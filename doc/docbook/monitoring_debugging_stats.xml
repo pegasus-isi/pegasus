@@ -72,6 +72,24 @@
       file in each workflow directory, the database at the top-level workflow
       will contain the information from not only the main workflow, but also
       from all sub-workflows.</para>
+
+      <section>
+        <title>Using pegasus-monitord with MySQL</title>
+
+        <para>Up to Pegasus 3.0.2, when using pegasus-monitord with MySQL,
+        users have to make sure that MySQL is configured to use the MyISAM
+        storage engine by default.</para>
+
+        <para>Additionally, users need to create the database using the
+        'latin1' encoding. This can be done by using the following MySQL
+        command: <programlisting>create database my_database default character set = 'latin1';</programlisting>
+        changing my_databse for the database name desired by the user.</para>
+
+        <para>Finally, users should use either the '-d' command line option,
+        or the 'pegasus.monitord.output' property with a MySQL connection
+        string to configure pegasus-monitord to use MySQL. Here is a sample
+        connection string: <programlisting>mysql://user:password@host:port/database_name</programlisting></para>
+      </section>
     </section>
 
     <section>
@@ -258,7 +276,7 @@ Logical transformation statistics :
         workflows have 4 jobs each, the total number of jobs displayed will be
         8 not 10 ( 2 + 4 + 4 ). During the count the DAX jobs in the outer
         level workflow are excluded. The same is true for other metrics
-        displayed on the stdout. </para>
+        displayed on the stdout.</para>
       </note>
 
       <para>pegasus-statistics summary contains the following
@@ -277,7 +295,6 @@ Logical transformation statistics :
           retries the value is the cumulative of all retries.</para>
         </listitem>
 
-
         <listitem>
           <para>Job summary <table>
               <title></title>
@@ -287,13 +304,13 @@ Logical transformation statistics :
                   <row>
                     <entry>Total</entry>
 
-                    <entry>the total number of jobs in the workflow. The 
-                    total number of jobs is calculated by parsing the .dag 
-                    file. For workflows having SUBDAX jobs , the SUDBAX job 
-                    is skipped , but the calculation takes into account all 
-                    the jobs that make up the SUBDAX sub workflow.For 
-                    workflows having SUBDAG jobs , the SUBDAG jobs are 
-                    treated like regular jobs.</entry>
+                    <entry>the total number of jobs in the workflow. The total
+                    number of jobs is calculated by parsing the .dag file. For
+                    workflows having SUBDAX jobs , the SUDBAX job is skipped ,
+                    but the calculation takes into account all the jobs that
+                    make up the SUBDAX sub workflow.For workflows having
+                    SUBDAG jobs , the SUBDAG jobs are treated like regular
+                    jobs.</entry>
                   </row>
 
                   <row>
@@ -417,7 +434,7 @@ Logical transformation statistics :
         </listitem>
 
         <listitem>
-          <para>Total jobs - the total number of jobs in the workflow. The 
+          <para>Total jobs - the total number of jobs in the workflow. The
           total number of jobs is calculated by parsing the .dag file.For
           workflows having sub workflow jobs (i.e SUBDAG and SUBDAX jobs) ,
           the sub workflow jobs are treated like regular jobs.</para>
@@ -440,7 +457,6 @@ Logical transformation statistics :
           <para># jobs unknown - the total number of jobs that are submitted,
           but has not completed execution or the state is unknown.</para>
         </listitem>
-
       </itemizedlist>
 
       <para><link linkend="???">/scratch/grid-setup/run0001</link></para>
@@ -491,8 +507,7 @@ Logical transformation statistics :
 
               <entry>0</entry>
             </row>
-
-           </tbody>
+          </tbody>
         </tgroup>
       </table>
 
@@ -947,8 +962,8 @@ Logical transformation statistics :
           </tbody>
         </tgroup>
       </table>
-	
-	  <para><emphasis role="bold">Workflow events list file
+
+      <para><emphasis role="bold">Workflow events list file
       [jobstate.txt]</emphasis></para>
 
       <para>Workflow events list file contains the events listed with time
@@ -984,7 +999,7 @@ Logical transformation statistics :
       MONITORD_STARTED and MONITORD_FINISHED are the actual timestamps. All
       the other timestamps are in reference to the time when DAGMAN started
       i.e DAGMAN_STARTED event has a 0 time associated with it.</para>
-      		
+
       <para><emphasis role="bold">Logical transformation statistics file per
       workflow [breakdown.txt]</emphasis></para>
 
@@ -1139,18 +1154,36 @@ Logical transformation statistics :
       <title>pegasus-plots</title>
 
       <para>pegasus-plots generates graphs and charts to visualize workflow
-      execution. </para>
-      
+      execution.</para>
+
       <section>
-    	<title>Prerequisites</title>
-        <para>pegasus-plots uses executables '<emphasis>ploticus</emphasis>','<emphasis>convert</emphasis>' and '<emphasis>dot</emphasis>' to generate graphs and charts. 
-        pegasus-plots looks for these executable in the system PATH and generates graphs and charts based on it's availability.</para>
-        <para><emphasis>dot</emphasis> can be downloaded from the Graphviz site <ulink url="http://www.graphviz.org/">http://www.graphviz.org/</ulink>. Graphviz software contains the <emphasis>dot</emphasis> tool which is available for most linux and OSX platforms.</para> 
-        <para><emphasis>convert</emphasis> can be downloaded from the ImageMagick site <ulink url="http://www.imagemagick.org/script/index.php">http://www.imagemagick.org/script/index.php</ulink>. ImageMagick contains the command tool <emphasis>convert</emphasis>. </para>
-        <para><emphasis>ploticus</emphasis> can be downloaded from site <ulink url="http://ploticus.sourceforge.net/doc/welcome.html">http://ploticus.sourceforge.net/doc/welcome.html</ulink>. </para>
-       </section>
-	<para>To generate graphs and charts run the command as shown
+        <title>Prerequisites</title>
+
+        <para>pegasus-plots uses executables
+        '<emphasis>ploticus</emphasis>','<emphasis>convert</emphasis>' and
+        '<emphasis>dot</emphasis>' to generate graphs and charts.
+        pegasus-plots looks for these executable in the system PATH and
+        generates graphs and charts based on it's availability.</para>
+
+        <para><emphasis>dot</emphasis> can be downloaded from the Graphviz
+        site <ulink
+        url="http://www.graphviz.org/">http://www.graphviz.org/</ulink>.
+        Graphviz software contains the <emphasis>dot</emphasis> tool which is
+        available for most linux and OSX platforms.</para>
+
+        <para><emphasis>convert</emphasis> can be downloaded from the
+        ImageMagick site <ulink
+        url="http://www.imagemagick.org/script/index.php">http://www.imagemagick.org/script/index.php</ulink>.
+        ImageMagick contains the command tool
+        <emphasis>convert</emphasis>.</para>
+
+        <para><emphasis>ploticus</emphasis> can be downloaded from site <ulink
+        url="http://ploticus.sourceforge.net/doc/welcome.html">http://ploticus.sourceforge.net/doc/welcome.html</ulink>.</para>
+      </section>
+
+      <para>To generate graphs and charts run the command as shown
       below.</para>
+
       <programlisting>$ <emphasis>pegasus-plots /scratch/grid-setup/run0001/</emphasis>
 
 
@@ -1177,8 +1210,10 @@ eps format : /scratch/grid-setup/run0001/graph/diamond-host.eps
       <para>By default the output gets generated to graph folder inside the
       submit directory. pegasus-plots generates the following graphs and
       charts.</para>
-      
-      <para><emphasis role="bold">Dax Graph</emphasis></para>
+
+      <para>
+        <emphasis role="bold">Dax Graph</emphasis>
+      </para>
 
       <para>Graph representation of the DAX file. A sample graph is shown
       below.</para>
@@ -1192,9 +1227,10 @@ eps format : /scratch/grid-setup/run0001/graph/diamond-host.eps
           </imageobject>
         </mediaobject>
       </figure>
-      
-      
-	  <para><emphasis role="bold">Dag Graph</emphasis></para>
+
+      <para>
+        <emphasis role="bold">Dag Graph</emphasis>
+      </para>
 
       <para>Graph representation of the DAG file. A sample graph is shown
       below.</para>
@@ -1209,8 +1245,9 @@ eps format : /scratch/grid-setup/run0001/graph/diamond-host.eps
         </mediaobject>
       </figure>
 
-      <para><emphasis role="bold">Gantt workflow execution
-      chart</emphasis></para>
+      <para>
+        <emphasis role="bold">Gantt workflow execution chart</emphasis>
+      </para>
 
       <para>Gantt chart of the workflow execution run. A sample chart is shown
       below.</para>
@@ -1225,7 +1262,9 @@ eps format : /scratch/grid-setup/run0001/graph/diamond-host.eps
         </mediaobject>
       </figure>
 
-      <para><emphasis role="bold">Host over time chart</emphasis></para>
+      <para>
+        <emphasis role="bold">Host over time chart</emphasis>
+      </para>
 
       <para>Host over time chart of the workflow execution run. A sample chart
       is shown below.</para>
@@ -1239,6 +1278,6 @@ eps format : /scratch/grid-setup/run0001/graph/diamond-host.eps
           </imageobject>
         </mediaobject>
       </figure>
-     </section>
+    </section>
   </section>
 </chapter>
