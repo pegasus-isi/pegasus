@@ -153,6 +153,9 @@ public class MainEngine
                                LoggingKeys.DAX_ID, 
                                mOriginalDag.getAbstractWorkflowName() );
         
+        //refinement process starting
+        mOriginalDag.setWorkflowRefinementStarted( true );
+        
         //do the authentication against the pools
         if (mPOptions.authenticationSet()) {
             mAuthEng = new AuthenticateEngine( mBag,

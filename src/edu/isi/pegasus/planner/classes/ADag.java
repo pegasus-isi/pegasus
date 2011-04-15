@@ -91,6 +91,12 @@ public class ADag extends Data {
     protected String mWorkflowUUID;
     
     /**
+     * Boolean indicating whether the refinement process on the workflow has
+     * started or not.
+     */
+    protected boolean mWorkflowRefinementStarted;
+    
+    /**
      * Initialises the class member variables.
      */
     public ADag() {
@@ -98,6 +104,7 @@ public class ADag extends Data {
         vJobSubInfos     = new Vector();
         mSubmitDirectory = ".";
         mWorkflowUUID    = generateWorkflowUUID();
+        mWorkflowRefinementStarted = false;
         resetStores();
     }
 
@@ -112,6 +119,7 @@ public class ADag extends Data {
         this.vJobSubInfos = (Vector)vSubs.clone();
         mSubmitDirectory  = ".";
         mWorkflowUUID    = generateWorkflowUUID();
+        mWorkflowRefinementStarted = false;
         resetStores();
     }
 
@@ -134,6 +142,8 @@ public class ADag extends Data {
         newAdag.vJobSubInfos= (Vector)this.vJobSubInfos.clone();
         newAdag.setBaseSubmitDirectory( this.mSubmitDirectory );
         newAdag.setRequestID( this.mRequestID );
+        newAdag.setWorkflowUUID( this.mWorkflowUUID );
+        newAdag.setWorkflowRefinementStarted( this.mWorkflowRefinementStarted );
         //the stores are not a true clone
         newAdag.setReplicaStore(mReplicaStore);
         newAdag.setTransformationStore(mTransformationStore);
@@ -171,8 +181,25 @@ public class ADag extends Data {
         return UUID.randomUUID().toString();
     }
     
+    /**
+     * Returns a boolean indicating whether the workflow refinement has started
+     * or not
+     * 
+     * @return boolean
+     */
+    public boolean hasWorkflowRefinementStarted(){
+       return this.mWorkflowRefinementStarted; 
+    }
 
-
+    /**
+     * Sets whether the workflow refinement has started or not
+     * 
+     * @param state  the boolean value
+     */
+    public void setWorkflowRefinementStarted( boolean state ){
+        this.mWorkflowRefinementStarted = state;
+    }
+    
     /**
      * Returns the String description of the dag associated with this object.
      *
@@ -181,6 +208,7 @@ public class ADag extends Data {
     public String toString(){
         String st = "\n Submit Directory " + this.mSubmitDirectory +
                     "\n Workflow UUID " + this.getWorkflowUUID() +
+                    "\n Workflow Refinement Started " + this.hasWorkflowRefinementStarted() +
                     "\n" + this.dagInfo.toString() +
                     vectorToString("\n Jobs making the DAG ",this.vJobSubInfos);
         return st;

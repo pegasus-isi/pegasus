@@ -21,11 +21,7 @@ import edu.isi.pegasus.common.logging.LogFormatterFactory;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.code.CodeGeneratorException;
 
-import java.net.UnknownHostException;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import org.globus.gsi.GlobusCredentialException;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.PegasusBag;
@@ -33,10 +29,10 @@ import edu.isi.pegasus.planner.classes.Job;
 
 import edu.isi.pegasus.planner.classes.PCRelation;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
+import edu.isi.pegasus.planner.code.CodeGenerator;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 
 import edu.isi.pegasus.planner.namespace.Dagman;
-import org.globus.gsi.GlobusCredential;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -44,23 +40,27 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 
-import java.net.InetAddress;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 
 /**
- * A Metrics file generator that generates a metrics file in the submit directory
- *
- * The following metrics are logged in the metrics file
- *
+ * A Stampede Events Code Generator that generates events in netlogger format
+ * for the exectuable workflow.  This generators generates the events about
+ * 
  * <pre>
+ *   the tasks int he abstract workflow
+ *   the edges in the abstract workflow
+ *   jobs in the executable workflow
+ *   the edges in the executable workflow
+ *   relationship about how the tasks in the abstract workflow map to jobs in the
+ *   executable workflow.
  * </pre>
  *
  * @author Karan Vahi
  * @version $Revision: 3409 $
  */
-public class Stampede {
+public class Stampede implements CodeGenerator {
 
 
     /**
@@ -140,6 +140,8 @@ public class Stampede {
                                                                      dag.dagInfo.index,
                                                                      Stampede.NETLOGGER_BP_FILE_SUFFIX ) );
 
+        boolean generateCodeForExecutableWorkflow = dag.hasWorkflowRefinementStarted();
+        
         String uuid = dag.getWorkflowUUID();
         try {
             writer = new PrintWriter(new BufferedWriter(new FileWriter(f, true) ));
@@ -147,117 +149,186 @@ public class Stampede {
             throw new CodeGeneratorException( "Unable to intialize writer to netlogger file " , ioe );
         }
 
-        for( Iterator<Job> it = dag.jobIterator(); it.hasNext(); ){
-            Job job = it.next();
-            mLogFormatter.addEvent( "pegasus.job", "exec_job.id", job.getID() );
+        
+        if( generateCodeForExecutableWorkflow ){
+            //events generation for executable workflow
+            for( Iterator<Job> it = dag.jobIterator(); it.hasNext(); ){
+                Job job = it.next();
+                generateEventsForExecutableJob( writer, dag, job );
+            }
+
+            //write out the edge informatiom for the workflow
+            for ( Iterator<PCRelation> it =  dag.dagInfo.relations.iterator(); it.hasNext(); ){
+                PCRelation relation = it.next();
+                mLogFormatter.addEvent( "stampede.job.edge", "wf.id", uuid );
+
+                mLogFormatter.add( "parent_exec_job.id", relation.getParent() );
+                mLogFormatter.add( "child_exec_job.id", relation.getChild() );
+
+                writer.println( mLogFormatter.createLogMessage() );
+                mLogFormatter.popEvent();
+            }
+        }
+        else{
+            //events generation for abstract workflow
+            for( Iterator<Job> it = dag.jobIterator(); it.hasNext(); ){
+                Job job = it.next();
+                generateEventsForDAXTask( writer, dag, job );
+            }
+            
+            //write out the edge informatiom for the workflow
+            for ( Iterator<PCRelation> it =  dag.dagInfo.relations.iterator(); it.hasNext(); ){
+                PCRelation relation = it.next();
+                mLogFormatter.addEvent( "stampede.task.edge", "wf.id", uuid );
+
+                mLogFormatter.add( "parent_abs_job.id", relation.getParent() );
+                mLogFormatter.add( "child_abs_job.id", relation.getChild() );
+
+                writer.println( mLogFormatter.createLogMessage() );
+                mLogFormatter.popEvent();
+            }
+
+        }
 
 
-            //to be retrieved
-            mLogFormatter.add( "wf.id" , uuid );
+        writer.close();
+        
+        Collection<File> result = new LinkedList();
+        result.add(f);
+        return result;
+    }
+    
+    /**
+     * Generates stampede events corresponding to jobs/tasks in the DAX
+     * 
+     * @param writer  the writer stream to write the events too
+     * @param workflow  the  workflow.
+     * @param job     the job for which to generate the events.
+     */
+    protected void generateEventsForDAXTask(PrintWriter writer, ADag workflow, Job job) 
+            throws CodeGeneratorException {
+            
+        String wfuuid = workflow.getWorkflowUUID();
+        //sanity check
+        if ( !( job.getJobType() == Job.COMPUTE_JOB ||
+            job.getJobType() == Job.DAG_JOB ||
+            job.getJobType() == Job.DAX_JOB ) ){
+            
+            //jobs/tasks in the dax can only be of the above types
+            throw new CodeGeneratorException( 
+                    "Invalid Job Type for a DAX Task while generating Stampede Events of type  " + job.getJobTypeDescription() +
+                    " for workflow " + workflow.getAbstractWorkflowName() );
+            
+        }
 
-            //disconnect??
-            mLogFormatter.add( "submit_file", job.getID() + ".sub" );
-            mLogFormatter.add( "jobtype", job.getJobTypeDescription() );
+        
+        mLogFormatter.addEvent( "stampede.task", "abs_task.id", job.getLogicalID() );
 
-            mLogFormatter.add( "clustered", Boolean.toString( job instanceof AggregatedJob ) );
-            mLogFormatter.add( "max_retries",
-                                job.dagmanVariables.containsKey( Dagman.RETRY_KEY ) ?
+        mLogFormatter.add( "wf.id" , wfuuid );
+
+        //disconnect??
+        mLogFormatter.add( "tasktype", job.getJobTypeDescription() );
+
+        mLogFormatter.add( "executable", job.getCompleteTCName() );
+        mLogFormatter.add( "arguments", job.getArguments() );
+            
+        writer.println( mLogFormatter.createLogMessage() );
+        mLogFormatter.popEvent();
+
+    }
+    
+    
+    /**
+     * Generates stampede events corresponding to an executable job
+     * 
+     * @param writer  the writer stream to write the events too
+     * @param workflow  the  workflow.
+     * @param job     the job for which to generate the events.
+     */
+    protected void generateEventsForExecutableJob(PrintWriter writer, ADag dag, Job job) 
+            throws CodeGeneratorException{
+            
+        String wfuuid = dag.getWorkflowUUID();
+        mLogFormatter.addEvent( "stampede.job", "exec_job.id", job.getID() );
+
+        mLogFormatter.add( "wf.id" , wfuuid );
+
+        //disconnect??
+        mLogFormatter.add( "submit_file", job.getID() + ".sub" );
+        mLogFormatter.add( "jobtype", job.getJobTypeDescription() );
+
+        mLogFormatter.add( "clustered", Boolean.toString( job instanceof AggregatedJob ) );
+        mLogFormatter.add( "max_retries",
+                           job.dagmanVariables.containsKey( Dagman.RETRY_KEY ) ?
                                             (String)job.dagmanVariables.get( Dagman.RETRY_KEY ):
                                             "0" );
 
             //to be changed???? wont be kickstart arguments?
 //            mLogFormatter.add( "executable" , job.getRemoteExecutable() );
 //            mLogFormatter.add( "arguments" , job.getArguments() );
-            mLogFormatter.add( "executable", (String)job.condorVariables.get( "executable" ) );
-            mLogFormatter.add( "arguments", (String)job.condorVariables.get( "arguments" ) );
+        mLogFormatter.add( "executable", (String)job.condorVariables.get( "executable" ) );
+        mLogFormatter.add( "arguments", (String)job.condorVariables.get( "arguments" ) );
             
-            //determine count of jobs
-            int taskCount = getTaskCount( job );
+        //determine count of jobs
+        int taskCount = getTaskCount( job );
 
-            mLogFormatter.add( "task_count", Integer.toString( taskCount ) );
-            writer.println( mLogFormatter.createLogMessage() );
-            mLogFormatter.popEvent();
+        mLogFormatter.add( "task_count", Integer.toString( taskCount ) );
+        writer.println( mLogFormatter.createLogMessage() );
+        mLogFormatter.popEvent();
 
-            //add task map events
-            //only compute jobs/ dax and dag jobs have task events associated
-            if( job.getJobType() == Job.COMPUTE_JOB ||
-                job.getJobType() == Job.DAG_JOB ||
-                job.getJobType() == Job.DAX_JOB ){
+        //add task map events
+        //only compute jobs/ dax and dag jobs have task events associated
+        if( job.getJobType() == Job.COMPUTE_JOB ||
+            job.getJobType() == Job.DAG_JOB ||
+            job.getJobType() == Job.DAX_JOB ){
 
 
-                if( job instanceof AggregatedJob ){
-                    AggregatedJob j = (AggregatedJob)job;
-                    //go through the job constituents and task.map events
-                    for( Iterator<Job> cit = j.constituentJobsIterator(); cit.hasNext(); ){
-                        Job constituentJob = cit.next();
-                        if( constituentJob.getJobType() == Job.COMPUTE_JOB ){
-                            //create task.map event
-                            //to the job in the DAX
-                            mLogFormatter.addEvent( "stampede.workflow.task.map", LoggingKeys.JOB_ID, job.getID() );
+            if( job instanceof AggregatedJob ){
+                AggregatedJob j = (AggregatedJob)job;
+                
+                //go through the job constituents and task.map events
+                for( Iterator<Job> cit = j.constituentJobsIterator(); cit.hasNext(); ){
+                    Job constituentJob = cit.next();
+                    if( constituentJob.getJobType() == Job.COMPUTE_JOB ){
+                        //create task.map event
+                        //to the job in the DAX
+                        mLogFormatter.addEvent( "stampede.workflow.task.map", LoggingKeys.JOB_ID, job.getID() );
                             
-                            //to be retrieved
-                            mLogFormatter.add( "wf.id" , uuid );
+                        //to be retrieved
+                        mLogFormatter.add( "wf.id" , wfuuid );
+                        mLogFormatter.add( "exec_job.id", job.getID() );
+                        mLogFormatter.add( "abs_task.id", constituentJob.getLogicalID() );
+                        writer.println( mLogFormatter.createLogMessage() );
+                   
+                        //writer.write( "\n" );
+                        mLogFormatter.popEvent();
 
-                            mLogFormatter.add( "exec_job.id", job.getID() );
-                            mLogFormatter.add( "abs_task.id", constituentJob.getLogicalID() );
-
-
-                    //System.out.println( mLogFormatter.createLogMessage() );
-
-                    writer.println( mLogFormatter.createLogMessage() );
-                    //writer.write( "\n" );
-                    mLogFormatter.popEvent();
-
-                        }
-                        else{
-                            //for time being lets warn
-                            mLogger.log( "Constituent Job " + constituentJob.getName() + " not of type compute for clustered job " + j.getName(),
-                                         LogManager.WARNING_MESSAGE_LEVEL );
-                        }
                     }
-                }
-                else{
-                    //create a single task.map event that maps compute job
-                    //to the job in the DAX
-                    mLogFormatter.addEvent( "stampede.workflow.task.map", "exec_job.id", job.getID() );
+                    else{
+                        //for time being lets warn
+                        mLogger.log( "Constituent Job " + constituentJob.getName() + " not of type compute for clustered job " + j.getName(),
+                                      LogManager.WARNING_MESSAGE_LEVEL );
+                      
+                    }
                     
-
-                    //to be retrieved
-                    mLogFormatter.add( "wf.id" , uuid );
-
-                    mLogFormatter.add( "abs_task.id", job.getLogicalID() );
-
-
-                    //System.out.println( mLogFormatter.createLogMessage() );
-                    writer.println( mLogFormatter.createLogMessage() );
-                    //writer.write( "\n" );
-                    mLogFormatter.popEvent();
                 }
+                
+            }
+            else{
+                //create a single task.map event that maps compute job
+                //to the job in the DAX
+                mLogFormatter.addEvent( "stampede.task.map", "exec_job.id", job.getID() );
+                
+                //to be retrieved
+                mLogFormatter.add( "wf.id" , wfuuid );
+                mLogFormatter.add( "abs_task.id", job.getLogicalID() );
 
+                writer.println( mLogFormatter.createLogMessage() );
+                mLogFormatter.popEvent();
             }
         }
-
-        //write out the edge informatiom for the workflow
-        for ( Iterator<PCRelation> it =  dag.dagInfo.relations.iterator(); it.hasNext(); ){
-            PCRelation relation = it.next();
-
-            mLogFormatter.addEvent( "stampede.job.edge", "wf.id", uuid );
-
-
-            mLogFormatter.add( "parent_exec_job.id", relation.getParent() );
-            mLogFormatter.add( "child_exec_job.id", relation.getChild() );
-
-            writer.println( mLogFormatter.createLogMessage() );
-            mLogFormatter.popEvent();
-        }
-
-
-        writer.close();
-        Collection<File> result = new LinkedList();
-        result.add(f);
-        return result;
+        
     }
-    
     
     /**
      * Method not implemented. Throws an exception.
@@ -268,8 +339,9 @@ public class Stampede {
      * @throws edu.isi.pegasus.planner.code.CodeGeneratorException
      */
     public void generateCode( ADag dag, Job job ) throws CodeGeneratorException {
-        throw new CodeGeneratorException( "Metrics generator only generates code for the whole workflow" );
+        throw new CodeGeneratorException( "Stampede generator only generates code for the whole workflow" );
     }
+
 
 
     /**
@@ -305,28 +377,13 @@ public class Stampede {
         return count;
     }
 
-    /**
-     * Initializes and returns a writer to the bp file
-     *
-     * @param dag  the final executable workflow
-     *
-     * @return the writer
-     *
-     * @throws IOException in case of error while writing out file.
-     */
-    protected PrintWriter getWriter( ADag dag ) throws IOException{
-        
-        
-        File f = new File( mSubmitFileDir , Abstract.getDAGFilename( this.mPOptions,
-                                                                     dag.dagInfo.nameOfADag,
-                                                                     dag.dagInfo.index,
-                                                                     Stampede.NETLOGGER_BP_FILE_SUFFIX ) );
-
-        return new PrintWriter(new BufferedWriter(new FileWriter(f, true) ));
-        
- 
+    public boolean startMonitoring() {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
-   
-    
+
+    public void reset() throws CodeGeneratorException {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
     
 }

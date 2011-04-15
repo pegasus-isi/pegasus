@@ -49,6 +49,11 @@ public class CodeGeneratorFactory {
     public static final String CONDOR_CODE_GENERATOR_CLASS =
                     "edu.isi.pegasus.planner.code.generator.condor.CondorGenerator";
 
+    /**
+     * The name of the class implementing the Stampede Event Generator
+     */
+    public static final String STAMPEDE_EVENT_GENERATOR_CLASS =
+                    "edu.isi.pegasus.planner.code.generator.Stampede";
 
     /**
      * This method loads the appropriate implementing code generator as specified

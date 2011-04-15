@@ -492,6 +492,10 @@ public class CPlanner extends Executable{
                 mPOptions.setRelativeDirectory( relativeSubmitDir );
             }
 
+            //before starting the refinement process load
+            //the stampede event generator and generate events for the dax
+            generateStampedeEventsForAbstractWorkflow( orgDag , mBag );
+            
             //populate the singleton instance for user options
             //UserOptions opts = UserOptions.getInstance(mPOptions);
             MainEngine cwmain = new MainEngine( orgDag, mBag );
@@ -547,6 +551,11 @@ public class CPlanner extends Executable{
             //random dir option specified
             if(mPOptions.generateRandomDirectory() && !emptyWorkflow ){
                 ADag cleanupDAG = cwmain.getCleanupDAG();
+                
+                //set the refinement started flag to get right events
+                //generated for stampede for cleanup workflow
+                cleanupDAG.setWorkflowRefinementStarted( true );
+                
                 PlannerOptions cleanupOptions = (PlannerOptions)mPOptions.clone();
 
                 //submit files are generated in a subdirectory
@@ -1497,6 +1506,35 @@ public class CPlanner extends Executable{
                  !result;
           
       }
+
+   
+    /**
+     * Generates events for the abstract workflow.
+     * 
+     * @param  workflow   the parsed dax
+     * @param bag         the initialized object bag
+     */
+    private void generateStampedeEventsForAbstractWorkflow(ADag  workflow, PegasusBag bag ) {
+        CodeGenerator codeGenerator =
+                CodeGeneratorFactory.loadInstance( bag, CodeGeneratorFactory.STAMPEDE_EVENT_GENERATOR_CLASS );
+
+
+        String message = "Generating Stampede Events for Abstract Workflow";
+        log( message, LogManager.INFO_MESSAGE_LEVEL );
+        
+        try{
+            Collection result = codeGenerator.generateCode( workflow );
+            for( Iterator it = result.iterator(); it.hasNext() ;){
+                mLogger.log("Written out stampede events for the abstract workflow to " + it.next(), LogManager.DEBUG_MESSAGE_LEVEL);
+            }
+        }
+        catch ( Exception e ){
+            throw new RuntimeException( "Unable to generate stampede events for abstract workflow", e );
+        }
+        
+        mLogger.log( message + " -DONE", LogManager.INFO_MESSAGE_LEVEL );
+
+    }
 
     /**
      * 
