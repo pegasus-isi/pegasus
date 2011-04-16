@@ -92,11 +92,6 @@
    <title>Link to Pegasus API landing page</title>
   </section>
   
-  <section>
-    <title>Migration</title>
-     <para>Are You Sure Migration Info should be in the walkthrough?</para>
-
-  </section>
 
   <section>
   <title>Concepts/Glossary</title>
@@ -106,6 +101,7 @@
 
 
 </chapter>
+
 
 
 
