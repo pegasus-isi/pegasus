@@ -175,11 +175,7 @@
 	</or>
       </and>
     </condition>
-    <condition property="latex.notavailable" else="false">
-      <isfalse value="${latex.available}"/>
-    </condition>
     <echo>latex.available="${latex.available}"</echo>
-    <echo>latex.notavailable="${latex.notavailable}"</echo>
   </target>
   
   <target name="latex-pre" depends="version">
@@ -198,7 +194,7 @@
   
   <target name="latex" depends="latex-pre,validate-latex"
           description="Runs PDF-LaTeX to auto-document properties" 
-	  if="latex.available"
+	  if="{latex.available}"
           unless="pegasus.predicate.latex">
 
     <exec executable="${pegasus.home}/libexec/assemble-sample-props"
@@ -224,7 +220,7 @@
 
   <target name="withoutlatex" depends="validate-latex"
           description="Copies properties to document if latex is not installed" 
-	  if="latex.notavailable">
+	  unless="{latex.available}">
      <mkdir dir="${dist.doc}"/>
      <copy preservelastmodified="true" todir="${dist.doc}" file="doc/basic-properties.pdf"/> 
      <copy preservelastmodified="true" todir="${dist.doc}" file="doc/advanced-properties.pdf"/> 
