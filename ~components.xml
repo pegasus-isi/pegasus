@@ -87,7 +87,7 @@
       <para> There are three catalogs in the Pegasus WMS</para>
       
       <link
-      linkend="catalogs">catalog details</link>
+      linkend="catalogs">See catalog details</link>
 
       
       <para>Insert a diagram of catalogs in a pegasus network</para>
@@ -143,6 +143,7 @@
   which parameters.</para>
        </section>
 </chapter>
+
 
 
 
