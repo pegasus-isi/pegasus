@@ -81,10 +81,13 @@
       <title>Catalogs </title>
       </section>
       
-      <para>Catalogs contain the source data????????????? </para>
+      <para>Catalogs contain the source data that is used by the DAG to execute the
+      workflow</para>
+      
+      <para> There are three catalogs in the Pegasus WMS</para>
       
       <link
-      linkend="catalogs">Chapter on Catalog Details</link>
+      linkend="catalogs">catalog details</link>
 
       
       <para>Insert a diagram of catalogs in a pegasus network</para>
@@ -140,6 +143,7 @@
   which parameters.</para>
        </section>
 </chapter>
+
 
 
 

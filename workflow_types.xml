@@ -22,7 +22,7 @@
       <title>Abstract Workflows</title>
 
       <para>Abstract workflows <link
-      linkend="components.php#id3106643">(DAX)</link> are a basic description, in XML format, of the steps required to.....</para>
+      linkend="components">(DAX)</link> are a basic description, in XML format, of the steps required to.....</para>
 
       </section>
                  
@@ -61,6 +61,7 @@
       
       
 </chapter>
+
 
 
 

@@ -14,7 +14,7 @@
       <listitem>
         <para><emphasis>System Walkthrough</emphasis></para>
         <para>We walk you through a representative workflow project that includes all aspects of the Pegasus WMS. The project we use is is at a level of complexity
-        that is needed for the great majority of users. </para>
+        that is needed for the vast majority of users. </para>
       </listitem>
       
        <listitem>
@@ -36,8 +36,8 @@
 
       <listitem>
         <para><emphasis>Planning and Submitting</emphasis></para>
-        <para> How to plan an abstract XML workflow and submit it to the DAG to
-         create an executable workflow </para>
+        <para> How to plan a DAX (abstract) workflow and submit it to the DAG to
+         create an executable workflow. </para>
       </listitem>
 
       <listitem>
@@ -62,6 +62,7 @@
       
       </itemizedlist>
 </chapter>
+
 
 
 
