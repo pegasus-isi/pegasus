@@ -8,10 +8,13 @@
   
       <title>Workflow Introduction</title>
 
-      <para>High Level Description of Workflows</para>
-      
       <para>Simply worded description of what workflows are, how they basically work, and how they can save time, money, etc</para>
+
+      <para>Workflows are at the cener of how Pegasus operates. Pegasus takes in an abstract workflow ( DAX ) and generates an executable workflow (DAG) in the submit directory.</para>
       
+      <para>Describe how workflows operate in research environments. </para>
+
+
       <para> workflow diagrams</para>
       </section>
       
@@ -56,6 +59,7 @@
       
       
 </chapter>
+
 
 
 
