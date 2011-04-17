@@ -17,15 +17,17 @@
         that is needed for the great majority of users. </para>
       </listitem>
       
+       <listitem>
+        <para><emphasis>Workflows</emphasis></para>
+        <para>An introducion to the concepts of workflows, the types of workflows, and how they are used in the Pegasus system</para>
+      </listitem>
+
+      
       <listitem>
         <para><emphasis>Pegasus Components</emphasis></para>
         <para>An introduction to the components of the Pegasus Workflow Management System (WMS)</para>
       </listitem>
 
-      <listitem>
-        <para><emphasis>Workflows</emphasis></para>
-        <para>An introducion to the concepts of workflows, the types of workflows, and how they are used in the Pegasus system</para>
-      </listitem>
 
       <listitem>
         <para><emphasis>Catalog Details</emphasis></para>
@@ -60,6 +62,7 @@
       
       </itemizedlist>
 </chapter>
+
 
 
 

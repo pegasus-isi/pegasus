@@ -35,11 +35,11 @@
   
                  <para>Catalog Basics</para>
                  <link
-      linkend="components">Chapter Components</link>
+      linkend="components">See Components</link>
                  
                  <para>link to Catalogs landing page</para>
                  <link
-      linkend="catalogs">Chapter on Catalog Details</link>
+      linkend="catalogs">See Catalog Details</link>
 
   </section>
   
@@ -101,6 +101,7 @@
 
 
 </chapter>
+
 
 
 
