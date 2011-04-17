@@ -13,7 +13,8 @@
       <itemizedlist>
       <listitem>
         <para><emphasis>System Walkthrough</emphasis></para>
-        <para>We walk you through a representative workflow project that includes all aspects of the Pegasus WMS.</para>
+        <para>We walk you through a representative workflow project that includes all aspects of the Pegasus WMS. The project we use is is at a level of complexity
+        that is needed for the great majority of users. </para>
       </listitem>
       
       <listitem>
@@ -59,6 +60,7 @@
       
       </itemizedlist>
 </chapter>
+
 
 
 
