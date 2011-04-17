@@ -60,7 +60,7 @@
 
           <mediaobject>
             <imageobject>
-              <imagedata align="center" fileref="images/DiamondWorkflow.jpg"
+              <imagedata align="center" fileref="images/DiamondWorkflow.png"
                          valign="middle" />
             </imageobject>
           </mediaobject>
@@ -140,6 +140,7 @@
   which parameters.</para>
        </section>
 </chapter>
+
 
 
 
