@@ -126,16 +126,25 @@
 
  <section>
   <title>Executing Workflows in Different Environments</title>
-  
-                   <para>Detailed Catalog landing page</para>
-                   
+               <section>
+               <title>Local Execution</title>
+
+               </section>
+               
+               <section>Condor Pools and Glidelins</section>
+               
+               <section>
+               <title>Grids</title>
+               
+               </section>
+
+
+               <section>
+                <title>Clouds</title>
+
+               </section>
                    <para>Local Execution</para>
-                   
-                   <para>Condor Pools and Glideins</para>
-                   
-                   <para>Grids</para>
-                   
-                   <para>Clouds</para>
+
   </section>
   
   <section>
