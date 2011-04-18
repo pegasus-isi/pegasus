@@ -71,8 +71,8 @@ my $fn = shift ||
 
 my %replace = ( 'tb2' => "<informaltable frame='none'><tgroup cols='2' align='left' colsep='1' rowsep='1'><tbody><row><entry>\n"
               , '/tb2' => "</entry></row></tbody></tgroup></informaltable>\n"
-              , 'tb3' => "<table><tr><td>\n"
-              , '/tb3' => "</td></tr></table>\n"
+              , 'tb3' => "<informaltable frame='none'><tgroup cols='3' align='left' colsep='1' rowsep='1'><tbody><row><entry>\n"
+              , '/tb3' => "</entry></row></tbody></tgroup></informaltable>\n"
               , '/te' => "</entry></row><row><entry>\n" );
 
 # we only need to escape the basic three, ignoring quot and apos
@@ -166,8 +166,6 @@ print << "EOF";
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
 "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
-<chapter id="properties">
-    <title>The Pegasus Workflow Planner Properties</title>
 
 EOF
 
@@ -240,7 +238,7 @@ while ( <SP> ) {
                     
         print "\n</section><!-- end section -->\n";
 
-    } elsif ( /\# (SECTION|SUBSECTION)/ ) {
+    } elsif ( /\# (SECTION|SUBSECTION|TITLE)/ ) {
         @line = map { trim($_) } map { substr($_,2) } split /[\r\n]/;
         my $flag = undef;
         for ( $i=0; $i<@line; ++$i ) {
@@ -274,6 +272,13 @@ while ( <SP> ) {
                 print "    <title>@title</title>\n\n";
                 $flag = 1;
                 $depth = 2;
+            } elsif ( $line[$i] =~ /^TITLE "([^\"]+)"/ ) {
+                my @title = map { ucfirst lc } split /\s+/,$1;
+                my $title = join('',@title);
+                print "<chapter id='$title'>\n";
+                print "    <title>@title</title>\n\n";
+                $flag = 0;
+                $depth = 0;
             }
         }
 
