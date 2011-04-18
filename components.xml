@@ -4,7 +4,7 @@
 <chapter id="components">
   <title>Pegasus Components</title>
   
-  <para>The Pegasus Workflow Management System consists of six main
+  <para>The Pegasus Workflow Management System consists of several main
   elements and components that work together to automate the processing of large scale workflows.</para>
   
   <itemizedlist>
@@ -20,6 +20,8 @@
    <listitem>Condor DagMan</listitem>
 
    <listitem>Condor Schedd</listitem>
+   
+   <listitem>Submit Directory</listitem>
 
   </itemizedlist>
 
@@ -147,7 +149,10 @@
       Condor schedd is a component in the Condor Project.</para>
 
       </section>
-      
+      <section>
+      <title>Submit Directory</title>
+
+      <para>Need a description of what a submit direcotory is and how it functions in the different environments.</para></section>
       <section>
 
       <title>Monitoring Tools</title>
@@ -178,6 +183,7 @@
   which parameters.</para>
        </section>
 </chapter>
+
 
 
 
