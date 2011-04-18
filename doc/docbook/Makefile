@@ -1,34 +1,33 @@
 
+ifndef ${prefix}
+prefix = html
+endif
 
-all: html/basic.properties.html html/index.php
+all: ${prefix}/index.php ${prefix}/pegasus-user-guide.pdf
 
 pegasus-user-guide.fo: *.xml
 	xsltproc --xinclude pegasus-pdf-style.xsl pegasus-book.xml > pegasus-user-guide.fo
 
-pegasus-user-guide.pdf: pegasus-user-guide.fo html
+${prefix}/pegasus-user-guide.pdf: pegasus-user-guide.fo
 	fop pegasus-user-guide.fo -pdf pegasus-user-guide.pdf
-	cp pegasus-user-guide.pdf html/
+	cp pegasus-user-guide.pdf ${prefix}/
 
-
-html:
-	mkdir -p html/images
-
-html/basic.properties.html: html/index.php ../../etc/basic.properties ../../etc/advanced.properties
+configuration.xml: ../../etc/basic.properties
 	export PEGASUS_HOME=`dirname \`pwd ../../\`` \
-        && export HTML_SNIPPET_ONLY="1" \
-        && ../../libexec/html-sample-props ../../etc/basic.properties > html/basic.properties.html \
-	    && ../../libexec/html-sample-props ../../etc/advanced.properties > html/advanced.properties.html 
-	perl -p -i -e 's/PHP_BASIC_PROPERTIES/<div class="titlepage"><?php include("basic.properties.html");?><\/div>/' html/configuration.php
-	perl -p -i -e 's/PHP_ADVANCED_PROPERTIES/<div class="titlepage"><?php include("advanced.properties.html");?><\/div>/' html/advanced_concepts_properties.php
+        && ../../libexec/docbook-sample-props ../../etc/basic.properties > configuration.xml 
 
-html/index.php: html *.xml pegasus-style.xsl
-	mkdir -p html
+advanced_concepts_properties.xml: ../../etc/advanced.properties
+	export PEGASUS_HOME=`dirname \`pwd ../../\`` \
+	    && ../../libexec/docbook-sample-props ../../etc/advanced.properties > advanced_concepts_properties.xml 
+
+${prefix}/index.php: *.xml pegasus-style.xsl configuration.xml advanced_concepts_properties.xml
+	mkdir -p ${prefix}/images
 	xsltproc --noout \
-		      --stringparam base.dir html/ \
+		      --stringparam base.dir ${prefix}/ \
 		      --xinclude \
 	         pegasus-style.xsl \
 	         pegasus-book.xml
-	(cd images && cp *.png *.jpg ../html/images/)
+	cp images/*.png images/*.jpg ${prefix}/images/
 
 clean:
 	  rm -rf html *.fo *.pdf ./*~

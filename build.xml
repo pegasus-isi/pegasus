@@ -160,106 +160,37 @@
     <chmod perm="a+x" file="${dist.lib}/vdl.jar"/>
   </target>
 
-  <target name="validate-latex">
-    <condition property="latex.available" else="false">
-      <and>
-	<or>
-	  <available file="pdflatex"     filepath="${env.PATH}"/>
-	  <available file="pdflatex.exe" filepath="${env.PATH}"/>
-	  <available file="pdflatex.exe" filepath="${env.Path}"/>
-	</or>
-	<or>
-	  <available file="makeindex"     filepath="${env.PATH}"/>
-	  <available file="makeindex.exe" filepath="${env.PATH}"/>
-	  <available file="makeindex.exe" filepath="${env.Path}"/>
-	</or>
-      </and>
-    </condition>
-    <echo>latex.available="${latex.available}"</echo>
-  </target>
-  
-  <target name="latex-pre" depends="version">
-    <mkdir dir="${dist.doc}"/>
-    <uptodate property="pegasus.predicate.latex">
-      <!--
-      <srcfiles dir="etc" includes="sample.properties"/>
-      <mapper type="regexp" from="^(.*)sample\.(.*)$" to="${dist.doc}/\2.pdf"/>
-      -->
-      <srcfiles dir="etc" includes="*.properties"/>
-      <mapper type="regexp" 
-	      from="^(.*)(basic|advanced)\.properties" 
-	      to="${dist.doc}/\2-properties.pdf"/>
-    </uptodate>
-  </target>
-  
-  <target name="latex" depends="latex-pre,validate-latex"
-          description="Runs PDF-LaTeX to auto-document properties" 
-	  if="{latex.available}"
-          unless="pegasus.predicate.latex">
 
-    <exec executable="${pegasus.home}/libexec/assemble-sample-props"
-          failonerror="true">
-      <arg file="${pegasus.home}/etc/basic.properties"/>
-      <arg file="${dist.doc}/basic-properties.pdf"/>
-      <env key="PEGASUS_HOME" value="${pegasus.home}"/>
-      <env key="PEGASUS_VERSION" value="${pegasus.version}"/>
-      <env key="PEGAUS_TIMESTAMP" value="${ISODATE.full}"/>
-    </exec>
-
-    <exec executable="${pegasus.home}/libexec/assemble-sample-props"
-	  failonerror="true">
-      <arg file="${pegasus.home}/etc/advanced.properties"/>
-      <arg file="${dist.doc}/advanced-properties.pdf"/>
-      <env key="PEGASUS_HOME" value="${pegasus.home}"/>
-      <env key="PEGASUS_VERSION" value="${pegasus.version}"/>
-      <env key="PEGAUS_TIMESTAMP" value="${ISODATE.full}"/>
-    </exec>
-    
-
-  </target>
-
-  <target name="withoutlatex" depends="validate-latex"
-          description="Copies properties to document if latex is not installed" 
-	  unless="{latex.available}">
-     <mkdir dir="${dist.doc}"/>
-     <copy preservelastmodified="true" todir="${dist.doc}" file="doc/basic-properties.pdf"/> 
-     <copy preservelastmodified="true" todir="${dist.doc}" file="doc/advanced-properties.pdf"/> 
-  </target>
-
-
-
-  <target name="javadoc-pre" depends="version">
-    <uptodate property="pegasus.predicate.doc">
-      <srcfiles dir="src" includes="edu/isi/pegasus/**/*.java" 
-	        excludes="**/*Test.java"/>
-      <mapper type="glob" from="*.java" to="${dist.doc}/javadoc/*.html"/>
-    </uptodate>
+  <target name="doc" depends="docbook,javadoc">
   </target>    
+  
+  <target name="docbook" depends="version,validate-make"
+          description="Generates documentation from docbook source">
+    <mkdir dir="${dist.doc}/html"/>
+    <exec executable="${basedir}/src/tools/make.pl" dir="doc/docbook" failonerror="true">
+      <env key="prefix" value="${dist.doc}/html"/>
+      <arg line="prefix=${dist.doc}/html"/>
+      <arg line="all"/>
+    </exec>
+  </target>
 
-  <target name="javadoc" depends="planner,common,javadoc-pre"
+  <target name="javadoc" depends="version,planner,common"
           description="Generates the javadoc auto-documentation"
           unless="pegasus.predicate.doc">
-    <!-- <delete dir="${dist.doc}/javadoc"/> -->
-    <javadoc destdir="${dist.doc}/javadoc"
+    <delete dir="${dist.doc}/html/javadoc"/>
+    <javadoc destdir="${dist.doc}/html/javadoc"
              Author="true" 
-	     Use="true"
+             Use="true"
              Version="true"
              Private="true"
              Windowtitle="PEGASUS"
              classpathref="build.classpath">
       <packageset dir="src">
-<!--        <include name="org/griphyn/vdl/**"/> -->
         <include name="edu/isi/pegasus/**"/>
       </packageset>
       <fileset dir="src" includes="*.java"/>
       <doctitle><![CDATA[PEGASUS ${pegasus.version}]]></doctitle>
-      <bottom><![CDATA[<i>Copyright &#169; 2007 The University of Southern California. All Rights Reserved.</i>]]></bottom>
-<!--      <group title="Common Shared Code" packages="org.griphyn.common.*"/> -->
-<!--      <group title="Chimera">
-	<package name="org.griphyn.vdl"/>
-	<package name="org.griphyn.vdl.*"/>
-      </group>
--->
+      <bottom><![CDATA[<i>Copyright &#169; 2011 The University of Southern California. All Rights Reserved.</i>]]></bottom>
       <group title="Pegasus" packages="edu.isi.pegasus.*"/>
       <link href="http://java.sun.com/j2se/1.5.0/docs/api/"/>
     </javadoc>
@@ -469,7 +400,7 @@
     </chmod>
   </target>
 
-  <target name="dist" depends="jar,vdl-jar,latex,withoutlatex,man-roff,ctools-all,externals"
+  <target name="dist" depends="jar,vdl-jar,man-roff,ctools-all,externals"
           description="Sets up the dist directory">
     <!-- bin -->
     <mkdir dir="${dist.dir}/bin"/>
