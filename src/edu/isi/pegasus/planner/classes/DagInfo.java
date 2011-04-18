@@ -129,6 +129,11 @@ public class DagInfo extends Data {
      */
     public TreeMap lfnMap;
 
+    /**
+     * The DAX Version
+     */
+    private String mDAXVersion;
+
 
     //for scripts later
 
@@ -146,6 +151,7 @@ public class DagInfo extends Data {
         mFlowTimestamp = new String();
         mDAXMTime      = new String();
         releaseVersion = new String();
+        mDAXVersion    = new String();
         lfnMap         = new TreeMap();
         mWFMetrics     = new WorkflowMetrics();
     }
@@ -270,6 +276,16 @@ public class DagInfo extends Data {
                 this.DEFAULT_NAME:
                 nameOfADag;
     }
+
+    /**
+     * Returns the dax version
+     *
+     * @return teh dax version.
+     */
+    public String getDAXVersion(  ) {
+        return this.mDAXVersion;
+    }
+
 
     /**
      * Returns the last modified time for the file containing the workflow
@@ -513,6 +529,14 @@ public class DagInfo extends Data {
     }
 
     /**
+     * Sets the dax version
+     * @param version   the version of the DAX
+     */
+    public void setDAXVersion( String version ) {
+        mDAXVersion = version;
+    }
+
+    /**
      * Sets the mtime (last modified time) for the DAX. It is the time, when
      * the DAX file was last modified. If the DAX file does not exist or an
      * IO error occurs, the MTime is set to OL i.e . The DAX mTime is always
@@ -589,6 +613,7 @@ public class DagInfo extends Data {
         dag.nameOfADag = new String(this.nameOfADag);
         dag.count = new String(this.count);
         dag.index = new String(this.index);
+        dag.mDAXVersion = this.mDAXVersion;
         dag.flowID = new String(this.flowID);
         dag.flowIDName     = new String(this.flowIDName);
         dag.mFlowTimestamp  = new String(this.mFlowTimestamp);
@@ -609,6 +634,7 @@ public class DagInfo extends Data {
         String st = "\n " +
             "\n Name of ADag : " + this.nameOfADag +
             "\n Index        : " + this.index + " Count :" + this.count +
+            "\n DAX Version  : " + this.mDAXVersion  +
             //"\n FlowId       : " + this.flowID +
             "\n FlowName     : " + this.flowIDName +
             "\n FlowTimestamp: " + this.mFlowTimestamp +
@@ -620,4 +646,5 @@ public class DagInfo extends Data {
         return st;
     }
 
+    
 }

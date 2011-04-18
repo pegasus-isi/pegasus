@@ -122,6 +122,7 @@ public class DAX2CDAG implements Callback {
      * @param attributes is a map of attribute key to attribute value
      */
     public void cbDocument(Map attributes) {
+        mDagInfo.setDAXVersion( (String)attributes.get( "version" ));
         mDagInfo.count = (String)attributes.get("count");
         mDagInfo.index = (String)attributes.get("index");
         mDagInfo.setLabel( (String)attributes.get("name") );

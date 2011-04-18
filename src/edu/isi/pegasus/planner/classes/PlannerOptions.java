@@ -1282,6 +1282,20 @@ public class PlannerOptions extends Data implements Cloneable{
 
 
     /**
+     * Returns the complete options string that is used to invoke pegasus
+     *
+     * @return the options as string.
+     */
+    public String getCompleteOptions(){
+        StringBuffer sb = new StringBuffer();
+        sb./*append( this.toJVMOptions() ).append( " " ).*/
+           append( "--dax" ).append( " " ).append( this.getDAX() ).
+           append( this.toOptions() );
+        
+        return sb.toString();
+    }
+
+    /**
      * Clones a Set.
      *
      * @param s Set

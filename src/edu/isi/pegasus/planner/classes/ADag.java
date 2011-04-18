@@ -363,6 +363,16 @@ public class ADag extends Data {
         return this.dagInfo.getLabel();
     }
 
+
+    /**
+     * Returns the dax version
+     *
+     * @return teh dax version.
+     */
+    public String getDAXVersion(  ) {
+        return this.dagInfo.getDAXVersion();
+    }
+
     /**
      * Returns the last modified time for the file containing the workflow
      * description.

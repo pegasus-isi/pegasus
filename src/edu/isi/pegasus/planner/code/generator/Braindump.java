@@ -43,7 +43,6 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.Map;
-import java.util.UUID;
 
 /**
  * Braindump file code generator that generates a Braindump file for the 
@@ -126,6 +125,16 @@ public class Braindump {
      * The DAX label.
      */
     public static final String DAX_LABEL_KEY = "dax_label";
+
+    /**
+     * The dax index
+     */
+    public static final String DAX_INDEX_KEY = "dax_index";
+
+    /**
+     * The DAX version.
+     */
+    public static final String DAX_VERRSION_KEY = "dax_version";
     
     /**
      * The workflow timestamp.
@@ -251,15 +260,18 @@ public class Braindump {
         //dax and dax label
         entries.put( "dax", mPOptions.getDAX() );
         entries.put( Braindump.DAX_LABEL_KEY, workflow.getLabel() );
+        entries.put( Braindump.DAX_INDEX_KEY, workflow.dagInfo.index );
+        entries.put( Braindump.DAX_VERRSION_KEY, workflow.getDAXVersion() );
+
         
         //the workflow name
         if (dinfo.flowIDName != null) {
-            entries.put( WF_NAME_KEY, dinfo.flowIDName );
+            entries.put( Braindump.WF_NAME_KEY, dinfo.flowIDName );
         }
         
         //the workflow timestamp
         if (dinfo.getMTime() != null) {
-            entries.put( WF_TIMESTAMP_KEY, dinfo.getFlowTimestamp() );
+            entries.put( Braindump.WF_TIMESTAMP_KEY, dinfo.getFlowTimestamp() );
         }
         
         //basedir and submit directory
@@ -277,24 +289,20 @@ public class Braindump {
         entries.put( "planner", planner.toString() );
         
         //planner version and build
-        entries.put( PLANNER_VERSION_KEY, Version.instance().toString() );
-        entries.put( BUILD_KEY, Version.instance().determineBuilt() );
+        entries.put( Braindump.PLANNER_VERSION_KEY, Version.instance().toString() );
+        entries.put( Braindump.BUILD_KEY, Version.instance().determineBuilt() );
         
+        //planner arguments
+        StringBuffer arguments = new StringBuffer( );
+        arguments.append( "\"" ).append( mPOptions.getCompleteOptions() ).append( "\"" );
+        entries.put( Braindump.PLANNER_ARGUMENTS_KEY, arguments.toString() );
+
         //required by tailstatd
         entries.put( "jsd" , absPath + File.separator + "jobstate.log");
         entries.put( "rundir" , directory.getName());
         entries.put( "pegasushome", mProps.getPegasusHome());
         entries.put( "vogroup" , mPOptions.getVOGroup() );
         
-/*                
-        //to be deleted once gaurang fixes pegasus-run
-        entries.put( "run" , absPath);
-        entries.put( "label", workflow.getLabel() );
-        entries.put( VERSION_KEY, Version.instance().toString() );
-        if (dinfo.getMTime() != null) {
-            entries.put( WF_TIMESTAMP_KEY, dinfo.getFlowTimestamp() );
-        }
-*/ 
         
         return entries;
     }
