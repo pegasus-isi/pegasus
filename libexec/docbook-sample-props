@@ -144,11 +144,6 @@ my $tmp = $ENV{'MY_TMP'} ||     # Wei likes MY_TMP, so try that first
     File::Spec->tmpdir() ||     # OK, this gets used if all above fail
     '/tmp';                     # last resort
 
-# which version 
-my $v_v = File::Spec->catfile($ENV{'PEGASUS_HOME'},'bin','pegasus-version');
-my $version = `$v_v`;
-chomp($version);
-
 my ($tmpfh,$tmpfn) = tempfile( 'tmp-XXXXXX', DIR => $tmp, UNLINK => 1 );
 die "FATAL: Unable to create files in $tmp\n" unless defined $tmpfh;
 warn "# toc into $tmpfn\n";
@@ -175,6 +170,7 @@ my %index = ();
 my (@line,%line,$k,$v,$i);
 my $depth = 0;
 my @count = ( 0, 0, 0 ); # section, subsection, subsubsection
+my $idbase = "";
 while ( <SP> ) {
     if ( /^\# Property : (.*)/ ) {
         my $title = $1;
@@ -182,14 +178,14 @@ while ( <SP> ) {
         if ( $depth == 2 ) {
             $count[2]++;
             $secmark = join('.',@count[0,1,2]);
-            print "\n\n\n<section id=\"$title\">\n";
+            print "\n\n\n<section id=\"$idbase$title\">\n";
             print "    <title>$title</title>\n";
             print "<para>\n";
         } else {
             $count[1]++;
             $count[2] = 0;
             $secmark = join('.',@count[0,1]);
-            print "\n\n\n<section id=\"$title\">\n";
+            print "\n\n\n<section id=\"$idbase$title\">\n";
             print "    <title>$title</title>\n";
             print "<para>\n";
         }
@@ -254,7 +250,7 @@ while ( <SP> ) {
                 $count[0]++;
                 $count[1] = $count[2] = 0;
                 my $title = join('',@title);
-                print "\n\n\n<section id=\"$title\">\n";
+                print "\n\n\n<section id=\"$idbase$title\">\n";
                 print "    <title>@title</title>\n\n";
 
                 $flag = 1;
@@ -268,7 +264,7 @@ while ( <SP> ) {
                 $count[1]++;
                 $count[2] = 0;
                 my $mark = join('.',@count[0,1]);
-                print "\n\n\n<section id=\"$title\">\n";
+                print "\n\n\n<section id=\"$idbase$title\">\n";
                 print "    <title>@title</title>\n\n";
                 $flag = 1;
                 $depth = 2;
@@ -277,7 +273,8 @@ while ( <SP> ) {
                 my $title = join('',@title);
                 print "<chapter id='$title'>\n";
                 print "    <title>@title</title>\n\n";
-                $flag = 0;
+                $idbase = $title; # used for unique ids across the book
+                $flag = 1;
                 $depth = 0;
             }
         }
