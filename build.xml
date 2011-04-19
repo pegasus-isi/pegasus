@@ -161,7 +161,7 @@
   </target>
 
 
-  <target name="doc" depends="docbook,javadoc">
+  <target name="doc" depends="docbook,javadoc,pythondoc,perldoc">
   </target>    
   
   <target name="docbook" depends="version,validate-make"
@@ -194,6 +194,27 @@
       <group title="Pegasus" packages="edu.isi.pegasus.*"/>
       <link href="http://java.sun.com/j2se/1.5.0/docs/api/"/>
     </javadoc>
+  </target>
+  
+  <target name="pythondoc" depends="version" description="Generates the python DAX documentation">
+    <delete dir="${dist.doc}/html/python"/>
+    <mkdir dir="${dist.doc}/html/python"/>
+    <exec executable="pydoc" dir="${dist.doc}/html/python" failonerror="true">
+      <arg line="-w"/>
+      <arg line="${basedir}/lib/python/Pegasus/DAX3.py"/>
+    </exec>
+    <exec executable="/bin/mv" dir="${dist.doc}/html/python" failonerror="true">
+      <arg line="DAX3.html"/>
+      <arg line="index.html"/>
+    </exec>
+  </target>
+  
+  <target name="perldoc" depends="version" description="Generates the perl DAX documentation">
+    <delete dir="${dist.doc}/html/perl"/>
+    <mkdir dir="${dist.doc}/html/perl"/>
+    <exec executable="./libexec/perl-docs" dir="${basedir}" failonerror="true">
+      <arg line="${dist.doc}/html/perl"/>
+    </exec>
   </target>
 
   <target name="validate-make">
