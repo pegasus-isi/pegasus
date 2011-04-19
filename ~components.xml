@@ -128,12 +128,18 @@
 
              </section>
              
-             &gt;section&gt;
+             <section>
              <title>Site</title>
+             </section>
+             
+             <section>
+             <title>Transformation</title>
+             </section>
              
              
       <section>
        <title>Catalog Diagram </title>
+       
       <para>Insert a diagram of catalogs in a pegasus network</para>
       
       </section>
