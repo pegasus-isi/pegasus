@@ -1,0 +1,10 @@
+/bin/usleep 500000
+/bin/usleep 450000
+/bin/usleep 400000
+/bin/usleep 350000
+/bin/usleep 300000
+/bin/usleep 250000
+/bin/usleep 200000
+/bin/usleep 150000
+/bin/usleep 100000
+/bin/usleep 50000

@@ -240,11 +240,12 @@ wait_for_child( Jobs* jobs, int* status )
     Job* j = (jobs->jobs) + slot; 
 
     /* 20110419 PM-364: new requirement */
-    printf( "[seqexec-task id=%lu, start=\"%s\", duration=%.3f, exitcode=%d, pid=%d, app=\"%s\"]\n",
+    printf( "[seqexec-task id=%lu, start=\"%s\", duration=%.3f, status=%d, line=%lu, pid=%d, app=\"%s\"]\n",
 	    j->count,
 	    iso2date( j->start, date, sizeof(date) ),
 	    (final - j->start), 
 	    *status,
+	    j->lineno, 
 	    child, 
 	    j->argv[0] ); 
     
@@ -264,6 +265,12 @@ int
 isafailure( int status )
 {
   return ( WIFEXITED(status) && success[ WEXITSTATUS(status) ] == 1 ) ? 0 : 1;
+}
+
+double 
+timespec( struct timeval* tv )
+{
+  return ( tv->tv_sec + tv->tv_usec / 1E6 ); 
 }
 
 void
@@ -392,13 +399,18 @@ main( int argc, char* argv[], char* envp[] )
       /* we are in failure mode already, skip starting new stuff */ 
     } else if ( slot < jobs.cpus ) { 
       /* there is a free slot. Spawn and continue */ 
+      Signals save; 
       Job* j = jobs.jobs + slot; 
       if ( (j->argc = interpreteArguments( cmd, &(j->argv) )) > 0 ) {
 	total++;
 	j->envp = envp; /* for now */ 
+	j->lineno = lineno; 
+
+	save_signals( &save ); 
 	if ( (j->child = fork()) == ((pid_t) -1) ) { 
 	  /* fork error, bad */
-	  perror( "fork" );
+	  showerr( "%s: fork: %d: %s\n", 
+		   application, errno, strerror(errno) ); 
 	  failure++; 
 	  job_done( j ); 
 	} else if ( j->child == ((pid_t) 0) ) {
@@ -411,6 +423,8 @@ main( int argc, char* argv[], char* envp[] )
 	  j->state = RUNNING;
 	  j->start = now( &(j->when) ); 
 	}
+	restore_signals( &save ); 
+
       } else {
 	/* error parsing args */
 	if ( debug ) 
@@ -465,18 +479,12 @@ main( int argc, char* argv[], char* envp[] )
   /* provide final statistics */
   jobs_done( &jobs ); 
   diff = now(NULL) - start;
-#if 0
-  printf( "[struct stat=\"OK\", lines=%lu, count=%lu, failed=%lu, "
-	  "duration=%.3f, start=\"%s\"]\n",
-	  lineno, total, failure, diff, isodate(when,line,sizeof(line)) );
-#else
-  printf( "[%s-summary stat=\"%s\", extra=%lu, seen=%lu, succeeded=%lu, failed=%lu, "
-	  "duration=%.3f, start=\"%s\"]\n",
+  printf( "[%s-summary stat=\"%s\", lines=%lu, tasks=%lu, succeeded=%lu, failed=%lu, "
+	  "extra=%lu, duration=%.3f, start=\"%s\"]\n",
 	  application, 
 	  ( (fail_hard && status && isafailure(status)) ? "fail" : "ok" ),
-	  extra, lineno, total-failure, failure, 
-	  diff, iso2date(start,line,sizeof(line)) ); 
-#endif
+	  lineno, total, total-failure, failure, extra,
+	  diff, iso2date(start,line,sizeof(line)) );
 
   fflush(stdout);
   exit( (fail_hard && status && isafailure(status)) ? 5 : 0 );

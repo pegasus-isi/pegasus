@@ -205,14 +205,18 @@ application was started.
 is the application wall-time duration in seconds, with millisecond
 resolution.
 .TP
-.B exitcode
+.B status
 is the
 .I raw
 exit status as returned by the 
 .I wait
-family of system calls. Typically, the exit value is found in the high
+family of system calls. Typically, the exit code is found in the high
 byte, and the signal of death in the low byte. Typically, 0 indicates
 a successful execution, and any other value a problem. 
+.TP
+.B line 
+is the line number where the task was found in the main sequence file.
+Setup- and cleanup tasks don't have this attribute. 
 .TP
 .B pid
 is the process id under which the application had run. 
@@ -237,15 +241,15 @@ mode when a failure occurred. Otherwise, it will always be the string
 .IR ok ,
 if the record is produced. 
 .TP
-.B extra
-is 0, 1 or 2, depending on the existence of setup- and cleanup jobs. 
-.TP
-.B seen
+.B lines
 is the stopping line number of the input sequence file, indicating 
 how far processing got. Up to the number of cores additional lines
 may have been parsed in case of
 .B \-f
 mode. 
+.TP
+.B tasks
+is the number of tasks processed. 
 .TP
 .B succeeded
 is the number of main sequence jobs that succeeded.
@@ -255,6 +259,9 @@ is the number of main sequence jobs that failed. The failure condition
 depends on the
 .B \-S
 settings, too. 
+.TP
+.B extra
+is 0, 1 or 2, depending on the existence of setup- and cleanup jobs. 
 .TP
 .B duration 
 is the duration in seconds, with millisecond resolution, how long 
