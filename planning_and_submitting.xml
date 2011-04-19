@@ -2,7 +2,7 @@
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
 "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <chapter id="planning_and_submitting">
-  <title>Planning and Submitting</title>
+  <title>Running Workflows</title>
 
   <section>
     <title>Mapping Refinement Steps</title>
@@ -1338,3 +1338,4 @@ ec2     amazon::s3cmd    /path/to/pegasus/bin/s3cmd    INSTALLED   INTEL32::LINU
     </section>
   </section>
 </chapter>
+

@@ -14,9 +14,51 @@
   <section>
 
    <title>Overview of Walkthrough Steps</title>
+   
+   <itemizedlist>
+      <listitem>
+        <para>Download and Install Pegasus</para>
+      </listitem>
+      
+       <listitem>
+        <para>Workflows</para>
+      </listitem>
+
+      <listitem>
+        <para>Running the Diamond Workflow (included)</para>
+        <para>Link</para>
+      </listitem>
+
+      <listitem>
+        <para>Pegasus Plan and Pegasus-run</para>
+      </listitem>
+      
+      <listitem>
+        <para>Monitoring and Debugging</para>
+      </listitem>
+      
+      <listitem>
+        <para>Plotting  and Statistics</para>
+      </listitem>
+
+      
+      <listitem>
+        <para>Environments</para>
+      </listitem>
+      
+      <listitem>
+        <para/>
+      </listitem>
+      
+      <listitem>
+        <para/>
+      </listitem>
+
+</itemizedlist>
+
   </section>
   
-  <para>List the steps that the user will go through</para>
+  <para/>
   
   <section>
    <title>Workflow Creation </title>
@@ -186,6 +228,7 @@
 
 
 </chapter>
+
 
 
 
