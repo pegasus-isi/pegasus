@@ -236,15 +236,17 @@ wait_for_child( Jobs* jobs, int* status )
 	     application, child, *status ); 
   } else { 
     /* free slot and report */ 
+    char date[32]; 
     Job* j = (jobs->jobs) + slot; 
 
-    /* say hi */ 
-    if ( debug > 1 ) { 
-      char date[32]; 
-      printf( "<job pid=\"%d\" app=\"%s\" start=\"%s\" duration=\"%.3f\" status=\"%d\"/>\n",
-	      child, j->argv[0], iso2date( j->start, date, sizeof(date) ),
-	      (final - j->start), *status ); 
-    }
+    /* 20110419 PM-364: new requirement */
+    printf( "[seqexec-task id=%lu, start=\"%s\", duration=%.3f, exitcode=%d, pid=%d, app=\"%s\"]\n",
+	    j->count,
+	    iso2date( j->start, date, sizeof(date) ),
+	    (final - j->start), 
+	    *status,
+	    child, 
+	    j->argv[0] ); 
     
     /* progress report at finish of job */ 
     if ( progress != -1 ) 
@@ -289,6 +291,7 @@ main( int argc, char* argv[], char* envp[] )
   unsigned long total = 0;
   unsigned long failure = 0;
   unsigned long lineno = 0;
+  unsigned long extra = 0; 
   time_t when;
   Jobs jobs;
   double diff, start = now(&when);
@@ -314,6 +317,7 @@ main( int argc, char* argv[], char* envp[] )
 
   /* NEW: unconditionally run a setup job */
   if ( (cmd = getenv("SEQEXEC_SETUP")) != NULL ) { 
+    extra++; 
 #ifndef USE_SYSTEM_SYSTEM
     if ( (appc = interpreteArguments( cmd, &appv )) > 0 ) {
       other = mysystem( appv, envp, "setup" ); 
@@ -353,7 +357,7 @@ main( int argc, char* argv[], char* envp[] )
       save = temp;
 
       lineno--;
-      fprintf( stderr, "# continuation line %lu\n", lineno );
+      showerr( "%s: continuation line %lu\n", application, lineno ); 
       continue;
     } else {
       /* remove line termination character(s) */
@@ -378,7 +382,7 @@ main( int argc, char* argv[], char* envp[] )
       if ( debug ) showerr( "%s: %d slot%s busy, wait()ing\n", 
 			    application, jobs.cpus, ( jobs.cpus == 1 ? "" : "s" ) ); 
       wait_for_child( &jobs, &other ); 
-      if ( errno == 0 && other ) failure++; 
+      if ( errno == 0 && isafailure(other) ) failure++; 
       massage_failure( fail_hard, other, &status );
     }
     /* post-condition: there is a free slot; slot number in "slot" */ 
@@ -431,12 +435,13 @@ main( int argc, char* argv[], char* envp[] )
     size_t n = jobs.cpus - slot; 
     showerr( "%s: %d task%s remaining\n", application, n, (n == 1 ? "" : "s" ) ); 
     wait_for_child( &jobs, &other );
-    if ( errno == 0 && other ) failure++; 
+    if ( errno == 0 && isafailure(other) ) failure++; 
     massage_failure( fail_hard, other, &status );
   }
 
   /* NEW: unconditionally run a clean-up job */
   if ( (cmd = getenv("SEQEXEC_CLEANUP")) != NULL ) { 
+    extra++; 
 #ifndef USE_SYSTEM_SYSTEM
     if ( (appc = interpreteArguments( cmd, &appv )) > 0 ) {
       other = mysystem( appv, envp, "cleanup" ); 
@@ -460,9 +465,18 @@ main( int argc, char* argv[], char* envp[] )
   /* provide final statistics */
   jobs_done( &jobs ); 
   diff = now(NULL) - start;
+#if 0
   printf( "[struct stat=\"OK\", lines=%lu, count=%lu, failed=%lu, "
 	  "duration=%.3f, start=\"%s\"]\n",
 	  lineno, total, failure, diff, isodate(when,line,sizeof(line)) );
+#else
+  printf( "[%s-summary stat=\"%s\", extra=%lu, seen=%lu, succeeded=%lu, failed=%lu, "
+	  "duration=%.3f, start=\"%s\"]\n",
+	  application, 
+	  ( (fail_hard && status && isafailure(status)) ? "fail" : "ok" ),
+	  extra, lineno, total-failure, failure, 
+	  diff, iso2date(start,line,sizeof(line)) ); 
+#endif
 
   fflush(stdout);
   exit( (fail_hard && status && isafailure(status)) ? 5 : 0 );
