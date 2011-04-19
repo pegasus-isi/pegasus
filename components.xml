@@ -138,9 +138,18 @@
              
              
              <section>
-                      <title>Catalog Diagram </title>
-       
-      <para>Insert a diagram of catalogs in a pegasus network</para>
+                              <para><figure id="">
+          <title>Catalog Diagram</title>
+          <para>The diagram below shows a typical Pegasus network with Catalogs</para>
+
+          <mediaobject>
+            <imageobject>
+              <imagedata align="center" fileref="images/"
+                         valign="middle" />
+            </imageobject>
+          </mediaobject>
+        </figure></para>
+
       
       </section>
       <section>

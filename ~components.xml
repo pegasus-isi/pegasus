@@ -124,12 +124,12 @@
       <para> There are three catalogs in the Pegasus WMS</para>
       
              <section>
-             <title>Replica</title>
+                      <title>Replica</title>
 
              </section>
              
              <section>
-             <title>Site</title>
+                      <title>Site</title>
              </section>
              
              <section>
@@ -137,8 +137,8 @@
              </section>
              
              
-      <section>
-       <title>Catalog Diagram </title>
+             <section>
+                      <title>Catalog Diagram </title>
        
       <para>Insert a diagram of catalogs in a pegasus network</para>
       
@@ -200,6 +200,7 @@
   which parameters.</para>
        </section>
 </chapter>
+
 
 
 
