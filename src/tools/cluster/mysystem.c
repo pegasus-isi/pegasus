@@ -152,9 +152,9 @@ mysystem( char* argv[], char* envp[], const char* special )
   /* say hi */
   diff = now(&then) - start;
   if ( debug > 1 ) {
-    printf( "<job app=\"%s\" start=\"%s\" duration=\"%.3f\" status=\"%d\"/>\n",
-	    special ? special : argv[0], 
-	    isodate(when,date,sizeof(date)), diff, status );
+    printf( "<job pid=\"%d\" app=\"%s\" start=\"%s\" duration=\"%.3f\" status=\"%d\"/>\n",
+	    child, special ? special : argv[0], 
+	    iso2date(start,date,sizeof(date)), diff, status );
   }
 
   /* progress report finish */

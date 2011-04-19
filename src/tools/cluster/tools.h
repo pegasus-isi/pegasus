@@ -51,4 +51,14 @@ isodate( time_t seconds, char* buffer, size_t size );
  * returns: pointer to start of buffer for convenience. 
  */
 
+extern
+char*
+iso2date( double seconds_wf, char* buffer, size_t size );
+/* purpose: formats ISO 8601 timestamp into given buffer (simplified)
+ * paramtr: seconds_wf (IN): time stamp with fractional seconds (millis)
+ *          buffer (OUT): where to put the results
+ *          size (IN): capacity of buffer
+ * returns: pointer to start of buffer for convenience. 
+ */
+
 #endif /* _TOOLS_H */

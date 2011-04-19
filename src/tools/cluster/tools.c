@@ -13,6 +13,7 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
+#include <math.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/time.h>
@@ -68,6 +69,32 @@ isodate( time_t seconds, char* buffer, size_t size )
     int minutes = distance < 0 ? -distance % 60 : distance % 60;
     size_t len = strftime( buffer, size, "%Y-%m-%dT%H:%M:%S", &local );
     snprintf( buffer+len, size-len, "%+03d:%02d", hours, minutes );
+  }
+  return buffer;
+}
+
+char*
+iso2date( double seconds_wf, char* buffer, size_t size )
+/* purpose: formats ISO 8601 timestamp into given buffer (simplified)
+ * paramtr: seconds_wf (IN): time stamp with fractional seconds (millis)
+ *          buffer (OUT): where to put the results
+ *          size (IN): capacity of buffer
+ * returns: pointer to start of buffer for convenience. 
+ */
+{
+  char millis[8]; 
+  double integral, fractional = modf(seconds_wf,&integral); 
+  time_t seconds = (time_t) integral; 
+  struct tm zulu = *gmtime(&seconds);
+  struct tm local = *localtime(&seconds);
+  zulu.tm_isdst = local.tm_isdst;
+  snprintf( millis, sizeof(millis), "%.3f", fractional ); 
+  {
+    time_t distance = (seconds - mktime(&zulu)) / 60;
+    int hours = distance / 60;
+    int minutes = distance < 0 ? -distance % 60 : distance % 60;
+    size_t len = strftime( buffer, size, "%Y-%m-%dT%H:%M:%S", &local );
+    snprintf( buffer+len, size-len, "%s%+03d:%02d", millis+1, hours, minutes );
   }
   return buffer;
 }

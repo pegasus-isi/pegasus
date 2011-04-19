@@ -237,12 +237,12 @@ wait_for_child( Jobs* jobs, int* status )
   } else { 
     /* free slot and report */ 
     Job* j = (jobs->jobs) + slot; 
-    
+
     /* say hi */ 
     if ( debug > 1 ) { 
       char date[32]; 
       printf( "<job pid=\"%d\" app=\"%s\" start=\"%s\" duration=\"%.3f\" status=\"%d\"/>\n",
-	      child, j->argv[0], isodate( j->when, date, sizeof(date) ),
+	      child, j->argv[0], iso2date( j->start, date, sizeof(date) ),
 	      (final - j->start), *status ); 
     }
     
@@ -262,6 +262,18 @@ int
 isafailure( int status )
 {
   return ( WIFEXITED(status) && success[ WEXITSTATUS(status) ] == 1 ) ? 0 : 1;
+}
+
+void
+massage_failure( int fail_hard, int current_ec, int* collect_ec )
+{
+  if ( fail_hard ) { 
+    /* only propagate first failure in hard-fail mode */ 
+    if ( ! ( *collect_ec && isafailure(*collect_ec) ) ) *collect_ec = current_ec; 
+  } else {
+    /* always retain last exit code in no-hard-fail mode */ 
+    *collect_ec = current_ec; 
+  }
 }
 
 int
@@ -365,12 +377,16 @@ main( int argc, char* argv[], char* envp[] )
       /* wait for any child to finish */
       if ( debug ) showerr( "%s: %d slot%s busy, wait()ing\n", 
 			    application, jobs.cpus, ( jobs.cpus == 1 ? "" : "s" ) ); 
-      wait_for_child( &jobs, &status ); 
+      wait_for_child( &jobs, &other ); 
+      if ( errno == 0 && other ) failure++; 
+      massage_failure( fail_hard, other, &status );
     }
     /* post-condition: there is a free slot; slot number in "slot" */ 
 
     /* found free slot */ 
-    if ( slot < jobs.cpus ) { 
+    if ( fail_hard && status && isafailure(status) ) {
+      /* we are in failure mode already, skip starting new stuff */ 
+    } else if ( slot < jobs.cpus ) { 
       /* there is a free slot. Spawn and continue */ 
       Job* j = jobs.jobs + slot; 
       if ( (j->argc = interpreteArguments( cmd, &(j->argv) )) > 0 ) {
@@ -414,9 +430,10 @@ main( int argc, char* argv[], char* envp[] )
     /* wait for any child to finish */
     size_t n = jobs.cpus - slot; 
     showerr( "%s: %d task%s remaining\n", application, n, (n == 1 ? "" : "s" ) ); 
-    wait_for_child( &jobs, &status ); 
+    wait_for_child( &jobs, &other );
+    if ( errno == 0 && other ) failure++; 
+    massage_failure( fail_hard, other, &status );
   }
-
 
   /* NEW: unconditionally run a clean-up job */
   if ( (cmd = getenv("SEQEXEC_CLEANUP")) != NULL ) { 
