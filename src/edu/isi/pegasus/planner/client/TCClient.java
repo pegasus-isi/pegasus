@@ -91,6 +91,10 @@ public class TCClient extends Executable{
     public TCClient() {
         super();
     }
+    
+    public void initialize(String[] opts){
+    	super.initialize(opts);
+    }
 
     public void loadProperties() {
     }
@@ -111,7 +115,7 @@ public class TCClient extends Executable{
 
     
     public LongOpt[] generateValidOptions() {
-        LongOpt[] longopts = new LongOpt[15 ];
+        LongOpt[] longopts = new LongOpt[16 ];
         longopts[ 0 ] = new LongOpt( "add", LongOpt.NO_ARGUMENT, null, 'a' );
         longopts[ 1 ] = new LongOpt( "delete", LongOpt.NO_ARGUMENT, null, 'd' );
         longopts[ 2 ] = new LongOpt( "query", LongOpt.NO_ARGUMENT, null, 'q' );
@@ -136,6 +140,8 @@ public class TCClient extends Executable{
             'x' );
         longopts[ 14 ] = new LongOpt( "oldformat", LongOpt.NO_ARGUMENT, null,
         	'o' );
+        longopts[ 15 ] = new LongOpt( "conf", LongOpt.REQUIRED_ARGUMENT, null,
+    		'c' );
         return longopts;
     }
 
@@ -144,7 +150,8 @@ public class TCClient extends Executable{
      * @param opts String[] The arguments obtained from the command line.
      */
 
-    public void executeCommand( String[] opts ) {
+    public void executeCommand() {
+    	String[] opts = getCommandLineOptions();
     	if(opts.length == 0){
     		mLogger.log("Please provide the required options.",LogManager.ERROR_MESSAGE_LEVEL);
             this.printShortVersion();
@@ -152,10 +159,9 @@ public class TCClient extends Executable{
     	}
         LongOpt[] longOptions = generateValidOptions();
         Getopt g = new Getopt( "TCClient", opts,
-            "adqhvxoVLPERTBSs:t:l:p:r:e:f:",
+            "adqhvxoVLPERTBSs:t:l:p:r:e:f:c:",
             longOptions, false );
         int option = 0;
-        int noOfOptions = 0;
         int level = 0;
         while ( ( option = g.getopt() ) != -1 ) {
             switch ( option ) {
@@ -235,9 +241,12 @@ public class TCClient extends Executable{
                     if(isxml){
                     	throw new IllegalArgumentException("Error: Illegal Argument passed. Options -x and -o cannot be set at the same time");
                     }
-                    break;    
+                    break;
+                case 'c':
+                	//do nothing
+                	break;
                 default:
-                    mLogger.log( "Unrecognized Option : " + ( char ) option,
+                    mLogger.log( "Unrecognized Option : " + (char)g.getOptopt(),
                         LogManager.FATAL_MESSAGE_LEVEL );
                     printShortVersion();
                     System.exit( 1 );
@@ -376,6 +385,7 @@ public class TCClient extends Executable{
             "\n" +
             "\n --xml       | -x  Generates the output in the xml format " +
             "\n --oldformat | -o  Generates the output in the old single line format " +
+            "\n --conf      | -c  path to  property file" +
             "\n --verbose   | -v  increases the verbosity level" +
             "\n --version   | -V  Displays the version number of the Griphyn Virtual Data System software " +
             "\n --help      | -h  Generates this help" +
@@ -420,7 +430,8 @@ public class TCClient extends Executable{
 
     public static void main( String[] args ) throws Exception {
         TCClient client = new TCClient();
-        client.executeCommand( args );
+        client.initialize(args);
+        client.executeCommand( );
     }
 
 }
