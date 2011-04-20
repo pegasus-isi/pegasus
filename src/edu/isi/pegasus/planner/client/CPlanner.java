@@ -187,7 +187,12 @@ public class CPlanner extends Executable{
      */
     public CPlanner( LogManager logger ){
         super( logger );
-        mLogMsg = new String();
+    }
+    
+    
+    public void initialize(String [] opts , char confChar){
+    	super.initialize(opts , confChar);
+    	mLogMsg = new String();
         mVersion = Version.instance().toString();
         mNumFormatter = new DecimalFormat( "0000" );
 
@@ -219,7 +224,8 @@ public class CPlanner extends Executable{
         double execTime  = -1;
 
         try{
-            cPlanner.executeCommand( args );
+        	cPlanner.initialize(args , '6');
+            cPlanner.executeCommand();
         }
         catch ( FactoryException fe){
             cPlanner.log( fe.convertException() , LogManager.FATAL_MESSAGE_LEVEL);
@@ -273,8 +279,8 @@ public class CPlanner extends Executable{
      *
      * @param args the command line options.
      */
-    public void executeCommand( String[] args ) {
-        executeCommand( parseCommandLineArguments( args ) );
+    public void executeCommand( ) {
+        executeCommand( parseCommandLineArguments( getCommandLineOptions() ) );
     }
 
     /**
@@ -706,7 +712,7 @@ public class CPlanner extends Executable{
         LongOpt[] longOptions = generateValidOptions();
 
         Getopt g = new Getopt("pegasus-plan",args,
-                              "vqhfSnzpVr::aD:d:s:o:P:c:C:b:g:2:j:3:F:X:4:",
+                              "vqhfSnzpVr::aD:d:s:o:P:c:C:b:g:2:j:3:F:X:4:6:",
                               longOptions,false);
         g.setOpterr(false);
 
@@ -773,6 +779,10 @@ public class CPlanner extends Executable{
                     options.setForce(true);
                     break;
 
+                case '6':// conf
+                	//do nothing
+                	break;
+                
                 case 'F'://forward
                     options.addToForwardOptions( g.getOptarg() );
                     break;
@@ -845,7 +855,7 @@ public class CPlanner extends Executable{
                 default: //same as help
                     printShortVersion();
                     throw new RuntimeException("Incorrect option or option usage " +
-                                               option);
+                    		(char)g.getOptopt());
 
             }
         }
@@ -1019,7 +1029,7 @@ public class CPlanner extends Executable{
      * options
      */
     public LongOpt[] generateValidOptions(){
-        LongOpt[] longopts = new LongOpt[29];
+        LongOpt[] longopts = new LongOpt[30];
 
         longopts[0]   = new LongOpt( "dir", LongOpt.REQUIRED_ARGUMENT, null, 'D' );
         longopts[1]   = new LongOpt( "dax", LongOpt.REQUIRED_ARGUMENT, null, 'd' );
@@ -1032,28 +1042,29 @@ public class CPlanner extends Executable{
         longopts[8]   = new LongOpt( "version", LongOpt.NO_ARGUMENT, null, 'V' );
         longopts[9]   = new LongOpt( "randomdir", LongOpt.OPTIONAL_ARGUMENT, null, 'r' );
         longopts[10]  = new LongOpt( "authenticate", LongOpt.NO_ARGUMENT, null, 'a' );
+        longopts[11]  = new LongOpt( "conf", LongOpt.REQUIRED_ARGUMENT, null, '6' );
         //deferred planning options
-        longopts[11]  = new LongOpt( "pdax", LongOpt.REQUIRED_ARGUMENT, null, 'P' );
-        longopts[12]  = new LongOpt( "cache", LongOpt.REQUIRED_ARGUMENT, null, 'c' );
-        longopts[13]  = new LongOpt( "megadag", LongOpt.REQUIRED_ARGUMENT, null, 'm' );
+        longopts[12]  = new LongOpt( "pdax", LongOpt.REQUIRED_ARGUMENT, null, 'P' );
+        longopts[13]  = new LongOpt( "cache", LongOpt.REQUIRED_ARGUMENT, null, 'c' );
+        longopts[14]  = new LongOpt( "megadag", LongOpt.REQUIRED_ARGUMENT, null, 'm' );
         //collapsing for mpi
-        longopts[14]  = new LongOpt( "cluster", LongOpt.REQUIRED_ARGUMENT, null, 'C' );
+        longopts[15]  = new LongOpt( "cluster", LongOpt.REQUIRED_ARGUMENT, null, 'C' );
         //more deferred planning stuff
-        longopts[15]  = new LongOpt( "basename", LongOpt.REQUIRED_ARGUMENT, null, 'b' );
-        longopts[16]  = new LongOpt( "monitor", LongOpt.NO_ARGUMENT, null , 1 );
-        longopts[17]  = new LongOpt( "nocleanup", LongOpt.NO_ARGUMENT, null, 'n' );
-        longopts[18]  = new LongOpt( "group",   LongOpt.REQUIRED_ARGUMENT, null, 'g' );
-        longopts[19]  = new LongOpt( "deferred", LongOpt.NO_ARGUMENT, null, 'z');
-        longopts[20]  = new LongOpt( "relative-dir", LongOpt.REQUIRED_ARGUMENT, null, '2' );
-        longopts[21]  = new LongOpt( "pap", LongOpt.NO_ARGUMENT, null, 'p' );
-        longopts[22]  = new LongOpt( "job-prefix", LongOpt.REQUIRED_ARGUMENT, null, 'j' );
-        longopts[23]  = new LongOpt( "rescue", LongOpt.REQUIRED_ARGUMENT, null, '3');
-        longopts[24]  = new LongOpt( "forward", LongOpt.REQUIRED_ARGUMENT, null, 'F');
-        longopts[25]  = new LongOpt( "X", LongOpt.REQUIRED_ARGUMENT, null, 'X' );
-        longopts[26]  = new LongOpt( "relative-submit-dir", LongOpt.REQUIRED_ARGUMENT, null, '4' );
-        longopts[27]  = new LongOpt( "quiet", LongOpt.NO_ARGUMENT, null, 'q' );
-        longopts[28]  = new LongOpt( "inherited-rc-files", LongOpt.REQUIRED_ARGUMENT, null, '5' );
-
+        longopts[16]  = new LongOpt( "basename", LongOpt.REQUIRED_ARGUMENT, null, 'b' );
+        longopts[17]  = new LongOpt( "monitor", LongOpt.NO_ARGUMENT, null , 1 );
+        longopts[18]  = new LongOpt( "nocleanup", LongOpt.NO_ARGUMENT, null, 'n' );
+        longopts[19]  = new LongOpt( "group",   LongOpt.REQUIRED_ARGUMENT, null, 'g' );
+        longopts[20]  = new LongOpt( "deferred", LongOpt.NO_ARGUMENT, null, 'z');
+        longopts[21]  = new LongOpt( "relative-dir", LongOpt.REQUIRED_ARGUMENT, null, '2' );
+        longopts[22]  = new LongOpt( "pap", LongOpt.NO_ARGUMENT, null, 'p' );
+        longopts[23]  = new LongOpt( "job-prefix", LongOpt.REQUIRED_ARGUMENT, null, 'j' );
+        longopts[24]  = new LongOpt( "rescue", LongOpt.REQUIRED_ARGUMENT, null, '3');
+        longopts[25]  = new LongOpt( "forward", LongOpt.REQUIRED_ARGUMENT, null, 'F');
+        longopts[26]  = new LongOpt( "X", LongOpt.REQUIRED_ARGUMENT, null, 'X' );
+        longopts[27]  = new LongOpt( "relative-submit-dir", LongOpt.REQUIRED_ARGUMENT, null, '4' );
+        longopts[28]  = new LongOpt( "quiet", LongOpt.NO_ARGUMENT, null, 'q' );
+        longopts[29]  = new LongOpt( "inherited-rc-files", LongOpt.REQUIRED_ARGUMENT, null, '5' );
+        
         return longopts;
     }
 
@@ -1071,7 +1082,7 @@ public class CPlanner extends Executable{
           "\n [ --relative-dir <relative directory to base directory> ] [ --relative-submit-dir <relative submit directory to base directory> ]" +
           "\n [ --inherited-rc-files f1[,f2[..]]] " +
           "\n [-g <vogroup>] [-o <output site>]  [-r[dir name]]  [-F option[=value] ] " +
-          "\n [-S] [-n]  [-v] [-q] [-V] [-X[non standard jvm option] [-h]";
+          "\n [-S] [-n] [--conf <path to property file>] [-v] [-q] [-V] [-X[non standard jvm option] [-h]";
 
         System.out.println(text);
     }
@@ -1089,7 +1100,7 @@ public class CPlanner extends Executable{
            "\n Usage: pegasus-plan [-Dprop  [..]] --dax|--pdax <file> [--sites <execution sites>] " +
            "\n [--authenticate] [--basename prefix] [--cache f1[,f2[..]] [--cluster t1[,t2[..]] " +
            "\n [--dir <dir for o/p files>] [--force] [--forward option=[value] ] [--group vogroup] [--nocleanup] " +
-           "\n [--output output site] [--randomdir=[dir name]] [--verbose] [--version][--help] " +
+           "\n [--output output site] [--randomdir=[dir name]] [--conf <path to property file>] [--verbose] [--version][--help] " +
            "\n" +
            "\n Mandatory Options " +
            "\n -d |-P fn "+
@@ -1117,6 +1128,7 @@ public class CPlanner extends Executable{
            "\n                    can optionally specify the basename of the remote directories" +
            "\n -n |--nocleanup    generates only the separate cleanup workflow. Does not add cleanup nodes to the concrete workflow." +
            "\n -S |--submit       submit the executable workflow generated" +
+           "\n --conf             path to  property file" +
            "\n -v |--verbose      increases the verbosity of messages about what is going on" +
            "\n -q |--quiet        decreases the verbosity of messages about what is going on" +
            "\n -V |--version      displays the version of the Pegasus Workflow Management System" +
