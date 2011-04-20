@@ -726,9 +726,17 @@ public class Kickstart implements GridStart {
         //in the Condor namespace and not printed to the
         //file so that they can be overriden if desired
         //later through profiles and key transfer_executable
+
+        // the arguments are no longer set as condor profiles
+        // they are now set to the corresponding profiles in
+        // the Condor Code Generator only.
+/*
         construct(job, "executable", gridStartPath );
         construct(job, "arguments", gridStartArgs.toString());
-
+*/
+        job.setArguments( gridStartArgs.toString() );
+        job.setRemoteExecutable( gridStartPath );
+        
         //all finished successfully
         return true;
     }

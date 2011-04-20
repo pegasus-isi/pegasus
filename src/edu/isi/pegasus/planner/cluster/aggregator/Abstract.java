@@ -395,8 +395,17 @@ public abstract class Abstract implements JobAggregator {
                 else{
                     //write out the argument string to the
                     //stdin file for the fat job
+
+
+                    // the arguments are no longer set as condor profiles
+                    // they are now set to the corresponding profiles in
+                    // the Condor Code Generator only.
+/*
                     writer.write( constitutentJob.condorVariables.get("executable")  + " " +
                                  constitutentJob.condorVariables.get("arguments") + "\n");
+ */
+                     writer.write( constitutentJob.getRemoteExecutable()  + " " +
+                                   constitutentJob.getArguments() + "\n");
                 }
             }
 

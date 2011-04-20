@@ -185,7 +185,14 @@ public class NoGridStart implements GridStart {
     public  AggregatedJob enable(AggregatedJob aggJob,Collection jobs){
         //sanity check for the arguments
         if( aggJob.strargs != null && aggJob.strargs.length() > 0){
-            construct( aggJob, "arguments", aggJob.strargs);
+
+            //construct( aggJob, "arguments", aggJob.strargs);
+
+           // the arguments are no longer set as condor profiles
+           // they are now set to the corresponding profiles in
+           // the Condor Code Generator only.
+           aggJob.setArguments( aggJob.strargs );
+
         }
 
         //we do not want the jobs being clustered to be enabled
@@ -299,17 +306,22 @@ public class NoGridStart implements GridStart {
         String submitDir = mSubmitDir + mSeparator;
 //        String submitDir = getSubmitDirectory( mSubmitDir , job) + mSeparator;
 
+        
+        // the arguments are no longer set as condor profiles
+        // they are now set to the corresponding profiles in
+        // the Condor Code Generator only.
+        job.setRemoteExecutable( handleTransferOfExecutable( job ) );
+/*
         //the executable path and arguments are put
         //in the Condor namespace and not printed to the
         //file so that they can be overriden if desired
         //later through profiles and key transfer_executable
         construct(job,"executable", handleTransferOfExecutable( job ) );
-
         //sanity check for the arguments
         if(job.strargs != null && job.strargs.length() > 0){
             construct(job, "arguments", job.strargs);
         }
-
+*/
         // handle stdin
         if (job.stdIn.length() > 0) {
             construct(job,"input",submitDir + job.stdIn);

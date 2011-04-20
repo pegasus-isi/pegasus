@@ -48,6 +48,10 @@ public class Condor extends Namespace{
      */
     public static final String ARGUMENTS_KEY = "arguments";
 
+    /**
+     * The name of the key that denotes the executable of the job.
+     */
+    public static final String EXECUTABLE_KEY = "executable";
 
     /**
      * The name of the key that denotes the requirements of the job.

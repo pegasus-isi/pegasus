@@ -345,8 +345,12 @@ public class Shell extends Abstract {
         //gridstart modules right now store the executable
         //and arguments as condor profiles. Should be fixed.
         //This setting should happen only in Condor Generator
+/*
         String executable = (String) job.condorVariables.get( "executable" );
         String arguments = (String)job.condorVariables.get( Condor.ARGUMENTS_KEY );
+ */
+        String executable = job.getRemoteExecutable();
+        String arguments = job.getArguments();
         arguments = ( arguments == null ) ? "" : arguments;
 
         String directory = job.runInWorkDirectory() ? scratchDirectory : submitDirectory;

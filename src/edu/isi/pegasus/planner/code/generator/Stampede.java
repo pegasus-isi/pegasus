@@ -273,12 +273,10 @@ public class Stampede implements CodeGenerator {
                                             (String)job.dagmanVariables.get( Dagman.RETRY_KEY ):
                                             "0" );
 
-            //to be changed???? wont be kickstart arguments?
-//            mLogFormatter.add( "executable" , job.getRemoteExecutable() );
-//            mLogFormatter.add( "arguments" , job.getArguments() );
-        mLogFormatter.add( "executable", (String)job.condorVariables.get( "executable" ) );
-        mLogFormatter.add( "arguments", (String)job.condorVariables.get( "arguments" ) );
-            
+           
+        mLogFormatter.add( "executable" , job.getRemoteExecutable() );
+        mLogFormatter.add( "arguments" , job.getArguments() );
+    
         //determine count of jobs
         int taskCount = getTaskCount( job );
 

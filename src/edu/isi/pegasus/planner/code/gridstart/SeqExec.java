@@ -449,9 +449,18 @@ public class SeqExec implements GridStart {
 
             //construct path to seqexec file
             TransformationCatalogEntry entry = getSeqExecTransformationCatalogEntry( job.getSiteHandle() );
+
+            // the arguments are no longer set as condor profiles
+            // they are now set to the corresponding profiles in
+            // the Condor Code Generator only.
+            job.setRemoteExecutable( entry.getPhysicalTransformation() );
+            //we want seqexec to fail hard on first error (non-zero exit code or signal death)
+            job.setArguments( " -f " );
+/*
             construct( job, "executable", entry.getPhysicalTransformation() );
             //we want seqexec to fail hard on first error (non-zero exit code or signal death)
             construct( job, "arguments", " -f " );
+ */
         }
         //for all auxillary jobs let kickstart figure what to do
         else{
@@ -498,7 +507,10 @@ public class SeqExec implements GridStart {
             //the clustering module did not add the -f option
             //we add ourselves here
             //we want seqexec to fail hard on first error (non-zero exit code or signal death)
-            construct(job, "arguments", job.getArguments() + " -f ");
+
+
+//            construct(job, "arguments", job.getArguments() + " -f ");
+            job.setArguments( job.getArguments() + " -f " );
         }
 
         this.enableAndGenerateSeqexecInputFile( job, isGlobusJob );
@@ -1064,7 +1076,13 @@ public class SeqExec implements GridStart {
 
             //write out the main command that needs to be invoked
             //add the kickstart -H option
-            writer.println( job.condorVariables.get( "executable" ) + " -H " + job.condorVariables.get( "arguments" ) );
+
+            // the arguments are no longer set as condor profiles
+            // they are now set to the corresponding profiles in
+            // the Condor Code Generator only.
+ //            writer.println( job.condorVariables.get( "executable" ) + " -H " + job.condorVariables.get( "arguments" ) );
+            writer.println( job.getRemoteExecutable() + " -H " + job.getArguments() );
+
             writer.flush();
             
             //retrieve name of seqxec postjob file
@@ -1165,7 +1183,12 @@ public class SeqExec implements GridStart {
          if( changeToDirectory != null ){
              result.append(  " -w " ).append( changeToDirectory );
          }
-         result.append( job.condorVariables.get( "arguments" ) );
+
+         // the arguments are no longer set as condor profiles
+         // they are now set to the corresponding profiles in
+         // the Condor Code Generator only.
+         result.append( job.getArguments() );
+//         result.append( job.condorVariables.get( "arguments" ) );
 
          return result.toString();
      }

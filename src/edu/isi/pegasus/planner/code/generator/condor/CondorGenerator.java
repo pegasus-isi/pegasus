@@ -1361,31 +1361,39 @@ public class CondorGenerator extends Abstract {
         cvar.construct("submit_event_user_notes","pool:" + job.executionPool);
 
 
-        //on the basis of the
-        //transfer_executable key do some magic
-// No longer handled here. Handled in Kickstart.java
-// Karan Vahi January 16, 2008
-//        handleTransferOfExecutable(job);
+        
 
         //correctly quote the arguments according to
         //Condor Quoting Rules.
-        String args = (String) job.condorVariables.get("arguments");
-        if( mProps.useCondorQuotingForArguments() && args != null){
-            try {
-                mLogger.log("Unquoted arguments are " + args,
-                            LogManager.DEBUG_MESSAGE_LEVEL);
-                //insert a comment for the old args
-                //job.condorVariables.construct("#arguments",args);
-                args = CondorQuoteParser.quote(args, true);
-                job.condorVariables.construct("arguments", args);
-                mLogger.log("Quoted arguments are " + args,
-                            LogManager.DEBUG_MESSAGE_LEVEL);
-            }
-            catch (CondorQuoteParserException e) {
-                throw new RuntimeException("CondorQuoting Problem " +
+ //       String args = (String) job.condorVariables.get("arguments");
+        String args = job.getArguments();
+
+        //put the arguments as appropriate condor profile
+        if( args != null && args.length() > 0){
+            if( mProps.useCondorQuotingForArguments() && args != null){
+                try {
+                    mLogger.log("Unquoted arguments are " + args,
+                                 LogManager.DEBUG_MESSAGE_LEVEL);
+
+                    //insert a comment for the old args
+                    //job.condorVariables.construct("#arguments",args);
+                    args = CondorQuoteParser.quote(args, true);
+                    job.condorVariables.construct( Condor.ARGUMENTS_KEY, args);
+                    mLogger.log("Quoted arguments are " + args,
+                                  LogManager.DEBUG_MESSAGE_LEVEL);
+                }
+                catch (CondorQuoteParserException e) {
+                    throw new RuntimeException("CondorQuoting Problem " +
                                            e.getMessage());
+                }
+            }
+            else{
+                //add without quoting
+                job.condorVariables.construct( Condor.ARGUMENTS_KEY, args);
             }
         }
+        //set the remote executable as condor executable
+        job.condorVariables.construct( Condor.EXECUTABLE_KEY, job.getRemoteExecutable() );
 
 
         return;

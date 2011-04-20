@@ -115,11 +115,20 @@ public class DCLauncher
         }
        
        arguments.append( job.getRemoteExecutable() ).append( " " ).append( job.getArguments() );
-       construct( job, "arguments", arguments.toString() );
        //the executable for the job is now the DC launcher
        job.setRemoteExecutable( gridStartPath );
-       construct( job, "executable", gridStartPath );
+  
+   
+       // the arguments are no longer set as condor profiles
+       // they are now set to the corresponding profiles in
+       // the Condor Code Generator only.
+       job.setArguments( arguments.toString() );
+       job.setRemoteExecutable( gridStartPath );
 
+/*
+       construct( job, "arguments", arguments.toString() );
+       construct( job, "executable", gridStartPath );
+*/
        return result;
    }
 
