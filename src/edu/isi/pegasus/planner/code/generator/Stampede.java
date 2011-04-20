@@ -157,6 +157,14 @@ public class Stampede implements CodeGenerator {
                 generateEventsForExecutableJob( writer, dag, job );
             }
 
+            //monte wants the task map events generated separately
+            //en mass. Lets iterate again
+            for( Iterator<Job> it = dag.jobIterator(); it.hasNext(); ){
+                Job job = it.next();
+                generateTaskMapEvents( writer, dag, job );
+            }
+
+
             //write out the edge informatiom for the workflow
             for ( Iterator<PCRelation> it =  dag.dagInfo.relations.iterator(); it.hasNext(); ){
                 PCRelation relation = it.next();
@@ -168,6 +176,8 @@ public class Stampede implements CodeGenerator {
                 writer.println( mLogFormatter.createLogMessage() );
                 mLogFormatter.popEvent();
             }
+
+
         }
         else{
             //events generation for abstract workflow
@@ -276,6 +286,20 @@ public class Stampede implements CodeGenerator {
         writer.println( mLogFormatter.createLogMessage() );
         mLogFormatter.popEvent();
 
+    }
+    
+    /**
+     * Generates the task.map events that link the jobs in the DAX with the
+     * jobs in the executable workflow 
+     * 
+     * 
+     * @param writer  the writer stream to write the events too
+     * @param workflow  the  workflow.
+     * @param job     the job for which to generate the events.
+     */
+    protected void generateTaskMapEvents(PrintWriter writer, ADag dag, Job job) {
+
+        String wfuuid = dag.getWorkflowUUID();
         //add task map events
         //only compute jobs/ dax and dag jobs have task events associated
         if( job.getJobType() == Job.COMPUTE_JOB ||
@@ -285,21 +309,21 @@ public class Stampede implements CodeGenerator {
 
             if( job instanceof AggregatedJob ){
                 AggregatedJob j = (AggregatedJob)job;
-                
+
                 //go through the job constituents and task.map events
                 for( Iterator<Job> cit = j.constituentJobsIterator(); cit.hasNext(); ){
                     Job constituentJob = cit.next();
                     if( constituentJob.getJobType() == Job.COMPUTE_JOB ){
                         //create task.map event
                         //to the job in the DAX
-                        mLogFormatter.addEvent( "workflow.task.map", LoggingKeys.JOB_ID, job.getID() );
-                            
+                        mLogFormatter.addEvent( "task.map", LoggingKeys.JOB_ID, job.getID() );
+
                         //to be retrieved
                         mLogFormatter.add( "wf.id" , wfuuid );
                         mLogFormatter.add( "exec_job.id", job.getID() );
                         mLogFormatter.add( "abs_task.id", constituentJob.getLogicalID() );
                         writer.println( mLogFormatter.createLogMessage() );
-                   
+
                         //writer.write( "\n" );
                         mLogFormatter.popEvent();
 
@@ -308,17 +332,17 @@ public class Stampede implements CodeGenerator {
                         //for time being lets warn
                         mLogger.log( "Constituent Job " + constituentJob.getName() + " not of type compute for clustered job " + j.getName(),
                                       LogManager.WARNING_MESSAGE_LEVEL );
-                      
+
                     }
-                    
+
                 }
-                
+
             }
             else{
                 //create a single task.map event that maps compute job
                 //to the job in the DAX
                 mLogFormatter.addEvent( "task.map", "exec_job.id", job.getID() );
-                
+
                 //to be retrieved
                 mLogFormatter.add( "wf.id" , wfuuid );
                 mLogFormatter.add( "abs_task.id", job.getLogicalID() );
@@ -327,9 +351,9 @@ public class Stampede implements CodeGenerator {
                 mLogFormatter.popEvent();
             }
         }
-        
     }
-    
+
+
     /**
      * Method not implemented. Throws an exception.
      * 
@@ -384,6 +408,7 @@ public class Stampede implements CodeGenerator {
     public void reset() throws CodeGeneratorException {
         throw new UnsupportedOperationException("Not supported yet.");
     }
+
 
     
 }
