@@ -195,6 +195,148 @@ $ tar xvf Pegasus-3.0.1-Debian-6-x86.vbox.tar</emphasis></programlisting>
 
     </section>
 
+    <section>
+     <title>Planning and Executing Workflows</title>
+     <para>In this chapter you will be introduced to planning and executing a
+    workflow through Pegasus WMS locally. You will then plan and execute a
+    larger Montage workflow on the GRID.</para>
+
+    <para>When the virtual machine starts , it will automatically log you in
+    as user <emphasis role="bold">tutorial</emphasis> . The password for this
+    account is <emphasis role="bold">pegasus</emphasis>.</para>
+
+    <para>After logging on, start a terminal. There is a shortcut on the
+    desktop for the terminal.</para>
+
+    <programlisting><command>$ </command><emphasis role="bold">tutorial@pegasus-vm:$</emphasis><emphasis
+        role="bold"> pwd</emphasis>
+
+/home/tutorial
+</programlisting>
+
+    <para>In general, to run workflows on the Grid you will need to obtain
+    Grid Credentials. The VM already has a user certificate installed for the
+    pegasus user. To generate the proxy ( grid credentials ) run the <emphasis
+    role="bold">grid-proxy-init</emphasis> command.</para>
+
+    <programlisting><command>$ [pegasus@pegasus ~]$ grid-proxy-init
+
+</command><computeroutput>Your identity: /O=edu/OU=ISI/OU=isi.edu/CN=Tutorial User
+Creating proxy ............................................. Done
+Your proxy is valid until: Thu Dec 23 22:41:36 2010
+
+
+</computeroutput></programlisting>
+
+    <para>All the exercises in this Chapter will be run from the
+    $HOME/pegasus-wms/ directory. All the files that are required reside in
+    this directory</para>
+
+    <programlisting><command>$ cd $HOME/pegasus-wms</command></programlisting>
+
+    <para>Files for the exercise are stored in subdirectories:</para>
+
+    <programlisting><command>$ ls</command><computeroutput><computeroutput>
+
+config  dax</computeroutput></computeroutput></programlisting>
+
+    <para>You may also see some other files here.</para>
+
+    <section>
+      <title>Creating a DIAMOND DAX</title>
+
+      <para>We generate a 4 node diamond dax. There is a small piece of java
+      code that uses the DAX API to generate the DAX. Open the file
+      $HOME/pegasus-wms/dax/CreateDAX.java in a file editor:</para>
+
+      <programlisting><command>$ vi dax/CreateDAX.java</command></programlisting>
+
+      <para>There is a function Diamond( String site_handle, String
+      pegasus_location ) that constructs the DAX. Towards the end of the
+      function there is some commented out code.</para>
+
+      <programlisting> // Add analyze job
+//To be uncommented for exercise 2.1
+
+        Job j4 = new Job("j4", "pegasus", "analyze", "4.0");
+        j4.addArgument("-a analyze -T 60 -i ").addArgument(fc1);
+        j4.addArgument(" ").addArgument(fc2);
+        j4.addArgument("-o ").addArgument(fd);
+        j4.uses(fc1, File.LINK.INPUT);
+        j4.uses(fc2, File.LINK.INPUT);
+        j4.uses(fd, File.LINK.OUTPUT);
+
+        //add job to the DAX
+        dax.addJob(j4);
+
+        //analyze job is a child to the findrange jobs
+        dax.addDependency("j2", "j4");
+        dax.addDependency("j3", "j4");
+
+//End of commented out code for Exercise 2.1
+</programlisting>
+
+      <para>The above snippet of code, adds a job with the ID0000004 to the
+      DAX. It illustrates how to specify</para>
+
+      <orderedlist>
+        <listitem>
+          <para>the arguments for the job</para>
+        </listitem>
+
+        <listitem>
+          <para>the logical files used by the job</para>
+        </listitem>
+
+        <listitem>
+          <para>the dependencies to other jobs</para>
+        </listitem>
+
+        <listitem>
+          <para>adding the job to the dax</para>
+        </listitem>
+      </orderedlist>
+
+      <para>After uncommenting the code, compile and run the CreateDAX
+      program.</para>
+
+      <programlisting><emphasis role="bold">$ cd dax
+
+$ javac -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX.java
+
+$  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/pegasus/default ./diamond.dax
+</emphasis></programlisting>
+
+      <para>Let us view the generated diamond.dax.</para>
+
+      <programlisting><emphasis role="bold">$ cat diamond.dax</emphasis></programlisting>
+
+      <para>Inside the DAX, you should see three sections.</para>
+
+      <orderedlist>
+        <listitem>
+          <para>list of input file locations</para>
+        </listitem>
+
+        <listitem>
+          <para>list of executable locations</para>
+        </listitem>
+
+        <listitem>
+          <para>definition of all jobs - each job in the workflow. 4 jobs in
+          total.</para>
+        </listitem>
+
+        <listitem>
+          <para>list of control-flow dependencies - this section specifies a
+          partial order in which jobs are to executed.</para>
+        </listitem>
+      </orderedlist>
+    </section>
+
+
+
+    </section>
 
   <section>
     <title>Setting Up Environments</title>

@@ -107,9 +107,8 @@
       <section>
       <title>DAG </title>
       
-      <para>The DAG an executable (concrete) workflow that can be executed over a variety of resources. In
-  case the workflow tasks are mapped to multiple resources that do not share a
-  file system, explicit nodes are added to the workflow for orchestrating data
+      <para>The DAG an executable (concrete) workflow that can be executed over a variety of resources. When the workflow tasks are mapped to multiple resources that do not share a
+  file system, explicit nodes are added to the workflow for orchestrating data.
   transfer between the tasks.</para>
       </section>
       
@@ -209,6 +208,7 @@
   which parameters.</para>
        </section>
 </chapter>
+
 
 
 
