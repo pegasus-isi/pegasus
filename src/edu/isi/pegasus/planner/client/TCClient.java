@@ -246,7 +246,7 @@ public class TCClient extends Executable{
                 	//do nothing
                 	break;
                 default:
-                    mLogger.log( "Unrecognized Option : " + (char)g.getOptopt(),
+                	mLogger.log( "Unrecognized option or Invalid argument to option " + (char)g.getOptopt(),
                         LogManager.FATAL_MESSAGE_LEVEL );
                     printShortVersion();
                     System.exit( 1 );
