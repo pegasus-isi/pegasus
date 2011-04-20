@@ -25,12 +25,20 @@ import edu.isi.pegasus.common.util.FactoryException;
 import edu.isi.pegasus.common.util.Version;
 import edu.isi.pegasus.common.util.CommonProperties;
 
+import gnu.getopt.Getopt;
 import gnu.getopt.LongOpt;
+
+import java.io.BufferedInputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
+import java.util.Enumeration;
+import java.util.Properties;
 
 /**
  * The interface which defines all the methods , any executable should implement.
@@ -64,6 +72,12 @@ public abstract class Executable {
     protected String mLogMsg;
     
     /**
+     * The command line options passed to the executable
+     */
+    
+    private String[] commandLineOpts;
+    
+    /**
      * The default constructor.
      */
     public Executable(){
@@ -76,12 +90,80 @@ public abstract class Executable {
      * @param logger  the logger to use. Can be null.
      */
     public Executable( LogManager logger ) {
+    	mLogger = logger;
+    }
+    
+    /**
+     * Looks up for the conf property in the arguments passed to the executable
+     * @param opts
+     * @param confChar
+     * @return
+     */
+    private String lookupConfProperty(String[] opts , char confChar){
+    	LongOpt[] longOptions = new LongOpt[1 ];
+    	longOptions[ 0 ] = new LongOpt( "conf", LongOpt.REQUIRED_ARGUMENT, null,confChar );
+    	Getopt g = new Getopt("Executable", opts, confChar+":", longOptions, false);
+		g.setOpterr(false);
+    	String propertyFilePath = null;
+    	int option = 0;
+    	while ( ( option = g.getopt() ) != -1 ) {
+    		if(option == confChar){
+    			propertyFilePath = g.getOptarg();
+    			break;
+    		}
+    	}
+    	return propertyFilePath;
+    }
+    
+    /**
+     * Updates the pegasus properties with the values specified in the property file 
+     * @param propertyFile the user specified property file
+     * @throws IOException
+     */
+    private void updateConfProperties(String propertyFile) throws IOException{
+    	File props = new File(propertyFile);
+    	if(props.exists()){
+    		Properties temp = new Properties();
+    		InputStream stream = new BufferedInputStream( new FileInputStream(props) );
+    		temp.load( stream );
+	    	stream.close();
+	    	for ( Enumeration e = temp.propertyNames(); e.hasMoreElements(); ) {
+	    	      String key = (String) e.nextElement();
+	    	      String value = temp.getProperty(key);
+	    	      this.mProps.setProperty(key, value);
+	    	}
+		}
+    }
+    /**
+     * Initialize the executable object 
+     * @param opts  the command line argument passed by the user
+     * @param confChar the short option corresponding the conf property.
+     */
+    protected void initialize(String[] opts , char confChar){
+    	this.commandLineOpts = opts;
+    	String propertyFile =lookupConfProperty(getCommandLineOptions(), confChar);
         mProps = PegasusProperties.getInstance();
+        if( propertyFile!= null){
+        	try{
+        		updateConfProperties(propertyFile);
+        	}catch(IOException ioe){
+        		throw new RuntimeException("Failed to set the properties in the configuration file. " + propertyFile );
+        	}
+        }
         mVersion = Version.instance().toString();
         //setup logging before doing anything with properties
-        setupLogging( logger );
+        setupLogging( mLogger );
         mLogMsg = new String();
         loadProperties();
+    }
+    
+    /**
+     * Initialize the executable object 
+     * @param opts the command line argument passed to the executable
+     */
+    
+    protected void initialize(String[] opts) {
+    	initialize(opts, 'c');
     }
 
     /**
@@ -256,5 +338,17 @@ public abstract class Executable {
         String value = null;
         value = System.getProperty(envVariable);
         return value;
+    }
+    
+    /**
+     * Returns the command line arguments passed to the executable
+     * @return command line arguments passed to the executable
+     */
+    protected String[] getCommandLineOptions(){
+    	String[] optsClone = new String[commandLineOpts.length];
+		for(int i =0; i< commandLineOpts.length;i++){
+			optsClone[i] = commandLineOpts[i];
+		}
+    	return optsClone;
     }
 }
