@@ -111,8 +111,11 @@ public class SCClient
      */
     public SCClient() {
         super();
-        
-        //the output format is whatever user specified in the properties
+    }
+    
+    public void initialize(String[] opts){
+    	super.initialize(opts);
+    	//the output format is whatever user specified in the properties
         mOutputFormat = mProps.getPoolMode();
         mInputFormat  = SCClient.TEXT_FORMAT;
         mLoggingLevel     = LogManager.WARNING_MESSAGE_LEVEL;
@@ -142,7 +145,7 @@ public class SCClient
     }
 
     public LongOpt[] generateValidOptions() {
-        LongOpt[] longopts = new LongOpt[ 10 ];
+        LongOpt[] longopts = new LongOpt[ 11 ];
         longopts[ 0 ] = new LongOpt( "text", LongOpt.NO_ARGUMENT, null, 't' );
         longopts[ 1 ] = new LongOpt( "files", LongOpt.REQUIRED_ARGUMENT, null,            'f' );
         longopts[ 2 ] = new LongOpt( "input", LongOpt.REQUIRED_ARGUMENT, null, 'i' );
@@ -153,7 +156,7 @@ public class SCClient
         longopts[ 7 ] = new LongOpt( "version", LongOpt.NO_ARGUMENT, null, 'V' );
         longopts[ 8 ] = new LongOpt( "verbose", LongOpt.NO_ARGUMENT, null, 'v' );
         longopts[ 9 ]  = new LongOpt( "quiet", LongOpt.NO_ARGUMENT, null, 'q' );
-
+        longopts[ 10 ] = new LongOpt( "conf", LongOpt.REQUIRED_ARGUMENT, null, 'c' );
         return longopts;
 
     }
@@ -163,14 +166,13 @@ public class SCClient
      * @param opts Command options
      */
 
-    public void executeCommand( String[] opts ) throws IOException {
+    public void executeCommand() throws IOException {
         LongOpt[] longOptions = generateValidOptions();
 
-        Getopt g = new Getopt( "SCClient", opts, "lthvqVi:I:o:O:f:",
+        Getopt g = new Getopt( "SCClient", getCommandLineOptions(), "lthvqVi:I:o:O:f:c:",
             longOptions, false );
 
         int option = 0;
-        int noOfOptions = 0;
         while ( ( option = g.getopt() ) != -1 ) {
             switch ( option ) {
                 case 't': //text 
@@ -226,12 +228,17 @@ public class SCClient
                 case 'v': //Verbose mode
                     incrementLogging();
                     break;
+                    
                 case 'q': //Quiet mode
                     decrementLogging();
-                    break;    
+                    break;
+                
+                case 'c': // conf
+                	//do nothing
+                	break;
 
                 default:
-                    mLogger.log( "Unrecognized Option : " + (char)option,
+                    mLogger.log( "Unrecognized option or Invalid argument to option : " + (char)g.getOptopt(),
                                 LogManager.FATAL_MESSAGE_LEVEL );
                     printShortVersion();
                     System.exit( 1 );
@@ -398,7 +405,7 @@ public class SCClient
             "\n $Id$ " +
             "\n " + getGVDSVersion() +
             "\n Usage: pegasus-sc-converter [-Dprop  [..]]  -i <list of input files> -o <output file to write> " +
-            "\n        [-I input format] [-O <output format> [-v] [-q] [-V] [-h]\n" ;
+            "\n        [-I input format] [-O <output format>] [-c <path to property file>] [-v] [-q] [-V] [-h]\n" ;
 
         System.out.print(text);
     }
@@ -410,7 +417,7 @@ public class SCClient
            "\n pegasus-sc-converter - Parses the site catalogs in old format ( Text and XML3 ) and generates site catalog in new format ( XML3 )"  +
            "\n " +
            "\n Usage: pegasus-sc-converter [-Dprop  [..]]  --input <list of input files> --output <output file to write> " +
-            "\n        [--iformat input format] [--oformat <output format> [--verbose] [--quiet] [--Version] [--help]" +
+            "\n        [--iformat input format] [--oformat <output format>] [--conf <path to property file>] [--verbose] [--quiet] [--Version] [--help]" +
             "\n" +   
             "\n" +
             "\n Mandatory Options " +
@@ -423,10 +430,11 @@ public class SCClient
             "\n" +
             "\n -I |--iformat    the input format for the files . Can be [XML , Text] "  + 
             "\n -O |--oformat    the output format of the file. Usually [XML3] " +
-            "\n -v |--verbose       increases the verbosity of messages about what is going on" +
-            "\n -q |--quiet        decreases the verbosity of messages about what is going on" +
-            "\n -V |--version       displays the version of the Pegasus Workflow Planner" +
-            "\n -h |--help          generates this help." +
+            "\n -c |--conf       path to  property file" +
+            "\n -v |--verbose    increases the verbosity of messages about what is going on" +
+            "\n -q |--quiet      decreases the verbosity of messages about what is going on" +
+            "\n -V |--version    displays the version of the Pegasus Workflow Planner" +
+            "\n -h |--help       generates this help." +
             "\n" + 
             "\n" + 
             "\n Deprecated Options " +
@@ -567,7 +575,8 @@ public class SCClient
         double execTime  = -1;
 
         try{
-             me.executeCommand( args );
+        	 me.initialize(args);
+             me.executeCommand( );
         }
         catch ( IOException ioe ){
             me.log( convertException(ioe,me.getLoggingLevel()), LogManager.FATAL_MESSAGE_LEVEL);
