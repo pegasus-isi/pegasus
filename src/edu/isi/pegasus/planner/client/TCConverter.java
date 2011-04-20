@@ -143,8 +143,11 @@ public class TCConverter
      */
     public TCConverter() {
         super();
-        
-        //the output format is whatever user specified in the properties
+      }
+    
+    protected void initialize(String[] opts){
+    	super.initialize(opts);
+    	//the output format is whatever user specified in the properties
         mOutputFormat = mProps.getTCMode();
         mInputFormat  = TCConverter.TEXT_FORMAT;
         mDatabase = TCConverter.DEFAULT_DATABASE;
@@ -175,10 +178,10 @@ public class TCConverter
    /**
     * Generates the list of valid options for the tc-converter client
     * 
-    * @return LongOpt[] list of valide options
+    * @return LongOpt[] list of valid options
     */
     public LongOpt[] generateValidOptions() {
-        LongOpt[] longopts = new LongOpt[ 12 ];
+        LongOpt[] longopts = new LongOpt[ 13 ];
         longopts[ 0 ] = new LongOpt( "input", LongOpt.REQUIRED_ARGUMENT, null, 'i' );
         longopts[ 1 ] = new LongOpt( "iformat", LongOpt.REQUIRED_ARGUMENT, null, 'I' );
         longopts[ 2 ] = new LongOpt( "output", LongOpt.REQUIRED_ARGUMENT, null, 'o' );
@@ -191,6 +194,7 @@ public class TCConverter
         longopts[ 9 ] = new LongOpt( "version", LongOpt.NO_ARGUMENT, null, 'V' );
         longopts[ 10 ] = new LongOpt( "verbose", LongOpt.NO_ARGUMENT, null, 'v' );
         longopts[ 11 ]  = new LongOpt( "quiet", LongOpt.NO_ARGUMENT, null, 'q' );
+        longopts[ 12 ] = new LongOpt( "conf", LongOpt.REQUIRED_ARGUMENT, null, 'c' );
 
         return longopts;
 
@@ -201,8 +205,8 @@ public class TCConverter
      * @param opts Command options
      */
 
-    public void executeCommand( String[] opts ) throws IOException {
-    	
+    public void executeCommand() throws IOException {
+    	String[] opts = getCommandLineOptions();
     	 if(opts.length == 0){
 	     	mLogger.log("Please provide the required options.",LogManager.ERROR_MESSAGE_LEVEL);
 	        this.printShortVersion();
@@ -211,7 +215,7 @@ public class TCConverter
     	 
         LongOpt[] longOptions = generateValidOptions();
 
-        Getopt g = new Getopt( "TCConverter", opts, "hVvqI:i:O:o:U:P:N:H:",
+        Getopt g = new Getopt( "TCConverter", opts, "hVvqI:i:O:o:U:P:N:H:c:",
             longOptions, false );
 
         int option = 0;
@@ -270,10 +274,14 @@ public class TCConverter
                     
                 case 'q': //Quiet mode
                     decrementLogging();
-                    break;    
-
+                    break;
+                    
+                case 'c':
+                	//do nothing
+                	break;
+                	
                 default:
-                    mLogger.log( "Unrecognized Option : " + (char)option,
+                    mLogger.log( "Unrecognized Option : " + (char)g.getOptopt(),
                                 LogManager.FATAL_MESSAGE_LEVEL );
                     printShortVersion();
                     System.exit( 1 );
@@ -475,7 +483,7 @@ public class TCConverter
             "\n Usage: pegasus-tc-converter [-Dprop  [..]]  -I <input format> -O <output format> " +
             "\n        [-i <list of input files>] [-o <output file to write>] " +
             "\n        [-N <database user name>] [-P <database user password>] [-U <database url>] [-H <database host>] " +
-            "\n        [-v] [-q] [-V] [-h] \n Type 'pegasus-tc-converter --help' for more help.";
+            "\n        [-c <path to property file>] [-v] [-q] [-V] [-h] \n Type 'pegasus-tc-converter --help' for more help.";
 
         System.out.println(text);
     }
@@ -489,7 +497,7 @@ public class TCConverter
         text.append("\n Usage: pegasus-tc-converter [-Dprop  [..]]  [--iformat <input format>] [--oformat <output format>]" );
         text.append("\n       [--input <list of input files>] [--output <output file to write>] ");
         text.append("\n       [--db-user-name <database user name>] [--db-user-pwd <database user password>] [--db-url <database url>] [--db-host <database host>]");
-        text.append("\n       [--verbose] [--quiet][--Version] [--help]" );
+        text.append("\n       [--conf <path to property file>] [--verbose] [--quiet][--Version] [--help]" );
         text.append("\n" );   
         text.append("\n" );
         text.append("\n Mandatory Options " );
@@ -506,6 +514,7 @@ public class TCConverter
         text.append("\n -P |--db-user-pwd    the database user password " );
         text.append("\n -U |--db-url         the database url "  ); 
         text.append("\n -H |--db-host        the database host " );
+        text.append("\n -c |--conf           path to  property file" );
         text.append("\n -v |--verbose        increases the verbosity of messages about what is going on" );
         text.append("\n -q |--quiet          decreases the verbosity of messages about what is going on" );
         text.append("\n -V |--version        displays the version of the Pegasus Workflow Planner" );
@@ -633,7 +642,8 @@ public class TCConverter
         double execTime  = -1;
 
         try{
-             me.executeCommand( args );
+        	me.initialize(args); 
+            me.executeCommand();
         }
         catch ( IOException ioe ){
             me.log(convertException( ioe,me.mLogger.getLevel()), LogManager.FATAL_MESSAGE_LEVEL);
