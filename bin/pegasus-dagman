@@ -46,6 +46,7 @@ def dagman_launch(arguments):
         arguments.insert(0, dagman_bin)
         try :
             dagman_proc = subprocess.Popen(arguments, env=os.environ, stdout=sys.stdout, stderr=sys.stderr)
+            print "Launched Dagman with Pid %d" % dagman_proc.pid
         except OSError, err :
             print "Error: Could not launch Dagman." + err
             sys.exit(1)
@@ -65,14 +66,15 @@ def monitord_launch():
             try :
                 monitord_proc = subprocess.Popen([monitord_bin, os.getenv('_CONDOR_DAGMAN_LOG')],
                                                  env=os.environ, stdout=sys.stdout, stderr=subprocess.STDOUT)
+                print "Launched Monitord with Pid %d" % monitord_proc.pid
                 return monitord_proc
             except OSError, err :
                 print "Error: Could not launch Monitord." + err
                 sys.exit(1)
-            else :
-                print "Error : pegausus-monitord not found"
-                sys.exit(127)
-            MAX_MONITORD_LAUNCH -= 1
+        else :
+            print "Error : pegausus-monitord not found"
+            sys.exit(127)
+    MAX_MONITORD_LAUNCH -= 1
     return None
 
 #-- main--------------------------------------------------------------
@@ -82,12 +84,17 @@ if __name__ == "__main__":
     dagman = dagman_launch(sys.argv[1:])
     # Launch Monitord
     monitord = monitord_launch()
+                           
+    dagman.poll()
+    monitord.poll()
     
-    while any[monitord.poll() == None, dagman.poll() == None]:
+    while monitord.returncode == None or dagman.returncode == None :
         if dagman.returncode == None and monitord.returncode != None :
             # Dagman has not finished. We may need to restart monitord.
             monitord = monitord_launch()
         time.sleep(SLEEP_TIME)
+        monitord.poll()
+        dagman.poll()
         
     # Dagman and Monitord have exited. Lets exit pegasus-dagman with a merged returncode
     print "Dagman exited with code %d" % dagman.returncode
