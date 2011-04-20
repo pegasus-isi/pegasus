@@ -64,16 +64,15 @@ def monitord_launch():
         monitord_bin = find_exec("pegasus-monitord")
         if monitord_bin != None :
             try :
+                log = open('monitord.log', 'w')
                 monitord_proc = subprocess.Popen([monitord_bin, "-N",os.getenv('_CONDOR_DAGMAN_LOG')],
-                                                 env=os.environ, stdout=monitord.log, stderr=subprocess.STDOUT)
+                                                 env=os.environ, stdout=log, stderr=subprocess.STDOUT)
                 print "Launched Monitord with Pid %d" % monitord_proc.pid
                 return monitord_proc
             except OSError, err :
                 print "Error: Could not launch Monitord." + err
-                sys.exit(1)
         else :
             print "Error : pegausus-monitord not found"
-            sys.exit(127)
     MAX_MONITORD_LAUNCH -= 1
     return None
 
@@ -84,7 +83,8 @@ if __name__ == "__main__":
     dagman = dagman_launch(sys.argv[1:])
     # Launch Monitord
     monitord = monitord_launch()
-                           
+        
+        
     dagman.poll()
     monitord.poll()
     
