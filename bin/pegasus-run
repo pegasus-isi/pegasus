@@ -49,17 +49,20 @@ my $grid=0;                     # if set, disable grid checks;
 my $properties="";  	        # properties file for Pegasus
 my $default_tsd = File::Spec->catfile( File::Spec->rel2abs( 
     File::Spec->canonpath(dirname($0)) ), 'pegasus-monitord' );
-
+my $dagman=File::Spec->catfile( File::Spec->rel2abs(
+				    File::Spec->canonpath(dirname($0)) ), 'pegasus-dagman' );
     
 my $database=1  ;
 my $tsd;
+my $monitor;
 GetOptions( "help|h" => \&usage,
-	    "monitor|tsd|m=s" => \$tsd,
+	    "monitor|m=s" => \$tsd,
 	    "database!"=>\$database,
 	    "condor" => \$condor,
 	    "debug|d=o" => \$main::DEBUG,
 	    "verbose|v+" => \$main::DEBUG,
             "grid!"=>\$grid,
+	    "M" => \$monitor,
 	    "conf|c=s"=> \$properties
 	    );
 
@@ -268,11 +271,14 @@ if ( $config{dag} ) {
     push( @args, @extra ) if @extra > 0;
     push( @args, '-d', 0+$main::DEBUG);
     push( @args, '--grid' ) if $grid;
-    push( @args, '--nosubmit', $config{dag} );
+    push( @args, '--dagman',$dagman, $config{dag} );
+
     print STDERR "# ", join(' ',@args), "\n" if $main::DEBUG;
     system(@args) == 0 
 	or die( "ERROR: Running pegasus-submit-dag failed with ", parse_exit($?));
     print STDERR "# dagman is running\n" if $main::DEBUG;
+
+    if ( $monitor ) {
 
     if ( -x $tsd ) {
 	my @tsdargs = ($tsd);
@@ -291,6 +297,7 @@ if ( $config{dag} ) {
 	print STDERR "# $tsd is running\n" if $main::DEBUG;
     }
 
+    }
     # next step
     if ( @rescue > 0 ) {
 	my $n = @rescue + 0;
