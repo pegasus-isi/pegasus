@@ -160,7 +160,7 @@ public class Stampede implements CodeGenerator {
             //write out the edge informatiom for the workflow
             for ( Iterator<PCRelation> it =  dag.dagInfo.relations.iterator(); it.hasNext(); ){
                 PCRelation relation = it.next();
-                mLogFormatter.addEvent( "stampede.job.edge", "wf.id", uuid );
+                mLogFormatter.addEvent( "job.edge", "wf.id", uuid );
 
                 mLogFormatter.add( "parent_exec_job.id", relation.getParent() );
                 mLogFormatter.add( "child_exec_job.id", relation.getChild() );
@@ -179,7 +179,7 @@ public class Stampede implements CodeGenerator {
             //write out the edge informatiom for the workflow
             for ( Iterator<PCRelation> it =  dag.dagInfo.relations.iterator(); it.hasNext(); ){
                 PCRelation relation = it.next();
-                mLogFormatter.addEvent( "stampede.task.edge", "wf.id", uuid );
+                mLogFormatter.addEvent( "task.edge", "wf.id", uuid );
 
                 mLogFormatter.add( "parent_abs_job.id", relation.getParent() );
                 mLogFormatter.add( "child_abs_job.id", relation.getChild() );
@@ -222,7 +222,7 @@ public class Stampede implements CodeGenerator {
         }
 
         
-        mLogFormatter.addEvent( "stampede.task", "abs_task.id", job.getLogicalID() );
+        mLogFormatter.addEvent( "task", "abs_task.id", job.getLogicalID() );
 
         mLogFormatter.add( "wf.id" , wfuuid );
 
@@ -249,7 +249,7 @@ public class Stampede implements CodeGenerator {
             throws CodeGeneratorException{
             
         String wfuuid = dag.getWorkflowUUID();
-        mLogFormatter.addEvent( "stampede.job", "exec_job.id", job.getID() );
+        mLogFormatter.addEvent( "job", "exec_job.id", job.getID() );
 
         mLogFormatter.add( "wf.id" , wfuuid );
 
@@ -292,7 +292,7 @@ public class Stampede implements CodeGenerator {
                     if( constituentJob.getJobType() == Job.COMPUTE_JOB ){
                         //create task.map event
                         //to the job in the DAX
-                        mLogFormatter.addEvent( "stampede.workflow.task.map", LoggingKeys.JOB_ID, job.getID() );
+                        mLogFormatter.addEvent( "workflow.task.map", LoggingKeys.JOB_ID, job.getID() );
                             
                         //to be retrieved
                         mLogFormatter.add( "wf.id" , wfuuid );
@@ -317,7 +317,7 @@ public class Stampede implements CodeGenerator {
             else{
                 //create a single task.map event that maps compute job
                 //to the job in the DAX
-                mLogFormatter.addEvent( "stampede.task.map", "exec_job.id", job.getID() );
+                mLogFormatter.addEvent( "task.map", "exec_job.id", job.getID() );
                 
                 //to be retrieved
                 mLogFormatter.add( "wf.id" , wfuuid );
