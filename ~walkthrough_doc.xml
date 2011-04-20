@@ -17,15 +17,11 @@
    
    <itemizedlist>
       <listitem>
-        <para>Download and Install Pegasus</para>
+        <para>Download and Install Pegasus VM</para>
       </listitem>
       
        <listitem>
-        <para>Workflows</para>
-      </listitem>
-
-      <listitem>
-        <para>Running the Diamond Workflow (included)</para>
+        <para>About Workflows (Link)</para>
       </listitem>
 
       <listitem>
@@ -37,11 +33,7 @@
       </listitem>
       
       <listitem>
-        <para>Plotting  and Statistics</para>
-      </listitem>
-      
-      <listitem>
-        <para>Workflows</para>
+        <para>Plotting and Statistics</para>
       </listitem>
       
       <listitem>
@@ -49,41 +41,160 @@
       </listitem>
       
       <listitem>
-        <para/>
+        <para>Advanced Exercises</para>
+        
       </listitem>
-      
-      <listitem>
-        <para/>
-      </listitem>
+
 
 </itemizedlist>
 
   </section>
   
-  <para/>
-  
-  <section>
-   <title>Workflow Creation </title>
-  
-   <para>2-5 based on VM</para>
-            <para>Workflow Basics</para>
-            
-            <para>How to Create a Workflow</para>
-            
-            <para>List the steps, in order, that a user performs to create a DAX Workflow.</para>
-            
-            <link
-      linkend="example_workflows">See Example Workflows</link>
-            
-            <para>The Example Workflows cover most situations users will encounter in designing and creating abstract workflows. We provide a link to material
-            that documents advanced concepts for the benefit of the curious.</para>
+ <section>
+    <title>Downloading and Running the VM using Virtual Box</title>
 
-            <link
-      linkend="advanced_concepts_hierarchical_workflows">See Advanced Workflows</link>
-            
+    <para>You will need to install Virtual Box to run the virtual machine on
+    your computer. If you already have one of the tools installed, use that.
+    Otherwise download the binary versions and install them from the<ulink
+    url="http://www.virtualbox.org/wiki/Downloads"> Virtual Box
+    Website</ulink> .</para>
 
-            
-  </section>
+
+    <section>
+      <title>Download the VM for Virtual Box use</title>
+
+      <para>Download the corresponding disk image.</para>
+
+      <itemizedlist>
+        <listitem>
+          <para><ulink
+          url="http://pegasus.isi.edu/wms/download/3.0/Pegasus-3.0.1-Debian-6-x86.vbox.tar.bz2"
+          xml:base="">Virtual Box Pegasus Image</ulink></para>
+
+          <para>It is around <emphasis role="bold">1.2 GB</emphasis> in size.
+          We recommend using a command line tool like <emphasis
+          role="bold">wget</emphasis> to download the image. Downloading the
+          image using the browser sometimes corrupts the image.</para>
+
+          <programlisting>$ <emphasis role="bold">wget http://pegasus.isi.edu/wms/download/3.0/Pegasus-3.0.1-Debian-6-x86.vbox.tar.bz2
+
+</emphasis> http://pegasus.isi.edu/wms/download/3.0/Pegasus-3.0.1-Debian-6-x86.vbox.tar.bz2
+           =&gt; `Pegasus-3.0.1-Debian-6-x86.vbox.tar.bz2'
+Resolving pegasus.isi.edu... 128.9.64.219
+Connecting to pegasus.isi.edu|128.9.64.219|:80... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 1,336,554,492 (1.2G) [application/x-bzip2]
+</programlisting>
+
+          <para>The Image is bzipped . You will need to unzip it.</para>
+
+          <para>If you have gnu tar you can do this directly</para>
+
+          <programlisting><emphasis role="bold">$ gtar jxvf Pegasus-3.0.1-Debian-6-x86.vbox.tar.bz2</emphasis></programlisting>
+
+          <para>Else you need to do the following</para>
+
+          <programlisting><emphasis role="bold">$ bunzip2 Pegasus-3.0.1-Debian-6-x86.vbox.tar.bz2
+
+$ tar xvf Pegasus-3.0.1-Debian-6-x86.vbox.tar</emphasis></programlisting>
+
+          <para>After untarring a folder named<emphasis role="bold">
+          Pegasus-3.0.1-Debian-6-x86.vbox</emphasis> will be created that has
+          the vmdk files for the VM.</para>
+        </listitem>
+      </itemizedlist>
+    </section>
+
+    <section>
+      <title>Running the VM with Virtual Box</title>
+
+      <para>Launch Virtual Box on your machine. Follow the steps to add the
+      vmdk file to Virtual Box and create a virtual machine inside the Virtual
+      Box</para>
+
+      <orderedlist>
+        <listitem>
+          <para>In the Menu, click File and select Virtual Media Manager (
+          File &gt; Virtual Media Manager )</para>
+        </listitem>
+
+        <listitem>
+          <para>The Virtual Media Manager Windows opens up.</para>
+        </listitem>
+
+        <listitem>
+          <para>Click on "Add" button to add the<emphasis role="bold">
+          Pegasus-3.0.1-Debian-6-x86.vbox/Debian-6-x86.vmdk</emphasis> file
+          that you just downloaded and unzipped.</para>
+        </listitem>
+
+        <listitem>
+          <para>You will now see the Debian-6-x86.vmdk in the list of hard
+          disks with Actual size listed as around 3.0 GB</para>
+        </listitem>
+
+        <listitem>
+          <para>Close the Window for the Virtual Media Manager</para>
+        </listitem>
+      </orderedlist>
+
+      <para>We will now create a Virtual Machine in the Virtual Box.</para>
+
+      <orderedlist>
+        <listitem>
+          <para>In the Menu, click Machine and select New ( Machine &gt; New
+          )</para>
+        </listitem>
+
+        <listitem>
+          <para>It will open the New Virtual Machine Wizard. Click
+          Continue</para>
+        </listitem>
+
+        <listitem>
+          <para>In the VM Name and OS Type Window specify the name as<emphasis
+          role="bold"> PegasusVM-3.0</emphasis>.1 Select the <emphasis
+          role="bold">Operating System as Linux </emphasis>and <emphasis
+          role="bold">Version as Debian </emphasis>. Click Continue.</para>
+        </listitem>
+
+        <listitem>
+          <para>Set the base memory to <emphasis role="bold">384 MB</emphasis>
+          . It defaults to 512 MB. Click Continue</para>
+        </listitem>
+
+        <listitem>
+          <para>We now select the Virtual Hard Disk to use with the machine.
+          Select the option box for Use Existing Hard Disk. Select <emphasis
+          role="bold">Debian-6-x86.vmdk</emphasis> from the list . Click
+          Continue</para>
+        </listitem>
+
+        <listitem>
+          <para>Click Done</para>
+        </listitem>
+
+        <listitem>
+          <para>Now in the Virtual Box , start the PegasusVM-3.0.1
+          machine.</para>
+        </listitem>
+      </orderedlist>
+    </section>
+
+    <section>
+     <title>Workflows</title>
+     
+      <para>Workflows are at the center of how Pegasus operates. Pegasus takes in an abstract workflow ( DAX ) and generates an executable workflow (DAG) that is run in an environment.
+      For the purposes of this walkthrough, we will demonstrate the characteristics and structure of walkthrough by using a workflow that is included in the downloaded installation files.
+
+      For a more detailed desription of workflows and how they are used in Pegasus please see <link
+
+      linkend="workflow_types">(Workflows)</link></para>
+
+
+
+    </section>
+
 
   <section>
     <title>Setting Up Environments</title>
@@ -226,10 +337,11 @@
   <para>Either links to a Glossary and a link to Components or DELETE ENTIRELY</para>
   
   </section>
-
+  </section>
 
 
 </chapter>
+
 
 
 

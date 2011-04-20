@@ -842,7 +842,7 @@ bin/mShrink"
 
         <itemizedlist>
           <listitem>
-            <para></para>
+            <para/>
 
             <programlisting><emphasis role="bold">$ pegasus-tc-client  -a -l diamond::dummy:2.0 \
       -p /opt/pegasus/default/bin/keg -r local -t INSTALLED -s INTEL32::LINUX 
@@ -1028,7 +1028,7 @@ pegasus-run -Dpegasus.user.properties=$HOME/.../blackdiamond/run0001/pegasus.728
           <para><emphasis role="bold">Now run pegasus-run as mentioned in the
           output of pegasus-plan. Do not copy the command below it is just for
           illustration purpose.</emphasis><programlisting><emphasis
-                role="bold"></emphasis><emphasis role="bold">[pegasus@pegasus pegasus-wms]$ pegasus-run \
+                role="bold"/><emphasis role="bold">[pegasus@pegasus pegasus-wms]$ pegasus-run \
  -Dpegasus.user.properties=$HOME/.../blackdiamond/run0001/pegasus.350356687577055673.properties \
        $HOME/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run0001</emphasis>
 
@@ -1884,7 +1884,7 @@ Job 2788.0 marked for removal</computeroutput></programlisting>
       diamond workflow we ran using pegasus-statistics and
       pegasus-plots</para>
 
-      <para></para>
+      <para/>
 
       <section>
         <title>Generating Statistics Using pegasus-statistics</title>
@@ -2431,7 +2431,7 @@ eps format : /home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run00
 [pegasus@pegasus pegasus-wms]$ 
 </programlisting>
 
-        <para></para>
+        <para/>
 
         <section>
           <title>Abstract Worfklow / DAX Image</title>
@@ -2443,7 +2443,7 @@ eps format : /home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run00
 
             <mediaobject>
               <imageobject>
-                <imagedata fileref="images/tutorial-blackdiamond-dax.png" />
+                <imagedata fileref="images/tutorial-blackdiamond-dax.png"/>
               </imageobject>
             </mediaobject>
           </figure>
@@ -2459,7 +2459,7 @@ eps format : /home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run00
 
             <mediaobject>
               <imageobject>
-                <imagedata fileref="images/tutorial-blackdiamond-dag.png" />
+                <imagedata fileref="images/tutorial-blackdiamond-dag.png"/>
               </imageobject>
             </mediaobject>
           </figure>
@@ -2502,7 +2502,7 @@ eps format : /home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run00
 
             <mediaobject>
               <imageobject>
-                <imagedata fileref="images/tutorial-blackdiamond-host.png" />
+                <imagedata fileref="images/tutorial-blackdiamond-host.png"/>
               </imageobject>
             </mediaobject>
           </figure>
