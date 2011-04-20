@@ -449,10 +449,13 @@ public class CondorGenerator extends Abstract {
         mLogger.log( "Writing out the DOT file ", LogManager.DEBUG_MESSAGE_LEVEL );
         this.writeDOTFile( getDAGFilename( dag, ".dot"), dag );
 
+        /*
+        //we no longer write out the job.map file
         //write out the netlogger file
         mLogger.log( "Written out job.map file", LogManager.DEBUG_MESSAGE_LEVEL );
         this.writeJobMapFile( getDAGFilename( dag, ".job.map"), dag );
-        
+        */
+
         //write out the braindump file
         this.writeOutBraindump( dag );
 
