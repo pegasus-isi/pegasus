@@ -406,7 +406,10 @@ main( int argc, char* argv[], char* envp[] )
 	j->envp = envp; /* for now */ 
 	j->lineno = lineno; 
 
+#if 0
+	/* failure: inhibits kickstart */
 	save_signals( &save ); 
+#endif
 	if ( (j->child = fork()) == ((pid_t) -1) ) { 
 	  /* fork error, bad */
 	  showerr( "%s: fork: %d: %s\n", 
@@ -423,7 +426,10 @@ main( int argc, char* argv[], char* envp[] )
 	  j->state = RUNNING;
 	  j->start = now( &(j->when) ); 
 	}
+#if 0
+	/* failure: inhibits kickstart */
 	restore_signals( &save ); 
+#endif
 
       } else {
 	/* error parsing args */
