@@ -184,10 +184,11 @@ $ tar xvf Pegasus-3.0.1-Debian-6-x86.vbox.tar</emphasis></programlisting>
 <section>
      <title>Workflows</title>
      
-      <para>Workflows are at the center of how Pegasus operates. Pegasus takes in an abstract workflow ( DAX ) and generates an executable workflow (DAG) that is run in an environment.
-      For the purposes of this walkthrough, we will demonstrate the characteristics and structure of walkthrough by using a workflow that is included in the downloaded installation files.
+      <para>Workflows are at the center of how Pegasus operates. Pegasus takes in an abstract workflow ( DAX ) and generates an executable workflow (DAG) that is
+      run in an environment. For the purposes of this walkthrough, we will demonstrate the characteristics and structure of workflows by generating a workflow with
+      a bit of Java code that uses the DAX API to generate the DAX workflow.
 
-      For a more detailed desription of workflows and how they are used in Pegasus please see <link
+      For a more detailed desription of workflows, how to create them, and how they are used in Pegasus please see <link
 
       linkend="workflow_types">(Workflows)</link></para>
 
