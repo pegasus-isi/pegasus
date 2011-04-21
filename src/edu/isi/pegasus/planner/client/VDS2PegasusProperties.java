@@ -140,6 +140,10 @@ public class VDS2PegasusProperties extends Executable {
                 mCompiledPatterns[i] = Pattern.compile( mRegexExpression[i] );
         }
     }
+    
+    public void initialize(String[] opts){
+    	super.initialize(opts);
+    }
 
 
     /**
@@ -509,7 +513,8 @@ public class VDS2PegasusProperties extends Executable {
         int result = 0;
 
         try{
-            me.executeCommand( args );
+        	me.initialize(args);
+            me.executeCommand();
         }
         catch ( FactoryException fe){
             me.log( fe.convertException() , LogManager.FATAL_MESSAGE_LEVEL);
@@ -545,8 +550,8 @@ public class VDS2PegasusProperties extends Executable {
      *
      * @param args the command line options.
      */
-    public void executeCommand(String[] args) {
-        parseCommandLineArguments(args);
+    public void executeCommand() {
+        parseCommandLineArguments(getCommandLineOptions());
 
         //sanity check on output directory
         mOutputDir = ( mOutputDir == null ) ? "." : mOutputDir;
@@ -593,7 +598,7 @@ public class VDS2PegasusProperties extends Executable {
         LongOpt[] longOptions = generateValidOptions();
 
         Getopt g = new Getopt( "properties-converter", args,
-                              "i:o:h",
+                              "i:o:c:h",
                               longOptions, false);
         g.setOpterr(false);
 
@@ -614,11 +619,14 @@ public class VDS2PegasusProperties extends Executable {
                 case 'o'://output directory
                     this.mOutputDir =  g.getOptarg();
                     break;
-
+                case 'c':
+                	//do nothing
+                	break;
+                	
                 default: //same as help
                     printShortVersion();
                     throw new RuntimeException("Incorrect option or option usage " +
-                                               (char)option);
+                    							(char)g.getOptopt());
 
             }
         }
@@ -635,11 +643,12 @@ public class VDS2PegasusProperties extends Executable {
      * options
      */
     public LongOpt[] generateValidOptions(){
-        LongOpt[] longopts = new LongOpt[3];
+        LongOpt[] longopts = new LongOpt[4];
 
         longopts[0]   = new LongOpt( "input", LongOpt.REQUIRED_ARGUMENT, null, 'i' );
         longopts[1]   = new LongOpt( "output", LongOpt.REQUIRED_ARGUMENT, null, 'o' );
         longopts[2]   = new LongOpt( "help", LongOpt.NO_ARGUMENT, null, 'h' );
+        longopts[3]   = new LongOpt( "conf", LongOpt.REQUIRED_ARGUMENT, null, 'c' );
         return longopts;
     }
 
@@ -652,7 +661,7 @@ public class VDS2PegasusProperties extends Executable {
           "\n $Id$ " +
           "\n " + getGVDSVersion() +
           "\n Usage : properties-converter [-Dprop  [..]] -i <input directory>  " +
-          " [-o output directory] [-h]";
+          " [-o output directory]  [-c <path to property file>] [-h]";
 
         System.out.println(text);
     }
@@ -669,12 +678,13 @@ public class VDS2PegasusProperties extends Executable {
            "\n properties-converter - A tool that converts the VDS properties file to " +
            "\n                         the corresponding Pegasus properties file " +
            "\n Usage: properties-converter [-Dprop  [..]] --input <input file> " +
-           "\n        [--output output directory] [--help] " +
+           "\n        [--output output directory] [--conf <path to property file>]  [--help] " +
            "\n" +
            "\n Mandatory Options " +
            "\n --input              the path to the VDS properties file." +
            "\n Other Options  " +
            "\n -o |--output        the output directory where to generate the pegasus property file." +
+           "\n -c |--conf          path to  property file" +
            "\n -h |--help          generates this help." +
            "\n ";
 
