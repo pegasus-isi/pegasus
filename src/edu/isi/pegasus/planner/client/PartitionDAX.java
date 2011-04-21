@@ -88,7 +88,17 @@ public class PartitionDAX extends Executable {
      * The default constructor.
      */
     public PartitionDAX() {
-        mProps     = PegasusProperties.nonSingletonInstance();
+        
+    }
+    
+    /**
+     * Initialize the PartitionDax object 
+     * @param opts the command line argument passed to the PartitionDax
+     */
+     
+    public void initalize(String[] opts){
+    	super.initialize(opts);
+    	mProps     = PegasusProperties.nonSingletonInstance();
         mDAXFile   = null;
         mDirectory = ".";
         mType      = DEFAULT_PARTITIONER_TYPE;
@@ -102,7 +112,8 @@ public class PartitionDAX extends Executable {
      */
     public static void main(String[] args){
         PartitionDAX pdax = new PartitionDAX();
-        pdax.executeCommand(args);
+        pdax.initalize(args);
+        pdax.executeCommand();
     }
 
     /**
@@ -111,10 +122,10 @@ public class PartitionDAX extends Executable {
      *
      * @param args  the arguments array  populated by the user options.
      */
-    public void executeCommand(String[] args) {
+    public void executeCommand() {
         int option = 0;
         LongOpt[] longOptions = generateValidOptions();
-        Getopt g = new Getopt("PartitionDAX", args, "vhVD:d:t:", longOptions, false);
+        Getopt g = new Getopt("PartitionDAX", getCommandLineOptions(), "vhVD:d:t:c:", longOptions, false);
         boolean help = false;
         boolean version = false;
         int status = 0;
@@ -136,6 +147,10 @@ public class PartitionDAX extends Executable {
                 case 't': //type
                     mType = g.getOptarg();
                     break;
+                
+                case 'c': // conf
+                	//do nothing
+                	break;
 
                 case 'v': //verbose
                     //set the verbose level in the logger
@@ -151,8 +166,8 @@ public class PartitionDAX extends Executable {
                     break;
 
                 default: //same as help
-                    mLogger.log("Unrecognized Option " +
-                                Integer.toString(option),
+                    mLogger.log("Incorrect option or option usage " +
+                    			(char)g.getOptopt(),
                                 LogManager.FATAL_MESSAGE_LEVEL);
                     printShortVersion();
                     System.exit(1);
@@ -164,6 +179,9 @@ public class PartitionDAX extends Executable {
             //set the logging level only if -v was specified
             //else bank upon the the default logging level
             mLogger.setLevel( level );
+        }else{
+        	// default level is warning
+        	mLogger.setLevel(LogManager.WARNING_MESSAGE_LEVEL);
         }
 
         if ( ( help && version ) || help ) {
@@ -180,7 +198,7 @@ public class PartitionDAX extends Executable {
         try{
             String pdax = partitionDAX( mProps, mDAXFile, mDirectory, mType );
             mLogger.log( "Partitioned DAX written out " + pdax,
-                         LogManager.DEBUG_MESSAGE_LEVEL );
+            		LogManager.CONSOLE_MESSAGE_LEVEL );
         }
         catch( Exception e ){
             mLogger.log( "", e, LogManager.FATAL_MESSAGE_LEVEL );
@@ -332,7 +350,7 @@ public class PartitionDAX extends Executable {
           "\n $Id$ " +
           "\n" + getGVDSVersion() +
           "\n Usage :partitiondax -d <dax file> [-D <dir for partitioned daxes>] " +
-          "   -t <type of partitioning to be used> [-v] [-V] [-h]";
+          "   -t <type of partitioning to be used> [-c <path to property file>] [-v] [-V] [-h]";
 
         mLogger.log(text,LogManager.ERROR_MESSAGE_LEVEL);
 
@@ -349,7 +367,7 @@ public class PartitionDAX extends Executable {
           "\n into smaller daxes for use in deferred planning." +
           "\n " +
           "\n Usage :partitiondax --dax <dax file> [--dir <dir for partitioned daxes>] " +
-          "\n --type <type of partitioning to be used> [--verbose] [--version] "  +
+          "\n --type <type of partitioning to be used> [--conf <path to property file>] [--verbose] [--version] "  +
           "\n [--help]" +
            "\n" +
            "\n Mandatory Options " +
@@ -358,6 +376,7 @@ public class PartitionDAX extends Executable {
            "\n -t|--type type the partitioning technique that is to be used for partitioning." +
            "\n -D|--dir dir   the directory in which the partitioned daxes reside (defaults to " +
            "\n                current directory)"+
+           "\n -c|--conf      path to  property file" +
            "\n -v|--verbose   increases the verbosity of messages about what is going on." +
            "\n -V|--version   displays the version number of the Griphyn Virtual Data System." +
            "\n -h|--help      generates this help";
@@ -374,7 +393,7 @@ public class PartitionDAX extends Executable {
      * options
      */
     public LongOpt[] generateValidOptions() {
-        LongOpt[] longopts = new LongOpt[6];
+        LongOpt[] longopts = new LongOpt[7];
 
         longopts[0]   = new LongOpt("dir",LongOpt.REQUIRED_ARGUMENT,null,'D');
         longopts[1]   = new LongOpt("dax",LongOpt.REQUIRED_ARGUMENT,null,'d');
@@ -382,6 +401,7 @@ public class PartitionDAX extends Executable {
         longopts[3]   = new LongOpt("verbose",LongOpt.NO_ARGUMENT,null,'v');
         longopts[4]   = new LongOpt("version",LongOpt.NO_ARGUMENT,null,'V');
         longopts[5]   = new LongOpt("help",LongOpt.NO_ARGUMENT,null,'h');
+        longopts[6]   = new LongOpt( "conf", LongOpt.REQUIRED_ARGUMENT, null, 'c' );
         return longopts;
 
     }
