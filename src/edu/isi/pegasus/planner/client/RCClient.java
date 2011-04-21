@@ -16,13 +16,18 @@
 
 package edu.isi.pegasus.planner.client;
 
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -48,6 +53,7 @@ import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogException;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaFactory;
+import edu.isi.pegasus.planner.common.PegasusProperties;
 import gnu.getopt.Getopt;
 import gnu.getopt.LongOpt;
 
@@ -117,6 +123,11 @@ public class RCClient extends Toolkit {
      * Indication of batch mode.
      */
     private boolean m_batch;
+    
+    /**
+     * Reference to the property file passed using the --conf option
+     */
+    private String m_conf_property_file = null;
 
     /**
      * Initializes the root logger when this class is loaded.
@@ -230,6 +241,8 @@ public class RCClient extends Toolkit {
 			+ linefeed
 			+ "                The special filename hyphen reads from pipes"
 			+ linefeed
+			+ " -c|--conf fn   path to the property file"
+			+ linefeed
 			+ " -v|--verbose   increases the verbosity level"
 			+ linefeed
 			+ " -p|--pref k=v  enters the specified mapping into preferences (multi-use)."
@@ -276,7 +289,7 @@ public class RCClient extends Toolkit {
      * @return an initialized array with the options
      */
     protected LongOpt[] generateValidOptions() {
-	LongOpt[] lo = new LongOpt[8];
+	LongOpt[] lo = new LongOpt[9];
 
 	lo[0] = new LongOpt("help", LongOpt.NO_ARGUMENT, null, 'h');
 	lo[1] = new LongOpt("version", LongOpt.NO_ARGUMENT, null, 'V');
@@ -286,7 +299,7 @@ public class RCClient extends Toolkit {
 	lo[5] = new LongOpt("delete", LongOpt.REQUIRED_ARGUMENT, null, 'd');
 	lo[6] = new LongOpt("lookup", LongOpt.REQUIRED_ARGUMENT, null, 'l');
 	lo[7] = new LongOpt("verbose", LongOpt.NO_ARGUMENT, null, 'v');
-
+	lo[8] = new LongOpt( "conf", LongOpt.REQUIRED_ARGUMENT, null, 'c' );
 	return lo;
     }
 
@@ -318,7 +331,11 @@ public class RCClient extends Toolkit {
 	    NoSuchMethodException, InstantiationException,
 	    IllegalAccessException, InvocationTargetException,
 	    MissingResourceException {
-	m_rc = ReplicaFactory.loadInstance();
+    PegasusProperties props = PegasusProperties.getInstance();
+    if(this.m_conf_property_file != null){
+    	updateConfProperties(props, this.m_conf_property_file);
+    }
+	m_rc = ReplicaFactory.loadInstance(props);
 
 	// auto-disconnect, should we forget it, or die in an orderly fashion
 	Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -895,6 +912,56 @@ public class RCClient extends Toolkit {
 	if (result == 1)
 	    throw new RuntimeException("Errors while processing input file");
     }
+    
+    
+    /**
+     * Looks up for the conf property in the command line arguments passed to the RCClient
+     * @param opts command line arguments 
+     * @param confChar short char corresponding to the conf property
+     * @return path to the property file
+     */
+    private String lookupConfProperty(String[] opts , char confChar){
+    	LongOpt[] longOptions = new LongOpt[1 ];
+    	longOptions[ 0 ] = new LongOpt( "conf", LongOpt.REQUIRED_ARGUMENT, null,confChar );
+    	// Create a clone before passing it to the GetOpts
+    	// Getopts changes the ordering of the array. 
+    	String[] optsClone = new String[opts.length];
+		for(int i =0; i< opts.length;i++){
+			optsClone[i] = opts[i];
+		}
+    	
+    	Getopt g = new Getopt("RCClient", optsClone, confChar+":", longOptions, false);
+		g.setOpterr(false);
+    	String propertyFilePath = null;
+    	int option = 0;
+    	while ( ( option = g.getopt() ) != -1 ) {
+    		if(option == confChar){
+    			propertyFilePath = g.getOptarg();
+    			break;
+    		}
+    	}
+    	return propertyFilePath;
+    }
+    
+    /**
+     * Updates the pegasus properties with the values specified in the property file 
+     * @param propertyFile the user specified property file
+     * @throws IOException
+     */
+    private void updateConfProperties(PegasusProperties properties, String propertyFile  ) throws IOException{
+    	File props = new File(propertyFile);
+    	if(props.exists()){
+    		Properties temp = new Properties();
+    		InputStream stream = new BufferedInputStream( new FileInputStream(props) );
+    		temp.load( stream );
+	    	stream.close();
+	    	for ( Enumeration e = temp.propertyNames(); e.hasMoreElements(); ) {
+	    	      String key = (String) e.nextElement();
+	    	      String value = temp.getProperty(key);
+	    	      properties.setProperty(key, value);
+	    	}
+		}
+    }
 
     /**
      * Manipulate entries in a given replica catalog implementation.
@@ -915,8 +982,9 @@ public class RCClient extends Toolkit {
 		me.showUsage();
 		System.exit(1);
 	    }
+	    me.m_conf_property_file = me.lookupConfProperty(args, 'c');
 	    // get the command line options
-	    Getopt opts = new Getopt(me.m_application, args, "f:hp:vVi:d:l:",
+	    Getopt opts = new Getopt(me.m_application, args, "f:hp:vVi:d:l:c:",
 		    me.generateValidOptions());
 	    opts.setOpterr(false);
 
@@ -965,6 +1033,9 @@ public class RCClient extends Toolkit {
 		    if (arg != null)
 			filename = arg;
 		    break;
+		case 'c': // conf
+			// do nothing
+			break;
 		case 'h':
 		default:
 		    me.showUsage();
