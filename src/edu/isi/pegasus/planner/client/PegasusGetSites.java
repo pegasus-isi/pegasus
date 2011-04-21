@@ -71,8 +71,17 @@ public class PegasusGetSites extends Executable{
      */
     public PegasusGetSites(){
         super();
-        mLogMsg = new String();
-        mVersion = Version.instance().toString();                      
+    }
+    
+    /**
+     * Initialize the PegasusGetSites object 
+     * @param opts the command line argument passed to the PegasusGetSites
+     */
+     
+    public void intialize(String [] opts){
+    	super.initialize(opts);
+    	mLogMsg = new String();
+        mVersion = Version.instance().toString();
     }
 
     /**
@@ -87,7 +96,8 @@ public class PegasusGetSites extends Executable{
         double execTime  = -1;
 
         try{
-            me.executeCommand( args );
+        	me.initialize(args);
+            me.executeCommand( );
         }        
         catch ( RuntimeException rte ) {
             //catch all runtime exceptions including our own that
@@ -136,7 +146,7 @@ public class PegasusGetSites extends Executable{
         text.append( "\n" ).append( "$Id$ ").
              append( "\n" ).append( getGVDSVersion() ).
              append( "\n" ).append( "Usage : pegasus-get-sites --source <source> --grid <grid> --vo <vo> --sc <filename> --properties <properties file>" ).
-             append( "\n" ).append( "[-v] [-h]" ).
+             append( "\n" ).append( "[--conf <path to property file>] [-v] [-h]" ).
              append( "\n" ).
              append( "\n Mandatory Options " ).
              append( "\n  --source     the source to query for information. Valid sources are OSGMM|MYOSG|VORS" ).
@@ -146,6 +156,7 @@ public class PegasusGetSites extends Executable{
              append( "\n -o |--vo         the virtual organization to which the user belongs " ).
              append( "\n -s |--sc         the path to the created site catalog file" ).
              append( "\n -p |--properties the properties file to be created" ).
+             append( "\n -c |--conf       path to  property file").
              append( "\n -v |--verbose    increases the verbosity of messages about what is going on" ).
              append( "\n -V |--version    displays the version of the Pegasus Workflow Management System" ).
              append( "\n -h |--help       generates this help." );          
@@ -161,7 +172,7 @@ public class PegasusGetSites extends Executable{
         text.append( "\n" ).append( "$Id$ ").
              append( "\n" ).append( getGVDSVersion() ).
              append( "\n" ).append( "Usage : pegasus-get-sites -source <site> -g <grid> -o <vo> -s <filename> -p <filename>" ).
-             append( "\n" ).append( "[-v] [-h]" );
+             append( "\n" ).append( "[-c <path to property file>] [-v] [-h]" );
         
        System.out.println( text.toString() );
     }
@@ -171,8 +182,8 @@ public class PegasusGetSites extends Executable{
      * 
      * @param args
      */
-    public void executeCommand(String[] args) {
-        parseCommandLineArguments(args);
+    public void executeCommand() {
+        parseCommandLineArguments(getCommandLineOptions());
         PegasusProperties p =  PegasusProperties.nonSingletonInstance();
         
         p.setProperty( "pegasus.catalog.site", mSource );
@@ -306,7 +317,7 @@ public class PegasusGetSites extends Executable{
     public void parseCommandLineArguments(String[] args){
         LongOpt[] longOptions = generateValidOptions();
 
-        Getopt g = new Getopt("pegasus-get-sites", args, "1:g:o:s:p:hvV", longOptions, false);
+        Getopt g = new Getopt("pegasus-get-sites", args, "1:g:o:s:p:c:hvV", longOptions, false);
         g.setOpterr(false);
 
         int option = 0;
@@ -334,6 +345,10 @@ public class PegasusGetSites extends Executable{
                 case 'p': //--properties
                     mPropertiesFilename = g.getOptarg();
                     break;
+                    
+                case 'c': // conf
+                	//do nothing
+                	break;
 
                 case 'v': //--verbose
                     level++;
@@ -352,7 +367,7 @@ public class PegasusGetSites extends Executable{
                     for( int i =0 ; i < args.length ; i++ )
                         System.out.println( args[i] );
                     throw new RuntimeException("Incorrect option or option usage " +
-                                               option);
+                    							(char)g.getOptopt());
             }
         }
 
@@ -376,7 +391,7 @@ public class PegasusGetSites extends Executable{
      * @return  LongOpt[]
      */
     public LongOpt[] generateValidOptions() {
-          LongOpt[] longopts = new LongOpt[8];
+          LongOpt[] longopts = new LongOpt[9];
 
         longopts[0]   = new LongOpt( "source", LongOpt.REQUIRED_ARGUMENT, null, '1' );
         longopts[1]   = new LongOpt( "grid", LongOpt.REQUIRED_ARGUMENT, null, 'g' );
@@ -386,6 +401,7 @@ public class PegasusGetSites extends Executable{
         longopts[5]   = new LongOpt( "verbose", LongOpt.NO_ARGUMENT, null, 'v' );
         longopts[6]   = new LongOpt( "help", LongOpt.NO_ARGUMENT, null, 'h' );
         longopts[7]   = new LongOpt( "properties", LongOpt.REQUIRED_ARGUMENT, null, 'p' );
+        longopts[8]   = new LongOpt( "conf", LongOpt.REQUIRED_ARGUMENT, null, 'c' );
         
         return longopts;
     }
