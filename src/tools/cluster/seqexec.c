@@ -199,7 +199,6 @@ merge( char* s1, char* s2, int use_space )
   }
 }
 
-
 pid_t
 wait_for_child( Jobs* jobs, int* status )
 {
@@ -210,7 +209,13 @@ wait_for_child( Jobs* jobs, int* status )
   size_t slot; 
   pid_t child = ((pid_t) -1);  
 
+  /* FIXME: Not sure, if I need these. I take it to mean: While I am
+   * blocked in kernel wait()ing for children, do not interrupt ^C me,
+   * and do not send me SIGCHLD since I am inside wait() anyways. Do
+   * send the signals to the children, though (which hopefully exit.)
+   */ 
   save_signals(&save); 
+
   while ( (child = wait4( ((pid_t) 0), status, 0, &usage )) < 0 ) {
     saverr = errno;
     perror( "wait4" ); 
@@ -223,6 +228,8 @@ wait_for_child( Jobs* jobs, int* status )
   }
   saverr = errno; 
   final = now(NULL); 
+
+  /* FIXME: see above, end bracket. */ 
   restore_signals(&save); 
 
   /* find child that has finished */ 
@@ -240,18 +247,19 @@ wait_for_child( Jobs* jobs, int* status )
     Job* j = (jobs->jobs) + slot; 
 
     /* 20110419 PM-364: new requirement */
-    printf( "[seqexec-task id=%lu, start=\"%s\", duration=%.3f, status=%d, line=%lu, pid=%d, app=\"%s\"]\n",
+    printf( "[seqexec-task id=%lu, start=\"%s\", duration=%.3f, status=%d, "
+	    "line=%lu, pid=%d, app=\"%s\"]\n",
 	    j->count,
 	    iso2date( j->start, date, sizeof(date) ),
 	    (final - j->start), 
 	    *status,
 	    j->lineno, 
 	    child, 
-	    j->argv[0] ); 
+	    j->argv[ find_application(j->argv) ] ); 
     
     /* progress report at finish of job */ 
     if ( progress != -1 ) 
-      report( progress, j->when, (final - j->start), *status, j->argv, &usage, NULL ); 
+      report( progress, j->start, (final - j->start), *status, j->argv, &usage, NULL ); 
     
     /* free reported job */ 
     job_done(j); 
@@ -261,16 +269,40 @@ wait_for_child( Jobs* jobs, int* status )
   return child; 
 }
 
+void
+run_independent_task( char* cmd, char* envp[], unsigned long* extra ) 
+{
+  if ( cmd != NULL ) { 
+#ifndef USE_SYSTEM_SYSTEM
+    size_t len; 
+    int    appc;
+    char** appv;
+
+    if ( (appc = interpreteArguments( cmd, &appv )) > 0 ) {
+      int other = mysystem( appv, envp, "setup" ); 
+      if ( other || debug )
+	showerr( "%s: setup returned %d/%d\n", application,
+		 (other >> 8), (other & 127) ); 
+      for ( len=0; len<appc; len++ ) free((void*) appv[len]);
+      free((void*) appv); 
+    } else {
+      /* unparsable cleanup argument string */
+      showerr( "%s: unparsable setup string, ignoring\n", application ); 
+    }
+#else
+    int other = system( cmd ); 
+    if ( other || debug )
+      showerr( "%s: setup returned %d/%d\n", application,
+	       (other >> 8), (other & 127) ); 
+#endif /* USE_SYSTEM_SYSTEM */
+    (*extra)++; 
+  }
+}
+
 int
 isafailure( int status )
 {
   return ( WIFEXITED(status) && success[ WEXITSTATUS(status) ] == 1 ) ? 0 : 1;
-}
-
-double 
-timespec( struct timeval* tv )
-{
-  return ( tv->tv_sec + tv->tv_usec / 1E6 ); 
 }
 
 void
@@ -290,10 +322,9 @@ main( int argc, char* argv[], char* envp[] )
 {
   size_t len;
   char line[MAXSTR];
-  int appc, other, status = 0;
+  int other, status = 0;
   int slot, cpus, fail_hard = 0;
   char* cmd;
-  char** appv = NULL;
   char* save = NULL;
   unsigned long total = 0;
   unsigned long failure = 0;
@@ -305,7 +336,7 @@ main( int argc, char* argv[], char* envp[] )
   parseCommandline( argc, argv, &fail_hard, &cpus );
   
   /* progress report finish */
-  if ( progress != -1 ) report( progress, time(NULL), 0.0, -1, argv, NULL, NULL );
+  if ( progress != -1 ) report( progress, start, 0.0, -1, argv, NULL, NULL );
 
   /* allocate job management memory */ 
   if ( jobs_init( &jobs, cpus ) == -1 ) {
@@ -323,27 +354,7 @@ main( int argc, char* argv[], char* envp[] )
   }
 
   /* NEW: unconditionally run a setup job */
-  if ( (cmd = getenv("SEQEXEC_SETUP")) != NULL ) { 
-    extra++; 
-#ifndef USE_SYSTEM_SYSTEM
-    if ( (appc = interpreteArguments( cmd, &appv )) > 0 ) {
-      other = mysystem( appv, envp, "setup" ); 
-      if ( other || debug )
-	showerr( "%s: setup returned %d/%d\n", application,
-		 (other >> 8), (other & 127) ); 
-      for ( len=0; len<appc; len++ ) free((void*) appv[len]);
-      free((void*) appv); 
-    } else {
-      /* unparsable cleanup argument string */
-      showerr( "%s: unparsable setup string, ignoring\n", application ); 
-    }
-#else
-    other = system( cmd ); 
-    if ( other || debug )
-      showerr( "%s: setup returned %d/%d\n", application,
-	       (other >> 8), (other & 127) ); 
-#endif /* USE_SYSTEM_SYSTEM */
-  }
+  run_independent_task( getenv("SEQEXEC_SETUP"), envp, &extra ); 
 
   /* Read the commands and call each sequentially */
   while ( fgets(line,sizeof(line),stdin) != (char*) NULL ) {
@@ -374,7 +385,9 @@ main( int argc, char* argv[], char* envp[] )
       } while ( len > 0 && (line[len-1] == '\r' || line[len-1] == '\n') );
     }
 	
-    /* assemble command */
+    /* Assemble command.
+     * FIXME: barf if commandline becomes too long, see _SC_ARG_MAX. 
+     */
     if ( save != NULL ) {
       cmd = merge( save, line, 0 );
       free((void*) save);
@@ -406,10 +419,9 @@ main( int argc, char* argv[], char* envp[] )
 	j->envp = envp; /* for now */ 
 	j->lineno = lineno; 
 
-#if 0
-	/* failure: inhibits kickstart */
+	/* WARNING: Must propagate "save" to start_child() */
 	save_signals( &save ); 
-#endif
+
 	if ( (j->child = fork()) == ((pid_t) -1) ) { 
 	  /* fork error, bad */
 	  showerr( "%s: fork: %d: %s\n", 
@@ -418,7 +430,7 @@ main( int argc, char* argv[], char* envp[] )
 	  job_done( j ); 
 	} else if ( j->child == ((pid_t) 0) ) {
 	  /* child code */
-	  start_child( j->argv, j->envp, NULL ); 
+	  start_child( j->argv, j->envp, &save ); 
 	  return 127; /* never reached, just in case */ 
 	} else {
 	  /* parent code */
@@ -426,10 +438,9 @@ main( int argc, char* argv[], char* envp[] )
 	  j->state = RUNNING;
 	  j->start = now( &(j->when) ); 
 	}
-#if 0
-	/* failure: inhibits kickstart */
+
+	/* END BRACKET */ 
 	restore_signals( &save ); 
-#endif
 
       } else {
 	/* error parsing args */
@@ -460,37 +471,18 @@ main( int argc, char* argv[], char* envp[] )
   }
 
   /* NEW: unconditionally run a clean-up job */
-  if ( (cmd = getenv("SEQEXEC_CLEANUP")) != NULL ) { 
-    extra++; 
-#ifndef USE_SYSTEM_SYSTEM
-    if ( (appc = interpreteArguments( cmd, &appv )) > 0 ) {
-      other = mysystem( appv, envp, "cleanup" ); 
-      if ( other || debug )
-	showerr( "%s: cleanup returned %d/%d\n", application,
-		 (other >> 8), (other & 127) ); 
-      for ( len=0; len<appc; len++ ) free((void*) appv[len]);
-      free((void*) appv); 
-    } else {
-      /* unparsable cleanup argument string */
-      showerr( "%s: unparsable cleanup string, ignoring\n", application ); 
-    }
-#else
-    other = system( cmd ); 
-    if ( other || debug )
-      showerr( "%s: cleanup returned %d/%d\n", application,
-	       (other >> 8), (other & 127) ); 
-#endif /* USE_SYSTEM_SYSTEM */
-  }
+  run_independent_task( getenv("SEQEXEC_CLEANUP"), envp, &extra ); 
 
   /* provide final statistics */
   jobs_done( &jobs ); 
   diff = now(NULL) - start;
   printf( "[%s-summary stat=\"%s\", lines=%lu, tasks=%lu, succeeded=%lu, failed=%lu, "
-	  "extra=%lu, duration=%.3f, start=\"%s\"]\n",
+	  "extra=%lu, duration=%.3f, start=\"%s\", pid=%d, app=\"%s\"]\n",
 	  application, 
 	  ( (fail_hard && status && isafailure(status)) ? "fail" : "ok" ),
 	  lineno, total, total-failure, failure, extra,
-	  diff, iso2date(start,line,sizeof(line)) );
+	  diff, iso2date(start,line,sizeof(line)),
+	  getpid(), argv[0] );
 
   fflush(stdout);
   exit( (fail_hard && status && isafailure(status)) ? 5 : 0 );

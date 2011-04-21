@@ -52,6 +52,51 @@ create_identifier( void )
   return (identifier = strdup(buffer));
 }
 
+int 
+find_application( char* argv[] )
+/* purpose: find start of argv excluding kickstart
+ * paramtr: argv (IN): invocation argument vector
+ * returns: start of argv. Returns 0 if unsure.
+ */
+{
+  size_t slen;
+  int i, flag = 0;
+  static const char* ks = "kickstart";
+
+  for ( i=0 ; argv[i]; ++i ) { 
+    char* s = argv[i];
+    slen = strlen(s);
+
+    /* detect presence of kickstart */
+    if ( i == 0 && strcmp( s+slen-strlen(ks), ks ) == 0 ) {
+      flag = 1;
+      continue;
+    }
+
+    if ( flag ) {
+      /* in kickstart mode, skip options of kickstart */
+      if ( s[0] == '-' && strchr( "ioelnNRBLTIwWSs", s[1] ) != NULL ) {
+	/* option with argument */
+	if ( s[2] == 0 ) ++i;
+	continue;
+      } else if ( s[0] == '-' && strchr( "HVX", s[1] ) != NULL ) {
+	/* option without argument */
+	continue;
+      } else {
+	flag = 0;
+      }
+    }
+
+    if ( ! flag ) {
+      /* found */ 
+      return ( argv[i] == NULL ? 0 : i ); 
+    }
+  }
+
+  /* invalid arguments? */
+  return 0;
+}
+
 static
 size_t
 append_argument( char* msg, size_t size, size_t len, char* argv[] )
@@ -203,7 +248,7 @@ mytrylock( int fd )
 }
 
 ssize_t
-report( int progress, time_t start, double duration,
+report( int progress, double start, double duration,
 	int status, char* argv[], struct rusage* use, 
 	const char* special )
 /* purpose: report what has just finished.
@@ -234,18 +279,18 @@ report( int progress, time_t start, double duration,
   if ( status == -1 && duration == 0.0 && use == NULL ) {
     /* report of seqexec itself */
     snprintf( msg, size, "%s %s %lu 0/0 START", 
-	      isodate(start,date,sizeof(date)), 
+	      iso2date(start,date,sizeof(date)), 
 	      identifier, counter++ );
   } else if ( special != NULL ) {
     /* report from setup/cleanup invocations */
     snprintf( msg, size, "%s %s %s %d/%d %.3f",
-	      isodate(start,date,sizeof(date)), 
+	      iso2date(start,date,sizeof(date)), 
 	      identifier, special,
 	      (status >> 8), (status & 127), duration );
   } else {
     /* report from child invocations */
     snprintf( msg, size, "%s %s %lu %d/%d %.3f",
-	      isodate(start,date,sizeof(date)), 
+	      iso2date(start,date,sizeof(date)), 
 	      identifier, counter++,
 	      (status >> 8), (status & 127), duration );
   }

@@ -16,7 +16,6 @@
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
-#include <sys/time.h>
 #include <unistd.h>
 #include "tools.h"
 
@@ -37,6 +36,12 @@ showerr( const char* fmt, ... )
   return write( STDOUT_FILENO, line, strlen(line) );
 }
 
+double 
+timespec( struct timeval* tv )
+{
+  return ( tv->tv_sec + tv->tv_usec / 1E6 ); 
+}
+
 double
 now( time_t* when )
 /* purpose: obtains an UTC timestamp with microsecond resolution.
@@ -48,7 +53,7 @@ now( time_t* when )
   struct timeval t = { -1, 0 };
   while ( gettimeofday( &t, NULL ) == -1 && timeout < 10 ) timeout++;
   if ( when != NULL ) *when = t.tv_sec;
-  return (t.tv_sec + t.tv_usec/1E6);
+  return timespec(&t); 
 }
 
 char*

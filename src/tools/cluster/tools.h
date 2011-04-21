@@ -20,6 +20,7 @@
 #include <sys/types.h>
 #include <stdarg.h>
 #include <time.h>
+#include <sys/time.h>
 
 #ifndef MAXSTR
 #define MAXSTR 4096
@@ -32,6 +33,15 @@ showerr( const char* fmt, ... );
  * paramtr: see printf()
  * returns: number of bytes written, -1 for error
  */ 
+
+extern
+double
+timespec( struct timeval* tv );
+/* purpose: convert a timeval into float seconds with microseconds.
+ * paramtr: tv (IN): pointer to struct timeval to convert
+ * returns: seconds as float with microseconds.
+ * warning: anything below millisecond resolution is unrealistic. 
+ */
 
 extern
 double

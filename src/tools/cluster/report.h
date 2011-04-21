@@ -22,8 +22,16 @@
 #include <sys/resource.h>
 
 extern
+int
+find_application( char* argv[] );
+/* purpose: find start of argv excluding kickstart
+ * paramtr: argv (IN): invocation argument vector
+ * returns: start of argv. Returns 0 if unsure.
+ */
+
+extern
 ssize_t
-report( int progress, time_t start, double duration,
+report( int progress, double start, double duration,
 	int status, char* argv[], struct rusage* use, 
 	const char* special );
 /* purpose: report what has just finished.
