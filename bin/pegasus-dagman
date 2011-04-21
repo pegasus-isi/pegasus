@@ -52,7 +52,7 @@ def dagman_launch(arguments):
             dagman_proc = subprocess.Popen(arguments, 
                                            env=os.environ, 
                                            stdout=sys.stdout, 
-                                           stderr=sys.stderr, preexec_fn=os.setsid) 
+                                           stderr=sys.stderr) 
 
             print "Launched Dagman with Pid %d" % dagman_proc.pid
         except OSError, err :
@@ -91,35 +91,26 @@ def sighandler(signum, frame):
     global dagman, monitord
     print "pegasus-dagman caught SIGTERM"
     if dagman != None :
-        os.killpg(dagman.pid, signum)
+        os.kill(dagman.pid, signum)
     if monitord != None:
         os.kill(monitord.pid, signum)
     if signum == 2 :
-        sys.exit(130)
+        sys.exit(1)
     elif signum == 15 :
-        sys.exit(143)
-    else :
-        sys.exit(145)
-
-def cleanup():
-    sleep(5)
-    global dagman,monitord
-    if dagman != None :
-        os.kill(dagman.pid, signal.SIGTERM)
-    if monitord != None:
-        os.kill(monitord.pid, signal.SIGTERM)
-
-
+        sys.exit(0)
 
 #-- main--------------------------------------------------------------
     
 if __name__ == "__main__":
-    
+    os.setpgid(0, 0)
     signal.signal(signal.SIGTERM, sighandler)
     signal.signal(signal.SIGINT, sighandler)
     signal.signal(signal.SIGABRT, sighandler)
-    atexit.register(cleanup)
-    
+    signal.signal(signal.SIGUSR1, sighandler)
+ #   atexit.register(cleanup)
+    f = open ( 'environent.log', 'w')
+    f.write(str(os.environ))
+    f.close
     # Launch DAGMAN
     dagman = dagman_launch(sys.argv[1:])
     # Launch Monitord
