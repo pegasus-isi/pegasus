@@ -398,28 +398,6 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
      
  </section>
  
- <section>
-  
-  <title>Workflow Monitoring and Analysis</title>
-  
-                  <section>
-                   <title>Monitoring Tools</title>
-                   
-                   <para>List the tools and link to each tools page</para>
-
-
-
-
-                  </section>
-  
-  </section>
-  
-  <section>
-  
-   <title>Setting up your own Pegasus Installation</title>
-  
-    <para>Not sure what goes here</para>
- </section>
 
  <section>
   <title>Executing Workflows in Different Environments</title>
@@ -444,7 +422,29 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
                    <para>Local Execution</para>
 
   </section>
-  
+  <section>
+
+  <title>Workflow Monitoring and Analysis</title>
+
+                  <section>
+                   <title>Monitoring Tools</title>
+
+                   <para>List the tools and link to each tools page</para>
+
+
+
+
+                  </section>
+
+  </section>
+
+  <section>
+
+   <title>Setting up your own Pegasus Installation</title>
+
+    <para>Not sure what goes here</para>
+ </section>
+
   <section>
    <title>Pegasus Logs</title>
    <para>Describe the logs that Pegasus creates and what each is used for</para>
@@ -483,6 +483,7 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
 
 
 </chapter>
+
 
 
 
