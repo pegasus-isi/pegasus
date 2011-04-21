@@ -48,11 +48,10 @@ def dagman_launch(arguments):
         try :
             dagman_proc = subprocess.Popen(arguments, 
                                            stdout=sys.stdout, 
-                                           stderr=sys.stderr,
-                    executable="condor_scheduniv_exec."+os.getenv("CONDOR_ID")) 
+                                           stderr=sys.stderr) 
             print "Launched Dagman with Pid %d" % dagman_proc.pid
         except OSError, err :
-            print "Error: Could not launch Dagman." + err
+            print "Error: Could not launch Dagman.",  err
             sys.exit(1)
     else :
         print "Error : Condor Dagman not found"
@@ -76,7 +75,7 @@ def monitord_launch():
             print "Launched Monitord with Pid %d" % monitord_proc.pid
             return monitord_proc
         except OSError, err :
-            print "Error: Could not launch Monitord." + err
+            print "Error: Could not launch Monitord.", err
     else :
         print "Error : pegausus-monitord not found"
 
