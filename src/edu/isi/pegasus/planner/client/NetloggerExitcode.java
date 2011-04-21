@@ -84,6 +84,14 @@ public class NetloggerExitcode extends Executable{
      */
     public NetloggerExitcode(){
         super();
+    }
+    
+    /**
+     * Initialize the NetloggerExitCode object 
+     * @param opts the command line argument passed to the NetloggerExitCode
+     */
+    public void initialize(String [] opts){
+    	super.initialize(opts);
         mLogMsg = new String();
         mVersion = Version.instance().toString();
         mLoggingLevel = 0;
@@ -103,7 +111,8 @@ public class NetloggerExitcode extends Executable{
         double execTime  = -1;
 
         try{
-            result = me.executeCommand( args );
+        	me.initialize(args);
+            result = me.executeCommand( );
         }
         catch ( FactoryException fe){
             me.log( fe.convertException() , LogManager.FATAL_MESSAGE_LEVEL);
@@ -131,7 +140,7 @@ public class NetloggerExitcode extends Executable{
                          LogManager.INFO_MESSAGE_LEVEL);
         }
         
-        me.log( "Exiting with exitcode " + result, LogManager.DEBUG_MESSAGE_LEVEL );
+        me.log( "Exiting with exitcode " + result, LogManager.CONSOLE_MESSAGE_LEVEL );
         me.mLogger.logEventCompletion();
         System.exit(result);
     }
@@ -155,12 +164,13 @@ public class NetloggerExitcode extends Executable{
      * 
      * @return  the exitcode to exit with
      */
-    public int executeCommand(String[] args) {
+    public int executeCommand() {
         int result = 0;
-        parseCommandLineArguments(args);
+        parseCommandLineArguments(getCommandLineOptions());
 
         //set logging level only if explicitly set by user
         if( mLoggingLevel > 0 ) { mLogger.setLevel( mLoggingLevel ); }
+        else{mLogger.setLevel(LogManager.WARNING_MESSAGE_LEVEL);}
 
 
         //do sanity check on input directory
@@ -234,7 +244,7 @@ public class NetloggerExitcode extends Executable{
         LongOpt[] longOptions = generateValidOptions();
 
         Getopt g = new Getopt( "plot-node-usage", args,
-                              "f:w:j:hvV",
+                              "f:w:j:c:hvV",
                               longOptions, false);
         g.setOpterr(false);
 
@@ -260,7 +270,10 @@ public class NetloggerExitcode extends Executable{
                     printLongVersion();
                     System.exit( 0 );
                     return;
-
+                
+                case 'c': // conf
+                	//do nothing
+                	break;
                 
                 case 'v'://verbose
                     mLoggingLevel++;
@@ -274,7 +287,7 @@ public class NetloggerExitcode extends Executable{
                 default: //same as help
                     printShortVersion();
                     throw new RuntimeException("Incorrect option or option usage " +
-                                               (char)option);
+                    		(char)g.getOptopt());
 
             }
         }
@@ -300,7 +313,7 @@ public class NetloggerExitcode extends Executable{
      * options
      */
     public LongOpt[] generateValidOptions(){
-        LongOpt[] longopts = new LongOpt[6];
+        LongOpt[] longopts = new LongOpt[7];
 
         longopts[0]   = new LongOpt( "file", LongOpt.REQUIRED_ARGUMENT, null, 'f' );
         longopts[1]   = new LongOpt( "wf-id", LongOpt.REQUIRED_ARGUMENT, null, 'w' );
@@ -308,6 +321,7 @@ public class NetloggerExitcode extends Executable{
         longopts[3]   = new LongOpt( "help", LongOpt.NO_ARGUMENT, null, 'h' );
         longopts[4]   = new LongOpt( "version", LongOpt.NO_ARGUMENT, null, 'V' );
         longopts[5]   = new LongOpt( "job-id", LongOpt.REQUIRED_ARGUMENT, null, 'j' );
+        longopts[6]   = new LongOpt( "conf", LongOpt.REQUIRED_ARGUMENT, null, 'c' );
         return longopts;
     }
 
@@ -320,7 +334,7 @@ public class NetloggerExitcode extends Executable{
           "\n $Id$ " +
           "\n " + getGVDSVersion() +
           "\n Usage : netlogger-exitcode [-Dprop  [..]] -f <kickstart output file>  " +
-          " -w <workflow-id>  -j <job id>  [-v] [-V] [-h]";
+          " -w <workflow-id>  -j <job id>  [-c <path to property file>] [-v] [-V] [-h]";
 
         System.out.println(text);
     }
@@ -339,13 +353,14 @@ public class NetloggerExitcode extends Executable{
            "\n                          pegasus.log.manager " + 
            "\n                          pegasus.log.formatter ." +
            "\n Usage: netlogger-exitcode [-Dprop  [..]] --file  -f <kickstart output file>  " +
-           "\n        --wf-id <workflow-id>  --job-id <job id>  [--version] [--verbose] [--help]" +
+           "\n        --wf-id <workflow-id>  --job-id <job id>  [--conf <path to property file>] [--version] [--verbose] [--help]" +
            "\n" +
            "\n Mandatory Options " +
            "\n --file              the kickstart output file to be parsed. May contain multiple invocation records." +
            "\n Other Options  " +
            "\n -w |--wf-id         the workflow id to use while logging." +
            "\n -j |--job-id        the job id to use while logging." +
+           "\n -c |--conf          path to  property file" +
            "\n -v |--verbose       increases the verbosity of messages about what is going on" +
            "\n -V |--version       displays the version of the Pegasus Workflow Planner" +
            "\n -h |--help          generates this help." +
