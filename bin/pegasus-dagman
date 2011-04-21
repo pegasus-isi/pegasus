@@ -3,8 +3,9 @@
 """
 pegasus-dagman
 
-This program is to be run as a replacement for condor_dagman inside of a submit file.
-The dag can be submitted by running the command condor_submit_dag -dagman /path/to/pegasus-dagman my.dag
+This program is to be run as a replacement for condor_dagman inside of a submit
+file. The dag can be submitted by running the command
+condor_submit_dag -dagman /path/to/pegasus-dagman my.dag
 
 Usage: pegasus-dagman [options] 
 """
@@ -28,12 +29,9 @@ Usage: pegasus-dagman [options]
 # Revision : $Revision$
 __author__ = "Gaurang Mehta"
 
-import os, sys
-import atexit
-import signal
+import os, sys, signal, subprocess
 from time import sleep
-import subprocess
-import common                   # Takes care of setting up PEGASUS_HOME and PYTHONPATH
+import common   # Takes care of setting up PEGASUS_HOME and PYTHONPATH
 from Pegasus.tools.utils import find_exec
 
 SLEEP_TIME = 30
@@ -41,10 +39,9 @@ MAX_MONITORD_LAUNCH = 5
 dagman = None
 monitord = None
 
-'''
-Launches the condor_dagman program with all the arguments passed to pegasus-dagman
-'''
 def dagman_launch(arguments):
+    '''Launches the condor_dagman program with
+    all the arguments passed to pegasus-dagman'''
     dagman_bin = find_exec("condor_dagman")
     if dagman_bin != None :
         arguments.insert(0, dagman_bin)
@@ -63,18 +60,16 @@ def dagman_launch(arguments):
         sys.exit(127)
     return dagman_proc
 
-'''
-Launches Monitord in std daemon mode
-'''
 def monitord_launch():
+    '''Launches Monitord in condor foreground  mode'''
     global MAX_MONITORD_LAUNCH
     if MAX_MONITORD_LAUNCH > 0 :
         monitord_bin = find_exec("pegasus-monitord")
         if monitord_bin != None :
             try :
                 log = open('monitord.log', 'w')
-                monitord_proc = subprocess.Popen([monitord_bin, 
-                                                  "-N",os.getenv('_CONDOR_DAGMAN_LOG')],
+                monitord_proc = subprocess.Popen(
+                    [monitord_bin, "-N", os.getenv('_CONDOR_DAGMAN_LOG')],
                                                  env=os.environ, stdout=log, 
                                                  stderr=subprocess.STDOUT)
                                                  
@@ -88,6 +83,7 @@ def monitord_launch():
     return None
 
 def sighandler(signum, frame):
+    ''' Handles SIGTERM, SIGINT, SIGABRT and SIGUSR1 signals'''
     global dagman, monitord
     print "pegasus-dagman caught SIGTERM"
     if dagman != None :
@@ -107,10 +103,7 @@ if __name__ == "__main__":
     signal.signal(signal.SIGINT, sighandler)
     signal.signal(signal.SIGABRT, sighandler)
     signal.signal(signal.SIGUSR1, sighandler)
- #   atexit.register(cleanup)
-    f = open ( 'environent.log', 'w')
-    f.write(str(os.environ))
-    f.close
+
     # Launch DAGMAN
     dagman = dagman_launch(sys.argv[1:])
     # Launch Monitord
@@ -128,7 +121,8 @@ if __name__ == "__main__":
         monitord.poll()
         dagman.poll()
         
-    # Dagman and Monitord have exited. Lets exit pegasus-dagman with a merged returncode
+    # Dagman and Monitord have exited.
+    #Lets exit pegasus-dagman with a merged returncode
     print "Dagman exited with code %d" % dagman.returncode
     print "Monitord exited with code %d" % monitord.returncode
     sys.exit(dagman.returncode & monitord.returncode)
