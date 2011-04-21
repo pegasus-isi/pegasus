@@ -105,7 +105,12 @@ public class RankDAX extends Executable {
      */
     public RankDAX() {
         super();
-        mBag = new PegasusBag();
+        
+    }
+    
+    public void initialize(String[] opts){
+    	super.initialize(opts);
+    	mBag = new PegasusBag();
         mBag.add( PegasusBag.PEGASUS_LOGMANAGER, mLogger );
         mBag.add( PegasusBag.PEGASUS_PROPERTIES, mProps );
         mTopNum = Integer.MAX_VALUE;
@@ -125,7 +130,8 @@ public class RankDAX extends Executable {
         double execTime  = -1;
 
         try{
-            me.executeCommand( args );
+        	me.initialize(args);
+            me.executeCommand();
         }
         catch ( FactoryException fe){
             me.log( fe.convertException() , LogManager.FATAL_MESSAGE_LEVEL);
@@ -175,7 +181,7 @@ public class RankDAX extends Executable {
     public void parseCommandLineArguments(String[] args){
         LongOpt[] longOptions = generateValidOptions();
 
-        Getopt g = new Getopt("rank-dax", args, "vhr:d:s:o:r:f:t:", longOptions, false);
+        Getopt g = new Getopt("rank-dax", args, "vhr:d:s:o:r:f:t:c:", longOptions, false);
         g.setOpterr(false);
 
         int option = 0;
@@ -212,7 +218,11 @@ public class RankDAX extends Executable {
                 case 't'://rank top t
                     mTopNum = new Integer( g.getOptarg() ).intValue();
                     break;
-
+                
+                case 'c': // conf
+                	//do nothing
+                	break;
+                	
                 case 'h':
                     printShortHelp();
                     System.exit( 0 );
@@ -223,12 +233,14 @@ public class RankDAX extends Executable {
                     for( int i =0 ; i < args.length ; i++ )
                         System.out.println( args[i] );
                     throw new RuntimeException("Incorrect option or option usage " +
-                                               option);
+                    							(char)g.getOptopt());
 
             }
         }
         if( level > 0 ){
             mLogger.setLevel( level );
+        }else{
+        	mLogger.setLevel(LogManager.WARNING_MESSAGE_LEVEL);
         }
     }
 
@@ -237,8 +249,8 @@ public class RankDAX extends Executable {
      *
      * @param args the command line options.
      */
-    public void executeCommand( String[] args ) {
-        parseCommandLineArguments(args);
+    public void executeCommand() {
+        parseCommandLineArguments(getCommandLineOptions());
 
 
         if( mRequestID == null ){
@@ -284,10 +296,10 @@ public class RankDAX extends Executable {
             getDax.connect( mProps );
             daxes = getDax.get( mRequestID, dir.getAbsolutePath() );
             mLogger.log( "Number of DAX'es retrieved  " + daxes.size(),
-                         LogManager.DEBUG_MESSAGE_LEVEL );
+                         LogManager.CONSOLE_MESSAGE_LEVEL );
             mLogger.logEventCompletion( );
             mLogger.log( "Writing daxes to directory " + dir,
-                          LogManager.DEBUG_MESSAGE_LEVEL);
+                          LogManager.CONSOLE_MESSAGE_LEVEL);
         }
         finally{
             getDax.close();
@@ -303,14 +315,14 @@ public class RankDAX extends Executable {
         File f = null;
         if( mOutputFile == null ){
             mLogger.log( "Output file not specified. Writing out ranked file in dir " + dir,
-                         LogManager.DEBUG_MESSAGE_LEVEL );
+                         LogManager.CONSOLE_MESSAGE_LEVEL );
             f = new File( dir, "ranked_daxes.txt" );
         }
         else{
             f = new File( mOutputFile );
         }
 
-        log( "Writing out the ranking file " + f, LogManager.DEBUG_MESSAGE_LEVEL );
+        log( "Writing out the ranking file " + f, LogManager.CONSOLE_MESSAGE_LEVEL );
         try{
             writeOutRankings( f, rankings );
         }catch( IOException ioe ){
@@ -432,7 +444,7 @@ public class RankDAX extends Executable {
         text.append( "\n" ).append( " $Id$ ").
              append( "\n" ).append( getGVDSVersion() ).
              append( "\n" ).append( "Usage : rank-dax [-Dprop  [..]]  -r <request id> -f <options to pegasus-plan> -d <base directory> " ).
-             append( "\n" ).append( " [-s site[,site[..]]] [-o <output file>] [-t execute top t] [-v] [-h]" );
+             append( "\n" ).append( " [-s site[,site[..]]] [-o <output file>] [-t execute top t] [-c <path to property file>] [-v] [-h]" );
 
        System.out.println( text.toString() );
 
@@ -447,7 +459,7 @@ public class RankDAX extends Executable {
      * options
      */
     public LongOpt[] generateValidOptions(){
-        LongOpt[] longopts = new LongOpt[8];
+        LongOpt[] longopts = new LongOpt[9];
 
         longopts[0]   = new LongOpt( "dir", LongOpt.REQUIRED_ARGUMENT, null, 'd' );
         longopts[1]   = new LongOpt( "sites", LongOpt.REQUIRED_ARGUMENT, null, 's' );
@@ -457,6 +469,7 @@ public class RankDAX extends Executable {
         longopts[5]   = new LongOpt( "request-id", LongOpt.OPTIONAL_ARGUMENT, null, 'r' );
         longopts[6]   = new LongOpt( "forward", LongOpt.REQUIRED_ARGUMENT, null, 'f' );
         longopts[7]   = new LongOpt( "top", LongOpt.REQUIRED_ARGUMENT, null, 't' );
+        longopts[8]   = new LongOpt( "conf", LongOpt.REQUIRED_ARGUMENT, null, 'c' );
 
         return longopts;
     }
