@@ -199,7 +199,6 @@ merge( char* s1, char* s2, int use_space )
   }
 }
 
-
 pid_t
 wait_for_child( Jobs* jobs, int* status )
 {
@@ -210,7 +209,13 @@ wait_for_child( Jobs* jobs, int* status )
   size_t slot; 
   pid_t child = ((pid_t) -1);  
 
+  /* FIXME: Not sure, if I need these. I take it to mean: While I am
+   * blocked in kernel wait()ing for children, do not interrupt ^C me,
+   * and do not send me SIGCHLD since I am inside wait() anyways. Do
+   * send the signals to the children, though (which hopefully exit.)
+   */ 
   save_signals(&save); 
+
   while ( (child = wait4( ((pid_t) 0), status, 0, &usage )) < 0 ) {
     saverr = errno;
     perror( "wait4" ); 
@@ -223,6 +228,8 @@ wait_for_child( Jobs* jobs, int* status )
   }
   saverr = errno; 
   final = now(NULL); 
+
+  /* FIXME: see above, end bracket. */ 
   restore_signals(&save); 
 
   /* find child that has finished */ 
@@ -236,19 +243,23 @@ wait_for_child( Jobs* jobs, int* status )
 	     application, child, *status ); 
   } else { 
     /* free slot and report */ 
+    char date[32]; 
     Job* j = (jobs->jobs) + slot; 
-    
-    /* say hi */ 
-    if ( debug > 1 ) { 
-      char date[32]; 
-      printf( "<job pid=\"%d\" app=\"%s\" start=\"%s\" duration=\"%.3f\" status=\"%d\"/>\n",
-	      child, j->argv[0], isodate( j->when, date, sizeof(date) ),
-	      (final - j->start), *status ); 
-    }
+
+    /* 20110419 PM-364: new requirement */
+    printf( "[seqexec-task id=%lu, start=\"%s\", duration=%.3f, status=%d, "
+	    "line=%lu, pid=%d, app=\"%s\"]\n",
+	    j->count,
+	    iso2date( j->start, date, sizeof(date) ),
+	    (final - j->start), 
+	    *status,
+	    j->lineno, 
+	    child, 
+	    j->argv[ find_application(j->argv) ] ); 
     
     /* progress report at finish of job */ 
     if ( progress != -1 ) 
-      report( progress, j->when, (final - j->start), *status, j->argv, &usage, NULL ); 
+      report( progress, j->start, (final - j->start), *status, j->argv, &usage, NULL ); 
     
     /* free reported job */ 
     job_done(j); 
@@ -258,10 +269,52 @@ wait_for_child( Jobs* jobs, int* status )
   return child; 
 }
 
+void
+run_independent_task( char* cmd, char* envp[], unsigned long* extra ) 
+{
+  if ( cmd != NULL ) { 
+#ifndef USE_SYSTEM_SYSTEM
+    size_t len; 
+    int    appc;
+    char** appv;
+
+    if ( (appc = interpreteArguments( cmd, &appv )) > 0 ) {
+      int other = mysystem( appv, envp, "setup" ); 
+      if ( other || debug )
+	showerr( "%s: setup returned %d/%d\n", application,
+		 (other >> 8), (other & 127) ); 
+      for ( len=0; len<appc; len++ ) free((void*) appv[len]);
+      free((void*) appv); 
+    } else {
+      /* unparsable cleanup argument string */
+      showerr( "%s: unparsable setup string, ignoring\n", application ); 
+    }
+#else
+    int other = system( cmd ); 
+    if ( other || debug )
+      showerr( "%s: setup returned %d/%d\n", application,
+	       (other >> 8), (other & 127) ); 
+#endif /* USE_SYSTEM_SYSTEM */
+    (*extra)++; 
+  }
+}
+
 int
 isafailure( int status )
 {
   return ( WIFEXITED(status) && success[ WEXITSTATUS(status) ] == 1 ) ? 0 : 1;
+}
+
+void
+massage_failure( int fail_hard, int current_ec, int* collect_ec )
+{
+  if ( fail_hard ) { 
+    /* only propagate first failure in hard-fail mode */ 
+    if ( ! ( *collect_ec && isafailure(*collect_ec) ) ) *collect_ec = current_ec; 
+  } else {
+    /* always retain last exit code in no-hard-fail mode */ 
+    *collect_ec = current_ec; 
+  }
 }
 
 int
@@ -269,21 +322,21 @@ main( int argc, char* argv[], char* envp[] )
 {
   size_t len;
   char line[MAXSTR];
-  int appc, other, status = 0;
+  int other, status = 0;
   int slot, cpus, fail_hard = 0;
   char* cmd;
-  char** appv = NULL;
   char* save = NULL;
   unsigned long total = 0;
   unsigned long failure = 0;
   unsigned long lineno = 0;
+  unsigned long extra = 0; 
   time_t when;
   Jobs jobs;
   double diff, start = now(&when);
   parseCommandline( argc, argv, &fail_hard, &cpus );
   
   /* progress report finish */
-  if ( progress != -1 ) report( progress, time(NULL), 0.0, -1, argv, NULL, NULL );
+  if ( progress != -1 ) report( progress, start, 0.0, -1, argv, NULL, NULL );
 
   /* allocate job management memory */ 
   if ( jobs_init( &jobs, cpus ) == -1 ) {
@@ -301,26 +354,7 @@ main( int argc, char* argv[], char* envp[] )
   }
 
   /* NEW: unconditionally run a setup job */
-  if ( (cmd = getenv("SEQEXEC_SETUP")) != NULL ) { 
-#ifndef USE_SYSTEM_SYSTEM
-    if ( (appc = interpreteArguments( cmd, &appv )) > 0 ) {
-      other = mysystem( appv, envp, "setup" ); 
-      if ( other || debug )
-	showerr( "%s: setup returned %d/%d\n", application,
-		 (other >> 8), (other & 127) ); 
-      for ( len=0; len<appc; len++ ) free((void*) appv[len]);
-      free((void*) appv); 
-    } else {
-      /* unparsable cleanup argument string */
-      showerr( "%s: unparsable setup string, ignoring\n", application ); 
-    }
-#else
-    other = system( cmd ); 
-    if ( other || debug )
-      showerr( "%s: setup returned %d/%d\n", application,
-	       (other >> 8), (other & 127) ); 
-#endif /* USE_SYSTEM_SYSTEM */
-  }
+  run_independent_task( getenv("SEQEXEC_SETUP"), envp, &extra ); 
 
   /* Read the commands and call each sequentially */
   while ( fgets(line,sizeof(line),stdin) != (char*) NULL ) {
@@ -341,7 +375,7 @@ main( int argc, char* argv[], char* envp[] )
       save = temp;
 
       lineno--;
-      fprintf( stderr, "# continuation line %lu\n", lineno );
+      showerr( "%s: continuation line %lu\n", application, lineno ); 
       continue;
     } else {
       /* remove line termination character(s) */
@@ -351,7 +385,9 @@ main( int argc, char* argv[], char* envp[] )
       } while ( len > 0 && (line[len-1] == '\r' || line[len-1] == '\n') );
     }
 	
-    /* assemble command */
+    /* Assemble command.
+     * FIXME: barf if commandline becomes too long, see _SC_ARG_MAX. 
+     */
     if ( save != NULL ) {
       cmd = merge( save, line, 0 );
       free((void*) save);
@@ -365,25 +401,36 @@ main( int argc, char* argv[], char* envp[] )
       /* wait for any child to finish */
       if ( debug ) showerr( "%s: %d slot%s busy, wait()ing\n", 
 			    application, jobs.cpus, ( jobs.cpus == 1 ? "" : "s" ) ); 
-      wait_for_child( &jobs, &status ); 
+      wait_for_child( &jobs, &other ); 
+      if ( errno == 0 && isafailure(other) ) failure++; 
+      massage_failure( fail_hard, other, &status );
     }
     /* post-condition: there is a free slot; slot number in "slot" */ 
 
     /* found free slot */ 
-    if ( slot < jobs.cpus ) { 
+    if ( fail_hard && status && isafailure(status) ) {
+      /* we are in failure mode already, skip starting new stuff */ 
+    } else if ( slot < jobs.cpus ) { 
       /* there is a free slot. Spawn and continue */ 
+      Signals save; 
       Job* j = jobs.jobs + slot; 
       if ( (j->argc = interpreteArguments( cmd, &(j->argv) )) > 0 ) {
 	total++;
 	j->envp = envp; /* for now */ 
+	j->lineno = lineno; 
+
+	/* WARNING: Must propagate "save" to start_child() */
+	save_signals( &save ); 
+
 	if ( (j->child = fork()) == ((pid_t) -1) ) { 
 	  /* fork error, bad */
-	  perror( "fork" );
+	  showerr( "%s: fork: %d: %s\n", 
+		   application, errno, strerror(errno) ); 
 	  failure++; 
 	  job_done( j ); 
 	} else if ( j->child == ((pid_t) 0) ) {
 	  /* child code */
-	  start_child( j->argv, j->envp, NULL ); 
+	  start_child( j->argv, j->envp, &save ); 
 	  return 127; /* never reached, just in case */ 
 	} else {
 	  /* parent code */
@@ -391,6 +438,10 @@ main( int argc, char* argv[], char* envp[] )
 	  j->state = RUNNING;
 	  j->start = now( &(j->when) ); 
 	}
+
+	/* END BRACKET */ 
+	restore_signals( &save ); 
+
       } else {
 	/* error parsing args */
 	if ( debug ) 
@@ -414,38 +465,24 @@ main( int argc, char* argv[], char* envp[] )
     /* wait for any child to finish */
     size_t n = jobs.cpus - slot; 
     showerr( "%s: %d task%s remaining\n", application, n, (n == 1 ? "" : "s" ) ); 
-    wait_for_child( &jobs, &status ); 
+    wait_for_child( &jobs, &other );
+    if ( errno == 0 && isafailure(other) ) failure++; 
+    massage_failure( fail_hard, other, &status );
   }
-
 
   /* NEW: unconditionally run a clean-up job */
-  if ( (cmd = getenv("SEQEXEC_CLEANUP")) != NULL ) { 
-#ifndef USE_SYSTEM_SYSTEM
-    if ( (appc = interpreteArguments( cmd, &appv )) > 0 ) {
-      other = mysystem( appv, envp, "cleanup" ); 
-      if ( other || debug )
-	showerr( "%s: cleanup returned %d/%d\n", application,
-		 (other >> 8), (other & 127) ); 
-      for ( len=0; len<appc; len++ ) free((void*) appv[len]);
-      free((void*) appv); 
-    } else {
-      /* unparsable cleanup argument string */
-      showerr( "%s: unparsable cleanup string, ignoring\n", application ); 
-    }
-#else
-    other = system( cmd ); 
-    if ( other || debug )
-      showerr( "%s: cleanup returned %d/%d\n", application,
-	       (other >> 8), (other & 127) ); 
-#endif /* USE_SYSTEM_SYSTEM */
-  }
+  run_independent_task( getenv("SEQEXEC_CLEANUP"), envp, &extra ); 
 
   /* provide final statistics */
   jobs_done( &jobs ); 
   diff = now(NULL) - start;
-  printf( "[struct stat=\"OK\", lines=%lu, count=%lu, failed=%lu, "
-	  "duration=%.3f, start=\"%s\"]\n",
-	  lineno, total, failure, diff, isodate(when,line,sizeof(line)) );
+  printf( "[%s-summary stat=\"%s\", lines=%lu, tasks=%lu, succeeded=%lu, failed=%lu, "
+	  "extra=%lu, duration=%.3f, start=\"%s\", pid=%d, app=\"%s\"]\n",
+	  application, 
+	  ( (fail_hard && status && isafailure(status)) ? "fail" : "ok" ),
+	  lineno, total, total-failure, failure, extra,
+	  diff, iso2date(start,line,sizeof(line)),
+	  getpid(), argv[0] );
 
   fflush(stdout);
   exit( (fail_hard && status && isafailure(status)) ? 5 : 0 );

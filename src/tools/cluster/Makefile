@@ -99,15 +99,16 @@ endif
 
 all: seqexec $(GENDOC)
 
+job.o: job.c job.h
+mei.o: mei.c mypopen.h
 #mpiexec.o: mpiexec.c mypopen.h mympi.h
 #mympi.o: mympi.c mympi.h
-job.o: job.c job.h
 mypopen.o: mypopen.c mypopen.h
 mysystem.o: mysystem.c tools.h report.h mysystem.h
 parser.o: parser.c parser.h
 report.o: report.c tools.h report.h
-tools.o: tools.c tools.h
 seqexec.o: seqexec.c tools.h parser.h report.h mysystem.h job.h
+tools.o: tools.c tools.h
 try-cpus.o: try-cpus.c
 
 seqexec: seqexec.o tools.o parser.o report.o mysystem.o job.o 

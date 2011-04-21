@@ -20,6 +20,7 @@
 #include <sys/types.h>
 #include <stdarg.h>
 #include <time.h>
+#include <sys/time.h>
 
 #ifndef MAXSTR
 #define MAXSTR 4096
@@ -35,6 +36,15 @@ showerr( const char* fmt, ... );
 
 extern
 double
+timespec( struct timeval* tv );
+/* purpose: convert a timeval into float seconds with microseconds.
+ * paramtr: tv (IN): pointer to struct timeval to convert
+ * returns: seconds as float with microseconds.
+ * warning: anything below millisecond resolution is unrealistic. 
+ */
+
+extern
+double
 now( time_t* when );
 /* purpose: obtains an UTC timestamp with microsecond resolution.
  * paramtr: when (opt. OUT): where to save integral seconds into. 
@@ -46,6 +56,16 @@ char*
 isodate( time_t seconds, char* buffer, size_t size );
 /* purpose: formats ISO 8601 timestamp into given buffer (simplified)
  * paramtr: seconds (IN): time stamp
+ *          buffer (OUT): where to put the results
+ *          size (IN): capacity of buffer
+ * returns: pointer to start of buffer for convenience. 
+ */
+
+extern
+char*
+iso2date( double seconds_wf, char* buffer, size_t size );
+/* purpose: formats ISO 8601 timestamp into given buffer (simplified)
+ * paramtr: seconds_wf (IN): time stamp with fractional seconds (millis)
  *          buffer (OUT): where to put the results
  *          size (IN): capacity of buffer
  * returns: pointer to start of buffer for convenience. 

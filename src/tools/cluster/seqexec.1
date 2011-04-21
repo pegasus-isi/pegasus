@@ -67,6 +67,12 @@ In hard failure mode, as soon as one application fails, either through
 a non-zero exit code, or by dying on a signal, further execution is
 stopped. 
 .IP
+In parallel execution mode, one or more other applications later in the 
+sequence file may have been started already by the time failure is
+detected. 
+.B Seqexec
+will wait for the completion of these applications, but not start new ones. 
+.IP
 By default, all applications are executed regardless of failures. 
 .TP
 .B \-h
@@ -149,18 +155,123 @@ where it will return 5 for true failure. The latter is modified by the
 .B \-S 
 option. 
 .PP
+All other internal errors being absent, 
+.B seqexec
+will always return 0 when run without
+.BR \-f . 
+Unlike shell, it will 
+.I not
+return the last application's exit code. 
+However, in 
+.B \-f
+mode, 
+.B seqexec
+returns either 0 if all main sequence applications succeeded, or
+5 if one failed; or more than one in parallel execution mode. 
+.PP
 The 
 .B seqexec 
 application will also create a small summary on 
 .I stdout
-about the success and failure. However, in this case, the field
+for each job, and one for itself, about the success and failure. The
+field
 .B failed
-reports
-.I any 
-exit code that was not zero or a signal of death termination. It
-includes non-zero exit codes that were marked as success with the
+reports any exit code that was not zero or a signal of death
+termination. It does 
+.I not 
+include non-zero exit codes that were marked as success using the
 .B \-S
 option.
+.SH "TASK SUMMARY"
+Each task executed by 
+.B seqexec
+generates a record bracketed by square brackets and introduced by the
+string
+.I seqexec-task
+with the following constituents: 
+.TP
+.B id
+This is a numerical value for main sequence application, indicating the
+application's place in the sequence file. The setup task uses the string
+.IR setup ,
+and the cleanup task uses the string 
+.IR cleanup . 
+.TP
+.B start
+is the ISO 8601 time stamp, with millisecond resolution, when the
+application was started.
+.TP
+.B duration
+is the application wall-time duration in seconds, with millisecond
+resolution.
+.TP
+.B status
+is the
+.I raw
+exit status as returned by the 
+.I wait
+family of system calls. Typically, the exit code is found in the high
+byte, and the signal of death in the low byte. Typically, 0 indicates
+a successful execution, and any other value a problem. 
+.TP
+.B line 
+is the line number where the task was found in the main sequence file.
+Setup- and cleanup tasks don't have this attribute. 
+.TP
+.B pid
+is the process id under which the application had run. 
+.TP
+.B app
+is the path to the application that was started. Note that in this record,
+unlike the progress record, any 
+.B kickstart
+will not be parsed out (yet). 
+.SH "SEQEXEC SUMMARY"
+The final summary of counts is a record bracketed by square brackets and
+introduced by the string
+.I seqexec-summary
+with the following constituents: 
+.TP
+.B stat
+The string
+.I fail
+in 
+.B \-f 
+mode when a failure occurred. Otherwise, it will always be the string
+.IR ok ,
+if the record is produced. 
+.TP
+.B lines
+is the stopping line number of the input sequence file, indicating 
+how far processing got. Up to the number of cores additional lines
+may have been parsed in case of
+.B \-f
+mode. 
+.TP
+.B tasks
+is the number of tasks processed. 
+.TP
+.B succeeded
+is the number of main sequence jobs that succeeded.
+.TP
+.B failed
+is the number of main sequence jobs that failed. The failure condition
+depends on the
+.B \-S
+settings, too. 
+.TP
+.B extra
+is 0, 1 or 2, depending on the existence of setup- and cleanup jobs. 
+.TP
+.B duration 
+is the duration in seconds, with millisecond resolution, how long 
+.B seqexec
+ran. 
+.TP
+.B start
+is the start time of 
+.B seqexec
+as ISO 8601 time stamp. 
 .SH "SEE ALSO"
 .BR kickstart (1).
 .SH "CAVEATS"
@@ -207,7 +318,8 @@ are running, broken Linux NFS may still garble some content.
 If this variable is set, and contains a single fully-qualified path
 to an executable and arguments, this executable will be run before 
 any jobs are started. The exit code of this setup job will have no
-effect upon the main job sequence. 
+effect upon the main job sequence. Success or failure will not be
+counted towards the summary. 
 .TP
 .B SEQEXEC_CLEANUP
 If this variable is set, and contains a single fully-qualified path
@@ -215,7 +327,8 @@ to an executable and arguments, this executable will be before
 .B seqexec
 quits. Failure of any previous job will have no effect on the ability 
 to run this job. The exit code of the cleanup job will have no effect 
-on the overall success or failure state. 
+on the overall success or failure state. Success or failure will not be
+counted towards the summary. 
 .SH "AUTHORS"
 Jens-S. Vöckler <voeckler at isi dot edu>
 .PP

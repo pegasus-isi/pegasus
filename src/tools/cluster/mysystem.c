@@ -149,17 +149,20 @@ mysystem( char* argv[], char* envp[], const char* special )
   /* ignore errors on these, too. */
   restore_signals( &save ); 
 
-  /* say hi */
+  /* 20110419 PM-364: new requirement */
   diff = now(&then) - start;
-  if ( debug > 1 ) {
-    printf( "<job app=\"%s\" start=\"%s\" duration=\"%.3f\" status=\"%d\"/>\n",
-	    special ? special : argv[0], 
-	    isodate(when,date,sizeof(date)), diff, status );
-  }
+  printf( "[seqexec-task id=%s, start=\"%s\", duration=%.3f, status=%d, "
+	  "pid=%d, app=\"%s\"]\n",
+	  special ? special : "(unknown)", 
+	  iso2date( start, date, sizeof(date) ),
+	  diff, 
+	  status,
+	  child, 
+	  argv[ find_application(argv) ] ); 
 
   /* progress report finish */
   if ( progress != -1 ) 
-    report( progress, when, diff, status, argv, &usage, special );
+    report( progress, start, diff, status, argv, &usage, special );
 
   errno = saverr;
   return status;

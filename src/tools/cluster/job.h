@@ -23,15 +23,16 @@ typedef enum {
 } JobState; 
 
 typedef struct {
-  int    argc;  /* number of arguments */
-  char** argv;  /* argument vector */
-  char** envp;  /* environment settings -- future lab per job */
+  int    argc;   /* number of arguments */
+  char** argv;   /* argument vector */
+  char** envp;   /* environment settings -- future lab per job */
 
   JobState state; /* where in the life cycle of a job are we */
-  pid_t  child;	/* pid of process -- when in state running */ 
-  double start; /* starting time */ 
-  time_t when;  /* start time_t */
-  size_t count; /* copy from job counter */ 
+  pid_t  child;	  /* pid of process -- when in state running */ 
+  double start;   /* starting time */ 
+  time_t when;    /* start time_t */
+  size_t count;   /* copy from job counter */ 
+  size_t lineno;  /* copy from lineno */ 
 } Job;
 
 extern
