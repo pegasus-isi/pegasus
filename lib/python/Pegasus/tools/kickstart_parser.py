@@ -420,7 +420,7 @@ class Parser:
 	schema.
 	"""
 
-	stampede_elements = {"invocation": ["hostname", "resource", "user", "hostaddr", "transformation"],
+	stampede_elements = {"invocation": ["hostname", "resource", "user", "hostaddr", "transformation", "derivation"],
 			     "mainjob": ["duration", "start"],
 			     "ram": ["total"],
 			     "uname": ["system", "release", "machine"],
