@@ -124,7 +124,15 @@ public class PlotSpaceUsage extends Executable{
      */
     public PlotSpaceUsage(){
         super();
-        mLogMsg = new String();
+    }
+    
+    /**
+     * Initialize the PlotSpaceUsage object 
+     * @param opts the command line argument passed to the PlotSpaceUsage
+     */
+    public void initialize(String[] opts){
+    	super.initialize(opts);
+    	mLogMsg = new String();
         mVersion = Version.instance().toString();
         mOutputDir = this.DEFAULT_OUTPUT_DIR;
         mLoggingLevel = 0;
@@ -149,7 +157,8 @@ public class PlotSpaceUsage extends Executable{
         double execTime  = -1;
 
         try{
-            me.executeCommand( args );
+        	me.initialize(args);
+            me.executeCommand();
         }
         catch ( FactoryException fe){
             me.log( fe.convertException() , LogManager.FATAL_MESSAGE_LEVEL);
@@ -195,11 +204,12 @@ public class PlotSpaceUsage extends Executable{
      *
      * @param args the command line options.
      */
-    public void executeCommand(String[] args) {
-        parseCommandLineArguments(args);
+    public void executeCommand() {
+        parseCommandLineArguments(getCommandLineOptions());
 
-        //set logging level only if explicitly set by user
+        //set logging level to warning if the level is not set by user
         if( mLoggingLevel > 0 ) { mLogger.setLevel( mLoggingLevel ); }
+        else{mLogger.setLevel(LogManager.WARNING_MESSAGE_LEVEL);}
 
         //do sanity check on units
         mSizeUnits = mSizeUnits.trim();
@@ -289,7 +299,7 @@ public class PlotSpaceUsage extends Executable{
         SpaceUsage s = (SpaceUsage)c.getConstructedObject();
         s.sort();
         log( " Space Store is \n" + c.getConstructedObject(),
-             LogManager.DEBUG_MESSAGE_LEVEL);
+             LogManager.CONSOLE_MESSAGE_LEVEL);
 
         //generate the ploticus format
         Plot plotter = new Ploticus();
@@ -299,12 +309,12 @@ public class PlotSpaceUsage extends Executable{
 
             for( Iterator it = result.iterator(); it.hasNext(); ){
                 mLogger.log( "Written out file " + it.next(),
-                             LogManager.INFO_MESSAGE_LEVEL );
+                             LogManager.CONSOLE_MESSAGE_LEVEL );
             }
         }
         catch (IOException ioe) {
             log( "Unable to plot the files " + convertException( ioe , mLogger.getLevel()),
-                 LogManager.DEBUG_MESSAGE_LEVEL);
+                 LogManager.ERROR_MESSAGE_LEVEL);
         }
 
     }
@@ -321,7 +331,7 @@ public class PlotSpaceUsage extends Executable{
         LongOpt[] longOptions = generateValidOptions();
 
         Getopt g = new Getopt( "plot-space-usage", args,
-                              "b:i:o:s:t:T:uhvV",
+                              "b:i:o:s:t:T:c:uhvV",
                               longOptions, false);
         g.setOpterr(false);
 
@@ -363,6 +373,10 @@ public class PlotSpaceUsage extends Executable{
                 case 'u'://use-stat
                     this.mUseStatInfo = true;
                     break;
+                    
+                case 'c': // conf
+                	//do nothing
+                	break;
 
                 case 'v'://verbose
                     mLoggingLevel++;
@@ -376,7 +390,7 @@ public class PlotSpaceUsage extends Executable{
                 default: //same as help
                     printShortVersion();
                     throw new RuntimeException("Incorrect option or option usage " +
-                                               (char)option);
+                    							(char)g.getOptopt());
 
             }
         }
@@ -393,7 +407,7 @@ public class PlotSpaceUsage extends Executable{
      * options
      */
     public LongOpt[] generateValidOptions(){
-        LongOpt[] longopts = new LongOpt[10];
+        LongOpt[] longopts = new LongOpt[11];
 
         longopts[0]   = new LongOpt( "input", LongOpt.REQUIRED_ARGUMENT, null, 'i' );
         longopts[1]   = new LongOpt( "output", LongOpt.REQUIRED_ARGUMENT, null, 'o' );
@@ -405,6 +419,7 @@ public class PlotSpaceUsage extends Executable{
         longopts[7]   = new LongOpt( "timing-source", LongOpt.REQUIRED_ARGUMENT, null, 't');
         longopts[8]   = new LongOpt( "use-stat", LongOpt.NO_ARGUMENT, null, 'u' );
         longopts[9]   = new LongOpt( "time-units", LongOpt.REQUIRED_ARGUMENT, null, 'T' );
+        longopts[10]  = new LongOpt( "conf", LongOpt.REQUIRED_ARGUMENT, null, 'c' );
         return longopts;
     }
 
@@ -418,7 +433,7 @@ public class PlotSpaceUsage extends Executable{
           "\n " + getGVDSVersion() +
           "\n Usage : plot-space-usage [-Dprop  [..]] -i <input directory>  " +
           " [-o output directory] [-b basename] [-s size units] [-t timing source] " +
-          " [-T time units] [-u] [-v] [-V] [-h]";
+          " [-T time units] [-c <path to property file>] [-u] [-v] [-V] [-h]";
 
         System.out.println(text);
     }
@@ -434,7 +449,7 @@ public class PlotSpaceUsage extends Executable{
            "\n " + getGVDSVersion() +
            "\n plot-space-usage - A plotting tool that plots out the space usage on remote clusters over time"  +
            "\n Usage: plot_space_usage [-Dprop  [..]] --dir <input directory> [--base basename] " +
-           "\n [--output output directory] [--timing-source source] [--use-stat] [--verbose] [--Version] [--help] " +
+           "\n [--output output directory] [--timing-source source] [--use-stat] [--conf <path to property file>] [--verbose] [--Version] [--help] " +
            "\n" +
            "\n Mandatory Options " +
            "\n --input              the directory where the kickstart records reside." +
@@ -446,6 +461,7 @@ public class PlotSpaceUsage extends Executable{
            "\n                     Can be kickstart or tailstatd. Defaults to kickstart." +
            "\n -T |--time-units    the units in which you want the x axis to be plotted (seconds|minutes|hours) Defaults to seconds." +
            "\n -u |--use-stat      use the file stat information in kickstart records to estimate directory usage" +
+           "\n -c |--conf          path to property file" +
            "\n -v |--verbose       increases the verbosity of messages about what is going on" +
            "\n -V |--version       displays the version of the Pegasus Workflow Planner" +
            "\n -h |--help          generates this help." +

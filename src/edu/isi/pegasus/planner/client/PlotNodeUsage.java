@@ -108,7 +108,15 @@ public class PlotNodeUsage extends Executable{
      */
     public PlotNodeUsage(){
         super();
-        mLogMsg = new String();
+    }
+    
+    /**
+     * Initialize the PlotNodeUsage object 
+     * @param opts the command line argument passed to the PlotNodeUsage
+     */
+    public void initialize(String[] opts){
+    	super.initialize(opts);
+    	mLogMsg = new String();
         mVersion = Version.instance().toString();
         mOutputDir = this.DEFAULT_OUTPUT_DIR;
         mLoggingLevel = 0;
@@ -129,7 +137,8 @@ public class PlotNodeUsage extends Executable{
         double execTime  = -1;
 
         try{
-            me.executeCommand( args );
+        	me.initialize(args);
+            me.executeCommand();
         }
         catch ( FactoryException fe){
             me.log( fe.convertException() , LogManager.FATAL_MESSAGE_LEVEL);
@@ -175,11 +184,12 @@ public class PlotNodeUsage extends Executable{
      *
      * @param args the command line options.
      */
-    public void executeCommand(String[] args) {
-        parseCommandLineArguments(args);
+    public void executeCommand() {
+        parseCommandLineArguments(getCommandLineOptions());
 
-        //set logging level only if explicitly set by user
+        //set logging level to warning if the level is not set by user
         if( mLoggingLevel > 0 ) { mLogger.setLevel( mLoggingLevel ); }
+        else{mLogger.setLevel(LogManager.WARNING_MESSAGE_LEVEL);}
 
 
         //do sanity check on input directory
@@ -252,7 +262,7 @@ public class PlotNodeUsage extends Executable{
         WorkflowMeasurements wm = ( WorkflowMeasurements )c.getConstructedObject();
         wm.sort();
         log( " Workflow Measurements is \n" + wm,
-             LogManager.DEBUG_MESSAGE_LEVEL);
+             LogManager.CONSOLE_MESSAGE_LEVEL);
 
         //generate the ploticus format
         Ploticus plotter = new Ploticus();
@@ -262,12 +272,12 @@ public class PlotNodeUsage extends Executable{
 
             for( Iterator it = result.iterator(); it.hasNext(); ){
                 mLogger.log( "Written out file " + it.next(),
-                             LogManager.INFO_MESSAGE_LEVEL );
+                             LogManager.CONSOLE_MESSAGE_LEVEL );
             }
         }
         catch (IOException ioe) {
             log( "Unable to plot the files " + convertException( ioe, mLogger.getLevel() ),
-                 LogManager.DEBUG_MESSAGE_LEVEL);
+                 LogManager.ERROR_MESSAGE_LEVEL);
         }
 
     }
@@ -284,7 +294,7 @@ public class PlotNodeUsage extends Executable{
         LongOpt[] longOptions = generateValidOptions();
 
         Getopt g = new Getopt( "plot-node-usage", args,
-                              "b:i:o:T:hvV",
+                              "b:i:o:T:c:hvV",
                               longOptions, false);
         g.setOpterr(false);
 
@@ -306,6 +316,10 @@ public class PlotNodeUsage extends Executable{
                     printLongVersion();
                     System.exit( 0 );
                     return;
+                 
+                case 'c': // conf
+                	//do nothing
+                	break;
 
                 case 'o'://output directory
                     this.mOutputDir =  g.getOptarg();
@@ -327,7 +341,7 @@ public class PlotNodeUsage extends Executable{
                 default: //same as help
                     printShortVersion();
                     throw new RuntimeException("Incorrect option or option usage " +
-                                               (char)option);
+                    							(char)g.getOptopt());
 
             }
         }
@@ -344,7 +358,7 @@ public class PlotNodeUsage extends Executable{
      * options
      */
     public LongOpt[] generateValidOptions(){
-        LongOpt[] longopts = new LongOpt[7];
+        LongOpt[] longopts = new LongOpt[8];
 
         longopts[0]   = new LongOpt( "input", LongOpt.REQUIRED_ARGUMENT, null, 'i' );
         longopts[1]   = new LongOpt( "output", LongOpt.REQUIRED_ARGUMENT, null, 'o' );
@@ -353,6 +367,7 @@ public class PlotNodeUsage extends Executable{
         longopts[4]   = new LongOpt( "Version", LongOpt.NO_ARGUMENT, null, 'V' );
         longopts[5]   = new LongOpt( "basename", LongOpt.REQUIRED_ARGUMENT, null, 'b' );
         longopts[6]   = new LongOpt( "time-units", LongOpt.REQUIRED_ARGUMENT, null, 'T' );
+        longopts[7]   = new LongOpt( "conf", LongOpt.REQUIRED_ARGUMENT, null, 'c' );
         return longopts;
     }
 
@@ -365,7 +380,7 @@ public class PlotNodeUsage extends Executable{
           "\n $Id$ " +
           "\n " + getGVDSVersion() +
           "\n Usage : plot_node_usage [-Dprop  [..]] -i <input directory>  " +
-          " [-o output directory] [-b basename] [-T time units] [-v] [-V] [-h]";
+          " [-o output directory] [-b basename] [-T time units] [-c <path to property file>] [-v] [-V] [-h]";
 
         System.out.println(text);
     }
@@ -381,7 +396,7 @@ public class PlotNodeUsage extends Executable{
            "\n " + getGVDSVersion() +
            "\n plot-node-usage - A plotting tool that plots out the number of jobs running on remote clusters over time"  +
            "\n Usage: plot_node_usage [-Dprop  [..]] --input <input directory> [--base basename] " +
-           "\n [--output output directory] [-T time units] [--verbose] [--Version] [--help] " +
+           "\n [--output output directory] [-T time units] [--conf <path to property file>] [--verbose] [--Version] [--help] " +
            "\n" +
            "\n Mandatory Options " +
            "\n --input              the directory where the kickstart records reside." +
@@ -390,6 +405,7 @@ public class PlotNodeUsage extends Executable{
            "\n -o |--output        the output directory where to generate the ploticus files." +
            "\n -T |--time-units    the units in which you want the x axis to be plotted (seconds|minutes|hours) " +
            "\n                     Defaults to seconds." +
+           "\n -c |--conf          path to  property file" +
            "\n -v |--verbose       increases the verbosity of messages about what is going on" +
            "\n -V |--version       displays the version of the Pegasus Workflow Planner" +
            "\n -h |--help          generates this help." +
