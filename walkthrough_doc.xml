@@ -196,7 +196,7 @@ $ tar xvf Pegasus-3.0.1-Debian-6-x86.vbox.tar</emphasis></programlisting>
 
     </section>
 
-<section>
+   <section>
      <title>Planning and Executing Workflows</title>
      <para>In this chapter you will be introduced to planning and executing a
     workflow through Pegasus WMS locally. You will then plan and execute a
@@ -339,7 +339,7 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
 
     </section>
 
-<section>
+   <section>
     <title>Setting Up Environments</title>
     
     <para>Describe what an environment is and the general set up steps required.</para>
@@ -388,9 +388,9 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
 
                        </section>
 
-  </section>
+     </section>
   
-<section>
+   <section>
     <title>Workflow Execution</title>
     
     <para>Describe in general how a workflow is executed.</para>
@@ -400,8 +400,8 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
  </section>
  
 
- <section>
-  <title>Executing Workflows in Different Environments</title>
+   <section>
+     <title>Executing Workflows in Different Environments</title>
                <section>
                <title>Local Execution</title>
 
@@ -422,8 +422,8 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
                </section>
                    <para>Local Execution</para>
 
-  </section>
-<section>
+   </section>
+   <section>
 
   <title>Workflow Monitoring and Analysis</title>
 
@@ -439,14 +439,14 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
 
   </section>
 
-<section>
+   <section>
 
    <title>Setting up your own Pegasus Installation</title>
 
     <para>Not sure what goes here</para>
  </section>
 
-<section>
+   <section>
    <title>Pegasus Logs</title>
    <para>Describe the logs that Pegasus creates and what each is used for</para>
    <para>Include the persistence of each log and any storage repository for historical logs</para>
@@ -454,15 +454,15 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
    
   </section>
   
-<section>
-   <title>Debugging and Statistical Analysis of Workflows</title>
-   <para>Describe each debugging tool used on workflows</para>
+   <section>
+    <title>Debugging and Statistical Analysis of Workflows</title>
+    <para>Describe each debugging tool used on workflows</para>
    
-   <para>Describe the Statistical Analysis Reports and what they indicate</para>
+    <para>Describe the Statistical Analysis Reports and what they indicate</para>
    
   </section>
    
-<section>
+   <section>
   
    <title>Planning Steps</title>
    <para>List the general planning steps that are performed on a workflow</para>
@@ -474,10 +474,10 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
   </section>
   
 
-<section>
-  <title>Concepts/Glossary</title>
+   <section>
+    <title>Concepts/Glossary</title>
   
-  <para>Either links to a Glossary and a link to Components or DELETE ENTIRELY</para>
+     <para>Either links to a Glossary and a link to Components or DELETE ENTIRELY</para>
   
   </section>
   </section>
