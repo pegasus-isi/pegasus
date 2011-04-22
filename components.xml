@@ -133,7 +133,7 @@
     path to a file. Along with the PFN one can also store additional key/value
     attributes to be associated with a PFN.</para>
 
-    <para>Pegasus supports 3 different implemenations of the Replica
+    <para>Pegasus supports 4 different implemenations of the Replica
     Catalog.</para>
 
     <orderedlist>
