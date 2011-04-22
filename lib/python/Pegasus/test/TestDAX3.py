@@ -2,6 +2,10 @@ import unittest
 from Pegasus.DAX3 import *
 from Pegasus.DAX3 import Element, CatalogType
 import sys
+import os
+
+DIR = os.path.dirname(__file__)
+DIAMOND_DAX = os.path.join(DIR, "diamond.xml")
 
 class TestElement(unittest.TestCase):
 	def testSimple(self):
@@ -983,7 +987,7 @@ class TestADAG(unittest.TestCase):
 		left = diamond.toXML()
 		
 		# Get reference diamond dax
-		right = open("diamond.xml").read()
+		right = open(DIAMOND_DAX).read()
 		
 		# For this test we sort because we don't really care about minor
 		# ordering differences caused by the use of sets
@@ -1012,11 +1016,11 @@ class TestParse(unittest.TestCase):
 	
 	def testParse(self):
 		"""Should be able to parse a file using parse()"""
-		adag = parse('diamond.xml')
+		adag = parse(DIAMOND_DAX)
 	
 	def testParseString(self):
 		"""Should be able to parse a string using parseString()"""
-		txt = open('diamond.xml').read()
+		txt = open(DIAMOND_DAX).read()
 		adag = parseString(txt)
 	
 
