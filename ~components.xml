@@ -1266,12 +1266,10 @@ clus1    black::analyze:1.0    gsiftp://clus1.com/opt/nfs/vdt/pegasus/bin/keg
             </imageobject>
           </mediaobject>
         </figure></para>
-
       
       </section>
       <section>
-
-      <title>Pegasus Mapper</title>
+       <title>Pegasus Mapper</title>
       </section>
 
       <para>The mapping of tasks to the execution resources is done by the mapper based on
