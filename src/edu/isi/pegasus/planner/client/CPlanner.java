@@ -1657,8 +1657,7 @@ public class CPlanner extends Executable{
     private String getPegasusRunInvocation( ){
         StringBuffer result = new StringBuffer();
 
-        result.append( "pegasus-run ").
-               append( "-Dpegasus.user.properties=" ).append( mProps.getPropertiesInSubmitDirectory() );
+        result.append( "pegasus-run ");
 
         //check if we need to add any other options to pegasus-run
         for( Iterator<NameValue> it = mPOptions.getForwardOptions().iterator(); it.hasNext() ; ){
