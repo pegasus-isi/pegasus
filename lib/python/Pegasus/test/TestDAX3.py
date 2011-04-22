@@ -345,7 +345,7 @@ class TestTransformation(unittest.TestCase):
 		self.assertEquals(t.name,e.name)
 		self.assertEquals(t.namespace,e.namespace)
 		self.assertEquals(t.version,e.version)
-		
+	
 	def testUse(self):
 		"""Transformations should allow Use objects"""
 		u = Use("name",namespace="namespace",version="version",register=True,transfer=True)
@@ -361,7 +361,24 @@ class TestTransformation(unittest.TestCase):
 		self.assertFalse(t.hasUse(u))
 		t.uses("name",namespace="namespace",version="version",register=True,transfer=True)
 		self.assertTrue(t.hasUse(u))
-		
+	
+	def testInvoke(self):
+		"""Transformations should support invoke"""
+		c = Transformation('myjob')
+		p = Invoke("when","what")
+		self.assertFalse(c.hasInvoke(p))
+		c.addInvoke(p)
+		self.assertRaises(DuplicateError, c.addInvoke, p)
+		self.assertTrue(c.hasInvoke(p))
+		c.removeInvoke(p)
+		self.assertFalse(c.hasInvoke(p))
+		self.assertRaises(NotFoundError, c.removeInvoke, p)
+		c.addInvoke(p)
+		c.clearInvokes()
+		self.assertFalse(c.hasInvoke(p))
+		c.invoke("when","what")
+		self.assertTrue(c.hasInvoke(p))
+	
 	def testXML(self):
 		t = Transformation("name","namespace","version")
 		self.assertEquals(str(t.toXML()), '<transformation namespace="namespace" name="name" version="version"/>')
@@ -379,6 +396,12 @@ class TestTransformation(unittest.TestCase):
 		t.uses(File(name="filename"),link="input",transfer=True,register=True)
 		self.assertEquals(str(t.toXML()), '<transformation namespace="namespace" name="name" version="version">\n\t<uses name="filename" link="input" register="true" transfer="true"/>\n</transformation>')
 		
+		t.clearUses()
+		
+		t.invoke("when","what")
+		self.assertEquals(str(t.toXML()), '<transformation namespace="namespace" name="name" version="version">\n\t<invoke when="when">what</invoke>\n</transformation>')
+	
+
 class TestInvoke(unittest.TestCase):
 	def testConstructor(self):
 		"""Invoke requires valid when and what"""
@@ -387,7 +410,7 @@ class TestInvoke(unittest.TestCase):
 		self.assertRaises(ValueError, Invoke, None, "what")
 		self.assertRaises(ValueError, Invoke, "", "what")
 		self.assertRaises(ValueError, Invoke, "when", "")
-		
+	
 	def testEqual(self):
 		"""Invoke objects are equal when they have the same when and what"""
 		a = Invoke("when","what")
@@ -400,6 +423,7 @@ class TestInvoke(unittest.TestCase):
 		self.assertFalse(a == d)
 		self.assertFalse(a == e)
 	
+
 class TestJob(unittest.TestCase):
 	def testConstructor(self):
 		"""Should be able to create a job using n+ns+ver or Transformation"""
@@ -416,7 +440,7 @@ class TestJob(unittest.TestCase):
 		self.assertEquals(j.version,"2")
 		j = Job(Transformation('myxform',namespace="ns1"),namespace="ns2")
 		self.assertEquals(j.namespace,"ns2")
-		
+	
 	def testStd(self):
 		"""Should be able to set stdin/out/err using File or string"""
 		j = Job('myjob')
@@ -433,7 +457,7 @@ class TestJob(unittest.TestCase):
 		self.assertEquals(j.stdin, File("stdin"))
 		j.setStderr("stderr")
 		self.assertEquals(j.stderr, File("stderr"))
-		
+	
 	def testProfile(self):
 		"""Jobs should support profiles"""
 		c = Job('myjob')
@@ -448,7 +472,7 @@ class TestJob(unittest.TestCase):
 		c.addProfile(p)
 		c.clearProfiles()
 		self.assertFalse(c.hasProfile(p))
-		
+	
 	def testUse(self):
 		"""Jobs should allow Use objects"""
 		u = Use("name",namespace="namespace",version="version",register=True,transfer=True)
@@ -464,7 +488,7 @@ class TestJob(unittest.TestCase):
 		self.assertFalse(t.hasUse(u))
 		t.uses("name",namespace="namespace",version="version",register=True,transfer=True)
 		self.assertTrue(t.hasUse(u))
-		
+	
 	def testArguments(self):
 		j = Job('myjob')
 		
@@ -813,40 +837,40 @@ class TestADAG(unittest.TestCase):
 		"""ADAGs should output properly-formatted XML"""
 		c = ADAG('adag',count=10,index=1)
 		
-		self.assertEqualXML(c.toXML(),"""<adag xmlns="http://pegasus.isi.edu/schema/DAX" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.2.xsd" version="3.2" name="adag" count="10" index="1">
+		self.assertEqualXML(c.toXML(),"""<adag xmlns="http://pegasus.isi.edu/schema/DAX" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.3.xsd" version="3.3" name="adag" count="10" index="1">
 </adag>""")
 		
 		# Invoke
 		c.invoke("when","what")
-		self.assertEqualXML(c.toXML(),"""<adag xmlns="http://pegasus.isi.edu/schema/DAX" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.2.xsd" version="3.2" name="adag" count="10" index="1">
+		self.assertEqualXML(c.toXML(),"""<adag xmlns="http://pegasus.isi.edu/schema/DAX" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.3.xsd" version="3.3" name="adag" count="10" index="1">
 <invoke when="when">what</invoke>
 </adag>""")
 		c.clearInvokes()
 
 		# File
 		c.addFile(File("file"))
-		self.assertEqualXML(c.toXML(),"""<adag xmlns="http://pegasus.isi.edu/schema/DAX" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.2.xsd" version="3.2" name="adag" count="10" index="1">
+		self.assertEqualXML(c.toXML(),"""<adag xmlns="http://pegasus.isi.edu/schema/DAX" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.3.xsd" version="3.3" name="adag" count="10" index="1">
 <file name="file"/>
 </adag>""")
 		c.clearFiles()
 		
 		# Executable
 		c.addExecutable(Executable("exe"))
-		self.assertEqualXML(c.toXML(),"""<adag xmlns="http://pegasus.isi.edu/schema/DAX" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.2.xsd" version="3.2" name="adag" count="10" index="1">
+		self.assertEqualXML(c.toXML(),"""<adag xmlns="http://pegasus.isi.edu/schema/DAX" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.3.xsd" version="3.3" name="adag" count="10" index="1">
 <executable name="exe"/>
 </adag>""")
 		c.clearExecutables()
 		
 		# Transformation
 		c.addTransformation(Transformation("xform"))
-		self.assertEqualXML(c.toXML(),"""<adag xmlns="http://pegasus.isi.edu/schema/DAX" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.2.xsd" version="3.2" name="adag" count="10" index="1">
+		self.assertEqualXML(c.toXML(),"""<adag xmlns="http://pegasus.isi.edu/schema/DAX" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.3.xsd" version="3.3" name="adag" count="10" index="1">
 <transformation name="xform"/>
 </adag>""")
 		c.clearTransformations()
 		
 		# Job
 		c.addJob(Job("xform",id="ID01"))
-		self.assertEqualXML(c.toXML(),"""<adag xmlns="http://pegasus.isi.edu/schema/DAX" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.2.xsd" version="3.2" name="adag" count="10" index="1">
+		self.assertEqualXML(c.toXML(),"""<adag xmlns="http://pegasus.isi.edu/schema/DAX" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.3.xsd" version="3.3" name="adag" count="10" index="1">
 <job id="ID01" name="xform"/>
 </adag>""")
 		c.clearJobs()
@@ -855,7 +879,7 @@ class TestADAG(unittest.TestCase):
 		c.addJob(Job("xform",id="ID01"))
 		c.addJob(Job("xform",id="ID02"))
 		c.depends("ID02","ID01")
-		self.assertEqualXML(c.toXML(),"""<adag xmlns="http://pegasus.isi.edu/schema/DAX" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.2.xsd" version="3.2" name="adag" count="10" index="1">
+		self.assertEqualXML(c.toXML(),"""<adag xmlns="http://pegasus.isi.edu/schema/DAX" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.3.xsd" version="3.3" name="adag" count="10" index="1">
 <job id="ID01" name="xform"/>
 <job id="ID02" name="xform"/>
 <child ref="ID02">
@@ -868,7 +892,7 @@ class TestADAG(unittest.TestCase):
 		c.addFile(File("file"))
 		c.addExecutable(Executable("exe"))
 		c.addTransformation(Transformation("xform"))
-		self.assertEqualXML(c.toXML(),"""<adag xmlns="http://pegasus.isi.edu/schema/DAX" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.2.xsd" version="3.2" name="adag" count="10" index="1">
+		self.assertEqualXML(c.toXML(),"""<adag xmlns="http://pegasus.isi.edu/schema/DAX" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.3.xsd" version="3.3" name="adag" count="10" index="1">
 <invoke when="when">what</invoke>
 <file name="file"/>
 <executable name="exe"/>
@@ -959,65 +983,7 @@ class TestADAG(unittest.TestCase):
 		left = diamond.toXML()
 		
 		# Get reference diamond dax
-		right = """
-<adag xmlns="http://pegasus.isi.edu/schema/DAX" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.2.xsd" version="3.2" name="diamond">
-
-	<!-- part 1: Replica catalog (may be empty) -->
-	<file name="f.a">
-		<pfn url="gsiftp://site.com/inputs/f.a" site="site"/>
-	</file>
-	<executable name="preprocess" namespace="diamond" version="4.0" arch="x86_64" os="linux">
-		<pfn url="gsiftp://site.com/bin/preprocess" site="site"/>
-	</executable>
-	<executable name="findrange" namespace="diamond" version="4.0" arch="x86_64" os="linux">
-		<pfn url="gsiftp://site.com/bin/findrange" site="site"/>
-	</executable>
-	<executable name="analyze" namespace="diamond" version="4.0" arch="x86_64" os="linux">
-		<pfn url="gsiftp://site.com/bin/analyze" site="site"/>
-	</executable>
-
-	<!-- part 2: Transformation catalog (may be empty) -->
-	<transformation namespace="diamond" name="analyze" version="4.0"/>
-	<transformation namespace="diamond" name="preprocess" version="4.0"/>
-	<transformation namespace="diamond" name="findrange" version="4.0"/>
-
-	<!-- part 3: Definition of all jobs/dags/daxes (at least one) -->
-	<job id="ID0000001" namespace="diamond" name="preprocess" version="4.0">
-		<argument>-a preprocess -T60 -i <file name="f.a"/> -o <file name="f.b1"/> <file name="f.b2"/></argument>
-		<uses name="f.b2" link="output" transfer="true"/>
-		<uses name="f.a" link="input"/>
-		<uses name="f.b1" link="output" transfer="true"/>
-	</job>
-	<job id="ID0000002" namespace="diamond" name="findrange" version="4.0">
-		<argument>-a findrange -T60 -i <file name="f.b1"/> -o <file name="f.c1"/></argument>
-		<uses name="f.c1" link="output" transfer="true"/>
-		<uses name="f.b1" link="input"/>
-	</job>
-	<job id="ID0000003" namespace="diamond" name="findrange" version="4.0">
-		<argument>-a findrange -T60 -i <file name="f.b2"/> -o <file name="f.c2"/></argument>
-		<uses name="f.c2" link="output" transfer="true"/>
-		<uses name="f.b2" link="input"/>
-	</job>
-	<job id="ID0000004" namespace="diamond" name="analyze" version="4.0">
-		<argument>-a analyze -T60 -i <file name="f.c1"/> <file name="f.c2"/> -o <file name="f.d"/></argument>
-		<uses name="f.c1" link="input"/>
-		<uses name="f.c2" link="input"/>
-		<uses name="f.d" link="output" register="true" transfer="true"/>
-	</job>
-
-	<!-- part 4: List of control-flow dependencies (may be empty) -->
-	<child ref="ID0000002">
-		<parent ref="ID0000001"/>
-	</child>
-	<child ref="ID0000003">
-		<parent ref="ID0000001"/>
-	</child>
-	<child ref="ID0000004">
-		<parent ref="ID0000002"/>
-		<parent ref="ID0000003"/>
-	</child>
-</adag>
-"""
+		right = open("diamond.xml").read()
 		
 		# For this test we sort because we don't really care about minor
 		# ordering differences caused by the use of sets
@@ -1028,7 +994,7 @@ class TestADAG(unittest.TestCase):
 		a = [x.strip() for x in a.split('\n')]
 		a = [x for x in a if x and not x.startswith("<!--") and not x.startswith("<?xml")]
 		return a
-		
+	
 	def assertEqualXML(self, left, right, sort=False):
 		"""Assert that two xml documents are the same (more or less)"""
 		left = self.simplifyXML(left)
@@ -1039,21 +1005,21 @@ class TestADAG(unittest.TestCase):
 			right.sort()
 		for l,r in zip(left,right):
 			self.assertEquals(l,r,"XML differs:\n%s\n%s" % (l,r))
-		
-		
+	
+
 class TestParse(unittest.TestCase):
 	"""This doesn't really do a thorough job of testing the parser"""
 	
 	def testParse(self):
 		"""Should be able to parse a file using parse()"""
 		adag = parse('diamond.xml')
-		
+	
 	def testParseString(self):
 		"""Should be able to parse a string using parseString()"""
 		txt = open('diamond.xml').read()
 		adag = parseString(txt)
-		
-		
+	
+
 class TestScale(unittest.TestCase):
 	def testLargeWorkflow(self):
 		"""It shouldn't take more than 5 seconds to build a 20000 job workflow"""

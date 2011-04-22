@@ -104,7 +104,7 @@ f.close()
 """
 
 __author__ = "Gideon Juve <juve@usc.edu>"
-__version__ = "3.2"
+__version__ = "3.3"
 __all__ = [
 	'DuplicateError',
 	'NotFoundError',
@@ -139,8 +139,8 @@ import xml.sax.handler
 import shlex
 
 SCHEMA_NAMESPACE = u"http://pegasus.isi.edu/schema/DAX"
-SCHEMA_LOCATION = u"http://pegasus.isi.edu/schema/dax-3.2.xsd"
-SCHEMA_VERSION = u"3.2"
+SCHEMA_LOCATION = u"http://pegasus.isi.edu/schema/dax-3.3.xsd"
+SCHEMA_VERSION = u"3.3"
 
 class DAX3Error(Exception): pass
 class DuplicateError(DAX3Error): pass
@@ -288,6 +288,76 @@ class When:
 	AT_END = u'at_end'
 	ALL = u'all'
 
+class Invoke:
+	def __init__(self, when, what):
+		if not when:
+			raise ValueError("invalid when",when)
+		if not what:
+			raise ValueError("invalid what",what)
+		self.when = when
+		self.what = what
+		
+	def __repr__(self):
+		return "invoke %s %s" % (self.when, self.what)
+		
+	def __hash__(self):
+		return hash((self.when, self.what))
+		
+	def __eq__(self, other):
+		if isinstance(other, Invoke):
+			return self.when == other.when and self.what == other.what
+		return False
+		
+	def toXML(self):
+		e = Element('invoke',[('when',self.when)])
+		e.text(self.what)
+		e.flatten()
+		return e
+		
+class InvokeMixin:
+	
+	def addInvoke(self, invoke):
+		"""Add invoke to this object"""
+		if self.hasInvoke(invoke):
+			raise DuplicateError("Duplicate Invoke", invoke)
+		self.invocations.add(invoke)
+		
+	def hasInvoke(self, invoke):
+		"""Test to see if this object has invoke"""
+		return invoke in self.invocations
+		
+	def removeInvoke(self, invoke):
+		"""Remove invoke from this object"""
+		if not self.hasInvoke(invoke):
+			raise NotFoundError("Invoke not found", invoke)
+		self.invocations.remove(invoke)
+		
+	def clearInvokes(self):
+		"""Remove all Invoke objects"""
+		self.invocations.clear()
+		
+	def invoke(self, when, what):
+		"""
+		Invoke executable 'what' when job reaches status 'when'. The value of 
+		'what' should be a command that can be executed on the submit host.
+	
+		The list of valid values for 'when' is:
+		
+		WHEN		MEANING
+		==========	=======================================================
+		never		never invoke
+		start		invoke just before job gets submitted.
+		on_error	invoke after job finishes with failure (exitcode != 0).
+		on_success	invoke after job finishes with success (exitcode == 0).
+		at_end		invoke after job finishes, regardless of exit status.
+		all			like start and at_end combined.
+		
+		Examples:
+			obj.invoke('at_end','/usr/bin/mail -s "job done" juve@usc.edu')
+			obj.invoke('on_error','/usr/bin/update_db -failure')
+		"""
+		self.addInvoke(Invoke(when, what))
+	
 
 class ProfileMixin:
 	def addProfile(self, profile):
@@ -793,7 +863,7 @@ class UseMixin:
 		self.addUse(use)
 
 
-class Transformation(UseMixin):
+class Transformation(UseMixin,InvokeMixin):
 	"""Transformation((name|executable)[,namespace][,version])
 	
 	A logical transformation. This is basically defining one or more
@@ -858,6 +928,7 @@ class Transformation(UseMixin):
 		self.namespace = None
 		self.version = None
 		self.used = set()
+		self.invocations = set()
 		if isinstance(name, Executable):
 			self.name = name.name
 			self.namespace = name.namespace
@@ -886,80 +957,18 @@ class Transformation(UseMixin):
 			('name',self.name),
 			('version',self.version)
 		])
+		
+		# Uses
 		for u in self.used:
 			e.element(u.toXML())
+			
+		# Invocations
+		for inv in self.invocations:
+			e.element(inv.toXML())
+		
 		return e
-		
-class Invoke:
-	def __init__(self, when, what):
-		if not when:
-			raise ValueError("invalid when",when)
-		if not what:
-			raise ValueError("invalid what",what)
-		self.when = when
-		self.what = what
-		
-	def __repr__(self):
-		return "invoke %s %s" % (self.when, self.what)
-		
-	def __hash__(self):
-		return hash((self.when, self.what))
-		
-	def __eq__(self, other):
-		if isinstance(other, Invoke):
-			return self.when == other.when and self.what == other.what
-		return False
-		
-	def toXML(self):
-		e = Element('invoke',[('when',self.when)])
-		e.text(self.what)
-		e.flatten()
-		return e
-		
-class InvokeMixin:
 	
-	def addInvoke(self, invoke):
-		"""Add invoke to this object"""
-		if self.hasInvoke(invoke):
-			raise DuplicateError("Duplicate Invoke", invoke)
-		self.invocations.add(invoke)
-		
-	def hasInvoke(self, invoke):
-		"""Test to see if this object has invoke"""
-		return invoke in self.invocations
-		
-	def removeInvoke(self, invoke):
-		"""Remove invoke from this object"""
-		if not self.hasInvoke(invoke):
-			raise NotFoundError("Invoke not found", invoke)
-		self.invocations.remove(invoke)
-		
-	def clearInvokes(self):
-		"""Remove all Invoke objects"""
-		self.invocations.clear()
-		
-	def invoke(self, when, what):
-		"""
-		Invoke executable 'what' when job reaches status 'when'. The value of 
-		'what' should be a command that can be executed on the submit host.
-	
-		The list of valid values for 'when' is:
-		
-		WHEN		MEANING
-		==========	=======================================================
-		never		never invoke
-		start		invoke just before job gets submitted.
-		on_error	invoke after job finishes with failure (exitcode != 0).
-		on_success	invoke after job finishes with success (exitcode == 0).
-		at_end		invoke after job finishes, regardless of exit status.
-		all			like start and at_end combined.
-		
-		Examples:
-			obj.invoke('at_end','/usr/bin/mail -s "job done" juve@usc.edu')
-			obj.invoke('on_error','/usr/bin/update_db -failure')
-		"""
-		self.addInvoke(Invoke(when, what))
-		
+
 class AbstractJob(ProfileMixin,UseMixin,InvokeMixin):
 	"""The base class for Job, DAX, and DAG"""
 	def __init__(self, id=None, node_label=None):
@@ -970,7 +979,7 @@ class AbstractJob(ProfileMixin,UseMixin,InvokeMixin):
 		self.profiles = set()
 		self.used = set()
 		self.invocations = set()
-
+		
 		self.stdout = None
 		self.stderr = None
 		self.stdin = None
