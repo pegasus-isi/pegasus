@@ -44,11 +44,12 @@ def dagman_launch(arguments):
       the arguments passed to pegasus-dagman'''
     dagman_bin = find_exec("condor_dagman")
     if dagman_bin != None :
-        arguments.insert(0, dagman_bin)
+        arguments.insert(0, "condor_scheduniv_exec."+os.getenv("CONDOR_ID"))
         try :
             dagman_proc = subprocess.Popen(arguments, 
                                            stdout=sys.stdout, 
-                                           stderr=sys.stderr) 
+                                           stderr=sys.stderr,
+                                           executable=dagman_bin) 
             print "Launched Dagman with Pid %d" % dagman_proc.pid
         except OSError, err :
             print "Error: Could not launch Dagman.",  err
