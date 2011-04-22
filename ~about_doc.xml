@@ -5,7 +5,11 @@
   <title>About this Document</title>
   
   <para>This document is designed to acquaint new users with the capabilities of the Pegasus Workflow Management System (WMS)
-  and to demonstrate how WMS can solve their scientific computational challenges.</para>
+  and to demonstrate how WMS can efficiently provide a variety of ways to execue complex workflows on distributed resources.
+
+  Readers are encouraged to take the walkthrough to acquaint themselves with the components of the Pegasus System.  Readers may also want to navigate through the chapters
+  to acquaint themselves with the components on a deeper level to understand how to integrate Pegasus with your own data resources to resolve
+  your individual computational challenges.</para>
   
   <para/>
   
@@ -14,7 +18,7 @@
       <listitem>
         <para><emphasis>System Walkthrough</emphasis></para>
         <para>We walk you through a representative workflow project that includes all aspects of the Pegasus WMS. The project we use is is at a level of complexity
-        that is needed for the vast majority of users. </para>
+        that is needed for the vast majority of users. Within the text there are links to advanced concepts and structures shoud the need arise to explore them.</para>
       </listitem>
       
        <listitem>
@@ -62,6 +66,7 @@
       
       </itemizedlist>
 </chapter>
+
 
 
 
