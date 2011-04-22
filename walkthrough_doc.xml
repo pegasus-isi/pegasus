@@ -50,7 +50,7 @@
 
   </section>
   
- <section>
+  <section>
     <title>Downloading and Running the VM using Virtual Box</title>
 
     <para>You will need to install Virtual Box to run the virtual machine on
@@ -181,7 +181,7 @@ $ tar xvf Pegasus-3.0.1-Debian-6-x86.vbox.tar</emphasis></programlisting>
       </orderedlist>
     </section>
 
-<section>
+   <section>
      <title>Workflows</title>
      
       <para>Workflows are at the center of how Pegasus operates. Pegasus takes in an abstract workflow ( DAX ) and generates an executable workflow (DAG) that is
@@ -484,6 +484,7 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
 
 
 </chapter>
+
 
 
 
