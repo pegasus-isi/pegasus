@@ -15,7 +15,6 @@
  */
 package edu.isi.pegasus.planner.code.generator;
 
-import edu.isi.ikcap.workflows.util.logging.LoggingKeys;
 import edu.isi.pegasus.common.logging.LogFormatter;
 import edu.isi.pegasus.common.logging.LogFormatterFactory;
 import edu.isi.pegasus.common.logging.LogManager;
@@ -70,6 +69,118 @@ public class Stampede implements CodeGenerator {
 
     public static final String NETLOGGER_LOG_FORMATTER_IMPLEMENTOR = "Netlogger";
 
+    
+    /**
+     * The attribute key for workflow id.
+     */
+    public static final String WORKFLOW_ID_KEY = "xwf.id";
+    
+    /**
+     * The event name for task info
+     */
+    public static final String TASK_EVENT_NAME = "task.info";
+    
+    /**
+     * The attribute key for task id
+     */
+    public static final String TASK_ID_KEY = "task.id";
+    
+    /**
+     * The attribute key for task type
+     */
+    public static final String TYPE_KEY = "type";
+    
+    /**
+     * The attribute key for type description
+     */
+    public static final String TYPE_DESCRIPTION_KEY = "type_desc";
+    
+    /**
+     * The attribute key for transformation
+     */
+    public static final String TASK_TRANSFORMATION_KEY = "transformation";
+    
+    /**
+     * The attribute key for task arguments.
+     */
+    public static final String ARGUMENTS_KEY = "argv";
+    
+    /**
+     * The event name for task edge
+     */
+    public static final String TASK_EDGE_EVENT_NAME = "task.edge";
+    
+    /**
+     * The atrribute key for parent task id.
+     */
+    public static final String PARENT_TASK_ID_KEY = "parent.task.id";
+    
+    
+    /**
+     * The atrribute key for child task id.
+     */
+    public static final String CHILD_TASK_ID_KEY = "child.task.id";
+    
+    /**
+     * The event name for a job
+     */
+    public static final String JOB_EVENT_NAME = "job.info";
+    
+    /**
+     * The attribute key for job id
+     */
+    public static final String JOB_ID_KEY = "job.id";
+    
+    
+    /**
+     * Teh attribute key for the submit file
+     */
+    public static final String JOB_SUBMIT_FILE_KEY = "submit_file";
+    
+    /**
+     * The attribute key for whether a job is clustered or not
+     */
+    public static final String JOB_CLUSTERED_KEY = "clustered";
+    
+    /**
+     * The attribute key for how many times a job is retried
+     */
+    public static final String JOB_MAX_RETRIES_KEY = "max_retries";
+    
+    /**
+     * The attribute key for the number of tasks in the job
+     */
+    public static final String JOB_TASK_COUNT_KEY = "task_count";
+    
+    
+    /**
+     * The attribute key for the executable
+     */
+    public static final String JOB_EXECUTABLE_KEY = "executable";
+    
+     /**
+     * The event name for job edge
+     */
+    public static final String JOB_EDGE_EVENT_NAME = "job.edge";
+    
+    /**
+     * The atrribute key for parent job id.
+     */
+    public static final String PARENT_JOB_ID_KEY = "parent.job.id";
+    
+    /**
+     * The atrribute key for child job id.
+     */
+    public static final String CHILD_JOB_ID_KEY = "child.job.id";
+    
+    /**
+     * The event name for task map event
+     */
+    public static final String TASK_MAP_EVENT_NAME = "wf.map.task_job";
+    
+    
+    
+    
     /**
      * The handle to the netlogger log formatter.
      */
@@ -168,10 +279,10 @@ public class Stampede implements CodeGenerator {
             //write out the edge informatiom for the workflow
             for ( Iterator<PCRelation> it =  dag.dagInfo.relations.iterator(); it.hasNext(); ){
                 PCRelation relation = it.next();
-                mLogFormatter.addEvent( "job.edge", "wf.id", uuid );
+                mLogFormatter.addEvent( Stampede.JOB_EDGE_EVENT_NAME, Stampede.WORKFLOW_ID_KEY, uuid );
 
-                mLogFormatter.add( "parent_exec_job.id", relation.getParent() );
-                mLogFormatter.add( "child_exec_job.id", relation.getChild() );
+                mLogFormatter.add( Stampede.PARENT_JOB_ID_KEY, relation.getParent() );
+                mLogFormatter.add( Stampede.CHILD_JOB_ID_KEY, relation.getChild() );
 
                 writer.println( mLogFormatter.createLogMessage() );
                 mLogFormatter.popEvent();
@@ -189,10 +300,10 @@ public class Stampede implements CodeGenerator {
             //write out the edge informatiom for the workflow
             for ( Iterator<PCRelation> it =  dag.dagInfo.relations.iterator(); it.hasNext(); ){
                 PCRelation relation = it.next();
-                mLogFormatter.addEvent( "task.edge", "wf.id", uuid );
+                mLogFormatter.addEvent( Stampede.TASK_EDGE_EVENT_NAME, Stampede.WORKFLOW_ID_KEY, uuid );
 
-                mLogFormatter.add( "parent_abs_task.id", relation.getParent() );
-                mLogFormatter.add( "child_abs_task.id", relation.getChild() );
+                mLogFormatter.add( Stampede.PARENT_TASK_ID_KEY, relation.getParent() );
+                mLogFormatter.add( Stampede.CHILD_TASK_ID_KEY, relation.getChild() );
 
                 writer.println( mLogFormatter.createLogMessage() );
                 mLogFormatter.popEvent();
@@ -232,15 +343,15 @@ public class Stampede implements CodeGenerator {
         }
 
         
-        mLogFormatter.addEvent( "task", "abs_task.id", job.getLogicalID() );
+        mLogFormatter.addEvent( Stampede.TASK_EVENT_NAME, Stampede.WORKFLOW_ID_KEY , wfuuid );
 
-        mLogFormatter.add( "wf.id" , wfuuid );
+        mLogFormatter.add( Stampede.TASK_ID_KEY, job.getLogicalID() );
 
-        //disconnect??
-        mLogFormatter.add( "tasktype", job.getJobTypeDescription() );
+        mLogFormatter.add( Stampede.TYPE_KEY, Integer.toString( job.getJobType() ));
+        mLogFormatter.add( Stampede.TYPE_DESCRIPTION_KEY, job.getJobTypeDescription() );
 
-        mLogFormatter.add( "executable", job.getCompleteTCName() );
-        mLogFormatter.add( "arguments", job.getArguments() );
+        mLogFormatter.add( Stampede.TASK_TRANSFORMATION_KEY, job.getCompleteTCName() );
+        mLogFormatter.add( Stampede.ARGUMENTS_KEY, job.getArguments() );
             
         writer.println( mLogFormatter.createLogMessage() );
         mLogFormatter.popEvent();
@@ -259,28 +370,29 @@ public class Stampede implements CodeGenerator {
             throws CodeGeneratorException{
             
         String wfuuid = dag.getWorkflowUUID();
-        mLogFormatter.addEvent( "job", "exec_job.id", job.getID() );
+        mLogFormatter.addEvent( Stampede.JOB_EVENT_NAME, Stampede.WORKFLOW_ID_KEY , wfuuid  );
 
-        mLogFormatter.add( "wf.id" , wfuuid );
+        mLogFormatter.add( Stampede.JOB_ID_KEY, job.getID() );
 
-        //disconnect??
-        mLogFormatter.add( "submit_file", job.getID() + ".sub" );
-        mLogFormatter.add( "jobtype", job.getJobTypeDescription() );
+        mLogFormatter.add( Stampede.JOB_SUBMIT_FILE_KEY, job.getID() + ".sub" );
+        mLogFormatter.add( Stampede.TYPE_KEY, Integer.toString( job.getJobType() ));
+        mLogFormatter.add( Stampede.TYPE_DESCRIPTION_KEY, job.getJobTypeDescription() );
 
-        mLogFormatter.add( "clustered", Boolean.toString( job instanceof AggregatedJob ) );
-        mLogFormatter.add( "max_retries",
+
+        mLogFormatter.add( Stampede.JOB_CLUSTERED_KEY, booleanToInt( job instanceof AggregatedJob ) );
+        mLogFormatter.add( Stampede.JOB_MAX_RETRIES_KEY,
                            job.dagmanVariables.containsKey( Dagman.RETRY_KEY ) ?
                                             (String)job.dagmanVariables.get( Dagman.RETRY_KEY ):
                                             "0" );
 
            
-        mLogFormatter.add( "executable" , job.getRemoteExecutable() );
-        mLogFormatter.add( "arguments" , job.getArguments() );
+        mLogFormatter.add( Stampede.JOB_EXECUTABLE_KEY , job.getRemoteExecutable() );
+        mLogFormatter.add( Stampede.ARGUMENTS_KEY , job.getArguments() );
     
         //determine count of jobs
         int taskCount = getTaskCount( job );
 
-        mLogFormatter.add( "task_count", Integer.toString( taskCount ) );
+        mLogFormatter.add( Stampede.JOB_TASK_COUNT_KEY, Integer.toString( taskCount ) );
         writer.println( mLogFormatter.createLogMessage() );
         mLogFormatter.popEvent();
 
@@ -314,12 +426,12 @@ public class Stampede implements CodeGenerator {
                     if( constituentJob.getJobType() == Job.COMPUTE_JOB ){
                         //create task.map event
                         //to the job in the DAX
-                        mLogFormatter.addEvent( "task.map", LoggingKeys.JOB_ID, job.getID() );
+                        mLogFormatter.addEvent( Stampede.TASK_MAP_EVENT_NAME, Stampede.WORKFLOW_ID_KEY , wfuuid );
 
                         //to be retrieved
-                        mLogFormatter.add( "wf.id" , wfuuid );
-                        mLogFormatter.add( "exec_job.id", job.getID() );
-                        mLogFormatter.add( "abs_task.id", constituentJob.getLogicalID() );
+                        mLogFormatter.add( Stampede.JOB_ID_KEY, job.getID() );
+                        //mLogFormatter.add( "exec_job.id", job.getID() );
+                        mLogFormatter.add( Stampede.TASK_ID_KEY, constituentJob.getLogicalID() );
                         writer.println( mLogFormatter.createLogMessage() );
 
                         //writer.write( "\n" );
@@ -339,11 +451,11 @@ public class Stampede implements CodeGenerator {
             else{
                 //create a single task.map event that maps compute job
                 //to the job in the DAX
-                mLogFormatter.addEvent( "task.map", "exec_job.id", job.getID() );
+                mLogFormatter.addEvent( Stampede.TASK_MAP_EVENT_NAME, Stampede.WORKFLOW_ID_KEY , wfuuid  );
 
                 //to be retrieved
-                mLogFormatter.add( "wf.id" , wfuuid );
-                mLogFormatter.add( "abs_task.id", job.getLogicalID() );
+                mLogFormatter.add( Stampede.JOB_ID_KEY, job.getID() );
+                mLogFormatter.add( Stampede.TASK_ID_KEY, job.getLogicalID() );
 
                 writer.println( mLogFormatter.createLogMessage() );
                 mLogFormatter.popEvent();
@@ -399,6 +511,17 @@ public class Stampede implements CodeGenerator {
         return count;
     }
 
+    /**
+     * Returns boolean as an integer
+     * 
+     * @param value the boolean value
+     * 
+     * @return 0 for true and 1 for false
+     */
+    public String booleanToInt( boolean value ){
+        return   value ? "1" : "0";
+    }
+    
     public boolean startMonitoring() {
         throw new UnsupportedOperationException("Not supported yet.");
     }
