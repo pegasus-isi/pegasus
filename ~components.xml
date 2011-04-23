@@ -64,7 +64,8 @@
           siblings are dependent on fewer parents.</para>
 
           <para>The example shows how the <emphasis> Job 2 and 3</emphasis> nodes
-          depend on <emphasis>Job 1</emphasis> node and <emphasis> Job 4</emphasis> node depends on <emphasis>Job 2 and 4</emphasis> nodes.</para>
+          depend on <emphasis>Job 1</emphasis> node, and <emphasis> the Job 4</emphasis>
+          node depends on <emphasis>Job 2 and 4</emphasis> nodes.</para>
         </listitem>
 
         <listitem>
@@ -1252,9 +1253,9 @@ clus1    black::analyze:1.0    gsiftp://clus1.com/opt/nfs/vdt/pegasus/bin/keg
     </section>
   </section>
              
-             <section>
-                              <para><figure id="">
-          <title>Catalog Diagram</title>
+  <section>
+    <para><figure id="">
+    <title>Catalog Diagram</title>
           <para>The diagram below shows a typical Pegasus network with Catalogs</para>
 
           <mediaobject>
@@ -1264,8 +1265,8 @@ clus1    black::analyze:1.0    gsiftp://clus1.com/opt/nfs/vdt/pegasus/bin/keg
             </imageobject>
           </mediaobject>
         </figure></para>
-      
-      </section>
+
+    </section>
       <section>
        <title>Pegasus Mapper</title>
       </section>
