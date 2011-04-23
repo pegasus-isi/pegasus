@@ -55,7 +55,7 @@
       DAX directly from a script</para>
 
       <para>The sample workflow below incorporates some of the elementary graph
-      structures used in all abstract workflows</para>
+      structures used in all abstract workflows.</para>
       
        <itemizedlist>
         <listitem>
@@ -63,8 +63,8 @@
           and <emphasis>diverge</emphasis> all describe the fact that multiple
           siblings are dependent on fewer parents.</para>
 
-          <para>The example shows how the <emphasis>findrange</emphasis> nodes
-          depend on the <emphasis>preprocess</emphasis> node.</para>
+          <para>The example shows how the <emphasis> Job 2 and 3</emphasis> nodes
+          depend on <emphasis>Job 1</emphasis> node and <emphasis> Job 4</emphasis> node depends on <emphasis>Job 2 and 4</emphasis> nodes.</para>
         </listitem>
 
         <listitem>
@@ -86,8 +86,7 @@
 
         <listitem>
           <para><emphasis>parallel execution</emphasis> implies that nodes can
-          be executed in parallel, as shown by the
-          <emphasis>findrange</emphasis> nodes in the example.</para>
+          be executed in parallel</para>
 
         </listitem>
       </itemizedlist>
@@ -117,8 +116,7 @@
       <title>Catalogs </title>
       </section>
       
-      <para>Catalogs contain the source data that is used by the DAG to execute the
-      workflow</para>
+      <para>Catalogs contain ....</para>
       
       <para> There are three catalogs in the Pegasus WMS</para>
       
@@ -1324,6 +1322,7 @@ clus1    black::analyze:1.0    gsiftp://clus1.com/opt/nfs/vdt/pegasus/bin/keg
   which parameters.</para>
        </section>
 </chapter>
+
 
 
 
