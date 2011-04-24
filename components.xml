@@ -117,12 +117,12 @@
       <title>Catalogs </title>
       </section>
       
-      <para>Catalogs contain ....</para>
+      <para>Catalogs contain generated files that Pegasus uses to execute workflows.</para>
       
       <para> There are three catalogs in the Pegasus WMS</para>
       
-       <section>
-        <title>Replica</title>
+        <section>
+         <title>Replica</title>
            <section id="replica">
            <title>Replica</title>
 
@@ -163,10 +163,10 @@
       </listitem>
     </orderedlist>
 
-    <section id="rc-FILE">
-      <title>File</title>
+       <section id="rc-FILE">
+        <title>File</title>
 
-      <para>In this mode, Pegasus queries a file based replica catalog. The
+        <para>In this mode, Pegasus queries a file based replica catalog. The
       file format is a simple multicolumn format. It is neither
       transactionally safe, nor advised to use for production purposes in any
       way. Multiple concurrent instances will clobber each other. The site
@@ -201,12 +201,12 @@ LFN PFN a="b" [..]
             the replica catalog file&gt;</replaceable></emphasis></para>
           </listitem>
         </orderedlist></para>
-    </section>
+       </section>
 
-    <section id="rc-JDBCRC">
-      <title>JDBCRC</title>
+       <section id="rc-JDBCRC">
+        <title>JDBCRC</title>
 
-      <para>In this mode, Pegasus queries a SQL based replica catalog that is
+         <para>In this mode, Pegasus queries a SQL based replica catalog that is
       accessed via JDBC. The sql schema’s for this catalog can be found at
       <emphasis role="bold">$PEGASUS_HOME/sql</emphasis> directory. You will
       have to install the schema into either PostgreSQL or MySQL by running
@@ -238,12 +238,12 @@ LFN PFN a="b" [..]
           password&gt;</replaceable></emphasis></para>
         </listitem>
       </orderedlist>
-    </section>
+      </section>
 
-    <section id="rc-RLS">
-      <title>Replica Location Service</title>
+       <section id="rc-RLS">
+        <title>Replica Location Service</title>
 
-      <para>RLS (Replica Location Service) is a distributed replica catalog,
+         <para>RLS (Replica Location Service) is a distributed replica catalog,
       which ships with Globus. There is an index service called Replica
       Location Index (RLI) to which 1 or more Local Replica Catalog (LRC)
       report. Each LRC can contain all or a subset of mappings.</para>
@@ -1323,6 +1323,7 @@ clus1    black::analyze:1.0    gsiftp://clus1.com/opt/nfs/vdt/pegasus/bin/keg
   which parameters.</para>
        </section>
 </chapter>
+
 
 
 

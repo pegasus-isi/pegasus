@@ -117,25 +117,25 @@
       <title>Catalogs </title>
       </section>
       
-      <para>Catalogs contain ....</para>
+      <para>Catalogs contain generated files that Pegasus uses to execute workflows.</para>
       
       <para> There are three catalogs in the Pegasus WMS</para>
       
        <section>
         <title>Replica</title>
            <section id="replica">
-    <title>Replica</title>
+           <title>Replica</title>
 
-    <para>The Replica Catalog keeps mappings of logical file ids/names (LFN's)
+           <para>The Replica Catalog keeps mappings of logical file ids/names (LFN's)
     to physical file ids/names (PFN's). A single LFN can map to several PFN's.
     A PFN consists of a URL with protocol, host and port information and a
     path to a file. Along with the PFN one can also store additional key/value
     attributes to be associated with a PFN.</para>
 
-    <para>Pegasus supports 4 different implemenations of the Replica
+               <para>Pegasus supports 4 different implemenations of the Replica
     Catalog.</para>
 
-    <orderedlist>
+     <orderedlist>
       <listitem>
         <para>File <emphasis role="bold">(Default)</emphasis></para>
       </listitem>
@@ -1323,6 +1323,7 @@ clus1    black::analyze:1.0    gsiftp://clus1.com/opt/nfs/vdt/pegasus/bin/keg
   which parameters.</para>
        </section>
 </chapter>
+
 
 
 
