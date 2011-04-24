@@ -17,74 +17,73 @@
       <itemizedlist>
       
       <listitem>
-        <para><emphasis>System Walkthrough</emphasis></para>
+        <para><emphasis>Pegasus Walkthrough - Chapter 2 </emphasis></para>
         <para>We walk you through a representative workflow project that includes all aspects of the Pegasus WMS. The project we use is is at a level of complexity
         that is needed for the vast majority of users. Within the text there are links to advanced concepts and structures shoud the need arise to explore them.</para>
       </listitem>
       
        <listitem>
-        <para><emphasis>Workflows</emphasis></para>
+        <para><emphasis>Workflows - Chapter 3 </emphasis></para>
         <para>An introducion to the concepts of workflows, the types of workflows, and how they are used in the Pegasus system</para>
       </listitem>
 
       
       <listitem>
-        <para><emphasis>Pegasus Components</emphasis></para>
+        <para><emphasis>Pegasus Components - Chapter 4 </emphasis></para>
         <para>An introduction to the components of the Pegasus Workflow Management System (WMS)</para>
       </listitem>
 
-
       <listitem>
-        <para><emphasis>Catalog Details</emphasis></para>
-        <para>Detailed information about catalog implementation requirements and settings</para>
-      </listitem>
-
-      <listitem>
-        <para><emphasis>Planning and Submitting</emphasis></para>
+        <para><emphasis>Running Workflows - Chapter 5 </emphasis></para>
         <para> How to plan a DAX (abstract) workflow and submit it to the DAG to
          create an executable workflow. </para>
       </listitem>
-
+      
       <listitem>
-        <para><emphasis>Monitoring Workflows</emphasis></para>
+        <para><emphasis>Submit Directory - Chapter 6 </emphasis></para>
+        <para> Description of the workflow afer it has been planned </para>
+      </listitem>
+      
+      <listitem>
+        <para><emphasis>Monitoring Workflows - Chapter 7</emphasis></para>
         <para> How to monitor, debug, and view statistics about the execution of the workflow  </para>
       </listitem>
 
       <listitem>
-        <para><emphasis>Example Workflows</emphasis></para>
+        <para><emphasis>Example Workflows - Chapter 8 </emphasis></para>
         <para> Example workflows are included to assist users with becoming familiar with existing workflows to gain insight into creating their own  </para>
       </listitem>
 
       <listitem>
-        <para><emphasis>Advanced Concepts and Configurations</emphasis></para>
+        <para><emphasis>Advanced Concepts and Configurations - Chapters 9 - 14 </emphasis></para>
         <para> Advanced information section of several chapters with configuration details for use in designing advanced workflows for very large scale projects</para>
       </listitem>
       
       <listitem>
-        <para><emphasis>API Reference</emphasis></para>
+        <para><emphasis>API Reference - Chapter 15 </emphasis></para>
         <para> View API details</para>
       </listitem>
           <listitem>
-        <para><emphasis>Command Reference</emphasis></para>
+        <para><emphasis>Command Reference - Chapter 16 </emphasis></para>
         <para> View a listing of all commands avaialble in the Pegasus WMS</para>
       </listitem>
       
           <listitem>
-        <para><emphasis>Useful Tips</emphasis></para>
+        <para><emphasis>Useful Tips - Chapter 17</emphasis></para>
         <para> View useful tips and best practices.</para>
       </listitem>
       
           <listitem>
-        <para><emphasis>Installation</emphasis></para>
+        <para><emphasis>Installation - Chapteer 18 </emphasis></para>
         <para> View complete installation steps for the range of installations available with Pegasus WMS.</para>
       </listitem>
           <listitem>
-        <para><emphasis>Migrating from Version 2.x</emphasis></para>
+        <para><emphasis>Migrating from Version 2.x - Chapter 19 </emphasis></para>
         <para> View instructions for upgrading a Pegasus version2.x installation to version 3.0.</para>
       </listitem>
       
           <listitem>
-        <para><emphasis>Glossary</emphasis></para>
+        <para><emphasis>Glossary - Chapter 20 </emphasis></para>
         <para> View a glossary of terms and concepts referenced in Pegasus WMS</para>
       </listitem>
       </itemizedlist>
