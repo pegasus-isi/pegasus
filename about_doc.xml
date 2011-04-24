@@ -15,6 +15,7 @@
   
       
       <itemizedlist>
+      
       <listitem>
         <para><emphasis>System Walkthrough</emphasis></para>
         <para>We walk you through a representative workflow project that includes all aspects of the Pegasus WMS. The project we use is is at a level of complexity
@@ -58,7 +59,9 @@
         <para><emphasis>Advanced Concepts and Configurations</emphasis></para>
         <para> Advanced information section of several chapters with configuration details for use in designing advanced and workflows for very large scale projects</para>
       </listitem>
-         <orderedlist>
+   </itemizedlist>
+      
+      <orderedlist>
       <listitem>
         <para><emphasis>Properties</emphasis>- NEED A SMALL BLURB HERE</para>
       </listitem>
@@ -84,6 +87,7 @@
       </listitem>
       
     </orderedlist>
+    
 
     <listitem>
         <para><emphasis>API Reference</emphasis></para>
@@ -91,7 +95,7 @@
       </listitem>
           <listitem>
         <para><emphasis>Command Reference</emphasis></para>
-        <para> View a isting of all commands avaialble in the Pegasus WMS</para>
+        <para> View a listing of all commands avaialble in the Pegasus WMS</para>
       </listitem>
       
           <listitem>
@@ -112,8 +116,7 @@
         <para><emphasis>Glossary</emphasis></para>
         <para> View a glossary of terms and concepts referenced in Pegasus WMS</para>
       </listitem>
-      
-      </itemizedlist>
+
 </chapter>
 
 
