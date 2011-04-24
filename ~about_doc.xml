@@ -56,16 +56,66 @@
 
       <listitem>
         <para><emphasis>Advanced Concepts and Configurations</emphasis></para>
-        <para> Advanced information Section with details about configuration details for.....</para>
+        <para> Advanced information section of several chapters with configuration details for use in designing advanced and workflows for very large scale projects</para>
+      </listitem>
+         <orderedlist>
+      <listitem>
+        <para><emphasis>Properties</emphasis>- NEED A SMALL BLURB HERE</para>
       </listitem>
 
+      <listitem>
+        <para><emphasis>Profiles</emphasis> </para>
+      </listitem>
+      
+      <listitem>
+        <para><emphasis>Replica Selection</emphasis> </para>
+      </listitem>
+      
+      <listitem>
+        <para><emphasis>Job Clustering</emphasis> </para>
+      </listitem>
+      
+      <listitem>
+        <para><emphasis>Transfers</emphasis> </para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis>Hierarchy Workflows</emphasis> </para>
+      </listitem>
+    </orderedlist>
+
     <listitem>
-        <para><emphasis>Pegasus Tutorial</emphasis></para>
-        <para> View a tutorial on Pegasus running on a virtual machine. Users download, install, and operate Pegasus with sample files in a series of exercises</para>
+        <para><emphasis>API Reference</emphasis></para>
+        <para> View API details</para>
+      </listitem>
+          <listitem>
+        <para><emphasis>Command Reference</emphasis></para>
+        <para> View a isting of all commands avaialble in the Pegasus WMS</para>
+      </listitem>
+      
+          <listitem>
+        <para><emphasis>Useful Tips</emphasis></para>
+        <para> View useful tips and best practices.</para>
+      </listitem>
+      
+          <listitem>
+        <para><emphasis>Installation</emphasis></para>
+        <para> View complete installation steps for the range of installations available with Pegasus WMS.</para>
+      </listitem>
+          <listitem>
+        <para><emphasis>Migrating from Version 2.x</emphasis></para>
+        <para> View instructions for upgrading a Pegasus version2.x installation to vrsion 3.0.</para>
+      </listitem>
+      
+          <listitem>
+        <para><emphasis>Glossary</emphasis></para>
+        <para> View a glossary of terms and concepts referenced in Pegasus WMS</para>
       </listitem>
       
       </itemizedlist>
 </chapter>
+
+
 
 
 
