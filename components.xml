@@ -64,8 +64,7 @@
           siblings are dependent on fewer parents.</para>
 
           <para>The example shows how the <emphasis> Job 2 and 3</emphasis> nodes
-          depend on <emphasis>Job 1</emphasis> node, and <emphasis> the Job 4</emphasis>
-          node depends on <emphasis>Job 2 and 4</emphasis> nodes.</para>
+          depend on <emphasis>Job 1</emphasis> node.</para>
         </listitem>
 
         <listitem>
@@ -74,8 +73,8 @@
           describe how multiple siblings are merged into fewer dependent child
           nodes.</para>
 
-          <para>The example shows how the <emphasis>analyze</emphasis> node
-          depends on both <emphasis>findrange</emphasis> nodes.</para>
+          <para>The example shows how the <emphasis>Job 4</emphasis> node
+          depends on both <emphasis>Job 2 and Job 3</emphasis> nodes.</para>
         </listitem>
       </itemizedlist>
 
@@ -1323,6 +1322,7 @@ clus1    black::analyze:1.0    gsiftp://clus1.com/opt/nfs/vdt/pegasus/bin/keg
   which parameters.</para>
        </section>
 </chapter>
+
 
 
 
