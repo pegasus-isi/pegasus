@@ -60,12 +60,36 @@
       </listitem>
 
     <listitem>
-        <para><emphasis>Pegasus Tutorial</emphasis></para>
-        <para> View a tutorial on Pegasus running on a virtual machine. Users download, install, and operate Pegasus with sample files in a series of exercises</para>
+        <para><emphasis>API Reference</emphasis></para>
+        <para> View API details</para>
+      </listitem>
+          <listitem>
+        <para><emphasis>Command Reference</emphasis></para>
+        <para> View a isting of all commands avaialble in the Pegasus WMS</para>
+      </listitem>
+      
+          <listitem>
+        <para><emphasis>Useful Tips</emphasis></para>
+        <para> View useful tips and best practices.</para>
+      </listitem>
+      
+          <listitem>
+        <para><emphasis>Installation</emphasis></para>
+        <para> View complete installation steps for the range of installations available with Pegasus WMS.</para>
+      </listitem>
+          <listitem>
+        <para><emphasis>Migrating from Version 2.x</emphasis></para>
+        <para> View instructions for upgrading a Pegasus version2.x installation to vrsion 3.0.</para>
+      </listitem>
+      
+          <listitem>
+        <para><emphasis>Glossary</emphasis></para>
+        <para> View a glossary of terms and concepts referenced in Pegasus WMS</para>
       </listitem>
       
       </itemizedlist>
 </chapter>
+
 
 
 

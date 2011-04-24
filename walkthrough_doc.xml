@@ -475,15 +475,16 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
   
 
    <section>
-    <title>Concepts/Glossary</title>
+    <title>Glossary</title>
   
-     <para>Either links to a Glossary and a link to Components or DELETE ENTIRELY</para>
+     <para>List of terms in Glossary format and a link to the term in the documentation </para>
   
   </section>
   </section>
 
 
 </chapter>
+
 
 
 
