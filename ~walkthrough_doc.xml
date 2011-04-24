@@ -180,8 +180,9 @@ $ tar xvf Pegasus-3.0.1-Debian-6-x86.vbox.tar</emphasis></programlisting>
         </listitem>
       </orderedlist>
     </section>
+    
 
-   <section>
+<section>
      <title>Workflows</title>
      
       <para>Workflows are at the center of how Pegasus operates. Pegasus takes in an abstract workflow ( DAX ) and generates an executable workflow (DAG) that is
@@ -420,7 +421,6 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
                 <title>Clouds</title>
 
                </section>
-                   <para>Local Execution</para>
 
    </section>
    <section>

@@ -5,11 +5,10 @@
   <title>About this Document</title>
   
   <para>This document is designed to acquaint new users with the capabilities of the Pegasus Workflow Management System (WMS)
-  and to demonstrate how WMS can efficiently provide a variety of ways to execue complex workflows on distributed resources.
+  and to demonstrate how WMS can efficiently provide a variety of ways to execute complex workflows on distributed resources.
 
   Readers are encouraged to take the walkthrough to acquaint themselves with the components of the Pegasus System.  Readers may also want to navigate through the chapters
-  to acquaint themselves with the components on a deeper level to understand how to integrate Pegasus with your own data resources to resolve
-  your individual computational challenges.</para>
+  to acquaint themselves with the components on a deeper level to understand how to integrate Pegasus with your own data resources to resolve computational challenges.</para>
   
   <para/>
   
@@ -17,8 +16,8 @@
       <itemizedlist>
       <listitem>
         <para><emphasis>System Walkthrough</emphasis></para>
-        <para>We walk you through a representative workflow project that includes all aspects of the Pegasus WMS. The project we use is is at a level of complexity
-        that is needed for the vast majority of users. Within the text there are links to advanced concepts and structures shoud the need arise to explore them.</para>
+        <para>Users are guided through a representative workflow project that demonstrates all aspects of the Pegasus WMS. The project we use is is at a level of complexity
+        that is needed for the vast majority of users. Within the text are links to advanced concepts and structures should the need arise to explore them.</para>
       </listitem>
       
        <listitem>
@@ -56,16 +55,13 @@
 
       <listitem>
         <para><emphasis>Advanced Concepts and Configurations</emphasis></para>
-        <para> Advanced information Section with details about configuration details for.....</para>
+        <para> Advanced information section with details about configuration details for very complex project workflows</para>
       </listitem>
 
-    <listitem>
-        <para><emphasis>Pegasus Tutorial</emphasis></para>
-        <para> View a tutorial on Pegasus running on a virtual machine. Users download, install, and operate Pegasus with sample files in a series of exercises</para>
-      </listitem>
       
       </itemizedlist>
 </chapter>
+
 
 
 
