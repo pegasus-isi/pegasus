@@ -57,39 +57,10 @@
 
       <listitem>
         <para><emphasis>Advanced Concepts and Configurations</emphasis></para>
-        <para> Advanced information section of several chapters with configuration details for use in designing advanced and workflows for very large scale projects</para>
-      </listitem>
-   </itemizedlist>
-      
-      <orderedlist>
-      <listitem>
-        <para><emphasis>Properties</emphasis>- NEED A SMALL BLURB HERE</para>
-      </listitem>
-
-      <listitem>
-        <para><emphasis>Profiles</emphasis> </para>
+        <para> Advanced information section of several chapters with configuration details for use in designing advanced workflows for very large scale projects</para>
       </listitem>
       
       <listitem>
-        <para><emphasis>Replica Selection</emphasis> </para>
-      </listitem>
-      
-      <listitem>
-        <para><emphasis>Job Clustering</emphasis> </para>
-      </listitem>
-      
-      <listitem>
-        <para><emphasis>Transfers</emphasis> </para>
-      </listitem>
-
-      <listitem>
-        <para><emphasis>Hierarchy Workflows</emphasis> </para>
-      </listitem>
-      
-    </orderedlist>
-    
-
-    <listitem>
         <para><emphasis>API Reference</emphasis></para>
         <para> View API details</para>
       </listitem>
@@ -116,8 +87,9 @@
         <para><emphasis>Glossary</emphasis></para>
         <para> View a glossary of terms and concepts referenced in Pegasus WMS</para>
       </listitem>
-
+      </itemizedlist>
 </chapter>
+
 
 
 
