@@ -160,7 +160,6 @@
     <chmod perm="a+x" file="${dist.lib}/vdl.jar"/>
   </target>
 
-
   <target name="doc" depends="docbook,javadoc,pythondoc,perldoc">
   </target>    
   
@@ -461,11 +460,19 @@
       <param name="dst.dir" value="${dist.dir}/contrib"/>
     </antcall>
 
-    <!-- doc -->
+    <!-- doc pdfs -->
     <mkdir dir="${dist.doc}"/>
     <copy preservelastmodified="true" todir="${dist.doc}">
-      <fileset dir="doc" includes="**/*" 
-               excludes="advanced-properties.pdf,basic-properties.pdf"/>
+      <fileset dir="doc">
+          <include name="advanced-properties.pdf"/>
+          <include name="basic-properties.pdf"/>
+          <include name="pegasus-user-guide.pdf"/>
+      </fileset>
+    </copy>
+
+    <!-- doc schemas -->
+    <copy preservelastmodified="true" todir="${dist.doc}/schemas">
+      <fileset dir="doc/schemas" includes="**/*"/>
     </copy>
 
     <!-- etc -->
