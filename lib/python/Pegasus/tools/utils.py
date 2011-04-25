@@ -34,9 +34,9 @@ import subprocess
 parse_iso8601 = re.compile(r'(\d{4})-?(\d{2})-?(\d{2})[ tT]?(\d{2}):?(\d{2}):?(\d{2})([.,]\d+)?([zZ]|[-+](\d{2}):?(\d{2}))')
 
 # Module variables
-MAXLOGFILE = 1000		# For log rotation, check files from .000 to .999
-jobbase = "jobstate.log"	# Default name for jobstate.log file
-brainbase = "braindump.txt"	# Default name for workflow information file
+MAXLOGFILE = 1000                # For log rotation, check files from .000 to .999
+jobbase = "jobstate.log"        # Default name for jobstate.log file
+brainbase = "braindump.txt"        # Default name for workflow information file
 
 # Get logger object (initialized elsewhere)
 logger = logging.getLogger()
@@ -116,18 +116,18 @@ def find_exec(program, curdir=False):
     my_path = os.getenv("PATH","/bin:/usr/bin")
 
     for my_dir in my_path.split(':'):
-	my_file = os.path.join(os.path.expanduser(my_dir), program)
-	# Test if file is 'executable'
-	if os.access(my_file, os.X_OK):
-	    # Found it!
-	    return my_file
-	
+        my_file = os.path.join(os.path.expanduser(my_dir), program)
+        # Test if file is 'executable'
+        if os.access(my_file, os.X_OK):
+            # Found it!
+            return my_file
+        
     if curdir:
-	my_file = os.path.join(os.getcwd(), program)
-	# Test if file is 'executable'
-	if os.access(my_file, os.X_OK):
-	    # Yes!
-	    return my_file
+        my_file = os.path.join(os.getcwd(), program)
+        # Test if file is 'executable'
+        if os.access(my_file, os.X_OK):
+            # Yes!
+            return my_file
 
     # File not found
     return None
@@ -143,26 +143,26 @@ def pipe_out_cmd(cmd_string):
 
     # Launch process using the subprocess module interface
     try:
-	proc = subprocess.Popen(cmd_string.split(), shell=False,
-				stdout=subprocess.PIPE,
-				stderr=subprocess.PIPE,
-				bufsize=1)
+        proc = subprocess.Popen(cmd_string.split(), shell=False,
+                                stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE,
+                                bufsize=1)
     except:
-	# Error running command
-	return None
+        # Error running command
+        return None
 
     # Wait for it to finish, capturing output
     resp = proc.communicate()
 
     # Capture stdout
     for line in resp[0].split('\n'):
-	if len(line):
-	    my_result.append(line)
-	
+        if len(line):
+            my_result.append(line)
+        
     # Capture stderr
     for line in resp[1].split('\n'):
-	if len(line):
-	    my_result.append(line)
+        if len(line):
+            my_result.append(line)
 
     return my_result
 
@@ -179,7 +179,7 @@ def add_to_braindb(run, missing_keys, brain_alternate=None):
         my_braindb = os.path.join(run, brain_alternate)
 
     try:
-	my_file = open(my_braindb, 'a')
+        my_file = open(my_braindb, 'a')
     except:
         return
 
@@ -209,24 +209,24 @@ def slurp_braindb(run, brain_alternate=None):
         my_braindb = os.path.join(run, brain_alternate)
 
     try:
-	my_file = open(my_braindb, 'r')
+        my_file = open(my_braindb, 'r')
     except:
-	# Error opening file
-	return my_config
+        # Error opening file
+        return my_config
 
     for line in my_file:
-	# Remove \r and/or \n from the end of the line
-	line = line.rstrip("\r\n")
-	# Split the line into a key and a value
-	k, v = line.split(" ", 1)
-	
-	if k == "run" and v != run and run != '.':
-	    logger.warn("run directory mismatch, using %s" % (run))
-	    my_config[k] = run
-	else:
-	    # Remove leading and trailing whitespaces from value
-	    v = v.strip()
-	    my_config[k] = v
+        # Remove \r and/or \n from the end of the line
+        line = line.rstrip("\r\n")
+        # Split the line into a key and a value
+        k, v = line.split(" ", 1)
+        
+        if k == "run" and v != run and run != '.':
+            logger.warn("run directory mismatch, using %s" % (run))
+            my_config[k] = run
+        else:
+            # Remove leading and trailing whitespaces from value
+            v = v.strip()
+            my_config[k] = v
 
     # Close file
     my_file.close()
@@ -249,15 +249,15 @@ def parse_exit(ec):
     Returns a string that shows what went wrong
     """
     if (ec & 127) > 0:
-	my_signo = ec & 127
-	my_core = ''
-	if (ec & 128) == 128:
-	    my_core = " (core)"
-	my_result = "died on signal %s%s" % (my_signo, my_core)
+        my_signo = ec & 127
+        my_core = ''
+        if (ec & 128) == 128:
+            my_core = " (core)"
+        my_result = "died on signal %s%s" % (my_signo, my_core)
     elif (ec >> 8) > 0:
-	my_result = "exit code %d" % ((ec >> 8))
+        my_result = "exit code %d" % ((ec >> 8))
     else:
-	my_result = "OK"
+        my_result = "OK"
 
     return my_result
 
@@ -272,14 +272,14 @@ def check_rescue(dir, dag):
     my_result = []
 
     try:
-	my_files = os.listdir(dir)
+        my_files = os.listdir(dir)
     except:
-	return my_result
+        return my_result
 
     for file in my_files:
-	# Add file to the list if pegasus-planned DAGs that have a rescue DAG
-	if file.startswith(my_base) and file.endswith(".rescue"):
-	    my_result.append(os.path.join(dir, file))
+        # Add file to the list if pegasus-planned DAGs that have a rescue DAG
+        if file.startswith(my_base) and file.endswith(".rescue"):
+            my_result.append(os.path.join(dir, file))
 
     # Sort list
     my_result.sort()
@@ -293,8 +293,8 @@ def rotate_log_file(source_file):
 
     # First we check if we have the log file
     if not os.access(source_file, os.F_OK):
-	# File doesn't exist, we don't have to rotate
-	return
+        # File doesn't exist, we don't have to rotate
+        return
 
     # Now we need to find the latest log file
 
@@ -302,24 +302,24 @@ def rotate_log_file(source_file):
     sf = 0
 
     while (sf < MAXLOGFILE):
-	dest_file = source_file + ".%03d" % (sf)
-	if os.access(dest_file, os.F_OK):
-	    # Continue to the next one
-	    sf = sf + 1
-	else:
-	    break
+        dest_file = source_file + ".%03d" % (sf)
+        if os.access(dest_file, os.F_OK):
+            # Continue to the next one
+            sf = sf + 1
+        else:
+            break
 
     # Safety check to see if we have reached the maximum number of log files
     if sf >= MAXLOGFILE:
-	logger.error("%s exists, cannot rotate log file anymore!" % (dest_file))
-	sys.exit(1)
+        logger.error("%s exists, cannot rotate log file anymore!" % (dest_file))
+        sys.exit(1)
 
     # Now that we have source_file and dest_file, try to rotate the logs
     try:
-	os.rename(source_file, dest_file)
+        os.rename(source_file, dest_file)
     except:
         logger.error("cannot rename %s to %s" % (source_file, dest_file))
-	sys.exit(1)
+        sys.exit(1)
 
     # Done!
     return
@@ -344,10 +344,10 @@ def make_boolean(value):
     # returns: 0 (false) or 1 (true)
     my_val = str(value)
     if (my_val.lower() == 'true' or
-	my_val.lower() == 'on' or
-	my_val.lower() == 'yes' or
-	my_val.isdigit() and int(value) > 0):
-	return 1
+        my_val.lower() == 'on' or
+        my_val.lower() == 'yes' or
+        my_val.isdigit() and int(value) > 0):
+        return 1
 
     return 0
 
@@ -401,17 +401,17 @@ def keep_foreground():
     # Go to a safe place that is not susceptible to sudden umounts
     # FIX THIS: It may break some things
     try:
-	os.chdir('/')
+        os.chdir('/')
     except:
-	logger.critical("could not chdir!")
-	sys.exit(1)
+        logger.critical("could not chdir!")
+        sys.exit(1)
     
     # Although we cannot set sid, we can still become process group leader
     try:
-	os.setpgid(0, 0)
+        os.setpgid(0, 0)
     except:
-	logger.critical("could not setpgid!")
-	sys.exit(1)
+        logger.critical("could not setpgid!")
+        sys.exit(1)
 
 if __name__ == "__main__":
     now = int(time.time())
