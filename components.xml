@@ -1519,15 +1519,19 @@ clus1    black::analyze:1.0    gsiftp://clus1.com/opt/nfs/vdt/pegasus/bin/keg
       Condor schedd is a component in the Condor Project.</para>
 
       </section>
+      
       <section>
+      
       <title>Submit Directory</title>
-
-      <para>Need a description of what a submit directory is and how it functions in the different environments. WHERE IS THIS ELEMENT SET UP?</para>
-
-      <para>The Submit Directory receives the executable workflow (DAG) and stores it until Pegasus Mapper runs to map the tasks of
+             <para>The Submit Directory receives the executable workflow (DAG) and stores it until Pegasus Mapper runs to map the tasks of
       the DAG with the static or dynamic compute resources.</para>
       </section>
-      <section>
+      
+       <para>To see the contents of the directory and the details of the process of conversion from an Abstract to Executable workflow see the <link
+       
+       linkend="submit_directory"> Submit Directory Details </link> </para>
+
+
 
       <title>Monitoring Tools</title>
       
@@ -1539,9 +1543,9 @@ clus1    black::analyze:1.0    gsiftp://clus1.com/opt/nfs/vdt/pegasus/bin/keg
   submit host, which hosts the workflow management system. Jobs are sent from
   the submit host to the campus cluster, the Open Science Grid, the TeraGrid,
   the cloud, or other resources.</para>
-      </section>
+
       
-       <section>
+  <section>
 
        <title>Error Recovery</title>
        
@@ -1556,7 +1560,10 @@ clus1    black::analyze:1.0    gsiftp://clus1.com/opt/nfs/vdt/pegasus/bin/keg
   the locations of data used and produced, and which software was used with
   which parameters.</para>
        </section>
+       
 </chapter>
+
+
 
 
 
