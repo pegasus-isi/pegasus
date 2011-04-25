@@ -250,6 +250,10 @@ push( @arg, '-maxjobs', $maxjobs ) if $maxjobs > 0;
 push( @arg, '-maxidle', $maxidle ) if $maxidle > 0;
 push( @arg, '-notification', $notify );
 push( @arg, '-verbose' ) if $verbose;
+push (@arg,'-append', '+wf_uuid="'.$config{wf_uuid}.'"');
+push (@arg,'-append', '+pegasus_wf_name="'.$config{pegasus_wf_name}.'"');
+push (@arg,'-append', '+pegasus_wf_time="'.$config{timestamp}.'"');
+
 #push( @arg, '-no_submit') if $submit==0;
 push( @arg, $dag );
 print STDERR "# @arg\n" if $main::DEBUG;
