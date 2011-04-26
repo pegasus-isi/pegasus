@@ -46,6 +46,8 @@ C:\DOCUME~1\voeckler\Desktop\schema\dax-3.3\dax-3.3.xsd" version="0.0.0" name="-
       <profile key="String" namespace="pegasus">Text</profile>
       <profile key="String" namespace="pegasus">Text</profile>
     </pfn>
+    <invoke when="NMTOKEN">String</invoke>
+    <invoke when="NMTOKEN">String</invoke>
   </executable>
   <executable name="String" namespace="String" version="0.0.0" installed="true" arch="x86" os="linux" osrelease="String" osversion="0.0.0" glibc="0.0.0">
     <profile key="String" namespace="pegasus">Text</profile>
@@ -60,14 +62,20 @@ C:\DOCUME~1\voeckler\Desktop\schema\dax-3.3\dax-3.3.xsd" version="0.0.0" name="-
       <profile key="String" namespace="pegasus">Text</profile>
       <profile key="String" namespace="pegasus">Text</profile>
     </pfn>
+    <invoke when="NMTOKEN">String</invoke>
+    <invoke when="NMTOKEN">String</invoke>
   </executable>
   <transformation name="String" namespace="String" version="0.0.0">
     <uses name="String" namespace="String" version="0.0.0" executable="true"/>
     <uses name="String" namespace="String" version="0.0.0" executable="true"/>
+    <invoke when="NMTOKEN">String</invoke>
+    <invoke when="NMTOKEN">String</invoke>
   </transformation>
   <transformation name="String" namespace="String" version="0.0.0">
     <uses name="String" namespace="String" version="0.0.0" executable="true"/>
     <uses name="String" namespace="String" version="0.0.0" executable="true"/>
+    <invoke when="NMTOKEN">String</invoke>
+    <invoke when="NMTOKEN">String</invoke>
   </transformation>
   <job id="-" node-label="String" name="String" namespace="String" version="0.0.0">
     <argument>Text<file name="String"/>

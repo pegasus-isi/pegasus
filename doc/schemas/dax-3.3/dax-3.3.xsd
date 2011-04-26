@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- edited with XMLSPY v2004 rel. 3 U (http://www.xmlspy.com) by Rebecca Y Jordan (UNIV OF SOUTHERN CALIF) -->
-<xs:schema targetNamespace="http://pegasus.isi.edu/schema/DAX" xmlns="http://pegasus.isi.edu/schema/DAX" xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" attributeFormDefault="unqualified" version="3.3">
+<xs:schema targetNamespace="http://pegasus.isi.edu/schema/DAX" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="http://pegasus.isi.edu/schema/DAX" elementFormDefault="qualified" attributeFormDefault="unqualified" version="3.3">
   <xs:annotation>
     <xs:documentation xml:lang="en">$Id: dax-3.2.xsd 2767 2010-11-06 22:49:52Z voeckler $</xs:documentation>
   </xs:annotation>
@@ -269,15 +269,10 @@
             <xs:documentation>very simple workflow-level notifications (no warrantees).</xs:documentation>
           </xs:annotation>
         </xs:element>
-        <xs:element name="file" minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="file" type="CatalogType" minOccurs="0" maxOccurs="unbounded">
           <xs:annotation>
             <xs:documentation>Optional list of all data files used. The new extension is a kind of included replica catalog.</xs:documentation>
           </xs:annotation>
-          <xs:complexType>
-            <xs:complexContent>
-              <xs:extension base="CatalogType"/>
-            </xs:complexContent>
-          </xs:complexType>
         </xs:element>
         <xs:element name="executable" minOccurs="0" maxOccurs="unbounded">
           <xs:annotation>
@@ -286,6 +281,13 @@
           <xs:complexType>
             <xs:complexContent>
               <xs:extension base="CatalogType">
+                <xs:sequence>
+                  <xs:element name="invoke" type="InvokeType" minOccurs="0" maxOccurs="unbounded">
+                    <xs:annotation>
+                      <xs:documentation>repeatable simple notification forwarded to job instantiation.</xs:documentation>
+                    </xs:annotation>
+                  </xs:element>
+                </xs:sequence>
                 <xs:attribute name="namespace" type="xs:string" use="optional"/>
                 <xs:attribute name="version" type="VersionPattern" use="optional"/>
                 <xs:attribute name="installed" type="xs:boolean" use="optional" default="true"/>
@@ -301,6 +303,7 @@
           <xs:complexType>
             <xs:sequence>
               <xs:element name="uses" type="TransformationUsesType" maxOccurs="unbounded"/>
+              <xs:element name="invoke" type="InvokeType" minOccurs="0" maxOccurs="unbounded"/>
             </xs:sequence>
             <xs:attribute name="name" type="xs:string" use="required"/>
             <xs:attribute name="namespace" type="xs:string" use="optional"/>
