@@ -137,6 +137,7 @@ public class PegasusProperties {
                                                       "pegasus.transfer.*.priority";
 
     
+    
 
     
     /**
@@ -1988,6 +1989,20 @@ public class PegasusProperties {
 
     //SOME MISCELLANEOUS PROPERTIES
 
+    /**
+     * Returns a boolean indicating whether we assign job priorities or not
+     * to the jobs
+     * 
+     * Referred to by the "pegasus.job.priority.assign" property.
+     *
+     * @return boolean value specified in properties else false.
+     */
+    public boolean assignDefaultJobPriorities() {
+        return Boolean.parse( mProps.getProperty( "pegasus.job.priority.assign" ) ,
+                              true  );
+    }
+
+    
     /**
      * Return returns the environment string specified for the local pool. If
      * specified the registration jobs are set with these environment variables.
