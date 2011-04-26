@@ -213,6 +213,10 @@ public class CondorGenerator extends Abstract {
      */
     private long mCondorVersion;
 
+    /**
+     * Boolean indicating whether to assign job priorities or not.
+     */
+    private boolean mAssignDefaultJobPriorities;
     
     
     /**
@@ -284,6 +288,7 @@ public class CondorGenerator extends Abstract {
 
         mTCHandle    = bag.getHandleToTransformationCatalog();
         mSiteStore   = bag.getHandleToSiteStore();
+        mAssignDefaultJobPriorities = mProps.assignDefaultJobPriorities();
 
         //instantiate and intialize the style factory
         mStyleFactory.initialize( mProps, mSiteStore );
@@ -400,7 +405,8 @@ public class CondorGenerator extends Abstract {
             
             //only apply priority if job is not associated with a priority
             //beforehand
-            if( !job.condorVariables.containsKey( Condor.PRIORITY_KEY ) ){
+            if( !job.condorVariables.containsKey( Condor.PRIORITY_KEY )  &&
+                 this.mAssignDefaultJobPriorities ){
                 int priority = getJobPriority( job, node.getDepth() );
                 
                 //apply a priority to the job overwriting any preexisting priority
