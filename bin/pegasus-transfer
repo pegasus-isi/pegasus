@@ -108,9 +108,25 @@ class Transfer:
 
     def src_url(self):
         return "%s://%s%s" % (self.src_proto, self.src_host, self.src_path)
+
+    def src_url_srm(self):
+        """
+        srm-copy is using broken urls - wants an extra / 
+        """
+        if self.src_proto != "srm":
+            return "%s://%s/%s" % (self.src_proto, self.src_host, self.src_path)
+        return self.src_url()
     
     def dst_url(self):
         return "%s://%s%s" % (self.dst_proto, self.dst_host, self.dst_path)
+
+    def dst_url_srm(self):
+        """
+        srm-copy is using broken urls - wants an extra / 
+        """
+        if self.dst_proto != "srm":
+            return "%s://%s/%s" % (self.dst_proto, self.dst_host, self.dst_path)
+        return self.dst_url()
     
     def dst_url_dirname(self):
         dn = os.path.dirname(self.dst_path)
@@ -304,7 +320,7 @@ def check_tool(executable, version_arg, version_regex):
     if tool_info[executable]['version_patch'] == None or tool_info[executable]['version_patch'] == "":
         tool_info[executable]['version_patch'] = None
     else:
-         tool_info[executable]['version_patch'] = int(tool_info[executable]['version_patch'])
+        tool_info[executable]['version_patch'] = int(tool_info[executable]['version_patch'])
 
     logger.info("  %-18s Version: %-7s Path: %s" % (executable, version, full_path))
 
@@ -423,7 +439,7 @@ def scp(transfers, failed_q):
     """
     copies using scp
     """
-    for i, transfer in enumerate(scp_list): 
+    for i, transfer in enumerate(transfers): 
         cmd = "/usr/bin/scp"
         if transfer.dst_proto == "file":
             prepare_local_dir(os.path.dirname(transfer.dst_path))
@@ -576,7 +592,7 @@ def gsiftp_do_transfers(transfers, failed_q, create_dest, third_party):
     logger.info("Grouped %d similar gsiftp transfers together in temporary file %s" %(num_pairs, tmp_name))
 
     # build command line for globus-url-copy
-    cmd = tool_info['globus-url-copy']['full_path'];
+    cmd = tool_info['globus-url-copy']['full_path']
 
     # make output from guc match our current log level
     if logger.isEnabledFor(logging.DEBUG):
@@ -632,12 +648,19 @@ def srm(transfers, failed_q):
     for i, url_pair in enumerate(transfers): 
         if url_pair.dst_proto == "file":
             prepare_local_dir(os.path.dirname(url_pair.dst_path))
+            
+        third_party = (url_pair.src_proto == "gsiftp" or url_pair.src_proto == "srm") and \
+                      (url_pair.dst_proto == "gsiftp" or url_pair.dst_proto == "srm")
+            
         cmd = ""
         # srm is mostly used on OSG, so look for $OSG_GRID and if found source setup.sh
         if "OSG_GRID" in os.environ:
             cmd = ". $OSG_GRID/setup.sh ;"
+            
         if tool_info['srm-copy']['full_path'] != None:
-            cmd = "%s srm-copy  %s %s -mkdir -concurrency 4 " % (cmd, url_pair.src_url(), url_pair.dst_url())
+            cmd = "%s srm-copy  %s %s -mkdir" % (cmd, url_pair.src_url_srm(), url_pair.dst_url_srm())
+            if third_party:
+                cmd = cmd + " -parallelism 4 -3partycopy"
         else:
             cmd = "%s lcg-cp -D srmv2 -vb -b -n 4 %s %s" % (cmd, url_pair.src_url(), url_pair.dst_url())
         try:
