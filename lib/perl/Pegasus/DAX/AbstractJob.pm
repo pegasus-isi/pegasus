@@ -18,7 +18,7 @@ use constant INVOKE_ON_ERROR => 'on_error';
 use constant INVOKE_AT_END => 'at_end'; 
 use constant INVOKE_ALL => 'all'; 
 
-our $VERSION = '3.2'; 
+our $VERSION = '3.3'; 
 our @EXPORT = (); 
 our %EXPORT_TAGS = ( all => [qw(INVOKE_NEVER INVOKE_START INVOKE_ON_SUCCESS
 	INVOKE_ON_ERROR INVOKE_AT_END INVOKE_ALL) ] ); 
@@ -333,8 +333,8 @@ Run the invoke after the job finishes with failure (exitcode != 0).
 
 =item INVOKE_AT_END
 
-Run the invoke after the job finishes, regardless of exit code. 
- 
+Run the invoke after the job finishes, regardless of exit code.
+
 =item INVOKE_ALL
 
 Like C<INVOKE_START> and C<INVOKE_AT_END> combined. 

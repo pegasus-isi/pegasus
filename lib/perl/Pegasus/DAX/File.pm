@@ -12,7 +12,7 @@ use Pegasus::DAX::CatalogType;
 use Exporter;
 our @ISA = qw(Pegasus::DAX::CatalogType Exporter); 
 
-our $VERSION = '3.2'; 
+our $VERSION = '3.3'; 
 our %EXPORT_TAGS = (); 
 our @EXPORT = (); 
 our @EXPORT_OK = (); 

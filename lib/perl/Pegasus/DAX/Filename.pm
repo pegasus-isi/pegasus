@@ -24,7 +24,7 @@ use constant TRANSFER_TRUE => 'true';
 use constant TRANSFER_FALSE => 'false';
 use constant TRANSFER_OPTIONAL => 'optional'; 
 
-our $VERSION = '3.2'; 
+our $VERSION = '3.3'; 
 our @EXPORT = (); 
 our %EXPORT_TAGS = ( 
     'link' => [qw(LINK_NONE LINK_IN LINK_OUT LINK_INPUT LINK_OUTPUT 

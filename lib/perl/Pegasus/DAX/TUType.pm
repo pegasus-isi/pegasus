@@ -12,7 +12,7 @@ use Pegasus::DAX::PlainFilename;
 use Exporter;
 our @ISA = qw(Pegasus::DAX::PlainFilename Exporter); 
 
-our $VERSION = '3.2'; 
+our $VERSION = '3.3'; 
 our @EXPORT = (); 
 our %EXPORT_TAGS = (); 
 our @EXPORT_OK = (); 

@@ -15,7 +15,7 @@ sub quote($);			# { }
 sub attribute($$;$);		# { }
 sub boolean($);			# { }
 
-our $VERSION = '3.2'; 
+our $VERSION = '3.3'; 
 our @EXPORT = (); 
 our @EXPORT_OK = qw(quote attribute boolean $escape %escape); 
 our %EXPORT_TAGS = ( 

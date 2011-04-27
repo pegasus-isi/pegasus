@@ -13,10 +13,10 @@ use Exporter;
 our @ISA = qw(Pegasus::DAX::AbstractJob Exporter); 
 
 use constant SCHEMA_NAMESPACE => 'http://pegasus.isi.edu/schema/DAX'; 
-use constant SCHEMA_LOCATION => 'http://pegasus.isi.edu/schema/dax-3.2.xsd';
-use constant SCHEMA_VERSION => 3.2;
+use constant SCHEMA_LOCATION => 'http://pegasus.isi.edu/schema/dax-3.3.xsd';
+use constant SCHEMA_VERSION => 3.3;
 
-our $VERSION = '3.2'; 
+our $VERSION = '3.3'; 
 our @EXPORT = (); 
 our @EXPORT_OK = qw(SCHEMA_NAMESPACE SCHEMA_LOCATION SCHEMA_VERSION); 
 our %EXPORT_TAGS = ( 
@@ -50,6 +50,33 @@ sub name;
 sub index;
 sub count; 
 
+sub addInvoke {
+    my $self = shift;
+    $self->invoke(@_);
+}
+
+sub notify {
+    my $self = shift;
+    $self->invoke(@_);
+}
+
+sub invoke {
+    my $self = shift;
+    my $when = shift;
+    my $cmd = shift;
+
+
+    if ( defined $when && defined $cmd ) { 
+	if ( exists $self->{invokes} ) {
+	    push( @{$self->{invokes}}, {$when => $cmd} ); 
+	} else {
+	    $self->{invokes} = [ { $when => $cmd } ]; 
+	}
+    } else {
+	croak "use proper arguments to addInvoke(when,cmdstring)";
+    }
+}
+
 use Pegasus::DAX::File; 
 
 sub addFile {
@@ -59,7 +86,8 @@ sub addFile {
 	if ( $name->isa('Pegasus::DAX::File') ) {
 	    push( @{$self->{files}}, $name ); 
 	} else { 
-	    croak "Instance of ", ref($name), " is an invalid argument"; 
+	    croak( "Instance of ", ( ref($name) ? ref($name) : 'SCALAR' ), 
+		   " is an invalid argument" ); 
 	}
     } else {
 	croak "invalid argument"; 
@@ -73,7 +101,8 @@ sub addExecutable {
 	if ( $name->isa('Pegasus::DAX::Executable') ) {
 	    push( @{$self->{executables}}, $name ); 
 	} else { 
-	    croak "Instance of ", ref($name), " is an invalid argument"; 
+	    croak( "Instance of ", ( ref($name) ? ref($name) : 'SCALAR' ), 
+		   " is an invalid argument" ); 
 	}
     } else {
 	croak "invalid argument";
@@ -86,22 +115,32 @@ sub addTransformation {
     if ( ref $name && $name->isa('Pegasus::DAX::Transformation') ) {
 	push( @{$self->{transformations}}, $name ); 
     } else { 
-	croak "Instance of ", ref($name), " is an invalid argument"; 
+	croak( "Instance of ", ( ref($name) ? ref($name) : 'SCALAR' ), 
+	       " is an invalid argument" ); 
     }
 }
 
 sub addJob { 
     my $self = shift; 
-    my $name = shift; 
-    if ( ref $name && $name->isa('Pegasus::DAX::AbstractJob') ) {
-	my $id = $name->id || 
-	    croak( "Instance of ", ref($name), " does not have a 'id' attribute" );
-	carp( "Warning: job identifier $id already exists, replacing existing job!" )
+    my $job = shift; 
+    if ( ref $job && $job->isa('Pegasus::DAX::AbstractJob') ) {
+	my $id = $job->id || 
+	    croak( "Instance of ", ref($job), " does not have an 'id' attribute" );
+	carp( "Warning: job identifier $id already exists, REPLACING existing job!" )
 	    if exists $self->{jobs}->{$id}; 
-	$self->{jobs}->{$id} = $name; 
+	$self->{jobs}->{$id} = $job; 
     } else { 
-	croak "Instance of ", ref($name), " is an invalid argument"; 
+	croak( "Instance of ", ( ref($job) ? ref($job) : 'SCALAR' ), 
+	       " is an invalid argument" ); 
     }
+}
+
+sub getJob {
+    my $self = shift;
+    my $id = shift; 		# job id
+
+    # avoid auto-vivification
+    ( exists $self->{jobs}->{$id} ? $self->{jobs}->{$id} : undef ); 
 }
 
 sub addDependency {
@@ -241,6 +280,22 @@ sub toXML {
 	     , attribute('index',$self->index,$xmlns)
 	     , attribute('count',$self->count,$xmlns)
 	     , ">\n" ); 
+
+    #
+    # <invoke>
+    #
+    if ( exists $self->{invokes} ) {
+	$f->print( "  $indent<!-- part 1.0: invocations -->\n" ); 
+	my $itag = defined $xmlns && $xmlns ? "$xmlns:invoke" : 'invoke';
+	foreach my $i ( @{$self->{invokes}} ) {
+	    $f->print( "$indent<$itag"
+		     , attribute('when',$i->{when},$xmlns)
+		     , ">"
+		     , quote($i->{cmd})
+		     , "</$itag>\n"
+		     ); 
+	}
+    }
 
     #
     # <file>
@@ -401,6 +456,12 @@ While not forbidden by the API, we cannot plan C<ADAG> within C<ADAG>
 yet. The job must have a valid and unique I<id> attribute once this gets
 implemented.
 
+=item getJob( $jobid )
+
+This method looks up a job by its I<id>. If the I<id> is not known to
+this instance (i.e. this job hasn't been added yet), the method will
+return the C<undef> value. 
+
 =item addDependency( $parent, $child, .. )
 
 =item addDependency( $parent, $child, $label, .. )
@@ -483,7 +544,7 @@ Please refer to L<Pegasus::DAX::AbstractJob> for inherited methods.
 
 =item notify( $when, $cmd ) 
 
-=item invoke( $when $cmd )
+=item invoke( $when, $cmd )
 
 =item innerXML( $handle, $indent, $xmlns )
 

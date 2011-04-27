@@ -20,7 +20,7 @@ use constant PROFILE_GLOBUS  => 'globus';
 use constant PROFILE_SELECTOR => 'selector';
 use constant PROFILE_STAT    => 'stat'; 
 
-our $VERSION = '3.2'; 
+our $VERSION = '3.3'; 
 our @EXPORT = (); 
 our %EXPORT_TAGS = ( ns => [ qw(PROFILE_PEGASUS PROFILE_CONDOR 
 	PROFILE_DAGMAN PROFILE_ENV PROFILE_HINTS PROFILE_GLOBUS 

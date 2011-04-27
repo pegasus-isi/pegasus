@@ -45,7 +45,7 @@ sub newADAG	{ Pegasus::DAX::ADAG->new(@_) }
 #
 # export bonanza
 #
-our $VERSION = '3.2'; 
+our $VERSION = '3.3'; 
 our %EXPORT_TAGS = (
     func => [qw(newADAG newDAG newDAX newExecutable newFile 
 	newFilename newJob newMetaData newPFN newPlainFilename 

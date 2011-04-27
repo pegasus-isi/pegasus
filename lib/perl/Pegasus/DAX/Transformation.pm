@@ -12,7 +12,7 @@ use Pegasus::DAX::Filename;
 use Exporter;
 our @ISA = qw(Pegasus::DAX::Base Exporter); 
 
-our $VERSION = '3.2'; 
+our $VERSION = '3.3'; 
 our @EXPORT = (); 
 our @EXPORT_OK = (); 
 our %EXPORT_TAGS = (); 
@@ -90,6 +90,32 @@ sub uses {
     }
 }
 
+sub addInvoke {
+    my $self = shift;
+    $self->invoke(@_);
+}
+
+sub notify {
+    my $self = shift; 
+    $self->invoke(@_);
+}
+
+sub invoke {
+    my $self = shift; 
+    my $when = shift; 
+    my $cmd = shift; 
+
+    if ( defined $when && defined $cmd ) { 
+	if ( exists $self->{invokes} ) {
+	    push( @{$self->{invokes}}, {$when => $cmd} ); 
+	} else {
+	    $self->{invokes} = [ { $when => $cmd } ]; 
+	}
+    } else {
+	croak "use proper arguments to addInvoke(when,cmdstring)";
+    }
+}
+
 sub toXML {
     # purpose: put self onto stream as XML
     # paramtr: F (IN): perl file handle open for writing
@@ -113,6 +139,21 @@ sub toXML {
     #
     while ( my ($name,$i) = each %{$self->{uses}} ) {
 	$i->toXML($f,"  $indent",$xmlns);
+    }
+
+    #
+    # <invoke>
+    #
+    if ( exists $self->{invokes} ) {
+	my $tag = defined $xmlns && $xmlns ? "$xmlns:invoke" : 'invoke';
+	foreach my $i ( @{$self->{invokes}} ) {
+	    $f->print( "  $indent<$tag"
+		     , attribute('when',$i->{when},$xmlns)
+		     , ">"
+		     , quote($i->{cmd})
+		     , "</$tag>\n"
+		     ); 
+	}
     }
 
     $f->print( "$indent</$tag>\n" );
@@ -209,6 +250,20 @@ copying the I<namespace>, I<name>, and I<version> attributes from the
 L<Pegasus::DAX::Executable> instance passed as argument, and sets the
 I<executable> attribute to C<true>. You will have to add a proper
 L<Pegasus::DAX::TUType> instance to overwrite these defaults.
+
+=item addInvoke( $when, $cmd )
+
+Alias for C<invoke> method.
+
+=item notify( $when, $cmd ) 
+
+Alias for C<invoke> method.
+
+=item invoke( $when $cmd )
+
+This method adds a simple executable instruction to run (on the submit
+host) when a job reaches the state in C<$when>. Please refer to the 
+constants C<INVOKE_*> in L<Pegasus::DAX::AbstractJob> for details. 
 
 =item toXML( $handle, $indent, $xmlns )
 
