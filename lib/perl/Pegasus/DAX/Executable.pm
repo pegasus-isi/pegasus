@@ -130,7 +130,7 @@ sub toXML {
     #
     if ( exists $self->{invokes} ) {
 	foreach my $i ( @{$self->{invokes}} ) {
-	    $i->toXML($f,$indent,$xmlns);
+	    $i->toXML($f,"  $indent",$xmlns);
 	}
     }
 

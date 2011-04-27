@@ -20,6 +20,7 @@ use Pegasus::DAX::PlainFilename;
 use Pegasus::DAX::Filename qw(:all);
 use Pegasus::DAX::File;
 use Pegasus::DAX::Executable qw(:all); 
+use Pegasus::DAX::Invoke qw(:all); 
 use Pegasus::DAX::Transformation;
 use Pegasus::DAX::DAG;
 use Pegasus::DAX::DAX;
@@ -41,6 +42,7 @@ sub newDAG	{ Pegasus::DAX::DAG->new(@_) }
 sub newDAX	{ Pegasus::DAX::DAX->new(@_) }
 sub newJob	{ Pegasus::DAX::Job->new(@_) }
 sub newADAG	{ Pegasus::DAX::ADAG->new(@_) }
+sub newInvoke   { Pegasus::DAX::Invoke->new(@_) }
 
 #
 # export bonanza
@@ -49,13 +51,14 @@ our $VERSION = '3.3';
 our %EXPORT_TAGS = (
     func => [qw(newADAG newDAG newDAX newExecutable newFile 
 	newFilename newJob newMetaData newPFN newPlainFilename 
-	newProfile newTransformation)],
+	newProfile newTransformation newInvoke)],
     link => [ @{$Pegasus::DAX::Filename::EXPORT_TAGS{link}} ],
     transfer => [ @{$Pegasus::DAX::Filename::EXPORT_TAGS{transfer}} ],
     arch => [ @{$Pegasus::DAX::Executable::EXPORT_TAGS{arch}} ],
     os => [ @{$Pegasus::DAX::Executable::EXPORT_TAGS{os}} ],
     ns => [ @{$Pegasus::DAX::Profile::EXPORT_TAGS{ns}} ],
-    schema => [ @{$Pegasus::DAX::ADAG::EXPORT_TAGS{schema}} ]
+    schema => [ @{$Pegasus::DAX::ADAG::EXPORT_TAGS{schema}} ],
+    invoke => [ @{$Pegasus::DAX::Invoke::EXPORT_TAGS{all}} ]
     ); 
 $EXPORT_TAGS{all} = [ map { @{$_} } values %EXPORT_TAGS ]; 
 our @EXPORT_OK = ( @{$EXPORT_TAGS{all}} );
@@ -124,6 +127,10 @@ This tag imports the profile namespace constants C<PROFILE_*> from L<Pegasus::DA
 
 This tag imports the XML schema constants C<SCHEMA_*> from L<Pegasus::DAX::ADAG>.
 
+=item C<:invoke>
+
+This tag imports the notification event constants C<INVOKE_*> from L<Pegasus::DAX::Invoke>.
+
 =item C<:all>
 
 All of the above. 
@@ -182,6 +189,9 @@ Factory function for C<L<Pegasus::DAX::Job>-E<gt>new>.
 
 Factory function for C<L<Pegasus::DAX::ADAG>-E<gt>new>.
 
+=item newInvoke
+
+Factory function for C<L<Pegasus::DAX::Invoke>-E<gt>new>.
 
 =back 
 
@@ -208,6 +218,8 @@ Base class.
 =item L<Pegasus::DAX::File>
 
 =item L<Pegasus::DAX::Filename>
+
+=item L<Pegasus::DAX::Invoke>
 
 =item L<Pegasus::DAX::Job>
 

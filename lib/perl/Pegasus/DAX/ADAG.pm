@@ -288,7 +288,7 @@ sub toXML {
     if ( exists $self->{invokes} ) {
 	$f->print( "  $indent<!-- part 1.0: invocations -->\n" ); 
 	foreach my $i ( @{$self->{invokes}} ) {
-	    $i->toXML($f,$indent,$xmlns); 
+	    $i->toXML($f,"  $indent",$xmlns); 
 	}
     }
 
