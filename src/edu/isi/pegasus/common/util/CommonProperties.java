@@ -172,18 +172,16 @@ public class CommonProperties
    * ctor. This initializes the local instance of properties
    * from a central file.
    *
-   * @param propFilename is the basename of the file to read. This file
-   * will be looked for in the $PEGASUS_HOME/etc directory. Usually, the name
-   * will be set from the PROPERTY_FILENAME constant above.
-   * Alternatively, the name will be ignored, if an alternative properties
-   * location is specified via <code>-Dpegasus.properties</code>.
+   * @param confProperties  the path to conf properties, that supersede the loading
+   *                        of properties from $PEGASUS_HOME/.pegasusrc
+   * 
    * @exception IOException will be thrown if reading the property file
    * goes awry.
    * @exception MissingResourceException will be thrown if you forgot
    * to specify the <code>-Dpegasus.home=$PEGASUS_HOME</code> to the runtime
    * environment.
    */
-  protected CommonProperties( String propFilename )
+  protected CommonProperties( String confProperties )
     throws IOException, MissingResourceException
   {
     // create empty new instance
@@ -204,6 +202,7 @@ public class CommonProperties
       
 
       // check for an alternative property file spec
+      String propFilename = CommonProperties.PROPERTY_FILENAME;
       alternative = System.getProperty("pegasus.properties" );
       File props = ( alternative == null ?
 		     new File( etcDir, propFilename ) :
@@ -232,6 +231,12 @@ public class CommonProperties
       props = new File( userHome, CommonProperties.USER_PROPERTY_FILENAME );
 
       //Prefer conf option over  $HOME/.pegasusrc 
+      File confProps = null;
+      props = ( confProperties != null &&
+                (confProps = new File( confProperties )).exists() )?
+                confProps :
+                props;
+      
       if ( props.exists() ) {
 	// if this file exists, read the properties (will throw IOException)
 	Properties temp = new Properties();
@@ -285,7 +290,7 @@ public class CommonProperties
   {
     if ( CommonProperties.m_instance == null )
       CommonProperties.m_instance =
-	new CommonProperties( CommonProperties.PROPERTY_FILENAME );
+	new CommonProperties( null );
     return CommonProperties.m_instance;
   }
 
@@ -294,9 +299,10 @@ public class CommonProperties
    * This may be helpful with portal, which do magic things during the
    * lifetime of a process.
    *
-   * @param propFilename is the full path name to the location of the
-   * properties file to read. In case of null, the default location
-   * will be taken
+   * 
+   * @param confProperties  the path to conf properties, that supersede the
+   *                        loading of properties from $PEGASUS_HOME/.pegasusrc
+   * 
    * @return a reference to the parsed properties.
    * @exception IOException will be thrown if reading the property file
    * goes awry.
@@ -305,14 +311,10 @@ public class CommonProperties
    * environment.
    * @see #instance()
    */
-  public static CommonProperties nonSingletonInstance( String propFilename )
+  public static CommonProperties nonSingletonInstance( String confProperties )
     throws IOException, MissingResourceException
   {
-    return new CommonProperties( (propFilename == null) ?
-			      // pick up the default value
-			      CommonProperties.PROPERTY_FILENAME :
-			      // pick up the file mentioned
-			      propFilename );
+    return new CommonProperties( confProperties );
   }
 
 

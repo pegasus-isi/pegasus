@@ -235,20 +235,20 @@ public class PegasusProperties {
      * @return a handle to the Properties class.
      */
     public static PegasusProperties getInstance( ){
-        return nonSingletonInstance( null );
+        return getInstance( null );
     }
 
 
     /**
      * Returns an instance to this properties object.
      *
-     * @param propFileName  name of the properties file to picked from
-     *                      $PEGASUS_HOME/etc/ directory.
+     * @param confProperties  the path to conf properties, that supersede the
+     *                        loading of properties from $PEGASUS_HOME/.pegasusrc
      *
      * @return a handle to the Properties class.
      */
-    public static PegasusProperties getInstance( String propFileName ){
-        return nonSingletonInstance( propFileName );
+    public static PegasusProperties getInstance( String confProperties ){
+        return nonSingletonInstance( confProperties );
     }
 
     /**
@@ -257,13 +257,13 @@ public class PegasusProperties {
      * This is *not implemented* as singleton. However the invocation of this
      * does modify the internally held singleton object.
      *
-     * @param propFileName  name of the properties file to picked from
-     *                      $PEGASUS_HOME/etc/ directory.
+     * @param confProperties  the path to conf properties, that supersede the
+     *                        loading of properties from $PEGASUS_HOME/.pegasusrc
      *
      * @return a handle to the Properties class.
      */
-    protected static PegasusProperties nonSingletonInstance( String propFileName ) {
-        return new PegasusProperties( propFileName );
+    protected static PegasusProperties nonSingletonInstance( String confProperties ) {
+        return new PegasusProperties( confProperties );
     }
 
     /**
@@ -277,7 +277,8 @@ public class PegasusProperties {
      * @return a handle to the Properties class.
      */
     public static PegasusProperties nonSingletonInstance() {
-        return nonSingletonInstance( CommonProperties.PROPERTY_FILENAME );
+        //return nonSingletonInstance( CommonProperties.PROPERTY_FILENAME );
+        return nonSingletonInstance( null );
     }
 
 
@@ -289,14 +290,14 @@ public class PegasusProperties {
      * the properties file passed is null, then the singleton instance is
      * invoked, else the non singleton instance is invoked.
      *
-     * @param propertiesFile name of the properties file to picked
-     *                       from $PEGASUS_HOME/etc/ directory.
+     * @param confProperties  the path to conf properties, that supersede the
+     *                        loading of properties from $PEGASUS_HOME/.pegasusrc
      */
-    private PegasusProperties( String propertiesFile ) {
+    private PegasusProperties( String confProperties  ) {
 //        mLogger = LogManager.getInstance();
         
         mDeprecatedProperties   = new HashSet(5);
-        initializePropertyFile( propertiesFile );
+        initializePropertyFile( confProperties  );
         mPegasusHome = mProps.getPegasusHome();
 
         mDefaultPoolFile        = getDefaultPathToSC();
@@ -412,29 +413,32 @@ public class PegasusProperties {
     /**
      * Gets the handle to the properties file. The singleton instance is
      * invoked if the properties file is null (partly due to the way CommonProperties
-     * is implemented ), else the non singleton is invoked. If you want to pick
-     * up the default properties file in a non singleton manner, specify
-     * CommonProperties.PROPERTY_FILENAME as a parameter.
+     * is implemented ), else the non singleton is invoked.
+     * 
+     * @param confProperties  the path to conf properties, that supersede the
+     *                        loading of properties from $PEGASUS_HOME/.pegasusrc
      *
-     * @param propertiesFile name of the properties file to picked
-     *                       from $PEGASUS_HOME/etc/ directory.
+     * 
      */
-    private void initializePropertyFile( String propertiesFile ) {
+    private void initializePropertyFile( String confProperties ) {
         try {
-            mProps = ( propertiesFile == null ) ?
+            /*
+            mProps = ( confProperties == null ) ?
                 //invoke the singleton instance
                 CommonProperties.instance() :
                 //invoke the non singleton instance
-                CommonProperties.nonSingletonInstance( propertiesFile );
+                CommonProperties.nonSingletonInstance( confProperties );
+             */
+            //we always load non singleton instance?
+            //Karan April 27, 2011
+            mProps = CommonProperties.nonSingletonInstance( confProperties );
         } catch ( IOException e ) {
             mLogMsg = "unable to read property file: " + e.getMessage();
             System.err.println( mLogMsg );
-//            mLogger.log( mLogMsg , LogManager.FATAL_MESSAGE_LEVEL);
             System.exit( 1 );
         } catch ( MissingResourceException e ) {
             mLogMsg = "You forgot to set -Dpegasus.home=$PEGASUS_HOME!";
             System.err.println( mLogMsg );
-//            mLogger.log( mLogMsg , LogManager.FATAL_MESSAGE_LEVEL);
             System.exit( 1 );
         }
 
