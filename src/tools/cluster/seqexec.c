@@ -247,15 +247,15 @@ wait_for_child( Jobs* jobs, int* status )
     Job* j = (jobs->jobs) + slot; 
 
     /* 20110419 PM-364: new requirement */
-    printf( "[seqexec-task id=%lu, start=\"%s\", duration=%.3f, status=%d, "
-	    "line=%lu, pid=%d, app=\"%s\"]\n",
-	    j->count,
-	    iso2date( j->start, date, sizeof(date) ),
-	    (final - j->start), 
-	    *status,
-	    j->lineno, 
-	    child, 
-	    j->argv[ find_application(j->argv) ] ); 
+    showout( "[%s-task id=%lu, start=\"%s\", duration=%.3f, status=%d, "
+	     "line=%lu, pid=%d, app=\"%s\"]\n", application,
+	     j->count,
+	     iso2date( j->start, date, sizeof(date) ),
+	     (final - j->start), 
+	     *status,
+	     j->lineno, 
+	     child, 
+	     j->argv[ find_application(j->argv) ] ); 
     
     /* progress report at finish of job */ 
     if ( progress != -1 ) 
@@ -306,6 +306,7 @@ run_independent_task( char* cmd, char* envp[], unsigned long* extra )
 int
 isafailure( int status )
 {
+  /* FIXME: On systems with exit codes outside 0..256 this may core dump! */
   return ( WIFEXITED(status) && success[ WEXITSTATUS(status) ] == 1 ) ? 0 : 1;
 }
 
@@ -474,7 +475,8 @@ main( int argc, char* argv[], char* envp[] )
   while ( (slot=jobs_in_state( &jobs, EMPTY )) < jobs.cpus ) {
     /* wait for any child to finish */
     size_t n = jobs.cpus - slot; 
-    showerr( "%s: %d task%s remaining\n", application, n, (n == 1 ? "" : "s" ) ); 
+    if ( debug ) showerr( "%s: %d task%s remaining\n", application, 
+			  n, (n == 1 ? "" : "s" ) ); 
     wait_for_child( &jobs, &other );
     if ( errno == 0 && isafailure(other) ) failure++; 
     massage_failure( fail_hard, other, &status );
@@ -486,14 +488,14 @@ main( int argc, char* argv[], char* envp[] )
   /* provide final statistics */
   jobs_done( &jobs ); 
   diff = now(NULL) - start;
-  printf( "[%s-summary stat=\"%s\", lines=%lu, tasks=%lu, succeeded=%lu, failed=%lu, "
-	  "extra=%lu, duration=%.3f, start=\"%s\", pid=%d, app=\"%s\"]\n",
-	  application, 
-	  ( (fail_hard && status && isafailure(status)) ? "fail" : "ok" ),
-	  lineno, total, total-failure, failure, extra,
-	  diff, iso2date(start,line,sizeof(line)),
-	  getpid(), argv[0] );
+  showout( "[%s-summary stat=\"%s\", lines=%lu, tasks=%lu, succeeded=%lu, failed=%lu, "
+	   "extra=%lu, duration=%.3f, start=\"%s\", pid=%d, app=\"%s\"]\n",
+	   application, 
+	   ( (fail_hard && status && isafailure(status)) ? "fail" : "ok" ),
+	   lineno, total, total-failure, failure, extra,
+	   diff, iso2date(start,line,sizeof(line)),
+	   getpid(), argv[0] );
 
-  fflush(stdout);
+  fflush(stdout); /* just in case */
   exit( (fail_hard && status && isafailure(status)) ? 5 : 0 );
 }

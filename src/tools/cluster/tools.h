@@ -34,6 +34,11 @@ showerr( const char* fmt, ... );
  * returns: number of bytes written, -1 for error
  */ 
 
+/* as long as showerr() reports on stdout, we can use this macro */ 
+#ifndef showout
+#define showout showerr
+#endif
+
 extern
 double
 timespec( struct timeval* tv );

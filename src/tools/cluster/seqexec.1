@@ -185,10 +185,18 @@ option.
 .SH "TASK SUMMARY"
 Each task executed by 
 .B seqexec
-generates a record bracketed by square brackets and introduced by the
-string
+generates a record bracketed by square brackets like this:
+.nf
+\f(CB
+[seqexec-task id=1, start="2011-04-27T14:31:25.340-07:00", duration=0.521, status=0, line=1, pid=18543, app="/bin/usleep"]
+[seqexec-task id=2, start="2011-04-27T14:31:25.342-07:00", duration=0.619, status=0, line=2, pid=18544, app="/bin/usleep"]
+[seqexec-task id=3, start="2011-04-27T14:31:25.862-07:00", duration=0.619, status=0, line=3, pid=18549, app="/bin/usleep"]
+\fP
+.fi
+.PP
+Each record is introduced by the string
 .I seqexec-task
-with the following constituents: 
+with the following constituents, where strings are quoted:  
 .TP
 .B id
 This is a numerical value for main sequence application, indicating the
@@ -199,7 +207,7 @@ and the cleanup task uses the string
 .TP
 .B start
 is the ISO 8601 time stamp, with millisecond resolution, when the
-application was started.
+application was started. This string is quoted. 
 .TP
 .B duration
 is the application wall-time duration in seconds, with millisecond
@@ -212,7 +220,9 @@ exit status as returned by the
 .I wait
 family of system calls. Typically, the exit code is found in the high
 byte, and the signal of death in the low byte. Typically, 0 indicates
-a successful execution, and any other value a problem. 
+a successful execution, and any other value a problem. However, details
+could differ between systems, and exit codes are only meaningful on the
+same os and architecture.
 .TP
 .B line 
 is the line number where the task was found in the main sequence file.
@@ -222,13 +232,21 @@ Setup- and cleanup tasks don't have this attribute.
 is the process id under which the application had run. 
 .TP
 .B app
-is the path to the application that was started. Note that in this record,
-unlike the progress record, any 
+is the path to the application that was started. As with the progress
+record, any 
 .B kickstart
-will not be parsed out (yet). 
+will be parsed out so that you see the true application. 
 .SH "SEQEXEC SUMMARY"
-The final summary of counts is a record bracketed by square brackets and
-introduced by the string
+The final summary of counts is a record bracketed by square brackets
+like this (broken over two lines for readability):
+.nf
+\f(CB
+[seqexec-summary stat="ok", lines=3, tasks=3, succeeded=3, failed=0, extra=0,
+ duration=1.143, start="2011-04-27T14:31:25.338-07:00", pid=18542, app="./seqexec"]
+\fP
+.fi
+.PP
+The record is introduced by the string
 .I seqexec-summary
 with the following constituents: 
 .TP
