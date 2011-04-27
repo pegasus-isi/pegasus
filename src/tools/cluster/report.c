@@ -248,9 +248,13 @@ mytrylock( int fd )
 }
 
 ssize_t
-report( int progress, double start, double duration,
-	int status, char* argv[], struct rusage* use, 
-	const char* special )
+report( int progress, double start, double duration
+      , int status, char* argv[], struct rusage* use
+      , const char* special 
+#ifndef MONOTONICALLY_INCREASING
+      , size_t taskid
+#endif /* MONOTONICALLY_INCREASING */
+      )
 /* purpose: report what has just finished.
  * paramtr: progress (IN): file description open for writing
  *          start (IN): start time (no millisecond resolution)
@@ -259,10 +263,13 @@ report( int progress, double start, double duration,
  *          argv (IN): NULL-delimited argument vector of app
  *          use (IN): resource usage from wait4() call
  *          special (IN): set for setup/cleanup jobs.
+ *          taskid (IN): task number from input file. 
  * returns: number of bytes written onto "progress"
  */
 {
+#ifdef MONOTONICALLY_INCREASING
   static unsigned long counter = 0;
+#endif /* MONOTONICALLY_INCREASING */
   int save, locked;
   char date[32];
   size_t len, size = getpagesize();
@@ -278,21 +285,35 @@ report( int progress, double start, double duration,
   /* message start */
   if ( status == -1 && duration == 0.0 && use == NULL ) {
     /* report of seqexec itself */
-    snprintf( msg, size, "%s %s %lu 0/0 START", 
-	      iso2date(start,date,sizeof(date)), 
-	      identifier, counter++ );
+    snprintf( msg, size, "%s %s %lu 0/0 START"
+	    , iso2date(start,date,sizeof(date)) 
+	    , identifier
+#ifdef MONOTONICALLY_INCREASING
+	    , counter++ 
+#else
+	    , 0ul
+#endif /* MONOTONICALLY_INCREASING */
+	    );
   } else if ( special != NULL ) {
     /* report from setup/cleanup invocations */
-    snprintf( msg, size, "%s %s %s %d/%d %.3f",
-	      iso2date(start,date,sizeof(date)), 
-	      identifier, special,
-	      (status >> 8), (status & 127), duration );
+    snprintf( msg, size, "%s %s %s %d/%d %.3f"
+	    , iso2date(start,date,sizeof(date))
+	    , identifier
+	    , special
+	    , (status >> 8), (status & 127), duration 
+	    );
   } else {
     /* report from child invocations */
-    snprintf( msg, size, "%s %s %lu %d/%d %.3f",
-	      iso2date(start,date,sizeof(date)), 
-	      identifier, counter++,
-	      (status >> 8), (status & 127), duration );
+    snprintf( msg, size, "%s %s %lu %d/%d %.3f"
+	    , iso2date(start,date,sizeof(date))
+	    , identifier
+#ifdef MONOTONICALLY_INCREASING
+	    , counter++
+#else
+	    , taskid
+#endif /* MONOTONICALLY_INCREASING */
+	    , (status >> 8), (status & 127), duration 
+	    );
   }
 
   /* add program arguments */

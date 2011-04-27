@@ -31,8 +31,8 @@ typedef struct {
   pid_t  child;	  /* pid of process -- when in state running */ 
   double start;   /* starting time */ 
   time_t when;    /* start time_t */
-  size_t count;   /* copy from job counter */ 
-  size_t lineno;  /* copy from lineno */ 
+  unsigned long count;   /* copy from job counter */ 
+  unsigned long lineno;  /* copy from lineno */ 
 } Job;
 
 extern

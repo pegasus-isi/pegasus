@@ -161,8 +161,13 @@ mysystem( char* argv[], char* envp[], const char* special )
 	  argv[ find_application(argv) ] ); 
 
   /* progress report finish */
-  if ( progress != -1 ) 
-    report( progress, start, diff, status, argv, &usage, special );
+  if ( progress != -1 ) {
+    report( progress, start, diff, status, argv, &usage, special 
+#ifndef MONOTONICALLY_INCREASING
+	    , -1ul
+#endif /* MONOTONICALLY_INCREASING */
+	    );
+  }
 
   errno = saverr;
   return status;

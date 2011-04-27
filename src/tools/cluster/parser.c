@@ -155,7 +155,7 @@ interpreteArguments( char* cmd, char*** argv )
 
   /* FIXME: What if state is not 6 ? */
   if ( state != 6 ) {
-    printf( "[syntax-error state=\"%u\" argc=\"%u\" cmd=\"%s\"]\n",
+    printf( "[syntax-error state=\"%d\" argc=\"%zu\" cmd=\"%s\"]\n",
 	    state, argc, cmd );
     free((void*) store);
     return 0;

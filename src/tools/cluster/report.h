@@ -31,9 +31,13 @@ find_application( char* argv[] );
 
 extern
 ssize_t
-report( int progress, double start, double duration,
-	int status, char* argv[], struct rusage* use, 
-	const char* special );
+report( int progress, double start, double duration
+      , int status, char* argv[], struct rusage* use
+      , const char* special 
+#ifndef MONOTONICALLY_INCREASING
+      , size_t taskid
+#endif /* MONOTONICALLY_INCREASING */
+      );
 /* purpose: report what has just finished.
  * paramtr: progress (IN): file description open for writing
  *          start (IN): start time (no millisecond resolution)
@@ -42,6 +46,7 @@ report( int progress, double start, double duration,
  *          argv (IN): NULL-delimited argument vector of app
  *          use (IN): resource usage from wait4() call
  *          special (IN): set for setup/cleanup jobs.
+ *          taskid (IN): task number from input file. 
  * returns: number of bytes written onto "progress"
  */
 
