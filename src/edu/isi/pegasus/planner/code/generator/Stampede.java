@@ -516,7 +516,7 @@ public class Stampede implements CodeGenerator {
      * 
      * @param value the boolean value
      * 
-     * @return 0 for true and 1 for false
+     * @return 0 for false and 1 for true
      */
     public String booleanToInt( boolean value ){
         return   value ? "1" : "0";
