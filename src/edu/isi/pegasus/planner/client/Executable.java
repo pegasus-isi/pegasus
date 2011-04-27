@@ -115,25 +115,7 @@ public abstract class Executable {
     	return propertyFilePath;
     }
     
-    /**
-     * Updates the pegasus properties with the values specified in the property file 
-     * @param propertyFile the user specified property file
-     * @throws IOException
-     */
-    private void updateConfProperties(String propertyFile) throws IOException{
-    	File props = new File(propertyFile);
-    	if(props.exists()){
-    		Properties temp = new Properties();
-    		InputStream stream = new BufferedInputStream( new FileInputStream(props) );
-    		temp.load( stream );
-	    	stream.close();
-	    	for ( Enumeration e = temp.propertyNames(); e.hasMoreElements(); ) {
-	    	      String key = (String) e.nextElement();
-	    	      String value = temp.getProperty(key);
-	    	      this.mProps.setProperty(key, value);
-	    	}
-		}
-    }
+    
     /**
      * Initialize the executable object 
      * @param opts  the command line argument passed by the user
@@ -142,14 +124,7 @@ public abstract class Executable {
     protected void initialize(String[] opts , char confChar){
     	this.commandLineOpts = opts;
     	String propertyFile =lookupConfProperty(getCommandLineOptions(), confChar);
-        mProps = PegasusProperties.getInstance();
-        if( propertyFile!= null){
-        	try{
-        		updateConfProperties(propertyFile);
-        	}catch(IOException ioe){
-        		throw new RuntimeException("Failed to set the properties in the configuration file. " + propertyFile );
-        	}
-        }
+        mProps = PegasusProperties.getInstance(propertyFile);
         mVersion = Version.instance().toString();
         //setup logging before doing anything with properties
         setupLogging( mLogger );
