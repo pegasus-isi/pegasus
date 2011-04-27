@@ -154,7 +154,7 @@ Class using L<Pegasus::DAX::File>.
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright 2007-2010 University Of Southern California
+Copyright 2007-2011 University Of Southern California
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.

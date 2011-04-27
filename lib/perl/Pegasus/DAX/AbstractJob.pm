@@ -11,18 +11,10 @@ use Pegasus::DAX::Base qw(:xml);
 use Exporter;
 our @ISA = qw(Pegasus::DAX::Base Exporter); 
 
-use constant INVOKE_NEVER => 'never';
-use constant INVOKE_START => 'start'; 
-use constant INVOKE_ON_SUCCESS => 'on_success';
-use constant INVOKE_ON_ERROR => 'on_error';
-use constant INVOKE_AT_END => 'at_end'; 
-use constant INVOKE_ALL => 'all'; 
-
 our $VERSION = '3.3'; 
 our @EXPORT = (); 
-our %EXPORT_TAGS = ( all => [qw(INVOKE_NEVER INVOKE_START INVOKE_ON_SUCCESS
-	INVOKE_ON_ERROR INVOKE_AT_END INVOKE_ALL) ] ); 
-our @EXPORT_OK = ( @{$EXPORT_TAGS{all}} );
+our %EXPORT_TAGS = (); 
+our @EXPORT_OK = (); 
 
 # one AUTOLOAD to rule them all
 BEGIN { *AUTOLOAD = \&Pegasus::DAX::Base::AUTOLOAD }
@@ -190,10 +182,11 @@ sub invoke {
     my $cmd = shift; 
 
     if ( defined $when && defined $cmd ) { 
+	my $i = Pegasus::DAX::Invoke->new($when,$cmd);
 	if ( exists $self->{invokes} ) {
-	    push( @{$self->{invokes}}, {$when => $cmd} ); 
+	    push( @{$self->{invokes}}, $i );
 	} else {
-	    $self->{invokes} = [ { $when => $cmd } ]; 
+	    $self->{invokes} = [ $i ]; 
 	}
     } else {
 	croak "use proper arguments to addInvoke(when,cmdstring)";
@@ -281,17 +274,10 @@ sub innerXML {
     # <invoke>
     #
     if ( exists $self->{invokes} ) {
-	my $tag = defined $xmlns && $xmlns ? "$xmlns:invoke" : 'invoke';
 	foreach my $i ( @{$self->{invokes}} ) {
-	    $f->print( "$indent<$tag"
-		     , attribute('when',$i->{when},$xmlns)
-		     , ">"
-		     , quote($i->{cmd})
-		     , "</$tag>\n"
-		     ); 
+	    $i->toXML($f,$indent,$xmlns);
 	}
     }
-
 }
 
 1; 
@@ -310,36 +296,6 @@ This is an abstract class. You do not instantiate abstract classes.
 =head1 DESCRIPTION
 
 This class is the base for the four kinds of jobs and sub-workflows. 
-
-=head1 CONSTANTS
-
-=over 4 
-
-=item INVOKE_NEVER
-
-Never run the invoke. This is primarily to temporarily disable an invoke. 
-
-=item INVOKE_START
-
-Run the invoke when the job gets submitted. 
-
-=item INVOKE_ON_SUCCESS
-
-Run the invoke after the job finishes with success (exitcode == 0). 
-
-=item INVOKE_ON_ERROR
-
-Run the invoke after the job finishes with failure (exitcode != 0). 
-
-=item INVOKE_AT_END
-
-Run the invoke after the job finishes, regardless of exit code.
-
-=item INVOKE_ALL
-
-Like C<INVOKE_START> and C<INVOKE_AT_END> combined. 
-
-=back
 
 =head1 METHODS
 
@@ -506,7 +462,7 @@ Child classes inheriting from L<Pegasus::DAX::AbstractJob>.
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright 2007-2010 University Of Southern California
+Copyright 2007-2011 University Of Southern California
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.

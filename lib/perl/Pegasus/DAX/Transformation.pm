@@ -106,10 +106,11 @@ sub invoke {
     my $cmd = shift; 
 
     if ( defined $when && defined $cmd ) { 
+	my $i = Pegasus::DAX::Invoke->new($when,$cmd);
 	if ( exists $self->{invokes} ) {
-	    push( @{$self->{invokes}}, {$when => $cmd} ); 
+	    push( @{$self->{invokes}}, $i );
 	} else {
-	    $self->{invokes} = [ { $when => $cmd } ]; 
+	    $self->{invokes} = [ $i ]; 
 	}
     } else {
 	croak "use proper arguments to addInvoke(when,cmdstring)";
@@ -145,14 +146,8 @@ sub toXML {
     # <invoke>
     #
     if ( exists $self->{invokes} ) {
-	my $tag = defined $xmlns && $xmlns ? "$xmlns:invoke" : 'invoke';
 	foreach my $i ( @{$self->{invokes}} ) {
-	    $f->print( "  $indent<$tag"
-		     , attribute('when',$i->{when},$xmlns)
-		     , ">"
-		     , quote($i->{cmd})
-		     , "</$tag>\n"
-		     ); 
+	    $i->toXML($f,$indent,$xmlns);
 	}
     }
 
@@ -301,7 +296,7 @@ Permissible ways to specify a file that is being used.
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright 2007-2010 University Of Southern California
+Copyright 2007-2011 University Of Southern California
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
