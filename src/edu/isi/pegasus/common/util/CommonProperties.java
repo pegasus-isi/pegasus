@@ -86,12 +86,6 @@ public class CommonProperties
   public static final String PROPERTY_FILENAME = "properties";
 
   /**
-   * Basename of the (old) file to read for user properties.
-   * Warning, the old name will eventually fall prey to bit rot.
-   */
-  public static final String OLD_USER_PROPERTY_FILENAME = ".chimerarc";
-
-  /**
    * Basename of the (new) file to read for user properties.
    */
   public static final String USER_PROPERTY_FILENAME = ".pegasusrc";
@@ -207,6 +201,7 @@ public class CommonProperties
       File etcDir = ( alternative == null ?
 		      new File( this.m_home, "etc" ) :
 		      new File( alternative ) );
+      
 
       // check for an alternative property file spec
       alternative = System.getProperty("pegasus.properties" );
@@ -214,43 +209,29 @@ public class CommonProperties
 		     new File( etcDir, propFilename ) :
 		     new File( alternative ) );
 
-      if ( props.exists() ) {
-	// if this file exists, read the properties (will throw IOException)
-	Properties temp = new Properties();
-	InputStream stream =
-	  new BufferedInputStream( new FileInputStream(props) );
-	temp.load( stream );
-	stream.close();
-
-	this.m_props = addProperties( this.m_props, temp );
+      if( props.exists() ){
+          //write a warning saying does not exist
+          System.err.println( "[WARNING] Properties are no longer loaded from " +
+                              "sysconfdir directory or by -Dpegasus.properties property. " +
+                               props.getAbsolutePath() +  " will not be loaded." );
       }
-
+     
       // add user properties afterwards to have higher precedence
       String userHome = System.getProperty( "user.home", "." );
       alternative = System.getProperty( "pegasus.user.properties" );
-      if ( alternative == null ) {
-	// Prefer $HOME/.pegasusrc over $HOME/.chimerarc
-	props = new File( userHome, CommonProperties.USER_PROPERTY_FILENAME );
-	if ( props.exists() ) {
-	  // new user props file does exist, sanity check for old one
-	  File old = new File( userHome,
-			       CommonProperties.OLD_USER_PROPERTY_FILENAME );
-	  if ( old.exists() ) {
-	    // both user props exist, does the user know what he's doing?
-	    System.out.println( "INFO: Both user property files " +
-				old.getName() + " and " + props.getName() +
-				" exist, using " +
-				CommonProperties.USER_PROPERTY_FILENAME );
-	  }
-	} else {
-	  // new user props file did not exist, check for old user props file
-	  props = new File( userHome, CommonProperties.OLD_USER_PROPERTY_FILENAME );
-	}
-      } else {
-	// was overwritten -- use user's overwrite
-	props = new File(alternative);
+      
+      if( alternative != null ){
+          //throw warning
+          System.err.println( "[WARNING] Properties are no longer loaded by " +
+                              "specifying -Dpegasus.user.properties property. " +
+                               alternative +  " will not be loaded." );
       }
+      
+      
+      // try loading $HOME/.pegasusrc 
+      props = new File( userHome, CommonProperties.USER_PROPERTY_FILENAME );
 
+      //Prefer conf option over  $HOME/.pegasusrc 
       if ( props.exists() ) {
 	// if this file exists, read the properties (will throw IOException)
 	Properties temp = new Properties();
@@ -262,6 +243,7 @@ public class CommonProperties
 	this.m_props = addProperties( this.m_props, temp );
       }
 
+      
       // now set the paths: set sysconfdir to correct latest value
       alternative = this.m_props.getProperty( "pegasus.home.datadir" );
       this.m_dataDir = ( alternative == null ?
