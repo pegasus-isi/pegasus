@@ -260,11 +260,31 @@ class TestExecutable(unittest.TestCase):
 		self.assertFalse(i == j)
 		for x in [a,b,c,d,e,f,g,h,i,j]:
 			self.assertTrue(x == x)
+	
+	def testInvoke(self):
+		"""Transformations should support invoke"""
+		c = Executable('myjob')
+		p = Invoke("when","what")
+		self.assertFalse(c.hasInvoke(p))
+		c.addInvoke(p)
+		self.assertRaises(DuplicateError, c.addInvoke, p)
+		self.assertTrue(c.hasInvoke(p))
+		c.removeInvoke(p)
+		self.assertFalse(c.hasInvoke(p))
+		self.assertRaises(NotFoundError, c.removeInvoke, p)
+		c.addInvoke(p)
+		c.clearInvokes()
+		self.assertFalse(c.hasInvoke(p))
+		c.invoke("when","what")
+		self.assertTrue(c.hasInvoke(p))
 			
 	def testXML(self):
 		"""toXML should output proper xml"""
 		x = Executable(namespace="os",name="grep",version="2.3",arch=Arch.X86,os=OS.LINUX,osrelease="foo",osversion="bar",glibc="2.4",installed=True)
 		self.assertEquals(str(x.toXML()), '<executable name="grep" namespace="os" version="2.3" arch="x86" os="linux" osrelease="foo" osversion="bar" glibc="2.4" installed="true"/>')
+		x.invoke("when","what")
+		self.assertEquals(str(x.toXML()), '<executable name="grep" namespace="os" version="2.3" arch="x86" os="linux" osrelease="foo" osversion="bar" glibc="2.4" installed="true">\n\t<invoke when="when">what</invoke>\n</executable>')
+		
 	
 class TestUse(unittest.TestCase):
 	def testConstructor(self):

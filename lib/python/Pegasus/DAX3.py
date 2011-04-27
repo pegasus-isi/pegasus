@@ -535,7 +535,7 @@ class File(CatalogType):
 		self.innerXML(e)
 		return e
 	
-class Executable(CatalogType):
+class Executable(CatalogType, InvokeMixin):
 	"""Executable(name[,namespace][,version][,arch][,os][,osrelease][,osversion][,glibc][,installed])
 				
 	An entry for an executable in the DAX-level replica catalog.
@@ -569,6 +569,7 @@ class Executable(CatalogType):
 		self.osversion = osversion
 		self.glibc = glibc
 		self.installed = installed
+		self.invocations = set()
 		
 	def __repr__(self):
 		return "%s::%s:%s" % (self.namespace, self.name, self.version)
@@ -611,6 +612,11 @@ class Executable(CatalogType):
 			('installed',self.installed)
 		])
 		self.innerXML(e)
+		
+		# Invocations
+		for inv in self.invocations:
+			e.element(inv.toXML())
+		
 		return e
 	
 class Metadata:
