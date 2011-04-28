@@ -1203,22 +1203,7 @@ clus1    black::analyze:1.0    gsiftp://clus1.com/opt/nfs/vdt/pegasus/bin/keg
       </section>
       
 
-  <section>
 
-       <title>Error Recovery</title>
-       
-       <para>When errors occur, Pegasus tries to recover when possible by retrying
-  tasks, by retrying the entire workflow, by providing workflow-level
-  checkpointing, by re-mapping portions of the workflow, by trying alternative
-  data sources for staging data, and, when all else fails, by providing a
-  rescue workflow containing a description of only the work that remains to be
-  done. It cleans up storage as the workflow is executed so that
-  data-intensive workflows have enough space to execute on storage-constrained
-  resource. Pegasus keeps track of what has been done (provenance) including
-  the locations of data used and produced, and which software was used with
-  which parameters.</para>
-       </section>
-       
 </chapter>
 
 

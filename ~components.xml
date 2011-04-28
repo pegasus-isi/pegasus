@@ -1203,20 +1203,6 @@ clus1    black::analyze:1.0    gsiftp://clus1.com/opt/nfs/vdt/pegasus/bin/keg
       </section>
       
 
-
-
-      <title>Monitoring Tools</title>
-      
-      <para>Pegasus comes with a set of tools that help monitor the progress of
-  the workflow and collect statistics and performance profiles of the
-  workflows. Pegasus WMS is a user-side application that can be deployed
-  locally by a scientist with no support from a site administrator and has no
-  impact on the target cyberinfrastructure sites. A collaboration can set up a
-  submit host, which hosts the workflow management system. Jobs are sent from
-  the submit host to the campus cluster, the Open Science Grid, the TeraGrid,
-  the cloud, or other resources.</para>
-
-      
   <section>
 
        <title>Error Recovery</title>
