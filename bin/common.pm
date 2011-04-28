@@ -62,6 +62,15 @@ common - Perl module included by all Pegasus Perl scripts
 
 =item B<Alternative 1>
 
+    use lib `pegasus-config --noeoln --perl`;
+    use common qw(:all); 
+
+This snippet relies on the presence of the I<new in 3.1> Pegasus helper
+application C<pegasus-config> in your C<PATH>. Through virtue of C<use>,
+the search path is evaluated at compile-time.
+
+=item B<Alternative 2>
+
     use File::Spec;
     use File::Basename;
     BEGIN { 
@@ -73,7 +82,7 @@ The explicit path argument to C<require> is used in order to avoid
 polluting your search path with the C<bin> directory in which the
 C<common> module resides.
 
-=item B<Alternative 2>
+=item B<Alternative 3>
 
     use File::Spec;
     use File::Basename;
@@ -105,7 +114,7 @@ Jens-S. VE<ouml>ckler, C<voeckler at isi dot edu>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright 2007-2010 University Of Southern California
+Copyright 2007-2011 University Of Southern California
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.

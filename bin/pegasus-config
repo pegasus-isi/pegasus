@@ -43,20 +43,22 @@ This is NOT an application to configure Pegasus, but an application
 to query the current Pegasus installation.
 
 Arguments:
- -h|--help        print this help and exit.
- -V|--version     print Pegasus version information and exit. 
- --home           print directory of Pegasus installation, 
+ -h|--help        Print this help and exit.
+ -V|--version     Print Pegasus version information and exit. 
+ --home           Print directory of Pegasus installation, 
                   formerly known as PEGASUS_HOME location. 
- --jar            tries to determine the pegasus.jar location. 
+ --jar            Tries to determine the pegasus.jar location. 
  -c|--classpath   TBD
  --java           TBD
- --perl           print the directory to include into your PERL5LIB.
- --python         print the directory to include into your PYTHONLIB.
- --local-site [d] create a site catalog entry for site "local". This is only
+ --perl           Print the directory to include into your PERL5LIB.
+ --python         Print the directory to include into your PYTHONLIB.
+ --noeoln         Do not produce a end-of-line after output. This is useful 
+                  when being called from non-shell backticks in scripts.
+ --local-site [d] Create a site catalog entry for site "local". This is only
                   an XML snippet without root element nor XML headers. The
 		  optional argument "d" points to the mount point to use.
                   If not specified, defaults to the user\'s \$HOME directory.
- --full-local [d] create a complete site catalog with only site "local". The
+ --full-local [d] Create a complete site catalog with only site "local". The
                   an XML snippet without root element nor XML headers. The
 		  optional argument "d" points to the mount point to use.
                   If not specified, defaults to the user\'s \$HOME directory.
@@ -140,15 +142,21 @@ sub site_snippet($) {
 
 # Parse command-line options.
 usage() unless @ARGV;
+my $eoln = 1; 
 GetOptions( "help|h" => \&usage
+	  , 'eoln|crlf!' => \$eoln
 	  , 'version|V' => sub {
 	      my $p_v= File::Spec->catfile( $main::home, 
 					    'bin', 
 					    'pegasus-version' ); 
-	      exec { $p_v } ($p_v); 
+	      my $p = `$p_v`; 
+	      chomp($p) if ! $eoln;
+	      print $p;
+	      exit 0; 
 	  }
 	  , 'home' => sub {
-	      print "$main::home\n"; 
+	      print $main::home;
+	      print "\n" if $eoln; 
 	      exit 0; 
 	  }
 	  , 'java' => sub {
@@ -172,7 +180,8 @@ GetOptions( "help|h" => \&usage
 		  }
 	      }
 
-	      print "$p\n";
+	      print $p;
+	      print "\n" if $eoln; 
 	      exit 0;
 	  }
 	  , 'perl' => sub {
@@ -181,7 +190,8 @@ GetOptions( "help|h" => \&usage
 					   'perl' ); 
 	      die( "FATAL: Unable to locate PERL5LIB path\n" )
 		  unless -d $p; 
-	      print "$p\n";
+	      print $p;
+	      print "\n" if $eoln; 
 	      exit 0;
 	  }
 	  , 'python' => sub {
@@ -190,7 +200,8 @@ GetOptions( "help|h" => \&usage
 					   'python' ); 
 	      die( "FATAL: Unable to locate PYTHONLIB path\n" )
 		  unless -d $p; 
-	      print "$p\n"; 
+	      print $p;
+	      print "\n" if $eoln; 
 	      exit 0; 
 	  }
 	  , 'local-site:s' => sub {
