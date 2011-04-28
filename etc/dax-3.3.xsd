@@ -2,7 +2,7 @@
 <!-- edited with XMLSPY v2004 rel. 3 U (http://www.xmlspy.com) by Rebecca Y Jordan (UNIV OF SOUTHERN CALIF) -->
 <xs:schema targetNamespace="http://pegasus.isi.edu/schema/DAX" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="http://pegasus.isi.edu/schema/DAX" elementFormDefault="qualified" attributeFormDefault="unqualified" version="3.3">
   <xs:annotation>
-    <xs:documentation xml:lang="en">$Id: dax-3.2.xsd 2767 2010-11-06 22:49:52Z voeckler $</xs:documentation>
+    <xs:documentation xml:lang="en">$Id: dax-3.3.xsd 3601 2011-04-28 02:49:55Z voeckler $</xs:documentation>
   </xs:annotation>
   <xs:simpleType name="TransferType">
     <xs:annotation>
