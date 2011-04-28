@@ -21,7 +21,7 @@
       </listitem>
       
        <listitem>
-        <para>About Workflows (Link)</para>
+        <para>Workflows</para>
       </listitem>
 
       <listitem>
@@ -484,6 +484,7 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
 
 
 </chapter>
+
 
 
 
