@@ -171,7 +171,6 @@ sub new {
     # purpose: Initialize an instance variable
     # paramtr: $conffile (IN): --conf filename (or undef)
     #          $runprops (IN): properties from rundir (or undef)
-    #          $pegasusrc (opt. IN): location of $HOME/.pegasusrc file
     # warning: exceptions from parse_properties() may be propagated
     # returns: reference to blessed self
     #
@@ -179,7 +178,7 @@ sub new {
     my $class = ref($proto) || $proto || __PACKAGE__;
     my $conffile = shift;
     my $rundirpfn = shift; 
-    my $pegasusrc = shift || pegasusrc(); 
+    my $pegasusrc = pegasusrc(); 
     
     my %config = (); 
     if ( defined $conffile ) { 
@@ -525,14 +524,11 @@ be passed as optional argument, or auto-detected otherwise.
 
 =item new( $conffile, $rundirpropfn )
 
-=item new( $conffile, $rundirpropfn, $pegasusrc )
-
 The constructor needs to know about the possible I<conf> command-line
 option file location, and the property file in the designated run
-directory. Either argument may be C<undef> to indicate that it does 
-not exist. As third, optional, argument, the constructor may take 
-the location of the C<$HOME/.pegasusrc> file, which is automatically
-constructed otherwise. 
+directory. Either argument may be C<undef> to indicate that it does not
+exist. Internally the constructor uses the location of the
+C<$HOME/.pegasusrc> file, which is automatically constructed.
 
 The constructor attempts to read from the defined file with the highest
 priority first. If the file does not exist or is not readable, it will
