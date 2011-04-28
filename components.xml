@@ -9,342 +9,24 @@
   
   <itemizedlist>
 
-   <listitem>DAX</listitem>
+   <listitem>Catalogs</listitem>
 
-   <listitem>DAG</listitem>
-   
-   <listitem>Catalogs (Basics)</listitem>
+   <listitem>Replica</listitem>
+
+   <listitem>Site</listitem>
+
+   <listitem>Transformation</listitem>
 
    <listitem>Pegasus Mapper</listitem>
-
-   <listitem>Condor DagMan</listitem>
-
-   <listitem>Condor Schedd</listitem>
    
    <listitem>Submit Directory</listitem>
 
   </itemizedlist>
 
-   <para>The Pegasus Workflow Management System also includes monitoring tools and features system recovery capabilities that make the system robust and efficient.</para>
-   
-   <itemizedlist>
 
-   <listitem>Monitoring Tools</listitem>
-   
-   <listitem>Error Recovery Capability</listitem>
-   
-   </itemizedlist>
 
   <section>
-      <title>DAX</title>   </section>
-
-
-      <para>The DAX is a description of an abstract workflow in XML format that
-      is used as the primary input into Pegasus. The DAX schema is described
-       in <ulink
-      url="http://pegasus.isi.edu/wms/docs/schemas/dax-3.2/dax-3.2.xsd">dax-3.2.xsd</ulink>
-      The documentation of the schema and its elements can be found in <ulink
-      url="http://pegasus.isi.edu/wms/docs/schemas/dax-3.2/dax-3.2.html">dax-3.2.html</ulink>. </para>
-      
-      <para>A DAX can be created by all users with the DAX generating API in
-      Java, Perl, or Python format</para>
-      
-      <note>We highly recommend using the DAX API. </note>
-      
-      <para>Advanced users who can read XML schema definitions can generate a
-      DAX directly from a script</para>
-
-      <para>The sample workflow below incorporates some of the elementary graph
-      structures used in all abstract workflows.</para>
-      
-       <itemizedlist>
-        <listitem>
-          <para><emphasis>fan-out</emphasis>, <emphasis>scatter</emphasis>,
-          and <emphasis>diverge</emphasis> all describe the fact that multiple
-          siblings are dependent on fewer parents.</para>
-
-          <para>The example shows how the <emphasis> Job 2 and 3</emphasis> nodes
-          depend on <emphasis>Job 1</emphasis> node.</para>
-        </listitem>
-
-        <listitem>
-          <para><emphasis>fan-in</emphasis>, <emphasis>gather</emphasis>,
-          <emphasis>join</emphasis>, and <emphasis>converge</emphasis>
-          describe how multiple siblings are merged into fewer dependent child
-          nodes.</para>
-
-          <para>The example shows how the <emphasis>Job 4</emphasis> node
-          depends on both <emphasis>Job 2 and Job 3</emphasis> nodes.</para>
-        </listitem>
-      </itemizedlist>
-
-      <itemizedlist>
-        <listitem>
-          <para><emphasis>serial execution</emphasis> implies that nodes are
-          dependent on one another, like pearls on a string.</para>
-        </listitem>
-
-        <listitem>
-          <para><emphasis>parallel execution</emphasis> implies that nodes can
-          be executed in parallel</para>
-
-        </listitem>
-      </itemizedlist>
-      
-        <para><figure id="components_blackdiamond">
-          <title>Sample Workflow</title>
-
-          <mediaobject>
-            <imageobject>
-              <imagedata align="center" fileref="images/DiamondWorkflow.png"
-                         valign="middle" />
-            </imageobject>
-          </mediaobject>
-        </figure></para>
-       <para>The example diamond workflow consits of four nodes representing
-      jobs, and are linked by six files.</para>
-
-      <itemizedlist>
-        <listitem>
-
-          <para>Required input files must be registered with the Replica catalog in order for Pegasus to find it and integrate it
-          into the workflow.</para>
-          </listitem>
-          
-        <listitem>
-          <para>Leaf files are a product or output of a workflow. Output files can be collected at a
-          location.</para>
-        </listitem>
-
-        <listitem>
-        <para>The remaining files all have lines leading to them and
-          originating from them. These files are products of some job steps
-          (lines leading to them), and consumed by other job steps (lines
-          leading out of them). Often, these files represent intermediary
-          results that can be cleaned.</para>
-        </listitem>
-      </itemizedlist>
-
-      <para>There are two main ways of generating DAX's</para>
-
-      <orderedlist>
-        <listitem>
-          <para>Using a DAX generating API in <link
-          linkend="api-java">Java</link>, <link linkend="api-perl">Perl</link>
-          or <link linkend="api-python">Python</link>.</para>
-
-          <para><emphasis>Note</emphasis> This option is what we recommend.</para>
-        </listitem>
-
-        <listitem>
-          <para>Generating XML directly from your script.</para>
-
-          <para>This option should only be considered by advanced users who
-          can also read XML schema definitions.</para>
-        </listitem>
-      </orderedlist>
-
-      <para>One example for a DAX representing the example workflow can look
-      like the following:</para>
-
-      <programlisting>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
-&lt;!-- generated: 2010-11-22T22:55:08Z --&gt;
-&lt;adag xmlns="http://pegasus.isi.edu/schema/DAX"
-      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-      xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.2.xsd"
-      version="3.2" name="diamond" index="0" count="1"&gt;
-  &lt;!-- part 2: definition of all jobs (at least one) --&gt;
-  &lt;job namespace="diamond" name="preprocess" version="2.0" id="ID000001"&gt;
-    &lt;argument&gt;-a preprocess -T60 -i &lt;file name="f.a" /&gt; -o &lt;file name="f.b1" /&gt; &lt;file name="f.b2" /&gt;&lt;/argument&gt;
-    &lt;uses name="f.b2" link="output" register="false" transfer="false" /&gt;
-    &lt;uses name="f.b1" link="output" register="false" transfer="false" /&gt;
-    &lt;uses name="f.a" link="input" /&gt;
-  &lt;/job&gt;
-  &lt;job namespace="diamond" name="findrange" version="2.0" id="ID000002"&gt;
-    &lt;argument&gt;-a findrange -T60 -i &lt;file name="f.b1" /&gt; -o &lt;file name="f.c1" /&gt;&lt;/argument&gt;
-    &lt;uses name="f.b1" link="input" register="false" transfer="false" /&gt;
-    &lt;uses name="f.c1" link="output" register="false" transfer="false" /&gt;
-  &lt;/job&gt;
-  &lt;job namespace="diamond" name="findrange" version="2.0" id="ID000003"&gt;
-    &lt;argument&gt;-a findrange -T60 -i &lt;file name="f.b2" /&gt; -o &lt;file name="f.c2" /&gt;&lt;/argument&gt;
-    &lt;uses name="f.c2" link="output" register="false" transfer="false" /&gt;
-    &lt;uses name="f.b2" link="input" register="false" transfer="false" /&gt;
-  &lt;/job&gt;
-  &lt;job namespace="diamond" name="analyze" version="2.0" id="ID000004"&gt;
-    &lt;argument&gt;-a analyze -T60 -i &lt;file name="f.c1" /&gt; &lt;file name="f.c2" /&gt; -o &lt;file name="f.d" /&gt;&lt;/argument&gt;
-    &lt;uses name="f.c2" link="input" register="false" transfer="false" /&gt;
-    &lt;uses name="f.d" link="output" register="false" transfer="true" /&gt;
-    &lt;uses name="f.c1" link="input" register="false" transfer="false" /&gt;
-  &lt;/job&gt;
-  &lt;!-- part 3: list of control-flow dependencies --&gt;
-  &lt;child ref="ID000002"&gt;
-    &lt;parent ref="ID000001" /&gt;
-  &lt;/child&gt;
-  &lt;child ref="ID000003"&gt;
-    &lt;parent ref="ID000001" /&gt;
-  &lt;/child&gt;
-  &lt;child ref="ID000004"&gt;
-    &lt;parent ref="ID000002" /&gt;
-    &lt;parent ref="ID000003" /&gt;
-  &lt;/child&gt;
-&lt;/adag&gt;</programlisting>
-
-      <para>The example workflow representation in form of a DAX requires
-      external catalogs, such as transformation catalog (TC) to resolve the
-      logical job names (such as diamond::preprocess:2.0), and a replica catalog
-      (RC) to resolve the input file <filename>f.a</filename>. The above
-      workflow defines the four jobs just like the example picture, and the
-      files that flow between the jobs. The intermediary files are neither
-      registered nor staged out, and can be considered transient. Only the
-      final result file <filename>f.d</filename> is staged out.</para>
-      
-      <section>
-      <title>DAG </title>
-      
-      <para>The DAG an executable (concrete) workflow that can be executed over a variety of resources. When the workflow tasks are mapped to multiple resources that do not share a
-  file system, explicit nodes are added to the workflow for orchestrating data.
-  transfer between the tasks.</para>
-  
-      <para>When you take the workflow DAX above, and plan it for a single
-    remote grid execution, here a site with handle <emphasis>hpcc</emphasis>,
-    and plan the workflow without clean-up nodes, the following concrete
-    workflow is built:</para>
-
-    <para><figure id="concepts-fig-dag">
-        <title>Black Diamond DAG</title>
-
-        <mediaobject>
-          <imageobject>
-            <imagedata align="center"
-                       fileref="images/concepts-diamond-dag.png"
-                       valign="middle" />
-          </imageobject>
-        </mediaobject>
-      </figure></para>
-
-    <para>Planning augments the original abstract workflow with ancillary
-    tasks to facility the proper execution of the workflow. These tasks
-    include:</para>
-
-    <itemizedlist>
-      <listitem>
-        <para>the creation of remote working directories. These directories
-        typically have name that seeks to avoid conflicts with other
-        simultaneously running similar workflows. Such tasks use a job prefix
-        of <code>create_dir</code>. </para>
-      </listitem>
-
-      <listitem>
-        <para>the stage-in of input files before any task which requires these
-        files. Any file consumed by a task needs to be staged to the task, if
-        it does not already exist on that site. Such tasks use a job prefix of
-        <code>stage_in</code>.If multiple files from various sources need to
-        be transferred, multiple stage-in jobs will be created. Additional
-        advanced options permit to control the size and number of these jobs,
-        and whether multiple compute tasks can share stage-in jobs. </para>
-      </listitem>
-
-      <listitem>
-        <para>the original DAX job is concretized into a compute task in the
-        DAG. Compute jobs are a concatination of the job's
-        <emphasis>name</emphasis> and <emphasis>id</emphasis> attribute from
-        the DAX file. </para>
-      </listitem>
-
-      <listitem>
-        <para>the stage-out of data products to a collecting site. Data
-        products with their <emphasis>transfer</emphasis> flag set to
-        <literal>false</literal> will not be staged to the output site.
-        However, they may still be eligible for staging to other, dependent
-        tasks. Stage-out tasks use a job prefix of <code>stage_out</code>.
-        </para>
-      </listitem>
-
-      <listitem>
-        <para>If compute jobs run at different sites, an intermediary staging
-        task with prefix <code>stage_inter</code> is inserted between the
-        compute jobs in the workflow, ensuring that the data products of the
-        parent are available to the child job. </para>
-      </listitem>
-
-      <listitem>
-        <para>the registration of data products in a replica catalog. Data
-        products with their <emphasis>register</emphasis> flag set to
-        <literal>false</literal> will not be registered.</para>
-      </listitem>
-
-      <listitem>
-        <para>the clean-up of transient files and working directories. These
-        steps can be omitted with the <command>--no-cleanup</command> option
-        to the planner.</para>
-      </listitem>
-    </itemizedlist>
-
-    <para><link linkend="advanced_concepts_transfers">Chapter "Advanced
-    Concepts: Transfers"</link> will talk more about when and how staging
-    nodes are inserted into the workflow. </para>
-
-    <para>The DAG will be found in file <filename>diamond-0.dag</filename>,
-    constructed from the <emphasis>name</emphasis> and
-    <emphasis>index</emphasis> attributes found in the root element of the DAX
-    file.</para>
-
-    <programlisting>######################################################################
-# PEGASUS WMS GENERATED DAG FILE
-# DAG diamond
-# Index = 0, Count = 1
-######################################################################
-
-JOB create_dir_diamond_0_hpcc create_dir_diamond_0_hpcc.sub
-SCRIPT POST create_dir_diamond_0_hpcc /opt/pegasus/default/bin/pegasus-exitcode create_dir_diamond_0_hpcc.out
-
-JOB stage_in_local_hpcc_0 stage_in_local_hpcc_0.sub
-SCRIPT POST stage_in_local_hpcc_0 /opt/pegasus/default/bin/pegasus-exitcode stage_in_local_hpcc_0.out
-
-JOB preprocess_ID000001 preprocess_ID000001.sub
-SCRIPT POST preprocess_ID000001 /opt/pegasus/default/bin/pegasus-exitcode preprocess_ID000001.out
-
-JOB findrange_ID000002 findrange_ID000002.sub
-SCRIPT POST findrange_ID000002 /opt/pegasus/default/bin/pegasus-exitcode findrange_ID000002.out
-
-JOB findrange_ID000003 findrange_ID000003.sub
-SCRIPT POST findrange_ID000003 /opt/pegasus/default/bin/pegasus-exitcode findrange_ID000003.out
-
-JOB analyze_ID000004 analyze_ID000004.sub
-SCRIPT POST analyze_ID000004 /opt/pegasus/default/bin/pegasus-exitcode analyze_ID000004.out
-
-JOB stage_out_local_hpcc_2_0 stage_out_local_hpcc_2_0.sub
-SCRIPT POST stage_out_local_hpcc_2_0 /opt/pegasus/default/bin/pegasus-exitcode stage_out_local_hpcc_2_0.out
-
-PARENT findrange_ID000002 CHILD analyze_ID000004
-PARENT findrange_ID000003 CHILD analyze_ID000004
-PARENT preprocess_ID000001 CHILD findrange_ID000002
-PARENT preprocess_ID000001 CHILD findrange_ID000003
-PARENT analyze_ID000004 CHILD stage_out_local_hpcc_2_0
-PARENT stage_in_local_hpcc_0 CHILD preprocess_ID000001
-PARENT create_dir_diamond_0_hpcc CHILD findrange_ID000002
-PARENT create_dir_diamond_0_hpcc CHILD findrange_ID000003
-PARENT create_dir_diamond_0_hpcc CHILD preprocess_ID000001
-PARENT create_dir_diamond_0_hpcc CHILD analyze_ID000004
-PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
-######################################################################
-# End of DAG
-######################################################################
-</programlisting>
-
-    <para>The DAG file declares all jobs and links them to a Condor submit
-    file that describes the planned, concrete job. In the same directory as
-    the DAG file are all Condor submit files for the jobs from the picture
-    plus a number of additional helper files.</para>
-
-    <para>The various instructions that can be put into a DAG file are
-    described in <ulink
-    url="http://www.cs.wisc.edu/condor/manual/v7.5/2_10DAGMan_Applications.html">Condor's
-    DAGMAN documentation</ulink>.The constituents of the submit directory are
-    shown in <link linkend="submit_directory-layout">chapter "submit
-    directory"</link>.</para>
-
-      </section>
+            </section>
       
       
   <section>
@@ -355,7 +37,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
       
       <para> There are three catalogs in the Pegasus WMS:</para>
       
-   <section>
+  <section>
          <title>Replica</title>
            <section id="replica">
            <title>Replica</title>
@@ -644,8 +326,8 @@ f.a gsiftp://somehost:port/path/to/file/f.a pool=local</computeroutput></screen>
   </section>
              
 
-      <section id="site">
-    <title>Site</title>
+  <section id="site">
+   <title>Site</title>
 
     <para>The Site Catalog describes the compute resources (which are often
     clusters) that we intend to run the workflow upon. A site is a homogeneous
@@ -1501,7 +1183,7 @@ clus1    black::analyze:1.0    gsiftp://clus1.com/opt/nfs/vdt/pegasus/bin/keg
         </figure></para>
 
     </section>
-      <section>
+  <section>
        <title>Pegasus Mapper</title>
       </section>
 
@@ -1511,40 +1193,16 @@ clus1    black::analyze:1.0    gsiftp://clus1.com/opt/nfs/vdt/pegasus/bin/keg
   execution environment and the location of data. In other cases, users
   specify this information. </para>
 
-      <section>
+  <section>
 
-      <title> Condor Schedd </title>
+      <title> Condor Schedd WHERE DOES THIS INFO BELONG?</title>
       
       <para>Individual workflow tasks are managed by Condor Schedd which supervises their execution on local and remote resources.
       Condor schedd is a component in the Condor Project.</para>
 
       </section>
       
-      <section>
-      
-      <title>Submit Directory</title>
-             <para>The Submit Directory receives the executable workflow (DAG) and stores it until Pegasus Mapper runs to map the tasks of
-      the DAG with the static or dynamic compute resources.</para>
-      </section>
-      
-       <para>To see the contents of the directory and the details of the process of conversion from an Abstract to Executable workflow see the <link
-       
-       linkend="submit_directory"> Submit Directory Details </link> </para>
 
-
-
-      <title>Monitoring Tools</title>
-      
-      <para>Pegasus comes with a set of tools that help monitor the progress of
-  the workflow and collect statistics and performance profiles of the
-  workflows. Pegasus WMS is a user-side application that can be deployed
-  locally by a scientist with no support from a site administrator and has no
-  impact on the target cyberinfrastructure sites. A collaboration can set up a
-  submit host, which hosts the workflow management system. Jobs are sent from
-  the submit host to the campus cluster, the Open Science Grid, the TeraGrid,
-  the cloud, or other resources.</para>
-
-      
   <section>
 
        <title>Error Recovery</title>
@@ -1562,6 +1220,7 @@ clus1    black::analyze:1.0    gsiftp://clus1.com/opt/nfs/vdt/pegasus/bin/keg
        </section>
        
 </chapter>
+
 
 
 

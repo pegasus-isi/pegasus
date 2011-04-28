@@ -2,7 +2,7 @@
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
 "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <chapter id="walkthrough_doc">
-  <title>Pegasus Walkthrough</title>
+  <title>New User Walkthrough</title>
   
   <section>
   
@@ -484,6 +484,7 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
 
 
 </chapter>
+
 
 
 

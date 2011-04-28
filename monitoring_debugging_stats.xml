@@ -12,7 +12,7 @@
     runs. These tools internally parse the Condor log files and have a similar
     interface. With the exception of pegasus-monitord (see below), all tools
     take in the submit directory as an argument. Users can invoke the tools
-    listed in this chapter as follows</para>
+    listed in this chapter as follows:</para>
 
     <programlisting>$ pegasus-[toolname]   &lt;path to the submit directory&gt;</programlisting>
   </section>
@@ -210,7 +210,7 @@ working dir : /lfs1/work/pegasus/run0004
   <section>
     <title>Plotting and Statistics</title>
 
-    <para></para>
+    <para/>
 
     <section>
       <title>pegasus-statistics</title>
@@ -280,7 +280,7 @@ Logical transformation statistics :
 
         <listitem>
           <para>Job summary <table>
-              <title></title>
+              <title/>
 
               <tgroup cols="2">
                 <tbody>
@@ -331,7 +331,7 @@ Logical transformation statistics :
 
         <listitem>
           <para>SUBDAX summary <table>
-              <title></title>
+              <title/>
 
               <tgroup cols="2">
                 <tbody>
@@ -1179,7 +1179,7 @@ eps format : /scratch/grid-setup/run0001/graph/diamond-host.eps
 
         <mediaobject>
           <imageobject>
-            <imagedata fileref="images/blackdiamond-dax.png" />
+            <imagedata fileref="images/blackdiamond-dax.png"/>
           </imageobject>
         </mediaobject>
       </figure>
@@ -1195,7 +1195,7 @@ eps format : /scratch/grid-setup/run0001/graph/diamond-host.eps
 
         <mediaobject>
           <imageobject>
-            <imagedata fileref="images/diamond-dag.png" />
+            <imagedata fileref="images/diamond-dag.png"/>
           </imageobject>
         </mediaobject>
       </figure>
@@ -1211,7 +1211,7 @@ eps format : /scratch/grid-setup/run0001/graph/diamond-host.eps
 
         <mediaobject>
           <imageobject>
-            <imagedata fileref="images/diamond-2.png" />
+            <imagedata fileref="images/diamond-2.png"/>
           </imageobject>
         </mediaobject>
       </figure>
@@ -1226,7 +1226,7 @@ eps format : /scratch/grid-setup/run0001/graph/diamond-host.eps
 
         <mediaobject>
           <imageobject>
-            <imagedata fileref="images/diamond-host.png" />
+            <imagedata fileref="images/diamond-host.png"/>
           </imageobject>
         </mediaobject>
       </figure>

@@ -35,15 +35,17 @@
         that is needed for the vast majority of users.</para>
       </listitem>
       
-       <listitem>
-        <para><emphasis>Workflows - Chapter 3 </emphasis></para>
-        <para>An introducion to the concepts of workflows, the types of workflows, and how they are used in the Pegasus system</para>
-      </listitem>
-
       
       <listitem>
-        <para><emphasis>Pegasus Components - Chapter 4 </emphasis></para>
+        <para><emphasis>Pegasus Components - Chapter 3 </emphasis></para>
         <para>An introduction to the components of the Pegasus Workflow Management System (WMS)</para>
+      </listitem>
+      
+      <listitem>
+       <para><emphasis>Installation</emphasis></para>
+       <para>How to install Pegasus</para>
+
+
       </listitem>
 
       <listitem>
@@ -53,7 +55,7 @@
       </listitem>
       
       <listitem>
-        <para><emphasis>Submit Directory - Chapter 6 </emphasis></para>
+        <para><emphasis>Submit Directory Details - Chapter 6 </emphasis></para>
         <para> Description of the workflow afer it has been planned </para>
       </listitem>
       
@@ -68,68 +70,33 @@
       </listitem>
 
       <listitem>
-        <para><emphasis>Advanced Concepts and Configurations - Chapters 9 - 14 </emphasis></para>
-        <para> Advanced information section of several chapters with configuration details for use in designing advanced workflows for very large scale projects</para>
+        <para><emphasis>Refernce Manual - Chapters 9  </emphasis></para>
+        <para> Advanced information with configuration details for use in designing advanced workflows for very large scale projects</para>
       </listitem>
       
       <listitem>
-        <para><emphasis>API Reference - Chapter 15 </emphasis></para>
+        <para><emphasis>API Reference - Chapter 10 </emphasis></para>
         <para> View API details</para>
       </listitem>
           <listitem>
-        <para><emphasis>Command Reference - Chapter 16 </emphasis></para>
+        <para><emphasis>Command Reference - Chapter 11 </emphasis></para>
         <para> View a listing of all commands avaialble in the Pegasus WMS</para>
       </listitem>
       
           <listitem>
-        <para><emphasis>Useful Tips - Chapter 17</emphasis></para>
-        <para> View useful tips and best practices.</para>
+        <para><emphasis>Useful Tips - Chapter 12</emphasis></para>
+        <para> View useful tips, best practices, and Version 2.x upgrade instructions.</para>
       </listitem>
       
-          <listitem>
-        <para><emphasis>Installation - Chapteer 18 </emphasis></para>
-        <para> View complete installation steps for the range of installations available with Pegasus WMS.</para>
-      </listitem>
-          <listitem>
-        <para><emphasis>Migrating from Version 2.x - Chapter 19 </emphasis></para>
-        <para> View instructions for upgrading a Pegasus version2.x installation to version 3.0.</para>
-      </listitem>
       
-          <listitem>
-        <para><emphasis>Glossary - Chapter 20 </emphasis></para>
+      <listitem>
+        <para><emphasis>Glossary - Chapter 13 </emphasis></para>
         <para> View a glossary of terms and concepts referenced in Pegasus WMS</para>
       </listitem>
       </itemizedlist>
       </section>
       
-      <section>
-        <title>Abstract Workflows (DAX)</title>
-        
-        <para>Abstract workflow text</para>
 
-
-
-
-      </section>
-      
-      <section>
-       <title>Executable Workflows (DAG)</title>
-       
-       <para>Executable workflows text</para>
-
-
-
-
-      </section>
-      
-      <section>
-       <title>Creating Workflows</title>
-       
-       <para>Creating Workflow Steps</para>
-
-
-
-      </section>
 </chapter>
 
 
