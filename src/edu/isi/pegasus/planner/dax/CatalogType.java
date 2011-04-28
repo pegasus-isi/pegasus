@@ -41,9 +41,19 @@ public class CatalogType {
         mMetadata = new LinkedList<MetaData>();
         mPFNs = new LinkedList<PFN>();
         mLogger = LogManagerFactory.loadSingletonInstance();
-
     }
 
+    /** Copy Constructor
+     * 
+     * @param c 
+     */
+    protected CatalogType(CatalogType c){
+        this.mProfiles = new LinkedList<Profile>(c.mProfiles);
+        this.mMetadata = new LinkedList<MetaData>(c.mMetadata);
+        this.mPFNs = new LinkedList<PFN>(c.mPFNs);
+        this.mLogger = c.mLogger;
+    }
+     
     /**
      * Add a pfn url to the Catalog
      * @param url

@@ -44,6 +44,8 @@ public class Transformation {
      * List of executable of files used by the transformation
      */
     protected List<CatalogType> mUses;
+    
+    protected List<Invoke> mInvokes;
 
     /**
      * Create a new Transformation object
@@ -53,6 +55,17 @@ public class Transformation {
         this("", name, "");
     }
 
+    /**
+     * Copy Constructor
+     * @param t 
+     */
+    public Transformation(Transformation t) {
+        this(t.mNamespace,t.mName,t.mVersion);
+        this.mUses = new LinkedList<CatalogType>(t.mUses);
+        this.mInvokes = new LinkedList<Invoke>(t.mInvokes);
+    }
+
+    
     /**
      * Create a new Transformation Object
      * @param namespace
@@ -65,6 +78,7 @@ public class Transformation {
 
         mVersion = (version == null) ? "" : null;
         mUses = new LinkedList<CatalogType>();
+        mInvokes = new LinkedList<Invoke>();
     }
 
     /**
@@ -91,6 +105,48 @@ public class Transformation {
         return mVersion;
     }
 
+        /**
+     * Return the list of Notification objects
+     * @return List<Invoke>
+     */
+    public List<Invoke> getInvoke() {
+        return Collections.unmodifiableList(mInvokes);
+    }
+    
+    
+    /**
+     * Add a Notification for this Transformation
+     * @param when
+     * @param what
+     * @return Transformation
+     */
+    public Transformation addInvoke(Invoke.WHEN when, String what) {
+        Invoke i = new Invoke(when, what);
+        mInvokes.add(i);
+        return this;
+    }
+    
+    
+   /**
+     * Add a Notification for this Transformation
+     * @param invoke
+     * @return Transformation
+     */
+    public Transformation addInvoke(Invoke invoke) {
+        mInvokes.add(invoke);
+        return this;
+    }
+
+    /**
+     * Add a List of Notifications for this Transformation
+     * @param invokes
+     * @return Transformation
+     */
+    public Transformation addInvokes(List<Invoke> invokes) {
+        this.mInvokes.addAll(invokes);
+        return this;
+    }
+    
     /**
      * Set the file or executable being used by the transformation
      * @param fileorexecutable
@@ -120,6 +176,43 @@ public class Transformation {
         return Collections.unmodifiableList(mUses);
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final Transformation other = (Transformation) obj;
+        if ((this.mNamespace == null) ? (other.mNamespace != null) : !this.mNamespace.equals(other.mNamespace)) {
+            return false;
+        }
+        if ((this.mName == null) ? (other.mName != null) : !this.mName.equals(other.mName)) {
+            return false;
+        }
+        if ((this.mVersion == null) ? (other.mVersion != null) : !this.mVersion.equals(other.mVersion)) {
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 7;
+        hash = 47 * hash + (this.mNamespace != null ? this.mNamespace.hashCode() : 0);
+        hash = 47 * hash + (this.mName != null ? this.mName.hashCode() : 0);
+        hash = 47 * hash + (this.mVersion != null ? this.mVersion.hashCode() : 0);
+        return hash;
+    }
+
+   
+    
+    @Override
+    public String toString(){
+        return mNamespace+"::"+mName+":"+mVersion;
+    }
+     
     public void toXML(XMLWriter writer) {
         toXML(writer, 0);
     }
@@ -153,6 +246,9 @@ public class Transformation {
                     writer.writeAttribute("executable", "true");
                     writer.endElement();
                 }
+            }
+            for (Invoke i : mInvokes) {
+                i.toXML(writer, indent + 1);
             }
             writer.endElement(indent);
         }

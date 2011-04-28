@@ -34,6 +34,9 @@ public class Job extends AbstractJob {
         this(id, namespace, name, version, "");
     }
 
+    public Job(Job j){
+        super(j);
+    }
     public Job(String id, String namespace, String name, String version, String label) {
         super();
         checkID(id);
@@ -53,5 +56,14 @@ public class Job extends AbstractJob {
 
     public String getVersion() {
         return mVersion;
+    }
+    
+        
+    /**
+     * Is this Object a Job
+     * @return 
+     */
+    public boolean isJob(){
+        return true;
     }
 }

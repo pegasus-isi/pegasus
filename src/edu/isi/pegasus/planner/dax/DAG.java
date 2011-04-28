@@ -34,6 +34,14 @@ public class DAG extends AbstractJob {
     }
 
     /**
+     * Copy Constructor
+     * @param dag 
+     */
+    public DAG(DAG dag){
+        super(dag);        
+    }
+    
+    /**
      * Create a DAG object
      * @param id The unique id of the DAG job object. Must be of type [A-Za-z][-A-Za-z0-9_]*
      * @param dagname The dag file to submit
@@ -46,5 +54,13 @@ public class DAG extends AbstractJob {
         mId = id;
         mName = dagname;
         mNodeLabel = label;
+    }
+    
+        /**
+     * Is this Object a DAG
+     * @return 
+     */
+    public boolean isDAG(){
+        return true;
     }
 }

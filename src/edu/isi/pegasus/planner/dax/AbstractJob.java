@@ -56,6 +56,31 @@ public class AbstractJob {
         mProfiles = new LinkedList<Profile>();
     }
 
+    /**
+     * Copy constructor
+     * @param a 
+     */
+    protected AbstractJob(AbstractJob a){
+        this.mArguments = new LinkedList(a.mArguments);
+        this.mProfiles = new LinkedList<Profile>(a.mProfiles);
+        this.mStdin = new File(a.mStdin);
+        this.mStdout = new File(a.mStdout);
+        this.mStderr = new File(a.mStderr);
+        this.mUses = new LinkedHashSet<File>(a.mUses);
+        this.mInvokes =  new LinkedList<Invoke>(a.mInvokes);
+        this.mName = a.mName;
+        this.mId = a.mId;
+        this.mNamespace = a.mNamespace;
+        this.mVersion = a.mVersion;
+        this.mNodeLabel = a.mNodeLabel;
+    }
+    
+    /**
+     * Copy Constructor
+     * @param a 
+     */
+
+
     protected static void checkID(String id) {
         if (!Patterns.isNodeIdValid(id)) {
             mLogger.log(
@@ -1219,11 +1244,35 @@ public class AbstractJob {
      * @param invokes
      * @return AbstractJob
      */
-    public AbstractJob addInvoke(List<Invoke> invokes) {
+    public AbstractJob addInvokes(List<Invoke> invokes) {
         this.mInvokes.addAll(invokes);
         return this;
     }
 
+    
+    /**
+     * Is this Object a Job
+     * @return 
+     */
+    public boolean isJob(){
+        return false;
+    }
+    
+    /**
+     * Is this Object a DAX
+     * @return 
+     */
+    public boolean isDAX(){
+        return false;
+    }
+    
+    /**
+     * Is this Object a DAG
+     * @return 
+     */
+    public boolean isDAG(){
+        return false;
+    }
     /**
      * 
      * @return String
@@ -1256,6 +1305,29 @@ public class AbstractJob {
         this.mNodeLabel = label;
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final AbstractJob other = (AbstractJob) obj;
+        if ((this.mId == null) ? (other.mId != null) : !this.mId.equals(other.mId)) {
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 7;
+        hash = 29 * hash + (this.mId != null ? this.mId.hashCode() : 0);
+        return hash;
+    }
+
+   
     /**
      *
      * @param writer

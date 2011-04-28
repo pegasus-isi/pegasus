@@ -15,6 +15,9 @@
  */
 package edu.isi.pegasus.planner.dax;
 
+import java.util.List;
+import java.util.LinkedList;
+import java.util.Collections;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.XMLWriter;
 
@@ -76,6 +79,11 @@ public class Executable extends CatalogType {
      * Flag to mark if the executable is installed or can be staged.
      */
     protected boolean mInstalled = true;
+    
+    /**
+     * List of Notification objects
+     */
+    protected List<Invoke> mInvokes;
 
     /**
      * Create a new executable
@@ -86,15 +94,35 @@ public class Executable extends CatalogType {
     }
 
     /**
+     * Copy Constructor
+     * @param e 
+     */
+    public Executable(Executable e) {
+        super(e);
+        this.mNamespace = e.mNamespace;
+        this.mName = e.mName;
+        this.mVersion = e.mVersion;
+        this.mArch = e.mArch;
+        this.mOs = e.mOs;
+        this.mOsRelease = e.mOsRelease;
+        this.mOsVersion = e.mOsVersion;
+        this.mGlibc = e.mGlibc;
+        this.mInvokes = new LinkedList<Invoke>(e.mInvokes);
+    }
+
+    
+    /**
      * Create a new Executable
      * @param namespace
      * @param name
      * @param version
      */
     public Executable(String namespace, String name, String version) {
+        super();
         mNamespace = (namespace == null) ? "" : namespace;
         mName = (name == null) ? "" : name;
         mVersion = (version == null) ? "" : version;
+        mInvokes=new LinkedList<Invoke>();
     }
 
     /**
@@ -122,9 +150,50 @@ public class Executable extends CatalogType {
     }
 
     /**
+     * Return the list of Notification objects
+     * @return List<Invoke>
+     */
+    public List<Invoke> getInvoke() {
+        return Collections.unmodifiableList(mInvokes);
+    }
+    
+    
+    /**
+     * Add a Notification for this Executable
+     * @param when
+     * @param what
+     * @return Executable
+     */
+    public Executable addInvoke(Invoke.WHEN when, String what) {
+        Invoke i = new Invoke(when, what);
+        mInvokes.add(i);
+        return this;
+    }
+    
+    
+   /**
+     * Add a Notification for this Executable
+     * @param invoke
+     * @return Executable
+     */
+    public Executable addInvoke(Invoke invoke) {
+        mInvokes.add(invoke);
+        return this;
+    }
+
+    /**
+     * Add a List of Notifications for this Executable
+     * @param invokes
+     * @return Executable
+     */
+    public Executable addInvokes(List<Invoke> invokes) {
+        this.mInvokes.addAll(invokes);
+        return this;
+    }
+    /**
      * Set the architecture the executable is compiled for
      * @param arch
-     * @return
+     * @return Executable
      */
     public Executable setArchitecture(ARCH arch) {
         mArch = arch;
@@ -244,6 +313,68 @@ public class Executable extends CatalogType {
     public String getGlibc() {
         return (mGlibc == null) ? "" : mGlibc;
     }
+       
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final Executable other = (Executable) obj;
+        if ((this.mNamespace == null) ? (other.mNamespace != null) : !this.mNamespace.equals(other.mNamespace)) {
+            return false;
+        }
+        if ((this.mName == null) ? (other.mName != null) : !this.mName.equals(other.mName)) {
+            return false;
+        }
+        if ((this.mVersion == null) ? (other.mVersion != null) : !this.mVersion.equals(other.mVersion)) {
+            return false;
+        }
+        if (this.mArch != other.mArch) {
+            return false;
+        }
+        if (this.mOs != other.mOs) {
+            return false;
+        }
+        if ((this.mOsRelease == null) ? (other.mOsRelease != null) : !this.mOsRelease.equals(other.mOsRelease)) {
+            return false;
+        }
+        if ((this.mOsVersion == null) ? (other.mOsVersion != null) : !this.mOsVersion.equals(other.mOsVersion)) {
+            return false;
+        }
+        if ((this.mGlibc == null) ? (other.mGlibc != null) : !this.mGlibc.equals(other.mGlibc)) {
+            return false;
+        }
+        if (this.mInstalled != other.mInstalled) {
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 7;
+        hash = 53 * hash + (this.mNamespace != null ? this.mNamespace.hashCode() : 0);
+        hash = 53 * hash + (this.mName != null ? this.mName.hashCode() : 0);
+        hash = 53 * hash + (this.mVersion != null ? this.mVersion.hashCode() : 0);
+        hash = 53 * hash + (this.mArch != null ? this.mArch.hashCode() : 0);
+        hash = 53 * hash + (this.mOs != null ? this.mOs.hashCode() : 0);
+        hash = 53 * hash + (this.mOsRelease != null ? this.mOsRelease.hashCode() : 0);
+        hash = 53 * hash + (this.mOsVersion != null ? this.mOsVersion.hashCode() : 0);
+        hash = 53 * hash + (this.mGlibc != null ? this.mGlibc.hashCode() : 0);
+        hash = 53 * hash + (this.mInstalled ? 1 : 0);
+        return hash;
+    }
+
+        
+    
+    @Override
+    public String toString(){
+        return mNamespace+"::"+mName+":"+mVersion;
+    }
 
     @Override
     public void toXML(XMLWriter writer) {
@@ -284,6 +415,9 @@ public class Executable extends CatalogType {
                 writer.writeAttribute("glibc", mGlibc);
             }
             super.toXML(writer, indent);
+            for (Invoke i : mInvokes) {
+                i.toXML(writer, indent+1);
+            }
             writer.endElement(indent);
         }
 

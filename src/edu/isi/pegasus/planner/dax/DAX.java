@@ -31,6 +31,14 @@ public class DAX extends AbstractJob {
     public DAX(String id, String daxname) {
         this(id, daxname, null);
     }
+    
+    /**
+     * Copy Constructor
+     * @param dax 
+     */
+    public DAX(DAX dax){
+        super(dax);
+    }
 
     /**
      * Create a DAX job object
@@ -45,5 +53,13 @@ public class DAX extends AbstractJob {
         mId = id;
         mName = daxname;
         mNodeLabel = label;
+    }
+    
+        /**
+     * Is this Object a DAX
+     * @return 
+     */
+    public boolean isDAX(){
+        return true;
     }
 }
