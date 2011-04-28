@@ -16,29 +16,20 @@
 
 package edu.isi.pegasus.planner.client;
 
-import edu.isi.pegasus.common.logging.LogManagerFactory;
-import edu.isi.pegasus.common.logging.LogManager;
-import edu.isi.pegasus.planner.common.PegasusProperties;
-
-import edu.isi.pegasus.common.util.FactoryException;
-
-import edu.isi.pegasus.common.util.Version;
-import edu.isi.pegasus.common.util.CommonProperties;
-
-import gnu.getopt.Getopt;
-import gnu.getopt.LongOpt;
-
-import java.io.BufferedInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
-import java.util.Enumeration;
-import java.util.Properties;
+
+import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.common.logging.LogManagerFactory;
+import edu.isi.pegasus.common.util.FactoryException;
+import edu.isi.pegasus.common.util.Version;
+import edu.isi.pegasus.planner.common.PegasusProperties;
+import gnu.getopt.Getopt;
+import gnu.getopt.LongOpt;
 
 /**
  * The interface which defines all the methods , any executable should implement.
@@ -95,8 +86,8 @@ public abstract class Executable {
     
     /**
      * Looks up for the conf property in the arguments passed to the executable
-     * @param opts
-     * @param confChar
+     * @param opts command line arguments passed to the executable
+     * @param confChar the short option corresponding to the conf property
      * @return
      */
     private String lookupConfProperty(String[] opts , char confChar){
@@ -127,7 +118,11 @@ public abstract class Executable {
         mProps = PegasusProperties.getInstance(propertyFile);
         mVersion = Version.instance().toString();
         //setup logging before doing anything with properties
-        setupLogging( mLogger );
+        try{
+        	setupLogging( mLogger , mProps );
+        }catch(IOException ioe){
+        	throw new RuntimeException("Unable to initialize the logger " , ioe);
+        }
         mLogMsg = new String();
         loadProperties();
     }
@@ -196,21 +191,20 @@ public abstract class Executable {
      * file, sets up the appropriate writers for output and stderr.
      * 
      * @param logger   the logger to use. Can be null.
+	 * @param properties reference of pegasus properties object.
      */
-    protected void setupLogging( LogManager logger ){
+    protected void setupLogging( LogManager logger , PegasusProperties properties  ) throws IOException{
         if( logger != null ){
             mLogger = logger;
             return;
         }
         
         //setup the logger for the default streams.
-        mLogger = LogManagerFactory.loadSingletonInstance( mProps );
+        mLogger = LogManagerFactory.loadSingletonInstance( properties );
         mLogger.logEventStart( "event.pegasus.planner", "planner.version", mVersion );
 
         //get the logging value set in properties
-        //cannot ask for PegasusProperties, as deprecation warnings could be
-        //logged. So get it directly from VDS Properties. Karan May 11, 2006.
-        String value = CommonProperties.noHassleInstance().getProperty("pegasus.log.*");
+        String value = properties.getProperty("pegasus.log.*");
 
         //use defaults if nothing is set.
         if( value == null){
