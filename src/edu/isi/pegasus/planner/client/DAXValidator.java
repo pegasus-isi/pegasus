@@ -541,14 +541,16 @@ public class DAXValidator extends DefaultHandler
   {
     boolean fail = true; 
 
-    try { 
-      DAXValidator validator = new DAXValidator( args.length > 1 );
-      validator.parse( args[0] ); 
-      fail = validator.statistics(); 
-    } catch ( IOException ioe ) {
-      System.err.println( ioe ); 
-    } catch ( SAXException spe ) { 
-      System.err.println( spe ); 
+    if ( args.length > 0 ) { 
+      try { 
+	DAXValidator validator = new DAXValidator( args.length > 1 );
+	validator.parse( args[0] ); 
+	fail = validator.statistics(); 
+      } catch ( IOException ioe ) {
+	System.err.println( ioe ); 
+      } catch ( SAXException spe ) { 
+	System.err.println( spe ); 
+      }
     }
 
     if ( fail ) System.exit(1); 
