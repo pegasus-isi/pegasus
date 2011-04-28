@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- edited with XMLSPY v2004 rel. 3 U (http://www.xmlspy.com) by Rebecca Y Jordan (UNIV OF SOUTHERN CALIF) -->
-<xs:schema targetNamespace="http://pegasus.isi.edu/schema/DAX" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="http://pegasus.isi.edu/schema/DAX" elementFormDefault="qualified" attributeFormDefault="unqualified" version="3.3">
+<xs:schema targetNamespace="http://pegasus.isi.edu/schema/DAX" xmlns="http://pegasus.isi.edu/schema/DAX" xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" attributeFormDefault="unqualified" version="3.3">
   <xs:annotation>
     <xs:documentation xml:lang="en">$Id$</xs:documentation>
   </xs:annotation>
@@ -103,7 +103,7 @@
   </xs:simpleType>
   <xs:complexType name="InvokeType">
     <xs:annotation>
-      <xs:documentation>defines notifications. Notifications are currently NOT SUPPORTED.</xs:documentation>
+      <xs:documentation>defines notifications. </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
       <xs:extension base="xs:string">
