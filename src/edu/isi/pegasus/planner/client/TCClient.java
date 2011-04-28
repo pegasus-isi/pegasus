@@ -84,8 +84,6 @@ public class TCClient extends Executable{
 
     private Map argsmap = null;
 
-    private LogManager mLogger =  LogManagerFactory.loadSingletonInstance();
-
     private Version version = Version.instance();
 
     public TCClient() {
@@ -281,7 +279,7 @@ public class TCClient extends Executable{
         //load the transformation catalog if required
         try{
             if (operationcase == 1 || operationcase == 4 || operationcase == 2) {
-                tc = TransformationFactory.loadInstance();
+                tc = TransformationFactory.loadInstance(this.mProps);
             }
         }
         catch ( FactoryException fe){
