@@ -11,12 +11,7 @@
    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="submit_directory.xml"/>
    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="monitoring_debugging_stats.xml"/>
    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="example_workflows.xml"/>
-   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="advanced_concepts_properties.xml"/>
-   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="advanced_concepts_profiles.xml"/>
-   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="advanced_concepts_replica_selection.xml"/>
-   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="advanced_concepts_job_clustering.xml"/>
-   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="advanced_concepts_transfers.xml"/>
-   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="advanced_concepts_hierarichal_workflows.xml"/>
+   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="reference.xml"/>
    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="api.xml"/>
    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="commands.xml"/>
    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="useful_tips.xml"/>

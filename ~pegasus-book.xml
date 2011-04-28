@@ -20,7 +20,6 @@
    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="api.xml"/>
    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="commands.xml"/>
    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="useful_tips.xml"/>
-   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="migration_from_pegasus_2_x.xml"/>
    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="glossary.xml"/>
 </book>
 
