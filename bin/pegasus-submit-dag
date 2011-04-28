@@ -44,6 +44,7 @@ my $dagman;
 my $submit=1;
 my $notify = 'NEVER';
 my $verbose;
+my $conffile; 
 my %props = ();
 my $grid=0; #Grid checks enabled
 
@@ -198,7 +199,8 @@ GetOptions( "debug|d=i"    => \$main::DEBUG,
 	    "maxpre|P=i"   => \$maxpre,
 	    "maxpost|p=i"  => \$maxpost,
 	    'dagman|e=s' => \$dagman,
-	    "submit!" =>\$submit,
+	    "submit!" => \$submit,
+	    'conf|c=s' => \$conffile,
 	    "maxjob|maxjobs|j=i" => \$maxjobs,
 	    "maxidle|i=i" => \$maxidle,
 	    "notify|n=s" => \$notify,
@@ -227,11 +229,9 @@ my $c_s = find_exec('condor_submit') || die "Unable to locate condor_submit\n";
 salvage_logfile($dag);
 my $run=dirname($dag);
 my %config = slurp_braindb( $run ) or die "ERROR: open braindb: $!\n";
-# this assumes karan writes a merged system + user properties per workflow in the dag dir.
-my $newprops = {'pegasus.properties'=> $config{properties}};
-# Enable below when we add --conf option
-#$newprops->{'pegasus.user.properties'}=$properties if defined $properties;
-my $props = Work::Properties->new($newprops);
+
+# pre-condition: The planner writes all properties per workflow into the DAG dir.
+my $props = Work::Properties->new( $conffile, $config{properties} );
 
 # set true defaults from properties
 $maxpre = $props->property('dagman.maxpre') || $maxpre;
@@ -250,39 +250,13 @@ push( @arg, '-maxjobs', $maxjobs ) if $maxjobs > 0;
 push( @arg, '-maxidle', $maxidle ) if $maxidle > 0;
 push( @arg, '-notification', $notify );
 push( @arg, '-verbose' ) if $verbose;
-push (@arg,'-append', '+wf_uuid="'.$config{wf_uuid}.'"');
-push (@arg,'-append', '+pegasus_wf_name="'.$config{pegasus_wf_name}.'"');
+push (@arg,'-append', '+wf_uuid="'.$config{'wf_uuid'}.'"');
+push (@arg,'-append', '+pegasus_wf_name="'.$config{'pegasus_wf_name'}.'"');
 push (@arg,'-append', '+pegasus_wf_time="'.$config{timestamp}.'"');
 
 #push( @arg, '-no_submit') if $submit==0;
 push( @arg, $dag );
 print STDERR "# @arg\n" if $main::DEBUG;
 #my $csdresult=`@arg`;
-exec { @arg[0] } @arg or die "Cannot execute @arg: $! \n";
+exec { $arg[0] } @arg or die "Cannot execute @arg: $! \n";
 exit 127;
-#if ( $? == 0 ) {
-#print STDERR "# submit value is $submit" if $main::DEBUG;
-# modify the submit file to remove -Dagman entry
-#{
-#    local @ARGV = ("$dag.condor.sub");
-#    local $^I = '';#<-- invokes inplace editing
-#    while( <> ){
-#	if( s/^executable[\s]*=.+$/executable=$dagman/ig ) {
-#	    print;
-#	}
-#	else {
-#	    print;
-#	}
-#    }
-#}
-
-#if($submit < 1){
-#    my @carg= ($c_s);
-#    push (@carg,'-append', '+pegasus_wf_name="'.$config{pegasus_wf_name}.'"');
-#    push (@carg,'-append', '+pegasus_wf_time="'.$config{timestamp}.'"');
-#    push (@carg, $dag.".condor.sub");
-#    print STDERR "# @carg\n" if $main::DEBUG;
-#    exec { $carg[0] } @carg or die "Cannot execut @carg: $!\n";
-    exit 127;
-#}
-#}

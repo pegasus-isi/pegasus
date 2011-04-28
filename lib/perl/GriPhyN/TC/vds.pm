@@ -39,7 +39,7 @@ $VERSION=$1 if ( '$Revision$' =~ /Revision:\s+([0-9.]+)/o );
 use Carp;
 use DBI;
 use File::Spec;
-use Work::Properties qw(:parse);
+use Work::Properties;
 use GriPhyN::Log qw/log/;
 
 our $prefix = '[' . __PACKAGE__ . '] ';
@@ -61,7 +61,7 @@ sub tc_properties {
     # vds.db.(*|tc).driver.user dbuser
     # vds.db.(*|tc).driver.password dbpass
     #
-    my $p = Work::Properties->new( PARSE_GVDS );
+    my $p = Work::Properties->new( shift(), shift() ); 
     my $mode = $p->property('vds.tc') || $p->property('vds.tc.mode');
     croak $prefix, " ERROR: Please adjust vds.tc=Database\n"
 	unless ( defined $mode && $mode eq 'Database' );
@@ -79,9 +79,10 @@ sub new {
 
     my %x = ( @_ );
     # avoid property parsings, if not necessary
-    %x = ( %x, tc_properties() ) unless ( exists $x{uri} && 
-					  exists $x{dbuser} && 
-					  exists $x{dbpass} );
+    %x = ( %x, tc_properties( $x{conffile}, $x{rundirprops} ) ) 
+	unless ( exists $x{uri} && 
+		 exists $x{dbuser} && 
+		 exists $x{dbpass} );
     my $self = bless GriPhyN::TC->new( style => 'vds', %x ), $class;
 
     # remember things

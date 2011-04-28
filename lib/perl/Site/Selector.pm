@@ -250,7 +250,7 @@ internally inside a hash.
 
 =over 4
 
-=item Work::Properties::parse_file_v2($filename)
+=item Site::Selector::parse_file_v2($filename)
 
 This static function reads a temporary file, and on success returns a
 vector with hash references. The first hash reference contains all keys

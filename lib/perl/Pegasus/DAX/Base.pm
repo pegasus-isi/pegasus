@@ -32,6 +32,42 @@ sub new {
     $self;
 }
 
+sub _deep($); 			# { } 
+sub _deep($) { 
+    my $src = shift; 
+
+    if ( ref $src eq 'ARRAY' ) {
+	[ map { _deep($_) } @{$src} ]; 
+    } elsif ( ref $src eq 'HASH' ) { 
+	my $x = { };
+	while ( my ($k,$v) = each %{$src} ) {
+	    $x->{$k} = _deep($v); 
+	}
+	$x; 
+    } elsif ( ref $src ) { 
+	if ( $src->can('clone') ) { 
+	    $src->clone();
+	} else { 
+	    carp "FATAL: Do not know how to clone ", ref($src), "\n"; 
+	}
+    } else {
+	$src; 
+    }
+}
+
+sub clone { 
+    # purpose: simplistic clone method
+    # paramtr: no arguments
+    # returns: copy of current object
+    #
+    my $self = shift; 
+    my $result = bless { }, ref($self); 
+    while ( my ($k,$v) = each %{ $self } ) {
+	$result->{$k} = _deep($v); 
+    }
+    $result; 
+}
+
 sub AUTOLOAD {
     # purpose: catch-all accessor (set and get) for all data fields
     #          ever defined in any great-grandchild of this class

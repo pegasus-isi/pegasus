@@ -36,7 +36,8 @@ BEGIN {
 }
 
 use Archive::Tar;
-use Work::Properties ();
+use Work::Properties;
+use Work::Common qw(:all); 
 
 # constants
 sub usage(;$);			# { }
@@ -46,8 +47,9 @@ $main::revision = 'unknown';
 $main::revision=$1 if '$Revision$' =~ /Revision:\s+([0-9.]+)/o;
 
 # argument checking
-my $daxfn;
+my ($daxfn,$conffile); 
 GetOptions( "help|h" => \&usage,
+	    "conf|c=s" => \$conffile,
 	    "version|V" => \&version,
 	    "dax|d=s" => \$daxfn,
 	    "verbose|v+" => \$main::DEBUG
@@ -93,6 +95,7 @@ Mandatory arguments:
 
 Optional arguments:
  -Dprop=val       explicit settings of a property (multi-option).
+ -c|--conf fn     override of properties from a given file. 
  -h|--help        print this help and exit.
  -v|--verbose     increase debug level by 1.
  -V|--version     print version and exit.
@@ -130,6 +133,7 @@ sub splitpath {
 sub readprops($$@) {
     # purpose: read a Java properties file
     # paramtr: $fh (IN): scalar filehandle to print to
+    #          $dbref (IN): property overrides. 
     #          $fn (IN): filename
     # returns: hash map with properties from file
     my $fh = shift;
@@ -137,13 +141,14 @@ sub readprops($$@) {
     my %result = ();
 
     foreach my $fn ( @_ ) {
+	next unless defined $fn;
 	next unless length($fn);
 	if ( -r $fn ) {
 	    print $fh "Reading properties from $fn\n";
 	    %result = Work::Properties::parse_properties($fn,%{$dbref});
 	    last;
 	} else {
-	    print $fh "Unable to read properties from $fn: no such file\n";
+	    print $fh "Unable to read properties from $fn: ignoring\n"; 
 	}
     }
 
@@ -193,21 +198,25 @@ print $fh 'OS-system  ', `uname -s`;
 print $fh 'OS-release ', `uname -r`;
 print $fh "\n";
 
-print $fh "#\n# PEGASUS properties\n#\n";
-my $pegasushome = $ENV{'PEGASUS_HOME'};
-my %sys = readprops( $fh, { },
-		     File::Spec->catfile( $pegasushome, 'etc', 'properties' ) );
-showprops( $fh, 'Sys-prop', %sys );
+print $fh "#\n# Braindump database\n#\n"; 
+my %config = slurp_braindb($run);
+if ( scalar keys %config == 0 ) {
+    print $fh "ERROR: Unable to open braindb: $!\n"; 
+} else {
+    foreach my $k ( sort keys %config ) { 
+	print $fh "$k=$config{$k}\n"; 
+    }
+}
 
-my %usr = readprops( $fh, \%sys,
-		     $sys{'pegasus.user.properties'}, 
-		     File::Spec->catfile( $ENV{HOME}, '.pegasusrc' ), 
-		     File::Spec->catfile( $ENV{HOME}, '.chimerarc' ) );
-showprops( $fh, 'Usr-prop', %usr );
-print $fh `show-properties | sed -e 's/^/Eff-prop /'`;
+print $fh "#\n# PEGASUS properties\n#\n";
+my $pegasushome = `pegasus-config --noeoln --home`;
+my $props = Work::Properties->new( $conffile, $config{properties} );
+my %sys = $props->all(); 
+showprops( $fh, 'Properties', %sys );
+# print $fh `show-properties | sed -e 's/^/Eff-prop /'`;
 print $fh "\n";
 
-my %all = ( %sys, %usr ); 	# let %usr overwrite %sys
+my %all = ( %sys );
 my $sysconfdir = $all{'pegasus.home.sysconfdir'} || 
     File::Spec->catfile( $pegasushome, 'etc' );
 

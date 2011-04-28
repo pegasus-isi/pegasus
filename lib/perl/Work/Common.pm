@@ -14,8 +14,9 @@
 # Copyright 1999-2004 University of Chicago and The University of
 # Southern California. All rights reserved.
 #
-# Author: Jens-S. Vöckler voeckler@cs.uchicago.edu
+# Author: Jens-S. VÃ¶ckler voeckler@cs.uchicago.edu
 # Revision : $Revision$
+# $Id$
 #
 package Work::Common;
 use 5.006;
@@ -43,7 +44,8 @@ our $brainbase = 'braindump.txt'; # basename of brain dump file
 our $VERSION = '0.1';
 our %EXPORT_TAGS = ();
 our @EXPORT_OK = qw($VERSION $brainbase $jobbase);
-our @EXPORT = qw(isodate find_exec pipe_out_cmd parse_exit slurp_braindb version check_rescue log10);
+our @EXPORT = qw(isodate find_exec pipe_out_cmd parse_exit 
+		 slurp_braindb version check_rescue log10);
 
 # Preloaded methods go here.
 use POSIX qw(strftime);
@@ -225,7 +227,7 @@ sub log10($) {
 
 __END__
 
--head1 NAME
+=head1 NAME
 
 Work::Common - generally useful collection of methods.
 

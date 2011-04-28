@@ -1,23 +1,25 @@
+package Work::Properties;
 #
 # Provides parsing of Java property files from Perl. 
 #
-# This file or a portion of this file is licensed under the terms of
-# the Globus Toolkit Public License, found in file GTPL, or at
-# http://www.globus.org/toolkit/download/license.html. This notice must
-# appear in redistributions of this file, with or without modification.
+#  Copyright 2007-2010 University Of Southern California
 #
-# Redistributions of this Software, with or without modification, must
-# reproduce the GTPL in: (1) the Software, or (2) the Documentation or
-# some other similar material which is provided with the Software (if
-# any).
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
 #
-# Copyright 1999-2004 University of Chicago and The University of
-# Southern California. All rights reserved.
+#  http://www.apache.org/licenses/LICENSE-2.0
 #
-# Author: Jens-S. Vöckler voeckler@cs.uchicago.edu
+#  Unless required by applicable law or agreed to in writing,
+#  software distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+#
+# Author: Jens-S. VÃ¶ckler voeckler@cs.uchicago.edu
 # Revision : $Revision$
+# $Id$
 #
-package Work::Properties;
 use 5.006;
 use strict;
 use warnings;
@@ -27,80 +29,96 @@ require Exporter;
 our @ISA = qw(Exporter);
 
 # declarations of methods here. Use the commented body to unconfuse emacs
+sub pegasusrc(;$);		# { }
 sub parse_properties($;\%); 	# { }
-sub PARSE_NONE { 0x0000 }
-sub PARSE_ALL { 0x0001 }
 
 # Items to export into callers namespace by default. Note: do not export
 # names by default without a very good reason. Use EXPORT_OK instead.
 # Do not simply export all your public functions/methods/constants.
-our $VERSION = '0.1';
+our $VERSION = '1.0';
 $VERSION=$1 if ( '$Revision$' =~ /Revision:\s+([0-9.]+)/o );
 
-our %EXPORT_TAGS = (parse => [qw(PARSE_NONE PARSE_ALL)]);
-our @EXPORT_OK = qw($VERSION parse_properties %initial %system
-		    PARSE_NONE PARSE_ALL);
+our @EXPORT_OK = qw($VERSION parse_properties pegasusrc %initial %system);
+our %EXPORT_TAGS = ( all => [ @EXPORT_OK ] );
 our @EXPORT = ();
 
 # Preloaded methods go here.
+use POSIX qw(uname); 
 use Carp;
 use File::Spec;
+
+sub pegasusrc(;$) {
+    # purpose: "static" method to determine location of pegasusrc
+    # paramtr: $home (opt. IN): override home location
+    # returns: a string
+    #
+    my $home = shift() || 
+	$ENV{HOME} || 
+	(getpwuid($>))[7] || 
+	File::Spec->curdir(); 
+    File::Spec->catfile( $home, '.pegasusrc' ); 
+}
 
 sub parse_properties($;\%) {
     # purpose: "static" method to parse properties from a file.
     # paramtr: $fn (IN): is the filename of the property file to read
     #          $hashref (IN): more properties for substitutions
+    # warning: dies, if the $fn cannot be opened properly. 
     # globals: %system (IN): more properties for substitutions
-    # returns: a map of properties, possibly empty.
+    # returns: a hash of properties, possibly empty.
+    #
     my $fn = shift;
-    my $hashref = shift;	# may be undef'd
+    my $hashref = shift || {};	# may be undef'd
     my %result = ();
 
-    open( IN, "<$fn" ) || croak "open $fn: $!\n";
-    print STDERR "# parsing properties in $fn...\n"
-	if ( $main::DEBUG );
+    open( IN, "<$fn" ) || die "Warning: open $fn: $!\n";
+    print STDERR "# parsing properties in $fn...\n" if $main::DEBUG;
 
     my $save;
     while ( <IN> ) {
-        next if /^[!\#]/;       # comments are skipped
-        s/[\r\n]*$//;           # safe chomp
-        s/\#(.*)$//;            # NEW: chop in-line comments to EOLN
-	s/\\(.)/$1/g;           # replace java properties escaped special characters #!=:
-        s/^\s*//;               # replace all starting whitespace
-        s/\s*$//;               # replace all trailing whitespace
-        next unless length($_); # skip empty lines
+	next if /^[!\#]/;	# comments are skipped
+	s/[\r\n]*$//;		# safe chomp
+	s/\#(.*)$//;		# NEW: chop in-line comments to EOLN
+	s/\\(.)/$1/g;	       # replace escaped special characters #!=:
+	s/^\s*//;		# replace all starting whitespace
+	s/\s*$//;		# replace all trailing whitespace
+	next unless length($_); # skip empty lines
 
-        if ( /\\$/ ) {
-            # continuation line
-            chop ;
-            $save .= $_;
-        } else {
-            # regular line
-            $_ = $save . $_ if defined $save;
-            undef $save;
-	    print "#Property being parsed is # $_\n" if $main::DEBUG;
-		if ( /([^:= \t]+)\s*[:=]?\s*(.*)/ ) {   # new fix for auto gen properties
-#		if ( /(\S+)\s*[:=]?\s*(.*)/ ) {
+	if ( /\\$/ ) {
+	    # continuation line
+	    chop ;
+	    $save .= $_;
+	} else {
+	    # regular line
+	    $_ = $save . $_ if defined $save;
+	    undef $save;
+	    print STDERR "# Parsing: $_\n" if $main::DEBUG;
+	    if ( /([^:= \t]+)\s*[:=]?\s*(.*)/ ) {   
+		# new fix for auto gen properties
 		my ($k,$v) = ($1,$2);
-			    print "#Property being stored is # $k ==> $v \n" if $main::DEBUG;
-		# substitutions
+		print STDERR "# Storing: $k => $v\n" if $main::DEBUG;
+
+		# substitutions -- works arbitrarily deep?
 		while ( $v =~ /(\$\{([A-Za-z0-9._]+)\})/g ) {
-		    my $newval = $hashref->{$2} || $system{$2} || '';
-		    substr($v,index($v,$1),length($1),$newval);
+		    my ($a,$b) = ($1,$2); 
+		    my $newval = $hashref->{$b} || $system{$b} || '';
+		    substr($v,index($v,$a),length($a),$newval);
 		}
-                $result{lc($k)} = $v;
-            } else {
-                carp "Illegal content in $fn:$.\n";
-            }
-        }
+		$result{lc($k)} = $v;
+	    } else {
+		carp "Illegal content in $fn:$.\n";
+	    }
+	}
     }
+
     close(IN);
     %result;
 }
 
 BEGIN {
-    # assemble %system properties
-    use POSIX qw(uname);
+    #
+    # Part 1: Assemble %system properties emulating some Java properties
+    #
     %system = ();		# start empty
 
     # assemble some default Java properties
@@ -108,7 +126,7 @@ BEGIN {
     $system{'java.home'} = $ENV{'JAVA_HOME'} if exists $ENV{'JAVA_HOME'};
     $system{'java.class.path'} = $ENV{CLASSPATH} if exists $ENV{CLASSPATH};
     $system{'java.io.tmpdir'} = $ENV{TMP} || File::Spec->tmpdir();
-    # $system{'line.separator'} = "\n"; # Unix
+#    $system{'line.separator'} = "\n"; # Unix
     @system{'os.name','os.version','os.arch'} = (POSIX::uname())[0,2,4];
     $system{'user.dir'} = File::Spec->curdir();
     $system{'user.home'} = $ENV{HOME} || (getpwuid($>))[7];
@@ -116,22 +134,29 @@ BEGIN {
     $system{'user.name'} = $ENV{USER} || $ENV{LOGNAME} || scalar getpwuid($>);
     $system{'user.timezone'} = $ENV{TZ}; # can be undef'd
 
-    # not require, but useful
+    # not required, but useful
     $system{'pegasus.home'} = $ENV{'PEGASUS_HOME'}; # can be undef'd
-}
 
-BEGIN {
-    # assemble commandline properties
+    #
+    # Part 2: Assemble commandline properties from initial -D argument
+    #
     %initial = ();		# start empty
 
-    # extracts -Dk=v properties from @ARGV before Getopt sees it
+    # Extracts -Dk=v properties from @ARGV before Getopt sees it
+    # This will remove *only* the initial -D arguments from the CLI!
     if ( @ARGV > 0 ) {
 	while ( defined $ARGV[0] && substr( $ARGV[0], 0, 2 ) eq '-D' ) {
 	    my $arg = shift(@ARGV);
 	    my ($k,$v) = split( /=/, 
 			 ($arg eq '-D' ? shift(@ARGV) : substr($arg,2)),
 			 2 );
-	    $initial{lc($k)} = $v if length($k); 
+
+	    $k = lc $k;
+	    if ( $k eq 'pegasus.properties' || $k eq 'pegasus.user.properties' ) { 
+		carp "Warning: $k is no longer supported, ignoring, please use --conf\n";
+	    } else {
+		$initial{$k} = $v if length($k); 
+	    }
 	}
     }
 
@@ -144,156 +169,80 @@ BEGIN {
 #
 sub new {
     # purpose: Initialize an instance variable
-    # paramtr: $flags (opt. IN): limits files to parse
-    #          $hashref (opt. IN): key value property list of least priority
+    # paramtr: $conffile (IN): --conf filename (or undef)
+    #          $runprops (IN): properties from rundir (or undef)
+    #          $pegasusrc (opt. IN): location of $HOME/.pegasusrc file
+    # warning: exceptions from parse_properties() may be propagated
     # returns: reference to blessed self
+    #
     my $proto = shift;
     my $class = ref($proto) || $proto || __PACKAGE__;
-    my $flags = PARSE_ALL;	# default
-
-    # first argument is either scalar number, or hashref
-    my $hashref = shift;
-    if ( defined $hashref && ref $hashref eq '' ) {
-	$flags = $hashref;	# use user-supplied flags
-	$hashref = shift;	# advance to next argument
+    my $conffile = shift;
+    my $rundirpfn = shift; 
+    my $pegasusrc = shift || pegasusrc(); 
+    
+    my %config = (); 
+    if ( defined $conffile ) { 
+	croak "FATAL: $conffile does not exist" unless -e $conffile;
+	croak "FATAL: $conffile is not readable" unless -r _; 
+	if ( -s _ ) { 
+	    print STDERR "# priority level 1: $conffile\n" if $main::DEBUG; 
+	    %config = parse_properties($conffile); 
+	} else {
+	    carp "Warning: $conffile is empty, trying next"; 
+	    goto LEVEL2;
+	}
+    } elsif ( defined $rundirpfn ) {
+      LEVEL2:
+	croak "FATAL: $rundirpfn does not exist" unless -e $rundirpfn;
+	croak "FATAL: $rundirpfn is not readable" unless -r _;
+	if ( -s _ ) { 
+	    print STDERR "# priority level 2: $rundirpfn\n" if $main::DEBUG;
+	    %config = parse_properties($rundirpfn); 
+	} else { 
+	    carp "Warning: $rundirpfn is empty, trying next priority"; 
+	    goto LEVEL3; 
+	}
+    } else {
+      LEVEL3:
+	# $HOME/.pegasusrc may safely not exist, no failures here
+	if ( -s $pegasusrc ) {
+	    print STDERR "# priority level 3: $pegasusrc\n" if $main::DEBUG; 
+	    %config = parse_properties($pegasusrc); 
+	} else {
+	    warn "Warning: No property files parsed whatsoever\n";
+	}
     }
-    # next argument is optional, a hash reference to props, or undef
-    my %config = ();
-    %config = ( %{$hashref} ) if ( ref $hashref eq 'HASH' );
+    
+    # create instance and return handle to self.
+    # last one in chain below has highest priority. 
+    bless { m_config => { %config, %initial } }, $class;
+}
 
-    # magic property
-    my $pegasushome;
-    my $flag = 0;
-    if ( ($flags & PARSE_ALL) ) {
-	if ( exists $ENV{'PEGASUS_HOME'} ) {
-	    if ( -d $ENV{'PEGASUS_HOME'} ) {
-		$pegasushome = $config{'pegasus.home'} = $ENV{'PEGASUS_HOME'};
-	    } else {
-		warn "Warning: PEGASUS_HOME does not point to a(n accessible) directory!\n";
-	    }
-	} elsif ( exists $ENV{'VDT_LOCATION'} ) {
-	    my $tmp = File::Spec->catdir( $ENV{'VDT_LOCATION'}, 'pegasus' );
-	    if ( -d $tmp ) {
-		$pegasushome = $config{'pegasus.home'} = $tmp;
-	    } else {
-		warn "Warning: $tmp does not point to a(n accessible) directory!\n";
-	    }
-	} else {
-	    croak "Warning: Your environment variable PEGASUS_HOME is not set!\n";
-	}
+sub reinit {
+    # purpose: ensure that %initial has highest priority
+    # 
+    my $self = shift;
+    %{ $self->{'m_config'} } = ( %{ $self->{'m_config'} }, %initial );
+}
 
-	# system properties go first
-	if ( exists $system{'pegasus.properties'} ) {
-	    # overwrite for system property location from CLI property
-	    my $sys = $system{'pegasus.properties'};
-	    if ( -r $sys ) {
-		%config = ( %config, parse_properties($sys) );
-	    } else {
-		$flag++;
-	    }
-	} elsif ( exists $config{'pegasus.properties'} ) {
-	    # overwrite for system property location from c'tor property
-	    my $sys = $config{'pegasus.properties'};
-	    if ( -r $sys ) {
-		%config = ( %config, parse_properties($sys) );
-	    } else {
-		$flag++;
-	    }
-	} elsif ( defined $pegasushome ) {
-	    # default system property location
-	    my $sys = File::Spec->catfile( $pegasushome, 'etc', 'properties' );
-	    if ( -r $sys ) {
-		%config = ( %config, parse_properties($sys) );
-	    } else {
-		$flag++;
-	    }
-	} else {
-	    $flag++;
-	}
-#    } else {
-#	# asked not to parse
-#	$flag++;
-
-## TODO : Delete this section when everything works fine in pegasus-run
-
-    # load wfrc user properties before pegasus user properties
-#    if ( ($flags & PARSE_WFRC) ) {
-#	if ( exists $system{'wf.properties'} ) {
-#	    # overwrite for wfrc property location from CLI property
-#	    my $wfrc = $system{'wf.properties'};
-#	    if ( -r $wfrc ) {
-#		%config = ( %config, parse_properties($wfrc) );
-#	    } else {
-#		$flag++;
-#	    }
-#	} elsif ( exists $config{'wf.properties'} ) {
-#	    # overwrite for wfrc property location from c'tor property
-#	    my $wfrc = $config{'wf.properties'};
-#	    if ( -r $wfrc ) {
-#		%config = ( %config, parse_properties($wfrc) );
-#	    } else {
-#		$flag++;
-#	    }
-#	} elsif  ( exists $ENV{'HOME'} ) {
-#	    # default wfrc property location
-#	    my $wfrc = File::Spec->catfile( $ENV{HOME}, '.wfrc' );
-#	    if ( -r $wfrc ) {
-#		%config = ( %config, parse_properties($wfrc) );
-#	    } else {
-#		$flag++;
-#	    }
-#	} else { 
-#	    $flag++;
-#	}
-#    } else {
-#	# asked not to parse
-#	$flag++;
-#    }
-
-	# user properties go last
-	if ( exists $system{'pegasus.user.properties'} ) {
-	    # overwrite for user property location from CLI property
-	    my $usr = $system{'pegasus.user.properties'};
-	    if ( -r $usr ) {
-		%config = ( %config, parse_properties($usr) );
-	    } else {
-		$flag++;
-	    }
-	} elsif ( exists $config{'pegasus.user.properties'} ) {
-	    # overwrite for user property location from lower property
-	    my $usr = $config{'pegasus.user.properties'};
-	    if ( -r $usr ) {
-		%config = ( %config, parse_properties($usr) );
-	    } else {
-		$flag++;
-	    }
-	} elsif ( exists $ENV{'HOME'} ) {
-	    # default user property 
-	    my $usr2 = File::Spec->catfile( $ENV{HOME}, '.pegasusrc' );
-	    if ( -r $usr2 ) {
-		# prefer new property definition
-		%config = ( %config, parse_properties($usr2) );
-	    } else {
-		$flag++;
-	    }
-	} else {
-	    $flag++;
-	}
-#    } else {
-#	# asked not to parse
-#	$flag++;
-    }
-
-    # sanity check -- only in warnings mode
-    carp "Warning: Unable to load any properties at all" 
-	if ( $^W &&
-	     ( $flag == 1 && $flags == PARSE_ALL ) );
-	
-    # create instance and return handle to self
-    # WARNING: Keep ordering of %config before %initial to permit
-    # CLI properties to overwrite any other property.
-    bless { m_config => { %config, %initial }, 
-	    m_flags => $flags }, $class;
+sub merge {
+    # purpose: Read and merge a file into the current property set
+    # paramtr: $fn (IN): where to read properties from.
+    # warning: Properties from the file will overwrite existing ones.
+    #          If the instance has keys (a,b), and the file has (b,c)
+    #          the updated instance has keys (a,b,c) with b from file.
+    # warning: use reinit() to give CLI properties precedence again. 
+    # warning: exceptions from parse_properties() will be propagated.
+    # returns: hash of all new (merged) properties. 
+    #
+    my $self = shift; 
+    my $where = shift || croak "need a filename";
+    
+    # the new props from the file will merge with the existing properties,
+    # where duplicate keys take precedence from the file. 
+    %{ $self->{'m_config'} } = ( %{ $self->{'m_config'} }, 
+				 parse_properties($where) );
 }
 
 sub property {
@@ -307,6 +256,24 @@ sub property {
     my $oldv = $self->{'m_config'}{$key};
     $self->{'m_config'}{$key} = shift if ( @_ );
     $oldv;
+}
+
+sub has {
+    # purpose: Checks for the existence of a given property key
+    # paramtr: $key (IN): property name to access
+    # returns: true, if a property with this key exists
+    #
+    my $self = shift;
+    my $key = shift || croak "need a property key";
+    exists $self->{'m_config'}{$key};
+}
+
+sub all {
+    # purpose: Return all known properties as simple hash
+    # returns: hash
+    #
+    my $self = shift; 
+    %{ $self->{'m_config'} }; 
 }
 
 sub keyset {
@@ -344,7 +311,7 @@ sub propertyset {
 
 my %translate = ( 'mysql' => 'mysql',
 		  'postgresql' => 'Pg',
-		  'sqlite' => 'SQLite2',
+		  'sqlite' => 'SQLite',
 		  'oracle' => 'Oracle' );
 
 sub jdbc2perl {
@@ -416,10 +383,19 @@ sub jdbc2perl {
     ( uri => $uri, dbuser => $dbuser, dbpass => $dbpass );
 }
 
+sub _quote($) {
+    local $_ = shift;
+    s{\015}{\\r}g;
+    s{\011}{\\n}g; 
+    s{([:= \t\f])}{\\$1}g;
+    "$_";
+}
+
 sub dump {
     # purpose: prints the key set in property format 
     # paramtr: $fn (opt. IN): Name of file to print into
     # returns: number of things printed, undef for error.
+    local(*OUT); 
     my $self = shift;
     my $fn = shift || '-';	# defaults to stdout
 
@@ -427,7 +403,8 @@ sub dump {
     if ( open( OUT, ">$fn" ) ) {
 	print OUT "# generated ", scalar localtime(), "\n";
 	foreach my $key ( sort keys %{ $self->{'m_config'} } ) {
-	    print OUT "$key=", $self->{'m_config'}->{$key}, "\n"; 
+	    print OUT _quote($key), '=', 
+		_quote($self->{'m_config'}->{$key}), "\n"; 
 	}
 	close OUT;
     } else {
@@ -453,9 +430,9 @@ Work::Properties - parsing of Java property files from Perl.
 
     use Work::Properties qw(:parse);
 
-    $p = Work::Properties->new( );
-    $p = Work::Properties->new( $pflags );
-    $p = Work::Properties->new( $pflags, { 'weak' => 'property' } );
+    $p = Work::Properties->new( $conffile, undef );
+    $p->merge( $fn ); 
+    $p->reinit(); 
     $p->dump('-'); # dump all known properties on stdout
 
     something() if $p->property('pegasus.db');
@@ -464,6 +441,7 @@ Work::Properties - parsing of Java property files from Perl.
     foreach my $key ( $p->keyset('^pegasus\.rc') ) { ... }
 
     %x = $p->propertyset('pegasus.rc.');
+    do( $p->property('asdf') ) if $p->has('asdf'); 
 
 =head1 DESCRIPTION
 
@@ -513,11 +491,13 @@ properties.
 
 =back
 
-=head1 METHODS
+=head1 STATIC METHODS
 
 =over 4
 
-=item Work::Properties::parse_properties($fn)
+=item Work::Properties::parse_properties( $fn )
+
+=item Work::Properties::parse_properties( $fn, $hashref )
 
 The static method reads a property file, located by $fn, into a
 single-level Perl hash. If the optional second argument is specified,
@@ -525,32 +505,56 @@ the hash will be used to do variable substitutions from the the second
 argument properties or system properties. Not found properties are
 replaced by an empty string.
 
-=item new()
+Please note that the method throws an error, if the file does not exist
+or cannot be opened properly. It is up to the caller to catch this
+exception.
 
-The constructor takes an optional hash reference to an arbitrary list of
-weak properties (of least priority) for debugging purposes. When
-constructing an instance variable, the constructor will parse the
-contents of the file pointed to by I<pegasus.properties> (defaults to
-F<$PEGASUS_HOME/etc/properties>) and I<pegasus.user.properties> which defaults to
-F<$HOME/.pegasusrc>.
+=item Work::Properties::pegasusrc( )
 
-The commandline properties are added last, giving them the highest
-priority. The constructor arguments were added first, giving them the
-least priority. Priorities are important in case of duplicate keys, as
-higher priorities overwrite values from lower priorities. 
+=item Work::Properties::pegasusrc( $home )
 
-This prioritizing is as if the constructor was invoked with the property
-flag I<PARSE_ALL>.
+This simple static method constructs a filename where to find the
+C<$HOME/.pegasusrc> file. The location of the home directory can 
+be passed as optional argument, or auto-detected otherwise. 
 
-=item new( $pflags )
+=back
 
-If invoked with one of the property flags I<PARSE_NONE> or I<PARSE_ALL>, 
-only a subset of the properties above
-will be parsed. 
+=head1 INSTANCE METHODS
 
-=item new( $pflags, %extra )
+=over 4
 
-TBD: At what priority are the I<%extra> flags added? Likely at lowest.
+=item new( $conffile, $rundirpropfn )
+
+=item new( $conffile, $rundirpropfn, $pegasusrc )
+
+The constructor needs to know about the possible I<conf> command-line
+option file location, and the property file in the designated run
+directory. Either argument may be C<undef> to indicate that it does 
+not exist. As third, optional, argument, the constructor may take 
+the location of the C<$HOME/.pegasusrc> file, which is automatically
+constructed otherwise. 
+
+The constructor attempts to read from the defined file with the highest
+priority first. If the file does not exist or is not readable, it will
+throw an exception. If the file is empty (0 byte sized), it will warn
+and attempt to read the next lower priority (etc.). 
+
+Values from the C<%initial> hash are merged into the instance with the
+highest priority. 
+
+=item merge( $fn )
+
+The C<merge> method permits you to easily add properties from a file
+to the current instance. The new properties from the file take a higher
+priority than the existing one, in case keys exist in both. 
+
+Typically, you want to follow C<merge> with C<reinit> to give
+command-line properties precedence.
+
+=item reinit( )
+
+Will ensure that properties from C<%initial> are merged back into the
+instance, overwriting any existing properties with the same key.
 
 =item property( $key )
 
@@ -562,6 +566,11 @@ value will be set. The old value previously know is the result of the
 method.
 
 The emulated system properties will not be considered. 
+
+=item has( $key )
+
+This method checks for the existence of a given key in the properties.
+Unlike the C<property> method, it will not auto-vivify any key.
 
 =item keyset( $predicate )
 
@@ -627,17 +636,18 @@ Gaurang Mehta, C<gmehta at isi dot edu>
 
 =head1 COPYRIGHT AND LICENSE
 
-This file or a portion of this file is licensed under the terms of the
-Globus Toolkit Public License, found in file GTPL, or at
-http://www.globus.org/toolkit/download/license.html. This notice must
-appear in redistributions of this file, with or without modification.
+Copyright 2007-2011 University Of Southern California
 
-Redistributions of this Software, with or without modification, must
-reproduce the GTPL in: (1) the Software, or (2) the Documentation or
-some other similar material which is provided with the Software (if
-any).
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-Copyright 1999-2004 University of Chicago and The University of Southern
-California. All rights reserved.
+L<http://www.apache.org/licenses/LICENSE-2.0>
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 
 =cut

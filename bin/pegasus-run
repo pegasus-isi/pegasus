@@ -26,6 +26,7 @@
 use 5.006;
 use strict;
 use Carp;
+use Cwd;
 use File::Spec;
 use File::Basename qw(basename dirname);
 use Getopt::Long qw(:config bundling no_ignore_case);
@@ -40,42 +41,42 @@ BEGIN {
 use Work::Common;
 use Work::Properties qw(%initial); # parses -Dprop=val from @ARGV
 
+sub make_path($) {
+    my $p = File::Spec->catfile( Cwd::realpath( dirname($0) ), shift() ); 
+    warn "# make_path = $p\n" if $main::DEBUG; 
+    $p;
+}
 
 # constants
 sub usage(;$);			# { }
 $main::DEBUG = 0;		# for now
 my $condor;			# if set, use Condor for pegasus-monitord
 my $grid=0;                     # if set, disable grid checks;
-my $properties="";  	        # properties file for Pegasus
-my $default_tsd = File::Spec->catfile( File::Spec->rel2abs( 
-    File::Spec->canonpath(dirname($0)) ), 'pegasus-monitord' );
-my $dagman=File::Spec->catfile( File::Spec->rel2abs(
-				    File::Spec->canonpath(dirname($0)) ), 'pegasus-dagman' );
-    
-my $database=1  ;
-my $tsd;
-my $monitor;
-GetOptions( "help|h" => \&usage,
-	    "monitor|m=s" => \$tsd,
-	    "database!"=>\$database,
-	    "condor" => \$condor,
-	    "debug|d=o" => \$main::DEBUG,
-	    "verbose|v+" => \$main::DEBUG,
-            "grid!"=>\$grid,
-	    "M" => \$monitor,
-	    "conf|c=s"=> \$properties
-	    );
+my $database=1;			# ???
+my $default_tsd = make_path( 'pegasus-monitord' );
+my $dagman = make_path( 'pegasus-dagman' );
+my ($tsd,$monitor,$conffile); 
+GetOptions( "help|h" => \&usage
+	  , "monitor|m=s" => \$tsd
+	  , "database!" => \$database
+	  , "condor" => \$condor
+	  , "debug|d=o" => \$main::DEBUG
+	  , "verbose|v+" => \$main::DEBUG
+          , "grid!" => \$grid
+	  , 'conf|c=s' => \$conffile
+	  , "M" => \$monitor
+	  );
 
 # arguments
 my $run = shift || usage(1);
 usage(1) unless -d $run;
 my %config = slurp_braindb( $run ) or die "ERROR: open braindb: $!\n";
-# this assumes karan writes a merged system + user properties per workflow in the dag dir.
-my $newprops = {'pegasus.properties'=> $config{properties}};
-$newprops->{'pegasus.user.properties'}=$properties if defined $properties;
-my $props = Work::Properties->new($newprops);
 
-$tsd = $tsd || $props->property('pegasus.monitord') || $default_tsd;
+# pre-condition: The planner writes all properties per workflow into the DAG dir.
+my $props = Work::Properties->new( $conffile, $config{properties} );
+
+# if TSD is empty, fill in from default locations
+$tsd ||=  $props->property('pegasus.monitord') || $default_tsd;
 
 #
 # --- functions -------------------------------------------------
@@ -93,16 +94,16 @@ Mandatory arguments:
           ancilliary files related to the workflow.
 
 Optional arguments:
- -Dprop=val         explicit settings of a property (multi-option). 
- -h|--help          print this help message and exit.
- -m|--monitor l     uses the workflow monitor daemon installed as l, default
+ -Dprop=val         Explicit settings of a property (multi-option). 
+ -c|--conf fn	    Use file fn as pegasus properties file.
+ -h|--help          Print this help message and exit.
+ -m|--monitor l     Uses the workflow monitor daemon installed as l, default
                     is $default_tsd.
- -d|--debug lvl     sets the debug level (verbosity), default is $main::DEBUG. 
- -v|--verbose       raises debug level by 1, see --debug. 
- --condor           uses Condor to submit daemons (prototype).
+ -d|--debug lvl     Sets the debug level (verbosity), default is $main::DEBUG. 
+ -v|--verbose       Raises debug level by 1, see --debug. 
+ --condor           Uses Condor to submit daemons (prototype).
  --database|--nodatabase Make tailstad log events in the workflow database (default yes)
- --grid|--nogrid  Disable or Enable grid checks (default is disabled)
- -c|--conf fn	    use file fn as pegasus properties file.
+ --grid|--nogrid    Disable or enable grid checks (default is disabled)
 EOF
     exit($ec);
 }
@@ -163,14 +164,6 @@ sub create_args {
 
 # sanity check: lower umask
 umask 0002;
-
-#my $fin=$config{jsd};
-#open( F, ">>$fin" ) && close F;
-
-# if brain-dump failed, this will be undefined
-# if the user corrupted things, this will not be readable
-#die "ERROR: Unable to determine job state log\n" 
-#    unless ( $config{jsd} && -r $config{jsd} );
 
 # where were we...
 my $here = File::Spec->curdir();
@@ -258,7 +251,7 @@ if ( $config{dag} ) {
     }
 
     # find the workflow name and timestamp for pegasus-status
-    my $workflow=$config{pegasus_wf_name};
+    my $workflow=$config{'pegasus_wf_name'};
     my $time=$config{timestamp};
 
     # start DAGMan with default throttles
@@ -271,33 +264,29 @@ if ( $config{dag} ) {
     push( @args, @extra ) if @extra > 0;
     push( @args, '-d', 0+$main::DEBUG);
     push( @args, '--grid' ) if $grid;
-    push( @args, '--dagman',$dagman, $config{dag} );
+    push( @args, '--dagman', $dagman, $config{dag} );
 
-    print STDERR "# ", join(' ',@args), "\n" if $main::DEBUG;
+    print STDERR "# @args\n" if $main::DEBUG;
     system(@args) == 0 
 	or die( "ERROR: Running pegasus-submit-dag failed with ", parse_exit($?));
     print STDERR "# dagman is running\n" if $main::DEBUG;
 
     if ( $monitor ) {
+	if ( -x $tsd ) {
+	    # run pegasus-monitord to update job stats until DAGMan finishes
+	    my @tsdargs = ($tsd);
+	    push( @tsdargs, '--no-database' ) unless $database; 
+	    push( @tsdargs, $config{dag} . '.dagman.out' );
 
-    if ( -x $tsd ) {
-	my @tsdargs = ($tsd);
-	# run pegasus-monitord to update job stats until DAGMan finishes
-	if(!$database){
-	    #@args=create_args( $tsd,'--nodatabase', $config{dag} . '.dagman.out' );
-	    push(@tsdargs,'--no-database');
-	    push(@tsdargs, $config{dag} . '.dagman.out' );
-	} else {
-	    #@args = create_args( $tsd, ,"-n", $config{dag} . '.dagman.out' );
-	    push(@tsdargs, $config{dag} . '.dagman.out' );
+	    print STDERR "# @tsdargs\n" if $main::DEBUG;
+	    if ( system(@tsdargs) == 0 ) {
+		print STDERR "# $tsd is running\n" if $main::DEBUG;
+	    } else {
+		warn( "WARN: Running $tsd failed with ", parse_exit($?) );
+	    }
 	}
-	print STDERR "# ", join(' ',@tsdargs), "\n" if $main::DEBUG;
-	system(@tsdargs) == 0 
-	    or warn( "WARN: Running $tsd failed with ", parse_exit($?) );
-	print STDERR "# $tsd is running\n" if $main::DEBUG;
     }
 
-    }
     # next step
     if ( @rescue > 0 ) {
 	my $n = @rescue + 0;
