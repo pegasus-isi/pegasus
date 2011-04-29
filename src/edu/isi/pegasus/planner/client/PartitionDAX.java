@@ -79,11 +79,7 @@ public class PartitionDAX extends Executable {
      */
     private String mType;
 
-    /**
-     * The object holding all the properties pertaining to Pegasus.
-     */
-    private PegasusProperties mProps;
-
+    
     /**
      * The default constructor.
      */
@@ -98,8 +94,7 @@ public class PartitionDAX extends Executable {
      
     public void initalize(String[] opts){
     	super.initialize(opts);
-    	mProps     = PegasusProperties.nonSingletonInstance();
-        mDAXFile   = null;
+    	mDAXFile   = null;
         mDirectory = ".";
         mType      = DEFAULT_PARTITIONER_TYPE;
     }
