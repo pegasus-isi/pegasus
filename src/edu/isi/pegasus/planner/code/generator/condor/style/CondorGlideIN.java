@@ -110,6 +110,9 @@ public class CondorGlideIN extends Abstract {
             throw new CondorStyleException( errorMessage( job, STYLE_NAME, universe ) );
         }
 
+        //the condor universe that is determined
+        //should be set back in the job.
+        job.condorVariables.construct( Condor.UNIVERSE_KEY, universe );
 
     }
 

@@ -306,6 +306,13 @@ public abstract class Abstract implements JobAggregator {
                 ipFiles.addAll( job.getInputFiles() );
                 opFiles.addAll( job.getOutputFiles() );
                 mergedJob.add(job);
+
+                //we need to merge the profiles from the constituent
+                //jobs now, rather in function makeAbstractAggreagatedJobConcrete
+                //JIRA PM-368
+                //merge profiles for all jobs
+                mergedJob.mergeProfiles( job );
+
         }
 
         //overriding the input files, output files, id
@@ -365,16 +372,10 @@ public abstract class Abstract implements JobAggregator {
 
             //traverse throught the jobs to determine input/output files
             //and merge the profiles for the jobs
-            boolean merge = false;
             for( Iterator it = job.constituentJobsIterator(); it.hasNext(); ) {
                 Job constitutentJob = (Job) it.next();
 
-                //merge profiles for all jobs except the first
-//                if( merge ) { mergedJob.mergeProfiles( job ); }
-                //merge profiles for all jobs
-                job.mergeProfiles( constitutentJob );
 
-                merge = true;
 
                 //handle stdin
                 if( constitutentJob instanceof AggregatedJob ){
