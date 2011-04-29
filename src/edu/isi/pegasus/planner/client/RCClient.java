@@ -125,6 +125,11 @@ public class RCClient extends Toolkit {
     private boolean m_batch;
     
     /**
+     * The object holding all the properties pertaining to Pegasus.
+     */
+    protected PegasusProperties m_pegasus_props;
+    
+    /**
      * Reference to the property file passed using the --conf option
      */
     private String m_conf_property_file = null;
@@ -201,22 +206,34 @@ public class RCClient extends Toolkit {
      */
     public RCClient(String appName) {
 	super(appName);
-
-	m_rc = null;
-	m_prefs = new HashMap();
-	m_batch = false;
-	m_total_lines_worked = 0;
-	m_total_lines_succ_worked = 0;
-	// private logger
-	m_log = Logger.getLogger(RCClient.class);
-	m_rls_logger = LogManagerFactory.loadSingletonInstance();
-	m_rls_logger.setLevel(Level.WARN);
-	m_rls_logger.logEventStart("pegasus-rc-client", "planner.version",
-		Version.instance().toString());
-	m_log.debug("starting instance");
-	determineChunkFactor();
     }
-
+    
+    /**
+     * Initialize the RCClient object 
+     * @param opts  the command line argument passed by the user
+     * @param confChar the short option corresponding the conf property.
+     */
+    
+    private void initialize(String [] opts , char confChar){
+    	m_rc = null;
+    	m_prefs = new HashMap();
+    	m_batch = false;
+    	m_total_lines_worked = 0;
+    	m_total_lines_succ_worked = 0;
+    	// private logger
+    	m_log = Logger.getLogger(RCClient.class);
+    	String propertyFile =lookupConfProperty(opts, confChar);
+        m_pegasus_props = PegasusProperties.getInstance(propertyFile);
+    	m_rls_logger = LogManagerFactory.loadSingletonInstance(m_pegasus_props);
+    	m_rls_logger.setLevel(Level.WARN);
+    	m_rls_logger.logEventStart("pegasus-rc-client", "planner.version",
+    		Version.instance().toString());
+    	m_log.debug("starting instance");
+    	determineChunkFactor();
+    }
+    
+    
+    
     /**
      * Prints the usage string on stdout.
      */
@@ -327,15 +344,11 @@ public class RCClient extends Toolkit {
      * 
      * @see org.griphyn.vdl.util.ChimeraProperties
      */
-    void connect() throws ClassNotFoundException, IOException,
+    void connect(PegasusProperties properties ) throws ClassNotFoundException, IOException,
 	    NoSuchMethodException, InstantiationException,
 	    IllegalAccessException, InvocationTargetException,
 	    MissingResourceException {
-    PegasusProperties props = PegasusProperties.getInstance();
-    if(this.m_conf_property_file != null){
-    	updateConfProperties(props, this.m_conf_property_file);
-    }
-	m_rc = ReplicaFactory.loadInstance(props);
+    m_rc = ReplicaFactory.loadInstance(properties);
 
 	// auto-disconnect, should we forget it, or die in an orderly fashion
 	Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -944,26 +957,6 @@ public class RCClient extends Toolkit {
     }
     
     /**
-     * Updates the pegasus properties with the values specified in the property file 
-     * @param propertyFile the user specified property file
-     * @throws IOException
-     */
-    private void updateConfProperties(PegasusProperties properties, String propertyFile  ) throws IOException{
-    	File props = new File(propertyFile);
-    	if(props.exists()){
-    		Properties temp = new Properties();
-    		InputStream stream = new BufferedInputStream( new FileInputStream(props) );
-    		temp.load( stream );
-	    	stream.close();
-	    	for ( Enumeration e = temp.propertyNames(); e.hasMoreElements(); ) {
-	    	      String key = (String) e.nextElement();
-	    	      String value = temp.getProperty(key);
-	    	      properties.setProperty(key, value);
-	    	}
-		}
-    }
-
-    /**
      * Manipulate entries in a given replica catalog implementation.
      * 
      * @param args
@@ -977,12 +970,12 @@ public class RCClient extends Toolkit {
 	try {
 	    // create an instance of self
 	    me = new RCClient("pegasus-rc-client");
+	    me.initialize(args ,'c');
 	    if (args.length == 0) {
 		me.m_log.error("Please provide the required options.");
 		me.showUsage();
 		System.exit(1);
 	    }
-	    me.m_conf_property_file = me.lookupConfProperty(args, 'c');
 	    // get the command line options
 	    Getopt opts = new Getopt(me.m_application, args, "f:hp:vVi:d:l:c:",
 		    me.generateValidOptions());
@@ -1046,7 +1039,7 @@ public class RCClient extends Toolkit {
 	    // Set verbosity level
 	    me.setLevel(level);
 	    // now work with me
-	    me.connect();
+	    me.connect(me.m_pegasus_props);
 	    RCClient.log(Level.DEBUG, "connected to backend");
 	    // are there any remaining CLI arguments?
 	    if (opts.getOptind() < args.length) {
