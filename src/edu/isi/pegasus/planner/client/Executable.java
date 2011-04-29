@@ -90,7 +90,7 @@ public abstract class Executable {
      * @param confChar the short option corresponding to the conf property
      * @return
      */
-    private String lookupConfProperty(String[] opts , char confChar){
+    protected String lookupConfProperty(String[] opts , char confChar){
     	LongOpt[] longOptions = new LongOpt[1 ];
     	longOptions[ 0 ] = new LongOpt( "conf", LongOpt.REQUIRED_ARGUMENT, null,confChar );
     	Getopt g = new Getopt("Executable", opts, confChar+":", longOptions, false);
