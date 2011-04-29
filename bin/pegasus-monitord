@@ -39,7 +39,7 @@ import logging
 import calendar
 import commands
 import datetime
-import operator
+#import operator
 import optparse
 import urlparse
 
@@ -60,7 +60,7 @@ _LEVELS = (logging.ERROR, logging.WARN, logging.INFO, logging.DEBUG)
 prog_base = os.path.split(sys.argv[0])[1]
 
 # Import our modules
-import common	       		# Takes care of setting up PEGASUS_HOME and PYTHONPATH
+import common   # Takes care of setting up PEGASUS_HOME and PYTHONPATH
 from Pegasus.tools import utils
 from Pegasus.tools import properties
 from Pegasus.tools import kickstart_parser
@@ -107,12 +107,10 @@ if sys.version_info < (2, 5):
     os.SEEK_CUR = 1
 
 # Compile our regular expressions
-
-# Used in the initialization code of the Workflow class, while reading the DAG file
+# Used while reading the DAG file
 re_parse_dag_submit_files = re.compile(r"JOB\s+(\S+)\s(\S+)(\s+DONE)?", re.IGNORECASE)
 re_parse_dag_script = re.compile(r"SCRIPT (?:PRE|POST)\s+(\S+)\s(\S+)\s(.*)", re.IGNORECASE)
 re_parse_dag_subdag = re.compile(r"SUBDAG EXTERNAL\s+(\S+)\s(\S+)\s?(?:DIR)?\s?(\S+)?", re.IGNORECASE)
-#re_parse_dag_edge = re.compile(r"PARENT\s+(\S+)\s+CHILD\s+(\S+)") # Done by pegasus-plan now
 
 # Used in out2log
 re_remove_extensions = re.compile(r"(?:\.(?:rescue|dag))+$")
@@ -124,7 +122,6 @@ re_clean_content = re.compile(r"([^-a-zA-z0-9_\s.,\[\]^\*\?\/\+])")
 re_rsl_string = re.compile(r"^\s*globusrsl\W", re.IGNORECASE)
 re_rsl_clean = re.compile(r"([-_])")
 re_site_parse_gvds = re.compile(r"^\s*\+(pegasus|wf)_(site|resource)\s*=\s*([\'\"])?(\S+)\3")
-re_parse_jobtype = re.compile(r"^\s*\+pegasus_job_class\s*=\s*(\S+)")
 re_parse_transformation = re.compile(r"^\s*\+pegasus_wf_xformation\s*=\s*(\S+)")
 re_parse_executable = re.compile(r"^\s*executable\s*=\s*(\S+)")
 re_parse_arguments = re.compile(r'^\s*arguments\s*=\s*"([^"\r\n]*)"')
@@ -158,55 +155,44 @@ re_parse_condor_logfile_insane = re.compile(r"\d{2}\s{3,}(\S+)")
 re_parse_multiline_files = re.compile(r"All DAG node user log files:")
 
 # Constants
-logbase = "monitord.log" 	# Basename of daemon logfile
+logbase = "monitord.log"       # Basename of daemon logfile
 good_rsl = {"maxcputime": 1, "maxtime":1, "maxwalltime": 1}
 speak = "PMD/1.0"
-PRESCRIPT_TASK_ID = -1			# id for prescript tasks
-POSTSCRIPT_TASK_ID = -2			# id for postscript tasks
-MONITORD_STATE_FILE = "monitord.info" 	# filename for writing monitord state information
-MAX_SLEEP_TIME = 10			# in seconds
+PRESCRIPT_TASK_ID = -1                  # id for prescript tasks
+POSTSCRIPT_TASK_ID = -2                 # id for postscript tasks
+MONITORD_STATE_FILE = "monitord.info"   # filename for writing monitord state information
+MAX_SLEEP_TIME = 10     	        # in seconds
 
 unsubmitted_events = {"UN_READY": 1,
-		      "PRE_SCRIPT_STARTED": 1,
-		      "PRE_SCRIPT_SUCCESS": 1,
-		      "PRE_SCRIPT_FAILURE": 1}
+                      "PRE_SCRIPT_STARTED": 1,
+                      "PRE_SCRIPT_SUCCESS": 1,
+                      "PRE_SCRIPT_FAILURE": 1}
 
 # Global variables
-wfs = []			# list of workflow entries monitord is tracking
-tracked_workflows = []		# list of workflows we have started tracking
-follow_subworkflows = True	# Flag for tracking sub-workflows
-root_wf_id = None		# Workflow id of the root workflow
-replay_mode = 0			# disable checking if DAGMan's pid is gone
-keep_state = 0			# Flag for keeping a Workflow's state across several DAGMan start/stop cycles
-db_stats = 'no'			# collect and print database stats at the end of execution
-no_events = False		# Flag for disabling event output altogether
-event_dest = None		# URL containing the destination of the events
-encoding = None			# Way to encode the data
-monitord_exit_code = 0		# Exit code for pegasus-monitord
+wfs = []                        # list of workflow entries monitord is tracking
+tracked_workflows = []          # list of workflows we have started tracking
+follow_subworkflows = True      # Flag for tracking sub-workflows
+root_wf_id = None               # Workflow id of the root workflow
+replay_mode = 0                 # disable checking if DAGMan's pid is gone
+keep_state = 0                  # Flag for keeping a Workflow's state across several DAGMan start/stop cycles
+db_stats = 'no'                 # collect and print database stats at the end of execution
+no_events = False               # Flag for disabling event output altogether
+event_dest = None               # URL containing the destination of the events
+encoding = None	                # Way to encode the data
+monitord_exit_code = 0          # Exit code for pegasus-monitord
 
-wf_event_sink = None 		# Where wf events go
-STAMPEDE_NS = "stampede."	# Event name-space
+wf_event_sink = None            # Where wf events go
+STAMPEDE_NS = "stampede."       # Event name-space
 
 # Revision handling
 revision = "$Revision: 2012 $" # Let cvs handle this, do not edit manually
 
 # Remaining variables
-out = None			# .dag.dagman.out file from command-line
-run = None			# run directory from command-line dagman.out file
-server = None			# server socket
-sockfn = None			# socket filename
+out = None                      # .dag.dagman.out file from command-line
+run = None                      # run directory from command-line dagman.out file
+server = None                   # server socket
+sockfn = None                   # socket filename
 condor_dagman_executable = None	# condor_dagman binary location
-
-jobtypes = {0: "unassigned",
-	    1: "compute",
-	    2: "stage-in",
-	    3: "stage-out",
-	    4: "replica registration",
-	    5: "inter pool",
-	    6: "create dir",
-	    7: "staged compute",
-	    8: "cleanup",
-	    9: "symlink stage-in job"}
 
 # Find condor_dagman
 condor_dagman_executable = utils.find_exec("condor_dagman")
@@ -220,8 +206,9 @@ class OutputURL:
     """
     def __init__(self, url):
 
-        # Fix for Python 2.5 and earlier 2.6, as their urlparse module does not handle
-        # these schemes correctly (netloc empty and everything after the scheme in path)
+        # Fix for Python 2.5 and earlier 2.6, as their urlparse module
+        # does not handle these schemes correctly (netloc empty and
+        # everything after the scheme in path)
         if (url.startswith("amqp:")
             or url.startswith("mysql:")
             or url.startswith("x-tcp:")
@@ -249,15 +236,24 @@ class OutputURL:
             self.port = None
 
 class EventSink(object):
+    """
+    Base class for an Event Sink.
+    """
     def __init__(self):
         name = self.__class__.__name__.split('.')[-1]
         self._log = logging.getLogger("pegasus.monitord." + name)
         self._isdbg = self._log.isEnabledFor(logging.DEBUG)
         
     def send(self, event, kw):
+        """
+        Clients call this function to send an event to the sink.
+        """
         pass
 
     def close(self):
+        """
+        Clients call this function to close the output to this sink.
+        """
         pass
 
 class EmptySink(EventSink):
@@ -323,6 +319,9 @@ class FileEventSink(EventSink):
         self._log.debug("close.end")
 
 class TCPEventSink(EventSink):
+    """
+    Write wflow event logs to a host:port.
+    """
     def __init__(self, host, port, encoder=None, **kw):
         super(TCPEventSink, self).__init__()
         self._encoder = encoder
@@ -342,6 +341,9 @@ class TCPEventSink(EventSink):
         self._log.debug("close.end")
 
 class AMQPEventSink(EventSink):
+    """
+    Write wflow event logs to an AMQP server.
+    """
     EXCH_OPTS = {'type' : 'topic'}
     def __init__(self, host, port, exch=None, encoder=None,
                  userid='guest', password='guest', virtual_host='/',
@@ -349,8 +351,9 @@ class AMQPEventSink(EventSink):
         super(AMQPEventSink, self).__init__()
         self._encoder = encoder
         self._conn = amqp.Connection(host="%s:%s" % (host, port),
-                                     userid=userid, password=password, virtual_host=virtual_host,
-                                     ssl=ssl, connect_timeout=connect_timeout, **kw)
+                                     userid=userid, password=password,
+                                     virtual_host=virtual_host, ssl=ssl,
+                                     connect_timeout=connect_timeout, **kw)
         self._channel = self._conn.channel()
         self._exch = exch
         self._channel.exchange_declare(exch, **self.EXCH_OPTS)
@@ -371,6 +374,10 @@ class AMQPEventSink(EventSink):
         self._log.debug("close.end")
 
 def get_default_sqlite_db(dagman_file):
+    """
+    This function returns the default connection string for a sqlite
+    database.
+    """
     return "sqlite:///" + dagman_file[:dagman_file.find(".dag.dagman.out")] + ".stampede.db"
 
 def bson_encode(event, **kw):
@@ -392,13 +399,14 @@ def create_wf_event_sink(dest, enc=None, **kw):
     def pick_encfn(enc_name):
         ##enc_name = url.query.get('enc', 'bp').lower()
         if enc_name is None or enc_name == 'bp':
-            assert nlapi is not None, "NetLogger encoding selected, but cannot "+\
-                   "import nlapi library"
+            assert nlapi is not None, "NetLogger encoding selected, "+\
+                "but cannot import nlapi library"
             # NetLogger name=value encoding
             encfn = nlapi.Log(level=nlapi.Level.ALL, prefix=STAMPEDE_NS)
         elif enc_name == 'bson':
             # BSON
-            assert bson is not None, "BSON encoding selected, but cannot import bson library"
+            assert bson is not None, "BSON encoding selected, "+\
+                "but cannot import bson library"
             encfn = bson_encode
         else:
             raise ValueError("Unknown encoding '%s'" % (enc_name))
@@ -417,12 +425,14 @@ def create_wf_event_sink(dest, enc=None, **kw):
         sink = TCPEventSink(url.host, url.port, encoder=pick_encfn(enc), **kw)
         _type, _name = "network", "%s:%s" % (url.host, url.port)
     elif url.scheme == 'amqp':
-        assert amqp is not None, "AMQP destination selected, but cannot import AMQP library"
+        assert amqp is not None, "AMQP destination selected, "+\
+            "but cannot import AMQP library"
         if url.port is None:
             url.port = 5672 # RabbitMQ default
         while url.path.startswith('/'):
             url.path = url.path[1:]
-        sink = AMQPEventSink(url.host, url.port, exch=url.path, encoder=pick_encfn(enc), **kw)
+        sink = AMQPEventSink(url.host, url.port, exch=url.path,
+                             encoder=pick_encfn(enc), **kw)
         _type, _name="AMQP", "%s:%s/%s" % (url.host, url.port, url.path)
     else:
         sink = DBEventSink(dest, **kw)
@@ -440,34 +450,21 @@ def finish_stampede_loader():
     if wf_event_sink is not None:
         try:
             if db_stats == 'yes' and logger.getEffectiveLevel() > logging.INFO:
-                # Make sure log level is enough to display database benchmarking information
+                # Make sure log level is enough to display database
+                # benchmarking information
                 logger.setLevel(logging.INFO)
             wf_event_sink.close()
         except:
-            logger.warning("could not call the finish method in the nl loader class... exiting anyway")
-
-def translate_job_type(my_jobtype_id):
-    """
-    This function translates an integer jobtype into its more
-    user-friendly string representation that can be used in databases.
-    It returns None, if the mapping cannot be done.
-    """
-    try:
-	my_jt = int(my_jobtype_id)
-    except:
-	# Failed to convert string into integer
-	return None
-    if my_jt in jobtypes:
-	# Found it, return the appropriate string
-	return jobtypes[my_jt]
-    # my_jt is not in the jobtypes conversion map, return None
-    return None
+            logger.warning("could not call the finish method "+\
+                               "in the nl loader class... exiting anyway")
 
 def out2log(rundir, outfile):
-    # purpose: infer output symlink for Condor common user log
-    # paramtr: rundir (IN): the run directory
-    # paramtr: outfile (IN): the name of the out file we use
-    # returns: the name of the log file to use
+    """
+    purpose: infer output symlink for Condor common user log
+    paramtr: rundir (IN): the run directory
+    paramtr: outfile (IN): the name of the out file we use
+    returns: the name of the log file to use
+    """
 
     # Get the basename
     my_base = os.path.basename(outfile)
@@ -492,17 +489,17 @@ class Job:
     # finished
 
     def __init__(self, wf_uuid, name, job_submit_seq):
-	"""
-	This function initializes the job parameters with the information
-	available when a job is detected in the "PRE_SCRIPT_STARTED" or the
-	"SUBMIT" state. Other parameters will remain None until a job
-	finishes and a kickstart output file can be parsed.
-	"""
-	self._wf_uuid = wf_uuid
-	self._exec_job_id = name
-	self._job_submit_seq = job_submit_seq
+        """
+        This function initializes the job parameters with the
+        information available when a job is detected in the
+        "PRE_SCRIPT_STARTED" or the "SUBMIT" state. Other parameters
+        will remain None until a job finishes and a kickstart output
+        file can be parsed.
+        """
+        self._wf_uuid = wf_uuid
+        self._exec_job_id = name
+        self._job_submit_seq = job_submit_seq
         self._sched_id = None
-        self._jobtype = None
         self._clustered = None
         self._site_name = None
         self._host_id = None
@@ -532,59 +529,59 @@ class Job:
         self._job_dagman_out = None		# _CONDOR_DAGMAN_LOG from environment line for pegasus-plan and subdax_ jobs
 
     def set_job_state(self, job_state, timestamp, status):
-	"""
-	This function sets the job state for this job. It also updates the
-        times the main job and PRE/POST scripts start and finish.
-	"""
-	self._job_state = job_state
-	self._job_state_timestamp = int(timestamp)
-	# Increment job state sequence
-	self._job_state_seq = self._job_state_seq + 1
+        """
+        This function sets the job state for this job. It also updates
+        the times the main job and PRE/POST scripts start and finish.
+        """
+        self._job_state = job_state
+        self._job_state_timestamp = int(timestamp)
+        # Increment job state sequence
+        self._job_state_seq = self._job_state_seq + 1
 
-	# Record timestamp for certain job states
-	if job_state == "PRE_SCRIPT_STARTED":
-	    self._pre_script_start = int(timestamp)
-	elif job_state == "PRE_SCRIPT_SUCCESS" or job_state == "PRE_SCRIPT_FAILURE":
-	    self._pre_script_done = int(timestamp)
-	    self._pre_script_exitcode = status
-	elif job_state == "POST_SCRIPT_STARTED":
-	    self._post_script_start = int(timestamp)
-	elif job_state == "POST_SCRIPT_TERMINATED":
-	    self._post_script_done = int(timestamp)
-	elif job_state == "EXECUTE":
-	    self._main_job_start = int(timestamp)
-	elif job_state == "JOB_TERMINATED":
-	    self._main_job_done = int(timestamp)
-	elif job_state == "JOB_SUCCESS" or job_state == "JOB_FAILURE":
-	    self._main_job_exitcode = status
-	elif job_state == "POST_SCRIPT_SUCCESS" or job_state == "POST_SCRIPT_FAILURE":
-	    self._post_script_exitcode = status
+        # Record timestamp for certain job states
+        if job_state == "PRE_SCRIPT_STARTED":
+            self._pre_script_start = int(timestamp)
+        elif job_state == "PRE_SCRIPT_SUCCESS" or job_state == "PRE_SCRIPT_FAILURE":
+            self._pre_script_done = int(timestamp)
+            self._pre_script_exitcode = status
+        elif job_state == "POST_SCRIPT_STARTED":
+            self._post_script_start = int(timestamp)
+        elif job_state == "POST_SCRIPT_TERMINATED":
+            self._post_script_done = int(timestamp)
+        elif job_state == "EXECUTE":
+            self._main_job_start = int(timestamp)
+        elif job_state == "JOB_TERMINATED":
+            self._main_job_done = int(timestamp)
+        elif job_state == "JOB_SUCCESS" or job_state == "JOB_FAILURE":
+            self._main_job_exitcode = status
+        elif job_state == "POST_SCRIPT_SUCCESS" or job_state == "POST_SCRIPT_FAILURE":
+            self._post_script_exitcode = status
 
     def parse_sub_file(self, stamp, submit_file):
-	"""
-	This function parses a job's submit file and returns job
-	planning information. In addition, we try to populate the job
-	type from information in the submit file.
-	# paramtr: stamp(IN): timestamp associated with the log line
-	# paramtr: submit_file(IN): submit file name
-	# globals: good_rsl(IN): which RSL keys constitute time requirements
-	# returns: (largest job time requirement in minutes, destination site)
-	# returns: (None, None) if sub file not found
-	"""
+        """
+        This function parses a job's submit file and returns job
+        planning information. In addition, we try to populate the job
+        type from information in the submit file.
+        # paramtr: stamp(IN): timestamp associated with the log line
+        # paramtr: submit_file(IN): submit file name
+        # globals: good_rsl(IN): which RSL keys constitute time requirements
+        # returns: (largest job time requirement in minutes, destination site)
+        # returns: (None, None) if sub file not found
+        """
         parse_environment = False
-	my_result = None
-	my_site = None
+        my_result = None
+        my_site = None
 
-	# Update stat record for submit file
-	try:
-	    my_stats = os.stat(submit_file)
-	except:
+        # Update stat record for submit file
+        try:
+            my_stats = os.stat(submit_file)
+        except:
 	    # Could not stat file
-	    logger.error("stat %s" % (submit_file))
-	    return my_result, my_site
+            logger.error("stat %s" % (submit_file))
+            return my_result, my_site
 
         # Check submit file timestamp
-	if stamp < my_stats[8]: #mtime
+        if stamp < my_stats[8]: #mtime
             logger.info("%s: submit file was modified after job ran: job timestamp=%d, sub file mtime=%d, diff = %d" % (submit_file, stamp, my_stats[8], my_stats[8]-stamp))
 
         # Check if we need to parse the environment line
@@ -592,46 +589,39 @@ class Job:
             parse_environment = True
 
         try:
-	    SUB = open(submit_file, "r")
-	except:
-	    logger.error("unable to parse %s" % (submit_file))
-	    return my_result, my_site
+            SUB = open(submit_file, "r")
+        except:
+            logger.error("unable to parse %s" % (submit_file))
+            return my_result, my_site
 
         # Parse submit file
-	for my_line in SUB:
-	    if re_rsl_string.search(my_line):
-		# Found RSL string, do parse now
-		for my_match in re.findall(r"\(([^)]+)\)", my_line):
-		    # Split into key and value
-		    my_k, my_v = my_match.split("=", 1)
-		    # Remove _- characters from string
-		    my_k = re_rsl_clean.sub('', my_k)
-		    if my_k.lower() in good_rsl and my_v > my_result:
-			try:
-			    my_result = int(my_v)
-			except:
-			    my_result = None
-	    elif re_site_parse_gvds.search(my_line):
-		# GVDS agreement
-		my_site = re_site_parse_gvds.search(my_line).group(4)
+        for my_line in SUB:
+            if re_rsl_string.search(my_line):
+                # Found RSL string, do parse now
+                for my_match in re.findall(r"\(([^)]+)\)", my_line):
+                    # Split into key and value
+                    my_k, my_v = my_match.split("=", 1)
+                    # Remove _- characters from string
+                    my_k = re_rsl_clean.sub('', my_k)
+                    if my_k.lower() in good_rsl and my_v > my_result:
+                        try:
+                            my_result = int(my_v)
+                        except:
+                            my_result = None
+            elif re_site_parse_gvds.search(my_line):
+                # GVDS agreement
+                my_site = re_site_parse_gvds.search(my_line).group(4)
                 self._site_name = my_site
-	    elif re_site_parse_euryale.search(my_line):
-		# Euryale specific comment
-		my_site = re_site_parse_euryale.search(my_line).group(1)
+            elif re_site_parse_euryale.search(my_line):
+                # Euryale specific comment
+                my_site = re_site_parse_euryale.search(my_line).group(1)
                 self._site_name = my_site
-	    elif re_parse_jobtype.search(my_line):
-		# Found line with jobtype information
-		my_jobtype_id = re_parse_jobtype.search(my_line).group(1)
-		# Convert jobtype_id into a string jobtype
-		my_jobtype = translate_job_type(my_jobtype_id)
-		if my_jobtype is not None:
-		    self._jobtype = my_jobtype
-	    elif re_parse_transformation.search(my_line):
-		# Found line with job transformation
-		my_transformation = re_parse_transformation.search(my_line).group(1)
-		# Remove quotes, if any
-		my_transformation = my_transformation.strip('"')
-		self._main_job_transformation = my_transformation
+            elif re_parse_transformation.search(my_line):
+                # Found line with job transformation
+                my_transformation = re_parse_transformation.search(my_line).group(1)
+                # Remove quotes, if any
+                my_transformation = my_transformation.strip('"')
+                self._main_job_transformation = my_transformation
             elif re_parse_executable.search(my_line):
                 # Found line with executable
                 my_executable = re_parse_executable.search(my_line).group(1)
@@ -675,70 +665,70 @@ class Job:
                         if sub_prop.group(1) == "_CONDOR_DAGMAN_LOG":
                             self._job_dagman_out = sub_prop.group(2)
 
-	SUB.close()
+        SUB.close()
 
-	# All done!
-	return my_result, my_site
+        # All done!
+        return my_result, my_site
 
     def extract_job_info(self, buffer):
-	"""
-	This function reads the output from the kickstart output parser and
-	extracts the job information for the Stampede schema.
+        """
+        This function reads the output from the kickstart output parser and
+        extracts the job information for the Stampede schema.
 
         Returns True if successful, or None if an error occurs.
-	"""
+        """
 
-	# Check if we have anything
-	if len(buffer) == 0:
-	    return None
+        # Check if we have anything
+        if len(buffer) == 0:
+            return None
 
-	# Check if first record is an invocation record (it should be!)
-	if not "invocation" in buffer[0]:
-	    logger.debug("cannot find invocation record!")
-	    return None
+        # Check if first record is an invocation record (it should be!)
+        if not "invocation" in buffer[0]:
+            logger.debug("cannot find invocation record!")
+            return None
 
-	# Ok, we have an invocation record, extract the information we
+        # Ok, we have an invocation record, extract the information we
         # need. Note that this may overwrite information obtained from
         # the submit file (e.g. the site_name).
-	my_record = buffer[0]
-	if "resource" in my_record:
-	    self._site_name = my_record["resource"]
-	if "user" in my_record:
-	    self._remote_user = my_record["user"]
-	if "cwd" in my_record:
-	    self._remote_working_dir = my_record["cwd"]
-	if "hostname" in my_record:
-	    self._host_id = my_record["hostname"]
+        my_record = buffer[0]
+        if "resource" in my_record:
+            self._site_name = my_record["resource"]
+        if "user" in my_record:
+            self._remote_user = my_record["user"]
+        if "cwd" in my_record:
+            self._remote_working_dir = my_record["cwd"]
+        if "hostname" in my_record:
+            self._host_id = my_record["hostname"]
 
-	# Set clustered flag
-	if len(buffer) > 1:
-	    self._clustered = True
-	else:
-	    self._clustered = False
+        # Set clustered flag
+        if len(buffer) > 1:
+            self._clustered = True
+        else:
+            self._clustered = False
 
-	# Fill in cluster parameters
-	if "clustered" in buffer[len(buffer) - 1]:
-	    my_record = buffer[len(buffer) - 1]
-	    if "duration" in my_record:
-		self._cluster_duration = my_record["duration"]
-	    if "start" in my_record:
-		# Convert timestamp to EPOCH
-		my_start = utils.epochdate(my_record["start"])
-		if my_start is not None:
-		    self._cluster_start_time = my_start
+        # Fill in cluster parameters
+        if "clustered" in buffer[len(buffer) - 1]:
+            my_record = buffer[len(buffer) - 1]
+            if "duration" in my_record:
+                self._cluster_duration = my_record["duration"]
+            if "start" in my_record:
+                # Convert timestamp to EPOCH
+                my_start = utils.epochdate(my_record["start"])
+                if my_start is not None:
+                    self._cluster_start_time = my_start
 
-	# Done populating Job class with information from the kickstart output file
-	return True
-	
+        # Done populating Job class with information from the kickstart output file
+        return True
+
 class Workflow:
     """
     Class used to keep everything needed to track a particular workflow
     """
 
     def output_to_db(self, event, kwargs):
-	"""
-	This function sends an NetLogger event to the loader class.
-	"""
+        """
+        This function sends an NetLogger event to the loader class.
+        """
         # Sanity check (should also be done elsewhere, but repeated here)
         if self._sink is None:
             return
@@ -746,32 +736,10 @@ class Workflow:
         # Send event to corresponding sink
         self._sink.send(event, kwargs)
 
-    def db_send_edge(self, parent, child):
-	"""
-	This function sends to the DB information about a parent-child relationship.
-	"""
-	# Check if database is configured
-	if self._sink is None:
-	    return
-	# Make sure parameters are not None
-	if parent is None or child is None:
-	    return
-
-	# Start empty
-	kwargs = {}
-	# Make sure we include the wf_uuid
-	kwargs["wf__id"] = self._wf_uuid
-	kwargs["ts"] = self._current_timestamp
-        kwargs["parent_exec_job__id"] = parent
-        kwargs["child_exec_job__id"] = child
-	
-	# Send workflow state event to database
-	self.output_to_db("job.edge", kwargs)
-
     def parse_dag_file(self, dag_file):
-	"""
-	This function parses the DAG file and determines submit file locations
-	"""
+        """
+        This function parses the DAG file and determines submit file locations
+        """
 
         # If we already have jobs in our _job_info dictionary, skip reading the dag file
         if len(self._job_info) > 0:
@@ -780,54 +748,54 @@ class Workflow:
 
         dag_file = os.path.join(self._run_dir, dag_file)
 
-	try:
-	    DAG = open(dag_file, "r")
-	except:
-	    logger.warning("unable to read %s!" % (dag_file))
-	else:
-	    for dag_line in DAG:
-		if (dag_line.lower()).find("job") >= 0:
-		    # Found Job line, parse it
-		    my_match = re_parse_dag_submit_files.search(dag_line)
-		    if my_match:
-			if not my_match.group(3):
-			    my_jobid = my_match.group(1)
-			    my_sub = os.path.join(self._run_dir, my_match.group(2))
-			    # Found submit file for not-DONE job
-			    if my_jobid in self._job_info:
-				# Entry already exists for this job, just collect submit file info
-				self._job_info[my_jobid][0] = my_sub
-			    else:
-				# No entry for this job, let's create a new one
-				self._job_info[my_jobid] = [my_sub, None, None, None, None, False, None, None]
+        try:
+            DAG = open(dag_file, "r")
+        except:
+            logger.warning("unable to read %s!" % (dag_file))
+        else:
+            for dag_line in DAG:
+                if (dag_line.lower()).find("job") >= 0:
+                    # Found Job line, parse it
+                    my_match = re_parse_dag_submit_files.search(dag_line)
+                    if my_match:
+                        if not my_match.group(3):
+                            my_jobid = my_match.group(1)
+                            my_sub = os.path.join(self._run_dir, my_match.group(2))
+                            # Found submit file for not-DONE job
+                            if my_jobid in self._job_info:
+                                # Entry already exists for this job, just collect submit file info
+                                self._job_info[my_jobid][0] = my_sub
+                            else:
+                                # No entry for this job, let's create a new one
+                                self._job_info[my_jobid] = [my_sub, None, None, None, None, False, None, None]
                 elif (dag_line.lower()).find("script post") >= 0:
-		    # Found SCRIPT POST line, parse it
-		    my_match = re_parse_dag_script.search(dag_line)
-		    if my_match:
-			my_jobid = my_match.group(1)
-			my_exec = my_match.group(2)
-			my_args = my_match.group(3)
-			if my_jobid in self._job_info:
-			    # Entry already exists for this job, just collect post script info
-			    self._job_info[my_jobid][3] = my_exec
-			    self._job_info[my_jobid][4] = my_args
-			else:
-			    # No entry for this job, let's create a new one
-			    self._job_info[my_jobid] = [None, None, None, my_exec, my_args, False, None, None]
-		elif (dag_line.lower()).find("script pre") >= 0:
-		    # Found SCRIPT PRE line, parse it
-		    my_match = re_parse_dag_script.search(dag_line)
-		    if my_match:
-			my_jobid = my_match.group(1)
-			my_exec = my_match.group(2)
-			my_args = my_match.group(3)
-			if my_jobid in self._job_info:
-			    # Entry already exists for this job, just collect pre script info
-			    self._job_info[my_jobid][1] = my_exec
-			    self._job_info[my_jobid][2] = my_args
-			else:
-			    # No entry for this job, let's create a new one
-			    self._job_info[my_jobid] = [None, my_exec, my_args, None, None, False, None, None]
+                    # Found SCRIPT POST line, parse it
+                    my_match = re_parse_dag_script.search(dag_line)
+                    if my_match:
+                        my_jobid = my_match.group(1)
+                        my_exec = my_match.group(2)
+                        my_args = my_match.group(3)
+                        if my_jobid in self._job_info:
+                            # Entry already exists for this job, just collect post script info
+                            self._job_info[my_jobid][3] = my_exec
+                            self._job_info[my_jobid][4] = my_args
+                        else:
+                            # No entry for this job, let's create a new one
+                            self._job_info[my_jobid] = [None, None, None, my_exec, my_args, False, None, None]
+                elif (dag_line.lower()).find("script pre") >= 0:
+                    # Found SCRIPT PRE line, parse it
+                    my_match = re_parse_dag_script.search(dag_line)
+                    if my_match:
+                        my_jobid = my_match.group(1)
+                        my_exec = my_match.group(2)
+                        my_args = my_match.group(3)
+                        if my_jobid in self._job_info:
+                            # Entry already exists for this job, just collect pre script info
+                            self._job_info[my_jobid][1] = my_exec
+                            self._job_info[my_jobid][2] = my_args
+                        else:
+                            # No entry for this job, let's create a new one
+                            self._job_info[my_jobid] = [None, my_exec, my_args, None, None, False, None, None]
                 elif (dag_line.lower()).find("subdag external") >= 0:
                     # Found SUBDAG line, parse it
                     my_match = re_parse_dag_subdag.search(dag_line)
@@ -841,30 +809,20 @@ class Workflow:
                                 my_dir = os.path.dirname(my_dag)
                         if my_jobid in self._job_info:
                             # Entry already exists for this job, just set subdag flag, and dag/dir info
-			    self._job_info[my_jobid][5] = True
-			    self._job_info[my_jobid][6] = my_dag
+                            self._job_info[my_jobid][5] = True
+                            self._job_info[my_jobid][6] = my_dag
                             self._job_info[my_jobid][7] = my_dir
                         else:
                             # No entry for this job, let's create a new one
                             self._job_info[my_jobid] = [None, None, None, None, None, True, my_dag, my_dir]
-#                elif re_parse_dag_edge.search(dag_line) is not None:
-#                    # Found edge
-#                    if self._restart_count > 0:
-#                        # Skip these for restarts
-#                        continue
-#                    my_match = re_parse_dag_edge.search(dag_line)
-#                    if my_match:
-#                        my_parent = my_match.group(1)
-#                        my_child = my_match.group(2)
-#                        self.db_send_edge(my_parent, my_child)
-			
-	    DAG.close()
 
-	# POST-CONDITION: _job_info contains only submit-files of jobs
-	# that are not yet done. Normally, this are all submit
-	# files. In rescue DAGS, that is an arbitrary subset of all
-	# jobs. In addition, _job_info should contain all PRE and POST
-	# script information for job in this workflow, and all subdag
+            DAG.close()
+
+        # POST-CONDITION: _job_info contains only submit-files of jobs
+        # that are not yet done. Normally, this are all submit
+        # files. In rescue DAGS, that is an arbitrary subset of all
+        # jobs. In addition, _job_info should contain all PRE and POST
+        # script information for job in this workflow, and all subdag
         # jobs, with the their dag files, and directories
 
     def read_workflow_state(self):
@@ -956,77 +914,81 @@ class Workflow:
         return
 
     def db_send_wf_info(self):
-	"""
-	This function sends to the DB information about the workflow
-	"""
-	# Start empty
-	kwargs = {}
-	# Make sure we include the wf_uuid
-	kwargs["wf__id"] = self._wf_uuid
-	# Now include others, if they are defined
-	if self._dax_label is not None:
-	    kwargs["dax_label"] = self._dax_label
-	if self._dax_version is not None:
-	    kwargs["dax_version"] = self._dax_version
-	if self._dax_index is not None:
-	    kwargs["dax_index"] = self._dax_index
-	if self._dax_file is not None:
-	    kwargs["dax_file"] = self._dax_file
+        """
+        This function sends to the DB information about the workflow
+        """
+        # Start empty
+        kwargs = {}
+        # Make sure we include the wf_uuid
+        kwargs["xwf__id"] = self._wf_uuid
+        # Now include others, if they are defined
+        if self._dax_label is not None:
+            kwargs["dax__label"] = self._dax_label
+        if self._dax_version is not None:
+            kwargs["dax__version"] = self._dax_version
+        if self._dax_index is not None:
+            kwargs["dax__index"] = self._dax_index
+        if self._dax_file is not None:
+            kwargs["dax__file"] = self._dax_file
         if self._dag_file_name is not None:
-            kwargs["dag_file_name"] = self._dag_file_name
-	if self._timestamp is not None:
-	    kwargs["ts"] = self._timestamp
-	if self._submit_hostname is not None:
-	    kwargs["submit_hostname"] = self._submit_hostname
-	if self._submit_dir is not None:
-	    kwargs["submit_dir"] = self._submit_dir
-	if self._planner_arguments is not None:
-	    kwargs["planner_arguments"] = self._planner_arguments
-	if self._user is not None:
-	    kwargs["user"] = self._user
-	if self._grid_dn is not None:
-	    kwargs["grid_dn"] = self._grid_dn
-	if self._planner_version is not None:
-	    kwargs["planner_version"] = self._planner_version
-	if self._parent_workflow_id is not None:
-	    kwargs["parent__wf__id"] = self._parent_workflow_id
-	else:
-	    kwargs["parent__wf__id"] = "None"
+            kwargs["dag__file__name"] = self._dag_file_name
+        if self._timestamp is not None:
+            kwargs["ts"] = self._timestamp
+        if self._submit_hostname is not None:
+            kwargs["submit__hostname"] = self._submit_hostname
+        if self._submit_dir is not None:
+            kwargs["submit__dir"] = self._submit_dir
+        if self._planner_arguments is not None:
+            kwargs["argv"] = self._planner_arguments
+        if self._user is not None:
+            kwargs["user"] = self._user
+        if self._grid_dn is not None:
+            kwargs["grid_dn"] = self._grid_dn
+        if self._planner_version is not None:
+            kwargs["planner__version"] = self._planner_version
+        if self._parent_workflow_id is not None:
+            kwargs["parent__xwf__id"] = self._parent_workflow_id
         if self._root_workflow_id is not None:
-	    kwargs["root__wf__id"] = self._root_workflow_id
-	else:
-	    kwargs["root__wf__id"] = "None"
+            kwargs["root__xwf__id"] = self._root_workflow_id
 
-	# Send workflow event to database
-	self.output_to_db("workflow.plan", kwargs)
+        # Send workflow event to database
+        self.output_to_db("wf.plan", kwargs)
 
     def db_send_wf_state(self, state):
-	"""
-	This function sends to the DB information about the current workflow state
-	"""
-	# Check if database is configured
-	if self._sink is None:
-	    return
-	# Make sure parameters are not None
-	if state is None:
-	    return
+        """
+        This function sends to the DB information about the current
+        workflow state
+        """
+        # Check if database is configured
+        if self._sink is None:
+            return
+        # Make sure parameters are not None
+        if state is None:
+            return
 
-	# Start empty
-	kwargs = {}
-	# Make sure we include the wf_uuid
-	kwargs["wf__id"] = self._wf_uuid
-	kwargs["ts"] = self._current_timestamp
+        # Start empty
+        kwargs = {}
+        # Make sure we include the wf_uuid
+        kwargs["xwf__id"] = self._wf_uuid
+        kwargs["ts"] = self._current_timestamp
         # Always decrement the restart count by 1
         kwargs["restart_count"] = self._restart_count - 1
-	state = "workflow." + state
+        if state == "end":
+            # Add status field for workflow.end event
+            kwargs["status"] = wf._dagman_exit_code
+            if wf._dagman_exit_code != 0:
+                # Set level to Error if workflow did not finish successfully
+                kwargs["level"] = "Error"
+        state = "xwf." + state
 
-	# Send workflow state event to database
-	self.output_to_db(state, kwargs)
+        # Send workflow state event to database
+        self.output_to_db(state, kwargs)
 
     def change_wf_state(self, state):
-	"""
-	This function changes the workflow state, and sends the state change to
-        the DB. This function is called as response to DAGMan starting/stopping.
+        """
+        This function changes the workflow state, and sends the state
+        change to the DB. This function is called as response to
+        DAGMan starting/stopping.
         """
         if state == "start":
             logger.info("DAGMan starting with condor id %s" % (self._dagman_condor_id))
@@ -1056,11 +1018,11 @@ class Workflow:
                 # This job is done
                 jobs_to_delete.append((my_jobid, my_job_submit_seq))
             elif my_job_state == "JOB_SUCCESS":
-                    if my_jobid in self._job_info and self._job_info[my_jobid][3] is None:
-                        # No postscript for this job
-                        jobs_to_delete.append((my_jobid, my_job_submit_seq))
-                    else:
-                        logger.debug("keeping job %s..." % (my_jobid))
+                if my_jobid in self._job_info and self._job_info[my_jobid][3] is None:
+                    # No postscript for this job
+                    jobs_to_delete.append((my_jobid, my_job_submit_seq))
+                else:
+                    logger.debug("keeping job %s..." % (my_jobid))
             else:
                 logger.debug("keeping job %s..." % (my_jobid))
 
@@ -1080,19 +1042,20 @@ class Workflow:
 
     def __init__(self, rundir, outfile, extra_params=None, database=None,
                  workflow_config_file=None, jsd=None, parent_id=None, root_id=None):
-	"""
-	This function initializes the workflow object. It looks
-        for the workflow configuration file (or for workflow_config_file,
-        if specified). Keys in extra_params override values in the configuration
-        file. Here we also open the jobstate.log file, and parse the dag.
-	"""
-	# Initialize class variables
+        """
+        This function initializes the workflow object. It looks for
+        the workflow configuration file (or for workflow_config_file,
+        if specified). Keys in extra_params override values in the
+        configuration file. Here we also open the jobstate.log file,
+        and parse the dag.
+        """
+        # Initialize class variables
         self._out_file = outfile
-	self._run_dir = rundir
+        self._run_dir = rundir
         self._static_bp_file = None
         self._parent_workflow_id = parent_id
         self._root_workflow_id = root_id
-	self._sink = database
+        self._sink = database
         self._workflow_start = int(time.time())
         self._wf_uuid = None
         self._dag_file_name = None
@@ -1102,8 +1065,8 @@ class Workflow:
         self._dax_index = None
         self._timestamp = None
         self._submit_hostname = None
-        self._submit_dir = None			# submit dir from braindump file (run dir, if submit_dir key is not found)
-        self._original_submit_dir = None	# submit dir from braindump file (jsd dir, if submit_dir key is not found)
+        self._submit_dir = None                 # submit dir from braindump file (run dir, if submit_dir key is not found)
+        self._original_submit_dir = None        # submit dir from braindump file (jsd dir, if submit_dir key is not found)
         self._planner_arguments = None
         self._user = None
         self._grid_dn = None
@@ -1112,26 +1075,26 @@ class Workflow:
         self._jobs_map = {}
         self._jobs = {}
         self._job_submit_seq = 1
-        self._log_file = None			# monitord.log file
-        self._jsd_file = None			# jobstate.log file
-        self._JSDB = None			# Handle for jobstate.log file
-        self._job_counters = {}			# Job counters for figuring out which output file to parse
-        self._job_info = {}			# jobid --> [sub_file, pre_exec, pre_args, post_exec, post_args, is_subdag, subdag_dag, subdag_dir]
-        self._valid_braindb = True		# Flag for creating a new brain db if we don't find one
-        self._write_wf_uuid = False		# Flag for appending the generated wf_uuid to the braindump file
-        self._line = 0 				# line number from dagman.out file
-        self._last_processed_line = 0		# line last processed by the monitoring daemon
-        self._restart_count = 0			# Keep track of how many times the workflow was restarted
-        self._skipping_recovery_lines = False	# Flag for skipping the repeat duplicate messages generated by DAGMan
-        self._dagman_condor_id = None		# Condor id of the current DAGMan
-        self._dagman_pid = 0			# Condor DAGMan's PID
-        self._current_timestamp = 0		# Last timestamp from DAGMan
-        self._dagman_exit_code = None		# Keep track of when to finish this workflow
-        self._monitord_exit_code = 0		# Keep track of errors inside monitord
-        self._condorlog = None			# Condor common logfile
-        self._multiline_file_flag = False	# Track multiline user log files, DAGMan > 6.6
-        self._walltime = {}			# jid --> walltime
-        self._job_site = {}			# last site a job was planned for
+        self._log_file = None                   # monitord.log file
+        self._jsd_file = None                   # jobstate.log file
+        self._JSDB = None                       # Handle for jobstate.log file
+        self._job_counters = {}                 # Job counters for figuring out which output file to parse
+        self._job_info = {}                     # jobid --> [sub_file, pre_exec, pre_args, post_exec, post_args, is_subdag, subdag_dag, subdag_dir]
+        self._valid_braindb = True              # Flag for creating a new brain db if we don't find one
+        self._write_wf_uuid = False             # Flag for appending the generated wf_uuid to the braindump file
+        self._line = 0                          # line number from dagman.out file
+        self._last_processed_line = 0           # line last processed by the monitoring daemon
+        self._restart_count = 0                 # Keep track of how many times the workflow was restarted
+        self._skipping_recovery_lines = False   # Flag for skipping the repeat duplicate messages generated by DAGMan
+        self._dagman_condor_id = None           # Condor id of the current DAGMan
+        self._dagman_pid = 0                    # Condor DAGMan's PID
+        self._current_timestamp = 0             # Last timestamp from DAGMan
+        self._dagman_exit_code = None           # Keep track of when to finish this workflow
+        self._monitord_exit_code = 0            # Keep track of errors inside monitord
+        self._condorlog = None                  # Condor common logfile
+        self._multiline_file_flag = False       # Track multiline user log files, DAGMan > 6.6
+        self._walltime = {}                     # jid --> walltime
+        self._job_site = {}                     # last site a job was planned for
 
         # Determine location of jobstate.log file
         if jsd is None:
@@ -1188,6 +1151,9 @@ class Workflow:
                 self._wf_uuid = str(time.time())
             self._write_wf_uuid = True
             missing_keys["wf_uuid"] = self._wf_uuid
+        # Now that we have the wf_uuid, set root_wf_uuid if not already set
+        if self._root_workflow_id is None:
+            self._root_workflow_id = self._wf_uuid
         if "dax_label" in wfparams:
             self._dax_label = wfparams["dax_label"]
         else:
@@ -1277,20 +1243,20 @@ class Workflow:
             # Process static bp file
             try:
                 for my_line in my_static_file:
-                   my_keys = {}
-                   my_keys = my_bp_parser.parseLine(my_line)
-                   if len(my_keys) == 0:
-                       continue
-                   if not "event" in my_keys:
-                       logger.error("bad event in static bp file: %s, continuing..." % (my_line))
-                       continue
-                   my_event = my_keys["event"]
-                   del my_keys["event"]
-                   # Cut the stampede part, until Karan fixes pegasus-plan
-                   if my_event.startswith("stampede."):
-                       my_event = my_event.split(".", 1)[1]
-                   # Send event to database
-                   self.output_to_db(my_event, my_keys)
+                    my_keys = {}
+                    my_keys = my_bp_parser.parseLine(my_line)
+                    if len(my_keys) == 0:
+                        continue
+                    if not "event" in my_keys:
+                        logger.error("bad event in static bp file: %s, continuing..." % (my_line))
+                        continue
+                    my_event = my_keys["event"]
+                    del my_keys["event"]
+                    # Cut the stampede part, until Karan fixes pegasus-plan
+                    if my_event.startswith("stampede."):
+                        my_event = my_event.split(".", 1)[1]
+                    # Send event to database
+                    self.output_to_db(my_event, my_keys)
             except:
                 logger.critical("error processing static bp file %s, exiting..." % (self._static_bp_file))
                 sys.exit(1)
@@ -1361,99 +1327,119 @@ class Workflow:
 
 
     def find_jobid(self, jobid):
-	"""
-	This function finds the job_submit_seq of a given jobid by checking
-	the _jobs_map dict. Since add_job will update _jobs_map, this function
-	will return the job_submit_seq of the latest jobid added to the workflow
-	"""
-	if jobid in self._jobs_map:
-	    return self._jobs_map[jobid]
+        """
+        This function finds the job_submit_seq of a given jobid by
+        checking the _jobs_map dict. Since add_job will update
+        _jobs_map, this function will return the job_submit_seq of the
+        latest jobid added to the workflow
+        """
+        if jobid in self._jobs_map:
+            return self._jobs_map[jobid]
 
-	# Not found, return None
-	return None
+        # Not found, return None
+        return None
 
     def find_job_submit_seq(self, jobid):
-	"""
-	If a jobid already exists and is in the PRE_SCRIPT_SUCCESS mode, this
-	function returns its job_submit_seq. Otherwise, it returns None, meaning
-	a new job needs to be created
-	"""
-	# Look for a jobid
-	my_job_submit_seq = self.find_jobid(jobid)
+        """
+        If a jobid already exists and is in the PRE_SCRIPT_SUCCESS
+        mode, this function returns its job_submit_seq. Otherwise, it
+        returns None, meaning a new job needs to be created
+        """
+        # Look for a jobid
+        my_job_submit_seq = self.find_jobid(jobid)
 
-	# No such job, return None
-	if my_job_submit_seq is None:
-	    return None
+        # No such job, return None
+        if my_job_submit_seq is None:
+            return None
 
-	# Make sure the job is there
-	if not (jobid, my_job_submit_seq) in self._jobs:
-	    logger.warning("cannot find job: %s, %s" % (jobid, my_job_submit_seq))
-	    return None
+        # Make sure the job is there
+        if not (jobid, my_job_submit_seq) in self._jobs:
+            logger.warning("cannot find job: %s, %s" % (jobid, my_job_submit_seq))
+            return None
 
-	my_job = self._jobs[jobid, my_job_submit_seq]
-	if my_job._job_state == "PRE_SCRIPT_SUCCESS" or my_job._job_state == "DAGMAN_SUBMIT":
-	    # jobid is in "PRE_SCRIPT_SUCCESS" or "DAGMAN_SUBMIT"  state,
+        my_job = self._jobs[jobid, my_job_submit_seq]
+        if my_job._job_state == "PRE_SCRIPT_SUCCESS" or my_job._job_state == "DAGMAN_SUBMIT":
+            # jobid is in "PRE_SCRIPT_SUCCESS" or "DAGMAN_SUBMIT"  state,
             # just return job_submit_seq
-	    return my_job_submit_seq
+            return my_job_submit_seq
 
-	# jobid is in another state, return None
-	return None
+        # jobid is in another state, return None
+        return None
 
-    def db_send_job_info(self, my_job, job_state):
-	"""
-	This function sends to the DB information about a particular job
-	"""
-	# Start empty
-	kwargs = {}
+    def db_send_job_brief(self, my_job, event, status=None):
+        """
+        This function sends to the DB basic state events for a
+        particular job
+        """
+        # Start empty
+        kwargs = {}
 
-	# Make sure we include the wf_uuid, name, and job_submit_seq
-	kwargs["wf__id"] = my_job._wf_uuid
-	kwargs["exec_job__id"] = my_job._exec_job_id
-	kwargs["job__id"] = my_job._job_submit_seq
-	kwargs["ts"] = self._current_timestamp
-	if my_job._sched_id is not None:
-	    kwargs["sched__id"] = my_job._sched_id
-#	if my_job._jobtype is not None:
-#	    kwargs["jobtype"] = my_job._jobtype
-#	if my_job._clustered is not None:
-#	    kwargs["clustered"] = my_job._clustered
-	if my_job._site_name is not None:
-	    kwargs["site_name"] = my_job._site_name
-	if my_job._remote_user is not None:
-	    kwargs["remote_user"] = my_job._remote_user
-	if my_job._remote_working_dir is not None:
-	    kwargs["remote_working_dir"] = my_job._remote_working_dir
-	if my_job._cluster_start_time is not None:
-	    kwargs["cluster_start_time"] = my_job._cluster_start_time
-	if my_job._cluster_duration is not None:
-	    kwargs["cluster_duration"] = my_job._cluster_duration
+        # Make sure we include the wf_uuid, name, and job_submit_seq
+        kwargs["xwf__id"] = my_job._wf_uuid
+        kwargs["job__id"] = my_job._exec_job_id
+        kwargs["job_inst__id"] = my_job._job_submit_seq
+        kwargs["ts"] = my_job._job_state_timestamp
+        kwargs["js__id"] = my_job._job_state_seq
+        if my_job._sched_id is not None:
+            kwargs["sched__id"] = my_job._sched_id
+        if status is not None:
+            kwargs["status"] = str(status)
+            if status != 0:
+                kwargs["level"] = "Error"
+
+        # Send job state event to database
+        self.output_to_db("job_inst." + event, kwargs)
+
+    def db_send_job_start(self, my_job):
+        """
+        This function sends to the DB the main.start event
+        """
+        # Start empty
+        kwargs = {}
+
+        # Make sure we include the wf_uuid, name, and job_submit_seq
+        kwargs["xwf__id"] = my_job._wf_uuid
+        kwargs["job__id"] = my_job._exec_job_id
+        kwargs["job_inst__id"] = my_job._job_submit_seq
+        kwargs["ts"] = my_job._job_state_timestamp
+        kwargs["js__id"] = my_job._job_state_seq
+
         if my_job._input_file is not None:
-            try:
-                if my_job._input_file.find(self._original_submit_dir) >= 0:
-                    # Path to file includes original submit_dir, let's try to remove it
-                    my_job._input_file = os.path.normpath(my_job._input_file.replace((self._original_submit_dir + os.sep), '', 1))
-            except:
-                # Something went wrong, let's just use what we had...
-                pass
-            kwargs["job_stdin"] = my_job._input_file
+            kwargs["stdin.file"] = my_job._input_file
         if my_job._output_file is not None:
-            try:
-                if my_job._output_file.find(self._original_submit_dir) >= 0:
-                    # Path to file includes original submit_dir, let's try to remove it
-                    my_job._output_file = os.path.normpath(my_job._output_file.replace((self._original_submit_dir + os.sep), '', 1))
-            except:
-                # Something went wrong, let's just use what we had...
-                pass
-            kwargs["job_stdout"] = my_job._output_file
+            kwargs["stdout.file"] = my_job._output_file
         if my_job._error_file is not None:
-            try:
-                if my_job._error_file.find(self._original_submit_dir) >= 0:
-                    # Path to file includes original submit_dir, let's try to remove it
-                    my_job._error_file = os.path.normpath(my_job._error_file.replace((self._original_submit_dir + os.sep), '', 1))
-            except:
-                # Something went wrong, let's just use what we had...
-                pass
-            kwargs["job_stderr"] = my_job._error_file
+            kwargs["stderr.file"] = my_job._error_file
+        if my_job._sched_id is not None:
+            kwargs["sched__id"] = my_job._sched_id
+
+        # Send job state event to database
+        self.output_to_db("job_inst.main.start", kwargs)
+
+    def db_send_job_end(self, my_job, status=None):
+        """
+        This function sends to the DB the main.end event
+        """
+        # Start empty
+        kwargs = {}
+
+        # Make sure we include the wf_uuid, name, and job_submit_seq
+        kwargs["xwf__id"] = my_job._wf_uuid
+        kwargs["job__id"] = my_job._exec_job_id
+        kwargs["job_inst__id"] = my_job._job_submit_seq
+        kwargs["ts"] = my_job._job_state_timestamp
+        kwargs["js__id"] = my_job._job_state_seq
+
+        if my_job._site_name is not None:
+            kwargs["site"] = my_job._site_name
+        if my_job._remote_user is not None:
+            kwargs["user"] = my_job._remote_user
+        if my_job._remote_working_dir is not None:
+            kwargs["work_dir"] = my_job._remote_working_dir
+        if my_job._cluster_start_time is not None:
+            kwargs["cluster__start"] = my_job._cluster_start_time
+        if my_job._cluster_duration is not None:
+            kwargs["cluster__dur"] = my_job._cluster_duration
         if my_job._main_job_start is not None and my_job._main_job_done is not None:
             # If we have both timestamps, let's try to compute the local duration
             try:
@@ -1462,114 +1448,159 @@ class Workflow:
             except:
                 # Nothing to do
                 pass
-	if job_state == "JOB_SUCCESS" or job_state == "JOB_FAILURE":
-	    event_type = "job.mainjob.end"
-	elif job_state == "PRE_SCRIPT_STARTED":
-	    event_type = "job.prescript.start"
-	elif job_state == "SUBMIT":
-	    event_type = "job.mainjob.start"
-	else:
-	    logger.warning("unknown job state: %s" % (job_state))
-	    return
+        if my_job._input_file is not None:
+            kwargs["stdin__file"] = my_job._input_file
+        if my_job._output_file is not None:
+            kwargs["stdout__file"] = my_job._output_file
+        if my_job._error_file is not None:
+            kwargs["stderr__file"] = my_job._error_file
+        kwargs["stdout__text"] = ""
+        kwargs["stderr__text"] = ""
 
-	# Send job event to database
-	self.output_to_db(event_type, kwargs)
+        if my_job._sched_id is not None:
+            kwargs["sched__id"] = my_job._sched_id
+        if status is not None:
+            kwargs["status"] = str(status)
+            if status != 0:
+                kwargs["level"] = "Error"
 
-    def db_send_job_note(self, my_job, event_type):
-	"""
-	This function sends to the DB a notification about a particular job
-	"""
-	# Start empty
-	kwargs = {}
+        # Send job state event to database
+        self.output_to_db("job_inst.main.end", kwargs)
 
-	# Make sure we include the wf_uuid, name, and job_submit_seq
-	kwargs["wf__id"] = my_job._wf_uuid
-	kwargs["exec_job__id"] = my_job._exec_job_id
-	kwargs["job__id"] = my_job._job_submit_seq
-	kwargs["ts"] = self._current_timestamp
+    def db_send_task_start(self, my_job, task_type, task_id=None, invocation_record={}):
+        """
+        This function sends to the database task start
+        events. task_type is either "PRE_SCRIPT", "MAIN_JOB", or
+        "POST_SCRIPT"
+        """
+        # Start empty
+        kwargs = {}
 
-	# Send job event to database
-	self.output_to_db(event_type, kwargs)
+        # Sanity check, verify task type
+        if task_type != "PRE_SCRIPT" and task_type != "POST_SCRIPT" and task_type != "MAIN_JOB":
+            logger.warning("unknown task type: %s" % (task_type))
+            return
 
-    def db_send_job_state(self, my_job):
-	"""
-	This function sends to the DB job state information for a particular job
-	"""
-	# Start empty
-	kwargs = {}
+        # Make sure we include the wf_uuid, name, and job_submit_seq
+        kwargs["xwf__id"] = my_job._wf_uuid
+        kwargs["job__id"] = my_job._exec_job_id
+        kwargs["job_inst__id"] = my_job._job_submit_seq
 
-	# Make sure we include the wf_uuid, name, and job_submit_seq
-	kwargs["wf__id"] = my_job._wf_uuid
-	kwargs["exec_job__id"] = my_job._exec_job_id
-	kwargs["job__id"] = my_job._job_submit_seq
-	kwargs["state"] = my_job._job_state
-	kwargs["ts"] = my_job._job_state_timestamp
-	kwargs["js__id"] = my_job._job_state_seq
+        if task_type == "PRE_SCRIPT":
+            # This is a PRE SCRIPT invocation
+            # Add PRE_SCRIPT task id to this event
+            kwargs["inv__id"] = PRESCRIPT_TASK_ID
+            kwargs["ts"] = my_job._pre_script_start
+        elif task_type == "POST_SCRIPT":
+            # This is a POST SCRIPT invocation
+            kwargs["inv__id"] = POSTSCRIPT_TASK_ID
+            kwargs["ts"] = my_job._post_script_start
+        elif task_type == "MAIN_JOB":
+            # This is a MAIN JOB invocation
+            if task_id is not None:
+                kwargs["inv__id"] = task_id
+            else:
+                logger.warning("warning: task id is not specified... skipping task...")
+                return
+            if "start" in invocation_record:
+                # Need to convert it to epoch data
+                my_start = utils.epochdate(invocation_record["start"])
+            else:
+                # Not in the invocation record, let's use our own time keeping
+                my_start = my_job._main_job_start
+                if my_start is None:
+                    # This must be a zero duration job (without an ULOG_EXECUTE), just use the end time
+                    my_start = my_job._main_job_done
+            if my_start is not None:
+                kwargs["ts"] = my_start
 
-	# Send job state event to database
-	self.output_to_db("job.state", kwargs)
+        # Send job event to database
+        self.output_to_db("inv.start", kwargs)
 
-    def db_send_task_info(self, my_job, task_type, task_id, invocation_record={}):
-	"""
-	This function sends to the database task
-	information. task_type is either "PRE SCRIPT", "MAIN JOB", or
-	"POST SCRIPT"
-	"""
-	# Start empty
-	kwargs = {}
+    def db_send_task_end(self, my_job, task_type, task_id=None, invocation_record={}):
+        """
+        This function sends to the database task end events with all
+        the information. task_type is either "PRE_SCRIPT", "MAIN_JOB",
+        or "POST_SCRIPT"
+        """
+        # Start empty
+        kwargs = {}
 
-	# Sanity check, verify task type
-	if task_type != "PRE SCRIPT" and task_type != "POST SCRIPT" and task_type != "MAIN JOB":
-	    logger.warning("unknown task type: %s" % (task_type))
-	    return
+        # Sanity check, verify task type
+        if task_type != "PRE_SCRIPT" and task_type != "POST_SCRIPT" and task_type != "MAIN_JOB":
+            logger.warning("unknown task type: %s" % (task_type))
+            return
 
-	# Make sure we include the wf_uuid, name, and job_submit_seq
-	kwargs["wf__id"] = my_job._wf_uuid
-	kwargs["exec_job__id"] = my_job._exec_job_id
-	kwargs["job__id"] = my_job._job_submit_seq
+        # Make sure we include the wf_uuid, name, and job_submit_seq
+        kwargs["xwf__id"] = my_job._wf_uuid
+        kwargs["job__id"] = my_job._exec_job_id
+        kwargs["job_inst__id"] = my_job._job_submit_seq
 
-	# Add task id to this event
-	kwargs["task__id"] = task_id
-
-	if task_type == "PRE SCRIPT":
-	    # This is a PRE SCRIPT invocation
-	    event_type = "invocation.prescript"
-	    kwargs["transformation"] = "dagman::pre"
-            # For prescript tasks, nothing to put in the abs_task_id field
+        if task_type == "PRE_SCRIPT":
+            # This is a PRE SCRIPT invocation
+            kwargs["inv__id"] = PRESCRIPT_TASK_ID
+            kwargs["transformation"] = "dagman::pre"
+            # For prescript tasks, nothing to put in the task_id field
             if my_job._pre_script_start is not None:
                 kwargs["start_time"] = my_job._pre_script_start
+            else:
+                kwargs["start_time"] = my_job._pre_script_done
             try:
-                kwargs["remote_duration"] = my_job._pre_script_done - my_job._pre_script_start
+                kwargs["dur"] = my_job._pre_script_done - my_job._pre_script_start
             except:
                 # Duration cannot be determined, possibly a missing PRE_SCRIPT_START event
-                kwargs["remote_duration"] = 0
-	    kwargs["exitcode"] = my_job._pre_script_exitcode
-	    if my_job._exec_job_id in self._job_info:
-		kwargs["executable"] = self._job_info[my_job._exec_job_id][1]
-		kwargs["arguments"] = self._job_info[my_job._exec_job_id][2]
-	    kwargs["ts"] = my_job._pre_script_done
-	elif task_type == "POST SCRIPT":
-	    # This is a POST SCRIPT invocation
-	    event_type = "invocation.postscript"
-	    kwargs["transformation"] = "dagman::post"
-            # For postscript tasks, nothing to put in the abs_task_id field
+                kwargs["dur"] = 0
+            kwargs["exitcode"] = str(my_job._pre_script_exitcode)
+            if my_job._exec_job_id in self._job_info:
+                if self._job_info[my_job._exec_job_id][1] is not None:
+                    kwargs["executable"] = self._job_info[my_job._exec_job_id][1]
+                else:
+                    kwargs["executable"] = ""
+                if self._job_info[my_job._exec_job_id][2] is not None:
+                    kwargs["argv"] = self._job_info[my_job._exec_job_id][2]
+                else:
+                    kwargs["argv"] = ""
+            else:
+                kwargs["executable"] = ""
+                kwargs["argv"] = ""
+            kwargs["ts"] = my_job._pre_script_done
+        elif task_type == "POST_SCRIPT":
+            # This is a POST SCRIPT invocation
+            kwargs["inv__id"] = POSTSCRIPT_TASK_ID
+            kwargs["transformation"] = "dagman::post"
+            # For postscript tasks, nothing to put in the task_id field
             if my_job._post_script_start is not None:
                 kwargs["start_time"] = my_job._post_script_start
+            else:
+                kwargs["start_time"] = my_job._post_script_done
             try:
-                kwargs["remote_duration"] = my_job._post_script_done - my_job._post_script_start
+                kwargs["dur"] = my_job._post_script_done - my_job._post_script_start
             except:
                 # Duration cannot be determined, possibly a missing POST_SCRIPT_START event
-                kwargs["remote_duration"] = 0
-	    kwargs["exitcode"] = my_job._post_script_exitcode
-	    if my_job._exec_job_id in self._job_info:
-		kwargs["executable"] = self._job_info[my_job._exec_job_id][3]
-		kwargs["arguments"] = self._job_info[my_job._exec_job_id][4]
-	    kwargs["ts"] = my_job._post_script_done
-	elif task_type == "MAIN JOB":
-	    # This is a MAIN JOB invocation
-	    event_type = "invocation.mainjob"
-	    if "transformation" in invocation_record:
-		kwargs["transformation"] = invocation_record["transformation"]
+                kwargs["dur"] = 0
+            kwargs["exitcode"] = str(my_job._post_script_exitcode)
+            if my_job._exec_job_id in self._job_info:
+                if self._job_info[my_job._exec_job_id][3] is not None:
+                    kwargs["executable"] = self._job_info[my_job._exec_job_id][3]
+                else:
+                    kwargs["executable"] = ""
+                if self._job_info[my_job._exec_job_id][4] is not None:
+                    kwargs["argv"] = self._job_info[my_job._exec_job_id][4]
+                else:
+                    kwargs["argv"] = ""
+            else:
+                kwargs["executable"] = ""
+                kwargs["argv"] = ""
+            kwargs["ts"] = my_job._post_script_done
+        elif task_type == "MAIN_JOB":
+            # This is a MAIN JOB invocation
+            if task_id is not None:
+                kwargs["inv__id"] = task_id
+            else:
+                logger.warning("warning: task id is not specified... skipping task...")
+                return
+            if "transformation" in invocation_record:
+                kwargs["transformation"] = invocation_record["transformation"]
             else:
                 if my_job._main_job_transformation is not None:
                     kwargs["transformation"] = my_job._main_job_transformation
@@ -1578,13 +1609,13 @@ class Workflow:
                         self._job_info[my_job._exec_job_id][5] == True):
                         kwargs["transformation"] = "condor::dagman"
             if "derivation" in invocation_record:
-                kwargs["abs_task__id"] = invocation_record["derivation"]
+                kwargs["task__id"] = invocation_record["derivation"]
             else:
                 # Nothing to do if we cannot get the derivation from the kickstart recort
                 pass
-	    if "start" in invocation_record:
+            if "start" in invocation_record:
                 # Need to convert it to epoch data
-		my_start = utils.epochdate(invocation_record["start"])
+                my_start = utils.epochdate(invocation_record["start"])
             else:
                 # Not in the invocation record, let's use our own time keeping
                 my_start = my_job._main_job_start
@@ -1593,8 +1624,8 @@ class Workflow:
                     my_start = my_job._main_job_done
             if my_start is not None:
                 kwargs["start_time"] = my_start
-	    if "duration" in invocation_record:
-		kwargs["remote_duration"] = invocation_record["duration"]
+            if "duration" in invocation_record:
+                kwargs["dur"] = invocation_record["duration"]
             else:
                 # Duration not in the invocation record
                 if my_job._main_job_start is not None and my_job._main_job_done is not None:
@@ -1603,27 +1634,27 @@ class Workflow:
                     except:
                         my_duration = None
                     if my_duration is not None:
-                        kwargs["remote_duration"] = my_duration
+                        kwargs["dur"] = my_duration
                 elif my_job._main_job_done is not None:
                     # This must be a zero duration job (without an ULOG_EXECUTE)
                     # In this case, duration should be set to ZERO
-                    kwargs["remote_duration"] = 0
-	    if my_start is not None and "duration" in invocation_record:
-		# Calculate timestamp for when this task finished
-		try:
-		    kwargs["ts"] = int(my_start + int(invocation_record["duration"]))
-		except:
-		    # Something went wrong, just use the time the main job finished
-		    kwargs["ts"] = my_job._main_job_done
-	    else:
-		kwargs["ts"] = my_job._main_job_done
-	    if "exitcode" in invocation_record:
-		kwargs["exitcode"] = invocation_record["exitcode"]
+                    kwargs["dur"] = 0
+            if my_start is not None and "duration" in invocation_record:
+                # Calculate timestamp for when this task finished
+                try:
+                    kwargs["ts"] = int(my_start + int(invocation_record["duration"]))
+                except:
+                    # Something went wrong, just use the time the main job finished
+                    kwargs["ts"] = my_job._main_job_done
+            else:
+                kwargs["ts"] = my_job._main_job_done
+            if "exitcode" in invocation_record:
+                kwargs["exitcode"] = invocation_record["exitcode"]
             else:
                 if my_job._main_job_exitcode is not None:
-                    kwargs["exitcode"] = my_job._main_job_exitcode
-	    if "name" in invocation_record:
-		kwargs["executable"] = invocation_record["name"]
+                    kwargs["exitcode"] = str(my_job._main_job_exitcode)
+            if "name" in invocation_record:
+                kwargs["executable"] = invocation_record["name"]
             else:
                 if my_job._main_job_executable is not None:
                     kwargs["executable"] = my_job._main_job_executable
@@ -1631,59 +1662,70 @@ class Workflow:
                     if (my_job._exec_job_id in self._job_info and
                         self._job_info[my_job._exec_job_id][5] == True):
                         kwargs["executable"] = condor_dagman_executable
-	    if "argument-vector" in invocation_record:
-		kwargs["arguments"] = invocation_record["argument-vector"]
+                    else:
+                        kwargs["executable"] = ""
+            if "argument-vector" in invocation_record:
+                kwargs["argv"] = invocation_record["argument-vector"]
             else:
                 if my_job._main_job_arguments is not None:
-                    kwargs["arguments"] = my_job._main_job_arguments
+                    kwargs["argv"] = my_job._main_job_arguments
+                else:
+                    kwargs["argv"] = ""
 
-	# Send job event to database
-	self.output_to_db(event_type, kwargs)
+        if "exitcode" in kwargs:
+            if kwargs["exitcode"] != "0":
+                kwargs["level"] = "Error"
+        else:
+            kwargs["level"] = "Error"
+
+        # Send job event to database
+        self.output_to_db("inv.end", kwargs)
 
     def db_send_host_info(self, my_job, record):
-	"""
-	This function sends host information collected from the kickstart record to the database.
-	"""
-	# Start empty
-	kwargs = {}
+        """
+        This function sends host information collected from the
+        kickstart record to the database.
+        """
+        # Start empty
+        kwargs = {}
 
-	# Make sure we include the wf_uuid, name, and job_submit_seq
-	kwargs["wf__id"] = my_job._wf_uuid
-	kwargs["exec_job__id"] = my_job._exec_job_id
-	kwargs["job__id"] = my_job._job_submit_seq
+        # Make sure we include the wf_uuid, name, and job_submit_seq
+        kwargs["xwf__id"] = my_job._wf_uuid
+        kwargs["exec_job__id"] = my_job._exec_job_id
+        kwargs["job_inst__id"] = my_job._job_submit_seq
 
-	# Add information about the host
-	if "hostname" in record:
-	    kwargs["hostname"] = record["hostname"]
-	else:
-	    # Don't know what the hostname is
-	    kwargs["hostname"] = "unknown"
-	if "hostaddr" in record:
-	    kwargs["ip_address"] = record["hostaddr"]
-	else:
-	    # Don't know what the ip address is
-	    kwargs["ip_address"] = "unknown"
-	if "resource" in record:
-	    kwargs["site_name"] = record["resource"]
-	else:
-	    # Don't know what the site name is
-	    kwargs["site_name"] = "unknown"
-	if "total" in record:
-	    kwargs["total_ram"] = record["total"]
-	if "system" in record and "release" in record and "machine" in record:
-	    kwargs["uname"] = record["system"] + "-" + record["release"] + "-" + record["machine"]
+        # Add information about the host
+        if "hostname" in record:
+            kwargs["hostname"] = record["hostname"]
+        else:
+            # Don't know what the hostname is
+            kwargs["hostname"] = "unknown"
+        if "hostaddr" in record:
+            kwargs["ip"] = record["hostaddr"]
+        else:
+            # Don't know what the ip address is
+            kwargs["ip_address"] = "unknown"
+        if "resource" in record:
+            kwargs["site"] = record["resource"]
+        else:
+            # Don't know what the site name is
+            kwargs["site"] = "unknown"
+        if "total" in record:
+            kwargs["total_memory"] = record["total"]
+        if "system" in record and "release" in record and "machine" in record:
+            kwargs["uname"] = record["system"] + "-" + record["release"] + "-" + record["machine"]
 
-	# Add timestamp
-	kwargs["ts"] = self._current_timestamp
+        # Add timestamp
+        kwargs["ts"] = self._current_timestamp
 
-	# Send host event to database
-	self.output_to_db("host", kwargs)
+        # Send host event to database
+        self.output_to_db("job_inst.host.info", kwargs)
 
     def parse_job_output(self, my_job, job_state):
-	"""
-	This function tries to parse the kickstart output file of a given job and
-	collect information for the stampede schema.
-	"""
+        """
+        This function tries to parse the kickstart output file of a
+        given job and collect information for the stampede schema.
+        """
         my_output = []
         skip_kickstart_parsing = False
 
@@ -1717,16 +1759,13 @@ class Workflow:
             if my_parser._open_error == True:
                 logger.info("unable to find output file for job %s" % (my_job._exec_job_id))
 
-	# Initialize task id counter
-	my_task_id = 1
+        # Initialize task id counter
+        my_task_id = 1
 
         if len(my_output) > 0:
             # Add job information (from the kickstart output file) to
             # the Job class.
             my_job.extract_job_info(my_output)
-
-            # Send updated info to the database
-            self.db_send_job_info(my_job, job_state)
 
             # Loop through all records
             for record in my_output:
@@ -1735,7 +1774,8 @@ class Workflow:
                     continue
 	
                 # Send task information to the database
-                self.db_send_task_info(my_job, "MAIN JOB", my_task_id, record)
+                self.db_send_task_start(my_job, "MAIN_JOB", my_task_id, record)
+                self.db_send_task_end(my_job, "MAIN_JOB", my_task_id, record)
 
                 # Increment task id counter
                 my_task_id = my_task_id + 1
@@ -1743,121 +1783,107 @@ class Workflow:
                 # Send host information to the database
                 self.db_send_host_info(my_job, record)
         else:
-            # No kickstart output is available, still send updated job
-            # information to the database.
-            self.db_send_job_info(my_job, job_state)
-
             # If we don't have kickstart, we only generate 1 task
-            self.db_send_task_info(my_job, "MAIN JOB", my_task_id)
+            self.db_send_task_start(my_job, "MAIN_JOB", my_task_id)
+            self.db_send_task_end(my_job, "MAIN_JOB", my_task_id)
 
     def add_job(self, jobid, job_state, sched_id=None):
-	"""
-	This function adds a new job to our list of jobs. It first checks if
-	the job is already in our list in the PRE_SCRIPT_SUCCESS state, if so,
-	we just update its sched id. Otherwise we create a new Job container.
-	In any case, we always set the job state to job_state.
-	"""
+        """
+        This function adds a new job to our list of jobs. It first checks if
+        the job is already in our list in the PRE_SCRIPT_SUCCESS state, if so,
+        we just update its sched id. Otherwise we create a new Job container.
+        In any case, we always set the job state to job_state.
+        """
 
-	my_job_submit_seq = self.find_job_submit_seq(jobid)
+        my_job_submit_seq = self.find_job_submit_seq(jobid)
 
-	if my_job_submit_seq is not None:
-	    # Job already exists
-	    if not (jobid, my_job_submit_seq) in self._jobs:
-		logger.warning("cannot find job: %s, %s" % (jobid, my_job_submit_seq))
-		return
+        if my_job_submit_seq is not None:
+            # Job already exists
+            if not (jobid, my_job_submit_seq) in self._jobs:
+                logger.warning("cannot find job: %s, %s" % (jobid, my_job_submit_seq))
+                return
 
-	    my_job = self._jobs[jobid, my_job_submit_seq]
+            my_job = self._jobs[jobid, my_job_submit_seq]
 
-	    # Set sched_id
-	    if sched_id is not None:
-		my_job._sched_id = sched_id
+            # Set sched_id
+            if sched_id is not None:
+                my_job._sched_id = sched_id
 
-	    # Update job state
-	    my_job._job_state = job_state
-	    my_job._job_state_timestamp = int(self._current_timestamp)
-	else:
-	    # This is a new job, we have to do everything from scratch
-	    my_job_submit_seq = self._job_submit_seq
+            # Update job state
+            my_job._job_state = job_state
+            my_job._job_state_timestamp = int(self._current_timestamp)
+        else:
+            # This is a new job, we have to do everything from scratch
+            my_job_submit_seq = self._job_submit_seq
 
-	    # Make sure job is not already there
-	    if (jobid, my_job_submit_seq) in self._jobs:
-		logger.warning("trying to add job twice: %s, %s" % (jobid, my_job_submit_seq))
-		return
+            # Make sure job is not already there
+            if (jobid, my_job_submit_seq) in self._jobs:
+                logger.warning("trying to add job twice: %s, %s" % (jobid, my_job_submit_seq))
+                return
 
-	    # Create new job container
-	    my_job = Job(self._wf_uuid, jobid, my_job_submit_seq)
-	    # Set job state
-	    my_job._job_state = job_state
-	    my_job._job_state_timestamp = int(self._current_timestamp)
-	    # Set sched_id
-	    my_job._sched_id = sched_id
-	    # Set job type as "compute" for now, will change when submit file is parsed
-	    my_job._jobtype = "compute"
-	    # Add job to our list of jobs
-	    self._jobs[jobid, my_job_submit_seq] = my_job
+            # Create new job container
+            my_job = Job(self._wf_uuid, jobid, my_job_submit_seq)
+            # Set job state
+            my_job._job_state = job_state
+            my_job._job_state_timestamp = int(self._current_timestamp)
+            # Set sched_id
+            my_job._sched_id = sched_id
+            # Add job to our list of jobs
+            self._jobs[jobid, my_job_submit_seq] = my_job
 
-	    # Add/Update job in our job map
-	    self._jobs_map[jobid] = my_job_submit_seq
+            # Add/Update job in our job map
+            self._jobs_map[jobid] = my_job_submit_seq
 
-	    # Update job_submit_seq
-	    self._job_submit_seq = self._job_submit_seq + 1
+            # Update job_submit_seq
+            self._job_submit_seq = self._job_submit_seq + 1
 
-	# Update job counter if this job is in the SUBMIT state
-	if job_state == "SUBMIT":
-	    if jobid in self._job_counters:
-		# Counter already exists for this job, just increate it by 1
-		self._job_counters[jobid] = self._job_counters[jobid] + 1
-	    else:
-		# No counter for this job yet
-		self._job_counters[jobid] = 0
-	    # Now, we set the job output counter for this particular job
-	    my_job._job_output_counter = self._job_counters[jobid]
+        # Update job counter if this job is in the SUBMIT state
+        if job_state == "SUBMIT":
+            if jobid in self._job_counters:
+                # Counter already exists for this job, just increate it by 1
+                self._job_counters[jobid] = self._job_counters[jobid] + 1
+            else:
+                # No counter for this job yet
+                self._job_counters[jobid] = 0
+            # Now, we set the job output counter for this particular job
+            my_job._job_output_counter = self._job_counters[jobid]
 
-        # Don't send a database event for the DAGMAN_SUBMIT state
-        if job_state == "DAGMAN_SUBMIT":
-            return my_job_submit_seq
-
-	# All done!
-	if self._sink is not None:
-	    # Send job event to database
-	    self.db_send_job_info(my_job, job_state)
-
-	return my_job_submit_seq
+        return my_job_submit_seq
 
     def job_update_info(self, jobid, job_submit_seq, sched_id=None):
-	"""
-	This function adds info to an exising job.
-	"""
+        """
+        This function adds info to an exising job.
+        """
 
-	# Make sure job is already there
-	if not (jobid, job_submit_seq) in self._jobs:
-	    logger.warning("cannot find job: %s, %s" % (jobid, job_submit_seq))
-	    return
+        # Make sure job is already there
+        if not (jobid, job_submit_seq) in self._jobs:
+            logger.warning("cannot find job: %s, %s" % (jobid, job_submit_seq))
+            return
 
-	my_job = self._jobs[jobid, job_submit_seq]
-	# Set sched_id
-	my_job._sched_id = sched_id
+        my_job = self._jobs[jobid, job_submit_seq]
+        # Set sched_id
+        my_job._sched_id = sched_id
 
-	# Everything done
-	return
+        # Everything done
+        return
 
     def update_job_state(self, jobid, job_submit_seq, job_state, status, walltime):
-	"""
-	This function updates a	job's state, and also writes
-	a line in our output file.
-	"""
-	# Find job
-	if job_submit_seq is None:
-	    # Need to get job_submit_seq from our hash table
-	    if jobid in self._jobs_map:
-		job_submit_seq = self._jobs_map[jobid]
-	if not (jobid, job_submit_seq) in self._jobs:
-	    logger.warning("cannot find job: %s, %s" % (jobid, job_submit_seq))
-	    return
-	# Got it
-	my_job = self._jobs[jobid, job_submit_seq]
-	# Update job state
-	my_job.set_job_state(job_state, self._current_timestamp, status)
+        """
+        This function updates a	job's state, and also writes
+        a line in our output file.
+        """
+        # Find job
+        if job_submit_seq is None:
+            # Need to get job_submit_seq from our hash table
+            if jobid in self._jobs_map:
+                job_submit_seq = self._jobs_map[jobid]
+        if not (jobid, job_submit_seq) in self._jobs:
+            logger.warning("cannot find job: %s, %s" % (jobid, job_submit_seq))
+            return
+        # Got it
+        my_job = self._jobs[jobid, job_submit_seq]
+        # Update job state
+        my_job.set_job_state(job_state, self._current_timestamp, status)
 
         # Make status a string so we can print properly
         if status is not None:
@@ -1874,71 +1900,126 @@ class Workflow:
         # Prepare for atomic append
         self._JSDB.write("%s\n" % (my_line))
 
-	if self._sink is None:
-	    # Not using a database, nothing else to do!
-	    return
+        if self._sink is None:
+            # Not using a database, nothing else to do!
+            return
 
-	# Send jobstate event to database
-	self.db_send_job_state(my_job)
+        # Check if we need to send any tasks to the database
+        if job_state == "PRE_SCRIPT_SUCCESS" or job_state == "PRE_SCRIPT_FAILURE":
+            # PRE script finished
+            self.db_send_task_start(my_job, "PRE_SCRIPT")
+            self.db_send_task_end(my_job, "PRE_SCRIPT")
+        elif job_state == "POST_SCRIPT_SUCCESS" or job_state == "POST_SCRIPT_FAILURE":
+            # POST script finished
+            self.db_send_task_start(my_job, "POST_SCRIPT")
+            self.db_send_task_end(my_job, "POST_SCRIPT")
+        elif job_state == "JOB_SUCCESS" or job_state == "JOB_FAILURE":
+            # Main job has ended
+            self.parse_job_output(my_job, job_state)
 
-	# Check if we need to send any job notifications to the
-	# database that are not already done in add_job (mainjob
-	# start, pre_script start) or in parse_job_output (mainjob
-	# start and finish)
-	if job_state == "POST_SCRIPT_STARTED":
-	    # POST script started
-	    self.db_send_job_note(my_job, "job.postscript.start")
-	if job_state == "POST_SCRIPT_FAILURE" or job_state == "POST_SCRIPT_SUCCESS":
-	    # POST script finished
-	    self.db_send_job_note(my_job, "job.postscript.end")
-	elif job_state == "PRE_SCRIPT_FAILURE" or job_state == "PRE_SCRIPT_SUCCESS":
-	    # PRE script finished
-	    self.db_send_job_note(my_job, "job.prescript.end")
-
-	# Check if we need to send any tasks to the database
-	if job_state == "POST_SCRIPT_FAILURE" or job_state == "POST_SCRIPT_SUCCESS":
-	    # POST script finished
-	    self.db_send_task_info(my_job, "POST SCRIPT", POSTSCRIPT_TASK_ID)
-	elif job_state == "PRE_SCRIPT_FAILURE" or job_state == "PRE_SCRIPT_SUCCESS":
-	    # PRE script finished
-	    self.db_send_task_info(my_job, "PRE SCRIPT", PRESCRIPT_TASK_ID)
-	elif job_state == "JOB_SUCCESS" or job_state == "JOB_FAILURE":
-	    # Main job has ended
-	    self.parse_job_output(my_job, job_state)
+        # Now, figure out what state event we need to send to the database
+        if job_state == "PRE_SCRIPT_STARTED":
+            self.db_send_job_brief(my_job, "pre.start")
+        elif job_state == "PRE_SCRIPT_TERMINATED":
+            self.db_send_job_brief(my_job, "pre.term")
+        elif job_state == "PRE_SCRIPT_SUCCESS":
+            self.db_send_job_brief(my_job, "pre.end", 0)
+        elif job_state == "PRE_SCRIPT_FAILED":
+            self.db_send_job_brief(my_job, "pre.end", -1)
+        elif job_state == "SUBMIT":
+            self.db_send_job_brief(my_job, "submit.start")
+            self.db_send_job_brief(my_job, "submit.end", 0)
+        elif job_state == "GRID_SUBMIT":
+            self.db_send_job_brief(my_job, "grid_submit")
+        elif job_state == "GLOBUS_SUBMIT":
+            self.db_send_job_brief(my_job, "globus_submit")
+        elif job_state == "SUBMIT_FAILED":
+            self.db_send_job_brief(my_job, "submit.start")
+            self.db_send_job_brief(my_job, "submit.end", -1)
+        elif job_state == "EXECUTE":
+            self.db_send_job_start(my_job)
+        elif job_state == "REMOTE_ERROR":
+            self.db_send_job_brief(my_job, "remote_error")
+        elif job_state == "IMAGE_SIZE":
+            self.db_send_job_brief(my_job, "image.info")
+        elif job_state == "JOB_TERMINATED":
+            self.db_send_job_brief(my_job, "main.term", 0)
+        elif job_state == "JOB_SUCCESS":
+            self.db_send_job_end(my_job, 0)
+        elif job_state == "JOB_FAILURE":
+            self.db_send_job_end(my_job, -1)
+        elif job_state == "JOB_HELD":
+            self.db_send_job_brief(my_job, "held.start")
+        elif job_state == "JOB_EVICTED":
+            self.db_send_job_brief(my_job, "main.term", -1)
+        elif job_state == "JOB_RELEASED":
+            self.db_send_job_brief(my_job, "held.end", 0)
+        elif job_state == "POST_SCRIPT_STARTED":
+            self.db_send_job_brief(my_job, "post.start")
+        elif job_state == "POST_SCRIPT_TERMINATED":
+            self.db_send_job_brief(my_job, "post.term")
+        elif job_state == "POST_SCRIPT_SUCCESS":
+            self.db_send_job_brief(my_job, "post.end", 0)
+        elif job_state == "POST_SCRIPT_FAILED":
+            self.db_send_job_brief(my_job, "post.end", -1)
 
     def parse_job_sub_file(self, jobid, job_submit_seq):
-	"""
-	This function calls a function in the Job class to parse
-	a job's submit file and extract planning information
-	"""
+        """
+        This function calls a function in the Job class to parse
+        a job's submit file and extract planning information
+        """
 
-	# Find job
-	if not (jobid, job_submit_seq) in self._jobs:
-	    logger.warning("cannot find job: %s, %s" % (jobid, job_submit_seq))
-	    return None, None
+        # Find job
+        if not (jobid, job_submit_seq) in self._jobs:
+            logger.warning("cannot find job: %s, %s" % (jobid, job_submit_seq))
+            return None, None
 
-	# Check if we have an entry for this job
-	if not jobid in self._job_info:
-	    return None, None
+        # Check if we have an entry for this job
+        if not jobid in self._job_info:
+            return None, None
 
-	# Make sure if we have a file for this entry
+        # Make sure if we have a file for this entry
         # (should always be there, except for SUBDAG jobs)
-	if self._job_info[jobid][0] is None:
-	    return None, None
+        if self._job_info[jobid][0] is None:
+            return None, None
 
-	# Got everything
-	my_job = self._jobs[jobid, job_submit_seq]
+        # Got everything
+        my_job = self._jobs[jobid, job_submit_seq]
 
-	# Parse sub file
-	my_diff, my_site = my_job.parse_sub_file(self._current_timestamp, self._job_info[jobid][0])
+        # Parse sub file
+        my_diff, my_site = my_job.parse_sub_file(self._current_timestamp, self._job_info[jobid][0])
 
-	# All done
-	return my_diff, my_site
+        # Change input, output, and error files to be relative to the submit directory
+        try:
+            if my_job._input_file.find(self._original_submit_dir) >= 0:
+                # Path to file includes original submit_dir, let's try to remove it
+                my_job._input_file = os.path.normpath(my_job._input_file.replace((self._original_submit_dir + os.sep), '', 1))
+        except:
+            # Something went wrong, let's just keep what we had...
+            pass
+        try:
+            if my_job._output_file.find(self._original_submit_dir) >= 0:
+                # Path to file includes original submit_dir, let's try to remove it
+                my_job._output_file = os.path.normpath(my_job._output_file.replace((self._original_submit_dir + os.sep), '', 1))
+        except:
+            # Something went wrong, let's just keep what we had...
+            pass
+        try:
+            if my_job._error_file.find(self._original_submit_dir) >= 0:
+                # Path to file includes original submit_dir, let's try to remove it
+                my_job._error_file = os.path.normpath(my_job._error_file.replace((self._original_submit_dir + os.sep), '', 1))
+        except:
+            # Something went wrong, let's just use what we had...
+            pass
+
+        # All done
+        return my_diff, my_site
 
     def has_subworkflow(self, jobid):
         """
-        This function returns a new dagman.out file to follow if the job is either a
-        SUBDAG job, a pegasus-plan, or a subdax_ job. Otherwise, it returns None.
+        This function returns a new dagman.out file to follow if the
+        job is either a SUBDAG job, a pegasus-plan, or a subdax_
+        job. Otherwise, it returns None.
         """
         # This shouldn't be the case...
         if not jobid in self._job_info:
@@ -2101,11 +2182,11 @@ if fuse < 60:
 # Copy command line options into our variables
 
 if options.vb == 0:
-     lvl = logging.WARN
+    lvl = logging.WARN
 elif options.vb == 1:
-     lvl = logging.INFO
+    lvl = logging.INFO
 else:
-     lvl = logging.DEBUG
+    lvl = logging.DEBUG
 
 # Set logging level
 logger.setLevel(lvl)
@@ -2169,13 +2250,13 @@ else:
 # Walk through any config properties
 if options.config_opts is not None:
     for prop in options.config_opts:
-	prop = prop.strip()
-	try:
-	    k, v = prop.split("=", 1)
-	except:
-	    parser.print_help()
-	    sys.exit(1)
-	config[k] = v
+        prop = prop.strip()
+        try:
+            k, v = prop.split("=", 1)
+        except:
+            parser.print_help()
+            sys.exit(1)
+        config[k] = v
 
 # Sanity check
 if fuse < 60:
@@ -2199,37 +2280,43 @@ if jsd is not None:
 #
 
 def sendmsg(client_connection, msg):
-    # purpose: send all data to socket connection, try several time if necessary
-    # paramtr: client_connection(IN): socket connection to send data
-    # paramtr: msg(IN): message to send
-    # returns: None on error, 1 on success
+    """
+    purpose: send all data to socket connection, try several time if necessary
+    paramtr: client_connection(IN): socket connection to send data
+    paramtr: msg(IN): message to send
+    returns: None on error, 1 on success
+    """
     my_total_bytes_sent = 0
 
     while my_total_bytes_sent < len(msg):
-	try:
-	    my_bytes_sent = client_connection.send(msg[my_total_bytes_sent:])
-	except:
-	    logger.error("writing to socket!")
-	    return None
+        try:
+            my_bytes_sent = client_connection.send(msg[my_total_bytes_sent:])
+        except:
+            logger.error("writing to socket!")
+            return None
 
-	my_total_bytes_sent = my_total_bytes_sent + my_bytes_sent
+        my_total_bytes_sent = my_total_bytes_sent + my_bytes_sent
 
     return 1
 
 def systell(fh):
-    # purpose: make things symmetric, have a systell for sysseek
-    # paramtr: fh (IO): filehandle
-    # returns: current file position
+    """
+    purpose: make things symmetric, have a systell for sysseek
+    paramtr: fh (IO): filehandle
+    returns: current file position
+    """
     os.lseek(fh, 0, os.SEEK_CUR)
 
 def add(wf, jobid, event, sched_id=None, status=None):
-    # purpose: append atomically a line to the jobstate file
-    # paramtr: wf(IN): workflow object for this operation
-    # paramtr: jobid(IN): what job
-    # paramtr: event(IN): new status of job
-    # paramtr: sched_id(IN, OPT): sched id
-    # paramtr: status(IN, OPT): exitcode
-    # returns: Nothing
+    """
+    purpose: append atomically a line to the jobstate file
+    paramtr: wf(IN): workflow object for this operation
+    paramtr: jobid(IN): what job
+    paramtr: event(IN): new status of job
+    paramtr: sched_id(IN, OPT): sched id
+    paramtr: status(IN, OPT): exitcode
+    returns: Nothing
+    """
 
     my_site = None
     my_time = None
@@ -2237,82 +2324,89 @@ def add(wf, jobid, event, sched_id=None, status=None):
 
     # Remove existing site info during replanning
     if event in unsubmitted_events:
-	if jobid in wf._job_site:
-	    del wf._job_site[jobid]
-	if jobid in wf._walltime:
-	    del wf._walltime[jobid]
+        if jobid in wf._job_site:
+            del wf._job_site[jobid]
+        if jobid in wf._walltime:
+            del wf._walltime[jobid]
 
     # Variables originally from submit file information
     if jobid in wf._job_site:
-	my_site = wf._job_site[jobid]
+        my_site = wf._job_site[jobid]
     if jobid in wf._walltime:
-	my_time = wf._walltime[jobid]
+        my_time = wf._walltime[jobid]
 
     # A PRE_SCRIPT_START event always means a new job
     if event == "PRE_SCRIPT_STARTED":
-	# This is a new job, we need to add it to the workflow
-	my_job_submit_seq = wf.add_job(jobid, event)
+        # This is a new job, we need to add it to the workflow
+        my_job_submit_seq = wf.add_job(jobid, event)
+
+    # A DAGMAN_SUBMIT event requires a new job (unless this was
+    # already done by a PRE_SCRIPT_STARTED event, but we let the
+    # add_job function figure this out).
+    if event == "DAGMAN_SUBMIT":
+        wf._last_submitted_job = jobid
+        my_job_submit_seq = wf.add_job(jobid, event)
+
+        # Nothing else to do... we should stop here...
+        return
 
     # A SUBMIT event brings sched id and job type information (it can also be
     # a new job for us when there is no PRE_SCRIPT)
     if event == "SUBMIT":
-	# Add job to our workflow (if not alredy there), will update sched_id in both cases
-	my_job_submit_seq = wf.add_job(jobid, event, sched_id=sched_id)
+        # Add job to our workflow (if not alredy there), will update sched_id in both cases
+        my_job_submit_seq = wf.add_job(jobid, event, sched_id=sched_id)
 
-	# Obtain planning information from the submit file when entering Condor,
-	# Figure out how long the job _intends_ to run maximum
-	my_time, my_site = wf.parse_job_sub_file(jobid, my_job_submit_seq)
+        # Obtain planning information from the submit file when entering Condor,
+        # Figure out how long the job _intends_ to run maximum
+        my_time, my_site = wf.parse_job_sub_file(jobid, my_job_submit_seq)
 
-	if my_site == "!!SITE!!":
-	    my_site = None
+        if my_site == "!!SITE!!":
+            my_site = None
 
-	# If not None, convert into seconds
-	if my_time is not None:
-	    my_time = my_time * 60
+        # If not None, convert into seconds
+        if my_time is not None:
+            my_time = my_time * 60
             logger.info("job %s requests %d s walltime" % (jobid, my_time))
-	    wf._walltime[jobid] = my_time
-	else:
+            wf._walltime[jobid] = my_time
+        else:
             logger.info("job %s does not request a walltime" % (jobid))
 
-	# Remember the run-site
-	if my_site is not None:
+        # Remember the run-site
+        if my_site is not None:
             logger.info("job %s is planned for site %s" % (jobid, my_site))
-	    wf._job_site[jobid] = my_site
-	else:
+            wf._job_site[jobid] = my_site
+        else:
             logger.info("job %s does not have a site information!" % (jobid))
 
     # Get job_submit_seq if we don't already have it
     if my_job_submit_seq is None:
-	my_job_submit_seq = wf.find_jobid(jobid)
+        my_job_submit_seq = wf.find_jobid(jobid)
 
     if my_job_submit_seq is None:
-	logger.warning("cannot find job_submit_seq for job: %s" % (jobid))
+        logger.warning("cannot find job_submit_seq for job: %s" % (jobid))
         # Nothing else to do...
         return
-
-    # A SUBMIT_FAILED event requires us to send a job mainjob start event
-    if event == "SUBMIT_FAILED":
-        if my_job_submit_seq is not None:
-            if (jobid, my_job_submit_seq) in wf._jobs:
-                my_job = wf._jobs[jobid, my_job_submit_seq]
-                wf.db_send_job_info(my_job, "SUBMIT")
-            else:
-                logger.warning("cannot find job: %s, %s" % (jobid, my_job_submit_seq))
 
     # Make sure job has the updated state
     wf.update_job_state(jobid, my_job_submit_seq, event, status, my_time)
 
     return
 
-def process(wf, log_line):
-    # purpose: process a log line and look for the information we are interested in
-    # paramtr: log_line(IN): the line
+def process_dagman_out(wf, log_line):
+    """
+    This function processes a log line from the dagman.out file and
+    calls either the add function to generate a jobstate.log output
+    line, or calls the corresponding workflow class method in order to
+    track the various events that happen during the life of a
+    workflow.
+    """
 
     # Keep track of line count
     wf._line = wf._line + 1
 
     # Make sure we have not already seen this line
-    # This is used in the case of rescue dags, for skipping what we have already seen in the dagman.out file
+    # This is used in the case of rescue dags, for skipping
+    # what we have already seen in the dagman.out file
     if wf._line <= wf._last_processed_line:
         return
 
@@ -2324,9 +2418,9 @@ def process(wf, log_line):
     my_expr = re_parse_timestamp.search(log_line)
     
     if my_expr is not None:
-	# Found time stamp, let's assume valid log line
-	curr_time = time.localtime()
-	adj_time = list(curr_time)
+        # Found time stamp, let's assume valid log line
+        curr_time = time.localtime()
+        adj_time = list(curr_time)
         adj_time[1] = int(my_expr.group(1)) # Month
         adj_time[2] = int(my_expr.group(2)) # Day
         adj_time[3] = int(my_expr.group(5)) # Hours
@@ -2338,7 +2432,7 @@ def process(wf, log_line):
             # New timestamp format
             adj_time[0] = int(my_expr.group(4)) + 2000 # Year
 
-	wf._current_timestamp = time.mktime(adj_time) + adjustment
+        wf._current_timestamp = time.mktime(adj_time) + adjustment
         timestamp_found = True
     else:
         # FIXME: Use method from utils.py, do not re-invent the wheel!
@@ -2381,96 +2475,96 @@ def process(wf, log_line):
                 wf._skipping_recovery_lines = False
             return
 
-	# Search for more content
-	if re_parse_event.search(log_line) is not None:
-	    # Found Event
-	    my_expr = re_parse_event.search(log_line)
-	    # groups = jobid, event, sched_id
+        # Search for more content
+        if re_parse_event.search(log_line) is not None:
+            # Found ULOG Event
+            my_expr = re_parse_event.search(log_line)
+            # groups = jobid, event, sched_id
             my_event = my_expr.group(1)
             my_jobid = my_expr.group(2)
             my_sched_id = my_expr.group(3)
-	    add(wf, my_jobid, my_event, sched_id=my_sched_id)
+            add(wf, my_jobid, my_event, sched_id=my_sched_id)
             if my_event == "SUBMIT" and follow_subworkflows == True:
                 # For SUBMIT ULOG events, check if this is a sub-workflow
                 my_new_dagman_out = wf.has_subworkflow(my_jobid)
                 # Ok, return result to main loop
                 return my_new_dagman_out
         elif re_parse_job_submit.search(log_line) is not None:
-            # Found job submit event
+            # Found a DAGMan job submit event
             my_expr = re_parse_job_submit.search(log_line)
-            wf._last_submitted_job = my_expr.group(1)
-            wf.add_job(my_expr.group(1), "DAGMAN_SUBMIT")
+            # groups = jobid
+            add(wf, my_expr.group(1), "DAGMAN_SUBMIT")
         elif re_parse_job_submit_error.search(log_line) is not None:
-            # Found job submit error event
+            # Found a DAGMan job submit error event
             if wf._last_submitted_job is not None:
                 add(wf, wf._last_submitted_job, "SUBMIT_FAILED")
             else:
                 logger.warning("found submit error in dagman.out, but last job is not set")
-	elif re_parse_script_running.search(log_line) is not None:
-	    # Pre scripts are not regular Condor event
-	    # Starting of scripts is not a regular Condor event
-	    my_expr = re_parse_script_running.search(log_line)
-	    # groups = script, jobid
-	    my_script = my_expr.group(1).upper()
-	    my_jobid = my_expr.group(2)
-	    add(wf, my_jobid, "%s_SCRIPT_STARTED" % (my_script))
-	elif re_parse_script_done.search(log_line) is not None:
-	    my_expr = re_parse_script_done.search(log_line)
-	    # groups = script, jobid
-	    my_script = my_expr.group(1).upper()
-	    my_jobid = my_expr.group(2)
-	    if re_parse_script_successful.search(log_line) is not None:
-		# Remember success with artificial jobstate
-		add(wf, my_jobid, "%s_SCRIPT_SUCCESS" % (my_script), status=0)
-	    elif re_parse_script_failed.search(log_line) is not None:
-		# Remember failure with artificial jobstate
-		my_expr = re_parse_script_failed.search(log_line)
-		# groups = exit code (error status)
-		try:
-		    my_exit_code = int(my_expr.group(1))
-		except:
-		    # Unable to convert exit code to integer -- should not happen
-		    logger.warning("unable to convert exit code to integer!")
-		    my_exit_code = 1
-		add(wf, my_jobid, "%s_SCRIPT_FAILURE" % (my_script), status=my_exit_code)
-	    else:
-		# Ignore
-		logger.warning("unknown pscript state: %s" % (log_line[-14:]))
-	elif re_parse_job_failed.search(log_line) is not None:
-	    # Job has failed
-	    my_expr = re_parse_job_failed.search(log_line)
-	    # groups = jobid, schedid, jobstatus
-	    my_jobid = my_expr.group(1)
-	    my_sched_id = my_expr.group(2)
-	    try:
-		my_jobstatus = int(my_expr.group(3))
-	    except:
-		# Unable to convert exit code to integet -- should not happen
-		logger.warning("unable to convert exit code to integer!")
-		my_jobstatus = 1
-	    # remember failure with artificial jobstate
-	    add(wf, my_jobid, "JOB_FAILURE", sched_id=my_sched_id, status=my_jobstatus)
-	elif re_parse_job_successful.search(log_line) is not None:
-	    # Job succeeded
-	    my_expr = re_parse_job_successful.search(log_line)
-	    my_jobid = my_expr.group(1)
-	    my_sched_id = my_expr.group(2)
-	    # remember success with artificial jobstate
-	    add(wf, my_jobid, "JOB_SUCCESS", sched_id=my_sched_id, status=0)
-	elif re_parse_dagman_finished.search(log_line) is not None:
-	    # DAG finished -- done parsing
-	    my_expr = re_parse_dagman_finished.search(log_line)
-	    # groups = exit code
-	    try:
-		wf._dagman_exit_code = int(my_expr.group(1))
-	    except:
-		# Cannot convert exit code to integer!
-		logger.warning("cannot convert DAGMan's exit code to integer!")
-		wf._dagman_exit_code = 0
+        elif re_parse_script_running.search(log_line) is not None:
+            # Pre scripts are not regular Condor event
+            # Starting of scripts is not a regular Condor event
+            my_expr = re_parse_script_running.search(log_line)
+            # groups = script, jobid
+            my_script = my_expr.group(1).upper()
+            my_jobid = my_expr.group(2)
+            add(wf, my_jobid, "%s_SCRIPT_STARTED" % (my_script))
+        elif re_parse_script_done.search(log_line) is not None:
+            my_expr = re_parse_script_done.search(log_line)
+            # groups = script, jobid
+            my_script = my_expr.group(1).upper()
+            my_jobid = my_expr.group(2)
+            if re_parse_script_successful.search(log_line) is not None:
+                # Remember success with artificial jobstate
+                add(wf, my_jobid, "%s_SCRIPT_SUCCESS" % (my_script), status=0)
+            elif re_parse_script_failed.search(log_line) is not None:
+                # Remember failure with artificial jobstate
+                my_expr = re_parse_script_failed.search(log_line)
+                # groups = exit code (error status)
+                try:
+                    my_exit_code = int(my_expr.group(1))
+                except:
+                    # Unable to convert exit code to integer -- should not happen
+                    logger.warning("unable to convert exit code to integer!")
+                    my_exit_code = 1
+                add(wf, my_jobid, "%s_SCRIPT_FAILURE" % (my_script), status=my_exit_code)
+            else:
+                # Ignore
+                logger.warning("unknown pscript state: %s" % (log_line[-14:]))
+        elif re_parse_job_failed.search(log_line) is not None:
+            # Job has failed
+            my_expr = re_parse_job_failed.search(log_line)
+            # groups = jobid, schedid, jobstatus
+            my_jobid = my_expr.group(1)
+            my_sched_id = my_expr.group(2)
+            try:
+                my_jobstatus = int(my_expr.group(3))
+            except:
+                # Unable to convert exit code to integet -- should not happen
+                logger.warning("unable to convert exit code to integer!")
+                my_jobstatus = 1
+            # remember failure with artificial jobstate
+            add(wf, my_jobid, "JOB_FAILURE", sched_id=my_sched_id, status=my_jobstatus)
+        elif re_parse_job_successful.search(log_line) is not None:
+            # Job succeeded
+            my_expr = re_parse_job_successful.search(log_line)
+            my_jobid = my_expr.group(1)
+            my_sched_id = my_expr.group(2)
+            # remember success with artificial jobstate
+            add(wf, my_jobid, "JOB_SUCCESS", sched_id=my_sched_id, status=0)
+        elif re_parse_dagman_finished.search(log_line) is not None:
+            # DAG finished -- done parsing
+            my_expr = re_parse_dagman_finished.search(log_line)
+            # groups = exit code
+            try:
+                wf._dagman_exit_code = int(my_expr.group(1))
+            except:
+                # Cannot convert exit code to integer!
+                logger.warning("cannot convert DAGMan's exit code to integer!")
+                wf._dagman_exit_code = 0
                 wf._monitord_exit_code = 1
-	    logger.info("DAGMan finished with exit code %s" % (wf._dagman_exit_code))
-	    # Send info to database
-	    wf.change_wf_state("end")
+            logger.info("DAGMan finished with exit code %s" % (wf._dagman_exit_code))
+            # Send info to database
+            wf.change_wf_state("end")
         elif re_parse_dagman_condor_id.search(log_line) is not None:
             # DAGMan starting, capture its condor id
             my_expr = re_parse_dagman_condor_id.search(log_line)
@@ -2478,8 +2572,8 @@ def process(wf, log_line):
             if not keep_state:
                 # Initialize workflow parameters
                 wf.start_wf()
-	elif re_parse_dagman_pid.search(log_line) is not None and not replay_mode:
-	    # DAGMan's pid, but only set pid if not running in replay mode
+        elif re_parse_dagman_pid.search(log_line) is not None and not replay_mode:
+            # DAGMan's pid, but only set pid if not running in replay mode
             # (otherwise pid may belong to another process)
             my_expr = re_parse_dagman_pid.search(log_line)
             # groups = DAGMan's pid
@@ -2488,7 +2582,7 @@ def process(wf, log_line):
             except:
                 logger.critical("cannot set pid: %s" % (my_expr.group(1)))
                 sys.exit(42)
-	    logger.info("DAGMan runs at pid %d" % (wf._dagman_pid))
+            logger.info("DAGMan runs at pid %d" % (wf._dagman_pid))
         elif re_parse_dag_name.search(log_line) is not None:
             # Found the dag filename, read dag, and generate start event for the database
             my_expr = re_parse_dag_name.search(log_line)
@@ -2496,52 +2590,52 @@ def process(wf, log_line):
             # Parse dag file
             logger.info("using dag %s" % (my_dag))
             wf.parse_dag_file(my_dag)
-	    # Send the delayed workflow start event to database
-	    wf.change_wf_state("start")
-	elif re_parse_condor_version.search(log_line) is not None:
-	    # Version of this logfile format
-	    my_expr = re_parse_condor_version.search(log_line)
-	    # groups = condor version, condor major
-	    my_condor_version = my_expr.group(1)
-	    my_condor_major = my_expr.group(2)
-	    logger.info("Using DAGMan version %s" % (my_condor_version))
-	elif (re_parse_condor_logfile.search(log_line) is not None or
-	      wf._multiline_file_flag == True and re_parse_condor_logfile_insane.search(log_line) is not None):
-	    # Condor common log file location, DAGMan 6.6
-	    if re_parse_condor_logfile.search(log_line) is not None:
-		my_expr = re_parse_condor_logfile.search(log_line)
-	    else:
-		my_expr = re_parse_condor_logfile_insane.search(log_line)
-	    wf._condorlog = my_expr.group(1)
-	    logger.info("Condor writes its logfile to %s" % (wf._condorlog))
+            # Send the delayed workflow start event to database
+            wf.change_wf_state("start")
+        elif re_parse_condor_version.search(log_line) is not None:
+            # Version of this logfile format
+            my_expr = re_parse_condor_version.search(log_line)
+            # groups = condor version, condor major
+            my_condor_version = my_expr.group(1)
+            my_condor_major = my_expr.group(2)
+            logger.info("Using DAGMan version %s" % (my_condor_version))
+        elif (re_parse_condor_logfile.search(log_line) is not None or
+              wf._multiline_file_flag == True and re_parse_condor_logfile_insane.search(log_line) is not None):
+            # Condor common log file location, DAGMan 6.6
+            if re_parse_condor_logfile.search(log_line) is not None:
+                my_expr = re_parse_condor_logfile.search(log_line)
+            else:
+                my_expr = re_parse_condor_logfile_insane.search(log_line)
+            wf._condorlog = my_expr.group(1)
+            logger.info("Condor writes its logfile to %s" % (wf._condorlog))
 
-	    # Make a symlink for NFS-secured files
-	    my_log, my_base = out2log(wf._run_dir, wf._out_file)
-	    if os.path.islink(my_log):
-		logger.info("symlink %s already exists" % (my_log))
-	    elif os.access(my_log, os.R_OK):
-		logger.info("%s is a regular file, not touching" % (my_base))
-	    else:
-		logger.info("trying to create local symlink to common log")
-		if os.access(wf._condorlog, os.R_OK) or not os.access(wf._condorlog, os.F_OK):
-		    if os.access(my_log, os.R_OK):
-			try:
-			    os.rename(my_log, "%s.bak" % (my_log))
-			except:
-			    logger.warning("error renaming %s to %s.bak" % (my_log, my_log))
-		    try:
-			os.symlink(wf._condorlog, my_log)
-		    except:
-			logger.info("unable to symlink %s" % (wf._condorlog))
-		    else:
-			logger.info("symlink %s -> %s" % (wf._condorlog, my_log))
-		else:
-		    logger.info("%s exists but is not readable!" % (wf._condorlog))
-	    # We only expect one of such files
-	    wf._multiline_file_flag = False
-	elif re_parse_multiline_files.search(log_line) is not None:
-	    # Multiline user log files, DAGMan > 6.6
-	    wf._multiline_file_flag = True
+            # Make a symlink for NFS-secured files
+            my_log, my_base = out2log(wf._run_dir, wf._out_file)
+            if os.path.islink(my_log):
+                logger.info("symlink %s already exists" % (my_log))
+            elif os.access(my_log, os.R_OK):
+                logger.info("%s is a regular file, not touching" % (my_base))
+            else:
+                logger.info("trying to create local symlink to common log")
+                if os.access(wf._condorlog, os.R_OK) or not os.access(wf._condorlog, os.F_OK):
+                    if os.access(my_log, os.R_OK):
+                        try:
+                            os.rename(my_log, "%s.bak" % (my_log))
+                        except:
+                            logger.warning("error renaming %s to %s.bak" % (my_log, my_log))
+                    try:
+                        os.symlink(wf._condorlog, my_log)
+                    except:
+                        logger.info("unable to symlink %s" % (wf._condorlog))
+                    else:
+                        logger.info("symlink %s -> %s" % (wf._condorlog, my_log))
+                else:
+                    logger.info("%s exists but is not readable!" % (wf._condorlog))
+            # We only expect one of such files
+            wf._multiline_file_flag = False
+        elif re_parse_multiline_files.search(log_line) is not None:
+            # Multiline user log files, DAGMan > 6.6
+            wf._multiline_file_flag = True
         elif log_line.find("Running in RECOVERY mode...") >= 0:
             # Entering recovery mode, skip lines until we reach the end
             wf._skipping_recovery_lines = True
@@ -2551,26 +2645,28 @@ def process(wf, log_line):
         logger.info( "time stamp format not recognized" )
 
 def server_socket(low, hi, bind_addr="127.0.0.1"):
-    # purpose: create a local TCP server socket to listen to sitesel requests
-    # paramtr: low (IN): minimum port from bind range
-    # paramtr: hi (IN): maximum port from bind range
-    # paramtr: bind_addr (IN): optional hostaddr_in to bind to , defaults to LOOPBACK
-    # returns: open socket, or None on error
+    """
+    purpose: create a local TCP server socket to listen to sitesel requests
+    paramtr: low (IN): minimum port from bind range
+    paramtr: hi (IN): maximum port from bind range
+    paramtr: bind_addr (IN): optional hostaddr_in to bind to , defaults to LOOPBACK
+    returns: open socket, or None on error
+    """
 
     # Create socket
     try:
-	my_socket = socket.socket(socket.AF_INET,
-				  socket.SOCK_STREAM,
-				  socket.getprotobyname("tcp"))
+        my_socket = socket.socket(socket.AF_INET,
+                                  socket.SOCK_STREAM,
+                                  socket.getprotobyname("tcp"))
     except:
         logger.critical("could not create socket!")
         sys.exit(42)
 
     # Set options
     try:
-	my_socket.setsockopt(socket.SOL_SOCKET,
-			     socket.SO_REUSEADDR,
-			     1)
+        my_socket.setsockopt(socket.SOL_SOCKET,
+                             socket.SO_REUSEADDR,
+                             1)
     except:
         logger.critical("setsockopt SO_REUSEADDR!")
         sys.exit(42)
@@ -2578,13 +2674,13 @@ def server_socket(low, hi, bind_addr="127.0.0.1"):
     # Bind to a free port
     my_port = low
     for my_port in range(low, hi):
-	try:
-	    my_res = my_socket.bind((bind_addr, my_port))
-	except:
-	    # Go to next port
-	    continue
-	else:
-	    break
+        try:
+            my_res = my_socket.bind((bind_addr, my_port))
+        except:
+            # Go to next port
+            continue
+        else:
+            break
 
     if my_port >= hi:
         logger.critical("no free port to bind to!")
@@ -2593,14 +2689,14 @@ def server_socket(low, hi, bind_addr="127.0.0.1"):
     # Make server socket non-blocking to not have a race condition
     # when doing select() before accept() on a server socket
     try:
-	my_socket.setblocking(0)
+        my_socket.setblocking(0)
     except:
         logger.critical("setblocking!")
         sys.exit(42)
 
     # Start listener
     try:
-	my_socket.listen(socket.SOMAXCONN)
+        my_socket.listen(socket.SOMAXCONN)
     except:
         logger.critical("listen!")
         sys.exit(42)
@@ -2609,20 +2705,24 @@ def server_socket(low, hi, bind_addr="127.0.0.1"):
     return my_socket
 
 def untaint(text):
-    # purpose: do not trust anything we get from the internet
-    # paramtr: text(IN): text to untaint
-    # returns: cleaned text, without any "special" characters
+    """
+    purpose: do not trust anything we get from the internet
+    paramtr: text(IN): text to untaint
+    returns: cleaned text, without any "special" characters
+    """
 
     if text is None:
-	return None
+        return None
 
     my_text = re_clean_content.sub('', str(text))
 
     return my_text
 
 def list_workflows(client_conn, param=""):
-    # purpose: lists the workflows currently being tracked
-    # globals: wfs(IN): array of workflows
+    """
+    purpose: lists the workflows currently being tracked
+    globals: wfs(IN): array of workflows
+    """
 
     for workflow_entry in wfs:
         if workflow_entry.wf is not None:
@@ -2633,16 +2733,18 @@ def list_workflows(client_conn, param=""):
 jumptable = {'list-wf': list_workflows}
 
 def service_request(server):
-    # purpose: accept an incoming connection and service its request
-    # paramtr: server(IN): server socket with a pending connection request
-    # returns: number of status lines, or None in case of error
+    """
+    purpose: accept an incoming connection and service its request
+    paramtr: server(IN): server socket with a pending connection request
+    returns: number of status lines, or None in case of error
+    """
 
     # First, we accept the connection
     try:
-	my_conn, my_addr = server.accept()
+        my_conn, my_addr = server.accept()
     except:
-	logger.error("accept!")
-	return None
+        logger.error("accept!")
+        return None
 
     my_count = 0
     logger.info("processing request from %s:%d" % (my_addr[0], my_addr[1]))
@@ -2650,30 +2752,30 @@ def service_request(server):
     # TODO: Can only handle 1 line up to 1024 bytes long, should fix this later
     # Read line fron socket
     while True:
-	try:
-	    my_buffer = my_conn.recv(1024)
-	except socket.error, e:
-	    if e[0] == 35:
-		continue
-	    else:
-		logger.error("recv: %d:%s" % (e[0], e[1]))
-		try:
-		    # Close socket
-		    my_conn.close()
-		except:
-		    pass
-		return None
-	else:
-	    # Received line, leave loop
-	    break
-	    
+        try:
+            my_buffer = my_conn.recv(1024)
+        except socket.error, e:
+            if e[0] == 35:
+                continue
+            else:
+                logger.error("recv: %d:%s" % (e[0], e[1]))
+                try:
+                    # Close socket
+                    my_conn.close()
+                except:
+                    pass
+                return None
+        else:
+            # Received line, leave loop
+            break
+
     if my_buffer == '':
-	# Nothing else to read
-	try:
-	    my_conn.close()
-	except:
-	    pass
-	return my_count
+        # Nothing else to read
+        try:
+            my_conn.close()
+        except:
+            pass
+        return my_count
 
     # Removed leading/trailing spaces/tabs, trailing \r\n
     my_buffer = my_buffer.strip()
@@ -2684,13 +2786,13 @@ def service_request(server):
     my_args = my_buffer.split()
     
     if len(my_args) < 3:
-	# Clearly not enough information
-	sendmsg(my_conn, "%s 204 No Content\r\n" % (speak))
-	try:
-	    my_conn.close()
-	except:
-	    pass
-	return my_count
+        # Clearly not enough information
+        sendmsg(my_conn, "%s 204 No Content\r\n" % (speak))
+        try:
+            my_conn.close()
+        except:
+            pass
+        return my_count
 
     # Read information we need
     my_proto = my_args.pop(0).upper()
@@ -2698,74 +2800,80 @@ def service_request(server):
     my_what = my_args.pop(0)
 
     if my_proto != speak:
-	# Illegal or unknown protocol
-	sendmsg(my_conn, "%s 400 Bad request\r\n" % (speak))
+        # Illegal or unknown protocol
+        sendmsg(my_conn, "%s 400 Bad request\r\n" % (speak))
     elif my_method.upper() != "GET":
-	# Unsupported method
-	sendmsg(my_conn, "%s 405 Method not allowed\r\n" % (speak))
+        # Unsupported method
+        sendmsg(my_conn, "%s 405 Method not allowed\r\n" % (speak))
     elif not my_what in jumptable:
-	# Request item is not supported
-	sendmsg(my_conn, "%s 501 Not implemented\r\n" % (speak))
+        # Request item is not supported
+        sendmsg(my_conn, "%s 501 Not implemented\r\n" % (speak))
     else:
-	# OK, process the command
-	sendmsg(my_conn, "%s 200 OK\r\n" % (speak))
+        # OK, process the command
+        sendmsg(my_conn, "%s 200 OK\r\n" % (speak))
         my_count = jumptable[my_what](my_conn, " ".join(my_args).lower())
 
     try:
-	my_conn.close()
+        my_conn.close()
     except:
-	pass
+        pass
 
     return my_count
 	
 def check_request(server, timeout=0):
-    # purpose: check for a pending service request, and service it
-    # paramtr: server(IN): server socket
-    # paramtr: timeout(IN, OPT): timeout in seconds, defaults to 0
-    # returns: return value of select on server socket
+    """
+    purpose: check for a pending service request, and service it
+    paramtr: server(IN): server socket
+    paramtr: timeout(IN, OPT): timeout in seconds, defaults to 0
+    returns: return value of select on server socket
+    """
 
     my_input_list = [server]
     my_input_ready, my_output_ready, my_except_ready = select.select(my_input_list, [], [], timeout)
 
     if len(my_input_ready) == 1:
-	service_request(server)
+        service_request(server)
 
     return len(my_input_ready)
 
 def sleepy(retries, server=None):
-    # purpose: sleep or work on client requests
-    # paramtr: retries (IN): number of retries we are in
-    # paramtr: server (IN): server listening socket, may be None
-    # returns: Nothing
+    """
+    purpose: sleep or work on client requests
+    paramtr: retries (IN): number of retries we are in
+    paramtr: server (IN): server listening socket, may be None
+    returns: Nothing
+    """
     my_sleeptime = sleeptime(retries)
 
     if server is not None:
-	# elaborate iterative (non-concurrent) internet daemon
-	my_start = int(time.time())
-	my_diff = 0
-	while my_diff < my_sleeptime:
-	    my_diff = int(time.time()) - my_start
-	    if my_diff < my_sleeptime:
-		check_request(server, my_sleeptime - my_diff)
-	    else:
-		check_request(server, 0)
+        # elaborate iterative (non-concurrent) internet daemon
+        my_start = int(time.time())
+        my_diff = 0
+        while my_diff < my_sleeptime:
+            my_diff = int(time.time()) - my_start
+            if my_diff < my_sleeptime:
+                check_request(server, my_sleeptime - my_diff)
+            else:
+                check_request(server, 0)
     else:
-	# no server, just sleep regularly
-	if my_sleeptime is not None:
-	    time.sleep(my_sleeptime)
+        # no server, just sleep regularly
+        if my_sleeptime is not None:
+            time.sleep(my_sleeptime)
 	
 def sleeptime(retries):
-    # purpose: compute suggested sleep time as a function of retries
-    # paramtr: $retries (IN): number of retries so far
-    # returns: recommended sleep time in seconds
+    """
+    purpose: compute suggested sleep time as a function of retries
+    paramtr: $retries (IN): number of retries so far
+    returns: recommended sleep time in seconds
+    """
     if retries < 5:
-	my_y = 1
+        my_y = 1
     elif retries < 50:
-	my_y = 5
+        my_y = 5
     elif retries < 500:
-	my_y = 30
+        my_y = 30
     else:
-	my_y = 60
+        my_y = 60
 
     return my_y
 
@@ -2801,9 +2909,15 @@ def purge_wf_uuid_from_database(rundir, output_db):
             e = None
 
 def prog_sighup_handler(signum, frame):
-    pass
+    """
+    This function catches SIGHUP.
+    """
+    logger.info("ignoring signal %d" % (signum))
 
 def prog_sigint_handler(signum, frame):
+    """
+    This function catches SIGINT.
+    """
     logger.info("graceful exit on signal %d" % (signum))
     # Go through all workflows we are tracking
     for my_wf in wfs:
@@ -2858,13 +2972,16 @@ def prog_sigusr2_handler(signum, frame):
 #
 
 def socket_exit_handler():
+    """
+    This function closes the socket server, and removes the sockfn file.
+    """
     if server is not None:
-	server.close()
-	try:
-	    os.unlink(sockfn)
-	except:
-	    # Just be silent
-	    pass
+        server.close()
+        try:
+            os.unlink(sockfn)
+        except:
+            # Just be silent
+            pass
 
 #
 # --- main ------------------------------------------------------------------------------
@@ -2875,18 +2992,18 @@ if nodaemon == 0:
     utils.daemonize()
     # Open logfile as stdout
     try:
-	sys.stdout = open(logfile, "w", 0)
+        sys.stdout = open(logfile, "w", 0)
     except:
-	logger.critical("could not open %s!" % (logfile))
-	sys.exit(1)
+        logger.critical("could not open %s!" % (logfile))
+        sys.exit(1)
 elif nodaemon == 2:
     utils.keep_foreground()
     # Open logfile as stdout
     try:
-	sys.stdout = open(logfile, "w", 0)
+        sys.stdout = open(logfile, "w", 0)
     except:
-	logger.critical("could not open %s!" % (logfile))
-	sys.exit(1)
+        logger.critical("could not open %s!" % (logfile))
+        sys.exit(1)
 else:
     # Hack to make stdout unbuffered
     sys.stdout = os.fdopen(sys.stdout.fileno(), "w", 0)
@@ -2904,7 +3021,7 @@ else:
     try:
         wf_event_sink = create_wf_event_sink(event_dest, db_stats=db_stats, enc=encoding)
         atexit.register(finish_stampede_loader)
-    except ValueError,err:
+    except ValueError, err:
         logger.critical("Cannot create output: %s. Abort." % (err))
         sys.exit(1)
 
@@ -2938,20 +3055,20 @@ if not replay_mode:
 
     # Save our address so that site selectors know where to connect
     if server is not None:
-	my_host, my_port = server.getsockname()
-	try:
-	    OUT = open(sockfn, "w")
-	    OUT.write("%s %d\n" % (my_host, my_port))
-	    OUT.close()
-	except:
-	    logger.warning("unable to write %s!" % (sockfn))
+        my_host, my_port = server.getsockname()
+        try:
+            OUT = open(sockfn, "w")
+            OUT.write("%s %d\n" % (my_host, my_port))
+            OUT.close()
+        except:
+            logger.warning("unable to write %s!" % (sockfn))
 
 # For future reference
 plus = ''
 if "LD_LIBRARY_PATH" in os.environ:
     for my_path in os.environ["LD_LIBRARY_PATH"].split(':'):
-	logger.info("env: LD_LIBRARY_PATH%s=%s" % (plus, my_path))
-	plus = '+'
+        logger.info("env: LD_LIBRARY_PATH%s=%s" % (plus, my_path))
+        plus = '+'
 
 if "GLOBUS_TCP_PORT_RANGE" in os.environ:
     logger.info("env: GLOBUS_TCP_PORT_RANGE=%s" % (os.environ["GLOBUS_TCP_PORT_RANGE"]))
@@ -3126,7 +3243,7 @@ while (len(wfs) > 0):
                     ml_pos = workflow_entry.ml_buffer.find('\n')
                     while (ml_pos >= 0):
                         # Take out 1 line, and adjust buffer
-                        new_dagman_out = process(workflow_entry.wf, workflow_entry.ml_buffer[0:ml_pos])
+                        new_dagman_out = process_dagman_out(workflow_entry.wf, workflow_entry.ml_buffer[0:ml_pos])
                         workflow_entry.ml_buffer = workflow_entry.ml_buffer[ml_pos+1:]
                         ml_pos = workflow_entry.ml_buffer.find('\n')
 
@@ -3232,14 +3349,14 @@ while (len(wfs) > 0):
 if not replay_mode:
     # Finish trailing connection requests
     while (check_request(server)):
-	pass
+        pass
     server.close()
     server = None
     try:
-	os.unlink(sockfn)
+        os.unlink(sockfn)
     except:
-	# Just be silent
-	pass
+        # Just be silent
+        pass
 
 # Try to run the hurricane graphics
 if doplot:
@@ -3250,4 +3367,3 @@ else:
 # done
 logger.info("finishing, exit with 0")
 sys.exit(0)
-
