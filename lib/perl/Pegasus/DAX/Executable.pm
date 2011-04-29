@@ -9,8 +9,9 @@ use Carp;
 
 use Pegasus::DAX::Base qw(:xml); 
 use Pegasus::DAX::CatalogType; 
+use Pegasus::DAX::InvokeMixin;
 use Exporter;
-our @ISA = qw(Pegasus::DAX::CatalogType Exporter); 
+our @ISA = qw(Pegasus::DAX::CatalogType Pegasus::DAX::InvokeMixin Exporter); 
 
 use constant ARCH_IA64    => 'ia64';
 use constant ARCH_PPC     => 'ppc';
@@ -34,7 +35,8 @@ our @EXPORT = ();
 our %EXPORT_TAGS = ( 
     arch =>[qw(ARCH_IA64 ARCH_PPC ARCH_PPC_64 ARCH_SPARCV7 ARCH_SPARCV9 
 	ARCH_X86 ARCH_X86_64 ARCH_AMD64)],
-    os => [qw(OS_AIX OS_LINUX OS_DARWIN OS_MACOSX OS_WINDOWS OS_SUNOS OS_SOLARIS)]
+    os => [qw(OS_AIX OS_LINUX OS_DARWIN OS_MACOSX OS_WINDOWS 
+	OS_SUNOS OS_SOLARIS)]
     ); 
 $EXPORT_TAGS{all} = [ map { @{$_} } values %EXPORT_TAGS ]; 
 our @EXPORT_OK = ( @{$EXPORT_TAGS{all}} ); 
@@ -60,33 +62,6 @@ sub new {
     }
 
     bless $self, $class; 
-}
-
-sub addInvoke {
-    my $self = shift;
-    $self->invoke(@_);
-}
-
-sub notify {
-    my $self = shift; 
-    $self->invoke(@_);
-}
-
-sub invoke {
-    my $self = shift; 
-    my $when = shift; 
-    my $cmd = shift; 
-
-    if ( defined $when && defined $cmd ) { 
-	my $i = Pegasus::DAX::Invoke->new($when,$cmd);
-	if ( exists $self->{invokes} ) {
-	    push( @{$self->{invokes}}, $i );
-	} else {
-	    $self->{invokes} = [ $i ]; 
-	}
-    } else {
-	croak "use proper arguments to addInvoke(when,cmdstring)";
-    }
 }
 
 # forward declarations
@@ -288,19 +263,11 @@ Setter and getter for the optional OS version string.
 
 Setter and getter for the optional GNU libc platform identifier string. 
 
-=item addInvoke( $when, $cmd )
+=item key
 
-Alias for C<invoke> method.
-
-=item notify( $when, $cmd ) 
-
-Alias for C<invoke> method.
-
-=item invoke( $when $cmd )
-
-This method adds a simple executable instruction to run (on the submit
-host) when a job reaches the state in C<$when>. Please refer to the 
-constants C<INVOKE_*> in L<Pegasus::DAX::AbstractJob> for details. 
+This function munges all above attributes of this instance into a binary
+string that can be used as unique identifier for this instance in a
+hash.
 
 =item toXML( $handle, $indent, $xmlns )
 
@@ -336,6 +303,18 @@ Please refer to L<Pegasus::DAX::CatalogType> for inherited methods.
 
 =back
 
+Please refer to L<Pegasus::DAX::InvokeMixin> for inherited methods. 
+
+=over 4
+
+=item addInvoke( $when, $cmd )
+
+=item invoke( $when, $cmd )
+
+=item notify( $when, $cmd )
+
+=back
+
 =head1 SEE ALSO
 
 =over 4
@@ -343,6 +322,10 @@ Please refer to L<Pegasus::DAX::CatalogType> for inherited methods.
 =item L<Pegasus::DAX::CatalogType>
 
 Base class.
+
+=item L<Pegasus::DAX::InvokeMixin>
+
+Base class. 
 
 =item L<Pegasus::DAX::ADAG>
 

@@ -20,14 +20,14 @@ use constant INVOKE_ALL => 'all';
 
 our $VERSION = '3.3'; 
 our @EXPORT = (); 
-our %EXPORT_TAGS = ( all => [qw(INVOKE_NEVER INVOKE_START INVOKE_ON_SUCCESS
-	INVOKE_ON_ERROR INVOKE_AT_END INVOKE_ALL) ] ); 
-our @EXPORT_OK = ( @{$EXPORT_TAGS{all}} );
+our @EXPORT_OK = qw(INVOKE_NEVER INVOKE_START INVOKE_ON_SUCCESS
+		INVOKE_ON_ERROR INVOKE_AT_END INVOKE_ALL); 
+our %permitted = map { eval($_) => 1 } @EXPORT_OK; 
+push( @EXPORT_OK, '%permitted' ); 
+our %EXPORT_TAGS = ( 'all' => [ @EXPORT_OK ] );
 
 # one AUTOLOAD to rule them all
 BEGIN { *AUTOLOAD = \&Pegasus::DAX::Base::AUTOLOAD }
-
-my %permitted = qw(never start on_success on_error at_end all);
 
 sub new {
     my $proto = shift;
@@ -38,8 +38,7 @@ sub new {
     $self->{when} = $when;
     $self->{cmd} = shift; 
 
-    carp( "Invalid value '$when' for 'when' parameter ",
-	  "in c'tor for ", __PACKAGE__ )
+    carp( "Invalid value '$when' for 'when' parameter in $class->new" )
 	unless exists $permitted{$when}; 
 
     bless $self, $class; 

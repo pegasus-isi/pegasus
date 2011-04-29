@@ -50,38 +50,12 @@ sub name;
 sub index;
 sub count; 
 
-sub addInvoke {
-    my $self = shift;
-    $self->invoke(@_);
-}
-
-sub notify {
-    my $self = shift;
-    $self->invoke(@_);
-}
-
-sub invoke {
-    my $self = shift;
-    my $when = shift;
-    my $cmd = shift;
-
-    if ( defined $when && defined $cmd ) { 
-	my $i = Pegasus::DAX::Invoke->new($when,$cmd);
-	if ( exists $self->{invokes} ) {
-	    push( @{$self->{invokes}}, $i );
-	} else {
-	    $self->{invokes} = [ $i ]; 
-	}
-    } else {
-	croak "use proper arguments to addInvoke(when,cmdstring)";
-    }
-}
-
 use Pegasus::DAX::File; 
 
 sub addFile {
     my $self = shift; 
     my $name = shift; 
+
     if ( ref $name ) {
 	if ( $name->isa('Pegasus::DAX::File') ) {
 	    # files uses LFN to distinguish files
@@ -201,11 +175,20 @@ sub addJob {
 
 sub getJob {
     my $self = shift;
-    my $id = shift; 		# job id
+    my $job = shift; 		# job id
+
+    my $key = undef; 
+    if ( ref $job && $job->isa('Pegasus::DAX::AbstractJob') ) {
+	$key = $job->id;
+    } elsif ( ! ref $job ) { 
+	$key = $job;
+    } else {
+	croak( "Instance of ", ref($job), " is an invalid argument" ); 
+    }
 
     # avoid auto-vivification
     return undef unless exists $self->{jobs}; 
-    exists $self->{jobs}->{$id} ? $self->{jobs}->{$id} : undef; 
+    exists $self->{jobs}->{$key} ? $self->{jobs}->{$key} : undef; 
 }
 
 sub addDependency {
@@ -231,7 +214,7 @@ sub addDependency {
 	    if ( $child->isa('Pegasus::DAX::AbstractJob') ) {
 		$child = $child->id;
 		croak( "child does not have a valid job-id" )
-		    unless ( defined $child && $child ); 
+		    unless ( defined $child && length($child) ); 
 	    } else {
 		croak "child is not a job type"; 
 	    }
@@ -242,6 +225,41 @@ sub addDependency {
 
 	# spring into existence -- store undef, if necessary
 	$self->{deps}->{$child}->{$parent} = $label; 
+    }
+}
+
+sub addDependencyById {
+    my $self = shift; 
+    my $parent = shift || croak "need a parent as first argument";
+
+    if ( ref $parent ) { 
+	if ( $parent->isa('Pegasus::DAX::AbstractJob') ) {
+	    $parent = $parent->id;
+	} else {
+	    croak( "instance of ", ref($parent), 
+		   " is an invalid parent argument" );
+	}
+    }
+    croak "parent does not have a valid job-id"
+	unless ( defined $parent && length($parent) ); 
+
+    while ( @_ ) {
+	my $child = shift; 
+
+	# we only need the job identifier string
+	if ( ref $child ) {
+	    if ( $child->isa('Pegasus::DAX::AbstractJob') ) {
+		$child = $child->id;
+	    } else {
+		croak( "Instance of ", ref($child), 
+		       " is an invalid child argument" ); 
+	    }
+	}
+	croak "child does not have a valid job-id" 
+	    unless ( defined $child && length($child) ); 
+
+	# spring into existence -- store undef, if necessary
+	$self->{deps}->{$child}->{$parent} = undef;
     }
 }
 
@@ -489,15 +507,37 @@ of this workflow. This is mostly an obsolete feature that will go away.
 
 =item addFile( $file_instance )
 
-Adds an included replica catalog entry. 
+Adds an included replica catalog entry. This method will make a copy of
+the instance passed.
+
+=item getFile( $filename )
+
+Retrieves an included replica catalog entry by a given filename. Returns
+C<undef> if not found. 
+
+=item getFile( $file_instance ) 
+
+Retrieves an included replica catalog entry by a given instance of
+L<Pegasus::DAX::File>. Returns C<undef> if not found. 
 
 =item addExecutable( $executable_instance )
 
-Adds an included transformation catalog entry. 
+Adds a copy of an included transformation catalog entry. 
 
 =item addTransformation( $transformation_instance )
 
-Adds a L<Pegasus::DAX::Transformation> combiner to the workflow. 
+Adds a copy of the L<Pegasus::DAX::Transformation> combiner to the
+workflow.
+
+=item getTransformation( $ns, $name, $version )
+
+Retrieves a transformation combiner instance by its namespace, name
+and version tuple. Returns C<undef>, if not found. 
+
+=item getTransformation( $transformation_instance )
+
+Retrieves a transformation combiner instance from a known instance. 
+Returns C<undef> if not found. 
 
 =item addJob( $dag_instance )
 
@@ -520,6 +560,12 @@ While not forbidden by the API, we cannot plan C<ADAG> within C<ADAG>
 yet. The job must have a valid and unique I<id> attribute once this gets
 implemented.
 
+=item getJob( $job_instance )
+
+This method looks up a job by a given abstract job instance. If the
+instance is not known to this instance (i.e. this job hasn't been added
+yet), the method will return the C<undef> value.
+
 =item getJob( $jobid )
 
 This method looks up a job by its I<id>. If the I<id> is not known to
@@ -539,6 +585,11 @@ You may add any number of children to the same parent by just listing
 them. Each child may be followed by a separate edge label - or not. The
 proper argument form is distinguished internally by whether the argument
 has a job type, or is a plain scalar (label).
+
+Note: You must use the full job instance when adding dependencies. You
+cannot use just the job's id value, because it is indistinguishable from
+the edge label. Look at L</getJob> to obtain full job instances from a
+given C<id>. 
 
 =item addInverse( $child, $parent, .. )
 

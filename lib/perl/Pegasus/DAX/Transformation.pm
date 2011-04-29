@@ -9,8 +9,9 @@ use Carp;
 
 use Pegasus::DAX::Base qw(:xml); 
 use Pegasus::DAX::Filename; 
+use Pegasus::DAX::InvokeMixin;
 use Exporter;
-our @ISA = qw(Pegasus::DAX::Base Exporter); 
+our @ISA = qw(Pegasus::DAX::Base Pegasus::DAX::InvokeMixin Exporter); 
 
 our $VERSION = '3.3'; 
 our @EXPORT = (); 
@@ -95,33 +96,6 @@ sub uses {
 	}
     } else {
 	croak "invalid argument";
-    }
-}
-
-sub addInvoke {
-    my $self = shift;
-    $self->invoke(@_);
-}
-
-sub notify {
-    my $self = shift; 
-    $self->invoke(@_);
-}
-
-sub invoke {
-    my $self = shift; 
-    my $when = shift; 
-    my $cmd = shift; 
-
-    if ( defined $when && defined $cmd ) { 
-	my $i = Pegasus::DAX::Invoke->new($when,$cmd);
-	if ( exists $self->{invokes} ) {
-	    push( @{$self->{invokes}}, $i );
-	} else {
-	    $self->{invokes} = [ $i ]; 
-	}
-    } else {
-	croak "use proper arguments to addInvoke(when,cmdstring)";
     }
 }
 
@@ -222,6 +196,12 @@ Setter and getter for required transformation name.
 
 Setter and getter for the optional transformation version string. 
 
+=item key
+
+creates a binary string that functions as key to identify this object
+when stashed into a hash. The key comprises namespace, name and version
+attribute values.
+
 =item addUses
 
 Alias method for C<uses> method.
@@ -245,7 +225,6 @@ instance passed as argument, and sets its I<executable> attribute to
 C<false>. You will have to add a proper L<Pegasus::DAX::TUType> instance
 to overwrite these defaults.
 
-
 =item uses( $executable_instance )
 
 This method constructs an internal L<Pegasus::DAX::TUType> instance by
@@ -253,20 +232,6 @@ copying the I<namespace>, I<name>, and I<version> attributes from the
 L<Pegasus::DAX::Executable> instance passed as argument, and sets the
 I<executable> attribute to C<true>. You will have to add a proper
 L<Pegasus::DAX::TUType> instance to overwrite these defaults.
-
-=item addInvoke( $when, $cmd )
-
-Alias for C<invoke> method.
-
-=item notify( $when, $cmd ) 
-
-Alias for C<invoke> method.
-
-=item invoke( $when $cmd )
-
-This method adds a simple executable instruction to run (on the submit
-host) when a job reaches the state in C<$when>. Please refer to the 
-constants C<INVOKE_*> in L<Pegasus::DAX::AbstractJob> for details. 
 
 =item toXML( $handle, $indent, $xmlns )
 
@@ -280,11 +245,29 @@ space.
 
 =back 
 
+=head1 INHERITED METHODS
+
+Please refer to L<Pegasus::DAX::InvokeMixin> for inherited methods. 
+
+=over 4
+
+=item addInvoke( $when, $cmd )
+
+=item invoke( $when, $cmd )
+
+=item notify( $when, $cmd )
+
+=back
+
 =head1 SEE ALSO
 
 =over 4
 
 =item L<Pegasus::DAX::Base>
+
+Base class. 
+
+=item L<Pegasus::DAX::InvokeMixin>
 
 Base class. 
 

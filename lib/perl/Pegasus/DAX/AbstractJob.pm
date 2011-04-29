@@ -8,8 +8,9 @@ use strict;
 use Carp; 
 
 use Pegasus::DAX::Base qw(:xml); 
+use Pegasus::DAX::InvokeMixin;
 use Exporter;
-our @ISA = qw(Pegasus::DAX::Base Exporter); 
+our @ISA = qw(Pegasus::DAX::Base Pegasus::DAX::InvokeMixin Exporter); 
 
 our $VERSION = '3.3'; 
 our @EXPORT = (); 
@@ -163,33 +164,6 @@ sub uses {
 	}
     } else {
 	croak "invalid argument"; 
-    }
-}
-
-sub addInvoke {
-    my $self = shift;
-    $self->invoke(@_);
-}
-
-sub notify {
-    my $self = shift; 
-    $self->invoke(@_);
-}
-
-sub invoke {
-    my $self = shift; 
-    my $when = shift; 
-    my $cmd = shift; 
-
-    if ( defined $when && defined $cmd ) { 
-	my $i = Pegasus::DAX::Invoke->new($when,$cmd);
-	if ( exists $self->{invokes} ) {
-	    push( @{$self->{invokes}}, $i );
-	} else {
-	    $self->{invokes} = [ $i ]; 
-	}
-    } else {
-	croak "use proper arguments to addInvoke(when,cmdstring)";
     }
 }
 
@@ -390,20 +364,6 @@ attributes, and sets the I<executable> attribute to C<true>. You will
 have to add a proper L<Pegasus::DAX::Filename> instance to overwrite
 these defaults.
 
-=item addInvoke( $when, $cmd )
-
-Alias for C<invoke> method.
-
-=item notify( $when, $cmd ) 
-
-Alias for C<invoke> method.
-
-=item invoke( $when $cmd )
-
-This method adds a simple executable instruction to run (on the submit
-host) when a job reaches the state in C<$when>. Please refer to the 
-constants C<INVOKE_*> for details. 
-
 =item id
 
 Getter and setter for the job's identifier string. Please note that the
@@ -440,6 +400,20 @@ tags will be prefixed with this name space.
 
 =back 
 
+=head1 INHERITED METHODS
+
+Please refer to L<Pegasus::DAX::InvokeMixin> for inherited methods. 
+
+=over 4
+
+=item addInvoke( $when, $cmd )
+
+=item invoke( $when, $cmd )
+
+=item notify( $when, $cmd )
+
+=back
+
 =head1 SEE ALSO
 
 =over 4
@@ -447,6 +421,10 @@ tags will be prefixed with this name space.
 =item L<Pegasus::DAX::Base>
 
 Base class. 
+
+=item L<Pegasus::DAX::InvokeMixin>
+
+Base class for L<Pegasus::DAX::Invoke> delegation methods.
 
 =item L<Pegasus::DAX::DAG>
 

@@ -32,7 +32,7 @@ my $job2 = newJob( namespace => NS, name => 'findrange', version => '2.0' );
 my $job3 = newJob( namespace => NS, name => 'findrange', version => '2.0' );
 my $job4 = newJob( namespace => NS, name => 'analyze', version => '2.0' );
 
-$job4->addInvoke( INVOKE_AT_END, '/bin/true' );
+$job4->invoke( INVOKE_AT_END, '/bin/true' );
 
 # create "f.a" locally 
 my $fn = "f.a"; 
