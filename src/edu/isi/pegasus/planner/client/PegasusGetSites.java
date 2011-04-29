@@ -178,13 +178,13 @@ public class PegasusGetSites extends Executable{
     }
 
     /**
-     * Executs the command on the basis of the command line options passed.
+     * Executes the command on the basis of the command line options passed.
      * 
      * @param args
      */
     public void executeCommand() {
         parseCommandLineArguments(getCommandLineOptions());
-        PegasusProperties p =  PegasusProperties.nonSingletonInstance();
+        PegasusProperties p =  PegasusProperties.getInstance(lookupConfProperty(getCommandLineOptions(), 'c'));
         
         p.setProperty( "pegasus.catalog.site", mSource );
         
