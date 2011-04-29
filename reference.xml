@@ -10,7 +10,8 @@
     <para>  </para>
 
   </section>
-  <section>Properties
+  <section>
+  <title>Properties</title>
 
 
 
@@ -33,7 +34,7 @@
     </section>
 
       <section>
-      <title>Profile Structure</title>
+       <title>Profile Structure</title>
 
        <para>All profiles are triples comprised of a namespace, a name or key,
     and a value. The namespace is a simple identifier. The key has only
@@ -44,8 +45,8 @@
     context. However, each syntax will describe the underlying triple.</para>
     </section>
 
-      <section>
-    <title>Profile Namespaces</title>
+       <section>
+       <title>Profile Namespaces</title>
 
     <para>Each namespace refers to a different aspect of a job’s runtime
     settings. A profile’s representation in the concrete plan (e.g. the Condor
@@ -79,8 +80,8 @@
       </listitem>
     </itemizedlist>
 
-      <section>
-      <title>The env Profile Namespace</title>
+       <section>
+       <title>The env Profile Namespace</title>
 
       <para>The <emphasis>env</emphasis> namespace allows users to specify
       environment variables of remote jobs. Globus transports the environment
@@ -2733,6 +2734,7 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
 
   </section>
 </chapter>
+
 
 
 
