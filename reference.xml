@@ -7,35 +7,18 @@
   <section>
     <title>Introduction</title>
 
-    <para/>
+    <para>  </para>
 
   </section>
-  
-  <section>
-   <title>Properties</title>
-   
+  <section>Properties
 
 
-  </section>
 
+   </section>
 
    <section>
    <title>Profiles</title>
 
-   <para>The Pegasus Workflow Mapper uses the concept of profiles to
-    encapsulate configurations for various aspects of dealing with the Grid
-    infrastructure. Profiles provide an abstract yet uniform interface to
-    specify configuration options for various layers from planner/mapper
-    behavior to remote environment settings. At various stages during the
-    mapping process, profiles may be added associated with the job.</para>
-
-    <para>This document describes various types of profiles, levels of
-    priorities for intersecting profiles, and how to specify profiles in
-    different contexts.</para>
-
-    </section>
-     <section>
-    <title>Profiles</title>
 
     <para>The Pegasus Workflow Mapper uses the concept of profiles to
     encapsulate configurations for various aspects of dealing with the Grid
@@ -47,21 +30,21 @@
     <para>This document describes various types of profiles, levels of
     priorities for intersecting profiles, and how to specify profiles in
     different contexts.</para>
-  </section>
+    </section>
 
-  <section>
-    <title>Profile Structure</title>
+      <section>
+      <title>Profile Structure</title>
 
-    <para>All profiles are triples comprised of a namespace, a name or key,
+       <para>All profiles are triples comprised of a namespace, a name or key,
     and a value. The namespace is a simple identifier. The key has only
     meaning within its namespace, and it’s yet another identifier. There are
     no constraints on the contents of a value</para>
 
-    <para>Profiles may be represented with different syntaxes in different
+       <para>Profiles may be represented with different syntaxes in different
     context. However, each syntax will describe the underlying triple.</para>
-  </section>
+    </section>
 
-  <section>
+      <section>
     <title>Profile Namespaces</title>
 
     <para>Each namespace refers to a different aspect of a job’s runtime
@@ -96,7 +79,7 @@
       </listitem>
     </itemizedlist>
 
-    <section>
+      <section>
       <title>The env Profile Namespace</title>
 
       <para>The <emphasis>env</emphasis> namespace allows users to specify
@@ -162,7 +145,7 @@
       be set through the means of <emphasis>env</emphasis> profiles.</para>
     </section>
 
-    <section>
+      <section>
       <title>The globus Profile Namespace</title>
 
       <para>The <emphasis>globus</emphasis> profile namespace encapsulates
@@ -328,7 +311,7 @@
       </table>
     </section>
 
-    <section>
+      <section>
       <title>The condor Profile Namespace</title>
 
       <para>The Condor submit file controls every detail how and where a job
@@ -491,7 +474,7 @@
       </table>
     </section>
 
-    <section>
+      <section>
       <title>The dagman Profile Namespace</title>
 
       <para>DAGMan is Condor's workflow manager. While planners generate most
@@ -732,7 +715,7 @@
       </table>
     </section>
 
-    <section>
+      <section>
       <title>The pegasus Profile Namespace</title>
 
       <para>The <emphasis>pegasus</emphasis> profiles allow users to configure
@@ -931,7 +914,7 @@
     </section>
   </section>
 
-  <section>
+    <section>
     <title>Sources for Profiles</title>
 
     <para>Profiles may enter the job-processing stream at various stages.
@@ -1026,7 +1009,7 @@ pegasus.stagein.clusters 3</programlisting>
 </programlisting>
     </section>
 
-    <section>
+      <section>
       <title>Profiles in Site Catalog</title>
 
       <para>If it becomes necessary to limit the scope of a profile to a
@@ -1078,7 +1061,7 @@ pegasus.stagein.clusters 3</programlisting>
 </programlisting>
     </section>
 
-    <section>
+      <section>
       <title>Profiles in Transformation Catalog</title>
 
       <para>Some profiles require a narrower scope than the site catalog
@@ -1107,8 +1090,8 @@ pegasus.stagein.clusters 3</programlisting>
     </section>
   </section>
 
-  <section>
-    <title>Profiles Conflict Resolution</title>
+     <section>
+     <title>Profiles Conflict Resolution</title>
 
     <para>Irrespective of where the profiles are specified, eventually the
     profiles are associated with jobs. Multiple sources may specify the same
@@ -1140,8 +1123,8 @@ pegasus.stagein.clusters 3</programlisting>
     </orderedlist>
   </section>
 
-  <section>
-    <title>Details of Profile Handling</title>
+     <section>
+     <title>Details of Profile Handling</title>
 
     <para>The previous sections omitted some of the finer details for the sake
     of clarity. To understand some of the constraints that Pegasus imposes, it
@@ -1183,7 +1166,7 @@ queue
       environment variables in its executable and arguments setting.</para>
     </section>
 
-    <section>
+      <section>
       <title>Details of globus Profiles</title>
 
       <para>Profiles in the <emphasis>globus</emphasis> Namespaces are
@@ -1235,7 +1218,7 @@ queue
     Pegasus.</para>
   </section>
 
-  <section>
+    <section>
     <title>Configuration</title>
 
     <para>The user properties determine what replica selector Pegasus Workflow
@@ -1268,7 +1251,7 @@ queue
     <programlisting>pegasus.selector.replica  Default</programlisting>
   </section>
 
-  <section>
+    <section>
     <title>Supported Replica Selectors</title>
 
     <para>The various Replica Selectors supported in Pegasus Workflow Mapper
@@ -1310,7 +1293,7 @@ queue
       property<programlisting>pegasus.selector.replica                  Default</programlisting></para>
     </section>
 
-    <section>
+      <section>
       <title>Restricted</title>
 
       <para>This replica selector, allows the user to specify good sites and
@@ -1358,7 +1341,7 @@ pegasus.replica.uwm.prefer.stagein.sites                   isi,cit
       <programlisting>pegasus.selector.replica                  Restricted</programlisting>
     </section>
 
-    <section>
+      <section>
       <title>Regex</title>
 
       <para>This replica selector allows the user allows the user to specific
@@ -1401,7 +1384,7 @@ pegasus.selector.replica.regex.rank.2                       gsiftp://example\.is
       property<programlisting>pegasus.selector.replica                  Regex</programlisting></para>
     </section>
 
-    <section>
+      <section>
       <title>Local</title>
 
       <para>This replica selector always prefers replicas from the local host
@@ -1433,7 +1416,7 @@ pegasus.selector.replica.regex.rank.2                       gsiftp://example\.is
     of this clustering on a per transformation per site basis.</para>
   </section>
 
-  <section>
+    <section>
     <title>Overview</title>
 
     <para>The abstract workflow is mapped onto the various sites by the Site
@@ -1458,7 +1441,7 @@ pegasus.selector.replica.regex.rank.2                       gsiftp://example\.is
     role="bold">pegasus-plan</emphasis> .</para>
   </section>
 
-  <section>
+    <section>
     <title>Generating Clustered Concrete DAG</title>
 
     <para>The clustering of a workflow is activated by passing the <emphasis
@@ -1483,7 +1466,7 @@ Valid clustering techniques are horizontal and label.</programlisting></para>
     contains the respective execution targets and the arguments for each of
     the jobs that make up the clustered job.</para>
 
-    <section>
+      <section>
       <title>Horizontal Clustering</title>
 
       <para>In case of horizontal clustering, each job in the workflow is
@@ -1498,7 +1481,7 @@ Valid clustering techniques are horizontal and label.</programlisting></para>
       <emphasis role="bold">--cluster</emphasis> option of <emphasis
       role="bold">pegasus-plan to horizontal</emphasis> .</para>
 
-      <section>
+        <section>
         <title>Controlling Clustering Granularity</title>
 
         <para>The number of jobs that have to be clustered into a single large
@@ -1591,7 +1574,7 @@ siteX    B     /shared/PEGASUS/bin/jobB INSTALLED       INTEL32::LINUX PEGASUS::
       </section>
     </section>
 
-    <section>
+      <section>
       <title>Label Clustering</title>
 
       <para>In label based clustering, the user labels the workflow. All jobs
@@ -1615,7 +1598,7 @@ siteX    B     /shared/PEGASUS/bin/jobB INSTALLED       INTEL32::LINUX PEGASUS::
       role="bold">--cluster</emphasis> option of <emphasis
       role="bold">pegasus-plan</emphasis> to label.</para>
 
-      <section>
+        <section>
         <title>Labelling the Workflow</title>
 
         <para>The labels for the jobs in the workflow are specified by
@@ -1668,7 +1651,7 @@ siteX    B     /shared/PEGASUS/bin/jobB INSTALLED       INTEL32::LINUX PEGASUS::
       </section>
     </section>
 
-    <section>
+      <section>
       <title>Recursive Clustering</title>
 
       <para>In some cases, a user may want to use a combination of clustering
@@ -1696,7 +1679,7 @@ siteX    B     /shared/PEGASUS/bin/jobB INSTALLED       INTEL32::LINUX PEGASUS::
     </section>
   </section>
 
-  <section>
+    <section>
     <title>Execution of the Clustered Job</title>
 
     <para>The execution of the clustered job on the remote site, involves the
@@ -1765,7 +1748,7 @@ siteX    pegasus::seqexec     /shared/PEGASUS/bin/mpiexec INSTALLED       INTEL3
       </listitem>
     </itemizedlist>
 
-    <section>
+      <section>
       <title>Specification of Method of Execution for Clustered Jobs</title>
 
       <para>The method execution of the clustered job(whether to launch via
@@ -1840,8 +1823,8 @@ siteX    B     /shared/PEGASUS/bin/jobB INSTALLED       INTEL32::LINUX pegasus::
     </section>
   </section>
 
-  <section>
-    <title>Outstanding Issues</title>
+      <section>
+       <title>Outstanding Issues</title>
 
     <orderedlist>
       <listitem>
@@ -1851,7 +1834,7 @@ siteX    B     /shared/PEGASUS/bin/jobB INSTALLED       INTEL32::LINUX pegasus::
         scheme applied by the user is valid.</para>
       </listitem>
     </orderedlist>
-  </section>
+   </section>
   <section>
     <title>Transfers</title>
 
@@ -1909,7 +1892,7 @@ siteX    B     /shared/PEGASUS/bin/jobB INSTALLED       INTEL32::LINUX pegasus::
     executables is managed in Pegasus.</para>
   </section>
 
-  <section>
+    <section>
     <title>Local versus Remote Transfers</title>
 
     <para>As far as possible, Pegasus will ensure that the transfer jobs added
@@ -1983,7 +1966,7 @@ siteX    B     /shared/PEGASUS/bin/jobB INSTALLED       INTEL32::LINUX pegasus::
     role="bold">[stage_in|stage_out|inter]_[local|remote]_</emphasis> .</para>
   </section>
 
-  <section>
+    <section>
     <title>Symlinking Against Input Data</title>
 
     <para>If input data for a job already exists on a compute site, then it is
@@ -2037,7 +2020,7 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
 </programlisting>
   </section>
 
-  <section>
+    <section>
     <title>Addition of Separate Data Movement Nodes to Executable
     Workflow</title>
 
@@ -2145,7 +2128,7 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
     </figure>
   </section>
 
-  <section>
+    <section>
     <title>Executable Used for Transfer Jobs</title>
 
     <para>Pegasus refers to a python script called <emphasis
@@ -2213,7 +2196,7 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
     role="bold">pegasus::pegasus-transfer</emphasis></para>
   </section>
 
-  <section>
+    <section>
     <title>Staging of Executables</title>
 
     <para>Users can get Pegasus to stage the user executables ( executables
@@ -2261,7 +2244,7 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
       </listitem>
     </orderedlist>
 
-    <section>
+      <section>
       <title>Transformation Mappers</title>
 
       <para>Pegasus has a notion of transformation mappers that determines
@@ -2338,8 +2321,8 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
     </section>
   </section>
 
-  <section>
-    <title>Staging of Pegasus Worker Package</title>
+     <section>
+      <title>Staging of Pegasus Worker Package</title>
 
     <para>Pegasus can optionally stage the pegasus worker package as part of
     the executable workflow to remote workflow specific execution directory.
@@ -2380,8 +2363,8 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
     </itemizedlist>
   </section>
 
-  <section>
-    <title>Second Level Staging</title>
+      <section>
+       <title>Second Level Staging</title>
 
     <para>By default, Pegasus executes the jobs in the workflow specific
     directory created on the shared filesystem of a compute site. However, if
@@ -2750,5 +2733,7 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
 
   </section>
 </chapter>
+
+
 
 
