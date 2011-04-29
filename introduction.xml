@@ -3,7 +3,8 @@
 "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <chapter id="introduction">
   <title>Introduction to Pegasus</title>
-
+  
+  <section>
   <para><ulink url="http://pegasus.isi.edu">Pegasus</ulink> is a configurable
   system for mapping and executing abstract application workflows over a wide
   range of execution environment including a laptop, a campus cluster, a Grid,
@@ -17,6 +18,7 @@
   graph where the vertices are the compute tasks and the edges represent the
   data dependencies between the tasks. The input to Pegasus is a description
   of the abstract workflow in XML format.</para>
+  </section>
 
   <para>The Pegasus Workflow Management System consists of three main
   components:</para>
@@ -86,4 +88,5 @@
   
 
 </chapter>
+
 
