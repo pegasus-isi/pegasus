@@ -353,7 +353,50 @@ public class SiteStore extends AbstractSiteData{
     public boolean removeFileServer( String handle, String url ){
         throw new UnsupportedOperationException( "Method remove( String , String ) not yet implmeneted" );
     }
+
     
+    /**
+     * Return the work directory as seen externally (including external mount point)
+     *
+     * @param fs          the FileServer with the file system
+     * @param siteHanlde  the site for which you want the directory
+     *
+     * @return    String corresponding to the mount point
+     */    
+    public String getExternalWorkDirectory(FileServer fs, String siteHandle) {
+        
+        String path = "";
+            
+        SiteCatalogEntry execPool = this.lookup(siteHandle);
+        if(execPool == null){
+            throw new RuntimeException("Entry for " + siteHandle +
+                                       " does not exist in the Site Catalog");
+        }
+
+        path = mWorkDir;
+
+        if ( mWorkDir.length() == 0 ) {
+            // special case - no pegasus.dir.exec
+            path = fs.getMountPoint();
+        }
+        else if ( mWorkDir.charAt( 0 ) != '/' ) {
+            // not a absolute path given - append
+            path = fs.getMountPoint() + File.separator + mWorkDir;
+        }
+
+        
+        String randDir = mPlannerOptions.getRandomDirName();
+
+        if ( randDir != null) {
+            //append the random dir name to the
+            //work dir constructed till now
+            path += File.separator + randDir;
+        }
+        
+        return path;
+    }
+
+     
     /**
      * Return the storage mount point for a particular pool.
      *
@@ -362,7 +405,7 @@ public class SiteStore extends AbstractSiteData{
      * @return    String corresponding to the mount point if the pool is found.
      *            null if pool entry is not found.
      */
-    public String getStorageDirectory( String site ) {
+    public String getInternalStorageDirectory( String site ) {
         
         String mount_point = mStorageDir;
         SiteCatalogEntry entry = this.lookup( site );
@@ -417,8 +460,8 @@ public class SiteStore extends AbstractSiteData{
      * @return the path to the pool work dir.
      * @throws RuntimeException in case of site not found in the site catalog.
      */
-    public String getWorkDirectory( String handle ) {
-        return this.getWorkDirectory( handle, null, -1 );
+    public String getInternalWorkDirectory( String handle ) {
+        return this.getInternalWorkDirectory( handle, null, -1 );
     }
 
     /**
@@ -430,8 +473,8 @@ public class SiteStore extends AbstractSiteData{
      * @return the path to the pool work dir.
      * @throws RuntimeException in case of site not found in the site catalog.
      */
-    public String getWorkDirectory( Job job ) {
-        return this.getWorkDirectory( job.executionPool,
+    public String getInternalWorkDirectory( Job job ) {
+        return this.getInternalWorkDirectory( job.executionPool,
             job.vdsNS.getStringValue(
             Pegasus.REMOTE_INITIALDIR_KEY ),
             job.jobClass );
@@ -449,8 +492,8 @@ public class SiteStore extends AbstractSiteData{
      * @return the path to the pool work dir.
      * @throws RuntimeException in case of site not found in the site catalog.
      */
-    public String getWorkDirectory( String handle, String path ) {
-        return this.getWorkDirectory( handle, path, -1 );
+    public String getInternalWorkDirectory( String handle, String path ) {
+        return this.getInternalWorkDirectory( handle, path, -1 );
     }
 
     /**
@@ -468,7 +511,7 @@ public class SiteStore extends AbstractSiteData{
      * @return the path to the pool work dir.
      * @throws RuntimeException in case of site not found in the site catalog.
      */
-    public String getWorkDirectory( String handle, String path, int jobClass ) {
+    public String getInternalWorkDirectory( String handle, String path, int jobClass ) {
         //get the random directory name
         //sanitary check
         if( mPlannerOptions == null ){
@@ -637,6 +680,8 @@ public class SiteStore extends AbstractSiteData{
         return obj;
     }
 
-     
+
+
+
     
 }

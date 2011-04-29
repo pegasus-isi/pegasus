@@ -690,11 +690,9 @@ public class TransferEngine extends Engine {
             throw new RuntimeException( mLogMsg );
         }
 
-        //definite inconsitency as url prefix and mount point
-        //are not picked up from the same server
         String execURL = ePool.getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix() +
-            mSiteStore.getWorkDirectory(execPool,path) + File.separatorChar +
-            lfn;
+            mSiteStore.getExternalWorkDirectory(ePool.getHeadNodeFS().selectScratchSharedFileServer(), execPool) + 
+            File.separatorChar + lfn;
 
         //write out the exec url to the cache file
         trackInTransientRC(lfn,execURL,execPool);
@@ -724,7 +722,7 @@ public class TransferEngine extends Engine {
             //construct the source url depending on whether third party tx
            String sourceURL = localTransfer ?
                                 execURL :
-                                "file://" + mSiteStore.getWorkDirectory(execPool,path) +
+                                "file://" + mSiteStore.getInternalWorkDirectory(execPool,path) +
                                 File.separator + lfn;
 
             ft = new FileTransfer(lfn,job,pf.getFlags());
@@ -757,11 +755,9 @@ public class TransferEngine extends Engine {
                 FileServer fs = (FileServer)it.next();
                 destURL = fs.getURLPrefix() ;
 
-              
                 //assumption of same se mount point for each gridftp server
-                destURL += this.getPathOnStageoutSite( lfn );//  + File.separator + lfn;
-
-
+                destURL += mSiteStore.getExternalWorkDirectory(fs, destPool);
+                
                 //if the paths match of dest URI
                 //and execDirURL we return null
                 if (execURL.equalsIgnoreCase(destURL)) {
@@ -838,7 +834,9 @@ public class TransferEngine extends Engine {
 
             String sourceURI = null;
             String thirdPartyDestURI = desPool.getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix() +
-                                        mSiteStore.getWorkDirectory( destPool, destRemoteDir );
+                                       mSiteStore.getExternalWorkDirectory(
+                                               desPool.getHeadNodeFS().selectScratchSharedFileServer(),
+                                               destPool);
 
             //definite inconsitency as url prefix and mount point
             //are not picked up from the same server
@@ -847,7 +845,7 @@ public class TransferEngine extends Engine {
                 //construct for third party transfer
                 thirdPartyDestURI :
                 //construct for normal transfer
-                "file://" + mSiteStore.getWorkDirectory( destPool, destRemoteDir );
+                "file://" + mSiteStore.getInternalWorkDirectory( destPool, destRemoteDir );
 
 
             for (Iterator fileIt = pJob.getOutputFiles().iterator(); fileIt.hasNext(); ){
@@ -872,8 +870,8 @@ public class TransferEngine extends Engine {
                         //are not picked up from the same server
                         sourceURI = server.getURLPrefix();
                                                                           
-                        sourceURI += mSiteStore.getWorkDirectory(  pJob.executionPool,
-                                                                   pJob.vdsNS.getStringValue(Pegasus.REMOTE_INITIALDIR_KEY));
+                        //sourceURI += server.getMountPoint();
+                        sourceURI += mSiteStore.getExternalWorkDirectory(server, pJob.getSiteHandle());
                         
                         sourceURL = sourceURI + File.separator + outFile;
 
@@ -1043,7 +1041,8 @@ public class TransferEngine extends Engine {
 
         //sAbsPath would be just the source directory absolute path
         //dAbsPath would be just the destination directory absolute path
-        String dAbsPath = mSiteStore.getWorkDirectory( ePool, eRemoteDir );
+        String dAbsPath = mSiteStore.getExternalWorkDirectory(ep.getHeadNodeFS().selectScratchSharedFileServer(),
+                                                              ePool);
         String sAbsPath = null;
 
         //sDirURL would be the url to the source directory.
@@ -1056,7 +1055,7 @@ public class TransferEngine extends Engine {
         
         
         //file dest dir is destination dir accessed as a file URL
-        String fileDestDir = scheme + "://" + mSiteStore.getWorkDirectory( ePool, eRemoteDir );
+        String fileDestDir = scheme + "://" + mSiteStore.getInternalWorkDirectory( ePool, eRemoteDir );
                 
         //check if the execution pool is third party or not
         boolean runTransferOnLocalSite = runTransferOnLocalSite( ePool, dDirURL, Job.STAGE_IN_JOB);
@@ -1500,7 +1499,7 @@ public class TransferEngine extends Engine {
         // create files in the directory, unless anything else is known.
 //        mStageOutBaseDirectory = mPoolHandle.getSeMountPoint( mPoolHandle.getPoolEntry( outputSite, "vanilla") );
         //mStageOutBaseDirectory = mSiteStore.lookup( outputSite ).selectStorageFileServerForStageout().getMountPoint() ;
-        mStageOutBaseDirectory = mSiteStore.getStorageDirectory( outputSite );
+        mStageOutBaseDirectory = mSiteStore.getInternalStorageDirectory( outputSite );
 
         if( mProps.useDeepStorageDirectoryStructure() ){
             // create hashed, and levelled directories
@@ -1570,12 +1569,10 @@ public class TransferEngine extends Engine {
             PegasusFile pf = (PegasusFile) it.next();
             String lfn = pf.getLFN();
 
-            //definite inconsitency as url prefix and mount point
-            //are not picked up from the same server
             StringBuffer execURL = new StringBuffer();
             FileServer server = ePool.getHeadNodeFS().selectScratchSharedFileServer();
             execURL.append( server.getURLPrefix() ).
-                    append( mSiteStore.getWorkDirectory( job.getSiteHandle(), path ) ).
+                    append( mSiteStore.getExternalWorkDirectory(server, job.getSiteHandle() ) ).
                     append( File.separatorChar ).append( lfn );
 
             

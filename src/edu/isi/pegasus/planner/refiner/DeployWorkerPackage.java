@@ -474,7 +474,7 @@ public class DeployWorkerPackage
             mLogger.log( "Selected entry " + selected, LogManager.DEBUG_MESSAGE_LEVEL );
 
             //figure out the directory where to stage the data
-            String baseRemoteWorkDir = siteStore.getWorkDirectory( site );
+            String baseRemoteWorkDir = siteStore.getInternalWorkDirectory( site );
             String name = getRootDirectoryNameForPegasus( selected.getPhysicalTransformation() );
             File pegasusHome = new File( baseRemoteWorkDir, name );
 
@@ -727,7 +727,7 @@ public class DeployWorkerPackage
             mLogger.log( "Adding worker package cleanup node for " + site,
                          LogManager.DEBUG_MESSAGE_LEVEL );
 
-            String baseRemoteWorkDir = mSiteStore.getWorkDirectory( site );
+            String baseRemoteWorkDir = mSiteStore.getInternalWorkDirectory( site );
 
             //figure out what needs to be deleted for the site
             FileTransfer ft = (FileTransfer)mFTMap.get( site ); 
@@ -965,8 +965,8 @@ public class DeployWorkerPackage
         //we want to fully specify the directory where we want tar file
         //untarred
         StringBuffer arguments = new StringBuffer();
-        arguments.append( " -C " ).append( mSiteStore.getWorkDirectory( site ) ).
-                  append( " -zxvf " ).append( mSiteStore.getWorkDirectory( site ) ).
+        arguments.append( " -C " ).append( mSiteStore.getInternalWorkDirectory( site ) ).
+                  append( " -zxvf " ).append( mSiteStore.getInternalWorkDirectory( site ) ).
                   append( File.separator ).append( wpBasename );
         
         newJob.jobName = jobName;

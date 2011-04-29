@@ -213,7 +213,7 @@ public class DefaultImplementation implements Implementation {
                append( File.separator ).append( DefaultImplementation.EXECUTABLE_BASENAME );
             execPath = sb.toString();
             argString = "--create --dir " +
-                        mSiteStore.getWorkDirectory( site );
+                        mSiteStore.getInternalWorkDirectory( site );
             
             newJob.condorVariables.setExecutableForTransfer();
             

@@ -346,7 +346,7 @@ public class GRMS extends Abstract {
         //GRMS invokes the job in it's own directory
         //make kickstart change to a directory that can be
         //tracked through the VDS by pass -w to kickstart
-        gridStartArgs.append("-w ").append( mSiteStore.getWorkDirectory( job ) ).
+        gridStartArgs.append("-w ").append( mSiteStore.getInternalWorkDirectory( job ) ).
             append(' ');
 
 

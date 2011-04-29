@@ -1556,7 +1556,7 @@ public class CondorGenerator extends Abstract {
                 //appended with the true remote directory
                 String args = (String) cvar.removeKey("arguments");
                 args = " -w " +
-                    mSiteStore.getWorkDirectory( sinfo ) +
+                    mSiteStore.getInternalWorkDirectory( sinfo ) +
                     " " + args;
                 cvar.construct("arguments", args);
 

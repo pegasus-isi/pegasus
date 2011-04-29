@@ -90,7 +90,7 @@ public class Condor extends Abstract {
      * @throws CondorStyleException in case of any error occuring code generation.
      */
     public void apply(Job job) throws CondorStyleException{
-        String execSiteWorkDir = mSiteStore.getWorkDirectory(job);
+        String execSiteWorkDir = mSiteStore.getInternalWorkDirectory(job);
         String workdir = (String) job.globusRSL.removeKey("directory"); // returns old value
         workdir = (workdir == null)?execSiteWorkDir:workdir;
 

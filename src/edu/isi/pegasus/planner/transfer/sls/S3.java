@@ -543,7 +543,7 @@ public class S3   implements SLS {
 
             destURL.append( mSiteStore.lookup( job.getSiteHandle() ).getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix() ).
                     append( separator ).
-                    append( mSiteStore.getWorkDirectory( job ) ).append( separator ).
+                    append( mSiteStore.getInternalWorkDirectory( job ) ).append( separator ).
                     append( slsInputLFN );
             ft.addDestination( job.getSiteHandle(), destURL.toString() );
 
@@ -569,7 +569,7 @@ public class S3   implements SLS {
 
             destURL.append( mSiteStore.lookup( job.getSiteHandle() ).getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix() )
                     .append( separator ).
-                    append( mSiteStore.getWorkDirectory( job ) ).append( separator ).
+                    append( mSiteStore.getInternalWorkDirectory( job ) ).append( separator ).
                     append( slsOutputLFN );
 
             ft.addDestination( job.getSiteHandle(), destURL.toString()  );

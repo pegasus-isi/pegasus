@@ -534,7 +534,7 @@ public class InterPoolEngine extends Engine implements Refiner {
             //pool where it needs to be staged to
             //always creating a third party transfer URL
             //for the destination.
-            String stagedPath =  mSiteStore.getWorkDirectory(job)
+            String stagedPath =  mSiteStore.getInternalWorkDirectory(job)
                                 + File.separator + job.getStagedExecutableBaseName();
 
             fTx.addDestination( siteHandle,
@@ -675,7 +675,7 @@ public class InterPoolEngine extends Engine implements Refiner {
 //                        fTx.addDestination(siteHandle,
 //                                           site.getURLPrefix(false) + stagedPath);
                         
-                        String stagedPath = mSiteStore.getWorkDirectory(job)
+                        String stagedPath = mSiteStore.getInternalWorkDirectory(job)
                             + File.separator + basename;
                         fTx.addDestination(siteHandle,
                                            site.getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix() + stagedPath);

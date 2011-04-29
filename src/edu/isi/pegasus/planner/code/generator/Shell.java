@@ -512,7 +512,7 @@ public class Shell extends Abstract {
      * @return  the directory
      */
     protected String getExecutionDirectory(Job job) {
-       String execSiteWorkDir = mSiteStore.getWorkDirectory(job);
+       String execSiteWorkDir = mSiteStore.getInternalWorkDirectory(job);
        String workdir = (String) job.globusRSL.removeKey("directory"); // returns old value
        workdir = (workdir == null)?execSiteWorkDir:workdir;
 

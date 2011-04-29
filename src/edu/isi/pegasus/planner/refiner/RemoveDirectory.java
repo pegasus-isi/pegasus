@@ -255,7 +255,7 @@ public class RemoveDirectory extends Engine {
      */
     public Job makeRemoveDirJob( String site, String jobName ) {
         List l = new LinkedList();
-        l.add( mSiteStore.getWorkDirectory( site ) );
+        l.add( mSiteStore.getInternalWorkDirectory( site ) );
         
         return makeRemoveDirJob( site, jobName, l );
     }
