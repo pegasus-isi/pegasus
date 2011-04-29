@@ -48,6 +48,14 @@ sub namespace;
 sub name;
 sub version;
 
+sub key {
+    # purpose: create the distinguishing key 
+    # returns: a string that can be used in a hash
+    #
+    my $self = shift;
+    join( $;, ($self->namespace || ''), $self->name, ($self->version || '') );
+}
+
 sub addUses {
     my $self = shift; 
     $self->uses(@_); 

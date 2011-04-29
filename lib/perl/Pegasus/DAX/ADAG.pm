@@ -65,7 +65,6 @@ sub invoke {
     my $when = shift;
     my $cmd = shift;
 
-
     if ( defined $when && defined $cmd ) { 
 	my $i = Pegasus::DAX::Invoke->new($when,$cmd);
 	if ( exists $self->{invokes} ) {
@@ -85,14 +84,36 @@ sub addFile {
     my $name = shift; 
     if ( ref $name ) {
 	if ( $name->isa('Pegasus::DAX::File') ) {
-	    push( @{$self->{files}}, $name ); 
+	    # files uses LFN to distinguish files
+	    carp( 'Warning: ', __PACKAGE__, '->addFile(', $name->name
+		, ") already exists, REPLACING existing file!" )
+		if exists $self->{files}->{ $name->name }; 
+
+	    $self->{files}->{ $name->name } = $name->clone();
 	} else { 
-	    croak( "Instance of ", ( ref($name) ? ref($name) : 'SCALAR' ), 
-		   " is an invalid argument" ); 
+	    croak( "Instance of ", ref($name), " is an invalid argument" ); 
 	}
     } else {
 	croak "invalid argument"; 
     }
+}
+
+sub getFile {
+    my $self = shift;
+    my $name = shift;
+
+    my $key = undef; 
+    if ( ! ref $name ) { 
+	$key = $name; 
+    } elsif ( $name->isa('Pegasus::DAX::File') ) {
+	$key = $name->name;
+    } else {
+	croak( 'getFile requires string or Pegasus::DAX::File argument' ); 
+    }
+
+    # avoid auto-vivification
+    return undef unless exists $self->{files}; 
+    exists $self->{files}->{$key} ? $self->{files}->{$key} : undef; 
 }
 
 sub addExecutable { 
@@ -100,10 +121,16 @@ sub addExecutable {
     my $name = shift; 
     if ( ref $name ) {
 	if ( $name->isa('Pegasus::DAX::Executable') ) {
-	    push( @{$self->{executables}}, $name ); 
+	    my $key = $name->key; 
+	    carp( 'Warning: ', __PACKAGE__, '->addExecutable('
+		, ($name->namespace || ''), ',', $name->name, ','
+		, ($name->version || '')
+		, ",...) already exists, REPLACING existing executable!" )
+		if exists $self->{executables}->{$key}; 
+
+	    $self->{executables}->{$key} = $name->clone(); 
 	} else { 
-	    croak( "Instance of ", ( ref($name) ? ref($name) : 'SCALAR' ), 
-		   " is an invalid argument" ); 
+	    croak( "Instance of ", ref($name), " is an invalid argument" ); 
 	}
     } else {
 	croak "invalid argument";
@@ -113,26 +140,62 @@ sub addExecutable {
 sub addTransformation { 
     my $self = shift; 
     my $name = shift; 
-    if ( ref $name && $name->isa('Pegasus::DAX::Transformation') ) {
-	push( @{$self->{transformations}}, $name ); 
-    } else { 
-	croak( "Instance of ", ( ref($name) ? ref($name) : 'SCALAR' ), 
-	       " is an invalid argument" ); 
+    if ( ref $name ) { 
+	if ( $name->isa('Pegasus::DAX::Transformation') ) {
+	    my $key = $name->key; 
+	    carp( 'Warning: ', __PACKAGE__, '->addTransformation('
+		, ($name->namespace || ''), ',', $name->name, ','
+		, ($name->version || '')
+		, ") already exists, REPLACING existing transformation!" )
+		if exists $self->{transformation}->{$key};
+
+	    $self->{transformations}->{$key} = $name->clone(); 
+	} else { 
+	    croak( "Instance of ", ref($name), " is an invalid argument" ); 
+	}
+    } else {
+	croak "invalid argument";
     }
+}
+
+sub getTransformation {
+    my $self = shift;
+    my $what = shift; 
+
+    my $key = undef; 
+    if ( ref $what && $what->isa('Pegasus::DAX::Transformation') ) {
+	# using Transformation as argument
+	$key = $what->key; 
+    } elsif ( ! ref $what && @_ == 2 ) { 
+	# using (ns,id,vs) tuple as argument
+	my $id = shift; 
+	my $vs = shift; 
+	$key = join( $;, $what, $id, $vs ); 
+    } else {
+	# not a valid argument
+	croak( "Invalid call of ", __PACKAGE__, "->getTransformation" );
+    }
+
+    # avoid auto-vivification
+    return undef unless exists $self->{transformation}; 
+    exists $self->{transformation}->{$key} ? $self->{transformation}->{$key} : undef; 
 }
 
 sub addJob { 
     my $self = shift; 
     my $job = shift; 
-    if ( ref $job && $job->isa('Pegasus::DAX::AbstractJob') ) {
-	my $id = $job->id || 
-	    croak( "Instance of ", ref($job), " does not have an 'id' attribute" );
-	carp( "Warning: job identifier $id already exists, REPLACING existing job!" )
-	    if exists $self->{jobs}->{$id}; 
-	$self->{jobs}->{$id} = $job; 
-    } else { 
-	croak( "Instance of ", ( ref($job) ? ref($job) : 'SCALAR' ), 
-	       " is an invalid argument" ); 
+    if ( ref $job ) { 
+	if ( $job->isa('Pegasus::DAX::AbstractJob') ) {
+	    my $id = $job->id || 
+		croak( "Instance of ", ref($job), " does not have an 'id' attribute" );
+	    carp( "Warning: job identifier $id already exists, REPLACING existing job!" )
+		if exists $self->{jobs}->{$id}; 
+	    $self->{jobs}->{$id} = $job->clone(); 
+	} else { 
+	    croak( "Instance of ", ref($job), " is an invalid argument" ); 
+	}
+    } else {
+	croak "invalid argument";
     }
 }
 
@@ -141,7 +204,8 @@ sub getJob {
     my $id = shift; 		# job id
 
     # avoid auto-vivification
-    ( exists $self->{jobs}->{$id} ? $self->{jobs}->{$id} : undef ); 
+    return undef unless exists $self->{jobs}; 
+    exists $self->{jobs}->{$id} ? $self->{jobs}->{$id} : undef; 
 }
 
 sub addDependency {
@@ -286,40 +350,44 @@ sub toXML {
     # <invoke>
     #
     if ( exists $self->{invokes} ) {
-	$f->print( "  $indent<!-- part 1.0: invocations -->\n" ); 
+	$f->print( "  $indent<!-- part 1.1: invocations -->\n" ); 
 	foreach my $i ( @{$self->{invokes}} ) {
 	    $i->toXML($f,"  $indent",$xmlns); 
 	}
+	$f->print("\n");
     }
 
     #
     # <file>
     #
     if ( exists $self->{files} ) {
-	$f->print( "  $indent<!-- part 1.1: included replica catalog -->\n" );
-	foreach my $i ( @{$self->{files}} ) {
+	$f->print( "  $indent<!-- part 1.2: included replica catalog -->\n" );
+	foreach my $i ( values %{ $self->{files} } ) {
 	    $i->toXML($f,"  $indent",$xmlns); 
 	}
+	$f->print("\n");
     }
 
     #
     # <executable>
     #
     if ( exists $self->{executables} ) { 
-	$f->print( "  $indent<!-- part 1.2: included transformation catalog -->\n" );
-	foreach my $i ( @{$self->{executables}} ) { 
+	$f->print( "  $indent<!-- part 1.3: included transformation catalog -->\n" );
+	foreach my $i ( values %{ $self->{executables} } ) { 
 	    $i->toXML($f,"  $indent",$xmlns);
 	}
+	$f->print("\n");
     }
 
     #
     # <transformation>
     #
     if ( exists $self->{transformations} ) { 
-	$f->print( "  $indent<!-- part 1.3: included transformation abbreviations -->\n" );
-	foreach my $i ( @{$self->{transformations}} ) {
+	$f->print( "  $indent<!-- part 1.4: included transformation abbreviations -->\n" );
+	foreach my $i ( values %{ $self->{transformations} } ) {
 	    $i->toXML($f,"  $indent",$xmlns);
 	}
+	$f->print("\n");
     }
 
     #
@@ -330,6 +398,7 @@ sub toXML {
     foreach my $id ( $self->topo_sort ) {
 	$self->{jobs}->{$id}->toXML($f,"  $indent",$xmlns);
     }
+    $f->print("\n");
     
     #
     # <child>

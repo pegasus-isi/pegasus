@@ -99,6 +99,24 @@ sub osrelease;
 sub osversion;
 sub glibc;
 sub installed;
+    
+sub key {
+    # purpose: create the distinguishing key 
+    # returns: a string that can be used in a hash
+    #
+    my $self = shift;
+    my @x = ( $self->namespace
+	    , $self->name
+	    , $self->version
+	    , $self->arch
+	    , $self->os
+	    , $self->osrelease
+	    , $self->osversion
+	    , $self->glibc
+	    , boolean($self->installed)
+	    );
+    join( $;, grep { defined $_ } @x );
+}
 
 sub toXML {
     # purpose: put self onto stream as XML
