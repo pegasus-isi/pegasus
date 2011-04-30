@@ -96,14 +96,18 @@ sub parse_properties($;\%) {
 	    if ( /([^:= \t]+)\s*[:=]?\s*(.*)/ ) {   
 		# new fix for auto gen properties
 		my ($k,$v) = ($1,$2);
-		print STDERR "# Storing: $k => $v\n" if $main::DEBUG;
 
 		# substitutions -- works arbitrarily deep?
 		while ( $v =~ /(\$\{([A-Za-z0-9._]+)\})/g ) {
 		    my ($a,$b) = ($1,$2); 
-		    my $newval = $hashref->{$b} || $system{$b} || '';
+		    my $newval = $hashref->{$b} || 
+			$system{$b} || 
+			$result{$b} || 
+			'';
 		    substr($v,index($v,$a),length($a),$newval);
 		}
+
+		print STDERR "# Storing: $k => $v\n" if $main::DEBUG;
 		$result{lc($k)} = $v;
 	    } else {
 		carp "Illegal content in $fn:$.\n";
