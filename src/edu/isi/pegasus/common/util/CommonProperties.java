@@ -130,6 +130,9 @@ public class CommonProperties
 	 * if ( newVal == null ) newVal = b.getProperty(newKey);
 	 */
 
+	// try myself
+	if ( newVal == null ) newVal = result.getProperty(newKey); 
+
 	// if still not found, try system properties
 	if ( newVal == null ) newVal = sys.getProperty(newKey);
 
@@ -608,5 +611,17 @@ public class CommonProperties
     return result;
   }
 
+  public static void main( String[] args )
+    throws java.io.IOException
+  {
+    CommonProperties cp = null;
+    if ( args.length > 0 ) cp = CommonProperties.nonSingletonInstance(args[0]);
+    else cp = CommonProperties.instance(); 
 
+    for ( Enumeration e = cp.propertyNames(); e.hasMoreElements(); ) {
+      String key = (String) e.nextElement();
+      String value = cp.getProperty(key);
+      System.out.println( key + '=' + value ); 
+    }
+  }
 }
