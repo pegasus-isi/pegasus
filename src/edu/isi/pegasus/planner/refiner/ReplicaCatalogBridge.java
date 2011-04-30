@@ -686,14 +686,17 @@ public class ReplicaCatalogBridge
                 "The Replica Catalog URL is not specified in site catalog for site " + mOutputPool );
         }
 
-        //get any command line properties that may need specifying
-        arguments.append( this.getCommandLineProperties( mProps ) );
+        
 
         //we have a lrc selected . construct vds.rc.url property
         arguments.append( "-D" ).append( ReplicaCatalog.c_prefix ).append( "." ).
                   append( this.REPLICA_CATALOG_URL_KEY).append( "=" ).append( rc.getURL() ).
                   append( " " );
 
+        //get any command line properties that may need specifying
+        arguments.append( "--conf" ).append( " " ).
+                  append(  mProps.getPropertiesInSubmitDirectory( )  );
+        
         //append the insert option
         arguments.append( "--insert" ).append( " " ).
                   append( this.generateMappingsFile( regJob, files ) );
