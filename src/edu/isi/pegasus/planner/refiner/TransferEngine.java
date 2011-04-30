@@ -755,8 +755,9 @@ public class TransferEngine extends Engine {
                 FileServer fs = (FileServer)it.next();
                 destURL = fs.getURLPrefix() ;
 
-                //assumption of same se mount point for each gridftp server
-                destURL += mSiteStore.getExternalWorkDirectory(fs, destPool);
+                //assumption of same external mount point for each storage
+                //file server on output site                                                                                                                                 
+                destURL += this.getPathOnStageoutSite( lfn );
                 
                 //if the paths match of dest URI
                 //and execDirURL we return null
@@ -1497,9 +1498,7 @@ public class TransferEngine extends Engine {
         }
 
         // create files in the directory, unless anything else is known.
-//        mStageOutBaseDirectory = mPoolHandle.getSeMountPoint( mPoolHandle.getPoolEntry( outputSite, "vanilla") );
-        //mStageOutBaseDirectory = mSiteStore.lookup( outputSite ).selectStorageFileServerForStageout().getMountPoint() ;
-        mStageOutBaseDirectory = mSiteStore.getInternalStorageDirectory( outputSite );
+        mStageOutBaseDirectory = mSiteStore.getExternalStorageDirectory( outputSite );
 
         if( mProps.useDeepStorageDirectoryStructure() ){
             // create hashed, and levelled directories

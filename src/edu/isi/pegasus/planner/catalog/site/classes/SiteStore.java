@@ -405,7 +405,7 @@ public class SiteStore extends AbstractSiteData{
      * @return    String corresponding to the mount point if the pool is found.
      *            null if pool entry is not found.
      */
-    public String getInternalStorageDirectory( String site ) {
+    public String getExternalStorageDirectory( String site ) {
         
         String mount_point = mStorageDir;
         SiteCatalogEntry entry = this.lookup( site );
