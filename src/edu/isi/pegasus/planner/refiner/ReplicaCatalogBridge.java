@@ -695,7 +695,8 @@ public class ReplicaCatalogBridge
 
         //get any command line properties that may need specifying
         arguments.append( "--conf" ).append( " " ).
-                  append(  mProps.getPropertiesInSubmitDirectory( )  );
+                  append(  mProps.getPropertiesInSubmitDirectory( )  ).
+                  append( " " );
         
         //append the insert option
         arguments.append( "--insert" ).append( " " ).
