@@ -201,10 +201,9 @@ showprops( $fh, 'Sys-prop', %sys );
 
 my %usr = readprops( $fh, \%sys,
 		     $sys{'pegasus.user.properties'}, 
-		     File::Spec->catfile( $ENV{HOME}, '.pegasusrc' ), 
-		     File::Spec->catfile( $ENV{HOME}, '.chimerarc' ) );
+		     File::Spec->catfile( $ENV{HOME}, '.pegasusrc' ) );
 showprops( $fh, 'Usr-prop', %usr );
-print $fh `show-properties | sed -e 's/^/Eff-prop /'`;
+#print $fh `show-properties | sed -e 's/^/Eff-prop /'`;
 print $fh "\n";
 
 my %all = ( %sys, %usr ); 	# let %usr overwrite %sys
