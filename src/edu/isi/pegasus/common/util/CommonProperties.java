@@ -611,6 +611,20 @@ public class CommonProperties
     return result;
   }
 
+  /**
+   * Print out the property list onto the specified stream. This method
+   * is useful for debugging, and meant for debugging.
+   *
+   * @param out an output stream
+   * @throws ClassCastException if any key is not a string.
+   *
+   * @see java.util.Properties#list( PrintStream )
+   */
+  public void list(PrintStream out)
+  {
+    m_props.list(out); 
+  }
+
   public static void main( String[] args )
     throws java.io.IOException
   {
@@ -618,10 +632,6 @@ public class CommonProperties
     if ( args.length > 0 ) cp = CommonProperties.nonSingletonInstance(args[0]);
     else cp = CommonProperties.instance(); 
 
-    for ( Enumeration e = cp.propertyNames(); e.hasMoreElements(); ) {
-      String key = (String) e.nextElement();
-      String value = cp.getProperty(key);
-      System.out.println( key + '=' + value ); 
-    }
+    cp.list( System.out );
   }
 }
