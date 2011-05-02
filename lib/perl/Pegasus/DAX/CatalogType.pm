@@ -50,7 +50,8 @@ sub addMeta {
 	# explicit
 	$meta = Pegasus::DAX::MetaData->new( shift(), shift(), shift() ); 
     } elsif ( @_ == 1 && ref $_[0] && $_[0]->isa('Pegasus::DAX::MetaData') ) {
-	$meta = shift; 
+	my $m = shift; 
+	$meta = $m->clone(); 
     } else {
 	croak "argument is not a valid MetaData";
     }
@@ -74,7 +75,8 @@ sub addPFN {
 	$pfn = Pegasus::DAX::PFN->new( shift(), shift() ); 
     } elsif ( @_ == 1 && $_[0]->isa('Pegasus::DAX::PFN' ) ) {
 	# ok
-	$pfn = shift; 
+	my $p = shift; 
+	$pfn = $p->clone(); 
     } else {
 	croak "argument is not a valid PFN";
     }
@@ -94,7 +96,8 @@ sub addProfile {
 	# explicit
 	$prof = Pegasus::DAX::Profile->new( shift(), shift(), shift() ); 
     } elsif ( @_ == 1 && ref $_[0] && $_[0]->isa('Pegasus::DAX::Profile') ) {
-	$prof = shift; 
+	my $p = shift; 
+	$prof = $p->clone(); 
     } else {
 	croak "argument is not a valid Profile";
     }

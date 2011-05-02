@@ -72,23 +72,42 @@ sub addFile {
     }
 }
 
+sub hasFile { 
+    my $self = shift; 
+    return undef unless exists $self->{files}; 
+
+    my $name = shift; 
+    my $key = undef; 
+    if ( ! ref $name ) {
+	$key = $name;
+    } elsif ( $name->can('name') ) {
+	$key = $name->name;
+    } else {
+	croak "invalid argument"; 
+    }
+
+    exists $self->{files}->{$key}; 
+}
+
 sub getFile {
     my $self = shift;
-    my $name = shift;
+    return undef unless exists $self->{files}; 
 
+    my $name = shift;
     my $key = undef; 
     if ( ! ref $name ) { 
 	$key = $name; 
-    } elsif ( $name->isa('Pegasus::DAX::File') ) {
+    } elsif ( $name->can('name') ) { 
 	$key = $name->name;
     } else {
 	croak( 'getFile requires string or Pegasus::DAX::File argument' ); 
     }
 
     # avoid auto-vivification
-    return undef unless exists $self->{files}; 
     exists $self->{files}->{$key} ? $self->{files}->{$key} : undef; 
 }
+
+
 
 sub addExecutable { 
     my $self = shift; 
@@ -111,6 +130,28 @@ sub addExecutable {
     }
 }
 
+sub hasExecutable {
+    my $self = shift;
+    return undef unless exists $self->{executables}; 
+
+    my $name = shift;
+    my $key = undef; 
+    if ( ref $name ) { 
+	if ( $name->isa('Pegasus::DAX::Executable') ) { 
+	    $key = $name->key;
+	} elsif ( ref $name eq 'HASH' ) {
+	    $key = Pegasus::DAX::Executable->new($name)->key; 
+	} else {
+	    croak "invalid argument";
+	}
+    } else {
+	croak "invalid argument";
+    }
+    exists $self->{executables}->{$key}; 
+}
+
+
+
 sub addTransformation { 
     my $self = shift; 
     my $name = shift; 
@@ -130,6 +171,28 @@ sub addTransformation {
     } else {
 	croak "invalid argument";
     }
+}
+
+sub hasTransformation {
+    my $self = shift;
+    return undef unless exists $self->{transformation}; 
+
+    my $what = shift; 
+    my $key = undef; 
+    if ( ref $what && $what->isa('Pegasus::DAX::Transformation') ) {
+	# using Transformation as argument
+	$key = $what->key; 
+    } elsif ( ! ref $what && @_ == 2 ) { 
+	# using (ns,id,vs) tuple as argument
+	my $id = shift; 
+	my $vs = shift; 
+	$key = join( $;, $what, $id, $vs ); 
+    } else {
+	# not a valid argument
+	croak( "Invalid argument to ", __PACKAGE__, "->hasTransformation" );
+    }
+
+    exists $self->{transformation}->{$key};
 }
 
 sub getTransformation {
@@ -155,6 +218,8 @@ sub getTransformation {
     exists $self->{transformation}->{$key} ? $self->{transformation}->{$key} : undef; 
 }
 
+
+
 sub addJob { 
     my $self = shift; 
     my $job = shift; 
@@ -171,6 +236,23 @@ sub addJob {
     } else {
 	croak "invalid argument";
     }
+}
+
+sub hasJob {
+    my $self = shift;
+    return undef unless exists $self->{jobs}; 
+
+    my $job = shift; 		# job id    
+    my $key = undef; 
+    if ( ref $job && $job->isa('Pegasus::DAX::AbstractJob') ) {
+	$key = $job->id;
+    } elsif ( ! ref $job ) { 
+	$key = $job;
+    } else {
+	croak( "Instance of ", ref($job), " is an invalid argument" ); 
+    }
+
+    exists $self->{jobs}->{$key};
 }
 
 sub getJob {
@@ -190,6 +272,8 @@ sub getJob {
     return undef unless exists $self->{jobs}; 
     exists $self->{jobs}->{$key} ? $self->{jobs}->{$key} : undef; 
 }
+
+
 
 sub addDependency {
     my $self = shift; 
@@ -510,6 +594,16 @@ of this workflow. This is mostly an obsolete feature that will go away.
 Adds an included replica catalog entry. This method will make a copy of
 the instance passed.
 
+=item hasFile( $file_instance )
+
+Checks, if the logical object described by the L<Pegasus::DAX::File>
+argument is already known to this instance.
+
+=item hasFile( $filename ) 
+
+Checks, if the logical object described by the file name is already
+known to this instance.
+
 =item getFile( $filename )
 
 Retrieves an included replica catalog entry by a given filename. Returns
@@ -524,10 +618,25 @@ L<Pegasus::DAX::File>. Returns C<undef> if not found.
 
 Adds a copy of an included transformation catalog entry. 
 
+=item hasExecutable( $executable_instance ) 
+
+Checks, if the given L<Pegasus::DAX::Executable> object is already known
+to this instance.
+
 =item addTransformation( $transformation_instance )
 
 Adds a copy of the L<Pegasus::DAX::Transformation> combiner to the
 workflow.
+
+=item hasTransformation( $transformation_instance ) 
+
+Checks, if the given L<Pegasus::DAX::Transformation> object is already
+known to this instance.
+
+=item hasTransformation( $ns, $name, $version )
+
+Checks, if the object described by the argument triple is already known
+to this instance. 
 
 =item getTransformation( $ns, $name, $version )
 
@@ -559,6 +668,17 @@ valid and unique I<id> attribute.
 While not forbidden by the API, we cannot plan C<ADAG> within C<ADAG>
 yet. The job must have a valid and unique I<id> attribute once this gets
 implemented.
+
+=item hasJob( $job_instance )
+
+Checks, if the given L<Pegasus::DAX::AbstractJob> object is already 
+known to this instance. It uses solely the object's C<id> value to 
+determine existence.
+
+=item hasJob( $jobid ) 
+
+Check, if the job described by a job identifier is already known to
+this instance. 
 
 =item getJob( $job_instance )
 

@@ -84,7 +84,8 @@ sub addProfile {
 	# explicit
 	$prof = Pegasus::DAX::Profile->new( shift(), shift(), shift() ); 
     } elsif ( @_ == 1 && ref $_[0] && $_[0]->isa('Pegasus::DAX::Profile') ) {
-	$prof = shift; 
+	my $p = shift; 
+	$prof = $p->clone; 
     } else {
 	croak "argument is not a valid Profile";
     }
