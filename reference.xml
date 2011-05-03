@@ -7,7 +7,7 @@
   <section>
     <title>Introduction</title>
 
-    <para>  </para>
+    <para>Introduction Text  </para>
 
   </section>
   <section>
@@ -43,12 +43,12 @@
 
        <para>Profiles may be represented with different syntaxes in different
     context. However, each syntax will describe the underlying triple.</para>
-    </section>
+        </section>
 
        <section>
        <title>Profile Namespaces</title>
 
-    <para>Each namespace refers to a different aspect of a job’s runtime
+        <para>Each namespace refers to a different aspect of a job’s runtime
     settings. A profile’s representation in the concrete plan (e.g. the Condor
     submit files) depends its namespace. Pegasus supports the following
     Namespaces for profiles:</para>
@@ -81,7 +81,7 @@
     </itemizedlist>
 
        <section>
-       <title>The env Profile Namespace</title>
+        <title>The env Profile Namespace</title>
 
       <para>The <emphasis>env</emphasis> namespace allows users to specify
       environment variables of remote jobs. Globus transports the environment

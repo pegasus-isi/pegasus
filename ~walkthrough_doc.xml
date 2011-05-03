@@ -50,8 +50,8 @@
 
   </section>
   
-  <section>
-    <title>Downloading and Running the VM using Virtual Box</title>
+    <section>
+     <title>Downloading and Running the VM using Virtual Box</title>
 
     <para>You will need to install Virtual Box to run the virtual machine on
     your computer. If you already have one of the tools installed, use that.
