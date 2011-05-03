@@ -526,6 +526,8 @@ class Job:
         self._input_file = None
         self._output_file = None
         self._error_file = None
+        self._stdout_text = ""
+        self._stderr_text = ""
         self._job_dagman_out = None		# _CONDOR_DAGMAN_LOG from environment line for pegasus-plan and subdax_ jobs
 
     def set_job_state(self, job_state, timestamp, status):
@@ -699,6 +701,10 @@ class Job:
             self._remote_working_dir = my_record["cwd"]
         if "hostname" in my_record:
             self._host_id = my_record["hostname"]
+        if "stdout" in my_record:
+            self._stdout_text = utils.quote(my_record["stdout"])
+        if "stderr" in my_record:
+            self._stderr_text = utils.quote(my_record["stderr"])
 
         # Set clustered flag
         if len(buffer) > 1:
@@ -939,7 +945,7 @@ class Workflow:
         if self._submit_dir is not None:
             kwargs["submit__dir"] = self._submit_dir
         if self._planner_arguments is not None:
-            kwargs["argv"] = self._planner_arguments
+            kwargs["argv"] = self._planner_arguments.strip('" \t\n\r')
         if self._user is not None:
             kwargs["user"] = self._user
         if self._grid_dn is not None:
@@ -1202,6 +1208,8 @@ class Workflow:
             # Use "pegasus_version" if "planner_version" not found
             if "pegasus_version" in wfparams:
                 self._planner_version = wfparams["pegasus_version"]
+        if "planner_arguments" in wfparams:
+            self._planner_arguments = wfparams["planner_arguments"]
         if "submit_hostname" in wfparams:
             self._submit_hostname = wfparams["submit_hostname"]
         if "user" in wfparams:
@@ -1451,11 +1459,11 @@ class Workflow:
         if my_job._input_file is not None:
             kwargs["stdin__file"] = my_job._input_file
         if my_job._output_file is not None:
-            kwargs["stdout__file"] = my_job._output_file
+            kwargs["stdout__file"] = my_job._output_file + ".%03d" % (my_job._job_output_counter)
         if my_job._error_file is not None:
-            kwargs["stderr__file"] = my_job._error_file
-        kwargs["stdout__text"] = ""
-        kwargs["stderr__text"] = ""
+            kwargs["stderr__file"] = my_job._error_file + ".%03d" % (my_job._job_output_counter)
+        kwargs["stdout__text"] = my_job._stdout_text
+        kwargs["stderr__text"] = my_job._stderr_text
 
         if my_job._sched_id is not None:
             kwargs["sched__id"] = my_job._sched_id

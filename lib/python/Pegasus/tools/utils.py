@@ -30,6 +30,17 @@ import commands
 import datetime
 import subprocess
 
+# The unquote routine comes from urllib
+from urllib import unquote
+
+__all__ = ['quote', 'unquote']
+_mapping = {}
+
+# Initialize _mapping
+for i, c in zip(xrange(256), str(bytearray(xrange(256)))):
+    _mapping[c] = c if (i >= 32 and i < 127 and c not in '"%\'') else ('%%%02X'%i)
+del i; del c
+
 # Regular expressions
 parse_iso8601 = re.compile(r'(\d{4})-?(\d{2})-?(\d{2})[ tT]?(\d{2}):?(\d{2}):?(\d{2})([.,]\d+)?([zZ]|[-+](\d{2}):?(\d{2}))')
 
@@ -40,6 +51,17 @@ brainbase = "braindump.txt"        # Default name for workflow information file
 
 # Get logger object (initialized elsewhere)
 logger = logging.getLogger()
+
+def quote(s):
+    """
+    Encodes a string using a partial URL encoding The encoding
+    replaces the following elements with their URL-encoded
+    equivalents:
+    1. Non-printing and control characters (characters < 0x20 and 0x7F [DEL])
+    2. Extended ASCII characters (characters >= 0x80)
+    3. Percent (0x25), quote (0x27), and double quote (0x22)
+    """
+    return ''.join(map(_mapping.__getitem__, s))
 
 def isodate(now=int(time.time()), utc=False, short=False):
     """
@@ -440,3 +462,8 @@ if __name__ == "__main__":
     print version()
     print slurp_braindb(".")
     print pipe_out_cmd('ls -lR')
+    print
+    print "Testing quote/unquote functions..."
+    print repr(str(bytearray(xrange(256))))
+    print quote(str(bytearray(xrange(256))))
+    print unquote("carriage return: %0Apercent: %25%0Aquote: %27%0Adouble quote: %22")

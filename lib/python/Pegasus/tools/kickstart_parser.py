@@ -427,7 +427,9 @@ class Parser:
                              "file": ["name"],
                              "regular": ["exitcode"],
                              "argument-vector": [],
-                             "cwd": []}
+                             "cwd": [],
+                             "stdout": [],
+                             "stderr": []}
 
         return self.parse(stampede_elements, clustered=True)
 
