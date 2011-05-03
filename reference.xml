@@ -1060,7 +1060,7 @@ pegasus.stagein.clusters 3</programlisting>
   …
 }
 </programlisting>
-    </section>
+      </section>
 
       <section>
       <title>Profiles in Transformation Catalog</title>
@@ -1089,7 +1089,7 @@ pegasus.stagein.clusters 3</programlisting>
       transformation catalog guide has more details on the usage of the
       tc-client.</para>
     </section>
-  </section>
+    </section>
 
      <section>
      <title>Profiles Conflict Resolution</title>
@@ -1122,7 +1122,7 @@ pegasus.stagein.clusters 3</programlisting>
         <para>Profiles in Properties</para>
       </listitem>
     </orderedlist>
-  </section>
+    </section>
 
      <section>
      <title>Details of Profile Handling</title>
@@ -1195,7 +1195,7 @@ queue
       <emphasis>globusrsl</emphasis> key in the <emphasis>condor</emphasis>
       profile namespace.</para>
     </section>
-  </section>
+   </section>
 
   <section>
    <title>Replica Selection</title>
