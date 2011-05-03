@@ -17,7 +17,7 @@
 
    </section>
 
-   <section>
+  <section>
    <title>Profiles</title>
 
 
@@ -31,7 +31,7 @@
     <para>This document describes various types of profiles, levels of
     priorities for intersecting profiles, and how to specify profiles in
     different contexts.</para>
-    </section>
+  </section>
 
       <section>
        <title>Profile Structure</title>
@@ -2734,6 +2734,7 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
 
   </section>
 </chapter>
+
 
 
 
