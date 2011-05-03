@@ -195,7 +195,8 @@ $ tar xvf Pegasus-3.0.1-Debian-6-x86.vbox.tar</emphasis></programlisting>
 
 
 
-    </section>
+
+  </section>
 
   <section>
      <title>Planning and Executing Workflows</title>
@@ -340,56 +341,7 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
 
     </section>
 
-  <section>
-    <title>Setting Up Environments</title>
-    
-    <para>Describe what an environment is and the general set up steps required.</para>
-  
-                   <section>
-                         <title>Catalog Basics</title>
 
-                         <para> NOT SURE WHAT THE END USER NEEDS RIGHT HERE</para>
-
-                 <link
-      linkend="components">See Catalog Details</link>
-                       </section>
-                       
-                       <section>
-                          <title>Setting Up a Local Environment</title>
-                          
-                          <para>Specific Steps</para>
-
-
-                       </section>
-                       <section>
-                          <title>Setting Up a Grid Environment</title>
-
-                          <para>Specific Steps</para>
-
-                        <section>
-                          <title>Setting Up a Condor Pools Environment</title>
-
-                          <para>Specific Steps</para>
-
-
-                         </section>
-                         </section>
-                       <section>
-                          <title>Setting Up a Glidein Environment</title>
-
-                          <para>Specific Steps</para>
-
-
-                       </section>
-                       <section>
-                       <title>Setting Up a Cloud Environment</title>
-
-                          <para>Specific Steps</para>
-
-
-                       </section>
-
-     </section>
   
   <section>
     <title>Workflow Execution</title>
@@ -401,28 +353,7 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
    </section>
  
 
-  <section>
-     <title>Executing Workflows in Different Environments</title>
-               <section>
-               <title>Local Execution</title>
 
-               </section>
-               
-               <section>
-               <title>Condor Pools and Glidelins</title></section>
-               
-               <section>
-               <title>Grids</title>
-               
-               </section>
-
-
-               <section>
-                <title>Clouds</title>
-
-               </section>
-
-   </section>
   <section>
 
    <title>Workflow Monitoring and Analysis</title>
@@ -439,12 +370,6 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
 
   </section>
 
-  <section>
-
-   <title>Setting up your own Pegasus Installation</title>
-
-    <para>Not sure what goes here</para>
-  </section>
 
   <section>
    <title>Pegasus Logs</title>
@@ -462,28 +387,13 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
    
    </section>
    
-  <section>
-  
-   <title>Planning Steps</title>
-   <para>List the general planning steps that are performed on a workflow</para>
-   
-  <link
-      linkend="api">See Pegasus API</link>
 
-
-   </section>
-  
-
-  <section>
-    <title>Glossary</title>
-  
-     <para>List of terms in Glossary format and a link to the term in the documentation </para>
-  
-  </section>
   </section>
 
 
 </chapter>
+
+
 
 
 

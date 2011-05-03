@@ -195,7 +195,8 @@ $ tar xvf Pegasus-3.0.1-Debian-6-x86.vbox.tar</emphasis></programlisting>
 
 
 
-    </section>
+
+  </section>
 
   <section>
      <title>Planning and Executing Workflows</title>
@@ -377,12 +378,12 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
    
    
    </section>
-  
-  <section>
-    <title>Debugging and Statistical Analysis of Workflows</title>
-    <para>Describe each debugging tool used on workflows</para>
+
+    <section>
+     <title>Debugging and Statistical Analysis of Workflows</title>
+      <para>Describe each debugging tool used on workflows</para>
    
-    <para>Describe the Statistical Analysis Reports and what they indicate</para>
+      <para>Describe the Statistical Analysis Reports and what they indicate</para>
    
    </section>
    
@@ -391,6 +392,7 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
 
 
 </chapter>
+
 
 
 
