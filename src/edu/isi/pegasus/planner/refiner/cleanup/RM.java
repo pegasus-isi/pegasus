@@ -112,8 +112,10 @@ public class RM implements CleanupImplementation{
     public Job createCleanupJob( String id, List files, Job job ){
 
         //we want to run the clnjob in the same directory
-        //as the compute job. So we clone.
-        Job cJob = ( Job )job.clone();
+        //as the compute job. We cannot clone as then the 
+        //the cleanup jobs for clustered jobs appears as
+        //a clustered job. PM-368
+        Job cJob = new Job( job );
         cJob.setJobType( Job.CLEANUP_JOB );
         cJob.setName( id );
         cJob.setSiteHandle( job.getSiteHandle() );
