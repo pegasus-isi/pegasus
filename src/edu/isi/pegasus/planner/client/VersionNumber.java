@@ -92,6 +92,20 @@ linefeed +
     return lo;
   }
 
+  /**
+   * Print the version information onto stdout. 
+   *
+   * @param v is the version information class. 
+   * @param build if true, also show build information with version.
+   */
+  public static void showVersion( Version v, boolean build )
+  {
+    System.out.print( v.toString() );
+    if ( build ) System.out.print( '-' + v.determinePlatform() +
+				   '-' + v.determineBuilt() );
+    System.out.println();
+  }
+
   public static void main( String args[] )
   {
     int result = 0;
@@ -130,12 +144,16 @@ linefeed +
 	  internal  = v.determineBuilt() + " " + v.determinePlatform();
 	  if ( ! quiet ) {
 	    System.out.println( "Compiled into PEGASUS: " + internal );
-	    System.out.println( "Provided by inst.: " + installed );
+	    System.out.println( "Installation provides: " + installed );
 	  }
 
 	  if ( v.matches() ) {
 	    if ( ! quiet ) System.out.println( "OK: Internal version matches installation." );
-	    return;
+	    // see pegasus-devel 2011-03-29: A user should not have to run both,
+	    // first "pegasus-version -fm" and then "pegasus-version". The version
+	    // info should also be returned by "pegasus-version -fm". 
+	    build = true; // successful -m should imply -f
+	    System.out.print( "Complete version info: " );
 	  } else {
 	    System.out.println( "ERROR: Internal version does not match installed version!" );
 	    System.out.println( "Your installation is suspicious, please correct!" );
@@ -155,10 +173,7 @@ linefeed +
       }
 
       // action
-      System.out.print( v.toString() );
-      if ( build ) System.out.print( '-' + v.determinePlatform() +
-				     '-' + v.determineBuilt() );
-      System.out.println();
+      showVersion(v,build); 
 
     } catch ( RuntimeException rte ) {
       System.err.println( "ERROR: " + rte.getMessage() );
