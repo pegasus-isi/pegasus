@@ -960,6 +960,35 @@ class Workflow:
         # Send workflow event to database
         self.output_to_db("wf.plan", kwargs)
 
+    def db_send_subwf_link(self, parent_jobid, parent_jobseq):
+        """
+        This function sends to the DB the information linking a subwf
+        to its parent job
+        """
+        # Check if database is configured
+        if self._sink is None:
+            return
+
+        # And if we have all needed parameters
+        if self._parent_workflow_id is None or parent_jobid is None or parent_jobseq is None:
+            return
+
+        # Start empty
+        kwargs = {}
+        # Make sure we include the wf_uuid, but note that in this
+        # particular event, the xwf.id key refers to the parent
+        # workflow, while the subwf.id key refers to this workflow
+        kwargs["xwf__id"] = self._parent_workflow_id
+        if self._timestamp is not None:
+            kwargs["ts"] = self._timestamp
+
+        kwargs["subwf__id"] = self._wf_uuid
+        kwargs["job__id"] = parent_jobid
+        kwargs["job_inst__id"] = parent_jobseq
+
+        # Send sub-workflow event to database
+        self.output_to_db("xwf.map.subwf_job", kwargs)
+
     def db_send_wf_state(self, state):
         """
         This function sends to the DB information about the current
@@ -1047,7 +1076,8 @@ class Workflow:
         return
 
     def __init__(self, rundir, outfile, extra_params=None, database=None,
-                 workflow_config_file=None, jsd=None, parent_id=None, root_id=None):
+                 workflow_config_file=None, jsd=None, root_id=None,
+                 parent_id=None, parent_jobid=None, parent_jobseq=None):
         """
         This function initializes the workflow object. It looks for
         the workflow configuration file (or for workflow_config_file,
@@ -1244,6 +1274,13 @@ class Workflow:
 
             # Send workflow plan info to database
             self.db_send_wf_info()
+
+            # If this workflow is a subworkflow and has a parent_id,
+            # parent_jobid and parent_jobseq, we send an event to link
+            # this workflow's id to the parent job...
+            if (self._parent_workflow_id is not None
+                and parent_jobid is not None and parent_jobseq is not None):
+                self.db_send_subwf_link(parent_jobid, parent_jobseq)
 
             # Send event to mark the start of the static content
             self.output_to_db("static.start", {})
@@ -1938,12 +1975,20 @@ class Workflow:
             self.db_send_job_brief(my_job, "submit.start")
             self.db_send_job_brief(my_job, "submit.end", 0)
         elif job_state == "GRID_SUBMIT":
-            self.db_send_job_brief(my_job, "grid_submit")
+            self.db_send_job_brief(my_job, "grid.submit.start")
+            self.db_send_job_brief(my_job, "grid.submit.end", 0)
         elif job_state == "GLOBUS_SUBMIT":
-            self.db_send_job_brief(my_job, "globus_submit")
+            self.db_send_job_brief(my_job, "globus.submit.start")
+            self.db_send_job_brief(my_job, "globus.submit.end", 0)
         elif job_state == "SUBMIT_FAILED":
             self.db_send_job_brief(my_job, "submit.start")
             self.db_send_job_brief(my_job, "submit.end", -1)
+        elif job_state == "GLOBUS_SUBMIT_FAILED":
+            self.db_send_job_brief(my_job, "globus.submit.start")
+            self.db_send_job_brief(my_job, "globus.submit.end", -1)
+        elif job_state == "GRID_SUBMIT_FAILED":
+            self.db_send_job_brief(my_job, "grid.submit.start")
+            self.db_send_job_brief(my_job, "grid.submit.end", -1)
         elif job_state == "EXECUTE":
             self.db_send_job_start(my_job)
         elif job_state == "REMOTE_ERROR":
@@ -2225,18 +2270,18 @@ if options.db_stats is not None:
     db_stats = options.db_stats
 if options.keep_state is not None:
     keep_state = options.keep_state
-if options.no_events is not None:
-    # Turn off event generation
-    no_events = True
-else:
-    if props.property("pegasus.monitord.events") is not None:
-        # Set event generation according to properties (default is True)
-        no_events = not utils.make_boolean(props.property("pegasus.monitord.events"))
-    else:
-        # Default is to generate events
-        no_events = False
-# Create event sink
 if options.event_dest is None:
+    if options.no_events is not None:
+        # Turn off event generation
+        no_events = True
+    else:
+        if props.property("pegasus.monitord.events") is not None:
+            # Set event generation according to properties (default is True)
+            no_events = not utils.make_boolean(props.property("pegasus.monitord.events"))
+        else:
+            # Default is to generate events
+            no_events = False
+
     if props.property("pegasus.monitord.output") is None:
         # No command-line or property specified, use default
         event_dest = get_default_sqlite_db(out)
@@ -2317,13 +2362,16 @@ def systell(fh):
 
 def add(wf, jobid, event, sched_id=None, status=None):
     """
-    purpose: append atomically a line to the jobstate file
-    paramtr: wf(IN): workflow object for this operation
-    paramtr: jobid(IN): what job
-    paramtr: event(IN): new status of job
-    paramtr: sched_id(IN, OPT): sched id
-    paramtr: status(IN, OPT): exitcode
-    returns: Nothing
+    This function processes events related to jobs' state changes. It
+    creates a new job, when needed, and by calling the workflow's
+    update_job_state method, it causes output to be generated (both to
+    jobstate.log and to the backend configured to receive events). wf
+    is the workflow object for this operation, jobid is the id for the
+    job (job_name), event is the actual state associated with this
+    event (SUBMIT, EXECUTE, etc). sched_id is the scheduler's id for
+    this particular job instance, and status is the exitcode for the
+    job. This function returns the job_submit_seq for the
+    corresponding jobid.
     """
 
     my_site = None
@@ -2356,7 +2404,7 @@ def add(wf, jobid, event, sched_id=None, status=None):
         my_job_submit_seq = wf.add_job(jobid, event)
 
         # Nothing else to do... we should stop here...
-        return
+        return my_job_submit_seq
 
     # A SUBMIT event brings sched id and job type information (it can also be
     # a new job for us when there is no PRE_SCRIPT)
@@ -2393,12 +2441,12 @@ def add(wf, jobid, event, sched_id=None, status=None):
     if my_job_submit_seq is None:
         logger.warning("cannot find job_submit_seq for job: %s" % (jobid))
         # Nothing else to do...
-        return
+        return None
 
     # Make sure job has the updated state
     wf.update_job_state(jobid, my_job_submit_seq, event, status, my_time)
 
-    return
+    return my_job_submit_seq
 
 def process_dagman_out(wf, log_line):
     """
@@ -2406,7 +2454,9 @@ def process_dagman_out(wf, log_line):
     calls either the add function to generate a jobstate.log output
     line, or calls the corresponding workflow class method in order to
     track the various events that happen during the life of a
-    workflow.
+    workflow. It returns a tuple containing the new DAGMan output
+    file, with the parent jobid and sequence number if we need to
+    follow a sub-workflow.
     """
 
     # Keep track of line count
@@ -2491,12 +2541,12 @@ def process_dagman_out(wf, log_line):
             my_event = my_expr.group(1)
             my_jobid = my_expr.group(2)
             my_sched_id = my_expr.group(3)
-            add(wf, my_jobid, my_event, sched_id=my_sched_id)
+            my_job_submit_seq = add(wf, my_jobid, my_event, sched_id=my_sched_id)
             if my_event == "SUBMIT" and follow_subworkflows == True:
                 # For SUBMIT ULOG events, check if this is a sub-workflow
                 my_new_dagman_out = wf.has_subworkflow(my_jobid)
                 # Ok, return result to main loop
-                return my_new_dagman_out
+                return (my_new_dagman_out, my_jobid, my_job_submit_seq)
         elif re_parse_job_submit.search(log_line) is not None:
             # Found a DAGMan job submit event
             my_expr = re_parse_job_submit.search(log_line)
@@ -3251,12 +3301,16 @@ while (len(wfs) > 0):
                     ml_pos = workflow_entry.ml_buffer.find('\n')
                     while (ml_pos >= 0):
                         # Take out 1 line, and adjust buffer
-                        new_dagman_out = process_dagman_out(workflow_entry.wf, workflow_entry.ml_buffer[0:ml_pos])
+                        process_output = process_dagman_out(workflow_entry.wf, workflow_entry.ml_buffer[0:ml_pos])
                         workflow_entry.ml_buffer = workflow_entry.ml_buffer[ml_pos+1:]
                         ml_pos = workflow_entry.ml_buffer.find('\n')
 
                         # Do we need to start following another workflow?
-                        if new_dagman_out is not None:
+                        if type(process_output) is tuple and len(process_output) == 3 and process_output[0] is not None:
+                            # Unpack the output tuple
+                            new_dagman_out = process_output[0]
+                            parent_jobid = process_output[1]
+                            parent_jobseq = process_output[2]
                             # Only if we are not already tracking it...
                             tracking_already = False
                             new_dagman_out = os.path.abspath(new_dagman_out)
@@ -3282,7 +3336,8 @@ while (len(wfs) > 0):
                                 new_run_dir = os.path.dirname(new_dagman_out)
                                 parent_wf_id = workflow_entry.wf._wf_uuid
                                 new_wf = Workflow(new_run_dir, new_dagman_out, config, database=wf_event_sink,
-                                                  parent_id=parent_wf_id, root_id=root_wf_id, jsd=jsd)
+                                                  parent_id=parent_wf_id, parent_jobid=parent_jobid,
+                                                  parent_jobseq=parent_jobseq, root_id=root_wf_id, jsd=jsd)
 
                                 if new_wf._monitord_exit_code == 0:
                                     new_workflow_entry = WorkflowEntry()
