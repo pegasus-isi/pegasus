@@ -17,6 +17,8 @@
 package edu.isi.pegasus.planner.classes;
 
 import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
+import edu.isi.pegasus.planner.dax.Invoke;
+
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.Set;
@@ -27,6 +29,7 @@ import java.util.Vector;
 import java.io.Writer;
 import java.io.StringWriter;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.UUID;
 
 
@@ -97,6 +100,11 @@ public class ADag extends Data {
     protected boolean mWorkflowRefinementStarted;
     
     /**
+     * All the notifications associated with the job
+     */
+    protected Notifications mNotifications;
+    
+    /**
      * Initialises the class member variables.
      */
     public ADag() {
@@ -105,6 +113,7 @@ public class ADag extends Data {
         mSubmitDirectory = ".";
         mWorkflowUUID    = generateWorkflowUUID();
         mWorkflowRefinementStarted = false;
+        mNotifications = new Notifications();
         resetStores();
     }
 
@@ -120,8 +129,49 @@ public class ADag extends Data {
         mSubmitDirectory  = ".";
         mWorkflowUUID    = generateWorkflowUUID();
         mWorkflowRefinementStarted = false;
+        mNotifications    = new Notifications();
         resetStores();
     }
+    
+    /**
+     * Adds a Invoke object correpsonding to a notification.
+     * 
+     * @param invoke  the invoke object containing the notification
+     */
+    public void addNotification( Invoke invoke ){
+       this.mNotifications.add(invoke);
+    }
+    
+    /**
+     * Adds all the notifications passed to the underlying container.
+     * 
+     * @param invokes  the notifications to be added
+     */
+    public void addNotifications( Notifications invokes  ){
+        this.mNotifications.addAll(invokes);
+    }
+
+    /**
+     * Returns a collection of all the notifications that need to be
+     * done for a particular condition
+     * 
+     * @param when  the condition
+     * 
+     * @return
+     */
+    public Collection<Invoke> getNotifications( Invoke.WHEN when ){
+       return this.mNotifications.getNotifications(when);
+    }
+
+    /**
+     * Returns all the notifications associated with the job.
+     * 
+     * @return the notifications
+     */
+    public Notifications getNotifications(  ){
+       return this.mNotifications;
+    }
+
 
     /**
      * Resets the replica and transformation stores;
@@ -148,6 +198,7 @@ public class ADag extends Data {
         newAdag.setReplicaStore(mReplicaStore);
         newAdag.setTransformationStore(mTransformationStore);
         newAdag.setWorkflowUUID( this.mWorkflowUUID );
+        newAdag.addNotifications( this.getNotifications() );
         return newAdag;
     }
     

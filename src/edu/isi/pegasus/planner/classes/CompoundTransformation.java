@@ -18,6 +18,8 @@ package edu.isi.pegasus.planner.classes;
 
 
 import edu.isi.pegasus.common.util.Separator;
+import edu.isi.pegasus.planner.dax.Invoke;
+import java.util.Collection;
 import java.util.List;
 import java.util.LinkedList;
 
@@ -51,6 +53,11 @@ public class CompoundTransformation {
     protected List<PegasusFile> mUses;
 
     /**
+     * All the notifications associated with the job
+     */
+    protected Notifications mNotifications;
+    
+    /**
      * Constructor
      *
      * @param name of transformation
@@ -72,6 +79,7 @@ public class CompoundTransformation {
 
         mVersion = (version == null) ? "" : null;
         mUses = new LinkedList<PegasusFile>();
+        mNotifications = new Notifications();
     }
 
     /**
@@ -118,6 +126,46 @@ public class CompoundTransformation {
     public List<PegasusFile> getDependantFiles() {
         return this.mUses;
     }
+    
+    /**
+     * Adds a Invoke object correpsonding to a notification.
+     * 
+     * @param invoke  the invoke object containing the notification
+     */
+    public void addNotification( Invoke invoke ){
+       this.mNotifications.add(invoke);
+    }
+    
+    /**
+     * Adds all the notifications passed to the underlying container.
+     * 
+     * @param invokes  the notifications to be added
+     */
+    public void addNotifications( Notifications invokes  ){
+        this.mNotifications.addAll(invokes);
+    }
+
+    /**
+     * Returns a collection of all the notifications that need to be
+     * done for a particular condition
+     * 
+     * @param when  the condition
+     * 
+     * @return
+     */
+    public Collection<Invoke> getNotifications( Invoke.WHEN when ){
+       return this.mNotifications.getNotifications(when);
+    }
+
+    /**
+     * Returns all the notifications associated with the job.
+     * 
+     * @return the notifications
+     */
+    public Notifications getNotifications(  ){
+       return this.mNotifications;
+    }
+
 
     /**
      * Returns whether two objects are equal or not on the basis of the
@@ -178,6 +226,8 @@ public class CompoundTransformation {
              append( " -> ").append( pf ).
              append( "\n" );
         }
+        sb.append( "Notifications -> " ).append( "\n" ).
+           append( this.getNotifications() );
         return sb.toString();
     }
 

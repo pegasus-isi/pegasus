@@ -38,6 +38,7 @@ import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry
 import edu.isi.pegasus.common.util.Separator;
 
 import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
+import edu.isi.pegasus.planner.dax.Invoke;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -47,6 +48,7 @@ import java.util.HashSet;
 import java.io.Writer;
 import java.io.StringWriter;
 import java.io.IOException;
+import java.util.Collection;
 
 /**
  * The object of this class holds the information to generate a submit file about
@@ -382,6 +384,12 @@ public class Job extends Data implements GraphNodeContent{
      */
     private boolean mJobExecutablesStaged;
 
+    
+    /**
+     * All the notifications associated with the job
+     */
+    private Notifications mNotifications;
+    
     /**
      * The relative path to the submit directory for the job, from the workflows
      * base submit directory.
@@ -422,6 +430,7 @@ public class Job extends Data implements GraphNodeContent{
         level            = -1;
         mRuntime = -1;
         mJobExecutablesStaged = false;
+        mNotifications   = new Notifications();
 //        submitDirectory  = null;
     }
 
@@ -459,7 +468,8 @@ public class Job extends Data implements GraphNodeContent{
         jobClass         = job.getJobType();
         level            = job.level;
         mRuntime = job.mRuntime;
-        mJobExecutablesStaged = false;
+        mJobExecutablesStaged = job.mJobExecutablesStaged;
+        mNotifications   = job.mNotifications;
 //        submitDirectory  = job.submitDirectory;
     }
 
@@ -514,7 +524,8 @@ public class Job extends Data implements GraphNodeContent{
 
         
         newSub.mJobExecutablesStaged = this.mJobExecutablesStaged;
-
+        newSub.mNotifications = (Notifications)this.getNotifications().clone();
+                
         return newSub;
     }
     
@@ -643,6 +654,46 @@ public class Job extends Data implements GraphNodeContent{
     public Set getInputFiles( ){
         return this.inputFiles;
     }
+    
+    /**
+     * Adds a Invoke object correpsonding to a notification.
+     * 
+     * @param invoke  the invoke object containing the notification
+     */
+    public void addNotification( Invoke invoke ){
+       this.mNotifications.add(invoke);
+    }
+    
+    /**
+     * Adds all the notifications passed to the underlying container.
+     * 
+     * @param invokes  the notifications to be added
+     */
+    public void addNotifications( Notifications invokes  ){
+        this.mNotifications.addAll(invokes);
+    }
+
+    /**
+     * Returns a collection of all the notifications that need to be
+     * done for a particular condition
+     * 
+     * @param when  the condition
+     * 
+     * @return
+     */
+    public Collection<Invoke> getNotifications( Invoke.WHEN when ){
+       return this.mNotifications.getNotifications(when);
+    }
+
+    /**
+     * Returns all the notifications associated with the job.
+     * 
+     * @return the notifications
+     */
+    public Notifications getNotifications(  ){
+       return this.mNotifications;
+    }
+
 
     /**
      * Adds an output file to the underlying collection of output files
@@ -1605,6 +1656,7 @@ public class Job extends Data implements GraphNodeContent{
         append( sb, "Output Files ", this.outputFiles , newline );
         append( sb, "Condor Variables\n" , cVar , newline );
         append( sb, "VDS Profiles" , vdsNS , newline );
+        append( sb, "Notifications", this.mNotifications, newline );
         sb.append("]");
         return sb.toString();
 

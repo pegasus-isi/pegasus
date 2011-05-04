@@ -17,15 +17,7 @@
 
 package edu.isi.pegasus.planner.catalog.transformation;
 
-/**
- * An object of this class corresponds to a
- * tuple in the Transformation Catalog.
- * @author Gaurang Mehta
- * @$Revision$
- *
- * @see org.griphyn.common.classes.VDSSysInfo
- * @see org.griphyn.common.classes.TCType
- */
+
 
 import edu.isi.pegasus.planner.catalog.classes.CatalogEntry;
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
@@ -39,11 +31,22 @@ import edu.isi.pegasus.common.util.ProfileParser;
 import edu.isi.pegasus.common.util.Separator;
 
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
+import edu.isi.pegasus.planner.classes.Notifications;
 import java.io.IOException;
 import edu.isi.pegasus.planner.classes.Profile;
 
+import edu.isi.pegasus.planner.dax.Invoke;
+import java.util.Collection;
 import java.util.List;
 
+/**
+ * An object of this class corresponds to a
+ * tuple in the Transformation Catalog.
+ * @author Gaurang Mehta
+ * @$Revision$
+ *
+ * 
+ */
 public class TransformationCatalogEntry
     implements CatalogEntry {
 
@@ -76,10 +79,6 @@ public class TransformationCatalogEntry
     private String mPFN;
 
     /**
-     * The profiles associated with the transformation;
-     */
-    //private List profiles;
-    /**
      * The profiles associated with the site.
      */
     private Profiles mProfiles;
@@ -94,6 +93,11 @@ public class TransformationCatalogEntry
      * The type of transformation. Takes one of the predefined enumerated type TCType.
      */
     private TCType type = TCType.INSTALLED;
+    
+    /**
+     * All the notifications associated with the job
+     */
+    private Notifications mNotifications;
 
     /**
      * The basic constructor
@@ -107,6 +111,7 @@ public class TransformationCatalogEntry
         mProfiles = null;
 //        sysinfo = null;
         mSysInfo = null;
+        mNotifications = new Notifications();
     }
 
     /**
@@ -127,6 +132,7 @@ public class TransformationCatalogEntry
 
     /**
      *  Optimized Constructor
+     * 
      * @param namespace String
      * @param name String
      * @param version String
@@ -136,14 +142,16 @@ public class TransformationCatalogEntry
      * @param profiles List
      * @param sysinfo VDSSysInfo
      */
-    public TransformationCatalogEntry( String namespace, String name,
-        String version,
-        String resourceid, String physicalname, TCType type,
-        List profiles,
-        VDSSysInfo sysinfo ) {
-        this.mNamespace = namespace;
-        this.mVersion = version;
-        this.mName = name;
+    public TransformationCatalogEntry( String namespace,
+                                       String name,
+                                       String version,
+                                       String resourceid,
+                                       String physicalname, 
+                                       TCType type,
+                                       List profiles,
+                                       VDSSysInfo sysinfo ) {
+        
+        this( namespace, name, version );
         this.mResourceID = resourceid;
         this.mPFN = physicalname;
         if(profiles != null) {
@@ -177,6 +185,8 @@ public class TransformationCatalogEntry
         this.mResourceID = resourceID;
         this.mPFN = physicalname;
         this.mProfiles = profiles;
+        this.mNotifications = new Notifications();
+        
 
         //       this.sysinfo = sysinfo;
         mSysInfo  = sysinfo;
@@ -193,9 +203,11 @@ public class TransformationCatalogEntry
      * @return Object
      */
     public Object clone() {
-        return new TransformationCatalogEntry( mNamespace, mName, mVersion,
+        TransformationCatalogEntry entry = new TransformationCatalogEntry( mNamespace, mName, mVersion,
             mResourceID, mPFN,
             type, mProfiles, this.getSysInfo() );
+        entry.addNotifications( this.getNotifications() );
+        return entry;
     }
 
     
@@ -358,6 +370,48 @@ public class TransformationCatalogEntry
         this.mSysInfo = ( sysinfo == null ) ? new SysInfo() : VDSSysInfo2NMI.vdsSysInfo2NMI(sysinfo);
     }
 
+    
+
+    
+    /**
+     * Adds a Invoke object correpsonding to a notification.
+     * 
+     * @param invoke  the invoke object containing the notification
+     */
+    public void addNotification( Invoke invoke ){
+       this.mNotifications.add(invoke);
+    }
+    
+    /**
+     * Adds all the notifications passed to the underlying container.
+     * 
+     * @param invokes  the notifications to be added
+     */
+    public void addNotifications( Notifications invokes  ){
+        this.mNotifications.addAll(invokes);
+    }
+
+    /**
+     * Returns a collection of all the notifications that need to be
+     * done for a particular condition
+     * 
+     * @param when  the condition
+     * 
+     * @return
+     */
+    public Collection<Invoke> getNotifications( Invoke.WHEN when ){
+       return this.mNotifications.getNotifications(when);
+    }
+
+    /**
+     * Returns all the notifications associated with the job.
+     * 
+     * @return the notifications
+     */
+    public Notifications getNotifications(  ){
+       return this.mNotifications;
+    }
+
 
     /**
      * Allows you to add one profile at a time to the transformation.
@@ -514,77 +568,6 @@ public class TransformationCatalogEntry
     private static String[] splitLFN( String logicaltransformation ) {
         return Separator.split( logicaltransformation );
     }
-
-    /**
-     * Converts the file profile string to a list of Profiles.
-     * @param profiles String The profile string.
-     * @return List Returns a list of profile objects
-     */
-    /* public List stringToProfiles( String profiles ) {
-         if ( profiles == null ) {
-             return null;
-         }
-         List resultprofiles = new ArrayList();
-         String[] namespaces = profiles.split( ";" );
-         for ( int i = 0; i < namespaces.length; i++ ) {
-             String[] nsprofiles = namespaces[ i ].split( "::", 2 );
-             if ( nsprofiles.length == 2 ) {
-                 String ns = nsprofiles[ 0 ].trim();
-                 String[] keyvalues = nsprofiles[ 1 ].trim().split( "," );
-                 for ( int j = 0; j < keyvalues.length; j++ ) {
-                     String[] keyvalue = keyvalues[ j ].trim().split( "=", 2 );
-                     String key = null;
-                     String value = null;
-                     if ( keyvalue.length == 2 ) {
-                         key = keyvalue[ 0 ].trim();
-                         value = keyvalue[ 1 ].trim();
-                     }
-                     if ( key != null && !key.equals( "" ) && value != null ) {
-                         Profile p = new Profile( ns, key, value );
-                         resultprofiles.add( p );
-                     }
-                 }
-             }
-         }
-         return resultprofiles;
-     }
-     */
-
-    /*
-     * Generates a file type profiles String.
-     * @param listprofiles List
-     * @return String
-     */
-    /*    public String profilesToString( List listprofiles ) {
-            String lprofiles = null;
-//        String temp = null;
-            if ( listprofiles != null ) {
-                lprofiles=ProfileParser.combine( listprofiles );
-            }
-                String currentns = "";
-                for ( Iterator i = listprofiles.iterator(); i.hasNext(); ) {
-                    Profile p = ( Profile ) i.next();
-     if ( !currentns.equalsIgnoreCase( p.getProfileNamespace() ) ) {
-                        currentns = p.getProfileNamespace();
-                        if ( lprofiles != null ) {
-     lprofiles = lprofiles + temp + ";" + currentns + "::";
-                            temp = null;
-                        } else {
-                            lprofiles = currentns + "::";
-                        }
-                    }
-                    if ( temp != null ) {
-                        temp = temp + "," + p.getProfileKey() + "=" +
-                            p.getProfileValue();
-                    } else {
-                        temp = p.getProfileKey() + "=" + p.getProfileValue();
-                    }
-                }
-                lprofiles += temp;
-            }
-            return lprofiles;
-        }
-     */
 
     /**
      * Compares two catalog entries for equality.
