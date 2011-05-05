@@ -40,6 +40,12 @@ import edu.isi.pegasus.common.util.Currently;
  * @version $Revision$
  */
 public class PlannerOptions extends Data implements Cloneable{
+    
+    
+    /**
+     * The default logging level.
+     */
+    public static final int DEFAULT_LOGGING_LEVEL = LogManager.WARNING_MESSAGE_LEVEL;
 
     /**
      * The base submit directory.
@@ -249,7 +255,7 @@ public class PlannerOptions extends Data implements Cloneable{
         mForwardOptions   = new java.util.LinkedList<NameValue>();
         mOutputPool       = null;
         mDisplayHelp      = false;
-        mLoggingLevel     = LogManager.WARNING_MESSAGE_LEVEL;
+        mLoggingLevel     = DEFAULT_LOGGING_LEVEL;
         mForce            = false;
         mSubmit           = false;
         mGenRandomDir     = false;
@@ -1208,8 +1214,14 @@ public class PlannerOptions extends Data implements Cloneable{
 
 
         //the verbose option
-        for(int i = 0; i < getLoggingLevel();i++)
+        for(int i = PlannerOptions.DEFAULT_LOGGING_LEVEL; i < getLoggingLevel();i++){
             sb.append(" --verbose " );
+        }
+        //add any quiet logging options if required
+        for( int i = getLoggingLevel() ; i < PlannerOptions.DEFAULT_LOGGING_LEVEL; i++ ){
+            sb.append(" --quiet " );
+        }
+
 
         //the monitor option
         if( mMonitor ) { sb.append(" --monitor "); }
