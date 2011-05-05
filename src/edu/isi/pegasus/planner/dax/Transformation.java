@@ -76,7 +76,7 @@ public class Transformation {
         mNamespace = (namespace == null) ? "" : namespace;
         mName = (name == null) ? "" : name;
 
-        mVersion = (version == null) ? "" : null;
+        mVersion = (version == null) ? "" : version;
         mUses = new LinkedList<CatalogType>();
         mInvokes = new LinkedList<Invoke>();
     }
