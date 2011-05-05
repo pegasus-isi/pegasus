@@ -31,13 +31,11 @@
     <para>This document describes various types of profiles, levels of
     priorities for intersecting profiles, and how to specify profiles in
     different contexts.</para>
-  </section>
+
   
-
-
       <section>
 
-      <h2><title>Profile Structure Heading</title></h2>
+      <title>Profile Structure Heading</title>
        <para>All profiles are triples comprised of a namespace, a name or key,
     and a value. The namespace is a simple identifier. The key has only
     meaning within its namespace, and it’s yet another identifier. There are
@@ -1197,6 +1195,7 @@ queue
       <para>For this reason, Pegasus prohibits the use of the
       <emphasis>globusrsl</emphasis> key in the <emphasis>condor</emphasis>
       profile namespace.</para>
+    </section>
     </section>
    </section>
 
