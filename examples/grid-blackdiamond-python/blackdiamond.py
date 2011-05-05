@@ -19,15 +19,15 @@ diamond.addFile(a)
 # Add executables to the DAX-level replica catalog
 # In this case the binary is keg, which is shipped with Pegasus, so we use
 # the remote PEGASUS_HOME to build the path.
-e_preprocess = Executable(namespace="diamond", name="preprocess", version="4.0", os="linux", arch="x86_64")
+e_preprocess = Executable(namespace="diamond", name="preprocess", version="4.0", os="linux", arch="x86_64", installed=True)
 e_preprocess.addPFN(PFN("file://" + sys.argv[1] + "/bin/keg", "TestCluster"))
 diamond.addExecutable(e_preprocess)
 	
-e_findrange = Executable(namespace="diamond", name="findrange", version="4.0", os="linux", arch="x86_64")
+e_findrange = Executable(namespace="diamond", name="findrange", version="4.0", os="linux", arch="x86_64", installed=True)
 e_findrange.addPFN(PFN("file://" + sys.argv[1] + "/bin/keg", "TestCluster"))
 diamond.addExecutable(e_findrange)
 	
-e_analyze = Executable(namespace="diamond", name="analyze", version="4.0", os="linux", arch="x86_64")
+e_analyze = Executable(namespace="diamond", name="analyze", version="4.0", os="linux", arch="x86_64", installed=True)
 e_analyze.addPFN(PFN("file://" + sys.argv[1] + "/bin/keg", "TestCluster"))
 diamond.addExecutable(e_analyze)
 
@@ -67,10 +67,10 @@ analyze.uses(d, link=Link.OUTPUT, register=True)
 diamond.addJob(analyze)
 
 # Add control-flow dependencies
-diamond.addDependency(parent=preprocess, child=frl)
-diamond.addDependency(parent=preprocess, child=frr)
-diamond.addDependency(parent=frl, child=analyze)
-diamond.addDependency(parent=frr, child=analyze)
+diamond.addDependency(Dependency(parent=preprocess, child=frl))
+diamond.addDependency(Dependency(parent=preprocess, child=frr))
+diamond.addDependency(Dependency(parent=frl, child=analyze))
+diamond.addDependency(Dependency(parent=frr, child=analyze))
 
 # Write the DAX to stdout
 diamond.writeXML(sys.stdout)

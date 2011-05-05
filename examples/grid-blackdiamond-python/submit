@@ -3,16 +3,16 @@
 set -e
 
 
-#######################################################################
+##################################################################################
 #
 #  Settings
 #
-CLUSTER_HOSTNAME="viz-login.isi.edu"
+CLUSTER_HOSTNAME="obelix.isi.edu"
 CLUSTER_SCHEDULER="condor"
-CLUSTER_WORK_DIR="/nfs/ccg1/90-day-scratch"
-CLUSTER_PEGASUS_HOME="/cluster-software/pegasus/testing/latest"
-CLUSTER_GLOBUS_LOCATION="/cluster-software/globus/5.0.2"
-#######################################################################
+CLUSTER_WORK_DIR="/moose/scratch/auto-cleanup-30-days"
+CLUSTER_PEGASUS_HOME="/moose/software/debian/squeeze/x86_64/pegasus/3.1.0cvs"
+CLUSTER_GLOBUS_LOCATION="/moose/software/debian/squeeze/x86_64/globus/default"
+##################################################################################
 
 
 TOPDIR=`pwd`
@@ -41,7 +41,7 @@ export PYTHONPATH=$PEGASUS_HOME/lib/python
 cat >sites.xml <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0">
-    <site  handle="local" arch="x86" os="LINUX">
+    <site  handle="local" arch="x86_64" os="LINUX">
         <grid  type="gt2" contact="localhost/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/>
         <head-fs>
             <scratch>
@@ -87,7 +87,7 @@ EOF
 
 # plan and submit the  workflow
 pegasus-plan \
-    -D pegasus.user.properties=pegasusrc \
+    --conf pegasusrc \
     --sites TestCluster \
     --dir work \
     --output local \
