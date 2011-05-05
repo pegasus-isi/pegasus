@@ -32,11 +32,24 @@
     priorities for intersecting profiles, and how to specify profiles in
     different contexts.</para>
   </section>
+  
+      <h2><title>Profile Structure</title></h2>
+
+      <section>
 
 
+       <para>All profiles are triples comprised of a namespace, a name or key,
+    and a value. The namespace is a simple identifier. The key has only
+    meaning within its namespace, and it’s yet another identifier. There are
+    no constraints on the contents of a value</para>
 
-       <section>
-       <title>Profile Namespaces</title>
+       <para>Profiles may be represented with different syntaxes in different
+    context. However, each syntax will describe the underlying triple.</para>
+        </section>
+
+
+            <section>
+             <title>Profile Namespaces</title>
 
         <para>Each namespace refers to a different aspect of a job’s runtime
     settings. A profile’s representation in the concrete plan (e.g. the Condor
