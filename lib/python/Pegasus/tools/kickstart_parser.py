@@ -106,7 +106,9 @@ class Parser:
                 return None
             if line.find("<invocation") != -1:
                 break
-            if line.find("[struct") != -1:
+            if line.find("[seqexec-task") != -1:
+                break
+            if line.find("[seqexec-summary") != -1:
                 break
 
         # Found something!
@@ -120,9 +122,9 @@ class Parser:
             if end >= 0:
                 end = end + len("</invocation>")
                 return buffer[:end]
-        elif line.find("[struct") >= 0:
+        elif line.find("[seqexec-summary") >= 0:
             # Found line with cluster jobs summary
-            start = line.find("[struct")
+            start = line.find("[seqexec-summary")
             buffer = line[start:]
             end = buffer.find("]")
 
@@ -130,7 +132,19 @@ class Parser:
                 end = end + len("]")
                 return buffer[:end]
 
-            # clustered struct should be a single line!
+            # clustered record should be in a single line!
+            return None
+        elif line.find("[seqexec-task") >= 0:
+            # Found line with task information
+            start = line.find("[seqexec-task")
+            buffer = line[start:]
+            end = buffer.find("]")
+
+            if end >= 0:
+                end = end + len("]")
+                return buffer[:end]
+
+            # task record should be in a single line!
             return None
         else:
             return None
@@ -161,11 +175,19 @@ class Parser:
             return False
         return True
 
+    def is_task_record(self, buffer=''):
+        """
+        Returns True if buffer contains a task record.
+        """
+        if buffer.find("[seqexec-task") == -1:
+            return False
+        return True
+
     def is_clustered_record(self, buffer=''):
         """
         Returns True if buffer contains a clustered record.
         """
-        if buffer.find("[struct") == -1:
+        if buffer.find("[seqexec-summary") == -1:
             return False
         return True
 

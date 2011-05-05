@@ -130,7 +130,7 @@ def parse_properties(fn, hashref={}):
     except:
         # Error opening file
         logger.warn("Could not open %s!" % (fn))
-        sys.exit(1)
+        return my_result
 
     logger.debug("# parsing properties in %s..." % (fn))
 

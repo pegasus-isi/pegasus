@@ -923,6 +923,10 @@ class Workflow:
         """
         This function sends to the DB information about the workflow
         """
+        # Check if database is configured
+        if self._sink is None:
+            return
+
         # Start empty
         kwargs = {}
         # Make sure we include the wf_uuid
@@ -1416,6 +1420,10 @@ class Workflow:
         This function sends to the DB basic state events for a
         particular job
         """
+        # Check if database is configured
+        if self._sink is None:
+            return
+
         # Start empty
         kwargs = {}
 
@@ -1439,6 +1447,10 @@ class Workflow:
         """
         This function sends to the DB the main.start event
         """
+        # Check if database is configured
+        if self._sink is None:
+            return
+
         # Start empty
         kwargs = {}
 
@@ -1465,6 +1477,10 @@ class Workflow:
         """
         This function sends to the DB the main.end event
         """
+        # Check if database is configured
+        if self._sink is None:
+            return
+
         # Start empty
         kwargs = {}
 
@@ -1518,6 +1534,10 @@ class Workflow:
         events. task_type is either "PRE_SCRIPT", "MAIN_JOB", or
         "POST_SCRIPT"
         """
+        # Check if database is configured
+        if self._sink is None:
+            return
+
         # Start empty
         kwargs = {}
 
@@ -1568,6 +1588,10 @@ class Workflow:
         the information. task_type is either "PRE_SCRIPT", "MAIN_JOB",
         or "POST_SCRIPT"
         """
+        # Check if database is configured
+        if self._sink is None:
+            return
+
         # Start empty
         kwargs = {}
 
@@ -1731,12 +1755,16 @@ class Workflow:
         This function sends host information collected from the
         kickstart record to the database.
         """
+        # Check if database is configured
+        if self._sink is None:
+            return
+
         # Start empty
         kwargs = {}
 
         # Make sure we include the wf_uuid, name, and job_submit_seq
         kwargs["xwf__id"] = my_job._wf_uuid
-        kwargs["exec_job__id"] = my_job._exec_job_id
+        kwargs["job__id"] = my_job._exec_job_id
         kwargs["job_inst__id"] = my_job._job_submit_seq
 
         # Add information about the host
@@ -3074,7 +3102,9 @@ sys.stderr = sys.stdout
 # Create wf_event_sink object
 if no_events:
     # Create an empty sink when no event generation is needed
-    wf_event_sink = EmptySink()
+    #    wf_event_sink = EmptySink()
+    wf_event_sink = None # Avoid parsing kickstart output if not
+                         # generating bp file or database events
 else:
     try:
         wf_event_sink = create_wf_event_sink(event_dest, db_stats=db_stats, enc=encoding)
