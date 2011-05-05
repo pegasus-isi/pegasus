@@ -118,7 +118,9 @@ if __name__ == "__main__":
             if MAX_MONITORD_LAUNCH > 0 :
                 monitord = monitord_launch()
                 MAX_MONITORD_LAUNCH -= 1
-                sleep(SLEEP_TIME)
+
+        # sleep in between polls
+        sleep(SLEEP_TIME)
                 
         monitord.poll()
         dagman.poll()
