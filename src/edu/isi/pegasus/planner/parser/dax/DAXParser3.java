@@ -97,7 +97,12 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
     public static final String UNDEFINED_SITE = "undefined";
 
     /*
-     * Predefined Constant for condor version 7.1.0
+     * Predefined Constant for dax version 3.2.0
+     */
+    public static final long DAX_VERSION_3_2_0 = CondorVersion.numericValue( "3.2.0" );
+    
+    /*
+     * Predefined Constant  for dax version 3.2.0
      */
     public static final long DAX_VERSION_3_3_0 = CondorVersion.numericValue( "3.3.0" );
     
@@ -1143,7 +1148,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
         
         //add a 0 suffix
         String nversion = version + ".0";
-        if( CondorVersion.numericValue( nversion) < DAXParser3.DAX_VERSION_3_3_0 ){
+        if( CondorVersion.numericValue( nversion) < DAXParser3.DAX_VERSION_3_2_0 ){
             StringBuffer sb = new StringBuffer();
             sb.append( "DAXParser3 Unsupported DAX Version " ).append( version ).
                append( ". Set pegasus.schema.dax property to load the old DAXParser" );
