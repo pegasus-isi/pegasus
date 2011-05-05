@@ -1407,7 +1407,7 @@ pegasus.selector.replica.regex.rank.2                       gsiftp://example\.is
     taken into consideration while clustering smaller jobs into a larger job
     in the concrete workflow. The user is allowed to control the granularity
     of this clustering on a per transformation per site basis.</para>
-  </section>
+
 
     <section>
     <title>Overview</title>
@@ -1828,6 +1828,7 @@ siteX    B     /shared/PEGASUS/bin/jobB INSTALLED       INTEL32::LINUX pegasus::
         scheme applied by the user is valid.</para>
       </listitem>
     </orderedlist>
+   </section>
    </section>
    </section>
   <section>
@@ -2728,6 +2729,7 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
 
   </section>
 </chapter>
+
 
 
 
