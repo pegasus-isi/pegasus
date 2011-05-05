@@ -1199,12 +1199,7 @@ queue
     </section>
    </section>
 
-  <section>
-   <title>Replica Selection</title>
 
-   <para>Text</para>
-
-  </section>
   <section>
     <title>Replica Selection</title>
 
@@ -1219,7 +1214,6 @@ queue
 
     <para>This document describes the various Replica Selection Strategies in
     Pegasus.</para>
-  </section>
 
     <section>
     <title>Configuration</title>
@@ -1399,12 +1393,8 @@ pegasus.selector.replica.regex.rank.2                       gsiftp://example\.is
       property<programlisting>pegasus.selector.replica                  Default</programlisting></para>
     </section>
   </section>
-  <section>
-   <title>Job Clustering</title>
-
-   <para>Text</para>
-
   </section>
+
   <section>
     <title>Job Clustering</title>
 
@@ -1442,7 +1432,7 @@ pegasus.selector.replica.regex.rank.2                       gsiftp://example\.is
     which clustering technique to use the user has to pass the <emphasis
     role="bold">--cluster</emphasis> option to <emphasis
     role="bold">pegasus-plan</emphasis> .</para>
-  </section>
+
 
     <section>
     <title>Generating Clustered Concrete DAG</title>
@@ -1485,6 +1475,7 @@ Valid clustering techniques are horizontal and label.</programlisting></para>
       role="bold">pegasus-plan to horizontal</emphasis> .</para>
 
         <section>
+
         <title>Controlling Clustering Granularity</title>
 
         <para>The number of jobs that have to be clustered into a single large
@@ -1838,6 +1829,7 @@ siteX    B     /shared/PEGASUS/bin/jobB INSTALLED       INTEL32::LINUX pegasus::
       </listitem>
     </orderedlist>
    </section>
+   </section>
   <section>
     <title>Transfers</title>
 
@@ -1893,7 +1885,7 @@ siteX    B     /shared/PEGASUS/bin/jobB INSTALLED       INTEL32::LINUX pegasus::
     compute sites if the executables are not installed on the remote sites
     before hand. This chapter gives an overview of how transfers of data and
     executables is managed in Pegasus.</para>
-  </section>
+
 
     <section>
     <title>Local versus Remote Transfers</title>
@@ -2408,7 +2400,7 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
 <emphasis role="bold">pegasus.transfer.sls.s3.stage.sls.file = false</emphasis>  # Do not transfer .sls files via transfer jobs
 <emphasis role="bold">pegasus.gridstart = SeqExec </emphasis>                    # Use SeqExec to launch the jobs</programlisting>
   </section>
-  
+  </section>
   <section>
    <title>Hierarchical Workflow</title>
 
