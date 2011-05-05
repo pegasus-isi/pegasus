@@ -21,16 +21,16 @@ import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.CompoundTransformation;
 import edu.isi.pegasus.planner.classes.DagInfo;
+import edu.isi.pegasus.planner.classes.Notifications;
 import edu.isi.pegasus.planner.classes.PCRelation;
 import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.classes.Job;
 
-import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
-import edu.isi.pegasus.planner.classes.DAGJob;
 import edu.isi.pegasus.planner.classes.ReplicaLocation;
 import edu.isi.pegasus.planner.classes.ReplicaStore;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+import edu.isi.pegasus.planner.dax.Invoke;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -93,6 +93,12 @@ public class DAX2CDAG implements Callback {
      * transformation.
      */
     protected Map<String,CompoundTransformation> mCompoundTransformations;
+    
+    
+    /**
+     * All the notifications associated with the adag
+     */
+    private Notifications mNotifications;
 
 
     /**
@@ -111,6 +117,7 @@ public class DAX2CDAG implements Callback {
         this.mReplicaStore = new ReplicaStore();
         this.mTransformationStore = new TransformationStore();
         this.mCompoundTransformations = new HashMap<String,CompoundTransformation>();
+        this.mNotifications = new Notifications();
     }
 
 
@@ -126,6 +133,16 @@ public class DAX2CDAG implements Callback {
         mDagInfo.count = (String)attributes.get("count");
         mDagInfo.index = (String)attributes.get("index");
         mDagInfo.setLabel( (String)attributes.get("name") );
+    }
+    
+    /**
+     * Callback when a invoke entry is encountered in the top level inside the adag element in DAX. 
+     *
+     * @param invoke  the invoke object
+     */
+    public void cbWfInvoke(Invoke invoke){
+    	System.out.println( "[DEBUG] WF Invoke " + invoke );
+    	this.mNotifications.add(invoke);
     }
 
     /**
@@ -150,6 +167,7 @@ public class DAX2CDAG implements Callback {
                 String lfn = pf.getLFN();
                 mDagInfo.updateLFNMap(lfn,"i");
             }
+            job.addNotifications( ct.getNotifications());
         }
 
         //put the input files in the map
@@ -174,8 +192,10 @@ public class DAX2CDAG implements Callback {
             mDagInfo.updateLFNMap(lfn,"o");
         }
 
-
-
+        if(!job.getNotifications().isEmpty()){
+        	System.out.println( "[DEBUG] Job Invoke " + job.getName() +  job.getNotifications() );
+        }
+ 
     }
 
     /**
@@ -230,6 +250,7 @@ public class DAX2CDAG implements Callback {
         ADag dag = new ADag(mDagInfo,mVSubInfo);
         dag.setReplicaStore(mReplicaStore);
         dag.setTransformationStore(mTransformationStore);
+        dag.addNotifications(mNotifications);
         return dag;
     }
 
@@ -239,7 +260,10 @@ public class DAX2CDAG implements Callback {
      * @param compoundTransformation   the compound transforamtion
      */
     public void cbCompoundTransformation( CompoundTransformation compoundTransformation ){
-        this.mCompoundTransformations.put( compoundTransformation.getCompleteName(), compoundTransformation );
+    	this.mCompoundTransformations.put( compoundTransformation.getCompleteName(), compoundTransformation );
+    	if(!compoundTransformation.getNotifications().isEmpty()){
+    		System.out.println( "[DEBUG] Compound Transformation Invoke " + compoundTransformation.getCompleteName() + " " +compoundTransformation.getNotifications() );
+    	}
     }
 
     /**
@@ -262,5 +286,8 @@ public class DAX2CDAG implements Callback {
      */
     public void cbExecutable( TransformationCatalogEntry tce ){
         this.mTransformationStore.addEntry( tce );
+        if( !tce.getNotifications().isEmpty() ){
+        	System.out.println( "[DEBUG] Executable Invoke " + tce.getLogicalTransformation() + " " +  tce.getNotifications() );
+        }
     }
 }
