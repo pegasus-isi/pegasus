@@ -33,11 +33,11 @@
     different contexts.</para>
   </section>
   
-      <h2><title>Profile Structure Heading</title></h2>
+
 
       <section>
 
-
+      <h2><title>Profile Structure Heading</title></h2>
        <para>All profiles are triples comprised of a namespace, a name or key,
     and a value. The namespace is a simple identifier. The key has only
     meaning within its namespace, and it’s yet another identifier. There are
