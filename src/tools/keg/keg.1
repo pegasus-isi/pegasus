@@ -23,11 +23,11 @@ keg \- kanonical executable for grids
 .SH SYNOPSIS
 .B keg
 [\-a\~appname] [\-t\~interval |\-T\~ interval] [\-l\~logname] [\-P\~prefix]
-[\-o\~fn [..]] [\-i\~fn [..]] [\-G\~sz] [\-e\~env [..]] [\-p\~parm [..]]
+[\-o\~fn [..]] [\-i\~fn [..]] [\-G\~sz] [\-C] [\-e\~env [..]] [\-p\~parm [..]]
 .PP
 .B keg.condor
 [\-a\~appname] [\-t\~interval |\-T\~ interval] [\-l\~logname] [\-P\~prefix]
-[\-o\~fn [..]] [\-i\~fn [..]] [\-G\~sz] [\-e\~env [..]] [\-p\~parm [..]]
+[\-o\~fn [..]] [\-i\~fn [..]] [\-G\~sz] [\-C] [\-e\~env [..]] [\-p\~parm [..]]
 .SH DESCRIPTION
 The kanonical executable is a stand-in for regular binaries in a DAG -
 but not for their arguments. It allows to trace the shape of the
@@ -144,11 +144,22 @@ operates in
 .I data sink
 mode.
 .TP
-.B -\G size
+.B \-G size
 If you want 
 .B keg
 to generate a lot of output, the generator option will do that for you.
 Just specify how much, in bytes, you want. 
+.IP
+This option is off by default. 
+.TP
+.B \-C 
+This option causes
+.B keg
+to list all environment variables that start with the prefix
+.IR _CONDOR .
+The option is useful, if 
+.B keg
+is run as (part of) a Condor job. 
 .IP
 This option is off by default. 
 .TP
@@ -203,25 +214,22 @@ file is connected to
 $ date > xx
 $ keg -i xx -p a b c -o -
 --- start xx ----
-  Thu Sep  2 10:11:05 CDT 2004
+  Thu May  5 10:55:45 PDT 2011
 --- final xx ----
-Timestamp Today: 20040902T101224-05:00 (1094137944.287;0.001)
-Applicationname: keg @ 128.135.152.241 (griodine.uchicago.edu)
-Current Workdir: /home/voeckler/1.2.10/vds/src/tools/keg
-Systemenvironm.: i686-Linux 2.4.27
-Processor Info.: 2 x Intel(R) Pentium(R) 4 CPU 2.60GHz @ 2600.129
+Timestamp Today: 20110505T105552.910-07:00 (1304618152.910;0.000)
+Applicationname: keg [3661M] @ 128.9.xxx.xxx (xxx.isi.edu)
+Current Workdir: /opt/pegasus/default/bin/keg
+Systemenvironm.: x86_64-Linux 2.6.18-238.9.1.el5
+Processor Info.: 4 x Intel(R) Core(TM) i5 CPU         750  @ 2.67GHz @ 2660.068
+Load Averages  : 0.298 0.135 0.104
+Memory Usage MB: 11970 total, 8089 free, 0 shared, 695 buffered
+Swap Usage   MB: 12299 total, 12299 free
+Filesystem Info: /                        ext3    62GB total,    20GB avail
+Filesystem Info: /lfs/balefire            ext4  1694GB total,  1485GB avail
+Filesystem Info: /boot                    ext2   493MB total,   447MB avail
 Output Filename: -
 Input Filenames: xx
 Other Arguments: a b c
-$ keg -G 120 -o -
-0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
-0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrs
-Timestamp Today: 20040902T101252-05:00 (1094137972.396;0.001)
-Applicationname: keg @ 128.135.152.241 (griodine.uchicago.edu)
-Current Workdir: /home/voeckler/1.2.10/vds/src/tools/keg
-Systemenvironm.: i686-Linux 2.4.27
-Processor Info.: 2 x Intel(R) Pentium(R) 4 CPU 2.60GHz @ 2600.129
-Output Filename: -
 \fP
 .fi
 .SH RESTRICTIONS

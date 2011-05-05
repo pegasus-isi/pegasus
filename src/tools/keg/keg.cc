@@ -384,7 +384,7 @@ whoami( char* buffer, size_t size )
 
 void
 identify( char* result, size_t size, const char* arg0,
-	  double start,
+	  double start, bool condor,
 	  const DirtyVector iox[4], const char* outfn )
 {
   size_t linsize = getpagesize();
@@ -475,9 +475,16 @@ identify( char* result, size_t size, const char* arg0,
   pegasus_meminfo( result, size ); 
   pegasus_statfs( result, size ); 
 #endif // MACHINE_SPECIFIC
-  append( result, size, "Output Filename: %s\n", outfn );
 
-  // 
+  if ( condor ) { 
+    for ( char** p = environ; *p; p++ ) {
+      if ( strncmp( *p, "_CONDOR", 7 ) == 0 ) {
+	append( result, size, "Condor Variable: %s\n", *p ); 
+      }
+    }
+  }
+
+  append( result, size, "Output Filename: %s\n", outfn );
   if ( iox[1].size() ) {
     append( result, size, "Input Filenames:" );
     for ( unsigned j=0; j<iox[1].size(); ++j ) {
@@ -506,10 +513,31 @@ identify( char* result, size_t size, const char* arg0,
   free( static_cast<void*>(line) );
 }
 
+void
+helpMe( const char* ptr, unsigned long timeout, unsigned long spinout, 
+	const char* prefix )
+{
+  printf( "Usage\t%s [-a appname] [(-t|-T) thinktime] [-l fn] [-o fn [..]]\n"
+	  "\t[-i fn [..] | -G size] [-e env [..]] [-p p [..]] [-P ps]\n",
+	  ptr );
+  printf( " -a app\tset name of application to something else, default %s\n", ptr );
+  printf( " -t to\tsleep for 'to' seconds during execution, default %lu\n", timeout );
+  printf( " -T to\tspin for 'to' seconds during execution, default %lu\n", spinout );
+  printf( " -l fn\tappend own information atomically to a logfile\n" );
+  printf( " -o ..\tenumerate space-separated list output files to create\n" );
+  printf( " -i ..\tenumerate space-separated list input to read and copy\n" );
+  printf( " -G sz\tuse the generated size pattern instead of input files\n" );
+  printf( " -p ..\tenumerate space-separated parameters to mention\n" );
+  printf( " -e ..\tenumerate space-separated environment values to print\n" );
+  printf( " -C\tprint all environment variables starting with _CONDOR\n" ); 
+  printf( " -P ps\tprefix input file lines with 'ps', default \"%s\"\n", prefix );
+}
+
 int
 main( int argc, char* argv[] ) 
 {
   int state = 0;
+  bool condor = false; 
   unsigned long timeout = 0;
   unsigned long spinout = 0;
   unsigned long gensize = 0;
@@ -527,30 +555,17 @@ main( int argc, char* argv[] )
 
   // complain, if no parameters were given
   if ( argc == 1 ) {
-    printf( "Usage\t%s [-a appname] [(-t|-T) thinktime] [-l fn] [-o fn [..]]\n"
-	    "\t[-i fn [..] | -G size] [-e env [..]] [-p p [..]] [-P ps]\n",
-	    ptr );
-    printf( " -a app\tset name of application to something else, default %s\n", ptr );
-    printf( " -t to\tsleep for 'to' seconds during execution, default %lu\n", timeout );
-    printf( " -T to\tspin for 'to' seconds during execution, default %lu\n", spinout );
-    printf( " -l fn\tappend own information atomically to a logfile\n" );
-    printf( " -o ..\tenumerate space-separated list output files to create\n" );
-    printf( " -i ..\tenumerate space-separated list input to read and copy\n" );
-    printf( " -G sz\tuse the generated size pattern instead of input files\n" );
-    printf( " -p ..\tenumerate space-separated parameters to mention\n" );
-    printf( " -e ..\tenumerate space-separated environment values to print\n" );
-    printf( " -P ps\tprefix input file lines with 'ps', default \"%s\"\n", prefix );
+    helpMe( ptr, timeout, spinout, prefix ); 
     return 0;
   }
   
   // prepare generator pattern
   for ( size_t i=0; i<sizeof(output); i++ ) output[i] = pattern[i & 63];
-
-  // parse cmdline options
+  
   for ( int i=1; i<argc; ++i ) {
     char* s = argv[i];
     if ( s[0] == '-' && s[1] != 0 ) {
-      if ( strchr( "iotTGaepPl\0", s[1] ) != NULL ) {
+      if ( strchr( "iotTGaepPlC\0", s[1] ) != NULL ) {
 	switch (s[1]) {
 	case 'i':
 	  state = 1;
@@ -582,6 +597,9 @@ main( int argc, char* argv[] )
 	case 'G':
 	  state = 15;
 	  break;
+	case 'C':
+	  condor = true;
+	  continue; 
 	}
 	s += 2;
       }
@@ -667,7 +685,7 @@ main( int argc, char* argv[] )
 
       // create buffer, and fill with content
       memset( buffer, 0, bufsize );
-      identify( buffer, bufsize, ptr, start, iox, iox[2][i] );
+      identify( buffer, bufsize, ptr, start, condor, iox, iox[2][i] );
       fputs( buffer, out );
       fclose(out);
     } else {
@@ -684,7 +702,7 @@ main( int argc, char* argv[] )
       fprintf( stderr, "WARNING: open(%s): %s\n", logfile, strerror(errno) );
     } else {
       memset( buffer, 0, bufsize );
-      identify( buffer, bufsize, ptr, start, iox, logfile );
+      identify( buffer, bufsize, ptr, start, condor, iox, logfile );
       append( buffer, bufsize, '\n' );
       write( fd, buffer, strlen(buffer) ); // atomic write
       close(fd);
