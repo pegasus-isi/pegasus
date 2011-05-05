@@ -122,4 +122,16 @@ public class Invoke {
 
 
     }
+    
+    /**
+     * Returns the object as String
+     * 
+     * @return the description 
+     */
+    public String toString(){
+    	StringBuffer sb = new StringBuffer();
+    	sb.append( "[invoke " ).append( "when=\"" ).append( mWhen.toString().toLowerCase() ).
+    	   append( "\"" ).append( " what=\"" ).append( mWhat ).append( "\"]" );
+    	return sb.toString();
+    }
 }
