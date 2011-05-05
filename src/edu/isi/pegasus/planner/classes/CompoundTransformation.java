@@ -77,7 +77,7 @@ public class CompoundTransformation {
         mNamespace = (namespace == null) ? "" : namespace;
         mName = (name == null) ? "" : name;
 
-        mVersion = (version == null) ? "" : null;
+        mVersion = (version == null) ? "" : version;
         mUses = new LinkedList<PegasusFile>();
         mNotifications = new Notifications();
     }
