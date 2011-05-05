@@ -133,7 +133,7 @@ public class Transformation {
      * @return Transformation
      */
     public Transformation addInvoke(Invoke invoke) {
-        mInvokes.add(invoke);
+        mInvokes.add(invoke.clone());
         return this;
     }
 
@@ -143,7 +143,9 @@ public class Transformation {
      * @return Transformation
      */
     public Transformation addInvokes(List<Invoke> invokes) {
-        this.mInvokes.addAll(invokes);
+        for (Invoke invoke: invokes){
+            this.addInvoke(invoke);
+        }
         return this;
     }
     

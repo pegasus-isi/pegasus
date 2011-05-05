@@ -1235,7 +1235,7 @@ public class AbstractJob {
      * @return AbstractJob
      */
     public AbstractJob addInvoke(Invoke invoke) {
-        mInvokes.add(invoke);
+        mInvokes.add(invoke.clone());
         return this;
     }
 
@@ -1245,7 +1245,9 @@ public class AbstractJob {
      * @return AbstractJob
      */
     public AbstractJob addInvokes(List<Invoke> invokes) {
-        this.mInvokes.addAll(invokes);
+        for (Invoke invoke: invokes){
+            this.addInvoke(invoke);
+        }
         return this;
     }
 

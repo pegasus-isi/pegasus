@@ -300,9 +300,10 @@ public class ADAG {
      * @return ADAG
      */
     public ADAG addInvoke(Invoke invoke) {
-        mInvokes.add(invoke);
+        mInvokes.add(invoke.clone());
         return this;
     }
+
 
     /**
      * Add a List of Notifications for this Workflow
@@ -310,7 +311,9 @@ public class ADAG {
      * @return ADAG
      */
     public ADAG addInvokes(List<Invoke> invokes) {
-        this.mInvokes.addAll(invokes);
+        for (Invoke invoke : invokes) {
+            this.addInvoke(invoke);
+        }
         return this;
     }
     

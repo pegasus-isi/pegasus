@@ -177,7 +177,7 @@ public class Executable extends CatalogType {
      * @return Executable
      */
     public Executable addInvoke(Invoke invoke) {
-        mInvokes.add(invoke);
+        mInvokes.add(invoke.clone());
         return this;
     }
 
@@ -187,7 +187,9 @@ public class Executable extends CatalogType {
      * @return Executable
      */
     public Executable addInvokes(List<Invoke> invokes) {
-        this.mInvokes.addAll(invokes);
+        for (Invoke invoke: invokes){
+            this.addInvoke(invoke);
+        }
         return this;
     }
     /**
