@@ -91,6 +91,15 @@ public class Notifications extends Data{
     }
 
     /**
+     * Returns a boolean indicating whether the notifications object is empty or not.
+     * 
+     * @return true if empty else false
+     */
+    public boolean isEmpty(){
+    	return this.mInvokeMap.isEmpty();
+    }
+    
+    /**
      * Returns the clone of the object.
      *
      * @return the clone
