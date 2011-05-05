@@ -82,7 +82,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
      * The "not-so-official" location URL of the Site Catalog Schema.
      */
     public static final String SCHEMA_LOCATION =
-                                        "http://pegasus.isi.edu/schema/dax-3.2.xsd";
+                                        "http://pegasus.isi.edu/schema/dax-3.3.xsd";
 
     /**
      * uri namespace
@@ -99,7 +99,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
     /*
      * Predefined Constant for condor version 7.1.0
      */
-    public static final long DAX_VERSION_3_2_0 = CondorVersion.numericValue( "3.2.0" );
+    public static final long DAX_VERSION_3_3_0 = CondorVersion.numericValue( "3.3.0" );
     
     /**
      * Constant denoting default metadata type
@@ -913,16 +913,41 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
 
             //i invoke
             case 'i':
-                if( child instanceof Invoke ){
-                    Invoke i = (Invoke)child;
-                    if( parent instanceof Job ){
-                        //invoke appears in job element
-                        unSupportedNestingOfElements( "job", "invoke" );
-
-                        return true;
-                    }
-                }
-                return false;
+            	 if( child instanceof Invoke ){
+                     Invoke i = (Invoke)child;
+                     i.setWhat(  mTextContent.toString().trim() );
+                     if( parent instanceof Map ){
+                     	this.mCallback.cbWfInvoke(i);
+                     	return true;
+                     }
+                     else if(parent instanceof DAXJob ){
+                     	//invoke appears in dax element
+                    	 DAXJob daxJob = (DAXJob)parent;
+                    	 daxJob.addNotification(i);
+                         return true;
+                     }else if(parent instanceof DAGJob ){
+                     	//invoke appears in dag element
+                    	 DAGJob dagJob = (DAGJob)parent;
+                    	 dagJob.addNotification(i);
+                         return true;
+                     }else if( parent instanceof Job ){
+                         //invoke appears in job element
+                         Job job = (Job)parent;
+                         job.addNotification(i);
+                         return true;
+                     }else if(parent instanceof TransformationCatalogEntry ){
+                     	//invoke appears in executable element
+                    	 TransformationCatalogEntry tce = (TransformationCatalogEntry)parent;
+                    	 tce.addNotification(i);
+                         return true;
+                     }else if(parent instanceof CompoundTransformation ){
+                     	//invoke appears in transformation element
+                    	 CompoundTransformation ct = (CompoundTransformation)parent;
+                    	 ct.addNotification(i);
+                         return true;
+                     }
+                 }
+                 return false;
 
             //j job
             case 'j':
@@ -1118,7 +1143,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
         
         //add a 0 suffix
         String nversion = version + ".0";
-        if( CondorVersion.numericValue( nversion) < DAXParser3.DAX_VERSION_3_2_0 ){
+        if( CondorVersion.numericValue( nversion) < DAXParser3.DAX_VERSION_3_3_0 ){
             StringBuffer sb = new StringBuffer();
             sb.append( "DAXParser3 Unsupported DAX Version " ).append( version ).
                append( ". Set pegasus.schema.dax property to load the old DAXParser" );
