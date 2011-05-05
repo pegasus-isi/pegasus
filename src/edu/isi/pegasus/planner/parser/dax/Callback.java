@@ -20,8 +20,8 @@ import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry
 import edu.isi.pegasus.planner.classes.CompoundTransformation;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PCRelation;
-import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.ReplicaLocation;
+import edu.isi.pegasus.planner.dax.Invoke;
 
 /**
  * This interfaces defines the callback calls from DAX parsing. A slim
@@ -64,6 +64,14 @@ public interface Callback {
      */
     public void cbDocument(java.util.Map attributes);
 
+        
+    /**
+     * Callback when a invoke is encountered in the DAX from the top level inside  
+     * adag tag.
+     *
+     * @param invoke  the invoke object
+     */
+    public void cbWfInvoke(Invoke invoke);
 
 
     /**
