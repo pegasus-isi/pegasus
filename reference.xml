@@ -33,8 +33,8 @@
     different contexts.</para>
   </section>
 
-      <section>
-       <title>Profile Structure</title>
+       <section>
+        <title>Profile Structure</title>
 
        <para>All profiles are triples comprised of a namespace, a name or key,
     and a value. The namespace is a simple identifier. The key has only
@@ -2734,6 +2734,7 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
 
   </section>
 </chapter>
+
 
 
 
