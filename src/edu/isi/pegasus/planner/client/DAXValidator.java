@@ -54,6 +54,11 @@ public class DAXValidator extends DefaultHandler
     "http://pegasus.isi.edu/schema/DAX";
 
   /**
+   * what is the name of the schema file in the filename hint?
+   */
+  private String m_schemafile = "dax-3.3.xsd"; 
+
+  /**
    * Holds the instance of a {@link org.xml.sax.XMLReader} class.
    */
   private XMLReader m_reader;
@@ -375,7 +380,7 @@ public class DAXValidator extends DefaultHandler
     String schemaLocation = null;
     String pegasus_home = System.getenv("PEGASUS_HOME"); 
     if ( pegasus_home != null ) { 
-      File sl = new File( new File( pegasus_home, "etc" ), "dax-3.2.xsd" ); 
+      File sl = new File( new File( pegasus_home, "etc" ), m_schemafile ); 
       if ( sl.canRead() ) {
 	schemaLocation = sl.toString(); 
       } else {
@@ -428,21 +433,21 @@ public class DAXValidator extends DefaultHandler
     throws SAXException 
   {
     m_warnings++; 
-    System.err.println("WARNING: " + ex.getMessage());
+    System.err.println("WARNING in " + full_where() + ": " + ex.getMessage());
   }
-       
+  
   public void error(SAXParseException ex) 
     throws SAXException 
   {
     m_errors++; 
-    System.err.println("ERROR: " + ex.getMessage());
+    System.err.println("ERROR in " + full_where() + ": " + ex.getMessage());
   } 
   
   public void fatalError(SAXParseException ex) 
     throws SAXException 
   {
     m_fatals++; 
-    System.err.println("FATAL: " + ex.getMessage());
+    System.err.println("FATAL in " + full_where() + ": " + ex.getMessage());
   } 
 
   // --- ContentHandler ---
@@ -450,6 +455,12 @@ public class DAXValidator extends DefaultHandler
   public void setDocumentLocator( Locator locator )
   {
     this.m_location = locator;
+  }
+
+  private String full_where()
+  {
+    return ( "line " + m_location.getLineNumber() +
+	     ", col " + m_location.getColumnNumber() ); 
   }
 
   private String where()
