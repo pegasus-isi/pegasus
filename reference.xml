@@ -33,17 +33,7 @@
     different contexts.</para>
   </section>
 
-       <section>
-        <title>Profile Structure</title>
 
-       <para>All profiles are triples comprised of a namespace, a name or key,
-    and a value. The namespace is a simple identifier. The key has only
-    meaning within its namespace, and it’s yet another identifier. There are
-    no constraints on the contents of a value</para>
-
-       <para>Profiles may be represented with different syntaxes in different
-    context. However, each syntax will describe the underlying triple.</para>
-        </section>
 
        <section>
        <title>Profile Namespaces</title>
