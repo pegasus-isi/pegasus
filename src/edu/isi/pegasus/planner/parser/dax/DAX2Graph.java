@@ -26,6 +26,7 @@ import edu.isi.pegasus.planner.classes.ReplicaLocation;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
+import edu.isi.pegasus.planner.dax.Invoke;
 import edu.isi.pegasus.common.logging.LogManager;
 
 import java.util.ArrayList;
@@ -127,6 +128,16 @@ public class DAX2Graph implements Callback {
             mLabel = "test";
         }
     }
+    
+     /**
+	 * Callback when a invoke entry is encountered in the top level inside the adag element in the DAX. 
+     *
+     * @param invoke  the invoke object
+     */
+    public void cbWfInvoke(Invoke invoke){
+    	throw new UnsupportedOperationException("Not supported yet.");
+    }
+    
 
     /**
      * This constructs a graph node for the job and ends up storing it in the
@@ -255,7 +266,7 @@ public class DAX2Graph implements Callback {
     /**
      * Callback when a transformation catalog entry is encountered in the DAX
      *
-     * @param tce  the transformationc catalog entry object.
+     * @param tce  the transformation catalog entry object.
      */
     public void cbExecutable( TransformationCatalogEntry tce ){
         throw new UnsupportedOperationException("Not supported yet.");

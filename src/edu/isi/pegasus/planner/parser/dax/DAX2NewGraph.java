@@ -27,10 +27,8 @@ import edu.isi.pegasus.planner.partitioner.graph.MapGraph;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
+import edu.isi.pegasus.planner.dax.Invoke;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -108,6 +106,17 @@ public class DAX2NewGraph implements Callback {
             mLabel = "test";
         }
     }
+    
+        
+    /**
+     * Callback when a invoke entry is encountered in the top level inside the adag element in the DAX. 
+     *
+     * @param invoke  the invoke object
+     */
+    public void cbWfInvoke(Invoke invoke){
+    	throw new UnsupportedOperationException("Not supported yet.");
+    }
+    
 
     /**
      * This constructs a graph node for the job and ends up storing it in the

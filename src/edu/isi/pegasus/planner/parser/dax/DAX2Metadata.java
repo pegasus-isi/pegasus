@@ -24,6 +24,7 @@ import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.classes.ReplicaLocation;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+import edu.isi.pegasus.planner.dax.Invoke;
 
 import java.util.HashMap;
 import java.util.List;
@@ -87,6 +88,16 @@ public class DAX2Metadata implements Callback {
 
         //call the cbDone()
         cbDone();
+    }
+
+    
+    /**
+     * Callback when a invoke entry is encountered in the top level inside the adag element in the DAX. 
+     *
+     * @param invoke  the invoke object
+     */
+    public void cbWfInvoke(Invoke invoke){
+    	throw new UnsupportedOperationException("Not supported yet.");
     }
 
     /**
