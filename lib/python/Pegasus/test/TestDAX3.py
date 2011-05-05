@@ -17,22 +17,42 @@ class TestElement(unittest.TestCase):
         y = Element("y")
         x.element(y)
         self.assertEquals(str(x), '<x>\n\t<y/>\n</x>')
-        
+    
     def testText(self):
         x = Element("x")
         x.text("y")
         self.assertEquals(str(x), '<x>\n\ty\n</x>')
+    
+    def testUnicode(self):
+        x = Element("x")
+        x.comment(u'\u03a3')
+        x.flatten()
+        self.assertEquals(unicode(x), u'<x><!-- \u03a3 --></x>')
         
+        x = Element(u'\u03a3')
+        self.assertEquals(unicode(x), u'<\u03a3/>')
+        
+        x = Element('x', [(u'\u03a3', 'foo')])
+        self.assertEquals(unicode(x), u'<x \u03a3="foo"/>')
+        
+        x = Element('x', [('foo', u'\u03a3')])
+        self.assertEquals(unicode(x), u'<x foo="\u03a3"/>')
+        
+        x = Element('x')
+        x.text(u'\u03a3')
+        x.flatten()
+        self.assertEquals(unicode(x), u'<x>\u03a3</x>')
+    
     def testFlatten(self):
         x = Element("x")
         x.text("y")
         x.flatten()
         self.assertEquals(str(x), '<x>y</x>')
-        
+    
     def testComment(self):
         x = Element("x")
         x.comment("test")
-        self.assertEquals(str(x), '<x>\n\t<!- test -->\n</x>')
+        self.assertEquals(str(x), '<x>\n\t<!-- test -->\n</x>')
         
 class TestMetadata(unittest.TestCase):
     def testConstructor(self):
@@ -101,8 +121,8 @@ class TestPFN(unittest.TestCase):
         
     def testXML(self):
         """toXML should output properly formatted XML"""
-        a = PFN("http://abc","a")
-        self.assertEquals(str(a.toXML()), '<pfn url="http://abc" site="a"/>')
+        a = PFN("http://abc", "a")
+        self.assertEquals(unicode(a.toXML()), '<pfn url="http://abc" site="a"/>')
         
         a.addProfile(Profile("ns","name","value"))
         self.assertEquals(str(a.toXML()), '<pfn url="http://abc" site="a">\n\t<profile namespace="ns" key="name">value</profile>\n</pfn>')
@@ -382,7 +402,7 @@ class TestTransformation(unittest.TestCase):
         self.assertEquals(t.name, "name")
         self.assertEquals(t.namespace, "namespace")
         self.assertEquals(t.version, "version")
-        
+    
     def testExecutable(self):
         e = Executable("name",namespace="ns",version="version")
         t = Transformation(e)
@@ -947,13 +967,18 @@ class TestADAG(unittest.TestCase):
 <parent ref="ID01"/>
 </child>
 </adag>""")
-
+    
+    def testWriteFile(self):
+        diamond = ADAG("diamond")
+        diamond.addJob(Job(u"\u03a3cat"))
+        diamond.writeXMLFile("/tmp/dax.xml")
+    
     def testDiamond(self):
         """Compare generated DAX to reference DAX"""
         
         # Create a DAX
         diamond = ADAG("diamond")
-    
+        
         # Add input file to the DAX-level replica catalog
         a = File("f.a")
         a.addPFN(PFN("gsiftp://site.com/inputs/f.a","site"))
