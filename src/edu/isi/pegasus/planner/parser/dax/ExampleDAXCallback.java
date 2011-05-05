@@ -24,6 +24,7 @@ import edu.isi.pegasus.planner.classes.Job;
 
 import edu.isi.pegasus.planner.classes.ReplicaLocation;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+import edu.isi.pegasus.planner.dax.Invoke;
 
 
 import java.util.Map;
@@ -65,6 +66,20 @@ public class ExampleDAXCallback implements Callback {
         System.out.println( attributes );
 
     }
+    
+        
+    /**
+     * Callback when a invoke entry is encountered in the top level inside the adag element in the DAX. 
+     *
+     * @param invoke  the invoke object
+     */
+    public void cbWfInvoke(Invoke invoke){
+    	
+    	System.out.println();
+        System.out.println( "Invoke Entry ");
+        System.out.println(  invoke );
+    }
+    
 
     /**
      * Callback for the job from section 2 jobs. These jobs are completely
