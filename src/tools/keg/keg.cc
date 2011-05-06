@@ -26,6 +26,7 @@
 #ifdef MACHINE_SPECIFIC
 #ifdef DARWIN
 #include "darwin.hh"
+extern char** environ;
 #endif // DARWIN
 
 #if defined(SUNOS) || defined(SOLARIS)
@@ -458,7 +459,7 @@ identify( char* result, size_t size, const char* arg0,
 
   // phase 1: Say hi
 #ifdef HAS_SVNVERSION
-  append( result, size, "Applicationname: %s [%s] @ %s\n", 
+  append( result, size, "Applicationname: %s [v%s] @ %s\n", 
 	  arg0, HAS_SVNVERSION, hostname );
 #else
   append( result, size, "Applicationname: %s @ %s\n", arg0, hostname );
