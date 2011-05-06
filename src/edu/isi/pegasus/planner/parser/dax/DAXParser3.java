@@ -1011,7 +1011,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                     else if ( parent instanceof Executable ) {
                         //profile appears in executable element
                     	Executable exec = ( Executable)parent;
-                        exec.addProfile(new edu.isi.pegasus.planner.dax.Profile(p.getProfileNamespace(),p.getProfileKey(),p.getProfileValue()));
+                        exec.addProfiles(new edu.isi.pegasus.planner.dax.Profile(p.getProfileNamespace(),p.getProfileKey(),p.getProfileValue()));
                         return true;
                     }
                     else if ( parent instanceof Job ){
