@@ -1161,8 +1161,8 @@ clus1    black::analyze:1.0    gsiftp://clus1.com/opt/nfs/vdt/pegasus/bin/keg
     </section>
 
              
-  <section>
-    <para><figure id="">
+    <section>
+    <para><figure id="catalogdiagram">
     <title>Catalog Diagram</title>
           <para>The diagram below shows a typical Pegasus network with Catalogs</para>
 
