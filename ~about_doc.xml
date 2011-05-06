@@ -4,8 +4,8 @@
 <chapter id="about_doc">
   <title>Introduction</title>
   
-  <section>
-  <title>Introduction</title>
+     <section>
+      <title>Introduction</title>
  
   <para>Pegasus allows researchers to translate complex computational tasks into workflows that link and
   manage ensembles of dependent tasks and related data files.  Pegasus automatically chains dependent tasks together,

@@ -198,7 +198,7 @@ $ tar xvf Pegasus-3.0.1-Debian-6-x86.vbox.tar</emphasis></programlisting>
 
   </section>
 
-  <section>
+    <section>
      <title>Planning and Executing Workflows</title>
      <para>In this chapter you will be introduced to planning and executing a
     workflow through Pegasus WMS locally. You will then plan and execute a
@@ -335,7 +335,7 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
           partial order in which jobs are to executed.</para>
         </listitem>
       </orderedlist>
-    </section>
+     </section>
 
 
 
@@ -343,20 +343,20 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
 
 
   
-  <section>
+   <section>
     <title>Workflow Execution</title>
     
     <para>Describe in general how a workflow is executed.</para>
   
      <para>Links to new optimization page</para>
      
-   </section>
+    </section>
  
 
 
-  <section>
+    <section>
 
-   <title>Workflow Monitoring and Analysis</title>
+     <title>Workflow Monitoring and Analysis</title>
 
                   <section>
                    <title>Monitoring Tools</title>
@@ -368,7 +368,7 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
 
                   </section>
 
-  </section>
+    </section>
 
 
   <section>
@@ -379,7 +379,7 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
    
    </section>
 
-    <section>
+  <section>
      <title>Debugging and Statistical Analysis of Workflows</title>
       <para>Describe each debugging tool used on workflows</para>
    
