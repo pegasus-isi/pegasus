@@ -37,7 +37,7 @@ __all__ = ['quote', 'unquote']
 _mapping = {}
 
 # Initialize _mapping
-for i, c in zip(xrange(256), str(bytearray(xrange(256)))):
+for i, c in  zip(xrange(256), ''.join([chr(x) for x in xrange(256)])):
     _mapping[c] = c if (i >= 32 and i < 127 and c not in '"%\'') else ('%%%02X'%i)
 del i; del c
 
