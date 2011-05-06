@@ -89,7 +89,7 @@ main( int argc, char* argv[], char* envp[] )
       keeploop = 0;
       break;
     default:
-      fprintf( stderr, "Illegal argument %d: %s", i, argv[i] );
+      fprintf( stderr, "Illegal argument %zd: %s", i, argv[i] );
       helpMe(argv[0]);
       return 127;
     }
@@ -99,7 +99,7 @@ main( int argc, char* argv[], char* envp[] )
   for ( size=0; i < argc; ++i ) {
     if ( add_arg( argv[i], &arg, &size, &capacity, 1 ) == -1 ) {
       /* check for errors */
-      fprintf( stderr, "Problems with argument %d: %s\n",
+      fprintf( stderr, "Problems with argument %zd: %s\n",
 	       i, strerror(errno) );
     }
   }
@@ -110,15 +110,15 @@ main( int argc, char* argv[], char* envp[] )
   /* determine size */
   width = log10(size);
   for ( total=size, i=0; i<size; ++i ) {
-    if ( debug ) printf( "# %*d: %s\n", width, i, arg[i] );
+    if ( debug ) printf( "# %*zd: %s\n", width, i, arg[i] );
     total += strlen(arg[i]); 
   }
-  if ( debug ) printf( "# length=%d, limit=%ld\n", total, maxArgSize );
+  if ( debug ) printf( "# length=%zd, limit=%ld\n", total, maxArgSize );
 
   /* warn about system limits */
   if ( total >= maxArgSize ) {
     fprintf( stderr, 
-	     "Warning: command-line length (%d) exceeds system limit (%ld)\n", 
+	     "Warning: command-line length (%zd) exceeds system limit (%ld)\n", 
 	     total, maxArgSize );
   }
 

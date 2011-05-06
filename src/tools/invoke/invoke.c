@@ -36,7 +36,7 @@ append_arg( char* data, char*** arg, size_t* index, size_t* capacity )
  */ 
 {
   if ( debug )
-    fprintf( stderr, "# data=%p arg=%p index=%d cap=%d: \"%s\"\n", 
+    fprintf( stderr, "# data=%p arg=%p index=%zd cap=%zd: \"%s\"\n", 
 	     data, *arg, *index, *capacity, data );
 
   if ( *index >= *capacity ) {
