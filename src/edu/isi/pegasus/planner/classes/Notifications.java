@@ -96,7 +96,12 @@ public class Notifications extends Data{
      * @return true if empty else false
      */
     public boolean isEmpty(){
-    	return this.mInvokeMap.isEmpty();
+    	Invoke.WHEN[] values = Invoke.WHEN.values();
+        for ( int i = 0; i < values.length; i++ ){
+           if(!mInvokeMap.get( values[i]).isEmpty())
+        	   return false;
+        }
+    	return true;
     }
     
     /**
