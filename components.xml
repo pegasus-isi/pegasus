@@ -1164,7 +1164,7 @@ clus1    black::analyze:1.0    gsiftp://clus1.com/opt/nfs/vdt/pegasus/bin/keg
         </listitem>
       </orderedlist>
     </section>
-  </section>
+
              
   <section>
     <para><figure id="">
@@ -1178,8 +1178,8 @@ clus1    black::analyze:1.0    gsiftp://clus1.com/opt/nfs/vdt/pegasus/bin/keg
             </imageobject>
           </mediaobject>
         </figure></para>
-
-    </section>
+   </section>
+   </section>
   <section>
        <title>Pegasus Mapper</title>
       </section>
@@ -1202,6 +1202,7 @@ clus1    black::analyze:1.0    gsiftp://clus1.com/opt/nfs/vdt/pegasus/bin/keg
 
 
 </chapter>
+
 
 
 
