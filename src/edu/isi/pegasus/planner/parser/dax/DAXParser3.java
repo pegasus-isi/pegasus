@@ -18,23 +18,26 @@
 
 package edu.isi.pegasus.planner.parser.dax;
 
-import edu.isi.pegasus.planner.parser.StackBasedXMLParser;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
-import edu.isi.pegasus.common.logging.LogManagerFactory;
+
+import org.xml.sax.SAXException;
 
 import edu.isi.pegasus.common.logging.LogManager;
-
+import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.common.util.CondorVersion;
 import edu.isi.pegasus.common.util.Separator;
 import edu.isi.pegasus.common.util.Version;
-
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
-
 import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
-import edu.isi.pegasus.planner.catalog.transformation.impl.Abstract;
-
 import edu.isi.pegasus.planner.classes.CompoundTransformation;
 import edu.isi.pegasus.planner.classes.DAGJob;
 import edu.isi.pegasus.planner.classes.DAXJob;
@@ -42,31 +45,21 @@ import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PCRelation;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PegasusFile;
-import edu.isi.pegasus.planner.classes.PegasusFile.LINKAGE;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.classes.ReplicaLocation;
-
+import edu.isi.pegasus.planner.classes.PegasusFile.LINKAGE;
+import edu.isi.pegasus.planner.classes.Notifications;
 import edu.isi.pegasus.planner.code.GridStartFactory;
-
-
+import edu.isi.pegasus.planner.dax.Executable;
 import edu.isi.pegasus.planner.dax.Invoke;
-import edu.isi.pegasus.planner.dax.Invoke.WHEN;
 import edu.isi.pegasus.planner.dax.MetaData;
 import edu.isi.pegasus.planner.dax.PFN;
-
+import edu.isi.pegasus.planner.dax.Executable.ARCH;
+import edu.isi.pegasus.planner.dax.Executable.OS;
+import edu.isi.pegasus.planner.dax.Invoke.WHEN;
 import edu.isi.pegasus.planner.namespace.Hints;
 import edu.isi.pegasus.planner.namespace.Pegasus;
-
-
-import java.io.File;
-import java.io.IOException;
-
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-
-import org.xml.sax.SAXException;
+import edu.isi.pegasus.planner.parser.StackBasedXMLParser;
 
 /**
  * This class uses the Xerces SAX2 parser to validate and parse an XML
@@ -409,45 +402,55 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
             //e executable
             case 'e':
                 if( element.equals( "executable" ) ){
-                    TransformationCatalogEntry tce = new TransformationCatalogEntry();
-                    SysInfo sysinfo = new SysInfo();
-
+                    String namespace = null;
+                    String execName = null;
+                    String version = null;
+                    ARCH arch = null;
+                    OS os = null;
+                    String os_release = null;
+                    String os_version = null;
+                    String os_glibc = null;
+                    Boolean os_installed = true; // Default is installed
                     for ( int i=0; i < names.size(); ++i ) {
                         String name = (String) names.get( i );
                         String value = (String) values.get( i );
 
                         if ( name.equals( "namespace" ) ) {
-                            tce.setLogicalNamespace( value );
+                            namespace = value;
                         }
                         else if( name.equals( "name" ) ){
-                            tce.setLogicalName( value );
+                            execName = value;
                         }
                         else if( name.equals( "version" ) ){
-                            tce.setLogicalVersion( value );
+                            version = value;
                         }
                         else if( name.equals( "arch" ) ){
-                            sysinfo.setArchitecture( SysInfo.Architecture.valueOf( value.toLowerCase() ) );
+                            arch = Executable.ARCH.valueOf( value.toLowerCase() );
                         }
                         else if( name.equals( "os" ) ){
-                            sysinfo.setOS( SysInfo.OS.valueOf( value.toUpperCase() ) );
+                            os = Executable.OS.valueOf( value.toLowerCase() );
                         }
                         else if( name.equals( "osrelease" ) ){
-                            sysinfo.setOSVersion( value );
+                            os_release = value;
                         }
                         else if( name.equals( "osversion" ) ){
-                            sysinfo.setOSVersion( value );
+                            os_version =value;
                         }
                         else if( name.equals( "glibc" ) ){
-                            sysinfo.setGlibc( value );
+                            os_glibc = value;
                         }
                         else if( name.equals( "installed" ) ){
-                            Boolean installed = Boolean.parseBoolean( value );
-                            //ignore dont need to do anything
-                            tce.setType( installed ? TCType.INSTALLED : TCType.STAGEABLE  );
+                        	os_installed  = Boolean.parseBoolean( value );
                         }
                     }
-                    tce.setSysInfo(sysinfo);
-                    return tce;
+                    Executable executable = new Executable( namespace , execName ,version);
+                    executable.setArchitecture(arch);
+                    executable.setOS(os);
+                    executable.setOSRelease(os_release);
+                    executable.setOSVersion(os_version);
+                    executable.setGlibc(os_glibc);
+                    executable.setInstalled(os_installed);
+                    return executable;
                 }//end of element executable
 
                 return null; //end of e
@@ -902,11 +905,14 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
 
             //e executable
             case 'e':
-                if( child instanceof TransformationCatalogEntry ){
+                if( child instanceof Executable ){
                     if( parent instanceof Map ){
                         //executable appears in adag element
-                        TransformationCatalogEntry tce = ( TransformationCatalogEntry )child;
-
+                         Executable exec = (Executable)child;
+                    	List<TransformationCatalogEntry> tceList = convertExecutableToTCE(exec);
+                    	for(TransformationCatalogEntry tce : tceList){
+                    		this.mCallback.cbExecutable(tce);
+                    	}
                         //moved the callback call to end of pfn
                         //each new pfn is a new transformation
                         //catalog entry
@@ -940,10 +946,10 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                          Job job = (Job)parent;
                          job.addNotification(i);
                          return true;
-                     }else if(parent instanceof TransformationCatalogEntry ){
+                     }else if(parent instanceof Executable ){
                      	//invoke appears in executable element
-                    	 TransformationCatalogEntry tce = (TransformationCatalogEntry)parent;
-                    	 tce.addNotification(i);
+                    	 Executable exec = (Executable)parent;
+                    	 exec.addInvoke(i);
                          return true;
                      }else if(parent instanceof CompoundTransformation ){
                      	//invoke appears in transformation element
@@ -974,7 +980,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                         return true;
                     }
                     //metadata appears in executable element
-                    if( parent instanceof TransformationCatalogEntry ){
+                    if( parent instanceof Executable ){
                         unSupportedNestingOfElements( "executable", "metadata" );
                         return true;
                     }
@@ -1002,10 +1008,10 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                         unSupportedNestingOfElements( "file", "profile" );
                         return true;
                     }
-                    else if ( parent instanceof TransformationCatalogEntry ) {
+                    else if ( parent instanceof Executable ) {
                         //profile appears in executable element
-                        TransformationCatalogEntry tce = ( TransformationCatalogEntry)parent;
-                        tce.addProfile(p);
+                    	Executable exec = ( Executable)parent;
+                        exec.addProfile(new edu.isi.pegasus.planner.dax.Profile(p.getProfileNamespace(),p.getProfileKey(),p.getProfileValue()));
                         return true;
                     }
                     else if ( parent instanceof Job ){
@@ -1023,16 +1029,17 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                         rl.addPFN( pfn );
                         return true;
                     }
-                    else if ( parent instanceof TransformationCatalogEntry){
+                    else if ( parent instanceof Executable){
                         //pfn appears in executable element
-                        TransformationCatalogEntry tce = (TransformationCatalogEntry)parent;
+                        Executable executable = (Executable)parent;
                         PFN pfn = ( PFN )child;
-                        tce.setResourceId( pfn.getSite() );
-                        tce.setPhysicalTransformation( pfn.getURL() );
+                        //tce.setResourceId( pfn.getSite() );
+                        //tce.setPhysicalTransformation( pfn.getURL() );
+                        executable.addPhysicalFile(pfn);
                         
                         //convert file url appropriately for installed executables
                         //before returning
-                        this.mCallback.cbExecutable( Abstract.modifyForFileURLS(tce) );
+                        //this.mCallback.cbExecutable( Abstract.modifyForFileURLS(tce) );
 
                         return true;
                     }
@@ -1110,6 +1117,42 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
 
         }
     }
+    
+    /**
+     * Converts the executable into  transformation catalog entries
+     * @param executable executable object
+     * @return transformation catalog entries 
+     */
+    public List<TransformationCatalogEntry> convertExecutableToTCE(Executable executable){
+ 	   List<TransformationCatalogEntry> tceList = new ArrayList <TransformationCatalogEntry> ();
+ 	   TransformationCatalogEntry tce = null;
+ 	   for(PFN pfn : executable.getPhysicalFiles()){
+			tce = new TransformationCatalogEntry(executable.getNamespace(), executable.getName(), executable.getVersion());
+			SysInfo sysinfo = new SysInfo();
+			sysinfo.setArchitecture( SysInfo.Architecture.valueOf( executable.getArchitecture().toString().toLowerCase() ) );
+			sysinfo.setOS( SysInfo.OS.valueOf( executable.getOS().toString().toUpperCase() ) );
+			sysinfo.setOSRelease( executable.getOsRelease() );
+			sysinfo.setOSVersion( executable.getOsVersion() );
+			sysinfo.setGlibc( executable.getGlibc() );
+			tce.setSysInfo(sysinfo);
+			tce.setType( executable.getInstalled() ? TCType.INSTALLED : TCType.STAGEABLE  );
+			tce.setResourceId( pfn.getSite() );
+	 		tce.setPhysicalTransformation( pfn.getURL() );
+	 		Notifications notifications = new Notifications();
+	 		for(Invoke invoke : executable.getInvoke()){
+	 			notifications.add( new Invoke(invoke) );
+	 		}
+	 		tce.addNotifications(notifications);
+	 		for(edu.isi.pegasus.planner.dax.Profile profile : executable.getProfiles()){
+	 			tce.addProfile(new edu.isi.pegasus.planner.classes.Profile(profile.getNameSpace(),profile.getKey() , profile.getValue()));
+	 		}
+	 		tceList.add(tce);
+ 	   }
+ 		   
+ 	   
+ 	   return tceList;
+    }
+
 
     /**
      * Returns the id for a job
