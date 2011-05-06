@@ -14,10 +14,15 @@
   resources. Pegasus can run workflows ranging from just a few computational
   tasks up to 1 million. </para>
 
-  <para>An abstract application workflow is represented as a directed acyclic
-  graph where the vertices are the compute tasks and the edges represent the
-  data dependencies between the tasks. The input to Pegasus is a description
-  of the abstract workflow in XML format.</para>
+  <para>Pegasus WMS bridges the scientific domain and the execution environment by automatically mapping high-level
+  workflow descriptions onto distributed resources. It automatically locates the necessary
+  input data and computational resources necessary for workflow execution. Pegasus enables
+  scientists to construct workflows in abstract terms without worrying about the details of
+  the underlying execution environment or the particulars of the low-level specifications required
+  by the middleware (Condor, Globus, or Amazon EC2). Pegasus WMS also bridges the current
+  cyberinfrastructure by effectively coordinating multiple distributed resources.
+
+ The input to Pegasus is a description of the abstract workflow in XML format.</para>
   </section>
 
   <para>The Pegasus Workflow Management System consists of three main
@@ -88,5 +93,6 @@
   
 
 </chapter>
+
 
 

@@ -369,13 +369,14 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
 
     </section>
    </section>
+    </section>
   <section>
    <title>Pegasus Logs</title>
    <para>Describe the logs that Pegasus creates and what each is used for</para>
    <para>Include the persistence of each log and any storage repository for historical logs</para>
    
    
-   </section>
+
 
   <section>
      <title>Debugging and Statistical Analysis of Workflows</title>

@@ -23,19 +23,14 @@
 
   </itemizedlist>
 
-
-      
-      
-  <section>
-      <title>Catalogs </title>
-  </section>
+    <section>Catalogs
       
       <para>Catalogs contain generated files that Pegasus uses to execute workflows.</para>
       
       <para> There are three catalogs in the Pegasus WMS:</para>
       
-  <section>
-         <title>Replica</title>
+          <section>
+          <title>Replica</title>
            <section id="replica">
            <title>Replica</title>
 
@@ -1166,8 +1161,8 @@ clus1    black::analyze:1.0    gsiftp://clus1.com/opt/nfs/vdt/pegasus/bin/keg
     </section>
 
              
-  <section>
-    <para><figure id="">
+    <section>
+    <para><figure id="catalogdiagram">
     <title>Catalog Diagram</title>
           <para>The diagram below shows a typical Pegasus network with Catalogs</para>
 
@@ -1178,6 +1173,7 @@ clus1    black::analyze:1.0    gsiftp://clus1.com/opt/nfs/vdt/pegasus/bin/keg
             </imageobject>
           </mediaobject>
         </figure></para>
+   </section>
    </section>
    </section>
   <section>
@@ -1192,10 +1188,18 @@ clus1    black::analyze:1.0    gsiftp://clus1.com/opt/nfs/vdt/pegasus/bin/keg
 
   <section>
 
-      <title> Condor Schedd WHERE DOES THIS INFO BELONG?</title>
-      
+      <title> Condor Schedd </title>
+
       <para>Individual workflow tasks are managed by Condor Schedd which supervises their execution on local and remote resources.
       Condor schedd is a component in the Condor Project.</para>
+
+      </section>
+      
+      <section>
+        <title> Submit Directory</title>
+        
+        <para>Text of submit directory</para>
+
 
       </section>
       
