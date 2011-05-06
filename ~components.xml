@@ -23,7 +23,8 @@
 
   </itemizedlist>
 
-    <section>Catalogs
+    <section>
+     <title>Catalogs</title>
       
       <para>Catalogs contain generated files that Pegasus uses to execute workflows.</para>
       
@@ -32,7 +33,6 @@
           <section>
           <title>Replica</title>
            <section id="replica">
-           <title>Replica</title>
 
            <para>The Replica Catalog keeps mappings of logical file ids/names (LFN's)
     to physical file ids/names (PFN's). A single LFN can map to several PFN's.
@@ -1206,6 +1206,7 @@ clus1    black::analyze:1.0    gsiftp://clus1.com/opt/nfs/vdt/pegasus/bin/keg
 
 
 </chapter>
+
 
 
 
