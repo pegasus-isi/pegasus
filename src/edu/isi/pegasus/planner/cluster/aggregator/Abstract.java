@@ -372,7 +372,8 @@ public abstract class Abstract implements JobAggregator {
 
             //traverse throught the jobs to determine input/output files
             //and merge the profiles for the jobs
-            for( Iterator it = job.constituentJobsIterator(); it.hasNext(); ) {
+            int taskid = 1;
+            for( Iterator it = job.constituentJobsIterator(); it.hasNext(); taskid++ ) {
                 Job constitutentJob = (Job) it.next();
 
 
@@ -386,8 +387,13 @@ public abstract class Abstract implements JobAggregator {
                                                                );
                     String line;
                     while( (line = reader.readLine()) != null ){
+                        //ignore comment out lines
+                        if( line.startsWith( "#") ){
+                            continue;
+                        }
                         writer.write( line );
                         writer.write( "\n" );
+                        taskid++;
                     }
                     reader.close();
                     //delete the previous stdin file
@@ -397,15 +403,14 @@ public abstract class Abstract implements JobAggregator {
                     //write out the argument string to the
                     //stdin file for the fat job
 
+                    //genereate the comment string that has the 
+                    //taskid transformation derivation
+                    writer.write( getCommentString( constitutentJob, taskid ) + "\n" );
 
                     // the arguments are no longer set as condor profiles
                     // they are now set to the corresponding profiles in
                     // the Condor Code Generator only.
-/*
-                    writer.write( constitutentJob.condorVariables.get("executable")  + " " +
-                                 constitutentJob.condorVariables.get("arguments") + "\n");
- */
-                     writer.write( constitutentJob.getRemoteExecutable()  + " " +
+                    writer.write( constitutentJob.getRemoteExecutable()  + " " +
                                    constitutentJob.getArguments() + "\n");
                 }
             }
@@ -477,6 +482,24 @@ public abstract class Abstract implements JobAggregator {
     }
 
 
+    /**
+     * Generates the comment string for the job . It generates a comment of the 
+     * format # task_id transformation derivation. 
+     * 
+     * @param job       the job for which 
+     * @param taskid    the task id to put in.
+     * 
+     * @return the comment invocation
+     */
+    protected String getCommentString( Job job, int taskid ){
+        StringBuffer sb = new StringBuffer();
+        sb.append( "# " ).
+           append( taskid ).append( " " ).
+           append( job.getCompleteTCName() ).append( " " ).
+           append( job.getDAXID() ).append( " " );
+           
+        return sb.toString();
+    }
     
      /**
      * Constructs a new aggregated job that contains all the jobs passed to it.

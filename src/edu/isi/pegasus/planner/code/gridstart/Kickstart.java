@@ -458,23 +458,7 @@ public class Kickstart implements GridStart {
 
         //for derivation we now pass the logical id in the DAX
         //for the job JIRA PM-329
-        gridStartArgs.append("-N ");
-        if( job.getJobType() == Job.COMPUTE_JOB ||
-            job.getJobType() == Job.DAG_JOB || 
-            job.getJobType() == Job.DAX_JOB ) {
-        
-            //dax and dag jobs actually are never launched
-            //via kickstart as of now.
-
-            //pass the logical id in the DAX
-            gridStartArgs.append( job.getLogicalID() );
-            
-        }
-        else{
-            //for all auxillary jobs pass null
-            gridStartArgs.append( (String)null );
-        }
-        gridStartArgs.append(' ');
+        gridStartArgs.append("-N ").append( job.getDAXID() ).append( " " );
 
         // handle stdin
         if (job.stdIn.length() > 0) {

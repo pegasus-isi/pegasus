@@ -917,6 +917,32 @@ public class Job extends Data implements GraphNodeContent{
     public String getLogicalID(){
         return logicalId;
     }
+    
+    /**
+     * Returns the DAX ID for the job if it appeared in the DAX, else null
+     * 
+     * @return  the id of the job in the DAX if present , else null
+     */
+    public String getDAXID(){
+        StringBuffer sb = new StringBuffer();
+        int type = this.getJobType();
+        if( type == Job.COMPUTE_JOB ||
+            type == Job.DAG_JOB || 
+            type == Job.DAX_JOB ) {
+        
+            //dax and dag jobs actually are never launched
+            //via kickstart as of now.
+
+            //pass the logical id in the DAX
+            sb.append( this.getLogicalID() );
+            
+        }
+        else{
+            //for all auxillary jobs pass null
+            sb.append( (String)null );
+        }
+        return sb.toString();
+    }
 
     /**
      * Setter method to set the logical id of the job.

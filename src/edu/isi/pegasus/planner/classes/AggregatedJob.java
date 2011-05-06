@@ -138,6 +138,15 @@ public class AggregatedJob extends Job {
     }
 
     /**
+     * Clustered jobs never originate in the DAX. Always return null.
+     * 
+     * @return  null
+     */
+    public String getDAXID(){
+        return null;
+    }
+    
+    /**
      * Returns a new copy of the Object. The constituent jobs are also cloned.
      *
      * @return Object

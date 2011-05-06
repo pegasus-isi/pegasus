@@ -76,9 +76,9 @@ public class ClassADSGenerator {
     public static final String XFORMATION_AD_KEY = "pegasus_wf_xformation";
 
     /**
-     * The classad for the corresponding vdl derivation.
+     * The classad for generating the DAX ID
      */
-//    public static final String DERIVATION_AD_KEY = "pegasus_wf_derivation";
+    public static final String DAX_ID_KEY = "pegasus_wf_dax_id";
 
     /**
      * The class ad for job Class.
@@ -163,10 +163,9 @@ public class ClassADSGenerator {
         writer.println(
             generateClassAdAttribute( ClassADSGenerator.XFORMATION_AD_KEY, job.getCompleteTCName() ) );
 
-        //the derivation name
-// No longer required. As we do not have to worry about VDL
-//        writer.println(
-//            generateClassAdAttribute( DERIVATION_AD_KEY, job.getCompleteDVName() ) );
+        //put in the DAX 
+        writer.println(
+            generateClassAdAttribute( DAX_ID_KEY, job.getDAXID() ) );
 
         //the class of the job
         writer.println(generateClassAdAttribute( ClassADSGenerator.JOB_CLASS_AD_KEY, job.getJobType() ) );
