@@ -180,7 +180,7 @@ $ tar xvf Pegasus-3.0.1-Debian-6-x86.vbox.tar</emphasis></programlisting>
         </listitem>
       </orderedlist>
     </section>
-    
+    </section>
 
   <section>
      <title>Workflows</title>
@@ -339,7 +339,6 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
 
 
 
-    </section>
 
 
   
@@ -366,11 +365,10 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
 
 
 
-                  </section>
+
 
     </section>
-
-
+   </section>
   <section>
    <title>Pegasus Logs</title>
    <para>Describe the logs that Pegasus creates and what each is used for</para>
@@ -385,13 +383,14 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
    
       <para>Describe the Statistical Analysis Reports and what they indicate</para>
    
-   </section>
+
    
 
   </section>
-
+    </section>
 
 </chapter>
+
 
 
 
