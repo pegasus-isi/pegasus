@@ -78,7 +78,7 @@ public class ClassADSGenerator {
     /**
      * The classad for generating the DAX ID
      */
-    public static final String DAX_ID_KEY = "pegasus_wf_dax_id";
+    public static final String DAX_JOB_ID_KEY = "pegasus_wf_dax_job_id";
 
     /**
      * The class ad for job Class.
@@ -92,7 +92,7 @@ public class ClassADSGenerator {
      *
      * @see org.griphyn.cPlanner.classes.Job#jobID
      */
-    public static final String JOB_ID_AD_KEY = "pegasus_job_id";
+    public static final String DAG_JOB_ID_KEY = "pegasus_wf_dag_job_id";
     
     /**
      * The class ad for the expected job value
@@ -165,13 +165,15 @@ public class ClassADSGenerator {
 
         //put in the DAX 
         writer.println(
-            generateClassAdAttribute( DAX_ID_KEY, job.getDAXID() ) );
+            generateClassAdAttribute( DAX_JOB_ID_KEY, job.getDAXID() ) );
+        
+        
+        //the supernode id
+        writer.println(generateClassAdAttribute( ClassADSGenerator.DAG_JOB_ID_KEY, job.getID()  ));
 
         //the class of the job
         writer.println(generateClassAdAttribute( ClassADSGenerator.JOB_CLASS_AD_KEY, job.getJobType() ) );
 
-        //the supernode id
-        writer.println(generateClassAdAttribute( ClassADSGenerator.JOB_ID_AD_KEY, job.jobID ));
 
         //the resource on which the job is scheduled
         writer.println(generateClassAdAttribute( ClassADSGenerator.RESOURCE_AD_KEY, job.getSiteHandle() ) );
