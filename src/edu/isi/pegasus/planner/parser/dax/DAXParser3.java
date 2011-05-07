@@ -26,7 +26,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-
 import org.xml.sax.SAXException;
 
 import edu.isi.pegasus.common.logging.LogManager;
@@ -38,17 +37,18 @@ import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
+import edu.isi.pegasus.planner.catalog.transformation.impl.Abstract;
 import edu.isi.pegasus.planner.classes.CompoundTransformation;
 import edu.isi.pegasus.planner.classes.DAGJob;
 import edu.isi.pegasus.planner.classes.DAXJob;
 import edu.isi.pegasus.planner.classes.Job;
+import edu.isi.pegasus.planner.classes.Notifications;
 import edu.isi.pegasus.planner.classes.PCRelation;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.classes.ReplicaLocation;
 import edu.isi.pegasus.planner.classes.PegasusFile.LINKAGE;
-import edu.isi.pegasus.planner.classes.Notifications;
 import edu.isi.pegasus.planner.code.GridStartFactory;
 import edu.isi.pegasus.planner.dax.Executable;
 import edu.isi.pegasus.planner.dax.Invoke;
@@ -911,7 +911,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                          Executable exec = (Executable)child;
                     	List<TransformationCatalogEntry> tceList = convertExecutableToTCE(exec);
                     	for(TransformationCatalogEntry tce : tceList){
-                    		this.mCallback.cbExecutable(tce);
+                    		this.mCallback.cbExecutable(Abstract.modifyForFileURLS(tce));
                     	}
                         //moved the callback call to end of pfn
                         //each new pfn is a new transformation
