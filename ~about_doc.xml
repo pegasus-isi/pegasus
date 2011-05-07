@@ -29,7 +29,7 @@
   manage ensembles of dependent tasks and related data files.  Pegasus automatically chains dependent tasks together,
   so that a single scientist can complete complex computations that once required many different people.
 
-   New users are encouraged to explore the New User Walkthrough chapter to become familiar with how to operate Pegasus for their own workflows.
+ New users are encouraged to explore the New User Walkthrough chapter to become familiar with how to operate Pegasus for their own workflows.
    Included in the guide is a walkthrough where users can create and run a sample project to demonstrate Pegasus capabilities.</para>
   
   <para>
@@ -485,8 +485,18 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
     shown in <link linkend="submit_directory-layout">chapter "submit
     directory"</link>.</para>
   </section>
+  <section>
+    <title>Creating Workflows</title>
+    
+    <para>Steps for creating an abstract workflow</para>
+    
+    <para>Steps for creating an executable workflow</para>
+
+
+  </section>
 
 </chapter>
+
 
 
 

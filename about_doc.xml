@@ -485,8 +485,18 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
     shown in <link linkend="submit_directory-layout">chapter "submit
     directory"</link>.</para>
   </section>
+  <section>
+    <title>Creating Workflows</title>
+    
+    <para>Steps for creating an abstract workflow?</para>
+    
+    <para>Steps for creating an executable workflow?</para>
+
+
+  </section>
 
 </chapter>
+
 
 
 
