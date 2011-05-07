@@ -30,7 +30,7 @@
       
       <para> There are three catalogs in the Pegasus WMS:</para>
       
-          <section>
+      <section>
           <title>Replica</title>
            <section id="replica">
 
@@ -1191,6 +1191,7 @@ clus1    black::analyze:1.0    gsiftp://clus1.com/opt/nfs/vdt/pegasus/bin/keg
 
 
 </chapter>
+
 
 
 

@@ -1186,22 +1186,7 @@ clus1    black::analyze:1.0    gsiftp://clus1.com/opt/nfs/vdt/pegasus/bin/keg
   execution environment and the location of data. In other cases, users
   specify this information. </para>
 
-  <section>
 
-      <title> Condor Schedd </title>
-
-      <para>Individual workflow tasks are managed by Condor Schedd which supervises their execution on local and remote resources.
-      Condor schedd is a component in the Condor Project.</para>
-
-      </section>
-      
-      <section>
-        <title> Submit Directory</title>
-        
-        <para>Text of submit directory</para>
-
-
-      </section>
       
 
 
