@@ -38,7 +38,10 @@ _mapping = {}
 
 # Initialize _mapping
 for i, c in  zip(xrange(256), ''.join([chr(x) for x in xrange(256)])):
-    _mapping[c] = c if (i >= 32 and i < 127 and c not in '"%\'') else ('%%%02X'%i)
+    if (i >= 32 and i < 127 and c not in '"%\''):
+        _mapping[c] = c
+    else:
+        _mapping[c] = ('%%%02X'%i)
 del i; del c
 
 # Regular expressions
