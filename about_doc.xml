@@ -7,6 +7,7 @@
      <section>
       <title>Introduction</title>
  
+ 
   <para><ulink url="http://pegasus.isi.edu">Pegasus</ulink> is a configurable
   system for mapping and executing abstract application workflows over a wide
   range of execution environment including a laptop, a campus cluster, a Grid,
@@ -35,10 +36,12 @@
   <para>
 </para>
  
-  <section>
-  <title>System Features</title>
+     <section>
+       <title>System Features</title>
+       
+       <para>Pegasus has a number of features that contribute to its useability and effectiveness.</para>
 
-  </section>
+
   
     <section>
 
@@ -493,8 +496,8 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
     <para>Steps for creating an executable workflow?</para>
 
 
+   </section>
   </section>
-
 </chapter>
 
 
