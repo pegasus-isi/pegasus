@@ -233,6 +233,14 @@ $ export CONDOR_CONFIG=PEGASUS_HOME/etc/condor_config</programlisting></para>
         </listitem>
       </itemizedlist>
     </section>
+    <section>
+      <title>Basic Configurations</title>
+      
+      <para>text</para>
+
+
+    </section>
   </section>
 </chapter>
+
 
