@@ -65,7 +65,7 @@
       <listitem>
         <para><emphasis>Operating Environments </emphasis></para>
         <para>Pegasus WMS can be deployed across a variety of environments:</para>
-      </listitem>
+
                  <itemizedlist>
                   <listitem>
                     <para><emphasis>Local Execution </emphasis></para>
@@ -90,7 +90,7 @@
 
 
                  </itemizedlist>
-      
+                 </listitem>
       <listitem>
         <para><emphasis>Sytem Feature 3 </emphasis></para>
         <para>text</para>

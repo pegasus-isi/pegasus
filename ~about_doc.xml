@@ -33,8 +33,7 @@
  New users are encouraged to explore the New User Walkthrough chapter to become familiar with how to operate Pegasus for their own workflows.
    Included in the guide is a walkthrough where users can create and run a sample project to demonstrate Pegasus capabilities.</para>
   
-  <para>
-</para>
+  </section>
  
 
 <section>
@@ -183,7 +182,7 @@
       </listitem>
       </itemizedlist>
       </section>
-<section>
+   <section>
       
      <title>Abstract Workflows (DAX)</title>   </section>
 
@@ -502,8 +501,8 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
 
 
 </section>
-</section>
 </chapter>
+
 
 
 
