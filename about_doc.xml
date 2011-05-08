@@ -181,7 +181,7 @@
       </section>
     <section>
       
-     <title>DAX</title>   </section>
+     <title>Abstract Workflows (DAX)</title>   </section>
 
 
       <para>The DAX is a description of an abstract workflow in XML format that
@@ -344,7 +344,7 @@
       final result file <filename>f.d</filename> is staged out.</para>
 
       <section>
-      <title>DAG </title>
+      <title>Executable Workflows (DAG) </title>
 
       <para>The DAG an executable (concrete) workflow that can be executed over a variety of resources. When the workflow tasks are mapped to multiple resources that do not share a
   file system, explicit nodes are added to the workflow for orchestrating data.
