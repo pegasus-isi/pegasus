@@ -191,7 +191,7 @@ $ tar xvf Pegasus-3.0.1-Debian-6-x86.vbox.tar</emphasis></programlisting>
 
       For a more detailed description of workflows, how to create them, and how they are used in Pegasus please see <link
 
-      linkend="workflow_types">(Workflows)</link></para>
+      linkend="about_doc.php#id453073">(Creating Workflows)</link></para>
 
 
 
@@ -391,6 +391,7 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
     </section>
 
 </chapter>
+
 
 
 

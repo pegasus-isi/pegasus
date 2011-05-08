@@ -196,7 +196,7 @@ $ tar xvf Pegasus-3.0.1-Debian-6-x86.vbox.tar</emphasis></programlisting>
 
 
 
-  </section>
+
 
     <section>
      <title>Planning and Executing Workflows</title>
@@ -366,7 +366,7 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
 
 
 
-
+      </section>
     </section>
    </section>
     </section>
