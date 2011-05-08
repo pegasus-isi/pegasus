@@ -36,7 +36,8 @@
   <para>
 </para>
  
-     <section>
+
+<section>
        <title>System Features</title>
        
        <para>Pegasus has a number of features that contribute to its useability and effectiveness.</para>
@@ -182,7 +183,7 @@
       </listitem>
       </itemizedlist>
       </section>
-    <section>
+<section>
       
      <title>Abstract Workflows (DAX)</title>   </section>
 
@@ -346,7 +347,7 @@
       registered nor staged out, and can be considered transient. Only the
       final result file <filename>f.d</filename> is staged out.</para>
 
-      <section>
+<section>
       <title>Executable Workflows (DAG) </title>
 
       <para>The DAG an executable (concrete) workflow that can be executed over a variety of resources. When the workflow tasks are mapped to multiple resources that do not share a
@@ -491,7 +492,8 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
     shown in <link linkend="submit_directory-layout">chapter "submit
     directory"</link>.</para>
   </section>
-  <section>
+
+<section>
     <title>Creating Workflows</title>
     
     <para>Steps for creating an abstract workflow?</para>
@@ -499,8 +501,8 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
     <para>Steps for creating an executable workflow?</para>
 
 
-   </section>
-  </section>
+</section>
+</section>
 </chapter>
 
 
