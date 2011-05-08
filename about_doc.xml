@@ -43,11 +43,15 @@
 
 
   
-    <section>
 
-       <title>Error Recovery</title>
 
-       <para>When errors occur, Pegasus tries to recover when possible by retrying
+  </section>
+   <itemizedlist>
+
+
+      <listitem>
+        <para><emphasis>Error Recovery </emphasis></para>
+        <para>When errors occur, Pegasus tries to recover when possible by retrying
   tasks, by retrying the entire workflow, by providing workflow-level
   checkpointing, by re-mapping portions of the workflow, by trying alternative
   data sources for staging data, and, when all else fails, by providing a
@@ -57,42 +61,41 @@
   resource. Pegasus keeps track of what has been done (provenance) including
   the locations of data used and produced, and which software was used with
   which parameters.</para>
-       </section>
-     <section>
-     <title>Operating Environments</title>
-     <para>Pegasus can be deployed across a variety of environments</para>
-     
-       <section>
-       <title>Local Execution</title>
-       
-       
-       <para>Text</para>
-       </section>
+      </listitem>
+      <listitem>
+        <para><emphasis>Operating Environments </emphasis></para>
+        <para>Pegasus WMS can be deployed across a variety of environments:</para>
+      </listitem>
+                 <itemizedlist>
+                  <listitem>
+                    <para><emphasis>Local Execution </emphasis></para>
+                    <para>text</para>
+                  </listitem>
 
-       <section>
-       <title>Condor Pools and Glideins</title>
+                   <listitem>
+                    <para><emphasis>Condor Pools and Glideins </emphasis></para>
+                    <para>text</para>
+                  </listitem>
+                  
+                  <listitem>
+                    <para><emphasis>Grids </emphasis></para>
+                    <para>text</para>
+                  </listitem>
 
-        <para>Text</para>
+                  <listitem>
+                    <para><emphasis>Clouds </emphasis></para>
+                    <para>text</para>
+                  </listitem>
 
-       </section>
 
-       <section>
-       <title>Grids</title>
 
-        <para>Text</para>
-
-       </section>
-       
-       <section>
-       <title>Clouds</title>
-
-        <para>Text</para>
-
-       </section>
-     </section>
-
-  </section>
-
+                 </itemizedlist>
+      
+      <listitem>
+        <para><emphasis>Sytem Feature 3 </emphasis></para>
+        <para>text</para>
+      </listitem>
+      </itemizedlist>
 <section>
     <title>About this Document</title>
   
@@ -499,6 +502,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
    </section>
   </section>
 </chapter>
+
 
 
 

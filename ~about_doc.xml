@@ -92,7 +92,42 @@
      </section>
 
   </section>
+   <itemizedlist>
 
+      <listitem>
+        <para><emphasis>Operating Environments </emphasis></para>
+        <para>Pegasus WMS can be deployed across a variety of environments:</para>
+      </listitem>
+                 <itemizedlist>
+                  <listitem>
+                    <para><emphasis>Local Execution </emphasis></para>
+                    <para>text</para>
+                  </listitem>
+
+                   <listitem>
+                    <para><emphasis>Condor Pools and Glideins </emphasis></para>
+                    <para>text</para>
+                  </listitem>
+                  
+                  <listitem>
+                    <para><emphasis>Grids </emphasis></para>
+                    <para>text</para>
+                  </listitem>
+
+                  <listitem>
+                    <para><emphasis>Clouds </emphasis></para>
+                    <para>text</para>
+                  </listitem>
+
+
+
+                 </itemizedlist>
+      
+      <listitem>
+        <para><emphasis>Sytem Feature 3 </emphasis></para>
+        <para>text</para>
+      </listitem>
+      </itemizedlist>
 <section>
     <title>About this Document</title>
   
@@ -181,7 +216,7 @@
       </section>
     <section>
       
-     <title>DAX</title>   </section>
+     <title>Abstract Workflows (DAX)</title>   </section>
 
 
       <para>The DAX is a description of an abstract workflow in XML format that
@@ -344,7 +379,7 @@
       final result file <filename>f.d</filename> is staged out.</para>
 
       <section>
-      <title>DAG </title>
+      <title>Executable Workflows (DAG) </title>
 
       <para>The DAG an executable (concrete) workflow that can be executed over a variety of resources. When the workflow tasks are mapped to multiple resources that do not share a
   file system, explicit nodes are added to the workflow for orchestrating data.
@@ -499,6 +534,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
    </section>
   </section>
 </chapter>
+
 
 
 
