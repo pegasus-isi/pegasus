@@ -428,7 +428,7 @@
       </listitem>
     </itemizedlist>
 
-    <para><link linkend="reference">"Reference Chapter"</link> details more about when and how staging
+    <para><link linkend="reference">"The Reference Manual Chapter"</link> details more about when and how staging
     nodes are inserted into the workflow. </para>
 
     <para>The DAG will be found in file <filename>diamond-0.dag</filename>,

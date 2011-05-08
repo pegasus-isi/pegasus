@@ -112,42 +112,42 @@
       <itemizedlist>
       
       <listitem>
-        <para><emphasis><bold>Introduction</bold> - Chapter 1 </emphasis></para>
+        <para><emphasis>Introduction - Chapter 1 </emphasis></para>
         <para>Introduction to Abstract and Executable Workflows, and how to create them.</para>
       </listitem>
       
       <listitem>
-        <para><emphasis><bold>New User Walkthrough</bold> - Chapter 2</emphasis></para>
+        <para><emphasis>New User Walkthrough - Chapter 2</emphasis></para>
         <para>We walk new users through a representative workflow project that includes all aspects of the Pegasus WMS. The project we use is is at a level of complexity
         that is needed for the vast majority of users.</para>
       </listitem>
       
       
       <listitem>
-        <para><emphasis><bold>Pegasus Components</bold> - Chapter 3 </emphasis></para>
+        <para><emphasis>Pegasus Components - Chapter 3 </emphasis></para>
         <para>An introduction to the components of the Pegasus Workflow Management System (WMS)</para>
       </listitem>
       
       <listitem>
-       <para><emphasis><bold>Installation</bold> - Chapter 4</emphasis></para>
+       <para><emphasis>Installation - Chapter 4</emphasis></para>
        <para>How to install Pegasus</para>
 
 
       </listitem>
 
       <listitem>
-        <para><emphasis><bold>Running Workflows</bold> - Chapter 5 </emphasis></para>
+        <para><emphasis>Running Workflows - Chapter 5 </emphasis></para>
         <para> How to plan a DAX workflow and submit it to the DAG to
          create an executable workflow. </para>
       </listitem>
       
       <listitem>
-        <para><emphasis><bold>Submnit Directory Details</bold> - Chapter 6 </emphasis></para>
+        <para><emphasis>Submnit Directory Details - Chapter 6 </emphasis></para>
         <para> Description of the workflow afer it has been planned </para>
       </listitem>
       
       <listitem>
-        <para><emphasis><bold>Monitoring Workflows</bold> - Chapter 7</emphasis></para>
+        <para><emphasis>Monitoring Workflows - Chapter 7</emphasis></para>
         <para> How to monitor, debug, and view statistics about the execution of the workflow  </para>
       </listitem>
 
@@ -157,27 +157,27 @@
       </listitem>
 
       <listitem>
-        <para><emphasis><bold>Reference Manual</bold> - Chapters 9  </emphasis></para>
+        <para><emphasis>Reference Manual - Chapters 9  </emphasis></para>
         <para> Advanced information with configuration details for use in designing advanced workflows for very large scale projects</para>
       </listitem>
       
       <listitem>
-        <para><emphasis><bold>API Reference</bold> - Chapter 10 </emphasis></para>
+        <para><emphasis>API Reference - Chapter 10 </emphasis></para>
         <para> View API details</para>
       </listitem>
           <listitem>
-        <para><emphasis><bold>Command Reference</bold> - Chapter 11 </emphasis></para>
+        <para><emphasis>Command Reference - Chapter 11 </emphasis></para>
         <para> View a listing of all commands avaialble in the Pegasus WMS</para>
       </listitem>
       
           <listitem>
-        <para><emphasis><bold>Useful Tips</bold> - Chapter 12</emphasis></para>
+        <para><emphasis>Useful Tips - Chapter 12</emphasis></para>
         <para> View useful tips, best practices, and Version 2.x upgrade instructions.</para>
       </listitem>
       
       
       <listitem>
-        <para><emphasis><bold>Glossary</bold> - Chapter 13 </emphasis></para>
+        <para><emphasis>Glossary - Chapter 13 </emphasis></para>
         <para> View a glossary of terms and concepts referenced in Pegasus WMS</para>
       </listitem>
       </itemizedlist>
