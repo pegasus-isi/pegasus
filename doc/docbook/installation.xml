@@ -84,7 +84,7 @@ Python 2.6.2</programlisting></para>
     <title>Native Packages (RPM/DEB)</title>
 
     <para>The preferred way to install Pegasus is with native (RPM/DEB)
-    packages. Using this packages, Pegasus will be installed into
+    packages. Using this package, Pegasus will be installed into
     <filename>/opt/pegasus/{major_version}.{minor_version}</filename>, and the
     packages have {major_version}.{minor_version} in the package name. This is
     so that you can have multiple Pegasus versions installed at the same time.
@@ -233,5 +233,14 @@ $ export CONDOR_CONFIG=PEGASUS_HOME/etc/condor_config</programlisting></para>
         </listitem>
       </itemizedlist>
     </section>
+    <section>
+      <title>Basic Configurations</title>
+      
+      <para>text</para>
+
+
+    </section>
   </section>
 </chapter>
+
+

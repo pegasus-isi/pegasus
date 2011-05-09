@@ -3,7 +3,8 @@
 "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <chapter id="introduction">
   <title>Introduction to Pegasus</title>
-
+  
+  <section>
   <para><ulink url="http://pegasus.isi.edu">Pegasus</ulink> is a configurable
   system for mapping and executing abstract application workflows over a wide
   range of execution environment including a laptop, a campus cluster, a Grid,
@@ -13,14 +14,32 @@
   resources. Pegasus can run workflows ranging from just a few computational
   tasks up to 1 million. </para>
 
-  <para>An abstract application workflow is represented as a directed acyclic
-  graph where the vertices are the compute tasks and the edges represent the
-  data dependencies between the tasks. The input to Pegasus is a description
-  of the abstract workflow in XML format.</para>
+  <para>Pegasus WMS bridges the scientific domain and the execution environment by automatically mapping high-level
+  workflow descriptions onto distributed resources. It automatically locates the necessary
+  input data and computational resources necessary for workflow execution. Pegasus enables
+  scientists to construct workflows in abstract terms without worrying about the details of
+  the underlying execution environment or the particulars of the low-level specifications required
+  by the middleware (Condor, Globus, or Amazon EC2). Pegasus WMS also bridges the current
+  cyberinfrastructure by effectively coordinating multiple distributed resources.
+
+ The input to Pegasus is a description of the abstract workflow in XML format.</para>
+  </section>
 
   <para>The Pegasus Workflow Management System consists of three main
-  components: the Pegasus mapper, Condor DAGMan, and the Condor schedd. The
-  mapping of tasks to the execution resources is done by the mapper based on
+  components:</para>
+
+  <itemizedlist>
+   <listitem>Pegasus Mapper</listitem>
+   
+   <listitem>Condor DagMan</listitem>
+   
+   <listitem>Condor Schedd</listitem>
+  </itemizedlist>
+  
+<section>
+  <title> Pegasus Mapper</title>
+
+  <para>The mapping of tasks to the execution resources is done by the mapper based on
   information derived for static and/or dynamic sources. In some cases
   information systems already in place provide the information about the
   execution environment and the location of data. In other cases, users
@@ -29,13 +48,24 @@
   case the workflow tasks are mapped to multiple resources that do not share a
   file system, explicit nodes are added to the workflow for orchestrating data
   transfer between the tasks.</para>
-
+  </section>
+<section>
+ <title>Condor Dagman</title>
+           
   <para>DAGMan relies on the resources (compute, storage and network) defined
-  in the executable workflow to perform the necessary actions. Individual
-  workflow tasks are managed by a task scheduler, which supervises their
+  in the executable workflow to perform the necessary actions. </para>
+ </section>
+ 
+ <section>
+   <title>Condor Schedd</title>
+   
+  <para>Individual workflow tasks are managed by a task scheduler, which supervises their
   execution on local and remote resources. In our work scheduling is performed
   by the schedd a component in the Condor Project.</para>
+</section>
 
+<section>
+  <title>Error Recovery</title>
   <para>When errors occur, Pegasus tries to recover when possible by retrying
   tasks, by retrying the entire workflow, by providing workflow-level
   checkpointing, by re-mapping portions of the workflow, by trying alternative
@@ -46,6 +76,10 @@
   resource. Pegasus keeps track of what has been done (provenance) including
   the locations of data used and produced, and which software was used with
   which parameters.</para>
+  </section>
+  
+  <section>
+  <title>Monitoring Tools</title>
 
   <para>Pegasus comes with a set of tools that help monitor the progress of
   the workflow and collect statistics and performance profiles of the
@@ -55,12 +89,10 @@
   submit host, which hosts the workflow management system. Jobs are sent from
   the submit host to the campus cluster, the Open Science Grid, the TeraGrid,
   the cloud, or other resources.</para>
+  </section>
+  
 
-  <para>Pegasus is currently supports applications in a <ulink
-  url="http://pegasus.isi.edu/applications.php">number of scientific
-  domains</ulink> including astronomy, bioinformatics, earthquake science,
-  gravitational wave physics, ocean science, limnology, and others</para>
-
-  <para>Pegasus related publications are available <ulink
-  url="http://pegasus.isi.edu/publications.php">here</ulink> .</para>
 </chapter>
+
+
+

@@ -12,7 +12,7 @@
     runs. These tools internally parse the Condor log files and have a similar
     interface. With the exception of pegasus-monitord (see below), all tools
     take in the submit directory as an argument. Users can invoke the tools
-    listed in this chapter as follows</para>
+    listed in this chapter as follows:</para>
 
     <programlisting>$ pegasus-[toolname]   &lt;path to the submit directory&gt;</programlisting>
   </section>
@@ -72,25 +72,6 @@
       file in each workflow directory, the database at the top-level workflow
       will contain the information from not only the main workflow, but also
       from all sub-workflows.</para>
-      <section>
-	<title>Using pegasus-monitord with MySQL</title>
-
-	<para>Up to Pegasus 3.0.2, when using pegasus-monitord with MySQL, users
-	have to make sure that MySQL is configured to use the MyISAM storage engine
-	by default.</para>
-
-	<para>Additionally, users need to create the database using the 'latin1' encoding.
-	This can be done by using the following MySQL command:
-	  <programlisting>create database my_database default character set = 'latin1';</programlisting>
-	changing my_databse for the database name desired by the user.</para>
-
-	<para>Finally, users should use either the '-d' command line option, or the
-	'pegasus.monitord.output' property with a MySQL connection string to configure
-	pegasus-monitord to use MySQL. Here is a sample connection string:
-	  <programlisting>mysql://user:password@host:port/database_name</programlisting></para>
-
-      </section>
-
     </section>
 
     <section>
@@ -229,7 +210,7 @@ working dir : /lfs1/work/pegasus/run0004
   <section>
     <title>Plotting and Statistics</title>
 
-    <para></para>
+    <para/>
 
     <section>
       <title>pegasus-statistics</title>
@@ -299,7 +280,7 @@ Logical transformation statistics :
 
         <listitem>
           <para>Job summary <table>
-              <title></title>
+              <title/>
 
               <tgroup cols="2">
                 <tbody>
@@ -350,7 +331,7 @@ Logical transformation statistics :
 
         <listitem>
           <para>SUBDAX summary <table>
-              <title></title>
+              <title/>
 
               <tgroup cols="2">
                 <tbody>
@@ -462,7 +443,6 @@ Logical transformation statistics :
 
       </itemizedlist>
 
-      <para><link linkend="???">/scratch/grid-setup/run0001</link></para>
 
       <table>
         <title>Workflow statistics</title>
@@ -581,7 +561,6 @@ Logical transformation statistics :
         </listitem>
       </itemizedlist>
 
-      <para><link linkend="???">/scratch/grid-setup/run0001</link></para>
 
       <table>
         <title>Job statistics</title>
@@ -1045,7 +1024,6 @@ Logical transformation statistics :
         </listitem>
       </itemizedlist>
 
-      <para><link linkend="???">/scratch/grid-setup/run0001</link></para>
 
       <table>
         <title>Transformation statistics</title>
@@ -1198,7 +1176,7 @@ eps format : /scratch/grid-setup/run0001/graph/diamond-host.eps
 
         <mediaobject>
           <imageobject>
-            <imagedata fileref="images/blackdiamond-dax.png" />
+            <imagedata fileref="images/blackdiamond-dax.png"/>
           </imageobject>
         </mediaobject>
       </figure>
@@ -1214,7 +1192,7 @@ eps format : /scratch/grid-setup/run0001/graph/diamond-host.eps
 
         <mediaobject>
           <imageobject>
-            <imagedata fileref="images/diamond-dag.png" />
+            <imagedata fileref="images/diamond-dag.png"/>
           </imageobject>
         </mediaobject>
       </figure>
@@ -1230,7 +1208,7 @@ eps format : /scratch/grid-setup/run0001/graph/diamond-host.eps
 
         <mediaobject>
           <imageobject>
-            <imagedata fileref="images/diamond-2.png" />
+            <imagedata fileref="images/diamond-2.png"/>
           </imageobject>
         </mediaobject>
       </figure>
@@ -1245,7 +1223,7 @@ eps format : /scratch/grid-setup/run0001/graph/diamond-host.eps
 
         <mediaobject>
           <imageobject>
-            <imagedata fileref="images/diamond-host.png" />
+            <imagedata fileref="images/diamond-host.png"/>
           </imageobject>
         </mediaobject>
       </figure>

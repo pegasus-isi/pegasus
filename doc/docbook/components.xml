@@ -1,22 +1,49 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
 "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
-<chapter id="catalogs">
-  <title>Catalog Details</title>
+<chapter id="components">
+  <title>Pegasus Components</title>
+  
+  <para>The Pegasus Workflow Management System consists of several main
+  elements and components that work together to automate the processing of large scale workflows.</para>
+  
+  <itemizedlist>
 
-  <section id="replica">
-    <title>Replica</title>
+   <listitem>Catalogs</listitem>
 
-    <para>The Replica Catalog keeps mappings of logical file ids/names (LFN's)
+   <listitem>Replica</listitem>
+
+   <listitem>Site</listitem>
+
+   <listitem>Transformation</listitem>
+
+   <listitem>Pegasus Mapper</listitem>
+   
+   <listitem>Submit Directory</listitem>
+
+  </itemizedlist>
+
+    <section>
+     <title>Catalogs</title>
+      
+      <para>Catalogs contain generated files that Pegasus uses to execute workflows.</para>
+      
+      <para> There are three catalogs in the Pegasus WMS:</para>
+      
+      <section>
+          <title>Replica</title>
+           <section id="replica">
+
+           <para>The Replica Catalog keeps mappings of logical file ids/names (LFN's)
     to physical file ids/names (PFN's). A single LFN can map to several PFN's.
     A PFN consists of a URL with protocol, host and port information and a
     path to a file. Along with the PFN one can also store additional key/value
     attributes to be associated with a PFN.</para>
 
-    <para>Pegasus supports 3 different implemenations of the Replica
+               <para>Pegasus supports 4 different implemenations of the Replica
     Catalog.</para>
 
-    <orderedlist>
+     <orderedlist>
       <listitem>
         <para>File <emphasis role="bold">(Default)</emphasis></para>
       </listitem>
@@ -44,10 +71,10 @@
       </listitem>
     </orderedlist>
 
-    <section id="rc-FILE">
-      <title>File</title>
+       <section id="rc-FILE">
+        <title>File</title>
 
-      <para>In this mode, Pegasus queries a file based replica catalog. The
+        <para>In this mode, Pegasus queries a file based replica catalog. The
       file format is a simple multicolumn format. It is neither
       transactionally safe, nor advised to use for production purposes in any
       way. Multiple concurrent instances will clobber each other. The site
@@ -82,12 +109,12 @@ LFN PFN a="b" [..]
             the replica catalog file&gt;</replaceable></emphasis></para>
           </listitem>
         </orderedlist></para>
-    </section>
+       </section>
 
-    <section id="rc-JDBCRC">
-      <title>JDBCRC</title>
+       <section id="rc-JDBCRC">
+        <title>JDBCRC</title>
 
-      <para>In this mode, Pegasus queries a SQL based replica catalog that is
+         <para>In this mode, Pegasus queries a SQL based replica catalog that is
       accessed via JDBC. The sql schema’s for this catalog can be found at
       <emphasis role="bold">$PEGASUS_HOME/sql</emphasis> directory. You will
       have to install the schema into either PostgreSQL or MySQL by running
@@ -119,12 +146,12 @@ LFN PFN a="b" [..]
           password&gt;</replaceable></emphasis></para>
         </listitem>
       </orderedlist>
-    </section>
+      </section>
 
-    <section id="rc-RLS">
-      <title>Replica Location Service</title>
+       <section id="rc-RLS">
+        <title>Replica Location Service</title>
 
-      <para>RLS (Replica Location Service) is a distributed replica catalog,
+         <para>RLS (Replica Location Service) is a distributed replica catalog,
       which ships with Globus. There is an index service called Replica
       Location Index (RLI) to which 1 or more Local Replica Catalog (LRC)
       report. Each LRC can contain all or a subset of mappings.</para>
@@ -273,7 +300,7 @@ LFN PFN a="b" [..]
       there.</para>
 
       <screen><command>$ cat $HOME/rc</command><computeroutput>
-    
+
 # file-based replica catalog: 2010-11-10T17:52:53.405-07:00
 f.a gsiftp://somehost:port/path/to/file/f.a pool=local</computeroutput></screen>
 
@@ -288,8 +315,11 @@ f.a gsiftp://somehost:port/path/to/file/f.a pool=local</computeroutput></screen>
     </section>
   </section>
 
+  </section>
+             
+
   <section id="site">
-    <title>Site</title>
+   <title>Site</title>
 
     <para>The Site Catalog describes the compute resources (which are often
     clusters) that we intend to run the workflow upon. A site is a homogeneous
@@ -335,9 +365,9 @@ f.a gsiftp://somehost:port/path/to/file/f.a pool=local</computeroutput></screen>
 
       <para>Below is an example of the XML3 site catalog</para>
 
-      <programlisting>&lt;sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" 
-xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog 
+      <programlisting>&lt;sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog
 http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
   &lt;site  handle="isi" arch="x86" os="LINUX" osrelease="" osversion="" glibc=""&gt;
       &lt;grid  type="gt2" contact="smarty.isi.edu/jobmanager-pbs" scheduler="PBS" jobtype="auxillary"/&gt;
@@ -352,7 +382,7 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
                &lt;/scratch&gt;
                &lt;storage&gt;
                   &lt;shared&gt;
-                     &lt;file-server protocol="gsiftp" url="gsiftp://skynet-data.isi.edu" 
+                     &lt;file-server protocol="gsiftp" url="gsiftp://skynet-data.isi.edu"
                                   mount-point="/exports/storage01"/&gt;
                      &lt;internal-mount-point mount-point="/exports/storage01"/&gt;
                   &lt;/shared&gt;
@@ -722,7 +752,7 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
 
       <programlisting><emphasis role="bold">$ pegasus-sc-converter -i sample.sites.xml -I XML -o sample.sites.xml3 -O XML3
 </emphasis>
-2010.11.22 12:55:14.169 PST:   Written out the converted file to sample.sites.xml3 
+2010.11.22 12:55:14.169 PST:   Written out the converted file to sample.sites.xml3
 </programlisting>
 
       <para>To use the converted site catalog, in the properties do the
@@ -785,10 +815,10 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
       underneath. All queries are done against the memory representation. The
       file sample.tc.text in the etc directory contains an example</para>
 
-      <para><programlisting>tr example::keg:1.0 { 
+      <para><programlisting>tr example::keg:1.0 {
 
-#specify profiles that apply for all the sites for the transformation 
-#in each site entry the profile can be overriden 
+#specify profiles that apply for all the sites for the transformation
+#in each site entry the profile can be overriden
 
   profile env "APP_HOME" "/tmp/myscratch"
   profile env "JAVA_HOME" "/opt/java/1.6"
@@ -1110,8 +1140,8 @@ clus1    black::analyze:1.0    gsiftp://clus1.com/opt/nfs/vdt/pegasus/bin/keg
 
       <programlisting><emphasis role="bold">$ pegasus-tc-converter -i sample.tc.data -I File -o sample.tc.text -O Text
 </emphasis>
-2010.11.22 12:53:16.661 PST:   Successfully converted Transformation Catalog from File to Text 
-2010.11.22 12:53:16.666 PST:   The output transfomation catalog is in file  /lfs1/software/install/pegasus/pegasus-3.0.0cvs/etc/sample.tc.text 
+2010.11.22 12:53:16.661 PST:   Successfully converted Transformation Catalog from File to Text
+2010.11.22 12:53:16.666 PST:   The output transfomation catalog is in file  /lfs1/software/install/pegasus/pegasus-3.0.0cvs/etc/sample.tc.text
 </programlisting>
 
       <para>To use the converted transformation catalog, in the properties do
@@ -1129,6 +1159,58 @@ clus1    black::analyze:1.0    gsiftp://clus1.com/opt/nfs/vdt/pegasus/bin/keg
         </listitem>
       </orderedlist>
     </section>
-  </section>
+
+             
+    <section>
+    <para><figure id="catalogdiagram">
+    <title>Catalog Diagram</title>
+          <para>The diagram below shows a typical Pegasus network with Catalogs</para>
+
+          <mediaobject>
+            <imageobject>
+              <imagedata align="center" fileref="images/"
+                         valign="middle" />
+            </imageobject>
+          </mediaobject>
+        </figure></para>
+   </section>
+   </section>
+   </section>
+  <section>
+       <title>Pegasus Mapper</title>
+      </section>
+
+      <para>The mapping of tasks to the execution resources is done by the mapper based on
+  information derived for static and/or dynamic sources. In some cases
+  information systems already in place provide the information about the
+  execution environment and the location of data. In other cases, users
+  specify this information. </para>
+
+
+      
+
+
 </chapter>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

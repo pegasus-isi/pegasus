@@ -12,11 +12,11 @@
 
       <para>Pegasus takes an abstract workflow in XML format called DAX as its
       fundamental input. Pegasus plans the abstract workflow provided by the
-      DAX using the concrete information found the in the replica catalog
+      DAX using the concrete information found in the replica catalog
       (RC), site catalog (SC), and transformation catalog (TC). The concrete
       behavior is controlled by the configuration (properties). Pegasus
       refines the abstract workflow to create a number of concretely runnable
-      jobs that can be executed in the Grid, clouds, locally or
+      jobs that can be executed in the Grid, Clouds, locally, or
       remotely.</para>
 
       <para>The DAX format is described by the XML schema instance document
@@ -35,7 +35,7 @@
         <listitem>
           <para><emphasis>fan-out</emphasis>, <emphasis>scatter</emphasis>,
           and <emphasis>diverge</emphasis> all describe the fact that multiple
-          siblings are dependent on a fewer parents.</para>
+          siblings are dependent on fewer parents.</para>
 
           <para>The example shows how the <emphasis>findrange</emphasis> nodes
           depend on the <emphasis>preprocess</emphasis> node.</para>
@@ -62,10 +62,7 @@
           <para><emphasis>parallel execution</emphasis> implies that nodes can
           be executed in parallel, as shown by the
           <emphasis>findrange</emphasis> nodes in the example.</para>
-
-          <para>Note that even though it is possible to execute these nodes in
-          parallel, planning constraints may limit the amount of parallelism
-          achieved.</para>
+          
         </listitem>
       </itemizedlist>
 
@@ -86,23 +83,23 @@
       <itemizedlist>
         <listitem>
           <para>If you follow the arrows, you realize that one arrow end in
-          file <filename>f.d</filename>, but not arrows are leaving it. This
-          mean that <filename>f.d</filename> is a leaf file. It is a product
+          file <filename>f.d</filename>, but no arrows are leaving it. This
+          indicates that <filename>f.d</filename> is a leaf file. It is a product
           or output of this workflow. Output files can be collected at a
           location.</para>
         </listitem>
-
+        
         <listitem>
+
           <para>If you follow the arrows, you also realize that only one arrow
-          comes from file <filename>f.a</filename>, but not arrows are leading
-          to it. This means that <filename>f.a</filename> is a required input
+          comes from file <filename>f.a</filename>, but no arrows are leading
+          to it. This indicates that <filename>f.a</filename> is a required input
           file to the workflow. Its location must be registered with the
           replica catalog in order for Pegasus to find it and integrate it
           into the workflow.</para>
-        </listitem>
+          </listitem>
 
-        <listitem>
-          <para>The remaining files all have arrows leading to them and
+        <listitem>                     <para>The remaining files all have arrows leading to them and
           originating from them. These files are products of some job steps
           (arrows leading to them), and consumed by other job steps (arrows
           leading out of them). Often, these files represent intermediary
@@ -118,7 +115,7 @@
           linkend="api-java">Java</link>, <link linkend="api-perl">Perl</link>
           or <link linkend="api-python">Python</link>.</para>
 
-          <para>This option is what we recommend.</para>
+          <para><emphasis>Note</emphasis> This option is what we recommend.</para>
         </listitem>
 
         <listitem>
@@ -175,8 +172,8 @@
 &lt;/adag&gt;</programlisting>
 
       <para>The example workflow representation in form of a DAX requires
-      external catalogs, like a transformation catalog (TC) to resolve the
-      logical job names like diamond::preprocess:2.0, and a replica catalog
+      external catalogs, such as transformation catalog (TC) to resolve the
+      logical job names (such as diamond::preprocess:2.0), and a replica catalog
       (RC) to resolve the input file <filename>f.a</filename>. The above
       workflow defines the four jobs just like the example picture, and the
       files that flow between the jobs. The intermediary files are neither
@@ -184,7 +181,7 @@
       final result file <filename>f.d</filename> is staged out.</para>
 
       <para>The decision between not staging nor remembering intermediary
-      files, and staging them, is a balance act of your faith into the
+      files, and staging them, is a balance act of your confidence in the
       workflow. If it is a very large workflow that is likely to fail at some
       point due to a site problem, or even a transient problem, you may want
       to be able to restart your workflow without losing too much work. If
@@ -196,7 +193,7 @@
     <section>
       <title>Workflow Gallery</title>
 
-      <para>Pegasus is being used in a broad range of applications. Our <link
+      <para>Pegasus is curently being used in a broad range of applications. Our <link
       linkend="example_workflows">example workflows</link> can be found in a
       later chapter. <ulink
       url="http://pegasus.isi.edu/applications.php">These external
@@ -620,3 +617,5 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
     "submit directory"</link>.</para>
   </section>
 </chapter>
+
+

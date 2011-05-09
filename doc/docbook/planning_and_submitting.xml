@@ -2,10 +2,10 @@
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
 "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <chapter id="planning_and_submitting">
-  <title>Planning and Submitting</title>
+  <title>Running Workflows</title>
 
   <section>
-    <title>Refinement Steps Explained</title>
+    <title>Mapping Refinement Steps</title>
 
     <para>During the mapping process, the abstract workflow undergoes a series
     of refinement steps that converts it to an executable form.</para>
@@ -54,7 +54,7 @@
 
         <mediaobject>
           <imageobject>
-            <imagedata fileref="./images/refinement-data-reuse.png" />
+            <imagedata fileref="./images/refinement-data-reuse.png"/>
           </imageobject>
         </mediaobject>
       </figure>
@@ -277,7 +277,7 @@
 
         <mediaobject>
           <imageobject>
-            <imagedata fileref="./images/refinement-site-selection.png" />
+            <imagedata fileref="./images/refinement-site-selection.png"/>
           </imageobject>
         </mediaobject>
       </figure>
@@ -291,7 +291,7 @@
       same site. Clustering is usually done on short running jobs in order to
       reduce the remote execution overheads associated with a job. Clustering
       is described in detail in the <link
-      linkend="advanced_concepts_job_clustering">Chapter on Advanced Concepts
+      linkend="job_clustering">Chapter on Advanced Concepts
       - Job Clustering.</link></para>
 
       <tip>
@@ -311,9 +311,8 @@
       multiple locations are specified for the same input file, the location
       from where to stage the data is selected using a <emphasis
       role="bold">Replica Selector</emphasis> . Replica Selection is described
-      in detail in the <link
-      linkend="advanced_concepts_replica_selection">Chapter on Advanced
-      Concepts - Replica Selection.</link></para>
+      in detail in the Replica Selection section of the <link
+      linkend="reference">Reference Manual.</link></para>
 
       <para>The process of adding the data stage-in and data stage-out nodes
       is handled by Transfer Refiners. All data transfer jobs in Pegasus are
@@ -323,9 +322,8 @@
       at source and destination url and figures out automatically which
       underlying client to use. pegasus-transfer is distributed with the
       PEGASUS and can be found in the bin subdirectory . Pegasus Transfer
-      Refiners are are described in the detail in the <link
-      linkend="advanced_concepts_transfers">Chapter on Advanced Concepts -
-      Transfers</link>. The default transfer refiner that is used in Pegasus
+      Refiners are are described in the detail in the Transfers section of the <link
+      linkend="reference">Reference Manual</link>. The default transfer refiner that is used in Pegasus
       is the <emphasis role="bold">Bundle</emphasis> Transfer Refiner, that
       bundles data stage-in nodes and data stage-out nodes on the basis of
       certain pegasus profile keys associated with the workflow.</para>
@@ -335,7 +333,7 @@
 
         <mediaobject>
           <imageobject>
-            <imagedata fileref="./images/refinement-transfer-jobs.png" />
+            <imagedata fileref="./images/refinement-transfer-jobs.png"/>
           </imageobject>
         </mediaobject>
       </figure>
@@ -351,7 +349,7 @@
 
         <mediaobject>
           <imageobject>
-            <imagedata fileref="./images/refinement-registration-jobs.png" />
+            <imagedata fileref="./images/refinement-registration-jobs.png"/>
           </imageobject>
         </mediaobject>
       </figure>
@@ -364,7 +362,7 @@
       execution, where the data is staged from the head node directory to a
       directory on the worker node filesystem. This feature will be refined
       further for Pegasus 3.1. To use it with Pegasus 3.0 send email to
-      <emphasis role="bold">pegasus-support aT isi.edu</emphasis>.</para>
+      <emphasis role="bold">pegasus-support at isi.edu</emphasis>.</para>
 
       <tip>
         <para>The replica selector to use for replica selection can be
@@ -400,7 +398,7 @@
 
         <mediaobject>
           <imageobject>
-            <imagedata fileref="./images/refinement-creadir-rm-jobs.png" />
+            <imagedata fileref="./images/refinement-creadir-rm-jobs.png"/>
           </imageobject>
         </mediaobject>
       </figure>
@@ -445,7 +443,7 @@
 
         <mediaobject>
           <imageobject>
-            <imagedata fileref="./images/refinement-final-executable-wf.png" />
+            <imagedata fileref="./images/refinement-final-executable-wf.png"/>
           </imageobject>
         </mediaobject>
       </figure>
@@ -453,7 +451,7 @@
   </section>
 
   <section>
-    <title>pegasus-plan</title>
+    <title>Pegasus-Plan</title>
 
     <para>pegasus-plan is the main executable that takes in the abstract
     workflow ( DAX ) and generates an executable workflow ( usually a Condor
@@ -471,9 +469,8 @@
 
             <para>The Replica Catalog needs to be catalogued with the
             locations of the input files required by the workflows. This can
-            be done by using pegasus-rc-client that is explained in the
-            Catalogs Chapter <link
-            linkend="pegasus-rc-client">here</link>.</para>
+            be done by using pegasus-rc-client (See the Replica section of <link
+            linkend="components">Pegasus Components </link>).</para>
           </listitem>
 
           <listitem>
@@ -482,9 +479,8 @@
 
             <para>The Transformation Catalog needs to be catalogued with the
             locations of the executables that the workflows will use. This can
-            be done by using pegasus-tc-client that is explained in the
-            Catalogs Chapter <link
-            linkend="pegasus-tc-client">here</link>.</para>
+            be done by using pegasus-tc-client (See the Transformation section of <link
+            linkend="components">Pegasus Components</link>).</para>
           </listitem>
 
           <listitem>
@@ -493,8 +489,8 @@
             <para>The Site Catalog needs to be catalogued with the site layout
             of the various sites that the workflows can execute on. A site
             catalog can be generated for OSG by using the client
-            pegasus-sc-client that is explained in the Catalogs Chapter <link
-            linkend="pegasus_sc_client">here</link>.</para>
+            pegasus-sc-client (See the Site section of the <link
+            linkend="components">Pegasus Components</link>).</para>
           </listitem>
         </orderedlist>
       </listitem>
@@ -636,7 +632,7 @@
 
         <mediaobject>
           <imageobject>
-            <imagedata fileref="./images/gram_layout.png" />
+            <imagedata fileref="./images/gram_layout.png"/>
           </imageobject>
         </mediaobject>
       </figure>
@@ -697,7 +693,7 @@
 
         <mediaobject>
           <imageobject>
-            <imagedata fileref="images/condor_layout.png" />
+            <imagedata fileref="images/condor_layout.png"/>
           </imageobject>
         </mediaobject>
       </figure>
@@ -752,7 +748,7 @@
     <section>
       <title>Condor Glideins</title>
 
-      <para>As mentioned Pegasus can execute workflows over Condor pool. This
+      <para>Pegasus WMS can execute workflows over Condor pool. This
       pool can contain machines managed by a single institution or department
       and belonging to a single administrative domain. This is the case for
       most of the Condor pools. In this section we describe how machines from
@@ -935,7 +931,7 @@ requirements = ((GLIDEIN_Entry_Name == "isi_iz") || (TARGET.Pegasus_Site == "isi
  &lt;/site&gt;
 </programlisting>
 
-      <para></para>
+      <para/>
 
       <section>
         <title>Changes to Jobs</title>
@@ -954,7 +950,7 @@ requirements = ((GLIDEIN_Entry_Name == "isi_iz") || (TARGET.Pegasus_Site == "isi
           </listitem>
         </orderedlist>
 
-        <para></para>
+        <para/>
 
         <section>
           <title>Remote CE Requirements</title>
@@ -1338,3 +1334,6 @@ ec2     amazon::s3cmd    /path/to/pegasus/bin/s3cmd    INSTALLED   INTEL32::LINU
     </section>
   </section>
 </chapter>
+
+
+

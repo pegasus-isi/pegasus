@@ -18,7 +18,7 @@ Text like this is the output you should get.</computeroutput></programlisting>
   <para>For example:</para>
 
   <programlisting><command>$ date</command><computeroutput>
-Fri Mar 18 12:50:05 PDT 2011
+Wed Nov 24 14:47:59 PST 2010
 </computeroutput></programlisting>
 
   <section>
@@ -43,36 +43,35 @@ Fri Mar 18 12:50:05 PDT 2011
           url="http://pegasus.isi.edu/wms/download/3.0/Pegasus-3.0.1-Debian-6-x86.vbox.tar.bz2"
           xml:base="">Virtual Box Pegasus Image</ulink></para>
 
-          <para>It is around <emphasis role="bold">576 MB</emphasis> in size.
+          <para>It is around <emphasis role="bold">1.2 GB</emphasis> in size.
           We recommend using a command line tool like <emphasis
           role="bold">wget</emphasis> to download the image. Downloading the
           image using the browser sometimes corrupts the image.</para>
 
-          <programlisting>$ <emphasis role="bold">wget http://pegasus.isi.edu/wms/download/3.0/Pegasus-3.0.2-Debian-6-x86.vbox.tar.bz2
+          <programlisting>$ <emphasis role="bold">wget http://pegasus.isi.edu/wms/download/3.0/Pegasus-3.0.1-Debian-6-x86.vbox.tar.bz2
 
-</emphasis>--12:43:50--  http://pegasus.isi.edu/wms/download/3.0/Pegasus-3.0.2-Debian-6-x86.vbox.tar.bz2
-           =&gt; `Pegasus-3.0.2-Debian-6-x86.vbox.tar.bz2'
+</emphasis> http://pegasus.isi.edu/wms/download/3.0/Pegasus-3.0.1-Debian-6-x86.vbox.tar.bz2
+           =&gt; `Pegasus-3.0.1-Debian-6-x86.vbox.tar.bz2'
 Resolving pegasus.isi.edu... 128.9.64.219
 Connecting to pegasus.isi.edu|128.9.64.219|:80... connected.
 HTTP request sent, awaiting response... 200 OK
-Length: 604,017,271 (576M) [application/x-bzip2]
-
+Length: 1,336,554,492 (1.2G) [application/x-bzip2]
 </programlisting>
 
           <para>The Image is bzipped . You will need to unzip it.</para>
 
           <para>If you have gnu tar you can do this directly</para>
 
-          <programlisting><emphasis role="bold">$ gtar jxvf Pegasus-3.0.2-Debian-6-x86.vbox.tar.bz2</emphasis></programlisting>
+          <programlisting><emphasis role="bold">$ gtar jxvf Pegasus-3.0.1-Debian-6-x86.vbox.tar.bz2</emphasis></programlisting>
 
           <para>Else you need to do the following</para>
 
-          <programlisting><emphasis role="bold">$ bunzip2 Pegasus-3.0.2-Debian-6-x86.vbox.tar.bz2
+          <programlisting><emphasis role="bold">$ bunzip2 Pegasus-3.0.1-Debian-6-x86.vbox.tar.bz2
 
-$ tar xvf Pegasus-3.0.2-Debian-6-x86.vbox.tar</emphasis></programlisting>
+$ tar xvf Pegasus-3.0.1-Debian-6-x86.vbox.tar</emphasis></programlisting>
 
           <para>After untarring a folder named<emphasis role="bold">
-          Pegasus-3.0.2-Debian-6-x86.vbox</emphasis> will be created that has
+          Pegasus-3.0.1-Debian-6-x86.vbox</emphasis> will be created that has
           the vmdk files for the VM.</para>
         </listitem>
       </itemizedlist>
@@ -97,7 +96,7 @@ $ tar xvf Pegasus-3.0.2-Debian-6-x86.vbox.tar</emphasis></programlisting>
 
         <listitem>
           <para>Click on "Add" button to add the<emphasis role="bold">
-          Pegasus-3.0.2-Debian-6-x86.vbox/Debian-6-x86.vmdk</emphasis> file
+          Pegasus-3.0.1-Debian-6-x86.vbox/Debian-6-x86.vmdk</emphasis> file
           that you just downloaded and unzipped.</para>
         </listitem>
 
@@ -126,7 +125,7 @@ $ tar xvf Pegasus-3.0.2-Debian-6-x86.vbox.tar</emphasis></programlisting>
 
         <listitem>
           <para>In the VM Name and OS Type Window specify the name as<emphasis
-          role="bold"> PegasusVM-</emphasis>3.0.2 Select the <emphasis
+          role="bold"> PegasusVM-3.0</emphasis>.1 Select the <emphasis
           role="bold">Operating System as Linux </emphasis>and <emphasis
           role="bold">Version as Debian </emphasis>. Click Continue.</para>
         </listitem>
@@ -148,7 +147,7 @@ $ tar xvf Pegasus-3.0.2-Debian-6-x86.vbox.tar</emphasis></programlisting>
         </listitem>
 
         <listitem>
-          <para>Now in the Virtual Box , start the PegasusVM-3.0.2
+          <para>Now in the Virtual Box , start the PegasusVM-3.0.1
           machine.</para>
         </listitem>
       </orderedlist>
@@ -843,7 +842,7 @@ bin/mShrink"
 
         <itemizedlist>
           <listitem>
-            <para></para>
+            <para/>
 
             <programlisting><emphasis role="bold">$ pegasus-tc-client  -a -l diamond::dummy:2.0 \
       -p /opt/pegasus/default/bin/keg -r local -t INSTALLED -s INTEL32::LINUX 
@@ -1020,7 +1019,7 @@ pegasus-run -Dpegasus.user.properties=$HOME/.../blackdiamond/run0001/pegasus.728
 
  
 2010.12.23 10:54:03.530 PST:   Time taken to execute is 1.757 seconds 
-2010.12.23 10:54:03.530 PST: [INFO] event.pegasus.planner planner.version 3.0.2  - FINISHED 
+2010.12.23 10:54:03.530 PST: [INFO] event.pegasus.planner planner.version 3.0.1  - FINISHED 
 
 </computeroutput></programlisting></para>
         </listitem>
@@ -1029,7 +1028,7 @@ pegasus-run -Dpegasus.user.properties=$HOME/.../blackdiamond/run0001/pegasus.728
           <para><emphasis role="bold">Now run pegasus-run as mentioned in the
           output of pegasus-plan. Do not copy the command below it is just for
           illustration purpose.</emphasis><programlisting><emphasis
-                role="bold"></emphasis><emphasis role="bold">[pegasus@pegasus pegasus-wms]$ pegasus-run \
+                role="bold"/><emphasis role="bold">[pegasus@pegasus pegasus-wms]$ pegasus-run \
  -Dpegasus.user.properties=$HOME/.../blackdiamond/run0001/pegasus.350356687577055673.properties \
        $HOME/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run0001</emphasis>
 
@@ -1885,7 +1884,7 @@ Job 2788.0 marked for removal</computeroutput></programlisting>
       diamond workflow we ran using pegasus-statistics and
       pegasus-plots</para>
 
-      <para></para>
+      <para/>
 
       <section>
         <title>Generating Statistics Using pegasus-statistics</title>
@@ -2432,7 +2431,7 @@ eps format : /home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run00
 [pegasus@pegasus pegasus-wms]$ 
 </programlisting>
 
-        <para></para>
+        <para/>
 
         <section>
           <title>Abstract Worfklow / DAX Image</title>
@@ -2444,7 +2443,7 @@ eps format : /home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run00
 
             <mediaobject>
               <imageobject>
-                <imagedata fileref="images/tutorial-blackdiamond-dax.png" />
+                <imagedata fileref="images/tutorial-blackdiamond-dax.png"/>
               </imageobject>
             </mediaobject>
           </figure>
@@ -2460,7 +2459,7 @@ eps format : /home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run00
 
             <mediaobject>
               <imageobject>
-                <imagedata fileref="images/tutorial-blackdiamond-dag.png" />
+                <imagedata fileref="images/tutorial-blackdiamond-dag.png"/>
               </imageobject>
             </mediaobject>
           </figure>
@@ -2503,7 +2502,7 @@ eps format : /home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run00
 
             <mediaobject>
               <imageobject>
-                <imagedata fileref="images/tutorial-blackdiamond-host.png" />
+                <imagedata fileref="images/tutorial-blackdiamond-host.png"/>
               </imageobject>
             </mediaobject>
           </figure>
