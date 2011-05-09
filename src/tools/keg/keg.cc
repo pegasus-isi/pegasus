@@ -39,6 +39,9 @@ extern char** environ;
 #endif // LINUX
 #endif // MACHINE_SPECIFIC
 
+static const char* RCS_ID =
+  "$Id$";
+
 static char output[4096];
 static char pattern[] = 
 "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz\r\n";
@@ -518,7 +521,8 @@ void
 helpMe( const char* ptr, unsigned long timeout, unsigned long spinout, 
 	const char* prefix )
 {
-  printf( "Usage\t%s [-a appname] [(-t|-T) thinktime] [-l fn] [-o fn [..]]\n"
+  puts( RCS_ID ); 
+  printf( "Usage:\t%s [-a appname] [(-t|-T) thinktime] [-l fn] [-o fn [..]]\n"
 	  "\t[-i fn [..] | -G size] [-e env [..]] [-p p [..]] [-P ps]\n",
 	  ptr );
   printf( " -a app\tset name of application to something else, default %s\n", ptr );
