@@ -113,7 +113,7 @@
       
       <listitem>
         <para><emphasis>Introduction - Chapter 1 </emphasis></para>
-        <para>Introduction to Abstract and Executable Workflows, and how to create them.</para>
+        <para>(This chapter)Introduction to Abstract and Executable Workflows, and how to create them.</para>
       </listitem>
       
       <listitem>
@@ -428,7 +428,7 @@
       </listitem>
     </itemizedlist>
 
-    <para><link linkend="reference">"The Reference Manual Chapter"</link> details more about when and how staging
+    <para>The <link linkend="reference">" Reference Manual"</link>  Chapter details more about when and how staging
     nodes are inserted into the workflow. </para>
 
     <para>The DAG will be found in file <filename>diamond-0.dag</filename>,
@@ -502,6 +502,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
 
 </section>
 </chapter>
+
 
 
 
