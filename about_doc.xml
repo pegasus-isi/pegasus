@@ -93,7 +93,7 @@
                  </listitem>
       <listitem>
         <para><emphasis>Sytem Feature 3 </emphasis></para>
-        <para>text</para>
+        <para>ARE THERE OTHER FEATURES WE WANT TO ADD?</para>
       </listitem>
       </itemizedlist>
 <section>
@@ -142,7 +142,7 @@
       </listitem>
       
       <listitem>
-        <para><emphasis>Submnit Directory Details - Chapter 6 </emphasis></para>
+        <para><emphasis>Submit Directory Details - Chapter 6 </emphasis></para>
         <para> Description of the workflow afer it has been planned </para>
       </listitem>
       
@@ -502,6 +502,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
 
 </section>
 </chapter>
+
 
 
 
