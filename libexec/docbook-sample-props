@@ -159,7 +159,7 @@ open( SP, '<' . $fn ) || die "open $fn: $!\n";
 my $now = POSIX::strftime("%Y-%m-%d %H:%M", localtime());
 print << "EOF";
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+<!DOCTYPE section PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
 "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 
 EOF
@@ -271,7 +271,7 @@ while ( <SP> ) {
             } elsif ( $line[$i] =~ /^TITLE "([^\"]+)"/ ) {
                 my @title = map { ucfirst lc } split /\s+/,$1;
                 my $title = join('',@title);
-                print "<chapter id='$title'>\n";
+                print "<section id='$title'>\n";
                 print "    <title>@title</title>\n\n";
                 $idbase = $title; # used for unique ids across the book
                 $flag = 1;
@@ -324,7 +324,7 @@ if ($depth >= 1) {
 #
 print << 'EOF';
 
-</chapter>
+</section>
 
 EOF
 
