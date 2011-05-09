@@ -451,7 +451,7 @@
   </section>
 
   <section>
-    <title>pegasus-plan</title>
+    <title>Pegasus-Plan</title>
 
     <para>pegasus-plan is the main executable that takes in the abstract
     workflow ( DAX ) and generates an executable workflow ( usually a Condor
@@ -470,7 +470,7 @@
             <para>The Replica Catalog needs to be catalogued with the
             locations of the input files required by the workflows. This can
             be done by using pegasus-rc-client (See the Replica section of <link
-            linkend="components">Pegasus Components chapter</link>.</para>
+            linkend="components">Pegasus Components </link>).</para>
           </listitem>
 
           <listitem>
@@ -480,7 +480,7 @@
             <para>The Transformation Catalog needs to be catalogued with the
             locations of the executables that the workflows will use. This can
             be done by using pegasus-tc-client (See the Transformation section of <link
-            linkend="components">Pegasus Components chapter</link>.</para>
+            linkend="components">Pegasus Components</link>).</para>
           </listitem>
 
           <listitem>
@@ -490,7 +490,7 @@
             of the various sites that the workflows can execute on. A site
             catalog can be generated for OSG by using the client
             pegasus-sc-client (See the Site section of the <link
-            linkend="components">Pegasus Components chapter</link>.</para>
+            linkend="components">Pegasus Components</link>).</para>
           </listitem>
         </orderedlist>
       </listitem>
@@ -1334,5 +1334,6 @@ ec2     amazon::s3cmd    /path/to/pegasus/bin/s3cmd    INSTALLED   INTEL32::LINU
     </section>
   </section>
 </chapter>
+
 
 
