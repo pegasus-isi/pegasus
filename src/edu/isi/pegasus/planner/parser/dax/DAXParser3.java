@@ -996,6 +996,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                     else if ( parent instanceof TransformationCatalogEntry){
                         //pfn appears in executable element
                         TransformationCatalogEntry tce = (TransformationCatalogEntry)parent;
+                        tce = (TransformationCatalogEntry) tce.clone();
                         PFN pfn = ( PFN )child;
                         tce.setResourceId( pfn.getSite() );
                         tce.setPhysicalTransformation( pfn.getURL() );

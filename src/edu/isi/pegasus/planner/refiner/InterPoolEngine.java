@@ -59,6 +59,7 @@ import edu.isi.pegasus.planner.catalog.transformation.Mapper;
 import edu.isi.pegasus.common.util.Separator;
 
 import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
+import edu.isi.pegasus.planner.common.PegRandom;
 import edu.isi.pegasus.planner.transfer.SLS;
 
 import edu.isi.pegasus.planner.transfer.sls.SLSFactory;
@@ -701,23 +702,20 @@ public class InterPoolEngine extends Engine implements Refiner {
     }
 
     /**
-     * Recursively ends up calling the transformation selector accordxing to
-     * a chain of selections that need to be performed on the list of valid
-     * transformation catalog
+     * Calls out to  the transformation selector to select an entry from a list
+     * of valid transformation catalog entries.
      *
      * @param entries    list of <code>TransformationCatalogEntry</code> objects.
      * @param job        the job.
-     * @param selectors  comma separated list of selectors.
+     * @param selectors  the selector to be called
      *
      * @return the selected <code>TransformationCatalogEntry</code> object
      *         null when transformation selector is unable to select any
      *         transformation
      */
     private TransformationCatalogEntry selectTCEntry(List entries, Job job,
-                                                     String selectors){
-        //at present there is only one selector
-        //operation performed on the selector
-        String selector = selectors;
+                                                     String selector){
+        
 
         //load the transformation selector. different
         //selectors may end up being loaded for different jobs.
@@ -726,8 +724,9 @@ public class InterPoolEngine extends Engine implements Refiner {
         return (entries == null || entries.size() == 0)?
                 null:
                  entries.size() > 1?
-                      //call the selector again
-                      selectTCEntry(entries,job,selectors):
+                      //select a random entry
+                      (TransformationCatalogEntry) entries.get( PegRandom.getInteger( entries.size() - 1 )):
+                      //return the first one
                       (TransformationCatalogEntry) entries.get(0);
     }
 
