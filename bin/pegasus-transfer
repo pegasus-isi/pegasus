@@ -429,17 +429,18 @@ def scp():
         return
     logger.info("Executing scp commands")
     for i, url_pair in enumerate(scp_list): 
-        cmd = "/usr/bin/scp"
+        cmd = "/usr/bin/scp -q -B -o StrictHostKeyChecking=no"
         if url_pair.dst_proto == "file":
             prepare_local_dir(os.path.dirname(url_pair.dst_path))
             cmd += " " + url_pair.src_host + ":" + url_pair.src_path
             cmd += " " + url_pair.dst_path
-            stats_add(url_pair.dst_path)
         else:
             cmd += " " + url_pair.src_path
             cmd += " " + url_pair.dst_host + ":" + url_pair.dst_path
             stats_add(url_pair.src_path)
         myexec(cmd, 1*60*60, False, delay_errors)
+        if url_pair.dst_proto == "file":
+            stats_add(url_pair.dst_path)
 
 
 def webget():
