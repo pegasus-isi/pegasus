@@ -1,4 +1,6 @@
 
+# required for Montage as the dax generator has not been updated 
+# to the new schema
 pegasus.schema.dax=${pegasus.home}/etc/dax-2.1.xsd
 
 pegasus.catalog.replica=SimpleFile

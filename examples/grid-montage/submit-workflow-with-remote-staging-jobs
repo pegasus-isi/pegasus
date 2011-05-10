@@ -8,24 +8,29 @@ set -e
 #
 #  Settings
 #
-DEGREES=1.0
-LOCAL_PEGASUS_HOME="/home/rynge/Pegasus/install/current"
+
+DEGREES=4.0
+
+LOCAL_PEGASUS_HOME="/home/rynge/Pegasus/install/trunk"
 LOCAL_GLOBUS_LOCATION="/opt/globus/5.0.1"
 LOCAL_GLOBUS_TCP_PORT_RANGE="40000,50000"
 LOCAL_MONTAGE_LOCATION="/home/rynge/Projects/Montage/src/Montage_v3.2_beta6_mats"
-CLUSTER_NAME="ISIViz"
-CLUSTER_HOSTNAME="viz-login.isi.edu"
+
+CLUSTER_NAME="CCG"
+CLUSTER_HOSTNAME="obelix.isi.edu"
 CLUSTER_GATEKEEPER_TYPE="gt5"
-CLUSTER_GATEKEEPER_PORT="2121"
+CLUSTER_GATEKEEPER_PORT="2119"
 CLUSTER_SCHEDULER="condor"
-CLUSTER_WORK_DIR="/nfs/ccg1/90-day-scratch"
-CLUSTER_PEGASUS_HOME="/cluster-software/pegasus/testing/latest"
-CLUSTER_GLOBUS_LOCATION="/cluster-software/globus/5.0.2"
-CLUSTER_MONTAGE_LOCATION="/cluster-software/montage/3.2_beta6_mats"
+CLUSTER_WORK_DIR="/moose/scratch"
+CLUSTER_PEGASUS_HOME="/moose/software/debian/squeeze/x86_64/pegasus/3.1.0cvs"
+CLUSTER_GLOBUS_LOCATION="/moose/software/debian/squeeze/x86_64/globus/default"
+CLUSTER_MONTAGE_LOCATION="/moose/software/debian/squeeze/x86_64/montage/default"
 
 # this will bundle N jobs togehter
 JOB_CLUSTERS_SIZE="10"
+
 #######################################################################
+
 
 TOP_DIR=`pwd`
 LOCAL_HOSTNAME=`hostname -f`
@@ -107,7 +112,7 @@ cat >sites.xml <<EOF
         <replica-catalog  type="LRC" url="rlsn://dummyValue.url.edu" />
         <profile namespace="env" key="PEGASUS_HOME" >$CLUSTER_PEGASUS_HOME</profile>
         <profile namespace="env" key="GLOBUS_LOCATION" >$CLUSTER_GLOBUS_LOCATION</profile>
-        <profile namespace="env" key="PATH" >$CLUSTER_MONTAGE_LOCATION/bin:$CLUSTER_GLOBUS_LOCATION/bin:/usr/local/bin:/bin:/usr/bin</profile>
+        <profile namespace="env" key="MONTAGE_HOME" >$CLUSTER_MONTAGE_LOCATION</profile>
     </site>
 </sitecatalog>
 EOF
@@ -124,7 +129,7 @@ perl -p -i -e 's/ipac_cluster/local/' rc
 
 echo "Planning and submitting the workflow..."
 pegasus-plan \
-    -D pegasus.user.properties=pegasusrc \
+    --conf pegasusrc \
     --sites $CLUSTER_NAME \
     --cluster horizontal \
     --dir work \
