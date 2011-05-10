@@ -1025,6 +1025,14 @@ public class Kickstart implements GridStart {
         if( job.vdsNS.containsKey( Pegasus.WORKER_NODE_DIRECTORY_KEY ) ){
             return job.vdsNS.getStringValue( Pegasus.WORKER_NODE_DIRECTORY_KEY );
         }
+        
+        if( mSLS.doesCondorModifications() ){
+            //indicates the worker node directory is the directory
+            //in which condor launches the job
+            // JIRA PM-380
+            return ".";
+        }
+                
 
         StringBuffer workerNodeDir = new StringBuffer();
         String destDir = mSiteStore.getEnvironmentVariable( job.getSiteHandle() , "wntmp" );
