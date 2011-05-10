@@ -309,7 +309,10 @@ public class Kickstart implements GridStart {
         }
         
         boolean partOfClusteredJob = true;
-        String directory = getWorkerNodeDirectory( job ) ;
+        
+        //we want to evaluate the directory only once
+        //for the clustered job
+        String directory = ( mWorkerNodeExecution ) ? getWorkerNodeDirectory( job ) : null ;
         for (Iterator it = job.constituentJobsIterator(); it.hasNext(); ) {
             Job constituentJob = (Job)it.next();
 
