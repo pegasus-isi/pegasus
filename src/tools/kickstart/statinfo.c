@@ -12,6 +12,7 @@
  * Copyright 1999-2004 University of Chicago and The University of
  * Southern California. All rights reserved.
  */
+#include <limits.h>
 #include <errno.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -337,6 +338,23 @@ preserveFile( const char* fn )
   }
 }
 
+static
+char*
+canonicalize( const char* filename )
+/* purpose: Try to obtain the realpath(3) to the given filename.
+ * paramtr: filename (IN): filename to memorize (deep copy)
+ * returns: the real path or original filename in a new buffer.
+ */
+{
+#ifdef HAS_REALPATH_EXT
+  /* these OS have a *safe* usage extension to the standard */
+  return realpath( filename, NULL ); 
+#else
+  /* these OS may not have a safe realpath(), so don't use it */
+  return strdup(filename); 
+#endif /* HAS_REALPATH_EXT */
+}
+
 int
 initStatInfoFromName( StatInfo* statinfo, const char* filename, int openmode,
 		      int flag )
@@ -353,7 +371,7 @@ initStatInfoFromName( StatInfo* statinfo, const char* filename, int openmode,
   memset( statinfo, 0, sizeof(StatInfo) );
   statinfo->source = IS_FILE;
   statinfo->file.descriptor = openmode;
-  statinfo->file.name = strdup(filename);
+  statinfo->file.name = canonicalize(filename);
 
   if ( (flag & 0x01) == 1 ) {
     /* FIXME: As long as we use shared stdio for stdout and stderr, we need
