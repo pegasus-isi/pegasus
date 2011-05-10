@@ -191,6 +191,7 @@ public class InvocationParser extends DefaultHandler
       // mysteriously, this one fails with recent Xerces
       // set( "http://apache.org/xml/features/validation/warn-on-undeclared-elemdef", true );
       set( "http://apache.org/xml/features/warn-on-duplicate-entitydef", true );
+      set( "http://apache.org/xml/features/honour-all-schemaLocations", true ); 
 
       // set the schema default location.
       if ( schemaLocation != null ) {
@@ -299,6 +300,19 @@ public class InvocationParser extends DefaultHandler
     this.m_location = locator;
   }
 
+  private String full_where()
+  {
+    return ( "line " + m_location.getLineNumber() +
+	     ", col " + m_location.getColumnNumber() ); 
+  }
+
+  private String where()
+  {
+    return ( m_location.getLineNumber() + 
+	     ":" +
+	     m_location.getColumnNumber() ); 
+  }
+
   /**
    * This method specifies what to do when the parser is at the beginning
    * of the document. In this case, we simply print a message for debugging.
@@ -389,8 +403,7 @@ public class InvocationParser extends DefaultHandler
   {
     m_log.log( "parser", 3,
 	       "<" + map(namespaceURI) + localName + "> at " +
-	       m_location.getLineNumber() + ":" +
-	       m_location.getColumnNumber() );
+	       where() );
 
     // yup, one more element level
     m_depth++;
@@ -438,8 +451,7 @@ public class InvocationParser extends DefaultHandler
     m_depth--;
     m_log.log( "parser", 3,
 	       "</" + map(namespaceURI) + localName + "> at " +
-	       m_location.getLineNumber() + ":" +
-	       m_location.getColumnNumber() );
+	       where() ); 
 
     IVSElement tos = (IVSElement) m_stack.pop();
     if ( ! qName.equals(tos.m_name) ) {
@@ -630,7 +642,7 @@ public class InvocationParser extends DefaultHandler
 	job.setDuration( Double.parseDouble(value) );
       } else if ( name.equals("pid") ) {
 	this.log( job.getTag(), name, value );
-	job.setPID( Integer.parseInt(value) );
+	job.setPID( (int) (Long.parseLong(value) & 0xFFFFFFFF) );
       } else {
 	this.complain( job.getTag(), name, value );
       }
@@ -944,13 +956,13 @@ public class InvocationParser extends DefaultHandler
 	      m_result.setPhysicalMemory( Long.parseLong(value) ); 
 	    } else if ( name.equals("pid") ) {
 	      this.log( e, name, value );
-	      m_result.setPID( Integer.parseInt(value) );
+	      m_result.setPID( (int) (Long.parseLong(value) & 0xFFFFFFFF) ); 
 	    } else if ( name.equals("uid") ) {
 	      this.log( e, name, value );
-	      m_result.setUID( Integer.parseInt(value) );
+	      m_result.setUID( (int) (Long.parseLong(value) & 0xFFFFFFFF) ); 
 	    } else if ( name.equals("gid") ) {
 	      this.log( e, name, value );
-	      m_result.setGID( Integer.parseInt(value) );
+	      m_result.setGID( (int) (Long.parseLong(value) & 0xFFFFFFFF) );
 	    } else if ( name.equals("user") ) {
 	      this.log( e, name, value );
 	      m_result.setUser( value );
@@ -1132,13 +1144,13 @@ public class InvocationParser extends DefaultHandler
 	      statinfo.setModificationTime( parseDate(value) );
 	    } else if ( name.equals("uid") ) {
 	      this.log( e, name, value );
-	      statinfo.setUID( (int)Long.parseLong(value) );
+	      statinfo.setUID( (int) (Long.parseLong(value) & 0xFFFFFFFF) );
 	    } else if ( name.equals("user") ) {
 	      this.log( e, name, value );
 	      statinfo.setUser( value );
 	    } else if ( name.equals("gid") ) {
 	      this.log( e, name, value );
-	      statinfo.setGID( (int)Long.parseLong(value) );
+	      statinfo.setGID( (int) (Long.parseLong(value) & 0xFFFFFFFF) );
 	    } else if ( name.equals("group") ) {
 	      this.log( e, name, value );
 	      statinfo.setGroup( value );
@@ -1359,20 +1371,17 @@ public class InvocationParser extends DefaultHandler
     } catch ( NumberFormatException nfe ) {
       m_log.log( "filler", 0,
 		 "Error: Unable to parse a number: " + nfe.getMessage() +
-		 " at " + m_location.getLineNumber() + ":" +
-		 m_location.getColumnNumber() );
+		 " at " + where() ); 
       return null;
     } catch ( UnknownHostException uh ) {
       m_log.log( "filler", 0,
 		 "Error: Unable to parse a hostname: " + uh.getMessage() +
-		 " at " + m_location.getLineNumber() + ":" +
-		 m_location.getColumnNumber() );
+		 " at " + where() ); 
       return null;
     } catch ( ParseException pe ) {
       m_log.log( "filler", 0,
 		 "Error: Unable to parse a date: " + pe.getMessage() +
-		 " at " + m_location.getLineNumber() + ":" +
-		 m_location.getColumnNumber() );
+		 " at " + where() );
       return null;
     }
   }
