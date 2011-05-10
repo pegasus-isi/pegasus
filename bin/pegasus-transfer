@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-Pegasus utility for transfer of files during a workflow enactment
+Pegasus utility for transfer of files during workflow enactment
 
 Usage: pegasus-transfer [options]
 
@@ -133,6 +133,9 @@ class Transfer:
         return "%s://%s%s" % (self.dst_proto, self.dst_host, dn)
 
     def groupable(self):
+        """
+        currently only gridftp allows for grouping
+        """
         return self.allow_grouping and (self.src_proto == "gsiftp" or self.dst_proto == "gsiftp")
 
     def __cmp__(self, other):
@@ -254,7 +257,7 @@ def get_env_var(match):
 
 def myexec(cmd_line, timeout_secs, should_log):
     """
-    executes shell commands using with timeouts
+    executes shell commands with the ability to time out if the command hangs
     """
     global delay_exit_code
     if should_log or logger.isEnabledFor(logging.DEBUG):
@@ -278,6 +281,9 @@ def myexec(cmd_line, timeout_secs, should_log):
 
 
 def backticks(cmd_line):
+    """
+    what would a python program be without some perl love?
+    """
     return subprocess.Popen(cmd_line, shell=True, stdout=subprocess.PIPE).communicate()[0]
 
 
@@ -376,7 +382,6 @@ def check_env_and_tools():
     check_tool("wget", "--version", "([0-9]+\.[0-9]+)")
     check_tool("globus-version", "--full", "([0-9]+\.[0-9]+\.[0-9]+)")
     check_tool("globus-url-copy", "-version", "([0-9]+\.[0-9]+)")
-    check_tool("lcg-cp", "--version", "lcg_util-([0-9]+\.[0-9]+\.[0-9]+\-[0-9]+)")
     check_tool("srm-copy", "-version", "srm-copy[ \t]+([\.0-9a-zA-Z]+)")
     check_tool("pegasus-s3", "help", None)
 
@@ -440,18 +445,19 @@ def scp(transfers, failed_q):
     copies using scp
     """
     for i, transfer in enumerate(transfers): 
-        cmd = "/usr/bin/scp"
+        cmd = "/usr/bin/scp -q -B -o StrictHostKeyChecking=no"
         if transfer.dst_proto == "file":
             prepare_local_dir(os.path.dirname(transfer.dst_path))
             cmd += " " + transfer.src_host + ":" + transfer.src_path
             cmd += " " + transfer.dst_path
-            stats_add(transfer.dst_path)
         else:
             cmd += " " + transfer.src_path
             cmd += " " + transfer.dst_host + ":" + transfer.dst_path
             stats_add(transfer.src_path)
         try:
             myexec(cmd, 60, True)
+            if transfer.dst_proto == "file":
+                stats_add(transfer.dst_path)    
         except RuntimeError, err:
             logger.error(err)
             failed_q.append(transfer)
@@ -637,17 +643,19 @@ def gsiftp_do_transfers(transfers, failed_q, create_dest, third_party):
 
 def srm(transfers, failed_q):
     """
-    srm - use lcg-cp (Is this generic enough? Do we need to handle space tokens?)
+    srm - use srm-copy (Is this generic enough? Do we need to handle space tokens?)
     """
     if len(transfers) == 0:
         return
 
-    if tool_info['srm-copy']['full_path'] == None and tool_info['lcg-cp']['full_path'] == None:
-        raise RuntimeError("Unable to do srm transfers becuase srm-copy / lcg-cp could not be found")
+    if tool_info['srm-copy']['full_path'] == None:
+        raise RuntimeError("Unable to do srm transfers becuase srm-copy could not be found")
 
     for i, url_pair in enumerate(transfers): 
         if url_pair.dst_proto == "file":
             prepare_local_dir(os.path.dirname(url_pair.dst_path))
+        elif url_pair.dst_proto == "gsiftp" or url_pair.dst_proto == "srm":
+            srm_mkdir(os.path.dirname(url_pair.dst_url_srm()))
             
         third_party = (url_pair.src_proto == "gsiftp" or url_pair.src_proto == "srm") and \
                       (url_pair.dst_proto == "gsiftp" or url_pair.dst_proto == "srm")
@@ -657,18 +665,41 @@ def srm(transfers, failed_q):
         if "OSG_GRID" in os.environ:
             cmd = ". $OSG_GRID/setup.sh ;"
             
-        if tool_info['srm-copy']['full_path'] != None:
-            cmd = "%s srm-copy  %s %s -mkdir" % (cmd, url_pair.src_url_srm(), url_pair.dst_url_srm())
-            if third_party:
-                cmd = cmd + " -parallelism 4 -3partycopy"
-        else:
-            cmd = "%s lcg-cp -D srmv2 -vb -b -n 4 %s %s" % (cmd, url_pair.src_url(), url_pair.dst_url())
+        cmd = "%s srm-copy  %s %s -mkdir" % (cmd, url_pair.src_url_srm(), url_pair.dst_url_srm())
+        if third_party:
+            cmd = cmd + " -parallelism 4 -3partycopy"
+            
         try:
             myexec(cmd, 6*60*60, True)
         except Exception, err:
             logger.error(err)
             failed_q.append(url_pair)
+            
+            
+def srm_mkdir(url):
+    """
+    implements recursive mkdir as srm-mkdir can not handle it
+    """
+    
+    print "BLA: " + url 
+    
+    # back all the way down first     
+    one_up = os.path.dirname(url)
+    if one_up.count("/") > 3:
+        srm_mkdir(one_up)
+    
+    cmd = ""
+    # srm is mostly used on OSG, so look for $OSG_GRID and if found source setup.sh
+    if "OSG_GRID" in os.environ:
+        cmd = ". $OSG_GRID/setup.sh ;"
+            
+    cmd = "%s srm-mkdir %s" %(cmd, url)
 
+    try:
+        myexec(cmd, 10*60, False)
+    except Exception, err:
+        logger.error(err)
+    
 
 def s3(transfers, failed_q):
     """
@@ -766,13 +797,16 @@ def stats_summarize():
     logger.info("Stats: %sB transferred in %.0f seconds. Rate: %sB/s (%sb/s)" % (
                 iso_prefix_formatted(stats_total_bytes), total_secs, 
                 iso_prefix_formatted(Bps), iso_prefix_formatted(Bps*8)))
-    logger.info("NOTE: stats do not include third party gsiftp transfers")
+    logger.info("NOTE: stats do not include third party gsiftp/srm transfers")
 
 
 def iso_prefix_formatted(n):
     prefix = ""
     n = float(n)
-    if n > (1024*1024*1024):
+    if n > (1024*1024*1024*1024):
+        prefix = "T"
+        n = n / (1024*1024*1024*1024)
+    elif n > (1024*1024*1024):
         prefix = "G"
         n = n / (1024*1024*1024)
     elif n > (1024*1024):
@@ -833,7 +867,7 @@ else:
         logger.critical('Error reading url pair list: %s' % (err))
         myexit(1)
 
-logger.debug("Checking environment and tools")
+# check environment and tools
 try:
     check_env_and_tools()
 except Exception, err:
