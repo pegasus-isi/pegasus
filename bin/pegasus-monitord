@@ -929,6 +929,9 @@ class Workflow:
 	"""
 	This function sends to the DB information about the workflow
 	"""
+	# Check if database is configured
+	if self._sink is None:
+	    return
 	# Start empty
 	kwargs = {}
 	# Make sure we include the wf_uuid
@@ -1292,6 +1295,10 @@ class Workflow:
 	"""
 	This function sends to the DB information about a particular job
 	"""
+	# Check if database is configured
+	if self._sink is None:
+	    return
+
 	# Start empty
 	kwargs = {}
 
@@ -1333,6 +1340,10 @@ class Workflow:
 	"""
 	This function sends to the DB a notification about a particular job
 	"""
+	# Check if database is configured
+	if self._sink is None:
+	    return
+
 	# Start empty
 	kwargs = {}
 
@@ -1349,6 +1360,10 @@ class Workflow:
 	"""
 	This function sends to the DB job state information for a particular job
 	"""
+	# Check if database is configured
+	if self._sink is None:
+	    return
+
 	# Start empty
 	kwargs = {}
 
@@ -1369,6 +1384,10 @@ class Workflow:
 	information. task_type is either "PRE SCRIPT", "MAIN JOB", or
 	"POST SCRIPT"
 	"""
+	# Check if database is configured
+	if self._sink is None:
+	    return
+
 	# Start empty
 	kwargs = {}
 
@@ -1491,6 +1510,10 @@ class Workflow:
 	"""
 	This function sends host information collected from the kickstart record to the database.
 	"""
+	# Check if database is configured
+	if self._sink is None:
+	    return
+
 	# Start empty
 	kwargs = {}
 
@@ -2746,7 +2769,9 @@ sys.stderr = sys.stdout
 # Create wf_event_sink object
 if no_events:
     # Create an empty sink when no event generation is needed
-    wf_event_sink = EmptySink()
+    #    wf_event_sink = EmptySink()
+    wf_event_sink = None # Avoid parsing kickstart output if not
+                         # generating bp file or database events
 else:
     try:
         wf_event_sink = create_wf_event_sink(event_dest, db_stats=db_stats, enc=encoding)
