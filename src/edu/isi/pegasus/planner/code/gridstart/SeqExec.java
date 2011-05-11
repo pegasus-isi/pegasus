@@ -1176,7 +1176,7 @@ public class SeqExec implements GridStart {
          this.mKickstartGridStartImpl.enable( job, true );
 
          StringBuffer result = new StringBuffer();
-         result.append( job.condorVariables.get( "executable" ) ).append( " " );
+         result.append( job.getRemoteExecutable() ).append( " " );
          if ( supressXMLHeader ){
              result.append( " -H " );
          }
