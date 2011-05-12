@@ -1,9 +1,9 @@
 #!/usr/bin/env perl
 #
-# Parses $PEGASUS_HOME/etc/sample.properties and generated LaTeX from it
+# Parses $PEGASUS_HOME/etc/sample.properties and generates LaTeX from it
 # $Id$
 #
-# Usage: parse-sample-props [sample.properties] > doc.tex
+# Usage: latex-sample-props propfn > doc.tex
 #        pdflatex doc
 #        makeindex doc.idx
 #        pdflatex doc
@@ -84,7 +84,7 @@ die "Set your PEGASUS_HOME environment variable\n"
 my $fn = shift || 
     File::Spec->catfile( $ENV{'PEGASUS_HOME'}, 'etc', 'sample.properties' );
 
-my @s = (); 
+my @stack = (); 
 my %replace = ( 'screen' => "\n\\begin{verbatim}",
 		'/screen' => "\\end{verbatim}\n",
 		'para' => '',
@@ -92,41 +92,41 @@ my %replace = ( 'screen' => "\n\\begin{verbatim}",
 		'emphasis' => "\\emph{",
 		'/emphasis' => "}",
 		'orderedlist' => sub {
-		    push(@s,'O');
+		    push(@stack,'O');
 		    "\n\\begin{enumerate}\n";
 		},
 		'/orderedlist' => sub {
-		    die unless pop(@s) eq 'O';
+		    die unless pop(@stack) eq 'O';
 		    "\n\\end{enumerate}\n";
 		},
 		'itemizedlist' => sub { 
-		    push(@s,'I');
+		    push(@stack,'I');
 		    "\n\\begin{itemize}\n";
 		},
 		'/itemizedlist' => sub {
-		    die unless pop(@s) eq 'I';
+		    die unless pop(@stack) eq 'I';
 		    "\n\\end{itemize}\n";
 		},
 		'variablelist' => sub { 
-		    push(@s,'D');
+		    push(@stack,'D');
 		    "\n\\begin{description}\n";
 		},
 		'/variablelist' => sub {
-		    die unless pop(@s) eq 'D'; 
+		    die unless pop(@stack) eq 'D'; 
 		    "\n\\end{description}\n";
 		},
 		'term' => "\n\\item[",
 		'/term' => "] ",
 		'listitem' => sub {
-		    $s[$#s] eq 'V' ? '' : "\n\\item ";
+		    $stack[$#stack] eq 'V' ? '' : "\n\\item ";
 		},
 		'/listitem' => '',
 		'varlistentry' => sub { 
-		    push(@s,'V');
+		    push(@stack,'V');
 		    '';
 		},
 		'/varlistentry' => sub {
-		    die unless pop(@s) eq 'V';
+		    die unless pop(@stack) eq 'V';
 		    '';
 		},
 
