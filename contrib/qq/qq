@@ -175,6 +175,9 @@ my %gstat =
        32 => 'U',		# unsuspended, unsubmitted
        64 => 'I',		# stage in
       128 => 'O' );		# stage out
+
+my %dagman_p = map { $_ => 1 } qw(pegasus-dagman condor_dagman); 
+
 sub gstat($) {
     if ( defined $_[0] ) {
 	my $s = shift;
@@ -220,8 +223,7 @@ sub showjob($\%) {
     }
     my $cmd = basename($r->{cmd} || '');
     print $cmd;
-
-    if ( $args_width > length($cmd) ) {
+    if ( $args_width > length($cmd) && ! exists $dagman_p{$cmd} ) {
 	if ( $cmd eq 'kickstart' ) {
 	    print ' ', fit( $args_width-length($cmd), kickstart($r->{arguments}) );
 	} elsif ( $cmd eq 'seqexec' || $cmd eq 'giraffe.pl' ) {
@@ -242,8 +244,8 @@ sub showjob($\%) {
 #	    print "\n\twd=", $r->{iwd};
 #	}
 #    }
-    if ( $cmd eq 'condor_dagman' || $cmd eq 'start-condor-dagman' ) {
-	print '[', $r->{iwd}, ']';
+    if ( exists $dagman_p{$cmd} ) { 
+	print ' [', $r->{iwd}, ']';
 	print ' # dj=', scalar count_deps( $r->{clusterid} ); 
     } elsif ( length($prefix) == 0 ) {
 	print "\n\twd=", $r->{iwd};
