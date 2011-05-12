@@ -287,7 +287,9 @@ public class ReplicaCatalogBridge
 
             
             //exit if there is no cache overloading specified.
-            if ( options.getCacheFiles().isEmpty() && this.mDAXReplicaStore.isEmpty() ) {
+            if ( options.getCacheFiles().isEmpty() &&       //no cache files specified
+                 options.getInheritedRCFiles().isEmpty() && //no files locations inherited from outer level DAX
+                 this.mDAXReplicaStore.isEmpty() ) {        //no file locations in current DAX
                 mLogger.log( msg + ex.getMessage(),LogManager.ERROR_MESSAGE_LEVEL );
                 throw new RuntimeException( msg , ex );
             }
