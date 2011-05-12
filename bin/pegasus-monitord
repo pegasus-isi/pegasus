@@ -1042,7 +1042,9 @@ class Workflow:
         if self._user is not None:
             kwargs["user"] = self._user
         if self._grid_dn is not None:
-            kwargs["grid_dn"] = self._grid_dn
+            if self._grid_dn != "null":
+                # Only add it if it is not "null"
+                kwargs["grid_dn"] = self._grid_dn
         if self._planner_version is not None:
             kwargs["planner__version"] = self._planner_version
         if self._parent_workflow_id is not None:
@@ -1726,11 +1728,8 @@ class Workflow:
                     kwargs["executable"] = ""
                 if self._job_info[my_job._exec_job_id][2] is not None:
                     kwargs["argv"] = self._job_info[my_job._exec_job_id][2]
-                else:
-                    kwargs["argv"] = ""
             else:
                 kwargs["executable"] = ""
-                kwargs["argv"] = ""
             kwargs["ts"] = my_job._pre_script_done
         elif task_type == "POST_SCRIPT":
             # This is a POST SCRIPT invocation
@@ -1754,11 +1753,8 @@ class Workflow:
                     kwargs["executable"] = ""
                 if self._job_info[my_job._exec_job_id][4] is not None:
                     kwargs["argv"] = self._job_info[my_job._exec_job_id][4]
-                else:
-                    kwargs["argv"] = ""
             else:
                 kwargs["executable"] = ""
-                kwargs["argv"] = ""
             kwargs["ts"] = my_job._post_script_done
         elif task_type == "MAIN_JOB":
             # This is a MAIN JOB invocation
@@ -1777,7 +1773,9 @@ class Workflow:
                         self._job_info[my_job._exec_job_id][5] == True):
                         kwargs["transformation"] = "condor::dagman"
             if "derivation" in invocation_record:
-                kwargs["task__id"] = invocation_record["derivation"]
+                if invocation_record["derivation"] != "null":
+                    # Make sure it is not "null"
+                    kwargs["task__id"] = invocation_record["derivation"]
             else:
                 # Nothing to do if we cannot get the derivation from the kickstart recort
                 pass
@@ -1837,8 +1835,6 @@ class Workflow:
             else:
                 if my_job._main_job_arguments is not None:
                     kwargs["argv"] = my_job._main_job_arguments
-                else:
-                    kwargs["argv"] = ""
 
         if "exitcode" in kwargs:
             if kwargs["exitcode"] != "0":

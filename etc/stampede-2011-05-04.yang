@@ -555,7 +555,6 @@ module stampede-2011-05-04 {
                 leaf stdout.text {
                     description "Text containing output of job";
                     type string;
-                    mandatory true;
                 }
                 leaf stderr.file {
                     description "Path to file containing standard error of job";
@@ -565,7 +564,6 @@ module stampede-2011-05-04 {
                 leaf stderr.text {
                     description "Text containing standard error of job";
                     type string;
-                    mandatory true;
                 }
                 leaf user {
                     description "Scheduler's name for user";
@@ -741,7 +739,6 @@ module stampede-2011-05-04 {
                 leaf argv {
                     description "All arguments given to executable on command-line";
                     type string;
-                    mandatory true; 
                 }
                 leaf task.id {
                     description "Identifier for related task in the DAX";
