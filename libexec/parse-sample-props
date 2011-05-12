@@ -84,9 +84,55 @@ die "Set your PEGASUS_HOME environment variable\n"
 my $fn = shift || 
     File::Spec->catfile( $ENV{'PEGASUS_HOME'}, 'etc', 'sample.properties' );
 
-my %replace = ( 'pre' => "\n\\begin{verbatim}",
+my @s = (); 
+my %replace = ( 'screen' => "\n\\begin{verbatim}",
+		'/screen' => "\\end{verbatim}\n",
+		'para' => '',
+		'/para' => '',
+		'emphasis' => "\\emph{",
+		'/emphasis' => "}",
+		'orderedlist' => sub {
+		    push(@s,'O');
+		    "\n\\begin{enumerate}\n";
+		},
+		'/orderedlist' => sub {
+		    die unless pop(@s) eq 'O';
+		    "\n\\end{enumerate}\n";
+		},
+		'itemizedlist' => sub { 
+		    push(@s,'I');
+		    "\n\\begin{itemize}\n";
+		},
+		'/itemizedlist' => sub {
+		    die unless pop(@s) eq 'I';
+		    "\n\\end{itemize}\n";
+		},
+		'variablelist' => sub { 
+		    push(@s,'D');
+		    "\n\\begin{description}\n";
+		},
+		'/variablelist' => sub {
+		    die unless pop(@s) eq 'D'; 
+		    "\n\\end{description}\n";
+		},
+		'term' => "\n\\item[",
+		'/term' => "] ",
+		'listitem' => sub {
+		    $s[$#s] eq 'V' ? '' : "\n\\item ";
+		},
+		'/listitem' => '',
+		'varlistentry' => sub { 
+		    push(@s,'V');
+		    '';
+		},
+		'/varlistentry' => sub {
+		    die unless pop(@s) eq 'V';
+		    '';
+		},
+
+                'pre' => "\n\\begin{verbatim}",
                 '/pre' => "\\end{verbatim}\n",
-                'ol' => "\n\\begin{enumerate}\n",
+		'ol' => "\n\\begin{enumerate}\n",
                 '/ol' => "\n\\end{enumerate}\n",
                 'ul' => "\n\\begin{itemize}\n",
                 '/ul' => "\n\\end{itemize}\n",
@@ -112,7 +158,19 @@ my %replace = ( 'pre' => "\n\\begin{verbatim}",
 
 sub lookup($) {
     my $key = shift;
-    exists $replace{$key} ? $replace{$key} : $key;
+
+    my $result; 
+    if ( exists $replace{$key} ) {
+	if ( ref $replace{$key} eq 'CODE' ) { 
+	    $result = &{$replace{$key}}($key);
+	} else { 
+	    $result = $replace{$key};
+	}
+    } else {
+	$result = $key;
+    }
+
+    $result; 
 }
 
 sub escape($) {
@@ -122,8 +180,8 @@ sub escape($) {
     local $_ = shift;
 
     # are we inside a pre?
-    $main::inpre=1 if m{<pre>};
-    $main::inpre=0 if m{</pre>};
+    $main::inpre=1 if m{<(pre|screen)>};
+    $main::inpre=0 if m{</(pre|screen)>};
 
     # escape all TeX special chars (that I can think of, not complete)
     s/([\$_%{}])/\\$1/g unless $main::inpre;
@@ -134,6 +192,9 @@ sub escape($) {
     # replace only known <TAG> items with LaTeX formatting.
     # unknown "TAG" strings are copied verbatim.
     s/<([^>]+)>/lookup($1)/eg;
+
+    # if something looks like a HTTP URL, try to hyperlink it
+    s^((ftp|https?)://\S+)^\\url{$1}^g;
 
     # done
     $_;
