@@ -123,6 +123,7 @@ re_rsl_string = re.compile(r"^\s*globusrsl\W", re.IGNORECASE)
 re_rsl_clean = re.compile(r"([-_])")
 re_site_parse_gvds = re.compile(r"^\s*\+(pegasus|wf)_(site|resource)\s*=\s*([\'\"])?(\S+)\3")
 re_parse_transformation = re.compile(r"^\s*\+pegasus_wf_xformation\s*=\s*(\S+)")
+re_parse_derivation = re.compile(r"^\s*\+pegasus_wf_dax_job_id\s*=\s*(\S+)")
 re_parse_executable = re.compile(r"^\s*executable\s*=\s*(\S+)")
 re_parse_arguments = re.compile(r'^\s*arguments\s*=\s*"([^"\r\n]*)"')
 re_parse_environment = re.compile(r'^\s*environment\s*=\s*(.*)')
@@ -500,7 +501,6 @@ class Job:
         self._exec_job_id = name
         self._job_submit_seq = job_submit_seq
         self._sched_id = None
-        self._clustered = None
         self._site_name = None
         self._host_id = None
         self._remote_user = None
@@ -517,6 +517,7 @@ class Job:
         self._main_job_start = None
         self._main_job_done = None
         self._main_job_transformation = None
+        self._main_job_derivation = None
         self._main_job_executable = None
         self._main_job_arguments = None
         self._main_job_exitcode = None
@@ -624,6 +625,12 @@ class Job:
                 # Remove quotes, if any
                 my_transformation = my_transformation.strip('"')
                 self._main_job_transformation = my_transformation
+            elif re_parse_derivation.search(my_line):
+                # Found line with job derivation
+                my_derivation = re_parse_derivation.search(my_line).group(1)
+                # Remove quotes, if any
+                my_derivation = my_derivation.strip('"')
+                self._main_job_derivation = my_derivation
             elif re_parse_executable.search(my_line):
                 # Found line with executable
                 my_executable = re_parse_executable.search(my_line).group(1)
@@ -674,47 +681,55 @@ class Job:
 
     def extract_job_info(self, buffer):
         """
-        This function reads the output from the kickstart output parser and
-        extracts the job information for the Stampede schema.
+        This function reads the output from the kickstart parser and
+        extracts the job information for the Stampede schema. It first
+        looks for an invocation record, and then for a clustered
+        record.
 
-        Returns True if successful, or None if an error occurs.
+        Returns None if an error occurs, True if an invocation record
+        was found, and False if it wasn't.
         """
 
         # Check if we have anything
         if len(buffer) == 0:
             return None
 
-        # Check if first record is an invocation record (it should be!)
-        if not "invocation" in buffer[0]:
-            logger.debug("cannot find invocation record!")
-            return None
+        # Let's try to find an invocation record...
+        my_invocation_found = False
+        for my_record in buffer:
+            if not "invocation" in my_record:
+                # Not this one... skip to the next
+                continue
+            # Ok, we have an invocation record, extract the information we
+            # need. Note that this may overwrite information obtained from
+            # the submit file (e.g. the site_name).
 
-        # Ok, we have an invocation record, extract the information we
-        # need. Note that this may overwrite information obtained from
-        # the submit file (e.g. the site_name).
-        my_record = buffer[0]
-        if "resource" in my_record:
-            self._site_name = my_record["resource"]
-        if "user" in my_record:
-            self._remote_user = my_record["user"]
-        if "cwd" in my_record:
-            self._remote_working_dir = my_record["cwd"]
-        if "hostname" in my_record:
-            self._host_id = my_record["hostname"]
-        if "stdout" in my_record:
-            self._stdout_text = utils.quote(my_record["stdout"])
-        if "stderr" in my_record:
-            self._stderr_text = utils.quote(my_record["stderr"])
+            if "resource" in my_record:
+                self._site_name = my_record["resource"]
+            if "user" in my_record:
+                self._remote_user = my_record["user"]
+            if "cwd" in my_record:
+                self._remote_working_dir = my_record["cwd"]
+            if "hostname" in my_record:
+                self._host_id = my_record["hostname"]
+            if "stdout" in my_record:
+                self._stdout_text = utils.quote(my_record["stdout"])
+            if "stderr" in my_record:
+                self._stderr_text = utils.quote(my_record["stderr"])
+            # No need to look further
+            my_invocation_found = True
+            break
 
-        # Set clustered flag
-        if len(buffer) > 1:
-            self._clustered = True
-        else:
-            self._clustered = False
+        if not my_invocation_found:
+            logger.debug("cannot find invocation record in output")
 
-        # Fill in cluster parameters
-        if "clustered" in buffer[len(buffer) - 1]:
-            my_record = buffer[len(buffer) - 1]
+        # Look for clustered record...
+        my_cluster_found = False
+        for my_record in buffer:
+            if not "clustered" in my_record:
+                # Not this one... skip to the next
+                continue
+            # Ok found it, fill in cluster parameters
             if "duration" in my_record:
                 self._cluster_duration = my_record["duration"]
             if "start" in my_record:
@@ -722,9 +737,15 @@ class Job:
                 my_start = utils.epochdate(my_record["start"])
                 if my_start is not None:
                     self._cluster_start_time = my_start
+            # No need to look further...
+            my_cluster_found = True
+            break
 
-        # Done populating Job class with information from the kickstart output file
-        return True
+        if not my_cluster_found:
+            logger.debug("cannot find cluster record in output")
+
+        # Done populating Job class with information from the output file
+        return my_invocation_found
 
 class Workflow:
     """
@@ -822,7 +843,10 @@ class Workflow:
                             # No entry for this job, let's create a new one
                             self._job_info[my_jobid] = [None, None, None, None, None, True, my_dag, my_dir]
 
-            DAG.close()
+            try:
+                DAG.close()
+            except:
+                pass
 
         # POST-CONDITION: _job_info contains only submit-files of jobs
         # that are not yet done. Normally, this are all submit
@@ -830,6 +854,71 @@ class Workflow:
         # jobs. In addition, _job_info should contain all PRE and POST
         # script information for job in this workflow, and all subdag
         # jobs, with the their dag files, and directories
+
+    def parse_in_file(self, jobname, tasks):
+        """
+        This function parses the in file for a given job, reading the
+        task information and adding to the dictionary of tasks. It
+        returns True if parsing was successful, or None, if an error
+        was found.
+        """
+        in_file = os.path.join(self._run_dir, jobname) + ".in"
+
+        try:
+            IN = open(in_file, "r")
+        except:
+            logger.warning("unable to read %s!" % (in_file))
+            return None
+
+        tasks_found = 0
+        for line in IN:
+            line = line.strip()
+            if len(line) == 0:
+                continue
+            if line.startswith("#"):
+                line = line.split("#", 1)[1]
+                line = line.strip()
+                try:
+                    my_task_id, my_transformation, my_derivation = line.split(None, 2)
+                    my_task_id = int(my_task_id)
+                except:
+                    # Doesn't look line a proper comment line with embedded info, skipping...
+                    continue
+                # Update information in dictionary
+                try:
+                    my_task_info = tasks[my_task_id]
+                except:
+                    logger.warning("cannot locate task %d in dictionary... skipping this task" % (my_task_id))
+                    continue
+                my_task_info["transformation"] = my_transformation
+                my_task_info["derivation"] = my_derivation
+            else:
+                # This is regular line, so we assume it is a task
+                split_line = line.split(None, 1)
+                if len(split_line) == 0:
+                    # Nothing here
+                    continue
+                my_executable = split_line[0]
+                if len(split_line) == 2:
+                    my_argv = split_line[1]
+                else:
+                    my_argv = ""
+                # Increment the task_found counter, so that we have the correct task index
+                tasks_found = tasks_found + 1
+                try:
+                    my_task_info = tasks[tasks_found]
+                except:
+                    logger.warning("cannot locate task %d in dictionary... skipping this task" % (tasks_found))
+                    continue
+                my_task_info["argument-vector"] = my_argv
+                my_task_info["name"] = my_executable
+
+        try:
+            IN.close()
+        except:
+            pass
+
+        return True
 
     def read_workflow_state(self):
         """
@@ -844,7 +933,7 @@ class Workflow:
         try:
             INPUT = open(my_fn, "r")
         except:
-            logger.info("cannot open state file %s" % (my_fn))
+            logger.info("cannot open state file %s, continuing without state..." % (my_fn))
             return
         
         try:
@@ -1079,15 +1168,14 @@ class Workflow:
         # Done!
         return
 
-    def __init__(self, rundir, outfile, extra_params=None, database=None,
+    def __init__(self, rundir, outfile, database=None,
                  workflow_config_file=None, jsd=None, root_id=None,
                  parent_id=None, parent_jobid=None, parent_jobseq=None):
         """
         This function initializes the workflow object. It looks for
         the workflow configuration file (or for workflow_config_file,
-        if specified). Keys in extra_params override values in the
-        configuration file. Here we also open the jobstate.log file,
-        and parse the dag.
+        if specified). Here we also open the jobstate.log file, and
+        parse the dag.
         """
         # Initialize class variables
         self._out_file = outfile
@@ -1159,9 +1247,6 @@ class Workflow:
             self._monitord_exit_code = 1
             return
 
-        # Say hello.... add start information to JSDB
-        self._JSDB.write("%d INTERNAL *** MONITORD_STARTED ***\n" % (self._workflow_start))
-
         if not replay_mode:
             # Recover state from a previous run
             self.read_workflow_state()
@@ -1173,10 +1258,6 @@ class Workflow:
         if len(wfparams) == 0:
             # Set flag for creating a braindb file if nothing was read
             self._valid_braindb = False
-
-        # Update wfparams with keys from extra_params, if any
-        if extra_params is not None:
-            wfparams.update(extra_params)
 
         # Go through wfparams, and read what we need
         if "wf_uuid" in wfparams:
@@ -1208,6 +1289,10 @@ class Workflow:
             self._dax_file = wfparams["dax"]
         if "dag" in wfparams:
             self._dag_file_name = wfparams["dag"]
+        else:
+            logger.error("dag not specified in braindump, skipping this (sub-)workflow...")
+            self._monitord_exit_code = 1
+            return
         if "timestamp" in wfparams:
             self._timestamp = wfparams["timestamp"]
         else:
@@ -1251,6 +1336,9 @@ class Workflow:
         if "grid_dn" in wfparams:
             self._grid_dn = wfparams["grid_dn"]
 
+        # Say hello.... add start information to JSDB
+        self._JSDB.write("%d INTERNAL *** MONITORD_STARTED ***\n" % (self._workflow_start))
+
         # All done... last step is to send to the database the workflow plan event,
         # along with all the static information generated by pegasus-plan
         # However, we only do this, if this is the first time we run
@@ -1261,11 +1349,7 @@ class Workflow:
                 sys.exit(1)
             # Create NetLogger parser
             my_bp_parser = NLSimpleParser(parse_date=False)
-            # Figure out static data filename
-            if self._dag_file_name is None:
-                logger.critical("dag not specified in braindump, exiting...")
-                sys.exit(1)
-            # Create full path name
+            # Figure out static data filename, and create full path name
             my_bp_file = os.path.splitext(self._dag_file_name)[0] + ".static.bp"
             self._static_bp_file = os.path.join(self._run_dir, my_bp_file)
 
@@ -1313,8 +1397,7 @@ class Workflow:
             try:
                 my_static_file.close()
             except:
-                logger.critical("error closing static bp file %s, exiting..." % (self._static_bp_file))
-                sys.exit(1)
+                logger.warning("error closing static bp file %s, continuing..." % (self._static_bp_file))
 
             # Send event to mark the end of the static content
             self.output_to_db("static.end", {})
@@ -1493,10 +1576,16 @@ class Workflow:
 
         if my_job._site_name is not None:
             kwargs["site"] = my_job._site_name
+        else:
+            kwargs["site"] = ""
         if my_job._remote_user is not None:
             kwargs["user"] = my_job._remote_user
+        else:
+            kwargs["user"] = ""
         if my_job._remote_working_dir is not None:
             kwargs["work_dir"] = my_job._remote_working_dir
+        else:
+            kwargs["work_dir"] = ""
         if my_job._cluster_start_time is not None:
             kwargs["cluster__start"] = my_job._cluster_start_time
         if my_job._cluster_duration is not None:
@@ -1507,14 +1596,21 @@ class Workflow:
                 my_duration = int(my_job._main_job_done) - int(my_job._main_job_start)
                 kwargs["local_duration"] = my_duration
             except:
-                # Nothing to do
+                # Nothing to do, this is not mandatory
                 pass
         if my_job._input_file is not None:
             kwargs["stdin__file"] = my_job._input_file
+        else:
+            # This is not mandatory, according to the schema
+            pass
         if my_job._output_file is not None:
             kwargs["stdout__file"] = my_job._output_file + ".%03d" % (my_job._job_output_counter)
+        else:
+            kwargs["stdout__file"] = ""
         if my_job._error_file is not None:
             kwargs["stderr__file"] = my_job._error_file + ".%03d" % (my_job._job_output_counter)
+        else:
+            kwargs["stderr__file"] = ""
         kwargs["stdout__text"] = my_job._stdout_text
         kwargs["stderr__text"] = my_job._stderr_text
 
@@ -1524,6 +1620,9 @@ class Workflow:
             kwargs["status"] = str(status)
             if status != 0:
                 kwargs["level"] = "Error"
+        else:
+            kwargs["status"] = str(-1)
+            kwargs["level"] = "Error"
 
         # Send job state event to database
         self.output_to_db("job_inst.main.end", kwargs)
@@ -1785,8 +1884,14 @@ class Workflow:
             kwargs["site"] = "unknown"
         if "total" in record:
             kwargs["total_memory"] = record["total"]
+        else:
+            # This is not mandatory
+            pass
         if "system" in record and "release" in record and "machine" in record:
             kwargs["uname"] = record["system"] + "-" + record["release"] + "-" + record["machine"]
+        else:
+            # This is not mandatory
+            pass
 
         # Add timestamp
         kwargs["ts"] = self._current_timestamp
@@ -1805,6 +1910,7 @@ class Workflow:
         # Check if this is a subdag job
         if (my_job._exec_job_id in self._job_info and
             self._job_info[my_job._exec_job_id][5] == True):
+            # Disable kickstart_parsing...
             skip_kickstart_parsing = True
 
         # If job is a subdag job, skip looking for its kickstart output
@@ -1836,27 +1942,71 @@ class Workflow:
         my_task_id = 1
 
         if len(my_output) > 0:
-            # Add job information (from the kickstart output file) to
-            # the Job class.
-            my_job.extract_job_info(my_output)
+            # Parsing the output file resulted in some info... let's parse it
 
-            # Loop through all records
-            for record in my_output:
-                # Skip non-invocation records
-                if not "invocation" in record:
-                    continue
+            # Add job information to the Job class.
+            my_invocation_found = my_job.extract_job_info(my_output)
+
+            if my_invocation_found:
+                # Loop through all records
+                for record in my_output:
+                    # Skip non-invocation records
+                    if not "invocation" in record:
+                        continue
 	
-                # Send task information to the database
-                self.db_send_task_start(my_job, "MAIN_JOB", my_task_id, record)
-                self.db_send_task_end(my_job, "MAIN_JOB", my_task_id, record)
+                    # Send task information to the database
+                    self.db_send_task_start(my_job, "MAIN_JOB", my_task_id, record)
+                    self.db_send_task_end(my_job, "MAIN_JOB", my_task_id, record)
 
-                # Increment task id counter
-                my_task_id = my_task_id + 1
+                    # Increment task id counter
+                    my_task_id = my_task_id + 1
 
-                # Send host information to the database
-                self.db_send_host_info(my_job, record)
+                    # Send host information to the database
+                    self.db_send_host_info(my_job, record)
+            else:
+                # No invocation found, but possibly task records are present...
+                my_tasks = {}
+                for record in my_output:
+                    if "task" in record:
+                        # Ok, this is a task record
+                        if not "id" in record:
+                            logger.warning("id missing from task record... skipping to next one")
+                            continue
+                        try:
+                            my_id = int(record["id"])
+                        except:
+                            logger.warning("task id looks invalid, cannot convert it to int: %s skipping to next" % (record["id"]))
+                            continue
+                        # Add to our list
+                        my_tasks[my_id] = record
+
+                if len(my_tasks) > 0:
+                    # Now, bring information from the .in file
+                    my_status = self.parse_in_file(my_job._exec_job_id, my_tasks)
+                    if my_status is True:
+                        # Parsing the in file completed, now generate tasks by task order
+                        for i in sorted(my_tasks):
+                            record = my_tasks[i]
+                            # Take care of renaming the exitcode field
+                            if "status" in record:
+                                record["exitcode"] = record["status"]
+                            # Validate record
+                            if (not "transformation" in record or not "derivation" in record or
+                                not "start" in record or not "duration" in record or
+                                not "name" in record or not "argument-vector" in record):
+                                logger.info("task %d has incomplete information, skipping it..." % (i))
+                                continue
+                            # Ok, it all validates, send task information to the database
+                            self.db_send_task_start(my_job, "MAIN_JOB", my_task_id, record)
+                            self.db_send_task_end(my_job, "MAIN_JOB", my_task_id, record)
+
+                            # Increment task id counter
+                            my_task_id = my_task_id + 1
+                else:
+                    # No tasks found...
+                    logger.info("no tasks found for job %s..." % (my_job._exec_job_id))
         else:
-            # If we don't have kickstart, we only generate 1 task
+            # If we don't have any records, we only generate 1 task
             self.db_send_task_start(my_job, "MAIN_JOB", my_task_id)
             self.db_send_task_end(my_job, "MAIN_JOB", my_task_id)
 
@@ -2108,11 +2258,15 @@ class Workflow:
 
         # First we take care of SUBDAG jobs
         if self._job_info[jobid][5] == True:
-            # This is a SUBDAG job, first check if dag is there
-            if self._job_info[jobid][6] is None:
-                return None
-            # Looks ok, return new dagman.out
-            my_dagman_out = self._job_info[jobid][6] + ".dagman.out"
+            # We cannot go into SUBDAG workflows as they are not
+            # planned by Pegasus and do not contain the information
+            # needed by the 3.1 Stampede schema.
+            return None
+#            # This is a SUBDAG job, first check if dag is there
+#            if self._job_info[jobid][6] is None:
+#                return None
+#            # Looks ok, return new dagman.out
+#            my_dagman_out = self._job_info[jobid][6] + ".dagman.out"
         else:
             # Now check if this is a pegasus-plan or a subdax_ job
 
@@ -2169,7 +2323,6 @@ jsd = None				# location of jobstate.log file
 nodaemon = 0				# foreground mode
 logfile = None				# location of monitord.log file
 millisleep = None			# emulated run mode delay
-config = {}				# command-line configuration key-value pairs
 adjustment = 0				# time zone adjustment (@#~! Condor)
 fuse = 60				# maximum wait for each plotting subscript
 
@@ -2195,8 +2348,8 @@ parser.add_option("-j", "--job", action = "store", type = "string", dest = "jsd"
 parser.add_option("-l", "--log", action = "store", type = "string", dest = "logfile",
 		  help = "alternative %s log file, default is %s in the workflow's directory"
 		  % (prog_base, logbase))
-parser.add_option("-C", "--config", action = "append", type = "string", dest = "config_opts",
-		  help = "k=v defines configurations that override values read from the braindump.txt file.")
+parser.add_option("--conf", action = "store", type = "string", dest = "config_properties",
+		  help = "specifies the properties' file to use. This option overrides all other property files.")
 parser.add_option("--no-recursive", action = "store_const", const = 1, dest = "disable_subworkflows",
 		  help = "disable pegasus-monitord the automatic follow any sub-workflows that are found")
 parser.add_option("--no-database", "--nodatabase", "--no-events", action = "store_const", const = 0, dest = "no_events",
@@ -2244,18 +2397,22 @@ out = os.path.abspath(out)
 # Infer run directory
 run = os.path.dirname(out)
 
+# Resolve command-line options conflicts
+if options.event_dest is not None and options.no_events is not None:
+    logger.warning("the --no-events and --dest options conflict, please use only one of them")
+    sys.exit(1)
+
 # Get the location of the properties file from braindump
 top_level_wf_params = utils.slurp_braindb(run)
+# Add None if properties tag is missing
+if not "properties" in top_level_wf_params:
+    top_level_wf_params["properties"] = None
 
 # Parse, and process properties
 props = properties.Properties()
-if "properties" in top_level_wf_params:
-    props.new(properties.PARSE_ALL,
-              {"pegasus.user.properties" : top_level_wf_params["properties"]})
-else:
-    props.new(properties.PARSE_ALL)
-doplot = utils.make_boolean(props.property("pegasus.monitord.show"))
+props.new(config_file=options.config_properties, rundir_propfile=top_level_wf_params["properties"])
 
+doplot = utils.make_boolean(props.property("pegasus.monitord.show"))
 fuse = int(props.property("pegasus.monitord.fuse") or 300)
 if fuse < 60:
     fuse = 60
@@ -2327,17 +2484,6 @@ else:
     if props.property("pegasus.monitord.encoding") is not None:
         # Get encoding from property
         encoding = props.property("pegasus.monitord.encoding")
-
-# Walk through any config properties
-if options.config_opts is not None:
-    for prop in options.config_opts:
-        prop = prop.strip()
-        try:
-            k, v = prop.split("=", 1)
-        except:
-            parser.print_help()
-            sys.exit(1)
-        config[k] = v
 
 # Sanity check
 if fuse < 60:
@@ -3174,7 +3320,7 @@ else:
 # Ok! Let's start now...
 
 # Instantiate workflow class
-wf = Workflow(run, out, config, database=wf_event_sink, jsd=jsd)
+wf = Workflow(run, out, database=wf_event_sink, jsd=jsd)
 # If everything went well, create a workflow entry for this workflow
 if wf._monitord_exit_code == 0:
     workflow_entry = WorkflowEntry()
@@ -3365,7 +3511,7 @@ while (len(wfs) > 0):
                                 # Not tracking this workflow, let's try to add it to our list
                                 new_run_dir = os.path.dirname(new_dagman_out)
                                 parent_wf_id = workflow_entry.wf._wf_uuid
-                                new_wf = Workflow(new_run_dir, new_dagman_out, config, database=wf_event_sink,
+                                new_wf = Workflow(new_run_dir, new_dagman_out, database=wf_event_sink,
                                                   parent_id=parent_wf_id, parent_jobid=parent_jobid,
                                                   parent_jobseq=parent_jobseq, root_id=root_wf_id, jsd=jsd)
 

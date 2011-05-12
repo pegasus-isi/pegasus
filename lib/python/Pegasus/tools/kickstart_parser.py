@@ -30,8 +30,8 @@ import sys
 import re
 
 # Regular expressions used in the kickstart parser
-re_parse_clustered_props = re.compile(r'(\S+)\s*=\s*([^",]+)')
-re_parse_quoted_clustered_props = re.compile(r'(\S+)\s*=\s*"([^"]+)"')
+re_parse_props = re.compile(r'(\S+)\s*=\s*([^",]+)')
+re_parse_quoted_props = re.compile(r'(\S+)\s*=\s*"([^"]+)"')
 
 class Parser:
     """
@@ -381,16 +381,39 @@ class Parser:
         self._keys["clustered"] = True
 
         # Parse all quoted properties
-        for my_key, my_val in re_parse_quoted_clustered_props.findall(buffer):
+        for my_key, my_val in re_parse_quoted_props.findall(buffer):
             self._keys[my_key] = my_val
 
         # And add unquoted properties as well
-        for my_key, my_val in re_parse_clustered_props.findall(buffer):
+        for my_key, my_val in re_parse_props.findall(buffer):
             self._keys[my_key] = my_val
 
         return self._keys
 
-    def parse(self, keys_dict, clustered=True):
+    def parse_task_record(self, buffer=''):
+        """
+        Parses the task record in buffer, returning all found keys
+        """
+        self._keys = {}
+
+        # Check if we have an invocation record
+        if self.is_task_record(buffer) == False:
+            return self._keys
+
+        # Add task key to our response
+        self._keys["task"] = True
+
+        # Parse all quoted properties
+        for my_key, my_val in re_parse_quoted_props.findall(buffer):
+            self._keys[my_key] = my_val
+
+        # And add unquoted properties as well
+        for my_key, my_val in re_parse_props.findall(buffer):
+            self._keys[my_key] = my_val
+
+        return self._keys
+
+    def parse(self, keys_dict, tasks=True, clustered=True):
         """
         This function parses the kickstart output file, looking for
         the keys specified in the keys_dict variable. It returns a
@@ -421,6 +444,11 @@ class Parser:
                 if clustered:
                     # We have a clustered record, parse it!
                     my_reply.append(self.parse_clustered_record(my_buffer))
+            elif self.is_task_record(my_buffer) == True:
+                # Check if we want task records too
+                if tasks:
+                    # We have a clustered record, parse it!
+                    my_reply.append(self.parse_task_record(my_buffer))
             else:
                 # We have something else, this shouldn't happen!
                 # Just skip it
@@ -453,7 +481,7 @@ class Parser:
                              "stdout": [],
                              "stderr": []}
 
-        return self.parse(stampede_elements, clustered=True)
+        return self.parse(stampede_elements, tasks=True, clustered=True)
 
     def parse_stdout_stderr(self):
         """
@@ -470,7 +498,7 @@ class Parser:
                                   "stdout": [],
                                   "stderr": []}
 
-        return self.parse(stdout_stderr_elements, clustered=False)
+        return self.parse(stdout_stderr_elements, tasks=False, clustered=False)
 
 if __name__ == "__main__":
 

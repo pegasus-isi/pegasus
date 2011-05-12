@@ -35,10 +35,6 @@ import logging
 import tempfile
 import pwd
 
-# Constants
-PARSE_NONE = 0
-PARSE_ALL = 1
-
 # Regular expressions
 re_remove_escapes = re.compile(r"\\(.)")
 re_parse_property = re.compile(r"([^:= \t]+)\s*[:=]?\s*(.*)")
@@ -106,10 +102,19 @@ while len(sys.argv) > 0 and sys.argv[0][:2] == "-D":
         # remove -D from this parameter before split
         my_arg = my_arg[2:]
     
-    k, v = my_arg.split("=", 1)
+    try:
+        k, v = my_arg.split("=", 1)
+    except:
+        logger.info("cannot parse command-line option %s... continuing..." % (my_arg))
+        k = ""
     if len(k):
-        initial[k.lower()] = v
-        #print "key:value = %s:%s" % (k, v)
+        k = k.lower()
+        if k == "pegasus.properties" or k == "pegasus.user.properties":
+            logger.warn("%s is no longer supported, ignoring, please use --conf!" % (k))
+        else:
+            logger.debug("parsed property %s..." % (my_arg))
+            initial[k] = v
+            #print "key:value = %s:%s" % (k, v)
 
 # Merge the two, with command-line taking precedence over environmental variables
 system.update(initial)
@@ -201,99 +206,58 @@ class Properties:
     def __init__(self):
         # Initialize class variables
         self.m_config = {}
-        self.m_flags = None
 
-    def new(self, flags=PARSE_ALL, hashref=None):
+    def new(self, config_file=None, rundir_propfile=None):
         """
-        Initialize instance variable
-        Param: flags limits files to parse
-        Param: hashref key value property list of least priority
+        Initialize instance variable, processing the appropriate
+        properties file. config_file is the properties file passed via
+        the --conf command-line option, it has the highest
+        priority. rundir_propfile is the properties file in the run
+        directory (specified in the braindump.txt file with the
+        properties tag. It has the second highest priority. If those
+        are not specified, we try to lost $(HOME)/.pegasusrc, as a
+        last resort.
         """
         my_config = {}
-        my_pegasushome = None
+        my_already_loaded = False
 
-        if hashref is not None:
-            my_config = hashref.copy()
-
-        my_flag = 0
-
-        if flags == PARSE_ALL:
-            if "PEGASUS_HOME" in os.environ:
-                if os.path.isdir(os.environ["PEGASUS_HOME"]):
-                    my_pegasushome = os.environ["PEGASUS_HOME"]
-                    my_config["pegasus.home"] = os.environ["PEGASUS_HOME"]
-                else:
-                    logger.warn("PEGASUS_HOME does not point to a(n accessible) directory!")
-            elif "VDT_LOCATION" in os.environ:
-                my_tmp = os.path.join(os.environ["VDT_LOCATION"], "pegasus")
-                if os.path.isdir(my_tmp):
-                    my_pegasushome = my_tmp
-                    my_config["pegasus.home"] = my_tmp
-                else:
-                    logger.warn("%s does not point to a(n accessible) directory!" % (my_tmp))
+        # First, try config_file, highest priority
+        if config_file is not None:
+            if os.path.isfile(config_file) and os.access(config_file, os.R_OK):
+                logger.info("processing properties file %s..." % (config_file))
+                my_config.update(parse_properties(config_file))
+                my_already_loaded = True
             else:
-                # Print message and exit
-                logger.fatal("Your environmental variable PEGASUS_HOME is not set!")
-                sys.exit(1)
+                logger.warn("cannot access properties file %s... continuing..." % (config_file))
 
-            # system properties go first
-            if "pegasus.properties" in system:
-                # Overwrite for system property location from CLI interface
-                my_sys = system["pegasus.properties"]
-                if os.path.isfile(my_sys) and os.access(my_sys, os.R_OK):
-                    my_config.update(parse_properties(my_sys))
-                else:
-                    my_flag = my_flag + 1
-            elif "pegasus.properties" in my_config:
-                # Overwrite for system property location from hashref property
-                my_sys = my_config["pegasus.properties"]
-                if os.path.isfile(my_sys) and os.access(my_sys, os.R_OK):
-                    my_config.update(parse_properties(my_sys))
-                else:
-                    my_flag = my_flag + 1
-            elif my_pegasushome is not None:
-                # Default system property location
-                my_sys = os.path.join(my_pegasushome, "etc", "properties")
-                if os.path.isfile(my_sys) and os.access(my_sys, os.R_OK):
-                    my_config.update(parse_properties(my_sys))
-                else:
-                    my_flag = my_flag + 1
+        # Second, try rundir_propfile
+        if not my_already_loaded and rundir_propfile is not None:
+            if os.path.isfile(rundir_propfile) and os.access(rundir_propfile, os.R_OK):
+                logger.info("processing properties file %s... " % (rundir_propfile))
+                my_config.update(parse_properties(rundir_propfile))
+                my_already_loaded = True
             else:
-                my_flag = my_flag + 1
+                logger.warn("cannot access properties file %s... continuing..." % (rundir_propfile))
 
-            # User properties go last
-            if "pegasus.user.properties" in system:
-                # Overwrite for user property location from CLI interface
-                my_usr = system["pegasus.user.properties"]
-                if os.path.isfile(my_usr) and os.access(my_usr, os.R_OK):
-                    my_config.update(parse_properties(my_usr))
+        # Last chance, look for $(HOME)/.pegasusrc
+        if not my_already_loaded:
+            if "user.home" in system:
+                my_user_propfile = os.path.join(system["user.home"], ".pegasusrc")
+                if os.path.isfile(my_user_propfile) and os.access(my_user_propfile, os.R_OK):
+                    logger.info("processing properties file %s... " % (my_user_propfile))
+                    my_config.update(parse_properties(my_user_propfile))
+                    my_already_loaded = True
                 else:
-                    my_flag = my_flag + 1
-            elif "pegasus.user.properties" in my_config:
-                # Overwrite for user property location from hashref property
-                my_usr = my_config["pegasus.user.properties"]
-                if os.path.isfile(my_usr) and os.access(my_usr, os.R_OK):
-                    my_config.update(parse_properties(my_usr))
-                else:
-                    my_flag = my_flag + 1
-            elif "HOME" in os.environ:
-                # Default user property location
-                my_usr2 = os.path.join(os.environ["HOME"], ".pegasusrc")
-                if os.path.isfile(my_usr2) and os.access(my_usr2, os.R_OK):
-                    my_config.update(parse_properties(my_usr2))
-                else:
-                    my_flag = my_flag + 1
-            else:
-                my_flag = my_flag + 1
+                    # No need to complain about this
+                    pass
 
-        if my_flag == 1 and flags == PARSE_ALL:
-            logger.debug("Unable to load any properties at all")
+        if not my_already_loaded:
+            logger.warn("no properties file parsed whatsoever!")
 
-        # Keep ordering of config before initial so that CLI
+        # Keep ordering of config before initial so that the -D CLI
         # properties can override any other properties
         self.m_config = my_config
         self.m_config.update(initial)
-        self.m_flags = flags
 
     def property(self, key, val=None):
         """
@@ -384,5 +348,5 @@ class Properties:
     
 if __name__ == "__main__":
     a = Properties()
-    a.new(PARSE_ALL)
+    a.new()
     print "testing finished!"
