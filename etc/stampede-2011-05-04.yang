@@ -568,7 +568,6 @@ module stampede-2011-05-04 {
                 leaf user {
                     description "Scheduler's name for user";
                     type string;
-                    mandatory true;
                 }
                 leaf site {
                     description "DAX name for the site at which the job ran";
@@ -578,7 +577,6 @@ module stampede-2011-05-04 {
                 leaf work_dir {
                     description "Path to working directory";
                     type string;
-                    mandatory true;
                 }
                 leaf local_duration {
                     description "Duration as seen at the local node";

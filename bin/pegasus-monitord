@@ -527,8 +527,8 @@ class Job:
         self._input_file = None
         self._output_file = None
         self._error_file = None
-        self._stdout_text = ""
-        self._stderr_text = ""
+        self._stdout_text = None
+        self._stderr_text = None
         self._job_dagman_out = None		# _CONDOR_DAGMAN_LOG from environment line for pegasus-plan and subdax_ jobs
 
     def set_job_state(self, job_state, timestamp, status):
@@ -1582,12 +1582,8 @@ class Workflow:
             kwargs["site"] = ""
         if my_job._remote_user is not None:
             kwargs["user"] = my_job._remote_user
-        else:
-            kwargs["user"] = ""
         if my_job._remote_working_dir is not None:
             kwargs["work_dir"] = my_job._remote_working_dir
-        else:
-            kwargs["work_dir"] = ""
         if my_job._cluster_start_time is not None:
             kwargs["cluster__start"] = my_job._cluster_start_time
         if my_job._cluster_duration is not None:
@@ -1613,8 +1609,10 @@ class Workflow:
             kwargs["stderr__file"] = my_job._error_file + ".%03d" % (my_job._job_output_counter)
         else:
             kwargs["stderr__file"] = ""
-        kwargs["stdout__text"] = my_job._stdout_text
-        kwargs["stderr__text"] = my_job._stderr_text
+        if my_job._stdout_text is not None:
+            kwargs["stdout__text"] = my_job._stdout_text
+        if my_job._stderr_text is not None:
+            kwargs["stderr__text"] = my_job._stderr_text
 
         if my_job._sched_id is not None:
             kwargs["sched__id"] = my_job._sched_id
