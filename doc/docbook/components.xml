@@ -18,8 +18,7 @@
    <listitem>Transformation</listitem>
 
    <listitem>Pegasus Mapper</listitem>
-   
-   <listitem>Submit Directory</listitem>
+
 
   </itemizedlist>
 
@@ -1191,6 +1190,7 @@ clus1    black::analyze:1.0    gsiftp://clus1.com/opt/nfs/vdt/pegasus/bin/keg
 
 
 </chapter>
+
 
 
 
