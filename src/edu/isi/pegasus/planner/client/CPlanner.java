@@ -93,6 +93,7 @@ import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.parser.Parser;
 import edu.isi.pegasus.planner.parser.dax.DAXParser;
+import java.util.regex.Pattern;
 
 
 /**
@@ -124,6 +125,14 @@ public class CPlanner extends Executable{
      * The prefix for the NoOP jobs that are created.
      */
     public static final String NOOP_PREFIX = "noop_";
+    
+    /**
+     * The regex used to match against a java property that is set using 
+     * -Dpropertyname=value in the argument string
+     */
+    public static final String JAVA_COMMAND_LINE_PROPERTY_REGEX 
+             = "(env|condor|globus|dagman|pegasus)\\..*=.*" ;
+    
 
     /**
      * The final successful message that is to be logged.
@@ -705,6 +714,9 @@ public class CPlanner extends Executable{
         PlannerOptions options = new PlannerOptions();
         options.setSanitizePath( sanitizePath );
 
+        //construct the property matcher regex
+        Pattern propertyPattern = Pattern.compile( CPlanner.JAVA_COMMAND_LINE_PROPERTY_REGEX );
+        
         while( (option = g.getopt()) != -1){
             //System.out.println("Option tag " + (char)option);
             switch (option) {
@@ -739,9 +751,9 @@ public class CPlanner extends Executable{
 
                 case 'D': //dir or -Dpegasus.blah=
                     String optarg = g.getOptarg();
-                    if( optarg.matches(  "pegasus\\..*=.*"  ) ){
+                    //if( optarg.matches(  "pegasus\\..*=.*"  ) ){
+                    if( propertyPattern.matcher( optarg ).matches() ){
                         options.setProperty( optarg );
-                        
                     }
                     else{
                         options.setSubmitDirectory( g.getOptarg(), null );
