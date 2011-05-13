@@ -364,7 +364,7 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
                    
                    <orderedlist>
                        <listitem>
-                         <para/>
+                         <para><link>See "planing_and_submitting"S</link></para>
 
                        </listitem>
 
