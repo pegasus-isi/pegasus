@@ -117,6 +117,13 @@ parseCommandline( int argc, char* argv[], int* fail_hard, int* cpus )
     }
   }
 
+  /* default parallelism from environment variable */ 
+  if ( (s = getenv("SEQEXEC_CPUS")) != NULL ) { 
+    if ( strcasecmp( s, "auto" ) == 0 ) *cpus = processors();
+    else *cpus = atoi(s); 
+    if ( *cpus < 0 ) *cpus = 1; 
+  }
+
   opterr = 0;
   while ( (option = getopt( argc, argv, "R:S:dfhn:s:" )) != -1 ) {
     switch ( option ) {
