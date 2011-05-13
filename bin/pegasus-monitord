@@ -1365,13 +1365,6 @@ class Workflow:
             # Send workflow plan info to database
             self.db_send_wf_info()
 
-            # If this workflow is a subworkflow and has a parent_id,
-            # parent_jobid and parent_jobseq, we send an event to link
-            # this workflow's id to the parent job...
-            if (self._parent_workflow_id is not None
-                and parent_jobid is not None and parent_jobseq is not None):
-                self.db_send_subwf_link(parent_jobid, parent_jobseq)
-
             # Send event to mark the start of the static content
             self.output_to_db("static.start", {})
 
@@ -1403,6 +1396,13 @@ class Workflow:
 
             # Send event to mark the end of the static content
             self.output_to_db("static.end", {})
+
+        # If this workflow is a subworkflow and has a parent_id,
+        # parent_jobid and parent_jobseq, we send an event to link
+        # this workflow's id to the parent job...
+        if (self._sink is not None and self._parent_workflow_id is not None
+            and parent_jobid is not None and parent_jobseq is not None):
+            self.db_send_subwf_link(parent_jobid, parent_jobseq)
 
         # Add any missing keys to the braindump file
         if len(missing_keys) > 0:
