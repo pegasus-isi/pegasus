@@ -69,12 +69,22 @@
                  <itemizedlist>
                   <listitem>
                     <para><emphasis>Local Execution </emphasis></para>
-                    <para>text</para>
+                    <para>Should we describe the minimum hardware requirements? Should we say something about any size/complexity limits?</para>
                   </listitem>
 
                    <listitem>
                     <para><emphasis>Condor Pools and Glideins </emphasis></para>
-                    <para>text</para>
+                    <para>Condor is a specialized workload management system for compute-intensive jobs. Condor queues workflows, schedules, and monitors the execution of each workflow.
+                    Condor Pools and Glideins are tools for submitting and executing the Condor daemons on a Globus resource.
+                    As long as the daemons continue to run, the remote machine running them appears as part of your Condor pool.
+                    See <ulink>
+
+       linkend="aboutlinkend="http://www.cs.wisc.edu/condor/description.html"&gt;(Condor Project Pages )</ulink>
+
+
+
+
+                  </para>
                   </listitem>
                   
                   <listitem>
@@ -502,6 +512,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
 
 </section>
 </chapter>
+
 
 
 
