@@ -499,8 +499,8 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
     described in <ulink
     url="http://www.cs.wisc.edu/condor/manual/v7.5/2_10DAGMan_Applications.html">Condor's
     DAGMAN documentation</ulink>.The constituents of the submit directory are
-    shown in <link linkend="submit_directory-layout">chapter "submit
-    directory"</link>.</para>
+    described in the<link linkend="submit_directory"> "Submit
+    Directory Details"</link>chapter.</para>
   </section>
 
 <section>
@@ -513,6 +513,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
 
 </section>
 </chapter>
+
 
 
 

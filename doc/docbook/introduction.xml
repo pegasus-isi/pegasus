@@ -61,7 +61,7 @@
    
   <para>Individual workflow tasks are managed by a task scheduler, which supervises their
   execution on local and remote resources. In our work scheduling is performed
-  by the schedd a component in the Condor Project.</para>
+  by the schedd component in the Condor Project.</para>
 </section>
 
 <section>
@@ -93,6 +93,7 @@
   
 
 </chapter>
+
 
 
 

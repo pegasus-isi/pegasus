@@ -360,13 +360,56 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
                   <section>
                    <title>Monitoring Tools</title>
 
-                   <para>List the tools and link to each tools page</para>
+                   <para>Pegasus comes bundled with tools for monitoring and analyzing workflows</para>
                    
                    <orderedlist>
                        <listitem>
-                         <para><link>See "planing_and_submitting"S</link></para>
+                         <para>Pegaus Monitord - Tracks the job states as a workflow is executed</para>
 
                        </listitem>
+                       <listitem>
+                         <para>Pegaus Status - Displays the status of the workflow individual jobs</para>
+
+                       </listitem>
+                       <listitem>
+                         <para>Pegaus Analyzer - Command line utility for parsing several workflow directory files to summarize useful information for the user</para>
+
+                       </listitem>
+                       <listitem>
+                         <para>Pegaus Remove - Comand line tool for aborting a workflow</para>
+
+                       </listitem>
+                      <listitem>
+
+                       <link linkend="monitoring_debugging_stats"> "Monitoring Tools"</link>
+
+
+                      </listitem>
+                      </orderedlist>
+                    </section>
+                    <section>
+                      <title>Plotting and Statistics Tools</title>
+
+                        <para>Pegasus comes bundled with tools for producing statistical system reports</para>
+                        
+                        <orderedlist>
+                        <listitem>
+                           <para>Pegasus Statistics - Generates workflow execution statistics</para>
+
+                        </listitem>
+                        <listitem>
+                        <para>Pegasus Plots - Generates graphs and charts to visusalize workflow execution</para>
+
+                        </listitem>
+
+                        <listitem>
+                       <para>For details - See
+                       <link linkend="monitoring_debugging_stats"> "Plotting and Statistics Tools"</link>   </para>
+
+
+                        </listitem>
+                        </orderedlist>
+                      </section>
 
 
 
@@ -375,25 +418,6 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-                   </orderedlist>
-
-
-
-
-
-      </section>
     </section>
    </section>
     </section>
@@ -413,11 +437,11 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
    
 
    
-
-  </section>
+    </section>
     </section>
 
 </chapter>
+
 
 
 
