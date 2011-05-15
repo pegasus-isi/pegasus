@@ -2592,8 +2592,8 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
 
     <para>Specifying a DAGJob in a DAX is pretty similar to how normal compute
     jobs are specified. There are minor differences in terms of the xml
-    element name ( dag vs job ) and the attributes specified. DAGJob XML
-    specification is described in detail in <link linkend="api"> Chapter 10 - API Reference </link> . An example DAG Job in a DAX is shown below</para>
+    element name ( dag vs job ) and the attributes specified. For DAGJob XML
+     details,see the <link linkend="api"> API Reference </link> chapter . An example DAG Job in a DAX is shown below</para>
 
     <programlisting id="dag_job_example">  &lt;dag id="ID000003" name="black.dag" node-label="foo" &gt;
     &lt;profile namespace="dagman" key="maxjobs"&gt;10&lt;/profile&gt;
@@ -2707,12 +2707,13 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
   <section>
     <title>Example</title>
 
-    <para>The Galactic Plane workflow is a Hierarchical workflow of many Montage workflows. (See <link
+    <para>The Galactic Plane workflow is a Hierarchical workflow of many Montage workflows. For details, see <link
     linkend="example_workflows">Workflow of Workflows</link> .</para>
   </section>
 
   </section>
 </chapter>
+
 
 
 
