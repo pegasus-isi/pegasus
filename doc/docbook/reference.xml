@@ -2613,8 +2613,7 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
           </listitem>
 
           <listitem>
-            <para>Replica Catalog Section in the <link
-            linkend="dax_replica_catalog">DAX</link> .</para>
+            <para>Replica Catalog Section in the DAX.</para>
 
             <note>
               <para>Currently, only file url's on the local site ( submit host
@@ -2629,8 +2628,7 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
 
       <para>Users can choose to specify dagman profiles with the DAX Job to
       control the behavior of the corresponding condor dagman instance in the
-      executable workflow. In the example <link
-      linkend="dag_job_example">above</link> maxjobs is set to 10 for the sub
+      executable workflow. In the example above, maxjobs is set to 10 for the sub
       workflow.</para>
 
       <para>The dagman profile DIR allows users to specify the directory in
@@ -2709,15 +2707,13 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
   <section>
     <title>Example</title>
 
-    <para>The <ulink
-    url="http://en.wikipedia.org/wiki/Galactic_plane">Galactic Plane</ulink>
-    workflow is a Hierarchical workflow of many Montage workflows. The example
-    is explained in the example workflows chapter <link
-    linkend="workflow_of_workflows">here</link> .</para>
+    <para>The Galactic Plane workflow is a Hierarchical workflow of many Montage workflows. (See <link
+    linkend="example_workflows">Workflow of Workflows</link> .</para>
   </section>
 
   </section>
 </chapter>
+
 
 
 

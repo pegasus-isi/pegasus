@@ -291,8 +291,7 @@
       same site. Clustering is usually done on short running jobs in order to
       reduce the remote execution overheads associated with a job. Clustering
       is described in detail in the <link
-      linkend="job_clustering">Chapter on Advanced Concepts
-      - Job Clustering.</link></para>
+      linkend="reference">Reference Manual</link>chapter.</para>
 
       <tip>
         <para>The job clustering is turned on by passing the <emphasis
@@ -1337,6 +1336,7 @@ ec2     amazon::s3cmd    /path/to/pegasus/bin/s3cmd    INSTALLED   INTEL32::LINU
     </section>
   </section>
 </chapter>
+
 
 
 
