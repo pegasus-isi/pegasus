@@ -621,7 +621,7 @@
         attribute is currently a restriction of type <code>xsd:NMTOKEN</code>
         type.The <emphasis>level</emphasis> attribute is being phased out, as
         the planner will trust its own re-computation more than user input.
-        The <emphasis>node-abel</emphasis> attribute is optional. It applies
+        The <emphasis>node-label</emphasis> attribute is optional. It applies
         to the use-case when every transformation has the same name, but its
         arguments determine what it really does. In the presence of a
         <emphasis>node-label</emphasis> value, a workflow grapher could use
@@ -675,10 +675,9 @@
         <section id="api-job-nodes">
           <title>Job Nodes</title>
 
-          <para>A job element has a number of attributes. The
+          <para>A job element has a number of attributes. In addition to the
           <emphasis>id</emphasis> and <emphasis>node-label</emphasis>
-          attributes were explained <link
-          linkend="api-graph-nodes">previously</link>. The optional
+         described in (Graph Nodes)above, the optional
           <emphasis>namespace</emphasis>, mandatory <emphasis>name</emphasis>
           and optional <emphasis>version</emphasis> identify the
           transformation, and provide the look-up handle: first in the DAX's
@@ -711,7 +710,7 @@
           <emphasis>file</emphasis> elements.</para>
 
           <para>The <emphasis>profile</emphasis> argument lets you encapsulate
-          site-specific knowledge [PROPER INTERNAL LINK HERE].</para>
+          site-specific knowledge .</para>
 
           <para>The <emphasis>stdin</emphasis>, <emphasis>stdout</emphasis>
           and <emphasis>stderr</emphasis> element permits you to connect a
@@ -1101,8 +1100,8 @@
   &lt;/child&gt;
 &lt;/adag&gt;</programlisting>
 
-      <para>The above workflow defines the black diamond from <link
-      linkend="concepts-fig-dax">the concepts figure</link>. It will require
+      <para>The above workflow defines the black diamond from the abstract workflow section of the <link
+      linkend="about">Introduction</link>chapter. It will require
       minimal configuration, because the catalog sections include all
       necessary declarations.</para>
 

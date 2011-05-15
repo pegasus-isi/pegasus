@@ -8,7 +8,7 @@
       <title>Introduction</title>
  
  
-  <para><ulink url="http://pegasus.isi.edu">Pegasus</ulink> is a configurable
+  <para><ulink url="http://pegasus.isi.edu">Pegasus WMS</ulink> is a configurable
   system for mapping and executing abstract application workflows over a wide
   range of execution environment including a laptop, a campus cluster, a Grid,
   or a commercial or academic cloud. Today, Pegasus runs workflows on Amazon
@@ -30,11 +30,16 @@
   manage ensembles of dependent tasks and related data files.  Pegasus automatically chains dependent tasks together,
   so that a single scientist can complete complex computations that once required many different people.
 
- New users are encouraged to explore the New User Walkthrough chapter to become familiar with how to operate Pegasus for their own workflows.
-   Included in the guide is a walkthrough where users can create and run a sample project to demonstrate Pegasus capabilities.</para>
+ New users are encouraged to explore the <link>
+ linkend="walkthrough"&gt;New User Walkthrough</link> chapter to become familiar with how to operate Pegasus for their own workflows.
+ Users create and run a sample project to demonstrate Pegasus capabilities.
+
+ Users can also browse the <link
+ linkend="useful_tips">Useful Tips</link> chapter to aid them in designing their workflows.
+   </para>
   
   </section>
- 
+
 
 <section>
        <title>System Features</title>
@@ -80,7 +85,7 @@
                     As long as the daemons continue to run, the remote machine running them appears as part of your Condor pool.
                     
                     What are the advatages to running in a Pool environment?
-                    For a more complete description of Condor, See <ulink> url="http://www.cs.wisc.edu/condor/description.html"&gt;(Condor Project Pages )</ulink>
+                    For a more complete description of Condor, See the <ulink url="http://www.cs.wisc.edu/condor/description.html">(Condor Project Pages )</ulink>
 
 
 
