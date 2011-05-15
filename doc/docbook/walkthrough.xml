@@ -188,9 +188,9 @@ $ tar xvf Pegasus-3.0.1-Debian-6-x86.vbox.tar</emphasis></programlisting>
       run in an environment. For the purposes of this walkthrough, we will demonstrate the characteristics and structure of workflows by generating a workflow with
       a bit of Java code that uses the DAX API to generate a DAX workflow.
 
-      For a more detailed description of workflows, how to create them, and how they are used in Pegasus please see Creating Workflows in <link
+      For a more detailed description of workflows, how to create them, and how they are used in Pegasus please see <emphasis>Creating Workflows</emphasis> in the <link
 
-      linkend="about">(Chapter 1)</link></para>
+      linkend="about">(Introduction)</link> chapter</para>
 
 
 
