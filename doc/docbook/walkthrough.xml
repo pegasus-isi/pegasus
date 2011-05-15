@@ -363,7 +363,7 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
                    
                    <orderedlist>
                        <listitem>
-                         <para>Pegaus Monitord - Tracks the job states as a workflow is executed</para>
+                         <para><emphasis>Pegaus Monitord</emphasis> - Tracks the job states as a workflow is executed</para>
 
                        </listitem>
                        <listitem>
@@ -371,20 +371,20 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
 
                        </listitem>
                        <listitem>
-                         <para>Pegaus Analyzer - Command line utility for parsing several workflow directory files to summarize useful information for the user</para>
+                         <para><emphasis>Pegaus Analyzer</emphasis> - Command line utility for parsing several workflow directory files to summarize useful information for the user</para>
 
                        </listitem>
                        <listitem>
-                         <para>Pegaus Remove - Comand line tool for aborting a workflow</para>
+                         <para><emphasis>Pegasus Remove</emphasis> - Comand line tool for aborting a workflow</para>
 
                        </listitem>
-                      <listitem>
 
-                       <link linkend="monitoring_debugging_stats"> "Monitoring Tools"</link>
-
-
-                      </listitem>
                       </orderedlist>
+                      
+                       <para> See
+                           <link linkend="monitoring_debugging_stats"> "Monitoring Tools"</link>
+
+                       </para>
                     </section>
                     <section>
                       <title>Plotting and Statistics Tools</title>
@@ -401,13 +401,9 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
 
                         </listitem>
 
-                        <listitem>
-                       <para>For details - See
-                       <link linkend="monitoring_debugging_stats"> "Plotting and Statistics Tools"</link>   </para>
-
-
-                        </listitem>
                         </orderedlist>
+                        <para> See
+                       <link linkend="monitoring_debugging_stats"> "Plotting and Statistics Tools"</link>   </para>
                       </section>
 
 
