@@ -2708,7 +2708,7 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
     <title>Example</title>
 
     <para>The Galactic Plane workflow is a Hierarchical workflow of many Montage workflows. For details, see <link
-    linkend="example_workflows">Workflow of Workflows</link> .</para>
+    linkend="example_workflows">Workflow of Workflows</link>.</para>
   </section>
 
   </section>
