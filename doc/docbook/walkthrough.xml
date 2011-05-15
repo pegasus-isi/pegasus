@@ -386,11 +386,12 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
 
                        </para>
                     </section>
-                    <section>
-                      <title>Plotting and Statistics Tools</title>
+       <section>
+     <title>Debugging and Statistical Analysis of Workflows</title>
 
-                        <para>Pegasus comes bundled with tools for producing statistical system reports</para>
-                        
+
+           <para>Pegasus comes bundled with tools for producing statistical system reports</para>
+
                         <orderedlist>
                         <listitem>
                            <para>Pegasus Statistics - Generates workflow execution statistics</para>
@@ -406,14 +407,6 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
                        <link linkend="monitoring_debugging_stats"> "Plotting and Statistics Tools"</link>   </para>
                       </section>
 
-
-
-
-
-
-
-
-    </section>
    </section>
     </section>
   <section>
@@ -422,17 +415,13 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
    <para>Include the persistence of each log and any storage repository for historical logs</para>
    
    
+   </section>
 
 
-  <section>
-     <title>Debugging and Statistical Analysis of Workflows</title>
-      <para>Describe each debugging tool used on workflows</para>
-   
-      <para>Describe the Statistical Analysis Reports and what they indicate</para>
    
 
    
-    </section>
+
     </section>
 
 </chapter>
