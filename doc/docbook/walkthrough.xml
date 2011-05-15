@@ -12,7 +12,7 @@
     The user will use an abstract workflow, convert it to an executable workflow, plan it and execute it, and then monitor the workflow execution.
      </para>
     
-
+   <para><emphasis>Walkthrough Organization:</emphasis></para>
    
    <itemizedlist>
       <listitem>
@@ -440,6 +440,7 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
     </section>
 
 </chapter>
+
 
 
 
