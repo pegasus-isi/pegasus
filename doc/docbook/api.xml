@@ -949,9 +949,9 @@
     &lt;uses file="sites.xml" link="input" register="false" transfer="true" type="data" /&gt;
   &lt;/dax&gt;</programlisting>
 
-          <para>The <emphasis>id</emphasis> and
-          <emphasis>node-label</emphasis> attributes were described <link
-          linkend="???">previously</link>. The <emphasis>name</emphasis>
+          <para>In addition to the <emphasis>id</emphasis> and
+          <emphasis>node-label</emphasis> attributes, See <link
+          linkend="Grapgh Nodes">Graph Nodes</link>. The <emphasis>name</emphasis>
           attribute refers to a file from the File Catalog that provides the
           to be planned DAX as external file data content. The
           <emphasis>dax</emphasis> element features optional
@@ -1036,7 +1036,7 @@
 
       <para>The following code example shows the XML instance document
       representing the diamond workflow from <link
-      linkend="concepts-fig-dax">the concepts figure</link>.</para>
+      linkend="images/DiamondWorkflow.png">the concepts figure</link>.</para>
 
       <programlisting>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
 &lt;!-- generated: 2010-11-19T20:00:29Z --&gt;
@@ -1101,7 +1101,7 @@
 &lt;/adag&gt;</programlisting>
 
       <para>The above workflow defines the black diamond from the abstract workflow section of the <link
-      linkend="about">Introduction</link>chapter. It will require
+      linkend="about">Introduction</link> chapter. It will require
       minimal configuration, because the catalog sections include all
       necessary declarations.</para>
 
@@ -1614,3 +1614,4 @@ ERROR: cvc-attribute.3: The value '2.6.18-194.26.1.el5' of attribute 'osversion'
     return with a non-zero exit code whenever errors were detected.</para>
   </section>
 </chapter>
+

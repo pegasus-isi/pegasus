@@ -7,13 +7,12 @@
   <section>
   
    <title> Walkthrough Objectives</title>
-    <para>Describe the sample project that the user will be assembling, what the objectives are, and what the user will be able to do after completing the walkthrough</para>
-    
-    </section>
-    
-  <section>
+    <para>Describe the subject of the sample project that the user will be assembling.
 
-   <title>Overview of Walkthrough Steps</title>
+    The user will use an abstract workflow, convert it to an executable workflow, plan it and execute it, and then monitor the workflow execution.
+     </para>
+    
+
    
    <itemizedlist>
       <listitem>
@@ -441,6 +440,7 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
     </section>
 
 </chapter>
+
 
 
 
