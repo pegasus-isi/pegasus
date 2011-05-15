@@ -352,7 +352,7 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
  
 
 
-    <section>
+<section>
 
      <title>Workflow Monitoring and Analysis</title>
 
@@ -385,7 +385,7 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
                            <link linkend="monitoring_debugging_stats"> "Monitoring Tools"</link>
 
                        </para>
-                    </section>
+</section>
        <section>
      <title>Debugging and Statistical Analysis of Workflows</title>
 
