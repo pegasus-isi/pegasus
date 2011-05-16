@@ -499,8 +499,9 @@
 
         <para>After the catalogs have been configured, the user properties
         file need to be updated with the types and locations of the catalogs
-        to use. These properties are explained in the basic.properties files
-        in the etc sub directory of the Pegasus installation.</para>
+        to use. These properties are described in the <emphasis>basic.properties</emphasis> files
+        in the <emphasis>etc</emphasis> sub directory of <link
+        linkend="installation">Installation</link> chapter.</para>
 
         <para>The basic properties that need to be set usually are listed
         below</para>
@@ -1336,6 +1337,7 @@ ec2     amazon::s3cmd    /path/to/pegasus/bin/s3cmd    INSTALLED   INTEL32::LINU
     </section>
   </section>
 </chapter>
+
 
 
 
