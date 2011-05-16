@@ -24,8 +24,9 @@ import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.common.util.DynamicLoader;
 
 import edu.isi.pegasus.planner.classes.PegasusBag;
-import edu.isi.pegasus.planner.parser.Parser;
 import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
 
 
 
@@ -57,7 +58,7 @@ public class DAXParserFactory {
 
 
     /*
-     * Predefined Constant for condor version 7.1.0
+     * Predefined Constant for DAX version 3.2.0
      */
     public static final long DAX_VERSION_3_2_0 = CondorVersion.numericValue( "3.2.0" );
 
@@ -92,7 +93,7 @@ public class DAXParserFactory {
      *
      * @see #DEFAULT_CALLBACK_PACKAGE_NAME
      */
-    public static Parser loadDAXParser( PegasusBag bag, String callbackClass, String daxFile ) throws DAXParserFactoryException{
+    public static DAXParser loadDAXParser( PegasusBag bag, String callbackClass, String daxFile ) throws DAXParserFactoryException{
 
         PegasusProperties properties = bag.getPegasusProperties();
 
@@ -103,16 +104,17 @@ public class DAXParserFactory {
 
         //load the callback
         Callback c = DAXParserFactory.loadDAXParserCallback( properties, daxFile, callbackClass );
-        return DAXParserFactory.loadDAXParser( bag, c );
+        return DAXParserFactory.loadDAXParser( bag, c, daxFile );
 
     }
 
     /**
-     * Loads the appropriate DAXParser looking at the dax schema that is specified by
-     * the user.
+     * Loads the appropriate DAXParser looking at the dax schema that is specified 
+     * in the DAX file. 
      *
      * @param bag         bag of Pegasus intialization objects
      * @param c           the dax callback.
+     * @param daxFile     the dax file to parser
      *
      * @return the DAXParser loaded.
      *
@@ -121,7 +123,7 @@ public class DAXParserFactory {
      *
      * @see #DEFAULT_CALLBACK_PACKAGE_NAME
      */
-    public static Parser loadDAXParser( PegasusBag bag, Callback c  ) throws DAXParserFactoryException{
+    public static DAXParser loadDAXParser( PegasusBag bag, Callback c , String daxFile ) throws DAXParserFactoryException{
 
         String daxClass = DAXParserFactory.DEFAULT_DAX_PARSER_CLASS;
         LogManager logger = bag.getLogger();
@@ -136,62 +138,101 @@ public class DAXParserFactory {
             throw new RuntimeException("Invalid logger passed");
         }
 
-        if( daxSchema != null ){
-            //try to determin the version of dax schema
-            try{
-                String version = null;
+        try{
+            //try to figure out the schema version by parsing the dax file
+            String schemaVersion = null;
+            if( daxFile != null && !daxFile.isEmpty() ){
+                Map m = getDAXMetadata( bag, daxFile );
+                if( m.containsKey( "version" ) && (schemaVersion = (String)m.get( "version" )) != null  ){
+                    
+                    logger.log( "DAX Version as determined from DAX file " + schemaVersion,
+                            LogManager.DEBUG_MESSAGE_LEVEL );
+                    
+                    //append .0 to the version number
+                    //to be able to convert to numberic value
+                    schemaVersion = schemaVersion + ".0";
+                
+                    
+                }
+            }
+        
+            //try to figure out the schema from the schema in properties
+            //in case unable to determine from the dax file
+            if( schemaVersion == null && daxSchema != null ){
+                //try to determin the version of dax schema
                 daxSchema = new File( daxSchema ).getName();
                 if( daxSchema.startsWith( "dax-" )  && daxSchema.endsWith( ".xsd" ) ){
-                    version = daxSchema.substring( daxSchema.indexOf( "dax-" ) + 4,
+                    schemaVersion = daxSchema.substring( daxSchema.indexOf( "dax-" ) + 4,
                                                    daxSchema.lastIndexOf(".xsd") );
 
                     
-                    logger.log( "DAX Version as determined from schema " + version,
+                    logger.log( "DAX Version as determined from schema property " + schemaVersion,
                         LogManager.DEBUG_MESSAGE_LEVEL );
                     
                     //append .0 to the version number
                     //to be able to convert to numberic value
-                    version = version + ".0";
+                    schemaVersion = schemaVersion + ".0";
         
-                    if( CondorVersion.numericValue(version) < DAXParserFactory.DAX_VERSION_3_2_0 ){
+                }            
+            }
+        
+           if( schemaVersion != null ){
+                   if( CondorVersion.numericValue(schemaVersion) < DAXParserFactory.DAX_VERSION_3_2_0 ){
                         daxClass = DAXParserFactory.DAX_PARSER2_CLASS;
                     }
                     else{
                         daxClass = DAXParserFactory.DAX_PARSER3_CLASS;
                     }
-                }
             }
-            catch( Exception e ){
-                logger.log( "Problem while determining the version of dax" ,
+        }
+        catch( Exception e ){
+            logger.log( "Problem while determining the version of dax" , e,
                             LogManager.ERROR_MESSAGE_LEVEL );
-            }
-
         }
         logger.log( "DAX Parser Class to be loaded is " + daxClass,
                         LogManager.DEBUG_MESSAGE_LEVEL );
         
 
-        Parser daxParser = null;
+        return loadDAXParser( daxClass, bag, c );
+    }
+    
+    /**
+     * Loads the appropriate DAXParser looking at the dax schema that is specified by
+     * the user.
+     *
+     * @param classname    the classname of the parser class that needs to be loaded
+     * @param bag          bag of Pegasus intialization objects
+     * @param c            the DAX Callback to use
+     *
+     * @return the DAXParser loaded.
+     *
+     * @exception DAXParserFactoryException that nests any error that
+     *            might occur during the instantiation
+     *
+     * @see #DEFAULT_CALLBACK_PACKAGE_NAME
+     */
+    public static final DAXParser loadDAXParser( String classname, PegasusBag bag, Callback c ){
+        DAXParser daxParser = null;
         try{
             //load the DAX Parser class
             //prepend the package name
-            daxClass = ( daxClass.indexOf('.') == -1)?
+            String daxClass = ( classname.indexOf('.') == -1)?
                         //pick up from the default package
-                        DEFAULT_PARSER_PACKAGE_NAME + "." + daxClass:
+                        DEFAULT_PARSER_PACKAGE_NAME + "." + classname:
                         //load directly
-                        daxClass;
+                        classname;
 
             DynamicLoader dl  = new DynamicLoader( daxClass );
             Object argList[]  = new Object[1];
             argList[0] = bag;
-            daxParser = (Parser)dl.instantiate(argList);
+            daxParser = (DAXParser)dl.instantiate(argList);
 
             //set the callback for the DAX Parser
             ((DAXParser)daxParser).setDAXCallback( c );
         }
         catch(Exception e){
             throw new DAXParserFactoryException( "Instantiating DAXParser ",
-                                                    daxClass, e);
+                                                    classname, e);
         }
         return daxParser;
     }
@@ -234,6 +275,42 @@ public class DAXParserFactory {
 
     }
 
+    /**
+     * Returns the metadata stored in the root adag element in the DAX
+     * 
+     * @param bag   the bag of initialization objects
+     * @param dax   the dax file.
+     * 
+     * @return Map containing the metadata, else an empty map
+     */
+    public static Map getDAXMetadata( PegasusBag bag, String dax ){
+        Callback cb =  DAXParserFactory.loadDAXParserCallback( bag.getPegasusProperties(), dax, "DAX2Metadata" );
+        
+        LogManager logger = bag.getLogger();
+        if( logger != null ){
+            logger.log( "Retrieving Metadata from the DAX file " + dax ,
+                        LogManager.DEBUG_MESSAGE_LEVEL );
+        }
+        
+        try{
+            Parser p = (Parser)DAXParserFactory.loadDAXParser( DAXParserFactory.DAX_PARSER2_CLASS,                                                 bag,
+                                                               cb );
+            p.startParser( dax );
+        }
+        catch( RuntimeException e ){
+            //check explicity for file not found exception
+            if( e.getCause() != null && e.getCause() instanceof java.io.IOException){
+                //rethrow 
+                throw e;
+            }
+            
+        }
+
+        Map result =  ( Map ) cb.getConstructedObject();
+        return ( result == null ) ? new HashMap() : result;
+    }
+    
+    
 
     /**
      * Loads the implementing class corresponding to the type specified by the user.

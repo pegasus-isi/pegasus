@@ -67,7 +67,7 @@ public class TestDAXParser {
        try{
 //           DaxParser parser = new DaxParser( daxFile, bag, mycallback );
            //DAXParser3 parser3 = new DAXParser3( daxFile, bag, mycallback );
-           Parser daxParser = DAXParserFactory.loadDAXParser( bag, "ExampleDAXCallback", daxFile );
+           Parser daxParser = (Parser)DAXParserFactory.loadDAXParser( bag, "ExampleDAXCallback", daxFile );
            daxParser.startParser( daxFile );
        }
        catch( Exception e ){

@@ -85,7 +85,7 @@ public class DAX2Metadata implements Callback {
         mMetadata.put( "count", (String)attributes.get( "count" ) );
         mMetadata.put( "index", (String)attributes.get( "index" ) );
         mMetadata.put( "name", (String)attributes.get( "name" ) );
-
+        mMetadata.put( "version", (String)attributes.get( "version" ) );
         //call the cbDone()
         cbDone();
     }

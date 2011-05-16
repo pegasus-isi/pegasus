@@ -201,7 +201,7 @@ public class PartitionAndPlan{
 
         try{
 //            DAXParser2 daxParser = new DAXParser2(options.getDAX(), mBag, cb);
-            Parser p = DAXParserFactory.loadDAXParser( mBag, cb );
+            Parser p = (Parser)DAXParserFactory.loadDAXParser( mBag, cb , options.getDAX());
             p.startParser( options.getDAX() );
         }
         catch( RuntimeException e ){

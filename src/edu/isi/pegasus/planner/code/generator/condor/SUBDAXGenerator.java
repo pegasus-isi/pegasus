@@ -295,7 +295,8 @@ public class SUBDAXGenerator{
         if( dax.exists() ){
             //retrieve the metadata in the subdax.
             //means the the dax needs to be generated beforehand.
-            Map metadata = getDAXMetadata( options.getDAX() );
+            //Map metadata = getDAXMetadata( options.getDAX() );
+            Map metadata = DAXParserFactory.getDAXMetadata( mBag, options.getDAX() );
             label = (String) metadata.get( "name" );
             index = (String) metadata.get( "index" );
             //the label for directory purposes includes the logical id too
@@ -1216,42 +1217,6 @@ public class SUBDAXGenerator{
         return destinationDAX.toString();
     }
     
-    
-    
-    /**
-     * Returns the metadata stored in the root adag element in the DAX
-     * 
-     * @param dax   the dax file.
-     * 
-     * @return Map containing the metadata.
-     */
-    public Map getDAXMetadata( String dax ){
-        Callback cb =  DAXParserFactory.loadDAXParserCallback( mProps, dax, "DAX2Metadata" );
-
-        try{
-//            DAXParser2 daxParser = new DAXParser2( dax, mBag, cb);
-            Parser p = DAXParserFactory.loadDAXParser( mBag, cb );
-            p.startParser( dax );
-        }
-        catch( RuntimeException e ){
-            //check explicity for file not found exception
-            if( e.getCause() != null && e.getCause() instanceof java.io.IOException){
-                //rethrow 
-                throw e;
-            }
-            
-            //ignore only if the parsing is completed
-            mLogger.log( e.getMessage(), LogManager.DEBUG_MESSAGE_LEVEL );
-        }
-
-        return ( Map ) cb.getConstructedObject();
-        
-    }
-    
-    
-    
-
-
     /**
      * Creates the submit directory for the workflow. This is not thread safe.
      *

@@ -331,16 +331,16 @@ public class DAXParser2 extends Parser implements DAXParser {
         //try to get the version number
         //of the dax
         mDaxSchemaVersion = getVersionOfDAX( daxFileName );
-        mLogger.log( "Version of DAX as picked up from the DAX " + mDaxSchemaVersion,
+        mLogger.log( "DAXParser2 Version of DAX as picked up from the DAX " + mDaxSchemaVersion,
                       LogManager.DEBUG_MESSAGE_LEVEL );
         String schemaLoc = getSchemaLocation();
-        mLogger.log( "Picking schema for DAX" + schemaLoc, LogManager.CONFIG_MESSAGE_LEVEL );
+        mLogger.log( "DAXParser2 Picking schema for DAX " + schemaLoc, LogManager.DEBUG_MESSAGE_LEVEL );
         String list = DAXParser2.SCHEMA_NAMESPACE + " " + schemaLoc;
         setSchemaLocations(list);
 
         //figure out whether to pick up the double negative flags or not
         mUseDoubleNegative = useDoubleNegative( mDaxSchemaVersion );
-        mLogger.log( "Picking up the dontTransfer and dontRegister flags " + mUseDoubleNegative,
+        mLogger.log( "DAXParser2 Picking up the dontTransfer and dontRegister flags " + mUseDoubleNegative,
                      LogManager.DEBUG_MESSAGE_LEVEL );
 
         mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_PARSE_DAX, LoggingKeys.DAX_ID, daxFileName );
@@ -354,8 +354,8 @@ public class DAXParser2 extends Parser implements DAXParser {
         catch (Exception e) {
             //if a locator error then
             String message = (mLocator == null) ?
-                           "While parsing the file " + daxFileName:
-                           "While parsing file " + mLocator.getSystemId() +
+                           "DAXParser2 While parsing the file " + daxFileName:
+                           "DAXParser2 While parsing file " + mLocator.getSystemId() +
                            " at line " + mLocator.getLineNumber() +
                            " at column " + mLocator.getColumnNumber();
             throw new RuntimeException(message, e);

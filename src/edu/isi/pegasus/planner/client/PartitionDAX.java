@@ -37,6 +37,7 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.common.util.FactoryException;
 
 import edu.isi.pegasus.planner.parser.Parser;
+import edu.isi.pegasus.planner.parser.dax.DAXParser;
 import gnu.getopt.Getopt;
 import gnu.getopt.LongOpt;
 
@@ -266,7 +267,7 @@ public class PartitionDAX extends Executable {
             bag.add( PegasusBag.PEGASUS_LOGMANAGER, mLogger );
 
 //            DAXParser2 d = new DAXParser2( daxFile, bag, callback );
-            Parser p = DAXParserFactory.loadDAXParser( bag, callback );
+            Parser p = (Parser)DAXParserFactory.loadDAXParser( bag, callback, daxFile );
             p.startParser( daxFile );
 
 
