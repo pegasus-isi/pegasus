@@ -351,8 +351,13 @@ public class Stampede implements CodeGenerator {
         mLogFormatter.add( Stampede.TYPE_DESCRIPTION_KEY, job.getJobTypeDescription() );
 
         mLogFormatter.add( Stampede.TASK_TRANSFORMATION_KEY, job.getCompleteTCName() );
-        mLogFormatter.add( Stampede.ARGUMENTS_KEY, job.getArguments() );
-            
+        
+        //only add arguments attribute if arguments are not 
+        //null and length > 0 . Job constructor initializes arguments to ""
+        if( job.getArguments() != null && job.getArguments().length() > 0 ){
+            mLogFormatter.add( Stampede.ARGUMENTS_KEY, job.getArguments() );
+        }
+        
         writer.println( mLogFormatter.createLogMessage() );
         mLogFormatter.popEvent();
 
@@ -387,7 +392,12 @@ public class Stampede implements CodeGenerator {
 
            
         mLogFormatter.add( Stampede.JOB_EXECUTABLE_KEY , job.getRemoteExecutable() );
-        mLogFormatter.add( Stampede.ARGUMENTS_KEY , job.getArguments() );
+        
+        //only add arguments attribute if arguments are not 
+        //null and length > 0 . Job constructor initializes arguments to ""
+        if( job.getArguments() != null && job.getArguments().length() > 0 ){
+            mLogFormatter.add( Stampede.ARGUMENTS_KEY , job.getArguments() );
+        }
     
         //determine count of jobs
         int taskCount = getTaskCount( job );

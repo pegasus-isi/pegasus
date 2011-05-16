@@ -416,8 +416,13 @@ public class CondorGenerator extends Abstract {
             else{ //normal jobs and subdax jobs
                 
                 if( job.typeRecursive() ){
-                    
+                    Job daxJob = job;
                     job = subdaxGen.generateCode( job  );
+                    
+                    //set the arguments to the DAX job to the ones
+                    //in the generated DAGJob to ensure stampede event
+                    //is generated correctly
+                    daxJob.setArguments( job.getArguments() );
                 }
                 
                 if( job != null ){
