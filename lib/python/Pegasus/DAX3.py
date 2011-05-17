@@ -126,8 +126,6 @@ __all__ = [
 import datetime, pwd, os, sys
 from StringIO import StringIO
 import codecs
-import xml.sax
-import xml.sax.handler
 import shlex
 import codecs
 
@@ -139,6 +137,7 @@ class DAX3Error(Exception): pass
 class DuplicateError(DAX3Error): pass
 class NotFoundError(DAX3Error): pass
 class FormatError(DAX3Error): pass
+class ParseError(DAX3Error): pass
 
 class Element:
     """Representation of an XML element for formatting output"""
@@ -691,7 +690,7 @@ class PFN(ProfileMixin):
         PFN('http://site.com/path/to/file.txt',site='site')
         PFN('http://site.com/path/to/file.txt')
     """
-    def __init__(self, url, site="local"):
+    def __init__(self, url, site=None):
         """
         Arguments:
             url: The url of the file.
@@ -721,8 +720,8 @@ class PFN(ProfileMixin):
     
     def toXML(self):
         pfn = Element('pfn', [
-            ('url',self.url),
-            ('site',self.site)
+            ('url', self.url),
+            ('site', self.site)
         ])
         for p in self.profiles:
             pfn.element(p.toXML())
@@ -1024,15 +1023,22 @@ class AbstractJob(ProfileMixin,UseMixin,InvokeMixin):
         self.stdin = None
     
     def addArguments(self, *arguments):
-        """Add one or more arguments to the job"""
+        """Add one or more arguments to the job (this will add whitespace)"""
         for arg in arguments:
-            if not (isinstance(arg, File) or isinstance(arg, str) or isinstance(arg, unicode)):
+            if not isinstance(arg, (File, basestring)):
                 raise FormatError("Invalid argument", arg)
         for arg in arguments:
             if len(self.arguments) > 0:
                 self.arguments.append(' ')
             self.arguments.append(arg)
-            
+    
+    def addRawArguments(self, *arguments):
+        """Add one or more arguments to the job (whitespace will NOT be added)"""
+        for arg in arguments:
+            if not isinstance(arg, (File, basestring)):
+                raise FormatError("Invalid argument", arg)
+        self.arguments.extend(arguments)
+    
     def clearArguments(self):
         """Remove all arguments from this job"""
         self.arguments = []
@@ -1064,22 +1070,22 @@ class AbstractJob(ProfileMixin,UseMixin,InvokeMixin):
             self.stderr = filename
         else:
             self.stderr = File(filename)
-            
+    
     def clearStderr(self):
         """Remove stderr file"""
         self.stderr = None
-
+    
     def setStdin(self, filename):
         """Redirect stdin from a file"""
         if isinstance(filename, File):
             self.stdin = filename
         else:
             self.stdin = File(filename)
-            
+    
     def clearStdin(self):
         """Remove stdin file"""
         self.stdin = None
-        
+    
     def innerXML(self, element):
         """Return an XML representation of this job"""
         # Arguments
@@ -1384,6 +1390,8 @@ class ADAG(InvokeMixin):
         if not name:
             raise FormatError("Invalid ADAG name", name)
         self.name = name
+        if count: count = int(count)
+        if index: index = int(index)
         self.count = count
         self.index = index
         
@@ -1665,231 +1673,286 @@ class ADAG(InvokeMixin):
         # Close tag
         out.write('</adag>\n')
 
-
-class DAXHandler(xml.sax.handler.ContentHandler):
-    """
-    This is a DAX parser
-    """
-    def __init__(self):
-        self.elements = []
-        self.adag = None
-        self.jobmap = {}
-        self.filemap = {}
-        self.lastJob = None
-        self.lastChild = None
-        self.lastArgument = None
-        self.lastProfile = None
-        self.lastMetadata = None
-        self.lastPFN = None
-        self.lastFile = None
-        self.lastInvoke = None
-        self.lastTransformation = None
-        
-    def startElement(self, element, attrs):
-        self.elements.insert(0, element)
-        parent = None
-        if len(self.elements) > 1:
-            parent = self.elements[1]
-        
-        if element == "adag":
-            name = attrs.get("name")
-            count = attrs.get("count")
-            index = attrs.get("index")
-            self.adag = ADAG(name,count,index)
-        elif element == "file":
-            name = attrs.get("name")
-            
-            if name in self.filemap:
-                f = self.filemap[name]
-            else:
-                f = File(name=name)
-                self.filemap[name] = f
-                    
-            if parent == 'adag':
-                self.adag.addFile(f)
-            elif parent == 'argument':
-                self.lastArgument.append(f)
-            else:
-                raise Exception("Adding file to %s" % parent)
-            self.lastFile = f
-        elif element == "executable":
-            name = attrs.get("name")
-            namespace = attrs.get("namespace")
-            version  = attrs.get("version")
-            arch = attrs.get("arch")
-            os  = attrs.get("os")
-            osrelease = attrs.get("osrelease")
-            osversion = attrs.get("osversion")
-            glibc = attrs.get("glibc")
-            installed = attrs.get("installed")
-            if installed is not None:
-                installed = bool(installed)
-            e = Executable(name=name, namespace=namespace, version=version,
-                arch=arch, os=os, osrelease=osrelease, osversion=osversion,
-                glibc=glibc, installed=installed)
-            self.filemap[name] = e
-            self.adag.addExecutable(e)
-            self.lastFile = e
-        elif element == "transformation":
-            namespace = attrs.get("namespace")
-            name = attrs.get("name")
-            version = attrs.get("version")
-            t = Transformation(name=name, namespace=namespace, version=version)
-            self.lastTransformation = t
-            self.adag.addTransformation(t)
-        elif element in ["job","dag","dax"]:
-            id = attrs.get("id")
-            namespace = attrs.get("namespace")
-            if element == 'job':
-                name = attrs.get("name")
-            else:
-                name = attrs.get("file")
-            version = attrs.get("version")
-            node_label = attrs.get("node-label")
-            if element == "job":
-                job = Job(id=id, namespace=namespace, name=name, version=version,
-                        node_label=node_label)
-                self.adag.addJob(job)
-            elif element == "dag":
-                job = DAG(file=name, id=id, node_label=node_label)
-                self.adag.addDAG(job)
-            else:
-                job = DAX(file=name, id=id, node_label=node_label)
-                self.adag.addDAX(job)
-            self.jobmap[id] = job
-            self.lastJob = job
-        elif element == "argument":
-            self.lastArgument = []
-        elif element == "profile":
-            namespace = attrs.get("namespace")
-            key = attrs.get("key")
-            p = Profile(namespace,key,"")
-            if parent == 'job':
-                self.lastJob.addProfile(p)
-            elif parent in ['file','executable']:
-                self.lastFile.addProfile(p)
-            elif parent == 'pfn':
-                self.lastPFN.addProfile(p)
-            else:
-                raise Exception("Adding profile to %s" % parent)
-            self.lastProfile = p
-        elif element == "metadata":
-            key = attrs.get("key")
-            type = attrs.get("type")
-            meta = Metadata(key=key,type=type,value="")
-            if parent in ["file","executable"]:
-                self.lastFile.addMetadata(meta)
-            elif parent == "transformation":
-                self.lastTransformation.addMetadata(meta)
-            elif parent == "job":
-                self.lastJob.addMetadata(meta)
-            else:
-                raise Exception("Adding metadata to %s" % parent)
-            self.lastMetadata = meta
-        elif element == "pfn":
-            url = attrs.get("url")
-            site = attrs.get("site")
-            pfn = PFN(url=url, site=site)
-            if parent in ["file","executable"]:
-                self.lastFile.addPFN(pfn)
-            else:
-                raise Exception("Adding PFN to %s" % parent)
-            self.lastPFN = pfn
-        elif element in ["stdin","stdout","stderr"]:
-            name = attrs.get("name")
-            f = File(name)
-            if element == "stdin":
-                self.lastJob.setStdin(f)
-            elif element == "stdout":
-                self.lastJob.setStdout(f)
-            else:
-                self.lastJob.setStderr(f)
-        elif element == "uses":
-            name = attrs.get("name")
-            link = attrs.get("link")
-            optional = attrs.get("optional")
-            register = attrs.get("register")
-            transfer = attrs.get("transfer")
-            namespace = attrs.get("namespace")
-            version = attrs.get("version")
-            executable = attrs.get("executable")
-            if executable is not None:
-                executable = bool(executable)
-                
-            if parent in ['job','dax','dag']:
-                self.lastJob.uses(name, link=link, register=register,
-                    transfer=transfer, optional=optional, namespace=namespace,
-                    version=version, executable=executable)
-            elif parent == 'transformation':
-                self.lastTransformation.uses(name, namespace=namespace,
-                    version=version, executable=executable)
-            else:
-                raise Exception("Adding uses to %s" % parent)
-        elif element == "invoke":
-            self.lastInvoke = [attrs.get("when"), ""]
-        elif element == "child":
-            ref = attrs.get("ref")
-            self.lastChild = self.jobmap[ref]
-        elif element == "parent":
-            ref = attrs.get("ref")
-            edge_label = attrs.get("edge-label")
-            p = self.jobmap[ref]
-            self.adag.depends(parent=p, child=self.lastChild, edge_label=edge_label)
-        else:
-            raise Exception("Unrecognized element %s" % name)
-            
-    def characters(self, chars):
-        parent = self.elements[0]
-        
-        if parent == "argument":
-            self.lastArgument.append(unicode(chars))
-        elif parent == "profile":
-            self.lastProfile.value += chars
-        elif parent == "metadata":
-            self.lastMetadata.value += chars
-        elif parent == "invoke":
-            self.lastInvoke[1] += chars
-            
-    def endElement(self, element):
-        self.elements = self.elements[1:]
-        
-        if element == "child":
-            self.lastChild = None
-        elif element in ["job","dax","dag"]:
-            self.lastJob = None
-        elif element == "argument":
-            self.lastJob.arguments = self.lastArgument[:]
-            self.lastArgument = None
-        elif element == "profile":
-            self.lastProfile = None
-        elif element == "metadata":
-            self.lastMetadata = None
-        elif element == "pfn":
-            self.lastPFN = None
-        elif element == "invoke":
-            self.lastJob.invoke(*self.lastInvoke)
-            self.lastInvoke = None
-        elif element == "transformation":
-            self.lastTransformation = None
-        
-    
-def parse(fname):
-    """
-    Parse DAX from a Pegasus DAX file.
-    """
-    handler = DAXHandler()
-    xml.sax.parse(fname, handler)
-    return handler.adag
-
-
 def parseString(string):
-    """
-    Parse DAX from a string
-    """
-    handler = DAXHandler()
-    xml.sax.parseString(string, handler)
-    return handler.adag
+    s = StringIO(string)
+    return parse(s)
 
+def parse(infile):
+    try:
+        import xml.etree.cElementTree as etree
+    except:
+        try:
+            import xml.etree.ElementTree as etree
+        except:
+            try:
+                import elementtree.ElementTree as etree
+            except:
+                raise Exception("Please install elementtree")
+    
+    NS = "{http://pegasus.isi.edu/schema/DAX}"
+    
+    def QN(tag):
+        return NS+tag
+    
+    def badattr(e, exc):
+        return ParseError("Attribute '%s' is required for element %s" % (exc.args[0], e.tag))
+    
+    def parse_invoke(e):
+        try:
+            return Invoke(when=e.attrib["when"], what=e.text)
+        except KeyError, ke:
+            raise badattr(e, ke)
+    
+    def parse_adag(e):
+        try:
+            name = e.attrib['name']
+            count = e.get("count", None)
+            index = e.get("index", None)
+            return ADAG(name=name, count=count, index=index)
+        except KeyError, ke:
+            raise badattr(e, ke)
+    
+    def parse_profile(e):
+        try:
+            return Profile(
+                namespace=e.attrib["namespace"],
+                key=e.attrib["key"],
+                value=e.text)
+        except KeyError, ke:
+            raise badattr(e, ke)
+    
+    def parse_metadata(e):
+        try:
+            return Metadata(
+                key=e.attrib['key'],
+                type=e.attrib['type'],
+                value=e.text)
+        except KeyError, ke:
+            raise badattr(e, ke)
+    
+    def parse_pfn(e):
+        try:
+            p = PFN(
+                url=e.attrib['url'],
+                site=e.get("site", None)
+            )
+        except KeyError, ke:
+            raise badattr(e, ke)
+        for pr in e.findall(QN("profile")):
+            p.addProfile(parse_profile(pr))
+        return p
+    
+    def parse_catalog(e, f):
+        for p in e.findall(QN("profile")):
+            f.addProfile(parse_profile(p))
+        for m in e.findall(QN("metadata")):
+            f.addMetadata(parse_metadata(m))
+        for p in e.findall(QN("pfn")):
+            f.addPFN(parse_pfn(p))
+        return f
+    
+    def parse_file(e):
+        try:
+            f = File(e.attrib['name'])
+        except KeyError, ke:
+            raise badattr(e, ke)
+        return parse_catalog(e, f)
+    
+    def parse_executable(e):
+        try:
+            exe = Executable(
+                name=e.attrib['name'],
+                namespace=e.get("namespace", None),
+                version=e.get("version", None),
+                arch=e.get("arch", None),
+                os=e.get("os", None), 
+                osrelease=e.get("osrelease", None),
+                osversion=e.get("osversion", None),
+                glibc=e.get("glibc", None),
+                installed=e.get("installed", None)
+            )
+        except KeyError, ke:
+            raise badattr(e, ke)
+        parse_catalog(e, exe)
+        for i in e.findall(QN("invoke")):
+            exe.addInvoke(parse_invoke(i))
+        return exe
+    
+    def parse_uses(e):
+        try:
+            return Use(
+                e.attrib['name'],
+                namespace = e.get('namespace', None),
+                version = e.get('version', None),
+                link = e.get('link', None),
+                register = e.get('register', None),
+                transfer = e.get('transfer', None),
+                optional = e.get('optional', None),
+                executable = e.get('executable', None)
+            )
+        except KeyError, ke:
+            raise badattr(e, ke)
+    
+    def parse_transformation(e):
+        try:
+            t = Transformation(
+                namespace=e.get("namespace", None),
+                name=e.attrib['name'],
+                version=e.get("version", None))
+        except KeyError, ke:
+            raise badattr(e, ke)
+        for u in e.findall(QN("uses")):
+            t.addUse(parse_uses(u))
+        for i in e.findall(QN("invoke")):
+            t.addInvoke(parse_invoke(i))
+        return t
+    
+    def iterelem(e):
+        if e.text:
+            yield e.text
+        for f in e:
+            if f.text:
+                yield f.text
+            yield f
+            if f.tail:
+                yield f.tail
+    
+    def parse_absjob(e, j):
+        args = e.find(QN("argument"))
+        if args is not None:
+            for i in iterelem(args):
+                if isinstance(i, basestring):
+                    j.addRawArguments(i)
+                else:
+                    j.addRawArguments(File(i.attrib['name']))
+        
+        try:
+            s = e.find(QN("stdin"))
+            if s is not None:
+                j.setStdin(s.attrib['name'])
+            
+            s = e.find(QN("stdout"))
+            if s is not None:
+                j.setStdout(s.attrib['name'])
+            
+            s = e.find(QN("stderr"))
+            if s is not None:
+                j.setStderr(s.attrib['name'])
+        except KeyError, ke:
+            raise badattr(s, ke)
+        
+        for p in e.findall(QN("profile")):
+            j.addProfile(parse_profile(p))
+        
+        for u in e.findall(QN("uses")):
+            j.addUse(parse_uses(u))
+        
+        for i in e.findall(QN("invoke")):
+            j.addInvoke(parse_invoke(i))
+        
+        return j
+    
+    def parse_job(e):
+        try:
+            j = Job(
+                name=e.attrib["name"],
+                id=e.attrib["id"], 
+                namespace=e.get("namespace", None),
+                version=e.get("version", None),
+                node_label=e.get("node-label", None)
+            )
+        except KeyError, ke:
+            raise badattr(e, ke)
+        return parse_absjob(e, j)
+        
+    def parse_dax(e):
+        try:
+            d = DAX(
+                file=e.attrib["file"],
+                id=e.attrib["id"],
+                node_label=e.get("node-label", None)
+            )
+        except KeyError, ke:
+            raise badattr(e, ke)
+        return parse_absjob(e, d)
+        
+    def parse_dag(e):
+        try:
+            d = DAG(
+                file=e.attrib["file"],
+                id=e.attrib["id"],
+                node_label=e.get("node-label", None)
+            )
+        except KeyError, ke:
+            raise badattr(e, ke)
+        return parse_absjob(e, d)
+        
+    def parse_dependencies(e):
+        try:
+            child = e.attrib["ref"]
+        except KeyError, ke:
+            raise badattr(e, ke)
+        for p in e.findall(QN("parent")):
+            try:
+                parent = p.attrib["ref"]
+                label = p.attrib.get("edge-label", None)
+                yield Dependency(parent, child, label)
+            except KeyError, ke:
+                raise badattr(p, ke)
+    
+    # We use iterparse because we don't have to read in the
+    # entire document
+    iterator = etree.iterparse(infile, events=("start", "end"))
+    iterator = iter(iterator)
+    
+    # Get the document element (should be <adag>)
+    event, root = iterator.next()
+    adag = parse_adag(root)
+    
+    # This function reads all the children of "node"
+    def expand(node):
+        event, elem = iterator.next()
+        while elem != node:
+            event, elem = iterator.next()
+            
+        # We clear the document element to prevent
+        # the memory usage from growing
+        root.clear()
+    
+    for ev, elem in iterator:
+        if ev == "end":
+            continue
+        
+        # Read in the entire element and children
+        expand(elem)
+            
+        if elem.tag == QN("job"):
+            j = parse_job(elem)
+            adag.addJob(j)
+        elif elem.tag == QN("child"):
+            for d in parse_dependencies(elem):
+                adag.addDependency(d)
+        elif elem.tag == QN("file"):
+            f = parse_file(elem)
+            adag.addFile(f)
+        elif elem.tag == QN("executable"):
+            e = parse_executable(elem)
+            adag.addExecutable(e)
+        elif elem.tag == QN("transformation"):
+            t = parse_transformation(elem)
+            adag.addTransformation(t)
+        elif elem.tag == QN("dag"):
+            d = parse_dag(elem)
+            adag.addJob(d)
+        elif elem.tag == QN("dax"):
+            d = parse_dax(elem)
+            adag.addJob(d)
+        elif elem.tag == QN("invoke"):
+            adag.addInvoke(parse_invoke(elem))
+        else:
+            raise ParseError("Unknown tag", elem.tag)
+    
+    return adag
 
 def main():
     """Simple smoke test"""
@@ -1958,7 +2021,6 @@ def main():
     # Get generated diamond dax
     import sys
     diamond.writeXML(sys.stdout)
-
 
 if __name__ == '__main__':
     main()

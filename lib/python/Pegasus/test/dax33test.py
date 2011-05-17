@@ -8,7 +8,7 @@ from Pegasus.DAX3 import *
 
 # Create a DAX
 diamond = ADAG("diamond", index=1, count=10)
-diamond.invoke("what", "when")
+diamond.invoke(what="what", when="when")
 
 # Add input file to the DAX-level replica catalog
 a = File("f.a")
@@ -27,7 +27,7 @@ e_preprocess.metadata("size","int",100)
 pfn = PFN("gsiftp://site.com/bin/preprocess","site")
 pfn.profile("pegasus", "baz", "abcd")
 e_preprocess.addPFN(pfn)
-e_preprocess.invoke("what", "when")
+e_preprocess.invoke(what="what", when="when")
 diamond.addExecutable(e_preprocess)
 
 e_findrange = Executable(namespace="diamond", name="findrange", version="4.0", os="linux", arch="x86_64")
@@ -40,7 +40,7 @@ diamond.addExecutable(e_analyze)
 
 # Add transformations to the DAX-level transformation catalog
 t_preprocess = Transformation(e_preprocess)
-t_preprocess.invoke("what", "when")
+t_preprocess.invoke(what="what", when="when")
 t_preprocess.uses(cfg)
 diamond.addTransformation(t_preprocess)
 
@@ -65,7 +65,7 @@ preprocess.uses(a, link=Link.INPUT, optional=True)
 preprocess.uses(b1, link=Link.OUTPUT, transfer=True, optional=True)
 preprocess.uses(b2, link=Link.OUTPUT, transfer=True, register=True)
 preprocess.uses(e_preprocess)
-preprocess.invoke("when", "what")
+preprocess.invoke(when="when", what="what")
 diamond.addJob(preprocess)
 
 # Add left Findrange job
@@ -101,7 +101,7 @@ dax.uses(a, link=Link.INPUT, optional=True)
 dax.uses(b1, link=Link.OUTPUT, transfer=True, optional=True)
 dax.uses(b2, link=Link.OUTPUT, transfer=True, register=True)
 dax.uses(e_preprocess)
-dax.invoke("when", "what")
+dax.invoke(when="when", what="what")
 diamond.addJob(dax)
 
 
@@ -115,7 +115,7 @@ dag.uses(a, link=Link.INPUT, optional=True)
 dag.uses(b1, link=Link.OUTPUT, transfer=True, optional=True)
 dag.uses(b2, link=Link.OUTPUT, transfer=True, register=True)
 dag.uses(e_preprocess)
-dag.invoke("when", "what")
+dag.invoke(when="when", what="what")
 diamond.addDAG(dag)
 
 # Add dependencies

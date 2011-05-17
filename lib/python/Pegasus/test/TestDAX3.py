@@ -6,6 +6,7 @@ import os
 
 DIR = os.path.dirname(__file__)
 DIAMOND_DAX = os.path.join(DIR, "diamond.xml")
+DAX33TEST_DAX = os.path.join(DIR, "dax33test.xml")
 
 class TestElement(unittest.TestCase):
     def testSimple(self):
@@ -1088,17 +1089,19 @@ class TestParse(unittest.TestCase):
     
     def testParse(self):
         """Should be able to parse a file using parse()"""
-        adag = parse(DIAMOND_DAX)
+        adag = parse(DAX33TEST_DAX)
     
     def testParseString(self):
         """Should be able to parse a string using parseString()"""
-        txt = open(DIAMOND_DAX).read()
+        txt = open(DAX33TEST_DAX).read()
         adag = parseString(txt)
-    
 
 class TestScale(unittest.TestCase):
+    TESTFILE = "/tmp/test_pegasus_dax3.xml"
+    
     def testLargeWorkflow(self):
-        """It shouldn't take more than 5 seconds to build a 20000 job workflow"""
+        """It shouldn't take more than 5 seconds to build a 20000 job workflow
+        or parse it"""
         import time
         from cStringIO import StringIO
         start = time.time()
@@ -1110,12 +1113,24 @@ class TestScale(unittest.TestCase):
             a.addJob(j)
             a.depends(j,x)
             x = j
-        s = StringIO()
-        a.writeXML(s)
-        s.close()
+        f = open(self.TESTFILE, "w")
+        a.writeXML(f)
+        f.close()
         end = time.time()
         elapsed = end - start
         self.assertTrue(elapsed < 5)
+        
+        a = None
+        
+        # Parse
+        start = time.time()
+        a = parse(self.TESTFILE)
+        end = time.time()
+        elapsed = end - start
+        self.assertTrue(elapsed < 5)
+    
+    def tearDown(self):
+        os.remove(self.TESTFILE)
         
 if __name__ == "__main__":
     unittest.main()
