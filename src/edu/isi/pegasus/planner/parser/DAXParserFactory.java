@@ -190,7 +190,7 @@ public class DAXParserFactory {
                             LogManager.ERROR_MESSAGE_LEVEL );
         }
         logger.log( "DAX Parser Class to be loaded is " + daxClass,
-                        LogManager.DEBUG_MESSAGE_LEVEL );
+                        LogManager.CONFIG_MESSAGE_LEVEL );
         
 
         return loadDAXParser( daxClass, bag, c );
@@ -295,6 +295,13 @@ public class DAXParserFactory {
         try{
             Parser p = (Parser)DAXParserFactory.loadDAXParser( DAXParserFactory.DAX_PARSER2_CLASS,                                                 bag,
                                                                cb );
+            
+            //while determining the metadata we are just parsing adag element
+            //we want the parser validation to be turned off.
+            /*
+            p.setParserFeature("http://xml.org/sax/features/validation", false);
+            p.setParserFeature("http://apache.org/xml/features/validation/schema", false);
+            */
             p.startParser( dax );
         }
         catch( RuntimeException e ){
