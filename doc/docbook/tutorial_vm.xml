@@ -30,7 +30,7 @@ Fri Mar 18 12:50:05 PDT 2011
     url="http://www.virtualbox.org/wiki/Downloads"> Virtual Box
     Website</ulink> .</para>
 
-    <para>The instructors have tested the image with Virtual Box 3.2.10</para>
+    <para>The instructors have tested the image with Virtual Box 4.0.6</para>
 
     <section>
       <title>Download the VM for Virtual Box use</title>
@@ -46,7 +46,9 @@ Fri Mar 18 12:50:05 PDT 2011
           <para>It is around <emphasis role="bold">576 MB</emphasis> in size.
           We recommend using a command line tool like <emphasis
           role="bold">wget</emphasis> to download the image. Downloading the
-          image using the browser sometimes corrupts the image.</para>
+          image using the browser may sometimes corrupt the image. If you are
+          running windows you try downloading using firefox instead of
+          Internet Explorer.</para>
 
           <programlisting>$ <emphasis role="bold">wget http://pegasus.isi.edu/wms/download/3.0/Pegasus-3.0.2-Debian-6-x86.vbox.tar.bz2
 
@@ -59,7 +61,8 @@ Length: 604,017,271 (576M) [application/x-bzip2]
 
 </programlisting>
 
-          <para>The Image is bzipped . You will need to unzip it.</para>
+          <para>The Image is bzipped . You will need to unzip it. For Windows
+          you may need winzip or similar tools to extract the VM files.</para>
 
           <para>If you have gnu tar you can do this directly</para>
 
@@ -87,34 +90,6 @@ $ tar xvf Pegasus-3.0.2-Debian-6-x86.vbox.tar</emphasis></programlisting>
 
       <orderedlist>
         <listitem>
-          <para>In the Menu, click File and select Virtual Media Manager (
-          File &gt; Virtual Media Manager )</para>
-        </listitem>
-
-        <listitem>
-          <para>The Virtual Media Manager Windows opens up.</para>
-        </listitem>
-
-        <listitem>
-          <para>Click on "Add" button to add the<emphasis role="bold">
-          Pegasus-3.0.2-Debian-6-x86.vbox/Debian-6-x86.vmdk</emphasis> file
-          that you just downloaded and unzipped.</para>
-        </listitem>
-
-        <listitem>
-          <para>You will now see the Debian-6-x86.vmdk in the list of hard
-          disks with Actual size listed as around 3.0 GB</para>
-        </listitem>
-
-        <listitem>
-          <para>Close the Window for the Virtual Media Manager</para>
-        </listitem>
-      </orderedlist>
-
-      <para>We will now create a Virtual Machine in the Virtual Box.</para>
-
-      <orderedlist>
-        <listitem>
           <para>In the Menu, click Machine and select New ( Machine &gt; New
           )</para>
         </listitem>
@@ -133,13 +108,16 @@ $ tar xvf Pegasus-3.0.2-Debian-6-x86.vbox.tar</emphasis></programlisting>
 
         <listitem>
           <para>Set the base memory to <emphasis role="bold">384 MB</emphasis>
-          . It defaults to 512 MB. Click Continue</para>
+          . It defaults to 512 MB. If you have more ram on your laptop/deskop
+          feel free to adjust this setting. Click Continue</para>
         </listitem>
 
         <listitem>
           <para>We now select the Virtual Hard Disk to use with the machine.
-          Select the option box for Use Existing Hard Disk. Select <emphasis
-          role="bold">Debian-6-x86.vmdk</emphasis> from the list . Click
+          Select the option box for Use Existing Hard Disk. Click the folder
+          icon next to the list and locate the file <emphasis
+          role="bold">Debian-6-x86.vmdk</emphasis> in the folder <emphasis
+          role="bold">Pegasus-3.0.2-Debian-6-x86.vbox</emphasis>. Click
           Continue</para>
         </listitem>
 
