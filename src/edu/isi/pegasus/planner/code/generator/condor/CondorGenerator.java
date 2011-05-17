@@ -1201,7 +1201,7 @@ public class CondorGenerator extends Abstract {
         Map entries = new HashMap();
         entries.put( Braindump.GENERATOR_TYPE_KEY, "dag" );
         entries.put( "dag", this.getDAGFilename( workflow, ".dag") );
-        entries.put( "condor_log", this.getCondorLogInSubmitDirectory( workflow ) );
+        entries.put( "condor_log", new File(this.getCondorLogInSubmitDirectory( workflow )).getName() );
         return entries;
     }
     

@@ -298,7 +298,7 @@ public class Braindump {
         entries.put( Braindump.PLANNER_ARGUMENTS_KEY, arguments.toString() );
 
         //required by tailstatd
-        entries.put( "jsd" , absPath + File.separator + "jobstate.log");
+        entries.put( "jsd" , "jobstate.log");
         entries.put( "rundir" , directory.getName());
         entries.put( "pegasushome", mProps.getPegasusHome());
         entries.put( "vogroup" , mPOptions.getVOGroup() );
