@@ -280,7 +280,7 @@ public class Braindump {
         entries.put( Braindump.SUBMIT_DIR_KEY, absPath );
         
         //the properties file
-        entries.put( Braindump.PROPERTIES_KEY, mProps.getPropertiesInSubmitDirectory() );
+        entries.put( Braindump.PROPERTIES_KEY, new File( mProps.getPropertiesInSubmitDirectory() ).getName() );
         
         //information about the planner
         StringBuffer planner = new StringBuffer();
