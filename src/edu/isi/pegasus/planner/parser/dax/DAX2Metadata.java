@@ -21,7 +21,6 @@ import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry
 import edu.isi.pegasus.planner.classes.CompoundTransformation;
 import edu.isi.pegasus.planner.classes.Job;
 
-import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.classes.ReplicaLocation;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.dax.Invoke;
@@ -43,6 +42,17 @@ public class DAX2Metadata implements Callback {
      * The parsing completed message.
      */
     public static final String PARSING_DONE_ERROR_MESSAGE = "Parsing done";
+
+    /**
+     * Default attribute value for the count attribute
+     */
+    public static final String DEFAULT_ADAG_COUNT_ATTRIBUTE = "1";
+
+
+    /**
+     * Default index value for the count attribute
+     */
+    public static final String DEFAULT_ADAG_INDEX_ATTRIBUTE = "0";
 
 
     /**
@@ -82,8 +92,12 @@ public class DAX2Metadata implements Callback {
      */
     public void cbDocument(Map attributes) {
         mMetadata = new HashMap();
-        mMetadata.put( "count", (String)attributes.get( "count" ) );
-        mMetadata.put( "index", (String)attributes.get( "index" ) );
+        mMetadata.put( "count", attributes.containsKey( "count" ) ? 
+                       (String)attributes.get( "count" ) :
+                       DEFAULT_ADAG_COUNT_ATTRIBUTE ) ;
+        mMetadata.put( "index", attributes.containsKey( "index" ) ?
+                       (String)attributes.get( "index" ) :
+                       DEFAULT_ADAG_INDEX_ATTRIBUTE ) ;
         mMetadata.put( "name", (String)attributes.get( "name" ) );
         mMetadata.put( "version", (String)attributes.get( "version" ) );
         //call the cbDone()
