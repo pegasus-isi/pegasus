@@ -30,7 +30,8 @@ Fri Mar 18 12:50:05 PDT 2011
     url="http://www.virtualbox.org/wiki/Downloads"> Virtual Box
     Website</ulink> .</para>
 
-    <para>The instructors have tested the image with Virtual Box 4.0.6</para>
+    <para>The instructors have tested the image with <emphasis
+    role="bold">Virtual Box 4.0.6</emphasis></para>
 
     <section>
       <title>Download the VM for Virtual Box use</title>
@@ -101,9 +102,11 @@ $ tar xvf Pegasus-3.0.2-Debian-6-x86.vbox.tar</emphasis></programlisting>
 
         <listitem>
           <para>In the VM Name and OS Type Window specify the name as<emphasis
-          role="bold"> PegasusVM-</emphasis>3.0.2 Select the <emphasis
-          role="bold">Operating System as Linux </emphasis>and <emphasis
-          role="bold">Version as Debian </emphasis>. Click Continue.</para>
+          role="bold"> </emphasis><emphasis role="bold"><emphasis
+          role="bold">PegasusVM-</emphasis>3.0.2</emphasis> .Select the
+          <emphasis role="bold">Operating System as Linux </emphasis>and
+          <emphasis role="bold">Version as Debian </emphasis>. Click
+          Continue.</para>
         </listitem>
 
         <listitem>
