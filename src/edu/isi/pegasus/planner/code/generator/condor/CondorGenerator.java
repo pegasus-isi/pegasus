@@ -135,9 +135,19 @@ public class CondorGenerator extends Abstract {
     public static final int DEFAULT_CREATE_DIR_PRIORITY_KEY = 800;
     
     /**
+     * The default priority key associated with chmod jobs.
+     */
+    public static final int DEFAULT_CHMOD_PRIORITY_KEY = 800;
+    
+    /**
      * The default priority key associated with the stage out jobs.
      */
     public static final int DEFAULT_STAGE_OUT_PRIORITY_KEY = 900;
+
+    /**
+     * The default priority key associated with the replica registration jobs.
+     */
+    public static final int DEFAULT_REPLICA_REG_PRIORITY_KEY = 900;
     
     /**
      * The default priority key associated with the cleanup jobs.
@@ -1698,6 +1708,10 @@ public class CondorGenerator extends Abstract {
                 priority = CondorGenerator.DEFAULT_CREATE_DIR_PRIORITY_KEY;
                 break;
                 
+            case Job.CHMOD_JOB:
+                priority = CondorGenerator.DEFAULT_CHMOD_PRIORITY_KEY;
+                break;
+                
             case Job.CLEANUP_JOB:
                 priority = CondorGenerator.DEFAULT_CLEANUP_PRIORITY_KEY;
                 break;
@@ -1705,7 +1719,7 @@ public class CondorGenerator extends Abstract {
             case Job.STAGE_IN_JOB:
                 priority = CondorGenerator.DEFAULT_STAGE_IN_PRIORITY_KEY;
                 break;
-                
+
             case Job.INTER_POOL_JOB:
                 priority = CondorGenerator.DEFAULT_INTER_SITE_PRIORITY_KEY;
                 break;
@@ -1713,6 +1727,9 @@ public class CondorGenerator extends Abstract {
             case Job.STAGE_OUT_JOB:
                 priority = CondorGenerator.DEFAULT_STAGE_OUT_PRIORITY_KEY;
                 break;
+                
+            case Job.REPLICA_REG_JOB:
+                priority = CondorGenerator.DEFAULT_REPLICA_REG_PRIORITY_KEY;
              
             default:
                 //compute on the basis of the depth
