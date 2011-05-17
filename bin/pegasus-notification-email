@@ -1,0 +1,117 @@
+#!/usr/bin/env python
+
+"""
+Pegasus utility for sending workflow notifications over email
+
+"""
+
+##
+#  Copyright 2007-2011 University Of Southern California
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing,
+#  software distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+##
+
+import os
+import sys
+import smtplib
+
+__author__ = "Mats Rynge <rynge@isi.edu>"
+
+# --- functions -----------------------------------------------------------------------
+
+
+def usage():
+    print ""
+    print "Usage: This tool is used by pegasus-monitord to send event notifications"
+    print "over email. A set of environment variables are expected to be set:"
+    print "   PEGASUS_EVENT"
+    print "   PEGASUS_EVENT_TIMESTAMP"
+    print "   PEGASUS_JOBID"
+    print "   PEGASUS_STATUS (only for end events)"
+    print "   EMAIL_FROM"
+    print "   EMAIL_TO"
+    print ""
+    myexit(1)
+    
+
+def validate_env_var(key):
+    if not key in os.environ:
+        raise RuntimeError(key + " is not defined in the current environment")
+
+
+def send_using_smtp(sender, recipient, msg):
+    server = smtplib.SMTP('localhost')
+    server.sendmail(sender, recipient, msg)
+    server.quit()
+    
+    
+def send_using_sendmail(sender, recipient, msg):
+    p = os.popen("/usr/sbin/sendmail -t", "w")
+    p.write(msg)
+    rc = p.close()
+    if rc is not None and rc >> 8:
+        raise RuntimeError("Sendmail exit status: %d" % (rc >> 8))
+
+
+def myexit(rc):
+    """
+    system exit without a stack trace - silly python
+    """
+    try:
+        sys.exit(rc)
+    except SystemExit:
+        sys.exit(rc)
+
+
+# --- main ----------------------------------------------------------------------------
+    
+    
+try:
+    validate_env_var("PEGASUS_EVENT")
+    validate_env_var("PEGASUS_EVENT_TIMESTAMP")
+    validate_env_var("PEGASUS_JOBID")
+    validate_env_var("EMAIL_FROM")
+    validate_env_var("EMAIL_TO")
+except RuntimeError, err:
+    print >> sys.stderr, err
+    usage()
+
+
+subject = "** Pegasus Notification - " + os.environ['PEGASUS_JOBID'] + " - " \
+        + os.environ['PEGASUS_EVENT'] + " **"
+
+msg = "From: " + os.environ['EMAIL_FROM'] + "\r\n" \
+    + "To: " + os.environ['EMAIL_TO'] + "\r\n" \
+    + "Subject: " + subject + "\r\n" \
+    + "\r\n" \
+    + "***** Pegasus Workflow Event ****\r\n" \
+    + "\r\n" \
+    + "Time:   " + os.environ['PEGASUS_EVENT_TIMESTAMP'] + "\r\n" \
+    + "Job id: " + os.environ['PEGASUS_JOBID'] + "\r\n" \
+    + "Event:  " + os.environ['PEGASUS_EVENT'] + "\r\n"
+    
+if 'PEGASUS_STATUS' in os.environ:
+    msg = msg \
+        + "Status: " + os.environ['PEGASUS_STATUS'] + "\r\n"
+        
+# try to send using smtp first, and if that does not work, sendmail
+try:
+    send_using_smtp(os.environ['EMAIL_FROM'], os.environ['EMAIL_TO'], msg)
+except Exception, e1:
+    try:
+        send_using_sendmail(os.environ['EMAIL_FROM'], os.environ['EMAIL_TO'], msg)
+    except Exception, e2:
+        print >> sys.stderr, "Unable to send email:\n", e1, "\n", e2
+        myexit(1)
+
+myexit(0)
