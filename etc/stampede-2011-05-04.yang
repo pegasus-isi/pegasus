@@ -254,7 +254,6 @@ module stampede-2011-05-04 {
                 leaf argv {
                     description "All arguments given to planner on command-line";
                     type string;
-                    //mandatory true; 
                 }
                 leaf parent.xwf.id {
                     description "Parent workflow in DAG, if any";
@@ -310,7 +309,6 @@ module stampede-2011-05-04 {
                 leaf argv {
                     description "All arguments given to transformation on command-line";
                     type string;
-                    mandatory true; 
                 }
                 leaf type{
 		            description "Type of task";
@@ -431,7 +429,6 @@ module stampede-2011-05-04 {
                 leaf argv {
                     description "All arguments given to executable (on command-line)";
                     type string;
-                    mandatory true; 
                 }
             }
 
