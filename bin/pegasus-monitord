@@ -2373,9 +2373,7 @@ grp.add_option("-e", "--encoding", action='store', dest='enc', default="bp", met
                 help="How to encode log events: bson | bp (default=%default)")
 parser.add_option_group(grp)
 
-# Re-insert our base name to avoid optparse confusion when printing error messages
-# (options, args) = parser.parse_args(sys.argv[0:]) # Does not work 100%
-sys.argv.insert(0, prog_base)
+# Parse command-line options
 (options, args) = parser.parse_args()
 
 # Remaining argument is .dag.dagman.out file

@@ -86,35 +86,40 @@ if "PEGASUS_HOME" in os.environ:
 # Assemble command-line properties
 
 if len(sys.argv) > 0:
-    # First parameter is program name, just skip it
-    sys.argv.pop(0)
-while len(sys.argv) > 0 and sys.argv[0][:2] == "-D":
-    my_arg = sys.argv.pop(0)
-    if my_arg == "-D":
-        # k, v must be in next parameter
-        if len(sys.argv) > 0:
-            # Make sure we have another parameter
-            my_arg = sys.argv.pop(0)
+    # First parameter is program name, just skip it, and remove it for now...
+    program_name = sys.argv.pop(0)
+
+    while len(sys.argv) > 0 and sys.argv[0][:2] == "-D":
+        my_arg = sys.argv.pop(0)
+        if my_arg == "-D":
+            # k, v must be in next parameter
+            if len(sys.argv) > 0:
+                # Make sure we have another parameter
+                my_arg = sys.argv.pop(0)
+            else:
+                # No, let's put the "-D" back and leave this loop
+                sys.argv.insert(0, my_arg)
+                break
         else:
-            # No, let's leave this loop
-            break
-    else:
-        # remove -D from this parameter before split
-        my_arg = my_arg[2:]
+            # remove -D from this parameter before split
+            my_arg = my_arg[2:]
     
-    try:
-        k, v = my_arg.split("=", 1)
-    except:
-        logger.info("cannot parse command-line option %s... continuing..." % (my_arg))
-        k = ""
-    if len(k):
-        k = k.lower()
-        if k == "pegasus.properties" or k == "pegasus.user.properties":
-            logger.warn("%s is no longer supported, ignoring, please use --conf!" % (k))
-        else:
-            logger.debug("parsed property %s..." % (my_arg))
-            initial[k] = v
+        try:
+            k, v = my_arg.split("=", 1)
+        except:
+            logger.info("cannot parse command-line option %s... continuing..." % (my_arg))
+            k = ""
+        if len(k):
+            k = k.lower()
+            if k == "pegasus.properties" or k == "pegasus.user.properties":
+                logger.warn("%s is no longer supported, ignoring, please use --conf!" % (k))
+            else:
+                logger.debug("parsed property %s..." % (my_arg))
+                initial[k] = v
             #print "key:value = %s:%s" % (k, v)
+
+    # Re-insert program_name
+    sys.argv.insert(0, program_name)
 
 # Merge the two, with command-line taking precedence over environmental variables
 system.update(initial)
