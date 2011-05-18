@@ -38,9 +38,9 @@ use Time::HiRes;
 use Time::Local;
 
 # load our own local modules
-use Work::Common;
-use Work::Properties qw(PARSE_ALL);
-use Work::Workflow;
+use Pegasus::Common;
+use Pegasus::Properties qw(PARSE_ALL);
+use Pegasus::Workflow;
 use Site::Intent;
 
 # constants
@@ -78,7 +78,7 @@ sub make_boolean($);		# { }
 
 # parse properties -Dkey=value
 #warn( "# ", join( "\n# ", @ARGV ), "\n" );
-my $props = Work::Properties->new( PARSE_ALL );
+my $props = Pegasus::Properties->new( PARSE_ALL );
 my $workdb = undef;
 my $doplot = make_boolean( $props->property('pegasus.tailstatd.show') );
 my $database=1;
@@ -146,7 +146,7 @@ my $sitedb = ( $sitefn ?
 	       undef );
 
 # determine location of textual jobstate log
-$jsd = File::Spec->catfile( $run, $Work::Common::jobbase ) 
+$jsd = File::Spec->catfile( $run, $Pegasus::Common::jobbase ) 
     unless ( defined $jsd );
 my $flags = ( O_WRONLY ); # | O_APPEND );
 if ( ! -e $jsd ) {
@@ -220,7 +220,7 @@ Optional arguments:
  -n|--no-daemon  (debug) don\'t daemonize $base; keep it in the foreground.
     --show       create diagrams of workflow upon normal exit.
     --fuse sec   maximum wait for each plotting subscript, default $fuse s. 
- -j|--job fn     alternative job state file to write, default is $Work::Common::jobbase
+ -j|--job fn     alternative job state file to write, default is $Pegasus::Common::jobbase
                  in the workflow\'s directory.
  -l|--log fn     alternative $base log file, default is $logbase 
                  in the workflow\'s directory.
@@ -1350,7 +1350,7 @@ if ( $nodaemon == 0 ) {
 ## TODO FIX THIS TO ignore the database errors.
 
 if ($database){
-    $workdb = eval { Work::Workflow->new($props,0) }; # fire-proofing
+    $workdb = eval { Pegasus::Workflow->new($props,0) }; # fire-proofing
     unless ( defined $workdb ) {
 	my $msg = 'ERROR: Your database handle is undefined';
 	$msg .= ": $@" if ( $@ );
