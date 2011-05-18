@@ -88,7 +88,7 @@ EOF
 
 # plan and submit the  workflow
 pegasus-plan \
-    -D pegasus.user.properties=pegasusrc \
+    --conf pegasusrc \
     --sites $TARGET \
     --dir work \
     --output local \
