@@ -18,7 +18,7 @@
 # Revision : $Revision$
 # $Id$
 #
-package Work::Common;
+package Pegasus::Common;
 use 5.006;
 use strict;
 use warnings;
@@ -229,11 +229,11 @@ __END__
 
 =head1 NAME
 
-Work::Common - generally useful collection of methods.
+Pegasus::Common - generally useful collection of methods.
 
 =head1 SYNOPSIS
 
-    use Work::Common;
+    use Pegasus::Common;
 
     $now = isodate();
     $when = isodate( $then );

@@ -1,4 +1,4 @@
-package Work::Properties;
+package Pegasus::Properties;
 #
 # Provides parsing of Java property files from Perl. 
 #
@@ -427,13 +427,13 @@ __END__
 
 =head1 NAME
 
-Work::Properties - parsing of Java property files from Perl. 
+Pegasus::Properties - parsing of Java property files from Perl. 
 
 =head1 SYNOPSIS
 
-    use Work::Properties qw(:parse);
+    use Pegasus::Properties qw(:parse);
 
-    $p = Work::Properties->new( $conffile, undef );
+    $p = Pegasus::Properties->new( $conffile, undef );
     $p->merge( $fn ); 
     $p->reinit(); 
     $p->dump('-'); # dump all known properties on stdout
@@ -448,7 +448,7 @@ Work::Properties - parsing of Java property files from Perl.
 
 =head1 DESCRIPTION
 
-The Work::Properties module reads Java properties for the GriPhyN
+The Pegasus::Properties module reads Java properties for the GriPhyN
 Virtual Data System. It permits commandline-based overwrites of
 properties using Java's C<-Dprop=val> syntax in Perl by removing initial
 definitions from C<@ARGV> during module initialization time. Thus, it is
@@ -498,9 +498,9 @@ properties.
 
 =over 4
 
-=item Work::Properties::parse_properties( $fn )
+=item Pegasus::Properties::parse_properties( $fn )
 
-=item Work::Properties::parse_properties( $fn, $hashref )
+=item Pegasus::Properties::parse_properties( $fn, $hashref )
 
 The static method reads a property file, located by $fn, into a
 single-level Perl hash. If the optional second argument is specified,
@@ -512,9 +512,9 @@ Please note that the method throws an error, if the file does not exist
 or cannot be opened properly. It is up to the caller to catch this
 exception.
 
-=item Work::Properties::pegasusrc( )
+=item Pegasus::Properties::pegasusrc( )
 
-=item Work::Properties::pegasusrc( $home )
+=item Pegasus::Properties::pegasusrc( $home )
 
 This simple static method constructs a filename where to find the
 C<$HOME/.pegasusrc> file. The location of the home directory can 
