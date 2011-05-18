@@ -850,40 +850,40 @@ local    diamond::analyze:2.0    /cluster-software/pegasus/current/bin/keg    IN
 
 local   mDiff       
              gsiftp://pegasus-vm/scratch/tutorial/software/montage/3.0/x86/bin/mDiff       
-                                STATIC_BINARY   INTEL32::LINUX  ENV::MONTAGE_HOME="."
+                                STAGEABLE   INTEL32::LINUX  ENV::MONTAGE_HOME="."
 local   mFitplane
              gsiftp://pegasus-vm/scratch/tutorial/software/montage/3.0/x86/bin/mFitplane
-                                STATIC_BINARY   INTEL32::LINUX  ENV::MONTAGE_HOME="."
+                                STAGEABLE   INTEL32::LINUX  ENV::MONTAGE_HOME="."
 local   mAdd:3.0  
              gsiftp://pegasus-vm/scratch/tutorial/software/montage/3.0/x86/bin/mAdd
-                                STATIC_BINARY   INTEL32::LINUX  ENV::MONTAGE_HOME="."
+                                STAGEABLE   INTEL32::LINUX  ENV::MONTAGE_HOME="."
 local   mBackground:3.0
              gsiftp://pegasus-vm/scratch/tutorial/software/montage/3.0/x86/bin/mBackground
-                                STATIC_BINARY   INTEL32::LINUX  ENV::MONTAGE_HOME="."
+                                STAGEABLE   INTEL32::LINUX  ENV::MONTAGE_HOME="."
 local   mBgModel:3.0
              gsiftp://pegasus-vm/scratch/tutorial/software/montage/3.0/x86/bin/mBgModel
-                                STATIC_BINARY   INTEL32::LINUX  ENV::MONTAGE_HOME="."
+                                STAGEABLE   INTEL32::LINUX  ENV::MONTAGE_HOME="."
 local   mConcatFit:3.0 
              gsiftp://pegasus-vm/scratch/tutorial/software/montage/3.0/x86/bin/mConcatFit
-                                STATIC_BINARY   INTEL32::LINUX  ENV::MONTAGE_HOME="."
+                                STAGEABLE   INTEL32::LINUX  ENV::MONTAGE_HOME="."
 local   mDiffFit:3.0
              gsiftp://pegasus-vm/scratch/tutorial/software/montage/3.0/x86/bin/mDiffFit 
-                                STATIC_BINARY   INTEL32::LINUX  ENV::MONTAGE_HOME="."
+                                STAGEABLE   INTEL32::LINUX  ENV::MONTAGE_HOME="."
 local   mImgtbl:3.0 
              gsiftp://pegasus-vm/scratch/tutorial/software/montage/3.0/x86/bin/mImgtbl  
-                                STATIC_BINARY   INTEL32::LINUX  ENV::MONTAGE_HOME="."
+                                STAGEABLE   INTEL32::LINUX  ENV::MONTAGE_HOME="."
 local   mJPEG:3.0       
              gsiftp://pegasus-vm/scratch/tutorial/software/montage/3.0/x86/bin/mJPEG  
-                                STATIC_BINARY   INTEL32::LINUX  ENV::MONTAGE_HOME="."
+                                STAGEABLE   INTEL32::LINUX  ENV::MONTAGE_HOME="."
 local   mProject:3.0 
              gsiftp://pegasus-vm/scratch/tutorial/software/montage/3.0/x86/bin/mProjectPP 
-                                STATIC_BINARY   INTEL32::LINUX  ENV::MONTAGE_HOME="."
+                                STAGEABLE   INTEL32::LINUX  ENV::MONTAGE_HOME="."
 local   mProjectPP:3.0
              gsiftp://pegasus-vm/scratch/tutorial/software/montage/3.0/x86/bin/mProjectPP
-                                STATIC_BINARY   INTEL32::LINUX  ENV::MONTAGE_HOME="."
+                                STAGEABLE   INTEL32::LINUX  ENV::MONTAGE_HOME="."
 local   mShrink:3.0
              gsiftp://pegasus-vm/scratch/tutorial/software/montage/3.0/x86/bin/mShrink
-                                STATIC_BINARY   INTEL32::LINUX  NULL</computeroutput></programlisting>
+                                STAGEABLE   INTEL32::LINUX  NULL</computeroutput></programlisting>
           </listitem>
         </itemizedlist>
       </section>
