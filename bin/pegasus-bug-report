@@ -37,7 +37,7 @@ BEGIN {
 
 use Archive::Tar;
 use Pegasus::Properties;
-use Pegasus::Common qw(:all); 
+use Pegasus::Common; 
 
 # constants
 sub usage(;$);			# { }
@@ -74,12 +74,6 @@ if ( ! -d $dir ) {
 # --- functions -------------------------------------------------
 #
 
-sub version() {
-    my $basename = basename($0,'.pl');
-    print "$basename $main::revision\n";
-    print '$Id$', "\n";
-    exit(0);
-}
 
 sub usage(;$) {
     my $ec = shift || 0;
@@ -199,7 +193,7 @@ print $fh 'OS-release ', `uname -r`;
 print $fh "\n";
 
 print $fh "#\n# Braindump database\n#\n"; 
-my %config = slurp_braindb($run);
+my %config = slurp_braindb($dir);
 if ( scalar keys %config == 0 ) {
     print $fh "ERROR: Unable to open braindb: $!\n"; 
 } else {
@@ -210,7 +204,7 @@ if ( scalar keys %config == 0 ) {
 
 print $fh "#\n# PEGASUS properties\n#\n";
 my $pegasushome = `pegasus-config --noeoln --home`;
-my $props = Pegasus::Properties->new( $conffile, $config{properties} );
+my $props = Pegasus::Properties->new( $conffile, File::Spec->catfile($dir,$config{properties}) );
 my %sys = $props->all(); 
 showprops( $fh, 'Properties', %sys );
 # print $fh `show-properties | sed -e 's/^/Eff-prop /'`;
