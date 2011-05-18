@@ -904,7 +904,7 @@ class Workflow:
                 if len(split_line) == 2:
                     my_argv = split_line[1]
                 else:
-                    my_argv = ""
+                    my_argv = None
                 # Increment the task_found counter, so that we have the correct task index
                 tasks_found = tasks_found + 1
                 try:
@@ -1831,9 +1831,10 @@ class Workflow:
                     else:
                         kwargs["executable"] = ""
             if "argument-vector" in invocation_record:
-                kwargs["argv"] = invocation_record["argument-vector"]
+                if invocation_record["argument-vector"] is not None and invocation_record["argument-vector"] != "":
+                    kwargs["argv"] = invocation_record["argument-vector"]
             else:
-                if my_job._main_job_arguments is not None:
+                if my_job._main_job_arguments is not None and my_job._main_job_arguments != "":
                     kwargs["argv"] = my_job._main_job_arguments
 
         if "exitcode" in kwargs:
