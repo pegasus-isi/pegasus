@@ -30,7 +30,7 @@ BEGIN {
     common->import(':all');
 }
 
-use Work::Common;
+use Pegasus::Common;
 use Data::Dumper;
 
 # debug off

@@ -32,8 +32,8 @@ BEGIN {
 }
 
 # load our own local modules, see PERL5LIB settings
-use Work::Properties;		# parses -Dprop=val from @ARGV
-use Work::Common;
+use Pegasus::Properties;		# parses -Dprop=val from @ARGV
+use Pegasus::Common;
 
 # some reasonable defaults
 my $maxpre = 20;
@@ -231,7 +231,7 @@ my $run=dirname($dag);
 my %config = slurp_braindb( $run ) or die "ERROR: open braindb: $!\n";
 
 # pre-condition: The planner writes all properties per workflow into the DAG dir.
-my $props = Work::Properties->new( $conffile, $config{properties} );
+my $props = Pegasus::Properties->new( $conffile, $config{properties} );
 
 # set true defaults from properties
 $maxpre = $props->property('dagman.maxpre') || $maxpre;

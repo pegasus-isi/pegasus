@@ -26,7 +26,7 @@ BEGIN {
     require File::Spec->catfile( dirname($0), 'common.pm' );
     common->import(':all');
 }
-use Work::Common;
+use Pegasus::Common;
 
 # debug off
 $main::debug = 0;

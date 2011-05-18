@@ -24,7 +24,7 @@ BEGIN {
 }
 
 use lib File::Spec->catdir( $main::home, 'lib', 'perl' );
-use Work::Common; 
+use Pegasus::Common; 
 
 my $tmpdir = $ENV{'MY_TMP'} ||	# MY_TMP to override standard settings
     $ENV{TMP} ||                # standard

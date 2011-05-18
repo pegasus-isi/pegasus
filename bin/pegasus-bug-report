@@ -36,8 +36,8 @@ BEGIN {
 }
 
 use Archive::Tar;
-use Work::Properties;
-use Work::Common qw(:all); 
+use Pegasus::Properties;
+use Pegasus::Common qw(:all); 
 
 # constants
 sub usage(;$);			# { }
@@ -145,7 +145,7 @@ sub readprops($$@) {
 	next unless length($fn);
 	if ( -r $fn ) {
 	    print $fh "Reading properties from $fn\n";
-	    %result = Work::Properties::parse_properties($fn,%{$dbref});
+	    %result = Pegasus::Properties::parse_properties($fn,%{$dbref});
 	    last;
 	} else {
 	    print $fh "Unable to read properties from $fn: ignoring\n"; 
@@ -210,7 +210,7 @@ if ( scalar keys %config == 0 ) {
 
 print $fh "#\n# PEGASUS properties\n#\n";
 my $pegasushome = `pegasus-config --noeoln --home`;
-my $props = Work::Properties->new( $conffile, $config{properties} );
+my $props = Pegasus::Properties->new( $conffile, $config{properties} );
 my %sys = $props->all(); 
 showprops( $fh, 'Properties', %sys );
 # print $fh `show-properties | sed -e 's/^/Eff-prop /'`;

@@ -38,8 +38,8 @@ BEGIN {
 }
 
 # load our own local modules
-use Work::Common;
-use Work::Properties qw(%initial); # parses -Dprop=val from @ARGV
+use Pegasus::Common;
+use Pegasus::Properties qw(%initial); # parses -Dprop=val from @ARGV
 
 sub make_path($) {
     my $p = File::Spec->catfile( Cwd::realpath( dirname($0) ), shift() ); 
@@ -73,7 +73,7 @@ usage(1) unless -d $run;
 my %config = slurp_braindb( $run ) or die "ERROR: open braindb: $!\n";
 
 # pre-condition: The planner writes all properties per workflow into the DAG dir.
-my $props = Work::Properties->new( $conffile, File::Spec->catfile($run,$config{properties}) );
+my $props = Pegasus::Properties->new( $conffile, File::Spec->catfile($run,$config{properties}) );
 
 # if TSD is empty, fill in from default locations
 $tsd ||=  $props->property('pegasus.monitord') || $default_tsd;

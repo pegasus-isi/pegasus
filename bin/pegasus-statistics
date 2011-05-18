@@ -19,7 +19,7 @@ use lib dirname($0);
 use common ':all'; 
 
 # use local modules
-use Work::Common;
+use Pegasus::Common;
 
 #global variables
 my $MAX_LOG_FILE = 1000;
