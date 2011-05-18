@@ -215,7 +215,7 @@ public class CommonProperties
           //write a warning saying does not exist
           System.err.println( "[WARNING] Properties are no longer loaded from " +
                               "sysconfdir directory or by -Dpegasus.properties property. " +
-                               props.getAbsolutePath() +  " will not be loaded." );
+                               props.getAbsolutePath() +  " will not be loaded. Use --conf option instead." );
       }
      
       // add user properties afterwards to have higher precedence
@@ -226,7 +226,7 @@ public class CommonProperties
           //throw warning
           System.err.println( "[WARNING] Properties are no longer loaded by " +
                               "specifying -Dpegasus.user.properties property. " +
-                               alternative +  " will not be loaded." );
+                               alternative +  " will not be loaded. Use --conf option instead." );
       }
       
       
