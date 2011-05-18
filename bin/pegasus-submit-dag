@@ -15,7 +15,7 @@
 # Copyright 1999-2004 University of Chicago and The University of
 # Southern California. All rights reserved.
 #
-# Author: Jens-S. V�ckler voeckler@cs.uchicago.edu
+# Author: Jens-S. Vöckler voeckler@cs.uchicago.edu
 # Author: Gaurang Mehta gmehta at isi dot edu
 # Revision : $Revision$
 #
@@ -68,6 +68,7 @@ sub usage(;$) {
     print << "EOF";
 Usage: @{[basename($0)]} [-Dprops] [options] dagfile
  -Dprop=val     Commandline overwrite for properties, must be initial args!
+ -c|--conf fn   Read properties from given filename instead of rundir. 
  -d|--debug lv  Initializes the level lv of verbosity, default $main::DEBUG
  -e|--dagman fn Specify an alternative dagman binary to use. 
  -P|--maxpre N  Maximum number of pre-scripts to run, default $maxpre
@@ -250,9 +251,9 @@ push( @arg, '-maxjobs', $maxjobs ) if $maxjobs > 0;
 push( @arg, '-maxidle', $maxidle ) if $maxidle > 0;
 push( @arg, '-notification', $notify );
 push( @arg, '-verbose' ) if $verbose;
-push (@arg,'-append', '+wf_uuid="'.$config{'wf_uuid'}.'"');
-push (@arg,'-append', '+pegasus_wf_name="'.$config{'pegasus_wf_name'}.'"');
-push (@arg,'-append', '+pegasus_wf_time="'.$config{timestamp}.'"');
+push (@arg, '-append', '+wf_uuid="'.$config{'wf_uuid'}.'"' );
+push (@arg, '-append', '+pegasus_wf_name="'.$config{'pegasus_wf_name'}.'"' );
+push (@arg, '-append', '+pegasus_wf_time="'.$config{timestamp}.'"' );
 
 #push( @arg, '-no_submit') if $submit==0;
 push( @arg, $dag );
