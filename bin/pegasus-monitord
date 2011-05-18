@@ -181,6 +181,8 @@ no_events = False               # Flag for disabling event output altogether
 event_dest = None               # URL containing the destination of the events
 encoding = None	                # Way to encode the data
 monitord_exit_code = 0          # Exit code for pegasus-monitord
+socket_enabled = False          # Enable socket for real-time debugging
+start_server = False            # Keep track if socket server needs to be started
 
 wf_event_sink = None            # Where wf events go
 STAMPEDE_NS = "stampede."       # Event name-space
@@ -2356,6 +2358,8 @@ parser.add_option("--db-stats", action = "store_const", const = "yes", dest = "d
                   help = "collect and print database stats at the end")
 parser.add_option("--keep-state", action = "store_const", const = 1, dest = "keep_state",
                   help = "keep state across several DAGMan start/stop cycles (development option)")
+parser.add_option("--socket", action = "store_const", const = "yes", dest = "socket_enabled",
+                  help = "enables a socket interface for debugging")
 parser.add_option("-v", "--verbose", action="count", default=0, dest="vb", help="Increase verbosity, repeatable")
 grp = optparse.OptionGroup(parser, "Output options")
 grp.add_option("-d", "--dest", action="store", dest="event_dest", metavar="PATH or URL",
@@ -2449,6 +2453,8 @@ if options.db_stats is not None:
     db_stats = options.db_stats
 if options.keep_state is not None:
     keep_state = options.keep_state
+if options.socket_enabled is not None:
+    socket_enabled = options.socket_enabled
 if options.event_dest is None:
     if options.no_events is not None:
         # Turn off event generation
@@ -3053,6 +3059,9 @@ def check_request(server, timeout=0):
     paramtr: timeout(IN, OPT): timeout in seconds, defaults to 0
     returns: return value of select on server socket
     """
+    # Nothing to do if server was not started
+    if server is None:
+        return
 
     my_input_list = [server]
     my_input_ready, my_output_ready, my_except_ready = select.select(my_input_list, [], [], timeout)
@@ -3161,6 +3170,7 @@ def prog_sigusr1_handler(signum, frame):
     This function increases the log level to the next one.
     """
     global g_isdbg
+    global start_server
 
     cur_level = logger.getEffectiveLevel()
 
@@ -3174,6 +3184,9 @@ def prog_sigusr1_handler(signum, frame):
 
     g_isdbg = logger.isEnabledFor(logging.DEBUG)
 
+    # Check debugging socket
+    if not socket_enabled:
+        start_server = True
 
 def prog_sigusr2_handler(signum, frame):
     """
@@ -3273,10 +3286,10 @@ signal.signal(signal.SIGINT, prog_sigint_handler)
 signal.signal(signal.SIGUSR1, prog_sigusr1_handler)
 signal.signal(signal.SIGUSR2, prog_sigusr2_handler)
 
-# No need to create server socket in replay mode
-if not replay_mode:
+# Only create server socket if asked...
+sockfn = os.path.join(os.path.dirname(out), "monitord.sock")
+if socket_enabled:
     # Create server socket for communication with site selector
-    sockfn = os.path.join(os.path.dirname(out), "monitord.sock")
     server = server_socket(49152, 65536)
     # Take care of closing socket when we exit
     atexit.register(socket_exit_handler)
@@ -3557,6 +3570,28 @@ while (len(wfs) > 0):
     if len(wfs) == 0:
         continue
 
+    # Check if we need to start the socket server
+    if not socket_enabled and start_server:
+        # Reset flag
+        start_server = False
+        
+        # Create server socket for communication with site selector
+        server = server_socket(49152, 65536)
+        # Take care of closing socket when we exit
+        atexit.register(socket_exit_handler)
+
+        # Save our address so that site selectors know where to connect
+        if server is not None:
+            # Socket open, make sure we set out socket_enabled flag
+            socket_enabled = True
+            my_host, my_port = server.getsockname()
+            try:
+                OUT = open(sockfn, "w")
+                OUT.write("%s %d\n" % (my_host, my_port))
+                OUT.close()
+            except:
+                logger.warning("unable to write %s!" % (sockfn))
+
     # Periodically check for service requests
     if server is not None:
         check_request(server)
@@ -3579,7 +3614,7 @@ while (len(wfs) > 0):
 # --- main loop end -----------------------------------------------------------------------
 #
 
-if not replay_mode:
+if socket_enabled and server is not None:
     # Finish trailing connection requests
     while (check_request(server)):
         pass
