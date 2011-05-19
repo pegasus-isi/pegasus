@@ -57,7 +57,7 @@ import java.util.LinkedList;
  * </pre>
  *
  * @author Karan Vahi
- * @version $Revision: 3409 $
+ * @version $Revision$
  */
 public class Stampede implements CodeGenerator {
 
