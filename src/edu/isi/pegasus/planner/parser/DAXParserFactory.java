@@ -293,15 +293,14 @@ public class DAXParserFactory {
         }
         
         try{
-            Parser p = (Parser)DAXParserFactory.loadDAXParser( DAXParserFactory.DAX_PARSER2_CLASS,                                                 bag,
+            Parser p = (Parser)DAXParserFactory.loadDAXParser( DAXParserFactory.DAX_PARSER2_CLASS,
+                                                               bag,
                                                                cb );
             
             //while determining the metadata we are just parsing adag element
             //we want the parser validation to be turned off.
-            /*
             p.setParserFeature("http://xml.org/sax/features/validation", false);
             p.setParserFeature("http://apache.org/xml/features/validation/schema", false);
-            */
             p.startParser( dax );
         }
         catch( RuntimeException e ){
