@@ -42,10 +42,10 @@ our $brainbase = 'braindump.txt'; # basename of brain dump file
 # names by default without a very good reason. Use EXPORT_OK instead.
 # Do not simply export all your public functions/methods/constants.
 our $VERSION = '0.1';
-our %EXPORT_TAGS = ();
 our @EXPORT_OK = qw($VERSION $brainbase $jobbase);
 our @EXPORT = qw(isodate find_exec pipe_out_cmd parse_exit 
 		 slurp_braindb version check_rescue log10);
+our %EXPORT_TAGS = ( all => [ @EXPORT ] );
 
 # Preloaded methods go here.
 use POSIX qw(strftime);
