@@ -71,7 +71,7 @@ GetOptions( "help|h" => \&usage
 my $run = shift;
 # NEW: Default to cwd if nothing was specified
 unless ( defined $run ) { 
-    $run = getpwd();
+    $run = getcwd();
     my $braindb = File::Spec->catfile( $run, $Pegasus::Common::brainbase ); 
     usage("You need to provide a valid run directory.") 
 	unless -r $braindb; 
