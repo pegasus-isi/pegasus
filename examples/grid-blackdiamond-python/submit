@@ -10,8 +10,8 @@ set -e
 CLUSTER_HOSTNAME="obelix.isi.edu"
 CLUSTER_SCHEDULER="condor"
 CLUSTER_WORK_DIR="/moose/scratch/auto-cleanup-30-days"
-CLUSTER_PEGASUS_HOME="/moose/software/debian/squeeze/x86_64/pegasus/3.1.0cvs"
-CLUSTER_GLOBUS_LOCATION="/moose/software/debian/squeeze/x86_64/globus/default"
+CLUSTER_PEGASUS_HOME="/nfs/moose/software/debian/squeeze/x86_64/pegasus/dev/trunk"
+CLUSTER_GLOBUS_LOCATION="/nfs/moose/software/debian/squeeze/x86_64/globus/default"
 ##################################################################################
 
 
@@ -41,19 +41,19 @@ export PYTHONPATH=$PEGASUS_HOME/lib/python
 cat >sites.xml <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0">
-    <site  handle="local" arch="x86_64" os="LINUX">
-        <grid  type="gt2" contact="localhost/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/>
+    <site handle="local" arch="x86_64" os="LINUX">
+        <grid type="gt2" contact="localhost/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/>
         <head-fs>
             <scratch>
                 <shared>
-                    <file-server protocol="file" url="file://" mount-point="$TOPDIR/outputs"/>
-                    <internal-mount-point mount-point="$TOPDIR/work/outputs" free-size="100G" total-size="30G"/>
+                    <file-server protocol="file" url="file://" mount-point="$TOPDIR/scratch"/>
+                    <internal-mount-point mount-point="$TOPDIR/scratch" free-size="100G" total-size="30G"/>
                 </shared>
             </scratch>
             <storage>
                 <shared>
                     <file-server protocol="file" url="file://" mount-point="$TOPDIR/outputs"/>
-                    <internal-mount-point mount-point="$TOPDIR/work/outputs" free-size="100G" total-size="30G"/>
+                    <internal-mount-point mount-point="$TOPDIR/outputs" free-size="100G" total-size="30G"/>
                 </shared>
             </storage>
         </head-fs>
@@ -61,9 +61,9 @@ cat >sites.xml <<EOF
         <profile namespace="env" key="PEGASUS_HOME" >$PEGASUS_HOME</profile>
         <profile namespace="env" key="GLOBUS_LOCATION" >$GLOBUS_LOCATION</profile>
     </site>
-    <site  handle="TestCluster" arch="x86_64" os="LINUX">
-        <grid  type="gt2" contact="$CLUSTER_HOSTNAME/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/>
-        <grid  type="gt2" contact="$CLUSTER_HOSTNAME/jobmanager-$CLUSTER_SCHEDULER" scheduler="unknown" jobtype="compute"/>
+    <site handle="TestCluster" arch="x86_64" os="LINUX">
+        <grid type="gt2" contact="$CLUSTER_HOSTNAME/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/>
+        <grid type="gt2" contact="$CLUSTER_HOSTNAME/jobmanager-$CLUSTER_SCHEDULER" scheduler="unknown" jobtype="compute"/>
         <head-fs>
             <scratch>
                 <shared>
@@ -72,10 +72,6 @@ cat >sites.xml <<EOF
                 </shared>
             </scratch>
             <storage>
-                <shared>
-                    <file-server protocol="gsiftp" url="gsiftp://$CLUSTER_HOSTNAME" mount-point="$CLUSTER_WORK_DIR"/>
-                    <internal-mount-point mount-point="$CLUSTER_WORK_DIR"/>
-                </shared>
             </storage>
         </head-fs>
         <replica-catalog  type="LRC" url="rlsn://dummyValue.url.edu" />
