@@ -28,7 +28,7 @@ our @ISA = qw(Exporter);
 
 # declarations of methods here. Use the commented body to unconfuse emacs
 sub isodate(;$$$);		# { }
-sub find_exec($;$);		# { }
+sub find_exec($;@);		# { }
 sub pipe_out_cmd;		# { }
 sub parse_exit(;$);		# { }
 sub slurp_braindb($);		# { }
@@ -77,20 +77,15 @@ sub isodate(;$$$) {
     $result;
 }
 
-sub find_exec($;$) {
+sub find_exec($;@) {
     # purpose: determine location of given binary in $PATH
     # paramtr: $program (IN): executable basename to look for
-    #          $curdir (opt. IN): if true, logically also check '.'
+    #          @extra (opt. IN): additional directories to search
     # returns: fully qualified path to binary, undef if not found
     my $program = shift;
-    my $curdir = shift;
-    foreach my $dir ( File::Spec->path ) {
+    foreach my $dir ( ( File::Spec->path, @_ ) ) {
         my $fs = File::Spec->catfile( $dir, $program );
         return $fs if -x $fs;
-    }
-    if ( defined $curdir && $curdir ) {
-	my $fs = File::Spec->catfile( File::Spec->curdir(), $program );
-	return $fs if -x $fs;
     }
     undef;
 }
@@ -243,7 +238,8 @@ Pegasus::Common - generally useful collection of methods.
     $version = version();
 
     my $app = find_exec( 'ls' );
-    my $gpi = find_exec( 'grid-proxy-info', $ENV{'GLOBUS_LOCATION'} );
+    my $gpi = find_exec( 'grid-proxy-info', 
+        File::Spec->catdir( $ENV{'GLOBUS_LOCATION'}, 'bin' ) );
 
     my @result = pipe_out_cmd( $app, '-lart' );
     warn "# ", parse_exit($?), "\n";
@@ -273,12 +269,14 @@ the choice between a regular and an extra concise output format. It does
 not use millisecond extensions (yet).
 
 =item find_exec( $basename );
-=item find_exec( $basename, $curdirflag );
+=item find_exec( $basename, @extra );
 
 The C<find_exec> function searches the C<PATH> environment variable for
 the existence of the given base name. Please only use a base name for
-the first argument. If the optional second argument is specified, the
-current directory (usually ".") is also searched.
+the first argument. 
+
+If you need to search additional directories outside your C<PATH>
+directories, add as many as you need as additional optional arguments.
 
 =item pipe_out_cmd( @argv );
 
