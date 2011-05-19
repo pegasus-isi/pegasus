@@ -147,7 +147,7 @@ public class Notifications extends Data{
 
     /**
      * Convenience method at add all the notifications corresponding
-     * to a particular even
+     * to a particular event
      * 
      * @param when     when does the event happen
      * @param notifications  the list of notificiations

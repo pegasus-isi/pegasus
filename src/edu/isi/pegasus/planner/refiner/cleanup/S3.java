@@ -299,6 +299,11 @@ public class S3 implements CleanupImplementation{
         //assimilated into the job.
         cJob.updateProfiles( mSiteStore.lookup( job.getSiteHandle() ).getProfiles()  );
 
+        
+        //add any notifications specified in the transformation
+        //catalog for the job. JIRA PM-391
+        cJob.addNotifications( entry );
+
         //the profile information from the transformation
         //catalog needs to be assimilated into the job
         //overriding the one from pool catalog.

@@ -536,6 +536,11 @@ public class ReplicaCatalogBridge
 //        newJob.updateProfiles( mPoolHandle.getPoolProfile( newJob.getSiteHandle() ) );
         newJob.updateProfiles( mSiteStore.lookup( newJob.getSiteHandle() ).getProfiles() );
 
+        //add any notifications specified in the transformation
+        //catalog for the job. JIRA PM-391
+        newJob.addNotifications( tc );
+
+
         //the profile information from the transformation
         //catalog needs to be assimilated into the job
         //overriding the one from pool catalog.

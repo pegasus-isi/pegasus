@@ -842,6 +842,10 @@ public class PDAX2MDAG implements Callback {
        job.condorVariables.construct( Condor.UNIVERSE_KEY, Condor.SCHEDULER_UNIVERSE );
        
 
+       //add any notifications specified in the transformation
+       //catalog for the job. JIRA PM-391
+       job.addNotifications( entry );
+
        //incorporate profiles from the transformation catalog
        //and properties for the time being. Not from the site catalog.
 

@@ -223,6 +223,10 @@ public abstract class AbstractSingleFTPerXFERJob extends Abstract
         //the profile information from the pool catalog needs to be
         //assimilated into the job.        txJob.updateProfiles( ePool.getProfiles() );
 
+        //add any notifications specified in the transformation
+        //catalog for the job. JIRA PM-391
+        txJob.addNotifications( tcEntry );
+
         //the profile information from the transformation
         //catalog needs to be assimilated into the job
         //overriding the one from pool catalog.

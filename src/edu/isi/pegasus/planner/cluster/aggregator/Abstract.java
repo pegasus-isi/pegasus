@@ -307,6 +307,11 @@ public abstract class Abstract implements JobAggregator {
                 opFiles.addAll( job.getOutputFiles() );
                 mergedJob.add(job);
 
+                //add any notifications specified in the job
+                //to the clustered job. JIRA PM-391
+                mergedJob.addNotifications( job.getNotifications());
+
+
                 //we need to merge the profiles from the constituent
                 //jobs now, rather in function makeAbstractAggreagatedJobConcrete
                 //JIRA PM-368
@@ -466,6 +471,11 @@ public abstract class Abstract implements JobAggregator {
         //assimilated into the job. As the collapsed job is run on the
         //same pool as the job is run
         // mergedJob.updateProfiles(mPoolHandle.getPoolProfile(mergedJob.executionPool));
+
+        //add any notifications specified in the transformation
+        //catalog for the job. JIRA PM-391
+        job.addNotifications( entry );
+
 
         //the profile information from the transformation
         //catalog needs to be assimilated into the job

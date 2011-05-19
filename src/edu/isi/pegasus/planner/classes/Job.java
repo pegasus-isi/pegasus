@@ -663,6 +663,16 @@ public class Job extends Data implements GraphNodeContent{
     public void addNotification( Invoke invoke ){
        this.mNotifications.add(invoke);
     }
+
+    /**
+     * Adds all the notifications specfied in the TransformationCatalogEntry
+     * to the underlying job notifications.
+     *
+     * @param entry     the TransformationCatalogEntry object
+     */
+    public void addNotifications( TransformationCatalogEntry entry ){
+        this.mNotifications.addAll( entry.getNotifications() );
+    }
     
     /**
      * Adds all the notifications passed to the underlying container.
