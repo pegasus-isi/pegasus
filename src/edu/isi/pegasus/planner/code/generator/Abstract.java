@@ -244,6 +244,28 @@ public abstract class Abstract implements CodeGenerator{
                         ioe, LogManager.ERROR_MESSAGE_LEVEL );
         }
     }
+
+    /**
+     * Writes out the notifications input file for the work-flow.
+     * 
+     * @param workflow      the work-flow whose notifications files needs to be generated.
+     */
+    protected void writeOutNotifications( ADag workflow ){
+        try{
+            Notifications notifications = new Notifications ();
+            notifications.initialize(mBag);
+        
+            Collection <File> result = notifications.generateCode(workflow);
+            for( File f : result){
+                mLogger.log("Written out notifications to " + f.getName(), LogManager.DEBUG_MESSAGE_LEVEL);
+            }
+        }
+        catch(CodeGeneratorException ioe){
+            //log the message and return
+            mLogger.log("Unable to write out the notifications file ",
+                        ioe, LogManager.ERROR_MESSAGE_LEVEL );
+        }
+    }
     
     /**
      * Returns a Map containing additional metrics entries that are specific
