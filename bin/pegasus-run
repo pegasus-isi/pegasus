@@ -47,8 +47,9 @@ sub make_path($) {
     $p;
 }
 
-# constants
 sub usage(;$);			# { }
+
+# constants
 $main::DEBUG = 0;		# for now
 my $condor;			# if set, use Condor for pegasus-monitord
 my $grid=0;                     # if set, disable grid checks;
@@ -67,9 +68,18 @@ GetOptions( "help|h" => \&usage
 	  , "M" => \$monitor
 	  );
 
-# arguments
-my $run = shift || usage(1);
-usage(1) unless -d $run;
+my $run = shift;
+# NEW: Default to cwd if nothing was specified
+unless ( defined $run ) { 
+    $run = getpwd();
+    my $braindb = File::Spec->catfile( $run, $Pegasus::Common::brainbase ); 
+    usage("You need to provide a valid run directory.") 
+	unless -r $braindb; 
+}
+
+# extra sanity
+usage( "$run is not a directory." ) unless -d $run;
+usage( "$run is not accessible." ) unless -r _; 
 my %config = slurp_braindb( $run ) or die "ERROR: open braindb: $!\n";
 
 # pre-condition: The planner writes all properties per workflow into the DAG dir.
@@ -83,15 +93,23 @@ $tsd ||=  $props->property('pegasus.monitord') || $default_tsd;
 #
 
 sub usage(;$) {
-    my $ec = shift || 0;
+    my $msg = shift;
+    my $flag = ( defined $msg && lc($msg) ne 'help' ); 
+    if ( $flag ) { 
+	my $tty = -t STDOUT;
+	print "\033[1m" if $tty;
+	print "ERROR: $msg\n";
+	print "\033[0m" if $tty;
+    }
+
     my $basename = basename($0,'.pl');
     print << "EOF";
 
-Usage: $basename [options] rundir
+Usage: $basename [options] [rundir]
 
 Mandatory arguments:
-  rundir  is the directory where the workflow resides as well as all
-          ancilliary files related to the workflow.
+  rundir  is the directory where the workflow resides as well as ancilliary
+          files related to the workflow. Defaults to current working dir.
 
 Optional arguments:
  -Dprop=val         Explicit settings of a property (multi-option). 
@@ -102,10 +120,13 @@ Optional arguments:
  -d|--debug lvl     Sets the debug level (verbosity), default is $main::DEBUG. 
  -v|--verbose       Raises debug level by 1, see --debug. 
  --condor           Uses Condor to submit daemons (prototype).
- --database|--nodatabase Make tailstad log events in the workflow database (default yes)
- --grid|--nogrid    Disable or enable grid checks (default is disabled)
+ --nodatabase       Disable logging events into the workflow database. 
+ --database         Make tailstad log events in the workflow database (default).
+ --nogrid           Disable checking for grids (default).
+ --grid             Enable checking for grids. 
+
 EOF
-    exit($ec);
+    exit( $flag ? 1 : 0 );
 }
 
 sub create_args {

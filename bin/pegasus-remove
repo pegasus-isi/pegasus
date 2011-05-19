@@ -43,20 +43,27 @@ sub myversion() {
 
 sub usage(;$) {
     my $msg = shift;
-    print "ERROR: $msg\n" if defined $msg && lc($msg) ne 'help';
+    my $flag = defined $msg && lc($msg) ne 'help';
+    if ( $flag ) {
+	my $tty = -t STDOUT; 
+	print "\033[1m" if $tty;
+	print "ERROR: $msg\n";
+	print "\033[0m" if $tty;
+    }
 
     print << "EOF";
+
 Usage: @{[basename($0)]} -d <dagid> | [dagdir]
  pegasus_remove helps remove your your entire workflow. 
 
 Optional arguments: 
- -d|--dagid N    The id of the dag to be removed
- -v|--verbose   Enter verbose mode, default is not
+ -d|--dagid N    The id of the dag to be removed.
+ -v|--verbose   Enter verbose mode, default is not.
  -V|--version   Print version number and exit.
- dagdir         The directory for the dag that you want removed
+ dagdir         The directory for the dag that you want removed.
                 Defaults to the current working directory. 
 EOF
-    exit(1);
+    exit( $flag ? 1 : 0 );
 }
 
 sub handler {
@@ -91,14 +98,14 @@ my $run = shift;
 unless ( defined $run || defined $dagid ) {
     $run = getcwd();
     my $brainfn = File::Spec->catfile( $run, $Pegasus::Common::brainbase );
-    usage("You need to provide a valid rundir or dagid.\n" )
+    usage("You need to provide a valid rundir or dagid." )
 	unless -r $brainfn; 
 }
 
 if ( defined $run ) {
     # extra sanity
-    die "FATAL: $run is not a directory, or not accessible!\n"
-	unless -d $run; 
+    usage( "$run is not a directory." ) unless -d $run;
+    usage( "$run is not accessible." ) unless -r _; 
 
     # where were we...
     my $here = File::Spec->curdir();
@@ -156,5 +163,5 @@ if ( defined $dagid ) {
     print "\nResult: ", parse_exit($?), "\n";
     exit( $? == 0 ? 0 : 42 );
 } else {
-    usage("You need to provide either a dagid or dagdirectory to remove the workflow\n");
+    usage("You must provide either a dagid or dagdirectory to remove a workflow.");
 }
