@@ -158,6 +158,11 @@ public class Condor extends Namespace{
      * The key that designates the collector associated with the job.
      */
     public static final String COLLECTOR_KEY = "condor_collector";
+
+    /**
+     * The key that overrides the default x509 proxy location.
+     */
+    public static final String X509USERPROXY_KEY = "x509userproxy";
     
     /**
      * The condor universe key value for vanilla universe.
@@ -370,6 +375,8 @@ public class Condor extends Namespace{
      * transfer_input_files - supported, especially used to transfer proxies in
      *                        case of glide in pools.
      * universe         - supported, especially used to incorporate glide in pools.
+     * x509userpoxy     - supported, overrides x509 default proxy and proxy transfers in
+     *                    for glideins and vanilla jobs
      * +xxxx            - supported, this is used to add extra classads with the jobs.
      * </pre>
      *
@@ -567,7 +574,15 @@ public class Condor extends Namespace{
                     res = UNKNOWN_KEY;
                 }
                 break;
-                
+
+            case 'x':
+                if (key.compareTo( Condor.X509USERPROXY_KEY ) == 0 ){
+                    res = VALID_KEY;
+                }
+                else {
+                    res = UNKNOWN_KEY;
+                }
+                break;
                 
             case '+':
                 res = VALID_KEY;
