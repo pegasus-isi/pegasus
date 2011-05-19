@@ -9,12 +9,12 @@ set -e
 #  Settings
 #
 
-DEGREES=4.0
+DEGREES=2.0
 
-LOCAL_PEGASUS_HOME="/home/rynge/Pegasus/install/trunk"
-LOCAL_GLOBUS_LOCATION="/opt/globus/5.0.1"
+LOCAL_PEGASUS_HOME="/nfs/moose/software/debian/squeeze/x86_64/pegasus/dev/trunk"
+LOCAL_GLOBUS_LOCATION="/nfs/moose/software/debian/squeeze/x86_64/globus/default"
 LOCAL_GLOBUS_TCP_PORT_RANGE="40000,50000"
-LOCAL_MONTAGE_LOCATION="/home/rynge/Projects/Montage/src/Montage_v3.2_beta6_mats"
+LOCAL_MONTAGE_LOCATION="/nfs/moose/software/debian/squeeze/x86_64/montage/default"
 
 CLUSTER_NAME="CCG"
 CLUSTER_HOSTNAME="obelix.isi.edu"
@@ -22,12 +22,12 @@ CLUSTER_GATEKEEPER_TYPE="gt5"
 CLUSTER_GATEKEEPER_PORT="2119"
 CLUSTER_SCHEDULER="condor"
 CLUSTER_WORK_DIR="/moose/scratch"
-CLUSTER_PEGASUS_HOME="/moose/software/debian/squeeze/x86_64/pegasus/3.1.0cvs"
-CLUSTER_GLOBUS_LOCATION="/moose/software/debian/squeeze/x86_64/globus/default"
-CLUSTER_MONTAGE_LOCATION="/moose/software/debian/squeeze/x86_64/montage/default"
+CLUSTER_PEGASUS_HOME="/nfs/moose/software/debian/squeeze/x86_64/pegasus/dev/trunk"
+CLUSTER_GLOBUS_LOCATION="/nfs/moose/software/debian/squeeze/x86_64/globus/default"
+CLUSTER_MONTAGE_LOCATION="/nfs//moose/software/debian/squeeze/x86_64/montage/default"
 
 # this will bundle N jobs togehter
-JOB_CLUSTERS_SIZE="50"
+JOB_CLUSTERS_SIZE="25"
 
 #######################################################################
 
@@ -42,7 +42,7 @@ RUN_DIR=`pwd`/work/$RUN_ID
 
 echo "Work directory: $RUN_DIR"
 
-mkdir -p $RUN_DIR/inputs
+mkdir -p $RUN_DIR
 cd $RUN_DIR
 
 cp $TOP_DIR/pegasusrc .
@@ -75,8 +75,8 @@ cat >sites.xml <<EOF
         <head-fs>
             <scratch>
                 <shared>
-                    <file-server protocol="file" url="file://" mount-point="$RUN_DIR/outputs"/>
-                    <internal-mount-point mount-point="$RUN_DIR/outputs" free-size="100G" total-size="30G"/>
+                    <file-server protocol="file" url="file://" mount-point="$RUN_DIR/shared"/>
+                    <internal-mount-point mount-point="$RUN_DIR/shared" free-size="100G" total-size="30G"/>
                 </shared>
             </scratch>
             <storage>
@@ -102,10 +102,6 @@ cat >sites.xml <<EOF
                 </shared>
             </scratch>
             <storage>
-                <shared>
-                    <file-server protocol="gsiftp" url="gsiftp://$CLUSTER_HOSTNAME" mount-point="$CLUSTER_WORK_DIR"/>
-                    <internal-mount-point mount-point="$CLUSTER_WORK_DIR"/>
-                </shared>
             </storage>
         </head-fs>
         <replica-catalog  type="LRC" url="rlsn://dummyValue.url.edu" />
@@ -121,16 +117,11 @@ echo "Running mDAG (finding input images, generating DAX, ...)..."
 mDAG 2mass j M17 $DEGREES $DEGREES 0.0002777778 . "gsiftp://$LOCAL_HOSTNAME$RUN_DIR" "gsiftp://$LOCAL_HOSTNAME$RUN_DIR/inputs"
 
 echo
-echo "Downloading input images from NASA IPAC at Caltech..."
-cd inputs
-mArchiveExec ../images.tbl
-cd ..
+echo "Adding input images to the replica catalog..."
+cat cache.list | grep -v ".fits " >rc
+cat url.list | sed 's/ http:.*ref=/ http:\/\/obelix.isi.edu\/irsa-cache/' >>rc
 
 echo
-echo "Setting up the replica catalog..."
-cp cache.list rc
-perl -p -i -e 's/ipac_cluster/local/' rc
-
 echo "Planning and submitting the workflow..."
 pegasus-plan \
     --conf pegasusrc \
@@ -139,7 +130,6 @@ pegasus-plan \
     --dir work \
     --output local \
     --dax dag.xml \
-    --nocleanup \
     --submit \
     2>&1 | tee pegasus-plan.out
 
