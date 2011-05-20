@@ -101,7 +101,7 @@ public class Notifications implements CodeGenerator {
      */
     protected LogManager mLogger;
 
-    private PrintWriter notificationsWriter = null;
+    private PrintWriter mNotificationsWriter;
 
     /**
      * Initializes the Code Generator implementation.
@@ -110,9 +110,10 @@ public class Notifications implements CodeGenerator {
      *            the bag of initialization objects.
      * 
      * @throws CodeGeneratorException
-     *             in case of any error occuring code generation.
+     *             in case of any error occurring code generation.
      */
     public void initialize(PegasusBag bag) throws CodeGeneratorException {
+	mNotificationsWriter = null;
 	mBag = bag;
 	mProps = bag.getPegasusProperties();
 	mPOptions = bag.getPlannerOptions();
@@ -121,16 +122,18 @@ public class Notifications implements CodeGenerator {
     }
 
     /**
-     * Generates the notifications input file.
+     * Generates the notifications input file. The method initially generates
+     * work-flow level notification records, followed by job-level notification
+     * records.
      * 
      * @param dag
-     *            the concrete workflow.
+     *            the concrete work-flow.
      * 
      * @return the Collection of <code>File</code> objects for the files written
      *         out.
      * 
      * @throws CodeGeneratorException
-     *             in case of any error occuring code generation.
+     *             in case of any error occurring code generation.
      */
     public Collection<File> generateCode(ADag dag)
 	    throws CodeGeneratorException {
@@ -140,7 +143,7 @@ public class Notifications implements CodeGenerator {
 	        Notifications.NOTIFICATIONS_FILE_SUFFIX));
 
 	try {
-	    notificationsWriter = new PrintWriter(new BufferedWriter(
+	    mNotificationsWriter = new PrintWriter(new BufferedWriter(
 		    new FileWriter(f, true)));
 	} catch (IOException ioe) {
 	    mLogger.log("Unable to intialize writer for notifications file ",
@@ -150,10 +153,12 @@ public class Notifications implements CodeGenerator {
 
 	}
 
+	// Generate work-flow level notification record.
 	generateWorkflowNotifications(dag);
+	// Generate job-level notification record.
 	generateJobNotifications(dag);
 
-	notificationsWriter.close();
+	mNotificationsWriter.close();
 
 	Collection<File> result = new LinkedList<File>();
 	result.add(f);
@@ -161,22 +166,82 @@ public class Notifications implements CodeGenerator {
     }
 
     /**
-     * Method not implemented. Throws an exception.
+     * 
+     * Not implemented
      * 
      * @param dag
-     *            the workflow
+     *            the work-flow
      * @param job
      *            the job for which the code is to be generated.
      * 
      * @throws edu.isi.pegasus.planner.code.CodeGeneratorException
      */
     public void generateCode(ADag dag, Job job) throws CodeGeneratorException {
+	throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    /**
+     * Not implemented
+     */
+    public boolean startMonitoring() {
+	throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    /**
+     * Not implemented
+     */
+    public void reset() throws CodeGeneratorException {
+	throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    /**
+     * 
+     * @param dag
+     */
+    private void generateWorkflowNotifications(ADag dag) {
+	String uuid = dag.getWorkflowUUID();
+	edu.isi.pegasus.planner.classes.Notifications notfications = dag
+	        .getNotifications();
+	for (WHEN wTemp : WHEN.values()) {
+	    for (Invoke invoke : notfications.getNotifications(wTemp)) {
+		mNotificationsWriter.println(Notifications.WORKFLOW + DELIMITER
+		        + uuid + DELIMITER + wTemp.toString() + DELIMITER
+		        + invoke.getWhat());
+	    }
+	}
+    }
+
+    /**
+     * Iterates over all jobs in the ADag object. Generates notifications for
+     * each job.
+     * 
+     * @param dag
+     *            the work-flow
+     * @throws CodeGeneratorException
+     *             when
+     */
+    private void generateJobNotifications(ADag dag)
+	    throws CodeGeneratorException {
+	for (Iterator<Job> it = dag.jobIterator(); it.hasNext();) {
+	    Job job = it.next();
+	    generateJobNotifications(dag, job);
+	}
+    }
+
+    /**
+     * Generates the notification input record for given work-flow, job.
+     * 
+     * @param dag
+     *            the work-flow
+     * @param job
+     *            the job
+     * @throws CodeGeneratorException
+     */
+    private void generateJobNotifications(ADag dag, Job job)
+	    throws CodeGeneratorException {
 	String sType = null;
 	String sJobId = job.getID();
 	switch (job.getJobType()) {
-	case Job.COMPUTE_JOB:
-	    sType = Notifications.JOB;
-	    break;
 	case Job.DAG_JOB:
 	    sType = Notifications.DAG_JOB;
 	    break;
@@ -184,48 +249,15 @@ public class Notifications implements CodeGenerator {
 	    sType = Notifications.DAX_JOB;
 	    break;
 	default:
-	    mLogger.log("Invalid Job Type " + job.getJobTypeDescription()
-		    + " for workflow " + dag.getAbstractWorkflowName(),
-		    LogManager.ERROR_MESSAGE_LEVEL);
-	    throw new CodeGeneratorException("Invalid Job Type "
-		    + job.getJobTypeDescription() + " for workflow "
-		    + dag.getAbstractWorkflowName());
+	    sType = Notifications.JOB;
+	    break;
 	}
 	for (WHEN wTemp : WHEN.values()) {
 	    for (Invoke invoke : job.getNotifications(wTemp)) {
-		notificationsWriter.println(sType + DELIMITER + sJobId
+		mNotificationsWriter.println(sType + DELIMITER + sJobId
 		        + DELIMITER + wTemp.toString() + DELIMITER
 		        + invoke.getWhat());
 	    }
-	}
-    }
-
-    public boolean startMonitoring() {
-	throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    public void reset() throws CodeGeneratorException {
-	throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    private void generateWorkflowNotifications(ADag dag) {
-	String uuid = dag.getWorkflowUUID();
-	edu.isi.pegasus.planner.classes.Notifications notfications = dag
-	        .getNotifications();
-	for (WHEN wTemp : WHEN.values()) {
-	    for (Invoke invoke : notfications.getNotifications(wTemp)) {
-		notificationsWriter.println(Notifications.WORKFLOW + DELIMITER
-		        + uuid + DELIMITER + wTemp.toString() + DELIMITER
-		        + invoke.getWhat());
-	    }
-	}
-    }
-
-    private void generateJobNotifications(ADag dag)
-	    throws CodeGeneratorException {
-	for (Iterator<Job> it = dag.jobIterator(); it.hasNext();) {
-	    Job job = it.next();
-	    generateCode(dag, job);
 	}
     }
 }
