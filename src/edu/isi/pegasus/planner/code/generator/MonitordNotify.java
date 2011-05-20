@@ -167,10 +167,24 @@ public class MonitordNotify implements CodeGenerator {
 
 	}
 
-	// Generate work-flow level notification record.
-	generateWorkflowNotifications(dag);
-	// Generate job-level notification record.
-	generateJobNotifications(dag);
+	//lets first generate code for the workflow level
+        //notifications
+        String uuid = dag.getWorkflowUUID();
+	Notifications notfications = dag.getNotifications();
+	for (WHEN when : WHEN.values()) {
+	    for (Invoke invoke : notfications.getNotifications(when)) {
+		mNotificationsWriter.println(MonitordNotify.WORKFLOW + DELIMITER
+		        + uuid + DELIMITER + when.toString() + DELIMITER
+		        + invoke.getWhat());
+	    }
+	}
+
+        //walk through the workflow and generate code for
+        //job notifications if specified
+        for ( Iterator<Job> it = dag.jobIterator(); it.hasNext();)  {
+	    Job job = it.next();
+	    this.generateCode( dag, job );
+	}
 
 	mNotificationsWriter.close();
 
@@ -189,7 +203,39 @@ public class MonitordNotify implements CodeGenerator {
      * @throws edu.isi.pegasus.planner.code.CodeGeneratorException
      */
     public void generateCode(ADag dag, Job job) throws CodeGeneratorException {
-	throw new UnsupportedOperationException("Not supported yet.");
+        String sType = null;
+	String sJobId = job.getID();
+
+        switch (job.getJobType()) {
+
+            case Job.DAG_JOB:
+                sType = MonitordNotify.DAG_JOB;
+                break;
+
+            case Job.DAX_JOB:
+                sType = MonitordNotify.DAX_JOB;
+                break;
+
+            default:
+                sType = MonitordNotify.JOB;
+                break;
+	}
+
+        //a new line only if there are some notification
+        //to print out.
+        if( !job.getNotifications().isEmpty() ){
+            mNotificationsWriter.println();
+        }
+
+	for ( WHEN when : WHEN.values() ) {
+	    for ( Invoke invoke : job.getNotifications(when) ) {
+		mNotificationsWriter.println(sType + DELIMITER + sJobId
+		        + DELIMITER + when.toString() + DELIMITER
+		        + invoke.getWhat());
+	    }
+	}
+
+
     }
 
     /**
@@ -206,70 +252,5 @@ public class MonitordNotify implements CodeGenerator {
 	throw new UnsupportedOperationException("Not supported yet.");
     }
 
-    /**
-     * Generates workflow notifications for the workflow.
-     * 
-     * @param dag   the workflow
-     */
-    private void generateWorkflowNotifications(ADag dag) {
-	String uuid = dag.getWorkflowUUID();
-	Notifications notfications = dag.getNotifications();
-	for (WHEN when : WHEN.values()) {
-	    for (Invoke invoke : notfications.getNotifications(when)) {
-		mNotificationsWriter.println(MonitordNotify.WORKFLOW + DELIMITER
-		        + uuid + DELIMITER + when.toString() + DELIMITER
-		        + invoke.getWhat());
-	    }
-	}
-    }
-
-    /**
-     * Iterates over all jobs in the ADag object. Generates notifications for
-     * each job.
-     * 
-     * @param dag the work-flow
-
-     * @throws CodeGeneratorException
-     *             
-     */
-    private void generateJobNotifications(ADag dag)
-	    throws CodeGeneratorException {
-	for (Iterator<Job> it = dag.jobIterator(); it.hasNext();) {
-	    Job job = it.next();
-	    generateJobNotifications(dag, job);
-	}
-    }
-
-    /**
-     * Generates the notification input record for given work-flow, job.
-     * 
-     * @param dag
-     *            the work-flow
-     * @param job
-     *            the job
-     * @throws CodeGeneratorException
-     */
-    private void generateJobNotifications(ADag dag, Job job)
-	    throws CodeGeneratorException {
-	String sType = null;
-	String sJobId = job.getID();
-	switch (job.getJobType()) {
-	case Job.DAG_JOB:
-	    sType = MonitordNotify.DAG_JOB;
-	    break;
-	case Job.DAX_JOB:
-	    sType = MonitordNotify.DAX_JOB;
-	    break;
-	default:
-	    sType = MonitordNotify.JOB;
-	    break;
-	}
-	for ( WHEN when : WHEN.values() ) {
-	    for ( Invoke invoke : job.getNotifications(when) ) {
-		mNotificationsWriter.println(sType + DELIMITER + sJobId
-		        + DELIMITER + when.toString() + DELIMITER
-		        + invoke.getWhat());
-	    }
-	}
-    }
+   
 }
