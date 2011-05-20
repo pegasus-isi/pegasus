@@ -65,6 +65,10 @@ public class Notifications extends Data{
      * @param notification  the notification object
      */
     public void add( Invoke notification  ){
+    	
+    	if(notification == null){
+    		return; // do nothing
+    	}
         //retrieve the appropriate namespace and then add
         List<Invoke> l = ( List )mInvokeMap.get(  Invoke.WHEN.valueOf( notification.getWhen() ));
         l.add( notification);
@@ -76,7 +80,10 @@ public class Notifications extends Data{
      * @param notifications  the notification object
      */
     public void addAll( Notifications notifications ){
-
+    	
+    	if(notifications == null){
+    		return; // do nothing
+    	}
         for( Invoke.WHEN when : Invoke.WHEN.values() ){
             this.addAll( when, notifications.getNotifications(when) );
         }
