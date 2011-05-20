@@ -16,7 +16,7 @@ package Pegasus::Properties;
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-# Author: Jens-S. Vöckler voeckler@cs.uchicago.edu
+# Author: Jens-S. Vöckler voeckler at isi dot edu
 # Revision : $Revision$
 # $Id$
 #
@@ -37,8 +37,11 @@ sub parse_properties($;\%); 	# { }
 # Do not simply export all your public functions/methods/constants.
 our $VERSION = '1.0';
 $VERSION=$1 if ( '$Revision$' =~ /Revision:\s+([0-9.]+)/o );
+our $pegasus_env = 'pegasus.env.'; 
+our $pegasus_len = length($pegasus_env); 
 
-our @EXPORT_OK = qw($VERSION parse_properties pegasusrc %initial %system);
+our @EXPORT_OK = qw($VERSION parse_properties pegasusrc %initial %system
+		    $pegasus_env);
 our %EXPORT_TAGS = ( all => [ @EXPORT_OK ] );
 our @EXPORT = ();
 
@@ -108,7 +111,8 @@ sub parse_properties($;\%) {
 		}
 
 		print STDERR "# Storing: $k => $v\n" if $main::DEBUG;
-		$result{lc($k)} = $v;
+		# 20110519 (jsv): No key lower-casing requested by FS,KV
+		$result{$k} = $v;
 	    } else {
 		carp "Illegal content in $fn:$.\n";
 	    }
@@ -155,7 +159,8 @@ BEGIN {
 			 ($arg eq '-D' ? shift(@ARGV) : substr($arg,2)),
 			 2 );
 
-	    $k = lc $k;
+	    # 20110519 (jsv): No key lower-casing requested by FS,KV
+	    #$k = lc $k;
 	    if ( $k eq 'pegasus.properties' || $k eq 'pegasus.user.properties' ) { 
 		carp "Warning: $k is no longer supported, ignoring, please use --conf\n";
 	    } else {
@@ -219,7 +224,19 @@ sub new {
     
     # create instance and return handle to self.
     # last one in chain below has highest priority. 
-    bless { m_config => { %config, %initial } }, $class;
+    my $self = bless { m_config => { %config, %initial } }, $class;
+    $self->setenv(); 
+    $self; 
+}
+
+sub setenv {
+    # purpoes: merge properties starting in $pegasus_key into %ENV
+    #
+    my $self = shift || croak; 
+    foreach my $k ( keys %{ $self->{'m_config'} } ) { 
+	$ENV{substr($k,$pegasus_len)}=$self->{'m_config'}{$k}
+	    if substr($k,0,$pegasus_len) eq $pegasus_env; 
+    }
 }
 
 sub reinit {
@@ -310,80 +327,6 @@ sub propertyset {
 	    if ( length($newkey) > 0 );
     }
     %result;
-}
-
-my %translate = ( 'mysql' => 'mysql',
-		  'postgresql' => 'Pg',
-		  'sqlite' => 'SQLite',
-		  'oracle' => 'Oracle' );
-
-sub jdbc2perl {
-    # purpose: Convert PEGASUS JDBC connect properties into what DBI needs
-    # paramtr: $cat (IN): catalog name, e.g. "tc" or "wf". 
-    # returns: uri => DBI-uri
-    #          dbuser => database account username
-    #          dbpass => database account password
-    #
-    # pegasus.db.(*|$cat).driver	(Postgres|MySQL)
-    # pegasus.db.(*|$cat).driver.url	jdbc:jdbtype:[//dbhost[:dbport]/]dbname
-    # pegasus.db.(*|$cat).driver.user	dbuser
-    # pegasus.db.(*|$cat).driver.password	dbpass
-    my $self = shift;
-    my $cat = shift || croak "need a catalog name, e.g. 'transformation' , 'replica', 'provenance'or 'work'";
-
-    my %x = ( $self->propertyset( "pegasus.catalog.*.db.", 1 ),
-	      $self->propertyset( "pegasus.catalog.$cat.db.", 1 ) );
-
-    # turn JDBC to DBI uri
-    my $dbuser = $x{'user'};
-    my $dbpass = $x{'password'};
-    my $juri = $x{'url'};
-    my @x = split /:/, $juri, 3;
-    die "ERROR: Is the JDBC URI \"$juri\" valid?" unless $x[0] eq 'jdbc';
-    delete @x{'driver.url','driver.user','driver.password'};
-
-    my $uri = 'dbi:' . ( $translate{$x[1]} || ucfirst(lc($x[1])) );
-    my $flag = 0;
-
-    my $pos;
-    if ( ($pos = index( $x[2], '//' )) >= 0 ) {
-	my $fin = index( $x[2], '/', $pos+2 );
-	$fin = length($x[2]) if $fin == -1;
-	my ($host,$port) = split /:/, substr($x[2],$pos+2,$fin-$pos-2), 2;
-	if ( $fin+1 < length($x[2]) ) {
-	    $uri .= $flag ? ';' : ':';
-	    $uri .= ( $x[1] eq 'mysql' ? 'database' : 'dbname' );
-	    $uri .= '=' . substr($x[2],$fin+1);
-	    $flag++;
-	}
-	if ( defined $host && length($host)>0 ) {
-	    $uri .= $flag ? ';' : ':';
-	    $uri .= "host=$host";
-	    $flag++;
-	}
-	if ( defined $port && length($host)>0 ) {
-	    $uri .= $flag ? ';' : ':';
-	    $uri .= "port=$port";
-	    $flag++;
-	}
-    } else {
-	if ( defined $x[2] && length($x[2])>0 ) {
-	    $uri .= $flag ? ';' : ':';
-	    $uri .= ( $x[1] eq 'mysql' ? 'database' : 'dbname' ) . '=' . $x[2];
-	    $flag++;
-	}
-    }
-
-    # copy remainder
-    foreach my $k ( keys %x ) { 
-	next unless length($k) > 7;
-	$uri .= $flag ? ';' : ':';
-	$uri .= substr($k,7) . '=' . $x{$k};
-	$flag++;
-    }
-
-    # done
-    ( uri => $uri, dbuser => $dbuser, dbpass => $dbpass );
 }
 
 sub _quote($) {
@@ -604,18 +547,6 @@ string will be removed from the keys in the result set.
     foreach my $key ( sort keys %x ) {
 	xxx( $x{$key} );
     }
-
-=item jdbc2perl( $catalog )
-
-This very special property parses the pegasus.db property database driver
-section. The only permitted argument is the (lower case) catalog name.
-The method will determine the necessary Perl connection string from 
-the JDBC connection information. 
-
-The result is a hash with three values. The B<uri> key stores the Perl
-DBI access URI. The B<dbname> store the database user account name as
-required for the connect function. The B<dbpass> transports the database
-account's password as found in the properties.
 
 =item dump( $filename )
 
