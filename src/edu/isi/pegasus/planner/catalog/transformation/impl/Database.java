@@ -23,34 +23,31 @@ package edu.isi.pegasus.planner.catalog.transformation.impl;
  * @version $Revision$
  */
 
-import edu.isi.pegasus.common.logging.LogManagerFactory;
-import edu.isi.pegasus.planner.classes.Profile;
-import edu.isi.pegasus.common.logging.LogManager;
-import edu.isi.pegasus.planner.common.PegasusProperties;
-
-
-import edu.isi.pegasus.planner.catalog.classes.SysInfo;
-
-import edu.isi.pegasus.planner.catalog.TransformationCatalog;
-import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
-import edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo;
-import edu.isi.pegasus.planner.catalog.transformation.classes.NMI2VDSSysInfo;
-import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
-
-
-import edu.isi.pegasus.common.util.Separator;
-import org.griphyn.vdl.dbschema.DatabaseSchema;
-
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
+
+import org.griphyn.vdl.dbschema.DatabaseSchema;
+
+import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.common.logging.LogManagerFactory;
+import edu.isi.pegasus.common.util.Separator;
+import edu.isi.pegasus.planner.catalog.TransformationCatalog;
+import edu.isi.pegasus.planner.catalog.classes.SysInfo;
+import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
+import edu.isi.pegasus.planner.catalog.transformation.classes.NMI2VDSSysInfo;
+import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
+import edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo;
+import edu.isi.pegasus.planner.classes.Notifications;
 import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.classes.Profile;
+import edu.isi.pegasus.planner.common.PegasusProperties;
 
 public class Database
     extends DatabaseSchema implements TransformationCatalog {
@@ -792,7 +789,8 @@ public class Database
                         entry.getLogicalName(), entry.getLogicalVersion(),
                         entry.getPhysicalTransformation(),
                         entry.getType(), entry.getResourceId(), null,
-                        entry.getProfiles(), entry.getSysInfo(), write)){
+                        entry.getProfiles(), entry.getSysInfo(), 
+                        entry.getNotifications(), write)){
         	return 1;
         }else{
         	throw new RuntimeException("Failed to add TransformationCatalogEntry " + entry.getLogicalName());
@@ -831,7 +829,7 @@ public class Database
                               SysInfo system) throws
         Exception {
         if(this.addTCEntry(namespace, name, version, physicalname, type,
-                               resourceid, lfnprofiles, pfnprofiles, system, true)){
+                               resourceid, lfnprofiles, pfnprofiles, system, null, true)){
         	return 1;
         }else{
         	throw new RuntimeException("Failed to add TransformationCatalogEntry " + name);
@@ -859,6 +857,8 @@ public class Database
      * a Physical Transformation. (can be null)
      * @param system    SysInfo  The System information associated with a
      * physical transformation.
+     * @param invokes      the Notifications associated with the 
+     * transformation.
      * @param write boolean to commit changes to the backend catalog
      * @throws Exception
      * @return boolean   Returns true if succesfully added, returns false if
@@ -867,12 +867,14 @@ public class Database
      * @see edu.isi.pegasus.planner.catalog.classes.SysInfo
      * @see org.griphyn.cPlanner.classes.Profile
      */
-    public boolean addTCEntry(String namespace, String name,
+    protected boolean addTCEntry(String namespace, String name,
                               String version,
                               String physicalname, TCType type,
                               String resourceid,
                               List lfnprofiles, List pfnprofiles,
-                              SysInfo system, boolean write) throws
+                              SysInfo system, 
+                              Notifications invokes,
+                              boolean write) throws
         Exception {
 if(!write) return false;
         //ADD LFN
