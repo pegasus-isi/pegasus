@@ -229,9 +229,11 @@ public class TransformationCatalogEntry
            append( "\n TYPE              : " ).append( ((this.type == null) ? "" : type.toString()) );
 
         if( mProfiles != null){
-            sb.append( "\n Profiles :\n" );
+            sb.append( "\n Profiles : " );
             sb.append( mProfiles );
         }
+
+        sb.append( "\n Notifications: " ).append( this.mNotifications );
 
         return sb.toString();
 

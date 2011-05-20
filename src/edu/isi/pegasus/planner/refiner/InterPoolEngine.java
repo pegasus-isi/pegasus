@@ -255,29 +255,6 @@ public class InterPoolEngine extends Engine implements Refiner {
      */
     public void scheduleJobs( ADag dag, List sites ) {
         
-        //before loading the site selector we need to
-        //update the transformation with the hints in the 
-        //DAX for the job. This is for DAX 3.0
-/*        for( Iterator it = dag.jobIterator(); it.hasNext(); ){
-            Job job = ( Job ) it.next();
-            //some sanity check for hints namespace
-            if( job.hints.containsKey( Hints.PFN_HINT_KEY ) &&
-                !job.hints.containsKey( Hints.EXECUTION_POOL_KEY )    ){
-                try {
-                    //insert an entry into the transformation catalog
-                    //for the mapper to pick up later on
-                    TransformationCatalogEntry tcEntry = constructTCEntryFromJobHints( job );
-                    mLogger.log( "Addding entry into transformation catalog " + tcEntry, LogManager.DEBUG_MESSAGE_LEVEL);
-            
-                    if (mTCHandle.insert( tcEntry, false ) != 1 ) {
-                        mLogger.log("Unable to add entry to transformation catalog " + tcEntry, LogManager.WARNING_MESSAGE_LEVEL);
-                    }
-                } catch (Exception ex) {
-                    throw new RuntimeException( "Exception while inserting into TC in Interpool Engine ");
-                }
-            }
-        }
- */
         //we iterate through the DAX Transformation Store and update
         //the transformation catalog with any transformation specified.
         for( TransformationCatalogEntry entry : this.mDAXTransformationStore.getAllEntries() ) {
@@ -578,7 +555,7 @@ public class InterPoolEngine extends Engine implements Refiner {
             //entry
             job.executable = tcEntry.getPhysicalTransformation();
         }
-        
+
         //add any notifications specified in the transformation
         //catalog for the job. JIRA PM-391
         job.addNotifications( tcEntry );
