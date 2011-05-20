@@ -116,6 +116,10 @@ public class RM implements CleanupImplementation{
         //the cleanup jobs for clustered jobs appears as
         //a clustered job. PM-368
         Job cJob = new Job( job );
+
+        //we dont want notifications to be inherited
+        cJob.resetNotifications();
+
         cJob.setJobType( Job.CLEANUP_JOB );
         cJob.setName( id );
         cJob.setSiteHandle( job.getSiteHandle() );

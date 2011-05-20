@@ -326,6 +326,10 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                     
                     if( element.equals( "dag" ) ){
                         DAGJob dagJob = new DAGJob( j );
+
+                        //we dont want notifications to be inherited
+                        dagJob.resetNotifications();
+
                         dagJob.setDAGLFN( file );
                         dagJob.addInputFile( pf );
                         
@@ -362,6 +366,10 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                     }
                     else if (element.equals( "dax" ) ){
                         DAXJob daxJob = new DAXJob( j );
+
+                        //we dont want notifications to be inherited
+                        daxJob.resetNotifications();
+
 
                         //the job should be tagged type pegasus
                         daxJob.setTypeRecursive();

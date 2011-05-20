@@ -237,6 +237,8 @@ public class S3 extends Abstract
             
             txJob = new TransferJob( merged );
 
+            //we dont want notifications to be inherited
+            txJob.resetNotifications();
             
             //set the name of the merged job back to the name of
             //transfer job passed in the function call

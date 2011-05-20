@@ -654,7 +654,15 @@ public class Job extends Data implements GraphNodeContent{
     public Set getInputFiles( ){
         return this.inputFiles;
     }
+
     
+    /**
+     * Resets the notifications associated with the job
+     */
+    public void resetNotifications( ){
+        this.mNotifications = new Notifications();
+    }
+
     /**
      * Adds a Invoke object correpsonding to a notification.
      * 

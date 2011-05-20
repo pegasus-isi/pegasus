@@ -39,6 +39,7 @@ import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 
 import edu.isi.pegasus.common.util.Separator;
 
+import edu.isi.pegasus.planner.classes.Notifications;
 import java.util.List;
 import java.util.Iterator;
 import java.util.HashSet;
@@ -179,6 +180,10 @@ public class Cleanup implements CleanupImplementation{
         //the cleanup jobs for clustered jobs appears as
         //a clustered job. PM-368
         Job cJob = new Job( job );
+
+        //we dont want notifications to be inherited
+        cJob.resetNotifications();
+
         cJob.setJobType( Job.CLEANUP_JOB );
         cJob.setName( id );
         cJob.setArguments( "" );

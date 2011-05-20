@@ -43,15 +43,21 @@ public class Notifications extends Data{
      * The default constructor.
      */
     public Notifications() {
+        reset();
+    }
+
+
+    /**
+     * Resets the internal invoke map.
+     */
+    public void reset() {
         mInvokeMap = new EnumMap<Invoke.WHEN, List<Invoke>>( Invoke.WHEN.class );
-                
-        mInvokeMap.put( Invoke.WHEN.all, new LinkedList() );
+
         Invoke.WHEN[] values = Invoke.WHEN.values();
         for ( int i = 0; i < values.length; i++ ){
            mInvokeMap.put( values[i], new LinkedList() );
         }
     }
-
 
     /**
      * Adds a Invoke object correpsonding to a notification.
