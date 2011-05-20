@@ -275,9 +275,7 @@ public abstract class Abstract implements CodeGenerator{
      *  
      * @return Map
      */
-    public  Map<String, String> getAdditionalBraindumpEntries( ADag workflow ){
-        return new HashMap();
-    }
+    public  abstract Map<String, String> getAdditionalBraindumpEntries( ADag workflow );
 
     
     /**

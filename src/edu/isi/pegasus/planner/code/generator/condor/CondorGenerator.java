@@ -52,6 +52,7 @@ import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.common.util.Boolean;
 
 import edu.isi.pegasus.planner.classes.AggregatedJob;
+import edu.isi.pegasus.planner.code.generator.MonitordNotify;
 import edu.isi.pegasus.planner.namespace.Condor;
 import edu.isi.pegasus.planner.namespace.Dagman;
 import edu.isi.pegasus.planner.namespace.Globus;
@@ -476,8 +477,7 @@ public class CondorGenerator extends Abstract {
         this.writeJobMapFile( getDAGFilename( dag, ".job.map"), dag );
         */
 
-        //write out the braindump file
-        this.writeOutBraindump( dag );
+        
 
         //write out the notifications input file
         this.writeOutNotifications( dag );
@@ -488,6 +488,8 @@ public class CondorGenerator extends Abstract {
         //write out the metrics file
         this.writeOutWorkflowMetrics(dag);
 
+        //write out the braindump file
+        this.writeOutBraindump( dag );
         
         //we are donedirectory
         mDone = true;
@@ -1211,6 +1213,7 @@ public class CondorGenerator extends Abstract {
         entries.put( Braindump.GENERATOR_TYPE_KEY, "dag" );
         entries.put( "dag", this.getDAGFilename( workflow, ".dag") );
         entries.put( "condor_log", new File(this.getCondorLogInSubmitDirectory( workflow )).getName() );
+        entries.put( "notify", this.getDAGFilename( workflow, MonitordNotify.NOTIFICATIONS_FILE_SUFFIX ) );
         return entries;
     }
     

@@ -32,6 +32,8 @@ import java.io.PrintWriter;
 import java.io.IOException;
 
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.StringTokenizer;
 
 
@@ -189,6 +191,17 @@ public class Stork extends Abstract {
         StringBuffer sb = new StringBuffer();
         sb.append(job.jobName).append(".stork");
         return sb.toString();
+    }
+
+    /**
+     * Returns an empty map
+     *
+     * @param workflow   the workflow.
+     *
+     * @return map containing extra entries
+     */
+    public Map<String, String> getAdditionalBraindumpEntries(ADag workflow) {
+        return new HashMap();
     }
 
 }
