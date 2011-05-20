@@ -252,7 +252,7 @@ public abstract class Abstract implements CodeGenerator{
      */
     protected void writeOutNotifications( ADag workflow ){
         try{
-            Notifications notifications = new Notifications ();
+            MonitordNotify notifications = new MonitordNotify ();
             notifications.initialize(mBag);
         
             Collection <File> result = notifications.generateCode(workflow);

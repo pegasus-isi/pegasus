@@ -15,34 +15,42 @@
  */
 package edu.isi.pegasus.planner.code.generator;
 
+
+import edu.isi.pegasus.common.logging.LogManager;
+
+import edu.isi.pegasus.planner.classes.ADag;
+import edu.isi.pegasus.planner.classes.Job;
+import edu.isi.pegasus.planner.classes.Notifications;
+import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.classes.PlannerOptions;
+
+import edu.isi.pegasus.planner.code.CodeGenerator;
+import edu.isi.pegasus.planner.code.CodeGeneratorException;
+
+import edu.isi.pegasus.planner.common.PegasusProperties;
+
+import edu.isi.pegasus.planner.dax.Invoke;
+import edu.isi.pegasus.planner.dax.Invoke.WHEN;
+
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 
-import edu.isi.pegasus.common.logging.LogManager;
-import edu.isi.pegasus.planner.classes.ADag;
-import edu.isi.pegasus.planner.classes.Job;
-import edu.isi.pegasus.planner.classes.PegasusBag;
-import edu.isi.pegasus.planner.classes.PlannerOptions;
-import edu.isi.pegasus.planner.code.CodeGenerator;
-import edu.isi.pegasus.planner.code.CodeGeneratorException;
-import edu.isi.pegasus.planner.common.PegasusProperties;
-import edu.isi.pegasus.planner.dax.Invoke;
-import edu.isi.pegasus.planner.dax.Invoke.WHEN;
-
 /**
- * A Notifications Input File Generator that generates the input file required
- * for the notifications module.
+ * A MonitordNotify Input File Generator that generates the input file required
+ * for pegasus-monitord.
  * 
  * @author Rajiv Mayani
  * @version $Revision$
  */
-public class Notifications implements CodeGenerator {
+public class MonitordNotify implements CodeGenerator {
 
     /**
      * The suffix to use while constructing the name of the metrics file
@@ -101,6 +109,10 @@ public class Notifications implements CodeGenerator {
      */
     protected LogManager mLogger;
 
+
+    /**
+     * The handle to the PrintWriter that writes out the notifications file
+     */
     private PrintWriter mNotificationsWriter;
 
     /**
@@ -126,8 +138,7 @@ public class Notifications implements CodeGenerator {
      * work-flow level notification records, followed by job-level notification
      * records.
      * 
-     * @param dag
-     *            the concrete work-flow.
+     * @param dag the concrete work-flow.
      * 
      * @return the Collection of <code>File</code> objects for the files written
      *         out.
@@ -138,13 +149,16 @@ public class Notifications implements CodeGenerator {
     public Collection<File> generateCode(ADag dag)
 	    throws CodeGeneratorException {
 
-	File f = new File(mSubmitFileDir, Abstract.getDAGFilename(
-	        this.mPOptions, dag.dagInfo.nameOfADag, dag.dagInfo.index,
-	        Notifications.NOTIFICATIONS_FILE_SUFFIX));
+	File f = new File( mSubmitFileDir,
+                           Abstract.getDAGFilename(
+                                           this.mPOptions,
+                                           dag.dagInfo.nameOfADag,
+                                           dag.dagInfo.index,
+                                           MonitordNotify.NOTIFICATIONS_FILE_SUFFIX) );
 
 	try {
-	    mNotificationsWriter = new PrintWriter(new BufferedWriter(
-		    new FileWriter(f, true)));
+	    mNotificationsWriter = new PrintWriter( new BufferedWriter(
+		    new FileWriter(f, true) ) );
 	} catch (IOException ioe) {
 	    mLogger.log("Unable to intialize writer for notifications file ",
 		    ioe, LogManager.ERROR_MESSAGE_LEVEL);
@@ -169,10 +183,8 @@ public class Notifications implements CodeGenerator {
      * 
      * Not implemented
      * 
-     * @param dag
-     *            the work-flow
-     * @param job
-     *            the job for which the code is to be generated.
+     * @param dag the work-flow
+     * @param job the job for which the code is to be generated.
      * 
      * @throws edu.isi.pegasus.planner.code.CodeGeneratorException
      */
@@ -195,17 +207,17 @@ public class Notifications implements CodeGenerator {
     }
 
     /**
+     * Generates workflow notifications for the workflow.
      * 
-     * @param dag
+     * @param dag   the workflow
      */
     private void generateWorkflowNotifications(ADag dag) {
 	String uuid = dag.getWorkflowUUID();
-	edu.isi.pegasus.planner.classes.Notifications notfications = dag
-	        .getNotifications();
-	for (WHEN wTemp : WHEN.values()) {
-	    for (Invoke invoke : notfications.getNotifications(wTemp)) {
-		mNotificationsWriter.println(Notifications.WORKFLOW + DELIMITER
-		        + uuid + DELIMITER + wTemp.toString() + DELIMITER
+	Notifications notfications = dag.getNotifications();
+	for (WHEN when : WHEN.values()) {
+	    for (Invoke invoke : notfications.getNotifications(when)) {
+		mNotificationsWriter.println(MonitordNotify.WORKFLOW + DELIMITER
+		        + uuid + DELIMITER + when.toString() + DELIMITER
 		        + invoke.getWhat());
 	    }
 	}
@@ -215,10 +227,10 @@ public class Notifications implements CodeGenerator {
      * Iterates over all jobs in the ADag object. Generates notifications for
      * each job.
      * 
-     * @param dag
-     *            the work-flow
+     * @param dag the work-flow
+
      * @throws CodeGeneratorException
-     *             when
+     *             
      */
     private void generateJobNotifications(ADag dag)
 	    throws CodeGeneratorException {
@@ -243,19 +255,19 @@ public class Notifications implements CodeGenerator {
 	String sJobId = job.getID();
 	switch (job.getJobType()) {
 	case Job.DAG_JOB:
-	    sType = Notifications.DAG_JOB;
+	    sType = MonitordNotify.DAG_JOB;
 	    break;
 	case Job.DAX_JOB:
-	    sType = Notifications.DAX_JOB;
+	    sType = MonitordNotify.DAX_JOB;
 	    break;
 	default:
-	    sType = Notifications.JOB;
+	    sType = MonitordNotify.JOB;
 	    break;
 	}
-	for (WHEN wTemp : WHEN.values()) {
-	    for (Invoke invoke : job.getNotifications(wTemp)) {
+	for ( WHEN when : WHEN.values() ) {
+	    for ( Invoke invoke : job.getNotifications(when) ) {
 		mNotificationsWriter.println(sType + DELIMITER + sJobId
-		        + DELIMITER + wTemp.toString() + DELIMITER
+		        + DELIMITER + when.toString() + DELIMITER
 		        + invoke.getWhat());
 	    }
 	}
