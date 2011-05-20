@@ -53,15 +53,18 @@ sub usage(;$) {
 
     print << "EOF";
 
-Usage: @{[basename($0)]} -d <dagid> | [dagdir]
- pegasus_remove helps remove your your entire workflow. 
+Usage: @{[basename($0)]} -d <dagid> | dagdir
+ pegasus_remove helps you remove an entire workflow. 
 
 Optional arguments: 
  -d|--dagid N    The id of the dag to be removed.
  -v|--verbose   Enter verbose mode, default is not.
  -V|--version   Print version number and exit.
+
+Mandatory arguments:
  dagdir         The directory for the dag that you want removed.
-                Defaults to the current working directory. 
+                You may use period (.) for the current working directory. 
+
 EOF
     exit( $flag ? 1 : 0 );
 }
@@ -94,13 +97,10 @@ GetOptions( "dagid|d=s"    => \$dagid,
 	    "help|h|?" => \&usage );
 
 my $run = shift;
-# NEW: Default to cwd if nothing was specified
-unless ( defined $run || defined $dagid ) {
-    $run = getcwd();
-    my $brainfn = File::Spec->catfile( $run, $Pegasus::Common::brainbase );
-    usage("You need to provide a valid rundir or dagid." )
-	unless -r $brainfn; 
-}
+usage("You need to provide a valid rundir or dagid." )
+    unless ( defined $run || defined $dagid ); 
+# 20110519 (jsv): partial relative path may break the chdir stuff below
+$run = abs_path($run) if defined $run; 
 
 if ( defined $run ) {
     # extra sanity
@@ -112,9 +112,9 @@ if ( defined $run ) {
     $SIG{'__DIE__'} = sub {
 	chdir($here) if defined $here;
     };
-    chdir($run) || die "ERROR: Cannot Change to directory $run: $!\n";
+    chdir($run) || die "ERROR: Cannot change to directory $run: $!\n";
 
-    my %config = slurp_braindb( $run ) or die "ERROR: Cannot Open braindb: $!\n";
+    my %config = slurp_braindb( $run ) or die "ERROR: Cannot open braindb: $!\n";
     my @rescue = check_rescue($run,$config{dag});
     if ( @rescue > 0 ) {
 	my (@stat,%rescue,$maxsize);
