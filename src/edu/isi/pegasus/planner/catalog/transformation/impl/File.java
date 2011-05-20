@@ -16,24 +16,6 @@
 
 package edu.isi.pegasus.planner.catalog.transformation.impl;
 
-import edu.isi.pegasus.common.logging.LogManagerFactory;
-import edu.isi.pegasus.common.logging.LogManager;
-
-import edu.isi.pegasus.planner.common.PegasusProperties;
-
-import edu.isi.pegasus.planner.catalog.classes.SysInfo;
-
-import edu.isi.pegasus.planner.catalog.TransformationCatalog;
-import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
-
-import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
-import edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo;
-import edu.isi.pegasus.planner.catalog.transformation.classes.NMI2VDSSysInfo;
-
-import edu.isi.pegasus.common.util.ProfileParser;
-import edu.isi.pegasus.common.util.ProfileParserException;
-import edu.isi.pegasus.common.util.Separator;
-
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileNotFoundException;
@@ -50,8 +32,22 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.TreeSet;
+
+import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.common.logging.LogManagerFactory;
+import edu.isi.pegasus.common.util.ProfileParser;
+import edu.isi.pegasus.common.util.ProfileParserException;
+import edu.isi.pegasus.common.util.Separator;
+import edu.isi.pegasus.planner.catalog.TransformationCatalog;
+import edu.isi.pegasus.planner.catalog.classes.SysInfo;
+import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
+import edu.isi.pegasus.planner.catalog.transformation.classes.NMI2VDSSysInfo;
+import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
+import edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo;
+import edu.isi.pegasus.planner.classes.Notifications;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.Profile;
+import edu.isi.pegasus.planner.common.PegasusProperties;
 
 /**
  * This is the new file based TC implementation storing the contents of the file
@@ -741,7 +737,8 @@ public class File  extends Abstract
                         entry.getLogicalName(), entry.getLogicalVersion(),
                         entry.getPhysicalTransformation(),
                         entry.getType(), entry.getResourceId(), null,
-                        entry.getProfiles(), entry.getSysInfo(), write)){
+                        entry.getProfiles(), entry.getSysInfo(), 
+                        entry.getNotifications(), write)){
     		return 1;
     	}else{
     		throw new RuntimeException("Failed to add TransformationCatalogEntry " + entry.getLogicalName());
@@ -780,7 +777,7 @@ public class File  extends Abstract
                               SysInfo system) throws
         Exception {
         if(this.addTCEntry(namespace, name, version, physicalname, type,
-                               resourceid, lfnprofiles, pfnprofiles, system, true)) {
+                               resourceid, lfnprofiles, pfnprofiles, system, null, true)) {
         	return 1;
         }else{
         	throw new RuntimeException("Failed to add TransformationCatalogEntry " + name);
@@ -802,6 +799,8 @@ public class File  extends Abstract
      *                     with a Physical Transformation. (can be null)
      * @param system       the System information associated with a physical
      *                     transformation.
+     * @param invokes      the Notifications associated with the 
+     *                     transformation.
      * @param write        boolean to commit changes to backend catalog
      * @return boolean     true if succesfully added, returns false if error and
      *                     throws exception.
@@ -812,12 +811,14 @@ public class File  extends Abstract
      * @see edu.isi.pegasus.planner.catalog.classes.SysInfo
      * @see org.griphyn.cPlanner.classes.Profile
      */
-    public boolean addTCEntry(String namespace, String name,
+    protected boolean addTCEntry(String namespace, String name,
                               String version,
                               String physicalname, TCType type,
                               String resourceid,
                               List pfnprofiles, List lfnprofiles,
-                              SysInfo system, boolean write) throws
+                              SysInfo system,
+                              Notifications invokes,
+                              boolean write) throws
         Exception {
 
         TransformationCatalogEntry entry = new TransformationCatalogEntry();
@@ -830,6 +831,8 @@ public class File  extends Abstract
         entry.addProfiles(lfnprofiles);
         entry.addProfiles(pfnprofiles);
         entry.setVDSSysInfo( NMI2VDSSysInfo.nmiToVDSSysInfo(system) );
+        entry.addNotifications(invokes);
+        
 
         Map lfnMap = null;
         if (mTreeMap.containsKey(resourceid)) {
