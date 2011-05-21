@@ -1172,6 +1172,73 @@ class Workflow:
         # Done!
         return
 
+    def read_notification_file(self):
+        """
+        This function reads the notification file, parsing all
+        notifications and creating our list of events to track
+        """
+        if self._notify_file is None:
+            return
+
+        # Add rundir to notifications filename
+        if self._run_dir is not None:
+            self._notify_file = os.path.join(self._run_dir, self._notify_file)
+
+        logger.info("loading notifications from %s" % (self._notify_file))
+
+        # Open file
+        try:
+            NOTIFY = open(self._notify_file, "r")
+        except:
+            logger.warning("cannot load notification file %s, continuing without notifications" % (self._notify_file))
+            return
+
+        my_notifications = {"workflow" : {},
+                            "job" : {}}
+
+        # Process notifications
+        for line in NOTIFY:
+            line = line.strip()
+            # Skip blank lines
+            if len(line) == 0:
+                continue
+            # Skip comments
+            if line.startswith("#"):
+                continue
+            # Split it
+            my_entry = line.split(None, 3)
+            if len(my_entry) != 4:
+                logger.warning("cannot parse notification: %s, skipping..." % (line))
+                continue
+            my_type = my_entry[0].lower()
+            my_id = my_entry[1]
+            my_condition = my_entry[2]
+            my_action = my_entry[3]
+            # Pick the right dictionary, depending on event type
+            if my_type == "workflow":
+                my_dict = my_notifications["workflow"]
+            elif my_type == "job" or my_type == "daxjob" or my_type == "dagjob":
+                my_dict = my_notifications["job"]
+            else:
+                logger.warning("unknown notification type: %s, skipping..." % (line))
+                continue
+
+            # Make sure id is in dictionary
+            if not my_id in my_dict:
+                my_dict[my_id] = {}
+
+            # Now add the notification condition, action pair
+            my_dict[my_id][my_condition] = my_action            
+
+        # Save our notifications for later use...
+        self._notifications = my_notifications
+        
+        # Close file
+        try:
+            NOTIFY.close()
+        except:
+            pass
+
     def __init__(self, rundir, outfile, database=None,
                  workflow_config_file=None, jsd=None, root_id=None,
                  parent_id=None, parent_jobid=None, parent_jobseq=None):
@@ -1209,6 +1276,8 @@ class Workflow:
         self._job_submit_seq = 1
         self._log_file = None                   # monitord.log file
         self._jsd_file = None                   # jobstate.log file
+        self._notify_file = None                # notification file
+        self._notifications = None              # list of notifications for this workflow
         self._JSDB = None                       # Handle for jobstate.log file
         self._job_counters = {}                 # Job counters for figuring out which output file to parse
         self._job_info = {}                     # jobid --> [sub_file, pre_exec, pre_args, post_exec, post_args, is_subdag, subdag_dag, subdag_dir]
@@ -1339,6 +1408,10 @@ class Workflow:
             self._user = wfparams["user"]
         if "grid_dn" in wfparams:
             self._grid_dn = wfparams["grid_dn"]
+
+        if "notify" in wfparams:
+            self._notify_file = wfparams["notify"]
+            self.read_notification_file()
 
         # Say hello.... add start information to JSDB
         self._JSDB.write("%d INTERNAL *** MONITORD_STARTED ***\n" % (self._workflow_start))

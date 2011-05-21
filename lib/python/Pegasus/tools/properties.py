@@ -110,7 +110,6 @@ if len(sys.argv) > 0:
             logger.info("cannot parse command-line option %s... continuing..." % (my_arg))
             k = ""
         if len(k):
-            k = k.lower()
             if k == "pegasus.properties" or k == "pegasus.user.properties":
                 logger.warn("%s is no longer supported, ignoring, please use --conf!" % (k))
             else:
@@ -198,7 +197,7 @@ def parse_properties(fn, hashref={}):
                     subs = re_find_subs.search(v)
 
                 # Insert key, value into my_result
-                my_result[k.lower()] = v
+                my_result[k] = v
             else:
                 logger.fatal("Illegal content in %s: %s" % (fn, line))
                 sys.exit(1)
@@ -293,7 +292,7 @@ class Properties:
         my_set = []
         for my_key in self.m_config.keys():
             if re.match(predicate, my_key):
-                my.set.append(my_key)
+                my_set.append(my_key)
 
         return my_set
 
