@@ -21,8 +21,17 @@
 # Author: Jens-S. Vöckler voeckler at isi dot edu
 # Revision: $Revision$
 #
-use 5.006;
+use v5.8.8;			# unbroken unicode requires perl >= 5.8.8
 use strict; 
+
+BEGIN {
+    # use very early - before loading most modules!
+    $main::isutf8 = ( exists $ENV{LANG} && $ENV{LANG} =~ m{utf-?8}i );
+    delete $ENV{LANG};
+    $ENV{LANG} = 'C';
+}
+
+use utf8; 
 use Carp; 
 use Cwd qw(getcwd abs_path); 
 use File::Spec;
@@ -38,6 +47,7 @@ BEGIN {
 use Pegasus::Common;
 use Pegasus::Properties qw(%initial); # parses -Dprop=val from @ARGV
 
+# set function TIOCGWINSZ to return ioctl() argument
 if ( $^O eq 'darwin' ) { 
     # h2ph is broken on Darwin
     *TIOCGWINSZ = sub { 0x40087468; };
@@ -53,7 +63,6 @@ $main::user = $ENV{USER} || $ENV{LOGNAME} || scalar getpwuid($>);
 $_ = '$Revision$';     # don't edit, automatically updated by CVS
 $main::revision=$1 if /Revision:\s+([0-9.]+)/o;
 $main::onatty = -t STDOUT; 	# are we connected to a terminal?
-$main::isutf8 = ( exists $ENV{LANG} && $ENV{LANG} =~ m{utf-?8}i ); 
 $main::dirsep = File::Spec->catdir( '', '' ); 
 @main::cstat = qw(U I R X C H);	# Condor job states (basic mode)
 @main::color = 
@@ -78,63 +87,65 @@ $main::reset = "\033[0m";	# reset all color/bold/etc.
     ,  64 => 'I'                # stage-in
     , 128 => 'O'                # stage-out
     );
-%main::count = ();		# statistics keeper
 $main::time = $^T;		# initialization only 
 %main::dagman_p =		# predicate to determine variations on DAGMan
     map { $_ => 1 } qw(pegasus-dagman condor_dagman); 
 %main::width = 			# width selection (0=unlimited)
     ( dagnodename => 24		# width of concrete dag node identifiers
     , pegasus_wf_name => 24	# width of abstract workflow identifiers
-    , machine => 24		# width of hostnames
-    , argument => 60            # width of arguments string
     );
 $main::cache = undef;		# debug 
 my ($rows,$cols) = &initialize_winch;
 
-# %title describes any head we would want to show, indexed by a short internal key.
+# %title describes any head we would want to show, 
+# indexed by a short internal key:
 # {header} is what to put into the title of the output
 # {function} is an fptr, being called with current row (q) job classads
-# {width} is an initial width, with negative width meaning left adjustment
+# {minwidth} is an minimal width, with negative width meaning left adjustment
+# {legend} is what to display for this column in the legend
+#
 my %title =
     ( 'ST' => { header => 'ST'
 	      , function => \&x_jobstatus
-	      , width => -2
+	      , minwidth => -2
 	      , legend => 'Condor job status'
               },
       'IN_STATE' => { header => 'IN_STATE'
 		    , function => \&x_in_state
-		    , width => 8
+		    , minwidth => 8
 		    , legend => 'Time job spent in current Condor status'
                     },
       'JPRIO' => { header => 'PRI'
-		 , width => 3
+		 , minwidth => 3
 		 , function => \&x_jobpriority
 		 , legend => 'Condor job priority'
 	         },
       'JOB1' => { header => 'JOB'
-	        , width => -50
+	        , minwidth => -50
 	        , function => \&x_job1
 		, legend => 'Workflow- or DAG-Node ID'
                 },
       'JOB2' => { header => 'JOB'
-	        , width => -32
+	        , minwidth => -32
 	        , function => \&x_job2
 		, legend => 'DAG-Node ID, command, and workflow-ID'
                 },
       'CONDORID' => { header => 'ID'
-		    , width => 2
+		    , minwidth => 2
 		    , function => \&x_condorid
 		    , legend => 'Condor cluster ID'
 		    },
       'C/G' => { header => 'C/G'
 	       , function => \&x_cgstatus
-	       , width => 3
+	       , minwidth => 3
 	       , legend => 'Condor- and Globus job status'
 	       }
     );
 
-# @title is an array, indexed by the 'expert level', of which columns to show
-my @title = 
+# @main::title is an array of default outputs, indexed by 'expert
+# level'. Each entry is a key into %title. (Eventually, this can
+# be overwritten by a CLI option for your own mix-n-match (TBD).)
+@main::title = 
     ( 
        # first level is the novice state, leave out distractive information
        [qw(ST IN_STATE JOB1) ],
@@ -169,6 +180,8 @@ Optional arguments:
  -w|--watch [s]   repeatedly print output every 's' seconds, default TBD.
  -i|--idle        DO NOT display any jobs in state 'idle'. 
  --[no]legend     Disable or enable showing of the legend, default on. 
+ --[no]held       Disable or enable showing HoldReason, default on.
+ --[no]heavy      Disable or enable heavy lines in Unicode output, default off. 
 
  rundir           directory to monitor, default is CWD. [currently unused]
 
@@ -261,11 +274,9 @@ sub interval($) {
     # returns: formatted string with or without days
     #
     use integer;
-    my $total = shift;
+    my $total = int( shift() );
     my $s = $total % 60;
     my $m = ($total % 3600) / 60; 
-    my $h = ($total % 86400) / 3600;
-    my $d = $total / 86400; 
 
     if ( $total < 3600 ) { 
 	# no days or hours
@@ -416,7 +427,6 @@ sub condor_q(\%\%\@;%) {
     #          %flag (IN): key value pairs controlling behavior
     # globals: $main::user (IN): which user to limit output to
     #          %main::title (IN): determines which keys to ask for
-    #          %main::count (OUT): updates statistics for Condor/Globus jobs.
     #
     my $jobref = shift;
     my $dagref = shift;
@@ -530,7 +540,6 @@ sub assemble_job($;$) {
     # purpose: create the data columns for a given job
     # paramtr: $r (IN): job classad hashref
     #          $indent (IN): what to use for indentation 
-    # globals: $main::time (IN): current time cache
     # returns: updated job classad hashref
     #
     my $r = shift; 		# job classad
@@ -563,8 +572,8 @@ sub assemble_dag($$$;$) {
     delete $main::seen{$dagid}; 
 
     # show dependent jobs for dagman
-    my @x = sort { $a <=> $b } @{ $dagref->{$dagid} }; 
     $indent = $main::graph[2] x ( length($indent) / length($main::graph[0]) );
+    my @x = sort { $a <=> $b } @{ $dagref->{$dagid} }; 
     for ( my $j=0; $j < @x; ++$j ) { 
 	# extra sanity? 
 	die "unknown job" unless scalar keys %{$jobref->{$x[$j]}}; 
@@ -624,7 +633,11 @@ sub x_job1 {
 	}
     }
 
-    $row->{_indent} . $result;
+    if ( $main::onatty ) { 
+	"\033[0;37m" . $row->{_indent} . $main::color[ $row->{jobstatus} ] . $result;
+    } else {
+	$row->{_indent} . $result;
+    }
 }
 
 sub x_job2 {
@@ -666,7 +679,12 @@ sub x_job2 {
 	    ']';
     }
 
-    $row->{_indent} . $result; 
+
+    if ( $main::onatty ) { 
+	"\033[0;37m" . $row->{_indent} . $main::color[ $row->{jobstatus} ] . $result;
+    } else {
+	$row->{_indent} . $result;
+    }
 }
 
 sub whittle_down(\@\@) {
@@ -681,11 +699,11 @@ sub whittle_down(\@\@) {
     my @result = (); 
 
     for my $row ( @{$q} ) {
-	my @y = (); 
+	my @y = (); 		# all columns go into @y
 	foreach my $k ( @{$t} ) { 
 	    push( @y, &{$title{$k}{function}}( $row ) );
 	}
-	push( @result, [ @y ] ); 
+	push( @result, [ @y ] ); # a row goes into @result
     }
 
     @result; 
@@ -715,7 +733,7 @@ sub column_widths(\@\@) {
 
     # start with title minimum width
     foreach my $k ( @{$t} ) { 
-	my $x = $title{$k}{width};
+	my $x = $title{$k}{minwidth};
 	push( @max, abs($x) );
 	push( @sgn, signum($x) ); 
     }
@@ -746,8 +764,11 @@ sub column_widths(\@\@) {
 #
 # --- main -------------------------------------------------
 #
+binmode( STDOUT, ':utf8' ) if $main::isutf8;
 
 # parse CLI options
+my $heldinfo = 1; 
+my $heavy = 0; 
 my $noidle = 0; 
 my $expert = 0; 
 my $legend = 1; 
@@ -759,6 +780,8 @@ GetOptions( 'help|h' => \&usage
 	  , 'version|V' => \&version
 	  , 'idle|i!' => \$noidle
 	  , 'legend!' => \$legend
+	  , 'hold|held!' => \$heldinfo
+	  , 'heavy!' => \$heavy
 	  , 'watch|w:i' => sub {
 	      if ( ! $main::onatty ) {
 		  warn "FATAL: --watch requires a terminal for output\n"; 
@@ -782,17 +805,20 @@ $SIG{WINCH} = \&sigwinch if ( defined &TIOCGWINSZ && $main::onatty );
 
 # determine UTF-8 capabilities
 if ( $main::onatty && $main::isutf8 ) { 
-    # draw UTF-8 graphics
-    @main::graph = ( "\xE2\x94\x9c\xE2\x94\x80", 
-		     "\xE2\x94\x94\xE2\x94\x80",
-		     "\xE2\x94\x82 " );
+    # Draw UTF-8 graphics 
+    # Warning: These are the unicode script string that require 'use utf8;'
+    if ( $heavy ) { 
+	@main::graph = ( " ┣━", " ┗━", " ┃ " );
+    } else {
+	@main::graph = ( " ├─", " └─", " │ " );
+    }
 } else {
-    # assume ASCII graphics
-    @main::graph = ( '|-', '\_', '| ' ); 
+    # Assume ASCII graphics
+    @main::graph = ( ' |-', ' \_', ' | ' ); 
 }
 
-my $run = shift;
 # NEW: Default to cwd if nothing was specified
+my $run = shift;
 unless ( defined $run ) {
     $run = getcwd();
     my $brainfn = File::Spec->catfile( $run, $Pegasus::Common::brainbase );
@@ -801,22 +827,15 @@ unless ( defined $run ) {
     $run = abs_path($run);
 }
 
-for ( my $cursor=1; ; $cursor=1 ) { 
-    # in watch mode
-    if ( defined $watch ) { 
-	($rows,$cols) = initialize_winch(); 
-	print "\033[2J\033[H";
-	$main::time = time(); 
-	my $now = scalar localtime($main::time); 
-	my $msg = 'Press Ctrl+C to exit'; 
-	printf "$msg%*s\n\n", $cols-length($msg), $now; 
-	$cursor += 2; 
-    }
+# what level of expertise (output, verbose mode). Eventually a CLI
+# option will permit to use your own mix-n-match output (TBD).  
+my @title = @{ $main::title[$expert] }; 
 
-    %main::count = (); 
+for ( my $cursor=1; ; $cursor=1 ) { 
+    my %count = (); 
     my (%job,%dag,@result);
-    condor_q( %job, %dag, @{$title[$expert]}, 
-	      noidle => $noidle, count => \%main::count );
+    condor_q( %job, %dag, @title,
+	      noidle => $noidle, count => \%count );
 
     # seen is for sanity checks
     %main::seen = map { $_ => 1 } keys %job;
@@ -828,13 +847,24 @@ for ( my $cursor=1; ; $cursor=1 ) {
 	push( @q, assemble_dag( \%job, \%dag, $id ) ); 
     }
 
+    # empty screen and print "Ctrl+C" and date header
+    if ( defined $watch ) { 
+	($rows,$cols) = initialize_winch(); 
+	print "\033[2J\033[H";
+	$main::time = CORE::time(); 
+	my $now = scalar localtime($main::time); 
+	my $msg = 'Press Ctrl+C to exit'; 
+	printf "$msg%*s\n\n", $cols-length($msg), $now; 
+	$cursor += 2; 
+    }
+
     # Are there are Condor jobs in the Q
     if ( @q > 0 ) { 
 	# create data to actually show from potentially larger set
-	@result = whittle_down( @{$title[$expert]}, @q ); 
+	@result = whittle_down( @title, @q ); 
 
 	# determine dynamic column widths
-	my @max = column_widths( @{$title[$expert]}, @result ); 
+	my @max = column_widths( @title, @result ); 
 	
 	#
 	# print legend (requested by Ewa)
@@ -842,8 +872,8 @@ for ( my $cursor=1; ; $cursor=1 ) {
 	if ( $legend ) { 
 	    my $p = 0;
 	    for ( my $i=0; $i<@max; ++$i ) { 
-		my $k = $title{ $title[$expert][$i] }{header};
-		my $v = $title{ $title[$expert][$i] }{legend}; 
+		my $k = $title{ $title[$i] }{header};
+		my $v = $title{ $title[$i] }{legend}; 
 		
 		my $s = '';
 		$s .= $main::bold if $main::onatty;
@@ -870,13 +900,15 @@ for ( my $cursor=1; ; $cursor=1 ) {
 	print $main::bold if $main::onatty; 
 	for ( my $i=0; $i<@max; ++$i ) {
 	    print ' ' if $i; 
-	    printf "%*s", $max[$i], $title{ $title[$expert][$i] }{header}; 
+	    printf "%*s", $max[$i], $title{ $title[$i] }{header}; 
 	}
 	print $main::reset if $main::onatty; 
 	print "\n";
 	++$cursor; 
 	
+	#
 	# print each row of results
+	#
 	for ( my $i=0; $i<@result; ++$i ) { 
 	    my $jobstatus = $q[$i]->{jobstatus}; 
 
@@ -888,8 +920,8 @@ for ( my $cursor=1; ; $cursor=1 ) {
 	    }
 
 	    # HELD jobs get a separate line with the hold reason
-	    if ( $jobstatus == 5 ) {
-		print "\n", $main::graph[1], fit( $cols-2, $q[$i]{holdreason} );
+	    if ( $heldinfo && $jobstatus == 5 ) {
+		print "\n", $main::graph[1], fit( $cols-3, $q[$i]{holdreason} );
 		++$cursor;
 	    }
 	    print $main::reset if $main::onatty;
@@ -942,13 +974,25 @@ for ( my $cursor=1; ; $cursor=1 ) {
 	print "\n", plural(@result,'job'), " total"; 
 	++$cursor; 
 	my $f = 0;
-	foreach my $c ( sort { $a <=> $b } keys %{$main::count{condor}} ) {
+	foreach my $c ( sort { $a <=> $b } keys %{$count{condor}} ) {
 	    print( $f++ ? ' ' : ' (' );
 	    print $main::color[$c] if $main::onatty; 
-	    print $main::cstat[$c], ':', commas($main::count{condor}{$c}); 
+	    print $main::cstat[$c], ':', commas($count{condor}{$c}); 
 	    print $main::reset if $main::onatty; 
 	}
 	print ')' if $f; 
+
+	# Globus job summary
+	if ( $count{all}{globus} > 0 ) { 
+	    print ", ", plural( $count{all}{globus}, 'Condor-G job' );
+	    $f = 0; 
+	    foreach my $g ( sort { $a <=> $b } keys %{$count{globus}} ) { 
+		print( $f++ ? ' ' : ' (' );
+		print $main::gstat{$g}, ':', commas($count{globus}{$g});
+	    }
+	    print ')' if $f;
+	}
+
 	print "\n"; 
 	++$cursor; 
     }
