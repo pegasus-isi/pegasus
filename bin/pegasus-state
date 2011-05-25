@@ -848,6 +848,131 @@ sub column_widths(\@\@) {
     map { $max[$_] * $sgn[$_] } 0 .. $#max;
 }
 
+sub print_qlegend($\@) {
+    # purpose: show the legend for condor-q output
+    # paramtr: $cursor (IN): current row of output
+    #          @title (IN): select expert level columns
+    # globals: %title (IN): legend
+    #          $main::bold (IN): turn on bold
+    #          $main::reset (IN): turn off bold 
+    # returns: new $cursor position
+    #
+    my $cursor = shift;
+    my $t = shift;		# @title ref
+
+    my $p = 0;
+    for ( my $i=0; $i<@{$t}; ++$i ) { 
+	my $k = $title{ $t->[$i] }{header};
+	my $v = $title{ $t->[$i] }{legend}; 
+	my $l = length($k) + length($v); 
+	my $s = '';
+	$s .= $main::bold if $main::onatty;
+	$s .= $k;
+	$s .= $main::reset if $main::onatty; 
+	$s .= ': ' . $v; 
+	if ( $p + $l + 2 > $cols ) { 
+	    print "\n$s";
+	    ++$cursor;
+	    $p = $l + 2;
+	} else {
+	    print ' ' if $i; 
+	    print $s; 
+	    $p += $l + 3; 
+	}
+    }
+    print "\n\n";
+    $cursor += 2; 
+}
+
+sub print_qdebug($$\%) {
+    # purpose: show job classads of certain matches for current job
+    # paramtr: $cursor (IN): current row
+    #          $watch (IN): are we in watch mode? 
+    #          %q[i] (IN): current job class ads
+    # globals: $main::onatty (IN): are we on a tty (can color)? 
+    #          $cols (IN): current terminal width
+    #          $rows (IN): current terminal height
+    # returns: new cursor position
+    #
+    my $cursor = shift; 	# current row
+    my $watch = shift; 		# current $watch
+    my $qi = shift;		# $q[$i] ref
+
+    my $m = $main::debug == 1 ? 
+	qr{^(?:pegasus|wf)_} :
+	qr{^(?:(?:pegasus|wf)_|job|globus)} ;
+
+    my $p = $cols + $cols; 
+    my ($s); 
+    foreach my $k ( sort keys %{$qi} ) {
+	if ( $watch && $cursor > $rows-6 ) {
+	    print " ..";
+	    last; 
+	}
+
+	if ( $k =~ /$m/o ) { 
+	    my $v = $qi->{$k}; 
+	    my $l = length($k) + length($v); 
+	    $s = '';
+	    $s .= "\033[1;30m" if $main::onatty;
+	    $s .= $k;
+	    $s .= $main::reset if $main::onatty; 
+	    $s .= '=' . $v; 
+	    if ( $p+$l+2 > $cols ) { 
+		print "\n\t$s"; 
+		++$cursor;
+		$p = $l+9; 
+	    } else {
+		print " $s";
+		$p += $l+2;
+	    }
+	}
+    }
+
+    $cursor;
+}
+
+sub print_qsummary($\%) {
+    # purpose: print summary line adding stats of Condor and Condor-G
+    # paramtr: $cursor (IN): current row
+    #          %count (IN): queue statistics
+    # globals: $main::onatty (IN): are we on a tty (can color)? 
+    #          @main::color (IN): color settings
+    #          $main::reset (IN): undo colorings
+    # returns: new cursor position
+    #
+    my $cursor = shift;		# current row
+    my $cref = shift;		# %count ref
+
+    # create Condor job summary
+    print "\n", plural($cref->{all}{condor},'job'), " total"; 
+    ++$cursor; 
+
+    my $f = 0;
+    foreach my $c ( sort { $a <=> $b } keys %{$cref->{condor}} ) {
+	print( $f++ ? ' ' : ' (' );
+	print $main::color[$c] if $main::onatty; 
+	print $main::cstat[$c], ':', commas($cref->{condor}{$c}); 
+	print $main::reset if $main::onatty; 
+    }
+    print ')' if $f; 
+
+    # Globus job summary
+    if ( $cref->{all}{globus} > 0 ) { 
+	print ", ", plural( $cref->{all}{globus}, 'Condor-G job' );
+	$f = 0; 
+	foreach my $g ( sort { $a <=> $b } keys %{$cref->{globus}} ) { 
+	    print( $f++ ? ' ' : ' (' );
+	    print $main::gstat{$g}, ':', commas($cref->{globus}{$g});
+	}
+	print ')' if $f;
+    }
+
+    print "\n"; 
+    ++$cursor; 
+}
+
+
 #
 # --- main -------------------------------------------------
 #
@@ -957,37 +1082,10 @@ for ( my $cursor=1; ; $cursor=1 ) {
 	# determine dynamic column widths
 	my @max = column_widths( @title, @result ); 
 	
-	#
 	# print legend (requested by Ewa)
-	#
-	if ( $legend ) { 
-	    my $p = 0;
-	    for ( my $i=0; $i<@max; ++$i ) { 
-		my $k = $title{ $title[$i] }{header};
-		my $v = $title{ $title[$i] }{legend}; 
-		my $l = length($k) + length($v); 
-		my $s = '';
-		$s .= $main::bold if $main::onatty;
-		$s .= $k;
-		$s .= $main::reset if $main::onatty; 
-		$s .= ': ' . $v; 
-		if ( $p + $l + 2 > $cols ) { 
-		    print "\n$s";
-		    ++$cursor;
-		    $p = $l + 2;
-		} else {
-		    print ' ' if $i; 
-		    print $s; 
-		    $p += $l + 3; 
-		}
-	    }
-	    print "\n\n";
-	    $cursor += 2; 
-	}
+	$cursor = print_qlegend( $cursor, @title ) if $legend;
 
-	#
 	# print headers
-	#
 	print $main::bold if $main::onatty; 
 	for ( my $i=0; $i<@max; ++$i ) {
 	    print $main::space if $i; 
@@ -997,27 +1095,15 @@ for ( my $cursor=1; ; $cursor=1 ) {
 	print "\n";
 	++$cursor; 
 	
-	#
 	# print each row of results
-	#
 	for ( my $i=0; $i<@result; ++$i ) { 
 	    my $jobstatus = $q[$i]->{jobstatus}; 
 
 	    # decide on color for row and print data columns
 	    print $main::color[$jobstatus] if $main::onatty;
-	    my $column = 1; 
 	    for ( my $j=0; $j<@{$result[$i]}; ++$j ) {
-		if ( $j ) { 
-		    print $main::space;
-		    $column += length($main::space); 
-		}
-
-		my $s = $result[$i][$j]; 
-#		if ( $j == $#max && $column+length($s) > $cols ) { 
-#		    # last column
-#		}
-		printf "%*s", $max[$j], $s;
-		$column += length($s); 
+		print $main::space if $j;
+		printf "%*s", $max[$j], $result[$i][$j]; 
 	    }
 
 	    # HELD jobs get a separate line with the hold reason
@@ -1028,75 +1114,28 @@ for ( my $cursor=1; ; $cursor=1 ) {
 	    }
 	    print $main::reset if $main::onatty;
 
-	    # transient trickery for verbose mode
-	    # NOTE: This part will likely move away
-	    if ( $main::debug ) { 
-		my $m = $main::debug == 1 ? 
-		    qr{^(?:pegasus|wf)_} :
-		    qr{^(?:(?:pegasus|wf)_|job|globus)} ;
-		my $p = $cols + $cols; 
-		my ($s); 
-		foreach my $k ( sort keys %{$q[$i]} ) {
-		    if ( $watch && $cursor > $rows-6 ) {
-			print " ..";
-			last; 
-		    }
-		    if ( $k =~ /$m/o ) { 
-			my $v = $q[$i]->{$k}; 
-			my $l = length($k) + length($v); 
-			$s = '';
-			$s .= "\033[1;30m" if $main::onatty;
-			$s .= $k;
-			$s .= $main::reset if $main::onatty; 
-			$s .= '=' . $v; 
-			if ( $p+$l+2 > $cols ) { 
-			    print "\n\t$s"; 
-			    ++$cursor;
-			    $p = $l+9; 
-			} else {
-			    print " $s";
-			    $p += $l+2;
-			}
-		    }
-		}
-	    }
-	    
+	    # transient trickery for debug mode
+	    $cursor = print_qdebug( $cursor, $watch, %{$q[$i]} ) if $main::debug; 
+
+	    # terminate current line
 	    print "\n"; 
 	    ++$cursor;
 
+	    # skip rest of output if reaching bottom of current terminal 
 	    if ( $watch && @result > $rows-5 && $cursor > $rows-5 ) {
-		print "(", plural( @result-$cursor, 'additional job' );
+		print "(", plural( @result-$i, 'additional job' );
 		print " omitted.)\n";
 		++$cursor; 
 		last;
 	    }
 	}
 
-	# create Condor job summary
-	print "\n", plural(@result,'job'), " total"; 
-	++$cursor; 
-	my $f = 0;
-	foreach my $c ( sort { $a <=> $b } keys %{$count{condor}} ) {
-	    print( $f++ ? ' ' : ' (' );
-	    print $main::color[$c] if $main::onatty; 
-	    print $main::cstat[$c], ':', commas($count{condor}{$c}); 
-	    print $main::reset if $main::onatty; 
-	}
-	print ')' if $f; 
-
-	# Globus job summary
-	if ( $count{all}{globus} > 0 ) { 
-	    print ", ", plural( $count{all}{globus}, 'Condor-G job' );
-	    $f = 0; 
-	    foreach my $g ( sort { $a <=> $b } keys %{$count{globus}} ) { 
-		print( $f++ ? ' ' : ' (' );
-		print $main::gstat{$g}, ':', commas($count{globus}{$g});
-	    }
-	    print ')' if $f;
-	}
-
-	print "\n"; 
-	++$cursor; 
+	# create summaries from %count
+	$cursor = print_qsummary( $cursor, %count ); 
+    } else {
+	# nothing in Q
+	print "(no matching jobs found in Condor Q)\n"; 
+	++$cursor;
     }
 
     # are we sane? 
