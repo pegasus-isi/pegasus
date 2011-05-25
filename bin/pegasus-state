@@ -31,7 +31,7 @@ BEGIN {
     $ENV{LANG} = 'C';
 }
 
-use utf8; 
+use utf8; 			# tell Perl "this script contains UTF-8"
 use Carp; 
 use Cwd qw(getcwd abs_path); 
 use File::Spec;
@@ -64,16 +64,25 @@ $_ = '$Revision$';     # don't edit, automatically updated by CVS
 $main::revision=$1 if /Revision:\s+([0-9.]+)/o;
 $main::onatty = -t STDOUT; 	# are we connected to a terminal?
 $main::dirsep = File::Spec->catdir( '', '' ); 
-@main::cstat = qw(U I R X C H);	# Condor job states (basic mode)
+$main::space = '  ';		# 2 spaces in basic mode
+@main::clong = 			# Condor job states (basic mode)
+    ( 'Unsub'			# U
+    , 'Idle'			# I
+    , 'Run'			# R
+    , 'Del'			# X
+    , 'Done'			# C
+    , 'Held'			# H
+    ); 
+@main::cstat = qw(U I R X C H);	# Condor job states (expert mode)
 @main::color = 
-    ( "\033[0;30m"		# unsubmitted (black)
+    ( "\033[0;37m"		# unsubmitted (gray)
     , "\033[0;34m"		# idle (blue)
     , "\033[0;32m"		# running (green)
     , "\033[0;35m"		# removing (magenta)
-    , "\033[0;37m"		# completed (cyan)
+    , "\033[0;36m"		# completed (cyan)
     , "\033[0;31m"		# held (red)
     );
-$main::bold  = "\033[1m"; 	# only works with black
+$main::bold  = "\033[1m";	# start real xterm as "xterm -bdc"
 $main::reset = "\033[0m";	# reset all color/bold/etc.
 %main::color = map { $main::cstat[$_] => $main::color[$_] } 0 .. $#main::cstat;
 %main::gstat = 			# Globus job states (expert mode)
@@ -87,12 +96,31 @@ $main::reset = "\033[0m";	# reset all color/bold/etc.
     ,  64 => 'I'                # stage-in
     , 128 => 'O'                # stage-out
     );
+@main::jobclass = 
+    ( 'unknown'
+    , 'compute'
+    , 'stage-in'
+    , 'stage-out'
+    , 'register'
+    , 'xsite-xfer'
+    , 'createdir'
+    , 's-compute'		# deprecated
+    , 'clean-up'
+    , 'chmod'
+    , 'dax'
+    , 'dag'
+    );
+@main::jobshort =
+    (   '-', 'job',  'si',  'so'
+    ,  'rr', 'isx',  'cd', 'stc'
+    , 'clu', 'chm', 'dax', 'dag' ); 
 $main::time = $^T;		# initialization only 
 %main::dagman_p =		# predicate to determine variations on DAGMan
     map { $_ => 1 } qw(pegasus-dagman condor_dagman); 
 %main::width = 			# width selection (0=unlimited)
-    ( dagnodename => 24		# width of concrete dag node identifiers
+    ( dagnodename => 30		# width of concrete dag node identifiers
     , pegasus_wf_name => 24	# width of abstract workflow identifiers
+    , cmd => 20			# width of executable that is actually run
     );
 $main::cache = undef;		# debug 
 my ($rows,$cols) = &initialize_winch;
@@ -105,11 +133,11 @@ my ($rows,$cols) = &initialize_winch;
 # {legend} is what to display for this column in the legend
 #
 my %title =
-    ( 'ST' => { header => 'ST'
-	      , function => \&x_jobstatus
-	      , minwidth => -2
-	      , legend => 'Condor job status'
-              },
+    ( 'STAT' => { header => 'STAT'
+		, function => \&x_jobstatus
+		, minwidth => -4
+		, legend => 'Condor job status'
+		},
       'IN_STATE' => { header => 'IN_STATE'
 		    , function => \&x_in_state
 		    , minwidth => 8
@@ -120,6 +148,21 @@ my %title =
 		 , function => \&x_jobpriority
 		 , legend => 'Condor job priority'
 	         },
+      'PJC' => { header => 'CLASS'
+	       , minwidth => -5
+	       , function => \&x_pegasus_jobtype
+	       , legend => 'Pegasus job type'
+	       },
+      'PJCN' => { header => 'C'
+	        , minwidth => 1
+	        , function => \&x_pegasus_jobtypenum
+	        , legend => 'Pegasus job type'
+	       },
+      'PJCS' => { header => 'PJC'
+	        , minwidth => -3
+	        , function => \&x_pegasus_jobtypeshort
+	        , legend => 'Pegasus job type'
+	       },
       'JOB1' => { header => 'JOB'
 	        , minwidth => -50
 	        , function => \&x_job1
@@ -135,6 +178,11 @@ my %title =
 		    , function => \&x_condorid
 		    , legend => 'Condor cluster ID'
 		    },
+      'SITE' => { header => 'SITE'
+		, minwidth => -5
+		, function => \&x_site
+		, legend => 'Job site'
+                },
       'C/G' => { header => 'C/G'
 	       , function => \&x_cgstatus
 	       , minwidth => 3
@@ -148,9 +196,13 @@ my %title =
 @main::title = 
     ( 
        # first level is the novice state, leave out distractive information
-       [qw(ST IN_STATE JOB1) ],
+       [qw(STAT IN_STATE JOB1) ],
+
        # some more complex information in first expert level 
-       [qw(C/G CONDORID IN_STATE JPRIO JOB2) ]
+       [qw(C/G CONDORID IN_STATE JPRIO JOB2) ],
+
+       # even more complex information in next expert level 
+       [qw(C/G CONDORID IN_STATE JPRIO PJCS SITE JOB2) ]
     );
 
 #
@@ -292,7 +344,7 @@ sub interval($) {
 }
 
 sub fit($$) {
-    # purpose: fit a string into a given width
+    # purpose: fit a string into a given width, truncate start or end
     # paramtr: $width (IN): maximum space
     #          $s (IN): input string to format
     # returns: formatted string
@@ -311,6 +363,28 @@ sub fit($$) {
 	}
     } else {
 	$s;
+    }
+}
+
+sub cfit($$) {
+    # purpose: fit a string into a given width, truncate center
+    # paramtr: $width (IN): maximum space
+    #          $s (IN): string to fit
+    # returns: fitted string
+    #
+    my $width = abs( shift() );
+    my $s = shift;
+    my $len = length($s); 
+
+    if ( $width == 0 || $len <= $width ) {
+	# string fits
+	$s;
+    } else {
+	use integer; 
+	my $diff = $len - $width + 2; 
+	substr( $s, 0, ($len-$diff)/2 ) . 
+	    '..' .
+	    substr( $s, ($len+$diff)/2 ); 
     }
 }
 
@@ -590,9 +664,32 @@ sub assemble_dag($$$;$) {
     @result; 
 }
 
+sub x_site {
+    my $row = shift;
+    $row->{'pegasus_site'} || '-';
+}
+
+sub x_pegasus_jobtype {
+    my $row = shift;
+    my $c = $row->{'pegasus_job_class'} + 0;
+    $c < @main::jobclass ? $main::jobclass[$c] : "$c";
+}
+
+sub x_pegasus_jobtypeshort {
+    my $row = shift;
+    my $c = $row->{'pegasus_job_class'} + 0;
+    $c < @main::jobshort ? $main::jobshort[$c] : "$c";
+}
+
+sub x_pegasus_jobtypenum {
+    my $row = shift; 
+    $row->{'pegasus_job_class'} || '-'; 
+} 
+
 sub x_jobstatus {
     my $row = shift;
-    cstat( $row->{jobstatus} ); 
+    my $s = $row->{jobstatus};
+    $s < @main::clong ? $main::clong[$s] : "$s"; 
 }
 
 sub x_in_state {
@@ -646,39 +743,27 @@ sub x_job2 {
 
     # show dagnodename first
     if ( exists $row->{dagnodename} ) { 
-	$result .= 
-	    '[' . 
-	    fit( -$main::width{dagnodename}, $row->{dagnodename} ) .
-	    '] ';
+	$result .= cfit( $main::width{dagnodename}, $row->{dagnodename} );
+    } elsif ( exists $row->{'pegasus_wf_name'} ) {
+	$result .= cfit( $main::width{'pegasus_wf_name'}, $row->{'pegasus_wf_name'} );
     }
 
     # replace commandline ('cmd' and 'arguments')
     my $cmd = basename( $row->{cmd} || '' );
 
     if ( $cmd eq 'kickstart' ) { 
-	$row->{iskickstarted} = 1; 
-	$row->{_arguments} = $row->{arguments};
-	my @x = kickstart($row->{arguments}); 
-	$row->{_cmd} = $x[0]; 
-	$cmd = '*' . shift(@x); 
-	$row->{arguments} = join(' ',@x);
-    } elsif ( $cmd eq 'seqexec' && ! exists $row->{pegasus_seqexec} ) { 
-	my $n = seqexec( %{$row} ); 
-	if ( defined $n && $n ) { 
-	    $row->{pegasus_seqexec} = $n;
-	    $cmd .= " [$n jobs]"; 
+	$cmd = (kickstart($row->{arguments}))[0]; 
+	$result .= ' [*' . cfit( $main::width{cmd}, $cmd ) . ']';
+    } else {
+	$result .= ' [' . cfit( $main::width{cmd}, $cmd ); 
+	if ( exists $row->{'pegasus_cluster_size'} ) {
+	    my $n = $row->{'pegasus_cluster_size'} + 0; 
+	    if ( $cmd eq 'seqexec' || $n > 1 ) { 
+		$result .= ": $n";
+	    }
 	}
+	$result .= ']'; 
     }
-
-    $result .= $cmd; 
-
-    # add workflow name 
-    if ( exists $main::dagman_p{$cmd} && exists $row->{'pegasus_wf_name'} ) {
-	$result .= ' [' .
-	    fit( -$main::width{'pegasus_wf_name'}, $row->{'pegasus_wf_name'} ) .
-	    ']';
-    }
-
 
     if ( $main::onatty ) { 
 	"\033[0;37m" . $row->{_indent} . $main::color[ $row->{jobstatus} ] . $result;
@@ -723,6 +808,7 @@ sub column_widths(\@\@) {
     # paramtr: @title (IN): which expert level of @title
     #          @q (IN): array of job classads as hashes
     # globals: %title (IN): minimum column width 
+    #          $main::space (IN): current column spacing
     # returns: array of column width. 
     # warning: The last column is adjust to the screen width
     #
@@ -748,8 +834,9 @@ sub column_widths(\@\@) {
 
     # fix last column to match maximum terminal width
     my $s = 0; 
+    my $l = length( $main::space ); 
     for ( my $i=0; $i < @max; ++$i ) {
-	$s += $max[$i] + 1; 
+	$s += $max[$i] + $l; 
     }
     if ( $s > $cols ) {
 	$s -= $max[$#max];
@@ -803,6 +890,9 @@ GetOptions( 'help|h' => \&usage
 # react to changes in terminal size
 $SIG{WINCH} = \&sigwinch if ( defined &TIOCGWINSZ && $main::onatty );
 
+# experts don't need spaces :-P
+$main::space = ' ' if $expert; 
+
 # determine UTF-8 capabilities
 if ( $main::onatty && $main::isutf8 ) { 
     # Draw UTF-8 graphics 
@@ -835,12 +925,13 @@ for ( my $cursor=1; ; $cursor=1 ) {
     my %count = (); 
     my (%job,%dag,@result);
     condor_q( %job, %dag, @title,
-	      noidle => $noidle, count => \%count );
+	      noidle => $noidle, 
+	      count => \%count );
 
     # seen is for sanity checks
     %main::seen = map { $_ => 1 } keys %job;
 
-    # collect data to show into @result
+    # collect data to show into @q
     my %leaves = find_leaves(%dag); 
     my @q = (); 
     foreach my $id ( sort { $a <=> $b } keys %leaves ) {
@@ -874,20 +965,20 @@ for ( my $cursor=1; ; $cursor=1 ) {
 	    for ( my $i=0; $i<@max; ++$i ) { 
 		my $k = $title{ $title[$i] }{header};
 		my $v = $title{ $title[$i] }{legend}; 
-		
+		my $l = length($k) + length($v); 
 		my $s = '';
 		$s .= $main::bold if $main::onatty;
 		$s .= $k;
 		$s .= $main::reset if $main::onatty; 
 		$s .= ': ' . $v; 
-		if ( $p + length($k) + length($v) + 1 > $cols ) { 
+		if ( $p + $l + 2 > $cols ) { 
 		    print "\n$s";
 		    ++$cursor;
-		    $p = length($k)+length($v)+1; 
+		    $p = $l + 2;
 		} else {
 		    print ' ' if $i; 
 		    print $s; 
-		    $p += length($k)+length($v)+2; 
+		    $p += $l + 3; 
 		}
 	    }
 	    print "\n\n";
@@ -899,7 +990,7 @@ for ( my $cursor=1; ; $cursor=1 ) {
 	#
 	print $main::bold if $main::onatty; 
 	for ( my $i=0; $i<@max; ++$i ) {
-	    print ' ' if $i; 
+	    print $main::space if $i; 
 	    printf "%*s", $max[$i], $title{ $title[$i] }{header}; 
 	}
 	print $main::reset if $main::onatty; 
@@ -914,14 +1005,25 @@ for ( my $cursor=1; ; $cursor=1 ) {
 
 	    # decide on color for row and print data columns
 	    print $main::color[$jobstatus] if $main::onatty;
+	    my $column = 1; 
 	    for ( my $j=0; $j<@{$result[$i]}; ++$j ) {
-		print ' ' if $j; 
-		printf "%*s", $max[$j], $result[$i][$j]; 
+		if ( $j ) { 
+		    print $main::space;
+		    $column += length($main::space); 
+		}
+
+		my $s = $result[$i][$j]; 
+#		if ( $j == $#max && $column+length($s) > $cols ) { 
+#		    # last column
+#		}
+		printf "%*s", $max[$j], $s;
+		$column += length($s); 
 	    }
 
 	    # HELD jobs get a separate line with the hold reason
 	    if ( $heldinfo && $jobstatus == 5 ) {
-		print "\n", $main::graph[1], fit( $cols-3, $q[$i]{holdreason} );
+		my $tile = $main::graph[1]; 
+		print "\n", $tile, fit( $cols-length($tile), $q[$i]{holdreason} );
 		++$cursor;
 	    }
 	    print $main::reset if $main::onatty;
@@ -943,7 +1045,7 @@ for ( my $cursor=1; ; $cursor=1 ) {
 			my $v = $q[$i]->{$k}; 
 			my $l = length($k) + length($v); 
 			$s = '';
-			$s .= "\033[30;1m" if $main::onatty;
+			$s .= "\033[1;30m" if $main::onatty;
 			$s .= $k;
 			$s .= $main::reset if $main::onatty; 
 			$s .= '=' . $v; 
