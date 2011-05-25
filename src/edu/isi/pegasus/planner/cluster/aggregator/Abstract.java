@@ -92,7 +92,7 @@ public abstract class Abstract implements JobAggregator {
      * The marker to designate a line in the input file reserved for 
      * monitord purposes.
      */
-    public static final String MONITORD_COMMENT_MARKER = "\"#@\"";
+    public static final String MONITORD_COMMENT_MARKER = "#@";
 
     /**
      * The directory, where the stdin file of the fat jobs are created.
