@@ -877,8 +877,8 @@ class Workflow:
             line = line.strip()
             if len(line) == 0:
                 continue
-            if line.startswith("#"):
-                line = line.split("#", 1)[1]
+            if line.startswith("#@"):
+                line = line[2:]
                 line = line.strip()
                 try:
                     my_task_id, my_transformation, my_derivation = line.split(None, 2)
@@ -894,6 +894,9 @@ class Workflow:
                     continue
                 my_task_info["transformation"] = my_transformation
                 my_task_info["derivation"] = my_derivation
+            elif line.startswith("#"):
+                # Regular comment line... just skip it
+                continue
             else:
                 # This is regular line, so we assume it is a task
                 split_line = line.split(None, 1)
