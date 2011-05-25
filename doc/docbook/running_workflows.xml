@@ -2,7 +2,180 @@
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
 "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <chapter id="planning_and_submitting">
-  <title>Running Workflows</title>
+    <title>Running Workflows</title>
+
+  <section>
+     
+
+      <title>Executable Workflows (DAG)</title>
+
+    <para>The DAG an executable (concrete) workflow that can be executed over
+    a variety of resources. When the workflow tasks are mapped to multiple
+    resources that do not share a file system, explicit nodes are added to the
+    workflow for orchestrating data. transfer between the tasks.</para>
+
+     
+
+    <para>When you take the workflow DAX above, and plan it for a single
+    remote grid execution, here a site with handle <emphasis>hpcc</emphasis>,
+    and plan the workflow without clean-up nodes, the following concrete
+    workflow is built:</para>
+
+     
+
+    <para>
+      <figure id="concepts-fig-dag">
+        <title>Black Diamond DAG</title>
+
+        <mediaobject>
+          <imageobject>
+            <imagedata align="center"
+                       fileref="images/concepts-diamond-dag.png"
+                       valign="middle" />
+          </imageobject>
+        </mediaobject>
+      </figure>
+    </para>
+
+     
+
+    <para>Planning augments the original abstract workflow with ancillary
+    tasks to facility the proper execution of the workflow. These tasks
+    include:</para>
+
+     
+
+    <itemizedlist>
+      <listitem>
+        <para>the creation of remote working directories. These directories
+        typically have name that seeks to avoid conflicts with other
+        simultaneously running similar workflows. Such tasks use a job prefix
+        of <code>create_dir</code>.</para>
+      </listitem>
+
+      <listitem>
+        <para>the stage-in of input files before any task which requires these
+        files. Any file consumed by a task needs to be staged to the task, if
+        it does not already exist on that site. Such tasks use a job prefix of
+        <code>stage_in</code>.If multiple files from various sources need to
+        be transferred, multiple stage-in jobs will be created. Additional
+        advanced options permit to control the size and number of these jobs,
+        and whether multiple compute tasks can share stage-in jobs.</para>
+      </listitem>
+
+      <listitem>
+        <para>the original DAX job is concretized into a compute task in the
+        DAG. Compute jobs are a concatination of the job's
+        <emphasis>name</emphasis> and <emphasis>id</emphasis> attribute from
+        the DAX file.</para>
+      </listitem>
+
+      <listitem>
+        <para>the stage-out of data products to a collecting site. Data
+        products with their <emphasis>transfer</emphasis> flag set to
+        <literal>false</literal> will not be staged to the output site.
+        However, they may still be eligible for staging to other, dependent
+        tasks. Stage-out tasks use a job prefix of
+        <code>stage_out</code>.</para>
+      </listitem>
+
+      <listitem>
+        <para>If compute jobs run at different sites, an intermediary staging
+        task with prefix <code>stage_inter</code> is inserted between the
+        compute jobs in the workflow, ensuring that the data products of the
+        parent are available to the child job.</para>
+      </listitem>
+
+      <listitem>
+        <para>the registration of data products in a replica catalog. Data
+        products with their <emphasis>register</emphasis> flag set to
+        <literal>false</literal> will not be registered.</para>
+      </listitem>
+
+      <listitem>
+        <para>the clean-up of transient files and working directories. These
+        steps can be omitted with the <command>--no-cleanup</command> option
+        to the planner.</para>
+      </listitem>
+    </itemizedlist>
+
+     
+
+    <para>The <link linkend="reference">" Reference Manual"</link> Chapter
+    details more about when and how staging nodes are inserted into the
+    workflow.</para>
+
+     
+
+    <para>The DAG will be found in file <filename>diamond-0.dag</filename>,
+    constructed from the <emphasis>name</emphasis> and
+    <emphasis>index</emphasis> attributes found in the root element of the DAX
+    file.</para>
+
+     
+
+    <programlisting>######################################################################
+# PEGASUS WMS GENERATED DAG FILE
+# DAG diamond
+# Index = 0, Count = 1
+######################################################################
+
+JOB create_dir_diamond_0_hpcc create_dir_diamond_0_hpcc.sub
+SCRIPT POST create_dir_diamond_0_hpcc /opt/pegasus/default/bin/pegasus-exitcode create_dir_diamond_0_hpcc.out
+
+JOB stage_in_local_hpcc_0 stage_in_local_hpcc_0.sub
+SCRIPT POST stage_in_local_hpcc_0 /opt/pegasus/default/bin/pegasus-exitcode stage_in_local_hpcc_0.out
+
+JOB preprocess_ID000001 preprocess_ID000001.sub
+SCRIPT POST preprocess_ID000001 /opt/pegasus/default/bin/pegasus-exitcode preprocess_ID000001.out
+
+JOB findrange_ID000002 findrange_ID000002.sub
+SCRIPT POST findrange_ID000002 /opt/pegasus/default/bin/pegasus-exitcode findrange_ID000002.out
+
+JOB findrange_ID000003 findrange_ID000003.sub
+SCRIPT POST findrange_ID000003 /opt/pegasus/default/bin/pegasus-exitcode findrange_ID000003.out
+
+JOB analyze_ID000004 analyze_ID000004.sub
+SCRIPT POST analyze_ID000004 /opt/pegasus/default/bin/pegasus-exitcode analyze_ID000004.out
+
+JOB stage_out_local_hpcc_2_0 stage_out_local_hpcc_2_0.sub
+SCRIPT POST stage_out_local_hpcc_2_0 /opt/pegasus/default/bin/pegasus-exitcode stage_out_local_hpcc_2_0.out
+
+PARENT findrange_ID000002 CHILD analyze_ID000004
+PARENT findrange_ID000003 CHILD analyze_ID000004
+PARENT preprocess_ID000001 CHILD findrange_ID000002
+PARENT preprocess_ID000001 CHILD findrange_ID000003
+PARENT analyze_ID000004 CHILD stage_out_local_hpcc_2_0
+PARENT stage_in_local_hpcc_0 CHILD preprocess_ID000001
+PARENT create_dir_diamond_0_hpcc CHILD findrange_ID000002
+PARENT create_dir_diamond_0_hpcc CHILD findrange_ID000003
+PARENT create_dir_diamond_0_hpcc CHILD preprocess_ID000001
+PARENT create_dir_diamond_0_hpcc CHILD analyze_ID000004
+PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
+######################################################################
+# End of DAG
+######################################################################
+</programlisting>
+
+     
+
+    <para>The DAG file declares all jobs and links them to a Condor submit
+    file that describes the planned, concrete job. In the same directory as
+    the DAG file are all Condor submit files for the jobs from the picture
+    plus a number of additional helper files.</para>
+
+     
+
+    <para>The various instructions that can be put into a DAG file are
+    described in <ulink
+    url="http://www.cs.wisc.edu/condor/manual/v7.5/2_10DAGMan_Applications.html">Condor's
+    DAGMAN documentation</ulink>.The constituents of the submit directory are
+    described in the<link linkend="submit_directory"> "Submit Directory
+    Details"</link>chapter</para>
+
+     
+  </section>
+
 
   <section>
     <title>Mapping Refinement Steps</title>

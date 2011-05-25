@@ -1,11 +1,210 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
 "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
-<chapter id="catalogs">
-  <title>Catalog Details</title>
+<chapter id="creating_workflows">
+  <title>Creating Workflows</title>
+
+  <section>
+     
+
+      <title>Abstract Workflows (DAX)</title>
+
+    <para>The DAX is a description of an abstract workflow in XML format that
+    is used as the primary input into Pegasus. The DAX schema is described in
+    <ulink
+    url="http://pegasus.isi.edu/wms/docs/schemas/dax-3.2/dax-3.2.xsd">dax-3.2.xsd</ulink>
+    The documentation of the schema and its elements can be found in <ulink
+    url="http://pegasus.isi.edu/wms/docs/schemas/dax-3.2/dax-3.2.html">dax-3.2.html</ulink>.</para>
+
+     
+
+    <para>A DAX can be created by all users with the DAX generating API in
+    Java, Perl, or Python format</para>
+
+     
+
+    <note>We highly recommend using the DAX API.</note>
+
+     
+
+    <para>Advanced users who can read XML schema definitions can generate a
+    DAX directly from a script</para>
+
+     
+
+    <para>The sample workflow below incorporates some of the elementary graph
+    structures used in all abstract workflows.</para>
+
+     
+
+    <itemizedlist>
+      <listitem>
+        <para><emphasis>fan-out</emphasis>, <emphasis>scatter</emphasis>, and
+        <emphasis>diverge</emphasis> all describe the fact that multiple
+        siblings are dependent on fewer parents.</para>
+
+        <para>The example shows how the <emphasis> Job 2 and 3</emphasis>
+        nodes depend on <emphasis>Job 1</emphasis> node.</para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis>fan-in</emphasis>, <emphasis>gather</emphasis>,
+        <emphasis>join</emphasis>, and <emphasis>converge</emphasis> describe
+        how multiple siblings are merged into fewer dependent child
+        nodes.</para>
+
+        <para>The example shows how the <emphasis>Job 4</emphasis> node
+        depends on both <emphasis>Job 2 and Job 3</emphasis> nodes.</para>
+      </listitem>
+    </itemizedlist>
+
+     
+
+    <itemizedlist>
+      <listitem>
+        <para><emphasis>serial execution</emphasis> implies that nodes are
+        dependent on one another, like pearls on a string.</para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis>parallel execution</emphasis> implies that nodes can
+        be executed in parallel</para>
+      </listitem>
+    </itemizedlist>
+
+     
+
+    <para>
+      <figure id="components_blackdiamond">
+        <title>Sample Workflow</title>
+
+        <mediaobject>
+          <imageobject>
+            <imagedata align="center" fileref="images/DiamondWorkflow.png"
+                       valign="middle" />
+          </imageobject>
+        </mediaobject>
+      </figure>
+    </para>
+
+     
+
+    <para>The example diamond workflow consits of four nodes representing
+    jobs, and are linked by six files.</para>
+
+     
+
+    <itemizedlist>
+      <listitem>
+        <para>Required input files must be registered with the Replica catalog
+        in order for Pegasus to find it and integrate it into the
+        workflow.</para>
+      </listitem>
+
+      <listitem>
+        <para>Leaf files are a product or output of a workflow. Output files
+        can be collected at a location.</para>
+      </listitem>
+
+      <listitem>
+        <para>The remaining files all have lines leading to them and
+        originating from them. These files are products of some job steps
+        (lines leading to them), and consumed by other job steps (lines
+        leading out of them). Often, these files represent intermediary
+        results that can be cleaned.</para>
+      </listitem>
+    </itemizedlist>
+
+     
+
+    <para>There are two main ways of generating DAX's</para>
+
+     
+
+    <orderedlist>
+      <listitem>
+        <para>Using a DAX generating API in <link
+        linkend="api-java">Java</link>, <link linkend="api-perl">Perl</link>
+        or <link linkend="api-python">Python</link>.</para>
+
+        <para><emphasis>Note</emphasis> This option is what we
+        recommend.</para>
+      </listitem>
+
+      <listitem>
+        <para>Generating XML directly from your script.</para>
+
+        <para>This option should only be considered by advanced users who can
+        also read XML schema definitions.</para>
+      </listitem>
+    </orderedlist>
+
+     
+
+    <para>One example for a DAX representing the example workflow can look
+    like the following:</para>
+
+     
+
+    <programlisting>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;!-- generated: 2010-11-22T22:55:08Z --&gt;
+&lt;adag xmlns="http://pegasus.isi.edu/schema/DAX"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.2.xsd"
+      version="3.2" name="diamond" index="0" count="1"&gt;
+  &lt;!-- part 2: definition of all jobs (at least one) --&gt;
+  &lt;job namespace="diamond" name="preprocess" version="2.0" id="ID000001"&gt;
+    &lt;argument&gt;-a preprocess -T60 -i &lt;file name="f.a" /&gt; -o &lt;file name="f.b1" /&gt; &lt;file name="f.b2" /&gt;&lt;/argument&gt;
+    &lt;uses name="f.b2" link="output" register="false" transfer="false" /&gt;
+    &lt;uses name="f.b1" link="output" register="false" transfer="false" /&gt;
+    &lt;uses name="f.a" link="input" /&gt;
+  &lt;/job&gt;
+  &lt;job namespace="diamond" name="findrange" version="2.0" id="ID000002"&gt;
+    &lt;argument&gt;-a findrange -T60 -i &lt;file name="f.b1" /&gt; -o &lt;file name="f.c1" /&gt;&lt;/argument&gt;
+    &lt;uses name="f.b1" link="input" register="false" transfer="false" /&gt;
+    &lt;uses name="f.c1" link="output" register="false" transfer="false" /&gt;
+  &lt;/job&gt;
+  &lt;job namespace="diamond" name="findrange" version="2.0" id="ID000003"&gt;
+    &lt;argument&gt;-a findrange -T60 -i &lt;file name="f.b2" /&gt; -o &lt;file name="f.c2" /&gt;&lt;/argument&gt;
+    &lt;uses name="f.c2" link="output" register="false" transfer="false" /&gt;
+    &lt;uses name="f.b2" link="input" register="false" transfer="false" /&gt;
+  &lt;/job&gt;
+  &lt;job namespace="diamond" name="analyze" version="2.0" id="ID000004"&gt;
+    &lt;argument&gt;-a analyze -T60 -i &lt;file name="f.c1" /&gt; &lt;file name="f.c2" /&gt; -o &lt;file name="f.d" /&gt;&lt;/argument&gt;
+    &lt;uses name="f.c2" link="input" register="false" transfer="false" /&gt;
+    &lt;uses name="f.d" link="output" register="false" transfer="true" /&gt;
+    &lt;uses name="f.c1" link="input" register="false" transfer="false" /&gt;
+  &lt;/job&gt;
+  &lt;!-- part 3: list of control-flow dependencies --&gt;
+  &lt;child ref="ID000002"&gt;
+    &lt;parent ref="ID000001" /&gt;
+  &lt;/child&gt;
+  &lt;child ref="ID000003"&gt;
+    &lt;parent ref="ID000001" /&gt;
+  &lt;/child&gt;
+  &lt;child ref="ID000004"&gt;
+    &lt;parent ref="ID000002" /&gt;
+    &lt;parent ref="ID000003" /&gt;
+  &lt;/child&gt;
+&lt;/adag&gt;</programlisting>
+
+     
+
+    <para>The example workflow representation in form of a DAX requires
+    external catalogs, such as transformation catalog (TC) to resolve the
+    logical job names (such as diamond::preprocess:2.0), and a replica catalog
+    (RC) to resolve the input file <filename>f.a</filename>. The above
+    workflow defines the four jobs just like the example picture, and the
+    files that flow between the jobs. The intermediary files are neither
+    registered nor staged out, and can be considered transient. Only the final
+    result file <filename>f.d</filename> is staged out.</para>
+
+     
+  </section>
+
 
   <section id="replica">
-    <title>Replica</title>
+    <title>Data Discovery (Replica Catalog)</title>
 
     <para>The Replica Catalog keeps mappings of logical file ids/names (LFN's)
     to physical file ids/names (PFN's). A single LFN can map to several PFN's.
@@ -62,10 +261,11 @@ LFN PFN a="b" [..]
       </programlisting>
 
       <para>The LFN may or may not be quoted. If it contains linear
-      whitespace, quotes, backslash or an equality (equal?) sign, it must be quoted and
-      escaped. The same conditions apply for the PFN. The attribute key-value pairs are separated
-      by an equality sign without any whitespaces. The value may be in quoted.
-      The LFN sentiments about quoting apply.</para>
+      whitespace, quotes, backslash or an equality (equal?) sign, it must be
+      quoted and escaped. The same conditions apply for the PFN. The attribute
+      key-value pairs are separated by an equality sign without any
+      whitespaces. The value may be in quoted. The LFN sentiments about
+      quoting apply.</para>
 
       <para>The file mode is the Default mode. In order to use the File mode
       you have to set the following properties</para>
@@ -88,10 +288,10 @@ LFN PFN a="b" [..]
       <title>JDBCRC</title>
 
       <para>In this mode, Pegasus queries a SQL based replica catalog that is
-      accessed via JDBC. The sql schema’s for this catalog can be found at
-      <emphasis role="bold">$PEGASUS_HOME/sql</emphasis> directory. You will
-      have to install the schema into either PostgreSQL or MySQL by running
-      the appropriate commands to load the two scheams <emphasis
+      accessed via JDBC. The sql schema&rsquor;s for this catalog can be found
+      at <emphasis role="bold">$PEGASUS_HOME/sql</emphasis> directory. You
+      will have to install the schema into either PostgreSQL or MySQL by
+      running the appropriate commands to load the two scheams <emphasis
       role="bold">create-XX-init.sql</emphasis> and <emphasis
       role="bold">create-XX-rc.sql</emphasis> where XX is either <emphasis
       role="bold">my</emphasis> (for MySQL) or <emphasis
@@ -136,9 +336,9 @@ LFN PFN a="b" [..]
         <title>RLS</title>
 
         <para>In this mode, Pegasus queries the central RLI to discover in
-        which LRC’s the mappings for a LFN reside. It then queries the
-        individual LRC’s for the PFN’s. To use this mode the following
-        properties need to be set</para>
+        which LRC&rsquor;s the mappings for a LFN reside. It then queries the
+        individual LRC&rsquor;s for the PFN&rsquor;s. To use this mode the
+        following properties need to be set</para>
 
         <para><orderedlist>
             <listitem>
@@ -216,8 +416,8 @@ LFN PFN a="b" [..]
         </listitem>
       </itemizedlist>
 
-      <para>For example, if a user wants to query two lrc’s at the same time
-      he/she can specify as follows</para>
+      <para>For example, if a user wants to query two lrc&rsquor;s at the same
+      time he/she can specify as follows</para>
 
       <para><itemizedlist>
           <listitem>
@@ -289,7 +489,7 @@ f.a gsiftp://somehost:port/path/to/file/f.a pool=local</computeroutput></screen>
   </section>
 
   <section id="site">
-    <title>Site</title>
+    <title>Resource Discover (Site Catalog)</title>
 
     <para>The Site Catalog describes the compute resources (which are often
     clusters) that we intend to run the workflow upon. A site is a homogeneous
@@ -328,7 +528,7 @@ f.a gsiftp://somehost:port/path/to/file/f.a pool=local</computeroutput></screen>
 
         <mediaobject>
           <imageobject>
-            <imagedata fileref="images/sc-3.0_p2.png"/>
+            <imagedata fileref="images/sc-3.0_p2.png" />
           </imageobject>
         </mediaobject>
       </figure>
@@ -606,7 +806,7 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
   workdir "path/to/a/tmp/shared/file/sytem/"
 
   #required one or more entries
-  gridftp "gsiftp://hostname/mountpoint” "GLOBUS VERSION"
+  gridftp "gsiftp://hostname/mountpoint&rdquor; "GLOBUS VERSION"
 
   #required one or more entries
   universe transfer "hostname/jobmanager-&lt;scheduler&gt;" "GLOBUS VERSION"
@@ -743,7 +943,7 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
   </section>
 
   <section id="transformation">
-    <title>Transformation</title>
+    <title>Executable Discovery (Transformation Catalog)</title>
 
     <para>The Transformation Catalog maps logical transformations to physical
     executables on the system. It also provides additional information about
@@ -1094,7 +1294,7 @@ Output Filename: /dev/fd/1</computeroutput></screen>
 clus1    black::analyze:1.0    gsiftp://clus1.com/opt/nfs/vdt/pegasus/bin/keg
                 STAGEABLE    INTEL32::LINUX</computeroutput></screen>
 
-      <para/>
+      <para></para>
     </section>
 
     <section>

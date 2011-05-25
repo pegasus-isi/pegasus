@@ -5,9 +5,9 @@
    <title>Pegasus User Guide</title>
    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="about.xml"/>
    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="walkthrough.xml"/>
-   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="components.xml"/>
    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="installation.xml"/>
-   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="planning_and_submitting.xml"/>
+   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="creating_workflows.xml"/>
+   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="running_workflows.xml"/>
    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="submit_directory.xml"/>
    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="monitoring_debugging_stats.xml"/>
    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="example_workflows.xml"/>
