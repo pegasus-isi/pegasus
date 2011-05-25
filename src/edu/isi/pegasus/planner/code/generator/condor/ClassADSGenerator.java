@@ -17,6 +17,7 @@
 package edu.isi.pegasus.planner.code.generator.condor;
 
 import edu.isi.pegasus.planner.classes.ADag;
+import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.DagInfo;
 import edu.isi.pegasus.planner.classes.Job;
 
@@ -105,6 +106,11 @@ public class ClassADSGenerator {
      * this execution pool.
      */
     public static final String RESOURCE_AD_KEY = "pegasus_site";
+    
+    /**
+     * The class ad to designate the size of the clustered jobs.
+     */
+    public static final String JOB_CLUSTER_SIZE_AD_KEY = "pegasus_cluster_size";
 
 
     /**
@@ -190,7 +196,13 @@ public class ClassADSGenerator {
             //ignore
         }
         writer.println(generateClassAdAttribute( ClassADSGenerator.JOB_RUNTIME_AD_KEY, runtime  ) );
-        
+     
+        //determine the cluster size
+        int csize = ( job instanceof AggregatedJob ) ? 
+                    ( (AggregatedJob)job ).numberOfConsitutentJobs() :
+                    1;
+        writer.println(
+                        generateClassAdAttribute( ClassADSGenerator.JOB_CLUSTER_SIZE_AD_KEY, csize    ) );
     }
 
 
