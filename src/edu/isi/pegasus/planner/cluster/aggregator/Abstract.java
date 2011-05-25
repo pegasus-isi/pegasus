@@ -88,7 +88,11 @@ public abstract class Abstract implements JobAggregator {
      */
     public static final String DERIVATION_VERSION = "1.0";
 
-
+    /**
+     * The marker to designate a line in the input file reserved for 
+     * monitord purposes.
+     */
+    public static final String MONITORD_COMMENT_MARKER = "\"#@\"";
 
     /**
      * The directory, where the stdin file of the fat jobs are created.
@@ -393,7 +397,7 @@ public abstract class Abstract implements JobAggregator {
                     String line;
                     while( (line = reader.readLine()) != null ){
                         //ignore comment out lines
-                        if( line.startsWith( "#") ){
+                        if( line.startsWith( "#" ) ){
                             continue;
                         }
                         writer.write( line );
@@ -503,7 +507,7 @@ public abstract class Abstract implements JobAggregator {
      */
     protected String getCommentString( Job job, int taskid ){
         StringBuffer sb = new StringBuffer();
-        sb.append( "# " ).
+        sb.append( MONITORD_COMMENT_MARKER ).append( " " ).
            append( taskid ).append( " " ).
            append( job.getCompleteTCName() ).append( " " ).
            append( job.getDAXID() ).append( " " );
