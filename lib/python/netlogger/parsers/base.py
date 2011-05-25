@@ -2,7 +2,7 @@
 Common code for NetLogger parsers
 """
 __author__ = 'Dan Gunter <dkgunter@lbl.gov>'
-__rcsid__ = '$Id: base.py 27236 2011-02-24 22:37:53Z dang $'
+__rcsid__ = '$Id: base.py 27681 2011-04-22 18:39:33Z dang $'
 
 import calendar 
 from netlogger.configobj import ConfigObj, Section
@@ -68,7 +68,7 @@ def parse_ts(ts):
     if ts[0] == '1':
         return float(ts)
     ts, subs = ts.split('.')
-    subs = float(subs[:-1])
+    subs = float('.' + subs[:-1])
     return calendar.timegm(time.strptime(ts, r'%Y-%m-%dT%H:%M:%S')) + subs 
 
 parseDate = parse_ts

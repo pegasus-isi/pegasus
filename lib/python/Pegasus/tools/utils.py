@@ -88,11 +88,9 @@ def isodate(now=int(time.time()), utc=False, short=False):
         else:
             return time.strftime("%Y-%m-%dT%H:%M:%S%z", my_time)
 
-def epochdate(timestamp, short=False):
+def epochdate(timestamp):
     """
     This function converts an ISO timestamp into seconds since epoch
-    Set short to False when the timestamp is in the YYYY-MM-DDTHH:MM:SSZZZ:ZZ format
-    Set short to True when the timestamp is in the YYYYMMDDTHHMMSSZZZZZ format
     """
 
     try: 

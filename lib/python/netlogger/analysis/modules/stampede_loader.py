@@ -16,7 +16,7 @@ the Stampede DB.
 
 See http://www.sqlalchemy.org/ for details on SQLAlchemy
 """
-__rcsid__ = "$Id: stampede_loader.py 27010 2011-01-31 19:24:41Z mgoode $"
+__rcsid__ = "$Id: stampede_loader.py 27826 2011-05-16 14:40:39Z mgoode $"
 __author__ = "Monte Goode"
 
 from netlogger.analysis.schema.stampede_schema import *
@@ -69,29 +69,46 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
 
         # "Case" dict to map events to handler methods
         self.eventMap = {
-            'stampede.edge': self.edge_static,
-            'stampede.host': self.host,
-            'stampede.job.mainjob.end': self.job,
-            'stampede.job.mainjob.start': self.job,
-            'stampede.job.postscript.end': self.noop,
-            'stampede.job.postscript.start': self.noop,
-            'stampede.job.prescript.end': self.noop,
-            'stampede.job.prescript.start': self.job,
-            'stampede.job.state': self.jobstate,
-            'stampede.task.mainjob': self.task,
-            'stampede.task.postscript': self.task,
-            'stampede.task.prescript': self.task,
-            'stampede.workflow.end': self.workflowstate,
-            'stampede.workflow.plan': self.workflow,
-            'stampede.workflow.start': self.workflowstate
+            'stampede.wf.plan' : self.workflow,
+            'stampede.wf.map.task_job' : self.task_map,
+            'stampede.static.start' : self.noop, # good
+            'stampede.static.end' : self.static_end,
+            'stampede.xwf.start' : self.workflowstate,
+            'stampede.xwf.end' : self.workflowstate,
+            'stampede.xwf.map.subwf_job' : self.subwf_map,
+            'stampede.task.info' : self.task,
+            'stampede.task.edge' : self.task_edge,
+            'stampede.job.info' : self.job,
+            'stampede.job.edge' : self.job_edge,
+            'stampede.job_inst.pre.start' : self.job_instance,
+            'stampede.job_inst.pre.term' : self.jobstate,
+            'stampede.job_inst.pre.end' : self.jobstate,
+            'stampede.job_inst.submit.start' : self.job_instance,
+            'stampede.job_inst.submit.end' : self.jobstate,
+            'stampede.job_inst.held.start' : self.jobstate,
+            'stampede.job_inst.held.end' : self.jobstate,
+            'stampede.job_inst.main.start' : self.jobstate,
+            'stampede.job_inst.main.term' : self.jobstate,
+            'stampede.job_inst.main.end' : self.job_instance,
+            'stampede.job_inst.post.start' : self.jobstate,
+            'stampede.job_inst.post.term' : self.jobstate,
+            'stampede.job_inst.post.end' : self.jobstate,
+            'stampede.job_inst.host.info' : self.host,
+            'stampede.job_inst.image.info' : self.jobstate,
+            'stampede.job_inst.grid.submit.start' : self.noop, # good
+            'stampede.job_inst.grid.submit.end' : self.jobstate,
+            'stampede.job_inst.globus.submit.start' : self.noop, # good
+            'stampede.job_inst.globus.submit.end' : self.jobstate,
+            'stampede.inv.start' : self.noop, # good
+            'stampede.inv.end' : self.invocation,
         }
         
         # Dicts for caching FK lookups
         self.wf_id_cache = {}
         self.job_id_cache = {}
+        self.job_instance_id_cache = {}
         self.host_cache = {}
         self.hosts_written_cache = None
-        self._wf_pks = []
         
         # undocumented performance option
         self._perf = util.as_bool(perf)
@@ -104,16 +121,17 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         self._flush_every = 10000
         self._flush_count = 0
         self._last_flush = time.time()
+        
         # caches for batched events
-        self._raw_edges = []
-        self._job_update_events = []
-        self._jobstate_events = []
-        self._host_events = []
-        self._host_to_job = []
-        self._task_events = []
-        self._wfstate_events = []
+        self._batch_cache = {
+            'batch_events' : [],
+            'update_events' : [],
+            'host_map_events' : []
+        }
+        self._task_map_flush = {}
         
         self.log.info('init.end', msg='Batching: %s' % self._batch)
+        pass
         
     def process(self, linedata):
         """
@@ -124,6 +142,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         to the appropriate method per-event.
         """
         self.log.debug('process', msg=linedata)
+        
         try:
             if self._perf:
                 t = time.time()
@@ -133,10 +152,13 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
             else:
                 self.eventMap[linedata['event']](linedata)
         except KeyError:
-            # Raised if self.eventMap does not have an entry for
-            # the passed in event.
-            self.log.error('process', 
-                msg='no handler for event type "%s" defined' % linedata['event'])
+            if linedata['event'].startswith('stampede.job_inst.'):
+                self.log.warn('process', 
+                    msg='Corner case jobstate event: "%s"' % linedata['event'])
+                self.jobstate(linedata)
+            else:
+                self.log.error('process', 
+                    msg='no handler for event type "%s" defined' % linedata['event'])
         except exceptions.IntegrityError, e:
             # This is raised when an attempted insert violates the
             # schema (unique indexes, etc).
@@ -145,6 +167,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
             self.session.rollback()
             
         self.check_flush()
+        pass
         
     def linedataToObject(self, linedata, o):
         """
@@ -160,24 +183,45 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         for k,v in linedata.items():
             if k == 'level':
                 continue
-            if k == 'wf.id':
-                k = 'wf_uuid'
-            if k == 'condor.id':
-                k = 'condor_id'
-            if k == 'job.id':
-                k = 'job_submit_seq'
-            if k == 'task.id':
-                k = 'task_submit_seq'
-            if k == 'js.id':
-                k = 'jobstate_submit_seq'
-            if k == 'parent.wf.id':
-                k = 'parent_workflow_id'
-            if k == 'arguments':
+            
+            # undot    
+            attr = k.replace('.', '_')
+            
+            attr_remap = {
+                # workflow
+                'xwf_id': 'wf_uuid',
+                'parent_xwf_id': 'parent_wf_id',
+                # task.info
+                'task_id': 'abs_task_id',
+                # task.edge
+                'child_task_id': 'child_abs_task_id',
+                'parent_task_id': 'parent_abs_task_id',
+                # job.info
+                'job_id': 'exec_job_id',
+                # job.edge
+                'child_job_id': 'child_exec_job_id',
+                'parent_job_id': 'parent_exec_job_id',
+                # xwf.start/end (none)
+                # job_inst.submit.start/job_inst.submit.start/etc
+                'job_inst_id': 'job_submit_seq',
+                'js_id': 'jobstate_submit_seq',
+                # inv.end
+                'inv_id': 'task_submit_seq',
+                'dur': 'remote_duration',
+            }
+            
+            # remap attr names
+            if attr_remap.has_key(attr):
+                attr = attr_remap[attr]
+            
+            # sanitize argv input
+            if attr == 'argv':
                 if v != None:
-                    v = v.replace("'", "\\'")
+                    #v = v.replace("'", "\\'")
+                    pass
             
             try:
-                exec("o.%s = '%s'" % (k,v))
+                exec("o.%s = '%s'" % (attr,v))
             except:
                 self.log.error('linedataToObject', 
                     msg='unable to process attribute %s with values: %s' % (k,v))
@@ -248,43 +292,21 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
             return
         self.log.debug('hard_flush.begin', batching=batch_flush)
         
-        # leaving all of these distinct rather than putting
-        # everyting in two lists for the moment
-        for re in self._raw_edges:
-            if batch_flush:
-                self.session.add(re)
-            else:
-                self.individual_commit(re)
+        end_event = []
         
-        for js in self._jobstate_events:
+        for event in self._batch_cache['batch_events']:
+            if event.event == 'stampede.xwf.end':
+                end_event.append(event)
+            if batch_flush: 
+                self.session.add(event)
+            else: 
+                self.individual_commit(event)
+
+        for event in self._batch_cache['update_events']:
             if batch_flush:
-                self.session.add(js)
+                self.session.merge(event)
             else:
-                self.individual_commit(js)
-        
-        for tsk in self._task_events:
-            if batch_flush:
-                self.session.add(tsk)
-            else:
-                self.individual_commit(tsk)
-        
-        for wfs in self._wfstate_events:
-            if batch_flush:
-                self.session.add(wfs)
-            else:
-                self.individual_commit(wfs)
-        
-        for j in self._job_update_events:
-            if batch_flush:
-                self.session.merge(j)
-            else:
-                self.individual_commit(j, merge=True)
-        
-        for h in self._host_events:
-            if batch_flush:
-                self.session.add(h)
-            else:
-                self.individual_commit(h)
+                self.individual_commit(event, merge=True)
                 
         try:
             self.session.commit()
@@ -294,16 +316,16 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
             self.session.rollback()
             self.hard_flush(batch_flush=False)
         
-        self._raw_edges = []
-        self._jobstate_events = []
-        self._task_events = []
-        self._wfstate_events = []
-        self._job_update_events = []
-        self._host_events = []
+        for host in self._batch_cache['host_map_events']:
+            self.map_host_to_job_instance(host)
+            
+        for ee in end_event:
+            self.flushCaches(ee)
+        end_event = []
         
-        for htj in self._host_to_job:
-            self.mapHostToJob(htj)
-        self._host_to_job = []
+        # Clear all data structures here.
+        for k in self._batch_cache.keys():
+            self._batch_cache[k] = []
         
         self.session.commit()
         self.reset_flush_state()
@@ -339,19 +361,24 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         Handles a workflow insert event.
         """
         wf = self.linedataToObject(linedata, Workflow())
-        wf.timestamp = wf.ts
-        if wf.parent_workflow_id == 'None':
-            wf.parent_workflow_id = None
-        else:
-            wf.parent_workflow_id = self.wf_uuidToId(wf.parent_workflow_id)
-        del wf.event, wf.ts
         self.log.debug('workflow', msg=wf)
-        # workflow inserts must be explicitly written to db
-        if self._batch:
+        
+        is_root = True
+        if wf.root_xwf_id != wf.wf_uuid:
+            is_root = False
+            wf.root_wf_id = self.wf_uuid_to_id(wf.root_xwf_id)
+        
+        if wf.parent_wf_id is not None:
+            wf.parent_wf_id = self.wf_uuid_to_id(wf.parent_wf_id)
+
+        # workflow inserts must be explicitly written to db whether
+        # batching or not
+        wf.commit_to_db(self.session)
+        if is_root:
+            wf.root_wf_id = self.wf_uuid_to_id(wf.root_xwf_id)
             wf.commit_to_db(self.session)
-        else:
-            wf.commit_to_db(self.session)
-        self._wf_pks.append(wf.wf_id)
+        if wf.root_wf_id == None:
+            self.log.warn('workflow', msg='Count not determine root_wf_id for event %s' % wf)
         pass
         
     def workflowstate(self, linedata):
@@ -362,27 +389,23 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         Handles a workflowstate insert event.
         """
         wfs = self.linedataToObject(linedata, Workflowstate())
-        wfs.state = wfs.event[wfs.event.rfind('.')+1:]
-        wfs.wf_id = self.wf_uuidToId(wfs.wf_uuid)
-        wfs.timestamp = wfs.ts
-        # XXX: this test is a band aid while people transition to
-        # the newer log style.
-        if hasattr(wfs, 'restart_count'):
-            if wfs.restart_count > 0:
-                wfs.state += ' restart=%s' % wfs.restart_count
-                del wfs.restart_count
-        else:
-            self.log.warn('workflowstate', 
-                msg='Workflow state event lacks restart_count attribute.  Reprocess log with updated monitord.')
-        del wfs.event, wfs.ts
         self.log.debug('workflowstate', msg=wfs)
+        
+        state = {
+            'stampede.xwf.start': 'WORKFLOW_STARTED',
+            'stampede.xwf.end': 'WORKFLOW_TERMINATED'
+        }
+        
+        wfs.wf_id = self.wf_uuid_to_id(wfs.wf_uuid)
+        wfs.timestamp = wfs.ts
+        wfs.state = state[wfs.event]
+        
         if self._batch:
-            self._wfstate_events.append(wfs)
+            self._batch_cache['batch_events'].append(wfs)
         else:
             wfs.commit_to_db(self.session)
-        
-        if wfs.state.startswith('end'):
-            self.flushCaches(wfs)
+            if wfs.event == 'stampede.xwf.end':
+                self.flushCaches(wfs)
         pass
         
     def job(self, linedata):
@@ -390,56 +413,82 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         @type   linedata: dict
         @param  linedata: One line of BP data dict-ified.
         
-        Handles a job insert event.
+        Handles a static job insert event.
         """
         job = self.linedataToObject(linedata, Job())
-        
-        # get wf_id
-        job.wf_id = self.wf_uuidToId(job.wf_uuid)
-        if job.wf_id == None:
-            er = 'No wf_id associated with wf_uuid %s - can not insert job %s' \
-                % (job.wf_uuid, job)
-            self.log.error('job', msg=er)
-            return
-            
-        if job.name.startswith('merge_'):
-            job.clustered = True
-        else:
-            job.clustered = False
-        
-        del job.ts, job.event
-        
+        job.wf_id = self.wf_uuid_to_id(job.wf_uuid)
+        job.clustered = util.as_bool(job.clustered)
         self.log.debug('job', msg=job)
         
-        # See if this is the initial entry or an update
-        if not self.job_id_cache.has_key((job.wf_id, job.job_submit_seq)):
-            jcheck = self.session.query(Job).filter(Job.wf_id == job.wf_id).filter(Job.job_submit_seq == job.job_submit_seq).first()
-            if not jcheck:
-                # A job entry does not exist so insert
-                # job inserts must be explicitly flushed to db
-                # whether batching or not
-                job.commit_to_db(self.session)
-                self.job_id_cache[(job.wf_id, job.job_submit_seq)] = job.job_id
-                self.log.debug('job', msg='Inserting new jobid: %s' % job.job_id)
-            else:
-                # A job entry EXISTS but not cached probably due to 
-                # an interrupted run.  Bulletproofing.  Raises a warning
-                # as this is a non-optimal state.
-                self.job_id_cache[(jcheck.wf_id, jcheck.job_submit_seq)] = jcheck.job_id
-                job.job_id = jcheck.job_id
-                if self._batch:
-                    self._job_update_events.append(job)
-                else:
-                    job.merge_to_db(self.session)
-                self.log.warn('job', msg='Updating non-cached job: %s' % job)
+        if self._batch:
+            self._batch_cache['batch_events'].append(job)
         else:
-            jid = self.jobIdFromUnique(job)
-            self.log.debug('job', msg='Updating jobid: %s' % jid)
-            job.job_id = jid # set PK from cache for merge
+            job.commit_to_db(self.session)
+        pass
+        
+    def job_edge(self, linedata):
+        """
+        @type   linedata: dict
+        @param  linedata: One line of BP data dict-ified.
+        
+        Handles a static job edge insert event.
+        """
+        je = self.linedataToObject(linedata, JobEdge())
+        je.wf_id = self.wf_uuid_to_id(je.wf_uuid)
+        self.log.debug('job_edge', msg=je)
+        
+        if self._batch:
+            self._batch_cache['batch_events'].append(je)
+        else:
+            je.commit_to_db(self.session)
+        pass
+        
+    def job_instance(self, linedata):
+        """
+        @type   linedata: dict
+        @param  linedata: One line of BP data dict-ified.
+        
+        Handles a job instance insert event.
+        """
+        job_instance = self.linedataToObject(linedata, JobInstance())
+        self.log.debug('job_instance', msg=job_instance)
+        
+        job_instance.wf_id = self.wf_uuid_to_id(job_instance.wf_uuid)
+        if job_instance.wf_id == None:
+            er = 'No wf_id associated with wf_uuid %s - can not insert job instance %s' \
+                % (job_instance.wf_uuid, job_instance)
+            self.log.error('job_instance', msg=er)
+            return
+        
+        job_instance.job_id = self.get_job_id(job_instance.wf_id, job_instance.exec_job_id)
+        if not job_instance.job_id:
+            self.log.error('job_instance',
+                msg='Could not determine job_id for job_instance: %s' % job_instance)
+            return
+        
+        if job_instance.event == 'stampede.job_inst.submit.start' or \
+            job_instance.event == 'stampede.job_inst.pre.start':
+            
+            iid = self.get_job_instance_id(job_instance, quiet=True)
+            
+            if not iid:
+                # explicit insert
+                job_instance.commit_to_db(self.session)
+                # seed the cache
+                noop = self.get_job_instance_id(job_instance)
+            
+            if job_instance.event == 'stampede.job_inst.pre.start':
+                self.jobstate(linedata)
+            return
+            
+        if job_instance.event == 'stampede.job_inst.main.end':
+            job_instance.job_instance_id = self.get_job_instance_id(job_instance)
             if self._batch:
-                self._job_update_events.append(job)
+                self._batch_cache['update_events'].append(job_instance)
             else:
-                job.merge_to_db(self.session)
+                job_instance.merge_to_db(self.session)
+            self.jobstate(linedata)
+            pass
         pass
     
     def jobstate(self, linedata):
@@ -450,21 +499,68 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         Handles a jobstate insert event.
         """
         js = self.linedataToObject(linedata, Jobstate())
-        js.timestamp = js.ts
+        self.log.debug('jobstate', msg=js)
+        
+        states = {
+            # array maps to status [-1, 0]
+            'stampede.job_inst.pre.start' : ['PRE_SCRIPT_STARTED', 'PRE_SCRIPT_STARTED'], # statusless
+            'stampede.job_inst.pre.term' : ['PRE_SCRIPT_TERMINATED', 'PRE_SCRIPT_TERMINATED'], # s-less
+            'stampede.job_inst.pre.end' : ['PRE_SCRIPT_FAILED', 'PRE_SCRIPT_SUCCESS'],
+            'stampede.job_inst.submit.end' : ['SUBMIT_FAILED', 'SUBMIT'],
+            'stampede.job_inst.main.start' : ['EXECUTE', 'EXECUTE'], # s-less
+            'stampede.job_inst.main.term' : ['JOB_EVICTED', 'JOB_TERMINATED'],
+            'stampede.job_inst.main.end' : ['JOB_FAILURE', 'JOB_SUCCESS'],
+            'stampede.job_inst.post.start' : ['POST_SCRIPT_STARTED', 'POST_SCRIPT_STARTED'], # s-less
+            'stampede.job_inst.post.term' : ['POST_SCRIPT_TERMINATED', 'POST_SCRIPT_TERMINATED'], # s-less
+            'stampede.job_inst.post.end' : ['POST_SCRIPT_FAILED', 'POST_SCRIPT_SUCCESS'],
+            'stampede.job_inst.held.start' : ['JOB_HELD', 'JOB_HELD'], # s-less
+            'stampede.job_inst.held.end' : ['JOB_RELEASED', 'JOB_RELEASED'], # s-less
+            'stampede.job_inst.image.info' : ['IMAGE_SIZE', 'IMAGE_SIZE'], # s-less
+            'stampede.job_inst.grid.submit.end' : ['GRID_SUBMIT_FAILED', 'GRID_SUBMIT'],
+            'stampede.job_inst.globus.submit.end' : ['GLOBUS_SUBMIT_FAILED', 'GLOBUS_SUBMIT'],
+            
+        }
 
-        js.job_id = self.jobIdFromUnique(js)
-        if js.job_id == None:
-            self.log.error('jobstate',
-                msg='Could not determine job_id for jobstate: %s' % js)
-            return
-        del js.name, js.wf_uuid, js.job_submit_seq, js.ts, js.event
+        if not states.has_key(js.event):
+            # corner case event
+            js.state = js.event.split('.')[2].upper()
+        else:
+            # doctor status-less events to simplify code
+            if not hasattr(js, 'status'): js.status = 0
+            js.state = states[js.event][int(js.status)+1]
+        
+
+        js.job_instance_id = self.get_job_instance_id(js)
+        js.timestamp = js.ts
         
         if self._batch:
-            self._jobstate_events.append(js)
+            self._batch_cache['batch_events'].append(js)
+        else:
+            js.commit_to_db(self.session)
+        pass
+        
+    def invocation(self, linedata):
+        """
+        @type   linedata: dict
+        @param  linedata: One line of BP data dict-ified.
+        
+        Handles a invocation insert event.
+        """
+        invocation = self.linedataToObject(linedata, Invocation())
+        self.log.debug('invocation', msg=invocation)
+        
+        invocation.wf_id = self.wf_uuid_to_id(invocation.wf_uuid)
+
+        invocation.job_instance_id = self.get_job_instance_id(invocation)
+        if invocation.job_instance_id == None:
+            self.log.error('invocation',
+                msg='Could not determine job_instance_id for invocation: %s' % invocation)
             return
         
-        self.log.debug('jobstate', msg=js)
-        js.commit_to_db(self.session)
+        if self._batch:
+            self._batch_cache['batch_events'].append(invocation)
+        else:
+            invocation.commit_to_db(self.session)
         pass
         
     def task(self, linedata):
@@ -472,36 +568,105 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         @type   linedata: dict
         @param  linedata: One line of BP data dict-ified.
         
-        Handles a task insert event.
+        Handles a task insert event
         """
-        tsk = self.linedataToObject(linedata, Task())
-
-        if tsk.duration == None:
-            tsk.duration = 0
-            self.log.warn('task',
-                msg='Task event lacked duration - setting to zero')
-                
-        if tsk.executable == None:
-            tsk.executable = ''
-            self.log.warn('task',
-                msg='Task event lacked executable - setting to empty string')
-        
-        tsk.job_id = self.jobIdFromUnique(tsk)
-        
-        if tsk.job_id == None:
-            self.log.error('task',
-                msg='Could not determine job_id for task: %s' % tsk)
-            return
-        del tsk.wf_uuid, tsk.name, tsk.job_submit_seq, tsk.ts
+        task = self.linedataToObject(linedata, Task())
+        self.log.debug('task', msg=task)
+        task.wf_id = self.wf_uuid_to_id(task.wf_uuid)
         
         if self._batch:
-            self._task_events.append(tsk)
-            return
-        
-        self.log.debug('task', msg=tsk)
-        tsk.commit_to_db(self.session)
+            self._batch_cache['batch_events'].append(task)
+        else:
+            task.commit_to_db(self.session)
         pass
         
+    def task_edge(self, linedata):
+        """
+        @type   linedata: dict
+        @param  linedata: One line of BP data dict-ified.
+        
+        Handles a task edge insert event
+        """
+        te = self.linedataToObject(linedata, TaskEdge())
+        self.log.debug('task_event', msg=te)
+        te.wf_id = self.wf_uuid_to_id(te.wf_uuid)
+        
+        if self._batch:
+            self._batch_cache['batch_events'].append(te)
+        else:
+            te.commit_to_db(self.session)
+        pass
+        
+    def task_map(self, linedata):
+        """
+        @type   linedata: dict
+        @param  linedata: One line of DB data dict-ified
+        
+        Handles a task.map event.  Updates a Task table row
+        to include the proper job_id event.
+        """
+        # Flush previous events to ensure that all the batched
+        # Job table entries are written.
+        if not self._task_map_flush.has_key(linedata['xwf.id']):
+            if self._batch:
+                self.hard_flush()
+            self._task_map_flush[linedata['xwf.id']] = True
+        
+        wf_id = self.wf_uuid_to_id(linedata['xwf.id'])
+        job_id = self.get_job_id(wf_id, linedata['job.id'])
+        
+        if not job_id:
+            self.log.error('task_map',
+                msg='Could not determine job_id for task map: %s' % linedata)
+            return
+        
+        try:
+            task = self.session.query(Task).filter(Task.wf_id == wf_id).filter(Task.abs_task_id == linedata['task.id']).one()
+            task.job_id = job_id
+        except orm.exc.MultipleResultsFound, e:
+            self.log.error('task_map', msg='Multiple task results: cant map task: %s ' % linedata)
+            return
+        except orm.exc.NoResultFound, e:
+            self.log.error('task_map', msg='No task found: cant map task: %s ' % linedata)
+            return
+        
+        if self._batch:
+            # next flush will catch this - no cache
+            pass
+        else:
+            self.session.commit()
+        pass
+        
+    def subwf_map(self, linedata):
+        """
+        @type   linedata: dict
+        @param  linedata: One line of BP data dict-ified.
+
+        Handles a subworkflow job map event.
+        """
+        self.log.debug('subwf_map', msg=linedata)
+        
+        wf_id = self.wf_uuid_to_id(linedata['xwf.id'])
+        subwf_id = self.wf_uuid_to_id(linedata['subwf.id'])
+        job_id = self.get_job_id(wf_id, linedata['job.id'])
+        
+        try:
+            job_inst = self.session.query(JobInstance).filter(JobInstance.job_id == job_id).filter(JobInstance.job_submit_seq == linedata['job_inst.id']).one()
+            job_inst.subwf_id = subwf_id
+        except orm.exc.MultipleResultsFound, e:
+            self.log.error('subwf_map', msg='Multiple job instance results: cant map subwf: %s ' % linedata)
+            return
+        except orm.exc.NoResultFound, e:
+            self.log.error('subwf_map', msg='No job instance found: cant map subwf: %s ' % linedata)
+            return
+        
+        if self._batch:
+            # next flush will catch this - no cache
+            pass
+        else:
+            self.session.commit()
+        pass
+    
     def host(self, linedata):
         """
         @type   linedata: dict
@@ -510,50 +675,41 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         Handles a host insert event.
         """
         host = self.linedataToObject(linedata, Host())
-        del host.ts, host.event, host.name
         
         self.log.debug('host', msg=host)
         
+        if self.hosts_written_cache == None:
+            self.hosts_written_cache = {}
+            query = self.session.query(Host)
+            for row in query.all():
+                self.hosts_written_cache[(row.site,row.hostname,row.ip)] = True
+        
+        # handle inserts into the host table
+        if not self.hosts_written_cache.has_key((host.site,host.hostname,host.ip)):
+            if self._batch:
+                self._batch_cache['batch_events'].append(host)
+            else:
+                host.commit_to_db(self.session)
+            self.hosts_written_cache[(host.site,host.hostname,host.ip)] = True
+            
+        # handle mappings
         if self._batch:
-            # initialize from previous runs into same db
-            if self.hosts_written_cache == None:
-                self.hosts_written_cache = {}
-                query = self.session.query(Host)
-                for row in query.all():
-                    self.hosts_written_cache[(row.site_name,row.hostname,row.ip_address)] = True
-                
-            if not self.hosts_written_cache.has_key((host.site_name,host.hostname,host.ip_address)):
-                self._host_events.append(host)
-                self.hosts_written_cache[(host.site_name,host.hostname,host.ip_address)] = True
-            self._host_to_job.append(host)
-            return
-        
-        try:
-            host.commit_to_db(self.session)
-        except exceptions.IntegrityError, e:
-            # In this case, catch the duplicate insert exception
-            # and ignore - we are bound to see duplicate host events
-            # during a load.
-            self.session.rollback()
-        
-        self.mapHostToJob(host)
+            self._batch_cache['host_map_events'].append(host)
+        else:
+            self.map_host_to_job_instance(host)
         pass
         
-    def edge_static(self, linedata):
+    def static_end(self, linedata):
         """
         @type   linedata: dict
         @param  linedata: One line of BP data dict-ified.
         
-        Handles a static edge insert event.
+        This forces a flush after all of the static events
+        have been processed.  
         """
-        edge = self.linedataToObject(linedata, EdgeStatic())
-        del edge.ts, edge.event
-        
-        self.log.debug('edge_static', msg=edge)
+        self.log.debug('static_end', msg=linedata)
         if self._batch:
-            self._raw_edges.append(edge)
-        else:
-            edge.commit_to_db(self.session)
+            self.hard_flush()
         pass
         
     def noop(self, linedata):
@@ -569,7 +725,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
     ####################################
     # DB helper/lookup/caching functions
     ####################################
-    def wf_uuidToId(self, wf_uuid):
+    def wf_uuid_to_id(self, wf_uuid):
         """
         @type   wf_uuid: string
         @param  wf_uuid: wf_uuid string from BP logs
@@ -583,46 +739,72 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
             try:
                 self.wf_id_cache[wf_uuid] = query.one().wf_id
             except orm.exc.MultipleResultsFound, e:
-                self.log.error('wf_uuidToId', 
+                self.log.error('wf_uuid_to_id', 
                     msg='Multiple wf_id results for wf_uuid %s : %s' % (wf_uuid, e))
                 return None
             except orm.exc.NoResultFound, e:
-                self.log.error('wf_uuidToId',
+                self.log.error('wf_uuid_to_id',
                     msg='No wf_id results for wf_uuid %s : %s' % (wf_uuid, e))
                 return None
                 pass
             
         return self.wf_id_cache[wf_uuid]
         
-    def jobIdFromUnique(self, o):
+    def get_job_id(self, wf_id, exec_id):
         """
-        @type   o: class instance
-        @param  o: Mapper object containing wf_uuid, condor_id and job name.
+        @type   wf_id: int
+        @param  wf_id: A workflow id from the workflow table.
+        @type   exec_id: string
+        @param  exec_id: The exec_job_id for a given job.
         
-        Attempts to retrieve a job job_id PK/FK from cache.  If not in
-        cache, retrieve from st_job table by the three unique columns and 
-        cache.  Cuts down on DB queries, especially when inserting jobstate
-        events, during insert processing.
+        Gets and caches job_id for job_instance inserts and static
+        table updating.
         """
-        wf_id = self.wf_uuidToId(o.wf_uuid)
-        uniqueIdIdx = (wf_id, o.job_submit_seq)
-        if not self.job_id_cache.has_key(uniqueIdIdx):
-            query = self.session.query(Job).filter(Job.wf_id == wf_id).filter(Job.job_submit_seq == o.job_submit_seq)
+        if not self.job_id_cache.has_key((wf_id, exec_id)):
+            query = self.session.query(Job.job_id).filter(Job.wf_id == wf_id).filter(Job.exec_job_id == exec_id)
             try:
-                self.job_id_cache[uniqueIdIdx] = query.one().job_id
+                self.job_id_cache[((wf_id, exec_id))] = query.one().job_id
             except orm.exc.MultipleResultsFound, e:
-                self.log.error('jobIdFromUnique',
-                    msg='Multple job_id results for tuple %s : %s' % (uniqueIdIdx, e))
+                self.log.error('get_job_id',
+                    msg='Multiple results found for wf_uuid/exec_job_id: %s/%s' % (wf_id, exec_id))
                 return None
             except orm.exc.NoResultFound, e:
-                self.log.error('jobIdFromUnique',
-                    msg='No job_id results for tuple %s : %s' % (uniqueIdIdx, e))
+                self.log.error('get_job_id',
+                    msg='No results found for wf_uuid/exec_job_id: %s/%s' % (wf_id, exec_id))
                 return None
-                    
             
-        return self.job_id_cache[uniqueIdIdx]
+        return self.job_id_cache[((wf_id, exec_id))]
+
         
-    def mapHostToJob(self, host):
+    def get_job_instance_id(self, o, quiet=False):
+        """
+        @type   o: class instance
+        @param  o: Mapper object containing wf_uuid and exec_job_id.
+        
+        Attempts to retrieve a job job_instance_id PK/FK from cache.  If not in
+        cache, retrieve from st_job table.
+        """
+        wf_id = self.wf_uuid_to_id(o.wf_uuid)
+        cached_job_id = self.get_job_id(wf_id, o.exec_job_id)
+        uniqueIdIdx = (cached_job_id, o.job_submit_seq)
+        if not self.job_instance_id_cache.has_key(uniqueIdIdx):
+            query = self.session.query(JobInstance).filter(JobInstance.job_id == cached_job_id).filter(JobInstance.job_submit_seq == o.job_submit_seq)
+            try:
+                self.job_instance_id_cache[uniqueIdIdx] = query.one().job_instance_id
+            except orm.exc.MultipleResultsFound, e:
+                if not quiet:
+                    self.log.error('get_job_instance_id',
+                        msg='Multple job_instance_id results for tuple %s : %s' % (uniqueIdIdx, e))
+                return None
+            except orm.exc.NoResultFound, e:
+                if not quiet:
+                    self.log.error('get_job_instance_id',
+                        msg='No job_instance_id results for tuple %s : %s' % (uniqueIdIdx, e))
+                return None
+        
+        return self.job_instance_id_cache[uniqueIdIdx]
+        
+    def map_host_to_job_instance(self, host):
         """
         @type   host: class instance of stampede_schema.Host
         @param  host: Host object with info from a host event in the log
@@ -631,48 +813,24 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         checks the cache to see if a job had already had its host_id,
         and if not, do the proper update and note it in the cache.
         """
-        self.log.debug('mapHostToJob', msg=host)
-        if not self.host_cache.has_key((host.wf_uuid, host.job_submit_seq)):
+        self.log.debug('map_host_to_job_instance', msg=host)
+        
+        wf_id = self.wf_uuid_to_id(host.wf_uuid)
+        cached_job_id = self.get_job_id(wf_id, host.exec_job_id)
+
+        if not self.host_cache.has_key((cached_job_id, host.job_submit_seq)):
             if not host.host_id:
                 try:
-                    host.host_id = self.session.query(Host.host_id).filter(Host.site_name == host.site_name).filter(Host.hostname == host.hostname).filter(Host.ip_address == host.ip_address).one().host_id
+                    host.host_id = self.session.query(Host.host_id).filter(Host.site == host.site).filter(Host.hostname == host.hostname).filter(Host.ip == host.ip).one().host_id
                 except orm.exc.MultipleResultsFound, e:
-                    self.log.error('mapHostToJob',
+                    self.log.error('map_host_to_job_instance',
                         msg='Multiple host_id results for host: %s' % host)
-            wf_id = self.wf_uuidToId(host.wf_uuid)
-            job = self.session.query(Job).filter(Job.wf_id == wf_id).filter(Job.job_submit_seq == host.job_submit_seq).one()
-            job.host_id = host.host_id
-            job.merge_to_db(self.session, batch=self._batch)
-            self.host_cache[(host.wf_uuid, host.job_submit_seq)] = True
-        
+            job_instance = self.session.query(JobInstance).filter(JobInstance.job_id == cached_job_id).filter(JobInstance.job_submit_seq == host.job_submit_seq).one()
+            job_instance.host_id = host.host_id
+            job_instance.merge_to_db(self.session, batch=self._batch)
+            self.host_cache[(cached_job_id, host.job_submit_seq)] = True
         pass
-        
-    def mapEdges(self):
-        """
-        A post-processing step to build the edge table after all the
-        other data has been written out.
-        """
-        s = time.time()
-        wf_map = {}
-        for k,v in self.wf_id_cache.items():
-            wf_map[v] = k
-        query = self.session.query(Job.job_id, Job.name, Job.wf_id).filter(Job.wf_id.in_(wf_map.keys())).order_by(Job.job_id)
-        for job in query.all():
-            self.log.debug('mapEdges', msg='Finding edges for job %s (job_id: %s)' % (job.name, job.job_id))
-            edgeq = self.session.query(EdgeStatic.parent).filter(EdgeStatic.wf_uuid == wf_map[job.wf_id]).filter(EdgeStatic.child == job.name)
-            for parent in edgeq.all():
-                parentName = parent[0]
-                parentq = self.session.query(Job.job_id).filter(Job.name == parentName).filter(Job.wf_id == job.wf_id)
-                for parentid in parentq.all():
-                    edge = Edge()
-                    edge.parent_id = parentid[0]
-                    edge.child_id = job.job_id
-                    edge.commit_to_db(self.session, batch=self._batch)
-        if self._batch:
-            self.session.commit()
-        e = time.time()
-        self.log.info('mapEdges', msg='Edges took: %d sec' % (e-s))
-        pass
+    
         
     def flushCaches(self, wfs):
         """
@@ -683,19 +841,26 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         event has been recieved.
         """
         self.log.debug('flushCaches', msg='Flushing caches for: %s' % wfs)
+        
         for k,v in self.wf_id_cache.items():
             if k == wfs.wf_uuid:
-                pass
-                #del self.wf_id_cache[k]
+                del self.wf_id_cache[k]
                 
-        for k,v in self.job_id_cache.items():
+        for k,v in self.job_instance_id_cache.items():
             if k[0] == wfs.wf_id:
-                del self.job_id_cache[k]
+                del self.job_instance_id_cache[k]
         
         for k,v in self.host_cache.items():
             if k[0] == wfs.wf_uuid:
                 del self.host_cache[k]
         
+        for k,v in self.job_id_cache.items():
+            if k[0] == wfs.wf_id:
+                del self.job_id_cache[k]
+        
+        if self._task_map_flush.has_key(wfs.wf_uuid):
+            del self._task_map_flush[wfs.wf_uuid]
+            
         pass
         
     ################
@@ -707,7 +872,6 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         if self._batch:
             self.log.info('finish', msg='Executing final flush')
             self.hard_flush()
-        self.mapEdges()
         if self._perf:
             run_time = time.time() - self._start_time
             self.log.info("performance", insert_time=self._insert_time,

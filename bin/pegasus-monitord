@@ -1458,9 +1458,11 @@ class Workflow:
                         continue
                     my_event = my_keys["event"]
                     del my_keys["event"]
-                    # Cut the stampede part, until Karan fixes pegasus-plan
-                    if my_event.startswith("stampede."):
-                        my_event = my_event.split(".", 1)[1]
+                    # Convert timestamp to epochtime
+                    if "ts" in my_keys:
+                        my_new_ts = utils.epochdate(my_keys["ts"])
+                        if my_new_ts is not None:
+                            my_keys["ts"] = my_new_ts
                     # Send event to database
                     self.output_to_db(my_event, my_keys)
             except:

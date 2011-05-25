@@ -2,7 +2,7 @@
 Utility code to work with workflow databases.
 """
 
-__rcsid__ = "$Id: util.py 26764 2010-11-11 18:55:22Z mgoode $"
+__rcsid__ = "$Id: util.py 27827 2011-05-16 14:41:18Z mgoode $"
 __author__ = "Monte Goode"
 
 from netlogger.analysis.schema.stampede_schema import *
@@ -67,29 +67,7 @@ class Expunge(SQLAlchemyInit, DoesLogging):
         self.session.delete(wf)
         self.session.flush()
         self.session.commit()
-        # clean static edge table
-        uuids = []
-        query = self.session.query(Workflow.wf_uuid)
-        for row in query.all():
-            uuids.append(row.wf_uuid)
-        if uuids:
-            query = self.session.query(EdgeStatic).filter(not_(EdgeStatic.wf_uuid.in_(uuids))).delete(synchronize_session=False)
-        else:
-            query = self.session.query(EdgeStatic).delete()
-        self.session.flush()
-        self.session.commit()
-        # clean relational edge table
-        jobids = []
-        query = self.session.query(Job.job_id)
-        for row in query.all():
-            jobids.append(row.job_id)
-        if jobids:
-            query = self.session.query(Edge).filter(not_(Edge.parent_id.in_(jobids))).delete(synchronize_session=False)
-        else:
-            query = self.session.query(Edge).delete()
-        self.session.flush()
-        self.session.commit()
-        self.log.info('expunge.done')
+        pass
 
 if __name__ == '__main__':
     pass

@@ -2,7 +2,7 @@
 Contains the code to create and map objects to the Stampede DB schema
 via a SQLAlchemy interface.
 """
-__rcsid__ = "$Id: stampede_schema.py 26830 2010-12-01 19:29:40Z mgoode $"
+__rcsid__ = "$Id: stampede_schema.py 27825 2011-05-16 14:39:20Z mgoode $"
 __author__ = "Monte Goode MMGoode@lbl.gov"
 
 from netlogger.analysis.schema._base import SABase, SchemaIntegrityError
@@ -31,20 +31,27 @@ class Workflowstate(SABase):
 class Job(SABase):
     pass
     
+class JobEdge(SABase):
+    pass
+
+class JobInstance(SABase):
+    pass
+    
 class Jobstate(SABase):
     pass
     
 class Task(SABase):
     pass
     
+class TaskEdge(SABase):
+    pass
+    
+class Invocation(SABase):
+    pass
+    
 class File(SABase):
     pass
-    
-class Edge(SABase):
-    pass
-    
-class EdgeStatic(SABase):
-    pass
+
     
 def initializeToPegasusDB(db, metadata, kw={}):
     """
@@ -63,6 +70,7 @@ def initializeToPegasusDB(db, metadata, kw={}):
     # DB don't like it so swap as needed.
     if db.name == 'mysql':
         KeyInt = BigInteger
+        kw['mysql_charset'] = 'latin1'
         
     if db.name == 'sqlite':
         warnings.filterwarnings('ignore', '.*does \*not\* support Decimal*.')
@@ -78,16 +86,15 @@ def initializeToPegasusDB(db, metadata, kw={}):
     
     st_host = Table('host', metadata,
                     Column('host_id', KeyInt, primary_key=True, nullable=False),
-                    Column('site_name', VARCHAR(255), nullable=False),
+                    Column('site', VARCHAR(255), nullable=False),
                     Column('hostname', VARCHAR(255), nullable=False),
-                    Column('ip_address', VARCHAR(255), nullable=False),
+                    Column('ip', VARCHAR(255), nullable=False),
                     Column('uname', VARCHAR(255), nullable=True),
-                    Column('total_ram', Integer, nullable=True),
+                    Column('total_memory', KeyInt, nullable=True),
                     **kw
     )
     
-    Index('UNIQUE_HOST', st_host.c.site_name, st_host.c.hostname,
-        st_host.c.ip_address, unique=True)
+    Index('UNIQUE_HOST', st_host.c.site, st_host.c.hostname, st_host.c.ip, unique=True)
     
     try:
         orm.mapper(Host, st_host)
@@ -111,7 +118,7 @@ def initializeToPegasusDB(db, metadata, kw={}):
     st_workflow = Table('workflow', metadata,
                         Column('wf_id', KeyInt, primary_key=True, nullable=False),
                         Column('wf_uuid', VARCHAR(255), nullable=False),
-                        Column('dax_label', VARCHAR(255), nullable=True),
+                        Column('dag_file_name', VARCHAR(255), nullable=True),
                         Column('timestamp', NUMERIC(precision=16,scale=6), nullable=True),
                         Column('submit_hostname', VARCHAR(255), nullable=True),
                         Column('submit_dir', TEXT, nullable=True),
@@ -119,8 +126,13 @@ def initializeToPegasusDB(db, metadata, kw={}):
                         Column('user', VARCHAR(255), nullable=True),
                         Column('grid_dn', VARCHAR(255), nullable=True),
                         Column('planner_version', VARCHAR(255), nullable=True),
-                        Column('parent_workflow_id', KeyInt,
+                        Column('dax_label', VARCHAR(255), nullable=True),
+                        Column('dax_version', VARCHAR(255), nullable=True),
+                        Column('dax_file', VARCHAR(255), nullable=True),
+                        Column('parent_wf_id', KeyInt,
                                 ForeignKey("workflow.wf_id"), nullable=True),
+                        # not marked as FK to not screw up the cascade.
+                        Column('root_wf_id', KeyInt, nullable=True),
                         **kw
     )
     
@@ -129,8 +141,12 @@ def initializeToPegasusDB(db, metadata, kw={}):
     try:
         orm.mapper(Workflow, st_workflow, properties = {
                 'child_wf':relation(Workflow, cascade='all'),
+                'child_wfs':relation(Workflowstate, backref='st_workflow', cascade='all'),
+                'child_task':relation(Task, backref='st_workflow', cascade='all'),
                 'child_job':relation(Job, backref='st_workflow', cascade='all'),
-                'child_wfs':relation(Workflowstate, backref='st_workflow', cascade='all')
+                'child_task_e':relation(TaskEdge, backref='st_workflow', cascade='all'),
+                'child_job_e':relation(JobEdge, backref='st_workflow', cascade='all'),
+                'child_invocation':relation(Invocation, backref='st_workflow', cascade='all'),
             }
         )
     except exc.ArgumentError:
@@ -142,9 +158,12 @@ def initializeToPegasusDB(db, metadata, kw={}):
     # unique.
                              Column('wf_id', KeyInt, ForeignKey('workflow.wf_id'), 
                                     nullable=False, primary_key=True),
-                             Column('state', VARCHAR(255), nullable=False, primary_key=True),
+                             Column('state', Enum('WORKFLOW_STARTED', 'WORKFLOW_TERMINATED'), 
+                                nullable=False, primary_key=True),
                              Column('timestamp', NUMERIC(precision=16,scale=6), nullable=False, primary_key=True,
                                     default=time.time()),
+                             Column('restart_count', INT, nullable=False),
+                             Column('status', INT, nullable=True),
                              **kw
     )
     
@@ -155,52 +174,95 @@ def initializeToPegasusDB(db, metadata, kw={}):
         orm.mapper(Workflowstate, st_workflowstate)
     except exc.ArgumentError:
         pass
-    
-    # st_job definition
-    # ==> Information comes mainly from kickstart output file, 
-    #       but also from dagman.out file
-    # 
-    # job_id = autogenerated
-    # host_id = <hostname from invocation element>
-    # name = <jobname from dagman.out file>
-    # condor id in <condor id from dagman.out file>
-    # jobtype = <from .sub file pegasus_job_class>
-    # clustered = boolean (true if jobname begins with merged_)
-    # site_name = <resource from invocation element>
-    # remote_user = <user from invocation element>
-    # remote_working_dir = <cwd element>
-    # cjob_start_time = (only for clustered job, struct entry of .out file, start)
-    # cduration = (only for clustered job, struct entry of .out file, duration)
+        
+    # static job table
     
     st_job = Table('job', metadata,
-                    Column('job_id', KeyInt, primary_key=True, nullable=False),
-                    Column('wf_id', KeyInt,
-                            ForeignKey('workflow.wf_id'), nullable=False),
-                    Column('job_submit_seq', INT, nullable=False),
-                    Column('name', VARCHAR(255), nullable=False),
-                    Column('host_id', KeyInt,
-                            ForeignKey('host.host_id'), nullable=True),
-                    Column('condor_id', VARCHAR(255), nullable=True),
-                    Column('jobtype', VARCHAR(255), nullable=False),
-                    Column('clustered', BOOLEAN, nullable=True, default=False),
-                    Column('site_name', VARCHAR(255), nullable=True),
-                    Column('remote_user', VARCHAR(255), nullable=True),
-                    Column('remote_working_dir', TEXT, nullable=True),
-                    Column('cluster_start_time', NUMERIC(16,6), nullable=True),
-                    Column('cluster_duration', NUMERIC(10,3), nullable=True),
-                    **kw
+            Column('job_id', KeyInt, primary_key=True, nullable=False),
+            Column('wf_id', KeyInt,
+                    ForeignKey('workflow.wf_id'), nullable=False),
+            Column('exec_job_id', VARCHAR(255), nullable=False),
+            Column('submit_file', VARCHAR(255), nullable=False),
+            Column('type_desc', Enum('unknown',
+                                    'compute',
+                                    'stage-in-tx',
+                                    'stage-out-tx',
+                                    'registration',
+                                    'inter-site-tx',
+                                    'create-dir',
+                                    'staged-compute',
+                                    'cleanup',
+                                    'chmod',
+                                    'dax',
+                                    'dag'), nullable=False),
+            Column('clustered', BOOLEAN, nullable=False),
+            Column('max_retries', INT, nullable=False),
+            Column('executable', TEXT, nullable=False),
+            Column('argv', TEXT, nullable=True),
+            Column('task_count', INT, nullable=False),
+            **kw
     )
     
-    Index('UNIQUE_JOB', st_job.c.wf_id, st_job.c.job_submit_seq, unique=True)
-    Index('IDX_JOB_LOOKUP', st_job.c.wf_id, st_job.c.name, unique=False)
-    
-    Edge.parent_id = Column('parent_id', KeyInt)
+    Index('UNIQUE_JOB', st_job.c.wf_id, st_job.c.exec_job_id, unique=True)
     
     try:
         orm.mapper(Job, st_job, properties = {
-                'child_tsk':relation(Task, backref='st_job', cascade='all'),
-                'child_jst':relation(Jobstate, backref='st_job', cascade='all'),
-                'child_file':relation(File, backref='st_job', cascade='all'),
+                'child_job_instance':relation(JobInstance, backref='st_job', cascade='all')
+            }
+        )
+    except exc.ArgumentError:
+        pass
+    
+    # static job edge table
+    
+    st_job_edge = Table('job_edge', metadata,
+        Column('wf_id', KeyInt,
+                ForeignKey('workflow.wf_id'), primary_key=True, nullable=False),
+        Column('parent_exec_job_id', VARCHAR(255), ForeignKey('job.exec_job_id'), primary_key=True, nullable=False),
+        Column('child_exec_job_id', VARCHAR(255), ForeignKey('job.exec_job_id'), primary_key=True, nullable=False),
+        **kw
+    )
+    
+    Index('UNIQUE_JOB_EDGE', st_job_edge.c.wf_id, 
+             st_job_edge.c.parent_exec_job_id, st_job_edge.c.child_exec_job_id, unique=True)
+    
+    try:
+        orm.mapper(JobEdge, st_job_edge)
+    except exc.ArgumentError:
+        pass
+    
+    # job_instance table
+    
+    st_job_instance = Table('job_instance', metadata,
+                    Column('job_instance_id', KeyInt, primary_key=True, nullable=False),
+                    Column('job_id', KeyInt,
+                            ForeignKey('job.job_id'), nullable=False),
+                    Column('host_id', KeyInt,
+                            ForeignKey('host.host_id'), nullable=True),
+                    Column('job_submit_seq', INT, nullable=False),
+                    Column('sched_id', VARCHAR(255), nullable=True),
+                    Column('site', VARCHAR(255), nullable=True),
+                    Column('user', VARCHAR(255), nullable=True),
+                    Column('work_dir', TEXT, nullable=True),
+                    Column('cluster_start_time', NUMERIC(16,6), nullable=True),
+                    Column('cluster_duration', NUMERIC(10,3), nullable=True),
+                    Column('local_duration', NUMERIC(10,3), nullable=True),
+                    Column('subwf_id', KeyInt,
+                            ForeignKey('workflow.wf_id'), nullable=True),
+                    Column('stdout_file', VARCHAR(255), nullable=True),
+                    Column('stdout_text', TEXT, nullable=True),
+                    Column('stderr_file', VARCHAR(255), nullable=True),
+                    Column('stderr_text', TEXT, nullable=True),
+                    Column('stdin_file', VARCHAR(255), nullable=True),
+                    **kw
+    )
+    
+    Index('UNIQUE_JOB_INSTANCE', st_job_instance.c.job_id, st_job_instance.c.job_submit_seq, unique=True)
+    
+    try:
+        orm.mapper(JobInstance, st_job_instance, properties = {
+                'child_tsk':relation(Invocation, backref='st_job_instance', cascade='all'),
+                'child_jst':relation(Jobstate, backref='st_job_instance', cascade='all'),
             }
         )
     except exc.ArgumentError:
@@ -218,7 +280,7 @@ def initializeToPegasusDB(db, metadata, kw={}):
     # All four columns are marked as primary key to produce the desired
     # effect - ie: it is the combo of the four columns that make a row
     # unique.
-                        Column('job_id', KeyInt, ForeignKey('job.job_id'), 
+                        Column('job_instance_id', KeyInt, ForeignKey('job_instance.job_instance_id'), 
                                 nullable=False, primary_key=True),
                         Column('state', VARCHAR(255), nullable=False, primary_key=True),
                         Column('timestamp', NUMERIC(precision=16,scale=6), nullable=False, primary_key=True,
@@ -227,7 +289,7 @@ def initializeToPegasusDB(db, metadata, kw={}):
                         **kw
     )
     
-    Index('UNIQUE_JOBSTATE', st_jobstate.c.job_id, st_jobstate.c.state, 
+    Index('UNIQUE_JOBSTATE', st_jobstate.c.job_instance_id, st_jobstate.c.state, 
         st_jobstate.c.timestamp, st_jobstate.c.jobstate_submit_seq, unique=True)
     
     try:
@@ -235,36 +297,72 @@ def initializeToPegasusDB(db, metadata, kw={}):
     except exc.ArgumentError:
         pass
         
-    # st_task definition
-    # ==> Information comes from kickstart output file
-    # 
-    # task_id = autogenerated here
-    # job_id = from st_job, autogenerated
-    # start_time =  <start from mainjob element>
-    # duration = <duration, from mainjob element>
-    # exitcode = <regular exitcode, from status element>
-    # transformation = <transformation from invocation element>
-    # arguments = <argument vector, joined by single space>
-    
+    # Task table
+        
     st_task = Table('task', metadata,
-                    Column('task_id', KeyInt, primary_key=True, nullable=False),
-                    Column('job_id', KeyInt,
-                            ForeignKey('job.job_id'), nullable=False),
+        Column('task_id', KeyInt, primary_key=True, nullable=False),
+        Column('job_id', KeyInt,
+                ForeignKey('job_instance.job_instance_id'), nullable=True),
+        Column('wf_id', KeyInt,
+                ForeignKey('workflow.wf_id'), nullable=False),
+        Column('abs_task_id', VARCHAR(255), nullable=False),
+        Column('transformation', TEXT, nullable=False),
+        Column('argv', TEXT, nullable=True),
+        Column('type_desc', VARCHAR(255), nullable=False),
+        **kw
+    )
+    
+    Index('UNIQUE_TASK', st_task.c.wf_id, st_task.c.abs_task_id, unique=True)
+    
+    try:
+        orm.mapper(Task, st_task, properties = {
+                'child_file':relation(File, backref='st_task', cascade='all'),
+            }
+        )
+    except exc.ArgumentError:
+        pass
+    
+    # Task edge table
+    
+    st_task_edge = Table('task_edge', metadata,
+        Column('wf_id', KeyInt,
+                ForeignKey('workflow.wf_id'), primary_key=True, nullable=False),
+        Column('parent_abs_task_id', VARCHAR(255), ForeignKey('task.abs_task_id'), primary_key=True, nullable=False),
+        Column('child_abs_task_id', VARCHAR(255), ForeignKey('task.abs_task_id'), primary_key=True, nullable=False),
+        **kw
+    )
+    
+    Index('UNIQUE_TASK_EDGE', st_task_edge.c.wf_id, 
+             st_task_edge.c.parent_abs_task_id, st_task_edge.c.child_abs_task_id, unique=True)
+    
+    try:
+        orm.mapper(TaskEdge, st_task_edge)
+    except exc.ArgumentError:
+        pass
+    
+    # Invocation table
+    
+    st_invocation = Table('invocation', metadata,
+                    Column('invocation_id', KeyInt, primary_key=True, nullable=False),
+                    Column('job_instance_id', KeyInt,
+                            ForeignKey('job_instance.job_instance_id'), nullable=False),
                     Column('task_submit_seq', INT, nullable=False),
                     Column('start_time', NUMERIC(16,6), nullable=False,
                             default=time.time()),
-                    Column('duration', NUMERIC(10,3), nullable=False),
+                    Column('remote_duration', NUMERIC(10,3), nullable=False),
                     Column('exitcode', INT, nullable=False),
                     Column('transformation', TEXT, nullable=False),
                     Column('executable', TEXT, nullable=False),
-                    Column('arguments', TEXT, nullable=True),
+                    Column('argv', TEXT, nullable=True),
+                    Column('abs_task_id', TEXT, nullable=True),
+                    Column('wf_id', KeyInt, ForeignKey('workflow.wf_id'), nullable=False),
                     **kw
     )
     
-    Index('UNIQUE_TASK', st_task.c.job_id, st_task.c.task_submit_seq, unique=True)
+    Index('UNIQUE_INVOCATION', st_invocation.c.job_instance_id, st_invocation.c.task_submit_seq, unique=True)
     
     try:
-        orm.mapper(Task, st_task)
+        orm.mapper(Invocation, st_invocation)
     except exc.ArgumentError:
         pass
     
@@ -273,52 +371,23 @@ def initializeToPegasusDB(db, metadata, kw={}):
     
     st_file = Table('file', metadata,
                     Column('file_id', KeyInt, primary_key=True, nullable=False),
-                    Column('job_id', KeyInt,
-                            ForeignKey('job.job_id'), nullable=True),
+                    Column('task_id', KeyInt,
+                            ForeignKey('task.task_id'), nullable=True),
                     Column('lfn', VARCHAR(255), nullable=True),
-                    Column('size', INT, nullable=True),
+                    Column('estimated_size', INT, nullable=True),
                     Column('md_checksum', VARCHAR(255), nullable=True),
                     Column('type', VARCHAR(255), nullable=True),
                     **kw
     )
     
-    #Index('file_id_UNIQUE', st_file.c.file_id, unique=True)
-    #Index('FK_FILE_JOB_ID', st_file.c.job_id, unique=False)
+    Index('file_id_UNIQUE', st_file.c.file_id, unique=True)
+    Index('FK_FILE_TASK_ID', st_task.c.task_id, unique=False)
     
     try:
         orm.mapper(File, st_file)
     except exc.ArgumentError:
         pass
-        
-    st_edge_static = Table('edge_static', metadata,
-                            Column('wf_uuid', VARCHAR(255), primary_key=True, nullable=False),
-                            Column('parent', VARCHAR(255), primary_key=True, nullable=False),
-                            Column('child', VARCHAR(255), primary_key=True, nullable=False),
-                           **kw
-    )
     
-    Index('UNIQUE_STATIC_EDGE', st_edge_static.c.wf_uuid, 
-            st_edge_static.c.child, st_edge_static.c.parent, unique=True)
-    
-    try:
-        orm.mapper(EdgeStatic, st_edge_static)
-    except exc.ArgumentError:
-        pass
-        
-    st_edge = Table('edge', metadata,
-                    Column('parent_id', KeyInt,
-                            ForeignKey('job.job_id'), primary_key=True, nullable=False),
-                    Column('child_id', KeyInt,
-                            ForeignKey('job.job_id'), primary_key=True, nullable=False),
-                    **kw
-    )
-    
-    Index('UNIQUE_EDGE', st_edge.c.parent_id, st_edge.c.child_id, unique=True)
-    
-    try:
-        orm.mapper(Edge, st_edge)
-    except exc.ArgumentError:
-        pass
     
     metadata.create_all(db)
     pass
