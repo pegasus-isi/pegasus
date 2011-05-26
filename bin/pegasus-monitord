@@ -1196,8 +1196,12 @@ class Workflow:
             logger.warning("cannot load notification file %s, continuing without notifications" % (self._notify_file))
             return
 
+        # Start with empty dictionaries for the three types of notifications
         my_notifications = {"workflow" : {},
-                            "job" : {}}
+                            "job" : {},
+                            "invocation": {}}
+        # For workflow and job notifications, we have a dict(workflow_id|job_id, dict(cond, [actions]))
+        # For invocation notifications, we have a dict(job_id, dict(inv_id, dict(cond, [actions])))
 
         # Process notifications
         for line in NOTIFY:
@@ -1208,34 +1212,66 @@ class Workflow:
             # Skip comments
             if line.startswith("#"):
                 continue
-            # Split it
-            my_entry = line.split(None, 3)
-            if len(my_entry) != 4:
-                logger.warning("cannot parse notification: %s, skipping..." % (line))
-                continue
-            my_type = my_entry[0].lower()
-            my_id = my_entry[1]
-            my_condition = my_entry[2]
-            my_action = my_entry[3]
+
+            # Check if we split it in 4 or 5 pieces
+            if line.lower().startswith("invocation"):
+                # This is an invocation notification, split and get all pieces
+                my_entry = line.split(None, 4)
+                if len(my_entry) != 5:
+                    logger.warning("cannot parse notification: %s, skipping..." % (line))
+                    continue
+                my_type = my_entry[0].lower()
+                my_id = my_entry[1]
+                my_inv = my_entry[2]
+                my_condition = my_entry[3]
+                my_action = my_entry[4]
+            else:
+                # This is a workflow/job notification, split and get all pieces
+                my_entry = line.split(None, 3)
+                if len(my_entry) != 4:
+                    logger.warning("cannot parse notification: %s, skipping..." % (line))
+                    continue
+                my_type = my_entry[0].lower()
+                my_id = my_entry[1]
+                my_condition = my_entry[2]
+                my_action = my_entry[3]
+
             # Pick the right dictionary, depending on event type
             if my_type == "workflow":
                 my_dict = my_notifications["workflow"]
             elif my_type == "job" or my_type == "daxjob" or my_type == "dagjob":
                 my_dict = my_notifications["job"]
+            elif my_type == "invocation":
+                my_dict = my_notifications["invocation"]
             else:
                 logger.warning("unknown notification type: %s, skipping..." % (line))
                 continue
+
+            logger.debug("loading notification: %s" % (line))
 
             # Make sure id is in dictionary
             if not my_id in my_dict:
                 my_dict[my_id] = {}
 
-            # Now add the notification condition, action pair
-            my_dict[my_id][my_condition] = my_action            
+            # For invocations, one extra level...
+            if my_type == "invocation":
+                my_dict = my_dict[my_id]
+                if not my_inv in my_dict:
+                    my_dict[my_inv] = {}
+                # Now add the notification condition, action pair
+                if not my_condition in my_dict[my_inv]:
+                    # No actions, start with the list
+                    my_dict[my_inv][my_condition] = [my_action]
+                else:
+                    # We already have an action(s), let's add the new one to the list
+                    my_dict[my_inv][my_condition].append(my_action)
+            else:
+                # Now add the notification condition, action pair
+                my_dict[my_id][my_condition] = my_action   
 
         # Save our notifications for later use...
         self._notifications = my_notifications
-        
+
         # Close file
         try:
             NOTIFY.close()
@@ -1672,7 +1708,7 @@ class Workflow:
             # If we have both timestamps, let's try to compute the local duration
             try:
                 my_duration = int(my_job._main_job_done) - int(my_job._main_job_start)
-                kwargs["local_duration"] = my_duration
+                kwargs["local__dur"] = my_duration
             except:
                 # Nothing to do, this is not mandatory
                 pass

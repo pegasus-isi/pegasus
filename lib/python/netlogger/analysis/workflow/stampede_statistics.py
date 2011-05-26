@@ -100,7 +100,7 @@ Methods listed in order of query list on wiki.
 
 https://confluence.pegasus.isi.edu/display/pegasus/Pegasus+statistics+python+version
 """
-__rcsid__ = "$Id: stampede_statistics.py 28025 2011-05-26 00:08:48Z mgoode $"
+__rcsid__ = "$Id: stampede_statistics.py 28031 2011-05-26 19:47:16Z mgoode $"
 __author__ = "Monte Goode"
 
 import decimal
@@ -760,11 +760,56 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
     def get_job_seqexec_delay(self):
         """
         Seqexec Delay is Seqexec - Kickstart calculated above.
+        
+        select jb.job_id,
+        (
+         (
+         select sum(jb_inst.cluster_duration)
+         from
+         job_instance as jb_inst
+         where
+         jb_inst.job_id = jb.job_id
+         group by jb_inst.job_id
+         )
+        -
+         (
+         select sum(remote_duration)
+         from
+         invocation as invoc,
+         job_instance as jb_inst
+         where
+         jb_inst.job_id = jb.job_id
+         and invoc.wf_id =jb.wf_id
+         and invoc.task_submit_seq >=0
+         and invoc.job_instance_id = jb_inst.job_instance_id
+         group by jb_inst.job_id
+         )
+        ) as seqexec_delay
+        from
+        job as jb
+        where jb.wf_id in (1,2,3)
+        and jb.clustered <>0
         """
         if self._expand:
             return []
-        return ['NOT IMPLEMENTED YET']
-        pass
+        
+        sq_1 = self.session.query(func.sum(JobInstance.cluster_duration))
+        sq_1 = sq_1.filter(JobInstance.job_id == Job.job_id).correlate(Job)
+        sq_1 = sq_1.group_by(JobInstance.job_id).subquery().as_scalar()
+        
+        sq_2 = self.session.query(func.sum(Invocation.remote_duration))
+        sq_2 = sq_2.filter(JobInstance.job_id == Job.job_id).correlate(Job)
+        sq_2 = sq_2.filter(Invocation.wf_id == Job.wf_id)
+        sq_2 = sq_2.filter(Invocation.task_submit_seq >= 0)
+        sq_2 = sq_2.filter(Invocation.job_instance_id == JobInstance.job_instance_id)
+        sq_2 = sq_2.group_by(JobInstance.job_id).subquery().as_scalar()
+        
+        q = self.session.query(Job.job_id, cast(sq_1 - sq_2, Float))
+        q = q.filter(Job.wf_id.in_(self._wfs))
+        q = q.filter(Job.clustered != 0)
+        q = q.order_by(Job.job_id)
+        
+        return q.all()
     
     def get_condor_q_time(self):
         """
@@ -920,7 +965,8 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         sq_5 = sq_5.filter(or_(Jobstate.state == 'POST_SCRIPT_TERMINATED', Jobstate.state == 'JOB_TERMINATED'))
         sq_5 = sq_5.subquery().as_scalar()
         
-        q = self.session.query(Job.exec_job_id.label('job_name'), cast(sq_2 - sq_5, Float).label('dagmanDelay'))
+        q = self.session.query(Job.job_id, Job.exec_job_id.label('job_name'), 
+                        cast(sq_2 - sq_5, Float).label('dagmanDelay'))
         
         q = q.filter(Job.wf_id.in_(self._wfs))
         

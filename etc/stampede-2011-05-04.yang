@@ -575,7 +575,7 @@ module stampede-2011-05-04 {
                     description "Path to working directory";
                     type string;
                 }
-                leaf local_duration {
+                leaf local.dur {
                     description "Duration as seen at the local node";
                     units "seconds";
                     type decimal64 {

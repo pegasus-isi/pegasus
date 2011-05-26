@@ -16,7 +16,7 @@ the Stampede DB.
 
 See http://www.sqlalchemy.org/ for details on SQLAlchemy
 """
-__rcsid__ = "$Id: stampede_loader.py 27826 2011-05-16 14:40:39Z mgoode $"
+__rcsid__ = "$Id: stampede_loader.py 28033 2011-05-26 21:26:46Z mgoode $"
 __author__ = "Monte Goode"
 
 from netlogger.analysis.schema.stampede_schema import *
@@ -205,6 +205,8 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
                 # job_inst.submit.start/job_inst.submit.start/etc
                 'job_inst_id': 'job_submit_seq',
                 'js_id': 'jobstate_submit_seq',
+                'cluster_dur': 'cluster_duration',
+                'local_dur': 'local_duration',
                 # inv.end
                 'inv_id': 'task_submit_seq',
                 'dur': 'remote_duration',
