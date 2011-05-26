@@ -100,7 +100,7 @@ Methods listed in order of query list on wiki.
 
 https://confluence.pegasus.isi.edu/display/pegasus/Pegasus+statistics+python+version
 """
-__rcsid__ = "$Id: stampede_statistics.py 28019 2011-05-24 23:36:11Z mgoode $"
+__rcsid__ = "$Id: stampede_statistics.py 28025 2011-05-26 00:08:48Z mgoode $"
 __author__ = "Monte Goode"
 
 import decimal
@@ -152,7 +152,7 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         return True
         
     def set_job_filter(self, filter='all'):
-        modes = ['all', 'nonsub', 'dax', 'compute', 'stage-in-tx', 
+        modes = ['all', 'nonsub', 'dax', 'dag', 'compute', 'stage-in-tx', 
                 'stage-out-tx', 'registration', 'inter-site-tx', 'create-dir', 
                 'staged-compute', 'cleanup', 'chmod']
         try:
