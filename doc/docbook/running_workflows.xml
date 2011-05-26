@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
 "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
-<chapter id="planning_and_submitting">
+<chapter id="running_workflows">
     <title>Running Workflows</title>
 
   <section>
@@ -642,7 +642,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
             <para>The Replica Catalog needs to be catalogued with the
             locations of the input files required by the workflows. This can
             be done by using pegasus-rc-client (See the Replica section of <link
-            linkend="components">Pegasus Components </link>).</para>
+            linkend="creating_workflows">Creating Workflows</link>).</para>
           </listitem>
 
           <listitem>
@@ -652,7 +652,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
             <para>The Transformation Catalog needs to be catalogued with the
             locations of the executables that the workflows will use. This can
             be done by using pegasus-tc-client (See the Transformation section of <link
-            linkend="components">Pegasus Components</link>).</para>
+            linkend="creating_workflows">Creating Workflows</link>).</para>
           </listitem>
 
           <listitem>
@@ -662,7 +662,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
             of the various sites that the workflows can execute on. A site
             catalog can be generated for OSG by using the client
             pegasus-sc-client (See the Site section of the <link
-            linkend="components">Pegasus Components</link>).</para>
+            linkend="creating_workflows">Creating Workflows</link>).</para>
           </listitem>
         </orderedlist>
       </listitem>

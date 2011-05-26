@@ -9,7 +9,7 @@
   <xi:include href="advanced_concepts_properties.xml"
               xmlns:xi="http://www.w3.org/2001/XInclude" />
 
-  <section>
+  <section id="profiles">
     <title>Profiles</title>
 
     <para>The Pegasus Workflow Mapper uses the concept of profiles to
@@ -1206,7 +1206,7 @@ queue
     </section>
   </section>
 
-  <section>
+  <section id="replica_selection">
     <title>Replica Selection</title>
 
     <para>Each job in the DAX maybe associated with input LFN&rsquor;s
@@ -1850,7 +1850,7 @@ siteX    B     /shared/PEGASUS/bin/jobB INSTALLED       INTEL32::LINUX pegasus::
     </section>
   </section>
 
-  <section>
+  <section id="transfer">
     <title>Transfers</title>
 
     <para>As part of the Workflow Mapping Process, Pegasus does data
@@ -2751,7 +2751,7 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
     </section>
 </section>
 
-<section>
+<section id="api">
   <title>API Reference</title>
 
   <section>
@@ -3701,7 +3701,7 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
 
           <para>In addition to the <emphasis>id</emphasis> and
           <emphasis>node-label</emphasis> attributes, See <link
-          linkend="Grapgh Nodes">Graph Nodes</link>. The
+          linkend="api-graph-nodes">Graph Nodes</link>. The
           <emphasis>name</emphasis> attribute refers to a file from the File
           Catalog that provides the to be planned DAX as external file data
           content. The <emphasis>dax</emphasis> element features optional
@@ -3785,8 +3785,7 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
       <title>DAX XML Schema Example</title>
 
       <para>The following code example shows the XML instance document
-      representing the diamond workflow from <link
-      linkend="images/DiamondWorkflow.png">the concepts figure</link>.</para>
+      representing the diamond workflow.</para>
 
       <programlisting>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
 &lt;!-- generated: 2010-11-19T20:00:29Z --&gt;

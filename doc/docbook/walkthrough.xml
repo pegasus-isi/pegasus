@@ -299,7 +299,7 @@ config  dax</computeroutput></computeroutput></programlisting>
 
 $ javac -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX.java
 
-$  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/pegasus/default ./diamond.dax
+$ java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/pegasus/default ./diamond.dax
 </emphasis></programlisting>
 
         <para>Let us view the generated diamond.dax.</para>
@@ -387,5 +387,12 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
         Statistics Tools"</link></para>
       </section>
     </section>
+  </section>
+
+  <section id="whats_next">
+    <title>What's next</title>
+
+    <para>Note: do not reference the tutorial here - it could become
+    confusing</para>
   </section>
 </chapter>
