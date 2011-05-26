@@ -74,7 +74,7 @@ $main::space = '  ';		# 2 spaces in basic mode
     , 'Held'			# H
     ); 
 @main::cstat = qw(U I R X C H);	# Condor job states (expert mode)
-@main::color = 
+@main::ccolor = 
     ( "\033[0;37m"		# unsubmitted (gray)
     , "\033[0;34m"		# idle (blue)
     , "\033[0;32m"		# running (green)
@@ -84,7 +84,15 @@ $main::space = '  ';		# 2 spaces in basic mode
     );
 $main::bold  = "\033[1m";	# start real xterm as "xterm -bdc"
 $main::reset = "\033[0m";	# reset all color/bold/etc.
-%main::color = map { $main::cstat[$_] => $main::color[$_] } 0 .. $#main::cstat;
+%main::ccolor = map { $main::cstat[$_] => $main::ccolor[$_] } 0 .. $#main::cstat;
+@main::dstat = qw(? I R S F);	# Workflow states
+@main::dcolor =
+    ( "\033[0;37m"		# unknown (gray)
+    , "\033[0;36m"		# indeterminable (cyan)
+    , "\033[0;34m"		# running (blue)
+    , "\033[0;30m"		# success (black)
+    , "\033[0;31m"		# failure (red)
+    );
 %main::gstat = 			# Globus job states (expert mode)
     (   0 => '?'		# unknown
     ,   1 => 'P'                # pending
@@ -110,7 +118,7 @@ $main::reset = "\033[0m";	# reset all color/bold/etc.
     , 'dax'
     , 'dag'
     );
-@main::jobshort =
+@main::jobshort =		# short job class (job type)
     (   '-', 'job',  'si',  'so'
     ,  'rr', 'isx',  'cd', 'stc'
     , 'clu', 'chm', 'dax', 'dag' ); 
@@ -138,6 +146,11 @@ my %title =
 		, minwidth => -4
 		, legend => 'Condor job status'
 		},
+      'S' => { header => 'S'
+	     , function => \&x_cstat
+	     , minwidth => 1
+	     , legend => 'Condor job status'
+	     },
       'IN_STATE' => { header => 'IN_STATE'
 		    , function => \&x_in_state
 		    , minwidth => 8
@@ -199,10 +212,10 @@ my %title =
        [qw(STAT IN_STATE JOB1) ],
 
        # some more complex information in first expert level 
-       [qw(C/G CONDORID IN_STATE JPRIO JOB2) ],
+       [qw(CONDORID S IN_STATE JPRIO JOB2) ],
 
        # even more complex information in next expert level 
-       [qw(C/G CONDORID IN_STATE JPRIO PJCS SITE JOB2) ]
+       [qw(CONDORID C/G IN_STATE JPRIO PJCS SITE JOB2) ]
     );
 
 #
@@ -546,13 +559,14 @@ sub condor_q(\%\%\@;%) {
 		$jobref->{$id} = { %db }; 
 
 		# Add job belonging to a dagman to %dag
-		# A dagman job will always be started prior to the job it starts,
-		# thus the (condor) job for the DAGMan exists for alive DAGMans. 
+		# A dagman job will always be started prior to the job
+		# it starts, thus the (condor) job for the DAGMan exists
+		# for alive DAGMans.
 		if ( exists $db{dagmanjobid} && exists $jobref->{ $db{dagmanjobid} } ) {
 		    push( @{ $dagref->{ $db{dagmanjobid} } }, $id );
 		} else {
-		    # we need this branch for Condor jobs not managed by DAGMan,
-		    # or for Condor jobs whose parent DAGMan died.
+		    # we need this branch for Condor jobs not managed by
+		    # DAGMan, or for Condor jobs whose parent DAGMan died.
 		    $dagref->{$id} = [] unless exists $dagref->{$id}; 
 		}
 	    }
@@ -686,12 +700,6 @@ sub x_pegasus_jobtypenum {
     $row->{'pegasus_job_class'} || '-'; 
 } 
 
-sub x_jobstatus {
-    my $row = shift;
-    my $s = $row->{jobstatus};
-    $s < @main::clong ? $main::clong[$s] : "$s"; 
-}
-
 sub x_in_state {
     my $row = shift;
     interval( $main::time - $row->{enteredcurrentstatus} );
@@ -700,6 +708,17 @@ sub x_in_state {
 sub x_jobpriority {
     my $row = shift;
     $row->{jobprio};
+}
+
+sub x_jobstatus {
+    my $row = shift;
+    my $s = $row->{jobstatus};
+    $s < @main::clong ? $main::clong[$s] : "$s"; 
+}
+
+sub x_cstat {
+    my $row = shift;
+    cstat( $row->{jobstatus} );
 }
 
 sub x_cgstatus {
@@ -731,7 +750,8 @@ sub x_job1 {
     }
 
     if ( $main::onatty ) { 
-	"\033[0;37m" . $row->{_indent} . $main::color[ $row->{jobstatus} ] . $result;
+	"\033[0;37m" . $row->{_indent} . $main::ccolor[ $row->{jobstatus} ] . 
+	    $result;
     } else {
 	$row->{_indent} . $result;
     }
@@ -743,9 +763,11 @@ sub x_job2 {
 
     # show dagnodename first
     if ( exists $row->{dagnodename} ) { 
-	$result .= cfit( $main::width{dagnodename}, $row->{dagnodename} );
+	$result .= cfit( $main::width{dagnodename}, 
+			 $row->{dagnodename} );
     } elsif ( exists $row->{'pegasus_wf_name'} ) {
-	$result .= cfit( $main::width{'pegasus_wf_name'}, $row->{'pegasus_wf_name'} );
+	$result .= cfit( $main::width{'pegasus_wf_name'}, 
+			 $row->{'pegasus_wf_name'} );
     }
 
     # replace commandline ('cmd' and 'arguments')
@@ -766,7 +788,8 @@ sub x_job2 {
     }
 
     if ( $main::onatty ) { 
-	"\033[0;37m" . $row->{_indent} . $main::color[ $row->{jobstatus} ] . $result;
+	"\033[0;37m" . $row->{_indent} . $main::ccolor[ $row->{jobstatus} ] . 
+	    $result;
     } else {
 	$row->{_indent} . $result;
     }
@@ -884,9 +907,10 @@ sub print_qlegend($\@) {
     $cursor += 2; 
 }
 
-sub print_qdebug($$\%) {
+sub print_qdebug($$$\%) {
     # purpose: show job classads of certain matches for current job
     # paramtr: $cursor (IN): current row
+    #          $reserve (IN): how much space to reserve
     #          $watch (IN): are we in watch mode? 
     #          %q[i] (IN): current job class ads
     # globals: $main::onatty (IN): are we on a tty (can color)? 
@@ -895,6 +919,7 @@ sub print_qdebug($$\%) {
     # returns: new cursor position
     #
     my $cursor = shift; 	# current row
+    my $reserve = shift;	# current $reserve
     my $watch = shift; 		# current $watch
     my $qi = shift;		# $q[$i] ref
 
@@ -905,7 +930,7 @@ sub print_qdebug($$\%) {
     my $p = $cols + $cols; 
     my ($s); 
     foreach my $k ( sort keys %{$qi} ) {
-	if ( $watch && $cursor > $rows-6 ) {
+	if ( $watch && $cursor > $rows-$reserve-1 ) {
 	    print " ..";
 	    last; 
 	}
@@ -937,7 +962,7 @@ sub print_qsummary($\%) {
     # paramtr: $cursor (IN): current row
     #          %count (IN): queue statistics
     # globals: $main::onatty (IN): are we on a tty (can color)? 
-    #          @main::color (IN): color settings
+    #          @main::ccolor (IN): color settings
     #          $main::reset (IN): undo colorings
     # returns: new cursor position
     #
@@ -945,13 +970,12 @@ sub print_qsummary($\%) {
     my $cref = shift;		# %count ref
 
     # create Condor job summary
-    print "\n", plural($cref->{all}{condor},'job'), " total"; 
-    ++$cursor; 
+    print "Queue summary: ", plural($cref->{all}{condor},'job'), " total"; 
 
     my $f = 0;
     foreach my $c ( sort { $a <=> $b } keys %{$cref->{condor}} ) {
 	print( $f++ ? ' ' : ' (' );
-	print $main::color[$c] if $main::onatty; 
+	print $main::ccolor[$c] if $main::onatty; 
 	print $main::cstat[$c], ':', commas($cref->{condor}{$c}); 
 	print $main::reset if $main::onatty; 
     }
@@ -972,6 +996,154 @@ sub print_qsummary($\%) {
     ++$cursor; 
 }
 
+sub dag_recurse(\@$$);		# { }
+sub dag_recurse(\@$$) {
+    local(*DIR); 
+    my $dirsref = shift;
+    my $dir = shift;
+    my $level = shift;
+
+    if ( opendir( DIR, $dir ) ) {
+	my ($file,$full); 
+	while ( defined ($file = readdir(DIR)) ) { 
+	    next if ( $file eq '.' || $file eq '..' );
+	    $full = File::Spec->catfile( $dir, $file );
+	    if ( -d $full ) { 
+		dag_recurse( @{$dirsref}, $full, $level+1 );
+	    } elsif ( $file =~ /\.dag\.dagman\.out/ ) { 
+		push( @{ $dirsref->[$level] }, $full );
+	    }
+	}
+	closedir DIR;
+    } else {
+	warn "Warning: Unable to open $dir: $!, ignoring\n";
+    }
+}
+
+sub getsubdagfromdag(\@$$) {
+    my $dirsref = shift;
+    my $dag = shift;
+    my $level = shift;
+    
+    if ( open( F, "<$dag" ) ) {
+	my @subdags = (); 
+	while ( <F> ) { 
+	    push( @subdags, $1 )
+		if /^SUBDAG EXTERNAL \S+ (\S+\.dag)($| DIR)/; 
+	}
+	close F; 
+
+	foreach my $s ( @subdags ) { 
+	    my $dagman = $s . '.dagman.out';
+	    push( @{$dirsref->[$level]}, $dagman )
+		if ( -e $dagman && -f _ && -r _ && ! -z _ ); 
+	}
+    } else {
+	warn "Warning: open $dag: $!, ignoring\n"; 
+    }
+}
+
+sub process_tab(@) { 
+    my @keys = split /\s+/, shift(); 
+    shift;			# unused 
+    my @vals = split /\s+/, shift(); 
+
+    my @result = (); 
+    my $state = 0; 
+    my $total = 0; 
+    for ( my $i=0; $i < @keys; ++$i ) { 
+	++$state if lc($keys[$i]) eq 'done'; 
+	next unless $state; 
+	# keep ordering by using an array (that is convertible into a hash).
+	# however, remove any punctuation stuff from keys
+	$keys[$i] =~ s/[^[:alnum:]]//g;
+	push( @result, lc($keys[$i]) => $vals[$i] ); 
+	$total += $vals[$i]; 
+    }
+
+    ( @result, 'total', $total ); 
+}
+
+my $re1 = qr{\*\scondor_scheduniv_exec\.([0-9.]+)\s\(CONDOR_DAGMAN\)\sSTARTING\sUP};
+my $re2 = qr{\*\scondor_scheduniv_exec\.([0-9.]+)\s\(condor_DAGMAN\)\spid\s\d+\sEXITING\sWITH\sSTATUS\s(\S+)}; 
+
+sub long_status($$) {
+    my $run = shift;
+    my $dagfn = shift;
+
+    my @dirs = (); 
+    dag_recurse(@dirs,$run,0);
+    getsubdagfromdag( @dirs, File::Spec->catfile($run,$dagfn), 1 ); 
+
+    my $dolen = length( '.dagman.out' ); 
+    my @result = (); 
+    foreach my $d ( reverse @dirs ) { 
+	next unless defined $d;
+	foreach my $fn ( @{$d} ) {
+	    my @tab = (); 
+	    my ($start,$final,$pid,$status);
+	    if ( open( F, "<$fn" ) ) { 
+		while ( <F> ) {
+		    ($start,$final) = ($1,"") if /$re1/o;
+		    $pid=$1 if /\*\*\sPID\s=\s(\d+)/;
+		    ($final,$status) = ($1,$2) if /$re2/o;
+		    if ( index($_,'Done') > 0 ) {
+			$tab[0] = $_; 
+			$tab[1] = <F>;
+			$tab[2] = <F>;
+		    }
+		}
+		close F; 
+	    } else {
+		warn "Warning: open $fn: $!\n";
+	    }
+
+	    @tab = process_tab(@tab); 
+	    my $short = ( $fn =~ /^$run/o ? 
+			  substr( $fn, length($run)+1, -$dolen ) :
+			  substr( $fn, 0, -$dolen ) );
+
+	    my $state = 0; 	# unknown -> (U)nsubmitted
+	    if ( $start ne $final ) {
+		warn "Debug: $start != $final\n" if $main::debug; 
+		if ( kill( 0, $pid ) ) { 
+		    $state = 2;	# running
+		} else {
+		    $state = 1; # undeterminable -> (I)dle
+		}
+	    } else {
+		# finished: success (3) or failure (4)
+		$state = ( $status == 0 ? 3 : 4 );
+	    }
+
+	    push( @result, { name => $short
+			   , state => $state
+			   , status => $status # may be undef
+			   , detail => [ @tab ] 
+		           } ); 
+			     
+	}
+    }
+
+    @result;
+}
+
+sub dag_summary(\@) {
+    my $dref = shift;
+
+    my %result = ( _state => [ map { 0 } @main::dstat ]
+		 , _total => 0 ); 
+    foreach my $dag ( @{$dref} ) { 
+	my $x = $dag->{detail}; 
+	for ( my $i=0; $i<@{$x}; $i += 2 ) { 
+	    $result{ $x->[$i] } += $x->[$i+1];
+	}
+	$result{'_state'}[$dag->{state}]++; 
+	$result{'_total'}++; 
+    }
+
+    %result; 
+}
 
 #
 # --- main -------------------------------------------------
@@ -984,6 +1156,7 @@ my $heavy = 0;
 my $noidle = 0; 
 my $expert = 0; 
 my $legend = 1; 
+my $dagsum = 1; 
 my ($watch);
 GetOptions( 'help|h' => \&usage
 	  , 'user|u=s' => \$main::user
@@ -994,6 +1167,7 @@ GetOptions( 'help|h' => \&usage
 	  , 'legend!' => \$legend
 	  , 'hold|held!' => \$heldinfo
 	  , 'heavy!' => \$heavy
+	  , 'ligo|l!' => \$dagsum
 	  , 'watch|w:i' => sub {
 	      if ( ! $main::onatty ) {
 		  warn "FATAL: --watch requires a terminal for output\n"; 
@@ -1032,28 +1206,26 @@ if ( $main::onatty && $main::isutf8 ) {
     @main::graph = ( ' |-', ' \_', ' | ' ); 
 }
 
-# NEW: Default to cwd if nothing was specified
-my $run = shift;
-unless ( defined $run ) {
-    $run = getcwd();
-    my $brainfn = File::Spec->catfile( $run, $Pegasus::Common::brainbase );
-    undef $run unless -r $brainfn; 
-} else {
-    $run = abs_path($run);
-}
+# Default $rundir to cwd if nothing was specified
+my $run = @ARGV ? abs_path(shift()) : getcwd();
+my %braindb = slurp_braindb($run); 
+undef $run unless scalar keys %braindb; 
+# POST-condition: $run is defined if it is a valid rundir
+# FIXME: Extend to permit multiple rundirs a la @ARGV
 
 # what level of expertise (output, verbose mode). Eventually a CLI
 # option will permit to use your own mix-n-match output (TBD).  
 my @title = @{ $main::title[$expert] }; 
 
 for ( my $cursor=1; ; $cursor=1 ) { 
-    my %count = (); 
-    my (%job,%dag,@result);
+    my (%count,%job,%dag,@result,@dag) = (); 
+
+    # collect information from condor_q
     condor_q( %job, %dag, @title,
 	      noidle => $noidle, 
 	      count => \%count );
 
-    # seen is for sanity checks
+    # %main::seen is for sanity checks
     %main::seen = map { $_ => 1 } keys %job;
 
     # collect data to show into @q
@@ -1063,7 +1235,11 @@ for ( my $cursor=1; ; $cursor=1 ) {
 	push( @q, assemble_dag( \%job, \%dag, $id ) ); 
     }
 
+    # collect data from $rundir (if applicable)
+    @dag = long_status( $run, $braindb{dag} ) if defined $run; 
+
     # empty screen and print "Ctrl+C" and date header
+    my $reserve = 5; 
     if ( defined $watch ) { 
 	($rows,$cols) = initialize_winch(); 
 	print "\033[2J\033[H";
@@ -1072,6 +1248,13 @@ for ( my $cursor=1; ; $cursor=1 ) {
 	my $msg = 'Press Ctrl+C to exit'; 
 	printf "$msg%*s\n\n", $cols-length($msg), $now; 
 	$cursor += 2; 
+
+	# too simplistic 'reservations'
+	my $nd = @dag;
+	if ( $nd ) { 
+	    $nd += ( @dag > 1 ? 2 : 1 );
+	}
+	$reserve += $nd;
     }
 
     # Are there are Condor jobs in the Q
@@ -1100,7 +1283,7 @@ for ( my $cursor=1; ; $cursor=1 ) {
 	    my $jobstatus = $q[$i]->{jobstatus}; 
 
 	    # decide on color for row and print data columns
-	    print $main::color[$jobstatus] if $main::onatty;
+	    print $main::ccolor[$jobstatus] if $main::onatty;
 	    for ( my $j=0; $j<@{$result[$i]}; ++$j ) {
 		print $main::space if $j;
 		printf "%*s", $max[$j], $result[$i][$j]; 
@@ -1115,14 +1298,15 @@ for ( my $cursor=1; ; $cursor=1 ) {
 	    print $main::reset if $main::onatty;
 
 	    # transient trickery for debug mode
-	    $cursor = print_qdebug( $cursor, $watch, %{$q[$i]} ) if $main::debug; 
+	    $cursor = print_qdebug( $cursor, $reserve, $watch, %{$q[$i]} )
+		if $main::debug; 
 
 	    # terminate current line
 	    print "\n"; 
 	    ++$cursor;
 
 	    # skip rest of output if reaching bottom of current terminal 
-	    if ( $watch && @result > $rows-5 && $cursor > $rows-5 ) {
+	    if ( $watch && @result > $rows-$reserve && $cursor > $rows-$reserve ) {
 		print "(", plural( @result-$i, 'additional job' );
 		print " omitted.)\n";
 		++$cursor; 
@@ -1142,6 +1326,93 @@ for ( my $cursor=1; ; $cursor=1 ) {
     warn "\n(Debug: I appear to be missing some jobs)\n" 
 	if ( scalar %main::seen );
 
+    if ( @q > 0 && @dag > 0 ) {
+	# separate the two sections
+	print "\n";
+	++$cursor; 
+    }
+
+    # Is there state in the rundir (is there a rundir)? 
+    if ( @dag > 0 ) { 
+	# determine summary of all workflow jobs
+	my %totals = dag_summary( @dag ); 
+
+	# assemble headers
+	my $x = $dag[0]{detail};
+	my @header = (); 
+	my @max = (); 
+	for ( my $i=0; $i < @{$x}; $i += 2 ) {
+	    push( @header, $x->[$i] ); 
+	    push( @max, length($x->[$i]) ); 
+	}
+	push( @header, 'S' );
+	push( @max, 1 ); 
+	push( @header, 'WORKFLOW' );
+	push( @max, -8 ); 
+
+	# print headers
+	print $main::bold if $main::onatty; 
+	for ( my $i=0; $i < @header; ++$i ) {
+	    print ' ' if $i; 
+	    printf "%*s", $max[$i], uc $header[$i];
+	}
+	print $main::reset if $main::onatty; 
+	print "\n";
+	++$cursor; 
+
+	# print data
+	foreach my $dag ( @dag ) { 
+	    # color this row according to state
+	    print $main::dcolor[ $dag->{state} ] if $main::onatty;
+
+	    my $x = $dag->{detail}; 
+	    for ( my $i=0; $i < @{$x}; $i += 2 ) {
+		print ' ' if $i; 
+		printf "%*s", $max[$i/2], commas($x->[$i+1]); 
+	    }
+	    print ' ', $main::dstat[ $dag->{state} ]; 
+	    print ' ', fit( 40, $dag->{name} );
+
+	    print $main::reset if $main::onatty; 
+	    print "\n";
+	    ++$cursor; 
+	}
+
+	# print summary
+	if ( @dag > 1 ) {
+	    for ( my $i=0; $i < @{$dag[0]{detail}}; $i += 2 ) {
+		my $k = $dag[0]{detail}[$i]; 
+		print ' ' if $i;
+		printf "%*s", $max[$i/2], commas($totals{$k}); 
+	    }
+	    print '  ';
+	    print ' TOTALS';
+
+	    print "\n";
+	    ++$cursor; 
+	}
+
+	print "Workflow summary: ", plural( $totals{'_total'}, 'workflow' ), " total";
+	if ( $totals{'_total'} > 0 ) { 
+	    my $f = 0; 
+	    for ( my $i=0; $i < @main::dstat; ++$i ) { 
+		my $x = $totals{_state}; 
+		if ( $x->[$i] > 0 ) { 
+		    print ( ++$f == 1 ? ' (' : ' ' );
+		    print $main::dcolor[$i] if $main::onatty;
+		    print $main::dstat[$i], ':', commas($x->[$i]);
+		    print $main::reset if $main::onatty; 
+		}
+	    }
+	    print ")" if $f; 
+	}
+
+	print "\n"; 
+	++$cursor; 
+    }
+
+
+    # are we in 'watch' mode, or is this it? 
     if ( defined $watch ) { 
 	sleep($watch);
     } else { 
