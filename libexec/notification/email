@@ -23,6 +23,7 @@ Pegasus utility for sending workflow notifications over email
 
 import os
 import sys
+import optparse
 import smtplib
 
 __author__ = "Mats Rynge <rynge@isi.edu>"
@@ -30,7 +31,7 @@ __author__ = "Mats Rynge <rynge@isi.edu>"
 # --- functions -----------------------------------------------------------------------
 
 
-def usage():
+def usage(parser):
     print ""
     print "Usage: This tool is used by pegasus-monitord to send event notifications"
     print "over email. A set of environment variables are expected to be set:"
@@ -38,8 +39,8 @@ def usage():
     print "   PEGASUS_EVENT_TIMESTAMP"
     print "   PEGASUS_JOBID"
     print "   PEGASUS_STATUS (only for end events)"
-    print "   EMAIL_FROM"
-    print "   EMAIL_TO"
+    print ""
+    parser.print_help()
     print ""
     myexit(1)
     
@@ -74,24 +75,37 @@ def myexit(rc):
 
 
 # --- main ----------------------------------------------------------------------------
-    
-    
+
+# Configure command line option parser
+parser = optparse.OptionParser()
+parser.add_option("-t", "--to", action = "store", dest = "to_address",
+                  help = "The To: email address. Defines the recipient for the notification.")
+parser.add_option("-f", "--from", action = "store", dest = "from_address",
+                  help = "The From: email address. Defaults to the required To: address.")
+
+# Parse command line options
+(options, args) = parser.parse_args()
+if options.to_address == None:
+    print >> sys.stderr, "You have to provide a To: email address"
+    usage(parser)
+to_address = options.to_address
+from_address = to_address
+if options.from_address != None:
+    from_address = options.from_address
+        
 try:
     validate_env_var("PEGASUS_EVENT")
     validate_env_var("PEGASUS_EVENT_TIMESTAMP")
     validate_env_var("PEGASUS_JOBID")
-    validate_env_var("EMAIL_FROM")
-    validate_env_var("EMAIL_TO")
 except RuntimeError, err:
     print >> sys.stderr, err
-    usage()
-
+    usage(parser)
 
 subject = "** Pegasus Notification - " + os.environ['PEGASUS_JOBID'] + " - " \
         + os.environ['PEGASUS_EVENT'] + " **"
 
-msg = "From: " + os.environ['EMAIL_FROM'] + "\r\n" \
-    + "To: " + os.environ['EMAIL_TO'] + "\r\n" \
+msg = "From: " + from_address + "\r\n" \
+    + "To: " + to_address + "\r\n" \
     + "Subject: " + subject + "\r\n" \
     + "\r\n" \
     + "***** Pegasus Workflow Event ****\r\n" \
@@ -106,10 +120,10 @@ if 'PEGASUS_STATUS' in os.environ:
         
 # try to send using smtp first, and if that does not work, sendmail
 try:
-    send_using_smtp(os.environ['EMAIL_FROM'], os.environ['EMAIL_TO'], msg)
+    send_using_smtp(from_address, to_address, msg)
 except Exception, e1:
     try:
-        send_using_sendmail(os.environ['EMAIL_FROM'], os.environ['EMAIL_TO'], msg)
+        send_using_sendmail(from_address, to_address, msg)
     except Exception, e2:
         print >> sys.stderr, "Unable to send email:\n", e1, "\n", e2
         myexit(1)

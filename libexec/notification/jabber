@@ -31,14 +31,7 @@ warnings.simplefilter("ignore")
 import os
 import sys
 import time
-
-try:
-    import xmpp
-except ImportError:
-    print >> sys.stderr, "The Python xmpp library is missing. On RHEL and Debian based systems,"
-    print >> sys.stderr, "please install the python-xmpp package."
-    myexit(1)
-    
+import optparse
 
 # --- functions -----------------------------------------------------------------------
 
@@ -51,10 +44,8 @@ def usage():
     print "   PEGASUS_EVENT_TIMESTAMP"
     print "   PEGASUS_JOBID"
     print "   PEGASUS_STATUS (only for end events)"
-    print "   JABBER_ID"
-    print "   JABBER_HOST"
-    print "   JABBER_PASSWORD"
-    print "   JABBER_TO"
+    print ""
+    parser.print_help()
     print ""
     myexit(1)
     
@@ -62,6 +53,7 @@ def usage():
 def validate_env_var(key):
     if not key in os.environ:
         raise RuntimeError(key + " is not defined in the current environment")
+
 
 def myexit(rc):
     """
@@ -74,16 +66,47 @@ def myexit(rc):
 
 
 # --- main ----------------------------------------------------------------------------
-    
-    
+
+try:
+    import xmpp
+except ImportError:
+    print >> sys.stderr, "The Python xmpp library is missing. On RHEL and Debian based systems,"
+    print >> sys.stderr, "please install the python-xmpp package."
+    myexit(1)
+
+
+# Configure command line option parser
+parser = optparse.OptionParser()
+parser.add_option("-i", "--jabberid", action = "store", dest = "jabber_id",
+                  help = "Your jabber id. Example: user@jabberhost.com")
+parser.add_option("-p", "--password", action = "store", dest = "password",
+                  help = "Your jabber password")
+parser.add_option("-s", "--host", action = "store", dest = "host",
+                  help = "Jabber host, if different from the host in your jabber id." \
+                       +  " For Google talk, set this to talk.google.com")
+parser.add_option("-r", "--recipient", action = "store", dest = "recipient",
+                  help = "Jabber id of the recipient. Not necessary if you want to send to your own jabber id")
+
+# Parse command line options
+(options, args) = parser.parse_args()
+
+if options.jabber_id == None:
+    print >> sys.stderr, "You have to provide a jabber id"
+    usage(parser)
+jabber_id = options.jabber_id
+if options.password == None:
+    print >> sys.stderr, "You have to provide a password"
+    usage(parser)
+password = options.password
+host = options.host
+recipient = options.recipient
+if recipient == None:
+    recipient = jabber_id
+
 try:
     validate_env_var("PEGASUS_EVENT")
     validate_env_var("PEGASUS_EVENT_TIMESTAMP")
     validate_env_var("PEGASUS_JOBID")
-    validate_env_var("JABBER_ID")
-    validate_env_var("JABBER_HOST")
-    validate_env_var("JABBER_PASSWORD")
-    validate_env_var("JABBER_TO")
 except RuntimeError, err:
     print >> sys.stderr, err
     usage()
@@ -98,22 +121,25 @@ if 'PEGASUS_STATUS' in os.environ:
     msg = msg \
         + "Status: " + os.environ['PEGASUS_STATUS'] + "\n"
 
-jid = xmpp.protocol.JID(os.environ['JABBER_ID'])
+jid = xmpp.protocol.JID(jabber_id)
 cl = xmpp.Client(jid.getDomain(), debug = [])
 
-con = cl.connect((os.environ['JABBER_HOST'], 5223), use_srv=False)
+if host == None:
+    host = jid.getDomain()
+
+con = cl.connect((host, 5223), use_srv=False)
 if not con:
-    con = cl.connect((os.environ['JABBER_HOST'], 5222), use_srv=False)
+    con = cl.connect((host, 5222), use_srv=False)
     if not con:
-        print >> sys.stderr, "Unable to connect to " + os.environ['JABBER_HOST']
+        print >> sys.stderr, "Unable to connect to " + host
         myexit(1)
 
-auth = cl.auth(jid.getNode(), os.environ['JABBER_PASSWORD'], resource = "Pegasus")
+auth = cl.auth(jid.getNode(), password, resource = "Pegasus")
 if not auth:
-    print >> sys.stderr, "Unable to authenticate with " + os.environ['JABBER_ID']
+    print >> sys.stderr, "Unable to authenticate with " + host
     myexit(1)
 
-mid = cl.send(xmpp.protocol.Message(os.environ['JABBER_TO'], msg))
+mid = cl.send(xmpp.protocol.Message(recipient, msg))
 
 time.sleep(1)   # some servers will not send the message if you disconnect immediately after sending
 cl.disconnect()
