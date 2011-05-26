@@ -100,7 +100,7 @@ my $run = shift;
 usage("You need to provide a valid rundir or dagid." )
     unless ( defined $run || defined $dagid ); 
 # 20110519 (jsv): partial relative path may break the chdir stuff below
-$run = abs_path($run) if defined $run; 
+$run = Cwd::abs_path($run) if defined $run; 
 
 if ( defined $run ) {
     # extra sanity
