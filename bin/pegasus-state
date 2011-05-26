@@ -84,8 +84,16 @@ $main::space = '  ';		# 2 spaces in basic mode
     );
 $main::bold  = "\033[1m";	# start real xterm as "xterm -bdc"
 $main::reset = "\033[0m";	# reset all color/bold/etc.
-%main::ccolor = map { $main::cstat[$_] => $main::ccolor[$_] } 0 .. $#main::cstat;
+%main::ccolor = map { $main::cstat[$_] => $main::ccolor[$_] } 
+	0 .. $#main::cstat;
 @main::dstat = qw(? I R S F);	# Workflow states
+@main::dlong = 
+    ( 'Unknown'
+    , 'Unknown'			# actually indeterminable 
+    , 'Running'
+    , 'Success'
+    , 'Failure'
+    ); 
 @main::dcolor =
     ( "\033[0;37m"		# unknown (gray)
     , "\033[0;36m"		# indeterminable (cyan)
@@ -133,14 +141,14 @@ $main::time = $^T;		# initialization only
 $main::cache = undef;		# debug 
 my ($rows,$cols) = &initialize_winch;
 
-# %title describes any head we would want to show, 
+# %qtitle describes any head we would want to show, 
 # indexed by a short internal key:
 # {header} is what to put into the title of the output
 # {function} is an fptr, being called with current row (q) job classads
 # {minwidth} is an minimal width, with negative width meaning left adjustment
 # {legend} is what to display for this column in the legend
 #
-my %title =
+my %qtitle =
     ( 'STAT' => { header => 'STAT'
 		, function => \&x_jobstatus
 		, minwidth => -4
@@ -203,10 +211,10 @@ my %title =
 	       }
     );
 
-# @main::title is an array of default outputs, indexed by 'expert
-# level'. Each entry is a key into %title. (Eventually, this can
+# @main::qtitle is an array of default outputs, indexed by 'expert
+# level'. Each entry is a key into %qtitle. (Eventually, this can
 # be overwritten by a CLI option for your own mix-n-match (TBD).)
-@main::title = 
+@main::qtitle = 
     ( 
        # first level is the novice state, leave out distractive information
        [qw(STAT IN_STATE JOB1) ],
@@ -217,6 +225,128 @@ my %title =
        # even more complex information in next expert level 
        [qw(CONDORID C/G IN_STATE JPRIO PJCS SITE JOB2) ]
     );
+
+
+# %dtitle describes any head we would want to show, 
+# indexed by a short internal key:
+# {header} is what to put into the title of the output
+# {function} is an fptr, being called with current row (dag) workflow entry
+# {minwidth} is an minimal width, with negative width meaning left adjustment
+# {legend} is what to display for this column in the legend
+#
+my %dtitle =
+    ( 'DONE' => { header => 'DONE'
+		, function => \&y_dag_done
+		, minwidth => 5
+		, legend => 'Job completed with success'
+	        },
+      'PRE' => { header => 'PRE',
+	       , function => \&y_dag_pre
+	       , minwidth => 5
+	       , legend => 'PRE-Scripts running'
+	       },
+      'QUEUED' => { header => 'QU\'ED',
+		  , function => \&y_dag_queued
+		  , minwidth => 5
+		  , legend => 'Queued up jobs'
+	          },
+      'POST' => { header => 'POST',
+	        , function => \&y_dag_post
+	        , minwidth => 5
+	        , legend => 'POST-Scripts running'
+	        },
+      'READY' => { header => 'READY',
+	         , function => \&y_dag_ready
+	         , minwidth => 5
+	         , legend => 'Jobs ready for submission'
+	         },
+      'UNREADY' => { header => 'UNRDY',
+		   , function => \&y_dag_unready
+		   , minwidth => 5
+		   , legend => 'Jobs blocked by dependencies'
+	           },
+      'FAILED' => { header => 'FAIL',
+		  , function => \&y_dag_failed
+		  , minwidth => 5
+		  , legend => 'Jobs completed with failure'
+		  },
+      'TOTAL' => { header => 'TOTAL'
+		 , function => \&y_dag_total
+		 , minwidth => 5
+		 , legend => 'Jobs in workflow'
+	         },
+      'S_DONE' => { header => 'SUCCESS'
+		, function => \&y_dag_done
+		, minwidth => 7
+		, legend => 'Job completed with success'
+	        },
+      'S_PRE' => { header => 'PRE',
+	       , function => \&y_dag_pre
+	       , minwidth => 7
+	       , legend => 'PRE-Scripts running'
+	       },
+      'S_QUEUED' => { header => 'QUEUED',
+		  , function => \&y_dag_queued
+		  , minwidth => 7
+		  , legend => 'Queued up jobs'
+	          },
+      'S_POST' => { header => 'POST',
+	        , function => \&y_dag_post
+	        , minwidth => 7
+	        , legend => 'POST-Scripts running'
+	        },
+      'S_READY' => { header => 'READY',
+	         , function => \&y_dag_ready
+	         , minwidth => 7
+	         , legend => 'Jobs ready for submission'
+	         },
+      'S_UNREADY' => { header => 'UNREADY',
+		   , function => \&y_dag_unready
+		   , minwidth => 7
+		   , legend => 'Jobs blocked by dependencies'
+	           },
+      'S_FAILED' => { header => 'FAILURE',
+		  , function => \&y_dag_failed
+		  , minwidth => 7
+		  , legend => 'Jobs completed with failure'
+		  },
+      'S_TOTAL' => { header => 'TOTAL'
+		 , function => \&y_dag_total
+		 , minwidth => 7
+		 , legend => 'Total of jobs'
+	         },
+      'S' => { header => 'S'
+	     , function => \&y_dstat
+	     , minwidth => 1
+	     , legend => 'Workflow state'
+	     },
+      'STATE' => { header => 'STATE'
+		 , function => \&y_dlong
+		 , minwidth => 1
+		 , legend => 'Workflow state'
+		 },
+      'EC' => { header => 'EC'
+	      , function => \&y_status
+	      , minwidth => 1
+	      , legend => 'Workflow exit status'
+	      },
+      'WORKFLOW' => { header => 'WORKFLOW'
+		    , function => \&y_name
+		    , minwidth => -40
+		    , legend => 'Name of workflow'
+		    }
+      );
+
+# @main::dtitle is an array of default outputs, currently fixed. Each
+# entry is a key into %qtitle. (Eventually, this can be overwritten by a
+# CLI option for your own mix-n-match (TBD).)
+@main::dtitle = 
+    ( # summary mode
+      [ qw(S_UNREADY S_READY S_PRE S_QUEUED S_POST S_DONE S_FAILED) ]
+      # show subdag mode
+    , [ qw(UNREADY READY PRE QUEUED POST DONE FAILED STATE WORKFLOW) ],
+    );
+
 
 #
 # --- functions --------------------------------------------
@@ -244,6 +374,7 @@ Optional arguments:
  -u|--user name   monitor for user 'name', default is $main::user.
  -w|--watch [s]   repeatedly print output every 's' seconds, default TBD.
  -i|--idle        DO NOT display any jobs in state 'idle'. 
+ -l|--long        Show sub-workflow state in workflow state. 
  --[no]legend     Disable or enable showing of the legend, default on. 
  --[no]held       Disable or enable showing HoldReason, default on.
  --[no]heavy      Disable or enable heavy lines in Unicode output, default off. 
@@ -401,6 +532,131 @@ sub cfit($$) {
     }
 }
 
+sub whittle_down(\%\@\@) {
+    # purpose: taken a full input set (Q or DAG), and reduce to only 
+    #          columns that we'll show
+    # paramtr: %title (IN): hash of all available title definitions
+    #          @title (IN): current set of columns to show
+    #          @input (IN): array of job classads or workflows
+    # returns: array of columns to show for the given input
+    #
+    my $avail = shift;		# %[qd]title
+    my $title = shift; 		# @[qd]title
+    my $input = shift;		# @q or @dags
+    my @result = (); 
+
+    foreach my $row ( @{$input} ) {
+	my @y = (); 		# all columns go into @y
+	foreach my $k ( @{$title} ) { 
+	    confess "FATAL: title \"$k\" does not exist" 
+		unless exists $avail->{$k}; 
+	    push( @y, &{$avail->{$k}->{function}}( $row ) );
+	}
+	push( @result, [ @y ] ); # a row goes into @result
+    }
+
+    @result; 
+}
+
+sub signum($) { 
+    # purpose: signum function
+    # paramtr: $x (IN) number
+    # returns: -1 for negative $x, +1 for positive $x and 0 for $x==0
+    #
+    my $x = shift; 
+    ( $x < 0 ? -1 : ( $x > 0 ? 1 : 0 ) );
+}
+
+sub column_widths(\%\@\@) {
+    # purpose: compute width of output column from data requirements
+    # paramtr: %title (IN): minimum column width comes from this
+    #          @title (IN): currently selected set of columns
+    #          @input (IN): whittled down input rows (array of arrays)
+    # globals: $main::space (IN): current column spacing
+    #          $cols (IN): terminal width 
+    # returns: array of column widths. 
+    # warning: The last column is (attempted to) adjust to the screen width
+    #
+    my $avail = shift;
+    my $title = shift;
+    my $input = shift;
+    my @max = ();
+    my @sgn = (); 
+
+    # start with title minimum width, separating sign and magnitude
+    foreach my $k ( @{$title} ) { 
+	my $x = $avail->{$k}{minwidth};
+	push( @max, abs($x) );
+	push( @sgn, signum($x) ); 
+    }
+
+    # determine the width of each column, but no smaller than the title width
+    foreach my $row ( @{$input} ) {
+	for ( my $i=0; $i < @{$row}; ++$i ) { 
+	    my $len = length( $row->[$i] ); 
+	    $max[$i] = $len if $len > $max[$i]; 
+	}
+    }
+
+    # fix last column to match maximum terminal width
+    my $s = 0; 
+    my $l = length( $main::space ); 
+    for ( my $i=0; $i < @max; ++$i ) {
+	$s += $max[$i] + $l; 
+    }
+    if ( $s > $cols ) {
+	$s -= $max[$#max];
+	$max[$#max] = $cols - $s;
+	$max[$#max] = 0 if $max[$#max] < 0; 
+    }
+
+    # return results
+    map { $max[$_] * $sgn[$_] } 0 .. $#max;
+}
+
+sub create_legend(\%\@) {
+    # purpose: show the legend based on a title (both: Q and DAG)
+    # paramtr: %title (IN): hash of all available title defs
+    #          @title (IN): select titles
+    # globals: $cols (IN): current terminal width
+    #          $main::bold (IN): turn on bold
+    #          $main::reset (IN): turn off bold 
+    # returns: scalar: string containing the legend
+    #          array: [0] string containing legend
+    #                 [1] rows required to show legend
+    #
+    my $avail = shift;		# %[qd]title ref
+    my $title = shift;		# @[qd]title ref
+
+    my $result = ''; 
+    my $cursor = 0; 
+
+    my $p = 0;
+    for ( my $i=0; $i<@{$title}; ++$i ) { 
+	my $k = $avail->{ $title->[$i] }{header};
+	my $v = $avail->{ $title->[$i] }{legend}; 
+	my $l = length($k) + length($v); 
+	my $s = '';
+	$s .= $main::bold if $main::onatty;
+	$s .= $k;
+	$s .= $main::reset if $main::onatty; 
+	$s .= ': ' . $v; 
+	if ( $p + $l + 2 > $cols ) { 
+	    $result .= "\n$s";
+	    ++$cursor;
+	    $p = $l + 2;
+	} else {
+	    $result .= ' ' if $i; 
+	    $result .= $s;
+	    $p += $l + 3; 
+	}
+    }
+    $result .= "\n\n"; 
+    $cursor += 2; 
+
+    wantarray ? ( $result, $cursor ) : $result;
+}
+
 sub kickstart($) {
     # purpose: remove kickstart arguments from commandline
     # paramtr: job classad 'Arguments' value
@@ -513,7 +769,7 @@ sub condor_q(\%\%\@;%) {
     #          @t    (IN): ask condor_q only for these keys 
     #          %flag (IN): key value pairs controlling behavior
     # globals: $main::user (IN): which user to limit output to
-    #          %main::title (IN): determines which keys to ask for
+    #          %qtitle (IN): determines which keys to ask for
     #
     my $jobref = shift;
     my $dagref = shift;
@@ -795,119 +1051,7 @@ sub x_job2 {
     }
 }
 
-sub whittle_down(\@\@) {
-    # purpose: taken a full queue and reduce to only columns that we'll show
-    # paramtr: @title (IN): which expert level of @title
-    #          @q (IN): array of job classads as hashes
-    # globals: %title (IN): find the function pointer to create column
-    # returns: array of columns to show for the given job row
-    #
-    my $t = shift;
-    my $q = shift;
-    my @result = (); 
-
-    for my $row ( @{$q} ) {
-	my @y = (); 		# all columns go into @y
-	foreach my $k ( @{$t} ) { 
-	    push( @y, &{$title{$k}{function}}( $row ) );
-	}
-	push( @result, [ @y ] ); # a row goes into @result
-    }
-
-    @result; 
-}
-
-sub signum($) { 
-    # purpose: signum function
-    # paramtr: $x (IN) number
-    # returns: -1 for negative $x, +1 for positive $x and 0 for $x==0
-    #
-    my $x = shift; 
-    ( $x < 0 ? -1 : ( $x > 0 ? 1 : 0 ) );
-}
-
-sub column_widths(\@\@) {
-    # purpose: compute width of output column from data requirements
-    # paramtr: @title (IN): which expert level of @title
-    #          @q (IN): array of job classads as hashes
-    # globals: %title (IN): minimum column width 
-    #          $main::space (IN): current column spacing
-    # returns: array of column width. 
-    # warning: The last column is adjust to the screen width
-    #
-    my $t = shift;		# @title[expert] ref
-    my $q = shift; 		# array of hash ref
-    my @max = ();
-    my @sgn = (); 
-
-    # start with title minimum width
-    foreach my $k ( @{$t} ) { 
-	my $x = $title{$k}{minwidth};
-	push( @max, abs($x) );
-	push( @sgn, signum($x) ); 
-    }
-
-    # determine the width of each column, but no smaller than the title width
-    foreach my $row ( @{$q} ) {
-	for ( my $i=0; $i < @{$row}; ++$i ) { 
-	    my $len = length( $row->[$i] ); 
-	    $max[$i] = $len if $len > $max[$i]; 
-	}
-    }
-
-    # fix last column to match maximum terminal width
-    my $s = 0; 
-    my $l = length( $main::space ); 
-    for ( my $i=0; $i < @max; ++$i ) {
-	$s += $max[$i] + $l; 
-    }
-    if ( $s > $cols ) {
-	$s -= $max[$#max];
-	$max[$#max] = $cols - $s;
-	$max[$#max] = 0 if $max[$#max] < 0; 
-    }
-
-    # return results
-    map { $max[$_] * $sgn[$_] } 0 .. $#max;
-}
-
-sub print_qlegend($\@) {
-    # purpose: show the legend for condor-q output
-    # paramtr: $cursor (IN): current row of output
-    #          @title (IN): select expert level columns
-    # globals: %title (IN): legend
-    #          $main::bold (IN): turn on bold
-    #          $main::reset (IN): turn off bold 
-    # returns: new $cursor position
-    #
-    my $cursor = shift;
-    my $t = shift;		# @title ref
-
-    my $p = 0;
-    for ( my $i=0; $i<@{$t}; ++$i ) { 
-	my $k = $title{ $t->[$i] }{header};
-	my $v = $title{ $t->[$i] }{legend}; 
-	my $l = length($k) + length($v); 
-	my $s = '';
-	$s .= $main::bold if $main::onatty;
-	$s .= $k;
-	$s .= $main::reset if $main::onatty; 
-	$s .= ': ' . $v; 
-	if ( $p + $l + 2 > $cols ) { 
-	    print "\n$s";
-	    ++$cursor;
-	    $p = $l + 2;
-	} else {
-	    print ' ' if $i; 
-	    print $s; 
-	    $p += $l + 3; 
-	}
-    }
-    print "\n\n";
-    $cursor += 2; 
-}
-
-sub print_qdebug($$$\%) {
+sub q_print_debug($$$\%) {
     # purpose: show job classads of certain matches for current job
     # paramtr: $cursor (IN): current row
     #          $reserve (IN): how much space to reserve
@@ -957,7 +1101,7 @@ sub print_qdebug($$$\%) {
     $cursor;
 }
 
-sub print_qsummary($\%) {
+sub q_print_summary($\%) {
     # purpose: print summary line adding stats of Condor and Condor-G
     # paramtr: $cursor (IN): current row
     #          %count (IN): queue statistics
@@ -970,7 +1114,7 @@ sub print_qsummary($\%) {
     my $cref = shift;		# %count ref
 
     # create Condor job summary
-    print "Queue summary: ", plural($cref->{all}{condor},'job'), " total"; 
+    print "Summary: ", plural($cref->{all}{condor},'job'), " total"; 
 
     my $f = 0;
     foreach my $c ( sort { $a <=> $b } keys %{$cref->{condor}} ) {
@@ -982,7 +1126,7 @@ sub print_qsummary($\%) {
     print ')' if $f; 
 
     # Globus job summary
-    if ( $cref->{all}{globus} > 0 ) { 
+    if ( exists $cref->{all}{globus} && $cref->{all}{globus} > 0 ) { 
 	print ", ", plural( $cref->{all}{globus}, 'Condor-G job' );
 	$f = 0; 
 	foreach my $g ( sort { $a <=> $b } keys %{$cref->{globus}} ) { 
@@ -1020,7 +1164,7 @@ sub dag_recurse(\@$$) {
     }
 }
 
-sub getsubdagfromdag(\@$$) {
+sub dag_get_subdag(\@$$) {
     my $dirsref = shift;
     my $dag = shift;
     my $level = shift;
@@ -1043,7 +1187,7 @@ sub getsubdagfromdag(\@$$) {
     }
 }
 
-sub process_tab(@) { 
+sub dag_process_tab(@) { 
     my @keys = split /\s+/, shift(); 
     shift;			# unused 
     my @vals = split /\s+/, shift(); 
@@ -1052,10 +1196,12 @@ sub process_tab(@) {
     my $state = 0; 
     my $total = 0; 
     for ( my $i=0; $i < @keys; ++$i ) { 
+	# find where keys start
 	++$state if lc($keys[$i]) eq 'done'; 
 	next unless $state; 
-	# keep ordering by using an array (that is convertible into a hash).
-	# however, remove any punctuation stuff from keys
+
+	# keep ordering by using an array (that is convertible into a
+	# hash). However, remove any punctuation stuff from keys
 	$keys[$i] =~ s/[^[:alnum:]]//g;
 	push( @result, lc($keys[$i]) => $vals[$i] ); 
 	$total += $vals[$i]; 
@@ -1067,13 +1213,13 @@ sub process_tab(@) {
 my $re1 = qr{\*\scondor_scheduniv_exec\.([0-9.]+)\s\(CONDOR_DAGMAN\)\sSTARTING\sUP};
 my $re2 = qr{\*\scondor_scheduniv_exec\.([0-9.]+)\s\(condor_DAGMAN\)\spid\s\d+\sEXITING\sWITH\sSTATUS\s(\S+)}; 
 
-sub long_status($$) {
+sub dag_status($$) {
     my $run = shift;
     my $dagfn = shift;
 
     my @dirs = (); 
     dag_recurse(@dirs,$run,0);
-    getsubdagfromdag( @dirs, File::Spec->catfile($run,$dagfn), 1 ); 
+    dag_get_subdag( @dirs, File::Spec->catfile($run,$dagfn), 1 ); 
 
     my $dolen = length( '.dagman.out' ); 
     my @result = (); 
@@ -1098,18 +1244,18 @@ sub long_status($$) {
 		warn "Warning: open $fn: $!\n";
 	    }
 
-	    @tab = process_tab(@tab); 
+	    @tab = dag_process_tab(@tab);
 	    my $short = ( $fn =~ /^$run/o ? 
 			  substr( $fn, length($run)+1, -$dolen ) :
 			  substr( $fn, 0, -$dolen ) );
 
-	    my $state = 0; 	# unknown -> (U)nsubmitted
+	    my $state = 0; 	# unknown	    
 	    if ( $start ne $final ) {
 		warn "Debug: $start != $final\n" if $main::debug; 
 		if ( kill( 0, $pid ) ) { 
 		    $state = 2;	# running
 		} else {
-		    $state = 1; # undeterminable -> (I)dle
+		    $state = 1; # undeterminable
 		}
 	    } else {
 		# finished: success (3) or failure (4)
@@ -1128,11 +1274,17 @@ sub long_status($$) {
     @result;
 }
 
-sub dag_summary(\@) {
+sub dag_totals(\@) {
+    # purpose: compute totals by column for all workflows
+    #          also computes number of workflows in each state
+    # paramtr: @dags (IN): reference to known workflows
+    # returns: hash with totals from workflow job statistics
+    #
     my $dref = shift;
-
+    
     my %result = ( _state => [ map { 0 } @main::dstat ]
-		 , _total => 0 ); 
+		 , _total => 0 
+		 ); 
     foreach my $dag ( @{$dref} ) { 
 	my $x = $dag->{detail}; 
 	for ( my $i=0; $i<@{$x}; $i += 2 ) { 
@@ -1143,6 +1295,114 @@ sub dag_summary(\@) {
     }
 
     %result; 
+}
+
+
+sub y_dag_done {
+    my $dag = shift;
+    $dag->{extra} = { @{$dag->{detail}} } unless exists $dag->{extra}; 
+    commas( $dag->{extra}->{done} );
+}
+
+sub y_dag_pre {
+    my $dag = shift;
+    $dag->{extra} = { @{$dag->{detail}} } unless exists $dag->{extra}; 
+    commas( $dag->{extra}->{pre} );
+}
+
+sub y_dag_queued {
+    my $dag = shift;
+    $dag->{extra} = { @{$dag->{detail}} } unless exists $dag->{extra}; 
+    commas( $dag->{extra}->{queued} );
+}
+
+sub y_dag_post {
+    my $dag = shift;
+    $dag->{extra} = { @{$dag->{detail}} } unless exists $dag->{extra}; 
+    commas( $dag->{extra}->{post} );
+}
+
+sub y_dag_ready {
+    my $dag = shift;
+    $dag->{extra} = { @{$dag->{detail}} } unless exists $dag->{extra}; 
+    commas( $dag->{extra}->{ready} );
+}
+
+sub y_dag_unready {
+    my $dag = shift;
+    $dag->{extra} = { @{$dag->{detail}} } unless exists $dag->{extra}; 
+    commas( $dag->{extra}->{unready} );
+}
+
+sub y_dag_failed {
+    my $dag = shift;
+    $dag->{extra} = { @{$dag->{detail}} } unless exists $dag->{extra}; 
+    commas( $dag->{extra}->{failed} );
+}
+
+sub y_dag_total {
+    my $dag = shift;
+    $dag->{extra} = { @{$dag->{detail}} } unless exists $dag->{extra}; 
+    commas( $dag->{extra}->{total} );
+}
+
+sub y_dstat {
+    my $dag = shift;
+    my $s = $dag->{state}+0;
+    $s < @main::dstat ? $main::dstat[$s] : "$s";
+}
+
+sub y_dlong {
+    my $dag = shift;
+    my $s = $dag->{state}+0;
+    $s < @main::dlong ? $main::dlong[$s] : "$s";
+}
+
+sub y_status {
+    my $dag = shift;
+    my $x = $dag->{status}; 
+    defined $x ? sprintf( "%d/%d", ($x >> 8), ($x & 127) ) : 'n.a'; 
+}
+
+sub y_name {
+    my $dag = shift;
+    my $result = $dag->{name} || ''; 
+    $result; 
+}
+
+sub dag_print_summary($\%) {
+    # purpose: print summary line adding stats of workflows
+    # paramtr: $cursor (IN): current row
+    #          %count (IN): queue statistics
+    # globals: $main::onatty (IN): are we on a tty (can color)? 
+    #          @main::dcolor (IN): color settings
+    #          $main::reset (IN): undo colorings
+    # returns: new cursor position
+    #
+    my $cursor = shift;		# current row
+    my $totals = shift;		# %totals ref
+
+    # create workflow summary
+    print( "Summary: ", 
+	   plural( $totals->{'_total'}, 'workflow' ), 
+	   " total" );
+
+    if ( $totals->{'_total'} > 0 ) { 
+	my $f = 0; 
+	for ( my $i=0; $i < @main::dcolor; ++$i ) { 
+	    my $x = $totals->{_state};
+	    if ( $x->[$i] > 0 ) { 
+		print( $f++ ? ' ' : ' (' );
+		print $main::dcolor[$i] if $main::onatty;
+		print $main::dlong[$i], ':', commas($x->[$i]);
+		print $main::reset if $main::onatty; 
+	    }
+	}
+	print ")" if $f; 
+    }
+
+    print "\n"; 
+    ++$cursor; 
 }
 
 #
@@ -1156,7 +1416,7 @@ my $heavy = 0;
 my $noidle = 0; 
 my $expert = 0; 
 my $legend = 1; 
-my $dagsum = 1; 
+my $show_subdag = 0; 
 my ($watch);
 GetOptions( 'help|h' => \&usage
 	  , 'user|u=s' => \$main::user
@@ -1167,7 +1427,7 @@ GetOptions( 'help|h' => \&usage
 	  , 'legend!' => \$legend
 	  , 'hold|held!' => \$heldinfo
 	  , 'heavy!' => \$heavy
-	  , 'ligo|l!' => \$dagsum
+	  , 'long|l!' => \$show_subdag
 	  , 'watch|w:i' => sub {
 	      if ( ! $main::onatty ) {
 		  warn "FATAL: --watch requires a terminal for output\n"; 
@@ -1215,13 +1475,14 @@ undef $run unless scalar keys %braindb;
 
 # what level of expertise (output, verbose mode). Eventually a CLI
 # option will permit to use your own mix-n-match output (TBD).  
-my @title = @{ $main::title[$expert] }; 
+my @qtitle = @{ $main::qtitle[$expert] }; 
+my @dtitle = @{ $main::dtitle[$show_subdag] }; 
 
 for ( my $cursor=1; ; $cursor=1 ) { 
-    my (%count,%job,%dag,@result,@dag) = (); 
+    my (%count,%job,%dag,@result,@dags) = (); 
 
     # collect information from condor_q
-    condor_q( %job, %dag, @title,
+    condor_q( %job, %dag, @qtitle,
 	      noidle => $noidle, 
 	      count => \%count );
 
@@ -1236,7 +1497,14 @@ for ( my $cursor=1; ; $cursor=1 ) {
     }
 
     # collect data from $rundir (if applicable)
-    @dag = long_status( $run, $braindb{dag} ) if defined $run; 
+    @dags = dag_status( $run, $braindb{dag} ) if defined $run; 
+
+    # construct legends and legend sizes according to terminal
+    my ($qlegend,$ql_size,$dlegend,$dl_size) = ('',0,'',0);
+    if ( $legend ) {
+	($qlegend,$ql_size) = create_legend( %qtitle, @qtitle ); 
+	($dlegend,$dl_size) = create_legend( %dtitle, @dtitle ); 
+    }
 
     # empty screen and print "Ctrl+C" and date header
     my $reserve = 5; 
@@ -1249,30 +1517,33 @@ for ( my $cursor=1; ; $cursor=1 ) {
 	printf "$msg%*s\n\n", $cols-length($msg), $now; 
 	$cursor += 2; 
 
-	# too simplistic 'reservations'
-	my $nd = @dag;
-	if ( $nd ) { 
-	    $nd += ( @dag > 1 ? 2 : 1 );
+	if ( $show_subdag ) { 
+	    my $nd = @dags;
+	    $reserve += $dl_size + $nd + 2; 
+	} else {
+	    $reserve += $dl_size + 3; 
 	}
-	$reserve += $nd;
     }
 
     # Are there are Condor jobs in the Q
     if ( @q > 0 ) { 
 	# create data to actually show from potentially larger set
-	@result = whittle_down( @title, @q ); 
+	@result = whittle_down( %qtitle, @qtitle, @q ); 
 
 	# determine dynamic column widths
-	my @max = column_widths( @title, @result ); 
+	my @max = column_widths( %qtitle, @qtitle, @result ); 
 	
 	# print legend (requested by Ewa)
-	$cursor = print_qlegend( $cursor, @title ) if $legend;
+	if ( $legend ) {
+	    print $qlegend;
+	    $cursor += $ql_size;
+	}
 
 	# print headers
 	print $main::bold if $main::onatty; 
 	for ( my $i=0; $i<@max; ++$i ) {
 	    print $main::space if $i; 
-	    printf "%*s", $max[$i], $title{ $title[$i] }{header}; 
+	    printf "%*s", $max[$i], $qtitle{ $qtitle[$i] }{header}; 
 	}
 	print $main::reset if $main::onatty; 
 	print "\n";
@@ -1295,10 +1566,12 @@ for ( my $cursor=1; ; $cursor=1 ) {
 		print "\n", $tile, fit( $cols-length($tile), $q[$i]{holdreason} );
 		++$cursor;
 	    }
+
+	    # reset color after this
 	    print $main::reset if $main::onatty;
 
 	    # transient trickery for debug mode
-	    $cursor = print_qdebug( $cursor, $reserve, $watch, %{$q[$i]} )
+	    $cursor = q_print_debug( $cursor, $reserve, $watch, %{$q[$i]} )
 		if $main::debug; 
 
 	    # terminate current line
@@ -1315,7 +1588,7 @@ for ( my $cursor=1; ; $cursor=1 ) {
 	}
 
 	# create summaries from %count
-	$cursor = print_qsummary( $cursor, %count ); 
+	$cursor = q_print_summary( $cursor, %count ); 
     } else {
 	# nothing in Q
 	print "(no matching jobs found in Condor Q)\n"; 
@@ -1326,91 +1599,95 @@ for ( my $cursor=1; ; $cursor=1 ) {
     warn "\n(Debug: I appear to be missing some jobs)\n" 
 	if ( scalar %main::seen );
 
-    if ( @q > 0 && @dag > 0 ) {
+    if ( @q > 0 && @dags > 0 ) {
 	# separate the two sections
 	print "\n";
 	++$cursor; 
     }
 
     # Is there state in the rundir (is there a rundir)? 
-    if ( @dag > 0 ) { 
+    $reserve = 5;
+    if ( @dags > 0 ) { 
 	# determine summary of all workflow jobs
-	my %totals = dag_summary( @dag ); 
+	my %totals = dag_totals( @dags ); 
 
-	# assemble headers
-	my $x = $dag[0]{detail};
-	my @header = (); 
-	my @max = (); 
-	for ( my $i=0; $i < @{$x}; $i += 2 ) {
-	    push( @header, $x->[$i] ); 
-	    push( @max, length($x->[$i]) ); 
+	# create data to actually show from larger set
+	@result = whittle_down( %dtitle, @dtitle, @dags ); 
+
+	# determine dynamic column widths
+	my @max = column_widths( %dtitle, @dtitle, @result ); 
+	
+	# print legend (requested by Ewa)
+	if ( $legend ) {
+	    print $dlegend;
+	    $cursor += $dl_size;
 	}
-	push( @header, 'S' );
-	push( @max, 1 ); 
-	push( @header, 'WORKFLOW' );
-	push( @max, -8 ); 
 
 	# print headers
-	print $main::bold if $main::onatty; 
-	for ( my $i=0; $i < @header; ++$i ) {
+	print $main::bold if $main::onatty;
+	for ( my $i=0; $i<@max; ++$i ) {
 	    print ' ' if $i; 
-	    printf "%*s", $max[$i], uc $header[$i];
+	    printf "%*s", $max[$i], $dtitle{ $dtitle[$i] }{header}; 
 	}
 	print $main::reset if $main::onatty; 
 	print "\n";
 	++$cursor; 
 
-	# print data
-	foreach my $dag ( @dag ) { 
-	    # color this row according to state
-	    print $main::dcolor[ $dag->{state} ] if $main::onatty;
+	# print each row of results
+	if ( $show_subdag ) { 
+	    for ( my $i=0; $i<@result; ++$i ) { 
+		my $dagstate = $dags[$i]->{state}; 
 
-	    my $x = $dag->{detail}; 
-	    for ( my $i=0; $i < @{$x}; $i += 2 ) {
-		print ' ' if $i; 
-		printf "%*s", $max[$i/2], commas($x->[$i+1]); 
-	    }
-	    print ' ', $main::dstat[ $dag->{state} ]; 
-	    print ' ', fit( 40, $dag->{name} );
+		# decide on a color for row and print data columns
+		print $main::dcolor[$dagstate] if $main::onatty; 
+		for ( my $j=0; $j<@{$result[$i]}; ++$j ) {
+		    print ' ' if $j;
+		    printf "%*s", $max[$j], $result[$i][$j]; 
+		}
 
-	    print $main::reset if $main::onatty; 
-	    print "\n";
-	    ++$cursor; 
-	}
+		# reset colors
+		print $main::reset if $main::onatty; 
 
-	# print summary
-	if ( @dag > 1 ) {
-	    for ( my $i=0; $i < @{$dag[0]{detail}}; $i += 2 ) {
-		my $k = $dag[0]{detail}[$i]; 
-		print ' ' if $i;
-		printf "%*s", $max[$i/2], commas($totals{$k}); 
-	    }
-	    print '  ';
-	    print ' TOTALS';
+		# terminate current line
+		print "\n"; 
+		++$cursor; 
 
-	    print "\n";
-	    ++$cursor; 
-	}
-
-	print "Workflow summary: ", plural( $totals{'_total'}, 'workflow' ), " total";
-	if ( $totals{'_total'} > 0 ) { 
-	    my $f = 0; 
-	    for ( my $i=0; $i < @main::dstat; ++$i ) { 
-		my $x = $totals{_state}; 
-		if ( $x->[$i] > 0 ) { 
-		    print ( ++$f == 1 ? ' (' : ' ' );
-		    print $main::dcolor[$i] if $main::onatty;
-		    print $main::dstat[$i], ':', commas($x->[$i]);
-		    print $main::reset if $main::onatty; 
+		# skip rest of output if reaching bottom of current terminal
+		my $diff = $rows - $reserve; 
+		if ( $watch && @result > $diff && $cursor > $diff ) {
+		    print '(', plural( @result-$i, 'additional workflow' );
+		    print " omitted.)\n"; 
+		    ++$cursor;
+		    last; 
 		}
 	    }
-	    print ")" if $f; 
 	}
 
-	print "\n"; 
-	++$cursor; 
-    }
+	# print totals, iff more than 1 workflow
+	if ( ! $show_subdag || @dags > 1 ) {
+	    for ( my $i=0; $i < @max; ++$i ) { 
+		my $key = lc $dtitle[$i]; 
+		substr($key,0,2,'') if substr($key,0,2) eq 's_'; 
+		print ' ' if $i; 
+		if ( exists $totals{$key} ) {
+		    printf "%*s", $max[$i], commas($totals{$key}); 
+		} else {
+		    if ( $i == $#max ) {
+			printf "%*s", $max[$i], 'TOTALS'; 
+		    } else {
+			printf "%*s", $max[$i], ''; 
+		    }
+		}
+	    }
+	    print "\n";
+	    ++$cursor; 
+	}
 
+	# print summary 
+	$cursor = dag_print_summary( $cursor, %totals ); 
+    } else {
+	# no valid rundir -- do nothing
+    }
 
     # are we in 'watch' mode, or is this it? 
     if ( defined $watch ) { 
