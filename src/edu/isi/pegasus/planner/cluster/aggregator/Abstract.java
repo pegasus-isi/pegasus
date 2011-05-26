@@ -311,11 +311,6 @@ public abstract class Abstract implements JobAggregator {
                 opFiles.addAll( job.getOutputFiles() );
                 mergedJob.add(job);
 
-                //add any notifications specified in the job
-                //to the clustered job. JIRA PM-391
-                mergedJob.addNotifications( job.getNotifications());
-
-
                 //we need to merge the profiles from the constituent
                 //jobs now, rather in function makeAbstractAggreagatedJobConcrete
                 //JIRA PM-368

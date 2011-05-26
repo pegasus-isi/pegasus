@@ -19,6 +19,7 @@ package edu.isi.pegasus.planner.code.generator;
 import edu.isi.pegasus.common.logging.LogManager;
 
 import edu.isi.pegasus.planner.classes.ADag;
+import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.Notifications;
 import edu.isi.pegasus.planner.classes.PegasusBag;
@@ -66,6 +67,11 @@ public class MonitordNotify implements CodeGenerator {
      * The constant string to write for job notifications.
      */
     public static final String JOB = "JOB";
+
+    /**
+     * The constant string to write for invocation notifications.
+     */
+    public static final String INVOCATION = "INVOCATION";
 
     /**
      * The constant string to write for dag job notifications.
@@ -235,6 +241,35 @@ public class MonitordNotify implements CodeGenerator {
 	    }
 	}
 
+        //for clustered jobs we need to list notifications
+        //per invocation of clustered job.
+        if( job instanceof AggregatedJob ){
+            AggregatedJob aggJob = ( AggregatedJob )job;
+            int invID = 1;
+            for( Iterator it = aggJob.constituentJobsIterator(); it.hasNext(); invID++ ){
+                Job j = (Job)it.next();
+
+                //a new line only if there are some notification
+                //to print out.
+                if( !j.getNotifications().isEmpty() ){
+                    mNotificationsWriter.println();
+                }
+
+                for ( WHEN when : WHEN.values() ) {
+                    for ( Invoke invoke : j.getNotifications(when) ) {
+                        StringBuffer sb = new StringBuffer();
+                        sb.append( MonitordNotify.INVOCATION ) .append( DELIMITER ).
+                           append( j.getID() ).append( DELIMITER ).
+                           append( invID ).append( DELIMITER ).
+                           append( when.toString() ).append( DELIMITER ).
+                           append( invoke.getWhat());
+
+                        mNotificationsWriter.println( sb.toString() );
+                    }
+                }
+            }
+
+        }
 
     }
 
