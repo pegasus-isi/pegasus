@@ -12,8 +12,6 @@
    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="monitoring_debugging_stats.xml"/>
    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="example_workflows.xml"/>
    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="reference.xml"/>
-   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="api.xml"/>
-   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="commands.xml"/>
    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="useful_tips.xml"/>
    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="glossary.xml"/>
 </book>
