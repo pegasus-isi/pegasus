@@ -36,46 +36,27 @@ Fri Mar 18 12:50:05 PDT 2011
     <section>
       <title>Download the VM for Virtual Box use</title>
 
-      <para>Download the corresponding disk image.</para>
+      <para>Download the corresponding disk image from the link below</para>
 
       <itemizedlist>
         <listitem>
           <para><ulink
-          url="http://pegasus.isi.edu/wms/download/3.0/Pegasus-3.0.2-Debian-6-x86.vbox.tar.bz2"
+          url="http://pegasus.isi.edu/wms/download/3.0/Pegasus-3.0.2-Debian-6-x86.vbox.zip"
           xml:base="">Virtual Box Pegasus Image</ulink></para>
 
-          <para>It is around <emphasis role="bold">576 MB</emphasis> in size.
-          We recommend using a command line tool like <emphasis
-          role="bold">wget</emphasis> to download the image. Downloading the
-          image using the browser may sometimes corrupt the image. If you are
-          running windows you try downloading using firefox instead of
-          Internet Explorer.</para>
+          <para>It is around <emphasis role="bold">650MB</emphasis> in size.
+          If you are running windows we recommend downloading using firefox
+          instead of Internet Explorer.</para>
 
-          <programlisting>$ <emphasis role="bold">wget http://pegasus.isi.edu/wms/download/3.0/Pegasus-3.0.2-Debian-6-x86.vbox.tar.bz2
+          <para>The Image is zipped. You will need to unzip it. </para>
 
-</emphasis>--12:43:50--  http://pegasus.isi.edu/wms/download/3.0/Pegasus-3.0.2-Debian-6-x86.vbox.tar.bz2
-           =&gt; `Pegasus-3.0.2-Debian-6-x86.vbox.tar.bz2'
-Resolving pegasus.isi.edu... 128.9.64.219
-Connecting to pegasus.isi.edu|128.9.64.219|:80... connected.
-HTTP request sent, awaiting response... 200 OK
-Length: 604,017,271 (576M) [application/x-bzip2]
+          <para>For Windows you can just double click on the downloaded zip
+          file or can use a tool like winzip to extract the VM files.</para>
 
-</programlisting>
+          <para>On Linux or Mac you can use the client unzip to unzip the
+          downloaded file</para>
 
-          <para>The Image is bzipped . You will need to unzip it. For Windows
-          you may need winzip or similar tools to extract the VM files.</para>
-
-          <para>If you have gnu tar you can do this directly</para>
-
-          <programlisting><emphasis role="bold">$ gtar jxvf Pegasus-3.0.2-Debian-6-x86.vbox.tar.bz2</emphasis></programlisting>
-
-          <para>Else you need to do the following</para>
-
-          <programlisting><emphasis role="bold">$ bunzip2 Pegasus-3.0.2-Debian-6-x86.vbox.tar.bz2
-
-$ tar xvf Pegasus-3.0.2-Debian-6-x86.vbox.tar</emphasis></programlisting>
-
-          <para>After untarring a folder named<emphasis role="bold">
+          <para>After unzipping a folder named<emphasis role="bold">
           Pegasus-3.0.2-Debian-6-x86.vbox</emphasis> will be created that has
           the vmdk files for the VM.</para>
         </listitem>
