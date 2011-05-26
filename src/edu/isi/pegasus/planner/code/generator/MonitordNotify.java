@@ -259,7 +259,7 @@ public class MonitordNotify implements CodeGenerator {
                     for ( Invoke invoke : j.getNotifications(when) ) {
                         StringBuffer sb = new StringBuffer();
                         sb.append( MonitordNotify.INVOCATION ) .append( DELIMITER ).
-                           append( j.getID() ).append( DELIMITER ).
+                           append( job.getID() ).append( DELIMITER ).
                            append( invID ).append( DELIMITER ).
                            append( when.toString() ).append( DELIMITER ).
                            append( invoke.getWhat());
