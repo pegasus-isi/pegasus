@@ -22,16 +22,13 @@ BEGIN { *AUTOLOAD = \&Pegasus::DAX::Base::AUTOLOAD }
 
 use Pegasus::DAX::Filename qw(LINK_INPUT); 
 
-my $count = 0; 
+my $count = 0; 			# class variable
 
 sub new {
     my $proto = shift;
     my $class = ref($proto) || $proto;
     my $self = $class->SUPER::new();
     $self->{separator} = ' '; 	# between arguments default
-
-    # default identifier using class variable $count
-    $self->{id} = sprintf( "ID%06u", ++$count ); 
 
     if ( @_ > 1 ) {
 	# called with a=>b,c=>d list
@@ -173,8 +170,24 @@ sub uses {
     }
 }
 
+sub id {
+    my $self = shift;
+
+    if ( @_ ) {
+	# setter
+	my $old = $self->{id};
+	$self->{id} = shift;
+	return $old;
+    } else {
+	# getter
+	# default identifier using class variable $count
+	$self->{id} = sprintf( "ID%06u", ++$count )
+	    unless exists $self->{id};
+	return $self->{id};
+    }
+}
+
 # forward declarations
-sub id;
 sub nodelabel;
 
 sub innerXML {
