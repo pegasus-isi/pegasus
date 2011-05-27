@@ -109,7 +109,7 @@ $ tar xvf Pegasus-3.0.1-Debian-6-x86.vbox.tar</emphasis></programlisting>
       <para>Follow these steps to add the vmdk file to Virtual Box and create a virtual machine inside the Virtual
       Box</para>
 
-
+          <section>
            <para>1. Launch Virtual Box on your machine.</para>
 
         
@@ -124,8 +124,9 @@ $ tar xvf Pegasus-3.0.1-Debian-6-x86.vbox.tar</emphasis></programlisting>
           </imageobject>
         </mediaobject>
       </figure></para>
-
-          <para>2. In the Icon Menu, select <emphasis>New</emphasis></para>
+           </section>
+           <section>
+          <para>2. In the Icon Menu, select <emphasis role="bold">New</emphasis></para>
 
 
           <para>The Create New Virtual Machine Wizard Welcome window opens up.</para>
@@ -142,8 +143,8 @@ $ tar xvf Pegasus-3.0.1-Debian-6-x86.vbox.tar</emphasis></programlisting>
         </mediaobject>
       </figure></para>
 
-          <para>3. Select <emphasis>Next</emphasis></para>
-
+          <para>3. Select <emphasis role="bold">Next</emphasis></para>
+          </section>
          <para><figure id="selectvm">
         <title>VM Name and OS Type</title>
 
@@ -157,9 +158,9 @@ $ tar xvf Pegasus-3.0.1-Debian-6-x86.vbox.tar</emphasis></programlisting>
       </figure></para>
 
           <para>4. Enter a name for the virtual machine.</para>
-          <para>5. Select <emphasis>Linux</emphasis> as the <emphasis>Operating System</emphasis> and
-          <emphasis>Debian</emphasis>as the <emphasis>Version</emphasis>
-          from the pull down menus. Select <emphasis>Next</emphasis></para>
+          <para>5. Select <emphasis role="bold">Linux</emphasis> as the <emphasis role="bold">Operating System</emphasis> and
+          <emphasis role="bold">Debian</emphasis>as the <emphasis role="bold">Version</emphasis>
+          from the pull down menus. Select <emphasis role="bold">Next</emphasis></para>
            <para><figure id="namevm">
         <title>Base Memory</title>
 
@@ -173,11 +174,11 @@ $ tar xvf Pegasus-3.0.1-Debian-6-x86.vbox.tar</emphasis></programlisting>
       </figure></para>
 
 
-          <para>6. Select the base recommended <emphasis>Base Memory Size</emphasis>
-          then select <emphasis>Next</emphasis></para>
+          <para>6. Select the base recommended <emphasis role="bold">Base Memory Size</emphasis>
+          then select <emphasis role="bold">Next</emphasis></para>
 
 
-         <para>7.Navigate to the location of the <emphasis>Debian-6-86</emphasis> file
+         <para>7.Navigate to the location of the <emphasis role="bold">Debian-6-86</emphasis> file
          downloaded earlier. Once a file has been selected, it is available in the pull down menu.</para>
          
         <para><figure id="selectfile">
@@ -193,7 +194,7 @@ $ tar xvf Pegasus-3.0.1-Debian-6-x86.vbox.tar</emphasis></programlisting>
       </figure></para>
 
 
-         <para>8. Double click the <emphasis>Debian-6-86 </emphasis> file to launch the Create New Virtual Disk Wizard.</para>
+         <para>8. Double click the <emphasis role="bold">Debian-6-86 </emphasis> file to launch the Create New Virtual Disk Wizard.</para>
           <para><figure id="doclib">
         <title/>
 
@@ -205,7 +206,7 @@ $ tar xvf Pegasus-3.0.1-Debian-6-x86.vbox.tar</emphasis></programlisting>
           </imageobject>
         </mediaobject>
       </figure></para>
-          <para>9. Select <emphasis>Next</emphasis></para>
+          <para>9. Select <emphasis role="bold">Next</emphasis></para>
           
           <para><figure id="virtdisk">
         <title>Storage Type</title>
@@ -221,7 +222,7 @@ $ tar xvf Pegasus-3.0.1-Debian-6-x86.vbox.tar</emphasis></programlisting>
 
         
         
-        <para>10. Select the desired storage type then select <emphasis>Next</emphasis></para>
+        <para>10. Select the desired storage type then select <emphasis role="bold">Next</emphasis></para>
           <para><figure id="virtdisklocation">
         <title>Virtual Disk Location and Size</title>
 
@@ -234,7 +235,7 @@ $ tar xvf Pegasus-3.0.1-Debian-6-x86.vbox.tar</emphasis></programlisting>
         </mediaobject>
       </figure></para>
 
-         <para>10. Select the desired location and virtual disk size, then select <emphasis>Next</emphasis></para>
+         <para>10. Select the desired location and virtual disk size, then select <emphasis role="bold">Next</emphasis></para>
           <para><figure id="summary">
         <title>Summary</title>
 
@@ -247,8 +248,8 @@ $ tar xvf Pegasus-3.0.1-Debian-6-x86.vbox.tar</emphasis></programlisting>
         </mediaobject>
       </figure></para>
 
-         <para>11. Review the settings and select <emphasis>Finish</emphasis> to create
-         the virtual disk or <emphasis>Cancel</emphasis> to cancel creation</para>
+         <para>11. Review the settings and select <emphasis role="bold">Finish</emphasis> to create
+         the virtual disk or <emphasis role="bold">Cancel</emphasis> to cancel creation</para>
          
          <para>The VM is created and will appear in the VirtualBox Manager window in a powered off state</para>
 
@@ -277,7 +278,7 @@ $ tar xvf Pegasus-3.0.1-Debian-6-x86.vbox.tar</emphasis></programlisting>
           </imageobject>
         </mediaobject>
       </figure></para>
-      <para> Select <emphasis>Next</emphasis></para>
+      <para> Select <emphasis role="bold">Next</emphasis></para>
       
       
         <para>The Starting VM progress window opens and tracks the creation process</para>
@@ -306,7 +307,7 @@ $ tar xvf Pegasus-3.0.1-Debian-6-x86.vbox.tar</emphasis></programlisting>
           </imageobject>
         </mediaobject>
       </figure></para>
-         <para>12. Select <emphasis>Accessories - LX Terminal</emphasis> to open a terminal window.</para>
+         <para>12. Select <emphasis role="bold">Accessories - LX Terminal</emphasis> to open a terminal window.</para>
          <para><figure id="virtdisk">
         <title>Select Terminal</title>
 
@@ -595,6 +596,7 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
     </section>
 
 </chapter>
+
 
 
 
