@@ -113,6 +113,17 @@ $ tar xvf Pegasus-3.0.1-Debian-6-x86.vbox.tar</emphasis></programlisting>
         <listitem>
            <para>Launch Virtual Box on your machine.</para>
         </listitem>
+        <para><figure id="concepts-fig-dag">
+        <title>Black Diamond DAG</title>
+
+        <mediaobject>
+          <imageobject>
+            <imagedata align="center"
+                       fileref="images/VirtualBoxHome.png"
+                       valign="middle" />
+          </imageobject>
+        </mediaobject>
+      </figure></para>
         <listitem>
           <para>In the Icon Menu, select <emphasis>New</emphasis></para>
         </listitem>
@@ -162,9 +173,9 @@ $ tar xvf Pegasus-3.0.1-Debian-6-x86.vbox.tar</emphasis></programlisting>
         <listitem>
          <para>Select <emphasis>Accessories - LX Terminal</emphasis> to open a terminal window.</para>
         </listitem>
-        <listitem><Emphasis>Note:</Emphasis> The terminal window is the main interface for the walkthrough process.</listitem>
-      </orderedlist>
 
+      </orderedlist>
+         <para><Emphasis>Note:</Emphasis> The terminal window is the main interface for the walkthrough process.</para>
 
 
     </section>
