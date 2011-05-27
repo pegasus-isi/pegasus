@@ -245,10 +245,10 @@ my %dtitle =
 	       , minwidth => 5
 	       , legend => 'PRE-Scripts running'
 	       },
-      'QUEUED' => { header => 'QU\'ED',
+      'QUEUED' => { header => 'IN_Q',
 		  , function => \&y_dag_queued
 		  , minwidth => 5
-		  , legend => 'Queued up jobs'
+		  , legend => 'Submitted jobs'
 	          },
       'POST' => { header => 'POST',
 	        , function => \&y_dag_post
@@ -288,7 +288,7 @@ my %dtitle =
       'S_QUEUED' => { header => 'QUEUED',
 		  , function => \&y_dag_queued
 		  , minwidth => 7
-		  , legend => 'Queued up jobs'
+		  , legend => 'Submitted jobs'
 	          },
       'S_POST' => { header => 'POST',
 	        , function => \&y_dag_post
@@ -390,6 +390,27 @@ sub myversion() {
     print "Pegasus $version, @{[basename($0)]} $main::revision\n"; 
     exit 0; 
 }
+
+sub profile_start($) {
+    my $fn = shift; 
+    if ( CORE::open( $main::profile, ">$fn" ) ) {
+	profile_log('start');
+    }
+}
+
+sub profile_log { 
+    if ( defined $main::profile ) { 
+	printf { $main::profile } "%s\n", join(' ', isomsdate(), @_ );
+    }
+}
+
+sub profile_done { 
+    profile_log('final');
+    close $main::profile;
+    undef $main::profile;
+}
+
+END { profile_done if defined $main::profile }
 
 sub trim($) { 
     # purpose: remove leading and trailing whitespace, quotes around
@@ -704,8 +725,10 @@ sub seqexec(\%) {
     #
     my $r = shift;
     my $result = 0;
+    local(*S); 
 
     my $fn = File::Spec->rel2abs( $r->{in}, $r->{iwd} );
+    profile_log( "open $fn" ) if defined $main::profile;
     if ( open( S, "<$fn" ) ) {
 	my @ok = ();
 	while ( <S> ) {
@@ -843,7 +866,7 @@ sub condor_q(\%\%\@;%) {
     }
 
     # extra sanity? 
-    die "hmm, maybe condor_q output formatting changed?" if scalar keys %db;
+    warn "Warning: Maybe condor_q output formatting changed?" if scalar keys %db;
 
     close Q;
     if ( $main::debug ) { 
@@ -1168,7 +1191,9 @@ sub dag_get_subdag(\@$$) {
     my $dirsref = shift;
     my $dag = shift;
     my $level = shift;
-    
+
+    local(*F);
+    profile_log( "open $dag" ) if defined $main::profile; 
     if ( open( F, "<$dag" ) ) {
 	my @subdags = (); 
 	while ( <F> ) { 
@@ -1228,15 +1253,21 @@ sub dag_status($$) {
 	foreach my $fn ( @{$d} ) {
 	    my @tab = (); 
 	    my ($start,$final,$pid,$status);
+	    local(*F); 
+	    profile_log( "open $fn" ) if defined $main::profile;
 	    if ( open( F, "<$fn" ) ) { 
 		while ( <F> ) {
-		    ($start,$final) = ($1,"") if /$re1/o;
-		    $pid=$1 if /\*\*\sPID\s=\s(\d+)/;
-		    ($final,$status) = ($1,$2) if /$re2/o;
+		    # none of these will be in the same line. order by frequency
 		    if ( index($_,'Done') > 0 ) {
 			$tab[0] = $_; 
 			$tab[1] = <F>;
 			$tab[2] = <F>;
+		    } elsif ( /$re1/o ) {
+			($start,$final) = ($1,'');
+		    } elsif ( /\*\*\s+PID\s+=\s+(\d+)/ ) {
+			$pid=$1;
+		    } elsif ( /$re2/o ) { 
+			($final,$status) = ($1,$2);
 		    }
 		}
 		close F; 
@@ -1251,7 +1282,6 @@ sub dag_status($$) {
 
 	    my $state = 0; 	# unknown	    
 	    if ( $start ne $final ) {
-		warn "Debug: $start != $final\n" if $main::debug; 
 		if ( kill( 0, $pid ) ) { 
 		    $state = 2;	# running
 		} else {
@@ -1414,19 +1444,20 @@ binmode( STDOUT, ':utf8' ) if $main::isutf8;
 my $heldinfo = 1; 
 my $heavy = 0; 
 my $noidle = 0; 
-my $expert = 0; 
+$main::expert = 0; 
 my $legend = 1; 
 my $show_subdag = 0; 
 my ($watch);
 GetOptions( 'help|h' => \&usage
 	  , 'user|u=s' => \$main::user
 	  , 'debug|d+' => \$main::debug
-	  , 'verbose|v+' => \$expert
+	  , 'verbose|v+' => \$main::expert
 	  , 'version|V' => \&version
 	  , 'idle|i!' => \$noidle
 	  , 'legend!' => \$legend
 	  , 'hold|held!' => \$heldinfo
 	  , 'heavy!' => \$heavy
+	  , 'profile=s' => sub { profile_start($_[1]) },
 	  , 'long|l!' => \$show_subdag
 	  , 'watch|w:i' => sub {
 	      if ( ! $main::onatty ) {
@@ -1449,8 +1480,12 @@ GetOptions( 'help|h' => \&usage
 # react to changes in terminal size
 $SIG{WINCH} = \&sigwinch if ( defined &TIOCGWINSZ && $main::onatty );
 
+# mess with verbosity (expert level) on SIGUSR
+$SIG{USR1} = sub { ++$main::expert };
+$SIG{USR2} = sub { $main::expert-- }; 
+
 # experts don't need spaces :-P
-$main::space = ' ' if $expert; 
+$main::space = ' ' if $main::expert; 
 
 # determine UTF-8 capabilities
 if ( $main::onatty && $main::isutf8 ) { 
@@ -1473,31 +1508,39 @@ undef $run unless scalar keys %braindb;
 # POST-condition: $run is defined if it is a valid rundir
 # FIXME: Extend to permit multiple rundirs a la @ARGV
 
-# what level of expertise (output, verbose mode). Eventually a CLI
-# option will permit to use your own mix-n-match output (TBD).  
-my @qtitle = @{ $main::qtitle[$expert] }; 
-my @dtitle = @{ $main::dtitle[$show_subdag] }; 
-
 for ( my $cursor=1; ; $cursor=1 ) { 
     my (%count,%job,%dag,@result,@dags) = (); 
 
+    # what level of expertise (output, verbose mode). Eventually a CLI
+    # option will permit to use your own mix-n-match output (TBD).  
+    my @qtitle = @{ $main::qtitle[$main::expert] }; 
+    my @dtitle = @{ $main::dtitle[$show_subdag] }; 
+
     # collect information from condor_q
+    profile_log( 'start condor_q' ) if defined $main::profile;
     condor_q( %job, %dag, @qtitle,
 	      noidle => $noidle, 
 	      count => \%count );
+    profile_log( "final condor_q ($?)" ) if defined $main::profile;
 
     # %main::seen is for sanity checks
     %main::seen = map { $_ => 1 } keys %job;
 
     # collect data to show into @q
+    profile_log( "start Q sorting" ) if defined $main::profile;
     my %leaves = find_leaves(%dag); 
     my @q = (); 
     foreach my $id ( sort { $a <=> $b } keys %leaves ) {
 	push( @q, assemble_dag( \%job, \%dag, $id ) ); 
     }
+    profile_log( "final Q sorting" ) if defined $main::profile;
 
     # collect data from $rundir (if applicable)
-    @dags = dag_status( $run, $braindb{dag} ) if defined $run; 
+    if ( defined $run ) {
+	profile_log( "start dag dir traversal" ) if defined $main::profile; 
+	@dags = dag_status( $run, $braindb{dag} );
+	profile_log( "final dag dir traversal" ) if defined $main::profile;
+    }
 
     # construct legends and legend sizes according to terminal
     my ($qlegend,$ql_size,$dlegend,$dl_size) = ('',0,'',0);
@@ -1527,6 +1570,8 @@ for ( my $cursor=1; ; $cursor=1 ) {
 
     # Are there are Condor jobs in the Q
     if ( @q > 0 ) { 
+	profile_log( "start Q printing" ) if defined $main::profile; 
+
 	# create data to actually show from potentially larger set
 	@result = whittle_down( %qtitle, @qtitle, @q ); 
 
@@ -1589,6 +1634,7 @@ for ( my $cursor=1; ; $cursor=1 ) {
 
 	# create summaries from %count
 	$cursor = q_print_summary( $cursor, %count ); 
+	profile_log( "final Q printing" ) if defined $main::profile; 
     } else {
 	# nothing in Q
 	print "(no matching jobs found in Condor Q)\n"; 
@@ -1608,6 +1654,9 @@ for ( my $cursor=1; ; $cursor=1 ) {
     # Is there state in the rundir (is there a rundir)? 
     $reserve = 5;
     if ( @dags > 0 ) { 
+	local $main::space = ' '; # temporarily scoped overwrite
+	profile_log( "start DAG printing" ) if defined $main::profile; 
+
 	# determine summary of all workflow jobs
 	my %totals = dag_totals( @dags ); 
 
@@ -1642,8 +1691,11 @@ for ( my $cursor=1; ; $cursor=1 ) {
 		print $main::dcolor[$dagstate] if $main::onatty; 
 		for ( my $j=0; $j<@{$result[$i]}; ++$j ) {
 		    print ' ' if $j;
+		    if ( $j == $#max && length($result[$i][$j]) > abs($max[$j]) ) {
+			$result[$i][$j] = fit( -abs($max[$j]), $result[$i][$j] ); 
+		    }
 		    printf "%*s", $max[$j], $result[$i][$j]; 
-		}
+	        }
 
 		# reset colors
 		print $main::reset if $main::onatty; 
@@ -1685,6 +1737,7 @@ for ( my $cursor=1; ; $cursor=1 ) {
 
 	# print summary 
 	$cursor = dag_print_summary( $cursor, %totals ); 
+	profile_log( "final DAG printing" ) if defined $main::profile; 
     } else {
 	# no valid rundir -- do nothing
     }
