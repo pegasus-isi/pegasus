@@ -113,8 +113,9 @@ $ tar xvf Pegasus-3.0.1-Debian-6-x86.vbox.tar</emphasis></programlisting>
         <listitem>
            <para>Launch Virtual Box on your machine.</para>
         </listitem>
-        <para><figure id="concepts-fig-dag">
-        <title>Black Diamond DAG</title>
+        
+        <para><figure id="virtualboxhome">
+        <title>Virtualbox Home</title>
 
         <mediaobject>
           <imageobject>
@@ -127,6 +128,17 @@ $ tar xvf Pegasus-3.0.1-Debian-6-x86.vbox.tar</emphasis></programlisting>
         <listitem>
           <para>In the Icon Menu, select <emphasis>New</emphasis></para>
         </listitem>
+        <para><figure id="wizard1">
+        <title>Welcome Window</title>
+
+        <mediaobject>
+          <imageobject>
+            <imagedata align="center"
+                       fileref="images/Wizard1.png"
+                       valign="middle" />
+          </imageobject>
+        </mediaobject>
+      </figure></para>
 
         <listitem>
           <para>The Create New Virtual Machine Wizard Welcome window opens up.</para>
@@ -437,6 +449,7 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
     </section>
 
 </chapter>
+
 
 
 
