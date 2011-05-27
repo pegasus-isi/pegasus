@@ -46,7 +46,10 @@
       <listitem>
         <para><emphasis role="bold">Portability / Reuse</emphasis></para>
 
-        <para>...</para>
+        <para>User created workflows can easily be run in different environments without alteration.
+        Pegasus currently runs workflows on Amazon EC2, Nimbus, Open Science Grid, the TeraGrid, and many campus clusters.
+
+        The same workflow can run on a single system or across a heterogeneous set of resources.</para>
       </listitem>
       
       <listitem>
@@ -58,13 +61,16 @@
       <listitem>
         <para><emphasis role="bold">Scalability</emphasis></para>
 
-        <para>...</para>
+        <para>Pegasus runs workflows ranging from just a few computational
+  tasks up to 1 million.</para>
       </listitem>
 
       <listitem>
         <para><emphasis role="bold">Provenance</emphasis></para>
 
-        <para>...</para>
+        <para>By default, all jobs in Pegasus are launched via the
+        <emphasis role="bold">kickstart</emphasis> process that captures runtime provenance of the job
+      and helps in debugging.</para>
       </listitem>
       
       <listitem>
@@ -267,3 +273,4 @@
     </itemizedlist>
   </section>
 </chapter>
+
