@@ -181,14 +181,14 @@
 
     <itemizedlist>
       <listitem>
-        <para><emphasis>Introduction - Chapter 1</emphasis></para>
+        <para><emphasis role="bold">Introduction - Chapter 1</emphasis></para>
 
         <para>(This chapter)An overview of Pegasus WMS and the features it offers, and an introduction
         to workflows. </para>
       </listitem>
 
       <listitem>
-        <para><emphasis>New User Walkthrough - Chapter 2</emphasis></para>
+        <para><emphasis role="bold">New User Walkthrough - Chapter 2</emphasis></para>
 
         <para>We walk new users through a representative workflow project that
         includes all aspects of the Pegasus WMS. The project we use is is at a
