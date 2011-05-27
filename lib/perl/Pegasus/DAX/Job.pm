@@ -17,8 +17,6 @@ our @EXPORT = ();
 our @EXPORT_OK = (); 
 our %EXPORT_TAGS = (); 
 
-my $count = 0; 
-
 # one AUTOLOAD to rule them all
 BEGIN { *AUTOLOAD = \&Pegasus::DAX::Base::AUTOLOAD }
 
@@ -26,9 +24,6 @@ sub new {
     my $proto = shift;
     my $class = ref($proto) || $proto;
     my $self = $class->SUPER::new();
-
-    # default identifier using class variable $count
-    $self->{id} = sprintf( "ID%06u", ++$count ); 
 
     if ( @_ == 0 ) { 
 	# nothing to do 

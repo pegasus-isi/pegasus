@@ -22,11 +22,16 @@ BEGIN { *AUTOLOAD = \&Pegasus::DAX::Base::AUTOLOAD }
 
 use Pegasus::DAX::Filename qw(LINK_INPUT); 
 
+my $count = 0; 
+
 sub new {
     my $proto = shift;
     my $class = ref($proto) || $proto;
     my $self = $class->SUPER::new();
     $self->{separator} = ' '; 	# between arguments default
+
+    # default identifier using class variable $count
+    $self->{id} = sprintf( "ID%06u", ++$count ); 
 
     if ( @_ > 1 ) {
 	# called with a=>b,c=>d list
