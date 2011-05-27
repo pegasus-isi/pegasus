@@ -197,7 +197,7 @@ $ tar xvf Pegasus-3.0.1-Debian-6-x86.vbox.tar</emphasis></programlisting>
         </listitem>
 
       </orderedlist>
-         <para><Emphasis>Note:</Emphasis> The terminal window is the main interface for the walkthrough process.</para>
+         <para>Note: The terminal window is the main interface for the walkthrough process.</para>
 
 
     </section>
