@@ -177,6 +177,18 @@ $ tar xvf Pegasus-3.0.1-Debian-6-x86.vbox.tar</emphasis></programlisting>
           <para>6. Select the base recommended <emphasis role="bold">Base Memory Size</emphasis>
           then select <emphasis role="bold">Next</emphasis></para>
 
+           <para><figure id="selectvmfile">
+        <title>VM Name and OS Type</title>
+
+        <mediaobject>
+          <imageobject>
+            <imagedata align="center"
+                       fileref="images/Wizard5.png"
+                       valign="middle" />
+          </imageobject>
+        </mediaobject>
+      </figure></para>
+
 
          <para>7.Navigate to the location of the <emphasis role="bold">Debian-6-86</emphasis> file
          downloaded earlier. Once a file has been selected, it is available in the pull down menu.</para>
@@ -352,22 +364,17 @@ $ tar xvf Pegasus-3.0.1-Debian-6-x86.vbox.tar</emphasis></programlisting>
       linkend="about">(Introduction)</link> chapter</para>
 
 
-
-
-
-
     <section>
      <title>Planning and Executing Workflows</title>
-     <para>In this chapter you will be introduced to planning and executing a
+     <para>In this section you are introduced to planning and executing a
     workflow through Pegasus WMS locally. You will then plan and execute a
     larger Montage workflow on the GRID.</para>
 
-    <para>When the virtual machine starts , it will automatically log you in
+    <para>When the virtual machine starts , it automatically logs you in
     as user <emphasis role="bold">tutorial</emphasis> . The password for this
     account is <emphasis role="bold">pegasus</emphasis>.</para>
 
-    <para>After logging on, start a terminal. There is a shortcut on the
-    desktop for the terminal.</para>
+    <para>After logging on, start a terminal. </para>
 
     <programlisting><command>$ </command><emphasis role="bold">tutorial@pegasus-vm:$</emphasis><emphasis
         role="bold"> pwd</emphasis>
