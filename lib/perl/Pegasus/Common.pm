@@ -28,6 +28,7 @@ our @ISA = qw(Exporter);
 
 # declarations of methods here. Use the commented body to unconfuse emacs
 sub isodate(;$$$);		# { }
+sub isomsdate(;$$$);		# { }
 sub find_exec($;@);		# { }
 sub pipe_out_cmd;		# { }
 sub parse_exit(;$);		# { }
@@ -43,7 +44,7 @@ our $brainbase = 'braindump.txt'; # basename of brain dump file
 # Do not simply export all your public functions/methods/constants.
 our $VERSION = '0.1';
 our @EXPORT_OK = qw($VERSION $brainbase $jobbase);
-our @EXPORT = qw(isodate find_exec pipe_out_cmd parse_exit 
+our @EXPORT = qw(isodate isomsdate find_exec pipe_out_cmd parse_exit 
 		 slurp_braindb version check_rescue log10);
 our %EXPORT_TAGS = ( all => [ @EXPORT ] );
 
@@ -51,6 +52,11 @@ our %EXPORT_TAGS = ( all => [ @EXPORT ] );
 use POSIX qw(strftime);
 use File::Spec;
 use Carp;
+
+BEGIN {
+    # non-fatally attempt to load semi-standard Time::HiRes module
+    eval { require Time::HiRes; import Time::HiRes qw(time); };
+}
 
 sub isodate(;$$$) {
     # purpose: convert seconds since epoch into ISO timestamp
@@ -75,6 +81,20 @@ sub isodate(;$$$) {
     }
 
     $result;
+}
+
+sub isomsdate(;$$$) {
+    # purpose: see isodate, but with millisecond extension
+    # returns: formatted ISO 8601 time stamp
+    #
+    my $now = shift || time();
+    my $utc = shift;
+    my $short = shift;
+    my $result = isodate($now,$utc,$short); 
+
+    my $s = substr( sprintf( "%.3f", $now-int($now) ), 1 ); 
+    substr( $result, ( $utc ? -1 : -5 ), 0, $s ); 
+    $result; 
 }
 
 sub find_exec($;@) {
@@ -235,6 +255,8 @@ Pegasus::Common - generally useful collection of methods.
     $zulu = isodate( time(), 1 );
     $short = isodate( $then, 0, 1 );
 
+    $millis = isomsdate(); 
+
     $version = version();
 
     my $app = find_exec( 'ls' );
@@ -268,7 +290,21 @@ arbitrary time stamps, the choice between local and zulu (UTC) time, and
 the choice between a regular and an extra concise output format. It does
 not use millisecond extensions (yet).
 
+=item isomsdate();
+
+=item isomsdate($whenms);
+
+=item isomsdate($whenms,$zuluflag);
+
+=item isomsdate($whenms,$zuluflag,$shortflag);
+
+The C<isomsdate> function works like the C<isodate> function. The difference
+is the milliseconds extension in the time stamp. In order to properly use
+the millisecond extension, and not have C<.000> appear, you need to import
+the L<Time::HiRes> module. 
+
 =item find_exec( $basename );
+
 =item find_exec( $basename, @extra );
 
 The C<find_exec> function searches the C<PATH> environment variable for
@@ -306,17 +342,18 @@ function of less general applicability.
 
 =item %ver = version();
 
-The C<version> function runs the C<pegasus-version> command and returns the version of Pegasus being used. 
+The C<version> function runs the C<pegasus-version> command and returns
+the version of Pegasus being used.
 
 =back
 
 =head1 SEE ALSO
 
-L<http://www.griphyn.org/>
+L<http://pegasus.isi.edu/>
 
 =head1 AUTHOR
 
-Jens-S. VE<ouml>ckler, C<voeckler at cs dot uchicago dot edu>
+Jens-S. VE<ouml>ckler, C<voeckler at isi dot edu>
 Gaurang Mehta, C<gmehta at isi dot edu>
 
 =head1 COPYRIGHT AND LICENSE
