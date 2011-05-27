@@ -1,58 +1,62 @@
-<?xml version="1.0" encoding="US-ASCII"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
 "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <chapter id="walkthrough">
   <title>New User Walkthrough</title>
-
+  
   <section>
-    <title>Walkthrough Objectives</title>
+  
+   <title> Walkthrough Objectives</title>
+    <para>Describe the subject of the sample project that the user will be assembling.
 
-    <para>Describe the subject of the sample project that the user will be
-    assembling. The user will use an abstract workflow, convert it to an
-    executable workflow, plan it and execute it, and then monitor the workflow
-    execution.</para>
-
-    <para><emphasis>Walkthrough Subjects:</emphasis></para>
-
-    <itemizedlist>
+    The user will use an abstract workflow, convert it to an executable workflow, plan it and execute it, and then monitor the workflow execution.
+     </para>
+    
+   <para><emphasis>Walkthrough Subjects:</emphasis></para>
+   
+   <itemizedlist>
       <listitem>
         <para>Download and Install Pegasus VM</para>
       </listitem>
-
-      <listitem>
+      
+       <listitem>
         <para>Workflows</para>
       </listitem>
 
       <listitem>
         <para>Pegasus Plan and Pegasus-run</para>
       </listitem>
-
+      
       <listitem>
         <para>Monitoring and Debugging</para>
       </listitem>
-
+      
       <listitem>
         <para>Plotting and Statistics</para>
       </listitem>
-
+      
       <listitem>
         <para>Environments</para>
       </listitem>
-
+      
       <listitem>
         <para>Advanced Exercises</para>
+        
       </listitem>
-    </itemizedlist>
+
+
+</itemizedlist>
+
   </section>
+  
+    <section>
+     <title>Downloading and Running the VM using Virtual Box</title>
 
-  <section>
-    <title>Downloading and Running the VM using Virtual Box</title>
-
-    <para>You will need to install Virtual Box to run the virtual machine on
-    your computer. If you already have one of the tools installed, use that.
-    Otherwise download the binary versions and install them from the<ulink
+    <para>You will need to have Virtual Box to run the virtual machine on
+    your computer. If you do not already have it installed, download the binary versions and install them from the<ulink
     url="http://www.virtualbox.org/wiki/Downloads"> Virtual Box
     Website</ulink> .</para>
+
 
     <section>
       <title>Download the VM for Virtual Box use</title>
@@ -102,119 +106,111 @@ $ tar xvf Pegasus-3.0.1-Debian-6-x86.vbox.tar</emphasis></programlisting>
     <section>
       <title>Running the VM with Virtual Box</title>
 
-      <para>Launch Virtual Box on your machine. Follow the steps to add the
-      vmdk file to Virtual Box and create a virtual machine inside the Virtual
+      <para>Follow these steps to add the vmdk file to Virtual Box and create a virtual machine inside the Virtual
       Box</para>
 
       <orderedlist>
         <listitem>
-          <para>In the Menu, click File and select Virtual Media Manager (
-          File &gt; Virtual Media Manager )</para>
+           <para>Launch Virtual Box on your machine.</para>
+        </listitem>
+        <listitem>
+          <para>In the Icon Menu, select <emphasis>New</emphasis></para>
         </listitem>
 
         <listitem>
-          <para>The Virtual Media Manager Windows opens up.</para>
+          <para>The Create New Virtual Machine Wizard Welcome window opens up.</para>
         </listitem>
 
         <listitem>
-          <para>Click on "Add" button to add the<emphasis role="bold">
-          Pegasus-3.0.1-Debian-6-x86.vbox/Debian-6-x86.vmdk</emphasis> file
-          that you just downloaded and unzipped.</para>
+          <para>Select <emphasis>Next</emphasis></para>
         </listitem>
 
         <listitem>
-          <para>You will now see the Debian-6-x86.vmdk in the list of hard
-          disks with Actual size listed as around 3.0 GB</para>
+          <para>Enter a name for the virtual machine.</para>
         </listitem>
 
         <listitem>
-          <para>Close the Window for the Virtual Media Manager</para>
+          <para>Select <emphasis>Linux</emphasis> as the <emphasis>Operating System</emphasis> and
+          <emphasis>Debian</emphasis>as the <emphasis>Version</emphasis>
+          from the pull down menus. Select <emphasis>Next</emphasis></para>
         </listitem>
+        <listitem>
+          <para>Select the base recommended <emphasis>Base Memory Size</emphasis>
+          then select <emphasis>Next</emphasis></para>
+        </listitem>
+        <listitem>Select <emphasis>Use existing hard disk</emphasis> then click on the
+        <emphasis>select button</emphasis></listitem>
+        <listitem>
+         <para>Navigate to the location of the <emphasis>Debian-6-86</emphasis> file
+         downloaded earlier. Once a file has been selected, it is available in the pull down menu.</para>
+        </listitem>
+        <listitem>
+         <para>Double click the <emphasis>Debian-6-86 </emphasis> file to launch it.</para>
+        </listitem>
+        <listitem>
+         <para>Select the desired storage type then select <emphasis>Next</emphasis></para>
+        </listitem>
+        <listitem>
+         <para>Select the desired location and virtual disk size, then select <emphasis>Next</emphasis></para>
+        </listitem>
+        <listitem>
+         <para>Review the settings and select <emphasis>Finish</emphasis> to create
+         the virtual disk or <emphasis>Cancel</emphasis> to cancel creation</para>
+        </listitem>
+        <listitem>The Starting VM progress window opens and tracks the creation process</listitem>
+        <listitem>When completed the virtual home page page is displayed</listitem>
+        <listitem>
+         <para>Select <emphasis>Accessories - LX Terminal</emphasis> to open a terminal window.</para>
+        </listitem>
+        <listitem><Emphasis>Note:</Emphasis> The terminal window is the main interface for the walkthrough process.</listitem>
       </orderedlist>
 
-      <para>We will now create a Virtual Machine in the Virtual Box.</para>
 
-      <orderedlist>
-        <listitem>
-          <para>In the Menu, click Machine and select New ( Machine &gt; New
-          )</para>
-        </listitem>
 
-        <listitem>
-          <para>It will open the New Virtual Machine Wizard. Click
-          Continue</para>
-        </listitem>
-
-        <listitem>
-          <para>In the VM Name and OS Type Window specify the name as<emphasis
-          role="bold"> PegasusVM-3.0</emphasis>.1 Select the <emphasis
-          role="bold">Operating System as Linux </emphasis>and <emphasis
-          role="bold">Version as Debian </emphasis>. Click Continue.</para>
-        </listitem>
-
-        <listitem>
-          <para>Set the base memory to <emphasis role="bold">384 MB</emphasis>
-          . It defaults to 512 MB. Click Continue</para>
-        </listitem>
-
-        <listitem>
-          <para>We now select the Virtual Hard Disk to use with the machine.
-          Select the option box for Use Existing Hard Disk. Select <emphasis
-          role="bold">Debian-6-x86.vmdk</emphasis> from the list . Click
-          Continue</para>
-        </listitem>
-
-        <listitem>
-          <para>Click Done</para>
-        </listitem>
-
-        <listitem>
-          <para>Now in the Virtual Box , start the PegasusVM-3.0.1
-          machine.</para>
-        </listitem>
-      </orderedlist>
     </section>
-  </section>
+    </section>
 
   <section>
-    <title>Simple Workflow Example</title>
+     <title>Workflows</title>
+     
+      <para>Workflows are at the center of how Pegasus operates. Pegasus takes in an abstract workflow ( DAX ) and generates an executable workflow (DAG) that is
+      run in an environment. For the purposes of this walkthrough, we will demonstrate the characteristics and structure of workflows by generating a workflow with
+      a bit of Java code that uses the DAX API to generate a DAX workflow.
 
-    <para>Workflows are at the center of how Pegasus operates. Pegasus takes
-    in an abstract workflow ( DAX ) and generates an executable workflow (DAG)
-    that is run in an environment. For the purposes of this walkthrough, we
-    will demonstrate the characteristics and structure of workflows by
-    generating a workflow with a bit of Java code that uses the DAX API to
-    generate a DAX workflow. For a more detailed description of workflows, how
-    to create them, and how they are used in Pegasus please see
-    <emphasis>Creating Workflows</emphasis> in the <link
-    linkend="about">(Introduction)</link> chapter</para>
+      For a more detailed description of workflows, how to create them, and how they are used in Pegasus please see <emphasis>Creating Workflows</emphasis> in the <link
+
+      linkend="about">(Introduction)</link> chapter</para>
+
+
+
+
+
 
     <section>
-      <title>Planning and Executing Workflows</title>
+     <title>Planning and Executing Workflows</title>
+     <para>In this chapter you will be introduced to planning and executing a
+    workflow through Pegasus WMS locally. You will then plan and execute a
+    larger Montage workflow on the GRID.</para>
 
-      <para>In this chapter you will be introduced to planning and executing a
-      workflow through Pegasus WMS locally. You will then plan and execute a
-      larger Montage workflow on the GRID.</para>
+    <para>When the virtual machine starts , it will automatically log you in
+    as user <emphasis role="bold">tutorial</emphasis> . The password for this
+    account is <emphasis role="bold">pegasus</emphasis>.</para>
 
-      <para>When the virtual machine starts , it will automatically log you in
-      as user <emphasis role="bold">tutorial</emphasis> . The password for
-      this account is <emphasis role="bold">pegasus</emphasis>.</para>
+    <para>After logging on, start a terminal. There is a shortcut on the
+    desktop for the terminal.</para>
 
-      <para>After logging on, start a terminal. There is a shortcut on the
-      desktop for the terminal.</para>
-
-      <programlisting><command>$ </command><emphasis role="bold">tutorial@pegasus-vm:$</emphasis><emphasis
-          role="bold"> pwd</emphasis>
+    <programlisting><command>$ </command><emphasis role="bold">tutorial@pegasus-vm:$</emphasis><emphasis
+        role="bold"> pwd</emphasis>
 
 /home/tutorial
 </programlisting>
 
-      <para>In general, to run workflows on the Grid you will need to obtain
-      Grid Credentials. The VM already has a user certificate installed for
-      the pegasus user. To generate the proxy ( grid credentials ) run the
-      <emphasis role="bold">grid-proxy-init</emphasis> command.</para>
+    <para>In general, to run workflows on the Grid you will need to obtain
+    Grid Credentials. The VM already has a user certificate installed for the
+    pegasus user. To generate the proxy ( grid credentials ) run the <emphasis
+    role="bold">grid-proxy-init</emphasis> command.</para>
 
-      <programlisting><command>$ [pegasus@pegasus ~]$ grid-proxy-init
+    <programlisting><command>$ [pegasus@pegasus ~]$ grid-proxy-init
 
 </command><computeroutput>Your identity: /O=edu/OU=ISI/OU=isi.edu/CN=Tutorial User
 Creating proxy ............................................. Done
@@ -223,34 +219,34 @@ Your proxy is valid until: Thu Dec 23 22:41:36 2010
 
 </computeroutput></programlisting>
 
-      <para>All the exercises in this Chapter will be run from the
-      $HOME/pegasus-wms/ directory. All the files that are required reside in
-      this directory</para>
+    <para>All the exercises in this Chapter will be run from the
+    $HOME/pegasus-wms/ directory. All the files that are required reside in
+    this directory</para>
 
-      <programlisting><command>$ cd $HOME/pegasus-wms</command></programlisting>
+    <programlisting><command>$ cd $HOME/pegasus-wms</command></programlisting>
 
-      <para>Files for the exercise are stored in subdirectories:</para>
+    <para>Files for the exercise are stored in subdirectories:</para>
 
-      <programlisting><command>$ ls</command><computeroutput><computeroutput>
+    <programlisting><command>$ ls</command><computeroutput><computeroutput>
 
 config  dax</computeroutput></computeroutput></programlisting>
 
-      <para>You may also see some other files here.</para>
+    <para>You may also see some other files here.</para>
 
-      <section>
-        <title>Creating a DIAMOND DAX</title>
+    <section>
+      <title>Creating a DIAMOND DAX</title>
 
-        <para>Generate a 4 node diamond dax with a small piece of java code
-        that uses the DAX API to generate the DAX. Open the file
-        $HOME/pegasus-wms/dax/CreateDAX.java in a file editor:</para>
+      <para>Generate a 4 node diamond dax with a small piece of java
+      code that uses the DAX API to generate the DAX. Open the file
+      $HOME/pegasus-wms/dax/CreateDAX.java in a file editor:</para>
 
-        <programlisting><command>$ vi dax/CreateDAX.java</command></programlisting>
+      <programlisting><command>$ vi dax/CreateDAX.java</command></programlisting>
 
-        <para>There is a function Diamond( String site_handle, String
-        pegasus_location ) that constructs the DAX. Towards the end of the
-        function there is some commented out code.</para>
+      <para>There is a function Diamond( String site_handle, String
+      pegasus_location ) that constructs the DAX. Towards the end of the
+      function there is some commented out code.</para>
 
-        <programlisting> // Add analyze job
+      <programlisting> // Add analyze job
 //To be uncommented for exercise 2.1
 
         Job j4 = new Job("j4", "pegasus", "analyze", "4.0");
@@ -271,128 +267,188 @@ config  dax</computeroutput></computeroutput></programlisting>
 //End of commented out code for Exercise 2.1
 </programlisting>
 
-        <para>The above snippet of code, adds a job with the ID0000004 to the
-        DAX. It illustrates how to specify</para>
+      <para>The above snippet of code, adds a job with the ID0000004 to the
+      DAX. It illustrates how to specify</para>
 
-        <orderedlist>
-          <listitem>
-            <para>the arguments for the job</para>
-          </listitem>
+      <orderedlist>
+        <listitem>
+          <para>the arguments for the job</para>
+        </listitem>
 
-          <listitem>
-            <para>the logical files used by the job</para>
-          </listitem>
+        <listitem>
+          <para>the logical files used by the job</para>
+        </listitem>
 
-          <listitem>
-            <para>the dependencies to other jobs</para>
-          </listitem>
+        <listitem>
+          <para>the dependencies to other jobs</para>
+        </listitem>
 
-          <listitem>
-            <para>adding the job to the dax</para>
-          </listitem>
-        </orderedlist>
+        <listitem>
+          <para>adding the job to the dax</para>
+        </listitem>
+      </orderedlist>
 
-        <para>After uncommenting the code, compile and run the CreateDAX
-        program.</para>
+      <para>After uncommenting the code, compile and run the CreateDAX
+      program.</para>
 
-        <programlisting><emphasis role="bold">$ cd dax
+      <programlisting><emphasis role="bold">$ cd dax
 
 $ javac -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX.java
 
-$ java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/pegasus/default ./diamond.dax
+$  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/pegasus/default ./diamond.dax
 </emphasis></programlisting>
 
-        <para>Let us view the generated diamond.dax.</para>
+      <para>Let us view the generated diamond.dax.</para>
 
-        <programlisting><emphasis role="bold">$ cat diamond.dax</emphasis></programlisting>
+      <programlisting><emphasis role="bold">$ cat diamond.dax</emphasis></programlisting>
 
-        <para>Inside the DAX, you should see three sections.</para>
+      <para>Inside the DAX, you should see three sections.</para>
 
-        <orderedlist>
-          <listitem>
-            <para>list of input file locations</para>
-          </listitem>
+      <orderedlist>
+        <listitem>
+          <para>list of input file locations</para>
+        </listitem>
 
-          <listitem>
-            <para>list of executable locations</para>
-          </listitem>
+        <listitem>
+          <para>list of executable locations</para>
+        </listitem>
 
-          <listitem>
-            <para>definition of all jobs - each job in the workflow. 4 jobs in
-            total.</para>
-          </listitem>
+        <listitem>
+          <para>definition of all jobs - each job in the workflow. 4 jobs in
+          total.</para>
+        </listitem>
 
-          <listitem>
-            <para>list of control-flow dependencies - this section specifies a
-            partial order in which jobs are to executed.</para>
-          </listitem>
-        </orderedlist>
-      </section>
+        <listitem>
+          <para>list of control-flow dependencies - this section specifies a
+          partial order in which jobs are to executed.</para>
+        </listitem>
+      </orderedlist>
+     </section>
 
-      <section>
-        <title>Workflow Execution</title>
 
-        <para>Describe in general how a workflow is executed.</para>
 
-        <para>Links to new optimization page</para>
-      </section>
 
-      <section>
-        <title>Workflow Monitoring and Analysis</title>
 
-        <para>Pegasus comes bundled with tools for monitoring and analyzing
-        workflows</para>
-
-        <orderedlist>
-          <listitem>
-            <para><emphasis>Pegasus Status</emphasis> - Displays the status of
-            the workflow individual jobs</para>
-          </listitem>
-
-          <listitem>
-            <para><emphasis>Pegaus Analyzer</emphasis> - Command line utility
-            for parsing several workflow directory files to summarize useful
-            information for the user</para>
-          </listitem>
-
-          <listitem>
-            <para><emphasis>Pegasus Remove</emphasis> - Comand line tool for
-            aborting a workflow</para>
-          </listitem>
-        </orderedlist>
-
-        <para>See <link linkend="monitoring_debugging_stats"> "Monitoring
-        Tools"</link></para>
-      </section>
-
-      <section>
-        <title>Statistical Analysis of Workflows</title>
-
-        <para>Pegasus comes bundled with tools for producing statistical
-        system reports</para>
-
-        <orderedlist>
-          <listitem>
-            <para><emphasis>Pegasus Statistics</emphasis> - Generates workflow
-            execution statistics</para>
-          </listitem>
-
-          <listitem>
-            <para><emphasis>Pegasus Plots</emphasis> - Generates graphs and
-            charts to visusalize workflow execution</para>
-          </listitem>
-        </orderedlist>
-
-        <para>See <link linkend="monitoring_debugging_stats"> "Plotting and
-        Statistics Tools"</link></para>
-      </section>
+  
+   <section>
+    <title>Workflow Execution</title>
+    
+    <para>Describe in general how a workflow is executed.</para>
+  
+     <para>Links to new optimization page</para>
+     
     </section>
-  </section>
+ 
 
-  <section id="whats_next">
-    <title>What's next</title>
 
-    <para>Note: do not reference the tutorial here - it could become
-    confusing</para>
-  </section>
+<section>
+
+     <title>Workflow Monitoring and Analysis</title>
+
+                  <section>
+                   <title>Monitoring Tools</title>
+
+                   <para>Pegasus comes bundled with tools for monitoring and analyzing workflows</para>
+                   
+                   <orderedlist>
+                       <listitem>
+                         <para><emphasis>Pegaus Monitord</emphasis> - Tracks the job states as a workflow is executed</para>
+
+                       </listitem>
+                       <listitem>
+                         <para><emphasis>Pegasus Status</emphasis> - Displays the status of the workflow individual jobs</para>
+
+                       </listitem>
+                       <listitem>
+                         <para><emphasis>Pegaus Analyzer</emphasis> - Command line utility for parsing several workflow directory files to summarize useful information for the user</para>
+
+                       </listitem>
+                       <listitem>
+                         <para><emphasis>Pegasus Remove</emphasis> - Comand line tool for aborting a workflow</para>
+
+                       </listitem>
+
+                      </orderedlist>
+                      
+                       <para> See
+                           <link linkend="monitoring_debugging_stats"> "Monitoring Tools"</link>
+
+                       </para>
+</section>
+       <section>
+     <title>Debugging and Statistical Analysis of Workflows</title>
+
+
+           <para>Pegasus comes bundled with tools for producing statistical system reports</para>
+
+                        <orderedlist>
+                        <listitem>
+                           <para><emphasis>Pegasus Statistics</emphasis> - Generates workflow execution statistics</para>
+
+                        </listitem>
+                        <listitem>
+                        <para><emphasis>Pegasus Plots</emphasis> - Generates graphs and charts to visusalize workflow execution</para>
+
+                        </listitem>
+
+                        </orderedlist>
+                        <para> See
+                       <link linkend="monitoring_debugging_stats"> "Plotting and Statistics Tools"</link>   </para>
+                      </section>
+
+   </section>
+    </section>
+  <section>
+   <title>Pegasus Logs</title>
+   <para>Describe the logs that Pegasus creates and what each is used for</para>
+   <para>Include the persistence of each log and any storage repository for historical logs</para>
+   
+     <itemizedlist>
+      <listitem>Log Number 1
+       <para>Log details</para>    </listitem>
+       
+       <listitem>Log Number 2
+       <para>Log details</para>    </listitem>
+
+       <listitem>Log Number 3
+       <para>Log details</para>    </listitem>
+
+     </itemizedlist>
+   
+   
+   </section>
+
+
+   
+
+   
+
+    </section>
+
 </chapter>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
