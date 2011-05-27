@@ -52,10 +52,10 @@
     <section>
      <title>Downloading and Running the VM using Virtual Box</title>
 
-    <para>You will need to have Virtual Box to run the virtual machine on
-    your computer. If you do not already have it installed, download the binary versions and install them from the<ulink
+    <note>Virtual Box is required to run the virtual machine on
+    your computer. If you do not already have it installed, download the binary version desired and install it from the<ulink
     url="http://www.virtualbox.org/wiki/Downloads"> Virtual Box
-    Website</ulink> .</para>
+    Website</ulink> .</note>
 
 
     <section>
