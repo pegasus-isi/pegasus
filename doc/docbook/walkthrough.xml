@@ -143,7 +143,17 @@ $ tar xvf Pegasus-3.0.1-Debian-6-x86.vbox.tar</emphasis></programlisting>
         <listitem>
           <para>The Create New Virtual Machine Wizard Welcome window opens up.</para>
         </listitem>
+        <para><figure id="namevm">
+        <title>VM Name and OS Type</title>
 
+        <mediaobject>
+          <imageobject>
+            <imagedata align="center"
+                       fileref="images/Wizard2.png"
+                       valign="middle" />
+          </imageobject>
+        </mediaobject>
+      </figure></para>
         <listitem>
           <para>Select <emphasis>Next</emphasis></para>
         </listitem>
