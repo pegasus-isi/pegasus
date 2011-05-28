@@ -251,9 +251,14 @@ push( @arg, '-maxjobs', $maxjobs ) if $maxjobs > 0;
 push( @arg, '-maxidle', $maxidle ) if $maxidle > 0;
 push( @arg, '-notification', $notify );
 push( @arg, '-verbose' ) if $verbose;
-push (@arg, '-append', '+wf_uuid="'.$config{'wf_uuid'}.'"' );
-push (@arg, '-append', '+pegasus_wf_name="'.$config{'pegasus_wf_name'}.'"' );
-push (@arg, '-append', '+pegasus_wf_time="'.$config{timestamp}.'"' );
+push( @arg, '-append', '+wf_uuid="'.$config{'wf_uuid'}.'"' );
+push( @arg, '-append', '+pegasus_wf_name="'.$config{'pegasus_wf_name'}.'"' );
+push( @arg, '-append', '+pegasus_wf_time="'.$config{timestamp}.'"' );
+push( @arg, '-append', '+pegasus_version="'.$config{'planner_version'}.'"' );
+push( @arg, '-append', '+pegasus_job_class=11' );
+push( @arg, '-append', '+pegasus_cluster_size=1' );
+push( @arg, '-append', '+pegasus_site="local"' ); 
+push( @arg, '-append', '+pegasus_wf_xformation="pegasus::dagman"' ); 
 
 #push( @arg, '-no_submit') if $submit==0;
 push( @arg, $dag );

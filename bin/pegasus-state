@@ -113,18 +113,18 @@ $main::reset = "\033[0m";	# reset all color/bold/etc.
     , 128 => 'O'                # stage-out
     );
 @main::jobclass = 
-    ( 'unknown'
-    , 'compute'
-    , 'stage-in'
-    , 'stage-out'
-    , 'register'
-    , 'xsite-xfer'
-    , 'createdir'
-    , 's-compute'		# deprecated
-    , 'clean-up'
-    , 'chmod'
-    , 'dax'
-    , 'dag'
+    ( 'unknown'			# 0
+    , 'compute'			# 1
+    , 'stage-in'		# 2
+    , 'stage-out'		# 3
+    , 'register'		# 4
+    , 'xsite-xfer'		# 5
+    , 'createdir'		# 6
+    , 's-compute'		# 7 -- deprecated
+    , 'clean-up'		# 8
+    , 'chmod'			# 9
+    , 'dax'			# 10
+    , 'dag'			# 11
     );
 @main::jobshort =		# short job class (job type)
     (   '-', 'job',  'si',  'so'
@@ -275,6 +275,11 @@ my %dtitle =
 		 , minwidth => 5
 		 , legend => 'Jobs in workflow'
 	         },
+      'PERCENT' => { header => '%'
+		   , function => \&y_percent
+		   , minwidth => 3
+		   , legend => 'Success percentage'
+		   },
       'S_DONE' => { header => 'SUCCESS'
 		, function => \&y_dag_done
 		, minwidth => 7
@@ -344,7 +349,7 @@ my %dtitle =
     ( # summary mode
       [ qw(S_UNREADY S_READY S_PRE S_QUEUED S_POST S_DONE S_FAILED) ]
       # show subdag mode
-    , [ qw(UNREADY READY PRE QUEUED POST DONE FAILED STATE WORKFLOW) ],
+    , [ qw(UNREADY READY PRE QUEUED POST DONE FAILED PERCENT STATE WORKFLOW) ],
     );
 
 
@@ -1029,8 +1034,13 @@ sub x_job1 {
     }
 
     if ( $main::onatty ) { 
-	"\033[0;37m" . $row->{_indent} . $main::ccolor[ $row->{jobstatus} ] . 
-	    $result;
+	if ( $row->{'pegasus_job_class'} > 9 ) { 
+	    "\033[0;37m" . $row->{_indent} . $main::reset .
+		$result . $main::ccolor[ $row->{jobstatus} ];
+	} else {
+	    "\033[0;37m" . $row->{_indent} . $main::ccolor[ $row->{jobstatus} ] . 
+		$result;
+	}
     } else {
 	$row->{_indent} . $result;
     }
@@ -1137,7 +1147,7 @@ sub q_print_summary($\%) {
     my $cref = shift;		# %count ref
 
     # create Condor job summary
-    print "Summary: ", plural($cref->{all}{condor},'job'), " total"; 
+    print "Summary: ", plural($cref->{all}{condor},'Condor job'), " total"; 
 
     my $f = 0;
     foreach my $c ( sort { $a <=> $b } keys %{$cref->{condor}} ) {
@@ -1292,9 +1302,15 @@ sub dag_status($$) {
 		$state = ( $status == 0 ? 3 : 4 );
 	    }
 
+	    # some more statistics 
+	    my %tab = @tab;	# magic
+	    my $percent = $tab{total} == 0 ? 0.0 : 
+		( ( 100.0 * $tab{done} ) / $tab{total} );
+	    
 	    push( @result, { name => $short
 			   , state => $state
 			   , status => $status # may be undef
+			   , percent => $percent
 			   , detail => [ @tab ] 
 		           } ); 
 			     
@@ -1374,6 +1390,11 @@ sub y_dag_total {
     my $dag = shift;
     $dag->{extra} = { @{$dag->{detail}} } unless exists $dag->{extra}; 
     commas( $dag->{extra}->{total} );
+}
+
+sub y_percent {
+    my $dag = shift;
+    sprintf "%.0f", $dag->{percent};
 }
 
 sub y_dstat {
@@ -1556,7 +1577,7 @@ for ( my $cursor=1; ; $cursor=1 ) {
 	print "\033[2J\033[H";
 	$main::time = CORE::time(); 
 	my $now = scalar localtime($main::time); 
-	my $msg = 'Press Ctrl+C to exit'; 
+	my $msg = "Press Ctrl+C to exit";
 	printf "$msg%*s\n\n", $cols-length($msg), $now; 
 	$cursor += 2; 
 
@@ -1717,6 +1738,7 @@ for ( my $cursor=1; ; $cursor=1 ) {
 
 	# print totals, iff more than 1 workflow
 	if ( ! $show_subdag || @dags > 1 ) {
+	    print $main::bold if $main::onatty;
 	    for ( my $i=0; $i < @max; ++$i ) { 
 		my $key = lc $dtitle[$i]; 
 		substr($key,0,2,'') if substr($key,0,2) eq 's_'; 
@@ -1731,6 +1753,7 @@ for ( my $cursor=1; ; $cursor=1 ) {
 		    }
 		}
 	    }
+	    print $main::reset if $main::onatty;
 	    print "\n";
 	    ++$cursor; 
 	}
