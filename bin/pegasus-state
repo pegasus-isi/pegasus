@@ -1077,8 +1077,13 @@ sub x_job2 {
     }
 
     if ( $main::onatty ) { 
-	"\033[0;37m" . $row->{_indent} . $main::ccolor[ $row->{jobstatus} ] . 
-	    $result;
+	if ( $row->{'pegasus_job_class'} > 9 ) { 
+	    "\033[0;37m" . $row->{_indent} . $main::reset .
+		$result . $main::ccolor[ $row->{jobstatus} ];
+	} else {
+	    "\033[0;37m" . $row->{_indent} . $main::ccolor[ $row->{jobstatus} ] . 
+		$result;
+	}
     } else {
 	$row->{_indent} . $result;
     }
