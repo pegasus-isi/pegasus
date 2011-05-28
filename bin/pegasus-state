@@ -275,11 +275,6 @@ my %dtitle =
 		 , minwidth => 5
 		 , legend => 'Jobs in workflow'
 	         },
-      'PERCENT' => { header => '%'
-		   , function => \&y_percent
-		   , minwidth => 3
-		   , legend => 'Success percentage'
-		   },
       'S_DONE' => { header => 'SUCCESS'
 		, function => \&y_dag_done
 		, minwidth => 7
@@ -325,9 +320,19 @@ my %dtitle =
 	     , minwidth => 1
 	     , legend => 'Workflow state'
 	     },
+      'DOFT' => { header => 'D/T'
+		, function => \&y_done_total
+		, minwidth => 3
+		, legend => 'Jobs done of total'
+                },
+      'PERCENT' => { header => '%DONE'
+		   , function => \&y_percent
+		   , minwidth => 5
+		   , legend => 'Success percentage'
+		   },
       'STATE' => { header => 'STATE'
 		 , function => \&y_dlong
-		 , minwidth => 1
+		 , minwidth => -7
 		 , legend => 'Workflow state'
 		 },
       'EC' => { header => 'EC'
@@ -335,7 +340,7 @@ my %dtitle =
 	      , minwidth => 1
 	      , legend => 'Workflow exit status'
 	      },
-      'WORKFLOW' => { header => 'WORKFLOW'
+      'WORKFLOW' => { header => 'DAGNAME'
 		    , function => \&y_name
 		    , minwidth => -40
 		    , legend => 'Name of workflow'
@@ -347,7 +352,7 @@ my %dtitle =
 # CLI option for your own mix-n-match (TBD).)
 @main::dtitle = 
     ( # summary mode
-      [ qw(S_UNREADY S_READY S_PRE S_QUEUED S_POST S_DONE S_FAILED) ]
+      [ qw(S_UNREADY S_READY S_PRE S_QUEUED S_POST S_DONE S_FAILED PERCENT) ]
       # show subdag mode
     , [ qw(UNREADY READY PRE QUEUED POST DONE FAILED PERCENT STATE WORKFLOW) ],
     );
@@ -380,7 +385,7 @@ Optional arguments:
  -w|--watch [s]   repeatedly print output every 's' seconds, default TBD.
  -i|--idle        DO NOT display any jobs in state 'idle'. 
  -l|--long        Show sub-workflow state in workflow state. 
- --[no]legend     Disable or enable showing of the legend, default on. 
+ --[no]legend     Disable or enable showing of the legend, default on.
  --[no]held       Disable or enable showing HoldReason, default on.
  --[no]heavy      Disable or enable heavy lines in Unicode output, default off. 
 
@@ -1290,7 +1295,6 @@ sub dag_status($$) {
 		warn "Warning: open $fn: $!\n";
 	    }
 
-	    @tab = dag_process_tab(@tab);
 	    my $short = ( $fn =~ /^$run/o ? 
 			  substr( $fn, length($run)+1, -$dolen ) :
 			  substr( $fn, 0, -$dolen ) );
@@ -1306,17 +1310,11 @@ sub dag_status($$) {
 		# finished: success (3) or failure (4)
 		$state = ( $status == 0 ? 3 : 4 );
 	    }
-
-	    # some more statistics 
-	    my %tab = @tab;	# magic
-	    my $percent = $tab{total} == 0 ? 0.0 : 
-		( ( 100.0 * $tab{done} ) / $tab{total} );
 	    
 	    push( @result, { name => $short
 			   , state => $state
 			   , status => $status # may be undef
-			   , percent => $percent
-			   , detail => [ @tab ] 
+			   , detail => { dag_process_tab(@tab) }
 		           } ); 
 			     
 	}
@@ -1337,9 +1335,8 @@ sub dag_totals(\@) {
 		 , _total => 0 
 		 ); 
     foreach my $dag ( @{$dref} ) { 
-	my $x = $dag->{detail}; 
-	for ( my $i=0; $i<@{$x}; $i += 2 ) { 
-	    $result{ $x->[$i] } += $x->[$i+1];
+	while ( my ($k,$v) = each %{ $dag->{detail} } ) { 
+	    $result{$k} += $v; 
 	}
 	$result{'_state'}[$dag->{state}]++; 
 	$result{'_total'}++; 
@@ -1351,73 +1348,73 @@ sub dag_totals(\@) {
 
 sub y_dag_done {
     my $dag = shift;
-    $dag->{extra} = { @{$dag->{detail}} } unless exists $dag->{extra}; 
-    commas( $dag->{extra}->{done} );
+    commas( $dag->{detail}->{done} || 0 );
 }
 
 sub y_dag_pre {
     my $dag = shift;
-    $dag->{extra} = { @{$dag->{detail}} } unless exists $dag->{extra}; 
-    commas( $dag->{extra}->{pre} );
+    commas( $dag->{detail}->{pre} || 0 );
 }
 
 sub y_dag_queued {
     my $dag = shift;
-    $dag->{extra} = { @{$dag->{detail}} } unless exists $dag->{extra}; 
-    commas( $dag->{extra}->{queued} );
+    commas( $dag->{detail}->{queued} || 0 );
 }
 
 sub y_dag_post {
     my $dag = shift;
-    $dag->{extra} = { @{$dag->{detail}} } unless exists $dag->{extra}; 
-    commas( $dag->{extra}->{post} );
+    commas( $dag->{detail}->{post} || 0 );
 }
 
 sub y_dag_ready {
     my $dag = shift;
-    $dag->{extra} = { @{$dag->{detail}} } unless exists $dag->{extra}; 
-    commas( $dag->{extra}->{ready} );
+    commas( $dag->{detail}->{ready} || 0 );
 }
 
 sub y_dag_unready {
     my $dag = shift;
-    $dag->{extra} = { @{$dag->{detail}} } unless exists $dag->{extra}; 
-    commas( $dag->{extra}->{unready} );
+    commas( $dag->{detail}->{unready} || 0 );
 }
 
 sub y_dag_failed {
     my $dag = shift;
-    $dag->{extra} = { @{$dag->{detail}} } unless exists $dag->{extra}; 
-    commas( $dag->{extra}->{failed} );
+    commas( $dag->{detail}->{failed} || 0 );
 }
 
 sub y_dag_total {
     my $dag = shift;
-    $dag->{extra} = { @{$dag->{detail}} } unless exists $dag->{extra}; 
-    commas( $dag->{extra}->{total} );
+    commas( $dag->{detail}->{total} || 0 );
 }
 
 sub y_percent {
     my $dag = shift;
-    sprintf "%.0f", $dag->{percent};
+    my $done = $dag->{detail}->{done}+0;
+    my $total = $dag->{detail}->{total}+0; 
+    my $percent = ( $total == 0 ) ? 0 : ( 100.0 * $done / $total );
+    sprintf "%.1f", $percent;
+}
+
+sub y_done_total {
+    my $dag = shift;
+    commas( $dag->{detail}->{done} || 0 ) . '/' . commas( $dag->{detail}->{total} || 0 );
 }
 
 sub y_dstat {
     my $dag = shift;
     my $s = $dag->{state}+0;
-    $s < @main::dstat ? $main::dstat[$s] : "$s";
+    $s < @main::dstat ? $main::dstat[$s] : ''; 
 }
 
 sub y_dlong {
     my $dag = shift;
     my $s = $dag->{state}+0;
-    $s < @main::dlong ? $main::dlong[$s] : "$s";
+    $s < @main::dlong ? $main::dlong[$s] : '';
 }
 
 sub y_status {
     my $dag = shift;
     my $x = $dag->{status}; 
-    defined $x ? sprintf( "%d/%d", ($x >> 8), ($x & 127) ) : 'n.a'; 
+    defined $x ? parse_exit($x) : 'n.a'; 
 }
 
 sub y_name {
@@ -1440,7 +1437,7 @@ sub dag_print_summary($\%) {
 
     # create workflow summary
     print( "Summary: ", 
-	   plural( $totals->{'_total'}, 'workflow' ), 
+	   plural( $totals->{'_total'}, 'DAG' ), 
 	   " total" );
 
     if ( $totals->{'_total'} > 0 ) { 
@@ -1686,6 +1683,12 @@ for ( my $cursor=1; ; $cursor=1 ) {
 	# determine summary of all workflow jobs
 	my %totals = dag_totals( @dags ); 
 
+	# create pseudo-row (last row) with totals
+	push( @dags, { name => 'TOTALS',
+		       state => 42,
+		       status => undef,
+		       detail => \%totals } );
+
 	# create data to actually show from larger set
 	@result = whittle_down( %dtitle, @dtitle, @dags ); 
 
@@ -1710,7 +1713,8 @@ for ( my $cursor=1; ; $cursor=1 ) {
 
 	# print each row of results
 	if ( $show_subdag ) { 
-	    for ( my $i=0; $i<@result; ++$i ) { 
+	    # exclude pseudo-row with total from this part
+	    for ( my $i=0; $i<$#result; ++$i ) { 
 		my $dagstate = $dags[$i]->{state}; 
 
 		# decide on a color for row and print data columns
@@ -1732,8 +1736,8 @@ for ( my $cursor=1; ; $cursor=1 ) {
 
 		# skip rest of output if reaching bottom of current terminal
 		my $diff = $rows - $reserve; 
-		if ( $watch && @result > $diff && $cursor > $diff ) {
-		    print '(', plural( @result-$i, 'additional workflow' );
+		if ( $watch && $#result > $diff && $cursor > $diff ) {
+		    print '(', plural( $#result-$i, 'additional workflow' );
 		    print " omitted.)\n"; 
 		    ++$cursor;
 		    last; 
@@ -1741,25 +1745,24 @@ for ( my $cursor=1; ; $cursor=1 ) {
 	    }
 	}
 
-	# print totals, iff more than 1 workflow
-	if ( ! $show_subdag || @dags > 1 ) {
-	    print $main::bold if $main::onatty;
-	    for ( my $i=0; $i < @max; ++$i ) { 
-		my $key = lc $dtitle[$i]; 
-		substr($key,0,2,'') if substr($key,0,2) eq 's_'; 
-		print ' ' if $i; 
-		if ( exists $totals{$key} ) {
-		    printf "%*s", $max[$i], commas($totals{$key}); 
-		} else {
-		    if ( $i == $#max ) {
-			printf "%*s", $max[$i], 'TOTALS'; 
-		    } else {
-			printf "%*s", $max[$i], ''; 
-		    }
+	# print totals here
+	if ( ! $show_subdag || @dags > 2 ) {
+	    # decide on a color for row and print data columns
+	    print $main::bold if ( $show_subdag && $main::onatty );
+	    my $i = $#result; 
+	    for ( my $j=0; $j<@{$result[$i]}; ++$j ) {
+		print ' ' if $j;
+		if ( $j == $#max && length($result[$i][$j]) > abs($max[$j]) ) {
+		    $result[$i][$j] = fit( -abs($max[$j]), $result[$i][$j] ); 
 		}
+		printf "%*s", $max[$j], $result[$i][$j]; 
 	    }
-	    print $main::reset if $main::onatty;
-	    print "\n";
+
+	    # reset colors
+	    print $main::reset if $main::onatty; 
+
+	    # terminate current line
+	    print "\n"; 
 	    ++$cursor; 
 	}
 
