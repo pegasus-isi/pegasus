@@ -127,9 +127,9 @@
             Globus resource. As long as the daemons continue to run, the
             remote machine running them appears as part of your Condor pool.
             What are the advatages to running in a Pool environment? For a
-            more complete description of Condor, See the <ulink
-            url="http://www.cs.wisc.edu/condor/description.html">(Condor
-            Project Pages )</ulink></para>
+            more complete description of Condor, see the <ulink
+            url="http://www.cs.wisc.edu/condor/description.html">Condor
+            Project Pages </ulink></para>
           </listitem>
 
           <listitem>
@@ -261,4 +261,5 @@
     </itemizedlist>
   </section>
 </chapter>
+
 
