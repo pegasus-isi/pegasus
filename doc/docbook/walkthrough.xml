@@ -331,7 +331,10 @@ $ tar xvf Pegasus-3.0.1-Debian-6-x86.vbox.tar</emphasis></programlisting>
           </imageobject>
         </mediaobject>
       </figure></para>
-      <para>The Terminal Window opens</para>
+      <para> When the virtual machine starts , it automatically logs you in
+    as user <emphasis role="bold">tutorial</emphasis>.
+
+     The Terminal Window opens:</para>
       
       <para><figure id="virtdisk">
         <title>Storage Type</title>
@@ -361,7 +364,7 @@ $ tar xvf Pegasus-3.0.1-Debian-6-x86.vbox.tar</emphasis></programlisting>
 
       For a detailed description of workflows, how to create them, and how they are used in Pegasus see  <link
 
-      linkend="creating_workflows">(Creating Workflows)</link></para>
+      linkend="creating_workflows">Creating Workflows</link></para>
 
 
     <section>
@@ -370,10 +373,23 @@ $ tar xvf Pegasus-3.0.1-Debian-6-x86.vbox.tar</emphasis></programlisting>
     workflow through Pegasus WMS locally. You then plan and execute a
     larger Montage workflow on the GRID.</para>
 
-    <para>When the virtual machine starts , it automatically logs you in
-    as user <emphasis role="bold">tutorial</emphasis> . </para>
 
-    <para>Open a terminal. </para>
+
+    <para>1. Open a terminal. </para>
+       <para><figure id="selectterminal">
+        <title>Terminal Window</title>
+
+        <mediaobject>
+          <imageobject>
+            <imagedata align="center"
+                       fileref="images/SelectTerminal.png"
+                       valign="middle" />
+          </imageobject>
+        </mediaobject>
+      </figure></para>
+    
+        <para>The window opens:</para>
+    
 
      <para><figure id="termwindow">
         <title>Terminal Window</title>
@@ -390,36 +406,40 @@ $ tar xvf Pegasus-3.0.1-Debian-6-x86.vbox.tar</emphasis></programlisting>
 
     <para>In general, to run workflows on the Grid you will need to obtain
     Grid Credentials. The VM already has a user certificate installed for the
-    pegasus user. To generate the proxy ( grid credentials ) run the <emphasis
-    role="bold">grid-proxy-init</emphasis> command.</para>
+    pegasus user. <token/> <token/><parameter/></para>
 
-    <programlisting><command>$ [pegasus@pegasus ~]$ grid-proxy-init
+    <para>2. Run the <emphasis
+    role="bold">grid-proxy-init</emphasis> command to generate the proxy (grid credentials).</para>
 
-</command><computeroutput>Your identity: /O=edu/OU=ISI/OU=isi.edu/CN=Tutorial User
-Creating proxy ............................................. Done
-Your proxy is valid until: Thu Dec 23 22:41:36 2010                                            cd $HOME/pegasus-wms
+       <para><figure id="gridcreds">
+        <title>Terminal Window</title>
 
-
-
-</computeroutput></programlisting>
-
-    <para>All the exercises in this Chapter will be run from the
-    $HOME/pegasus-wms/ directory. All the files that are required reside in
-    this directory. </para>
+        <mediaobject>
+          <imageobject>
+            <imagedata align="center"
+                       fileref="images/gridcreds.png"
+                       valign="middle" />
+          </imageobject>
+        </mediaobject>
+      </figure></para>
     
-    <para>Execute the following command: </para>
+
+    <para>All the exercises in this Chapter will be run from the <emphasis role="bold">$HOME/pegasus-wms/ directory</emphasis>
+    . All the files that are required reside in this directory. </para>
+    
+    <para>3. Change the directory to HOME/pegasus-wms: </para>
 
     <programlisting><command>$ cd $HOME/pegasus-wms</command></programlisting>
 
     <para>The files for the exercise are stored in the <emphasis role="bold">config</emphasis> <emphasis role="bold">dax</emphasis>subdirectories:</para>
 
-         <para><figure id="filemanagerwindow">
+         <para><figure id="fileslocation">
         <title>File Manager</title>
 
         <mediaobject>
           <imageobject>
             <imagedata align="center"
-                       fileref="images/filemgr.png"
+                       fileref="images/fileslocation.png"
                        valign="middle" />
           </imageobject>
         </mediaobject>
