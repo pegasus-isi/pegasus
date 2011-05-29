@@ -190,7 +190,9 @@ $ tar xvf Pegasus-3.0.1-Debian-6-x86.vbox.tar</emphasis></programlisting>
       </figure></para>
 
 
-         <para>7.Navigate to the location of the <emphasis role="bold">Debian-6-86</emphasis> file
+         <para>7. Select <emphasis role="bold">Use existing hard disk</emphasis>.</para>
+         
+        <para>8. Open the file icon and navigate to the location of the <emphasis role="bold">Debian-6-86</emphasis> file
          downloaded earlier. Once a file has been selected, it is available in the pull down menu.</para>
          
         <para><figure id="selectfile">
@@ -206,7 +208,7 @@ $ tar xvf Pegasus-3.0.1-Debian-6-x86.vbox.tar</emphasis></programlisting>
       </figure></para>
 
 
-         <para>8. Double click the <emphasis role="bold">Debian-6-86 </emphasis> file to launch the Create New Virtual Disk Wizard.</para>
+         <para>9. Double click the <emphasis role="bold">Debian-6-86 </emphasis> file to launch the Create New Virtual Disk Wizard.</para>
           <para><figure id="doclib">
         <title/>
 
@@ -218,7 +220,7 @@ $ tar xvf Pegasus-3.0.1-Debian-6-x86.vbox.tar</emphasis></programlisting>
           </imageobject>
         </mediaobject>
       </figure></para>
-          <para>9. Select <emphasis role="bold">Next</emphasis></para>
+          <para>10. Select <emphasis role="bold">Next</emphasis></para>
           
           <para><figure id="virtdisk">
         <title>Storage Type</title>
@@ -234,7 +236,7 @@ $ tar xvf Pegasus-3.0.1-Debian-6-x86.vbox.tar</emphasis></programlisting>
 
         
         
-        <para>10. Select the desired storage type then select <emphasis role="bold">Next</emphasis></para>
+        <para>11. Select the desired storage type then select <emphasis role="bold">Next</emphasis></para>
           <para><figure id="virtdisklocation">
         <title>Virtual Disk Location and Size</title>
 
@@ -247,7 +249,7 @@ $ tar xvf Pegasus-3.0.1-Debian-6-x86.vbox.tar</emphasis></programlisting>
         </mediaobject>
       </figure></para>
 
-         <para>10. Select the desired location and virtual disk size, then select <emphasis role="bold">Next</emphasis></para>
+         <para>12. Select the desired location and virtual disk size, then select <emphasis role="bold">Next</emphasis></para>
           <para><figure id="summary">
         <title>Summary</title>
 
@@ -260,7 +262,7 @@ $ tar xvf Pegasus-3.0.1-Debian-6-x86.vbox.tar</emphasis></programlisting>
         </mediaobject>
       </figure></para>
 
-         <para>11. Review the settings and select <emphasis role="bold">Finish</emphasis> to create
+         <para>13. Review the settings and select <emphasis role="bold">Finish</emphasis> to create
          the virtual disk or <emphasis role="bold">Cancel</emphasis> to cancel creation</para>
          
          <para>The VM is created and will appear in the VirtualBox Manager window in a powered off state</para>
@@ -277,7 +279,7 @@ $ tar xvf Pegasus-3.0.1-Debian-6-x86.vbox.tar</emphasis></programlisting>
         </mediaobject>
       </figure></para>
       
-      <para>12. Double click the VM to launch the First Run Wizard</para>
+      <para>14. Double click the VM to launch the First Run Wizard</para>
       
       <para><figure id="firstrunwizard">
         <title>Storage Type</title>
@@ -319,7 +321,7 @@ $ tar xvf Pegasus-3.0.1-Debian-6-x86.vbox.tar</emphasis></programlisting>
           </imageobject>
         </mediaobject>
       </figure></para>
-         <para>12. Select <emphasis role="bold">Accessories - LX Terminal</emphasis> to open a terminal window.</para>
+         <para>15. Select <emphasis role="bold">Accessories - LX Terminal</emphasis> to open a terminal window.</para>
          <para><figure id="virtdisk">
         <title>Select Terminal</title>
 
@@ -376,40 +378,14 @@ $ tar xvf Pegasus-3.0.1-Debian-6-x86.vbox.tar</emphasis></programlisting>
 
 
     <para>1. Open a terminal. </para>
-       <para><figure id="selectterminal">
-        <title>Terminal Window</title>
 
-        <mediaobject>
-          <imageobject>
-            <imagedata align="center"
-                       fileref="images/SelectTerminal.png"
-                       valign="middle" />
-          </imageobject>
-        </mediaobject>
-      </figure></para>
-    
-        <para>The window opens:</para>
-    
-
-     <para><figure id="termwindow">
-        <title>Terminal Window</title>
-
-        <mediaobject>
-          <imageobject>
-            <imagedata align="center"
-                       fileref="images/tutorialterminal.png"
-                       valign="middle" />
-          </imageobject>
-        </mediaobject>
-      </figure></para>
 
 
     <para>In general, to run workflows on the Grid you will need to obtain
     Grid Credentials. The VM already has a user certificate installed for the
     pegasus user. <token/> <token/><parameter/></para>
 
-    <para>2. Run the <emphasis
-    role="bold">grid-proxy-init</emphasis> command to generate the proxy (grid credentials).</para>
+    <para>2. Run the <emphasis role="bold">grid-proxy-init</emphasis> command to generate the proxy (grid credentials).</para>
 
        <para><figure id="gridcreds">
         <title>Terminal Window</title>
@@ -427,11 +403,11 @@ $ tar xvf Pegasus-3.0.1-Debian-6-x86.vbox.tar</emphasis></programlisting>
     <para>All the exercises in this Chapter will be run from the <emphasis role="bold">$HOME/pegasus-wms/ directory</emphasis>
     . All the files that are required reside in this directory. </para>
     
-    <para>3. Change the directory to HOME/pegasus-wms: </para>
+    <para>3. Change the directory to <emphasis role="bold">HOME/pegasus-wms:</emphasis> </para>
 
     <programlisting><command>$ cd $HOME/pegasus-wms</command></programlisting>
 
-    <para>The files for the exercise are stored in the <emphasis role="bold">config</emphasis> <emphasis role="bold">dax</emphasis>subdirectories:</para>
+    <para>The files for the exercise are stored in the <emphasis role="bold">config</emphasis> and <emphasis role="bold">dax</emphasis>subdirectories:</para>
 
          <para><figure id="fileslocation">
         <title>File Manager</title>
@@ -486,7 +462,7 @@ $ tar xvf Pegasus-3.0.1-Debian-6-x86.vbox.tar</emphasis></programlisting>
 
 
       <para>The above snippet of code, adds a job with the ID0000004 to the
-      DAX. It illustrates how to specify</para>
+      DAX. It illustrates how to specify:</para>
 
       <orderedlist>
         <listitem>
@@ -516,7 +492,7 @@ $ javac -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX.java
 $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/pegasus/default ./diamond.dax
 </emphasis></programlisting>
 
-      <para>View the generated diamond.dax.</para>
+      <para>4. View the generated diamond.dax.</para>
 
       <programlisting><emphasis role="bold">$ cat diamond.dax</emphasis></programlisting>
       
@@ -536,23 +512,23 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
 
       <para>The DAX contains four sections.</para>
 
-      <orderedlist>
+      <unorderedlist>
         <listitem>
-          <para>Section 1. Files - Acts as a Replica Catalog</para>
+          <para><emphasis role="bold">Section 1. Files</emphasis> - Acts as a Replica Catalog</para>
         </listitem>
 
         <listitem>
-          <para>Section 2. Executables - Acts as a Transformation Catalog</para>
+          <para><emphasis role="bold">Section 2. Executables</emphasis> - Acts as a Transformation Catalog</para>
         </listitem>
 
         <listitem>
-          <para>Section 3. Transformations - Aggregates, Executables, and Files</para>
+          <para><emphasis role="bold">Section 3. Transformations</emphasis> - Aggregates, Executables, and Files</para>
         </listitem>
 
         <listitem>
-          <para>Section 4. Jobs DAXs or DAGs - Defines a Job, DAX, or DAG</para>
+          <para><emphasis role="bold">Section 4. Jobs DAXs or DAGs</emphasis> - Defines a Job, DAX, or DAG</para>
         </listitem>
-      </orderedlist>
+      </unorderedlist>
      </section>
 
 
@@ -655,6 +631,7 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
     </section>
 
 </chapter>
+
 
 
 
