@@ -512,23 +512,15 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
 
       <para>The DAX contains four sections.</para>
 
-      <unorderedlist>
-        <listitem>
+
           <para><emphasis role="bold">Section 1. Files</emphasis> - Acts as a Replica Catalog</para>
-        </listitem>
 
-        <listitem>
           <para><emphasis role="bold">Section 2. Executables</emphasis> - Acts as a Transformation Catalog</para>
-        </listitem>
 
-        <listitem>
           <para><emphasis role="bold">Section 3. Transformations</emphasis> - Aggregates, Executables, and Files</para>
-        </listitem>
 
-        <listitem>
           <para><emphasis role="bold">Section 4. Jobs DAXs or DAGs</emphasis> - Defines a Job, DAX, or DAG</para>
-        </listitem>
-      </unorderedlist>
+
      </section>
 
 
@@ -631,6 +623,7 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
     </section>
 
 </chapter>
+
 
 
 
