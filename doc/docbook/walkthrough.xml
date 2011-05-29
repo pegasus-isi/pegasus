@@ -471,27 +471,18 @@ $ tar xvf Pegasus-3.0.1-Debian-6-x86.vbox.tar</emphasis></programlisting>
 
 
       <para>2. Scroll down to the <emphasis role="bold">//Add analyze job //To be uncommented for exercise 2.1</emphasis> code near the end of the file. </para>
+      
+      <para><figure id="addanalyze">
+        <title>Add Analyze Code</title>
 
-      <programlisting> // Add analyze job
-//To be uncommented for exercise 2.1
-
-        Job j4 = new Job("j4", "pegasus", "analyze", "4.0");
-        j4.addArgument("-a analyze -T 60 -i ").addArgument(fc1);
-        j4.addArgument(" ").addArgument(fc2);
-        j4.addArgument("-o ").addArgument(fd);
-        j4.uses(fc1, File.LINK.INPUT);
-        j4.uses(fc2, File.LINK.INPUT);
-        j4.uses(fd, File.LINK.OUTPUT);
-
-        //add job to the DAX
-        dax.addJob(j4);
-
-        //analyze job is a child to the findrange jobs
-        dax.addDependency("j2", "j4");
-        dax.addDependency("j3", "j4");
-
-//End of commented out code for Exercise 2.1
-</programlisting>
+        <mediaobject>
+          <imageobject>
+            <imagedata align="center"
+                       fileref="uncommentsection.png"
+                       valign="middle" />
+          </imageobject>
+        </mediaobject>
+      </figure></para>
 
 
       <para>The above snippet of code, adds a job with the ID0000004 to the
@@ -516,7 +507,7 @@ $ tar xvf Pegasus-3.0.1-Debian-6-x86.vbox.tar</emphasis></programlisting>
       </orderedlist>
 
       <para>3. Uncomment the code, then compile and run the CreateDAX
-      program.</para>
+      program as follows:</para>
 
       <programlisting><emphasis role="bold">$ cd dax
 
@@ -525,29 +516,41 @@ $ javac -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX.java
 $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/pegasus/default ./diamond.dax
 </emphasis></programlisting>
 
-      <para>Let us view the generated diamond.dax.</para>
+      <para>View the generated diamond.dax.</para>
 
       <programlisting><emphasis role="bold">$ cat diamond.dax</emphasis></programlisting>
+      
+      <para>The job output is displayed</para>
+      
+       <para><figure id="joboutput">
+        <title>Generated Diamond DAX file</title>
 
-      <para>Inside the DAX, you should see three sections.</para>
+        <mediaobject>
+          <imageobject>
+            <imagedata align="center"
+                       fileref="generatedDAXtutorial.png"
+                       valign="middle" />
+          </imageobject>
+        </mediaobject>
+      </figure></para>
+
+      <para>The DAX contains four sections.</para>
 
       <orderedlist>
         <listitem>
-          <para>list of input file locations</para>
+          <para>Section 1. Files - Acts as a Replica Catalog</para>
         </listitem>
 
         <listitem>
-          <para>list of executable locations</para>
+          <para>Section 2. Executables - Acts as a Transformation Catalog</para>
         </listitem>
 
         <listitem>
-          <para>definition of all jobs - each job in the workflow. 4 jobs in
-          total.</para>
+          <para>Section 3. Transformations - Aggregates, Executables, and Files</para>
         </listitem>
 
         <listitem>
-          <para>list of control-flow dependencies - this section specifies a
-          partial order in which jobs are to executed.</para>
+          <para>Section 4. Jobs DAXs or DAGs - Defines a Job, DAX, or DAG</para>
         </listitem>
       </orderedlist>
      </section>
