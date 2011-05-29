@@ -371,16 +371,22 @@ $ tar xvf Pegasus-3.0.1-Debian-6-x86.vbox.tar</emphasis></programlisting>
     larger Montage workflow on the GRID.</para>
 
     <para>When the virtual machine starts , it automatically logs you in
-    as user <emphasis role="bold">tutorial</emphasis> . The password for this
-    account is <emphasis role="bold">pegasus</emphasis>.</para>
+    as user <emphasis role="bold">tutorial</emphasis> . </para>
 
-    <para>After logging on, start a terminal. </para>
+    <para>Open a terminal. </para>
 
-    <programlisting><command>$ </command><emphasis role="bold">tutorial@pegasus-vm:$</emphasis><emphasis
-        role="bold"> pwd</emphasis>
+     <para><figure id="termwindow">
+        <title>Terminal Window</title>
 
-/home/tutorial
-</programlisting>
+        <mediaobject>
+          <imageobject>
+            <imagedata align="center"
+                       fileref="images/tutorialterminal.png"
+                       valign="middle" />
+          </imageobject>
+        </mediaobject>
+      </figure></para>
+
 
     <para>In general, to run workflows on the Grid you will need to obtain
     Grid Credentials. The VM already has a user certificate installed for the
@@ -405,11 +411,7 @@ Your proxy is valid until: Thu Dec 23 22:41:36 2010                             
 
     <programlisting><command>$ cd $HOME/pegasus-wms</command></programlisting>
 
-    <para>The files for the exercise are stored in subdirectories:</para>
-
-    <programlisting><command>$ ls</command><computeroutput><computeroutput>
-
-config  dax</computeroutput></computeroutput></programlisting>
+    <para>The files for the exercise are stored in the <emphasis role="bold">config</emphasis> <emphasis role="bold">dax</emphasis>subdirectories:</para>
 
          <para><figure id="filemanagerwindow">
         <title>File Manager</title>
