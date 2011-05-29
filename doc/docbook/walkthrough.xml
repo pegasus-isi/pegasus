@@ -7,9 +7,9 @@
   <section>
   
    <title> Walkthrough Objectives</title>
-    <para>Describe the subject of the sample project that the user will be assembling.
+    <para>
 
-    The user will use an abstract workflow, convert it to an executable workflow, plan it and execute it, and then monitor the workflow execution.
+    Using an abstract workflow, a user will convert it to an executable workflow, plan it and execute it, and then monitor the workflow execution.
      </para>
     
    <para><emphasis>Walkthrough Subjects:</emphasis></para>
@@ -353,21 +353,21 @@ $ tar xvf Pegasus-3.0.1-Debian-6-x86.vbox.tar</emphasis></programlisting>
     </section>
 
   <section>
-     <title>Workflows</title>
+     <title>Walkthrough Workflow</title>
      
       <para>Workflows are at the center of how Pegasus operates. Pegasus takes in an abstract workflow ( DAX ) and generates an executable workflow (DAG) that is
       run in an environment. For the purposes of this walkthrough, we will demonstrate the characteristics and structure of workflows by generating a workflow with
       a bit of Java code that uses the DAX API to generate a DAX workflow.
 
-      For a more detailed description of workflows, how to create them, and how they are used in Pegasus please see <emphasis>Creating Workflows</emphasis> in the <link
+      For a detailed description of workflows, how to create them, and how they are used in Pegasus see  <link
 
-      linkend="about">(Introduction)</link> chapter</para>
+      linkend="creating_workflows">(Creating Workflows)</link></para>
 
 
     <section>
      <title>Planning and Executing Workflows</title>
-     <para>In this section you are introduced to planning and executing a
-    workflow through Pegasus WMS locally. You will then plan and execute a
+     <para>In this section you plan and execute a
+    workflow through Pegasus WMS locally. You then plan and execute a
     larger Montage workflow on the GRID.</para>
 
     <para>When the virtual machine starts , it automatically logs you in
@@ -391,37 +391,64 @@ $ tar xvf Pegasus-3.0.1-Debian-6-x86.vbox.tar</emphasis></programlisting>
 
 </command><computeroutput>Your identity: /O=edu/OU=ISI/OU=isi.edu/CN=Tutorial User
 Creating proxy ............................................. Done
-Your proxy is valid until: Thu Dec 23 22:41:36 2010
+Your proxy is valid until: Thu Dec 23 22:41:36 2010                                            cd $HOME/pegasus-wms
+
 
 
 </computeroutput></programlisting>
 
     <para>All the exercises in this Chapter will be run from the
     $HOME/pegasus-wms/ directory. All the files that are required reside in
-    this directory</para>
+    this directory. </para>
+    
+    <para>Execute the following command: </para>
 
     <programlisting><command>$ cd $HOME/pegasus-wms</command></programlisting>
 
-    <para>Files for the exercise are stored in subdirectories:</para>
+    <para>The files for the exercise are stored in subdirectories:</para>
 
     <programlisting><command>$ ls</command><computeroutput><computeroutput>
 
 config  dax</computeroutput></computeroutput></programlisting>
 
-    <para>You may also see some other files here.</para>
+         <para><figure id="filemanagerwindow">
+        <title>File Manager</title>
+
+        <mediaobject>
+          <imageobject>
+            <imagedata align="center"
+                       fileref="images/filemgr.png"
+                       valign="middle" />
+          </imageobject>
+        </mediaobject>
+      </figure></para>
+
 
     <section>
       <title>Creating a DIAMOND DAX</title>
 
-      <para>Generate a 4 node diamond dax with a small piece of java
-      code that uses the DAX API to generate the DAX. Open the file
+      <para>Use these instructions to generate a 4 node diamond dax with a small piece of java
+      code that uses the DAX API to generate the DAX.</para>
+
+      <para>1.  Open the file
       $HOME/pegasus-wms/dax/CreateDAX.java in a file editor:</para>
 
       <programlisting><command>$ vi dax/CreateDAX.java</command></programlisting>
 
-      <para>There is a function Diamond( String site_handle, String
-      pegasus_location ) that constructs the DAX. Towards the end of the
-      function there is some commented out code.</para>
+        <para><figure id="openjavafile">
+        <title>File Manager</title>
+
+        <mediaobject>
+          <imageobject>
+            <imagedata align="center"
+                       fileref="javafile.png"
+                       valign="middle" />
+          </imageobject>
+        </mediaobject>
+      </figure></para>
+
+
+      <para>2. Scroll down to the <emphasis role="bold">//Add analyze job //To be uncommented for exercise 2.1</emphasis> code near the end of the file. </para>
 
       <programlisting> // Add analyze job
 //To be uncommented for exercise 2.1
@@ -444,6 +471,7 @@ config  dax</computeroutput></computeroutput></programlisting>
 //End of commented out code for Exercise 2.1
 </programlisting>
 
+
       <para>The above snippet of code, adds a job with the ID0000004 to the
       DAX. It illustrates how to specify</para>
 
@@ -465,7 +493,7 @@ config  dax</computeroutput></computeroutput></programlisting>
         </listitem>
       </orderedlist>
 
-      <para>After uncommenting the code, compile and run the CreateDAX
+      <para>3. Uncomment the code, then compile and run the CreateDAX
       program.</para>
 
       <programlisting><emphasis role="bold">$ cd dax
@@ -501,7 +529,6 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
         </listitem>
       </orderedlist>
      </section>
-
 
 
 
@@ -603,6 +630,7 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
     </section>
 
 </chapter>
+
 
 
 
