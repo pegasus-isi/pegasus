@@ -86,7 +86,7 @@ Length: 1,336,554,492 (1.2G) [application/x-bzip2]
 
           <para>The Image is bzipped . You will need to unzip it.</para>
 
-          <para>If you have gnu tar you can do this directly</para>
+          <para>If you have gnu tar you can do this directly:</para>
 
           <programlisting><emphasis role="bold">$ gtar jxvf Pegasus-3.0.1-Debian-6-x86.vbox.tar.bz2</emphasis></programlisting>
 
@@ -448,20 +448,32 @@ $ tar xvf Pegasus-3.0.1-Debian-6-x86.vbox.tar</emphasis></programlisting>
 
       <para>2. Scroll down to the <emphasis role="bold">//Add analyze job //To be uncommented for exercise 2.1</emphasis> code near the end of the file. </para>
       
-      <para><figure id="addanalyze">
-        <title>Add Analyze Code</title>
-
-        <mediaobject>
-          <imageobject>
-            <imagedata align="center"
-                       fileref="uncommentsection.png"
-                       valign="middle" />
-          </imageobject>
-        </mediaobject>
-      </figure></para>
 
 
-      <para>The above snippet of code, adds a job with the ID0000004 to the
+        <programlisting><command>// Add analyse job
+        // To be uncommented for exercise 2.1
+        /*
+        Job j4 = new Job ("j4", "pegasus", "analyze", "4.0");
+        j4.addArgument(" -a analyze -T 60 -i ").addArgument (fc1);
+        j4.addArgument (" ").addArgument (fc2);
+        j4.addArgument(" -o ").addArgument (fd);
+        j4.uses(fc1, File.LINK.INPUT);
+        j4.uses(fc2, FileLINK.INPUT);
+        j4.uses(fd, File.LINK&gt;OUTPUT);
+        
+        //add job to the DAX
+        dax.addJob (j4);
+        
+        //analyze job is a child to the findrange jobs
+        dax.addDependency("j2", "j4");
+        dax.addDependency("j3","j4");
+        */
+        //End of commented out code for Exercise 2.1
+         </command></programlisting>
+
+
+      <para>The above snippet of code, adds a job with the ID of <emphasis role="bold">0000004</emphasis>
+       to the
       DAX. It illustrates how to specify:</para>
 
       <orderedlist>
@@ -623,6 +635,7 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
     </section>
 
 </chapter>
+
 
 
 
