@@ -434,7 +434,7 @@ $ tar xvf Pegasus-3.0.1-Debian-6-x86.vbox.tar</emphasis></programlisting>
       <programlisting><command>$ vi dax/CreateDAX.java</command></programlisting>
 
         <para><figure id="openjavafile">
-        <title>File Manager</title>
+        <title>Create DAX Code</title>
 
         <mediaobject>
           <imageobject>
