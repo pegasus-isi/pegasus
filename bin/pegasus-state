@@ -374,22 +374,26 @@ sub usage(;$) {
     print << "EOF";
 
 Usage: $app [options ] [dagdir]
- $app helps monitor your jobs by querying Condor.
+ $app helps monitor a workflow by querying Condor and directories. 
 
-Optional arguments:
+Global optional arguments:
  -h|--help        print this help and exit.
  -V|--version     print version information and exit. 
- -v|--verbose     increase expert level.
- -d|--debug       increase debug level.
+ -v|--verbose     increase expert level (affects only C_Q).
+ -d|--debug       increase debug level (affects only C_Q).
  -u|--user name   monitor for user 'name', default is $main::user.
- -w|--watch [s]   repeatedly print output every 's' seconds, default TBD.
- -i|--idle        DO NOT display any jobs in state 'idle'. 
- -l|--long        Show sub-workflow state in workflow state. 
+ -w|--watch [s]   repeatedly print output every 's' seconds, default 60.
  --[no]legend     Disable or enable showing of the legend, default on.
- --[no]held       Disable or enable showing HoldReason, default on.
- --[no]heavy      Disable or enable heavy lines in Unicode output, default off. 
 
- rundir           directory to monitor, default is CWD. [currently unused]
+Optional arguments affecting Condor Q output:
+ -i|--[no]idle    Omit jobs in state 'idle' from output. 
+ --[no]held       Disable or enable showing HoldReason, default on.
+ --[no]heavy      Disable or enable heavy Unicode lines, default off. 
+
+Optional arguments affecting DAG output: 
+ rundir           directory to monitor, default is CWD.
+ -l|--long        Show all DAG states, including sub-DAGs, default only totals.
+ -s|--[no]success Omit 'Success' workflows from --long output, default show. 
 
 EOF
     exit ($flag ? 1 : 0); 
@@ -1190,6 +1194,7 @@ sub dag_recurse(\@$$) {
     my $dir = shift;
     my $level = shift;
 
+    profile_log( "opendir $dir" ) if defined $main::profile; 
     if ( opendir( DIR, $dir ) ) {
 	my ($file,$full); 
 	while ( defined ($file = readdir(DIR)) ) { 
@@ -1197,7 +1202,7 @@ sub dag_recurse(\@$$) {
 	    $full = File::Spec->catfile( $dir, $file );
 	    if ( -d $full ) { 
 		dag_recurse( @{$dirsref}, $full, $level+1 );
-	    } elsif ( $file =~ /\.dag\.dagman\.out/ ) { 
+	    } elsif ( $file =~ /\.dag\.dagman\.out$/ ) { 
 		push( @{ $dirsref->[$level] }, $full );
 	    }
 	}
@@ -1258,9 +1263,10 @@ sub dag_process_tab(@) {
 my $re1 = qr{\*\scondor_scheduniv_exec\.([0-9.]+)\s\(CONDOR_DAGMAN\)\sSTARTING\sUP};
 my $re2 = qr{\*\scondor_scheduniv_exec\.([0-9.]+)\s\(condor_DAGMAN\)\spid\s\d+\sEXITING\sWITH\sSTATUS\s(\S+)}; 
 
-sub dag_status($$) {
+sub dag_status($$;%) {
     my $run = shift;
     my $dagfn = shift;
+    my %flags = ( @_ ); 	# optional
 
     my @dirs = (); 
     dag_recurse(@dirs,$run,0);
@@ -1268,6 +1274,7 @@ sub dag_status($$) {
 
     my $dolen = length( '.dagman.out' ); 
     my @result = (); 
+    my $lastfn = $dirs[0][0]; # master workflow
     foreach my $d ( reverse @dirs ) { 
 	next unless defined $d;
 	foreach my $fn ( @{$d} ) {
@@ -1310,41 +1317,54 @@ sub dag_status($$) {
 		# finished: success (3) or failure (4)
 		$state = ( $status == 0 ? 3 : 4 );
 	    }
-	    
-	    push( @result, { name => $short
-			   , state => $state
-			   , status => $status # may be undef
-			   , detail => { dag_process_tab(@tab) }
-		           } ); 
-			     
+
+	    # I need this separately for bookeeping
+	    my %detail = dag_process_tab(@tab); 
+
+	    # tinker with the job count. The "master" workflow dagman is
+	    # not counted in any of job counts, yet it does appear in
+	    # the Condor Q.
+	    if ( $fn eq $lastfn ) {
+		if ( $state == 0 ) { 
+		    # map unknown to unready
+		    $detail{unready}++;
+		} elsif ( $state == 1 || $state == 2 ) {
+		    # map interdeterminate and running to queued
+		    $detail{queued}++;
+		} elsif ( $state == 3 ) { 
+		    # map success to done
+		    $detail{done}++;
+		} elsif ( $state == 4 ) { 
+		    # map failure to failed
+		    $detail{failed}++;
+		}
+		$detail{total}++; 
+		# tag root workflow that we included itself by asterisk
+		$short = '*' . $short;
+	    }
+
+	    # nosuccess for my own sanity -- and maybe Mats?
+	    unless ( $state == 3 && $flags{nosuccess} ) {
+		push( @result, { name => $short
+				, state => $state
+				, status => $status # may be undef
+				, detail => { %detail }
+		                } ); 
+	    }
+
+	    # bookeeping
+	    if ( exists $flags{count} ) { 
+		$flags{count}{'_state'}[$state]++;
+		$flags{count}{'_total'}++; 
+		while ( my ($k,$v) = each %detail ) {
+		    $flags{count}{$k} += $v;
+		}
+	    }     
 	}
     }
 
     @result;
 }
-
-sub dag_totals(\@) {
-    # purpose: compute totals by column for all workflows
-    #          also computes number of workflows in each state
-    # paramtr: @dags (IN): reference to known workflows
-    # returns: hash with totals from workflow job statistics
-    #
-    my $dref = shift;
-    
-    my %result = ( _state => [ map { 0 } @main::dstat ]
-		 , _total => 0 
-		 ); 
-    foreach my $dag ( @{$dref} ) { 
-	while ( my ($k,$v) = each %{ $dag->{detail} } ) { 
-	    $result{$k} += $v; 
-	}
-	$result{'_state'}[$dag->{state}]++; 
-	$result{'_total'}++; 
-    }
-
-    %result; 
-}
-
 
 sub y_dag_done {
     my $dag = shift;
@@ -1467,6 +1487,7 @@ binmode( STDOUT, ':utf8' ) if $main::isutf8;
 my $heldinfo = 1; 
 my $heavy = 0; 
 my $noidle = 0; 
+my $nosuccess = 0; 
 $main::expert = 0; 
 my $legend = 1; 
 my $show_subdag = 0; 
@@ -1477,6 +1498,7 @@ GetOptions( 'help|h' => \&usage
 	  , 'verbose|v+' => \$main::expert
 	  , 'version|V' => \&version
 	  , 'idle|i!' => \$noidle
+	  , 'success|s!' => \$nosuccess
 	  , 'legend!' => \$legend
 	  , 'hold|held!' => \$heldinfo
 	  , 'heavy!' => \$heavy
@@ -1493,8 +1515,7 @@ GetOptions( 'help|h' => \&usage
 		      sleep(3); 
 		  }
 	      }
-	      #$watch = $_[1] || 30; # 30s or 60s will be 'production'
-	      $watch = $_[1] || 5; 
+	      $watch = $_[1] || 60; # once a minute is almost too often
 	  }
 	  , 'cache=s' => \$main::cache
 	  , 'color' => sub { $main::onatty = 1 }
@@ -1532,7 +1553,9 @@ undef $run unless scalar keys %braindb;
 # FIXME: Extend to permit multiple rundirs a la @ARGV
 
 for ( my $cursor=1; ; $cursor=1 ) { 
-    my (%count,%job,%dag,@result,@dags) = (); 
+    my (%ccount,%job,%dag,@result,@dags) = ();
+    my %dcount = ( _state => [ map { 0 } @main::dstat ]
+	         , _total => 0 ); 
 
     # what level of expertise (output, verbose mode). Eventually a CLI
     # option will permit to use your own mix-n-match output (TBD).  
@@ -1543,7 +1566,7 @@ for ( my $cursor=1; ; $cursor=1 ) {
     profile_log( 'start condor_q' ) if defined $main::profile;
     condor_q( %job, %dag, @qtitle,
 	      noidle => $noidle, 
-	      count => \%count );
+	      count => \%ccount );
     profile_log( "final condor_q ($?)" ) if defined $main::profile;
 
     # %main::seen is for sanity checks
@@ -1561,7 +1584,9 @@ for ( my $cursor=1; ; $cursor=1 ) {
     # collect data from $rundir (if applicable)
     if ( defined $run ) {
 	profile_log( "start dag dir traversal" ) if defined $main::profile; 
-	@dags = dag_status( $run, $braindb{dag} );
+	@dags = dag_status( $run, $braindb{dag}, 
+			    nosuccess => $nosuccess,
+			    count => \%dcount );
 	profile_log( "final dag dir traversal" ) if defined $main::profile;
     }
 
@@ -1655,8 +1680,8 @@ for ( my $cursor=1; ; $cursor=1 ) {
 	    }
 	}
 
-	# create summaries from %count
-	$cursor = q_print_summary( $cursor, %count ); 
+	# create summaries from %ccount
+	$cursor = q_print_summary( $cursor, %ccount ); 
 	profile_log( "final Q printing" ) if defined $main::profile; 
     } else {
 	# nothing in Q
@@ -1668,7 +1693,7 @@ for ( my $cursor=1; ; $cursor=1 ) {
     warn "\n(Debug: I appear to be missing some jobs)\n" 
 	if ( scalar %main::seen );
 
-    if ( @q > 0 && @dags > 0 ) {
+    if ( @q > 0 && $dcount{'_total'} > 0 ) {
 	# separate the two sections
 	print "\n";
 	++$cursor; 
@@ -1676,18 +1701,15 @@ for ( my $cursor=1; ; $cursor=1 ) {
 
     # Is there state in the rundir (is there a rundir)? 
     $reserve = 5;
-    if ( @dags > 0 ) { 
+    if ( $dcount{'_total'} ) { 
 	local $main::space = ' '; # temporarily scoped overwrite
 	profile_log( "start DAG printing" ) if defined $main::profile; 
 
-	# determine summary of all workflow jobs
-	my %totals = dag_totals( @dags ); 
-
 	# create pseudo-row (last row) with totals
-	push( @dags, { name => 'TOTALS',
+	push( @dags, { name => "TOTALS (" . plural($dcount{'total'},'job') . ')',
 		       state => 42,
 		       status => undef,
-		       detail => \%totals } );
+		       detail => \%dcount } );
 
 	# create data to actually show from larger set
 	@result = whittle_down( %dtitle, @dtitle, @dags ); 
@@ -1746,7 +1768,7 @@ for ( my $cursor=1; ; $cursor=1 ) {
 	}
 
 	# print totals here
-	if ( ! $show_subdag || @dags > 2 ) {
+	if ( ! $show_subdag || $dcount{'_total'} > 1 ) {
 	    # decide on a color for row and print data columns
 	    print $main::bold if ( $show_subdag && $main::onatty );
 	    my $i = $#result; 
@@ -1767,7 +1789,7 @@ for ( my $cursor=1; ; $cursor=1 ) {
 	}
 
 	# print summary 
-	$cursor = dag_print_summary( $cursor, %totals ); 
+	$cursor = dag_print_summary( $cursor, %dcount ); 
 	profile_log( "final DAG printing" ) if defined $main::profile; 
     } else {
 	# no valid rundir -- do nothing
