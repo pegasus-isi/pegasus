@@ -549,19 +549,19 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
                    
                    <orderedlist>
                        <listitem>
-                         <para><emphasis>Pegaus Monitord</emphasis> - Tracks the job states as a workflow is executed</para>
+                         <para><emphasis role="bold">Pegaus Monitord</emphasis> - Tracks the job states as a workflow is executed</para>
 
                        </listitem>
                        <listitem>
-                         <para><emphasis>Pegasus Status</emphasis> - Displays the status of the workflow individual jobs</para>
+                         <para><emphasis role="bold">Pegasus Status</emphasis> - Displays the status of the workflow individual jobs</para>
 
                        </listitem>
                        <listitem>
-                         <para><emphasis>Pegaus Analyzer</emphasis> - Command line utility for parsing several workflow directory files to summarize useful information for the user</para>
+                         <para><emphasis role="bold">Pegaus Analyzer</emphasis> - Command line utility for parsing several workflow directory files to summarize useful information for the user</para>
 
                        </listitem>
                        <listitem>
-                         <para><emphasis>Pegasus Remove</emphasis> - Comand line tool for aborting a workflow</para>
+                         <para><emphasis role="bold">Pegasus Remove</emphasis> - Comand line tool for aborting a workflow</para>
 
                        </listitem>
 
