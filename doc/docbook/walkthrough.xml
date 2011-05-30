@@ -496,7 +496,7 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
 
       <programlisting><emphasis role="bold">$ cat diamond.dax</emphasis></programlisting>
       
-      <para>The job output is displayed</para>
+      <para>The job output is displayed:</para>
       
        <para><figure id="joboutput">
         <title>Generated Diamond DAX file</title>
@@ -504,7 +504,7 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
         <mediaobject>
           <imageobject>
             <imagedata align="center"
-                       fileref="generatedDAXtutorial.png"
+                       fileref="croppedoutput.png"
                        valign="middle" />
           </imageobject>
         </mediaobject>
@@ -623,6 +623,7 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
     </section>
 
 </chapter>
+
 
 
 
