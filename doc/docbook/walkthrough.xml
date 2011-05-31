@@ -439,7 +439,7 @@ $ tar xvf Pegasus-3.0.1-Debian-6-x86.vbox.tar</emphasis></programlisting>
         <mediaobject>
           <imageobject>
             <imagedata align="center"
-                       fileref="javafile.png"
+                       fileref="javafile2.png"
                        valign="middle" />
           </imageobject>
         </mediaobject>
@@ -516,7 +516,7 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
         <mediaobject>
           <imageobject>
             <imagedata align="center"
-                       fileref="croppedoutput.png"
+                       fileref=""
                        valign="middle" />
           </imageobject>
         </mediaobject>
