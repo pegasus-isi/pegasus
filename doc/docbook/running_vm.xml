@@ -35,7 +35,7 @@
         <mediaobject>
           <imageobject>
             <imagedata align="center"
-                       fileref="images/Wizard1.png"
+                       fileref="images/Wizard1.png"  width="5in"
                        valign="middle" />
           </imageobject>
         </mediaobject>
@@ -140,7 +140,7 @@
         <mediaobject>
           <imageobject>
             <imagedata align="center"
-                       fileref="images/Wizard9.png"
+                       fileref="images/Wizard9.png"  width="6in"
                        valign="middle" />
           </imageobject>
         </mediaobject>
@@ -213,7 +213,7 @@
         <mediaobject>
           <imageobject>
             <imagedata align="center"
-                       fileref="images/VirtualHomePageLogged in.png" width="4in"
+                       fileref="images/VirtualHomePageLogged in.png" width="6in"
                        valign="middle" />
           </imageobject>
         </mediaobject>
@@ -225,7 +225,7 @@
         <mediaobject>
           <imageobject>
             <imagedata align="center"
-                       fileref="images/SelectTerminal.png"
+                       fileref="images/SelectTerminal.png"  width="6in"
                        valign="middle" />
           </imageobject>
         </mediaobject>
