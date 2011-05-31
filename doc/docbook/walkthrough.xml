@@ -439,7 +439,7 @@ $ tar xvf Pegasus-3.0.1-Debian-6-x86.vbox.tar</emphasis></programlisting>
         <mediaobject>
           <imageobject>
             <imagedata align="center"
-                       fileref="javafile2.png"
+                       fileref="javafile.png"
                        valign="middle" />
           </imageobject>
         </mediaobject>
@@ -511,12 +511,12 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
       <para>The job output is displayed:</para>
       
        <para><figure id="joboutput">
-        <title>Generated Diamond DAX file</title>
+        <title>Generated Diamond-DAX file</title>
 
         <mediaobject>
           <imageobject>
             <imagedata align="center"
-                       fileref="joboutput"
+                       fileref=""
                        valign="middle" />
           </imageobject>
         </mediaobject>
