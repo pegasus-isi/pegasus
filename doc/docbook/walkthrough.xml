@@ -433,20 +433,7 @@ $ tar xvf Pegasus-3.0.1-Debian-6-x86.vbox.tar</emphasis></programlisting>
 
       <programlisting><command>$ vi dax/CreateDAX.java</command></programlisting>
 
-        <para><figure id="openjavafile">
-        <title>Create DAX Code</title>
-
-        <mediaobject>
-          <imageobject>
-            <imagedata align="center"
-                       fileref="javafile2.png"
-                       valign="middle" />
-          </imageobject>
-        </mediaobject>
-      </figure></para>
-
-
-      <para>2. Scroll down to the <emphasis role="bold">//Add analyze job //To be uncommented for exercise 2.1</emphasis> code near the end of the file. </para>
+       <para>2. Scroll down to the <emphasis role="bold">//Add analyze job //To be uncommented for exercise 2.1</emphasis> code near the end of the file. </para>
       
 
 
@@ -510,18 +497,16 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
       
       <para>The job output is displayed:</para>
       
-       <para><figure id="joboutput">
-        <title>Generated Diamond-DAX file</title>
+       <programlisting><emphasis>
 
-        <mediaobject>
-          <imageobject>
-            <imagedata align="center"
-                       fileref="joboutput"
-                       valign="middle" />
-          </imageobject>
-        </mediaobject>
-      </figure></para>
 
+
+
+
+
+
+
+        </emphasis></programlisting>
       <para>The DAX contains four sections.</para>
 
 
