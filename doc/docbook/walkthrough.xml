@@ -50,7 +50,7 @@
   </section>
   
     <section>
-     <title>Downloading and Running the VM using Virtual Box</title>
+     <title>Downloading Virtual Box </title>
 
     <note>Virtual Box is required to run the virtual machine on
     your computer. If you do not already have it installed, download the binary version desired and install it from the<ulink
@@ -86,11 +86,11 @@ Length: 1,336,554,492 (1.2G) [application/x-bzip2]
 
           <para>The Image is bzipped . You will need to unzip it.</para>
 
-          <para>If you have gnu tar you can do this directly:</para>
+          <para>If you have <emphasis role="bold">gnu tar</emphasis> you can do this directly:</para>
 
           <programlisting><emphasis role="bold">$ gtar jxvf Pegasus-3.0.1-Debian-6-x86.vbox.tar.bz2</emphasis></programlisting>
 
-          <para>Else you need to do the following</para>
+          <para>If you do not have <emphasis>gnu tar</emphasis> ,you need to do the following:</para>
 
           <programlisting><emphasis role="bold">$ bunzip2 Pegasus-3.0.1-Debian-6-x86.vbox.tar.bz2
 
@@ -102,259 +102,10 @@ $ tar xvf Pegasus-3.0.1-Debian-6-x86.vbox.tar</emphasis></programlisting>
         </listitem>
       </itemizedlist>
     </section>
-
-    <section>
-      <title>Running the VM with Virtual Box</title>
-
-      <para>Follow these steps to add the vmdk file to Virtual Box and create a virtual machine inside the Virtual
-      Box</para>
-
-          <section>
-           <para>1. Launch Virtual Box on your machine.</para>
-
-        
-        <para><figure id="virtualboxhome">
-        <title>Virtualbox Home</title>
-
-        <mediaobject>
-          <imageobject>
-            <imagedata align="center"
-                       fileref="images/VirtualBoxHome.png"
-                       valign="middle" />
-          </imageobject>
-        </mediaobject>
-      </figure></para>
-           </section>
-           <section>
-          <para>2. In the Icon Menu, select <emphasis role="bold">New</emphasis></para>
+    
+    <para>To run the VM with Virtual Box see <link linkend="running_vm">Runnning VM with Virtual Box</link></para>
 
 
-          <para>The Create New Virtual Machine Wizard Welcome window opens up.</para>
-
-        <para><figure id="welcome">
-        <title>Welcome Window</title>
-
-        <mediaobject>
-          <imageobject>
-            <imagedata align="center"
-                       fileref="images/Wizard1.png"
-                       valign="middle" />
-          </imageobject>
-        </mediaobject>
-      </figure></para>
-
-          <para>3. Select <emphasis role="bold">Next</emphasis></para>
-          </section>
-         <para><figure id="selectvm">
-        <title>VM Name and OS Type</title>
-
-        <mediaobject>
-          <imageobject>
-            <imagedata align="center"
-                       fileref="images/Wizard3.png"
-                       valign="middle" />
-          </imageobject>
-        </mediaobject>
-      </figure></para>
-
-          <para>4. Enter a name for the virtual machine.</para>
-          <para>5. Select <emphasis role="bold">Linux</emphasis> as the <emphasis role="bold">Operating System</emphasis> and
-          <emphasis role="bold">Debian</emphasis>as the <emphasis role="bold">Version</emphasis>
-          from the pull down menus. Select <emphasis role="bold">Next</emphasis></para>
-           <para><figure id="namevm">
-        <title>Base Memory</title>
-
-        <mediaobject>
-          <imageobject>
-            <imagedata align="center"
-                       fileref="images/Wizard4.png"
-                       valign="middle" />
-          </imageobject>
-        </mediaobject>
-      </figure></para>
-
-
-          <para>6. Select the base recommended <emphasis role="bold">Base Memory Size</emphasis>
-          then select <emphasis role="bold">Next</emphasis></para>
-
-           <para><figure id="selectvmfile">
-        <title>VM Name and OS Type</title>
-
-        <mediaobject>
-          <imageobject>
-            <imagedata align="center"
-                       fileref="images/Wizard5.png"
-                       valign="middle" />
-          </imageobject>
-        </mediaobject>
-      </figure></para>
-
-
-         <para>7. Select <emphasis role="bold">Use existing hard disk</emphasis>.</para>
-         
-        <para>8. Open the file icon and navigate to the location of the <emphasis role="bold">Debian-6-86</emphasis> file
-         downloaded earlier. Once a file has been selected, it is available in the pull down menu.</para>
-         
-        <para><figure id="selectfile">
-        <title>Document Library</title>
-
-        <mediaobject>
-          <imageobject>
-            <imagedata align="center"
-                       fileref="images/Wizard6.png"
-                       valign="middle" />
-          </imageobject>
-        </mediaobject>
-      </figure></para>
-
-
-         <para>9. Double click the <emphasis role="bold">Debian-6-86 </emphasis> file to launch the Create New Virtual Disk Wizard.</para>
-          <para><figure id="doclib">
-        <title/>
-
-        <mediaobject>
-          <imageobject>
-            <imagedata align="center"
-                       fileref="images/Wizard7.png"
-                       valign="middle" />
-          </imageobject>
-        </mediaobject>
-      </figure></para>
-          <para>10. Select <emphasis role="bold">Next</emphasis></para>
-          
-          <para><figure id="virtdisk">
-        <title>Storage Type</title>
-
-        <mediaobject>
-          <imageobject>
-            <imagedata align="center"
-                       fileref="images/Wizard8.png"
-                       valign="middle" />
-          </imageobject>
-        </mediaobject>
-      </figure></para>
-
-        
-        
-        <para>11. Select the desired storage type then select <emphasis role="bold">Next</emphasis></para>
-          <para><figure id="virtdisklocation">
-        <title>Virtual Disk Location and Size</title>
-
-        <mediaobject>
-          <imageobject>
-            <imagedata align="center"
-                       fileref="images/Wizard9.png"
-                       valign="middle" />
-          </imageobject>
-        </mediaobject>
-      </figure></para>
-
-         <para>12. Select the desired location and virtual disk size, then select <emphasis role="bold">Next</emphasis></para>
-          <para><figure id="summary">
-        <title>Summary</title>
-
-        <mediaobject>
-          <imageobject>
-            <imagedata align="center"
-                       fileref="images/Wizard10.png"
-                       valign="middle" />
-          </imageobject>
-        </mediaobject>
-      </figure></para>
-
-         <para>13. Review the settings and select <emphasis role="bold">Finish</emphasis> to create
-         the virtual disk or <emphasis role="bold">Cancel</emphasis> to cancel creation</para>
-         
-         <para>The VM is created and will appear in the VirtualBox Manager window in a powered off state</para>
-
-         <para><figure id="virtboxpopulated">
-        <title>Storage Type</title>
-
-        <mediaobject>
-          <imageobject>
-            <imagedata align="center"
-                       fileref="images/VirtualBoxPopulated.png"
-                       valign="middle" />
-          </imageobject>
-        </mediaobject>
-      </figure></para>
-      
-      <para>14. Double click the VM to launch the First Run Wizard</para>
-      
-      <para><figure id="firstrunwizard">
-        <title>Storage Type</title>
-
-        <mediaobject>
-          <imageobject>
-            <imagedata align="center"
-                       fileref="images/FirstRun1.png"
-                       valign="middle" />
-          </imageobject>
-        </mediaobject>
-      </figure></para>
-      <para> Select <emphasis role="bold">Next</emphasis></para>
-      
-      
-        <para>The Starting VM progress window opens and tracks the creation process</para>
-        
-        <para><figure id="progressbar">
-        <title>Storage Type</title>
-
-        <mediaobject>
-          <imageobject>
-            <imagedata align="center"
-                       fileref="images/FirstRun2.png"
-                       valign="middle" />
-          </imageobject>
-        </mediaobject>
-      </figure></para>
-        <para>When completed the virtual home page page is displayed</para>
-        
-       <para><figure id="virthome">
-        <title>Virtual Machine Running</title>
-
-        <mediaobject>
-          <imageobject>
-            <imagedata align="center"
-                       fileref="images/VirtualHomePageLogged in.png"
-                       valign="middle" />
-          </imageobject>
-        </mediaobject>
-      </figure></para>
-         <para>15. Select <emphasis role="bold">Accessories - LX Terminal</emphasis> to open a terminal window.</para>
-         <para><figure id="virtdisk">
-        <title>Select Terminal</title>
-
-        <mediaobject>
-          <imageobject>
-            <imagedata align="center"
-                       fileref="images/SelectTerminal.png"
-                       valign="middle" />
-          </imageobject>
-        </mediaobject>
-      </figure></para>
-      <para> When the virtual machine starts , it automatically logs you in
-    as user <emphasis role="bold">tutorial</emphasis>.
-
-     The Terminal Window opens:</para>
-      
-      <para><figure id="virtdisk">
-        <title>Storage Type</title>
-
-        <mediaobject>
-          <imageobject>
-            <imagedata align="center"
-                       fileref="images/VMCommandWindow.png"
-                       valign="middle" />
-          </imageobject>
-        </mediaobject>
-      </figure></para>
-
-
-         <para>Note: The terminal window is the main interface for the walkthrough process.</para>
-
-
-    </section>
     </section>
 
   <section>
@@ -628,6 +379,7 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
     </section>
 
 </chapter>
+
 
 
 
