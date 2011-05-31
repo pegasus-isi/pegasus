@@ -516,7 +516,7 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
         <mediaobject>
           <imageobject>
             <imagedata align="center"
-                       fileref=""
+                       fileref="joboutput"
                        valign="middle" />
           </imageobject>
         </mediaobject>
