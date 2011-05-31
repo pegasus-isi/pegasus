@@ -1329,8 +1329,10 @@ class Workflow:
         # Now, match the workflow state to the conditions in the notifications...
         for k in my_notifications:
             if state == "start":
-                if k != "start" and k != "always":
+                if k != "start" and k != "all":
                     continue
+                # Change k == 'all' to 'start'
+                k = "start"
             if state == "end":
                 if k == "on_error":
                     if self._dagman_exit_code == 0:
@@ -1338,8 +1340,10 @@ class Workflow:
                 elif k == "on_success":
                     if self._dagman_exit_code != 0:
                         continue
-                elif k != "at_end" and k != "always":
+                elif k != "at_end" and k != "all":
                     continue
+                if k == "all":
+                    k = "at_end"
 
             # Ok, we have a match!
             my_actions = my_notifications[k]
@@ -1349,6 +1353,8 @@ class Workflow:
                 my_env["PEGASUS_EVENT"] = k
                 my_env["PEGASUS_EVENT_TIMESTAMP"] = self._current_timestamp
                 my_env["PEGASUS_SUBMIT_DIR"] = self._original_submit_dir
+                my_env["PEGASUS_STDOUT"] = self._out_file
+                my_env["PEGASUS_JOBID"] = self._wf_uuid
                 if state == "end":
                     my_env["PEGASUS_STATUS"] = self._dagman_exit_code
 
@@ -1388,8 +1394,10 @@ class Workflow:
         # Now, match the job state to the conditions in the notifications...
         for k in my_notifications:
             if state == "EXECUTE":
-                if k != "start" and k != "always":
+                if k != "start" and k != "all":
                     continue
+                # Change k to "start"
+                k = "start"
                 my_status = None
             elif state == "JOB_SUCCESS":
                 if job_has_post_script:
@@ -1397,10 +1405,14 @@ class Workflow:
                     continue
                 if k == "start" or k == "on_error":
                     continue
+                if k == "all":
+                    k = "at_end"
                 my_status = "0"
             elif state == "POST_SCRIPT_SUCCESS":
                 if k == "start" or k == "on_error":
                     continue
+                if k == "all":
+                    k = "at_end"
                 my_status = "0"
             elif state == "JOB_FAILURE":
                 if job_has_post_script:
@@ -1408,14 +1420,25 @@ class Workflow:
                     continue
                 if k == "start" or k == "on_success":
                     continue
+                if k == "all":
+                    k = "at_end"
                 my_status = status
             elif state == "POST_SCRIPT_FAILED":
                 if k == "start" or k == "on_success":
                     continue
+                if k == "all":
+                    k = "at_end"
                 my_status = status
             else:
                 # We are in some other state...
                 continue
+
+            my_output = os.path.join(self._original_submit_dir, job._output_file)
+            my_error = os.path.join(self._original_submit_dir, job._error_file)
+            # Use the rotated file names if at the end of the job
+            if k != "start":
+                my_output = my_output + ".%03d" % (job._job_output_counter)
+                my_error = my_error + ".%03d" % (job._job_output_counter)
 
             # Ok, we have a match!
             my_actions = my_notifications[k]
@@ -1426,8 +1449,8 @@ class Workflow:
                 my_env["PEGASUS_EVENT_TIMESTAMP"] = self._current_timestamp
                 my_env["PEGASUS_SUBMIT_DIR"] = self._original_submit_dir
                 my_env["PEGASUS_JOBID"] = job._exec_job_id
-                my_env["PEGASUS_STDOUT"] = job._output_file
-                my_env["PEGASUS_STDERR"] = job._error_file
+                my_env["PEGASUS_STDOUT"] = my_output
+                my_env["PEGASUS_STDERR"] = my_error
                 if my_status is not None:
                     my_env["PEGASUS_STATUS"] = my_status
 
@@ -1481,6 +1504,13 @@ class Workflow:
             if my_status != 0:
                 if k == "on_success":
                     continue
+            if k == "all":
+                k = "at_end"
+
+            # Here, we always use the rotated file names as the invocation has already finished...
+            my_output = os.path.join(self._original_submit_dir, job._output_file) + ".%03d" % (job._job_output_counter)
+            my_error = os.path.join(self._original_submit_dir, job._error_file) + ".%03d" % (job._job_output_counter)
+
             # Ok, we have a match!
             my_actions = my_notifications[k]
             for action in my_actions:
@@ -1490,8 +1520,9 @@ class Workflow:
                 my_env["PEGASUS_EVENT_TIMESTAMP"] = self._current_timestamp
                 my_env["PEGASUS_SUBMIT_DIR"] = self._original_submit_dir
                 my_env["PEGASUS_JOBID"] = job._exec_job_id
-                my_env["PEGASUS_STDOUT"] = job._output_file
-                my_env["PEGASUS_STDERR"] = job._error_file
+                my_env["PEGASUS_INVID"] = task_id
+                my_env["PEGASUS_STDOUT"] = my_output
+                my_env["PEGASUS_STDERR"] = my_error
                 if k != "start":
                     my_env["PEGASUS_STATUS"] = my_status
 
