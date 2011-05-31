@@ -211,12 +211,12 @@
         <para>When completed the virtual home page page is displayed</para>
 
        <para><figure id="virthome">
-        <title>Virtual Machine Running</title>
+        <title>Virtual Machine Home Page</title>
 
         <mediaobject>
           <imageobject>
             <imagedata align="center"
-                       fileref="images/VirtualHomePageLogged in.png"
+                       fileref="images/VirtualHomePageLogged in.png" width="4in"
                        valign="middle" />
           </imageobject>
         </mediaobject>
