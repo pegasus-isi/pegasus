@@ -3,13 +3,12 @@
 "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <chapter id="runvm">
   <title>Running the VM with Virtual Box</title>
-  <section>
+
 
 
       <para>Follow these steps to add the vmdk file to Virtual Box and create a virtual machine inside the Virtual
       Box</para>
 
-          <section>
            <para>1. Launch Virtual Box on your machine.</para>
 
 
@@ -24,8 +23,7 @@
           </imageobject>
         </mediaobject>
       </figure></para>
-           </section>
-           <section>
+
           <para>2. In the Icon Menu, select <emphasis role="bold">New</emphasis></para>
 
 
@@ -44,7 +42,6 @@
       </figure></para>
 
           <para>3. Select <emphasis role="bold">Next</emphasis></para>
-          </section>
          <para><figure id="selectvm">
         <title>VM Name and OS Type</title>
 
@@ -249,7 +246,7 @@
           </imageobject>
         </mediaobject>
       </figure></para>
-      </section>
+
 
 
          <para>Note: The terminal window is the main interface for the walkthrough process.</para>
