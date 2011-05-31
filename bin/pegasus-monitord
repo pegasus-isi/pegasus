@@ -183,6 +183,9 @@ encoding = None	                # Way to encode the data
 monitord_exit_code = 0          # Exit code for pegasus-monitord
 socket_enabled = False          # Enable socket for real-time debugging
 start_server = False            # Keep track if socket server needs to be started
+do_notifications = True         # Flag to enable notifications
+pending_notifications = []      # List of pending notifications
+max_parallel_notifications = 10 # Maximum number of notifications we can do in parallel
 
 wf_event_sink = None            # Where wf events go
 STAMPEDE_NS = "stampede."       # Event name-space
@@ -1131,7 +1134,10 @@ class Workflow:
             self._restart_count = self._restart_count + 1
         elif state == "end":
             self._JSDB.write("%d INTERNAL *** DAGMAN_FINISHED %s ***\n" % (self._current_timestamp, self._dagman_exit_code))
-        
+
+        # Take care of workflow-level notifications
+        self.process_workflow_notifications(state)
+
         self.db_send_wf_state(state)
 
     def start_wf(self):
@@ -1222,7 +1228,11 @@ class Workflow:
                     continue
                 my_type = my_entry[0].lower()
                 my_id = my_entry[1]
-                my_inv = my_entry[2]
+                try:
+                    my_inv = int(my_entry[2])
+                except:
+                    logger.warning("cannot parse notification: %s, skipping..." % (line))
+                    continue
                 my_condition = my_entry[3]
                 my_action = my_entry[4]
             else:
@@ -1239,6 +1249,11 @@ class Workflow:
             # Pick the right dictionary, depending on event type
             if my_type == "workflow":
                 my_dict = my_notifications["workflow"]
+                if my_id != self._wf_uuid:
+                    logger.warning("workflow notification has id %s, our id is %s, skipping..."
+                                   % (my_id, self._wf_uuid))
+                    continue
+
             elif my_type == "job" or my_type == "daxjob" or my_type == "dagjob":
                 my_dict = my_notifications["job"]
             elif my_type == "invocation":
@@ -1267,7 +1282,10 @@ class Workflow:
                     my_dict[my_inv][my_condition].append(my_action)
             else:
                 # Now add the notification condition, action pair
-                my_dict[my_id][my_condition] = my_action   
+                if not my_condition in my_dict[my_id]:
+                    my_dict[my_id][my_condition] = [my_action]
+                else:
+                    my_dict[my_id][my_condition].append(my_action)
 
         # Save our notifications for later use...
         self._notifications = my_notifications
@@ -1278,25 +1296,235 @@ class Workflow:
         except:
             pass
 
+    def process_workflow_notifications(self, state):
+        """
+        This function takes care of processing workflow-level notifications.
+        """
+        # Skip, if notificatications for this workflow are disabled, or if we have no list
+        if not self._enable_notifications or self._notifications is None:
+            return
+
+        if "workflow" in self._notifications:
+            my_dict = self._notifications["workflow"]
+            if len(my_dict) == 0:
+                # No workflow notifications
+                return
+        else:
+            logger.warning("notification structure missing workflow entry...")
+            return
+
+        # Our workflow is must be in there...
+        if self._wf_uuid in my_dict:
+            my_notifications = my_dict[self._wf_uuid]
+        else:
+            logger.warning("notification has mismatching workflow id: %s different from %s" %
+                           (self._wf_uuid, str(my_dict)))
+            return
+
+        # Sanity check the state...
+        if state != "start" and state != "end":
+            logger.warning("unknown workflow state %s, continuing..." % (state))
+            return
+
+        # Now, match the workflow state to the conditions in the notifications...
+        for k in my_notifications:
+            if state == "start":
+                if k != "start" and k != "always":
+                    continue
+            if state == "end":
+                if k == "on_error":
+                    if self._dagman_exit_code == 0:
+                        continue
+                elif k == "on_success":
+                    if self._dagman_exit_code != 0:
+                        continue
+                elif k != "at_end" and k != "always":
+                    continue
+
+            # Ok, we have a match!
+            my_actions = my_notifications[k]
+            for action in my_actions:
+                # Create dictionary with needed environment variables
+                my_env = {}
+                my_env["PEGASUS_EVENT"] = k
+                my_env["PEGASUS_EVENT_TIMESTAMP"] = self._current_timestamp
+                my_env["PEGASUS_SUBMIT_DIR"] = self._original_submit_dir
+                if state == "end":
+                    my_env["PEGASUS_STATUS"] = self._dagman_exit_code
+
+                # Done, queue the notification
+                if self._notification_list is not None:
+                    self._notification_list.append((action, my_env))
+                # print "WORKFLOW NOTIFICATION ---> ", action, my_env
+
+    def process_job_notifications(self, state, job, status):
+        """
+        This function takes care of processing job-level notifications.
+        """
+        # Skip, if notificatications for this workflow are disabled, or if we have no list
+        if not self._enable_notifications or self._notifications is None:
+            return
+
+        if "job" in self._notifications:
+            my_dict = self._notifications["job"]
+        else:
+            logger.warning("notification structure missing job entry...")
+            return
+
+        # Check if we have notifications for this job
+        if not job._exec_job_id in my_dict:
+            return
+
+        my_notifications = my_dict[job._exec_job_id]
+        if job._exec_job_id in self._job_info:
+            if self._job_info[job._exec_job_id][3] is None:
+                job_has_post_script = False
+            else:
+                job_has_post_script = True
+        else:
+            logger.warning("cannot find job %s in job_info database... skipping notification...")
+            return
+
+        # Now, match the job state to the conditions in the notifications...
+        for k in my_notifications:
+            if state == "EXECUTE":
+                if k != "start" and k != "always":
+                    continue
+                my_status = None
+            elif state == "JOB_SUCCESS":
+                if job_has_post_script:
+                    # Wait till postscript...
+                    continue
+                if k == "start" or k == "on_error":
+                    continue
+                my_status = "0"
+            elif state == "POST_SCRIPT_SUCCESS":
+                if k == "start" or k == "on_error":
+                    continue
+                my_status = "0"
+            elif state == "JOB_FAILURE":
+                if job_has_post_script:
+                    # Wait till postscript...
+                    continue
+                if k == "start" or k == "on_success":
+                    continue
+                my_status = status
+            elif state == "POST_SCRIPT_FAILED":
+                if k == "start" or k == "on_success":
+                    continue
+                my_status = status
+            else:
+                # We are in some other state...
+                continue
+
+            # Ok, we have a match!
+            my_actions = my_notifications[k]
+            for action in my_actions:
+                # Create dictionary with needed environment variables
+                my_env = {}
+                my_env["PEGASUS_EVENT"] = k
+                my_env["PEGASUS_EVENT_TIMESTAMP"] = self._current_timestamp
+                my_env["PEGASUS_SUBMIT_DIR"] = self._original_submit_dir
+                my_env["PEGASUS_JOBID"] = job._exec_job_id
+                my_env["PEGASUS_STDOUT"] = job._output_file
+                my_env["PEGASUS_STDERR"] = job._error_file
+                if my_status is not None:
+                    my_env["PEGASUS_STATUS"] = my_status
+
+                # Done, queue the notification
+                if self._notification_list is not None:
+                    self._notification_list.append((action, my_env))
+                # print "JOB NOTIFICATION ---> ", action, my_env
+
+    def process_invocation_notifications(self, job, task_id, record={}):
+        """
+        This function takes care of processing invocation-level notifications.
+        """
+        # Skip, if notificatications for this workflow are disabled, or if we have no list
+        if not self._enable_notifications or self._notifications is None:
+            return
+
+        if "invocation" in self._notifications:
+            my_dict = self._notifications["invocation"]
+        else:
+            logger.warning("notification structure missing invocation entry...")
+            return
+
+        # Check if we have notifications for this job
+        if not job._exec_job_id in my_dict:
+            return
+
+        # Advance to the task dictionary
+        my_dict = my_dict[job._exec_job_id]
+
+        # Check if we have notifications for this invocation
+        if not task_id in my_dict:
+            return
+
+        my_notifications = my_dict[task_id]
+
+        # Now, match the invocation state to the condition in the notification
+        for k in my_notifications:
+            if "exitcode" in record:
+                my_status = record["exitcode"]
+            else:
+                my_status = job._main_job_exitcode
+            # Convert exitcode to int
+            try:
+                my_status = int(my_status)
+            except:
+                pass
+            # Now, compare to the notification condition(s)
+            if my_status == 0:
+                if k == "on_error":
+                    continue
+            if my_status != 0:
+                if k == "on_success":
+                    continue
+            # Ok, we have a match!
+            my_actions = my_notifications[k]
+            for action in my_actions:
+                # Create dictionary with needed environment variables
+                my_env = {}
+                my_env["PEGASUS_EVENT"] = k
+                my_env["PEGASUS_EVENT_TIMESTAMP"] = self._current_timestamp
+                my_env["PEGASUS_SUBMIT_DIR"] = self._original_submit_dir
+                my_env["PEGASUS_JOBID"] = job._exec_job_id
+                my_env["PEGASUS_STDOUT"] = job._output_file
+                my_env["PEGASUS_STDERR"] = job._error_file
+                if k != "start":
+                    my_env["PEGASUS_STATUS"] = my_status
+
+                # Done, queue the notification
+                if self._notification_list is not None:
+                    self._notification_list.append((action, my_env))
+                # print "INVOCATION NOTIFICATION ---> ", action, my_env
+
     def __init__(self, rundir, outfile, database=None,
                  workflow_config_file=None, jsd=None, root_id=None,
-                 parent_id=None, parent_jobid=None, parent_jobseq=None):
+                 parent_id=None, parent_jobid=None, parent_jobseq=None,
+                 enable_notifications=True,
+                 notification_list=None):
         """
         This function initializes the workflow object. It looks for
         the workflow configuration file (or for workflow_config_file,
         if specified). Here we also open the jobstate.log file, and
         parse the dag.
         """
-        # Initialize class variables
+        # Initialize class variables from creator parameters
         self._out_file = outfile
         self._run_dir = rundir
-        self._static_bp_file = None
         self._parent_workflow_id = parent_id
         self._root_workflow_id = root_id
         self._sink = database
         self._workflow_start = int(time.time())
+        self._enable_notifications = enable_notifications
+        self._notification_list = notification_list
+
+        # Initialize other class variables
         self._wf_uuid = None
         self._dag_file_name = None
+        self._static_bp_file = None
         self._dax_label = None
         self._dax_version = None
         self._dax_file = None
@@ -1448,9 +1676,14 @@ class Workflow:
         if "grid_dn" in wfparams:
             self._grid_dn = wfparams["grid_dn"]
 
-        if "notify" in wfparams:
-            self._notify_file = wfparams["notify"]
-            self.read_notification_file()
+        # Skip notifications, if disabled
+        if self._enable_notifications:
+            if "notify" in wfparams:
+                self._notify_file = wfparams["notify"]
+                self.read_notification_file()
+            # Disable notifications, if this workflow doesn't include any...
+            if self._notifications is None:
+                self._enable_notifications = False
 
         # Say hello.... add start information to JSDB
         self._JSDB.write("%d INTERNAL *** MONITORD_STARTED ***\n" % (self._workflow_start))
@@ -2016,16 +2249,16 @@ class Workflow:
         given job and collect information for the stampede schema.
         """
         my_output = []
-        skip_kickstart_parsing = False
+        parse_kickstart = True
 
         # Check if this is a subdag job
         if (my_job._exec_job_id in self._job_info and
             self._job_info[my_job._exec_job_id][5] == True):
             # Disable kickstart_parsing...
-            skip_kickstart_parsing = True
+            parse_kickstart = False
 
         # If job is a subdag job, skip looking for its kickstart output
-        if not skip_kickstart_parsing:
+        if parse_kickstart:
             # Compose kickstart output file name (base is the filename before rotation)
             my_job_output_fn_base = os.path.join(self._run_dir, my_job._exec_job_id) + ".out"
             my_job_output_fn = my_job_output_fn_base + ".%03d" % (my_job._job_output_counter)
@@ -2064,6 +2297,9 @@ class Workflow:
                     # Skip non-invocation records
                     if not "invocation" in record:
                         continue
+
+                    # Take care of invocation-level notifications
+                    self.process_invocation_notifications(my_job, my_task_id, record)
 	
                     # Send task information to the database
                     self.db_send_task_start(my_job, "MAIN_JOB", my_task_id, record)
@@ -2107,6 +2343,10 @@ class Workflow:
                                 not "name" in record or not "argument-vector" in record):
                                 logger.info("task %d has incomplete information, skipping it..." % (i))
                                 continue
+
+                            # Take care of invocation-level notifications
+                            self.process_invocation_notifications(my_job, my_task_id, record)
+	
                             # Ok, it all validates, send task information to the database
                             self.db_send_task_start(my_job, "MAIN_JOB", my_task_id, record)
                             self.db_send_task_end(my_job, "MAIN_JOB", my_task_id, record)
@@ -2117,6 +2357,9 @@ class Workflow:
                     # No tasks found...
                     logger.info("no tasks found for job %s..." % (my_job._exec_job_id))
         else:
+            # Take care of invocation-level notifications
+            self.process_invocation_notifications(my_job, my_task_id)
+
             # If we don't have any records, we only generate 1 task
             self.db_send_task_start(my_job, "MAIN_JOB", my_task_id)
             self.db_send_task_end(my_job, "MAIN_JOB", my_task_id)
@@ -2234,8 +2477,20 @@ class Workflow:
         # Prepare for atomic append
         self._JSDB.write("%s\n" % (my_line))
 
+        if self._sink is None and not self._enable_notifications:
+            # Not generating events and notifcations, nothing else to do
+            return
+
+        # Parse the kickstart output file, also send mainjob tasks, if needed
+        if job_state == "JOB_SUCCESS" or job_state == "JOB_FAILURE":
+            # Main job has ended
+            self.parse_job_output(my_job, job_state)
+
+        # Take care of job-level notifications
+        self.process_job_notifications(job_state, my_job, status)
+
         if self._sink is None:
-            # Not using a database, nothing else to do!
+            # Not generating events, nothing else to do
             return
 
         # Check if we need to send any tasks to the database
@@ -2247,9 +2502,6 @@ class Workflow:
             # POST script finished
             self.db_send_task_start(my_job, "POST_SCRIPT")
             self.db_send_task_end(my_job, "POST_SCRIPT")
-        elif job_state == "JOB_SUCCESS" or job_state == "JOB_FAILURE":
-            # Main job has ended
-            self.parse_job_output(my_job, job_state)
 
         # Now, figure out what state event we need to send to the database
         if job_state == "PRE_SCRIPT_STARTED":
@@ -2465,6 +2717,8 @@ parser.add_option("--no-recursive", action = "store_const", const = 1, dest = "d
 		  help = "disable pegasus-monitord the automatic follow any sub-workflows that are found")
 parser.add_option("--no-database", "--nodatabase", "--no-events", action = "store_const", const = 0, dest = "no_events",
 		  help = "turn off event generation completely, and overrides the URL in the -d option")
+parser.add_option("--no-notifications", "--no-notification", action = "store_const", const = 0, dest = "no_notify",
+                  help = "turn off notifications completely")
 parser.add_option("-S", "--sim", action = "store", type = "int", dest = "millisleep",
 		  help = "Developer: simulate delays between reads by sleeping ms milliseconds")
 parser.add_option("-r", "--replay", action = "store_const", const = 1, dest = "replay_mode",
@@ -2523,10 +2777,20 @@ if not "properties" in top_level_wf_params:
 props = properties.Properties()
 props.new(config_file=options.config_properties, rundir_propfile=top_level_wf_params["properties"])
 
+# Parse plotting-related properties
 doplot = utils.make_boolean(props.property("pegasus.monitord.show"))
 fuse = int(props.property("pegasus.monitord.fuse") or 300)
 if fuse < 60:
     fuse = 60
+
+# Parse notification-related properties
+if int(props.property("pegasus.monitord.notification.max") or -1) >= 0:
+    max_parallel_notifications = int(props.property("pegasus.monitord.notification.max"))
+if max_parallel_notifications == 0:
+    logger.warning("maximum parallel notifications set to 0, disabling notifications...")
+    do_notifications = False
+if utils.make_boolean(props.property("pegasus.monitord.notifications.disable")):
+    do_notifications = False
 
 # Copy command line options into our variables
 
@@ -2560,6 +2824,10 @@ if options.replay_mode is not None:
     replay_mode = options.replay_mode
     # Replay mode always runs in foreground
     nodaemon = 1
+    # No notifications in replay mode
+    do_notifications = False
+if options.no_notify is not None:
+    do_notifications = False
 if options.disable_subworkflows is not None:
     follow_subworkflows = False
 if options.db_stats is not None:
@@ -3440,7 +3708,8 @@ else:
 # Ok! Let's start now...
 
 # Instantiate workflow class
-wf = Workflow(run, out, database=wf_event_sink, jsd=jsd)
+wf = Workflow(run, out, database=wf_event_sink, jsd=jsd,
+              enable_notifications=do_notifications, notification_list=pending_notifications)
 # If everything went well, create a workflow entry for this workflow
 if wf._monitord_exit_code == 0:
     workflow_entry = WorkflowEntry()
@@ -3633,7 +3902,9 @@ while (len(wfs) > 0):
                                 parent_wf_id = workflow_entry.wf._wf_uuid
                                 new_wf = Workflow(new_run_dir, new_dagman_out, database=wf_event_sink,
                                                   parent_id=parent_wf_id, parent_jobid=parent_jobid,
-                                                  parent_jobseq=parent_jobseq, root_id=root_wf_id, jsd=jsd)
+                                                  parent_jobseq=parent_jobseq, root_id=root_wf_id, jsd=jsd,
+                                                  enable_notifications=do_notifications,
+                                                  notification_list=pending_notifications)
 
                                 if new_wf._monitord_exit_code == 0:
                                     new_workflow_entry = WorkflowEntry()
