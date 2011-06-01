@@ -444,12 +444,14 @@ public class SUBDAXGenerator{
         }
         mLogger.log( "Relative Execution Directory for SUB DAX is " + options.getRelativeDirectory() , LogManager.DEBUG_MESSAGE_LEVEL );
 
+        //no longer create a symbolic link at this point Karan. June 1, 2011
+/*
         //create a symbolic link to dax in the subdax submit directory
         String linkedDAX = createSymbolicLinktoDAX( options.getSubmitDirectory(),
-                                                    options.getDAX() );
-        
+                                                    options.getDAX() );      
         //update options with the linked dax
         options.setDAX( linkedDAX );
+ */
         
         //for time being for LIGO , try and create a symlink for
         //the cache file that is created during sub workflow execution
@@ -458,7 +460,8 @@ public class SUBDAXGenerator{
         if( mProps.labelBasedSubmitDirectoryForSubWorkflows() ){
             this.createSymbolicLinktoCacheFile( options, label, index);
         }
-        
+
+/*
         //write out the properties in the submit directory
         String propertiesFile = null;
         try{
@@ -469,14 +472,21 @@ public class SUBDAXGenerator{
         catch( IOException ioe ){
             throw new RuntimeException( "Unable to write out properties to directory " + options.getSubmitDirectory() );
         }
+*/
+        //refer to the parent workflow's properties file only instead.
+        //Karan June 1, 2011
+        String propertiesFile = this.mProps.getPropertiesInSubmitDirectory();
 
+
+/*
+ *     //disabled writing out of the DAX replica store.
         //check if a encompassing DAX to which the dax job belongs has a
         //replica store associated.
         if( !this.mDAG.getReplicaStore().isEmpty() ){
             File daxReplicaFile = this.writeOutDAXReplicaStore( this.mDAG, this.mPegasusPlanOptions, options.getSubmitDirectory() );
             options.setInheritedRCFiles( daxReplicaFile.getAbsolutePath() );
         }
-         
+ */
         
         //construct  the pegasus-plan prescript for the JOB
         //the log file for the prescript should be in the

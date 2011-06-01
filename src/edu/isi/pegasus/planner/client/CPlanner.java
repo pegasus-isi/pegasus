@@ -92,7 +92,15 @@ import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.parser.Parser;
 import edu.isi.pegasus.planner.parser.dax.DAXParser;
+import java.io.BufferedReader;
+import java.io.FilenameFilter;
+import java.io.InputStream;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.regex.Pattern;
+import javax.swing.text.NumberFormatter;
+
+
 
 
 /**
@@ -390,9 +398,7 @@ public class CPlanner extends Executable{
         mPMetrics.setBaseSubmitDirectory( mPOptions.getSubmitDirectory() );
         mPMetrics.setDAX( mPOptions.getDAX() );
 
-        
-            //Commented for new Site catalog
-//        UserOptions opts = UserOptions.getInstance(mPOptions);
+       
         
 
         //try to get hold of the vds properties
@@ -417,8 +423,6 @@ public class CPlanner extends Executable{
         else if(pdax == null && dax != null
              && !eSites.isEmpty()){
 
-//            Callback cb =  DAXParserFactory.loadDAXParserCallback( mProps, dax, "DAX2CDAG" );
-//            DAXParser2 daxParser = new DAXParser2( dax, mBag, cb );
             Parser p = (Parser)DAXParserFactory.loadDAXParser( mBag, "DAX2CDAG", dax );
             Callback cb = ((DAXParser)p).getDAXCallback();
             p.startParser( dax );
@@ -440,17 +444,31 @@ public class CPlanner extends Executable{
             int state = 0;
             String relativeSubmitDir; //the submit directory relative to the base specified
             try{
-                //create the base directory if required
-                relativeSubmitDir = /*( mPOptions.partOfDeferredRun() )?
-                                        null:*/
-                                        ( mPOptions.getRelativeSubmitDirectory() == null )?
+                //determine the relative submit directory
+                relativeSubmitDir = ( mPOptions.getRelativeSubmitDirectory() == null )?
                                                 //create our own relative dir
-                                                createSubmitDirectory( orgDag,
+                                                determineRelativeSubmitDirectory( orgDag,
                                                                        baseDir,
                                                                        mUser,
                                                                        mPOptions.getVOGroup(),
                                                                        mProps.useTimestampForDirectoryStructure() ):
                                                 mPOptions.getRelativeSubmitDirectory();
+
+
+                if( options.partOfDeferredRun() ){
+                    //replan case for now
+
+                    //the relativeSubmitDir is to be a symlink to relativeSubmitDir.XXX
+                    relativeSubmitDir = doBackupAndCreateSymbolicLinkForSubmitDirectory( baseDir , relativeSubmitDir );
+                    mLogger.log( "Setting relative submit dir to " + relativeSubmitDir,
+                                 LogManager.DEBUG_MESSAGE_LEVEL );
+                }
+                else{
+                    //create the relative submit directory if required
+                    sanityCheck( new File( baseDir, relativeSubmitDir) );
+
+                }
+
                 mPOptions.setSubmitDirectory( baseDir, relativeSubmitDir  );
                 state++;
                 mProps.writeOutProperties( mPOptions.getSubmitDirectory() );
@@ -939,11 +957,7 @@ public class CPlanner extends Executable{
      * @param options      the options passed to the planner.
      */
     protected void doPartitionAndPlan( PegasusProperties properties, PlannerOptions options ){
-        //we first need to get the label of DAX
-//        Callback cb =  DAXParserFactory.loadDAXParserCallback( properties, options.getDAX(), "DAX2Metadata" );
-//        try{
-//            DAXParser2 daxParser = new DAXParser2( options.getDAX(), mBag, cb );
-
+  
         PegasusBag bag = new PegasusBag();
         bag.add( PegasusBag.PEGASUS_LOGMANAGER, this.mLogger );
         bag.add( PegasusBag.PEGASUS_PROPERTIES, properties );
@@ -965,12 +979,14 @@ public class CPlanner extends Executable{
         try{
             relativeDir = (options.getRelativeDirectory() == null) ?
                                  //create our own relative dir
-                                 createSubmitDirectory(label,
+                                 determineRelativeSubmitDirectory(label,
                                                        baseDir,
                                                        mUser,
                                                        options.getVOGroup(),
                                                        properties.useTimestampForDirectoryStructure()) :
                                  options.getRelativeDirectory();
+            //create the relative submit directory if required
+            sanityCheck( new File( baseDir, relativeDir) );
         }
         catch( IOException ioe ){
             String error = "Unable to write  to directory" ;
@@ -1267,13 +1283,13 @@ public class CPlanner extends Executable{
      *
      * @throws IOException in case of unable to create submit directory.
      */
-    protected String createSubmitDirectory( ADag dag,
+    protected String determineRelativeSubmitDirectory( ADag dag,
                                             String dir,
                                             String user,
                                             String vogroup,
                                             boolean timestampBased ) throws IOException {
 
-        return createSubmitDirectory( dag.getLabel(), dir, user, vogroup, timestampBased );
+        return determineRelativeSubmitDirectory( dag.getLabel(), dir, user, vogroup, timestampBased );
     }
 
     /**
@@ -1290,7 +1306,7 @@ public class CPlanner extends Executable{
      *
      * @throws IOException in case of unable to create submit directory.
      */
-    protected String createSubmitDirectory( String label,
+    protected String determineRelativeSubmitDirectory( String label,
                                             String dir,
                                             String user,
                                             String vogroup,
@@ -1337,7 +1353,6 @@ public class CPlanner extends Executable{
         base = new File( base, leaf.toString() );
         mLogger.log( "Directory to be created is " + base.getAbsolutePath(),
                      LogManager.DEBUG_MESSAGE_LEVEL );
-        sanityCheck( base );
 
         return result.toString();
     }
@@ -1532,6 +1547,74 @@ public class CPlanner extends Executable{
           
       }
 
+    /**
+     * This method generates a symlink between two files
+     *
+     * @param source       the file that has to be symlinked
+     * @param destination  the destination of the symlink
+     * @param directory    the directory in which to execute the command
+     * @param logErrorToDebug  whether to log messeage to debug or not
+     *
+     * @return boolean indicating if creation of symlink was successful or not
+     *
+     */
+    protected boolean createSymbolicLink( String source, 
+                                          String destination ,
+                                          File directory,
+                                          boolean logErrorToDebug ) {
+        try{
+            Runtime rt = Runtime.getRuntime();
+            String command = "ln -sf " + source + " " + destination;
+            mLogger.log( "Creating symlink between " + source + " " + destination,
+                         LogManager.DEBUG_MESSAGE_LEVEL);
+
+            Process p = ( directory == null )?
+                        rt.exec( command, null )://dont specify the directory to execute in
+                        rt.exec( command, null, directory );
+
+            // set up to read subprogram output
+            InputStream is = p.getInputStream();
+            InputStreamReader isr = new InputStreamReader(is);
+            BufferedReader br = new BufferedReader(isr);
+
+            // set up to read subprogram error
+            InputStream er = p.getErrorStream();
+            InputStreamReader err = new InputStreamReader(er);
+            BufferedReader ebr = new BufferedReader(err);
+
+            // read output from subprogram
+            // and display it
+
+            String s,se=null;
+            while ( ((s = br.readLine()) != null) || ((se = ebr.readLine()) != null ) ) {
+               if(s!=null){
+                   mLogger.log(s,LogManager.DEBUG_MESSAGE_LEVEL);
+               }
+               else {
+                   if( logErrorToDebug ){
+                       mLogger.log( se, LogManager.DEBUG_MESSAGE_LEVEL );
+                   }
+                   else{
+                       mLogger.log(se,LogManager.ERROR_MESSAGE_LEVEL );
+                   }
+               }
+            }
+
+            br.close();
+            return true;
+        }
+        catch(Exception ex){
+            if( logErrorToDebug ){
+                mLogger.log("Unable to create symlink to the log file" , ex,
+                            LogManager.DEBUG_MESSAGE_LEVEL );
+            }else{
+                mLogger.log("Unable to create symlink to the log file" , ex,
+                            LogManager.ERROR_MESSAGE_LEVEL);
+            }
+            return false;
+       }
+
+    }
    
     /**
      * Generates events for the abstract workflow.
@@ -1687,9 +1770,117 @@ public class CPlanner extends Executable{
 
     }
 
+    protected String doBackupAndCreateSymbolicLinkForSubmitDirectory( String baseDir,
+                                                                      String relativeSubmitDir)
+                        throws IOException {
+
+        //find the maximum run directory
+        //get the parent of the current relativeSubmitDir
+        File f = new File( relativeSubmitDir );
+        String relativeParentSubmitDir = f.getParent();
+        File parent = ( relativeParentSubmitDir == null ) ?
+                        new File( baseDir ):
+                        new File( baseDir, relativeParentSubmitDir );
+
+        String basename = f.getName();
+        String[] files = parent.list( new SubmitDirectoryFilenameFilter( basename ) );
+
+        int num, max = 0;
+        String prefix = basename + ".";
+        for( int i = 0; i < files.length ; i++ ){
+            num = Integer.parseInt( files[i].substring( prefix.length() ) );
+            if ( num + 1 > max ){
+                max = num + 1;
+            }
+        }
+
+        //create the directory name
+        NumberFormat formatter = new DecimalFormat( "000" );
+
+        //prefix is just the basname of relativeSubmitDir.XXX
+        prefix = prefix +  formatter.format( max ) ;
+
+        String relativeSubmitDirXXX =  ( relativeParentSubmitDir == null ) ?
+                                        new File( prefix ).getPath():
+                                        new File( relativeParentSubmitDir, prefix ).getPath();
+
+
+        //create the relativeSubmitDirXXX
+        File fRelativeSubmitDirXXX = new File(  baseDir, relativeSubmitDirXXX );
+        sanityCheck( fRelativeSubmitDirXXX );
+
+        //we have to create a symlink between relativeSubmitDir and relativeSubmitDir.xxx
+        //and update relativeSubmitDir to be relativeSubmitDir.xxx
+        File destination = new File( baseDir, relativeSubmitDir);
+
+        if( destination.exists() ){
+            //delete existing file
+            //no way in java to detect if a file is a symbolic link
+            destination.delete();
+        }
+
+        //we want symlinks to be created in parent directory
+        //without absolute paths
+        createSymbolicLink( fRelativeSubmitDirXXX.getName(),
+                            destination.getName(),
+                            parent,
+                            true );
+
+        return relativeSubmitDirXXX;
+
+    }
+
 }
+/**
+ * A filename filter for identifying the submit directory
+ *
+ * @author Karan Vahi vahi@isi.edu
+ */
+ class SubmitDirectoryFilenameFilter implements FilenameFilter {
 
 
+    /**
+     * Store the regular expressions necessary to parse kickstart output files
+     */
+    private String mRegexExpression;
+
+    /**
+     * Stores compiled patterns at first use, quasi-Singleton.
+     */
+    private  Pattern mPattern = null;
+
+
+
+    /**
+     * Overloaded constructor.
+     *
+     * @param prefix  prefix for the submit directory
+     */
+    public SubmitDirectoryFilenameFilter( String prefix ){
+        mRegexExpression = "(" + prefix + ")([\\.][0-9][0-9][0-9])";
+        mPattern = Pattern.compile( mRegexExpression );
+    }
+
+
+
+    /***
+     * Tests if a specified file should be included in a file list.
+     *
+     * @param dir the directory in which the file was found.
+     * @param name - the name of the file.
+     *
+     * @return  true if and only if the name should be included in the file list
+     *          false otherwise.
+     *
+     *
+     */
+     public boolean accept( File dir, String name) {
+
+         return mPattern.matcher( name ).matches();
+     }
+
+
+}
 
 
 
