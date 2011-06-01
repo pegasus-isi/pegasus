@@ -140,7 +140,7 @@
         <mediaobject>
           <imageobject>
             <imagedata align="center"
-                       fileref="images/Wizard9.png"  width="6in"
+                       fileref="images/Wizard9.png"  width="5in"
                        valign="middle" />
           </imageobject>
         </mediaobject>
@@ -170,7 +170,7 @@
         <mediaobject>
           <imageobject>
             <imagedata align="center"
-                       fileref="images/VirtualBoxPopulated.png"
+                       fileref="images/VirtualBoxPopulated.png" width="4in"
                        valign="middle" />
           </imageobject>
         </mediaobject>
@@ -241,7 +241,7 @@
         <mediaobject>
           <imageobject>
             <imagedata align="center"
-                       fileref="images/VMCommandWindow.png"
+                       fileref="images/VMCommandWindow.png"  width="6in"
                        valign="middle" />
           </imageobject>
         </mediaobject>
