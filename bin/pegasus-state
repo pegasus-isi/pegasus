@@ -123,8 +123,22 @@ $main::reset = "\033[0m";	# reset all color/bold/etc.
     , 's-compute'		# 7 -- deprecated
     , 'clean-up'		# 8
     , 'chmod'			# 9
-    , 'dax'			# 10
-    , 'dag'			# 11
+    , 'subdax'			# 10
+    , 'subdag'			# 11
+    );
+@main::jobclass_desc = 
+    ( 'unknown (do not use)'
+    , 'regular computation job'
+    , 'auxilliary stage-in transfer job'
+    , 'auxilliary stage-out transfer job'
+    , 'auxilliary replica registration job'
+    , 'auxilliary inter-site transfer job'
+    , 'auxilliary createdir job'
+    , 'remote compute job (do not use)'
+    , 'auxilliary clean-up job'
+    , 'auxilliary chmod job'
+    , 'unplanned DAX sub-workflow job'
+    , 'planned DAG sub-workflow job'
     );
 @main::jobshort =		# short job class (job type)
     (   '-', 'job',  'si',  'so'
@@ -376,24 +390,29 @@ sub usage(;$) {
 Usage: $app [options ] [dagdir]
  $app helps monitor a workflow by querying Condor and directories. 
 
-Global optional arguments:
+Optional arguments:
  -h|--help        print this help and exit.
  -V|--version     print version information and exit. 
- -v|--verbose     increase expert level (affects only C_Q).
- -d|--debug       increase debug level (affects only C_Q).
- -u|--user name   monitor for user 'name', default is $main::user.
  -w|--watch [s]   repeatedly print output every 's' seconds, default 60.
- --[no]legend     Disable or enable showing of the legend, default on.
+ --[no]legend     Disable or enable showing of the legends, default on.
 
 Optional arguments affecting Condor Q output:
+ -v|--verbose     increase expert level. 
+ -d|--debug       increase debug level (Pegasus debugging only). 
+ -u|--user name   monitor jobs for user 'name', default is $main::user.
  -i|--[no]idle    Omit jobs in state 'idle' from output. 
  --[no]held       Disable or enable showing HoldReason, default on.
  --[no]heavy      Disable or enable heavy Unicode lines, default off. 
+ -j|--jobtype jt  *Only show jobs of type 'jt', default is all jobs.
+                  (run with 'jt' of 'help' to see available job types.)
+ -s|--site sid    *Only show jobs running on site 'sid', default is all sites.
 
 Optional arguments affecting DAG output: 
  rundir           directory to monitor, default is CWD.
  -l|--long        Show all DAG states, including sub-DAGs, default only totals.
- -s|--[no]success Omit 'Success' workflows from --long output, default show. 
+ -S|--[no]success Omit 'Success' workflows from --long output, default show. 
+
+(*) denotes a multi-option, which may be specified multiple times or comma lists. 
 
 EOF
     exit ($flag ? 1 : 0); 
@@ -459,8 +478,11 @@ sub plural($$) {
     my $s = shift;
     return "$n $s" if $n == 1;
 
-    if ( substr($s,-1) eq 'y' ) {
+    my $last = substr($s,-1);
+    if ( $last eq 'y' ) {
         commas($n) . ' ' . substr($s,0,-1) . 'ies';
+    } elsif ( $last eq 's' ) {
+	commas($n) . " ${s}es"; 
     } else {
         commas($n) . " ${s}s";
     }
@@ -564,6 +586,42 @@ sub cfit($$) {
 	substr( $s, 0, ($len-$diff)/2 ) . 
 	    '..' .
 	    substr( $s, ($len+$diff)/2 ); 
+    }
+}
+
+sub headline($$$;$) {
+    # purpose: format header from 3 strings
+    # paramtr: $left (IN): what to put on left side
+    #          $center (IN): what to put into center
+    #          $right (IN): what to put on right side
+    #          $width (opt. IN): total width (typically terminal)
+    # globals: $cols (IN): terminal width default
+    # returns: formatted string
+    #
+    my $l = shift || '';
+    my $c = shift || '';
+    my $r = shift || '';
+    my $width = shift || $cols;
+
+    my $llen = length($l);
+    my $clen = length($c);
+    my $rlen = length($r); 
+    if ( $llen+$clen+$rlen > $width ) {
+	# FIXME: fit strings
+	$l . $c . $r;
+    } else {
+	# adjust strings
+	use integer; 
+	my $room = $width - $llen - $clen - $rlen; 
+	my $x = ' ' x ( $room / 2 ); 
+
+	if ( ( $room & 1 ) == 1 ) { 
+	    # odd 
+	    $l . $x . ' ' . $c . $x . $r;
+	} else {
+	    # even
+	    $l . $x . $c . $x . $r;
+	}
     }
 }
 
@@ -813,6 +871,36 @@ sub condor_q(\%\%\@;%) {
     my $t      = shift; 
     my %flags = ( @_ ); 
 
+    # determine extra jobclass constraints
+    my $constraint = ''; 
+    if ( exists $flags{jobtypes} ) {
+	my $s = ''; 
+	foreach my $n ( @{ $flags{jobtypes} } ) {
+	    $s .= ' || ' if $s;
+	    $s .= "(pegasus_job_class==$n)"; 
+	}
+	$constraint = "( $s )"; 
+    }
+
+    # determine extra jobsites constraints
+    if ( exists $flags{jobsites} ) { 
+	my $s = ''; 
+	foreach my $site ( @{ $flags{jobsites} } ) { 
+	    $s .= ' || ' if $s;
+	    $s .= "(pegasus_site==\\\"$site\\\")"; 
+	}
+	if ( $constraint ) { 
+	    $constraint .= " && ( $s )"; 
+	} else { 
+	    $constraint = "( $s )";
+	}
+    }
+
+    # finalize constraints
+    if ( $constraint ) { 
+	$constraint = "-constraint \"$constraint\"";
+    }
+
     local(*Q);
     my $condor_q = find_exec('condor_q') ||
 	die "FATAL: Unable to find 'condor_q' in your PATH.\n"; 
@@ -822,8 +910,9 @@ sub condor_q(\%\%\@;%) {
 	open( Q, $main::cache ) || die "open $main::cache: $!\n"; 
     } else {
 	# FIXME: 'condor_q' is expensive. Find better restrictions!
-	open( Q, "$condor_q -l $main::user|" ) ||
-	    die "FATAL: Unable to execute $condor_q: $!\n"; 
+	warn "# $condor_q -l $main::user $constraint\n" if $main::debug; 
+	open( Q, "$condor_q -l $main::user $constraint|" ) ||
+	    die "FATAL: Unable to execute $condor_q -l $main::user $constraint: $!\n"; 
     }
 
     # skip intro
@@ -1491,14 +1580,16 @@ my $nosuccess = 0;
 $main::expert = 0; 
 my $legend = 1; 
 my $show_subdag = 0; 
-my ($watch);
+my ($watch,@jobtypes,@jobsites);
 GetOptions( 'help|h' => \&usage
 	  , 'user|u=s' => \$main::user
 	  , 'debug|d+' => \$main::debug
 	  , 'verbose|v+' => \$main::expert
 	  , 'version|V' => \&version
+	  , 'jobtype|jobclass|j=s' => \@jobtypes
+	  , 'site|s=s' => \@jobsites
 	  , 'idle|i!' => \$noidle
-	  , 'success|s!' => \$nosuccess
+	  , 'success|S!' => \$nosuccess
 	  , 'legend!' => \$legend
 	  , 'hold|held!' => \$heldinfo
 	  , 'heavy!' => \$heavy
@@ -1520,6 +1611,59 @@ GetOptions( 'help|h' => \&usage
 	  , 'cache=s' => \$main::cache
 	  , 'color' => sub { $main::onatty = 1 }
 	  );
+
+#
+# If the user specified any form of job type/class limitations... 
+#
+if ( @jobtypes > 0 ) { 
+    # make keys unique, merge comma lists
+    my %temp = map { lc($_) => 1 } split( /,/, join(',', @jobtypes) );
+
+    # determine valid inputs from @main::job{class,short} and numerical
+    my %valid = ( ( map { $main::jobclass[$_] => $_ } 0..$#main::jobclass ), 
+		  ( map { $main::jobshort[$_] => $_ } 0..$#main::jobshort ),
+		  ( map { $_ => $_ } 0..$#main::jobclass ) );
+
+    # determine, if there were any invalid job classes
+    my @invalid = ();
+    foreach my $k ( keys %temp ) { 
+	push( @invalid, $k ) unless ( $k eq 'help' || exists $valid{$k} ); 
+    }
+
+    if ( exists $temp{help} || @invalid ) { 
+	# this path if 'help' was specified or invalid class specs found
+	print "\n"; 
+
+	# deal with, if any, invalid job class specs
+	if ( @invalid ) { 
+	    print 'ERROR: ', plural(@invalid,'unrecognized job class');
+	    print ': ', join(', ',@invalid), "\n\n"; 
+	}
+
+	# print list of supported job class specs (omit unknown)
+	print "List of recognized job classes:\n\n";
+	printf "%2s %-5s %-10s %s\n", 'NR', 'SHORT', 'LONG', 'DESCRITPION'; 
+	for ( my $i=1; $i<@main::jobclass; ++$i ) { 
+	    printf( "%2d %-5s %-10s %s\n", $i, $main::jobshort[$i], 
+		    $main::jobclass[$i], $main::jobclass_desc[$i] );
+	}
+	print "\n";
+
+	# in case of invalid spec, exit with an error. 'help' is not an error. 
+	exit ( @invalid ? 1 : 0 );  
+    } else {
+	# all keys look kosher, translate into numbers
+	@jobtypes = sort { $a <=> $b } map { $valid{$_} } keys %temp; 
+    }
+}
+
+#
+# If the user specified site limitations, unique specs
+#
+if ( @jobsites ) { 
+    @jobsites = sort keys %{{ map { $_ => 1 }
+			      split( /,/, join(',', @jobsites) ) }};
+}
 
 # react to changes in terminal size
 $SIG{WINCH} = \&sigwinch if ( defined &TIOCGWINSZ && $main::onatty );
@@ -1564,9 +1708,12 @@ for ( my $cursor=1; ; $cursor=1 ) {
 
     # collect information from condor_q
     profile_log( 'start condor_q' ) if defined $main::profile;
-    condor_q( %job, %dag, @qtitle,
-	      noidle => $noidle, 
-	      count => \%ccount );
+    condor_q( %job, %dag, @qtitle
+	    , noidle => $noidle
+	    , count => \%ccount
+	    , ( @jobtypes ? ( jobtypes => \@jobtypes ) : () ) 
+	    , ( @jobsites ? ( jobsites => \@jobsites ) : () ) 
+	    );
     profile_log( "final condor_q ($?)" ) if defined $main::profile;
 
     # %main::seen is for sanity checks
@@ -1605,7 +1752,7 @@ for ( my $cursor=1; ; $cursor=1 ) {
 	$main::time = CORE::time(); 
 	my $now = scalar localtime($main::time); 
 	my $msg = "Press Ctrl+C to exit";
-	printf "$msg%*s\n\n", $cols-length($msg), $now; 
+	print headline($msg,"(pid=$$)",$now,$cols), "\n\n"; 
 	$cursor += 2; 
 
 	if ( $show_subdag ) { 
