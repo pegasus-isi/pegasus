@@ -189,7 +189,7 @@
           </imageobject>
         </mediaobject>
       </figure></para>
-      <para> Select <emphasis role="bold">Next</emphasis></para>
+      <para>15. Select <emphasis role="bold">Next</emphasis></para>
 
 
         <para>The Starting VM progress window opens and tracks the creation process</para>
@@ -218,7 +218,7 @@
           </imageobject>
         </mediaobject>
       </figure></para>
-         <para>15. Select <emphasis role="bold">Accessories - LX Terminal</emphasis> to open a terminal window.</para>
+         <para>16. Select <emphasis role="bold">Accessories - LX Terminal</emphasis> to open a terminal window.</para>
          <para><figure id="virtdisk">
         <title>Select Terminal</title>
 
