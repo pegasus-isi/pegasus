@@ -61,8 +61,8 @@
       <listitem>
         <para><emphasis role="bold">Scalability</emphasis></para>
 
-        <para>Pegasus runs workflows ranging from just a few computational
-  tasks up to 1 million.</para>
+        <para>Pegasus easily can scale both the size of the workflow, but the resources that the workflow is distributed over. Pegasus runs workflows ranging from just a few computational
+  tasks up to 1 million. The number of resources involved in executing a workflow can scale as needed without any impediments to performance.</para>
       </listitem>
 
       <listitem>
@@ -112,9 +112,9 @@
           <listitem>
             <para><emphasis>Local Execution</emphasis></para>
 
-            <para>Should we describe the minimum hardware requirements? Should
-            we say something about any size/complexity limits? What are the
-            advantages to running in the local environment?</para>
+            <para>Pegasus can run a workflow on a single computer with Internet access.
+            <emphasis role="bold">WHAT ARE THE SIZE/COMPLEXITY LIMITS?</emphasis>
+            Running in a local environment is quicker to deploy as the user does not need to gain access to muliple resources in order to execute a workfow.</para>
           </listitem>
 
           <listitem>
@@ -135,14 +135,15 @@
           <listitem>
             <para><emphasis>Grids</emphasis></para>
 
-            <para>What advantages are there to operating in a Grid ?</para>
+            <para>Pegasus WMS is entirely compatible with Grid computing. Grid computing relies on the concept of distributed computations. Pegasus apportions
+            pieces of a workflow to run on distributed resources.</para>
           </listitem>
 
           <listitem>
             <para><emphasis>Clouds</emphasis></para>
 
-            <para>What advantages are there to operating in a Cloud
-            environment?</para>
+            <para>Cloud computing uses a network as a means to connect a Pegasus end user to distributed resources that are based in the cloud.
+            </para>
           </listitem>
         </itemizedlist>
       </listitem>
@@ -261,5 +262,6 @@
     </itemizedlist>
   </section>
 </chapter>
+
 
 
