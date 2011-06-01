@@ -155,12 +155,14 @@
 
       <para>Pegasus is curently being used in a broad range of applications. Our <link
       linkend="example_workflows">example workflows</link> can be found in a
-      later chapter. <ulink
-      url="http://pegasus.isi.edu/applications.php">These external
-      pages</ulink> shows some of the examples. Also to see the details of the
-      workflows of the applications below you can visit our <ulink
-      url="http://confluence.pegasus.isi.edu/display/pegasus/WorkflowGenerator">gallery
-      of workflows</ulink>.</para>
+      later chapter.
+      The
+      <ulink
+      url="http://pegasus.isi.edu/applications.php">Pegasus Application Page
+     </ulink> shows some of the examples. To see the details of the
+      workflows of the applications you can visit our <ulink
+      url="http://confluence.pegasus.isi.edu/display/pegasus/WorkflowGenerator">Gallery
+      of Workflows</ulink>.</para>
 
       <para>We are always looking for new applications willing to leverage our
       workflow technologies. If you are interested please contact us at
@@ -184,7 +186,7 @@
       <listitem>
         <para><emphasis role="bold">Introduction - Chapter 1</emphasis></para>
 
-        <para>(This chapter)An overview of Pegasus WMS and the features it offers, and an introduction
+        <para>(This chapter) An overview of Pegasus WMS and the features it offers, and a brief introduction
         to workflows. </para>
       </listitem>
 
