@@ -16,7 +16,7 @@
    
    <itemizedlist>
       <listitem>
-        <para>Download and Install Pegasus VM</para>
+        <para>Virtual Machine Image</para>
       </listitem>
       
        <listitem>
@@ -59,7 +59,7 @@
 
 
     <section>
-      <title>Download the VM for Virtual Box use</title>
+      <title>Download the VM Image</title>
 
       <para>Download the corresponding disk image.</para>
 
@@ -90,7 +90,7 @@ Length: 1,336,554,492 (1.2G) [application/x-bzip2]
 
           <programlisting><emphasis role="bold">$ gtar jxvf Pegasus-3.0.1-Debian-6-x86.vbox.tar.bz2</emphasis></programlisting>
 
-          <para>If you do not have <emphasis>gnu tar</emphasis> ,you need to do the following:</para>
+          <para>If you do not have <emphasis role="bold">gnu tar</emphasis> ,you need to do the following:</para>
 
           <programlisting><emphasis role="bold">$ bunzip2 Pegasus-3.0.1-Debian-6-x86.vbox.tar.bz2
 
@@ -249,10 +249,8 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
       <para>The job output is displayed:</para>
       
        <programlisting><emphasis>
-
        <para>
         tutorial@pegasus-vm:~/pegasus-wms/dax$
-
        </para>
          ?xml version="1.0" encoding="UTF-8"?&gt;
          - -generated on 2011-05-28T19:32:02-07:00- -&gt;
