@@ -331,11 +331,11 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
 
                         <orderedlist>
                         <listitem>
-                           <para><emphasis>Pegasus Statistics</emphasis> - Generates workflow execution statistics</para>
+                           <para><emphasis role="bold">Pegasus Statistics</emphasis> - Generates workflow execution statistics</para>
 
                         </listitem>
                         <listitem>
-                        <para><emphasis>Pegasus Plots</emphasis> - Generates graphs and charts to visusalize workflow execution</para>
+                        <para><emphasis role="bold">Pegasus Plots</emphasis> - Generates graphs and charts to visusalize workflow execution</para>
 
                         </listitem>
 
