@@ -1783,14 +1783,19 @@ public class CPlanner extends Executable{
                         new File( baseDir, relativeParentSubmitDir );
 
         String basename = f.getName();
-        String[] files = parent.list( new SubmitDirectoryFilenameFilter( basename ) );
 
         int num, max = 0;
         String prefix = basename + ".";
-        for( int i = 0; i < files.length ; i++ ){
-            num = Integer.parseInt( files[i].substring( prefix.length() ) );
-            if ( num + 1 > max ){
-                max = num + 1;
+
+        //check if parent exists. first time around the submit directory for
+        //sub workflow may not exist
+        if( parent.exists() ){
+            String[] files = parent.list( new SubmitDirectoryFilenameFilter( basename ) );
+            for( int i = 0; i < files.length ; i++ ){
+                num = Integer.parseInt( files[i].substring( prefix.length() ) );
+                if ( num + 1 > max ){
+                    max = num + 1;
+                }
             }
         }
 

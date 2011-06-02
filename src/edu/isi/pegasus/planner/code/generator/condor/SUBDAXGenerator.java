@@ -31,7 +31,6 @@ import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.namespace.Dagman;
 
 import edu.isi.pegasus.planner.parser.DAXParserFactory;
-import edu.isi.pegasus.planner.parser.dax.Callback;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.common.RunDirectoryFilenameFilter;
@@ -49,12 +48,11 @@ import edu.isi.pegasus.planner.classes.DAXJob;
 import edu.isi.pegasus.planner.classes.ReplicaLocation;
 import edu.isi.pegasus.planner.classes.ReplicaStore;
 import edu.isi.pegasus.planner.code.GridStartFactory;
+import edu.isi.pegasus.planner.code.generator.DAXReplicaStore;
 import edu.isi.pegasus.planner.namespace.Condor;
 import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.namespace.Pegasus;
-import edu.isi.pegasus.planner.parser.Parser;
 
-import edu.isi.pegasus.planner.partitioner.graph.Adapter;
 import edu.isi.pegasus.planner.partitioner.graph.Graph;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import java.io.BufferedReader;
@@ -89,27 +87,9 @@ public class SUBDAXGenerator{
     public static final boolean GENERATE_SUBDAG_KEYWORD = false;
 
     /**
-     * The name of the source key for Replica Catalog Implementer that serves as
-     * the repository for DAX Replica Store
-     */
-    public static final String DAX_REPLICA_STORE_CATALOG_KEY = "file";
-
-    /**
-     * The name of the Replica Catalog Implementer that serves as the source for
-     * cache files.
-     */
-    public static final String DAX_REPLICA_STORE_CATALOG_IMPLEMENTER = "SimpleFile";
-
-    /**
      * Suffix to be applied for cache file generation.
      */
     private static final String CACHE_FILE_SUFFIX = ".cache";
-
-    /**
-     * Suffix to be applied for the DAX Replica Store.
-     */
-    private static final String DAX_REPLICA_STORE_SUFFIX = ".replica.store";
-            
     
     /**
      * The logical name with which to query the transformation catalog for
@@ -261,7 +241,9 @@ public class SUBDAXGenerator{
         else{
             mLogger.log( "Condor Version detected is " + mCondorVersion , LogManager.DEBUG_MESSAGE_LEVEL );
         }
-        
+
+
+      
     }
 
     
@@ -478,15 +460,19 @@ public class SUBDAXGenerator{
         String propertiesFile = this.mProps.getPropertiesInSubmitDirectory();
 
 
-/*
- *     //disabled writing out of the DAX replica store.
+
         //check if a encompassing DAX to which the dax job belongs has a
         //replica store associated.
         if( !this.mDAG.getReplicaStore().isEmpty() ){
-            File daxReplicaFile = this.writeOutDAXReplicaStore( this.mDAG, this.mPegasusPlanOptions, options.getSubmitDirectory() );
-            options.setInheritedRCFiles( daxReplicaFile.getAbsolutePath() );
+            //construct the path to mDAG replica store
+            StringBuffer inheritedRCFile = new StringBuffer();
+            //point to the outer level workflow DAX replica store file
+            inheritedRCFile.append( DAXReplicaStore.getDAXReplicaStoreFile( this.mPegasusPlanOptions,
+                                                                            this.mDAG.getLabel(),
+                                                                            this.mDAG.dagInfo.index  )
+                                                              );
+            options.setInheritedRCFiles( inheritedRCFile.toString() );
         }
- */
         
         //construct  the pegasus-plan prescript for the JOB
         //the log file for the prescript should be in the
@@ -805,56 +791,6 @@ public class SUBDAXGenerator{
 
 
 
-    /**
-     * Writes out the DAX Replica Store to a File based Replica Catalog in
-     * the submit directory passed.
-     *
-     * @param dag  the workflow being planned
-     * @param options  the planner options
-     * @param submitDirectory  the submit directory for the workflow
-     *
-     * @return the File object pointing to the location of replica store in the
-     *         submit directory.
-     */
-    protected File writeOutDAXReplicaStore( ADag dag, PlannerOptions options, String submitDirectory ){
-        ReplicaCatalog rc = null;
-
-        Properties replicaStoreProps = mProps.getVDSProperties().matchingSubset(
-                                                              ReplicaCatalog.c_prefix,
-                                                              false );
-        File file = new File( submitDirectory,
-                              getDAXReplicaStoreFile( options, dag.dagInfo.getLabel(), dag.dagInfo.index ) );
-
-        //set the appropriate property to designate path to file
-        replicaStoreProps.setProperty( SUBDAXGenerator.DAX_REPLICA_STORE_CATALOG_KEY, file.getAbsolutePath() );
-
-        mLogger.log("Writing out the DAX Replica Store to file " + file.getAbsolutePath(),
-                    LogManager.DEBUG_MESSAGE_LEVEL );
-
-        try{
-            rc = ReplicaFactory.loadInstance(
-                                          SUBDAXGenerator.DAX_REPLICA_STORE_CATALOG_IMPLEMENTER,
-                                          replicaStoreProps);
-        }
-        catch( Exception e ){
-            throw new RuntimeException( "Unable to initialize the DAX Replica Store File  " + file,
-                                         e );
-        }
-
-        //get hold of DAX Replica Store
-        ReplicaStore store = dag.getReplicaStore();
-        for( Iterator it = store.replicaLocationIterator(); it.hasNext() ;){
-            ReplicaLocation rl = (ReplicaLocation)it.next();
-            String lfn = rl.getLFN();
-            for( Iterator rceIt = rl.pfnIterator(); rceIt.hasNext(); ){
-                ReplicaCatalogEntry rce = (ReplicaCatalogEntry) rceIt.next();
-                rc.insert(lfn, rce);
-            }
-        }
-        rc.close();
-
-        return file;
-    }
     
     /**
      * Returns the basename of a dagman (usually) related file for a particular
@@ -873,18 +809,7 @@ public class SUBDAXGenerator{
     }
 
 
-    /**
-     * Constructs the basename to the DAX Replica file.
-     *
-     * @param options   the options for the sub workflow.
-     * @param label     the label for the workflow.
-     * @param index     the index for the workflow.
-     *
-     * @return the name of the cache file
-     */
-    protected String getDAXReplicaStoreFile( PlannerOptions options, String label , String index ){
-        return this.getWorkflowFileName(options, label, index, SUBDAXGenerator.DAX_REPLICA_STORE_SUFFIX );
-    }
+   
 
     /**
      * Constructs the basename to the cache file that is to be used

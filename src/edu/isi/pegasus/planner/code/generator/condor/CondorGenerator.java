@@ -482,6 +482,9 @@ public class CondorGenerator extends Abstract {
         //write out the notifications input file
         this.writeOutNotifications( dag );
 
+        //the dax replica store
+        this.writeOutDAXReplicaStore( dag );
+
         //write out the nelogger file
         this.writeOutStampedeEvents( dag );
 

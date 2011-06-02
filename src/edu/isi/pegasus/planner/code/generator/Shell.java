@@ -173,6 +173,9 @@ public class Shell extends Abstract {
         //set the XBit on the generated shell script
         setXBitOnFile( opFileName );
 
+         //the dax replica store
+        this.writeOutDAXReplicaStore( dag );
+
         //write out the braindump file
         this.writeOutBraindump( dag );
 

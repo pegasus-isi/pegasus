@@ -246,9 +246,31 @@ public abstract class Abstract implements CodeGenerator{
     }
 
     /**
-     * Writes out the notifications input file for the work-flow.
+     * Writes out the DAX replica store
      * 
-     * @param workflow      the work-flow whose notifications files needs to be generated.
+     * @param workflow      the work-flow 
+     */
+    protected void writeOutDAXReplicaStore( ADag workflow ){
+        try{
+            DAXReplicaStore generator = new DAXReplicaStore ();
+            generator.initialize(mBag);
+        
+            Collection <File> result = generator.generateCode(workflow);
+            for( File f : result){
+                mLogger.log("Written out dax replica store to " + f.getName(), LogManager.DEBUG_MESSAGE_LEVEL);
+            }
+        }
+        catch(CodeGeneratorException ioe){
+            //log the message and return
+            mLogger.log("Unable to write out the notifications file ",
+                        ioe, LogManager.ERROR_MESSAGE_LEVEL );
+        }
+    }
+
+    /**
+     * Writes out the generator input file for the work-flow.
+     * 
+     * @param workflow      the work-flow whose generator files needs to be generated.
      */
     protected void writeOutNotifications( ADag workflow ){
         try{
