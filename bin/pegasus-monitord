@@ -2155,8 +2155,13 @@ class Workflow:
                     # Make sure it is not "null"
                     kwargs["task__id"] = invocation_record["derivation"]
             else:
-                # Nothing to do if we cannot get the derivation from the kickstart recort
-                pass
+                # Lets see if we have the derivation from the submit file
+                if my_job._main_job_derivation is not None:
+                    kwargs["task__id"] = my_job._main_job_derivation
+                else:
+                    # Nothing to do if we cannot get the derivation
+                    # from the kickstart record or submit file
+                    pass
             if "start" in invocation_record:
                 # Need to convert it to epoch data
                 my_start = utils.epochdate(invocation_record["start"])
