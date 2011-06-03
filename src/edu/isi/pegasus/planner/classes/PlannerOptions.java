@@ -46,6 +46,11 @@ public class PlannerOptions extends Data implements Cloneable{
      */
     public static final int DEFAULT_LOGGING_LEVEL = LogManager.WARNING_MESSAGE_LEVEL;
 
+    /**
+     * The value of number of rescue retries if no value is specified
+     */
+    public static final int DEFAULT_NUMBER_OF_RESCUE_TRIES = 999;
+
 
     /**
      * The base submit directory.
@@ -237,7 +242,12 @@ public class PlannerOptions extends Data implements Cloneable{
      * The set of non standard java options that need to be passed to the JVM
      */
     private Set<String> mNonStandardJavaOptions;
-    
+
+    /**
+     * Returns the force replan option
+     */
+    private boolean mForceReplan;
+
     /**
      * Default Constructor.
      */
@@ -274,8 +284,9 @@ public class PlannerOptions extends Data implements Cloneable{
         mPartitioningType = null;
         mSanitizePath     = true;
         mJobPrefix        = null;
-        mNumOfRescueTries = 0;
+        mNumOfRescueTries = DEFAULT_NUMBER_OF_RESCUE_TRIES;
         mProperties       = new Properties();
+        mForceReplan      = false;
     }
 
     /**
@@ -372,6 +383,15 @@ public class PlannerOptions extends Data implements Cloneable{
      */
     public boolean getForce(){
         return mForce;
+    }
+
+    /**
+     * Returns the force replan option
+     *
+     * @return boolean
+     */
+    public boolean getForceReplan( ){
+        return mForceReplan;
     }
 
     /**
@@ -853,6 +873,16 @@ public class PlannerOptions extends Data implements Cloneable{
     }
 
     /**
+     * Sets the force replan option
+     * 
+     * @param  force  the boolean value
+     */
+    public void setForceReplan(boolean force ) {
+        mForceReplan = force;
+    }
+
+
+    /**
      * Parses the argument in form of option=[value] and adds to the
      * options that are to be passed ahead to pegasus-run.
      *
@@ -1137,6 +1167,7 @@ public class PlannerOptions extends Data implements Cloneable{
                     "\n Display Help         " + mDisplayHelp +
                     "\n Logging Level        " + mLoggingLevel +
                     "\n Force Option         " + mForce +
+                    "\n Force Replan         " + mForceReplan +
                     "\n Cleanup within wf    " + mCleanup +
                     "\n Create Random Direct " + mGenRandomDir +
                     "\n Random Direct Name   " + mRandomDirName +
@@ -1208,6 +1239,8 @@ public class PlannerOptions extends Data implements Cloneable{
         //the force option
         if(mForce){ sb.append(" --force "); }
 
+        //the force replan option
+        if( mForceReplan ){ sb.append( " --force-replan " ); }
 
         //the cleanup option
         if( !mCleanup ){ sb.append(" --nocleanup "); }
@@ -1252,7 +1285,10 @@ public class PlannerOptions extends Data implements Cloneable{
         sb.append(" --group ").append( mVOGroup );
         
         //specify the number of times to try rescue
-        sb.append( " --rescue " ).append( this.getNumberOfRescueTries() );
+        //only if it does not match the default value!
+        if( this.getNumberOfRescueTries() != PlannerOptions.DEFAULT_NUMBER_OF_RESCUE_TRIES ){
+            sb.append( " --rescue " ).append( this.getNumberOfRescueTries() );
+        }
 
         //help option
         if(mDisplayHelp){  sb.append(" --help ");}
@@ -1356,6 +1392,7 @@ public class PlannerOptions extends Data implements Cloneable{
         pOpt.mDisplayHelp    = this.mDisplayHelp;
         pOpt.mLoggingLevel   = this.mLoggingLevel;
         pOpt.mForce          = this.mForce;
+        pOpt.mForceReplan    = this.mForceReplan;
         pOpt.mCleanup        = this.mCleanup;
         pOpt.mSubmit         = this.mSubmit;
         pOpt.mGenRandomDir   = this.mGenRandomDir;
@@ -1446,6 +1483,7 @@ public class PlannerOptions extends Data implements Cloneable{
 
         return absPath;
     }
+
 
 
 

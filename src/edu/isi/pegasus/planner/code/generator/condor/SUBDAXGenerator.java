@@ -351,6 +351,11 @@ public class SUBDAXGenerator{
                          LogManager.DEBUG_MESSAGE_LEVEL );
             options.getExecutionSites().addAll( mPegasusPlanOptions.getExecutionSites() );
         }
+
+        //we propogate force-replan if set to the sub workflow
+        if( mPegasusPlanOptions.getForceReplan() ){
+            options.setForceReplan( true );
+        }
         
         //add the parents generated transient rc to the cache files
         //arguments for the sub workflow

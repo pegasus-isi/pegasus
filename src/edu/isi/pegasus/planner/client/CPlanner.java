@@ -63,6 +63,13 @@ import edu.isi.pegasus.common.util.FactoryException;
 
 import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
 import edu.isi.pegasus.planner.code.GridStartFactory;
+
+
+import edu.isi.pegasus.planner.classes.Job;
+import edu.isi.pegasus.planner.namespace.Pegasus;
+import edu.isi.pegasus.planner.parser.Parser;
+import edu.isi.pegasus.planner.parser.dax.DAXParser;
+
 import gnu.getopt.Getopt;
 import gnu.getopt.LongOpt;
 
@@ -88,17 +95,11 @@ import java.util.LinkedList;
 
 import java.util.Properties;
 import java.util.Set;
-import edu.isi.pegasus.planner.classes.Job;
-import edu.isi.pegasus.planner.namespace.Pegasus;
-import edu.isi.pegasus.planner.parser.Parser;
-import edu.isi.pegasus.planner.parser.dax.DAXParser;
 import java.io.BufferedReader;
 import java.io.FilenameFilter;
 import java.io.InputStream;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.regex.Pattern;
-import javax.swing.text.NumberFormatter;
 
 
 
@@ -455,11 +456,30 @@ public class CPlanner extends Executable{
                                                 mPOptions.getRelativeSubmitDirectory();
 
 
+                mPOptions.setSubmitDirectory( baseDir, relativeSubmitDir  );
+                
                 if( options.partOfDeferredRun() ){
-                    //replan case for now
+
+                    if( !mPOptions.getForceReplan() ){
+                        //if --force-replan is not set handle
+                        //rescue dags
+                        boolean rescue = handleRescueDAG( orgDag, mPOptions );
+                        if( rescue ){
+                             result = new LinkedList(  );
+                             result.add(  new File ( mPOptions.getSubmitDirectory(),
+                                          this.getDAGFilename( orgDag, mPOptions)));
+                             return result;
+
+                        }
+                    }
+
+                    //replanning case. rescues already accounted for earlier.
 
                     //the relativeSubmitDir is to be a symlink to relativeSubmitDir.XXX
                     relativeSubmitDir = doBackupAndCreateSymbolicLinkForSubmitDirectory( baseDir , relativeSubmitDir );
+
+                    //update the submit directory again.
+                    mPOptions.setSubmitDirectory( baseDir, relativeSubmitDir  );
                     mLogger.log( "Setting relative submit dir to " + relativeSubmitDir,
                                  LogManager.DEBUG_MESSAGE_LEVEL );
                 }
@@ -469,7 +489,6 @@ public class CPlanner extends Executable{
 
                 }
 
-                mPOptions.setSubmitDirectory( baseDir, relativeSubmitDir  );
                 state++;
                 mProps.writeOutProperties( mPOptions.getSubmitDirectory() );
 
@@ -484,16 +503,6 @@ public class CPlanner extends Executable{
                                "Unable to write out properties to directory";
                 throw new RuntimeException( error + mPOptions.getSubmitDirectory() , ioe );
 
-            }
-            
-            boolean rescue = handleRescueDAG( orgDag, mPOptions );
-            if( rescue ){
-                mLogger.log( "No planning attempted. Rescue dag will be submitted", 
-                             LogManager.CONSOLE_MESSAGE_LEVEL );
-                result = new LinkedList(  );
-                result.add(  new File ( mPOptions.getSubmitDirectory(), 
-                                        this.getDAGFilename( orgDag, mPOptions)));
-                return result;
             }
             
 
@@ -738,7 +747,7 @@ public class CPlanner extends Executable{
         LongOpt[] longOptions = generateValidOptions();
 
         Getopt g = new Getopt("pegasus-plan",args,
-                              "vqhfSnzpVr::aD:d:s:o:P:c:C:b:g:2:j:3:F:X:4:6:",
+                              "vqhfSnzpVr::aD:d:s:o:P:c:C:b:g:2:j:3:F:X:4:5:6:7",
                               longOptions,false);
         g.setOpterr(false);
 
@@ -778,6 +787,12 @@ public class CPlanner extends Executable{
                     options.setClusteringTechnique( g.getOptarg() );
                     break;
 
+
+                case '6':// conf
+                	//do nothing
+                	break;
+
+
                 case 'd'://dax
                     options.setDAX(g.getOptarg());
                     break;
@@ -810,10 +825,10 @@ public class CPlanner extends Executable{
                     options.setForce(true);
                     break;
 
-                case '6':// conf
-                	//do nothing
-                	break;
-                
+                case '7'://force replan
+                    options.setForceReplan( true );
+                    break;
+
                 case 'F'://forward
                     options.addToForwardOptions( g.getOptarg() );
                     break;
@@ -1058,7 +1073,7 @@ public class CPlanner extends Executable{
      * options
      */
     public LongOpt[] generateValidOptions(){
-        LongOpt[] longopts = new LongOpt[30];
+        LongOpt[] longopts = new LongOpt[31];
 
         longopts[0]   = new LongOpt( "dir", LongOpt.REQUIRED_ARGUMENT, null, 'D' );
         longopts[1]   = new LongOpt( "dax", LongOpt.REQUIRED_ARGUMENT, null, 'd' );
@@ -1093,7 +1108,7 @@ public class CPlanner extends Executable{
         longopts[27]  = new LongOpt( "relative-submit-dir", LongOpt.REQUIRED_ARGUMENT, null, '4' );
         longopts[28]  = new LongOpt( "quiet", LongOpt.NO_ARGUMENT, null, 'q' );
         longopts[29]  = new LongOpt( "inherited-rc-files", LongOpt.REQUIRED_ARGUMENT, null, '5' );
-        
+        longopts[30]  = new LongOpt( "force-replan" , LongOpt.NO_ARGUMENT, null, '7' );
         return longopts;
     }
 
@@ -1109,7 +1124,7 @@ public class CPlanner extends Executable{
           " [-s site[,site[..]]] [-b prefix] [-c f1[,f2[..]]] [-f] [-m style] " /*<dag|noop|daglite>]*/ +
           "\n [-b basename] [-C t1[,t2[..]]  [-D  <base dir  for o/p files>] [-j <job-prefix>] " +
           "\n [ --relative-dir <relative directory to base directory> ] [ --relative-submit-dir <relative submit directory to base directory> ]" +
-          "\n [ --inherited-rc-files f1[,f2[..]]] " +
+          "\n [ --inherited-rc-files f1[,f2[..]]] [ --force-replan ] " +
           "\n [-g <vogroup>] [-o <output site>]  [-r[dir name]]  [-F option[=value] ] " +
           "\n [-S] [-n] [--conf <path to property file>] [-v] [-q] [-V] [-X[non standard jvm option] [-h]";
 
@@ -1146,6 +1161,7 @@ public class CPlanner extends Executable{
            "\n --relative-dir     the relative directory to the base directory where to generate the concrete workflow." +
            "\n --relative-submit-dir  the relative submit directory where to generate the concrete workflow. Overrids --relative-dir ." +
            "\n -f |--force        skip reduction of the workflow, resulting in build style dag." +
+           "\n --force-replan     force replanning for sub workflows in case of failure. " +
            "\n -F |--forward      any options that need to be passed ahead to pegasus-run in format option[=value] " +
            "\n                    where value can be optional. e.g -F nogrid will result in --nogrid . The option " +
            "\n                    can be repeated multiple times." +
@@ -1497,7 +1513,8 @@ public class CPlanner extends Executable{
     }
     
     /**
-     * Checks for rescue dags, and determines whether to plan or not.
+     * Checks for rescue dags, and determines whether to submit a rescue dag
+     * or not.
      * 
      * 
      * @param dag           the dag file for the dax
@@ -1514,37 +1531,62 @@ public class CPlanner extends Executable{
         if( numOfRescues < 1 ){
             return result;
         }
-        
-        //check for existence of dag file
-        
-        if( numOfRescues < 1 ){
-            return result;
-        }
-        
+
         //check for existence of dag file
         //if it does not exists means we need to plan
-        File f  = new File( dir, dag );
-        mLogger.log( "Determining existence of dag file " + f.getAbsolutePath(),
+        File dagFile  = new File( dir, dag );
+        mLogger.log( "Determining existence of dag file " + dagFile.getAbsolutePath(),
                      LogManager.DEBUG_MESSAGE_LEVEL );        
-        if ( !f.exists() ){
+        if ( !dagFile.exists() ){
             return result;
         }
-        
-        
-        
+
+        /*
+        //if it is default max value , then return true always
+        if( numOfRescues == PlannerOptions.DEFAULT_NUMBER_OF_RESCUE_TRIES ){
+            return true;
+        }
+         */
+
+        int largestRescue = 0;
+        String largestRescueFile = null;
         //check for existence of latest rescue file.
         NumberFormat nf = new DecimalFormat( "000" );
-        
-        String rescue = dag + ".rescue" +  nf.format( numOfRescues );
-        f  = new File( dir, rescue );
-        mLogger.log( "Determining existence of rescue file " + f.getAbsolutePath(),
-                     LogManager.DEBUG_MESSAGE_LEVEL );
-         
-        
-         return  f.exists() ?
-                 result  ://means we need to start planning now
-                 !result;
-          
+        for( int i = 1; i <= numOfRescues; i++ ){
+            String rescue = dag + ".rescue" +  nf.format( i );
+            File rescueFile  = new File( dir, rescue );
+            mLogger.log( "Determining existence of rescue file " + rescueFile.getAbsolutePath(),
+                         LogManager.DEBUG_MESSAGE_LEVEL );
+            if( rescueFile.exists() ){
+                largestRescue = i;
+                largestRescueFile = rescue;
+            }
+            else{
+                break;
+            }
+        }
+
+        if( largestRescue == 0 ){
+            //no rescue dag. but the dag still exists
+            mLogger.log( "No planning attempted. Existing DAG will be submitted " + dagFile,
+                         LogManager.CONSOLE_MESSAGE_LEVEL );
+            return true;
+        }
+
+        if( largestRescue == numOfRescues ){
+            //we need to start planning now
+            mLogger.log( "Reached user specified limit of rescue retries " + numOfRescues
+                         + " .Replanning will be triggered ",
+                         LogManager.CONFIG_MESSAGE_LEVEL );
+            return false;
+        }
+
+        if( largestRescueFile != null ){
+            //a rescue file was detected . lets log that
+            mLogger.log( "Rescue DAG will be submitted. Largest Rescue File detected was " + largestRescueFile,
+                         LogManager.CONSOLE_MESSAGE_LEVEL );
+        }
+        return true;
       }
 
     /**
