@@ -1962,8 +1962,14 @@ class Workflow:
             kwargs["site"] = ""
         if my_job._remote_user is not None:
             kwargs["user"] = my_job._remote_user
+        else:
+            if self._user is not None:
+                kwargs["user"] = self._user
         if my_job._remote_working_dir is not None:
             kwargs["work_dir"] = my_job._remote_working_dir
+        else:
+            if self._original_submit_dir is not None:
+                kwargs["work_dir"] = self._original_submit_dir
         if my_job._cluster_start_time is not None:
             kwargs["cluster__start"] = my_job._cluster_start_time
         if my_job._cluster_duration is not None:
