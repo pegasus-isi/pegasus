@@ -352,9 +352,19 @@ public class SUBDAXGenerator{
             options.getExecutionSites().addAll( mPegasusPlanOptions.getExecutionSites() );
         }
 
-        //we propogate force-replan if set to the sub workflow
+        //we propogate force-replan  if set in outer level workflow
+        //to the sub workflow
         if( mPegasusPlanOptions.getForceReplan() ){
             options.setForceReplan( true );
+        }
+
+        //we propogate the rescue option also
+        if( mPegasusPlanOptions.getNumberOfRescueTries() != PlannerOptions.DEFAULT_NUMBER_OF_RESCUE_TRIES ){
+            //user specified a value.
+            //put that for sub workflow if not specified in there
+            if( options.getNumberOfRescueTries() == PlannerOptions.DEFAULT_NUMBER_OF_RESCUE_TRIES ){
+                options.setNumberOfRescueTries( mPegasusPlanOptions.getNumberOfRescueTries() );
+            }
         }
         
         //add the parents generated transient rc to the cache files
