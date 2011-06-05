@@ -408,11 +408,11 @@ LFN PFN a="b" [..]
             role="bold">&lt;url to the 2nd globus LRC&gt;</emphasis></para>
           </listitem>
         </itemizedlist>
+   
 
-    In the above example,<emphasis role=bold>lrc1</emphasis> and <emphasis role="bold"> lrc2</emphasis>
-    are any valid identifier names and url is the property key that needed to be specified.</para>
-
-    </section>
+        <para>In the above example,<emphasis role=bold>lrc1</emphasis> and <emphasis role="bold"> lrc2</emphasis> are any valid
+      identifier names and <emphasis role="bold">url</emphasis>  is the property key that needed to be
+      specified.</para>
 
     <section id="pegasus-rc-client">
       <title>Replica Catalog Client pegasus-rc-client</title>
@@ -446,7 +446,7 @@ f.a gsiftp://somehost:port/path/to/file/f.a pool=local</computeroutput></screen>
       <para>The above line shows that entry for file <emphasis>f.a</emphasis> was made
       correctly.</para>
 
-      <para>You can also use the<emphasis role="bold">pegasus-rc-client</empasis> to look for entries.</para>
+      <para>You can also use the <emphasis role="bold">pegasus-rc-client</emphasis> to look for entries.</para>
 
       <screen><command>$ pegasus-rc-client -Dpegasus.catalog.replica=File -Dpegasus.catalog.replica.file=$HOME/rc lookup LFN f.a</command><computeroutput>
 
@@ -535,39 +535,39 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
 
       <para><orderedlist>
           <listitem>
-            <para>site - A site identifier.</para>
+            <para><emphasis role="bold">site</emphasis> - A site identifier.</para>
           </listitem>
 
           <listitem>
-            <para>replica-catalog - URL for a local replica catalog (LRC) to
+            <para><emphasis role="bold">replica-catalog</emphasis>  - URL for a local replica catalog (LRC) to
             register your files in. Only used for RLS implementation of the
             RC. This is optional</para>
           </listitem>
 
           <listitem>
-            <para>File Systems - Info about filesystems mounted on the remote
+            <para><emphasis>File Systems</emphasis>  - Info about filesystems mounted on the remote
             clusters head node or worker nodes. It has several
             configurations</para>
 
             <itemizedlist>
               <listitem>
-                <para>head-fs/scratch - This describe the scratch file systems
+                <para><emphasis>head-fs/scratch</emphasis>  - This describe the scratch file systems
                 (temporary for execution) available on the head node</para>
               </listitem>
 
               <listitem>
-                <para>head-fs/storage - This describes the storage file
+                <para><emphasis>head-fs/storage</emphasis>  - This describes the storage file
                 systems (long term) available on the head node</para>
               </listitem>
 
               <listitem>
-                <para>worker-fs/scratch - This describe the scratch file
+                <para><emphasis>worker-fs/scratch</emphasis>  - This describe the scratch file
                 systems (temporary for execution) available on the worker
                 node</para>
               </listitem>
 
               <listitem>
-                <para>worker-fs/storage - This describes the storage file
+                <para><emphasis>worker-fs/storage</emphasis>  - This describes the storage file
                 systems (long term) available on the worker node</para>
               </listitem>
             </itemizedlist>
@@ -598,7 +598,7 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
           </listitem>
 
           <listitem>
-            <para>arch,os,osrelease,osversion, glibc - The
+            <para><emphasis>arch,os,osrelease,osversion, glibc</emphasis> - The
             arch/os/osrelease/osversion/glibc of the site. OSRELEASE,
             OSVERSION and GLIBC are optional</para>
 
@@ -611,7 +611,7 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
           </listitem>
 
           <listitem>
-            <para>Profiles - One or many profiles can be attached to a
+            <para><emphasis>Profiles</emphasis>  - One or many profiles can be attached to a
             pool.</para>
 
             <para>One example is the environments to be set on a remote
@@ -620,7 +620,7 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
         </orderedlist></para>
 
       <para>To use this site catalog the follow properties need to be
-      set</para>
+      set:</para>
 
       <orderedlist>
         <listitem>
