@@ -206,7 +206,7 @@
       </listitem>
 
       <listitem>
-        <para><emphasis>MRC</emphasis> </para>
+        <para><emphasis role="bold">MRC</emphasis> </para>
       </listitem>
     </orderedlist>
 
@@ -388,8 +388,7 @@ LFN PFN a="b" [..]
 
       <para><itemizedlist>
           <listitem>
-            <para><emphasis
-            role="bold">pegasus.catalog.replica.mrc.lrc1=LRC</emphasis></para>
+            <para><emphasis role="bold">pegasus.catalog.replica.mrc.lrc1=LRC</emphasis></para>
           </listitem>
 
           <listitem>
@@ -408,9 +407,11 @@ LFN PFN a="b" [..]
             role="bold">pegasus.catalog.replica.mrc.lrc2.url=</emphasis><emphasis
             role="bold">&lt;url to the 2nd globus LRC&gt;</emphasis></para>
           </listitem>
-        </itemizedlist>In the above example,<emphasis>lrc1</emphasis> and <emphasis> lrc2</emphasis> are any valid
-      identifier names and <emphasis>url</emphasis> is the property key that needed to be
-      specified.</para>
+        </itemizedlist>
+
+    In the above example,<emphasis role=bold>lrc1</emphasis> and <emphasis role="bold"> lrc2</emphasis>
+    are any valid identifier names and url is the property key that needed to be specified.</para>
+
     </section>
 
     <section id="pegasus-rc-client">
@@ -445,7 +446,7 @@ f.a gsiftp://somehost:port/path/to/file/f.a pool=local</computeroutput></screen>
       <para>The above line shows that entry for file <emphasis>f.a</emphasis> was made
       correctly.</para>
 
-      <para>You can also use the<empasis role="bold">pegasus-rc-client</empasis> to look for entries.</para>
+      <para>You can also use the<emphasis role="bold">pegasus-rc-client</empasis> to look for entries.</para>
 
       <screen><command>$ pegasus-rc-client -Dpegasus.catalog.replica=File -Dpegasus.catalog.replica.file=$HOME/rc lookup LFN f.a</command><computeroutput>
 
