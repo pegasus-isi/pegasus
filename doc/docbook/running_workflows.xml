@@ -12,7 +12,7 @@
     resources that do not share a file system, explicit nodes are added to the
     workflow for orchestrating data. transfer between the tasks.</para>
 
-    <para>When you take the workflow DAX above, and plan it for a single
+    <para>When you take the DAX workflow created in <link linkend="creating_workflows">Creating Workflows</link>, and plan it for a single
     remote grid execution, here a site with handle <emphasis>hpcc</emphasis>,
     and plan the workflow without clean-up nodes, the following concrete
     workflow is built:</para>
@@ -443,7 +443,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
 
         <mediaobject>
           <imageobject>
-            <imagedata contentdepth="100%" scalefit="1" width="100%" fileref="./images/refinement-site-selection.png" />
+            <imagedata contentdepth="100%" scalefit="1" width="100%" fileref="./images/refinement-site-selection.png"/>
           </imageobject>
         </mediaobject>
       </figure>
@@ -499,7 +499,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
 
         <mediaobject>
           <imageobject>
-            <imagedata contentdepth="100%" scalefit="1" width="100%" fileref="./images/refinement-transfer-jobs.png" />
+            <imagedata contentdepth="100%" scalefit="1" width="100%" fileref="./images/refinement-transfer-jobs.png"/>
           </imageobject>
         </mediaobject>
       </figure>
@@ -515,7 +515,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
 
         <mediaobject>
           <imageobject>
-            <imagedata contentdepth="100%" scalefit="1" width="100%" fileref="./images/refinement-registration-jobs.png" />
+            <imagedata contentdepth="100%" scalefit="1" width="100%" fileref="./images/refinement-registration-jobs.png"/>
           </imageobject>
         </mediaobject>
       </figure>
@@ -564,7 +564,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
 
         <mediaobject>
           <imageobject>
-            <imagedata contentdepth="100%" scalefit="1" width="100%" fileref="./images/refinement-creadir-rm-jobs.png" />
+            <imagedata contentdepth="100%" scalefit="1" width="100%" fileref="./images/refinement-creadir-rm-jobs.png"/>
           </imageobject>
         </mediaobject>
       </figure>
@@ -613,7 +613,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
 
         <mediaobject>
           <imageobject>
-            <imagedata contentdepth="100%" scalefit="1" width="100%" fileref="./images/refinement-final-executable-wf.png" />
+            <imagedata contentdepth="100%" scalefit="1" width="100%" fileref="./images/refinement-final-executable-wf.png"/>
           </imageobject>
         </mediaobject>
       </figure>
@@ -927,7 +927,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
       where a user submits Pegasus workflows for execution. This site
       typically runs a Condor collector to gather resource announcements, or
       is part of a larger Condor pool that collects these announcement. Condor
-      makes the remote resources available to the submit host&rsquor;s Condor
+      makes the remote resources available to the submit host&amp;rsquor;s Condor
       installation.</para>
 
       <para>The <link linkend="concepts-fig-cloud-layout">figure above</link>
@@ -960,7 +960,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
       products may both be different and external to the submit host.</para>
 
       <para>Once resources begin appearing in the pool managed by the submit
-      machine&rsquor;s Condor collector, the application workflow can be
+      machine&amp;rsquor;s Condor collector, the application workflow can be
       submitted to Condor. A Condor DAGMan will manage the application
       workflow execution. Pegasus run-time tools obtain timing-, performance
       and provenance information as the application workflow is executed. At
@@ -1015,7 +1015,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
         <para>The Pegasus team explores the option of dynamically bringing up
         an NFS server on one resource of a multi-resource allocation for the
         duration of the allocation. This option is part of the configuration
-        for an experiment&rsquor;s workflow&rsquor;s provisioning stage. We do
+        for an experiment&amp;rsquor;s workflow&amp;rsquor;s provisioning stage. We do
         not expect cloud sites to ban NFS and RPC traffic between resources of
         the same multi-resource allocation.</para>
       </section>
@@ -1078,7 +1078,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
 
         <mediaobject>
           <imageobject>
-            <imagedata contentdepth="100%" scalefit="1" width="100%" fileref="./images/gram_layout.png" />
+            <imagedata contentdepth="100%" scalefit="1" width="100%" fileref="./images/gram_layout.png"/>
           </imageobject>
         </mediaobject>
       </figure>
@@ -1139,7 +1139,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
 
         <mediaobject>
           <imageobject>
-            <imagedata contentdepth="100%" scalefit="1" width="100%" fileref="images/condor_layout.png" />
+            <imagedata contentdepth="100%" scalefit="1" width="100%" fileref="images/condor_layout.png"/>
           </imageobject>
         </mediaobject>
       </figure>
@@ -1158,11 +1158,11 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
       pool. Pegasus currently uses the FileSystemDomain classad[] attribute to
       restrict the set of machines that make up a single resource. To clarify
       this point, suppose there are certain execution machines in the Condor
-      pool whose FileSystemDomain is set to &ldquo;viz.isi.edu&rdquor;. If the
+      pool whose FileSystemDomain is set to &amp;ldquo;viz.isi.edu&amp;rdquor;. If the
       user wants to execute the workflow on these machines, then there should
-      be a site, say &ldquo;isi_viz&rdquor; defined in the site catalog and
+      be a site, say &amp;ldquo;isi_viz&amp;rdquor; defined in the site catalog and
       the FileSystemDomain and universe attributes for this resource should be
-      defined as &ldquo;viz.isi.edu&rdquor; and &ldquo;vanilla&rdquor;
+      defined as &amp;ldquo;viz.isi.edu&amp;rdquor; and &amp;ldquo;vanilla&amp;rdquor;
       respectively. When invoking Pegasus, the user should select isi_viz as
       the compute resource.</para>
 
@@ -1223,7 +1223,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
         <emphasis role="bold">GlideIn of Remote Globus Resources</emphasis>
       </para>
 
-      <para>The above step glides in 10 nodes to the user&rsquor;s local
+      <para>The above step glides in 10 nodes to the user&amp;rsquor;s local
       condor pool, from the remote pbs scheduler running at
       gatekeeper.site.edu. By default, the glide in binaries are installed in
       the users home directory on the remote host.</para>
@@ -1238,7 +1238,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
       submit files with a value matching the FileSystemDomain of the machines
       from that site. For example, the user migrates nodes from the ISI
       cluster (with FileSystemDomain viz.isi.org) into a Condor pool and
-      specifies FileSystemDomain == &ldquo;viz.isi.edu&rdquor;. Condor would
+      specifies FileSystemDomain == &amp;ldquo;viz.isi.edu&amp;rdquor;. Condor would
       then schedule the jobs only on the nodes from the ISI VIZ cluster in the
       local condor pool. The FileSystemDomain can be specified for an
       execution site in the site catalog with condor profile namespace as
@@ -1277,7 +1277,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
       site isi_condor would have the following expression in the submit
       file.</para>
 
-      <programlisting>requirements = FileSystemDomain == &ldquo;viz.isi.edu&rdquor;</programlisting>
+      <programlisting>requirements = FileSystemDomain == &amp;ldquo;viz.isi.edu&amp;rdquor;</programlisting>
     </section>
 
     <section>
@@ -1380,7 +1380,7 @@ requirements = ((GLIDEIN_Entry_Name == "isi_iz") || (TARGET.Pegasus_Site == "isi
  &lt;/site&gt;
 </programlisting>
 
-      <para />
+      <para/>
 
       <section>
         <title>Changes to Jobs</title>
@@ -1399,7 +1399,7 @@ requirements = ((GLIDEIN_Entry_Name == "isi_iz") || (TARGET.Pegasus_Site == "isi
           </listitem>
         </orderedlist>
 
-        <para />
+        <para/>
 
         <section>
           <title>Remote CE Requirements</title>
@@ -1785,3 +1785,4 @@ ec2     amazon::s3cmd    /path/to/pegasus/bin/s3cmd    INSTALLED   INTEL32::LINU
     </section>
   </section>
 </chapter>
+
