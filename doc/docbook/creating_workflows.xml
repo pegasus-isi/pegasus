@@ -992,14 +992,14 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
           </listitem>
 
           <listitem>
-            <para>pfn - URL or file path for the location of the executable.
+            <para><emphasis role="bold">pfn</emphasis> - URL or file path for the location of the executable.
             The pfn is a file path if the transformation is of type INSTALLED
             and generally a url (file:/// or http:// or gridftp://) if of type
             STAGEABLE</para>
           </listitem>
 
           <listitem>
-            <para>site - The site identifier for the site where the
+            <para><emphasis role="bold">site</emphasis> - The site identifier for the site where the
             transformation is available</para>
           </listitem>
 
@@ -1010,7 +1010,7 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
           </listitem>
 
           <listitem>
-            <para>arch, os, osrelease, osversion - The
+            <para><emphasis role="bold">arch, os, osrelease, osversion</emphasis> - The
             arch/os/osrelease/osversion of the transformation. osrelease and
             osversion are optional.</para>
 
@@ -1023,7 +1023,7 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
           </listitem>
 
           <listitem>
-            <para>Profiles - One or many profiles can be attached to a
+            <para><emphasis role="bold">Profiles</emphasis> - One or many profiles can be attached to a
             transformation for all sites or to a transformation on a
             particular site.</para>
           </listitem>
@@ -1068,17 +1068,17 @@ site1 sys::date:1.0 /usr/bin/date  INSTALLED INTEL32::LINUX:FC4.2:3.6 ENV::PATH=
 
       <orderedlist>
         <listitem>
-          <para>site - A site identifier.</para>
+          <para><emphasis role="bold">site</emphasis> - A site identifier.</para>
         </listitem>
 
         <listitem>
-          <para>logicaltr - The logical transformation name. The format is
+          <para><emphasis role="bold">logicaltr</emphasis> - The logical transformation name. The format is
           NAMESPACE::NAME:VERSION where NAMESPACE and NAME are
           optional.</para>
         </listitem>
 
         <listitem>
-          <para>physicaltr - The physical transformation path or URL.</para>
+          <para><emphasis role="bold">physicaltr</emphasis> - The physical transformation path or URL.</para>
 
           <para>If the transformation type is INSTALLED then it needs to be an
           absolute path to the executable. If the type is STAGEABLE then the
@@ -1086,7 +1086,7 @@ site1 sys::date:1.0 /usr/bin/date  INSTALLED INTEL32::LINUX:FC4.2:3.6 ENV::PATH=
         </listitem>
 
         <listitem>
-          <para>type - The type of transformation. Can have on of two
+          <para><emphasis role="bold">type</emphasis>  - The type of transformation. Can have on of two
           values</para>
 
           <itemizedlist>
@@ -1103,7 +1103,7 @@ site1 sys::date:1.0 /usr/bin/date  INSTALLED INTEL32::LINUX:FC4.2:3.6 ENV::PATH=
         </listitem>
 
         <listitem>
-          <para>system - The system for which the transformation is
+          <para><emphasis role="bold">system</emphasis> - The system for which the transformation is
           compiled.</para>
 
           <para>The formation of the sytem is ARCH::OS:OSVERSION:GLIBC where
@@ -1114,7 +1114,7 @@ site1 sys::date:1.0 /usr/bin/date  INSTALLED INTEL32::LINUX:FC4.2:3.6 ENV::PATH=
         </listitem>
 
         <listitem>
-          <para>Profiles - The profiles associated with the transformation.
+          <para><emphasis role="bold">Profiles</emphasis> - The profiles associated with the transformation.
           For indepth information about profiles and their priorities read the
           Profile Guide.</para>
 
@@ -1226,19 +1226,21 @@ Output Filename: /dev/fd/1</computeroutput></screen>
 
       <para>Now we need to map all 3 transformations onto the "keg"
       executable. We place these mappings in our File transformation catalog
-      for site clus1. In earlier version of Pegasus one had to define entries
-      for Pegasus executables like transfer, replica client, dirmanager etc on
-      each site as well as site "local". This is no longer required. Pegasus
-      2.0 and later automatically picks up the paths for these binaries from
+      for site clus1. </para>
+
+      <note><para>In earlier version of Pegasus users had to define entries
+      for Pegasus executables such as transfer, replica client, dirmanager, etc on
+      each site as well as site "local". This is no longer required. Pegasus versions
+      2.0 and later automatically pick up the paths for these binaries from
       the environment profile PEGASUS_HOME set in the site catalog for each
       site.</para>
 
-      <para>Note: A single entry needs to be on one line. The above example is
-      just formatted for convenience.</para>
+      <para>A single entry needs to be on one line. The above example is
+      just formatted for convenience.</para> </note>
 
       <para>Alternatively you can also use the pegasus-tc-client to add
       entries to any implementation of the transformation catalog. The
-      following eg: shows us adding the last entry in the File based
+      following example shows the addiition the last entry in the File based
       transformation catalog.</para>
 
       <screen><command>$ pegasus-tc-client -Dpegasus.catalog.transformation=Text \
