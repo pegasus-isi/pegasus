@@ -627,7 +627,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
     workflow ( DAX ) and generates an executable workflow ( usually a Condor
     DAG ) by querying various catalogs and performing several refinement
     steps. Before users can run pegasus plan the following needs to be
-    done</para>
+    done:</para>
 
     <orderedlist>
       <listitem>
@@ -678,12 +678,12 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
         <para>After the catalogs have been configured, the user properties
         file need to be updated with the types and locations of the catalogs
         to use. These properties are described in the
-        <emphasis>basic.properties</emphasis> files in the
-        <emphasis>etc</emphasis> sub directory of <link
-        linkend="installation">Installation</link> chapter.</para>
+        <emphasis role="bold">basic.properties</emphasis> files in the
+        <emphasis role="bold">etc</emphasis> sub directory (see the Properties section of the<link
+        linkend="reference">Reference</link> chapter.</para>
 
         <para>The basic properties that need to be set usually are listed
-        below</para>
+        below:</para>
 
         <table>
           <title>Table2: Basic Properties that need to be set</title>
@@ -721,7 +721,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
     </orderedlist>
 
     <para>To execute pegasus-plan user usually requires to specify the
-    following options</para>
+    following options:</para>
 
     <orderedlist>
       <listitem>
@@ -1580,13 +1580,14 @@ pegasus.selector.replica =  Local               # Always prefer file URL's on th
 # the vanilla universe. The CONDOR transfer settings are so that stdout and stderr are
 # not redirected to initialdir instead of the submit dir
 
-local-condor pegasus::dirmanager /path/on/submithost/pegasus/bin/dirmanager INSTALLED INTEL32::LINUX CONDOR::universe="local"CONDOR::requirements="";CONDOR::transfer_output="";CONDOR::transfer_error="";CONDOR::whentotransferoutput=""
+local-condor pegasus::dirmanager /path/on/submithost/pegasus/bin/dirmanager INSTALLED INTEL32::LINUX CONDOR:
+:universe="local"CONDOR::requirements="";CONDOR::transfer_output="";CONDOR::transfer_error="";CONDOR::whentotransferoutput=""
 </programlisting>
         </listitem>
       </orderedlist>
 
       <note>
-        <para>For Pegasus 3.1 running workflows in this setup will be made
+        <para>In Pegasus 3.1, running workflows in this setup will be made
         much simpler.</para>
       </note>
     </section>

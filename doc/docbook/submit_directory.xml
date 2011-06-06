@@ -4,7 +4,6 @@
 <chapter id="submit_directory">
   <title>Submit Directory Details</title>
 
-
   <section>
     <title>Introduction</title>
 
@@ -13,10 +12,9 @@
     DAX ) and generates an executable workflow (DAG) in the submit
     directory.</para>
 
-    <para>This document describes the various Replica Selection Strategies in
+    <para>This document also describes the various Replica Selection Strategies in
     Pegasus.</para>
   </section>
-
   <section id="submit_directory-layout">
     <title>Layout</title>
 
@@ -888,5 +886,6 @@ ts=2009-04-21T23:09:03.093402Z event=pegasus.job.map job.id=merge_vahi-findrange
     </itemizedlist>
   </section>
 </chapter>
+
 
 

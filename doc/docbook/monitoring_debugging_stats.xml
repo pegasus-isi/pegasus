@@ -53,7 +53,7 @@
       install the low-level database drivers, and should consult
       pegasus-monitord's man page for more detailed information.</para>
 
-      <para>As an example:</para>
+      <para>As an example, the command:</para>
 
       <para><programlisting>$ pegasus-monitord -r diamond-0.dag.dagman.out</programlisting>will
       launch pegasus-monitord in replay mode. In this case, if a jobstate.log
@@ -77,7 +77,7 @@
     <section>
       <title>pegasus-status</title>
 
-      <para>To monitor the execution of the workflow lets run the
+      <para>To monitor the execution of the workflow run the
       pegasus-status command as suggested by the output of the pegasus-run
       command above.</para>
 
@@ -90,8 +90,8 @@ Workflow_1-0.dag succeeded
 
 WORKFLOW STATUS : RUNNING | 48/58 ( 83% ) | (workflow is running)</programlisting>
 
-      <para>To see the jobs in the queue while the workflow is running you can
-      run the pegasus-status without the -l option as shown below.</para>
+      <para>To see the jobs in the queue while the workflow is running,
+      run the pegasus-status without the -l option as shown below:</para>
 
       <programlisting>$ <emphasis>pegasus-status /nfs/asd2/gmehta/PEGASUS/dags/gmehta/pegasus/black-diamond/run0002</emphasis>
 
@@ -266,13 +266,13 @@ Logical transformation statistics :
 
       <itemizedlist>
         <listitem>
-          <para>Workflow runtime (min,sec) - the walltime from the start of
+          <para><emphasis role="bold">Workflow runtime (min,sec)</emphasis> - the walltime from the start of
           the workflow execution to the end as reported by the DAGMAN.In case
           of rescue dag the value is the cumulative of all retries.</para>
         </listitem>
 
         <listitem>
-          <para>Cumulative workflow runtime (min,sec) - the sum of the
+          <para><emphasis role="bold">Cumulative workflow runtime (min,sec)</emphasis> - the sum of the
           walltime of all jobs as reported by the DAGMan .In case of job
           retries the value is the cumulative of all retries.</para>
         </listitem>
@@ -403,13 +403,13 @@ Logical transformation statistics :
 
       <itemizedlist>
         <listitem>
-          <para>Workflow runtime (min,sec) - the waltime from the start of the
+          <para><emphasis role="bold">Workflow runtime (min,sec)</emphasis> - the waltime from the start of the
           workflow execution to the end as reported by the DAGMAN.In case of
           rescue dag the value is the cumulative of all retries.</para>
         </listitem>
 
         <listitem>
-          <para>Cumulative workflow runtime (min,sec) - the sum of the
+          <para><emphasis role="bold">Cumulative workflow runtime (min,sec)</emphasis> - the sum of the
           walltime of all jobs as reported by the DAGMan .In case of job
           retries the value is the cumulative of all retries. For workflows
           having sub workflow jobs (i.e SUBDAG and SUBDAX jobs) , the sub
@@ -417,27 +417,27 @@ Logical transformation statistics :
         </listitem>
 
         <listitem>
-          <para>Total jobs - the total number of jobs in the workflow. The 
+          <para><emphasis role="bold">Total jobs</emphasis> - the total number of jobs in the workflow. The
           total number of jobs is calculated by parsing the .dag file.For
           workflows having sub workflow jobs (i.e SUBDAG and SUBDAX jobs) ,
           the sub workflow jobs are treated like regular jobs.</para>
         </listitem>
 
         <listitem>
-          <para># jobs succeeded - the total number of jobs succeeded.</para>
+          <para><emphasis role="bold"># jobs succeeded</emphasis> - the total number of jobs succeeded.</para>
         </listitem>
 
         <listitem>
-          <para># jobs failed - the total number of jobs failed.</para>
+          <para><emphasis role="bold"># jobs failed</emphasis> - the total number of jobs failed.</para>
         </listitem>
 
         <listitem>
-          <para># jobs unsubmitted - the total number of jobs that are not
+          <para><emphasis role="bold"># jobs unsubmitted</emphasis> - the total number of jobs that are not
           submitted.</para>
         </listitem>
 
         <listitem>
-          <para># jobs unknown - the total number of jobs that are submitted,
+          <para><emphasis role="bold"># jobs unknown</emphasis> - the total number of jobs that are submitted,
           but has not completed execution or the state is unknown.</para>
         </listitem>
 
@@ -1230,3 +1230,4 @@ eps format : /scratch/grid-setup/run0001/graph/diamond-host.eps
      </section>
   </section>
 </chapter>
+
