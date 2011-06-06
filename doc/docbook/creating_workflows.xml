@@ -408,9 +408,9 @@ LFN PFN a="b" [..]
             role="bold">&lt;url to the 2nd globus LRC&gt;</emphasis></para>
           </listitem>
         </itemizedlist>
-   
+       </para> 
 
-        <para>In the above example,<emphasis role=bold>lrc1</emphasis> and <emphasis role="bold"> lrc2</emphasis> are any valid
+        <para>In the above example,<emphasis role="bold">lrc1</emphasis> and <emphasis role="bold"> lrc2</emphasis> are any valid
       identifier names and <emphasis role="bold">url</emphasis>  is the property key that needed to be
       specified.</para>
 
@@ -452,6 +452,7 @@ f.a gsiftp://somehost:port/path/to/file/f.a pool=local</computeroutput></screen>
 
 f.a gsiftp://somehost:port/path/to/file/f.a pool=local</computeroutput></screen>
     </section>
+  </section>
   </section>
 
   <section id="site">
