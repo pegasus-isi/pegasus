@@ -233,30 +233,38 @@ $ export CONDOR_CONFIG=PEGASUS_HOME/etc/condor_config</programlisting></para>
         </listitem>
       </itemizedlist>
 
-
+     </section>
+     <section>
       <title>Basic Configurations</title>
       
       <para>Basic configuration is controlled through the properties settings selected for Pegasus Planner, Pegasus Home, and Catalogs. </para>
+      
       <note>Values rely on proper capitalization, unless explicitly noted otherwise.</note>
       
-      <para>Some properties rely with their default on the value of other properties. As a notation, the curly braces refer to the value of the named property.
-      For instance, ${pegasus.home} means that the value depends on the value of the pegasus.home property plus any noted additions. You can use this notation to refer to other properties, though the extent of the subsitutions are limited. Usually, you want to refer to a set of the standard system properties. Nesting is not allowed. Substitutions will only be done once.
+      <para>Some properties rely with their default on the value of other properties.</para>
 
-There is a priority to the order of reading and evaluating properties. Usually there is no need to worry about the priorities. However, it is good to know the details of when which property applies, and how one property is able to overwrite another.
+      <para>The curly braces refer to the value of the named property.
+      For instance,<emphasis role="bold">${pegasus.home}</emphasis>  means that the value depends on the value of the pegasus.home property plus any noted additions.
+      You can use this notation to refer to other properties, though the extent of the subsitutions are limited.
+      Usually, you want to refer to a set of the standard system properties.</para>
+      <para> Nesting is not allowed.</para>
 
-    Property definitions in the system property file, usually found in ${pegasus.home.sysconfdir}/properties, have the lowest priority.
-    These properties are expected to be set up by the submit host's administrator.
+      <para> Substitutions will only be done once.</para>
+
+      <para> There is a priority to the order of reading and evaluating properties.
+      Usually there is no need to worry about the priorities. However, it is good to know the details of when which property applies,
+      and how one property is able to overwrite another.</para>
+
+    <para>Property definitions in the system property file, usually found in ${pegasus.home.sysconfdir}/properties, have the lowest priority.
+    These properties are expected to be set up by the submit host's administrator. </para>
     
-    The properties defined in the user property file ${user.home}/.pegasusrc have higher priority.
-    These can overwrite settings found in the system's properties. A set of sensible property values to set on a production system is shown below.
+    <para>The properties defined in the user property file<emphasis role="bold">${user.home}/.pegasusrc</emphasis>  have higher priority.
+    These can overwrite settings found in the system's properties. A set of sensible property values to set on a production system is shown below.</para>
     
-    Commandline properties have the highest priority. Each commandline property is introduced by a -D argument.
+   <para> Commandline properties have the highest priority. Each commandline property is introduced by a <emphasis role="bold">-D</emphasis> argument.   </para>
 
-    <note>These arguments are parsed by the shell wrapper, and thus the -D arguments must be the first arguments to any command.
-    Commandline properties are useful for debugging purposes.  </note>
-</para>
-      </section>
-
+    <note>These arguments are parsed by the shell wrapper, and thus the -D arguments must be the first arguments to any command. Commandline properties are useful for debugging purposes.  </note>
+       </section>
 
   </section>
 </chapter>
