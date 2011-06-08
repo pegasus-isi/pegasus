@@ -234,7 +234,7 @@ $ export CONDOR_CONFIG=PEGASUS_HOME/etc/condor_config</programlisting></para>
       </itemizedlist>
 
     </section>
-    
+     </section>
   <section id="basic_configuration">
       <title>Basic Configurations</title>
       
@@ -270,10 +270,11 @@ $ export CONDOR_CONFIG=PEGASUS_HOME/etc/condor_config</programlisting></para>
     Commandline properties are useful for debugging purposes.  </note>
     
     <para> For more details see <link linkend="running_workflows"/></para>
-       </section>
+
 
 </section>
 </chapter>
+
 
 
 
