@@ -80,7 +80,7 @@ Python 2.6.2</programlisting></para>
       it does not require PEGASUS_HOME to be set or sourcing of any
       environtment setup scripts.</para>
     </note>
-  </section>
+   </section>
 
   <section id="native_packages">
     <title>Native Packages (RPM/DEB)</title>
@@ -142,7 +142,7 @@ Complete!</programlisting>
 ...
 # <emphasis role="bold">apt-get install pegasus-3.0</emphasis></programlisting>
     </section>
-  </section>
+   </section>
 
   <section id="tarballs">
     <title>Pegasus from Tarballs</title>
@@ -171,9 +171,9 @@ Complete!</programlisting>
           <para><programlisting>$ export PATH=/path/to/pegasus-3.0.0:$PATH</programlisting></para>
         </listitem>
       </itemizedlist>
-    </section>
+     </section>
 
-    <section id="tarball_condor">
+     <section id="tarball_condor">
       <title>Tarball with Included Condor</title>
 
       <para>For convenience, there is Pegasus WMS tarballs which has Condor
@@ -233,8 +233,9 @@ $ export CONDOR_CONFIG=PEGASUS_HOME/etc/condor_config</programlisting></para>
         </listitem>
       </itemizedlist>
 
-      </section>
-  <section id="basic_configuration">
+    </section>
+    
+<section id="basic_configuration">
       <title>Basic Configurations</title>
       
       <para>
@@ -268,10 +269,10 @@ $ export CONDOR_CONFIG=PEGASUS_HOME/etc/condor_config</programlisting></para>
     <note>These arguments are parsed by the shell wrapper, and thus the -D arguments must be the first arguments to any command.
     Commandline properties are useful for debugging purposes.  </note>
     
-    <para> For more details see <link linkend="running_workflows.php#Resource_Configurations"/></para>
+    <para> For more details see <link linkend="running_workflows"/></para>
        </section>
 
-  </section>
+</section>
 </chapter>
 
 
