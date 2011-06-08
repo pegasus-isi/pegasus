@@ -237,7 +237,9 @@ $ export CONDOR_CONFIG=PEGASUS_HOME/etc/condor_config</programlisting></para>
      <section>
       <title>Basic Configurations</title>
       
-      <para>Basic configuration is controlled through the properties settings selected for Pegasus Planner, Pegasus Home, and Catalogs. </para>
+      <para><orderedlist>
+      <listitem>
+      Basic configuration is controlled through the properties settings selected for Pegasus Planner, Pegasus Home, and Catalogs.</listitem> </orderedlist> </para>
       
       <note>Values rely on proper capitalization, unless explicitly noted otherwise.</note>
       
