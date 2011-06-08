@@ -265,7 +265,10 @@ $ export CONDOR_CONFIG=PEGASUS_HOME/etc/condor_config</programlisting></para>
     
    <para> Commandline properties have the highest priority. Each commandline property is introduced by a <emphasis role="bold">-D</emphasis> argument.   </para>
 
-    <note>These arguments are parsed by the shell wrapper, and thus the -D arguments must be the first arguments to any command. Commandline properties are useful for debugging purposes.  </note>
+    <note>These arguments are parsed by the shell wrapper, and thus the -D arguments must be the first arguments to any command.
+    Commandline properties are useful for debugging purposes.  </note>
+    
+    <para> For more details see <link linkend="running_workflows.php#Resource_Configurations"/></para>
        </section>
 
   </section>
