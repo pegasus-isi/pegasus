@@ -236,7 +236,7 @@ $ export CONDOR_CONFIG=PEGASUS_HOME/etc/condor_config</programlisting></para>
     </section>
      </section>
   <section id="basic_configuration">
-      <title>Basic Configurations</title>
+      <title>About Basic Configurations</title>
       
       <para>
 
