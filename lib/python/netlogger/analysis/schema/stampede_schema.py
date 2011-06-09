@@ -63,6 +63,7 @@ def initializeToPegasusDB(db, metadata, kw={}):
     # DB don't like it so swap as needed.
     if db.name == 'mysql':
         KeyInt = BigInteger
+        kw['mysql_charset'] = 'latin1'
         
     if db.name == 'sqlite':
         warnings.filterwarnings('ignore', '.*does \*not\* support Decimal*.')
