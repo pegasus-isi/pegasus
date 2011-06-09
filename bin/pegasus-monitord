@@ -283,7 +283,7 @@ class DBEventSink(EventSink):
     def __init__(self, dest, db_stats=False, **kw):
         assert stampede_loader is not None, "Database destination selected, "+\
                "but cannot import stampede loader"
-        self._db = stampede_loader.Analyzer(dest, perf=db_stats, batch="yes")
+        self._db = stampede_loader.Analyzer(dest, perf=db_stats, batch="yes", mysql_engine='InnoDB')
         super(DBEventSink, self).__init__()
         
     def send(self, event, kw):
