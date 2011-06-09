@@ -58,6 +58,16 @@ public class ClassADSGenerator {
     public static final String BUILD_AD_KEY = "pegasus_build";
 
     /**
+     * The classad for the root workflow uuid
+     */
+    public static final String ROOT_WF_UUID_KEY = "pegasus_root_wf_uuid";
+    
+    /**
+     * The classad for the  workflow uuid
+     */
+    public static final String WF_UUID_KEY = "pegasus_wf_uuid";
+    
+    /**
      * The classad for the flow id.
      *
      * @see org.griphyn.cPlanner.classes.DagInfo#flowIDName
@@ -126,7 +136,11 @@ public class ClassADSGenerator {
         DagInfo dinfo = dag.dagInfo;
 
         //pegasus is the generator
-        writer.println(generateClassAdAttribute(GENERATOR_AD_KEY, GENERATOR));
+        writer.println( generateClassAdAttribute( GENERATOR_AD_KEY, GENERATOR) );
+        
+        //the root workflow and workflow uuid
+        writer.println( generateClassAdAttribute( ROOT_WF_UUID_KEY, dag.getRootWorkflowUUID()) );
+        writer.println( generateClassAdAttribute( WF_UUID_KEY, dag.getWorkflowUUID()) );
 
         //the vds version
         if (dinfo.releaseVersion != null) {

@@ -89,6 +89,11 @@ public class ADag extends Data {
     protected TransformationStore mTransformationStore;
 
     /**
+     * The Root Workflow UUID.
+     */
+    protected String mRootWorkflowUUID;
+    
+    /**
      * The UUID associated with the workflow.
      */
     protected String mWorkflowUUID;
@@ -112,6 +117,7 @@ public class ADag extends Data {
         vJobSubInfos     = new Vector();
         mSubmitDirectory = ".";
         mWorkflowUUID    = generateWorkflowUUID();
+        mRootWorkflowUUID = null;
         mWorkflowRefinementStarted = false;
         mNotifications = new Notifications();
         resetStores();
@@ -128,6 +134,7 @@ public class ADag extends Data {
         this.vJobSubInfos = (Vector)vSubs.clone();
         mSubmitDirectory  = ".";
         mWorkflowUUID    = generateWorkflowUUID();
+        mRootWorkflowUUID = null;
         mWorkflowRefinementStarted = false;
         mNotifications    = new Notifications();
         resetStores();
@@ -192,16 +199,34 @@ public class ADag extends Data {
         newAdag.vJobSubInfos= (Vector)this.vJobSubInfos.clone();
         newAdag.setBaseSubmitDirectory( this.mSubmitDirectory );
         newAdag.setRequestID( this.mRequestID );
-        newAdag.setWorkflowUUID( this.mWorkflowUUID );
+        newAdag.setRootWorkflowUUID( this.getRootWorkflowUUID() );
         newAdag.setWorkflowRefinementStarted( this.mWorkflowRefinementStarted );
         //the stores are not a true clone
         newAdag.setReplicaStore(mReplicaStore);
         newAdag.setTransformationStore(mTransformationStore);
-        newAdag.setWorkflowUUID( this.mWorkflowUUID );
+        newAdag.setWorkflowUUID( this.getWorkflowUUID() );
         newAdag.addNotifications( this.getNotifications() );
         return newAdag;
     }
     
+    /**
+     * Returns the UUID for the Root workflow
+     * 
+     * @return the UUID of the workflow
+     */
+    public String getRootWorkflowUUID() {
+        return this.mRootWorkflowUUID;
+    }
+    
+    
+    /**
+     * Sets the root UUID for the workflow
+     * 
+     * @param uuid   the UUID of the workflow
+     */
+    public void setRootWorkflowUUID( String uuid ) {
+        this.mRootWorkflowUUID = uuid;
+    }
     
     
     /**
@@ -258,6 +283,7 @@ public class ADag extends Data {
      */
     public String toString(){
         String st = "\n Submit Directory " + this.mSubmitDirectory +
+                    "\n Root Workflow UUID " + this.getRootWorkflowUUID() +
                     "\n Workflow UUID " + this.getWorkflowUUID() +
                     "\n Workflow Refinement Started " + this.hasWorkflowRefinementStarted() +
                     "\n" + this.dagInfo.toString() +

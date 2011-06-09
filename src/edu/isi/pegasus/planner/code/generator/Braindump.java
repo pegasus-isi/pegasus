@@ -116,6 +116,12 @@ public class Braindump {
     public static final String PLANNER_ARGUMENTS_KEY = "planner_arguments";
     
     
+    
+    /**
+     * The key for UUID of the workflow.
+     */
+    public static final String ROOT_UUID_KEY = "root_wf_uuid" ;
+    
     /**
      * The key for UUID of the workflow.
      */
@@ -254,7 +260,8 @@ public class Braindump {
         //submit hostname
         entries.put( Braindump.SUBMIT_HOSTNAME_KEY, getSubmitHostname() );
         
-        //the workflow uuid
+        
+        entries.put( Braindump.ROOT_UUID_KEY, workflow.getRootWorkflowUUID()  );
         entries.put( Braindump.UUID_KEY,  workflow.getWorkflowUUID() );
         
         //dax and dax label

@@ -133,10 +133,14 @@ public class PegasusProperties {
      * Default properties that applies priorities to all kinds of transfer
      * jobs.
      */
-    public static final String ALL_TRANSFER_PRIORITY_PROPERTY =
+    public static final String ALL_TRANSFER_PRIORITY_PROPERTY_KEY =
                                                       "pegasus.transfer.*.priority";
 
     
+    /**
+     * The property key designated the root workflow uuid.
+     */
+    public static final String ROOT_WORKFLOW_UUID_PROPERTY_KEY = "pegasus.workflow.root.uuid";
     
 
     
@@ -1051,7 +1055,7 @@ public class PegasusProperties {
       *         non integer value or no value specified.
       */
      private String getDefaultTransferPriority(){
-         String prop = mProps.getProperty( this.ALL_TRANSFER_PRIORITY_PROPERTY);
+         String prop = mProps.getProperty( this.ALL_TRANSFER_PRIORITY_PROPERTY_KEY);
          int val = -1;
 
          try {
@@ -2197,6 +2201,19 @@ public class PegasusProperties {
 
 
     //DEFERRED PLANNING PROPERTIES
+    
+    /**
+     * Returns the root workflow UUID if defined in the properties, else null
+     * 
+     * Referred to by the "pegasus.workflow.root.uuid" property.
+     * 
+     * @return the value in the properties file else, null
+     */
+    public String getRootWorkflowUUID() {
+        return mProps.getProperty( ROOT_WORKFLOW_UUID_PROPERTY_KEY, null );
+    }
+
+    
     /**
      * Returns the DAXCallback that is to be used while parsing the DAX.
      *

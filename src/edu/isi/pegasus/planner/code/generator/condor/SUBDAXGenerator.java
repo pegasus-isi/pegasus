@@ -22,7 +22,6 @@ import edu.isi.pegasus.common.logging.LogManager;
 
 import edu.isi.pegasus.common.util.CondorVersion;
 import edu.isi.pegasus.common.util.FindExecutable;
-import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.classes.PegasusBag;
@@ -38,15 +37,11 @@ import edu.isi.pegasus.planner.common.RunDirectoryFilenameFilter;
 import edu.isi.pegasus.planner.client.CPlanner;
 
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
-import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
-import edu.isi.pegasus.planner.catalog.replica.ReplicaFactory;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 
 
 import edu.isi.pegasus.planner.classes.DAXJob;
-import edu.isi.pegasus.planner.classes.ReplicaLocation;
-import edu.isi.pegasus.planner.classes.ReplicaStore;
 import edu.isi.pegasus.planner.code.GridStartFactory;
 import edu.isi.pegasus.planner.code.generator.DAXReplicaStore;
 import edu.isi.pegasus.planner.namespace.Condor;
@@ -67,10 +62,8 @@ import java.text.DecimalFormat;
 
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 /**
  * The class that takes in a dax job specified in the DAX and renders it into
@@ -489,13 +482,18 @@ public class SUBDAXGenerator{
             options.setInheritedRCFiles( inheritedRCFile.toString() );
         }
         
+                
         //construct  the pegasus-plan prescript for the JOB
         //the log file for the prescript should be in the
         //submit directory of the outer level workflow
         StringBuffer log = new StringBuffer();
         log.append( mPegasusPlanOptions.getSubmitDirectory() ).append( File.separator ).
             append( job.getName() ).append( ".pre.log" );
-        String prescript = constructPegasusPlanPrescript( job, options, propertiesFile, log.toString() );
+        String prescript = constructPegasusPlanPrescript( job, 
+                                                          options,
+                                                          mDAG.getRootWorkflowUUID(), 
+                                                          propertiesFile,
+                                                          log.toString() );
         job.setPreScript( prescript );
         
         //determine the path to the dag file that will be constructed
@@ -1022,6 +1020,7 @@ public class SUBDAXGenerator{
      * 
      * @param job        the subdax job
      * @param options    the planner options with which subdax has to be invoked
+     * @param rootUUID   the root workflow uuid
      * @param properties the properties file.
      * @param log        the log for the prescript output
      * 
@@ -1029,6 +1028,7 @@ public class SUBDAXGenerator{
      */
     public String constructPegasusPlanPrescript( Job job,
                                                  PlannerOptions options,
+                                                 String rootUUID,
                                                  String properties,
                                                  String log ){
         StringBuffer prescript = new StringBuffer();
@@ -1091,6 +1091,8 @@ public class SUBDAXGenerator{
         StringBuffer arguments = new StringBuffer();
         arguments./*append( mPOptions.toJVMOptions())*/
                   append( " -Dpegasus.log.*=").append(log).
+                  append( " -D" ).append( PegasusProperties.ROOT_WORKFLOW_UUID_PROPERTY_KEY ).
+                  append( "=" ).append( rootUUID ).
                   //add other jvm options that user may have specified
                   append( options.toJVMOptions() ).
                   append(" --conf ").append( properties ).

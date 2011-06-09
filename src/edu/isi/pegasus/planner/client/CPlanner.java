@@ -437,6 +437,12 @@ public class CPlanner extends Executable{
             orgDag.dagInfo.generateFlowID();
             orgDag.dagInfo.setReleaseVersion();
 
+            //set out the root workflow id
+            orgDag.setRootWorkflowUUID( determineRootWorkflowUUID(
+                                                                   orgDag,
+                                                                   this.mPOptions,
+                                                                   this.mProps ) );
+                                        
             //log id hiearchy message
             //that connects dax with the jobs
             logIDHierarchyMessage( orgDag , LoggingKeys.DAX_ID, orgDag.getAbstractWorkflowName() );
@@ -592,6 +598,10 @@ public class CPlanner extends Executable{
             //random dir option specified
             if(mPOptions.generateRandomDirectory() && !emptyWorkflow ){
                 ADag cleanupDAG = cwmain.getCleanupDAG();
+                
+                //the cleanup dags are never part of hierarichal workflows
+                //for time being 
+                cleanupDAG.setRootWorkflowUUID( cleanupDAG.getWorkflowUUID() );
                 
                 //set the refinement started flag to get right events
                 //generated for stampede for cleanup workflow
@@ -1189,6 +1199,39 @@ public class CPlanner extends Executable{
 
         System.out.println(text);
         //mLogger.log(text,LogManager.INFO_MESSAGE_LEVEL);
+    }
+
+    /**
+     * Determines the workflow uuid for a workflow
+     * 
+     * @param dag     the workflow
+     * @param options the options passed to the planner
+     * @param properties  the properties passed to the planner
+     * 
+     * @return uuid for the root workflow instance
+     */
+    private String determineRootWorkflowUUID(ADag dag, PlannerOptions options, PegasusProperties properties ) {
+        //figure out the root workflow uuid to put for pegasus-state
+        //JIRA PM-396
+        
+        String uuid = null;
+        if( options.partOfDeferredRun() ){
+            //in recursive workflow we are not on the root , but some level
+            //we have to retrive from properties 
+            uuid = properties.getRootWorkflowUUID();
+        }
+        else{
+            //the root workflow uuid is the uuid of the workflow
+            //being planned right now. We are on the root level of the recursive
+            //workflows
+            uuid = dag.getWorkflowUUID();
+        }
+        if ( uuid == null ){
+            //something amiss
+            throw new RuntimeException( "Unable to determine Root Workflow UUID" );
+        }
+        
+        return uuid;
     }
 
 
