@@ -284,7 +284,7 @@ $ export CONDOR_CONFIG=PEGASUS_HOME/etc/condor_config</programlisting></para>
       </itemizedlist>
       
 
-    <note>These arguments are parsed by the shell wrapper, and thus the -D arguments must be the first arguments to any command.
+    <note>These arguments are parsed by the shell wrapper, and thus the <emphasis role="bold">-D</emphasis> arguments must be the first arguments to any command.
     Commandline properties are useful for debugging purposes.  </note>
     
     <para> For more details see the Basic Properties section of the <link linkend="running_workflows">Running Workflows</link> chapter</para>
