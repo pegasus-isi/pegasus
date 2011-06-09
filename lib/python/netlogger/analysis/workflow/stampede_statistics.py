@@ -100,7 +100,7 @@ Methods listed in order of query list on wiki.
 
 https://confluence.pegasus.isi.edu/display/pegasus/Pegasus+statistics+python+version
 """
-__rcsid__ = "$Id: stampede_statistics.py 28031 2011-05-26 19:47:16Z mgoode $"
+__rcsid__ = "$Id: stampede_statistics.py 28074 2011-06-09 15:50:35Z mgoode $"
 __author__ = "Monte Goode"
 
 import decimal
@@ -335,17 +335,12 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
     def _query_jobstate_for_instance(self, states):
         """
         The states arg is a list of strings.
-        Returns a list of job_instance_id(s).
+        Returns an appropriate subquery.
         """
-        q = self.session.query(Jobstate.job_instance_id, JobInstance.job_instance_id)
-        q = q.filter(Jobstate.job_instance_id == JobInstance.job_instance_id)
-        q = q.filter(Jobstate.state.in_(states))
-        
-        instance_ids = []
-        
-        for row in q.all():
-            instance_ids.append(row[0])
-        return instance_ids
+        q = self.session.query(Jobstate.job_instance_id)
+        q = q.filter(Jobstate.job_instance_id == JobInstance.job_instance_id).correlate(JobInstance)
+        q = q.filter(Jobstate.state.in_(states)).subquery()
+        return q
         
     def get_total_unknown_jobs_status(self):
         """
@@ -371,15 +366,15 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         )
         and not (jb.type_desc ='dax' or jb.type_desc ='dag' )
         """
-        submits = self._query_jobstate_for_instance(['SUBMIT'])
-        jobstops = self._query_jobstate_for_instance(['JOB_SUCCESS', 'JOB_FAILURE'])
+        subq_1 = self._query_jobstate_for_instance(['SUBMIT'])
+        subq_2 = self._query_jobstate_for_instance(['JOB_SUCCESS', 'JOB_FAILURE'])
         
-        sub_q = self._max_job_seq_subquery()
+        maxsub_q = self._max_job_seq_subquery()
         
-        q = self.session.query(Job, JobInstance)
-        q = q.filter(JobInstance.job_submit_seq == sub_q.as_scalar())
-        q = q.filter(JobInstance.job_instance_id.in_(submits))
-        q = q.filter(not_(JobInstance.job_instance_id.in_(jobstops)))
+        q = self.session.query(Job.job_id)
+        q = q.filter(JobInstance.job_submit_seq == maxsub_q.as_scalar())
+        q = q.filter(JobInstance.job_instance_id.in_(subq_1))
+        q = q.filter(not_(JobInstance.job_instance_id.in_(subq_2)))
         q = q.filter(Job.job_id == JobInstance.job_id)
         q = q.filter(Job.wf_id.in_(self._wfs))
         # jobtype filtering
@@ -422,7 +417,7 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         """
         sub_q = self._max_job_seq_subquery()
         
-        q = self.session.query(Job, JobInstance, Task, Invocation)
+        q = self.session.query(Task.task_id)
         q = q.filter(Invocation.wf_id.in_(self._wfs))
         q = q.filter(JobInstance.job_submit_seq == sub_q.as_scalar())
         q = q.filter(Task.wf_id.in_(self._wfs))
