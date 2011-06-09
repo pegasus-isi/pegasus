@@ -204,8 +204,7 @@ Complete!</programlisting>
 
 
 RELEASE_DIR = !!PEGASUS_HOME!!    # CHANGE THIS TO PATH OF PEGASUS_WMS INSTALLATION
-
-CONDOR_ADMIN = !!USER!! # CHANGE THIS To THE USER WHO wILL GET EMAIL INCASE OF ERROR.</programlisting></para>
+WILL GET EMAIL IN CASE OF ERROR.</programlisting></para>
         </listitem>
 
         <listitem>
@@ -271,7 +270,7 @@ $ export CONDOR_CONFIG=PEGASUS_HOME/etc/condor_config</programlisting></para>
       and how one property is able to overwrite another.</para> </listitem>
       <listitem>
 
-    <para>Property definitions in the system property file, usually found in ${pegasus.home.sysconfdir}/properties, have the lowest priority.
+    <para>Property definitions in the system property file, usually found in <emphasis role="bold">${pegasus.home.sysconfdir}/properties</emphasis> , have the lowest priority.
     These properties are expected to be set up by the submit host's administrator. </para>
     </listitem>
           <listitem>
@@ -295,6 +294,7 @@ $ export CONDOR_CONFIG=PEGASUS_HOME/etc/condor_config</programlisting></para>
 
 </section>
 </chapter>
+
 
 
 
