@@ -1617,7 +1617,7 @@ public class CPlanner extends Executable{
             return true;
         }
 
-        if( largestRescue == numOfRescues ){
+        if( largestRescue == numOfRescues + 1 ){
             //we need to start planning now
             mLogger.log( "Reached user specified limit of rescue retries " + numOfRescues
                          + " .Replanning will be triggered ",
