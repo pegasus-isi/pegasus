@@ -235,11 +235,11 @@ $ export CONDOR_CONFIG=PEGASUS_HOME/etc/condor_config</programlisting></para>
     </section>
      </section>
   <section id="basic_configuration">
-      <title>About Basic Configurations</title>
+      <title>Basic Configuration Control</title>
       
       <para>
 
-      Basic configuration is controlled through the properties settings selected for Pegasus Planner, Pegasus Home, and Catalogs. </para>
+      Basic system configuration is controlled through the properties settings selected for Pegasus Planner, Pegasus Home, and Catalogs. </para>
       
       <note>Values rely on proper capitalization, unless explicitly noted otherwise.</note>
       
@@ -287,13 +287,14 @@ $ export CONDOR_CONFIG=PEGASUS_HOME/etc/condor_config</programlisting></para>
     <note>These arguments are parsed by the shell wrapper, and thus the -D arguments must be the first arguments to any command.
     Commandline properties are useful for debugging purposes.  </note>
     
-    <para> For more details see the <link linkend="running_workflows">Running Workflows</link> chapter</para>
+    <para> For more details see the Basic Properties section of the<link linkend="running_workflows">Running Workflows</link> chapter</para>
     
 
 
 
 </section>
 </chapter>
+
 
 
 
