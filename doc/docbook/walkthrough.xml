@@ -105,7 +105,7 @@ $ tar xvf Pegasus-3.0.1-Debian-6-x86.vbox.tar</emphasis></programlisting>
      <section>
      <title>Create the Virtual Machine</title>
      
-    <para>Run the VM with Virtual Box (see <link linkend="runvm">Runnning VM with Virtual Box</link>) to create the virtual machine</para>
+    <para>Run the VM with Virtual Box (see <link linkend="useful_tips">Runnning VM with Virtual Box</link>) to create the virtual machine</para>
 
      </section>
     </section>
@@ -356,6 +356,7 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
     </section>
 
 </chapter>
+
 
 
 
