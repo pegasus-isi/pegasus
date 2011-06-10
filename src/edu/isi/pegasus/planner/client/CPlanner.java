@@ -1596,7 +1596,7 @@ public class CPlanner extends Executable{
         String largestRescueFile = null;
         //check for existence of latest rescue file.
         NumberFormat nf = new DecimalFormat( "000" );
-        for( int i = 1; i <= numOfRescues; i++ ){
+        for( int i = 1; i <= numOfRescues + 1; i++ ){
             String rescue = dag + ".rescue" +  nf.format( i );
             File rescueFile  = new File( dir, rescue );
             mLogger.log( "Determining existence of rescue file " + rescueFile.getAbsolutePath(),
