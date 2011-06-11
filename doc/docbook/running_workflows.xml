@@ -7,13 +7,13 @@
   <section>
     <title>Executable Workflows (DAG)</title>
 
-    <para>The DAG an executable (concrete) workflow that can be executed over
+    <para>The DAG is an executable (concrete) workflow that can be executed over
     a variety of resources. When the workflow tasks are mapped to multiple
     resources that do not share a file system, explicit nodes are added to the
     workflow for orchestrating data. transfer between the tasks.</para>
 
     <para>When you take the DAX workflow created in <link linkend="creating_workflows">Creating Workflows</link>, and plan it for a single
-    remote grid execution, here a site with handle <emphasis>hpcc</emphasis>,
+    remote grid execution, here a site with handle <emphasis role="bold">hpcc</emphasis>,
     and plan the workflow without clean-up nodes, the following concrete
     workflow is built:</para>
 
@@ -1786,4 +1786,5 @@ ec2     amazon::s3cmd    /path/to/pegasus/bin/s3cmd    INSTALLED   INTEL32::LINU
     </section>
   </section>
 </chapter>
+
 
