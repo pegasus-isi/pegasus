@@ -273,7 +273,7 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
           <para><emphasis role="bold">Section 4. Jobs DAXs or DAGs</emphasis> - Defines a Job, DAX, or DAG</para>
 
      </section>
-
+          </section>
 
 
 
@@ -350,11 +350,6 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
 
 
 
-   
-
-   
-
-    </section>
 
 </chapter>
 
