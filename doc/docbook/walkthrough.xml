@@ -283,8 +283,8 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
     
     <para>Workflows are submitted to <emphasis role="bold">pegasus-plan</emphasis> where an executable workflow is generated
     by querying the catalogs and performing refinement steps. </para>
-         <para> See the Pegasus Plan section of the
-                           <link linkend="running_workflows"> "Running Workflows"</link> chapter.
+         <para> See the Pegasus Plan section of
+                           <link linkend="running_workflows"> "Running Workflows"</link>.
 
                        </para>
      
