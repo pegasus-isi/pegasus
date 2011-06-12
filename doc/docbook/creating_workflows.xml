@@ -260,7 +260,7 @@ LFN PFN a="b" [..]
       will have to install the schema into either PostgreSQL or MySQL by
       running the appropriate commands to load the two scheams <emphasis
       role="bold">create-XX-init.sql</emphasis> and <emphasis
-      role="bold">create-XX-rc.sql</emphasis> where XX is either <emphasis
+      role="bold">create-XX-rc.sql</emphasis> where <emphasis role="bold">XX</emphasis> is either <emphasis
       role="bold">my</emphasis> (for MySQL) or <emphasis
       role="bold">pg</emphasis> (for PostgreSQL)</para>
 
@@ -383,8 +383,8 @@ LFN PFN a="b" [..]
         </listitem>
       </itemizedlist>
 
-      <para>For example, if a user wants to query two lrc&amp;rsquor;s at the same
-      time he/she can specify as follows</para>
+      <para>For example, to query two lrcs at the same
+      time specify the following:</para>
 
       <para><itemizedlist>
           <listitem>
@@ -443,7 +443,7 @@ LFN PFN a="b" [..]
 # file-based replica catalog: 2010-11-10T17:52:53.405-07:00
 f.a gsiftp://somehost:port/path/to/file/f.a pool=local</computeroutput></screen>
 
-      <para>The above line shows that entry for file <emphasis>f.a</emphasis> was made
+      <para>The above line shows that entry for file <emphasis role="bold">f.a</emphasis> was made
       correctly.</para>
 
       <para>You can also use the <emphasis role="bold">pegasus-rc-client</emphasis> to look for entries.</para>
@@ -456,13 +456,14 @@ f.a gsiftp://somehost:port/path/to/file/f.a pool=local</computeroutput></screen>
   </section>
 
   <section id="site">
-    <title>Resource Discover (Site Catalog)</title>
+    <title>Resource Discovery (Site Catalog)</title>
 
     <para>The Site Catalog describes the compute resources (which are often
     clusters) that we intend to run the workflow upon. A site is a homogeneous
     part of a cluster that has at least a single GRAM gatekeeper with a <emphasis role="bold">jobmanager-fork</emphasis>
      and<emphasis>jobmanager-&lt;scheduler&gt; </emphasis> interface and at least
-    one <emphasis>gridftp</emphasis> server along with a shared file system. The GRAM gatekeeper
+    one <emphasis role="bold">gridftp</emphasis> server along with a sh$ cat $HOME
+    ared file system. The GRAM gatekeeper
     can be either WS GRAM or Pre-WS GRAM. A site can also be a condor pool or
     glidein pool with a shared file system.</para>
 
@@ -1299,4 +1300,5 @@ clus1    black::analyze:1.0    gsiftp://clus1.com/opt/nfs/vdt/pegasus/bin/keg
     </section>
   </section>
 </chapter>
+
 
