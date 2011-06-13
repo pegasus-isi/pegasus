@@ -317,7 +317,7 @@ public class ReplicaCatalogBridge
                 //we set the default category value to 1
                 //in the properties
                 String key = getDefaultRegistrationMaxJobsPropertyKey();
-                mLogger.log( "Setting property " + key + " to set max jobs for registrations jobs category",
+                mLogger.log( "Setting property " + key + " to 1 to set max jobs for registrations jobs category",
                               LogManager.DEBUG_MESSAGE_LEVEL );
                 mProps.setProperty( key, "1" );
             }
