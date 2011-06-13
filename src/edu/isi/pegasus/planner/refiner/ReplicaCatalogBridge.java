@@ -247,6 +247,7 @@ public class ReplicaCatalogBridge
      * @param options     the options passed to the planner at runtime.
      *
      */
+    @SuppressWarnings("static-access")
     public void initialize( ADag dag ,
                             PegasusProperties properties,
                             PlannerOptions options ){
@@ -308,10 +309,20 @@ public class ReplicaCatalogBridge
             mReplicaStore = ( mReplicaStore == null ) ?new ReplicaStore() : mReplicaStore;
         }
 
-
-
-//        mTCHandle = TCMode.loadInstance();
-
+        
+        if( mReplicaCatalog != null ){
+            //specify maxjobs to 1 for File based replica catalog
+            //JIRA PM-377
+            if( mReplicaCatalog instanceof edu.isi.pegasus.planner.catalog.replica.impl.SimpleFile ){
+                //we set the default category value to 1
+                //in the properties
+                String key = getDefaultRegistrationMaxJobsPropertyKey();
+                mLogger.log( "Setting property " + key + " to set max jobs for registrations jobs category",
+                              LogManager.DEBUG_MESSAGE_LEVEL );
+                mProps.setProperty( key, "1" );
+            }
+        }
+            
         //incorporate the caching if any
         if ( !options.getCacheFiles().isEmpty() ) {
             loadCacheFiles( options.getCacheFiles() );
@@ -431,37 +442,21 @@ public class ReplicaCatalogBridge
     }
 
 
-
-
-
-
     /**
-     * Returns a boolean indicating whether all input files of the workflow
-     * are in the collection of LFNs passed.
-     *
-     * @param lfns  collection of LFNs in which to search for existence.
-     *
-     * @return boolean.
+     * Returns the property key that can be used to set the max jobs for the
+     * default category associated with the registration jobs.
+     * 
+     * @return the property key
      */
-     /*
-    public boolean allIPFilesInCollection( Collection lfns ){
-        boolean result = true;
-        String lfn;
-        String type;
-        for (Iterator it = mLFNMap.keySet().iterator(); it.hasNext(); ) {
-            lfn = (String) it.next();
-            type = (String) mLFNMap.get( lfn );
-
-            //search for existence of input file in lfns
-            if ( type.equals("i") && !lfns.contains( lfn ) ) {
-                mLogger.log("Input LFN not found in collection " + lfn,
-                            LogManager.DEBUG_MESSAGE_LEVEL);
-                return false;
-            }
-        }
-        return result;
+    public String getDefaultRegistrationMaxJobsPropertyKey(){
+        StringBuffer key = new StringBuffer();
+        
+        key.append( Dagman.NAMESPACE_NAME ).append( "." ).
+            append( ReplicaCatalogBridge.DEFAULT_REGISTRATION_CATEGORY_KEY ).
+            append( "." ).append( Dagman.MAXJOBS_KEY.toLowerCase() );
+        
+        return key.toString();
     }
-    */
 
     /**
      * It constructs the Job object for the registration node, which
