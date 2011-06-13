@@ -159,8 +159,8 @@ public class DefaultImplementation implements Implementation {
         List entries    = null;
         String execPath = null;
         TransformationCatalogEntry entry   = null;
-//        JobManager jobManager = null;
-        GridGateway jobManager = null;
+        
+//        GridGateway jobManager = null;
 
         try {
             entries = mTCHandle.lookup( DefaultImplementation.TRANSFORMATION_NAMESPACE,
@@ -195,8 +195,10 @@ public class DefaultImplementation implements Implementation {
 
 
         SiteCatalogEntry ePool = mSiteStore.lookup( site );
-        jobManager = ePool.selectGridGateway( GridGateway.JOB_TYPE.cleanup );
 
+/*      JIRA PM-277
+        jobManager = ePool.selectGridGateway( GridGateway.JOB_TYPE.cleanup );
+*/
         String argString = null;
         if( mUseMkdir ){
             /*
@@ -233,8 +235,10 @@ public class DefaultImplementation implements Implementation {
                               DefaultImplementation.DERIVATION_NAME,
                               DefaultImplementation.DERIVATION_VERSION );
 //        newJob.condorUniverse = "vanilla";
+/*      JIRA PM-277 
         newJob.condorUniverse = jobManager.getJobType().toString();
         newJob.globusScheduler = jobManager.getContact();
+*/ 
         newJob.executable = execPath;
         newJob.executionPool = site;
         newJob.strargs = argString;

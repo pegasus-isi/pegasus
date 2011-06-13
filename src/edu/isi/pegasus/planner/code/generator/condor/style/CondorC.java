@@ -25,6 +25,8 @@ import edu.isi.pegasus.planner.code.generator.condor.CondorStyleException;
 
 import edu.isi.pegasus.common.logging.LogManager;
 
+import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.TransferJob;
 
@@ -168,7 +170,11 @@ public class CondorC extends Condor {
         
         //the second field is the remote condor schedd
         //specified in the grid gateway for the site
-        gridResource.append( job.globusScheduler ).append( " " );
+//        gridResource.append( job.globusScheduler ).append( " " );
+        
+        SiteCatalogEntry s = mSiteStore.lookup( job.getSiteHandle() );
+        GridGateway g = s.selectGridGateway( job.getGridGatewayJobType() );
+        gridResource.append( g.getContact() ).append( " " );
         
         //the job should have the collector key associated
         String collector = (String) job.condorVariables.removeKey( CondorC.COLLECTOR_KEY );

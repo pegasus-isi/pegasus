@@ -276,7 +276,7 @@ public class RemoveDirectory extends Engine {
         List entries    = null;
         String execPath = null;
         TransformationCatalogEntry entry   = null;
-        GridGateway jm = null;
+//        GridGateway jm = null;
 
         SiteCatalogEntry ePool = mSiteStore.lookup( site );
 
@@ -329,7 +329,7 @@ public class RemoveDirectory extends Engine {
             execPath = entry.getPhysicalTransformation();
         }
 
-        jm = ePool.selectGridGateway( GridGateway.JOB_TYPE.cleanup );
+//        jm = ePool.selectGridGateway( GridGateway.JOB_TYPE.cleanup );
 
         StringBuffer arguments = new StringBuffer();
         arguments.append( "--verbose --remove --dir \"" );       
@@ -353,9 +353,10 @@ public class RemoveDirectory extends Engine {
 
 //        newJob.condorUniverse = "vanilla";
         
-        
+ /*     JIRA PM-277       
         newJob.setUniverse( GridGateway.JOB_TYPE.cleanup.toString() );
         newJob.globusScheduler = jm.getContact();
+ */ 
         newJob.executable = execPath;
         newJob.setSiteHandle( site );
         newJob.setArguments( arguments.toString() );

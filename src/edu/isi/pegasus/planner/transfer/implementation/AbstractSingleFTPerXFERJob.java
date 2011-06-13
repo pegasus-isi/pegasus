@@ -200,11 +200,13 @@ public abstract class AbstractSingleFTPerXFERJob extends Abstract
 
         //this should in fact only be set
         // for non third party pools
+/*      JIRA PM-277
         jobmanager = ePool.selectGridGateway( GridGateway.JOB_TYPE.transfer );
         txJob.globusScheduler = (jobmanager == null) ?
                                   null :
                                   jobmanager.getContact();
-
+*/
+        
         txJob.jobClass = jobClass;
         txJob.jobID = job.jobName;
 

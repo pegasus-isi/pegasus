@@ -27,9 +27,6 @@ import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 
 
-import edu.isi.pegasus.planner.catalog.transformation.classes.Arch;
-import edu.isi.pegasus.planner.catalog.transformation.classes.Os;
-import edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo;
 
 
 import edu.isi.pegasus.common.logging.LogManager;
@@ -324,10 +321,12 @@ public class InterPoolEngine extends Engine implements Refiner {
                             LogManager.ERROR_MESSAGE_LEVEL );
                 throw new RuntimeException( error.toString() );
             }
+            
+/*           JIRA PM-277 
             String jm = job.getJobManager();
             jm = ( (jm == null) || jm.length() == 0 ) ?
                 null : jm;
-
+*/
             if ( site.length() == 0 ||
                  site.equalsIgnoreCase( SiteSelector.SITE_NOT_FOUND ) ) {
                 error = new StringBuffer();
@@ -337,10 +336,12 @@ public class InterPoolEngine extends Engine implements Refiner {
                 mLogger.log( error.toString(), LogManager.ERROR_MESSAGE_LEVEL );
                 throw new RuntimeException( error.toString() );
             }
+            
+/*           JIRA PM-277 
             job.setJobManager( jm == null ?
                                           getJobManager( site, job.getUniverse() ) :
                                           jm );
-
+*/
 
             mLogger.log("Mapped job " + job.jobName + " to pool " + site,
                         LogManager.DEBUG_MESSAGE_LEVEL);
@@ -385,35 +386,7 @@ public class InterPoolEngine extends Engine implements Refiner {
 
     }
 
-    /**
-     * Constructs a TC entry object from the contents of a job. 
-     * The architecture assigned to this entry is default ( INTEL32::LINUX )
-     * and resource id is set to unknown.
-     * 
-     * @param job  the job object
-     * 
-     * @return constructed TransformationCatalogEntry 
-     */
-    private TransformationCatalogEntry constructTCEntryFromJobHints( Job job ){
-        String executable = (String) job.hints.get( Hints.PFN_HINT_KEY );
-        TransformationCatalogEntry entry = new TransformationCatalogEntry();
-        entry.setLogicalTransformation(job.getTXNamespace(), job.getTXName(), job.getTXVersion());
-        entry.setResourceId( "unknown" );
-        entry.setVDSSysInfo( new VDSSysInfo( Arch.INTEL64, Os.LINUX, "", "" ) );
-        entry.setPhysicalTransformation( executable );
-        //hack to determine whether an executable is
-        //installed or static binary
-        entry.setType( executable.startsWith("/") ?
-                            TCType.INSTALLED : 
-                            TCType.STAGEABLE );
-                    
-        return entry;
-    }
-
-
-
-
-
+   
 
     /**
      * Incorporates the profiles from the various sources into the job.
@@ -724,10 +697,8 @@ public class InterPoolEngine extends Engine implements Refiner {
      *         null if not found.
      */
     private String getJobManager( String site, String universe) {
-//        SiteInfo p = mPoolHandle.getPoolEntry( site, universe );
         SiteCatalogEntry p = mSiteStore.lookup( site );
-//        JobManager jm = ( p == null )? null : p.selectJobManager( universe, true );
-//        String result =  ( jm == null ) ? null : jm.getInfo( JobManager.URL );
+        
         GridGateway jm = ( p == null )? null : p.selectGridGateway( GridGateway.JOB_TYPE.valueOf( universe ) );
         String result = ( jm == null ) ? null : jm.getContact( );
 
@@ -776,7 +747,7 @@ public class InterPoolEngine extends Engine implements Refiner {
                     return true;
                 }
                 break;
-
+/*
             case 'g':
                 if (key.equals("globusScheduler")) {
                     if( job.hints.containsKey( Hints.GLOBUS_SCHEDULER_KEY ) ){
@@ -801,7 +772,7 @@ public class InterPoolEngine extends Engine implements Refiner {
                     return true;
                 }
                 break;
-
+*/
             
             case 'p':
 

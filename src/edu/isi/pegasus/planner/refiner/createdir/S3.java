@@ -322,8 +322,8 @@ public class S3 implements Implementation {
         List entries    = null;
         String execPath = null;
         TransformationCatalogEntry entry   = null;
-//        JobManager jobManager = null;
-        GridGateway jobManager = null;
+        
+//        GridGateway jobManager = null;
 
         try {
             entries = mTCHandle.lookup( S3.TRANSFORMATION_NAMESPACE,
@@ -356,8 +356,9 @@ public class S3 implements Implementation {
 
 
         SiteCatalogEntry ePool = mSiteStore.lookup( site );
+/*      JIRA PM-277 
         jobManager = ePool.selectGridGateway( GridGateway.JOB_TYPE.cleanup );
-
+*/
         String argString = null;
         
         
@@ -373,9 +374,10 @@ public class S3 implements Implementation {
         newJob.setDerivation( S3.DERIVATION_NAMESPACE,
                               S3.DERIVATION_NAME,
                               S3.DERIVATION_VERSION  );
-//        newJob.condorUniverse = "vanilla";
+ /*     JIRA PM-277  
         newJob.condorUniverse = jobManager.getJobType().toString();
         newJob.globusScheduler = jobManager.getContact();
+ */ 
         newJob.executable = execPath;
         newJob.executionPool = site;
         newJob.strargs = argString;

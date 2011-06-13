@@ -430,10 +430,10 @@ public abstract class Abstract implements JobAggregator {
 
         
         
-
+/*      JIRA PM-277
         job.setUniverse( firstJob.getUniverse() );
         job.setJobManager( firstJob.getJobManager() );
-
+*/
         
 
         //the executable that fat job refers to is collapser

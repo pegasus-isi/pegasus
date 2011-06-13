@@ -924,7 +924,7 @@ public class DeployWorkerPackage
         List entries    = null;
         String execPath = null;
         TransformationCatalogEntry entry   = null;
-        GridGateway jobManager = null;
+//        GridGateway jobManager = null;
 
         try {
             entries = mTCHandle.lookup( DeployWorkerPackage.UNTAR_TRANSFORMATION_NAMESPACE,
@@ -959,7 +959,11 @@ public class DeployWorkerPackage
 
 
         SiteCatalogEntry ePool = mSiteStore.lookup( site );
+        
+ /*      JIRA PM-277 
         jobManager = ePool.selectGridGateway( GridGateway.JOB_TYPE.transfer );
+ */
+        
         //String argString = "zxvf " + wpBasename;
         // tar -C /tmp/ -zxvf pegasus-worker-2.4.0cvs-x86_rhas_3.tar.gz 
         //we want to fully specify the directory where we want tar file
@@ -976,9 +980,12 @@ public class DeployWorkerPackage
         newJob.setDerivation( DeployWorkerPackage.UNTAR_DERIVATION_NAMESPACE,
                               DeployWorkerPackage.UNTAR_DERIVATION_NAME,
                               DeployWorkerPackage.UNTAR_DERIVATION_VERSION );
+        
 //        newJob.condorUniverse = "vanilla";
+/*      JIRA PM-277
         newJob.condorUniverse = GridGateway.JOB_TYPE.auxillary.toString();
         newJob.globusScheduler = jobManager.getContact();
+*/
         newJob.executable = execPath;
         newJob.executionPool = site;
         newJob.strargs = arguments.toString();
