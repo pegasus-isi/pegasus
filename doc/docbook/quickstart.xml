@@ -36,10 +36,10 @@
     <para>Check Java version and ensure it is JAVA 1.6.x</para>
 
     <screen><command>$ java -version</command><computeroutput>
-
-java version "1.5.0_07"
-Java(TM) 2 Runtime Environment, Standard Edition (build 1.5.0_07-164)
-Java HotSpot(TM) Client VM (build 1.5.0_07-87, mixed mode, sharing)</computeroutput></screen>
+java version "1.6.0_17"
+Java(TM) SE Runtime Environment (build 1.6.0_17-b04)
+Java HotSpot(TM) Server VM (build 14.3-b01, mixed mode)
+</computeroutput></screen>
 
     <para>To install Pegsus</para>
 
@@ -111,9 +111,7 @@ $ export CONDOR_CONFIG=PEGASUS_HOME/etc/condor_config</command></screen></para>
 
     <para>Pegasus plans an abstract workflow (DAX) into a concrete/executable
     workflow by querying various catalogs listed above and performing several
-    refinement steps. We have already setup all the catalogs required by
-    Pegasus in the previous sections and also configured properties that will
-    affect how Pegasus plans the workflow.</para>
+    refinement steps. </para>
 
     <para>Pegasus planner is invoked on the command line by running the
     pegasus-plan command. The client takes several parameters including one or
@@ -516,7 +514,7 @@ pegasus.dir.storage.deep=false
       <emphasis
       role="bold">work/&lt;username&gt;/blackdiamond&lt;time-stamp&gt;.</emphasis></para>
 
-      <para>Pegasus allows you to submit your planned workflow by givign the
+      <para>Pegasus allows you to submit your planned workflow by giving the
       <emphasis role="bold">--submit </emphasis>option. If you want to only
       generate the planned workflow and submit the workflow later for
       execution you can run the pegasus-run command.</para>
