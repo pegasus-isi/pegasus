@@ -261,7 +261,7 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
         </emphasis></programlisting>
         
         
-      <para>The DAX contains four sections. Review the output file to identify the content of each section for insite into creating your own workflows.</para>
+      <para>The DAX contains four sections. Review the output file to identify the content of each section for insights into creating your own workflows.</para>
 
 
           <para><emphasis role="bold">Section 1. Files</emphasis> - Acts as a Replica Catalog</para>
