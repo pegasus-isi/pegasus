@@ -306,7 +306,7 @@ public class Dagman extends Namespace {
         //special handling for category related keys
         if( categoryRelatedKey( key ) ){
             //category related key is ignored
-            mLogger.log( "Dagman category related key not associated with job " + key,
+            mLogger.log( "Dagman category related key cannot be associated with job " + key,
                              LogManager.DEBUG_MESSAGE_LEVEL );
             return;
         }

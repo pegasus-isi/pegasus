@@ -59,6 +59,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.StringTokenizer;
 import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.namespace.Dagman;
 
 /**
  * This coordinates the look up to the Replica Location Service, to determine
@@ -72,6 +73,11 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 public class ReplicaCatalogBridge
              extends Engine //for the time being.
              {
+    
+    /**
+     * Default category for registration jobs
+     */
+    public static final String DEFAULT_REGISTRATION_CATEGORY_KEY = "registration";
 
     /**
      * The transformation namespace for the regostration jobs.
@@ -550,6 +556,12 @@ public class ReplicaCatalogBridge
         //is assimilated overidding the one from transformation
         //catalog.
         newJob.updateProfiles( mProps );
+        
+        //if no category is associated with the job, add a default
+       //category
+       if( !newJob.dagmanVariables.containsKey( Dagman.CATEGORY_KEY ) ){
+           newJob.dagmanVariables.construct( Dagman.CATEGORY_KEY, DEFAULT_REGISTRATION_CATEGORY_KEY );
+       }
 
         //in order to make sure that COG picks the default proxy
         //correctly through condor

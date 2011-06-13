@@ -75,6 +75,11 @@ import java.util.Set;
 public class SUBDAXGenerator{
 
     /**
+     * The default category for the sub dax jobs.
+     */
+    public static final String DEFAULT_SUBDAX_CATEGORY_KEY = "subwf";
+    
+    /**
      * Whether to generate the SUBDAG keyword or not.
      */
     public static final boolean GENERATE_SUBDAG_KEYWORD = false;
@@ -749,6 +754,12 @@ public class SUBDAXGenerator{
        //is assimilated overidding the one from transformation
        //catalog.
        job.updateProfiles(mProps);
+       
+       //if no category is associated with the job, add a default
+       //category
+       if( !job.dagmanVariables.containsKey( Dagman.CATEGORY_KEY ) ){
+           job.dagmanVariables.construct( Dagman.CATEGORY_KEY, DEFAULT_SUBDAX_CATEGORY_KEY );
+       }
        
        //we do not want the job to be launched via kickstart
        //Fix for Pegasus bug number 143

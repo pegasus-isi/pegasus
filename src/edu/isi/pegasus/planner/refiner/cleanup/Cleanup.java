@@ -29,7 +29,6 @@ import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.common.logging.LogManager;
 
 
-import edu.isi.pegasus.planner.namespace.Condor;
 
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
@@ -39,7 +38,7 @@ import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 
 import edu.isi.pegasus.common.util.Separator;
 
-import edu.isi.pegasus.planner.classes.Notifications;
+import edu.isi.pegasus.planner.namespace.Dagman;
 import java.util.List;
 import java.util.Iterator;
 import java.util.HashSet;
@@ -56,6 +55,11 @@ import java.io.IOException;
  * @version $Revision$
  */
 public class Cleanup implements CleanupImplementation{
+
+    /**
+     * Default category for registration jobs
+     */
+    public static final String DEFAULT_CLEANUP_CATEGORY_KEY = "cleanup";
 
     /**
      * The transformation namespace for the  job.
@@ -274,7 +278,11 @@ public class Cleanup implements CleanupImplementation{
         //catalog.
         cJob.updateProfiles( mProps );
 
-        
+        //if no category is associated with the job, add a default
+       //category
+       if( !cJob.dagmanVariables.containsKey( Dagman.CATEGORY_KEY ) ){
+           cJob.dagmanVariables.construct( Dagman.CATEGORY_KEY, DEFAULT_CLEANUP_CATEGORY_KEY );
+       }
 
         //a remote hack that only works for condor pools
         //cJob.globusRSL.construct( "condorsubmit",

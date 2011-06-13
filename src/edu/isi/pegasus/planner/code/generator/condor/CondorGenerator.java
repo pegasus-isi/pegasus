@@ -93,6 +93,11 @@ import java.util.HashMap;
  * @version $Revision$
  */
 public class CondorGenerator extends Abstract {
+    
+    /**
+     * The default category for the sub dax jobs.
+     */
+    public static final String DEFAULT_SUBDAG_CATEGORY_KEY = "subwf";
 
     /**
      * The nice separator, define once, use often.
@@ -418,6 +423,12 @@ public class CondorGenerator extends Abstract {
                 if( dagDir != null){
                     sb.append( " " ).append( Dagman.DIRECTORY_EXTERNAL_KEY ).
                        append( " " ).append( dagDir );
+                }
+                
+                //if no category is associated with the job, add a default
+                //category
+                if( !job.dagmanVariables.containsKey( Dagman.CATEGORY_KEY ) ){
+                    job.dagmanVariables.construct( Dagman.CATEGORY_KEY, DEFAULT_SUBDAG_CATEGORY_KEY );
                 }
                 
                 printDagString( sb.toString() );
