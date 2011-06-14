@@ -16,29 +16,22 @@
    
    <itemizedlist>
       <listitem>
-        <para>Virtual Machine Image</para>
+        <para>Downloading Virtual Box</para>
       </listitem>
+      <listitem>Create the Virtual Machine</listitem>
       
        <listitem>
-        <para>Workflows</para>
+        <para>The Walkthrough Workflow</para>
+      </listitem>
+      
+      <listitem>
+        <para>Monitoring, Debugging, and Statistics</para>
+      </listitem>
+      
+      <listitem>
+        <para>Planning and Executing Workflows</para>
       </listitem>
 
-      <listitem>
-        <para>Pegasus Plan and Pegasus-run</para>
-      </listitem>
-      
-      <listitem>
-        <para>Monitoring and Debugging</para>
-      </listitem>
-      
-      <listitem>
-        <para>Plotting and Statistics</para>
-      </listitem>
-      
-      <listitem>
-        <para>Environments</para>
-      </listitem>
-      
       <listitem>
         <para>Advanced Exercises</para>
         
@@ -280,47 +273,45 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
        <section>
     <title>Monitoring, Debugging and Statistics</title>
 
-    <para>In this section, we are going to list ways to track your workflow,
-    how to debug a failed workflow and how to generates statistics and plots
+    <para>In this section, we are going to show different ways to track your workflow,
+    how to debug a failed workflow, and how to generate statistics and plots
     for a workflow run.</para>
 
     <section>
-      <title>Tracking the progress of the workflow and debugging the
-      workflows.</title>
+      <title>Workflow Tracking and Debugging</title>
 
-      <para>We will change into the directory, that was mentioned by the
-      output of pegasus-run command.</para>
+      <para>Change to the directory specified by the
+      output of the <emphasis role="bold">pegasus-run</emphasis>  command.</para>
 
       <programlisting><command>$ cd /home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run0001</command></programlisting>
 
-      <para>In this directory you will see a whole lot of files. That should
-      not scare you. Unless things go wrong, you need to look at just a very
-      few number of files to track the progress of the workflow</para>
+      <para>In this directory you will see many files. Normally you need to look at just a very
+      few number of files to track the progress of the workflow.</para>
 
       <itemizedlist>
         <listitem>
-          <para><emphasis role="bold">Run the command pegasus-status as
-          mentioned by pegasus-run above to check the status of your jobs. Use
-          the watch command to auto repeat the command every 2
-          seconds.</emphasis><programlisting><command>$ watch pegasus-status /home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run0001</command><computeroutput>
+          <para>Run the<emphasis role="bold">pegasus-status</emphasis>
+          to check the status of jobs. Use
+          the <emphasis role="bold">watch</emphasis>  command to auto repeat the command every 2
+          seconds.</para>
+          <programlisting><command>$ watch pegasus-status /home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run0001</command><computeroutput>
 
 -- Submitter: pegasus : &lt;172.16.80.128:40195&gt; : pegasus
  ID      OWNER/NODENAME   SUBMITTED     RUN_TIME ST PRI SIZE CMD
   84.0   pegasus         7/19 16:59   0+00:01:17 R  0   7.3  condor_dagman -f -
   87.0    |-preprocess_  7/19 17:00   0+00:00:31 R  10  0.1  kickstart -n diamo
 </computeroutput></programlisting><tip>
-              <para>watch does not end with ESC nor (q)uit, but with
+              <para><emphasis role="bold">watch</emphasis> does not end with ESC nor (q)uit, but with
               Ctrl+C.</para>
-            </tip> The above output shows that a couple of jobs are running
-          under the main dagman process. Keep a lookout to track whether a
-          workflow is running or not. If you do not see any of your job in the
-          output for sometime (say 30 seconds), we know the workflow has
-          finished. We need to wait, as there might be delay in Condor DAGMan
+            </tip> The above output shows that some jobs are running
+          under the main dagman process. There might be delay in Condor DAGMan
           releasing the next job into the queue after a job has finished
-          successfully.</para>
+          successfully. If you do not see any of your jobs in the
+          output for sometime (say 30 seconds), the workflow has
+          finished.
 
           <para>If output of pegasus-status is empty, then either your
-          workflow has</para>
+          workflow has:</para>
 
           <orderedlist>
             <listitem>
@@ -332,13 +323,10 @@ $  java -classpath .:/opt/pegasus/default/lib/pegasus.jar CreateDAX local /opt/p
             </listitem>
           </orderedlist>
 
-          <para>We can now run pegasus-analyzer to analyze the
+          <para>Run <emphasis>pegasus-analyzer</emphasis> to analyze the
           workflow.</para>
         </listitem>
 
-        <listitem>
-          <para>Using <emphasis role="bold">pegasus-analyzer</emphasis> to
-          analyze the workflow</para>
 
           <programlisting><emphasis role="bold">$ pegasus-analyzer  -i /home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run0001</emphasis>
 
@@ -357,7 +345,7 @@ pegasus-analyzer: end of status report
 
 
 </programlisting>
-        </listitem>
+
 
         <listitem>
           <para>Another way to monitor the workflow is to check the <emphasis
@@ -373,7 +361,7 @@ pegasus-analyzer: end of status report
           entries with status UN_READY. That designates that DAGMan has just
           parsed in the .dag file and has not started working on any job as
           yet. Initially all the jobs in the workflow are listed as UN_READY.
-          After sometime you will see entries in jobstate.log, that shows a
+          After some time you will see entries in jobstate.log, that shows a
           job is being executed etc. <programlisting><computeroutput>
 1290676261 create_dir_blackdiamond_0_local SUBMIT 340.0 local - 1
 1290676266 create_dir_blackdiamond_0_local EXECUTE 340.0 local - 1
@@ -383,16 +371,15 @@ pegasus-analyzer: end of status report
 1290676271 create_dir_blackdiamond_0_local POST_SCRIPT_TERMINATED 340.0 local - 1
 1290676271 create_dir_blackdiamond_0_local POST_SCRIPT_SUCCESS 0 local - 1</computeroutput></programlisting></para>
 
-          <para>The above shows the being submitted and then executed on the
-          grid. In addition it lists that job is being run on the grid site
+          <para>The above shows the job being submitted and then executed on the
+          grid. In addition it shows that the job is being run on the grid site
           local (which is your submit machine). The various states of the job
           while it goes through submission to execution to post processing are
           in UPPERCASE.</para>
         </listitem>
 
         <listitem>
-          <para>Successfully Completed : Let us again look at the
-          jobstate.log. This time we need to look at the last few lines of
+          <para>Successfully Completed : Look at the last few lines of
           jobstate.log <programlisting><command>$ tail jobstate.log</command><computeroutput>
 
 1290676542 register_local_2_0 SUBMIT 347.0 local - 8
@@ -404,16 +391,15 @@ pegasus-analyzer: end of status report
 1290676552 register_local_2_0 POST_SCRIPT_SUCCESS 0 local - 8
 1290676552 INTERNAL *** DAGMAN_FINISHED 0 ***
 1290676554 INTERNAL *** MONITORD_FINISHED 0 ***
-</computeroutput></programlisting> Looking at the last two lines we see that
-          DAGMan finished, and pegasus-monitord finished successfully with a
-          status 0. This means workflow ran successfully. Congratulations you
-          ran your workflow on the local site successfully. The workflow
-          generates a final output file f.d that resides in the directory
+</computeroutput></programlisting>The last two lines show that
+          DAGMan and pegasus-monitord finished successfully with a
+          status 0. This means workflow ran successfully. The workflow
+          generates a final output file <emphasis role="bold">f.d</emphasis>  that resides in the directory
           <emphasis
           role="bold">/home/tutorial/local-storage/storage/f.d</emphasis>
           .</para>
 
-          <para>To view the file, you can do the following <programlisting><command>$ cat /home/tutorial/local-storage/storage/f.d
+          <para>To view the file, you can execute the following command: <programlisting><command>$ cat /home/tutorial/local-storage/storage/f.d
 </command>
 --- start f.c1 ----
   --- start f.b1 ----
@@ -492,8 +478,7 @@ Input Filenames: f.c1 f.c2
         </listitem>
 
         <listitem>
-          <para>Unsuccessfully Completed (Workflow execution stopped midway) :
-          Let us again look at the jobstate.log. Again we need to look at the
+          <para> For unsuccessfully completed workflows(execution stopped midway)We need to look at the
           last few lines of jobstate.log <programlisting><command>$ tail jobstate.log</command><computeroutput>
 
 1290677127 stage_in_local_local_0 EXECUTE 352.0 local - 4
@@ -505,7 +490,7 @@ Input Filenames: f.c1 f.c2
 1290677132 INTERNAL *** DAGMAN_FINISHED 1 ***
 1290677134 INTERNAL *** MONITORD_FINISHED 0 ***
 
-</computeroutput></programlisting>Looking at the last two lines we see that
+</computeroutput></programlisting>The last two lines show that
           DAGMan finished, and pegasus-monitord finished unsuccessfully with a
           status 1. We can easily determine which job failed. It is
           stage_in_local_local_0 in this case. To determine the reason for
@@ -516,21 +501,19 @@ Input Filenames: f.c1 f.c2
     </section>
 
     <section>
-      <title>Debugging a failed workflow using pegasus-analyzer</title>
+      <title>Debugging Failed Workflows </title>
 
       <para>In this section, we will run the diamond workflow but remove the
-      input file so that the workflow fails during execution. This is to
-      highlight how to use pegasus-analyzer to debug a failed workflow.</para>
+      input file so that the workflow fails during execution. We then use <emphasis>pegasus-analyzer</emphasis> to debug the failed workflow.</para>
 
-      <para>First of all lets rename the input file f.a</para>
+      <para>Rename the input file f.a</para>
 
       <programlisting><emphasis role="bold"> $ mv /scratch/tutorial/inputdata/diamond/f.a /scratch/tutorial/inputdata/diamond/f.a.old
 
  $ cd $HOME/pegasus-wms
  </emphasis></programlisting>
 
-      <para>We will now repeat exercise <emphasis role="bold">2.4 and
-      2.5</emphasis> and submit the workflow again.</para>
+      <para>We will now repeat the exercise and submit the workflow again.</para>
 
       <programlisting><emphasis><emphasis role="bold">Plan and Submit the diamond workflow</emphasis> .</emphasis> Pass --submit to pegasus-plan to submit in case of successful planning
 
@@ -572,7 +555,7 @@ WORKFLOW STATUS : FAILED | 1/8 ( 12% ) | (rescue needs to be submitted)
 
 </programlisting>
 
-      <para>We will now run pegasus-analyzer on the failed workflow submit
+      <para>Run <emphasis role="bold">pegasus-analyzer</emphasis>  on the failed workflow submit
       directory to see what job failed.</para>
 
       <programlisting><emphasis role="bold">$ pegasus-analyzer  -i $HOME/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run0002<emphasis>
@@ -646,22 +629,18 @@ pegasus-analyzer: end of status report
 
 </programlisting>
 
-      <para>The above tells us that the stage-in job for the workflow failed,
-      and points us to the stdout of the job. By default, all jobs in Pegasus
+      <para>The above tells us that the <emphasis role="bold">stage-in</emphasis>  job for the workflow failed,
+      and points us to the <emphasis role="bold">stdout</emphasis> of the job. By default, all jobs in Pegasus
       are launched via kickstart that captures runtime provenance of the job
       and helps in debugging. Hence, the stdout of the job is the kickstart
       stdout which is in XML.</para>
 
-      <para>. the duration of the job the start time for the job the node on
-      which the job ran the stdout/stderr of the job the arguments with which
-      it launched the job the environment that was set for the job before it
-      was launched. the machine information about the node that the job ran on
-      Amongst the above information, the dagman.out file gives a coarser
-      grained estimate of the job duration and start time</para>
+     <note> <para>The <emphasis role="bold">dagman.out</emphasis>  file gives a coarser
+      grained estimate of the job duration and start time</para> </note>
     </section>
 
     <section>
-      <title>Kickstart and Condor DAGMan format and log files</title>
+      <title>Kickstart and Condor DAGMan </title>
 
       <para>This section explains how to read kickstart output and DAGMan
       Condor log files.</para>
@@ -674,7 +653,7 @@ pegasus-analyzer: end of status report
         remote end, unless explicitly disabled at the time of running
         pegasus-plan.</para>
 
-        <para>Kickstart does not work with</para>
+        <para>Kickstart does not work with:</para>
 
         <orderedlist>
           <listitem>
@@ -686,14 +665,14 @@ pegasus-analyzer: end of status report
           </listitem>
         </orderedlist>
 
-        <para>Pegasus automatically disables kickstart for the above
-        jobs.</para>
+        <note><para>Pegasus automatically disables kickstart for the above
+        jobs.</para>   </note>
 
         <para>Kickstart captures useful runtime provenance information about
         the job launched by it on the remote note, and puts in an XML record
         that it writes to it's stdout. The stdout appears in the workflow
         submit directory as &lt;job&gt;.out.00n . Some useful information
-        captured by kickstart and logged are as follows</para>
+        captured by kickstart and logged are as follows:</para>
 
         <orderedlist>
           <listitem>
@@ -738,7 +717,7 @@ pegasus-analyzer: end of status report
         <section>
           <title>Reading a Kickstart Output File</title>
 
-          <para>Lets look at the stdout of our failed job.</para>
+          <para>Review the <emphasis>stdout</emphasis> of our failed job.</para>
 
           <programlisting><emphasis role="bold">$ </emphasis><emphasis
               role="bold">cat /home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run0002/stage_in_local_local_0.out.002 </emphasis>
@@ -893,7 +872,7 @@ pegasus-analyzer: end of status report
 
         <itemizedlist>
           <listitem>
-            <para>Now take a look at the DAG file...</para>
+            <para>Review the DAG file:</para>
 
             <programlisting><command>$ cat $HOME/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run0001/blackdiamond-0.dag</command><computeroutput>
 
@@ -963,7 +942,7 @@ PARENT create_dir_blackdiamond_0_local CHILD stage_in_local_local_0
           </listitem>
 
           <listitem>
-            <para>... and the dagman.out file.</para>
+            <para>Review the <emphasis role="bold">dagman.out</emphasis>  file.</para>
 
             <programlisting><emphasis role="bold"><command>$</command><computeroutput> cat $HOME/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run0001/blackdiamond-0.dag.dagman.out </computeroutput></emphasis><computeroutput>
 
@@ -1076,11 +1055,10 @@ create_dir_blackdiamond_0_local -a +DAGParentNodeNames' '=' '"" create_dir_black
     </section>
 
     <section>
-      <title>Removing a running workflow</title>
+      <title>Removing a Workflow</title>
 
-      <para>Sometimes you may want to halt the execution of the workflow or
-      just permanently remove it. You can stop/halt a workflow by running the
-      pegasus-remove command mentioned in the output of pegasus-run</para>
+      <para>You can stop a workflow by running the
+      <emphasis role="bold">pegasus-remove</emphasis>  command.</para>
 
       <programlisting><command>$ pegasus-remove $HOME/pegasus-wms/dags/tutorial/pegasus/diamond/runXXXX</command><computeroutput>
 
@@ -1088,19 +1066,18 @@ Job 2788.0 marked for removal</computeroutput></programlisting>
     </section>
 
     <section>
-      <title>Generating statistics and plots of a workflow run</title>
+      <title>Generating Workflow Statistics and Plotting Graphs</title>
 
-      <para>In this section, we will generate statistics and plots of the
-      diamond workflow we ran using pegasus-statistics and
-      pegasus-plots</para>
+      <para>In this section, we will generate statistics and plot graphs for the
+      diamond workflow we ran using <emphasis role="bold">pegasus-statistics</emphasis>  and  <emhasis role="bold">pegasus-plots</emhasis>
+      </para>
 
       <para/>
 
       <section>
-        <title>Generating Statistics Using pegasus-statistics</title>
+        <title>Generating Statistics Using Pegasus-Statistics</title>
 
-        <para>pegasus-statistics generates workflow execution statistics. To
-        generate statistics run the command as shown below</para>
+        <para>The <emphasis>pegasus-statistics</emphasis> command generates workflow execution statistics. Run the command as shown below:</para>
 
         <programlisting><emphasis role="bold">$ cd $HOME/pegasus-wms
 
@@ -1161,14 +1138,14 @@ Logical transformation statistics :
 
  </programlisting>
 
-        <para><emphasis role="bold">Workflow statistics
-        table</emphasis></para>
+        <para><emphasis role="bold">Workflow Statistics
+        Table</emphasis></para>
 
         <para>Workflow statistics table contains information about the
         workflow run like total execution time, job's failed etc.</para>
 
         <table>
-          <title>Table Workflow Statistics</title>
+          <title>Workflow Statistics</title>
 
           <tgroup cols="2">
             <tbody>
@@ -1217,39 +1194,39 @@ Logical transformation statistics :
           </tgroup>
         </table>
 
-        <para><emphasis role="bold">Job statistics table</emphasis></para>
+        <para><emphasis role="bold">Job Statistics Table</emphasis></para>
 
-        <para>Job statistics table contains the following details about the
+        <para>The Job Statistics table contains details about the
         jobs in the workflow. A sample table is shown below.</para>
 
         <itemizedlist>
           <listitem>
-            <para>Job - the name of the job</para>
+            <para><emphasis role="bold">Job</emphasis>  - the name of the job</para>
           </listitem>
 
           <listitem>
-            <para>Site - the site where the job ran</para>
+            <para><emphasis role="bold">Site</emphasis> - the site where the job ran</para>
           </listitem>
 
           <listitem>
-            <para>Kickstart(sec.) - the actual duration of the job in seconds
+            <para><emphasis>Kickstart (sec.)</emphasis> - the actual duration of the job in seconds
             on the remote compute node. In case of retries the value is the
             cumulative of all retries.</para>
           </listitem>
 
           <listitem>
-            <para>Post(sec.) - the postscript time as reported by DAGMan .In
+            <para><emphasis role="bold">Post (sec.)</emphasis>  - the postscript time as reported by DAGMan .In
             case of retries the value is the cumulative of all retries.</para>
           </listitem>
 
           <listitem>
-            <para>DAGMan(sec.) - the time between the last parent job of a job
+            <para><emphasis role="bold">DAGMan (sec.)</emphasis> - the time between the last parent job of a job
             completes and the job gets submitted.In case of retries the value
             of the last retry is used for calculation.</para>
           </listitem>
 
           <listitem>
-            <para>CondorQTime(sec.) - the time between submission by DAGMan
+            <para><emphasis>CondorQTime(sec.)</emphasis>  - the time between submission by DAGMan
             and the remote Grid submission. It is an estimate of the time
             spent in the condor q on the submit node .In case of retries the
             value is the cumulative of all retries.</para>
@@ -2191,6 +2168,7 @@ on="3.2" name="superdiamond" index="0" count="1"&gt;
 
 
 </chapter>
+
 
 
 
