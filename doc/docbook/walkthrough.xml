@@ -1233,26 +1233,26 @@ Logical transformation statistics :
           </listitem>
 
           <listitem>
-            <para>Resource(sec.) - the time between the remote Grid submission
+            <para><emphasis>Resource(sec.)</emphasis>  - the time between the remote Grid submission
             and start of remote execution . It is an estimate of the time job
             spent in the remote queue .In case of retries the value is the
             cumulative of all retries.</para>
           </listitem>
 
           <listitem>
-            <para>Runtime(sec.) - the time spent on the resource as seen by
+            <para><emphasis>Runtime(sec.)</emphasis> - the time spent on the resource as seen by
             Condor DAGMan . Is always &gt;=kickstart .In case of retries the
             value is the cumulative of all retries.</para>
           </listitem>
 
           <listitem>
-            <para>Seqexec(sec.) - the time taken for the completion of a
+            <para><emphasis>Seqexec(sec.)</emphasis> - the time taken for the completion of a
             clustered job .In case of retries the value is the cumulative of
             all retries.</para>
           </listitem>
 
           <listitem>
-            <para>Seqexec-Delay(sec.) - the time difference between the time
+            <para><emphasis>Seqexec-Delay(sec.)</emphasis>  - the time difference between the time
             for the completion of a clustered job and sum of all the
             individual tasks kickstart time .In case of retries the value is
             the cumulative of all retries.</para>
@@ -1485,10 +1485,10 @@ Logical transformation statistics :
           </tgroup>
         </table>
 
-        <para><emphasis role="bold">Logical transformation statistics
-        table</emphasis></para>
+        <para><emphasis role="bold">Logical Transformation Statistics
+        Table</emphasis></para>
 
-        <para>Logical transformation statistics table contains information
+        <para>The Logical transformation statistics table contains information
         about each type of transformation in the workflow.</para>
 
         <table>
@@ -1567,11 +1567,11 @@ Logical transformation statistics :
       </section>
 
       <section>
-        <title>Generating plots using pegasus-plots</title>
+        <title>Generating Plots </title>
 
-        <para>pegasus-plots generates graphs and charts to visualize workflow
+        <para>Pegasus-plots generates graphs and charts to visualize workflow
         execution. To generate graphs and charts run the command as shown
-        below.</para>
+        below:</para>
 
         <programlisting><emphasis role="bold">$ cd $HOME/pegasus-wms
 $ pegasus-plots dags/tutorial/pegasus/blackdiamond/run0001/</emphasis>
@@ -1623,7 +1623,7 @@ eps format : /home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run00
         <section>
           <title>Abstract Worfklow / DAX Image</title>
 
-          <para>/home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run0001/graph/diamond-dax.png</para>
+          <para>The abstract workflow can be found at: /home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run0001/graph/diamond-dax.png</para>
 
           <figure>
             <title>Figure: Black Diamond DAX Image</title>
@@ -1639,7 +1639,7 @@ eps format : /home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run00
         <section>
           <title>Executable Workflow / DAG Image</title>
 
-          <para>/home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run0001/graph/blackdiamond-dag.png</para>
+          <para>The executable workflow can be found at: /home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run0001/graph/blackdiamond-dag.png</para>
 
           <figure>
             <title>Figure: Black Diamond DAG Image</title>
@@ -1655,7 +1655,7 @@ eps format : /home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run00
         <section>
           <title>Gantt Chart of Workflow Execution</title>
 
-          <para>/home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run0001/graph/blackdiamond-2.png</para>
+          <para>The Gantt Chart for the workflow can be found at: /home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run0001/graph/blackdiamond-2.png</para>
 
           <para><emphasis role="bold">X axis </emphasis>- time in seconds .
           Each tic is 60 seconds</para>
@@ -1675,9 +1675,9 @@ eps format : /home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run00
         </section>
 
         <section>
-          <title>Host over time chart</title>
+          <title>Host Over Time Chart</title>
 
-          <para>/home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run0001/graph/blackdiamond-host.png</para>
+          <para>The host over time chart can be fund at: /home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run0001/graph/blackdiamond-host.png</para>
 
           <para><emphasis role="bold">X axis </emphasis>- time in seconds .
           Each tic is 60 seconds</para>
@@ -1703,10 +1703,10 @@ eps format : /home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run00
 
     <para>In this exercise we are going to run pegasus-plan to generate a
     executable workflow from the abstract workflow (montage.dax). The
-    Executable workflow generated, are condor submit files that are submitted
-    to remote grid resources using pegasus-run</para>
+    Executable workflow generated consists of condor submit files that are submitted
+    to remote grid resources using <emphasis role="bold">pegasus-run</emphasis></para>
 
-    <para>The instructors have provided:</para>
+    <para>The iwlakthrough includes:</para>
 
     <itemizedlist>
       <listitem>
@@ -1715,10 +1715,10 @@ eps format : /home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run00
       </listitem>
     </itemizedlist>
 
-    <para>You will need to write some things yourself, by following the
+    <para>You will need to write some things yourself, see the
     instructions below: <itemizedlist>
         <listitem>
-          <para>Run pegasus-plan to generate the condor submit files out of
+          <para>Run <emphasis role="bold">pegasus-plan</emphasis> to generate the condor submit files out of
           the dax.</para>
         </listitem>
       </itemizedlist></para>
@@ -1727,13 +1727,13 @@ eps format : /home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run00
 
     <itemizedlist>
       <listitem>
-        <para>Let us run pegasus-plan on the montage dax on the tg_ncsa
+        <para>Run pegasus-plan on the montage dax on the tg_ncsa
         cluster. If multiple sites are available you could provide the sites
         using a comma "," separated list like tg_ncsa,viz etc.<programlisting><command>$ cd $HOME/pegasus-wms
 $ pegasus-plan -Dpegasus.schema.dax=/opt/pegasus/default/etc/dax-2.1.xsd \
                --dir dags --sites cluster --output local --force \
                --nocleanup --dax `pwd`/dax/montage.dax --submit -v</command></programlisting>
-        The above command says that we need to plan the montage dax on the
+        The above command shows that we need to plan the montage dax on the
         <emphasis role="bold">cluster</emphasis> site. The cluster site in the
         VM is managed by SGE that is running in the VM. The jobs for this
         workflow will be submitted to <emphasis
@@ -1795,12 +1795,12 @@ $ pegasus-plan -Dpegasus.schema.dax=/opt/pegasus/default/etc/dax-2.1.xsd \
 
       <listitem>
         <para>If you get any errors above while running pegasus-plan you can
-        add -vvvvv to enable maximum verbosity on pegasus-run.</para>
+        add <emphasis>-vvvvv</emphasis> to enable maximum verbosity on pegasus-run.</para>
       </listitem>
     </itemizedlist>
 
     <para>The above command submits the workflow to Condor DAGMan/CondorG.
-    After submitting it starts a monitoring daemon pegasus-monitord that
+    After submitting it starts the monitoring daemon <emphasis role="bold"/> pegasus-monitord that
     parses the condor log files to update the status of the jobs and push it
     in a work database.</para>
 
@@ -1812,8 +1812,7 @@ $ pegasus-plan -Dpegasus.schema.dax=/opt/pegasus/default/etc/dax-2.1.xsd \
     role="bold">/home/tutorial/local-storage/storage/montage.jpg</emphasis> if
     it runs successfully</para>
 
-    <para>The grid workflow will take time to execute on the VM. On the
-    instructor's MAC Pro Desktop it took about<emphasis role="bold"> 30
+    <para>The grid workflow will take time to execute on the VM. On a MAC Pro Desktop it took about<emphasis role="bold"> 30
     minutes </emphasis>to run.</para>
   </section>
 
@@ -1847,9 +1846,9 @@ $ pegasus-plan -Dpegasus.schema.dax=/opt/pegasus/default/etc/dax-2.1.xsd \
       track in the replica catalog. This is done by setting the register flags
       with the output files for a job. For our tutorial, we only register the
       final output data products. So if you were able to execute the diamond
-      or the montage workflow successfully, we can do data reuse. Let us run
+      or the montage workflow successfully, we can do data reuse. Run
       <emphasis role="bold">pegasus-plan </emphasis>on the diamond workflow
-      again. However, this time we will remove the <emphasis
+      againafter removing the <emphasis
       role="bold">--force</emphasis> option.</para>
 
       <programlisting><emphasis role="bold">$ cd $HOME/pegasus-wms
