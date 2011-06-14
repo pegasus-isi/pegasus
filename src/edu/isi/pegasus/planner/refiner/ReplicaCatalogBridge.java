@@ -695,17 +695,21 @@ public class ReplicaCatalogBridge
 
         edu.isi.pegasus.planner.catalog.site.classes.ReplicaCatalog rc =
                                 (site == null) ? null : site.selectReplicaCatalog();
-        if ( rc  == null || rc.getURL() == null || rc.getURL().length() == 0) {
-            throw new RuntimeException(
-                "The Replica Catalog URL is not specified in site catalog for site " + mOutputPool );
+        
+        
+        //we append the url property if a user has specified a
+        //URL in the site catalog entry, else we rely on what
+        //was specified in properties
+        if (!( rc  == null || rc.getURL() == null || rc.getURL().length() == 0)) {
+            //we have a lrc selected . construct vds.rc.url property
+            arguments.append( "-D" ).append( ReplicaCatalog.c_prefix ).append( "." ).
+                  append( ReplicaCatalogBridge.REPLICA_CATALOG_URL_KEY).append( "=" ).append( rc.getURL() ).
+                  append( " " );
         }
 
         
 
-        //we have a lrc selected . construct vds.rc.url property
-        arguments.append( "-D" ).append( ReplicaCatalog.c_prefix ).append( "." ).
-                  append( this.REPLICA_CATALOG_URL_KEY).append( "=" ).append( rc.getURL() ).
-                  append( " " );
+        
 
         //get any command line properties that may need specifying
         arguments.append( "--conf" ).append( " " ).
