@@ -1069,7 +1069,7 @@ Job 2788.0 marked for removal</computeroutput></programlisting>
       <title>Generating Workflow Statistics and Plotting Graphs</title>
 
       <para>In this section, we will generate statistics and plot graphs for the
-      diamond workflow we ran using <emphasis role="bold">pegasus-statistics</emphasis>  and  <emhasis role="bold">pegasus-plots</emhasis>
+      diamond workflow we ran using <emphasis role="bold">pegasus-statistics</emphasis>  and  <emphasis role="bold">pegasus-plots</emphasis>
       </para>
 
       <para/>
@@ -1209,7 +1209,7 @@ Logical transformation statistics :
           </listitem>
 
           <listitem>
-            <para><emphasis>Kickstart (sec.)</emphasis> - the actual duration of the job in seconds
+            <para><emphasis role="bold">Kickstart (sec.)</emphasis> - the actual duration of the job in seconds
             on the remote compute node. In case of retries the value is the
             cumulative of all retries.</para>
           </listitem>
@@ -1226,14 +1226,14 @@ Logical transformation statistics :
           </listitem>
 
           <listitem>
-            <para><emphasis>CondorQTime(sec.)</emphasis>  - the time between submission by DAGMan
+            <para><emphasis role="bold">CondorQTime(sec.)</emphasis>  - the time between submission by DAGMan
             and the remote Grid submission. It is an estimate of the time
             spent in the condor q on the submit node .In case of retries the
             value is the cumulative of all retries.</para>
           </listitem>
 
           <listitem>
-            <para><emphasis>Resource(sec.)</emphasis>  - the time between the remote Grid submission
+            <para><emphasis role="bold">Resource(sec.)</emphasis>  - the time between the remote Grid submission
             and start of remote execution . It is an estimate of the time job
             spent in the remote queue .In case of retries the value is the
             cumulative of all retries.</para>
@@ -1246,13 +1246,13 @@ Logical transformation statistics :
           </listitem>
 
           <listitem>
-            <para><emphasis>Seqexec(sec.)</emphasis> - the time taken for the completion of a
+            <para><emphasis role="bold">Seqexec(sec.)</emphasis> - the time taken for the completion of a
             clustered job .In case of retries the value is the cumulative of
             all retries.</para>
           </listitem>
 
           <listitem>
-            <para><emphasis>Seqexec-Delay(sec.)</emphasis>  - the time difference between the time
+            <para><emphasis role="bold">Seqexec-Delay(sec.)</emphasis>  - the time difference between the time
             for the completion of a clustered job and sum of all the
             individual tasks kickstart time .In case of retries the value is
             the cumulative of all retries.</para>
