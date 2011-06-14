@@ -217,31 +217,24 @@ public abstract class Executable {
             File f = new File( value );
             File dir = f.getParentFile();
             String basename = f.getName();
-            if( f.exists() ){
-                //check if value.??? exists.
-                NumberFormat formatter = new DecimalFormat( "000" );
-                File backupFile = null;
-                //start from 000 onwards and check for existence
-                for( int i = 0; i < 999 ; i++ ){
-                    StringBuffer backup = new StringBuffer();
-                    backup.append( basename ).append( "." ).append( formatter.format(i) );
-                    
-                    //check if backup file exists.
-                    backupFile = new File( dir, backup.toString() );
-                    if( !backupFile.exists() ){
-                        break;
-                    }
+
+            NumberFormat formatter = new DecimalFormat( "000" );
+            File backupFile = null;
+            //start from 000 onwards and check for existence
+            for( int i = 0; i < 999 ; i++ ){
+                StringBuffer backup = new StringBuffer();
+                backup.append( basename ).append( "." ).append( formatter.format(i) );
+                
+                //check if backup file exists.
+                backupFile = new File( dir, backup.toString() );
+                if( !backupFile.exists() ){
+                    break;
                 }
-                System.out.println( "Backing up existing log file to " + backupFile );
-                //move file to backup file
-                f.renameTo( backupFile );
             }
-            
+                        
             //log both output and error messages to value specified
-            mLogger.setWriters(value);
+            mLogger.setWriters(backupFile.getAbsolutePath ());
         }
-
-
     }
 
 
