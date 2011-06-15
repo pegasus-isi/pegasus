@@ -113,7 +113,6 @@
             <para><emphasis>Local Execution</emphasis></para>
 
             <para>Pegasus can run a workflow on a single computer with Internet access.
-            <emphasis role="bold">WHAT ARE THE SIZE/COMPLEXITY LIMITS?</emphasis>
             Running in a local environment is quicker to deploy as the user does not need to gain access to muliple resources in order to execute a workfow.</para>
           </listitem>
 
@@ -126,8 +125,7 @@
             are tools for submitting and executing the Condor daemons on a
             Globus resource. As long as the daemons continue to run, the
             remote machine running them appears as part of your Condor pool.
-            What are the advatages to running in a Pool environment? For a
-            more complete description of Condor, see the <ulink
+            For a more complete description of Condor, see the <ulink
             url="http://www.cs.wisc.edu/condor/description.html">Condor
             Project Pages </ulink></para>
           </listitem>
@@ -153,9 +151,8 @@
     <section>
       <title>Workflow Gallery</title>
 
-      <para>Pegasus is curently being used in a broad range of applications. Our <link
-      linkend="example_workflows">example workflows</link> can be found in a
-      later chapter.
+      <para>Pegasus is curently being used in a broad range of applications. See <link
+      linkend="example_workflows">example workflows</link> to review the workflows.
       The
       <ulink
       url="http://pegasus.isi.edu/applications.php">Pegasus Application Page
