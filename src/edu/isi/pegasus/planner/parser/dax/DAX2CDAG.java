@@ -199,27 +199,30 @@ public class DAX2CDAG implements Callback {
     }
 
     /**
-     * Callback for child and parent relationships from section 3.
+     * Callback for child and parentID relationships from section 3.
      *
      * @param child is the IDREF of the child element.
      * @param parents is a list of IDREFs of the included parents.
      */
     public void cbParents(String child, List<PCRelation> parents) {
-        PCRelation relation;
-        child  = (String)mJobMap.get(child);
-        String parent;
+        String childID  = (String)mJobMap.get(child);
+        String parentID;
 
         //System.out.println( child + " -> " + parents );
 
         for ( PCRelation pc : parents  ){
-//            parent = (String)mJobMap.get((String)it.next());
-            parent = (String)mJobMap.get( pc.getParent() );
-            if(parent == null){
+            
+            parentID = (String)mJobMap.get( pc.getParent() );
+            if(parentID == null){
                 //this actually means dax is generated wrong.
                 //probably some one tinkered with it by hand.
-                throw new RuntimeException( "Cannot find parent for job " + child );
+                throw new RuntimeException( "Cannot find parent for job " + childID );
             }
-            mDagInfo.addNewRelation(parent,child);
+            PCRelation relation = new PCRelation( parentID, childID  );
+            relation.setAbstractChildID( child );
+            relation.setAbstractParentID( pc.getParent() );
+                  
+            mDagInfo.addNewRelation( relation );
         }
 
     }

@@ -171,6 +171,17 @@ public class DagInfo extends Data {
     /**
      * Adds a new PCRelation pair to the Vector of <code>PCRelation</code>
      * pairs. Since we are adding a new relation the isDeleted parameter should
+     * be false
+     * 
+     * @param relation  the relation to be added
+     */
+    public void addNewRelation(PCRelation relation) {
+        relations.addElement( relation );
+    }
+
+    /**
+     * Adds a new PCRelation pair to the Vector of <code>PCRelation</code>
+     * pairs. Since we are adding a new relation the isDeleted parameter should
      * be false.
      *
      * @param parent    The parent in the relation pair

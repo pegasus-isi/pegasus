@@ -17,7 +17,6 @@
 
 package edu.isi.pegasus.planner.classes;
 
-import java.util.Iterator;
 
 import java.io.Writer;
 import java.io.StringWriter;
@@ -54,12 +53,26 @@ public class PCRelation extends Data /*implements Comparable*/{
      */
     public boolean isDeleted;
 
+    
+    /**
+     * The abstract id for the parent node. required for stampede events.
+     */
+    private String mAbstractParentID;
+    
+    
+    /**
+     * The abstract id for the child node. required for stampede events.
+     */
+    private String mAbstractChildID;
+    
     /**
      * the default constructor
      */
     public PCRelation(){
         parent = new String();
         child = new String();
+        mAbstractParentID = new String();
+        mAbstractChildID = new String();
         isDeleted = false;
     }
 
@@ -67,6 +80,7 @@ public class PCRelation extends Data /*implements Comparable*/{
      * the overloaded constructor
      */
     public PCRelation(String parentName,String childName,boolean deleted){
+        this();
         parent = new String(parentName);
         child  = new String(childName);
         isDeleted = deleted;
@@ -77,6 +91,7 @@ public class PCRelation extends Data /*implements Comparable*/{
      * the overloaded constructor
      */
     public PCRelation(String parentName,String childName){
+        this();
         parent = new String(parentName);
         child  = new String(childName);
         isDeleted = false;
@@ -101,6 +116,47 @@ public class PCRelation extends Data /*implements Comparable*/{
     public String getChild(){
         return child;
     }
+    
+    /**
+     * Sets the abstract parent id associated with the edge.
+     *
+     * @param id  the abstract id
+     */
+    public void setAbstractParentID( String id){
+        mAbstractParentID = id;
+    }
+
+
+    /**
+     * Sets the abstract child id associated with the edge.
+     *
+     * @param id  the abstract id
+     */
+    public void setAbstractChildID( String id){
+        mAbstractChildID = id;
+    }
+
+
+    
+    /**
+     * Returns the abstract parent id associated with the edge.
+     *
+     * @return parent
+     */
+    public String getAbstractParentID(){
+        return mAbstractParentID;
+    }
+
+
+    /**
+     * Returns the abstract child id associated with the edge.
+     *
+     * @return child
+     */
+    public String getAbstractChildID(){
+        return mAbstractChildID;
+    }
+
 
 
     /**
@@ -112,7 +168,8 @@ public class PCRelation extends Data /*implements Comparable*/{
         pc.parent     = this.parent;
         pc.child      = this.child;
         pc.isDeleted  = this.isDeleted;
-
+        pc.mAbstractChildID = this.mAbstractChildID;
+        pc.mAbstractParentID = this.mAbstractParentID;
         return pc;
     }
 
@@ -144,8 +201,9 @@ public class PCRelation extends Data /*implements Comparable*/{
      */
     public String toString(){
         StringBuffer sb = new StringBuffer();
-        sb.append( "{" ).append( parent ).append( " -> " ).append( child ).
-           append( "," ).append( this.isDeleted ).append( "}" );
+        sb.append( "{" ).append( parent ).append( " [" ).append( this.getAbstractParentID()).
+           append( "]" ).append( " -> " ).append( child ).append( " [" ).append( this.getAbstractChildID()).
+           append( "]" ).append( "," ).append( this.isDeleted ).append( "}" );
 
         return sb.toString();
     }

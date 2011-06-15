@@ -302,8 +302,8 @@ public class Stampede implements CodeGenerator {
                 PCRelation relation = it.next();
                 mLogFormatter.addEvent( Stampede.TASK_EDGE_EVENT_NAME, Stampede.WORKFLOW_ID_KEY, uuid );
 
-                mLogFormatter.add( Stampede.PARENT_TASK_ID_KEY, relation.getParent() );
-                mLogFormatter.add( Stampede.CHILD_TASK_ID_KEY, relation.getChild() );
+                mLogFormatter.add( Stampede.PARENT_TASK_ID_KEY, relation.getAbstractParentID() );
+                mLogFormatter.add( Stampede.CHILD_TASK_ID_KEY, relation.getAbstractChildID() );
 
                 writer.println( mLogFormatter.createLogMessage() );
                 mLogFormatter.popEvent();
