@@ -503,10 +503,10 @@ Input Filenames: f.c1 f.c2
     <section>
       <title>Debugging Failed Workflows </title>
 
-      <para>In this section, we will run the diamond workflow but remove the
-      input file so that the workflow fails during execution. We then use <emphasis>pegasus-analyzer</emphasis> to debug the failed workflow.</para>
+      <para>In this section, we run the diamond workflow but remove the
+      input file so that the workflow fails during execution. We then use <emphasis role="bold">pegasus-analyzer</emphasis> to debug the failed workflow.</para>
 
-      <para>Rename the input file f.a</para>
+      <para>Rename the input file <emphasis>f.a</emphasis> </para>
 
       <programlisting><emphasis role="bold"> $ mv /scratch/tutorial/inputdata/diamond/f.a /scratch/tutorial/inputdata/diamond/f.a.old
 
@@ -515,7 +515,7 @@ Input Filenames: f.c1 f.c2
 
       <para>We will now repeat the exercise and submit the workflow again.</para>
 
-      <programlisting><emphasis><emphasis role="bold">Plan and Submit the diamond workflow</emphasis> .</emphasis> Pass --submit to pegasus-plan to submit in case of successful planning
+      <programlisting><emphasis role="bold">Plan and Submit the diamond workflow</emphasis> . Pass --submit to pegasus-plan to submit in case of successful planning
 
 $  pegasus-plan --dax `pwd`/dax/diamond.dax --force \
         --dir dags -s local -o local --nocleanup --submit -v
