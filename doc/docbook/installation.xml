@@ -177,7 +177,7 @@ Complete!</programlisting>
       <title>Tarball with Included Condor</title>
 
       <para>For convenience, there is Pegasus WMS tarballs which has Condor
-      included. This way you can instlal Pegasus and Condor at the same time,
+      included. This way you can install Pegasus and Condor at the same time,
       with just minor configuration to get up and running.</para>
 
       <itemizedlist>
@@ -221,7 +221,7 @@ $ export CONDOR_CONFIG=PEGASUS_HOME/etc/condor_config</programlisting></para>
         </listitem>
 
         <listitem>
-          <para>Verify that Condor is up by running the <emphasis role="bold">condor-q</emphasis>command</para>
+          <para>Verify that Condor is up by running the <emphasis role="bold">condor-q</emphasis> command</para>
 
           <para><programlisting>$ condor_q
 
@@ -246,12 +246,12 @@ $ export CONDOR_CONFIG=PEGASUS_HOME/etc/condor_config</programlisting></para>
       <itemizedlist>
          <listitem>
 
-          <para>Some properties rely with their default on the value of other properties.</para>
+          <para>Some default property values depend on the value of other properties.</para>
 
          </listitem>
 
          <listitem>
-          <para>The curly braces refer to the value of the named property.
+          <para>Curly braces refer to the value of the named property.
       For instance,<emphasis role="bold">${pegasus.home}</emphasis>  means that the value depends on the value of the pegasus.home property plus any noted additions.
       You can use this notation to refer to other properties, though the extent of the subsitutions are limited.
       Usually, you want to refer to a set of the standard system properties.</para>
@@ -274,7 +274,7 @@ $ export CONDOR_CONFIG=PEGASUS_HOME/etc/condor_config</programlisting></para>
     These properties are expected to be set up by the submit host's administrator. </para>
     </listitem>
           <listitem>
-    <para>The properties defined in the user property file<emphasis role="bold">${user.home}/.pegasusrc</emphasis>  have higher priority.
+    <para>The properties defined in the user property file <emphasis role="bold">${user.home}/.pegasusrc</emphasis>  have higher priority.
     These can overwrite settings found in the system's properties. </para> </listitem>
     
     <listitem>
@@ -294,6 +294,7 @@ $ export CONDOR_CONFIG=PEGASUS_HOME/etc/condor_config</programlisting></para>
 
 </section>
 </chapter>
+
 
 
 
