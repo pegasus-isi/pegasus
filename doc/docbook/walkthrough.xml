@@ -717,7 +717,7 @@ pegasus-analyzer: end of status report
         <section>
           <title>Reading a Kickstart Output File</title>
 
-          <para>Review the <emphasis>stdout</emphasis> of our failed job.</para>
+          <para>Review the <emphasis role="bold">stdout</emphasis> of our failed job.</para>
 
           <programlisting><emphasis role="bold">$ </emphasis><emphasis
               role="bold">cat /home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run0002/stage_in_local_local_0.out.002 </emphasis>
@@ -1240,7 +1240,7 @@ Logical transformation statistics :
           </listitem>
 
           <listitem>
-            <para><emphasis>Runtime(sec.)</emphasis> - the time spent on the resource as seen by
+            <para><emphasis role="bold">Runtime(sec.)</emphasis> - the time spent on the resource as seen by
             Condor DAGMan . Is always &gt;=kickstart .In case of retries the
             value is the cumulative of all retries.</para>
           </listitem>
