@@ -61,7 +61,7 @@
       <listitem>
         <para><emphasis role="bold">Scalability</emphasis></para>
 
-        <para>Pegasus easily can scale both the size of the workflow, but the resources that the workflow is distributed over. Pegasus runs workflows ranging from just a few computational
+        <para>Pegasus can easily scale both the size of the workflow, and the resources that the workflow is distributed over. Pegasus runs workflows ranging from just a few computational
   tasks up to 1 million. The number of resources involved in executing a workflow can scale as needed without any impediments to performance.</para>
       </listitem>
 
@@ -264,6 +264,7 @@
     </itemizedlist>
   </section>
 </chapter>
+
 
 
 
