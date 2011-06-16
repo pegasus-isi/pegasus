@@ -92,7 +92,7 @@ import java.util.List;
  *
  * To enable this implementation at runtime set the following property
  * <pre>
- * pegasus.gridstart SeqExecOld
+ * pegasus.gridstart SeqExec
  * </pre>
  *
  * @see org.griphyn.cPlanner.transfer.sls.S3#STAGE_SLS_FILE_PROPERTY_KEY
@@ -187,7 +187,7 @@ public class SeqExec implements GridStart {
     /**
      * Handle to kickstart GridStart implementation.
      */
-    private GridStart mKickstartGridStartImpl;
+    private Kickstart mKickstartGridStartImpl;
 
    
      /**
@@ -274,6 +274,16 @@ public class SeqExec implements GridStart {
         //lets enable the aggregated job via kickstart first
         //to create the SLS files and other things
         result = this.mKickstartGridStartImpl.enable(job, isGlobusJob);
+        
+         //For JIRA PM-380
+        if( mWorkerNodeExecution ){
+            //lets enable the AggregatedJob directly for worker node execution
+            //create a SLS files for the clustered jobs.
+            StringBuffer args = new StringBuffer();
+            this.mKickstartGridStartImpl.enableForWorkerNodeExecution( job, args , false );
+        }
+         
+        
         if( job instanceof AggregatedJob && !mSLS.doesCondorModifications()){
             if( job.getJobType() == Job.COMPUTE_JOB /*||
                 job.getJobType() == Job.STAGED_COMPUTE_JOB*/ ){

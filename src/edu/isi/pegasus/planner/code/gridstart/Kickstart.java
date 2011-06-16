@@ -373,12 +373,14 @@ public class Kickstart implements GridStart {
         //to it's executable form
         aggregator.makeAbstractAggregatedJobConcrete( job  );
 
+        /* For JIRA PM-380. Was intially added for clustering refactoring PM-316
         if( mWorkerNodeExecution ){
             //lets enable the AggregatedJob directly for worker node execution
             //before handing to the NoGridStart implementation
             StringBuffer args = new StringBuffer();
             this.enableForWorkerNodeExecution( job, args , false );
         }
+         */
         //the aggregated job itself needs to be enabled via NoGridStart
         mNoGridStartImpl.enable( (Job)job, isGlobusJob);
         
