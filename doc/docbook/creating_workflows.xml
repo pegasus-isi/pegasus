@@ -579,12 +579,12 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
 
             <itemizedlist>
               <listitem>
-                <para>SHARED for shared file systems like NFS, LUSTRE
+                <para><emphasis role="bold"/> SHARED for shared file systems like NFS, LUSTRE
                 etc.</para>
               </listitem>
 
               <listitem>
-                <para>LOCAL for local file systems (local to the
+                <para><emphasis role="bold"/> LOCAL for local file systems (local to the
                 node/machine)</para>
               </listitem>
             </itemizedlist>
@@ -600,7 +600,7 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
           </listitem>
 
           <listitem>
-            <para><emphasis>arch,os,osrelease,osversion, glibc</emphasis> - The
+            <para><emphasis role="bold">arch,os,osrelease,osversion, glibc</emphasis> - The
             arch/os/osrelease/osversion/glibc of the site. OSRELEASE,
             OSVERSION and GLIBC are optional</para>
 
@@ -613,7 +613,7 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
           </listitem>
 
           <listitem>
-            <para><emphasis>Profiles</emphasis>  - One or many profiles can be attached to a
+            <para><emphasis role="bold">Profiles</emphasis>  - One or many profiles can be attached to a
             pool.</para>
 
             <para>One example is the environments to be set on a remote
