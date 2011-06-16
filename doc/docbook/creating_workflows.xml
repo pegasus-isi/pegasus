@@ -29,33 +29,33 @@
 
     <itemizedlist>
       <listitem>
-        <para><emphasis>fan-out</emphasis>, <emphasis>scatter</emphasis>, and
+        <para><emphasis role="bold">fan-out</emphasis>, <emphasis>scatter</emphasis>, and
         <emphasis>diverge</emphasis> all describe the fact that multiple
         siblings are dependent on fewer parents.</para>
 
-        <para>The example shows how the <emphasis> Job 2 and 3</emphasis>
-        nodes depend on <emphasis>Job 1</emphasis> node.</para>
+        <para>The example shows how the <emphasis role="bold"> Job 2 and 3</emphasis>
+        nodes depend on <emphasis role="bold">Job 1</emphasis> node.</para>
       </listitem>
 
       <listitem>
-        <para><emphasis>fan-in</emphasis>, <emphasis>gather</emphasis>,
-        <emphasis>join</emphasis>, and <emphasis>converge</emphasis> describe
+        <para><emphasis role="bold">fan-in</emphasis>, <emphasis role="bold">gather</emphasis>,
+        <emphasis role="bold">join</emphasis>, and <emphasis role="bold">converge</emphasis> describe
         how multiple siblings are merged into fewer dependent child
         nodes.</para>
 
-        <para>The example shows how the <emphasis>Job 4</emphasis> node
-        depends on both <emphasis>Job 2 and Job 3</emphasis> nodes.</para>
+        <para>The example shows how the <emphasis role="bold">Job 4</emphasis> node
+        depends on both <emphasis role="bold">Job 2 and Job 3</emphasis> nodes.</para>
       </listitem>
     </itemizedlist>
 
     <itemizedlist>
       <listitem>
-        <para><emphasis>serial execution</emphasis> implies that nodes are
+        <para><emphasis role="bold">serial execution</emphasis> implies that nodes are
         dependent on one another, like pearls on a string.</para>
       </listitem>
 
       <listitem>
-        <para><emphasis>parallel execution</emphasis> implies that nodes can
+        <para><emphasis role="bold">parallel execution</emphasis> implies that nodes can
         be executed in parallel</para>
       </listitem>
     </itemizedlist>
@@ -1300,6 +1300,7 @@ clus1    black::analyze:1.0    gsiftp://clus1.com/opt/nfs/vdt/pegasus/bin/keg
     </section>
   </section>
 </chapter>
+
 
 
 
