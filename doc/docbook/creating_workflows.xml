@@ -547,29 +547,29 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
           </listitem>
 
           <listitem>
-            <para><emphasis>File Systems</emphasis>  - Info about filesystems mounted on the remote
+            <para><emphasis role="bold">File Systems</emphasis>  - Info about filesystems mounted on the remote
             clusters head node or worker nodes. It has several
             configurations</para>
 
             <itemizedlist>
               <listitem>
-                <para><emphasis>head-fs/scratch</emphasis>  - This describe the scratch file systems
+                <para><emphasis role="bold">head-fs/scratch</emphasis>  - This describe the scratch file systems
                 (temporary for execution) available on the head node</para>
               </listitem>
 
               <listitem>
-                <para><emphasis>head-fs/storage</emphasis>  - This describes the storage file
+                <para><emphasis role="bold">head-fs/storage</emphasis>  - This describes the storage file
                 systems (long term) available on the head node</para>
               </listitem>
 
               <listitem>
-                <para><emphasis>worker-fs/scratch</emphasis>  - This describe the scratch file
+                <para><emphasis role="bold">worker-fs/scratch</emphasis>  - This describe the scratch file
                 systems (temporary for execution) available on the worker
                 node</para>
               </listitem>
 
               <listitem>
-                <para><emphasis>worker-fs/storage</emphasis>  - This describes the storage file
+                <para><emphasis role="bold">worker-fs/storage</emphasis>  - This describes the storage file
                 systems (long term) available on the worker node</para>
               </listitem>
             </itemizedlist>
@@ -695,7 +695,7 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
           </listitem>
 
           <listitem>
-            <para><emphasis>workdirectory</emphasis> - A remote working directory (Should be on a
+            <para><emphasis role="bold">workdirectory</emphasis> - A remote working directory (Should be on a
             shared file system)</para>
           </listitem>
 
@@ -705,7 +705,7 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
           </listitem>
 
           <listitem>
-            <para><emphasis>jobmanager</emphasis> - Url to the jobmanager entrypoints for the
+            <para><emphasis role="bold">jobmanager</emphasis> - Url to the jobmanager entrypoints for the
             remote grid. Different universes are supported which map to
             different batch jobmanagers.</para>
 
@@ -715,7 +715,7 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
           </listitem>
 
           <listitem>
-            <para><emphasis>gridlaunch</emphasis> - Path to the remote kickstart tool (provenance
+            <para><emphasis role="bold">gridlaunch</emphasis> - Path to the remote kickstart tool (provenance
             tracking)</para>
           </listitem>
 
@@ -731,7 +731,7 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
           </listitem>
 
           <listitem>
-            <para><emphasis>Profiles</emphasis> - One or many profiles can be attached to a
+            <para><emphasis role="bold">Profiles</emphasis> - One or many profiles can be attached to a
             pool.</para>
 
             <para>Profiles such as the environments to be set on a remote
@@ -832,7 +832,7 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
         </listitem>
 
         <listitem>
-          <para><emphasis>sysinfo</emphasis> - The arch/os/osversion/glibc of the site. The format
+          <para><emphasis role="bold">sysinfo</emphasis> - The arch/os/osversion/glibc of the site. The format
           is ARCH::OS:OSVER:GLIBC where OSVERSION and GLIBC are
           optiona.</para>
 
@@ -843,7 +843,7 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
         </listitem>
 
         <listitem>
-          <para><emphasis>Profiles</emphasis> - One or many profiles can be attached to a
+          <para><emphasis role="bold">Profiles</emphasis> - One or many profiles can be attached to a
           pool.</para>
 
           <para>Profiles such as the environments to be set on a remote
@@ -893,7 +893,7 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
 </programlisting>
 
       <para>To use the converted site catalog, in the properties do the
-      following</para>
+      following:</para>
 
       <orderedlist>
         <listitem>
@@ -1093,12 +1093,12 @@ site1 sys::date:1.0 /usr/bin/date  INSTALLED INTEL32::LINUX:FC4.2:3.6 ENV::PATH=
 
           <itemizedlist>
             <listitem>
-              <para>INSTALLED: This means that the transformation is installed
+              <para><emphasis role="bold">INSTALLED</emphasis>: This means that the transformation is installed
               on the remote site</para>
             </listitem>
 
             <listitem>
-              <para>STAGEABLE: This means that the transformation is available
+              <para><emphasis role="bold">STAGEABLE</emphasis>: This means that the transformation is available
               as a static binary and can be staged to a remote site.</para>
             </listitem>
           </itemizedlist>
@@ -1300,5 +1300,6 @@ clus1    black::analyze:1.0    gsiftp://clus1.com/opt/nfs/vdt/pegasus/bin/keg
     </section>
   </section>
 </chapter>
+
 
 
