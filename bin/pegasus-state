@@ -394,7 +394,7 @@ Optional arguments:
  -h|--help        print this help and exit.
  -V|--version     print version information and exit. 
  -w|--watch [s]   repeatedly print output every 's' seconds, default 60.
- --[no]legend     Disable or enable showing of the legends, default on.
+ -L|--legend      Enable showing of the legends, default off. 
 
 Optional arguments affecting Condor Q output:
  -v|--verbose     increase expert level. 
@@ -402,7 +402,7 @@ Optional arguments affecting Condor Q output:
  -u|--user name   monitor jobs for user 'name', default is $main::user.
  -i|--[no]idle    Omit jobs in state 'idle' from output. 
  --[no]held       Disable or enable showing HoldReason, default on.
- --[no]heavy      Disable or enable heavy Unicode lines, default off. 
+ --[no]heavy      Disable or enable heavy Unicode lines, default on. 
  -j|--jobtype jt  *Only show jobs of type 'jt', default is all jobs.
                   (run with 'jt' of 'help' to see available job types.)
  -s|--site sid    *Only show jobs running on site 'sid', default is all sites.
@@ -1574,11 +1574,11 @@ binmode( STDOUT, ':utf8' ) if $main::isutf8;
 
 # parse CLI options
 my $heldinfo = 1; 
-my $heavy = 0; 
+my $heavy = 1; 
 my $noidle = 0; 
 my $nosuccess = 0; 
 $main::expert = 0; 
-my $legend = 1; 
+my $legend = 0; 
 my $show_subdag = 0; 
 my ($watch,@jobtypes,@jobsites);
 GetOptions( 'help|h' => \&usage
@@ -1590,7 +1590,7 @@ GetOptions( 'help|h' => \&usage
 	  , 'site|s=s' => \@jobsites
 	  , 'idle|i!' => \$noidle
 	  , 'success|S!' => \$nosuccess
-	  , 'legend!' => \$legend
+	  , 'legend|L!' => \$legend
 	  , 'hold|held!' => \$heldinfo
 	  , 'heavy!' => \$heavy
 	  , 'profile=s' => sub { profile_start($_[1]) },
