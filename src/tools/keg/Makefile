@@ -154,8 +154,10 @@ INST_TG = install-keg
 ifneq (,${CONDOR_LOCATION})
 ifneq (ia64,${MARCH})
 ifneq (x86_64,${MARCH})
+ifneq (DARWIN,${SYSTEM})
 TARGET += keg.condor
 INST_TG += install-condor
+endif
 endif
 endif
 endif
