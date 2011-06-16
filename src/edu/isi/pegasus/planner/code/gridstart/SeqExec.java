@@ -67,27 +67,25 @@ import java.util.Set;
 import java.util.List;
 
 /**
- * This class launches all the jobs using seqexec. SeqExecOld by default wraps all
- * invocations in kickstart. This implementation is useful in the case of worker
- * node execution on Amazon EC2 with S3 being used to store the data.
- *
- * <p>
- * Since S3 transfer implementation uses seqexec to execute multiple s3 commands
- * in one job, there is possibility of optimization whereby the contents of all
- * sls files for a job can be coalesced into a single seqexec input file.
- * This seqexec input file will then be transferred to the node by condor when
- * running the job.  The benefit of this approach is that the SLS files that
- * are created during worker node execution dont need to be transferred from the
- * submit host.
- *
- * <p>
- * NOTE : For the worker node execution case, this implementation only works
- * if the SLS transfer implementation is set to S3. In addition the following property
- * should be set to false to disable the staging of the SLS files created by
- * S3 transfer implementation
- *
+ * This class launches all the jobs using seqexec. It wraps all
+ * invocations in kickstart. 
+ * 
+ * The seqexec input file for the compute jobs contains the commands to
+ * 
  * <pre>
- * pegasus.transfer.sls.s3.stage.sls.file     false
+ * 1) create directory on worker node
+ * 2) fetch input data files
+ * 3) execute the job
+ * 4) transfer the output data files
+ * 5) cleanup the directory
+ * </pre>
+ *
+ * 
+ * The following property should be set to false to disable the staging of the 
+ * SLS files via the first level staging jobs
+ * 
+ * <pre>
+ * pegasus.transfer.stage.sls.file     false
  * </pre>
  *
  * To enable this implementation at runtime set the following property
@@ -95,8 +93,7 @@ import java.util.List;
  * pegasus.gridstart SeqExec
  * </pre>
  *
- * @see org.griphyn.cPlanner.transfer.sls.S3#STAGE_SLS_FILE_PROPERTY_KEY
- *
+ * 
  * @author Karan Vahi
  * @version $Revision$
  */
@@ -116,6 +113,17 @@ public class SeqExec implements GridStart {
      */
     public static final String SHORT_NAME = "seqexec";
 
+    /**
+     * The marker to designate a line in the input file reserved for 
+     * monitord purposes.
+     */
+    public static final String MONITORD_COMMENT_MARKER =
+            edu.isi.pegasus.planner.cluster.aggregator.Abstract.MONITORD_COMMENT_MARKER;
+    
+    /**
+     * The complete transformation name for pegasus transfer
+     */
+    public static final String PEGASUS_TRANSFER_COMPLETE_TRANSFORMATION_NAME = "pegasus::pegasus-transfer";
 
     /**
      * The environment variable that tells seqexec to run a setup job.
@@ -816,6 +824,7 @@ public class SeqExec implements GridStart {
         String key = getDirectoryKey( job );
         String dir = (String)job.condorVariables.removeKey( key );
 
+        int taskid = 1;
         try{
             //create a temp file first
             File temp = File.createTempFile( "merge_stdin", null, new File(mSubmitDir));
@@ -869,6 +878,9 @@ public class SeqExec implements GridStart {
 
             if( !filesToBeCopied.isEmpty() ){
                 String cmd = constructCopyFileCommand( filesToBeCopied, directory );
+                writer.println( getSeqExecCommentStringForTask( "cp",
+                                                                null,
+                                                                taskid++) );
                 writer.println( enableCommandViaKickstart( cmd,
                                                "cp",
                                                job.getSiteHandle(),
@@ -881,6 +893,9 @@ public class SeqExec implements GridStart {
             //set the xbit for the proxy
             if( remoteProxyPath != null ){
 
+                writer.println( getSeqExecCommentStringForTask( "chmod",
+                                                                null,
+                                                                taskid++) );
                 writer.println( enableCommandViaKickstart( "/bin/chmod 600 " + remoteProxyPath,
                                                            "chmod",
                                                            job.getSiteHandle(),
@@ -896,8 +911,11 @@ public class SeqExec implements GridStart {
             }
             else{
                 //enable the pre command via kickstart
+                writer.println( getSeqExecCommentStringForTask( PEGASUS_TRANSFER_COMPLETE_TRANSFORMATION_NAME,
+                                                                null,
+                                                                taskid++) );
                 writer.println( enableCommandViaKickstart( preJob,
-                                                            "pre-job",
+                                                            PEGASUS_TRANSFER_COMPLETE_TRANSFORMATION_NAME,
                                                             job.getSiteHandle(),
                                                             Job.STAGE_OUT_JOB,
                                                             suppressXMLHeader,
@@ -913,13 +931,28 @@ public class SeqExec implements GridStart {
             File stdin = new File(mSubmitDir, job.getStdIn());
             BufferedReader in = new BufferedReader(new FileReader( stdin ));
             String line = null;
+            
+            //go through each line of the .in file for clustered job
             while ((line = in.readLine()) != null) {
-                //figure out the executable and the arguments first.
-                int index = line.indexOf(' '); //the first space
-                String executable = line.substring(0, index);
-                String arguments = line.substring(index);
-                writer.println(executable + ( suppressXMLHeader ? " -H " : "" ) + arguments);
-                suppressXMLHeader = true;
+                if( line.startsWith( SeqExec.MONITORD_COMMENT_MARKER ) ){
+                    // comment line for monitord . update the taskid
+                    // #@ 1 vahi::findrange ID000002 
+                    String contents[] = line.split( " " );
+                    writer.println( 
+                            getSeqExecCommentStringForTask( contents[2], contents[3], taskid++ ) );
+                    
+                }
+                else if ( line.startsWith( "#" ) ){
+                    //skip do nothing
+                }
+                else{                
+                    //figure out the executable and the arguments first.
+                    int index = line.indexOf(' '); //the first space
+                    String executable = line.substring(0, index);
+                    String arguments = line.substring(index);
+                    writer.println(executable + ( suppressXMLHeader ? " -H " : "" ) + arguments);
+                    suppressXMLHeader = true;
+                }
             }
             in.close();
             writer.flush();
@@ -931,8 +964,11 @@ public class SeqExec implements GridStart {
             String postJob = (String)job.envVariables.removeKey( Kickstart.KICKSTART_POSTJOB );
             if( postJob != null  ){
                 //enable the post command via kickstart
+                writer.println( getSeqExecCommentStringForTask( PEGASUS_TRANSFER_COMPLETE_TRANSFORMATION_NAME,
+                                                                null,
+                                                                taskid++) );
                 writer.println( enableCommandViaKickstart( postJob,
-                                                           "post-job",
+                                                           PEGASUS_TRANSFER_COMPLETE_TRANSFORMATION_NAME,
                                                            job.getSiteHandle(),
                                                            Job.STAGE_OUT_JOB,
                                                            suppressXMLHeader,
@@ -998,19 +1034,13 @@ public class SeqExec implements GridStart {
         //the last token is the directory name
         String directory  = cmdArray[ cmdArray.length - 1 ];
 
+        int taskid = 1;
+        
         try{
             OutputStream ostream = new FileOutputStream( stdIn , true );
             PrintWriter writer = new PrintWriter( new BufferedWriter(new OutputStreamWriter(ostream)) );
 
-            /*
-            writer.println( enableCommandViaKickstart(  "/bin/mkdir -p " + directory,
-                                                        "mkdir",
-                                                        job.getSiteHandle(),
-                                                        Job.CREATE_DIR_JOB,
-                                                        false )
-                           );
-            writer.flush();
-             */
+            
             //worker node directory is created by setting SEQEXEC_SETUP Env variable
             job.envVariables.construct( SeqExec.SEQEXEC_SETUP_ENV_VARIABLE,  "/bin/mkdir -p " + directory );
 
@@ -1047,6 +1077,9 @@ public class SeqExec implements GridStart {
             if( !filesToBeCopied.isEmpty() ){
 
                 String cmd = constructCopyFileCommand( filesToBeCopied, directory );
+                writer.println( getSeqExecCommentStringForTask( "cp",
+                                                                null,
+                                                                taskid++) );
                 writer.println( enableCommandViaKickstart( cmd,
                                                "cp",
                                                job.getSiteHandle(),
@@ -1058,6 +1091,9 @@ public class SeqExec implements GridStart {
             //set the xbit for the proxy
             if( remoteProxyPath != null ){
 
+                writer.println( getSeqExecCommentStringForTask( "chmod",
+                                                                null,
+                                                                taskid++) );
                 writer.println( enableCommandViaKickstart( "/bin/chmod 600 " + remoteProxyPath,
                                                            "chmod",
                                                            job.getSiteHandle(),
@@ -1075,8 +1111,11 @@ public class SeqExec implements GridStart {
                 //there should be a way to determine if
                 //prejob is actually a clustered job itself
                 //enable the pre command via kickstart
+                writer.println( getSeqExecCommentStringForTask( PEGASUS_TRANSFER_COMPLETE_TRANSFORMATION_NAME,
+                                                                null,
+                                                                taskid++) );
                      writer.println( enableCommandViaKickstart( preJob,
-                                                            "pre-job",
+                                                            PEGASUS_TRANSFER_COMPLETE_TRANSFORMATION_NAME,
                                                             job.getSiteHandle(),
                                                             Job.STAGE_OUT_JOB,
                                                             suppressXMLHeader,
@@ -1091,6 +1130,7 @@ public class SeqExec implements GridStart {
             // they are now set to the corresponding profiles in
             // the Condor Code Generator only.
  //            writer.println( job.condorVariables.get( "executable" ) + " -H " + job.condorVariables.get( "arguments" ) );
+            writer.println( getSeqExecCommentStringForTask( job, taskid++) );
             writer.println( job.getRemoteExecutable() + " -H " + job.getArguments() );
 
             writer.flush();
@@ -1103,8 +1143,11 @@ public class SeqExec implements GridStart {
                 //there should be a way to determine if
                 //postjob is actually a clustered job itself
                 //enable the post command via kickstart
+                writer.println( getSeqExecCommentStringForTask( PEGASUS_TRANSFER_COMPLETE_TRANSFORMATION_NAME,
+                                                                null,
+                                                                taskid++) );
                 writer.println( enableCommandViaKickstart( postJob,
-                                                          "post-job",
+                                                           PEGASUS_TRANSFER_COMPLETE_TRANSFORMATION_NAME,
                                                            job.getSiteHandle(),
                                                            Job.STAGE_OUT_JOB,
                                                            suppressXMLHeader,
@@ -1125,6 +1168,85 @@ public class SeqExec implements GridStart {
 
         return stdIn;
     }
+    
+    /**
+     * Returns the comemnt string required by monitord for a constituent job
+     * It generates a comment of the format 
+     * 
+     * #@ task_id transformation derivation. 
+     * 
+     * @param job   the job
+     * @param id    the task id.
+     * 
+     * @return the comment string
+     * 
+     * @see #MONITORD_COMMENT_MARKER
+     */
+    protected String getSeqExecCommentStringForTask( Job job,
+                                                     int id ){
+        
+        return this.getSeqExecCommentStringForTask( job.getCompleteTCName(),
+                                                    job.getLogicalID(),
+                                                    id );
+    }
+    
+    /**
+     * Returns the comemnt string required by monitord for a constituent job
+     * It generates a comment of the format 
+     * 
+     * #@ task_id transformation derivation. 
+     * 
+     * @param namespace   the namespace associated with the job
+     * @param name        the logical name of the job
+     * @param version     the version
+     * @param absJobID    the id of the job in the DAX.
+     * @param id          the task id.
+     * 
+     * @return the comment string
+     * 
+     * @see #MONITORD_COMMENT_MARKER
+     */
+    protected String getSeqExecCommentStringForTask( String namespace, 
+                                                     String name,
+                                                     String version,
+                                                     String absJobID,
+                                                     int id ){
+        
+        return this.getSeqExecCommentStringForTask( Separator.combine(namespace, name, version),
+                                                    absJobID,
+                                                    id );
+    }
+    
+    
+    /**
+     * Returns the comemnt string required by monitord for a constituent job
+     * It generates a comment of the format 
+     * 
+     * #@ task_id transformation derivation. 
+     * 
+     * @param transformation  the complete transformation 
+     * @param absJobID       the id of the job in the DAX.
+     * @param id          the task id.
+     * 
+     * @return the comment string
+     * 
+     * @see #MONITORD_COMMENT_MARKER
+     */
+    protected String getSeqExecCommentStringForTask( String transformation,
+                                                     String absJobID,
+                                                     int id  ){
+    
+        
+        StringBuffer sb = new StringBuffer();
+        
+        sb.append( MONITORD_COMMENT_MARKER ).append( " " ).
+           append( id ).append( " " ).
+           append( transformation ).append( " " ).
+           append( absJobID  );
+           
+        return sb.toString();
+    }
+    
 
     /**
       * Enables a command via kickstart. This is used to enable commands that
