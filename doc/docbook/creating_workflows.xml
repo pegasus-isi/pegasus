@@ -29,8 +29,8 @@
 
     <itemizedlist>
       <listitem>
-        <para><emphasis role="bold">fan-out</emphasis>, <emphasis>scatter</emphasis>, and
-        <emphasis>diverge</emphasis> all describe the fact that multiple
+        <para><emphasis role="bold">fan-out</emphasis>, <emphasis role="bold">scatter</emphasis>, and
+        <emphasis role="bold">diverge</emphasis> all describe the fact that multiple
         siblings are dependent on fewer parents.</para>
 
         <para>The example shows how the <emphasis role="bold"> Job 2 and 3</emphasis>
