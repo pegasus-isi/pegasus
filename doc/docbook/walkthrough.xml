@@ -37,6 +37,15 @@
         
       </listitem>
 
+      <listitem>
+        <para>About Workflow Execution</para>
+
+      </listitem>
+
+      <listitem>
+        <para>About Workflow Monitoring and Analysis Tools</para>
+
+      </listitem>
 
 </itemizedlist>
 
@@ -2100,7 +2109,7 @@ on="3.2" name="superdiamond" index="0" count="1"&gt;
     </section>
      </section>
    <section>
-    <title>Workflow Execution</title>
+    <title>About Workflow Execution</title>
     
     <para>Workflows are submitted to <emphasis role="bold">pegasus-plan</emphasis> where an executable workflow is generated
     by querying the catalogs and performing refinement steps. </para>
@@ -2110,7 +2119,7 @@ on="3.2" name="superdiamond" index="0" count="1"&gt;
     </section>
  
                   <section>
-                   <title>Workflow Monitoring and Analysis Tools</title>
+                   <title>About Workflow Monitoring and Analysis Tools</title>
 
                    <para>Pegasus comes bundled with tools for monitoring and analyzing workflows</para>
                    
