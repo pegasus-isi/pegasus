@@ -2,7 +2,7 @@
 Contains the code to create and map objects to the Stampede DB schema
 via a SQLAlchemy interface.
 """
-__rcsid__ = "$Id: stampede_schema.py 28032 2011-05-26 21:25:24Z mgoode $"
+__rcsid__ = "$Id: stampede_schema.py 28088 2011-06-15 18:56:24Z mgoode $"
 __author__ = "Monte Goode MMGoode@lbl.gov"
 
 from netlogger.analysis.schema._base import SABase, SchemaIntegrityError
@@ -136,6 +136,7 @@ def initializeToPegasusDB(db, metadata, kw={}):
                         **kw
     )
     
+    Index('wf_id_KEY', st_workflow.c.wf_id, unique=True)
     Index('wf_uuid_UNIQUE', st_workflow.c.wf_uuid, unique=True)
     
     try:
@@ -203,11 +204,14 @@ def initializeToPegasusDB(db, metadata, kw={}):
             **kw
     )
     
+    Index('job_id_KEY', st_job.c.job_id, unique=True)
+    Index('job_type_desc_COL', st_job.c.type_desc)
+    Index('job_exec_job_id_COL', st_job.c.exec_job_id)
     Index('UNIQUE_JOB', st_job.c.wf_id, st_job.c.exec_job_id, unique=True)
     
     try:
         orm.mapper(Job, st_job, properties = {
-                'child_job_instance':relation(JobInstance, backref='st_job', cascade='all')
+                'child_job_instance':relation(JobInstance, backref='st_job', cascade='all', lazy=False)
             }
         )
     except exc.ArgumentError:
@@ -257,12 +261,13 @@ def initializeToPegasusDB(db, metadata, kw={}):
                     **kw
     )
     
+    Index('job_instance_id_KEY', st_job_instance.c.job_instance_id, unique=True)
     Index('UNIQUE_JOB_INSTANCE', st_job_instance.c.job_id, st_job_instance.c.job_submit_seq, unique=True)
     
     try:
         orm.mapper(JobInstance, st_job_instance, properties = {
-                'child_tsk':relation(Invocation, backref='st_job_instance', cascade='all'),
-                'child_jst':relation(Jobstate, backref='st_job_instance', cascade='all'),
+                'child_tsk':relation(Invocation, backref='st_job_instance', cascade='all', lazy=False),
+                'child_jst':relation(Jobstate, backref='st_job_instance', cascade='all', lazy=False),
             }
         )
     except exc.ArgumentError:
@@ -302,7 +307,7 @@ def initializeToPegasusDB(db, metadata, kw={}):
     st_task = Table('task', metadata,
         Column('task_id', KeyInt, primary_key=True, nullable=False),
         Column('job_id', KeyInt,
-                ForeignKey('job_instance.job_instance_id'), nullable=True),
+                ForeignKey('job.job_id'), nullable=True),
         Column('wf_id', KeyInt,
                 ForeignKey('workflow.wf_id'), nullable=False),
         Column('abs_task_id', VARCHAR(255), nullable=False),
@@ -312,6 +317,9 @@ def initializeToPegasusDB(db, metadata, kw={}):
         **kw
     )
     
+    Index('task_id_KEY', st_task.c.task_id, unique=True)
+    Index('task_abs_task_id_COL', st_task.c.abs_task_id)
+    Index('task_wf_id_COL', st_task.c.wf_id)
     Index('UNIQUE_TASK', st_task.c.wf_id, st_task.c.abs_task_id, unique=True)
     
     try:
@@ -354,11 +362,14 @@ def initializeToPegasusDB(db, metadata, kw={}):
                     Column('transformation', TEXT, nullable=False),
                     Column('executable', TEXT, nullable=False),
                     Column('argv', TEXT, nullable=True),
-                    Column('abs_task_id', TEXT, nullable=True),
+                    Column('abs_task_id', VARCHAR(255), nullable=True),
                     Column('wf_id', KeyInt, ForeignKey('workflow.wf_id'), nullable=False),
                     **kw
     )
     
+    Index('invocation_id_KEY', st_invocation.c.invocation_id, unique=True)
+    Index('invoc_abs_task_id_COL', st_invocation.c.abs_task_id)
+    Index('invoc_wf_id_COL', st_invocation.c.wf_id)
     Index('UNIQUE_INVOCATION', st_invocation.c.job_instance_id, st_invocation.c.task_submit_seq, unique=True)
     
     try:
