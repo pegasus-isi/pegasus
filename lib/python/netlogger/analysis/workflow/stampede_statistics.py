@@ -6,10 +6,10 @@ Usage::
  stats.initialize('unique_wf_uuid')
  stats.set_job_filter('dax')
  print stats.get_total_jobs_status()
- print stats.get_total_jobs_statistics()
+ print stats.get_total_succeeded_jobs_status()
  stats.set_job_filter('dag')
  print stats.get_total_jobs_status()
- print stats.get_total_jobs_statistics()
+ print stats.get_total_succeeded_jobs_status()
  etc.
  
 Constructor and initialize methods:
@@ -71,39 +71,36 @@ Methods::
  get_total_jobs_status
  get_total_succeeded_jobs_status
  get_total_failed_jobs_status
- get_total_unknown_jobs_status
+ get_total_jobs_retries
  get_total_tasks_status
  get_total_succeeded_tasks_status
  get_total_failed_tasks_status
- get_total_jobs_statistics
- get_total_succeeded_jobs_statistics
- get_total_failed_jobs_statistics
- get_total_tasks_statistics
- get_total_succeeded_tasks_statistics
- get_total_failed_tasks_statistics
- get_workflow_wall_time
+ get_total_tasks_retries
+ get_workflow_states
  get_workflow_cum_job_wall_time
  get_submit_side_job_wall_time
+ get_workflow_details
+ get_workflow_retries
+ get_job_statistics
+ get_job_states
+ get_job_instance_sub_wf_map
+ get_failed_job_instances
  get_job_name
  get_job_site
  get_job_kickstart
  get_job_runtime
  get_job_seqexec
- get_job_seqexec_delay
  get_condor_q_time
  get_resource_delay
- get_dagman_delay
  get_post_time
  get_transformation_statistics
  
 Methods listed in order of query list on wiki.
 
-https://confluence.pegasus.isi.edu/display/pegasus/Pegasus+statistics+python+version
+https://confluence.pegasus.isi.edu/display/pegasus/Pegasus+Statistics+Python+Version+Modified
 """
-__rcsid__ = "$Id: stampede_statistics.py 28074 2011-06-09 15:50:35Z mgoode $"
+__rcsid__ = "$Id: stampede_statistics.py 28089 2011-06-16 21:20:36Z mgoode $"
 __author__ = "Monte Goode"
-
-import decimal
 
 from netlogger.analysis.modules._base import SQLAlchemyInit
 from netlogger.analysis.schema.stampede_schema import *
@@ -145,8 +142,18 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
             q = self.session.query(Workflow.wf_id).filter(Workflow.root_wf_id == self._root_wf_id)
             for row in q.all():
                 self._wfs.append(row.wf_id)
+            if not len(self._wfs):
+                self.log.error('initialize',
+                    msg='Unable to expand wf_uuid: %s - not a root_wf_id?' % root_wf_uuid)
+                return False
         else:
             self._wfs.append(self._root_wf_id)
+            
+        if not len(self._wfs):
+            self.log.error('initialize',
+                msg='No results found for wf_uuid: %s' % root_wf_uuid)
+            return False
+        
         # Initialize filter with default value
         self.set_job_filter()
         return True
@@ -184,22 +191,29 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
     #
     # Status of initially planned wf components.
     #
+    
+    #
+    # The following block of queries are documented here:
+    # https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Summary
+    # and
+    # https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Statistics+file
+    #
         
-    def _get_job_filter(self):
+    def _get_job_filter(self, JobO=Job):
         filters = {
             'all': None,
-            'nonsub': not_(self._dax_or_dag_cond()),
-            'dax': Job.type_desc == 'dax',
-            'dag': Job.type_desc == 'dag',
-            'compute': Job.type_desc == 'compute',
-            'stage-in-tx': Job.type_desc == 'stage-in-tx',
-            'stage-out-tx': Job.type_desc == 'stage-out-tx',
-            'registration': Job.type_desc == 'registration',
-            'inter-site-tx': Job.type_desc == 'inter-site-tx',
-            'create-dir': Job.type_desc == 'create-dir',
-            'staged-compute': Job.type_desc == 'staged-compute',
-            'cleanup': Job.type_desc == 'cleanup',
-            'chmod': Job.type_desc == 'chmod',
+            'nonsub': not_(self._dax_or_dag_cond(JobO)),
+            'dax': JobO.type_desc == 'dax',
+            'dag': JobO.type_desc == 'dag',
+            'compute': JobO.type_desc == 'compute',
+            'stage-in-tx': JobO.type_desc == 'stage-in-tx',
+            'stage-out-tx': JobO.type_desc == 'stage-out-tx',
+            'registration': JobO.type_desc == 'registration',
+            'inter-site-tx': JobO.type_desc == 'inter-site-tx',
+            'create-dir': JobO.type_desc == 'create-dir',
+            'staged-compute': JobO.type_desc == 'staged-compute',
+            'cleanup': JobO.type_desc == 'cleanup',
+            'chmod': JobO.type_desc == 'chmod',
         }
         return filters[self._filter_mode]
         
@@ -211,109 +225,93 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
             select max(job_submit_seq) from job_instance where job_id = jb_inst.job_id group by job_id
             )
         """
-        JobInstanceSub = orm.aliased(JobInstance)
-        sub_q = self.session.query(func.max(JobInstanceSub.job_submit_seq).label('max_id'))
-        sub_q = sub_q.filter(JobInstanceSub.job_id == JobInstance.job_id).correlate(JobInstance)
-        sub_q = sub_q.group_by(JobInstanceSub.job_id).subquery()
+        JobInstanceSubMax = orm.aliased(JobInstance)
+        sub_q = self.session.query(func.max(JobInstanceSubMax.job_submit_seq).label('max_id'))
+        sub_q = sub_q.filter(JobInstanceSubMax.job_id == JobInstance.job_id).correlate(JobInstance)
+        sub_q = sub_q.group_by(JobInstanceSubMax.job_id).subquery()
         return sub_q
         
-    def _dax_or_dag_cond(self):
-        return or_(Job.type_desc == 'dax', Job.type_desc == 'dag')
+    def _dax_or_dag_cond(self, JobO=Job):
+        return or_(JobO.type_desc == 'dax', JobO.type_desc == 'dag')
         
     def get_total_jobs_status(self):
         """
-        select
-        (    
-            select count(*)  from job as jb where jb.wf_id in (1,2,3) and not 
-                        (jb.type_desc = 'dax'or jb.type_desc = 'dag')
-        )
-        +
-        (
-            select count(*) from
-            (
-                select jb_inst.job_id from job_instance as jb_inst , job as jb  
-                where jb.wf_id in (1,2,3)
-                and jb_inst.job_id = jb.job_id
-                and (jb.type_desc ='dax' or jb.type_desc ='dag' )
-                and jb_inst.subwf_id is  null
-                and jb_inst.job_submit_seq  = (
-                    select max(job_submit_seq) from job_instance where job_id = jb_inst.job_id group by job_id
-                    )
-            )
-        ) as total_jobs
-        
+        https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Summary#WorkflowSummary-Totaljobs
+        https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Statistics+file#WorkflowStatisticsfile-Totaljobs        
         """
-        if not self._expand:
-            q = self.session.query(Job)
-            q = q.filter(Job.wf_id.in_(self._wfs))
-            if self._get_job_filter() is not None:
-                q = q.filter(self._get_job_filter())
-            return q.count()
+        JobSub = orm.aliased(Job)
+        JobInstanceSub = orm.aliased(JobInstance)
+        
+        sq_1 = self.session.query(JobSub)
+        sq_1 = sq_1.filter(JobSub.wf_id.in_(self._wfs))
+        if not self._expand and self._get_job_filter(JobSub) is not None:
+            sq_1 = sq_1.filter(self._get_job_filter(JobSub))
         else:
-            q = self.session.query(Job.job_id)
-            q = q.filter(Job.wf_id.in_(self._wfs))
-            q = q.filter(not_(self._dax_or_dag_cond()))
-            job_count =  q.count()
+            sq_1 = sq_1.filter(not_(self._dax_or_dag_cond(JobSub)))
+        sq_1 = sq_1.subquery()
         
-            sub_q = self._max_job_seq_subquery()
+        sub_q = self._max_job_seq_subquery()
         
-            q = self.session.query(JobInstance.job_id)
-            q = q.filter(Job.wf_id.in_(self._wfs))
-            q = q.filter(JobInstance.job_id == Job.job_id)
-            q = q.filter(JobInstance.subwf_id == None)
-            q = q.filter(JobInstance.job_submit_seq == sub_q.as_scalar())
-            q = q.filter(self._dax_or_dag_cond())
-            job_instance_count = q.count()
-            
-            return job_count + job_instance_count
+        sq_2 = self.session.query(JobInstance.job_id)
+        sq_2 = sq_2.filter(Job.wf_id.in_(self._wfs))
+        sq_2 = sq_2.filter(JobInstance.job_id == Job.job_id)
+        sq_2 = sq_2.filter(self._dax_or_dag_cond())
+        sq_2 = sq_2.filter(JobInstance.subwf_id == None)
+        sq_2 = sq_2.filter(JobInstance.job_submit_seq == sub_q.as_scalar())
+        sq_2 = sq_2.subquery()
+        
+        q = self.session.query((sq_1.count().as_scalar() + sq_2.count().as_scalar() ).label('total_jobs'))
+        return q.one()[0]
              
     def get_total_succeeded_jobs_status(self):
         """
-        select DISTINCT count(jb.job_id)
-            from
-            job as jb,
-            job_instance as jb_inst,
-            jobstate as jb_state
-            where  jb.wf_id in(
-            1,2,3
-            )
-            and jb.job_id = jb_inst.job_id
-            and not (jb.type_desc ='dax' or jb.type_desc ='dag')
-            and jb_inst.job_instance_id = jb_state.job_instance_id
-            and jb_state.state ='JOB_SUCCESS'
+        https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Summary#WorkflowSummary-Totalsucceededjobs
+        https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Statistics+file#WorkflowStatisticsfile-Totalsucceededjobs
         """
-        q = self.session.query(Job.job_id).distinct()
-        q = q.filter(Job.wf_id.in_(self._wfs))
-        q = q.filter(Job.job_id == JobInstance.job_id)
-        q = q.filter(JobInstance.job_instance_id == Jobstate.job_instance_id)
-        q = q.filter(Jobstate.state == 'JOB_SUCCESS')
-        # jobtype filtering
-        if not self._expand and self._get_job_filter() is not None:
-            q = q.filter(self._get_job_filter())
+        
+        JobSub = orm.aliased(Job, name='JobSub')
+        JobInstanceSub = orm.aliased(JobInstance, name='JobInstanceSub')
+        WorkflowSub = orm.aliased(Workflow, name='WorkflowSub')
+        
+        sq_1 = self.session.query(JobInstanceSub.job_id.label('jiid'), JobInstanceSub.job_instance_id.label('jid'),
+                func.max(JobInstanceSub.job_submit_seq).label('mjss'))
+        
+        if not self._expand:
+            sq_1 = sq_1.filter(WorkflowSub.wf_id.in_(self._wfs))
         else:
-            q = q.filter(not_(self._dax_or_dag_cond()))
+            sq_1 = sq_1.filter(WorkflowSub.root_wf_id == self._root_wf_id)
         
+        sq_1 = sq_1.filter(WorkflowSub.wf_id == JobSub.wf_id)
+        sq_1 = sq_1.filter(JobSub.job_id == JobInstanceSub.job_id)
+        
+        # jobtype filtering
+        if not self._expand and self._get_job_filter(JobSub) is not None:
+            sq_1 = sq_1.filter(self._get_job_filter(JobSub))
+        else:
+            d_or_d = self._dax_or_dag_cond(JobSub)
+            sq_1 = sq_1.filter((or_(not_(d_or_d), and_(d_or_d, JobInstanceSub.subwf_id == None))))
+        
+        sq_1 = sq_1.group_by(JobSub.job_id).subquery()
+        
+        JobstateSub = orm.aliased(Jobstate, name='JobstateSub')
+            
+        sq_2 = self.session.query(sq_1.c.jid, func.max(JobstateSub.jobstate_submit_seq).label('sjss'))
+        sq_2 = sq_2.filter(JobstateSub.job_instance_id == sq_1.c.jid)
+        sq_2 = sq_2.group_by(sq_1.c.jid).subquery()
+        
+        JobstateOut = orm.aliased(Jobstate)
+        
+        q = self.session.query(JobstateOut.job_instance_id, JobstateOut.state, JobstateOut.timestamp, JobstateOut.jobstate_submit_seq, sq_2.c.jid, sq_2.c.sjss)
+        q = q.filter(JobstateOut.job_instance_id == sq_2.c.jid)
+        q = q.filter(JobstateOut.jobstate_submit_seq == sq_2.c.sjss)
+        q = q.filter(JobstateOut.state.in_(['POST_SCRIPT_SUCCESS', 'JOB_SUCCESS']))
+
         return q.count()
-        
+
     def get_total_failed_jobs_status(self):
         """
-        select count(*) from
-        (
-            select jb_inst.job_instance_id
-            from job as jb, job_instance as jb_inst , jobstate as jb_state
-            where jb_inst.job_submit_seq  = (
-                select max(job_submit_seq) from job_instance where job_id = jb_inst.job_id group by job_id
-            )
-            and jb.wf_id in (1,2,3)    
-            and jb.job_id = jb_inst.job_id
-            and jb_inst.job_instance_id = jb_state.job_instance_id
-            and (
-                      (not (jb.type_desc ='dax' or jb.type_desc ='dag'))
-                or
-                      ((jb.type_desc ='dax' or jb.type_desc ='dag') and jb_inst.subwf_id is NULL)
-                     )
-            and jb_state.state in ('JOB_FAILURE')
-        )
+        https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Summary#WorkflowSummary-Totalfailedjobs
+        https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Statistics+file#WorkflowStatisticsfile-Totalfailedjobs
         """
         sub_q = self._max_job_seq_subquery()
         
@@ -322,7 +320,7 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         q = q.filter(Job.wf_id.in_(self._wfs))
         q = q.filter(Job.job_id == JobInstance.job_id)
         q = q.filter(JobInstance.job_instance_id == Jobstate.job_instance_id)
-        q = q.filter(Jobstate.state.in_(['JOB_FAILURE'])) # why in and not == ?
+        q = q.filter(Jobstate.state.in_(['PRE_SCRIPT_FAILED','SUBMIT_FAILED','JOB_FAILURE' ,'POST_SCRIPT_FAILED']))
         # jobtype filtering
         if not self._expand and self._get_job_filter() is not None:
             q = q.filter(self._get_job_filter())
@@ -342,78 +340,50 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         q = q.filter(Jobstate.state.in_(states)).subquery()
         return q
         
-    def get_total_unknown_jobs_status(self):
+    def get_total_jobs_retries(self):
         """
-        select count(*) from job_instance jb_inst , job as jb
-        where jb_inst.job_submit_seq  = (
-                select max(job_submit_seq) from job_instance where job_id = jb_inst.job_id group by job_id
-            )
-        and jb_inst.job_instance_id in
-            (
-            select js.job_instance_id from jobstate as js
-            where js.job_instance_id = jb_inst.job_instance_id
-            and js.state = 'SUBMIT'
-            )
-        and jb_inst.job_instance_id not in
-            (
-            select js.job_instance_id from jobstate as js
-            where js.job_instance_id = jb_inst.job_instance_id
-            and js.state in ( 'JOB_SUCCESS', 'JOB_FAILURE')
-        )
-        and jb_inst.job_id  = jb.job_id
-        and jb.wf_id in (
-                1,2,3
-        )
-        and not (jb.type_desc ='dax' or jb.type_desc ='dag' )
+        https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Summary#WorkflowSummary-TotalJobRetries
+        https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Statistics+file#WorkflowStatisticsfile-TotalJobRetries
         """
-        subq_1 = self._query_jobstate_for_instance(['SUBMIT'])
-        subq_2 = self._query_jobstate_for_instance(['JOB_SUCCESS', 'JOB_FAILURE'])
+        d_or_d = self._dax_or_dag_cond()
         
-        maxsub_q = self._max_job_seq_subquery()
-        
-        q = self.session.query(Job.job_id)
-        q = q.filter(JobInstance.job_submit_seq == maxsub_q.as_scalar())
-        q = q.filter(JobInstance.job_instance_id.in_(subq_1))
-        q = q.filter(not_(JobInstance.job_instance_id.in_(subq_2)))
-        q = q.filter(Job.job_id == JobInstance.job_id)
-        q = q.filter(Job.wf_id.in_(self._wfs))
-        # jobtype filtering
+        sq_1 = self.session.query(func.count(Job.job_id))
+        sq_1 = sq_1.filter(Job.wf_id.in_(self._wfs))
+        sq_1 = sq_1.filter(Job.job_id == JobInstance.job_id)
         if not self._expand and self._get_job_filter() is not None:
-            q = q.filter(self._get_job_filter())
+            sq_1 = sq_1.filter(self._get_job_filter())
         else:
-            q = q.filter(not_(self._dax_or_dag_cond()))
+            sq_1 = sq_1.filter(or_(not_(d_or_d), and_(d_or_d, JobInstance.subwf_id == None)))
+        sq_1 = sq_1.subquery()
+
         
-        return q.count()
+        sq_2 = self.session.query(func.count(distinct(JobInstance.job_id)))
+        sq_2 = sq_2.filter(Job.wf_id.in_(self._wfs))
+        sq_2 = sq_2.filter(Job.job_id == JobInstance.job_id)
+        if not self._expand and self._get_job_filter() is not None:
+            sq_2 = sq_2.filter(self._get_job_filter())
+        else:
+            sq_2 = sq_2.filter(or_(not_(d_or_d), and_(d_or_d, JobInstance.subwf_id == None)))
+        sq_2 = sq_2.subquery()
+        
+        q = self.session.query((sq_1.as_scalar() - sq_2.as_scalar()).label('total_job_retries'))
+        
+        return q.all()[0].total_job_retries
         
     def get_total_tasks_status(self):
         """
         select count(*) from task where wf_id in (
             1,2,3
            )
+        https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Summary#WorkflowSummary-Totaltask
+        https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Statistics+file#WorkflowStatisticsfile-Totaltasks
         """
         return self.session.query(Task).filter(Task.wf_id.in_(self._wfs)).count()
         
     def _base_task_status_query(self):
         """
-        select count(*) from
-        task as tk,
-        job_instance as jb_inst,
-        job as jb,
-        invocation as invoc
-        where invoc.wf_id in (
-            1,2,3
-         )
-        and jb_inst.job_submit_seq  = (
-                select max(job_submit_seq) from job_instance where job_id = jb_inst.job_id group by job_id
-            )
-        and tk.wf_id in (
-             1,2,3
-        )
-        and  jb.job_id = jb_inst.job_id
-        and jb_inst.job_instance_id = invoc.job_instance_id
-        and tk.abs_task_id = invoc.abs_task_id
-        and tk.wf_id = invoc.wf_id
-        and invoc.exitcode = 0
+        https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Summary#WorkflowSummary-Totalsucceededtasks
+        https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Statistics+file#WorkflowStatisticsfile-Totalsucceededtasks
         """
         sub_q = self._max_job_seq_subquery()
         
@@ -437,197 +407,61 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         q = q.filter(Invocation.exitcode != 0)
         return q.count()
         
-    #
-    # Statistics of actually run wf components.
-    #
-    
-    def get_total_jobs_statistics(self):
+    def get_total_tasks_retries(self):
         """
-        select count(*)  as total_jobs
-        from
-        job_instance as jb_inst ,
-        job as jb
-        where
-        jb_inst.job_id  = jb.job_id
-        and jb.wf_id in (
-            1,2,3
-        )  
-        and (
-              (not (jb.type_desc ='dax' or jb.type_desc ='dag'))
-            or
-              ((jb.type_desc ='dax' or jb.type_desc ='dag') and jb_inst.subwf_id is NULL)
-           )
+        https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Summary#WorkflowSummary-Totaltaskretries
+        https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Statistics+file#WorkflowStatisticsfile-Totaltaskretries
         """
-        q = self.session.query(Job, JobInstance)
-        q = q.filter(Job.job_id == JobInstance.job_id)
-        q = q.filter(Job.wf_id.in_(self._wfs))
-        # jobtype filtering
-        if not self._expand and self._get_job_filter() is not None:
-            q = q.filter(self._get_job_filter())
-        else:
-            d_or_d = self._dax_or_dag_cond()
-            q = q.filter(or_(not_(d_or_d), and_(d_or_d, JobInstance.subwf_id == None)))
+        sq_1 = self.session.query(func.count(Invocation.invocation_id))
+        sq_1 = sq_1.filter(Invocation.wf_id.in_(self._wfs))
+        sq_1 = sq_1.filter(Invocation.abs_task_id != None)
+        if self._expand:
+            sq_1 = sq_1.filter(Invocation.abs_task_id != 'null')
+        sq_1 = sq_1.subquery()
         
-        return q.count()
+        sq_2 = self.session.query(distinct(Invocation.wf_id), Invocation.abs_task_id)
+        sq_2 = sq_2.filter(Invocation.wf_id.in_(self._wfs))
+        sq_2 = sq_2.filter(Invocation.abs_task_id != None)
+        if self._expand:
+            sq_2 = sq_2.filter(Invocation.abs_task_id != 'null')
+        sq_2 = sq_2.subquery()
         
-    def get_total_succeeded_jobs_statistics(self):
-        """
-        select DISTINCT count(jb.job_id)
-            from
-            job as jb,
-            job_instance as jb_inst,
-            jobstate as jb_state
-            where  jb.wf_id in(
-            1,2,3
-            )
-            and jb.job_id = jb_inst.job_id
-            and not (jb.type_desc ='dax' or jb.type_desc ='dag')
-            and jb_inst.job_instance_id = jb_state.job_instance_id
-            and jb_state.state ='JOB_SUCCESS'
-        """
-        q = self.session.query(Job.job_id).distinct()
-        q = q.filter(Job.wf_id.in_(self._wfs))
-        q = q.filter(Job.job_id == JobInstance.job_id)
-        q = q.filter(JobInstance.job_instance_id == Jobstate.job_instance_id)
-        q = q.filter(Jobstate.state == 'JOB_SUCCESS')
-        # jobtype filtering
-        if not self._expand and self._get_job_filter() is not None:
-            q = q.filter(self._get_job_filter())
-        else:
-            q = q.filter(not_(self._dax_or_dag_cond()))
-
-        return q.count()
-        
-    def get_total_failed_jobs_statistics(self):
-        """
-        select count(*) as job_failure
-        from
-        jobstate as jb_state ,
-        job_instance jb_inst,
-        job as jb
-        where  jb.wf_id in(
-            1,2,3
-              )
-        and jb_state.job_instance_id = jb_inst.job_instance_id
-        and jb.job_id = jb_inst.job_id
-        and jb_state.state = 'JOB_FAILURE'
-        and (
-              (not (jb.type_desc ='dax' or jb.type_desc ='dag'))
-            or
-              ((jb.type_desc ='dax' or jb.type_desc ='dag') and jb_inst.subwf_id is NULL)
-           )
-        """
-        q = self.session.query(Job, JobInstance, Jobstate)
-        q = q.filter(Job.wf_id.in_(self._wfs))
-        q = q.filter(Jobstate.job_instance_id == JobInstance.job_instance_id)
-        q = q.filter(Job.job_id == JobInstance.job_id)
-        q = q.filter(Jobstate.state == 'JOB_FAILURE')
-        # jobtype filtering
-        if not self._expand and self._get_job_filter() is not None:
-            q = q.filter(self._get_job_filter())
-        else:
-            d_or_d = self._dax_or_dag_cond()
-            q = q.filter(or_(not_(d_or_d), and_(d_or_d, JobInstance.subwf_id == None)))
-        
-        return q.count()
-        
-        
-    def _base_task_statistics_query(self):
-        q = self.session.query(Invocation)
-        q = q.filter(Invocation.wf_id.in_(self._wfs))
-        q = q.filter(Invocation.task_submit_seq >= 0)
-        return q
-        
-    def get_total_tasks_statistics(self):
-        """
-        select count(*) from invocation as invoc where invoc.task_submit_seq >=0 and invoc.wf_id in  (
-              1,2,3
-         )
-        """
-        q = self._base_task_statistics_query()
-        return q.count()
-        
-    def get_total_succeeded_tasks_statistics(self):
-        """
-        select count(*) as succeeded_tasks
-        from
-        invocation as invoc
-        where
-        invoc.wf_id in  (
-            1,2,3
-        )
-        and invoc.exitcode = 0
-        and invoc.task_submit_seq >=0
-        """
-        q = self._base_task_statistics_query()
-        q = q.filter(Invocation.exitcode == 0)
-        return q.count()
-        
-    def get_total_failed_tasks_statistics(self):
-        """
-        select count(*) as failed_tasks
-        from
-        invocation as invoc
-        where
-        invoc.wf_id in  (
-            1,2,3
-        )
-        and invoc.exitcode <> 0
-        and invoc.task_submit_seq >=0
-        """
-        q = self._base_task_statistics_query()
-        q = q.filter(Invocation.exitcode != 0)
-        return q.count()
+        q = self.session.query((sq_1.as_scalar() - sq_2.count()).label('total_task_retries'))
+        return q.all()[0].total_task_retries
         
     #
     # Run statistics
     #
-    
-    def get_workflow_wall_time(self):
+
+    def get_workflow_states(self):
         """
-        select ws.wf_id,
-        sum(case when (ws.state == 'WORKFLOW_TERMINATED') then ws.timestamp end)
-        -
-        sum (case when (ws.state == 'WORKFLOW_STARTED') then ws.timestamp end) as duration
-        from workflowstate ws
-        group by ws.wf_id
+        https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Summary#WorkflowSummary-Workflowwalltime
+        https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Statistics+file#WorkflowStatisticsfile-Workflowwalltime
         """
-        q = self.session.query(
-            Workflowstate.wf_id,
-            (
-                func.sum(case([(Workflowstate.state == 'WORKFLOW_TERMINATED', Workflowstate.timestamp)]))
-                -
-                func.sum(case([(Workflowstate.state == 'WORKFLOW_STARTED', Workflowstate.timestamp)]))
-            ).label('duration')
-        ).filter(Workflowstate.wf_id.in_(self._wfs)).group_by(Workflowstate.wf_id)
-        
+        q = self.session.query(Workflowstate.wf_id, Workflowstate.state, Workflowstate.timestamp)
+        q = q.filter(Workflowstate.wf_id.in_(self._wfs)).order_by(Workflowstate.restart_count)
+
         return q.all()
-        
+
     def get_workflow_cum_job_wall_time(self):
         """
         select sum(remote_duration) from invocation as invoc 
            where  invoc.task_submit_seq >=0 and invoc.wf_id in(
               1,2,3
            )
+        https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Summary#WorkflowSummary-Workflowcumulativejobwalltime
+        https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Statistics+file#WorkflowStatisticsfile-Workflowcumulativejobwalltime
         """
         q = self.session.query(func.sum(Invocation.remote_duration))
         q = q.filter(Invocation.task_submit_seq >= 0)
         q = q.filter(Invocation.wf_id.in_(self._wfs))
+        q = q.filter(Invocation.transformation != 'condor::dagman')
         return q.first()[0]
-        
+
     def get_submit_side_job_wall_time(self):
         """
-        select sum(local_duration) from job_instance as jb_inst , job as jb where
-        jb_inst.job_id  = jb.job_id
-        and jb.wf_id in (
-            1,2,3
-        )
-        and (
-              (not (jb.type_desc ='dax' or jb.type_desc ='dag'))
-            or
-              ((jb.type_desc ='dax' or jb.type_desc ='dag') and jb_inst.subwf_id is NULL)
-           )
-           
+        https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Summary#WorkflowSummary-Cumulativejobwalltimeasseenfromsubmitside
+        https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Statistics+file#WorkflowStatisticsfile-Cumulativejobwalltimeasseenfromsubmitside
         """
         q = self.session.query(func.sum(JobInstance.local_duration).label('wall_time'))
         q = q.filter(JobInstance.job_id == Job.job_id)
@@ -635,378 +469,369 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         if self._expand:
             d_or_d = self._dax_or_dag_cond()
             q = q.filter(or_(not_(d_or_d), and_(d_or_d, JobInstance.subwf_id == None)))
-        
+
         return q.first().wall_time
         
+    def get_workflow_details(self):
+        """
+        https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Statistics+file#WorkflowStatisticsfile-Workflowdetails
+        """
+        q = self.session.query(Workflow.wf_id, Workflow.wf_uuid,
+            Workflow.parent_wf_id, Workflow.root_wf_id, Workflow.dag_file_name,
+            Workflow.submit_hostname, Workflow.submit_dir, Workflow.planner_arguments,
+            Workflow.user, Workflow.grid_dn, Workflow.planner_version,
+            Workflow.dax_label, Workflow.dax_version)
+        q = q.filter(Workflow.wf_id.in_(self._wfs))
+        return q.all()
+        
+    def get_workflow_retries(self):
+        """
+        https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Statistics+file#WorkflowStatisticsfile-Workflowretries
+        """
+        if not self._expand:
+            q = self.session.query(func.max(Workflowstate.restart_count))
+            q = q.filter(Workflowstate.wf_id.in_(self._wfs))
+            return q.one()[0]
+        else:
+            return None
+    
     #
     # Job Statistics
+    # These queries are documented:
+    # https://confluence.pegasus.isi.edu/display/pegasus/Job+Statistics+file
     #
     
-    def get_job_name(self):
+    def get_job_statistics(self):
         """
-        select jb.job_id, jb.exec_job_id as job_name
-         from
-         job as jb,
-         job_instance as jb_inst
-         where
-         jb_inst.job_id = jb.job_id
-         and jb.wf_id = 3
-         group by jb.job_id
+        https://confluence.pegasus.isi.edu/display/pegasus/Job+Statistics+file#JobStatisticsfile-All
         """
         if self._expand:
             return []
-        q = self.session.query(Job.job_id, Job.exec_job_id.label('job_name'))
+        sq_1 = self.session.query(func.min(Jobstate.timestamp))
+        sq_1 = sq_1.filter(Jobstate.job_instance_id == JobInstance.job_instance_id).correlate(JobInstance)
+        sq_1 = sq_1.filter(or_(Jobstate.state == 'GRID_SUBMIT', Jobstate.state == 'GLOBUS_SUBMIT',
+                                Jobstate.state == 'EXECUTE'))
+        sq_1 = sq_1.subquery()
+        
+        sq_2 = self.session.query(Jobstate.timestamp)
+        sq_2 = sq_2.filter(Jobstate.job_instance_id == JobInstance.job_instance_id).correlate(JobInstance)
+        sq_2 = sq_2.filter(Jobstate.state == 'SUBMIT')
+        sq_2 = sq_2.subquery()
+        
+        sq_3 = self.session.query(func.min(Jobstate.timestamp))
+        sq_3 = sq_3.filter(Jobstate.job_instance_id == JobInstance.job_instance_id).correlate(JobInstance)
+        sq_3 = sq_3.filter(Jobstate.state == 'EXECUTE')
+        sq_3 = sq_3.subquery()
+        
+        sq_4 = self.session.query(Jobstate.timestamp)
+        sq_4 = sq_4.filter(Jobstate.job_instance_id == JobInstance.job_instance_id).correlate(JobInstance)
+        sq_4 = sq_4.filter(or_(Jobstate.state == 'GRID_SUBMIT', Jobstate.state == 'GLOBUS_SUBMIT'))
+        sq_4 = sq_4.subquery()
+        
+        sq_5 = self.session.query(func.sum(Invocation.remote_duration))
+        sq_5 = sq_5.filter(Invocation.job_instance_id == JobInstance.job_instance_id).correlate(JobInstance)
+        sq_5 = sq_5.filter(Invocation.wf_id == Job.wf_id).correlate(Job)
+        sq_5 = sq_5.filter(Invocation.task_submit_seq >= 0)
+        sq_5 = sq_5.group_by().subquery()
+        
+        sq_6 = self.session.query(Jobstate.timestamp)
+        sq_6 = sq_6.filter(Jobstate.job_instance_id == JobInstance.job_instance_id).correlate(JobInstance)
+        sq_6 = sq_6.filter(Jobstate.state == 'POST_SCRIPT_TERMINATED')
+        sq_6 = sq_6.subquery()
+        
+        sq_7 = self.session.query(func.max(Jobstate.timestamp))
+        sq_7 = sq_7.filter(Jobstate.job_instance_id == JobInstance.job_instance_id).correlate(JobInstance)
+        sq_7 = sq_7.filter(or_(Jobstate.state == 'POST_SCRIPT_STARTED', Jobstate.state == 'JOB_TERMINATED'))
+        sq_7 = sq_7.subquery()
+        
+        
+        q = self.session.query(Job.job_id, JobInstance.job_instance_id, JobInstance.job_submit_seq,
+            Job.exec_job_id.label('job_name'), JobInstance.site,
+            cast(sq_1.as_scalar() - sq_2.as_scalar(), Float).label('condor_q_time'),
+            cast(sq_3.as_scalar() - sq_4.as_scalar(), Float).label('resource_delay'),
+            cast(JobInstance.local_duration, Float).label('runtime'),
+            cast(sq_5.as_scalar(), Float).label('kickstart'),
+            cast(sq_6.as_scalar() - sq_7.as_scalar(), Float).label('post_time'),
+            cast(JobInstance.cluster_duration, Float).label('seqexec'))
+        q = q.filter(JobInstance.job_id == Job.job_id)
+        q = q.filter(Job.wf_id.in_(self._wfs))
+        
+        return q.all()
+        
+    def _state_sub_q(self, states, function=None):
+        sq = None
+        if not function:
+            sq = self.session.query(Jobstate.timestamp)
+        elif function == 'max':
+            sq = self.session.query(func.max(Jobstate.timestamp))
+        elif function == 'min':
+            sq = self.session.query(func.min(Jobstate.timestamp))
+        sq = sq.filter(Jobstate.job_instance_id == JobInstance.job_instance_id).correlate(JobInstance)
+        sq = sq.filter(Jobstate.state.in_(states)).subquery()
+        return sq
+        
+    def get_job_states(self):
+        """
+        https://confluence.pegasus.isi.edu/display/pegasus/Job+Statistics+file#JobStatisticsfile-JobStates
+        """
+        if self._expand:
+            return []
+        sq_1 = self.session.query(Host.hostname).filter(Host.host_id == JobInstance.host_id).correlate(JobInstance).subquery()
+        #select min(timestamp) from jobstate where job_instance_id = jb_inst.job_instance_id
+        # ) as jobS ,
+        #(
+        #select max(timestamp)-min(timestamp) from jobstate where job_instance_id = jb_inst.job_instance_id
+        # ) as jobDuration,
+        
+        sq_jobS = self.session.query(func.min(Jobstate.timestamp))
+        sq_jobS = sq_jobS.filter(Jobstate.job_instance_id == JobInstance.job_instance_id).correlate(JobInstance).subquery()
+        
+        sq_jobD = self.session.query(func.max(Jobstate.timestamp) - func.min(Jobstate.timestamp))
+        sq_jobD = sq_jobD.filter(Jobstate.job_instance_id == JobInstance.job_instance_id).correlate(JobInstance).subquery()
+        
+        sq_2 = self._state_sub_q(['PRE_SCRIPT_STARTED'])
+        sq_3 = self._state_sub_q(['PRE_SCRIPT_TERMINATED'])
+        sq_4 = self._state_sub_q(['PRE_SCRIPT_STARTED'])
+        sq_5 = self._state_sub_q(['SUBMIT'])
+        sq_6 = self._state_sub_q(['JOB_TERMINATED'])
+        sq_7 = self._state_sub_q(['GRID_SUBMIT', 'GLOBUS_SUBMIT'])
+        sq_8 = self._state_sub_q(['EXECUTE'], 'min')
+        sq_9 = self._state_sub_q(['EXECUTE', 'SUBMIT'], 'max')
+        sq_10 = self._state_sub_q(['JOB_TERMINATED'])
+
+        sq_11 = self.session.query(func.min(Invocation.start_time))
+        sq_11 = sq_11.filter(Invocation.job_instance_id == JobInstance.job_instance_id).correlate(JobInstance)
+        sq_11 = sq_11.filter(Invocation.wf_id == Job.wf_id).correlate(Job)
+        sq_11 = sq_11.filter(Invocation.task_submit_seq >= 0)
+        sq_11 = sq_11.group_by(Invocation.job_instance_id).subquery()
+
+        sq_12 = self.session.query(func.sum(Invocation.remote_duration))
+        sq_12 = sq_12.filter(Invocation.job_instance_id == JobInstance.job_instance_id).correlate(JobInstance)
+        sq_12 = sq_12.filter(Invocation.wf_id == Job.wf_id).correlate(Job)
+        sq_12 = sq_12.filter(Invocation.task_submit_seq >= 0)
+        sq_12 = sq_12.group_by(Invocation.job_instance_id).subquery()
+        
+        sq_13 = self._state_sub_q(['POST_SCRIPT_STARTED', 'JOB_TERMINATED'], 'max')
+        sq_14 = self._state_sub_q(['POST_SCRIPT_TERMINATED'])
+        
+        sq_15 = self.session.query(func.group_concat(func.distinct(Invocation.transformation)))
+        sq_15 = sq_15.filter(Invocation.wf_id.in_(self._wfs))
+        sq_15 = sq_15.filter(Invocation.job_instance_id == JobInstance.job_instance_id).correlate(JobInstance)
+        sq_15 = sq_15.filter(Invocation.transformation != 'dagman::post')
+        sq_15 = sq_15.filter(Invocation.transformation != 'dagman::pre')
+        sq_15 = sq_15.subquery()
+        
+        q = self.session.query(Job.job_id, JobInstance.job_instance_id, JobInstance.job_submit_seq,
+                Job.exec_job_id.label('job_name'), JobInstance.site,
+                sq_1.as_scalar().label('host_name'),
+                cast(sq_jobS.as_scalar(), Float).label('jobS'),
+                cast(sq_jobD.as_scalar(), Float).label('jobDuration'),
+                cast(sq_2.as_scalar(), Float).label('pre_start'),
+                cast(sq_3.as_scalar() - sq_4.as_scalar(), Float).label('pre_duration'),
+                cast(sq_5.as_scalar(), Float).label('condor_start'),
+                cast(sq_6.as_scalar() - sq_5.as_scalar(), Float).label('condor_duration'),
+                cast(sq_7.as_scalar(), Float).label('grid_start'),
+                cast(sq_8.as_scalar() - sq_7.as_scalar(), Float).label('grid_duration'),
+                cast(sq_9.as_scalar(), Float).label('exec_start'),
+                cast(sq_10.as_scalar() - sq_9.as_scalar(), Float).label('exec_duration'),
+                cast(sq_11.as_scalar(), Float).label('kickstart_start'),
+                cast(sq_12.as_scalar(), Float).label('kickstart_duration'),
+                cast(sq_13.as_scalar(), Float).label('post_start'),
+                cast(sq_14.as_scalar() - sq_13.as_scalar(), Float).label('post_duration'),
+                sq_15.as_scalar().label('transformation')
+                )
+        q = q.filter(JobInstance.job_id == Job.job_id)
+        q = q.filter(Job.wf_id.in_(self._wfs))
+        q = q.order_by(JobInstance.job_submit_seq)
+        
+        return q.all()
+        
+    def get_job_instance_sub_wf_map(self):
+        """
+        https://confluence.pegasus.isi.edu/display/pegasus/Job+Statistics+file#JobStatisticsfile-Subworkflowjobinstancesmapping
+        """
+        if self._expand:
+            return []
+        q = self.session.query(JobInstance.job_instance_id, JobInstance.subwf_id)
+        q = q.filter(Job.wf_id.in_(self._wfs))
         q = q.filter(Job.job_id == JobInstance.job_id)
-        q = q.filter(Job.wf_id.in_(self._wfs)).group_by(Job.job_id)
+        q = q.filter(self._dax_or_dag_cond())
+        return q.all()
+        
+    def get_failed_job_instances(self):
+        """
+        https://confluence.pegasus.isi.edu/display/pegasus/Job+Statistics+file#JobStatisticsfile-Failedjobinstances
+        """
+        if self._expand:
+            return []
+        d_or_d = self._dax_or_dag_cond()
+        
+        q = self.session.query(JobInstance.job_instance_id)
+        q = q.filter(Job.wf_id.in_(self._wfs))
+        q = q.filter(Job.job_id == JobInstance.job_id)
+        q = q.filter(JobInstance.job_instance_id == Jobstate.job_instance_id)
+        q = q.filter(or_(not_(d_or_d), and_(d_or_d, JobInstance.subwf_id == None)))
+        q = q.filter(Jobstate.state.in_(['PRE_SCRIPT_FAILED','SUBMIT_FAILED','JOB_FAILURE' ,'POST_SCRIPT_FAILED']))
+        
+        return q.all()
+    
+    def get_job_name(self):
+        """
+        https://confluence.pegasus.isi.edu/display/pegasus/Job+Statistics+file#JobStatisticsfile-Name
+        """
+        if self._expand:
+            return []
+        q = self.session.query(Job.job_id, JobInstance.job_instance_id, JobInstance.job_submit_seq,
+            Job.exec_job_id.label('job_name'))
+        q = q.filter(Job.job_id == JobInstance.job_id)
+        q = q.filter(Job.wf_id.in_(self._wfs)).order_by(JobInstance.job_submit_seq)
         return q.all()
         
     def get_job_site(self):
         """
-        select job_id , group_concat(site) as sites from
-        (
-        select DISTINCT jb.job_id as job_id , jb_inst.site as site
-        from
-        job as jb,
-        job_instance as jb_inst
-        where
-        jb.wf_id = 3
-        and jb_inst.job_id = jb.job_id
-        ) group by job_id
+        https://confluence.pegasus.isi.edu/display/pegasus/Job+Statistics+file#JobStatisticsfile-Site
         """
         if self._expand:
             return []
-        q = self.session.query(Job.job_id, func.group_concat(JobInstance.site).label('sites'))
+        q = self.session.query(Job.job_id, JobInstance.job_instance_id, JobInstance.job_submit_seq,
+            JobInstance.site)
         q = q.filter(Job.wf_id.in_(self._wfs))
         q = q.filter(Job.job_id == JobInstance.job_id).group_by(Job.job_id)
+        q = q.order_by(JobInstance.job_submit_seq)
         return q.all()
         
     def get_job_kickstart(self):
         """
-        select jb.job_id,
-        jb.exec_job_id as job_name ,
-        sum(remote_duration) as kickstart
-        from
-        job as jb,
-        invocation as invoc,
-        job_instance as jb_inst
-        where
-        jb_inst.job_id = jb.job_id
-        and jb.wf_id = 3
-        and invoc.wf_id =3
-        and invoc.task_submit_seq >=0
-        and invoc.job_instance_id = jb_inst.job_instance_id
-        group by jb.job_id
+        https://confluence.pegasus.isi.edu/display/pegasus/Job+Statistics+file#JobStatisticsfile-Kickstart
         """
         if self._expand:
             return []
-        q = self.session.query(Job.job_id, Job.exec_job_id.label('job_name'),
-                    func.sum(Invocation.remote_duration).label('kickstart'))
-        q = q.filter(Job.job_id == JobInstance.job_id)
+            
+        sq_1 = self.session.query(func.sum(Invocation.remote_duration))
+        sq_1 = sq_1.filter(Invocation.job_instance_id == JobInstance.job_instance_id).correlate(JobInstance)
+        sq_1 = sq_1.filter(Invocation.wf_id == Job.wf_id).correlate(Job)
+        sq_1 = sq_1.filter(Invocation.task_submit_seq >= 0)
+        sq_1 = sq_1.group_by(Invocation.job_instance_id)
+        sq_1 = sq_1.subquery()
+            
+        q = self.session.query(Job.job_id, JobInstance.job_instance_id, JobInstance.job_submit_seq,
+            cast(sq_1.as_scalar(), Float).label('kickstart'))
+        q = q.filter(JobInstance.job_id == Job.job_id)
         q = q.filter(Job.wf_id.in_(self._wfs))
-        q = q.filter(Invocation.wf_id.in_(self._wfs))
-        q = q.filter(Invocation.task_submit_seq >= 0)
-        q = q.filter(Invocation.job_instance_id == JobInstance.job_instance_id)
-        q = q.group_by(Job.job_id, Job.exec_job_id).order_by(Job.job_id)
-        
+        q = q.order_by(JobInstance.job_submit_seq)
         return q.all()
         
     def get_job_runtime(self):
         """
-        select jb.job_id,
-        sum(jb_inst.local_duration) as runtime
-        from
-        job as jb,
-        job_instance as jb_inst
-        where
-        jb_inst.job_id = jb.job_id
-        and jb.wf_id = 3
-        group by jb.job_id
+        https://confluence.pegasus.isi.edu/display/pegasus/Job+Statistics+file#JobStatisticsfile-Runtime
         """
         if self._expand:
             return []
-        q = self.session.query(Job.job_id, func.sum(JobInstance.local_duration).label('runtime'))
+            
+        q = self.session.query(Job.job_id, JobInstance.job_instance_id, JobInstance.job_submit_seq,
+            JobInstance.local_duration.label('runtime'))
         q = q.filter(Job.job_id == JobInstance.job_id)
         q = q.filter(Job.wf_id.in_(self._wfs))
-        q = q.group_by(Job.job_id).order_by(Job.job_id)
+        q = q.group_by(Job.job_id).order_by(JobInstance.job_submit_seq)
         
         return q.all()
         
     def get_job_seqexec(self):
         """
-        select jb.job_id,
-        sum(jb_inst.cluster_duration) as seqexec
-        from
-        job as jb,
-        job_instance as jb_inst
-        where
-        jb_inst.job_id = jb.job_id
-        and jb.wf_id = 3
-        group by jb.job_id
+        https://confluence.pegasus.isi.edu/display/pegasus/Job+Statistics+file#JobStatisticsfile-Seqexec
         """
         if self._expand:
             return []
-        q = self.session.query(Job.job_id, func.sum(JobInstance.cluster_duration).label('seqexec'))
+        q = self.session.query(Job.job_id, JobInstance.job_instance_id, JobInstance.job_submit_seq,
+            JobInstance.cluster_duration)
         q = q.filter(Job.job_id == JobInstance.job_id)
         q = q.filter(Job.wf_id.in_(self._wfs))
-        q = q.group_by(Job.job_id).order_by(Job.job_id)
-        
-        return q.all()
-        
-    def get_job_seqexec_delay(self):
-        """
-        Seqexec Delay is Seqexec - Kickstart calculated above.
-        
-        select jb.job_id,
-        (
-         (
-         select sum(jb_inst.cluster_duration)
-         from
-         job_instance as jb_inst
-         where
-         jb_inst.job_id = jb.job_id
-         group by jb_inst.job_id
-         )
-        -
-         (
-         select sum(remote_duration)
-         from
-         invocation as invoc,
-         job_instance as jb_inst
-         where
-         jb_inst.job_id = jb.job_id
-         and invoc.wf_id =jb.wf_id
-         and invoc.task_submit_seq >=0
-         and invoc.job_instance_id = jb_inst.job_instance_id
-         group by jb_inst.job_id
-         )
-        ) as seqexec_delay
-        from
-        job as jb
-        where jb.wf_id in (1,2,3)
-        and jb.clustered <>0
-        """
-        if self._expand:
-            return []
-        
-        sq_1 = self.session.query(func.sum(JobInstance.cluster_duration))
-        sq_1 = sq_1.filter(JobInstance.job_id == Job.job_id).correlate(Job)
-        sq_1 = sq_1.group_by(JobInstance.job_id).subquery().as_scalar()
-        
-        sq_2 = self.session.query(func.sum(Invocation.remote_duration))
-        sq_2 = sq_2.filter(JobInstance.job_id == Job.job_id).correlate(Job)
-        sq_2 = sq_2.filter(Invocation.wf_id == Job.wf_id)
-        sq_2 = sq_2.filter(Invocation.task_submit_seq >= 0)
-        sq_2 = sq_2.filter(Invocation.job_instance_id == JobInstance.job_instance_id)
-        sq_2 = sq_2.group_by(JobInstance.job_id).subquery().as_scalar()
-        
-        q = self.session.query(Job.job_id, cast(sq_1 - sq_2, Float))
-        q = q.filter(Job.wf_id.in_(self._wfs))
         q = q.filter(Job.clustered != 0)
-        q = q.order_by(Job.job_id)
+        q = q.order_by(JobInstance.job_submit_seq)
         
         return q.all()
     
     def get_condor_q_time(self):
         """
-        select job_id, job_name, sum(cQTime) as condorQTime from
-        (
-        select jb.exec_job_id as job_name,  jb.job_id as job_id, jb_inst.job_instance_id ,
-            (
-                (select min(timestamp) from jobstate where job_instance_id = jb_inst.job_instance_id and (state = 'GRID_SUBMIT' or state = 'GLOBUS_SUBMIT' or state = 'EXECUTE'))
-                -
-                (select timestamp from jobstate where job_instance_id = jb_inst.job_instance_id and state = 'SUBMIT' )
-            )   as cQTime
-        from
-        job_instance as jb_inst,
-        job as jb
-        where jb_inst.job_id =jb.job_id
-        and jb.wf_id = 2
-        )   group by job_id
+        https://confluence.pegasus.isi.edu/display/pegasus/Job+Statistics+file#JobStatisticsfile-CondorQTime
         """
         if self._expand:
             return []
-        sq_1 = self.session.query(func.min(Jobstate.timestamp).label('ts'))
-        sq_1 = sq_1.filter(Jobstate.job_instance_id == JobInstance.job_instance_id)
-        sq_1 = sq_1.filter(or_(Jobstate.state == 'GRID_SUBMIT', 
-                    Jobstate.state == 'GLOBUS_SUBMIT', Jobstate.state == 'EXECUTE')).correlate(JobInstance)
-        sq_1 = sq_1.subquery().as_scalar()
+            
+        sq_1 = self.session.query(func.min(Jobstate.timestamp))
+        sq_1 = sq_1.filter(Jobstate.job_instance_id == JobInstance.job_instance_id).correlate(JobInstance)
+        sq_1 = sq_1.filter(or_(Jobstate.state == 'GRID_SUBMIT', Jobstate.state == 'GLOBUS_SUBMIT',
+                                Jobstate.state == 'EXECUTE'))
+        sq_1 = sq_1.subquery()
         
-        sq_2 = self.session.query(Jobstate.timestamp.label('ts'))
-        sq_2 = sq_2.filter(Jobstate.job_instance_id == JobInstance.job_instance_id)
-        sq_2 = sq_2.filter(Jobstate.state == 'SUBMIT').correlate(JobInstance)
-        sq_2 = sq_2.subquery().as_scalar()
+        sq_2 = self.session.query(Jobstate.timestamp)
+        sq_2 = sq_2.filter(Jobstate.job_instance_id == JobInstance.job_instance_id).correlate(JobInstance)
+        sq_2 = sq_2.filter(Jobstate.state == 'SUBMIT')
+        sq_2 = sq_2.subquery()
         
-        q = self.session.query(Job.exec_job_id.label('job_name'), Job.job_id, JobInstance.job_instance_id,
-            cast(sq_1 - sq_2, Float).label('cQTime'))
+        q = self.session.query(Job.job_id, JobInstance.job_instance_id, JobInstance.job_submit_seq,
+                cast(sq_1.as_scalar() - sq_2.as_scalar(), Float).label('condor_q_time'))
         q = q.filter(JobInstance.job_id == Job.job_id)
         q = q.filter(Job.wf_id.in_(self._wfs))
-        q = q.order_by(Job.job_id).subquery()
-        
-        main = self.session.query(q.c.job_id, q.c.job_name, func.sum(q.c.cQTime).label('condorQTime'))
-        main = main.group_by(q.c.job_id)
-        
-        return main.all()
+        q = q.order_by(JobInstance.job_submit_seq)
+
+        return q.all()
         
     def get_resource_delay(self):
         """
-        select job_id, job_name, sum(rTime) as resourceTime from
-        (
-        select jb.exec_job_id as job_name,  jb.job_id as job_id, jb_inst.job_instance_id ,
-            (
-                     (select timestamp from jobstate where job_instance_id = jb_inst.job_instance_id and state = 'EXECUTE' )  
-                -
-                    (select timestamp from jobstate where job_instance_id = jb_inst.job_instance_id and (state = 'GRID_SUBMIT' or state ='GLOBUS_SUBMIT'))
-            )   as rTime
-        from
-        job_instance as jb_inst,
-        job as jb
-        where jb_inst.job_id =jb.job_id
-        and jb.wf_id = 2
-        )   group by job_id
+        https://confluence.pegasus.isi.edu/display/pegasus/Job+Statistics+file#JobStatisticsfile-Resource
         """
         if self._expand:
             return []
-        sq_1 = self.session.query(Jobstate.timestamp.label('ts'))
-        sq_1 = sq_1.filter(Jobstate.job_instance_id == JobInstance.job_instance_id)
-        sq_1 = sq_1.filter(Jobstate.state == 'EXECUTE').correlate(JobInstance)
-        sq_1 = sq_1.subquery().as_scalar()
         
-        sq_2 = self.session.query(Jobstate.timestamp.label('ts'))
-        sq_2 = sq_2.filter(Jobstate.job_instance_id == JobInstance.job_instance_id)
-        sq_2 = sq_2.filter(or_(Jobstate.state == 'GRID_SUBMIT', 
-                    Jobstate.state == 'GLOBUS_SUBMIT')).correlate(JobInstance)
-        sq_2 = sq_2.subquery().as_scalar()
+        sq_1 = self.session.query(func.min(Jobstate.timestamp))
+        sq_1 = sq_1.filter(Jobstate.job_instance_id == JobInstance.job_instance_id).correlate(JobInstance)
+        sq_1 = sq_1.filter(Jobstate.state == 'EXECUTE')
+        sq_1 = sq_1.subquery()
+
+        sq_2 = self.session.query(Jobstate.timestamp)
+        sq_2 = sq_2.filter(Jobstate.job_instance_id == JobInstance.job_instance_id).correlate(JobInstance)
+        sq_2 = sq_2.filter(or_(Jobstate.state == 'GRID_SUBMIT', Jobstate.state == 'GLOBUS_SUBMIT'))
+        sq_2 = sq_2.subquery()
         
-        q = self.session.query(Job.exec_job_id.label('job_name'), Job.job_id, JobInstance.job_instance_id,
-            cast(sq_1 - sq_2, Float).label('rTime'))
+        q = self.session.query(Job.job_id, JobInstance.job_instance_id, JobInstance.job_submit_seq,
+                cast(sq_1.as_scalar() - sq_2.as_scalar(), Float).label('resource_delay'))
         q = q.filter(JobInstance.job_id == Job.job_id)
         q = q.filter(Job.wf_id.in_(self._wfs))
-        q = q.order_by(Job.job_id).subquery()
-        
-        main = self.session.query(q.c.job_id, q.c.job_name, func.sum(q.c.rTime).label('resourceTime'))
-        main = main.group_by(q.c.job_id)
-        
-        return main.all()
-        
-    def get_dagman_delay(self):
-        """
-        select jb.exec_job_id as job_name,  
-        (
-          (
-           select min(timestamp)
-           from jobstate
-           where job_instance_id in 
-             (select job_instance_id from job_instance as jb_inst where jb_inst.job_id = jb.job_id )  
-           and state ='SUBMIT'
-          )
-          -
-          (
-           select max(timestamp)
-           from jobstate
-           where job_instance_id in 
-              (select job_instance_id from job_instance as jb_inst where jb_inst.job_id in
-                (
-                  select
-                  parent.job_id as parent_job_id
-                  from
-                  job as parent,
-                  job as child,
-                  job_edge as edge
-                  where
-                  edge.wf_id = 2
-                  and parent.wf_id = 2
-                  and child.wf_id = 2
-                  and child.job_id = jb.job_id
-                  and edge.parent_exec_job_id like parent.exec_job_id
-                  and edge.child_exec_job_id like child.exec_job_id
-                 )
-               )
-           and (state = 'POST_SCRIPT_TERMINATED' or state ='JOB_TERMINATED')
-          )
-        )   as dagmanDelay
-        from
-        job as jb where
-        jb.wf_id =2
-        """
-        if self._expand:
-            return []
-        # topmost nested queries
-        sq_1 = self.session.query(JobInstance.job_instance_id)
-        sq_1 = sq_1.filter(JobInstance.job_id == Job.job_id).correlate(Job)
-        sq_1 = sq_1.subquery()
-        
-        sq_2 = self.session.query(func.min(Jobstate.timestamp))
-        sq_2 = sq_2.filter(Jobstate.job_instance_id.in_(sq_1))
-        sq_2 = sq_2.filter(Jobstate.state == 'SUBMIT').subquery().as_scalar()
-
-        # lower nested queries
-        Parent = orm.aliased(Job)
-        Child  = orm.aliased(Job)
-        
-        sq_3 = self.session.query(Parent.job_id.label('parent_job_id'))
-        sq_3 = sq_3.filter(JobEdge.wf_id.in_(self._wfs))
-        sq_3 = sq_3.filter(Parent.wf_id.in_(self._wfs))
-        sq_3 = sq_3.filter(Child.wf_id.in_(self._wfs))
-        sq_3 = sq_3.filter(Child.job_id == Job.job_id).correlate(Job)
-        sq_3 = sq_3.filter(JobEdge.parent_exec_job_id.like(Parent.exec_job_id))
-        sq_3 = sq_3.filter(JobEdge.child_exec_job_id.like(Child.exec_job_id))
-        sq_3 = sq_3.subquery()
-        
-        sq_4 = self.session.query(JobInstance.job_instance_id)
-        sq_4 = sq_4.filter(JobInstance.job_id.in_(sq_3)).subquery()
-        
-        sq_5 = self.session.query(func.max(Jobstate.timestamp))
-        sq_5 = sq_5.filter(Jobstate.job_instance_id.in_(sq_4))
-        sq_5 = sq_5.filter(or_(Jobstate.state == 'POST_SCRIPT_TERMINATED', Jobstate.state == 'JOB_TERMINATED'))
-        sq_5 = sq_5.subquery().as_scalar()
-        
-        q = self.session.query(Job.job_id, Job.exec_job_id.label('job_name'), 
-                        cast(sq_2 - sq_5, Float).label('dagmanDelay'))
-        
-        q = q.filter(Job.wf_id.in_(self._wfs))
+        q = q.order_by(JobInstance.job_submit_seq)
         
         return q.all()
         
     def get_post_time(self):
         """
-        select job_id, job_name, sum(pTime) as postTime from
-        (
-        select jb.exec_job_id as job_name,  jb.job_id as job_id, jb_inst.job_instance_id ,
-            (
-                     (select timestamp from jobstate where job_instance_id = jb_inst.job_instance_id and state = 'POST_SCRIPT_TERMINATED')
-                -
-                    (select max(timestamp) from jobstate  where job_instance_id = jb_inst.job_instance_id  and (state ='POST_SCRIPT_STARTED' or state ='JOB_TERMINATED'))
-            )   as pTime
-        from
-        job_instance as jb_inst,
-        job as jb
-        where jb_inst.job_id =jb.job_id
-        and jb.wf_id = 2
-        ) group by job_id
+        https://confluence.pegasus.isi.edu/display/pegasus/Job+Statistics+file#JobStatisticsfile-Post
         """
         if self._expand:
             return []
-        sq_1 = self.session.query(Jobstate.timestamp.label('ts'))
-        sq_1 = sq_1.filter(Jobstate.job_instance_id == JobInstance.job_instance_id)
-        sq_1 = sq_1.filter(Jobstate.state == 'POST_SCRIPT_TERMINATED').correlate(JobInstance)
-        sq_1 = sq_1.subquery().as_scalar()
-        
-        sq_2 = self.session.query(func.max(Jobstate.timestamp).label('ts'))
-        sq_2 = sq_2.filter(Jobstate.job_instance_id == JobInstance.job_instance_id)
-        sq_2 = sq_2.filter(or_(Jobstate.state == 'POST_SCRIPT_STARTED', 
-                    Jobstate.state == 'JOB_TERMINATED')).correlate(JobInstance)
-        sq_2 = sq_2.subquery().as_scalar()
-        
-        q = self.session.query(Job.exec_job_id.label('job_name'), Job.job_id, JobInstance.job_instance_id,
-            cast(sq_1 - sq_2, Float).label('pTime'))
+            
+        sq_1 = self.session.query(Jobstate.timestamp)
+        sq_1 = sq_1.filter(Jobstate.job_instance_id == JobInstance.job_instance_id).correlate(JobInstance)
+        sq_1 = sq_1.filter(Jobstate.state == 'POST_SCRIPT_TERMINATED')
+        sq_1 = sq_1.subquery()
+
+        sq_2 = self.session.query(func.max(Jobstate.timestamp))
+        sq_2 = sq_2.filter(Jobstate.job_instance_id == JobInstance.job_instance_id).correlate(JobInstance)
+        sq_2 = sq_2.filter(or_(Jobstate.state == 'POST_SCRIPT_STARTED', Jobstate.state == 'JOB_TERMINATED'))
+        sq_2 = sq_2.subquery()
+
+        q = self.session.query(Job.job_id, JobInstance.job_instance_id, JobInstance.job_submit_seq,
+                cast(sq_1.as_scalar() - sq_2.as_scalar(), Float).label('post_time'))
         q = q.filter(JobInstance.job_id == Job.job_id)
         q = q.filter(Job.wf_id.in_(self._wfs))
-        q = q.order_by(Job.job_id).subquery()
+        q = q.order_by(JobInstance.job_submit_seq)
         
-        main = self.session.query(q.c.job_id, q.c.job_name, func.sum(q.c.pTime).label('postTime'))
-        main = main.group_by(q.c.job_id)
+        return q.all()
         
-        return main.all()
+        
+    #
+    # This query documented:
+    # https://confluence.pegasus.isi.edu/display/pegasus/Transformation+Statistics+file
+    #
         
     def get_transformation_statistics(self):
         """
@@ -1015,9 +840,14 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         avg(remote_duration)  , sum(remote_duration) 
         from invocation as invoc where invoc.wf_id = 3 group by transformation
         """
+        if self._expand:
+            return []
+        
         q = self.session.query(Invocation.transformation, 
                 func.count(Invocation.invocation_id).label('count'),
-                func.min(Invocation.remote_duration).label('min'),  
+                func.min(Invocation.remote_duration).label('min'),
+                func.count(case([(Invocation.exitcode == 0, Invocation.exitcode)])).label('success'),
+                func.count(case([(Invocation.exitcode != 0, Invocation.exitcode)])).label('failure'),
                 func.max(Invocation.remote_duration).label('max'),
                 func.avg(Invocation.remote_duration).label('avg'), 
                 func.sum(Invocation.remote_duration).label('sum'))
