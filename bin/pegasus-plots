@@ -17,15 +17,14 @@ logger.setLevel(logging.INFO)
 
 
 import common
-from Pegasus.plots import plot_utils
-from Pegasus.plots import populate
-from Pegasus.plots import workflow_info
-from Pegasus.plots import pegasus_gantt
-from Pegasus.plots import pegasus_host_over_time
+from Pegasus.plots_stats import utils as plot_utils
+from Pegasus.plots_stats.plots import populate
+from Pegasus.plots_stats.plots import pegasus_gantt
+from Pegasus.plots_stats.plots import pegasus_host_over_time
 from Pegasus.tools import utils
-#from statistics import *
 
-from netlogger.analysis.workflow.sql_alchemy import *
+from netlogger.analysis.workflow.stampede_statistics import StampedeStatistics
+#from netlogger.analysis.workflow.sql_alchemy import *
 from datetime import timedelta
 
 #regular expressions
@@ -33,6 +32,7 @@ re_parse_property = re.compile(r'([^:= \t]+)\s*[:=]?\s*(.*)')
 
 #Global variables----
 prog_base = os.path.split(sys.argv[0])[1]	# Name of this program
+NEW_LINE_STR ="\n"
 	
 def setup_logger(level_str):
 	level_str = level_str.lower()
@@ -59,131 +59,132 @@ def setup(output_dir):
 			sys.exit(1) 	 	
 	shutil.copytree (src_img_path, dest_img_path)	
 
-def generate_dag_graph(wf_info_list, output_dir):
-	wf_uuid_image ={}
-	for wf_info in wf_info_list:
-		dag_file_path = wf_info.dag_file_path
-		wf_uuid_image[wf_info.wf_uuid] = None
-		if dag_file_path is not None:
-			dag2dot_file_path = os.path.join(common.pegasus_home, "libexec/visualize/dag2dot")
-			dot_file_path = os.path.join(output_dir, wf_info.wf_uuid+".dot")
-			dag_cmd = dag2dot_file_path 
-			dag_cmd +=" --output "+ dot_file_path
-			dag_cmd += " "+ dag_file_path
-			status, output = commands.getstatusoutput(dag_cmd)
-			if status == 0:
-				logger.info("Command %s"%(dag_cmd))
-			else:
-				logger.warn("%s: %d:%s" % (dag_cmd, status, output))
-				continue
-			png_file_path = os.path.join(output_dir, wf_info.wf_uuid+".png")
-			dot_png_cmd = utils.find_exec("dot")
-			if dot_png_cmd is None:
-				logger.warn("dot is not present . Unable to create chart in png format. ")
-				continue
-			dot_png_cmd +=" -Tpng -o" + png_file_path
-			dot_png_cmd += " "+ dot_file_path
-			status, output = commands.getstatusoutput(dot_png_cmd)
-			if status == 0:
-				wf_uuid_image[wf_info.wf_uuid] = wf_info.wf_uuid+".png"
-				logger.info("Command %s"%(dot_png_cmd))
-			else:
-				logger.warn("%s: %d:%s" % (dot_png_cmd, status, output))
-				continue
+def generate_dag_graph(wf_info, output_dir):
+	logger.info("Generating dag graph for  workflow "  + wf_info.wf_uuid)
+	dag_file_path = wf_info.dag_file_path
+	if dag_file_path is not None:
+		dag2dot_file_path = os.path.join(common.pegasus_home, "libexec/visualize/dag2dot")
+		dot_file_path = os.path.join(output_dir, wf_info.wf_uuid+".dot")
+		dag_cmd = dag2dot_file_path 
+		dag_cmd +=" --output "+ dot_file_path
+		dag_cmd += " "+ dag_file_path
+		logger.info("Executing command :\n"  + dag_cmd)
+		status, output = commands.getstatusoutput(dag_cmd)
+		if status == 0:
+			logger.info("Finished executing command." )
 		else:
-			logger.warn("Unable to find the dag file for workflow  " + wf_info.wf_uuid)
-	# assumption is the wf_info_list contain the parent worklow at index 0
-	data_file =  os.path.join(output_dir,wf_info_list[0].wf_uuid+".html")
-	create_image_gallery(data_file, wf_info_list, wf_uuid_image , False )
-	return
-	
-	
-def generate_dax_graph(wf_info_list, output_dir):
-	wf_uuid_image ={}
-	for wf_info in wf_info_list:
-		dax_file_path = wf_info.dax_file_path
-		wf_uuid_image[wf_info.wf_uuid] = None
-		if dax_file_path is not None:
-			dax2dot_file_path = os.path.join(common.pegasus_home, "libexec/visualize/dax2dot")
-			dot_file_path = os.path.join(output_dir, wf_info.wf_uuid + ".dot")
-			dax_cmd = dax2dot_file_path 
-			dax_cmd +=" --output "+ dot_file_path
-			dax_cmd += " "+ dax_file_path
-			status, output = commands.getstatusoutput(dax_cmd)
-			if status != 0:
-				logger.warn("Failed to generate dax graph for workflow "+ wf_info.wf_uuid)
-				logger.debug("%s: %d:%s" % (dax_cmd, status, output))
-				continue
-			# Find dot command
-			dot_png_cmd = utils.find_exec("dot")
-			if dot_png_cmd is None:
-				logger.warn("dot is not present . Unable to create chart in png format. ")
-			png_file_path = os.path.join(output_dir, wf_info.wf_uuid +".png")
-			dot_png_cmd +=" -Tpng -o" + png_file_path
-			dot_png_cmd += " "+ dot_file_path
-			status, output = commands.getstatusoutput(dot_png_cmd)
-			if status == 0:
-				wf_uuid_image[wf_info.wf_uuid] = wf_info.wf_uuid+".png"
-				logger.info("Command %s"%(dot_png_cmd))
-			else:
-				logger.warn("Failed to generate dax graph in png format for workflow " + wf_info.wf_uuid)
-				logger.debug("%s: %d:%s" % (dot_png_cmd, status, output))
-				continue
+			logger.warn("Failed to generate dag graph for workflow "+ wf_info.wf_uuid)
+			logger.debug("%s: %d:%s" % (dag_cmd, status, output))
+			return None
+		png_file_path = os.path.join(output_dir, wf_info.wf_uuid+".png")
+		dot_png_cmd = utils.find_exec("dot")
+		if dot_png_cmd is None:
+			logger.warn("dot is not present . Unable to create chart in png format. ")
+			return
+		dot_png_cmd +=" -Tpng -o" + png_file_path
+		dot_png_cmd += " "+ dot_file_path
+		logger.info("Executing command :\n"  + dot_png_cmd)
+		status, output = commands.getstatusoutput(dot_png_cmd)
+		if status == 0:
+			logger.info("Finished executing command." )
+			return status
 		else:
-			logger.warn("Unable to find the dax file for workflow " + wf_info.wf_uuid)
-	# assumption is the wf_info_list contain the parent worklow at index 0		
-	data_file =  os.path.join(output_dir,wf_info_list[0].wf_uuid+".html")
-	create_image_gallery(data_file, wf_info_list, wf_uuid_image , True )
+			logger.warn("%s: %d:%s" % (dot_png_cmd, status, output))
+	else:
+		logger.warn("Unable to find the dag file for workflow  " + wf_info.wf_uuid)
+	return None
 	
-def create_image_gallery(file_name ,wf_info_list , uuid_image_map, isDax):
-	wf_uuid_parent_ref = wf_info_list[0].parent_wf_uuid
+	
+def generate_dax_graph(wf_info, output_dir):
+	logger.info("Generating dax graph for  workflow "  + wf_info.wf_uuid)
+	dax_file_path = wf_info.dax_file_path
+	if dax_file_path is not None:
+		dax2dot_file_path = os.path.join(common.pegasus_home, "libexec/visualize/dax2dot")
+		dot_file_path = os.path.join(output_dir, wf_info.wf_uuid + ".dot")
+		dax_cmd = dax2dot_file_path 
+		dax_cmd +=" --output "+ dot_file_path
+		dax_cmd += " "+ dax_file_path
+		logger.info("Executing command :\n"  + dax_cmd)
+		status, output = commands.getstatusoutput(dax_cmd)
+		if status == 0:
+			logger.info("Finished executing command." )
+		else:
+			logger.warn("Failed to generate dax graph for workflow "+ wf_info.wf_uuid)
+			logger.debug("%s: %d:%s" % (dax_cmd, status, output))
+			return None
+		# Find dot command
+		dot_png_cmd = utils.find_exec("dot")
+		if dot_png_cmd is None:
+			logger.warn("dot is not present . Unable to create chart in png format. ")
+		png_file_path = os.path.join(output_dir, wf_info.wf_uuid +".png")
+		dot_png_cmd +=" -Tpng -o" + png_file_path
+		dot_png_cmd += " "+ dot_file_path
+		logger.info("Executing command :\n"  + dot_png_cmd)
+		status, output = commands.getstatusoutput(dot_png_cmd)
+		if status == 0:
+			logger.info("Finished executing command." )
+			return status
+		else:
+			logger.warn("Failed to generate dax graph in png format for workflow " + wf_info.wf_uuid)
+			logger.debug("%s: %d:%s" % (dot_png_cmd, status, output))
+	else:
+		logger.warn("Unable to find the dax file for workflow " + wf_info.wf_uuid)
+	return None
+	
+	
+def create_image_gallery(file_name ,wf_uuid_list , wf_parent_uuid_list, uuid_image_map,wf_uuid_label_map , isDax):
+	wf_uuid_parent_ref = None
 	try:
 		fh = open(file_name, "w")
-		content = "<html>\n\
-<head>\n\
-<style>\n\
-.imgbox\n\
-{\n\
-float:left;\n\
-text-align:center;\n\
-width:450px;\n\
-height:450px;\n\
-margin:4px;\n\
-margin-bottom:8px;\n\
-padding:0px;\n\
-}\n\
-.thumbnail\n\
-{\n\
-width:300px;\n\
-height:300px;\n\
-margin:3px;\n\
-}\n\
-.box\n\
-{\n\
-width:450px;\n\
-padding:0px;\n\
-}\n\
-.workflow\n\
-{\n\
-clear:both;\n\
-}\n\
-</style>\n\
-</head>\n\
-<body>\n\
-<center>\n"
+		content = """
+<html>
+<head>
+<style>
+.imgbox
+{
+float:left;
+text-align:center;
+width:450px;
+height:450px;
+margin:4px;
+margin-bottom:8px;
+padding:0px;
+}
+.thumbnail
+{
+width:300px;
+height:300px;
+margin:3px;
+}
+.box
+{
+width:450px;
+padding:0px;
+}
+.workflow
+{
+clear:both;
+}
+</style>
+</head>
+<body>
+<center>
+"""
 		if isDax:
-			content += "<h3>DAX Graph </h3>\n"
+			content += "<h3>DAX Graph </h3>" + NEW_LINE_STR
 		else:
-			content += "<h3>DAG Graph </h3>\n"
-		for wf_info in wf_info_list:
-			uuid = wf_info.wf_uuid
-			image = uuid_image_map[uuid]
-			if wf_info.parent_wf_uuid is None:
-				content += "<h3 class= 'workflow'> Top level workflow ("+ wf_info.wf_uuid+")</h3>"
+			content += "<h3>DAG Graph </h3>"+ NEW_LINE_STR
+		for index in range(len(wf_uuid_list)):
+			uuid = wf_uuid_list[index]
+			image = uuid_image_map[index]
+			label = wf_uuid_label_map[index]
+			parent_uuid =wf_parent_uuid_list[index]
+			if parent_uuid is None:
+				content += "<h3 class= 'workflow'> Top level workflow ("+ uuid+")</h3>"
 			else:
-				if wf_info.parent_wf_uuid != wf_uuid_parent_ref:
-					wf_uuid_parent_ref = wf_info.parent_wf_uuid 
-					content += "<h3 class= 'workflow'> Sub  workflow's of workflow (" +  wf_info.parent_wf_uuid + ")</h3>"
+				if parent_uuid != wf_uuid_parent_ref:
+					wf_uuid_parent_ref = parent_uuid 
+					content += "<h3 class= 'workflow'> Sub  workflow's of workflow (" +  parent_uuid + ")</h3>"
 			content += "<div  class ='imgbox' >"
 			if image is None:
 				content += "<a class= 'thumbnail' href ='#'>\n"
@@ -192,10 +193,10 @@ clear:both;\n\
 				content+="<div class ='box'>\n"
 				content+= "wf_uuid :" + uuid +"<br/>"
 				if isDax:
-					content+= "dax label :" + wf_info.dax_label
+					content+= "dax label :" + label
 				else:
-					if wf_info.dag_label is not None:
-						content+= "dag label :" + wf_info.dag_label
+					if image is not None:
+						content+= "dag label :" + image
 				content +="</div>"					
 			else:
 				content +="<a class= 'thumbnail'  href ='"+image+ "'>"
@@ -204,14 +205,17 @@ clear:both;\n\
 				content+="<div class ='box'>\n"
 				content+= "wf_uuid :" + uuid +"<br/>"
 				if isDax:
-					content+= "dax label :" + wf_info.dax_label
+					content+= "dax label :" +label
 				else:
-					if wf_info.dag_label is not None:
-						content+= "dag label :" + wf_info.dag_label
+					if label is not None:
+						content+= "dag label :" + label
 				content +="</div>"
 			content += "</div>"
-		content +="</center>\n</body>\n\
-	</html>\n"
+		content +="""
+</center>
+</body>
+</html>
+"""
 		fh.write( content)
 	except IOError:
 		logger.error("Unable to write to file " + data_file)
@@ -231,26 +235,69 @@ def createOuterhtml(output_dir , submit_dir, wf_uuid):
 	host_chart_parent_file = os.path.join("host_chart/" + wf_uuid +".html")
 	try:
 		fh = open(data_file, "w")
-		content = "<html>\n\
-<head>\n\
-</head>\n\
-<body>\n\
-<center>\n\
-<h3>Pegasus plots </h3>\n\
-<a href ='" + gantt_chart_parent_file +  "'>Workflow Execution Gantt Chart</a><br/>\n\
-<a href ='" + host_chart_parent_file + "'>Host Over Time Chart</a><br/>\n\
-<a href ='" + dax_graph_parent_file +  "'>DAX graph</a><br/>\n\
-<a href ='" + dag_graph_parent_file + "'>DAG graph</a><br/><br/><br/>\n"
+		content = """
+<html>
+<head>
+</head>
+<body>
+<center>
+<h3>Pegasus plots </h3>
+"""
+		content += "<a href ='" + gantt_chart_parent_file +  "'>Workflow Execution Gantt Chart</a><br/>" + NEW_LINE_STR
+		content += "<a href ='" + host_chart_parent_file + "'>Host Over Time Chart</a><br/>" + NEW_LINE_STR
+		content += "<a href ='" + dax_graph_parent_file +  "'>DAX graph</a><br/>" + NEW_LINE_STR
+		content += "<a href ='" + dag_graph_parent_file + "'>DAG graph</a><br/><br/><br/> " + NEW_LINE_STR
 		content += plot_utils.print_braindump_file(submit_dir)
-		content += "</center>\n\</body>\n\
-</html>\n"
+		content += "</center>" + NEW_LINE_STR + "</body>" + NEW_LINE_STR +"</html>" + NEW_LINE_STR
 		fh.write( content)
 		print "Graphs and charts generated by pegasus-plots can be viewed by opening the generated html file in the web browser  : \n" + data_file
 	except IOError:
 		logger.error("Unable to write to file " + data_file)
 		sys.exit(1)
 	else:
-		fh.close()	
+		fh.close()
+		
+def create_charts(submit_dir , output_dir , log_level):
+	wf_uuid_dax_image =[]
+	wf_uuid_dax_label =[]
+	wf_uuid_dag_image =[]
+	wf_uuid_dag_label =[]
+	wf_uuid_parent =[]
+	populate.setup(submit_dir)
+	wf_uuid_list = populate.get_workflows_uuid()
+	if len(wf_uuid_list) == 0:
+		logger.error("Unable to populate workflow information.")
+	gantt_chart_output_dir = os.path.join(output_dir,"gantt_chart")
+	host_chart_output_dir = os.path.join(output_dir,"host_chart")
+	dag_graph_output_dir = os.path.join(output_dir,"dag_graph")
+	dax_graph_output_dir = os.path.join(output_dir,"dax_graph")
+	pegasus_gantt.setup(submit_dir,gantt_chart_output_dir ,log_level)
+	pegasus_host_over_time.setup(submit_dir,host_chart_output_dir ,log_level)
+	setup(dag_graph_output_dir)
+	setup(dax_graph_output_dir)
+	for wf_uuid in wf_uuid_list:
+		wf_info = populate.populate_chart(wf_uuid)
+		wf_uuid_parent.append(wf_info.parent_wf_uuid)
+		pegasus_gantt.generate_chart(wf_info)
+		pegasus_host_over_time.generate_chart(wf_info)
+		if generate_dag_graph(wf_info,dag_graph_output_dir) is None:
+			wf_uuid_dag_image.append(None)
+		else:
+			wf_uuid_dag_image.append(wf_info.wf_uuid+".png")
+		wf_uuid_dag_label.append( wf_info.dag_label)
+		if generate_dax_graph(wf_info,dax_graph_output_dir) is None:
+			wf_uuid_dax_image.append(None)
+		else:
+			wf_uuid_dax_image.append(wf_info.wf_uuid+".png")
+		wf_uuid_dax_label.append(wf_info.dax_label)
+	data_file =  os.path.join(dax_graph_output_dir,wf_uuid_list[0]+".html")
+	create_image_gallery(data_file, wf_uuid_list,wf_uuid_parent, wf_uuid_dax_image ,wf_uuid_dax_label, True )
+	data_file =  os.path.join(dag_graph_output_dir,wf_uuid_list[0]+".html")
+	create_image_gallery(data_file, wf_uuid_list,wf_uuid_parent, wf_uuid_dag_image ,wf_uuid_dag_label, False )
+	createOuterhtml(output_dir ,submit_dir , wf_uuid_list[0])
+	return
+	
+	
 	
 
 # ---------main----------------------------------------------------------------------------
@@ -278,47 +325,14 @@ def main():
 	# Copy options from the command line parser
 	if options.output_dir is not None:
 		output_dir = options.output_dir
-		if not os.path.isdir(output_dir):
-			logger.warning("Output directory doesn't exists. Creating directory... ")
-			try:
-				os.mkdir(output_dir)
-			except:
-				logger.error("Unable to create output directory."+output_dir)
-				sys.exit(1) 	
+		plot_utils.create_directory(output_dir, True)
 	else :
 		output_dir = tempfile.mkdtemp()
-	dag_graph_output_dir = os.path.join(output_dir,"dag_graph")
-	dax_graph_output_dir = os.path.join(output_dir,"dax_graph")
-	if not os.path.isdir(dag_graph_output_dir):
-		logger.warning("DAG graph directory doesn't exists. Creating directory... ")
-		try:
-			os.mkdir(dag_graph_output_dir)
-		except:
-			logger.error("Unable to create DAG graph directory."+dag_graph_output_dir)
-			sys.exit(1)
-	if not os.path.isdir(dax_graph_output_dir):
-		logger.warning("DAX graph directory doesn't exists. Creating directory... ")
-		try:
-			os.mkdir(dax_graph_output_dir)
-		except:
-			logger.error("Unable to create DAX graph directory."+dax_graph_output_dir)
-			sys.exit(1)
-	
 	if options.log_level == None:
-		options.log_level = "warning"
+		options.log_level = "info"
 	setup_logger(options.log_level)
-	wf_info_list = populate.populate_chart(submit_dir)
-	if len(wf_info_list) == 0:
-		logger.error("Unable to populate workflow information.")
-	gantt_chart_output_dir = os.path.join(output_dir,"gantt_chart")
-	pegasus_gantt.generate_chart(submit_dir,wf_info_list,gantt_chart_output_dir,options.log_level)
-	host_chart_output_dir = os.path.join(output_dir,"host_chart")
-	pegasus_host_over_time.generate_chart(submit_dir,wf_info_list,host_chart_output_dir ,options.log_level)
-	setup(dag_graph_output_dir)
-	generate_dag_graph(wf_info_list,dag_graph_output_dir)
-	setup(dax_graph_output_dir)
-	generate_dax_graph(wf_info_list,dax_graph_output_dir)
-	createOuterhtml(output_dir ,submit_dir , wf_info_list[0].wf_uuid)
+	create_charts(submit_dir, output_dir,options.log_level)
+	
 	sys.exit(0)
 	
 	
