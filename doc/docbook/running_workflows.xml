@@ -56,13 +56,13 @@
       <listitem>
         <para>the original DAX job is concretized into a compute task in the
         DAG. Compute jobs are a concatination of the job's
-        <emphasis>name</emphasis> and <emphasis>id</emphasis> attribute from
+        <emphasis role="bold">name</emphasis> and <emphasis role="bold">id</emphasis> attribute from
         the DAX file.</para>
       </listitem>
 
       <listitem>
         <para>the stage-out of data products to a collecting site. Data
-        products with their <emphasis>transfer</emphasis> flag set to
+        products with their <emphasis role="bold">transfer</emphasis> flag set to
         <literal>false</literal> will not be staged to the output site.
         However, they may still be eligible for staging to other, dependent
         tasks. Stage-out tasks use a job prefix of
@@ -78,7 +78,7 @@
 
       <listitem>
         <para>the registration of data products in a replica catalog. Data
-        products with their <emphasis>register</emphasis> flag set to
+        products with their <emphasis role="bold">register</emphasis> flag set to
         <literal>false</literal> will not be registered.</para>
       </listitem>
 
@@ -94,8 +94,8 @@
     workflow.</para>
 
     <para>The DAG will be found in file <filename>diamond-0.dag</filename>,
-    constructed from the <emphasis>name</emphasis> and
-    <emphasis>index</emphasis> attributes found in the root element of the DAX
+    constructed from the <emphasis role="bold">name</emphasis> and
+    <emphasis role="bold">index</emphasis> attributes found in the root element of the DAX
     file.</para>
 
     <programlisting>######################################################################
@@ -2419,6 +2419,7 @@ ec2     amazon::s3cmd    /path/to/pegasus/bin/s3cmd    INSTALLED   INTEL32::LINU
     </section>
   </section>
 </chapter>
+
 
 
 
