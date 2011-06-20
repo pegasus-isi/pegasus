@@ -16,7 +16,7 @@ the Stampede DB.
 
 See http://www.sqlalchemy.org/ for details on SQLAlchemy
 """
-__rcsid__ = "$Id: stampede_loader.py 28033 2011-05-26 21:26:46Z mgoode $"
+__rcsid__ = "$Id: stampede_loader.py 28097 2011-06-20 20:16:18Z mgoode $"
 __author__ = "Monte Goode"
 
 from netlogger.analysis.schema.stampede_schema import *
@@ -129,6 +129,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
             'host_map_events' : []
         }
         self._task_map_flush = {}
+        self._task_edge_flush = {}
         
         self.log.info('init.end', msg='Batching: %s' % self._batch)
         pass
@@ -533,6 +534,10 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         
 
         js.job_instance_id = self.get_job_instance_id(js)
+        if not js.job_instance_id:
+            self.log.error('jobstate', msg='No job_instance_id for event: %s -%s' % (linedata, js))
+            return
+            
         js.timestamp = js.ts
         
         if self._batch:
@@ -589,6 +594,11 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         
         Handles a task edge insert event
         """
+        if not self._task_edge_flush.has_key(linedata['xwf.id']):
+            if self._batch:
+                self.hard_flush()
+            self._task_edge_flush[linedata['xwf.id']] = True
+            
         te = self.linedataToObject(linedata, TaskEdge())
         self.log.debug('task_event', msg=te)
         te.wf_id = self.wf_uuid_to_id(te.wf_uuid)
