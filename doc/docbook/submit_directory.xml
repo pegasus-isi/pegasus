@@ -18,8 +18,7 @@
   <section id="submit_directory-layout">
     <title>Layout</title>
 
-    <para>Each executable workflow is associated with a submit directory. In
-    it you will see the following</para>
+    <para>Each executable workflow is associated with a submit directory, and includes the following:</para>
 
     <orderedlist>
       <listitem>
@@ -34,19 +33,19 @@
 
         <orderedlist>
           <listitem>
-            <para>the job submit file for each job in the DAG.</para>
+            <para>The job submit file for each job in the DAG.</para>
           </listitem>
 
           <listitem>
-            <para>the post script that is to be invoked when a job completes.
-            This is usually $PEGASUS_HOME/bin/exitpost that parses the
-            kickstart record in the job's .out file and determines the
+            <para>The post script that is to be invoked when a job completes.
+            This is usually located at <emphasis role="bold">$PEGASUS_HOME/bin/exitpost</emphasis>  and parses the
+            kickstart record in the job's<emphasis role="bold">.out file</emphasis>  and determines the
             exitcode.</para>
           </listitem>
 
           <listitem>
             <para>JOB RETRY - the number of times the job is to be retried in
-            case of failure. In case of Pegasus, job postscript exits with a
+            case of failure. In Pegasus, the job postscript exits with a
             non zero exitcode if it determines a failure occurred.</para>
           </listitem>
         </orderedlist>
@@ -57,11 +56,11 @@
         role="bold">&lt;daxlabel-daxindex&gt;.dag.dagman.out</emphasis></para>
 
         <para>When a DAG ( .dag file ) is executed by Condor DAGMan , the
-        DAGMan writes out it's output to the
-        &lt;daxlabel-daxindex&gt;.dag.dagman.out file. This file tells us the
+        DAGMan writes out it's output to the  <emphasis role="bold">&lt;daxlabel-daxindex&gt;.dag.dagman.out file</emphasis>
+        . This file tells us the
         progress of the workflow, and can be used to determine the status of
-        the workflow. Most of pegasus tools mine the dagman.out or
-        jobstate.log to determine the progress of the workflows.</para>
+        the workflow. Most of pegasus tools mine the <emphasis role="bold">dagman.out</emphasis>  or <emphasis role="bold">jobstate.log</emphasis>
+         to determine the progress of the workflows.</para>
       </listitem>
 
       <listitem>
@@ -87,7 +86,7 @@
         <para><emphasis role="bold">&lt;job&gt;.sub</emphasis></para>
 
         <para>Each job in the executable workflow is associated with it's own
-        submit file. The submit file tells Condor on how to execute the
+        submit file. The submit file tells Condor how to execute the
         job.</para>
       </listitem>
 
@@ -95,7 +94,7 @@
         <para><emphasis role="bold">&lt;job&gt;.out.00n</emphasis></para>
 
         <para>The stdout of the executable referred in the job submit file. In
-        case of Pegasus, mostly the jobs are launched via kickstart. Hence,
+        Pegasus, most jobs are launched via kickstart. Hence,
         this file contains the kickstart XML provenance record that captures
         runtime provenance on the remote node where the job was executed. n
         varies from 1-N where N is the JOB RETRY value in the .dag file. The
@@ -112,8 +111,8 @@
         this file contains stderr of kickstart. This is usually empty unless
         there in an error in kickstart e.g. kickstart segfaults , or kickstart
         location specified in the submit file is incorrect. The exitpost
-        executable is invoked on the &lt;job&gt;.out file and it moves the
-        &lt;job&gt;.err to &lt;job&gt;.err.00n so that the the job's .out
+        executable is invoked on the <emphasis role="bold">&lt;job&gt;.out</emphasis>  file and it moves the
+        <emphasis role="bold"> &lt;job&gt;.err to &lt;job&gt;.err.00n</emphasis>  so that the the job's <emphasis role="bold">.out</emphasis>
         files are preserved across retries.</para>
       </listitem>
 
@@ -132,7 +131,7 @@
         <para><emphasis role="bold">braindump.txt </emphasis></para>
 
         <para>Contains information about pegasus version, dax file, dag file,
-        dax label</para>
+        dax label.</para>
       </listitem>
     </orderedlist>
   </section>
@@ -144,16 +143,16 @@
     workflow executor used by Pegasus ) .</para>
 
     <para>Pegasus generated .dag file usually contains the following
-    information for each job</para>
+    information for each job:</para>
 
     <orderedlist>
       <listitem>
-        <para>the job submit file for each job in the DAG.</para>
+        <para>The job submit file for each job in the DAG.</para>
       </listitem>
 
       <listitem>
-        <para>the post script that is to be invoked when a job completes. This
-        is usually $PEGASUS_HOME/bin/exitpost that parses the kickstart record
+        <para>The post script that is to be invoked when a job completes. This
+        is usually found in <emphasis role="bold">$PEGASUS_HOME/bin/exitpost</emphasis>  and parses the kickstart record
         in the job's .out file and determines the exitcode.</para>
       </listitem>
 
@@ -164,7 +163,7 @@
       </listitem>
 
       <listitem>
-        <para>the pre script to be invoked before running a job. This is
+        <para>The pre script to be invoked before running a job. This is
         usually for the dax jobs in the DAX. The pre script is pegasus-plan
         invocation for the subdax.</para>
       </listitem>
@@ -258,7 +257,7 @@ PARENT pegasus_concat_blackdiamond_0 CHILD stage_in_local_isi_viz_0
     end, unless explicitly disabled at the time of running
     pegasus-plan.</para>
 
-    <para>Kickstart does not work with</para>
+    <para>Kickstart does not work with:</para>
 
     <orderedlist>
       <listitem>
@@ -275,41 +274,41 @@ PARENT pegasus_concat_blackdiamond_0 CHILD stage_in_local_isi_viz_0
     <para>Kickstart captures useful runtime provenance information about the
     job launched by it on the remote note, and puts in an XML record that it
     writes to its own stdout. The stdout appears in the workflow submit
-    directory as &lt;job&gt;.out.00n . Some useful information captured by
-    kickstart and logged are as follows</para>
+    directory as &lt;job&gt;.out.00n . The following information is captured by
+    kickstart and logged:</para>
 
     <orderedlist>
       <listitem>
-        <para>the exitcode with which the job it launched exited.</para>
+        <para>The exitcode with which the job it launched exited.</para>
       </listitem>
 
       <listitem>
-        <para>the duration of the job</para>
+        <para>The duration of the job</para>
       </listitem>
 
       <listitem>
-        <para>the start time for the job</para>
+        <para>The start time for the job</para>
       </listitem>
 
       <listitem>
-        <para>the node on which the job ran</para>
+        <para>The node on which the job ran</para>
       </listitem>
 
       <listitem>
-        <para>the stdout and stderr of the job</para>
+        <para>The stdout and stderr of the job</para>
       </listitem>
 
       <listitem>
-        <para>the arguments with which it launched the job</para>
+        <para>The arguments with which it launched the job</para>
       </listitem>
 
       <listitem>
-        <para>the environment that was set for the job before it was
+        <para>The environment that was set for the job before it was
         launched.</para>
       </listitem>
 
       <listitem>
-        <para>the machine information about the node that the job ran
+        <para>The machine information about the node that the job ran
         on</para>
       </listitem>
     </orderedlist>
@@ -321,42 +320,42 @@ PARENT pegasus_concat_blackdiamond_0 CHILD stage_in_local_isi_viz_0
       <title>Reading a Kickstart Output File</title>
 
       <para>The kickstart file below has the following fields
-      highlighted</para>
+      highlighted:</para>
 
       <orderedlist>
         <listitem>
-          <para>the host on which the job executed and the ipaddress of that
+          <para>The host on which the job executed and the ipaddress of that
           host</para>
         </listitem>
 
         <listitem>
-          <para>the duration and start time of the job. The time here is in
-          reference to the clock on the remote node where job executed.</para>
+          <para>The duration and start time of the job. The time here is in
+          reference to the clock on the remote node where the job is executed.</para>
         </listitem>
 
         <listitem>
-          <para>the exitcode with which the job executed</para>
+          <para>The exitcode with which the job executed</para>
         </listitem>
 
         <listitem>
-          <para>the arguments with which the job was launched.</para>
+          <para>The arguments with which the job was launched.</para>
         </listitem>
 
         <listitem>
-          <para>the directory in which the job executed on the remote
+          <para>The directory in which the job executed on the remote
           site</para>
         </listitem>
 
         <listitem>
-          <para>the stdout of the job</para>
+          <para>The stdout of the job</para>
         </listitem>
 
         <listitem>
-          <para>the stderr of the job</para>
+          <para>The stderr of the job</para>
         </listitem>
 
         <listitem>
-          <para>the environment of the job</para>
+          <para>The environment of the job</para>
         </listitem>
       </orderedlist>
 
@@ -499,36 +498,36 @@ ctime="2009-01-30T19:17:41-06:00" uid="29548" user="vahi" gid="13872" group="bvr
 1239666069 create_dir_blackdiamond_0_isi_viz POST_SCRIPT_TERMINATED 3758.0 isi_viz - 1
 1239666069 create_dir_blackdiamond_0_isi_viz POST_SCRIPT_SUCCESS - isi_viz - 1</programlisting>
 
-    <para>Each entry in jobstate.log has the following</para>
+    <para>Each entry in jobstate.log has the following:</para>
 
     <orderedlist>
       <listitem>
-        <para>the ISO timestamp for the time at which the particular event
-        happened</para>
+        <para>The ISO timestamp for the time at which the particular event
+        happened.</para>
       </listitem>
 
       <listitem>
-        <para>the name of the job.</para>
+        <para>The name of the job.</para>
       </listitem>
 
       <listitem>
-        <para>the event recorded by DAGMan for the job</para>
+        <para>The event recorded by DAGMan for the job.</para>
       </listitem>
 
       <listitem>
-        <para>the condor id of the job in the queue on the submit node</para>
+        <para>The condor id of the job in the queue on the submit node.</para>
       </listitem>
 
       <listitem>
-        <para>the pegasus site to which the job is mapped</para>
+        <para>The pegasus site to which the job is mapped.</para>
       </listitem>
 
       <listitem>
-        <para>job time requirements from submit file</para>
+        <para>The job time requirements from the submit file.</para>
       </listitem>
 
       <listitem>
-        <para>the job submit sequence for this workflow</para>
+        <para>The job submit sequence for this workflow.</para>
       </listitem>
     </orderedlist>
 
@@ -775,7 +774,7 @@ ctime="2009-01-30T19:17:41-06:00" uid="29548" user="vahi" gid="13872" group="bvr
       </tgroup>
     </table>
 
-    <para>A Sample Braindump File is displayed below</para>
+    <para>A Sample Braindump File is displayed below:</para>
 
     <programlisting>user vahi
 grid_dn null
@@ -802,7 +801,7 @@ type dag
   </section>
 
   <section>
-    <title>Pegasus job.map file</title>
+    <title>Pegasus job.map File</title>
 
     <para>Pegasus creates a workflow.job.map file that links jobs in the DAG
     with the jobs in the DAX. The contents of the file are in netlogger
@@ -812,7 +811,7 @@ type dag
     <para>The workflow is replaced by the name of the workflow i.e. same
     prefix as the .dag file</para>
 
-    <para>In the file there are two types of events.</para>
+    <para>In the file there are two types of events:</para>
 
     <itemizedlist>
       <listitem>
@@ -827,24 +826,24 @@ type dag
     <para><emphasis role="bold">pegasus.job</emphasis></para>
 
     <para>This event is for all the jobs in the DAG. The following information
-    is associated with this event.</para>
+    is associated with this event:</para>
 
     <itemizedlist>
       <listitem>
-        <para>job.id the id of the job in the DAG</para>
+        <para><emphasis role="bold">job.id</emphasis> - The id of the job in the DAG</para>
       </listitem>
 
       <listitem>
-        <para>job.class an integer designating the type of the job</para>
+        <para><emphasis role="bold">job.class</emphasis> - An integer designating the type of the job</para>
       </listitem>
 
       <listitem>
-        <para>job.xform the logical transformation which the job refers
+        <para><emphasis role="bold">job.xform</emphasis> - The logical transformation which the job refers
         to.</para>
       </listitem>
 
       <listitem>
-        <para>task.count the number of tasks associated with the job. This is
+        <para><emphasis role="bold">task.count</emphasis> - The number of tasks associated with the job. This is
         equal to the number of pegasus.job.task events created for that
         job.</para>
       </listitem>
@@ -857,15 +856,15 @@ type dag
 
     <itemizedlist>
       <listitem>
-        <para>task.id the id of the job in the DAG</para>
+        <para><emphasis role="bold">task.id</emphasis> - The id of the job in the DAG</para>
       </listitem>
 
       <listitem>
-        <para>task.class an integer designating the type of the job</para>
+        <para><emphasis role="bold">task.class</emphasis> - An integer designating the type of the job</para>
       </listitem>
 
       <listitem>
-        <para>task.xform the logical transformation which the job refers
+        <para><emphasis>task.xform</emphasis> - The logical transformation which the job refers
         to.</para>
 
         <para>Some sample entries are as follows</para>
@@ -886,6 +885,7 @@ ts=2009-04-21T23:09:03.093402Z event=pegasus.job.map job.id=merge_vahi-findrange
     </itemizedlist>
   </section>
 </chapter>
+
 
 
 
