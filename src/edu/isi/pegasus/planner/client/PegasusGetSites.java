@@ -61,7 +61,12 @@ public class PegasusGetSites extends Executable{
     
     private String mVO ="";
     private String mGrid ="";
-    private String mSource="";
+    
+    /**
+     * The default source to query for generating a site catalog.
+     */
+    private String mSource="OSGMM";
+    
     private SiteCatalog mCatalog = null;
     private String mSCFile = null;
     private String mPropertiesFilename;
@@ -149,7 +154,7 @@ public class PegasusGetSites extends Executable{
              append( "\n" ).append( "[--conf <path to property file>] [-v] [-h]" ).
              append( "\n" ).
              append( "\n Mandatory Options " ).
-             append( "\n  --source     the source to query for information. Valid sources are OSGMM|MYOSG|VORS" ).
+             append( "\n  --source     the source to query for information. Defaults to OSGMM" ).
              append( "\n" ). 
              append( "\n Other Options  " ).
              append( "\n -g |--grid       the grid for which to generate the site catalog ").
