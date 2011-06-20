@@ -1135,7 +1135,8 @@ public class CPlanner extends Executable{
           "\n [-b basename] [-C t1[,t2[..]]  [-D  <base dir  for o/p files>] [-j <job-prefix>] " +
           "\n [--relative-dir <relative directory to base directory> ] [--relative-submit-dir <relative submit directory to base directory>]" +
           "\n [--inherited-rc-files f1[,f2[..]]]  " +
-          "\n [-g <vogroup>] [-o <output site>]  [-r[dir name]] [--rescue <number of rescues before replanning>] [-F option[=value] ] " +
+          "\n [-g <vogroup>] [-o <output site>]  [-r[dir name]] [-F option[=value] ] " +
+          //"[--rescue <number of rescues before replanning>]"
           "\n [-S] [-n] [-v] [-q] [-V] [-X[non standard jvm option] [-h]";
 
         System.out.println(text);
@@ -1154,7 +1155,7 @@ public class CPlanner extends Executable{
            "\n Usage: pegasus-plan [-Dprop  [..]] --dax|--pdax <file> [--sites <execution sites>] " +
            "\n [--authenticate] [--basename prefix] [--cache f1[,f2[..]] [--cluster t1[,t2[..]] [--conf <path to property file>]" +
            "\n [--dir <dir for o/p files>] [--force] [--force-replan] [--forward option=[value] ] [--group vogroup] [--nocleanup] " +
-           "\n [--output output site] [--randomdir=[dir name]] [--rescue <number of rescues before replanning>]  [--verbose] [--version][--help] " +
+           "\n [--output output site] [--randomdir=[dir name]]   [--verbose] [--version][--help] " +
            "\n" +
            "\n Mandatory Options " +
            "\n -d |-P fn "+
@@ -1180,7 +1181,7 @@ public class CPlanner extends Executable{
            "\n -o |--output       the output site where the data products during workflow execution are transferred to." +
            "\n -s |--sites        comma separated list of executions sites on which to map the workflow." +
            "\n -r |--randomdir    create random directories on remote execution sites in which jobs are executed" +
-           "\n --rescue           the number of times rescue dag should be submitted for sub workflows before triggering re-planning" +
+          // "\n --rescue           the number of times rescue dag should be submitted for sub workflows before triggering re-planning" +
            "\n                    can optionally specify the basename of the remote directories" +
            "\n -n |--nocleanup    generates only the separate cleanup workflow. Does not add cleanup nodes to the concrete workflow." +
            "\n -S |--submit       submit the executable workflow generated" +
