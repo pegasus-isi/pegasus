@@ -33,6 +33,7 @@ import time
 import errno
 import atexit
 import select
+import shelve
 import signal
 import socket
 import logging
@@ -159,10 +160,11 @@ re_parse_multiline_files = re.compile(r"All DAG node user log files:")
 logbase = "monitord.log"       # Basename of daemon logfile
 good_rsl = {"maxcputime": 1, "maxtime":1, "maxwalltime": 1}
 speak = "PMD/1.0"
-PRESCRIPT_TASK_ID = -1                  # id for prescript tasks
-POSTSCRIPT_TASK_ID = -2                 # id for postscript tasks
-MONITORD_STATE_FILE = "monitord.info"   # filename for writing monitord state information
-MAX_SLEEP_TIME = 10     	        # in seconds
+PRESCRIPT_TASK_ID = -1                    # id for prescript tasks
+POSTSCRIPT_TASK_ID = -2                   # id for postscript tasks
+MONITORD_STATE_FILE = "monitord.info"     # filename for writing monitord state information
+MONITORD_WF_RETRY_FILE = "monitord.subwf" # filename for writing persistent sub-workflow retry information
+MAX_SLEEP_TIME = 10     	          # in seconds
 
 unsubmitted_events = {"UN_READY": 1,
                       "PRE_SCRIPT_STARTED": 1,
@@ -172,6 +174,7 @@ unsubmitted_events = {"UN_READY": 1,
 # Global variables
 wfs = []                        # list of workflow entries monitord is tracking
 tracked_workflows = []          # list of workflows we have started tracking
+wf_retry_dict = None            # File-based dictionary keeping track of sub-workflows retries, opened later...
 follow_subworkflows = True      # Flag for tracking sub-workflows
 root_wf_id = None               # Workflow id of the root workflow
 replay_mode = 0                 # disable checking if DAGMan's pid is gone
@@ -2651,7 +2654,7 @@ class Workflow:
         # All done
         return my_diff, my_site
 
-    def has_subworkflow(self, jobid):
+    def has_subworkflow(self, jobid, wf_retries):
         """
         This function returns a new dagman.out file to follow if the
         job is either a SUBDAG job, a pegasus-plan, or a subdax_
@@ -2694,17 +2697,52 @@ class Workflow:
 
         # Got it!
         my_dagman_out = os.path.normpath(my_dagman_out)
+
         if my_dagman_out.find(self._original_submit_dir) >= 0:
             # Path to new dagman.out file includes original submit_dir, let's try to change it
-            new_dagman_out = os.path.normpath(my_dagman_out.replace((self._original_submit_dir + os.sep), '', 1))
+            my_dagman_out = os.path.normpath(my_dagman_out.replace((self._original_submit_dir + os.sep), '', 1))
             # Join with current run directory
-            new_dagman_out = os.path.join(self._run_dir, new_dagman_out)
-            return new_dagman_out
+            my_dagman_out = os.path.join(self._run_dir, my_dagman_out)
 
 #        try:
 #            my_dagman_out = os.path.relpath(my_dagman_out, self._original_submit_dir)
 #        except:
 #            pass
+
+        # Split filename into dir and base names
+        my_dagman_dir = os.path.dirname(my_dagman_out)
+        my_dagman_file = os.path.basename(my_dagman_out)
+
+        if wf_retries is None:
+            logger.warning("persistent wf_retry not available... using sub-workflow directory: %s" % (my_dagman_dir))
+            return my_dagman_out
+
+        # Check if we have seen this sub-workflow before
+        if my_dagman_dir in wf_retries:
+            # Yes, increment out retry counter...
+            my_retry = wf_retries[my_dagman_dir]
+            my_retry = my_retry + 1
+            wf_retries[my_dagman_dir] = my_retry
+        else:
+            # No, this is the first time we get to this sub-workflow
+            wf_retries[my_dagman_dir] = 0
+            my_retry = 0
+
+        # Compose directory... assuming replanning mode
+        my_retry_dir = my_dagman_dir + ".%03d" % (my_retry)
+
+        # If directory doesn't exist, let's change to rescue mode
+        if not os.path.isdir(my_retry_dir):
+            logger.debug("sub-workflow directory %s does not exist, shifting to rescue mode..." % (my_retry_dir))
+            my_retry_dir = my_dagman_dir + ".000"
+
+            if not os.path.isdir(my_retry_dir):
+                # Still not able to find it, output warning message
+                logger.warning("sub-workflow directory %s does not exist! Skipping this sub-workflow..." % (my_retry_dir))
+                return None
+
+        # Found sub-workflow directory, let's compose the final path to the new dagman.out file...
+        my_dagman_out = os.path.join(my_retry_dir, my_dagman_file)
 
         return my_dagman_out
 
@@ -2811,13 +2849,18 @@ if options.event_dest is not None and options.no_events is not None:
 
 # Get the location of the properties file from braindump
 top_level_wf_params = utils.slurp_braindb(run)
-# Add None if properties tag is missing
-if not "properties" in top_level_wf_params:
-    top_level_wf_params["properties"] = None
+top_level_prop_file = None
+
+# Get properties tag from braindump
+if "properties" in top_level_wf_params:
+    top_level_prop_file = top_level_wf_params["properties"]
+    # Create the full path by using the submit_dir key from braindump
+    if "submit_dir" in top_level_wf_params:
+        top_level_prop_file = os.path.join(top_level_wf_params["submit_dir"], top_level_prop_file)
 
 # Parse, and process properties
 props = properties.Properties()
-props.new(config_file=options.config_properties, rundir_propfile=top_level_wf_params["properties"])
+props.new(config_file=options.config_properties, rundir_propfile=top_level_prop_file)
 
 # Parse plotting-related properties
 doplot = utils.make_boolean(props.property("pegasus.monitord.show"))
@@ -3141,7 +3184,7 @@ def process_dagman_out(wf, log_line):
             my_job_submit_seq = add(wf, my_jobid, my_event, sched_id=my_sched_id)
             if my_event == "SUBMIT" and follow_subworkflows == True:
                 # For SUBMIT ULOG events, check if this is a sub-workflow
-                my_new_dagman_out = wf.has_subworkflow(my_jobid)
+                my_new_dagman_out = wf.has_subworkflow(my_jobid, wf_retry_dict)
                 # Ok, return result to main loop
                 return (my_new_dagman_out, my_jobid, my_job_submit_seq)
         elif re_parse_job_submit.search(log_line) is not None:
@@ -3645,6 +3688,13 @@ def socket_exit_handler():
             # Just be silent
             pass
 
+def close_wf_retry_file():
+    """
+    This function closes the persistent storage file containing sub-workflow retry information.
+    """
+    if wf_retry_dict is not None:
+        wf_retry_dict.close()
+
 #
 # --- main ------------------------------------------------------------------------------
 #
@@ -3746,6 +3796,25 @@ if "GLOBUS_LOCATION" in os.environ:
     logger.info("env: GLOBUS_LOCATION=%s" % (os.environ["GLOBUS_LOCATION"]))
 else:
     logger.info("env: GLOBUS_LOCATION=")
+
+# Build sub-workflow retry filename
+wf_retry_fn = os.path.join(run, MONITORD_WF_RETRY_FILE)
+
+# Empty sub-workflow retry information if in replay mode
+if replay_mode:
+    try:
+        os.unlink(wf_retry_fn)
+    except:
+        # Nothing to do...
+        pass
+
+# Link wf_retry_dict to persistent storage
+try:
+    wf_retry_dict = shelve.open(wf_retry_fn)
+    atexit.register(close_wf_retry_file)
+except:
+    logger.critical("cannot create persistent storage file for sub-workflow retry information... exiting...")
+    sys.exit(1)
 
 # Ok! Let's start now...
 
