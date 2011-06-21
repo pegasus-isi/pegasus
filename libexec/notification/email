@@ -25,6 +25,7 @@ import os
 import sys
 import optparse
 import smtplib
+import subprocess
 
 __author__ = "Mats Rynge <rynge@isi.edu>"
 
@@ -35,6 +36,8 @@ def usage(parser):
     print ""
     print "Usage: This tool is used by pegasus-monitord to send event notifications"
     print "over email. A set of environment variables are expected to be set:"
+    print "   PEGASUS_HOME"
+    print "   PEGASUS_SUBMIT_DIR"
     print "   PEGASUS_EVENT"
     print "   PEGASUS_EVENT_TIMESTAMP"
     print "   PEGASUS_JOBID"
@@ -64,6 +67,13 @@ def send_using_sendmail(sender, recipient, msg):
         raise RuntimeError("Sendmail exit status: %d" % (rc >> 8))
 
 
+def backticks(cmd_line):
+    """
+    what would a python program be without some perl love?
+    """
+    return subprocess.Popen(cmd_line, shell=True, stdout=subprocess.PIPE).communicate()[0]
+
+
 def myexit(rc):
     """
     system exit without a stack trace - silly python
@@ -82,6 +92,9 @@ parser.add_option("-t", "--to", action = "store", dest = "to_address",
                   help = "The To: email address. Defines the recipient for the notification.")
 parser.add_option("-f", "--from", action = "store", dest = "from_address",
                   help = "The From: email address. Defaults to the required To: address.")
+parser.add_option("-r", "--report", action = "store", dest = "report",
+                  help = "Include workflow report. Valid values are: none pegasus-analyzer pegasus-status (default)")
+
 
 # Parse command line options
 (options, args) = parser.parse_args()
@@ -92,8 +105,13 @@ to_address = options.to_address
 from_address = to_address
 if options.from_address != None:
     from_address = options.from_address
+report = "pegasus-status"
+if options.report != None:
+    report = str.lower(options.report)
         
 try:
+    validate_env_var("PEGASUS_HOME")
+    validate_env_var("PEGASUS_SUBMIT_DIR")
     validate_env_var("PEGASUS_EVENT")
     validate_env_var("PEGASUS_EVENT_TIMESTAMP")
     validate_env_var("PEGASUS_JOBID")
@@ -117,7 +135,27 @@ msg = "From: " + from_address + "\r\n" \
 if 'PEGASUS_STATUS' in os.environ:
     msg = msg \
         + "Status: " + os.environ['PEGASUS_STATUS'] + "\r\n"
-        
+    
+# pegasus-status report
+if report == "pegasus-status":
+    msg = msg + "\r\n\r\npegasus-status:\r\n\r\n"
+    try:
+        out = backticks(os.environ['PEGASUS_HOME'] + "/bin/pegasus-status -Q " \
+                      + os.environ['PEGASUS_SUBMIT_DIR'] + " 2>&1") 
+        msg = msg + out
+    except err:
+        print >> sys.stderr, "Error running pegasus-status: " + err
+
+# pegasus-analyzer report             
+if report == "pegasus-analyzer":
+    try:
+        msg = msg + "\r\n\r\npegasus-analyzer:\r\n\r\n"
+        out = backticks(os.environ['PEGASUS_HOME'] + "/bin/pegasus-analyzer -d " \
+                      + os.environ['PEGASUS_SUBMIT_DIR'] + " 2>&1") 
+        msg = msg + out
+    except err:
+        print >> sys.stderr, "Error running pegasus-analyzer: " + err 
+
 # try to send using smtp first, and if that does not work, sendmail
 try:
     send_using_smtp(from_address, to_address, msg)
