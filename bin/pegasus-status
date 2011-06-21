@@ -1604,9 +1604,9 @@ binmode( STDOUT, ':utf8' ) if $main::isutf8;
 # parse CLI options
 my $heldinfo = 1; 
 my $heavy = 1; 
-my $noidle = 0; 
-my $nosuccess = 0; 
-my $noqueue = 0; 
+my $queue = 1; 
+my $showidle = 1; 
+my $success = 1; 
 $main::expert = 0; 
 my $legend = 0; 
 my $show_subdag = 0; 
@@ -1620,10 +1620,10 @@ GetOptions( 'help|h' => \&usage
 	  , 'classad|ca+' => \$classads
 	  , 'jobtype|jobclass|j=s' => \@jobtypes
 	  , 'site|s=s' => \@jobsites
-	  , 'idle|i!' => \$noidle
-	  , 'success|S!' => \$nosuccess
+	  , 'idle|i!' => \$showidle
+	  , 'success|S!' => \$success
 	  , 'legend|L!' => \$legend
-	  , 'queue|Q!' => \$noqueue
+	  , 'queue|Q!' => \$queue
 	  , 'hold|held!' => \$heldinfo
 	  , 'heavy!' => \$heavy
 	  , 'profile=s' => sub { profile_start($_[1]) },
@@ -1748,11 +1748,11 @@ for ( my $cursor=1; ; $cursor=1 ) {
     my @dtitle = @{ $main::dtitle[$show_subdag] }; 
 
     my @q = (); 
-    unless ( $noqueue ) { 
+    if ( $queue ) { 
 	# collect information from condor_q
 	profile_log( 'start condor_q' ) if defined $main::profile;
 	condor_q( %job, %dag, @qtitle
-		, noidle => $noidle
+		, noidle => ! $showidle
 		, count => \%ccount
 		, ( @jobtypes ? ( jobtypes => \@jobtypes ) : () ) 
 		, ( @jobsites ? ( jobsites => \@jobsites ) : () ) 
@@ -1776,7 +1776,7 @@ for ( my $cursor=1; ; $cursor=1 ) {
     if ( defined $run ) {
 	profile_log( "start dag dir traversal" ) if defined $main::profile; 
 	@dags = dag_status( $run, $braindb{dag}, 
-			    nosuccess => $nosuccess,
+			    nosuccess => ! $success,
 			    count => \%dcount );
 	profile_log( "final dag dir traversal" ) if defined $main::profile;
     }
@@ -1880,8 +1880,10 @@ for ( my $cursor=1; ; $cursor=1 ) {
 	profile_log( "final Q printing" ) if defined $main::profile; 
     } else {
 	# nothing in Q
-	print "(no matching jobs found in Condor Q)\n"; 
-	++$cursor;
+	if ( $queue ) { 
+	    print "(no matching jobs found in Condor Q)\n";
+	    ++$cursor;
+	}
     }
 
     # are we sane? 
