@@ -417,7 +417,7 @@ public class TCClient extends Executable{
             "\n\tQuery Bulk         : -q -B" +
             "\n\tQuery LFN          : -q -L [-r <resource>] [-t <type>]" +
             "\n\tQuery PFN          : -q -P -l <lfn> [-r <resource>] [-t <type>]" +
-            "\n\tQuery Resource     : -q -R [-l <lfn>] [-t <type>]" +
+            "\n\tQuery Resource     : -q -R -l <lfn> [-t <type>]" +
             "\n\tQuery Lfn Profile  : -q -L -E -l <lfn>" +
             "\n\tQuery Pfn Profile  : -q -P -E -p <pfn> -r <resource> -t <type>" +
             "\n";
