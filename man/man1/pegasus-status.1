@@ -33,11 +33,228 @@ pegasus\-status \- Pegasus workflow- and run\-time status
 [\-\-[no]heavy] [\-j|\-\-jobtype\~jt] [\-s|\-\-site\~sid] [\-l|\-\-long]
 [\-S|\-\-[no]success] [rundir]
 .SH "DESCRIPTION"
+.B pegasus\-status
+shows the current state of the Condor Q and a workflow, depending on settings.
+If no valid run directory could be determined, including the current directory,
+.B pegasus\-status
+will show all jobs of the current user and no workflows. If a run directory 
+was specified, or the current directory is a valid run directory, status about
+the workflow will also be shown. 
+.PP 
+Many option will modify the behavior of this program, not withstanding a proper
+UTF-8 capable terminal, watch mode, the presence of jobs in the queue, progress
+in the workflow directory, etc. 
 .SH "ARGUMENTS"
+.TP
+.B \-h
+.TP
+.B \-\-help
+Prints a concise help and exits. 
+.IP
+.TP
+.B \-V
+.TP
+.B \-\-version
+Prints the version information and exits.
+.IP
+.TP
+.B \-w\~[sec]
+.TP
+.B \-\-watch\~[sec]
+This option enables the 
+.I watch mode.
+In watch mode, the program repeated polls the status sources and shows
+them in an updating window. The optional argument 
+.I sec
+to this option determines how often these sources are polled. 
+.IP
+We 
+.I strongly
+recommend to set this interval not too low, as frequent polling will
+degrade the scheduler performance and increase the host load. In watch
+mode, the terminal size is the limiting factor, and parts of the output
+may be truncated to fit it onto the given terminal. 
+.IP
+Watch mode is disabled by default. The
+.I sec
+argument defaults to 60 seconds. 
+.TP
+.B \-L
+.TP
+.B \-\-legend
+.TP
+.B \-\-nolegend
+This option shows a legend explaining the columns in the output, or turns off 
+legends. 
+.IP
+By default, legends are turned off to save terminal real estate. 
+.TP
+.B \-Q
+.TP
+.B \-\-queue
+.TP
+.B \-\-noqueue
+This option turns on (or off) the output from parsing Condor Q. 
+.IP
+By default, Condor Q will be parsed for jobs of the current user. If a workflow
+run directory is specified, it will furthermore be limited to jobs only belonging
+to the workflow. 
+.TP
+.B \-v
+.TP
+.B \-\-verbose
+This option increases the expert level, showing more information about the Condor
+Q state. Being an incremental option, two incrases are supported. 
+.IP
+Additionally, the signals
+.I SIGUSR1
+and
+.I SIGUSR2
+will increase and decrease the expert level respectively during run\-time.  
+.IP
+By default, the simplest queue view is enabled. 
+.TP
+.B \-d
+.TP
+.B \-\-debug
+This is an internal debugging tool and should not be used outside the development
+team. As incremental option, it will show Pegasus-specific ClassAd tuples for each
+job, more in the second level. 
+.IP
+By default, debug mode is off. 
+.TP
+.B \-u name
+.TP
+.B \-\-user name
+This option permits to query the queue for a different user than the current one. 
+This may be of interest, if you are debugging the workflow of another user. 
+.IP
+By default, the current user is assumed. 
+.TP
+.B \-i
+.TP
+.B \-\-idle
+.TP
+.B \-\-noidle
+With this option, jobs in Condor state
+.I idle
+are omitted from the queue output. 
+.IP
+By default, 
+.I idle
+jobs are shown. 
+.TP
+.B \-\-held
+.TP
+.B \-\-noheld
+This option enables or disabled showing of the reason a job entered
+Condor's
+.I held
+state. The reason will somewhat destroy the screen layout. 
+.IP
+By default, the reason is shown. 
+.TP
+.B \-\-heavy
+.TP
+.B \-\-noheavy
+If the terminal is UTF-8 capable, and output is to a terminal, this option
+decides whether to use heavyweight or lightweight line drawing characters. 
+.IP
+By default, heavy lines connect the jobs to workflows.
+.TP
+.B \-j\~jt
+.TP
+.B \-\-jobtype\~jt
+This option filters the Condor jobs shown only to the Pegasus jobtypes given
+as argument or arguments to this option. It is a multi-option, and may be 
+specified multiple times, and may use comma-separated lists. Use this option
+with an argument
+.I help
+to see all valid and recognized jobtypes. 
+.IP
+By default, all Pegasus jobtypes are shown. 
+.TP
+.B \-s site
+.TP
+.B \-\-site site
+This option limits the Condor jobs shown to only those pertaining to the
+(remote) site
+.IR site .
+This is an multi-option, and may be specified multiple times, and may use
+comma-separated lists. 
+.IP
+By default, all sites are shown. 
+.IP
+.TP
+.B \-l
+.TP
+.B \-\-long
+This option will show one line per sub-DAG, including one line for the
+workflow. If there is only a single DAG pertaining to the 
+.IR rundir , 
+only total will be shown. 
+.IP
+By default, only DAG totals (sums) are shown. 
+.TP
+.B \-S
+.TP
+.B \-\-success
+.TP
+.B \-\-nosuccess
+This option modifies the previous
+.I \-\-long
+option. It will omit (or show) fully successful sub-DAGs from the output. 
+.IP
+By default, all DAGs are shown. 
+.IP
+.TP
+.B rundir
+This option show statistics about the given DAG that runs in
+.IR rundir .
+To gather proper statistics, 
+.B pegasus\-status
+needs to traverse the directory and all sub-directories. This can become
+an expensive operation on shared filesystems. 
+.IP
+By default, the
+.I rundir
+is assumed to be the current directory. If the current directory is not
+a valid 
+.IR rundir , 
+no DAG statistics will be shown. 
 .SH "RETURN VALUE"
+.B pegasus\-status
+will typically return success in regular mode, and the termination signal
+in watch mode. Abnormal behavior will result in a non-zero exit code. 
 .SH "SEE ALSO"
+.BR condor_q (1),
+.BR pegasus-statistics (1). 
 .SH "EXAMPLE"
+.TP
+.B pegasus\-status
+This invocation will parse the Condor Q for the current user and show all
+her jobs. Additionally, if the current directory is a valid Pegasus workflow
+directory, totals about the DAG in that directory are displayed. 
+.TP
+.B pegasus\-status -l rundir
+As above, but providing a specific Pegasus workflow directory in argument
+.I rundir
+and requesting to itemize sub-DAGs. 
+.TP
+.B pegasus\-status -j help
+This option will show all permissible job types and exit. 
+.TP
+.B pegasus\-status -vvw 300 -Ll
+This invocation will parse the queue, print it in high-expert mode, show
+legends, itemize DAG statistics of the current working directory, and 
+redraw the terminal every five minutes with updated statistics. 
 .SH "RESTRICTIONS"
+Currently only supports a single (optional) run directory. If you want to
+watch multiple run directories, I suggest to open multiple terminals and
+watch them separately. If that is not an option, or deemed too expensive,
+you can ask
+.I pegasus\-support at isi dot edu
+to extend the program. 
 .SH "AUTHORS"
 Jens-S. Vöckler <voeckler at isi dot edu>
 .br
