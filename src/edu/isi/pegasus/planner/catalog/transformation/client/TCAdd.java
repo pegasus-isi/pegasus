@@ -27,6 +27,7 @@ import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 import edu.isi.pegasus.common.logging.LogManager;
@@ -35,7 +36,10 @@ import edu.isi.pegasus.common.util.ProfileParserException;
 import edu.isi.pegasus.common.util.Separator;
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
+import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
+import edu.isi.pegasus.planner.catalog.transformation.TransformationFactory;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
+import edu.isi.pegasus.planner.common.PegasusProperties;
 
 
 public class TCAdd
@@ -173,101 +177,35 @@ public class TCAdd
      * @return boolean
      */
     private boolean addBulk() {
-        BufferedReader buf = null;
-        int linecount = 0;
-        int count = 0;
-        TCType ttype = null;
-        try {
-            String line = null;
-            buf = new BufferedReader( new FileReader( file ) );
-            while ( ( line = buf.readLine() ) != null ) {
-                linecount++;
-                if ( ! ( line.startsWith( "#" ) ||
-                    line.trim().equalsIgnoreCase( "" ) ) ) {
-                    lfn = null;
-                    namespace = null;
-                    name = null;
-                    version = null;
-                    type = null;
-                    profiles = null;
-                    pfn = null;
-                    resource = null;
-                    systemstring = null;
-                    profile = null;
-                    String[] tokens = line.split( "[ \t]+", 6 );
-                    for ( int i = 0; i < tokens.length; i++ ) {
-                        switch ( i ) {
-                            case 0: //poolname
-                                resource = tokens[ i ];
-                                break;
-                            case 1: //logical transformation name
-                                lfn = tokens[ i ];
-                                String[] s = Separator.split( lfn );
-                                namespace = s[ 0 ];
-                                name = s[ 1 ];
-                                version = s[ 2 ];
-                                break;
-                            case 2: //pfn
-                                pfn = tokens[ i ];
-                                break;
-                            case 3: //type
-                                ttype = ( tokens[ i ].equalsIgnoreCase( "null" ) ) ?
-                                    TCType.INSTALLED :
-                                    TCType.valueOf( tokens[ i ] );
-                                break;
-                            case 4: //systeminfo
-                                system = ( tokens[ i ].equalsIgnoreCase( "null" ) ) ?
-                                    new SysInfo( null ) :
-                                    new SysInfo( tokens[ i ] );
-                                systemstring = system.toString();
-                                break;
-                            case 5: //profile string
-                                profile = ( tokens[ i ].equalsIgnoreCase(
-                                    "null" ) ) ? null :
-                                    tokens[ i ];
-                                break;
-                            default:
-                                mLogger.log( "Line " + linecount +
-                                    " : Humm no need to be in default",
-                                   LogManager.ERROR_MESSAGE_LEVEL );
-                        } //end of switch
-                    } //end of for loop
-                    try {
-                    profiles = ProfileParser.parse( profile );
-                }catch (ProfileParserException ppe) {
-                    mLogger.log( "Unable to parse profiles on line "+
-                                 linecount+" "+ppe.getMessage()+ "at position "+
-                                 ppe.getPosition(), ppe ,
-                                 LogManager.ERROR_MESSAGE_LEVEL);
-                }
-                    if ( !(tc.insert( namespace, name, version, pfn, ttype,
-                        resource, null, profiles,  system  )==1) ) {
-                        mLogger.log(
-                            "Unable to bulk entries into tc on line " +
-                            linecount ,LogManager.ERROR_MESSAGE_LEVEL);
-                        return false;
-                    }
-                    count++;
-                    // this.addEntry();
-                } //end of if "#"
-            } //end of while line
-            mLogger.log( "Added " + count + " entries to the TC" ,
-                         LogManager.INFO_MESSAGE_LEVEL);
-            buf.close();
-            return true;
-        } catch ( FileNotFoundException ex ) {
-            mLogger.log( "The tc text file " + file +
-                " was not found", ex ,LogManager.ERROR_MESSAGE_LEVEL);
-            return false;
-        } catch ( IOException e ) {
-            mLogger.log( "Unable to open the file " +
-                         file, e,LogManager.ERROR_MESSAGE_LEVEL );
-            return false;
-        } catch ( Exception e ) {
-            mLogger.log(
-                "Unable to add bulk entries into tc on line " + linecount,
-                e ,LogManager.ERROR_MESSAGE_LEVEL);
-            return false;
-        }
+	List <TransformationCatalogEntry> entries = null;
+	PegasusProperties mBag = PegasusProperties.getInstance ();
+	
+	mBag.setProperty( "pegasus.catalog.transformation", "File" );
+	mBag.setProperty( "pegasus.catalog.transformation.file", file );
+
+	TransformationCatalog catalog = TransformationFactory.loadInstance( mBag );
+	
+	try {
+	    entries = catalog.getContents();
+	    mLogger.log( "Loaded  " + entries.size( ) + " number of transformations ", LogManager.DEBUG_MESSAGE_LEVEL );
+        
+	    int i = tc.insert( entries );
+	    mLogger.log( "Added " + i + " number of transformations ", LogManager.DEBUG_MESSAGE_LEVEL );
+        
+	    return true;
+        
+	} catch ( Exception e ) {
+	    mLogger.log( "Unable to add bulk entries into tc", e, LogManager.ERROR_MESSAGE_LEVEL);
+	    return false;
+	    
+	} finally {
+
+	    if (catalog != null) {
+		catalog.close ();
+	    }
+	    
+	}
+    
     }
+
 }
