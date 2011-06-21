@@ -109,7 +109,6 @@ public class PegasusGetSites extends Executable{
             //are thrown that may have chained causes
             me.log( convertException(rte),
                          LogManager.FATAL_MESSAGE_LEVEL );
-            rte.printStackTrace();
             result = 1;
         }
         catch ( Exception e ) {
