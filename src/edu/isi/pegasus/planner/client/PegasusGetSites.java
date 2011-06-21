@@ -59,8 +59,8 @@ import java.util.Properties;
  */
 public class PegasusGetSites extends Executable{	
     
-    private String mVO ="";
-    private String mGrid ="";
+    private String mVO = null;
+    private String mGrid = null;
     
     /**
      * The default source to query for generating a site catalog.
@@ -203,10 +203,10 @@ public class PegasusGetSites extends Executable{
         
         //pass on the VO and Grid information as properties
         //to site catalog back end.
-        if(mVO != null){
+        if(mVO != null  ){
             p.setProperty( getPropertyKey( mSource, "vo" ), mVO  );
         }
-        if(mGrid != null){
+        if(mGrid != null  ){
             p.setProperty( getPropertyKey( mSource, "grid" ), mGrid  );
         }
         
