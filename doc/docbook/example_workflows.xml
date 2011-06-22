@@ -354,8 +354,7 @@ requirements = ((GLIDEIN_Entry_Name == "ISIViz") || (TARGET.Pegasus_Site == "ISI
         </listitem>
       </itemizedlist>
 
-      <para>Note how the DAX API has support for sub workflows (compare adding
-      a sub workflow to adding a simple job):</para>
+      <para>The DAX API has support for sub workflows:</para>
 
       <programlisting>    remote_tile_setup = Job(namespace="gp", name="remote_tile_setup", version="1.0")
     remote_tile_setup.addArguments("%05d" % (tile_id))
@@ -380,7 +379,8 @@ requirements = ((GLIDEIN_Entry_Name == "ISIViz") || (TARGET.Pegasus_Site == "ISI
 
 </programlisting>
 
-      <para></para>
+      <para/>
     </section>
   </section>
 </chapter>
+
