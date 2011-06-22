@@ -881,11 +881,12 @@ public class SeqExec implements GridStart {
                 writer.println( getSeqExecCommentStringForTask( "cp",
                                                                 null,
                                                                 taskid++) );
-                writer.println( enableCommandViaKickstart( cmd,
-                                               "cp",
-                                               job.getSiteHandle(),
-                                               Job.CREATE_DIR_JOB,
-                                               suppressXMLHeader  ) );
+                writer.println( enableCommandViaKickstart( job,
+                                                           cmd,
+                                                           "cp",
+                                                           job.getSiteHandle(),
+                                                           Job.CREATE_DIR_JOB,
+                                                           suppressXMLHeader  ) );
                 suppressXMLHeader = true;
             }
 
@@ -896,7 +897,8 @@ public class SeqExec implements GridStart {
                 writer.println( getSeqExecCommentStringForTask( "chmod",
                                                                 null,
                                                                 taskid++) );
-                writer.println( enableCommandViaKickstart( "/bin/chmod 600 " + remoteProxyPath,
+                writer.println( enableCommandViaKickstart( job,
+                                                           "/bin/chmod 600 " + remoteProxyPath,
                                                            "chmod",
                                                            job.getSiteHandle(),
                                                            Job.STAGE_IN_JOB,
@@ -914,7 +916,8 @@ public class SeqExec implements GridStart {
                 writer.println( getSeqExecCommentStringForTask( PEGASUS_TRANSFER_COMPLETE_TRANSFORMATION_NAME,
                                                                 null,
                                                                 taskid++) );
-                writer.println( enableCommandViaKickstart( preJob,
+                writer.println( enableCommandViaKickstart(  job,
+                                                            preJob,
                                                             PEGASUS_TRANSFER_COMPLETE_TRANSFORMATION_NAME,
                                                             job.getSiteHandle(),
                                                             Job.STAGE_OUT_JOB,
@@ -967,7 +970,8 @@ public class SeqExec implements GridStart {
                 writer.println( getSeqExecCommentStringForTask( PEGASUS_TRANSFER_COMPLETE_TRANSFORMATION_NAME,
                                                                 null,
                                                                 taskid++) );
-                writer.println( enableCommandViaKickstart( postJob,
+                writer.println( enableCommandViaKickstart( job,
+                                                           postJob,
                                                            PEGASUS_TRANSFER_COMPLETE_TRANSFORMATION_NAME,
                                                            job.getSiteHandle(),
                                                            Job.STAGE_OUT_JOB,
@@ -993,6 +997,10 @@ public class SeqExec implements GridStart {
             throw new RuntimeException( "[SEQEXEC GRIDSTART] Error while writing out seqexec input file " + stdIn , ioe );
         }
 
+        //specifically remove any GRIDSTART variables that may exist
+        job.envVariables.removeKey( Kickstart.KICKSTART_SETUP ) ;
+        job.envVariables.removeKey( Kickstart.KICKSTART_CLEANUP ) ;
+        
         return stdIn;
     }
 
@@ -1080,11 +1088,12 @@ public class SeqExec implements GridStart {
                 writer.println( getSeqExecCommentStringForTask( "cp",
                                                                 null,
                                                                 taskid++) );
-                writer.println( enableCommandViaKickstart( cmd,
-                                               "cp",
-                                               job.getSiteHandle(),
-                                               Job.CREATE_DIR_JOB,
-                                               suppressXMLHeader  ) );
+                writer.println( enableCommandViaKickstart( job,
+                                                           cmd,
+                                                           "cp",
+                                                           job.getSiteHandle(),
+                                                           Job.CREATE_DIR_JOB,
+                                                           suppressXMLHeader  ) );
                 suppressXMLHeader = true;
             }
 
@@ -1094,7 +1103,8 @@ public class SeqExec implements GridStart {
                 writer.println( getSeqExecCommentStringForTask( "chmod",
                                                                 null,
                                                                 taskid++) );
-                writer.println( enableCommandViaKickstart( "/bin/chmod 600 " + remoteProxyPath,
+                writer.println( enableCommandViaKickstart( job,
+                                                           "/bin/chmod 600 " + remoteProxyPath,
                                                            "chmod",
                                                            job.getSiteHandle(),
                                                            Job.STAGE_IN_JOB,
@@ -1114,12 +1124,13 @@ public class SeqExec implements GridStart {
                 writer.println( getSeqExecCommentStringForTask( PEGASUS_TRANSFER_COMPLETE_TRANSFORMATION_NAME,
                                                                 null,
                                                                 taskid++) );
-                     writer.println( enableCommandViaKickstart( preJob,
-                                                            PEGASUS_TRANSFER_COMPLETE_TRANSFORMATION_NAME,
-                                                            job.getSiteHandle(),
-                                                            Job.STAGE_OUT_JOB,
-                                                            suppressXMLHeader,
-                                                            directory ) );
+                     writer.println( enableCommandViaKickstart( job,
+                                                                preJob,
+                                                                PEGASUS_TRANSFER_COMPLETE_TRANSFORMATION_NAME,
+                                                                job.getSiteHandle(),
+                                                                Job.STAGE_OUT_JOB,
+                                                                suppressXMLHeader,
+                                                                directory ) );
                      suppressXMLHeader = true;
             }
 
@@ -1146,7 +1157,8 @@ public class SeqExec implements GridStart {
                 writer.println( getSeqExecCommentStringForTask( PEGASUS_TRANSFER_COMPLETE_TRANSFORMATION_NAME,
                                                                 null,
                                                                 taskid++) );
-                writer.println( enableCommandViaKickstart( postJob,
+                writer.println( enableCommandViaKickstart( job,
+                                                           postJob,
                                                            PEGASUS_TRANSFER_COMPLETE_TRANSFORMATION_NAME,
                                                            job.getSiteHandle(),
                                                            Job.STAGE_OUT_JOB,
@@ -1252,6 +1264,8 @@ public class SeqExec implements GridStart {
       * Enables a command via kickstart. This is used to enable commands that
       * are retrieved from the SLS files.
       *
+      * @param mainJob   the main job associated with which additional command
+      *                  is invoked.    
       * @param command   the command that needs to be invoked via kickstart.
       * @param name      a logical name to assign to the command
       * @param site      the site on which the command executes
@@ -1262,19 +1276,22 @@ public class SeqExec implements GridStart {
       * @return   the command enabled via kickstart
       */
 
-     protected String enableCommandViaKickstart( String command,
+     protected String enableCommandViaKickstart( Job mainJob,
+                                                 String command,
                                                  String name,
                                                  String site,
                                                  int type,
                                                  boolean supressXMLHeader ){
     
-         return this.enableCommandViaKickstart(command, name, site, type, supressXMLHeader, null );
+         return this.enableCommandViaKickstart( mainJob, command, name, site, type, supressXMLHeader, null );
      }
 
      /**
       * Enables a command via kickstart. This is used to enable commands that
       * are retrieved from the SLS files.
       *
+      * @param mainJob   the main job associated with which additional command
+      *                  is invoked.
       * @param command   the command that needs to be invoked via kickstart.
       * @param name      a logical name to assign to the command
       * @param site      the site on which the command executes
@@ -1286,7 +1303,8 @@ public class SeqExec implements GridStart {
       *
       * @return   the command enabled via kickstart
       */
-     protected String enableCommandViaKickstart( String command,
+     protected String enableCommandViaKickstart( Job mainJob,
+                                                 String command,
                                                  String name,
                                                  String site,
                                                  int type,
@@ -1305,6 +1323,12 @@ public class SeqExec implements GridStart {
          job.setSiteHandle( site );
          job.setRemoteExecutable( executable );
          job.setArguments( arguments );
+
+         //we pull the pegasus profiles from the main job
+         //to ensure that path to kickstart is picked up correctlyh
+         //if overriden via profiles
+         job.vdsNS = mainJob.vdsNS;
+         
          this.mKickstartGridStartImpl.enable( job, true );
 
          StringBuffer result = new StringBuffer();
