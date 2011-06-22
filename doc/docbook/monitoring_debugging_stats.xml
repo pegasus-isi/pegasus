@@ -1208,7 +1208,7 @@ eps format : /scratch/grid-setup/run0001/graph/diamond-host.eps
 
         <mediaobject>
           <imageobject>
-            <imagedata fileref="images/diamond-2.png"/>  width="4.5in"
+            <imagedata fileref="images/diamond-2.png"/>  width="6in"
           </imageobject>
         </mediaobject>
       </figure>
@@ -1223,7 +1223,7 @@ eps format : /scratch/grid-setup/run0001/graph/diamond-host.eps
 
         <mediaobject>
           <imageobject>
-            <imagedata fileref="images/diamond-host.png"/>
+            <imagedata fileref="images/diamond-host.png"/>  width="6in"
           </imageobject>
         </mediaobject>
       </figure>
