@@ -29,7 +29,7 @@
     <section>
       <title>pegasus-monitord</title>
 
-      <para>pegasus-monitord is used to follow a workflow, parsing the output
+      <para>Pegasus-monitord is used to follow a workflow, parsing the output
       of DAGMan's dagman.out file. In addition to generating the jobstate.log
       file, which contains the various states that a job goes through during
       the workflow execution, pegasus-monitord can also be used to mine
@@ -37,7 +37,7 @@
       database, or write a file with NetLogger events containing this
       information.</para>
 
-      <para>pegasus-monitord is automatically invoked by pegasus-run, and
+      <para>Pegasus-monitord is automatically invoked by pegasus-run, and
       tracks workflows in real-time. By default, it produces the jobstate.log
       file, and a SQLite database, which contains all the information listed
       in the Stampede schema. When a workflow fails, and is re-submitted with
@@ -121,7 +121,7 @@ WORKFLOW STATUS : RUNNING | 48/58 ( 83% ) | (workflow is running)</programlistin
     <section>
       <title>pegasus-analyzer</title>
 
-      <para>pegasus-analyzer is a command-line utility for parsing several
+      <para>Pegasus-analyzer is a command-line utility for parsing several
       files in the workflow directory and summarizing useful information to
       the user. It should be used after the workflow has already finished
       execution. pegasus-analyzer quickly goes through the jobstate.log file,
@@ -215,7 +215,7 @@ working dir : /lfs1/work/pegasus/run0004
     <section>
       <title>pegasus-statistics</title>
 
-      <para>pegasus-statistics generates workflow execution statistics. To
+      <para>Pegasus-statistics generates workflow execution statistics. To
       generate statistics run the command as shown below.</para>
 
       <programlisting>$ <emphasis>pegasus-statistics /scratch/grid-setup/run0001/</emphasis>
@@ -399,7 +399,7 @@ Logical transformation statistics :
         .</para>
       </note>
 
-      <para>A sample file is shown below.</para>
+      <para>A sample file is shown below:</para>
 
       <itemizedlist>
         <listitem>
@@ -503,58 +503,58 @@ Logical transformation statistics :
 
       <itemizedlist>
         <listitem>
-          <para>Job - the name of the job</para>
+          <para><emphasis role="bold">Job</emphasis> - the name of the job</para>
         </listitem>
 
         <listitem>
-          <para>Site - the site where the job ran</para>
+          <para><emphasis role="bold">Site</emphasis> - the site where the job ran</para>
         </listitem>
 
         <listitem>
-          <para>Kickstart(sec.) - the actual duration of the job in seconds on
+          <para><emphasis role="bold">Kickstart(sec.)</emphasis> - the actual duration of the job in seconds on
           the remote compute node. In case of retries the value is the
           cumulative of all retries.</para>
         </listitem>
 
         <listitem>
-          <para>Post(sec.) - the postscript time as reported by DAGMan .In
+          <para><emphasis role="bold">Post(sec.)</emphasis> - the postscript time as reported by DAGMan .In
           case of retries the value is the cumulative of all retries.</para>
         </listitem>
 
         <listitem>
-          <para>DAGMan(sec.) - the time between the last parent job of a job
+          <para><emphasis role="bold">DAGMan(sec.)</emphasis> - the time between the last parent job of a job
           completes and the job gets submitted.In case of retries the value of
           the last retry is used for calculation.</para>
         </listitem>
 
         <listitem>
-          <para>CondorQTime(sec.) - the time between submission by DAGMan and
+          <para><emphasis role="bold">CondorQTime(sec.)</emphasis> - the time between submission by DAGMan and
           the remote Grid submission. It is an estimate of the time spent in
           the condor q on the submit node .In case of retries the value is the
           cumulative of all retries.</para>
         </listitem>
 
         <listitem>
-          <para>Resource(sec.) - the time between the remote Grid submission
+          <para><emphasis role="bold">Resource(sec.)</emphasis> - the time between the remote Grid submission
           and start of remote execution . It is an estimate of the time job
           spent in the remote queue .In case of retries the value is the
           cumulative of all retries.</para>
         </listitem>
 
         <listitem>
-          <para>Runtime(sec.) - the time spent on the resource as seen by
+          <para><emphasis role="bold">Runtime(sec.)</emphasis> - the time spent on the resource as seen by
           Condor DAGMan . Is always &gt;=kickstart .In case of retries the
           value is the cumulative of all retries.</para>
         </listitem>
 
         <listitem>
-          <para>Seqexec(sec.) - the time taken for the completion of a
+          <para><emphasis role="bold">Seqexec(sec.)</emphasis> - the time taken for the completion of a
           clustered job .In case of retries the value is the cumulative of all
           retries.</para>
         </listitem>
 
         <listitem>
-          <para>Seqexec-Delay(sec.) - the time difference between the time for
+          <para><emphasis role="bold">Seqexec-Delay(sec.)</emphasis> - the time difference between the time for
           the completion of a clustered job and sum of all the individual
           tasks kickstart time .In case of retries the value is the cumulative
           of all retries.</para>
@@ -992,41 +992,41 @@ Logical transformation statistics :
 
       <itemizedlist>
         <listitem>
-          <para>Transformation - name of the transformation.</para>
+          <para><emphasis role="bold">Transformation</emphasis> - name of the transformation.</para>
         </listitem>
 
         <listitem>
-          <para>Count - the number of times the transformation was
+          <para><emphasis role="bold">Count</emphasis> - the number of times the transformation was
           executed.</para>
         </listitem>
 
         <listitem>
-          <para>Mean(sec.) - the mean of the transformation runtime.</para>
+          <para><emphasis role="bold">Mean (sec.)</emphasis> - the mean of the transformation runtime.</para>
         </listitem>
 
         <listitem>
-          <para>Variance(sec.) - the variance of the transformation
+          <para><emphasis role="bold">Varaince (sec.)</emphasis> - the variance of the transformation
           runtime.Variance is calculated using the on-line algorithm by Knuth
           (<ulink
           url="http://en.wikipedia.org/wiki/Algorithms_for_calculating_variance">http://en.wikipedia.org/wiki/Algorithms_for_calculating_variance</ulink>).</para>
         </listitem>
 
         <listitem>
-          <para>Min(sec.) - the minimum transformation runtime value.</para>
+          <para><emphasis role="bold">Min (sec.)</emphasis> - the minimum transformation runtime value.</para>
         </listitem>
 
         <listitem>
-          <para>Max(sec.) - the maximum transformation runtime value.</para>
+          <para><emphasis role="bold">Max (sec.)</emphasis> - the maximum transformation runtime value.</para>
         </listitem>
 
         <listitem>
-          <para>Total(sec.) - the cumulative of transformation runtime.</para>
+          <para><emphasis role="bold">Total (sec.)</emphasis> - the cumulative of transformation runtime.</para>
         </listitem>
       </itemizedlist>
 
 
       <table>
-        <title>Transformation statistics</title>
+        <title>Transformation Statistics</title>
 
         <tgroup align="center" cols="7">
           <thead>
@@ -1135,7 +1135,7 @@ Logical transformation statistics :
     <section>
       <title>pegasus-plots</title>
 
-      <para>pegasus-plots generates graphs and charts to visualize workflow
+      <para>Pegasus-plots generates graphs and charts to visualize workflow
       execution. To generate graphs and charts run the command as shown
       below.</para>
 
@@ -1204,11 +1204,11 @@ eps format : /scratch/grid-setup/run0001/graph/diamond-host.eps
       below.</para>
 
       <figure>
-        <title>Gantt chart</title>
+        <title>Gantt Chart</title>
 
         <mediaobject>
           <imageobject>
-            <imagedata fileref="images/diamond-2.png"/>
+            <imagedata fileref="images/diamond-2.png"/>  width="4.5in"
           </imageobject>
         </mediaobject>
       </figure>
@@ -1230,4 +1230,5 @@ eps format : /scratch/grid-setup/run0001/graph/diamond-host.eps
      </section>
   </section>
 </chapter>
+
 

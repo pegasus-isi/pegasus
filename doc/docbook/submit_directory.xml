@@ -467,7 +467,7 @@ ctime="2009-01-30T19:17:41-06:00" uid="29548" user="vahi" gid="13872" group="bvr
   </section>
 
   <section>
-    <title>Jobstate.log File</title>
+    <title>Jobstate.Log File</title>
 
     <para>The jobstate.log file logs the various states that a job goes
     through during workflow execution. It is created by the <emphasis
@@ -477,16 +477,16 @@ ctime="2009-01-30T19:17:41-06:00" uid="29548" user="vahi" gid="13872" group="bvr
     writes out the jobstate.log file, the format of which is more amenable to
     parsing.</para>
 
-    <para><emphasis role="bold">Note: </emphasis>The jobstate.log file is not
+    <note><para>The jobstate.log file is not
     created if a user uses condor_submit_dag to submit a workflow to Condor
-    DAGMan.</para>
+    DAGMan.</para></note>
 
     <para>The jobstate.log file can be created after a workflow has finished
     executing by running <emphasis role="bold">pegasus-monitord</emphasis> on
     the .dagman.out file in the workflow submit directory.</para>
 
     <para>Below is a snippet from the jobstate.log for a single job executed
-    via condorg</para>
+    via condorg:</para>
 
     <programlisting>1239666049 create_dir_blackdiamond_0_isi_viz SUBMIT 3758.0 isi_viz - 1
 1239666059 create_dir_blackdiamond_0_isi_viz EXECUTE 3758.0 isi_viz - 1
@@ -864,10 +864,10 @@ type dag
       </listitem>
 
       <listitem>
-        <para><emphasis>task.xform</emphasis> - The logical transformation which the job refers
+        <para><emphasis role="bold">task.xform</emphasis> - The logical transformation which the job refers
         to.</para>
 
-        <para>Some sample entries are as follows</para>
+        <para>Some sample entries are:</para>
 
         <programlisting>ts=2009-04-21T23:09:03.091658Z event=pegasus.job job.id=analyze_ID000004 job.class="7" \
                           job.xform="vahi::analyze:1.0" task.count="1"
@@ -885,6 +885,7 @@ ts=2009-04-21T23:09:03.093402Z event=pegasus.job.map job.id=merge_vahi-findrange
     </itemizedlist>
   </section>
 </chapter>
+
 
 
 
