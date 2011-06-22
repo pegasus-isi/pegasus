@@ -539,7 +539,7 @@ class Job:
         self._stderr_text = None
         self._job_dagman_out = None		# _CONDOR_DAGMAN_LOG from environment line for pegasus-plan and subdax_ jobs
 
-    def set_job_state(self, job_state, timestamp, status):
+    def set_job_state(self, job_state, sched_id, timestamp, status):
         """
         This function sets the job state for this job. It also updates
         the times the main job and PRE/POST scripts start and finish.
@@ -549,6 +549,9 @@ class Job:
         # Increment job state sequence
         self._job_state_seq = self._job_state_seq + 1
 
+        # Set sched_id if we don't already have it...
+        if self._sched_id is None:
+            self._sched_id = sched_id
         # Record timestamp for certain job states
         if job_state == "PRE_SCRIPT_STARTED":
             self._pre_script_start = int(timestamp)
@@ -1856,7 +1859,7 @@ class Workflow:
         # Not found, return None
         return None
 
-    def find_job_submit_seq(self, jobid):
+    def find_job_submit_seq(self, jobid, sched_id=None):
         """
         If a jobid already exists and is in the PRE_SCRIPT_SUCCESS
         mode, this function returns its job_submit_seq. Otherwise, it
@@ -1879,6 +1882,13 @@ class Workflow:
             # jobid is in "PRE_SCRIPT_SUCCESS" or "DAGMAN_SUBMIT"  state,
             # just return job_submit_seq
             return my_job_submit_seq
+
+        # Ok, check sched_id if it is not None...
+        if sched_id is not None:
+            if my_job._sched_id == sched_id:
+                # sched_id matches job we already have... must be an
+                # out-of-order submit event...
+                return my_job_submit_seq
 
         # jobid is in another state, return None
         return None
@@ -2416,8 +2426,7 @@ class Workflow:
         we just update its sched id. Otherwise we create a new Job container.
         In any case, we always set the job state to job_state.
         """
-
-        my_job_submit_seq = self.find_job_submit_seq(jobid)
+        my_job_submit_seq = self.find_job_submit_seq(jobid, sched_id)
 
         if my_job_submit_seq is not None:
             # Job already exists
@@ -2489,7 +2498,7 @@ class Workflow:
         # Everything done
         return
 
-    def update_job_state(self, jobid, job_submit_seq, job_state, status, walltime):
+    def update_job_state(self, jobid, sched_id, job_submit_seq, job_state, status, walltime):
         """
         This function updates a	job's state, and also writes
         a line in our output file.
@@ -2504,8 +2513,15 @@ class Workflow:
             return
         # Got it
         my_job = self._jobs[jobid, job_submit_seq]
+
+        # Check for the out of order submit event case
+        if my_job._sched_id is None and sched_id is not None:
+            my_out_of_order_events_detected = True
+        else:
+            my_out_of_order_events_detected = False
+
         # Update job state
-        my_job.set_job_state(job_state, self._current_timestamp, status)
+        my_job.set_job_state(job_state, sched_id, self._current_timestamp, status)
 
         # Make status a string so we can print properly
         if status is not None:
@@ -2537,6 +2553,11 @@ class Workflow:
         if self._sink is None:
             # Not generating events, nothing else to do
             return
+
+        if my_out_of_order_events_detected:
+            # We need to send a submit.start event in order to create
+            # the database entry for this job
+            self.db_send_job_brief(my_job, "submit.start")
 
         # Check if we need to send any tasks to the database
         if job_state == "PRE_SCRIPT_SUCCESS" or job_state == "PRE_SCRIPT_FAILURE":
@@ -3084,7 +3105,7 @@ def add(wf, jobid, event, sched_id=None, status=None):
         return None
 
     # Make sure job has the updated state
-    wf.update_job_state(jobid, my_job_submit_seq, event, status, my_time)
+    wf.update_job_state(jobid, sched_id, my_job_submit_seq, event, status, my_time)
 
     return my_job_submit_seq
 
