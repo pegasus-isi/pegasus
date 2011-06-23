@@ -26,9 +26,7 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PegasusFile;
 
 
-import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.cluster.JobAggregator;
-import edu.isi.pegasus.planner.cluster.aggregator.JobAggregatorFactory;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
 
@@ -46,11 +44,15 @@ import edu.isi.pegasus.common.util.Separator;
 import edu.isi.pegasus.common.logging.LogManager;
 
 
+import edu.isi.pegasus.planner.refiner.CreateDirectory;
+import edu.isi.pegasus.planner.refiner.createdir.Implementation;
+import java.io.BufferedWriter;
 import java.util.List;
 import java.util.Iterator;
-import java.util.LinkedList;
 
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 
 
 /**
@@ -64,7 +66,7 @@ public class S3 implements CleanupImplementation{
     /**
      * The transformation namespace for the  job.
      */
-    public static final String TRANSFORMATION_NAMESPACE = "amazon";
+    public static final String TRANSFORMATION_NAMESPACE = "pegasus";
 
     /**
      * The default priority key associated with the cleanup jobs.
@@ -75,22 +77,35 @@ public class S3 implements CleanupImplementation{
      * The name of the underlying transformation that is queried for in the
      * Transformation Catalog.
      */
-    public static final String TRANSFORMATION_NAME = "s3cmd";
+    public static final String TRANSFORMATION_NAME = "s3";
 
     /**
      * The version number for the job.
      */
     public static final String TRANSFORMATION_VERSION = null;
+    
+    /**
+     * The basename of the pegasus cleanup executable.
+     */
+    public static final String EXECUTABLE_BASENAME = "pegasus-s3";
+
+    /**
+     * The complete TC name for the amazon s3cmd.
+     */
+    public static final String COMPLETE_TRANSFORMATION_NAME = Separator.combine(
+                                                                 TRANSFORMATION_NAMESPACE,
+                                                                 TRANSFORMATION_NAME,
+                                                                 TRANSFORMATION_VERSION  );
 
     /**
      * The derivation namespace for the job.
      */
-    public static final String DERIVATION_NAMESPACE = "amazon";
+    public static final String DERIVATION_NAMESPACE = "pegasus";
 
     /**
      * The name of the underlying derivation.
      */
-    public static final String DERIVATION_NAME = "s3cmd";
+    public static final String DERIVATION_NAME = "s3";
 
     /**
      * The derivation version number for the job.
@@ -155,6 +170,12 @@ public class S3 implements CleanupImplementation{
                                   TRANSFORMATION_VERSION );
     }
     
+    
+    /**
+     * An instance to the Create Direcotry Implementation being used in Pegasus.
+     */
+    private edu.isi.pegasus.planner.refiner.createdir.S3 mS3CreateDirImpl;
+    
     /**
      * The default constructor.
      */
@@ -175,19 +196,13 @@ public class S3 implements CleanupImplementation{
         mTCHandle        = bag.getHandleToTransformationCatalog(); 
         mLogger          = bag.getLogger();
         
-        mBucketName = bag.getPlannerOptions().getRelativeDirectory();
-
-        //replace file separators in directory with -
-        mBucketName = mBucketName.replace( File.separatorChar,  '-' );
-        
-        //just to pass the label have to send an empty ADag.
-        //should be fixed
-        ADag dag = new ADag();
-        dag.dagInfo.setLabel( "s3" );
-
-        mSeqExecAggregator = JobAggregatorFactory.loadInstance( JobAggregatorFactory.SEQ_EXEC_CLASS,
-                                                                dag,
-                                                                bag  );
+        Implementation createDirImpl = 
+                CreateDirectory.loadCreateDirectoryImplementationInstance(bag);
+        //sanity check on the implementation
+        if ( !( createDirImpl instanceof edu.isi.pegasus.planner.refiner.createdir.S3 )){
+            throw new RuntimeException( "Only S3 Create Dir implementation can be used with S3 First Level Staging" );
+        }
+        mS3CreateDirImpl = (edu.isi.pegasus.planner.refiner.createdir.S3 )createDirImpl;
     }
 
 
@@ -203,54 +218,9 @@ public class S3 implements CleanupImplementation{
      * @return the cleanup job.
      */
     public Job createCleanupJob( String id, List files, Job job ){
-        Job cleanupJob = null;
         
-        //create a cleanup job per file
-        List<Job> cJobs = new LinkedList<Job>( );
-        for( Iterator<PegasusFile> it = files.iterator(); it.hasNext() ; ){
-            PegasusFile file = it.next();
-            Job cJob = this.createCleanupJob( id, file, job );
-            cJobs.add( cJob );
-        }
-            
-        if( files.size() > 1 ){      
-            //now lets merge all these jobs
-            Job merged = mSeqExecAggregator.constructAbstractAggregatedJob( cJobs, "cleanup", id  );
-            String stdIn = id + ".in";
-            //rename the stdin file to make in accordance with tx jobname
-            File f = new File( mSubmitDirectory, merged.getStdIn() );
-            f.renameTo( new File( mSubmitDirectory, stdIn ) );
-            merged.setStdIn( stdIn );
-            
-            cleanupJob =  merged;
-
-            
-            //set the name of the merged job back to the name of
-            //transfer job passed in the function call
-            cleanupJob.setName( id );
-            cleanupJob.setJobType(  Job.CLEANUP_JOB );
-            
-            
-        }else{
-            cleanupJob = cJobs.get( 0 );
-        }
+        String bucket = mS3CreateDirImpl.getBucketNameURL( job.getSiteHandle() );
         
-        
-        return cleanupJob;
-    }
-    
-    /**
-     * Creates a cleanup job that removes the files from remote working directory.
-     * This will eventually make way to it's own interface.
-     *
-     * @param id     the identifier to be assigned to the job.
-     * @param file   <code>PegasusFile</code> that need to be cleaned up.
-     * @param job    the primary compute job with which this cleanup job is associated.
-     *
-     * @return the cleanup job.
-     */
-    protected Job createCleanupJob( String id, PegasusFile file, Job job ){
-
         //we want to run the clnjob in the same directory
         //as the compute job. We cannot clone as then the 
         //the cleanup jobs for clustered jobs appears as
@@ -286,18 +256,41 @@ public class S3 implements CleanupImplementation{
         cJob.setRemoteExecutable( entry.getPhysicalTransformation() );
 
 
+        //prepare the input for the cleanup job
+        File stdIn = new File( mSubmitDirectory, id + ".in" );
+        
+        try{
+            BufferedWriter writer;
+            writer = new BufferedWriter( new FileWriter( stdIn ));
+
+            for( Iterator it = files.iterator(); it.hasNext(); ){
+                PegasusFile file = (PegasusFile)it.next();
+                writer.write( bucket + "/" + file.getLFN() );
+                writer.write( "\n" );
+            }
+
+            //closing the handle to the writer
+            writer.close();
+        }
+        catch(IOException e){
+            mLogger.log( "While writing the stdIn file " + e.getMessage(),
+                        LogManager.ERROR_MESSAGE_LEVEL);
+            throw new RuntimeException( "While writing the stdIn file " + stdIn, e );
+        }
+        
+        
         //prepare the argument invocation
         StringBuffer arguments = new StringBuffer();
-        arguments.append( "del "). 
-                  append( "s3://" ).
-                  append( mBucketName ).
-                  append( "/" ).
-                  append( file.getLFN() );
+        arguments.append( "rm -F "). 
+                  append( stdIn.getName() );
         cJob.setArguments( arguments.toString() );
         
         //the cleanup job is a clone of compute
         //need to reset the profiles first
         cJob.resetProfiles();
+        
+        //the file needs to be transferred via condor file io
+        cJob.condorVariables.addIPFileForTransfer( stdIn.getAbsolutePath() );
 
         //the profile information from the pool catalog needs to be
         //assimilated into the job.
@@ -333,6 +326,8 @@ public class S3 implements CleanupImplementation{
         
         return cJob;
     }
+    
+   
 
     /**
      * Returns the TCEntry object for the rm executable on a grid site.
@@ -354,8 +349,8 @@ public class S3 implements CleanupImplementation{
 
 
         entry = ( tcentries == null ) ?
-                 null:
-                 (TransformationCatalogEntry) tcentries.get(0);
+            this.defaultTCEntry( site ): //try using a default one
+            (TransformationCatalogEntry) tcentries.get(0);
 
         if( entry == null ){
             //NOW THROWN AN EXCEPTION
@@ -375,6 +370,77 @@ public class S3 implements CleanupImplementation{
         return entry;
 
     }
+    
+    /**
+     * Returns a default TC entry to be used in case entry is not found in the
+     * transformation catalog.
+     *
+     * @param site   the site for which the default entry is required.
+     *
+     *
+     * @return  the default entry.
+     */
+    private  TransformationCatalogEntry defaultTCEntry( String site ){
+        TransformationCatalogEntry defaultTCEntry = null;
+        //check if PEGASUS_HOME is set
+        String home = mSiteStore.getPegasusHome( site );
+        //if PEGASUS_HOME is not set, use VDS_HOME
+        home = ( home == null )? mSiteStore.getVDSHome( site ): home;
+
+        mLogger.log( "Creating a default TC entry for " +
+                     COMPLETE_TRANSFORMATION_NAME +
+                     " at site " + site,
+                     LogManager.DEBUG_MESSAGE_LEVEL );
+
+        //if home is still null
+        if ( home == null ){
+            //cannot create default TC
+            mLogger.log( "Unable to create a default entry for " +
+                         COMPLETE_TRANSFORMATION_NAME,
+                         LogManager.DEBUG_MESSAGE_LEVEL );
+            //set the flag back to true
+            return defaultTCEntry;
+        }
+
+        //remove trailing / if specified
+        home = ( home.charAt( home.length() - 1 ) == File.separatorChar )?
+            home.substring( 0, home.length() - 1 ):
+            home;
+
+        //construct the path to it
+        StringBuffer path = new StringBuffer();
+        path.append( home ).append( File.separator ).
+            append( "bin" ).append( File.separator ).
+            append( S3.EXECUTABLE_BASENAME );
+
+
+        defaultTCEntry = new TransformationCatalogEntry( S3.TRANSFORMATION_NAMESPACE,
+                                                         S3.TRANSFORMATION_NAME,
+                                                         S3.TRANSFORMATION_VERSION );
+
+        defaultTCEntry.setPhysicalTransformation( path.toString() );
+        defaultTCEntry.setResourceId( site );
+        defaultTCEntry.setType( TCType.INSTALLED );
+        defaultTCEntry.setSysInfo( this.mSiteStore.lookup( site ).getSysInfo() );
+
+        //register back into the transformation catalog
+        //so that we do not need to worry about creating it again
+        try{
+            mTCHandle.insert( defaultTCEntry , false );
+        }
+        catch( Exception e ){
+            //just log as debug. as this is more of a performance improvement
+            //than anything else
+            mLogger.log( "Unable to register in the TC the default entry " +
+                          defaultTCEntry.getLogicalTransformation() +
+                          " for site " + site, e,
+                          LogManager.DEBUG_MESSAGE_LEVEL );
+        }
+
+        return defaultTCEntry;
+
+    }
+
 
   
 }
