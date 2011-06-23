@@ -378,9 +378,16 @@ public class Condor extends AbstractMultipleFTPerXFERJob {
      * @param stdIn the writer to the stdin file.
      * @param files Collection of <code>FileTransfer</code> objects
      *   containing the information about sourceam fin and destURL's.
+     * @param stagingSite the site where the data will be populated by first
+     *                    level staging jobs.
+     * @param jobClass    the job Class for the newly added job. Can be one of the
+     *                    following:
+     *                              stage-in
+     *                              stage-out
+     *                              inter-pool transfer
      * @throws Exception
      */
-    protected void writeJumboStdIn( FileWriter stdIn, Collection files ) throws
+    protected void writeJumboStdIn( FileWriter stdIn, Collection files, String stagingSite, int jobClass ) throws
         Exception {
     }
 }

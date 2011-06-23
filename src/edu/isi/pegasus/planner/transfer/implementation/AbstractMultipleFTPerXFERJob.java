@@ -174,7 +174,7 @@ public abstract class AbstractMultipleFTPerXFERJob extends Abstract
         txJob.outputFiles = new HashSet( files );
 
         try{
-            txJob.stdIn = prepareSTDIN(txJobName, files);
+            txJob.stdIn = prepareSTDIN( txJobName, files, job.getSiteHandle(), jobClass );
         } catch (Exception e) {
             mLogger.log("Unable to write the stdIn file for job " +
                         txJob.getCompleteTCName() + " " + e.getMessage(),
@@ -350,18 +350,25 @@ public abstract class AbstractMultipleFTPerXFERJob extends Abstract
      * @param name  the name of the transfer job.
      * @param files    Collection of <code>FileTransfer</code> objects containing
      *                 the information about sourceam fin and destURL's.
+     * @param stagingSite the site where the data will be populated by first
+     *                    level staging jobs.
+     * @param jobClass    the job Class for the newly added job. Can be one of the
+     *                    following:
+     *                              stage-in
+     *                              stage-out
+     *                              inter-pool transfer
      *
      * @return  the path to the prepared stdin file.
      *
      * @throws Exception in case of error.
      */
-    protected String prepareSTDIN(String name, Collection files)throws Exception{
+    protected String prepareSTDIN(String name, Collection files, String stagingSite, int jobClass )throws Exception{
         //writing the stdin file
         FileWriter stdIn;
         String basename = name + ".in";
         stdIn = new FileWriter(new File(mPOptions.getSubmitDirectory(),
                                         basename));
-        writeJumboStdIn(stdIn, files);
+        writeJumboStdIn(stdIn, files, stagingSite, jobClass );
         //close the stdin stream
         stdIn.close();
         return basename;
@@ -409,10 +416,17 @@ public abstract class AbstractMultipleFTPerXFERJob extends Abstract
      * @param stdIn    the writer to the stdin file.
      * @param files    Collection of <code>FileTransfer</code> objects containing
      *                 the information about sourceam fin and destURL's.
+     * @param stagingSite the site where the data will be populated by first
+     *                    level staging jobs.
+     * @param jobClass    the job Class for the newly added job. Can be one of the
+     *                    following:
+     *                              stage-in
+     *                              stage-out
+     *                              inter-pool transfer
      *
      * @throws Exception
      */
-    protected abstract void writeJumboStdIn(FileWriter stdIn, Collection files)
+    protected abstract void writeJumboStdIn(FileWriter stdIn, Collection files, String stagingSite, int jobClass )
               throws Exception ;
 
     /**
