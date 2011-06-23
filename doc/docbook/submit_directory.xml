@@ -801,7 +801,7 @@ type dag
   </section>
 
   <section>
-    <title>Pegasus job.map File</title>
+    <title>Pegasus Job.Map File</title>
 
     <para>Pegasus creates a workflow.job.map file that links jobs in the DAG
     with the jobs in the DAX. The contents of the file are in netlogger
@@ -885,6 +885,7 @@ ts=2009-04-21T23:09:03.093402Z event=pegasus.job.map job.id=merge_vahi-findrange
     </itemizedlist>
   </section>
 </chapter>
+
 
 
 
