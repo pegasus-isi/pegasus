@@ -56,19 +56,23 @@ public class S3 implements Implementation {
     /**
      * The transformation namespace for the amazon bucket creation jobs.
      */
-    public static final String TRANSFORMATION_NAMESPACE = "amazon";
+    public static final String TRANSFORMATION_NAMESPACE = "pegasus";
 
     /**
      * The logical name of the transformation that creates buckets on the
      * amazon S3Strategy.
      */
-    public static final String TRANSFORMATION_NAME = "s3cmd";
+    public static final String TRANSFORMATION_NAME = "s3";
 
     /**
      * The version number for the derivations for create dir  jobs.
      */
     public static final String TRANSFORMATION_VERSION = null;
 
+    /**
+     * The basename of the pegasus cleanup executable.
+     */
+    public static final String EXECUTABLE_BASENAME = "pegasus-s3";
 
     /**
      * The complete TC name for the amazon s3cmd.
@@ -81,13 +85,13 @@ public class S3 implements Implementation {
     /**
      * The derivation namespace for the amazon bucket creation jobs.
      */
-    public static final String DERIVATION_NAMESPACE = "amazon";
+    public static final String DERIVATION_NAMESPACE = "pegasus";
 
     /**
      * The logical name of the transformation that creates buckets on the
      * amazon S3Strategy.
      */
-    public static final String DERIVATION_NAME = "s3cmd";
+    public static final String DERIVATION_NAME = "pegasus-s3";
 
 
     /**
@@ -120,10 +124,7 @@ public class S3 implements Implementation {
      */
     protected PegasusProperties mProps;
     
-    /**
-     * Whether we want to use dirmanager or mkdir directly.
-     */
-    protected boolean mUseMkdir;
+    
     
     /**
      * The name of the bucket that is created.
@@ -160,9 +161,6 @@ public class S3 implements Implementation {
         //replace file separators in directory with -
         mRelativeBucketDir = mRelativeBucketDir.replace( File.separatorChar,  '-' );
         
-        //in case of staging of executables/worker package
-        //we use mkdir directly
-        mUseMkdir = bag.getPegasusProperties().transferWorkerPackage();
     }
     
     
@@ -338,7 +336,9 @@ public class S3 implements Implementation {
                         e.getMessage(), LogManager.DEBUG_MESSAGE_LEVEL );
         }
 
-        entry = (entries == null )? null: (TransformationCatalogEntry) entries.get(0);
+        entry = ( entries == null ) ?
+            this.defaultTCEntry( site ): //try using a default one
+            (TransformationCatalogEntry) entries.get(0);
 
         if( entry == null ){
             //NOW THROWN AN EXCEPTION
@@ -365,7 +365,7 @@ public class S3 implements Implementation {
         execPath = entry.getPhysicalTransformation();
 
         //argString = " mb " + "s3://" +   mBucketName;
-        argString = " mb " + this.getBucketNameURL( site );
+        argString = " mkdir " + this.getBucketNameURL( site );
               
         newJob.jobName = name;
         newJob.setTransformation( S3.TRANSFORMATION_NAMESPACE,
@@ -448,12 +448,12 @@ public class S3 implements Implementation {
         StringBuffer path = new StringBuffer();
         path.append( home ).append( File.separator ).
             append( "bin" ).append( File.separator ).
-            append( S3.TRANSFORMATION_NAME  );
+            append( S3.EXECUTABLE_BASENAME );
 
 
         defaultTCEntry = new TransformationCatalogEntry( S3.TRANSFORMATION_NAMESPACE,
                                                          S3.TRANSFORMATION_NAME,
-                                                         S3.TRANSFORMATION_VERSION  );
+                                                         S3.TRANSFORMATION_VERSION );
 
         defaultTCEntry.setPhysicalTransformation( path.toString() );
         defaultTCEntry.setResourceId( site );
@@ -477,7 +477,5 @@ public class S3 implements Implementation {
         return defaultTCEntry;
 
     }
-
-
 
 }
