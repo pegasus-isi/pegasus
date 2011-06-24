@@ -71,7 +71,7 @@ pegasus.catalog.site.file             ${pegasus.home}/etc/sample.sites.xml3
 
 
 <section id="Propertiespegasus.home">
-    <title>pegasus.home</title>
+    <title>Pegasus.home</title>
 <para>
 
 <informaltable frame='none'>
@@ -788,7 +788,8 @@ host, port, and database. Although most driver URLs allow to pass
 arbitrary arguments, please use the
 pegasus.catalog.[catalog-name].db.* keys or  pegasus.catalog.*.db.*
 to preload these arguments.
-<emphasis role="bold"> THE URL IS A MANDATORY PROPERTY FOR ANY DBMS BACKEND.</emphasis>
+
+<warning><emphasis role="bold"> THE URL IS A MANDATORY PROPERTY FOR ANY DBMS BACKEND.</emphasis></warning>
 </para>
 
 <para><screen>
@@ -6214,8 +6215,8 @@ siteX    B     /shared/PEGASUS/bin/jobB INSTALLED       INTEL32::LINUX pegasus::
               of transformation B on siteX will be executed via
               mpiexec.</para>
 
-              <para><emphasis role="bold">Note: The clustering of jobs on a
-              site only happens only if </emphasis></para>
+             <note><para><emphasis role="bold"> The clustering of jobs on a
+              site only happens only if </emphasis></para></note>
 
               <itemizedlist>
                 <listitem>
@@ -9370,4 +9371,5 @@ secret_key = asdhfuinakwjelfuhalsdflahsdl</programlisting>
   </section>
   </section>
 </chapter>
+
 

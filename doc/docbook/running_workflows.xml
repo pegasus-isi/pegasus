@@ -818,7 +818,7 @@ pegasus.catalog.site.file            ${pegasus.home}/etc/sample.sites.xml3
 
 
 <section id="BasicPropertiespegasus.home">
-    <title>pegasus.home</title>
+    <title>Pegasus.Home</title>
 <para>
 
 <informaltable frame='none'>
@@ -2419,6 +2419,7 @@ ec2     amazon::s3cmd    /path/to/pegasus/bin/s3cmd    INSTALLED   INTEL32::LINU
     </section>
   </section>
 </chapter>
+
 
 
 

@@ -268,7 +268,7 @@ pegasus.code.generator = Shell</programlisting>
   </section>
 
   <section id="glideinwms_examples">
-    <title>glideinWMS Examples</title>
+    <title>GlideinWMS Examples</title>
 
     <section>
       <title>NASA/IPAC Montage</title>
@@ -383,4 +383,5 @@ requirements = ((GLIDEIN_Entry_Name == "ISIViz") || (TARGET.Pegasus_Site == "ISI
     </section>
   </section>
 </chapter>
+
 

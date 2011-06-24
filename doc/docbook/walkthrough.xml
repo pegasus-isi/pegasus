@@ -1677,7 +1677,7 @@ eps format : /home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run00
             <mediaobject>
               <imageobject>
                 <imagedata fileref="images/tutorial-blackdiamond-gantt.png"
-                           format="PNG" remap="" width="1000" />
+                           format="PNG" remap="" width="6in" />
               </imageobject>
             </mediaobject>
           </figure>
@@ -2176,6 +2176,7 @@ on="3.2" name="superdiamond" index="0" count="1"&gt;
 
 
 </chapter>
+
 
 
 
