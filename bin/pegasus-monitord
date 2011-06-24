@@ -55,7 +55,7 @@ logger.propagate = 0
 g_isdgb = 0
 
 # Ordered logging levels
-_LEVELS = (logging.ERROR, logging.WARN, logging.INFO, logging.DEBUG)
+_LEVELS = [logging.ERROR, logging.WARN, logging.INFO, logging.DEBUG]
 
 # Save our own basename
 prog_base = os.path.split(sys.argv[0])[1]
@@ -3663,7 +3663,7 @@ def prog_sigusr1_handler(signum, frame):
 
     try:
         idx = _LEVELS.index(cur_level)
-        if idx < len(_LEVELS):
+        if idx + 1 < len(_LEVELS):
             logger.setLevel(_LEVELS[idx + 1])
     except ValueError:
         logger.setLevel(logging.INFO)
