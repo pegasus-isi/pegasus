@@ -837,8 +837,9 @@ work
 </para>
 
 <para>In order to access a database, you must provide the name of your
-account on the DBMS. This property is database-independent.<emphasis role="bold">THIS IS A
-MANDATORY PROPERTY FOR MANY DBMS BACKENDS</emphasis>.
+account on the DBMS. This property is database-independent.
+<warning><emphasis role="bold">THE ACCOUNT NAME IS A
+MANDATORY PROPERTY FOR MANY DBMS BACKENDS</emphasis></warning>.
 </para>
 
 <para>The * in the property name can be replaced by a catalog name to
@@ -878,9 +879,10 @@ work
 </para>
 
 <para>In order to access a database, you must provide an optional password
-of your account on the DBMS. This property is database-independent. <emphasis role="bold">
+of your account on the DBMS. This property is database-independent.
+<warning><emphasis role="bold">
 THIS IS A MANDATORY PROPERTY, IF YOUR DBMS BACKEND ACCOUNT REQUIRES
-A PASSWORD </emphasis>.
+A PASSWORD </emphasis></warning>.
 </para>
 
 <para>The * in the property name can be replaced by a catalog name to
@@ -2124,7 +2126,7 @@ transformation           </entry><entry> is the fully-qualified definition
 identifier for the transformation (TR)
 namespace::name:version. </entry></row><row><entry>
 
-derivation               </entry><entry> is teh fully qualified definition
+derivation               </entry><entry> is the fully qualified definition
 identifier for the derivation (DV),
 namespace::name:version. </entry></row><row><entry>
 
@@ -2400,11 +2402,12 @@ pegasus.transfer.*.impl         </entry><entry> apply to types of transfer jobs 
 
 </para>
 
-<para>Note: Since version 2.2.0 the worker package is staged automatically during
+<note><para>Note: Since version 2.2.0 the worker package is staged automatically during
 staging of executables to the remote site. This is achieved
 by adding a setup transfer job to the workflow. The setup transfer job by
 default uses GUC to stage the data. The implementation to use can be
-configured by setting the property
+configured by setting the property</para></note>
+<para>
 <screen>pegasus.transfer.setup.impl </screen>property.
 However, if you have pegasus.transfer.*.impl set in your properties file,
 then you need to set pegasus.transfer.setup.impl to GUC
@@ -3528,8 +3531,9 @@ alternative database by using a SQLAlchemy connection
 string. Details are available at:
 <screen>
 http://www.sqlalchemy.org/docs/05/reference/dialects/index.html
-</screen>
-It is important to note that users will need to have the appropriate
+</screen> </para>
+<note><para>
+Users will need to have the appropriate
 db interface library installed. Which is to say, SQLAlchemy is a
 wrapper around the mysql interface library (for instance), it does
 not provide a MySQL driver itself.  The Pegasus distribution
@@ -3539,7 +3543,7 @@ SQLite databases, using SQLAlchemy with other database servers,
 e.g. MySQL or Postgres , the target database needs to exist.
 Users can also specify a file name using this property in order to
 create a file with the log events.
-</para>
+</para></note>
 
 <para>Example values for the SQLAlchemy connection string for various end points
 are listed below
@@ -4540,7 +4544,7 @@ line breaks that appear in the CDATA section.
       </section>
 
       <section>
-        <title>The globus Profile Namespace</title>
+        <title>The Globus Profile Namespace</title>
 
         <para>The <emphasis>globus</emphasis> profile namespace encapsulates
         Globus resource specification language (RSL) instructions. The RSL
@@ -4873,7 +4877,7 @@ line breaks that appear in the CDATA section.
       </section>
 
       <section>
-        <title>The dagman Profile Namespace</title>
+        <title>The Dagman Profile Namespace</title>
 
         <para>DAGMan is Condor's workflow manager. While planners generate
         most of DAGMan's configuration, it is possible to tweak certain
@@ -5117,7 +5121,7 @@ line breaks that appear in the CDATA section.
       </section>
 
       <section>
-        <title>The pegasus Profile Namespace</title>
+        <title>The Pegasus Profile Namespace</title>
 
         <para>The <emphasis>pegasus</emphasis> profiles allow users to
         configure extra options to the Pegasus Workflow Planner that can be
@@ -8259,7 +8263,7 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
 
       <itemizedlist>
         <listitem>
-          <para>The <emphasis>file</emphasis> element declares the required
+          <para>The <emphasis role="bold">file</emphasis> element declares the required
           input file "f.a" in terms of the local machine. Please note that if
           you plan the workflow for a remote site, the has to be some way for
           the file to be staged from the local site to the remote site. While
@@ -8270,7 +8274,7 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
         </listitem>
 
         <listitem>
-          <para>The <emphasis>executable</emphasis> elements declare the same
+          <para>The <emphasis role="bold">executable</emphasis> elements declare the same
           executable keg that is to be run for each the logical transformation
           in terms of the local site. To declare it for a remote site, you
           would have to adjust the <emphasis>site</emphasis> attribute's value
@@ -8280,7 +8284,7 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
         </listitem>
 
         <listitem>
-          <para>The <emphasis>job</emphasis> elements define the workflow's
+          <para>The <emphasis role="bold">job</emphasis> elements define the workflow's
           logical constituents, the way to invoke the <literal>keg</literal>
           command, where to put filenames on the commandline, and what files
           are consumed or produced. In addition to the direction of files,
@@ -8293,7 +8297,7 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
         </listitem>
 
         <listitem>
-          <para>The <emphasis>child</emphasis> elements define the control
+          <para>The <emphasis role="bold">child</emphasis> elements define the control
           flow between the jobs.</para>
         </listitem>
       </itemizedlist>
@@ -8301,7 +8305,7 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
   </section>
 
   <section>
-    <title>DAX generator API</title>
+    <title>DAX Generator API</title>
 
     <para>The DAX generating APIs support Java, Perl and Python. This section
     will show in each language the necessary code, using Pegasus-provided
@@ -8310,7 +8314,7 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
     effectively all generate the same basic diamond.</para>
 
     <section id="api-java">
-      <title>The Java DAX generator API</title>
+      <title>The Java DAX Generator API</title>
 
       <para>The Java DAX API provided with the Pegasus distribution allows
       easy creation of complex and huge workflows. This API is used by several
@@ -8504,9 +8508,9 @@ public class BlackDiamondDAX {
     </section>
 
     <section id="api-python">
-      <title>The Python DAX generator API</title>
+      <title>The Python DAX Generator API</title>
 
-      <para>I am no python master. There is <ulink
+      <para>Refer to the <ulink
       url="http://pegasus.isi.edu/wms/docs/3.0/python/">auto-generated python
       documentation</ulink> explaining this API.</para>
 
@@ -8589,7 +8593,7 @@ diamond.writeXML(sys.stdout)</programlisting>
     </section>
 
     <section id="api-perl">
-      <title>The Perl DAX generator</title>
+      <title>The Perl DAX Generator</title>
 
       <para>The Perl API example below can be found in file
       <filename>blackdiamond.pl</filename> in directory <filename
@@ -8730,7 +8734,7 @@ $adag-&gt;toXML( \*STDOUT, '', $xmlns );</programlisting>
   </section>
 
   <section>
-    <title>DAX generator without using a Pegasus DAX API</title>
+    <title>DAX Generator without a Pegasus DAX API</title>
 
     <para>If you are using some other scripting or programming environment,
     you can directly write out the DAX format using the provided schema using
@@ -9364,12 +9368,13 @@ secret_key = asdhfuinakwjelfuhalsdflahsdl</programlisting>
   </section>
 
   <section>
-    <title>kickstart</title>
+    <title>Kickstart</title>
 
-    <para>kickstart is a job wrapper that collects data about a job's
+    <para>Kickstart is a job wrapper that collects data about a job's
     execution environment, performance, and output.</para>
   </section>
   </section>
 </chapter>
+
 
 
