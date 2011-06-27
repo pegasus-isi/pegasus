@@ -99,7 +99,7 @@ Methods listed in order of query list on wiki.
 
 https://confluence.pegasus.isi.edu/display/pegasus/Pegasus+Statistics+Python+Version+Modified
 """
-__rcsid__ = "$Id: stampede_statistics.py 28089 2011-06-16 21:20:36Z mgoode $"
+__rcsid__ = "$Id: stampede_statistics.py 28106 2011-06-23 22:15:49Z mgoode $"
 __author__ = "Monte Goode"
 
 from netlogger.analysis.modules._base import SQLAlchemyInit
@@ -117,7 +117,8 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         
         self._root_wf_id = None
         self._root_wf_uuid = None
-        self._filter_mode = None
+        self._job_filter_mode = None
+        self._task_filter_mode = None
         
         self._wfs = []
         pass
@@ -154,22 +155,22 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
                 msg='No results found for wf_uuid: %s' % root_wf_uuid)
             return False
         
-        # Initialize filter with default value
+        # Initialize filters with default value
         self.set_job_filter()
         return True
         
     def set_job_filter(self, filter='all'):
-        modes = ['all', 'nonsub', 'dax', 'dag', 'compute', 'stage-in-tx', 
+        modes = ['all', 'nonsub', 'subwf', 'dax', 'dag', 'compute', 'stage-in-tx', 
                 'stage-out-tx', 'registration', 'inter-site-tx', 'create-dir', 
                 'staged-compute', 'cleanup', 'chmod']
         try:
             modes.index(filter)
-            self._filter_mode = filter
+            self._job_filter_mode = filter
             self.log.debug('set_job_filter', msg='Setting filter to: %s' % filter)
         except:
-            self._filter_mode = 'all'
-            self.log.error('set_job_filter', msg='Unknown job filter %s - setting to any' % filter)
-            
+            self._job_filter_mode = 'all'
+            self.log.error('set_job_filter', msg='Unknown job filter %s - setting to all' % filter)
+                
     #
     # Pulls information about sub workflows
     #
@@ -198,11 +199,15 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
     # and
     # https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Statistics+file
     #
+    
+    def _dax_or_dag_cond(self, JobO=Job):
+        return or_(JobO.type_desc == 'dax', JobO.type_desc == 'dag')
         
     def _get_job_filter(self, JobO=Job):
         filters = {
             'all': None,
             'nonsub': not_(self._dax_or_dag_cond(JobO)),
+            'subwf': self._dax_or_dag_cond(JobO),
             'dax': JobO.type_desc == 'dax',
             'dag': JobO.type_desc == 'dag',
             'compute': JobO.type_desc == 'compute',
@@ -215,7 +220,7 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
             'cleanup': JobO.type_desc == 'cleanup',
             'chmod': JobO.type_desc == 'chmod',
         }
-        return filters[self._filter_mode]
+        return filters[self._job_filter_mode]
         
     def _max_job_seq_subquery(self):
         """
@@ -231,38 +236,22 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         sub_q = sub_q.group_by(JobInstanceSubMax.job_id).subquery()
         return sub_q
         
-    def _dax_or_dag_cond(self, JobO=Job):
-        return or_(JobO.type_desc == 'dax', JobO.type_desc == 'dag')
-        
     def get_total_jobs_status(self):
         """
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Summary#WorkflowSummary-Totaljobs
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Statistics+file#WorkflowStatisticsfile-Totaljobs        
         """
-        JobSub = orm.aliased(Job)
-        JobInstanceSub = orm.aliased(JobInstance)
-        
-        sq_1 = self.session.query(JobSub)
-        sq_1 = sq_1.filter(JobSub.wf_id.in_(self._wfs))
-        if not self._expand and self._get_job_filter(JobSub) is not None:
-            sq_1 = sq_1.filter(self._get_job_filter(JobSub))
+        q = self.session.query(Job.job_id)
+        if self._expand:
+            q = q.filter(Workflow.root_wf_id == self._root_wf_id)
         else:
-            sq_1 = sq_1.filter(not_(self._dax_or_dag_cond(JobSub)))
-        sq_1 = sq_1.subquery()
-        
-        sub_q = self._max_job_seq_subquery()
-        
-        sq_2 = self.session.query(JobInstance.job_id)
-        sq_2 = sq_2.filter(Job.wf_id.in_(self._wfs))
-        sq_2 = sq_2.filter(JobInstance.job_id == Job.job_id)
-        sq_2 = sq_2.filter(self._dax_or_dag_cond())
-        sq_2 = sq_2.filter(JobInstance.subwf_id == None)
-        sq_2 = sq_2.filter(JobInstance.job_submit_seq == sub_q.as_scalar())
-        sq_2 = sq_2.subquery()
-        
-        q = self.session.query((sq_1.count().as_scalar() + sq_2.count().as_scalar() ).label('total_jobs'))
-        return q.one()[0]
+            q = q.filter(Workflow.wf_id == self._wfs[0])
+        q = q.filter(Job.wf_id == Workflow.wf_id)
+        if self._get_job_filter() is not None:
+            q = q.filter(self._get_job_filter())
              
+        return q.count()
+        
     def get_total_succeeded_jobs_status(self):
         """
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Summary#WorkflowSummary-Totalsucceededjobs
@@ -273,23 +262,18 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         JobInstanceSub = orm.aliased(JobInstance, name='JobInstanceSub')
         WorkflowSub = orm.aliased(Workflow, name='WorkflowSub')
         
-        sq_1 = self.session.query(JobInstanceSub.job_id.label('jiid'), JobInstanceSub.job_instance_id.label('jid'),
+        sq_1 = self.session.query(JobInstanceSub.job_instance_id.label('jid'),
                 func.max(JobInstanceSub.job_submit_seq).label('mjss'))
         
-        if not self._expand:
-            sq_1 = sq_1.filter(WorkflowSub.wf_id.in_(self._wfs))
-        else:
+        if self._expand:
             sq_1 = sq_1.filter(WorkflowSub.root_wf_id == self._root_wf_id)
+        else:
+            sq_1 = sq_1.filter(WorkflowSub.wf_id == self._wfs[0])
         
         sq_1 = sq_1.filter(WorkflowSub.wf_id == JobSub.wf_id)
         sq_1 = sq_1.filter(JobSub.job_id == JobInstanceSub.job_id)
-        
-        # jobtype filtering
-        if not self._expand and self._get_job_filter(JobSub) is not None:
+        if self._get_job_filter(JobSub) is not None:
             sq_1 = sq_1.filter(self._get_job_filter(JobSub))
-        else:
-            d_or_d = self._dax_or_dag_cond(JobSub)
-            sq_1 = sq_1.filter((or_(not_(d_or_d), and_(d_or_d, JobInstanceSub.subwf_id == None))))
         
         sq_1 = sq_1.group_by(JobSub.job_id).subquery()
         
@@ -313,21 +297,25 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Summary#WorkflowSummary-Totalfailedjobs
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Statistics+file#WorkflowStatisticsfile-Totalfailedjobs
         """
-        sub_q = self._max_job_seq_subquery()
+        JobSub = orm.aliased(Job, name='JobSub')
+        JobInstanceSub = orm.aliased(JobInstance, name='JobInstanceSub')
+        WorkflowSub = orm.aliased(Workflow, name='WorkflowSub')
         
-        q = self.session.query(JobInstance.job_instance_id)
-        q = q.filter(JobInstance.job_submit_seq == sub_q.as_scalar())
-        q = q.filter(Job.wf_id.in_(self._wfs))
-        q = q.filter(Job.job_id == JobInstance.job_id)
-        q = q.filter(JobInstance.job_instance_id == Jobstate.job_instance_id)
-        q = q.filter(Jobstate.state.in_(['PRE_SCRIPT_FAILED','SUBMIT_FAILED','JOB_FAILURE' ,'POST_SCRIPT_FAILED']))
-        # jobtype filtering
-        if not self._expand and self._get_job_filter() is not None:
-            q = q.filter(self._get_job_filter())
+        sq_1 = self.session.query(JobInstanceSub.job_instance_id.label('jid'),
+                func.max(JobInstanceSub.job_submit_seq).label('mjss'))
+        if self._expand:
+            sq_1 = sq_1.filter(WorkflowSub.root_wf_id == self._root_wf_id)
         else:
-            d_or_d = self._dax_or_dag_cond()
-            q = q.filter(or_(not_(d_or_d), and_(d_or_d, JobInstance.subwf_id == None)))
+            sq_1 = sq_1.filter(WorkflowSub.wf_id == self._wfs[0])
+        sq_1 = sq_1.filter(JobSub.job_id == JobInstanceSub.job_id)
+        if self._get_job_filter(JobSub) is not None:
+            sq_1 = sq_1.filter(self._get_job_filter(JobSub))
+        sq_1 = sq_1.group_by(JobSub.job_id)
+        sq_1 = sq_1.subquery()
         
+        q = self.session.query(sq_1.c.jid)
+        q = q.filter(Jobstate.job_instance_id == sq_1.c.jid)
+        q = q.filter(Jobstate.state.in_(['PRE_SCRIPT_FAILED','SUBMIT_FAILED','JOB_FAILURE' ,'POST_SCRIPT_FAILED']))
         return q.count()
         
     def _query_jobstate_for_instance(self, states):
@@ -348,22 +336,28 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         d_or_d = self._dax_or_dag_cond()
         
         sq_1 = self.session.query(func.count(Job.job_id))
-        sq_1 = sq_1.filter(Job.wf_id.in_(self._wfs))
-        sq_1 = sq_1.filter(Job.job_id == JobInstance.job_id)
-        if not self._expand and self._get_job_filter() is not None:
-            sq_1 = sq_1.filter(self._get_job_filter())
+        if self._expand:
+            sq_1 = sq_1.filter(Workflow.root_wf_id == self._root_wf_id)
         else:
-            sq_1 = sq_1.filter(or_(not_(d_or_d), and_(d_or_d, JobInstance.subwf_id == None)))
+            sq_1 = sq_1.filter(Workflow.wf_id == self._wfs[0])
+        sq_1 = sq_1.filter(Job.wf_id == Workflow.wf_id)
+        sq_1 = sq_1.filter(Job.job_id == JobInstance.job_id)
+        if self._get_job_filter() is not None:
+            sq_1 = sq_1.filter(self._get_job_filter())
+
         sq_1 = sq_1.subquery()
 
         
         sq_2 = self.session.query(func.count(distinct(JobInstance.job_id)))
-        sq_2 = sq_2.filter(Job.wf_id.in_(self._wfs))
-        sq_2 = sq_2.filter(Job.job_id == JobInstance.job_id)
-        if not self._expand and self._get_job_filter() is not None:
-            sq_2 = sq_2.filter(self._get_job_filter())
+        if self._expand:
+            sq_2 = sq_2.filter(Workflow.root_wf_id == self._root_wf_id)
         else:
-            sq_2 = sq_2.filter(or_(not_(d_or_d), and_(d_or_d, JobInstance.subwf_id == None)))
+            sq_2 = sq_2.filter(Workflow.wf_id == self._wfs[0])
+        sq_2 = sq_2.filter(Job.wf_id == Workflow.wf_id)
+        sq_2 = sq_2.filter(Job.job_id == JobInstance.job_id)
+        if self._get_job_filter() is not None:
+            sq_2 = sq_2.filter(self._get_job_filter())
+
         sq_2 = sq_2.subquery()
         
         q = self.session.query((sq_1.as_scalar() - sq_2.as_scalar()).label('total_job_retries'))
@@ -372,29 +366,43 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         
     def get_total_tasks_status(self):
         """
-        select count(*) from task where wf_id in (
-            1,2,3
-           )
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Summary#WorkflowSummary-Totaltask
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Statistics+file#WorkflowStatisticsfile-Totaltasks
         """
-        return self.session.query(Task).filter(Task.wf_id.in_(self._wfs)).count()
-        
+        q = self.session.query(Task.task_id)
+        if self._expand:
+            q = q.filter(Workflow.root_wf_id == self._root_wf_id)
+        else:
+            q = q.filter(Workflow.wf_id == self._wfs[0])
+        q = q.filter(Task.wf_id == Workflow.wf_id)
+        q = q.filter(Task.job_id == Job.job_id)
+        if self._get_job_filter(Task) is not None:
+            q = q.filter(self._get_job_filter(Task))
+        return q.count()
+    
     def _base_task_status_query(self):
         """
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Summary#WorkflowSummary-Totalsucceededtasks
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Statistics+file#WorkflowStatisticsfile-Totalsucceededtasks
         """
-        sub_q = self._max_job_seq_subquery()
+        sq_1 = self.session.query(Workflow.wf_id.label('wid'), JobInstance.job_instance_id.label('jiid'),
+                func.max(JobInstance.job_submit_seq).label('mjss'))
+        if self._expand:
+            sq_1 = sq_1.filter(Workflow.root_wf_id == self._root_wf_id)
+        else:
+            sq_1 = sq_1.filter(Workflow.wf_id == self._wfs[0])
+        sq_1 = sq_1.filter(Workflow.wf_id == Job.wf_id)
+        sq_1 = sq_1.filter(Job.job_id == JobInstance.job_id)
+        sq_1 = sq_1.group_by(JobInstance.job_id)
+        if self._get_job_filter() is not None:
+            sq_1 = sq_1.filter(self._get_job_filter())
+        sq_1 = sq_1.subquery()
         
-        q = self.session.query(Task.task_id)
-        q = q.filter(Invocation.wf_id.in_(self._wfs))
-        q = q.filter(JobInstance.job_submit_seq == sub_q.as_scalar())
-        q = q.filter(Task.wf_id.in_(self._wfs))
-        q = q.filter(Job.job_id == JobInstance.job_id)
-        q = q.filter(JobInstance.job_instance_id == Invocation.job_instance_id)
-        q = q.filter(Task.abs_task_id == Invocation.abs_task_id)
-        q = q.filter(Task.wf_id == Invocation.wf_id)
+        q = self.session.query(Invocation.invocation_id)
+        q = q.filter(Invocation.abs_task_id != None)
+        q = q.filter(Invocation.job_instance_id == sq_1.c.jiid)
+        q = q.filter(Invocation.wf_id == sq_1.c.wid)
+        
         return q
         
     def get_total_succeeded_tasks_status(self):
@@ -412,23 +420,28 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Summary#WorkflowSummary-Totaltaskretries
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Statistics+file#WorkflowStatisticsfile-Totaltaskretries
         """
-        sq_1 = self.session.query(func.count(Invocation.invocation_id))
-        sq_1 = sq_1.filter(Invocation.wf_id.in_(self._wfs))
+        sq_1 = self.session.query(Workflow.wf_id.label('wid'), Invocation.abs_task_id.label('tid'))
+        if self._expand:
+            sq_1 = sq_1.filter(Workflow.root_wf_id == self._root_wf_id)
+        else:
+            sq_1 = sq_1.filter(Workflow.wf_id == self._wfs[0])
+        sq_1 = sq_1.filter(Job.wf_id == Workflow.wf_id)
+        sq_1 = sq_1.filter(Invocation.wf_id == Workflow.wf_id)
+        sq_1 = sq_1.filter(Job.job_id == JobInstance.job_id)
+        if self._get_job_filter() is not None:
+            sq_1 = sq_1.filter(self._get_job_filter())
+        sq_1 = sq_1.filter(JobInstance.job_instance_id == Invocation.job_instance_id)
         sq_1 = sq_1.filter(Invocation.abs_task_id != None)
-        if self._expand:
-            sq_1 = sq_1.filter(Invocation.abs_task_id != 'null')
-        sq_1 = sq_1.subquery()
         
-        sq_2 = self.session.query(distinct(Invocation.wf_id), Invocation.abs_task_id)
-        sq_2 = sq_2.filter(Invocation.wf_id.in_(self._wfs))
-        sq_2 = sq_2.filter(Invocation.abs_task_id != None)
-        if self._expand:
-            sq_2 = sq_2.filter(Invocation.abs_task_id != 'null')
-        sq_2 = sq_2.subquery()
-        
-        q = self.session.query((sq_1.as_scalar() - sq_2.count()).label('total_task_retries'))
-        return q.all()[0].total_task_retries
-        
+        i = 0
+        f = {}
+        for row in sq_1.all():
+            i += 1
+            if not f.has_key(row):
+                f[row] = True
+                
+        return i - len(f.keys())
+                
     #
     # Run statistics
     #
@@ -488,12 +501,17 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         """
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Statistics+file#WorkflowStatisticsfile-Workflowretries
         """
-        if not self._expand:
-            q = self.session.query(func.max(Workflowstate.restart_count))
-            q = q.filter(Workflowstate.wf_id.in_(self._wfs))
-            return q.one()[0]
+        sq_1 = self.session.query(func.max(Workflowstate.restart_count).label('retry'))
+        if self._expand:
+            sq_1 = sq_1.filter(Workflow.root_wf_id == self._root_wf_id)
         else:
-            return None
+            sq_1 = sq_1.filter(Workflow.wf_id.in_(self._wfs))
+        sq_1 = sq_1.filter(Workflowstate.wf_id == Workflow.wf_id)
+        sq_1 = sq_1.group_by(Workflowstate.wf_id)
+        sq_1 = sq_1.subquery()
+        
+        q = self.session.query(func.sum(sq_1.c.retry).label('total_retry'))
+        return q.one().total_retry
     
     #
     # Job Statistics
@@ -840,9 +858,6 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         avg(remote_duration)  , sum(remote_duration) 
         from invocation as invoc where invoc.wf_id = 3 group by transformation
         """
-        if self._expand:
-            return []
-        
         q = self.session.query(Invocation.transformation, 
                 func.count(Invocation.invocation_id).label('count'),
                 func.min(Invocation.remote_duration).label('min'),
