@@ -46,44 +46,58 @@
       <listitem>
         <para><emphasis role="bold">Portability / Reuse</emphasis></para>
 
-        <para>User created workflows can easily be run in different environments without alteration.
-        Pegasus currently runs workflows on Amazon EC2, Nimbus, Open Science Grid, the TeraGrid, and many campus clusters.
-
-        The same workflow can run on a single system or across a heterogeneous set of resources.</para>
+        <para>User created workflows can easily be run in different
+        environments without alteration. Pegasus currently runs workflows on
+        top of Condor, Grid infrastrucutures such as Open Science Grid and
+        TeraGrid, Amazon EC2, Nimbus, and many campus clusters. The same
+        workflow can run on a single system or across a heterogeneous set of
+        resources.</para>
       </listitem>
-      
+
       <listitem>
         <para><emphasis role="bold">Performance</emphasis></para>
 
-        <para>...</para>
+        <para>The Pegasus mapper can reorder, group, and prioritize tasks in
+        order to increase the overall workflow performance.</para>
       </listitem>
-      
+
       <listitem>
         <para><emphasis role="bold">Scalability</emphasis></para>
 
-        <para>Pegasus can easily scale both the size of the workflow, and the resources that the workflow is distributed over. Pegasus runs workflows ranging from just a few computational
-  tasks up to 1 million. The number of resources involved in executing a workflow can scale as needed without any impediments to performance.</para>
+        <para>Pegasus can easily scale both the size of the workflow, and the
+        resources that the workflow is distributed over. Pegasus runs
+        workflows ranging from just a few computational tasks up to 1 million.
+        The number of resources involved in executing a workflow can scale as
+        needed without any impediments to performance.</para>
       </listitem>
 
       <listitem>
         <para><emphasis role="bold">Provenance</emphasis></para>
 
-        <para>By default, all jobs in Pegasus are launched via the
-        <emphasis role="bold">kickstart</emphasis> process that captures runtime provenance of the job
-      and helps in debugging.</para>
+        <para>By default, all jobs in Pegasus are launched via the <emphasis
+        role="bold">kickstart</emphasis> process that captures runtime
+        provenance of the job and helps in debugging. The provenance data is
+        collected in a database, and the data can be summaries with tools such
+        as <emphasis role="bold">pegasus-statistics</emphasis>, <emphasis
+        role="bold">pegasus-plots</emphasis>, or directly with SQL
+        queries.</para>
       </listitem>
-      
+
       <listitem>
         <para><emphasis role="bold">Data Management</emphasis></para>
 
-        <para>...</para>
+        <para>Pegasus handles replica selection, data transfers and output
+        registrations in data catalogs. These tasks are added to a workflow as
+        auxilliary jobs by the Pegasus planner.</para>
       </listitem>
-
 
       <listitem>
         <para><emphasis role="bold">Reliability</emphasis></para>
 
-        <para>...</para>
+        <para>Jobs and data transfers are automatically retried in case of
+        failures. Debugging tools such as <emphasis
+        role="bold">pegasus-analyzer</emphasis> helps the user to debug the
+        workflow in case of non-recoverable failures.</para>
       </listitem>
 
       <listitem>
@@ -112,8 +126,10 @@
           <listitem>
             <para><emphasis>Local Execution</emphasis></para>
 
-            <para>Pegasus can run a workflow on a single computer with Internet access.
-            Running in a local environment is quicker to deploy as the user does not need to gain access to muliple resources in order to execute a workfow.</para>
+            <para>Pegasus can run a workflow on a single computer with
+            Internet access. Running in a local environment is quicker to
+            deploy as the user does not need to gain access to muliple
+            resources in order to execute a workfow.</para>
           </listitem>
 
           <listitem>
@@ -133,38 +149,40 @@
           <listitem>
             <para><emphasis>Grids</emphasis></para>
 
-            <para>Pegasus WMS is entirely compatible with Grid computing. Grid computing relies on the concept of distributed computations. Pegasus apportions
-            pieces of a workflow to run on distributed resources.</para>
+            <para>Pegasus WMS is entirely compatible with Grid computing. Grid
+            computing relies on the concept of distributed computations.
+            Pegasus apportions pieces of a workflow to run on distributed
+            resources.</para>
           </listitem>
 
           <listitem>
             <para><emphasis>Clouds</emphasis></para>
 
-            <para>Cloud computing uses a network as a means to connect a Pegasus end user to distributed resources that are based in the cloud.
-            </para>
+            <para>Cloud computing uses a network as a means to connect a
+            Pegasus end user to distributed resources that are based in the
+            cloud.</para>
           </listitem>
         </itemizedlist>
       </listitem>
     </itemizedlist>
   </section>
 
-    <section>
-      <title>Workflow Gallery</title>
+  <section>
+    <title>Workflow Gallery</title>
 
-      <para>Pegasus is curently being used in a broad range of applications. See <link
-      linkend="example_workflows">example workflows</link> to review the workflows.
-      The
-      <ulink
-      url="http://pegasus.isi.edu/applications.php">Pegasus Application Page
-     </ulink> shows some of the examples. To see the details of the
-      workflows of the applications you can visit our <ulink
-      url="http://confluence.pegasus.isi.edu/display/pegasus/WorkflowGenerator">Gallery
-      of Workflows</ulink>.</para>
+    <para>Pegasus is curently being used in a broad range of applications. See
+    <link linkend="example_workflows">example workflows</link> to review the
+    workflows. The <ulink
+    url="http://pegasus.isi.edu/applications.php">Pegasus Application Page
+    </ulink> shows some of the examples. To see the details of the workflows
+    of the applications you can visit our <ulink
+    url="http://confluence.pegasus.isi.edu/display/pegasus/WorkflowGenerator">Gallery
+    of Workflows</ulink>.</para>
 
-      <para>We are always looking for new applications willing to leverage our
-      workflow technologies. If you are interested please contact us at
-      pegasus at isi dot edu.</para>
-    </section>
+    <para>We are always looking for new applications willing to leverage our
+    workflow technologies. If you are interested please contact us at pegasus
+    at isi dot edu.</para>
+  </section>
 
   <section>
     <title>About this Document</title>
@@ -183,12 +201,13 @@
       <listitem>
         <para><emphasis role="bold">Introduction - Chapter 1</emphasis></para>
 
-        <para>(This chapter) An overview of Pegasus WMS and the features it offers, and a brief introduction
-        to workflows. </para>
+        <para>(This chapter) An overview of Pegasus WMS and the features it
+        offers, and a brief introduction to workflows.</para>
       </listitem>
 
       <listitem>
-        <para><emphasis role="bold">New User Walkthrough - Chapter 2</emphasis></para>
+        <para><emphasis role="bold">New User Walkthrough - Chapter
+        2</emphasis></para>
 
         <para>We walk new users through a representative workflow project that
         includes all aspects of the Pegasus WMS. The project we use is is at a
@@ -203,33 +222,38 @@
       </listitem>
 
       <listitem>
-        <para><emphasis role="bold"> Creating Workflows - Chapter 4</emphasis></para>
+        <para><emphasis role="bold"> Creating Workflows - Chapter
+        4</emphasis></para>
 
         <para>Abstract workflow creation and Catalog Details</para>
       </listitem>
 
       <listitem>
-        <para><emphasis role="bold">Running Workflows - Chapter 5</emphasis></para>
+        <para><emphasis role="bold">Running Workflows - Chapter
+        5</emphasis></para>
 
         <para>How to plan a DAX workflow and submit it to the DAG to create an
         executable workflow.</para>
       </listitem>
 
       <listitem>
-        <para><emphasis role="bold">Submit Directory Details - Chapter 6</emphasis></para>
+        <para><emphasis role="bold">Submit Directory Details - Chapter
+        6</emphasis></para>
 
         <para>Description of the workflow afer it has been planned</para>
       </listitem>
 
       <listitem>
-        <para><emphasis role="bold">Monitoring, Debugging, and Statistics - Chapter 7</emphasis></para>
+        <para><emphasis role="bold">Monitoring, Debugging, and Statistics -
+        Chapter 7</emphasis></para>
 
         <para>How to monitor, debug, and view statistics about the execution
         of a workflow</para>
       </listitem>
 
       <listitem>
-        <para><emphasis role="bold">Example Workflows - Chapter 8</emphasis></para>
+        <para><emphasis role="bold">Example Workflows - Chapter
+        8</emphasis></para>
 
         <para>Example workflows are included to assist users with becoming
         familiar with existing workflows to gain insight into creating their
@@ -237,13 +261,13 @@
       </listitem>
 
       <listitem>
-        <para><emphasis role="bold">Reference Manual - Chapters 9</emphasis></para>
+        <para><emphasis role="bold">Reference Manual - Chapters
+        9</emphasis></para>
 
         <para>Advanced information of configuration details for use in
         designing advanced workflows for very large scale projects along with
         API details and a listing of all commands available</para>
       </listitem>
-
 
       <listitem>
         <para><emphasis role="bold">Useful Tips - Chapter 10</emphasis></para>
@@ -261,7 +285,3 @@
     </itemizedlist>
   </section>
 </chapter>
-
-
-
-
