@@ -121,7 +121,7 @@
       </figure></para>
           <para>10. Select <emphasis role="bold">Next</emphasis></para>
 
-          <para><figure id="virtdisk">
+          <para><figure id="virtdisk1">
         <title>Storage Type</title>
 
         <mediaobject>
@@ -221,7 +221,7 @@
         </mediaobject>
       </figure></para>
          <para>16. Select <emphasis role="bold">Accessories - LX Terminal</emphasis> to open a terminal window.</para>
-         <para><figure id="virtdisk">
+         <para><figure id="virtdisk2">
         <title>Select Terminal</title>
 
         <mediaobject>
@@ -237,7 +237,7 @@
 
      The Terminal Window opens:</para>
 
-      <para><figure id="virtdisk">
+      <para><figure id="virtdisk3">
         <title>Storage Type</title>
 
         <mediaobject>
