@@ -756,14 +756,18 @@ public class CPlanner extends Executable{
     public PlannerOptions parseCommandLineArguments( String[] args, boolean sanitizePath ){
         LongOpt[] longOptions = generateValidOptions();
 
+        //store the args with which planner was invoked
+        
+        PlannerOptions options = new PlannerOptions();
+        options.setSanitizePath( sanitizePath );
+        options.setOriginalArgString( args );
+        
         Getopt g = new Getopt("pegasus-plan",args,
                               "vqhfSnzpVr::aD:d:s:o:P:c:C:b:g:2:j:3:F:X:4:5:6:7",
                               longOptions,false);
         g.setOpterr(false);
 
         int option = 0;
-        PlannerOptions options = new PlannerOptions();
-        options.setSanitizePath( sanitizePath );
         
         //construct the property matcher regex
         Pattern propertyPattern = Pattern.compile( CPlanner.JAVA_COMMAND_LINE_PROPERTY_REGEX );

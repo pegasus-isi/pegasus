@@ -247,6 +247,11 @@ public class PlannerOptions extends Data implements Cloneable{
      * Returns the force replan option
      */
     private boolean mForceReplan;
+    
+    /**
+     * The argument string with which the planner was invoked.
+     */
+    private String mOriginalArgumentString;
 
     /**
      * Default Constructor.
@@ -287,6 +292,7 @@ public class PlannerOptions extends Data implements Cloneable{
         mNumOfRescueTries = DEFAULT_NUMBER_OF_RESCUE_TRIES;
         mProperties       = new Properties();
         mForceReplan      = false;
+        mOriginalArgumentString = null;
     }
 
     /**
@@ -515,6 +521,30 @@ public class PlannerOptions extends Data implements Cloneable{
             return this.getRandomDir();
         }
         return null;
+    }
+
+    /**
+     * Returns the argument string of how planner was invoked. 
+     * 
+     * @return   the arguments with which the planner was invoked.
+     */
+    public String getOriginalArgString( ) {
+        return this.mOriginalArgumentString;
+    }
+    
+    /**
+     * Sets the argument string of how planner was invoked. This function
+     * just stores the arguments as a String internally.
+     * 
+     * @param args   the arguments with which the planner was invoked.
+     */
+    public void setOriginalArgString( String[] args ) {
+        
+        StringBuffer originalArgs = new StringBuffer();
+        for( int i = 0; i < args.length ; i++ ){
+            originalArgs.append( args[i] ).append( " " );
+        }
+        this.mOriginalArgumentString = originalArgs.toString();
     }
 
     /**
@@ -1152,7 +1182,8 @@ public class PlannerOptions extends Data implements Cloneable{
      */
     public String toString(){
         String st = "\n" +
-                    "\n Concrete Planner Options" +
+                    "\n Planner Options" +
+                    "\n Argument String As Seen By Planner " + this.getOriginalArgString() +
                     "\n Base Submit Directory " + mBaseDir +
                     "\n SubmitFile Directory " + this.getSubmitDirectory() +
                     "\n Basename Prefix      " + mBasenamePrefix +
@@ -1408,6 +1439,7 @@ public class PlannerOptions extends Data implements Cloneable{
         pOpt.mDate           = (Date)this.mDate.clone();
         pOpt.mPartitioningType = this.mPartitioningType;
         pOpt.mNumOfRescueTries = this.mNumOfRescueTries;
+        pOpt.mOriginalArgumentString = this.mOriginalArgumentString;
 
         //a shallow clone for forward options
         pOpt.mForwardOptions  = this.mForwardOptions;

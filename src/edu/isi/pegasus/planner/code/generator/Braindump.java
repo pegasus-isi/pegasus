@@ -301,7 +301,7 @@ public class Braindump {
         
         //planner arguments
         StringBuffer arguments = new StringBuffer( );
-        arguments.append( "\"" ).append( mPOptions.getCompleteOptions() ).append( "\"" );
+        arguments.append( "\"" ).append(  mPOptions.getOriginalArgString()  ).append( "\"" );
         entries.put( Braindump.PLANNER_ARGUMENTS_KEY, arguments.toString() );
 
         //required by tailstatd

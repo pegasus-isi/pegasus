@@ -49,7 +49,8 @@ public class PegasusBag
      */
     public static final String PEGASUS_INFO[] = {
         "pegasus-properties", "planner-options", "replica-catalog", "site-catalog",
-        "transformation-catalog", "transformation-mapper", "pegasus-logger", "site-store"
+        "transformation-catalog", "transformation-mapper", "pegasus-logger", "site-store",
+        "transient-rc"
     };
 
 
@@ -270,7 +271,7 @@ public class PegasusBag
         }
         catch( Exception e ){}
 
-        return ( k >= this.PEGASUS_PROPERTIES.intValue() && k <= this.TRANSFORMATION_CATALOG.intValue() );
+        return ( k >= this.PEGASUS_PROPERTIES.intValue() && k <= this.TRANSIENT_REPLICA_CATALOG.intValue() );
     }
 
     /**
