@@ -399,6 +399,8 @@ Optional arguments:
  -V|--version     print version information and exit. 
  -w|--watch [s]   repeatedly print output every 's' seconds, default 60.
  -L|--[no]legend  Disable or enable showing of the legends, default off. 
+ --color          Force color mode, even if not on a terminal.
+ --nocolor        Force no color mode, even if on a terminal.
 
 Optional arguments affecting Condor Q output:
  -Q|--[no]queue   Disable or enable Condor Q output, default is on. 
@@ -1643,6 +1645,7 @@ GetOptions( 'help|h' => \&usage
 	  }
 	  , 'cache=s' => \$main::cache
 	  , 'color' => sub { $main::onatty = 1 }
+	  , 'nocolor' => sub { $main::onatty = 0 }
 	  );
 
 #
