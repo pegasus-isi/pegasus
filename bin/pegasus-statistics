@@ -13,6 +13,7 @@ logger = logging.getLogger()
 
 import common
 from Pegasus.tools import utils
+from Pegasus.tools import properties
 from Pegasus.plots_stats import utils as stats_utils
 from netlogger.analysis.workflow.stampede_statistics import StampedeStatistics
 from datetime import timedelta
@@ -26,7 +27,6 @@ prog_base = os.path.split(sys.argv[0])[1]	# Name of this program
 workflow_statistics_file_name ="workflow.txt";
 job_statistics_file_name ="jobs.txt";
 logical_transformation_statistics_file_name ="breakdown.txt";
-output_dir=''
 calc_wf_stats = False
 calc_wf_summary = False
 calc_jb_stats = False
@@ -38,13 +38,13 @@ transformation_stats_col_name =["Transformation","Count","Succeeded" , "Failed",
 transformation_stats_col_size =[80,12,12,12,20,20,20,12]
 
 job_stats_col_name =['#Job','Site','Kickstart','Post' ,'CondorQTime','Resource','Runtime','Seqexec','Seqexec-Delay']
-job_stats_col_size =[35,15,15,15,15,15,15,15,15]
+job_stats_col_size =[80,15,12,12,12,12,12,12,12]
 
 worklow_summary_col_name =["Type" ,"Succeeded","Failed","Unsubmitted" ,"Total" , " " ,"Retries" , "Total Run (Retries Included)"]
 worklow_summary_col_size =[20,20,20,20,20,5,20,20]
 
 worklow_status_col_name =["#","Type" ,"Succeeded","Failed","Unsubmitted" ,"Total" , " " ,"Retries" , "Total Run (Retries Included)" ,"Workflow Retries"]
-worklow_status_col_size =[40,6,12,12,12,12,5,12,30,18]
+worklow_status_col_size =[40,15,12,12,12,12,5,12,30,18]
 
 
 
@@ -108,7 +108,7 @@ def formatted_wf_summary_legends():
 	formatted_wf_statistics_legend ="#legends \n"
 	
 	formatted_wf_statistics_legend +="""
-Workflow summary - Summary of the workflow execution .It shows total jobs/tasks run , how many succeeded/failed etc. In case of hierarchical workflow the calculation considers the sub worklow jobs/tasks .
+Workflow summary - Summary of the workflow execution .It shows total tasks/jobs/sub workflows run , how many succeeded/failed etc.
 """
 	formatted_wf_statistics_legend +="""
 Workflow wall time - The walltime from the start of the workflow execution to the end as reported by the DAGMAN.In case of rescue dag the value is the cumulative of all retries.
@@ -198,15 +198,19 @@ def format_seconds(duration):
 	
 
 
-def print_workflow_details(output_db_url , wf_uuid):
+def print_workflow_details(output_db_url , wf_uuid , output_dir):
 	"""
 	Prints the workflow statistics information of all workflows
 	@param output_db_url :  time in seconds and miliseconds
 	@param wf_uuid  : uuid of the top level workflow
 	"""
-	expanded_workflow_stats = StampedeStatistics(output_db_url)
- 	expanded_workflow_stats.initialize(wf_uuid)
- 	expanded_workflow_stats.set_job_filter('all')
+	
+	try:
+		expanded_workflow_stats = StampedeStatistics(output_db_url)
+		expanded_workflow_stats.initialize(wf_uuid)
+ 	except:
+ 		logger.error("Failed to load the database." + output_db_url )
+		sys.exit(1)
  	
  	# print workflow statistics
 	wf_uuid_list = [wf_uuid]
@@ -227,7 +231,6 @@ def print_workflow_details(output_db_url , wf_uuid):
 		write_to_file(transformation_stats_file, "w" , formatted_transformation_stats_legends())
 	
 	for sub_wf_uuid in wf_uuid_list:
-		print "wf_uuid " + sub_wf_uuid
 		individual_workflow_stats = StampedeStatistics(output_db_url , False)
  		individual_workflow_stats.initialize(sub_wf_uuid)
  		
@@ -258,7 +261,6 @@ def print_workflow_details(output_db_url , wf_uuid):
 	if calc_tf_stats:
 		expanded_workflow_stats.set_job_filter('all')
 		content = print_wf_transformation_stats(expanded_workflow_stats , "All")
-		print "Transformation" + str(content)
 		write_to_file(transformation_stats_file, "a" , content)
 		print "Logical transformation statistics : "
 		print transformation_stats_file +"\n"
@@ -285,25 +287,42 @@ def print_workflow_summary(workflow_stats ):
 	@param workflow_stats :  workflow statistics object reference
 	"""
 	# status
-	total_jobs = workflow_stats.get_total_jobs_status()
-	total_succeeded_jobs = workflow_stats.get_total_succeeded_jobs_status()
-	total_failed_jobs = workflow_stats.get_total_failed_jobs_status()
-	total_unsubmitted_jobs = total_jobs - (total_succeeded_jobs + total_failed_jobs )
-	total_job_retries = workflow_stats.get_total_jobs_retries()
-	total_job_instance_retries =  total_succeeded_jobs + total_failed_jobs + total_job_retries
+	workflow_stats.set_job_filter('nonsub')
+	# Tasks
 	total_tasks = workflow_stats.get_total_tasks_status()
 	total_succeeded_tasks = workflow_stats.get_total_succeeded_tasks_status()
 	total_failed_tasks = workflow_stats.get_total_failed_tasks_status()
 	total_unsubmitted_tasks = total_tasks -(total_succeeded_tasks + total_failed_tasks)
 	total_task_retries =  workflow_stats.get_total_tasks_retries()
 	total_invocations = total_succeeded_tasks + total_failed_tasks + total_task_retries
+	# Jobs
+	total_jobs = workflow_stats.get_total_jobs_status()
+	total_succeeded_jobs = workflow_stats.get_total_succeeded_jobs_status()
+	total_failed_jobs = workflow_stats.get_total_failed_jobs_status()
+	total_unsubmitted_jobs = total_jobs - (total_succeeded_jobs + total_failed_jobs )
+	total_job_retries = workflow_stats.get_total_jobs_retries()
+	total_job_instance_retries =  total_succeeded_jobs + total_failed_jobs + total_job_retries
+	# Sub workflows
+	workflow_stats.set_job_filter('subwf')
+	total_sub_wfs = workflow_stats.get_total_jobs_status()
+	total_succeeded_sub_wfs = workflow_stats.get_total_succeeded_jobs_status()
+	total_failed_sub_wfs = workflow_stats.get_total_failed_jobs_status()
+	total_unsubmitted_sub_wfs = total_sub_wfs - (total_succeeded_sub_wfs + total_failed_sub_wfs)
+	total_sub_wfs_retries = workflow_stats.get_total_jobs_retries()
+	total_sub_wfs_tries =  total_succeeded_sub_wfs + total_failed_sub_wfs + total_sub_wfs_retries
 	
 	print "".center(sum(worklow_summary_col_size), '-')
 	print print_row(worklow_summary_col_name , worklow_summary_col_size)
-	content =[ "Jobs" , convert_to_str(total_succeeded_jobs), convert_to_str(total_failed_jobs), convert_to_str(total_unsubmitted_jobs) , convert_to_str(total_jobs) ,"||",str(total_job_retries), convert_to_str(total_job_instance_retries) ]		
-	print print_row(content, worklow_summary_col_size)
+	
 	content = ["Tasks " , convert_to_str(total_succeeded_tasks), convert_to_str(total_failed_tasks), convert_to_str(total_unsubmitted_tasks) ,convert_to_str(total_tasks),"||",convert_to_str(total_task_retries), convert_to_str(total_invocations) ]
 	print print_row(content, worklow_summary_col_size)
+	
+	content =[ "Jobs" , convert_to_str(total_succeeded_jobs), convert_to_str(total_failed_jobs), convert_to_str(total_unsubmitted_jobs) , convert_to_str(total_jobs) ,"||",str(total_job_retries), convert_to_str(total_job_instance_retries) ]		
+	print print_row(content, worklow_summary_col_size)
+	
+	content =[ "Sub Workflows" , convert_to_str(total_succeeded_sub_wfs), convert_to_str(total_failed_sub_wfs), convert_to_str(total_unsubmitted_sub_wfs) , convert_to_str(total_sub_wfs) ,"||",str(total_sub_wfs_retries), convert_to_str(total_sub_wfs_tries) ]		
+	print print_row(content, worklow_summary_col_size)
+	
 	print "".center(sum(worklow_summary_col_size), '-')
 	
 	workflow_states_list = workflow_stats.get_workflow_states()
@@ -334,34 +353,52 @@ def print_individual_workflow_stats(workflow_stats , title):
 	"""
 	content_str =""
 	# individual workflow status
+	
+	# workflow status
 	workflow_stats.set_job_filter('all')
-	total_jobs = workflow_stats.get_total_jobs_status()
-	total_succeeded_jobs = workflow_stats.get_total_succeeded_jobs_status()
-	total_failed_jobs = workflow_stats.get_total_failed_jobs_status()
-	total_unsubmitted_jobs = total_jobs - (total_succeeded_jobs + total_failed_jobs )
-	total_job_retries = workflow_stats.get_total_jobs_retries()
-	total_job_instance_retries =  total_succeeded_jobs + total_failed_jobs + total_job_retries
 	total_wf_retries = workflow_stats.get_workflow_retries() 
-	content = ["","Jobs",convert_to_str(total_succeeded_jobs), convert_to_str(total_failed_jobs) , convert_to_str(total_unsubmitted_jobs), convert_to_str(total_jobs) ,"||",convert_to_str(total_job_retries), convert_to_str(total_job_instance_retries) ,"" ]
-	jobs_status_str = print_row(content,worklow_status_col_size)
 	content = [title,"","","" , "", "" ,"||","", "" ,convert_to_str(total_wf_retries) ]
 	wf_status_str = print_row(content, worklow_status_col_size)
 			
 	#tasks
-	workflow_stats.set_job_filter('all')
+	workflow_stats.set_job_filter('nonsub')
 	total_tasks = workflow_stats.get_total_tasks_status()
 	total_succeeded_tasks = workflow_stats.get_total_succeeded_tasks_status()
 	total_failed_tasks = workflow_stats.get_total_failed_tasks_status()
 	total_unsubmitted_tasks = total_tasks -(total_succeeded_tasks + total_failed_tasks )
 	total_task_retries =  workflow_stats.get_total_tasks_retries()
-	total_invocations = total_succeeded_tasks + total_failed_tasks + total_task_retries
-	content =["","Tasks",  convert_to_str(total_succeeded_tasks) , convert_to_str(total_failed_tasks), convert_to_str(total_unsubmitted_tasks) , convert_to_str(total_tasks) ,"||",convert_to_str(total_task_retries), convert_to_str(total_invocations) ,""]
+	total_task_invocations = total_succeeded_tasks + total_failed_tasks + total_task_retries
+	content =["","Tasks",  convert_to_str(total_succeeded_tasks) , convert_to_str(total_failed_tasks), convert_to_str(total_unsubmitted_tasks) , convert_to_str(total_tasks) ,"||",convert_to_str(total_task_retries), convert_to_str(total_task_invocations) ,""]
 	tasks_status_str =  print_row(content,worklow_status_col_size)
 	
+	# job status
+	workflow_stats.set_job_filter('nonsub')
+	total_jobs = workflow_stats.get_total_jobs_status()
+	total_succeeded_jobs = workflow_stats.get_total_succeeded_jobs_status()
+	total_failed_jobs = workflow_stats.get_total_failed_jobs_status()
+	total_unsubmitted_jobs = total_jobs - (total_succeeded_jobs + total_failed_jobs )
+	total_job_retries = workflow_stats.get_total_jobs_retries()
+	total_job_invocations =  total_succeeded_jobs + total_failed_jobs + total_job_retries
+	content = ["","Jobs",convert_to_str(total_succeeded_jobs), convert_to_str(total_failed_jobs) , convert_to_str(total_unsubmitted_jobs), convert_to_str(total_jobs) ,"||",convert_to_str(total_job_retries), convert_to_str(total_job_invocations) ,"" ]
+	jobs_status_str = print_row(content,worklow_status_col_size)
+	
+	# sub workflow
+	workflow_stats.set_job_filter('subwf')
+	total_sub_wfs = workflow_stats.get_total_jobs_status()
+	total_succeeded_sub_wfs = workflow_stats.get_total_succeeded_jobs_status()
+	total_failed_sub_wfs = workflow_stats.get_total_failed_jobs_status()
+	total_unsubmitted_sub_wfs = total_sub_wfs - (total_succeeded_sub_wfs + total_failed_sub_wfs )
+	total_sub_wfs_retries = workflow_stats.get_total_jobs_retries()
+	total_sub_wfs_invocations =  total_succeeded_sub_wfs + total_failed_sub_wfs + total_sub_wfs_retries
+	content = ["","Sub Workflows",convert_to_str(total_succeeded_sub_wfs), convert_to_str(total_failed_sub_wfs) , convert_to_str(total_unsubmitted_sub_wfs), convert_to_str(total_sub_wfs) ,"||",convert_to_str(total_sub_wfs_retries), convert_to_str(total_sub_wfs_invocations) ,"" ]
+	sub_wf_status_str = print_row(content,worklow_status_col_size)
+	
+	
 	content_str += "".center(sum(worklow_status_col_size), '-') +"\n"
-	content_str += jobs_status_str +"\n"
 	content_str += wf_status_str +"\n"
 	content_str += tasks_status_str +"\n"
+	content_str += jobs_status_str +"\n"
+	content_str += sub_wf_status_str +"\n"
 	
 	return content_str
 	
@@ -491,80 +528,105 @@ def set_statistics_level(stats_level):
 	
 # ---------main----------------------------------------------------------------------------
 
-# Configure command line option parser
-prog_usage = prog_base +" [options] SUBMIT DIRECTORY" 
-parser = optparse.OptionParser(usage=prog_usage)
-parser.add_option("-o", "--output", action = "store", dest = "output_dir",
-		help = "writes the output to given directory.")
-parser.add_option("-s", "--statisticslevel", action = "store", dest = "statistics_level",
-		choices=['all', 'summary', 'wf_stats','jb_stats','tf_stats' ],
-		help = "Log level. Valid levels are: all,summary,wf_stats,jb_stats,tf_stats Default is summary.")
-parser.add_option("-l", "--loglevel", action = "store", dest = "log_level",
-		choices=['debug', 'info', 'warning','error' ],
-		help = "Log level. Valid levels are: debug,info,warning,error, Default is info.")
-# Parse command line options
-(options, args) = parser.parse_args()
-
-print prog_base +" : initializing..."
-if len(args) < 1:
-	parser.error("Please specify Submit Directory")
-	sys.exit(1)
-
-if len(args) > 1:
-	parser.error("Invalid argument")
-	sys.exit(1) 
-
-submit_dir = os.path.abspath(args[0])
-
-# Copy options from the command line parser
-if options.statistics_level is not None:
-	 statistics_level = options.statistics_level
-else:
-	statistics_level =  'summary'
-	print statistics_level
-set_statistics_level(statistics_level)
-
-if options.output_dir is not None:
-	output_dir = options.output_dir
-	if not os.path.isdir(output_dir):
-		logger.warning("Output directory doesn't exists. Creating directory... ")
-		try:
-			os.mkdir(output_dir)
-		except:
-			logger.error("Unable to create output directory."+output_dir)
-			sys.exit(1) 	
-else :
-	output_dir = tempfile.mkdtemp()
-if options.log_level == None:
-	options.log_level = "info"
-setup_logger(options.log_level)	
-#Getting values from braindump file
-config = utils.slurp_braindb(submit_dir)
-if not config:
-	logger.warning("could not process braindump.txt ")
-	sys.exit(1)
-wf_uuid = ''
-if (config.has_key('wf_uuid')):
-	wf_uuid = config['wf_uuid']
-else:
-	logger.error("workflow id cannot be found in the braindump.txt ")
-	sys.exit(1)
-
-dag_file_name =''
-if (config.has_key('dag')):
-	dag_file_name = config['dag']
-else:
-	logger.error("Dag file name cannot be found in the braindump.txt ")
-	sys.exit(1)	
-
-# Create the sqllite db url
-output_db_file =submit_dir +"/"+ dag_file_name[:dag_file_name.find(".dag")] + ".stampede.db"
-output_db_url = "sqlite:///" + output_db_file
-if os.path.isfile(output_db_file):
-	print_workflow_details(output_db_url,wf_uuid )
+def main():
+	# Configure command line option parser
+	prog_usage = prog_base +" [options] SUBMIT DIRECTORY" 
+	parser = optparse.OptionParser(usage=prog_usage)
+	parser.add_option("-o", "--output", action = "store", dest = "output_dir",
+			help = "writes the output to given directory.")
+	parser.add_option("-c","--conf", action = "store", type = "string", dest = "config_properties",
+			  help = "specifies the properties' file to use. This option overrides all other property files.")
+	parser.add_option("-s", "--statisticslevel", action = "store", dest = "statistics_level",
+			choices=['all', 'summary', 'wf_stats','jb_stats','tf_stats' ],
+			help = "Log level. Valid levels are: all,summary,wf_stats,jb_stats,tf_stats Default is summary.")
+	parser.add_option("-l", "--loglevel", action = "store", dest = "log_level",
+			choices=['debug', 'info', 'warning','error' ],
+			help = "Log level. Valid levels are: debug,info,warning,error, Default is info.")
+	# Parse command line options
+	(options, args) = parser.parse_args()
 	
-else:
-	logger.error("Unable to find database file in "+submit_dir)
-	sys.exit(1)
-sys.exit(0)
+	print prog_base +" : initializing..."
+	if len(args) < 1:
+		parser.error("Please specify Submit Directory")
+		sys.exit(1)
+	
+	if len(args) > 1:
+		parser.error("Invalid argument")
+		sys.exit(1) 
+	
+	submit_dir = os.path.abspath(args[0])
+	
+	# Copy options from the command line parser
+	if options.statistics_level is not None:
+		 statistics_level = options.statistics_level
+	else:
+		statistics_level =  'summary'
+		print statistics_level
+	set_statistics_level(statistics_level)
+	global output_dir
+	if options.output_dir is not None:
+		output_dir = options.output_dir
+		if not os.path.isdir(output_dir):
+			logger.warning("Output directory doesn't exists. Creating directory... ")
+			try:
+				os.mkdir(output_dir)
+			except:
+				logger.error("Unable to create output directory."+output_dir)
+				sys.exit(1) 	
+	else :
+		output_dir = tempfile.mkdtemp()
+	if options.log_level == None:
+		options.log_level = "info"
+	setup_logger(options.log_level)	
+	#Getting values from braindump file
+	top_level_wf_params = utils.slurp_braindb(submit_dir)
+	top_level_prop_file = None
+	if not top_level_wf_params:
+		logger.warning("could not process braindump.txt ")
+		sys.exit(1)
+	wf_uuid = ''
+	if (top_level_wf_params.has_key('wf_uuid')):
+		wf_uuid = top_level_wf_params['wf_uuid']
+	else:
+		logger.error("workflow id cannot be found in the braindump.txt ")
+		sys.exit(1)
+	
+	# Get the location of the properties file from braindump
+	
+	
+	# Get properties tag from braindump
+	if "properties" in top_level_wf_params:
+	    top_level_prop_file = top_level_wf_params["properties"]
+	    # Create the full path by using the submit_dir key from braindump
+	    if "submit_dir" in top_level_wf_params:
+	        top_level_prop_file = os.path.join(top_level_wf_params["submit_dir"], top_level_prop_file)
+	
+	# Parse, and process properties
+	props = properties.Properties()
+	props.new(config_file=options.config_properties, rundir_propfile=top_level_prop_file)
+	
+	output_db_url=""
+	if props.property('pegasus.monitord.output') is not None:
+		output_db_url = props.property('pegasus.monitord.output')
+		if not (output_db_url.startswith("mysql:") or output_db_url.startswith("sqlite:")):
+			logger.error("Unable to find database file from the properties file ")
+			sys.exit(0)
+	else:
+		dag_file_name =''
+		if (top_level_wf_params.has_key('dag')):
+			dag_file_name = top_level_wf_params['dag']
+		else:
+			logger.error("Dag file name cannot be found in the braindump.txt ")
+			sys.exit(1)	
+		# Create the sqllite db url
+		output_db_file =submit_dir +"/"+ dag_file_name[:dag_file_name.find(".dag")] + ".stampede.db"
+		output_db_url = "sqlite:///" + output_db_file
+		if not os.path.isfile(output_db_file):
+			logger.error("Unable to find database file in "+submit_dir)
+			sys.exit(1)
+	print_workflow_details(str(output_db_url),wf_uuid ,output_dir)
+	sys.exit(0)
+
+if __name__ == '__main__':
+	main()
 
