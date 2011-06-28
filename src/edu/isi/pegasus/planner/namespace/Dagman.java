@@ -104,6 +104,11 @@ public class Dagman extends Namespace {
      * retrying the job.
      */
     public static final String RETRY_KEY = "RETRY";
+    
+    /**
+     * The default value for the JOB Retries
+     */
+    public static final String DEFAULT_RETRY_VALUE = "3";
 
     /**
      * The name of the key that determines the category to which the job
@@ -229,6 +234,7 @@ public class Dagman extends Namespace {
         mProfileMap = new TreeMap();
         mNamespace = NAMESPACE_NAME;
         mJobName = null;
+        
     }
 
     /**
@@ -237,9 +243,8 @@ public class Dagman extends Namespace {
      * @param mp  the initial map containing the profile keys for this namespace.
      */
     public Dagman(Map mp) {
+        this();
         mProfileMap = new TreeMap(mp);
-        mNamespace = NAMESPACE_NAME;
-        mJobName = null;
     }
 
     /**
@@ -249,8 +254,7 @@ public class Dagman extends Namespace {
      * @param name name of the job with which these profile keys are associated.
      */
     public Dagman(Map mp, String name) {
-        mProfileMap = new TreeMap(mp);
-        mNamespace  = NAMESPACE_NAME;
+        this( mp );
         mJobName    = name;
     }
 
@@ -530,6 +534,13 @@ public class Dagman extends Namespace {
                 this.checkKeyInNS( key, (String)profiles.get( key ) );
            }
         }
+        
+        //profiles in properties have lowest priority
+        //we associate default retry only if user did 
+        //not specify in properties
+        if( !this.containsKey( Dagman.RETRY_KEY ) ){
+            this.construct( RETRY_KEY, DEFAULT_RETRY_VALUE );
+        } 
     }
 
     
