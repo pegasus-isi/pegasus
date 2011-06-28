@@ -16,7 +16,7 @@ the Stampede DB.
 
 See http://www.sqlalchemy.org/ for details on SQLAlchemy
 """
-__rcsid__ = "$Id: stampede_loader.py 28097 2011-06-20 20:16:18Z mgoode $"
+__rcsid__ = "$Id: stampede_loader.py 28107 2011-06-27 21:46:29Z mgoode $"
 __author__ = "Monte Goode"
 
 from netlogger.analysis.schema.stampede_schema import *
@@ -105,6 +105,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         
         # Dicts for caching FK lookups
         self.wf_id_cache = {}
+        self.root_wf_id_cache = {}
         self.job_id_cache = {}
         self.job_instance_id_cache = {}
         self.host_cache = {}
@@ -694,15 +695,17 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
             self.hosts_written_cache = {}
             query = self.session.query(Host)
             for row in query.all():
-                self.hosts_written_cache[(row.site,row.hostname,row.ip)] = True
+                self.hosts_written_cache[(row.wf_id,row.site,row.hostname,row.ip)] = True
+                
+        host.wf_id = self.wf_uuid_to_root_id(host.wf_uuid)
         
         # handle inserts into the host table
-        if not self.hosts_written_cache.has_key((host.site,host.hostname,host.ip)):
+        if not self.hosts_written_cache.has_key((host.wf_id,host.site,host.hostname,host.ip)):
             if self._batch:
                 self._batch_cache['batch_events'].append(host)
             else:
                 host.commit_to_db(self.session)
-            self.hosts_written_cache[(host.site,host.hostname,host.ip)] = True
+            self.hosts_written_cache[(host.wf_id,host.site,host.hostname,host.ip)] = True
             
         # handle mappings
         if self._batch:
@@ -761,6 +764,31 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
                 pass
             
         return self.wf_id_cache[wf_uuid]
+        
+    def wf_uuid_to_root_id(self, wf_uuid):
+        """
+        @type   wf_uuid: string
+        @param  wf_uuid: wf_uuid string from BP logs
+
+        Attempts to retrieve a root workflow wf_id PK/FK from cache.  If
+        not in cache, retrieve from st_workflow table in DB and cache.  
+        Cuts down on DB queries during insert processing.
+        """
+        if not self.root_wf_id_cache.has_key(wf_uuid):
+            query = self.session.query(Workflow).filter(Workflow.wf_uuid == wf_uuid)
+            try:
+                self.root_wf_id_cache[wf_uuid] = query.one().root_wf_id
+            except orm.exc.MultipleResultsFound, e:
+                self.log.error('wf_uuid_to_root_id', 
+                    msg='Multiple wf_id results for wf_uuid %s : %s' % (wf_uuid, e))
+                return None
+            except orm.exc.NoResultFound, e:
+                self.log.error('wf_uuid_to_root_id',
+                    msg='No wf_id results for wf_uuid %s : %s' % (wf_uuid, e))
+                return None
+                pass
+
+        return self.root_wf_id_cache[wf_uuid]
         
     def get_job_id(self, wf_id, exec_id):
         """
@@ -833,7 +861,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         if not self.host_cache.has_key((cached_job_id, host.job_submit_seq)):
             if not host.host_id:
                 try:
-                    host.host_id = self.session.query(Host.host_id).filter(Host.site == host.site).filter(Host.hostname == host.hostname).filter(Host.ip == host.ip).one().host_id
+                    host.host_id = self.session.query(Host.host_id).filter(Host.wf_id == host.wf_id).filter(Host.site == host.site).filter(Host.hostname == host.hostname).filter(Host.ip == host.ip).one().host_id
                 except orm.exc.MultipleResultsFound, e:
                     self.log.error('map_host_to_job_instance',
                         msg='Multiple host_id results for host: %s' % host)
@@ -857,6 +885,10 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         for k,v in self.wf_id_cache.items():
             if k == wfs.wf_uuid:
                 del self.wf_id_cache[k]
+                
+        for k,v in self.root_wf_id_cache.items():
+            if k == wfs.wf_uuid:
+                del self.root_wf_id_cache[k]
                 
         for k,v in self.job_instance_id_cache.items():
             if k[0] == wfs.wf_id:

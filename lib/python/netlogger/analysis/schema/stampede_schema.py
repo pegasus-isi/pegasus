@@ -2,7 +2,7 @@
 Contains the code to create and map objects to the Stampede DB schema
 via a SQLAlchemy interface.
 """
-__rcsid__ = "$Id: stampede_schema.py 28088 2011-06-15 18:56:24Z mgoode $"
+__rcsid__ = "$Id: stampede_schema.py 28107 2011-06-27 21:46:29Z mgoode $"
 __author__ = "Monte Goode MMGoode@lbl.gov"
 
 from netlogger.analysis.schema._base import SABase, SchemaIntegrityError
@@ -75,31 +75,6 @@ def initializeToPegasusDB(db, metadata, kw={}):
     if db.name == 'sqlite':
         warnings.filterwarnings('ignore', '.*does \*not\* support Decimal*.')
     
-    # st_host definition
-    # ==> Information from kickstart output file
-    # 
-    # site_name = <resource, from invocation element>
-    # hostname = <hostname, from invocation element>
-    # ip_address = <hostaddr, from invocation element>
-    # uname = <combined (system, release, machine) from machine element>
-    # total_ram = <ram_total from machine element>
-    
-    st_host = Table('host', metadata,
-                    Column('host_id', KeyInt, primary_key=True, nullable=False),
-                    Column('site', VARCHAR(255), nullable=False),
-                    Column('hostname', VARCHAR(255), nullable=False),
-                    Column('ip', VARCHAR(255), nullable=False),
-                    Column('uname', VARCHAR(255), nullable=True),
-                    Column('total_memory', KeyInt, nullable=True),
-                    **kw
-    )
-    
-    Index('UNIQUE_HOST', st_host.c.site, st_host.c.hostname, st_host.c.ip, unique=True)
-    
-    try:
-        orm.mapper(Host, st_host)
-    except exc.ArgumentError:
-        pass
     
     # st_workflow definition
     # ==> Information comes from braindump.txt file
@@ -143,6 +118,7 @@ def initializeToPegasusDB(db, metadata, kw={}):
         orm.mapper(Workflow, st_workflow, properties = {
                 'child_wf':relation(Workflow, cascade='all'),
                 'child_wfs':relation(Workflowstate, backref='st_workflow', cascade='all'),
+                'child_host':relation(Host, backref='st_workflow', cascade='all'),
                 'child_task':relation(Task, backref='st_workflow', cascade='all'),
                 'child_job':relation(Job, backref='st_workflow', cascade='all'),
                 'child_task_e':relation(TaskEdge, backref='st_workflow', cascade='all'),
@@ -175,6 +151,35 @@ def initializeToPegasusDB(db, metadata, kw={}):
         orm.mapper(Workflowstate, st_workflowstate)
     except exc.ArgumentError:
         pass
+    
+    # st_host definition
+    # ==> Information from kickstart output file
+    # 
+    # site_name = <resource, from invocation element>
+    # hostname = <hostname, from invocation element>
+    # ip_address = <hostaddr, from invocation element>
+    # uname = <combined (system, release, machine) from machine element>
+    # total_ram = <ram_total from machine element>
+
+    st_host = Table('host', metadata,
+                    Column('host_id', KeyInt, primary_key=True, nullable=False),
+                    Column('wf_id', KeyInt,
+                            ForeignKey('workflow.wf_id'), nullable=False),
+                    Column('site', VARCHAR(255), nullable=False),
+                    Column('hostname', VARCHAR(255), nullable=False),
+                    Column('ip', VARCHAR(255), nullable=False),
+                    Column('uname', VARCHAR(255), nullable=True),
+                    Column('total_memory', KeyInt, nullable=True),
+                    **kw
+    )
+
+    Index('UNIQUE_HOST', st_host.c.wf_id, st_host.c.site, st_host.c.hostname, st_host.c.ip, unique=True)
+
+    try:
+        orm.mapper(Host, st_host)
+    except exc.ArgumentError:
+        pass
+    
         
     # static job table
     
