@@ -85,8 +85,13 @@ public class PegasusConfiguration {
      * @return Properties
      */
     public Properties getConfigurationProperties( String configuration ){
-        Properties p = new Properties( );
+        //sanity check
+        if( configuration == null ){
+            //return empty properties
+            return new Properties();
+        }        
         
+        Properties p = new Properties( );
         if( configuration.equalsIgnoreCase( S3_CONFIGURATION_VALUE ) ){
             p.setProperty( "pegasus.execute.*.filesystem.local", "true" );
             p.setProperty( "pegasus.dir.create.impl", "S3" );
