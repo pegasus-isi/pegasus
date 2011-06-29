@@ -48,8 +48,6 @@ from datetime import datetime
 #Global variables----
 prog_base = os.path.split(sys.argv[0])[1]	# Name of this program
 brainbase ='braindump.txt'
-base_submit_dir = None
-braindb_submit_dir =None
 output_dir = None
 
 
@@ -73,16 +71,6 @@ def setup_logger(level_str):
 		logger.setLevel(logging.INFO)
 	return
 
-def rlb(file_path):
-	"""
-	This function converts the path relative to base path
-	Returns : path relative to the base 
-	"""
-	file_path = plot_utils.rlb(file_path, braindb_submit_dir,base_submit_dir)
-	return file_path
-	
-
-			
 
 #-----date conversion----------
 def convert_to_seconds(time):
@@ -931,7 +919,7 @@ def create_gnatt_plot_page(workflow_info ,output_dir):
 	if workflow_info.submit_dir is None:
 		logger.warning("Unable to display brain dump contents. Invalid submit directory for workflow  " + workflow_info.wf_uuid)
 	else:
-		wf_page = plot_utils.print_braindump_file(os.path.join(rlb(workflow_info.submit_dir)))
+		wf_page = plot_utils.print_property_table(workflow_info.wf_env,False ," : ")
 		str_list.append(wf_page)
 	wf_page = "\n<div style='clear: left'>\n</div></body>\n</html>"
 	str_list.append(wf_page)
@@ -948,41 +936,11 @@ def create_gnatt_plot_page(workflow_info ,output_dir):
 	return
 def setup(submit_dir,out_dir,log_level):
 	# global reference
-	global base_submit_dir
-	global braindb_submit_dir
 	global output_dir
-	base_submit_dir = submit_dir
 	output_dir = out_dir
 	if log_level == None:
 		log_level = "info"
 	setup_logger(log_level)
-	#Getting values from braindump file
-	config = utils.slurp_braindb(submit_dir)
-	if not config:
-		logger.warning("could not process braindump.txt ")
-		sys.exit(1)
-	wf_uuid = ''
-	if (config.has_key('wf_uuid')):
-		wf_uuid = config['wf_uuid']
-	else:
-		logger.error("workflow id cannot be found in the braindump.txt ")
-		sys.exit(1)
-	
-	if (config.has_key('submit_dir') or config.has_key('run')):
-		if config.has_key('submit_dir'):
-			braindb_submit_dir =  os.path.abspath(config['submit_dir'])
-		else:
-			braindb_submit_dir =  os.path.abspath(config['run'])
-	else:
-		logger.error("Submit directory cannot be found in the braindump.txt ")
-		sys.exit(1)
-	
-	dag_file_name =''
-	if (config.has_key('dag')):
-		dag_file_name = config['dag']
-	else:
-		logger.error("Dag file name cannot be found in the braindump.txt ")
-		sys.exit(1)	
 	plot_utils.create_directory(output_dir)
 	src_js_path = os.path.join(common.pegasus_home, "lib/javascript")
 	src_img_path = os.path.join(common.pegasus_home, "share/plots/images/protovis/")
