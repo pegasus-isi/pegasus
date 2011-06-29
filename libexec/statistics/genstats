@@ -314,6 +314,16 @@ sub processJobstateLog {
                         if ($jobsRef->{$job}->{'site'} ne "local") {
                             $condorQLength++;
                         }
+                        # undef all the previous values, if it exists
+                        # Fix for the case in which some event is missing in the current retry, but was present in the previous retry. 
+                        #Then the calculation was picking the previous retry value.
+                         
+                        undef $jobsRef->{$job}->{'EXECUTE'};
+                        undef $jobsRef->{$job}->{'GLOBUS_SUBMIT'};
+                        undef $jobsRef->{$job}->{'GRID_SUBMIT'};
+                        undef $jobsRef->{$job}->{'JOB_TERMINATED'};
+                        undef $jobsRef->{$job}->{'POST_SCRIPT_STARTED'};
+                        undef $jobsRef->{$job}->{'POST_SCRIPT_TERMINATED'};
                     }
 
                     case 'EXECUTE' {
@@ -339,6 +349,15 @@ sub processJobstateLog {
                         if (!$condorRun && $jobsRef->{$job}->{'site'} ne "local") {
                             $jobsRef->{$job}->{'condorQLength'} = $condorQLength;
                             $condorQLength--;
+                        }
+                    }
+                    
+                    
+                    case 'JOB_TERMINATED' {
+                        if (defined $jobsRef->{$job}->{'num'} ) {
+                        	$jobsRef->{$job}->{'num'} +=1;
+                        }else{
+                        	$jobsRef->{$job}->{'num'} =1;
                         }
                     }
                 }
@@ -647,12 +666,15 @@ sub writeJobs {
     #print JOBS "#Seqexec(sec.) -  the time taken for the completion of a clustered job\n";
     #print JOBS "#Seqexec-Delay(sec.) - the time difference between the time for the completion of a clustered job and sum of all the individual tasks kickstart time\n\n";
     if ($longJobNames) {
-        print JOBS sprintf("#%-79s %20s %8s %8s %8s %13s %8s %8s %7s %13s\n", "Job", "Site", "Kickstart", "Post", "DAGMan", "CondorQTime", "Res", "Runtime", "Seqexec", "Seqexec-Delay");
+        print JOBS sprintf("#%-79s %6s %20s %8s %8s %8s %13s %8s %8s %7s %13s\n", "Job", "Num" , "Site", "Kickstart", "Post", "DAGMan", "CondorQTime", "Res", "Runtime", "Seqexec", "Seqexec-Delay");
     } else {
-        print JOBS sprintf("#%-39s %20s %8s %8s %8s %13s %8s %8s %7s %13s\n", "Job", "Site", "Kickstart", "Post", "DAGMan", "CondorQTime", "Resource", "Runtime",  "Seqexec", "Seqexec-Delay");
+        print JOBS sprintf("#%-39s %6s %20s %8s %8s %8s %13s %8s %8s %7s %13s\n", "Job", "Num" , "Site", "Kickstart", "Post", "DAGMan", "CondorQTime", "Resource", "Runtime",  "Seqexec", "Seqexec-Delay");
     }
     foreach my $job (sort keys %{$jobsRef}) {
     	#Setting default values 
+    	if (!defined($jobsRef->{$job}->{"num"})) {
+    		$jobsRef->{$job}->{"num"} = "0";
+    	}
         if (!defined($jobsRef->{$job}->{"site"})) {
             $jobsRef->{$job}->{"site"} = "local";
         }
@@ -671,9 +693,9 @@ sub writeJobs {
     	$jobsRef->{$job}->{'cumulative_resourceDelay'} = defined($jobsRef->{$job}->{'cumulative_resourceDelay'})?$jobsRef->{$job}->{'cumulative_resourceDelay'}:'-';
     	$jobsRef->{$job}->{'cumulative_runtime'} = defined($jobsRef->{$job}->{'cumulative_runtime'})?$jobsRef->{$job}->{'cumulative_runtime'}:'-';
         if ($longJobNames) {
-        	print JOBS sprintf("%-80s %20s %8s %8s %8s %13s %8s %8s %7s %13s\n", $job, $jobsRef->{$job}->{'site'}, $jobsRef->{$job}->{'cumulative_ksruntime'}, $jobsRef->{$job}->{'cumulative_postscripttime'}, $jobsRef->{$job}->{'cumulative_dagmanDelay'}, $jobsRef->{$job}->{'cumulative_condorDelay'}, $jobsRef->{$job}->{'cumulative_resourceDelay'}, $jobsRef->{$job}->{'cumulative_runtime'}, $jobsRef->{$job}->{'cumulative_seqexec'}, $jobsRef->{$job}->{'cumulative_seqexec-delay'});
+        	print JOBS sprintf("%-80s %6s %20s %8s %8s %8s %13s %8s %8s %7s %13s\n", $job, $jobsRef->{$job}->{'num'}, $jobsRef->{$job}->{'site'}, $jobsRef->{$job}->{'cumulative_ksruntime'}, $jobsRef->{$job}->{'cumulative_postscripttime'}, $jobsRef->{$job}->{'cumulative_dagmanDelay'}, $jobsRef->{$job}->{'cumulative_condorDelay'}, $jobsRef->{$job}->{'cumulative_resourceDelay'}, $jobsRef->{$job}->{'cumulative_runtime'}, $jobsRef->{$job}->{'cumulative_seqexec'}, $jobsRef->{$job}->{'cumulative_seqexec-delay'});
         } else {
-        	print JOBS sprintf("%-40s %20s %8s %8s %8s %13s %8s %8s %7s %13s\n", $job, $jobsRef->{$job}->{'site'}, $jobsRef->{$job}->{'cumulative_ksruntime'}, $jobsRef->{$job}->{'cumulative_postscripttime'}, $jobsRef->{$job}->{'cumulative_dagmanDelay'}, $jobsRef->{$job}->{'cumulative_condorDelay'}, $jobsRef->{$job}->{'cumulative_resourceDelay'}, $jobsRef->{$job}->{'cumulative_runtime'}, $jobsRef->{$job}->{'cumulative_seqexec'},$jobsRef->{$job}->{'cumulative_seqexec-delay'});
+        	print JOBS sprintf("%-40s %6s %20s %8s %8s %8s %13s %8s %8s %7s %13s\n", $job, $jobsRef->{$job}->{'num'}, $jobsRef->{$job}->{'site'}, $jobsRef->{$job}->{'cumulative_ksruntime'}, $jobsRef->{$job}->{'cumulative_postscripttime'}, $jobsRef->{$job}->{'cumulative_dagmanDelay'}, $jobsRef->{$job}->{'cumulative_condorDelay'}, $jobsRef->{$job}->{'cumulative_resourceDelay'}, $jobsRef->{$job}->{'cumulative_runtime'}, $jobsRef->{$job}->{'cumulative_seqexec'},$jobsRef->{$job}->{'cumulative_seqexec-delay'});
         }
     }
     close(JOBS);
