@@ -66,6 +66,8 @@ import edu.isi.pegasus.planner.code.GridStartFactory;
 
 
 import edu.isi.pegasus.planner.classes.Job;
+import edu.isi.pegasus.planner.common.PegasusConfiguration;
+import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.parser.Parser;
 import edu.isi.pegasus.planner.parser.dax.DAXParser;
@@ -285,11 +287,11 @@ public class CPlanner extends Executable{
      * Loads all the properties that are needed by this class.
      */
     public void loadProperties(){
-
-
+        PegasusConfiguration configurator = new PegasusConfiguration( mLogger );
+        configurator.loadConfigurationProperties( mProps );
     }
 
-
+    
 
     /**
      * Executes the command on the basis of the options specified.
