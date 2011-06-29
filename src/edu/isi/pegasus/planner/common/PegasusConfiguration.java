@@ -123,7 +123,7 @@ public class PegasusConfiguration {
             //log a warning 
             StringBuffer sb = new StringBuffer();
             sb.append( "Property Key " ).append( key ).append( " already set to " ).
-               append( value ).append( ". Will not be set to - ").append( value );
+               append( propValue ).append( ". Will not be set to - ").append( value );
             mLogger.log( sb.toString(), LogManager.WARNING_MESSAGE_LEVEL );
         }
     }
