@@ -40,7 +40,7 @@ global_db_url = None
 global_top_wf_uuid =None
 global_wf_id_uuid_map = {}
 
-def populate_job_details(job_states , job_stat, dagman_start_time , isFailed):
+def populate_job_details(job_states , job_stat, dagman_start_time , isFailed , retry_count):
 	"""
 	Returns the job statistics information
 	Param: the job reference
@@ -112,43 +112,9 @@ def populate_job_details(job_states , job_stat, dagman_start_time , isFailed):
 		job_stat.state ='FAILED'
 	else:
 		job_stat.state= "Unknown"
+	job_stat.retry_count = retry_count
 	return		
 	
-def parse_submit_file(sub_fn):
-	"""
-	This function walks through the submit file, looks for initialdir.
-	Returns : initial directory for the workflow, None if no value found
-	"""
-	init_dir_path = None
-	if os.access(sub_fn ,os.R_OK):
-	# Open dag file
-		try:
-			SUB = open(sub_fn, "r")
-		except:
-			logger.debug( "Could not open submit file ." +(sub_fn))
-			return init_dir_path
-	# Loop through the sub file
-	for line in SUB:	
-		line = line.strip(" \t")
-		# Skip comments
-		if line.startswith("#"):
-			continue
-		line = line.rstrip("\n\r") # Remove new lines, if any
-		line = line.split('#')[0] # Remove inline comments too
-		line = line.strip() # Remove any remaining spaces at both ends
-		# Skip empty lines
-		if len(line) == 0:
-			continue
-		prop = re_parse_property.search(line)
-		if prop:
-			k = prop.group(1)
-			v = prop.group(2)
-			if k =="initialdir":
-				init_dir_path = v
-				break
-	else:
-		logger.debug("Unable to read the submit file" + sub_fn)
-	return init_dir_path	
 
 def rlb(file_path):
 	"""
@@ -160,24 +126,28 @@ def rlb(file_path):
 	
 							
 #------------Gets sub worklows job names----------------
-def get_job_name_sub_workflow_map(workflow ):
-	job_name_wf_uuid_map ={}
+def get_job_inst_sub_workflow_map(workflow ):
+	job_inst_wf_uuid_map ={}
 	jb_inst_sub_wf_list = workflow.get_job_instance_sub_wf_map()
 	for jb_inst_sub_wf in jb_inst_sub_wf_list:
-		job_name_wf_uuid_map[jb_inst_sub_wf.job_instance_id] = global_wf_id_uuid_map[jb_inst_sub_wf.subwf_id]
-	return job_name_wf_uuid_map
+		job_inst_wf_uuid_map[jb_inst_sub_wf.job_instance_id] = global_wf_id_uuid_map[jb_inst_sub_wf.subwf_id]
+	return job_inst_wf_uuid_map
 
 
 
 #-------return workflow uuid by parsing db alone-----
 
 def get_workflows_uuid():
+	# expand = True
 	expanded_workflow_stats = StampedeStatistics(global_db_url)
  	expanded_workflow_stats.initialize(global_top_wf_uuid)
  	expanded_workflow_stats.set_job_filter('all')
- 	#TODO why list of list
- 	print "WORKFLOW DETAILS LENGTH " + str(len(expanded_workflow_stats.get_workflow_details()))
-	wf_det = expanded_workflow_stats.get_workflow_details()[0]
+ 	#expand = False
+ 	root_workflow_stats = StampedeStatistics(global_db_url , False)
+ 	root_workflow_stats.initialize(global_top_wf_uuid)
+ 	root_workflow_stats.set_job_filter('all')
+ 	
+ 	wf_det = root_workflow_stats.get_workflow_details()[0]
  	# print workflow statistics
  	global global_wf_id_uuid_map
  	global_wf_id_uuid_map[wf_det.wf_id] = global_top_wf_uuid
@@ -200,9 +170,9 @@ def populate_workflow_details(workflow):
 	workflow_run_time = None
 	total_jobs =0
 	transformation_stats_dict ={}
-	job_stats_dict ={}
 	job_stats_list =[]
 	host_job_mapping ={}
+	job_name_retry_count_dict ={}
 	wf_transformation_color_map ={}
 	
 	worklow_states_list = workflow.get_workflow_states()
@@ -220,18 +190,26 @@ def populate_workflow_details(workflow):
 		workflow_run_time = walltime
 	color_count = 0
 	# populating statistics details
-	#TODO why list of list
 	wf_det = workflow.get_workflow_details()[0]
 	
 	
+	
+	failed_job_list = workflow.get_failed_job_instances()
 	dagman_start_time = worklow_states_list[0].timestamp
 	# for root jobs,dagman_start_time is required, assumption start_event[0] is not none
 	job_states_list =  workflow.get_job_states()
 	for job_states in job_states_list:
 		job_stat = JobInfo()
-		job_stats_dict[job_states.job_name] = job_stat
 		job_stats_list.append(job_stat)
-		populate_job_details(job_states ,job_stat , dagman_start_time , True)
+		is_job_failed = False
+		restart_count =0
+		if job_name_retry_count_dict.has_key(job_states.job_name):
+			restart_count = job_name_retry_count_dict[job_states.job_name]
+			restart_count +=1
+		job_name_retry_count_dict[job_states.job_name] = restart_count
+		if job_states.job_instance_id in failed_job_list:
+			is_job_failed = True	
+		populate_job_details(job_states ,job_stat , dagman_start_time , is_job_failed , job_name_retry_count_dict[job_states.job_name])
 		# Assigning host to job mapping
 		if host_job_mapping.has_key(job_stat.host_name):
 			job_list =host_job_mapping[job_stat.host_name]
@@ -252,6 +230,7 @@ def populate_workflow_details(workflow):
 	
 	#Calculating total jobs
 	total_jobs = len(job_stats_list)
+	
 	# Assigning value to the workflow object
 	workflow_stat.wf_uuid = wf_det.wf_uuid
 	
@@ -264,11 +243,11 @@ def populate_workflow_details(workflow):
 		workflow_stat.workflow_run_time =workflow_run_time
 	workflow_stat.total_jobs = total_jobs	
 	workflow_stat.dagman_start_time = dagman_start_time
-	workflow_stat.job_statistics_dict = job_stats_dict
 	workflow_stat.job_statistics_list =job_stats_list
 	workflow_stat.host_job_map = host_job_mapping
 	workflow_stat.transformation_statistics_dict = transformation_stats_dict
 	workflow_stat.transformation_color_map = wf_transformation_color_map
+	workflow_stat.wf_env = plot_utils.parse_workflow_environment(wf_det)
 	return workflow_stat
 	
 	
@@ -286,15 +265,14 @@ def setup_logger(level_str):
 	
 def populate_chart(wf_uuid):
 	"""
-	workflow = Workflow(global_db_url)
-	workflow.initialize(wf_uuid)
+	Populates the workflow info object corresponding to the wf_uuid
 	"""
 	workflow = StampedeStatistics(global_db_url , False)
  	workflow.initialize(wf_uuid)
 	workflow_info = populate_workflow_details(workflow)
 	sub_wf_uuids = workflow.get_sub_workflow_ids()
 	if len(sub_wf_uuids) > 0:
-		workflow_info.job_name_sub_wf_uuid_map = get_job_name_sub_workflow_map(workflow )
+		workflow_info.job_instance_id_sub_wf_uuid_map = get_job_inst_sub_workflow_map(workflow )
 	config = utils.slurp_braindb(rlb(workflow_info.submit_dir))
 	if (config.has_key('dag')):
 		dag_file_name = config['dag']
@@ -306,7 +284,7 @@ def populate_chart(wf_uuid):
 	
 
 
-def setup(submit_dir):
+def setup(submit_dir , config_properties):
 	# global reference
 	global global_base_submit_dir
 	global global_braindb_submit_dir
@@ -315,15 +293,6 @@ def setup(submit_dir):
 	global_base_submit_dir = submit_dir
 	#Getting values from braindump file
 	config = utils.slurp_braindb(submit_dir)
-	if not config:
-		logger.warning("could not process braindump.txt ")
-		sys.exit(1)
-	wf_uuid = ''
-	if (config.has_key('wf_uuid')):
-		global_top_wf_uuid = config['wf_uuid']
-	else:
-		logger.error("workflow id cannot be found in the braindump.txt ")
-		sys.exit(1)
 	if (config.has_key('submit_dir') or config.has_key('run')):
 		if config.has_key('submit_dir'):
 			global_braindb_submit_dir =  os.path.abspath(config['submit_dir'])
@@ -333,17 +302,9 @@ def setup(submit_dir):
 		logger.error("Submit directory cannot be found in the braindump.txt . ")
 		sys.exit(1)
 	
-	dag_file_name =''
-	if (config.has_key('dag')):
-		dag_file_name = config['dag']
-	else:
-		logger.error("Dag file name cannot be found in the braindump.txt ")
-		sys.exit(1)	
 	# Create the sqllite db url
-	output_db_file =submit_dir +"/"+ dag_file_name[:dag_file_name.find(".dag")] + ".stampede.db"
-	global_db_url = "sqlite:///" + output_db_file
-	if not os.path.isfile(output_db_file):
-		logger.error("Unable to find database file in "+submit_dir)
+	global_db_url , global_top_wf_uuid = plot_utils.get_db_url_wf_uuid(submit_dir , config_properties)
+	if global_db_url is None:
 		sys.exit(1)
 
 	
