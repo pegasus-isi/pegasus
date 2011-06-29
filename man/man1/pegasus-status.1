@@ -28,7 +28,8 @@ pegasus\-status \- Pegasus workflow- and run\-time status
 \-V|\-\-version
 .PP
 .B pegasus\-status 
-[\-w|\-\-watch\~[s]] [\-L|\-\-[no]legend] [\-Q|\-\-[no]queue] [\-v|\-\-verbose]
+[\-w|\-\-watch\~[s]] [\-L|\-\-[no]legend] [\-c|\-\-[no]color]
+[\-U|\-\-[no]utf8] [\-Q|\-\-[no]queue] [\-v|\-\-verbose]
 [\-d|\-\-debug] [\-u|\-\-user\~name] [\-i|\-\-[no]idle] [\-\-[no]held]
 [\-\-[no]heavy] [\-j|\-\-jobtype\~jt] [\-s|\-\-site\~sid] [\-l|\-\-long]
 [\-S|\-\-[no]success] [rundir]
@@ -47,19 +48,25 @@ in the workflow directory, etc.
 .SH "ARGUMENTS"
 .TP
 .B \-h
+.PD 0
 .TP
+.PD 1
 .B \-\-help
 Prints a concise help and exits. 
 .IP
 .TP
 .B \-V
+.PD 0
 .TP
+.PD 1
 .B \-\-version
 Prints the version information and exits.
 .IP
 .TP
 .B \-w\~[sec]
+.PD 0
 .TP
+.PD 1
 .B \-\-watch\~[sec]
 This option enables the 
 .I watch mode.
@@ -80,19 +87,61 @@ Watch mode is disabled by default. The
 argument defaults to 60 seconds. 
 .TP
 .B \-L
+.PD 0
 .TP
+.PD 1
 .B \-\-legend
+.PD 0
 .TP
+.PD 1
 .B \-\-nolegend
 This option shows a legend explaining the columns in the output, or turns off 
 legends. 
 .IP
 By default, legends are turned off to save terminal real estate. 
+.TP 
+.B \-c
+.PD 0
+.TP
+.PD 1 
+.B \-\-color
+.PD 0
+.TP
+.PD 1 
+.B \-\-nocolor
+This option turns on (or off) ANSI color escape sequences in the output.
+The single letter option can only switch on colors. 
+.IP
+By default, colors are turned off, as they will not display well on a 
+terminal with black background.
+.TP
+.B \-U
+.PD 0
+.TP
+.PD 1
+.B \-\-utf8
+.PD 0
+.TP
+.PD 1
+.B \-\-noutf8
+This option turns on (or off) the output of Unicode box drawing characters
+as UTF-8 encoded sequences. The single option can only turn on box drawing
+characters.
+.IP
+The defaults for this setting depend on the 
+.I LANG
+environment variable. If the variable contains a value ending in something
+indicating UTF-8 capabilities, the option is turned on by default. It is
+off otherwise. 
 .TP
 .B \-Q
+.PD 0
 .TP
+.PD 1
 .B \-\-queue
+.PD 0
 .TP
+.PD 1
 .B \-\-noqueue
 This option turns on (or off) the output from parsing Condor Q. 
 .IP
@@ -101,7 +150,9 @@ run directory is specified, it will furthermore be limited to jobs only belongin
 to the workflow. 
 .TP
 .B \-v
+.PD 0
 .TP
+.PD 1
 .B \-\-verbose
 This option increases the expert level, showing more information about the Condor
 Q state. Being an incremental option, two incrases are supported. 
@@ -115,7 +166,9 @@ will increase and decrease the expert level respectively during run\-time.
 By default, the simplest queue view is enabled. 
 .TP
 .B \-d
+.PD 0
 .TP
+.PD 1
 .B \-\-debug
 This is an internal debugging tool and should not be used outside the development
 team. As incremental option, it will show Pegasus-specific ClassAd tuples for each
@@ -124,7 +177,9 @@ job, more in the second level.
 By default, debug mode is off. 
 .TP
 .B \-u name
+.PD 0
 .TP
+.PD 1
 .B \-\-user name
 This option permits to query the queue for a different user than the current one. 
 This may be of interest, if you are debugging the workflow of another user. 
@@ -132,9 +187,13 @@ This may be of interest, if you are debugging the workflow of another user.
 By default, the current user is assumed. 
 .TP
 .B \-i
+.PD 0
 .TP
+.PD 1
 .B \-\-idle
+.PD 0
 .TP
+.PD 1
 .B \-\-noidle
 With this option, jobs in Condor state
 .I idle
@@ -145,7 +204,9 @@ By default,
 jobs are shown. 
 .TP
 .B \-\-held
+.PD 0
 .TP
+.PD 1
 .B \-\-noheld
 This option enables or disabled showing of the reason a job entered
 Condor's
@@ -155,7 +216,9 @@ state. The reason will somewhat destroy the screen layout.
 By default, the reason is shown. 
 .TP
 .B \-\-heavy
+.PD 0
 .TP
+.PD 1
 .B \-\-noheavy
 If the terminal is UTF-8 capable, and output is to a terminal, this option
 decides whether to use heavyweight or lightweight line drawing characters. 
@@ -163,7 +226,9 @@ decides whether to use heavyweight or lightweight line drawing characters.
 By default, heavy lines connect the jobs to workflows.
 .TP
 .B \-j\~jt
+.PD 0
 .TP
+.PD 1
 .B \-\-jobtype\~jt
 This option filters the Condor jobs shown only to the Pegasus jobtypes given
 as argument or arguments to this option. It is a multi-option, and may be 
@@ -175,7 +240,9 @@ to see all valid and recognized jobtypes.
 By default, all Pegasus jobtypes are shown. 
 .TP
 .B \-s site
+.PD 0
 .TP
+.PD 1
 .B \-\-site site
 This option limits the Condor jobs shown to only those pertaining to the
 (remote) site
@@ -187,7 +254,9 @@ By default, all sites are shown.
 .IP
 .TP
 .B \-l
+.PD 0
 .TP
+.PD 1
 .B \-\-long
 This option will show one line per sub-DAG, including one line for the
 workflow. If there is only a single DAG pertaining to the 
@@ -197,9 +266,13 @@ only total will be shown.
 By default, only DAG totals (sums) are shown. 
 .TP
 .B \-S
+.PD 0
 .TP
+.PD 1
 .B \-\-success
+.PD 0
 .TP
+.PD 1
 .B \-\-nosuccess
 This option modifies the previous
 .I \-\-long

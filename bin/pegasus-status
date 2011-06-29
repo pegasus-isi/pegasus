@@ -63,6 +63,7 @@ if ( $^O eq 'darwin' ) {
 # --- globals ----------------------------------------------
 #
 $main::debug = 0;		# debug output
+$main::color = 0; 		# default: no color (black bg terminal)
 $main::user = $ENV{USER} || $ENV{LOGNAME} || scalar getpwuid($>);
 $_ = '$Revision$';     # don't edit, automatically updated by CVS
 $main::revision=$1 if /Revision:\s+([0-9.]+)/o;
@@ -383,9 +384,9 @@ sub usage(;$) {
     my $msg = shift;
     my $flag = defined $msg && lc($msg) ne 'help';
     if ( $flag ) {
-	print $main::bold if $main::onatty;
+	print $main::bold if $main::color;
 	print "ERROR: $msg\n";
-	print $main::reset if $main::onatty; 
+	print $main::reset if $main::color; 
     }
 
     my $app = basename($0); 
@@ -398,9 +399,9 @@ Optional arguments:
  -h|--help        print this help and exit.
  -V|--version     print version information and exit. 
  -w|--watch [s]   repeatedly print output every 's' seconds, default 60.
- -L|--[no]legend  Disable or enable showing of the legends, default off. 
- --color          Force color mode, even if not on a terminal.
- --nocolor        Force no color mode, even if on a terminal.
+ -L|--[no]legend  Enable or disable showing of the legends, default off. 
+ -c|--[no]color   Enable or disable ANSI colors, default off.
+ -U|--[no]utf8    Enable or disable UTF-8 graphics, default from \$LANG.
 
 Optional arguments affecting Condor Q output:
  -Q|--[no]queue   Disable or enable Condor Q output, default is on. 
@@ -719,6 +720,7 @@ sub create_legend(\%\@) {
     # paramtr: %title (IN): hash of all available title defs
     #          @title (IN): select titles
     # globals: $cols (IN): current terminal width
+    #          $main::color (IN): whether to use ANSI colors
     #          $main::bold (IN): turn on bold
     #          $main::reset (IN): turn off bold 
     # returns: scalar: string containing the legend
@@ -737,9 +739,9 @@ sub create_legend(\%\@) {
 	my $v = $avail->{ $title->[$i] }{legend}; 
 	my $l = length($k) + length($v); 
 	my $s = '';
-	$s .= $main::bold if $main::onatty;
+	$s .= $main::bold if $main::color;
 	$s .= $k;
-	$s .= $main::reset if $main::onatty; 
+	$s .= $main::reset if $main::color; 
 	$s .= ': ' . $v; 
 	if ( $p + $l + 2 > $cols ) { 
 	    $result .= "\n$s";
@@ -1162,7 +1164,7 @@ sub x_job1 {
 	}
     }
 
-    if ( $main::onatty ) { 
+    if ( $main::color ) { 
 	if ( $row->{'pegasus_job_class'} > 9 ) { 
 	    "\033[0;37m" . $row->{_indent} . $main::reset .
 		$result . $main::ccolor[ $row->{jobstatus} ];
@@ -1205,7 +1207,7 @@ sub x_job2 {
 	$result .= ']'; 
     }
 
-    if ( $main::onatty ) { 
+    if ( $main::color ) { 
 	if ( $row->{'pegasus_job_class'} > 9 ) { 
 	    "\033[0;37m" . $row->{_indent} . $main::reset .
 		$result . $main::ccolor[ $row->{jobstatus} ];
@@ -1225,7 +1227,7 @@ sub q_print_debug($$$$\%) {
     #          $watch (IN): are we in watch mode? 
     #          $match (IN): regular expression of classads to match
     #          %q[i] (IN): current job class ads
-    # globals: $main::onatty (IN): are we on a tty (can color)? 
+    # globals: $main::color (IN): whether to use ANSI colors
     #          $cols (IN): current terminal width
     #          $rows (IN): current terminal height
     # returns: new cursor position
@@ -1248,9 +1250,9 @@ sub q_print_debug($$$$\%) {
 	    my $v = $qi->{$k}; 
 	    my $l = length($k) + length($v); 
 	    $s = '';
-	    $s .= "\033[1;30m" if $main::onatty;
+	    $s .= "\033[1;30m" if $main::color;
 	    $s .= $k;
-	    $s .= $main::reset if $main::onatty; 
+	    $s .= $main::reset if $main::color; 
 	    $s .= '=' . $v; 
 	    if ( $p+$l+2 > $cols ) { 
 		print "\n\t$s"; 
@@ -1270,7 +1272,7 @@ sub q_print_summary($\%) {
     # purpose: print summary line adding stats of Condor and Condor-G
     # paramtr: $cursor (IN): current row
     #          %count (IN): queue statistics
-    # globals: $main::onatty (IN): are we on a tty (can color)? 
+    # globals: $main::color (IN): whether to use ANSI colors
     #          @main::ccolor (IN): color settings
     #          $main::reset (IN): undo colorings
     # returns: new cursor position
@@ -1284,9 +1286,9 @@ sub q_print_summary($\%) {
     my $f = 0;
     foreach my $c ( sort { $a <=> $b } keys %{$cref->{condor}} ) {
 	print( $f++ ? ' ' : ' (' );
-	print $main::ccolor[$c] if $main::onatty; 
+	print $main::ccolor[$c] if $main::color; 
 	print $main::cstat[$c], ':', commas($cref->{condor}{$c}); 
-	print $main::reset if $main::onatty; 
+	print $main::reset if $main::color; 
     }
     print ')' if $f; 
 
@@ -1567,7 +1569,7 @@ sub dag_print_summary($\%) {
     # purpose: print summary line adding stats of workflows
     # paramtr: $cursor (IN): current row
     #          %count (IN): queue statistics
-    # globals: $main::onatty (IN): are we on a tty (can color)? 
+    # globals: $main::color (IN): whether to use ANSI colors
     #          @main::dcolor (IN): color settings
     #          $main::reset (IN): undo colorings
     # returns: new cursor position
@@ -1586,9 +1588,9 @@ sub dag_print_summary($\%) {
 	    my $x = $totals->{_state};
 	    if ( $x->[$i] > 0 ) { 
 		print( $f++ ? ' ' : ' (' );
-		print $main::dcolor[$i] if $main::onatty;
+		print $main::dcolor[$i] if $main::color;
 		print $main::dlong[$i], ':', commas($x->[$i]);
-		print $main::reset if $main::onatty; 
+		print $main::reset if $main::color; 
 	    }
 	}
 	print ")" if $f; 
@@ -1618,6 +1620,8 @@ GetOptions( 'help|h' => \&usage
 	  , 'user|u=s' => \$main::user
 	  , 'debug|d+' => \$main::debug
 	  , 'verbose|v+' => \$main::expert
+	  , 'color|c!' => \$main::color
+	  , 'utf8|U!' => \$main::isutf8
 	  , 'version|V' => \&version
 	  , 'classad|ca+' => \$classads
 	  , 'jobtype|jobclass|j=s' => \@jobtypes
@@ -1644,9 +1648,8 @@ GetOptions( 'help|h' => \&usage
 	      $watch = $_[1] || 60; # once a minute is almost too often
 	  }
 	  , 'cache=s' => \$main::cache
-	  , 'color' => sub { $main::onatty = 1 }
-	  , 'nocolor' => sub { $main::onatty = 0 }
 	  );
+binmode( STDOUT, ':utf8' ) if $main::isutf8;
 
 #
 # If the user specified any form of job type/class limitations... 
@@ -1712,7 +1715,7 @@ $SIG{USR2} = sub { $main::expert-- };
 $main::space = ' ' if $main::expert; 
 
 # determine UTF-8 capabilities
-if ( $main::onatty && $main::isutf8 ) { 
+if ( $main::isutf8 ) { 
     # Draw UTF-8 graphics 
     # Warning: These are the unicode script string that require 'use utf8;'
     if ( $heavy ) { 
@@ -1827,12 +1830,12 @@ for ( my $cursor=1; ; $cursor=1 ) {
 	}
 
 	# print headers
-	print $main::bold if $main::onatty; 
+	print $main::bold if $main::color; 
 	for ( my $i=0; $i<@max; ++$i ) {
 	    print $main::space if $i; 
 	    printf "%*s", $max[$i], $qtitle{ $qtitle[$i] }{header}; 
 	}
-	print $main::reset if $main::onatty; 
+	print $main::reset if $main::color; 
 	print "\n";
 	++$cursor; 
 	
@@ -1841,7 +1844,7 @@ for ( my $cursor=1; ; $cursor=1 ) {
 	    my $jobstatus = $q[$i]->{jobstatus}; 
 
 	    # decide on color for row and print data columns
-	    print $main::ccolor[$jobstatus] if $main::onatty;
+	    print $main::ccolor[$jobstatus] if $main::color;
 	    for ( my $j=0; $j<@{$result[$i]}; ++$j ) {
 		print $main::space if $j;
 		printf "%*s", $max[$j], $result[$i][$j]; 
@@ -1855,7 +1858,7 @@ for ( my $cursor=1; ; $cursor=1 ) {
 	    }
 
 	    # reset color after this
-	    print $main::reset if $main::onatty;
+	    print $main::reset if $main::color;
 
 	    # transient trickery for classads mode
 	    if ( $classads ) {
@@ -1924,12 +1927,12 @@ for ( my $cursor=1; ; $cursor=1 ) {
 	}
 
 	# print headers
-	print $main::bold if $main::onatty;
+	print $main::bold if $main::color;
 	for ( my $i=0; $i<@max; ++$i ) {
 	    print ' ' if $i; 
 	    printf "%*s", $max[$i], $dtitle{ $dtitle[$i] }{header}; 
 	}
-	print $main::reset if $main::onatty; 
+	print $main::reset if $main::color; 
 	print "\n";
 	++$cursor; 
 
@@ -1940,7 +1943,7 @@ for ( my $cursor=1; ; $cursor=1 ) {
 		my $dagstate = $dags[$i]->{state}; 
 
 		# decide on a color for row and print data columns
-		print $main::dcolor[$dagstate] if $main::onatty; 
+		print $main::dcolor[$dagstate] if $main::color; 
 		for ( my $j=0; $j<@{$result[$i]}; ++$j ) {
 		    print ' ' if $j;
 		    if ( $j == $#max && length($result[$i][$j]) > abs($max[$j]) ) {
@@ -1950,7 +1953,7 @@ for ( my $cursor=1; ; $cursor=1 ) {
 	        }
 
 		# reset colors
-		print $main::reset if $main::onatty; 
+		print $main::reset if $main::color; 
 
 		# terminate current line
 		print "\n"; 
@@ -1970,7 +1973,7 @@ for ( my $cursor=1; ; $cursor=1 ) {
 	# print totals here
 	if ( ! $show_subdag || $dcount{'_total'} > 1 ) {
 	    # decide on a color for row and print data columns
-	    print $main::bold if ( $show_subdag && $main::onatty );
+	    print $main::bold if ( $show_subdag && $main::color );
 	    my $i = $#result; 
 	    for ( my $j=0; $j<@{$result[$i]}; ++$j ) {
 		print ' ' if $j;
@@ -1981,7 +1984,7 @@ for ( my $cursor=1; ; $cursor=1 ) {
 	    }
 
 	    # reset colors
-	    print $main::reset if $main::onatty; 
+	    print $main::reset if $main::color; 
 
 	    # terminate current line
 	    print "\n"; 
