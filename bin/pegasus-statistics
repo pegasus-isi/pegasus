@@ -13,7 +13,6 @@ logger = logging.getLogger()
 
 import common
 from Pegasus.tools import utils
-from Pegasus.tools import properties
 from Pegasus.plots_stats import utils as stats_utils
 from netlogger.analysis.workflow.stampede_statistics import StampedeStatistics
 from datetime import timedelta
@@ -577,54 +576,10 @@ def main():
 		output_dir = tempfile.mkdtemp()
 	if options.log_level == None:
 		options.log_level = "info"
-	setup_logger(options.log_level)	
-	#Getting values from braindump file
-	top_level_wf_params = utils.slurp_braindb(submit_dir)
-	top_level_prop_file = None
-	if not top_level_wf_params:
-		logger.warning("could not process braindump.txt ")
-		sys.exit(1)
-	wf_uuid = ''
-	if (top_level_wf_params.has_key('wf_uuid')):
-		wf_uuid = top_level_wf_params['wf_uuid']
-	else:
-		logger.error("workflow id cannot be found in the braindump.txt ")
-		sys.exit(1)
-	
-	# Get the location of the properties file from braindump
-	
-	
-	# Get properties tag from braindump
-	if "properties" in top_level_wf_params:
-	    top_level_prop_file = top_level_wf_params["properties"]
-	    # Create the full path by using the submit_dir key from braindump
-	    if "submit_dir" in top_level_wf_params:
-	        top_level_prop_file = os.path.join(top_level_wf_params["submit_dir"], top_level_prop_file)
-	
-	# Parse, and process properties
-	props = properties.Properties()
-	props.new(config_file=options.config_properties, rundir_propfile=top_level_prop_file)
-	
-	output_db_url=""
-	if props.property('pegasus.monitord.output') is not None:
-		output_db_url = props.property('pegasus.monitord.output')
-		if not (output_db_url.startswith("mysql:") or output_db_url.startswith("sqlite:")):
-			logger.error("Unable to find database file from the properties file ")
-			sys.exit(0)
-	else:
-		dag_file_name =''
-		if (top_level_wf_params.has_key('dag')):
-			dag_file_name = top_level_wf_params['dag']
-		else:
-			logger.error("Dag file name cannot be found in the braindump.txt ")
-			sys.exit(1)	
-		# Create the sqllite db url
-		output_db_file =submit_dir +"/"+ dag_file_name[:dag_file_name.find(".dag")] + ".stampede.db"
-		output_db_url = "sqlite:///" + output_db_file
-		if not os.path.isfile(output_db_file):
-			logger.error("Unable to find database file in "+submit_dir)
-			sys.exit(1)
-	print_workflow_details(str(output_db_url),wf_uuid ,output_dir)
+	setup_logger(options.log_level)
+	output_db_url , wf_uuid = stats_utils.get_db_url_wf_uuid(submit_dir , options.config_properties)
+	if output_db_url is not None:
+		print_workflow_details(output_db_url,wf_uuid ,output_dir)
 	sys.exit(0)
 
 if __name__ == '__main__':
