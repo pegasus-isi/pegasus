@@ -9,6 +9,7 @@ import math
 import tempfile
 import commands
 import shutil
+from Pegasus.tools import properties
 
 # Initialize logging object
 logger = logging.getLogger()
@@ -16,7 +17,7 @@ logger = logging.getLogger()
 import common
 from Pegasus.tools import utils
 
-#TODO add subdag_ job also the sub workflow jobs
+
 def isSubWfJob(job_name):
 	if job_name.lstrip().startswith('subdax_') or job_name.lstrip().startswith('pegasus-plan_') or job_name.lstrip().startswith('subdag_'):
 		return True;
@@ -43,6 +44,19 @@ def print_braindump_file(braindb_path):
 		brain_db_content = print_property_table(config , False ," : ")
 	return brain_db_content
 	
+def parse_workflow_environment(wf_det):
+	config = {}
+	config["wf_uuid"] = wf_det.wf_uuid
+	config["dag_file_name"] = wf_det.dag_file_name
+	config["submit_hostname"] = wf_det.submit_hostname
+	config["submit_dir"] = wf_det.submit_dir
+	config["planner_arguments"] = wf_det.planner_arguments
+	config["user"] = wf_det.user
+	config["grid_dn"] = wf_det.grid_dn
+	config["planner_version"] = wf_det.planner_version
+	config["dax_label"] = wf_det.dax_label
+	config["dax_version"] = wf_det.dax_version
+	return config
 
 
 def print_property_table(props , border= True , separator =""):
@@ -52,7 +66,9 @@ def print_property_table(props , border= True , separator =""):
 	else:
 		html_content ="<table style='color:#600000;'>"
 	for key, value in props.items():
-		html_content += "<tr><th align ='left' style ='color:#600000'>"+ key +"</th><td style ='color:#888888'>" + separator +value +"</td></tr>"
+		if value is None:
+			value ='-'
+		html_content += "<tr><th align ='left' style ='color:#600000'>"+ key +"</th><td style ='color:#888888'>" + separator +str(value) +"</td></tr>"
 	html_content +="</table>"
 	return html_content
 
@@ -234,4 +250,54 @@ def get_workflow_wall_time(workflow_states_list):
 	if workflow_start_event_count >0 and workflow_end_event_count > 0:
 		if workflow_start_event_count == workflow_end_event_count:
 			workflow_wall_time = workflow_end_cum - workflow_start_cum
-	return workflow_wall_time	
+	return workflow_wall_time
+	
+def get_db_url_wf_uuid(submit_dir , config_properties):
+	#Getting values from braindump file
+	top_level_wf_params = utils.slurp_braindb(submit_dir)
+	top_level_prop_file = None
+	if not top_level_wf_params:
+		logger.error("Unable to process braindump.txt ")
+		return None ,None
+	wf_uuid = None
+	if (top_level_wf_params.has_key('wf_uuid')):
+		wf_uuid = top_level_wf_params['wf_uuid']
+	else:
+		logger.error("workflow id cannot be found in the braindump.txt ")
+		return None ,None
+	
+	# Get the location of the properties file from braindump
+	
+	
+	# Get properties tag from braindump
+	if "properties" in top_level_wf_params:
+	    top_level_prop_file = top_level_wf_params["properties"]
+	    # Create the full path by using the submit_dir key from braindump
+	    if "submit_dir" in top_level_wf_params:
+	        top_level_prop_file = os.path.join(top_level_wf_params["submit_dir"], top_level_prop_file)
+	
+	# Parse, and process properties
+	props = properties.Properties()
+	props.new(config_file=config_properties, rundir_propfile=top_level_prop_file)
+	
+	output_db_url= None
+	if props.property('pegasus.monitord.output') is not None:
+		output_db_url = props.property('pegasus.monitord.output')
+		if not (output_db_url.startswith("mysql:") or output_db_url.startswith("sqlite:")):
+			logger.error("Unable to find database file from the properties file ")
+			return None ,None
+	else:
+		dag_file_name =''
+		if (top_level_wf_params.has_key('dag')):
+			dag_file_name = top_level_wf_params['dag']
+		else:
+			logger.error("Dag file name cannot be found in the braindump.txt ")
+			return None ,None
+		# Create the sqllite db url
+		output_db_file =submit_dir +"/"+ dag_file_name[:dag_file_name.find(".dag")] + ".stampede.db"
+		output_db_url = "sqlite:///" + output_db_file
+		if not os.path.isfile(output_db_file):
+			logger.error("Unable to find database file in "+ submit_dir)
+			return None , None
+	return output_db_url , wf_uuid
+	
