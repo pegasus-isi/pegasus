@@ -57,11 +57,11 @@ class WorkflowInfo:
 		self.workflow_run_time = None
 		self.total_jobs= None
 		self.job_statistics_list =[]
-		self.job_statistics_dict ={}
 		self.transformation_statistics_dict ={}
 		self.host_job_map={}
 		self.transformation_color_map={}
-		self.job_name_sub_wf_uuid_map ={}
+		self.job_instance_id_sub_wf_uuid_map ={}
+		self.wf_env ={}
 				
 	def get_formatted_host_data(self ):
 		# find the pretty print length
@@ -103,8 +103,8 @@ class WorkflowInfo:
 				if plot_utils.isSubWfJob(job_stat_det['name']):
 					job_info += ( "\"sub_wf\":1 , "  )
 					corresponding_dax =''
-					if (self.job_name_sub_wf_uuid_map.has_key(job_stat_det['name'])): 
-						corresponding_dax = self.job_name_sub_wf_uuid_map[job_stat_det['name']]
+					if (self.job_instance_id_sub_wf_uuid_map.has_key(job_stat_det['name'])): 
+						corresponding_dax = self.job_instance_id_sub_wf_uuid_map[job_stat_det['name']]
 						job_info += ( "\"sub_wf_name\":\""+ corresponding_dax+ ".html\"")
 					else:
 						job_info += ( "\"sub_wf_name\":''")	
@@ -116,10 +116,8 @@ class WorkflowInfo:
 				if plot_utils.isSubWfJob(job_stat_det['name']):
 					job_info += ( "\"sub_wf\":1 , "  )
 					corresponding_dax =''
-					print self.job_name_sub_wf_uuid_map.keys()
-					print self.job_name_sub_wf_uuid_map.values()
-					if (self.job_name_sub_wf_uuid_map.has_key(job_stat_det['instance_id'])): 
-						corresponding_dax = self.job_name_sub_wf_uuid_map[job_stat_det['instance_id']]
+					if (self.job_instance_id_sub_wf_uuid_map.has_key(job_stat_det['instance_id'])): 
+						corresponding_dax = self.job_instance_id_sub_wf_uuid_map[job_stat_det['instance_id']]
 						job_info += ( "\"sub_wf_name\":\""+ corresponding_dax+ ".html\"")
 					else:
 						job_info += ( "\"sub_wf_name\":''")	
@@ -164,8 +162,8 @@ class WorkflowInfo:
 			if plot_utils.isSubWfJob(job_stat_det['name']):
 				job_info += ( "\"sub_wf\":1 , "  )
 				corresponding_dax =''
-				if (self.job_name_sub_wf_uuid_map.has_key(job_stat_det['instance_id'])): 
-					corresponding_dax = self.job_name_sub_wf_uuid_map[job_stat_det['instance_id']]
+				if (self.job_instance_id_sub_wf_uuid_map.has_key(job_stat_det['instance_id'])): 
+					corresponding_dax = self.job_instance_id_sub_wf_uuid_map[job_stat_det['instance_id']]
 					job_info += ( "\"sub_wf_name\":\""+ corresponding_dax+ ".html\"")
 				else:
 					job_info += ( "\"sub_wf_name\":''")	
@@ -183,6 +181,7 @@ class JobInfo:
 	def __init__(self):
 		self.name = None
 		self.instance_id = None
+		self.retry_count = None
 		self.site = None
 		self.jobStart = None # This is timestamp of the first event in the jobstate.log this could be PRE_SCRIPT_STARTED
 		self.jobDuration = None # This is duration till POST SCRIPT TERMINATED event or the last state of the job's run
@@ -219,7 +218,10 @@ class JobInfo:
 	
 	def getJobDetails(self , global_start_time):
 		job_details ={}
-		job_details['name'] = self.name
+		if self.retry_count > 0:
+			job_details['name'] = self.name +"_retry_"+ str(self.retry_count)
+		else:
+			job_details['name'] = self.name
 		job_details['site'] = self.site
 		job_details['instance_id']= self.instance_id
 		
