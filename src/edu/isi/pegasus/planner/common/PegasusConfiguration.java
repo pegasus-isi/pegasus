@@ -33,7 +33,7 @@ public class PegasusConfiguration {
     /**
      * The property key for pegasus configuration.
      */
-    public static final String PEGASUS_CONFIGURATION_PROPERTY_KEY = "pegasus.configuration";
+    public static final String PEGASUS_CONFIGURATION_PROPERTY_KEY = "pegasus.data.configuration";
 
     /**
      * The value for the S3 configuration.
