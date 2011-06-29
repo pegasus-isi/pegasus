@@ -63,6 +63,9 @@ ifeq (x86_64,${MARCH})
 CFLAGS	= -Wall -O2 -m64 -ggdb
 MPICC_PBS = /sys/software/mpich/bin/mpicc
 else
+ifeq (armv7l, ${MARCH})
+CFLAGS = -Wall -O2 -ggdb
+else
 #
 # Linux IA32
 #
@@ -71,6 +74,7 @@ CFLAGS	= -Wall -O2 -march=i686 -ggdb
 #ISI dc/condor
 MPICC_LSF     =  /cluster/mpich/mpich-1.2.5.3/bin/mpicc
 MPICC_CONDOR  =  /nfs/asd2/pegasus/software/linux/mpi/mpich-1.2.5-gt3.0.2/bin/mpicc
+endif
 endif
 endif
 endif

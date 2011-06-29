@@ -42,6 +42,7 @@ my %short_arch =
     "x86_64", "x86_64",
     "X86-based PC", "x86",
     "HP-UX", "hppa",
+    "arm", "arm"
 );
 
 # Override the flags based on a system
@@ -93,10 +94,15 @@ sub getPlatform(){
         $os_version = "$major.$minor"
     }
 
+    if ($arch =~ m/arm/) {
+    	$arch ="arm"; 
+    }
+
     # differentiate IBM PPC64 from Sony PS3
     if ($arch eq "ppc64" && $os_version =~ /ps3$/) {
 	$arch = "ps3";
     }
+
 
     # Simplify HPUX 11 version string
     if ($Config{'archname'} =~ m!PA!) {

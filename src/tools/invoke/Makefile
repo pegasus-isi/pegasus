@@ -62,8 +62,12 @@ else
 ifeq (x86_64,${MARCH})
 CFLAGS  = -Wall -O2 -ggdb -m64
 else
+ifeq (armv7l,${MARCH})
+CFLAGS	= -Wall -02 -ggdb
+else
 CFLAGS  = -Wall -O2 -march=i686 -ggdb
 #EXTRA_LDFLAGS += -static
+endif
 endif
 endif
 #CFLAGS += -D__USE_POSIX=199309

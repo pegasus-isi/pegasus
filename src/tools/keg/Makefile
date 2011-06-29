@@ -96,8 +96,12 @@ ifeq (x86_64,${MARCH})
 CXXFLAGS = -Wall -O2 -m64 -ggdb
 LD	= gcc -m64
 else
-CXXFLAGS  = -Wall -O2 -march=i686 -ggdb
+ifeq (armv7l, ${MARCH})
+CXXFLAGS = -Wall -O2 -ggdb
+else
+CXXFLAGS  = -Wall -O2  -march=i686 -ggdb
 #LDFLAGS += -static
+endif
 endif
 LOADLIBES_VANILLA = -Wl,-Bstatic -lstdc++ -Wl,-Bdynamic
 LOADLIBES_CONDOR  = -lstdc++
