@@ -276,8 +276,8 @@ def populate_chart(wf_uuid):
 	config = utils.slurp_braindb(rlb(workflow_info.submit_dir))
 	if (config.has_key('dag')):
 		dag_file_name = config['dag']
-	workflow_info.dag_label = dag_file_name[:dag_file_name.find(".dag")]
-	workflow_info.dag_file_path = os.path.join(rlb(workflow_info.submit_dir), dag_file_name)
+		workflow_info.dag_label = dag_file_name[:dag_file_name.find(".dag")]
+		workflow_info.dag_file_path = os.path.join(rlb(workflow_info.submit_dir), dag_file_name)
 	if (config.has_key('dax')):
 		workflow_info.dax_file_path = config['dax']
 	return workflow_info
