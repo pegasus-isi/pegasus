@@ -17,19 +17,16 @@
 
 package edu.isi.pegasus.planner.transfer.implementation;
 
-import edu.isi.pegasus.planner.classes.TransferJob;
-import edu.isi.pegasus.planner.classes.FileTransfer;
-import edu.isi.pegasus.planner.classes.PegasusBag;
-
-import edu.isi.pegasus.planner.classes.NameValue;
-
-import edu.isi.pegasus.planner.refiner.CreateDirectory;
-import edu.isi.pegasus.planner.refiner.createdir.Implementation;
-
+import java.io.FileWriter;
 import java.util.Collection;
 import java.util.Iterator;
 
-import java.io.FileWriter;
+import edu.isi.pegasus.planner.classes.FileTransfer;
+import edu.isi.pegasus.planner.classes.NameValue;
+import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.classes.TransferJob;
+import edu.isi.pegasus.planner.refiner.CreateDirectory;
+import edu.isi.pegasus.planner.refiner.createdir.Implementation;
 
 
 /**
@@ -37,6 +34,7 @@ import java.io.FileWriter;
  * to a S3 bucket instead of a directory on the head node of a cloud site.
  * 
  * @author Karan Vahi
+ * @author Mats Rynge
  * @version $Revision$
  */
 
@@ -75,6 +73,12 @@ public class S3 extends Transfer3 {
        
     }
 
+    /**
+     * hook to post process the created transfer jobs - we want to add the s3cfg file
+     */
+    public void postProcess( TransferJob job ){
+        this.checkAndTransferS3cfg(job);
+    }
 
 
     /**

@@ -31,6 +31,7 @@ import edu.isi.pegasus.planner.common.Utility;
 import edu.isi.pegasus.common.logging.LogManager;
 
 import edu.isi.pegasus.common.util.Proxy;
+import edu.isi.pegasus.common.util.S3cfg;
 import edu.isi.pegasus.planner.code.GridStartFactory;
 
 import edu.isi.pegasus.planner.namespace.Condor;
@@ -123,7 +124,17 @@ public abstract class Abstract implements Implementation{
      * proxies.
      */
     protected String mLocalUserProxyBasename;
+    
+    /**
+     * The path to the s3cfg file on the submit host (local pool).
+     */
+    protected String mLocalS3cfg;
 
+    /**
+     * The basename of the user s3cfg file
+     */
+    protected String mLocalS3cfgBasename;
+    
     /**
      * The handle to the properties object holding the properties relevant to
      * Pegasus.
@@ -203,6 +214,18 @@ public abstract class Abstract implements Implementation{
         mLocalUserProxyBasename = (mLocalUserProxy == null) ?
                                   null :
                                   new File(mLocalUserProxy).getName();
+        
+        mLocalS3cfg = S3cfg.getPathToUserProxy(bag);
+        //set the path to user proxy only if the proxy exists
+        if( mLocalS3cfg != null && !new File(mLocalS3cfg).exists() ){
+            mLogger.log( "The s3cfg file does not exist - " + mLocalUserProxy,
+                         LogManager.DEBUG_MESSAGE_LEVEL );
+            mLocalS3cfg = null;
+        }
+
+        mLocalS3cfgBasename = (mLocalS3cfg == null) ?
+                                  null :
+                                  new File(mLocalS3cfg).getName();
     }
 
 
@@ -321,6 +344,42 @@ public abstract class Abstract implements Implementation{
         return transfer;
     }
 
+    /**
+     * Determines if there is a need to transfer the s3cfg for the transfer
+     * job or not.  If there is a need to transfer s3cfg file, then the job is
+     * modified to create the correct condor commands to transfer the file.
+     * The proxy is transferred from the submit host (i.e site local).
+     *
+     * @param job   the transfer job .
+     *
+     * @return boolean true job was modified to transfer the s3cfg, else
+     *                 false when job is not modified.
+     */
+    public boolean checkAndTransferS3cfg(TransferJob job){
+
+        // for jobs executing on local site, just set the environment variable
+        // for remote execution, transfer the s3cfg file
+        if( job.getSiteHandle().equalsIgnoreCase( "local" ) ){
+            //the full path
+            job.envVariables.checkKeyInNS(ENV.S3CFG, this.mLocalS3cfg );
+        }
+        else{
+            job.condorVariables.addIPFileForTransfer(mLocalS3cfg);
+            //just the basename
+            job.envVariables.checkKeyInNS(ENV.S3CFG, mLocalS3cfgBasename);
+            job.envVariables.checkKeyInNS(ENV.GRIDSTART_PREJOB,
+                    "/bin/chmod 600 " +
+                    mLocalS3cfgBasename);
+        }
+
+        //we want the transfer job to be run in the
+        //directory that Condor or GRAM decided to run
+        //job.condorVariables.removeKey("remote_initialdir");
+                
+        return true;
+    }
+
+    
     /**
      * Sets the callback to the refiner, that has loaded this implementation.
      *

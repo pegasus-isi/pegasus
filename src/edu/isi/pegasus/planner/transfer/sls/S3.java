@@ -17,43 +17,7 @@
 package edu.isi.pegasus.planner.transfer.sls;
 
 
-import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
-
-import edu.isi.pegasus.common.logging.LogManager;
-
-import edu.isi.pegasus.planner.classes.PegasusBag;
-import edu.isi.pegasus.planner.classes.FileTransfer;
 import edu.isi.pegasus.planner.classes.Job;
-import edu.isi.pegasus.planner.classes.PegasusFile;
-import edu.isi.pegasus.planner.classes.TransferJob;
-import edu.isi.pegasus.planner.classes.Profile;
-
-import edu.isi.pegasus.planner.common.PegasusProperties;
-
-import edu.isi.pegasus.planner.refiner.CreateDirectory;
-import edu.isi.pegasus.planner.refiner.createdir.Implementation;
-
-import edu.isi.pegasus.planner.transfer.SLS;
-
-import edu.isi.pegasus.planner.catalog.TransformationCatalog;
-import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
-import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
-
-import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
-
-import edu.isi.pegasus.common.util.Separator;
-import edu.isi.pegasus.common.util.Boolean;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.FileWriter;
-
-import java.util.Iterator;
-import java.util.Set;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedList;
 
 
 /**
@@ -61,11 +25,10 @@ import java.util.LinkedList;
  * data from S3 bucket for worker node execution.
  *
  * @author Karan Vahi
+ * @author Mats Rynge
  * @version $Revision$
  */
-public class S3   extends Transfer3 {
-
-  
+public class S3 extends Transfer3 {
 
     /**
      * Modifies a job for the first level staging to headnode.This is to add
@@ -90,8 +53,6 @@ public class S3   extends Transfer3 {
                                                   String submitDir,
                                                   String slsInputLFN,
                                                   String slsOutputLFN ) {
-        
-        //any potential credential handling will go here.
         
         return super.modifyJobForFirstLevelStaging(job, submitDir, slsInputLFN, slsOutputLFN);
     }

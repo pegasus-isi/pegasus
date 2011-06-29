@@ -21,6 +21,8 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.common.logging.LogManager;
 
 import edu.isi.pegasus.common.util.Proxy;
+import edu.isi.pegasus.common.util.S3cfg;
+
 import java.io.BufferedReader;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 
@@ -218,6 +220,16 @@ public class SeqExec implements GridStart {
      */
     protected String mLocalUserProxyBasename;
 
+    /**
+     * The path to local user s3cfg.
+     */
+    protected String mLocalS3cfg;
+
+    /**
+     * The basename of the s3cfg
+     */
+    protected String mLocalS3cfgBasename;
+
 
     /**
      * Initializes the GridStart implementation.
@@ -258,7 +270,18 @@ public class SeqExec implements GridStart {
                                   null :
                                   new File(mLocalUserProxy).getName();
 
-   }
+        mLocalS3cfg = S3cfg.getPathToUserProxy(bag);
+        //set the path to user proxy only if the proxy exists
+        if( mLocalS3cfg != null && !new File(mLocalS3cfg).exists() ){
+            mLogger.log( "The s3cfg file does not exist - " + mLocalUserProxy,
+                         LogManager.DEBUG_MESSAGE_LEVEL );
+            mLocalS3cfg = null;
+        }
+
+        mLocalS3cfgBasename = (mLocalS3cfg == null) ?
+                                  null :
+                                  new File(mLocalS3cfg).getName();
+    }
     
     /**
      * Enables a job to run on the grid. This also determines how the
@@ -875,6 +898,25 @@ public class SeqExec implements GridStart {
                                             remoteProxyPath );
                 filesToBeCopied.add( this.mLocalUserProxyBasename );
             }
+            
+            // s3cfg - always transfer if defined
+            if( this.mLocalS3cfg != null ) {
+            
+                // first fix permissions
+                writer.println( getSeqExecCommentStringForTask( "chmod", null, taskid++) );
+                writer.println( enableCommandViaKickstart( job,
+                                                           "/bin/chmod 600 " + mLocalS3cfgBasename,
+                                                           "chmod",
+                                                           job.getSiteHandle(),
+                                                           Job.STAGE_IN_JOB,
+                                                           suppressXMLHeader ) );
+                suppressXMLHeader = true;
+                
+                String remoteS3cfgPath = directory + File.separator + this.mLocalS3cfgBasename;
+                job.condorVariables.addIPFileForTransfer( this.mLocalS3cfg );
+                job.envVariables.construct( S3cfg.S3CFG, remoteS3cfgPath );
+                filesToBeCopied.add( this.mLocalS3cfgBasename );
+            }
 
             if( !filesToBeCopied.isEmpty() ){
                 String cmd = constructCopyFileCommand( filesToBeCopied, directory );
@@ -1082,6 +1124,26 @@ public class SeqExec implements GridStart {
                 filesToBeCopied.add( this.mLocalUserProxyBasename );
             }
 
+            // s3cfg - always transfer if defined
+            if( this.mLocalS3cfg != null ) {
+            
+                // first fix permissions
+                writer.println( getSeqExecCommentStringForTask( "chmod", null, taskid++) );
+                writer.println( enableCommandViaKickstart( job,
+                                                           "/bin/chmod 600 " + mLocalS3cfgBasename,
+                                                           "chmod",
+                                                           job.getSiteHandle(),
+                                                           Job.STAGE_IN_JOB,
+                                                           suppressXMLHeader ) );
+                suppressXMLHeader = true;
+                
+                String remoteS3cfgPath = directory + File.separator + this.mLocalS3cfgBasename;
+                job.condorVariables.addIPFileForTransfer( this.mLocalS3cfg );
+                job.envVariables.construct( S3cfg.S3CFG, remoteS3cfgPath );
+                filesToBeCopied.add( this.mLocalS3cfgBasename );
+            }
+                       
+            // add cp's
             if( !filesToBeCopied.isEmpty() ){
 
                 String cmd = constructCopyFileCommand( filesToBeCopied, directory );

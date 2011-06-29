@@ -23,6 +23,7 @@ import edu.isi.pegasus.common.logging.LogManager;
 
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 
+import edu.isi.pegasus.common.util.S3cfg;
 import edu.isi.pegasus.common.util.Separator;
 import edu.isi.pegasus.common.util.Proxy;
 
@@ -128,6 +129,16 @@ public class Transfer   implements SLS {
     protected String mLocalUserProxyBasename;
 
     /**
+     * The path to local s3cfg.
+     */
+    protected String mLocalS3cfg;
+
+    /**
+     * The basename of the s3cfg
+     */
+    protected String mLocalS3cfgBasename;
+
+    /**
      * The local url prefix for the submit host.
      */
     protected String mLocalURLPrefix;
@@ -181,6 +192,18 @@ public class Transfer   implements SLS {
         mLocalUserProxyBasename = (mLocalUserProxy == null) ?
                                   null :
                                   new File(mLocalUserProxy).getName();
+        
+        mLocalS3cfg = S3cfg.getPathToUserProxy(bag);
+        //set the path to user proxy only if the proxy exists
+        if( mLocalS3cfg != null && !new File(mLocalS3cfg).exists() ){
+            mLogger.log( "The s3cfg file does not exist - " + mLocalUserProxy,
+                         LogManager.DEBUG_MESSAGE_LEVEL );
+            mLocalS3cfg = null;
+        }
+
+        mLocalS3cfgBasename = (mLocalS3cfg == null) ?
+                                  null :
+                                  new File(mLocalS3cfg).getName();
 
         mLocalURLPrefix = mSiteStore.lookup( "local" ).getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix( );
         mTransientRC = bag.getHandleToTransientReplicaCatalog();

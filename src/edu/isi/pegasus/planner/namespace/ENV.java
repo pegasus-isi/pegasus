@@ -59,6 +59,11 @@ public class ENV extends Namespace {
     public static final String GRIDSTART_PREJOB = "GRIDSTART_PREJOB";
 
     /**
+     * The name of the environment variable that specifies the s3cfg path
+     */
+    public static final String S3CFG = "S3CFG";
+    
+    /**
      * The name of the implementing namespace. It should be one of the valid
      * namespaces always.
      *
