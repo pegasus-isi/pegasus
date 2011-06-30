@@ -519,11 +519,15 @@ Logical transformation statistics :
 
       <itemizedlist>
         <listitem>
-          <para>Job - the name of the job</para>
+          <para>Job - the name of the job.</para>
         </listitem>
 
         <listitem>
-          <para>Site - the site where the job ran</para>
+          <para>Num - the number of times JOB_TERMINATED event was seen.</para>
+        </listitem>
+        
+        <listitem>
+          <para>Site - the site where the job ran.</para>
         </listitem>
 
         <listitem>
@@ -586,6 +590,8 @@ Logical transformation statistics :
           <thead>
             <row>
               <entry align="center">Job</entry>
+              
+              <entry align="center">Num</entry>
 
               <entry align="center">Site</entry>
 
@@ -611,6 +617,8 @@ Logical transformation statistics :
             <row>
               <entry>analyze_ID0000004</entry>
 
+              <entry>1</entry>
+              
               <entry>TestCluster</entry>
 
               <entry>61.24</entry>
@@ -632,6 +640,8 @@ Logical transformation statistics :
 
             <row>
               <entry>clean_up_analyze_ID0000004</entry>
+              
+              <entry>1</entry>
 
               <entry>TestCluster</entry>
 
@@ -654,6 +664,8 @@ Logical transformation statistics :
 
             <row>
               <entry>clean_up_findrange_ID0000002</entry>
+              
+              <entry>1</entry>
 
               <entry>TestCluster</entry>
 
@@ -676,6 +688,8 @@ Logical transformation statistics :
 
             <row>
               <entry>clean_up_preprocess_ID0000001</entry>
+              
+              <entry>1</entry>
 
               <entry>TestCluster</entry>
 
@@ -698,6 +712,8 @@ Logical transformation statistics :
 
             <row>
               <entry>clean_up_stage_out_local_TestCluster_0_0</entry>
+              
+              <entry>1</entry>
 
               <entry>TestCluster</entry>
 
@@ -720,6 +736,8 @@ Logical transformation statistics :
 
             <row>
               <entry>clean_up_stage_out_local_TestCluster_1_0</entry>
+              
+              <entry>1</entry>
 
               <entry>TestCluster</entry>
 
@@ -742,6 +760,8 @@ Logical transformation statistics :
 
             <row>
               <entry>clean_up_stage_out_local_TestCluster_2_0</entry>
+              
+              <entry>1</entry>
 
               <entry>TestCluster</entry>
 
@@ -764,6 +784,8 @@ Logical transformation statistics :
 
             <row>
               <entry>create_dir_diamond_0_TestCluster</entry>
+              
+              <entry>1</entry>
 
               <entry>TestCluster</entry>
 
@@ -786,6 +808,8 @@ Logical transformation statistics :
 
             <row>
               <entry>findrange_ID0000002</entry>
+              
+              <entry>1</entry>
 
               <entry>TestCluster</entry>
 
@@ -808,6 +832,8 @@ Logical transformation statistics :
 
             <row>
               <entry>findrange_ID0000003</entry>
+              
+              <entry>1</entry>
 
               <entry>TestCluster</entry>
 
@@ -830,6 +856,8 @@ Logical transformation statistics :
 
             <row>
               <entry>preprocess_ID0000001</entry>
+              
+              <entry>1</entry>
 
               <entry>TestCluster</entry>
 
@@ -852,6 +880,8 @@ Logical transformation statistics :
 
             <row>
               <entry>stage_in_local_TestCluster_0</entry>
+              
+              <entry>1</entry>
 
               <entry>local</entry>
 
@@ -874,6 +904,8 @@ Logical transformation statistics :
 
             <row>
               <entry>stage_out_local_TestCluster_0_0</entry>
+              
+              <entry>1</entry>
 
               <entry>local</entry>
 
@@ -896,6 +928,8 @@ Logical transformation statistics :
 
             <row>
               <entry>stage_out_local_TestCluster_1_0</entry>
+              
+              <entry>1</entry>
 
               <entry>local</entry>
 
@@ -918,6 +952,8 @@ Logical transformation statistics :
 
             <row>
               <entry>stage_out_local_TestCluster_1_1</entry>
+              
+              <entry>1</entry>
 
               <entry>local</entry>
 
@@ -940,6 +976,8 @@ Logical transformation statistics :
 
             <row>
               <entry>stage_out_local_TestCluster_2_0</entry>
+              
+              <entry>1</entry>
 
               <entry>local</entry>
 
