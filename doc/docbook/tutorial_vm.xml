@@ -41,14 +41,14 @@ Fri Mar 18 12:50:05 PDT 2011
       <itemizedlist>
         <listitem>
           <para><ulink
-          url="http://pegasus.isi.edu/wms/download/3.0/Pegasus-3.0.2-Debian-6-x86.vbox.zip"
+          url="http://pegasus.isi.edu/wms/download/3.0/Pegasus-3.0.3-Debian-6-x86.vbox.zip"
           xml:base="">Virtual Box Pegasus Image</ulink></para>
 
           <para>It is around <emphasis role="bold">650MB</emphasis> in size.
           If you are running windows we recommend downloading using firefox
           instead of Internet Explorer.</para>
 
-          <para>The Image is zipped. You will need to unzip it. </para>
+          <para>The Image is zipped. You will need to unzip it.</para>
 
           <para>For Windows you can just double click on the downloaded zip
           file or can use a tool like winzip to extract the VM files.</para>
@@ -57,7 +57,7 @@ Fri Mar 18 12:50:05 PDT 2011
           downloaded file</para>
 
           <para>After unzipping a folder named<emphasis role="bold">
-          Pegasus-3.0.2-Debian-6-x86.vbox</emphasis> will be created that has
+          Pegasus-3.0.3-Debian-6-x86.vbox</emphasis> will be created that has
           the vmdk files for the VM.</para>
         </listitem>
       </itemizedlist>
@@ -84,7 +84,7 @@ Fri Mar 18 12:50:05 PDT 2011
         <listitem>
           <para>In the VM Name and OS Type Window specify the name as<emphasis
           role="bold"> </emphasis><emphasis role="bold"><emphasis
-          role="bold">PegasusVM-</emphasis>3.0.2</emphasis> .Select the
+          role="bold">PegasusVM-</emphasis>3.0.3</emphasis> .Select the
           <emphasis role="bold">Operating System as Linux </emphasis>and
           <emphasis role="bold">Version as Debian </emphasis>. Click
           Continue.</para>
@@ -101,7 +101,7 @@ Fri Mar 18 12:50:05 PDT 2011
           Select the option box for Use Existing Hard Disk. Click the folder
           icon next to the list and locate the file <emphasis
           role="bold">Debian-6-x86.vmdk</emphasis> in the folder <emphasis
-          role="bold">Pegasus-3.0.2-Debian-6-x86.vbox</emphasis>. Click
+          role="bold">Pegasus-3.0.3-Debian-6-x86.vbox</emphasis>. Click
           Continue</para>
         </listitem>
 
@@ -110,7 +110,7 @@ Fri Mar 18 12:50:05 PDT 2011
         </listitem>
 
         <listitem>
-          <para>Now in the Virtual Box , start the PegasusVM-3.0.2
+          <para>Now in the Virtual Box , start the PegasusVM-3.0.3
           machine.</para>
         </listitem>
       </orderedlist>
@@ -982,7 +982,7 @@ pegasus-run -Dpegasus.user.properties=$HOME/.../blackdiamond/run0001/pegasus.728
 
  
 2010.12.23 10:54:03.530 PST:   Time taken to execute is 1.757 seconds 
-2010.12.23 10:54:03.530 PST: [INFO] event.pegasus.planner planner.version 3.0.2  - FINISHED 
+2010.12.23 10:54:03.530 PST: [INFO] event.pegasus.planner planner.version 3.0.3  - FINISHED 
 
 </computeroutput></programlisting></para>
         </listitem>
