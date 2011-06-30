@@ -1,6 +1,71 @@
 $Id$
 
 ===============================
+Release Notes for PEGASUS 3.0.3
+===============================
+This is a minor release, that fixes some bugs and has minor
+enhancements. 
+
+
+NEW FEATURES
+--------------
+
+1) job statistics file has a num field now
+
+   The job statistics file has statistics about Condor jobs in the 
+   workflow across retries. There is now a new field called num added 
+   that indicates the number of times JOB_TERMINATED event is seen for
+   a Condor Job.
+
+2) improvements to pegasus-monitord
+
+   When using MySQL, users no longer are required to create the database
+   using the 'latin1' character encoding. Now, pegasus-monitord will 
+   automatically create all tables using the 'latin1' encoding.
+
+   When using MySQL, the database engine used by Pegasus-monitord is set
+   to 'InnoDB'. This prevents certain database errors and allows for 
+   improved performance.
+
+3) inherited-rc-files option for pegasus-plan
+
+   pegasus-plan has a new option --inherited-rc-files, that is used in
+   hierarichal workflows to pass the file locations in the parent
+   workflow's DAX to planner instances working on a subdax job. Locations
+   passed via this option, have a lower priority than the locations of
+   files mentioned in the DAX.
+
+4)
+
+BUGS FIXED
+----------
+1) Fixed a bug in the code handling SIGUSR1 and SIGUSR2 that caused 
+   pegasus-monitord to abort due to an out-of-bounds condition.
+
+2) Fixed Python 2.4 compatibility issue that caused pegasus-monitord to
+   abort when receiving a SIGUSR1 or SIGUSR2 to change its debugging level.
+
+3) pegasus-transfer failed on scp if the destination URL was a file URL
+   This is now fixed. More details at
+   
+   https://jira.isi.edu/browse/PM-375
+
+4) pegasus transfer failed on scp if the destination host was not in users
+   know_hosts. This is now fixed. More details at
+
+   https://jira.isi.edu/browse/PM-374
+
+5)  pegasus-plan had a potential stack overflow issue that could occur 
+    while calling out to transformation selectors that return more than 
+    one entry. 
+
+6)  Destination file url's were not correctly replaced with symlink protocol
+    scheme in the case where the destination site had a file server 
+    ( url prefix file:/// ). 
+
+
+
+===============================
 Release Notes for PEGASUS 3.0.2
 ===============================
 This is a minor release, that fixes some bugs and has minor
