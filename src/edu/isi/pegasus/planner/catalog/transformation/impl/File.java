@@ -1235,7 +1235,7 @@ public class File  extends Abstract
                                 }
                                 else{
                                     //set to whatever the value was
-                                    TCType.valueOf(tokens[i]);
+                                	tc.setType(TCType.valueOf(tokens[i]));
                                 }
                                 /*
                                 tc.setType( (tokens[i].equalsIgnoreCase(
