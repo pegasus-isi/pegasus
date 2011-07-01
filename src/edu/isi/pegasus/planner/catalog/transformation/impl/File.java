@@ -30,6 +30,7 @@ import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo;
 import edu.isi.pegasus.planner.catalog.transformation.classes.NMI2VDSSysInfo;
 
+import edu.isi.pegasus.common.util.Boolean;
 import edu.isi.pegasus.common.util.ProfileParser;
 import edu.isi.pegasus.common.util.ProfileParserException;
 import edu.isi.pegasus.common.util.Separator;
@@ -103,6 +104,12 @@ public class File  extends Abstract
      * close.
      */
     private boolean mFlushOnClose;
+    
+    /**
+     * Boolean indicating whether to modify the file URL or not
+     *
+     */
+    private boolean modifyFileURL = true;
 
     /**
      * Returns an instance of the File TC.
@@ -240,6 +247,8 @@ public class File  extends Abstract
         mProps = bag.getPegasusProperties();
         mLogger = bag.getLogger();
         mFlushOnClose = false;
+        modifyFileURL = Boolean.parse(mProps.getProperty( MODIFY_FOR_FILE_URLS_KEY),
+                true );
         mTCFile = mProps.getTCPath();
         mTreeMap = new TreeMap();
         mLogger.log("TC Mode being used is " + this.getDescription(),
@@ -1388,7 +1397,11 @@ public class File  extends Abstract
                         entries = (List) lfnMap.get(tc.
                             getLogicalTransformation());
                     }
-                    entries.add( Abstract.modifyForFileURLS(tc) );
+                    if(modifyFileURL){
+                    	entries.add( Abstract.modifyForFileURLS(tc) );
+                    }else{
+                    	entries.add(tc);
+                    }
                     lfnMap.put(tc.getLogicalTransformation(), entries);
                     mTreeMap.put(tc.getResourceId(), lfnMap);
                     count++;

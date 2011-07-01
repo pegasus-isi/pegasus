@@ -26,6 +26,7 @@ package edu.isi.pegasus.planner.catalog.transformation.impl;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.common.util.Boolean;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 
 
@@ -67,6 +68,12 @@ public class Database
     // private PegasusProperties mProps;
 
     private static Database mDatabaseTC = null;
+    
+    /**
+     * Boolean indicating whether to modify the file URL or not
+     *
+     */
+    private boolean modifyURL = true;
 
     /**
      * Used for a singleton access to the implementation
@@ -102,6 +109,8 @@ public class Database
      */
     public void initialize ( PegasusBag bag ){
         mLogger = bag.getLogger();
+        modifyURL = Boolean.parse(bag.getPegasusProperties().getProperty( MODIFY_FOR_FILE_URLS_KEY),
+                true );
         
         try{
         /**
@@ -334,7 +343,12 @@ public class Database
 
                 }
 
-                resultEntries.add(Abstract.modifyForFileURLS(tc));
+                if(modifyURL){
+                	resultEntries.add(Abstract.modifyForFileURLS(tc));
+                }else{
+                	resultEntries.add(tc);
+                }
+
             }
         }
         return resultEntries;
@@ -564,7 +578,9 @@ public class Database
             }
 
             String pfn=rs.getString(2);
-            pfn=Abstract.modifyForFileURLS(pfn, ttype);
+            if(modifyURL){
+            	pfn=Abstract.modifyForFileURLS(pfn, ttype);
+            }
 
             TransformationCatalogEntry entry = new TransformationCatalogEntry(namespace,name,version);
             entry.setPhysicalTransformation(pfn);
