@@ -54,6 +54,11 @@ public interface TransformationCatalog
     public static final String FILE_URL_SCHEME = "file:";
     
     /**
+     * Property specify whether to modify file url or not.
+     */
+    public static final String MODIFY_FOR_FILE_URLS_KEY = "pegasus.catalog.transformation.modify.file.urls";
+    
+    /**
      * Initialize the implementation, and return an instance of the implementation.
      * 
      * @param bag  the bag of Pegasus initialization objects.
