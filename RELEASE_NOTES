@@ -35,7 +35,14 @@ NEW FEATURES
    passed via this option, have a lower priority than the locations of
    files mentioned in the DAX.
 
-4)
+4) Turning off priority assignments to condor jobs
+   
+   By default, Pegasus add a condor priority to a job based on the level of
+   the workflow the job is at. The property pegasus.job.priority.assign turns
+   of that default assignment of priorities.
+
+
+
 
 BUGS FIXED
 ----------
