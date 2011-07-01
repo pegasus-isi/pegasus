@@ -35,6 +35,7 @@ import java.util.TreeSet;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
+import edu.isi.pegasus.common.util.Boolean;
 import edu.isi.pegasus.common.util.ProfileParser;
 import edu.isi.pegasus.common.util.ProfileParserException;
 import edu.isi.pegasus.common.util.Separator;
@@ -101,6 +102,12 @@ public class File  extends Abstract
     private boolean mFlushOnClose;
 
     /**
+     * Boolean indicating whether to modify the file URL or not
+     *
+     */
+    private boolean modifyFileURL = true;
+
+    /**
      * Returns an instance of the File TC.
      *
      * @return TransformationCatalog
@@ -136,6 +143,8 @@ public class File  extends Abstract
         mProps = bag.getPegasusProperties();
         mLogger = bag.getLogger();
         mFlushOnClose = false;
+        modifyFileURL = Boolean.parse(mProps.getProperty( MODIFY_FOR_FILE_URLS_KEY),
+                true );
         mTCFile = mProps.getTCPath();
         mTreeMap = new TreeMap();
         mLogger.log("TC Mode being used is " + this.getDescription(),
@@ -1290,7 +1299,11 @@ public class File  extends Abstract
                         entries = (List) lfnMap.get(tc.
                             getLogicalTransformation());
                     }
-                    entries.add( Abstract.modifyForFileURLS(tc) );
+                    if(modifyFileURL){
+                    	entries.add( Abstract.modifyForFileURLS(tc) );
+                    }else{
+                    	entries.add(tc);
+                    }
                     lfnMap.put(tc.getLogicalTransformation(), entries);
                     mTreeMap.put(tc.getResourceId(), lfnMap);
                     count++;

@@ -31,6 +31,7 @@ import java.util.Properties;
 import java.util.Set;
 
 import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.common.util.Boolean;
 import edu.isi.pegasus.common.util.Separator;
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
@@ -134,6 +135,12 @@ public class Text extends Abstract
      */
     private boolean mFlushOnClose;
     
+    /**
+     * Boolean indicating whether to modify the file URL or not
+     *
+     */
+    private boolean modifyFileURL = true;
+    
 
     /**
      * Default constructor.
@@ -153,7 +160,8 @@ public class Text extends Abstract
         mProps = bag.getPegasusProperties();
         mLogger = bag.getLogger();
         mFlushOnClose = false;
-        
+        modifyFileURL = Boolean.parse(mProps.getProperty( MODIFY_FOR_FILE_URLS_KEY),
+                true );
         mTCFile = mProps.getTCPath();
         mLogger.log("TC Mode being used is " + this.getDescription(),
                     LogManager.CONFIG_MESSAGE_LEVEL);
@@ -172,7 +180,7 @@ public class Text extends Abstract
             if( f.exists() ){
                 mTextParser = new TransformationCatalogTextParser ( new FileReader( f ),
                                                                     mLogger );
-                mTCStore = mTextParser.parse();
+                mTCStore = mTextParser.parse(modifyFileURL);
             }
             else{
                 //empty TCStore
