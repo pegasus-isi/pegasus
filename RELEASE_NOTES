@@ -38,8 +38,8 @@ NEW FEATURES
 4) Turning off priority assignments to condor jobs
    
    By default, Pegasus add a condor priority to a job based on the level of
-   the workflow the job is at. The property pegasus.job.priority.assign turns
-   of that default assignment of priorities.
+   the workflow the job is at. The Boolean property pegasus.job.priority.assign 
+   can be used to turn off the default assignment of priorities.
 
 
 
