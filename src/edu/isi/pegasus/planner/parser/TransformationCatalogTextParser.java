@@ -128,6 +128,8 @@ public class TransformationCatalogTextParser {
      * Parses the complete input stream, into the PoolConfig data object that
      * holds the contents of all the sites referred to in the stream.
      *
+     *@param modifyFileURL Boolean indicating whether to modify the file URL or not
+     *
      * @return TransformationStore
      *
      * @throws IOException
@@ -135,7 +137,7 @@ public class TransformationCatalogTextParser {
      * @throws Exception
      * @see org.griphyn.cPlanner.classes.PoolConfig
      */
-    public TransformationStore parse() throws IOException,
+    public TransformationStore parse(boolean modifyFileURL) throws IOException,
         ScannerException  {
         //to check more
         TransformationStore store = new TransformationStore();
@@ -154,7 +156,7 @@ public class TransformationCatalogTextParser {
                     Profiles profiles = getProfilesForTransformation();
 
                     while( !( mLookAhead instanceof CloseBrace ) ){
-                        TransformationCatalogEntry entry = getTransformationCatalogEntry( transformation, profiles );
+                        TransformationCatalogEntry entry = getTransformationCatalogEntry( transformation, profiles , modifyFileURL );
                         store.addEntry( entry );
                         //we have information about one transformation catalog entry
                         mLogger.log( "Transformation Catalog Entry parsed is - " + entry,
@@ -227,12 +229,13 @@ public class TransformationCatalogTextParser {
      *
      * @param entry the <code>TransformationCatalogEntry<code> object that is to be populated.
      * @param profiles  the profiles that apply to all the entries
+     * @param modifyFileURL Boolean indicating whether to modify the file URL or not
      *
      * @return  the transformation catalog entry object.
      *
      * @throws even more mystery
      */
-    private TransformationCatalogEntry getTransformationCatalogEntry( String transformation,  Profiles profiles ) throws IOException,
+    private TransformationCatalogEntry getTransformationCatalogEntry( String transformation,  Profiles profiles , boolean modifyFileURL) throws IOException,
         ScannerException {
 
 
@@ -321,7 +324,12 @@ public class TransformationCatalogTextParser {
         
         //modify the entry to handle for file URL's
         //specified for the PFN's
-        return Abstract.modifyForFileURLS( entry );
+        if(modifyFileURL){
+        	return Abstract.modifyForFileURLS( entry );
+        }else{
+        	return entry;
+        }
+
     }
 
     /**
@@ -517,7 +525,7 @@ public class TransformationCatalogTextParser {
 
 
             TransformationCatalogTextParser p = new TransformationCatalogTextParser( r, logger );
-            p.parse();
+            p.parse(true);
 
         } catch (FileNotFoundException ex) {
             Logger.getLogger(TransformationCatalogTextParser.class.getName()).log(Level.SEVERE, null, ex);
