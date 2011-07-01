@@ -1333,7 +1333,7 @@ public class File  extends Abstract
                                 }
                                 else{
                                     //set to whatever the value was
-                                    TCType.valueOf(tokens[i]);
+                                	tc.setType(TCType.valueOf(tokens[i]));
                                 }
                                 /*
                                 tc.setType( (tokens[i].equalsIgnoreCase(
@@ -1397,6 +1397,8 @@ public class File  extends Abstract
                         entries = (List) lfnMap.get(tc.
                             getLogicalTransformation());
                     }
+                    System.out.println("File.populateTC() tc " + tc);
+                    System.out.println("File.populateTC() entries " + entries);
                     if(modifyFileURL){
                     	entries.add( Abstract.modifyForFileURLS(tc) );
                     }else{
@@ -1404,6 +1406,7 @@ public class File  extends Abstract
                     }
                     lfnMap.put(tc.getLogicalTransformation(), entries);
                     mTreeMap.put(tc.getResourceId(), lfnMap);
+                    System.out.println("File.populateTC()" + mTreeMap);
                     count++;
                 } //end of if "#"
             } //end of while line
