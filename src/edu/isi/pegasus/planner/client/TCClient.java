@@ -264,6 +264,7 @@ public class TCClient extends Executable{
         //load the transformation catalog if required
         try{
             if (operationcase == 1 || operationcase == 4 || operationcase == 2) {
+            	this.mProps.setProperty(TransformationCatalog.MODIFY_FOR_FILE_URLS_KEY, "false");
                 tc = TransformationFactory.loadInstance();
             }
         }
