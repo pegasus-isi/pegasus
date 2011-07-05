@@ -31,6 +31,7 @@ import re
 import sys
 import time
 import errno
+import shlex
 import atexit
 import select
 import shelve
@@ -42,7 +43,9 @@ import commands
 import datetime
 #import operator
 import optparse
+import tempfile
 import urlparse
+import subprocess
 
 # Initialize logging object
 logger = logging.getLogger()
@@ -164,7 +167,10 @@ PRESCRIPT_TASK_ID = -1                    # id for prescript tasks
 POSTSCRIPT_TASK_ID = -2                   # id for postscript tasks
 MONITORD_STATE_FILE = "monitord.info"     # filename for writing monitord state information
 MONITORD_WF_RETRY_FILE = "monitord.subwf" # filename for writing persistent sub-workflow retry information
+MONITORD_NOTIFICATION_FILE = "monitord-notifications.log" # filename for writing the output of notification scripts
 MAX_SLEEP_TIME = 10     	          # in seconds
+SLEEP_WAIT_NOTIFICATION = 5               # in seconds
+WAIT_CHILD_FINISH = 5                     # in seconds
 
 unsubmitted_events = {"UN_READY": 1,
                       "PRE_SCRIPT_STARTED": 1,
@@ -188,7 +194,9 @@ socket_enabled = False          # Enable socket for real-time debugging
 start_server = False            # Keep track if socket server needs to be started
 do_notifications = True         # Flag to enable notifications
 pending_notifications = []      # List of pending notifications
+active_notifications = []       # List of active notifications
 max_parallel_notifications = 10 # Maximum number of notifications we can do in parallel
+notifications_log = None        # File for logging notifications' output
 
 wf_event_sink = None            # Where wf events go
 STAMPEDE_NS = "stampede."       # Event name-space
@@ -1357,12 +1365,12 @@ class Workflow:
                 # Create dictionary with needed environment variables
                 my_env = {}
                 my_env["PEGASUS_EVENT"] = k
-                my_env["PEGASUS_EVENT_TIMESTAMP"] = self._current_timestamp
+                my_env["PEGASUS_EVENT_TIMESTAMP"] = str(self._current_timestamp)
                 my_env["PEGASUS_SUBMIT_DIR"] = self._original_submit_dir
                 my_env["PEGASUS_STDOUT"] = self._out_file
                 my_env["PEGASUS_JOBID"] = self._wf_uuid
                 if state == "end":
-                    my_env["PEGASUS_STATUS"] = self._dagman_exit_code
+                    my_env["PEGASUS_STATUS"] = str(self._dagman_exit_code)
 
                 # Done, queue the notification
                 if self._notification_list is not None:
@@ -1452,13 +1460,13 @@ class Workflow:
                 # Create dictionary with needed environment variables
                 my_env = {}
                 my_env["PEGASUS_EVENT"] = k
-                my_env["PEGASUS_EVENT_TIMESTAMP"] = self._current_timestamp
+                my_env["PEGASUS_EVENT_TIMESTAMP"] = str(self._current_timestamp)
                 my_env["PEGASUS_SUBMIT_DIR"] = self._original_submit_dir
                 my_env["PEGASUS_JOBID"] = job._exec_job_id
                 my_env["PEGASUS_STDOUT"] = my_output
                 my_env["PEGASUS_STDERR"] = my_error
                 if my_status is not None:
-                    my_env["PEGASUS_STATUS"] = my_status
+                    my_env["PEGASUS_STATUS"] = str(my_status)
 
                 # Done, queue the notification
                 if self._notification_list is not None:
@@ -1523,14 +1531,14 @@ class Workflow:
                 # Create dictionary with needed environment variables
                 my_env = {}
                 my_env["PEGASUS_EVENT"] = k
-                my_env["PEGASUS_EVENT_TIMESTAMP"] = self._current_timestamp
+                my_env["PEGASUS_EVENT_TIMESTAMP"] = str(self._current_timestamp)
                 my_env["PEGASUS_SUBMIT_DIR"] = self._original_submit_dir
                 my_env["PEGASUS_JOBID"] = job._exec_job_id
-                my_env["PEGASUS_INVID"] = task_id
+                my_env["PEGASUS_INVID"] = str(task_id)
                 my_env["PEGASUS_STDOUT"] = my_output
                 my_env["PEGASUS_STDERR"] = my_error
                 if k != "start":
-                    my_env["PEGASUS_STATUS"] = my_status
+                    my_env["PEGASUS_STATUS"] = str(my_status)
 
                 # Done, queue the notification
                 if self._notification_list is not None:
@@ -3599,6 +3607,256 @@ def sleeptime(retries):
 
     return my_y
 
+def service_notifications():
+    """
+    This function services notifications. It chekcs the notifications
+    in the active list to see if they have finished. If so, it copies
+    the stdout/stderr from these notifications to the
+    monitord-notifications.log file. For notifications in the
+    pending_notifications list, it starts the notification scripts,
+    unless there are already too many notifications running in the
+    system.
+    """
+
+    if len(active_notifications) > 0:
+        # We have active notifications, let's check on their statuses
+        my_notif_index = 0
+        while my_notif_index < len(active_notifications):
+            my_active_notif = active_notifications[my_notif_index]
+            # Get subprocess object
+            my_active_p = my_active_notif["subp"]
+            my_status = my_active_p.poll()
+            if my_status is not None:
+                # Process finished notification
+                my_finished_out_fn = my_active_notif["out_fn"]
+                my_finished_err_fn = my_active_notif["err_fn"]
+                my_finished_out_fd = my_active_notif["out_fd"]
+                my_finished_err_fd = my_active_notif["err_fd"]
+                my_finished_notification = my_active_notif["notification"]
+                my_finished_action = my_active_notif["action"]
+                my_finished_notification_params = my_active_notif["params"]
+                # Close out/err files, if not already closed...
+                try:
+                    my_finished_out_fd.close()
+                except:
+                    logger.warning("error closing stdout file for notification %s... continuing..."
+                                   % (my_finished_notification))
+                try:
+                    my_finished_err_fd.close()
+                except:
+                    logger.warning("error closing stderr file for notification %s... continuing..."
+                                   % (my_finished_notification))
+                
+                if notifications_log is not None:
+                    notifications_log.write("%s\n" % ('-' * 80))
+                    notifications_log.write("Notification time  : %s\n" % (utils.isodate()))
+                    notifications_log.write("Notification event : %s\n" % (my_finished_notification))
+                    notifications_log.write("Notification action: %s\n" % (my_finished_action))
+                    notifications_log.write("Notification status: %s\n" % (my_status))
+                    notifications_log.write("\n")
+                    notifications_log.write("Notification environment\n")
+                    for k in my_finished_notification_params:
+                        notifications_log.write("%s : %s\n" % (k, my_finished_notification_params[k]))
+                    notifications_log.write("\n")
+                    notifications_log.write("stdout:\n")
+                    try:
+                        my_f = open(my_finished_out_fn, 'r')
+                        for line in my_f:
+                            notifications_log.write(line)
+                        my_f.close()
+                        os.unlink(my_finished_out_fn)
+                    except:
+                        logger.warning("error processing notification stdout file: %s... continuing..."
+                                       % (my_finished_out_fn))
+                    notifications_log.write("\n")
+                    notifications_log.write("stderr:\n")
+                    try:
+                        my_f = open(my_finished_err_fn, 'r')
+                        for line in my_f:
+                            notifications_log.write(line)
+                        my_f.close()
+                        os.unlink(my_finished_err_fn)
+                    except:
+                        logger.warning("error processing notification stderr file: %s... continuing..."
+                                       % (my_finished_err_fn))
+                    notifications_log.write("\n")
+                    notifications_log.write("\n")
+                else:
+                    logger.critical("notifications' output log file not initialized... exiting...")
+                    sys.exit(1)
+
+                # Delete this notification from our list
+                my_deleted_entry = active_notifications.pop(my_notif_index)
+            else:
+                # Process still going... leave it...
+                my_notif_index = my_notif_index + 1
+
+    while len(pending_notifications) > 0:
+        # Ok we have notifications to service...
+        # print "pending notifications: %s" % (len(pending_notifications))
+        logger.debug("pending notifications: %s" % (len(pending_notifications)))
+
+        # Check if we have reached the maximum number of concurrent notifications
+        if len(active_notifications) > max_parallel_notifications:
+            # print "reaching maximum number of concurrent notifications... waiting until next cycle..."
+            logger.info("reaching maximum number of concurrent notifications... waiting until next cycle...")
+            break
+
+        # Get first notification from the list
+        try:
+            my_action, my_env = pending_notifications.pop(0)
+        except:
+            logger.error("error processing notification list... exiting!")
+            sys.exit(1)
+
+        # Merge default environment with notification-specific environment
+        my_complete_env = os.environ.copy()
+        my_complete_env.update(my_env)
+        try:
+            my_notification = "%s - %s" % (my_env["PEGASUS_JOBID"], my_env["PEGASUS_EVENT"])
+        except:
+            logger.warning("notification missing PEGASUS_JOBID or PEGASUS_EVENT... skipping...")
+            continue
+
+        # Split arguments
+        my_args = shlex.split(my_action)
+
+        # Create output and error files for the notification script to use
+        try:
+            my_temp_out = tempfile.mkstemp(prefix="notification-", suffix="-out.log", dir="/tmp")
+            my_temp_err = tempfile.mkstemp(prefix="notification-", suffix="-err.log", dir="/tmp")
+            os.close(my_temp_out[0])
+            os.close(my_temp_err[0])
+            my_out_fn = my_temp_out[1]
+            my_err_fn = my_temp_err[1]
+        except:
+            logger.warning("cannot create temp files for notification: %s... skipping..." % (my_notification))
+            continue
+
+        # Open output and error files for the notification script
+        try:
+            my_f_out = open(my_out_fn, 'w')
+            my_f_err = open(my_err_fn, 'w')
+        except:
+            logger.warning("cannot open temp files for notification: %s... skipping..." % (my_notification))
+            try:
+                os.unlink(my_out_fn)
+                os.unlink(my_err_fn)
+            except:
+                # No error here...
+                pass
+            continue
+
+        # Ok, here we go...
+        try:
+            my_p = subprocess.Popen(my_args, stdout=my_f_out, stderr=my_f_err, env=my_complete_env)
+        except OSError:
+            logger.warning("cannot start notification executable: %s... skipping..." % (my_notification))
+            try:
+                my_f_out.close()
+                my_f_err.close()
+                os.unlink(my_out_fn)
+                os.unlink(my_err_fn)
+            except:
+                logger.warning("found problem cleaning up notification: %s... skipping..." % (my_notification))
+                continue
+            # Clean up ok, just continue
+            continue
+        except:
+            logger.warning("problem starting notification: %s... skipping..." % (my_notification))
+            try:
+                my_f_out.close()
+                my_f_err.close()
+                os.unlink(my_out_fn)
+                os.unlink(my_err_fn)
+            except:
+                logger.warning("found problem cleaning up notification: %s... skipping..." % (my_notification))
+                continue
+            # Clean up ok, just continue
+            continue
+
+        # Let's keep everything we need for the future
+        my_started_notification = {}
+        my_started_notification["pid"] = my_p.pid
+        my_started_notification["subp"] = my_p
+        my_started_notification["env"] = my_complete_env
+        my_started_notification["params"] = my_env
+        my_started_notification["args"] = my_args
+        my_started_notification["action"] = my_action
+        my_started_notification["out_fd"] = my_f_out
+        my_started_notification["err_fd"] = my_f_err
+        my_started_notification["out_fn"] = my_out_fn
+        my_started_notification["err_fn"] = my_err_fn
+        my_started_notification["notification"] = my_notification
+        my_started_notification["time"] = time.time()
+
+        # Add to the active list, and done!
+        active_notifications.append(my_started_notification)
+        logger.info("started notification for: %s" % (my_notification))
+
+def finish_notifications():
+    """
+    This function flushes all notifications, and closes the
+    notifications' log file. It also logs all pending (but not yet
+    issued) notifications.
+    """
+    global notifications_log
+
+    # Take care of active notifications
+    if len(active_notifications) > 0:
+        for my_entry in active_notifications:
+            my_p = my_entry["subp"]
+            my_pid = my_entry["pid"]
+            my_notification = my_entry["notification"]
+            my_out_fn = my_entry["out_fn"]
+            my_err_fn = my_entry["err_fn"]
+            my_out_fd = my_entry["out_fd"]
+            my_err_fd = my_entry["err_fd"]
+            my_action = my_entry["action"]
+            my_p.poll()
+            # If process hasn't finished...
+            if my_p.returncode is None:
+                # Send SIGTERM first...
+                try:
+                    os.kill(my_pid, signal.SIGTERM)
+                except:
+                    logger.info("error sending SIGTERM to notification script...")
+                # Wait for child to finish
+                time.sleep(WAIT_CHILD_FINISH)
+                my_p.poll()
+                if my_p.returncode is None:
+                    # Send SIGKILL now...
+                    try:
+                        os.kill(my_pid, signal.SIGKILL)
+                    except:
+                        logger.info("error sending SIGKILL to notification script...")
+            # Clean up files...
+            try:
+                os.unlink(my_out_fn)
+                os.unlink(my_err_fn)
+            except:
+                # No error here...
+                pass
+            logger.warning("notification terminated: %s - %s" % (my_notification, my_action))
+
+    # Take care of pending notifications
+    if len(pending_notifications) > 0:
+        for my_action, my_env in pending_notifications:
+            try:
+                my_notification = "%s - %s" % (my_env["PEGASUS_JOBID"], my_env["PEGASUS_EVENT"])
+            except:
+                logger.warning("notification missing PEGASUS_JOBID or PEGASUS_EVENT... skipping...")
+                continue
+            logger.warning("pending notification skipped: %s - %s" % (my_notification, my_action))
+
+    # Close notifications' log file
+    if notifications_log is not None:
+        try:
+            notifications_log.close()
+        except:
+            logger.warning("error closing notifications' log file...")
+        notifications_log = None
+
 def purge_wf_uuid_from_database(rundir, output_db):
     """
     This function purges a workflow id from the output database.
@@ -3820,6 +4078,7 @@ else:
 
 # Build sub-workflow retry filename
 wf_retry_fn = os.path.join(run, MONITORD_WF_RETRY_FILE)
+wf_notification_fn = os.path.join(run, MONITORD_NOTIFICATION_FILE)
 
 # Empty sub-workflow retry information if in replay mode
 if replay_mode:
@@ -3836,6 +4095,15 @@ try:
 except:
     logger.critical("cannot create persistent storage file for sub-workflow retry information... exiting...")
     sys.exit(1)
+
+# Open notifications' log file
+if do_notifications == True:
+    try:
+        notifications_log = open(wf_notification_fn, 'a')
+    except:
+        logger.critical("cannot create notifications' log file... exiting...")
+        sys.exit(1)
+    atexit.register(finish_notifications)
 
 # Ok! Let's start now...
 
@@ -4082,10 +4350,6 @@ while (len(wfs) > 0):
             # Mode index to next workflow
             wf_index = wf_index + 1
 
-    # Skip sleeping, if we have no more workflow to track...
-    if len(wfs) == 0:
-        continue
-
     # Check if we need to start the socket server
     if not socket_enabled and start_server:
         # Reset flag
@@ -4111,6 +4375,15 @@ while (len(wfs) > 0):
     # Periodically check for service requests
     if server is not None:
         check_request(server)
+
+    # Service notifications
+    if do_notifications == True:
+        logger.info("servicing notifications...")
+        service_notifications()
+
+    # Skip sleeping, if we have no more workflow to track...
+    if len(wfs) == 0:
+        continue
 
     # All done... let's figure out how long to sleep...
     time_to_sleep = time.time() + MAX_SLEEP_TIME
@@ -4141,6 +4414,17 @@ if socket_enabled and server is not None:
     except:
         # Just be silent
         pass
+
+if do_notifications == True:
+    # Finish pending notifications
+    logger.info("finishing notifications...")
+    while len(active_notifications) > 0 or len(pending_notifications) > 0:
+        # print "active notifications %d, pending notifications: %d" % (len(active_notifications), len(pending_notifications))
+        logger.info("active notifications %d, pending notifications: %d"
+                    % (len(active_notifications), len(pending_notifications)))
+        service_notifications()        
+        time.sleep(SLEEP_WAIT_NOTIFICATION)
+    logger.info("finishing notifications... done!")
 
 # Try to run the hurricane graphics
 if doplot:
