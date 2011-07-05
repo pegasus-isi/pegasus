@@ -566,7 +566,7 @@ public class File  extends Abstract
                         TransformationCatalogEntry) j.next();
                     if (type != null) {
                         if (!entry.getType().equals(type)) {
-                            break;
+                            continue;
                         }
                     }
 
