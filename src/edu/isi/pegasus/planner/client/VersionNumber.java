@@ -60,7 +60,7 @@ public class VersionNumber
 "    --verbose   increases the verbosity level (ignored)." + linefeed +
 " -f|--full      also shows the internal built time stamp." + linefeed +
 " -l|--long      alias for --full." + linefeed +
-" -m|--match     matches internal version with installation." + linefeed +
+" -m|--match     matches internal version with installation, implies long." + linefeed +
 " -q|--quiet     in match mode, no news are good news, use exit code." + linefeed +
 linefeed +
 "The following exit codes are produced:" + linefeed +
@@ -121,6 +121,7 @@ linefeed +
       String internal = null;
       boolean build = false;
       boolean quiet = false;
+      boolean match = false; 
       Version v = Version.instance();
 
       int option = 0;
@@ -140,25 +141,7 @@ linefeed +
 	  break;
 
 	case 'm':
-	  installed = v.determineInstalled();
-	  internal  = v.determineBuilt() + " " + v.determinePlatform();
-	  if ( ! quiet ) {
-	    System.out.println( "Compiled into PEGASUS: " + internal );
-	    System.out.println( "Installation provides: " + installed );
-	  }
-
-	  if ( v.matches() ) {
-	    if ( ! quiet ) System.out.println( "OK: Internal version matches installation." );
-	    // see pegasus-devel 2011-03-29: A user should not have to run both,
-	    // first "pegasus-version -fm" and then "pegasus-version". The version
-	    // info should also be returned by "pegasus-version -fm". 
-	    build = true; // successful -m should imply -f
-	    System.out.print( "Complete version info: " );
-	  } else {
-	    System.out.println( "ERROR: Internal version does not match installed version!" );
-	    System.out.println( "Your installation is suspicious, please correct!" );
-	    System.exit(1);
-	  }
+	  match = true;
 	  break;
 
 	case 'q':
@@ -172,8 +155,31 @@ linefeed +
 	}
       }
 
+      // 20110706 (jsv): Moving code section ensures that -fmq behaves like -qfm
+      if ( match ) { 
+	installed = v.determineInstalled();
+	internal  = v.determineBuilt() + " " + v.determinePlatform();
+	if ( ! quiet ) {
+	  System.out.println( "Compiled into PEGASUS: " + internal );
+	  System.out.println( "Installation provides: " + installed );
+	}
+
+	if ( v.matches() ) {
+	  if ( ! quiet ) System.out.println( "OK: Internal version matches installation." );
+	  // see pegasus-devel 2011-03-29: A user should not have to run both,
+	  // first "pegasus-version -fm" and then "pegasus-version". The version
+	  // info should also be returned by "pegasus-version -fm". 
+	  build = true; // successful -m should imply -f
+	  if ( ! quiet ) System.out.print( "Complete version info: " );
+	} else {
+	  System.out.println( "ERROR: Internal version does not match installed version!" );
+	  System.out.println( "Your installation is suspicious, please correct!" );
+	  System.exit(1);
+	}
+      }
+
       // action
-      showVersion(v,build); 
+      if ( match && ! quiet || ! match ) showVersion(v,build); 
 
     } catch ( RuntimeException rte ) {
       System.err.println( "ERROR: " + rte.getMessage() );
