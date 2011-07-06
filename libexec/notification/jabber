@@ -36,7 +36,7 @@ import optparse
 # --- functions -----------------------------------------------------------------------
 
 
-def usage():
+def usage(parser):
     print ""
     print "Usage: This tool is used by pegasus-monitord to send event notifications"
     print "over jabber. A set of environment variables are expected to be set:"
@@ -109,7 +109,7 @@ try:
     validate_env_var("PEGASUS_JOBID")
 except RuntimeError, err:
     print >> sys.stderr, err
-    usage()
+    usage(parser)
 
 
 msg = " === Pegasus Workflow Event ===\n" \
