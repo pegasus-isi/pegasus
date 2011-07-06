@@ -15,16 +15,17 @@
 .\"
 .\" $Id$
 .\"
-.\" Authors: Jens-S. Vöckler
+.\" Authors: Jens-S. V;ckler
 .\"
 .\"
-.TH pegasus-version 1 "July, 15th 2005"
+.TH "pegasus-version" "1" "3.1.0" "PEGASUS version"
 .SH NAME
-pegasus-version \- print the version of the toolkit.
+pegasus\-version \- print or match the version of the toolkit.
 .SH SYNOPSIS
-.B pegasus-version [ [-q] -m | -V | -f ]
+.B pegasus-version [ [\-q] \-m | \-V | [ \-f | \-l ] ]
 .SH DESCRIPTION
-This small program just invokes Java to print the version string on
+This program prints the version string of the currently active Pegasus
+toolkit on
 .IR stdout .
 .SH ARGUMENTS
 .TP
@@ -41,9 +42,19 @@ CLI properties take precedence over the file-based properties of the same key.
 .TP
 .PD 1
 .B \-\-full
-The full mode displays the internal time stamp of the built time in
-addition to the version number. The time stamp uses ISO 8601 format, and
-is a UTC stamp. 
+The full mode displays internal build metrics, like OS type and libc
+version, addition to the version number. It appends the build time as
+time stamp to the version. The time stamp uses ISO 8601 format, and is a
+UTC stamp.
+.TP
+.B \-l
+.PD 0
+.TP
+.PD 1
+.B \-\-long
+This option is an alias for 
+.I full
+mode. 
 .TP
 .B \-m
 .PD 0
@@ -54,6 +65,14 @@ In match mode, the internal version is checked against the external
 version of the installation. This mode will detect if a jar has been
 updated but not the installation it is in. Mismatches will result in an
 exit code of 1. 
+.IP
+In addition, 
+.I match
+mode implies 
+.I long
+mode. It will print the full version number, unless 
+.I quiet
+mode is active. 
 .TP
 .B \-q
 .PD 0
@@ -61,8 +80,9 @@ exit code of 1.
 .PD 1
 .B \-\-quiet
 This flag is to be combined with match mode above only. If present, the
-match mode will not display any message if all is well. In case of a
-mismatch, it will only print the error and exit with status 1. 
+match mode will not display any message, if the versions match (all is
+well). In case of a mismatch, it will only print the error and exit with
+status 1.
 .TP
 .PD 0
 .B \-V
@@ -95,21 +115,21 @@ should be set to contain all necessary files for the execution environment.
 .nf
 \f(CB
 $ pegasus-version   
-1.3.8
+3.1.0cvs
 
 $ pegasus-version -f
-1.3.8-20050715180634Z
+3.1.0cvs-x86_64_cent_5.6-20110706191019Z
 
 $ pegasus-version -m 
-Timestamp internal in PEGASUS: 20050715180634Z
-Timestamp of installation: 20050715180634Z
+Compiled into PEGASUS: 20110706191019Z x86_64_cent_5.6
+Installation provides: 20110706191019Z x86_64_cent_5.6
 OK: Internal version matches installation.
+Complete version info: 3.1.0cvs-x86_64_cent_5.6-20110706191019Z
 \fP
 .fi
 .PP
 .SH AUTHORS
-Jens-S. Vöckler <voeckler at isi.edu>,
-.\"Jens-S. V\*:ockler 
+Jens-S. VÃ¶ckler <voeckler at isi dot edu>
 .PP
 Pegasus
 .B http://pegasus.isi.edu
