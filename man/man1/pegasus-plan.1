@@ -512,6 +512,13 @@ The location of file to use as a site catalog.
 If not specified, then default value of
 $PEGASUS_HOME/etc/sites.xml is used in case of the xml based site catalog
 and $PEGASUS_HOME/etc/sites.txt in case of the text based site catalog.
+.TP
+.B pegasus.code.generator 
+The code generator to use. By default, Condor submit files are generated for
+the executable workflow. Setting to 
+.B Shell
+results in Pegasus generating a shell script that can be executed on the 
+submit host.
 .SH FILES
 .TP
 .B $PEGASUS_HOME/etc/dax-3.2.xsd
