@@ -1366,6 +1366,7 @@ class Workflow:
                 my_env = {}
                 my_env["PEGASUS_EVENT"] = k
                 my_env["PEGASUS_EVENT_TIMESTAMP"] = str(self._current_timestamp)
+                my_env["PEGASUS_EVENT_TIMESTAMP_ISO"] = utils.isodate(self._current_timestamp)
                 my_env["PEGASUS_SUBMIT_DIR"] = self._original_submit_dir
                 my_env["PEGASUS_STDOUT"] = self._out_file
                 my_env["PEGASUS_JOBID"] = self._wf_uuid
@@ -1407,6 +1408,8 @@ class Workflow:
 
         # Now, match the job state to the conditions in the notifications...
         for k in my_notifications:
+            # Look up the actions for this notification now
+            my_actions = my_notifications[k]
             if state == "EXECUTE":
                 if k != "start" and k != "all":
                     continue
@@ -1455,12 +1458,12 @@ class Workflow:
                 my_error = my_error + ".%03d" % (job._job_output_counter)
 
             # Ok, we have a match!
-            my_actions = my_notifications[k]
             for action in my_actions:
                 # Create dictionary with needed environment variables
                 my_env = {}
                 my_env["PEGASUS_EVENT"] = k
                 my_env["PEGASUS_EVENT_TIMESTAMP"] = str(self._current_timestamp)
+                my_env["PEGASUS_EVENT_TIMESTAMP_ISO"] = utils.isodate(self._current_timestamp)
                 my_env["PEGASUS_SUBMIT_DIR"] = self._original_submit_dir
                 my_env["PEGASUS_JOBID"] = job._exec_job_id
                 my_env["PEGASUS_STDOUT"] = my_output
@@ -1532,6 +1535,7 @@ class Workflow:
                 my_env = {}
                 my_env["PEGASUS_EVENT"] = k
                 my_env["PEGASUS_EVENT_TIMESTAMP"] = str(self._current_timestamp)
+                my_env["PEGASUS_EVENT_TIMESTAMP_ISO"] = utils.isodate(self._current_timestamp)
                 my_env["PEGASUS_SUBMIT_DIR"] = self._original_submit_dir
                 my_env["PEGASUS_JOBID"] = job._exec_job_id
                 my_env["PEGASUS_INVID"] = str(task_id)
