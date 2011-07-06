@@ -35,7 +35,17 @@ NEW FEATURES
    passed via this option, have a lower priority than the locations of
    files mentioned in the DAX.
 
-4)
+4) improved pegasus-status
+
+   There is a slight change in default behavior of the tool, so please
+   read the manpage or short information about it. By default, it will
+   look both, into the current Condor Q and a workflow run directory 
+   (if a valid one is the current one, or was specified.) Each of this
+   behavior can be turned on and off separately.
+
+   Improved output includes UTF-8 box drawing characters to show 
+   dependencies, a color option (for white terminal backgrounds), and
+   detection of the current terminal size. 
 
 BUGS FIXED
 ----------
