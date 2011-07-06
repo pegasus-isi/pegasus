@@ -2,7 +2,7 @@
 Contains the code to create and map objects to the Stampede DB schema
 via a SQLAlchemy interface.
 """
-__rcsid__ = "$Id: stampede_schema.py 28107 2011-06-27 21:46:29Z mgoode $"
+__rcsid__ = "$Id: stampede_schema.py 28134 2011-07-05 19:39:47Z mgoode $"
 __author__ = "Monte Goode MMGoode@lbl.gov"
 
 from netlogger.analysis.schema._base import SABase, SchemaIntegrityError
@@ -115,17 +115,17 @@ def initializeToPegasusDB(db, metadata, kw={}):
     Index('wf_uuid_UNIQUE', st_workflow.c.wf_uuid, unique=True)
     
     try:
-        orm.mapper(Workflow, st_workflow, properties = {
+        wf_props = {
                 'child_wf':relation(Workflow, cascade='all'),
                 'child_wfs':relation(Workflowstate, backref='st_workflow', cascade='all'),
                 'child_host':relation(Host, backref='st_workflow', cascade='all'),
                 'child_task':relation(Task, backref='st_workflow', cascade='all'),
                 'child_job':relation(Job, backref='st_workflow', cascade='all'),
+                'child_invocation':relation(Invocation, backref='st_workflow', cascade='all'),
                 'child_task_e':relation(TaskEdge, backref='st_workflow', cascade='all'),
                 'child_job_e':relation(JobEdge, backref='st_workflow', cascade='all'),
-                'child_invocation':relation(Invocation, backref='st_workflow', cascade='all'),
-            }
-        )
+            }        
+        orm.mapper(Workflow, st_workflow, properties = wf_props)
     except exc.ArgumentError:
         pass
     
@@ -227,8 +227,8 @@ def initializeToPegasusDB(db, metadata, kw={}):
     st_job_edge = Table('job_edge', metadata,
         Column('wf_id', KeyInt,
                 ForeignKey('workflow.wf_id'), primary_key=True, nullable=False),
-        Column('parent_exec_job_id', VARCHAR(255), ForeignKey('job.exec_job_id'), primary_key=True, nullable=False),
-        Column('child_exec_job_id', VARCHAR(255), ForeignKey('job.exec_job_id'), primary_key=True, nullable=False),
+        Column('parent_exec_job_id', VARCHAR(255), primary_key=True, nullable=False),
+        Column('child_exec_job_id', VARCHAR(255), primary_key=True, nullable=False),
         **kw
     )
     
@@ -247,7 +247,7 @@ def initializeToPegasusDB(db, metadata, kw={}):
                     Column('job_id', KeyInt,
                             ForeignKey('job.job_id'), nullable=False),
                     Column('host_id', KeyInt,
-                            ForeignKey('host.host_id'), nullable=True),
+                            ForeignKey('host.host_id', ondelete='SET NULL'), nullable=True),
                     Column('job_submit_seq', INT, nullable=False),
                     Column('sched_id', VARCHAR(255), nullable=True),
                     Column('site', VARCHAR(255), nullable=True),
@@ -257,7 +257,7 @@ def initializeToPegasusDB(db, metadata, kw={}):
                     Column('cluster_duration', NUMERIC(10,3), nullable=True),
                     Column('local_duration', NUMERIC(10,3), nullable=True),
                     Column('subwf_id', KeyInt,
-                            ForeignKey('workflow.wf_id'), nullable=True),
+                            ForeignKey('workflow.wf_id', ondelete='SET NULL'), nullable=True),
                     Column('stdout_file', VARCHAR(255), nullable=True),
                     Column('stdout_text', TEXT, nullable=True),
                     Column('stderr_file', VARCHAR(255), nullable=True),
@@ -340,8 +340,8 @@ def initializeToPegasusDB(db, metadata, kw={}):
     st_task_edge = Table('task_edge', metadata,
         Column('wf_id', KeyInt,
                 ForeignKey('workflow.wf_id'), primary_key=True, nullable=False),
-        Column('parent_abs_task_id', VARCHAR(255), ForeignKey('task.abs_task_id'), primary_key=True, nullable=False),
-        Column('child_abs_task_id', VARCHAR(255), ForeignKey('task.abs_task_id'), primary_key=True, nullable=False),
+        Column('parent_abs_task_id', VARCHAR(255), primary_key=True, nullable=True),
+        Column('child_abs_task_id', VARCHAR(255), primary_key=True, nullable=True),
         **kw
     )
     

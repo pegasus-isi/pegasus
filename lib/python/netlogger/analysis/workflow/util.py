@@ -2,7 +2,7 @@
 Utility code to work with workflow databases.
 """
 
-__rcsid__ = "$Id: util.py 27827 2011-05-16 14:41:18Z mgoode $"
+__rcsid__ = "$Id: util.py 28135 2011-07-05 20:07:28Z mgoode $"
 __author__ = "Monte Goode"
 
 from netlogger.analysis.schema.stampede_schema import *
@@ -10,7 +10,7 @@ from netlogger.analysis.modules._base import SQLAlchemyInit
 from netlogger import util
 from netlogger.nllog import DoesLogging
 
-import os
+import os, time
 
 class Expunge(SQLAlchemyInit, DoesLogging):
     """
@@ -64,9 +64,31 @@ class Expunge(SQLAlchemyInit, DoesLogging):
         except orm.exc.NoResultFound, e:
             self.log.warn('expunge', msg='No workflow found with wf_uuid %s - aborting expunge' % self._wf_uuid)
             return
+            
+        root_wf_id = wf.wf_id
+        
+        subs = []
+        
+        query = self.session.query(Workflow.wf_id).filter(Workflow.root_wf_id == root_wf_id).filter(Workflow.wf_id != root_wf_id)
+        for row in query:
+            subs.append(row[0])
+        
+        for sub in subs:
+            query = self.session.query(Workflow).filter(Workflow.wf_id == sub)
+            subwf = query.one()
+            self.log.info('expunge', msg='Expunging sub-workflow: %s' % subwf.wf_uuid)
+            i = time.time()
+            self.session.delete(subwf)
+            self.session.flush()
+            self.session.commit()
+            self.log.info('expunge', msg='Flush took: %f seconds' % (time.time() - i))
+            
+        self.log.info('expunge', msg='Flushing top-level workflow: %s' % wf.wf_uuid)
+        i = time.time()
         self.session.delete(wf)
         self.session.flush()
         self.session.commit()
+        self.log.info('expunge', msg=' Flush took: %f seconds' % (time.time() - i) )
         pass
 
 if __name__ == '__main__':

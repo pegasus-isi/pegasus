@@ -16,7 +16,7 @@ the Stampede DB.
 
 See http://www.sqlalchemy.org/ for details on SQLAlchemy
 """
-__rcsid__ = "$Id: stampede_loader.py 28107 2011-06-27 21:46:29Z mgoode $"
+__rcsid__ = "$Id: stampede_loader.py 28136 2011-07-05 20:35:44Z mgoode $"
 __author__ = "Monte Goode"
 
 from netlogger.analysis.schema.stampede_schema import *
@@ -270,14 +270,14 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         
         if self._flush_count >= self._flush_every:
             self.hard_flush()
-            self.log.debug('reset_flush_state', msg='Flush: flush count')
+            self.log.debug('check_flush', msg='Flush: flush count')
             return
         else:
             self._flush_count += 1
             
         if (time.time() - self._last_flush) > 30:
             self.hard_flush()
-            self.log.debug('reset_flush_state', msg='Flush: time based')
+            self.log.debug('check_flush', msg='Flush: time based')
             
     def hard_flush(self, batch_flush=True):
         """
