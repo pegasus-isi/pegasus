@@ -99,7 +99,7 @@ Methods listed in order of query list on wiki.
 
 https://confluence.pegasus.isi.edu/display/pegasus/Pegasus+Statistics+Python+Version+Modified
 """
-__rcsid__ = "$Id: stampede_statistics.py 28106 2011-06-23 22:15:49Z mgoode $"
+__rcsid__ = "$Id: stampede_statistics.py 28142 2011-07-07 15:24:59Z mgoode $"
 __author__ = "Monte Goode"
 
 from netlogger.analysis.modules._base import SQLAlchemyInit
@@ -262,9 +262,10 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         JobInstanceSub = orm.aliased(JobInstance, name='JobInstanceSub')
         WorkflowSub = orm.aliased(Workflow, name='WorkflowSub')
         
-        sq_1 = self.session.query(JobInstanceSub.job_instance_id.label('jid'),
-                func.max(JobInstanceSub.job_submit_seq).label('mjss'))
-        
+        #sq_1 = self.session.query(JobInstanceSub.job_instance_id.label('jid'),
+        #        func.max(JobInstanceSub.job_submit_seq).label('mjss'))
+        sq_1 = self.session.query(func.max(JobInstanceSub.job_instance_id).label('jid'))
+                
         if self._expand:
             sq_1 = sq_1.filter(WorkflowSub.root_wf_id == self._root_wf_id)
         else:
@@ -301,12 +302,15 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         JobInstanceSub = orm.aliased(JobInstance, name='JobInstanceSub')
         WorkflowSub = orm.aliased(Workflow, name='WorkflowSub')
         
-        sq_1 = self.session.query(JobInstanceSub.job_instance_id.label('jid'),
-                func.max(JobInstanceSub.job_submit_seq).label('mjss'))
+        #sq_1 = self.session.query(JobInstanceSub.job_instance_id.label('jid'),
+        #        func.max(JobInstanceSub.job_submit_seq).label('mjss'))
+        sq_1 = self.session.query(func.max(JobInstanceSub.job_instance_id).label('jid'))
+        
         if self._expand:
             sq_1 = sq_1.filter(WorkflowSub.root_wf_id == self._root_wf_id)
         else:
             sq_1 = sq_1.filter(WorkflowSub.wf_id == self._wfs[0])
+        sq_1 = sq_1.filter(WorkflowSub.wf_id == JobSub.wf_id)
         sq_1 = sq_1.filter(JobSub.job_id == JobInstanceSub.job_id)
         if self._get_job_filter(JobSub) is not None:
             sq_1 = sq_1.filter(self._get_job_filter(JobSub))
@@ -385,8 +389,10 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Summary#WorkflowSummary-Totalsucceededtasks
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Statistics+file#WorkflowStatisticsfile-Totalsucceededtasks
         """
-        sq_1 = self.session.query(Workflow.wf_id.label('wid'), JobInstance.job_instance_id.label('jiid'),
-                func.max(JobInstance.job_submit_seq).label('mjss'))
+        #sq_1 = self.session.query(Workflow.wf_id.label('wid'), JobInstance.job_instance_id.label('jiid'),
+        #        func.max(JobInstance.job_submit_seq).label('mjss'))
+        sq_1 = self.session.query(Workflow.wf_id.label('wid'), 
+                func.max(JobInstance.job_instance_id).label('jiid'))
         if self._expand:
             sq_1 = sq_1.filter(Workflow.root_wf_id == self._root_wf_id)
         else:
