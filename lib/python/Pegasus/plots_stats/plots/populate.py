@@ -169,6 +169,8 @@ def populate_workflow_details(workflow):
 	workflow_stat = WorkflowInfo()
 	workflow_run_time = None
 	total_jobs =0
+	total_tasks = 0
+	total_job_instances = 0
 	transformation_stats_dict ={}
 	job_stats_list =[]
 	host_job_mapping ={}
@@ -229,8 +231,9 @@ def populate_workflow_details(workflow):
 		wf_transformation_color_map[job_stat.transformation] =global_transformtion_color_map[job_stat.transformation] 
 	
 	#Calculating total jobs
-	total_jobs = len(job_stats_list)
-	
+	total_job_instances = len(job_stats_list)
+	total_jobs = workflow.get_total_jobs_status() 
+	total_tasks = workflow.get_total_tasks_status()
 	# Assigning value to the workflow object
 	workflow_stat.wf_uuid = wf_det.wf_uuid
 	
@@ -241,7 +244,9 @@ def populate_workflow_details(workflow):
 	workflow_stat.dax_label = wf_det.dax_label
 	if workflow_run_time is not None:
 		workflow_stat.workflow_run_time =workflow_run_time
-	workflow_stat.total_jobs = total_jobs	
+	workflow_stat.total_jobs = total_jobs
+	workflow_stat.total_job_instances = total_job_instances
+	workflow_stat.total_tasks = total_tasks
 	workflow_stat.dagman_start_time = dagman_start_time
 	workflow_stat.job_statistics_list =job_stats_list
 	workflow_stat.host_job_map = host_job_mapping
