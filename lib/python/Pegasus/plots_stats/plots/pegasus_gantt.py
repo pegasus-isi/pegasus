@@ -425,7 +425,7 @@ def create_include(workflow_stat):
 	return include_str
 	
 def create_variable(workflow_stat):
-	number_of_jobs = workflow_stat.total_jobs
+	number_of_jobs = workflow_stat.total_job_instances
 	# Adding  variables
 	var_str = "<script type='text/javascript'>\nvar initMaxX = " + str(workflow_stat.workflow_run_time) + ";\n"
 	var_str +="var bar_spacing = 20;\n\
