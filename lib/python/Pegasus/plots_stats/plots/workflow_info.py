@@ -56,6 +56,8 @@ class WorkflowInfo:
 		self.dagman_start_time = None
 		self.workflow_run_time = None
 		self.total_jobs= None
+		self.total_job_instances = None
+		self.total_tasks = None
 		self.job_statistics_list =[]
 		self.transformation_statistics_dict ={}
 		self.host_job_map={}
