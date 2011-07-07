@@ -140,7 +140,7 @@ if 'PEGASUS_STATUS' in os.environ:
 if report == "pegasus-status":
     msg = msg + "\r\n\r\npegasus-status:\r\n\r\n"
     try:
-        out = backticks(os.environ['PEGASUS_HOME'] + "/bin/pegasus-status -Q " \
+        out = backticks(os.environ['PEGASUS_HOME'] + "/bin/pegasus-status --noutf8 --nocolor " \
                       + os.environ['PEGASUS_SUBMIT_DIR'] + " 2>&1") 
         msg = msg + out
     except err:
