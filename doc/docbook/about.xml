@@ -170,9 +170,10 @@
   <section>
     <title>Workflow Gallery</title>
 
-    <para>Pegasus is curently being used in a broad range of applications. To review example workflows, see the
-    <link linkend="example_workflows">Example Workflows</link> chapter.  To see additional details about the workflows
-    of the applications see the <ulink
+    <para>Pegasus is curently being used in a broad range of applications. To
+    review example workflows, see the <link
+    linkend="example_workflows">Example Workflows</link> chapter. To see
+    additional details about the workflows of the applications see the <ulink
     url="http://confluence.pegasus.isi.edu/display/pegasus/WorkflowGenerator">Gallery
     of Workflows</ulink>.</para>
 
@@ -282,4 +283,3 @@
     </itemizedlist>
   </section>
 </chapter>
-

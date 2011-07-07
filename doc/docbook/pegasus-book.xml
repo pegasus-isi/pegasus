@@ -1,22 +1,36 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
-                      "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+"http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <book>
-   <title>Pegasus User Guide</title>
-   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="about.xml"/>
-   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="walkthrough.xml"/>
-   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="installation.xml"/>
-   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="creating_workflows.xml"/>
-   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="running_workflows.xml"/>
-   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="submit_directory.xml"/>
-   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="monitoring_debugging_stats.xml"/>
-   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="example_workflows.xml"/>
-   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="reference.xml"/>
-   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="useful_tips.xml"/>
-   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="glossary.xml"/>
+  <title>Pegasus User Guide</title>
+
+  <xi:include href="about.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+
+  <xi:include href="walkthrough.xml"
+              xmlns:xi="http://www.w3.org/2001/XInclude" />
+
+  <xi:include href="installation.xml"
+              xmlns:xi="http://www.w3.org/2001/XInclude" />
+
+  <xi:include href="creating_workflows.xml"
+              xmlns:xi="http://www.w3.org/2001/XInclude" />
+
+  <xi:include href="running_workflows.xml"
+              xmlns:xi="http://www.w3.org/2001/XInclude" />
+
+  <xi:include href="submit_directory.xml"
+              xmlns:xi="http://www.w3.org/2001/XInclude" />
+
+  <xi:include href="monitoring_debugging_stats.xml"
+              xmlns:xi="http://www.w3.org/2001/XInclude" />
+
+  <xi:include href="example_workflows.xml"
+              xmlns:xi="http://www.w3.org/2001/XInclude" />
+
+  <xi:include href="reference.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+
+  <xi:include href="useful_tips.xml"
+              xmlns:xi="http://www.w3.org/2001/XInclude" />
+
+  <xi:include href="glossary.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
 </book>
-
-
-
-
-

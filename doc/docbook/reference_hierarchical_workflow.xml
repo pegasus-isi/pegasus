@@ -1,0 +1,324 @@
+<?xml version="1.0" encoding="US-ASCII"?>
+<!DOCTYPE section PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+"http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<section>
+  <title>Hierarchical Workflows</title>
+
+  <section>
+    <title>Introduction</title>
+
+    <para>The Abstract Workflow in addition to containing compute jobs, can
+    also contain jobs that refer to other workflows. This is useful for
+    running large workflows or ensembles of workflows.</para>
+
+    <para>Users can embed two types of workflow jobs in the DAX</para>
+
+    <orderedlist>
+      <listitem>
+        <para>daxjob - refers to a sub workflow represented as a DAX. During
+        the planning of a workflow, the DAX jobs are mapped to condor dagman
+        jobs that have pegasus plan invocation on the dax ( referred to in the
+        DAX job ) as the prescript.</para>
+
+        <figure>
+          <title>Planning of a DAX Job</title>
+
+          <mediaobject>
+            <imageobject>
+              <imagedata fileref="./images/daxjob-mapping.png" />
+            </imageobject>
+          </mediaobject>
+        </figure>
+      </listitem>
+
+      <listitem>
+        <para>dagjob - refers to a sub workflow represented as a DAG. During
+        the planning of a workflow, the DAG jobs are mapped to condor dagman
+        and refer to the DAG file mentioned in the DAG job.</para>
+
+        <figure>
+          <title>Planning of a DAG Job</title>
+
+          <mediaobject>
+            <imageobject>
+              <imagedata fileref="./images/dagjob-mapping.png" />
+            </imageobject>
+          </mediaobject>
+        </figure>
+      </listitem>
+    </orderedlist>
+  </section>
+
+  <section>
+    <title>Specifying a DAX Job in the DAX</title>
+
+    <para>Specifying a DAXJob in a DAX is pretty similar to how normal compute
+    jobs are specified. There are minor differences in terms of the xml
+    element name ( dax vs job ) and the attributes specified. DAXJob XML
+    specification is described in detail in the <link linkend="api">chapter on
+    DAX API</link> . An example DAX Job in a DAX is shown below</para>
+
+    <programlisting id="dax_job_example" language="">  &lt;dax id="ID000002" name="black.dax" node-label="bar" &gt;
+    &lt;profile namespace="dagman" key="maxjobs"&gt;10&lt;/profile&gt;
+    &lt;argument&gt;-Xmx1024 -Xms512 -Dpegasus.dir.storage=storagedir  -Dpegasus.dir.exec=execdir -o local -vvvvv --force -s dax_site &lt;/argument&gt;
+  &lt;/dax&gt;</programlisting>
+
+    <section>
+      <title>DAX File Locations</title>
+
+      <para>The name attribute in the dax element refers to the LFN ( Logical
+      File Name ) of the dax file. The location of the DAX file can be
+      catalogued either in the</para>
+
+      <para><orderedlist>
+          <listitem>
+            <para>Replica Catalog</para>
+          </listitem>
+
+          <listitem>
+            <para>Replica Catalog Section in the <link
+            linkend="dax_replica_catalog">DAX</link> .</para>
+
+            <note>
+              <para>Currently, only file url's on the local site ( submit host
+              ) can be specified as DAX file locations.</para>
+            </note>
+          </listitem>
+        </orderedlist></para>
+    </section>
+
+    <section>
+      <title>Arguments for a DAX Job</title>
+
+      <para>Users can specify specific arguments to the DAX Jobs. The
+      arguments specified for the DAX Jobs are passed to the pegasus-plan
+      invocation in the prescript for the corresponding condor dagman job in
+      the executable workflow.</para>
+
+      <para>The following options for pegasus-plan are inherited from the
+      pegasus-plan invocation of the parent workflow. If an option is
+      specified in the arguments section for the DAX Job then that overrides
+      what is inherited.</para>
+
+      <table>
+        <title>Options inherited from parent workflow</title>
+
+        <tgroup cols="2">
+          <thead>
+            <row>
+              <entry>Option Name</entry>
+
+              <entry>Description</entry>
+            </row>
+          </thead>
+
+          <tbody>
+            <row>
+              <entry>--sites</entry>
+
+              <entry>list of execution sites.</entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+
+      <para>It is highly recommended that users <emphasis role="bold">dont
+      specify</emphasis> directory related options in the arguments section
+      for the DAX Jobs. Pegasus assigns values to these options for the sub
+      workflows automatically.</para>
+
+      <orderedlist>
+        <listitem>
+          <para>--relative-dir</para>
+        </listitem>
+
+        <listitem>
+          <para>--dir</para>
+        </listitem>
+
+        <listitem>
+          <para>--relative-submit-dir</para>
+        </listitem>
+      </orderedlist>
+    </section>
+
+    <section>
+      <title>Profiles for DAX Job</title>
+
+      <para>Users can choose to specify dagman profiles with the DAX Job to
+      control the behavior of the corresponding condor dagman instance in the
+      executable workflow. In the example <link
+      linkend="dax_job_example">above</link> maxjobs is set to 10 for the sub
+      workflow.</para>
+    </section>
+
+    <section>
+      <title>Execution of the PRE script and Condor DAGMan instance</title>
+
+      <para>The pegasus plan that is invoked as part of the prescript to the
+      condor dagman job is executed on the submit host. The log from the
+      output of pegasus plan is redirected to a file ( ending with suffix
+      pre.log ) in the submit directory of the workflow that contains the DAX
+      Job. The path to pegasus-plan is automatically determined.</para>
+
+      <para>The DAX Job maps to a Condor DAGMan job. The path to condor dagman
+      binary is determined according to the following rules -</para>
+
+      <orderedlist>
+        <listitem>
+          <para>entry in the transformation catalog for condor::dagman for
+          site local, else</para>
+        </listitem>
+
+        <listitem>
+          <para>pick up the value of CONDOR_HOME from the environment if
+          specified and set path to condor dagman as
+          $CONDOR_HOME/bin/condor_dagman , else</para>
+        </listitem>
+
+        <listitem>
+          <para>pick up the value of CONDOR_LOCATION from the environment if
+          specified and set path to condor dagman as
+          $CONDOR_LOCATION/bin/condor_dagman , else</para>
+        </listitem>
+
+        <listitem>
+          <para>pick up the path to condor dagman from what is defined in the
+          user's PATH</para>
+        </listitem>
+      </orderedlist>
+
+      <tip>
+        <para>It is recommended that user dagman.maxpre in their properties
+        file to control the maximum number of pegasus plan instances launched
+        by each running dagman instance.</para>
+      </tip>
+    </section>
+  </section>
+
+  <section>
+    <title>Specifying a DAG Job in the DAX</title>
+
+    <para>Specifying a DAGJob in a DAX is pretty similar to how normal compute
+    jobs are specified. There are minor differences in terms of the xml
+    element name ( dag vs job ) and the attributes specified. For DAGJob XML
+    details,see the <link linkend="api"> API Reference </link> chapter . An
+    example DAG Job in a DAX is shown below</para>
+
+    <programlisting id="dag_job_example">  &lt;dag id="ID000003" name="black.dag" node-label="foo" &gt;
+    &lt;profile namespace="dagman" key="maxjobs"&gt;10&lt;/profile&gt;
+    &lt;profile namespace="dagman" key="DIR"&gt;/dag-dir/test&lt;/profile&gt;
+  &lt;/dag&gt;</programlisting>
+
+    <section>
+      <title>DAG File Locations</title>
+
+      <para>The name attribute in the dag element refers to the LFN ( Logical
+      File Name ) of the dax file. The location of the DAX file can be
+      catalogued either in the</para>
+
+      <para><orderedlist>
+          <listitem>
+            <para>Replica Catalog</para>
+          </listitem>
+
+          <listitem>
+            <para>Replica Catalog Section in the DAX.</para>
+
+            <note>
+              <para>Currently, only file url's on the local site ( submit host
+              ) can be specified as DAG file locations.</para>
+            </note>
+          </listitem>
+        </orderedlist></para>
+    </section>
+
+    <section>
+      <title>Profiles for DAG Job</title>
+
+      <para>Users can choose to specify dagman profiles with the DAX Job to
+      control the behavior of the corresponding condor dagman instance in the
+      executable workflow. In the example above, maxjobs is set to 10 for the
+      sub workflow.</para>
+
+      <para>The dagman profile DIR allows users to specify the directory in
+      which they want the condor dagman instance to execute. In the example
+      <link linkend="dag_job_example">above</link> black.dag is set to be
+      executed in directory /dag-dir/test . The /dag-dir/test should be
+      created beforehand.</para>
+    </section>
+  </section>
+
+  <section>
+    <title>File Dependencies Across DAX Jobs</title>
+
+    <para>In hierarchal workflows , if a sub workflow generates some output
+    files required by another sub workflow then there should be an edge
+    connecting the two dax jobs. Pegasus will ensure that the prescript for
+    the child sub-workflow, has the path to the cache file generated during
+    the planning of the parent sub workflow. The cache file in the submit
+    directory for a workflow is a textual replica catalog that lists the
+    locations of all the output files created in the remote workflow execution
+    directory when the workflow executes.</para>
+
+    <para>This automatic passing of the cache file to a child sub-workflow
+    ensures that the datasets from the same workflow run are used. However,
+    the passing of the locations in a cache file also ensures that Pegasus
+    will prefer them over all other locations in the Replica Catalog. If you
+    need the Replica Selection to consider locations in the Replica Catalog
+    also, then set the following property.</para>
+
+    <programlisting><emphasis role="bold">pegasus.catalog.replica.cache.asrc  true</emphasis></programlisting>
+
+    <para>The above is useful in the case, where you are staging out the
+    output files to a storage site, and you want the child sub workflow to
+    stage these files from the storage output site instead of the workflow
+    execution directory where the files were originally created.</para>
+  </section>
+
+  <section>
+    <title>Recursion in Hierarchal Workflows</title>
+
+    <para>It is possible for a user to add a dax jobs to a dax that already
+    contain dax jobs in them. Pegasus does not place a limit on how many
+    levels of recursion a user can have in their workflows. From Pegasus
+    perspective recursion in hierarchal workflows ends when a DAX with only
+    compute jobs is encountered . However, the levels of recursion are limited
+    by the system resources consumed by the DAGMan processes that are running
+    (each level of nesting produces another DAGMan process) .</para>
+
+    <para>The figure below illustrates an example with recursion 2 levels
+    deep.</para>
+
+    <figure>
+      <title>Recursion in Hierarchal Workflows</title>
+
+      <mediaobject>
+        <imageobject>
+          <imagedata fileref="./images/recursion_in_hierarchal_workflows.png" />
+        </imageobject>
+      </mediaobject>
+    </figure>
+
+    <para>The execution time-line of the various jobs in the above figure is
+    illustrated below.</para>
+
+    <figure>
+      <title>Execution Time-line for Hierarchal Workflows</title>
+
+      <mediaobject>
+        <imageobject>
+          <imagedata fileref="./images/hierarchal_workflows_execution_timeline.png" />
+        </imageobject>
+      </mediaobject>
+    </figure>
+  </section>
+
+  <section>
+    <title>Example</title>
+
+    <para>The Galactic Plane workflow is a Hierarchical workflow of many
+    Montage workflows. For details, see <link
+    linkend="example_workflows">Workflow of Workflows</link>.</para>
+  </section>
+</section>

@@ -7,15 +7,17 @@
   <section>
     <title>Executable Workflows (DAG)</title>
 
-    <para>The DAG is an executable (concrete) workflow that can be executed over
-    a variety of resources. When the workflow tasks are mapped to multiple
-    resources that do not share a file system, explicit nodes are added to the
-    workflow for orchestrating data. transfer between the tasks.</para>
+    <para>The DAG is an executable (concrete) workflow that can be executed
+    over a variety of resources. When the workflow tasks are mapped to
+    multiple resources that do not share a file system, explicit nodes are
+    added to the workflow for orchestrating data. transfer between the
+    tasks.</para>
 
-    <para>When you take the DAX workflow created in <link linkend="creating_workflows">Creating Workflows</link>, and plan it for a single
-    remote grid execution, here a site with handle <emphasis role="bold">hpcc</emphasis>,
-    and plan the workflow without clean-up nodes, the following concrete
-    workflow is built:</para>
+    <para>When you take the DAX workflow created in <link
+    linkend="creating_workflows">Creating Workflows</link>, and plan it for a
+    single remote grid execution, here a site with handle <emphasis
+    role="bold">hpcc</emphasis>, and plan the workflow without clean-up nodes,
+    the following concrete workflow is built:</para>
 
     <para>
       <figure id="concepts-fig-dag">
@@ -23,9 +25,9 @@
 
         <mediaobject>
           <imageobject>
-            <imagedata contentdepth="100%" scalefit="1" width="100%" align="center"
-                       fileref="images/concepts-diamond-dag.png"
-                       valign="middle" />
+            <imagedata align="center" contentdepth="100%"
+                       fileref="images/concepts-diamond-dag.png" scalefit="1"
+                       valign="middle" width="100%" />
           </imageobject>
         </mediaobject>
       </figure>
@@ -55,15 +57,15 @@
 
       <listitem>
         <para>the original DAX job is concretized into a compute task in the
-        DAG. Compute jobs are a concatination of the job's
-        <emphasis role="bold">name</emphasis> and <emphasis role="bold">id</emphasis> attribute from
-        the DAX file.</para>
+        DAG. Compute jobs are a concatination of the job's <emphasis
+        role="bold">name</emphasis> and <emphasis role="bold">id</emphasis>
+        attribute from the DAX file.</para>
       </listitem>
 
       <listitem>
         <para>the stage-out of data products to a collecting site. Data
-        products with their <emphasis role="bold">transfer</emphasis> flag set to
-        <literal>false</literal> will not be staged to the output site.
+        products with their <emphasis role="bold">transfer</emphasis> flag set
+        to <literal>false</literal> will not be staged to the output site.
         However, they may still be eligible for staging to other, dependent
         tasks. Stage-out tasks use a job prefix of
         <code>stage_out</code>.</para>
@@ -78,8 +80,8 @@
 
       <listitem>
         <para>the registration of data products in a replica catalog. Data
-        products with their <emphasis role="bold">register</emphasis> flag set to
-        <literal>false</literal> will not be registered.</para>
+        products with their <emphasis role="bold">register</emphasis> flag set
+        to <literal>false</literal> will not be registered.</para>
       </listitem>
 
       <listitem>
@@ -94,9 +96,9 @@
     workflow.</para>
 
     <para>The DAG will be found in file <filename>diamond-0.dag</filename>,
-    constructed from the <emphasis role="bold">name</emphasis> and
-    <emphasis role="bold">index</emphasis> attributes found in the root element of the DAX
-    file.</para>
+    constructed from the <emphasis role="bold">name</emphasis> and <emphasis
+    role="bold">index</emphasis> attributes found in the root element of the
+    DAX file.</para>
 
     <programlisting>######################################################################
 # PEGASUS WMS GENERATED DAG FILE
@@ -443,7 +445,9 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
 
         <mediaobject>
           <imageobject>
-            <imagedata contentdepth="100%" scalefit="1" width="100%" fileref="./images/refinement-site-selection.png"/>
+            <imagedata contentdepth="100%"
+                       fileref="./images/refinement-site-selection.png"
+                       scalefit="1" width="100%" />
           </imageobject>
         </mediaobject>
       </figure>
@@ -499,7 +503,9 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
 
         <mediaobject>
           <imageobject>
-            <imagedata contentdepth="100%" scalefit="1" width="100%" fileref="./images/refinement-transfer-jobs.png"/>
+            <imagedata contentdepth="100%"
+                       fileref="./images/refinement-transfer-jobs.png"
+                       scalefit="1" width="100%" />
           </imageobject>
         </mediaobject>
       </figure>
@@ -515,7 +521,9 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
 
         <mediaobject>
           <imageobject>
-            <imagedata contentdepth="100%" scalefit="1" width="100%" fileref="./images/refinement-registration-jobs.png"/>
+            <imagedata contentdepth="100%"
+                       fileref="./images/refinement-registration-jobs.png"
+                       scalefit="1" width="100%" />
           </imageobject>
         </mediaobject>
       </figure>
@@ -564,7 +572,9 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
 
         <mediaobject>
           <imageobject>
-            <imagedata contentdepth="100%" scalefit="1" width="100%" fileref="./images/refinement-creadir-rm-jobs.png"/>
+            <imagedata contentdepth="100%"
+                       fileref="./images/refinement-creadir-rm-jobs.png"
+                       scalefit="1" width="100%" />
           </imageobject>
         </mediaobject>
       </figure>
@@ -613,7 +623,9 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
 
         <mediaobject>
           <imageobject>
-            <imagedata contentdepth="100%" scalefit="1" width="100%" fileref="./images/refinement-final-executable-wf.png"/>
+            <imagedata contentdepth="100%"
+                       fileref="./images/refinement-final-executable-wf.png"
+                       scalefit="1" width="100%" />
           </imageobject>
         </mediaobject>
       </figure>
@@ -677,10 +689,10 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
 
         <para>After the catalogs have been configured, the user properties
         file need to be updated with the types and locations of the catalogs
-        to use. These properties are described in the
-        <emphasis role="bold">basic.properties</emphasis> files in the
-        <emphasis role="bold">etc</emphasis> sub directory (see the Properties section of the<link
-        linkend="reference">Reference</link> chapter.</para>
+        to use. These properties are described in the <emphasis
+        role="bold">basic.properties</emphasis> files in the <emphasis
+        role="bold">etc</emphasis> sub directory (see the Properties section
+        of the<link linkend="reference">Reference</link> chapter.</para>
 
         <para>The basic properties that need to be set usually are listed
         below:</para>
@@ -750,648 +762,10 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
         done.</para>
       </listitem>
     </orderedlist>
-
-
   </section>
-   <section id='BasicProperties'>
-    <title>Basic Properties</title>
 
-
-<note><para>
-Values rely on proper capitalization, unless explicitly
-noted otherwise.
-</para></note>
-
-<para>Some properties rely with their default on the value of other
-properties. For example, curly braces refer to the value of the
-named property. For instance, <emphasis role="bold">${pegasus.home}</emphasis>  means that the value depends
-on the value of the <emphasis/> pegasus.home property plus any noted additions. You
-can use this notation to refer to other properties, though the extent
-of the subsitutions are limited. Usually, it isa best to refer to a set
-of the standard system properties. Nesting is not allowed, and substitutions shall only be done once.
-</para>
-
-<para>There is a priority to the order of reading and evaluating properties.
-Usually there is no need to worry about the priorities. However, it
-is good to know the details of when which property applies, and how
-one property is able to overwrite another.
-</para>
-
-<para><itemizedlist>
-<listitem>Property definitions in the system property file,
-usually found in <emphasis>${pegasus.home.sysconfdir}/properties</emphasis>, have the
-lowest priority. These properties are expected to be set up by the submit
-host's administrator.</listitem>
-<listitem>The properties defined in the user property file
-<emphasis>${user.home}/.pegasusrc</emphasis> have higher priority. These can overwrite
-settings found in the system's properties. A set of sensible property
-values to set on a production system is shown below.</listitem>
-<listitem>Commandline properties have the highest priority. Each
-commandline property is introduced by a -D argument. Note that these arguments
-are parsed by the shell wrapper, and thus the -D arguments must be the first
-arguments to any command. Commandline properties are useful for debugging
-purposes.</listitem>
-</itemizedlist>
-</para>
-
-<para>The following example provides a sensible set of properties to be set
-by the user property file. These properties use mostly non-default
-settings. It is an example only, and will not work for your configuration:
-</para>
-</section>
- <para><screen>
-pegasus.catalog.replica              File
-pegasus.catalog.replica.file         ${pegasus.home}/etc/sample.rc.data
-pegasus.catalog.transformation       Text
-pegasus.catalog.transformation.file  ${pegasus.home}/etc/sample.tc.text
-pegasus.catalog.site                 XML3
-pegasus.catalog.site.file            ${pegasus.home}/etc/sample.sites.xml3
-</screen>
-</para>
-
-<para>During the planning of the workflow, Pegasus, after reading and prioritizing, dumps all properties
- in a file with the suffix properties on the Submit Directory.
-</para>
-
-   <para> Use the following sections to guide you in setting component parameters for <emphasis role="bold">Property Files and Locations</emphasis>,
-   and <emphasis>Catalog Properties</emphasis> </para>
-
-
-<section id="BasicPropertiespegasus.home">
-    <title>Pegasus.Home</title>
-<para>
-
-<informaltable frame='none'>
-<tgroup cols='2' align='left' colsep='1' rowsep='1'>
-<tbody>
-<row><entry>Systems:</entry><entry>all</entry></row>
-<row><entry>Type:</entry><entry>directory location string</entry></row>
-<row><entry>Default:</entry><entry>"$PEGASUS_HOME"</entry></row>
-</tbody>
-</tgroup>
-</informaltable>
-</para>
-
-<para/>
-
-<para>The property pegasus.home cannot be set in the property file. This property is
-automatically set up by the pegasus clients internally by determining the installation
-directory of pegasus. Knowledge about this property is important for developers who
-want to invoke PEGASUS JAVA classes without the shell wrappers.
-</para>
-
-
-</section><!-- end section -->
-
-
-
-<section id="BasicPropertiesPropertyFilesAndLocations">
-    <title>Property Files And Locations</title>
-
-<para/>
-
-<para>This section describes the property file locations. Please refer to
-the introduction on issues about precedence of property definitions.
-</para>
-
-
-
-
-<section id="BasicPropertiespegasus.properties">
-    <title>pegasus.properties</title>
-<para>
-
-<informaltable frame='none'>
-<tgroup cols='2' align='left' colsep='1' rowsep='1'>
-<tbody>
-<row><entry>Systems:</entry><entry>all</entry></row>
-<row><entry>Type:</entry><entry>file location string</entry></row>
-<row><entry>Default:</entry><entry>${pegasus.home.sysconfdir}/properties</entry></row>
-</tbody>
-</tgroup>
-</informaltable>
-</para>
-
-<para/>
-
-<para>The system-wide properties file is in its default
-location, normally in $PEGASUS_HOME/etc as file named
-<emphasis>properties</emphasis>.
-</para>
-
-
-</section><!-- end section -->
-
-
-
-<section id="BasicPropertiespegasus.user.properties">
-    <title>pegasus.user.properties</title>
-<para>
-
-<informaltable frame='none'>
-<tgroup cols='2' align='left' colsep='1' rowsep='1'>
-<tbody>
-<row><entry>Systems:</entry><entry>all</entry></row>
-<row><entry>Type:</entry><entry>file location string</entry></row>
-<row><entry>Default:</entry><entry>${user.home}/.pegasusrc</entry></row>
-</tbody>
-</tgroup>
-</informaltable>
-</para>
-
-<para/>
-
-<para>Each user can overwrite the system-wide properties with his or her own
-definitions. The user properties rely on the system's notion of the
-user home directory, as reflected in the JRE system properties. In the
-user's home directory, a file .pegasusrc will be taken to contain user
-property definitions. Note that ${user.home} is a system property
-provided by the Java run-time environment (JRE).
-</para>
-
-<para>Older version of PEGASUS used to support a dot-chimerarc file. For a
-while, both files are supported. However, in the presence of both
-files, precedence will be granted to the dot-pegasusrc file.
-</para>
-
-
-</section><!-- end section -->
-
-</section><!-- end section -->
-
-
-
-<section id="BasicPropertiesCatalogProperties">
-    <title>Catalog Properties</title>
-
-<para/>
-
-<para/>
-
-
-
-
-<section id="BasicPropertiesReplicaCatalog">
-    <title>Replica Catalog</title>
-
-<para/>
-
-
-
-
-<section id="BasicPropertiespegasus.catalog.replica">
-    <title>pegasus.catalog.replica</title>
-<para>
-
-<informaltable frame='none'>
-<tgroup cols='2' align='left' colsep='1' rowsep='1'>
-<tbody>
-<row><entry>System:</entry><entry>Pegasus</entry></row>
-<row><entry>Since:</entry><entry>2.0</entry></row>
-<row><entry>Type:</entry><entry>enumeration</entry></row>
-<row><entry>Value[0]:</entry><entry>RLS</entry></row>
-<row><entry>Value[1]:</entry><entry>LRC</entry></row>
-<row><entry>Value[2]:</entry><entry>JDBCRC</entry></row>
-<row><entry>Value[3]:</entry><entry>File</entry></row>
-<row><entry>Value[4]:</entry><entry>MRC</entry></row>
-<row><entry>Default:</entry><entry>RLS</entry></row>
-</tbody>
-</tgroup>
-</informaltable>
-</para>
-
-<para>Pegasus queries a Replica Catalog to discover the physical filenames
-(PFN) for input files specified in the DAX. Pegasus can interface
-with various types of Replica Catalogs. This property specifies
-which type of Replica Catalog to use during the planning process.
-</para>
-
-<para><variablelist>
-<varlistentry>
-<term>RLS</term>
-<listitem>
-RLS (Replica Location Service) is a distributed replica
-catalog, which ships with GT4. There is an index service called
-Replica Location Index (RLI) to which 1 or more Local Replica
-Catalog (LRC) report. Each LRC can contain all or a subset of
-mappings. In this mode, Pegasus queries the central RLI to
-discover in which LRC's the mappings for a LFN reside. It then
-queries the individual LRC's for the PFN's.
-To use RLS, the user additionally needs to set the property
-pegasus.catalog.replica.url to specify the URL for the RLI to
-query.
-Details about RLS can be found at
-http://www.globus.org/toolkit/data/rls/
-</listitem>
-</varlistentry>
-<varlistentry>
-<term>LRC</term>
-<listitem>
-If the user does not want to query the RLI, but directly a
-single Local Replica Catalog.
-To use LRC, the user additionally needs to set the property
-pegasus.catalog.replica.url to specify the URL for the LRC to
-query.
-Details about RLS can be found at
-http://www.globus.org/toolkit/data/rls/
-</listitem>
-</varlistentry>
-<varlistentry>
-<term>JDBCRC</term>
-<listitem>
-In this mode, Pegasus queries a SQL based replica catalog that
-is accessed via JDBC. The sql schema's for this catalog can be
-found at $PEGASUS_HOME/sql directory.
-To use JDBCRC, the user additionally needs to set the following
-properties
-<orderedlist>
-<listitem>pegasus.catalog.replica.db.url</listitem>
-<listitem>pegasus.catalog.replica.db.user</listitem>
-<listitem>pegasus.catalog.replica.db.password</listitem>
-</orderedlist>
-</listitem>
-</varlistentry>
-<varlistentry>
-<term>File</term>
-<listitem><para>In this mode, Pegasus queries a file based replica catalog.
-It is neither transactionally safe, nor advised to use for
-production purposes in any way. Multiple concurrent access to
-the File will end up clobbering the contents of the file.  The
-site attribute should be specified whenever possible. The attribute
-key for the site attribute is "pool".
-</para>
-
-<para>The LFN may or may not be quoted. If it contains linear
-whitespace, quotes, backslash or an equality sign, it must be
-quoted and escaped. Ditto for the PFN. The attribute key-value
-pairs are separated by an equality sign  without any
-whitespaces. The value may be in quoted. The LFN  sentiments about quoting apply.
-</para>
-
-<para><screen>
-LFN PFN
-LFN PFN a=b [..]
-LFN PFN a="b" [..]
-"LFN w/LWS" "PFN w/LWS" [..]
-</screen>
-</para>
-
-<para>To use File, the user additionally needs to specify
-pegasus.catalog.replica.file property to specify the path to the
-file based RC.
-</para></listitem>
-</varlistentry>
-<varlistentry>
-<term>MRC</term>
-<listitem><para>In this mode, Pegasus queries multiple replica catalogs to
-discover the file locations on the grid.  To use it set
-</para>
-
-<para><screen>
-pegasus.catalog.replica MRC
-</screen>
-</para>
-
-<para>Each associated replica catalog can be configured via properties
-as follows.
-</para>
-
-<para>The user associates a variable name referred to as [value] for
-each of the catalogs, where [value] is any legal identifier
-(concretely [A-Za-z][_A-Za-z0-9]*) For each associated replica
-catalogs the user specifies the following properties.
-</para>
-
-<para><screen>
-pegasus.catalog.replica.mrc.[value]       specifies the type of replica catalog.
-pegasus.catalog.replica.mrc.[value].key   specifies a property name key for a
-particular catalog
-</screen>
-</para>
-
-<para>For example, if a user wants to query two lrc's at the same time
-he/she can specify as follows
-</para>
-
-<para><screen>
-pegasus.catalog.replica.mrc.lrc1 LRC
-pegasus.catalog.replica.mrc.lrc2.url rls://sukhna
-pegasus.catalog.replica.mrc.lrc2 LRC
-pegasus.catalog.replica.mrc.lrc2.url rls://smarty
-</screen>
-</para>
-
-<para>In the above example, lrc1, lrc2 are any valid identifier names
-and url is the property key that needed to be specified.
-</para></listitem>
-</varlistentry>
-</variablelist>
-</para>
-
-<para/>
-
-
-</section><!-- end section -->
-
-
-
-<section id="BasicPropertiespegasus.catalog.replica.url">
-    <title>pegasus.catalog.replica.url</title>
-<para>
-
-<informaltable frame='none'>
-<tgroup cols='2' align='left' colsep='1' rowsep='1'>
-<tbody>
-<row><entry>System:</entry><entry>Pegasus</entry></row>
-<row><entry>Since:</entry><entry>2.0</entry></row>
-<row><entry>Type:</entry><entry>URI string</entry></row>
-<row><entry>Default:</entry><entry>(no default)</entry></row>
-</tbody>
-</tgroup>
-</informaltable>
-</para>
-
-<para>When using the modern RLS replica catalog, the URI to the Replica
-catalog must be  provided to Pegasus to enable it to look up
-filenames. There is no  default.
-</para>
-
-
-</section><!-- end section -->
-
-</section><!-- end subsection -->
-
-
-
-<section id="BasicPropertiesSiteCatalog">
-    <title>Site Catalog</title>
-
-<para/>
-
-<para/>
-
-
-
-
-<section id="BasicPropertiespegasus.catalog.site">
-    <title>pegasus.catalog.site</title>
-<para>
-
-<informaltable frame='none'>
-<tgroup cols='2' align='left' colsep='1' rowsep='1'>
-<tbody>
-<row><entry>System:</entry><entry>Site Catalog</entry></row>
-<row><entry>Since:</entry><entry>2.0</entry></row>
-<row><entry>Type:</entry><entry>enumeration</entry></row>
-<row><entry>Value[0]:</entry><entry>XML3</entry></row>
-<row><entry>Value[1]:</entry><entry>XML</entry></row>
-<row><entry>Value[2]:</entry><entry>Text</entry></row>
-<row><entry>Default:</entry><entry>XML3</entry></row>
-</tbody>
-</tgroup>
-</informaltable>
-</para>
-
-<para>The site catalog file is available in three major flavors: The Text and
-and XML formats for the site catalog are deprecated.
-Users can use pegasus-sc-converter client to convert their site catalog
-to the newer XML3 format.
-<orderedlist>
-<listitem> The "XML" format is an XML-based file. The XML format reads site
-catalog conforming to the old site catalog schema available at
-http://pegasus.isi.edu/wms/docs/schemas/sc-2.0/sc-2.0.xsd
-</listitem>
-<listitem> The "XML3" format is an XML-based file. The XML format reads site
-catalog conforming to the old site catalog schema available at
-http://pegasus.isi.edu/wms/docs/schemas/sc-3.0/sc-3.0.xsd
-</listitem>
-<listitem> The "Text" format is a multiline site catalog format. It is
-described in the site catalog guide. It can be directly given
-to Pegasus starting with PEGASUS-1.4
-</listitem>
-</orderedlist>
-</para>
-
-
-</section><!-- end section -->
-
-
-
-<section id="BasicPropertiespegasus.catalog.site.file">
-    <title>pegasus.catalog.site.file</title>
-<para>
-
-<informaltable frame='none'>
-<tgroup cols='2' align='left' colsep='1' rowsep='1'>
-<tbody>
-<row><entry>System:</entry><entry>Site Catalog</entry></row>
-<row><entry>Since:</entry><entry>2.0</entry></row>
-<row><entry>Type:</entry><entry>file location string</entry></row>
-<row><entry>Default:</entry><entry>${pegasus.home.sysconfdir}/sites.xml3 | ${pegasus.home.sysconfdir}/sites.xml</entry></row>
-<row><entry>See also:</entry><entry>pegasus.catalog.site</entry></row>
-</tbody>
-</tgroup>
-</informaltable>
-</para>
-
-<para/>
-
-<para>Running things on the grid requires an extensive description of the
-capabilities of each compute cluster, commonly termed "site". This
-property describes the location of the file that contains such a site
-description. As the format is currently in flow, please refer to the
-userguide and Pegasus for details which format is expected.
-The default value is dependant on the value specified for
-the property pegasus.sc . pegasus.sc denotes the type of site catalog being
-used.
-</para>
-
-
-</section><!-- end section -->
-
-</section><!-- end subsection -->
-
-
-
-<section id="BasicPropertiesTransformationCatalog">
-    <title>Transformation Catalog</title>
-
-<para/>
-
-<para/>
-
-
-
-
-<section id="BasicPropertiespegasus.catalog.transformation">
-    <title>pegasus.catalog.transformation</title>
-<para>
-
-<informaltable frame='none'>
-<tgroup cols='2' align='left' colsep='1' rowsep='1'>
-<tbody>
-<row><entry>System:</entry><entry>Transformation Catalog</entry></row>
-<row><entry>Since:</entry><entry>2.0</entry></row>
-<row><entry>Type:</entry><entry>enumeration</entry></row>
-<row><entry>Value[0]:</entry><entry>File</entry></row>
-<row><entry>Value[1]:</entry><entry>Text</entry></row>
-<row><entry>Value[2]:</entry><entry>Database</entry></row>
-<row><entry>Default:</entry><entry>Text</entry></row>
-<row><entry>See also:</entry><entry>pegasus.catalog.transformation.file</entry></row>
-</tbody>
-</tgroup>
-</informaltable>
-</para>
-
-<para><variablelist>
-<varlistentry>
-<term>Text</term>
-<listitem><para>In this mode, a multiline file based format is understood. The file
-is read and cached in memory. Any modifications, as adding or
-deleting, causes an update of the memory and hence to the file
-underneath. All queries are done against the memory
-representation.
-</para>
-
-<para>The file sample.tc.text in the etc directory contains an example
-</para>
-
-<para>Here is a sample textual format for transfomation catalog containing
-one transformation on two sites
-</para>
-
-<para><screen>
-tr example::keg:1.0 {
-#specify profiles that apply for all the sites for the transformation
-#in each site entry the profile can be overriden
-profile env "APP_HOME" "/tmp/karan"
-profile env "JAVA_HOME" "/bin/app"
-site isi {
-profile env "me" "with"
-profile condor "more" "test"
-profile env "JAVA_HOME" "/bin/java.1.6"
-pfn "/path/to/keg"
-arch  "x86"
-os    "linux"
-osrelease "fc"
-osversion "4"
-type "INSTALLED"
-site wind {
-profile env "me" "with"
-profile condor "more" "test"
-pfn "/path/to/keg"
-arch  "x86"
-os    "linux"
-osrelease "fc"
-osversion "4"
-type "STAGEABLE"
-</screen>
-</para>
-</listitem>
-</varlistentry>
-<varlistentry>
-<term>File</term>
-<listitem>In this mode, a file format is understood. The file is
-read and cached in memory. Any modifications, as adding or
-deleting, causes an update of the memory and hence to the file
-underneath. All queries are done against the memory
-representation. The  TC file format uses 6 columns:
-<orderedlist>
-<listitem>The resource ID is represented in the first column.</listitem>
-<listitem>The logical transformation uses the colonized format
-ns::name:vs.</listitem>
-<listitem>The path to the application on the system</listitem>
-<listitem>The installation type is identified by one of the following
-keywords - all upper case: INSTALLED, STAGEABLE.
-If not specified, or <command>NULL</command> is used, the type
-defaults to INSTALLED.</listitem>
-<listitem>The system is of the format ARCH::OS[:VER:GLIBC]. The
-following arch types are understood: "INTEL32", "INTEL64",
-"SPARCV7", "SPARCV9".
-The following os types are understood: "LINUX", "SUNOS",
-"AIX". If unset or <command>NULL</command>, defaults to
-INTEL32::LINUX.</listitem>
-<listitem>Profiles are written in the format
-NS::KEY=VALUE,KEY2=VALUE;NS2::KEY3=VALUE3
-Multiple key-values for same namespace are seperated by a
-comma "," and multiple namespaces are seperated by a
-semicolon ";". If any of your profile values contains a
-comma  you must not use the namespace abbreviator.</listitem>
-</orderedlist>
-</listitem>
-</varlistentry>
-<varlistentry>
-<term>Database</term>
-<listitem><para>
-In this mode, the transformation catalog is kept in a relational
-database. Currently mysql DB and Postgre are supported. To set
-up the the database, use the schema in
-$PEGASUS_HOME/sql/create-my-init.sql followed by
-$PEGASUS_HOME/sql/create-my-tc.sql .
-</para>
-
-<para><screen>
-The following properties need to be set
-pegasus.catalog.transformation.db.driver = MySQL|Postgres
-pegasus.catalog.transformation.db.url =
-jdbc:mysql://[hostname[:port]]/database |
-jdbc:postgres://[hostname[:port]]/database
-pegasus.catalog.transformation.db.user = dbusername
-pegasus.catalog.transformation.db.password = passoword
-</screen>
-</para>
-
-<para>If the pegasus.catalog.transformation.db.* properties are not defined, the
-database implementation picks up the properties specified by
-pegasus.catalog.*.db.* .
-</para></listitem>
-</varlistentry>
-</variablelist>
-</para>
-
-<para>Future modifications to the TC may extend the enumeration. To
-implement your own TC implementation see
-edu.isi.pegasus.catalog.TransformationCatalog. To load the class set
-pegasus.catalog.transformation to the TC implementation class.
-</para>
-
-
-</section><!-- end section -->
-
-
-
-<section id="BasicPropertiespegasus.catalog.transformation.file">
-    <title>pegasus.catalog.transformation.file</title>
-<para>
-
-<informaltable frame='none'>
-<tgroup cols='2' align='left' colsep='1' rowsep='1'>
-<tbody>
-<row><entry>Systems:</entry><entry>Transformation Catalog</entry></row>
-<row><entry>Type:</entry><entry>file location string</entry></row>
-<row><entry>Default:</entry><entry>${pegasus.home.sysconfdir}/tc.data</entry></row>
-<row><entry>See also:</entry><entry>pegasus.catalog.transformation</entry></row>
-</tbody>
-</tgroup>
-</informaltable>
-</para>
-
-<para/>
-
-<para>This property is used to set the path to the textual transformation
-catalogs of type File or Text.
-</para>
-
-<para/>
-
-
-</section><!-- end section -->
-
-</section><!-- end subsection -->
-
-</section><!-- end section -->
-
-
+  <xi:include href="configuration.xml"
+      xmlns:xi="http://www.w3.org/2001/XInclude" />
 
   <section>
     <title>Execution Environments</title>
@@ -1445,9 +819,9 @@ catalogs of type File or Text.
 
           <mediaobject>
             <imageobject>
-              <imagedata contentdepth="100%" scalefit="1" width="100%" align="center"
+              <imagedata align="center" contentdepth="100%"
                          fileref="images/concepts-site-layout.jpg"
-                         valign="middle" />
+                         scalefit="1" valign="middle" width="100%" />
             </imageobject>
           </mediaobject>
         </figure>
@@ -1542,8 +916,9 @@ catalogs of type File or Text.
 
           <mediaobject>
             <imageobject>
-              <imagedata contentdepth="100%" scalefit="1" width="100%" align="center" fileref="images/fg-pwms-prefio.3.png"
-                         valign="middle" />
+              <imagedata align="center" contentdepth="100%"
+                         fileref="images/fg-pwms-prefio.3.png" scalefit="1"
+                         valign="middle" width="100%" />
             </imageobject>
           </mediaobject>
         </figure>
@@ -1560,8 +935,8 @@ catalogs of type File or Text.
       where a user submits Pegasus workflows for execution. This site
       typically runs a Condor collector to gather resource announcements, or
       is part of a larger Condor pool that collects these announcement. Condor
-      makes the remote resources available to the submit host&amp;rsquor;s Condor
-      installation.</para>
+      makes the remote resources available to the submit host&amp;rsquor;s
+      Condor installation.</para>
 
       <para>The <link linkend="concepts-fig-cloud-layout">figure above</link>
       shows the way Pegasus WMS is deployed in cloud computing resources,
@@ -1648,9 +1023,9 @@ catalogs of type File or Text.
         <para>The Pegasus team explores the option of dynamically bringing up
         an NFS server on one resource of a multi-resource allocation for the
         duration of the allocation. This option is part of the configuration
-        for an experiment&amp;rsquor;s workflow&amp;rsquor;s provisioning stage. We do
-        not expect cloud sites to ban NFS and RPC traffic between resources of
-        the same multi-resource allocation.</para>
+        for an experiment&amp;rsquor;s workflow&amp;rsquor;s provisioning
+        stage. We do not expect cloud sites to ban NFS and RPC traffic between
+        resources of the same multi-resource allocation.</para>
       </section>
     </section>
   </section>
@@ -1711,7 +1086,8 @@ catalogs of type File or Text.
 
         <mediaobject>
           <imageobject>
-            <imagedata contentdepth="100%" scalefit="1" width="100%" fileref="./images/gram_layout.png"/>
+            <imagedata contentdepth="100%" fileref="./images/gram_layout.png"
+                       scalefit="1" width="100%" />
           </imageobject>
         </mediaobject>
       </figure>
@@ -1772,7 +1148,8 @@ catalogs of type File or Text.
 
         <mediaobject>
           <imageobject>
-            <imagedata contentdepth="100%" scalefit="1" width="100%" fileref="images/condor_layout.png"/>
+            <imagedata contentdepth="100%" fileref="images/condor_layout.png"
+                       scalefit="1" width="100%" />
           </imageobject>
         </mediaobject>
       </figure>
@@ -1791,13 +1168,14 @@ catalogs of type File or Text.
       pool. Pegasus currently uses the FileSystemDomain classad[] attribute to
       restrict the set of machines that make up a single resource. To clarify
       this point, suppose there are certain execution machines in the Condor
-      pool whose FileSystemDomain is set to &amp;ldquo;viz.isi.edu&amp;rdquor;. If the
-      user wants to execute the workflow on these machines, then there should
-      be a site, say &amp;ldquo;isi_viz&amp;rdquor; defined in the site catalog and
-      the FileSystemDomain and universe attributes for this resource should be
-      defined as &amp;ldquo;viz.isi.edu&amp;rdquor; and &amp;ldquo;vanilla&amp;rdquor;
-      respectively. When invoking Pegasus, the user should select isi_viz as
-      the compute resource.</para>
+      pool whose FileSystemDomain is set to
+      &amp;ldquo;viz.isi.edu&amp;rdquor;. If the user wants to execute the
+      workflow on these machines, then there should be a site, say
+      &amp;ldquo;isi_viz&amp;rdquor; defined in the site catalog and the
+      FileSystemDomain and universe attributes for this resource should be
+      defined as &amp;ldquo;viz.isi.edu&amp;rdquor; and
+      &amp;ldquo;vanilla&amp;rdquor; respectively. When invoking Pegasus, the
+      user should select isi_viz as the compute resource.</para>
 
       <programlisting> &lt;site  handle="isi_viz" arch="x86" os="LINUX" osrelease="" osversion="" glibc=""&gt;
        &lt;grid  type="gt2" contact="smarty.isi.edu/jobmanager-pbs" scheduler="PBS" jobtype="auxillary"/&gt;
@@ -1871,9 +1249,9 @@ catalogs of type File or Text.
       submit files with a value matching the FileSystemDomain of the machines
       from that site. For example, the user migrates nodes from the ISI
       cluster (with FileSystemDomain viz.isi.org) into a Condor pool and
-      specifies FileSystemDomain == &amp;ldquo;viz.isi.edu&amp;rdquor;. Condor would
-      then schedule the jobs only on the nodes from the ISI VIZ cluster in the
-      local condor pool. The FileSystemDomain can be specified for an
+      specifies FileSystemDomain == &amp;ldquo;viz.isi.edu&amp;rdquor;. Condor
+      would then schedule the jobs only on the nodes from the ISI VIZ cluster
+      in the local condor pool. The FileSystemDomain can be specified for an
       execution site in the site catalog with condor profile namespace as
       follows</para>
 
@@ -2013,7 +1391,7 @@ requirements = ((GLIDEIN_Entry_Name == "isi_iz") || (TARGET.Pegasus_Site == "isi
  &lt;/site&gt;
 </programlisting>
 
-      <para/>
+      <para />
 
       <section>
         <title>Changes to Jobs</title>
@@ -2032,7 +1410,7 @@ requirements = ((GLIDEIN_Entry_Name == "isi_iz") || (TARGET.Pegasus_Site == "isi
           </listitem>
         </orderedlist>
 
-        <para/>
+        <para />
 
         <section>
           <title>Remote CE Requirements</title>
@@ -2246,8 +1624,9 @@ local-condor pegasus::dirmanager /path/on/submithost/pegasus/bin/dirmanager INST
 
             <mediaobject>
               <imageobject>
-                <imagedata contentdepth="100%" scalefit="1" width="100%" align="center" fileref="images/ec2.png"
-                           valign="middle" />
+                <imagedata align="center" contentdepth="100%"
+                           fileref="images/ec2.png" scalefit="1"
+                           valign="middle" width="100%" />
               </imageobject>
             </mediaobject>
           </figure>
@@ -2419,9 +1798,3 @@ ec2     amazon::s3cmd    /path/to/pegasus/bin/s3cmd    INSTALLED   INTEL32::LINU
     </section>
   </section>
 </chapter>
-
-
-
-
-
-

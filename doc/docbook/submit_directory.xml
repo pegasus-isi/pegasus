@@ -7,18 +7,19 @@
   <section>
     <title>Introduction</title>
 
-    <para>This chapter describes the submit directory content after
-    Pegasus has planned a workflow. Pegasus takes in an abstract workflow (
-    DAX ) and generates an executable workflow (DAG) in the submit
-    directory.</para>
+    <para>This chapter describes the submit directory content after Pegasus
+    has planned a workflow. Pegasus takes in an abstract workflow ( DAX ) and
+    generates an executable workflow (DAG) in the submit directory.</para>
 
-    <para>This document also describes the various Replica Selection Strategies in
-    Pegasus.</para>
+    <para>This document also describes the various Replica Selection
+    Strategies in Pegasus.</para>
   </section>
+
   <section id="submit_directory-layout">
     <title>Layout</title>
 
-    <para>Each executable workflow is associated with a submit directory, and includes the following:</para>
+    <para>Each executable workflow is associated with a submit directory, and
+    includes the following:</para>
 
     <orderedlist>
       <listitem>
@@ -38,15 +39,16 @@
 
           <listitem>
             <para>The post script that is to be invoked when a job completes.
-            This is usually located at <emphasis role="bold">$PEGASUS_HOME/bin/exitpost</emphasis>  and parses the
-            kickstart record in the job's<emphasis role="bold">.out file</emphasis>  and determines the
-            exitcode.</para>
+            This is usually located at <emphasis
+            role="bold">$PEGASUS_HOME/bin/exitpost</emphasis> and parses the
+            kickstart record in the job's<emphasis role="bold">.out
+            file</emphasis> and determines the exitcode.</para>
           </listitem>
 
           <listitem>
             <para>JOB RETRY - the number of times the job is to be retried in
-            case of failure. In Pegasus, the job postscript exits with a
-            non zero exitcode if it determines a failure occurred.</para>
+            case of failure. In Pegasus, the job postscript exits with a non
+            zero exitcode if it determines a failure occurred.</para>
           </listitem>
         </orderedlist>
       </listitem>
@@ -56,11 +58,13 @@
         role="bold">&lt;daxlabel-daxindex&gt;.dag.dagman.out</emphasis></para>
 
         <para>When a DAG ( .dag file ) is executed by Condor DAGMan , the
-        DAGMan writes out it's output to the  <emphasis role="bold">&lt;daxlabel-daxindex&gt;.dag.dagman.out file</emphasis>
-        . This file tells us the
-        progress of the workflow, and can be used to determine the status of
-        the workflow. Most of pegasus tools mine the <emphasis role="bold">dagman.out</emphasis>  or <emphasis role="bold">jobstate.log</emphasis>
-         to determine the progress of the workflows.</para>
+        DAGMan writes out it's output to the <emphasis
+        role="bold">&lt;daxlabel-daxindex&gt;.dag.dagman.out file</emphasis> .
+        This file tells us the progress of the workflow, and can be used to
+        determine the status of the workflow. Most of pegasus tools mine the
+        <emphasis role="bold">dagman.out</emphasis> or <emphasis
+        role="bold">jobstate.log</emphasis> to determine the progress of the
+        workflows.</para>
       </listitem>
 
       <listitem>
@@ -94,13 +98,13 @@
         <para><emphasis role="bold">&lt;job&gt;.out.00n</emphasis></para>
 
         <para>The stdout of the executable referred in the job submit file. In
-        Pegasus, most jobs are launched via kickstart. Hence,
-        this file contains the kickstart XML provenance record that captures
-        runtime provenance on the remote node where the job was executed. n
-        varies from 1-N where N is the JOB RETRY value in the .dag file. The
-        exitpost executable is invoked on the &lt;job&gt;.out file and it
-        moves the &lt;job&gt;.out to &lt;job&gt;.out.00n so that the the job's
-        .out files are preserved across retries.</para>
+        Pegasus, most jobs are launched via kickstart. Hence, this file
+        contains the kickstart XML provenance record that captures runtime
+        provenance on the remote node where the job was executed. n varies
+        from 1-N where N is the JOB RETRY value in the .dag file. The exitpost
+        executable is invoked on the &lt;job&gt;.out file and it moves the
+        &lt;job&gt;.out to &lt;job&gt;.out.00n so that the the job's .out
+        files are preserved across retries.</para>
       </listitem>
 
       <listitem>
@@ -111,9 +115,11 @@
         this file contains stderr of kickstart. This is usually empty unless
         there in an error in kickstart e.g. kickstart segfaults , or kickstart
         location specified in the submit file is incorrect. The exitpost
-        executable is invoked on the <emphasis role="bold">&lt;job&gt;.out</emphasis>  file and it moves the
-        <emphasis role="bold"> &lt;job&gt;.err to &lt;job&gt;.err.00n</emphasis>  so that the the job's <emphasis role="bold">.out</emphasis>
-        files are preserved across retries.</para>
+        executable is invoked on the <emphasis
+        role="bold">&lt;job&gt;.out</emphasis> file and it moves the <emphasis
+        role="bold"> &lt;job&gt;.err to &lt;job&gt;.err.00n</emphasis> so that
+        the the job's <emphasis role="bold">.out</emphasis> files are
+        preserved across retries.</para>
       </listitem>
 
       <listitem>
@@ -152,8 +158,10 @@
 
       <listitem>
         <para>The post script that is to be invoked when a job completes. This
-        is usually found in <emphasis role="bold">$PEGASUS_HOME/bin/exitpost</emphasis>  and parses the kickstart record
-        in the job's .out file and determines the exitcode.</para>
+        is usually found in <emphasis
+        role="bold">$PEGASUS_HOME/bin/exitpost</emphasis> and parses the
+        kickstart record in the job's .out file and determines the
+        exitcode.</para>
       </listitem>
 
       <listitem>
@@ -274,8 +282,8 @@ PARENT pegasus_concat_blackdiamond_0 CHILD stage_in_local_isi_viz_0
     <para>Kickstart captures useful runtime provenance information about the
     job launched by it on the remote note, and puts in an XML record that it
     writes to its own stdout. The stdout appears in the workflow submit
-    directory as &lt;job&gt;.out.00n . The following information is captured by
-    kickstart and logged:</para>
+    directory as &lt;job&gt;.out.00n . The following information is captured
+    by kickstart and logged:</para>
 
     <orderedlist>
       <listitem>
@@ -330,7 +338,8 @@ PARENT pegasus_concat_blackdiamond_0 CHILD stage_in_local_isi_viz_0
 
         <listitem>
           <para>The duration and start time of the job. The time here is in
-          reference to the clock on the remote node where the job is executed.</para>
+          reference to the clock on the remote node where the job is
+          executed.</para>
         </listitem>
 
         <listitem>
@@ -477,9 +486,10 @@ ctime="2009-01-30T19:17:41-06:00" uid="29548" user="vahi" gid="13872" group="bvr
     writes out the jobstate.log file, the format of which is more amenable to
     parsing.</para>
 
-    <note><para>The jobstate.log file is not
-    created if a user uses condor_submit_dag to submit a workflow to Condor
-    DAGMan.</para></note>
+    <note>
+      <para>The jobstate.log file is not created if a user uses
+      condor_submit_dag to submit a workflow to Condor DAGMan.</para>
+    </note>
 
     <para>The jobstate.log file can be created after a workflow has finished
     executing by running <emphasis role="bold">pegasus-monitord</emphasis> on
@@ -622,7 +632,7 @@ ctime="2009-01-30T19:17:41-06:00" uid="29548" user="vahi" gid="13872" group="bvr
 
       <mediaobject>
         <imageobject>
-          <imagedata fileref="images/Pegasus_Job_State_Delay.jpg" scalefit=""/>
+          <imagedata fileref="images/Pegasus_Job_State_Delay.jpg" scalefit="" />
         </imageobject>
       </mediaobject>
     </section>
@@ -830,22 +840,24 @@ type dag
 
     <itemizedlist>
       <listitem>
-        <para><emphasis role="bold">job.id</emphasis> - The id of the job in the DAG</para>
+        <para><emphasis role="bold">job.id</emphasis> - The id of the job in
+        the DAG</para>
       </listitem>
 
       <listitem>
-        <para><emphasis role="bold">job.class</emphasis> - An integer designating the type of the job</para>
+        <para><emphasis role="bold">job.class</emphasis> - An integer
+        designating the type of the job</para>
       </listitem>
 
       <listitem>
-        <para><emphasis role="bold">job.xform</emphasis> - The logical transformation which the job refers
-        to.</para>
+        <para><emphasis role="bold">job.xform</emphasis> - The logical
+        transformation which the job refers to.</para>
       </listitem>
 
       <listitem>
-        <para><emphasis role="bold">task.count</emphasis> - The number of tasks associated with the job. This is
-        equal to the number of pegasus.job.task events created for that
-        job.</para>
+        <para><emphasis role="bold">task.count</emphasis> - The number of
+        tasks associated with the job. This is equal to the number of
+        pegasus.job.task events created for that job.</para>
       </listitem>
     </itemizedlist>
 
@@ -856,16 +868,18 @@ type dag
 
     <itemizedlist>
       <listitem>
-        <para><emphasis role="bold">task.id</emphasis> - The id of the job in the DAG</para>
+        <para><emphasis role="bold">task.id</emphasis> - The id of the job in
+        the DAG</para>
       </listitem>
 
       <listitem>
-        <para><emphasis role="bold">task.class</emphasis> - An integer designating the type of the job</para>
+        <para><emphasis role="bold">task.class</emphasis> - An integer
+        designating the type of the job</para>
       </listitem>
 
       <listitem>
-        <para><emphasis role="bold">task.xform</emphasis> - The logical transformation which the job refers
-        to.</para>
+        <para><emphasis role="bold">task.xform</emphasis> - The logical
+        transformation which the job refers to.</para>
 
         <para>Some sample entries are:</para>
 
@@ -885,9 +899,3 @@ ts=2009-04-21T23:09:03.093402Z event=pegasus.job.map job.id=merge_vahi-findrange
     </itemizedlist>
   </section>
 </chapter>
-
-
-
-
-
-

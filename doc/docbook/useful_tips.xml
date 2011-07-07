@@ -2,533 +2,325 @@
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
 "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <chapter id="useful_tips" lang="">
-    <title>Useful Tips</title>
-  <section>
-     <title>Running the VM with Virtual Box</title>
-
-
-
-      <para>Follow these steps to add the vmdk file to Virtual Box and create a virtual machine inside the Virtual
-      Box</para>
-
-           <para>1. Launch Virtual Box on your machine.</para>
-
-
-        <para><figure id="virtualboxhome">
-        <title>Virtualbox Home</title>
-
-        <mediaobject>
-          <imageobject>
-            <imagedata align="center"
-                       fileref="images/VirtualBoxHome.png"
-                       valign="middle" />
-          </imageobject>
-        </mediaobject>
-      </figure></para>
-
-          <para>2. In the Icon Menu, select <emphasis role="bold">New</emphasis></para>
-
-
-          <para>The Create New Virtual Machine Wizard Welcome window opens up.</para>
-
-        <para><figure id="welcome">
-        <title>Welcome Window</title>
-
-        <mediaobject>
-          <imageobject>
-            <imagedata align="center"
-                       fileref="images/Wizard1.png"  width="5in"
-                       valign="middle" />
-          </imageobject>
-        </mediaobject>
-      </figure></para>
-
-          <para>3. Select <emphasis role="bold">Next</emphasis></para>
-         <para><figure id="selectvm">
-        <title>VM Name and OS Type</title>
-
-        <mediaobject>
-          <imageobject>
-            <imagedata align="center"
-                       fileref="images/Wizard3.png"
-                       valign="middle" />
-          </imageobject>
-        </mediaobject>
-      </figure></para>
-
-          <para>4. Enter a name for the virtual machine.</para>
-          <para>5. Select <emphasis role="bold">Linux</emphasis> as the <emphasis role="bold">Operating System</emphasis> and
-          <emphasis role="bold">Debian</emphasis>as the <emphasis role="bold">Version</emphasis>
-          from the pull down menus. Select <emphasis role="bold">Next</emphasis></para>
-           <para><figure id="namevm">
-        <title>Base Memory</title>
-
-        <mediaobject>
-          <imageobject>
-            <imagedata align="center"
-                       fileref="images/Wizard4.png"
-                       valign="middle" />
-          </imageobject>
-        </mediaobject>
-      </figure></para>
-
-
-          <para>6. Select the base recommended <emphasis role="bold">Base Memory Size</emphasis>
-          then select <emphasis role="bold">Next</emphasis></para>
-
-           <para><figure id="selectvmfile">
-        <title>VM Name and OS Type</title>
-
-        <mediaobject>
-          <imageobject>
-            <imagedata align="center"
-                       fileref="images/Wizard5.png"
-                       valign="middle" />
-          </imageobject>
-        </mediaobject>
-      </figure></para>
-
-
-         <para>7. Select <emphasis role="bold">Use existing hard disk</emphasis>.</para>
-
-        <para>8. Open the file icon and navigate to the location of the <emphasis role="bold">Debian-6-86</emphasis> file
-         downloaded earlier. Once a file has been selected, it is available in the pull down menu.</para>
-
-        <para><figure id="selectfile">
-        <title>Document Library</title>
-
-        <mediaobject>
-          <imageobject>
-            <imagedata align="center"
-                       fileref="images/Wizard6.png"
-                       valign="middle" />
-          </imageobject>
-        </mediaobject>
-      </figure></para>
-
-
-         <para>9. Double click the <emphasis role="bold">Debian-6-86 </emphasis> file to launch the Create New Virtual Disk Wizard.</para>
-          <para><figure id="doclib">
-        <title/>
-
-        <mediaobject>
-          <imageobject>
-            <imagedata align="center"
-                       fileref="images/Wizard7.png"
-                       valign="middle" />
-          </imageobject>
-        </mediaobject>
-      </figure></para>
-          <para>10. Select <emphasis role="bold">Next</emphasis></para>
-
-          <para><figure id="virtdisk1">
-        <title>Storage Type</title>
-
-        <mediaobject>
-          <imageobject>
-            <imagedata align="center"
-                       fileref="images/Wizard8.png"
-                       valign="middle" />
-          </imageobject>
-        </mediaobject>
-      </figure></para>
-
-
-
-        <para>11. Select the desired storage type then select <emphasis role="bold">Next</emphasis></para>
-          <para><figure id="virtdisklocation">
-        <title>Virtual Disk Location and Size</title>
-
-        <mediaobject>
-          <imageobject>
-            <imagedata align="center"
-                       fileref="images/Wizard9.png"  width="5in"
-                       valign="middle" />
-          </imageobject>
-        </mediaobject>
-      </figure></para>
-
-         <para>12. Select the desired location and virtual disk size, then select <emphasis role="bold">Next</emphasis></para>
-          <para><figure id="summary">
-        <title>Summary</title>
-
-        <mediaobject>
-          <imageobject>
-            <imagedata align="center"
-                       fileref="images/Wizard10.png"
-                       valign="middle" />
-          </imageobject>
-        </mediaobject>
-      </figure></para>
-
-         <para>13. Review the settings and select <emphasis role="bold">Finish</emphasis> to create
-         the virtual disk or <emphasis role="bold">Cancel</emphasis> to cancel creation</para>
-
-         <para>The VM is created and will appear in the VirtualBox Manager window in a powered off state</para>
-
-         <para><figure id="virtboxpopulated">
-        <title>Storage Type</title>
-
-        <mediaobject>
-          <imageobject>
-            <imagedata align="center"
-                       fileref="images/VirtualBoxPopulated.png" width="4in"
-                       valign="middle" />
-          </imageobject>
-        </mediaobject>
-      </figure></para>
-
-      <para>14. Double click the VM to launch the First Run Wizard</para>
-
-      <para><figure id="firstrunwizard">
-        <title>First Run</title>
-
-        <mediaobject>
-          <imageobject>
-            <imagedata align="center"
-                       fileref="images/FirstRun1.png"
-                       valign="middle" />
-          </imageobject>
-        </mediaobject>
-      </figure></para>
-      <para>15. Select <emphasis role="bold">Next</emphasis></para>
-
-
-        <para>The Starting VM progress window opens and tracks the creation process</para>
-
-        <para><figure id="progressbar">
-        <title>Start Run 2</title>
-
-        <mediaobject>
-          <imageobject>
-            <imagedata align="center"
-                       fileref="images/FirstRun2.png"
-                       valign="middle" />
-          </imageobject>
-        </mediaobject>
-      </figure></para>
-        <para>When completed the virtual home page page is displayed</para>
-
-       <para><figure id="virthome">
-        <title>Virtual Machine Home Page</title>
-
-        <mediaobject>
-          <imageobject>
-            <imagedata align="center"
-                       fileref="images/VirtualHomePageLogged in.png" width="6in"
-                       valign="middle" />
-          </imageobject>
-        </mediaobject>
-      </figure></para>
-         <para>16. Select <emphasis role="bold">Accessories - LX Terminal</emphasis> to open a terminal window.</para>
-         <para><figure id="virtdisk2">
-        <title>Select Terminal</title>
-
-        <mediaobject>
-          <imageobject>
-            <imagedata align="center"
-                       fileref="images/SelectTerminal.png"  width="6in"
-                       valign="middle" />
-          </imageobject>
-        </mediaobject>
-      </figure></para>
-      <para> When the virtual machine starts , it automatically logs you in
-    as user <emphasis role="bold">tutorial</emphasis>.
-
-     The Terminal Window opens:</para>
-
-      <para><figure id="virtdisk3">
-        <title>Storage Type</title>
-
-        <mediaobject>
-          <imageobject>
-            <imagedata align="center"
-                       fileref="images/VMCommandWindow.png"  width="6in"
-                       valign="middle" />
-          </imageobject>
-        </mediaobject>
-      </figure></para>
-
-
-
-         <para>Note: The terminal window is the main interface for the walkthrough process.</para>
-
-         <para>To continue with the walkthrough see <link linkend="walkthrough">Walkthrough Workflow </link></para>
-
-
-
-
-  </section>
-
+  <title>Useful Tips</title>
 
   <section>
-  <title>Migrating From Pegasus 2.X to Pegasus 3.0</title>
+    <title>Migrating From Pegasus 2.X to Pegasus 3.X</title>
 
     <para>With Pegasus 3.0 effort has been made to simplify configuration.
     This chapter is for existing users of Pegasus who use Pegasus 2.x to run
     their workflows and walks through the steps to move to using Pegasus
     3.0</para>
 
-  <section>
-    <title>PEGASUS_HOME and Setup Scripts</title>
-
-    <para>Earlier versions of Pegasus required users to have the environment
-    variable PEGASUS_HOME set and to source a setup file
-    $PEGASUS_HOME/setup.sh | $PEGASUS_HOME/setup.csh before running Pegasus to
-    setup CLASSPATH and other variables.</para>
-
-    <para>Starting with Pegasus 3.0 this is no longer required. The above
-    paths are automaticallly determined by the Pegasus tools when they are
-    invoked.</para>
-
-    <para>All the users need to do is to set the PATH variable to pick up the
-    pegasus executables from the bin directory.</para>
-
-    <programlisting>$ <emphasis role="bold">export PATH=/some/install/pegasus-3.0.0/bin:$PATH</emphasis></programlisting>
-  </section>
-
-  <section>
-    <title>Changes to Schemas and Catalog Formats</title>
-
     <section>
-      <title>DAX Schema</title>
+      <title>PEGASUS_HOME and Setup Scripts</title>
 
-      <para>Pegasus 3.0 by default now parses DAX documents conforming to the
-      DAX Schema 3.2 available <ulink role=""
-      url="http://pegasus.isi.edu/wms/docs/schemas/dax-3.2/dax-3.2.xsd"
-      userlevel="">here</ulink> and is explained in detail in the chapter on
-      API references.</para>
+      <para>Earlier versions of Pegasus required users to have the environment
+      variable PEGASUS_HOME set and to source a setup file
+      $PEGASUS_HOME/setup.sh | $PEGASUS_HOME/setup.csh before running Pegasus
+      to setup CLASSPATH and other variables.</para>
 
-      <para>Starting Pegasus 3.0 , DAX generation API's are provided in
-      Java/Python and Perl for users to use in their DAX Generators. The use
-      of API's is highly encouraged. Support for the old DAX schema's has been
-      deprecated and will be removed in a future version.</para>
+      <para>Starting with Pegasus 3.0 this is no longer required. The above
+      paths are automaticallly determined by the Pegasus tools when they are
+      invoked.</para>
 
-      <para>For users, who still want to run using the old DAX formats i.e 3.0
-      or earlier, can for the time being set the following property in the
-      properties and point it to dax-3.0 xsd of the installation.</para>
+      <para>All the users need to do is to set the PATH variable to pick up
+      the pegasus executables from the bin directory.</para>
 
-      <programlisting><emphasis role="bold">pegasus.schema.dax  /some/install/pegasus-3.0/etc/dax-3.0.xsd</emphasis></programlisting>
+      <programlisting>$ <emphasis role="bold">export PATH=/some/install/pegasus-3.0.0/bin:$PATH</emphasis></programlisting>
     </section>
 
     <section>
-      <title>Site Catalog Format</title>
+      <title>Changes to Schemas and Catalog Formats</title>
 
-      <para>Pegasus 3.0 by default now parses Site Catalog format conforming
-      to the SC schema 3.0 ( XML3 ) available <ulink role=""
-      url="http://pegasus.isi.edu/wms/docs/schemas/dax-3.2/dax-3.2.xsd"
-      userlevel="">here</ulink> and is explained in detail in the chapter on
-      Catalogs.</para>
+      <section>
+        <title>DAX Schema</title>
 
-      <para>Pegasus 3.0 comes with a pegasus-sc-converter that will convert
-      users old site catalog ( XML ) to the XML3 format. Sample usage is given
-      below.</para>
+        <para>Pegasus 3.0 by default now parses DAX documents conforming to
+        the DAX Schema 3.2 available <ulink role=""
+        url="http://pegasus.isi.edu/wms/docs/schemas/dax-3.2/dax-3.2.xsd"
+        userlevel="">here</ulink> and is explained in detail in the chapter on
+        API references.</para>
 
-      <programlisting><emphasis role="bold">$ pegasus-sc-converter -i sample.sites.xml -I XML -o sample.sites.xml3 -O XML3
+        <para>Starting Pegasus 3.0 , DAX generation API's are provided in
+        Java/Python and Perl for users to use in their DAX Generators. The use
+        of API's is highly encouraged. Support for the old DAX schema's has
+        been deprecated and will be removed in a future version.</para>
+
+        <para>For users, who still want to run using the old DAX formats i.e
+        3.0 or earlier, can for the time being set the following property in
+        the properties and point it to dax-3.0 xsd of the installation.</para>
+
+        <programlisting><emphasis role="bold">pegasus.schema.dax  /some/install/pegasus-3.0/etc/dax-3.0.xsd</emphasis></programlisting>
+      </section>
+
+      <section>
+        <title>Site Catalog Format</title>
+
+        <para>Pegasus 3.0 by default now parses Site Catalog format conforming
+        to the SC schema 3.0 ( XML3 ) available <ulink role=""
+        url="http://pegasus.isi.edu/wms/docs/schemas/dax-3.2/dax-3.2.xsd"
+        userlevel="">here</ulink> and is explained in detail in the chapter on
+        Catalogs.</para>
+
+        <para>Pegasus 3.0 comes with a pegasus-sc-converter that will convert
+        users old site catalog ( XML ) to the XML3 format. Sample usage is
+        given below.</para>
+
+        <programlisting><emphasis role="bold">$ pegasus-sc-converter -i sample.sites.xml -I XML -o sample.sites.xml3 -O XML3
 </emphasis>
 2010.11.22 12:55:14.169 PST:   Written out the converted file to sample.sites.xml3 
 </programlisting>
 
-      <para>To use the converted site catalog, in the properties do the
-      following</para>
+        <para>To use the converted site catalog, in the properties do the
+        following</para>
 
-      <orderedlist>
-        <listitem>
-          <para>unset pegasus.catalog.site or set pegasus.catalog.site to
-          XML3</para>
-        </listitem>
+        <orderedlist>
+          <listitem>
+            <para>unset pegasus.catalog.site or set pegasus.catalog.site to
+            XML3</para>
+          </listitem>
 
-        <listitem>
-          <para>point pegasus.catalog.site.file to the converted site
-          catalog</para>
-        </listitem>
-      </orderedlist>
-    </section>
+          <listitem>
+            <para>point pegasus.catalog.site.file to the converted site
+            catalog</para>
+          </listitem>
+        </orderedlist>
+      </section>
 
-    <section>
-      <title>Transformation Catalog Format</title>
+      <section>
+        <title>Transformation Catalog Format</title>
 
-      <para>Pegasus 3.0 by default now parses a file based multiline textual
-      format of a Transformation Catalog. The new Text format is explained in
-      detail in the chapter on Catalogs.</para>
+        <para>Pegasus 3.0 by default now parses a file based multiline textual
+        format of a Transformation Catalog. The new Text format is explained
+        in detail in the chapter on Catalogs.</para>
 
-      <para>Pegasus 3.0 comes with a pegasus-tc-converter that will convert
-      users old transformation catalog ( File ) to the Text format. Sample
-      usage is given below.</para>
+        <para>Pegasus 3.0 comes with a pegasus-tc-converter that will convert
+        users old transformation catalog ( File ) to the Text format. Sample
+        usage is given below.</para>
 
-      <programlisting><emphasis role="bold">$ pegasus-tc-converter -i sample.tc.data -I File -o sample.tc.text -O Text
+        <programlisting><emphasis role="bold">$ pegasus-tc-converter -i sample.tc.data -I File -o sample.tc.text -O Text
 </emphasis>
 2010.11.22 12:53:16.661 PST:   Successfully converted Transformation Catalog from File to Text 
 2010.11.22 12:53:16.666 PST:   The output transfomation catalog is in file  /lfs1/software/install/pegasus/pegasus-3.0.0cvs/etc/sample.tc.text 
 </programlisting>
 
-      <para>To use the converted transformation catalog, in the properties do
-      the following</para>
+        <para>To use the converted transformation catalog, in the properties
+        do the following</para>
 
-      <orderedlist>
-        <listitem>
-          <para>unset pegasus.catalog.transformation or set
-          pegasus.catalog.transformation to Text</para>
-        </listitem>
+        <orderedlist>
+          <listitem>
+            <para>unset pegasus.catalog.transformation or set
+            pegasus.catalog.transformation to Text</para>
+          </listitem>
 
-        <listitem>
-          <para>point pegasus.catalog.transformation.file to the converted
-          transformation catalog</para>
-        </listitem>
-      </orderedlist>
+          <listitem>
+            <para>point pegasus.catalog.transformation.file to the converted
+            transformation catalog</para>
+          </listitem>
+        </orderedlist>
+      </section>
     </section>
-</section>
-
-  <section>
-    <title>Properties and Profiles Simplification</title>
-
-    <para>Starting with Pegasus 3.0 all profiles can be specified in the
-    properties file. Profiles specified in the properties file have the lowest
-    priority. Profiles are explained in the detail in the<link
-    linkend="profiles"> Profiles</link>chapter. As a
-    result of this a lot of existing Pegasus Properties were replaced by
-    profiles. The table below lists the properties removed and the new profile
-    based names.</para>
-
-    <table>
-      <title>Table 1: Property Keys removed and their Profile based
-      replacement</title>
-
-      <tgroup cols="2">
-        <tbody>
-          <row>
-            <entry><emphasis role="bold">Old Property Key</emphasis></entry>
-
-            <entry><emphasis role="bold">New Property Key</emphasis></entry>
-          </row>
-
-          <row>
-            <entry>pegasus.local.env</entry>
-
-            <entry>no replacement. Specify env profiles for local site in the
-            site catalog</entry>
-          </row>
-
-          <row>
-            <entry>pegasus.condor.release</entry>
-
-            <entry>condor.periodic_release</entry>
-          </row>
-
-          <row>
-            <entry>pegasus.condor.remove</entry>
-
-            <entry>condor.periodic_remove</entry>
-          </row>
-
-          <row>
-            <entry>pegasus.job.priority</entry>
-
-            <entry>condor.priority</entry>
-          </row>
-
-          <row>
-            <entry>pegasus.condor.output.stream</entry>
-
-            <entry>pegasus.condor.output.stream</entry>
-          </row>
-
-          <row>
-            <entry>pegasus.condor.error.stream</entry>
-
-            <entry>condor.stream_error</entry>
-          </row>
-
-          <row>
-            <entry>pegasus.dagman.retry</entry>
-
-            <entry>dagman.retry</entry>
-          </row>
-
-          <row>
-            <entry>pegasus.exitcode.impl</entry>
-
-            <entry>dagman.post</entry>
-          </row>
-
-          <row>
-            <entry>pegasus.exitcode.scope</entry>
-
-            <entry>dagman.post.scope</entry>
-          </row>
-
-          <row>
-            <entry>pegasus.exitcode.arguments</entry>
-
-            <entry>dagman.post.arguments</entry>
-          </row>
-
-          <row>
-            <entry>pegasus.exitcode.path.*</entry>
-
-            <entry>dagman.post.path.*</entry>
-          </row>
-
-          <row>
-            <entry>pegasus.dagman.maxpre</entry>
-
-            <entry>dagman.maxpre</entry>
-          </row>
-
-          <row>
-            <entry>pegasus.dagman.maxpost</entry>
-
-            <entry>dagman.maxpost</entry>
-          </row>
-
-          <row>
-            <entry>pegasus.dagman.maxidle</entry>
-
-            <entry>dagman.maxidle</entry>
-          </row>
-
-          <row>
-            <entry>pegasus.dagman.maxjobs</entry>
-
-            <entry>dagman.maxjobs</entry>
-          </row>
-
-          <row>
-            <entry>pegasus.remote.scheduler.min.maxwalltime</entry>
-
-            <entry>globus.maxwalltime</entry>
-          </row>
-
-          <row>
-            <entry>pegasus.remote.scheduler.min.maxtime</entry>
-
-            <entry>globus.maxtime</entry>
-          </row>
-
-          <row>
-            <entry>pegasus.remote.scheduler.min.maxcputime</entry>
-
-            <entry>globus.maxcputime</entry>
-          </row>
-
-          <row>
-            <entry>pegasus.remote.scheduler.queues</entry>
-
-            <entry>globus.queue</entry>
-          </row>
-        </tbody>
-      </tgroup>
-    </table>
 
     <section>
-      <title>Profile Keys for Clustering</title>
+      <title>Properties and Profiles Simplification</title>
 
-      <para>The pegasus profile keys for job clustering were <emphasis
-      role="bold">renamed</emphasis>. The following table lists the old and
-      the new names for the profile keys.</para>
+      <para>Starting with Pegasus 3.0 all profiles can be specified in the
+      properties file. Profiles specified in the properties file have the
+      lowest priority. Profiles are explained in the detail in the<link
+      linkend="profiles"> Profiles</link>chapter. As a result of this a lot of
+      existing Pegasus Properties were replaced by profiles. The table below
+      lists the properties removed and the new profile based names.</para>
 
       <table>
-        <title>Table 2: Old and New Names For Job Clustering Profile
+        <title>Table 1: Property Keys removed and their Profile based
+        replacement</title>
+
+        <tgroup cols="2">
+          <tbody>
+            <row>
+              <entry><emphasis role="bold">Old Property Key</emphasis></entry>
+
+              <entry><emphasis role="bold">New Property Key</emphasis></entry>
+            </row>
+
+            <row>
+              <entry>pegasus.local.env</entry>
+
+              <entry>no replacement. Specify env profiles for local site in
+              the site catalog</entry>
+            </row>
+
+            <row>
+              <entry>pegasus.condor.release</entry>
+
+              <entry>condor.periodic_release</entry>
+            </row>
+
+            <row>
+              <entry>pegasus.condor.remove</entry>
+
+              <entry>condor.periodic_remove</entry>
+            </row>
+
+            <row>
+              <entry>pegasus.job.priority</entry>
+
+              <entry>condor.priority</entry>
+            </row>
+
+            <row>
+              <entry>pegasus.condor.output.stream</entry>
+
+              <entry>pegasus.condor.output.stream</entry>
+            </row>
+
+            <row>
+              <entry>pegasus.condor.error.stream</entry>
+
+              <entry>condor.stream_error</entry>
+            </row>
+
+            <row>
+              <entry>pegasus.dagman.retry</entry>
+
+              <entry>dagman.retry</entry>
+            </row>
+
+            <row>
+              <entry>pegasus.exitcode.impl</entry>
+
+              <entry>dagman.post</entry>
+            </row>
+
+            <row>
+              <entry>pegasus.exitcode.scope</entry>
+
+              <entry>dagman.post.scope</entry>
+            </row>
+
+            <row>
+              <entry>pegasus.exitcode.arguments</entry>
+
+              <entry>dagman.post.arguments</entry>
+            </row>
+
+            <row>
+              <entry>pegasus.exitcode.path.*</entry>
+
+              <entry>dagman.post.path.*</entry>
+            </row>
+
+            <row>
+              <entry>pegasus.dagman.maxpre</entry>
+
+              <entry>dagman.maxpre</entry>
+            </row>
+
+            <row>
+              <entry>pegasus.dagman.maxpost</entry>
+
+              <entry>dagman.maxpost</entry>
+            </row>
+
+            <row>
+              <entry>pegasus.dagman.maxidle</entry>
+
+              <entry>dagman.maxidle</entry>
+            </row>
+
+            <row>
+              <entry>pegasus.dagman.maxjobs</entry>
+
+              <entry>dagman.maxjobs</entry>
+            </row>
+
+            <row>
+              <entry>pegasus.remote.scheduler.min.maxwalltime</entry>
+
+              <entry>globus.maxwalltime</entry>
+            </row>
+
+            <row>
+              <entry>pegasus.remote.scheduler.min.maxtime</entry>
+
+              <entry>globus.maxtime</entry>
+            </row>
+
+            <row>
+              <entry>pegasus.remote.scheduler.min.maxcputime</entry>
+
+              <entry>globus.maxcputime</entry>
+            </row>
+
+            <row>
+              <entry>pegasus.remote.scheduler.queues</entry>
+
+              <entry>globus.queue</entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+
+      <section>
+        <title>Profile Keys for Clustering</title>
+
+        <para>The pegasus profile keys for job clustering were <emphasis
+        role="bold">renamed</emphasis>. The following table lists the old and
+        the new names for the profile keys.</para>
+
+        <table>
+          <title>Table 2: Old and New Names For Job Clustering Profile
+          Keys</title>
+
+          <tgroup cols="2">
+            <tbody>
+              <row>
+                <entry><emphasis role="bold">Old Pegasus Profile
+                Key</emphasis></entry>
+
+                <entry><emphasis role="bold">New Pegasus Profile
+                Key</emphasis></entry>
+              </row>
+
+              <row>
+                <entry>collapse</entry>
+
+                <entry>clusters.size</entry>
+              </row>
+
+              <row>
+                <entry>bundle</entry>
+
+                <entry>clusters.num</entry>
+              </row>
+            </tbody>
+          </tgroup>
+        </table>
+      </section>
+    </section>
+
+    <section>
+      <title>Transfers Simplification</title>
+
+      <para>Pegasus 3.0 has a new default transfer client pegasus-transfer
+      that is invoked by default for first level and second level staging. The
+      pegasus-transfer client is a python based wrapper around various
+      transfer clients like globus-url-copy, lcg-copy, wget, cp, ln .
+      pegasus-transfer looks at source and destination url and figures out
+      automatically which underlying client to use. pegasus-transfer is
+      distributed with the PEGASUS and can be found in the bin subdirectory
+      .</para>
+
+      <para>Also, the Bundle Transfer refiner has been made the default for
+      pegasus 3.0. Most of the users no longer need to set any transfer
+      related properties. The names of the profiles keys that control the
+      Bundle Transfers have been changed . The following table lists the old
+      and the new names for the Pegasus Profile Keys and are explained in
+      details in the Profiles Chapter.</para>
+
+      <table>
+        <title>Table 3: Old and New Names For Transfer Bundling Profile
         Keys</title>
 
         <tgroup cols="2">
@@ -538,181 +330,132 @@
               Key</emphasis></entry>
 
               <entry><emphasis role="bold">New Pegasus Profile
-              Key</emphasis></entry>
+              Keys</emphasis></entry>
             </row>
 
             <row>
-              <entry>collapse</entry>
+              <entry>bundle.stagein</entry>
 
-              <entry>clusters.size</entry>
+              <entry>stagein.clusters | stagein.local.clusters |
+              stagein.remote.clusters</entry>
             </row>
 
             <row>
-              <entry>bundle</entry>
+              <entry>bundle.stageout</entry>
 
-              <entry>clusters.num</entry>
+              <entry>stageout.clusters | stageout.local.clusters |
+              stageout.remote.clusters</entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+
+      <section>
+        <title>Worker Package Staging</title>
+
+        <para>Starting Pegasus 3.0 there is a separate boolean property
+        <emphasis role="bold">pegasus.transfer.worker.package</emphasis> to
+        enable worker package staging to the remote compute sites. Earlier it
+        was bundled with user executables staging i.e if <emphasis
+        role="bold">pegasus.catalog.transformation.mapper</emphasis> property
+        was set to Staged .</para>
+      </section>
+    </section>
+
+    <section>
+      <title>Clients in bin directory</title>
+
+      <para>Starting with Pegasus 3.0 the pegasus clients in the bin directory
+      have a pegasus prefix. The table below lists the old client names and
+      new names for the clients that replaced them</para>
+
+      <table>
+        <title>Table 1: Old Client Names and their New Names</title>
+
+        <tgroup cols="2">
+          <tbody>
+            <row>
+              <entry><emphasis role="bold">Old Client</emphasis></entry>
+
+              <entry><emphasis role="bold">New Client</emphasis></entry>
+            </row>
+
+            <row>
+              <entry>rc-client</entry>
+
+              <entry>pegasus-rc-client</entry>
+            </row>
+
+            <row>
+              <entry>tc-client</entry>
+
+              <entry>pegasus-tc-client</entry>
+            </row>
+
+            <row>
+              <entry>pegasus-get-sites</entry>
+
+              <entry>pegasus-sc-client</entry>
+            </row>
+
+            <row>
+              <entry>sc-client</entry>
+
+              <entry>pegasus-sc-converter</entry>
+            </row>
+
+            <row>
+              <entry>tailstatd</entry>
+
+              <entry>pegasus-monitord</entry>
+            </row>
+
+            <row>
+              <entry>genstats and genstats-breakdown</entry>
+
+              <entry>pegasus-statistics</entry>
+            </row>
+
+            <row>
+              <entry>show-job</entry>
+
+              <entry>pegasus-plots</entry>
+            </row>
+
+            <row>
+              <entry>cleanup</entry>
+
+              <entry>pegasus-cleanup</entry>
+            </row>
+
+            <row>
+              <entry>dirmanager</entry>
+
+              <entry>pegasus-dirmanager</entry>
+            </row>
+
+            <row>
+              <entry>exitcode</entry>
+
+              <entry>pegasus-exitcode</entry>
+            </row>
+
+            <row>
+              <entry>rank-dax</entry>
+
+              <entry>pegasus-rank-dax</entry>
+            </row>
+
+            <row>
+              <entry>transfer</entry>
+
+              <entry>pegasus-transfer</entry>
             </row>
           </tbody>
         </tgroup>
       </table>
     </section>
   </section>
-
-  <section>
-    <title>Transfers Simplification</title>
-
-    <para>Pegasus 3.0 has a new default transfer client pegasus-transfer that
-    is invoked by default for first level and second level staging. The
-    pegasus-transfer client is a python based wrapper around various transfer
-    clients like globus-url-copy, lcg-copy, wget, cp, ln . pegasus-transfer
-    looks at source and destination url and figures out automatically which
-    underlying client to use. pegasus-transfer is distributed with the PEGASUS
-    and can be found in the bin subdirectory .</para>
-
-    <para>Also, the Bundle Transfer refiner has been made the default for
-    pegasus 3.0. Most of the users no longer need to set any transfer related
-    properties. The names of the profiles keys that control the Bundle
-    Transfers have been changed . The following table lists the old and the
-    new names for the Pegasus Profile Keys and are explained in details in the
-    Profiles Chapter.</para>
-
-    <table>
-      <title>Table 3: Old and New Names For Transfer Bundling Profile
-      Keys</title>
-
-      <tgroup cols="2">
-        <tbody>
-          <row>
-            <entry><emphasis role="bold">Old Pegasus Profile
-            Key</emphasis></entry>
-
-            <entry><emphasis role="bold">New Pegasus Profile
-            Keys</emphasis></entry>
-          </row>
-
-          <row>
-            <entry>bundle.stagein</entry>
-
-            <entry>stagein.clusters | stagein.local.clusters |
-            stagein.remote.clusters</entry>
-          </row>
-
-          <row>
-            <entry>bundle.stageout</entry>
-
-            <entry>stageout.clusters | stageout.local.clusters |
-            stageout.remote.clusters</entry>
-          </row>
-        </tbody>
-      </tgroup>
-    </table>
-
-    <section>
-      <title>Worker Package Staging</title>
-
-      <para>Starting Pegasus 3.0 there is a separate boolean property
-      <emphasis role="bold">pegasus.transfer.worker.package</emphasis> to
-      enable worker package staging to the remote compute sites. Earlier it
-      was bundled with user executables staging i.e if <emphasis
-      role="bold">pegasus.catalog.transformation.mapper</emphasis> property
-      was set to Staged .</para>
-    </section>
-  </section>
-
-  <section>
-    <title>Clients in bin directory</title>
-
-    <para>Starting with Pegasus 3.0 the pegasus clients in the bin directory
-    have a pegasus prefix. The table below lists the old client names and new
-    names for the clients that replaced them</para>
-
-    <table>
-      <title>Table 1: Old Client Names and their New Names</title>
-
-      <tgroup cols="2">
-        <tbody>
-          <row>
-            <entry><emphasis role="bold">Old Client</emphasis></entry>
-
-            <entry><emphasis role="bold">New Client</emphasis></entry>
-          </row>
-
-          <row>
-            <entry>rc-client</entry>
-
-            <entry>pegasus-rc-client</entry>
-          </row>
-
-          <row>
-            <entry>tc-client</entry>
-
-            <entry>pegasus-tc-client</entry>
-          </row>
-
-          <row>
-            <entry>pegasus-get-sites</entry>
-
-            <entry>pegasus-sc-client</entry>
-          </row>
-
-          <row>
-            <entry>sc-client</entry>
-
-            <entry>pegasus-sc-converter</entry>
-          </row>
-
-          <row>
-            <entry>tailstatd</entry>
-
-            <entry>pegasus-monitord</entry>
-          </row>
-
-          <row>
-            <entry>genstats and genstats-breakdown</entry>
-
-            <entry>pegasus-statistics</entry>
-          </row>
-
-          <row>
-            <entry>show-job</entry>
-
-            <entry>pegasus-plots</entry>
-          </row>
-
-          <row>
-            <entry>cleanup</entry>
-
-            <entry>pegasus-cleanup</entry>
-          </row>
-
-          <row>
-            <entry>dirmanager</entry>
-
-            <entry>pegasus-dirmanager</entry>
-          </row>
-
-          <row>
-            <entry>exitcode</entry>
-
-            <entry>pegasus-exitcode</entry>
-          </row>
-
-          <row>
-            <entry>rank-dax</entry>
-
-            <entry>pegasus-rank-dax</entry>
-          </row>
-
-          <row>
-            <entry>transfer</entry>
-
-            <entry>pegasus-transfer</entry>
-          </row>
-        </tbody>
-      </tgroup>
-    </table>
-  </section>
-</section>
 
   <section>
     <title>Best Practices For Developing Portable Code</title>
@@ -892,7 +635,7 @@ $ echo $?
       <emphasis>stdout</emphasis> for a single file output data. The
       <emphasis>stderr</emphasis> descriptor should be used for logging and
       debugging purposes only, never to put data on it. In the *nix world,
-      this will work well, but may hiccup in the Windows world. </para>
+      this will work well, but may hiccup in the Windows world.</para>
 
       <para>We are suggesting that you avoid using stdio for data files,
       because there is the implied expectation that stdio data gets magically
@@ -905,7 +648,7 @@ $ echo $?
       you produce logs on <emphasis>stderr</emphasis> that you care about, you
       must track it in a similar manner. Think about it this way: Whenever you
       are redirecting stdio in a *nix shell, you will also have to specify a
-      file name. </para>
+      file name.</para>
 
       <para>Most execution environments permit to connect
       <emphasis>stdin</emphasis>, <emphasis>stdout</emphasis> or
@@ -1002,10 +745,8 @@ $ echo $?
       <note>
         <para>A logical file name should never be an absolute file path, e.g.
         /a/1/f.a In other words, there should not be a starting slash (/) in a
-        logical filename. </para>
+        logical filename.</para>
       </note>
     </section>
   </section>
 </chapter>
-
-

@@ -9,11 +9,11 @@ configuration.xml: ../../etc/basic.properties ../../libexec/docbook-sample-props
 	export PEGASUS_HOME=`dirname \`pwd ../../\`` \
         && ../../libexec/docbook-sample-props ../../etc/basic.properties > configuration.xml 
 
-advanced_concepts_properties.xml: ../../etc/advanced.properties ../../libexec/docbook-sample-props
+reference_properties.xml: ../../etc/advanced.properties ../../libexec/docbook-sample-props
 	export PEGASUS_HOME=`dirname \`pwd ../../\`` \
-	    && ../../libexec/docbook-sample-props ../../etc/advanced.properties > advanced_concepts_properties.xml 
+	    && ../../libexec/docbook-sample-props ../../etc/advanced.properties > reference_properties.xml 
 
-${prefix}/index.php: *.xml pegasus-style.xsl configuration.xml advanced_concepts_properties.xml
+${prefix}/index.php: *.xml pegasus-style.xsl configuration.xml reference_properties.xml
 	mkdir -p ${prefix}/images
 	xsltproc --noout \
 		      --stringparam base.dir ${prefix}/ \

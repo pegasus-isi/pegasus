@@ -18,7 +18,7 @@
     Java, Perl, or Python format</para>
 
     <note>
-      We highly recommend using the DAX API.
+       We highly recommend using the DAX API.
     </note>
 
     <para>Advanced users who can read XML schema definitions can generate a
@@ -29,34 +29,37 @@
 
     <itemizedlist>
       <listitem>
-        <para><emphasis role="bold">fan-out</emphasis>, <emphasis role="bold">scatter</emphasis>, and
-        <emphasis role="bold">diverge</emphasis> all describe the fact that multiple
+        <para><emphasis role="bold">fan-out</emphasis>, <emphasis
+        role="bold">scatter</emphasis>, and <emphasis
+        role="bold">diverge</emphasis> all describe the fact that multiple
         siblings are dependent on fewer parents.</para>
 
-        <para>The example shows how the <emphasis role="bold"> Job 2 and 3</emphasis>
-        nodes depend on <emphasis role="bold">Job 1</emphasis> node.</para>
+        <para>The example shows how the <emphasis role="bold"> Job 2 and
+        3</emphasis> nodes depend on <emphasis role="bold">Job 1</emphasis>
+        node.</para>
       </listitem>
 
       <listitem>
-        <para><emphasis role="bold">fan-in</emphasis>, <emphasis role="bold">gather</emphasis>,
-        <emphasis role="bold">join</emphasis>, and <emphasis role="bold">converge</emphasis> describe
-        how multiple siblings are merged into fewer dependent child
-        nodes.</para>
+        <para><emphasis role="bold">fan-in</emphasis>, <emphasis
+        role="bold">gather</emphasis>, <emphasis role="bold">join</emphasis>,
+        and <emphasis role="bold">converge</emphasis> describe how multiple
+        siblings are merged into fewer dependent child nodes.</para>
 
-        <para>The example shows how the <emphasis role="bold">Job 4</emphasis> node
-        depends on both <emphasis role="bold">Job 2 and Job 3</emphasis> nodes.</para>
+        <para>The example shows how the <emphasis role="bold">Job 4</emphasis>
+        node depends on both <emphasis role="bold">Job 2 and Job 3</emphasis>
+        nodes.</para>
       </listitem>
     </itemizedlist>
 
     <itemizedlist>
       <listitem>
-        <para><emphasis role="bold">serial execution</emphasis> implies that nodes are
-        dependent on one another, like pearls on a string.</para>
+        <para><emphasis role="bold">serial execution</emphasis> implies that
+        nodes are dependent on one another, like pearls on a string.</para>
       </listitem>
 
       <listitem>
-        <para><emphasis role="bold">parallel execution</emphasis> implies that nodes can
-        be executed in parallel</para>
+        <para><emphasis role="bold">parallel execution</emphasis> implies that
+        nodes can be executed in parallel</para>
       </listitem>
     </itemizedlist>
 
@@ -103,15 +106,16 @@
         linkend="api-java">Java</link>, <link linkend="api-perl">Perl</link>
         or <link linkend="api-python">Python</link>.</para>
 
-        <para><emphasis role="bold">Note:</emphasis> We
-        recommend this option.</para>
+        <para><emphasis role="bold">Note:</emphasis> We recommend this
+        option.</para>
       </listitem>
 
       <listitem>
         <para>Generating XML directly from your script.</para>
 
-        <para><emphasis role="bold">Note:</emphasis> This option should only be considered by advanced users who can
-        also read XML schema definitions.</para>
+        <para><emphasis role="bold">Note:</emphasis> This option should only
+        be considered by advanced users who can also read XML schema
+        definitions.</para>
       </listitem>
     </orderedlist>
 
@@ -192,11 +196,11 @@
       </listitem>
 
       <listitem>
-        <para><emphasis role="bold">Replica Location Service</emphasis>  </para>
+        <para><emphasis role="bold">Replica Location Service</emphasis></para>
 
         <itemizedlist>
           <listitem>
-            <para><emphasis role="bold">RLS</emphasis> </para>
+            <para><emphasis role="bold">RLS</emphasis></para>
           </listitem>
 
           <listitem>
@@ -206,7 +210,7 @@
       </listitem>
 
       <listitem>
-        <para><emphasis role="bold">MRC</emphasis> </para>
+        <para><emphasis role="bold">MRC</emphasis></para>
       </listitem>
     </orderedlist>
 
@@ -216,9 +220,10 @@
       <para>In this mode, Pegasus queries a file based replica catalog. The
       file format is a simple multicolumn format. It is neither
       transactionally safe, nor advised to use for production purposes in any
-      way. Multiple concurrent instances will conflict with each other. The site
-      attribute should be specified whenever possible. The attribute key for
-      the site attribute is <emphasis role="bold">"pool".</emphasis></para>
+      way. Multiple concurrent instances will conflict with each other. The
+      site attribute should be specified whenever possible. The attribute key
+      for the site attribute is <emphasis
+      role="bold">"pool".</emphasis></para>
 
       <programlisting>
 LFN PFN
@@ -228,11 +233,10 @@ LFN PFN a="b" [..]
       </programlisting>
 
       <para>The LFN may or may not be quoted. If it contains linear
-      whitespace, quotes, backslash or an equal sign, it must be
-      quoted and escaped. The same conditions apply for the PFN. The attribute
-      key-value pairs are separated by an equality sign without any
-      whitespaces. The value may be quoted. The LFN sentiments about
-      quoting apply.</para>
+      whitespace, quotes, backslash or an equal sign, it must be quoted and
+      escaped. The same conditions apply for the PFN. The attribute key-value
+      pairs are separated by an equality sign without any whitespaces. The
+      value may be quoted. The LFN sentiments about quoting apply.</para>
 
       <para>The file mode is the Default mode. In order to use the File mode
       you have to set the following properties</para>
@@ -255,14 +259,15 @@ LFN PFN a="b" [..]
       <title>JDBCRC</title>
 
       <para>In this mode, Pegasus queries a SQL based replica catalog that is
-      accessed via JDBC. The sql schema&amp;rsquor;s for this catalog can be found
-      at <emphasis role="bold">$PEGASUS_HOME/sql</emphasis> directory. You
-      will have to install the schema into either PostgreSQL or MySQL by
+      accessed via JDBC. The sql schema&amp;rsquor;s for this catalog can be
+      found at <emphasis role="bold">$PEGASUS_HOME/sql</emphasis> directory.
+      You will have to install the schema into either PostgreSQL or MySQL by
       running the appropriate commands to load the two scheams <emphasis
       role="bold">create-XX-init.sql</emphasis> and <emphasis
-      role="bold">create-XX-rc.sql</emphasis> where <emphasis role="bold">XX</emphasis> is either <emphasis
-      role="bold">my</emphasis> (for MySQL) or <emphasis
-      role="bold">pg</emphasis> (for PostgreSQL)</para>
+      role="bold">create-XX-rc.sql</emphasis> where <emphasis
+      role="bold">XX</emphasis> is either <emphasis role="bold">my</emphasis>
+      (for MySQL) or <emphasis role="bold">pg</emphasis> (for
+      PostgreSQL)</para>
 
       <para>To use JDBCRC, the user additionally needs to set the following
       properties</para>
@@ -303,9 +308,9 @@ LFN PFN a="b" [..]
         <title>RLS</title>
 
         <para>In this mode, Pegasus queries the central RLI to discover in
-        which LRC&amp;rsquor;s the mappings for a LFN reside. It then queries the
-        individual LRC&amp;rsquor;s for the PFN&amp;rsquor;s. To use this mode the
-        following properties need to be set:</para>
+        which LRC&amp;rsquor;s the mappings for a LFN reside. It then queries
+        the individual LRC&amp;rsquor;s for the PFN&amp;rsquor;s. To use this
+        mode the following properties need to be set:</para>
 
         <para><orderedlist>
             <listitem>
@@ -325,8 +330,9 @@ LFN PFN a="b" [..]
         <title>LRC</title>
 
         <para>This mode is availabe If the user does not want to query the RLI
-        (Replica Location Index), but instead wishes to directly query a single Local Replica Catalog.
-        To use the LRC mode the follow properties need to be set</para>
+        (Replica Location Index), but instead wishes to directly query a
+        single Local Replica Catalog. To use the LRC mode the follow
+        properties need to be set</para>
 
         <para><orderedlist>
             <listitem>
@@ -383,12 +389,13 @@ LFN PFN a="b" [..]
         </listitem>
       </itemizedlist>
 
-      <para>For example, to query two lrcs at the same
-      time specify the following:</para>
+      <para>For example, to query two lrcs at the same time specify the
+      following:</para>
 
       <para><itemizedlist>
           <listitem>
-            <para><emphasis role="bold">pegasus.catalog.replica.mrc.lrc1=LRC</emphasis></para>
+            <para><emphasis
+            role="bold">pegasus.catalog.replica.mrc.lrc1=LRC</emphasis></para>
           </listitem>
 
           <listitem>
@@ -407,52 +414,55 @@ LFN PFN a="b" [..]
             role="bold">pegasus.catalog.replica.mrc.lrc2.url=</emphasis><emphasis
             role="bold">&lt;url to the 2nd globus LRC&gt;</emphasis></para>
           </listitem>
-        </itemizedlist>
-       </para> 
+        </itemizedlist></para>
 
-        <para>In the above example,<emphasis role="bold">lrc1</emphasis> and <emphasis role="bold"> lrc2</emphasis> are any valid
-      identifier names and <emphasis role="bold">url</emphasis>  is the property key that needed to be
-      specified.</para>
+      <para>In the above example,<emphasis role="bold">lrc1</emphasis> and
+      <emphasis role="bold"> lrc2</emphasis> are any valid identifier names
+      and <emphasis role="bold">url</emphasis> is the property key that needed
+      to be specified.</para>
 
-    <section id="pegasus-rc-client">
-      <title>Replica Catalog Client pegasus-rc-client</title>
+      <section id="pegasus-rc-client">
+        <title>Replica Catalog Client pegasus-rc-client</title>
 
-      <para>The client used to interact with the Replica Catalogs is
-      pegasus-rc-client. The implementation that the client talks to is
-      configured using Pegasus properties.</para>
+        <para>The client used to interact with the Replica Catalogs is
+        pegasus-rc-client. The implementation that the client talks to is
+        configured using Pegasus properties.</para>
 
-      <para>Lets assume we create a file f.a in your home directory as shown
-      below.</para>
+        <para>Lets assume we create a file f.a in your home directory as shown
+        below.</para>
 
-      <screen><command>$ date &gt; $HOME/f.a </command></screen>
+        <screen><command>$ date &gt; $HOME/f.a </command></screen>
 
-      <para>We now need to register this file in the <emphasis
-      role="bold">File</emphasis> replica catalog located in <emphasis
-      role="bold">$HOME/rc</emphasis> using the pegasus-rc-client. Replace the
-      <emphasis role="bold">gsiftp://url</emphasis> with the appropriate
-      parameters for your grid site.</para>
+        <para>We now need to register this file in the <emphasis
+        role="bold">File</emphasis> replica catalog located in <emphasis
+        role="bold">$HOME/rc</emphasis> using the pegasus-rc-client. Replace
+        the <emphasis role="bold">gsiftp://url</emphasis> with the appropriate
+        parameters for your grid site.</para>
 
-      <screen><emphasis>$<command> rc-client -Dpegasus.catalog.replica=File -Dpegasus.catalog.replica.file=$HOME/rc insert \
+        <screen><emphasis>$<command> rc-client -Dpegasus.catalog.replica=File -Dpegasus.catalog.replica.file=$HOME/rc insert \
  f.a</command> <replaceable>gsiftp://somehost:port/path/to/file/f.a pool=local</replaceable></emphasis></screen>
 
-      <para>You may first want to verify that the file registeration is in the replica catalog. Since we are using a File catalog we can
-      look at the file <emphasis role="bold">$HOME/rc</emphasis> to view entries.</para>
+        <para>You may first want to verify that the file registeration is in
+        the replica catalog. Since we are using a File catalog we can look at
+        the file <emphasis role="bold">$HOME/rc</emphasis> to view
+        entries.</para>
 
-      <screen><command>$ cat $HOME/rc</command><computeroutput>
+        <screen><command>$ cat $HOME/rc</command><computeroutput>
     
 # file-based replica catalog: 2010-11-10T17:52:53.405-07:00
 f.a gsiftp://somehost:port/path/to/file/f.a pool=local</computeroutput></screen>
 
-      <para>The above line shows that entry for file <emphasis role="bold">f.a</emphasis> was made
-      correctly.</para>
+        <para>The above line shows that entry for file <emphasis
+        role="bold">f.a</emphasis> was made correctly.</para>
 
-      <para>You can also use the <emphasis role="bold">pegasus-rc-client</emphasis> to look for entries.</para>
+        <para>You can also use the <emphasis
+        role="bold">pegasus-rc-client</emphasis> to look for entries.</para>
 
-      <screen><command>$ pegasus-rc-client -Dpegasus.catalog.replica=File -Dpegasus.catalog.replica.file=$HOME/rc lookup LFN f.a</command><computeroutput>
+        <screen><command>$ pegasus-rc-client -Dpegasus.catalog.replica=File -Dpegasus.catalog.replica.file=$HOME/rc lookup LFN f.a</command><computeroutput>
 
 f.a gsiftp://somehost:port/path/to/file/f.a pool=local</computeroutput></screen>
+      </section>
     </section>
-  </section>
   </section>
 
   <section id="site">
@@ -460,23 +470,24 @@ f.a gsiftp://somehost:port/path/to/file/f.a pool=local</computeroutput></screen>
 
     <para>The Site Catalog describes the compute resources (which are often
     clusters) that we intend to run the workflow upon. A site is a homogeneous
-    part of a cluster that has at least a single GRAM gatekeeper with a <emphasis role="bold">jobmanager-fork</emphasis>
-     and<emphasis>jobmanager-&lt;scheduler&gt; </emphasis> interface and at least
-    one <emphasis role="bold">gridftp</emphasis> server along with a sh$ cat $HOME
-    ared file system. The GRAM gatekeeper
-    can be either WS GRAM or Pre-WS GRAM. A site can also be a condor pool or
-    glidein pool with a shared file system.</para>
+    part of a cluster that has at least a single GRAM gatekeeper with a
+    <emphasis role="bold">jobmanager-fork</emphasis>
+    and<emphasis>jobmanager-&lt;scheduler&gt; </emphasis> interface and at
+    least one <emphasis role="bold">gridftp</emphasis> server along with a sh$
+    cat $HOME ared file system. The GRAM gatekeeper can be either WS GRAM or
+    Pre-WS GRAM. A site can also be a condor pool or glidein pool with a
+    shared file system.</para>
 
     <para>Pegasus currently supports two implementation of the Site
     Catalog:</para>
 
     <orderedlist>
       <listitem>
-        <para> <emphasis role="bold">XML3</emphasis>(Default)</para>
+        <para><emphasis role="bold">XML3</emphasis>(Default)</para>
       </listitem>
 
       <listitem>
-        <para> <emphasis role="bold">XML</emphasis>(Deprecated)</para>
+        <para><emphasis role="bold">XML</emphasis>(Deprecated)</para>
       </listitem>
 
       <listitem>
@@ -496,7 +507,7 @@ f.a gsiftp://somehost:port/path/to/file/f.a pool=local</computeroutput></screen>
 
         <mediaobject>
           <imageobject>
-            <imagedata fileref="images/sc-3.0_p2.png"/>
+            <imagedata fileref="images/sc-3.0_p2.png" />
           </imageobject>
         </mediaobject>
       </figure>
@@ -537,40 +548,44 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
 
       <para><orderedlist>
           <listitem>
-            <para><emphasis role="bold">site</emphasis> - A site identifier.</para>
+            <para><emphasis role="bold">site</emphasis> - A site
+            identifier.</para>
           </listitem>
 
           <listitem>
-            <para><emphasis role="bold">replica-catalog</emphasis>  - URL for a local replica catalog (LRC) to
-            register your files in. Only used for RLS implementation of the
-            RC. This is optional</para>
+            <para><emphasis role="bold">replica-catalog</emphasis> - URL for a
+            local replica catalog (LRC) to register your files in. Only used
+            for RLS implementation of the RC. This is optional</para>
           </listitem>
 
           <listitem>
-            <para><emphasis role="bold">File Systems</emphasis>  - Info about filesystems mounted on the remote
-            clusters head node or worker nodes. It has several
-            configurations</para>
+            <para><emphasis role="bold">File Systems</emphasis> - Info about
+            filesystems mounted on the remote clusters head node or worker
+            nodes. It has several configurations</para>
 
             <itemizedlist>
               <listitem>
-                <para><emphasis role="bold">head-fs/scratch</emphasis>  - This describe the scratch file systems
-                (temporary for execution) available on the head node</para>
+                <para><emphasis role="bold">head-fs/scratch</emphasis> - This
+                describe the scratch file systems (temporary for execution)
+                available on the head node</para>
               </listitem>
 
               <listitem>
-                <para><emphasis role="bold">head-fs/storage</emphasis>  - This describes the storage file
-                systems (long term) available on the head node</para>
+                <para><emphasis role="bold">head-fs/storage</emphasis> - This
+                describes the storage file systems (long term) available on
+                the head node</para>
               </listitem>
 
               <listitem>
-                <para><emphasis role="bold">worker-fs/scratch</emphasis>  - This describe the scratch file
-                systems (temporary for execution) available on the worker
-                node</para>
+                <para><emphasis role="bold">worker-fs/scratch</emphasis> -
+                This describe the scratch file systems (temporary for
+                execution) available on the worker node</para>
               </listitem>
 
               <listitem>
-                <para><emphasis role="bold">worker-fs/storage</emphasis>  - This describes the storage file
-                systems (long term) available on the worker node</para>
+                <para><emphasis role="bold">worker-fs/storage</emphasis> -
+                This describes the storage file systems (long term) available
+                on the worker node</para>
               </listitem>
             </itemizedlist>
 
@@ -579,13 +594,13 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
 
             <itemizedlist>
               <listitem>
-                <para><emphasis role="bold"/> SHARED for shared file systems like NFS, LUSTRE
-                etc.</para>
+                <para><emphasis role="bold"></emphasis> SHARED for shared file
+                systems like NFS, LUSTRE etc.</para>
               </listitem>
 
               <listitem>
-                <para><emphasis role="bold"/> LOCAL for local file systems (local to the
-                node/machine)</para>
+                <para><emphasis role="bold"></emphasis> LOCAL for local file
+                systems (local to the node/machine)</para>
               </listitem>
             </itemizedlist>
 
@@ -600,9 +615,9 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
           </listitem>
 
           <listitem>
-            <para><emphasis role="bold">arch,os,osrelease,osversion, glibc</emphasis> - The
-            arch/os/osrelease/osversion/glibc of the site. OSRELEASE,
-            OSVERSION and GLIBC are optional</para>
+            <para><emphasis role="bold">arch,os,osrelease,osversion,
+            glibc</emphasis> - The arch/os/osrelease/osversion/glibc of the
+            site. OSRELEASE, OSVERSION and GLIBC are optional</para>
 
             <para>ARCH can have one of the following values X86, X86_64,
             SPARCV7, SPARCV9, AIX, PPC.</para>
@@ -613,8 +628,8 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
           </listitem>
 
           <listitem>
-            <para><emphasis role="bold">Profiles</emphasis>  - One or many profiles can be attached to a
-            pool.</para>
+            <para><emphasis role="bold">Profiles</emphasis> - One or many
+            profiles can be attached to a pool.</para>
 
             <para>One example is the environments to be set on a remote
             pool.</para>
@@ -686,28 +701,31 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
   &lt;/site&gt;
 &lt;/sitecatalog&gt;</programlisting><orderedlist>
           <listitem>
-            <para><emphasis role="bold">site</emphasis> - A site identifier.</para>
+            <para><emphasis role="bold">site</emphasis> - A site
+            identifier.</para>
           </listitem>
 
           <listitem>
-            <para><emphasis role="bold">lrc</emphasis> - URL for a local replica catalog (LRC) to register your
-            files in. Only used for RLS implementation of the RC</para>
+            <para><emphasis role="bold">lrc</emphasis> - URL for a local
+            replica catalog (LRC) to register your files in. Only used for RLS
+            implementation of the RC</para>
           </listitem>
 
           <listitem>
-            <para><emphasis role="bold">workdirectory</emphasis> - A remote working directory (Should be on a
-            shared file system)</para>
+            <para><emphasis role="bold">workdirectory</emphasis> - A remote
+            working directory (Should be on a shared file system)</para>
           </listitem>
 
           <listitem>
-            <para><emphasis role="bold">gridftp</emphasis> - A URL prefix for a remote storage location. and a
-            path to the storage location</para>
+            <para><emphasis role="bold">gridftp</emphasis> - A URL prefix for
+            a remote storage location. and a path to the storage
+            location</para>
           </listitem>
 
           <listitem>
-            <para><emphasis role="bold">jobmanager</emphasis> - Url to the jobmanager entrypoints for the
-            remote grid. Different universes are supported which map to
-            different batch jobmanagers.</para>
+            <para><emphasis role="bold">jobmanager</emphasis> - Url to the
+            jobmanager entrypoints for the remote grid. Different universes
+            are supported which map to different batch jobmanagers.</para>
 
             <para>"vanilla" for compute jobs and "transfer" for transfer jobs
             are mandatory. Generally a transfer universe should map to the
@@ -715,13 +733,14 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
           </listitem>
 
           <listitem>
-            <para><emphasis role="bold">gridlaunch</emphasis> - Path to the remote kickstart tool (provenance
-            tracking)</para>
+            <para><emphasis role="bold">gridlaunch</emphasis> - Path to the
+            remote kickstart tool (provenance tracking)</para>
           </listitem>
 
           <listitem>
-            <para><emphasis role="bold">sysinfo</emphasis> - The arch/os/osversion/glibc of the site. The
-            format is ARCH::OS:OSVER:GLIBC where OSVERSION and GLIBC are
+            <para><emphasis role="bold">sysinfo</emphasis> - The
+            arch/os/osversion/glibc of the site. The format is
+            ARCH::OS:OSVER:GLIBC where OSVERSION and GLIBC are
             optional.</para>
 
             <para>ARCH can have one of the following values INTEL32, INTEL64,
@@ -731,8 +750,8 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
           </listitem>
 
           <listitem>
-            <para><emphasis role="bold">Profiles</emphasis> - One or many profiles can be attached to a
-            pool.</para>
+            <para><emphasis role="bold">Profiles</emphasis> - One or many
+            profiles can be attached to a pool.</para>
 
             <para>Profiles such as the environments to be set on a remote
             pool.</para>
@@ -800,26 +819,30 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
 
       <orderedlist>
         <listitem>
-          <para><emphasis role="bold">site</emphasis> - A site identifier.</para>
+          <para><emphasis role="bold">site</emphasis> - A site
+          identifier.</para>
         </listitem>
 
         <listitem>
-          <para><emphasis role="bold">lrc</emphasis> - URL for a local replica catalog (LRC) to register your
-          files in. Only used for RLS implementation of the RC</para>
+          <para><emphasis role="bold">lrc</emphasis> - URL for a local replica
+          catalog (LRC) to register your files in. Only used for RLS
+          implementation of the RC</para>
         </listitem>
 
         <listitem>
-          <para><emphasis role="bold">workdir</emphasis> - A remote working directory (Should be on a shared
-          file system)</para>
+          <para><emphasis role="bold">workdir</emphasis> - A remote working
+          directory (Should be on a shared file system)</para>
         </listitem>
 
         <listitem>
-          <para><emphasis role="bold">gridftp</emphasis> gridftp - A URL prefix for a remote storage location.</para>
+          <para><emphasis role="bold">gridftp</emphasis> gridftp - A URL
+          prefix for a remote storage location.</para>
         </listitem>
 
         <listitem>
-          <para><emphasis role="bold">universe</emphasis> - Different universes are supported which map to
-          different batch jobmanagers.</para>
+          <para><emphasis role="bold">universe</emphasis> - Different
+          universes are supported which map to different batch
+          jobmanagers.</para>
 
           <para>"vanilla" for compute jobs and "transfer" for transfer jobs
           are mandatory. Generally a transfer universe should map to the fork
@@ -827,14 +850,14 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
         </listitem>
 
         <listitem>
-          <para><emphasis role="bold">gridlaunch</emphasis> - Path to the remote kickstart tool (provenance
-          tracking)</para>
+          <para><emphasis role="bold">gridlaunch</emphasis> - Path to the
+          remote kickstart tool (provenance tracking)</para>
         </listitem>
 
         <listitem>
-          <para><emphasis role="bold">sysinfo</emphasis> - The arch/os/osversion/glibc of the site. The format
-          is ARCH::OS:OSVER:GLIBC where OSVERSION and GLIBC are
-          optiona.</para>
+          <para><emphasis role="bold">sysinfo</emphasis> - The
+          arch/os/osversion/glibc of the site. The format is
+          ARCH::OS:OSVER:GLIBC where OSVERSION and GLIBC are optiona.</para>
 
           <para>ARCH can have one of the following values INTEL32, INTEL64,
           SPARCV7, SPARCV9, AIX, AMD64. OS can have one of the following
@@ -843,15 +866,16 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
         </listitem>
 
         <listitem>
-          <para><emphasis role="bold">Profiles</emphasis> - One or many profiles can be attached to a
-          pool.</para>
+          <para><emphasis role="bold">Profiles</emphasis> - One or many
+          profiles can be attached to a pool.</para>
 
           <para>Profiles such as the environments to be set on a remote
           pool.</para>
         </listitem>
       </orderedlist>
 
-      <para>To use this format you need to set the following properties:</para>
+      <para>To use this format you need to set the following
+      properties:</para>
 
       <para><orderedlist>
           <listitem>
@@ -881,7 +905,9 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
       <para>Pegasus 3.0 by default now parses Site Catalog format conforming
       to the SC schema 3.0 ( XML3 ) available <ulink role=""
       url="http://pegasus.isi.edu/wms/docs/schemas/dax-3.2/dax-3.2.xsd"
-      userlevel="">here</ulink> and is explained in detail in the Catalog Properties section of <link linkend="running_workflows">Running Workflows</link>.</para>
+      userlevel="">here</ulink> and is explained in detail in the Catalog
+      Properties section of <link linkend="running_workflows">Running
+      Workflows</link>.</para>
 
       <para>Pegasus 3.0 comes with a pegasus-sc-converter that will convert
       users old site catalog ( XML ) to the XML3 format. Sample usage is given
@@ -988,33 +1014,33 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
 
       <para><orderedlist>
           <listitem>
-            <para><emphasis role="bold">tr</emphasis> tr - A transformation identifier. (Normally a
-            Namespace::Name:Version.. The Namespace and Version are
-            optional.)</para>
+            <para><emphasis role="bold">tr</emphasis> tr - A transformation
+            identifier. (Normally a Namespace::Name:Version.. The Namespace
+            and Version are optional.)</para>
           </listitem>
 
           <listitem>
-            <para><emphasis role="bold">pfn</emphasis> - URL or file path for the location of the executable.
-            The pfn is a file path if the transformation is of type INSTALLED
-            and generally a url (file:/// or http:// or gridftp://) if of type
-            STAGEABLE</para>
+            <para><emphasis role="bold">pfn</emphasis> - URL or file path for
+            the location of the executable. The pfn is a file path if the
+            transformation is of type INSTALLED and generally a url (file:///
+            or http:// or gridftp://) if of type STAGEABLE</para>
           </listitem>
 
           <listitem>
-            <para><emphasis role="bold">site</emphasis> - The site identifier for the site where the
-            transformation is available</para>
+            <para><emphasis role="bold">site</emphasis> - The site identifier
+            for the site where the transformation is available</para>
           </listitem>
 
           <listitem>
-            <para><emphasis role="bold">type</emphasis> - The type of transformation. Whether it is Iinstalled
-            ("INSTALLED") on the remote site or is availabe to stage
-            ("STAGEABLE").</para>
+            <para><emphasis role="bold">type</emphasis> - The type of
+            transformation. Whether it is Iinstalled ("INSTALLED") on the
+            remote site or is availabe to stage ("STAGEABLE").</para>
           </listitem>
 
           <listitem>
-            <para><emphasis role="bold">arch, os, osrelease, osversion</emphasis> - The
-            arch/os/osrelease/osversion of the transformation. osrelease and
-            osversion are optional.</para>
+            <para><emphasis role="bold">arch, os, osrelease,
+            osversion</emphasis> - The arch/os/osrelease/osversion of the
+            transformation. osrelease and osversion are optional.</para>
 
             <para>ARCH can have one of the following values x86, x86_64,
             sparcv7, sparcv9, ppc, aix. The default value for arch is
@@ -1025,9 +1051,9 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
           </listitem>
 
           <listitem>
-            <para><emphasis role="bold">Profiles</emphasis> - One or many profiles can be attached to a
-            transformation for all sites or to a transformation on a
-            particular site.</para>
+            <para><emphasis role="bold">Profiles</emphasis> - One or many
+            profiles can be attached to a transformation for all sites or to a
+            transformation on a particular site.</para>
           </listitem>
         </orderedlist></para>
 
@@ -1070,17 +1096,19 @@ site1 sys::date:1.0 /usr/bin/date  INSTALLED INTEL32::LINUX:FC4.2:3.6 ENV::PATH=
 
       <orderedlist>
         <listitem>
-          <para><emphasis role="bold">site</emphasis> - A site identifier.</para>
+          <para><emphasis role="bold">site</emphasis> - A site
+          identifier.</para>
         </listitem>
 
         <listitem>
-          <para><emphasis role="bold">logicaltr</emphasis> - The logical transformation name. The format is
-          NAMESPACE::NAME:VERSION where NAMESPACE and NAME are
-          optional.</para>
+          <para><emphasis role="bold">logicaltr</emphasis> - The logical
+          transformation name. The format is NAMESPACE::NAME:VERSION where
+          NAMESPACE and NAME are optional.</para>
         </listitem>
 
         <listitem>
-          <para><emphasis role="bold">physicaltr</emphasis> - The physical transformation path or URL.</para>
+          <para><emphasis role="bold">physicaltr</emphasis> - The physical
+          transformation path or URL.</para>
 
           <para>If the transformation type is INSTALLED then it needs to be an
           absolute path to the executable. If the type is STAGEABLE then the
@@ -1088,25 +1116,26 @@ site1 sys::date:1.0 /usr/bin/date  INSTALLED INTEL32::LINUX:FC4.2:3.6 ENV::PATH=
         </listitem>
 
         <listitem>
-          <para><emphasis role="bold">type</emphasis>  - The type of transformation. Can have on of two
-          values</para>
+          <para><emphasis role="bold">type</emphasis> - The type of
+          transformation. Can have on of two values</para>
 
           <itemizedlist>
             <listitem>
-              <para><emphasis role="bold">INSTALLED</emphasis>: This means that the transformation is installed
-              on the remote site</para>
+              <para><emphasis role="bold">INSTALLED</emphasis>: This means
+              that the transformation is installed on the remote site</para>
             </listitem>
 
             <listitem>
-              <para><emphasis role="bold">STAGEABLE</emphasis>: This means that the transformation is available
-              as a static binary and can be staged to a remote site.</para>
+              <para><emphasis role="bold">STAGEABLE</emphasis>: This means
+              that the transformation is available as a static binary and can
+              be staged to a remote site.</para>
             </listitem>
           </itemizedlist>
         </listitem>
 
         <listitem>
-          <para><emphasis role="bold">system</emphasis> - The system for which the transformation is
-          compiled.</para>
+          <para><emphasis role="bold">system</emphasis> - The system for which
+          the transformation is compiled.</para>
 
           <para>The formation of the sytem is ARCH::OS:OSVERSION:GLIBC where
           the GLIBC and OS VERSION are optional. ARCH can have one of the
@@ -1116,9 +1145,9 @@ site1 sys::date:1.0 /usr/bin/date  INSTALLED INTEL32::LINUX:FC4.2:3.6 ENV::PATH=
         </listitem>
 
         <listitem>
-          <para><emphasis role="bold">Profiles</emphasis> - The profiles associated with the transformation.
-          For indepth information about profiles and their priorities read the
-          Profile Guide.</para>
+          <para><emphasis role="bold">Profiles</emphasis> - The profiles
+          associated with the transformation. For indepth information about
+          profiles and their priorities read the Profile Guide.</para>
 
           <para>The format for profiles is NS::KEY="VALUE" where NS is the
           namespace of the profile e.g. Pegasus,condor,DAGMan,env,globus. The
@@ -1228,17 +1257,19 @@ Output Filename: /dev/fd/1</computeroutput></screen>
 
       <para>Now we need to map all 3 transformations onto the "keg"
       executable. We place these mappings in our File transformation catalog
-      for site clus1. </para>
+      for site clus1.</para>
 
-      <note><para>In earlier version of Pegasus users had to define entries
-      for Pegasus executables such as transfer, replica client, dirmanager, etc on
-      each site as well as site "local". This is no longer required. Pegasus versions
-      2.0 and later automatically pick up the paths for these binaries from
-      the environment profile PEGASUS_HOME set in the site catalog for each
-      site.</para>
+      <note>
+        <para>In earlier version of Pegasus users had to define entries for
+        Pegasus executables such as transfer, replica client, dirmanager, etc
+        on each site as well as site "local". This is no longer required.
+        Pegasus versions 2.0 and later automatically pick up the paths for
+        these binaries from the environment profile PEGASUS_HOME set in the
+        site catalog for each site.</para>
 
-      <para>A single entry needs to be on one line. The above example is
-      just formatted for convenience.</para> </note>
+        <para>A single entry needs to be on one line. The above example is
+        just formatted for convenience.</para>
+      </note>
 
       <para>Alternatively you can also use the pegasus-tc-client to add
       entries to any implementation of the transformation catalog. The
@@ -1263,7 +1294,7 @@ Output Filename: /dev/fd/1</computeroutput></screen>
 clus1    black::analyze:1.0    gsiftp://clus1.com/opt/nfs/vdt/pegasus/bin/keg
                 STAGEABLE    INTEL32::LINUX</computeroutput></screen>
 
-      <para/>
+      <para></para>
     </section>
 
     <section>
@@ -1294,13 +1325,9 @@ clus1    black::analyze:1.0    gsiftp://clus1.com/opt/nfs/vdt/pegasus/bin/keg
 
         <listitem>
           <para>point pegasus.catalog.transformation.file to the converted
-          transformation catalog </para>
+          transformation catalog</para>
         </listitem>
       </orderedlist>
     </section>
   </section>
 </chapter>
-
-
-
-

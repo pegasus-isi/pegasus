@@ -379,9 +379,7 @@ requirements = ((GLIDEIN_Entry_Name == "ISIViz") || (TARGET.Pegasus_Site == "ISI
 
 </programlisting>
 
-      <para/>
+      <para></para>
     </section>
   </section>
 </chapter>
-
-
