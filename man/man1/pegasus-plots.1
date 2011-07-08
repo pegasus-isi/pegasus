@@ -19,23 +19,30 @@
 .\"
 .TH "pegasus-plots" "1" "1.0.0" "PEGASUS Workflow Planner"
 .SH "NAME"
-pegasus-plots \- A tool to generate graphs and charts to visualize workflow execution.
+pegasus-plots \- A tool to generate graphs and charts to visualize workflow run.
 
 .SH "SYNOPSIS"
 .B pegasus-plots <submit directory>
+[\-h|\-\-help]
 [\-o|\-\-output <output directory>] 
-[\-G|\-\-gnatt\-chart\-title workflow execution Gnatt chart title] [\-H|\-\-host\-chart\-title host over time chart title]
-[\-S|\-\-use\-site site information handle]
-[\-K|\-\-kickstart]
-[\-O|\-\-omit]
-[\-m|\-\-monitord] 
-[\-k|\-\-keep]
-[\-v|\-\-verbose] 
-[\-h|\-\-help] 
+[\-c|\-\-conf <property file path>]
+[\-m|\-\-max_graph_nodes max_value]
+[\-p|\-\-plotting_level level_str]
+[\-l|\-\-log_level level_str] 
+
 .SH "DESCRIPTION"
-pegasus-plots generates graphs and charts to visualize workflow execution. It generates workflow execution Gantt chart, job over time chart, dax and dag graph. It uses executables \'ploticus\',\'convert\' and \'dot\' to generate graphs and charts. Tool looks for these executable in your path and generates graphs and charts based on it\'s availability .
+pegasus-plots generates graphs and charts to visualize workflow run. It generates workflow execution Gantt chart, job over time chart, dax and dag graph. It uses executable \'dot\' to generate graphs. pegasus-plots looks for the executable in your path and generates graphs based on it\'s availability .
 
 .SH "ARGUMENTS"
+
+.TP
+.B \-h
+.PD 0
+.TP
+.PD 1
+.B \-\-help 
+Prints a usage summary with all the available command-line options.
+
 .TP
 .B \-o <output directory>
 .PD 0
@@ -45,93 +52,67 @@ pegasus-plots generates graphs and charts to visualize workflow execution. It ge
 Writes the output to the given directory 
 
 .TP
-.B \-G
+.B \-c
 .PD 0
 .TP
 .PD 1
-.B \-\-gnatt\-chart\-title  workflow execution Gnatt chart title
-The title of the  Gantt workflow execution chart.
-
-
-
-.TP
-.B \-H
-.PD 0
-.TP
-.PD 1
-.B \-\-host\-chart\-title  host over time chart title
-The title of the host over time chart.
-
-
-.TP
-.B \-S
-.PD 0
-.TP
-.PD 1
-.B \-\-use\-site  site information handle
-Specifies where to get the site information.
-.IP
-Valid values for the use\-site are
-.B 0: use gatekeeper host (default)
-.B  1: use site handle
-and
-.B 2:use reported workernode handle
-
-.TP
-.B \-K
-.PD 0
-.TP
-.PD 1
-.B \-\-kickstart
-Parallelize host over time chart with kickstart intervals, default is Condor.
-
-.TP
-.B \-O
-.PD 0
-.TP
-.PD 1
-.B \-\-omit
-Omit the gridstart gray boxes from the host over time chart, default draw.
+.B \-\-conf  <property file path>
+The properties file to use. This option overrides all other property files.
 
 .TP
 .B \-m
 .PD 0
 .TP
 .PD 1
-.B \-\-monitord
-Invokes pegasus-monitord beforre running pegasus-plots.
+.B \-\-max_graph_nodes  max_value
+ Maximum limit on the number of tasks/jobs in the dax/dag upto which the graph should be generated;The default value is 100
+
 
 .TP
-.B \-k
+.B \-p
 .PD 0
 .TP
 .PD 1
-.B \-\-keep
-Keeps the log created by the pegasus-plots run.
+.B \-\-plotting_level  level_str
+Specifies the charts and graphs to generate. Valid levels are: all,all_charts, all_graphs, dax_graph,dag_graph,gantt_chart,host_chart; Default is all_charts.
+Valid values for the plotting_level are
+.RS
+.B all : 
+generates all charts and graphs
+.RE
+.RS
+.B all_charts : 
+generates all charts
+.RE
+.RS
+.B all_graphs : 
+generates all graphs
+.RE
+.RS
+.B dax_graph : 
+generates dax graph
+.RE
+.RS
+.B dag_graph : 
+generates dag graph
+.RE
+.RS
+.B gantt_chart : 
+generates the workflow execution Gantt chart
+.RE
+.RS
+.B host_chart : 
+generates the host over time chart
+.RE
 
 .TP
-.B \-v
+.B \-l
 .PD 0
 .TP
 .PD 1
-.B \-\-verbose
-Enters the verbose mode.
+.B \-\-log_level level_str
+Specifies the log level.Valid levels are: debug,info,warning,error; Default is info.
 
-.TP
-.B \-h
-.PD 0
-.TP
-.PD 1
-.B \-\-help
-Displays all the options to the
-.B pegasus-plots
-command.
-
-.SH "ENVIRONMENT VARIABLES"
-.TP
-.B PEGASUS_HOME
-points to the installation base directory of your the PEGASUS execution
-environment. 
 
 .SH "EXAMPLE"
 .TP

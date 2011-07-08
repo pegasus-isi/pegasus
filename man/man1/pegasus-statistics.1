@@ -19,20 +19,29 @@
 .\"
 .TH "pegasus-statistics" "1" "1.0.0" "PEGASUS Workflow Planner"
 .SH "NAME"
-pegasus-statistics \- A tool to generate statistics about the workflow execution.
+pegasus-statistics \- A tool to generate statistics about the workflow run.
 
 .SH "SYNOPSIS"
 .B pegasus-statistics <submit directory>
+[\-h|\-\-help]
 [\-o|\-\-output <output directory>] 
-[\-m|\-\-monitord]
-[\-c|\-\-condor]
-[\-k|\-\-keep]
-[\-v|\-\-verbose] 
-[\-h|\-\-help] 
+[\-c|\-\-conf <property file path>]
+[\-p|\-\-statistics_level level_str]
+[\-l|\-\-log_level level_str] 
+
 .SH "DESCRIPTION"
-The pegasus-statistics generates statistics about the workflow execution like job's run time, condor queue delay etc. 
+The pegasus-statistics generates statistics about the workflow run like total jobs/tasks/sub workflows ran , how many succeeded/failed etc.It generates job instance statistics like run time, condor queue delay etc. It also generates invocation statistics information grouped by transformation name. 
 
 .SH "ARGUMENTS"
+
+.TP
+.B \-h
+.PD 0
+.TP
+.PD 1
+.B \-\-help 
+Prints a usage summary with all the available command-line options.
+
 .TP
 .B \-o <output directory>
 .PD 0
@@ -42,52 +51,53 @@ The pegasus-statistics generates statistics about the workflow execution like jo
 Writes the output to the given directory 
 
 .TP
-.B \-m
-.PD 0
-.TP
-.PD 1
-.B \-\-monitord
-Invokes pegasus-monitord beforre running pegasus-statistics.
-
-.TP
 .B \-c
 .PD 0
 .TP
 .PD 1
-.B \-\-condor
-Specifies a pure condor run with no GRID_SUBMIT events
+.B \-\-conf  <property file path>
+The properties file to use. This option overrides all other property files.
 
 .TP
-.B \-k
+.B \-p
 .PD 0
 .TP
 .PD 1
-.B \-\-keep
-Keeps the log created by the pegasus-statistics run.
+.B \-\-statistics_level  level_str
+Specifies the statistics information to generate. Valid levels are:all,summary,wf_stats,jb_stats,tf_stats Default is summary.
+Valid values for the statistics_level are
+.RS
+.B all : 
+generates all the statistics information
+.RE
+.RS
+.B summary : 
+generates the workflow statistics summary .In case of hierarchical workflow the summary is across all sub workflows.
+.RE
+.RS
+.B wf_stats : 
+generates the workflow statistics information of each individual workflow. In case of hierarchical workflow the workflow statistics is created for each sub workflows.
+.RE
+.RS
+.B jb_stats : 
+generates the job statistics information of each individual workflow.In case of hierarchical workflow the job statistics is created for each sub workflows.
+.RE
+.RS
+.B tf_stats : 
+generates the invocation statistics information of each individual workflow grouped by transformation name .In case of hierarchical workflow the transformation statistics is created for each sub workflows.
+.RE
+.RS
+.B host_chart : 
+generates the host over time chart
+.RE
 
 .TP
-.B \-v
+.B \-l
 .PD 0
 .TP
 .PD 1
-.B \-\-verbose
-Enters the verbose mode.
-
-.TP
-.B \-h
-.PD 0
-.TP
-.PD 1
-.B \-\-help
-Displays all the options to the
-.B pegasus-statistics
-command.
-
-.SH "ENVIRONMENT VARIABLES"
-.TP
-.B PEGASUS_HOME
-points to the installation base directory of your the PEGASUS execution
-environment. 
+.B \-\-log_level level_str
+Specifies the log level.Valid levels are: debug,info,warning,error; Default is info.
 
 .SH "EXAMPLE"
 .TP
