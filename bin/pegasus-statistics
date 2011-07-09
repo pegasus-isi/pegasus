@@ -30,7 +30,7 @@ calc_wf_stats = False
 calc_wf_summary = False
 calc_jb_stats = False
 calc_tf_stats = False
-
+NEW_LINE_STR ="\n"
 
 
 transformation_stats_col_name =["Transformation","Count","Succeeded" , "Failed", "Min","Max","Mean","Total"]
@@ -252,42 +252,54 @@ def print_workflow_details(output_db_url , wf_uuid , output_dir):
 	if calc_tf_stats:
 		transformation_stats_file = os.path.join(output_dir, logical_transformation_statistics_file_name)
 		write_to_file(transformation_stats_file, "w" , formatted_transformation_stats_legends())
-	
-	for sub_wf_uuid in wf_uuid_list:
-		individual_workflow_stats = StampedeStatistics(output_db_url , False)
- 		individual_workflow_stats.initialize(sub_wf_uuid)
- 		
- 		if calc_jb_stats:
- 			individual_workflow_stats.set_job_filter('all')
- 			content = print_individual_wf_job_stats(individual_workflow_stats , sub_wf_uuid)
- 			write_to_file(jobs_stats_file, "a" , content)
-		if calc_tf_stats:
-			individual_workflow_stats.set_job_filter('all')
-			content = print_wf_transformation_stats(individual_workflow_stats , sub_wf_uuid)
-			write_to_file(transformation_stats_file, "a" , content)
-		if calc_wf_stats:
-			individual_workflow_stats.set_job_filter('all')
-			content = print_individual_workflow_stats(individual_workflow_stats , sub_wf_uuid)
-			write_to_file(wf_stats_file, "a" , content)
-	print "SUMMARY".center(100, '*')
+	if calc_jb_stats or calc_tf_stats or calc_wf_stats:
+		for sub_wf_uuid in wf_uuid_list:
+			individual_workflow_stats = StampedeStatistics(output_db_url , False)
+			individual_workflow_stats.initialize(sub_wf_uuid)
+			logger.info("Generating statistics information about the workflow " + str(sub_wf_uuid) +" ... ")
+			if calc_jb_stats:
+				logger.debug("Generating job instance statistics information about the workflow " + str(sub_wf_uuid) +" ... ")
+				individual_workflow_stats.set_job_filter('all')
+				content = print_individual_wf_job_stats(individual_workflow_stats , sub_wf_uuid)
+				write_to_file(jobs_stats_file, "a" , content)
+			if calc_tf_stats:
+				logger.debug("Generating invocation statistics information about the workflow " + str(sub_wf_uuid) +" ... ")
+				individual_workflow_stats.set_job_filter('all')
+				content = print_wf_transformation_stats(individual_workflow_stats , sub_wf_uuid)
+				write_to_file(transformation_stats_file, "a" , content)
+			if calc_wf_stats:
+				logger.debug("Generating workflow statistics information about the workflow " + str(sub_wf_uuid)  +" ... ")
+				individual_workflow_stats.set_job_filter('all')
+				content = print_individual_workflow_stats(individual_workflow_stats , sub_wf_uuid)
+				write_to_file(wf_stats_file, "a" , content)
+	stats_output =  NEW_LINE_STR+ "SUMMARY".center(100, '*')
+	stats_output +=  NEW_LINE_STR
 	if calc_wf_summary:	
-		print formatted_wf_summary_legends()
-		print_workflow_summary(expanded_workflow_stats)
+		stats_output += formatted_wf_summary_legends()
+		stats_output +=  NEW_LINE_STR
+		logger.info("Generating workflow summary ... " )
+		stats_output += print_workflow_summary(expanded_workflow_stats)
 	if calc_wf_stats:
+		stats_output +=  NEW_LINE_STR
 		content = print_individual_workflow_stats(expanded_workflow_stats , "Total")
 		write_to_file(wf_stats_file, "a" , content)
-		print "Workflow execution statistics     : "
-		print wf_stats_file +"\n"
+		stats_output += "Workflow execution statistics     : "
+		stats_output += wf_stats_file +"\n"
 	if calc_jb_stats:
-		print "Job statistics                    : "
-		print jobs_stats_file +"\n"
+		stats_output +=  NEW_LINE_STR
+		stats_output += "Job statistics                    : "
+		stats_output += jobs_stats_file +"\n"
 	if calc_tf_stats:
+		stats_output +=  NEW_LINE_STR
 		expanded_workflow_stats.set_job_filter('all')
 		content = print_wf_transformation_stats(expanded_workflow_stats , "All")
 		write_to_file(transformation_stats_file, "a" , content)
-		print "Logical transformation statistics : "
-		print transformation_stats_file +"\n"
-	print "".center(100, '*')
+		stats_output += "Logical transformation statistics : "
+		stats_output += transformation_stats_file +"\n"
+	
+	stats_output += NEW_LINE_STR
+	stats_output += "".center(100, '*')
+	print stats_output
 	return
 
 
@@ -334,27 +346,34 @@ def print_workflow_summary(workflow_stats ):
 	total_sub_wfs_retries = workflow_stats.get_total_jobs_retries()
 	total_sub_wfs_tries =  total_succeeded_sub_wfs + total_failed_sub_wfs + total_sub_wfs_retries
 	
-	print "".center(sum(worklow_summary_col_size), '-')
-	print print_row(worklow_summary_col_name , worklow_summary_col_size)
+	summary_str = "".center(sum(worklow_summary_col_size), '-')
+	summary_str += NEW_LINE_STR
+	summary_str+= print_row(worklow_summary_col_name , worklow_summary_col_size)
 	
 	content = ["Tasks " , convert_to_str(total_succeeded_tasks), convert_to_str(total_failed_tasks), convert_to_str(total_unsubmitted_tasks) ,convert_to_str(total_tasks),"||",convert_to_str(total_task_retries), convert_to_str(total_invocations) ]
-	print print_row(content, worklow_summary_col_size)
+	summary_str += NEW_LINE_STR
+	summary_str+= print_row(content, worklow_summary_col_size)
 	
-	content =[ "Jobs" , convert_to_str(total_succeeded_jobs), convert_to_str(total_failed_jobs), convert_to_str(total_unsubmitted_jobs) , convert_to_str(total_jobs) ,"||",str(total_job_retries), convert_to_str(total_job_instance_retries) ]		
-	print print_row(content, worklow_summary_col_size)
+	content =[ "Jobs" , convert_to_str(total_succeeded_jobs), convert_to_str(total_failed_jobs), convert_to_str(total_unsubmitted_jobs) , convert_to_str(total_jobs) ,"||",str(total_job_retries), convert_to_str(total_job_instance_retries) ]
+	summary_str += NEW_LINE_STR		
+	summary_str+= print_row(content, worklow_summary_col_size)
 	
-	content =[ "Sub Workflows" , convert_to_str(total_succeeded_sub_wfs), convert_to_str(total_failed_sub_wfs), convert_to_str(total_unsubmitted_sub_wfs) , convert_to_str(total_sub_wfs) ,"||",str(total_sub_wfs_retries), convert_to_str(total_sub_wfs_tries) ]		
-	print print_row(content, worklow_summary_col_size)
-	
-	print "".center(sum(worklow_summary_col_size), '-')
+	content =[ "Sub Workflows" , convert_to_str(total_succeeded_sub_wfs), convert_to_str(total_failed_sub_wfs), convert_to_str(total_unsubmitted_sub_wfs) , convert_to_str(total_sub_wfs) ,"||",str(total_sub_wfs_retries), convert_to_str(total_sub_wfs_tries) ]
+	summary_str += NEW_LINE_STR		
+	summary_str+= print_row(content, worklow_summary_col_size)
+	summary_str += NEW_LINE_STR
+	summary_str+= "".center(sum(worklow_summary_col_size), '-')
 	
 	workflow_states_list = workflow_stats.get_workflow_states()
 	workflow_wall_time = stats_utils.get_workflow_wall_time(workflow_states_list)
-		
-	print "\nWorkflow wall time                               : " + format_seconds(workflow_wall_time) +"\n"
-	print "Workflow cumulative job wall time                : " + format_seconds(workflow_stats.get_workflow_cum_job_wall_time()) +"\n"
-	print "Cumulative job walltime as seen from submit side : " + format_seconds(workflow_stats.get_submit_side_job_wall_time()) +"\n"
+	summary_str += NEW_LINE_STR	
+	summary_str+= "\nWorkflow wall time                               : " + format_seconds(workflow_wall_time) +"\n"
+	summary_str += NEW_LINE_STR
+	summary_str+= "Workflow cumulative job wall time                : " + format_seconds(workflow_stats.get_workflow_cum_job_wall_time()) +"\n"
+	summary_str += NEW_LINE_STR
+	summary_str+= "Cumulative job walltime as seen from submit side : " + format_seconds(workflow_stats.get_submit_side_job_wall_time()) +"\n"
 	
+	return summary_str
 
 def print_row(content , format):
 	"""
