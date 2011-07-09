@@ -86,7 +86,7 @@ def generate_dag_graph(wf_info, output_dir):
 		dot_png_cmd = utils.find_exec("dot")
 		if dot_png_cmd is None:
 			logger.warn("dot is not present . Unable to create chart in png format. ")
-			return
+			return None
 		dot_png_cmd +=" -Tpng -o" + png_file_path
 		dot_png_cmd += " "+ dot_file_path
 		logger.info("Executing command :\n"  + dot_png_cmd)
@@ -122,6 +122,7 @@ def generate_dax_graph(wf_info, output_dir):
 		dot_png_cmd = utils.find_exec("dot")
 		if dot_png_cmd is None:
 			logger.warn("dot is not present . Unable to create chart in png format. ")
+			return None
 		png_file_path = os.path.join(output_dir, wf_info.wf_uuid +".png")
 		dot_png_cmd +=" -Tpng -o" + png_file_path
 		dot_png_cmd += " "+ dot_file_path
@@ -367,12 +368,12 @@ def main():
 	parser.add_option("-o", "--output", action = "store", dest = "output_dir",
 			help = "writes the output to given directory.")
 	parser.add_option("-c","--conf", action = "store", type = "string", dest = "config_properties",
-			  help = "specifies the properties' file to use. This option overrides all other property files.")
+			  help = "specifies the properties file to use. This option overrides all other property files.")
 	parser.add_option("-m", "--max_graph_nodes", action = "store", type = "int", dest = "max_graph_nodes",
-		  help = "Maximum limit on the number of tasks/jobs in the dax/dag upto which the graph should be generated; Default is 100")
+		  help = "Maximum limit on the number of tasks/jobs in the dax/dag upto which the graph should be generated; Default value is 100")
 	parser.add_option("-p", "--plottinglevel", action = "store", dest = "plotting_level",
 			choices=['all', 'all_charts', 'all_graphs' ,'dax_graph', 'dag_graph','gantt_chart','host_chart' ],
-			help = "Log level. Valid levels are: all,all_charts, all_graphs, dax_graph,dag_graph,gantt_chart,host_chart; Default is all_charts.")
+			help = "specifies the chart and graphs to generate. Valid levels are: all,all_charts, all_graphs, dax_graph,dag_graph,gantt_chart,host_chart; Default is all_charts.")
 	parser.add_option("-l", "--loglevel", action = "store", dest = "log_level",
 			choices=['debug', 'info', 'warning' ,'error'],
 			help = "Log level. Valid levels are: debug,info,warning,error; Default is info.")
