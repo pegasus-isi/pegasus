@@ -36,8 +36,8 @@ calc_tf_stats = False
 transformation_stats_col_name =["Transformation","Count","Succeeded" , "Failed", "Min","Max","Mean","Total"]
 transformation_stats_col_size =[80,12,12,12,20,20,20,12]
 
-job_stats_col_name =['#Job','Site','Kickstart','Post' ,'CondorQTime','Resource','Runtime','Seqexec','Seqexec-Delay']
-job_stats_col_size =[80,15,12,12,12,12,12,12,12]
+job_stats_col_name =['#Job','Try','Site','Kickstart','Post' ,'CondorQTime','Resource','Runtime','Seqexec','Seqexec-Delay']
+job_stats_col_size =[60,4,15,12,12,12,12,12,12,12]
 
 worklow_summary_col_name =["Type" ,"Succeeded","Failed","Unsubmitted" ,"Total" , " " ,"Retries" , "Total Run (Retries Included)"]
 worklow_summary_col_size =[20,20,20,20,20,5,20,20]
@@ -59,6 +59,7 @@ class JobStatistics:
 		self.condorQlen =None
 		self.seqexec= None
 		self.seqexec_delay = None
+		self.retry_count = 0
 	
 	def getFormattedJobStatistics(self):
 		"""
@@ -66,6 +67,7 @@ class JobStatistics:
 		@return:    formatted job statistics information
 		"""
 		formatted_job_stats = [self.name]
+		formatted_job_stats.append(str(self.retry_count))
 		if self.site is None:
 			formatted_job_stats.append('-')
 		else:
@@ -107,16 +109,31 @@ def formatted_wf_summary_legends():
 	formatted_wf_statistics_legend ="#legends \n"
 	
 	formatted_wf_statistics_legend +="""
-Workflow summary - Summary of the workflow execution .It shows total tasks/jobs/sub workflows run , how many succeeded/failed etc.
+Workflow summary - Summary of the workflow execution. It shows total
+		tasks/jobs/sub workflows run, how many succeeded/failed etc.
+		In case of hierarchical workflow the calculation shows the 
+		statistics across all the sub workflow.
 """
 	formatted_wf_statistics_legend +="""
-Workflow wall time - The walltime from the start of the workflow execution to the end as reported by the DAGMAN.In case of rescue dag the value is the cumulative of all retries.
+Workflow wall time - The walltime from the start of the workflow execution
+		to the end as reported by the DAGMAN.In case of rescue dag the value
+		is the cumulative of all retries.
 """
 	formatted_wf_statistics_legend += """
-Workflow cumulative job wall time - The sum of the walltime of all jobs as reported by kickstart. In case of job retries the value is the cumulative of all retries. For workflows having sub workflow jobs (i.e SUBDAG and SUBDAX jobs), the walltime value includes jobs from the sub workflows as well.
+Workflow cumulative job wall time - The sum of the walltime of all jobs as
+		reported by kickstart. In case of job retries the value is the
+		cumulative of all retries. For workflows having sub workflow jobs
+		(i.e SUBDAG and SUBDAX jobs), the walltime value includes jobs from
+		the sub workflows as well.
 """
 	formatted_wf_statistics_legend += """
-Cumulative job walltime as seen from submit side - The sum of the walltime of all jobs as reported by DAGMan. This is similar to the regular cumulative job walltime, but includes job management overhead and delays. In case of job retries the value is the cumulative of all retries. For workflows having sub workflow jobs (i.e SUBDAG and SUBDAX jobs), the walltime value includes jobs from the sub workflows as well.
+Cumulative job walltime as seen from submit side - The sum of the walltime of
+		all jobs as reported by DAGMan. This is similar to the regular
+		cumulative job walltime, but includes job management overhead and
+		delays. In case of job retries the value is the cumulative of all
+		retries. For workflows having sub workflow jobs (i.e SUBDAG and
+		SUBDAX jobs), the walltime value includes jobs from the sub workflows
+		as well.
 """
 	return formatted_wf_statistics_legend
 
@@ -130,7 +147,10 @@ def formatted_wf_status_legends():
 	formatted_wf_statistics_legend ="#legends \n"
 	
 	formatted_wf_statistics_legend +="""
-Workflow summary - Summary of the workflow execution .It shows total jobs/tasks run , how many succeeded/failed etc. In case of hierarchical workflow the calculation considers the sub worklow jobs/tasks .
+Workflow summary - Summary of the workflow execution. It shows total
+		tasks/jobs/sub workflows run, how many succeeded/failed etc.
+		In case of hierarchical workflow the calculation shows the 
+		statistics of each individual sub workflow.
 """
 	return formatted_wf_statistics_legend
 
@@ -142,15 +162,19 @@ def formatted_job_stats_legends():
 	"""
 	formatted_job_stats_legend="#legends \n"
 	formatted_job_stats_legend +="#Job - the name of the job \n"
+	formatted_job_stats_legend +="#Try - the number representing the job instance run count.  \n"
 	formatted_job_stats_legend +="#Site - the site where the job ran \n"
-	formatted_job_stats_legend +="#Kickstart - the actual duration of the job in seconds on the remote compute node \n"
+	formatted_job_stats_legend +="#Kickstart - the actual duration of the job instance in seconds on the remote compute node \n"
 	formatted_job_stats_legend +="#Post - the postscript time as reported by DAGMan \n"
-	formatted_job_stats_legend +="#CondorQTime - the time between submission by DAGMan and the remote Grid submission. It is an estimate of the time spent in the condor q on the submit node \n"
-	formatted_job_stats_legend +="#Resource - the time between the remote Grid submission and start of remote execution . It is an estimate of the time job spent in the remote queue \n"
-	formatted_job_stats_legend +="#Runtime - the time spent on the resource as seen by Condor DAGMan . Is always >=kickstart \n"
-	#formatted_job_stats_legend +="#CondorQLen - the number of outstanding jobs in the queue when this job was released \n"
+	formatted_job_stats_legend +="""#CondorQTime - the time between submission by DAGMan and the remote Grid submission. 
+	It is an estimate of the time spent in the condor q on the submit node \n"""
+	formatted_job_stats_legend +="""#Resource - the time between the remote Grid submission and start of remote execution. 
+	It is an estimate of the time job spent in the remote queue \n"""
+	formatted_job_stats_legend +="""#Runtime - the time spent on the resource as seen by Condor DAGMan . 
+	Is always >=kickstart \n"""
 	formatted_job_stats_legend +="#Seqexec -  the time taken for the completion of a clustered job\n"
-	formatted_job_stats_legend +="#Seqexec-Delay - the time difference between the time for the completion of a clustered job and sum of all the individual tasks kickstart time\n"
+	formatted_job_stats_legend +="""#Seqexec-Delay - the time difference between the time for the completion of a clustered
+		job and sum of all the individual tasks kickstart time\n"""
 	return formatted_job_stats_legend
 
 def formatted_transformation_stats_legends():
@@ -409,62 +433,38 @@ def print_individual_wf_job_stats(workflow_stats , wf_uuid):
 	@param wf_uuid  : uuid of the workflow
 	"""	
 	job_stats_dict={}
+	job_stats_list=[]
+	job_retry_count_dict={}
 	job_status_str = "\n\n# " +  wf_uuid +"\n"
 	for index in range(len(job_stats_col_name)):
 			job_status_str += (job_stats_col_name[index].ljust(job_stats_col_size[index]))
+	job_status_str +="\n"
+			
+	wf_job_stats_list =  workflow_stats.get_job_statistics()
 	
-	#Job
-	for job in workflow_stats.get_job_name():
+	for job in wf_job_stats_list:
 		job_stats = JobStatistics()
 		job_stats.name = job.job_name
-		job_stats_dict[job.job_id] = job_stats
-	#Site
-	for job in workflow_stats.get_job_site():
-		job_stats = job_stats_dict[job.job_id]
 		job_stats.site = job.site
-		
-	# kickstart
-	for job in workflow_stats.get_job_kickstart():
-		job_stats = job_stats_dict[job.job_id]
 		job_stats.kickstart = job.kickstart
-	#Post
-	for job in workflow_stats.get_post_time():
-		job_stats = job_stats_dict[job.job_id]
 		job_stats.post = job.post_time
-	
-	# runtime
-	for job in workflow_stats.get_job_runtime():
-		job_stats = job_stats_dict[job.job_id]
 		job_stats.runtime = job.runtime
-	
-	
-	# condorQTime
-	for job in workflow_stats.get_condor_q_time():
-		job_stats = job_stats_dict[job.job_id]
 		job_stats.condor_delay = job.condor_q_time
-	
-	#resource Delay
-	for job in workflow_stats.get_resource_delay():
-		job_stats = job_stats_dict[job.job_id]
 		job_stats.resource = job.resource_delay
+		job_stats.seqexec = job.seqexec
+		if job_stats.seqexec is not None and job_stats.kickstart is not None:
+			job_stats.seqexec_delay = (float(job_stats.seqexec) - float(job_stats.kickstart))
+		if job_retry_count_dict.has_key(job.job_name):
+			job_retry_count_dict[job.job_name] +=1
+		else:
+			job_retry_count_dict[job.job_name] = 1
+		job_stats.retry_count = job_retry_count_dict[job.job_name]
+		job_stats_list.append(job_stats)
 	
-	#seqexec
-	for job in workflow_stats.get_job_seqexec():
-		job_stats = job_stats_dict[job.job_id]
-		job_stats.seqexec = job.cluster_duration
-	
-	#seqexec-delay
-	if job_stats.seqexec is not None and job_stats.kickstart is not None:
-		job_stats.seqexec_delay = (float(job_stats.seqexec) - float(job_stats.kickstart))
-		
 	# printing
 	content_list = []
 	# find the pretty print length
-	#Add sort
-	keys = job_stats_dict.keys()
-	keys.sort()	
-	for key in keys:
-		job_stat = job_stats_dict[key]
+	for job_stat in job_stats_list:
 		job_det =job_stat.getFormattedJobStatistics()
 		index = 0
 		for content in job_det:
@@ -502,7 +502,7 @@ def print_wf_transformation_stats(workflow_stats , title):
 	return transformation_status_str
 	
 """
-Prints the statistics level 
+Sets the statistics level 
 @param stats_level
 """
 def set_statistics_level(stats_level):
@@ -534,10 +534,10 @@ def main():
 	parser.add_option("-o", "--output", action = "store", dest = "output_dir",
 			help = "writes the output to given directory.")
 	parser.add_option("-c","--conf", action = "store", type = "string", dest = "config_properties",
-			  help = "specifies the properties' file to use. This option overrides all other property files.")
+			  help = "specifies the properties file to use. This option overrides all other property files.")
 	parser.add_option("-s", "--statisticslevel", action = "store", dest = "statistics_level",
 			choices=['all', 'summary', 'wf_stats','jb_stats','tf_stats' ],
-			help = "Log level. Valid levels are: all,summary,wf_stats,jb_stats,tf_stats Default is summary.")
+			help = "Valid levels are: all,summary,wf_stats,jb_stats,tf_stats Default is summary.")
 	parser.add_option("-l", "--loglevel", action = "store", dest = "log_level",
 			choices=['debug', 'info', 'warning','error' ],
 			help = "Log level. Valid levels are: debug,info,warning,error, Default is info.")
@@ -560,7 +560,6 @@ def main():
 		 statistics_level = options.statistics_level
 	else:
 		statistics_level =  'summary'
-		print statistics_level
 	set_statistics_level(statistics_level)
 	global output_dir
 	if options.output_dir is not None:
