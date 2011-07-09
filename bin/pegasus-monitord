@@ -1342,6 +1342,8 @@ class Workflow:
 
         # Now, match the workflow state to the conditions in the notifications...
         for k in my_notifications:
+            # Look up the actions for this notification now
+            my_actions = my_notifications[k]
             if state == "start":
                 if k != "start" and k != "all":
                     continue
@@ -1360,7 +1362,6 @@ class Workflow:
                     k = "at_end"
 
             # Ok, we have a match!
-            my_actions = my_notifications[k]
             for action in my_actions:
                 # Create dictionary with needed environment variables
                 my_env = {}
@@ -1505,6 +1506,8 @@ class Workflow:
 
         # Now, match the invocation state to the condition in the notification
         for k in my_notifications:
+            # Look up the actions for this notification now
+            my_actions = my_notifications[k]
             if "exitcode" in record:
                 my_status = record["exitcode"]
             else:
@@ -1529,7 +1532,6 @@ class Workflow:
             my_error = os.path.join(self._original_submit_dir, job._error_file) + ".%03d" % (job._job_output_counter)
 
             # Ok, we have a match!
-            my_actions = my_notifications[k]
             for action in my_actions:
                 # Create dictionary with needed environment variables
                 my_env = {}
