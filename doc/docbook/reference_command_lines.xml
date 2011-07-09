@@ -52,8 +52,622 @@ $ <command>echo $?</command>
   <section>
     <title>pegasus-plan</title>
 
-    <para>pegasus-plan generates a concrete, executable workflow from an
-    abstract workflow description (DAX).</para>
+    <para>pegasus-plan generates an executable workflow from an abstract
+    workflow description (DAX).</para>
+
+    <section>
+      <title>SYNOPSIS</title>
+
+      <para><emphasis role="bold">pegasus-plan</emphasis> -h|--help </para>
+
+      <para><emphasis role="bold">pegasus-plan</emphasis> -V|--version </para>
+
+      <para><emphasis role="bold">pegasus-plan</emphasis> [-Dprop [..]] -d
+      &lt;dax file&gt; [-b prefix] [--conf &lt;path to properties file&gt;]
+      [-c f1[,f2[..]]] [-C &lt;clustering technique&gt;] [-D &lt;base
+      directory for o/p files&gt;] [-f] [--force-replan] [
+      --inherited-rc-files] [-j job-prefix] [-n] [-o &lt;out- put site&gt;]
+      [-r[directoryname]] [--relative-dir &lt;relative directory to base
+      directory&gt;] [--relative-submit-dir &lt;relative sub- mit directory to
+      the base directory&gt;] [-s site1[,site2[..]]] [-v] [-q] [-V] [-h]
+      </para>
+    </section>
+
+    <section>
+      <title>DESCRIPTION</title>
+
+      <para>The pegasus-plan command takes in as input the DAX and generates
+      an executable workflow usually in form of condor submit files, which can
+      be submitted to an execution site for execution.</para>
+
+      <para>As part of generating the executable workflow, the planner needs
+      to discover </para>
+
+      <itemizedlist>
+        <listitem>
+          <para>data</para>
+
+          <para>The Pegasus Workflow Planner ensures that all the data
+          required for the execution of the executable workflow is transferred
+          to the execution site by adding transfer nodes at appropriate points
+          in the DAG. This is done by looking up an appropriate Replica
+          Catalog to determine the locations of the input files for the
+          various jobs. At present the default replica mechanism used is RLS
+          .</para>
+
+          <para>The Pegasus Workflow Planner also tries to reduce the
+          workflow, unless specified otherwise. This is done by deleting the
+          jobs whose output files have been found in some location in the
+          Replica Catalog . At present no cost metrics are used. However
+          preference is given to a location corresponding to the execution
+          site.</para>
+
+          <para>The planner can also add nodes to transfer all the
+          materialized files to an output site. The location on the output
+          site is determined by looking up the site catalog file, the path to
+          which is picked up from the <emphasis
+          role="bold">pegasus.catalog.site.file</emphasis> property
+          value.</para>
+        </listitem>
+
+        <listitem>
+          <para>executables</para>
+
+          <para>The planner looks up a Transformation Catalog to discover
+          locations of the executables referred to in the executable workflow.
+          Users can specify INSTALLED or STAGEABLE executables in the catalog.
+          Stageable executables can be used by Pegasus to stage executables to
+          resources where they are not pre-installed.</para>
+        </listitem>
+
+        <listitem>
+          <para>resources</para>
+
+          <para>The layout of the sites , where Pegasus can schedule jobs of a
+          workflow are described in the Site Catalog. The planner looks up the
+          site catalog to determine for a site what directories a job can be
+          executed in, what servers to use for staging in and out data and
+          what jobmanagers ( if applicable) can be used for submitting
+          jobs.</para>
+        </listitem>
+      </itemizedlist>
+
+      <para>The data and executable locations can now be specified in DAX'es
+      conforming to DAX schema version 3.2 or higher.</para>
+    </section>
+
+    <section>
+      <title>ARGUMENTS</title>
+
+      <para>Any option will be displayed with its long options
+      synonym(s).</para>
+
+      <itemizedlist>
+        <listitem>
+          <para>-<emphasis role="bold">Dprop</emphasis></para>
+
+          <para>The -D options allows an experienced user to override certain
+          properties which influence the program execution, among them the
+          default location of the user's properties file and the PEGASUS home
+          location. One may set several CLI properties by giving this option
+          multiple times. The -D option(s) must be the first option on the
+          command line. A CLI property take precedence over the properties
+          file property of the same key.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-d filename</emphasis></para>
+
+          <para><emphasis role="bold">--dax filename</emphasis></para>
+
+          <para>The DAX is the XML input file that describes an abstract
+          workflow.</para>
+
+          <para>This is a mandatory option, which has to be used.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-b prefix</emphasis></para>
+
+          <para><emphasis role="bold">--basename prefix</emphasis></para>
+
+          <para>The basename prefix to be used while constructing per workflow
+          files like the dagman file (.dag file) and other work- flow specific
+          files that are created by Condor. Usually this prefix, is taken from
+          the name attribute specified in the root element of the dax files.
+          </para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-c list of cache files</emphasis>
+          </para>
+
+          <para><emphasis role="bold">--cache list of cache files</emphasis>
+          </para>
+
+          <para>A comma separated list of paths to replica cache files that
+          override the results from the replica catalog for a particular
+          lfn.</para>
+
+          <para> Each entry in the cache file describes a LFN , the
+          corresponding PFN and the associated attributes. The pool attribute
+          should be specified for each entry.</para>
+
+          <programlisting>LFN_1 PFN_1 pool=[site handle 1]
+LFN_2 PFN_2 pool=[site handle 2]
+...
+LFN_N PFN_N [site handle N]</programlisting>
+
+          <para>To treat the cache files as supplemental replica catalogs set
+          the property <emphasis
+          role="bold">pegasus.catalog.replica.cache.asrc </emphasis>to true.
+          This results in the mapping in the cache files to be merged with the
+          mappings in the replica catalog. Thus, for a particular lfn both the
+          entries in the cache file and replica catalog are available for
+          replica selection. </para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-C comma separated list of clustering
+          styles</emphasis></para>
+
+          <para><emphasis role="bold">--cluster comma separated list of
+          clustering styles</emphasis></para>
+
+          <para>This mode of operation results in clustering of n compute jobs
+          into a larger jobs to reduce remote scheduling overhead. You can
+          specify a list of clustering techniques to recursively apply them to
+          the workflow. For example, this allows you to cluster some jobs in
+          the workflow using horizontal clustering and then use label based
+          clustering on the intermediate workflow to do vertical clustering.
+          </para>
+
+          <para>The clustered jobs can be run at the remote site, either
+          sequentially or by using mpi. This can be specified by setting the
+          property pegasus.job.aggregator. The property can be overridden by
+          associating the PEGASUS profile key <emphasis
+          role="bold">collapser</emphasis> either with the transformation in
+          the transformation catalog or the execution site in the site
+          catalog. The value specified (to the property or the profile), is
+          the logical name of the transformation that is to be used for
+          clustering jobs. Note that clustering will only happen if the
+          corresponding transformations are catalogued in the transformation
+          catalog.</para>
+
+          <para>PEGASUS ships with a clustering executable <emphasis
+          role="bold">seqexec</emphasis> that can be found in
+          $PEGASUS_HOME/bin directory. It runs the jobs in the clustered job
+          sequentially on the same node at the remote site.</para>
+
+          <para>In addition, a mpi wrapper <emphasis
+          role="bold">mpiexec</emphasis> is distributed as source with the
+          PEGASUS. It can be found in $PEGASUS_HOME/src/tools/cluster
+          directory. The wrapper is run on every mpi node, with the first one
+          being the master and the rest of the ones as workers. The number of
+          instances of mpiexec that are invoked is equal to the value of the
+          globus rsl key nodecount. The master distributes the smaller
+          constituent jobs to the workers. For e.g. If there were 10 jobs in
+          the clustered job and nodecount was 5, then one node acts as master,
+          and the 10 jobs are distributed amongst the 4 slaves on demand. The
+          master hands off a job to the slave node as and when it gets free.
+          So initially all the 4 nodes are given a single job each, and then
+          as and when they get done are handed more jobs till all the 10 jobs
+          have been executed. </para>
+
+          <para>By default, seqexec is used for clustering jobs unless
+          overridden in the properties or by the <emphasis role="bold">pegasus
+          profile key collapser</emphasis>. </para>
+
+          <para>The following type of clustering styles are currently
+          supported</para>
+
+          <orderedlist>
+            <listitem>
+              <para><emphasis role="bold">horizontal</emphasis></para>
+
+              <para>is the style of clustering in which jobs on the same level
+              are aggregated into larger jobs. A level of the workflow is
+              defined as the greatest distance of a node, from the root of the
+              workflow. Clustering occurs only on jobs of the same type i.e
+              they refer to the same logical transformation in the
+              transformation catalog. </para>
+
+              <para>The granularity of clustering can be specified by
+              associating either the PEGASUS profile key <emphasis
+              role="bold">clusters.size</emphasis> or the PEGASUS profile key
+              <emphasis role="bold">clusters.num</emphasis> with the
+              transformation. The clusters.size key indicates how many jobs
+              need to be clustered into the larger clustered job. The
+              clusters.num key indicates how many clustered jobs are to be
+              created for a particular level at a particular execution site.
+              If both keys are specified for a particular transformation, then
+              the clusters.num key value is used to determine the clustering
+              granularity.</para>
+            </listitem>
+
+            <listitem>
+              <para><emphasis role="bold">label</emphasis></para>
+
+              <para>is the style of clustering in which you can label the jobs
+              in your workflow. The jobs with the same level are put in the
+              same clustered job. This allows you to aggregate jobs across
+              levels, or in a manner that is best suited to your
+              application.</para>
+
+              <para>To label the workflow, you need to associate PEGASUS
+              profiles with the jobs in the DAX. The profile key to use for
+              labelling the workflow can be set by the property <emphasis
+              role="bold">pegasus.clusterer.label.key</emphasis> . It defaults
+              to label, meaning if you have a PEGASUS profile key label with
+              jobs, the jobs with the same value for the pegasus profile key
+              label will go into the same clustered job.</para>
+            </listitem>
+          </orderedlist>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-D dir name</emphasis></para>
+
+          <para><emphasis role="bold">--dir dir name</emphasis></para>
+
+          <para>The base directory where you want the output of the Pegasus
+          Workflow Planner usually condor submit files, to be generated.
+          Pegasus creates a directory structure in this base directory on the
+          basis of username, VO Group and the label of the workflow in the
+          DAX. </para>
+
+          <para>By default the base directory is the directory from which one
+          runs the pegasus-plan command.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-f</emphasis></para>
+
+          <para><emphasis role="bold">--force</emphasis></para>
+
+          <para>This bypasses the reduction phase in which the abstract DAG is
+          reduced, on the basis of the locations of the output files returned
+          by the replica catalog. This is analogous to a make style generation
+          of the executable workflow.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">--force-replan</emphasis></para>
+
+          <para>By default, for hierarchal workflows if a dax job fails, then
+          on job retry the rescue dag of the associated workflow is submitted.
+          This option causes Pegasus to replan the dax job in case of failure
+          instead.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-g</emphasis></para>
+
+          <para><emphasis role="bold">--group</emphasis></para>
+
+          <para>The VO Group to which the user belongs to. </para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-h</emphasis></para>
+
+          <para><emphasis role="bold">--help</emphasis> displays the options
+          to pegasus-plan command.</para>
+        </listitem>
+
+        <listitem>
+          <para> <emphasis role="bold">--inherited-rc-files</emphasis> comma
+          separated list of replica catalog files </para>
+
+          <para> A comma separated list of paths to replica files. Locations
+          mentioned in these have a lower priority than the locations in the
+          DAX file. This option is usually used internally for hierarichal
+          workflows, where the file locations mentioned in the parent (
+          encompassing) workflow DAX, passed to the sub workflows (
+          corresponding) to the dax jobs. </para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-j</emphasis></para>
+
+          <para><emphasis role="bold">--j</emphasis></para>
+
+          <para>The job prefix to be applied for constructing the filenames
+          for the job submit files.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-n</emphasis></para>
+
+          <para><emphasis role="bold">--no-cleanup</emphasis></para>
+
+          <para>This results in the generation of the separate cleanup
+          workflow that removes the directories created during the execution
+          of the executable workflow. The cleanup workflow is to be submitted
+          after the executable workflow has finished. If this option is not
+          specified, then Pegasus adds cleanup nodes to the executable
+          workflow itself that cleanup files on the remote sites when they are
+          no longer required. </para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-o</emphasis> output site</para>
+
+          <para><emphasis role="bold">--output </emphasis>output site</para>
+
+          <para>The output site where all the materialized data is transferred
+          to.</para>
+
+          <para>By default the materialized data remains in the working
+          directory on the execution site where it was created. Only those
+          output files are transferred to an output site for which transfer
+          attribute is set to true in the DAX. </para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-q</emphasis></para>
+
+          <para><emphasis role="bold">--quiet</emphasis></para>
+
+          <para>decreases the logging level</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">--relative-dir</emphasis> dir
+          name</para>
+
+          <para>The directory relative to the base directory where the
+          executable workflow it to be generated and executed. This over-
+          rides the default directory structure that Pegasus creates based on
+          username, VO Group and the DAX label. </para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">--relative-submit-dir</emphasis> dir
+          name</para>
+
+          <para>The directory relative to the base directory where the
+          executable workflow it to be generated. This overrides the default
+          directory structure that Pegasus creates based on username, VO Group
+          and the DAX label. By specifying --relative-dir and
+          --relative-submit-dir you can have different relative execution
+          directory on the remote site and different relative sub- mit
+          directory on the submit host. </para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-s</emphasis> list of execution
+          sites</para>
+
+          <para><emphasis role="bold">--sites</emphasis> list of execution
+          sites</para>
+
+          <para>A comma separated list of execution sites on which the
+          workflow is to be executed. Each of the sites should have an entry
+          in the site catalog, that is being used. To run on the submit host,
+          specify the execution site as<emphasis role="bold"> local
+          .</emphasis></para>
+
+          <para> In case this option is not specified, all the sites in the
+          site catalog are picked up as candidates for running the work- flow.
+          </para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-s</emphasis></para>
+
+          <para><emphasis role="bold">--submit</emphasis></para>
+
+          <para>Submits the generated executable workflow using pegasus-run
+          script in $PEGASUS_HOME/bin directory.</para>
+
+          <para>By default, the Pegasus Workflow Planner only generates the
+          Condor submit files and does not submit them.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-v</emphasis></para>
+
+          <para><emphasis role="bold">--verbose</emphasis></para>
+
+          <para>increases the verbosity of messages about what is going on.
+          </para>
+
+          <para>By default, all FATAL, ERROR, CONSOLE and WARN messages are
+          logged.</para>
+
+          <para>The logging hierarchy is as follows </para>
+
+          <itemizedlist>
+            <listitem>
+              <para>FATAL</para>
+            </listitem>
+
+            <listitem>
+              <para>ERROR</para>
+            </listitem>
+
+            <listitem>
+              <para>CONSOLE</para>
+            </listitem>
+
+            <listitem>
+              <para>WARN</para>
+            </listitem>
+
+            <listitem>
+              <para>INFO</para>
+            </listitem>
+
+            <listitem>
+              <para>CONFIG</para>
+            </listitem>
+
+            <listitem>
+              <para>DEBUG</para>
+            </listitem>
+
+            <listitem>
+              <para>TRACE</para>
+            </listitem>
+          </itemizedlist>
+
+          <para> For example, to see the INFO, CONFIG and DEBUG messages
+          additionally, set -vvv.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-V</emphasis> </para>
+
+          <para><emphasis role="bold">--version</emphasis></para>
+
+          <para> Displays the current version number of the Pegasus Workflow
+          Management System.</para>
+        </listitem>
+      </itemizedlist>
+    </section>
+
+    <section>
+      <title>RETURN VALUE</title>
+
+      <para>If the Pegasus Workflow Planner is able to generate an executable
+      workflow successfully, the exitcode will be 0. All runtime errors result
+      in an exitcode of 1. This is usually in the case when you have
+      mis-configured your catalogs etc. In the case of an error occurring
+      while loading a specific module implementation at run time, the exitcode
+      will be 2. This is usually due to factory methods failing while loading
+      a module. In case of any other error occurring during the running of the
+      command, the exit- code will be 1. In most cases, the error message
+      logged should give a clear indication as to where things went wrong.
+      </para>
+    </section>
+
+    <section>
+      <title>PEGASUS PROPERTIES</title>
+
+      <para>This is not an exhaustive list of properties used. For the
+      complete description and list of properties refer to <emphasis
+      role="bold">$PEGASUS_HOME/doc/advanced-properties.pdf</emphasis> or the
+      properties chapter.</para>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis
+          role="bold">pegasus.catalog.replica</emphasis></para>
+
+          <para>Specifies the type of replica catalog to be used. If not
+          specified, then RLS is used as a Replica Catalog Backend.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis
+          role="bold">pegasus.catalog.replica.url</emphasis></para>
+
+          <para>Contact string to access the replica catalog. In case of RLS
+          it is the RLI url. I</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">pegasus.dir.exec</emphasis></para>
+
+          <para> A suffix to the workdir in the site catalog to determine the
+          current working directory. If relative, the value will be appended
+          to the working directory from the site.config file. If absolute it
+          constitutes the working directory.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis
+          role="bold">pegasus.catalog.transformation</emphasis></para>
+
+          <para>Specifies the type of transformation catalog to be used. One
+          can use either a file based or a database based transforma- tion
+          catalog. At present the default is Text .</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis
+          role="bold">pegasus.catalog.transformation.file</emphasis></para>
+
+          <para>The location of file to use as transformation catalog.</para>
+        </listitem>
+
+        <listitem>
+          <para> <emphasis role="bold">pegasus.catalog.site</emphasis></para>
+
+          <para> Specifies the type of site catalog to be used. At present the
+          default is <emphasis role="bold">XML3</emphasis> .</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis
+          role="bold">pegasus.catalog.site.file</emphasis></para>
+
+          <para>The location of file to use as a site catalog. If not
+          specified, then default value of $PEGASUS_HOME/etc/sites.xml is used
+          in case of the xml based site catalog and
+          $PEGASUS_HOME/etc/sites.txt in case of the text based site catalog.
+          </para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">pegasus.code.generator</emphasis></para>
+
+          <para>The code generator to use. By default, Condor submit files are
+          generated for the executable workflow. Setting to <emphasis
+          role="bold">Shell</emphasis> results in Pegasus generating a shell
+          script that can be executed on the submit host. </para>
+        </listitem>
+      </itemizedlist>
+    </section>
+
+    <section>
+      <title>FILES</title>
+
+      <para></para>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis
+          role="bold">$PEGASUS_HOME/etc/dax-3.2.xsd</emphasis></para>
+
+          <para>It is the suggested location of the latest DAX schema to
+          produce DAX output. </para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis
+          role="bold">$PEGASUS_HOME/etc/tc.data.text</emphasis></para>
+
+          <para>is the suggested location for the file corresponding to the
+          Transformation Catalog.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">$PEGASUS_HOME/etc/sc-3.0.xsd</emphasis>
+          </para>
+
+          <para>is the suggested location of the latest Site Catalog schema
+          that is used to create the XML3 version of the site catalog </para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">$PEGASUS_HOME/etc/sites.xml3 |
+          $PEGASUS_HOME/etc/sites.xml</emphasis></para>
+
+          <para>is the suggested location for the file containing the site
+          information.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis
+          role="bold">$PEGASUS_HOME/lib/pegasus.jar</emphasis></para>
+
+          <para>contains all compiled Java bytecode to run the Pegasus
+          Workflow Planner.</para>
+        </listitem>
+      </itemizedlist>
+    </section>
   </section>
 
   <section>
@@ -396,7 +1010,7 @@ s3s://ewa@amazon/pegasus-images/data.tar.gz</programlisting>
 
         <orderedlist>
           <listitem>
-             The -C/--conf argument 
+             The -C/--conf argument
           </listitem>
 
           <listitem>
