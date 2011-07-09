@@ -84,7 +84,7 @@ public class Version
   public String toString()
   {
     return ( Integer.toString(MAJOR) + '.' + Integer.toString(MINOR) + 
-	     '.' + Integer.toString(PLEVEL)  + "cvs" ); // !! HERE !!
+	     '.' + Integer.toString(PLEVEL)  + "" ); // !! HERE !!
   }
 
   /**
