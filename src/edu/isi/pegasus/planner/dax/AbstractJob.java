@@ -60,27 +60,25 @@ public class AbstractJob {
      * Copy constructor
      * @param a 
      */
-    protected AbstractJob(AbstractJob a){
+    protected AbstractJob(AbstractJob a) {
         this.mArguments = new LinkedList(a.mArguments);
         this.mProfiles = new LinkedList<Profile>(a.mProfiles);
         this.mStdin = new File(a.mStdin);
         this.mStdout = new File(a.mStdout);
         this.mStderr = new File(a.mStderr);
         this.mUses = new LinkedHashSet<File>(a.mUses);
-        this.mInvokes =  new LinkedList<Invoke>(a.mInvokes);
+        this.mInvokes = new LinkedList<Invoke>(a.mInvokes);
         this.mName = a.mName;
         this.mId = a.mId;
         this.mNamespace = a.mNamespace;
         this.mVersion = a.mVersion;
         this.mNodeLabel = a.mNodeLabel;
     }
-    
+
     /**
      * Copy Constructor
      * @param a 
      */
-
-
     protected static void checkID(String id) {
         if (!Patterns.isNodeIdValid(id)) {
             mLogger.log(
@@ -1245,36 +1243,36 @@ public class AbstractJob {
      * @return AbstractJob
      */
     public AbstractJob addInvokes(List<Invoke> invokes) {
-        for (Invoke invoke: invokes){
+        for (Invoke invoke : invokes) {
             this.addInvoke(invoke);
         }
         return this;
     }
 
-    
     /**
      * Is this Object a Job
      * @return 
      */
-    public boolean isJob(){
+    public boolean isJob() {
         return false;
     }
-    
+
     /**
      * Is this Object a DAX
      * @return 
      */
-    public boolean isDAX(){
+    public boolean isDAX() {
         return false;
     }
-    
+
     /**
      * Is this Object a DAG
      * @return 
      */
-    public boolean isDAG(){
+    public boolean isDAG() {
         return false;
     }
+
     /**
      * 
      * @return String
@@ -1316,7 +1314,8 @@ public class AbstractJob {
             return false;
         }
         final AbstractJob other = (AbstractJob) obj;
-        if ((this.mId == null) ? (other.mId != null) : !this.mId.equals(other.mId)) {
+        if ((this.mId == null) ? (other.mId != null) : !this.mId.equals(
+                other.mId)) {
             return false;
         }
         return true;
@@ -1329,7 +1328,6 @@ public class AbstractJob {
         return hash;
     }
 
-   
     /**
      *
      * @param writer
@@ -1344,35 +1342,9 @@ public class AbstractJob {
      * @param indent
      */
     public void toXML(XMLWriter writer, int indent) {
-        Class c = this.getClass();
+
         //Check if its a dax, dag or job class
-        if (c == DAX.class) {
-            writer.startElement(
-                    "dax", indent);
-            writer.writeAttribute(
-                    "id", mId);
-            writer.writeAttribute(
-                    "file", mName);
-        } else if (c == DAG.class) {
-            writer.startElement(
-                    "dag", indent);
-            writer.writeAttribute(
-                    "id", mId);
-            writer.writeAttribute(
-                    "file", mName);
-        } else if (c == Job.class) {
-            writer.startElement(
-                    "job", indent);
-            writer.writeAttribute(
-                    "id", mId);
-            if (mNamespace != null && !mNamespace.isEmpty()) {
-                writer.writeAttribute("namespace", mNamespace);
-            }
-            writer.writeAttribute("name", mName);
-            if (mVersion != null && !mVersion.isEmpty()) {
-                writer.writeAttribute("version", mVersion);
-            }
-        }
+
         if (mNodeLabel != null && !mNodeLabel.isEmpty()) {
             writer.writeAttribute("node-label", mNodeLabel);
         } //add argument

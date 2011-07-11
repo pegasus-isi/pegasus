@@ -15,6 +15,8 @@
  */
 package edu.isi.pegasus.planner.dax;
 
+import edu.isi.pegasus.common.util.XMLWriter;
+
 /**
  *
  * @author gmehta
@@ -34,10 +36,12 @@ public class Job extends AbstractJob {
         this(id, namespace, name, version, "");
     }
 
-    public Job(Job j){
+    public Job(Job j) {
         super(j);
     }
-    public Job(String id, String namespace, String name, String version, String label) {
+
+    public Job(String id, String namespace, String name, String version,
+            String label) {
         super();
         checkID(id);
 
@@ -57,13 +61,34 @@ public class Job extends AbstractJob {
     public String getVersion() {
         return mVersion;
     }
-    
-        
+
     /**
      * Is this Object a Job
      * @return 
      */
-    public boolean isJob(){
+    public boolean isJob() {
         return true;
+    }
+
+    /**
+     * Overrides Base TOXML method.
+     * @param writer
+     * @param indent
+     */
+    @Override
+    public void toXML(XMLWriter writer, int indent) {
+
+        writer.startElement(
+                "job", indent);
+        writer.writeAttribute(
+                "id", mId);
+        if (mNamespace != null && !mNamespace.isEmpty()) {
+            writer.writeAttribute("namespace", mNamespace);
+        }
+        writer.writeAttribute("name", mName);
+        if (mVersion != null && !mVersion.isEmpty()) {
+            writer.writeAttribute("version", mVersion);
+        }
+        super.toXML(writer, indent);
     }
 }

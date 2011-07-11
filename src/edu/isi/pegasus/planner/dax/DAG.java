@@ -15,6 +15,8 @@
  */
 package edu.isi.pegasus.planner.dax;
 
+import edu.isi.pegasus.common.util.XMLWriter;
+
 /**
  * DAG Class to hold the DAG job object.
  *
@@ -37,10 +39,10 @@ public class DAG extends AbstractJob {
      * Copy Constructor
      * @param dag 
      */
-    public DAG(DAG dag){
-        super(dag);        
+    public DAG(DAG dag) {
+        super(dag);
     }
-    
+
     /**
      * Create a DAG object
      * @param id The unique id of the DAG job object. Must be of type [A-Za-z][-A-Za-z0-9_]*
@@ -55,12 +57,24 @@ public class DAG extends AbstractJob {
         mName = dagname;
         mNodeLabel = label;
     }
-    
-        /**
+
+    /**
      * Is this Object a DAG
      * @return 
      */
-    public boolean isDAG(){
+    public boolean isDAG() {
         return true;
+    }
+
+    public void toXML(XMLWriter writer, int indent) {
+
+        writer.startElement(
+                "dag", indent);
+        writer.writeAttribute(
+                "id", mId);
+        writer.writeAttribute(
+                "file", mName);
+        super.toXML(writer, indent);
+
     }
 }

@@ -15,6 +15,8 @@
  */
 package edu.isi.pegasus.planner.dax;
 
+import edu.isi.pegasus.common.util.XMLWriter;
+
 /**
  * Creates a DAX job object
  * @author GAURANG MEHTA gmehta at isi dot edu
@@ -31,12 +33,12 @@ public class DAX extends AbstractJob {
     public DAX(String id, String daxname) {
         this(id, daxname, null);
     }
-    
+
     /**
      * Copy Constructor
      * @param dax 
      */
-    public DAX(DAX dax){
+    public DAX(DAX dax) {
         super(dax);
     }
 
@@ -54,12 +56,28 @@ public class DAX extends AbstractJob {
         mName = daxname;
         mNodeLabel = label;
     }
-    
-        /**
+
+    /**
      * Is this Object a DAX
      * @return 
      */
-    public boolean isDAX(){
+    public boolean isDAX() {
         return true;
+    }
+
+    /**
+     *
+     * @param writer
+     * @param indent
+     */
+    public void toXML(XMLWriter writer, int indent) {
+
+        writer.startElement(
+                "dax", indent);
+        writer.writeAttribute(
+                "id", mId);
+        writer.writeAttribute(
+                "file", mName);
+        super.toXML(writer, indent);
     }
 }
