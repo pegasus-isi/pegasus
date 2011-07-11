@@ -813,16 +813,26 @@ public class CPlanner extends Executable{
                     options.setDAX(g.getOptarg());
                     break;
 
-                case 'D': //dir or -Dpegasus.blah=
-                    String optarg = g.getOptarg();
+                case 'D': // -Dpegasus.blah=
+                    String optarg = g.getOptarg(); 
                     //if( optarg.matches(  "pegasus\\..*=.*"  ) ){
                       if( propertyPattern.matcher( optarg ).matches() ){
                         options.setProperty( optarg );
                         
                     }
                     else{
-                        options.setSubmitDirectory( g.getOptarg(), null );
+                        //JIRA PM-390 dont accept -D for --dir
+                        //log warning
+                        StringBuffer sb = new StringBuffer();
+                        sb.append( "Submit Directory can only be set by specifying the --dir option now. " ).
+                           append( "Setting -D to " ).append( optarg ).append(" does not work" );
+                        mLogger.log( sb.toString(),
+                                     LogManager.WARNING_MESSAGE_LEVEL );
                     }
+                    break;
+                    
+                case '8'://dir option
+                    options.setSubmitDirectory( g.getOptarg(), null );
                     break;
 
                 case '2'://relative-dir
@@ -1091,7 +1101,7 @@ public class CPlanner extends Executable{
     public LongOpt[] generateValidOptions(){
         LongOpt[] longopts = new LongOpt[31];
 
-        longopts[0]   = new LongOpt( "dir", LongOpt.REQUIRED_ARGUMENT, null, 'D' );
+        longopts[0]   = new LongOpt( "dir", LongOpt.REQUIRED_ARGUMENT, null, '8' );
         longopts[1]   = new LongOpt( "dax", LongOpt.REQUIRED_ARGUMENT, null, 'd' );
         longopts[2]   = new LongOpt( "sites", LongOpt.REQUIRED_ARGUMENT, null, 's' );
         longopts[3]   = new LongOpt( "output", LongOpt.REQUIRED_ARGUMENT, null, 'o' );
@@ -1136,9 +1146,9 @@ public class CPlanner extends Executable{
         String text =
           "\n $Id$ " +
           "\n " + getGVDSVersion() +
-          "\n Usage : pegasus-plan [-Dprop  [..]] -d|-P <dax file|pdax file> " +
+          "\n Usage : pegasus-plan [-Dprop  [..]] -d <dax file> " +
           " [-s site[,site[..]]] [-b prefix] [-c f1[,f2[..]]] [--conf <path to property file>] [-f] [--force-replan] "+
-          "\n [-b basename] [-C t1[,t2[..]]  [-D  <base dir  for o/p files>] [-j <job-prefix>] " +
+          "\n [-b basename] [-C t1[,t2[..]]  [--dir  <base dir  for o/p files>] [-j <job-prefix>] " +
           "\n [--relative-dir <relative directory to base directory> ] [--relative-submit-dir <relative submit directory to base directory>]" +
           "\n [--inherited-rc-files f1[,f2[..]]]  " +
           "\n [-g <vogroup>] [-o <output site>]  [-r[dir name]] [-F option[=value] ] " +
@@ -1174,7 +1184,7 @@ public class CPlanner extends Executable{
            "\n --inherited-rc-files  comma separated list of replica files. Locations mentioned in these have a lower priority than the locations in the DAX file" +
            "\n -C |--cluster      comma separated list of clustering techniques to be applied to the workflow to " +
            "\n                    to cluster jobs in to larger jobs, to avoid scheduling overheads." +
-           "\n -D |--dir          the directory where to generate the concrete workflow." +
+           "\n --dir          the directory where to generate the concrete workflow." +
            "\n --relative-dir     the relative directory to the base directory where to generate the concrete workflow." +
            "\n --relative-submit-dir  the relative submit directory where to generate the concrete workflow. Overrids --relative-dir ." +
            "\n -f |--force        skip reduction of the workflow, resulting in build style dag." +

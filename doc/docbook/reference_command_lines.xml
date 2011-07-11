@@ -58,19 +58,19 @@ $ <command>echo $?</command>
     <section>
       <title>SYNOPSIS</title>
 
-      <para><emphasis role="bold">pegasus-plan</emphasis> -h|--help </para>
+      <para><emphasis role="bold">pegasus-plan</emphasis> -h|--help</para>
 
-      <para><emphasis role="bold">pegasus-plan</emphasis> -V|--version </para>
+      <para><emphasis role="bold">pegasus-plan</emphasis> -V|--version</para>
 
       <para><emphasis role="bold">pegasus-plan</emphasis> [-Dprop [..]] -d
       &lt;dax file&gt; [-b prefix] [--conf &lt;path to properties file&gt;]
-      [-c f1[,f2[..]]] [-C &lt;clustering technique&gt;] [-D &lt;base
+      [-c f1[,f2[..]]] [-C &lt;clustering technique&gt;] [--dir &lt;base
       directory for o/p files&gt;] [-f] [--force-replan] [
       --inherited-rc-files] [-j job-prefix] [-n] [-o &lt;out- put site&gt;]
       [-r[directoryname]] [--relative-dir &lt;relative directory to base
       directory&gt;] [--relative-submit-dir &lt;relative sub- mit directory to
-      the base directory&gt;] [-s site1[,site2[..]]] [-v] [-q] [-V] [-h]
-      </para>
+      the base directory&gt;] [-s site1[,site2[..]]] [-v] [-q] [-V]
+      [-h]</para>
     </section>
 
     <section>
@@ -81,7 +81,7 @@ $ <command>echo $?</command>
       be submitted to an execution site for execution.</para>
 
       <para>As part of generating the executable workflow, the planner needs
-      to discover </para>
+      to discover</para>
 
       <itemizedlist>
         <listitem>
@@ -174,22 +174,21 @@ $ <command>echo $?</command>
           <para>The basename prefix to be used while constructing per workflow
           files like the dagman file (.dag file) and other work- flow specific
           files that are created by Condor. Usually this prefix, is taken from
-          the name attribute specified in the root element of the dax files.
-          </para>
+          the name attribute specified in the root element of the dax
+          files.</para>
         </listitem>
 
         <listitem>
-          <para><emphasis role="bold">-c list of cache files</emphasis>
-          </para>
+          <para><emphasis role="bold">-c list of cache files</emphasis></para>
 
-          <para><emphasis role="bold">--cache list of cache files</emphasis>
-          </para>
+          <para><emphasis role="bold">--cache list of cache
+          files</emphasis></para>
 
           <para>A comma separated list of paths to replica cache files that
           override the results from the replica catalog for a particular
           lfn.</para>
 
-          <para> Each entry in the cache file describes a LFN , the
+          <para>Each entry in the cache file describes a LFN , the
           corresponding PFN and the associated attributes. The pool attribute
           should be specified for each entry.</para>
 
@@ -204,7 +203,7 @@ LFN_N PFN_N [site handle N]</programlisting>
           This results in the mapping in the cache files to be merged with the
           mappings in the replica catalog. Thus, for a particular lfn both the
           entries in the cache file and replica catalog are available for
-          replica selection. </para>
+          replica selection.</para>
         </listitem>
 
         <listitem>
@@ -219,8 +218,8 @@ LFN_N PFN_N [site handle N]</programlisting>
           specify a list of clustering techniques to recursively apply them to
           the workflow. For example, this allows you to cluster some jobs in
           the workflow using horizontal clustering and then use label based
-          clustering on the intermediate workflow to do vertical clustering.
-          </para>
+          clustering on the intermediate workflow to do vertical
+          clustering.</para>
 
           <para>The clustered jobs can be run at the remote site, either
           sequentially or by using mpi. This can be specified by setting the
@@ -252,11 +251,11 @@ LFN_N PFN_N [site handle N]</programlisting>
           master hands off a job to the slave node as and when it gets free.
           So initially all the 4 nodes are given a single job each, and then
           as and when they get done are handed more jobs till all the 10 jobs
-          have been executed. </para>
+          have been executed.</para>
 
           <para>By default, seqexec is used for clustering jobs unless
           overridden in the properties or by the <emphasis role="bold">pegasus
-          profile key collapser</emphasis>. </para>
+          profile key collapser</emphasis>.</para>
 
           <para>The following type of clustering styles are currently
           supported</para>
@@ -270,7 +269,7 @@ LFN_N PFN_N [site handle N]</programlisting>
               defined as the greatest distance of a node, from the root of the
               workflow. Clustering occurs only on jobs of the same type i.e
               they refer to the same logical transformation in the
-              transformation catalog. </para>
+              transformation catalog.</para>
 
               <para>The granularity of clustering can be specified by
               associating either the PEGASUS profile key <emphasis
@@ -306,15 +305,13 @@ LFN_N PFN_N [site handle N]</programlisting>
         </listitem>
 
         <listitem>
-          <para><emphasis role="bold">-D dir name</emphasis></para>
-
           <para><emphasis role="bold">--dir dir name</emphasis></para>
 
           <para>The base directory where you want the output of the Pegasus
           Workflow Planner usually condor submit files, to be generated.
           Pegasus creates a directory structure in this base directory on the
           basis of username, VO Group and the label of the workflow in the
-          DAX. </para>
+          DAX.</para>
 
           <para>By default the base directory is the directory from which one
           runs the pegasus-plan command.</para>
@@ -345,7 +342,7 @@ LFN_N PFN_N [site handle N]</programlisting>
 
           <para><emphasis role="bold">--group</emphasis></para>
 
-          <para>The VO Group to which the user belongs to. </para>
+          <para>The VO Group to which the user belongs to.</para>
         </listitem>
 
         <listitem>
@@ -356,15 +353,15 @@ LFN_N PFN_N [site handle N]</programlisting>
         </listitem>
 
         <listitem>
-          <para> <emphasis role="bold">--inherited-rc-files</emphasis> comma
-          separated list of replica catalog files </para>
+          <para><emphasis role="bold">--inherited-rc-files</emphasis> comma
+          separated list of replica catalog files</para>
 
-          <para> A comma separated list of paths to replica files. Locations
+          <para>A comma separated list of paths to replica files. Locations
           mentioned in these have a lower priority than the locations in the
           DAX file. This option is usually used internally for hierarichal
           workflows, where the file locations mentioned in the parent (
           encompassing) workflow DAX, passed to the sub workflows (
-          corresponding) to the dax jobs. </para>
+          corresponding) to the dax jobs.</para>
         </listitem>
 
         <listitem>
@@ -387,7 +384,7 @@ LFN_N PFN_N [site handle N]</programlisting>
           after the executable workflow has finished. If this option is not
           specified, then Pegasus adds cleanup nodes to the executable
           workflow itself that cleanup files on the remote sites when they are
-          no longer required. </para>
+          no longer required.</para>
         </listitem>
 
         <listitem>
@@ -401,7 +398,7 @@ LFN_N PFN_N [site handle N]</programlisting>
           <para>By default the materialized data remains in the working
           directory on the execution site where it was created. Only those
           output files are transferred to an output site for which transfer
-          attribute is set to true in the DAX. </para>
+          attribute is set to true in the DAX.</para>
         </listitem>
 
         <listitem>
@@ -419,7 +416,7 @@ LFN_N PFN_N [site handle N]</programlisting>
           <para>The directory relative to the base directory where the
           executable workflow it to be generated and executed. This over-
           rides the default directory structure that Pegasus creates based on
-          username, VO Group and the DAX label. </para>
+          username, VO Group and the DAX label.</para>
         </listitem>
 
         <listitem>
@@ -432,7 +429,7 @@ LFN_N PFN_N [site handle N]</programlisting>
           and the DAX label. By specifying --relative-dir and
           --relative-submit-dir you can have different relative execution
           directory on the remote site and different relative sub- mit
-          directory on the submit host. </para>
+          directory on the submit host.</para>
         </listitem>
 
         <listitem>
@@ -448,9 +445,9 @@ LFN_N PFN_N [site handle N]</programlisting>
           specify the execution site as<emphasis role="bold"> local
           .</emphasis></para>
 
-          <para> In case this option is not specified, all the sites in the
-          site catalog are picked up as candidates for running the work- flow.
-          </para>
+          <para>In case this option is not specified, all the sites in the
+          site catalog are picked up as candidates for running the work-
+          flow.</para>
         </listitem>
 
         <listitem>
@@ -470,13 +467,13 @@ LFN_N PFN_N [site handle N]</programlisting>
 
           <para><emphasis role="bold">--verbose</emphasis></para>
 
-          <para>increases the verbosity of messages about what is going on.
-          </para>
+          <para>increases the verbosity of messages about what is going
+          on.</para>
 
           <para>By default, all FATAL, ERROR, CONSOLE and WARN messages are
           logged.</para>
 
-          <para>The logging hierarchy is as follows </para>
+          <para>The logging hierarchy is as follows</para>
 
           <itemizedlist>
             <listitem>
@@ -512,16 +509,16 @@ LFN_N PFN_N [site handle N]</programlisting>
             </listitem>
           </itemizedlist>
 
-          <para> For example, to see the INFO, CONFIG and DEBUG messages
+          <para>For example, to see the INFO, CONFIG and DEBUG messages
           additionally, set -vvv.</para>
         </listitem>
 
         <listitem>
-          <para><emphasis role="bold">-V</emphasis> </para>
+          <para><emphasis role="bold">-V</emphasis></para>
 
           <para><emphasis role="bold">--version</emphasis></para>
 
-          <para> Displays the current version number of the Pegasus Workflow
+          <para>Displays the current version number of the Pegasus Workflow
           Management System.</para>
         </listitem>
       </itemizedlist>
@@ -538,8 +535,8 @@ LFN_N PFN_N [site handle N]</programlisting>
       will be 2. This is usually due to factory methods failing while loading
       a module. In case of any other error occurring during the running of the
       command, the exit- code will be 1. In most cases, the error message
-      logged should give a clear indication as to where things went wrong.
-      </para>
+      logged should give a clear indication as to where things went
+      wrong.</para>
     </section>
 
     <section>
@@ -570,7 +567,7 @@ LFN_N PFN_N [site handle N]</programlisting>
         <listitem>
           <para><emphasis role="bold">pegasus.dir.exec</emphasis></para>
 
-          <para> A suffix to the workdir in the site catalog to determine the
+          <para>A suffix to the workdir in the site catalog to determine the
           current working directory. If relative, the value will be appended
           to the working directory from the site.config file. If absolute it
           constitutes the working directory.</para>
@@ -593,9 +590,9 @@ LFN_N PFN_N [site handle N]</programlisting>
         </listitem>
 
         <listitem>
-          <para> <emphasis role="bold">pegasus.catalog.site</emphasis></para>
+          <para><emphasis role="bold">pegasus.catalog.site</emphasis></para>
 
-          <para> Specifies the type of site catalog to be used. At present the
+          <para>Specifies the type of site catalog to be used. At present the
           default is <emphasis role="bold">XML3</emphasis> .</para>
         </listitem>
 
@@ -606,8 +603,8 @@ LFN_N PFN_N [site handle N]</programlisting>
           <para>The location of file to use as a site catalog. If not
           specified, then default value of $PEGASUS_HOME/etc/sites.xml is used
           in case of the xml based site catalog and
-          $PEGASUS_HOME/etc/sites.txt in case of the text based site catalog.
-          </para>
+          $PEGASUS_HOME/etc/sites.txt in case of the text based site
+          catalog.</para>
         </listitem>
 
         <listitem>
@@ -616,7 +613,7 @@ LFN_N PFN_N [site handle N]</programlisting>
           <para>The code generator to use. By default, Condor submit files are
           generated for the executable workflow. Setting to <emphasis
           role="bold">Shell</emphasis> results in Pegasus generating a shell
-          script that can be executed on the submit host. </para>
+          script that can be executed on the submit host.</para>
         </listitem>
       </itemizedlist>
     </section>
@@ -632,7 +629,7 @@ LFN_N PFN_N [site handle N]</programlisting>
           role="bold">$PEGASUS_HOME/etc/dax-3.2.xsd</emphasis></para>
 
           <para>It is the suggested location of the latest DAX schema to
-          produce DAX output. </para>
+          produce DAX output.</para>
         </listitem>
 
         <listitem>
@@ -644,11 +641,11 @@ LFN_N PFN_N [site handle N]</programlisting>
         </listitem>
 
         <listitem>
-          <para><emphasis role="bold">$PEGASUS_HOME/etc/sc-3.0.xsd</emphasis>
-          </para>
+          <para><emphasis
+          role="bold">$PEGASUS_HOME/etc/sc-3.0.xsd</emphasis></para>
 
           <para>is the suggested location of the latest Site Catalog schema
-          that is used to create the XML3 version of the site catalog </para>
+          that is used to create the XML3 version of the site catalog</para>
         </listitem>
 
         <listitem>
@@ -1010,7 +1007,7 @@ s3s://ewa@amazon/pegasus-images/data.tar.gz</programlisting>
 
         <orderedlist>
           <listitem>
-             The -C/--conf argument
+             The -C/--conf argument 
           </listitem>
 
           <listitem>

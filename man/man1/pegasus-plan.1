@@ -29,7 +29,7 @@ pegasus-plan \- runs Pegasus to generate the executable workflow
 .PP
 .B pegasus\-plan
 [\-Dprop [..]]  \-d <dax file> [\-b prefix] [\--conf <path to properties file>]
-[\-c f1[,f2[..]]] [\-C <clustering technique>] [\-D <base directory for o/p files>]
+[\-c f1[,f2[..]]] [\-C <clustering technique>] [\--dir <base directory for o/p files>]
 [\-f] [\--force-replan] [ --inherited-rc-files] [\-j job-prefix] [\-n] [\-o <output site>]
 [\-r[directoryname]] [\--relative-dir <relative directory to base directory>]
 [\--relative-submit-dir <relative submit directory to the base directory>]
@@ -233,11 +233,8 @@ with jobs, the jobs with the same value for the pegasus profile key label
 will go into the same clustered job. 
 
 .TP
-.B \-D \fIdir name
-.PD 0
-.TP
-.PD 1
 .B \--dir \fIdir name
+.PD 0
 The base directory where you want the output of the Pegasus Workflow
 Planner usually condor submit files, to be generated. Pegasus creates
 a directory structure in this base directory on the basis of username,
