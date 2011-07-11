@@ -305,6 +305,14 @@ LFN_N PFN_N [site handle N]</programlisting>
         </listitem>
 
         <listitem>
+          <para><emphasis role="bold">--conf path to properties
+          file</emphasis></para>
+
+          <para>The path to properties file that contains the properties
+          planner needs to use while planning the workflow.</para>
+        </listitem>
+
+        <listitem>
           <para><emphasis role="bold">--dir dir name</emphasis></para>
 
           <para>The base directory where you want the output of the Pegasus
