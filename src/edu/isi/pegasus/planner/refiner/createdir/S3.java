@@ -37,6 +37,7 @@ import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 
 import edu.isi.pegasus.common.util.Separator;
 
+import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
 import java.io.File;
 
 import java.util.HashMap;
@@ -184,7 +185,9 @@ public class S3 implements Implementation {
             }
             //retrieve the base mount point that is the bucket name
             StringBuffer url = new StringBuffer();
-            url.append( "s3://" );
+            FileServer fs = entry.getHeadNodeFS().selectScratchSharedFileServer();
+            url.append( fs.getURLPrefix() );
+            url.append( File.separator );
             
             //add internal mount point
             String bucketName  = entry.getInternalMountPointOfWorkDirectory();
