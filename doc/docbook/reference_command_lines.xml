@@ -730,8 +730,546 @@ LFN_N PFN_N [site handle N]</programlisting>
   <section>
     <title>pegasus-tc-client</title>
 
-    <para>pegasus-tc-client is used to generate and modify transformation
-    catalogs.</para>
+    <para>A full featured generic client to handle adds, delete and queries to
+    the Transformation Catalog (TC).</para>
+
+    <section>
+      <title>SYNOPSIS</title>
+
+      <para><emphasis role="bold">pegasus-tc-client</emphasis> OPERATION
+      TRIGGERS [OPTIONS] [-h] [-v] [-V]</para>
+    </section>
+
+    <section>
+      <title>DESCRIPTION</title>
+
+      <para>The tc-client command is a generic client that performs the three
+      basic operation of adding, deleting and querying of any Transformation
+      Catalog impemented to the TC API. The client implements all the
+      operations supported by the TC Api. It is upto the TC implementation
+      whether they support all operations or modes. </para>
+
+      <para></para>
+
+      <para>The following 3 operations are supported by the tc-client. One of
+      these operations have to be specified to run the client.</para>
+
+      <orderedlist>
+        <listitem>
+          <para><emphasis role="bold">ADD</emphasis></para>
+
+          <para>This operation allows the client to add or update entries in
+          the Transformation Catalog. Entries can be added one by one on the
+          command line or in bulk by using the BULK Trigger and pro‐ viding a
+          file with the necessary entries. Also Profiles can be added to
+          either the logical transformation or the physical
+          transformation.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">DELETE</emphasis></para>
+
+          <para>This operation allows the client to delete entries from the
+          Transformation Catalog. Entries can be deleted based on logical
+          transformation, by resource, by transformation type as well as the
+          transformation system information. Also Profiles associated with the
+          logical or physical transformation can be deleted.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">QUERY</emphasis></para>
+
+          <para>This opeartion allows the client to query for entries from the
+          Transformation Catalog. Queries can be made for printing all the
+          contents of the Catalog or for specific entries, for all the logical
+          transformations or resources etc. See the TRIGGERS and VALID
+          COMBINATIONS section for more details.</para>
+        </listitem>
+      </orderedlist>
+    </section>
+
+    <section>
+      <title>OPERATIONS</title>
+
+      <para>To select one of the 3 operations.</para>
+
+      <para></para>
+
+      <orderedlist>
+        <listitem>
+          <para><emphasis role="bold">-a , --add</emphasis></para>
+
+          <para>Perform addition operations on the TC.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-d , --delete </emphasis></para>
+
+          <para>Perform delete operations on the TC.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis>-q , --query</emphasis></para>
+
+          <para>Perform query operations on the TC.</para>
+        </listitem>
+      </orderedlist>
+    </section>
+
+    <section>
+      <title>TRIGGERS</title>
+
+      <para>Triggers modify an OPERATIONS behaviour. E.g. if you want to
+      perform a bulk operation you would use a BULK Trigger or if you want to
+      perform an operation on a Logical Transformation then you would use the
+      LFN Trigger.</para>
+
+      <para></para>
+
+      <para> The following 7 Triggers are available. See the VALID
+      COMBINATIONS section for the correct grouping and usage.</para>
+
+      <para></para>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">-B </emphasis></para>
+
+          <para>Triggers a bulk operation.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-L</emphasis></para>
+
+          <para><emphasis role="bold"><emphasis>Triggers an operation on a
+          logical transformation.</emphasis></emphasis></para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-P</emphasis></para>
+
+          <para><emphasis role="bold"><emphasis>Triggers an operation on a
+          physical transformation.</emphasis></emphasis></para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-R</emphasis></para>
+
+          <para><emphasis role="bold"><emphasis>Triggers an operation on a
+          resource.</emphasis></emphasis></para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-E</emphasis></para>
+
+          <para><emphasis role="bold"><emphasis>Triggers an operation on a
+          Profile.</emphasis></emphasis></para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-T</emphasis></para>
+
+          <para><emphasis role="bold"><emphasis>Triggers an operation on a
+          Type.</emphasis></emphasis></para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-S</emphasis></para>
+
+          <para><emphasis role="bold"><emphasis>Triggers an operation on a
+          System information.</emphasis></emphasis></para>
+        </listitem>
+      </itemizedlist>
+    </section>
+
+    <section>
+      <title>OPTIONS</title>
+
+      <para>The following options are applicable for all the
+      operations.</para>
+
+      <para></para>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">-l, --lfn logicalTR</emphasis></para>
+
+          <para>The logical transformation to be added. The format is
+          NAMESPACE::NAME:VERSION. The name is always required, namespace and
+          version are optional.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-p, --pfn physical TR</emphasis></para>
+
+          <para>The physical transfromation to be added. For INSTALLED
+          executables its a local file path, for all others its a url.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-t , --type type</emphasis></para>
+
+          <para>The type of physical transformation. Valid values are :
+          INSTALLED, STATIC_BINARY, DYNAMIC_BINARY, SCRIPT, SOURCE,
+          PACMAN_PACKAGE.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-r , --resource
+          resourceID</emphasis></para>
+
+          <para>The resourceID where the transformation is located.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-e , --profile
+          profiles</emphasis></para>
+
+          <para> The profiles for the transformation. Mulitple profiles of
+          same namespace can be added simultaneously by seperating them with a
+          comma ",". Each profile section is written as
+          NAMESPACE::KEY=VALUE,KEY2=VALUE2 e.g.
+          ENV::JAVA_HOME=/usr/bin/java2,PEGASUS_HOME=/usr/local/pegasus. To
+          add muliple namespaces you need to repeat the -e option for each
+          namespace. </para>
+
+          <para>e.g. -e ENV::JAVA_HOME=/usr/bin/java -e
+          GLOBUS::JobType=MPI,COUNT=10 </para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-s , --system
+          systeminfo</emphasis></para>
+
+          <para>The architecture, os, osversion and glibc if any for the
+          executable. Each system info is written in the form
+          ARCH::OS:OSVER:GLIBC</para>
+        </listitem>
+      </itemizedlist>
+    </section>
+
+    <section>
+      <title>OTHER OPTIONS</title>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">--oldformat, -o</emphasis></para>
+
+          <para>Generates the output in the old single line format </para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">--conf, -c</emphasis></para>
+
+          <para>path to property file</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">--verbose, -v</emphasis></para>
+
+          <para>increases the verbosity level</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">--version, -V</emphasis></para>
+
+          <para>Displays the version number of the Griphyn Virtual Data System
+          software</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">--help, -h</emphasis></para>
+
+          <para>Generates this help</para>
+        </listitem>
+      </itemizedlist>
+    </section>
+
+    <section>
+      <title>VALID COMBINATIONS</title>
+
+      <para>The following are valid combinations of OPERATIONS, TRIGGERS,
+      OPTIONS for the tc-client</para>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">ADD</emphasis></para>
+
+          <itemizedlist>
+            <listitem>
+              <para><emphasis>ADD TC ENTRY</emphasis></para>
+
+              <para><emphasis><emphasis>-a -l lfn -p pfn -t type -r resource
+              -s system [-e profiles..] </emphasis></emphasis></para>
+
+              <para><emphasis><emphasis>Adds a single entry into the
+              transformation catalog.</emphasis></emphasis></para>
+            </listitem>
+
+            <listitem>
+              <para><emphasis>ADD PFN PROFILE</emphasis></para>
+
+              <para>-a -P -E -p pfn -t type -r resource -e profiles ....
+              </para>
+
+              <para>Adds profiles to a specified physical transformation on a
+              given resource and of a given type. </para>
+            </listitem>
+
+            <listitem>
+              <para><emphasis>ADD LFN PROFILE</emphasis></para>
+
+              <para>-a -L -E -l lfn -e profiles .... </para>
+
+              <para>Adds profiles to a specified logical
+              transformation.</para>
+            </listitem>
+
+            <listitem>
+              <para><emphasis>Add Bulk Entries</emphasis></para>
+
+              <para>-a -B -f file </para>
+
+              <para>Adds entries in bulk mode by supplying a file containg the
+              entries. </para>
+
+              <para>The format of the file cotnains 6 columns. E.g. </para>
+
+              <para>#RESOURCE LFN PFN TYPE SYSINFO PROFILES # isi NS::NAME:VER
+              /bin/date INSTALLED ARCH::OS:OSVERS:GLIBC
+              NS::KEY=VALUE,KEY=VALUE;NS2::KEY=VALUE,KEY=VALUE</para>
+            </listitem>
+          </itemizedlist>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">DELETE</emphasis></para>
+
+          <itemizedlist>
+            <listitem>
+              <para><emphasis>Delete all TC </emphasis></para>
+
+              <para>-d -BPRELST </para>
+
+              <para>Deletes the entire contents of the TC. WARNING : USE WITH
+              CAUTION.</para>
+            </listitem>
+
+            <listitem>
+              <para><emphasis>Delete by LFN </emphasis></para>
+
+              <para>-d -L -l lfn [-r resource] [-t type] </para>
+
+              <para>Deletes entries from the TC for a particular logical
+              transformation and additionaly a resource and or type.</para>
+            </listitem>
+
+            <listitem>
+              <para><emphasis>Delete by PFN </emphasis></para>
+
+              <para>-d -P -l lfn -p pfn [-r resource] [-t type] </para>
+
+              <para>Deletes entries from the TC for a given logical and
+              physical transformation and additionaly on a particular resource
+              and or of a particular type.</para>
+            </listitem>
+
+            <listitem>
+              <para><emphasis>Delete by Type </emphasis></para>
+
+              <para>-d -T -t type [-r resource] </para>
+
+              <para>Deletes entries from TC of a specific type and/or on a
+              specific resource. </para>
+            </listitem>
+
+            <listitem>
+              <para><emphasis>Delete by Resource </emphasis></para>
+
+              <para>-d -R -r resource </para>
+
+              <para>Deletes the entries from the TC on a particular
+              resource.</para>
+            </listitem>
+
+            <listitem>
+              <para><emphasis>Delete by SysInfo </emphasis></para>
+
+              <para>-d -S -s sysinfo </para>
+
+              <para>Deletes the entries from the TC for a particular system
+              information type.</para>
+            </listitem>
+
+            <listitem>
+              <para><emphasis>Delete Pfn Profile </emphasis></para>
+
+              <para>-d -P -E -p pfn -r resource -t type [-e profiles ..]
+              </para>
+
+              <para>Deletes all or specific profiles associated with a
+              physical transformation.</para>
+            </listitem>
+
+            <listitem>
+              <para><emphasis>Delete Lfn Profile </emphasis></para>
+
+              <para>-d -L -E -l lfn -e profiles .... </para>
+
+              <para>Deletes all or specific profiles associated with a logical
+              transformation.</para>
+            </listitem>
+          </itemizedlist>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">QUERY</emphasis></para>
+
+          <itemizedlist>
+            <listitem>
+              <para><emphasis>Query Bulk </emphasis></para>
+
+              <para>-q -B Queries for all the contents of the TC. </para>
+
+              <para>It produces a file format TC which can be added to another
+              TC using the bulk option.</para>
+            </listitem>
+
+            <listitem>
+              <para><emphasis>Query LFN </emphasis></para>
+
+              <para>-q -L [-r resource] [-t type] </para>
+
+              <para>Queries the TC for logical transformation and/or on a
+              particular resource and/or of a particular type. </para>
+            </listitem>
+
+            <listitem>
+              <para><emphasis> Query PFN </emphasis></para>
+
+              <para>-q -P -l lfn [-r resource] [-t type] </para>
+
+              <para>Queries the TC for physical transformations for a give
+              logical transformation and/or on a particular resource and/or of
+              a particular type.</para>
+            </listitem>
+
+            <listitem>
+              <para><emphasis>Query Resource </emphasis></para>
+
+              <para>-q -R -l lfn [-t type] </para>
+
+              <para>Queries the TC for resources that are registered and/or
+              resources registered for a specific type of
+              transformation.</para>
+            </listitem>
+
+            <listitem>
+              <para><emphasis>Query Lfn Profile </emphasis></para>
+
+              <para>-q -L -E -l lfn </para>
+
+              <para>Queries for profiles associated with a particular logical
+              transformation</para>
+            </listitem>
+
+            <listitem>
+              <para><emphasis>Query Pfn Profile </emphasis></para>
+
+              <para>-q -P -E -p pfn -r resource -t type </para>
+
+              <para>Queries for profiles associated with a particular physical
+              transformation</para>
+            </listitem>
+          </itemizedlist>
+        </listitem>
+      </itemizedlist>
+    </section>
+
+    <section>
+      <title>PROPERTIES</title>
+
+      <para>This are the properties you will need to set to use either the
+      File or Text TC. For more details please check the
+      $PEGASUS_HOME/etc/sample.properties file.</para>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis
+          role="bold">pegasus.catalog.transformation</emphasis></para>
+
+          <para>Identifies what impelemntation of TC will be used. If relative
+          name is used then the path org.griphyn.cPlanner.tc is prefixed to
+          the name and used as the class name to load. The default value is
+          Text. Other supported mode is File</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis
+          role="bold">pegasus.catalog.transformation.file</emphasis></para>
+
+          <para> The file path where the text based TC is located. By default
+          the path $PEGASUS_HOME/var/tc.data is used.</para>
+        </listitem>
+      </itemizedlist>
+    </section>
+
+    <section>
+      <title>FILES</title>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">$PEGASUS_HOME/var/tc.data</emphasis>
+          </para>
+
+          <para>is the suggested location for the file corresponding to the
+          Transformation Catalog </para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">$PEGASUS_HOME/etc/properties</emphasis>
+          </para>
+
+          <para>is the location to specify properties to change what
+          Tranformation Catalog Implementation to use and the implementation
+          related PROPERTIES.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">pegasus.jar</emphasis> </para>
+
+          <para>contains all compiled Java bytecode to run the PEGASUS
+          Planner.</para>
+        </listitem>
+      </itemizedlist>
+    </section>
+
+    <section>
+      <title>ENVIRONMENT VARIABLES</title>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">$PEGASUS_HOME </emphasis></para>
+
+          <para>Path to the PEGASUS installation directory.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">$JAVA_HOME </emphasis></para>
+
+          <para>Path to the JAVA 1.4.x installation directory.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">$CLASSPATH </emphasis></para>
+
+          <para>The classpath should be set to contain all necessary PEGASUS
+          files for the execution environment. To automatically add the
+          CLASSPATH to you environment, in the $PEGASUS_HOME directory run the
+          script source setup-user-env.csh or source setup-user-env.sh.</para>
+        </listitem>
+      </itemizedlist>
+    </section>
   </section>
 
   <section>
