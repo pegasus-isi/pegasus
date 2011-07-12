@@ -2080,7 +2080,9 @@ Logical transformation statistics :
               <row>
                 <entry align="center">Job</entry>
 
-                <entry align="center">Site</entry>
+				<entry align="center">Num</entry>
+
+				<entry align="center">Site</entry>
 
                 <entry align="center">Kickstart</entry>
 
@@ -2106,6 +2108,8 @@ Logical transformation statistics :
               <row>
                 <entry>analyze_j4</entry>
 
+                <entry>1</entry>
+
                 <entry>local</entry>
 
                 <entry>60.03</entry>
@@ -2129,6 +2133,8 @@ Logical transformation statistics :
 
               <row>
                 <entry>create_dir_blackdiamond_0_local</entry>
+
+                <entry>1</entry>
 
                 <entry>local</entry>
 
@@ -2154,6 +2160,8 @@ Logical transformation statistics :
               <row>
                 <entry>findrange_j2</entry>
 
+                <entry>1</entry>
+
                 <entry>local</entry>
 
                 <entry>60.03</entry>
@@ -2177,6 +2185,8 @@ Logical transformation statistics :
 
               <row>
                 <entry>findrange_j3</entry>
+
+                <entry>1</entry>
 
                 <entry>local</entry>
 
@@ -2202,6 +2212,8 @@ Logical transformation statistics :
               <row>
                 <entry>preprocess_j1</entry>
 
+                <entry>1</entry>
+
                 <entry>local</entry>
 
                 <entry>60.03</entry>
@@ -2225,6 +2237,8 @@ Logical transformation statistics :
 
               <row>
                 <entry>register_local_2_0</entry>
+
+                <entry>1</entry>
 
                 <entry>local</entry>
 
@@ -2250,6 +2264,8 @@ Logical transformation statistics :
               <row>
                 <entry>stage_in_local_local_0</entry>
 
+                <entry>1</entry>
+
                 <entry>local</entry>
 
                 <entry>0.08</entry>
@@ -2273,6 +2289,8 @@ Logical transformation statistics :
 
               <row>
                 <entry>stage_out_local_local_2_0</entry>
+
+                <entry>1</entry>
 
                 <entry>local</entry>
 
