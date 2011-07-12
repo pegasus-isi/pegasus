@@ -77,14 +77,20 @@ public class PegasusProperties {
 
     public static final String DEFAULT_TC_MODE = "Text";
 
+    public static final String TC_TEXT_FILE = "tc.text";
+    
+    public static final String TC_DATA_FILE = "tc.data";
+
+
     public static final String DEFAULT_POOL_MODE = "XML3";
 
     public static final String DEFAULT_CONDOR_BIN_DIR = "";
 
     public static final String DEFAULT_CONDOR_CONFIG_DIR = "";
 
-   
-    public static final String POOL_CONFIG_FILE = "sites.";
+    public static final String SC_XML_FILE = "sites.xml";
+
+    public static final String SC_XML3_FILE = "sites.xml3";
 
     public static final String CONDOR_KICKSTART = "kickstart-condor";
 
@@ -124,7 +130,6 @@ public class PegasusProperties {
 
     public static final String DEFAULT_TX_SELECTOR_MODE = "Random";
 
-    public static final String TC_DATA_FILE = "tc.data";
 
     //logging constants
     public static final String DEFAULT_LOGGING_FILE = "stdout";
@@ -360,18 +365,20 @@ public class PegasusProperties {
     
     /**
      * Returns the default path to the transformation catalog. Currently the
-     * default path defaults to  $PEGASUS_HOME/var/tc.data.
+     * default path defaults to  $PEGASUS_HOME/etc/tc.text if transformation
+     * type is Text else $PEGASUS_HOME/etc/tc.data
      *
-     * @return the default path to tc.data.
+     * @return the default path to transformation catalog file
      */
     public String getDefaultPathToTC() {
-        StringBuffer sb = new StringBuffer( 50 );
-        sb.append( mPegasusHome );
-        sb.append( File.separator );
-        sb.append( "etc" );
-        File f = new File( sb.toString(), TC_DATA_FILE );
 
+        String name = (getTCMode().equalsIgnoreCase( DEFAULT_TC_MODE ))?
+                  PegasusProperties.TC_TEXT_FILE:
+                  PegasusProperties.TC_DATA_FILE;
+        File f = new File( mProps.getSysConfDir(),name);
+        //System.err.println("Default Path to SC is " + f.getAbsolutePath());
         return f.getAbsolutePath();
+
     }
 
     /**
@@ -379,16 +386,15 @@ public class PegasusProperties {
      * The default path is constructed on the basis of the mode set by
      * the user.
      *
-     * @return $PEGASUS_HOME/etc/sites.txt if the pool mode is Text, else
+     * @return $PEGASUS_HOME/etc/sites.xml3 if the pool mode is XML3, else
      *         $PEGASUS_HOME/etc/sites.xml
      *
      * @see #getPoolMode()
      */
     public String getDefaultPathToSC() {
-        String name = POOL_CONFIG_FILE;
-        name += (getPoolMode().equalsIgnoreCase("Text"))?
-                 "txt":
-                 "xml";
+        String name =  (getPoolMode().equalsIgnoreCase( DEFAULT_POOL_MODE ))?
+                  PegasusProperties.SC_XML3_FILE:
+                  PegasusProperties.SC_XML_FILE;
         File f = new File( mProps.getSysConfDir(),name);
         //System.err.println("Default Path to SC is " + f.getAbsolutePath());
         return f.getAbsolutePath();
