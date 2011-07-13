@@ -16,15 +16,13 @@
 .\"
 .\" Authors: Jens-S. Vöckler, Yong Zhao
 .\"
-.TH "kickstart" "1" "1.0.0" "GriPhyN Virtual Data System"
+.TH "kickstart" "1" "3.1.0" "Pegasus WMS"
 .SH "NAME"
 kickstart \- run an executable in a more universal environment.
 .SH "SYNTAX"
 .B kickstart
 [\-n\~tr] [\-N\~dv] [\-H] [\-R site] [\-W | \-w\~dir] [\-L\~lbl \-T\~iso]
-.br
  [\-s [l=]p | @fn] [\-S [l=]p | @fn] [\-i\~fn] [\-o\~fn] [\-e\~fn] [-X] 
-.br
  [\-l\~fn\~sz] (-I fn | app [appflags] )
 .br
 .B kickstart
@@ -44,7 +42,7 @@ possible for
 .B kickstart 
 to gather additional information about the executable run-time behavior
 and resource usage, including the exit status of jobs. This information
-is important for the VDS invocation tracking as well as to Condor
+is important for the Pegasus invocation tracking as well as to Condor
 DAGMan's awareness of Globus job failures.
 .PP
 .B Kickstart
@@ -80,16 +78,16 @@ below for details on this feature.
 .B \-n tr
 In order to associate the minimal performance information of the job
 with the invocation records, the jobs needs to carry which
-transformation in the VDC was responsible for producing it. The format
-is the notion of VDLt for fully-qualified definition names, like
+.I transformation 
+was responsible for producing it. The format
+is the textual notation for fully-qualified definition names, like
 namespace::name:version, with only the name portion being mandatory.
 .IP
 There is no default. If no value is given, "null" will be reported.
 .TP
 .B \-N dv
-In order to associate the VDC invocation record of the job with the
-invocation records, the jobs needs to carry which derivation in the VDC
-was responsible for producing it. The format is the notion of VDLt for
+The jobs may carry which instantiation of a transformation was
+responsible for producing it. The format is the textual notation for
 fully-qualified definition names, like namespace::name:version, with
 only the name portion being mandatory.
 .IP
@@ -205,7 +203,7 @@ to re-connect the
 of the application that it starts. The mode is used whenever an application
 produces meaningful results on its 
 .I stdout
-that need to be tracked by VDS. The real
+that need to be tracked by Pegasus. The real
 .I stdout 
 of Globus jobs is staged via GASS (GT2) or RFT (GT4). The real 
 .I stdout
@@ -251,7 +249,7 @@ to re-connect the
 of the application that it starts. This option is used whenever an
 application produces meaningful results on
 .I stderr
-that needs tracking by VDS. The real
+that needs tracking by Pegasus. The real
 .I stderr
 of Globus jobs is staged via GASS (GT2) or RFT (GT4). It is used to
 propagate abnormal behaviour from both,
@@ -404,9 +402,9 @@ failures.
 .BR getrusage (3c),
 .BR gencdag (1).
 .PP
-.BR http://vds.isi.edu/doc/schemas/iv-1.10/iv-1.10.html ,
+.BR https://pegasus.isi.edu/wms/docs/schemas/iv-2.1/iv-2.1.html ,
 .br
-.BR http://vds.isi.edu/ link Documentation.
+.BR https://pegasus.isi.edu/wms/ link Documentation.
 .SH "SUBJOBS"
 Subjobs are a new feature and may have a few wrinkles left.
 .PP
@@ -458,7 +456,7 @@ optional commandline argument into the environment variable
 If you are invoking from a shell, you might want to use single quotes
 to protect against the shell. If you are invoking from Globus, you can
 append the RSL string feature. From Condor, you can use Condor's notion
-of environment settings. From VDS, use the 
+of environment settings. In Pegasus use the 
 .I profile
 command to set generic scripts that will work on multiple sites, 
 or the transformation catalog to set environment variables in a pool-specific
@@ -530,11 +528,11 @@ directory that contains the application, the transformation catalog does
 not need to care about the true location of the application path on each
 pool. Even better, an administrator may decide to move your home
 directory to a different place. As long as the compute node is set up
-correctly, you don't have to adjust any VDS data.
+correctly, you don't have to adjust any Pegasus data.
 .PP 
 Mind that variable substitution is an expert feature, as some degree of
 tricky quoting is required to protect substitutable variables and quotes
-from Globus, Condor and VDS in that order. Note that Condor uses the
+from Globus, Condor and Pegasus in that order. Note that Condor uses the
 dollar sign for its own variables. 
 .PP
 The variable substitution assumptions for the main job differ
@@ -563,7 +561,7 @@ finish,
 will attempt to read from the FIFO. By default, any information read
 will be encapsulated in XML tags, and written to 
 .I stderr .
-Please note that in a VDS, Globus, Condor-G environment, 
+Please note that in a Pegasus, Globus, Condor-G environment, 
 .I stderr
 will be GASS streamed or staged to the submit host. At the submit host, an
 application specific monitor may unpack the data chunks and could
@@ -628,10 +626,10 @@ NFS) are atomically written.
 The current format of the performance data is as follows:
 .SH "OUTPUT FORMAT"
 Refer to
-.B http://www.griphyn.org/workspace/VDS/iv-1.4/iv-1.4.html
+.B https://pegasus.isi.edu/wms/docs/schemas/iv-2.1/iv-2.1.html
 for an up-to-date description of elements and their attributes. Check with
-.B http://www.griphyn.org/workspace/VDS/
-for IV schemas with a higher version number.
+.B https://pegasus.isi.edu/wms/schema.php
+for invocation schemas with a higher version number.
 .SH "RESTRICTIONS"
 There is no version for the Condor
 .I standard 
@@ -644,9 +642,9 @@ will also prove difficult to port outside the Unix environment.
 Any of the pre-, main-, cleanup and postjob are unable to influence one anothers
 visible environment.
 .PP
-Do not use a VDL definition with just the name
+Do not use a Pegasus transformation with just the name
 .I null 
-and no namespace or version.
+and no namespace nor version.
 .PP 
 First Condor, and then Unix, place a limit on the length of the commandline. 
 The additional space required for the gridstart invocation may silently 
@@ -681,7 +679,7 @@ the resulting file will still be truncated. This is correct behavior,
 but sometimes not obvious.
 .SH "FILES"
 .TP
-.B $PEGASUS_HOME/etc/iv-1.6.xsd
+.B $PEGASUS_HOME/etc/iv-2.1.xsd
 is the suggested location of the latest XML schema describing the data
 on the submit host.
 .SH "ENVIRONMENT VARIABLES"
@@ -727,19 +725,13 @@ after any of the previous jobs, see above for a detailled description.
 is the name of a FIFO for an application-specific feedback-channel,
 see above for a detailled description.
 .SH "AUTHORS"
-Michael Milligan <mbmillig@uchicago.edu>,
+Michael Milligan <mbmillig at uchicago dot edu>,
 .br
-Jens-S. Vöckler <voeckler@cs.uchicago.edu>,
-.\"Jens-S. V\*:ockler <voeckler@cs.uchicago.edu>,
+Jens-S. Vöckler <voeckler at isi dot edu>,
 .br
-Mike Wilde <wilde@mcs.anl.gov>,
+Mike Wilde <wilde at mcs dot anl dot gov>,
 .br
-Yong Zhao <yongzh@cs.uchicago.edu>.
+Yong Zhao <yongzh at cs dot uchicago dot edu>.
 .PP
-Virtual Data System
-.B http://vds.isi.edu/
-and
-.B http://vds.uchicago.edu/
-.br
-GriPhyN
-.BR http://www.griphyn.org/
+Pegasus 
+.BR http://pegasus.isi.edu/
