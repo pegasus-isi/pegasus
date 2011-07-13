@@ -31,6 +31,7 @@ import edu.isi.pegasus.planner.cluster.JobAggregator;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 
 import edu.isi.pegasus.planner.namespace.Condor;
+import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
@@ -39,6 +40,7 @@ import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry
 
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 
+import edu.isi.pegasus.common.util.S3cfg;
 import edu.isi.pegasus.common.util.Separator;
 
 import edu.isi.pegasus.common.logging.LogManager;
@@ -157,6 +159,16 @@ public class S3 implements CleanupImplementation{
      */
     protected String mBucketName;
     
+    /**
+     * The path to the s3cfg file on the submit host (local pool).
+     */
+    protected String mLocalS3cfg;
+
+    /**
+     * The basename of the user s3cfg file
+     */
+    protected String mLocalS3cfgBasename;
+    
 
     /**
      * A convenience method to return the complete transformation name being
@@ -203,6 +215,20 @@ public class S3 implements CleanupImplementation{
             throw new RuntimeException( "Only S3 Create Dir implementation can be used with S3 First Level Staging" );
         }
         mS3CreateDirImpl = (edu.isi.pegasus.planner.refiner.createdir.S3 )createDirImpl;
+        
+        // s3cfg
+        mLocalS3cfg = S3cfg.getPathToS3cfg(bag);
+        //set the path to s3cfg only if the scfg exists
+        if( mLocalS3cfg != null && !new File(mLocalS3cfg).exists() ){
+            mLogger.log( "The s3cfg file does not exist - " + mLocalS3cfg,
+                         LogManager.DEBUG_MESSAGE_LEVEL );
+            mLocalS3cfg = null;
+        }
+
+        mLocalS3cfgBasename = (mLocalS3cfg == null) ?
+                                  null :
+                                  new File(mLocalS3cfg).getName();
+        
     }
 
 
@@ -221,11 +247,11 @@ public class S3 implements CleanupImplementation{
         
         String bucket = mS3CreateDirImpl.getBucketNameURL( job.getSiteHandle() );
         
-        //we want to run the clnjob in the same directory
-        //as the compute job. We cannot clone as then the 
-        //the cleanup jobs for clustered jobs appears as
-        //a clustered job. PM-368
-        Job cJob = new Job( job );
+        Job cJob = new Job();
+        
+        // run locally
+        cJob.setSiteHandle("local");
+        cJob.executionPool = "local";
 
         //we dont want notifications to be inherited
         cJob.resetNotifications();
@@ -252,7 +278,7 @@ public class S3 implements CleanupImplementation{
         cJob.setVDSSuperNode( job.getID() );
 
         //set the path to the rm executable
-        TransformationCatalogEntry entry = this.getTCEntry( job.getSiteHandle() );
+        TransformationCatalogEntry entry = this.getTCEntry( "local" );
         cJob.setRemoteExecutable( entry.getPhysicalTransformation() );
 
 
@@ -294,7 +320,7 @@ public class S3 implements CleanupImplementation{
 
         //the profile information from the pool catalog needs to be
         //assimilated into the job.
-        cJob.updateProfiles( mSiteStore.lookup( job.getSiteHandle() ).getProfiles()  );
+        cJob.updateProfiles( mSiteStore.lookup( cJob.getSiteHandle() ).getProfiles()  );
 
         
         //add any notifications specified in the transformation
@@ -314,15 +340,21 @@ public class S3 implements CleanupImplementation{
         //let us put some priority for the cleaunup jobs
         cJob.condorVariables.construct( Condor.PRIORITY_KEY,
                                         DEFAULT_PRIORITY_KEY );
-
-        //a remote hack that only works for condor pools
-        //cJob.globusRSL.construct( "condorsubmit",
-        //                                 "(priority " + DEFAULT_PRIORITY_KEY + ")");
         
-        //we want the S3 cleanup jobs only execute in /tmp since
-        //there is no remote directory being created in S3 environment
-        cJob.vdsNS.construct( Pegasus.REMOTE_INITIALDIR_KEY, "/tmp" );
-        //System.out.println( cJob );
+        // s3cfg - for jobs executing on local site, just set the environment variable
+        // for remote execution, transfer the s3cfg file
+        if( cJob.getSiteHandle().equalsIgnoreCase( "local" ) ){
+            //the full path
+            cJob.envVariables.checkKeyInNS(S3cfg.S3CFG, this.mLocalS3cfg );
+        }
+        else{
+            cJob.condorVariables.addIPFileForTransfer(mLocalS3cfg);
+            //just the basename
+            cJob.envVariables.checkKeyInNS(ENV.S3CFG, mLocalS3cfgBasename);
+            cJob.envVariables.checkKeyInNS(ENV.GRIDSTART_PREJOB,
+                                             "/bin/chmod 600 " +
+                                             mLocalS3cfgBasename);
+        }
         
         return cJob;
     }

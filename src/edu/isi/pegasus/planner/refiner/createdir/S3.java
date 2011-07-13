@@ -28,6 +28,7 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 
+import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
@@ -35,6 +36,7 @@ import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry
 
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 
+import edu.isi.pegasus.common.util.S3cfg;
 import edu.isi.pegasus.common.util.Separator;
 
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
@@ -128,6 +130,15 @@ public class S3 implements Implementation {
      */
     protected PegasusProperties mProps;
     
+    /**
+     * The path to the s3cfg file on the submit host (local pool).
+     */
+    protected String mLocalS3cfg;
+
+    /**
+     * The basename of the user s3cfg file
+     */
+    protected String mLocalS3cfgBasename;
     
     
     /**
@@ -164,6 +175,19 @@ public class S3 implements Implementation {
 
         //replace file separators in directory with -
         mRelativeBucketDir = mRelativeBucketDir.replace( File.separatorChar,  '-' );
+
+        
+        mLocalS3cfg = S3cfg.getPathToS3cfg(bag);
+        //set the path to s3cfg only if the scfg exists
+        if( mLocalS3cfg != null && !new File(mLocalS3cfg).exists() ){
+            mLogger.log( "The s3cfg file does not exist - " + mLocalS3cfg,
+                         LogManager.DEBUG_MESSAGE_LEVEL );
+            mLocalS3cfg = null;
+        }
+
+        mLocalS3cfgBasename = (mLocalS3cfg == null) ?
+                                  null :
+                                  new File(mLocalS3cfg).getName();
         
     }
     
@@ -333,7 +357,7 @@ public class S3 implements Implementation {
             entries = mTCHandle.lookup( S3.TRANSFORMATION_NAMESPACE,
                                               S3.TRANSFORMATION_NAME,
                                               S3.TRANSFORMATION_VERSION,
-                                              site, 
+                                              "local", 
                                               TCType.INSTALLED);
         }
         catch (Exception e) {
@@ -343,7 +367,7 @@ public class S3 implements Implementation {
         }
 
         entry = ( entries == null ) ?
-            this.defaultTCEntry( site ): //try using a default one
+            this.defaultTCEntry( "local" ): //try using a default one
             (TransformationCatalogEntry) entries.get(0);
 
         if( entry == null ){
@@ -353,15 +377,15 @@ public class S3 implements Implementation {
             StringBuffer error = new StringBuffer();
             error.append("Could not find entry in tc for lfn ").
                 append( COMPLETE_TRANSFORMATION_NAME ).
-                append(" at site ").append( site );
+                append(" at site ").append( "local" );
 
             mLogger.log( error.toString(), LogManager.ERROR_MESSAGE_LEVEL);
             throw new RuntimeException( error.toString() );
         }
 
 
-
-        SiteCatalogEntry ePool = mSiteStore.lookup( site );
+        // map to local site
+        SiteCatalogEntry ePool = mSiteStore.lookup( "local" );
 /*      JIRA PM-277 
         jobManager = ePool.selectGridGateway( GridGateway.JOB_TYPE.cleanup );
 */
@@ -385,7 +409,7 @@ public class S3 implements Implementation {
         newJob.globusScheduler = jobManager.getContact();
  */ 
         newJob.executable = execPath;
-        newJob.executionPool = site;
+        newJob.executionPool = "local";
         newJob.strargs = argString;
         newJob.jobClass = Job.CREATE_DIR_JOB;
         newJob.jobID = name;
@@ -408,7 +432,22 @@ public class S3 implements Implementation {
         //is assimilated overidding the one from transformation
         //catalog.
         newJob.updateProfiles( mProps );
-
+        
+        // s3cfg - for jobs executing on local site, just set the environment variable
+        // for remote execution, transfer the s3cfg file
+        if( newJob.getSiteHandle().equalsIgnoreCase( "local" ) ){
+            //the full path
+            newJob.envVariables.checkKeyInNS(S3cfg.S3CFG, this.mLocalS3cfg );
+        }
+        else{
+            newJob.condorVariables.addIPFileForTransfer(mLocalS3cfg);
+            //just the basename
+            newJob.envVariables.checkKeyInNS(ENV.S3CFG, mLocalS3cfgBasename);
+            newJob.envVariables.checkKeyInNS(ENV.GRIDSTART_PREJOB,
+                                             "/bin/chmod 600 " +
+                                             mLocalS3cfgBasename);
+        }
+        
         return newJob;
 
     }
