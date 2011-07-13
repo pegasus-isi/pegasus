@@ -366,13 +366,15 @@ def print_workflow_summary(workflow_stats ):
 	
 	workflow_states_list = workflow_stats.get_workflow_states()
 	workflow_wall_time = stats_utils.get_workflow_wall_time(workflow_states_list)
+	summary_str += NEW_LINE_STR
+	summary_str += "Workflow wall time                               : %-20s (total %d seconds)\n" % \
+			(format_seconds(workflow_wall_time), (workflow_wall_time)) 
+	summary_str += NEW_LINE_STR
+	summary_str += "Workflow cumulative job wall time                : %-20s (total %d seconds)\n" % \
+			(format_seconds(workflow_stats.get_workflow_cum_job_wall_time()), workflow_stats.get_workflow_cum_job_wall_time())
 	summary_str += NEW_LINE_STR	
-	summary_str+= "\nWorkflow wall time                               : " + format_seconds(workflow_wall_time) +"\n"
-	summary_str += NEW_LINE_STR
-	summary_str+= "Workflow cumulative job wall time                : " + format_seconds(workflow_stats.get_workflow_cum_job_wall_time()) +"\n"
-	summary_str += NEW_LINE_STR
-	summary_str+= "Cumulative job walltime as seen from submit side : " + format_seconds(workflow_stats.get_submit_side_job_wall_time()) +"\n"
-	
+	summary_str += "Cumulative job walltime as seen from submit side : %-20s (total %d seconds)\n" % \
+			(format_seconds(workflow_stats.get_submit_side_job_wall_time()), workflow_stats.get_submit_side_job_wall_time())
 	return summary_str
 
 def print_row(content , format):
