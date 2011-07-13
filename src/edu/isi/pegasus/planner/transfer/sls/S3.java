@@ -18,17 +18,17 @@ package edu.isi.pegasus.planner.transfer.sls;
 
 
 import edu.isi.pegasus.common.logging.LogManager;
-import edu.isi.pegasus.common.util.S3cfg;
 
 
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.refiner.CreateDirectory;
-import edu.isi.pegasus.planner.refiner.createdir.Implementation;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+
 import java.util.Iterator;
 import java.util.Set;
 
