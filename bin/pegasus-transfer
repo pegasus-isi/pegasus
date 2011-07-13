@@ -97,14 +97,19 @@ class Transfer:
 
         # other than file/symlink urls
         r = re_parse_url.search(url)
-        if r:
-            # Parse successful
-            proto = r.group(1)
-            host = r.group(2)
-            path = r.group(3)
-            return proto, host, path
-        else:
+        if not r:
             raise RuntimeError("Unable to parse URL: %s" % (url))
+        
+        # Parse successful
+        proto = r.group(1)
+        host = r.group(2)
+        path = r.group(3)
+        
+        # no double slashes in urls
+        path = re.sub('//+', '/', path)
+        
+        return proto, host, path
+
 
     def src_url(self):
         return "%s://%s%s" % (self.src_proto, self.src_host, self.src_path)
@@ -173,6 +178,7 @@ logger = logging.getLogger("my_logger")
 tool_map = {}
 tool_map[('file'    , 'file'    )] = 'cp'
 tool_map[('file'    , 'gsiftp'  )] = 'gsiftp'
+tool_map[('file'    , 'irods'   )] = 'irods'
 tool_map[('file'    , 'scp'     )] = 'scp'
 tool_map[('file'    , 's3'      )] = 's3'
 tool_map[('file'    , 's3s'     )] = 's3'
@@ -187,6 +193,7 @@ tool_map[('gsiftp'  , 'srm'     )] = 'srm'
 tool_map[('http'    , 'file'    )] = 'webget'
 tool_map[('http'    , 'gsiftp'  )] = 'gsiftp'
 tool_map[('https'   , 'file'    )] = 'webget'
+tool_map[('irods'   , 'file'    )] = 'irods'
 tool_map[('s3'      , 'file'    )] = 's3'
 tool_map[('s3s'     , 'file'    )] = 's3'
 tool_map[('scp'     , 'file'    )] = 'scp'
@@ -378,11 +385,15 @@ def check_env_and_tools():
     logger.info("PATH=" + os.environ['PATH'])
     logger.info("LD_LIBRARY_PATH=" + os.environ['LD_LIBRARY_PATH'])
     
+    # irods requires a password hash file
+    os.environ['irodsAuthFileName'] = os.getcwd() + "/.irodsA"
+    
     # tools we might need later
     check_tool("wget", "--version", "([0-9]+\.[0-9]+)")
     check_tool("globus-version", "--full", "([0-9]+\.[0-9]+\.[0-9]+)")
     check_tool("globus-url-copy", "-version", "([0-9]+\.[0-9]+)")
     check_tool("srm-copy", "-version", "srm-copy[ \t]+([\.0-9a-zA-Z]+)")
+    check_tool("iget", "-h", "Version[ \t]+([\.0-9a-zA-Z]+)")
     check_tool("pegasus-s3", "help", None)
 
 
@@ -641,6 +652,82 @@ def gsiftp_do_transfers(transfers, failed_q, create_dest, third_party):
     os.unlink(tmp_name)
 
 
+def irods_login():
+    """
+    log in to irods by using the iinit command - if the file already exists,
+    we are already logged in
+    """
+    f = os.environ['irodsAuthFileName']
+    if os.path.exists(f):
+        return
+    
+    # read password from env file
+    if not "irodsEnvFile" in os.environ:
+        raise RuntimeError("Missing irodsEnvFile - unable to do irods transfers")
+    password = None
+    h = open(os.environ['irodsEnvFile'], 'r')
+    for line in h:
+        items = line.split(" ", 2)
+        if items[0].lower() == "irodspassword":
+            password = items[1].strip(" \t'\"\r\n")
+    h.close()
+    if password == None:
+        raise RuntimeError("No irodsPassword specified in irods env file")
+    
+    h = open(".irodsAc", "w")
+    h.write(password + "\n")
+    h.close()
+    
+    cmd = "cat .irodsAc | iinit"
+    myexec(cmd, 60*60, True)
+        
+    os.unlink(".irodsAc")
+
+
+def irods(transfers, failed_q):
+    """
+    irods - use the icommands to interact with irods
+    """
+    if len(transfers) == 0:
+        return
+
+    if tool_info['iget']['full_path'] == None:
+        raise RuntimeError("Unable to do irods transfers becuase iget could not be found in the current path")
+
+    # log in to irods
+    try:
+        irods_login()
+    except Exception, loginErr:
+        logger.error(loginErr)
+        raise RuntimError("Unable to log into irods")
+
+    for i, url_pair in enumerate(transfers): 
+        if url_pair.dst_proto == "file":
+            # irods->file
+            prepare_local_dir(os.path.dirname(url_pair.dst_path))
+            cmd = "iget -f " + url_pair.src_path + " " + url_pair.dst_path
+        else:
+            # file->irods
+            cmd = "imkdir -p " + os.path.dirname(url_pair.dst_path)
+            try:
+                myexec(cmd, 60*60, True)
+            except:
+                # ignore errors from the mkdir command
+                pass
+            cmd = "iput -f " + url_pair.src_path + " " +  url_pair.dst_path
+
+        try:
+            myexec(cmd, 6*60*60, True)
+            # stats      
+            if url_pair.dst_proto == "file":
+                stats_add(url_pair.dst_path)
+            else:
+                stats_add(url_pair.src_path)
+        except Exception, err:
+            logger.error(err)
+            failed_q.append(url_pair)
+
+
 def srm(transfers, failed_q):
     """
     srm - use srm-copy (Is this generic enough? Do we need to handle space tokens?)
@@ -680,8 +767,6 @@ def srm_mkdir(url):
     """
     implements recursive mkdir as srm-mkdir can not handle it
     """
-    
-    print "BLA: " + url 
     
     # back all the way down first     
     one_up = os.path.dirname(url)
@@ -724,8 +809,17 @@ def s3(transfers, failed_q):
         else:
             # this is a 'put'
             local_filename = url_pair.src_path
-            # first ensure that the bucket exists
+            
+            # extract the bucket part
+            re_bucket = re.compile(r'(s3(s){0,1}://\w+@\w+/+[\w]+)')
             bucket = url_pair.dst_url_dirname()
+            r = re_bucket.search(bucket)
+            if r:
+                bucket = r.group(1)
+            else:
+                raise RuntimeError("Unable to parse bucket: %s" % (bucket))
+            
+            # first ensure that the bucket exists
             if not bucket in buckets_created:
                 buckets_created[bucket] = True
                 cmd = "pegasus-s3 mkdir %s" %(bucket)
@@ -760,6 +854,8 @@ def handle_transfers(transfers, failed_q, attempt):
                 webget(transfers, failed_q)
             elif tool == "gsiftp":
                 gsiftp(transfers, failed_q, attempt)
+            elif tool == "irods":
+                irods(transfers, failed_q)
             elif tool == "srm":
                 srm(transfers, failed_q)
             elif tool == "s3":

@@ -43,6 +43,9 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.apache.log4j.Logger;
+
 import edu.isi.pegasus.planner.code.GridStartFactory;
 
 
@@ -187,7 +190,6 @@ public class S3 implements Implementation {
             StringBuffer url = new StringBuffer();
             FileServer fs = entry.getHeadNodeFS().selectScratchSharedFileServer();
             url.append( fs.getURLPrefix() );
-            url.append( File.separator );
             
             //add internal mount point
             String bucketName  = entry.getInternalMountPointOfWorkDirectory();
@@ -200,8 +202,9 @@ public class S3 implements Implementation {
             else{
                 //use existing bucket first
                 url.append( bucketName );
-                url.append( File.separator );
             }
+            
+            url.append( File.separator );
             url.append( this.mRelativeBucketDir );
             mLogger.log( "For site " + site + " bucket used is " + url.toString() ,
                         LogManager.DEBUG_MESSAGE_LEVEL );

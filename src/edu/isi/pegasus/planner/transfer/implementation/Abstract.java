@@ -17,47 +17,39 @@
 
 package edu.isi.pegasus.planner.transfer.implementation;
 
+import java.io.File;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+import java.util.StringTokenizer;
+
+import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.common.util.IrodsEnvFile;
+import edu.isi.pegasus.common.util.Proxy;
+import edu.isi.pegasus.common.util.S3cfg;
+import edu.isi.pegasus.common.util.Separator;
+import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
-import edu.isi.pegasus.planner.classes.Job;
-import edu.isi.pegasus.planner.classes.TransferJob;
-import edu.isi.pegasus.planner.classes.NameValue;
-import edu.isi.pegasus.planner.classes.PlannerOptions;
+import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
+import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import edu.isi.pegasus.planner.classes.FileTransfer;
-
+import edu.isi.pegasus.planner.classes.Job;
+import edu.isi.pegasus.planner.classes.NameValue;
+import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.classes.PlannerOptions;
+import edu.isi.pegasus.planner.classes.TransferJob;
+import edu.isi.pegasus.planner.code.GridStartFactory;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.common.Utility;
-import edu.isi.pegasus.common.logging.LogManager;
-
-import edu.isi.pegasus.common.util.Proxy;
-import edu.isi.pegasus.common.util.S3cfg;
-import edu.isi.pegasus.planner.code.GridStartFactory;
-
 import edu.isi.pegasus.planner.namespace.Condor;
-import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.namespace.ENV;
-
-
+import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.transfer.Implementation;
 import edu.isi.pegasus.planner.transfer.Refiner;
-
-import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
-
-import edu.isi.pegasus.planner.catalog.TransformationCatalog;
-import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
-
-
-import java.io.File;
-
-import java.util.Collection;
-import java.util.List;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.HashSet;
-import java.util.StringTokenizer;
-import edu.isi.pegasus.planner.classes.PegasusBag;
-import edu.isi.pegasus.common.util.Separator;
 
 /**
  * An abstract implementation that implements some of the common functions in
@@ -134,6 +126,16 @@ public abstract class Abstract implements Implementation{
      * The basename of the user s3cfg file
      */
     protected String mLocalS3cfgBasename;
+
+    /**
+     * The path to the irodsEnv file on the submit host (local pool).
+     */
+    protected String mLocalIrodsEnv;
+
+    /**
+     * The basename of the user irodsEnv file
+     */
+    protected String mLocalIrodsEnvBasename;
     
     /**
      * The handle to the properties object holding the properties relevant to
@@ -215,10 +217,10 @@ public abstract class Abstract implements Implementation{
                                   null :
                                   new File(mLocalUserProxy).getName();
         
-        mLocalS3cfg = S3cfg.getPathToUserProxy(bag);
-        //set the path to user proxy only if the proxy exists
+        mLocalS3cfg = S3cfg.getPathToS3cfg(bag);
+        //set the path to s3cfg only if the scfg exists
         if( mLocalS3cfg != null && !new File(mLocalS3cfg).exists() ){
-            mLogger.log( "The s3cfg file does not exist - " + mLocalUserProxy,
+            mLogger.log( "The s3cfg file does not exist - " + mLocalS3cfg,
                          LogManager.DEBUG_MESSAGE_LEVEL );
             mLocalS3cfg = null;
         }
@@ -226,6 +228,20 @@ public abstract class Abstract implements Implementation{
         mLocalS3cfgBasename = (mLocalS3cfg == null) ?
                                   null :
                                   new File(mLocalS3cfg).getName();
+        
+        // irods
+        mLocalIrodsEnv = IrodsEnvFile.getPathToIrodsEnvFile(bag);
+        //set the path to irodsEnv file only if the file exists
+        if( mLocalIrodsEnv != null && !new File(mLocalIrodsEnv).exists() ){
+            mLogger.log( "The irodsEnv file does not exist - " + mLocalIrodsEnv,
+                         LogManager.ERROR_MESSAGE_LEVEL );
+            mLocalIrodsEnv = null;
+        }
+
+        mLocalIrodsEnvBasename = (mLocalIrodsEnv == null) ?
+                                  null :
+                                  new File(mLocalIrodsEnv).getName();
+
     }
 
 
@@ -345,6 +361,31 @@ public abstract class Abstract implements Implementation{
     }
 
     /**
+     * Determines if there is a need to transfer the irodsEnvFile for the transfer
+     * job or not.  If there is a need to transfert the file, then the job is
+     * modified to create the correct condor commands to transfer the file.
+     * The file is transferred from the submit host (i.e site local).
+     *
+     * @param job   the transfer job .
+     *
+     * @return boolean true job was modified to transfer the irodsEnvFile, else
+     *                 false when job is not modified.
+     */
+    public boolean checkAndTransferIrodsEnvFile(TransferJob job){
+           
+        // for remote execution, transfer the irodsEnvFile file
+        if ( ! job.getSiteHandle().equalsIgnoreCase( "local" ) &&
+             ! job.envVariables.containsKey(IrodsEnvFile.IRODSENVFILE) ) {
+            job.condorVariables.addIPFileForTransfer(mLocalIrodsEnv);
+            //just the basename
+            job.envVariables.checkKeyInNS(IrodsEnvFile.IRODSENVFILE, mLocalIrodsEnvBasename);
+        }
+
+        return true;
+    }
+
+    
+    /**
      * Determines if there is a need to transfer the s3cfg for the transfer
      * job or not.  If there is a need to transfer s3cfg file, then the job is
      * modified to create the correct condor commands to transfer the file.
@@ -361,7 +402,7 @@ public abstract class Abstract implements Implementation{
         // for remote execution, transfer the s3cfg file
         if( job.getSiteHandle().equalsIgnoreCase( "local" ) ){
             //the full path
-            job.envVariables.checkKeyInNS(ENV.S3CFG, this.mLocalS3cfg );
+            job.envVariables.checkKeyInNS(S3cfg.S3CFG, this.mLocalS3cfg );
         }
         else{
             job.condorVariables.addIPFileForTransfer(mLocalS3cfg);

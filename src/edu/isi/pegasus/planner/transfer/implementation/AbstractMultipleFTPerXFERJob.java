@@ -204,6 +204,9 @@ public abstract class AbstractMultipleFTPerXFERJob extends Abstract
         //take care of transfer of proxies
         this.checkAndTransferProxy(txJob);
 
+        //take care of transfer of irods files
+        this.checkAndTransferIrodsEnvFile(txJob);
+        
         //apply the priority to the transfer job
         this.applyPriority(txJob);
 

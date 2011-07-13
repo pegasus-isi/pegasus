@@ -270,7 +270,7 @@ public class SeqExec implements GridStart {
                                   null :
                                   new File(mLocalUserProxy).getName();
 
-        mLocalS3cfg = S3cfg.getPathToUserProxy(bag);
+        mLocalS3cfg = S3cfg.getPathToS3cfg(bag);
         //set the path to user proxy only if the proxy exists
         if( mLocalS3cfg != null && !new File(mLocalS3cfg).exists() ){
             mLogger.log( "The s3cfg file does not exist - " + mLocalUserProxy,

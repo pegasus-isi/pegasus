@@ -17,6 +17,7 @@
 package edu.isi.pegasus.planner.transfer.sls;
 
 
+import edu.isi.pegasus.common.util.S3cfg;
 import edu.isi.pegasus.planner.classes.Job;
 
 
@@ -56,5 +57,6 @@ public class S3 extends Transfer3 {
         
         return super.modifyJobForFirstLevelStaging(job, submitDir, slsInputLFN, slsOutputLFN);
     }
-    
+
+
 }
