@@ -7,13 +7,13 @@ BOTO=boto-2.0b3-24047c8
 all: touch.pysqlite touch.sqlalchemy touch.boto
 
 touch.pysqlite:
-	@rm -rf pysqlite-2.6.0
-	tar xzf pysqlite-2.6.0.tar.gz
-	(cd pysqlite-2.6.0 && \
+	@rm -rf pysqlite-2.6.3
+	tar xzf pysqlite-2.6.3.tar.gz
+	(cd pysqlite-2.6.3 && \
 	  python setup.py build_static && \
 	  cp -R build/lib*/pysqlite2 ${prefix}/lib/python/ \
 	)
-	@rm -rf pysqlite-2.6.0
+	@rm -rf pysqlite-2.6.3
 	touch touch.pysqlite
 
 touch.sqlalchemy:
