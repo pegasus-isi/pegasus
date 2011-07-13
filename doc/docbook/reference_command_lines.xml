@@ -2196,7 +2196,7 @@ secret_key = asdhfuinakwjelfuhalsdflahsdl</programlisting>
       possible for <command>kickstart</command> to gather additional
       information about the executable run-time behavior and resource usage,
       including the exit status of jobs. This information is important for the
-      VDS invocation tracking as well as to Condor DAGMan's awareness of
+      Pegasus invocation tracking as well as to Condor DAGMan's awareness of
       Globus job failures.</para>
 
       <para><command>Kickstart</command> allows the optional execution of jobs
@@ -2237,10 +2237,10 @@ secret_key = asdhfuinakwjelfuhalsdflahsdl</programlisting>
           <listitem>
             <para>In order to associate the minimal performance information of
             the job with the invocation records, the jobs needs to carry which
-            transformation in the VDC was responsible for producing it. The
-            format is the notion of VDLt for fully-qualified definition names,
-            like namespace::name:version, with only the name portion being
-            mandatory.</para>
+            <emphasis>transformation</emphasis> was responsible for producing
+            it. The format is the notation for fully-qualified definition
+            names, like namespace::name:version, with only the name portion
+            being mandatory.</para>
 
             <para>There is no default. If no value is given, "null" will be
             reported.</para>
@@ -2251,12 +2251,10 @@ secret_key = asdhfuinakwjelfuhalsdflahsdl</programlisting>
           <term><option>-N dv</option></term>
 
           <listitem>
-            <para>In order to associate the VDC invocation record of the job
-            with the invocation records, the jobs needs to carry which
-            derivation in the VDC was responsible for producing it. The format
-            is the notion of VDLt for fully-qualified definition names, like
-            namespace::name:version, with only the name portion being
-            mandatory.</para>
+            <para>the job may carry which instantiation of a transformation
+            was responsible for producing it. The format is the notation for
+            fully-qualified definition names, like namespace::name:version,
+            with only the name portion being mandatory.</para>
 
             <para>There is no default. If no value is given, "null" will be
             reported.</para>
@@ -2428,8 +2426,8 @@ secret_key = asdhfuinakwjelfuhalsdflahsdl</programlisting>
             re-connect the <emphasis>stderr</emphasis> of the application that
             it starts. This option is used whenever an application produces
             meaningful results on <emphasis>stderr</emphasis> that needs
-            tracking by VDS. The real <emphasis>stderr</emphasis> of Globus
-            jobs is staged via GASS (GT2) or RFT (GT4). It is used to
+            tracking by Pegasus. The real <emphasis>stderr</emphasis> of
+            Globus jobs is staged via GASS (GT2) or RFT (GT4). It is used to
             propagate abnormal behaviour from both,
             <emphasis>kickstart</emphasis> and the application that it starts,
             though its main use is to propagate application dependent data and
@@ -2726,8 +2724,8 @@ secret_key = asdhfuinakwjelfuhalsdflahsdl</programlisting>
 
       <para>Mind that variable substitution is an expert feature, as some
       degree of tricky quoting is required to protect substitutable variables
-      and quotes from Globus, Condor and VDS in that order. Note that Condor
-      uses the dollar sign for its own variables.</para>
+      and quotes from Globus, Condor and Pegasus in that order. Note that
+      Condor uses the dollar sign for its own variables.</para>
 
       <para>The variable substitution assumptions for the main job differ
       slightly from the prejob and postjob for technical reasions. The pre-
@@ -2753,7 +2751,7 @@ secret_key = asdhfuinakwjelfuhalsdflahsdl</programlisting>
       waiting for started jobs to finish, <emphasis>kickstart</emphasis> will
       attempt to read from the FIFO. By default, any information read will be
       encapsulated in XML tags, and written to <emphasis>stderr .</emphasis>
-      Please note that in a VDS, Globus, Condor-G environment,
+      Please note that in a Pegasus, Globus, Condor-G environment,
       <emphasis>stderr</emphasis> will be GASS streamed or staged to the
       submit host. At the submit host, an application specific monitor may
       unpack the data chunks and could for instance visually display them, or
