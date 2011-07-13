@@ -428,10 +428,8 @@ public class TransferEngine extends Engine {
                 vOutPoolTX = getFileTX(outputSite, currentJob, localTransfer );
                 mTXRefiner.addStageOutXFERNodes( currentJob, vOutPoolTX, rcb, localTransfer );
             }
-
-            if( mPOptions.partOfDeferredRun() && !stageOut ){
-                //create the cache file always for deferred runs
-                //Pegasus Bug 34
+            else{ //create the cache file always 
+                //Pegasus Bug PM-32 and PM-356
                 trackInTransientRC( currentJob );
             }
         }
