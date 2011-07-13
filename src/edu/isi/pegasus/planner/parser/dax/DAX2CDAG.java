@@ -141,7 +141,7 @@ public class DAX2CDAG implements Callback {
      * @param invoke  the invoke object
      */
     public void cbWfInvoke(Invoke invoke){
-    	System.out.println( "[DEBUG] WF Invoke " + invoke );
+    	//System.out.println( "[DEBUG] WF Invoke " + invoke );
     	this.mNotifications.add(invoke);
     }
 
