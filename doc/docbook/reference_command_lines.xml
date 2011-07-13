@@ -737,8 +737,8 @@ LFN_N PFN_N [site handle N]</programlisting>
 
       <itemizedlist>
         <listitem>
-          <para><emphasis role="bold">pegasus-rc-client</emphasis> [-c fn] [-p
-          k=v] [[-f fn]|[-i|-d fn]|[cmd [args]]</para>
+          <para><emphasis role="bold">pegasus-rc-client</emphasis> [-Dprop
+          [...]] [-c fn] [-p k=v] [[-f fn]|[-i|-d fn]|[cmd [args]]</para>
         </listitem>
 
         <listitem>
@@ -769,13 +769,25 @@ LFN_N PFN_N [site handle N]</programlisting>
         <listitem>
           <para><emphasis role="bold">-h, --help</emphasis></para>
 
-          <para>print this help text </para>
+          <para>print this help text</para>
         </listitem>
 
         <listitem>
           <para><emphasis role="bold">-V, --version</emphasis></para>
 
           <para>print some version identification string and exit</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-Dprop</emphasis></para>
+
+          <para>The -D options allows an experienced user to override certain
+          properties which influence the program execution, among them the
+          default location of the user's properties file and the PEGASUS home
+          location. One may set several CLI properties by giving this option
+          multiple times. The -D option(s) must be the first option on the
+          command line. A CLI property take precedence over the properties
+          file property of the same key.</para>
         </listitem>
 
         <listitem>
@@ -824,7 +836,7 @@ LFN_N PFN_N [site handle N]</programlisting>
           <para><emphasis role="bold">-l, --lookup fn</emphasis></para>
 
           <para>the path to the file containing the LFN's to be looked up.
-          Each line in the file denotes one LFN </para>
+          Each line in the file denotes one LFN</para>
         </listitem>
 
         <listitem>
@@ -859,8 +871,8 @@ LFN_N PFN_N [site handle N]</programlisting>
         <listitem>
           <para><emphasis role="bold">$HOME/.pegasusrc</emphasis></para>
 
-          <para>contains the basic properties with all configurable options.
-          </para>
+          <para>contains the basic properties with all configurable
+          options.</para>
         </listitem>
 
         <listitem>
@@ -1046,8 +1058,8 @@ LFN_N PFN_N [site handle N]</programlisting>
           <para><emphasis role="bold">remove &lt;lfn&gt; [&lt;lfn&gt;
           [..]]</emphasis></para>
 
-          <para>removes all mappings for each lfn from the replica backend.
-          </para>
+          <para>removes all mappings for each lfn from the replica
+          backend.</para>
         </listitem>
 
         <listitem>
@@ -1069,7 +1081,7 @@ LFN_N PFN_N [site handle N]</programlisting>
           <para>sets an internal variable that controls the behavior of the
           front-end. With no arguments, all possible behaviors are displayed.
           With one argument, just the matching behavior is listed. With two
-          arguments, the matching behavior is set to the value. </para>
+          arguments, the matching behavior is set to the value.</para>
         </listitem>
       </itemizedlist>
     </section>
@@ -1091,8 +1103,8 @@ LFN_N PFN_N [site handle N]</programlisting>
     <section>
       <title>SYNOPSIS</title>
 
-      <para><emphasis role="bold">pegasus-tc-client</emphasis> OPERATION
-      TRIGGERS [OPTIONS] [-h] [-v] [-V]</para>
+      <para><emphasis role="bold">pegasus-tc-client</emphasis> [-Dprop [...]]
+      OPERATION TRIGGERS [OPTIONS] [-h] [-v] [-V]</para>
     </section>
 
     <section>
@@ -1307,6 +1319,18 @@ LFN_N PFN_N [site handle N]</programlisting>
       <title>OTHER OPTIONS</title>
 
       <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">-Dprop</emphasis></para>
+
+          <para>The -D options allows an experienced user to override certain
+          properties which influence the program execution, among them the
+          default location of the user's properties file and the PEGASUS home
+          location. One may set several CLI properties by giving this option
+          multiple times. The -D option(s) must be the first option on the
+          command line. A CLI property take precedence over the properties
+          file property of the same key.</para>
+        </listitem>
+
         <listitem>
           <para><emphasis role="bold">--oldformat, -o</emphasis></para>
 
