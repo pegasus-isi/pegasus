@@ -5,6 +5,6 @@ pegasus.dir.useTimestamp=true
 pegasus.dir.storage.deep=false
 
 pegasus.monitord.events=True
-pegasus.monitord.output /tmp/test1.bp
+#pegasus.monitord.output /tmp/test1.bp
 #pegasus.monitord.output mysql://user:password@hostname/database_name
 #pegasus.monitord.output sqlite:///tmp/stampede_test_310
