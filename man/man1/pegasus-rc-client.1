@@ -18,15 +18,15 @@
 .\"
 .\" Authors: Jens-S. Vöckler, Yong Zhao, Karan Vahi
 .\"
-.TH "rc\-client" "1" "2.2.0" "Pegasus Workflow Planner"
+.TH "pegasus\-rc\-client" "1" "3.1.0" "Pegasus Workflow Planner"
 .SH NAME
-rc\-client \- shell client for replica implementations
+pegasus\-rc\-client \- shell client for replica implementations
 .SH SYNOPSIS
-.B rc\-client
-[\-Dprop [..]] [\-p k=v] [[\-f fn]|[\-i|-d fn]|[cmd [args]]  
+.B pegasus\-rc\-client
+[\-Dprop [...]] [\-c fn] [\-p k=v] [[\-f fn]|[\-i|-d fn]|[cmd [args]]  
 .br
-.B rc\-client
-[\-Dprop [..]] \-V
+.B pegasus\-rc\-client
+[\-c fn] \-V
 .SH DESCRIPTION
 The shell interface to replica catalog implementations is a prototype. 
 It determines from various property setting which class implements the
@@ -36,14 +36,19 @@ commands depend on the implementation.
 .SH ARGUMENTS
 Any option will be displayed with its long options synonym(s).
 .TP
-.B \-Dprop
-The -D options allows an experienced user to override certain properties
-which influence the program execution, among them the default location of
-the user's properties file and the PEGASUS home location. One may set several
-CLI properties by giving this option multiple times.
-.I The -D option(s) must be the first option on the command line. 
-A CLI property take precedence over the properties file property 
-of the same key.
+.PD 0
+.B \-Dprop value
+The \-D options allows an experienced user to override certain properties which influence the program execution, 
+among them the default location of the user's properties file and the PEGASUS home location. 
+One may set several CLI properties by giving this option multiple times. The -D option(s) must be the first option 
+on the command line. A CLI property take precedence over the properties file property of the same key.
+.TP
+.PD 0
+.B \-c fn
+.TP
+.PD 1
+.B \-\-conf fn
+path to the property file
 .TP
 .PD 0
 .B \-f fn
@@ -74,7 +79,7 @@ Each line in the file denotes one mapping of the format
 .B <lfn> <pfn> [k=v [..]]
 .TP
 .PD 0
-.B \-p k=v
+.B \-d fn
 .TP
 .PD 1
 .B \-\-delete fn

@@ -18,16 +18,16 @@
 .\" $REVISION$
 .\" 
 .\" 
-.TH "pegasus-tc-client" "1" "2.2.0" "PEGASUS Workflow Planner"
+.TH "pegasus-tc-client" "1" "3.1.0" "PEGASUS Workflow Planner"
 .SH "NAME"
-\fBtc\-client\fR \- A full featured generic client to handle adds, delete and queries to the \fITransformation Catalog (TC).
+\fBpegasus\-tc\-client\fR \- A full featured generic client to handle adds, delete and queries to the \fITransformation Catalog (TC).
 .SH "SYNOPSIS"
-\fBtc\-client\fR \fIOPERATION TRIGGERS\fR [\fIOPTIONS\fR] [\fI\-h\fR] [\fI\-v\fR] [\fI\-V\fR]
+\fBpegasus\-tc\-client\fR [\fI\-Dprop [...]\fR] \fIOPERATION TRIGGERS\fR [\fIOPTIONS\fR] [\fI\-h\fR] [\fI\-v\fR] [\fI\-V\fR]
 .SH "DESCRIPTION"
 The
-\fBtc\-client\fR command is a generic client that performs the three basic operation of adding, deleting and querying of any \fITransformation Catalog\fR impemented to the \fITC Api\fR. The client implements all the operations supported by the \fITC Api\fR. It is upto the TC implementation whether they support all operations or modes.
+\fBpegasus\-tc\-client\fR command is a generic client that performs the three basic operation of adding, deleting and querying of any \fITransformation Catalog\fR impemented to the \fITC Api\fR. The client implements all the operations supported by the \fITC Api\fR. It is upto the TC implementation whether they support all operations or modes.
 .LP 
-The following 3 operations are supported by the \fBtc\-client\fR. One of these operations have to be specified to run the client.
+The following 3 operations are supported by the \fBpegasus\-tc\-client\fR. One of these operations have to be specified to run the client.
 .TP 
 \fBADD\fR
 .br 
@@ -70,6 +70,13 @@ The following 7 Triggers are available. See the \fBVALID COMBINATIONS\fR section
 \fB\-S\fR Triggers an operation on a System information.
 .SH "OPTIONS"
 The following options are applicable for all the operations.
+.TP
+.PD 0
+.B \-Dprop \fIvalue\fR
+The \-D options allows an experienced user to override certain properties which influence the program execution, 
+among them the default location of the user's properties file and the PEGASUS home location. 
+One may set several CLI properties by giving this option multiple times. The -D option(s) must be the first option 
+on the command line. A CLI property take precedence over the properties file property of the same key.
 .TP 
 \fB\-l , \-\-lfn\fR \fIlogicalTR
 The logical transformation to be added. The format is 
@@ -105,8 +112,17 @@ Displays the version number of the PEGASUS Workflow Planner software.
 .TP 
 \fB\-h , \-\-help\fR
 Generates help
+.SH "OTHER OPTIONS"
+.TP 
+\fB\-o , \-\-oldformat
+Generates the output in the old single line format
+.br 
+.TP 
+\fB\-c , \-\-conf
+path to property file
+.br
 .SH "VALID COMBINATIONS"
-The following are valid combinations of \fBOPERATIONS, TRIGGERS, OPTIONS\fR for the \fBtc\-client\fR
+The following are valid combinations of \fBOPERATIONS, TRIGGERS, OPTIONS\fR for the \fBpegasus\-tc\-client\fR
 .SS
 \fBADD\fR
 .TP 
@@ -217,25 +233,10 @@ This are the properties you will need to set to use either the \fBFile\fR or \fB
 For more details please check the \fB$PEGASUS_HOME/etc/sample.properties\fR file.
 .TP 
 \fBpegasus.catalog.transformation
-Identifies what impelemntation of TC will be used. If relative name is used then the path org.griphyn.cPlanner.tc is prefixed to the name and used as the class name to load. The default value if \fBFile\fR. Other supported mode is \fBDatabase\fR
+Identifies what impelemntation of TC will be used. If relative name is used then the path org.griphyn.cPlanner.tc is prefixed to the name and used as the class name to load. The default value if \fBText\fR. Other supported mode is \fBFile\fR
 .TP 
 \fBpegasus.catalog.transformation.file
 The file path where the text based TC is located. By default the path \fB$PEGASUS_HOME/var/tc.data\fR is used.
-.TP 
-.B pegasus.catalog.transformation.db.driver
-Specifies which db driver to use. No defaults. Currently TC is only implemented on MySQL
-.TP 
-.B pegasus.catalog.transformation.db.url
-Specifies the url of the database to connect to. E.g. jdbc://mysql:hostname.foo.com/tc
-.TP 
-.B pegasus.catalog.transformation.db.user
-Specifies the username to use to connect to the Database.
-.TP 
-.B pegasus.catalog.transformation.db.password
-Specifies the password to use to connect to the Database.
-.TP 
-.B pegasus.catalog.*.db.*
-Specified other database driver specific properties. See the \fB$PEGASUS_HOME/etc/sample.properties\fR file for more information.
 .SH "FILES"
 .TP 
 \fB$PEGASUS_HOME/var/tc.data\fR is the suggested location for the file corresponding to the \fITransformation Catalog
