@@ -153,45 +153,15 @@ def parse_property_file(file_name, separator=" "):
 	my_file.close()
 	logger.debug("# parsed " + file_name)
 	return my_config
-"""
-def format_seconds(sec):
-	formatted_duration = ''
-	days = sec / 86400
-	sec -= 86400*days
-	hrs = sec / 3600
-	sec -= 3600*hrs
-	mins = sec / 60
-	sec -= 60*mins
-	if days >= 1:
-		if days == 1:
-			formatted_duration  += str(days) + ' day, '
-		else:
-			formatted_duration  += str(days) + ' days, '
-	if hrs >=1:
-		if hrs == 1:
-			formatted_duration  += str(hrs) + ' hr. ' 
-		else:
-			formatted_duration  += str(hrs) + ' hrs. '
-	if mins >=1:
-		if mins == 1:
-			formatted_duration  += str(mins) + ' min. '
-		else:
-			formatted_duration  += str(mins) + ' mins. '
-	if sec >=1:
-		if sec ==1:
-			formatted_duration  += str(sec) + " sec."
-		else:
-			formatted_duration  += str(sec) + " secs."
-	
-	return formatted_duration
-"""
 
-def format_seconds(duration):
+def format_seconds(duration, max_comp = 2):
 	"""
 	Utility for converting time to a readable format
 	@param duration :  time in seconds and miliseconds
-	@return time in format day,hour, min,sec
+	@param max_comp :  number of components of the returned time
+	@return time in n component format
 	"""
+	comp = 0
 	if duration is None:
 		return '-'
 	milliseconds = math.modf(duration)[0]
@@ -203,33 +173,39 @@ def format_seconds(duration):
 	sec -= 3600*hrs
 	mins = sec / 60
 	sec -= 60*mins
-	if days >= 1:
+
+   	# days
+	if comp < max_comp and (days >= 1 or comp > 0):
+		comp += 1
 		if days == 1:
 			formatted_duration  += str(days) + ' day, '
 		else:
 			formatted_duration  += str(days) + ' days, '
-	if hrs >=1:
+
+	# hours
+	if comp < max_comp and (hrs >=1 or comp > 0):
+		comp += 1
 		if hrs == 1:
-			formatted_duration  += str(hrs) + ' hr. ' 
+			formatted_duration  += str(hrs) + ' hr, ' 
 		else:
-			formatted_duration  += str(hrs) + ' hrs. '
-	if mins >=1:
+			formatted_duration  += str(hrs) + ' hrs, '
+	
+	# mins
+	if comp < max_comp and (mins >=1 or comp > 0):
+		comp += 1
 		if mins == 1:
-			formatted_duration  += str(mins) + ' min. '
+			formatted_duration  += str(mins) + ' min, '
 		else:
-			formatted_duration  += str(mins) + ' mins. '
-	if sec >=1:
+			formatted_duration  += str(mins) + ' mins, '
+
+	# seconds
+	if comp < max_comp and (sec >=1 or comp > 0):
+		comp += 1
 		if sec ==1:
-			formatted_duration  += str(sec) + " sec. "
+			formatted_duration  += str(sec) + " sec, "
 		else:
-			formatted_duration  += str(sec) + " secs. "
-	milliseconds= round(milliseconds,3)*1000
-	milliseconds= int(milliseconds)
-	if milliseconds >=1:
-		if milliseconds ==1:
-			formatted_duration  += str(milliseconds) + " sec. "
-		else:
-			formatted_duration  += str(milliseconds)  + " millisecs."
+			formatted_duration  += str(sec) + " secs, "
+
 	return formatted_duration
 	
 
