@@ -15,7 +15,7 @@ import common
 from Pegasus.tools import utils
 from Pegasus.plots_stats import utils as stats_utils
 from netlogger.analysis.workflow.stampede_statistics import StampedeStatistics
-from datetime import timedelta
+from datetime import datetime
 
 #regular expressions
 re_parse_property = re.compile(r'([^:= \t]+)\s*[:=]?\s*(.*)')
@@ -26,10 +26,13 @@ prog_base = os.path.split(sys.argv[0])[1]	# Name of this program
 workflow_statistics_file_name ="workflow.txt";
 job_statistics_file_name ="jobs.txt";
 logical_transformation_statistics_file_name ="breakdown.txt";
+time_statistics_file_name ="time.txt"
 calc_wf_stats = False
 calc_wf_summary = False
 calc_jb_stats = False
 calc_tf_stats = False
+calc_ti_stats = False
+time_filter = None
 NEW_LINE_STR ="\n"
 
 
@@ -45,7 +48,10 @@ worklow_summary_col_size =[20,20,20,20,20,5,20,20]
 worklow_status_col_name =["#","Type" ,"Succeeded","Failed","Unsubmitted" ,"Total" , " " ,"Retries" , "Total Run (Retries Included)" ,"Workflow Retries"]
 worklow_status_col_size =[40,15,12,12,12,12,5,12,30,18]
 
-
+time_stats_col_name =["Date","Count","Runtime"]
+time_stats_col_size =[30,20,20]
+time_host_stats_col_name =["Date","Host", "Count","Runtime"]
+time_host_stats_col_size =[30,80,20,20]
 
 class JobStatistics:
 	def __init__(self):
@@ -153,8 +159,7 @@ Workflow summary - Summary of the workflow execution. It shows total
 		statistics of each individual sub workflow.
 """
 	return formatted_wf_statistics_legend
-
-
+	
 def formatted_job_stats_legends():
 	"""
 	Returns the job table legend 
@@ -192,7 +197,21 @@ def formatted_transformation_stats_legends():
 	formatted_transformation_stats_legend +="#Max(sec.) - the maximum invocation runtime value corresponding to the transformation. \n"
 	formatted_transformation_stats_legend +="#Total(sec.) - the cumulative of invocation runtime corresponding to the transformation. \n"
 	return formatted_transformation_stats_legend
+
+
+def formatted_time_stats_legends():
+	"""
+	Returns the time table legend
+	@return :  time table legend
+	"""	
+	filter = str(time_filter)
+	formatted_time_stats_legend="#legends" + NEW_LINE_STR
+	formatted_time_stats_legend +="#Job instance statistics per " + filter + " : " +" the number of job instances run, total runtime sorted by " + filter+ NEW_LINE_STR
+	formatted_time_stats_legend +="#Invocation statistics per " + filter + " : " +" the number of invocations , total runtime sorted by " + filter+ NEW_LINE_STR
+	formatted_time_stats_legend +="#Job instance statistics by host per " + filter + " : " +" the number of job instance run, total runtime on each host sorted by " + filter+ NEW_LINE_STR
+	formatted_time_stats_legend +="#Invocation by host per " + filter + " : " +" the number of invocations, total runtime on each host sorted by " + filter + NEW_LINE_STR
 	
+	return formatted_time_stats_legend	
 
 def write_to_file(file_path, mode, content):
 	"""
@@ -252,6 +271,12 @@ def print_workflow_details(output_db_url , wf_uuid , output_dir):
 	if calc_tf_stats:
 		transformation_stats_file = os.path.join(output_dir, logical_transformation_statistics_file_name)
 		write_to_file(transformation_stats_file, "w" , formatted_transformation_stats_legends())
+	if calc_ti_stats:
+		time_stats_file = os.path.join(output_dir, time_statistics_file_name)
+		write_to_file(time_stats_file, "w" , formatted_time_stats_legends())
+		content = print_statistics_by_time_and_host(expanded_workflow_stats)
+		write_to_file(time_stats_file, "a" , content)
+		
 	if calc_jb_stats or calc_tf_stats or calc_wf_stats:
 		for sub_wf_uuid in wf_uuid_list:
 			individual_workflow_stats = StampedeStatistics(output_db_url , False)
@@ -287,16 +312,19 @@ def print_workflow_details(output_db_url , wf_uuid , output_dir):
 		stats_output += wf_stats_file +"\n"
 	if calc_jb_stats:
 		stats_output +=  NEW_LINE_STR
-		stats_output += "Job statistics                    : "
+		stats_output += "Job instance statistics           : "
 		stats_output += jobs_stats_file +"\n"
 	if calc_tf_stats:
 		stats_output +=  NEW_LINE_STR
 		expanded_workflow_stats.set_job_filter('all')
 		content = print_wf_transformation_stats(expanded_workflow_stats , "All")
 		write_to_file(transformation_stats_file, "a" , content)
-		stats_output += "Logical transformation statistics : "
+		stats_output += "Transformation statistics         : "
 		stats_output += transformation_stats_file +"\n"
-	
+	if calc_ti_stats:
+		stats_output +=  NEW_LINE_STR
+		stats_output += "Time statistics                   : "
+		stats_output += time_stats_file +"\n"
 	stats_output += NEW_LINE_STR
 	stats_output += "".center(100, '*')
 	print stats_output
@@ -363,6 +391,7 @@ def print_workflow_summary(workflow_stats ):
 	summary_str+= print_row(content, worklow_summary_col_size)
 	summary_str += NEW_LINE_STR
 	summary_str+= "".center(sum(worklow_summary_col_size), '-')
+	summary_str += NEW_LINE_STR
 	
 	workflow_states_list = workflow_stats.get_workflow_states()
 	workflow_wall_time = stats_utils.get_workflow_wall_time(workflow_states_list)
@@ -494,26 +523,36 @@ def print_individual_wf_job_stats(workflow_stats , wf_uuid):
 	return job_status_str
 
 
-"""
+def round_to_str(value , to=3):
+	"""
 Utility method for rounding the float value to rounded string
 @param value :  value to round 
 @param to    :  how many decimal points to round to
-"""
-def round_to_str(value , to=3):
+	"""
 	rounded_value = '-'
 	if value is None:
 		return rounded_value
 	rounded_value = str(round(float(value) , to))
-	return rounded_value	
+	return rounded_value
+	
+
+def convert_to_date_format(value):
+	"""
+Utility method for converting the value to date format
+@param value :  value to format 
+	"""
+	multiplier = stats_utils.get_date_multiplier(time_filter)
+	date_format = datetime.fromtimestamp(int(value*multiplier)).strftime(stats_utils.get_date_format(time_filter))
+	return date_format
 	
 	
 
-"""
+def print_wf_transformation_stats(workflow_stats , title):
+	"""
 Prints the transformation statistics of workflow
 @param workflow_stats :  workflow statistics object reference
 @param title  : title of the transformation statistics
-"""	
-def print_wf_transformation_stats(workflow_stats , title):
+	"""
 	transformation_status_str = "\n\n# " +  title +"\n"
 	transformation_status_str += print_row(transformation_stats_col_name , transformation_stats_col_size)
 	for transformation in workflow_stats.get_transformation_statistics():
@@ -521,6 +560,61 @@ def print_wf_transformation_stats(workflow_stats , title):
 		content = [transformation.transformation ,str(transformation.count),str(transformation.success) , str(transformation.failure), round_to_str(transformation.min),round_to_str(transformation.max),round_to_str(transformation.avg),round_to_str(transformation.sum)]
 		transformation_status_str += print_row(content , transformation_stats_col_size)
 	return transformation_status_str
+	
+
+def print_statistics_by_time_and_host(workflow_stats ):
+	"""
+	Prints the job instance and invocation statistics sorted by time
+	@param workflow_stats :  workflow statistics object reference
+	"""
+	statistics_by_time_str = NEW_LINE_STR
+	workflow_stats.set_job_filter('all')
+	workflow_stats.set_time_filter(time_filter)
+	
+	statistics_by_time_str +="#Job instances statistics per " + time_filter
+	statistics_by_time_str += NEW_LINE_STR
+	statistics_by_time_str +=print_row(time_stats_col_name , time_stats_col_size)
+	statistics_by_time_str += NEW_LINE_STR
+	stats_by_time = workflow_stats.get_jobs_run_by_time()
+	for stats in stats_by_time:
+		content = [convert_to_date_format(stats.date_format) ,str(stats.count),round_to_str(stats.total_runtime)]
+		statistics_by_time_str += print_row(content , time_stats_col_size)
+		statistics_by_time_str += NEW_LINE_STR
+	
+	statistics_by_time_str += NEW_LINE_STR	
+	statistics_by_time_str +="#Invocation statistics run per " + time_filter
+	statistics_by_time_str += NEW_LINE_STR
+	statistics_by_time_str +=print_row(time_stats_col_name , time_stats_col_size)
+	statistics_by_time_str += NEW_LINE_STR
+	stats_by_time = workflow_stats.get_invocation_by_time()
+	for stats in stats_by_time:
+		content = [convert_to_date_format(stats.date_format) ,str(stats.count),round_to_str(stats.total_runtime)]
+		statistics_by_time_str += print_row(content , time_stats_col_size)
+		statistics_by_time_str += NEW_LINE_STR
+	
+	statistics_by_time_str += NEW_LINE_STR
+	statistics_by_time_str +="#Job instances statistics on host per " + time_filter
+	statistics_by_time_str += NEW_LINE_STR
+	statistics_by_time_str +=print_row(time_host_stats_col_name , time_host_stats_col_size)
+	statistics_by_time_str += NEW_LINE_STR
+	stats_by_time = workflow_stats.get_jobs_run_by_time_per_host()
+	for stats in stats_by_time:
+		content = [convert_to_date_format(stats.date_format) ,str(stats.host_name) , str(stats.count),round_to_str(stats.total_runtime)]
+		statistics_by_time_str += print_row(content , time_host_stats_col_size)
+		statistics_by_time_str += NEW_LINE_STR
+	
+	statistics_by_time_str += NEW_LINE_STR
+	statistics_by_time_str +="#Invocation statistics on host per " + time_filter
+	statistics_by_time_str += NEW_LINE_STR
+	statistics_by_time_str +=print_row(time_host_stats_col_name , time_host_stats_col_size)
+	statistics_by_time_str += NEW_LINE_STR
+	stats_by_time = workflow_stats.get_invocation_by_time_per_host()
+	for stats in stats_by_time:
+		content = [convert_to_date_format(stats.date_format) ,str(stats.host_name) , str(stats.count),round_to_str(stats.total_runtime)]
+		statistics_by_time_str += print_row(content , time_host_stats_col_size)
+		statistics_by_time_str += NEW_LINE_STR
+	
+	return statistics_by_time_str
 	
 """
 Sets the statistics level 
@@ -531,19 +625,23 @@ def set_statistics_level(stats_level):
 	global calc_wf_summary
 	global calc_jb_stats
 	global calc_tf_stats
+	global calc_ti_stats
 	if stats_level =='all':
 		calc_wf_stats = True
 		calc_wf_summary = True
 		calc_jb_stats = True
 		calc_tf_stats = True
+		calc_ti_stats = True
 	elif stats_level =='summary':
 		calc_wf_summary = True
 	elif stats_level =='wf_stats':
 		calc_wf_stats = True
 	elif stats_level == 'jb_stats':
 		calc_jb_stats = True
-	else:
+	elif stats_level == 'tf_stats':
 		calc_tf_stats = True
+	else:
+		calc_ti_stats = True
 	
 	
 # ---------main----------------------------------------------------------------------------
@@ -557,8 +655,11 @@ def main():
 	parser.add_option("-c","--conf", action = "store", type = "string", dest = "config_properties",
 			  help = "specifies the properties file to use. This option overrides all other property files.")
 	parser.add_option("-s", "--statisticslevel", action = "store", dest = "statistics_level",
-			choices=['all', 'summary', 'wf_stats','jb_stats','tf_stats' ],
-			help = "Valid levels are: all,summary,wf_stats,jb_stats,tf_stats Default is summary.")
+			choices=['all', 'summary', 'wf_stats','jb_stats','tf_stats' ,'ti_stats' ],
+			help = "Valid levels are: all,summary,wf_stats,jb_stats,tf_stats , ti_stats; Default is summary.")
+	parser.add_option("-t", "--time_filter", action = "store", dest = "time_filter",
+			choices=['month', 'week', 'day','hour' ],
+			help = "Valid levels are: month,week,day,hour; Default is day.")
 	parser.add_option("-l", "--loglevel", action = "store", dest = "log_level",
 			choices=['debug', 'info', 'warning','error' ],
 			help = "Log level. Valid levels are: debug,info,warning,error, Default is info.")
@@ -582,6 +683,14 @@ def main():
 	else:
 		statistics_level =  'summary'
 	set_statistics_level(statistics_level)
+	
+	global time_filter
+	if options.time_filter is not None:
+		 time_filter = options.time_filter
+	else:
+		time_filter =  'day'
+	
+	
 	global output_dir
 	if options.output_dir is not None:
 		output_dir = options.output_dir
@@ -594,9 +703,11 @@ def main():
 				sys.exit(1) 	
 	else :
 		output_dir = tempfile.mkdtemp()
+	
 	if options.log_level == None:
 		options.log_level = "info"
 	setup_logger(options.log_level)
+	
 	output_db_url , wf_uuid = stats_utils.get_db_url_wf_uuid(submit_dir , options.config_properties)
 	if output_db_url is not None:
 		print_workflow_details(output_db_url,wf_uuid ,output_dir)
