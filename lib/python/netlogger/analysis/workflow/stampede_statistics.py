@@ -44,6 +44,50 @@ as many times as the user desires.  There is an example of re/setting
 the job filter in the usage section above.  The query methods
 will return different values after the filter is re/set.
 
+Time filtering:
+
+This behaves much like job filtering.  For the runtime queries, 
+the time intervals 'month', 'week', 'day', and  'hour' can 
+be set using the set_time_filter() method.  If this method
+is not set, it will default to the 'month' interval for filtering.
+
+Hostname filtering:
+
+For the runtime queries the method set_host_filter() can be used to 
+filter by various hosts.  This method differs from the job and time
+filtering methods in that the argument can be either a string (for
+a single hostname), or an array/list of hostnames for multiple 
+hostnames.
+
+Example::
+ s.set_host_filter('butterfly.isi.edu')
+ or
+ s.set_host_filter(['engage-submit3.renci.org', 'node0012.palmetto.clemson.edu'])
+ 
+Either one of these variations will work.  The first variation will
+only retrieve data for that one host, the second will return data
+for both hosts.  If this method is not set, no hostname filtering 
+will be done and information for all hosts will be returned.
+
+Transformation filtering:
+
+Transformation filtering works similarly to hostname filtering in 
+that it can accept a single string value or a array/list of strings. 
+However the set_transformation_filter() method accepts two keyword
+arguments - 'include' and 'exclude'.  Only one of these keywords can 
+be set per method call.
+
+Example::
+ s.set_transformation_filter(include='pegasus::dirmanager')
+ s.set_transformation_filter(exclude=['dagman::post' , 'dagman::pre' ,'condor::dagman'])
+ etc.
+
+This example demonstrates the two proper keyword invocations and 
+that either a string or list may be used.  If this method is not 
+set, no filtering will be done and information for all transforms 
+will be returned.  Calling this method with no arguments will  
+reset any previously set filters.
+
 Return values from methods:
 
 The return value types will vary from method to method.  Most of
@@ -94,17 +138,23 @@ Methods::
  get_resource_delay
  get_post_time
  get_transformation_statistics
+ get_invocation_by_time
+ get_jobs_run_by_time
+ get_invocation_by_time_per_host
+ get_jobs_run_by_time_per_host
  
 Methods listed in order of query list on wiki.
 
 https://confluence.pegasus.isi.edu/display/pegasus/Pegasus+Statistics+Python+Version+Modified
 """
-__rcsid__ = "$Id: stampede_statistics.py 28142 2011-07-07 15:24:59Z mgoode $"
+__rcsid__ = "$Id: stampede_statistics.py 28165 2011-07-14 17:37:02Z mgoode $"
 __author__ = "Monte Goode"
 
 from netlogger.analysis.modules._base import SQLAlchemyInit
 from netlogger.analysis.schema.stampede_schema import *
 from netlogger.nllog import DoesLogging, get_logger
+        
+# Main stats class.
 
 class StampedeStatistics(SQLAlchemyInit, DoesLogging):
     def __init__(self, connString=None, expand_workflow=True):
@@ -118,7 +168,9 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         self._root_wf_id = None
         self._root_wf_uuid = None
         self._job_filter_mode = None
-        self._task_filter_mode = None
+        self._time_filter_mode = None
+        self._host_filter = None
+        self._xform_filter = {'include':None, 'exclude':None}
         
         self._wfs = []
         pass
@@ -157,6 +209,9 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         
         # Initialize filters with default value
         self.set_job_filter()
+        self.set_time_filter()
+        self.set_host_filter()
+        self.set_transformation_filter()
         return True
         
     def set_job_filter(self, filter='all'):
@@ -170,6 +225,35 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         except:
             self._job_filter_mode = 'all'
             self.log.error('set_job_filter', msg='Unknown job filter %s - setting to all' % filter)
+            
+            
+    def set_time_filter(self, filter='month'):
+        modes = ['month', 'week', 'day', 'hour']
+        try:
+            modes.index(filter)
+            self._time_filter_mode = filter
+            self.log.debug('set_time_filter', msg='Setting filter to: %s' % filter)
+        except:
+            self._job_filter_mode = 'month'
+            self.log.error('set_time_filter', msg='Unknown time filter %s - setting to month' % filter)
+            
+    def set_host_filter(self, host=None):
+        """
+        The host argument can either be a string/single hostname or
+        it can be a list/array of hostnames.
+        """
+        self._host_filter = host
+        
+    def set_transformation_filter(self, include=None, exclude=None):
+        """
+        Either of these args can either be a single string/xform type or
+        it can be a list/array of xform types.
+        
+        Both arguments can not be set at the same time.  If they are,
+        the program will log an error and not do any filtering.
+        """
+        self._xform_filter['include'] = include
+        self._xform_filter['exclude'] = exclude
                 
     #
     # Pulls information about sub workflows
@@ -251,76 +335,83 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
             q = q.filter(self._get_job_filter())
              
         return q.count()
+    
         
     def get_total_succeeded_jobs_status(self):
         """
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Summary#WorkflowSummary-Totalsucceededjobs
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Statistics+file#WorkflowStatisticsfile-Totalsucceededjobs
         """
+        JobSub1 = orm.aliased(Job, name='JobSub1')
+        JobInstanceSub1 = orm.aliased(JobInstance, name='JobInstanceSub1')
+        WorkflowSub1 = orm.aliased(Workflow, name='WorkflowSub1')
         
-        JobSub = orm.aliased(Job, name='JobSub')
-        JobInstanceSub = orm.aliased(JobInstance, name='JobInstanceSub')
-        WorkflowSub = orm.aliased(Workflow, name='WorkflowSub')
-        
-        #sq_1 = self.session.query(JobInstanceSub.job_instance_id.label('jid'),
-        #        func.max(JobInstanceSub.job_submit_seq).label('mjss'))
-        sq_1 = self.session.query(func.max(JobInstanceSub.job_instance_id).label('jid'))
-                
+        sq_1 = self.session.query(func.max(JobInstanceSub1.job_submit_seq).label('jss'),
+                JobInstanceSub1.job_id.label('jobid'))
         if self._expand:
-            sq_1 = sq_1.filter(WorkflowSub.root_wf_id == self._root_wf_id)
+            sq_1 = sq_1.filter(WorkflowSub1.root_wf_id == self._root_wf_id)
         else:
-            sq_1 = sq_1.filter(WorkflowSub.wf_id == self._wfs[0])
+            sq_1 = sq_1.filter(WorkflowSub1.wf_id == self._wfs[0])
         
-        sq_1 = sq_1.filter(WorkflowSub.wf_id == JobSub.wf_id)
-        sq_1 = sq_1.filter(JobSub.job_id == JobInstanceSub.job_id)
-        if self._get_job_filter(JobSub) is not None:
-            sq_1 = sq_1.filter(self._get_job_filter(JobSub))
+        sq_1 = sq_1.filter(WorkflowSub1.wf_id == JobSub1.wf_id)
+        sq_1 = sq_1.filter(JobSub1.job_id == JobInstanceSub1.job_id)
+        if self._get_job_filter(JobSub1) is not None:
+            sq_1 = sq_1.filter(self._get_job_filter(JobSub1))
         
-        sq_1 = sq_1.group_by(JobSub.job_id).subquery()
+        sq_1 = sq_1.group_by(JobSub1.job_id).subquery()
         
-        JobstateSub = orm.aliased(Jobstate, name='JobstateSub')
-            
-        sq_2 = self.session.query(sq_1.c.jid, func.max(JobstateSub.jobstate_submit_seq).label('sjss'))
-        sq_2 = sq_2.filter(JobstateSub.job_instance_id == sq_1.c.jid)
-        sq_2 = sq_2.group_by(sq_1.c.jid).subquery()
+        JobInstanceSub2 = orm.aliased(JobInstance, name='JobInstanceSub2')
+        sq_2 = self.session.query(JobInstanceSub2.job_instance_id.label('last_job_instance_id'))
+        sq_2 = sq_2.filter(JobInstanceSub2.job_id == sq_1.c.jobid)
+        sq_2 = sq_2.filter(JobInstanceSub2.job_submit_seq == sq_1.c.jss).subquery()
         
-        JobstateOut = orm.aliased(Jobstate)
+        JobstateSub3 = orm.aliased(Jobstate, name='JobstateSub3')
+        sq_3 = self.session.query(sq_2.c.last_job_instance_id,
+                func.max(JobstateSub3.jobstate_submit_seq).label('sjss'))
+        sq_3 = sq_3.filter(JobstateSub3.job_instance_id == sq_2.c.last_job_instance_id)
+        sq_3 = sq_3.group_by(sq_2.c.last_job_instance_id).subquery()
         
-        q = self.session.query(JobstateOut.job_instance_id, JobstateOut.state, JobstateOut.timestamp, JobstateOut.jobstate_submit_seq, sq_2.c.jid, sq_2.c.sjss)
-        q = q.filter(JobstateOut.job_instance_id == sq_2.c.jid)
-        q = q.filter(JobstateOut.jobstate_submit_seq == sq_2.c.sjss)
-        q = q.filter(JobstateOut.state.in_(['POST_SCRIPT_SUCCESS', 'JOB_SUCCESS']))
-
+        q = self.session.query(sq_3.c.last_job_instance_id)
+        q = q.filter(Jobstate.job_instance_id == sq_3.c.last_job_instance_id)
+        q = q.filter(Jobstate.jobstate_submit_seq == sq_3.c.sjss)
+        q = q.filter(Jobstate.state.in_(['POST_SCRIPT_SUCCESS', 'JOB_SUCCESS']))
+        
         return q.count()
-
+    
+        
     def get_total_failed_jobs_status(self):
         """
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Summary#WorkflowSummary-Totalfailedjobs
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Statistics+file#WorkflowStatisticsfile-Totalfailedjobs
         """
-        JobSub = orm.aliased(Job, name='JobSub')
-        JobInstanceSub = orm.aliased(JobInstance, name='JobInstanceSub')
-        WorkflowSub = orm.aliased(Workflow, name='WorkflowSub')
+        JobSub1 = orm.aliased(Job, name='JobSub1')
+        JobInstanceSub1 = orm.aliased(JobInstance, name='JobInstanceSub1')
+        WorkflowSub1 = orm.aliased(Workflow, name='WorkflowSub1')
         
-        #sq_1 = self.session.query(JobInstanceSub.job_instance_id.label('jid'),
-        #        func.max(JobInstanceSub.job_submit_seq).label('mjss'))
-        sq_1 = self.session.query(func.max(JobInstanceSub.job_instance_id).label('jid'))
-        
+        sq_1 = self.session.query(func.max(JobInstanceSub1.job_submit_seq).label('jss'),
+                JobInstanceSub1.job_id.label('jobid'))
         if self._expand:
-            sq_1 = sq_1.filter(WorkflowSub.root_wf_id == self._root_wf_id)
+            sq_1 = sq_1.filter(WorkflowSub1.root_wf_id == self._root_wf_id)
         else:
-            sq_1 = sq_1.filter(WorkflowSub.wf_id == self._wfs[0])
-        sq_1 = sq_1.filter(WorkflowSub.wf_id == JobSub.wf_id)
-        sq_1 = sq_1.filter(JobSub.job_id == JobInstanceSub.job_id)
-        if self._get_job_filter(JobSub) is not None:
-            sq_1 = sq_1.filter(self._get_job_filter(JobSub))
-        sq_1 = sq_1.group_by(JobSub.job_id)
-        sq_1 = sq_1.subquery()
+            sq_1 = sq_1.filter(WorkflowSub1.wf_id == self._wfs[0])
         
-        q = self.session.query(sq_1.c.jid)
-        q = q.filter(Jobstate.job_instance_id == sq_1.c.jid)
+        sq_1 = sq_1.filter(WorkflowSub1.wf_id == JobSub1.wf_id)
+        sq_1 = sq_1.filter(JobSub1.job_id == JobInstanceSub1.job_id)
+        if self._get_job_filter(JobSub1) is not None:
+            sq_1 = sq_1.filter(self._get_job_filter(JobSub1))
+        
+        sq_1 = sq_1.group_by(JobSub1.job_id).subquery()
+        
+        JobInstanceSub2 = orm.aliased(JobInstance, name='JobInstanceSub2')
+        sq_2 = self.session.query(JobInstanceSub2.job_instance_id.label('last_job_instance_id'))
+        sq_2 = sq_2.filter(JobInstanceSub2.job_id == sq_1.c.jobid)
+        sq_2 = sq_2.filter(JobInstanceSub2.job_submit_seq == sq_1.c.jss).subquery()
+        
+        q = self.session.query(sq_2.c.last_job_instance_id)
+        q = q.filter(Jobstate.job_instance_id == sq_2.c.last_job_instance_id)
         q = q.filter(Jobstate.state.in_(['PRE_SCRIPT_FAILED','SUBMIT_FAILED','JOB_FAILURE' ,'POST_SCRIPT_FAILED']))
-        return q.count()
+        
+        return q.count()     
         
     def _query_jobstate_for_instance(self, states):
         """
@@ -384,30 +475,41 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
             q = q.filter(self._get_job_filter(Task))
         return q.count()
     
+        
     def _base_task_status_query(self):
         """
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Summary#WorkflowSummary-Totalsucceededtasks
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Statistics+file#WorkflowStatisticsfile-Totalsucceededtasks
         """
-        #sq_1 = self.session.query(Workflow.wf_id.label('wid'), JobInstance.job_instance_id.label('jiid'),
-        #        func.max(JobInstance.job_submit_seq).label('mjss'))
-        sq_1 = self.session.query(Workflow.wf_id.label('wid'), 
-                func.max(JobInstance.job_instance_id).label('jiid'))
+        WorkflowSub1 = orm.aliased(Workflow, name='WorkflowSub1')
+        JobInstanceSub1 = orm.aliased(JobInstance, name='JobInstanceSub1')
+        JobSub1 = orm.aliased(Job, name='JobSub1')
+        
+        sq_1 = self.session.query(WorkflowSub1.wf_id.label('wid'), 
+                func.max(JobInstanceSub1.job_submit_seq).label('jss'),
+                JobInstanceSub1.job_id.label('jobid')
+        )
         if self._expand:
-            sq_1 = sq_1.filter(Workflow.root_wf_id == self._root_wf_id)
+            sq_1 = sq_1.filter(WorkflowSub1.root_wf_id == self._root_wf_id)
         else:
-            sq_1 = sq_1.filter(Workflow.wf_id == self._wfs[0])
-        sq_1 = sq_1.filter(Workflow.wf_id == Job.wf_id)
-        sq_1 = sq_1.filter(Job.job_id == JobInstance.job_id)
-        sq_1 = sq_1.group_by(JobInstance.job_id)
-        if self._get_job_filter() is not None:
-            sq_1 = sq_1.filter(self._get_job_filter())
+            sq_1 = sq_1.filter(WorkflowSub1.wf_id == self._wfs[0])
+        sq_1 = sq_1.filter(WorkflowSub1.wf_id == JobSub1.wf_id)
+        sq_1 = sq_1.filter(JobSub1.job_id == JobInstanceSub1.job_id)
+        sq_1 = sq_1.group_by(JobInstanceSub1.job_id)
+        if self._get_job_filter(JobSub1) is not None:
+            sq_1 = sq_1.filter(self._get_job_filter(JobSub1))
         sq_1 = sq_1.subquery()
+        
+        JobInstanceSub2 = orm.aliased(JobInstance, name='JobInstanceSub2')
+        sq_2 = self.session.query(sq_1.c.wid.label('wf_id'), JobInstanceSub2.job_instance_id.label('last_job_instance_id'))
+        sq_2 = sq_2.filter(JobInstanceSub2.job_id == sq_1.c.jobid)
+        sq_2 = sq_2.filter(JobInstanceSub2.job_submit_seq == sq_1.c.jss)
+        sq_2 = sq_2.subquery()
         
         q = self.session.query(Invocation.invocation_id)
         q = q.filter(Invocation.abs_task_id != None)
-        q = q.filter(Invocation.job_instance_id == sq_1.c.jiid)
-        q = q.filter(Invocation.wf_id == sq_1.c.wid)
+        q = q.filter(Invocation.job_instance_id == sq_2.c.last_job_instance_id)
+        q = q.filter(Invocation.wf_id == sq_2.c.wf_id)
         
         return q
         
@@ -876,6 +978,142 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         q = q.group_by(Invocation.transformation)
         
         return q.all()
+        
+    #
+    # Runtime queries
+    # https://confluence.pegasus.isi.edu/display/pegasus/Additional+queries
+    #
+    
+    def _get_date_divisors(self):
+        vals = {
+        'month': 2629743,
+        'week': 604800,
+        'day': 86400,
+        'hour': 3600
+        }
+        return vals[self._time_filter_mode]
+        
+    def _get_host_filter(self):
+        if self._host_filter == None:
+            return None
+        elif type(self._host_filter) == type('str'):
+            return Host.hostname == self._host_filter
+        elif type(self._host_filter) == type([]):
+            return Host.hostname.in_(self._host_filter)
+        else:
+            return None
+            
+    def _get_xform_filter(self):
+        if self._xform_filter['include'] != None and \
+            self._xform_filter['exclude'] != None:
+            self.log.error('_get_xform_filter', 
+                msg='Can\'t set both transform include and exclude - reset s.set_transformation_filter()')
+            return None
+        elif self._xform_filter['include'] == None and \
+            self._xform_filter['exclude'] == None:
+            return None    
+        elif self._xform_filter['include'] != None:
+            if type(self._xform_filter['include']) == type('str'):
+                return Invocation.transformation == self._xform_filter['include']
+            elif type(self._xform_filter['include']) == type([]):
+                return Invocation.transformation.in_(self._xform_filter['include'])
+            else:
+                return None
+        elif self._xform_filter['exclude'] != None:
+            if type(self._xform_filter['exclude']) == type('str'):
+                return Invocation.transformation != self._xform_filter['exclude']
+            elif type(self._xform_filter['exclude']) == type([]):
+                return not_(Invocation.transformation.in_(self._xform_filter['exclude']))
+            else:
+                return None
+            pass
+        else:
+            return None
+
+    def get_invocation_by_time(self):
+        """
+        https://confluence.pegasus.isi.edu/display/pegasus/Additional+queries
+        """
+        q = self.session.query(
+                (cast(Invocation.start_time / self._get_date_divisors(), Integer)).label('date_format'), 
+                func.count(Invocation.invocation_id).label('count'), 
+                cast(func.sum(Invocation.remote_duration), Float).label('total_runtime')
+        )
+        q = q.filter(Workflow.root_wf_id == self._root_wf_id)
+        q = q.filter(Invocation.wf_id == Workflow.wf_id)
+        if self._get_xform_filter() is not None:
+            q = q.filter(self._get_xform_filter())
+        q = q.group_by('date_format').order_by('date_format')
+        
+        return q.all()
+        
+    def get_jobs_run_by_time(self):
+        """
+        https://confluence.pegasus.isi.edu/display/pegasus/Additional+queries
+        """
+        q = self.session.query(
+                (cast(Jobstate.timestamp / self._get_date_divisors(), Integer)).label('date_format'),
+                func.count(JobInstance.job_instance_id).label('count'),
+                cast(func.sum(JobInstance.local_duration), Float).label('total_runtime')
+        )
+        q = q.filter(Workflow.root_wf_id == self._root_wf_id)
+        q = q.filter(Workflow.wf_id == Job.wf_id)
+        q = q.filter(Job.job_id == JobInstance.job_id)
+        q = q.filter(Jobstate.job_instance_id == JobInstance.job_instance_id)
+        q = q.filter(Jobstate.state == 'SUBMIT')
+        if self._get_job_filter() is not None:
+            q = q.filter(self._get_job_filter())
+        q = q.group_by('date_format').order_by('date_format')
+        
+        return q.all()
+        
+        
+    def get_invocation_by_time_per_host(self, host=None):
+        """
+        https://confluence.pegasus.isi.edu/display/pegasus/Additional+queries
+        """
+        q = self.session.query(
+            (cast(Invocation.start_time / self._get_date_divisors(), Integer)).label('date_format'),
+            Host.hostname.label('host_name'),
+            func.count(Invocation.invocation_id).label('count'), 
+            cast(func.sum(Invocation.remote_duration), Float).label('total_runtime')
+        )
+        q = q.filter(Workflow.root_wf_id == self._root_wf_id)
+        q = q.filter(Invocation.wf_id == Workflow.wf_id)
+        q = q.filter(JobInstance.job_instance_id == Invocation.job_instance_id)
+        q = q.filter(JobInstance.host_id == Host.host_id)
+        if self._get_host_filter() is not None:
+            q = q.filter(self._get_host_filter())
+        if self._get_xform_filter() is not None:
+            q = q.filter(self._get_xform_filter())
+        q = q.group_by('date_format', 'host_name').order_by('date_format')
+        
+        return q.all()
+        
+    def get_jobs_run_by_time_per_host(self):
+        """
+        https://confluence.pegasus.isi.edu/display/pegasus/Additional+queries
+        """
+        q = self.session.query(
+                (cast(Jobstate.timestamp / self._get_date_divisors(), Integer)).label('date_format'),
+                Host.hostname.label('host_name'),
+                func.count(JobInstance.job_instance_id).label('count'),
+                cast(func.sum(JobInstance.local_duration), Float).label('total_runtime')
+        )
+        q = q.filter(Workflow.root_wf_id == self._root_wf_id)
+        q = q.filter(Workflow.wf_id == Job.wf_id)
+        q = q.filter(Job.job_id == JobInstance.job_id)
+        q = q.filter(Jobstate.job_instance_id == JobInstance.job_instance_id)
+        q = q.filter(Jobstate.state == 'SUBMIT')
+        q = q.filter(JobInstance.host_id == Host.host_id)
+        if self._get_host_filter() is not None:
+            q = q.filter(self._get_host_filter())
+        if self._get_job_filter() is not None:
+            q = q.filter(self._get_job_filter())
+        q = q.group_by('date_format', 'host_name').order_by('date_format')
+        
+        return q.all()
+        
         
 if __name__ == '__main__':
     pass
