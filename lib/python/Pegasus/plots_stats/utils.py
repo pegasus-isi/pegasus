@@ -277,3 +277,31 @@ def get_db_url_wf_uuid(submit_dir , config_properties):
 			return None , None
 	return output_db_url , wf_uuid
 	
+def get_date_multiplier(date_filter):
+	"""
+	Utility for returning the multiplier for a given date filter
+	@param date filter :  the given date filter 
+	@return multiplier for a given filter
+	"""
+	vals = {
+	'month': 2629743,
+	'week': 604800,
+	'day': 86400,
+	'hour': 3600
+	}
+	return vals[date_filter]
+	
+def get_date_format(date_filter):
+	"""
+	Utility for returning the date format for a given date filter
+	@param date filter :  the given date filter 
+	@return the date format for a given filter
+	"""
+	vals = {
+	'month': '%Y-%m',
+	'week': '%Y-%U',
+	'day': '%Y-%m-%d',
+	'hour': '%Y-%m-%d : %H'
+	}
+	return vals[date_filter]
+	
