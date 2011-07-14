@@ -692,6 +692,508 @@ LFN_N PFN_N [site handle N]</programlisting>
     <title>pegasus-status</title>
 
     <para>pegasus-status reports on the status of a workflow.</para>
+
+    <section>
+      <title>SYNTAX</title>
+
+      <cmdsynopsis>
+        <command>pegasus-status</command>
+
+        <group choice="plain">
+          <arg choice="plain">-h</arg>
+
+          <arg choice="plain">--help</arg>
+        </group>
+      </cmdsynopsis>
+
+      <cmdsynopsis>
+        <command>pegasus-status</command>
+
+        <group choice="plain">
+          <arg choice="plain">-V</arg>
+
+          <arg choice="plain">--version</arg>
+        </group>
+      </cmdsynopsis>
+
+      <cmdsynopsis>
+        <command>pegasus-status</command>
+
+        <group choice="opt">
+          <arg choice="plain">-w</arg>
+
+          <arg choice="plain">--watch <replaceable>s</replaceable></arg>
+        </group>
+
+        <group choice="opt">
+          <arg choice="plain">-L</arg>
+
+          <arg choice="plain">--<arg choice="opt">no</arg>legend</arg>
+        </group>
+
+        <group choice="opt">
+          <arg choice="plain">-c</arg>
+
+          <arg choice="plain">--<arg choice="opt">no</arg>color</arg>
+        </group>
+
+        <group choice="opt">
+          <arg choice="plain">-U</arg>
+
+          <arg choice="plain">--<arg choice="opt">no</arg>utf8</arg>
+        </group>
+
+        <group choice="opt">
+          <arg choice="plain">-Q</arg>
+
+          <arg choice="plain">--<arg choice="opt">no</arg>queue</arg>
+        </group>
+
+        <group choice="opt">
+          <arg choice="plain">-v</arg>
+
+          <arg choice="plain">--verbose</arg>
+        </group>
+
+        <group choice="opt">
+          <arg choice="plain">-d</arg>
+
+          <arg choice="plain">--debug</arg>
+        </group>
+
+        <group choice="opt">
+          <arg choice="plain">-u</arg>
+
+          <arg choice="plain">--user <replaceable>name</replaceable></arg>
+        </group>
+
+        <group choice="opt">
+          <arg choice="plain">-i</arg>
+
+          <arg choice="plain">--<arg choice="opt">no</arg>idle</arg>
+        </group>
+
+        <group choice="opt">
+          <arg choice="plain">--<arg choice="opt">no</arg>held</arg>
+        </group>
+
+        <group choice="opt">
+          <arg choice="plain">--<arg choice="opt">no</arg>heavy</arg>
+        </group>
+
+        <group choice="opt">
+          <arg choice="plain">-j</arg>
+
+          <arg choice="plain">--jobtype <replaceable>jt</replaceable></arg>
+        </group>
+
+        <group choice="opt">
+          <arg choice="plain">-s</arg>
+
+          <arg choice="plain">--site <replaceable>sid</replaceable></arg>
+        </group>
+
+        <group choice="opt">
+          <arg choice="plain">-l</arg>
+
+          <arg choice="plain">--long</arg>
+        </group>
+
+        <group choice="opt">
+          <arg choice="plain">-S</arg>
+
+          <arg choice="plain">--<arg choice="opt">no</arg>success</arg>
+        </group>
+
+        <arg choice="opt"><replaceable>rundir</replaceable></arg>
+      </cmdsynopsis>
+
+      <para><command>pegasus-status</command> shows the current state of the
+      Condor Q and a workflow, depending on settings. If no valid run
+      directory could be determined, including the current directory,
+      <command>pegasus-status</command> will show all jobs of the current user
+      and no workflows. If a run directory was specified, or the current
+      directory is a valid run directory, status about the workflow will also
+      be shown.</para>
+
+      <para>Many option will modify the behavior of this program, not
+      withstanding a proper UTF-8 capable terminal, watch mode, the presence
+      of jobs in the queue, progress in the workflow directory, etc.</para>
+    </section>
+
+    <section id="pegasus_status_arguments">
+      <title>ARGUMENTS</title>
+
+      <variablelist>
+        <varlistentry>
+          <term><option>-h</option></term>
+
+          <term><option>--help</option></term>
+
+          <listitem>
+            <para>Prints a concise help and exits.</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+
+      <variablelist>
+        <varlistentry>
+          <term><option>-V</option></term>
+
+          <term><option>--version</option></term>
+
+          <listitem>
+            <para>Prints the version information and exits.</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+
+      <variablelist>
+        <varlistentry>
+          <term><option>-w<replaceable> sec</replaceable></option></term>
+
+          <term><option>--watch <replaceable>sec</replaceable></option></term>
+
+          <listitem>
+            <para>This option enables the <emphasis>watch mode.</emphasis> In
+            watch mode, the program repeated polls the status sources and
+            shows them in an updating window. The optional argument
+            <replaceable>sec</replaceable> to this option determines how often
+            these sources are polled.</para>
+
+            <para>We <emphasis>strongly</emphasis> recommend to set this
+            interval not too low, as frequent polling will degrade the
+            scheduler performance and increase the host load. In watch mode,
+            the terminal size is the limiting factor, and parts of the output
+            may be truncated to fit it onto the given terminal.</para>
+
+            <para>Watch mode is disabled by default. The
+            <replaceable>sec</replaceable> argument defaults to 60
+            seconds.</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+
+      <variablelist>
+        <varlistentry>
+          <term><option>-L</option></term>
+
+          <term><option>--legend</option></term>
+
+          <term><option>--nolegend</option></term>
+
+          <listitem>
+            <para>This option shows a legend explaining the columns in the
+            output, or turns off legends.</para>
+
+            <para>By default, legends are turned off to save terminal real
+            estate.</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+
+      <variablelist>
+        <varlistentry>
+          <term><option>-c</option></term>
+
+          <term><option>--color</option></term>
+
+          <term><option>--nocolor</option></term>
+
+          <listitem>
+            <para>This option turns on (or off) ANSI color escape sequences in
+            the output. The single letter option can only switch on
+            colors.</para>
+
+            <para>By default, colors are turned off, as they will not display
+            well on a terminal with black background.</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+
+      <variablelist>
+        <varlistentry>
+          <term><option>-U</option></term>
+
+          <term><option>--utf8</option></term>
+
+          <term><option>--noutf8</option></term>
+
+          <listitem>
+            <para>This option turns on (or off) the output of Unicode box
+            drawing characters as UTF-8 encoded sequences. The single option
+            can only turn on box drawing characters.</para>
+
+            <para>The defaults for this setting depend on the
+            <envar>LANG</envar> environment variable. If the variable contains
+            a value ending in something indicating UTF-8 capabilities, the
+            option is turned on by default. It is off otherwise.</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+
+      <variablelist>
+        <varlistentry>
+          <term><option>-Q</option></term>
+
+          <term><option>--queue</option></term>
+
+          <term><option>--noqueue</option></term>
+
+          <listitem>
+            <para>This option turns on (or off) the output from parsing Condor
+            Q.</para>
+
+            <para>By default, Condor Q will be parsed for jobs of the current
+            user. If a workflow run directory is specified, it will
+            furthermore be limited to jobs only belonging to the
+            workflow.</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+
+      <variablelist>
+        <varlistentry>
+          <term><option>-v</option></term>
+
+          <term><option>--verbose</option></term>
+
+          <listitem>
+            <para>This option increases the expert level, showing more
+            information about the Condor Q state. Being an incremental option,
+            two incrases are supported.</para>
+
+            <para>Additionally, the signals <emphasis>SIGUSR1</emphasis> and
+            <emphasis>SIGUSR2</emphasis> will increase and decrease the expert
+            level respectively during run-time.</para>
+
+            <para>By default, the simplest queue view is enabled.</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+
+      <variablelist>
+        <varlistentry>
+          <term><option>-d</option></term>
+
+          <term><option>--debug</option></term>
+
+          <listitem>
+            <para>This is an internal debugging tool and should not be used
+            outside the development team. As incremental option, it will show
+            Pegasus-specific ClassAd tuples for each job, more in the second
+            level.</para>
+
+            <para>By default, debug mode is off.</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+
+      <variablelist>
+        <varlistentry>
+          <term><option>-u <replaceable>name</replaceable></option></term>
+
+          <term><option>--user <replaceable>name</replaceable></option></term>
+
+          <listitem>
+            <para>This option permits to query the queue for a different
+            <replaceable>user</replaceable> than the current one. This may be
+            of interest, if you are debugging the workflow of another
+            user.</para>
+
+            <para>By default, the current user is assumed.</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+
+      <variablelist>
+        <varlistentry>
+          <term><option>-i</option></term>
+
+          <term><option>--idle</option></term>
+
+          <term><option>--noidle</option></term>
+
+          <listitem>
+            <para>With this option, jobs in Condor state
+            <emphasis>idle</emphasis> are omitted from the queue
+            output.</para>
+
+            <para>By default, <emphasis>idle</emphasis> jobs are shown.</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+
+      <variablelist>
+        <varlistentry>
+          <term><option>--held</option></term>
+
+          <term><option>--noheld</option></term>
+
+          <listitem>
+            <para>This option enables or disabled showing of the reason a job
+            entered Condor's <emphasis>held</emphasis> state. The reason will
+            somewhat destroy the screen layout.</para>
+
+            <para>By default, the reason is shown.</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+
+      <variablelist>
+        <varlistentry>
+          <term><option>--heavy</option></term>
+
+          <term><option>--noheavy</option></term>
+
+          <listitem>
+            <para>If the terminal is UTF-8 capable, and output is to a
+            terminal, this option decides whether to use heavyweight or
+            lightweight line drawing characters.</para>
+
+            <para>By default, heavy lines connect the jobs to
+            workflows.</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+
+      <variablelist>
+        <varlistentry>
+          <term><option>-j <replaceable>jt</replaceable></option></term>
+
+          <term><option>--jobtype<replaceable>
+          jt</replaceable></option></term>
+
+          <listitem>
+            <para>This option filters the Condor jobs shown only to the
+            Pegasus jobtypes given as argument or arguments to this option. It
+            is a multi-option, and may be specified multiple times, and may
+            use comma-separated lists. Use this option with an argument
+            <replaceable>help</replaceable> to see all valid and recognized
+            jobtypes.</para>
+
+            <para>By default, all Pegasus jobtypes are shown.</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+
+      <variablelist>
+        <varlistentry>
+          <term><option>-s <replaceable>site</replaceable></option></term>
+
+          <term><option>--site <replaceable>site</replaceable></option></term>
+
+          <listitem>
+            <para>This option limits the Condor jobs shown to only those
+            pertaining to the (remote) site <replaceable>site</replaceable>
+            This is an multi-option, and may be specified multiple times, and
+            may use comma-separated lists.</para>
+
+            <para>By default, all sites are shown.</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+
+      <variablelist>
+        <varlistentry>
+          <term><option>-l</option></term>
+
+          <term><option>--long</option></term>
+
+          <listitem>
+            <para>This option will show one line per sub-DAG, including one
+            line for the workflow. If there is only a single DAG pertaining to
+            the <replaceable>rundir</replaceable>, only total will be
+            shown.</para>
+
+            <para>By default, only DAG totals (sums) are shown.</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+
+      <variablelist>
+        <varlistentry>
+          <term><option>-S</option></term>
+
+          <term><option>--success</option></term>
+
+          <term><option>--nosuccess</option></term>
+
+          <listitem>
+            <para>This option modifies the previous <option>--long</option>
+            option. It will omit (or show) fully successful sub-DAGs from the
+            output.</para>
+
+            <para>By default, all DAGs are shown.</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+
+      <variablelist>
+        <varlistentry>
+          <term><replaceable>rundir</replaceable></term>
+
+          <listitem>
+            <para>This option show statistics about the given DAG that runs in
+            <replaceable>rundir</replaceable>. To gather proper statistics,
+            <command>pegasus-status</command> needs to traverse the directory
+            and all sub-directories. This can become an expensive operation on
+            shared filesystems.</para>
+
+            <para>By default, the <replaceable>rundir</replaceable> is assumed
+            to be the current directory. If the current directory is not a
+            valid <replaceable>rundir</replaceable>, no DAG statistics will be
+            shown.</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+    </section>
+
+    <section>
+      <title>RETURN VALUE</title>
+
+      <para><command>pegasus-status</command> will typically return success in
+      regular mode, and the termination signal in watch mode. Abnormal
+      behavior will result in a non-zero exit code.</para>
+    </section>
+
+    <section>
+      <title>EXAMPLE</title>
+
+      <screen><command>pegasus-status</command></screen>
+
+      <para>This invocation will parse the Condor Q for the current user and
+      show all her jobs. Additionally, if the current directory is a valid
+      Pegasus workflow directory, totals about the DAG in that directory are
+      displayed.</para>
+
+      <screen><command>pegasus-status</command> -l <filename>rundir</filename></screen>
+
+      <para>As above, but providing a specific Pegasus workflow directory in
+      argument <filename>rundir</filename> and requesting to itemize
+      sub-DAGs.</para>
+
+      <screen><command>pegasus-status</command> -j help</screen>
+
+      <para>This option will show all permissible job types and exit.</para>
+
+      <screen><command>pegasus-status</command> -vvw 300 -Ll</screen>
+
+      <para>This invocation will parse the queue, print it in high-expert
+      mode, show legends, itemize DAG statistics of the current working
+      directory, and redraw the terminal every five minutes with updated
+      statistics.</para>
+    </section>
+
+    <section>
+      <title>RESTRICTIONS</title>
+
+      <para>Currently only supports a single (optional) run directory. If you
+      want to watch multiple run directories, I suggest to open multiple
+      terminals and watch them separately. If that is not an option, or deemed
+      too expensive, you can ask <email>pegasus-support at isi dot edu</email>
+      to extend the program.</para>
+    </section>
   </section>
 
   <section>
