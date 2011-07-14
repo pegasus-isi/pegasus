@@ -27,10 +27,14 @@ pegasus-statistics \- A tool to generate statistics about the workflow run.
 [\-o|\-\-output <output directory>] 
 [\-c|\-\-conf <property file path>]
 [\-p|\-\-statistics_level level_str]
+[\-t|\-\-time_filter filter_str]
 [\-l|\-\-log_level level_str] 
 
 .SH "DESCRIPTION"
-The pegasus-statistics generates statistics about the workflow run like total jobs/tasks/sub workflows ran , how many succeeded/failed etc.It generates job instance statistics like run time, condor queue delay etc. It also generates invocation statistics information grouped by transformation name. 
+pegasus-statistics generates statistics about the workflow run like total jobs/tasks/sub workflows ran , how many succeeded/failed etc.
+It generates job instance statistics like run time, condor queue delay etc. 
+It generates invocation statistics information grouped by transformation name.
+It also generates job instance and invocation statistics information grouped by time and host. 
 
 .SH "ARGUMENTS"
 
@@ -64,7 +68,7 @@ The properties file to use. This option overrides all other property files.
 .TP
 .PD 1
 .B \-\-statistics_level  level_str
-Specifies the statistics information to generate. Valid levels are:all,summary,wf_stats,jb_stats,tf_stats Default is summary.
+Specifies the statistics information to generate. Valid levels are:all,summary,wf_stats,jb_stats,tf_stats,ti_stats; Default is summary.
 Valid values for the statistics_level are
 .RS
 .B all : 
@@ -87,9 +91,18 @@ generates the job statistics information of each individual workflow.In case of 
 generates the invocation statistics information of each individual workflow grouped by transformation name .In case of hierarchical workflow the transformation statistics is created for each sub workflows.
 .RE
 .RS
-.B host_chart : 
-generates the host over time chart
+.B ti_stats : 
+generates the job instance and invocation statistics like how many run, total runtime grouped by time and host.
 .RE
+
+
+.TP
+.B \-t
+.PD 0
+.TP
+.PD 1
+.B \-\-time_filter filter_str
+ Specifies the time filter to group the time statistics. Valid levels are: month,week,day,hour; Default is day.
 
 .TP
 .B \-l
