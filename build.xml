@@ -399,13 +399,17 @@
     <mkdir dir="${dist.lib}"/>
     <copy preservelastmodified="true" todir="${dist.lib}">
       <fileset dir="lib" includes="*.jar"/>
-      <fileset dir="lib" includes="*.sh"/>
-      <fileset dir="lib">
+        <fileset dir="lib" includes="*.sh"/>
+        <fileset dir="lib">
         <include name="0*"/>
-	<include name="C*"/>
-	<include name="L*"/>
-	<include name="R*"/>
+        <include name="C*"/>
+        <include name="L*"/>
+        <include name="R*"/>
       </fileset>
+    </copy>
+    <mkdir dir="${dist.lib}/javascript"/>
+    <copy preservelastmodified="true" todir="${dist.lib}/javascript">
+      <fileset dir="lib/javascript" includes="**/*.js"/>
     </copy>
     <mkdir dir="${dist.lib}/perl"/>
     <copy preservelastmodified="true" todir="${dist.lib}/perl">
@@ -510,6 +514,11 @@
       <fileset dir="${dist.dir}/libexec" excludes="README*"/>
     </chmod>
 
+    <!-- share -->
+    <mkdir dir="${dist.dir}/share"/>
+    <copy preservelastmodified="true" todir="${dist.dir}/share">
+      <fileset dir="share" includes="**/*"/>
+    </copy>
 
     <!-- sql -->
     <mkdir dir="${dist.dir}/sql"/>
