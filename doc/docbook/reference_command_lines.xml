@@ -1208,9 +1208,6 @@ LFN_N PFN_N [site handle N]</programlisting>
     <para>pegasus-statistics reports statistics about a workflow.</para>
     <section>
       <title>SYNOPSIS</title>
-
-      <itemizedlist>
-        <listitem>
           <para><emphasis role="bold">pegasus-statistics</emphasis> &lt;submit directory&gt;
 			[-h | --help]
 			[-o | --output &lt;output directory&gt;] 
@@ -1219,8 +1216,6 @@ LFN_N PFN_N [site handle N]</programlisting>
 			[-t | --time_filter filter_str]
 			[-l | --log_level level_str]
           </para>
-        </listitem>
-      </itemizedlist>
     </section>
     
     <section>
@@ -1365,8 +1360,6 @@ LFN_N PFN_N [site handle N]</programlisting>
     <section>
       <title>SYNOPSIS</title>
 
-      <itemizedlist>
-        <listitem>
           <para><emphasis role="bold">pegasus-statistics</emphasis> &lt;submit directory&gt;
 			[-h | --help]
 			[-o | --output &lt;output directory&gt;] 
@@ -1375,9 +1368,8 @@ LFN_N PFN_N [site handle N]</programlisting>
 			[-p | --plotting_level level_str]
 			[-l | --log_level level_str]
           </para>
-        </listitem>
-      </itemizedlist>
-    </section>
+      
+     </section>
     
     <section>
       <title>DESCRIPTION</title>
