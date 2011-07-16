@@ -39,6 +39,7 @@ calc_dag_graph = False
 calc_gantt_chart = False
 calc_host_chart = False
 max_graph_nodes = MAX_GRAPH_NODES
+DEFAULT_OUTPUT_DIR = "plots"
 	
 def setup_logger(level_str):
 	level_str = level_str.lower()
@@ -399,9 +400,9 @@ def main():
 		
 	if options.output_dir is not None:
 		output_dir = options.output_dir
-		plot_utils.create_directory(output_dir, True)
 	else :
-		output_dir = tempfile.mkdtemp()
+		output_dir = os.path.join(submit_dir, DEFAULT_OUTPUT_DIR)
+	plot_utils.create_directory(output_dir, True)
 	if options.log_level is None:
 		options.log_level = "info"
 	if options.max_graph_nodes is not None:
