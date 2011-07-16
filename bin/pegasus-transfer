@@ -371,7 +371,13 @@ def prepare_local_dir(path):
     makes sure a local path exists before putting files into it
     """
     if not(os.path.exists(path)):
-        os.makedirs(path, 0755)
+        logger.debug("Creating local directory " + path)
+        try:
+            os.makedirs(path, 0755)
+        except os.error, err:
+            # if dir already exists, ignore the error
+            if not(os.path.isdir(path)):
+                raise RuntimeError(err)
 
 
 def cp():
