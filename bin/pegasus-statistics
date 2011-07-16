@@ -23,6 +23,7 @@ re_parse_property = re.compile(r'([^:= \t]+)\s*[:=]?\s*(.*)')
 #Global variables----
 prog_base = os.path.split(sys.argv[0])[1]	# Name of this program
 
+
 workflow_statistics_file_name ="workflow.txt";
 job_statistics_file_name ="jobs.txt";
 logical_transformation_statistics_file_name ="breakdown.txt";
@@ -34,7 +35,7 @@ calc_tf_stats = False
 calc_ti_stats = False
 time_filter = None
 NEW_LINE_STR ="\n"
-
+DEFAULT_OUTPUT_DIR = "statistics"
 
 transformation_stats_col_name =["Transformation","Count","Succeeded" , "Failed", "Min","Max","Mean","Total"]
 transformation_stats_col_size =[80,12,12,12,20,20,20,12]
@@ -50,7 +51,7 @@ worklow_status_col_size =[40,15,12,12,12,12,5,12,30,18]
 
 time_stats_col_name =["Date","Count","Runtime"]
 time_stats_col_size =[30,20,20]
-time_host_stats_col_name =["Date","Host", "Count","Runtime"]
+time_host_stats_col_name =["Date","Host", "Count","Runtime (Sec.)"]
 time_host_stats_col_size =[30,80,20,20]
 
 class JobStatistics:
@@ -192,9 +193,9 @@ def formatted_transformation_stats_legends():
 	formatted_transformation_stats_legend +="#Count - the number of times the invocations corresponding to the transformation was executed. \n"
 	formatted_transformation_stats_legend +="#Succeeded - the count of the succeeded invocations corresponding to the transformation. \n"
 	formatted_transformation_stats_legend +="#Failed - the count of the failed invocations corresponding to the transformation. \n"
-	formatted_transformation_stats_legend +="#Mean(sec.) - the mean of the invocation runtime corresponding to the transformation. \n"
 	formatted_transformation_stats_legend +="#Min(sec.) - the minimum invocation runtime value corresponding to the transformation. \n"
 	formatted_transformation_stats_legend +="#Max(sec.) - the maximum invocation runtime value corresponding to the transformation. \n"
+	formatted_transformation_stats_legend +="#Mean(sec.) - the mean of the invocation runtime corresponding to the transformation. \n"
 	formatted_transformation_stats_legend +="#Total(sec.) - the cumulative of invocation runtime corresponding to the transformation. \n"
 	return formatted_transformation_stats_legend
 
@@ -689,7 +690,9 @@ def main():
 		 time_filter = options.time_filter
 	else:
 		time_filter =  'day'
-	
+	# Change the legend to show the time filter format
+	time_stats_col_name[0]+= str(stats_utils.get_date_print_format(time_filter))
+	time_host_stats_col_name[0] += str(stats_utils.get_date_print_format(time_filter))
 	
 	global output_dir
 	if options.output_dir is not None:
@@ -702,7 +705,9 @@ def main():
 				logger.error("Unable to create output directory."+output_dir)
 				sys.exit(1) 	
 	else :
-		output_dir = tempfile.mkdtemp()
+		output_dir = os.path.join(submit_dir, DEFAULT_OUTPUT_DIR)
+		stats_utils.create_directory(output_dir, True)
+		
 	
 	if options.log_level == None:
 		options.log_level = "info"
