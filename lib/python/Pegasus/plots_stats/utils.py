@@ -305,3 +305,18 @@ def get_date_format(date_filter):
 	}
 	return vals[date_filter]
 	
+
+def get_date_print_format(date_filter):
+	"""
+	Utility for returning the date format for a given date filter in human readable format
+	@param date filter :  the given date filter 
+	@return the date format for a given filter
+	"""
+	vals = {
+	'month': '[YYYY-MM]',
+	'week': '[YYYY-WW]',
+	'day': '[YYYY-MM-DD]',
+	'hour': '[YYYY-MM-DD : HH]'
+	}
+	return vals[date_filter]
+	
