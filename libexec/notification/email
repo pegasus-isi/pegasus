@@ -113,7 +113,7 @@ try:
     validate_env_var("PEGASUS_HOME")
     validate_env_var("PEGASUS_SUBMIT_DIR")
     validate_env_var("PEGASUS_EVENT")
-    validate_env_var("PEGASUS_EVENT_TIMESTAMP")
+    validate_env_var("PEGASUS_EVENT_TIMESTAMP_ISO")
     validate_env_var("PEGASUS_JOBID")
 except RuntimeError, err:
     print >> sys.stderr, err
@@ -128,9 +128,10 @@ msg = "From: " + from_address + "\r\n" \
     + "\r\n" \
     + "***** Pegasus Workflow Event ****\r\n" \
     + "\r\n" \
-    + "Time:   " + os.environ['PEGASUS_EVENT_TIMESTAMP'] + "\r\n" \
-    + "Job id: " + os.environ['PEGASUS_JOBID'] + "\r\n" \
-    + "Event:  " + os.environ['PEGASUS_EVENT'] + "\r\n"
+    + "Time:     " + os.environ['PEGASUS_EVENT_TIMESTAMP_ISO'] + "\r\n" \
+    + "Workflow: " + os.environ['PEGASUS_SUBMIT_DIR'] + "\r\n" \
+    + "Job id:   " + os.environ['PEGASUS_JOBID'] + "\r\n" \
+    + "Event:    " + os.environ['PEGASUS_EVENT'] + "\r\n"
     
 if 'PEGASUS_STATUS' in os.environ:
     msg = msg \
@@ -140,8 +141,9 @@ if 'PEGASUS_STATUS' in os.environ:
 if report == "pegasus-status":
     msg = msg + "\r\n\r\npegasus-status:\r\n\r\n"
     try:
-        out = backticks(os.environ['PEGASUS_HOME'] + "/bin/pegasus-status --noutf8 --nocolor " \
-                      + os.environ['PEGASUS_SUBMIT_DIR'] + " 2>&1") 
+        out = backticks(os.environ['PEGASUS_HOME'] + "/bin/pegasus-status --noutf8 --nocolor" \
+                      + " --noqueue" \
+                      + " " + os.environ['PEGASUS_SUBMIT_DIR'] + " 2>&1") 
         msg = msg + out
     except err:
         print >> sys.stderr, "Error running pegasus-status: " + err

@@ -41,7 +41,7 @@ def usage(parser):
     print "Usage: This tool is used by pegasus-monitord to send event notifications"
     print "over jabber. A set of environment variables are expected to be set:"
     print "   PEGASUS_EVENT"
-    print "   PEGASUS_EVENT_TIMESTAMP"
+    print "   PEGASUS_EVENT_TIMESTAMP_ISO"
     print "   PEGASUS_JOBID"
     print "   PEGASUS_STATUS (only for end events)"
     print ""
@@ -105,7 +105,7 @@ if recipient == None:
 
 try:
     validate_env_var("PEGASUS_EVENT")
-    validate_env_var("PEGASUS_EVENT_TIMESTAMP")
+    validate_env_var("PEGASUS_EVENT_TIMESTAMP_ISO")
     validate_env_var("PEGASUS_JOBID")
 except RuntimeError, err:
     print >> sys.stderr, err
@@ -113,7 +113,7 @@ except RuntimeError, err:
 
 
 msg = " === Pegasus Workflow Event ===\n" \
-    + "Time:   " + os.environ['PEGASUS_EVENT_TIMESTAMP'] + "\n" \
+    + "Time:   " + os.environ['PEGASUS_EVENT_TIMESTAMP_ISO'] + "\n" \
     + "Job id: " + os.environ['PEGASUS_JOBID'] + "\n" \
     + "Event:  " + os.environ['PEGASUS_EVENT'] + "\n"
     
