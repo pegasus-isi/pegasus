@@ -10,25 +10,25 @@ use File::Path;
 
 $main::DEBUG = 1;		# for now
 
-sub parse_exit(;$) {
-    # purpose: parse an exit code any way possible
+#sub parse_exit(;$) {
+#    # purpose: parse an exit code any way possible
     # paramtr: $ec (IN): exit code from $?
     # returns: string that shows what went wrong
-    my $ec = shift;
-    $ec=$? unless defined $ec;
-
-    my $result;
-    if ( ($ec & 127) > 0 ) {
-        my $signo = ($ec & 127);
-        my $core = ( ($ec & 128) == 128 ? ' (core)' : '' );
-        $result = "died on signal $signo$core";
-    } elsif ( ($ec >> 8) > 0 ) {
-        $result = "exit code @{[$ec >> 8]}";
-    } else {
-        $result = "OK";
-    }
-    $result;
-}
+#    my $ec = shift;
+#    $ec=$? unless defined $ec;#
+#
+#    my $result;
+#    if ( ($ec & 127) > 0 ) {
+#        my $signo = ($ec & 127);
+#        my $core = ( ($ec & 128) == 128 ? ' (core)' : '' );
+#        $result = "died on signal $signo$core";
+#    } elsif ( ($ec >> 8) > 0 ) {
+#        $result = "exit code @{[$ec >> 8]}";
+#    } else {
+#        $result = "OK";
+#    }
+#    $result;
+#}
 
 #linenumber in the input file
 my $linenum=0;
@@ -88,7 +88,7 @@ while(<STDIN>){
 		    	if ($res==1){
 			    print STDOUT "MKDIR success\n";
 			} else {
-			    print STDERR "MKDIR ERROR",parse_exit($?),"\n";
+			    print STDERR "MKDIR ERROR\n";
 			}
 		    
 		}
@@ -103,7 +103,7 @@ while(<STDIN>){
 		    print STDOUT "SYMLINK success\n";
 		    $success++;
 		} else {
-		    print STDERR "SYMLINK ERROR",parse_exit($?),"\n";
+		    print STDERR "SYMLINK ERROR ", $src, "->",$dest,"\n";
 		    $failures++;
 		}
 	    }
