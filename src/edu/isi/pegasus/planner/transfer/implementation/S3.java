@@ -21,10 +21,12 @@ import java.io.FileWriter;
 import java.util.Collection;
 import java.util.Iterator;
 
+import edu.isi.pegasus.common.util.S3cfg;
 import edu.isi.pegasus.planner.classes.FileTransfer;
 import edu.isi.pegasus.planner.classes.NameValue;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.TransferJob;
+import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.refiner.CreateDirectory;
 import edu.isi.pegasus.planner.refiner.createdir.Implementation;
 
@@ -73,6 +75,43 @@ public class S3 extends Transfer3 {
        
     }
 
+    
+    /**
+     * Determines if there is a need to transfer the s3cfg for the transfer
+     * job or not.  If there is a need to transfer s3cfg file, then the job is
+     * modified to create the correct condor commands to transfer the file.
+     * The proxy is transferred from the submit host (i.e site local).
+     *
+     * @param job   the transfer job .
+     *
+     * @return boolean true job was modified to transfer the s3cfg, else
+     *                 false when job is not modified.
+     */
+    public boolean checkAndTransferS3cfg(TransferJob job){
+
+        // for jobs executing on local site, just set the environment variable
+        // for remote execution, transfer the s3cfg file
+        if( job.getSiteHandle().equalsIgnoreCase( "local" ) ){
+            //the full path
+            job.envVariables.checkKeyInNS(S3cfg.S3CFG, this.mLocalS3cfg );
+        }
+        else{
+            job.condorVariables.addIPFileForTransfer(mLocalS3cfg);
+            //just the basename
+            job.envVariables.checkKeyInNS(ENV.S3CFG, mLocalS3cfgBasename);
+            job.envVariables.checkKeyInNS(ENV.GRIDSTART_PREJOB,
+                    "/bin/chmod 600 " +
+                    mLocalS3cfgBasename);
+        }
+
+        //we want the transfer job to be run in the
+        //directory that Condor or GRAM decided to run
+        //job.condorVariables.removeKey("remote_initialdir");
+                
+        return true;
+    }
+
+    
     /**
      * hook to post process the created transfer jobs - we want to add the s3cfg file
      */
@@ -97,6 +136,7 @@ public class S3 extends Transfer3 {
         return true;
     }
 
+    
     /**
      * Writes to a FileWriter stream the stdin which goes into the magic script
      * via standard input
