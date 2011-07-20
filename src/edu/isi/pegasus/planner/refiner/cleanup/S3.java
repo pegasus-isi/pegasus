@@ -305,19 +305,13 @@ public class S3 implements CleanupImplementation{
         }
         
         
-        //prepare the argument invocation
-        StringBuffer arguments = new StringBuffer();
-        arguments.append( "rm -F "). 
-                  append( stdIn.getName() );
-        cJob.setArguments( arguments.toString() );
+        
         
         //the cleanup job is a clone of compute
         //need to reset the profiles first
         cJob.resetProfiles();
         
-        //the file needs to be transferred via condor file io
-        cJob.condorVariables.addIPFileForTransfer( stdIn.getAbsolutePath() );
-
+        
         //the profile information from the pool catalog needs to be
         //assimilated into the job.
         cJob.updateProfiles( mSiteStore.lookup( cJob.getSiteHandle() ).getProfiles()  );
@@ -341,13 +335,30 @@ public class S3 implements CleanupImplementation{
         cJob.condorVariables.construct( Condor.PRIORITY_KEY,
                                         DEFAULT_PRIORITY_KEY );
         
+        
+        //prepare the argument invocation
+        StringBuffer arguments = new StringBuffer();
+        arguments.append( "rm -F ");
+        
         // s3cfg - for jobs executing on local site, just set the environment variable
         // for remote execution, transfer the s3cfg file
         if( cJob.getSiteHandle().equalsIgnoreCase( "local" ) ){
             //the full path
             cJob.envVariables.checkKeyInNS(S3cfg.S3CFG, this.mLocalS3cfg );
+            arguments.append( stdIn.getAbsolutePath() );
+            
+            //on local site, we have full path the input file.
+            //set initialdir to "" to indicate that it should not
+            //be set.
+            cJob.condorVariables.construct( "initialdir", "" );
+            
         }
         else{
+            //the input file needs to be transferred via condor file io
+            //and arguments refer just to basename
+            cJob.condorVariables.addIPFileForTransfer( stdIn.getAbsolutePath() );
+            arguments.append( stdIn.getName() );
+
             cJob.condorVariables.addIPFileForTransfer(mLocalS3cfg);
             //just the basename
             cJob.envVariables.checkKeyInNS(ENV.S3CFG, mLocalS3cfgBasename);
@@ -355,6 +366,8 @@ public class S3 implements CleanupImplementation{
                                              "/bin/chmod 600 " +
                                              mLocalS3cfgBasename);
         }
+        
+        cJob.setArguments( arguments.toString() );
         
         return cJob;
     }

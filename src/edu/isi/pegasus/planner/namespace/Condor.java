@@ -772,6 +772,9 @@ public class Condor extends Namespace{
         while(it.hasNext()){
             key = (String)it.next();
             value = (String)mProfileMap.get(key);
+            if( value == null || value.equals( "" ) ){
+                continue;
+            }
             st.append(key).append(" = ").append(value).append("\n");
         }
 
