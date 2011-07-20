@@ -7,45 +7,13 @@
   <section>
     <title>Walkthrough Objectives</title>
 
-    <para>Using an abstract workflow, a user will convert it to an executable
-    workflow, plan it and execute it, and then monitor the workflow
-    execution.</para>
-
-    <para><emphasis>Walkthrough Subjects:</emphasis></para>
-
-    <itemizedlist>
-      <listitem>
-        <para>Downloading Virtual Box</para>
-      </listitem>
-
-      <listitem>
-         Create the Virtual Machine 
-      </listitem>
-
-      <listitem>
-        <para>The Walkthrough Workflow</para>
-      </listitem>
-
-      <listitem>
-        <para>Monitoring, Debugging, and Statistics</para>
-      </listitem>
-
-      <listitem>
-        <para>Planning and Executing Workflows</para>
-      </listitem>
-
-      <listitem>
-        <para>Advanced Exercises</para>
-      </listitem>
-
-      <listitem>
-        <para>About Workflow Execution</para>
-      </listitem>
-
-      <listitem>
-        <para>About Workflow Monitoring and Analysis Tools</para>
-      </listitem>
-    </itemizedlist>
+    <para>This walkthrough is intended for new users who want so get a quick
+    overview of the Pegasus concepts and system. A preconfigured virtual
+    machine is provided so that no software installation (except Virtal Box)
+    is required. The walkthrough covers creating a workflow, submitting,
+    monitoring, debugging, and generating run statistics. As concepts and
+    tools are introduced, links to the main Pegasus documentation are
+    provided.</para>
   </section>
 
   <section>
@@ -96,7 +64,8 @@
 
       <mediaobject>
         <imageobject>
-          <imagedata fileref="images/tutorial-blackdiamond-dax.png"
+          <imagedata align="center"
+                     fileref="images/tutorial-blackdiamond-dax.png"
                      width="500" />
         </imageobject>
       </mediaobject>
@@ -119,8 +88,8 @@
     role="bold">$HOME/walkthrough/</emphasis> directory . All the files that
     are required reside in this directory.</para>
 
-    <para><emphasis role="bold">3.</emphasis> Change the directory to
-    <emphasis role="bold">HOME/walkthrough:</emphasis></para>
+    <para>Change the directory to <emphasis
+    role="bold">$HOME/walkthrough:</emphasis></para>
 
     <programlisting><command>$ cd $HOME/walkthrough</command></programlisting>
 
@@ -321,7 +290,8 @@
 
       <mediaobject>
         <imageobject>
-          <imagedata fileref="images/tutorial-blackdiamond-dag.png"
+          <imagedata align="center"
+                     fileref="images/tutorial-blackdiamond-dag.png"
                      width="500" />
         </imageobject>
       </mediaobject>
