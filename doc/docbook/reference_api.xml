@@ -1151,7 +1151,7 @@
     </section>
   </section>
 
-  <section>
+  <section id="dax_generator_api">
     <title>DAX Generator API</title>
 
     <para>The DAX generating APIs support Java, Perl and Python. This section

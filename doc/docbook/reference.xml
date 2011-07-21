@@ -22,6 +22,9 @@
   <xi:include href="reference_hierarchical_workflow.xml"
               xmlns:xi="http://www.w3.org/2001/XInclude" />
 
+  <xi:include href="reference_notifications.xml"
+              xmlns:xi="http://www.w3.org/2001/XInclude" />
+
   <xi:include href="reference_api.xml"
               xmlns:xi="http://www.w3.org/2001/XInclude" />
 

@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE section PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+"http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<section id="profiles">
+  <title>Notifications</title>
+
+  <para>The Pegasus Workflow Mapper now supports job and workflow level
+  notifications. The user can specify in the DAX with the job or the workflow
+  </para>
+
+  <itemizedlist>
+    <listitem>
+      <para>the event when the notification needs to be sent</para>
+    </listitem>
+
+    <listitem>
+      <para>the executable that needs to be invoked.</para>
+    </listitem>
+  </itemizedlist>
+
+  <para>The notifications are issued from the submit host by the
+  pegasus-monitord daemon that monitors the Condor logs for the workflow. When
+  a notification is issued, pegasus-monitord while invoking the notifying
+  executable sets certain environment variables that contain information about
+  the job and workflow state.</para>
+
+  <para>The Pegasus release comes with default notification clients that send
+  notifications via email or jabber.</para>
+
+  <section>
+    <title>Specifying Notifications in the DAX</title>
+
+    <para>Currently, you can specify notifications for the jobs and the
+    workflow by the use of invoke elements.</para>
+
+    <para>Invoke elements can be sub elements for the following elements in
+    the DAX schema.<itemizedlist>
+        <listitem>
+          <para>job - to associate notifications with a compute job in the
+          DAX.</para>
+        </listitem>
+
+        <listitem>
+          <para>dax - to associate notifications with a dax job in the
+          DAX.</para>
+        </listitem>
+
+        <listitem>
+          <para>dag - to associate notifications with a dag job in the
+          DAX.</para>
+        </listitem>
+
+        <listitem>
+          <para>executable - to associate notifications with a job that uses a
+          particular notification</para>
+        </listitem>
+      </itemizedlist></para>
+
+    <para>The invoke element can be specified at the root element level of the
+    DAX to indicate workflow level notifications.</para>
+
+    <para>The invoke element may be specified multiple times, as needed. It
+    has a mandatory <emphasis role="bold">when</emphasis> attribute with the
+    following value set</para>
+
+    <table>
+      <title>Table 1. Invoke Element attributes and meaning.</title>
+
+      <tgroup cols="2">
+        <thead>
+          <row>
+            <entry align="center">Enumeration of Values for when
+            attribute</entry>
+
+            <entry align="center">Meaning</entry>
+          </row>
+        </thead>
+
+        <tbody>
+          <row>
+            <entry>never</entry>
+
+            <entry>(default). Never notify of anything. This is useful to
+            temporarily disable an existing notifications.</entry>
+          </row>
+
+          <row>
+            <entry>start</entry>
+
+            <entry>create a notification when the job is submitted.</entry>
+          </row>
+
+          <row>
+            <entry>on_error</entry>
+
+            <entry>after a job finishes with failure (exitcode != 0).</entry>
+          </row>
+
+          <row>
+            <entry>on_success</entry>
+
+            <entry>after a job finishes with success (exitcode == 0).</entry>
+          </row>
+
+          <row>
+            <entry>at_end</entry>
+
+            <entry>after a job finishes, regardless of exitcode.</entry>
+          </row>
+
+          <row>
+            <entry>all</entry>
+
+            <entry>like start and at_end combined.</entry>
+          </row>
+        </tbody>
+      </tgroup>
+    </table>
+
+    <para>You can specify multiple invoke elements corresponding to same when
+    attribute value in the DAX. This will allow you to have multiple
+    notifications for the same event.</para>
+
+    <para>Here is an example that illustrates that.</para>
+
+    <programlisting>&lt;job id="ID000001" namespace="example" name="mDiffFit" version="1.0" 
+       node-label="preprocess" &gt;
+    &lt;argument&gt;-a top -T 6  -i &lt;file name="f.a"/&gt;  -o &lt;file name="f.b1"/&gt;&lt;/argument&gt;
+
+    &lt;!-- profiles are optional --&gt;
+    &lt;profile namespace="execution" key="site"&gt;isi_viz&lt;/profile&gt;
+    &lt;profile namespace="condor" key="getenv"&gt;true&lt;/profile&gt;
+
+    &lt;uses name="f.a" link="input"  register="false" transfer="true" type="data" /&gt;
+    &lt;uses name="f.b" link="output" register="false" transfer="true" type="data" /&gt;
+    
+    &lt;!-- 'WHEN' enumeration: never, start, on_error, on_success, on_end, all --&gt;
+    <emphasis role="bold">&lt;invoke when="start"&gt;/path/to/notify1 arg1 arg2&lt;/invoke&gt;
+    &lt;invoke when="start"&gt;/path/to/notify1 arg3 arg4&lt;/invoke&gt;
+    &lt;invoke when="on_success"&gt;/path/to/notify2 arg3 arg4&lt;/invoke&gt;</emphasis>
+  &lt;/job&gt;</programlisting>
+
+    <para>In the above example the executable notify1 will be invoked twice
+    when a job is submitted ( when="start" ), once with arguments arg1 and
+    arg2 and second time with arguments arg3 and arg4.</para>
+
+    <para>The DAX Generator API <link
+    linkend="dax_generator_api">chapter</link> has information about how to
+    add notifications to the DAX using the DAX api's.</para>
+  </section>
+
+  <section>
+    <title>Configuring pegasus-monitord for notifications. [Fabio]</title>
+
+    <para></para>
+
+    <section>
+      <title>Environment set for the Notification Scripts</title>
+
+      <para></para>
+    </section>
+  </section>
+
+  <section>
+    <title>Default Notification Scripts [Mats]</title>
+
+    <para></para>
+  </section>
+
+  <section>
+    <title>Notification Example [Mats]</title>
+
+    <para></para>
+  </section>
+</section>
