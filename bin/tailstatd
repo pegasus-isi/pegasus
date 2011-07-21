@@ -1533,7 +1533,7 @@ for (;;) {
     } elsif ( $stat[7] > $current ) {
 	# something to read
 	my $size = length($buffer);
-	my $rsize = sysread( DMOF, $buffer, 32768-$size, $size );
+	my $rsize = sysread( DMOF, $buffer, 32768, $size ); 
 	if ( ! defined $rsize || $rsize == -1 ) {
 	    # error while reading
 	    next if ( $!{EINTR} || $!{EAGAIN} );
