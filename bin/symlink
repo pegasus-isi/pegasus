@@ -58,7 +58,7 @@ while(<STDIN>){
     if(defined($src) && defined($dest)){
 	$pairs++;
 	print STDOUT "SRC URL: ", $src,"\n";
-	print STDOUT "DES URL:" ,$dest,"\n";
+	print STDOUT "DES URL: " ,$dest,"\n";
 	if($src =~ /^file\:\/\// && $dest =~ /^file\:\/\//){
 	    $src =~ s/^file\:\/\/[a-zA-Z0-9\-\.]*//;
 	    $dest =~ s/^file\:\/\/[a-zA-Z0-9\-\.]*//;
