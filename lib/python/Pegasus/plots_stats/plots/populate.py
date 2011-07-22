@@ -287,7 +287,26 @@ def populate_chart(wf_uuid):
 		workflow_info.dax_file_path = config['dax']
 	return workflow_info
 	
-
+def populate_time_details(wf_info , date_time_filter):
+	"""
+	Populates the job instances and invocation time and runtime statistics sorted by time.
+	"""
+	workflow_stats = StampedeStatistics(global_db_url , True)
+ 	workflow_stats.initialize(wf_info.wf_uuid)
+ 	workflow_stats.set_job_filter('all')
+	workflow_stats.set_time_filter(date_time_filter)
+ 	stats_by_time = workflow_stats.get_jobs_run_by_time()
+ 	jobs_time_list =[]
+	for stats in stats_by_time:
+		content = [stats.date_format ,stats.count,stats.total_runtime]
+		jobs_time_list.append(content)
+	wf_info.wf_job_instances_over_time_statistics[date_time_filter] = jobs_time_list
+	stats_by_time = workflow_stats.get_invocation_by_time()
+	invoc_time_list = []
+	for stats in stats_by_time:
+		content = [stats.date_format ,stats.count ,stats.total_runtime]
+		invoc_time_list.append(content)
+	wf_info.wf_invocations_over_time_statistics[date_time_filter] = invoc_time_list
 
 def setup(submit_dir , config_properties):
 	# global reference
