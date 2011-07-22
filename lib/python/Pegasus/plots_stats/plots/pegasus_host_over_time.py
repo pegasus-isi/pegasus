@@ -24,13 +24,9 @@ Usage: pegasus-gantt [options] submit directory
 
 # Revision : $Revision$
 import os
-import re
 import sys
 import logging
-import optparse
-import math
-import tempfile
-import shutil
+
 
 # Initialize logging object
 logger = logging.getLogger()
@@ -49,13 +45,6 @@ from datetime import datetime
 prog_base = os.path.split(sys.argv[0])[1]	# Name of this program
 output_dir = None
 
-
-#TODO's 
-# print warning if kickstart time doesn't fit in the condor window
-# Handle  when it is running
-# handle the case when it is last retry mode 
-# need to handle cluster job case
-# need to handle sub dag job
 
 def setup_logger(level_str):
 	level_str = level_str.lower()
