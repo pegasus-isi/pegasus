@@ -9,6 +9,8 @@ import math
 import tempfile
 import commands
 import shutil
+from datetime import datetime
+
 from Pegasus.tools import properties
 
 # Initialize logging object
@@ -319,4 +321,28 @@ def get_date_print_format(date_filter):
 	'hour': '[YYYY-MM-DD : HH]'
 	}
 	return vals[date_filter]
+
+def convert_to_date_format(value , date_time_filter):
+	"""
+Utility method for converting the value to date format
+@param value :  value to format
+@param date_time_filter :  the date time filter 
+	"""
+	multiplier = get_date_multiplier(date_time_filter)
+	date_format = datetime.fromtimestamp(int(value*multiplier)).strftime(get_date_format(date_time_filter))
+	return date_format
+	
+	
+
+def round_decimal_to_str(value , to=3):
+	"""
+Utility method for rounding the decimal value to string to given digits
+@param value :  value to round 
+@param to    :  how many decimal points to round to
+	"""
+	rounded_value = '-'
+	if value is None:
+		return rounded_value
+	rounded_value = str(round(float(value) , to))
+	return rounded_value
 	
