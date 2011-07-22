@@ -5,10 +5,9 @@ import re
 import sys
 import logging
 import optparse
-import math
-import tempfile
 import commands
 import shutil
+from datetime import timedelta
 
 # Initialize logging object
 logger = logging.getLogger()
@@ -21,11 +20,9 @@ from Pegasus.plots_stats import utils as plot_utils
 from Pegasus.plots_stats.plots import populate
 from Pegasus.plots_stats.plots import pegasus_gantt
 from Pegasus.plots_stats.plots import pegasus_host_over_time
+from Pegasus.plots_stats.plots import pegasus_time
 from Pegasus.tools import utils
 
-from netlogger.analysis.workflow.stampede_statistics import StampedeStatistics
-#from netlogger.analysis.workflow.sql_alchemy import *
-from datetime import timedelta
 
 #regular expressions
 re_parse_property = re.compile(r'([^:= \t]+)\s*[:=]?\s*(.*)')
@@ -38,6 +35,7 @@ calc_dax_graph = False
 calc_dag_graph = False
 calc_gantt_chart = False
 calc_host_chart = False
+calc_time_chart = False
 max_graph_nodes = MAX_GRAPH_NODES
 DEFAULT_OUTPUT_DIR = "plots"
 	
@@ -241,6 +239,7 @@ def createOuterhtml(wf_info, wf_uuid , output_dir ):
 	dag_graph_parent_file = os.path.join("dag_graph/" + wf_uuid +".html")
 	dax_graph_parent_file = os.path.join("dax_graph/" + wf_uuid +".html")
 	host_chart_parent_file = os.path.join("host_chart/" + wf_uuid +".html")
+	time_chart_parent_file = os.path.join("time_chart/" + wf_uuid +".html")
 	try:
 		fh = open(data_file, "w")
 		content = """
@@ -255,6 +254,8 @@ def createOuterhtml(wf_info, wf_uuid , output_dir ):
 			content += "<a href ='" + gantt_chart_parent_file +  "'>Workflow Execution Gantt Chart</a><br/>" + NEW_LINE_STR
 		if calc_host_chart :
 			content += "<a href ='" + host_chart_parent_file + "'>Host Over Time Chart</a><br/>" + NEW_LINE_STR
+		if calc_time_chart :
+			content += "<a href ='" + time_chart_parent_file + "'>Time Chart</a><br/>" + NEW_LINE_STR
 		if calc_dax_graph :
 			content += "<a href ='" + dax_graph_parent_file +  "'>DAX graph</a><br/>" + NEW_LINE_STR
 		if calc_dag_graph :
@@ -292,6 +293,9 @@ def create_charts(submit_dir , output_dir, config_properties , log_level ):
 	if calc_host_chart :
 		host_chart_output_dir = os.path.join(output_dir,"host_chart")
 		pegasus_host_over_time.setup(submit_dir,host_chart_output_dir ,log_level)
+	if calc_time_chart :
+		time_chart_output_dir = os.path.join(output_dir,"time_chart")
+		pegasus_time.setup(submit_dir,time_chart_output_dir ,log_level)
 	if calc_dag_graph :
 		dag_graph_output_dir = os.path.join(output_dir,"dag_graph")
 		setup(dag_graph_output_dir)
@@ -328,6 +332,9 @@ def create_charts(submit_dir , output_dir, config_properties , log_level ):
 				wf_uuid_dax_image.append(None)
 				logger.info("Dax graph for workflow '" + wf_uuid +"' was not created because number of tasks is more than the maximum  graph node generation limit ")
 			wf_uuid_dax_label.append(wf_info.dax_label)
+	if calc_time_chart :
+		populate.populate_time_details(root_wf_info,'hour')
+		pegasus_time.generate_chart(root_wf_info)
 	if calc_dax_graph :
 		data_file =  os.path.join(dax_graph_output_dir,wf_uuid_list[0]+".html")
 		create_image_gallery(data_file, wf_uuid_list,wf_uuid_parent, wf_uuid_dax_image ,wf_uuid_dax_label, True )
@@ -346,14 +353,17 @@ def set_plotting_level(plots_level):
 	global calc_dag_graph
 	global calc_gantt_chart
 	global calc_host_chart
+	global calc_time_chart
 	if plots_level =='all':
 		calc_dax_graph = True
 		calc_dag_graph = True
 		calc_gantt_chart = True
 		calc_host_chart = True
+		calc_time_chart = True
 	elif plots_level =='all_charts':
 		calc_gantt_chart = True
 		calc_host_chart = True
+		calc_time_chart = True
 	elif plots_level =='all_graphs':
 		calc_dax_graph = True
 		calc_dag_graph = True
@@ -363,8 +373,10 @@ def set_plotting_level(plots_level):
 		calc_dag_graph = True
 	elif plots_level == 'gantt_chart':
 		calc_gantt_chart = True
+	elif plots_level == 'host_chart':
+		calc_host_chart = True
 	else:
-		calc_host_chart = True	
+		calc_time_chart = True	
 	
 	
 
@@ -380,8 +392,8 @@ def main():
 	parser.add_option("-m", "--max_graph_nodes", action = "store", type = "int", dest = "max_graph_nodes",
 		  help = "Maximum limit on the number of tasks/jobs in the dax/dag upto which the graph should be generated; Default value is 100")
 	parser.add_option("-p", "--plottinglevel", action = "store", dest = "plotting_level",
-			choices=['all', 'all_charts', 'all_graphs' ,'dax_graph', 'dag_graph','gantt_chart','host_chart' ],
-			help = "specifies the chart and graphs to generate. Valid levels are: all,all_charts, all_graphs, dax_graph,dag_graph,gantt_chart,host_chart; Default is all_charts.")
+			choices=['all', 'all_charts', 'all_graphs' ,'dax_graph', 'dag_graph','gantt_chart','host_chart','time_chart' ],
+			help = "specifies the chart and graphs to generate. Valid levels are: all,all_charts, all_graphs, dax_graph,dag_graph,gantt_chart,host_chart,time_chart; Default is all_charts.")
 	parser.add_option("-l", "--loglevel", action = "store", dest = "log_level",
 			choices=['debug', 'info', 'warning' ,'error'],
 			help = "Log level. Valid levels are: debug,info,warning,error; Default is info.")
