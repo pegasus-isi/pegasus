@@ -64,6 +64,8 @@ class WorkflowInfo:
 		self.transformation_color_map={}
 		self.job_instance_id_sub_wf_uuid_map ={}
 		self.wf_env ={}
+		self.wf_job_instances_over_time_statistics = {}
+		self.wf_invocations_over_time_statistics = {}
 				
 	def get_formatted_host_data(self ):
 		# find the pretty print length
@@ -174,7 +176,46 @@ class WorkflowInfo:
 				job_info += ( "\"sub_wf\":0 , " )	
 				job_info += ( "\"sub_wf_name\":''")
 			job_info +=( "},\n")
-		return job_info		
+		return job_info
+		
+	def get_formatted_job_instances_over_time_data(self , date_time_filter):
+		job_instance_over_time_list = self.wf_job_instances_over_time_statistics[date_time_filter]
+		job_info = ''
+		for job_stat in job_instance_over_time_list:
+			job_info +=("{")
+			job_info +=( "\n")
+			job_info += ( "\"name\":"  + "\"" + plot_utils.convert_to_date_format(job_stat[0] , date_time_filter)+ "\" , ")
+			job_info += ( "\"count\":" +  str(job_stat[1]) +" , ")
+			job_info += ( "\"runtime\":" +  plot_utils.round_decimal_to_str(job_stat[2]) +"  ")
+			job_info +=( "},\n")
+		return job_info
+		
+	def get_formatted_invocations_over_time_data(self , date_time_filter):
+		invs_over_time_list = self.wf_invocations_over_time_statistics[date_time_filter]
+		inv_info = ''
+		for inv_stat in invs_over_time_list:
+			inv_info +=("{")
+			inv_info +=( "\n")
+			inv_info += ( "\"name\":"  + "\"" + plot_utils.convert_to_date_format(inv_stat[0] , date_time_filter)+ "\" , ")
+			inv_info += ( "\"count\":" +  str(inv_stat[1]) +" , ")
+			inv_info += ( "\"runtime\":" +  plot_utils.round_decimal_to_str(inv_stat[2]) +"  ")
+			inv_info +=( "},\n")
+		return inv_info
+	
+	def get_max_count_run_time(self, isJobInstance, date_time_filter):
+		if isJobInstance:
+			content_list = self.wf_job_instances_over_time_statistics[date_time_filter]
+		else:
+			content_list = self.wf_invocations_over_time_statistics[date_time_filter]
+		
+		if len(content_list) < 1:
+			return None, None
+		max_run_time = 0.0
+		max_count =0
+		for content in content_list:
+			max_count = max(content[1],max_count )
+			max_run_time = max(content[2],max_run_time )
+		return max_count , max_run_time
 						
 	
 #---job information ---
