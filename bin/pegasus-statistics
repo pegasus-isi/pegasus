@@ -530,11 +530,7 @@ Utility method for rounding the float value to rounded string
 @param value :  value to round 
 @param to    :  how many decimal points to round to
 	"""
-	rounded_value = '-'
-	if value is None:
-		return rounded_value
-	rounded_value = str(round(float(value) , to))
-	return rounded_value
+	return stats_utils.round_decimal_to_str(value,to)
 	
 
 def convert_to_date_format(value):
@@ -542,9 +538,7 @@ def convert_to_date_format(value):
 Utility method for converting the value to date format
 @param value :  value to format 
 	"""
-	multiplier = stats_utils.get_date_multiplier(time_filter)
-	date_format = datetime.fromtimestamp(int(value*multiplier)).strftime(stats_utils.get_date_format(time_filter))
-	return date_format
+	return stats_utils.convert_to_date_format(value, time_filter)
 	
 	
 
