@@ -24,13 +24,9 @@ Usage: pegasus-gantt [options] submit directory
 
 # Revision : $Revision$
 import os
-import re
 import sys
 import logging
-import optparse
-import math
-import tempfile
-import shutil
+
 
 # Initialize logging object
 logger = logging.getLogger()
@@ -47,17 +43,9 @@ from datetime import datetime
 
 #Global variables----
 prog_base = os.path.split(sys.argv[0])[1]	# Name of this program
-brainbase ='braindump.txt'
 output_dir = None
 
 
-#TODO's 
-# print warning if kickstart time doesn't fit in the condor window
-# Handle  when it is running
-# handle the case when it is last retry mode 
-# need to handle cluster job case
-# need to handle sub dag job
-	
 
 def setup_logger(level_str):
 	level_str = level_str.lower()
@@ -71,14 +59,6 @@ def setup_logger(level_str):
 		logger.setLevel(logging.INFO)
 	return
 
-
-#-----date conversion----------
-def convert_to_seconds(time):
-	"""
-	Converts the timedelta to seconds format 
-	Param: time delta reference
-	"""
-	return (time.microseconds + (time.seconds + time.days * 24 * 3600) * pow(10,6)) / pow(10,6)
 
 #----------print workflow details--------
 def print_workflow_details(workflow_stat , output_dir):
@@ -950,8 +930,6 @@ def setup(submit_dir,out_dir,log_level):
 	plot_utils.create_directory(dest_img_path)
 	plot_utils.copy_files(src_js_path , dest_js_path)
 	plot_utils.copy_files(src_img_path, dest_img_path) 	 	
-	#shutil.copytree (src_js_path, dest_js_path)
-	#shutil.copytree (src_img_path, dest_img_path)
 	create_action_script(output_dir)
 
 
