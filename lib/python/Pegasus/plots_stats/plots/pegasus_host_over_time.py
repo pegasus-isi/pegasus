@@ -338,6 +338,7 @@ hc_curEndY =  hc_initMaxY;\n\
 hc_xScale.domain(hc_curX, hc_curEndX);\n\
 hc_yScale.domain(hc_curY, hc_curEndY);\n\
 hc_rootPanel.render();\n\
+hc_headerPanel.render();\n\
 }\n"
 	data_file = os.path.join(output_dir,  "hc_action.js")
 	try:

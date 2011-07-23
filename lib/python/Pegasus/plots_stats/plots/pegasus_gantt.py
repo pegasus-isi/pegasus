@@ -375,6 +375,7 @@ curEndY =  initMaxY;\n\
 xScale.domain(curX, curEndX);\n\
 yScale.domain(curY, curEndY);\n\
 rootPanel.render();\n\
+headerPanel.render();\n\
 }\n"
 	# print action script
 	data_file = os.path.join(output_dir,  "gc_action.js")
