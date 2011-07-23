@@ -58,13 +58,27 @@ def setup_logger(level_str):
 
 #----------print workflow details--------
 def print_workflow_details(workflow_stat , output_dir):
-	job_info =  "var data = [" + workflow_stat.get_formatted_job_instances_over_time_data('hour') + "];"
+	job_info_day =  "var data_job_per_day = [" + workflow_stat.get_formatted_job_instances_over_time_data('day') + "];\n"
+	invocation_info_day =  "var data_invoc_per_day = [" + workflow_stat.get_formatted_invocations_over_time_data('day') + "];\n"
+	job_info_hour =  "var data_job_per_hour = [" + workflow_stat.get_formatted_job_instances_over_time_data('hour') + "];\n"
+	invocation_info_hour =  "var data_invoc_per_hour = [" + workflow_stat.get_formatted_invocations_over_time_data('hour') + "];\n"
+	job_info_day_metadata =  "var job_metadata_per_day = [" + workflow_stat.get_formatted_job_instances_over_time_metadata('day') + "];\n"
+	invocation_info_day_metadata =  "var invoc_metadata_per_day = [" + workflow_stat.get_formatted_invocations_over_time_metadata('day') + "];\n"
+	job_info_hour_metadata =  "var job_metadata_per_hour = [" + workflow_stat.get_formatted_job_instances_over_time_metadata('hour') + "];\n"
+	invocation_info_hour_metadata =  "var invoc_metadata_per_hour = [" + workflow_stat.get_formatted_invocations_over_time_metadata('hour') + "];\n"
 	# print javascript file
 	data_file = os.path.join(output_dir,  "data.js")
 	try:
 		fh = open(data_file, "w")
 		fh.write( "\n")
-		fh.write(job_info)
+		fh.write(job_info_day)
+		fh.write(invocation_info_day)
+		fh.write(job_info_hour)
+		fh.write(invocation_info_hour)
+		fh.write(job_info_day_metadata)
+		fh.write(invocation_info_day_metadata)
+		fh.write(job_info_hour_metadata)
+		fh.write(invocation_info_hour_metadata)
 	except IOError:
 		logger.error("Unable to write to file " + data_file)
 		sys.exit(1)
@@ -96,7 +110,6 @@ function panLeft(){
 	curX +=panBy;
 	curEndX +=panBy;
 	xScale.domain(curX ,curEndX );
-	alert(curX +" : " + curEndX);
 	rootPanel.render();
 	headerPanel.render();
 }
@@ -209,7 +222,74 @@ function resetZooming(){
 	xScale.domain(curX, curEndX);
 	yCountScale.domain(curCountY,curCountEndY);
 	rootPanel.render();
+	headerPanel.render();
 }
+
+function setType(){
+	if(isJob){
+		isJob= false;
+	}else{
+		isJob= true;
+	}
+	loadGraph();
+}
+
+function setTime(){
+	if(isHour){
+		isHour = false;
+	}else{
+		isHour = true;
+	}
+	loadGraph();
+}
+
+function getMetaData(){
+	if(isJob){
+		if(isHour){
+			return job_metadata_per_hour;
+		}else{
+			return job_metadata_per_day;
+		}
+	}else{
+		if(isHour){
+			return invoc_metadata_per_hour;
+		}else{
+			return invoc_metadata_per_day;
+		}
+	}
+		
+}
+
+function getContentData(){
+	if(isJob){
+		if(isHour){
+			return data_job_per_hour;
+		}else{
+			return data_job_per_day;
+		}
+	}else{
+		if(isHour){
+			return data_invoc_per_hour;
+		}else{
+			return data_invoc_per_day;
+		}
+	}
+}
+
+function loadGraph(){
+	
+	data = getContentData();
+	metadata = getMetaData();
+	dateTimeCount =metadata[0].num;
+	maxCount = metadata[0].max_count;
+	maxRuntime =metadata[0].max_runtime;
+	resetZooming();
+}
+
+function getData(){
+	return getContentData();
+}
+
 """
 	# print action script
 	data_file = os.path.join(output_dir,  "tc_action.js")
@@ -249,11 +329,13 @@ def create_include(workflow_stat):
 	return include_str
 	
 def create_variable(workflow_stat):
-	number_of_units = len(workflow_stat.wf_job_instances_over_time_statistics)
+	number_of_units = len(workflow_stat.wf_job_instances_over_time_statistics['hour'])
 	max_count, max_runtime = workflow_stat.get_max_count_run_time(True, 'hour')
 	# Adding  variables
 	var_str = """
 <script type='text/javascript'>
+var isJob = true;
+var isHour = true;
 """
 	var_str += "\nvar dateTimeCount =" + str(number_of_units) +";"
 	var_str += "\nvar maxRuntime =" + str( max_runtime)+";"
@@ -261,14 +343,14 @@ def create_variable(workflow_stat):
 	var_str +=""" 
 var bar_spacing = 50;
 var single_bar_width = 20;
-var yScaleMargin  = 50;
-var xScaleBottomMargin = 200;
+var yScaleMargin  = 100;
+var xScaleBottomMargin = 120;
 var color =['steelblue','orange'];
 var desc=['Runtime in seconds','transformation count'];
 var h = 840;
-var w = 1460;
+var w = 1400;
 var toolbar_width = 550;
-var containerPanelPadding = 20;
+var containerPanelPadding = 50;
 var chartPanelWidth = w+ containerPanelPadding*2;
 var chartPanelHeight  = h + containerPanelPadding*2;
 var curX  = 0;
@@ -433,11 +515,12 @@ rulePanelH.add(pv.Rule)
 var rulePanelV = vis.add(pv.Panel)
 	.overflow('hidden')
 	.left(yScaleMargin)
+	.width(w-2*yScaleMargin)
 	.bottom(0);
 
 rulePanelV.add(pv.Rule)
 	.bottom(xScaleBottomMargin)
-	.data(data)
+	.data(function(){return getData();})
 	.strokeStyle('#F8F8F8')
 	.left(function(){
 	return xScale(this.index*bar_spacing) + single_bar_width;
@@ -447,7 +530,7 @@ rulePanelV.add(pv.Rule)
 	.textAlign('left')
 	.textBaseline("middle")
 	.textAngle(Math.PI / 2)
-	.text(function(d){return d.name;});
+	.text(function(d){return d.datetime;});
 
 var chartPanelContainer = vis.add(pv.Panel)
 	.left(yScaleMargin)
@@ -457,7 +540,7 @@ var chartPanelContainer = vis.add(pv.Panel)
 	.overflow('hidden');
 
 var runtimePanel = chartPanelContainer.add(pv.Panel)
-	.data(data);
+	.data(function(){return getData();});
   
 runtimePanel.add(pv.Bar)
 	.bottom(0)
@@ -503,7 +586,7 @@ rootPanel.add(pv.Label)
 	.font(function() {return 20 +'px sans-serif';})
 	.textAlign('left')
 	.textBaseline('top')
-	.text('Transformation count -->')
+	.text('count -->')
 	.textAngle(-Math.PI / 2);
 
 rootPanel.add(pv.Label)
@@ -512,7 +595,7 @@ rootPanel.add(pv.Label)
 	.font(function() {return 20 +'px sans-serif';})
 	.textAlign('left')
 	.textBaseline('bottom')
-	.text('Transformation name -->');
+	.text('Date time -->');
  
 rootPanel.render();
 </script>
@@ -560,10 +643,30 @@ footerPanel.render();
 	return panel_str
 
 
+def create_bottom_toolbar():
+	toolbar_content ="""
+<div id ='tools' style='width: 300px; margin : 0 auto;' >
+	<div style ='float:right'>
+		<p1> Time filter </p1>
+		<br/>
+		<input type='radio' name='time_filter' value='by day' onclick="setTime();" /> by day<br />
+		<input type='radio' name='time_filter' value='by hour' onclick="setTime();" checked /> by hour<br />
+	</div>
+	<div>
+		<p1>Type filter</p1>
+		<br/>
+		<input type='radio' name='type_filter' value='show jobs' onclick="setType();" checked/> show jobs<br />
+		<input type='radio' name='type_filter' value='show invocations' onclick="setType();"/> show invocations<br />
+	</div>
+</div>	
+	""" 
+	return toolbar_content
 
 
 
-def create_gnatt_plot(workflow_info , output_dir):
+
+
+def create_time_plot(workflow_info , output_dir):
 	print_workflow_details(workflow_info ,output_dir)
 	str_list = []
 	wf_content = create_include(workflow_info)
@@ -584,6 +687,8 @@ def create_gnatt_plot(workflow_info , output_dir):
 	str_list.append(wf_content)
 	wf_content = "</div>\n<br />"
 	str_list.append(wf_content)
+	wf_content =create_bottom_toolbar()
+	str_list.append(wf_content)
 	return "".join(str_list)
 		
 		
@@ -594,7 +699,7 @@ def create_time_plot_page(workflow_info ,output_dir):
 	str_list = []
 	wf_page = create_header(workflow_info)
 	str_list.append(wf_page)
-	wf_page = create_gnatt_plot(workflow_info ,output_dir)
+	wf_page = create_time_plot(workflow_info ,output_dir)
 	str_list.append(wf_page)
 	# printing the brain dump content
 	if workflow_info.submit_dir is None:
