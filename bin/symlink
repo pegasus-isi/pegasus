@@ -92,9 +92,12 @@ while(<STDIN>){
 			}
 		    
 		}
-		if (-e $dest) {
+
+		if (-e $dest || -l $dest) {
 	     	    #remove existing link
 		    print STDOUT "DEST $dest already exists. Removing.\n";
+
+		    #we always unlink the destination
 		    unlink($dest);
 		}
 		
