@@ -333,6 +333,7 @@ def create_charts(submit_dir , output_dir, config_properties , log_level ):
 				logger.info("Dax graph for workflow '" + wf_uuid +"' was not created because number of tasks is more than the maximum  graph node generation limit ")
 			wf_uuid_dax_label.append(wf_info.dax_label)
 	if calc_time_chart :
+		populate.populate_time_details(root_wf_info,'day')
 		populate.populate_time_details(root_wf_info,'hour')
 		pegasus_time.generate_chart(root_wf_info)
 	if calc_dax_graph :
