@@ -184,7 +184,7 @@ class WorkflowInfo:
 		for job_stat in job_instance_over_time_list:
 			job_info +=("{")
 			job_info +=( "\n")
-			job_info += ( "\"name\":"  + "\"" + plot_utils.convert_to_date_format(job_stat[0] , date_time_filter)+ "\" , ")
+			job_info += ( "\"datetime\":"  + "\"" + plot_utils.convert_to_date_format(job_stat[0] , date_time_filter)+ "\" , ")
 			job_info += ( "\"count\":" +  str(job_stat[1]) +" , ")
 			job_info += ( "\"runtime\":" +  plot_utils.round_decimal_to_str(job_stat[2]) +"  ")
 			job_info +=( "},\n")
@@ -196,10 +196,34 @@ class WorkflowInfo:
 		for inv_stat in invs_over_time_list:
 			inv_info +=("{")
 			inv_info +=( "\n")
-			inv_info += ( "\"name\":"  + "\"" + plot_utils.convert_to_date_format(inv_stat[0] , date_time_filter)+ "\" , ")
+			inv_info += ( "\"datetime\":"  + "\"" + plot_utils.convert_to_date_format(inv_stat[0] , date_time_filter)+ "\" , ")
 			inv_info += ( "\"count\":" +  str(inv_stat[1]) +" , ")
 			inv_info += ( "\"runtime\":" +  plot_utils.round_decimal_to_str(inv_stat[2]) +"  ")
 			inv_info +=( "},\n")
+		return inv_info
+	
+	def get_formatted_job_instances_over_time_metadata(self , date_time_filter):
+		job_instance_over_time_list = self.wf_job_instances_over_time_statistics[date_time_filter]
+		max_count, max_runtime =  self.get_max_count_run_time(True, date_time_filter)
+		job_info = ''
+		job_info +=("{")
+		job_info +=( "\n")
+		job_info += ( "\"num\":"  + "\"" + str(len(job_instance_over_time_list))+ "\" , ")
+		job_info += ( "\"max_count\":" +  str(max_count) +" , ")
+		job_info += ( "\"max_runtime\":" +  plot_utils.round_decimal_to_str(max_runtime) +"  ")
+		job_info +=( "},\n")
+		return job_info
+		
+	def get_formatted_invocations_over_time_metadata(self , date_time_filter):
+		invs_over_time_list = self.wf_invocations_over_time_statistics[date_time_filter]
+		max_count, max_runtime =  self.get_max_count_run_time(False, date_time_filter)
+		inv_info = ''
+		inv_info +=("{")
+		inv_info +=( "\n")
+		inv_info += ( "\"num\":"  + "\"" + str(len(invs_over_time_list))+ "\" , ")
+		inv_info += ( "\"max_count\":" +  str(max_count) +" , ")
+		inv_info += ( "\"max_runtime\":" +  plot_utils.round_decimal_to_str(max_runtime) +"  ")
+		inv_info +=( "},\n")
 		return inv_info
 	
 	def get_max_count_run_time(self, isJobInstance, date_time_filter):
