@@ -303,16 +303,21 @@ def create_charts(submit_dir , output_dir, config_properties , log_level ):
 		dax_graph_output_dir = os.path.join(output_dir,"dax_graph")
 		setup(dax_graph_output_dir)
 	root_wf_info = None
+	root_wf_stats = None
 	for wf_uuid in wf_uuid_list:
-		wf_info = populate.populate_chart(wf_uuid)
+		wf_stats, wf_info = populate.populate_chart(wf_uuid)
+		if calc_gantt_chart or calc_host_chart:
+			populate.populate_job_instance_details(wf_stats, wf_info)
 		if root_wf_info is None:
 			root_wf_info = wf_info
+			root_wf_stats =wf_stats
 		wf_uuid_parent.append(wf_info.parent_wf_uuid)
 		if calc_gantt_chart :
 			pegasus_gantt.generate_chart(wf_info)
 		if calc_host_chart :
 			pegasus_host_over_time.generate_chart(wf_info)
 		if calc_dag_graph :
+			populate.populate_job_details(wf_stats, wf_info)
 			if wf_info.total_jobs <= max_graph_nodes:
 				if generate_dag_graph(wf_info,dag_graph_output_dir) is None:
 					wf_uuid_dag_image.append(None)
@@ -323,6 +328,7 @@ def create_charts(submit_dir , output_dir, config_properties , log_level ):
 				logger.info("Dag graph for workflow '" + wf_uuid + "'  was not created because number of jobs is more than the maximum graph node generation limit ")
 			wf_uuid_dag_label.append( wf_info.dag_label)
 		if calc_dax_graph :
+			populate.populate_task_details(wf_stats, wf_info)
 			if wf_info.total_tasks <= max_graph_nodes:
 				if generate_dax_graph(wf_info,dax_graph_output_dir) is None:
 					wf_uuid_dax_image.append(None)
@@ -333,8 +339,8 @@ def create_charts(submit_dir , output_dir, config_properties , log_level ):
 				logger.info("Dax graph for workflow '" + wf_uuid +"' was not created because number of tasks is more than the maximum  graph node generation limit ")
 			wf_uuid_dax_label.append(wf_info.dax_label)
 	if calc_time_chart :
-		populate.populate_time_details(root_wf_info,'day')
-		populate.populate_time_details(root_wf_info,'hour')
+		populate.populate_time_details(root_wf_stats ,root_wf_info,'day')
+		populate.populate_time_details(root_wf_stats, root_wf_info,'hour')
 		pegasus_time.generate_chart(root_wf_info)
 	if calc_dax_graph :
 		data_file =  os.path.join(dax_graph_output_dir,wf_uuid_list[0]+".html")
