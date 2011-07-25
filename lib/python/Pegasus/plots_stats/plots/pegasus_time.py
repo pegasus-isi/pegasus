@@ -221,6 +221,7 @@ function resetZooming(){
 	curCountEndY =  maxCount;
 	xScale.domain(curX, curEndX);
 	yCountScale.domain(curCountY,curCountEndY);
+	yRuntimeScale.domain(curRuntimeY, curRuntimeEndY);
 	rootPanel.render();
 	headerPanel.render();
 }
