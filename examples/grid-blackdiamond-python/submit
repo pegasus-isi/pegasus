@@ -9,9 +9,9 @@ set -e
 #
 CLUSTER_HOSTNAME="obelix.isi.edu"
 CLUSTER_SCHEDULER="condor"
-CLUSTER_WORK_DIR="/moose/scratch/auto-cleanup-30-days"
-CLUSTER_PEGASUS_HOME="/nfs/moose/software/debian/squeeze/x86_64/pegasus/dev/trunk"
-CLUSTER_GLOBUS_LOCATION="/nfs/moose/software/debian/squeeze/x86_64/globus/default"
+CLUSTER_WORK_DIR="/nfs/ccg1/90-day-scratch"
+CLUSTER_PEGASUS_HOME="/ccg/software/pegasus/dev/trunk"
+CLUSTER_GLOBUS_LOCATION="/ccg/software/globus/default"
 ##################################################################################
 
 
