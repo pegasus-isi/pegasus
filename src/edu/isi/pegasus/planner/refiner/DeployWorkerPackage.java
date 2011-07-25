@@ -107,7 +107,6 @@ public class DeployWorkerPackage
      * Associates the transformation name with the executable basenames
      */
     public static final String PEGASUS_WORKER_EXECUTABLES[][] = {
-        { "T2", "T2" },
         { "transfer", "transfer" },
         { "kickstart", "kickstart" },
         { "cleanup", "pegasus-cleanup" },
@@ -116,7 +115,8 @@ public class DeployWorkerPackage
         { "invoke", "invoke" },
         { "keg" , "keg" },
         { "symlink", "symlink"},
-        { "pegasus-transfer", "pegasus-transfer" }
+        { "pegasus-transfer", "pegasus-transfer" },
+        { "s3", "pegasus-s3" }
 
     };
 
