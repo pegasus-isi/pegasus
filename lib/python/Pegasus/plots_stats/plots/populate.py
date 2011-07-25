@@ -40,7 +40,7 @@ global_db_url = None
 global_top_wf_uuid =None
 global_wf_id_uuid_map = {}
 
-def populate_job_details(job_states , job_stat, dagman_start_time , isFailed , retry_count):
+def populate_individual_job_instance_details(job_states , job_stat , isFailed , retry_count):
 	"""
 	Returns the job statistics information
 	Param: the job reference
@@ -161,46 +161,82 @@ def get_workflows_uuid():
 
 
 # ---------populate_workflow_details--------------------------
-def populate_workflow_details(workflow):
+def populate_workflow_details(workflow_stats):
 	"""
 	populates the workflow statistics information
-	Param: the workflow reference
+	@param workflow_stats the StampedeStatistics object reference
 	"""
-	workflow_stat = WorkflowInfo()
-	workflow_run_time = None
+	workflow_info = WorkflowInfo()
+	
+	# Getting the workflow details
+	wf_det = workflow_stats.get_workflow_details()[0]
+	
+	
+	# Populating workflow details
+	workflow_info.wf_uuid = wf_det.wf_uuid
+	if global_wf_id_uuid_map.has_key(wf_det.parent_wf_id):
+		workflow_info.parent_wf_uuid =global_wf_id_uuid_map[wf_det.parent_wf_id]
+	workflow_info.submit_dir = wf_det.submit_dir
+	workflow_info.dax_label = wf_det.dax_label
+	workflow_info.wf_env = plot_utils.parse_workflow_environment(wf_det)
+	return workflow_info
+
+
+def populate_job_details(workflow_stats , workflow_info):
+	"""
+	populates the job details of the workflow
+	@param workflow_stats the StampedeStatistics object reference
+	@param workflow_info the WorkflowInfo object reference 
+	"""
 	total_jobs =0
+	total_jobs = workflow_stats.get_total_jobs_status()
+	workflow_info.total_jobs = total_jobs
+	
+
+def populate_task_details(workflow_stats, workflow_info):
+	"""
+	populates the task details of the workflow
+	@param workflow_stats the StampedeStatistics object reference
+	@param workflow_info the WorkflowInfo object reference 
+	"""
 	total_tasks = 0
+	total_tasks = workflow_stats.get_total_tasks_status()
+	workflow_info.total_tasks = total_tasks
+
+def populate_job_instance_details(workflow_stats , workflow_info):
+	"""
+	populates the job instances details of the workflow
+	@param workflow_stats the StampedeStatistics object reference
+	@param workflow_info the WorkflowInfo object reference 
+	"""
+	workflow_run_time = None
 	total_job_instances = 0
 	transformation_stats_dict ={}
 	job_stats_list =[]
 	host_job_mapping ={}
 	job_name_retry_count_dict ={}
 	wf_transformation_color_map ={}
-	
-	worklow_states_list = workflow.get_workflow_states()
-	if len(worklow_states_list) < 1:
-		logger.warning("Unable to find the start event for the workflow ")
-		workflow_stat.wf_uuid = wf_det.wf_uuid
-		workflow_stat.parent_wf_uuid =global_wf_id_uuid_map[wf_det.parent_wf_uuid]
-		workflow_stat.submit_dir = wf_det.submit_dir
-		workflow_stat.dax_label = wf_det.dax_label
-		return workflow_stat
-	if worklow_states_list[0].state != "WORKFLOW_STARTED":
-		logger.warning("Mismatch in the order of the events. Taking the first state in the database as the start event  ")
-	walltime = plot_utils.get_workflow_wall_time(worklow_states_list)
-	if walltime is not None:
-		workflow_run_time = walltime
 	color_count = 0
-	# populating statistics details
-	wf_det = workflow.get_workflow_details()[0]
+	start_event = sys.maxint
+	end_event = -sys.maxint -1
 	
-	
-	
-	failed_job_list = workflow.get_failed_job_instances()
-	dagman_start_time = worklow_states_list[0].timestamp
-	# for root jobs,dagman_start_time is required, assumption start_event[0] is not none
-	job_states_list =  workflow.get_job_states()
+	worklow_states_list = workflow_stats.get_workflow_states()
+	if len(worklow_states_list) > 0:
+		if worklow_states_list[0].state != "WORKFLOW_STARTED":
+			logger.warning("Mismatch in the order of the events. Taking the first state in the database as the start event  ")
+		
+		# Storing the start and end event from the workflow states
+		start_event = worklow_states_list[0].timestamp
+		end_event = worklow_states_list[len(worklow_states_list)-1].timestamp
+			
+	failed_job_list = workflow_stats.get_failed_job_instances()
+	job_states_list =  workflow_stats.get_job_states()
 	for job_states in job_states_list:
+		# Additional check for the case where "WORKFLOW_STARTED" event is missing
+		if job_states.jobS is not None:
+			start_event = min(int(start_event) , int(job_states.jobS) )
+			if job_states.jobDuration is not None:
+				end_event = max(int(end_event) , int(job_states.jobS + job_states.jobDuration))
 		job_stat = JobInfo()
 		job_stats_list.append(job_stat)
 		is_job_failed = False
@@ -211,7 +247,7 @@ def populate_workflow_details(workflow):
 		job_name_retry_count_dict[job_states.job_name] = restart_count
 		if job_states.job_instance_id in failed_job_list:
 			is_job_failed = True	
-		populate_job_details(job_states ,job_stat , dagman_start_time , is_job_failed , job_name_retry_count_dict[job_states.job_name])
+		populate_individual_job_instance_details(job_states ,job_stat , is_job_failed , job_name_retry_count_dict[job_states.job_name])
 		# Assigning host to job mapping
 		if host_job_mapping.has_key(job_stat.host_name):
 			job_list =host_job_mapping[job_stat.host_name]
@@ -228,33 +264,19 @@ def populate_workflow_details(workflow):
 			global_transformtion_color_map[job_stat.transformation]= predefined_colors[color_count%len(predefined_colors)]
 			color_count +=1
 		# Assigning the mapping to the workflow map
-		wf_transformation_color_map[job_stat.transformation] =global_transformtion_color_map[job_stat.transformation] 
+		wf_transformation_color_map[job_stat.transformation] =global_transformtion_color_map[job_stat.transformation]
 	
-	#Calculating total jobs
-	total_job_instances = len(job_stats_list)
-	total_jobs = workflow.get_total_jobs_status() 
-	total_tasks = workflow.get_total_tasks_status()
-	# Assigning value to the workflow object
-	workflow_stat.wf_uuid = wf_det.wf_uuid
-	
-	if global_wf_id_uuid_map.has_key(wf_det.parent_wf_id):
-		workflow_stat.parent_wf_uuid =global_wf_id_uuid_map[wf_det.parent_wf_id]
 		
-	workflow_stat.submit_dir = wf_det.submit_dir
-	workflow_stat.dax_label = wf_det.dax_label
-	if workflow_run_time is not None:
-		workflow_stat.workflow_run_time =workflow_run_time
-	workflow_stat.total_jobs = total_jobs
-	workflow_stat.total_job_instances = total_job_instances
-	workflow_stat.total_tasks = total_tasks
-	workflow_stat.dagman_start_time = dagman_start_time
-	workflow_stat.job_statistics_list =job_stats_list
-	workflow_stat.host_job_map = host_job_mapping
-	workflow_stat.transformation_statistics_dict = transformation_stats_dict
-	workflow_stat.transformation_color_map = wf_transformation_color_map
-	workflow_stat.wf_env = plot_utils.parse_workflow_environment(wf_det)
-	return workflow_stat
-	
+	if (start_event != sys.maxint) and  (end_event != (-sys.maxint -1)):
+		workflow_info.workflow_run_time = end_event - start_event
+	total_job_instances = len(job_stats_list)
+	workflow_info.dagman_start_time = start_event 
+	workflow_info.job_statistics_list =job_stats_list
+	workflow_info.host_job_map = host_job_mapping
+	workflow_info.transformation_statistics_dict = transformation_stats_dict
+	workflow_info.transformation_color_map = wf_transformation_color_map
+	workflow_info.total_job_instances = total_job_instances
+	return workflow_info
 	
 def setup_logger(level_str):
 	level_str = level_str.lower()
@@ -272,12 +294,12 @@ def populate_chart(wf_uuid):
 	"""
 	Populates the workflow info object corresponding to the wf_uuid
 	"""
-	workflow = StampedeStatistics(global_db_url , False)
- 	workflow.initialize(wf_uuid)
-	workflow_info = populate_workflow_details(workflow)
-	sub_wf_uuids = workflow.get_sub_workflow_ids()
+	workflow_stampede_stats = StampedeStatistics(global_db_url , False)
+ 	workflow_stampede_stats.initialize(wf_uuid)
+	workflow_info = populate_workflow_details(workflow_stampede_stats)
+	sub_wf_uuids = workflow_stampede_stats.get_sub_workflow_ids()
 	if len(sub_wf_uuids) > 0:
-		workflow_info.job_instance_id_sub_wf_uuid_map = get_job_inst_sub_workflow_map(workflow )
+		workflow_info.job_instance_id_sub_wf_uuid_map = get_job_inst_sub_workflow_map(workflow_stampede_stats )
 	config = utils.slurp_braindb(rlb(workflow_info.submit_dir))
 	if (config.has_key('dag')):
 		dag_file_name = config['dag']
@@ -285,15 +307,13 @@ def populate_chart(wf_uuid):
 		workflow_info.dag_file_path = os.path.join(rlb(workflow_info.submit_dir), dag_file_name)
 	if (config.has_key('dax')):
 		workflow_info.dax_file_path = config['dax']
-	return workflow_info
+	return workflow_stampede_stats, workflow_info 
 	
-def populate_time_details(wf_info , date_time_filter):
+def populate_time_details(workflow_stats, wf_info , date_time_filter):
 	"""
 	Populates the job instances and invocation time and runtime statistics sorted by time.
 	"""
-	workflow_stats = StampedeStatistics(global_db_url , True)
- 	workflow_stats.initialize(wf_info.wf_uuid)
- 	workflow_stats.set_job_filter('all')
+	workflow_stats.set_job_filter('all')
 	workflow_stats.set_time_filter(date_time_filter)
  	stats_by_time = workflow_stats.get_jobs_run_by_time()
  	jobs_time_list =[]
