@@ -11,20 +11,20 @@ set -e
 
 DEGREES=2.0
 
-LOCAL_PEGASUS_HOME="/nfs/moose/software/debian/squeeze/x86_64/pegasus/dev/trunk"
-LOCAL_GLOBUS_LOCATION="/nfs/moose/software/debian/squeeze/x86_64/globus/default"
+LOCAL_PEGASUS_HOME="/ccg/software/pegasus/dev/trunk"
+LOCAL_GLOBUS_LOCATION="/ccg/software/globus/default"
+LOCAL_MONTAGE_LOCATION="/ccg/software/montage/Montage_v3.2_beta6_mats"
 LOCAL_GLOBUS_TCP_PORT_RANGE="40000,50000"
-LOCAL_MONTAGE_LOCATION="/nfs/moose/software/debian/squeeze/x86_64/montage/default"
 
 CLUSTER_NAME="CCG"
 CLUSTER_HOSTNAME="obelix.isi.edu"
 CLUSTER_GATEKEEPER_TYPE="gt5"
 CLUSTER_GATEKEEPER_PORT="2119"
 CLUSTER_SCHEDULER="condor"
-CLUSTER_WORK_DIR="/moose/scratch"
-CLUSTER_PEGASUS_HOME="/nfs/moose/software/debian/squeeze/x86_64/pegasus/dev/trunk"
-CLUSTER_GLOBUS_LOCATION="/nfs/moose/software/debian/squeeze/x86_64/globus/default"
-CLUSTER_MONTAGE_LOCATION="/nfs//moose/software/debian/squeeze/x86_64/montage/default"
+CLUSTER_WORK_DIR="/nfs/ccg1/90-day-scratch"
+CLUSTER_PEGASUS_HOME="/ccg/software/pegasus/dev/trunk"
+CLUSTER_GLOBUS_LOCATION="/ccg/software/globus/default"
+CLUSTER_MONTAGE_LOCATION="/ccg/software/montage/Montage_v3.2_beta6_mats"
 
 # this will bundle N jobs togehter
 JOB_CLUSTERS_SIZE="25"
@@ -75,14 +75,14 @@ cat >sites.xml <<EOF
         <head-fs>
             <scratch>
                 <shared>
-                    <file-server protocol="file" url="file://" mount-point="$RUN_DIR/shared"/>
-                    <internal-mount-point mount-point="$RUN_DIR/shared" free-size="100G" total-size="30G"/>
+                    <file-server protocol="file" url="file://" mount-point="$RUN_DIR/work"/>
+                    <internal-mount-point mount-point="$RUN_DIR/work"/>
                 </shared>
             </scratch>
             <storage>
                 <shared>
                     <file-server protocol="file" url="file://" mount-point="$RUN_DIR/outputs"/>
-                    <internal-mount-point mount-point="$RUN_DIR/outputs" free-size="100G" total-size="30G"/>
+                    <internal-mount-point mount-point="$RUN_DIR/outputs"/>
                 </shared>
             </storage>
         </head-fs>
@@ -118,6 +118,7 @@ mDAG 2mass j M17 $DEGREES $DEGREES 0.0002777778 . "gsiftp://$LOCAL_HOSTNAME$RUN_
 
 echo
 echo "Adding input images to the replica catalog..."
+echo "  " `cat cache.list | wc -l` "images found"
 cat cache.list | grep -v ".fits " >rc
 cat url.list | sed 's/ http:.*ref=/ http:\/\/obelix.isi.edu\/irsa-cache/' >>rc
 

@@ -46,13 +46,13 @@ cat >sites.xml <<EOF
             <scratch>
                 <shared>
                     <file-server protocol="file" url="file://" mount-point="$TOPDIR/work"/>
-                    <internal-mount-point mount-point="$TOPDIR/work" free-size="100G" total-size="30G"/>
+                    <internal-mount-point mount-point="$TOPDIR/work"/>
                 </shared>
             </scratch>
             <storage>
                 <shared>
                     <file-server protocol="file" url="file://" mount-point="$TOPDIR/outputs"/>
-                    <internal-mount-point mount-point="$TOPDIR/outputs" free-size="100G" total-size="30G"/>
+                    <internal-mount-point mount-point="$TOPDIR/outputs"/>
                 </shared>
             </storage>
         </head-fs>
@@ -60,18 +60,8 @@ cat >sites.xml <<EOF
     </site>
     <site  handle="condorpool" arch="x86" os="LINUX">
         <head-fs>
-            <scratch>
-                <shared>
-                    <file-server protocol="file" url="file://" mount-point="$TOPDIR/work"/>
-                    <internal-mount-point mount-point="$TOPDIR/work" free-size="100G" total-size="30G"/>
-                </shared>
-            </scratch>
-            <storage>
-                <shared>
-                    <file-server protocol="file" url="file://" mount-point="$TOPDIR/outputs"/>
-                    <internal-mount-point mount-point="$TOPDIR/outputs" free-size="100G" total-size="30G"/>
-                </shared>
-            </storage>
+            <scratch />
+            <storage />
         </head-fs>
         <profile namespace="pegasus" key="style" >condor</profile>
         <profile namespace="condor" key="universe" >vanilla</profile>
