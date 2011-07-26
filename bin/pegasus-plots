@@ -40,6 +40,10 @@ max_graph_nodes = MAX_GRAPH_NODES
 DEFAULT_OUTPUT_DIR = "plots"
 	
 def setup_logger(level_str):
+	"""
+	Sets the logging level
+	@param level_str logging level
+	"""
 	level_str = level_str.lower()
 	if level_str == "debug":
 		logger.setLevel(logging.DEBUG)
@@ -53,6 +57,10 @@ def setup_logger(level_str):
 	return
 
 def setup(output_dir):
+	"""
+	Set up the pegaus plots. 
+	@param output_dir output directory path
+	"""
 	src_img_path = os.path.join(common.pegasus_home, "share/plots/images/common/")
 	dest_img_path = os.path.join(output_dir, "images/")
 	if os.path.isdir(dest_img_path):
@@ -65,6 +73,11 @@ def setup(output_dir):
 	shutil.copytree (src_img_path, dest_img_path)	
 
 def generate_dag_graph(wf_info, output_dir):
+	"""
+	Generates the DAG graph
+	@wf_info WorkflowInfo object reference
+	@output_dir the output directory path
+	"""
 	logger.info("Generating dag graph for  workflow "  + wf_info.wf_uuid)
 	dag_file_path = wf_info.dag_file_path
 	if dag_file_path is not None:
@@ -101,6 +114,11 @@ def generate_dag_graph(wf_info, output_dir):
 	
 	
 def generate_dax_graph(wf_info, output_dir):
+	"""
+	Generates the DAX graph
+	@wf_info WorkflowInfo object reference
+	@output_dir the output directory path
+	"""
 	logger.info("Generating dax graph for  workflow "  + wf_info.wf_uuid)
 	dax_file_path = wf_info.dax_file_path
 	if dax_file_path is not None:
@@ -139,6 +157,15 @@ def generate_dax_graph(wf_info, output_dir):
 	
 	
 def create_image_gallery(file_name ,wf_uuid_list , wf_parent_uuid_list, uuid_image_map,wf_uuid_label_map , isDax):
+	"""
+	Creates the image gallery.
+	@param file_mame the output file name
+	@param wf_uuid_list the list of all workflow id's
+	@param wf_parent_uuid_list the list of parent workflow id's corresponding to each workflow
+	@param uuid_image_map uuid and image file mapping
+	@param wf_uuid_label_map uuid and label mapping
+	@isDax boolean indicating whether it is a dax file or not.
+	"""
 	wf_uuid_parent_ref = None
 	try:
 		fh = open(file_name, "w")
@@ -234,6 +261,12 @@ clear:both;
 
 
 def createOuterhtml(wf_info, wf_uuid , output_dir ):
+	"""
+	Generates the outer html file which links to all the charts and graph
+	@wf_info WorkflowInfo object reference
+	@wf_uuid uuid of the root workflow
+	@output_dir the output directory path
+	"""
 	data_file = os.path.join(output_dir,  "index.html")
 	gantt_chart_parent_file = os.path.join("gantt_chart/" + wf_uuid +".html")
 	dag_graph_parent_file = os.path.join("dag_graph/" + wf_uuid +".html")
@@ -278,6 +311,13 @@ def createOuterhtml(wf_info, wf_uuid , output_dir ):
 		fh.close()
 		
 def create_charts(submit_dir , output_dir, config_properties , log_level ):
+	"""
+	Generates all the graphs and charts 
+	@submit_dir submit directory pathd
+	@output_dir the output directory path
+	@config_properties path to the pegasus property file
+	@log_level logging level
+	"""
 	wf_uuid_dax_image =[]
 	wf_uuid_dax_label =[]
 	wf_uuid_dag_image =[]
@@ -351,11 +391,12 @@ def create_charts(submit_dir , output_dir, config_properties , log_level ):
 	createOuterhtml(wf_info, wf_uuid_list[0] , output_dir  )
 	return
 	
-"""
-Sets the plotting level 
-@param plot_level
-"""
+
 def set_plotting_level(plots_level):
+	"""
+	Sets the plotting level 
+	@param plot_level
+	"""
 	global calc_dax_graph
 	global calc_dag_graph
 	global calc_gantt_chart
