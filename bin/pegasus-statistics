@@ -673,12 +673,12 @@ def main():
 	submit_dir = os.path.abspath(args[0])
 	
 	# Copy options from the command line parser
-	log_level = options.verbose - options.quiet
-	log_level_str = "info" 
-	if options.verbose ==0 and options.quiet ==0 :
-		# default case , when the user has not set verbose or quiet option
-		log_level_str = "info"
-	elif log_level <=0:
+	
+	# default is info
+	log_level = 1 
+	log_level_str = "info"
+	log_level += (options.verbose - options.quiet)
+	if log_level <=0:
 		log_level_str = "error"
 	elif log_level ==1:
 		log_level_str = "warning"
