@@ -28,7 +28,8 @@ pegasus-statistics \- A tool to generate statistics about the workflow run.
 [\-c|\-\-conf <property file path>]
 [\-p|\-\-statistics_level level_str]
 [\-t|\-\-time_filter filter_str]
-[\-l|\-\-log_level level_str] 
+[\-v|\-\-verbose]
+[\-q|\-\-quiet] 
 
 .SH "DESCRIPTION"
 pegasus-statistics generates statistics about the workflow run like total jobs/tasks/sub workflows ran , how many succeeded/failed etc.
@@ -105,12 +106,22 @@ generates the job instance and invocation statistics like total count and runtim
  Specifies the time filter to group the time statistics. Valid levels are: month,week,day,hour; Default is day.
 
 .TP
-.B \-l level_str
+.B \-v
 .PD 0
 .TP
 .PD 1
-.B \-\-log_level level_str
-Specifies the log level.Valid levels are: debug,info,warning,error; Default is info.
+.B \-\-verbose
+Increases the log level.  If omitted, the default level will be set to WARNING.  When this option is given, the log level is changed
+ to INFO.  If this option is repeated, the log level will be changed to DEBUG.
+
+.TP
+.B \-q
+.PD 0
+.TP
+.PD 1
+.B \-\-quiet
+Decreases the log level.  If omitted, the default level will be set to WARNING.  When this option is given, the log level is changed
+ to ERROR.
 
 .SH "EXAMPLE"
 .TP
