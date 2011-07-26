@@ -28,20 +28,33 @@ Usage: pegasus-dagman [options]
 # Author : gmehta at isi dot edu
 # Revision : $Revision$
 __author__ = "Gaurang Mehta"
+__author__ = "Mats Rynge"
 
 import os, sys, signal, subprocess
-from time import sleep
+import logging
+import time
+import math
 import common   # Takes care of setting up PEGASUS_HOME and PYTHONPATH
 from Pegasus.tools.utils import find_exec
 
-SLEEP_TIME = 30
-MAX_MONITORD_LAUNCH = 5
+# logger is setup in common
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+
+SLEEP_TIME = 15
+DIED_TOO_QUICKLY_TIME = 120
+
 dagman = None
+
 monitord = None
+monitord_last_start = 0
+monitord_next_start = 0
+monitord_current_restarts = 0
+
 
 def dagman_launch(arguments):
     '''Launches the condor_dagman program with all
-      the arguments passed to pegasus-dagman'''
+       the arguments passed to pegasus-dagman'''
     dagman_bin = find_exec("condor_dagman")
     if dagman_bin != None :
         arguments.insert(0, "condor_scheduniv_exec."+os.getenv("CONDOR_ID"))
@@ -50,12 +63,12 @@ def dagman_launch(arguments):
                                            stdout=sys.stdout, 
                                            stderr=sys.stderr,
                                            executable=dagman_bin) 
-            print "Launched Dagman with Pid %d" % dagman_proc.pid
+            logger.info("Launched Dagman with Pid %d" % dagman_proc.pid)
         except OSError, err :
-            print "Error: Could not launch Dagman.",  err
+            logger.error("Could not launch Dagman.",  err)
             sys.exit(1)
     else :
-        print "Error : Condor Dagman not found"
+        logger.error("Condor Dagman not found")
         sys.exit(127)
 
     return dagman_proc
@@ -73,12 +86,12 @@ def monitord_launch():
                         stdout=log, 
                         stderr=subprocess.STDOUT)
                                                  
-            print "Launched Monitord with Pid %d" % monitord_proc.pid
+            logger.info("Launched Monitord with Pid %d" % monitord_proc.pid)
             return monitord_proc
         except OSError, err :
-            print "Error: Could not launch Monitord.", err
+            logger.error("Could not launch Monitord.", err)
     else :
-        print "Error : pegausus-monitord not found"
+        logger.error("pegausus-monitord not found")
 
     return None
 
@@ -94,6 +107,7 @@ def sighandler(signum, frame):
 #-- main--------------------------------------------------------------
     
 if __name__ == "__main__":
+    
     os.setpgid(0, 0)
     signal.signal(signal.SIGTERM, sighandler)
     signal.signal(signal.SIGINT, sighandler)
@@ -103,6 +117,7 @@ if __name__ == "__main__":
  
     # Launch DAGMAN
     dagman = dagman_launch(sys.argv[1:])
+    
     # Launch Monitord
     monitord = monitord_launch()
         
@@ -111,19 +126,33 @@ if __name__ == "__main__":
     
     while monitord.returncode == None or dagman.returncode == None :
         if dagman.returncode == None and monitord.returncode != None :
-            # Dagman has not finished. We may need to restart monitord.
-            if MAX_MONITORD_LAUNCH > 0 :
+            # monitord is not running
+            t = time.time()
+            if monitord_next_start == 0:
+                logger.error("monitord is not running")
+                # did the process die too quickly?
+                if t - monitord_last_start < DIED_TOO_QUICKLY_TIME:
+                    monitord_current_restarts += 1
+                else:
+                    monitord_current_restarts = 0
+                # backoff with upper limit
+                backoff = min(math.exp(monitord_current_restarts) * 10, 3600)
+                logger.info("next monitord launch scheduled in about %d seconds" % (backoff))
+                monitord_next_start = t + backoff - 1
+            # time to restart yet?    
+            if monitord_next_start <= t:
+                monitord_next_start = 0
+                monitord_last_start = t
                 monitord = monitord_launch()
-                MAX_MONITORD_LAUNCH -= 1
 
         # sleep in between polls
-        sleep(SLEEP_TIME)
+        time.sleep(SLEEP_TIME)
                 
         monitord.poll()
         dagman.poll()
         
     # Dagman and Monitord have exited. Lets exit pegasus-dagman with
     #a merged returncode
-    print "Dagman exited with code %d" % dagman.returncode
-    print "Monitord exited with code %d" % monitord.returncode
+    logger.info("Dagman exited with code %d" % dagman.returncode)
+    logger.info("Monitord exited with code %d" % monitord.returncode)
     sys.exit(dagman.returncode & monitord.returncode)
