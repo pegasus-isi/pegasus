@@ -28,10 +28,11 @@ pegasus-plots \- A tool to generate graphs and charts to visualize workflow run.
 [\-c|\-\-conf <property file path>]
 [\-m|\-\-max_graph_nodes max_value]
 [\-p|\-\-plotting_level level_str]
-[\-l|\-\-log_level level_str] 
+[\-v|\-\-verbose]
+[\-q|\-\-quiet] 
 
 .SH "DESCRIPTION"
-pegasus-plots generates graphs and charts to visualize workflow run. It generates workflow execution Gantt chart, job over time chart, dax and dag graph. It uses executable \'dot\' to generate graphs. pegasus-plots looks for the executable in your path and generates graphs based on it\'s availability .
+pegasus-plots generates graphs and charts to visualize workflow run. It generates workflow execution Gantt chart, job over time chart, time chart,dax and dag graph. It uses executable \'dot\' to generate graphs. pegasus-plots looks for the executable in your path and generates graphs based on it\'s availability .
 
 .SH "ARGUMENTS"
 
@@ -104,14 +105,28 @@ generates the workflow execution Gantt chart.
 .B host_chart : 
 generates the host over time chart.
 .RE
+.RS
+.B time_chart : 
+generates the chart which shows the job instance/invocation count and runtime over time.
+.RE
 
 .TP
-.B \-l level_str
+.B \-v
 .PD 0
 .TP
 .PD 1
-.B \-\-log_level level_str
-Specifies the log level.Valid levels are: debug,info,warning,error; Default is info.
+.B \-\-verbose
+Increases the log level.  If omitted, the default level will be set to WARNING.  When this option is given, the log level is changed
+ to INFO.  If this option is repeated, the log level will be changed to DEBUG.
+
+.TP
+.B \-q
+.PD 0
+.TP
+.PD 1
+.B \-\-quiet
+Decreases the log level.  If omitted, the default level will be set to WARNING.  When this option is given, the log level is changed
+ to ERROR.
 
 
 .SH "EXAMPLE"
