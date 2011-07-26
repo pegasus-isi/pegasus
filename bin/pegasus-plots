@@ -78,7 +78,6 @@ def generate_dag_graph(wf_info, output_dir):
 	@wf_info WorkflowInfo object reference
 	@output_dir the output directory path
 	"""
-	logger.info("Generating dag graph for  workflow "  + wf_info.wf_uuid)
 	dag_file_path = wf_info.dag_file_path
 	if dag_file_path is not None:
 		dag2dot_file_path = os.path.join(common.pegasus_home, "libexec/visualize/dag2dot")
@@ -86,7 +85,7 @@ def generate_dag_graph(wf_info, output_dir):
 		dag_cmd = dag2dot_file_path 
 		dag_cmd +=" --output "+ dot_file_path
 		dag_cmd += " "+ dag_file_path
-		logger.info("Executing command :\n"  + dag_cmd)
+		logger.debug("Executing command :\n"  + dag_cmd)
 		status, output = commands.getstatusoutput(dag_cmd)
 		if status == 0:
 			logger.info("Finished executing command." )
@@ -101,10 +100,10 @@ def generate_dag_graph(wf_info, output_dir):
 			return None
 		dot_png_cmd +=" -Tpng -o" + png_file_path
 		dot_png_cmd += " "+ dot_file_path
-		logger.info("Executing command :\n"  + dot_png_cmd)
+		logger.debug("Executing command :\n"  + dot_png_cmd)
 		status, output = commands.getstatusoutput(dot_png_cmd)
 		if status == 0:
-			logger.info("Finished executing command." )
+			logger.debug("Finished executing command." )
 			return status
 		else:
 			logger.warn("%s: %d:%s" % (dot_png_cmd, status, output))
@@ -119,7 +118,6 @@ def generate_dax_graph(wf_info, output_dir):
 	@wf_info WorkflowInfo object reference
 	@output_dir the output directory path
 	"""
-	logger.info("Generating dax graph for  workflow "  + wf_info.wf_uuid)
 	dax_file_path = wf_info.dax_file_path
 	if dax_file_path is not None:
 		dax2dot_file_path = os.path.join(common.pegasus_home, "libexec/visualize/dax2dot")
@@ -127,10 +125,10 @@ def generate_dax_graph(wf_info, output_dir):
 		dax_cmd = dax2dot_file_path 
 		dax_cmd +=" --output "+ dot_file_path
 		dax_cmd += " "+ dax_file_path
-		logger.info("Executing command :\n"  + dax_cmd)
+		logger.debug("Executing command :\n"  + dax_cmd)
 		status, output = commands.getstatusoutput(dax_cmd)
 		if status == 0:
-			logger.info("Finished executing command." )
+			logger.debug("Finished executing command." )
 		else:
 			logger.warn("Failed to generate dax graph for workflow "+ wf_info.wf_uuid)
 			logger.debug("%s: %d:%s" % (dax_cmd, status, output))
@@ -143,10 +141,10 @@ def generate_dax_graph(wf_info, output_dir):
 		png_file_path = os.path.join(output_dir, wf_info.wf_uuid +".png")
 		dot_png_cmd +=" -Tpng -o" + png_file_path
 		dot_png_cmd += " "+ dot_file_path
-		logger.info("Executing command :\n"  + dot_png_cmd)
+		logger.debug("Executing command :\n"  + dot_png_cmd)
 		status, output = commands.getstatusoutput(dot_png_cmd)
 		if status == 0:
-			logger.info("Finished executing command." )
+			logger.debug("Finished executing command." )
 			return status
 		else:
 			logger.warn("Failed to generate dax graph in png format for workflow " + wf_info.wf_uuid)
@@ -346,6 +344,7 @@ def create_charts(submit_dir , output_dir, config_properties , log_level ):
 	root_wf_stats = None
 	for wf_uuid in wf_uuid_list:
 		wf_stats, wf_info = populate.populate_chart(wf_uuid)
+		logger.info("Generating graphs/charts for the workflow " + str(wf_uuid) +" ... ")
 		if calc_gantt_chart or calc_host_chart:
 			populate.populate_job_instance_details(wf_stats, wf_info)
 		if root_wf_info is None:
@@ -353,12 +352,15 @@ def create_charts(submit_dir , output_dir, config_properties , log_level ):
 			root_wf_stats =wf_stats
 		wf_uuid_parent.append(wf_info.parent_wf_uuid)
 		if calc_gantt_chart :
+			logger.debug("Generating gantt chart for the workflow " + str(wf_uuid) +" ... ")
 			pegasus_gantt.generate_chart(wf_info)
 		if calc_host_chart :
+			logger.debug("Generating host chart for the workflow " + str(wf_uuid) +" ... ")
 			pegasus_host_over_time.generate_chart(wf_info)
 		if calc_dag_graph :
 			populate.populate_job_details(wf_stats, wf_info)
 			if wf_info.total_jobs <= max_graph_nodes:
+				logger.debug("Generating dag graph for the workflow " + str(wf_uuid) +" ... ")
 				if generate_dag_graph(wf_info,dag_graph_output_dir) is None:
 					wf_uuid_dag_image.append(None)
 				else:
@@ -370,6 +372,7 @@ def create_charts(submit_dir , output_dir, config_properties , log_level ):
 		if calc_dax_graph :
 			populate.populate_task_details(wf_stats, wf_info)
 			if wf_info.total_tasks <= max_graph_nodes:
+				logger.debug("Generating dax graph for the workflow " + str(wf_uuid) +" ... ")
 				if generate_dax_graph(wf_info,dax_graph_output_dir) is None:
 					wf_uuid_dax_image.append(None)
 				else:
@@ -381,6 +384,7 @@ def create_charts(submit_dir , output_dir, config_properties , log_level ):
 	if calc_time_chart :
 		populate.populate_time_details(root_wf_stats ,root_wf_info,'day')
 		populate.populate_time_details(root_wf_stats, root_wf_info,'hour')
+		logger.debug("Generating time chart for the workflow " + str(root_wf_info.wf_uuid) +" ... ")
 		pegasus_time.generate_chart(root_wf_info)
 	if calc_dax_graph :
 		data_file =  os.path.join(dax_graph_output_dir,wf_uuid_list[0]+".html")
@@ -441,14 +445,16 @@ def main():
 		  help = "Maximum limit on the number of tasks/jobs in the dax/dag upto which the graph should be generated; Default value is 100")
 	parser.add_option("-p", "--plottinglevel", action = "store", dest = "plotting_level",
 			choices=['all', 'all_charts', 'all_graphs' ,'dax_graph', 'dag_graph','gantt_chart','host_chart','time_chart' ],
-			help = "specifies the chart and graphs to generate. Valid levels are: all,all_charts, all_graphs, dax_graph,dag_graph,gantt_chart,host_chart,time_chart; Default is all_charts.")
-	parser.add_option("-l", "--loglevel", action = "store", dest = "log_level",
-			choices=['debug', 'info', 'warning' ,'error'],
-			help = "Log level. Valid levels are: debug,info,warning,error; Default is info.")
+			help = "specifies the chart and graphs to generate. Valid levels are: all,all_charts, all_graphs, dax_graph,\
+					dag_graph,gantt_chart,host_chart,time_chart; Default is all_charts.")
+	parser.add_option("-v", "--verbose", action="count", default=0, dest="verbose", 
+			help="Increase verbosity, repeatable")
+	parser.add_option("-q", "--quiet", action="count", default=0, dest="quiet", 
+			help="Decrease verbosity, repeatable")
 	# Parse command line options
 	(options, args) = parser.parse_args()
 	
-	logger.info(prog_base +" : initializing...")
+	
 	if len(args) < 1:
 		parser.error("Please specify Submit Directory")
 		sys.exit(1)
@@ -459,6 +465,22 @@ def main():
 	
 	submit_dir = os.path.abspath(args[0])
 	# Copy options from the command line parser
+	log_level = options.verbose - options.quiet
+	log_level_str = "info" 
+	if options.verbose ==0 and options.quiet ==0 :
+		# default case , when the user has not set verbose or quiet option
+		log_level_str = "info"
+	elif log_level <=0:
+		log_level_str = "error"
+	elif log_level ==1:
+		log_level_str = "warning"
+	elif log_level ==2:
+		log_level_str = "info"
+	elif log_level >=3:
+		log_level_str = "debug"
+	setup_logger(log_level_str)
+	logger.info(prog_base +" : initializing...")
+		
 	if options.plotting_level is not None:
 		 plotting_level = options.plotting_level
 	else:
@@ -470,13 +492,11 @@ def main():
 	else :
 		output_dir = os.path.join(submit_dir, DEFAULT_OUTPUT_DIR)
 	plot_utils.create_directory(output_dir, True)
-	if options.log_level is None:
-		options.log_level = "info"
 	if options.max_graph_nodes is not None:
 		global max_graph_nodes
 		max_graph_nodes = options.max_graph_nodes
-	setup_logger(options.log_level)
-	create_charts(submit_dir, output_dir,options.config_properties, options.log_level)
+		
+	create_charts(submit_dir, output_dir,options.config_properties, log_level_str)
 	
 	sys.exit(0)
 	
