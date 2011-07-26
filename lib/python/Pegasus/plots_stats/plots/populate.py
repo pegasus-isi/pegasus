@@ -127,6 +127,10 @@ def rlb(file_path):
 							
 #------------Gets sub worklows job names----------------
 def get_job_inst_sub_workflow_map(workflow ):
+	"""
+	Returns the mapping of sub workflow jobs to the corresponding wf_uuid
+	@workflow  StampedeStatistics object reference.
+	"""
 	job_inst_wf_uuid_map ={}
 	jb_inst_sub_wf_list = workflow.get_job_instance_sub_wf_map()
 	for jb_inst_sub_wf in jb_inst_sub_wf_list:
@@ -138,15 +142,25 @@ def get_job_inst_sub_workflow_map(workflow ):
 #-------return workflow uuid by parsing db alone-----
 
 def get_workflows_uuid():
+	"""
+	Returns the workflow uuid of a given workflow , this includes the id of all sub workflows.
+	"""
 	# expand = True
-	expanded_workflow_stats = StampedeStatistics(global_db_url)
- 	expanded_workflow_stats.initialize(global_top_wf_uuid)
- 	expanded_workflow_stats.set_job_filter('all')
+	try:
+		expanded_workflow_stats = StampedeStatistics(global_db_url)
+	 	expanded_workflow_stats.initialize(global_top_wf_uuid)
+	 	expanded_workflow_stats.set_job_filter('all')
+ 	except:
+ 		logger.error("Failed to load the database." + global_db_url )
+		sys.exit(1)
  	#expand = False
- 	root_workflow_stats = StampedeStatistics(global_db_url , False)
- 	root_workflow_stats.initialize(global_top_wf_uuid)
- 	root_workflow_stats.set_job_filter('all')
- 	
+ 	try:
+	 	root_workflow_stats = StampedeStatistics(global_db_url , False)
+	 	root_workflow_stats.initialize(global_top_wf_uuid)
+	 	root_workflow_stats.set_job_filter('all')
+ 	except:
+ 		logger.error("Failed to load the database." + global_db_url )
+		sys.exit(1)
  	wf_det = root_workflow_stats.get_workflow_details()[0]
  	# print workflow statistics
  	global global_wf_id_uuid_map
@@ -228,7 +242,8 @@ def populate_job_instance_details(workflow_stats , workflow_info):
 		# Storing the start and end event from the workflow states
 		start_event = worklow_states_list[0].timestamp
 		end_event = worklow_states_list[len(worklow_states_list)-1].timestamp
-			
+	else:
+		logger.warning("Workflow states are missing for workflow  " + workflow_info.wf_uuid)
 	failed_job_list = workflow_stats.get_failed_job_instances()
 	job_states_list =  workflow_stats.get_job_states()
 	for job_states in job_states_list:
@@ -269,6 +284,8 @@ def populate_job_instance_details(workflow_stats , workflow_info):
 		
 	if (start_event != sys.maxint) and  (end_event != (-sys.maxint -1)):
 		workflow_info.workflow_run_time = end_event - start_event
+	else:
+		logger.error("Unable to find the start and event event for the workflow  " + workflow_info.wf_uuid)
 	total_job_instances = len(job_stats_list)
 	workflow_info.dagman_start_time = start_event 
 	workflow_info.job_statistics_list =job_stats_list
@@ -279,6 +296,10 @@ def populate_job_instance_details(workflow_stats , workflow_info):
 	return workflow_info
 	
 def setup_logger(level_str):
+	"""
+	Set up the logger for the module.
+	@param level_str logging level
+	"""
 	level_str = level_str.lower()
 	if level_str == "debug":
 		logger.setLevel(logging.DEBUG)
@@ -294,8 +315,12 @@ def populate_chart(wf_uuid):
 	"""
 	Populates the workflow info object corresponding to the wf_uuid
 	"""
-	workflow_stampede_stats = StampedeStatistics(global_db_url , False)
- 	workflow_stampede_stats.initialize(wf_uuid)
+	try:
+		workflow_stampede_stats = StampedeStatistics(global_db_url , False)
+		workflow_stampede_stats.initialize(wf_uuid)
+	except:
+ 		logger.error("Failed to load the database." + global_db_url )
+		sys.exit(1)
 	workflow_info = populate_workflow_details(workflow_stampede_stats)
 	sub_wf_uuids = workflow_stampede_stats.get_sub_workflow_ids()
 	if len(sub_wf_uuids) > 0:
@@ -329,6 +354,11 @@ def populate_time_details(workflow_stats, wf_info , date_time_filter):
 	wf_info.wf_invocations_over_time_statistics[date_time_filter] = invoc_time_list
 
 def setup(submit_dir , config_properties):
+	"""
+	Setup the populate module
+	@submit_dir submit directory path of the workflow run
+	@config_properties path to the propery file
+	"""
 	# global reference
 	global global_base_submit_dir
 	global global_braindb_submit_dir

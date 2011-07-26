@@ -48,6 +48,10 @@ output_dir = None
 
 
 def setup_logger(level_str):
+	"""
+	Sets the logging level  
+	@param level_str:  logging level
+	"""
 	level_str = level_str.lower()
 	if level_str == "debug":
 		logger.setLevel(logging.DEBUG)
@@ -62,6 +66,11 @@ def setup_logger(level_str):
 
 #----------print workflow details--------
 def print_workflow_details(workflow_stat , output_dir):
+	"""
+	Prints the data required for generating the gantt chart into data file.
+	@param workflow_stat the WorkflowInfo object reference 
+	@param output_dir output directory path
+	"""
 	job_info =  "var data = [" + workflow_stat.get_formatted_job_data() + "];"
 	# print javascript file
 	data_file = os.path.join(output_dir,  "gc_" + workflow_stat.wf_uuid+"_data.js")
@@ -79,6 +88,10 @@ def print_workflow_details(workflow_stat , output_dir):
 
 
 def create_action_script(output_dir):
+	"""
+	Generates the action script file which contains the javascript functions used by the main html file.
+	@param output_dir output directory path
+	"""
 	action_content = "\n\
 function barvisibility(d , index){\n\
 if(!d){\n\
@@ -392,6 +405,10 @@ headerPanel.render();\n\
 
 
 def create_header(workflow_stat):
+	"""
+	Generates the header html content.
+	@param workflow_stat the WorkflowInfo object reference 
+	"""
 	header_str = "<html>\n<head>\n<title>"+ workflow_stat.wf_uuid +"</title>\n<style type ='text/css'>\n\
 #gantt_chart{\n\
 border:1px solid red;\n\
@@ -400,12 +417,20 @@ border:1px solid red;\n\
 	return header_str
 	
 def create_include(workflow_stat):
+	"""
+	Generates the html script include content.
+	@param workflow_stat the WorkflowInfo object reference 
+	"""
 	include_str = "\n\
 <script type='text/javascript' src='gc_action.js'></script>\n\
 <script type='text/javascript' src='gc_" + workflow_stat.wf_uuid  +"_data.js'></script>\n"
 	return include_str
 	
 def create_variable(workflow_stat):
+	"""
+	Generates the javascript variables used to generate the chart.
+	@param workflow_stat the WorkflowInfo object reference 
+	"""
 	number_of_jobs = workflow_stat.total_job_instances
 	# Adding  variables
 	var_str = "<script type='text/javascript'>\nvar initMaxX = " + str(workflow_stat.workflow_run_time) + ";\n"
@@ -462,6 +487,10 @@ var footerPanelHeight  = "+ str(50 + len(workflow_stat.transformation_statistics
 	
 
 def create_toolbar_panel(workflow_stat):
+	"""
+	Generates the top level toolbar content.
+	@param workflow_stat the WorkflowInfo object reference 
+	"""
 	panel_str = "<script type=\"text/javascript+protovis\">\n\
 var headerPanel = new pv.Panel()\n\
 .width(headerPanelWidth)\n\
@@ -573,6 +602,10 @@ headerPanel.render();\n\n\
 	return panel_str
 
 def create_chart_panel(workflow_stat):
+	"""
+	Generates the chart panel content.
+	@param workflow_stat the WorkflowInfo object reference 
+	"""
 	panel_str ="<script type=\"text/javascript+protovis\">\n\
 var rootPanel = new pv.Panel()\n\
 .width(chartPanelWidth)\n\
@@ -810,6 +843,10 @@ rootPanel.render();\n\
 	
 
 def create_legend_panel(workflow_stat):
+	"""
+	Generates the bottom level legend panel content.
+	@param workflow_stat the WorkflowInfo object reference 
+	"""
 	panel_str ="<script type=\"text/javascript+protovis\">\n\
 var footerPanel = new pv.Panel()\n\
 .width(footerPanelWidth)\n\
@@ -847,6 +884,10 @@ footerPanel.render();\n\n\
 
 
 def create_bottom_toolbar():
+	"""
+	Generates the bottom toolbar html content.
+	@param workflow_stat the WorkflowInfo object reference 
+	"""
 	toolbar_content ="\n\
 <div id ='tools' style='width: 1000px; margin : 0 auto;' >\n\
 <img style='float: right' src = 'images/jobstates_all.png'/>\n\
@@ -861,7 +902,12 @@ def create_bottom_toolbar():
 	return toolbar_content
 
 
-def create_gnatt_plot(workflow_info , output_dir):
+def create_gantt_plot(workflow_info , output_dir):
+	"""
+	Generates the html page content for displaying the gantt chart.
+	@param workflow_stat the WorkflowInfo object reference 
+	@output_dir the output directory path
+	"""
 	print_workflow_details(workflow_info ,output_dir)
 	str_list = []
 	wf_content = create_include(workflow_info)
@@ -889,12 +935,16 @@ def create_gnatt_plot(workflow_info , output_dir):
 		
 	
 
-def create_gnatt_plot_page(workflow_info ,output_dir):
-	
+def create_gantt_plot_page(workflow_info ,output_dir):
+	"""
+	Prints the complete html page with the gantt chart and workflow details.
+	@param workflow_stat the WorkflowInfo object reference 
+	@output_dir the output directory path
+	"""	
 	str_list = []
 	wf_page = create_header(workflow_info)
 	str_list.append(wf_page)
-	wf_page = create_gnatt_plot(workflow_info ,output_dir)
+	wf_page = create_gantt_plot(workflow_info ,output_dir)
 	str_list.append(wf_page)
 	# printing the brain dump content
 	if workflow_info.submit_dir is None:
@@ -916,6 +966,12 @@ def create_gnatt_plot_page(workflow_info ,output_dir):
 		fh.close()	
 	return
 def setup(submit_dir,out_dir,log_level):
+	"""
+	Setup the pegasus gantt module
+	@param submit_dir submit directory path 
+	@out_dir the output directory path
+	@log_level logging level
+	"""
 	# global reference
 	global output_dir
 	output_dir = out_dir
@@ -936,7 +992,11 @@ def setup(submit_dir,out_dir,log_level):
 
 
 def generate_chart(workflow_info):
-	create_gnatt_plot_page(workflow_info , output_dir)
+	"""
+	Generates the gantt chart and all it's required files
+	@workflow_info WorkflowInfo object reference
+	"""
+	create_gantt_plot_page(workflow_info , output_dir)
 
 
 # ---------main----------------------------------------------------------------------------

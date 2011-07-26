@@ -44,6 +44,10 @@ output_dir = None
 
 
 def setup_logger(level_str):
+	"""
+	Sets the logging level  
+	@param level_str:  logging level
+	"""
 	level_str = level_str.lower()
 	if level_str == "debug":
 		logger.setLevel(logging.DEBUG)
@@ -58,6 +62,11 @@ def setup_logger(level_str):
 
 #----------print workflow details--------
 def print_workflow_details(workflow_stat , output_dir):
+	"""
+	Prints the data required for generating the time chart into data file.
+	@param workflow_stat the WorkflowInfo object reference 
+	@param output_dir output directory path
+	"""
 	job_info_day =  "var data_job_per_day = [" + workflow_stat.get_formatted_job_instances_over_time_data('day') + "];\n"
 	invocation_info_day =  "var data_invoc_per_day = [" + workflow_stat.get_formatted_invocations_over_time_data('day') + "];\n"
 	job_info_hour =  "var data_job_per_hour = [" + workflow_stat.get_formatted_job_instances_over_time_data('hour') + "];\n"
@@ -89,6 +98,10 @@ def print_workflow_details(workflow_stat , output_dir):
 
 
 def create_action_script(output_dir):
+	"""
+	Generates the action script file which contains the javascript functions used by the main html file.
+	@param output_dir output directory path
+	"""
 	action_content = """
 	
 function fadeRight(){
@@ -307,6 +320,10 @@ function getData(){
 
 
 def create_header(workflow_stat):
+	"""
+	Generates the header html content.
+	@param workflow_stat the WorkflowInfo object reference 
+	"""
 	header_str = """
 <html>
 <head>
@@ -323,6 +340,10 @@ border:1px solid red;
 	return header_str
 	
 def create_include(workflow_stat):
+	"""
+	Generates the html script include content.
+	@param workflow_stat the WorkflowInfo object reference 
+	"""
 	include_str = """
 <script type="text/javascript" src="data.js"></script>
 <script type="text/javascript" src="tc_action.js"></script>	
@@ -330,6 +351,10 @@ def create_include(workflow_stat):
 	return include_str
 	
 def create_variable(workflow_stat):
+	"""
+	Generates the javascript variables used to generate the chart.
+	@param workflow_stat the WorkflowInfo object reference 
+	"""
 	number_of_units = len(workflow_stat.wf_job_instances_over_time_statistics['hour'])
 	max_count, max_runtime = workflow_stat.get_max_count_run_time(True, 'hour')
 	# Adding  variables
@@ -377,6 +402,10 @@ var yCountScale = pv.Scale.linear(curCountY, curCountEndY).range(0, h -xScaleBot
 	
 
 def create_toolbar_panel(workflow_stat):
+	"""
+	Generates the top level toolbar content.
+	@param workflow_stat the WorkflowInfo object reference 
+	"""
 	panel_str = """
 <script type="text/javascript+protovis">
 var headerPanel = new pv.Panel()
@@ -474,6 +503,10 @@ headerPanel.render();
 	return panel_str
 
 def create_chart_panel(workflow_stat):
+	"""
+	Generates the chart panel content.
+	@param workflow_stat the WorkflowInfo object reference 
+	"""
 	panel_str ="""
 <script type="text/javascript+protovis">
 var rootPanel = new pv.Panel()
@@ -605,6 +638,10 @@ rootPanel.render();
 	
 
 def create_legend_panel(workflow_stat):
+	"""
+	Generates the legend panel content.
+	@param workflow_stat the WorkflowInfo object reference 
+	"""
 	panel_str ="""
 <script type="text/javascript+protovis">
 var footerPanel = new pv.Panel()
@@ -645,6 +682,10 @@ footerPanel.render();
 
 
 def create_bottom_toolbar():
+	"""
+	Generates the bottom toolbar html content.
+	@param workflow_stat the WorkflowInfo object reference 
+	"""
 	toolbar_content ="""
 <div id ='tools' style='width: 300px; margin : 0 auto;' >
 	<div style ='float:right'>
@@ -668,6 +709,11 @@ def create_bottom_toolbar():
 
 
 def create_time_plot(workflow_info , output_dir):
+	"""
+	Generates the html page content for displaying the time chart.
+	@param workflow_stat the WorkflowInfo object reference 
+	@output_dir the output directory path
+	"""
 	print_workflow_details(workflow_info ,output_dir)
 	str_list = []
 	wf_content = create_include(workflow_info)
@@ -696,7 +742,11 @@ def create_time_plot(workflow_info , output_dir):
 	
 
 def create_time_plot_page(workflow_info ,output_dir):
-	
+	"""
+	Prints the complete html page with the time chart and workflow details.
+	@param workflow_stat the WorkflowInfo object reference 
+	@output_dir the output directory path
+	"""
 	str_list = []
 	wf_page = create_header(workflow_info)
 	str_list.append(wf_page)
@@ -722,6 +772,12 @@ def create_time_plot_page(workflow_info ,output_dir):
 		fh.close()	
 	return
 def setup(submit_dir,out_dir,log_level):
+	"""
+	Setup the pegasus time module
+	@param submit_dir submit directory path 
+	@out_dir the output directory path
+	@log_level logging level
+	"""
 	# global reference
 	global output_dir
 	output_dir = out_dir
@@ -742,6 +798,10 @@ def setup(submit_dir,out_dir,log_level):
 
 
 def generate_chart(workflow_info):
+	"""
+	Generates the time chart and all it's required files
+	@workflow_info WorkflowInfo object reference
+	"""
 	create_time_plot_page(workflow_info , output_dir)
 
 

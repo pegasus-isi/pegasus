@@ -68,6 +68,9 @@ class WorkflowInfo:
 		self.wf_invocations_over_time_statistics = {}
 				
 	def get_formatted_host_data(self ):
+		"""
+		Returns formatted host information data.
+		"""
 		# find the pretty print length
 		host_info =''
 		for host_name , job_list in self.host_job_map.items():
@@ -135,6 +138,9 @@ class WorkflowInfo:
 		return host_info
 		
 	def get_formatted_job_data(self ):
+		"""
+		Returns formatted job information data.
+		"""
 		# find the pretty print length
 		job_info = ''
 		for job_stat in self.job_statistics_list:
@@ -179,6 +185,10 @@ class WorkflowInfo:
 		return job_info
 		
 	def get_formatted_job_instances_over_time_data(self , date_time_filter):
+		"""
+		Returns formatted job instance over time data.
+		@param date_time_filter date time filter
+		"""
 		job_instance_over_time_list = self.wf_job_instances_over_time_statistics[date_time_filter]
 		job_info = ''
 		for job_stat in job_instance_over_time_list:
@@ -191,6 +201,10 @@ class WorkflowInfo:
 		return job_info
 		
 	def get_formatted_invocations_over_time_data(self , date_time_filter):
+		"""
+		Returns formatted invocations over time  data.
+		@param date_time_filter date time filter
+		"""
 		invs_over_time_list = self.wf_invocations_over_time_statistics[date_time_filter]
 		inv_info = ''
 		for inv_stat in invs_over_time_list:
@@ -203,6 +217,10 @@ class WorkflowInfo:
 		return inv_info
 	
 	def get_formatted_job_instances_over_time_metadata(self , date_time_filter):
+		"""
+		Returns formatted job instances over time metadata.
+		@param date_time_filter date time filter
+		"""
 		job_instance_over_time_list = self.wf_job_instances_over_time_statistics[date_time_filter]
 		max_count, max_runtime =  self.get_max_count_run_time(True, date_time_filter)
 		job_info = ''
@@ -215,6 +233,10 @@ class WorkflowInfo:
 		return job_info
 		
 	def get_formatted_invocations_over_time_metadata(self , date_time_filter):
+		"""
+		Returns formatted invocations over time metadata.
+		@param date_time_filter date time filter
+		"""
 		invs_over_time_list = self.wf_invocations_over_time_statistics[date_time_filter]
 		max_count, max_runtime =  self.get_max_count_run_time(False, date_time_filter)
 		inv_info = ''
@@ -227,6 +249,11 @@ class WorkflowInfo:
 		return inv_info
 	
 	def get_max_count_run_time(self, isJobInstance, date_time_filter):
+		"""
+		Returns the maximum count and runtime when filter by given filter.
+		@parm isJobInstance true if it is calculated for job instances, false otherwise
+		@param date_time_filter date time filter
+		"""
 		if isJobInstance:
 			content_list = self.wf_job_instances_over_time_statistics[date_time_filter]
 		else:
@@ -273,17 +300,27 @@ class JobInfo:
 		
 	@property
 	def is_success(self):
+		"""
+		Returns whether the job instance was successful or not
+		"""
 		if self.state =='SUCCESS':
 			return True
 		return False
 	
 	@property
 	def is_failure(self):
+		"""
+		Returns whether the job instance was successful or not
+		"""
 		if self.state =='FAILED':
 			return True
 		return False
 	
 	def getJobDetails(self , global_start_time):
+		"""
+		Returns the job instance details
+		@global_start_time the workflow start event.
+		"""
 		job_details ={}
 		if self.retry_count > 0:
 			job_details['name'] = self.name +"_retry_"+ str(self.retry_count)

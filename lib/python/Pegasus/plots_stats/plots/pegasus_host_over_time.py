@@ -47,6 +47,10 @@ output_dir = None
 
 
 def setup_logger(level_str):
+	"""
+	Sets the logging level  
+	@param level_str:  logging level
+	"""
 	level_str = level_str.lower()
 	if level_str == "debug":
 		logger.setLevel(logging.DEBUG)
@@ -62,11 +66,12 @@ def setup_logger(level_str):
 
 
 #----------print workflow details--------
-"""
-	Prints the workflow statistics information
-	Param: the workflow reference
-	"""
 def print_workflow_details(workflow_stat ,output_dir):
+	"""
+	Prints the data required for generating the host chart into data file.
+	@param workflow_stat the WorkflowInfo object reference 
+	@param output_dir output directory path
+	"""
 	job_info = "var hc_data = [" + workflow_stat.get_formatted_host_data() + "];"
 	# print javascript file
 	data_file = os.path.join(output_dir,  "hc_"+workflow_stat.wf_uuid+"_data.js")
@@ -83,6 +88,10 @@ def print_workflow_details(workflow_stat ,output_dir):
 	
 
 def create_action_script(output_dir):
+	"""
+	Generates the action script file which contains the javascript functions used by the main html file.
+	@param output_dir output directory path
+	"""
 	# print action script
 	action_content = "\n\
 function hc_barvisibility(d , index){\n\
@@ -354,6 +363,10 @@ hc_headerPanel.render();\n\
 
 
 def create_header(workflow_stat):
+	"""
+	Generates the header html content.
+	@param workflow_stat the WorkflowInfo object reference 
+	"""
 	header_str = "<html>\n<head>\n<title>"+ workflow_stat.wf_uuid +"</title>\n<style type ='text/css'>\n\
 #host_chart{\n\
 border:1px solid red;\n\
@@ -362,12 +375,20 @@ border:1px solid red;\n\
 	return header_str
 	
 def create_include(workflow_stat):
+	"""
+	Generates the html script include content.
+	@param workflow_stat the WorkflowInfo object reference 
+	"""
 	include_str = "\n\
 <script type='text/javascript' src='hc_action.js'></script>\n\
 <script type='text/javascript' src='hc_" + workflow_stat.wf_uuid  +"_data.js'></script>\n"
 	return include_str
 	
 def create_variable(workflow_stat):
+	"""
+	Generates the javascript variables used to generate the chart.
+	@param workflow_stat the WorkflowInfo object reference 
+	"""
 	number_of_hosts = len(workflow_stat.host_job_map)
 	# Adding  variables
 	var_str = "<script type='text/javascript'>\nvar hc_initMaxX = " + str(workflow_stat.workflow_run_time) + ";\n"
@@ -422,6 +443,10 @@ var hc_footerPanelHeight  = "+ str(50 + len(workflow_stat.transformation_statist
 	
 
 def create_toolbar_panel(workflow_stat):
+	"""
+	Generates the top level toolbar content.
+	@param workflow_stat the WorkflowInfo object reference 
+	"""
 	panel_str = "<script type=\"text/javascript+protovis\">\n\
 var hc_headerPanel = new pv.Panel()\n\
 .width(hc_headerPanelWidth)\n\
@@ -533,6 +558,10 @@ hc_headerPanel.render();\n\n\
 	return panel_str
 
 def create_chart_panel(workflow_stat):
+	"""
+	Generates the chart panel content.
+	@param workflow_stat the WorkflowInfo object reference 
+	"""
 	panel_str ="<script type=\"text/javascript+protovis\">\n\
 var hc_rootPanel = new pv.Panel()\n\
 .width(hc_chartPanelWidth)\n\
@@ -736,6 +765,10 @@ hc_rootPanel.render();\n\
 	
 
 def create_legend_panel(workflow_stat):
+	"""
+	Generates the bottom level legend panel content.
+	@param workflow_stat the WorkflowInfo object reference 
+	"""
 	panel_str ="<script type=\"text/javascript+protovis\">\n\
 var hc_footerpanel = new pv.Panel()\n\
 .width(hc_footerPanelWidth)\n\
@@ -772,6 +805,10 @@ hc_footerpanel.render();\n\n\
 	return panel_str
 
 def create_bottom_toolbar():
+	"""
+	Generates the bottom toolbar html content.
+	@param workflow_stat the WorkflowInfo object reference 
+	"""
 	toolbar_content ="\n\
 <div id ='hc_tools' style='width: 1000px; margin : 0 auto;' >\n\
 <img style='float: right' src = 'images/jobstates.png'/>\n\
@@ -784,6 +821,11 @@ def create_bottom_toolbar():
 	return toolbar_content
 
 def create_host_plot(workflow_info,output_dir):
+	"""
+	Generates the html page content for displaying the host chart.
+	@param workflow_stat the WorkflowInfo object reference 
+	@output_dir the output directory path
+	"""
 	print_workflow_details(workflow_info ,output_dir)
 	str_list = []
 	wf_content = create_include(workflow_info)
@@ -809,6 +851,11 @@ def create_host_plot(workflow_info,output_dir):
 	return "".join(str_list)
 
 def create_host_plot_page(workflow_info , output_dir ):
+	"""
+	Prints the complete html page with the host chart and workflow details.
+	@param workflow_stat the WorkflowInfo object reference 
+	@output_dir the output directory path
+	"""	
 	str_list = []
 	wf_page = create_header(workflow_info)
 	str_list.append(wf_page)
@@ -836,6 +883,12 @@ def create_host_plot_page(workflow_info , output_dir ):
 	return
 	
 def setup(submit_dir,out_dir,log_level):
+	"""
+	Setup the pegasus host over time module
+	@param submit_dir submit directory path 
+	@out_dir the output directory path
+	@log_level logging level
+	"""
 	global output_dir
 	output_dir = out_dir
 	if log_level == None:
@@ -854,6 +907,10 @@ def setup(submit_dir,out_dir,log_level):
 
 
 def generate_chart(workflow_info):
+	"""
+	Generates the host chart and all it's required files
+	@workflow_info WorkflowInfo object reference
+	"""
 	create_host_plot_page(workflow_info,output_dir )
 
 
