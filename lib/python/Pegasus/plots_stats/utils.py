@@ -21,6 +21,9 @@ from Pegasus.tools import utils
 
 
 def isSubWfJob(job_name):
+	"""
+		Returns whether the given job is a sub workflow or not
+	"""
 	if job_name.lstrip().startswith('subdax_') or job_name.lstrip().startswith('pegasus-plan_') or job_name.lstrip().startswith('subdag_'):
 		return True;
 	return False;
@@ -36,17 +39,12 @@ def rlb(file_path ,parent_wf_braindb_submit_dir , parent_submit_dir):
 	file_path = file_path.replace(parent_wf_braindb_submit_dir,parent_submit_dir)
 	return file_path
 	
-def print_braindump_file(braindb_path):
-	config = utils.slurp_braindb(braindb_path)
-	brain_db_content =''
-	if not config:
-		logger.warning("could not process braindump.txt " + braindb_path)
-		brain_db_content ="<div style='color:red;'>Unable to read braindump file </div>"
-	else:
-		brain_db_content = print_property_table(config , False ," : ")
-	return brain_db_content
 	
 def parse_workflow_environment(wf_det):
+	"""
+	Parses the workflow detail to get the workflow environment details
+	@param wf_det the workflow detail list.
+	"""
 	config = {}
 	config["wf_uuid"] = wf_det.wf_uuid
 	config["dag_file_name"] = wf_det.dag_file_name
@@ -62,6 +60,12 @@ def parse_workflow_environment(wf_det):
 
 
 def print_property_table(props , border= True , separator =""):
+	"""
+	Utility method for printing a property table
+	@props dictionary of the property key and value.
+	@border boolean indication whether to draw a border or not.
+	@separator string to separate key value pair.
+	"""
 	html_content =''
 	if border:
 		html_content ="<table border = 1 style='color:#600000;'>"
@@ -74,28 +78,6 @@ def print_property_table(props , border= True , separator =""):
 	html_content +="</table>"
 	return html_content
 
-def print_grid_table(title , content_list):
-	# find the pretty print length
-	html_content = ''
-	html_content +=( "\n<table border = 1 style='color:#600000;'>\n<tr>")
-	# print title
-	for index in range(len(title)):
-		html_content +=  "\n<th style='color:#600000;'>" + title[index] +"</th>"
-	html_content +="\n</tr>"
-	for content in content_list:
-		html_content += ( "\n")
-		html_content +="<tr style ='color:#888888'>"
-		for index in range(len(content)):
-			html_content +="<td>"
-			if isinstance(content[index],basestring):
-				html_content += content[index]
-			else:
-				html_content += str(content[index])
-			html_content +="</td>"
-		html_content +="</tr>"
-	html_content +=( "</table>\n")
-	return html_content
-
 
 def convert_to_seconds(time):
 	"""
@@ -105,6 +87,11 @@ def convert_to_seconds(time):
 	return (time.microseconds + (time.seconds + time.days * 24 * 3600) * pow(10,6)) / pow(10,6)
 
 def create_directory(dir_name , delete_if_exists = False ):
+	"""
+	Utility method for creating directory
+	@param dir_name the directory path
+	@param delete_if_exists boolean indication whether to delete the directory if it exists.
+	"""
 	if delete_if_exists:
 		if os.path.isdir(dir_name):
 			logger.warning("Deleting existing directory. Deleting... " + dir_name)
@@ -122,6 +109,11 @@ def create_directory(dir_name , delete_if_exists = False ):
 			sys.exit(1)
 
 def copy_files(src, dest):
+	"""
+	Utility method for recursively copying from a directory to another
+	@src source directory path
+	@dst destination directory path
+	"""
 	for file in os.listdir(src):
 		if os.path.isfile(os.path.join(src,file)):
 			try:
@@ -131,31 +123,6 @@ def copy_files(src, dest):
 				logger.error("Unable to copy file "+ file +  " to "+ dest)
 				sys.exit(1)
 	
-def parse_property_file(file_name, separator=" "):
-	"""
-	Reads a property file
-	Param: file name
-	Returns: Dictionary with the configuration, empty if error
-	"""
-	my_config = {}
-
-	try:
-		my_file = open(file_name, 'r')
-	except:
-	# Error opening file
-		return my_config
-
-	for line in my_file:
-	# Remove \r and/or \n from the end of the line
-		line = line.rstrip("\r\n")
-		# Split the line into a key and a value
-		k, v = line.split(separator, 1)
-		v = v.strip()
-		my_config[k] = v
-	my_file.close()
-	logger.debug("# parsed " + file_name)
-	return my_config
-
 def format_seconds(duration, max_comp = 2):
 	"""
 	Utility for converting time to a readable format
@@ -212,6 +179,10 @@ def format_seconds(duration, max_comp = 2):
 	
 
 def get_workflow_wall_time(workflow_states_list):
+	"""
+	Utility method for returning the workflow wall time given all the workflow states
+	@worklow_states_list list of all workflow states.
+	"""
 	workflow_wall_time = None
 	workflow_start_event_count  =0 
 	workflow_end_event_count = 0
@@ -231,6 +202,11 @@ def get_workflow_wall_time(workflow_states_list):
 	return workflow_wall_time
 	
 def get_db_url_wf_uuid(submit_dir , config_properties):
+	"""
+	Utility method for returning the db_url and wf_uuid given the submit_dir and pegasus properties file.
+	@submit_dir submit directory path
+	@config_properties config properties file path
+	"""
 	#Getting values from braindump file
 	top_level_wf_params = utils.slurp_braindb(submit_dir)
 	top_level_prop_file = None
