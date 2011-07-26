@@ -655,13 +655,13 @@ def main():
 	parser.add_option("-t", "--time_filter", action = "store", dest = "time_filter",
 			choices=['month', 'week', 'day','hour' ],
 			help = "Valid levels are: month,week,day,hour; Default is day.")
-	parser.add_option("-l", "--loglevel", action = "store", dest = "log_level",
-			choices=['debug', 'info', 'warning','error' ],
-			help = "Log level. Valid levels are: debug,info,warning,error, Default is info.")
+	parser.add_option("-v", "--verbose", action="count", default=0, dest="verbose", 
+			help="Increase verbosity, repeatable")
+	parser.add_option("-q", "--quiet", action="count", default=0, dest="quiet", 
+			help="Decrease verbosity, repeatable")
 	# Parse command line options
 	(options, args) = parser.parse_args()
 	
-	print prog_base +" : initializing..."
 	if len(args) < 1:
 		parser.error("Please specify Submit Directory")
 		sys.exit(1)
@@ -673,6 +673,22 @@ def main():
 	submit_dir = os.path.abspath(args[0])
 	
 	# Copy options from the command line parser
+	log_level = options.verbose - options.quiet
+	log_level_str = "info" 
+	if options.verbose ==0 and options.quiet ==0 :
+		# default case , when the user has not set verbose or quiet option
+		log_level_str = "info"
+	elif log_level <=0:
+		log_level_str = "error"
+	elif log_level ==1:
+		log_level_str = "warning"
+	elif log_level ==2:
+		log_level_str = "info"
+	elif log_level >=3:
+		log_level_str = "debug"
+	setup_logger(log_level_str)
+	logger.info(prog_base +" : initializing...")
+	
 	if options.statistics_level is not None:
 		 statistics_level = options.statistics_level
 	else:
@@ -702,10 +718,6 @@ def main():
 		output_dir = os.path.join(submit_dir, DEFAULT_OUTPUT_DIR)
 		stats_utils.create_directory(output_dir, True)
 		
-	
-	if options.log_level == None:
-		options.log_level = "info"
-	setup_logger(options.log_level)
 	
 	output_db_url , wf_uuid = stats_utils.get_db_url_wf_uuid(submit_dir , options.config_properties)
 	if output_db_url is not None:
