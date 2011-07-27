@@ -675,13 +675,169 @@ LFN_N PFN_N [site handle N]</programlisting>
     </section>
   </section>
 
-  <section>
+ <section>
     <title>pegasus-run</title>
 
     <para>pegasus-run executes a workflow that has been planned using
     pegasus-plan.</para>
-  </section>
 
+    <section>
+      <title>SYNTAX</title>
+
+      <para>pegasus-run [options] [rundir]</para>
+    </section>
+
+    <section>
+      <title>DESCRIPTION</title>
+
+      <para>The pegasus-run command executes a workflow that has been planned
+      using pegasus-plan. By default pegasus-run can be invoked either in the
+      planned directory with no options and arguments or just the full path to
+      the run directory. pegasus-run also can be used to resubmit a failed
+      workflow by running the same command again.</para>
+    </section>
+
+    <section>
+      <title>ARGUMENTS</title>
+
+      <para>By default pegasus-run does not require any options or arguments
+      if invoked from within the planned workflow directory. If running the
+      command outside the workflow directory then a full path to the workflow
+      directory needs to be specified. </para>
+
+      <para>pegasus-run takes the following options</para>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">-Dpropkey=propvalue</emphasis></para>
+
+          <para>The -D options allows an advanced user to override certain
+          properties which influence pegasus-run. One may set several CLI
+          properties by giving this option multiple times. The -D option(s)
+          must be the first option on the command line. CLI properties take
+          precedence over the file-based properties of the same key. </para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-c
+          pegasus_properties_file</emphasis></para>
+
+          <para><emphasis role="bold">--conf
+          pegasus_properties_file</emphasis></para>
+
+          <para>Provide a property file to override the default pegasus
+          properties file from the planning directory. Ordinary users do not
+          need to use this option unless the specifically want to override
+          several properties</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-d</emphasis></para>
+
+          <para><emphasis role="bold">--debug level</emphasis></para>
+
+          <para>Set the debug level for the client. Default is 0. </para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-v</emphasis></para>
+
+          <para><emphasis role="bold">--verbose</emphasis></para>
+
+          <para>Raises debug level. Each invocation increase the level by
+          1.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">--grid</emphasis></para>
+
+          <para>Enable grid checks to see if your submit machine is GRID
+          enabled.</para>
+        </listitem>
+      </itemizedlist>
+
+      <para><emphasis role="bold">rundir</emphasis> Is the full qualified path
+      to the base directory containing the planned workflow dag and submit
+      files. This is optional if pegasus-run command is invoked from within
+      the run directory. </para>
+    </section>
+
+    <section>
+      <title>RETURN VALUE</title>
+
+      <para>If the workflow is submitted for execution pegasus-run returns
+      with an exit code of 0. However, in case of error, a non-zero exit code
+      indicates problems. An error message clearly marks the cause.</para>
+    </section>
+
+    <section>
+      <title>FILES AND DIRECTORIES</title>
+
+      <para>The following files are created, opened or written to.</para>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">braindump</emphasis></para>
+
+          <para>This file is located in the rundir. pegasus-run uses this file
+          to find out paths to several other files, properties configurations
+          etc</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis
+          role="bold">pegasus.?????????.properties</emphasis></para>
+
+          <para>This file is located in the rundir. pegasus-run uses this
+          properties file by default to configure its internal
+          settings.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">workflowname.dag</emphasis></para>
+
+          <para>pegasus-run uses the workflowname.dag or workflowname.sh file
+          and submits it either to condor for execution or runs it locally in
+          a shell environment</para>
+        </listitem>
+      </itemizedlist>
+    </section>
+
+    <section>
+      <title>PROPERTIES</title>
+
+      <para>pegasus-run reads its properties from several locations. By
+      default the properties are read from the file
+      RUNDIR/pegasus.??????????.properties. If the --conf option is provided
+      then the properties file provided in the conf option is used. If both
+      the default properties file in the rundir as well as --conf file is not
+      found or provided then the properties file located at $HOME/.pegasusrc
+      will be used. Additionally properties can be provided individually using
+      the -D&lt;key&gt;=&lt;value&gt; option on the command line before all
+      other options. These properties will override properties provided using
+      either --conf or RUNDIR/pegasus.???????.properties or the
+      $HOME/.pegasusrc</para>
+
+      <para>The merge logic is CONF PROPERTIES || DEFAULT RUNDIR PROPERTIES ||
+      PEGASUSRC overriden by Command line properties</para>
+    </section>
+
+    <section>
+      <title>ENVIRONMENT VARIABLES</title>
+
+      <para>The following environment variables are used by pegasus-run</para>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">PATH</emphasis></para>
+
+          <para>The path variable is used to locate binaries for
+          condor-submit-dag, condor-dagman, condor-submit,pegasus-submit-dag,
+          pegasus-dagman and pegasus-monitord</para>
+        </listitem>
+      </itemizedlist>
+    </section>
+  </section>
   <section>
     <title>pegasus-remove</title>
 
