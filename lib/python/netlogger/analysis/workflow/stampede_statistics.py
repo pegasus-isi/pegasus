@@ -147,7 +147,7 @@ Methods listed in order of query list on wiki.
 
 https://confluence.pegasus.isi.edu/display/pegasus/Pegasus+Statistics+Python+Version+Modified
 """
-__rcsid__ = "$Id: stampede_statistics.py 28165 2011-07-14 17:37:02Z mgoode $"
+__rcsid__ = "$Id: stampede_statistics.py 28219 2011-07-27 23:26:37Z mgoode $"
 __author__ = "Monte Goode"
 
 from netlogger.analysis.modules._base import SQLAlchemyInit
@@ -560,7 +560,7 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Statistics+file#WorkflowStatisticsfile-Workflowwalltime
         """
         q = self.session.query(Workflowstate.wf_id, Workflowstate.state, Workflowstate.timestamp)
-        q = q.filter(Workflowstate.wf_id.in_(self._wfs)).order_by(Workflowstate.restart_count)
+        q = q.filter(Workflowstate.wf_id == self._root_wf_id).order_by(Workflowstate.restart_count)
 
         return q.all()
 
