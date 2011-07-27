@@ -521,6 +521,7 @@ def print_individual_wf_job_stats(workflow_stats , wf_uuid):
 		for content in job_det:
 			job_status_str += str(content).ljust(job_stats_col_size[index])
 			index = index + 1
+		job_status_str +=NEW_LINE_STR
 	return job_status_str
 
 
