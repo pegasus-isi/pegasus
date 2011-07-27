@@ -3933,19 +3933,14 @@ def purge_wf_uuid_from_database(rundir, output_db):
     """
     This function purges a workflow id from the output database.
     """
-    if output_db.lower().find('sqlite:///') != 0:
-        # Not a SQLite database, nothing to do
-        return
+    if output_db.lower().find('sqlite:///') == 0:
+        # Ok, we have a SQLite database, let's get the filename and check if it exists
+        filename = output_db[10:]
 
-    # Ok, we have a SQLite database, let's get the filename and check if it exists
-    filename = output_db[10:]
-
-    # Check if SQLite database exists
-    if not os.path.isfile(filename):
-        # No, nothing to do
-        return
-
-    # Ok, file is there, let's continue
+        # Check if SQLite database exists
+        if not os.path.isfile(filename):
+            # No, nothing to do
+            return
 
     # Parse the braindump file
     wfparams = utils.slurp_braindb(rundir)
