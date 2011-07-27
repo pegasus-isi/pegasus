@@ -29,6 +29,7 @@ Usage: pegasus-monitord [options] dagoutfile
 import os
 import re
 import sys
+import math
 import time
 import errno
 import shlex
@@ -196,6 +197,7 @@ do_notifications = True         # Flag to enable notifications
 pending_notifications = []      # List of pending notifications
 active_notifications = []       # List of active notifications
 max_parallel_notifications = 10 # Maximum number of notifications we can do in parallel
+notifications_timeout = 0	# Time to wait for notification scripts to finish (0 means wait forever)
 notifications_log = None        # File for logging notifications' output
 
 wf_event_sink = None            # Where wf events go
@@ -1371,6 +1373,8 @@ class Workflow:
                 my_env["PEGASUS_SUBMIT_DIR"] = self._original_submit_dir
                 my_env["PEGASUS_STDOUT"] = self._out_file
                 my_env["PEGASUS_JOBID"] = self._wf_uuid
+                my_env["PEGASUS_WFID"] = ((self._dax_label or "unknown") +
+                                          "-" + (self._dax_index or "unknown"))
                 if state == "end":
                     my_env["PEGASUS_STATUS"] = str(self._dagman_exit_code)
 
@@ -1441,7 +1445,7 @@ class Workflow:
                 if k == "all":
                     k = "at_end"
                 my_status = status
-            elif state == "POST_SCRIPT_FAILED":
+            elif state == "POST_SCRIPT_FAILURE":
                 if k == "start" or k == "on_success":
                     continue
                 if k == "all":
@@ -1467,6 +1471,8 @@ class Workflow:
                 my_env["PEGASUS_EVENT_TIMESTAMP_ISO"] = utils.isodate(self._current_timestamp)
                 my_env["PEGASUS_SUBMIT_DIR"] = self._original_submit_dir
                 my_env["PEGASUS_JOBID"] = job._exec_job_id
+                my_env["PEGASUS_WFID"] = ((self._dax_label or "unknown") +
+                                          "-" + (self._dax_index or "unknown"))
                 my_env["PEGASUS_STDOUT"] = my_output
                 my_env["PEGASUS_STDERR"] = my_error
                 if my_status is not None:
@@ -1541,6 +1547,8 @@ class Workflow:
                 my_env["PEGASUS_SUBMIT_DIR"] = self._original_submit_dir
                 my_env["PEGASUS_JOBID"] = job._exec_job_id
                 my_env["PEGASUS_INVID"] = str(task_id)
+                my_env["PEGASUS_WFID"] = ((self._dax_label or "unknown") +
+                                          "-" + (self._dax_index or "unknown"))
                 my_env["PEGASUS_STDOUT"] = my_output
                 my_env["PEGASUS_STDERR"] = my_error
                 if k != "start":
@@ -2834,6 +2842,10 @@ parser.add_option("--no-database", "--nodatabase", "--no-events", action = "stor
 		  help = "turn off event generation completely, and overrides the URL in the -d option")
 parser.add_option("--no-notifications", "--no-notification", action = "store_const", const = 0, dest = "no_notify",
                   help = "turn off notifications completely")
+parser.add_option("--notifications-max", action = "store", type = "int", dest = "notifications_max",
+                  help = "maximum number of concurrent notification concurrent notification scripts, 0 disable notifications, default is %d" % (max_parallel_notifications))
+parser.add_option("--notifications-timeout", action = "store", type = "int", dest = "notifications_timeout",
+                  help = "time to wait for notification scripts to finish before terminating them, 0 allows scripts to run indefinitely")
 parser.add_option("-S", "--sim", action = "store", type = "int", dest = "millisleep",
 		  help = "Developer: simulate delays between reads by sleeping ms milliseconds")
 parser.add_option("-r", "--replay", action = "store_const", const = 1, dest = "replay_mode",
@@ -2904,12 +2916,14 @@ if fuse < 60:
     fuse = 60
 
 # Parse notification-related properties
-if int(props.property("pegasus.monitord.notification.max") or -1) >= 0:
-    max_parallel_notifications = int(props.property("pegasus.monitord.notification.max"))
+if int(props.property("pegasus.monitord.notifications.timeout") or -1) >= 0:
+    notifications_timeout = int(props.property("pegasus.monitord.notifications.timeout"))
+if int(props.property("pegasus.monitord.notifications.max") or -1) >= 0:
+    max_parallel_notifications = int(props.property("pegasus.monitord.notifications.max"))
 if max_parallel_notifications == 0:
     logger.warning("maximum parallel notifications set to 0, disabling notifications...")
     do_notifications = False
-if utils.make_boolean(props.property("pegasus.monitord.notifications.disable")):
+if not utils.make_boolean(props.property("pegasus.monitord.notifications") or 'true'):
     do_notifications = False
 
 # Copy command line options into our variables
@@ -2948,6 +2962,20 @@ if options.replay_mode is not None:
     do_notifications = False
 if options.no_notify is not None:
     do_notifications = False
+if options.notifications_max is not None:
+    max_parallel_notifications = options.notifications_max
+    if max_parallel_notifications == 0:
+        do_notifications = False
+    if max_parallel_notifications < 0:
+        logger.critical("notifications-max must be integet >= 0")
+        sys.exit(1)
+if options.notifications_timeout is not None:
+    notifications_timeout = options.notifications_timeout
+    if notifications_timeout < 0:
+        logger.critical("notifications-timeout must be integet >= 0")
+        sys.exit(1)
+    if notifications_timeout > 0 and notifications_timeout < 5:
+        logger.warning("notifications-timeout set too low... notification scripts may not have enough time to complete... continuing anyway...")
 if options.disable_subworkflows is not None:
     follow_subworkflows = False
 if options.db_stats is not None:
@@ -3613,6 +3641,50 @@ def sleeptime(retries):
 
     return my_y
 
+def terminate_notification(my_entry):
+    """
+    This function terminates a notification process, and cleans up its
+    output/error files.
+    """
+    my_p = my_entry["subp"]
+    my_pid = my_entry["pid"]
+    my_notification = my_entry["notification"]
+    my_out_fn = my_entry["out_fn"]
+    my_err_fn = my_entry["err_fn"]
+    my_out_fd = my_entry["out_fd"]
+    my_err_fd = my_entry["err_fd"]
+    my_action = my_entry["action"]
+    my_p.poll()
+    # If process hasn't finished...
+    if my_p.returncode is None:
+        # Send SIGTERM first...
+        try:
+            os.kill(my_pid, signal.SIGTERM)
+        except:
+            logger.info("error sending SIGTERM to notification script...")
+        # Wait for child to finish
+        logger.warning("waiting for notification process to finish: %s - %s"
+                       % (my_notification, my_action))
+        time.sleep(WAIT_CHILD_FINISH)
+        my_p.poll()
+        if my_p.returncode is None:
+            # Send SIGKILL now...
+            try:
+                logger.warning("killing notification process to finish: %s - %s"
+                               % (my_notification, my_action))
+                os.kill(my_pid, signal.SIGKILL)
+            except:
+                logger.info("error sending SIGKILL to notification script...")
+
+    # Finally, clean up files...
+    try:
+        os.unlink(my_out_fn)
+        os.unlink(my_err_fn)
+    except:
+        # No error here...
+        pass
+    logger.warning("notification terminated: %s - %s" % (my_notification, my_action))
+
 def service_notifications():
     """
     This function services notifications. It chekcs the notifications
@@ -3624,6 +3696,7 @@ def service_notifications():
     system.
     """
 
+    # Step 1: Look at existing notifications
     if len(active_notifications) > 0:
         # We have active notifications, let's check on their statuses
         my_notif_index = 0
@@ -3697,6 +3770,7 @@ def service_notifications():
                 # Process still going... leave it...
                 my_notif_index = my_notif_index + 1
 
+    # Step 2: Look at our notification queue
     while len(pending_notifications) > 0:
         # Ok we have notifications to service...
         # print "pending notifications: %s" % (len(pending_notifications))
@@ -3800,6 +3874,30 @@ def service_notifications():
         active_notifications.append(my_started_notification)
         logger.info("started notification for: %s" % (my_notification))
 
+    # Step 3: Check if any notifications ran over the allowed time
+    if notifications_timeout > 0:
+        # Only go through the list if a timeout was specified
+
+        # Get current time
+        now = int(math.floor(time.time()))
+
+        # Go through our list
+        my_index = 0
+        while my_index < len(active_notifications):
+            my_entry = active_notifications[my_index]
+            my_exp_time = my_entry["time"] + notifications_timeout
+
+            # Check if notification has expired
+            if my_exp_time < now:
+                # Notification has expired... kill it...
+                logger.warning("notification expired... terminating it...")
+                terminate_notification(my_entry)
+                # Delete this notification from our list
+                my_deleted_entry = active_notifications.pop(my_index)
+            else:
+                # Notification hasn't expired yet, move to next one...
+                my_index = my_index + 1
+
 def finish_notifications():
     """
     This function flushes all notifications, and closes the
@@ -3811,39 +3909,7 @@ def finish_notifications():
     # Take care of active notifications
     if len(active_notifications) > 0:
         for my_entry in active_notifications:
-            my_p = my_entry["subp"]
-            my_pid = my_entry["pid"]
-            my_notification = my_entry["notification"]
-            my_out_fn = my_entry["out_fn"]
-            my_err_fn = my_entry["err_fn"]
-            my_out_fd = my_entry["out_fd"]
-            my_err_fd = my_entry["err_fd"]
-            my_action = my_entry["action"]
-            my_p.poll()
-            # If process hasn't finished...
-            if my_p.returncode is None:
-                # Send SIGTERM first...
-                try:
-                    os.kill(my_pid, signal.SIGTERM)
-                except:
-                    logger.info("error sending SIGTERM to notification script...")
-                # Wait for child to finish
-                time.sleep(WAIT_CHILD_FINISH)
-                my_p.poll()
-                if my_p.returncode is None:
-                    # Send SIGKILL now...
-                    try:
-                        os.kill(my_pid, signal.SIGKILL)
-                    except:
-                        logger.info("error sending SIGKILL to notification script...")
-            # Clean up files...
-            try:
-                os.unlink(my_out_fn)
-                os.unlink(my_err_fn)
-            except:
-                # No error here...
-                pass
-            logger.warning("notification terminated: %s - %s" % (my_notification, my_action))
+            terminate_notification(my_entry)
 
     # Take care of pending notifications
     if len(pending_notifications) > 0:
