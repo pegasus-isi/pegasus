@@ -5,8 +5,8 @@
   <title>Notifications</title>
 
   <para>The Pegasus Workflow Mapper now supports job and workflow level
-  notifications. The user can specify in the DAX with the job or the workflow
-  </para>
+  notifications. You can specify in the DAX with the job or the
+  workflow</para>
 
   <itemizedlist>
     <listitem>
@@ -63,7 +63,7 @@
     has a mandatory <emphasis role="bold">when</emphasis> attribute with the
     following value set</para>
 
-    <table>
+    <table id="notification_conditions_table">
       <title>Table 1. Invoke Element attributes and meaning.</title>
 
       <tgroup cols="2">
@@ -147,6 +147,124 @@
     <para>The DAX Generator API <link
     linkend="dax_generator_api">chapter</link> has information about how to
     add notifications to the DAX using the DAX api's.</para>
+  </section>
+
+  <section id="pegasus_notify_file">
+    <title>Notify File created by Pegasus in the submit directory.</title>
+
+    <para>Pegasus while planning a workflow writes out a notify file in the
+    submit directory that contains all the notifications that need to be sent
+    for the workflow. pegasus-monitord picks up this notifications file to
+    determine what notifications need to be sent and when.</para>
+
+    <orderedlist>
+      <listitem>
+        <para>ENTITY_TYPE ID NOTIFICATION_CONDITION ACTION</para>
+
+        <itemizedlist>
+          <listitem>
+            <para>ENTITY_TYPE can be either of the following keywords</para>
+
+            <itemizedlist>
+              <listitem>
+                <para>WORKFLOW - indicates workflow level notification</para>
+              </listitem>
+
+              <listitem>
+                <para>JOB - indicates notifications for a job in the
+                executable workflow</para>
+              </listitem>
+
+              <listitem>
+                <para>DAXJOB - indicates notifications for a DAX Job in the
+                executable workflow</para>
+              </listitem>
+
+              <listitem>
+                <para>DAGJOB - indicates notifications for a DAG Job in the
+                executable workflow</para>
+              </listitem>
+            </itemizedlist>
+          </listitem>
+
+          <listitem>
+            <para>ID indicates the identifier for the entity. It has different
+            meaning depending on the entity type - - </para>
+
+            <itemizedlist>
+              <listitem>
+                <para>workflow - ID is wf_uuid </para>
+              </listitem>
+
+              <listitem>
+                <para>JOB|DAXJOB|DAGJOB - ID is the job identifier in the
+                executable workflow ( DAG ).</para>
+              </listitem>
+            </itemizedlist>
+          </listitem>
+
+          <listitem>
+            <para>NOTIFICATION_CONDITION is the condition when the
+            notification needs to be sent. The notification conditions are
+            enumerated in <link linkend="notification_conditions_table">Table
+            1</link></para>
+          </listitem>
+
+          <listitem>
+            <para>ACTION is what needs to happen when condition is satisfied.
+            It is executable + arguments</para>
+          </listitem>
+        </itemizedlist>
+      </listitem>
+
+      <listitem>
+        <para>INVOCATION JOB_IDENTIFIER INV.ID NOTIFICATION_CONDITION
+        ACTION</para>
+
+        <para>The INVOCATION lines are only generated for clustered jobs, to
+        specifiy the finer grained notifications for each constitutent
+        job/invocation .</para>
+
+        <itemizedlist>
+          <listitem>
+            <para>JOB IDENTIFIER is the job identifier in the executable
+            workflow ( DAG ).</para>
+          </listitem>
+
+          <listitem>
+            <para>INV.ID indicates the index of the task in the clustered job
+            for which the notification needs to be sent.</para>
+          </listitem>
+
+          <listitem>
+            <para>NOTIFICATION_CONDITION is the condition when the
+            notification needs to be sent. The notification conditions are
+            enumerated in <link linkend="notification_conditions_table">Table
+            1</link></para>
+          </listitem>
+
+          <listitem>
+            <para>ACTION is what needs to happen when condition is satisfied.
+            It is executable + arguments</para>
+          </listitem>
+        </itemizedlist>
+      </listitem>
+    </orderedlist>
+
+    <para>A sample notifications file generated is listed below.</para>
+
+    <programlisting>WORKFLOW d2c4f79c-8d5b-4577-8c46-5031f4d704e8 on_error /bin/date1
+
+INVOCATION merge_vahi-preprocess-1.0_PID1_ID1 1 on_success /bin/date_executable
+INVOCATION merge_vahi-preprocess-1.0_PID1_ID1 1 on_success /bin/date_executable
+INVOCATION merge_vahi-preprocess-1.0_PID1_ID1 1 on_error /bin/date_executable
+
+INVOCATION merge_vahi-preprocess-1.0_PID1_ID1 2 on_success /bin/date_executable
+INVOCATION merge_vahi-preprocess-1.0_PID1_ID1 2 on_error /bin/date_executable
+
+DAXJOB subdax_black_ID000003 on_error /bin/date13
+JOB    analyze_ID00004    on_success /bin/date
+</programlisting>
   </section>
 
   <section>
