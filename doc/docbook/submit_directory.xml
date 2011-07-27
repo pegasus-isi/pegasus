@@ -69,12 +69,29 @@
 
       <listitem>
         <para><emphasis
-        role="bold">&lt;daxlabel-daxindex&gt;.job.map</emphasis></para>
+        role="bold">&lt;daxlabel-daxindex&gt;.static.bp</emphasis></para>
 
-        <para>This file links jobs in the DAG with the jobs in the DAX. The
-        contents of the file are in netlogger format. The purpose of this file
-        is to be able to link an invocation record of a task to the
-        corresponding job in the DAX</para>
+        <para>This file contains netlogger events that link jobs in the DAG
+        with the jobs in the DAX. This file is parsed by pegasus-monitord when
+        a workflow starts and populated to the stampede backend.</para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis
+        role="bold">&lt;daxlabel-daxindex&gt;.notify</emphasis></para>
+
+        <para>This file contains all the notifications that need to be set for
+        the workflow and the jobs in the executable workflow. The format of
+        notify file is described <link
+        linkend="pegasus_notify_file">here</link></para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis
+        role="bold">&lt;daxlabel-daxindex&gt;.replica.store</emphasis></para>
+
+        <para>This is a file based replica catalog, that only lists file
+        locations are mentioned in the DAX.</para>
       </listitem>
 
       <listitem>
@@ -674,6 +691,19 @@ ctime="2009-01-30T19:17:41-06:00" uid="29548" user="vahi" gid="13872" group="bvr
           </row>
 
           <row>
+            <entry>root_wf_uuid</entry>
+
+            <entry>the workflow uuid of the root workflow</entry>
+          </row>
+
+          <row>
+            <entry>wf_uuid</entry>
+
+            <entry>the workflow uuid of the current workflow i.e the one whose
+            submit directory the braindump file is.</entry>
+          </row>
+
+          <row>
             <entry>dax</entry>
 
             <entry>the path to the dax file</entry>
@@ -683,6 +713,18 @@ ctime="2009-01-30T19:17:41-06:00" uid="29548" user="vahi" gid="13872" group="bvr
             <entry>dax_label</entry>
 
             <entry>the label attribute in the adag element of the dax</entry>
+          </row>
+
+          <row>
+            <entry>dax_index</entry>
+
+            <entry>the index in the dax.</entry>
+          </row>
+
+          <row>
+            <entry>dax_version</entry>
+
+            <entry>the version of the DAX schema that DAX referred to.</entry>
           </row>
 
           <row>
@@ -737,6 +779,12 @@ ctime="2009-01-30T19:17:41-06:00" uid="29548" user="vahi" gid="13872" group="bvr
           </row>
 
           <row>
+            <entry>planner_arguments</entry>
+
+            <entry>the arguments with which the planner is invoked.</entry>
+          </row>
+
+          <row>
             <entry>jsd</entry>
 
             <entry>the path to the jobstate file</entry>
@@ -770,6 +818,13 @@ ctime="2009-01-30T19:17:41-06:00" uid="29548" user="vahi" gid="13872" group="bvr
           </row>
 
           <row>
+            <entry>notify </entry>
+
+            <entry>the notify file that contains any notifications that need
+            to be sent for the workflow.</entry>
+          </row>
+
+          <row>
             <entry>dag</entry>
 
             <entry>the basename of the dag file created</entry>
@@ -788,32 +843,37 @@ ctime="2009-01-30T19:17:41-06:00" uid="29548" user="vahi" gid="13872" group="bvr
 
     <programlisting>user vahi
 grid_dn null
-submit_hostname pierre.local
-wf_uuid 66550511-a5da-4e8d-8c51-e482f5dc11f6
-dax /Users/vahi/Pegasus/work/bugs/PM-311/test_dax.xml
-dax_label Brain
-pegasus_wf_name Brain-0
-timestamp 20110211T154749-0800
-basedir /Users/vahi/Pegasus/work/bugs/PM-311/dags
-submit_dir /Users/vahi/Pegasus/work/bugs/PM-311/dags/vahi/pegasus/Brain/run0009
-properties /Users/vahi/Pegasus/work/bugs/PM-311/dags/vahi/pegasus/Brain/run0009/pegasus.188331607045368933.properties
-planner /Users/vahi/Pegasus/pegasus/bin/pegasus-plan
+submit_hostname obelix
+root_wf_uuid a4045eb6-317a-4710-9a73-96a745cb1fe8
+wf_uuid a4045eb6-317a-4710-9a73-96a745cb1fe8
+dax /data/scratch/vahi/examples/synthetic-scec/Test.dax
+dax_label Stampede-Test
+dax_index 0
+dax_version 3.3
+pegasus_wf_name Stampede-Test-0
+timestamp 20110726T153746-0700
+basedir /data/scratch/vahi/examples/synthetic-scec/dags
+submit_dir /data/scratch/vahi/examples/synthetic-scec/dags/vahi/pegasus/Stampede-Test/run0005
+properties pegasus.6923599674234553065.properties
+planner /data/scratch/vahi/software/install/pegasus/default/bin/pegasus-plan
 planner_version 3.1.0cvs
-pegasus_build BUILDTIMESTAMP
-jsd /Users/vahi/Pegasus/work/bugs/PM-311/dags/vahi/pegasus/Brain/run0009/jobstate.log
-rundir run0009
-pegasushome /Users/vahi/Pegasus/pegasus
+pegasus_build 20110726221240Z
+planner_arguments "--conf ./conf/properties --dax Test.dax --sites local --output local --dir dags --force --submit "
+jsd jobstate.log
+rundir run0005
+pegasushome /data/scratch/vahi/software/install/pegasus/default
 vogroup pegasus
-condor_log /Users/vahi/Pegasus/work/bugs/PM-311/dags/vahi/pegasus/Brain/run0009/Brain-0.log
-dag Brain-0.dag
+condor_log Stampede-Test-0.log
+notify Stampede-Test-0.notify
+dag Stampede-Test-0.dag
 type dag
 </programlisting>
   </section>
 
   <section>
-    <title>Pegasus Job.Map File</title>
+    <title>Pegasus static.bp File</title>
 
-    <para>Pegasus creates a workflow.job.map file that links jobs in the DAG
+    <para>Pegasus creates a workflow.static.bp file that links jobs in the DAG
     with the jobs in the DAX. The contents of the file are in netlogger
     format. The purpose of this file is to be able to link an invocation
     record of a task to the corresponding job in the DAX</para>
@@ -821,80 +881,42 @@ type dag
     <para>The workflow is replaced by the name of the workflow i.e. same
     prefix as the .dag file</para>
 
-    <para>In the file there are two types of events:</para>
+    <para>In the file there are five types of events:</para>
 
     <itemizedlist>
       <listitem>
-        <para>pegasus.job</para>
+        <para>task.info</para>
+
+        <para>This event is used to capture information about all the tasks in
+        the DAX( abstract workflow) </para>
       </listitem>
 
       <listitem>
-        <para>pegasus.job.map</para>
-      </listitem>
-    </itemizedlist>
+        <para>task.edge</para>
 
-    <para><emphasis role="bold">pegasus.job</emphasis></para>
-
-    <para>This event is for all the jobs in the DAG. The following information
-    is associated with this event:</para>
-
-    <itemizedlist>
-      <listitem>
-        <para><emphasis role="bold">job.id</emphasis> - The id of the job in
-        the DAG</para>
+        <para>This event is used to capture information about the edges
+        between the tasks in the DAX ( abstract workflow )</para>
       </listitem>
 
       <listitem>
-        <para><emphasis role="bold">job.class</emphasis> - An integer
-        designating the type of the job</para>
+        <para>job.info</para>
+
+        <para>This event is used to capture information about the jobs in the
+        DAG ( executable workflow generated by Pegasus )</para>
       </listitem>
 
       <listitem>
-        <para><emphasis role="bold">job.xform</emphasis> - The logical
-        transformation which the job refers to.</para>
+        <para>job.edge</para>
+
+        <para>This event is used to capture information about edges between
+        the jobs in the DAG ( executable workflow ).</para>
       </listitem>
 
       <listitem>
-        <para><emphasis role="bold">task.count</emphasis> - The number of
-        tasks associated with the job. This is equal to the number of
-        pegasus.job.task events created for that job.</para>
-      </listitem>
-    </itemizedlist>
+        <para>wf.map.task_job</para>
 
-    <para><emphasis role="bold">pegasus.job.map</emphasis></para>
-
-    <para>This event allows us to associate a job in the DAG with the jobs in
-    the DAX. The following information is associated with this event.</para>
-
-    <itemizedlist>
-      <listitem>
-        <para><emphasis role="bold">task.id</emphasis> - The id of the job in
-        the DAG</para>
-      </listitem>
-
-      <listitem>
-        <para><emphasis role="bold">task.class</emphasis> - An integer
-        designating the type of the job</para>
-      </listitem>
-
-      <listitem>
-        <para><emphasis role="bold">task.xform</emphasis> - The logical
-        transformation which the job refers to.</para>
-
-        <para>Some sample entries are:</para>
-
-        <programlisting>ts=2009-04-21T23:09:03.091658Z event=pegasus.job job.id=analyze_ID000004 job.class="7" \
-                          job.xform="vahi::analyze:1.0" task.count="1"
-ts=2009-04-21T23:09:03.091772Z event=pegasus.job.map job.id=analyze_ID000004 task.id="ID000004" \
-                          task.class="7" task.xform="vahi::analyze:1.0"
-ts=2009-04-21T23:09:03.092063Z event=pegasus.job job.id=create_dir_blackdiamond_0_isi_viz \
-                          job.class="6" job.xform="pegasus::dirmanager" task.count="0"
-ts=2009-04-21T23:09:03.092165Z event=pegasus.job job.id=merge_vahi-findrange-1.0_PID2_ID1 \
-                          job.class="1" job.xform="pegasus::seqexec" task.count="2"
-ts=2009-04-21T23:09:03.093259Z event=pegasus.job.map job.id=merge_vahi-findrange-1.0_PID2_ID1 \
-                          task.id="ID000002" task.class="7" task.xform="vahi::findrange:1.0"
-ts=2009-04-21T23:09:03.093402Z event=pegasus.job.map job.id=merge_vahi-findrange-1.0_PID2_ID1 \
-                          task.id="ID000003" task.class="7" task.xform="vahi::findrange:1.0"</programlisting>
+        <para>This event is used to associate the tasks in the DAX with the
+        corresponding jobs in the DAG.</para>
       </listitem>
     </itemizedlist>
   </section>
