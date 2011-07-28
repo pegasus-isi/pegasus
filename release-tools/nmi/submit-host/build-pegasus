@@ -146,13 +146,10 @@ sub build_wms
     
     cd("$top_dir/public");
     cmd("ls -l", 1, 1);
-    my $condor_version = `ls -d v*`;
+    my $condor_version = `ls *.gz | sed 's/condor-//' | sed 's/-.*//' | head -n 1`;
     chomp($condor_version);
 
-    cd("$condor_version");
-    cmd("ls -l -h", 1, 1);
-
-    cmd("rm -rf native *.deb *.rpm *.sha1 *.md5", 1, 1);
+    cmd("rm -rf native *.deb *.rpm *.sha1 *.md5 condor_examples condor_tests", 1, 1);
     cmd("rm -f *unstripped*", 1, 1);
     cmd("rm -f *debug*", 1, 1);
     my $num_tars = `ls *.tar.gz | wc -l`;
@@ -187,7 +184,7 @@ sub build_wms
 
     cmd("mv pegasus-$pegasus_version pegasus-wms-$pegasus_version", 1, 1);
 
-    cmd("mv $top_dir/public/$condor_version/condor-* pegasus-wms-$pegasus_version/condor");
+    cmd("mv $top_dir/public/condor-* pegasus-wms-$pegasus_version/condor");
 
     cd("pegasus-wms-$pegasus_version");
     cmd("ls -l -h", 1, 1);
