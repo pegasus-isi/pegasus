@@ -24,6 +24,7 @@ re_parse_property = re.compile(r'([^:= \t]+)\s*[:=]?\s*(.*)')
 prog_base = os.path.split(sys.argv[0])[1]	# Name of this program
 
 
+workflow_summary_file_name ="summary.txt";
 workflow_statistics_file_name ="workflow.txt";
 job_statistics_file_name ="jobs.txt";
 logical_transformation_statistics_file_name ="breakdown.txt";
@@ -303,11 +304,17 @@ def print_workflow_details(output_db_url , wf_uuid , output_dir):
 				write_to_file(wf_stats_file, "a" , content)
 	stats_output =  NEW_LINE_STR+ "SUMMARY".center(100, '*')
 	stats_output +=  NEW_LINE_STR
-	if calc_wf_summary:	
-		stats_output += formatted_wf_summary_legends()
-		stats_output +=  NEW_LINE_STR
+	if calc_wf_summary:
+		summary_output = formatted_wf_summary_legends()
+		summary_output +=  NEW_LINE_STR
 		logger.info("Generating workflow summary ... " )
-		stats_output += print_workflow_summary(expanded_workflow_stats)
+		summary_output += print_workflow_summary(expanded_workflow_stats)
+		wf_summary_file = os.path.join(output_dir,  workflow_summary_file_name)
+		write_to_file(wf_summary_file, "w" , summary_output)
+		stats_output += summary_output
+		stats_output +=  NEW_LINE_STR
+		stats_output += "Summary                           : "
+		stats_output += wf_summary_file +"\n"
 	if calc_wf_stats:
 		stats_output +=  NEW_LINE_STR
 		content = print_individual_workflow_stats(expanded_workflow_stats , "Total")
