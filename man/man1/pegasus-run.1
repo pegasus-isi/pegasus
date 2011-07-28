@@ -14,191 +14,99 @@
 .\"
 .\" 
 .\" $Id$
-.TH "pegasus-run" "1" "2.2.0" "Pegasus Workflow Planner"
+.TH "pegasus-run" "1" "3.1.0" "Pegasus Workflow Planner"
 .SH "NAME"
 .LP 
+pegasus\-run executes a workflow that has been planned using pegasus\-plan.
 pegasus\-run \- setup of workflow environment and runs a workflow.
 .SH "SYNTAX"
 .LP 
-.B pegasus\-run \-\-help
-.LP 
-.B pegasus\-run [\-Dprops] [\-d l | \-v] [\-m fn] rundir
+.B pegasus\-run [options] [rundir]
 .SH "DESCRIPTION"
 .LP 
-This script assumes that the 
-.I pegasus\-plan
-tool has prepared directories and a workflow for running. The hierarchy
-of directories is also part and parcel of a secondary key to find the
-workflow in the workflow database, as explained below in
-.IR HIERARCHY .
-Specifying just the workflow base directory (rundir), it performs basic
-sanity checks, starts DAGMan, starts the workflow monitoring daemon
-.I tailstatd
-and records a started state of the workflow into the workflow database. 
+The pegasus\-run command executes a workflow that has been planned using pegasus\-plan. By default pegasus\-run can be invoked either in the planned directory with no options and arguments or just the full path to the run directory. pegasus\-run also can be used to resubmit a failed workflow by running the same command again.
 .SH "ARGUMENTS"
+.LP
+By default pegasus\-run does not require any options or arguments if invoked from within the planned workflow directory. If running the command outside the workflow directory then a full path to the workflow directory needs to be specified.
+.P
+pegasus-run takes the following options
 .TP
-.B \-Dprop
-The -D options allows an experienced user to override certain properties
-which influence the program execution, among them the default location of
-the user's properties file and the PEGASUS home location. One may set several
-CLI properties by giving this option multiple times.
+.B \-Dpropkey=propvalue
+The \-D options allows an advanced user to override certain properties which influence pegasus\-run. One may set several CLI properties by giving this option multiple times.
 .I The \-D option(s) must be the first option on the command line. 
-CLI properties take precedence over the file-based properties of the
-same key. \-D properties are passed to subsequent tools. 
-.IP
+CLI properties take precedence over the file\-based properties of the same key.
+.Ip
 Please refer to the
 .I PROPERTIES
 section below.
-.TP 
-.B \-\-debug lv
-.PD 0
-.TP 
-.PD 1
-.B \-d lv
-sets the debug level to a specific level. A higher debug level increases
-the message verbosity on 
-.IR stderr . 
-.IP
-The default debug level is 0.
 .TP
-.B \-\-verbose
+.B \-c pegasus_properties_file
 .PD 0
 .TP
 .PD 1
+.B \-\-conf pegasus_properties_file
+Provide a property file to override the default pegasus properties file from the planning directory. Ordinary users do not need to use this option unless the specifically want to override several properties
+.TP
+.B \-d level
+.PD 0
+.TP
+.PD 1
+.B \-\-debug level
+Set the debug level for the client. Default is 0.
+.TP
 .B \-v
-raises debug level. A higher debug level will increase the verbosity of
-the output messages on
-.IR stderr .
-This is a multi\-option, each specification will increase the debug
-level by 1.
-.IP 
-The default debug level is 0.
-.TP
-.B \-\-monitor fn
 .PD 0
 .TP
 .PD 1
-.B \-m fn
-This option permits to start a different workflow monitoring daemon. It
-is mostly a developer option. 
-.IP
-Default is to use what property
-.I wf.monitor
-points to, which in turn defaults to
-.IR $PEGASUS_HOME/bin/tailstatd .
+.B \-\-verbose
+Raises debug level. Each invocation increase the level by 1.
 .TP
-.B \-\-condor
-is an experimental option. If specified, the workflow monitoring daemon 
-is not started by forking off a process, but rather as Condor job. This
-way, should the host fall over, Condor will automagically restart the
-workflow monitoring daemon. 
+.B \-\-grid
+Enable grid checks to see if your submit machine is GRID enabled.</para
 .TP
-.B \-\-vdd l
-is an experimental option. For the WS-GRAM, it is considered beneficial
-to re-use delegation of the user proxy. The PEGASUS delegation daemon caches
-and manages user delegations, so that they can be re-used. 
-.LP
-The 
 .B rundir
-is the fully-qualified path to the base directory of the workflow. The
-base directory of the workflow is where the .dag file resides. 
+Is the full qualified path to the base directory containing the planned workflow dag and submit files. This is optional if pegasus-run command is invoked from within the run directory.
+
 .SH "RETURN VALUE"
-If the plan could be constructed, 
-.I pegasus\-run
-returns with an exit code of 0. However, in case of error, a non-zero
-exit code indicates problems. An error message clearly marks the cause. 
+If the workflow is submitted for execution pegasus\-run returns with an exit code of 0. However, in case of error, a non\-zero exit code indicates problems. An error message clearly marks the cause.
+
 .SH "FILES AND DIRECTORIES"
-The workflow tools support a somewhat rigid directory hierarchy, made up
-of four parts: 
+The following files are created, opened or written to :
 .TP
-.B 1.
-The 
-.I basedir
-is the directory where the other directories spring from. For personal
-workflows, it can be 
-.I $HOME/run
-and for shared workflows in a sharable location.
+.B braindump
+This file is located in the rundir. pegasus\-run uses this file to find out paths to several other files, properties configurations etc.
 .TP
-.B 2.
-The
-.I vogroup
-is the next level. The directory name is directly taken from the 
-.I -g option
-above. If a directory of this name does not exist, it is created. 
+.B pegasus.?????????.properties
+This file is located in the rundir. pegasus\-run uses this properties file by default to configure its internal settings.
 .TP
-.B 3.
-The
-.I wflabel
-is the label of the workflow, as supplied to the abstract planning
-process, e.g. 
-.I gendax 
-or 
-.IR vdlc . 
-If a directory of this name does not exist underneath the vogroup
-directory, it is created. 
-.TP
-.B 4.
-The
-.I rundir
-is a numbered directory to permit multiple replans of the same workflow
-(dax file). If no rundir exists, the first one will be created.
-Otherwise, each invocation will create the next run directory. 
-.LP
-Together, the four directories form a quadruple. The quadruple is also
-the secondary key that can be used to locate the workflow inside the
-workflow database. 
+.B workflowname.dag
+pegasus\-run uses the workflowname.dag or workflowname.sh file and submits it either to condor for execution or runs it locally in a shell environment
+
 .SH "PROPERTIES"
-.LP
-Properties are read from
-.BR $PEGASUS_HOME/etc/properties ,
-.B $HOME/.pegasusrc
-and
-.B $HOME/.pegasusrc
-with rising priority. 
-Properties are read and evaluated according to the PEGASUS property
-precedence rules. Additionally,.pegasusrc properties are merged. Please refer
-to the property documentation for in\-depth description of properties
-and their effects.
-.TP 
-.B wf.properties
-points to the location where the.pegasusrc file is location.
-.IP
-Default is 
-.IR $HOME/.pegasusrc .
+pegasus\-run reads its properties from several locations.
 .TP
-.B wf.base.dir
-points to the base directory, see
-.I FILES AND 
-.IR DIRECTORIES .
+.B RUNDIR/pegasus.??????????.properties.
+The default location for pegasus-run to read the properties from
+.TP  
+.B \-\-conf propfile
+properties file provided in the conf option replaces the default properties file used. 
 .TP
-.B wf.tailstatd
-points to the location where the 
-.I tailstatd
-workflow monitor is installed. Default is to use
-.IR $PEGASUS_HOME/bin/tailstatd .
+.B $HOME/.pegasusrc 
+will be used if neither default rundir properties or \-\-conf propertiesfile are found.
+.P 
+Additionally properties can be provided individually using the 
+.B \-D<propkey=propvalue> 
+option on the command line before all other options. These properties will override properties provided using either \-\-conf or RUNDIR/pegasus.???????.properties or the $HOME/.pegasusrc
+.P 
+.I The merge logic is CONF PROPERTIES || DEFAULT RUNDIR PROPERTIES || PEGASUSRC overriden by Command line properties
+
 .SH "ENVIRONMENT VARIABLES"
 .TP
-.B PEGASUS_HOME
-points to the installation base directory of your the PEGASUS execution
-environment. 
-.TP
-.B PERL5LIB
-is a path-like variable. It must include to the PEGASUS perl module
-installation. 
-.TP
 .B PATH
-should include the Condor binaries. 
-.SH "EXAMPLES"
-.LP
-.nf 
-\f(CB
-TBD
-\fP
-.fi 
+The path variable is used to locate binaries for condor\-submit\-dag, condor\-dagman, condor\-submit,pegasus\-submit\-dag, pegasus\-dagman and pegasus\-monitord
+
 .SH "SEE ALSO"
 .BR pegasus\-plan (1),
-.BR tailstatd (1),
-.BR pegasus\-submit\-dag (1).
 .SH "AUTHORS"
 .LP
 Gaurang Mehta  <gmehta at isi dot edu>
