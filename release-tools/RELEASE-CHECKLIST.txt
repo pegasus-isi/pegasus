@@ -28,19 +28,26 @@ NOTE: Do not copy and paste the commands below without double checking.
       svn copy https://pegasus.isi.edu/svn/pegasus/branches/N.M \
                https://pegasus.isi.edu/svn/pegasus/tags/N.M.O
 
-6.  Build using the NMI system.
+6.  Open branch for new checkins with new version:
 
-7.  Copy the build binaries from nightlies to their final place.
+       vim ./src/edu/isi/pegasus/common/util/Version.in
+       svn commit -m "Branch reopen for checkins"
 
-8.  Build APT repo. First copy the debs into their final place in 
+7.  Build using the NMI system.
+
+8.  Copy the build binaries from nightlies to their final place.
+
+9.  Build APT repo. First copy the debs into their final place in 
     the apt tree. Then run update-pegasus-apt-repo on a Debian
     machine. Note that Mats' Debian key is used to sign the
     repository, so currently he has to do this step.
 
-9.  Built Yum repo. Similar to Apt repo, but the step has to be
+10. Built Yum repo. Similar to Apt repo, but the step has to be
     done on a RHEL machine.
 
-10. Update download page (and test the links!)
+11. Update download page (and test the links!)
 
-11. Send annouce email to pegasus-announce@mailman.isi.edu   
+12. Send annouce email to pegasus-announce@mailman.isi.edu
+    (Karan or Gaurang has to do this step)
+
 
