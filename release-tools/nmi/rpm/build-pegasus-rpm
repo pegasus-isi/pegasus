@@ -70,6 +70,8 @@ rm -rf pegasus-*
 
 # spec file
 cat >SPECS/pegasus.spec <<EOF
+%define debug_package %{nil}
+
 Summary: Pegasus Workflow Management System
 Vendor: USC/ISI
 Name: pegasus-$MAJOR_VERSION
