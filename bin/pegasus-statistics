@@ -38,7 +38,7 @@ NEW_LINE_STR ="\n"
 DEFAULT_OUTPUT_DIR = "statistics"
 
 transformation_stats_col_name =["Transformation","Count","Succeeded" , "Failed", "Min","Max","Mean","Total"]
-transformation_stats_col_size =[80,12,12,12,20,20,20,12]
+transformation_stats_col_size =[60,12,12,12,20,20,20,12]
 
 job_stats_col_name =['#Job','Try','Site','Kickstart','Post' ,'CondorQTime','Resource','Runtime','Seqexec','Seqexec-Delay']
 job_stats_col_size =[60,4,15,12,12,12,12,12,12,12]
@@ -265,6 +265,7 @@ def print_workflow_details(output_db_url , wf_uuid , output_dir):
 		wf_stats_file = os.path.join(output_dir,  workflow_statistics_file_name)
 		write_to_file(wf_stats_file, "w" , formatted_wf_status_legends())
 		workflow_status_table_header_str = print_row(worklow_status_col_name, worklow_status_col_size)
+		workflow_status_table_header_str +=NEW_LINE_STR
 		write_to_file(wf_stats_file, "a" , workflow_status_table_header_str)
 	if calc_jb_stats:
 		jobs_stats_file = os.path.join(output_dir,  job_statistics_file_name)
@@ -282,21 +283,23 @@ def print_workflow_details(output_db_url , wf_uuid , output_dir):
 		for sub_wf_uuid in wf_uuid_list:
 			individual_workflow_stats = StampedeStatistics(output_db_url , False)
 			individual_workflow_stats.initialize(sub_wf_uuid)
+			wf_det = individual_workflow_stats.get_workflow_details()[0]
+			title =  str(sub_wf_uuid) + " (" + str(wf_det.dax_label) +")"
 			logger.info("Generating statistics information about the workflow " + str(sub_wf_uuid) +" ... ")
 			if calc_jb_stats:
 				logger.debug("Generating job instance statistics information about the workflow " + str(sub_wf_uuid) +" ... ")
 				individual_workflow_stats.set_job_filter('all')
-				content = print_individual_wf_job_stats(individual_workflow_stats , sub_wf_uuid)
+				content = print_individual_wf_job_stats(individual_workflow_stats , title)
 				write_to_file(jobs_stats_file, "a" , content)
 			if calc_tf_stats:
 				logger.debug("Generating invocation statistics information about the workflow " + str(sub_wf_uuid) +" ... ")
 				individual_workflow_stats.set_job_filter('all')
-				content = print_wf_transformation_stats(individual_workflow_stats , sub_wf_uuid)
+				content = print_wf_transformation_stats(individual_workflow_stats , title)
 				write_to_file(transformation_stats_file, "a" , content)
 			if calc_wf_stats:
 				logger.debug("Generating workflow statistics information about the workflow " + str(sub_wf_uuid)  +" ... ")
 				individual_workflow_stats.set_job_filter('all')
-				content = print_individual_workflow_stats(individual_workflow_stats , sub_wf_uuid)
+				content = print_individual_workflow_stats(individual_workflow_stats , title)
 				write_to_file(wf_stats_file, "a" , content)
 	stats_output =  NEW_LINE_STR+ "SUMMARY".center(100, '*')
 	stats_output +=  NEW_LINE_STR
@@ -423,7 +426,7 @@ def print_individual_workflow_stats(workflow_stats , title):
 	"""
 	Prints the workflow statistics of workflow
 	@param workflow_stats :  workflow statistics object reference
-	@param wf_uuid  : uuid of the workflow
+	@param title  : title of the workflow table
 	"""
 	content_str =""
 	# individual workflow status
@@ -431,8 +434,9 @@ def print_individual_workflow_stats(workflow_stats , title):
 	# workflow status
 	workflow_stats.set_job_filter('all')
 	total_wf_retries = workflow_stats.get_workflow_retries() 
-	content = [title,"","","" , "", "" ,"||","", "" ,convert_to_str(total_wf_retries) ]
-	wf_status_str = print_row(content, worklow_status_col_size)
+	content = [title,convert_to_str(total_wf_retries) ]
+	retry_col_size =  worklow_status_col_size[len(worklow_status_col_size) -1]
+	wf_status_str = print_row(content, [sum(worklow_status_col_size) -retry_col_size , retry_col_size])
 			
 	#tasks
 	workflow_stats.set_job_filter('nonsub')
@@ -477,16 +481,16 @@ def print_individual_workflow_stats(workflow_stats , title):
 	return content_str
 	
 
-def print_individual_wf_job_stats(workflow_stats , wf_uuid):
+def print_individual_wf_job_stats(workflow_stats , title):
 	"""
 	Prints the job statistics of workflow
 	@param workflow_stats :  workflow statistics object reference
-	@param wf_uuid  : uuid of the workflow
+	@param title  : title for the table
 	"""	
 	job_stats_dict={}
 	job_stats_list=[]
 	job_retry_count_dict={}
-	job_status_str = "\n\n# " +  wf_uuid +"\n"
+	job_status_str = "\n\n# " +  title +"\n"
 	for index in range(len(job_stats_col_name)):
 			job_status_str += (job_stats_col_name[index].ljust(job_stats_col_size[index]))
 	job_status_str +="\n"
