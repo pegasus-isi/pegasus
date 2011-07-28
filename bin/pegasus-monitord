@@ -46,6 +46,7 @@ import datetime
 import optparse
 import tempfile
 import urlparse
+import traceback
 import subprocess
 
 # Initialize logging object
@@ -777,12 +778,26 @@ class Workflow:
         """
         This function sends an NetLogger event to the loader class.
         """
+
         # Sanity check (should also be done elsewhere, but repeated here)
         if self._sink is None:
             return
 
-        # Send event to corresponding sink
-        self._sink.send(event, kwargs)
+        # Don't output anything if we have disabled events to the database
+        if self._database_disabled == True:
+            return
+
+        try:
+            # Send event to corresponding sink
+            self._sink.send(event, kwargs)
+        except:
+            # Error sending this event... disable the sink from now on...
+            logger.warning("EVENT-ERROR --> %s - %s" % (self.wf_uuid,
+                                                        ((self._dax_label or "unknown") +
+                                                         "-" + (self._dax_index or "unknown"))))
+            logger.warning("error sending event: %s --> %s" % (event, kwargs))
+            logger.warning(traceback.format_exc())
+            self._database_disabled = True
 
     def parse_dag_file(self, dag_file):
         """
@@ -1576,6 +1591,7 @@ class Workflow:
         self._parent_workflow_id = parent_id
         self._root_workflow_id = root_id
         self._sink = database
+        self._database_disabled = False
         self._workflow_start = int(time.time())
         self._enable_notifications = enable_notifications
         self._notification_list = notification_list
@@ -1745,6 +1761,11 @@ class Workflow:
                 self._enable_notifications = False
 
         # Say hello.... add start information to JSDB
+        my_now = int(time.time())
+        print "%d - %s - MONITORD_STARTED  - %s - %s" % (my_now,
+                                                         utils.isodate(my_now), self._wf_uuid,
+                                                         ((self._dax_label or "unknown") +
+                                                          "-" + (self._dax_index or "unknown")))
         self._JSDB.write("%d INTERNAL *** MONITORD_STARTED ***\n" % (self._workflow_start))
 
         # All done... last step is to send to the database the workflow plan event,
@@ -1823,6 +1844,10 @@ class Workflow:
         """
         my_workflow_end = int(time.time())
 
+        print "%d - %s - MONITORD_FINISHED - %s - %s" % (my_workflow_end,
+                                                         utils.isodate(my_workflow_end), self._wf_uuid,
+                                                         ((self._dax_label or "unknown") +
+                                                          "-" + (self._dax_index or "unknown")))
         self._JSDB.write("%d INTERNAL *** MONITORD_FINISHED %d ***\n" % (my_workflow_end, self._monitord_exit_code))
         self._JSDB.close()
 
