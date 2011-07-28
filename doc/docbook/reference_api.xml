@@ -9,24 +9,31 @@
 
     <para>The DAX format is described by the XML schema instance document
     <ulink
-    url="http://pegasus.isi.edu/wms/docs/schemas/dax-3.2/dax-3.2.xsd">dax-3.2.xsd</ulink>.
+    url="http://pegasus.isi.edu/wms/docs/schemas/dax-3.3/dax-3.3.xsd">dax-3.3.xsd</ulink>.
     A local copy of the schema definition is provided in the
     <quote>etc</quote> directory. The documentation of the XML schema and its
     elements can be found in <ulink
-    url="http://pegasus.isi.edu/wms/docs/schemas/dax-3.2/dax-3.2.html">dax-3.2.html</ulink>
+    url="http://pegasus.isi.edu/wms/docs/schemas/dax-3.3/dax-3.3.html">dax-3.3.html</ulink>
     as well as locally in
-    <filename>doc/schemas/dax-3.2/dax-3.2.html</filename> in your Pegasus
+    <filename>doc/schemas/dax-3.3/dax-3.3.html</filename> in your Pegasus
     distribution.</para>
 
     <section>
       <title>DAX XML Schema In Detail</title>
 
-      <para>The DAX file format has three major sections, with the first
-      section sub-divided into more sub-sections. The DAX format works on the
+      <para>The DAX file format has four major sections, with the second
+      section divided into more sub-sections. The DAX format works on the
       abstract or logical level, letting you focus on the shape of the
       workflows, what to do and what to work upon.</para>
 
       <orderedlist>
+        <listitem>
+          <para>Workflow-level Notifications</para>
+
+          <para>Very simple workflow-level notifications. More about
+          notifications later.</para>
+        </listitem>
+
         <listitem>
           <para>Catalogs</para>
 
@@ -34,7 +41,8 @@
           recommend to use external replica- and transformation catalogs, it
           is possible to include some replicas and transformations into the
           DAX file itself. Any DAX-included entry takes precedence over
-          regular RC and TC entries.</para>
+          regular replica catalog (RC) and transformation catalog (TC)
+          entries.</para>
 
           <para>The first section (and any of its sub-sections) is completely
           optional.</para>
@@ -60,7 +68,7 @@
         <listitem>
           <para>Job List</para>
 
-          <para>The second section defines the job- or task descriptions. For
+          <para>The jobs section defines the job- or task descriptions. For
           each task to conduct, a three-part logical name declares the task
           and aides identifying it in the transformation catalog or one of the
           <emphasis>executable</emphasis> section above. During planning, the
@@ -81,10 +89,13 @@
           <emphasis>uses</emphasis> element inside the task.</para>
 
           <para>Elements exist to link a logical file to any of the stdio file
-          descriptors. The profile element is Pegasus's way to abstract
-          site-specific data.</para>
+          descriptors. The <emphasis>profile</emphasis> element is Pegasus's
+          way to abstract site-specific data.</para>
 
-          <para>Jobs are nodes in the workflow graph.</para>
+          <para>Jobs are nodes in the workflow graph. Other nodes include
+          unplanned workflows (DAX), which are planned and then run when the
+          node runs, and planned workflows (DAG), which are simply
+          executed.</para>
         </listitem>
 
         <listitem>
@@ -103,15 +114,15 @@
         <title>XML Intro</title>
 
         <para>If you have seen the DAX schema before, not a lot of new items
-        in the root element. However, we did retire the (old) attributes
-        ending in <emphasis>Count</emphasis>.</para>
+        in the root element. <emphasis>However</emphasis>, we did retire the
+        (old) attributes ending in <emphasis>Count</emphasis>.</para>
 
         <programlisting>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
-&lt;!-- generated: 2010-11-20T03:10:52Z --&gt;
+&lt;!-- generated: 2011-07-28T18:29:57Z --&gt;
 &lt;adag xmlns="http://pegasus.isi.edu/schema/DAX" 
       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-      xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.2.xsd" 
-      version="3.2" 
+      xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.3.xsd" 
+      version="3.3" 
       name="diamond" 
       index="0" 
       count="1"&gt;</programlisting>
@@ -143,7 +154,8 @@
                   <emphasis>VersionPattern</emphasis>
                 </entry>
 
-                <entry>Version number of DAX instance document.</entry>
+                <entry>Version number of DAX instance document. Must be
+                3.3.</entry>
               </row>
 
               <row>
@@ -153,8 +165,7 @@
 
                 <entry>string</entry>
 
-                <entry>name of this DAX (or set of DAXes). Must be
-                3.2.</entry>
+                <entry>name of this DAX (or set of DAXes).</entry>
               </row>
 
               <row>
@@ -233,9 +244,23 @@
           </tr>
 
           <tr>
-            <td colspan="2">version1 &gt; version2 if n &gt; m</td>
+            <td align="center" colspan="2">version1 &gt; version2 if n &gt;
+            m</td>
           </tr>
         </informaltable>
+      </section>
+
+      <section>
+        <title>Workflow-level Notifications</title>
+
+        <para>(something to be said here.)</para>
+
+        <programlisting>  &lt;!-- part 1.1: invocations --&gt;
+  &lt;invoke when="at_end"&gt;/bin/date -Ins &amp;gt;&amp;gt; my.log&lt;/invoke&gt;</programlisting>
+
+        <para>The above snippet will append the current time to a log file in
+        the current directory. This is with regards to the monitord instance
+        acting the notification.</para>
       </section>
 
       <section>
@@ -264,7 +289,7 @@
           files declared in this section take precedence over files in
           external replica catalogs during planning.</para>
 
-          <programlisting>  &lt;!-- part 1.1: included replica catalog --&gt;
+          <programlisting>  &lt;!-- part 1.2: included replica catalog --&gt;
   &lt;file name="example.a" &gt;
     &lt;!-- profiles are optional --&gt;
     &lt;!-- The "stat" namespace is ONLY AN EXAMPLE --&gt;
@@ -365,7 +390,7 @@
           precedence over the external transformation catalog during
           planning.</para>
 
-          <programlisting>  &lt;!-- part 1.2: included transformation catalog --&gt;
+          <programlisting>  &lt;!-- part 1.3: included transformation catalog --&gt;
   &lt;executable namespace="example" name="mDiffFit" version="1.0" 
               arch="x86_64" os="linux" installed="true" &gt;
     &lt;!-- profiles are optional --&gt;
@@ -396,6 +421,7 @@
     &lt;pfn url="file:///tmp/mDiffFitplane"  site="local"&gt;
       &lt;profile namespace="stat" key="md5sum"&gt;0a9c38b919c7809cb645fc09011588a6&lt;/profile&gt;
     &lt;/pfn&gt;
+    &lt;invoke when="at_end"&gt;/path/to/my_send_email some args&lt;/invoke&gt;
   &lt;/executable&gt;
 
   &lt;!-- a more likely example from the black diamond --&gt;
@@ -552,6 +578,12 @@
           <emphasis>profile</emphasis> children-elements, referring to
           attributes of the physical filename itself.</para>
 
+          <para>Each <emphasis>executable</emphasis> element may also feature
+          <emphasis>invoke</emphasis> elements. These enable notifications at
+          the appropriate point when every job that uses this executable
+          reaches the point of notification. Please refer to the notification
+          section for details and caveats.</para>
+
           <para>The last example above comes from the black diamond example
           workflow, and presents the kind and extend of attributes you are
           most likely to see and use in your own workflows.</para>
@@ -618,12 +650,19 @@
         instantiated sub-workflows as dag nodes, and still to be instantiated
         dax nodes. Each of the graph nodes can has a mandatory
         <emphasis>id</emphasis> attribute. The <emphasis>id</emphasis>
-        attribute is currently a restriction of type <code>xsd:NMTOKEN</code>
-        type.The <emphasis>level</emphasis> attribute is being phased out, as
-        the planner will trust its own re-computation more than user input.
-        The <emphasis>node-label</emphasis> attribute is optional. It applies
-        to the use-case when every transformation has the same name, but its
-        arguments determine what it really does. In the presence of a
+        attribute is currently a restriction of type
+        <emphasis>NodeIdentifierPattern</emphasis> type, which is a
+        restriction of the <code>xs:NMTOKEN</code> type to letters, digits,
+        hyphen and underscore.</para>
+
+        <para>The <emphasis>level</emphasis> attribute is deprecated, as the
+        planner will trust its own re-computation more than user input. Please
+        do not use nor produce any <emphasis>level</emphasis>
+        attribute.</para>
+
+        <para>The <emphasis>node-label</emphasis> attribute is optional. It
+        applies to the use-case when every transformation has the same name,
+        but its arguments determine what it really does. In the presence of a
         <emphasis>node-label</emphasis> value, a workflow grapher could use
         the label value to show graph nodes to the user. It may also come in
         handy while debugging.</para>
@@ -664,13 +703,11 @@
           </listitem>
 
           <listitem>
-            <para>0 or more <emphasis>invoke</emphasis> elements</para>
+            <para>0 or more <emphasis>invoke</emphasis> elements to solicit
+            notifications whence a job reaches a certain state in its
+            life-cycle.</para>
           </listitem>
         </itemizedlist>
-
-        <warning>
-          <para>The invoke element is not supported as of this writing.</para>
-        </warning>
 
         <section id="api-job-nodes">
           <title>Job Nodes</title>
@@ -725,11 +762,6 @@
           requires in this section, so that the proper ancilliary staging- and
           clean-up tasks can be generated during planning.</para>
 
-          <warning>
-            <para>The <emphasis>invoke</emphasis> element is not supported as
-            of this writing!</para>
-          </warning>
-
           <para>The invoke element may be specified multiple times, as needed.
           It has a mandatory when attribute with the following value
           set:</para>
@@ -740,7 +772,7 @@
                 <row>
                   <entry align="center">keyword</entry>
 
-                  <entry align="center">when</entry>
+                  <entry align="center">job life-cycle state</entry>
 
                   <entry align="center">meaning</entry>
                 </row>
@@ -754,15 +786,6 @@
 
                   <entry>(default). Never notify of anything. This is useful
                   to temporarily disable an existing notifications.</entry>
-                </row>
-
-                <row>
-                  <entry>start</entry>
-
-                  <entry>submit</entry>
-
-                  <entry>create a notification when the job is
-                  submitted.</entry>
                 </row>
 
                 <row>
@@ -811,11 +834,13 @@
             </tgroup>
           </table>
 
-          <para>Again, even though we define the <emphasis>invoke</emphasis>
-          element, at this point, it is not supported. Each
-          <emphasis>invoke</emphasis> is a simple local invocation of an
-          executable or script with the specified arguments. Pegasus will plan
-          any notification into the pre- and post-script of DAGMan. The
+          <warning>
+            <para>In clustered jobs, a notification can only be sent at the
+            start or end of the clustered job, not for each member.</para>
+          </warning>
+
+          <para>Each <emphasis>invoke</emphasis> is a simple local invocation
+          of an executable or script with the specified arguments. The
           executable inside the invoke body will see the following environment
           variables:</para>
 
@@ -825,7 +850,7 @@
                 <row>
                   <entry align="center">variable</entry>
 
-                  <entry align="center">when</entry>
+                  <entry align="center">job life-cycle state</entry>
 
                   <entry align="center">meaning</entry>
                 </row>
@@ -837,7 +862,7 @@
 
                   <entry>always</entry>
 
-                  <entry>The value of the when attribute</entry>
+                  <entry>The value of the <code>when</code> attribute</entry>
                 </row>
 
                 <row>
@@ -924,11 +949,6 @@
           <emphasis>notify</emphasis> element in the same manner as for
           jobs.</para>
 
-          <warning>
-            <para>The <emphasis>invoke</emphasis> element is not supported as
-            of this writing!</para>
-          </warning>
-
           <para>A graph node that is a dag instead of a job would just use a
           different submit file generator to create a DAGMan invocation. There
           can be an <emphasis>argument</emphasis> element to modify the
@@ -960,11 +980,6 @@
           and <literal>env</literal> profile namespaces. It may be possible to
           have the optional <emphasis>notify</emphasis> element in the same
           manner as for jobs.</para>
-
-          <warning>
-            <para>The <emphasis>invoke</emphasis> element is not supported as
-            of this writing!</para>
-          </warning>
 
           <para>A graph node that is a <emphasis>dax</emphasis> instead of a
           job would just use yet another submit file and pre-script generator
@@ -1038,54 +1053,59 @@
       representing the diamond workflow.</para>
 
       <programlisting>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
-&lt;!-- generated: 2010-11-19T20:00:29Z --&gt;
+&lt;!-- generated: 2011-07-28T18:29:53Z --&gt;
 &lt;adag xmlns="http://pegasus.isi.edu/schema/DAX" 
       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-      xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.2.xsd"
-      version="3.2" 
-      name="diamond" 
-      index="0" 
-      count="1"&gt;
-  &lt;!-- part 1.1: included replica catalog --&gt;
+      xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.3.xsd" 
+      version="3.3" name="diamond" index="0" count="1"&gt;
+  &lt;!-- part 1.2: included replica catalog --&gt;
   &lt;file name="f.a"&gt;
-    &lt;pfn url="file:///home/voeckler/f.a" site="local" /&gt;
+    &lt;pfn url="file:///lfs/voeckler/Pegasus/Karan/f.a" site="local" /&gt;
   &lt;/file&gt;
-  &lt;!-- part 1.2: included transformation catalog --&gt;
-  &lt;executable namespace="diamond" name="preprocess" version="2.0" 
-              arch="x86_64" os="linux" osversion="2.6.18"&gt;
-    &lt;pfn url="file:///opt/pegasus/default/bin/keg" site="local" /&gt;
+
+  &lt;!-- part 1.3: included transformation catalog --&gt;
+  &lt;executable namespace="diamond" name="preprocess" version="2.0" arch="x86_64" os="linux" installed="true"&gt;
+    &lt;profile namespace="globus" key="maxtime"&gt;2&lt;/profile&gt;
+    &lt;profile namespace="dagman" key="RETRY"&gt;3&lt;/profile&gt;
+    &lt;pfn url="file:///opt/pegasus/default/bin/keg" site="futuregrid" /&gt;
   &lt;/executable&gt;
-  &lt;executable namespace="diamond" name="findrange" version="2.0" 
-              arch="x86_64" os="linux" osversion="2.6.18"&gt;
-    &lt;pfn url="file:///opt/pegasus/default/bin/keg" site="local" /&gt;
+  &lt;executable namespace="diamond" name="findrange" version="2.0" arch="x86_64" os="linux" installed="true"&gt;
+    &lt;profile namespace="globus" key="maxtime"&gt;2&lt;/profile&gt;
+    &lt;profile namespace="dagman" key="RETRY"&gt;3&lt;/profile&gt;
+    &lt;pfn url="file:///opt/pegasus/default/bin/keg" site="futuregrid" /&gt;
   &lt;/executable&gt;
-  &lt;executable namespace="diamond" name="analyze" version="2.0" 
-              arch="x86_64" os="linux" osversion="2.6.18"&gt;
-    &lt;pfn url="file:///opt/pegasus/default/bin/keg" site="local" /&gt;
+  &lt;executable namespace="diamond" name="analyze" version="2.0" arch="x86_64" os="linux" installed="true"&gt;
+    &lt;profile namespace="globus" key="maxtime"&gt;2&lt;/profile&gt;
+    &lt;profile namespace="dagman" key="RETRY"&gt;3&lt;/profile&gt;
+    &lt;pfn url="file:///opt/pegasus/default/bin/keg" site="futuregrid" /&gt;
   &lt;/executable&gt;
+
   &lt;!-- part 2: definition of all jobs (at least one) --&gt;
   &lt;job namespace="diamond" name="preprocess" version="2.0" id="ID000001"&gt;
-    &lt;argument&gt;-a preprocess -T60 -i &lt;file name="f.a" /&gt; -o &lt;file name="f.b1" /&gt; &lt;file name="f.b2" /&gt;&lt;/argument&gt;
+    &lt;argument&gt;-a preprocess -T 60 -i &lt;file name="f.a" /&gt; -o &lt;file name="f.b1" /&gt; &lt;file name="f.b2" /&gt;&lt;/argument&gt;
     &lt;uses name="f.b2" link="output" register="false" transfer="false" /&gt;
     &lt;uses name="f.b1" link="output" register="false" transfer="false" /&gt;
     &lt;uses name="f.a" link="input" /&gt;
   &lt;/job&gt;
   &lt;job namespace="diamond" name="findrange" version="2.0" id="ID000002"&gt;
-    &lt;argument&gt;-a findrange -T60 -i &lt;file name="f.b1" /&gt; -o &lt;file name="f.c1" /&gt;&lt;/argument&gt;
+    &lt;argument&gt;-a findrange -T 60 -i &lt;file name="f.b1" /&gt; -o &lt;file name="f.c1" /&gt;&lt;/argument&gt;
+    &lt;profile namespace="pegasus" key="label"&gt;clusterme&lt;/profile&gt;
     &lt;uses name="f.b1" link="input" register="false" transfer="false" /&gt;
     &lt;uses name="f.c1" link="output" register="false" transfer="false" /&gt;
   &lt;/job&gt;
   &lt;job namespace="diamond" name="findrange" version="2.0" id="ID000003"&gt;
-    &lt;argument&gt;-a findrange -T60 -i &lt;file name="f.b2" /&gt; -o &lt;file name="f.c2" /&gt;&lt;/argument&gt;
-    &lt;uses name="f.c2" link="output" register="false" transfer="false" /&gt;
+    &lt;argument&gt;-a findrange -T 60 -i &lt;file name="f.b2" /&gt; -o &lt;file name="f.c2" /&gt;&lt;/argument&gt;
+    &lt;profile namespace="pegasus" key="label"&gt;clusterme&lt;/profile&gt;
     &lt;uses name="f.b2" link="input" register="false" transfer="false" /&gt;
+    &lt;uses name="f.c2" link="output" register="false" transfer="false" /&gt;
   &lt;/job&gt;
   &lt;job namespace="diamond" name="analyze" version="2.0" id="ID000004"&gt;
-    &lt;argument&gt;-a analyze -T60 -i &lt;file name="f.c1" /&gt; &lt;file name="f.c2" /&gt; -o &lt;file name="f.d" /&gt;&lt;/argument&gt;
+    &lt;argument&gt;-a analyze -T 60 -i &lt;file name="f.c1" /&gt; &lt;file name="f.c2" /&gt; -o &lt;file name="f.d" /&gt;&lt;/argument&gt;
     &lt;uses name="f.c2" link="input" register="false" transfer="false" /&gt;
     &lt;uses name="f.d" link="output" register="false" transfer="true" /&gt;
     &lt;uses name="f.c1" link="input" register="false" transfer="false" /&gt;
   &lt;/job&gt;
+
   &lt;!-- part 3: list of control-flow dependencies --&gt;
   &lt;child ref="ID000002"&gt;
     &lt;parent ref="ID000001" /&gt;
@@ -1097,7 +1117,8 @@
     &lt;parent ref="ID000002" /&gt;
     &lt;parent ref="ID000003" /&gt;
   &lt;/child&gt;
-&lt;/adag&gt;</programlisting>
+&lt;/adag&gt;
+</programlisting>
 
       <para>The above workflow defines the black diamond from the abstract
       workflow section of the <link linkend="about">Introduction</link>
@@ -1122,11 +1143,11 @@
         <listitem>
           <para>The <emphasis role="bold">executable</emphasis> elements
           declare the same executable keg that is to be run for each the
-          logical transformation in terms of the local site. To declare it for
-          a remote site, you would have to adjust the
-          <emphasis>site</emphasis> attribute's value to the proper remote
-          site handle. This section also shows that the same executable may
-          come in different guises as transformation.</para>
+          logical transformation in terms of the remote site
+          <emphasis>futuregrid</emphasis>. To declare it for a local site, you
+          would have to adjust the <emphasis>site</emphasis> attribute's value
+          to <literal>local</literal>. This section also shows that the same
+          executable may come in different guises as transformation.</para>
         </listitem>
 
         <listitem>
@@ -1511,10 +1532,16 @@ use 5.006;
 use strict;
 use IO::Handle; 
 use Cwd;
-##!! PEGASUS_HOME set to install dir of Pegasus
-##!! PERL5LIB includes $PEGASUS_HOME/lib/perl
-use Pegasus::DAX::Factory qw(:all); 
+use File::Spec;
+use File::Basename;
+use Sys::Hostname;
+use POSIX ();
 
+# set up Perl include paths dynamically from Pegasus installation
+BEGIN { $ENV{'PEGASUS_HOME'} ||= `pegasus-config --nocrlf --home` }
+use lib File::Spec-&gt;catdir( $ENV{'PEGASUS_HOME'}, 'lib', 'perl' );
+
+use Pegasus::DAX::Factory qw(:all); 
 use constant NS =&gt; 'diamond'; 
 
 my $adag = newADAG( name =&gt; NS ); 
@@ -1523,22 +1550,34 @@ my $job2 = newJob( namespace =&gt; NS, name =&gt; 'findrange', version =&gt; '2.
 my $job3 = newJob( namespace =&gt; NS, name =&gt; 'findrange', version =&gt; '2.0' );
 my $job4 = newJob( namespace =&gt; NS, name =&gt; 'analyze', version =&gt; '2.0' );
 
+# create "f.a" locally
+my $fn = "f.a";
+open( F, "&gt;$fn" ) || die "FATAL: Unable to open $fn: $!\n";
+my @now = gmtime();
+printf F "%04u-%02u-%02u %02u:%02u:%02uZ\n",
+        $now[5]+1900, $now[4]+1, @now[3,2,1,0];
+close F;
+
 my $file = newFile( name =&gt; 'f.a' );
 $file-&gt;addPFN( newPFN( url =&gt; 'file://' . Cwd::abs_path(getcwd()) . '/f.a', 
                        site =&gt; 'local' ) ); 
 $adag-&gt;addFile($file); 
 
 if ( exists $ENV{'PEGASUS_HOME'} ) {
-    use File::Spec;
-    use POSIX (); 
     my $keg = File::Spec-&gt;catfile( $ENV{'PEGASUS_HOME'}, 'bin', 'keg' ); 
     my @os = POSIX::uname(); 
     $os[2] =~ s/^(\d+(\.\d+(\.\d+)?)?).*/$1/;
+    $os[4] =~ s/i.86/x86/;
     if ( -x $keg ) { 
-        my $app1 = newExecutable( namespace =&gt; NS, name =&gt; 'preprocess', version =&gt; '2.0',
-                                  arch =&gt; $os[4], os =&gt; lc($^O), osversion =&gt; $os[2] ); 
-        $app1-&gt;addPFN( newPFN( url =&gt; "file://$keg", site =&gt; 'local' ) );
-        $adag-&gt;addExecutable($app1); 
+        for my $what ( qw(preprocess findrange analyze) ) {
+            my $app = newExecutable( namespace =&gt; NS, name =&gt; $what,
+                                     version =&gt; '2.0', installed =&gt; 'false',
+                                     arch =&gt; $os[4], os =&gt; lc($^O) );
+            $app-&gt;addProfile( 'globus', 'maxtime', '2' );
+            $app-&gt;addProfile( 'dagman', 'RETRY', '3' );
+            $app-&gt;addPFN( newPFN( url =&gt; "file://$keg", site =&gt; 'local' ) );
+            $adag-&gt;addExecutable($app);
+        }
     }
 }
 
@@ -1561,10 +1600,8 @@ $fnb2-&gt;link( LINK_IN );
 $job3-&gt;addArgument( '-a', $job3-&gt;name, '-T60', '-i', $fnb2, 
                     '-o', $fnc2 ); 
 $adag-&gt;addJob($job3);
-
-# yeah, you can create multiple children for the same parent
-# string labels are distinguished from jobs, no problem
-$adag-&gt;addDependency( $job1, $job2, 'edge1', $job3, 'edge2' ); 
+# a convenience function -- you can specify multiple dependents
+$adag-&gt;addDependency( $job1, $job2, $job3 ); 
 
 my $fnd = newFilename( name =&gt; 'f.d', %hash ); 
 $fnc1-&gt;link( LINK_IN );
@@ -1573,8 +1610,8 @@ $job4-&gt;separator('');                 # just to show the difference wrt defau
 $job4-&gt;addArgument( '-a ', $job4-&gt;name, ' -T60 -i ', $fnc1, ' ', $fnc2, 
                     ' -o ', $fnd );
 $adag-&gt;addJob($job4);
-# this is a convenience function -- easier than overloading addDependency?
-$adag-&gt;addInverse( $job4, $job2, 'edge3', $job3, 'edge4' );
+# this is a convenience function -- easier than overloading addDependency
+$adag-&gt;addInverse( $job4, $job2, $job3 );
 
 my $xmlns = shift; 
 $adag-&gt;toXML( \*STDOUT, '', $xmlns );</programlisting>
