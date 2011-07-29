@@ -91,7 +91,7 @@ sub getPlatform(){
         my $minor = `uname -r`;
         chomp $major;
         chomp $minor;
-        $os_version = "$major.$minor"
+        $os_version = "$major.$minor";
     }
 
     if ($arch =~ m/arm/) {
@@ -253,6 +253,10 @@ sub get_linux_distro () {
 	
 	#hack to handle "/" in version numbers should probably apply to other places as well
 	$distro{"version"} =~ s/\//_/g ;
+
+	# we only want major version numbers
+	$distro{"version"} =~ s/\..*//;
+
         return %distro;
     }
 }
