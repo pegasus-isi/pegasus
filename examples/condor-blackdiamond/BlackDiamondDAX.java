@@ -23,13 +23,13 @@ public class BlackDiamondDAX {
      * @param args
      */
     public static void main(String[] args) {
-        if (args.length != 3) {
+        if (args.length != 2) {
             System.out.println("Usage: java ADAG <site_handle> <pegasus_location> <filename.dax>");
             System.exit(1);
         }
 
         try {
-            Diamond(args[0], args[1]).writeToFile(args[2]);
+            Diamond(args[0]).writeToFile(args[1]);
         }
         catch (Exception e) {
             e.printStackTrace();
@@ -37,7 +37,7 @@ public class BlackDiamondDAX {
 
     }
 
-    private static ADAG Diamond(String site_handle, String pegasus_location) throws Exception {
+    private static ADAG Diamond(String pegasus_location) throws Exception {
 
         java.io.File cwdFile = new java.io.File (".");
         String cwd = cwdFile.getCanonicalPath(); 
@@ -45,7 +45,7 @@ public class BlackDiamondDAX {
         ADAG dax = new ADAG("blackdiamond");
 
         File fa = new File("f.a");
-        fa.addPhysicalFile("file://" + cwd + "/f.a", site_handle);
+        fa.addPhysicalFile("file://" + cwd + "/f.a", "local");
         dax.addFile(fa);
 
         File fb1 = new File("f.b1");
@@ -58,17 +58,17 @@ public class BlackDiamondDAX {
         Executable preprocess = new Executable("pegasus", "preprocess", "4.0");
         preprocess.setArchitecture(Executable.ARCH.X86).setOS(Executable.OS.LINUX);
         preprocess.setInstalled(true);
-        preprocess.addPhysicalFile("file://" + pegasus_location + "/bin/keg", site_handle);
+        preprocess.addPhysicalFile("file://" + pegasus_location + "/bin/keg", "condorpool");
 
         Executable findrange = new Executable("pegasus", "findrange", "4.0");
         findrange.setArchitecture(Executable.ARCH.X86).setOS(Executable.OS.LINUX);
         findrange.setInstalled(true);
-        findrange.addPhysicalFile("file://" + pegasus_location + "/bin/keg", site_handle);
+        findrange.addPhysicalFile("file://" + pegasus_location + "/bin/keg", "condorpool");
 
         Executable analyze = new Executable("pegasus", "analyze", "4.0");
         analyze.setArchitecture(Executable.ARCH.X86).setOS(Executable.OS.LINUX);
         analyze.setInstalled(true);
-        analyze.addPhysicalFile("file://" + pegasus_location + "/bin/keg", site_handle);
+        analyze.addPhysicalFile("file://" + pegasus_location + "/bin/keg", "condorpool");
 
         dax.addExecutable(preprocess).addExecutable(findrange).addExecutable(analyze);
 

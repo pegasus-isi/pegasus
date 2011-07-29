@@ -4,21 +4,6 @@ set -e
 
 TOPDIR=`pwd`
 
-if [ "x$1" = "x" ]; then
-    echo "Please specify local or condorpool as argument. Examples:"
-    echo "  ./submit local"
-    echo "  ./submit condorpool"
-    exit 1
-fi
-
-if [ "$1" = "condorpool" ]; then
-    echo "Submitting to the Condor pool"
-    TARGET="condorpool"
-else
-    echo "Submitting to the local universe"
-    TARGET="local"
-fi
-
 # figure out where Pegasus is installed
 export PEGASUS_HOME=`which pegasus-plan | sed 's:/bin/pegasus-plan::'`
 if [ "x$PEGASUS_HOME" = "x" ]; then
@@ -30,12 +15,15 @@ fi
 # generate the input file
 echo "This is sample input to KEG" >f.a
 
+# output directory
+mkdir -p outputs
+
 # build the dax generator
 export CLASSPATH=.:$PEGASUS_HOME/lib/pegasus.jar:$CLASSPATH
 javac BlackDiamondDAX.java
 
 # generate the dax
-java BlackDiamondDAX $TARGET $PEGASUS_HOME blackdiamond.dax
+java BlackDiamondDAX $PEGASUS_HOME blackdiamond.dax
 
 # create the site catalog
 cat >sites.xml <<EOF
@@ -60,7 +48,14 @@ cat >sites.xml <<EOF
     </site>
     <site  handle="condorpool" arch="x86" os="LINUX">
         <head-fs>
-            <scratch />
+            <!-- the paths for scratch filesystem are the paths on local site as we execute create dir job
+            on local site. -->
+            <scratch>
+                <shared>
+                    <file-server protocol="file" url="file:///" mount-point="$TOPDIR/work"/>
+                    <internal-mount-point mount-point="$TOPDIR/work"/>
+                </shared>
+            </scratch>
             <storage />
         </head-fs>
         <profile namespace="pegasus" key="style" >condor</profile>
@@ -73,7 +68,7 @@ EOF
 # plan and submit the  workflow
 pegasus-plan \
     --conf pegasusrc \
-    --sites $TARGET \
+    --sites condorpool \
     --dir work \
     --output local \
     --dax blackdiamond.dax \
