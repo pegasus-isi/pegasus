@@ -120,14 +120,14 @@ sub site_snippet($) {
     print "    <head-fs>\n";
     print "      <scratch>\n";
     print "\t<shared>\n"; 
-    print "\t  <file-server protocol=\"file\" url=\"file://\" mount-point=\"$home\" />\n";
-    print "\t  <internal-mount-point mount-point=\"$home\" />\n";
+    print "\t  <file-server protocol=\"file\" url=\"file://\"\n\t\tmount-point=\"$home\" />\n";
+    print "\t  <internal-mount-point\n\t\tmount-point=\"$home\" />\n";
     print "\t</shared>\n"; 
     print "      </scratch>\n"; 
     print "      <storage>\n";
     print "\t<shared>\n";
-    print "\t  <file-server protocol=\"file\" url=\"file://\" mount-point=\"$home\" />\n";
-    print "\t  <internal-mount-point mount-point=\"$home\" />\n";
+    print "\t  <file-server protocol=\"file\" url=\"file://\"\n\t\tmount-point=\"$home\" />\n";
+    print "\t  <internal-mount-point\n\t\tmount-point=\"$home\" />\n";
     print "\t</shared>\n";
     print "      </storage>\n";
     print "    </head-fs>\n"; 
@@ -136,6 +136,10 @@ sub site_snippet($) {
     print "    <profile namespace=\"env\" key=\"HOME\">$userdir</profile>\n"; 
     if ( defined $g_l ) {
 	print "    <profile namespace=\"env\" key=\"GLOBUS_LOCATION\">$g_l</profile>\n"; 
+    }
+    if ( exists $ENV{'LD_LIBRARY_PATH'} ) { 
+	print( "    <profile namespace=\"env\" key=\"LD_LIBRARY_PATH\">", 
+	       $ENV{LD_LIBRARY_PATH}, "</profile>\n" ); 
     }
     print "  </site>\n";
 }
