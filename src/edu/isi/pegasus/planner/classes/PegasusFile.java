@@ -231,6 +231,15 @@ public class PegasusFile extends Data {
 
     /**
      * Sets the size for the file.
+     *
+     * @param size  the size of the file.
+     */
+    public void setSize( double size ) {
+        mSize = size;
+    }
+
+    /**
+     * Sets the size for the file.
      * 
      * @param size  the size of the file.
      */

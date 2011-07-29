@@ -86,6 +86,7 @@ public class FileTransfer extends PegasusFile {
     public FileTransfer(PegasusFile pf){
         this.mLogicalFile  = pf.mLogicalFile;
         this.mTransferFlag = pf.mTransferFlag;
+        this.mSize         = pf.mSize;
         this.mFlags        = pf.getFlags();
         this.mType         = pf.getType();
         this.mJob          = new String();

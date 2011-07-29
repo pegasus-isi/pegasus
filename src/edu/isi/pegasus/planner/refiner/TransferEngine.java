@@ -537,6 +537,7 @@ public class TransferEngine extends Engine {
                 ft = new FileTransfer( lfn, job.getName() );
                 ft.addSource( selLoc.getResourceHandle() , sourceURL );
                 ft.addDestination( pool, destURL );
+                ft.setSize( pf.getSize() );
 
                 //System.out.println("Deleted Leaf Job File transfer object " + ft);
 
@@ -709,6 +710,7 @@ public class TransferEngine extends Engine {
 
             ft = new FileTransfer(lfn,job,pf.getFlags());
             //set the transfer mode
+            ft.setSize( pf.getSize() );
             ft.setTransferFlag(pf.getTransferFlag());
             ft.addSource(execPool,execURL);
             ft.addDestination(execPool,execURL);
@@ -724,6 +726,7 @@ public class TransferEngine extends Engine {
                                 File.separator + lfn;
 
             ft = new FileTransfer(lfn,job,pf.getFlags());
+            ft.setSize( pf.getSize() );
             //set the transfer mode
             ft.setTransferFlag(pf.getTransferFlag());
 
@@ -857,7 +860,9 @@ public class TransferEngine extends Engine {
                     String thirdPartyDestURL = thirdPartyDestURI + File.separator +
                                            outFile;
                     FileTransfer ft      = new FileTransfer(outFile,pJob.jobName);
+                    ft.setSize( pf.getSize() );
                     ft.addDestination(destPool,destURL);
+
 
                     //add all the possible source urls iterating through
                     //the list of grid ftp servers associated with the dest pool.
@@ -1236,6 +1241,8 @@ public class TransferEngine extends Engine {
             
             //make sure the type information is set in file transfer
             ft.setType( pf.getType() );
+
+            ft.setSize( pf.getSize() );
             
             //the transfer mode for the file needs to be
             //propogated for optional transfers.
