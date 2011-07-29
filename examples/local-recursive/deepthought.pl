@@ -16,8 +16,8 @@ use lib File::Spec->catdir( $ENV{'PEGASUS_HOME'}, 'lib', 'perl' );
 use Pegasus::DAX::Factory qw(:all); 
 use Pegasus::Common qw(find_exec); 
 
-my $depth = shift || die "Usage: $0 depths [site [sleeptime]]";
-my $sleep = shift || 7200; 
+my $depth = shift || die "Usage: $0 depths [sleeptime]";
+my $sleep = shift || 600; 	# 10 minutes for now
 
 my %hash = ( namespace => 'deepthought' ); 
 my $keg = find_exec( 'keg', File::Spec->catdir($ENV{'PEGASUS_HOME'},'bin') ); 
