@@ -309,6 +309,57 @@ def check_rescue(dir, dag):
 
     return my_result
 
+def monitoring_running(run_dir):
+    """
+    This function takes a run directory and returns true if it appears
+    that pegasus-monitord is still running, or false if it has
+    finished (or perhaps it was never started).
+    """
+    start_file = os.path.join(run_dir, "monitord.started")
+    done_file = os.path.join(run_dir, "monitord.done")
+
+    # If monitord finished, it is not running anymore
+    if os.access(done_file, os.F_OK):
+        return False
+
+    # If monitord started, it is (possibly) still running
+    if os.access(start_file, os.F_OK):
+        return True
+
+    # Otherwise, monitord was never executed (so it is not running right now...)
+    return False
+
+def loading_completed(run_dir):
+    """
+    This function examines a run directory and returns True if all
+    events were successfully processed by pegasus-monitord.
+    """
+    # Loading is never completed if monitoring is still running
+    if monitoring_running(run_dir) == True:
+        return False
+
+    start_file = os.path.join(run_dir, "monitord.started")
+    done_file = os.path.join(run_dir, "monitord.done")
+    log_file = os.path.join(run_dir, "monitord.log")
+
+    # Both started and done files need to exist...
+    if (not os.access(start_file, os.F_OK)) or (not os.access(done_file, os.F_OK)):
+        return False
+
+    # Check monitord.log for loading errors...
+    if os.access(log_file, os.F_OK):
+        try:
+            LOG = open(log_file, "r")
+            for line in LOG:
+                if line.startswith("NL-LOAD-ERROR -->"):
+                    # Found loading error... event processing was not completed
+                    return False
+        except:
+            logger.warning("could not process log file: %s" % (log_file))
+
+    # Otherwise, return true
+    return True
+
 def rotate_log_file(source_file):
     """
     This function rotates the specified logfile.
