@@ -285,6 +285,9 @@ sub build_rpm
     if ( -e "rhel" ) {
         cmd("mv rhel $src_dir/build-results/", 1, 1);
     }
+    else {
+        die("RPM was built - but where did it go?");
+    }
 }
 
 

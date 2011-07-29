@@ -13,14 +13,13 @@ BASE_DIR=`(cd $BASE_DIR && pwd)`
 WORK_DIR=`mktemp -t -d rpm.XXXXXX`
 
 # os name (rhel) and major version
-OS_NAME=`lsb_release -i -s | tr "[:upper:]" "[:lower:]"`
-if echo $OS_NAME | grep enterprise >/dev/null 2>&1; then
+if [ -e /etc/redhat-release ]; then
     OS_NAME="rhel"
+    OS_MAJOR=`cat /etc/redhat-release | sed 's/.*release //' | sed 's/\..*//'`
+else
+    echo "Unable to determine OS name and version"
+    exit 1
 fi
-if [ "$OS_NAME" = "centos" ]; then
-    OS_NAME="rhel"
-fi
-OS_MAJOR=`lsb_release -r -s | sed 's/\..*//'`
 
 # arch
 ARCH=`uname -m`
