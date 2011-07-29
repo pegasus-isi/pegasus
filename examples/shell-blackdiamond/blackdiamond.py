@@ -47,38 +47,38 @@ d = File("f.d")
 # Add a preprocess job
 preprocess = Job(namespace="diamond",name="preprocess",version="2.0")
 preprocess.addArguments("-a preprocess","-T60","-i",a,"-o",b1,b2)
-preprocess.addUses(a,link=Link.INPUT)
-preprocess.addUses(b1,link=Link.OUTPUT, register=False)
-preprocess.addUses(b2,link=Link.OUTPUT, register=False)
+preprocess.uses(a,link=Link.INPUT)
+preprocess.uses(b1,link=Link.OUTPUT, register=False)
+preprocess.uses(b2,link=Link.OUTPUT, register=False)
 diamond.addJob(preprocess)
 
 # Add left Findrange job
 frl = Job(namespace="diamond",name="findrange",version="2.0")
 frl.addArguments("-a findrange","-T60","-i",b1,"-o",c1)
-frl.addUses(b1,link=Link.INPUT)
-frl.addUses(c1,link=Link.OUTPUT, register=False)
+frl.uses(b1,link=Link.INPUT)
+frl.uses(c1,link=Link.OUTPUT, register=False)
 diamond.addJob(frl)
 
 # Add right Findrange job
 frr = Job(namespace="diamond",name="findrange",version="2.0")
 frr.addArguments("-a findrange","-T60","-i",b2,"-o",c2)
-frr.addUses(b2,link=Link.INPUT)
-frr.addUses(c2,link=Link.OUTPUT, register=False)
+frr.uses(b2,link=Link.INPUT)
+frr.uses(c2,link=Link.OUTPUT, register=False)
 diamond.addJob(frr)
 
 # Add Analyze job
 analyze = Job(namespace="diamond",name="analyze",version="2.0")
 analyze.addArguments("-a analyze","-T60","-i",c1,c2,"-o",d)
-analyze.addUses(c1,link=Link.INPUT)
-analyze.addUses(c2,link=Link.INPUT)
-analyze.addUses(d,link=Link.OUTPUT, register=False)
+analyze.uses(c1,link=Link.INPUT)
+analyze.uses(c2,link=Link.INPUT)
+analyze.uses(d,link=Link.OUTPUT, register=False)
 diamond.addJob(analyze)
 
 # Add control-flow dependencies
-diamond.addDependency(parent=preprocess, child=frl)
-diamond.addDependency(parent=preprocess, child=frr)
-diamond.addDependency(parent=frl, child=analyze)
-diamond.addDependency(parent=frr, child=analyze)
+diamond.addDependency(Dependency(parent=preprocess, child=frl))
+diamond.addDependency(Dependency(parent=preprocess, child=frr))
+diamond.addDependency(Dependency(parent=frl, child=analyze))
+diamond.addDependency(Dependency(parent=frr, child=analyze))
 
 # Write the DAX to stdout
 diamond.writeXML(sys.stdout)
