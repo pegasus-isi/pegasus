@@ -268,11 +268,6 @@ public class Condor extends MultipleFTPerXFERJobRefiner {
         for( Iterator it = files.iterator(); it.hasNext(); ){
             FileTransfer ft = (FileTransfer)it.next();
             
-            //sanity check. warn user about limited capability
-            if ( !ft.getTransientRegFlag() ){
-                mLogger.log( "Condor Refiner does not support registration of output files " + ft.getLFN(),
-                             LogManager.WARNING_MESSAGE_LEVEL );
-            }
             
             if ( mCreateRegistrationJobs && ft.getRegisterFlag() ) {
                 regFiles.add(ft);
