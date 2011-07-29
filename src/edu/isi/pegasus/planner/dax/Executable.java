@@ -107,6 +107,7 @@ public class Executable extends CatalogType {
         this.mOsRelease = e.mOsRelease;
         this.mOsVersion = e.mOsVersion;
         this.mGlibc = e.mGlibc;
+	this.mInstalled=e.mInstalled;
         this.mInvokes = new LinkedList<Invoke>(e.mInvokes);
     }
 
