@@ -7,13 +7,13 @@ set -e
 #
 #  Settings
 #
-CLUSTER_NAME="ISIViz"
-CLUSTER_HOSTNAME="viz-login.isi.edu"
-CLUSTER_GATEKEEPER_PORT="2121"
+CLUSTER_NAME="CCG"
+CLUSTER_HOSTNAME="obelix.isi.edu"
+CLUSTER_GATEKEEPER_PORT="2119"
 CLUSTER_GRID_TYPE="gt5"
 CLUSTER_SCHEDULER="condor"
 CLUSTER_WORK_DIR="/nfs/ccg1/90-day-scratch"
-CLUSTER_GLOBUS_LOCATION="/cluster-software/globus/5.0.1"
+CLUSTER_GLOBUS_LOCATION="/ccg/software/globus/default"
 #######################################################################
 
 
@@ -27,16 +27,22 @@ if [ "x$PEGASUS_HOME" = "x" ]; then
     exit 1
 fi 
 
+# download rosetta binary - this is to save space in the Pegasus distribution
+if [ ! -e rosetta.exe ]; then
+   wget http://pegasus.isi.edu/wms/example-workflows/rosetta/rosetta.exe
+   chmod 755 rosetta.exe
+fi
+
 # do we have the required minirosetta_database?
 if [ ! -e minirosetta_database ]; then
-   wget http://www.isi.edu/~rynge/pegasus/example-workflows/minirosetta_database.tar.gz
+   wget http://pegasus.isi.edu/wms/example-workflows/rosetta/minirosetta_database.tar.gz
    tar xzf minirosetta_database.tar.gz
    rm minirosetta_database.tar.gz
 fi
 
 # what about the required pdbs?
 if [ ! -e pdbs ]; then
-   wget http://www.isi.edu/~rynge/pegasus/example-workflows/pdbs.tar.gz
+   wget http://pegasus.isi.edu/wms/example-workflows/rosetta/pdbs.tar.gz
    tar xzf pdbs.tar.gz
    rm pdbs.tar.gz
 fi
@@ -98,7 +104,7 @@ EOF
 echo
 echo
 pegasus-plan \
-    -D pegasus.user.properties=pegasusrc \
+    --conf pegasusrc \
     --sites $CLUSTER_NAME \
     --cluster horizontal \
     --dir work \
