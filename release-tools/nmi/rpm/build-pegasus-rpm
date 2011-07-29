@@ -15,7 +15,7 @@ WORK_DIR=`mktemp -t -d rpm.XXXXXX`
 # os name (rhel) and major version
 if [ -e /etc/redhat-release ]; then
     OS_NAME="rhel"
-    OS_MAJOR=`cat /etc/redhat-release | sed 's/.*release //' | sed 's/\..*//'`
+    OS_MAJOR=`cat /etc/redhat-release | sed 's/.*release //' | sed 's/[\. ].*//'`
 else
     echo "Unable to determine OS name and version"
     exit 1
