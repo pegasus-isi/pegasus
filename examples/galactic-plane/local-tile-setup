@@ -11,6 +11,6 @@ echo "Job started in $START_DIR"
 mkdir -p $TILE_WORK_DIR
 cd $TILE_WORK_DIR
 
-tar xzf ../../outputs/*/pegasus/gp/*/$TILE_ID.tar.gz
+tar xzf $START_DIR/$TILE_ID.tar.gz
 
 

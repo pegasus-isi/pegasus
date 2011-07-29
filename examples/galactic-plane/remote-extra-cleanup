@@ -7,6 +7,6 @@ TILE_ID=$1
 
 START_DIR=`pwd`
 
-rm -rf tile-$TILE_ID
-rm -rf tile-inputs/$TILE_ID
+rm -rf tile-setup/$TILE_ID
+rm -rf $TILE_ID
 
