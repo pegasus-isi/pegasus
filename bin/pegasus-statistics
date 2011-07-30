@@ -672,13 +672,13 @@ def main():
 			help = "writes the output to given directory.")
 	parser.add_option("-c","--conf", action = "store", type = "string", dest = "config_properties",
 			  help = "specifies the properties file to use. This option overrides all other property files.")
-	parser.add_option("-s", "--statisticslevel", action = "store", dest = "statistics_level",
+	parser.add_option("-s", "--statistics_level", action = "store", dest = "statistics_level",
 			choices=['all', 'summary', 'wf_stats','jb_stats','tf_stats' ,'ti_stats' ],
 			help = "Valid levels are: all,summary,wf_stats,jb_stats,tf_stats , ti_stats; Default is summary.")
 	parser.add_option("-t", "--time_filter", action = "store", dest = "time_filter",
 			choices=['month', 'week', 'day','hour' ],
 			help = "Valid levels are: month,week,day,hour; Default is day.")
-	parser.add_option("-i", "--ignore-db-inconsistency", action = "store_const", const = 0, dest = "ignore_db_inconsistency",
+	parser.add_option("-i", "--ignore_db_inconsistency", action = "store_const", const = 0, dest = "ignore_db_inconsistency",
                   help = "turn off the check for db consistency")
 	parser.add_option("-v", "--verbose", action="count", default=0, dest="verbose", 
 			help="Increase verbosity, repeatable")
