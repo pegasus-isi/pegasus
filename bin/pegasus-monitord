@@ -168,7 +168,10 @@ speak = "PMD/1.0"
 PRESCRIPT_TASK_ID = -1                    # id for prescript tasks
 POSTSCRIPT_TASK_ID = -2                   # id for postscript tasks
 MONITORD_STATE_FILE = "monitord.info"     # filename for writing monitord state information
+MONITORD_DONE_FILE = "monitord.done"      # filename for writing when monitord finishes
+MONITORD_START_FILE = "monitord.started"  # filename for writing when monitord starts
 MONITORD_WF_RETRY_FILE = "monitord.subwf" # filename for writing persistent sub-workflow retry information
+MONITORD_RECOVER_FILE = "monitord.recover"                # filename for writing monitord recovery information
 MONITORD_NOTIFICATION_FILE = "monitord-notifications.log" # filename for writing the output of notification scripts
 MAX_SLEEP_TIME = 10     	          # in seconds
 SLEEP_WAIT_NOTIFICATION = 5               # in seconds
@@ -219,6 +222,32 @@ condor_dagman_executable = utils.find_exec("condor_dagman")
 if condor_dagman_executable is None:
     # Default value
     condor_dagman_executable = "condor_dagman"
+
+def purge_wf_uuid_from_database(rundir, output_db):
+    """
+    This function purges a workflow id from the output database.
+    """
+    if output_db.lower().find('sqlite:///') == 0:
+        # Ok, we have a SQLite database, let's get the filename and check if it exists
+        filename = output_db[10:]
+
+        # Check if SQLite database exists
+        if not os.path.isfile(filename):
+            # No, nothing to do
+            return
+
+    # Parse the braindump file
+    wfparams = utils.slurp_braindb(rundir)
+    
+    if "wf_uuid" in wfparams:
+        if wfparams["wf_uuid"] is not None:
+            # Get wf_uuid
+            wf_uuid = wfparams["wf_uuid"]
+            e = Expunge(output_db, wf_uuid)
+            e.expunge()
+
+            # Done, make this connection go away
+            e = None
 
 class OutputURL:
     """
@@ -319,11 +348,14 @@ class FileEventSink(EventSink):
     """
     Write wflow event logs to a file.
     """
-    def __init__(self, path, encoder=None, **kw):
+    def __init__(self, path, restart=False, encoder=None, **kw):
         assert nlapi is not None, "File/socket destination selected, "+\
                "but cannot import NetLogger API"
         super(FileEventSink, self).__init__()
-        self._output = open(path, 'a')
+        if restart:
+            self._output = open(path, 'w')
+        else:
+            self._output = open(path, 'a')
         self._encoder = encoder
 
     def send(self, event, kw):
@@ -1047,6 +1079,58 @@ class Workflow:
         # All done!
         return
 
+    def read_workflow_progress(self):
+        """
+        This function reads the workflow progress from a previous
+        instance of the monitoring daemon, and keeps track of the last
+        time that was processed by pegasus-monitord.
+        """
+        my_recover_file = os.path.join(self._run_dir, MONITORD_RECOVER_FILE)
+        if os.access(my_recover_file, os.F_OK):
+            try:
+                RECOVER = open(my_recover_file, 'r')
+                for line in RECOVER:
+                    line = line.strip()
+                    my_key, my_value = line.split(" ", 1)
+                    if my_key == "line_processed":
+                        self._previous_processed_line = int(my_value.strip())
+                        logger.info("monitord last processed line: %d" % (self._previous_processed_line))
+                        break
+                RECOVER.close()
+            except:
+                logger.info("couldn't open/parse recover file information: %s" % (my_recover_file))
+
+    def write_workflow_progress(self):
+        """
+        This function writes the workflow progress so that a future
+        instance of the monitoring daemon can figure out where we were
+        in case of failure.
+        """
+        # Nothing to do if we still haven't caught up with the last instance's progress...
+        if self._line < self._previous_processed_line:
+            return
+ 
+        my_recover_file = os.path.join(self._run_dir, MONITORD_RECOVER_FILE)
+        try:
+            RECOVER = open(my_recover_file, "w")
+        except:
+            logger.error("cannot open recover file: %s" % (my_recover_file))
+            return
+
+        try:
+            # Write line with information about where we are in the dagman.out file
+            RECOVER.write("line_processed %s\n" % (self._line))
+        except:
+            logger.error("cannot write recover information to file: %s" % (my_recover_file))
+
+        # Close the file
+        try:
+            RECOVER.close()
+        except:
+            pass
+
+        return
+
     def db_send_wf_info(self):
         """
         This function sends to the DB information about the workflow
@@ -1335,6 +1419,11 @@ class Workflow:
         if not self._enable_notifications or self._notifications is None:
             return
 
+        if self._line < self._previous_processed_line:
+            # Recovery mode, skip notification that we already did.
+            logger.debug("Recovery mode: skipping notification already issued... line %s" % (self._line))
+            return
+
         if "workflow" in self._notifications:
             my_dict = self._notifications["workflow"]
             if len(my_dict) == 0:
@@ -1404,6 +1493,11 @@ class Workflow:
         """
         # Skip, if notificatications for this workflow are disabled, or if we have no list
         if not self._enable_notifications or self._notifications is None:
+            return
+
+        if self._line < self._previous_processed_line:
+            # Recovery mode, skip notification that we already did.
+            logger.debug("Recovery mode: skipping notification already issued... line %s" % (self._line))
             return
 
         if "job" in self._notifications:
@@ -1506,6 +1600,11 @@ class Workflow:
         if not self._enable_notifications or self._notifications is None:
             return
 
+        if self._line < self._previous_processed_line:
+            # Recovery mode, skip notification that we already did.
+            logger.debug("Recovery mode: skipping notification already issued... line %s" % (self._line))
+            return
+
         if "invocation" in self._notifications:
             my_dict = self._notifications["invocation"]
         else:
@@ -1577,7 +1676,7 @@ class Workflow:
     def __init__(self, rundir, outfile, database=None,
                  workflow_config_file=None, jsd=None, root_id=None,
                  parent_id=None, parent_jobid=None, parent_jobseq=None,
-                 enable_notifications=True,
+                 enable_notifications=True, replay_mode=False,
                  notification_list=None):
         """
         This function initializes the workflow object. It looks for
@@ -1594,6 +1693,7 @@ class Workflow:
         self._database_disabled = False
         self._workflow_start = int(time.time())
         self._enable_notifications = enable_notifications
+        self._replay_mode = replay_mode
         self._notification_list = notification_list
 
         # Initialize other class variables
@@ -1627,6 +1727,7 @@ class Workflow:
         self._write_wf_uuid = False             # Flag for appending the generated wf_uuid to the braindump file
         self._line = 0                          # line number from dagman.out file
         self._last_processed_line = 0           # line last processed by the monitoring daemon
+        self._previous_processed_line = 0       # line last processed by a previous instance of monitord
         self._restart_count = 0                 # Keep track of how many times the workflow was restarted
         self._skipping_recovery_lines = False   # Flag for skipping the repeat duplicate messages generated by DAGMan
         self._dagman_condor_id = None           # Condor id of the current DAGMan
@@ -1634,10 +1735,21 @@ class Workflow:
         self._current_timestamp = 0             # Last timestamp from DAGMan
         self._dagman_exit_code = None           # Keep track of when to finish this workflow
         self._monitord_exit_code = 0            # Keep track of errors inside monitord
+        self._finished = False                  # keep track so we don't finish multiple times
         self._condorlog = None                  # Condor common logfile
         self._multiline_file_flag = False       # Track multiline user log files, DAGMan > 6.6
         self._walltime = {}                     # jid --> walltime
         self._job_site = {}                     # last site a job was planned for
+
+        if not self._replay_mode:
+            # Recover state from a previous run
+            self.read_workflow_state()
+            self.read_workflow_progress()
+            if self._previous_processed_line != 0:
+                # Recovery mode detected, reset last_processed_line so
+                # that we start from the beginning of the dagman.out
+                # file...
+                self._last_processed_line = 0
 
         # Determine location of jobstate.log file
         if jsd is None:
@@ -1651,20 +1763,20 @@ class Workflow:
 
         try:
             # Create new file, or append to an existing one
-            if not replay_mode:
+            if not self._replay_mode and self._previous_processed_line == 0:
+                # Append to current one if not in replay mode and not
+                # in recovering from previous errors
                 self._JSDB = open(self._jsd_file, 'a', 0)
             else:
-                # Rotate jobstate.log file, if any
+                # Rotate jobstate.log file, if any in case of replay
+                # mode of if we are starting from the beginning
+                # because of a previous failure
                 utils.rotate_log_file(self._jsd_file)
                 self._JSDB = open(self._jsd_file, 'w', 0)
         except:
             logger.critical("error creating/appending to %s!" % (self._jsd_file))
             self._monitord_exit_code = 1
             return
-
-        if not replay_mode:
-            # Recover state from a previous run
-            self.read_workflow_state()
 
         # Parse the braindump file
         wfparams = utils.slurp_braindb(rundir, workflow_config_file)
@@ -1769,7 +1881,7 @@ class Workflow:
         self._JSDB.write("%d INTERNAL *** MONITORD_STARTED ***\n" % (self._workflow_start))
 
         # Write monitord.started file
-        my_start_file = os.path.join(self._run_dir, "monitord.started")
+        my_start_file = os.path.join(self._run_dir, MONITORD_START_FILE)
         try:
             STARTED = open(my_start_file, "w")
             STARTED.write("%s\n" % (utils.isodate(my_now)))
@@ -1778,7 +1890,7 @@ class Workflow:
             logger.error("writing %s" % (my_start_file))
 
         # Remove monitord.done file, if it is there
-        my_touch_name = os.path.join(self._run_dir, "monitord.done")
+        my_touch_name = os.path.join(self._run_dir, MONITORD_DONE_FILE)
         try:
             os.unlink(my_touch_file)
         except:
@@ -1858,7 +1970,12 @@ class Workflow:
         This function writes the last line in the jobstate.log and closes
         the file.
         """
+        if self._finished:
+            return
+        self_finished = True
+
         my_workflow_end = int(time.time())
+        my_recover_file = os.path.join(self._run_dir, MONITORD_RECOVER_FILE)
 
         print "%d - %s - MONITORD_FINISHED - %s - %s" % (my_workflow_end,
                                                          utils.isodate(my_workflow_end), self._wf_uuid,
@@ -1870,9 +1987,14 @@ class Workflow:
         # Save all state to disk so that we can start again later
         self.write_workflow_state()
 
+        try:
+            os.unlink(my_recover_file)
+            logger.info("recovery file deleted: %s" % (my_recover_file))
+        except:
+            logger.warning("unable to remove recover file: %s" % (my_recover_file))
 
         # Write monitord.done file
-        my_touch_name = os.path.join(self._run_dir, "monitord.done")
+        my_touch_name = os.path.join(self._run_dir, MONITORD_DONE_FILE)
         try:
             TOUCH = open(my_touch_name, "w")
             TOUCH.write("%s %.3f\n" % (utils.isodate(my_workflow_end),
@@ -1881,7 +2003,7 @@ class Workflow:
         except:
             logger.error("writing %s" % (my_touch_name))
 
-        if not replay_mode:
+        if not self._replay_mode:
             # Attempt to copy the condor common logfile to the current directory
             if self._condorlog is not None:
                 if (os.path.isfile(self._condorlog) and
@@ -1908,7 +2030,6 @@ class Workflow:
                                 logger.info("copied common log to %s" % (self._run_dir))
                     else:
                         logger.info("%s: %d:%s" % (my_cmd, my_status, my_output))
-
 
     def find_jobid(self, jobid):
         """
@@ -3971,32 +4092,6 @@ def finish_notifications():
             logger.warning("error closing notifications' log file...")
         notifications_log = None
 
-def purge_wf_uuid_from_database(rundir, output_db):
-    """
-    This function purges a workflow id from the output database.
-    """
-    if output_db.lower().find('sqlite:///') == 0:
-        # Ok, we have a SQLite database, let's get the filename and check if it exists
-        filename = output_db[10:]
-
-        # Check if SQLite database exists
-        if not os.path.isfile(filename):
-            # No, nothing to do
-            return
-
-    # Parse the braindump file
-    wfparams = utils.slurp_braindb(rundir)
-    
-    if "wf_uuid" in wfparams:
-        if wfparams["wf_uuid"] is not None:
-            # Get wf_uuid
-            wf_uuid = wfparams["wf_uuid"]
-            e = Expunge(output_db, wf_uuid)
-            e.expunge()
-
-            # Done, make this connection go away
-            e = None
-
 def prog_sighup_handler(signum, frame):
     """
     This function catches SIGHUP.
@@ -4120,17 +4215,20 @@ if no_events:
     wf_event_sink = None # Avoid parsing kickstart output if not
                          # generating bp file or database events
 else:
+    restart_logging = False
+    if replay_mode or os.access(os.path.join(run, MONITORD_RECOVER_FILE), os.F_OK):
+        restart_logging = True
     try:
-        wf_event_sink = create_wf_event_sink(event_dest, db_stats=db_stats, enc=encoding)
+        wf_event_sink = create_wf_event_sink(event_dest, db_stats=db_stats,
+                                             restart=restart_logging, enc=encoding)
         atexit.register(finish_stampede_loader)
+        if restart_logging and isinstance(wf_event_sink, DBEventSink):
+            # If in replay mode or recovery mode and it is a DB,
+            # attempt to purge wf_uuid_first
+            purge_wf_uuid_from_database(run, event_dest)
     except ValueError, err:
         logger.critical("Cannot create output: %s. Abort." % (err))
         sys.exit(1)
-
-# If in replay mode and it is a DB, attempt to purge wf_uuid_first
-if wf_event_sink is not None:
-    if replay_mode and isinstance(wf_event_sink, DBEventSink):
-        purge_wf_uuid_from_database(run, event_dest)
 
 # Say hello
 logger.info("starting [%s], using pid %d" % (revision, os.getpid()))
@@ -4218,7 +4316,8 @@ if do_notifications == True:
 
 # Instantiate workflow class
 wf = Workflow(run, out, database=wf_event_sink, jsd=jsd,
-              enable_notifications=do_notifications, notification_list=pending_notifications)
+              enable_notifications=do_notifications,
+              replay_mode=replay_mode, notification_list=pending_notifications)
 # If everything went well, create a workflow entry for this workflow
 if wf._monitord_exit_code == 0:
     workflow_entry = WorkflowEntry()
@@ -4411,7 +4510,8 @@ while (len(wfs) > 0):
                                 parent_wf_id = workflow_entry.wf._wf_uuid
                                 new_wf = Workflow(new_run_dir, new_dagman_out, database=wf_event_sink,
                                                   parent_id=parent_wf_id, parent_jobid=parent_jobid,
-                                                  parent_jobseq=parent_jobseq, root_id=root_wf_id, jsd=jsd,
+                                                  parent_jobseq=parent_jobseq, root_id=root_wf_id,
+                                                  jsd=jsd, replay_mode=replay_mode,
                                                   enable_notifications=do_notifications,
                                                   notification_list=pending_notifications)
 
@@ -4437,6 +4537,8 @@ while (len(wfs) > 0):
                     logger.info("processed chunk of %d byte" % (ml_pos - workflow_entry.ml_current -len(workflow_entry.ml_buffer)))
                     workflow_entry.ml_current = ml_pos
                     workflow_entry.ml_retries = 0
+                    # Write workflow progress for recovery mode
+                    workflow_entry.wf.write_workflow_progress()
 
             workflow_entry.sleep_time = time.time() + sleeptime(workflow_entry.ml_retries)
     
