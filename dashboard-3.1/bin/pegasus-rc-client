@@ -1,0 +1,11 @@
+#!/bin/bash
+#
+# manipulate any replica catalog implementation through a generic
+# interface from the shell.
+#
+# $Id$
+#
+. "`dirname $0`/common.sh"
+
+# run java program
+${JAVA} "-Dpegasus.home=${PEGASUS_HOME}" $addon  edu.isi.pegasus.planner.client.RCClient "$@"

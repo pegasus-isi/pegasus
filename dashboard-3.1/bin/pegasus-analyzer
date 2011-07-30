@@ -1,0 +1,1046 @@
+#!/usr/bin/env python
+
+"""
+Pegasus utility for pasing jobstate.log and reporting succesful and failed jobs
+
+Usage: pegasus-analyzer [options]
+
+"""
+
+##
+#  Copyright 2007-2010 University Of Southern California
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing,
+#  software distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+##
+
+# Revision : $Revision: 2012 $
+
+# Import Python modules (some not currently needed, but included for future expansion)
+import os
+import re
+import sys
+import time
+import errno
+import logging
+import commands
+import optparse
+import tempfile
+
+# Initialize logging object
+logger = logging.getLogger()
+# Set default level to WARNING
+logger.setLevel(logging.WARNING)
+
+# Import our modules
+import common
+from Pegasus.tools import utils
+from Pegasus.tools import kickstart_parser
+
+# --- regular expressions -------------------------------------------------------------
+
+re_parse_property = re.compile(r'([^:= \t]+)\s*[:=]?\s*(.*)')
+re_parse_script_pre = re.compile(r'^SCRIPT PRE (\S+) (.*)')
+re_parse_condor_subs = re.compile(r'(\S+)="([^"]+)"')
+re_collapse_condor_subs = re.compile(r'\$\([^\)]*\)') 
+
+# --- classes -------------------------------------------------------------------------
+
+class Job:
+
+    def __init__(self, job_name, job_state=""):
+	"""
+	Initializes the Job class, setting job name,
+	and state, if provided
+	"""
+	self.name = job_name		# Job name
+	self.state = job_state		# Job state
+        self.sub_file = ""	    	# Submit file for this job
+        self.out_file = ""		# Output file for this job
+        self.err_file = ""		# Error file for this job
+        self.cluster = ""		# Cluster id for this job (from Condor)
+        self.process = ""		# Process id for this job (from Condor)
+        self.sub_file_parsed = False 	# Flag to tell if we were able to parse this job's submit file
+        self.site = ""			# Site where the job ran
+        self.executable = ""		# Job's executable
+        self.arguments = ""		# Job's arguments
+        self.initial_dir = ""		# Job's initial dir (from submit file)
+        self.transfer_input_files = ""	# Files to transfer when debugging a job
+        self.is_subdag = False		# Flag to tell if job is a SUBDAG job in the dag file
+        self.subdag_dir = ""		# Subdag directory from a SUBDAG job in the dag file
+        self.dag_path = ""		# Full path to the dag file from a SUBDAG job
+        self.dagman_out = ""		# dagman.out file for this job (only for clustered jobs)
+        self.pre_script = ""		# SCRIPT PRE line from the dag file
+        self.condor_subs = {}		# Lits of condor substitutions rom DAG VARS line
+
+    def set_state(self, new_state):
+	"""
+	This function updates a job state
+	"""
+	self.state = new_state
+
+# --- constants -----------------------------------------------------------------------
+
+MAXLOGFILE = 1000				# For log file rotation, check files .000 to .999
+debug_level = logging.WARNING			# For now
+
+# --- global variables ----------------------------------------------------------------
+
+prog_base = os.path.split(sys.argv[0])[1]	# Name of this program
+input_dir = None				# Directory given in -i command line option
+dag_path = None					# Path of the dag file
+dagman_out_path = None				# Path to the dagman.out file
+jsdl_path = None				# Path of the jobstate.log file
+tsdl_path = None				# Path to monitord's log file
+temp_log = None					# Temporary log file created
+debug_job = None				# Path of a submit file to debug
+debug_dir = None				# Temp directory to use while debugging a job
+workflow_type = None				# Type of the workflow being debugged
+workflow_base_dir = ""				# Workflow submit_dir or dirname(jsd) from braindump file
+run_monitord = 0				# Run monitord before trying to analyze the output
+run_directory_writable = False			# Flag to indicate if we can write to the run directory
+quiet_mode = 0					# Prints out/err filenames instead of dumping their contents
+strict_mode = 0					# Gets out/err filenames from submit file
+debug_mode = 0					# Mode that enables debugging a single job
+keep_log = 0					# Keeps temporaty jobstate.log file created by monitord in /tmp directory
+print_invocation = 0				# Prints invocation command for failed jobs
+print_pre_script = 0				# Prints the SCRIPT PRE line for failed jobs, if present
+jsdl_filename = "jobstate.log"			# Default name of the log file to use
+jobs = {}					# List of jobs found in the jobstate.log file
+success = 0					# Number of successful jobs
+unsubmitted = 0					# Number of unsubmitted jobs
+failed_jobs = []				# List of jobs that failed
+unknown_jobs = []				# List of jobs that neither succeeded nor failed
+
+# --- functions -----------------------------------------------------------------------
+
+def create_temp_logfile(name):
+    """
+    This function uses tempfile.mkstemp to create a temporary 
+    log filename in the /tmp directory
+    """
+    try:
+	tmp_file = tempfile.mkstemp(prefix="%s-" % (name), suffix=".log", dir="/tmp")
+    except:
+	return None
+
+    # Close file, we will use it later
+    os.close(tmp_file[0])
+
+    # Return filename
+    return tmp_file[1]
+
+def has_seen(job_name):
+    """
+    This function returns true if we are already tracking job_name
+    """
+    if job_name in jobs:
+	return True
+    return False
+
+def add_job(job_name, job_state=""):
+    """
+    This function adds a job to our list
+    """
+    # Don't add the same job twice
+    if job_name in jobs:
+	return
+
+    newjob = Job(job_name, job_state)
+    jobs[job_name] = newjob
+
+def update_job_state(job_name, job_state=""):
+    """
+    This function updates the job state of a given job
+    """
+    # Make sure we have this job
+    if not job_name in jobs:
+	# Print a warning message
+	logger.error("could not find job %s" % (job_name))
+	return
+
+    jobs[job_name].set_state(job_state)
+
+def update_job_condor_info(job_name, condor_id="-"):
+    """
+    This function updates a job's condor_id (it splits it into process
+    and cluster)
+    """
+    # Make sure we have this job
+    if not job_name in jobs:
+	# Print a warning message
+	logger.error("could not find job %s" % (job_name))
+	return
+
+    # Nothing to do if condor_id is not defined
+    if condor_id == "-":
+	return
+
+    my_split = condor_id.split(".")
+
+    # First part is cluster id
+    jobs[job_name].cluster = my_split[0]
+
+    # If we have two pieces, second piece is process
+    if len(my_split) >= 2:
+	jobs[job_name].process = my_split[1]
+
+def analyze():
+    """
+    This function processes all currently known jobs, generating some statistics
+    """
+    global success, unsubmitted
+
+    for my_job in jobs:
+	if (jobs[my_job].state == "POST_SCRIPT_SUCCESS" or
+	    jobs[my_job].state == "JOB_SUCCESS"):
+	    success = success + 1
+	elif (jobs[my_job].state == "POST_SCRIPT_FAILURE" or
+	      jobs[my_job].state == "JOB_FAILURE"):
+	    failed_jobs.append(my_job)
+	elif (jobs[my_job].state == "UNSUBMITTED"):
+	    unsubmitted = unsubmitted + 1
+	else:
+	    # It seems we don't have a final result for this job
+	    unknown_jobs.append(my_job)
+
+def parse_submit_file(my_job):
+    """
+    This function opens a submit file and reads site
+    and condor dagman log information
+    """
+    # First we check if this is a SUBDAG job from the dag file
+    if my_job.is_subdag:
+	# Nothing to do here
+	return
+
+    if my_job.sub_file == "":
+	# Create full path for the submit file if we already don't have the sub file set up
+	my_job.sub_file = os.path.join(input_dir, my_job.name + ".sub")
+    my_job.out_file = os.path.join(input_dir, my_job.name + ".out")
+    my_job.err_file = os.path.join(input_dir, my_job.name + ".err")
+
+    # Try to access submit file
+    if os.access(my_job.sub_file, os.R_OK):
+	# Open submit file
+	try:
+	    SUB = open(my_job.sub_file, "r")
+	except:
+	    # print "error opening submit file: %s" % (my_job.sub_file)
+	    # fail silently for now...
+	    return
+	
+	# submit file found
+	my_job.sub_file_parsed = True
+
+	# Check if this job includes sub workflows
+	if my_job.name.startswith("pegasus-plan") or my_job.name.startswith("subdax_"):
+	    has_sub_workflow = True
+	else:
+	    has_sub_workflow = False
+
+	# Parse submit file
+	for line in SUB:
+	    # First we need to do some trimming...
+	    line = line.strip(" \t") # Remove leading and trailing spaces
+	    if line.startswith('#'):
+		# Skip comments
+		continue
+	    line = line.rstrip("\n\r") # Remove new lines, if any
+	    line = line.split('#')[0] # Remove inline comments too
+	    line = line.strip() # Remove any remaining spaces at both ends
+	    if len(line) == 0:
+		# Skip empty lines
+		continue
+	    prop = re_parse_property.search(line)
+	    if prop:
+		# Parse successful
+		k = prop.group(1)
+		v = prop.group(2)
+
+		# See if it is one of the properties we are looking for...
+		if k == "+pegasus_site":
+		    my_job.site = v.strip('"')
+		    continue
+		if k == "arguments":
+		    my_job.arguments = v.strip('"')
+		if k == "executable":
+		    my_job.executable = v
+		if k == "environment" and has_sub_workflow:
+		    # Ok, we need to find the CONDOR_DAGMAN_LOG entry now...
+		    sub_props = v.split(';')
+		    for sub_prop_line in sub_props:
+			sub_prop_line = sub_prop_line.strip() # Remove any spaces
+			if len(sub_prop_line) == 0:
+			    continue
+			sub_prop = re_parse_property.search(sub_prop_line)
+			if sub_prop:
+			    if sub_prop.group(1) == "_CONDOR_DAGMAN_LOG":
+				my_job.dagman_out = sub_prop.group(2)
+                                my_job.dagman_out = os.path.normpath(my_job.dagman_out)
+                                if my_job.dagman_out.find(workflow_base_dir) >= 0:
+                                    # Path to dagman_out file includes original submit_dir, let's try to change it
+                                    my_job.dagman_out = os.path.normpath(my_job.dagman_out.replace((workflow_base_dir + os.sep), '', 1))
+                                    # Join with current input_dir
+                                    my_job.dagman_out = os.path.join(input_dir, my_job.dagman_out)
+		# Only parse following keys if we are running in strict mode
+		if strict_mode:
+		    # Get initial dir
+		    if k == "initialdir":
+			my_job.initial_dir = v
+		    # Parse error and output keys
+		    if k == "output" or k == "error":
+			# Take care of basic substitutions first
+			v = v.replace("$(cluster)", my_job.cluster)
+			v = v.replace("$(process)", my_job.process)
+
+			# Now we do any substitutions from the DAG's VAR line (if any)
+			for my_key in my_job.condor_subs:
+			    v = v.replace("$(%s)" % (my_key), my_job.condor_subs[my_key])
+
+			# Now, we collapse any remaining substitutions (not found in the VAR line)
+			v = re_collapse_condor_subs.sub('', v)
+
+			# Make sure we have an absolute path
+			if not os.path.isabs(v):
+			    v = os.path.join(input_dir, v)
+
+			# Done! Replace out/err filenames with what we have
+			if k == "output":
+			    my_job.out_file = v
+			else:
+			    my_job.err_file = v
+		# Only parse following keys if we are debugging a job
+		if debug_mode:
+		    # Get transfer input files
+		    if k == "transfer_input_files":
+			my_job.transfer_input_files = v
+	SUB.close()
+	# If initialdir was specified, we need to make both error and output files relative to that
+	if len(my_job.initial_dir):
+	    my_job.out_file = os.path.join(my_job.initial_dir, my_job.out_file)
+	    my_job.err_file = os.path.join(my_job.initial_dir, my_job.err_file)
+    else:
+	# Was not able to access submit file
+	# fail silently for now...
+	# print "cannot access submit file: %s" % (my_job.sub_file)
+	pass
+
+def find_file(input_dir, file_type):
+    """
+    This function finds a file with the suffix file_type
+    in the input directory. We assume there is just one
+    file of the requested type in the directory (otherwise
+    the function will return the first file matching the type
+    """
+    try:
+	file_list = os.listdir(input_dir)
+    except:
+	logger.error("cannot read directory: %s" % (input_dir))
+	sys.exit(1)
+
+    for file in file_list:
+	if file.endswith(file_type):
+	    return os.path.join(input_dir, file)
+
+    logger.error("could not find any %s file in %s" % (file_type, input_dir))
+    sys.exit(1)
+
+def parse_dag_file(dag_fn):
+    """
+    This function walks through the dag file, learning about
+    all jobs before hand.
+    """
+    # Open dag file
+    try:
+	DAG = open(dag_fn, "r")
+    except:
+	logger.error("could not open dag file %s: exiting..." % (dag_fn))
+	sys.exit(1)
+
+    # Loop through the dag file
+    for line in DAG:
+	line = line.strip(" \t")
+	if line.startswith("#"):
+	    # Skip comments
+	    continue
+	line = line.rstrip("\n\r") # Remove new lines, if any
+	line = line.split('#')[0] # Remove inline comments too
+	line = line.strip() # Remove any remaining spaces at both ends
+	if len(line) == 0:
+	    # Skip empty lines
+	    continue
+	if line.startswith("JOB"):
+	    # This is a job line, let's parse it
+	    my_job = line.split()
+	    if len(my_job) != 3:
+		logger.warn("confused parsing dag line: %s" % (line))
+		continue
+	    if not has_seen(my_job[1]):
+		add_job(my_job[1], "UNSUBMITTED")
+		# Get submit file information from dag file
+		jobs[my_job[1]].sub_file = os.path.join(input_dir, my_job[2])
+	    else:
+		logger.warn("job appears twice in dag file: %s" % (my_job[1]))
+	if line.startswith("SUBDAG EXTERNAL"):
+	    # This is a subdag line, parse it to get job name and directory
+	    my_job = line.split()
+	    if len(my_job) != 6:
+		logger.warn("confused parsing dag line: %s" % (line))
+		continue
+	    if not has_seen(my_job[2]):
+		add_job(my_job[2], "UNSUBMITTED")
+		jobs[my_job[2]].is_subdag = True
+		jobs[my_job[2]].dag_path = my_job[3]
+		jobs[my_job[2]].subdag_dir = my_job[5]
+	    else:
+		logger.warn("job appears twice in dag file: %s" % (my_job[2]))
+	if line.startswith("SCRIPT PRE"):
+	    # This is a SCRIPT PRE line, parse it to get the script for the job
+	    my_script = re_parse_script_pre.search(line)
+	    if my_script is None:
+		# Couldn't parse line
+		logger.warn("confused parsing dag line: %s" % (line))
+		continue
+	    # Get job name, and check if we have it
+	    my_job = my_script.group(1)
+	    if not has_seen(my_job):
+		# Cannot find this job, ignore this line
+		logger.warn("couldn't find job: %s for PRE SCRIPT line in dag file" % (my_job))
+		continue
+	    # Good, copy PRE script line to our job structure
+	    jobs[my_job].pre_script = my_script.group(2)
+	if line.startswith("VARS"):
+	    # This is a VARS line, parse it to get the condor substitutions
+	    if len(line.split()) > 2:
+		# Line looks promising...
+		my_job = line.split()[1]
+		if not has_seen(my_job):
+		    # Cannot find this job, ignore this line
+		    logger.warn("couldn't find job: %s for VARS line in dag file" % (my_job))
+		    continue
+		# Good, parse the condor substitutions, and create substitution dictionary
+		for my_key, my_val in re_parse_condor_subs.findall(line):
+		    jobs[my_job].condor_subs[my_key] = my_val
+
+def parse_jobstate_log(jobstate_fn):
+    """
+    This function parses the jobstate.log file, loading all job information
+    """
+    # Open log file
+    try:
+	JSDL = open(jobstate_fn, "r")
+    except:
+	logger.error("could not open file %s: exiting..." % (jobstate_fn))
+	sys.exit(1)
+
+    # Loop through the log file
+    for line in JSDL:
+	sp = line.split()
+	# Skip lines that don't have enough items
+	if len(sp) < 6:
+	    continue
+	# Skip monitord comments
+	if sp[1] == "INTERNAL":
+	    continue
+
+	# Ok, we have a valid job
+	jobname = sp[1]
+	jobstate = sp[2]
+	condor_id = sp[3]
+
+	# Add to job list if we have never seen this job before
+	if not has_seen(jobname):
+	    logger.warn("job %s not present in dag file" % (jobname))
+	    add_job(jobname, jobstate)
+	else:
+	    # Update job state
+	    update_job_state(jobname, jobstate)
+
+	# Update condor id if we reached the SUBMIT state
+	if jobstate == "SUBMIT":
+	    update_job_condor_info(jobname, condor_id)
+
+    # Close log file
+    JSDL.close()
+
+def find_latest_log(log_file_base):
+    """
+    This function tries to locate the latest log file
+    """
+    last_log = None
+    curr_log = None
+
+    if os.access(log_file_base, os.F_OK):
+	last_log = log_file_base
+
+    # Starts from .000
+    sf = 0
+
+    while (sf < MAXLOGFILE):
+	curr_log = log_file_base + ".%03d" % (sf)
+	if os.access(curr_log, os.F_OK):
+	    last_log = curr_log
+	    sf = sf + 1
+	else:
+	    break
+
+    return last_log
+
+def rotate_log(source_file):
+    """
+    This function rotates a log file so that it is not overwritten.
+    """
+    if not os.access(source_file, os.F_OK):
+	# File doesn't exist, we don't have to rotate
+	return
+
+    # Now we need to find the latest log file
+
+    # We start from .000
+    sf = 0
+
+    while (sf < MAXLOGFILE):
+	dest_file = source_file + ".%03d" % (sf)
+	if os.access(dest_file, os.F_OK):
+	    # Continue to the next one
+	    sf = sf + 1
+	else:
+	    break
+
+    # Safety check to see if we have reached the maximum number of log files
+    if sf >= MAXLOGFILE:
+	logger.error("%s exists, cannot rotate log file anymore!" % (dest_file))
+	sys.exit(1)
+
+    # Now that we have source_file and dest_file, try to rotate the logs
+    try:
+	os.rename(source_file, dest_file)
+    except:
+	logger.error("cannot rename %s to %s" % (source_file, dest_file))
+	sys.exit(1)
+
+    # Done!
+    return
+
+def invoke_monitord(dagman_out_file, output_log):
+    """
+    This function runs monitord on the given dagman_out_file.
+    """
+    monitord_cmd = "pegasus-monitord -r --no-database"
+    monitord_cmd = monitord_cmd + " -j " + output_log
+    monitord_cmd = monitord_cmd + " " + dagman_out_file
+    logger.info("running: %s" % (monitord_cmd))
+
+    try:
+	status, output = commands.getstatusoutput(monitord_cmd)
+    except:
+	logger.error("could not invoke monitord")
+	sys.exit(1)
+
+def dump_file(file):
+    """
+    This function dumps a file to our stdout
+    """
+    if file is not None:
+	try:
+	    OUT = open(file, 'r')
+	except:
+	    logger.warn("*** Cannot access: %s" % (file))
+	    print
+	else:
+	    print os.path.split(file)[1].center(80, '-')
+	    print
+	    # Dump file contents to terminal
+	    line = OUT.readline()
+	    while line:
+		line = line.strip()
+		print line
+		line = OUT.readline()
+
+	    OUT.close()
+	    print
+
+def print_output_error(job):
+    """
+    This function outputs both output and error files for a given job.
+    """
+    out_file = find_latest_log(job.out_file)
+    err_file = find_latest_log(job.err_file)
+
+    my_parser = kickstart_parser.Parser(out_file)
+    my_output = my_parser.parse_stdout_stderr()
+    my_task_id = 0
+
+    if len(my_output) > 0:
+        # Ok, we got valid kickstart records, output stdout and stderr for tasks that failed
+        for entry in my_output:
+            # Count tasks, the same way as pegasus-monitord for Stampede
+            my_task_id = my_task_id + 1
+            if not "derivation" in entry or not "transformation" in entry:
+                continue
+            if not "exitcode" in entry and not "error" in entry:
+                continue
+            if "exitcode" in entry:
+                try:
+                    if int(entry["exitcode"]) == 0:
+                        # Skip tasks with exitcode equals to zero
+                        continue
+                except:
+                    logger.warn("couldn't convert exitcode to integer!")
+                    continue
+            else:
+                # We must have "error" in entry
+                pass
+            # Got a task with a non-zero exitcode
+            print ("Task #" + str(my_task_id) + " - Summary").center(80, '-')
+            print
+            if "resource" in entry:
+                print "site        : %s" % (entry["resource"])
+            if "hostname" in entry:
+                print "hostname    : %s" % (entry["hostname"])
+            if "name" in entry:
+                print "executable  : %s" % (entry["name"])
+            if "argument-vector" in entry:
+                print "arguments   : %s" % (entry["argument-vector"])
+            if "exitcode" in entry:
+                print "exitcode    : %s" % (entry["exitcode"])
+            else:
+                if "error" in entry:
+                    print "error       : %s" % (entry["error"])
+            if "cwd" in entry:
+                print "working dir : %s" % (entry["cwd"])
+            print
+            # Now let's display stdout and stderr
+            if "stdout" in entry:
+                if len(entry["stdout"]) > 0:
+                    # Something to display
+                    print ("Task #" + str(my_task_id) + " - " + entry["transformation"] + " - " + entry["derivation"] + " - stdout").center(80, '-')
+                    print
+                    print entry["stdout"]
+                    print
+            if "stderr" in entry:
+                if len(entry["stderr"]) > 0:
+                    # Something to display
+                    print ("Task #" + str(my_task_id) + " - " + entry["transformation"] + " - " + entry["derivation"] + " - stderr").center(80, '-')
+                    print
+                    print entry["stderr"]
+                    print
+    else:
+        # Not able to parse the kickstart output file, let's just dump the out and err files
+
+	# Print outfile to screen
+        dump_file(out_file)
+
+	# Print errfile to screen
+        dump_file(err_file)
+
+def print_job_info(job):
+    """
+    This function prints the information about a particular job
+    """
+    print
+    print job.center(80, '=')
+    print
+    print " last state: %s" % (jobs[job].state)
+    parse_submit_file(jobs[job])
+
+    # Handle subdag jobs from the dag file
+    if jobs[job].is_subdag == True:
+	print " This is a SUBDAG job:"
+	print " For more information, please run the following command:"
+	user_cmd = " %s -m -s " % (prog_base)
+	if keep_log:
+	    user_cmd = user_cmd + " -k"
+	print "%s -f %s" % (user_cmd, jobs[job].dag_path)
+	print
+	return
+
+    if jobs[job].sub_file_parsed == False:
+	print "       site: submit file not available"
+    else:
+	print "       site: %s" % (jobs[job].site or '-')
+    print "submit file: %s" % (jobs[job].sub_file)
+    print "output file: %s" % (find_latest_log(jobs[job].out_file))
+    print " error file: %s" % (find_latest_log(jobs[job].err_file))
+    if print_invocation:
+	print
+	print "To re-run this job, use: %s %s" % (jobs[job].executable, jobs[job].arguments)
+	print
+    if print_pre_script and len(jobs[job].pre_script) > 0:
+	print
+	print "SCRIPT PRE:"
+	print jobs[job].pre_script
+	print
+    if len(jobs[job].dagman_out) > 0:
+	# This job has a sub workflow
+	print " This job contains sub workflows!"
+	print " Please run the command below for more information:"
+	user_cmd = " %s -m " % (prog_base)
+	if keep_log:
+	    user_cmd = user_cmd + " -k"
+	print "%s -d %s" % (user_cmd, os.path.split(jobs[job].dagman_out)[0])
+	print
+    print
+
+    # Now dump file contents to screen if we are not in quiet mode
+    if not quiet_mode:
+        print_output_error(jobs[job])
+
+def print_top_summary():
+    """
+    This function prints the summary for the analyzer report,
+    which is the same for the long and short output versions
+    """
+    print
+    print "Summary".center(80, '*')
+    print
+    print " Total jobs         : % 6d (%3.2f%%)" % (len(jobs), 100 * (1.0 * len(jobs)/(len(jobs) or 1)))
+    print " # jobs succeeded   : % 6d (%3.2f%%)" % (success, 100 * (1.0 * success/(len(jobs) or 1)))
+    print " # jobs failed      : % 6d (%3.2f%%)" % (len(failed_jobs), 100 * (1.0 * len(failed_jobs)/(len(jobs) or 1)))
+    print " # jobs unsubmitted : % 6d (%3.2f%%)" % (unsubmitted, 100 * (1.0 * unsubmitted/(len(jobs) or 1)))
+    if len(unknown_jobs):
+	print " # jobs unknown     : % 6d (%3.2f%%)" % (len(unknown_jobs), 100 * (1.0 * len(unknown_jobs)/(len(jobs) or 1)))
+    print
+
+
+def print_summary():
+    """
+    This function prints the analyzer report summary
+    """
+
+    # First print the summary section
+    print_top_summary()
+
+    # Print information about failed jobs
+    if len(failed_jobs):
+	print "Failed jobs' details".center(80, '*')
+	for job in failed_jobs:
+	    print_job_info(job)
+
+    # Print information about unknown jobs
+    if len(unknown_jobs):
+	print "Unknown jobs' details".center(80, '*')
+	for job in unknown_jobs:
+	    print_job_info(job)
+
+def debug_condor(my_job):
+    """
+    This function is used to debug a condor job. It creates a
+    shell script in the debug_dir directory that is used to
+    copy all necessary files to the (local) debug_dir directory
+    and then execute the job locally.
+    """
+    global strict_mode
+
+    # Set strict mode in order to parse everything in the submit file
+    strict_mode = 1
+    # Parse submit file
+    parse_submit_file(my_job)
+
+    # Create script name
+    debug_script_basename = "debug_" + my_job.name + ".sh"
+    debug_script_name = os.path.join(debug_dir, debug_script_basename)
+
+    job_executable = os.path.join(debug_dir, my_job.executable) + my_job.arguments
+
+    try:
+	debug_script = open(debug_script_name, "w")
+    except:
+	logger.error("cannot create debug script %s" % (debug_script))
+	sys.exit(1)
+
+    try:
+	# Start with the bash line
+	debug_script.write("#!/bin/bash\n")
+	debug_script.write("\n")
+	debug_script.write("set -e\n")
+	debug_script.write("\n")
+	debug_script.write("# Copy any files that are needed\n")
+
+	debug_script.write('echo "copying input files..."\n')
+	debug_script.write("\n")
+	# Copy all files that we need
+	for my_file in my_job.transfer_input_files.split(","):
+	    if len(my_file):
+		if len(my_job.initial_dir):
+		    # Add the initial dir to all files to be copied
+		    my_file = os.path.join(my_job.initial_dir, my_file)
+		debug_script.write("cp %s %s\n" % (my_file, debug_dir))
+
+	# Extra newline before executing the job
+	debug_script.write("\n")
+	debug_script.write('echo "copying input files completed."\n')
+	debug_script.write("\n")
+	debug_script.write("# Set the execute bit on the executable\n")
+	debug_script.write("chmod +x %s\n" % (os.path.join(debug_dir, my_job.executable)))
+	debug_script.write("\n")
+	debug_script.write('echo "executing job: %s"\n' % (job_executable))
+	debug_script.write("\n")
+	debug_script.write("# Now, execute the job\n")
+	debug_script.write("%s\n" % (job_executable))
+	debug_script.write("\n")
+        # Remember not to put anything between running the executable
+        # and checking the exit code, otherwise $? will break...
+        debug_script.write("# Check error code\n")
+        debug_script.write("if [ $? -eq 0 ]; then\n")
+        debug_script.write('   echo "executable ran successfully"\n')
+        debug_script.write("else\n")
+        debug_script.write('   echo "executable failed with error $?"\n')
+    except:
+	logger.error("cannot write to file %s" % (debug_script))
+	sys.exit(1)
+
+    # We are done writing the file!
+    debug_script.close()
+
+    try:
+	# Make our debug script executable
+	os.chmod(debug_script_name, 0755)
+    except:
+	logger.error("cannot change permissions for the debug script %s" % (debug_script))
+	sys.exit(1)
+
+    # Print next step
+    print
+    print "%s: finished generating job debug script!" % (prog_base)
+    print
+    print "To run it, you need to type:"
+    print "   $ cd %s" % (debug_dir)
+    print "   $ ./%s" % (debug_script_basename)
+    print
+
+def debug_workflow():
+    """
+    This function handles the mode where the analyzer
+    is used to debug a job in a workflow
+    """
+    global debug_job, debug_dir
+
+    # Check if we can find this job's submit file
+    if not debug_job.endswith(".sub"):
+	debug_job = debug_job + ".sub"
+    # Figure out job name
+    jobname = os.path.basename(debug_job)
+    jobname = jobname[0:jobname.find(".sub")]
+    # Create job class
+    my_job = Job(jobname)
+    my_job.sub_file = debug_job
+
+    if not os.access(debug_job, os.R_OK):
+	logger.error("cannot access job submit file: %s" % (debug_job))
+	sys.exit(1)
+
+    # Handle the temporary directory option
+    if debug_dir is None:
+	# Create temporary directory
+	try:
+	    debug_dir = tempfile.mkdtemp()
+	except:
+	    logger.error("could not create temporary directory!")
+	    sys.exit(1)
+    else:
+	# Make sure directory specified is writable
+	debug_dir = os.path.abspath(debug_dir)
+	if not os.access(debug_dir, os.F_OK):
+	    # Create directory if it does not exist
+	    try:
+		os.mkdir(debug_dir)
+	    except:
+		logger.error("cannot create debug directory: %s" % (debug_dir))
+
+	# Check if we can write to the debug directory
+	if not os.access(debug_dir, os.W_OK):
+	    logger.error("not able to write to temporary directory: %s" % (debug_dir))
+	    sys.exit(1)
+
+
+    # Handle workflow type
+    if workflow_type is not None:
+	if workflow_type.lower() == "condor":
+	    logger.info("debugging condor type workflow")
+	    debug_condor(my_job)
+	else:
+	    logger.error("workflow type %s not supported!" % (workflow_type))
+	    sys.exit(1)
+    else:
+	logger.info("debugging condor type workflow")
+	debug_condor(my_job)
+
+    # All done, in case we are back here!
+    sys.exit(0)
+
+# --- main ----------------------------------------------------------------------------
+
+# Configure command line option parser
+prog_usage = "usage: %s [options]" % (prog_base)
+parser = optparse.OptionParser(usage=prog_usage)
+parser.add_option("--debug", action = "store", type = "string", dest = "debug_level",
+		  help = "set log level, possible values are INFO, DEBUG, WARNING, ERROR, CRITICAL. Default level is %s."
+		  % logging.getLevelName(debug_level))
+parser.add_option("-i", "-d", "--dir", action = "store", type = "string", dest = "input_dir",
+		  help = "input directory where the jobstate.log file is located, default is the current directory")
+parser.add_option("-f", "--file", action = "store", type = "string", dest = "dag_filename",
+		  help = "full path to the dag file to use -- this option overrides the -d option")
+parser.add_option("-m", "-t", "--monitord", action = "store_const", const = 1, dest = "run_monitord",
+		  help = "run pegasus-monitord before analyzing the output")
+parser.add_option("-k", "--keep", action = "store_const", const = 1, dest = "keep_log",
+		  help = "keeps temporary jobstate.log file created by monitord in the /tmp directory")
+parser.add_option("-q", "--quiet", action = "store_const", const = 1, dest = "quiet_mode",
+		  help = "output out/err filenames instead of their contents")
+parser.add_option("-p", "--print", action = "store", type = "string" , dest = "print_options",
+		  help = "specifies print options from pre,invocation")
+parser.add_option("-s", "--strict", action = "store_const", const = 1, dest = "strict_mode",
+		  help = "gets a job's out and err files from the submit file")
+parser.add_option("--debug-job", action = "store", type = "string", dest = "debug_job",
+		  help = "specifies a job to debug (can be either the job base name or the submit file name) -- this option enables debugging a single job")
+parser.add_option("--debug-dir", action = "store", type = "string", dest = "debug_dir",
+		  help = "specifies the directory to use as debug directory (default is to create a random directory in /tmp)")
+parser.add_option("--type", action = "store", type = "string", dest = "workflow_type",
+		  help = "specifies what type of workflow we are debugging (available types: condor)")
+
+# Parse command line options
+(options, args) = parser.parse_args()
+
+print "%s: initializing..." % (prog_base)
+
+# Copy options from the command line parser
+if options.debug_level is not None:
+    try:
+        # Convert the user-specified debug level (string) into a logging level value
+        debug_level = LOG_LEVELS.get(options.debug_level.lower(), debug_level)
+        logger.setLevel(debug_level)
+    except:
+        logger.warning("could not set logging level to %s" % options.debug_level)
+if options.run_monitord is not None:
+    run_monitord = options.run_monitord
+if options.strict_mode is not None:
+    strict_mode = options.strict_mode
+if options.quiet_mode is not None:
+    quiet_mode = options.quiet_mode
+if options.keep_log is not None:
+    keep_log = options.keep_log
+if options.print_options is not None:
+    my_options = options.print_options.split(",")
+    if "pre" in my_options or "all" in my_options:
+	print_pre_script = 1
+    if "invocation" in my_options or "all" in my_options:
+	print_invocation = 1
+if options.debug_job is not None:
+    debug_job = options.debug_job
+    # Enables the debugging mode
+    debug_mode = 1
+if options.debug_dir is not None:
+    debug_dir = options.debug_dir
+if options.workflow_type is not None:
+    workflow_type = options.workflow_type
+
+if options.dag_filename is not None:
+    dag_path = options.dag_filename
+    input_dir = os.path.abspath(os.path.split(dag_path)[0])
+    # Assume current directory if input dir is empty
+    if len(input_dir) == 0:
+	input_dir = os.getcwd()
+else:
+    # Select directory where jobstate.log is located
+    if options.input_dir is not None:
+	input_dir = os.path.abspath(options.input_dir)
+    else:
+	input_dir = os.getcwd()
+
+if debug_mode == 1:
+    # Enter debug mode if job name given
+    # This function does not return
+    debug_workflow()
+
+# Get the dag file if it was not specified by the user
+if dag_path is None:
+    dag_path = find_file(input_dir, ".dag")
+    logger.info("using %s, use -f/--file option to override this" % (dag_path))
+
+# Build dagman.out path
+dagman_out_path = dag_path + ".dagman.out"
+
+# Check if we can write to the run directory
+run_directory_writable = os.access(input_dir, os.W_OK)
+
+# Invoke monitord if requested
+if run_monitord:
+    if run_directory_writable:
+	# Run directory is writable, write monitord output to jobstate.log file
+	jsdl_path = os.path.join(input_dir, jsdl_filename)
+	rotate_log(jsdl_path)
+	invoke_monitord("%s.dagman.out" % (dag_path), jsdl_path)
+    else:
+	# Need to use /tmp directory for monitord output as run directory is not writable
+	jsdl_path = create_temp_logfile("jobstate")
+	if jsdl_path is None:
+	    logger.error("could not create temporaty jobstate.log file in the /tmp directory")
+	    sys.exit(1)
+	temp_log = jsdl_path
+	invoke_monitord("%s.dagman.out" % (dag_path), jsdl_path)
+else:
+    jsdl_path = os.path.join(input_dir, jsdl_filename)
+
+# Compare timestamps of jsdl_path with dagman_out_path
+try:
+    jsdl_stat = os.stat(jsdl_path)
+except:
+    logger.error("could not access %s, exiting..." % (jsdl_path))
+    sys.exit(1)
+
+try:
+    dagman_out_stat = os.stat(dagman_out_path)
+except:
+    logger.error("could not access %s, exiting..." % (dagman_out_path))
+    sys.exit(1)
+
+# Compare mtime for both files
+if dagman_out_stat[8] > jsdl_stat[8]:
+    logger.warning("jobstate.log is older than the dagman.out file, workflow logs may not be up to date...")
+
+# Try to parse workflow parameters from braindump.txt file
+wfparams = utils.slurp_braindb(input_dir)
+if "submit_dir" in wfparams:
+    workflow_base_dir = os.path.normpath(wfparams["submit_dir"])
+elif "jsd" in wfparams:
+    workflow_base_dir = os.path.dirname(os.path.normpath(wfparams["jsd"]))
+
+# First we learn about jobs by going through the dag file
+parse_dag_file(dag_path)
+
+# Read logfile
+parse_jobstate_log(jsdl_path)
+
+# Process our jobs
+analyze()
+
+# Print summary of our analysis
+print_summary()
+
+# Done!
+print "Done".center(80, '*')
+print
+print "%s: end of status report" % (prog_base)
+
+# Handle temporary log files created by pegasus-analyzer
+if temp_log is not None:
+    if keep_log:
+	print "%s: temporary monitord output kept at: %s" % (prog_base, temp_log)
+    else:
+	try:
+	    os.unlink(temp_log)
+	except:
+	    # Ignore error silently
+	    pass
+
+print
