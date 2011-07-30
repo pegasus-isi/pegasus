@@ -1370,6 +1370,7 @@ LFN_N PFN_N [site handle N]</programlisting>
 			[-c | --conf &lt;property file path&gt;]
 			[-p | --statistics_level level_str]
 			[-t | --time_filter filter_str]
+			[-i | --ignore_db_inconsistency]
 			[-v | --verbose]
 			[-q | --quiet]
           </para>
@@ -1482,6 +1483,15 @@ LFN_N PFN_N [site handle N]</programlisting>
           month,week,day,hour; Default is day.</para>
         </listitem>
         
+        
+        <listitem>
+          <para><emphasis role="bold">-i </emphasis></para>
+
+          <para><emphasis role="bold">--ignore_db_inconsistency</emphasis></para>
+
+          <para>Turns off the the check for database consistency.</para>
+        </listitem>
+        
         <listitem>
           <para><emphasis role="bold">-v </emphasis></para>
 
@@ -1535,6 +1545,7 @@ LFN_N PFN_N [site handle N]</programlisting>
 			[-c | --conf &lt;property file path&gt;]
 			[-m | --max_graph_nodes max_value]
 			[-p | --plotting_level level_str]
+			[-i | --ignore_db_inconsistency]
 			[-v | --verbose]
 			[-q | --quiet]
           </para>
@@ -1648,6 +1659,14 @@ LFN_N PFN_N [site handle N]</programlisting>
 
            </itemizedlist>
 		  
+        </listitem>
+        
+        <listitem>
+          <para><emphasis role="bold">-i </emphasis></para>
+
+          <para><emphasis role="bold">--ignore_db_inconsistency</emphasis></para>
+
+          <para>Turns off the the check for database consistency.</para>
         </listitem>
         
         <listitem>
