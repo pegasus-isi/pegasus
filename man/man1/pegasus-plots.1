@@ -28,6 +28,7 @@ pegasus-plots \- A tool to generate graphs and charts to visualize workflow run.
 [\-c|\-\-conf <property file path>]
 [\-m|\-\-max_graph_nodes max_value]
 [\-p|\-\-plotting_level level_str]
+[\-i|\-\-ignore_db_inconsistency]
 [\-v|\-\-verbose]
 [\-q|\-\-quiet] 
 
@@ -109,6 +110,15 @@ generates the host over time chart.
 .B time_chart : 
 generates the time chart which shows the job instance/invocation count and runtime over time.
 .RE
+
+
+.TP
+.B \-i
+.PD 0
+.TP
+.PD 1
+.B \-\-ignore_db_inconsistency
+Turn off the the check for database consistency.
 
 .TP
 .B \-v

@@ -28,6 +28,7 @@ pegasus-statistics \- A tool to generate statistics about the workflow run.
 [\-c|\-\-conf <property file path>]
 [\-p|\-\-statistics_level level_str]
 [\-t|\-\-time_filter filter_str]
+[\-i|\-\-ignore_db_inconsistency]
 [\-v|\-\-verbose]
 [\-q|\-\-quiet] 
 
@@ -105,6 +106,15 @@ generates the job instance and invocation statistics like total count and runtim
 .B \-\-time_filter filter_str
  Specifies the time filter to group the time statistics. Valid levels are: month,week,day,hour; Default is day.
 
+
+.TP
+.B \-i
+.PD 0
+.TP
+.PD 1
+.B \-\-ignore_db_inconsistency
+Turn off the the check for database consistency.
+ 
 .TP
 .B \-v
 .PD 0
