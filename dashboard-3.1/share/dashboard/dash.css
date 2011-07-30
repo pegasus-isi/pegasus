@@ -1,0 +1,204 @@
+/*
+ * Stylesheet for Stampede dashboard. 
+ */
+body { font-family: Myriad, Univers, Helvetica, sans-serif;
+       font-size: 0.9em; }
+.header { 
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 50px;
+    background-color: #69c;
+    /*background: url("img/lightblue-texture.jpg") repeat-x;*/
+}
+#logo img { position: absolute; left: 2px; top: 2px; width: 100px; }
+#credits {
+    display: block;
+    position: absolute;
+    left: 2px;
+    top: 300px;
+    width: 80px;
+}
+#page_title { 
+    position: absolute;
+    left: 130px;
+    top: 10px;
+    font-size: 200%;
+    font-family: Arial, Helvetica, sans-serif;
+    font-weight: 900;
+    color: #fff;
+}
+.main { 
+    position: absolute;
+    left: 110px; 
+    top: 50px; 
+    width: 800px;
+    padding: 10px 10px 0 20px;
+    -moz-border-radius: 8px;
+    border-radius: 8px;
+/*background-color: #eee;*/
+/*border: 1px solid #E77902;
+  border-right: 5px solid #999;*/
+}
+.main #filter { 
+    position: absolute;
+    left: 0px;
+    top: 30px;
+    width: 785px;
+    height: 80px;
+    padding: 5px; 
+    margin: 0;
+    -moz-border-radius: 4px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+}
+.main #wf { 
+    position: absolute;
+    top: 130px;
+    left: 0px;
+    width: 784px;
+    background-color: #eee;
+    padding: 2px;
+    border: 4px solid #eee;
+    -moz-border-radius: 4px;
+    border-radius: 4px;
+}
+.navigation { 
+    position: absolute; 
+    left: 0; 
+    top: 60px; 
+    width: 115px;
+    height: 200px; 
+    background-color: #FFF; 
+}
+
+.navigation h2 {
+    margin: 0 0 0 5px;
+    font-size: 110%;
+    background-color: #E77902/*2#146EB4*/;
+    width: 90px;
+    color: white;
+    padding-left: 2px;
+}
+.navigation ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    margin-left: 5px;
+    color: black;
+    font-family: "Helvetica";
+    font-size: 110%;
+    background-color: #EDF7FF; /* amazon color */
+    border: 1px solid #E77902;
+    width: 90px;
+}
+.navigation li {
+    margin: 0;
+    border-bottom: 1px solid #ccc;
+    padding: 0;
+    padding-left: 2px;
+}
+s
+.footer { margin-top: 10px; background-color: grey; }
+#wf h2 { font-size: 1.1em; font-weight: 500; }
+#filter h2 { 
+    font-size: 1.1em;
+    font-weight: 500;
+    margin: -30px 0 2px 5px;
+    width: 7.5em;
+    background-color: #fff;
+    border-bottom: 2px solid #ccc;
+    padding: 2px;
+    color: #048;
+}
+#filter input[type=submit] {
+    display: block;
+    position: absolute;
+    left: 5; top: 55;
+    width:  80px; height: 30px;
+    font-size: 1.25em;
+    color: white;
+    background-color: #146EB4;
+    -moz-border-radius: 4px;
+    border-radius: 4px;
+    border-width: 0;
+}
+#filter input[type=submit]:hover {
+    background-color: #57F;
+}
+#filter-state {
+    position: absolute;
+    top: 10px;
+    left: 5px;
+    width: 140px;
+}
+#filter-state div {
+    display: block;
+    position:absolute;
+    top: 0px;
+    left: 40px;
+}
+#filter-wfname {
+    position: absolute;
+    top: 10px;
+    left: 150px;
+    width: 650px;
+}
+#filter-form input[name=wf_name] {
+   width: 450px;
+}
+/* Bar-chart of workflows table */
+.wftxt { padding: 0 0.5em }
+.wfname { text-align: left; width: 7em; }
+.wfbar { margin: 0 1px; padding: 0; text-align: center; font-size: 80%;
+         color: white; }
+table.wfstack {
+    width: 90%; 
+}
+table.wfstackhdr {
+    width: 90%; 
+    margin: 35px -5px 5px 0; 
+}
+table.wfstackhdr tr {
+    background-color: #333;
+    color: white;
+}
+table.wfstackhdr td {
+    border-right: 1px solid #eee;
+    border-bottom: 5px solid #eee;
+    padding: 2px;
+}
+
+td.interval { width: 50px; font-size: 80%; }
+/* table.wfstack tbody tr td { text-align: left; } */
+.xmark { color: blue; }
+
+#timestamp {
+    font-family: "Courier";
+    font-weight: 900;
+    position: absolute;
+    top: 148px; 
+    left: 200px;
+    color: darkblue;
+    padding: 3px;
+}
+#timestamp:before {
+    content: "Last: "
+}
+
+#wf_options {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+}
+#wf_showing {
+    position: absolute;
+    top: 10px;
+    left: 150px;
+}
+#wf_since {
+    position: absolute;
+    top: 10px;
+    left: 300px;
+}

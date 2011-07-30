@@ -1,0 +1,51 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html> <head>
+<title>Stampede Dashboard</title>
+<link rel="stylesheet" type="text/css" href="dash.css" />
+</head>
+<body>
+<script src="jquery.js"></script>
+<script src="stringformat.js"></script>
+<script src="dash.js"></script>
+<span id="credits">Stampede is funded by the NSF and DOE</span>
+<div class="header">
+  <span id="logo"><img src="img/stampede-logo.png"/></span>
+  <span id="page_title">Workflow Dashboard</span>
+<div id="timestamp"><span id="ts_now">now</span></div>
+</div>
+<div class="navigation">
+  <h2>Menu</h2>
+  <ul id="menu">
+    <li>Home</li>
+    <li>Workflows</li>
+    <li>Status</li>
+  </ul> 
+</div>
+<div class="main">
+<div id="filter">
+  <h2>Filter workflows</h2>
+  <form id="filter-form">
+  <div id="filter-state">State:
+    <div>
+      <input type="checkbox" name="wf_state"
+      value="running" checked>Running</input>
+      <br/>
+      <input type="checkbox" name="wf_state"
+      value="completed" checked>Completed</input>
+      </div>
+  </div>
+  <div id="filter-wfname">Workflow name: <input type="text"
+    name="wf_name"></input></div>
+    <input type="submit" id="refresh-button" value="Refresh"  class=""/>
+  </form>
+</div>
+<div id="wf">
+<div id="wf_since">Most recent: <span id="ts_delta">a while</span></div>
+<div id="wf_showing">Showing: <span id="wf_first">0</span>..<span
+    id="wf_last">0</span> of <span id="wf_count">0</span>
+  </div>
+  <div id="wf_options"><input type="checkbox" name="expand" value="yes">Expand all</input></div>
+  </div>
+  <div class="footer">
+ </div>
+  </body> </html>
