@@ -447,6 +447,8 @@ def main():
 			choices=['all', 'all_charts', 'all_graphs' ,'dax_graph', 'dag_graph','gantt_chart','host_chart','time_chart' ],
 			help = "specifies the chart and graphs to generate. Valid levels are: all,all_charts, all_graphs, dax_graph,\
 					dag_graph,gantt_chart,host_chart,time_chart; Default is all_charts.")
+	parser.add_option("-i", "--ignore-db-inconsistency", action = "store_const", const = 0, dest = "ignore_db_inconsistency",
+			help = "turn off the check for db consistency")
 	parser.add_option("-v", "--verbose", action="count", default=0, dest="verbose", 
 			help="Increase verbosity, repeatable")
 	parser.add_option("-q", "--quiet", action="count", default=0, dest="quiet", 
@@ -478,6 +480,16 @@ def main():
 		log_level_str = "debug"
 	setup_logger(log_level_str)
 	logger.info(prog_base +" : initializing...")
+	
+	if options.ignore_db_inconsistency is None:
+		if not utils.loading_completed(submit_dir):
+			if utils.monitoring_running(submit_dir):
+				logger.warning("pegasus-monitord still running. Please wait for it to complete. ")
+			else:
+				logger.warning("Please run pegasus monitord in replay mode. ")
+			sys.exit(1)
+	else:
+		logger.warning("The tool is meant to be run after the completion of workflow run.")
 		
 	if options.plotting_level is not None:
 		 plotting_level = options.plotting_level
