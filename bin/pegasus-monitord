@@ -1232,6 +1232,9 @@ class Workflow:
             if wf._dagman_exit_code != 0:
                 # Set level to Error if workflow did not finish successfully
                 kwargs["level"] = "Error"
+            if wf._dagman_exit_code is None:
+                logger.warning("DAGMan exit code hasn't been set...")
+                kwargs["status"] = 0
         state = "xwf." + state
 
         # Send workflow state event to database
@@ -2099,7 +2102,7 @@ class Workflow:
         if my_job._sched_id is not None:
             kwargs["sched__id"] = my_job._sched_id
         if status is not None:
-            kwargs["status"] = str(status)
+            kwargs["status"] = status
             if status != 0:
                 kwargs["level"] = "Error"
 
@@ -2201,11 +2204,11 @@ class Workflow:
         if my_job._sched_id is not None:
             kwargs["sched__id"] = my_job._sched_id
         if status is not None:
-            kwargs["status"] = str(status)
+            kwargs["status"] = status
             if status != 0:
                 kwargs["level"] = "Error"
         else:
-            kwargs["status"] = str(-1)
+            kwargs["status"] = -1
             kwargs["level"] = "Error"
 
         # Send job state event to database
@@ -4208,6 +4211,16 @@ sys.stdin.close()
 # dup stderr onto stdout
 sys.stderr = sys.stdout
 
+# Ignore dying shells
+signal.signal(signal.SIGHUP, prog_sighup_handler)
+
+# Die nicely when asked to (Ctrl+C, system shutdown)
+signal.signal(signal.SIGINT, prog_sigint_handler)
+
+# Permit dynamic changes of debug level
+signal.signal(signal.SIGUSR1, prog_sigusr1_handler)
+signal.signal(signal.SIGUSR2, prog_sigusr2_handler)
+
 # Create wf_event_sink object
 if no_events:
     # Create an empty sink when no event generation is needed
@@ -4234,16 +4247,6 @@ else:
 logger.info("starting [%s], using pid %d" % (revision, os.getpid()))
 if millisleep is not None:
     logger.info("using simulation delay of %d ms" % (millisleep))
-
-# Ignore dying shells
-signal.signal(signal.SIGHUP, prog_sighup_handler)
-
-# Die nicely when asked to (Ctrl+C, system shutdown)
-signal.signal(signal.SIGINT, prog_sigint_handler)
-
-# Permit dynamic changes of debug level
-signal.signal(signal.SIGUSR1, prog_sigusr1_handler)
-signal.signal(signal.SIGUSR2, prog_sigusr2_handler)
 
 # Only create server socket if asked...
 sockfn = os.path.join(os.path.dirname(out), "monitord.sock")
