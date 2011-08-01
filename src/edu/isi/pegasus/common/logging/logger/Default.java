@@ -27,6 +27,7 @@ import java.io.PrintWriter;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.io.Writer;
 
 import java.util.Properties;
@@ -130,13 +131,13 @@ public class Default extends LogManager{
      *
      * @see #setOutputWriter
      */
-    private PrintWriter mWriter;
+    private PrintStream mOutStream;
 
     /**
      * The stream to which all the error messages are logged.By default it is
      * System.err
      */
-    private PrintWriter mErrWriter;
+    private PrintStream mErrStream;
 
     /**
      * The mask that needs to be deployed to determine what messages are to be
@@ -154,8 +155,8 @@ public class Default extends LogManager{
      */
     public Default(){
         mDebugLevel    = 0;
-        mWriter        = new PrintWriter(System.out,true);
-        mErrWriter     = new PrintWriter(System.err,true);
+        mOutStream     = new PrintStream(System.out,true);
+        mErrStream     = new PrintStream(System.err,true);
         Default.mFormatter = new Currently( "yyyy.MM.dd HH:mm:ss.SSS zzz: " );
         //by default we are logging only CONSOLE
         //and all message less than WARN
@@ -258,8 +259,13 @@ public class Default extends LogManager{
      */
     public void setWriters(String out){
         try{
-            mWriter    = (PrintWriter)getWriter(out);
-            mErrWriter = mWriter;
+//            mOutStream    = (PrintStream)getPrintStream(out);
+//            mErrStream = mOutStream;
+            PrintStream ps = (PrintStream)getPrintStream(out);
+            System.setOut( ps );
+            System.setErr( ps );
+            mOutStream =  System.out;
+            mErrStream = System.err;
         }
         catch(IOException e){
             //log on the existing streams !!!
@@ -278,10 +284,12 @@ public class Default extends LogManager{
      *
      * @param err  the stream to which error messages are to be logged.
      */
+    /*
     public void setWriters(OutputStream err){
-        mWriter = new PrintWriter( err, true );
-        mErrWriter = mWriter;
+        mOutStream = new PrintWriter( err, true );
+        mErrStream = mOutStream;
     }
+    */
 
 
     /**
@@ -296,7 +304,7 @@ public class Default extends LogManager{
      */
     public void setOutputWriter(String out){
         try{
-            mWriter = (PrintWriter)getWriter(out);
+            mOutStream = (PrintStream)getPrintStream(out);
         }
         catch(IOException e){
             //log on the existing streams !!!
@@ -315,7 +323,7 @@ public class Default extends LogManager{
      * @see #setErrorWriter(OutputStream)
      */
     public void setOutputWriter(OutputStream out){
-        mWriter = new PrintWriter( out, true );
+        mOutStream = new PrintStream( out, true );
     }
 
     /**
@@ -332,7 +340,7 @@ public class Default extends LogManager{
      */
     public void setErrorWriter(String out){
         try{
-            mErrWriter = (PrintWriter)getWriter(out);
+            mErrStream = (PrintStream)getPrintStream(out);
         }
         catch(IOException e){
             //log on the existing streams !!!
@@ -352,7 +360,7 @@ public class Default extends LogManager{
      * @param err  the stream to which error messages are to be logged.
      */
     public void setErrorWriter(OutputStream err){
-        mErrWriter = new PrintWriter( err, true );
+        mErrStream = new PrintStream( err, true );
     }
 
 
@@ -410,7 +418,7 @@ public class Default extends LogManager{
          if( (type & mMask) != 0x0 ){
              //we need to log the message
              //get hold of the writer to be used to logging the message.
-             PrintWriter writer = getWriter(level);
+             PrintStream writer = getPrintStream(level);
              writer.print(Default.mFormatter.now());
              String prefix = getPrefix(type);
              message = prefix + " " + message;
@@ -470,7 +478,7 @@ public class Default extends LogManager{
         
          int type = (int)Math.pow(2, level);
          if( (type & mMask) != 0x0 ){
-             PrintWriter writer = getWriter(level);
+             PrintStream writer = getPrintStream(level);
              /*uncomment if we want commpetion message for INFO
                on same line
              if ( (mMask & INFO_MESSAGE_TYPE) == INFO_MESSAGE_TYPE) {
@@ -570,11 +578,11 @@ public class Default extends LogManager{
      * <code>stdout</code> and <code>stderr</code>, which map to the
      * system's respective streams.
      *
-     * @return the corresponding writer.
+     * @return the corresponding PrintStream.
      *
      * @throws IOException in case of being unable to open a stream.
      */
-    private Writer getWriter( String out ) throws IOException{
+    private PrintStream getPrintStream( String out ) throws IOException{
         //check if value refers to any of the predefined streams
         OutputStream stream;
         if( out.equalsIgnoreCase("stdout")){ stream = System.out; }
@@ -587,7 +595,7 @@ public class Default extends LogManager{
             sanityCheckOnFile( f );
             stream = new FileOutputStream( f);
         }
-        return new PrintWriter(stream);
+        return new PrintStream(stream);
     }
 
     /**
@@ -599,11 +607,11 @@ public class Default extends LogManager{
      *
      * @return PrintWriter for logging the message.
      */
-    private PrintWriter getWriter(int level){
+    private PrintStream getPrintStream(int level){
         return ( (level >= FATAL_MESSAGE_LEVEL && level < CONSOLE_MESSAGE_LEVEL)
                   || level == WARNING_MESSAGE_LEVEL )?
-               mErrWriter:
-               mWriter;
+               mErrStream:
+               mOutStream;
     }
 
     
