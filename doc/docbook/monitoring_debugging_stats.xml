@@ -227,7 +227,7 @@ working dir : /lfs1/work/pegasus/run0004
 ...
 
 -----------------------------------------------------------------------------------------------------
-Type            Succeeded  Failed  Unsubmitted  Total      Retries  Total Run (Retries Included)
+Type            Succeeded  Failed  Incomplete   Total      Retries  Total Run (Retries Included)
 Tasks           8          0       0            8      ||  0        8                   
 Jobs            27         0       0            27     ||  0        27                  
 Sub Workflows   2          0       0            2      ||  0        2                   
@@ -291,10 +291,12 @@ Time statistics                   : /scratch/grid-setup/run0001/statistics/time.
       		</listitem>
       		
       		<listitem>
-      		<para><emphasis role="bold">Unsubmitted</emphasis> -
-      		total count of unsubmitted tasks/jobs/sub workflows.This is
-      		the difference between 'total' count and sum of 'succeeded'
-      		and 'failed' count. 
+      		<para><emphasis role="bold">Incomplete</emphasis> -
+			total count of tasks/jobs/sub workflows that are not in  
+			succeeded or failed state. This includes all the jobs that  
+			are not submitted, submitted but not completed etc. This  
+			is calculated as  difference between 'total' count and sum  
+			of 'succeeded' and 'failed' count. 
       		</para>
       		</listitem>
       		
@@ -386,10 +388,12 @@ Time statistics                   : /scratch/grid-setup/run0001/statistics/time.
   		</listitem>
   		
   		<listitem>
-  		<para><emphasis role="bold">Unsubmitted</emphasis> -
-  		total count of unsubmitted tasks/jobs/sub workflows.This is
-  		the difference between 'total' count and sum of 'succeeded'
-  		and 'failed' count. 
+  		<para><emphasis role="bold">Incomplete</emphasis> -
+  		total count of tasks/jobs/sub workflows that are not in  
+		succeeded or failed state. This includes all the jobs that  
+		are not submitted, submitted but not completed etc. This  
+		is calculated as  difference between 'total' count and sum  
+		of 'succeeded' and 'failed' count.  
   		</para>
   		</listitem>
   		
@@ -429,7 +433,7 @@ Time statistics                   : /scratch/grid-setup/run0001/statistics/time.
 
               <entry align="center">Failed</entry>
 
-              <entry align="center">Unsubmitted</entry>
+              <entry align="center">Incomplete</entry>
               
               <entry align="center">Total</entry>
               
