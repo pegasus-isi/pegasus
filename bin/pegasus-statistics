@@ -44,10 +44,10 @@ transformation_stats_col_size =[60,12,12,12,20,20,20,12]
 job_stats_col_name =['#Job','Try','Site','Kickstart','Post' ,'CondorQTime','Resource','Runtime','Seqexec','Seqexec-Delay']
 job_stats_col_size =[60,4,15,12,12,12,12,12,12,12]
 
-worklow_summary_col_name =["Type" ,"Succeeded","Failed","Unsubmitted" ,"Total" , " " ,"Retries" , "Total Run (Retries Included)"]
+worklow_summary_col_name =["Type" ,"Succeeded","Failed","Incomplete" ,"Total" , " " ,"Retries" , "Total Run (Retries Included)"]
 worklow_summary_col_size =[20,20,20,20,20,5,20,20]
 
-worklow_status_col_name =["#","Type" ,"Succeeded","Failed","Unsubmitted" ,"Total" , " " ,"Retries" , "Total Run (Retries Included)" ,"Workflow Retries"]
+worklow_status_col_name =["#","Type" ,"Succeeded","Failed","Incomplete" ,"Total" , " " ,"Retries" , "Total Run (Retries Included)" ,"Workflow Retries"]
 worklow_status_col_size =[40,15,12,12,12,12,5,12,30,18]
 
 time_stats_col_name =["Date","Count","Runtime"]
@@ -120,7 +120,20 @@ def formatted_wf_summary_legends():
 Workflow summary - Summary of the workflow execution. It shows total
 		tasks/jobs/sub workflows run, how many succeeded/failed etc.
 		In case of hierarchical workflow the calculation shows the 
-		statistics across all the sub workflow.
+		statistics across all the sub workflows.It shows the following 
+		statistics about tasks, jobs and sub workflows.
+		* Succeeded - total count of succeeded tasks/jobs/sub workflows.
+		* Failed - total count of failed tasks/jobs/sub workflows.
+		* Incomplete - total count of tasks/jobs/sub workflows that are 
+		not in succeeded or failed state. This includes all the jobs 
+		that are not submitted, submitted but not completed etc. This  
+		is calculated as  difference between 'total' count and sum of 
+		'succeeded' and 'failed' count.
+		* Total - total count of tasks/jobs/sub workflows.
+		* Retries - total retry count of tasks/jobs/sub workflows.
+		* Total Run - total count of tasks/jobs/sub workflows executed 
+		during workflow run. This is the cumulative of retries, 
+		succeeded and failed count. 
 """
 	formatted_wf_statistics_legend +="""
 Workflow wall time - The walltime from the start of the workflow execution
@@ -158,7 +171,23 @@ def formatted_wf_status_legends():
 Workflow summary - Summary of the workflow execution. It shows total
 		tasks/jobs/sub workflows run, how many succeeded/failed etc.
 		In case of hierarchical workflow the calculation shows the 
-		statistics of each individual sub workflow.
+		statistics of each individual sub workflow.The file also 
+		contains a 'Total' table at the bottom which is the cummulative 
+		of all the individual statistics details.t shows the following 
+		statistics about tasks, jobs and sub workflows.
+		*Workflow Retries - number of times a workflow was retried.
+		* Succeeded - total count of succeeded tasks/jobs/sub workflows.
+		* Failed - total count of failed tasks/jobs/sub workflows.
+		* Incomplete - total count of tasks/jobs/sub workflows that are 
+		not in succeeded or failed state. This includes all the jobs 
+		that are not submitted, submitted but not completed etc. This  
+		is calculated as  difference between 'total' count and sum of 
+		'succeeded' and 'failed' count.
+		* Total - total count of tasks/jobs/sub workflows.
+		* Retries - total retry count of tasks/jobs/sub workflows.
+		* Total Run - total count of tasks/jobs/sub workflows executed 
+		during workflow run. This is the cumulative of retries, 
+		succeeded and failed count.
 """
 	return formatted_wf_statistics_legend
 	
