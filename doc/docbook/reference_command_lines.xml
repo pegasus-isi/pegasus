@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE section PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
 "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
-<section>
+<section id="cli">
   <title>Command Line Tools</title>
 
   <para>This chapter contains reference material for all the command-line
   tools distributed with Pegasus.</para>
 
-  <section>
+  <section id="pegasus-version">
     <title>pegasus-version</title>
 
     <para>pegasus-version is a simple command-line tool that reports the
@@ -49,7 +49,7 @@ $ <command>echo $?</command>
     more details, and long options availble to the user.</para>
   </section>
 
-  <section>
+  <section id="pegasus-plan">
     <title>pegasus-plan</title>
 
     <para>pegasus-plan generates an executable workflow from an abstract
@@ -675,7 +675,7 @@ LFN_N PFN_N [site handle N]</programlisting>
     </section>
   </section>
 
- <section>
+  <section id="pegasus-run">
     <title>pegasus-run</title>
 
     <para>pegasus-run executes a workflow that has been planned using
@@ -703,7 +703,7 @@ LFN_N PFN_N [site handle N]</programlisting>
       <para>By default pegasus-run does not require any options or arguments
       if invoked from within the planned workflow directory. If running the
       command outside the workflow directory then a full path to the workflow
-      directory needs to be specified. </para>
+      directory needs to be specified.</para>
 
       <para>pegasus-run takes the following options</para>
 
@@ -715,7 +715,7 @@ LFN_N PFN_N [site handle N]</programlisting>
           properties which influence pegasus-run. One may set several CLI
           properties by giving this option multiple times. The -D option(s)
           must be the first option on the command line. CLI properties take
-          precedence over the file-based properties of the same key. </para>
+          precedence over the file-based properties of the same key.</para>
         </listitem>
 
         <listitem>
@@ -736,7 +736,7 @@ LFN_N PFN_N [site handle N]</programlisting>
 
           <para><emphasis role="bold">--debug level</emphasis></para>
 
-          <para>Set the debug level for the client. Default is 0. </para>
+          <para>Set the debug level for the client. Default is 0.</para>
         </listitem>
 
         <listitem>
@@ -759,7 +759,7 @@ LFN_N PFN_N [site handle N]</programlisting>
       <para><emphasis role="bold">rundir</emphasis> Is the full qualified path
       to the base directory containing the planned workflow dag and submit
       files. This is optional if pegasus-run command is invoked from within
-      the run directory. </para>
+      the run directory.</para>
     </section>
 
     <section>
@@ -838,13 +838,14 @@ LFN_N PFN_N [site handle N]</programlisting>
       </itemizedlist>
     </section>
   </section>
-  <section>
+
+  <section id="pegasus-remove">
     <title>pegasus-remove</title>
 
     <para>pegasus-remove is used to abort a running workflow.</para>
   </section>
 
-  <section>
+  <section id="pegasus-status">
     <title>pegasus-status</title>
 
     <para>pegasus-status reports on the status of a workflow.</para>
@@ -1352,42 +1353,38 @@ LFN_N PFN_N [site handle N]</programlisting>
     </section>
   </section>
 
-  <section>
+  <section id="pegasus-analyzer">
     <title>pegasus-analyzer</title>
 
     <para>pegasus-analyzer is used to debug failed workflows.</para>
   </section>
 
-  <section>
+  <section id="pegasus--statistics">
     <title>pegasus-statistics</title>
 
     <para>pegasus-statistics reports statistics about a workflow.</para>
+
     <section>
       <title>SYNOPSIS</title>
-          <para><emphasis role="bold">pegasus-statistics</emphasis> &lt;submit directory&gt;
-			[-h | --help]
-			[-o | --output &lt;output directory&gt;] 
-			[-c | --conf &lt;property file path&gt;]
-			[-p | --statistics_level level_str]
-			[-t | --time_filter filter_str]
-			[-i | --ignore_db_inconsistency]
-			[-v | --verbose]
-			[-q | --quiet]
-          </para>
+
+      <para><emphasis role="bold">pegasus-statistics</emphasis> &lt;submit
+      directory&gt; [-h | --help] [-o | --output &lt;output directory&gt;] [-c
+      | --conf &lt;property file path&gt;] [-p | --statistics_level level_str]
+      [-t | --time_filter filter_str] [-i | --ignore_db_inconsistency] [-v |
+      --verbose] [-q | --quiet]</para>
     </section>
-    
+
     <section>
       <title>DESCRIPTION</title>
 
-      <para>pegasus-statistics generates statistics about the workflow run 
+      <para>pegasus-statistics generates statistics about the workflow run
       like total jobs/tasks/sub workflows ran , how many succeeded/failed etc.
-      It generates job instance statistics like run time, condor queue delay etc. 
-      It generates invocation statistics information grouped by transformation name.
-      It also generates job instance and invocation statistics information grouped
-      by time and host.
-      </para>
+      It generates job instance statistics like run time, condor queue delay
+      etc. It generates invocation statistics information grouped by
+      transformation name. It also generates job instance and invocation
+      statistics information grouped by time and host.</para>
     </section>
-    
+
     <section>
       <title>ARGUMENTS</title>
 
@@ -1395,103 +1392,115 @@ LFN_N PFN_N [site handle N]</programlisting>
       synonym(s).</para>
 
       <itemizedlist>
-       
         <listitem>
           <para><emphasis role="bold">-h </emphasis></para>
 
           <para><emphasis role="bold">--help</emphasis></para>
 
-          <para>Prints a usage summary with all the available command-line 
+          <para>Prints a usage summary with all the available command-line
           options.</para>
         </listitem>
 
         <listitem>
-          <para><emphasis role="bold">-o &lt;output directory &gt;</emphasis></para>
+          <para><emphasis role="bold">-o &lt;output directory
+          &gt;</emphasis></para>
 
-          <para><emphasis role="bold">--output &lt;output directory &gt;</emphasis></para>
+          <para><emphasis role="bold">--output &lt;output directory
+          &gt;</emphasis></para>
 
           <para>Writes the output to the given directory.</para>
         </listitem>
-        
+
         <listitem>
-          <para><emphasis role="bold">-c &lt;property file path &gt;</emphasis></para>
+          <para><emphasis role="bold">-c &lt;property file path
+          &gt;</emphasis></para>
 
-          <para><emphasis role="bold">--conf &lt;property file path &gt;</emphasis></para>
+          <para><emphasis role="bold">--conf &lt;property file path
+          &gt;</emphasis></para>
 
-          <para>The properties file to use. This option overrides all other property
-          files.</para>
+          <para>The properties file to use. This option overrides all other
+          property files.</para>
         </listitem>
-        
+
         <listitem>
           <para><emphasis role="bold">-s level_str</emphasis></para>
 
-          <para><emphasis role="bold">--statistics_level level_str</emphasis></para>
+          <para><emphasis role="bold">--statistics_level
+          level_str</emphasis></para>
 
-          <para>Specifies the statistics information to generate. Valid levels are:
-          all,summary,wf_stats,jb_stats,tf_stats,ti_stats; Default is summary.
-		  The output generated by pegasus-statistics is based on the statistics_level 
-		  set.</para>
-		  <itemizedlist>
+          <para>Specifies the statistics information to generate. Valid levels
+          are: all,summary,wf_stats,jb_stats,tf_stats,ti_stats; Default is
+          summary. The output generated by pegasus-statistics is based on the
+          statistics_level set.</para>
+
+          <itemizedlist>
             <listitem>
               <para><emphasis role="bold">all</emphasis></para>
+
               <para>generates all the statistics information.</para>
             </listitem>
 
             <listitem>
               <para><emphasis role="bold">summary</emphasis></para>
-              <para>generates the workflow statistics summary .In case of hierarchical 
-              workflow the summary is across all sub workflows.</para>
+
+              <para>generates the workflow statistics summary .In case of
+              hierarchical workflow the summary is across all sub
+              workflows.</para>
             </listitem>
 
             <listitem>
               <para><emphasis role="bold">wf_stats</emphasis></para>
-              <para>generates the workflow statistics information of each individual workflow.
-               In case of hierarchical workflow the workflow statistics is created for each 
-               sub workflows.</para>
+
+              <para>generates the workflow statistics information of each
+              individual workflow. In case of hierarchical workflow the
+              workflow statistics is created for each sub workflows.</para>
             </listitem>
 
             <listitem>
               <para><emphasis role="bold">jb_stats</emphasis></para>
-              <para>generates the job statistics information of each individual workflow.
-              In case of hierarchical workflow the job statistics is created for each 
-              sub workflows.</para>
-            </listitem>
 
-            <listitem>
-              <para><emphasis role="bold">tf_stats</emphasis></para>
-              <para>generates the invocation statistics information of each individual workflow 
-              grouped by transformation name .In case of hierarchical workflow the transformation 
+              <para>generates the job statistics information of each
+              individual workflow. In case of hierarchical workflow the job
               statistics is created for each sub workflows.</para>
             </listitem>
 
             <listitem>
-              <para><emphasis role="bold">ti_stats</emphasis></para>
-              <para>generates the job instance and invocation statistics like total count and 
-              runtime grouped by time and host.</para>
+              <para><emphasis role="bold">tf_stats</emphasis></para>
+
+              <para>generates the invocation statistics information of each
+              individual workflow grouped by transformation name .In case of
+              hierarchical workflow the transformation statistics is created
+              for each sub workflows.</para>
             </listitem>
 
-           </itemizedlist>
-		  
+            <listitem>
+              <para><emphasis role="bold">ti_stats</emphasis></para>
+
+              <para>generates the job instance and invocation statistics like
+              total count and runtime grouped by time and host.</para>
+            </listitem>
+          </itemizedlist>
         </listitem>
-        
+
         <listitem>
           <para><emphasis role="bold">-t filter_str</emphasis></para>
 
-          <para><emphasis role="bold">--time_filter filter_str</emphasis></para>
+          <para><emphasis role="bold">--time_filter
+          filter_str</emphasis></para>
 
-          <para>Specifies the time filter to group the time statistics. Valid levels are: 
-          month,week,day,hour; Default is day.</para>
+          <para>Specifies the time filter to group the time statistics. Valid
+          levels are: month,week,day,hour; Default is day.</para>
         </listitem>
-        
-        
+
         <listitem>
           <para><emphasis role="bold">-i </emphasis></para>
 
-          <para><emphasis role="bold">--ignore_db_inconsistency</emphasis></para>
+          <para><emphasis
+          role="bold">--ignore_db_inconsistency</emphasis></para>
 
           <para>Turns off the the check for database consistency.</para>
         </listitem>
-        
+
         <listitem>
           <para><emphasis role="bold">-v </emphasis></para>
 
@@ -1502,7 +1511,7 @@ LFN_N PFN_N [site handle N]</programlisting>
           to INFO. If this option is repeated, the log level will be changed
           to DEBUG.</para>
         </listitem>
-        
+
         <listitem>
           <para><emphasis role="bold">-q</emphasis></para>
 
@@ -1511,57 +1520,52 @@ LFN_N PFN_N [site handle N]</programlisting>
           <para>Decreases the log level. If omitted, the default level will be
           set to WARNING. When this option is given, the log level is changed
           to ERROR.</para>
-       </listitem>
-      </itemizedlist>	
+        </listitem>
+      </itemizedlist>
     </section>
-    
+
     <section>
       <title>EXAMPLE</title>
 
       <screen><command>pegasus-statistics   /scratch/grid-setup/run0001</command></screen>
 
-      <para>Runs pegasus-statistics and prints the workflow summary statistics on the command line output.</para>
-      
+      <para>Runs pegasus-statistics and prints the workflow summary statistics
+      on the command line output.</para>
+
       <screen><command>pegasus-statistics  -o /scratch/statistics -s all /scratch/grid-setup/run0001</command></screen>
 
-      <para>Runs pegasus-statistics and prints the workflow summary statistics on the command line output 
-      and generates all statistics information files to the given directory.</para>
+      <para>Runs pegasus-statistics and prints the workflow summary statistics
+      on the command line output and generates all statistics information
+      files to the given directory.</para>
     </section>
- 
   </section>
 
-  <section>
+  <section id="pegasus-plots">
     <title>pegasus-plots</title>
 
     <para>pegasus-plots generates charts and graphs that illustrate the
     statistics and execution of a workflow.</para>
-    
+
     <section>
       <title>SYNOPSIS</title>
 
-          <para><emphasis role="bold">pegasus-statistics</emphasis> &lt;submit directory&gt;
-			[-h | --help]
-			[-o | --output &lt;output directory&gt;] 
-			[-c | --conf &lt;property file path&gt;]
-			[-m | --max_graph_nodes max_value]
-			[-p | --plotting_level level_str]
-			[-i | --ignore_db_inconsistency]
-			[-v | --verbose]
-			[-q | --quiet]
-          </para>
-      
-     </section>
-    
+      <para><emphasis role="bold">pegasus-statistics</emphasis> &lt;submit
+      directory&gt; [-h | --help] [-o | --output &lt;output directory&gt;] [-c
+      | --conf &lt;property file path&gt;] [-m | --max_graph_nodes max_value]
+      [-p | --plotting_level level_str] [-i | --ignore_db_inconsistency] [-v |
+      --verbose] [-q | --quiet]</para>
+    </section>
+
     <section>
       <title>DESCRIPTION</title>
 
-      <para>pegasus-plots generates graphs and charts to visualize workflow run. It generates
-       workflow execution Gantt chart, job over time chart, time chart, dax and dag graph. 
-      It uses executable 'dot' to generate graphs. pegasus-plots looks for the executable 
-      in your path and generates graphs based on it's availability .
-      </para>
+      <para>pegasus-plots generates graphs and charts to visualize workflow
+      run. It generates workflow execution Gantt chart, job over time chart,
+      time chart, dax and dag graph. It uses executable 'dot' to generate
+      graphs. pegasus-plots looks for the executable in your path and
+      generates graphs based on it's availability .</para>
     </section>
-    
+
     <section>
       <title>ARGUMENTS</title>
 
@@ -1569,106 +1573,119 @@ LFN_N PFN_N [site handle N]</programlisting>
       synonym(s).</para>
 
       <itemizedlist>
-       
         <listitem>
           <para><emphasis role="bold">-h </emphasis></para>
 
           <para><emphasis role="bold">--help</emphasis></para>
 
-          <para>Prints a usage summary with all the available command-line 
+          <para>Prints a usage summary with all the available command-line
           options.</para>
         </listitem>
 
         <listitem>
-          <para><emphasis role="bold">-o &lt;output directory &gt;</emphasis></para>
+          <para><emphasis role="bold">-o &lt;output directory
+          &gt;</emphasis></para>
 
-          <para><emphasis role="bold">--output &lt;output directory &gt;</emphasis></para>
+          <para><emphasis role="bold">--output &lt;output directory
+          &gt;</emphasis></para>
 
           <para>Writes the output to the given directory.</para>
         </listitem>
-        
+
         <listitem>
-          <para><emphasis role="bold">-c &lt;property file path &gt;</emphasis></para>
+          <para><emphasis role="bold">-c &lt;property file path
+          &gt;</emphasis></para>
 
-          <para><emphasis role="bold">--conf &lt;property file path &gt;</emphasis></para>
+          <para><emphasis role="bold">--conf &lt;property file path
+          &gt;</emphasis></para>
 
-          <para>The properties file to use. This option overrides all other property
-          files.</para>
+          <para>The properties file to use. This option overrides all other
+          property files.</para>
         </listitem>
-        
+
         <listitem>
           <para><emphasis role="bold">-m max_value</emphasis></para>
 
-          <para><emphasis role="bold">--max_graph_nodes max_value</emphasis></para>
+          <para><emphasis role="bold">--max_graph_nodes
+          max_value</emphasis></para>
 
-          <para>Maximum limit on the number of tasks/jobs in the dax/dag upto which the graph 
-          should be generated;The default value is 100</para>
+          <para>Maximum limit on the number of tasks/jobs in the dax/dag upto
+          which the graph should be generated;The default value is 100</para>
         </listitem>
-        
-        
+
         <listitem>
           <para><emphasis role="bold">-p level_str</emphasis></para>
 
-          <para><emphasis role="bold">--plotting_level level_str</emphasis></para>
+          <para><emphasis role="bold">--plotting_level
+          level_str</emphasis></para>
 
-          <para>Specifies the charts and graphs to generate. Valid levels are: all,all_charts, 
-          all_graphs, dax_graph,dag_graph,gantt_chart,host_chart,time_chart; Default is all_charts.
-		  The output generated by pegasus-plots is based on the plotting_level 
-		  set.</para>
-		  <itemizedlist>
+          <para>Specifies the charts and graphs to generate. Valid levels are:
+          all,all_charts, all_graphs,
+          dax_graph,dag_graph,gantt_chart,host_chart,time_chart; Default is
+          all_charts. The output generated by pegasus-plots is based on the
+          plotting_level set.</para>
+
+          <itemizedlist>
             <listitem>
               <para><emphasis role="bold">all</emphasis></para>
+
               <para>generates all charts and graphs.</para>
             </listitem>
 
             <listitem>
               <para><emphasis role="bold">all_charts</emphasis></para>
+
               <para>generates all charts.</para>
             </listitem>
 
             <listitem>
               <para><emphasis role="bold">all_graphs</emphasis></para>
+
               <para>generates all graphs.</para>
             </listitem>
 
             <listitem>
               <para><emphasis role="bold">dax_graph</emphasis></para>
+
               <para>generates dax graph.</para>
             </listitem>
 
             <listitem>
               <para><emphasis role="bold">dag_graph</emphasis></para>
+
               <para>generates dag graph.</para>
             </listitem>
 
             <listitem>
               <para><emphasis role="bold">gantt_chart</emphasis></para>
+
               <para>generates the workflow execution Gantt chart.</para>
             </listitem>
-            
+
             <listitem>
               <para><emphasis role="bold">host_chart</emphasis></para>
+
               <para>generates the host over time chart.</para>
             </listitem>
-            
-             <listitem>
+
+            <listitem>
               <para><emphasis role="bold">time_chart</emphasis></para>
-              <para>generates the time chart which shows the job instance/ 
+
+              <para>generates the time chart which shows the job instance/
               invocation count and runtime over time.</para>
             </listitem>
-
-           </itemizedlist>
-		  
+          </itemizedlist>
         </listitem>
-        
+
         <listitem>
           <para><emphasis role="bold">-i </emphasis></para>
 
-          <para><emphasis role="bold">--ignore_db_inconsistency</emphasis></para>
+          <para><emphasis
+          role="bold">--ignore_db_inconsistency</emphasis></para>
 
           <para>Turns off the the check for database consistency.</para>
         </listitem>
-        
+
         <listitem>
           <para><emphasis role="bold">-v </emphasis></para>
 
@@ -1679,7 +1696,7 @@ LFN_N PFN_N [site handle N]</programlisting>
           to INFO. If this option is repeated, the log level will be changed
           to DEBUG.</para>
         </listitem>
-        
+
         <listitem>
           <para><emphasis role="bold">-q</emphasis></para>
 
@@ -1688,35 +1705,108 @@ LFN_N PFN_N [site handle N]</programlisting>
           <para>Decreases the log level. If omitted, the default level will be
           set to WARNING. When this option is given, the log level is changed
           to ERROR.</para>
-       </listitem>
-      </itemizedlist>	
+        </listitem>
+      </itemizedlist>
     </section>
-    
+
     <section>
       <title>EXAMPLE</title>
 
       <screen><command>pegasus-plots  -o /scratch/plots  /scratch/grid-setup/run0001</command></screen>
 
-      <para>Runs pegasus-plots and generates all the charts and graphs to the given directory.</para>
+      <para>Runs pegasus-plots and generates all the charts and graphs to the
+      given directory.</para>
     </section>
-    
   </section>
 
-  <section>
+  <section id="pegasus-transfer">
     <title>pegasus-transfer</title>
 
-    <para>pegasus-transfer is a wrapper for several file transfer
-    clients.</para>
+    <para>pegasus-transfer is a wrapper for several file transfer clients. The
+    tool is used whenever Pegasus plans a transfer of data.</para>
+
+    <section>
+      <title>SYNOPSIS</title>
+
+      <para><emphasis role="bold">pegasus-transfer </emphasis>[-h | --help]
+      [-l | --loglevel &lt;level&gt;] [-f | --file=&lt;input file&gt;]
+      [--max-attempts=&lt;attempts&gt;] </para>
+    </section>
+
+    <section>
+      <title>DESCRIPTION</title>
+
+      <para>pegasus-transfer takes a list of url pairs, either on stdin or
+      with an input file, determines the correct tool to use for the transfer
+      and executes the transfer. Some of the protocols pegasus-transfer can
+      handle are GridFTP, SRM, Amazon S3, HTTP, and local cp/symlinking.
+      Failed transfers are retried.</para>
+    </section>
+
+    <section>
+      <title>ARGUMENTS</title>
+
+      <para>Any option will be displayed with its long options
+      synonym(s).</para>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">-h </emphasis></para>
+
+          <para><emphasis role="bold">--help</emphasis></para>
+
+          <para>Prints a usage summary with all the available command-line
+          options.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-l &lt;level&gt;</emphasis></para>
+
+          <para><emphasis role="bold">--loglevel
+          &lt;level&gt;</emphasis></para>
+
+          <para>The debugging output level. Valid values are
+          debug,info.warning,error. Default value is info.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-f &lt;input file&gt;</emphasis></para>
+
+          <para><emphasis role="bold">--file &lt;input
+          file&gt;</emphasis></para>
+
+          <para>File with input pairs. If not given, stdin will be
+          used.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">--max-attempts
+          &lt;attempts&gt;</emphasis></para>
+
+          <para>Maximum number of attempts for retrying failed
+          transfers.</para>
+        </listitem>
+      </itemizedlist>
+    </section>
+
+    <section>
+      <title>EXAMPLE</title>
+
+      <screen><command>pegasus-transfer
+file:///etc/hosts
+file:///tmp/foo
+CTRL+D</command></screen>
+    </section>
   </section>
 
-  <section>
+  <section id="pegasus-sc-client">
     <title>pegasus-sc-client</title>
 
     <para>pegasus-sc-client is used to generate and modify site
     catalogs.</para>
   </section>
 
-  <section>
+  <section id="pegasus-rc-client">
     <title>pegasus-rc-client</title>
 
     <para>pegasus-rc-client - shell client for replica implementations</para>
@@ -2083,7 +2173,7 @@ LFN_N PFN_N [site handle N]</programlisting>
     </section>
   </section>
 
-  <section>
+  <section id="pegasus-tc-client">
     <title>pegasus-tc-client</title>
 
     <para>A full featured generic client to handle adds, delete and queries to
@@ -2640,7 +2730,7 @@ LFN_N PFN_N [site handle N]</programlisting>
     </section>
   </section>
 
-  <section>
+  <section id="pegasus-s3">
     <title>pegasus-s3</title>
 
     <para>pegasus-s3 is a client for the Amazon S3 object storage service and
@@ -3085,7 +3175,7 @@ secret_key = asdhfuinakwjelfuhalsdflahsdl</programlisting>
     </section>
   </section>
 
-  <section>
+  <section id="pegasus-exitcode">
     <title>pegasus-exitcode</title>
 
     <para>pegasus-exitcode is a utility that examines the STDOUT of a job to
@@ -3161,7 +3251,7 @@ secret_key = asdhfuinakwjelfuhalsdflahsdl</programlisting>
     executed.</para>
   </section>
 
-  <section>
+  <section id="kickstart">
     <title>Kickstart</title>
 
     <para>Kickstart is a job wrapper that collects data about a job's
