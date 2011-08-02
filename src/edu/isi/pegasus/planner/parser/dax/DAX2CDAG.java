@@ -192,10 +192,6 @@ public class DAX2CDAG implements Callback {
             mDagInfo.updateLFNMap(lfn,"o");
         }
 
-        if(!job.getNotifications().isEmpty()){
-        	System.out.println( "[DEBUG] Job Invoke " + job.getName() +  job.getNotifications() );
-        }
- 
     }
 
     /**
