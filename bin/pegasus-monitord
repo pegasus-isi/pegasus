@@ -1233,7 +1233,10 @@ class Workflow:
                 # Set level to Error if workflow did not finish successfully
                 kwargs["level"] = "Error"
             if wf._dagman_exit_code is None:
-                logger.warning("DAGMan exit code hasn't been set...")
+                logger.warning("%s - %s: DAGMan exit code hasn't been set..." %
+                               (self._wf_uuid,
+                                ((self._dax_label or "unknown") +
+                                 "-" + (self._dax_index or "unknown"))))
                 kwargs["status"] = 0
         state = "xwf." + state
 
@@ -4357,6 +4360,9 @@ while (len(wfs) > 0):
                 except:
                     logger.critical("error: workflow not started, %s does not exist, dropping this workflow..." % (workflow_entry.dagman_out))
                     workflow_entry.delete_workflow = True
+                    # Close jobstate.log, if any
+                    if workflow_entry.wf is not None:
+                        workflow_entry.wf.end_workflow()
                     # Go to the next workflow_entry in the for loop
                     continue
 
@@ -4370,6 +4376,9 @@ while (len(wfs) > 0):
                         # We tried too long, just exit
                         logger.critical("%s never made an appearance" % (workflow_entry.dagman_out))
                         workflow_entry.delete_workflow = True
+                        # Close jobstate.log, if any
+                        if workflow_entry.wf is not None:
+                            workflow_entry.wf.end_workflow()
                         # Go to the next workflow_entry in the for loop
                         continue
                     # Continue waiting
@@ -4379,12 +4388,18 @@ while (len(wfs) > 0):
                     # Another error
                     logger.critical("stat %s" % (workflow_entry.dagman.out))
                     workflow_entry.delete_workflow = True
+                    # Close jobstate.log, if any
+                    if workflow_entry.wf is not None:
+                        workflow_entry.wf.end_workflow()
                     # Go to the next workflow_entry in the for loop
                     continue
             except:
                 # Another exception
                 logger.critical("stat %s" % (workflow_entry.dagman.out))
                 workflow_entry.delete_workflow = True
+                # Close jobstate.log, if any
+                if workflow_entry.wf is not None:
+                    workflow_entry.wf.end_workflow()
                 # Go to the next workflow_entry in the for loop
                 continue
             else:
@@ -4394,6 +4409,9 @@ while (len(wfs) > 0):
                 except:
                     logger.critical("opening %s" % (workflow_entry.dagman_out))
                     workflow_entry.delete_workflow = True
+                    # Close jobstate.log, if any
+                    if workflow_entry.wf is not None:
+                        workflow_entry.wf.end_workflow()
                     # Go to the next workflow_entry in the for loop
                     continue
 
@@ -4407,6 +4425,9 @@ while (len(wfs) > 0):
                 # stat error
                 logger.critical("stat %s" % (workflow_entry.dagman_out))
                 workflow_entry.delete_workflow = True
+                # Close jobstate.log, if any
+                if workflow_entry.wf is not None:
+                    workflow_entry.wf.end_workflow()
                 # Go to the next workflow_entry in the for loop
                 continue
 
@@ -4416,6 +4437,9 @@ while (len(wfs) > 0):
                 if workflow_entry.wf._dagman_exit_code is not None and not replay_mode:
                     logger.info("workflow %s ended" % (workflow_entry.dagman_out))
                     workflow_entry.delete_workflow = True
+                    # Close jobstate.log, if any
+                    if workflow_entry.wf is not None:
+                        workflow_entry.wf.end_workflow()
                     # Go to the next workflow_entry in the for loop
                     continue
 
@@ -4428,6 +4452,9 @@ while (len(wfs) > 0):
                         logger.critical("DAGMan is gone! Sudden death syndrome detected!")
                         workflow_entry.wf._monitord_exit_code = 42
                         workflow_entry.delete_workflow = True
+                        # Close jobstate.log, if any
+                        if workflow_entry.wf is not None:
+                            workflow_entry.wf.end_workflow()
                         # Go to the next workflow_entry in the for loop
                         continue
 
@@ -4437,6 +4464,9 @@ while (len(wfs) > 0):
                     # Too long without change
                     logger.critical("too long without action, stopping workflow %s" % (workflow_entry.dagman_out))
                     workflow_entry.delete_workflow = True
+                    # Close jobstate.log, if any
+                    if workflow_entry.wf is not None:
+                        workflow_entry.wf.end_workflow()
                     # Go to the next workflow_entry in the for loop
                     continue
 
@@ -4445,6 +4475,9 @@ while (len(wfs) > 0):
                     # We are in replay mode, so we should have everything here
                     logger.info("no more action, stopping workflow %s" % (workflow_entry.dagman_out))
                     workflow_entry.delete_workflow = True
+                    # Close jobstate.log, if any
+                    if workflow_entry.wf is not None:
+                        workflow_entry.wf.end_workflow()
                     # Go to the next workflow_entry in the for loop
                     continue
 
@@ -4452,6 +4485,9 @@ while (len(wfs) > 0):
                 # Truncated file, booh!
                 logger.critical("%s file truncated, time to exit" % (workflow_entry.dagman_out))
                 workflow_entry.delete_workflow = True
+                # Close jobstate.log, if any
+                if workflow_entry.wf is not None:
+                    workflow_entry.wf.end_workflow()
                 # Go to the next workflow_entry in the for loop
                 continue
 
@@ -4464,6 +4500,9 @@ while (len(wfs) > 0):
                     logger.critical("while reading %s" % (workflow_entry.dagman_out))
                     workflow_entry.wf._monitord_exit_code = 42
                     workflow_entry.delete_workflow = True
+                    # Close jobstate.log, if any
+                    if workflow_entry.wf is not None:
+                        workflow_entry.wf.end_workflow()
                     # Go to the next workflow_entry in the for loop
                     continue
                 if len(ml_rbuffer) == 0:
@@ -4554,9 +4593,9 @@ while (len(wfs) > 0):
             # Close dagman.out file, if any
             if workflow_entry.DMOF is not None:
                 workflow_entry.DMOF.close()
-            # Close jobstate.log, if any
-            if workflow_entry.wf is not None:
-                workflow_entry.wf.end_workflow()
+#            # Close jobstate.log, if any
+#            if workflow_entry.wf is not None:
+#                workflow_entry.wf.end_workflow()
             # Delete this workflow from our list
             deleted_entry = wfs.pop(wf_index)
             # Don't move index to next one
