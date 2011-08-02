@@ -152,7 +152,7 @@ public class All
      */
     public String getMode() {
         return
-            "All Mode : Use both Installed and Stageable Executables on all sites.";
+            "All Mode - Handle both Installed and Stageable Executables on all sites";
     }
 
     /**
