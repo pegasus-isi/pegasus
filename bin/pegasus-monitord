@@ -1233,10 +1233,11 @@ class Workflow:
                 # Set level to Error if workflow did not finish successfully
                 kwargs["level"] = "Error"
             if wf._dagman_exit_code is None:
-                logger.warning("%s - %s: DAGMan exit code hasn't been set..." %
+                logger.warning("%s - %s - %s - %s: DAGMan exit code hasn't been set..." %
                                (self._wf_uuid,
                                 ((self._dax_label or "unknown") +
-                                 "-" + (self._dax_index or "unknown"))))
+                                 "-" + (self._dax_index or "unknown")),
+                                self._line, self._out_file))
                 kwargs["status"] = 0
         state = "xwf." + state
 
