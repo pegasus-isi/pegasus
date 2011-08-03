@@ -3895,43 +3895,54 @@ def service_notifications():
                     logger.warning("error closing stderr file for notification %s... continuing..."
                                    % (my_finished_notification))
                 
-                if notifications_log is not None:
-                    notifications_log.write("%s\n" % ('-' * 80))
-                    notifications_log.write("Notification time  : %s\n" % (utils.isodate()))
-                    notifications_log.write("Notification event : %s\n" % (my_finished_notification))
-                    notifications_log.write("Notification action: %s\n" % (my_finished_action))
-                    notifications_log.write("Notification status: %s\n" % (my_status))
-                    notifications_log.write("\n")
-                    notifications_log.write("Notification environment\n")
-                    for k in my_finished_notification_params:
-                        notifications_log.write("%s : %s\n" % (k, my_finished_notification_params[k]))
-                    notifications_log.write("\n")
-                    notifications_log.write("stdout:\n")
-                    try:
-                        my_f = open(my_finished_out_fn, 'r')
-                        for line in my_f:
-                            notifications_log.write(line)
-                        my_f.close()
-                        os.unlink(my_finished_out_fn)
-                    except:
-                        logger.warning("error processing notification stdout file: %s... continuing..."
-                                       % (my_finished_out_fn))
-                    notifications_log.write("\n")
-                    notifications_log.write("stderr:\n")
-                    try:
-                        my_f = open(my_finished_err_fn, 'r')
-                        for line in my_f:
-                            notifications_log.write(line)
-                        my_f.close()
-                        os.unlink(my_finished_err_fn)
-                    except:
-                        logger.warning("error processing notification stderr file: %s... continuing..."
-                                       % (my_finished_err_fn))
-                    notifications_log.write("\n")
-                    notifications_log.write("\n")
-                else:
-                    logger.critical("notifications' output log file not initialized... exiting...")
-                    sys.exit(1)
+                if logger.isEnabledFor(logging.INFO):
+                    if notifications_log is not None:
+                        notifications_log.write("%s\n" % ('-' * 80))
+                        notifications_log.write("Notification time  : %s\n" % (utils.isodate()))
+                        notifications_log.write("Notification event : %s\n" % (my_finished_notification))
+                        notifications_log.write("Notification action: %s\n" % (my_finished_action))
+                        notifications_log.write("Notification status: %s\n" % (my_status))
+                        notifications_log.write("\n")
+                        notifications_log.write("Notification environment\n")
+                        for k in my_finished_notification_params:
+                            notifications_log.write("%s : %s\n" % (k, my_finished_notification_params[k]))
+                        notifications_log.write("\n")
+                        notifications_log.write("stdout:\n")
+                        try:
+                            my_f = open(my_finished_out_fn, 'r')
+                            for line in my_f:
+                                notifications_log.write(line)
+                            my_f.close()
+                        except:
+                            logger.warning("error processing notification stdout file: %s. continuing..."
+                                           % (my_finished_out_fn))
+                        notifications_log.write("\n")
+                        notifications_log.write("stderr:\n")
+                        try:
+                            my_f = open(my_finished_err_fn, 'r')
+                            for line in my_f:
+                                notifications_log.write(line)
+                            my_f.close()
+                        except:
+                            logger.warning("error processing notification stderr file: %s. continuing..."
+                                           % (my_finished_err_fn))
+                        notifications_log.write("\n")
+                        notifications_log.write("\n")
+                    else:
+                        logger.critical("notifications' output log file not initialized... exiting...")
+                        sys.exit(1)
+
+                # Now, delete output and error files
+                try:
+                    os.unlink(my_finished_out_fn)
+                except:
+                    logger.warning("error deleting notification stdout file: %s. continuing..."
+                                   % (my_finished_out_fn))
+                try:
+                    os.unlink(my_finished_err_fn)
+                except:
+                    logger.warning("error deleting notification stderr file: %s. continuing..."
+                                   % (my_finished_err_fn))
 
                 # Delete this notification from our list
                 my_deleted_entry = active_notifications.pop(my_notif_index)
