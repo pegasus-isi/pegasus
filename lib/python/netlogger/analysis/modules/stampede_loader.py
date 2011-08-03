@@ -16,7 +16,7 @@ the Stampede DB.
 
 See http://www.sqlalchemy.org/ for details on SQLAlchemy
 """
-__rcsid__ = "$Id: stampede_loader.py 28222 2011-07-28 15:29:38Z mgoode $"
+__rcsid__ = "$Id: stampede_loader.py 28233 2011-08-02 23:32:40Z mgoode $"
 __author__ = "Monte Goode"
 
 from netlogger.analysis.schema.stampede_schema import *
@@ -145,6 +145,9 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         """
         self.log.debug('process', msg=linedata)
         
+        if not self._batch:
+            self.check_connection()
+        
         try:
             if self._perf:
                 t = time.time()
@@ -167,6 +170,11 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
             self.log.error('process',
                 msg='Insert failed for event "%s" : %s' % (linedata['event'], e))
             self.session.rollback()
+        except exceptions.OperationalError, e:
+            self.log.error('process', msg='Connection seemingly lost - attempting to refresh')
+            self.session.rollback()
+            self.check_connection()
+            self.process(linedata)
             
         self.check_flush()
         pass
@@ -279,6 +287,25 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
             self.hard_flush()
             self.log.debug('check_flush', msg='Flush: time based')
             
+    def check_connection(self, sub=False):
+        self.log.debug('check_connection.start')
+        try:
+            self.session.connection().closed
+        except exceptions.OperationalError, e:
+            try:
+                if not self.session.is_active:
+                    self.session.rollback()
+                self.log.error('check_connection', msg='Lost connection - attempting reconnect')
+                time.sleep(5)
+                self.session.connection().connect()
+            except exceptions.OperationalError, e:
+                self.check_connection(sub=True)
+            if not sub:
+                self.log.warn('check_connection', msg='Connection re-established')
+
+        self.log.debug('check_connection.end')
+        
+            
     def hard_flush(self, batch_flush=True):
         """
         @type   batch_flush: boolean
@@ -295,6 +322,8 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         if not self._batch:
             return
         self.log.debug('hard_flush.begin', batching=batch_flush)
+        
+        self.check_connection()
         
         if self._perf:
             s = time.time()
@@ -322,6 +351,11 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
                 msg='Integrity error on batch flush: %s - batch will need to be committed per-event which will take longer' % e)
             self.session.rollback()
             self.hard_flush(batch_flush=False)
+        except exceptions.OperationalError, e:
+            self.log.error('batch_flush',
+                msg='Connection problem during commit - reattempting batch')
+            self.session.rollback()
+            self.hard_flush()
         
         for host in self._batch_cache['host_map_events']:
             self.map_host_to_job_instance(host)

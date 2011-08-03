@@ -123,7 +123,7 @@ class SQLAlchemyInit:
             # The Analyzer superclass SHOULD have been _init__'ed
             # already but if not, bulletproof this attr.
             self._dbg = False
-        self.db = create_engine(connString, echo=self._dbg)
+        self.db = create_engine(connString, echo=self._dbg, pool_recycle=True)
         self.metadata = MetaData()
         dialect_kw = kwarg.get(dsn_dialect(connString), {})
         initFunction(self.db, self.metadata, kw=dialect_kw)
