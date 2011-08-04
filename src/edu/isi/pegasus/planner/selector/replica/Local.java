@@ -58,7 +58,7 @@ public class Local implements ReplicaSelector {
     /**
      * Sanity Check Error Message.
      */
-    public static final String SANITY_CHECK_ERROR_MESSAGE = "Local Replica Selector selects only local file URL's. Set transfers to run on submit host";
+    public static final String SANITY_CHECK_ERROR_MESSAGE_PREFIX = "Local Replica Selector selects only local file URL's. Set transfers to run on submit host.";
 
     /**
      * The scheme name for file url.
@@ -111,7 +111,11 @@ public class Local implements ReplicaSelector {
 
         //sanity check
         if( !allowLocalFileURLs && !preferredSite.equals( ReplicaSelector.LOCAL_SITE_HANDLE )){
-            throw new RuntimeException( SANITY_CHECK_ERROR_MESSAGE );
+            StringBuffer message = new StringBuffer();
+            message.append( SANITY_CHECK_ERROR_MESSAGE_PREFIX ).
+                    append( "For LFN " ).append( rl.getLFN() ). append( " (preferred site , allow local urls) is set to ").
+                    append( "(").append( preferredSite ).append( "," ).append( allowLocalFileURLs ).append( ")" );
+            throw new RuntimeException( message.toString() );
         }
         
         ReplicaCatalogEntry rce;
@@ -186,7 +190,11 @@ public class Local implements ReplicaSelector {
 
         //sanity check
         if( !allowLocalFileURLs && !preferredSite.equals( ReplicaSelector.LOCAL_SITE_HANDLE )){
-            throw new RuntimeException( SANITY_CHECK_ERROR_MESSAGE );
+            StringBuffer message = new StringBuffer();
+            message.append( SANITY_CHECK_ERROR_MESSAGE_PREFIX ).
+                    append( "For LFN " ).append( rl.getLFN() ). append( " (preferred site , allow local urls) is set to ").
+                    append( "(").append( preferredSite ).append( "," ).append( allowLocalFileURLs ).append( ")" );
+            throw new RuntimeException( message.toString() );
         }
 
         String lfn = rl.getLFN();
