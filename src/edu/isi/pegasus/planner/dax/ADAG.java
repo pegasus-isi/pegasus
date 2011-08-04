@@ -31,6 +31,7 @@ import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.common.util.Version;
 import edu.isi.pegasus.common.util.XMLWriter;
+import edu.isi.pegasus.planner.dax.Invoke.WHEN;
 
 /**
  * <pre>
@@ -61,6 +62,11 @@ import edu.isi.pegasus.common.util.XMLWriter;
  *   <B>Create a new {@link ADAG} object </B><br><br>
  *   <i>ADAG dax = new ADAG("test");</i>
  *   </li><br>
+ * <li>
+ * <B>Add notifications to the workflow</B><br><br>
+ * <i>j3.addNotification(WHEN.start,"/usr/local/pegasus/libexec/notification/email -t notify@example.com -f workflow@example.com");<br><br>
+ *    j3.addNotification(WHEN.at_end,"/usr/local/pegasus/libexec/notification/email -t notify@example.com -f workflow@example.com");</i>
+ *  </li><br>
  *  <li>
  *     <B>Create a {@link File} object</B><br>
  *      You only need to add entries to this section if you want to use an "IN-DAX" Replica Catalog"<br><br>
@@ -111,7 +117,7 @@ import edu.isi.pegasus.common.util.XMLWriter;
  *              <i>diamond.uses(preprocess).uses(findrange).uses(analyze);</i><br>
  *          </li><br>
  *          <li><b>Add the sub files(e.g config files) for this transformation</b><br><br>
-                <i>diamond.uses(new File("config", File.LINK.INPUT));</i><br>
+ *               <i>diamond.uses(new File("config", File.LINK.INPUT));</i><br>
  *          </li><br>
  *          <li><b>Finally Add the Transformation to the {@link ADAG} object</b><br><br>
  *              <i>dax.addTransformation(diamond);</i>
@@ -119,7 +125,7 @@ import edu.isi.pegasus.common.util.XMLWriter;
  *      </ol>
  * </li><br>
  * <li><b>Create a {@link Job} object</b><br><br>
-       <i>Job j1 = new Job("j1", "pegasus", "preprocess", "1.0", "j1");</i><br>
+ *      <i>Job j1 = new Job("j1", "pegasus", "preprocess", "1.0", "j1");</i><br>
  *     <ol type=a>
  *       <li><b>Add Arguments to the job object</b><br><br>
  *           <i>j1.addArgument("-a","preprocess")<br>
@@ -131,9 +137,10 @@ import edu.isi.pegasus.common.util.XMLWriter;
  *              j1.uses(fb1, File.LINK.OUTPUT);<br>
  *              j1.uses(new File("f.b2"), File.LINK.OUTPUT);</i>
  *      </li><br>
- *      <li><b>Add the Notifications to this job</b><br><br>
- *          <i>j3.addInvoke(Invoke.WHEN.start, "/bin/notify -m START gmehta@isi.edu");<br>
- *              j3.addInvoke(Invoke.WHEN.at_end, "/bin/notify -m END gmehta@isi.edu");</i>
+ *      <li><b>Add the Notifications to this job</b><br><br
+ *         <i>j3.addNotification(WHEN.start,"/usr/local/pegasus/libexec/notification/email -t notify@example.com -f workflow@example.com");<br>
+ *            j3.addNotification(WHEN.at_end,"/usr/local/pegasus/libexec/notification/email -t notify@example.com -f workflow@example.com");</i>
+ *
  *      </li><br>
  *      <li><b>Add {@link Profile}s to the job</b><br><br>
  *          <i>j1.addProfile(Profile.NAMESPACE.dagman, "pre", "20");</i>
@@ -292,6 +299,16 @@ public class ADAG {
         mInvokes.add(i);
         return this;
     }
+
+    /**
+     * Add a Notification for this Workflow
+     * @param when
+     * @param what
+     * @return ADAG
+     */
+    public ADAG addNotification(Invoke.WHEN when, String what) {
+        return addInvoke(when, what);
+    }
     
     
    /**
@@ -302,6 +319,15 @@ public class ADAG {
     public ADAG addInvoke(Invoke invoke) {
         mInvokes.add(invoke.clone());
         return this;
+    }
+
+    /**
+     * Add a Notification for this Workflow
+     * @param invoke
+     * @return ADAG
+     */
+    public ADAG addNotification(Invoke invoke) {
+        return addInvoke(invoke);
     }
 
 
@@ -316,7 +342,16 @@ public class ADAG {
         }
         return this;
     }
-    
+
+
+    /**
+     * Add a List of Notifications for this Workflow
+     * @param invokes
+     * @return ADAG
+     */
+    public ADAG addNotifications(List<Invoke> invokes) {
+        return addInvokes(invokes);
+    }
     /**
      * Add a RC File object to the top of the DAX.
      * @param file File object to be added to the RC section
@@ -931,6 +966,8 @@ public class ADAG {
         j1.uses(fb1, File.LINK.OUTPUT);
         j1.uses("f.b2", File.LINK.OUTPUT);
         j1.addProfile(Profile.NAMESPACE.dagman, "pre", "20");
+        j1.addInvoke(WHEN.start,"/usr/local/pegasus/libexec/notification/email -t notify@example.com -f workflow@example.com");
+        j1.addInvoke(WHEN.at_end,"/usr/local/pegasus/libexec/notification/email -t notify@example.com -f workflow@example.com");
         dax.addJob(j1);
 
         DAG j2 = new DAG("j2", "findrange.dag", "j2");
@@ -938,6 +975,8 @@ public class ADAG {
         j2.uses("f.c1", File.LINK.OUTPUT, File.TRANSFER.FALSE, false);
         j2.addProfile(Profile.NAMESPACE.dagman, "pre", "20");
         j2.addProfile("condor", "universe", "vanilla");
+        j2.addInvoke(WHEN.start,"/usr/local/pegasus/libexec/notification/email -t notify@example.com -f workflow@example.com");
+        j2.addInvoke(WHEN.at_end,"/usr/local/pegasus/libexec/notification/email -t notify@example.com -f workflow@example.com");
         dax.addDAG(j2);
 
         DAX j3 = new DAX("j3", "findrange.dax", "j3");
@@ -946,6 +985,8 @@ public class ADAG {
         j3.uses(new File("f.c2"), File.LINK.OUTPUT, File.TRANSFER.FALSE, false);
         j3.addInvoke(Invoke.WHEN.start, "/bin/notify -m START gmehta@isi.edu");
         j3.addInvoke(Invoke.WHEN.at_end, "/bin/notify -m END gmehta@isi.edu");
+        j3.addInvoke(WHEN.start,"/usr/local/pegasus/libexec/notification/email -t notify@example.com -f workflow@example.com");
+        j3.addInvoke(WHEN.at_end,"/usr/local/pegasus/libexec/notification/email -t notify@example.com -f workflow@example.com");
         j3.addProfile("ENV", "HAHA", "YADAYADAYADA");
         dax.addDAX(j3);
 
@@ -957,6 +998,8 @@ public class ADAG {
         j4.uses(fc1, File.LINK.INPUT);
         j4.uses(fc2, File.LINK.INPUT);
         j4.uses(fd, File.LINK.OUTPUT);
+        j4.addInvoke(WHEN.start,"/usr/local/pegasus/libexec/notification/email -t notify@example.com -f workflow@example.com");
+        j4.addInvoke(WHEN.at_end,"/usr/local/pegasus/libexec/notification/email -t notify@example.com -f workflow@example.com");
         dax.addJob(j4);
 
         dax.addDependency("j1", "j2", "1-2");

@@ -1216,7 +1216,7 @@ public class AbstractJob {
     }
 
     /**
-     * 
+     * Add Notification to the job
      * @param when
      * @param what
      * @return AbstractJob
@@ -1227,8 +1227,18 @@ public class AbstractJob {
         return this;
     }
 
+     /**
+     * Add Notification to the job
+     * @param when
+     * @param what
+     * @return AbstractJob
+     */
+    public AbstractJob addNotification(Invoke.WHEN when, String what) {
+        return addInvoke(when,what);
+    }
+
     /**
-     *
+     * Add notification to the job
      * @param invoke
      * @return AbstractJob
      */
@@ -1238,7 +1248,16 @@ public class AbstractJob {
     }
 
     /**
-     *
+     * Add notification to the job
+     * @param invoke
+     * @return AbstractJob
+     */
+    public AbstractJob addNotification(Invoke invoke) {
+        return addInvoke(invoke);
+    }
+
+    /**
+     * Add Notifications to the job
      * @param invokes
      * @return AbstractJob
      */
@@ -1249,6 +1268,14 @@ public class AbstractJob {
         return this;
     }
 
+    /**
+     * Add Notifications to the job
+     * @param invokes
+     * @return AbstractJob
+     */
+    public AbstractJob addNotifications(List<Invoke> invokes) {
+        return addInvokes(invokes);
+    }
     /**
      * Is this Object a Job
      * @return 

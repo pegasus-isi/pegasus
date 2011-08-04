@@ -161,6 +161,7 @@ public class Executable extends CatalogType {
     
     /**
      * Add a Notification for this Executable
+     * same as addNotification
      * @param when
      * @param what
      * @return Executable
@@ -170,10 +171,22 @@ public class Executable extends CatalogType {
         mInvokes.add(i);
         return this;
     }
+
+    /**
+     * Add a Notification for this Executable
+     * same as addInvoke
+     * @param when
+     * @param what
+     * @return Executable
+     */
+    public Executable addNotification(Invoke.WHEN when, String what) {
+        return addInvoke(when,what);
+    }
     
     
    /**
      * Add a Notification for this Executable
+    * Same as add Notification
      * @param invoke
      * @return Executable
      */
@@ -183,7 +196,18 @@ public class Executable extends CatalogType {
     }
 
     /**
+     * Add a Notification for this Executable
+     * Same as addInvoke
+     * @param invoke
+     * @return Executable
+     */
+    public Executable addNotification(Invoke invoke) {
+       return addInvoke(invoke);
+    }
+
+    /**
      * Add a List of Notifications for this Executable
+     * Same as addNotifications
      * @param invokes
      * @return Executable
      */
@@ -193,6 +217,17 @@ public class Executable extends CatalogType {
         }
         return this;
     }
+
+    /**
+     * Add a List of Notifications for this Executable.
+     * Same as addInvokes
+     * @param invokes
+     * @return Executable
+     */
+    public Executable addNotifications(List<Invoke> invokes) {
+        return addInvokes(invokes);
+    }
+
     /**
      * Set the architecture the executable is compiled for
      * @param arch
