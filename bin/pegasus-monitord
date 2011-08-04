@@ -4265,13 +4265,18 @@ else:
         wf_event_sink = create_wf_event_sink(event_dest, db_stats=db_stats,
                                              restart=restart_logging, enc=encoding)
         atexit.register(finish_stampede_loader)
-        if restart_logging and isinstance(wf_event_sink, DBEventSink):
-            # If in replay mode or recovery mode and it is a DB,
-            # attempt to purge wf_uuid_first
-            purge_wf_uuid_from_database(run, event_dest)
-    except ValueError, err:
-        logger.critical("Cannot create output: %s. Abort." % (err))
-        sys.exit(1)
+    except:
+        logger.error(traceback.format_exc())
+        logger.error("cannot create events output... disabling event output!")
+        wf_event_sink = None
+    else:
+        try:
+            if restart_logging and isinstance(wf_event_sink, DBEventSink):
+                # If in replay mode or recovery mode and it is a DB,
+                # attempt to purge wf_uuid_first
+                purge_wf_uuid_from_database(run, event_dest)
+        except:
+            logger.warning("error flushing previous wf_uuid from database... continuing...")
 
 # Say hello
 logger.info("starting [%s], using pid %d" % (revision, os.getpid()))
