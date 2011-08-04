@@ -1,0 +1,237 @@
+#!/usr/bin/env python
+
+import os
+import re
+import sys
+import logging
+import optparse
+import math
+import tempfile
+import commands
+import shutil
+import tarfile
+
+# Initialize logging object
+logger = logging.getLogger()
+# Set default level to INFO
+logger.setLevel(logging.INFO)
+
+
+import common
+from Pegasus.plots_stats import utils as plot_utils
+from Pegasus.tools import utils
+
+
+from netlogger.analysis.workflow.sql_alchemy import *
+from datetime import timedelta
+
+#regular expressions
+re_parse_property = re.compile(r'([^:= \t]+)\s*[:=]?\s*(.*)')
+
+#Global variables----
+brainbase ='braindump.txt'
+dagman_extension = ".dagman.out"
+prog_base = os.path.split(sys.argv[0])[1]	# Name of this program
+	
+def setup_logger(level_str):
+	level_str = level_str.lower()
+	if level_str == "debug":
+		logger.setLevel(logging.DEBUG)
+	if level_str == "warning":
+		logger.setLevel(logging.WARNING)
+	if level_str == "error":
+		logger.setLevel(logging.ERROR)
+	if level_str == "info":
+		logger.setLevel(logging.INFO)
+	return
+
+
+def listFiles(basedir):
+	subdirlist = []
+	for item in os.listdir(basedir):
+		if os.path.islink(os.path.join(basedir, item)):
+			continue
+		if os.path.isfile(os.path.join(basedir, item)):
+			continue
+		else:
+			subdirlist.append(os.path.join(basedir, item))
+	return subdirlist
+
+
+def create_header(workflow_type):
+	header_str = "<html>\n\
+	<head>\n\
+	<link href='css/default.css' rel='stylesheet' type='text/css'/>\n\
+	<title>"+ workflow_type +"</title>\n\
+	<style type ='text/css'>\n\
+	</style>\n\
+	</head>\n\
+	<body>\n\
+	<div id = 'header_div' class ='header'>\n\
+	</div>\n"
+	return header_str
+
+
+
+
+def create_footer():
+	footer_str = "<div id = 'footer_div' class = 'footer'>\n\
+	</div>\n\
+	</body>\n\
+	</html>\n"
+	return footer_str
+	
+
+
+def print_workflow_type_details(type_dir):
+	html_content =""
+	props ={}
+	workflow_type_file_name = "workflow_type.txt"
+	if os.path.exists(os.path.join(type_dir,workflow_type_file_name)):
+		if os.path.exists(os.path.join(type_dir,workflow_type_file_name)):
+			props = plot_utils.parse_property_file(os.path.join(type_dir,workflow_type_file_name))
+	
+	if props.has_key('name'):
+		html_content += "<h3>" + props['name'] + "</h3>"
+	if props.has_key('desc'):
+		html_content += "<p>" + read_file(os.path.join(type_dir,props['desc'])) + "</p>" 
+	if props.has_key('image'):
+		html_content += "<img src='" + props['image'] +"' align='bottom' />"
+	
+	return html_content	
+			
+
+
+
+def setup(output_dir):
+	dest_img_path = os.path.join(output_dir, "images/")
+	plot_utils.create_directory(dest_img_path)
+	src_img_path = os.path.join(common.pegasus_home, "share/plots/images/common/download.jpg")
+	shutil.copy(src_img_path, dest_img_path)
+	dest_css_path = os.path.join(output_dir, "css/")
+	plot_utils.create_directory(dest_css_path)
+	src_css_path =os.path.join(common.pegasus_home, "share/plots/css/default.css")
+	shutil.copy(src_css_path, dest_css_path)
+	return
+
+def create_workflow_type_page(type_dir , output_dir , log_level):
+	setup(output_dir)
+	workflow_dirs = listFiles(type_dir)
+	file_name = os.path.join(output_dir, "index.html")
+	html_content =  create_header("")
+	html_content += "<div id='main' class ='columns'>\n\
+			<div id='left_div' class ='left'>\n\
+			<a href ='../../index.html'>Home</a><br/>\n\
+			<a href ='../../help.html'>Gallery Info</a>\n\
+			</div>\n\
+			<div id='right_div' class ='right' >\n\
+			</div>\n\
+			<div id='center_div' class ='middle'>\n"
+	html_content += print_workflow_type_details(type_dir)
+	workflow_info_file_name = "workflow_info.txt"
+	workflow_run_count = 0
+	for workflow_dir in workflow_dirs:
+		print workflow_dir
+		if os.path.exists(os.path.join(workflow_dir,workflow_info_file_name)):
+			props = plot_utils.parse_property_file(os.path.join(workflow_dir,workflow_info_file_name) ," ")
+			workflow_run_count +=1
+			html_content += "<a href ='"+ os.path.basename(workflow_dir) +"/" + props['wf_uuid']+".html' ><h3> Run "+ str(workflow_run_count) +"</h3></a>"
+			workflow_info = ''
+			workflow_info += "<div> <table style='color:#600000;'>\n"
+			workflow_info +="<tr><th style ='color:#600000'><pre>Workflow runtime                   :</pre></th><td style ='color:#888888'>" + str(props['workflow_runtime']) 
+			workflow_info +="\n"
+			workflow_info +="<tr><th style ='color:#600000'><pre>Cumulative workflow runtime        :</pre></th><td style ='color:#888888'>" + str(props['cumulative_workflow_runtime'])
+			workflow_info +="\n"
+			workflow_info +="<tr><th style ='color:#600000'><pre>Total jobs run                     :</pre></th><td style ='color:#888888'>" + str(props['total_jobs'])+ "</td></tr>"
+			workflow_info +="\n"	
+			workflow_info +="<tr><th style ='color:#600000'><pre># jobs succeeded                   :</pre></th><td style ='color:#888888'>" + str(props['succeeded_jobs'])+ "</td></tr>"
+			workflow_info +="\n"
+			workflow_info +="<tr><th style ='color:#600000'><pre># jobs failed                      :</pre></th><td style ='color:#888888'>" + str(props['failed_jobs'])+ "</td></tr>"
+			workflow_info +="\n"
+			workflow_info +="<tr><th style ='color:#600000'><pre># jobs unsubmitted                 :</pre></th><td style ='color:#888888'>" + str(props['unsubmitted_jobs'])+ "</td></tr>"
+			workflow_info +="\n"
+			workflow_info +="<tr><th style ='color:#600000'><pre># jobs unknown                     :</pre></th><td style ='color:#888888'>" + str(props['unknown_jobs'])+ "</td></tr>"
+			workflow_info +="\n"
+			workflow_info +="<tr><th style ='color:#600000'><pre># Total tasks succeeded            :</pre></th><td style ='color:#888888'>" + str(props['total_succeeded_tasks'])+ "</td></tr>"
+			workflow_info +="\n"
+			workflow_info +="<tr><th style ='color:#600000'><pre># Total tasks failed               :</pre></th><td style ='color:#888888'>" + str(props['total_failed_tasks'])+ "</td></tr>"
+			workflow_info +="</table></div>"
+			html_content +=workflow_info	
+			html_content += "Download tar : <a href ='"+ os.path.basename(workflow_dir) +"/" + props['tar_file']+"' ><img src='images/download.jpg' alt='Download' align='bottom' width='16' height='16' border ='0' /></a>"
+	html_content += "</div>\n"
+	html_content += "</div>\n"
+	html_content +=  create_footer()
+	write_to_file(file_name, html_content)
+
+def write_to_file(file_name , content):
+	try:
+		fh = open(file_name, "w")
+		fh.write(content)
+	except IOError:
+		logger.error("Unable to write to file " + data_file)
+		sys.exit(1)
+	else:
+		fh.close()	
+	return
+	
+def read_file(file_name):
+	content =''
+	try:
+		my_file = open(file_name, 'r')
+	except:
+	# Error opening file
+		return content
+	for line in my_file:
+		content += line
+	return content
+	
+	
+
+	
+	
+
+# ---------main----------------------------------------------------------------------------
+def main():
+	# Configure command line option parser
+	prog_usage = prog_base +" [options] WORKFLOW TYPE DIRECTORY" 
+	parser = optparse.OptionParser(usage=prog_usage)
+	parser.add_option("-o", "--output", action = "store", dest = "output_dir",
+			help = "writes the output to given directory.")
+	parser.add_option("-l", "--loglevel", action = "store", dest = "log_level",
+			help = "Log level. Valid levels are: debug,info,warning,error, Default is warning.")
+	# Parse command line options
+	(options, args) = parser.parse_args()
+	
+	logger.info(prog_base +" : initializing...")
+	if len(args) < 1:
+		parser.error("Please specify directory to look for workflow pages that are created by pegasus-create-workflow-page.")
+		sys.exit(1)
+	
+	if len(args) > 1:
+		parser.error("Invalid argument")
+		sys.exit(1) 
+	
+	type_dir = os.path.abspath(args[0])
+	
+	# Copy options from the command line parser
+	if options.output_dir is not None:
+		output_dir = options.output_dir
+		if not os.path.isdir(output_dir):
+			logger.warning("Output directory doesn't exists. Creating directory... ")
+			try:
+				os.mkdir(output_dir)
+			except:
+				logger.error("Unable to create output directory."+output_dir)
+				sys.exit(1) 	
+	else:
+		output_dir = type_dir
+	if options.log_level == None:
+		options.log_level = "warning"
+	setup_logger(options.log_level)
+	create_workflow_type_page(type_dir,output_dir , options.log_level)
+	sys.exit(0)
+	
+	
+
+if __name__ == '__main__':
+	main()

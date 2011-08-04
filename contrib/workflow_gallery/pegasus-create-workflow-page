@@ -1,0 +1,414 @@
+#!/usr/bin/env python
+
+import os
+import re
+import sys
+import logging
+import optparse
+import math
+import tempfile
+import commands
+import shutil
+import tarfile
+
+# Initialize logging object
+logger = logging.getLogger()
+# Set default level to INFO
+#logger.setLevel(logging.INFO)
+
+
+import common
+from Pegasus.tools import utils
+from Pegasus.plots_stats import utils as plot_utils
+from Pegasus.plots_stats.plots import populate
+from Pegasus.plots_stats.plots import workflow_info
+from Pegasus.plots_stats.plots import pegasus_gantt
+from Pegasus.plots_stats.plots import pegasus_host_over_time
+from Pegasus.plots_stats.stats import populate_stats
+submit_dir = None
+prefix =""
+no_dax = 0
+no_dag = 0
+MAX_GRAPH_LIMIT = 100
+
+
+from netlogger.analysis.workflow.sql_alchemy import *
+from datetime import timedelta
+
+#regular expressions
+re_parse_property = re.compile(r'([^:= \t]+)\s*[:=]?\s*(.*)')
+
+#Global variables----
+brainbase ='braindump.txt'
+dagman_extension = ".dagman.out"
+prog_base = os.path.split(sys.argv[0])[1]	# Name of this program
+	
+def setup_logger(level_str):
+	level_str = level_str.lower()
+	if level_str == "debug":
+		logger.setLevel(logging.DEBUG)
+	if level_str == "warning":
+		logger.setLevel(logging.WARNING)
+	if level_str == "error":
+		logger.setLevel(logging.ERROR)
+	if level_str == "info":
+		logger.setLevel(logging.INFO)
+	populate.setup_logger(level_str)
+	populate_stats.setup_logger(level_str)
+	return
+
+def run_pegasus_monitord(dagman_out_file):
+	monitord_path = os.path.join(common.pegasus_home, "bin/pegasus-monitord")
+	monitord_cmd = monitord_path 
+	monitord_cmd += " -r "+ dagman_out_file
+	logger.info("Executing command :\n"  + monitord_cmd)
+	status, output = commands.getstatusoutput(monitord_cmd)
+	if status == 0:
+		logger.info("Finished executing command." )
+		return 0
+	else:
+		logger.warn("Failed to run pegasus-monitord on workflow")
+		logger.debug("%s: %d:%s" % (monitord_cmd, status, output))
+		return None
+
+def listFiles(dir):
+	basedir = dir
+	subdirlist = []
+	for file in os.listdir(dir):
+		if os.path.isfile(os.path.join(basedir, file)):
+			if file == "braindump.txt":
+				global submit_dir
+				submit_dir = basedir
+				return
+		if os.path.islink(os.path.join(basedir, file)):
+			continue
+		if os.path.isdir(os.path.join(basedir, file)):
+			listFiles(os.path.join(basedir, file))
+	
+
+
+	
+def untar_workflow(tar_file , output_dir):
+	tar = tarfile.open(tar_file)
+	tar.extractall(output_dir)
+	tar.close()
+	return
+	
+
+def create_header(workflow_info):
+	header_str = "<html>\n\
+	<head>\n\
+	<link href='css/default.css' rel='stylesheet' type='text/css'/>\n\
+	<title>"+ workflow_info.wf_uuid +"</title>\n\
+	<style type ='text/css'>\n\
+	#host_chart{\n\
+	border:1px solid red;\n\
+	}\n\
+	#gantt_chart{\n\
+	border:1px solid red;\n\
+	}\n\
+	</style>\n\
+	</head>\n\
+	<body>\n\
+	<div id = 'header_div' class ='header'>\n\
+	</div>\n"
+	return header_str
+
+
+def generate_dag_graph(wf_info, output_dir):
+	logger.info("Generating dag graph for  workflow "  + wf_info.wf_uuid)
+	dag_file_path = wf_info.dag_file_path
+	if dag_file_path is not None:
+		dag2dot_file_path = os.path.join(common.pegasus_home, "libexec/visualize/dag2dot")
+		dot_file_path = os.path.join(output_dir, wf_info.wf_uuid+".dot")
+		dag_cmd = dag2dot_file_path 
+		dag_cmd +=" --output "+ dot_file_path
+		dag_cmd += " "+ dag_file_path
+		logger.info("Executing command :\n"  + dag_cmd)
+		status, output = commands.getstatusoutput(dag_cmd)
+		if status == 0:
+			logger.info("Finished executing command." )
+		else:
+			logger.warn("Failed to generate dag graph for workflow "+ wf_info.wf_uuid)
+			logger.debug("%s: %d:%s" % (dag_cmd, status, output))
+			return None
+		png_file_path = os.path.join(output_dir, wf_info.wf_uuid+".png")
+		dot_png_cmd = utils.find_exec("dot")
+		if dot_png_cmd is None:
+			logger.warn("dot is not present . Unable to create chart in png format. ")
+			return
+		dot_png_cmd +=" -Tpng -o" + png_file_path
+		dot_png_cmd += " "+ dot_file_path
+		logger.info("Executing command :\n"  + dot_png_cmd)
+		status, output = commands.getstatusoutput(dot_png_cmd)
+		if status == 0:
+			logger.info("Finished executing command." )
+			return status
+		else:
+			logger.warn("%s: %d:%s" % (dot_png_cmd, status, output))
+	else:
+		logger.warn("Unable to find the dag file for workflow  " + wf_info.wf_uuid)
+	return None
+	
+	
+def generate_dax_graph(wf_info, output_dir):
+	logger.info("Generating dax graph for  workflow "  + wf_info.wf_uuid)
+	dax_file_path = wf_info.dax_file_path
+	if dax_file_path is not None:
+		dax2dot_file_path = os.path.join(common.pegasus_home, "libexec/visualize/dax2dot")
+		dot_file_path = os.path.join(output_dir, wf_info.wf_uuid + ".dot")
+		dax_cmd = dax2dot_file_path 
+		dax_cmd +=" --output "+ dot_file_path
+		dax_cmd += " "+ dax_file_path
+		logger.info("Executing command :\n"  + dax_cmd)
+		status, output = commands.getstatusoutput(dax_cmd)
+		if status == 0:
+			logger.info("Finished executing command." )
+		else:
+			logger.warn("Failed to generate dax graph for workflow "+ wf_info.wf_uuid)
+			logger.debug("%s: %d:%s" % (dax_cmd, status, output))
+			return None
+		# Find dot command
+		dot_png_cmd = utils.find_exec("dot")
+		if dot_png_cmd is None:
+			logger.warn("dot is not present . Unable to create chart in png format. ")
+		png_file_path = os.path.join(output_dir, wf_info.wf_uuid +".png")
+		dot_png_cmd +=" -Tpng -o" + png_file_path
+		dot_png_cmd += " "+ dot_file_path
+		logger.info("Executing command :\n"  + dot_png_cmd)
+		status, output = commands.getstatusoutput(dot_png_cmd)
+		if status == 0:
+			logger.info("Finished executing command." )
+			return status
+		else:
+			logger.warn("Failed to generate dax graph in png format for workflow " + wf_info.wf_uuid)
+			logger.debug("%s: %d:%s" % (dot_png_cmd, status, output))
+	else:
+		logger.warn("Unable to find the dax file for workflow " + wf_info.wf_uuid)
+	return None
+
+
+
+def create_footer():
+	footer_str = "<div id = 'footer_div' class = 'footer'>\n\
+	</div>\n\
+	</body>\n\
+	</html>\n"
+	return footer_str
+	
+
+	
+def setup(output_dir):
+	dest_img_path = os.path.join(output_dir, "images/")
+	plot_utils.create_directory(dest_img_path)
+	src_img_path = os.path.join(common.pegasus_home, "share/plots/images/common/not_available.jpg")
+	shutil.copy(src_img_path, dest_img_path)
+	src_img_path = os.path.join(common.pegasus_home, "share/plots/images/common/download.jpg")
+	shutil.copy(src_img_path, dest_img_path)
+	dest_css_path = os.path.join(output_dir, "css/")
+	plot_utils.create_directory(dest_css_path)
+	src_css_path =os.path.join(common.pegasus_home, "share/plots/css/default.css")
+	shutil.copy(src_css_path, dest_css_path)
+
+def create_workflow_page(tar_file_name , output_dir , log_level):
+	setup(output_dir)
+	extract_output_dir = os.path.join(output_dir,"temp")
+	logger.debug("Extracting the tar file to "+ extract_output_dir)
+	untar_workflow(os.path.join(output_dir,tar_file_name), extract_output_dir)
+	listFiles(extract_output_dir)
+	if submit_dir is None:
+		logger.warning("Unable to find the submit dir ")
+		sys.exit(1)
+	config = utils.slurp_braindb(submit_dir)
+	braindb = os.path.join(submit_dir, brainbase)
+	if not config:
+		logger.warning("Unable to parse braindump.txt " + submit_dir)
+		sys.exit(1)
+	dag_name = None
+	if (config.has_key('dag')):
+		dag_name = config['dag']
+	else:
+		logger.warning("Unable to find the dag name in the braindump.txt " )
+		sys.exit(1)
+	
+	dagman_out_file =  os.path.join(submit_dir, dag_name) + dagman_extension
+	if run_pegasus_monitord(dagman_out_file) is None:
+		logger.warning("Failed to execute monitord on the workflow")
+		sys.exit(1)
+	populate.setup(submit_dir)
+	populate_stats.setup(submit_dir)
+	dag_graph_output_dir = os.path.join(output_dir,"dag_graph")
+	dax_graph_output_dir = os.path.join(output_dir,"dax_graph")
+	plot_utils.create_directory(dag_graph_output_dir)
+	plot_utils.create_directory(dax_graph_output_dir)
+	pegasus_gantt.setup(submit_dir,output_dir ,log_level)
+	pegasus_host_over_time.setup(submit_dir,output_dir ,log_level)
+	top_level_wf_uuid  = None
+	workflow_run_time = 0
+	workflow_cpu_time = 0
+	total_jobs = 0
+	succeeded_jobs  =0
+	failed_jobs  = 0
+	unsubmitted_jobs =0
+	unknown_jobs  =0
+	total_succeeded_tasks  =0
+	total_failed_tasks  =0
+	
+	wf_uuid_list = populate.get_workflows_uuid()
+	for wf_uuid in wf_uuid_list:
+		logger.debug("Populating the workflow information...  "+ wf_uuid)
+		wf_info = populate.populate_chart(wf_uuid)
+		logger.debug("Populating the workflow statistics ...  ")
+		wf_stats = populate_stats.populate_stats(wf_uuid)
+		if wf_info.parent_wf_uuid is None:
+			workflow_run_time = wf_stats.workflow_run_time
+			top_level_wf_uuid = wf_uuid
+		if wf_stats.workflow_cpu_time_non_sub_wf is None or wf_stats.workflow_cpu_time_non_sub_wf =='-':
+			workflow_cpu_time ='-'
+		else:
+			if workflow_cpu_time !='-':
+				workflow_cpu_time += wf_stats.workflow_cpu_time_non_sub_wf
+		total_jobs += wf_stats.total_jobs_non_sub_wf
+		succeeded_jobs += wf_stats.succeeded_jobs_non_sub_wf
+		failed_jobs += wf_stats.failed_jobs_non_sub_wf
+		unsubmitted_jobs += wf_stats.unsubmitted_jobs_non_sub_wf
+		unknown_jobs += wf_stats.unknown_jobs_non_sub_wf
+		total_succeeded_tasks += wf_stats.total_succeeded_tasks
+		total_failed_tasks +=wf_stats.total_failed_tasks
+		html_content =  create_header(wf_info)
+		html_content +="<div id='main' class ='columns'>"
+		html_content +="\n<div id='left_div' class ='left'></div>\n<div id='right_div' class ='right' ></div>\n<div id='center_div' class ='middle'>\n<script type='text/javascript' src='js/protovis-r3.2.js'></script>"
+		html_content += "\n<h3> Workflow execution details (<span style =' font-style:italic;font-size:14px;'> Download tar: <a href= '"+   tar_file_name + "'><img src='images/download.jpg' alt='Download' align='bottom' width='16' height='16' border ='0' /></a>)</span></h3>"
+		html_content += wf_stats.get_html_formatted_workflow_info()
+		html_content +="\n<h3> Workflow execution environment </h3>"
+		html_content += plot_utils.print_braindump_file(populate.rlb(wf_info.submit_dir))
+		html_content +="\n<h3> Job statistics </h3>"
+		html_content += wf_stats.get_html_formatted_job_info()
+		html_content +="\n<h3> Task statistics </h3>"
+		html_content += wf_stats.get_html_formatted_transformation_info()
+		html_content += "<h3>DAX graph</h3>"
+		
+		# dax also compares against the total non sub workflow jobs instead of tasks. No task information available
+		if no_dax or wf_stats.total_jobs_non_sub_wf > MAX_GRAPH_LIMIT:
+			html_content +="<img src ='images/not_available.jpg' height='300px' width='300px'></img><br/>\n"
+		else:
+			if generate_dax_graph(wf_info,dax_graph_output_dir) is None:
+				html_content +="<img src ='images/not_available.jpg' height='300px' width='300px'></img><br/>\n"
+			else:
+				image = "dax_graph/" + wf_info.wf_uuid+".png"
+				html_content +="<img src ='"+image+ "' ></img><br/>\n"
+		html_content += "<h3>DAG graph</h3>"
+		if no_dag or wf_stats.total_jobs_non_sub_wf > MAX_GRAPH_LIMIT:
+			html_content += "<img src ='images/not_available.jpg' height='300px' width='300px'></img><br/>\n"
+		else:
+			if generate_dag_graph(wf_info,dag_graph_output_dir) is None:
+				html_content += "<img src ='images/not_available.jpg' height='300px' width='300px'></img><br/>\n"
+			else:
+				image = "dag_graph/" +wf_info.wf_uuid+".png"
+				html_content +="<img src ='"+image+ "' ></img><br/>\n"
+		logger.debug("Generating the workflow execution gantt chart...  ")
+		html_content +="\n<h3> Workflow execution gantt chart</h3>"
+		html_content += pegasus_gantt.create_gnatt_plot(wf_info , output_dir)
+		logger.debug("Generating the host over time chart...  ")
+		html_content +="\n<h3> Host over time chart</h3>"
+		html_content += pegasus_host_over_time.create_host_plot(wf_info , output_dir)
+		html_content += "</div>\n"
+		html_content += "</div>\n"
+		html_content += create_footer()
+		file_name = os.path.join(output_dir,wf_info.wf_uuid +".html")
+		write_to_file(file_name, html_content)
+	workflow_content  = "tar_file " + tar_file_name
+	workflow_content += "\nwf_uuid " + top_level_wf_uuid
+	if workflow_run_time is None or  workflow_run_time =='-':
+			workflow_content += "\nworkflow_runtime " +"-"
+	else:
+		workflow_content += "\nworkflow_runtime " + plot_utils.format_seconds(workflow_run_time) 
+	if workflow_cpu_time is None or  workflow_cpu_time =='-':
+			workflow_content += "\ncumulative_workflow_runtime " +"-"
+	else:
+		workflow_content += "\ncumulative_workflow_runtime " + plot_utils.format_seconds(workflow_cpu_time)
+	workflow_content += "\ntotal_jobs " +str(total_jobs) 
+	workflow_content += "\nsucceeded_jobs " +str(succeeded_jobs)
+	workflow_content += "\nfailed_jobs " +str(failed_jobs)
+	workflow_content += "\nunsubmitted_jobs " + str(unsubmitted_jobs)
+	workflow_content += "\nunknown_jobs " +str(unknown_jobs)
+	workflow_content += "\ntotal_succeeded_tasks " +str(total_succeeded_tasks)
+	workflow_content += "\ntotal_failed_tasks " +str(total_failed_tasks)
+	file_name = os.path.join(output_dir,"workflow_info.txt")
+	write_to_file(file_name, workflow_content)
+
+def write_to_file(file_name , content):
+	try:
+		fh = open(file_name, "w")
+		fh.write(content)
+	except IOError:
+		logger.error("Unable to write to file " + data_file)
+		sys.exit(1)
+	else:
+		fh.close()	
+	return
+	
+
+# ---------main----------------------------------------------------------------------------
+def main():
+	# Configure command line option parser
+	prog_usage = prog_base +" [options] TAR DIRECTORY" 
+	parser = optparse.OptionParser(usage=prog_usage)
+	parser.add_option("-o", "--output", action = "store", dest = "output_dir",
+			help = "writes the output to given directory.")
+	parser.add_option("-p", "--prefix", action = "store", dest = "prefix",
+			help = "Adds prefix to the workflow page directory.")
+	parser.add_option("-d", "--nodag", action = "store_const", const = 1, dest = "no_dag",
+		help = "if set dag chart would not be created")
+	parser.add_option("-D", "--nodax", action = "store_const", const = 1, dest = "no_dax",
+		help = "if set dax chart would not be created")
+	parser.add_option("-l", "--loglevel", action = "store", dest = "log_level",
+			help = "Log level. Valid levels are: debug,info,warning,error, Default is warning.")
+	# Parse command line options
+	(options, args) = parser.parse_args()
+	logger.info(prog_base +" : initializing...")
+	if len(args) < 1:
+		parser.error("Please specify directory to look for workflow tar files.")
+		sys.exit(1)
+	
+	if len(args) > 1:
+		parser.error("Invalid argument")
+		sys.exit(1) 
+	
+	tar_dir = os.path.abspath(args[0])
+	# Copy options from the command line parser
+	if options.log_level == None:
+		options.log_level = "info"
+	global prefix
+	global no_dag
+	global no_dax
+	if options.prefix is not None:
+		prefix = options.prefix
+	if options.no_dax is not None:
+		no_dax = options.no_dax
+	if options.no_dag is not None:
+		no_dag = options.no_dag
+	setup_logger(options.log_level)
+	if options.output_dir is not None:
+		output_dir = options.output_dir
+		plot_utils.create_directory(output_dir)
+	else :
+		output_dir = tempfile.mkdtemp()
+	tarCount = 0
+	for tar_file_name in os.listdir(tar_dir):
+		if os.path.isfile(os.path.join(tar_dir, tar_file_name)):
+			if tarfile.is_tarfile(os.path.join(tar_dir,tar_file_name)):
+				tarCount =tarCount+1
+				run_dir = os.path.join(output_dir , prefix + "run_" + str(tarCount))
+				plot_utils.create_directory(run_dir)
+				shutil.copy(os.path.join(tar_dir,tar_file_name), run_dir)
+				create_workflow_page(tar_file_name,run_dir , options.log_level)			
+		else:
+			logger.debug("Skipping ..." + tar_file_name)
+	print "Successfully generated "+ str(tarCount) +  " workflow pages"
+	sys.exit(0)
+	
+	
+
+if __name__ == '__main__':
+	main()
