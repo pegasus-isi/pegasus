@@ -1452,10 +1452,17 @@ analyze.uses(d, link=Link.OUTPUT, register=True)
 diamond.addJob(analyze)
 
 # Add control-flow dependencies
-diamond.addDependency(parent=preprocess, child=frl)
-diamond.addDependency(parent=preprocess, child=frr)
-diamond.addDependency(parent=frl, child=analyze)
-diamond.addDependency(parent=frr, child=analyze)
+diamond.depends(parent=preprocess, child=frl)
+diamond.depends(parent=preprocess, child=frr)
+diamond.depends(parent=frl, child=analyze)
+diamond.depends(parent=frr, child=analyze)
+
+# Add notification for analyze job
+analyze.invoke(When.ON_ERROR, '/home/user/bin/email -s "Analyze job failed" user@example.com')
+
+# Add notification for workflow
+diamond.invoke(When.AT_END, '/home/user/bin/email -s "Workflow finished" user@example.com')
+diamond.invoke(When.ON_SUCCESS, '/home/user/bin/publish_workflow_result')
 
 # Write the DAX to stdout
 diamond.writeXML(sys.stdout)</programlisting>
