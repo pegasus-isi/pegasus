@@ -3494,6 +3494,12 @@ def process_dagman_out(wf, log_line):
                 wf._dagman_exit_code = 0
                 wf._monitord_exit_code = 1
             logger.info("DAGMan finished with exit code %s" % (wf._dagman_exit_code))
+            # XXXX: Temporary debug statement for JIRA issue PM-450
+            logger.warning("%s - %s - %s - %s - %s" % (wf._wf_uuid,
+                                                       ((wf._dax_label or "unknown") +
+                                                        "-" + (wf._dax_index or "unknown")),
+                                                       wf._dagman_exit_code, wf._line,
+                                                       log_line))
             # Send info to database
             wf.change_wf_state("end")
         elif re_parse_dagman_condor_id.search(log_line) is not None:
