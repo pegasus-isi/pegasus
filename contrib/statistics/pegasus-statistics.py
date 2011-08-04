@@ -10,6 +10,8 @@ import optparse
 import math
 import tempfile
 
+# Initialize logging object
+logger = logging.getLogger()
 
 #regular expressions
 re_parse_property = re.compile(r'([^:= \t]+)\s*[:=]?\s*(.*)')
@@ -29,10 +31,6 @@ cell_spacing =1
 job_run_statistics_size = 50
 condor = 0				# pure condor run - no GRID_SUBMIT events
 
-
-
-# Initialize logging object
-logger = logging.getLogger()
 
 #---workflow statistics
 
