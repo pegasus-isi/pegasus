@@ -4247,6 +4247,10 @@ signal.signal(signal.SIGINT, prog_sigint_handler)
 signal.signal(signal.SIGUSR1, prog_sigusr1_handler)
 signal.signal(signal.SIGUSR2, prog_sigusr2_handler)
 
+# Log recover mode
+if os.access(os.path.join(run, MONITORD_RECOVER_FILE), os.F_OK):
+    logger.warning("monitord entering recover mode...")
+
 # Create wf_event_sink object
 if no_events:
     # Create an empty sink when no event generation is needed
