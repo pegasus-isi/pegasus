@@ -4211,7 +4211,7 @@ if nodaemon == 0:
     utils.daemonize()
     # Open logfile as stdout
     try:
-        sys.stdout = open(logfile, "w", 0)
+        sys.stdout = open(logfile, "a", 0)
     except:
         logger.critical("could not open %s!" % (logfile))
         sys.exit(1)
@@ -4219,13 +4219,18 @@ elif nodaemon == 2:
     utils.keep_foreground()
     # Open logfile as stdout
     try:
-        sys.stdout = open(logfile, "w", 0)
+        sys.stdout = open(logfile, "a", 0)
     except:
         logger.critical("could not open %s!" % (logfile))
         sys.exit(1)
 else:
     # Hack to make stdout unbuffered
     sys.stdout = os.fdopen(sys.stdout.fileno(), "w", 0)
+
+# Touch logfile with start event
+print
+print (utils.isodate(time.time()) + " - pegasus-monitord starting ").ljust(80, "-")
+print
 
 # Close stdin
 sys.stdin.close()
@@ -4705,4 +4710,10 @@ else:
 
 # done
 logger.info("finishing, exit with 0")
+
+# Touch logfile with end event
+print
+print (utils.isodate(time.time()) + " - pegasus-monitord ending ").ljust(80, "-")
+print
+
 sys.exit(0)
