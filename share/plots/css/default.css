@@ -1,0 +1,33 @@
+body{
+	background-image: url(http://pegasus.isi.edu/images/gradient.gif);
+    background-repeat: repeat-x;
+}
+.header {
+	text-align: center;
+}
+  
+.left {
+	float: left;
+	padding: 0% 2% 0% 0%;
+	width: 14%;
+	*/
+}
+
+.middle {
+	top: 10px;
+	margin-left: 16%;
+	margin-right: 16%;
+}
+
+.right {
+	float: right;
+	padding: 0% 0% 0% 2%;
+	width: 14%;
+}
+
+.footer {	
+	padding-top: 2%;
+	text-align: center;
+	clear: both;
+}
+
