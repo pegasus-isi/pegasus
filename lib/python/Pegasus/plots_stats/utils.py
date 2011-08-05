@@ -86,15 +86,27 @@ def convert_to_seconds(time):
 	Param: time delta reference
 	"""
 	return (time.microseconds + (time.seconds + time.days * 24 * 3600) * pow(10,6)) / pow(10,6)
+	
+
+def delete_directory(dir_path):
+	"""
+	Deletes a directory
+	@param dir_path directory path
+	@return Returns dir_path if deletion succeeds , None otherwise
+	"""
+	try:
+		logger.warning("Deleting directory. Deleting... " + dir_path)
+		shutil.rmtree(dir_path)
+	except:
+		logger.error("Unable to remove directory." + dir_path)
+		return None
+	return dir_path
 
 def create_directory(dir_name , delete_if_exists = False ):
 	if delete_if_exists:
 		if os.path.isdir(dir_name):
-			logger.warning("Deleting existing directory. Deleting... " + dir_name)
-			try:
-				shutil.rmtree(dir_name)
-			except:
-				logger.error("Unable to remove existing directory." + dir_name)
+			if delete_directory(dir_name) is None:
+				logger.error("Failed to delete existing directory. " + dir_name)
 				sys.exit(1)
 	if not os.path.isdir(dir_name):
 		logger.info("Creating directory... " + dir_name)
