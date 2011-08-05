@@ -376,27 +376,7 @@ class TestUse(unittest.TestCase):
         a = Use("name", link="link", register="true", transfer="true", 
                 optional=True, namespace="ns", version="10", executable=True)
         self.assertEquals(str(a.toTransformationXML()), '<uses namespace="ns" name="name" version="10" executable="true"/>')
-    
-    def testFile(self):
-        """Use should accept File as an argument"""
-        a = Use(File("filename"))
-        self.assertEquals(str(a.toJobXML()), '<uses name="filename" executable="false"/>')
-        
-    def testExecutable(self):
-        """Use should accept Executable as an argument"""
-        e = Executable(name="exe", namespace="ns", version="1.0")
-        a = Use(e)
-        self.assertEquals(str(a.toJobXML()), '<uses namespace="ns" name="exe" version="1.0" executable="true"/>')
-        
-        a = Use(e, namespace="alt")
-        self.assertEquals(str(a.toJobXML()), '<uses namespace="alt" name="exe" version="1.0" executable="true"/>')
-        
-        a = Use(e, version="alt")
-        self.assertEquals(str(a.toJobXML()), '<uses namespace="ns" name="exe" version="alt" executable="true"/>')
-        
-        a = Use(e, register=True)
-        self.assertEquals(str(a.toJobXML()), '<uses namespace="ns" name="exe" version="1.0" register="true" executable="true"/>')
-    
+
 class TestTransformation(unittest.TestCase):
     def testConstructor(self):
         t = Transformation("name","namespace","version")
@@ -444,6 +424,33 @@ class TestTransformation(unittest.TestCase):
         c.invoke("when","what")
         self.assertTrue(c.hasInvoke(p))
     
+    def testUsesFile(self):
+        """uses should accept File as an argument"""
+        c = Transformation('myjob')
+        c.uses(File("filename"))
+        self.assertEquals(str(c.toXML()), '<transformation name="myjob">\n\t<uses name="filename" executable="false"/>\n</transformation>')
+        
+    def testUsesExecutable(self):
+        """Use should accept Executable as an argument"""
+        c = Transformation('myjob')
+        e = Executable(name="exe", namespace="ns", version="1.0")
+        
+        c.uses(e)
+        self.assertEquals(str(c.toXML()), '<transformation name="myjob">\n\t<uses namespace="ns" name="exe" version="1.0"/>\n</transformation>')
+        c.clearUses()
+        
+        c.uses(e, namespace="alt")
+        self.assertEquals(str(c.toXML()), '<transformation name="myjob">\n\t<uses namespace="alt" name="exe" version="1.0"/>\n</transformation>')
+        c.clearUses()
+        
+        c.uses(e, version="alt")
+        self.assertEquals(str(c.toXML()), '<transformation name="myjob">\n\t<uses namespace="ns" name="exe" version="alt"/>\n</transformation>')
+        c.clearUses()
+        
+        c.uses(e, register=True)
+        self.assertEquals(str(c.toXML()), '<transformation name="myjob">\n\t<uses namespace="ns" name="exe" version="1.0"/>\n</transformation>')
+        c.clearUses()
+    
     def testXML(self):
         t = Transformation("name","namespace","version")
         self.assertEquals(str(t.toXML()), '<transformation namespace="namespace" name="name" version="version"/>')
@@ -454,7 +461,7 @@ class TestTransformation(unittest.TestCase):
         t.clearUses()
         
         t.uses(Executable(name="name",namespace="ns",version="ver"))
-        self.assertEquals(str(t.toXML()), '<transformation namespace="namespace" name="name" version="version">\n\t<uses namespace="ns" name="name" version="ver" executable="true"/>\n</transformation>')
+        self.assertEquals(str(t.toXML()), '<transformation namespace="namespace" name="name" version="version">\n\t<uses namespace="ns" name="name" version="ver"/>\n</transformation>')
         
         t.clearUses()
         
@@ -595,7 +602,34 @@ class TestJob(unittest.TestCase):
         self.assertFalse(c.hasInvoke(p))
         c.invoke("when","what")
         self.assertTrue(c.hasInvoke(p))
+    
+    def testUsesFile(self):
+        """uses should accept File as an argument"""
+        c = Job('myjob')
+        c.uses(File("filename"))
+        self.assertEquals(str(c.toXML()), '<job name="myjob">\n\t<uses name="filename"/>\n</job>')
         
+    def testUsesExecutable(self):
+        """Use should accept Executable as an argument"""
+        c = Job('myjob')
+        e = Executable(name="exe", namespace="ns", version="1.0")
+        
+        c.uses(e)
+        self.assertEquals(str(c.toXML()), '<job name="myjob">\n\t<uses namespace="ns" name="exe" version="1.0" executable="true"/>\n</job>')
+        c.clearUses()
+        
+        c.uses(e, namespace="alt")
+        self.assertEquals(str(c.toXML()), '<job name="myjob">\n\t<uses namespace="alt" name="exe" version="1.0" executable="true"/>\n</job>')
+        c.clearUses()
+        
+        c.uses(e, version="alt")
+        self.assertEquals(str(c.toXML()), '<job name="myjob">\n\t<uses namespace="ns" name="exe" version="alt" executable="true"/>\n</job>')
+        c.clearUses()
+        
+        c.uses(e, register=True)
+        self.assertEquals(str(c.toXML()), '<job name="myjob">\n\t<uses namespace="ns" name="exe" version="1.0" register="true" executable="true"/>\n</job>')
+        c.clearUses()
+    
     def testXML(self):
         # Job element
         j = Job(name="name")

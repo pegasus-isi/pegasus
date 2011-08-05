@@ -801,39 +801,19 @@ class Use:
     value for executable is 'true'.
     """
 
-    def __init__(self, file, link=None, register=None, transfer=None, 
+    def __init__(self, name, link=None, register=None, transfer=None, 
                 optional=None, namespace=None, version=None, executable=None):
-        if not file:
-            raise FormatError('Invalid file', file)
+        if not name:
+            raise FormatError('Invalid name', name)
         
-        if isinstance(file, CatalogType):
-            self.name = file.name
-        else:
-            self.name = file
-        
+        self.name = name
         self.link = link
         self.optional = optional
         self.register = register
         self.transfer = transfer
-        
-        self.namespace = None
-        self.version = None
-        self.executable = None
-        
-        if isinstance(file, Executable):
-            self.namespace = file.namespace
-            self.version = file.version
-            self.executable = True
-        
-        if isinstance(file, File):
-            self.executable = False
-            
-        if namespace is not None:
-            self.namespace = namespace
-        if version is not None:
-            self.version = str(version)
-        if executable is not None:
-            self.executable = executable
+        self.namespace = namespace
+        self.version = version
+        self.executable = executable
     
     def __unicode__(self):
         return u"<Use %s::%s:%s>" % (self.namespace, self.name, self.version)
@@ -892,9 +872,40 @@ class UseMixin:
         """Remove all uses from this object"""
         self.used.clear()
     
-    def uses(self, name=None, link=None, register=None, transfer=None, 
+    def uses(self, arg, link=None, register=None, transfer=None, 
              optional=None, namespace=None, version=None, executable=None):
-        use = Use(name,link,register,transfer,optional,namespace,version,executable)
+        
+        if isinstance(arg, CatalogType):
+            _name = arg.name
+        else:
+            _name = arg
+        
+        _namespace = None
+        _version = None
+        _executable = None
+        
+        if isinstance(arg, Executable):
+            _namespace = arg.namespace
+            _version = arg.version
+            # We only need to set this for jobs
+            # the default is True for Transformations
+            if isinstance(self, AbstractJob):
+                _executable = True
+        
+        if isinstance(arg, File):
+            # We only need to set this for transformations
+            # The default is False for Jobs
+            if isinstance(self, Transformation):
+                _executable = False
+        
+        if namespace is not None:
+            _namespace = namespace
+        if version is not None:
+            _version = str(version)
+        if executable is not None:
+            _executable = executable
+        
+        use = Use(_name,link,register,transfer,optional,_namespace,_version,_executable)
         self.addUse(use)
     
 
