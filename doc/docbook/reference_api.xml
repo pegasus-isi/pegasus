@@ -1202,7 +1202,7 @@
         <listitem>
           <para>Create a new <emphasis>ADAG</emphasis> object</para>
         </listitem>
-
+        <listitem><para>Add any Workflow notification elements</para></listitem>
         <listitem>
           <para>Create <emphasis>File</emphasis> objects as necessary. You can
           augment the files with physical information, if you want to include
@@ -1222,7 +1222,7 @@
         </listitem>
 
         <listitem>
-          <para>Add arguments, files, profiles and other information to the
+          <para>Add arguments, files, profiles, notifications and other information to the
           <emphasis>Job</emphasis> object</para>
         </listitem>
 
@@ -1297,7 +1297,8 @@ public class BlackDiamondDAX {
         String cwd = cwdFile.getCanonicalPath(); 
 
         ADAG dax = new ADAG("blackdiamond");
-
+        dax.addNotification(When.start,"/pegasus/libexec/notification/email -t notify@example.com");
+        dax.addNotification(When.at_end,"/pegasus/libexec/notification/email -t notify@example.com");
         File fa = new File("f.a");
         fa.addPhysicalFile("file://" + cwd + "/f.a", "local");
         dax.addFile(fa);
@@ -1334,6 +1335,8 @@ public class BlackDiamondDAX {
         j1.uses(fa, File.LINK.INPUT);
         j1.uses(fb1, File.LINK.OUTPUT);
         j1.uses(fb2, File.LINK.OUTPUT);
+        j1.addNotification(When.start,"/pegasus/libexec/notification/email -t notify@example.com");
+        j1.addNotification(When.at_end,"/pegasus/libexec/notification/email -t notify@example.com");
         dax.addJob(j1);
 
         // Add left Findrange job
@@ -1342,6 +1345,8 @@ public class BlackDiamondDAX {
         j2.addArgument("-o ").addArgument(fc1);
         j2.uses(fb1, File.LINK.INPUT);
         j2.uses(fc1, File.LINK.OUTPUT);
+        j2.addNotification(When.start,"/pegasus/libexec/notification/email -t notify@example.com");
+        j2.addNotification(When.at_end,"/pegasus/libexec/notification/email -t notify@example.com");
         dax.addJob(j2);
 
         // Add right Findrange job
@@ -1350,6 +1355,8 @@ public class BlackDiamondDAX {
         j3.addArgument("-o ").addArgument(fc2);
         j3.uses(fb2, File.LINK.INPUT);
         j3.uses(fc2, File.LINK.OUTPUT);
+        j3.addNotification(When.start,"/pegasus/libexec/notification/email -t notify@example.com");
+        j3.addNotification(When.at_end,"/pegasus/libexec/notification/email -t notify@example.com");
         dax.addJob(j3);
 
         // Add analyze job
@@ -1360,6 +1367,8 @@ public class BlackDiamondDAX {
         j4.uses(fc1, File.LINK.INPUT);
         j4.uses(fc2, File.LINK.INPUT);
         j4.uses(fd, File.LINK.OUTPUT);
+        j4.addNotification(When.start,"/pegasus/libexec/notification/email -t notify@example.com");
+        j4.addNotification(When.at_end,"/pegasus/libexec/notification/email -t notify@example.com");
         dax.addJob(j4);
 
         dax.addDependency("j1", "j2");
