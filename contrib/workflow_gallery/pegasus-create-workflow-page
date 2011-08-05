@@ -223,17 +223,20 @@ def create_workflow_page(tar_file_name , output_dir , log_level):
 	braindb = os.path.join(submit_dir, brainbase)
 	if not config:
 		logger.warning("Unable to parse braindump.txt " + submit_dir)
+		plot_utils.delete_directory(extract_output_dir)
 		sys.exit(1)
 	dag_name = None
 	if (config.has_key('dag')):
 		dag_name = config['dag']
 	else:
 		logger.warning("Unable to find the dag name in the braindump.txt " )
+		plot_utils.delete_directory(extract_output_dir)
 		sys.exit(1)
 	
 	dagman_out_file =  os.path.join(submit_dir, dag_name) + dagman_extension
 	if run_pegasus_monitord(dagman_out_file) is None:
 		logger.warning("Failed to execute monitord on the workflow")
+		plot_utils.delete_directory(extract_output_dir)
 		sys.exit(1)
 	populate.setup(submit_dir)
 	populate_stats.setup(submit_dir)
@@ -336,6 +339,7 @@ def create_workflow_page(tar_file_name , output_dir , log_level):
 	workflow_content += "\ntotal_failed_tasks " +str(total_failed_tasks)
 	file_name = os.path.join(output_dir,"workflow_info.txt")
 	write_to_file(file_name, workflow_content)
+	plot_utils.delete_directory(extract_output_dir)
 
 def write_to_file(file_name , content):
 	try:
