@@ -52,14 +52,12 @@ sub usage(;$);			# { }
 # constants
 $main::DEBUG = 0;		# for now
 my $condor;			# if set, use Condor for pegasus-monitord
-my $grid=0;                     # if set, disable grid checks;
-my $database=1;			# ???
+my $grid=0;                     # if set, enable grid checks, disabled by default
 my $default_tsd = make_path( 'pegasus-monitord' );
 my $dagman = make_path( 'pegasus-dagman' );
 my ($tsd,$monitor,$conffile); 
 GetOptions( "help|h" => \&usage
 	  , "monitor|m=s" => \$tsd
-	  , "database!" => \$database
 	  , "condor" => \$condor
 	  , "debug|d=o" => \$main::DEBUG
 	  , "verbose|v+" => \$main::DEBUG
@@ -73,7 +71,7 @@ my $run = shift;
 unless ( defined $run ) { 
     $run = getcwd();
     my $braindb = File::Spec->catfile( $run, $Pegasus::Common::brainbase ); 
-    usage("You need to provide a valid run directory.") 
+    usage("You need to provide a valid run directory. Cannot find pegasus brain file") 
 	unless -r $braindb; 
 }
 
@@ -107,21 +105,20 @@ sub usage(;$) {
 
 Usage: $basename [options] [rundir]
 
-Mandatory arguments:
+SemiMandatory arguments:
   rundir  is the directory where the workflow resides as well as ancilliary
-          files related to the workflow. Defaults to current working dir.
+          files related to the workflow. Defaults to current working directory if not specified.
 
 Optional arguments:
- -Dprop=val         Explicit settings of a property (multi-option). 
- -c|--conf fn	    Use file fn as pegasus properties file.
+ -Dprop=val         Explicit settings of a property (multi-option) (only use if really required)
+ -c|--conf fn	    Use file fn as pegasus properties file. (only use for debugging purposes.
+                    pegasus-run will pick the correct planned properties by default.
  -h|--help          Print this help message and exit.
  -m|--monitor l     Uses the workflow monitor daemon installed as l, default
                     is $default_tsd.
  -d|--debug lvl     Sets the debug level (verbosity), default is $main::DEBUG. 
  -v|--verbose       Raises debug level by 1, see --debug. 
  --condor           Uses Condor to submit daemons (prototype).
- --nodatabase       Disable logging events into the workflow database. 
- --database         Make tailstad log events in the workflow database (default).
  --nogrid           Disable checking for grids (default).
  --grid             Enable checking for grids. 
 
@@ -296,7 +293,6 @@ if ( $config{dag} ) {
 	if ( -x $tsd ) {
 	    # run pegasus-monitord to update job stats until DAGMan finishes
 	    my @tsdargs = ($tsd);
-	    push( @tsdargs, '--no-database' ) unless $database; 
 	    push( @tsdargs, $config{dag} . '.dagman.out' );
 
 	    print STDERR "# @tsdargs\n" if $main::DEBUG;
