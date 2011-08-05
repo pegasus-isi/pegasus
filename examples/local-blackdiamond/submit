@@ -17,6 +17,9 @@ echo "This is sample input to KEG" >f.a
 
 # build the dax generator
 export CLASSPATH=.:$PEGASUS_HOME/lib/pegasus.jar:$CLASSPATH
+NOTIFY="$PEGASUS_HOME/libexec/notification/email -t $USER"
+
+sed -e "s|NOTIFYME|$NOTIFY|g" BlackDiamondDAX.java.template > BlackDiamondDAX.java
 javac BlackDiamondDAX.java
 
 # generate the dax
