@@ -97,11 +97,9 @@ GetOptions( "dagid|d=s"    => \$dagid,
 	    "help|h|?" => \&usage );
 
 my $run = shift;
-usage("You need to provide a valid rundir or dagid." )
-    unless ( defined $run || defined $dagid ); 
+$run = getcwd() unless ( defined $run || defined $dagid ); 
 # 20110519 (jsv): partial relative path may break the chdir stuff below
 $run = Cwd::abs_path($run) if defined $run; 
-
 if ( defined $run ) {
     # extra sanity
     usage( "$run is not a directory." ) unless -d $run;
@@ -114,7 +112,7 @@ if ( defined $run ) {
     };
     chdir($run) || die "ERROR: Cannot change to directory $run: $!\n";
 
-    my %config = slurp_braindb( $run ) or die "ERROR: Cannot open braindb: $!\n";
+    my %config = slurp_braindb( $run ) or die "ERROR: Please ensure that either the run directory is provided as an argument or the dagid.\n       Alternatively run the pegasus-remove command from within the run directory without any arguments\n";
     my @rescue = check_rescue($run,$config{dag});
     if ( @rescue > 0 ) {
 	my (@stat,%rescue,$maxsize);
@@ -152,16 +150,15 @@ if ( defined $run ) {
     # return to where we were
     chdir($here);
 }
-
 if ( defined $dagid ) {
     # construct the command line string
     my @arg = ( $condor_rm, $dagid );
     warn "# run @arg\n" if $main::debug;
-
     # DO NOT call pipe_out_cmd, if you don't need popen()
     system { $arg[0] } @arg; 	
     print "\nResult: ", parse_exit($?), "\n";
     exit( $? == 0 ? 0 : 42 );
-} else {
+}
+ else {
     usage("You must provide either a dagid or dagdirectory to remove a workflow.");
 }
