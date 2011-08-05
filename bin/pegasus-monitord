@@ -1228,11 +1228,11 @@ class Workflow:
         kwargs["restart_count"] = self._restart_count - 1
         if state == "end":
             # Add status field for workflow.end event
-            kwargs["status"] = wf._dagman_exit_code
-            if wf._dagman_exit_code != 0:
+            kwargs["status"] = self._dagman_exit_code
+            if self._dagman_exit_code != 0:
                 # Set level to Error if workflow did not finish successfully
                 kwargs["level"] = "Error"
-            if wf._dagman_exit_code is None:
+            if self._dagman_exit_code is None:
                 logger.warning("%s - %s - %s - %s: DAGMan exit code hasn't been set..." %
                                (self._wf_uuid,
                                 ((self._dax_label or "unknown") +
@@ -3494,12 +3494,6 @@ def process_dagman_out(wf, log_line):
                 wf._dagman_exit_code = 0
                 wf._monitord_exit_code = 1
             logger.info("DAGMan finished with exit code %s" % (wf._dagman_exit_code))
-            # XXXX: Temporary debug statement for JIRA issue PM-450
-            logger.warning("%s - %s - %s - %s - %s" % (wf._wf_uuid,
-                                                       ((wf._dax_label or "unknown") +
-                                                        "-" + (wf._dax_index or "unknown")),
-                                                       wf._dagman_exit_code, wf._line,
-                                                       log_line))
             # Send info to database
             wf.change_wf_state("end")
         elif re_parse_dagman_condor_id.search(log_line) is not None:
