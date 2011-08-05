@@ -684,7 +684,11 @@ class Job:
                 my_derivation = re_parse_derivation.search(my_line).group(1)
                 # Remove quotes, if any
                 my_derivation = my_derivation.strip('"')
-                self._main_job_derivation = my_derivation
+                if my_derivation == "null":
+                    # If derivation is the "null" string, we don't want to take it
+                    self._main_job_derivation = None
+                else:
+                    self._main_job_derivation = my_derivation
             elif re_parse_executable.search(my_line):
                 # Found line with executable
                 my_executable = re_parse_executable.search(my_line).group(1)
