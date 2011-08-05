@@ -1,0 +1,442 @@
+#!/usr/bin/env python
+"""
+Pegasus utility for generating breakdown chart
+
+
+"""
+
+##
+#  Copyright 2010-2011 University Of Southern California
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing,
+#  software distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+##
+
+# Revision : $Revision$
+import os
+import sys
+import logging
+
+
+# Initialize logging object
+logger = logging.getLogger()
+# Set default level to INFO
+logger.setLevel(logging.INFO)
+
+import common
+from Pegasus.tools import utils
+from Pegasus.plots_stats import utils as plot_utils
+import populate
+from datetime import timedelta
+from datetime import datetime
+
+
+#Global variables----
+prog_base = os.path.split(sys.argv[0])[1]	# Name of this program
+output_dir = None
+
+
+
+def setup_logger(level_str):
+	"""
+	Sets the logging level  
+	@param level_str:  logging level
+	"""
+	level_str = level_str.lower()
+	if level_str == "debug":
+		logger.setLevel(logging.DEBUG)
+	if level_str == "warning":
+		logger.setLevel(logging.WARNING)
+	if level_str == "error":
+		logger.setLevel(logging.ERROR)
+	if level_str == "info":
+		logger.setLevel(logging.INFO)
+	return
+
+
+#----------print workflow details--------
+def print_workflow_details(workflow_stat , output_dir):
+	"""
+	Prints the data required for generating the gantt chart into data file.
+	@param workflow_stat the WorkflowInfo object reference 
+	@param output_dir output directory path
+	"""
+	trans_info =  "var bc_data = [" + workflow_stat.get_formatted_transformation_data() + "];"
+	
+	# print javascript file
+	data_file = os.path.join(output_dir,  "bc_" + workflow_stat.wf_uuid+"_data.js")
+	try:
+		fh = open(data_file, "w")
+		fh.write( "\n")
+		fh.write(trans_info)
+	except IOError:
+		logger.error("Unable to write to file " + data_file)
+		sys.exit(1)
+	else:
+		fh.close()	
+	return
+	
+
+
+def create_action_script(output_dir):
+	"""
+	Generates the action script file which contains the javascript functions used by the main html file.
+	@param output_dir output directory path
+	"""
+	action_content = """
+function printTransformationDetails(d){
+	var transformation_details = "name : "+d.name ;
+	transformation_details +=  "\\nTotal count : "+ d.count ;
+	transformation_details +=  "\\nSucceeded count : "+ d.success ;
+	transformation_details +=  "\\nFailed count : "+d.failure ;
+	transformation_details +=  "\\nMin Runtime : "+d.min ;
+	transformation_details +=  "\\nMax Runtime : "+d.max ;
+	transformation_details +=  "\\nAvg Runtime : "+d.avg ;
+	transformation_details +=  "\\nTotal Runtime : "+d.total ;
+	alert(transformation_details);
+}
+"""
+	# print action script
+	data_file = os.path.join(output_dir,  "bc_action.js")
+	try:
+		fh = open(data_file, "w")
+		fh.write( action_content)
+		fh.write( "\n")
+	except IOError:
+		logger.error("Unable to write to file " + data_file)
+		sys.exit(1)
+	else:
+		fh.close()
+
+
+
+def create_header(workflow_stat):
+	"""
+	Generates the header html content.
+	@param workflow_stat the WorkflowInfo object reference 
+	"""
+	header_str = """
+<html>
+<head>
+<title>"""+ workflow_stat.wf_uuid +"""</title>
+<style type ='text/css'>
+#breakdown_chart{
+border:1px solid orange;
+}
+</style>
+</head>
+<body>
+<script type='text/javascript' src='js/protovis-r3.2.js'>
+</script>
+"""
+	return header_str
+	
+def create_include(workflow_stat):
+	"""
+	Generates the html script include content.
+	@param workflow_stat the WorkflowInfo object reference 
+	"""
+	include_str = """
+<script type='text/javascript' src='bc_action.js'>
+</script>
+<script type='text/javascript' src='bc_""" + workflow_stat.wf_uuid  +"""_data.js'>
+</script>
+"""
+	return include_str
+	
+def create_variable(workflow_stat):
+	"""
+	Generates the javascript variables used to generate the chart.
+	@param workflow_stat the WorkflowInfo object reference 
+	"""
+	number_of_invocations , total_runtime = workflow_stat.get_total_count_run_time()
+	# Adding  variables
+	var_str = """<script type='text/javascript'>
+	var bc_w = 860;
+	var bc_h = 400;
+	var bc_radius = 120;
+	var bc_centerX = bc_w/2;
+	var bc_centerY = bc_h/2;
+	var bc_headerPanelWidth =  bc_w;
+	var bc_headerPanelHeight  = 100 ;
+	var bc_total_count  = """ + str(number_of_invocations) +""";
+	var bc_total_runtime =  """ + str(total_runtime)+""";
+	var bc_footerPanelWidth =  bc_w;
+	var bc_footerPanelHeight  =""" + str(50 + len(workflow_stat.transformation_statistics_dict)/4*10)  + """;
+	var bc_label_padding = 30
+	var bc_xLabelPos = bc_label_padding;
+	var bc_yLabelPos = 30;
+	</script>"""
+	return var_str
+	
+
+def create_toolbar_panel(workflow_stat):
+	"""
+	Generates the top level toolbar content.
+	@param workflow_stat the WorkflowInfo object reference 
+	"""
+	panel_str = """
+<script type="text/javascript+protovis">
+var bc_headerPanel = new pv.Panel()
+.width(bc_headerPanelWidth)
+.height(bc_headerPanelHeight)
+.fillStyle('white');
+bc_headerPanel.add(pv.Label)
+.top(40)
+.left( bc_label_padding)
+.font(function() {return 24 +'px sans-serif';})
+.textAlign('left')
+.textBaseline('bottom')
+.text('Breakdown chart');
+
+bc_headerPanel.add(pv.Label)
+	.top(80)
+	.left(bc_label_padding)
+	.font(function() {return 16 +'px sans-serif';})
+	.textAlign('left')
+	.textBaseline('bottom')
+	"""
+	panel_str += ".text('" +workflow_stat.dax_label + "');\n"
+	panel_str += """
+bc_headerPanel.render();
+
+</script>	
+"""
+	return panel_str
+
+def create_chart_panel(workflow_stat):
+	"""
+	Generates the chart panel content.
+	@param workflow_stat the WorkflowInfo object reference 
+	"""
+	panel_str ="""
+<script type="text/javascript+protovis">
+var hc_chartPanel = new pv.Panel()
+.width(bc_w)
+.height(bc_h)
+.strokeStyle('yellow');
+hc_chartPanel.def("o", -1); 
+
+var outerWedge = hc_chartPanel.add(pv.Wedge)
+.left(bc_centerX)
+.bottom(bc_centerY);
+
+outerWedge.data(bc_data)
+.outerRadius(bc_radius)
+.angle(function(d) d.count/ bc_total_count * 2 * Math.PI)
+.left(function() bc_centerX
+	+ Math.cos(this.startAngle() + this.angle() / 2)
+	* ((this.parent.o() == this.index) ? 10 : 0))
+.bottom(function() bc_centerY
+	- Math.sin(this.startAngle() + this.angle() / 2)
+	* ((this.parent.o() == this.index) ? 10 : 0))
+.event("mouseover", function() this.parent.o(this.index))
+.event("click", function(d) printTransformationDetails(d))
+.fillStyle(function(d)d.color);
+
+
+var innerWedge = hc_chartPanel.add(pv.Wedge)
+.data(bc_data)
+.left(bc_centerX)
+.bottom(bc_centerY)
+.outerRadius(function(d){
+if(d.failure < 0){
+	return 0;
+}else{
+	return bc_radius*(d.failure/d.count);
+} 
+})
+.angle(function(d) d.count/ bc_total_count * 2 * Math.PI)
+.left(function() bc_centerX
++ Math.cos(this.startAngle() + this.angle() / 2)
+* ((this.parent.o() == this.index) ? 10 : 0))
+.bottom(function() bc_centerY
+- Math.sin(this.startAngle() + this.angle() / 2)
+* ((this.parent.o() == this.index) ? 10 : 0))
+.event("mouseover", function() this.parent.o(this.index))
+ .event("click", function(d) printTransformationDetails(d))   
+.fillStyle("red");
+hc_chartPanel.render();
+</script>
+	"""
+	return panel_str
+	
+
+def create_legend_panel(workflow_stat):
+	"""
+	Generates the bottom level legend panel content.
+	@param workflow_stat the WorkflowInfo object reference 
+	"""
+	panel_str ="""
+<script type="text/javascript+protovis">
+var hc_footerPanel = new pv.Panel()
+.width(bc_footerPanelWidth)
+.height(bc_footerPanelHeight)
+.fillStyle('white');
+hc_footerPanel.add(pv.Dot)
+.data(bc_data)
+.left( function(d){
+	if(this.index == 0){
+		bc_xLabelPos = bc_label_padding;
+		bc_yLabelPos = 30;
+	}else{
+		if(bc_xLabelPos + 180 > bc_w){
+			bc_xLabelPos =  bc_label_padding;
+			bc_yLabelPos -=10;
+		}
+		else{
+			bc_xLabelPos += 180;
+		}
+	}
+	return bc_xLabelPos;}
+)
+.bottom(function(d){
+	return bc_yLabelPos;}
+)
+.fillStyle(function(d) d.color)
+.strokeStyle(null)
+.size(30)
+.anchor('right').add(pv.Label)
+.textMargin(6)
+.textAlign('left')
+.text(function(d) d.name);
+
+hc_footerPanel.render();
+</script>
+"""
+	return panel_str
+
+
+def create_bottom_toolbar():
+	"""
+	Generates the bottom toolbar html content.
+	@param workflow_stat the WorkflowInfo object reference 
+	"""
+	toolbar_content ="""
+	"""
+	return toolbar_content
+
+
+def create_breakdown_plot(workflow_info , output_dir):
+	"""
+	Generates the html page content for displaying the breakdown chart.
+	@param workflow_stat the WorkflowInfo object reference 
+	@output_dir the output directory path
+	"""
+	print_workflow_details(workflow_info ,output_dir)
+	str_list = []
+	wf_content = create_include(workflow_info)
+	str_list.append(wf_content)
+	# Adding  variables
+	wf_content =create_variable(workflow_info)
+	str_list.append(wf_content)
+	wf_content = """
+<div id ='breakdown_chart' style='width: 860px; margin : 0 auto;' >
+	"""
+	str_list.append(wf_content)
+	# adding the tool bar panel
+	wf_content =create_toolbar_panel(workflow_info)
+	str_list.append(wf_content)
+	# Adding the chart panel
+	wf_content =create_chart_panel(workflow_info)
+	str_list.append(wf_content)
+	# Adding the legend panel
+	wf_content =create_legend_panel(workflow_info)
+	str_list.append(wf_content)
+	wf_content = """
+</div>
+<br />
+"""
+	str_list.append(wf_content)
+	wf_content =create_bottom_toolbar()
+	str_list.append(wf_content)
+	return "".join(str_list)
+		
+		
+	
+
+def create_breakdown_plot_page(workflow_info ,output_dir):
+	"""
+	Prints the complete html page with the gantt chart and workflow details.
+	@param workflow_stat the WorkflowInfo object reference 
+	@output_dir the output directory path
+	"""	
+	str_list = []
+	wf_page = create_header(workflow_info)
+	str_list.append(wf_page)
+	wf_page = create_breakdown_plot(workflow_info ,output_dir)
+	str_list.append(wf_page)
+	# printing the brain dump content
+	if workflow_info.submit_dir is None:
+		logger.warning("Unable to display brain dump contents. Invalid submit directory for workflow  " + workflow_info.wf_uuid)
+	else:
+		wf_page = plot_utils.print_property_table(workflow_info.wf_env,False ," : ")
+		str_list.append(wf_page)
+	wf_page = """
+<div style='clear: left'>
+</div>
+</body>
+</html>
+	"""
+	str_list.append(wf_page)
+	data_file = os.path.join(output_dir,  workflow_info.wf_uuid+".html")
+	try:
+		fh = open(data_file, "w")
+		fh.write( "\n")
+		fh.write("".join(str_list))	
+	except IOError:
+		logger.error("Unable to write to file " + data_file)
+		sys.exit(1)
+	else:
+		fh.close()	
+	return
+def setup(submit_dir,out_dir,log_level):
+	"""
+	Setup the pegasus breakdown module
+	@param submit_dir submit directory path 
+	@out_dir the output directory path
+	@log_level logging level
+	"""
+	# global reference
+	global output_dir
+	output_dir = out_dir
+	if log_level == None:
+		log_level = "info"
+	setup_logger(log_level)
+	plot_utils.create_directory(output_dir)
+	src_js_path = os.path.join(common.pegasus_home, "lib/javascript")
+	src_img_path = os.path.join(common.pegasus_home, "share/plots/images/protovis/")
+	dest_js_path = os.path.join(output_dir, "js")
+	dest_img_path = os.path.join(output_dir, "images/")
+	plot_utils.create_directory(dest_js_path)
+	plot_utils.create_directory(dest_img_path)
+	plot_utils.copy_files(src_js_path , dest_js_path)
+	plot_utils.copy_files(src_img_path, dest_img_path) 	 	
+	create_action_script(output_dir)
+
+
+
+def generate_chart(workflow_info):
+	"""
+	Generates the breakdown chart and all it's required files
+	@workflow_info WorkflowInfo object reference
+	"""
+	create_breakdown_plot_page(workflow_info , output_dir)
+
+
+# ---------main----------------------------------------------------------------------------
+def main():
+	sys.exit(0)
+
+
+if __name__ == '__main__':
+	main()
