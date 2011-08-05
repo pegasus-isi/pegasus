@@ -137,6 +137,40 @@ class WorkflowInfo:
 			host_info += "]},"	
 		return host_info
 		
+	def get_formatted_transformation_data(self ):
+		"""
+		Returns formatted job information data.
+		"""
+		# find the pretty print length
+		trans_info = ''
+		for trans_stat in self.transformation_statistics_dict.values():
+			trans_stat_det = trans_stat.getTransformationDetails()
+			trans_info +=("{")
+			trans_info +=( "\n")
+			trans_info += ( "\"name\":"  + "\"" + trans_stat_det['name']+ "\" , ")
+			trans_info += ( "\"count\":" +  trans_stat_det['count'] +" , ")
+			trans_info += ( "\"success\":" +  trans_stat_det['success'] +" , ")
+			trans_info += ( "\"failure\":" +  trans_stat_det['failure'] +" , ")
+			trans_info += ( "\"min\":" +  trans_stat_det['min'] +" , ")
+			trans_info += ( "\"max\":"  +  trans_stat_det['max'] +" , ")
+			trans_info += ( "\"avg\":"    +  trans_stat_det['avg']  +" , ")
+			trans_info += ( "\"total\":"    +  trans_stat_det['total']  +" , ")
+			if self.transformation_color_map.has_key(trans_stat_det['name']):
+				trans_info += ( "\"color\": \"" +  self.transformation_color_map[trans_stat_det['name']] +"\"  ")
+			else:
+				# there is no compute task
+				trans_info += ( "\"color\": 'white'  ")
+			trans_info +=( "},\n")
+		return trans_info
+	
+	def get_total_count_run_time(self):
+		total_invoc_count =0
+		total_runtime =0 
+		for trans_stat in self.transformation_statistics_dict.values():
+			total_invoc_count +=trans_stat.count
+			total_runtime +=trans_stat.total_runtime
+		return total_invoc_count, total_runtime
+		
 	def get_formatted_job_data(self ):
 		"""
 		Returns formatted job information data.
@@ -396,6 +430,34 @@ class JobInfo:
 		else:
 			job_details['state'] = "3"
 		return job_details
+		
+
+class TransformationInfo:
+	def __init__(self):
+		self.name = None
+		self.count = None
+		self.succeeded_count = None
+		self.failed_count = None
+		self.total_runtime = None
+		self.min = None
+		self.max = None
+		self.avg = None
+	def getTransformationDetails(self ):
+		"""
+		Returns the transformation  details
+		"""
+		trans_details ={}
+		trans_details['name'] = self.name
+		trans_details['count'] = str(self.count)
+		trans_details['success'] = str(self.succeeded_count)
+		trans_details['failure'] = str(self.failed_count)
+		trans_details['min'] = str(self.min)
+		trans_details['max'] = str(self.max)
+		trans_details['avg'] = str(self.avg)
+		trans_details['total'] = str(self.total_runtime)
+		return trans_details
+		
+
 		
 #-----date conversion----------
 def convert_to_base_time(end_time , start_time):
