@@ -17,7 +17,7 @@ logger.setLevel(logging.INFO)
 import common
 from Pegasus.tools import utils
 from Pegasus.plots_stats import utils as plot_utils
-from workflow_info import WorkflowInfo, JobInfo
+from workflow_info import WorkflowInfo, JobInfo , TransformationInfo
 import pegasus_gantt
 import pegasus_host_over_time
 
@@ -39,6 +39,7 @@ global_braindb_submit_dir =None
 global_db_url = None
 global_top_wf_uuid =None
 global_wf_id_uuid_map = {}
+color_count =0
 
 def populate_individual_job_instance_details(job_states , job_stat , isFailed , retry_count):
 	"""
@@ -230,7 +231,7 @@ def populate_job_instance_details(workflow_stats , workflow_info):
 	host_job_mapping ={}
 	job_name_retry_count_dict ={}
 	wf_transformation_color_map ={}
-	color_count = 0
+	global color_count
 	start_event = sys.maxint
 	end_event = -sys.maxint -1
 	
@@ -274,7 +275,7 @@ def populate_job_instance_details(workflow_stats , workflow_info):
 			
 		# Assigning the tranformation name
 		if job_stat.transformation is not None:
-			transformation_stats_dict[job_stat.transformation] = job_stat.transformation
+			transformation_stats_dict[job_stat.transformation] = None
 		if not global_transformtion_color_map.has_key(job_stat.transformation):
 			global_transformtion_color_map[job_stat.transformation]= predefined_colors[color_count%len(predefined_colors)]
 			color_count +=1
@@ -295,6 +296,36 @@ def populate_job_instance_details(workflow_stats , workflow_info):
 	workflow_info.total_job_instances = total_job_instances
 	return workflow_info
 	
+
+def populate_transformation_details(workflow_stats , workflow_info):
+	"""
+	populates the transformation details of the workflow
+	@param workflow_stats the StampedeStatistics object reference
+	@param workflow_info the WorkflowInfo object reference 
+	"""
+	transformation_stats_dict ={}
+	wf_transformation_color_map ={}
+	global color_count
+	transformation_stats_list= workflow_stats.get_transformation_statistics()
+	for trans_stats in transformation_stats_list:
+		trans_info = TransformationInfo()
+		trans_info.name = trans_stats.transformation
+		trans_info.count = trans_stats.count
+		trans_info.succeeded_count = trans_stats.success
+		trans_info.failed_count = trans_stats.failure
+		trans_info.min = trans_stats.min
+		trans_info.max = trans_stats.max
+		trans_info.avg = trans_stats.avg
+		trans_info.total_runtime = trans_stats.sum
+		transformation_stats_dict[trans_stats.transformation] = trans_info
+		if not global_transformtion_color_map.has_key(trans_stats.transformation):
+			global_transformtion_color_map[trans_stats.transformation]= predefined_colors[color_count%len(predefined_colors)]
+			color_count +=1
+		# Assigning the mapping to the workflow map
+		wf_transformation_color_map[trans_stats.transformation] =global_transformtion_color_map[trans_stats.transformation]
+	workflow_info.transformation_statistics_dict = transformation_stats_dict
+	workflow_info.transformation_color_map = wf_transformation_color_map
+	
 def setup_logger(level_str):
 	"""
 	Set up the logger for the module.
@@ -310,17 +341,24 @@ def setup_logger(level_str):
 	if level_str == "info":
 		logger.setLevel(logging.INFO)
 	return
-	
-def populate_chart(wf_uuid):
-	"""
-	Populates the workflow info object corresponding to the wf_uuid
-	"""
+
+
+def get_wf_stats(wf_uuid,expand = False):
+	workflow_stampede_stats = None
 	try:
-		workflow_stampede_stats = StampedeStatistics(global_db_url , False)
+		workflow_stampede_stats = StampedeStatistics(global_db_url , expand)
 		workflow_stampede_stats.initialize(wf_uuid)
 	except:
  		logger.error("Failed to load the database." + global_db_url )
 		sys.exit(1)
+	return workflow_stampede_stats
+
+
+def populate_chart(wf_uuid):
+	"""
+	Populates the workflow info object corresponding to the wf_uuid
+	"""
+	workflow_stampede_stats = get_wf_stats(wf_uuid)
 	workflow_info = populate_workflow_details(workflow_stampede_stats)
 	sub_wf_uuids = workflow_stampede_stats.get_sub_workflow_ids()
 	if len(sub_wf_uuids) > 0:
@@ -338,14 +376,16 @@ def populate_time_details(workflow_stats, wf_info , date_time_filter):
 	"""
 	Populates the job instances and invocation time and runtime statistics sorted by time.
 	"""
-	workflow_stats.set_job_filter('all')
+	workflow_stats.set_job_filter('nonsub')
 	workflow_stats.set_time_filter(date_time_filter)
+	
  	stats_by_time = workflow_stats.get_jobs_run_by_time()
  	jobs_time_list =[]
 	for stats in stats_by_time:
 		content = [stats.date_format ,stats.count,stats.total_runtime]
 		jobs_time_list.append(content)
 	wf_info.wf_job_instances_over_time_statistics[date_time_filter] = jobs_time_list
+	workflow_stats.set_transformation_filter(exclude=['condor::dagman'])
 	stats_by_time = workflow_stats.get_invocation_by_time()
 	invoc_time_list = []
 	for stats in stats_by_time:
