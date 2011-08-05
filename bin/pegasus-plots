@@ -405,7 +405,7 @@ def create_charts(submit_dir , output_dir, config_properties , log_level ):
 	if calc_dag_graph :
 		data_file =  os.path.join(dag_graph_output_dir,wf_uuid_list[0]+".html")
 		create_image_gallery(data_file, wf_uuid_list,wf_uuid_parent, wf_uuid_dag_image ,wf_uuid_dag_label, False )
-	createOuterhtml(wf_info, wf_uuid_list[0] , output_dir  )
+	createOuterhtml(root_wf_info, wf_uuid_list[0] , output_dir  )
 	return
 	
 
