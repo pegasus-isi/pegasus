@@ -327,7 +327,7 @@ def create_header(workflow_stat):
 	header_str = """
 <html>
 <head>
-<title>Time chart</title>
+<title>"""+ workflow_stat.wf_uuid +"""</title>
 <style type ='text/css'>
 #time_chart{
 border:1px solid red;
