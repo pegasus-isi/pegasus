@@ -54,6 +54,9 @@ if ( $^O eq 'darwin' ) {
 } elsif ( $^O eq 'linux' ) {
     # not broken, but may not be installed
     *TIOCGWINSZ = sub { 0x5413; };
+} elsif ( lc $^O eq 'sunos' ) {
+    # may be easier than getting the headers right
+    *TIOCGWINSZ = sub { 0x5468; }; 
 } else {
     # Neither linux nor macosx
     eval { require "sys/ioctl.ph" }; 
@@ -1055,18 +1058,20 @@ sub assemble_job($;$) {
     $r;
 }
 
-sub assemble_dag($$$;$);		# { } 
-sub assemble_dag($$$;$) {
+sub assemble_dag($$$;$$);		# { } 
+sub assemble_dag($$$;$$) {
     # purpose: create the data rows for a given dag job
     # paramtr: %job (IN): see condor_q
     #          %dag (IN): see condor_q
     #          $dagid (IN): which workflow to assemble
-    #          $indent (IN): what to use for indentation 
+    #          $lastp (opt. IN): last job in parent workflow
+    #          $indent (opt. IN): what to use for indentation 
     # returns: ordered list (rows) of job classad refs (cols)
     # 
     my $jobref = shift;
     my $dagref = shift;
     my $dagid = shift;
+    my $lastp = shift; 
     my $indent = shift || ''; 
     my @result = (); 
 
@@ -1075,15 +1080,16 @@ sub assemble_dag($$$;$) {
     delete $main::seen{$dagid}; 
 
     # show dependent jobs for dagman
-    $indent = $main::graph[2] x ( length($indent) / length($main::graph[0]) );
+    # $indent = $main::graph[2] x ( length($indent) / length($main::graph[0]) );
+    substr( $indent, -3 ) = $main::graph[ 2 + $lastp ] if $indent; 
     my @x = sort { $a <=> $b } @{ $dagref->{$dagid} }; 
     for ( my $j=0; $j < @x; ++$j ) { 
 	# extra sanity? 
 	die "unknown job" unless scalar keys %{$jobref->{$x[$j]}}; 
-
+	
 	my $conn = $main::graph[ $j == $#x ];
 	if ( exists $dagref->{$x[$j]} ) {
-	    push( @result, assemble_dag( $jobref, $dagref, $x[$j], "$indent$conn" ) ); 
+	    push( @result, assemble_dag( $jobref, $dagref, $x[$j], ($j==$#x), "$indent$conn" ) ); 
 	} else {
 	    push( @result, assemble_job( $jobref->{$x[$j]}, "$indent$conn" ) ); 
 	}
@@ -1719,13 +1725,13 @@ if ( $main::isutf8 ) {
     # Draw UTF-8 graphics 
     # Warning: These are the unicode script string that require 'use utf8;'
     if ( $heavy ) { 
-	@main::graph = ( " ┣━", " ┗━", " ┃ " );
+	@main::graph = ( " ┣━", " ┗━", " ┃ ", "   " );
     } else {
-	@main::graph = ( " ├─", " └─", " │ " );
+	@main::graph = ( " ├─", " └─", " │ ", "   " );
     }
 } else {
     # Assume ASCII graphics
-    @main::graph = ( ' |-', ' \_', ' | ' ); 
+    @main::graph = ( ' |-', ' \_', ' | ', '   ' ); 
 }
 
 # Default $rundir to cwd if nothing was specified
