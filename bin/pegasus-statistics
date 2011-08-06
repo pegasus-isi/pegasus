@@ -7,6 +7,7 @@ import logging
 import optparse
 import math
 import tempfile
+import traceback
 
 # Initialize logging object
 logger = logging.getLogger()
@@ -283,6 +284,7 @@ def print_workflow_details(output_db_url , wf_uuid , output_dir):
 		expanded_workflow_stats.initialize(wf_uuid)
  	except:
  		logger.error("Failed to load the database." + output_db_url )
+ 		logger.warning(traceback.format_exc())
 		sys.exit(1)
  	
  	# print workflow statistics
@@ -311,23 +313,28 @@ def print_workflow_details(output_db_url , wf_uuid , output_dir):
 		
 	if calc_jb_stats or calc_tf_stats or calc_wf_stats:
 		for sub_wf_uuid in wf_uuid_list:
-			individual_workflow_stats = StampedeStatistics(output_db_url , False)
-			individual_workflow_stats.initialize(sub_wf_uuid)
+			try:
+				individual_workflow_stats = StampedeStatistics(output_db_url , False)
+				individual_workflow_stats.initialize(sub_wf_uuid)
+			except:
+ 				logger.error("Failed to load the database." + output_db_url )
+ 				logger.warning(traceback.format_exc())
+				sys.exit(1)
 			wf_det = individual_workflow_stats.get_workflow_details()[0]
 			title =  str(sub_wf_uuid) + " (" + str(wf_det.dax_label) +")"
-			logger.info("Generating statistics information about the workflow " + str(sub_wf_uuid) +" ... ")
+			logger.info("Generating statistics information about the workflow " + title +" ... ")
 			if calc_jb_stats:
-				logger.debug("Generating job instance statistics information about the workflow " + str(sub_wf_uuid) +" ... ")
+				logger.debug("Generating job instance statistics information about the workflow " + title +" ... ")
 				individual_workflow_stats.set_job_filter('all')
 				content = print_individual_wf_job_stats(individual_workflow_stats , title)
 				write_to_file(jobs_stats_file, "a" , content)
 			if calc_tf_stats:
-				logger.debug("Generating invocation statistics information about the workflow " + str(sub_wf_uuid) +" ... ")
+				logger.debug("Generating invocation statistics information about the workflow " + title +" ... ")
 				individual_workflow_stats.set_job_filter('all')
 				content = print_wf_transformation_stats(individual_workflow_stats , title)
 				write_to_file(transformation_stats_file, "a" , content)
 			if calc_wf_stats:
-				logger.debug("Generating workflow statistics information about the workflow " + str(sub_wf_uuid)  +" ... ")
+				logger.debug("Generating workflow statistics information about the workflow " + title  +" ... ")
 				individual_workflow_stats.set_job_filter('all')
 				content = print_individual_workflow_stats(individual_workflow_stats , title)
 				write_to_file(wf_stats_file, "a" , content)
