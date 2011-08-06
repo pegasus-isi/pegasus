@@ -369,7 +369,7 @@ def create_header(workflow_stat):
 	"""
 	header_str = "<html>\n<head>\n<title>"+ workflow_stat.wf_uuid +"</title>\n<style type ='text/css'>\n\
 #host_chart{\n\
-border:1px solid red;\n\
+border:1px solid orange;\n\
 }\n\
 </style></head>\n<body><script type='text/javascript' src='js/protovis-r3.2.js'></script>\n"
 	return header_str
