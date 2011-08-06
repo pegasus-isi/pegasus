@@ -20,6 +20,7 @@ from Pegasus.plots_stats import utils as plot_utils
 from workflow_info import WorkflowInfo, JobInfo , TransformationInfo
 import pegasus_gantt
 import pegasus_host_over_time
+import traceback
 
 from netlogger.analysis.workflow.stampede_statistics import StampedeStatistics
 from datetime import timedelta
@@ -350,6 +351,7 @@ def get_wf_stats(wf_uuid,expand = False):
 		workflow_stampede_stats.initialize(wf_uuid)
 	except:
  		logger.error("Failed to load the database." + global_db_url )
+ 		logger.warning(traceback.format_exc())
 		sys.exit(1)
 	return workflow_stampede_stats
 
