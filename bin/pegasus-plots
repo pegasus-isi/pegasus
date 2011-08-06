@@ -260,36 +260,62 @@ clear:both;
 
 
 
-def createOuterhtml(wf_info, wf_uuid , output_dir ):
+def createOuterhtml(wf_stats, wf_info,  submit_dir, output_dir , log_level ):
 	"""
 	Generates the outer html file which links to all the charts and graph
-	@wf_info WorkflowInfo object reference
-	@wf_uuid uuid of the root workflow
-	@output_dir the output directory path
+	@param wf_info WorkflowInfo object reference
+	@param wf_stats StampedeStatistics reference
+	@param submit_dir submit directory
+	@param output_dir the output directory path
+	@param log_level logging level
 	"""
+	wf_uuid = wf_info.wf_uuid
+	title =  str(wf_info.wf_uuid) + " (" + str(wf_info.dax_label) +")"
 	data_file = os.path.join(output_dir,  "index.html")
 	gantt_chart_parent_file = os.path.join("gantt_chart/" + wf_uuid +".html")
 	dag_graph_parent_file = os.path.join("dag_graph/" + wf_uuid +".html")
 	dax_graph_parent_file = os.path.join("dax_graph/" + wf_uuid +".html")
 	host_chart_parent_file = os.path.join("host_chart/" + wf_uuid +".html")
-	time_chart_parent_file = os.path.join("time_chart/" + wf_uuid +".html")
 	breakdown_chart_parent_file = os.path.join("breakdown_chart/" + wf_uuid +".html")
+	
+	time_summary_output_dir = None
+	breakdown_summary_output_dir = None
+	if calc_time_chart :
+		time_summary_output_dir = output_dir
+		pegasus_time.setup(submit_dir,time_summary_output_dir ,log_level)
+	if  calc_breakdown_chart:
+		breakdown_summary_output_dir = output_dir
+		pegasus_breakdown.setup(submit_dir,breakdown_summary_output_dir ,log_level)
 	try:
 		fh = open(data_file, "w")
 		content = """
 <html>
 <head>
+<style type ='text/css'>
+#breakdown_chart{
+border:1px solid orange;
+}
+#time_chart{
+border:1px solid orange;
+}
+</style>
+
 </head>
 <body>
 <center>
 <h3>Pegasus plots </h3>
 """
+		if calc_time_chart or calc_breakdown_chart:
+			content += """
+<script type='text/javascript' src='js/protovis-r3.2.js'>
+</script>
+			"""
 		if calc_gantt_chart :
 			content += "<a href ='" + gantt_chart_parent_file +  "'>Workflow Execution Gantt Chart</a><br/>" + NEW_LINE_STR
 		if calc_host_chart :
 			content += "<a href ='" + host_chart_parent_file + "'>Host Over Time Chart</a><br/>" + NEW_LINE_STR
 		if calc_time_chart :
-			content += "<a href ='" + time_chart_parent_file + "'>Time Chart</a><br/>" + NEW_LINE_STR
+			content += """<a href ="#time_chart_div">Time Chart</a><br/>""" + NEW_LINE_STR
 		if calc_breakdown_chart:
 			content += "<a href ='" + breakdown_chart_parent_file + "'>Invocation Breakdown Chart</a><br/>" + NEW_LINE_STR
 		if calc_dax_graph :
@@ -297,7 +323,26 @@ def createOuterhtml(wf_info, wf_uuid , output_dir ):
 		if calc_dag_graph :
 			content += "<a href ='" + dag_graph_parent_file + "'>DAG graph</a><br/><br/><br/> " + NEW_LINE_STR
 		content += plot_utils.print_property_table(wf_info.wf_env , False ,":")
-		content += "</center>" + NEW_LINE_STR + "</body>" + NEW_LINE_STR +"</html>" + NEW_LINE_STR
+		if calc_time_chart :
+			populate.populate_time_details(populate.get_wf_stats(wf_info.wf_uuid, True) ,wf_info,'day')
+			populate.populate_time_details(populate.get_wf_stats(wf_info.wf_uuid, True), wf_info,'hour')
+			logger.debug("Generating time chart for the workflow " + title +" ... ")
+			content += """
+<div id ='time_chart_div' style ='font-family:"Times New Roman", Times, serif; font-size:30px;'> Time chart </div>
+			"""
+			content += pegasus_time.create_time_plot(wf_info ,time_summary_output_dir)
+		if calc_breakdown_chart:
+			content += """
+<div id ='breakdown_chart_div' style ='font-family:"Times New Roman", Times, serif; font-size:30px;'> Invocation breakdown chart </div>
+			"""
+			populate.populate_transformation_details(populate.get_wf_stats(wf_info.wf_uuid, True) ,wf_info)
+			logger.debug("Generating breakdown chart for the workflow " + title +" ... ")
+			content += pegasus_breakdown.create_breakdown_plot(wf_info, breakdown_summary_output_dir)
+		content += """
+</center>
+</body>
+</html>
+"""
 		fh.write( content)
 		plots_output =  NEW_LINE_STR+ "SUMMARY".center(100, '*')
 		plots_output +=  NEW_LINE_STR
@@ -336,9 +381,6 @@ def create_charts(submit_dir , output_dir, config_properties , log_level ):
 	if calc_host_chart :
 		host_chart_output_dir = os.path.join(output_dir,"host_chart")
 		pegasus_host_over_time.setup(submit_dir,host_chart_output_dir ,log_level)
-	if calc_time_chart :
-		time_chart_output_dir = os.path.join(output_dir,"time_chart")
-		pegasus_time.setup(submit_dir,time_chart_output_dir ,log_level)
 	if calc_breakdown_chart:
 		breakdown_chart_output_dir = os.path.join(output_dir,"breakdown_chart")
 		pegasus_breakdown.setup(submit_dir,breakdown_chart_output_dir ,log_level)
@@ -353,7 +395,8 @@ def create_charts(submit_dir , output_dir, config_properties , log_level ):
 	root_wf_stats = None
 	for wf_uuid in wf_uuid_list:
 		wf_stats, wf_info = populate.populate_chart(wf_uuid)
-		logger.info("Generating graphs/charts for the workflow " + str(wf_uuid) +" ... ")
+		title =  str(wf_uuid) + " (" + str(wf_info.dax_label) +")"
+		logger.info("Generating graphs/charts for the workflow " + title +" ... ")
 		if calc_gantt_chart or calc_host_chart:
 			populate.populate_job_instance_details(wf_stats, wf_info)
 		if root_wf_info is None:
@@ -361,51 +404,52 @@ def create_charts(submit_dir , output_dir, config_properties , log_level ):
 			root_wf_stats =wf_stats
 		wf_uuid_parent.append(wf_info.parent_wf_uuid)
 		if calc_gantt_chart :
-			logger.debug("Generating gantt chart for the workflow " + str(wf_uuid) +" ... ")
+			logger.debug("Generating gantt chart for the workflow " + title +" ... ")
 			pegasus_gantt.generate_chart(wf_info)
 		if calc_host_chart :
-			logger.debug("Generating host chart for the workflow " + str(wf_uuid) +" ... ")
+			logger.debug("Generating host chart for the workflow " + title +" ... ")
 			pegasus_host_over_time.generate_chart(wf_info)
+		if calc_breakdown_chart:
+			populate.populate_transformation_details(wf_stats, wf_info)
+			logger.debug("Generating breakdown chart for the workflow " + title +" ... ")
+			pegasus_breakdown.generate_chart(wf_info)
+		
 		if calc_dag_graph :
 			populate.populate_job_details(wf_stats, wf_info)
 			if wf_info.total_jobs <= max_graph_nodes:
-				logger.debug("Generating dag graph for the workflow " + str(wf_uuid) +" ... ")
+				logger.debug("Generating dag graph for the workflow " + title +" ... ")
 				if generate_dag_graph(wf_info,dag_graph_output_dir) is None:
 					wf_uuid_dag_image.append(None)
 				else:
 					wf_uuid_dag_image.append(wf_info.wf_uuid+".png")
 			else:
 				wf_uuid_dag_image.append(None)
-				logger.info("Dag graph for workflow '" + wf_uuid + "'  was not created because number of jobs is more than the maximum graph node generation limit ")
+				logger.info("Dag graph for workflow '" + title + "'  was not created because number of jobs is more than the maximum graph node generation limit ")
 			wf_uuid_dag_label.append( wf_info.dag_label)
 		if calc_dax_graph :
 			populate.populate_task_details(wf_stats, wf_info)
 			if wf_info.total_tasks <= max_graph_nodes:
-				logger.debug("Generating dax graph for the workflow " + str(wf_uuid) +" ... ")
+				logger.debug("Generating dax graph for the workflow " + title +" ... ")
 				if generate_dax_graph(wf_info,dax_graph_output_dir) is None:
 					wf_uuid_dax_image.append(None)
 				else:
 					wf_uuid_dax_image.append(wf_info.wf_uuid+".png")
 			else:
 				wf_uuid_dax_image.append(None)
-				logger.info("Dax graph for workflow '" + wf_uuid +"' was not created because number of tasks is more than the maximum  graph node generation limit ")
+				logger.info("Dax graph for workflow '" + title +"' was not created because number of tasks is more than the maximum  graph node generation limit ")
 			wf_uuid_dax_label.append(wf_info.dax_label)
-	if calc_time_chart :
-		populate.populate_time_details(populate.get_wf_stats(root_wf_info.wf_uuid, True) ,root_wf_info,'day')
-		populate.populate_time_details(populate.get_wf_stats(root_wf_info.wf_uuid, True), root_wf_info,'hour')
-		logger.debug("Generating time chart for the workflow " + str(root_wf_info.wf_uuid) +" ... ")
-		pegasus_time.generate_chart(root_wf_info)
-	if calc_breakdown_chart:
-		populate.populate_transformation_details(populate.get_wf_stats(root_wf_info.wf_uuid, True) ,root_wf_info)
-		logger.debug("Generating breakdown chart for the workflow " + str(root_wf_info.wf_uuid) +" ... ")
-		pegasus_breakdown.generate_chart(root_wf_info)
+		wf_stats = None
+		wf_info = None
+	title =  str(root_wf_info.wf_uuid) + " (" + str(root_wf_info.dax_label) +")"
+	
 	if calc_dax_graph :
 		data_file =  os.path.join(dax_graph_output_dir,wf_uuid_list[0]+".html")
 		create_image_gallery(data_file, wf_uuid_list,wf_uuid_parent, wf_uuid_dax_image ,wf_uuid_dax_label, True )
 	if calc_dag_graph :
 		data_file =  os.path.join(dag_graph_output_dir,wf_uuid_list[0]+".html")
 		create_image_gallery(data_file, wf_uuid_list,wf_uuid_parent, wf_uuid_dag_image ,wf_uuid_dag_label, False )
-	createOuterhtml(root_wf_info, wf_uuid_list[0] , output_dir  )
+	
+	createOuterhtml(root_wf_stats, root_wf_info , submit_dir, output_dir ,log_level )
 	return
 	
 
