@@ -1806,7 +1806,7 @@ CTRL+D</command></screen>
     catalogs.</para>
   </section>
 
-  <section id="pegasus-rc-client">
+  <section id="cli-pegasus-rc-client">
     <title>pegasus-rc-client</title>
 
     <para>pegasus-rc-client - shell client for replica implementations</para>
