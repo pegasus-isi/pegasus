@@ -2173,7 +2173,7 @@ CTRL+D</command></screen>
     </section>
   </section>
 
-  <section id="pegasus-tc-client">
+  <section id="cli-pegasus-tc-client">
     <title>pegasus-tc-client</title>
 
     <para>A full featured generic client to handle adds, delete and queries to
