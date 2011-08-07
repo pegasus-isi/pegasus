@@ -39,7 +39,6 @@
         </l:l10n>
     </l:i18n>
 
-
     <!-- ==================================================================== -->
     <xsl:template name="chunk-element-content">
         <xsl:param name="prev"/>
@@ -50,44 +49,33 @@
         </xsl:param>
 
         <xsl:call-template name="user.preroot"/>
-        <html>
-            <head>
-                <title>Pegasus WMS User Guide</title>
-                <link rel="stylesheet" type="text/css" href="/css/default.css"/>   
-                <script type="text/javascript" src="/js/jquery-1.3.2.min.js"></script>
-                <script type="text/javascript" src="/js/pegasus_menu.js"></script>
-            </head>
-            <body topmargin="0" leftmargin="0" marginwidth="0" marginheight="0">
-                <div id="wrap">
-                    <xsl:processing-instruction name="php"> 
-                        include_once( $_SERVER['DOCUMENT_ROOT']."/includes/header2.inc" );
-                        include_once( $_SERVER['DOCUMENT_ROOT']."/includes/sidebar2.inc" );
-                    ?</xsl:processing-instruction>
-                    <div id="content">
-                        <!-- breadcrumbs are turned off
-                        <xsl:call-template name="breadcrumbs"/>
-                        <hr/>
-                        -->
-                        <xsl:call-template name="header.navigation.custom">
-                            <xsl:with-param name="prev" select="$prev"/>
-                            <xsl:with-param name="next" select="$next"/>
-                            <xsl:with-param name="nav.context" select="$nav.context"/>
-                        </xsl:call-template>
-                        <xsl:copy-of select="$content"/>
-                        <xsl:call-template name="footer.navigation">
-                            <xsl:with-param name="prev" select="$prev"/>
-                            <xsl:with-param name="next" select="$next"/>
-                            <xsl:with-param name="nav.context" select="$nav.context"/>
-                        </xsl:call-template>
-                    </div> <!-- Close content -->
-                    <xsl:processing-instruction name="php"> 
-                        include_once( $_SERVER['DOCUMENT_ROOT']."/includes/footer2.inc" );
-                    ?</xsl:processing-instruction>
-                </div> <!-- Closing Wrap -->
-            </body>
-        </html>
+        <xsl:processing-instruction name="php"> 
+            include_once( $_SERVER['DOCUMENT_ROOT']."/static/includes/common.inc.php" );
+            do_html_header("Documentation");
+        ?</xsl:processing-instruction>
+        <div id="content">
+        <!-- breadcrumbs are turned off
+        <xsl:call-template name="breadcrumbs"/>
+        <hr/>
+        -->
+        <xsl:call-template name="header.navigation.custom">
+            <xsl:with-param name="prev" select="$prev"/>
+            <xsl:with-param name="next" select="$next"/>
+            <xsl:with-param name="nav.context" select="$nav.context"/>
+        </xsl:call-template>
+        <xsl:copy-of select="$content"/>
+        <xsl:call-template name="footer.navigation">
+            <xsl:with-param name="prev" select="$prev"/>
+            <xsl:with-param name="next" select="$next"/>
+            <xsl:with-param name="nav.context" select="$nav.context"/>
+        </xsl:call-template>
+        </div> <!-- Close content -->
+        <xsl:processing-instruction name="php"> 
+            do_html_footer();
+        ?</xsl:processing-instruction>
         <xsl:value-of select="$chunk.append"/>
     </xsl:template>
+
 
     <xsl:template name="breadcrumbs">
         <xsl:param name="this.node" select="."/>
