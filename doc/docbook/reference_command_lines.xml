@@ -1799,7 +1799,7 @@ CTRL+D</command></screen>
     </section>
   </section>
 
-  <section id="pegasus-sc-client">
+  <section id="cli-pegasus-sc-client">
     <title>pegasus-sc-client</title>
 
     <para>pegasus-sc-client is used to generate and modify site
