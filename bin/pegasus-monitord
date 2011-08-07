@@ -8,7 +8,7 @@ Usage: pegasus-monitord [options] dagoutfile
 """
 
 ##
-#  Copyright 2007-2010 University Of Southern California
+#  Copyright 2007-2011 University Of Southern California
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -1003,7 +1003,10 @@ class Workflow:
         stopped last time.
         """
         
-        my_fn = os.path.join(self._run_dir, MONITORD_STATE_FILE)
+        if self._prefix is None:
+            my_fn = os.path.join(self._run_dir, MONITORD_STATE_FILE)
+        else:
+            my_fn = os.path.join(self._prefix, "%s-%s" % (self._wf_uuid, MONITORD_STATE_FILE))
 
         try:
             INPUT = open(my_fn, "r")
@@ -1049,8 +1052,11 @@ class Workflow:
         where we stop. This function will overwrite the log file every
         time is it called.
         """
-        
-        my_fn = os.path.join(self._run_dir, MONITORD_STATE_FILE)
+
+        if self._prefix is None:
+            my_fn = os.path.join(self._run_dir, MONITORD_STATE_FILE)
+        else:
+            my_fn = os.path.join(self._prefix, "%s-%s" % (self._wf_uuid, MONITORD_STATE_FILE))
 
         try:
             OUT = open(my_fn, "w")
@@ -1089,7 +1095,12 @@ class Workflow:
         instance of the monitoring daemon, and keeps track of the last
         time that was processed by pegasus-monitord.
         """
-        my_recover_file = os.path.join(self._run_dir, MONITORD_RECOVER_FILE)
+        if self._prefix is None:
+            my_recover_file = os.path.join(self._run_dir, MONITORD_RECOVER_FILE)
+        else:
+            my_recover_file = os.path.join(self._prefix, "%s-%s" % (self._wf_uuid,
+                                                                    MONITORD_RECOVER_FILE))
+
         if os.access(my_recover_file, os.F_OK):
             try:
                 RECOVER = open(my_recover_file, 'r')
@@ -1114,7 +1125,11 @@ class Workflow:
         if self._line < self._previous_processed_line:
             return
  
-        my_recover_file = os.path.join(self._run_dir, MONITORD_RECOVER_FILE)
+        if self._prefix is None:
+            my_recover_file = os.path.join(self._run_dir, MONITORD_RECOVER_FILE)
+        else:
+            my_recover_file = os.path.join(self._prefix, "%s-%s" % (self._wf_uuid,
+                                                                    MONITORD_RECOVER_FILE))
         try:
             RECOVER = open(my_recover_file, "w")
         except:
@@ -1688,7 +1703,7 @@ class Workflow:
                  workflow_config_file=None, jsd=None, root_id=None,
                  parent_id=None, parent_jobid=None, parent_jobseq=None,
                  enable_notifications=True, replay_mode=False,
-                 notification_list=None):
+                 prefix=None, notification_list=None):
         """
         This function initializes the workflow object. It looks for
         the workflow configuration file (or for workflow_config_file,
@@ -1706,6 +1721,7 @@ class Workflow:
         self._enable_notifications = enable_notifications
         self._replay_mode = replay_mode
         self._notification_list = notification_list
+        self._prefix = prefix
 
         # Initialize other class variables
         self._wf_uuid = None
@@ -1751,43 +1767,6 @@ class Workflow:
         self._multiline_file_flag = False       # Track multiline user log files, DAGMan > 6.6
         self._walltime = {}                     # jid --> walltime
         self._job_site = {}                     # last site a job was planned for
-
-        if not self._replay_mode:
-            # Recover state from a previous run
-            self.read_workflow_state()
-            self.read_workflow_progress()
-            if self._previous_processed_line != 0:
-                # Recovery mode detected, reset last_processed_line so
-                # that we start from the beginning of the dagman.out
-                # file...
-                self._last_processed_line = 0
-
-        # Determine location of jobstate.log file
-        if jsd is None:
-            self._jsd_file = os.path.join(rundir, utils.jobbase)
-        else:
-            # Make sure we have an absolute path
-            self._jsd_file = os.path.join(rundir, jsd)
-
-        if not os.path.isfile(self._jsd_file):
-            logger.info("creating new file %s" % (self._jsd_file))
-
-        try:
-            # Create new file, or append to an existing one
-            if not self._replay_mode and self._previous_processed_line == 0:
-                # Append to current one if not in replay mode and not
-                # in recovering from previous errors
-                self._JSDB = open(self._jsd_file, 'a', 0)
-            else:
-                # Rotate jobstate.log file, if any in case of replay
-                # mode of if we are starting from the beginning
-                # because of a previous failure
-                utils.rotate_log_file(self._jsd_file)
-                self._JSDB = open(self._jsd_file, 'w', 0)
-        except:
-            logger.critical("error creating/appending to %s!" % (self._jsd_file))
-            self._monitord_exit_code = 1
-            return
 
         # Parse the braindump file
         wfparams = utils.slurp_braindb(rundir, workflow_config_file)
@@ -1874,6 +1853,45 @@ class Workflow:
         if "grid_dn" in wfparams:
             self._grid_dn = wfparams["grid_dn"]
 
+        if not self._replay_mode:
+            # Recover state from a previous run
+            self.read_workflow_state()
+            self.read_workflow_progress()
+            if self._previous_processed_line != 0:
+                # Recovery mode detected, reset last_processed_line so
+                # that we start from the beginning of the dagman.out
+                # file...
+                self._last_processed_line = 0
+
+        # Determine location of jobstate.log file
+        my_jsd = (jsd or utils.jobbase)
+
+        if self._prefix is None:
+            # Make sure we have an absolute path
+            self._jsd_file = os.path.join(rundir, my_jsd)
+        else:
+            self._jsd_file = os.path.join(rundir, self._prefix, "%s-%s" % (self._wf_uuid, my_jsd))
+
+        if not os.path.isfile(self._jsd_file):
+            logger.info("creating new file %s" % (self._jsd_file))
+
+        try:
+            # Create new file, or append to an existing one
+            if not self._replay_mode and self._previous_processed_line == 0:
+                # Append to current one if not in replay mode and not
+                # in recovering from previous errors
+                self._JSDB = open(self._jsd_file, 'a', 0)
+            else:
+                # Rotate jobstate.log file, if any in case of replay
+                # mode of if we are starting from the beginning
+                # because of a previous failure
+                utils.rotate_log_file(self._jsd_file)
+                self._JSDB = open(self._jsd_file, 'w', 0)
+        except:
+            logger.critical("error creating/appending to %s!" % (self._jsd_file))
+            self._monitord_exit_code = 1
+            return
+
         # Skip notifications, if disabled
         if self._enable_notifications:
             if "notify" in wfparams:
@@ -1892,7 +1910,11 @@ class Workflow:
         self._JSDB.write("%d INTERNAL *** MONITORD_STARTED ***\n" % (self._workflow_start))
 
         # Write monitord.started file
-        my_start_file = os.path.join(self._run_dir, MONITORD_START_FILE)
+        if self._prefix is None:
+            my_start_file = os.path.join(self._run_dir, MONITORD_START_FILE)
+        else:
+            my_start_file = os.path.join(self._prefix, "%s-%s" % (self._wf_uuid, MONITORD_START_FILE))
+
         try:
             STARTED = open(my_start_file, "w")
             STARTED.write("%s\n" % (utils.isodate(my_now)))
@@ -1901,7 +1923,11 @@ class Workflow:
             logger.error("writing %s" % (my_start_file))
 
         # Remove monitord.done file, if it is there
-        my_touch_name = os.path.join(self._run_dir, MONITORD_DONE_FILE)
+        if self._prefix is None:
+            my_touch_name = os.path.join(self._run_dir, MONITORD_DONE_FILE)
+        else:
+            my_touch_name = os.path.join(self._prefix, "%s-%s" % (self._wf_uuid, MONITORD_DONE_FILE))
+
         try:
             os.unlink(my_touch_file)
         except:
@@ -1986,7 +2012,12 @@ class Workflow:
         self_finished = True
 
         my_workflow_end = int(time.time())
-        my_recover_file = os.path.join(self._run_dir, MONITORD_RECOVER_FILE)
+
+        if self._prefix is None:
+            my_recover_file = os.path.join(self._run_dir, MONITORD_RECOVER_FILE)
+        else:
+            my_recover_file = os.path.join(self._prefix, "%s-%s" % (self._wf_uuid,
+                                                                    MONITORD_RECOVER_FILE))
 
         print "%d - %s - MONITORD_FINISHED - %s - %s" % (my_workflow_end,
                                                          utils.isodate(my_workflow_end), self._wf_uuid,
@@ -2005,7 +2036,10 @@ class Workflow:
             logger.warning("unable to remove recover file: %s" % (my_recover_file))
 
         # Write monitord.done file
-        my_touch_name = os.path.join(self._run_dir, MONITORD_DONE_FILE)
+        if self._prefix is None:
+            my_touch_name = os.path.join(self._run_dir, MONITORD_DONE_FILE)
+        else:
+            my_touch_name = os.path.join(self._prefix, "%s-%s" % (self._wf_uuid, MONITORD_DONE_FILE))
         try:
             TOUCH = open(my_touch_name, "w")
             TOUCH.write("%s %.3f\n" % (utils.isodate(my_workflow_end),
@@ -2979,6 +3013,7 @@ class WorkflowEntry:
     delete_workflow = False		# Flag for dropping this workflow
     sleep_time = None			# Time to sleep for this workflow
 
+prefix = None                           # prefix for all files written by monitord
 jsd = None				# location of jobstate.log file
 nodaemon = 0				# foreground mode
 logfile = None				# location of monitord.log file
@@ -3030,6 +3065,8 @@ parser.add_option("--keep-state", action = "store_const", const = 1, dest = "kee
                   help = "keep state across several DAGMan start/stop cycles (development option)")
 parser.add_option("--socket", action = "store_const", const = "yes", dest = "socket_enabled",
                   help = "enables a socket interface for debugging")
+parser.add_option("--prefix", "-p", action = "store", type = "string", dest = "prefix",
+                  help = "provides a prefix for all monitord log files")
 parser.add_option("-v", "--verbose", action="count", default=0, dest="vb", help="Increase verbosity, repeatable")
 grp = optparse.OptionGroup(parser, "Output options")
 grp.add_option("-d", "--dest", action="store", dest="event_dest", metavar="PATH or URL",
@@ -3156,6 +3193,14 @@ if options.db_stats is not None:
     db_stats = options.db_stats
 if options.keep_state is not None:
     keep_state = options.keep_state
+if options.prefix is not None:
+    prefix = options.prefix
+    try:
+        if not os.path.exists(prefix):
+            os.makedirs(prefix)
+    except:
+        logger.critical("cannot create directory %s. exiting..." % (prefix))
+        sys.exit(1)
 if options.socket_enabled is not None:
     socket_enabled = options.socket_enabled
 if options.event_dest is None:
@@ -3193,8 +3238,11 @@ if fuse < 60:
     fuse = 60
 
 # Use default monitord logfile if user hasn't specified another file
-if not logfile:
-    logfile = os.path.join(run, logbase)
+if logfile is None:
+    if prefix is None:
+        logfile = os.path.join(run, logbase)
+    else:
+        logfile = os.path.join(run, prefix, logbase)
 logfile = os.path.abspath(logfile)
 
 # Check if the user-provided jsd file is an absolute path, if so, we
@@ -4225,15 +4273,15 @@ else:
     # Hack to make stdout unbuffered
     sys.stdout = os.fdopen(sys.stdout.fileno(), "w", 0)
 
-# Touch logfile with start event
-print
-print (utils.isodate(time.time()) + " - pegasus-monitord starting ").ljust(80, "-")
-print
-
 # Close stdin
 sys.stdin.close()
 # dup stderr onto stdout
 sys.stderr = sys.stdout
+
+# Touch logfile with start event
+print
+print (utils.isodate(time.time()) + " - pegasus-monitord starting ").ljust(80, "-")
+print
 
 # Ignore dying shells
 signal.signal(signal.SIGHUP, prog_sighup_handler)
@@ -4274,7 +4322,10 @@ else:
                 # attempt to purge wf_uuid_first
                 purge_wf_uuid_from_database(run, event_dest)
         except:
-            logger.warning("error flushing previous wf_uuid from database... continuing...")
+            logger.error(traceback.format_exc())
+            logger.error("error flushing previous wf_uuid from database... continuing...")
+            logger.error("cannot create events output... disabling event output!")
+            wf_event_sink = None
 
 # Say hello
 logger.info("starting [%s], using pid %d" % (revision, os.getpid()))
@@ -4282,7 +4333,10 @@ if millisleep is not None:
     logger.info("using simulation delay of %d ms" % (millisleep))
 
 # Only create server socket if asked...
-sockfn = os.path.join(os.path.dirname(out), "monitord.sock")
+if prefix is None:
+    sockfn = os.path.join(os.path.dirname(out), "monitord.sock")
+else:
+    sockfn = os.path.join(os.path.dirname(out), prefix, "monitord.sock")
 if socket_enabled:
     # Create server socket for communication with site selector
     server = server_socket(49152, 65536)
@@ -4320,8 +4374,12 @@ else:
     logger.info("env: GLOBUS_LOCATION=")
 
 # Build sub-workflow retry filename
-wf_retry_fn = os.path.join(run, MONITORD_WF_RETRY_FILE)
-wf_notification_fn = os.path.join(run, MONITORD_NOTIFICATION_FILE)
+if prefix is None:
+    wf_retry_fn = os.path.join(run, MONITORD_WF_RETRY_FILE)
+    wf_notification_fn = os.path.join(run, MONITORD_NOTIFICATION_FILE)
+else:
+    wf_retry_fn = os.path.join(run, prefix, MONITORD_WF_RETRY_FILE)
+    wf_notification_fn = os.path.join(run, prefix, MONITORD_NOTIFICATION_FILE)
 
 # Empty sub-workflow retry information if in replay mode
 if replay_mode:
@@ -4353,7 +4411,8 @@ if do_notifications == True:
 # Instantiate workflow class
 wf = Workflow(run, out, database=wf_event_sink, jsd=jsd,
               enable_notifications=do_notifications,
-              replay_mode=replay_mode, notification_list=pending_notifications)
+              replay_mode=replay_mode,
+              prefix=prefix, notification_list=pending_notifications)
 # If everything went well, create a workflow entry for this workflow
 if wf._monitord_exit_code == 0:
     workflow_entry = WorkflowEntry()
@@ -4585,7 +4644,7 @@ while (len(wfs) > 0):
                                                   parent_jobseq=parent_jobseq, root_id=root_wf_id,
                                                   jsd=jsd, replay_mode=replay_mode,
                                                   enable_notifications=do_notifications,
-                                                  notification_list=pending_notifications)
+                                                  prefix=prefix, notification_list=pending_notifications)
 
                                 if new_wf._monitord_exit_code == 0:
                                     new_workflow_entry = WorkflowEntry()
