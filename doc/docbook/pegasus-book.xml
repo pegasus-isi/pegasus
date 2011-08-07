@@ -2,7 +2,7 @@
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
 "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <book>
-  <title>Pegasus User Guide</title>
+  <title>Pegasus 3.1 User Guide</title>
 
   <xi:include href="about.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
 
