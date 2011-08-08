@@ -302,7 +302,7 @@ border:1px solid orange;
 border:1px solid orange;
 }
 #time_chart_footer_div{
-border:1px solid orange;
+border:1px solid #C35617;
 }
 .header_level1{
 font-family:"Times New Roman", Times, serif; 
