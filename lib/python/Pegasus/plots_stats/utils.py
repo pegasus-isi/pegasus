@@ -68,14 +68,30 @@ def print_property_table(props , border= True , separator =""):
 	"""
 	html_content =''
 	if border:
-		html_content ="<table border = 1 style='color:#600000;'>"
+		html_content ="\n<table border = 1 style='color:#600000;'>"
 	else:
-		html_content ="<table style='color:#600000;'>"
+		html_content ="\n<table style='color:#600000;'>"
 	for key, value in props.items():
 		if value is None:
 			value ='-'
-		html_content += "<tr><th align ='left' style ='color:#600000'>"+ key +"</th><td style ='color:#888888'>" + separator +str(value) +"</td></tr>"
-	html_content +="</table>"
+		html_content += "\n<tr>\n<th align ='left' style ='color:#600000'>"+ key +"</th>\n<td style ='color:#888888'>" + separator +str(value) +"</td>\n</tr>"
+	html_content +="\n</table>"
+	return html_content
+	
+
+def print_sub_wf_links(wf_id_uuid_list ):
+	"""
+	Utility method for printing the link to sub workflow pages
+	@param wf_id_uuid_list list of wf_id and wf_uuid
+	"""
+	html_content =''
+	if len(wf_id_uuid_list) == 0:
+		return  html_content
+	
+	html_content ="\n<div>"
+	for wf_id_uuid in wf_id_uuid_list:
+		html_content += "\n<a href ='"+ str(wf_id_uuid.wf_uuid) +".html'>"+ str(wf_id_uuid.wf_uuid) + "</a><br/>"
+	html_content +="\n</div>"
 	return html_content
 
 
