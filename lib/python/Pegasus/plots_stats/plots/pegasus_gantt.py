@@ -417,6 +417,9 @@ def create_header(workflow_stat):
 #gantt_chart{
 border:1px solid orange;
 }
+#gantt_chart_footer_div{
+border:1px solid #C35617;
+}
 .header_level1{
 font-family:"Times New Roman", Times, serif; 
 font-size:36px;
@@ -924,7 +927,7 @@ def create_bottom_toolbar():
 	@param workflow_stat the WorkflowInfo object reference 
 	"""
 	toolbar_content ="\n\
-<div id ='tools' style='width: 1000px; margin : 0 auto;' >\n\
+<div id ='gantt_chart_footer_div' style='width: 1500px; margin : 0 auto;' >\n\
 <img style='float: right' src = 'images/jobstates_all.png'/>\n\
 <input type='checkbox' name='state' value='show condor job' onclick=\"setCondorTime();\" /> show condor job [JOB_TERMINATED -SUBMIT]<br />\n\
 <input type='checkbox' name='state' value='kickstart' onclick=\"setKickstart();\"/> show kickstart time <br />\n\
@@ -961,7 +964,7 @@ def create_gantt_plot(workflow_info , output_dir):
 	# Adding the legend panel
 	wf_content =create_legend_panel(workflow_info)
 	str_list.append(wf_content)
-	wf_content = "</div>\n<br />"
+	wf_content = "</div>\n"
 	str_list.append(wf_content)
 	wf_content =create_bottom_toolbar()
 	str_list.append(wf_content)

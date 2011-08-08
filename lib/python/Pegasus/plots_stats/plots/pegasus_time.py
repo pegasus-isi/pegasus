@@ -332,6 +332,9 @@ def create_header(workflow_stat):
 #time_chart{
 border:1px solid orange;
 }
+#time_chart_footer_div{
+border:1px solid #C35617;
+}
 </style>
 </head>
 <body>
@@ -687,7 +690,7 @@ def create_bottom_toolbar():
 	@param workflow_stat the WorkflowInfo object reference 
 	"""
 	toolbar_content ="""
-<div id ='tools' style='width: 300px; margin : 0 auto;' >
+<div id ='time_chart_footer_div' style='width: 1500px; margin : 0 auto;' >
 	<div style ='float:right'>
 		<p1> Time filter </p1>
 		<br/>
@@ -732,7 +735,7 @@ def create_time_plot(workflow_info , output_dir):
 	# Adding the legend panel
 	wf_content =create_legend_panel(workflow_info)
 	str_list.append(wf_content)
-	wf_content = "</div>\n<br />"
+	wf_content = "</div>\n"
 	str_list.append(wf_content)
 	wf_content =create_bottom_toolbar()
 	str_list.append(wf_content)
