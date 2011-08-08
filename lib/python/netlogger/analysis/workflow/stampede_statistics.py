@@ -147,7 +147,7 @@ Methods listed in order of query list on wiki.
 
 https://confluence.pegasus.isi.edu/display/pegasus/Pegasus+Statistics+Python+Version+Modified
 """
-__rcsid__ = "$Id: stampede_statistics.py 28219 2011-07-27 23:26:37Z mgoode $"
+__rcsid__ = "$Id: stampede_statistics.py 28253 2011-08-08 20:49:26Z mgoode $"
 __author__ = "Monte Goode"
 
 from netlogger.analysis.modules._base import SQLAlchemyInit
@@ -213,6 +213,13 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         self.set_host_filter()
         self.set_transformation_filter()
         return True
+        
+    def close(self):
+        self.log.debug('close')
+        self.session.connection().close()
+        self.session.close_all()
+        self.session.bind.dispose()
+        self.db.dispose()
         
     def set_job_filter(self, filter='all'):
         modes = ['all', 'nonsub', 'subwf', 'dax', 'dag', 'compute', 'stage-in-tx', 
