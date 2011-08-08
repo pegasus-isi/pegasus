@@ -8,6 +8,7 @@ import optparse
 import commands
 import shutil
 from datetime import timedelta
+import traceback
 
 # Initialize logging object
 logger = logging.getLogger()
@@ -336,8 +337,8 @@ padding-top:25px;
 		content += """<div id ='env_div' class ='header_level2'> Workflow environment </div>"""
 		content += plot_utils.print_property_table(wf_info.wf_env , False ,":")
 		if calc_time_chart :
-			populate.populate_time_details(populate.get_wf_stats(wf_info.wf_uuid, True) ,wf_info,'day')
-			populate.populate_time_details(populate.get_wf_stats(wf_info.wf_uuid, True), wf_info,'hour')
+			populate.populate_time_details(wf_stats ,wf_info,'day')
+			populate.populate_time_details(wf_stats, wf_info,'hour')
 			logger.debug("Generating time chart for the workflow " + title +" ... ")
 			content += """
 <div id ='time_chart_div' class ='header_level2'> Time chart </div>
@@ -347,7 +348,7 @@ padding-top:25px;
 			content += """
 <div id ='breakdown_chart_div' class ='header_level2'> Invocation breakdown chart </div>
 			"""
-			populate.populate_transformation_details(populate.get_wf_stats(wf_info.wf_uuid, True) ,wf_info)
+			populate.populate_transformation_details(wf_stats,wf_info)
 			logger.debug("Generating breakdown chart for the workflow " + title +" ... ")
 			content += pegasus_breakdown.create_breakdown_plot(wf_info, breakdown_summary_output_dir)
 		content += """
@@ -403,17 +404,12 @@ def create_charts(submit_dir , output_dir, config_properties , log_level ):
 	if calc_dax_graph :
 		dax_graph_output_dir = os.path.join(output_dir,"dax_graph")
 		setup(dax_graph_output_dir)
-	root_wf_info = None
-	root_wf_stats = None
 	for wf_uuid in wf_uuid_list:
 		wf_stats, wf_info = populate.populate_chart(wf_uuid)
 		title =  str(wf_uuid) + " (" + str(wf_info.dax_label) +")"
 		logger.info("Generating graphs/charts for the workflow " + title +" ... ")
 		if calc_gantt_chart or calc_host_chart:
 			populate.populate_job_instance_details(wf_stats, wf_info)
-		if root_wf_info is None:
-			root_wf_info = wf_info
-			root_wf_stats =wf_stats
 		wf_uuid_parent.append(wf_info.parent_wf_uuid)
 		if calc_gantt_chart :
 			logger.debug("Generating gantt chart for the workflow " + title +" ... ")
@@ -450,10 +446,11 @@ def create_charts(submit_dir , output_dir, config_properties , log_level ):
 				wf_uuid_dax_image.append(None)
 				logger.info("Dax graph for workflow '" + title +"' was not created because number of tasks is more than the maximum  graph node generation limit ")
 			wf_uuid_dax_label.append(wf_info.dax_label)
+		wf_stats.close()
 		wf_stats = None
 		wf_info = None
-	title =  str(root_wf_info.wf_uuid) + " (" + str(root_wf_info.dax_label) +")"
 	
+	root_wf_stats ,root_wf_info = populate.populate_chart(wf_uuid_list[0] , True)
 	if calc_dax_graph :
 		data_file =  os.path.join(dax_graph_output_dir,wf_uuid_list[0]+".html")
 		create_image_gallery(data_file, wf_uuid_list,wf_uuid_parent, wf_uuid_dax_image ,wf_uuid_dax_label, True )
@@ -462,6 +459,7 @@ def create_charts(submit_dir , output_dir, config_properties , log_level ):
 		create_image_gallery(data_file, wf_uuid_list,wf_uuid_parent, wf_uuid_dag_image ,wf_uuid_dag_label, False )
 	
 	createOuterhtml(root_wf_stats, root_wf_info , submit_dir, output_dir ,log_level )
+	root_wf_stats.close()
 	return
 	
 
@@ -579,9 +577,13 @@ def main():
 	if options.max_graph_nodes is not None:
 		global max_graph_nodes
 		max_graph_nodes = options.max_graph_nodes
-		
-	create_charts(submit_dir, output_dir,options.config_properties, log_level_str)
 	
+	try:
+		create_charts(submit_dir, output_dir,options.config_properties, log_level_str)
+	except:
+		logger.warning(traceback.format_exc())
+		sys.exit(1)
+
 	sys.exit(0)
 	
 	
