@@ -356,11 +356,13 @@ def get_wf_stats(wf_uuid,expand = False):
 	return workflow_stampede_stats
 
 
-def populate_chart(wf_uuid):
+def populate_chart(wf_uuid , expand = False):
 	"""
 	Populates the workflow info object corresponding to the wf_uuid
+	@param wf_uuid the workflow uuid
+	@param expand expand workflow or not.
 	"""
-	workflow_stampede_stats = get_wf_stats(wf_uuid)
+	workflow_stampede_stats = get_wf_stats(wf_uuid , expand)
 	workflow_info = populate_workflow_details(workflow_stampede_stats)
 	sub_wf_uuids = workflow_stampede_stats.get_sub_workflow_ids()
 	workflow_info.sub_wf_id_uuids = sub_wf_uuids
