@@ -132,6 +132,15 @@ def create_header(workflow_stat):
 #breakdown_chart{
 border:1px solid orange;
 }
+.header_level1{
+font-family:"Times New Roman", Times, serif; 
+font-size:36px;
+}
+.header_level2{
+font-family:"Times New Roman", Times, serif; 
+font-size:30px;
+padding-top:25px;
+}
 </style>
 </head>
 <body>
@@ -139,6 +148,25 @@ border:1px solid orange;
 </script>
 """
 	return header_str
+	
+
+def create_toc(workflow_stat):
+	"""
+	Generates the table of content for the pages
+	@param workflow_stat the WorkflowInfo object reference 
+	"""
+	toc_str ="""
+<div class ='header_level1'>Invocation breakdown chart </div>
+	"""
+	toc_str += """
+<a href ='#chart_div'>Invocation breakdown chart</a><br/>
+<a href ='#env_div'> Workflow environment</a><br/>
+	"""
+	if len(workflow_stat.sub_wf_id_uuids) >0:
+		toc_str += """
+<a href ='#sub_div'> Sub workflows</a><br/>
+""" 
+	return toc_str
 	
 def create_include(workflow_stat):
 	"""
@@ -373,14 +401,34 @@ def create_breakdown_plot_page(workflow_info ,output_dir):
 	str_list = []
 	wf_page = create_header(workflow_info)
 	str_list.append(wf_page)
+	wf_page = """
+<center>
+	"""
+	str_list.append(wf_page)
+	wf_page = create_toc(workflow_info)
+	str_list.append(wf_page)
+	wf_page = """<div id ='chart_div' class ='header_level2'> Invocation breakdown chart </div>"""
+	str_list.append(wf_page)
 	wf_page = create_breakdown_plot(workflow_info ,output_dir)
 	str_list.append(wf_page)
 	# printing the brain dump content
+	wf_page = """<div id ='env_div' class ='header_level2'> Workflow environment </div>"""
+	str_list.append(wf_page)
 	if workflow_info.submit_dir is None:
 		logger.warning("Unable to display brain dump contents. Invalid submit directory for workflow  " + workflow_info.wf_uuid)
 	else:
 		wf_page = plot_utils.print_property_table(workflow_info.wf_env,False ," : ")
 		str_list.append(wf_page)
+	# print sub workflow list
+	if len(workflow_info.sub_wf_id_uuids) >0:
+		wf_page = """<div id ='sub_div' class ='header_level2'> Sub workflows </div>"""
+		str_list.append(wf_page)
+		wf_page = plot_utils.print_sub_wf_links(workflow_info.sub_wf_id_uuids)
+		str_list.append(wf_page)
+	wf_page = """
+</center>
+	"""
+	str_list.append(wf_page)
 	wf_page = """
 <div style='clear: left'>
 </div>
