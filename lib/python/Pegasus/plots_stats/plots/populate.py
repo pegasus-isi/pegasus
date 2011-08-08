@@ -363,6 +363,7 @@ def populate_chart(wf_uuid):
 	workflow_stampede_stats = get_wf_stats(wf_uuid)
 	workflow_info = populate_workflow_details(workflow_stampede_stats)
 	sub_wf_uuids = workflow_stampede_stats.get_sub_workflow_ids()
+	workflow_info.sub_wf_id_uuids = sub_wf_uuids
 	if len(sub_wf_uuids) > 0:
 		workflow_info.job_instance_id_sub_wf_uuid_map = get_job_inst_sub_workflow_map(workflow_stampede_stats )
 	config = utils.slurp_braindb(rlb(workflow_info.submit_dir))

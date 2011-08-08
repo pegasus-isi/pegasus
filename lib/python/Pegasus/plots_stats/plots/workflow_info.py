@@ -63,6 +63,7 @@ class WorkflowInfo:
 		self.host_job_map={}
 		self.transformation_color_map={}
 		self.job_instance_id_sub_wf_uuid_map ={}
+		self.sub_wf_id_uuids = []
 		self.wf_env ={}
 		self.wf_job_instances_over_time_statistics = {}
 		self.wf_invocations_over_time_statistics = {}
