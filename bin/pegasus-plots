@@ -81,6 +81,7 @@ def generate_dag_graph(wf_info, output_dir):
 	@output_dir the output directory path
 	"""
 	dag_file_path = wf_info.dag_file_path
+	title =  str(wf_info.wf_uuid) + " (" + str(wf_info.dax_label) +")"
 	if dag_file_path is not None:
 		dag2dot_file_path = os.path.join(common.pegasus_home, "libexec/visualize/dag2dot")
 		dot_file_path = os.path.join(output_dir, wf_info.wf_uuid+".dot")
@@ -92,7 +93,7 @@ def generate_dag_graph(wf_info, output_dir):
 		if status == 0:
 			logger.info("Finished executing command." )
 		else:
-			logger.warn("Failed to generate dag graph for workflow "+ wf_info.wf_uuid)
+			logger.warn("Failed to generate dag graph for workflow "+ title)
 			logger.debug("%s: %d:%s" % (dag_cmd, status, output))
 			return None
 		png_file_path = os.path.join(output_dir, wf_info.wf_uuid+".png")
@@ -110,7 +111,7 @@ def generate_dag_graph(wf_info, output_dir):
 		else:
 			logger.warn("%s: %d:%s" % (dot_png_cmd, status, output))
 	else:
-		logger.warn("Unable to find the dag file for workflow  " + wf_info.wf_uuid)
+		logger.warn("Unable to find the dag file for workflow  " + title)
 	return None
 	
 	
@@ -121,6 +122,7 @@ def generate_dax_graph(wf_info, output_dir):
 	@output_dir the output directory path
 	"""
 	dax_file_path = wf_info.dax_file_path
+	title =  str(wf_info.wf_uuid) + " (" + str(wf_info.dax_label) +")"
 	if dax_file_path is not None:
 		dax2dot_file_path = os.path.join(common.pegasus_home, "libexec/visualize/dax2dot")
 		dot_file_path = os.path.join(output_dir, wf_info.wf_uuid + ".dot")
@@ -132,7 +134,7 @@ def generate_dax_graph(wf_info, output_dir):
 		if status == 0:
 			logger.debug("Finished executing command." )
 		else:
-			logger.warn("Failed to generate dax graph for workflow "+ wf_info.wf_uuid)
+			logger.warn("Failed to generate dax graph for workflow "+ title)
 			logger.debug("%s: %d:%s" % (dax_cmd, status, output))
 			return None
 		# Find dot command
@@ -152,7 +154,7 @@ def generate_dax_graph(wf_info, output_dir):
 			logger.warn("Failed to generate dax graph in png format for workflow " + wf_info.wf_uuid)
 			logger.debug("%s: %d:%s" % (dot_png_cmd, status, output))
 	else:
-		logger.warn("Unable to find the dax file for workflow " + wf_info.wf_uuid)
+		logger.warn("Unable to find the dax file for workflow " + title)
 	return None
 	
 	
@@ -298,12 +300,21 @@ border:1px solid orange;
 #time_chart{
 border:1px solid orange;
 }
+.header_level1{
+font-family:"Times New Roman", Times, serif; 
+font-size:36px;
+}
+.header_level2{
+font-family:"Times New Roman", Times, serif; 
+font-size:30px;
+padding-top:25px;
+}
 </style>
 
 </head>
 <body>
 <center>
-<h3>Pegasus plots </h3>
+<div class ='header_level1'>Pegasus plots </div>
 """
 		if calc_time_chart or calc_breakdown_chart:
 			content += """
@@ -322,18 +333,19 @@ border:1px solid orange;
 			content += "<a href ='" + dax_graph_parent_file +  "'>DAX graph</a><br/>" + NEW_LINE_STR
 		if calc_dag_graph :
 			content += "<a href ='" + dag_graph_parent_file + "'>DAG graph</a><br/><br/><br/> " + NEW_LINE_STR
+		content += """<div id ='env_div' class ='header_level2'> Workflow environment </div>"""
 		content += plot_utils.print_property_table(wf_info.wf_env , False ,":")
 		if calc_time_chart :
 			populate.populate_time_details(populate.get_wf_stats(wf_info.wf_uuid, True) ,wf_info,'day')
 			populate.populate_time_details(populate.get_wf_stats(wf_info.wf_uuid, True), wf_info,'hour')
 			logger.debug("Generating time chart for the workflow " + title +" ... ")
 			content += """
-<div id ='time_chart_div' style ='font-family:"Times New Roman", Times, serif; font-size:30px;'> Time chart </div>
+<div id ='time_chart_div' class ='header_level2'> Time chart </div>
 			"""
 			content += pegasus_time.create_time_plot(wf_info ,time_summary_output_dir)
 		if calc_breakdown_chart:
 			content += """
-<div id ='breakdown_chart_div' style ='font-family:"Times New Roman", Times, serif; font-size:30px;'> Invocation breakdown chart </div>
+<div id ='breakdown_chart_div' class ='header_level2'> Invocation breakdown chart </div>
 			"""
 			populate.populate_transformation_details(populate.get_wf_stats(wf_info.wf_uuid, True) ,wf_info)
 			logger.debug("Generating breakdown chart for the workflow " + title +" ... ")
