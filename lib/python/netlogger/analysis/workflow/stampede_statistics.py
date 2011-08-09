@@ -147,7 +147,7 @@ Methods listed in order of query list on wiki.
 
 https://confluence.pegasus.isi.edu/display/pegasus/Pegasus+Statistics+Python+Version+Modified
 """
-__rcsid__ = "$Id: stampede_statistics.py 28253 2011-08-08 20:49:26Z mgoode $"
+__rcsid__ = "$Id: stampede_statistics.py 28255 2011-08-09 17:47:46Z mgoode $"
 __author__ = "Monte Goode"
 
 from netlogger.analysis.modules._base import SQLAlchemyInit
@@ -216,10 +216,7 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         
     def close(self):
         self.log.debug('close')
-        self.session.connection().close()
-        self.session.close_all()
-        self.session.bind.dispose()
-        self.db.dispose()
+        self.disconnect()
         
     def set_job_filter(self, filter='all'):
         modes = ['all', 'nonsub', 'subwf', 'dax', 'dag', 'compute', 'stage-in-tx', 
@@ -270,7 +267,7 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         """
         Returns info on child workflows only.
         """
-        q = self.session.query(Workflow.wf_id, Workflow.wf_uuid)
+        q = self.session.query(Workflow.wf_id, Workflow.wf_uuid, Workflow.dax_label)
         q = q.filter(Workflow.parent_wf_id == self._root_wf_id)
         return q.all()
         
@@ -1067,7 +1064,7 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         q = q.filter(Workflow.wf_id == Job.wf_id)
         q = q.filter(Job.job_id == JobInstance.job_id)
         q = q.filter(Jobstate.job_instance_id == JobInstance.job_instance_id)
-        q = q.filter(Jobstate.state == 'SUBMIT')
+        q = q.filter(Jobstate.state == 'EXECUTE')
         if self._get_job_filter() is not None:
             q = q.filter(self._get_job_filter())
         q = q.group_by('date_format').order_by('date_format')
@@ -1111,7 +1108,7 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         q = q.filter(Workflow.wf_id == Job.wf_id)
         q = q.filter(Job.job_id == JobInstance.job_id)
         q = q.filter(Jobstate.job_instance_id == JobInstance.job_instance_id)
-        q = q.filter(Jobstate.state == 'SUBMIT')
+        q = q.filter(Jobstate.state == 'EXECUTE')
         q = q.filter(JobInstance.host_id == Host.host_id)
         if self._get_host_filter() is not None:
             q = q.filter(self._get_host_filter())
