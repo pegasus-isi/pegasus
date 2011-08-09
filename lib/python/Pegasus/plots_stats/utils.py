@@ -321,7 +321,7 @@ Utility method for converting the value to date format
 @param date_time_filter :  the date time filter 
 	"""
 	multiplier = get_date_multiplier(date_time_filter)
-	date_format = datetime.fromtimestamp(int(value*multiplier)).strftime(get_date_format(date_time_filter))
+	date_format = datetime.utcfromtimestamp(int(value*multiplier)).strftime(get_date_format(date_time_filter))
 	return date_format
 	
 	
