@@ -104,6 +104,48 @@ function printTransformationDetails(d){
 	transformation_details +=  "\\nTotal Runtime : "+d.total ;
 	alert(transformation_details);
 }
+
+function setBreakdownBy(){
+	if(breakdownByCount){
+		breakdownByCount= false;
+	}else{
+		breakdownByCount= true;
+	}
+	loadBCGraph();
+}
+
+
+function loadBCGraph(){
+	
+	bc_headerPanel.render();
+	bc_chartPanel.render();
+	bc_chartPanel.def("o", -1); 
+}
+
+
+function getOuterAngle(d){
+	if(breakdownByCount){
+		return d.count/ bc_total_count * 2 * Math.PI;
+	}
+	else{
+		return d.total/ bc_total_runtime * 2 * Math.PI;
+	}
+}
+
+function getInnerRadius(d){
+	if(d.failure < 0){
+			return 0;
+	}
+	
+	if(breakdownByCount){
+		return bc_radius*(d.failure/d.count);
+	}
+	else{
+		return bc_radius*d.total*(d.failure/d.count);
+	}
+}
+
+
 """
 	# print action script
 	data_file = os.path.join(output_dir,  "bc_action.js")
@@ -130,6 +172,9 @@ def create_header(workflow_stat):
 <title>"""+ workflow_stat.wf_uuid +"""</title>
 <style type ='text/css'>
 #breakdown_chart{
+border:1px solid orange;
+}
+#breakdown_chart_footer_div{
 border:1px solid orange;
 }
 .header_level1{
@@ -203,6 +248,7 @@ def create_variable(workflow_stat):
 	var bc_label_padding = 30
 	var bc_xLabelPos = bc_label_padding;
 	var bc_yLabelPos = 30;
+	var breakdownByCount = true;
 	</script>"""
 	return var_str
 	
@@ -248,19 +294,19 @@ def create_chart_panel(workflow_stat):
 	"""
 	panel_str ="""
 <script type="text/javascript+protovis">
-var hc_chartPanel = new pv.Panel()
+var bc_chartPanel = new pv.Panel()
 .width(bc_w)
 .height(bc_h)
 .strokeStyle('yellow');
-hc_chartPanel.def("o", -1); 
+bc_chartPanel.def("o", -1); 
 
-var outerWedge = hc_chartPanel.add(pv.Wedge)
+var outerWedge = bc_chartPanel.add(pv.Wedge)
 .left(bc_centerX)
 .bottom(bc_centerY);
 
 outerWedge.data(bc_data)
 .outerRadius(bc_radius)
-.angle(function(d) d.count/ bc_total_count * 2 * Math.PI)
+.angle(function(d){return getOuterAngle(d);})
 .left(function() bc_centerX
 	+ Math.cos(this.startAngle() + this.angle() / 2)
 	* ((this.parent.o() == this.index) ? 10 : 0))
@@ -272,18 +318,12 @@ outerWedge.data(bc_data)
 .fillStyle(function(d)d.color);
 
 
-var innerWedge = hc_chartPanel.add(pv.Wedge)
+var innerWedge = bc_chartPanel.add(pv.Wedge)
 .data(bc_data)
 .left(bc_centerX)
 .bottom(bc_centerY)
-.outerRadius(function(d){
-if(d.failure < 0){
-	return 0;
-}else{
-	return bc_radius*(d.failure/d.count);
-} 
-})
-.angle(function(d) d.count/ bc_total_count * 2 * Math.PI)
+.outerRadius( function(d){return getInnerRadius(d);})
+.angle(function(d) {return getOuterAngle(d);})
 .left(function() bc_centerX
 + Math.cos(this.startAngle() + this.angle() / 2)
 * ((this.parent.o() == this.index) ? 10 : 0))
@@ -293,7 +333,7 @@ if(d.failure < 0){
 .event("mouseover", function() this.parent.o(this.index))
  .event("click", function(d) printTransformationDetails(d))   
 .fillStyle("red");
-hc_chartPanel.render();
+bc_chartPanel.render();
 </script>
 	"""
 	return panel_str
@@ -306,11 +346,11 @@ def create_legend_panel(workflow_stat):
 	"""
 	panel_str ="""
 <script type="text/javascript+protovis">
-var hc_footerPanel = new pv.Panel()
+var bc_footerPanel = new pv.Panel()
 .width(bc_footerPanelWidth)
 .height(bc_footerPanelHeight)
 .fillStyle('white');
-hc_footerPanel.add(pv.Dot)
+bc_footerPanel.add(pv.Dot)
 .data(bc_data)
 .left( function(d){
 	if(this.index == 0){
@@ -338,7 +378,7 @@ hc_footerPanel.add(pv.Dot)
 .textAlign('left')
 .text(function(d) d.name);
 
-hc_footerPanel.render();
+bc_footerPanel.render();
 </script>
 """
 	return panel_str
@@ -347,9 +387,15 @@ hc_footerPanel.render();
 def create_bottom_toolbar():
 	"""
 	Generates the bottom toolbar html content.
-	@param workflow_stat the WorkflowInfo object reference 
 	"""
 	toolbar_content ="""
+<div id ='breakdown_chart_footer_div' style='width: 860px; margin : 0 auto;' >
+	<div>
+		<div>Breakdown  by</div>
+		<input type='radio' name='by_filter' value='by count' onclick="setBreakdownBy();" checked/> count<br />
+		<input type='radio' name='by_filter' value='by runtime' onclick="setBreakdownBy();"/> runtime<br />
+	</div>
+</div>
 	"""
 	return toolbar_content
 
