@@ -338,6 +338,7 @@ def print_workflow_details(output_db_url , wf_uuid , output_dir):
 				individual_workflow_stats.set_job_filter('all')
 				content = print_individual_workflow_stats(individual_workflow_stats , title)
 				write_to_file(wf_stats_file, "a" , content)
+			individual_workflow_stats.close()
 	stats_output =  NEW_LINE_STR+ "SUMMARY".center(100, '*')
 	stats_output +=  NEW_LINE_STR
 	if calc_wf_summary:
@@ -372,6 +373,7 @@ def print_workflow_details(output_db_url , wf_uuid , output_dir):
 		stats_output +=  NEW_LINE_STR
 		stats_output += "Time statistics                   : "
 		stats_output += time_stats_file +"\n"
+	expanded_workflow_stats.close()
 	stats_output += NEW_LINE_STR
 	stats_output += "".center(100, '*')
 	print stats_output
