@@ -131,6 +131,12 @@ class SQLAlchemyInit:
         sm = orm.sessionmaker(bind=self.db, autoflush=False, autocommit=False, 
                                 expire_on_commit=False)
         self.session = orm.scoped_session(sm)
+        
+    def disconnect(self):
+        self.session.connection().close()
+        self.session.close_all()
+        self.session.bind.dispose()
+        self.db.dispose()
 
             
 """
