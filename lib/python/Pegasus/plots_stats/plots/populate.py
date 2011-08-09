@@ -34,6 +34,7 @@ prog_base = os.path.split(sys.argv[0])[1]	# Name of this program
 brainbase ='braindump.txt'
 
 predefined_colors = ["#8dd3c7" , "#4daf4a","#bebada" , "#80b1d3" , "#b3de69" , "#fccde5" , "#d9d9d9" , "#bc80bd" , "#ccebc5" ,  "#fb8072"]
+exclude_transformations =['dagman::post' , 'dagman::pre']
 global_transformtion_color_map ={}
 global_base_submit_dir = None
 global_braindb_submit_dir =None
@@ -309,6 +310,8 @@ def populate_transformation_details(workflow_stats , workflow_info):
 	global color_count
 	transformation_stats_list= workflow_stats.get_transformation_statistics()
 	for trans_stats in transformation_stats_list:
+		if trans_stats.transformation.strip() in exclude_transformations:
+			continue
 		trans_info = TransformationInfo()
 		trans_info.name = trans_stats.transformation
 		trans_info.count = trans_stats.count
