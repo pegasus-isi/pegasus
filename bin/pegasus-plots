@@ -349,8 +349,7 @@ padding-top:25px;
 			logger.debug("Generating breakdown chart for the workflow " + title +" ... ")
 			content += pegasus_breakdown.create_breakdown_plot(wf_info, breakdown_summary_output_dir)
 		if calc_time_chart :
-			populate.populate_time_details(wf_stats ,wf_info,'day')
-			populate.populate_time_details(wf_stats, wf_info,'hour')
+			populate.populate_time_details(wf_stats ,wf_info)
 			logger.debug("Generating time chart for the workflow " + title +" ... ")
 			content += """
 <div id ='time_chart_div' class ='header_level2'> Time chart (Across workflow) </div>
