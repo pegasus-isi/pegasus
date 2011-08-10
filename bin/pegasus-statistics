@@ -594,15 +594,6 @@ Utility method for rounding the float value to rounded string
 	return stats_utils.round_decimal_to_str(value,to)
 	
 
-def convert_to_date_format(value):
-	"""
-Utility method for converting the value to date format
-@param value :  value to format 
-	"""
-	return stats_utils.convert_to_date_format(value, time_filter)
-	
-	
-
 def print_wf_transformation_stats(workflow_stats , title):
 	"""
 Prints the transformation statistics of workflow
@@ -624,16 +615,18 @@ def print_statistics_by_time_and_host(workflow_stats ):
 	@param workflow_stats :  workflow statistics object reference
 	"""
 	statistics_by_time_str = NEW_LINE_STR
-	workflow_stats.set_job_filter('all')
-	workflow_stats.set_time_filter(time_filter)
+	workflow_stats.set_job_filter('nonsub')
+	workflow_stats.set_time_filter('hour')
+	workflow_stats.set_transformation_filter(exclude=['condor::dagman'])
 	
 	statistics_by_time_str +="#Job instances statistics per " + time_filter
 	statistics_by_time_str += NEW_LINE_STR
 	statistics_by_time_str +=print_row(time_stats_col_name , time_stats_col_size)
 	statistics_by_time_str += NEW_LINE_STR
 	stats_by_time = workflow_stats.get_jobs_run_by_time()
-	for stats in stats_by_time:
-		content = [convert_to_date_format(stats.date_format) ,str(stats.count),round_to_str(stats.total_runtime)]
+	formatted_stats_list = stats_utils.convert_stats_to_base_time(stats_by_time , time_filter)
+	for stats in formatted_stats_list:
+		content = [stats['date_format'] , str(stats['count']),round_to_str(stats['runtime'])]
 		statistics_by_time_str += print_row(content , time_stats_col_size)
 		statistics_by_time_str += NEW_LINE_STR
 	
@@ -643,8 +636,9 @@ def print_statistics_by_time_and_host(workflow_stats ):
 	statistics_by_time_str +=print_row(time_stats_col_name , time_stats_col_size)
 	statistics_by_time_str += NEW_LINE_STR
 	stats_by_time = workflow_stats.get_invocation_by_time()
-	for stats in stats_by_time:
-		content = [convert_to_date_format(stats.date_format) ,str(stats.count),round_to_str(stats.total_runtime)]
+	formatted_stats_list = stats_utils.convert_stats_to_base_time(stats_by_time , time_filter)
+	for stats in formatted_stats_list:
+		content = [stats['date_format'] , str(stats['count']),round_to_str(stats['runtime'])]
 		statistics_by_time_str += print_row(content , time_stats_col_size)
 		statistics_by_time_str += NEW_LINE_STR
 	
@@ -654,8 +648,9 @@ def print_statistics_by_time_and_host(workflow_stats ):
 	statistics_by_time_str +=print_row(time_host_stats_col_name , time_host_stats_col_size)
 	statistics_by_time_str += NEW_LINE_STR
 	stats_by_time = workflow_stats.get_jobs_run_by_time_per_host()
-	for stats in stats_by_time:
-		content = [convert_to_date_format(stats.date_format) ,str(stats.host_name) , str(stats.count),round_to_str(stats.total_runtime)]
+	formatted_stats_list = stats_utils.convert_stats_to_base_time(stats_by_time , time_filter, True)
+	for stats in formatted_stats_list:
+		content = [stats['date_format'] ,str(stats['host']) , str(stats['count']),round_to_str(stats['runtime'])]
 		statistics_by_time_str += print_row(content , time_host_stats_col_size)
 		statistics_by_time_str += NEW_LINE_STR
 	
@@ -665,8 +660,9 @@ def print_statistics_by_time_and_host(workflow_stats ):
 	statistics_by_time_str +=print_row(time_host_stats_col_name , time_host_stats_col_size)
 	statistics_by_time_str += NEW_LINE_STR
 	stats_by_time = workflow_stats.get_invocation_by_time_per_host()
-	for stats in stats_by_time:
-		content = [convert_to_date_format(stats.date_format) ,str(stats.host_name) , str(stats.count),round_to_str(stats.total_runtime)]
+	formatted_stats_list = stats_utils.convert_stats_to_base_time(stats_by_time , time_filter, True)
+	for stats in formatted_stats_list:
+		content = [stats['date_format'] ,str(stats['host']) , str(stats['count']),round_to_str(stats['runtime'])]
 		statistics_by_time_str += print_row(content , time_host_stats_col_size)
 		statistics_by_time_str += NEW_LINE_STR
 	
@@ -714,8 +710,8 @@ def main():
 			choices=['all', 'summary', 'wf_stats','jb_stats','tf_stats' ,'ti_stats' ],
 			help = "Valid levels are: all,summary,wf_stats,jb_stats,tf_stats , ti_stats; Default is summary.")
 	parser.add_option("-t", "--time_filter", action = "store", dest = "time_filter",
-			choices=['month', 'week', 'day','hour' ],
-			help = "Valid levels are: month,week,day,hour; Default is day.")
+			choices=[ 'day','hour' ],
+			help = "Valid levels are: day,hour; Default is day.")
 	parser.add_option("-i", "--ignore_db_inconsistency", action = "store_const", const = 0, dest = "ignore_db_inconsistency",
                   help = "turn off the check for db consistency")
 	parser.add_option("-v", "--verbose", action="count", default=0, dest="verbose", 
