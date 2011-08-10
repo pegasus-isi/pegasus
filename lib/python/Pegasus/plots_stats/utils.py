@@ -278,8 +278,6 @@ def get_date_multiplier(date_filter):
 	@return multiplier for a given filter
 	"""
 	vals = {
-	'month': 2629743,
-	'week': 604800,
 	'day': 86400,
 	'hour': 3600
 	}
@@ -292,8 +290,6 @@ def get_date_format(date_filter):
 	@return the date format for a given filter
 	"""
 	vals = {
-	'month': '%Y-%m',
-	'week': '%Y-%U',
 	'day': '%Y-%m-%d',
 	'hour': '%Y-%m-%d : %H'
 	}
@@ -307,23 +303,78 @@ def get_date_print_format(date_filter):
 	@return the date format for a given filter
 	"""
 	vals = {
-	'month': '[YYYY-MM]',
-	'week': '[YYYY-WW]',
 	'day': '[YYYY-MM-DD]',
 	'hour': '[YYYY-MM-DD : HH]'
 	}
 	return vals[date_filter]
 
-def convert_to_date_format(value , date_time_filter):
+
+def convert_datetime_to_printable_format(timestamp , date_time_filter = 'hour'):
 	"""
-Utility method for converting the value to date format
-@param value :  value to format
-@param date_time_filter :  the date time filter 
+	Utility for returning the date format  in human readable format
+	@param timestamp :  the unix timestamp
+	@param date filter :  the given date filter 
+	@return the date format in human readable format
 	"""
-	multiplier = get_date_multiplier(date_time_filter)
-	date_format = datetime.utcfromtimestamp(int(value*multiplier)).strftime(get_date_format(date_time_filter))
-	return date_format
+
+	local_date_time= convert_utc_to_local_datetime(timestamp)
+	date_formatted =  local_date_time.strftime(get_date_format(date_time_filter))
+	return date_formatted
+
+def convert_utc_to_local_datetime(utc_timestamp):
+	"""
+	Utility for converting the timestamp  to local time
+	@param timestamp :  the unix timestamp
+	@return the date format in human readable format
+	"""
+	local_datetime = datetime.fromtimestamp(utc_timestamp)
+	return local_datetime
 	
+
+def convert_stats_to_base_time(stats_by_time , date_time_filter = 'hour' ,isHost = False ):
+	"""
+	Converts the time grouped by hour into local time.Converts the time grouped by hours into day based on the date_time_filter
+	@param stats_by_time : ime grouped by hou
+	@param date filter :  the given date filter 
+	@param isHost : true if it is grouped by host
+	@return the stats list after doing conversion
+	"""
+	formatted_stats_by_hour_list = []
+	for stats in stats_by_time:
+		timestamp = stats.date_format*get_date_multiplier('hour')
+		formatted_stats ={}
+		formatted_stats['timestamp'] = timestamp
+		formatted_stats['count'] = stats.count
+		formatted_stats['runtime'] = stats.total_runtime
+		if isHost:
+			formatted_stats['host'] = stats.host_name
+		formatted_stats_by_hour_list.append(formatted_stats)
+		formatted_stats = None
+	
+	if date_time_filter =='hour':
+		for formatted_stats in formatted_stats_by_hour_list:
+			formatted_stats['date_format'] = convert_datetime_to_printable_format(formatted_stats['timestamp'] , date_time_filter)
+		return formatted_stats_by_hour_list
+	else:
+		day_to_hour_mapping ={}
+		formatted_stats_by_day_list =[]
+		for formatted_stats_by_hour in formatted_stats_by_hour_list:
+			formatted_stats_by_day = None
+			corresponding_day = convert_datetime_to_printable_format(formatted_stats_by_hour['timestamp'] , date_time_filter)
+			id =''
+			if isHost:
+				id += formatted_stats_by_hour['host'] +":" 
+			id += corresponding_day
+			if day_to_hour_mapping.has_key(id):
+				formatted_stats_by_day = day_to_hour_mapping[id]
+				formatted_stats_by_day['count']   += formatted_stats_by_hour['count']
+				formatted_stats_by_day['runtime'] += formatted_stats_by_hour['runtime']
+			else:
+				formatted_stats_by_day = formatted_stats_by_hour
+				formatted_stats_by_day['date_format'] = corresponding_day
+				day_to_hour_mapping[id] = formatted_stats_by_day
+				formatted_stats_by_day_list.append(formatted_stats_by_day)
+		return formatted_stats_by_day_list
 	
 
 def round_decimal_to_str(value , to=3):
