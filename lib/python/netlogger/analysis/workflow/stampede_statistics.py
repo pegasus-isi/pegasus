@@ -11,6 +11,7 @@ Usage::
  print stats.get_total_jobs_status()
  print stats.get_total_succeeded_jobs_status()
  etc.
+ stats.close()
  
 Constructor and initialize methods:
 
@@ -147,7 +148,7 @@ Methods listed in order of query list on wiki.
 
 https://confluence.pegasus.isi.edu/display/pegasus/Pegasus+Statistics+Python+Version+Modified
 """
-__rcsid__ = "$Id: stampede_statistics.py 28255 2011-08-09 17:47:46Z mgoode $"
+__rcsid__ = "$Id: stampede_statistics.py 28263 2011-08-10 16:47:16Z mgoode $"
 __author__ = "Monte Goode"
 
 from netlogger.analysis.modules._base import SQLAlchemyInit

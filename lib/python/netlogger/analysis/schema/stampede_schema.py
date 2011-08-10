@@ -2,7 +2,7 @@
 Contains the code to create and map objects to the Stampede DB schema
 via a SQLAlchemy interface.
 """
-__rcsid__ = "$Id: stampede_schema.py 28134 2011-07-05 19:39:47Z mgoode $"
+__rcsid__ = "$Id: stampede_schema.py 28267 2011-08-10 20:47:03Z mgoode $"
 __author__ = "Monte Goode MMGoode@lbl.gov"
 
 from netlogger.analysis.schema._base import SABase, SchemaIntegrityError
@@ -312,7 +312,7 @@ def initializeToPegasusDB(db, metadata, kw={}):
     st_task = Table('task', metadata,
         Column('task_id', KeyInt, primary_key=True, nullable=False),
         Column('job_id', KeyInt,
-                ForeignKey('job.job_id'), nullable=True),
+                ForeignKey('job.job_id', ondelete='SET NULL'), nullable=True),
         Column('wf_id', KeyInt,
                 ForeignKey('workflow.wf_id'), nullable=False),
         Column('abs_task_id', VARCHAR(255), nullable=False),
