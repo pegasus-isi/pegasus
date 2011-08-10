@@ -24,10 +24,12 @@ import re
 import os
 import sys
 import time
+import errno
 import logging
 import calendar
 import commands
 import datetime
+import traceback
 import subprocess
 
 # The unquote routine comes from urllib
@@ -324,6 +326,50 @@ def monitoring_running(run_dir):
 
     # If monitord started, it is (possibly) still running
     if os.access(start_file, os.F_OK):
+        try:
+            # Open monitord's start file
+            START = open(start_file, 'r')
+
+            # Look for pid line
+            for line in START:
+                line = line.strip()
+                if line.startswith("pid"):
+                    # Get pid
+                    my_pid = int(line.split(" ")[1])
+                    # We are done with this file, just close it...
+                    START.close()
+                    # Now let's see if process still around...
+                    try:
+                        os.kill(my_pid, 0)
+                    except OSError, err:
+                        if err.errno == errno.ESRCH:
+                            # pid is not found, monitoring cannot be running
+                            logger.info("pid %d not running anymore..." % (my_pid))
+                            return False
+                        elif err.errno == errno.EPERM:
+                            # pid cannot be killed because we don't have permission
+                            logger.debug("no permission to talk to pid %d..." % (my_pid))
+                            return True
+                        else:
+                            logger.warning("unknown error while sending signal to pid %d" % (my_pid))
+                            logger.warning(traceback.format_exc())
+                            return True
+                    except:
+                        logger.warning("unknown error while sending signal to pid %d" % (my_pid))
+                        logger.warning(traceback.format_exc())
+                        return True
+                    else:
+                        logger.debug("pid %d still running..." % (my_pid))
+                        return True
+
+            logger.warning("could not find pid line in file %s. continuing..." % (start_file))
+
+            # Don't forget to close file
+            START.close()
+        except:
+            logger.warning("error processing file %s. continuing..." % (start_file))
+            logger.warning(traceback.format_exc())
+
         return True
 
     # Otherwise, monitord was never executed (so it is not running right now...)

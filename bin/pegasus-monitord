@@ -1917,7 +1917,8 @@ class Workflow:
 
         try:
             STARTED = open(my_start_file, "w")
-            STARTED.write("%s\n" % (utils.isodate(my_now)))
+            STARTED.write("pid %d\n" % (os.getpid()))
+            STARTED.write("timestamp %s\n" % (utils.isodate(my_now)))
             STARTED.close()
         except:
             logger.error("writing %s" % (my_start_file))
