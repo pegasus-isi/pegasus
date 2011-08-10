@@ -229,7 +229,7 @@ class WorkflowInfo:
 		for job_stat in job_instance_over_time_list:
 			job_info +=("{")
 			job_info +=( "\n")
-			job_info += ( "\"datetime\":"  + "\"" + plot_utils.convert_to_date_format(job_stat[0] , date_time_filter)+ "\" , ")
+			job_info += ( "\"datetime\":"  + "\"" + job_stat[0]+ "\" , ")
 			job_info += ( "\"count\":" +  str(job_stat[1]) +" , ")
 			job_info += ( "\"runtime\":" +  plot_utils.round_decimal_to_str(job_stat[2]) +"  ")
 			job_info +=( "},\n")
@@ -245,7 +245,7 @@ class WorkflowInfo:
 		for inv_stat in invs_over_time_list:
 			inv_info +=("{")
 			inv_info +=( "\n")
-			inv_info += ( "\"datetime\":"  + "\"" + plot_utils.convert_to_date_format(inv_stat[0] , date_time_filter)+ "\" , ")
+			inv_info += ( "\"datetime\":"  + "\"" + inv_stat[0] + "\" , ")
 			inv_info += ( "\"count\":" +  str(inv_stat[1]) +" , ")
 			inv_info += ( "\"runtime\":" +  plot_utils.round_decimal_to_str(inv_stat[2]) +"  ")
 			inv_info +=( "},\n")

@@ -380,24 +380,42 @@ def populate_chart(wf_uuid , expand = False):
 		workflow_info.dax_file_path = config['dax']
 	return workflow_stampede_stats, workflow_info 
 	
-def populate_time_details(workflow_stats, wf_info , date_time_filter):
+def populate_time_details(workflow_stats, wf_info ):
 	"""
 	Populates the job instances and invocation time and runtime statistics sorted by time.
+	@param workflow_stats the StampedeStatistics object reference
+	@param workflow_info the WorkflowInfo object reference 
 	"""
 	workflow_stats.set_job_filter('nonsub')
-	workflow_stats.set_time_filter(date_time_filter)
+	# day is calculated from hour.
+	workflow_stats.set_time_filter('hour')
 	
- 	stats_by_time = workflow_stats.get_jobs_run_by_time()
+	job_stats_by_time = workflow_stats.get_jobs_run_by_time()
+	workflow_stats.set_transformation_filter(exclude=['condor::dagman'])
+	inv_stats_by_time = workflow_stats.get_invocation_by_time()
+	populate_job_invocation_time_details(wf_info,job_stats_by_time,inv_stats_by_time ,'hour')
+	populate_job_invocation_time_details(wf_info, job_stats_by_time,inv_stats_by_time ,'day')
+	
+
+def populate_job_invocation_time_details(wf_info, job_stats, invocation_stats ,date_time_filter):
+	"""
+	Populates the job instances and invocation time and runtime statistics sorted by time.
+	@param workflow_info the WorkflowInfo object reference 
+	@param job_stats the job statistics by time tuple
+	@param invocation_stats the invocation statisctics by time tuple
+	@param date_time_filter date time filter
+	"""
+	formatted_stats_list = plot_utils.convert_stats_to_base_time(job_stats , date_time_filter)
  	jobs_time_list =[]
-	for stats in stats_by_time:
-		content = [stats.date_format ,stats.count,stats.total_runtime]
+	for stats in formatted_stats_list:
+		content = [stats['date_format'] , stats['count'],stats['runtime']]
 		jobs_time_list.append(content)
 	wf_info.wf_job_instances_over_time_statistics[date_time_filter] = jobs_time_list
-	workflow_stats.set_transformation_filter(exclude=['condor::dagman'])
-	stats_by_time = workflow_stats.get_invocation_by_time()
+	
+	formatted_stats_list = plot_utils.convert_stats_to_base_time(invocation_stats , date_time_filter)
 	invoc_time_list = []
-	for stats in stats_by_time:
-		content = [stats.date_format ,stats.count ,stats.total_runtime]
+	for stats in formatted_stats_list:
+		content = [stats['date_format'] , stats['count'],stats['runtime']]
 		invoc_time_list.append(content)
 	wf_info.wf_invocations_over_time_statistics[date_time_filter] = invoc_time_list
 
