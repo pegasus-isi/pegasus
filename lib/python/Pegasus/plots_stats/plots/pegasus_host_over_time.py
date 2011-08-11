@@ -373,10 +373,14 @@ def create_header(workflow_stat):
 <title>"""+ workflow_stat.wf_uuid +"""</title>
 <style type ='text/css'>
 #host_chart{
-border:1px solid orange;
+border:2px solid orange;
 }
 #host_chart_footer_div{
-border:1px solid #C35617;
+border:2px solid #C35617;
+border-top-style:none;
+}
+#host_chart_legend_div{
+color:#0066CC;
 }
 .header_level1{
 font-family:"Times New Roman", Times, serif; 
@@ -463,6 +467,7 @@ var hc_curEndY =  hc_initMaxY;\n\
 var hc_xScale = pv.Scale.linear(hc_curX, hc_curEndX).range(0, hc_w-hc_nameMargin);\n\
 var hc_yScale = pv.Scale.linear(hc_curY, hc_curEndY).range(0, hc_h -hc_scaleMargin);\n\
 var hc_xLabelPos = hc_containerPanelPadding + hc_nameMargin;\n\
+var hc_LabelWidth = 200;\n\
 var hc_yLabelPos = 40;\n\
 var hc_panXFactor = 10;\n\
 var hc_panYFactor  = 10;\n\
@@ -475,7 +480,7 @@ var hc_showName = true;\n\
 var hc_headerPanelWidth = hc_w+ hc_containerPanelPadding*2;\n\
 var hc_headerPanelHeight  = 100;\n\
 var hc_footerPanelWidth = hc_w+ hc_containerPanelPadding*2;\n\
-var hc_footerPanelHeight  = "+ str(50 + len(workflow_stat.transformation_statistics_dict)/4*10) + ";\n\
+var hc_footerPanelHeight  = "+ str(75 + len(workflow_stat.transformation_statistics_dict)/3*15) + ";\n\
 </script>\n"
 	return var_str
 	
@@ -819,12 +824,12 @@ if(this.index == 0){\n\
 hc_xLabelPos = hc_containerPanelPadding + hc_nameMargin;\n\
 hc_yLabelPos = 30;\n\
 }else{\n\
-if(hc_xLabelPos + 180 > hc_w){\n\
+if(hc_xLabelPos + hc_LabelWidth > hc_w - ( hc_containerPanelPadding + hc_nameMargin )){\n\
 	hc_xLabelPos =  hc_containerPanelPadding + hc_nameMargin;\n\
-	hc_yLabelPos -=10;\n\
+	hc_yLabelPos -=15;\n\
 }\n\
 else{\n\
-hc_xLabelPos += 180;\n\
+hc_xLabelPos += hc_LabelWidth;\n\
 }\n\
 }\n\
 return hc_xLabelPos;}\n\
@@ -833,7 +838,7 @@ return hc_xLabelPos;}\n\
 return hc_yLabelPos;})\n\
 .fillStyle(function(d) hc_color[this.index])\n\
 .strokeStyle(null)\n\
-.size(30)\n\
+.size(45)\n\
 .anchor('right').add(pv.Label)\n\
 .textMargin(6)\n\
 .textAlign('left')\n\
@@ -847,15 +852,23 @@ def create_bottom_toolbar():
 	Generates the bottom toolbar html content.
 	@param workflow_stat the WorkflowInfo object reference 
 	"""
-	toolbar_content ="\n\
-<div id ='host_chart_footer_div' style='width: 1500px; margin : 0 auto;' >\n\
-<img style='float: right' src = 'images/jobstates.png'/>\n\
-<input type='checkbox' name='state' value='show condor job' onclick=\"hc_setCondorTime();\" /> show condor job [JOB_TERMINATED -SUBMIT]<br />\n\
-<input type='checkbox' name='state' value='kickstart' onclick=\"hc_setKickstart();\"/> show kickstart time <br />\n\
-<input type='checkbox' name='state' value='execute'   onclick=\"hc_setCondorRuntime();\"/> show runtime as seen by dagman [JOB_TERMINATED - EXECUTE]<br />\n\
-<input type='checkbox' name='state' value='resource'  onclick=\"hc_setResourceDelay();\"/> show resource delay  [EXECUTE -GRID_SUBMIT/GLOBUS_SUBMIT] <br/>\n\
-<div style='clear: right'></div>\n\
-</div><br/>\n" 
+	toolbar_content ="""
+<div id ='host_chart_footer_div' style='width: 1500px; margin : 0 auto;' >
+<img style='float: right' src = 'images/jobstates.png'/>
+<input type='checkbox' name='state' value='show condor job' onclick="hc_setCondorTime();" /> show condor job [JOB_TERMINATED -SUBMIT]<br />
+<input type='checkbox' name='state' value='kickstart' onclick="hc_setKickstart();"/> show kickstart time <br />
+<input type='checkbox' name='state' value='execute'   onclick="hc_setCondorRuntime();"/> show runtime as seen by dagman [JOB_TERMINATED - EXECUTE]<br />
+<input type='checkbox' name='state' value='resource'  onclick="hc_setResourceDelay();"/> show resource delay  [EXECUTE -GRID_SUBMIT/GLOBUS_SUBMIT] <br/>
+<div id = 'host_chart_legend_div'>
+	<p><b>Note</b>: Sub workflow jobs are drawn with orange border and clicking on the sub workflow job will<br/>
+	      take you to the sub workflow chart page. Failed jobs are drawn with red border. Clicking on a non <br/>
+	 	  sub workflow job will display the job information. Mous eover the bars will provided the job names.<br/>  
+	 	  Host names are marked 'Unknown' when the host name cannot be resolved by the pegasus system.
+	 </p>
+</div>
+<div style='clear: right'></div>
+</div><br/>
+	""" 
 	return toolbar_content
 
 def create_host_plot(workflow_info,output_dir):
