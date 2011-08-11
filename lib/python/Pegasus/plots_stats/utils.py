@@ -93,6 +93,16 @@ def print_sub_wf_links(wf_id_uuid_list ):
 		html_content += "\n<a href ='"+ str(wf_id_uuid.wf_uuid) +".html'>"+ str(wf_id_uuid.wf_uuid) +" - " + str(wf_id_uuid.dax_label) + "</a><br/>"
 	html_content +="\n</div>"
 	return html_content
+	
+
+def create_home_button():
+	"""
+	Utility method for creating a home button
+	"""
+	html_content ="""
+<a href="../index.html" target="_self"><img src="images/home.png" border =0 title ="Home" alt ="Home"></a>
+	"""
+	return html_content
 
 
 def convert_to_seconds(time):
