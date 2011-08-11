@@ -90,7 +90,7 @@ def print_sub_wf_links(wf_id_uuid_list ):
 	
 	html_content ="\n<div>"
 	for wf_id_uuid in wf_id_uuid_list:
-		html_content += "\n<a href ='"+ str(wf_id_uuid.wf_uuid) +".html'>"+ str(wf_id_uuid.wf_uuid) + "</a><br/>"
+		html_content += "\n<a href ='"+ str(wf_id_uuid.wf_uuid) +".html'>"+ str(wf_id_uuid.wf_uuid) +" - " + str(wf_id_uuid.dax_label) + "</a><br/>"
 	html_content +="\n</div>"
 	return html_content
 
