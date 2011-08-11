@@ -105,15 +105,21 @@ function printTransformationDetails(d){
 	alert(transformation_details);
 }
 
-function setBreakdownBy(){
-	if(breakdownByCount){
-		breakdownByCount= false;
-	}else{
-		breakdownByCount= true;
-	}
+function setBreakdownBy(isBreakdown){
+	
+	breakdownByCount= isBreakdown;
 	loadBCGraph();
 }
 
+
+function setBCChartTitle(){
+	if(breakdownByCount){
+		return "Invocation breakdown by count grouped by transformation name";
+	}else{
+		return "Invocation breakdown by runtime grouped by transformation name";
+	}
+	
+}
 
 function loadBCGraph(){
 	
@@ -172,10 +178,14 @@ def create_header(workflow_stat):
 <title>"""+ workflow_stat.wf_uuid +"""</title>
 <style type ='text/css'>
 #breakdown_chart{
-border:1px solid orange;
+border:2px solid orange;
 }
 #breakdown_chart_footer_div{
-border:1px solid orange;
+border:2px solid  #C35617;
+border-top-style:none;
+}
+#breakdown_chart_legend_div{
+color:#0066CC;
 }
 .header_level1{
 font-family:"Times New Roman", Times, serif; 
@@ -244,10 +254,11 @@ def create_variable(workflow_stat):
 	var bc_total_count  = """ + str(number_of_invocations) +""";
 	var bc_total_runtime =  """ + str(total_runtime)+""";
 	var bc_footerPanelWidth =  bc_w;
-	var bc_footerPanelHeight  =""" + str(50 + len(workflow_stat.transformation_statistics_dict)/4*10)  + """;
+	var bc_footerPanelHeight  =""" + str(75 + len(workflow_stat.transformation_statistics_dict)/4*15)  + """;
 	var bc_label_padding = 30
 	var bc_xLabelPos = bc_label_padding;
 	var bc_yLabelPos = 30;
+	var bc_labelWidth =200;
 	var breakdownByCount = true;
 	</script>"""
 	return var_str
@@ -270,7 +281,7 @@ bc_headerPanel.add(pv.Label)
 .font(function() {return 24 +'px sans-serif';})
 .textAlign('left')
 .textBaseline('bottom')
-.text('Breakdown chart');
+.text(function(){ return setBCChartTitle();});
 
 bc_headerPanel.add(pv.Label)
 	.top(80)
@@ -296,8 +307,8 @@ def create_chart_panel(workflow_stat):
 <script type="text/javascript+protovis">
 var bc_chartPanel = new pv.Panel()
 .width(bc_w)
-.height(bc_h)
-.strokeStyle('yellow');
+.height(bc_h);
+
 bc_chartPanel.def("o", -1); 
 
 var outerWedge = bc_chartPanel.add(pv.Wedge)
@@ -357,12 +368,12 @@ bc_footerPanel.add(pv.Dot)
 		bc_xLabelPos = bc_label_padding;
 		bc_yLabelPos = 30;
 	}else{
-		if(bc_xLabelPos + 180 > bc_w){
+		if(bc_xLabelPos + bc_labelWidth > bc_w - (bc_label_padding + bc_labelWidth)){
 			bc_xLabelPos =  bc_label_padding;
-			bc_yLabelPos -=10;
+			bc_yLabelPos -=15;
 		}
 		else{
-			bc_xLabelPos += 180;
+			bc_xLabelPos += bc_labelWidth;
 		}
 	}
 	return bc_xLabelPos;}
@@ -372,7 +383,8 @@ bc_footerPanel.add(pv.Dot)
 )
 .fillStyle(function(d) d.color)
 .strokeStyle(null)
-.size(30)
+.size(45)
+.event("click", function(d) printTransformationDetails(d))
 .anchor('right').add(pv.Label)
 .textMargin(6)
 .textAlign('left')
@@ -392,8 +404,11 @@ def create_bottom_toolbar():
 <div id ='breakdown_chart_footer_div' style='width: 860px; margin : 0 auto;' >
 	<div>
 		<div>Breakdown  by</div>
-		<input type='radio' name='by_filter' value='by count' onclick="setBreakdownBy();" checked/> count<br />
-		<input type='radio' name='by_filter' value='by runtime' onclick="setBreakdownBy();"/> runtime<br />
+		<input type='radio' name='by_filter' value='by count' onclick="setBreakdownBy(true);" checked/> count<br />
+		<input type='radio' name='by_filter' value='by runtime' onclick="setBreakdownBy(false);"/> runtime<br />
+	</div>
+	<div id = 'breakdown_chart_legend_div'>
+	<p><b>Note</b>: Legends can be clicked to find information corresponding to the transformation name.</p>
 	</div>
 </div>
 	"""
@@ -428,7 +443,6 @@ def create_breakdown_plot(workflow_info , output_dir):
 	str_list.append(wf_content)
 	wf_content = """
 </div>
-<br />
 """
 	str_list.append(wf_content)
 	wf_content =create_bottom_toolbar()
