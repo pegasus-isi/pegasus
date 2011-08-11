@@ -415,10 +415,14 @@ def create_header(workflow_stat):
 <title>"""+ workflow_stat.wf_uuid +""""</title>
 <style type ='text/css'>
 #gantt_chart{
-border:1px solid orange;
+border:2px solid orange;
 }
 #gantt_chart_footer_div{
-border:1px solid #C35617;
+border:2px solid #C35617;
+border-top-style:none;
+}
+#gantt_chart_legend_div{
+color:#0066CC;
 }
 .header_level1{
 font-family:"Times New Roman", Times, serif; 
@@ -506,6 +510,7 @@ var xScale = pv.Scale.linear(curX, curEndX).range(0, w-nameMargin);\n\
 var yScale = pv.Scale.linear(curY, curEndY).range(0, h -scaleMargin);\n\
 var xLabelPos = containerPanelPadding + nameMargin;\n\
 var yLabelPos = 40;\n\
+var labelWidth = 200;\n\
 var panXFactor = 10;\n\
 var panYFactor  = 10;\n\
 var isNewWindow = false;\n\
@@ -519,7 +524,7 @@ var showName = false;\n\
 var headerPanelWidth = w+ containerPanelPadding*2;\n\
 var headerPanelHeight  = 100;\n\
 var footerPanelWidth = w+ containerPanelPadding*2;\n\
-var footerPanelHeight  = "+ str(50 + len(workflow_stat.transformation_statistics_dict)/4*10) + ";\n\
+var footerPanelHeight  = "+ str(75 + len(workflow_stat.transformation_statistics_dict)/3*15) + ";\n\
 </script>\n"
 	return var_str
 	
@@ -897,12 +902,12 @@ if(this.index == 0){\n\
 xLabelPos = containerPanelPadding + nameMargin;\n\
 yLabelPos = 30;\n\
 }else{\n\
-if(xLabelPos + 180 > w){\n\
+if(xLabelPos + labelWidth > w - (containerPanelPadding + nameMargin)){\n\
 	xLabelPos =  containerPanelPadding + nameMargin;\n\
-	yLabelPos -=10;\n\
+	yLabelPos -=15;\n\
 }\n\
 else{\n\
-xLabelPos += 180;\n\
+xLabelPos += labelWidth;\n\
 }\n\
 }\n\
 return xLabelPos;}\n\
@@ -911,7 +916,7 @@ return xLabelPos;}\n\
 return yLabelPos;})\n\
 .fillStyle(function(d) color[this.index])\n\
 .strokeStyle(null)\n\
-.size(30)\n\
+.size(45)\n\
 .anchor('right').add(pv.Label)\n\
 .textMargin(6)\n\
 .textAlign('left')\n\
@@ -926,17 +931,24 @@ def create_bottom_toolbar():
 	Generates the bottom toolbar html content.
 	@param workflow_stat the WorkflowInfo object reference 
 	"""
-	toolbar_content ="\n\
-<div id ='gantt_chart_footer_div' style='width: 1500px; margin : 0 auto;' >\n\
-<img style='float: right' src = 'images/jobstates_all.png'/>\n\
-<input type='checkbox' name='state' value='show condor job' onclick=\"setCondorTime();\" /> show condor job [JOB_TERMINATED -SUBMIT]<br />\n\
-<input type='checkbox' name='state' value='kickstart' onclick=\"setKickstart();\"/> show kickstart time <br />\n\
-<input type='checkbox' name='state' value='execute'   onclick=\"setCondorRuntime();\"/> show runtime as seen by dagman [JOB_TERMINATED - EXECUTE]<br />\n\
-<input type='checkbox' name='state' value='resource'  onclick=\"setResourceDelay();\"/> show resource delay  [EXECUTE -GRID_SUBMIT/GLOBUS_SUBMIT] <br/>\n\
-<input type='checkbox' name='state' value='pre script'  onclick=\"setPreScript();\"/> show pre script time <br/>\n\
-<input type='checkbox' name='state' value='post script'  onclick=\"setPostScript();\"/> show post script time <br/>\n\
-<div style='clear: right'></div>\n\
-</div><br/>\n"
+	toolbar_content ="""
+<div id ='gantt_chart_footer_div' style='width: 1500px; margin : 0 auto;' >
+<img style='float: right' src = 'images/jobstates_all.png'/>
+<input type='checkbox' name='state' value='show condor job' onclick="setCondorTime();" /> show condor job [JOB_TERMINATED -SUBMIT]<br />
+<input type='checkbox' name='state' value='kickstart' onclick="setKickstart();"/> show kickstart time <br />
+<input type='checkbox' name='state' value='execute'   onclick="setCondorRuntime();"/> show runtime as seen by dagman [JOB_TERMINATED - EXECUTE]<br />
+<input type='checkbox' name='state' value='resource'  onclick="setResourceDelay();"/> show resource delay  [EXECUTE -GRID_SUBMIT/GLOBUS_SUBMIT] <br/>
+<input type='checkbox' name='state' value='pre script'  onclick="setPreScript();"/> show pre script time <br/>
+<input type='checkbox' name='state' value='post script'  onclick="setPostScript();"/> show post script time <br/>
+<div id = 'gantt_chart_legend_div'>
+	<p><b>Note</b>: Sub workflow jobs are drawn with orange border and clicking on the sub workflow job will<br/>
+	 	  take you to the sub workflow chart page. Failed jobs are drawn with red border. Clicking on a non <br/>
+	 	  sub workflow job will display the job information. Mouse over the bars will provided the job names.
+	</p>
+</div>
+<div style='clear: right'></div>
+</div><br/>
+	"""
 	return toolbar_content
 
 
