@@ -239,22 +239,30 @@ function resetZooming(){
 	headerPanel.render();
 }
 
-function setType(){
-	if(isJob){
-		isJob= false;
-	}else{
-		isJob= true;
-	}
+function setType(isJobSet){
+	isJob= isJobSet;
 	loadGraph();
 }
 
-function setTime(){
-	if(isHour){
-		isHour = false;
-	}else{
-		isHour = true;
-	}
+function setTime(isHourSet){
+	isHour = isHourSet;
 	loadGraph();
+}
+
+function setChartTitle(){
+	if(isJob){
+		if(isHour){
+			return "Job count/runtime grouped by hour";
+		}else{
+			return "Job count/runtime grouped by day";
+		}
+	}else{
+		if(isHour){
+			return "Invocation count/runtime grouped by hour";
+		}else{
+			return "Invocation count/runtime grouped by day";
+		}
+	}
 }
 
 function getMetaData(){
@@ -390,6 +398,7 @@ var curCountY = 0;
 var curCountEndY =  maxCount;
 var xLabelPos = containerPanelPadding + yScaleMargin;
 var yLabelPos = 40;
+var labelWidth = 200;
 var panXFactor = 10;
 var panYFactor  = 10;
 var headerPanelWidth = w+ containerPanelPadding*2;
@@ -489,7 +498,7 @@ headerPanel.add(pv.Label)
 	.font(function() {return 24 +'px sans-serif';})
 	.textAlign('left')
 	.textBaseline('bottom')
-	.text('Time chart');
+	.text(function(){ return setChartTitle();});
 
 headerPanel.add(pv.Label)
 	.top(80)
@@ -655,15 +664,15 @@ var footerPanel = new pv.Panel()
 	.data(desc)
 	.left( function(d){
 	if(this.index == 0){
-		xLabelPos = containerPanelPadding + yScaleMargin;
+		xLabelPos = containerPanelPadding +  yScaleMargin;
 		yLabelPos = 30;
 	}else{
-		if(xLabelPos + 180 > w){
+		if(xLabelPos + labelWidth > w - (containerPanelPadding + yScaleMargin+ labelWidth)){
 			xLabelPos =  containerPanelPadding + yScaleMargin;
-			yLabelPos -=10;
+			yLabelPos -=15;
 		}
 		else{
-			xLabelPos += 180;
+			xLabelPos += labelWidth;
 		}
 	}
 	return xLabelPos;}
@@ -672,7 +681,7 @@ var footerPanel = new pv.Panel()
 	return yLabelPos;})
 	.fillStyle(function(d) color[this.index])
 	.strokeStyle(null)
-	.size(30)
+	.size(45)
 	.anchor('right').add(pv.Label)
 	.textMargin(6)
 	.textAlign('left')
@@ -692,18 +701,17 @@ def create_bottom_toolbar():
 	toolbar_content ="""
 <div id ='time_chart_footer_div' style='width: 1500px; margin : 0 auto;' >
 	<div style ='float:right'>
-		<p1> Time filter </p1>
-		<br/>
-		<input type='radio' name='time_filter' value='by day' onclick="setTime();" /> by day<br />
-		<input type='radio' name='time_filter' value='by hour' onclick="setTime();" checked /> by hour<br />
+		<div> Time filter </div>
+		<input type='radio' name='time_filter' value='by day' onclick="setTime(false);" /> by day<br />
+		<input type='radio' name='time_filter' value='by hour' onclick="setTime(true);" checked /> by hour<br />
 	</div>
 	<div>
-		<p1>Type filter</p1>
-		<br/>
-		<input type='radio' name='type_filter' value='show jobs' onclick="setType();" checked/> show jobs<br />
-		<input type='radio' name='type_filter' value='show invocations' onclick="setType();"/> show invocations<br />
+		<div>Type filter</div>
+		<input type='radio' name='type_filter' value='show jobs' onclick="setType(true);" checked/> show jobs<br />
+		<input type='radio' name='type_filter' value='show invocations' onclick="setType(false);"/> show invocations<br />
 	</div>
-</div>	
+</div>
+	
 	""" 
 	return toolbar_content
 
