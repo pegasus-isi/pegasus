@@ -202,6 +202,7 @@ padding-top:25px;
 <script type='text/javascript' src='js/protovis-r3.2.js'>
 </script>
 """
+	header_str += plot_utils.create_home_button()
 	return header_str
 	
 
@@ -243,24 +244,26 @@ def create_variable(workflow_stat):
 	"""
 	number_of_invocations , total_runtime = workflow_stat.get_total_count_run_time()
 	# Adding  variables
-	var_str = """<script type='text/javascript'>
-	var bc_w = 860;
-	var bc_h = 400;
-	var bc_radius = 120;
-	var bc_centerX = bc_w/2;
-	var bc_centerY = bc_h/2;
-	var bc_headerPanelWidth =  bc_w;
-	var bc_headerPanelHeight  = 100 ;
-	var bc_total_count  = """ + str(number_of_invocations) +""";
-	var bc_total_runtime =  """ + str(total_runtime)+""";
-	var bc_footerPanelWidth =  bc_w;
-	var bc_footerPanelHeight  =""" + str(75 + len(workflow_stat.transformation_statistics_dict)/4*15)  + """;
-	var bc_label_padding = 30
-	var bc_xLabelPos = bc_label_padding;
-	var bc_yLabelPos = 30;
-	var bc_labelWidth =200;
-	var breakdownByCount = true;
-	</script>"""
+	var_str = """
+<script type='text/javascript'>
+var bc_w = 860;
+var bc_h = 400;
+var bc_radius = 120;
+var bc_centerX = bc_w/2;
+var bc_centerY = bc_h/2;
+var bc_headerPanelWidth =  bc_w;
+var bc_headerPanelHeight  = 100 ;
+var bc_total_count  = """ + str(number_of_invocations) +""";
+var bc_total_runtime =  """ + str(total_runtime)+""";
+var bc_footerPanelWidth =  bc_w;
+var bc_footerPanelHeight  =""" + str(75 + len(workflow_stat.transformation_statistics_dict)/4*15)  + """;
+var bc_label_padding = 30
+var bc_xLabelPos = bc_label_padding;
+var bc_yLabelPos = 30;
+var bc_labelWidth =200;
+var breakdownByCount = true;
+</script>
+	"""
 	return var_str
 	
 
@@ -528,6 +531,9 @@ def setup(submit_dir,out_dir,log_level):
 	plot_utils.create_directory(dest_js_path)
 	plot_utils.create_directory(dest_img_path)
 	plot_utils.copy_files(src_js_path , dest_js_path)
+	plot_utils.copy_files(src_img_path, dest_img_path)
+	# copy images from common
+	src_img_path = os.path.join(common.pegasus_home, "share/plots/images/common/")
 	plot_utils.copy_files(src_img_path, dest_img_path) 	 	
 	create_action_script(output_dir)
 

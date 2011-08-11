@@ -348,6 +348,7 @@ border:1px solid #C35617;
 <body>
 <script type="text/javascript" src="js/protovis-r3.2.js"></script>
 """
+	header_str += plot_utils.create_home_button()
 	return header_str
 	
 def create_include(workflow_stat):
@@ -803,7 +804,10 @@ def setup(submit_dir,out_dir,log_level):
 	plot_utils.create_directory(dest_js_path)
 	plot_utils.create_directory(dest_img_path)
 	plot_utils.copy_files(src_js_path , dest_js_path)
-	plot_utils.copy_files(src_img_path, dest_img_path) 	 	
+	plot_utils.copy_files(src_img_path, dest_img_path)
+	# copy images from common
+	src_img_path = os.path.join(common.pegasus_home, "share/plots/images/common/")
+	plot_utils.copy_files(src_img_path, dest_img_path) 
 	create_action_script(output_dir)
 
 
