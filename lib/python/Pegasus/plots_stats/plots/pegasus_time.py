@@ -378,7 +378,9 @@ var isHour = true;
 	var_str += "\nvar dateTimeCount =" + str(number_of_units) +";"
 	var_str += "\nvar maxRuntime =" + str( max_runtime)+";"
 	var_str += "\nvar maxCount = " + str( max_count)+";"
-	var_str +=""" 
+	var_str +="""
+maxRuntime +=  maxRuntime/10;
+maxCount += maxCount/10;
 var bar_spacing = 50;
 var single_bar_width = 20;
 var yScaleMargin  = 100;
