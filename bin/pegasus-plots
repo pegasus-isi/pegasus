@@ -204,6 +204,7 @@ clear:both;
 </style>
 </head>
 <body>
+"""+plot_utils.create_home_button()+"""
 <center>
 """
 		if isDax:
@@ -296,13 +297,21 @@ def createOuterhtml(wf_stats, wf_info,  submit_dir, output_dir , log_level ):
 <head>
 <style type ='text/css'>
 #breakdown_chart{
-border:1px solid orange;
+border:2px solid orange;
+}
+#breakdown_chart_footer_div{
+border:2px solid  #C35617;
+border-top-style:none;
 }
 #time_chart{
-border:1px solid orange;
+border:2px solid orange;
 }
 #time_chart_footer_div{
-border:1px solid #C35617;
+border:2px solid #C35617;
+border-top-style:none;
+}
+#breakdown_chart_legend_div{
+color:#0066CC;
 }
 .header_level1{
 font-family:"Times New Roman", Times, serif; 
@@ -330,10 +339,10 @@ padding-top:25px;
 		if calc_host_chart :
 			content += "<a href ='" + host_chart_parent_file + "'>Host Over Time Chart (Per workflow)</a><br/>" + NEW_LINE_STR
 		if calc_breakdown_chart:
-			content += """<a href ='#breakdown_chart_div'>Invocation Breakdown Chart (Across workflow)</a><br/>""" + NEW_LINE_STR
+			content += """<a href ='#breakdown_chart_div'>Invocation Breakdown Chart (Across workflows)</a><br/>""" + NEW_LINE_STR
 			content += "<a href ='" + breakdown_chart_parent_file + "'>Invocation Breakdown Chart (Per workflow)</a><br/>" + NEW_LINE_STR
 		if calc_time_chart :
-			content += """<a href ="#time_chart_div">Time Chart (Across workflow)</a><br/>""" + NEW_LINE_STR
+			content += """<a href ="#time_chart_div">Time Chart (Across workflows)</a><br/>""" + NEW_LINE_STR
 		if calc_dax_graph :
 			content += "<a href ='" + dax_graph_parent_file +  "'>DAX graph</a><br/>" + NEW_LINE_STR
 		if calc_dag_graph :
@@ -343,7 +352,7 @@ padding-top:25px;
 		content += plot_utils.print_property_table(wf_info.wf_env , False ,":")
 		if calc_breakdown_chart:
 			content += """
-<div id ='breakdown_chart_div' class ='header_level2'> Invocation breakdown chart (Across workflow) </div>
+<div id ='breakdown_chart_div' class ='header_level2'> Invocation breakdown chart (Across workflows) </div>
 			"""
 			populate.populate_transformation_details(wf_stats,wf_info)
 			logger.debug("Generating breakdown chart for the workflow " + title +" ... ")
@@ -352,7 +361,7 @@ padding-top:25px;
 			populate.populate_time_details(wf_stats ,wf_info)
 			logger.debug("Generating time chart for the workflow " + title +" ... ")
 			content += """
-<div id ='time_chart_div' class ='header_level2'> Time chart (Across workflow) </div>
+<div id ='time_chart_div' class ='header_level2'> Time chart (Across workflows) </div>
 			"""
 			content += pegasus_time.create_time_plot(wf_info ,time_summary_output_dir)
 		
