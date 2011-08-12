@@ -754,12 +754,15 @@ LFN_N PFN_N [site handle N]</programlisting>
           <para>Enable grid checks to see if your submit machine is GRID
           enabled.</para>
         </listitem>
-      </itemizedlist>
 
-      <para><emphasis role="bold">rundir</emphasis> Is the full qualified path
-      to the base directory containing the planned workflow dag and submit
-      files. This is optional if pegasus-run command is invoked from within
-      the run directory.</para>
+        <listitem>
+          <para><emphasis role="bold">rundir</emphasis></para>
+
+          <para>Is the full qualified path to the base directory containing
+          the planned workflow dag and submit files. This is optional if
+          pegasus-run command is invoked from within the run directory.</para>
+        </listitem>
+      </itemizedlist>
     </section>
 
     <section>
@@ -842,7 +845,87 @@ LFN_N PFN_N [site handle N]</programlisting>
   <section id="pegasus-remove">
     <title>pegasus-remove</title>
 
-    <para>pegasus-remove is used to abort a running workflow.</para>
+    <para>pegasus-remove removes a workflow that has been planned and
+    submitted using pegasus-plan and pegasus-run</para>
+
+    <section>
+      <title>SYNTAX</title>
+
+      <para>pegasus-remove [options] [rundir]</para>
+    </section>
+
+    <section>
+      <title>DESCRIPTION</title>
+
+      <para>The pegasus-remove command removes a submitted/running workflow
+      that has been planned and submitted using pegsus-plan and pegasus-run.
+      The command can be invoked either in the planned directory with no
+      options and arguments or just the full path to the run directory.</para>
+    </section>
+
+    <section>
+      <title>ARGUMENTS</title>
+
+      <para>By default pegasus-remove does not require any options or
+      arguments if invoked from within the planned workflow directory. If
+      running the command outside the workflow directory then a full path to
+      the workflow directory needs to be specified or the dagid of the
+      workflow to be removed.</para>
+
+      <para>pegasus-remove takes the following options</para>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">-d</emphasis></para>
+
+          <para><emphasis role="bold">--dagid dagid</emphasis></para>
+
+          <para>The workflow dagid to remove.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-v</emphasis></para>
+
+          <para><emphasis role="bold">--verbose</emphasis></para>
+
+          <para>Raises debug level. Each invocation increase the level by
+          1.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">rundir</emphasis></para>
+
+          <para>Is the full qualified path to the base directory containing
+          the planned workflow dag and submit files. This is optional if
+          pegasus-remove command is invoked from within the run
+          directory.</para>
+        </listitem>
+      </itemizedlist>
+    </section>
+
+    <section>
+      <title>RETURN VALUE</title>
+
+      <para>If the workflow is removed successfully pegasus-remove returns
+      with an exit code of 0. However, in case of error, a non-zero exit code
+      indicates problems. An error message clearly marks the cause.</para>
+    </section>
+
+    <section>
+      <title>ENVIRONMENT VARIABLES</title>
+
+      <para>The following environment variables are used by
+      pegasus-remove</para>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">PATH</emphasis></para>
+
+          <para>The path variable is used to locate binaries for
+          condor-rm</para>
+        </listitem>
+      </itemizedlist>
+    </section>
   </section>
 
   <section id="pegasus-status">
@@ -1730,7 +1813,7 @@ LFN_N PFN_N [site handle N]</programlisting>
 
       <para><emphasis role="bold">pegasus-transfer </emphasis>[-h | --help]
       [-l | --loglevel &lt;level&gt;] [-f | --file=&lt;input file&gt;]
-      [--max-attempts=&lt;attempts&gt;] </para>
+      [--max-attempts=&lt;attempts&gt;]</para>
     </section>
 
     <section>
