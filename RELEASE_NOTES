@@ -1,6 +1,189 @@
 $Id$
 
 ===============================
+Release Notes for PEGASUS 3.1.0
+===============================
+This is a major release of Pegasus with support for notifications and
+a redesigned backend database to store information about running jobs.
+There are updated and redesigned auxillary tools in the release
+namely
+   - pegasus-status
+   - pegasus-statistics
+   - pegasus-plots
+
+The user guide has been reorganized and now has a new user walkthrough
+and reference guide for all command line tools.
+   
+   http://pegasus.isi.edu/wms/docs/3.1/
+
+NEW FEATURES
+---------------
+
+1) Support for Notifications
+  
+  This release of Pegasus has support for workflow level and job
+  notifications. Currently, the user can annotate the DAX to specify
+  what notifications they want associated with the workflow or/and
+  individual jobs. Associating a notification with job entails
+  specifying the condition when notification should be sent, the
+  executable that needs to be invoked and the arguments with which it
+  needs to be invoked. All notifications are invoked on the submit
+  host by the monitoring daemon pegasus-monitord. The release comes
+  bundled with default notification scripts that users can use for
+  notifications. 
+
+  The DAX API's have also been updated to allow for associating
+  notifications with the jobs and the workflow.
+
+  More details about how notifications can be found here
+  http://pegasus.isi.edu/wms/docs/3.1/reference.php#notifications
+
+2) Runtime Database
+
+   The backend database schema to which pegasus-monitord populates
+   runtime information about jobs in the workflow has been
+   redesigned. Now in addition to jobs in the executable workflow,
+   information about tasks in the DAX is also tracked and can be
+   connected to the corresponding kickstart records.
+
+   Also, pegasus-monitord no longer dies on database related
+   errors. The statistics and plotting tools have in built checks that
+   will notify a user if a DB was not populated fully for a workflow
+   run. 
+
+    monitord now logs timestamps in monitord.log and monitord.done
+    files to reflect the time monitord finishes processing specific
+    sub-workflows.  
+
+   Information about the updated database schema can be found here.
+   http://pegasus.isi.edu/wms/docs/3.1/monitoring_debugging_stats.php#monitoring_pegasus-monitord
+
+3) Updated pegasus-statistics and plots
+
+   pegasus-statistics and pegasus-plots have been updated to retrive
+   all information from the runtime stampede database. pegasus plots
+   now generates plots using protoviz and generates charts showing
+   invocation breakdown, workflow gantt chart, host over time chart
+   that shows how jobs ran on various hosts and a Time chart shows job
+   instance/invocation count and runtime of the workflow run over time 
+
+   More information about updated statistics and tools can be found
+   here
+   http://pegasus.isi.edu/wms/docs/3.1/monitoring_debugging_stats.php#plotting_statistics
+
+4) Updated pegasus-status tool
+   
+   The pegasus-status tool has been reimplemented for this
+   release. The new tool shows the current state of a Condor Q and
+   formats it better. For hierarichal workflows, the tool now displays
+   jobs correctly grouped by sub workflows.
+
+   More information can be found here
+   http://pegasus.isi.edu/wms/docs/3.1/reference.php#pegasus-status
+
+5) Improved support for S3
+
+   With 3.1 release, there is a pegasus-s3 client that uses the amazon
+   api to create buckets, put and retrieve files from buckets. This
+   client has further been incorporated into pegasus-transfer . The
+   pegasus-s3 looks up a configuration file to look up connection
+   parameters and authentication tokens. The S3 config file is
+   automatically transferred to the cloud with jobs when a
+   workflow is configured to run in the S3 mode.
+
+   In the S3 mode, jobs will run in the cloud without requiring a
+   shared filesystem.
+
+   More information about S3 mode in Pegasus can be found here
+   http://pegasus.isi.edu/wms/docs/3.1/running_workflows.php#running_on_cloud
+   
+
+6) Tools now have a --conf option
+   
+   Most of the command line tools now have a --conf option that can be
+   used to pass a properties file to the tools. Properties can no
+   longer be passed to a tool using
+   -Dpegasus.properties=/path/to/props or
+   -Dpegasus.user.properties=/path/to/props 
+
+
+7) Improved rescue dag semantics for hierarchal workflows
+
+   In earlier releases, a rescue dag submission of a hierarchal
+   workflow lead to re-planning of the sub workflows even though
+   rescue dags were submitted for the sub workflows. This could create
+   problems as the re-planning resulted in the braindump files being
+   over-written and monitord attempting to load information into the
+   stampede database with a new workflow uuid.
+
+   In this release, this issue has been addressed. By default for sub
+   workflows  rescue dags are always submitted unless a --force-replan
+   option is provided to pegasus-plan. In case of replanning, now a
+   new submit directory is created for the sub workflow. The submit
+   directories for sub workflows are now symlinks that point to the
+   current submit directory for a sub workflow. This ensures that
+   there are no race conditions between monitord and the workflow
+   while populating to the database.
+
+8) Default categories for certain types of jobs.
+
+   subdax, subdag , cleanup and registration jobs now have default
+   DAGMan categories associated with them. 
+
+   JOB TYPE 	 | CATEGORY NAME 
+   --------------------------
+    dax		 | subwf 
+    dag          | subwf 
+    cleanup      | cleanup 
+    registration | registration
+
+   This allows for a user to control maxjobs for these categories
+   easily in properties by specifying
+   dagman.[CATEGORY NAME].maxjobs property
+
+    If a file based replica catalog is used, then maxjobs for
+    registration jobs is set to 1. This is to ensure, that multiple
+    registration jobs are not run at the same time. 
+
+9) pegasus-tc-client
+
+   pegasus-tc-client now displays output in the new multi line Text
+   format, rather than the old File format.
+
+   The support for the File format for the Transformation Catalog will
+   be removed in the upcoming releases.    
+
+10) Removed the requirements for specifying grid gateways in Site
+Catalog
+   
+   Grid Gateways are associated with a site in a Site Catalog to
+   designate the jobmanagers associated with a grid site. However, in
+   the case where jobs were submitted in a pure condor enviornment or
+   on a local sites ( where jobs are not submitted via jobmanagers),
+   Pegasus still required users to associate dummy grid gateways with
+   the site.  This is no longer required . The Grid Gateways need to
+   be specified only for grid sites now.
+	   
+11)Workflow metrics file in the submit directory
+
+   A workflow metrics file is created by the planner in the submit
+   directory that gives a breakdown of various jobs in the executable
+   workflow by type.
+   
+
+12) pegasus-plan is always niced
+
+    Starting with this release, pegasus-plan always nice's the
+    corresponding java invocation that launches the planner. This is
+    helpful in keeping the load on the submit host in check.
+
+13) Dropped support for VORS and MyOSG backends
+    
+    pegasus-sc-client now relies only on one backend ( OSGMM ) to
+    generate a site catalog for OSG. VORS and MyOSG are no longer
+    suppored by OSG.    
+
+===============================
 Release Notes for PEGASUS 3.0.3
 ===============================
 This is a minor release, that fixes some bugs and has minor
