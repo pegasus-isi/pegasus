@@ -1003,10 +1003,10 @@ class Workflow:
         stopped last time.
         """
         
-        if self._prefix is None:
+        if self._output_dir is None:
             my_fn = os.path.join(self._run_dir, MONITORD_STATE_FILE)
         else:
-            my_fn = os.path.join(self._prefix, "%s-%s" % (self._wf_uuid, MONITORD_STATE_FILE))
+            my_fn = os.path.join(self._output_dir, "%s-%s" % (self._wf_uuid, MONITORD_STATE_FILE))
 
         try:
             INPUT = open(my_fn, "r")
@@ -1053,10 +1053,10 @@ class Workflow:
         time is it called.
         """
 
-        if self._prefix is None:
+        if self._output_dir is None:
             my_fn = os.path.join(self._run_dir, MONITORD_STATE_FILE)
         else:
-            my_fn = os.path.join(self._prefix, "%s-%s" % (self._wf_uuid, MONITORD_STATE_FILE))
+            my_fn = os.path.join(self._output_dir, "%s-%s" % (self._wf_uuid, MONITORD_STATE_FILE))
 
         try:
             OUT = open(my_fn, "w")
@@ -1095,10 +1095,10 @@ class Workflow:
         instance of the monitoring daemon, and keeps track of the last
         time that was processed by pegasus-monitord.
         """
-        if self._prefix is None:
+        if self._output_dir is None:
             my_recover_file = os.path.join(self._run_dir, MONITORD_RECOVER_FILE)
         else:
-            my_recover_file = os.path.join(self._prefix, "%s-%s" % (self._wf_uuid,
+            my_recover_file = os.path.join(self._output_dir, "%s-%s" % (self._wf_uuid,
                                                                     MONITORD_RECOVER_FILE))
 
         if os.access(my_recover_file, os.F_OK):
@@ -1125,10 +1125,10 @@ class Workflow:
         if self._line < self._previous_processed_line:
             return
  
-        if self._prefix is None:
+        if self._output_dir is None:
             my_recover_file = os.path.join(self._run_dir, MONITORD_RECOVER_FILE)
         else:
-            my_recover_file = os.path.join(self._prefix, "%s-%s" % (self._wf_uuid,
+            my_recover_file = os.path.join(self._output_dir, "%s-%s" % (self._wf_uuid,
                                                                     MONITORD_RECOVER_FILE))
         try:
             RECOVER = open(my_recover_file, "w")
@@ -1703,7 +1703,7 @@ class Workflow:
                  workflow_config_file=None, jsd=None, root_id=None,
                  parent_id=None, parent_jobid=None, parent_jobseq=None,
                  enable_notifications=True, replay_mode=False,
-                 prefix=None, notification_list=None):
+                 output_dir=None, notification_list=None):
         """
         This function initializes the workflow object. It looks for
         the workflow configuration file (or for workflow_config_file,
@@ -1721,7 +1721,7 @@ class Workflow:
         self._enable_notifications = enable_notifications
         self._replay_mode = replay_mode
         self._notification_list = notification_list
-        self._prefix = prefix
+        self._output_dir = output_dir
 
         # Initialize other class variables
         self._wf_uuid = None
@@ -1866,11 +1866,11 @@ class Workflow:
         # Determine location of jobstate.log file
         my_jsd = (jsd or utils.jobbase)
 
-        if self._prefix is None:
+        if self._output_dir is None:
             # Make sure we have an absolute path
             self._jsd_file = os.path.join(rundir, my_jsd)
         else:
-            self._jsd_file = os.path.join(rundir, self._prefix, "%s-%s" % (self._wf_uuid, my_jsd))
+            self._jsd_file = os.path.join(rundir, self._output_dir, "%s-%s" % (self._wf_uuid, my_jsd))
 
         if not os.path.isfile(self._jsd_file):
             logger.info("creating new file %s" % (self._jsd_file))
@@ -1910,10 +1910,10 @@ class Workflow:
         self._JSDB.write("%d INTERNAL *** MONITORD_STARTED ***\n" % (self._workflow_start))
 
         # Write monitord.started file
-        if self._prefix is None:
+        if self._output_dir is None:
             my_start_file = os.path.join(self._run_dir, MONITORD_START_FILE)
         else:
-            my_start_file = os.path.join(self._prefix, "%s-%s" % (self._wf_uuid, MONITORD_START_FILE))
+            my_start_file = os.path.join(self._output_dir, "%s-%s" % (self._wf_uuid, MONITORD_START_FILE))
 
         try:
             STARTED = open(my_start_file, "w")
@@ -1924,10 +1924,10 @@ class Workflow:
             logger.error("writing %s" % (my_start_file))
 
         # Remove monitord.done file, if it is there
-        if self._prefix is None:
+        if self._output_dir is None:
             my_touch_name = os.path.join(self._run_dir, MONITORD_DONE_FILE)
         else:
-            my_touch_name = os.path.join(self._prefix, "%s-%s" % (self._wf_uuid, MONITORD_DONE_FILE))
+            my_touch_name = os.path.join(self._output_dir, "%s-%s" % (self._wf_uuid, MONITORD_DONE_FILE))
 
         try:
             os.unlink(my_touch_file)
@@ -2014,10 +2014,10 @@ class Workflow:
 
         my_workflow_end = int(time.time())
 
-        if self._prefix is None:
+        if self._output_dir is None:
             my_recover_file = os.path.join(self._run_dir, MONITORD_RECOVER_FILE)
         else:
-            my_recover_file = os.path.join(self._prefix, "%s-%s" % (self._wf_uuid,
+            my_recover_file = os.path.join(self._output_dir, "%s-%s" % (self._wf_uuid,
                                                                     MONITORD_RECOVER_FILE))
 
         print "%d - %s - MONITORD_FINISHED - %s - %s" % (my_workflow_end,
@@ -2037,10 +2037,10 @@ class Workflow:
             logger.warning("unable to remove recover file: %s" % (my_recover_file))
 
         # Write monitord.done file
-        if self._prefix is None:
+        if self._output_dir is None:
             my_touch_name = os.path.join(self._run_dir, MONITORD_DONE_FILE)
         else:
-            my_touch_name = os.path.join(self._prefix, "%s-%s" % (self._wf_uuid, MONITORD_DONE_FILE))
+            my_touch_name = os.path.join(self._output_dir, "%s-%s" % (self._wf_uuid, MONITORD_DONE_FILE))
         try:
             TOUCH = open(my_touch_name, "w")
             TOUCH.write("%s %.3f\n" % (utils.isodate(my_workflow_end),
@@ -3014,7 +3014,7 @@ class WorkflowEntry:
     delete_workflow = False		# Flag for dropping this workflow
     sleep_time = None			# Time to sleep for this workflow
 
-prefix = None                           # prefix for all files written by monitord
+output_dir = None                       # output_dir for all files written by monitord
 jsd = None				# location of jobstate.log file
 nodaemon = 0				# foreground mode
 logfile = None				# location of monitord.log file
@@ -3066,8 +3066,8 @@ parser.add_option("--keep-state", action = "store_const", const = 1, dest = "kee
                   help = "keep state across several DAGMan start/stop cycles (development option)")
 parser.add_option("--socket", action = "store_const", const = "yes", dest = "socket_enabled",
                   help = "enables a socket interface for debugging")
-parser.add_option("--prefix", "-p", action = "store", type = "string", dest = "prefix",
-                  help = "provides a prefix for all monitord log files")
+parser.add_option("-o", "--output-dir", action = "store", type = "string", dest = "output_dir",
+                  help = "provides an output directory for all monitord log files")
 parser.add_option("-v", "--verbose", action="count", default=0, dest="vb", help="Increase verbosity, repeatable")
 grp = optparse.OptionGroup(parser, "Output options")
 grp.add_option("-d", "--dest", action="store", dest="event_dest", metavar="PATH or URL",
@@ -3194,13 +3194,13 @@ if options.db_stats is not None:
     db_stats = options.db_stats
 if options.keep_state is not None:
     keep_state = options.keep_state
-if options.prefix is not None:
-    prefix = options.prefix
+if options.output_dir is not None:
+    output_dir = options.output_dir
     try:
-        if not os.path.exists(prefix):
-            os.makedirs(prefix)
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
     except:
-        logger.critical("cannot create directory %s. exiting..." % (prefix))
+        logger.critical("cannot create directory %s. exiting..." % (output_dir))
         sys.exit(1)
 if options.socket_enabled is not None:
     socket_enabled = options.socket_enabled
@@ -3240,10 +3240,10 @@ if fuse < 60:
 
 # Use default monitord logfile if user hasn't specified another file
 if logfile is None:
-    if prefix is None:
+    if output_dir is None:
         logfile = os.path.join(run, logbase)
     else:
-        logfile = os.path.join(run, prefix, logbase)
+        logfile = os.path.join(run, output_dir, logbase)
 logfile = os.path.abspath(logfile)
 
 # Check if the user-provided jsd file is an absolute path, if so, we
@@ -4334,10 +4334,10 @@ if millisleep is not None:
     logger.info("using simulation delay of %d ms" % (millisleep))
 
 # Only create server socket if asked...
-if prefix is None:
+if output_dir is None:
     sockfn = os.path.join(os.path.dirname(out), "monitord.sock")
 else:
-    sockfn = os.path.join(os.path.dirname(out), prefix, "monitord.sock")
+    sockfn = os.path.join(os.path.dirname(out), output_dir, "monitord.sock")
 if socket_enabled:
     # Create server socket for communication with site selector
     server = server_socket(49152, 65536)
@@ -4375,12 +4375,12 @@ else:
     logger.info("env: GLOBUS_LOCATION=")
 
 # Build sub-workflow retry filename
-if prefix is None:
+if output_dir is None:
     wf_retry_fn = os.path.join(run, MONITORD_WF_RETRY_FILE)
     wf_notification_fn = os.path.join(run, MONITORD_NOTIFICATION_FILE)
 else:
-    wf_retry_fn = os.path.join(run, prefix, MONITORD_WF_RETRY_FILE)
-    wf_notification_fn = os.path.join(run, prefix, MONITORD_NOTIFICATION_FILE)
+    wf_retry_fn = os.path.join(run, output_dir, MONITORD_WF_RETRY_FILE)
+    wf_notification_fn = os.path.join(run, output_dir, MONITORD_NOTIFICATION_FILE)
 
 # Empty sub-workflow retry information if in replay mode
 if replay_mode:
@@ -4413,7 +4413,7 @@ if do_notifications == True:
 wf = Workflow(run, out, database=wf_event_sink, jsd=jsd,
               enable_notifications=do_notifications,
               replay_mode=replay_mode,
-              prefix=prefix, notification_list=pending_notifications)
+              output_dir=output_dir, notification_list=pending_notifications)
 # If everything went well, create a workflow entry for this workflow
 if wf._monitord_exit_code == 0:
     workflow_entry = WorkflowEntry()
@@ -4645,7 +4645,8 @@ while (len(wfs) > 0):
                                                   parent_jobseq=parent_jobseq, root_id=root_wf_id,
                                                   jsd=jsd, replay_mode=replay_mode,
                                                   enable_notifications=do_notifications,
-                                                  prefix=prefix, notification_list=pending_notifications)
+                                                  output_dir=output_dir,
+                                                  notification_list=pending_notifications)
 
                                 if new_wf._monitord_exit_code == 0:
                                     new_workflow_entry = WorkflowEntry()
