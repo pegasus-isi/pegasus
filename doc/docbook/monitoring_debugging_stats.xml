@@ -200,10 +200,7 @@ working dir : /lfs1/work/pegasus/run0004
       <para>To resubmit an aborted or failed workflow with the same submit
       files and rescue Dag just rerun the pegasus-run command</para>
 
-      <programlisting>$ <emphasis>pegasus-run -Dpegasus.user.properties=/nfs/asd2/gmehta/PEGASUS/dags\
-/gmehta/pegasus/black-diamond/run0001/pegasus.61698.properties \
---nodatabase /nfs/asd2/gmehta/PEGASUS/dags/gmehta/pegasus/black-diamond/run0001
-</emphasis></programlisting>
+      <programlisting><emphasis role="bold">$ pegasus-run</emphasis><replacable> /Path/To/Workflow/Directory</replaceable></programlisting>
     </section>
   </section>
 
