@@ -100,7 +100,7 @@ def create_home_button():
 	Utility method for creating a home button
 	"""
 	html_content ="""
-<a href="../index.html" target="_self"><img src="images/home.png" border =0 title ="Home" alt ="Home"></a>
+<a href="../index.html" target="_self"><img src="images/home.png" width =72 height =72 border =0 title ="Home" alt ="Home"></a>
 	"""
 	return html_content
 
