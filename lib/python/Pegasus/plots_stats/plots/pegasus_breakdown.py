@@ -256,7 +256,7 @@ var bc_headerPanelHeight  = 100 ;
 var bc_total_count  = """ + str(number_of_invocations) +""";
 var bc_total_runtime =  """ + str(total_runtime)+""";
 var bc_footerPanelWidth =  bc_w;
-var bc_footerPanelHeight  =""" + str(75 + len(workflow_stat.transformation_statistics_dict)/4*15)  + """;
+var bc_footerPanelHeight  =""" + str(30 + len(workflow_stat.transformation_statistics_dict)/4*15)  + """;
 var bc_label_padding = 30
 var bc_xLabelPos = bc_label_padding;
 var bc_yLabelPos = 30;
@@ -369,7 +369,7 @@ bc_footerPanel.add(pv.Dot)
 .left( function(d){
 	if(this.index == 0){
 		bc_xLabelPos = bc_label_padding;
-		bc_yLabelPos = 30;
+		bc_yLabelPos = bc_footerPanelHeight - 15 ;
 	}else{
 		if(bc_xLabelPos + bc_labelWidth > bc_w - (bc_label_padding + bc_labelWidth)){
 			bc_xLabelPos =  bc_label_padding;
@@ -386,7 +386,7 @@ bc_footerPanel.add(pv.Dot)
 )
 .fillStyle(function(d) d.color)
 .strokeStyle(null)
-.size(45)
+.size(49)
 .event("click", function(d) printTransformationDetails(d))
 .anchor('right').add(pv.Label)
 .textMargin(6)

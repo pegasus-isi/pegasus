@@ -525,7 +525,7 @@ var showName = false;\n\
 var headerPanelWidth = w+ containerPanelPadding*2;\n\
 var headerPanelHeight  = 100;\n\
 var footerPanelWidth = w+ containerPanelPadding*2;\n\
-var footerPanelHeight  = "+ str(75 + len(workflow_stat.transformation_statistics_dict)/3*15) + ";\n\
+var footerPanelHeight  = "+ str(30 + len(workflow_stat.transformation_statistics_dict)/3*15) + ";\n\
 </script>\n"
 	return var_str
 	
@@ -901,7 +901,7 @@ footerPanel.add(pv.Dot)\n\
 .left( function(d){\n\
 if(this.index == 0){\n\
 xLabelPos = containerPanelPadding + nameMargin;\n\
-yLabelPos = 30;\n\
+yLabelPos = footerPanelHeight - 15;\n\
 }else{\n\
 if(xLabelPos + labelWidth > w - (containerPanelPadding + nameMargin)){\n\
 	xLabelPos =  containerPanelPadding + nameMargin;\n\
@@ -917,7 +917,7 @@ return xLabelPos;}\n\
 return yLabelPos;})\n\
 .fillStyle(function(d) color[this.index])\n\
 .strokeStyle(null)\n\
-.size(45)\n\
+.size(49)\n\
 .anchor('right').add(pv.Label)\n\
 .textMargin(6)\n\
 .textAlign('left')\n\

@@ -481,7 +481,7 @@ var hc_showName = true;\n\
 var hc_headerPanelWidth = hc_w+ hc_containerPanelPadding*2;\n\
 var hc_headerPanelHeight  = 100;\n\
 var hc_footerPanelWidth = hc_w+ hc_containerPanelPadding*2;\n\
-var hc_footerPanelHeight  = "+ str(75 + len(workflow_stat.transformation_statistics_dict)/3*15) + ";\n\
+var hc_footerPanelHeight  = "+ str(30 + len(workflow_stat.transformation_statistics_dict)/3*15) + ";\n\
 </script>\n"
 	return var_str
 	
@@ -823,7 +823,7 @@ hc_footerpanel.add(pv.Dot)\n\
 .left( function(d){\n\
 if(this.index == 0){\n\
 hc_xLabelPos = hc_containerPanelPadding + hc_nameMargin;\n\
-hc_yLabelPos = 30;\n\
+hc_yLabelPos = hc_footerPanelHeight -15;\n\
 }else{\n\
 if(hc_xLabelPos + hc_LabelWidth > hc_w - ( hc_containerPanelPadding + hc_nameMargin )){\n\
 	hc_xLabelPos =  hc_containerPanelPadding + hc_nameMargin;\n\
@@ -839,7 +839,7 @@ return hc_xLabelPos;}\n\
 return hc_yLabelPos;})\n\
 .fillStyle(function(d) hc_color[this.index])\n\
 .strokeStyle(null)\n\
-.size(45)\n\
+.size(49)\n\
 .anchor('right').add(pv.Label)\n\
 .textMargin(6)\n\
 .textAlign('left')\n\

@@ -668,7 +668,7 @@ var footerPanel = new pv.Panel()
 	.left( function(d){
 	if(this.index == 0){
 		xLabelPos = containerPanelPadding +  yScaleMargin;
-		yLabelPos = 30;
+		yLabelPos = footerPanelHeight-15;
 	}else{
 		if(xLabelPos + labelWidth > w - (containerPanelPadding + yScaleMargin+ labelWidth)){
 			xLabelPos =  containerPanelPadding + yScaleMargin;
@@ -684,7 +684,7 @@ var footerPanel = new pv.Panel()
 	return yLabelPos;})
 	.fillStyle(function(d) color[this.index])
 	.strokeStyle(null)
-	.size(45)
+	.size(49)
 	.anchor('right').add(pv.Label)
 	.textMargin(6)
 	.textAlign('left')
