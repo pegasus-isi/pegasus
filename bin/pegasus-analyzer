@@ -8,7 +8,7 @@ Usage: pegasus-analyzer [options]
 """
 
 ##
-#  Copyright 2007-2010 University Of Southern California
+#  Copyright 2007-2011 University Of Southern California
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ Usage: pegasus-analyzer [options]
 
 # Revision : $Revision: 2012 $
 
-# Import Python modules (some not currently needed, but included for future expansion)
+# Import Python modules
 import os
 import re
 import sys
@@ -75,6 +75,8 @@ class Job:
         self.arguments = ""		# Job's arguments
         self.initial_dir = ""		# Job's initial dir (from submit file)
         self.transfer_input_files = ""	# Files to transfer when debugging a job
+        self.retries = None             # Keep track of how many times a job is submitted
+        self.is_subdax = False          # Flag to tell if job is a SUBDAX/pegasus-plan job
         self.is_subdag = False		# Flag to tell if job is a SUBDAG job in the dag file
         self.subdag_dir = ""		# Subdag directory from a SUBDAG job in the dag file
         self.dag_path = ""		# Full path to the dag file from a SUBDAG job
@@ -101,17 +103,17 @@ dag_path = None					# Path of the dag file
 dagman_out_path = None				# Path to the dagman.out file
 jsdl_path = None				# Path of the jobstate.log file
 tsdl_path = None				# Path to monitord's log file
-temp_log = None					# Temporary log file created
+temp_dir = None					# Temporary log file created
 debug_job = None				# Path of a submit file to debug
 debug_dir = None				# Temp directory to use while debugging a job
 workflow_type = None				# Type of the workflow being debugged
 workflow_base_dir = ""				# Workflow submit_dir or dirname(jsd) from braindump file
 run_monitord = 0				# Run monitord before trying to analyze the output
 run_directory_writable = False			# Flag to indicate if we can write to the run directory
+output_dir = None                               # Output_dir for all files written by monitord
 quiet_mode = 0					# Prints out/err filenames instead of dumping their contents
 strict_mode = 0					# Gets out/err filenames from submit file
 debug_mode = 0					# Mode that enables debugging a single job
-keep_log = 0					# Keeps temporaty jobstate.log file created by monitord in /tmp directory
 print_invocation = 0				# Prints invocation command for failed jobs
 print_pre_script = 0				# Prints the SCRIPT PRE line for failed jobs, if present
 jsdl_filename = "jobstate.log"			# Default name of the log file to use
@@ -122,6 +124,24 @@ failed_jobs = []				# List of jobs that failed
 unknown_jobs = []				# List of jobs that neither succeeded nor failed
 
 # --- functions -----------------------------------------------------------------------
+
+def get_jsdl_filename(input_dir):
+    """
+    This function parses the braindump file in the input_dir,
+    retrieving the wf_uuid and assembling the filename for the
+    jobstate.log file.
+    """
+    try:
+        my_wf_params = utils.slurp_braindb(input_dir)
+    except:
+        logger.error("cannot read braindump.txt file... exiting...")
+        sys.exit(1)
+
+    if "wf_uuid" in my_wf_params:
+        return my_wf_params["wf_uuid"]+"-"+jsdl_filename
+
+    logger.error("braindump.txt does not contain wf_uuid... exiting...")
+    sys.exit(1)
 
 def create_temp_logfile(name):
     """
@@ -243,7 +263,7 @@ def parse_submit_file(my_job):
 	my_job.sub_file_parsed = True
 
 	# Check if this job includes sub workflows
-	if my_job.name.startswith("pegasus-plan") or my_job.name.startswith("subdax_"):
+	if my_job.is_subdax:
 	    has_sub_workflow = True
 	else:
 	    has_sub_workflow = False
@@ -292,6 +312,35 @@ def parse_submit_file(my_job):
                                     my_job.dagman_out = os.path.normpath(my_job.dagman_out.replace((workflow_base_dir + os.sep), '', 1))
                                     # Join with current input_dir
                                     my_job.dagman_out = os.path.join(input_dir, my_job.dagman_out)
+
+                                    # Now, figure out the correct directory, accounting for
+                                    # replanning and rescue modes
+                                    
+                                    # Split filename into dir and base names
+                                    my_dagman_dir = os.path.dirname(my_job.dagman_out)
+                                    my_dagman_file = os.path.basename(my_job.dagman_out)
+                                    my_retry = my_job.retries
+                                    if my_retry is None:
+                                        logger.warning("sub-workflow retry counter not initialized... continuing...")
+                                        continue
+
+                                    # Compose directory... assuming replanning mode
+                                    my_retry_dir = my_dagman_dir + ".%03d" % (my_retry)
+                                    # If directory doesn't exist, let's change to rescue mode
+                                    if not os.path.isdir(my_retry_dir):
+                                        logger.debug("sub-workflow directory %s does not exist, shifting to rescue mode..." % (my_retry_dir))
+                                        my_retry_dir = my_dagman_dir + ".000"
+                                        if not os.path.isdir(my_retry_dir):
+                                            # Still not able to find it, output warning message
+                                            logger.warning("sub-workflow directory %s does not exist!"
+                                                           % (my_retry_dir))
+                                            continue
+
+                                    # Found sub-workflow directory, let's compose the final path to the new dagman.out file...
+                                    my_job.dagman_out = os.path.join(my_retry_dir, my_dagman_file)
+
+
+
 		# Only parse following keys if we are running in strict mode
 		if strict_mode:
 		    # Get initial dir
@@ -389,6 +438,9 @@ def parse_dag_file(dag_fn):
 		add_job(my_job[1], "UNSUBMITTED")
 		# Get submit file information from dag file
 		jobs[my_job[1]].sub_file = os.path.join(input_dir, my_job[2])
+                if my_job[1].startswith("pegasus-plan") or my_job[1].startswith("subdax_"):
+                    # Mark job as subdax
+                    jobs[my_job[1]].is_subdax = True
 	    else:
 		logger.warn("job appears twice in dag file: %s" % (my_job[1]))
 	if line.startswith("SUBDAG EXTERNAL"):
@@ -462,6 +514,9 @@ def parse_jobstate_log(jobstate_fn):
 	if not has_seen(jobname):
 	    logger.warn("job %s not present in dag file" % (jobname))
 	    add_job(jobname, jobstate)
+            if jobname.startswith("pegasus-plan") or jobname.startswith("subdax_"):
+                # Mark job as subdax
+                jobs[jobname].is_subdax = True
 	else:
 	    # Update job state
 	    update_job_state(jobname, jobstate)
@@ -469,6 +524,11 @@ def parse_jobstate_log(jobstate_fn):
 	# Update condor id if we reached the SUBMIT state
 	if jobstate == "SUBMIT":
 	    update_job_condor_info(jobname, condor_id)
+            # Keep track of retries
+            if jobs[jobname].retries is None:
+                jobs[jobname].retries = 0
+            else:
+                jobs[jobname].retries = jobs[jobname].retries + 1
 
     # Close log file
     JSDL.close()
@@ -496,55 +556,21 @@ def find_latest_log(log_file_base):
 
     return last_log
 
-def rotate_log(source_file):
-    """
-    This function rotates a log file so that it is not overwritten.
-    """
-    if not os.access(source_file, os.F_OK):
-	# File doesn't exist, we don't have to rotate
-	return
-
-    # Now we need to find the latest log file
-
-    # We start from .000
-    sf = 0
-
-    while (sf < MAXLOGFILE):
-	dest_file = source_file + ".%03d" % (sf)
-	if os.access(dest_file, os.F_OK):
-	    # Continue to the next one
-	    sf = sf + 1
-	else:
-	    break
-
-    # Safety check to see if we have reached the maximum number of log files
-    if sf >= MAXLOGFILE:
-	logger.error("%s exists, cannot rotate log file anymore!" % (dest_file))
-	sys.exit(1)
-
-    # Now that we have source_file and dest_file, try to rotate the logs
-    try:
-	os.rename(source_file, dest_file)
-    except:
-	logger.error("cannot rename %s to %s" % (source_file, dest_file))
-	sys.exit(1)
-
-    # Done!
-    return
-
-def invoke_monitord(dagman_out_file, output_log):
+def invoke_monitord(dagman_out_file, output_dir):
     """
     This function runs monitord on the given dagman_out_file.
     """
-    monitord_cmd = "pegasus-monitord -r --no-database"
-    monitord_cmd = monitord_cmd + " -j " + output_log
+    monitord_cmd = "pegasus-monitord -r --no-events"
+    if output_dir is not None:
+        # Add output_dir, if given
+        monitord_cmd = monitord_cmd + " --output-dir " + output_dir
     monitord_cmd = monitord_cmd + " " + dagman_out_file
     logger.info("running: %s" % (monitord_cmd))
 
     try:
 	status, output = commands.getstatusoutput(monitord_cmd)
     except:
-	logger.error("could not invoke monitord")
+	logger.error("could not invoke monitord, exiting...")
 	sys.exit(1)
 
 def dump_file(file):
@@ -658,9 +684,9 @@ def print_job_info(job):
     if jobs[job].is_subdag == True:
 	print " This is a SUBDAG job:"
 	print " For more information, please run the following command:"
-	user_cmd = " %s -m -s " % (prog_base)
-	if keep_log:
-	    user_cmd = user_cmd + " -k"
+	user_cmd = " %s -s " % (prog_base)
+        if output_dir is not None:
+            user_cmd = user_cmd + " --output-dir %s" % (output_dir)
 	print "%s -f %s" % (user_cmd, jobs[job].dag_path)
 	print
 	return
@@ -685,9 +711,9 @@ def print_job_info(job):
 	# This job has a sub workflow
 	print " This job contains sub workflows!"
 	print " Please run the command below for more information:"
-	user_cmd = " %s -m " % (prog_base)
-	if keep_log:
-	    user_cmd = user_cmd + " -k"
+	user_cmd = " %s" % (prog_base)
+        if output_dir is not None:
+            user_cmd = user_cmd + " --output-dir %s" % (output_dir)
 	print "%s -d %s" % (user_cmd, os.path.split(jobs[job].dagman_out)[0])
 	print
     print
@@ -893,8 +919,8 @@ parser.add_option("-f", "--file", action = "store", type = "string", dest = "dag
 		  help = "full path to the dag file to use -- this option overrides the -d option")
 parser.add_option("-m", "-t", "--monitord", action = "store_const", const = 1, dest = "run_monitord",
 		  help = "run pegasus-monitord before analyzing the output")
-parser.add_option("-k", "--keep", action = "store_const", const = 1, dest = "keep_log",
-		  help = "keeps temporary jobstate.log file created by monitord in the /tmp directory")
+parser.add_option("-o", "--output-dir", action = "store", type = "string", dest = "output_dir",
+                  help = "provides an output directory for all monitord log files")
 parser.add_option("-q", "--quiet", action = "store_const", const = 1, dest = "quiet_mode",
 		  help = "output out/err filenames instead of their contents")
 parser.add_option("-p", "--print", action = "store", type = "string" , dest = "print_options",
@@ -927,14 +953,14 @@ if options.strict_mode is not None:
     strict_mode = options.strict_mode
 if options.quiet_mode is not None:
     quiet_mode = options.quiet_mode
-if options.keep_log is not None:
-    keep_log = options.keep_log
 if options.print_options is not None:
     my_options = options.print_options.split(",")
     if "pre" in my_options or "all" in my_options:
 	print_pre_script = 1
     if "invocation" in my_options or "all" in my_options:
 	print_invocation = 1
+if options.output_dir is not None:
+    output_dir = options.output_dir
 if options.debug_job is not None:
     debug_job = options.debug_job
     # Enables the debugging mode
@@ -975,21 +1001,29 @@ run_directory_writable = os.access(input_dir, os.W_OK)
 
 # Invoke monitord if requested
 if run_monitord:
-    if run_directory_writable:
-	# Run directory is writable, write monitord output to jobstate.log file
-	jsdl_path = os.path.join(input_dir, jsdl_filename)
-	rotate_log(jsdl_path)
-	invoke_monitord("%s.dagman.out" % (dag_path), jsdl_path)
+    if output_dir is not None:
+        # If output_dir is specified, invoke monitord with that path
+        invoke_monitord("%s.dagman.out" % (dag_path), output_dir)
+        # jobstate.log file uses wf_uuid as prefix
+        jsdl_path = os.path.join(output_dir, get_jsdl_filename(input_dir))
     else:
-	# Need to use /tmp directory for monitord output as run directory is not writable
-	jsdl_path = create_temp_logfile("jobstate")
-	if jsdl_path is None:
-	    logger.error("could not create temporaty jobstate.log file in the /tmp directory")
-	    sys.exit(1)
-	temp_log = jsdl_path
-	invoke_monitord("%s.dagman.out" % (dag_path), jsdl_path)
+        if run_directory_writable:
+            # Run directory is writable, write monitord output to jobstate.log file
+            jsdl_path = os.path.join(input_dir, jsdl_filename)
+            # Invoke monitord
+            invoke_monitord("%s.dagman.out" % (dag_path), None)
+        else:
+            # User must provide the --output-dir option
+            logger.error("%s is not writable" % (input_dir))
+            logger.error("user must specify directory for new monitord logs with the --output-dir option")
+            logger.error("exiting...")
+            sys.exit(1)
 else:
-    jsdl_path = os.path.join(input_dir, jsdl_filename)
+    if output_dir is not None:
+        # jobstate.log file uses wf_uuid as prefix and is inside output_dir
+        jsdl_path = os.path.join(output_dir, get_jsdl_filename(input_dir))
+    else:
+        jsdl_path = os.path.join(input_dir, jsdl_filename)
 
 # Compare timestamps of jsdl_path with dagman_out_path
 try:
@@ -1031,16 +1065,4 @@ print_summary()
 print "Done".center(80, '*')
 print
 print "%s: end of status report" % (prog_base)
-
-# Handle temporary log files created by pegasus-analyzer
-if temp_log is not None:
-    if keep_log:
-	print "%s: temporary monitord output kept at: %s" % (prog_base, temp_log)
-    else:
-	try:
-	    os.unlink(temp_log)
-	except:
-	    # Ignore error silently
-	    pass
-
 print
