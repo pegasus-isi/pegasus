@@ -33,6 +33,7 @@ import edu.isi.pegasus.planner.common.PegasusProperties;
 
 import edu.isi.pegasus.planner.namespace.Dagman;
 
+import edu.isi.pegasus.planner.refiner.DeployWorkerPackage;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -425,6 +426,23 @@ public class Stampede implements CodeGenerator {
         if( job.getJobType() == Job.COMPUTE_JOB ||
             job.getJobType() == Job.DAG_JOB ||
             job.getJobType() == Job.DAX_JOB ){
+
+            // untar jobs created as part of worker package staging
+            //are of type compute but we don't want
+            if( job.getLogicalID() == null || job.getLogicalID().isEmpty() ){
+                //dont warn if a job is compute and transformation name is untar
+                if( job.getJobType() == Job.COMPUTE_JOB &&
+                    job.getCompleteTCName().equals( DeployWorkerPackage.COMPLETE_UNTAR_TRANSFORMATION_NAME ) ){
+                    //dont do anything
+                    return;
+                }
+                else{
+                    //warn and return
+                    mLogger.log( "No corresponding DAX task for compute job " + job.getName() ,
+                                 LogManager.WARNING_MESSAGE_LEVEL );
+                    return;
+                }
+            }
 
 
             if( job instanceof AggregatedJob ){
