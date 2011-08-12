@@ -181,7 +181,7 @@ working dir : /lfs1/work/pegasus/run0004
 
       <para>If you want to abort your workflow for any reason you can use the
       pegasus-remove command listed in the output of pegasus-run invocation or
-      by specifiying the Dag directory for the workflow you want to
+      by specifying the Dag directory for the workflow you want to
       terminate.</para>
 
       <programlisting><emphasis role="bold">$ <emphasis role="bold">pegasus-remove </emphasis></emphasis><replaceable>/PATH/To/WORKFLOW DIRECTORY</replaceable></programlisting>
@@ -204,7 +204,7 @@ working dir : /lfs1/work/pegasus/run0004
     </section>
   </section>
 
-  <section>
+  <section id="plotting_statistics">
     <title>Plotting and Statistics</title>
 
     <para></para>
