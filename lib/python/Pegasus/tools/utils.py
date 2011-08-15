@@ -400,6 +400,9 @@ def loading_completed(run_dir):
                 if line.startswith("NL-LOAD-ERROR -->"):
                     # Found loading error... event processing was not completed
                     return False
+                if line.startswith("KICKSTART-PARSE-ERROR -->"):
+                    # Found kickstart parsing error... data not fully loaded
+                    return False
         except:
             logger.warning("could not process log file: %s" % (log_file))
 

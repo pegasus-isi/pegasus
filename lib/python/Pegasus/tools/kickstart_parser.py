@@ -26,12 +26,17 @@ Pegasus utility functions for pasing a kickstart output file and return wanted i
 # Import Python modules
 
 from xml.parsers import expat
-import sys
 import re
+import sys
+import logging
+import traceback
 
 # Regular expressions used in the kickstart parser
 re_parse_props = re.compile(r'(\S+)\s*=\s*([^",]+)')
 re_parse_quoted_props = re.compile(r'(\S+)\s*=\s*"([^"]+)"')
+
+# Get logger object (initialized elsewhere)
+logger = logging.getLogger()
 
 class Parser:
     """
@@ -350,7 +355,15 @@ class Parser:
         self._my_parser.CharacterDataHandler = self.char_data
 
         # Parse everything!
-        output = self._my_parser.Parse(buffer)
+        try:
+            output = self._my_parser.Parse(buffer)
+        except:
+            logger.warning("KICKSTART-PARSE-ERROR --> error parsing file %s"
+                           % (self._kickstart_output_file))
+            logger.warning(traceback.format_exc())
+            # close the file
+            self.close()
+            return {}
 
         # Add cwd, arguments, stdout, and stderr to keys
         if "cwd" in self._ks_elements:
