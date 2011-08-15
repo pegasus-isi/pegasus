@@ -355,16 +355,8 @@ class Parser:
         self._my_parser.CharacterDataHandler = self.char_data
 
         # Parse everything!
-        try:
-            output = self._my_parser.Parse(buffer)
-        except:
-            logger.warning("KICKSTART-PARSE-ERROR --> error parsing file %s"
-                           % (self._kickstart_output_file))
-            logger.warning(traceback.format_exc())
-            # close the file
-            self.close()
-            return {}
-
+        output = self._my_parser.Parse(buffer)
+                    
         # Add cwd, arguments, stdout, and stderr to keys
         if "cwd" in self._ks_elements:
             self._keys["cwd"] = self._cwd
@@ -451,7 +443,17 @@ class Parser:
         while my_buffer is not None:
             if self.is_invocation_record(my_buffer) == True:
                 # We have an invocation record, parse it!
-                my_reply.append(self.parse_invocation_record(my_buffer))
+                try:
+                    my_record = self.parse_invocation_record(my_buffer)
+                except:
+                    logger.warning("KICKSTART-PARSE-ERROR --> error parsing invocation record in file %s"
+                                   % (self._kickstart_output_file))
+                    logger.warning(traceback.format_exc())
+                    # Found error parsing this file, return empty reply
+                    my_reply = []
+                    # Finish the loop
+                    break
+                my_reply.append(my_record)
             elif self.is_clustered_record(my_buffer) == True:
                 # Check if we want clustered records too
                 if clustered:
