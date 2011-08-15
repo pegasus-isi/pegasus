@@ -397,10 +397,10 @@ def loading_completed(run_dir):
         try:
             LOG = open(log_file, "r")
             for line in LOG:
-                if line.startswith("NL-LOAD-ERROR -->"):
+                if line.find("NL-LOAD-ERROR -->") > 0:
                     # Found loading error... event processing was not completed
                     return False
-                if line.startswith("KICKSTART-PARSE-ERROR -->"):
+                if line.find("KICKSTART-PARSE-ERROR -->") > 0:
                     # Found kickstart parsing error... data not fully loaded
                     return False
         except:
