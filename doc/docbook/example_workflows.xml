@@ -94,12 +94,8 @@ examples/grid-blackdiamond-python/</programlisting>
       script.</para>
 
       <para>The Montage DAX is generated with a tool called
-      <filename>mDAG</filename> shipped with Montage.
-      <filename>mDAG</filename> is generating a DAX in schema 2.1 and the
-      workflow is then run with the 2.1 DAX parser using a property in
-      pegasusrc:</para>
-
-      <programlisting>pegasus.schema.dax=${pegasus.home}/etc/dax-2.1.xsd</programlisting>
+      <filename>mDAG</filename> shipped with Montage which generates the
+      workflow.</para>
     </section>
 
     <section>
@@ -140,78 +136,6 @@ examples/grid-blackdiamond-python/</programlisting>
            black diamond example 
         </xref> above, this example uses a <filename>./submit</filename>
       script.</para>
-    </section>
-
-    <section>
-      <title>Rosetta with Second Level Staging</title>
-
-      <para>This example can be found under</para>
-
-      <programlisting><filename>examples/grid-rosetta-sls/</filename></programlisting>
-
-      <para><caution>
-          <para>Second Level Staging is an experimental feature in Pegasus,
-          and is only partially implemented in the 3.0 release. The first hop
-          is not implemented, and therefore you either have to use the submit
-          host for the data staging, or manually stage into the storage server
-          you want to use</para>
-
-          <para>Intermediate data is kept on the shared filesystem at the
-          site, and outputs are staged out with separate stage out
-          jobs.</para>
-        </caution>This is similar to the previous example, except that the
-      data files are staged directly from the submit host to a local
-      filesystem on the compute node. The changes below are already in place,
-      but described to highlight the difference between the standard Pegasus
-      stageing strategy and the second level one.</para>
-
-      <para>The second level staging is enabled by some properties in
-      pegasusrc:</para>
-
-      <programlisting># turn on second level staging
-pegasus.execute.*.filesystem.local = true                                                                                     
-pegasus.transfer.stage.sls.file = false                                                                                       
-pegasus.gridstart = SeqExec          </programlisting>
-
-      <para>And by setting the <command>wntmp</command> environment variable
-      for the site in the site catalog, pointing to where the local directory
-      to use on the worker nodes:</para>
-
-      <programlisting>&lt;profile namespace="env" key="wmtmp" &gt;/condor/osg_wn_tmp&lt;/profile&gt;</programlisting>
-
-      <para>You also need to set pool="[sitehandle]" in the replica catalog.
-      When doing second level staging, this is a required hint to the Pegasus
-      planner to know what files need to be staged. This is done automatically
-      in the submit script with example result:</para>
-
-      <programlisting>minirosetta_database/Rama08.dat
-    gsiftp://yggdrasil.isi.edu/home/rynge/Pegasus/rosetta-sls/minirosetta_database/Rama08.dat
-    pool="RENCI-Engagement"
-</programlisting>
-
-      <para>Some potential issues when using second level staging:</para>
-
-      <itemizedlist>
-        <listitem>
-          <para>Not enough disk space on the local disk on the compute
-          node</para>
-        </listitem>
-
-        <listitem>
-          <para>Hard to control gridftp access pattern / bandwidth usage as
-          the workflow scales up</para>
-        </listitem>
-
-        <listitem>
-          <para>If a lot of jobs are using the same files, you will end up
-          seeing many transfers of the same file over and over again</para>
-        </listitem>
-      </itemizedlist>
-
-      <para>Just like the <xref linkend="example_black_diamond">
-           black diamond example 
-        </xref> above, this example uses a <filename>./submit</filename>
-      script</para>
     </section>
   </section>
 
@@ -308,8 +232,61 @@ requirements = ((GLIDEIN_Entry_Name == "ISIViz") || (TARGET.Pegasus_Site == "ISI
     </section>
   </section>
 
-  <section>
-    <title id="workflow_of_workflows">Workflow of Workflows</title>
+  <section id="notifications_example">
+    <title>Notifications Example</title>
+
+    <para>A new feature in Pegasus 3.1. is notifications. While the workflow
+    is running, a monitoring tool is running side by side to the workflow, and
+    issues user defined notifications when certain events takes place, such as
+    job completion or failure. See <link linkend="notifications">notifications
+    section</link> for detailed information. A workflow example with
+    notifications can be found under examples/notifications. This workflow is
+    based on the Black Diamond, with the changes being notifications added to
+    the DAX generator. For example, notifications are added at the workflow
+    level:</para>
+
+    <programlisting># Create a abstract dag
+diamond = ADAG("diamond")
+# dax level notifications
+diamond.invoke('all', os.getcwd() + "/my-notify.sh")</programlisting>
+
+    <para>The DAX generator also contains job level notifications:</para>
+
+    <programlisting># job level notifications - in this case for at_end events
+frr.invoke('at_end', os.getcwd() + "/my-notify.sh")</programlisting>
+
+    <para>These invoke lines specify that the <command>my-notify.sh</command>
+    script will be invoked for events generated (<emphasis
+    role="bold">all</emphasis> in the first case, <emphasis
+    role="bold">at_end</emphasis> in the second). The
+    <command>my-notify.sh</command> script contains callouts sample
+    notification tools shipped with Pegasus, one for email and for
+    Jabber/GTalk (commented out by default):</para>
+
+    <programlisting>#!/bin/bash
+
+# Pegasus ships with a couple of basic notification tools. Below
+# we show how to notify via email and gtalk.
+
+# all notifications will be sent to email
+# change $USER to your full email addess
+$PEGASUS_HOME/libexec/notification/email -t $USER
+
+# this sends notifications about failed jobs to gtalk.
+# note that you can also set which events to trigger on in your DAX.
+# set jabberid to your gmail address, and put in yout
+# password
+# uncomment to enable
+if [ "x$PEGASUS_STATUS" != "x" -a "$PEGASUS_STATUS" != "0" ]; then
+    $PEGASUS_HOME/libexec/notification/jabber --jabberid FIXME@gmail.com \
+                                              --password FIXME \
+                                              --host talk.google.com
+fi
+</programlisting>
+  </section>
+
+  <section id="workflow_of_workflows">
+    <title>Workflow of Workflows</title>
 
     <section>
       <title>Galactic Plane</title>
