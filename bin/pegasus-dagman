@@ -78,14 +78,12 @@ def monitord_launch():
     monitord_bin = find_exec("pegasus-monitord")
     if monitord_bin != None :
         try :
-            log = open('monitord-launch.out', 'a')
             monitord_proc = subprocess.Popen(
                         [monitord_bin, 
                           "-N",
                           os.getenv('_CONDOR_DAGMAN_LOG')],
-                        stdout=log, 
-                        stderr=subprocess.STDOUT)
-                                                 
+                        stdout=sys.stdout, 
+                        stderr=sys.stderr)
             logger.info("Launched Monitord with Pid %d" % monitord_proc.pid)
             return monitord_proc
         except OSError, err :
