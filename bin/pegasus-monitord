@@ -828,7 +828,7 @@ class Workflow:
             self._sink.send(event, kwargs)
         except:
             # Error sending this event... disable the sink from now on...
-            logger.warning("NL-LOAD-ERROR --> %s - %s" % (self.wf_uuid,
+            logger.warning("NL-LOAD-ERROR --> %s - %s" % (self._wf_uuid,
                                                           ((self._dax_label or "unknown") +
                                                            "-" + (self._dax_index or "unknown"))))
             logger.warning("error sending event: %s --> %s" % (event, kwargs))
