@@ -765,7 +765,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
   </section>
 
   <xi:include href="configuration.xml"
-      xmlns:xi="http://www.w3.org/2001/XInclude" />
+              xmlns:xi="http://www.w3.org/2001/XInclude" />
 
   <section>
     <title>Execution Environments</title>
@@ -1698,21 +1698,14 @@ local-condor pegasus::dirmanager /path/on/submithost/pegasus/bin/dirmanager INST
       <section>
         <title>Using S3 for intermediate files</title>
 
-        <note>
-          <para>This section describes how to use the legacy support for S3
-          that exists in Pegasus 2.4.x and 3.0. In Pegasus 3.1, support for S3
-          will be added to pegasus-transfer.</para>
-        </note>
-
         <para>This section will show you how to use S3 to store intermediate
         files. In this mode, Pegasus transfers workflow inputs from the input
         site to S3 if they are not already in S3. When a job runs, the inputs
         for that job are fetched from S3 to the worker node, the job is
         executed, then the output files are transferred from the worker node
-        back to S3. Finally, at the end of the workflow, the desired outputs
-        are transferred from S3 to the output site. This is similar to how
-        second-level staging works (SLS), and, in fact, the current S3
-        implementation is an extension of SLS.</para>
+        back to S3. This is similar to how second-level staging works (SLS),
+        and, in fact, the current S3 implementation is an extension of
+        SLS.</para>
 
         <para>In order to use S3 for your workflows, you need to first create
         a config file for the S3 transfer client, s3cmd. This config file
@@ -1755,45 +1748,51 @@ verbosity = WARNING</programlisting>
         <para>Next, you need to modify your site catalog to tell s3cmd the
         path to your config file. You can do this by specifying an environment
         variable called S3CFG using an 'env' profile. This needs to be added
-        to both the 'local' site, and any execution sites where you want to
-        use S3. This environment variable will be used by s3cmd in the S3
-        transfer jobs to locate the config file.</para>
+        to both the '<emphasis role="bold">local</emphasis>' site, and any
+        execution sites where you want to use S3. This environment variable
+        will be used by s3cmd in the S3 transfer jobs to locate the config
+        file.</para>
 
         <programlisting>&lt;profile namespace="env" key="S3CFG"&gt;/local/path/to/s3cmd.cfg&lt;/profile&gt;</programlisting>
 
         <para>Next, you need to update your pegasus.properties file to tell
-        Pegasus to turn on SLS, to use S3 for first and second-level staging,
-        and to create and delete buckets. The pegasus.gridstart property tells
-        pegasus to use seqexec, which allows the application jobs to be
-        wrapped with S3 PUT and GET commands to retrieve and store input and
-        output data.</para>
+        Pegasus to turn on S3 mode. This will tell Pegasus to use S3 instead
+        of rgular shared filesystem. </para>
 
-        <programlisting>pegasus.execute.*.filesystem.local = true       # Turn on second-level staging (SLS)
-pegasus.transfer.*.impl = S3                    # Use S3 for first-level staging
-pegasus.transfer.sls.*.impl = S3                # Use S3 for second-level staging
-pegasus.transfer.sls.s3.stage.sls.file = false  # Do not transfer .sls files
-pegasus.dir.create.impl = S3                    # Create buckets in S3
-pegasus.file.cleanup.impl = S3                  # Delete buckets from S3
-pegasus.gridstart = SeqExecOld                  # Use the old seqexec implementation</programlisting>
+        <programlisting>pegasus.data.configuration = S3</programlisting>
 
-        <para>Next, you need to add an entry for amazon::s3cmd in your
-        transformation catalog. The s3cmd executable is in the
-        PEGASUS_HOME/bin directory.</para>
-
-        <programlisting>local   amazon::s3cmd    /path/to/pegasus/bin/s3cmd    INSTALLED   INTEL32::LINUX  NULL
-ec2     amazon::s3cmd    /path/to/pegasus/bin/s3cmd    INSTALLED   INTEL32::LINUX  NULL</programlisting>
+        <para>
+          <note>
+            <para>The current S3 support does not work mixing storage
+            solutions. Once S3 mode is turned on, Pegasus shared file system
+            mode is turned off. For example, you currently can not use S3 and
+            iRods storage at the same time.</para>
+          </note>
+        </para>
 
         <para>Finally, if you want to use an existing bucket to store your
         data in S3 add this to your site catalog entry (replacing the existing
         workdirectory):</para>
 
-        <programlisting>&lt;workdirectory&gt;existing-bucket&lt;/workdirectory&gt;</programlisting>
+        <programlisting>&lt;scratch&gt;
+  &lt;shared&gt;
+    &lt;file-server protocol="s3" url="s3://user@amazon" mount-point="/<emphasis
+            role="bold">existing-bucket</emphasis>"/&gt;
+    &lt;internal-mount-point mount-point="/<emphasis role="bold">existing-bucket</emphasis>"/&gt;
+  &lt;/shared&gt;
+&lt;/scratch&gt;
+</programlisting>
 
         <para>Otherwise, you can have Pegasus create a new bucket for each
         workflow by adding this to your site catalog entry (again, replacing
         any existing workdirectory):</para>
 
-        <programlisting>&lt;workdirectory&gt;/&lt;/workdirectory&gt;</programlisting>
+        <programlisting>&lt;scratch&gt;
+  &lt;shared&gt;
+    &lt;file-server protocol="s3" url="s3://user@amazon" mount-point="/"/&gt;
+    &lt;internal-mount-point mount-point="/"/&gt;
+  &lt;/shared&gt;
+&lt;/scratch&gt;</programlisting>
       </section>
     </section>
   </section>
