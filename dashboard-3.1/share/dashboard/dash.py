@@ -12,7 +12,8 @@ import uuid
 import sqlalchemy as sa
 from netlogger.analysis.workflow import stampede_statistics as sstat
 
-DB_URL = 'sqlite:///sample.db'
+#DB_URL = 'sqlite:///sample.db'
+DB_URL = 'sqlite:////Users/dang/Logs/Stampede/run0005/Stampede-Test-0.stampede.db'
 g_engine =  sa.create_engine(DB_URL)
 
 def json_header():
@@ -34,57 +35,48 @@ def find_workflows(engine, dburl, label=None, submit_host=None, user=None,
                    grid_dn=None):
     # Get list of workflows
     conn = engine.connect()
-    qstr = "select wf_id, wf_uuid, dax_label from workflow" # XXX: ignore filters
+    qstr = "select wf_id, root_wf_id, wf_uuid, dax_label from workflow" # XXX: ignore filters
     result = conn.execute(qstr)
-    wf_list, workflows = [ ], { }
+    workflows = { }
     # Build workflow summary info for each workflow
-    for wf_id, wf_uuid, label in result:
-        stats = sstat.StampedeStatistics(dburl, True)
-        stats.set_job_filter('nonsub')
+    for wf_id, root_wf_id, wf_uuid, label in result:
+        do_expand = wf_id == root_wf_id # only expand root workflows
+        stats = sstat.StampedeStatistics(connString=dburl, expand_workflow=do_expand)
         stats.initialize(wf_uuid)
+        stats.set_job_filter('all')
         ttl = stats.get_total_tasks_status()
         succ = stats.get_total_succeeded_tasks_status()
         fail = stats.get_total_failed_tasks_status()
         retry = stats.get_total_tasks_retries()
-        parent_wf_id = None
+        try:
+            wallclock = float(stats.get_submit_side_job_wall_time()),
+        except TypeError:
+            wallclock = 0
         datum = {
             'id': wf_uuid,
             'name' : label,
-            'pid': parent_wf_id,
+            'pid': root_wf_id,
             'running' : True,
             'restarted' : stats.get_workflow_retries(),
-            'wallclock' : float(stats.get_submit_side_job_wall_time()),
+            'wallclock' : wallclock,
             'jobs': {
                 'total' : ttl, 'successful': succ , 'failed': fail,
                 'restarted': retry, 'queued': ttl - retry - succ - fail },
-            'subwf' : [ ],
-            'children' : [ ] }
-        wf_list.append(datum)
+            'subwf' : [ ] }
         workflows[wf_id] = datum
-    # Put list of children in all parents
-    for wf_id in workflows:
-        parent = datum['pid']
-        if workflows.has_key(parent):
-            workflows[parent]['children'].append(wf_id)
-    # Recursively nest workflows in a list
-    wf_list = [ ]
-    while workflows:
-        for wf_id, datum in workflows.items():
-            n = len(datum['children'])
-            # If all children are filled in (including zero of them),
-            # then add this workflow to its parent or at the top-level. 
-            if n == len(datum['subwf']):
-                if datum['pid']:
-                    # Add to parent
-                    workflows['subwf'].append(datum)
-                else:
-                    # Add to top-level list
-                    wf_list.append(datum)
-                # Delete workflow from working set
-                del workflows[wf_id]
-    # Return the (nested) list of workflows
-    #print("@@ wf_list="+str(wf_list))
-    return wf_list
+        stats.close()
+    # Nest children under parents
+    delete_later = [ ]
+    for wfid, datum in workflows.iteritems():
+        parent_id = datum['pid']
+        if parent_id == wfid:
+            pass # root, nothing to do
+        else:
+            workflows[parent_id]['subwf'].append(datum)
+            delete_later.append(wfid)
+    for wfid in delete_later:
+        del workflows[wfid]
+    return workflows.values()
 
 def get_max_ts(engine):
     result = 0.0
