@@ -527,13 +527,13 @@ def main():
 			help = "writes the output to given directory.")
 	parser.add_option("-c","--conf", action = "store", type = "string", dest = "config_properties",
 			  help = "specifies the properties file to use. This option overrides all other property files.")
-	parser.add_option("-m", "--max_graph_nodes", action = "store", type = "int", dest = "max_graph_nodes",
+	parser.add_option("-m", "--max-graph-nodes", action = "store", type = "int", dest = "max_graph_nodes",
 		  help = "Maximum limit on the number of tasks/jobs in the dax/dag upto which the graph should be generated; Default value is 100")
-	parser.add_option("-p", "--plotting_level", action = "store", dest = "plotting_level",
+	parser.add_option("-p", "--plotting-level", action = "store", dest = "plotting_level",
 			choices=['all', 'all_charts', 'all_graphs' ,'dax_graph', 'dag_graph','gantt_chart','host_chart','time_chart','breakdown_chart' ],
 			help = "specifies the chart and graphs to generate. Valid levels are: all,all_charts, all_graphs, dax_graph,\
 					dag_graph,gantt_chart,host_chart,time_chart, breakdown_chart; Default is all_charts.")
-	parser.add_option("-i", "--ignore_db_inconsistency", action = "store_const", const = 0, dest = "ignore_db_inconsistency",
+	parser.add_option("-i", "--ignore-db-inconsistency", action = "store_const", const = 0, dest = "ignore_db_inconsistency",
 			help = "turn off the check for db consistency")
 	parser.add_option("-v", "--verbose", action="count", default=0, dest="verbose", 
 			help="Increase verbosity, repeatable")
