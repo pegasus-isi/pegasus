@@ -383,21 +383,74 @@ JOB    analyze_ID00004    on_success /bin/date
           <para>PEGASUS_STATUS: For workflow notifications, this contains
           DAGMan's exit code. For job and invocation notifications, this field
           contains the exit code for the particular job/task. Please note that
-          this field is not present for 'start' notification events. </para>
+          this field is not present for 'start' notification events.</para>
         </listitem>
       </itemizedlist>
     </section>
   </section>
 
   <section>
-    <title>Default Notification Scripts [Mats]</title>
+    <title>Default Notification Scripts</title>
 
-    <para></para>
-  </section>
+    <para>Pegasus ships with two reference notification scripts. These can be
+    used as starting point when creating your own notification scripts, or if
+    the default one is all you need, you can use them directly in your
+    workflows. The scripts are:</para>
 
-  <section>
-    <title>Notification Example [Mats]</title>
+    <itemizedlist>
+      <listitem>
+        <para><emphasis role="bold">libexec/notification/email</emphasis> -
+        sends email, including the output from
+        <command>pegasus-status</command> (default) or
+        <command>pegasus-analyzer</command>.</para>
 
-    <para></para>
+        <screen><emphasis role="bold">$ ./libexec/notification/email --help</emphasis>
+Usage: email [options]
+
+Options:
+  -h, --help            show this help message and exit
+  -t TO_ADDRESS, --to=TO_ADDRESS
+                        The To: email address. Defines the recipient for the
+                        notification.
+  -f FROM_ADDRESS, --from=FROM_ADDRESS
+                        The From: email address. Defaults to the required To:
+                        address.
+  -r REPORT, --report=REPORT
+                        Include workflow report. Valid values are: none
+                        pegasus-analyzer pegasus-status (default)
+</screen>
+      </listitem>
+
+      <listitem>
+        <para><emphasis role="bold">libexec/notification/jabber </emphasis>-
+        sends simple notifications to Jabber/GTalk. This can be useful for job
+        failures.</para>
+
+        <screen><emphasis role="bold">$ ./libexec/notification/jabber --help</emphasis>
+Usage: jabber [options]
+
+Options:
+  -h, --help            show this help message and exit
+  -i JABBER_ID, --jabberid=JABBER_ID
+                        Your jabber id. Example: user@jabberhost.com
+  -p PASSWORD, --password=PASSWORD
+                        Your jabber password
+  -s HOST, --host=HOST  Jabber host, if different from the host in your jabber
+                        id. For Google talk, set this to talk.google.com
+  -r RECIPIENT, --recipient=RECIPIENT
+                        Jabber id of the recipient. Not necessary if you want
+                        to send to your own jabber id
+</screen>
+      </listitem>
+    </itemizedlist>
+
+    <para>For example, if the DAX generator is written in Python and you want
+    notifications on 'at_end' events (successful or failed):</para>
+
+    <programlisting># job level notifications - in this case for at_end events
+job.invoke('at_end', pegasus_home + "/libexec/notifications/email --to me@somewhere.edu")</programlisting>
+
+    <para>Please see the <link linkend="notifications_example">notifications
+    example</link> to see a full workflow using notifications.</para>
   </section>
 </section>
