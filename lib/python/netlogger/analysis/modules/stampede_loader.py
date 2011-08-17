@@ -16,7 +16,7 @@ the Stampede DB.
 
 See http://www.sqlalchemy.org/ for details on SQLAlchemy
 """
-__rcsid__ = "$Id: stampede_loader.py 28254 2011-08-09 14:58:05Z mgoode $"
+__rcsid__ = "$Id: stampede_loader.py 28283 2011-08-16 17:49:15Z mgoode $"
 __author__ = "Monte Goode"
 
 from netlogger.analysis.schema.stampede_schema import *
@@ -359,7 +359,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         
         for host in self._batch_cache['host_map_events']:
             self.map_host_to_job_instance(host)
-            
+        
         for ee in end_event:
             self.flushCaches(ee)
         end_event = []
@@ -389,6 +389,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
                 event.merge_to_db(self.session)
             else:
                 event.commit_to_db(self.session)
+            self.session.expunge(event)
         except exceptions.IntegrityError, e:
             self.log.error('individual_commit', msg='Insert failed for event %s : %s' % (event,e))
             self.session.rollback()

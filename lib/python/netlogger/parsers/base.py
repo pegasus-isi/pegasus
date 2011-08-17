@@ -473,7 +473,8 @@ class NLSimpleParser(DoesLogging):
     This is important to allow the BaseParser to itself parse 
     netlogger input.
     """
-    E1 = re.compile('\s*([a-zA-Z][a-zA-Z0-9._\-]*)=([^"]\S*|"[^"]*")\s*')
+#    E1 = re.compile('\s*([a-zA-Z][a-zA-Z0-9._\-]*)=([^"]\S*|"[^"]*")\s*')
+    E1 = re.compile('\s*([a-zA-Z][a-zA-Z0-9._\-]*)=([^"]\S*|["](?:\\\["]|[^"])+["])\s*')
     E2 = re.compile('(\s*)[a-zA-Z][a-zA-Z0-9._\-]*=(?:[^"]\S*|"[^"]*")(\s*)')
 
     def __init__(self, verify=False, parse_date=True, strip_quotes=True):
