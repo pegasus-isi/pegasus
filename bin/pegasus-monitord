@@ -2507,7 +2507,7 @@ class Workflow:
             kwargs["ip"] = record["hostaddr"]
         else:
             # Don't know what the ip address is
-            kwargs["ip_address"] = "unknown"
+            kwargs["ip"] = "unknown"
         if "resource" in record:
             kwargs["site"] = record["resource"]
         else:
@@ -2650,6 +2650,19 @@ class Workflow:
             # If we don't have any records, we only generate 1 task
             self.db_send_task_start(my_job, "MAIN_JOB", my_task_id)
             self.db_send_task_end(my_job, "MAIN_JOB", my_task_id)
+
+            # parse_kickstart will be False for subdag jobs
+            if my_job._exec_job_id.startswith("subdax_") or not parse_kickstart:
+                # For dag and subdax jobs, we also generate a host event
+                record = {}
+                record["hostname"] = socket.getfqdn()
+                try:
+                    record["hostaddr"] = socket.gethostbyname(socket.getfqdn())
+                except:
+                    record["hostaddr"] = "unknown"
+                record["resource"] = my_job._site_name
+                # Send event to the database
+                self.db_send_host_info(my_job, record)
 
     def add_job(self, jobid, job_state, sched_id=None):
         """
