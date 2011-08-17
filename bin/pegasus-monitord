@@ -1982,6 +1982,7 @@ class Workflow:
                     self.output_to_db(my_event, my_keys)
             except:
                 logger.critical("error processing static bp file %s, exiting..." % (self._static_bp_file))
+                logger.critical(traceback.format_exc())
                 sys.exit(1)
             # Close static bp file
             try:
@@ -3020,7 +3021,6 @@ nodaemon = 0				# foreground mode
 logfile = None				# location of monitord.log file
 millisleep = None			# emulated run mode delay
 adjustment = 0				# time zone adjustment (@#~! Condor)
-fuse = 60				# maximum wait for each plotting subscript
 
 # Parse command line options
 prog_usage = "usage: %s [options] workflow.dag.dagman.out" % (prog_base)
@@ -3034,10 +3034,6 @@ parser.add_option("-N", "--foreground", action = "store_const", const = 2, dest 
 		  help = "(Condor) don't daemonize %s; go through motions as if" % (prog_base))
 parser.add_option("-n", "--no-daemon", action = "store_const", const = 1, dest = "nodaemon",
 		  help = "(debug) don't daemonize %s; keep it in the foreground" % (prog_base))
-parser.add_option("--show", action = "store_const", const = 1, dest = "doplot",
-		  help = "create diagrams of workflow upon normal exit")
-parser.add_option("--fuse", action = "store", type = "int", dest = "fuse",
-		  help = "maximum wait for each plotting subscript, default %d s" % (fuse))
 parser.add_option("-j", "--job", action = "store", type = "string", dest = "jsd",
 		  help = "alternative job state file to write, default is %s in the workflow's directory"
 		  % (utils.jobbase))
@@ -3121,12 +3117,6 @@ if "properties" in top_level_wf_params:
 props = properties.Properties()
 props.new(config_file=options.config_properties, rundir_propfile=top_level_prop_file)
 
-# Parse plotting-related properties
-doplot = utils.make_boolean(props.property("pegasus.monitord.show"))
-fuse = int(props.property("pegasus.monitord.fuse") or 300)
-if fuse < 60:
-    fuse = 60
-
 # Parse notification-related properties
 if int(props.property("pegasus.monitord.notifications.timeout") or -1) >= 0:
     notifications_timeout = int(props.property("pegasus.monitord.notifications.timeout"))
@@ -3156,10 +3146,6 @@ if options.adjustment is not None:
     adjustment = options.adjustment
 if options.nodaemon is not None:
     nodaemon = options.nodaemon
-if options.doplot is not None:
-    doplot = options.doplot
-if options.fuse is not None:
-    fuse = options.fuse
 if options.jsd is not None:
     jsd = options.jsd
 if options.logfile is not None:
@@ -3233,10 +3219,6 @@ else:
     if props.property("pegasus.monitord.encoding") is not None:
         # Get encoding from property
         encoding = props.property("pegasus.monitord.encoding")
-
-# Sanity check
-if fuse < 60:
-    fuse = 60
 
 # Use default monitord logfile if user hasn't specified another file
 if logfile is None:
@@ -4769,12 +4751,6 @@ if do_notifications == True:
         service_notifications()        
         time.sleep(SLEEP_WAIT_NOTIFICATION)
     logger.info("finishing notifications... done!")
-
-# Try to run the hurricane graphics
-if doplot:
-    pass
-else:
-    logger.info("skipping plots")
 
 # done
 logger.info("finishing, exit with 0")
