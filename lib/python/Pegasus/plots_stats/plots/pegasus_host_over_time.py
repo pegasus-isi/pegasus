@@ -481,7 +481,7 @@ var hc_showName = true;\n\
 var hc_headerPanelWidth = hc_w+ hc_containerPanelPadding*2;\n\
 var hc_headerPanelHeight  = 100;\n\
 var hc_footerPanelWidth = hc_w+ hc_containerPanelPadding*2;\n\
-var hc_footerPanelHeight  = "+ str(30 + len(workflow_stat.transformation_statistics_dict)/3*15) + ";\n\
+var hc_footerPanelHeight  = "+ str(45 + len(workflow_stat.transformation_statistics_dict)/3*15) + ";\n\
 </script>\n"
 	return var_str
 	

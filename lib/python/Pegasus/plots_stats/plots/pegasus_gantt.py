@@ -525,7 +525,7 @@ var showName = false;\n\
 var headerPanelWidth = w+ containerPanelPadding*2;\n\
 var headerPanelHeight  = 100;\n\
 var footerPanelWidth = w+ containerPanelPadding*2;\n\
-var footerPanelHeight  = "+ str(30 + len(workflow_stat.transformation_statistics_dict)/3*15) + ";\n\
+var footerPanelHeight  = "+ str(45 + len(workflow_stat.transformation_statistics_dict)/3*15) + ";\n\
 </script>\n"
 	return var_str
 	
