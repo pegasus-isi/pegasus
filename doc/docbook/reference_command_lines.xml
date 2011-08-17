@@ -1452,8 +1452,8 @@ LFN_N PFN_N [site handle N]</programlisting>
 
       <para><emphasis role="bold">pegasus-statistics</emphasis> &lt;submit
       directory&gt; [-h | --help] [-o | --output &lt;output directory&gt;] [-c
-      | --conf &lt;property file path&gt;] [-p | --statistics_level level_str]
-      [-t | --time_filter filter_str] [-i | --ignore_db_inconsistency] [-v |
+      | --conf &lt;property file path&gt;] [-p | --statistics-level level_str]
+      [-t | --time-filter filter_str] [-i | --ignore-db-inconsistency] [-v |
       --verbose] [-q | --quiet]</para>
     </section>
 
@@ -1508,7 +1508,7 @@ LFN_N PFN_N [site handle N]</programlisting>
         <listitem>
           <para><emphasis role="bold">-s level_str</emphasis></para>
 
-          <para><emphasis role="bold">--statistics_level
+          <para><emphasis role="bold">--statistics-level
           level_str</emphasis></para>
 
           <para>Specifies the statistics information to generate. Valid levels
@@ -1568,7 +1568,7 @@ LFN_N PFN_N [site handle N]</programlisting>
         <listitem>
           <para><emphasis role="bold">-t filter_str</emphasis></para>
 
-          <para><emphasis role="bold">--time_filter
+          <para><emphasis role="bold">--time-filter
           filter_str</emphasis></para>
 
           <para>Specifies the time filter to group the time statistics. Valid
@@ -1579,7 +1579,7 @@ LFN_N PFN_N [site handle N]</programlisting>
           <para><emphasis role="bold">-i </emphasis></para>
 
           <para><emphasis
-          role="bold">--ignore_db_inconsistency</emphasis></para>
+          role="bold">--ignore-db-inconsistency</emphasis></para>
 
           <para>Turns off the the check for database consistency.</para>
         </listitem>
@@ -1634,8 +1634,8 @@ LFN_N PFN_N [site handle N]</programlisting>
 
       <para><emphasis role="bold">pegasus-statistics</emphasis> &lt;submit
       directory&gt; [-h | --help] [-o | --output &lt;output directory&gt;] [-c
-      | --conf &lt;property file path&gt;] [-m | --max_graph_nodes max_value]
-      [-p | --plotting_level level_str] [-i | --ignore_db_inconsistency] [-v |
+      | --conf &lt;property file path&gt;] [-m | --max-graph-nodes max_value]
+      [-p | --plotting-level level_str] [-i | --ignore-db-inconsistency] [-v |
       --verbose] [-q | --quiet]</para>
     </section>
 
@@ -1689,7 +1689,7 @@ LFN_N PFN_N [site handle N]</programlisting>
         <listitem>
           <para><emphasis role="bold">-m max_value</emphasis></para>
 
-          <para><emphasis role="bold">--max_graph_nodes
+          <para><emphasis role="bold">--max-graph-nodes
           max_value</emphasis></para>
 
           <para>Maximum limit on the number of tasks/jobs in the dax/dag upto
@@ -1699,7 +1699,7 @@ LFN_N PFN_N [site handle N]</programlisting>
         <listitem>
           <para><emphasis role="bold">-p level_str</emphasis></para>
 
-          <para><emphasis role="bold">--plotting_level
+          <para><emphasis role="bold">--plotting-level
           level_str</emphasis></para>
 
           <para>Specifies the charts and graphs to generate. Valid levels are:
@@ -1771,7 +1771,7 @@ LFN_N PFN_N [site handle N]</programlisting>
           <para><emphasis role="bold">-i </emphasis></para>
 
           <para><emphasis
-          role="bold">--ignore_db_inconsistency</emphasis></para>
+          role="bold">--ignore-db-inconsistency</emphasis></para>
 
           <para>Turns off the the check for database consistency.</para>
         </listitem>
