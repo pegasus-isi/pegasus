@@ -45,8 +45,6 @@ import edu.isi.pegasus.planner.common.RunDirectoryFilenameFilter;
 
 import edu.isi.pegasus.planner.refiner.MainEngine;
 
-import edu.isi.pegasus.planner.refiner.createdir.WindwardImplementation;
-
 
 import edu.isi.pegasus.planner.parser.dax.Callback;
 import edu.isi.pegasus.planner.parser.DAXParserFactory;
@@ -1763,15 +1761,6 @@ public class CPlanner extends Executable{
         Set<String> toLoad = new HashSet<String>( sites );
         toLoad.add( "local" );
 
-        /* add the windward allegro graph site if reqd
-         * a kludge for time being 
-         */
-        //figure out some allegro graph stuff
-        Properties p = mProps.matchingSubset( WindwardImplementation.ALLEGRO_PROPERTIES_PREFIX, false  );
-        String site = p.getProperty( "site" );
-        if( site != null ){
-            toLoad.add( site );
-        }
         
         /* load the sites in site catalog */
         try{

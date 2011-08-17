@@ -42,13 +42,6 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
 
-import edu.isi.ikcap.workflows.ac.ProcessCatalog;
-import edu.isi.ikcap.workflows.ac.classes.TransformationCharacteristics;
-
-import edu.isi.ikcap.workflows.sr.util.PropertiesHelper;
-
-import edu.isi.ikcap.workflows.sr.util.WorkflowGenerationProvenanceCatalog;
-
 
 import java.util.List;
 import java.util.Map;
@@ -57,7 +50,6 @@ import java.util.LinkedList;
 import java.util.Iterator;
 import java.util.Comparator;
 import java.util.Collections;
-import java.util.Properties;
 import edu.isi.pegasus.planner.classes.Profile;
 
 
@@ -173,10 +165,6 @@ public class Algorithm {
     private PegasusProperties mProps;
 
     //TANGRAM related variables
-    /**
-     * The handle to the workflow provenance catalog
-     */
-    private WorkflowGenerationProvenanceCatalog mWGPC;
 
     /**
      * The request id associated with the DAX.
@@ -188,10 +176,6 @@ public class Algorithm {
      */
     private String mLabel;
 
-    /**
-     * The handle to the Process Catalog.
-     */
-    private ProcessCatalog mProcessCatalog;
 
     /**
      * The handle to the transformation catalog.
@@ -213,13 +197,6 @@ public class Algorithm {
         mSiteStore = bag.getHandleToSiteStore();
         mAverageCommunicationCost = (this.AVERAGE_BANDWIDTH / this.AVERAGE_DATA_SIZE_BETWEEN_JOBS);
 
-        mProcessCatalog = this.loadProcessCatalog( mProps.getProperty( this.PROCESS_CATALOG_IMPL_PROPERTY ),
-                                                   mProps.matchingSubset( this.PROCESS_CATALOG_IMPL_PROPERTY, false )
-                                                   );
-
-        //to figure out a way to insantiate SWF
-        //Varun needs to write out a factory
-        mWGPC = new WorkflowGenerationProvenanceCatalog( true );
     }
 
 
@@ -241,47 +218,6 @@ public class Algorithm {
 
 
 
-    /**
-     * Load the process catalog, only if it is determined that the Transformation
-     * Catalog description is the windward one.
-     *
-     * @param type  the type of process catalog
-     * @param props contains all necessary data to establish the link.
-     *
-     * @return true if connected now, or false to indicate a failure.
-     */
-    protected ProcessCatalog loadProcessCatalog( String type, Properties props ) {
-        ProcessCatalog result = null;
-
-        return result;
-
-        //The Windward backend for Transformation Catalog is no longer
-        //supported in Pegasus 3.0
-        /*
-        //only load process catalog if TC implementation loaded is of type windward.
-        if( ! (mTCHandle instanceof Windward ) ) {
-            return result;
-        }
-
-        //figure out how to specify via properties
-        try{
-            result = PropertiesHelper.getPCFactory().getPC(
-				PropertiesHelper.getDCDomain(), 
-				PropertiesHelper.getPCDomain(), null);
-            
-            //String requestID = mProps.getWingsRequestID();
-            if( mRequestID == null ){
-                throw new RuntimeException( "Specify the request id by specifying pegasus.wings.request.id property" );
-            }
-            result.setRequestId( mRequestID );
-		
-        }catch( Exception e ){
-            mLogger.log( "Unable to connect to process catalog " + e,
-                         LogManager.DEBUG_MESSAGE_LEVEL );
-        }
-        return result;
-         */
-    }
 
 
     /**
@@ -651,7 +587,7 @@ public class Algorithm {
 
     /**
      * Return expected runtime from the AC only if the process catalog is
-     * initialized.
+     * initialized. Since Pegasus 3.0 release it always returns -1.
      *
      * @param job    the job in the workflow.
      * @param entry  the TC entry
@@ -660,22 +596,7 @@ public class Algorithm {
      */
     protected double getExpectedRuntimeFromAC( Job job, TransformationCatalogEntry entry  ){
         double result = -1;
-        if( mProcessCatalog == null ){
-            return result;
-        }
-        //fetch the job information first
-        List tcs =  mProcessCatalog.getPredictedPerformance(
-                          mWGPC.getJobInformation( mRequestID, mLabel, job.getLogicalID() ),
-                          entry.getResourceId(),
-                          entry.getVDSSysInfo().getArch().toString()
-                              );
-
-
-        mLogger.log( "Predicted performance for job " + job.getID() + " is " + tcs,
-                     LogManager.DEBUG_MESSAGE_LEVEL );
-        return tcs == null || tcs.isEmpty()?
-               result:
-               (Double)((( TransformationCharacteristics )tcs.get(0)).getCharacteristic( TransformationCharacteristics.EXPECTED_RUNTIME ));
+        return result;
     }
 
     /**
