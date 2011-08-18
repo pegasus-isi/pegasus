@@ -3492,6 +3492,10 @@ def process_dagman_out(wf, log_line):
             # groups = script, jobid
             my_script = my_expr.group(1).upper()
             my_jobid = my_expr.group(2)
+            if my_script == "PRE":
+                # Special case for PRE_SCRIPT_TERMINATED, as Condor
+                # does not generate a PRE_SCRIPT_TERMINATED ULOG event
+                add(wf, my_jobid, "PRE_SCRIPT_TERMINATED")
             if re_parse_script_successful.search(log_line) is not None:
                 # Remember success with artificial jobstate
                 add(wf, my_jobid, "%s_SCRIPT_SUCCESS" % (my_script), status=0)
