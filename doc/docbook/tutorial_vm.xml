@@ -18,7 +18,7 @@ Text like this is the output you should get.</computeroutput></programlisting>
   <para>For example:</para>
 
   <programlisting><command>$ date</command><computeroutput>
-Wed Nov 24 14:47:59 PST 2010
+Wed Jun 24 14:47:59 PST 2011
 </computeroutput></programlisting>
 
   <section>
@@ -62,13 +62,13 @@ Length: 1,336,554,492 (1.2G) [application/x-bzip2]
 
           <para>If you have gnu tar you can do this directly</para>
 
-          <programlisting><emphasis role="bold">$ gtar jxvf Pegasus-3.1.0-Debian-6-x86.vbox.tar.bz2</emphasis></programlisting>
+          <programlisting><emphasis role="bold">$ gtar jxvf Pegasus-3.1-Debian-6-x86.vbox.tar.bz2</emphasis></programlisting>
 
           <para>Else you need to do the following</para>
 
-          <programlisting><emphasis role="bold">$ bunzip2 Pegasus-3.1.0-Debian-6-x86.vbox.tar.bz2
+          <programlisting><emphasis role="bold">$ bunzip2 Pegasus-3.1-Debian-6-x86.vbox.tar.bz2
 
-$ tar xvf Pegasus-3.1.0-Debian-6-x86.vbox.tar</emphasis></programlisting>
+$ tar xvf Pegasus-3.1-Debian-6-x86.vbox.tar</emphasis></programlisting>
 
           <para>After untarring a folder named<emphasis role="bold">
           Pegasus-3.1.0-Debian-6-x86.vbox</emphasis> will be created that has
@@ -125,9 +125,13 @@ $ tar xvf Pegasus-3.1.0-Debian-6-x86.vbox.tar</emphasis></programlisting>
 
         <listitem>
           <para>In the VM Name and OS Type Window specify the name as<emphasis
-          role="bold"> PegasusVM-3.1</emphasis>.1 Select the <emphasis
-          role="bold">Operating System as Linux </emphasis>and <emphasis
-          role="bold">Version as Debian </emphasis>. Click Continue.</para>
+          role="bold"> PegasusVM-3.1</emphasis>.</para>
+        </listitem>
+
+        <listitem>
+          <para>Select the <emphasis role="bold">Operating System as
+          Linux</emphasis>and <emphasis role="bold">Version as
+          Debian</emphasis>. Click Continue.</para>
         </listitem>
 
         <listitem>
@@ -143,7 +147,7 @@ $ tar xvf Pegasus-3.1.0-Debian-6-x86.vbox.tar</emphasis></programlisting>
         </listitem>
 
         <listitem>
-          <para>Click Done</para>
+          <para>Click Done.</para>
         </listitem>
 
         <listitem>
@@ -371,7 +375,7 @@ statfile_20080505_143233_14944.tbl
      gsiftp://pegasus-vm/scratch/tutorial/inputdata/0.2degree/statfile.tbl 
           pool="local"
 
-...</computeroutput></programlisting></para>
+</computeroutput></programlisting></para>
           </listitem>
         </itemizedlist>
       </section>
@@ -394,8 +398,7 @@ statfile_20080505_143233_14944.tbl
         /scratch/tutorial/inputdata/diamond/f.a . Let us insert a single entry
         into the replica catalog.</para>
 
-        <programlisting><command>$  pegasus-rc-client  insert f.a \
-          gsiftp://pegasus-vm/scratch/tutorial/inputdata/diamond/f.a pool=local
+        <programlisting><command>$  cat 
 </command></programlisting>
 
         <para>Let us know verify if f.a has been registered successfully by
@@ -592,7 +595,6 @@ pimages_20080505_143233_14944.tbl
   &lt;profile namespace="env" key="LD_LIBRARY_PATH" &gt;/opt/globus/default/lib&lt;/profile&gt;
   &lt;profile namespace="env" key="PEGASUS_HOME" &gt;/opt/pegasus/default&lt;/profile&gt;
  &lt;/site&gt;
-
 &lt;/sitecatalog&gt;
  
 </computeroutput></programlisting>
@@ -643,7 +645,6 @@ pimages_20080505_143233_14944.tbl
 2011.07.29 12:44:33.847 PDT:   Writing out properties to /home/tutorial/pegasus-wms/./pegasus.526913080507226851.properties 
 2011.07.29 12:44:33.854 PDT: [INFO]  Time taken to execute is 2.083 seconds 
 2011.07.29 12:44:33.854 PDT: [INFO] event.pegasus.planner planner.version 3.1.0  - FINISHED
-
 
 </computeroutput></programlisting>
       </section>
@@ -846,6 +847,7 @@ tr mShrink:3.0 {
                 type "STAGEABLE"
         }
 }
+
 </programlisting>
       </section>
 
@@ -1024,6 +1026,7 @@ tr mShrink:3.0 {
           type "STAGEABLE"
      }
 }
+
 </computeroutput></programlisting>
           </listitem>
         </itemizedlist>
@@ -1264,6 +1267,7 @@ pegasus-analyzer: initializing...
 **************************************Done**************************************
 
 pegasus-analyzer: end of status report
+
 </programlisting>
         </listitem>
 
@@ -1276,7 +1280,7 @@ pegasus-analyzer: end of status report
 
 1290676248 INTERNAL *** MONITORD_STARTED ***
 1290676247 INTERNAL *** DAGMAN_STARTED 339.0 ***
-[..]</computeroutput></programlisting> In the starting of the jobstate.log,
+...</computeroutput></programlisting> In the starting of the jobstate.log,
           when the workflow has just started running you will see a lot of
           entries with status UN_READY. That designates that DAGMan has just
           parsed in the .dag file and has not started working on any job as
@@ -1312,7 +1316,8 @@ pegasus-analyzer: end of status report
 1290676552 register_local_2_0 POST_SCRIPT_SUCCESS 0 local - 8
 1290676552 INTERNAL *** DAGMAN_FINISHED 0 ***
 1290676554 INTERNAL *** MONITORD_FINISHED 0 ***
-</computeroutput></programlisting> Looking at the last two lines we see that
+
+</computeroutput></programlisting>Looking at the last two lines we see that
           DAGMan finished, and pegasus-monitord finished successfully with a
           status 0. This means workflow ran successfully. Congratulations you
           ran your workflow on the local site successfully. The workflow
@@ -1799,7 +1804,6 @@ pegasus-analyzer: end of status report
 
             <programlisting><command>$ cat $HOME/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run0001/blackdiamond-0.dag</command><computeroutput>
 
-
 ######################################################################
 # PEGASUS WMS GENERATED DAG FILE
 # DAG blackdiamond
@@ -1995,8 +1999,6 @@ Job 2788.0 marked for removal</computeroutput></programlisting>
       <para>In this section, we will generate statistics and plots of the
       diamond workflow we ran using pegasus-statistics and
       pegasus-plots</para>
-
-      <para></para>
 
       <section>
         <title>Generating Statistics Using pegasus-statistics</title>
@@ -2202,7 +2204,7 @@ Time statistics                   : /home/tutorial/pegasus-wms/dags/tutorial/peg
               <row>
                 <entry align="center">Job</entry>
 
-                <entry align="center">Num</entry>
+                <entry align="center">Try</entry>
 
                 <entry align="center">Site</entry>
 
@@ -2528,7 +2530,7 @@ Time statistics                   : /home/tutorial/pegasus-wms/dags/tutorial/peg
 
         <programlisting><emphasis role="bold">$ cd $HOME/pegasus-wms 
 
-$ pegasus-plots dags/tutorial/pegasus/blackdiamond/run0001/</emphasis>
+$ pegasus-plots -p all dags/tutorial/pegasus/blackdiamond/run0001/</emphasis>
 
 **********************************************SUMMARY***********************************************
 
@@ -2542,9 +2544,25 @@ Graphs and charts generated by pegasus-plots can be viewed by opening the genera
         <para></para>
 
         <section>
+          <title>Home Page</title>
+
+          <para>/home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run0001/plots/index.html</para>
+
+          <figure>
+            <title>Figure: Home Page</title>
+
+            <mediaobject>
+              <imageobject>
+                <imagedata fileref="images/tutorial-blackdiamond-home.png" />
+              </imageobject>
+            </mediaobject>
+          </figure>
+        </section>
+
+        <section>
           <title>Abstract Worfklow / DAX Image</title>
 
-          <para>/home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run0001/graph/diamond-dax.png</para>
+          <para>/home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run0001/plots/dax_graph/</para>
 
           <figure>
             <title>Figure: Black Diamond DAX Image</title>
@@ -2560,7 +2578,7 @@ Graphs and charts generated by pegasus-plots can be viewed by opening the genera
         <section>
           <title>Executable Workflow / DAG Image</title>
 
-          <para>/home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run0001/graph/blackdiamond-dag.png</para>
+          <para>/home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run0001/plots/dag_graph/</para>
 
           <figure>
             <title>Figure: Black Diamond DAG Image</title>
@@ -2617,9 +2635,9 @@ Graphs and charts generated by pegasus-plots can be viewed by opening the genera
         </section>
 
         <section>
-          <title>Time chart</title>
+          <title>Invocation Beakdown chart</title>
 
-          <para>/home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run0001/plots/time_chart/</para>
+          <para>/home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run0001/plots/breakdown_chart/</para>
 
           <para><emphasis role="bold">X axis </emphasis>- time (seconds),
           count (seconds).</para>
@@ -2628,11 +2646,11 @@ Graphs and charts generated by pegasus-plots can be viewed by opening the genera
           (seconds).</para>
 
           <figure>
-            <title>Figure: Time Chart of Workflow Execution</title>
+            <title>Figure: Invocation Breakdown Chart</title>
 
             <mediaobject>
               <imageobject>
-                <imagedata fileref="images/tutorial-blackdiamond-time.png"
+                <imagedata fileref="images/tutorial-blackdiamond-invocation.png"
                            format="PNG" remap="" width="1000" />
               </imageobject>
             </mediaobject>
