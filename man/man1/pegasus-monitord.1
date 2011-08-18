@@ -14,7 +14,7 @@
 .\"
 .\" 
 .\" $Id$
-.TH "pegasus-monitord" "1" "3.0" "Pegasus Monitoring Daemon"
+.TH "pegasus-monitord" "1" "3.1" "Pegasus Monitoring Daemon"
 .SH "NAME"
 .LP 
 pegasus\-monitord \- tracks a workflow progress, mining information
@@ -26,13 +26,21 @@ pegasus\-monitord \- tracks a workflow progress, mining information
 .br
 .B [\-\-no-daemon|\-n] [\-\-job|\-j jobstate.log file]
 .br
-.B [\-\-log|\-l logfile] [\-\-config|\-C config_opts]
+.B [\-\-log|\-l logfile] [\-\-conf properties file]
 .br
-.B [\-\-no\-recursive] [\-\-no\-database] [\-\-replay|\r]
+.B [\-\-no\-recursive] [\-\-no\-database | \-\-no\-events]
+.br
+.B [\-\-replay|\-r] [\-\-no\-notifications]
+.br
+.B [\-\-notifications\-max max_notifications]
+.br
+.B [\-\-notifications\-timeout timeout]
 .br
 .B [\-\-sim|\-s millisleep] [\-\-db\-stats]
 .br
-.B [\-\-dest|\-d URL] [\-\-encoding|\-e bp | bson]
+.B [\-\-socket] [\-\-output\-dir | \-o dir]
+.br
+.B [\-\-dest|\-d PATH or URL] [\-\-encoding|\-e bp | bson]
 .br
 .B DAGMan output file
 .br
@@ -44,6 +52,9 @@ dagman.out file. In addition to generating the jobstate.log file,
 can also be used mine information from the workflow
 dag file and jobs' submit and output files, and either populate a
 database or write a NetLogger events file with that information.
+.B "pegasus\-monitord"
+can also perform notifications when tracking
+a workflow's progress in real-time.
 .SH "ARGUMENTS"
 .TP
 .B \-\-help | \-h
@@ -116,13 +127,16 @@ only generates one
 .I logfile
 per execution (and not one per workflow and sub-workflow it tracks).
 .TP
-.B \-\-config | \-C config_opts
-.I config_opts
-are in the
+.B \-\-conf
+.I properties_file
+is an alternative file containing properties in the
 .I key=value
-format, and allow users to override values read from the braindump.txt
-file. This option should be used carefully, as it will apply not only
-to the main workflow, but also to all sub-workflows found.
+format, and allows users to override values read from the
+.I braindump.txt
+file. This option has precedence over the properties file specified in the
+.I braindump.txt
+file. Please note that these properties will apply not only to 
+the main workflow, but also to all sub-workflows found.
 .TP
 .B \-\-no\-recursive
 This options disables
@@ -145,15 +159,50 @@ This option is used to replay the output of an already finished
 workflow. It should only be used after the workflow is finished (not
 necessarily successfully). If a
 .I jobstate.log
-file is found, it will be rotated. However, if a database file is found,
-all references to the workflow (and all its sub-workflows) will be erased
-from it (unless the
-.B \-\-no\-database
-option is specified). When running in replay mode, 
+file is found, it will be rotated. However, when using a database,
+all previous references to that workflow (and all its sub-workflows)
+will be erased from it. When outputing to a bp file, the file
+will be deleted. When running in replay mode, 
 .B "pegasus\-monitord"
 will always run with the 
 .B \-\-no\-daemon
-option, and any errors will be output directly to the terminal.
+option, and any errors will be output directly to the terminal. Also,
+.B "pegasus\-monitord"
+will not process any notifications while in replay mode.
+.TP
+.B \-\-no\-notifications
+This options disables notifications completely, making
+.B "pegasus\-monitord"
+ignore all the .notify files for all workflows it tracks.
+.TP
+.B \-\-notifications\-max max_notifications
+This option sets the maximum number of concurrent notifications that
+.B "pegasus\-monitord"
+will start. When the
+.I max_notifications
+limit is reached,
+.B "pegasus\-monitord"
+will queue notifications and wait for a pending notification
+script to finish before starting a new one. If
+.I max_notifications
+is set to 0, notifications will be disabled.
+.TP
+.B \-\-notifications\-timeout timeout
+Normally,
+.B "pegasus\-monitord"
+will start a notification script and wait indefinitely for it to finish.
+This option allows users to set up a maximum
+.I timeout
+that
+.B "pegasus\-monitord"
+will wait for a notification script to finish before terminating it.
+If notification scripts do not finish in a reasonable amount of time,
+it can cause other notification scripts to be queued due to
+the maximum number of concurrent scripts allowed by
+.B "pegasus\-monitord."
+Additionally, until all notification scripts finish,
+.B "pegasus\-monitord"
+will not terminate.
 .TP
 .B \-\-sim | \-s millisleep
 This option simulates delays between reads, by sleeping
@@ -165,6 +214,42 @@ This option causes the database module to collect and print database
 statistics at the end of the execution. It has no effect if the
 .B \-\-no\-database
 option is given.
+.TP
+.B \-\-socket
+This option causes
+.B "pegasus\-monitord"
+to start a socket interface that can be used for advanced debugging.
+The port number for connecting to
+.B "pegasus\-monitord"
+can be found in the
+.I monitord.sock
+file in the workflow directory (the file is deleted when
+.B "pegasus\-monitord"
+finishes).
+If not already started, the socket interface is also created when
+.B "pegasus\-monitord"
+receives a 
+.I USR1
+signal.
+.TP
+.B \-\-ouput\-dir | \-o dir
+When this option is given,
+.B "pegasus\-monitord"
+will create all its output files in the directory specified by
+.I dir.
+This option is useful for allowing a user to debug a workflow in a
+directory the user does not have write permissions.
+In this case, all files generated by
+.B "pegasus\-monitord"
+will have the workflow
+.I wf_uuid
+as a prefix so that files from multiple sub-workflows can
+be placed in the same directory. This option is mainly used by
+.B "pegasus\-analyzer."
+It is important to note that the location for the output BP file
+or database is not changed by this option and should be set via the
+.B \-\-dest
+option.
 .TP
 .B \-\-dest | \-d URL [<scheme>]<params>
 This option allows users to specify the destination for the log events
@@ -278,9 +363,9 @@ $ pegasus_monitord -r --no-database diamond-0.dag.dagman.out
 .LP
 will do the same thing, but without generating any log events.
 .TP
-$ pegasus_monitord -r --no-database --dest `pwd`/diamond-0.bp diamond-0.dag.dagman.out
+$ pegasus_monitord -r --dest `pwd`/diamond-0.bp diamond-0.dag.dagman.out
 .LP
-will turn on NetLogger's logging API and create the file
+will create the file
 .B diamond-0.bp
 in the current directory, containing
 NetLogger events with all the workflow data. This is in addition to the

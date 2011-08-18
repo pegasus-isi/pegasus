@@ -14,7 +14,7 @@
 .\"
 .\" 
 .\" $Id$
-.TH "pegasus-analyzer" "1" "3.0" "Pegasus Analyzer"
+.TH "pegasus-analyzer" "1" "3.1" "Pegasus Analyzer"
 .SH "NAME"
 .LP 
 pegasus\-analyzer \- debug a workflow.
@@ -22,7 +22,9 @@ pegasus\-analyzer \- debug a workflow.
 .TP 17 
 .B pegasus\-analyzer [\-\-help|\-h] [\-\-quiet|\-q] [\-\-strict|\-s]
 .br
-.B [\-\-monitord|\-m|\-t] [\-\-keep|\-k] [\-\-debug level]
+.B [\-\-monitord|\-m|\-t] [\-\-debug level]
+.br
+.B [\-\-output\-dir|\-o output_dir]
 .br
 .B [\-\-file|\-f dag_filename] [\-\-dir|\-d|\-i input_dir]
 .br
@@ -57,14 +59,20 @@ Invoke
 .B "pegasus\-monitord"
 before analyzing the
 .I jobstate.log
-file. As
+file. Although
 .B "pegasus\-analyzer"
-is supposed to be executed after the workflow has already completed
+can be executed during the workflow execution as well as
+after the workflow has already completed
 execution,
 .B "pegasus\-monitord"
-will be invoked the
+is always invoked with the
 .B --replay
-option. If the 
+option. Since multiple instances of
+.B "pegasus\-monitord"
+should not be executed simultanesouly in the same workflow directory,
+the user should ensure that no other instances of
+.B "pegasus\-monitord" are running.
+If the 
 .I run_directory
 is writable,
 .B "pegasus\-analyzer"
@@ -75,27 +83,11 @@ file there, rotating an older log, if it is found. If the
 is not writable (e.g. when the user debugging the workflow is not the
 same user that ran the workflow), 
 .B "pegasus\-analyzer"
-will invoke
+will exit and ask the user to provide the
+.B \-\-output\-dir
+option, in order to provide an alternative location for
 .B "pegasus\-monitord"
-with the
-.B \-j
-option pointing to a temporary log file in the
-.I /tmp
-directory.
-.TP
-.B \-\-keep | \-k
-This option keeps a temporary log file created as a result of the
-.B \-\-monitord
-option (see above) after
-.B "pegasus\-analyzer"
-is completed. Without this option, 
-.B "pegasus\-analyzer"
-will delete the temporary
-.I jobstate.log
-before it exits. With this option,
-.B "pegasus\-analyzer"
-will output the temporary filename at the end, so that users know
-where to look.
+log files.
 .TP
 .B \-\-debug level
 Sets the log level for
@@ -113,6 +105,35 @@ If omitted, the default
 .I level
 will be set to
 .IR "WARNING" .
+.TP
+.B \-\-output\-dir | \-o output_dir
+This option provides an alternative location for all monitoring log files
+for a particular workflow. It is mainly used when an user does not have
+write privileges to a workflow directory and needs to generate the log
+files needed by
+.B "pegasus\-analyzer."
+If this option is used in conjunction with the
+.B \-\-monitord
+option, it will invoke
+.B "pegasus\-monitord"
+using
+.I output_dir
+to store all output files. Because workflows can have sub\-workflows,
+.B "pegasus\-monitord"
+will create its files prepending the workflow
+.I wf_uuid
+to each filename. This way, multiple workflow files can be stored in the
+same directory.
+.B "pegasus\-analyzer"
+has built\-in logic to find the specific
+.I jobstate.log
+file by looking at the workflow
+.I braindump.txt
+file first and figuring out the corresponding
+.I wf_uuid.
+If
+.I output_dir
+does not exist, it will be created.
 .TP
 .B \-\-file | \-f dag_filename
 In this option,
@@ -255,22 +276,26 @@ categories.
 
 ******************Failed jobs' details**********************
 
-===================preprocess_ID0000001=====================
+=======================findrange_j3=========================
 
   last state: POST_SCRIPT_FAILURE
-        site: futuregrid
- submit file: /home/user/diamond\-submit/preprocess_ID0000001.sub
- output file: /home/user/diamond\-submit/preprocess_ID0000001.out.000
-  error file: /home/user/diamond\-submit/preprocess_ID0000001.err.000
+        site: local
+ submit file: /home/user/diamond\-submit/findrange_j3.sub
+ output file: /home/user/diamond\-submit/findrange_j3.out.000
+  error file: /home/user/diamond\-submit/findrange_j3.err.000
 
--------------preprocess_ID0000001.out.000-------------------
+--------------------Task #1 - Summary-----------------------
 
-
--------------preprocess_ID0000001.err.000-------------------
+ site        : local
+ hostname    : server-machine.domain.com
+ executable  : (null)
+ arguments   : -a findrange -T 60 -i f.b2 -o f.c2
+ error       : 2
+ working dir : 
 
 .LP
 In the example above, the
-.I preprocess_ID0000001
+.I findrange_j3
 job has failed, and the analyzer displays information about the job,
 showing that the job finished with a
 .I POST_SCRIPT_FAILURE
@@ -280,17 +305,20 @@ showing that the job finished with a
 .I output
 and
 .I error
-files for this job. Also, because
+files for this job. Whenever 
 .B "pegasus\-analyzer"
-was not run with the
+detects that the output file contains a kickstart record, it will
+display the breakdown containing each task in the job (in this case we
+only have one task). Because
+.B "pegasus\-analyzer"
+was not invoked with the
 .B \-\-quiet
-flag, 
-.B "pegasus\-analyzer"
-will also show the contents of the
+flag, it will also display the contents of the
 .I output
 and
 .I error
-files (in this case both files are empty).
+files (or the stdout and stderr sections of the kickstart record), which
+in this case are both empty.
 .LP
 In the case of
 .I SUBDAG
@@ -301,21 +329,27 @@ jobs,
 will indicate it, and show the command needed for the user to debug
 that sub-workflow. For example:
 
-=================pegasus-plan_ID000009=====================
+=================subdax_black_ID000009=====================
 
-  last state: EXECUTE
+  last state: JOB_FAILURE
         site: local
- submit file: /home/user/run1/pegasus-plan_ID000009.sub
- output file: /home/user/run1/pegasus-plan_ID000009.out
-  error file: /home/user/run1/pegasus-plan_ID000009.err
+ submit file: /home/user/run1/subdax_black_ID000009.sub
+ output file: /home/user/run1/subdax_black_ID000009.out
+  error file: /home/user/run1/subdax_black_ID000009.err
   This job contains sub workflows!
   Please run the command below for more information:
-  pegasus-analyzer -m  -d /home/user/run1/data/tile0001
+  pegasus-analyzer -d /home/user/run1/blackdiamond_ID000009.000
+
+-----------------subdax_black_ID000009.out-----------------
+
+Executing condor dagman ...
+
+-----------------subdax_black_ID000009.err-----------------
+
 
 tells the user the
-.I pegasus\-plan_ID000009
-sub-workflow did not finish, and that it can be debugged by using the
-indicated
+.I subdax_black_ID000009
+sub-workflow failed, and that it can be debugged by using the indicated
 .B "pegasus\-analyzer"
 command.
 .SH "SEE ALSO"
