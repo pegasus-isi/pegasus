@@ -68,13 +68,29 @@ public class Escape
    */
   public Escape( String escapable, char escape )
   { 
+    this( escapable, escape, true );
+  }
+
+  
+  /**
+   * Constructs arbitrary escaping rules.
+   *
+   * @param escapable is the set of characters that require escaping
+   * @param escape is the escape character itself.
+   * @param escapeEscape boolean indicating whether escape character itself
+   *                     should be escaped if not present in escapable.
+   */
+  public Escape( String escapable, char escape , boolean escapeEscape )
+  { 
     m_escape = escape;
     m_escapable = escapable;
 
-    // ensure that the escape character is part of the escapable char set
-    if ( escapable.indexOf(escape) == -1 ) m_escapable += m_escape; 
+    if( escapeEscape ){
+        // ensure that the escape character is part of the escapable char set
+        if ( escapable.indexOf(escape) == -1 ) m_escapable += m_escape; 
+    }
   }
-
+  
   /**
    * Transforms a given string by escaping all characters inside the
    * quotable characters set with the escape character. The escape
