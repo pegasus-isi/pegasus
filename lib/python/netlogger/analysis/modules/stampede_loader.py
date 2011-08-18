@@ -16,7 +16,7 @@ the Stampede DB.
 
 See http://www.sqlalchemy.org/ for details on SQLAlchemy
 """
-__rcsid__ = "$Id: stampede_loader.py 28283 2011-08-16 17:49:15Z mgoode $"
+__rcsid__ = "$Id: stampede_loader.py 28289 2011-08-18 15:45:00Z mgoode $"
 __author__ = "Monte Goode"
 
 from netlogger.analysis.schema.stampede_schema import *
@@ -229,7 +229,8 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
             # sanitize argv input
             if attr == 'argv':
                 if v != None:
-                    #v = v.replace("'", "\\'")
+                    v = v.replace("\\", "\\\\" )
+                    v = v.replace("'", "\\'")
                     pass
             
             try:
