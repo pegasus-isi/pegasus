@@ -2,12 +2,13 @@
 Common code for NetLogger parsers
 """
 __author__ = 'Dan Gunter <dkgunter@lbl.gov>'
-__rcsid__ = '$Id: base.py 27681 2011-04-22 18:39:33Z dang $'
+__rcsid__ = '$Id: base.py 28287 2011-08-18 03:42:53Z dang $'
 
 import calendar 
 from netlogger.configobj import ConfigObj, Section
 import glob
 import imp
+from itertools import starmap
 import os
 from Queue import Queue, Empty
 import re
@@ -84,6 +85,10 @@ def tolerateBlanksAndComments(line=None, error=None, linenum=0):
     else:
         raise(error)
 
+
+
+# Parse BP log lines with Regular Expressions
+
 class BPError(ValueError):
     """
     Exception class to indicate violations from the logging best practices
@@ -101,6 +106,109 @@ class BPError(ValueError):
 
     def __str__(self):
         return "Parser error on line %i: %s" % (self.lineno, self.msg)
+
+class BPValidationError(BPError):
+    def __init__(self, msg):
+        self.msg = msg
+    def __str__(self):
+        return "Validation error: " + str(self.msg)
+
+class BPParseError(BPError):
+    def __init__(self, msg):
+        self.msg = msg
+    def __str__(self):
+        return "Parse error: " + str(self.msg)
+
+"""
+Regular expression that captures names and data
+"""
+BP_EXPR = re.compile(r"""
+(?:
+    \s*                        # leading whitespace
+    ([0-9a-zA-Z_.\-]+)         # Name
+    =
+    (?:                        # Value:
+      ([^"\s]+) |              # a) simple value
+      "((?:[^"] | (?<=\\)")*)" # b) quoted string
+    )
+    \s*
+)
+""", flags = re.X)
+
+"""
+For validation, regular expression that captures all valid characters,
+so by simply comparing with string length we can tell if there are invalid
+characters in the string.
+"""
+BP_EXPR_WS = re.compile(r"""
+(?:
+    (\s*)                      # leading whitespace
+    ([0-9a-zA-Z_.\-]+)         # Name
+    =
+    (?:                        # Value:
+      ([^"\s]+) |              # a) simple value
+      (")((?:[^"] | (?<=\\)")*)(") # b) quoted string
+    )
+    (\s*)
+)""", flags=re.X)
+         
+def _bp_extract(s, as_dict=True, validate=False):
+    """Parse BP log line and extract key=value pairs.
+
+    If validate is False, this will skip over many types of "junk" data.
+    The only escape sequence recognized is a backslash-escaped double-quote,
+    within a quoted value.
+
+    Args:
+      s - Input line
+      as_dict - If True, return a dictionary, otherwise, a list of tuples.
+                Note: when OrderedDict (Python 3.1+, 2.7+) becomes common,
+                this will go away.
+      validate - If True, see if there are any 'extra' characters in the string.
+                 If there are, raise a BPValidationError.
+    Raises:
+      BPParseError - If a token doesn't contain a recognizable name=value pair,
+      BPValidationError - If (optional) validation fails.
+    Returns:
+      Dictionary or list of tuples (see `as_dict` arg)
+    """
+    if as_dict:
+        result = { }
+    else:
+        result = [ ]
+    if not validate:
+        for n, v, vq in BP_EXPR.findall(s):
+            # check input
+            if not n:
+                raise BPParseError("Bad key: '{0}'".format(n))
+            # add to result
+            if vq:
+                v = vq.replace('\\"', '"')
+            if as_dict:
+                result[n] = v
+            else:
+                result.append((n,v))
+    else:
+        valid_data_len = 0
+        for ws1, n, v, q1, vq, q2, ws2 in BP_EXPR_WS.findall(s):
+            #print(",".join(["<"+x+">" for x in (ws1, n, v, q1, vq, q2, ws2)]))
+            # check input
+            if not n:
+                raise BPParseError("Bad key: '{0}'".format(n))
+            valid_data_len += sum(map(len, (ws1, n, v, q1, vq, q2, ws2))) + 1 # 1 for '='
+            # add to result
+            if vq:
+                v = vq.replace('\\"', '"')
+            if as_dict:
+                result[n] = v
+            else:
+                result.append((n,v))
+        # check overall input
+        junk_chars = len(s) - valid_data_len
+        if junk_chars != 0:
+            raise BPValidationError("{0:d} junk chars in '{1}'".format(junk_chars, s))
+    return result
+
 
 class ProcessInterface:
     """Process interface for a parser
@@ -473,55 +581,27 @@ class NLSimpleParser(DoesLogging):
     This is important to allow the BaseParser to itself parse 
     netlogger input.
     """
-#    E1 = re.compile('\s*([a-zA-Z][a-zA-Z0-9._\-]*)=([^"]\S*|"[^"]*")\s*')
-    E1 = re.compile('\s*([a-zA-Z][a-zA-Z0-9._\-]*)=([^"]\S*|["](?:\\\["]|[^"])+["])\s*')
-    E2 = re.compile('(\s*)[a-zA-Z][a-zA-Z0-9._\-]*=(?:[^"]\S*|"[^"]*")(\s*)')
-
-    def __init__(self, verify=False, parse_date=True, strip_quotes=True):
+    def __init__(self, verify=False, parse_date=True, **kw):
         DoesLogging.__init__(self)
-        self.verify = verify
-        self.parse_date = parse_date
-        self.strip_quotes = strip_quotes
+        self.verify, self.parse_date = verify, parse_date
 
-    def parseLine(self, line, strip=True):
+    def parseLine(self, line):
         """Parse a BP-formatted line.
+        For lines which are completely whitespace, raise BPParseError
         """
-        status = 0
-        if strip:
-            s = line.strip()
-        else:
-            s = line
-        if len(s) == 0:
-            return { }
-        d = { }
-        fields = self.E1.findall(s)
-        if self.verify:
-            ws = self.E2.findall(s)
-            ws_len = sum([len(x)+len(y) for x,y in ws])
-            fld_len = sum([len(x)+len(y)+1 for x,y in fields])
-            if ws_len + fld_len < len(s):
-                n = len(s) - (ws_len + fld_len)
-                raise ValueError("%d bad chars in log line '%s'" % (n, s))
-        for name,value in fields:
-            if name == 'ts':
-                if self.parse_date:
-                    d[name] = parse_ts(value)
-                else:
-                    d[name] = value
-            elif value and value[0] == '"':
-                if self.strip_quotes:
-                    d[name] = value[1:-1]
-                else:
-                    d[name] = value
-            else:
-                d[name] = value
-        if self.verify:
-            for k in 'ts', 'event':
-                if not d.has_key(k):
-                    raise ValueError("missing %s" % k)
-        elif len(d) < 2:
-            status = -1
-        return d
+        try:
+            fields = _bp_extract(line, validate=self.verify)
+        except BPError, err:
+            raise BPParseError("BP parse error: " + str(err))
+        # higher-level verification
+        for key in TS_FIELD, EVENT_FIELD:
+            if not fields.has_key(key):
+                raise BPParseError("missing required key '{0}'".format(key))
+        # Pre-process date, if requested
+        if self.parse_date:
+            fields[TS_FIELD] = parse_ts(fields[TS_FIELD])
+        # Done.
+        return fields
 
 class NLFastParser(NLSimpleParser, NLBaseParser):
     """NetLogger parser that does inherit from NLBaseParser
