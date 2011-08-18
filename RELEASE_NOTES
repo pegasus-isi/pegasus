@@ -11,6 +11,17 @@ namely
    - pegasus-statistics
    - pegasus-plots
 
+There has been a change on how locations of properties files are
+passed to the planner and tools. From Pegasus 3.1 release onwards,
+support has been dropped for the following properties that were used
+to signify the location of the properties file 
+  - pegasus.properties
+  - pegasus.user.properties
+Instead, users should use the --conf option for the tools.
+More details at
+http://pegasus.isi.edu/wms/docs/3.1/reference.php#Properties
+
+
 The user guide has been reorganized and now has a new user walkthrough
 and reference guide for all command line tools.
    
@@ -106,7 +117,7 @@ NEW FEATURES
    -Dpegasus.properties=/path/to/props or
    -Dpegasus.user.properties=/path/to/props 
 
-
+ 
 7) Improved rescue dag semantics for hierarchal workflows
 
    In earlier releases, a rescue dag submission of a hierarchal
@@ -145,7 +156,16 @@ NEW FEATURES
     registration jobs is set to 1. This is to ensure, that multiple
     registration jobs are not run at the same time. 
 
-9) pegasus-tc-client
+9) Automatic loading of DAXParser based on schema number
+   
+   Earlier the users needed to specify the pegasus.schemea.dax
+   property to point to the corresponding DAX schema definition file
+   to get Pegasus to load DAX'es with version < 3.2 and plan it.
+
+   Pegasus now inspects the version number in the adag element to
+   determine what parser will be loaded.
+
+10) pegasus-tc-client
 
    pegasus-tc-client now displays output in the new multi line Text
    format, rather than the old File format.
@@ -153,7 +173,7 @@ NEW FEATURES
    The support for the File format for the Transformation Catalog will
    be removed in the upcoming releases.    
 
-10) Removed the requirements for specifying grid gateways in Site
+11) Removed the requirements for specifying grid gateways in Site
 Catalog
    
    Grid Gateways are associated with a site in a Site Catalog to
@@ -164,20 +184,20 @@ Catalog
    the site.  This is no longer required . The Grid Gateways need to
    be specified only for grid sites now.
 	   
-11)Workflow metrics file in the submit directory
+12)Workflow metrics file in the submit directory
 
    A workflow metrics file is created by the planner in the submit
    directory that gives a breakdown of various jobs in the executable
    workflow by type.
    
 
-12) pegasus-plan is always niced
+13) pegasus-plan is always niced
 
     Starting with this release, pegasus-plan always nice's the
     corresponding java invocation that launches the planner. This is
     helpful in keeping the load on the submit host in check.
 
-13) Dropped support for VORS and MyOSG backends
+14) Dropped support for VORS and MyOSG backends
     
     pegasus-sc-client now relies only on one backend ( OSGMM ) to
     generate a site catalog for OSG. VORS and MyOSG are no longer
