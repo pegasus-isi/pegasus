@@ -4,7 +4,7 @@
 <chapter id="about">
   <title>Introduction</title>
 
-  <section>
+  <section id="overview">
     <title>Overview and Features</title>
 
     <para><ulink url="http://pegasus.isi.edu">Pegasus WMS</ulink> is a
@@ -167,7 +167,7 @@
     </itemizedlist>
   </section>
 
-  <section>
+  <section id="workflow_gallery">
     <title>Workflow Gallery</title>
 
     <para>Pegasus is curently being used in a broad range of applications. To
@@ -182,7 +182,7 @@
     at isi dot edu.</para>
   </section>
 
-  <section>
+  <section id="about_document">
     <title>About this Document</title>
 
     <para>This document is designed to acquaint new users with the

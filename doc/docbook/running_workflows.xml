@@ -4,7 +4,7 @@
 <chapter id="running_workflows">
   <title>Running Workflows</title>
 
-  <section>
+  <section id="executable_workflows">
     <title>Executable Workflows (DAG)</title>
 
     <para>The DAG is an executable (concrete) workflow that can be executed
@@ -19,8 +19,7 @@
     role="bold">hpcc</emphasis>, and plan the workflow without clean-up nodes,
     the following concrete workflow is built:</para>
 
-    <para>
-      <figure id="concepts-fig-dag">
+    <para><figure id="concepts-fig-dag">
         <title>Black Diamond DAG</title>
 
         <mediaobject>
@@ -30,8 +29,7 @@
                        valign="middle" width="100%" />
           </imageobject>
         </mediaobject>
-      </figure>
-    </para>
+      </figure></para>
 
     <para>Planning augments the original abstract workflow with ancillary
     tasks to facility the proper execution of the workflow. These tasks
@@ -156,7 +154,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
     Details"</link>chapter</para>
   </section>
 
-  <section>
+  <section id="mapping_refinement_steps">
     <title>Mapping Refinement Steps</title>
 
     <para>During the mapping process, the abstract workflow undergoes a series
@@ -239,18 +237,14 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
 
           <itemizedlist>
             <listitem>
-              <para>
-                <emphasis role="bold">Random</emphasis>
-              </para>
+              <para><emphasis role="bold">Random</emphasis></para>
 
               <para>The jobs will be randomly distributed among the sites that
               can execute them.</para>
             </listitem>
 
             <listitem>
-              <para>
-                <emphasis role="bold">RoundRobin</emphasis>
-              </para>
+              <para><emphasis role="bold">RoundRobin</emphasis></para>
 
               <para>The jobs will be assigned in a round robin manner amongst
               the sites that can execute them. Since each site cannot execute
@@ -266,9 +260,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
             </listitem>
 
             <listitem>
-              <para>
-                <emphasis role="bold">Group</emphasis>
-              </para>
+              <para><emphasis role="bold">Group</emphasis></para>
 
               <para>Group of jobs will be assigned to the same site that can
               execute them. The use of the<emphasis role="bold"> PEGASUS
@@ -280,9 +272,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
             </listitem>
 
             <listitem>
-              <para>
-                <emphasis role="bold">Heft</emphasis>
-              </para>
+              <para><emphasis role="bold">Heft</emphasis></para>
 
               <para>A version of the HEFT processor scheduling algorithm is
               used to schedule jobs in the workflow to multiple grid sites.
@@ -302,9 +292,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
             </listitem>
 
             <listitem>
-              <para>
-                <emphasis role="bold">NonJavaCallout</emphasis>
-              </para>
+              <para><emphasis role="bold">NonJavaCallout</emphasis></para>
 
               <para>Pegasus will callout to an external site selector.In this
               mode a temporary file is prepared containing the job information
@@ -330,13 +318,9 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
                 <tgroup cols="2">
                   <tbody>
                     <row>
-                      <entry>
-                        <emphasis role="bold">Key</emphasis>
-                      </entry>
+                      <entry><emphasis role="bold">Key</emphasis></entry>
 
-                      <entry>
-                        <emphasis role="bold">Value</emphasis>
-                      </entry>
+                      <entry><emphasis role="bold">Value</emphasis></entry>
                     </row>
 
                     <row>
@@ -590,9 +574,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
 
       <orderedlist>
         <listitem>
-          <para>
-            <emphasis role="bold">Condor</emphasis>
-          </para>
+          <para><emphasis role="bold">Condor</emphasis></para>
 
           <para>This is the default code generator for Pegasus . This
           generator generates the executable workflow as a Condor DAG file and
@@ -601,9 +583,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
         </listitem>
 
         <listitem>
-          <para>
-            <emphasis role="bold">Shell</emphasis>
-          </para>
+          <para><emphasis role="bold">Shell</emphasis></para>
 
           <para>This Code Generator generates the executable workflow as a
           shell script that can be executed on the submit host. While using
@@ -632,7 +612,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
     </section>
   </section>
 
-  <section>
+  <section id="pegasus-plan">
     <title>Pegasus-Plan</title>
 
     <para>pegasus-plan is the main executable that takes in the abstract
@@ -647,9 +627,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
 
         <orderedlist>
           <listitem>
-            <para>
-              <emphasis role="bold">Replica Catalog</emphasis>
-            </para>
+            <para><emphasis role="bold">Replica Catalog</emphasis></para>
 
             <para>The Replica Catalog needs to be catalogued with the
             locations of the input files required by the workflows. This can
@@ -659,9 +637,8 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
           </listitem>
 
           <listitem>
-            <para>
-              <emphasis role="bold">Transformation Catalog</emphasis>
-            </para>
+            <para><emphasis role="bold">Transformation
+            Catalog</emphasis></para>
 
             <para>The Transformation Catalog needs to be catalogued with the
             locations of the executables that the workflows will use. This can
@@ -671,9 +648,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
           </listitem>
 
           <listitem>
-            <para>
-              <emphasis role="bold">Site Catalog</emphasis>
-            </para>
+            <para><emphasis role="bold">Site Catalog</emphasis></para>
 
             <para>The Site Catalog needs to be catalogued with the site layout
             of the various sites that the workflows can execute on. A site
@@ -767,7 +742,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
   <xi:include href="configuration.xml"
               xmlns:xi="http://www.w3.org/2001/XInclude" />
 
-  <section>
+  <section id="execution_environments">
     <title>Execution Environments</title>
 
     <para>Pegasus supports a number of execution environments. An execution
@@ -813,8 +788,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
       <para>The rest of this chapter will focus on the vanilla grid execution
       environment.</para>
 
-      <para>
-        <figure id="concepts-fig-site-layout">
+      <para><figure id="concepts-fig-site-layout">
           <title>Grid Sample Site Layout</title>
 
           <mediaobject>
@@ -824,8 +798,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
                          scalefit="1" valign="middle" width="100%" />
             </imageobject>
           </mediaobject>
-        </figure>
-      </para>
+        </figure></para>
 
       <para>The vanilla grid environment shown in the figure <link
       linkend="concepts-fig-site-layout">above</link>. We will work from the
@@ -910,8 +883,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
     <section>
       <title>A Cloud Execution Environment</title>
 
-      <para>
-        <figure id="concepts-fig-cloud-layout">
+      <para><figure id="concepts-fig-cloud-layout">
           <title>Cloud Sample Site Layout</title>
 
           <mediaobject>
@@ -921,8 +893,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
                          valign="middle" width="100%" />
             </imageobject>
           </mediaobject>
-        </figure>
-      </para>
+        </figure></para>
 
       <para>The pevious figure shows a sample layout for sky computing (as in:
       multiple clouds) as supported by Pegasus. At this point, it is up to the
@@ -1030,7 +1001,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
     </section>
   </section>
 
-  <section>
+  <section id="resource_configuration">
     <title>Resource Configurations</title>
 
     <para>This section discusses the various resource configurations that can
@@ -1230,9 +1201,8 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
 
       <programlisting><emphasis role="bold">$condor_glidein -count 10 gatekeeper.site.edu/jobmanager-pbs</emphasis></programlisting>
 
-      <para>
-        <emphasis role="bold">GlideIn of Remote Globus Resources</emphasis>
-      </para>
+      <para><emphasis role="bold">GlideIn of Remote Globus
+      Resources</emphasis></para>
 
       <para>The above step glides in 10 nodes to the user&amp;rsquor;s local
       condor pool, from the remote pbs scheduler running at
@@ -1391,7 +1361,7 @@ requirements = ((GLIDEIN_Entry_Name == "isi_iz") || (TARGET.Pegasus_Site == "isi
  &lt;/site&gt;
 </programlisting>
 
-      <para />
+      <para></para>
 
       <section>
         <title>Changes to Jobs</title>
@@ -1410,7 +1380,7 @@ requirements = ((GLIDEIN_Entry_Name == "isi_iz") || (TARGET.Pegasus_Site == "isi
           </listitem>
         </orderedlist>
 
-        <para />
+        <para></para>
 
         <section>
           <title>Remote CE Requirements</title>
@@ -1618,8 +1588,7 @@ local-condor pegasus::dirmanager /path/on/submithost/pegasus/bin/dirmanager INST
         outside the cloud, and to provision several worker nodes and a file
         server node in the cloud as shown here:</para>
 
-        <para>
-          <figure id="ec2">
+        <para><figure id="ec2">
             <title>Amazon EC2</title>
 
             <mediaobject>
@@ -1629,8 +1598,7 @@ local-condor pegasus::dirmanager /path/on/submithost/pegasus/bin/dirmanager INST
                            valign="middle" width="100%" />
               </imageobject>
             </mediaobject>
-          </figure>
-        </para>
+          </figure></para>
 
         <para>The submit machine runs Pegasus and a Condor master (collector,
         schedd, negotiator),the workers run a Condor startd, and the file
@@ -1757,18 +1725,16 @@ verbosity = WARNING</programlisting>
 
         <para>Next, you need to update your pegasus.properties file to tell
         Pegasus to turn on S3 mode. This will tell Pegasus to use S3 instead
-        of rgular shared filesystem. </para>
+        of rgular shared filesystem.</para>
 
         <programlisting>pegasus.data.configuration = S3</programlisting>
 
-        <para>
-          <note>
+        <para><note>
             <para>The current S3 support does not work mixing storage
             solutions. Once S3 mode is turned on, Pegasus shared file system
             mode is turned off. For example, you currently can not use S3 and
             iRods storage at the same time.</para>
-          </note>
-        </para>
+          </note></para>
 
         <para>Finally, if you want to use an existing bucket to store your
         data in S3 add this to your site catalog entry (replacing the existing

@@ -4,7 +4,7 @@
 <chapter id="useful_tips" lang="">
   <title>Useful Tips</title>
 
-  <section>
+  <section id="migrating_from_2x">
     <title>Migrating From Pegasus 2.X to Pegasus 3.X</title>
 
     <para>With Pegasus 3.0 effort has been made to simplify configuration.
@@ -457,7 +457,7 @@
     </section>
   </section>
 
-  <section>
+  <section id="portable_code">
     <title>Best Practices For Developing Portable Code</title>
 
     <para>This document lists out issues for the algorithm developers to keep

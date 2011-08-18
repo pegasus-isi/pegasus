@@ -4,7 +4,7 @@
 <chapter id="walkthrough">
   <title>New User Walkthrough</title>
 
-  <section>
+  <section id="walkthrough_objectives">
     <title>Walkthrough Objectives</title>
 
     <para>This walkthrough is intended for new users who want so get a quick
@@ -16,7 +16,7 @@
     provided.</para>
   </section>
 
-  <section>
+  <section id="walkthrough_vm">
     <title>Virtual Box Pegasus VM</title>
 
     <note>
@@ -43,7 +43,7 @@
     Linux desktop, move on to the next step.</para>
   </section>
 
-  <section>
+  <section id="walkthrough_creating_dax">
     <title>Creating the Workflow (DAX)</title>
 
     <para>Pegasus takes in an abstract workflow (DAX) and generates an
@@ -238,7 +238,7 @@
     linkend="creating_workflows">Creating Workflows chapter</link>.</para>
   </section>
 
-  <section>
+  <section id="walkthrough_submitting">
     <title>Submitting the Workflow</title>
 
     <para>Submitting a Pegasus workflow consists of two steps, planning and
@@ -339,7 +339,7 @@ pegasus-remove /home/tutorial/walkthrough/runs/tutorial/pegasus/diamond/run0001<
     chapter</link>.</para>
   </section>
 
-  <section>
+  <section id="walkthrough_monitoring">
     <title>Monitoring, Debugging and Statistics</title>
 
     <para>Once the workflow has been submitted, you can check status of it

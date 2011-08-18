@@ -4,18 +4,14 @@
 <chapter id="submit_directory">
   <title>Submit Directory Details</title>
 
-  <section>
-    <title>Introduction</title>
+  <para>This chapter describes the submit directory content after Pegasus has
+  planned a workflow. Pegasus takes in an abstract workflow ( DAX ) and
+  generates an executable workflow (DAG) in the submit directory.</para>
 
-    <para>This chapter describes the submit directory content after Pegasus
-    has planned a workflow. Pegasus takes in an abstract workflow ( DAX ) and
-    generates an executable workflow (DAG) in the submit directory.</para>
+  <para>This document also describes the various Replica Selection Strategies
+  in Pegasus.</para>
 
-    <para>This document also describes the various Replica Selection
-    Strategies in Pegasus.</para>
-  </section>
-
-  <section id="submit_directory-layout">
+  <section id="submit_directory_layout">
     <title>Layout</title>
 
     <para>Each executable workflow is associated with a submit directory, and
@@ -159,7 +155,7 @@
     </orderedlist>
   </section>
 
-  <section>
+  <section id="condor_dagman_file">
     <title>Condor DAGMan File</title>
 
     <para>The Condor DAGMan file ( .dag ) is the input to Condor DAGMan ( the
@@ -274,7 +270,7 @@ PARENT pegasus_concat_blackdiamond_0 CHILD stage_in_local_isi_viz_0
     </section>
   </section>
 
-  <section>
+  <section id="kickstart_xml_record">
     <title>Kickstart XML Record</title>
 
     <para>Kickstart is a light weight C executable that is shipped with the
@@ -492,7 +488,7 @@ ctime="2009-01-30T19:17:41-06:00" uid="29548" user="vahi" gid="13872" group="bvr
     </section>
   </section>
 
-  <section>
+  <section id="jobstate_log_file">
     <title>Jobstate.Log File</title>
 
     <para>The jobstate.log file logs the various states that a job goes
@@ -655,7 +651,7 @@ ctime="2009-01-30T19:17:41-06:00" uid="29548" user="vahi" gid="13872" group="bvr
     </section>
   </section>
 
-  <section>
+  <section id="braindump_file">
     <title>Braindump File</title>
 
     <para>The braindump file is created per workflow in the submit file and
@@ -818,7 +814,7 @@ ctime="2009-01-30T19:17:41-06:00" uid="29548" user="vahi" gid="13872" group="bvr
           </row>
 
           <row>
-            <entry>notify </entry>
+            <entry>notify</entry>
 
             <entry>the notify file that contains any notifications that need
             to be sent for the workflow.</entry>
@@ -870,7 +866,7 @@ type dag
 </programlisting>
   </section>
 
-  <section>
+  <section id="static_bp_file">
     <title>Pegasus static.bp File</title>
 
     <para>Pegasus creates a workflow.static.bp file that links jobs in the DAG
@@ -888,7 +884,7 @@ type dag
         <para>task.info</para>
 
         <para>This event is used to capture information about all the tasks in
-        the DAX( abstract workflow) </para>
+        the DAX( abstract workflow)</para>
       </listitem>
 
       <listitem>

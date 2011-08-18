@@ -7,7 +7,7 @@
   <para>This chapter contains reference material for all the command-line
   tools distributed with Pegasus.</para>
 
-  <section id="pegasus-version">
+  <section id="cli-pegasus-version">
     <title>pegasus-version</title>
 
     <para>pegasus-version is a simple command-line tool that reports the
@@ -49,7 +49,7 @@ $ <command>echo $?</command>
     more details, and long options availble to the user.</para>
   </section>
 
-  <section id="pegasus-plan">
+  <section id="cli-pegasus-plan">
     <title>pegasus-plan</title>
 
     <para>pegasus-plan generates an executable workflow from an abstract
@@ -675,7 +675,7 @@ LFN_N PFN_N [site handle N]</programlisting>
     </section>
   </section>
 
-  <section id="pegasus-run">
+  <section id="cli-pegasus-run">
     <title>pegasus-run</title>
 
     <para>pegasus-run executes a workflow that has been planned using
@@ -842,7 +842,7 @@ LFN_N PFN_N [site handle N]</programlisting>
     </section>
   </section>
 
-  <section id="pegasus-remove">
+  <section id="cli-pegasus-remove">
     <title>pegasus-remove</title>
 
     <para>pegasus-remove removes a workflow that has been planned and
@@ -928,7 +928,7 @@ LFN_N PFN_N [site handle N]</programlisting>
     </section>
   </section>
 
-  <section id="pegasus-status">
+  <section id="cli-pegasus-status">
     <title>pegasus-status</title>
 
     <para>pegasus-status reports on the status of a workflow.</para>
@@ -1870,8 +1870,9 @@ LFN_N PFN_N [site handle N]</programlisting>
 
       <screen><emphasis role="bold">pegasus_monitord -r --dest sqlite:////home/user/diamond_database.db diamond-0.dag.dagman.out</emphasis></screen>
 
-      <para>Here are docs with details for all of the supported drivers: <link
-      linkend="???">http://www.sqlalchemy.org/docs/05/reference/dialects/index.html</link></para>
+      <para>Here are docs with details for all of the supported drivers:
+          <ulink url="http://www.sqlalchemy.org/docs/05/reference/dialects/index.html">http://www.sqlalchemy.org/docs/05/reference/dialects/index.html</ulink>
+      </para>
 
       <para>Additional per-database options that work into the connection
       strings are outlined there.</para>
@@ -1897,7 +1898,7 @@ LFN_N PFN_N [site handle N]</programlisting>
     </section>
   </section>
 
-  <section id="pegasus-analyzer">
+  <section id="cli-pegasus-analyzer">
     <title>pegasus-analyzer</title>
 
     <para>pegasus-analyzer is used to debug failed workflows.</para>
@@ -2252,7 +2253,7 @@ Executing condor dagman ...
     </section>
   </section>
 
-  <section id="pegasus--statistics">
+  <section id="cli-pegasus-statistics">
     <title>pegasus-statistics</title>
 
     <para>pegasus-statistics reports statistics about a workflow.</para>
@@ -2433,7 +2434,7 @@ Executing condor dagman ...
     </section>
   </section>
 
-  <section id="pegasus-plots">
+  <section id="cli-pegasus-plots">
     <title>pegasus-plots</title>
 
     <para>pegasus-plots generates charts and graphs that illustrate the
@@ -2620,7 +2621,7 @@ Executing condor dagman ...
     </section>
   </section>
 
-  <section id="pegasus-transfer">
+  <section id="cli-pegasus-transfer">
     <title>pegasus-transfer</title>
 
     <para>pegasus-transfer is a wrapper for several file transfer clients. The
@@ -3631,7 +3632,7 @@ CTRL+D</command></screen>
     </section>
   </section>
 
-  <section id="pegasus-s3">
+  <section id="cli-pegasus-s3">
     <title>pegasus-s3</title>
 
     <para>pegasus-s3 is a client for the Amazon S3 object storage service and
@@ -4076,7 +4077,7 @@ secret_key = asdhfuinakwjelfuhalsdflahsdl</programlisting>
     </section>
   </section>
 
-  <section id="pegasus-exitcode">
+  <section id="cli-pegasus-exitcode">
     <title>pegasus-exitcode</title>
 
     <para>pegasus-exitcode is a utility that examines the STDOUT of a job to
@@ -4152,7 +4153,7 @@ secret_key = asdhfuinakwjelfuhalsdflahsdl</programlisting>
     executed.</para>
   </section>
 
-  <section id="kickstart">
+  <section id="cli-kickstart">
     <title>Kickstart</title>
 
     <para>Kickstart is a job wrapper that collects data about a job's
