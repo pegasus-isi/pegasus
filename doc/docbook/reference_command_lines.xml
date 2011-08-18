@@ -1436,10 +1436,820 @@ LFN_N PFN_N [site handle N]</programlisting>
     </section>
   </section>
 
+  <section>
+    <title>pegasus-monitord</title>
+
+    <para>pegasus-monitord tracks a workflow's progress in real time and mines
+    information. </para>
+
+    <section>
+      <title>SYNOPSIS</title>
+
+      <para>pegasus-monitord [--help | -help] [--verbose | -v] [--adjust | -a
+      i] [--foreground | -N] [--no-daemon | -n] [--job | -j jobstate.log file]
+      [--log | -l logfile] [--conf properties file] [--no-recursive]
+      [--no-database | --no-events] [--replay | -r] [--no-notifications]
+      [--notifications-max max_notifications] [--notifications-timeout
+      timeout] [--sim | -s millisleep] [--db-stats] [--socket] [--output-dir |
+      -o dir] [--dest | -d PATH or URL] [--encoding | -e bp | bson] DAGMan
+      output file</para>
+    </section>
+
+    <section>
+      <title>DESCRIPTION</title>
+
+      <para>This program follows a workflow, parsing the output of DAGMAN's
+      dagman.out file. In addition to generating the jobstate.log file,
+      <emphasis role="bold">pegasus-monitord</emphasis> can also be used mine
+      information from the workflow dag file and jobs' submit and output
+      files, and either populate a database or write a NetLogger events file
+      with that information. <emphasis role="bold">pegasus-monitord</emphasis>
+      can also perform notifications when tracking a workflow's progress in
+      real-time.</para>
+    </section>
+
+    <section>
+      <title>ARGUMENTS</title>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">-h</emphasis></para>
+
+          <para><emphasis role="bold">--help</emphasis></para>
+
+          <para>Prints a usage summary with all the available command-line
+          options.</para>
+        </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">-v</emphasis></para>
+
+          <para><emphasis role="bold">--verbose</emphasis></para>
+
+          <para>Sets the log level for .<emphasis
+          role="bold">pegasus-monitord</emphasis>. If omitted, the default
+          level will be set to WARNING. When this option is given, the log
+          level is changed to "INFO. If this option is repeated, the log level
+          will be changed to DEBUG. The log level in <emphasis
+          role="bold">pegasus-monitord</emphasis> can also be adjusted
+          interactively, by sending the USR1 and USR2 signals to the process,
+          respectively for incrementing and decrementing the log level.</para>
+        </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">-a i</emphasis></para>
+
+          <para><emphasis role="bold">--adjust i</emphasis></para>
+
+          <para>For adjusting time zone differences by i seconds, default is
+          0.</para>
+        </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">-N</emphasis></para>
+
+          <para><emphasis role="bold">--foreground</emphasis></para>
+
+          <para>Do not daemonize <emphasis
+          role="bold">pegasus-monitord</emphasis>, go through the motions as
+          if (Condor).</para>
+        </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">-n</emphasis></para>
+
+          <para><emphasis role="bold">--no-daemon</emphasis></para>
+
+          <para>Do not daemonize <emphasis
+          role="bold">pegasus-monitord</emphasis>, keep it in the foreground
+          (for debugging).</para>
+        </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">-j
+          &lt;jobstate.log&gt;</emphasis></para>
+
+          <para><emphasis role="bold">--job
+          &lt;jobstate.log&gt;</emphasis></para>
+
+          <para>Alternative location for the jobstate.log file. The default is
+          to write a jobstate.log in the workflow directory. An absolute file
+          name should only be used if the workflow does not have any
+          sub-workflows, as each sub-workflow will generate its own
+          jobstate.log file. If an alternative, non-absolute, filename is
+          given with this option, <emphasis
+          role="bold">pegasus-monitord</emphasis> will create one file in each
+          workflow (and sub-workflow) directory with the filename provided by
+          the user with this option. If an absolute filename is provided and
+          sub-workflows are found, a warning message will be printed and
+          <emphasis role="bold">pegasus-monitord</emphasis> will not track any
+          sub-workflows.</para>
+        </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">-l &lt;logfile&gt;</emphasis></para>
+
+          <para><emphasis role="bold">--log-file
+          &lt;logfile&gt;</emphasis></para>
+
+          <para>Specifies an alternative logfile to use instead of the
+          monitord.log file in the main workflow directory. Differently from
+          the jobstate.log file above, <emphasis
+          role="bold">pegasus-monitord</emphasis> only generates one logfile
+          per execution (and not one per workflow and sub-workflow it
+          tracks).</para>
+        </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">--conf &lt;properties
+          file&gt;</emphasis></para>
+
+          <para><emphasis role="bold">properties file</emphasis> is an
+          alternative file containing properties in the <emphasis
+          role="bold">key=value</emphasis> format, and allows users to
+          override values read from the braindump.txt file. This option has
+          precedence over the properties file specified in the braindump.txt
+          file. Please note that these properties will apply not only to the
+          main workflow, but also to all sub-workflows found.</para>
+        </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">--no-recursive</emphasis></para>
+
+          <para>This options disables <emphasis
+          role="bold">pegasus-monitord</emphasis> to automatically follow any
+          sub-workflows that are found.</para>
+        </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">--no-database</emphasis></para>
+
+          <para><emphasis role="bold">--nodatabase</emphasis></para>
+
+          <para><emphasis role="bold">--no-events</emphasis></para>
+
+          <para>Turns off generating events (when this option is given,
+          <emphasis role="bold">pegasus-monitord</emphasis> will only generate
+          the jobstate.log file). The default is to automatically log
+          information to a SQLite database (see the <emphasis
+          role="bold">--dest</emphasis> option below for more details). This
+          option overrides any parameter given by the<emphasis role="bold">
+          --dest</emphasis> option. </para>
+        </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">-r</emphasis></para>
+
+          <para><emphasis role="bold">--replay</emphasis></para>
+
+          <para>This option is used to replay the output of an already
+          finished workflow. It should only be used after the workflow is
+          finished (not necessarily successfully). If a jobstate.log file is
+          found, it will be rotated. However, when using a database, all
+          previous references to that workflow (and all its sub-workflows)
+          will be erased from it. When outputing to a bp file, the file will
+          be deleted. When running in replay mode, <emphasis
+          role="bold">pegasus-monitord</emphasis> will always run with the
+          <emphasis role="bold">--no-daemon</emphasis> option, and any errors
+          will be output directly to the terminal. Also, <emphasis
+          role="bold">pegasus-monitord</emphasis> will not process any
+          notifications while in replay mode.</para>
+        </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">--no-notifications</emphasis></para>
+
+          <para> This options disables notifications completely, making
+          <emphasis role="bold">pegasus-monitord</emphasis> ignore all the
+          .notify files for all workflows it tracks.</para>
+        </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">--notifications-max &lt;max
+          notifications&gt;</emphasis></para>
+
+          <para>This option sets the maximum number of concurrent
+          notifications that <emphasis role="bold">pegasus-monitord</emphasis>
+          will start. When the <emphasis role="bold">max
+          notifications</emphasis> limit is reached, <emphasis
+          role="bold">pegasus-monitord</emphasis> will queue notifications and
+          wait for a pending notification script to finish before starting a
+          new one. If <emphasis role="bold">max notifications</emphasis> is
+          set to 0, notifications will be disabled.</para>
+        </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">--notifications-timeout
+          &lt;timeout&gt;</emphasis></para>
+
+          <para>Normally, <emphasis role="bold">pegasus-monitord</emphasis>
+          will start a notification script and wait indefinitely for it to
+          finish. This option allows users to set up a maximum <emphasis
+          role="bold">timeout</emphasis> that <emphasis
+          role="bold">pegasus-monitord</emphasis> will wait for a notification
+          script to finish before terminating it. If notification scripts do
+          not finish in a reasonable amount of time, it can cause other
+          notification scripts to be queued due to the maximum number of
+          concurrent scripts allowed by <emphasis
+          role="bold">pegasus-monitord</emphasis>. Additionally, until all
+          notification scripts finish, <emphasis
+          role="bold">pegasus-monitord</emphasis> will not terminate.</para>
+        </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">-s &lt;millisleep&gt;</emphasis></para>
+
+          <para><emphasis role="bold">--sim
+          &lt;millisleep&gt;</emphasis></para>
+
+          <para>This option simulates delays between reads, by sleeping
+          millisleep milliseconds. This option is mainly used by
+          developers.</para>
+        </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">--db-stats</emphasis></para>
+
+          <para>This option causes the database module to collect and print
+          database statistics at the end of the execution. It has no effect if
+          the <emphasis role="bold">--no-database</emphasis> option is
+          given.</para>
+        </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">--socket</emphasis></para>
+
+          <para>This option causes <emphasis
+          role="bold">pegasus-monitord</emphasis> to start a socket interface
+          that can be used for advanced debugging. The port number for
+          connecting to <emphasis role="bold">pegasus-monitord</emphasis> can
+          be found in the monitord.sock file in the workflow directory (the
+          file is deleted when <emphasis
+          role="bold">pegasus-monitord</emphasis> finishes). If not already
+          started, the socket interface is also created when <emphasis
+          role="bold">pegasus-monitord</emphasis> receives a USR1
+          signal.</para>
+        </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">-o &lt;dir&gt;</emphasis></para>
+
+          <para><emphasis role="bold">--output-dir
+          &lt;dir&gt;</emphasis></para>
+
+          <para>When this option is given, .<emphasis
+          role="bold">pegasus-monitord</emphasis> will create all its output
+          files in the directory specified by <emphasis
+          role="bold">dir</emphasis>. This option is useful for allowing a
+          user to debug a workflow in a directory the user does not have write
+          permissions. In this case, all files generated by <emphasis
+          role="bold">pegasus-monitord</emphasis> will have the workflow
+          <emphasis role="bold">wf_uuid</emphasis> as a prefix so that files
+          from multiple sub-workflows can be placed in the same directory.
+          This option is mainly used by <emphasis
+          role="bold">pegasus-analyzer</emphasis>. It is important to note
+          that the location for the output BP file or database is not changed
+          by this option and should be set via the <emphasis
+          role="bold">--dest</emphasis> option.</para>
+        </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">-d
+          URL[&lt;scheme&gt;]&lt;params&gt;</emphasis></para>
+
+          <para><emphasis role="bold">--dest
+          URL[&lt;scheme&gt;]&lt;params&gt;</emphasis></para>
+
+          <para>This option allows users to specify the destination for the
+          log events generated by <emphasis
+          role="bold">pegasus-monitord</emphasis>. If this option is omitted,
+          <firstterm>pegasus-monitord</firstterm> will create a SQLite
+          database in the workflow's run directory with the same name as the
+          workflow, but with a .<emphasis role="bold">stampede.db</emphasis>
+          prefix. For an empty <emphasis role="bold">scheme</emphasis>,
+          <emphasis role="bold">params</emphasis> are a file path with "-"
+          meaning standard output. For a x-tcp <emphasis
+          role="bold">scheme</emphasis>, <emphasis
+          role="bold">params</emphasis> are TCP_host[:port=14380]. For a
+          database <emphasis role="bold">scheme</emphasis>, <emphasis
+          role="bold">params</emphasis> are a SQLAlchemy engine URL with a
+          database connection string that can be used to specify different
+          database engines. Please see the examples section below for more
+          information on how to use this option. Note that when using a
+          database engine other than sqlite, the necessary Python database
+          drivers will need to be installed.</para>
+        </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">-e &lt;bp | bson&gt;</emphasis></para>
+
+          <para><emphasis role="bold">--encoding &lt;bp |
+          bson&gt;</emphasis></para>
+
+          <para>This option specifies how to encode log events. The two
+          available possibilities are <emphasis role="bold">bp</emphasis> and
+          <emphasis role="bold">bson</emphasis>. If this option is not
+          specified, events will be generated in the <emphasis
+          role="bold">bp</emphasis> format.</para>
+        </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">DAGMan output file</emphasis></para>
+
+          <para>The <emphasis role="bold">DAGMan output file</emphasis> is the
+          only requires command-line argument in <emphasis
+          role="bold">pegasus-monitord</emphasis> and must have the <emphasis
+          role="bold">.dag.dagman.out</emphasis> extension.</para>
+        </listitem>
+      </itemizedlist>
+    </section>
+
+    <section>
+      <title>RETURN VALUE</title>
+
+      <para>If the plan could be constructed, <emphasis
+      role="bold">pegasus-monitord</emphasis> returns with an exit code of 0.
+      However, in case of error, a non-zero exit code indicates problems. In
+      that case, the logfile should contain additional information about the
+      error condition.</para>
+    </section>
+
+    <section>
+      <title>EXAMPLES</title>
+
+      <para>Usually, <emphasis role="bold">pegasus-monitord</emphasis> is
+      invoked automatically by <emphasis role="bold">pegasus-run</emphasis>
+      and tracks the workflow progress in real-time, producing the
+      jobstate.log file and a corresponding SQLite database. When a workflow
+      fails, and is re-submitted with a rescue DAG, <emphasis
+      role="bold">pegasus-monitord</emphasis> will automatically pick up from
+      where it left previously and continue the jobstate.log file and the
+      database.</para>
+
+      <para>If users need to create the jobstate.log file after a workflow is
+      already finished, the <emphasis role="bold">--replay | -r</emphasis>
+      option should be used when running <emphasis
+      role="bold">pegasus-monitord</emphasis> manually. For example:</para>
+
+      <screen><emphasis role="bold">pegasus_monitord -r diamond-0.dag.dagman.out</emphasis></screen>
+
+      <para>will launch <emphasis role="bold">pegasus-monitord</emphasis> in
+      replay mode. In this case, if a jobstate.log file already exists, it
+      will be rotated and a new file will be created. If a
+      diamond-0.stampede.db SQLite database already exists, <emphasis
+      role="bold">pegasus-monitord</emphasis> will purge all references to the
+      workflow id specified in the braindump.txt file, including all
+      sub-workflows associated with that workflow id.</para>
+
+      <screen><emphasis role="bold">pegasus_monitord -r --no-database diamond-0.dag.dagman.out</emphasis></screen>
+
+      <para>will do the same thing, but without generating any log
+      events.</para>
+
+      <screen><emphasis role="bold">pegasus_monitord -r --dest `pwd`/diamond-0.bp diamond-0.dag.dagman.out</emphasis></screen>
+
+      <para>will create the file diamond-0.bp in the current directory,
+      containing NetLogger events with all the workflow data. This is in
+      addition to the jobstate.log file.</para>
+
+      <para>For using a database, users should provide a database connection
+      string in the format of:</para>
+
+      <screen>dialect://username:password@host:port/database</screen>
+
+      <para>Where <emphasis role="bold">dialect</emphasis> is the name of the
+      underlying driver (<emphasis role="bold">mysql</emphasis>, <emphasis
+      role="bold">sqlite</emphasis>, <emphasis role="bold">oracle</emphasis>,
+      <emphasis role="bold">postgres</emphasis>) and <emphasis
+      role="bold">database</emphasis> is the name of the database running on
+      the server at the host computer.</para>
+
+      <para>If users want to use a different SQLite database, <emphasis
+      role="bold">pegasus-monitord</emphasis> requires them to specify the
+      absolute path of the alternate file. For example:</para>
+
+      <screen><emphasis role="bold">pegasus_monitord -r --dest sqlite:////home/user/diamond_database.db diamond-0.dag.dagman.out</emphasis></screen>
+
+      <para>Here are docs with details for all of the supported drivers: <link
+      linkend="???">http://www.sqlalchemy.org/docs/05/reference/dialects/index.html</link></para>
+
+      <para>Additional per-database options that work into the connection
+      strings are outlined there.</para>
+
+      <para>It is important to note that one will need to have the appropriate
+      db interface library installed. Which is to say, SQLAlchemy is a wrapper
+      around the mysql interface library (for instance), it does not provide a
+      MySQL driver itself. The Pegasus distribution includes both SQLAlchemy
+      and the SQLite Python driver.</para>
+
+      <para>As a final note, it is important to mention that unlike when using
+      SQLite databases, using SQLAlchemy with other database servers, e.g.
+      MySQL or Postgres, the target database needs to exist. So, if a user
+      wanted to connect to:</para>
+
+      <screen>mysql://pegasus-user:supersecret@localhost:localport/diamond</screen>
+
+      <para>it would need to first connect to the server at <emphasis
+      role="bold">localhost</emphasis> and issue the appropriate create
+      database command before running <emphasis
+      role="bold">pegasus-monitord</emphasis> as SQLAlchemy will take care of
+      creating the tables and indexes if they do not already exist.</para>
+    </section>
+  </section>
+
   <section id="pegasus-analyzer">
     <title>pegasus-analyzer</title>
 
     <para>pegasus-analyzer is used to debug failed workflows.</para>
+
+    <section>
+      <title>SYNOPSIS</title>
+
+      <para>pegasus-analyzer [--help | -h] [--quiet | -q] [--strict | -s]
+      [--monitord | -m | -t] [--debug level] [--output-dir | -o output_dir]
+      [--file | -f dag_filename] [--dir | -d| -i input_dir] [--print | -p
+      print_options] [--debug-job job] [--debug-dir debug_dir] [--type
+      workflow_type]</para>
+    </section>
+
+    <section>
+      <title>DESCRIPTION</title>
+
+      <para>Pegasus-analyzer is a command-line utility for parsing the
+      jobstate.log file and reporting succesful and failed jobs. It quickly
+      goes through several log files, isolates jobs that did not complete
+      sucessfully, and prints their stdout and stderr so that users can get
+      detailed information about their workflow runs.</para>
+    </section>
+
+    <section>
+      <title>ARGUMENTS</title>
+
+      <para>Any option will be displayed with its long options
+      synonym(s).</para>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">-h</emphasis></para>
+
+          <para><emphasis role="bold">--help</emphasis></para>
+
+          <para>Prints a usage summary with all the available command-line
+          options.</para>
+        </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">-q</emphasis></para>
+
+          <para><emphasis role="bold">--quiet</emphasis></para>
+
+          <para>Only print the the output and error filenames instead of their
+          contents.</para>
+        </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">-s</emphasis></para>
+
+          <para><emphasis role="bold">--strict</emphasis></para>
+
+          <para>Get jobs' output and error filenames from the job's submit
+          file.</para>
+        </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">-m</emphasis></para>
+
+          <para><emphasis role="bold">-t</emphasis></para>
+
+          <para><emphasis role="bold">--monitord</emphasis></para>
+
+          <para>Invoke <emphasis role="bold">pegasus-monitord</emphasis>
+          before analyzing the jobstate.log file. Although <emphasis
+          role="bold">pegasus-analyzer</emphasis> can be executed during the
+          workflow execution as well as after the workflow has already
+          completed execution, <emphasis
+          role="bold">pegasus-monitord</emphasis> is always invoked with the
+          <emphasis role="bold">--replay</emphasis> option. Since multiple
+          instances of <emphasis role="bold">pegasus-monitord</emphasis>
+          should not be executed simultanesouly in the same workflow
+          directory, the user should ensure that no other instances of
+          <emphasis role="bold">pegasus-monitord</emphasis> are running. If
+          the run_directory is writable, <emphasis
+          role="bold">pegasus-analyzer</emphasis> will create a jobstate.log
+          file there, rotating an older log, if it is found. If the
+          run_directory is not writable (e.g. when the user debugging the
+          workflow is not the same user that ran the workflow), <emphasis
+          role="bold">pegasus-analyzer</emphasis> will exit and ask the user
+          to provide the <emphasis role="bold">--output-dir</emphasis> option,
+          in order to provide an alternative location for <emphasis
+          role="bold">pegasus-monitord</emphasis> log files.</para>
+        </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">--debug-level</emphasis></para>
+
+          <para>Sets the log level for <emphasis
+          role="bold">pegasus-analyzer</emphasis> . Possible values, in the
+          more verbose to least verbose order, are: </para>
+
+          <itemizedlist>
+            <listitem>
+              <para>INFO</para>
+            </listitem>
+
+            <listitem>
+              <para>DEBUG</para>
+            </listitem>
+
+            <listitem>
+              <para>WARNING</para>
+            </listitem>
+
+            <listitem>
+              <para>ERROR</para>
+            </listitem>
+
+            <listitem>
+              <para>CRITICAL</para>
+            </listitem>
+          </itemizedlist>
+
+          <para>If omitted, the default level will be set to WARNING.</para>
+        </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">-o &lt;output
+          directory&gt;</emphasis></para>
+
+          <para><emphasis role="bold">--output-dir &lt;output
+          directory&gt;</emphasis></para>
+
+          <para>This option provides an alternative location for all
+          monitoring log files for a particular workflow. It is mainly used
+          when an user does not have write privileges to a workflow directory
+          and needs to generate the log files needed by <emphasis
+          role="bold">pegasus-analyzer</emphasis>. If this option is used in
+          conjunction with the <emphasis role="bold">--monitord
+          option</emphasis>, it will invoke <emphasis
+          role="bold">pegasus-monitord</emphasis> using output_dir to store
+          all output files. Because workflows can have sub-workflows,
+          <emphasis role="bold">pegasus-monitord</emphasis> will create its
+          files prepending the workflow wf_uuid to each filename. This way,
+          multiple workflow files can be stored in the same directory.
+          <emphasis role="bold">pegasus-analyzer</emphasis> has built-in logic
+          to find the specific jobstate.log file by looking at the workflow
+          braindump.txt file first and figuring out the corresponding wf_uuid.
+          If output_dir does not exist, it will be created.</para>
+        </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">-f &lt;dag
+          filename&gt;</emphasis></para>
+
+          <para><emphasis role="bold">--file &lt;dag
+          filename&gt;</emphasis></para>
+
+          <para>In this option, <emphasis role="bold">dag filename</emphasis>
+          specifies the path to the DAG file to use. <emphasis
+          role="bold">pegasus-analyzer</emphasis> will get the directory
+          information from the <emphasis role="bold">dag filename</emphasis>.
+          This option overrides the <emphasis role="bold">--dir</emphasis>
+          option below.</para>
+        </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">-d &lt;input dir&gt;</emphasis></para>
+
+          <para><emphasis role="bold">-i &lt;input dir&gt;</emphasis></para>
+
+          <para><emphasis role="bold">--dir &lt;input
+          dir&gt;</emphasis></para>
+
+          <para>Makes <emphasis role="bold">pegasus-analyzer</emphasis> look
+          for the jobstate.log file in the <emphasis role="bold">input
+          dir</emphasis> directory. If this option is omitted, <emphasis
+          role="bold">pegasus-analyzer</emphasis> will look in the current
+          directory.</para>
+        </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">-p &lt;print
+          options&gt;</emphasis></para>
+
+          <para><emphasis role="bold">--print &lt;print
+          options&gt;</emphasis></para>
+
+          <para>Tells <emphasis role="bold">pegasus-analyzer</emphasis> what
+          extra information it should print for failed jobs. <emphasis
+          role="bold">print options</emphasis> is a comma-delimited list of
+          options, that include <emphasis role="bold">pre</emphasis>,
+          <emphasis role="bold">invocation</emphasis>, and/or <emphasis
+          role="bold">all</emphasis>, which activates all printing options.
+          With the <emphasis role="bold">pre</emphasis> option, <emphasis
+          role="bold">pegasus-analyzer</emphasis> will print the pre-script
+          information for failed jobs. For the <emphasis
+          role="bold">invocation</emphasis> option, <emphasis
+          role="bold">pegasus-analyzer</emphasis> will print the invocation
+          command, so users can manually run the failed job.</para>
+        </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">--debug-job
+          &lt;job&gt;</emphasis></para>
+
+          <para>When given this option, <emphasis
+          role="bold">pegasus-analyzer</emphasis> turns on its debug_mode,
+          which can be used to debug a particular job. In this mode, <emphasis
+          role="bold">pegasus-analyzer</emphasis> will create a shell script
+          in the <emphasis role="bold">debug dir</emphasis> (see below, for
+          specifying it) and copy all necessary files to this local directory
+          and then execute the job locally. </para>
+        </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">--debug-dir &lt;debug
+          dir&gt;</emphasis></para>
+
+          <para>When in debug mode, <emphasis
+          role="bold">pegasus-analyzer</emphasis> will create a temporary
+          debug directory. Users can give this option in order to specify a
+          particular <emphasis role="bold">debug dir</emphasis> directory to
+          be used instead.</para>
+        </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">--type &lt;workflow
+          type&gt;</emphasis></para>
+
+          <para>In this options, users specify what <emphasis
+          role="bold">workflow type</emphasis> they want to debug. At this
+          moment, the only <emphasis role="bold">workflow type</emphasis>
+          available is <emphasis role="bold">condor</emphasis> and it is the
+          default value if this option is not specified.</para>
+        </listitem>
+      </itemizedlist>
+    </section>
+
+    <section>
+      <title>EXAMPLES</title>
+
+      <para>The simplest way to use <emphasis
+      role="bold">pegasus-analyzer</emphasis> is to go to the run directory
+      and invoke the analyzer:</para>
+
+      <screen><emphasis role="bold">pegasus-analyzer .</emphasis></screen>
+
+      <para>which will cause <emphasis role="bold">pegasus-analyzer</emphasis>
+      to print information about the workflow in the current directory.</para>
+
+      <para><emphasis role="bold">pegasus-analyzer</emphasis> output contains
+      a summary, followed by detailed information about each job that either
+      failed, or is in an unknown state. Here is the summary section of the
+      output:</para>
+
+      <programlisting>**************************Summary***************************
+
+ Total jobs         :     75 (100.00%)
+ # jobs succeeded   :     41 (54.67%)
+ # jobs failed      :      0 (0.00%)
+ # jobs unsubmitted :     33 (44.00%)
+ # jobs unknown     :      1 (1.33%)</programlisting>
+
+      <para><emphasis role="bold">jobs succeeded</emphasis> are jobs that have
+      completed succesfully. <emphasis role="bold">jobs failed</emphasis> are
+      jobs that have finished, but that did not complete successfully.
+      <emphasis role="bold">jobs unsubmitted</emphasis> are jobs that are
+      listed in the dag file, but no information about them was found in the
+      jobstate.log file. Finally, <emphasis role="bold">jobs
+      unknown</emphasis> are jobs that have started, but have not reached
+      completion.</para>
+
+      <para>After the summary section, <emphasis
+      role="bold">pegasus-analyzer</emphasis> will display information about
+      each job in the <emphasis role="bold">job failed</emphasis> and
+      <emphasis role="bold">job unknown</emphasis> categories.</para>
+
+      <programlisting>******************Failed jobs' details**********************
+
+=======================findrange_j3=========================
+
+  last state: POST_SCRIPT_FAILURE
+        site: local
+ submit file: /home/user/diamond\-submit/findrange_j3.sub
+ output file: /home/user/diamond\-submit/findrange_j3.out.000
+  error file: /home/user/diamond\-submit/findrange_j3.err.000
+
+--------------------Task #1 - Summary-----------------------
+
+ site        : local
+ hostname    : server-machine.domain.com
+ executable  : (null)
+ arguments   : -a findrange -T 60 -i f.b2 -o f.c2
+ error       : 2
+ working dir : </programlisting>
+
+      <para>In the example above, the <emphasis
+      role="bold">findrange_j3</emphasis> job has failed, and the analyzer
+      displays information about the job, showing that the job finished with a
+      <emphasis role="bold">POST_SCRIPT_FAILURE</emphasis>, and lists the
+      submit, output and error files for this job. Whenever <emphasis
+      role="bold">pegasus-analyzer</emphasis> detects that the output file
+      contains a kickstart record, it will display the breakdown containing
+      each task in the job (in this case we only have one task). Because
+      <emphasis role="bold">pegasus-analyzer</emphasis> was not invoked with
+      the <emphasis role="bold">--quiet</emphasis> flag, it will also display
+      the contents of the output and error files (or the stdout and stderr
+      sections of the kickstart record), which in this case are both empty.
+      </para>
+
+      <para>In the case of SUBDAG and subdax jobs, <emphasis
+      role="bold">pegasus-analyzer</emphasis> will indicate it, and show the
+      command needed for the user to debug that sub-workflow. For
+      example:</para>
+
+      <programlisting>=================subdax_black_ID000009=====================
+
+  last state: JOB_FAILURE
+        site: local
+ submit file: /home/user/run1/subdax_black_ID000009.sub
+ output file: /home/user/run1/subdax_black_ID000009.out
+  error file: /home/user/run1/subdax_black_ID000009.err
+  This job contains sub workflows!
+  Please run the command below for more information:
+  pegasus-analyzer -d /home/user/run1/blackdiamond_ID000009.000
+
+-----------------subdax_black_ID000009.out-----------------
+
+Executing condor dagman ...
+
+-----------------subdax_black_ID000009.err-----------------</programlisting>
+
+      <para>tells the user the subdax_black_ID000009 sub-workflow failed, and
+      that it can be debugged by using the indicated <emphasis
+      role="bold">pegasus-analyzer</emphasis> command.</para>
+    </section>
   </section>
 
   <section id="pegasus--statistics">
@@ -1644,8 +2454,8 @@ LFN_N PFN_N [site handle N]</programlisting>
 
       <para>pegasus-plots generates graphs and charts to visualize workflow
       run. It generates workflow execution Gantt chart, job over time chart,
-      time chart, breakdown chart, dax and dag graph. It uses executable 'dot' 
-      to generate graphs. pegasus-plots looks for the executable in your path 
+      time chart, breakdown chart, dax and dag graph. It uses executable 'dot'
+      to generate graphs. pegasus-plots looks for the executable in your path
       and generates graphs based on it's availability .</para>
     </section>
 
@@ -1703,10 +2513,11 @@ LFN_N PFN_N [site handle N]</programlisting>
           level_str</emphasis></para>
 
           <para>Specifies the charts and graphs to generate. Valid levels are:
-          all,all_charts, all_graphs,dax_graph,dag_graph,gantt_chart,host_chart,
-          time_chart,breakdown_chart;Default is all_charts. The output generated
-          by pegasus-plots is based on the plotting_level set.</para> 
-          
+          all,all_charts,
+          all_graphs,dax_graph,dag_graph,gantt_chart,host_chart,
+          time_chart,breakdown_chart;Default is all_charts. The output
+          generated by pegasus-plots is based on the plotting_level
+          set.</para>
 
           <itemizedlist>
             <listitem>
@@ -1757,12 +2568,12 @@ LFN_N PFN_N [site handle N]</programlisting>
               <para>generates the time chart which shows the job instance/
               invocation count and runtime over time.</para>
             </listitem>
-            
+
             <listitem>
               <para><emphasis role="bold">breakdown_chart</emphasis></para>
 
               <para>generates the breakdown chart which shows the invocation
-               count and runtime grouped by transformation name.</para>
+              count and runtime grouped by transformation name.</para>
             </listitem>
           </itemizedlist>
         </listitem>
