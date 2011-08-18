@@ -942,9 +942,9 @@ def create_bottom_toolbar():
 <input type='checkbox' name='state' value='pre script'  onclick="setPreScript();"/> show pre script time <br/>
 <input type='checkbox' name='state' value='post script'  onclick="setPostScript();"/> show post script time <br/>
 <div id = 'gantt_chart_legend_div'>
-	<p><b>Note</b>: Sub workflow jobs are drawn with orange border and clicking on the sub workflow job will<br/>
-	 	  take you to the sub workflow chart page. Failed jobs are drawn with red border. Clicking on a non <br/>
-	 	  sub workflow job will display the job information. Mouse over the bars will provided the job names.
+	<p><b>Note</b>: Sub workflow job instances are drawn with orange border and clicking on the sub workflow job instance will<br/>
+	 	  take you to the sub workflow chart page. Failed job instances are drawn with red border. Clicking on a non sub <br/>
+	 	  workflow job instance will display the job instance information. Mouse over the bars will provided the job names.
 	</p>
 </div>
 <div style='clear: right'></div>

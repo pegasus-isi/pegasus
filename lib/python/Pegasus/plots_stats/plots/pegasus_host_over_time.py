@@ -861,10 +861,10 @@ def create_bottom_toolbar():
 <input type='checkbox' name='state' value='execute'   onclick="hc_setCondorRuntime();"/> show runtime as seen by dagman [JOB_TERMINATED - EXECUTE]<br />
 <input type='checkbox' name='state' value='resource'  onclick="hc_setResourceDelay();"/> show resource delay  [EXECUTE -GRID_SUBMIT/GLOBUS_SUBMIT] <br/>
 <div id = 'host_chart_legend_div'>
-	<p><b>Note</b>: Sub workflow jobs are drawn with orange border and clicking on the sub workflow job will<br/>
-	      take you to the sub workflow chart page. Failed jobs are drawn with red border. Clicking on a non <br/>
-	 	  sub workflow job will display the job information. Mous eover the bars will provided the job names.<br/>  
-	 	  Host names are marked 'Unknown' when the host name cannot be resolved by the pegasus system.
+	<p><b>Note</b>: Sub workflow job instances are drawn with orange border and clicking on the sub workflow job instance <br/>
+	      will take you to the sub workflow chart page. Failed job instances are drawn with red border. Clicking on a non <br/>
+	 	  sub workflow job instance will display the job instance information. Mouse over the bars will provided the job <br/>  
+	 	  names. Host names are marked 'Unknown' when the host name cannot be resolved by the pegasus system.
 	 </p>
 </div>
 <div style='clear: right'></div>
