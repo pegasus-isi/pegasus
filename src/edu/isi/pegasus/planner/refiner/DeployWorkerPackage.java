@@ -259,7 +259,7 @@ public class DeployWorkerPackage
         if( mOSToNMIOSReleaseAndVersion == null ){
             mOSToNMIOSReleaseAndVersion = new HashMap();
             mOSToNMIOSReleaseAndVersion.put( SysInfo.OS.LINUX, "rhel_5" );
-            mOSToNMIOSReleaseAndVersion.put( SysInfo.OS.MACOSX, "macos_10.4" );
+            mOSToNMIOSReleaseAndVersion.put( SysInfo.OS.MACOSX, "macos_10.5" );
         }
         return mOSToNMIOSReleaseAndVersion;
     }
@@ -990,10 +990,11 @@ public class DeployWorkerPackage
         newJob.executionPool = site;
         newJob.strargs = arguments.toString();
         
-        //hack for Pegasus bug 41. for local site the untar job
-        //needs to have initialdir specified. that is only set for 
-        //compute jobs.
-        newJob.jobClass = Job.COMPUTE_JOB;
+        //for JIRA PM-38 we used to run as a compute job
+        //this creates problem with stampede schema as the job is counted
+        //towards a dax task. the untar job is classified as chmod job
+        //internally now. JIRA PM-326
+        newJob.jobClass = Job.CHMOD_JOB;
         newJob.jobID = jobName;
 
         //the profile information from the pool catalog needs to be
@@ -1123,7 +1124,7 @@ public class DeployWorkerPackage
         
         mLogger.log( "Creating a default TC entry for " +
                      Separator.combine( "pegasus", name, null ) +
-                     " at for sysinfo " + sysinfo,
+                     " at site pegasus for sysinfo " + sysinfo,
                      LogManager.DEBUG_MESSAGE_LEVEL );
 
         mLogger.log( "Remote Path set is " + path.toString(),
