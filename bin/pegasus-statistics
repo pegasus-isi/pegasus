@@ -602,10 +602,11 @@ Prints the transformation statistics of workflow
 	"""
 	transformation_status_str = "\n\n# " +  title +"\n"
 	transformation_status_str += print_row(transformation_stats_col_name , transformation_stats_col_size)
+	transformation_status_str += NEW_LINE_STR
 	for transformation in workflow_stats.get_transformation_statistics():
-		transformation_status_str += "\n"
 		content = [transformation.transformation ,str(transformation.count),str(transformation.success) , str(transformation.failure), round_to_str(transformation.min),round_to_str(transformation.max),round_to_str(transformation.avg),round_to_str(transformation.sum)]
 		transformation_status_str += print_row(content , transformation_stats_col_size)
+		transformation_status_str += NEW_LINE_STR
 	return transformation_status_str
 	
 
