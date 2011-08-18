@@ -33,13 +33,15 @@ import java.util.Set;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.Boolean;
 import edu.isi.pegasus.common.util.Separator;
+
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
-import edu.isi.pegasus.planner.catalog.transformation.classes.NMI2VDSSysInfo;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
+
 import edu.isi.pegasus.planner.catalog.transformation.client.TCFormatUtility;
+
 import edu.isi.pegasus.planner.classes.Notifications;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.Profile;
@@ -698,7 +700,8 @@ public class Text extends Abstract
         entry.setResourceId(resourceid);
         entry.addProfiles(lfnprofiles);
         entry.addProfiles(pfnprofiles);
-        entry.setVDSSysInfo( NMI2VDSSysInfo.nmiToVDSSysInfo(system) );
+        entry.setSysInfo( system );
+        //entry.setVDSSysInfo( NMI2VDSSysInfo.nmiToVDSSysInfo(system) );
         entry.addNotifications(invokes);
         
 
