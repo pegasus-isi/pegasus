@@ -4,7 +4,7 @@ $Id$
 Release Notes for PEGASUS 3.1.0
 ===============================
 This is a major release of Pegasus with support for notifications and
-a redesigned backend database to store information about running jobs.
+a redesigned backend database to store information about workflows and  jobs.
 There are updated and redesigned auxillary tools in the release
 namely
    - pegasus-status
@@ -49,7 +49,7 @@ NEW FEATURES
   More details about how notifications can be found here
   http://pegasus.isi.edu/wms/docs/3.1/reference.php#notifications
 
-2) Runtime Database
+2) Workflows and Jobs Database
 
    The backend database schema to which pegasus-monitord populates
    runtime information about jobs in the workflow has been
