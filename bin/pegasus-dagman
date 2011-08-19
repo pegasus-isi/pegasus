@@ -97,10 +97,12 @@ def monitord_launch():
 def sighandler(signum, frame):
     ''' Signal handler to catch and pass SIGTERM, SIGABRT, SIGUSR1, SIGTERM '''
  #   global dagman, monitord
-    print "pegasus-dagman caught SIGTERM"
+    print "pegasus-dagman caught SIGNAL", signum
     if dagman != None :
         os.kill(dagman.pid, signum)
     if monitord != None:
+        if signum == signal.SIGUSR1 :
+            signum = signal.SIGINT
         os.kill(monitord.pid, signum)
 
 #-- main--------------------------------------------------------------
