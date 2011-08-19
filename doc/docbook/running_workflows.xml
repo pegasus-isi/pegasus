@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="US-ASCII"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
 "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <chapter id="running_workflows">
@@ -1529,11 +1529,7 @@ requirements = ((GLIDEIN_Entry_Name == "isi_iz") || (TARGET.Pegasus_Site == "isi
       turn on Condor File IO and execute jobs on the worker nodes
       filesystem.</para>
 
-      <programlisting>pegasus.execute.*.filesystem.local = true       # Turn on second-level staging (SLS)
-pegasus.transfer.refiner = Condor               # Condor Specific Transfer Refiner
-pegasus.transfer.sls.*.impl = Condor            # Turn on Condor File Transfer to stage data to the worker nodes
-pegasus.selector.replica =  Local               # Always prefer file URL's on the submit host with pool attribute set to local
-</programlisting>
+      <programlisting>pegasus.data.configuration = Condor</programlisting>
 
       <para>By default, Pegasus creates a workflow specific execution
       directory that is associated with the compute site ( in this case
