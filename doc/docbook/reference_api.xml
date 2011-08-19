@@ -30,8 +30,9 @@
         <listitem>
           <para>Workflow-level Notifications</para>
 
-          <para>Very simple workflow-level notifications. More about
-          notifications later.</para>
+          <para>Very simple workflow-level notifications. These are defined in
+          the <link linkend="notifications">Notification</link>
+          section.</para>
         </listitem>
 
         <listitem>
@@ -260,7 +261,8 @@
 
         <para>The above snippet will append the current time to a log file in
         the current directory. This is with regards to the monitord instance
-        acting the notification.</para>
+        acting on the <link
+        linkend="notifications">notification</link>.</para>
       </section>
 
       <section>
@@ -581,8 +583,9 @@
           <para>Each <emphasis>executable</emphasis> element may also feature
           <emphasis>invoke</emphasis> elements. These enable notifications at
           the appropriate point when every job that uses this executable
-          reaches the point of notification. Please refer to the notification
-          section for details and caveats.</para>
+          reaches the point of notification. Please refer to the <link
+          linkend="notifications">notification section</link> for details and
+          caveats.</para>
 
           <para>The last example above comes from the black diamond example
           workflow, and presents the kind and extend of attributes you are
@@ -632,6 +635,11 @@
           <literal>true</literal>), or to be looked up as necessary at
           instantiation time. The lookup catalog is determined by the
           <emphasis>executable</emphasis> attribute.</para>
+
+          <para>After <emphasis>uses</emphasis> elements, any number of
+          <emphasis>invoke</emphasis> elements may occur to add a <link
+          linkend="notifications">notification</link> each whenever this
+          transformation is instantiated.</para>
 
           <para>The <emphasis>namespace</emphasis> and
           <emphasis>version</emphasis> attributes' default values inside
@@ -704,8 +712,8 @@
 
           <listitem>
             <para>0 or more <emphasis>invoke</emphasis> elements to solicit
-            notifications whence a job reaches a certain state in its
-            life-cycle.</para>
+            <link linkend="notifications">notifications</link> whence a job
+            reaches a certain state in its life-cycle.</para>
           </listitem>
         </itemizedlist>
 
@@ -762,9 +770,9 @@
           requires in this section, so that the proper ancilliary staging- and
           clean-up tasks can be generated during planning.</para>
 
-          <para>The invoke element may be specified multiple times, as needed.
-          It has a mandatory when attribute with the following value
-          set:</para>
+          <para>The <emphasis>invoke</emphasis> element may be specified
+          multiple times, as needed. It has a mandatory when attribute with
+          the following value set:</para>
 
           <table>
             <tgroup cols="3">
@@ -920,7 +928,9 @@
           <para>Generators should use CDATA encapsulated values to the invoke
           element to minimize interference. Unfortunately, CDATA cannot be
           nested, so if the user invocation contains a CDATA section, we
-          suggest that they use careful XML-entity escaped strings.</para>
+          suggest that they use careful XML-entity escaped strings. The <link
+          linkend="notifications">notifications section</link> describes these
+          in further detail.</para>
         </section>
 
         <section>
@@ -1202,7 +1212,11 @@
         <listitem>
           <para>Create a new <emphasis>ADAG</emphasis> object</para>
         </listitem>
-        <listitem><para>Add any Workflow notification elements</para></listitem>
+
+        <listitem>
+          <para>Add any Workflow notification elements</para>
+        </listitem>
+
         <listitem>
           <para>Create <emphasis>File</emphasis> objects as necessary. You can
           augment the files with physical information, if you want to include
@@ -1222,8 +1236,8 @@
         </listitem>
 
         <listitem>
-          <para>Add arguments, files, profiles, notifications and other information to the
-          <emphasis>Job</emphasis> object</para>
+          <para>Add arguments, files, profiles, notifications and other
+          information to the <emphasis>Job</emphasis> object</para>
         </listitem>
 
         <listitem>
