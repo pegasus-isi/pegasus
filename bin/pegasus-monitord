@@ -3917,6 +3917,8 @@ def service_notifications():
     unless there are already too many notifications running in the
     system.
     """
+    logger.info("active notifications %d, pending notifications: %d"
+                % (len(active_notifications), len(pending_notifications)))
 
     # Step 1: Look at existing notifications
     if len(active_notifications) > 0:
@@ -4510,6 +4512,7 @@ while (len(wfs) > 0):
 
             try:
                 f_stat = os.stat(workflow_entry.dagman_out)
+                logger.debug("stating file: %s" % (workflow_entry.dagman_out))
             except:
                 # stat error
                 logger.critical("stat %s" % (workflow_entry.dagman_out))
@@ -4673,6 +4676,9 @@ while (len(wfs) > 0):
                     workflow_entry.wf.write_workflow_progress()
 
             workflow_entry.sleep_time = time.time() + sleeptime(workflow_entry.ml_retries)
+
+    # Print number of workflows we currently have
+    logger.info("currently tracking %d workflow(s)..." % (len(wfs)))
     
     # Go through the workflows again, and finish any marked ones
     wf_index = 0
@@ -4762,9 +4768,6 @@ if do_notifications == True:
     # Finish pending notifications
     logger.info("finishing notifications...")
     while len(active_notifications) > 0 or len(pending_notifications) > 0:
-        # print "active notifications %d, pending notifications: %d" % (len(active_notifications), len(pending_notifications))
-        logger.info("active notifications %d, pending notifications: %d"
-                    % (len(active_notifications), len(pending_notifications)))
         service_notifications()        
         time.sleep(SLEEP_WAIT_NOTIFICATION)
     logger.info("finishing notifications... done!")
