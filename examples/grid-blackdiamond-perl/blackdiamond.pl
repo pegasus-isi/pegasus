@@ -6,33 +6,13 @@ use IO::Handle;
 use Cwd; 
 use File::Spec;
 use File::Basename; 
+use Sys::Hostname;
+use POSIX ();
 
-#
-# all this to determine PEGASUS_HOME, which we don't set any more.
-# and from there derive the PERL5LIB that we need for the DAX API.
-# 
-BEGIN {
-    my $found; 
-    foreach my $dir ( File::Spec->path ) { 
-	if ( -x File::Spec->catfile( $dir, 'pegasus-plan' ) ) {
-	    $found = dirname($dir);
-	    last; 
-	}
-    }
+BEGIN { $ENV{'PEGASUS_HOME'} ||= `pegasus-config --nocrlf --home` }
+use lib File::Spec->catdir( $ENV{'PEGASUS_HOME'}, 'lib', 'perl' ); 
 
-    # last resort, if PATH search fails
-    if ( ! defined $found && exists $ENV{'PEGASUS_HOME'} ) {
-	warn "Warning: Using PEGASUS_HOME to locate Perl API.\n"; 
-	$found = $ENV{'PEGASUS_HOME'}; 
-    }
-
-    die "FATAL: Sorry, but you need to include Pegasus into your PATH."
-	unless defined $found; 
-    unshift( @INC, File::Spec->catdir( $found, 'lib', 'perl' ) ); 
-    $ENV{'PEGASUS_HOME'} = $found; 
-}
 use Pegasus::DAX::Factory qw(:all); 
-
 use constant NS => 'diamond'; 
 
 my $adag = newADAG( name => NS ); 
@@ -54,18 +34,31 @@ $file->addPFN( newPFN( url => 'file://' . Cwd::abs_path($fn),
 		       site => 'local' ) ); 
 $adag->addFile($file); 
 
+# follow this path, if the PEGASUS_HOME was determined
 if ( exists $ENV{'PEGASUS_HOME'} ) {
-    use File::Spec;
-    use POSIX (); 
     my $keg = File::Spec->catfile( $ENV{'PEGASUS_HOME'}, 'bin', 'keg' ); 
     my @os = POSIX::uname(); 
-    $os[2] =~ s/^(\d+(\.\d+(\.\d+)?)?).*/$1/;
+    # $os[2] =~ s/^(\d+(\.\d+(\.\d+)?)?).*/$1/;  ## create a proper osversion
+    $os[4] =~ s/i.86/x86/;
 
+    # add Executable instances to DAX-included TC. This will only work,
+    # if we know how to access the keg executable. HOWEVER, for a grid
+    # workflow, these entries are not used, and you need to 
+    # [1] install the work tools remotely
+    # [2] create a TC with the proper entries
     if ( -x $keg ) { 
-	my $app1 = newExecutable( namespace => NS, name => 'preprocess', version => '2.0',
-				  arch => $os[4], os => lc($^O), osversion => $os[2] ); 
-	$app1->addPFN( newPFN( url => "file://$keg", site => 'local' ) );
-	$adag->addExecutable($app1); 
+	for my $j ( $job1, $job2, $job4 ) { 
+	    my $app = newExecutable( namespace => $j->namespace, 
+				     name => $j->name, 
+				     version => $j->version, 
+				     installed => 'false',
+				     arch => $os[4], 
+				     os => lc($^O) );
+	    $app->addProfile( 'globus', 'maxtime', '2' );
+	    $app->addProfile( 'dagman', 'RETRY', '3' );
+	    $app->addPFN( newPFN( url => "file://$keg", site => 'local' ) );
+	    $adag->addExecutable($app); 
+	}
     }
 }
 
@@ -88,10 +81,8 @@ $fnb2->link( LINK_IN );
 $job3->addArgument( '-a', $job3->name, '-T60', '-i', $fnb2, 
 		    '-o', $fnc2 ); 
 $adag->addJob($job3);
-
-# yeah, you can create multiple children for the same parent
-# string labels are distinguished from jobs, no problem
-$adag->addDependency( $job1, $job2, 'edge1', $job3, 'edge2' ); 
+# a convenience function -- you can specify multiple dependents
+$adag->addDependency( $job1, $job2, $job3 );
 
 my $fnd = newFilename( name => 'f.d', %hash ); 
 $fnc1->link( LINK_IN );
@@ -100,8 +91,15 @@ $job4->separator(''); 		# just to show the difference wrt default
 $job4->addArgument( '-a ', $job4->name, ' -T60 -i ', $fnc1, ' ', $fnc2, 
 		    ' -o ', $fnd );
 $adag->addJob($job4);
-# this is a convenience function -- easier than overloading addDependency?
-$adag->addInverse( $job4, $job2, 'edge3', $job3, 'edge4' );
+# this is a convenience function adding parents to a child. 
+# it is clearer than overloading addDependency
+$adag->addInverse( $job4, $job2, $job3 );
+
+# workflow level notification in case of failure
+# refer to Pegasus::DAX::Invoke for details
+my $user = $ENV{USER} || $ENV{LOGNAME} || scalar getpwuid($>); 
+$adag->invoke( INVOKE_ON_ERROR, 
+	       "/bin/mailx -s 'blackdiamond failed' $user" ); 
 
 my $xmlns = shift; 
 $adag->toXML( \*STDOUT, '', $xmlns );
