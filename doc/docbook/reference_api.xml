@@ -1063,57 +1063,57 @@
       representing the diamond workflow.</para>
 
       <programlisting>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
-&lt;!-- generated: 2011-07-28T18:29:53Z --&gt;
-&lt;adag xmlns="http://pegasus.isi.edu/schema/DAX" 
-      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-      xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.3.xsd" 
-      version="3.3" name="diamond" index="0" count="1"&gt;
+&lt;adag xmlns="http://pegasus.isi.edu/schema/DAX"
+ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.3.xsd"
+ version="3.3" name="diamond" index="0" count="1"&gt;
+  &lt;!-- part 1.1: invocations --&gt;
+  &lt;invoke when="on_error"&gt;/bin/mailx -s &amp;apos;diamond failed&amp;apos; use@some.domain&lt;/invoke&gt;
+
   &lt;!-- part 1.2: included replica catalog --&gt;
   &lt;file name="f.a"&gt;
-    &lt;pfn url="file:///lfs/voeckler/Pegasus/Karan/f.a" site="local" /&gt;
+    &lt;pfn url="file:///lfs/voeckler/src/svn/pegasus/trunk/examples/grid-blackdiamond-perl/f.a" site="local" /&gt;
   &lt;/file&gt;
 
   &lt;!-- part 1.3: included transformation catalog --&gt;
-  &lt;executable namespace="diamond" name="preprocess" version="2.0" arch="x86_64" os="linux" installed="true"&gt;
+  &lt;executable namespace="diamond" name="preprocess" version="2.0" arch="x86_64" os="linux" installed="false"&gt;
     &lt;profile namespace="globus" key="maxtime"&gt;2&lt;/profile&gt;
     &lt;profile namespace="dagman" key="RETRY"&gt;3&lt;/profile&gt;
-    &lt;pfn url="file:///opt/pegasus/default/bin/keg" site="futuregrid" /&gt;
+    &lt;pfn url="file:///opt/pegasus/latest/bin/keg" site="local" /&gt;
   &lt;/executable&gt;
-  &lt;executable namespace="diamond" name="findrange" version="2.0" arch="x86_64" os="linux" installed="true"&gt;
+  &lt;executable namespace="diamond" name="analyze" version="2.0" arch="x86_64" os="linux" installed="false"&gt;
     &lt;profile namespace="globus" key="maxtime"&gt;2&lt;/profile&gt;
     &lt;profile namespace="dagman" key="RETRY"&gt;3&lt;/profile&gt;
-    &lt;pfn url="file:///opt/pegasus/default/bin/keg" site="futuregrid" /&gt;
+    &lt;pfn url="file:///opt/pegasus/latest/bin/keg" site="local" /&gt;
   &lt;/executable&gt;
-  &lt;executable namespace="diamond" name="analyze" version="2.0" arch="x86_64" os="linux" installed="true"&gt;
+  &lt;executable namespace="diamond" name="findrange" version="2.0" arch="x86_64" os="linux" installed="false"&gt;
     &lt;profile namespace="globus" key="maxtime"&gt;2&lt;/profile&gt;
     &lt;profile namespace="dagman" key="RETRY"&gt;3&lt;/profile&gt;
-    &lt;pfn url="file:///opt/pegasus/default/bin/keg" site="futuregrid" /&gt;
+    &lt;pfn url="file:///opt/pegasus/latest/bin/keg" site="local" /&gt;
   &lt;/executable&gt;
 
   &lt;!-- part 2: definition of all jobs (at least one) --&gt;
   &lt;job namespace="diamond" name="preprocess" version="2.0" id="ID000001"&gt;
-    &lt;argument&gt;-a preprocess -T 60 -i &lt;file name="f.a" /&gt; -o &lt;file name="f.b1" /&gt; &lt;file name="f.b2" /&gt;&lt;/argument&gt;
-    &lt;uses name="f.b2" link="output" register="false" transfer="false" /&gt;
-    &lt;uses name="f.b1" link="output" register="false" transfer="false" /&gt;
+    &lt;argument&gt;-a preprocess -T60 -i &lt;file name="f.a" /&gt; -o &lt;file name="f.b1" /&gt; &lt;file name="f.b2" /&gt;&lt;/argument&gt;
+    &lt;uses name="f.b2" link="output" register="false" transfer="true" /&gt;
+    &lt;uses name="f.b1" link="output" register="false" transfer="true" /&gt;
     &lt;uses name="f.a" link="input" /&gt;
   &lt;/job&gt;
   &lt;job namespace="diamond" name="findrange" version="2.0" id="ID000002"&gt;
-    &lt;argument&gt;-a findrange -T 60 -i &lt;file name="f.b1" /&gt; -o &lt;file name="f.c1" /&gt;&lt;/argument&gt;
-    &lt;profile namespace="pegasus" key="label"&gt;clusterme&lt;/profile&gt;
-    &lt;uses name="f.b1" link="input" register="false" transfer="false" /&gt;
-    &lt;uses name="f.c1" link="output" register="false" transfer="false" /&gt;
+    &lt;argument&gt;-a findrange -T60 -i &lt;file name="f.b1" /&gt; -o &lt;file name="f.c1" /&gt;&lt;/argument&gt;
+    &lt;uses name="f.b1" link="input" register="false" transfer="true" /&gt;
+    &lt;uses name="f.c1" link="output" register="false" transfer="true" /&gt;
   &lt;/job&gt;
   &lt;job namespace="diamond" name="findrange" version="2.0" id="ID000003"&gt;
-    &lt;argument&gt;-a findrange -T 60 -i &lt;file name="f.b2" /&gt; -o &lt;file name="f.c2" /&gt;&lt;/argument&gt;
-    &lt;profile namespace="pegasus" key="label"&gt;clusterme&lt;/profile&gt;
-    &lt;uses name="f.b2" link="input" register="false" transfer="false" /&gt;
-    &lt;uses name="f.c2" link="output" register="false" transfer="false" /&gt;
+    &lt;argument&gt;-a findrange -T60 -i &lt;file name="f.b2" /&gt; -o &lt;file name="f.c2" /&gt;&lt;/argument&gt;
+    &lt;uses name="f.b2" link="input" register="false" transfer="true" /&gt;
+    &lt;uses name="f.c2" link="output" register="false" transfer="true" /&gt;
   &lt;/job&gt;
   &lt;job namespace="diamond" name="analyze" version="2.0" id="ID000004"&gt;
-    &lt;argument&gt;-a analyze -T 60 -i &lt;file name="f.c1" /&gt; &lt;file name="f.c2" /&gt; -o &lt;file name="f.d" /&gt;&lt;/argument&gt;
-    &lt;uses name="f.c2" link="input" register="false" transfer="false" /&gt;
+    &lt;argument&gt;-a analyze -T60 -i &lt;file name="f.c1" /&gt; &lt;file name="f.c2" /&gt; -o &lt;file name="f.d" /&gt;&lt;/argument&gt;
+    &lt;uses name="f.c2" link="input" register="false" transfer="true" /&gt;
     &lt;uses name="f.d" link="output" register="false" transfer="true" /&gt;
-    &lt;uses name="f.c1" link="input" register="false" transfer="false" /&gt;
+    &lt;uses name="f.c1" link="input" register="false" transfer="true" /&gt;
   &lt;/job&gt;
 
   &lt;!-- part 3: list of control-flow dependencies --&gt;
@@ -1560,21 +1560,20 @@ diamond.writeXML(sys.stdout)</programlisting>
 #
 use 5.006;
 use strict;
-use IO::Handle; 
+use IO::Handle;
 use Cwd;
 use File::Spec;
 use File::Basename;
 use Sys::Hostname;
 use POSIX ();
 
-# set up Perl include paths dynamically from Pegasus installation
 BEGIN { $ENV{'PEGASUS_HOME'} ||= `pegasus-config --nocrlf --home` }
 use lib File::Spec-&gt;catdir( $ENV{'PEGASUS_HOME'}, 'lib', 'perl' );
 
-use Pegasus::DAX::Factory qw(:all); 
-use constant NS =&gt; 'diamond'; 
+use Pegasus::DAX::Factory qw(:all);
+use constant NS =&gt; 'diamond';
 
-my $adag = newADAG( name =&gt; NS ); 
+my $adag = newADAG( name =&gt; NS );
 my $job1 = newJob( namespace =&gt; NS, name =&gt; 'preprocess', version =&gt; '2.0' );
 my $job2 = newJob( namespace =&gt; NS, name =&gt; 'findrange', version =&gt; '2.0' );
 my $job3 = newJob( namespace =&gt; NS, name =&gt; 'findrange', version =&gt; '2.0' );
@@ -1589,20 +1588,30 @@ printf F "%04u-%02u-%02u %02u:%02u:%02uZ\n",
 close F;
 
 my $file = newFile( name =&gt; 'f.a' );
-$file-&gt;addPFN( newPFN( url =&gt; 'file://' . Cwd::abs_path(getcwd()) . '/f.a', 
-                       site =&gt; 'local' ) ); 
-$adag-&gt;addFile($file); 
+$file-&gt;addPFN( newPFN( url =&gt; 'file://' . Cwd::abs_path($fn),
+                       site =&gt; 'local' ) );
+$adag-&gt;addFile($file);
 
+# follow this path, if the PEGASUS_HOME was determined
 if ( exists $ENV{'PEGASUS_HOME'} ) {
-    my $keg = File::Spec-&gt;catfile( $ENV{'PEGASUS_HOME'}, 'bin', 'keg' ); 
-    my @os = POSIX::uname(); 
-    $os[2] =~ s/^(\d+(\.\d+(\.\d+)?)?).*/$1/;
+    my $keg = File::Spec-&gt;catfile( $ENV{'PEGASUS_HOME'}, 'bin', 'keg' );
+    my @os = POSIX::uname();
+    # $os[2] =~ s/^(\d+(\.\d+(\.\d+)?)?).*/$1/;  ## create a proper osversion
     $os[4] =~ s/i.86/x86/;
-    if ( -x $keg ) { 
-        for my $what ( qw(preprocess findrange analyze) ) {
-            my $app = newExecutable( namespace =&gt; NS, name =&gt; $what,
-                                     version =&gt; '2.0', installed =&gt; 'false',
-                                     arch =&gt; $os[4], os =&gt; lc($^O) );
+
+    # add Executable instances to DAX-included TC. This will only work,
+    # if we know how to access the keg executable. HOWEVER, for a grid
+    # workflow, these entries are not used, and you need to
+    # [1] install the work tools remotely
+    # [2] create a TC with the proper entries
+    if ( -x $keg ) {
+        for my $j ( $job1, $job2, $job4 ) {
+            my $app = newExecutable( namespace =&gt; $j-&gt;namespace,
+                                     name =&gt; $j-&gt;name,
+                                     version =&gt; $j-&gt;version,
+                                     installed =&gt; 'false',
+                                     arch =&gt; $os[4],
+                                     os =&gt; lc($^O) );
             $app-&gt;addProfile( 'globus', 'maxtime', '2' );
             $app-&gt;addProfile( 'dagman', 'RETRY', '3' );
             $app-&gt;addPFN( newPFN( url =&gt; "file://$keg", site =&gt; 'local' ) );
@@ -1611,39 +1620,46 @@ if ( exists $ENV{'PEGASUS_HOME'} ) {
     }
 }
 
-my %hash = ( link =&gt; LINK_OUT, register =&gt; 'false', transfer =&gt; 'true' ); 
+my %hash = ( link =&gt; LINK_OUT, register =&gt; 'false', transfer =&gt; 'true' );
 my $fna = newFilename( name =&gt; $file-&gt;name, link =&gt; LINK_IN );
 my $fnb1 = newFilename( name =&gt; 'f.b1', %hash );
-my $fnb2 = newFilename( name =&gt; 'f.b2', %hash ); 
+my $fnb2 = newFilename( name =&gt; 'f.b2', %hash );
 $job1-&gt;addArgument( '-a', $job1-&gt;name, '-T60', '-i', $fna,
-                    '-o', $fnb1, $fnb2 ); 
-$adag-&gt;addJob($job1); 
+                    '-o', $fnb1, $fnb2 );
+$adag-&gt;addJob($job1);
 
 my $fnc1 = newFilename( name =&gt; 'f.c1', %hash );
-$fnb1-&gt;link( LINK_IN ); 
-$job2-&gt;addArgument( '-a', $job2-&gt;name, '-T60', '-i', $fnb1, 
-                    '-o', $fnc1 ); 
+$fnb1-&gt;link( LINK_IN );
+$job2-&gt;addArgument( '-a', $job2-&gt;name, '-T60', '-i', $fnb1,
+                    '-o', $fnc1 );
 $adag-&gt;addJob($job2);
 
 my $fnc2 = newFilename( name =&gt; 'f.c2', %hash );
-$fnb2-&gt;link( LINK_IN ); 
-$job3-&gt;addArgument( '-a', $job3-&gt;name, '-T60', '-i', $fnb2, 
-                    '-o', $fnc2 ); 
+$fnb2-&gt;link( LINK_IN );
+$job3-&gt;addArgument( '-a', $job3-&gt;name, '-T60', '-i', $fnb2,
+                    '-o', $fnc2 );
 $adag-&gt;addJob($job3);
 # a convenience function -- you can specify multiple dependents
-$adag-&gt;addDependency( $job1, $job2, $job3 ); 
+$adag-&gt;addDependency( $job1, $job2, $job3 );
 
-my $fnd = newFilename( name =&gt; 'f.d', %hash ); 
+my $fnd = newFilename( name =&gt; 'f.d', %hash );
 $fnc1-&gt;link( LINK_IN );
-$fnc2-&gt;link( LINK_IN ); 
-$job4-&gt;separator('');                 # just to show the difference wrt default
-$job4-&gt;addArgument( '-a ', $job4-&gt;name, ' -T60 -i ', $fnc1, ' ', $fnc2, 
+$fnc2-&gt;link( LINK_IN );
+$job4-&gt;separator('');                # just to show the difference wrt default
+$job4-&gt;addArgument( '-a ', $job4-&gt;name, ' -T60 -i ', $fnc1, ' ', $fnc2,
                     ' -o ', $fnd );
 $adag-&gt;addJob($job4);
-# this is a convenience function -- easier than overloading addDependency
+# this is a convenience function adding parents to a child.
+# it is clearer than overloading addDependency
 $adag-&gt;addInverse( $job4, $job2, $job3 );
 
-my $xmlns = shift; 
+# workflow level notification in case of failure
+# refer to Pegasus::DAX::Invoke for details
+my $user = $ENV{USER} || $ENV{LOGNAME} || scalar getpwuid($&gt;);
+$adag-&gt;invoke( INVOKE_ON_ERROR,
+               "/bin/mailx -s 'blackdiamond failed' $user" );
+
+my $xmlns = shift;
 $adag-&gt;toXML( \*STDOUT, '', $xmlns );</programlisting>
     </section>
   </section>

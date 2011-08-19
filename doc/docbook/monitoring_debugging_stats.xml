@@ -73,45 +73,81 @@
     <section id="monitoring_pegasus-status">
       <title>pegasus-status</title>
 
-      <para>To monitor the execution of the workflow run the pegasus-status
-      command as suggested by the output of the pegasus-run command
-      above.</para>
+      <para>To monitor the execution of the workflow run the
+      <command>pegasus-status</command> command as suggested by the output of
+      the <command>pegasus-run</command> command.
+      <command>pegasus-status</command> shows the current status of the Condor
+      Q as pertaining to the master workflow from the workflow directory you
+      are pointing it to. In a second section, it will show a summary of the
+      state of all jobs in the workflow and all of its sub-workflows. </para>
 
-      <programlisting><emphasis role="bold">$ pegasus-status -l /Workflow/dags/directory</emphasis> 
+      <para>The details of <command>pegasus-status</command> are described in
+      its respective <link linkend="cli-pegasus-status">manual page</link>.
+      There are many options to help you gather the most out of this tool,
+      including a watch-mode to repeatedly draw information, various modes to
+      add more information, and legends if you are new to it, or need to
+      present it. </para>
 
-Workflow_1-0.dag succeeded
-10/01/10 12:24:38  Done     Pre   Queued    Post   Ready   Un-Ready   Failed
-10/01/10 12:24:38   ===     ===      ===     ===     ===        ===      ===
-10/01/10 12:24:38    48       0        5       0       5          0        0
+      <programlisting><command>$ pegasus-status /Workflow/dags/directory</command>
+STAT  IN_STATE  JOB
+Run      05:08  level-3-0
+Run      04:32   |-sleep_ID000005
+Run      04:27   \_subdax_level-2_ID000004
+Run      03:51      |-sleep_ID000003
+Run      03:46      \_subdax_level-1_ID000002
+Run      03:10         \_sleep_ID000001
+Summary: 6 Condor jobs total (R:6)
 
-WORKFLOW STATUS : RUNNING | 48/58 ( 83% ) | (workflow is running)</programlisting>
+UNREADY   READY     PRE  QUEUED    POST SUCCESS FAILURE %DONE
+      0       0       0       6       0       3       0  33.3
+Summary: 3 DAGs total (Running:3)</programlisting>
 
-      <para>To see the jobs in the queue while the workflow is running, run
-      the pegasus-status without the -l option as shown below:</para>
+      <para>Without the <parameter>-l</parameter> option, the only a summary
+      of the workflow statistics is shown under the current queue status.
+      However, with the <parameter>-l</parameter> option, it will show each
+      sub-workflow separately: </para>
 
-      <programlisting>$ <emphasis>pegasus-status /nfs/asd2/gmehta/PEGASUS/dags/gmehta/pegasus/black-diamond/run0002</emphasis>
+      <programlisting><command>$ pegasus-status -l /Workflow/dags/directory</command>
+STAT  IN_STATE  JOB
+Run      07:01  level-3-0
+Run      06:25   |-sleep_ID000005
+Run      06:20   \_subdax_level-2_ID000004
+Run      05:44      |-sleep_ID000003
+Run      05:39      \_subdax_level-1_ID000002
+Run      05:03         \_sleep_ID000001
+Summary: 6 Condor jobs total (R:6)
 
+UNRDY READY   PRE  IN_Q  POST  DONE  FAIL %DONE STATE   DAGNAME
+    0     0     0     1     0     1     0  50.0 Running level-2_ID000004/level-1_ID000002/level-1-0.dag
+    0     0     0     2     0     1     0  33.3 Running level-2_ID000004/level-2-0.dag
+    0     0     0     3     0     1     0  25.0 Running *level-3-0.dag
+    0     0     0     6     0     3     0  33.3         TOTALS (9 jobs)
+Summary: 3 DAGs total (Running:3)</programlisting>
 
--- Submitter: smarty.isi.edu : &lt;128.9.72.26:53194&gt; : smarty.isi.edu
- ID      OWNER/NODENAME   SUBMITTED     RUN_TIME ST PRI SIZE CMD
-22417.0   gmehta          7/11 18:13   0+00:03:58 R  0   9.8  condor_dagman -f -
-22423.0    |-rc_tx_analy  7/11 18:16   0+00:00:54 R  2   0.0  kickstart -n pegas
-22424.0    |-rc_tx_findr  7/11 18:16   0+00:00:00 I  2   0.0  kickstart -n pegas
-22425.0    |-rc_tx_prepr  7/11 18:16   0+00:00:00 I  2   0.0  kickstart -n pegas</programlisting>
+      <para>The following output shows a successful workflow of workflow
+      summary after it has finished.</para>
 
-      <para>If you do not see any of your job in the output of pegasus status
-      or if the the pegasus-status says FAILED or Completed 100% then the
-      workflow has</para>
+      <programlisting><command>$ pegasus-status work/2011080514</command>
+(no matching jobs found in Condor Q)
+UNREADY   READY     PRE  QUEUED    POST SUCCESS FAILURE %DONE
+      0       0       0       0       0   7,137       0 100.0
+Summary: 44 DAGs total (Success:44)</programlisting>
 
-      <itemizedlist>
-        <listitem>
-          <para>successfully completed</para>
-        </listitem>
+      <para><warning>
+          <para>For large workflows with many jobs, please note that
+          <command>pegasus-status</command> will take time to compile state
+          from all workflow files. This typically affects the initial run, and
+          sub-sequent runs are faster due to the file system's buffer cache.
+          However, on a low-RAM machine, thrashing is a possibility.</para>
+        </warning>The following output show a failed workflow after no more
+      jobs from it exist. Please note how no active jobs are shown, and the
+      failure status of the total workflow. </para>
 
-        <listitem>
-          <para>stopped midway due to non recoverable error.</para>
-        </listitem>
-      </itemizedlist>
+      <programlisting><command>$ pegasus-status work/submit</command>
+(no matching jobs found in Condor Q)
+UNREADY   READY     PRE  QUEUED    POST SUCCESS FAILURE %DONE
+     20       0       0       0       0       0       2   0.0
+Summary: 1 DAG total (Failure:1)</programlisting>
     </section>
 
     <section id="monitoring_pegasus-analyzer">
@@ -202,24 +238,24 @@ working dir : /lfs1/work/pegasus/run0004
 
   <section id="plotting_statistics">
     <title>Plotting and Statistics</title>
-	<para> Pegasus plotting and statistics tools queries the Stampede database 
-	created by pegasus-monitord for generating the output.The stampede scheme
-	can be found here.
-	</para>
-	<para>
-	pegasus-plot uses the following terminology for defining tasks,jobs etc.
-	Pegasus takes in a DAX which is composed of tasks. Pegasus plans it into
-	a Condor DAG / Executable workflow that consists of Jobs. In case of 
-	Clustering, multiple tasks in the DAX can be captured into a single job in 
-	the Executable workflow. When DAGMan executes a job, a job instance is 
-	populated . Job instances capture information as seen by DAGMan. In case 
-	DAGMan retires a job on detecting a failure , a new job instance is populated. 
-	When DAGMan finds a job instance has finished , an invocation is associated 
-	with job instance. In case of clustered job , multiple invocations will be 
-	associated with a single job instance. If a Pre script or Post Script is 
-	associated with a job instance, then invocations are populated in the 
-	database for the corresponding job instance.
-	</para>
+
+    <para>Pegasus plotting and statistics tools queries the Stampede database
+    created by pegasus-monitord for generating the output.The stampede scheme
+    can be found here.</para>
+
+    <para>pegasus-plot uses the following terminology for defining tasks,jobs
+    etc. Pegasus takes in a DAX which is composed of tasks. Pegasus plans it
+    into a Condor DAG / Executable workflow that consists of Jobs. In case of
+    Clustering, multiple tasks in the DAX can be captured into a single job in
+    the Executable workflow. When DAGMan executes a job, a job instance is
+    populated . Job instances capture information as seen by DAGMan. In case
+    DAGMan retires a job on detecting a failure , a new job instance is
+    populated. When DAGMan finds a job instance has finished , an invocation
+    is associated with job instance. In case of clustered job , multiple
+    invocations will be associated with a single job instance. If a Pre script
+    or Post Script is associated with a job instance, then invocations are
+    populated in the database for the corresponding job instance.</para>
+
     <section>
       <title>pegasus-statistics</title>
 
@@ -1112,10 +1148,11 @@ Time statistics                   : /scratch/grid-setup/run0001/statistics/time.
 
       <para>Time statistics file contains job instance and invocation
       statistics information grouped by time and host. The time grouping can
-      be on day/hour. The file contains the following tables Job instance 
-      statistics per day/hour, Invocation statistics per day/hour, Job instance
-      statistics by host per day/hour and Invocation by host per day/hour. A sample
-      Invocation statistics by host per day table is shown below.</para>
+      be on day/hour. The file contains the following tables Job instance
+      statistics per day/hour, Invocation statistics per day/hour, Job
+      instance statistics by host per day/hour and Invocation by host per
+      day/hour. A sample Invocation statistics by host per day table is shown
+      below.</para>
 
       <itemizedlist>
         <listitem>
@@ -1125,20 +1162,21 @@ Time statistics                   : /scratch/grid-setup/run0001/statistics/time.
         </listitem>
 
         <listitem>
-          <para><emphasis role="bold">Invocation statistics per day/hour</emphasis>
-          - the number of invocations , total runtime sorted by day/hour.</para>
+          <para><emphasis role="bold">Invocation statistics per
+          day/hour</emphasis> - the number of invocations , total runtime
+          sorted by day/hour.</para>
         </listitem>
 
         <listitem>
           <para><emphasis role="bold">Job instance statistics by host per
-          day/hour</emphasis> - the number of job instances run, total runtime on
-          each host sorted by day/hour.</para>
+          day/hour</emphasis> - the number of job instances run, total runtime
+          on each host sorted by day/hour.</para>
         </listitem>
 
         <listitem>
           <para><emphasis role="bold">Invocation statistics by host per
-          day/hour</emphasis> - the number of invocations , total runtime on each
-          host sorted by day/hour.</para>
+          day/hour</emphasis> - the number of invocations , total runtime on
+          each host sorted by day/hour.</para>
         </listitem>
       </itemizedlist>
 
@@ -1264,9 +1302,9 @@ Graphs and charts generated by pegasus-plots can be viewed by opening the genera
 
       <para>The toolbar at the top provides zoom in/out , pan
       left/right/top/bottom and show/hide job name functionality.The toolbar
-      at the bottom can be used to show/hide job states. Failed job instances are shown
-      in red border in the chart. Clicking on a sub workflow job instance will take you
-      to the corresponding sub workflow chart.</para>
+      at the bottom can be used to show/hide job states. Failed job instances
+      are shown in red border in the chart. Clicking on a sub workflow job
+      instance will take you to the corresponding sub workflow chart.</para>
 
       <para><emphasis role="bold">Host over time chart</emphasis></para>
 
@@ -1286,9 +1324,9 @@ Graphs and charts generated by pegasus-plots can be viewed by opening the genera
 
       <para>The toolbar at the top provides zoom in/out , pan
       left/right/top/bottom and show/hide host name functionality.The toolbar
-      at the bottom can be used to show/hide job states. Failed job instances are shown
-      in red border in the chart. Clicking on a sub workflow job instance will take you
-      to the corresponding sub workflow chart.</para>
+      at the bottom can be used to show/hide job states. Failed job instances
+      are shown in red border in the chart. Clicking on a sub workflow job
+      instance will take you to the corresponding sub workflow chart.</para>
 
       <para><emphasis role="bold">Time chart</emphasis></para>
 
