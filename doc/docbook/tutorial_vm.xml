@@ -40,7 +40,7 @@ Wed Jun 24 14:47:59 PST 2011
       <itemizedlist>
         <listitem>
           <para><ulink
-          url="http://pegasus.isi.edu/wms/download/3.1/Pegasus-3.1-Debian-6-x86.vbox.tar.bz2"
+          url="http://pegasus.isi.edu/wms/download/3.1/Pegasus-3.1.0-Debian-6-x86.vbox.zip"
           xml:base="">Virtual Box Pegasus Image</ulink></para>
 
           <para>It is around <emphasis role="bold">1.2 GB</emphasis> in size.
@@ -48,29 +48,23 @@ Wed Jun 24 14:47:59 PST 2011
           role="bold">wget</emphasis> to download the image. Downloading the
           image using the browser sometimes corrupts the image.</para>
 
-          <programlisting>$ <emphasis role="bold">wget http://pegasus.isi.edu/wms/download/3.1/Pegasus-3.1-Debian-6-x86.vbox.tar.bz2
+          <programlisting>$ <emphasis role="bold">wget http://pegasus.isi.edu/wms/download/3.1/Pegasus-3.1.0-Debian-6-x86.vbox.zip
 
-</emphasis> http://pegasus.isi.edu/wms/download/3.1/Pegasus-3.1-Debian-6-x86.vbox.tar.bz2
-           =&gt; `Pegasus-3.1.0-Debian-6-x86.vbox.tar.bz2'
+</emphasis> http://pegasus.isi.edu/wms/download/3.1/Pegasus-3.1.0-Debian-6-x86.vbox.zip
+           =&gt; `Pegasus-3.1.0-Debian-6-x86.vbox.zip'
 Resolving pegasus.isi.edu... 128.9.64.219
 Connecting to pegasus.isi.edu|128.9.64.219|:80... connected.
 HTTP request sent, awaiting response... 200 OK
-Length: 1,336,554,492 (1.2G) [application/x-bzip2]
+Length: 1,336,554,492 (1.2G) [application/x-zip]
 </programlisting>
 
-          <para>The Image is bzipped . You will need to unzip it.</para>
+          <para>The Image is zipped. You will need to unzip it.</para>
 
-          <para>If you have gnu tar you can do this directly</para>
+          <para>If you have unzip you can do this directly</para>
 
-          <programlisting><emphasis role="bold">$ gtar jxvf Pegasus-3.1-Debian-6-x86.vbox.tar.bz2</emphasis></programlisting>
+          <programlisting><emphasis role="bold">$ unzip Pegasus-3.1.0-Debian-6-x86.vbox.zip</emphasis></programlisting>
 
-          <para>Else you need to do the following</para>
-
-          <programlisting><emphasis role="bold">$ bunzip2 Pegasus-3.1-Debian-6-x86.vbox.tar.bz2
-
-$ tar xvf Pegasus-3.1-Debian-6-x86.vbox.tar</emphasis></programlisting>
-
-          <para>After untarring a folder named<emphasis role="bold">
+          <para>After unzipping a folder named<emphasis role="bold">
           Pegasus-3.1.0-Debian-6-x86.vbox</emphasis> will be created that has
           the vmdk files for the VM.</para>
         </listitem>
@@ -125,7 +119,7 @@ $ tar xvf Pegasus-3.1-Debian-6-x86.vbox.tar</emphasis></programlisting>
 
         <listitem>
           <para>In the VM Name and OS Type Window specify the name as<emphasis
-          role="bold"> PegasusVM-3.1</emphasis>.</para>
+          role="bold"> PegasusVM-3.1.0</emphasis>.</para>
         </listitem>
 
         <listitem>
