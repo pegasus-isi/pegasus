@@ -138,12 +138,14 @@
       <listitem>
         <para><emphasis role="bold">jobstate.log</emphasis></para>
 
-        <para>The jobstate.log file is written out by the tailstatd daemon
-        that is launched when a workflow is submitted for execution by
-        pegasus-run. The tailstatd daemon parses the dagman.out file and
-        writes out the jobstate.log that is easier to parse. The jobstate.log
-        captures the various states through which a job goes during the
-        workflow.</para>
+        <para>The jobstate.log file is written out by the pegasus-monitord
+        daemon that is launched when a workflow is submitted for execution by
+        pegasus-run. The pegasus-monitord daemon parses the dagman.out file
+        and writes out the jobstate.log that is easier to parse. The
+        jobstate.log captures the various states through which a job goes
+        during the workflow. There are other monitoring related files that are
+        explained in the monitoring <link
+        linkend="monitoring-files">chapter</link>.</para>
       </listitem>
 
       <listitem>
@@ -634,6 +636,9 @@ ctime="2009-01-30T19:17:41-06:00" uid="29548" user="vahi" gid="13872" group="bvr
         </tbody>
       </tgroup>
     </table>
+
+    <para>There are other monitoring related files that are explained in the
+    monitoring <link linkend="monitoring-files">chapter</link>.</para>
 
     <section id="submit_directory-delays">
       <title>Pegasus Workflow Job States and Delays</title>
