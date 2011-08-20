@@ -25,49 +25,195 @@
     <section id="monitoring_pegasus-monitord" os="">
       <title>pegasus-monitord</title>
 
-      <para>Pegasus-monitord is used to follow a workflow, parsing the output
-      of DAGMan's dagman.out file. In addition to generating the jobstate.log
-      file, which contains the various states that a job goes through during
-      the workflow execution, pegasus-monitord can also be used to mine
+      <para><emphasis role="bold">Pegasus-monitord</emphasis> is used to
+      follow workflows, parsing the output of DAGMan's dagman.out file. In
+      addition to generating the jobstate.log file, which contains the various
+      states that a job goes through during the workflow execution, <emphasis
+      role="bold">pegasus-monitord</emphasis> can also be used to mine
       information from jobs' submit and output files, and either populate a
       database, or write a file with NetLogger events containing this
-      information.</para>
+      information. <emphasis role="bold">Pegasus-monitord</emphasis> can also
+      send notifications to users in real-time as it parses the workflow
+      execution logs.</para>
 
-      <para>Pegasus-monitord is automatically invoked by pegasus-run, and
-      tracks workflows in real-time. By default, it produces the jobstate.log
-      file, and a SQLite database, which contains all the information listed
-      in the Stampede schema. When a workflow fails, and is re-submitted with
-      a rescue DAG, pegasus-monitord will automatically pick up from where it
-      left previously and continue to write the jobstate.log file and populate
-      the database.</para>
+      <para><emphasis role="bold">Pegasus-monitord</emphasis> is automatically
+      invoked by <emphasis role="bold">pegasus-run</emphasis>, and tracks
+      workflows in real-time. By default, it produces the jobstate.log file,
+      and a SQLite database, which contains all the information listed in the
+      <link linkend="stampede-schema">Stampede schema</link>. When a workflow
+      fails, and is re-submitted with a rescue DAG, <emphasis
+      role="bold">pegasus-monitord</emphasis> will automatically pick up from
+      where it left previously and continue to write the jobstate.log file and
+      populate the database.</para>
 
       <para>If, after the workflow has already finished, users need to
       re-create the jobstate.log file, or re-populate the database from
-      scratch, pegasus-monitord's --replay option should be used when running
-      it manually. In addition to SQLite, pegasus-monitord supports other
-      types of databases, such as MySQL and Postgres. Users will need to
-      install the low-level database drivers, and should consult
-      pegasus-monitord's man page for more detailed information.</para>
+      scratch, <emphasis role="bold">pegasus-monitord</emphasis>'s <emphasis
+      role="bold">--replay</emphasis> option should be used when running it
+      manually.</para>
 
-      <para>As an example, the command:</para>
+      <section>
+        <title>Populating to different backend databases</title>
 
-      <para><programlisting>$ pegasus-monitord -r diamond-0.dag.dagman.out</programlisting>will
-      launch pegasus-monitord in replay mode. In this case, if a jobstate.log
-      file already exists, it will be rotated and a new file will be created.
-      It will also create/use a SQLite database in the workflow's run
-      directory, with the name of diamond-0.stampede.db. If the database
-      already exists, it will make sure to remove any references to the
-      current workflow before it populates the database. In this case,
-      pegasus-monitord will process the workflow information from start to
-      finish, including any restarts that may have happened.</para>
+        <para>In addition to SQLite, <emphasis
+        role="bold">pegasus-monitord</emphasis> supports other types of
+        databases, such as MySQL and Postgres. Users will need to install the
+        low-level database drivers, and can use the <emphasis
+        role="bold">--dest</emphasis> command-line option, or the <emphasis
+        role="bold">pegasus.monitord.output</emphasis> property to select
+        where the logs should go.</para>
 
-      <para>One important detail is that while processing a workflow,
-      pegasus-monitord will automatically detect if/when sub-workflows are
-      initiated, and will automatically track those sub-workflows as well. In
-      this case, although pegasus-monitord will create a separate jobstate.log
-      file in each workflow directory, the database at the top-level workflow
-      will contain the information from not only the main workflow, but also
-      from all sub-workflows.</para>
+        <para>As an example, the command:</para>
+
+        <programlisting>$ pegasus-monitord -r diamond-0.dag.dagman.out</programlisting>
+
+        <para>will launch <emphasis role="bold">pegasus-monitord</emphasis> in
+        replay mode. In this case, if a jobstate.log file already exists, it
+        will be rotated and a new file will be created. It will also
+        create/use a SQLite database in the workflow's run directory, with the
+        name of diamond-0.stampede.db. If the database already exists, it will
+        make sure to remove any references to the current workflow before it
+        populates the database. In this case, <emphasis
+        role="bold">pegasus-monitord</emphasis> will process the workflow
+        information from start to finish, including any restarts that may have
+        happened.</para>
+
+        <para>Users can specify an alternative database for the events, as
+        illustrated by the following examples:</para>
+
+        <programlisting>$ pegasus-monitord -r -d mysql://username:userpass@hostname/database_name diamond-0.dag.dagman.out</programlisting>
+
+        <programlisting>$ pegasus-monitord -r -d sqlite:////tmp/diamond-0.db diamond-0.dag.dagman.out</programlisting>
+
+        <para>In the first example, <emphasis
+        role="bold">pegasus-monitord</emphasis> will send the data to the
+        <emphasis role="bold">database_name</emphasis> database located at
+        server <emphasis role="bold">hostname</emphasis>, using the <emphasis
+        role="bold">username</emphasis> and <emphasis
+        role="bold">userpass</emphasis> provided. In the second example,
+        <emphasis role="bold">pegasus-monitord</emphasis> will store the data
+        in the /tmp/diamond-0.db SQLite database. </para>
+
+        <note>
+          <para>For absolute paths four slashes are required when specifying
+          an alternative database path in SQLite.</para>
+        </note>
+
+        <para>Users should also be aware that in all cases, with the exception
+        of SQLite, the database should exist before <emphasis
+        role="bold">pegasus-monitord</emphasis> is run (as it creates all
+        needed tables but does not create the database itself).</para>
+
+        <para>Finally, the following example:</para>
+
+        <programlisting>$ pegasus-monitord -r --dest diamond-0.bp diamond-0.dag.dagman.out</programlisting>
+
+        <para>sends events to the diamond-0.bp file. (please note that in
+        replay mode, any data on the file will be overwritten).</para>
+
+        <para>One important detail is that while processing a workflow,
+        <emphasis role="bold">pegasus-monitord</emphasis> will automatically
+        detect if/when sub-workflows are initiated, and will automatically
+        track those sub-workflows as well. In this case, although <emphasis
+        role="bold">pegasus-monitord</emphasis> will create a separate
+        jobstate.log file in each workflow directory, the database at the
+        top-level workflow will contain the information from not only the main
+        workflow, but also from all sub-workflows.</para>
+
+        <figure>
+          <title>Stampede Database Schema</title>
+
+          <mediaobject>
+            <imageobject>
+              <imagedata fileref="images/stampede-schema-small.png"
+                         id="stampede-schema" scale="" />
+            </imageobject>
+          </mediaobject>
+        </figure>
+      </section>
+
+      <section id="monitoring-files">
+        <title>Monitoring related files in the workflow directory</title>
+
+        <para><emphasis role="bold">Pegasus-monitord</emphasis> generates a
+        number of files in each workflow directory:</para>
+
+        <itemizedlist>
+          <listitem>
+            <para><emphasis role="bold">jobstate.log</emphasis>: contains a
+            summary of workflow and job execution. </para>
+          </listitem>
+        </itemizedlist>
+
+        <itemizedlist>
+          <listitem>
+            <para><emphasis role="bold">monitord.log</emphasis>: contains any
+            log messages generated by <emphasis
+            role="bold">pegasus-monitord</emphasis>. It is not overwritten
+            when it restarts. This file is not generated in replay mode, as
+            all log messages from <emphasis
+            role="bold">pegasus-monitord</emphasis> are output to the console.
+            Also, when sub-workflows are involved, only the top-level workflow
+            will have this log file.</para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis role="bold">monitord.started</emphasis>: contains
+            a timestamp indicating when <emphasis
+            role="bold">pegasus-monitord</emphasis> was started. This file get
+            overwritten every time <emphasis
+            role="bold">pegasus-monitord</emphasis> starts.</para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis role="bold">monitord.done</emphasis>: contains a
+            timestamp indicating when <emphasis
+            role="bold">pegasus-monitord</emphasis> finished. This file is
+            overwritten every time <emphasis
+            role="bold">pegasus-monitord</emphasis> starts.</para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis role="bold">monitord.info</emphasis>: contains
+            <emphasis role="bold">pegasus-monitord</emphasis> state
+            information, which allows it to resume processing if a workflow
+            does not finish properly and a rescue dag is submitted. This file
+            is erased when <emphasis role="bold">pegasus-monitord</emphasis>
+            is executed in replay mode.</para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis role="bold">monitord.recover</emphasis>: contains
+            <emphasis role="bold">pegasus-monitord</emphasis> state
+            information that allows it to detect that a previous instance of
+            <emphasis role="bold">pegasus-monitord</emphasis> failed (or was
+            killed) midway through parsing a workflow's execution logs. This
+            file is only present while <emphasis
+            role="bold">pegasus-monitord</emphasis> is running, as it is
+            deleted when it ends and the <emphasis
+            role="bold">monitord.info</emphasis> file is generated.</para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis role="bold">monitord.subwf.db</emphasis>: contains
+            information that aids <emphasis
+            role="bold">pegasus-monitord</emphasis> to track when
+            sub-workflows fail and are re-planned/re-tried. It is overwritten
+            when <emphasis role="bold">pegasus-monitord</emphasis> is started
+            in replay mode.</para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis role="bold">monitord-notifications.log</emphasis>:
+            contains the log file for notification-related messages. Normally,
+            this file only includes logs for failed notifications, but can be
+            populated with all notification information when <emphasis
+            role="bold">pegasus-monitord</emphasis> is run in verbose mode via
+            the <emphasis role="bold">-v</emphasis> command-line option.
+            </para>
+          </listitem>
+        </itemizedlist>
+      </section>
     </section>
 
     <section id="monitoring_pegasus-status">
@@ -79,14 +225,14 @@
       <command>pegasus-status</command> shows the current status of the Condor
       Q as pertaining to the master workflow from the workflow directory you
       are pointing it to. In a second section, it will show a summary of the
-      state of all jobs in the workflow and all of its sub-workflows. </para>
+      state of all jobs in the workflow and all of its sub-workflows.</para>
 
       <para>The details of <command>pegasus-status</command> are described in
       its respective <link linkend="cli-pegasus-status">manual page</link>.
       There are many options to help you gather the most out of this tool,
       including a watch-mode to repeatedly draw information, various modes to
       add more information, and legends if you are new to it, or need to
-      present it. </para>
+      present it.</para>
 
       <programlisting><command>$ pegasus-status /Workflow/dags/directory</command>
 STAT  IN_STATE  JOB
@@ -105,7 +251,7 @@ Summary: 3 DAGs total (Running:3)</programlisting>
       <para>Without the <parameter>-l</parameter> option, the only a summary
       of the workflow statistics is shown under the current queue status.
       However, with the <parameter>-l</parameter> option, it will show each
-      sub-workflow separately: </para>
+      sub-workflow separately:</para>
 
       <programlisting><command>$ pegasus-status -l /Workflow/dags/directory</command>
 STAT  IN_STATE  JOB
@@ -141,7 +287,7 @@ Summary: 44 DAGs total (Success:44)</programlisting>
           However, on a low-RAM machine, thrashing is a possibility.</para>
         </warning>The following output show a failed workflow after no more
       jobs from it exist. Please note how no active jobs are shown, and the
-      failure status of the total workflow. </para>
+      failure status of the total workflow.</para>
 
       <programlisting><command>$ pegasus-status work/submit</command>
 (no matching jobs found in Condor Q)
@@ -241,20 +387,21 @@ working dir : /lfs1/work/pegasus/run0004
 
     <para>Pegasus plotting and statistics tools queries the Stampede database
     created by pegasus-monitord for generating the output.The stampede scheme
-    can be found here.</para>
+    can be found <link linkend="stampede-schema">here</link>.</para>
 
-    <para>pegasus-plot uses the following terminology for defining tasks,jobs
-    etc. Pegasus takes in a DAX which is composed of tasks. Pegasus plans it
-    into a Condor DAG / Executable workflow that consists of Jobs. In case of
-    Clustering, multiple tasks in the DAX can be captured into a single job in
-    the Executable workflow. When DAGMan executes a job, a job instance is
-    populated . Job instances capture information as seen by DAGMan. In case
-    DAGMan retires a job on detecting a failure , a new job instance is
-    populated. When DAGMan finds a job instance has finished , an invocation
-    is associated with job instance. In case of clustered job , multiple
-    invocations will be associated with a single job instance. If a Pre script
-    or Post Script is associated with a job instance, then invocations are
-    populated in the database for the corresponding job instance.</para>
+    <para>The statistics and plotting tools use the following terminology for
+    defining tasks, jobs etc. Pegasus takes in a DAX which is composed of
+    tasks. Pegasus plans it into a Condor DAG / Executable workflow that
+    consists of Jobs. In case of Clustering, multiple tasks in the DAX can be
+    captured into a single job in the Executable workflow. When DAGMan
+    executes a job, a job instance is populated . Job instances capture
+    information as seen by DAGMan. In case DAGMan retires a job on detecting a
+    failure , a new job instance is populated. When DAGMan finds a job
+    instance has finished , an invocation is associated with job instance. In
+    case of clustered job, multiple invocations will be associated with a
+    single job instance. If a Pre script or Post Script is associated with a
+    job instance, then invocations are populated in the database for the
+    corresponding job instance.</para>
 
     <section>
       <title>pegasus-statistics</title>
