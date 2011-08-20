@@ -31,10 +31,10 @@
     <para>Download the corresponding disk image.</para>
 
     <para><ulink
-    url="http://pegasus.isi.edu/wms/download/3.0/Pegasus-3.0.1-Debian-6-x86.vbox.tar.bz2"
+    url="http://pegasus.isi.edu/wms/download/3.1/Pegasus-3.1.0-Debian-6-x86.vbox.zip"
     xml:base="">Virtual Box Pegasus Image</ulink></para>
 
-    <para>It is around <emphasis role="bold">1.2 GB</emphasis> in size. The
+    <para>It is around <emphasis role="bold">600 MB</emphasis> in size. The
     Image is in zip format. You will need to unzip it.</para>
 
     <para>After untarring a folder named<emphasis role="bold">
