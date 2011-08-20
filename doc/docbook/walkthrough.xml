@@ -55,18 +55,16 @@
     linkend="creating_workflows">Creating Workflows</link></para>
 
     <para>The workflow we will be creating is called Black Diamond because its
-    shape. It is a made up workflow which has 4 jobs, and it is an interesting
-    example as it shows data and job dependencies. The workflow looks
-    like:</para>
+    shape. It is a made up workflow which has 4 jobs, files (f.*) passed
+    between the jobs, and it is an interesting example as it shows data and
+    job dependencies. The workflow looks like:</para>
 
     <figure>
       <title>Figure: Black Diamond DAX</title>
 
       <mediaobject>
         <imageobject>
-          <imagedata align="center"
-                     fileref="images/tutorial-blackdiamond-dax.png"
-                     width="500" />
+          <imagedata align="center" fileref="images/examples-diamond.jpg" />
         </imageobject>
       </mediaobject>
     </figure>
@@ -78,7 +76,7 @@
 
         <mediaobject>
           <imageobject>
-            <imagedata align="center" fileref="images/gridcreds.png"
+            <imagedata align="center" fileref="images/tutorialterminal.png"
                        valign="middle" />
           </imageobject>
         </mediaobject>
@@ -290,9 +288,7 @@
 
       <mediaobject>
         <imageobject>
-          <imagedata align="center"
-                     fileref="images/tutorial-blackdiamond-dag.png"
-                     width="500" />
+          <imagedata align="center" fileref="images/concepts-diamond-dag.png" />
         </imageobject>
       </mediaobject>
     </figure>
