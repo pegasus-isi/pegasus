@@ -92,38 +92,39 @@ Python 2.6.2</programlisting></para>
     you installed Pegasus 2.4.3 and 3.0.0, you will have: with:</para>
 
     <programlisting>/opt/pegasus/2.4/
-/opt/pegasus/3.0/</programlisting>
+/opt/pegasus/3.0/
+/opt/pegasus/3.1/</programlisting>
 
     <section id="rhel5">
-      <title>RHEL 5 / CentOS 5 / Scientific Linux 5</title>
+      <title>RHEL / CentOS / Scientific Linux - 5 and 6</title>
 
       <para>Add the Pegasus repository to yum by creating a file named
       <emphasis role="bold">
       <filename>/etc/yum.repos.d/pegasus.repo</filename></emphasis> with the
       content:</para>
 
-      <programlisting># Pegasus 3.0
-name=Pegasus30
-baseurl=http://pegasus.isi.edu/wms/download/3.0/yum/rhel/$releasever/$basearch/
+      <programlisting># Pegasus 3.1
+name=Pegasus31
+baseurl=http://pegasus.isi.edu/wms/download/3.1/yum/rhel/$releasever/$basearch/
 gpgcheck=0
 enabled=1</programlisting>
 
       <para>Search for, and install Pegasus:</para>
 
       <programlisting># <emphasis role="bold">yum search pegasus</emphasis>
-pegasus-3.0 : Pegasus Workflow Management System
-# <emphasis role="bold">yum install pegasus</emphasis>
+pegasus-3.1 : Pegasus Workflow Management System
+# <emphasis role="bold">yum install pegasus-3.1</emphasis>
 Running Transaction
-Installing     : pegasus-3.0 
+Installing     : pegasus-3.1 
 
 Installed:
-pegasus-3.0 :3.0.0-1                                                                                                                        
+pegasus-3.1 :3.1.0-1                                                                                                                        
 
 Complete!</programlisting>
     </section>
 
     <section id="deb5">
-      <title>Debian 5 (Lenny)</title>
+      <title>Debian 5 (Lenny) and 6 (Squeeze)</title>
 
       <para>To be able to install and upgrade from the Pegasus <emphasis
       role="bold">APT</emphasis> repository, you will have to trust the
@@ -133,16 +134,18 @@ Complete!</programlisting>
 # <emphasis role="bold">gpg -a --export 81C2A4AC | apt-key add -</emphasis>  </programlisting>
 
       <para>Add the Pegasus apt repository to your
-      <filename>/etc/apt/sources.list</filename> file:</para>
+      <filename>/etc/apt/sources.list</filename> file, replacing [DEBVERSION]
+      with either <emphasis role="bold">lenny</emphasis> or <emphasis
+      role="bold">squeeze</emphasis>:</para>
 
-      <programlisting>deb http://pegasus.isi.edu/wms/download/3.0/apt/debian lenny main</programlisting>
+      <programlisting>deb http://pegasus.isi.edu/wms/download/3.1/apt/debian [DEBVERSION] main</programlisting>
 
       <para>Install Pegasus with <emphasis role="bold">apt-get
       :</emphasis></para>
 
       <programlisting># <emphasis role="bold">apt-get update</emphasis>
 ...
-# <emphasis role="bold">apt-get install pegasus-3.0</emphasis></programlisting>
+# <emphasis role="bold">apt-get install pegasus-3.1</emphasis></programlisting>
     </section>
   </section>
 
@@ -245,7 +248,7 @@ $ export CONDOR_CONFIG=PEGASUS_HOME/etc/condor_config</programlisting></para>
     settings selected for Pegasus Planner, Pegasus Home, and Catalogs.</para>
 
     <note>
-      Values rely on proper capitalization, unless explicitly noted otherwise.
+       Values rely on proper capitalization, unless explicitly noted otherwise. 
     </note>
 
     <itemizedlist>
@@ -301,7 +304,7 @@ $ export CONDOR_CONFIG=PEGASUS_HOME/etc/condor_config</programlisting></para>
     </itemizedlist>
 
     <note>
-      These arguments are parsed by the shell wrapper, and thus the 
+       These arguments are parsed by the shell wrapper, and thus the 
 
       <emphasis role="bold">-D</emphasis>
 
