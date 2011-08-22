@@ -493,6 +493,7 @@
     </copy>
     <chmod perm="ugo+rx" type="file">
       <fileset dir="${dist.dir}/examples" includes="**/submit"/>
+      <fileset dir="${dist.dir}/examples" includes="**/*.sh"/>
       <fileset dir="${dist.dir}/examples" includes="**/*.py"/>
       <fileset dir="${dist.dir}/examples" includes="**/*.pl"/>
       <fileset dir="${dist.dir}/examples" includes="**/*.exe"/>
