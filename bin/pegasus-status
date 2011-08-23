@@ -39,7 +39,7 @@ use File::Basename qw(basename dirname);
 use Getopt::Long qw(:config bundling no_ignore_case);
 use Data::Dumper; 
 
-# path to load our libs..
+# Path to load Pegasus Perl modules
 BEGIN {
     require File::Spec->catfile( dirname($0), 'common.pm' );
     common->import(':all');
@@ -421,6 +421,7 @@ Optional arguments affecting Condor Q output:
 Optional arguments affecting DAG output: 
  rundir           directory to monitor, default is CWD.
  -l|--long        Show all DAG states, including sub-DAGs, default only totals.
+ -r|--rows        Show summary in rows, not columns. Mutually-exclusive wrt -l. 
  -S|--[no]success Omit 'Success' workflows from --long output, default show. 
 
 (*) denotes a multi-option, which may be given multiple times or comma lists. 
@@ -663,9 +664,10 @@ sub whittle_down(\%\@\@) {
 }
 
 sub signum($) { 
-    # purpose: signum function
+    # purpose: sign (lat.: signum) function
     # paramtr: $x (IN) number
     # returns: -1 for negative $x, +1 for positive $x and 0 for $x==0
+    # warning: comparison with 0 should use |x| < epsilon for floats. 
     #
     my $x = shift; 
     ( $x < 0 ? -1 : ( $x > 0 ? 1 : 0 ) );
@@ -1621,6 +1623,7 @@ $main::expert = 0;
 my $legend = 0; 
 my $show_subdag = 0; 
 my $classads = 0; 
+my $vertical = 0; 
 my ($watch,@jobtypes,@jobsites);
 GetOptions( 'help|h' => \&usage
 	  , 'user|u=s' => \$main::user
@@ -1639,7 +1642,9 @@ GetOptions( 'help|h' => \&usage
 	  , 'hold|held!' => \$heldinfo
 	  , 'heavy!' => \$heavy
 	  , 'profile=s' => sub { profile_start($_[1]) },
+	  # the next two options are mutually exclusive
 	  , 'long|l!' => \$show_subdag
+	  , 'rows|row|r!' => \$vertical
 	  , 'watch|w:i' => sub {
 	      if ( ! $main::onatty ) {
 		  warn "FATAL: --watch requires a terminal for output\n"; 
@@ -1653,9 +1658,13 @@ GetOptions( 'help|h' => \&usage
 	      }
 	      $watch = $_[1] || 60; # once a minute is almost too often
 	  }
+	  # the next option is for internal debugging only
 	  , 'cache=s' => \$main::cache
 	  );
 binmode( STDOUT, ':utf8' ) if $main::isutf8;
+
+# if both are (mistakenly) specified, --long wins over --rows
+$vertical=0 if ( $show_subdag && $vertical ); 
 
 #
 # If the user specified any form of job type/class limitations... 
@@ -1723,7 +1732,7 @@ $main::space = ' ' if $main::expert;
 # determine UTF-8 capabilities
 if ( $main::isutf8 ) { 
     # Draw UTF-8 graphics 
-    # Warning: These are the unicode script string that require 'use utf8;'
+    # Warning: These are the unicode strings that require 'use utf8;'
     if ( $heavy ) { 
 	@main::graph = ( " ┣━", " ┗━", " ┃ ", "   " );
     } else {
@@ -1814,6 +1823,8 @@ for ( my $cursor=1; ; $cursor=1 ) {
 	if ( $show_subdag ) { 
 	    my $nd = @dags;
 	    $reserve += $dl_size + $nd + 2; 
+	} elsif ( $vertical ) {
+	    $reserve += $dl_size + 9; 
 	} else {
 	    $reserve += $dl_size + 3; 
 	}
@@ -1933,14 +1944,16 @@ for ( my $cursor=1; ; $cursor=1 ) {
 	}
 
 	# print headers
-	print $main::bold if $main::color;
-	for ( my $i=0; $i<@max; ++$i ) {
-	    print ' ' if $i; 
-	    printf "%*s", $max[$i], $dtitle{ $dtitle[$i] }{header}; 
+	unless ( $vertical ) { 
+	    print $main::bold if $main::color;
+	    for ( my $i=0; $i<@max; ++$i ) {
+		print ' ' if $i; 
+		printf "%*s", $max[$i], $dtitle{ $dtitle[$i] }{header}; 
+	    }
+	    print $main::reset if $main::color; 
+	    print "\n";
+	    ++$cursor; 
 	}
-	print $main::reset if $main::color; 
-	print "\n";
-	++$cursor; 
 
 	# print each row of results
 	if ( $show_subdag ) { 
@@ -1978,27 +1991,40 @@ for ( my $cursor=1; ; $cursor=1 ) {
 
 	# print totals here
 	if ( ! $show_subdag || $dcount{'_total'} > 1 ) {
-	    # decide on a color for row and print data columns
-	    print $main::bold if ( $show_subdag && $main::color );
-	    my $i = $#result; 
-	    for ( my $j=0; $j<@{$result[$i]}; ++$j ) {
-		print ' ' if $j;
-		if ( $j == $#max && length($result[$i][$j]) > abs($max[$j]) ) {
-		    $result[$i][$j] = fit( -abs($max[$j]), $result[$i][$j] ); 
+	    if ( $vertical ) { 
+		my $i = $#result;
+#		my $mk = (sort { $b <=> $a } map { length($dtitle{$_}{header}) } @dtitle)[0]; 
+		for ( my $j=0; $j<@max; ++$j ) { 
+		    print $main::bold if $main::color; 
+#		    printf "%*s: ", $mk, $dtitle{ $dtitle[$j] }{header}; 
+		    printf "%s: ", $dtitle{ $dtitle[$j] }{header}; 
+		    print $main::reset if $main::color; 
+		    printf "%s\n", $result[$i][$j]; 
+		    ++$cursor;
 		}
-		printf "%*s", $max[$j], $result[$i][$j]; 
+	    } else {
+		# decide on a color for row and print data columns
+		print $main::bold if ( $show_subdag && $main::color );
+		my $i = $#result; 
+		for ( my $j=0; $j<@{$result[$i]}; ++$j ) {
+		    print ' ' if $j;
+		    if ( $j == $#max && length($result[$i][$j]) > abs($max[$j]) ) {
+			$result[$i][$j] = fit( -abs($max[$j]), $result[$i][$j] ); 
+		    }
+		    printf "%*s", $max[$j], $result[$i][$j]; 
+		}
+
+		# reset colors
+		print $main::reset if $main::color; 
+
+		# terminate current line
+		print "\n"; 
+		++$cursor; 
 	    }
-
-	    # reset colors
-	    print $main::reset if $main::color; 
-
-	    # terminate current line
-	    print "\n"; 
-	    ++$cursor; 
 	}
 
 	# print summary 
-	$cursor = dag_print_summary( $cursor, %dcount ); 
+	$cursor = dag_print_summary( $cursor, %dcount );
 	profile_log( "final DAG printing" ) if defined $main::profile; 
     } else {
 	# no valid rundir -- do nothing
