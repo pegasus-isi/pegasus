@@ -37,6 +37,7 @@ submit_dir = None
 prefix =""
 no_dax = 0
 no_dag = 0
+monitord = True
 MAX_GRAPH_LIMIT = 100
 
 DEFAULT_OUTPUT_DIR = "gallery"
@@ -347,10 +348,13 @@ def create_workflow_page(tar_file_name , output_dir , log_level):
 		sys.exit(1)
 	
 	dagman_out_file =  os.path.join(submit_dir, dag_name) + dagman_extension
-	if run_pegasus_monitord(dagman_out_file) is None:
-		logger.warning("Failed to execute monitord on the workflow")
-		delete_directory(extract_output_dir)
-		sys.exit(1)
+	if monitord:
+		if run_pegasus_monitord(dagman_out_file) is None:
+			logger.warning("Failed to execute monitord on the workflow")
+			delete_directory(extract_output_dir)
+			sys.exit(1)
+	else:
+		logger.info("Skipping pegasus monitord")
 	populate.setup(submit_dir , None)
 	dag_graph_output_dir = os.path.join(output_dir,"dag_graph")
 	dax_graph_output_dir = os.path.join(output_dir,"dax_graph")
@@ -532,6 +536,8 @@ def main():
 			help = "writes the output to given directory.")
 	parser.add_option("-p", "--prefix", action = "store", dest = "prefix",
 			help = "Adds prefix to the workflow page directory.")
+	parser.add_option("-s", "--skip-monitord", action = "store_const", const = 1, dest = "no_monitord",
+		help = "if set pegasus monitord won't be run on the workflow.")
 	parser.add_option("-d", "--nodag", action = "store_const", const = 1, dest = "no_dag",
 		help = "if set dag chart would not be created")
 	parser.add_option("-D", "--nodax", action = "store_const", const = 1, dest = "no_dax",
@@ -556,8 +562,11 @@ def main():
 	global prefix
 	global no_dag
 	global no_dax
+	global monitord
 	if options.prefix is not None:
 		prefix = options.prefix
+	if options.no_monitord is not None:
+		monitord = False
 	if options.no_dax is not None:
 		no_dax = options.no_dax
 	if options.no_dag is not None:
