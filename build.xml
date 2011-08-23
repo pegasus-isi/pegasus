@@ -403,6 +403,11 @@
       <exclude name="mpi*"/>
       <exclude name="condor-log-parser"/>
     </fixcrlf>
+    <chmod perm="0755" type="file">
+      <fileset dir="${dist.bin}">
+        <include name="*"/>
+      </fileset>
+    </chmod>
 
     <!-- doc pdfs -->
     <mkdir dir="${dist.doc}"/>
@@ -453,7 +458,7 @@
     </copy>
     <mkdir dir="${dist.lib}/python"/>
     <copy preservelastmodified="true" todir="${dist.lib}/python">
-      <fileset dir="lib/python" includes="**/*.py"/>
+      <fileset dir="lib/pegasus/python" includes="**/*.py"/>
     </copy>
     
     <!-- jars -->

@@ -38,18 +38,4 @@ else:
 cl.setFormatter(formatter)
 logger.addHandler(cl)
 
-# Figure out where our lib/Python directory is located, and put that in our module search path
 
-# First let's set out PEGASUS_HOME
-pegasus_home = os.path.normpath(os.path.join(os.path.dirname(sys.argv[0]), ".."))
-os.environ["PEGASUS_HOME"] = pegasus_home
-lib_path = os.path.join(pegasus_home, "lib/python")
-
-# Check if this is a directory
-if os.path.isdir(lib_path):
-    # Insert this directory in our search path
-    os.sys.path.insert(0, lib_path)
-else:
-    # Cannot figure out what to do!
-    logger.critical("cannot find Pegasus's Python library directory... exiting!")
-    sys.exit(1)

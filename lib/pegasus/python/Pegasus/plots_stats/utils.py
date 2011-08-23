@@ -16,10 +16,6 @@ from Pegasus.tools import properties
 # Initialize logging object
 logger = logging.getLogger()
 
-import common
-from Pegasus.tools import utils
-
-
 def isSubWfJob(job_name):
 	"""
 		Returns whether the given job is a sub workflow or not

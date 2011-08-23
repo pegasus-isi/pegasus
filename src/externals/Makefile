@@ -8,9 +8,9 @@ endif
 
 BOTO=boto-2.0b3-24047c8
 
-all: touch.pysqlite touch.sqlalchemy touch.boto
+all: ${libdir}/python/pysqlite2 ${libdir}/python/sqlalchemy ${libdir}/python/boto
 
-touch.pysqlite:
+${libdir}/python/pysqlite2:
 	@rm -rf pysqlite-2.6.3
 	tar xzf pysqlite-2.6.3.tar.gz
 	(cd pysqlite-2.6.3 && \
@@ -18,9 +18,8 @@ touch.pysqlite:
 	  cp -R build/lib*/pysqlite2 ${libdir}/python/ \
 	)
 	@rm -rf pysqlite-2.6.3
-	touch touch.pysqlite
 
-touch.sqlalchemy:
+${libdir}/python/sqlalchemy:
 	@rm -rf SQLAlchemy-0.6.4
 	tar xzf SQLAlchemy-0.6.4.tar.gz
 	(cd SQLAlchemy-0.6.4 && \
@@ -28,9 +27,8 @@ touch.sqlalchemy:
 	  cp -R build/lib*/sqlalchemy ${libdir}/python/ \
 	)
 	@rm -rf SQLAlchemy-0.6.4
-	touch touch.sqlalchemy
 
-touch.boto:
+${libdir}/python/boto:
 	@rm -rf $(BOTO)
 	tar xzf $(BOTO).tar.gz
 	(cd $(BOTO) && \
@@ -39,7 +37,6 @@ touch.boto:
 	  cp -R build/lib*/boto ${libdir}/python/ \
 	)
 	@rm -rf $(BOTO)
-	touch touch.boto
 	
 clean:
 	rm -rf touch.pysqlite pysqlite-2.6.0
