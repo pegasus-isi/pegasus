@@ -76,7 +76,7 @@ def print_workflow_details(workflow_stat , output_dir):
 	job_info_hour_metadata =  "var job_metadata_per_hour = [" + workflow_stat.get_formatted_job_instances_over_time_metadata('hour') + "];\n"
 	invocation_info_hour_metadata =  "var invoc_metadata_per_hour = [" + workflow_stat.get_formatted_invocations_over_time_metadata('hour') + "];\n"
 	# print javascript file
-	data_file = os.path.join(output_dir,  "data.js")
+	data_file = os.path.join(output_dir,  "tc_data.js")
 	try:
 		fh = open(data_file, "w")
 		fh.write( "\n")
@@ -104,160 +104,160 @@ def create_action_script(output_dir):
 	"""
 	action_content = """
 	
-function fadeRight(){
-	if(curX == 0){
+function tc_fadeRight(){
+	if(tc_curX == 0){
 		return "images/right-fade.png"
 	}
 	return "images/right.png"
 }
 
-function fadeDown(){
-	if(curRuntimeY == 0){
+function tc_fadeDown(){
+	if(tc_curRuntimeY == 0){
 		return "images/down-fade.png"
 	}
 	return "images/down.png"
 }
 
-function panLeft(){
-	var panBy = (curEndX -curX)/panXFactor;
-	curX +=panBy;
-	curEndX +=panBy;
-	xScale.domain(curX ,curEndX );
-	rootPanel.render();
-	headerPanel.render();
+function tc_panLeft(){
+	var tc_panBy = (tc_curEndX -tc_curX)/tc_panXFactor;
+	tc_curX +=tc_panBy;
+	tc_curEndX +=tc_panBy;
+	tc_xScale.domain(tc_curX ,tc_curEndX );
+	tc_rootPanel.render();
+	tc_headerPanel.render();
 }
 
-function panRight(){
-	var panBy = (curEndX -curX)/panXFactor;
-	if(curX > 0){
-		curX -=panBy;
-		curEndX -=panBy;
-		if(curX <= 0){
-		curEndX += (curX + panBy)
-		curX = 0;
+function tc_panRight(){
+	var tc_panBy = (tc_curEndX -tc_curX)/tc_panXFactor;
+	if(tc_curX > 0){
+		tc_curX -=tc_panBy;
+		tc_curEndX -=tc_panBy;
+		if(tc_curX <= 0){
+		tc_curEndX += (tc_curX + tc_panBy)
+		tc_curX = 0;
 	}
-	xScale.domain(curX ,curEndX );
-	rootPanel.render();
-	headerPanel.render();
+	tc_xScale.domain(tc_curX ,tc_curEndX );
+	tc_rootPanel.render();
+	tc_headerPanel.render();
 	}
 }
 
-function panUp(){
-	var panRuntimeBy = (curRuntimeEndY -curRuntimeY)/panYFactor;
-	var panCountBy = (curCountEndY -curCountY)/panYFactor;
-	curRuntimeY +=panRuntimeBy;
-	curRuntimeEndY += panRuntimeBy;
-	curCountY+=panCountBy;
-	curCountEndY += panCountBy;
-	yRuntimeScale.domain(curRuntimeY ,curRuntimeEndY);
-	yCountScale.domain(curCountY, curCountEndY);
-	rootPanel.render();
-	headerPanel.render();
+function tc_panUp(){
+	var tc_panRuntimeBy = (tc_curRuntimeEndY -tc_curRuntimeY)/tc_panYFactor;
+	var tc_panCountBy = (tc_curCountEndY -tc_curCountY)/tc_panYFactor;
+	tc_curRuntimeY +=tc_panRuntimeBy;
+	tc_curRuntimeEndY += tc_panRuntimeBy;
+	tc_curCountY+=tc_panCountBy;
+	tc_curCountEndY += tc_panCountBy;
+	tc_yRuntimeScale.domain(tc_curRuntimeY ,tc_curRuntimeEndY);
+	tc_yCountScale.domain(tc_curCountY, tc_curCountEndY);
+	tc_rootPanel.render();
+	tc_headerPanel.render();
 }
 
-function panDown(){
-	var panRuntimeBy = (curRuntimeEndY -curRuntimeY)/panYFactor;
-	var panCountBy = (curCountEndY -curCountY)/panYFactor;
-	if(curRuntimeY > 0){
+function tc_panDown(){
+	var tc_panRuntimeBy = (tc_curRuntimeEndY -tc_curRuntimeY)/tc_panYFactor;
+	var tc_panCountBy = (tc_curCountEndY -tc_curCountY)/tc_panYFactor;
+	if(tc_curRuntimeY > 0){
 		
-		curRuntimeY -= panRuntimeBy;
-		curRuntimeEndY -= panRuntimeBy;
-		if(curRuntimeY< 0){
-			curRuntimeEndY += (curRuntimeY + panRuntimeBy);
-			curRuntimeY = 0;
+		tc_curRuntimeY -= tc_panRuntimeBy;
+		tc_curRuntimeEndY -= tc_panRuntimeBy;
+		if(tc_curRuntimeY< 0){
+			tc_curRuntimeEndY += (tc_curRuntimeY + panRuntimeBy);
+			tc_curRuntimeY = 0;
 		}
-		yRuntimeScale.domain(curRuntimeY ,curRuntimeEndY );
+		tc_yRuntimeScale.domain(tc_curRuntimeY ,tc_curRuntimeEndY );
 		
-		curCountY -= panCountBy;
-		curCountEndY -= panCountBy;
-		if(curCountY <0){
-			curCountEndY += (curCountY+panCountBy);
-			curCountY = 0;
+		tc_curCountY -= tc_panCountBy;
+		tc_curCountEndY -= tc_panCountBy;
+		if(tc_curCountY <0){
+			tc_curCountEndY += (tc_curCountY+tc_panCountBy);
+			tc_curCountY = 0;
 		}
-		yCountScale.domain(curCountY, curCountEndY);
-		rootPanel.render();
-		headerPanel.render();
+		tc_yCountScale.domain(tc_curCountY, tc_curCountEndY);
+		tc_rootPanel.render();
+		tc_headerPanel.render();
 	}
 }
 
-function zoomOut(){
-	var newX = 0;
-	var newRuntimeY = 0;
-	var newCountY = 0;
+function tc_zoomOut(){
+	var tc_newX = 0;
+	var tc_newRuntimeY = 0;
+	var tc_newCountY = 0;
 	
-	newX = curEndX  + curEndX*0.1;
-	newRuntimeY = curRuntimeEndY  + curRuntimeEndY*0.1;
-	newCountY = curCountEndY+curCountEndY*0.1; 
-	if(curX < newX && isFinite(newX)){
-		curEndX = newX;
-		xScale.domain(curX, curEndX);
+	tc_newX = tc_curEndX  + tc_curEndX*0.1;
+	tc_newRuntimeY = tc_curRuntimeEndY  + tc_curRuntimeEndY*0.1;
+	tc_newCountY = tc_curCountEndY+tc_curCountEndY*0.1; 
+	if(tc_curX < tc_newX && isFinite(tc_newX)){
+		tc_curEndX = tc_newX;
+		tc_xScale.domain(tc_curX, tc_curEndX);
 	}
-	if(curRuntimeY < newRuntimeY && isFinite(newRuntimeY)){
-		curRuntimeEndY = newRuntimeY;
-		yRuntimeScale.domain(curRuntimeY, curRuntimeEndY);
+	if(tc_curRuntimeY < tc_newRuntimeY && isFinite(tc_newRuntimeY)){
+		tc_curRuntimeEndY = tc_newRuntimeY;
+		tc_yRuntimeScale.domain(tc_curRuntimeY, tc_curRuntimeEndY);
 	}
-	if(curCountY < newCountY && isFinite(newCountY)){
-		curCountEndY = newCountY;
-		yCountScale.domain(curCountY, curCountEndY);
+	if(tc_curCountY < tc_newCountY && isFinite(tc_newCountY)){
+		tc_curCountEndY = tc_newCountY;
+		tc_yCountScale.domain(tc_curCountY, tc_curCountEndY);
 	}
-	rootPanel.render();
+	tc_rootPanel.render();
 }
 
-function zoomIn(){
-	var newX = 0;
-	var newRuntimeY = 0;
-	var newCountY =0;
-	newX = curEndX  - curEndX*0.1;
-	newRuntimeY = curRuntimeEndY  - curRuntimeEndY*0.1;
-	newCountY = curCountEndY - curCountEndY*0.1; 
-	if(curX < newX && isFinite(newX)){
-		curEndX = newX;
-		xScale.domain(curX, curEndX);
+function tc_zoomIn(){
+	var tc_newX = 0;
+	var tc_newRuntimeY = 0;
+	var tc_newCountY =0;
+	tc_newX = tc_curEndX  - tc_curEndX*0.1;
+	tc_newRuntimeY = tc_curRuntimeEndY  - tc_curRuntimeEndY*0.1;
+	tc_newCountY = tc_curCountEndY - tc_curCountEndY*0.1; 
+	if(tc_curX < tc_newX && isFinite(tc_newX)){
+		tc_curEndX = tc_newX;
+		tc_xScale.domain(tc_curX, tc_curEndX);
 	}
-	if(curRuntimeY < newRuntimeY && isFinite(newRuntimeY)){
-		curRuntimeEndY = newRuntimeY;
-		yRuntimeScale.domain(curRuntimeY, curRuntimeEndY);
+	if(tc_curRuntimeY < tc_newRuntimeY && isFinite(tc_newRuntimeY)){
+		tc_curRuntimeEndY =tc_newRuntimeY;
+		tc_yRuntimeScale.domain(tc_curRuntimeY, tc_curRuntimeEndY);
 	}
-	if(curCountY < newCountY && isFinite(newCountY)){
-		curCountEndY = newCountY;
-		yCountScale.domain(curCountY, curCountEndY);
+	if(tc_curCountY < tc_newCountY && isFinite(tc_newCountY)){
+		tc_curCountEndY = tc_newCountY;
+		tc_yCountScale.domain(tc_curCountY, tc_curCountEndY);
 	}
-	rootPanel.render();
+	tc_rootPanel.render();
 }
 
-function resetZooming(){
-	curX  = 0;
-	curEndX  = dateTimeCount*bar_spacing;
-	curRuntimeY = 0;
-	curRuntimeEndY =  maxRuntime;
-	curCountY = 0;
-	curCountEndY =  maxCount;
-	xScale.domain(curX, curEndX);
-	yCountScale.domain(curCountY,curCountEndY);
-	yRuntimeScale.domain(curRuntimeY, curRuntimeEndY);
-	rootPanel.render();
-	headerPanel.render();
+function tc_resetZooming(){
+	tc_curX  = 0;
+	tc_curEndX  = tc_dateTimeCount*tc_bar_spacing;
+	tc_curRuntimeY = 0;
+	tc_curRuntimeEndY =  tc_maxRuntime;
+	tc_curCountY = 0;
+	tc_curCountEndY =  tc_maxCount;
+	tc_xScale.domain(tc_curX, tc_curEndX);
+	tc_yCountScale.domain(tc_curCountY,tc_curCountEndY);
+	tc_yRuntimeScale.domain(tc_curRuntimeY, tc_curRuntimeEndY);
+	tc_rootPanel.render();
+	tc_headerPanel.render();
 }
 
-function setType(isJobSet){
-	isJob= isJobSet;
-	loadGraph();
+function tc_setType(isJobSet){
+	tc_isJob= isJobSet;
+	tc_loadGraph();
 }
 
-function setTime(isHourSet){
-	isHour = isHourSet;
-	loadGraph();
+function tc_setTime(isHourSet){
+	tc_isHour = isHourSet;
+	tc_loadGraph();
 }
 
-function setChartTitle(){
-	if(isJob){
-		if(isHour){
+function tc_setChartTitle(){
+	if(tc_isJob){
+		if(tc_isHour){
 			return "Job count/runtime grouped by hour";
 		}else{
 			return "Job count/runtime grouped by day";
 		}
 	}else{
-		if(isHour){
+		if(tc_isHour){
 			return "Invocation count/runtime grouped by hour";
 		}else{
 			return "Invocation count/runtime grouped by day";
@@ -265,15 +265,15 @@ function setChartTitle(){
 	}
 }
 
-function getMetaData(){
-	if(isJob){
-		if(isHour){
+function tc_getMetaData(){
+	if(tc_isJob){
+		if(tc_isHour){
 			return job_metadata_per_hour;
 		}else{
 			return job_metadata_per_day;
 		}
 	}else{
-		if(isHour){
+		if(tc_isHour){
 			return invoc_metadata_per_hour;
 		}else{
 			return invoc_metadata_per_day;
@@ -282,15 +282,15 @@ function getMetaData(){
 		
 }
 
-function getContentData(){
-	if(isJob){
-		if(isHour){
+function tc_getContentData(){
+	if(tc_isJob){
+		if(tc_isHour){
 			return data_job_per_hour;
 		}else{
 			return data_job_per_day;
 		}
 	}else{
-		if(isHour){
+		if(tc_isHour){
 			return data_invoc_per_hour;
 		}else{
 			return data_invoc_per_day;
@@ -298,18 +298,19 @@ function getContentData(){
 	}
 }
 
-function loadGraph(){
+function tc_loadGraph(){
 	
-	data = getContentData();
-	metadata = getMetaData();
-	dateTimeCount =metadata[0].num;
-	maxCount = metadata[0].max_count;
-	maxRuntime =metadata[0].max_runtime;
-	resetZooming();
+	tc_metadata = tc_getMetaData();
+	tc_dateTimeCount =tc_metadata[0].num;
+	tc_maxCount = tc_metadata[0].max_count;
+	tc_maxRuntime =tc_metadata[0].max_runtime;
+	tc_maxRuntime +=  tc_maxRuntime/10;
+	tc_maxCount += tc_maxCount/10;
+	tc_resetZooming();
 }
 
-function getData(){
-	return getContentData();
+function tc_getData(){
+	return tc_getContentData();
 }
 
 """
@@ -357,7 +358,7 @@ def create_include(workflow_stat):
 	@param workflow_stat the WorkflowInfo object reference 
 	"""
 	include_str = """
-<script type="text/javascript" src="data.js"></script>
+<script type="text/javascript" src="tc_data.js"></script>
 <script type="text/javascript" src="tc_action.js"></script>	
 	"""
 	return include_str
@@ -372,45 +373,45 @@ def create_variable(workflow_stat):
 	# Adding  variables
 	var_str = """
 <script type='text/javascript'>
-var isJob = true;
-var isHour = true;
+var tc_isJob = true;
+var tc_isHour = true;
 """
-	var_str += "\nvar dateTimeCount =" + str(number_of_units) +";"
-	var_str += "\nvar maxRuntime =" + str( max_runtime)+";"
-	var_str += "\nvar maxCount = " + str( max_count)+";"
+	var_str += "\nvar tc_dateTimeCount =" + str(number_of_units) +";"
+	var_str += "\nvar tc_maxRuntime =" + str( max_runtime)+";"
+	var_str += "\nvar tc_maxCount = " + str( max_count)+";"
 	var_str +="""
-maxRuntime +=  maxRuntime/10;
-maxCount += maxCount/10;
-var bar_spacing = 50;
-var single_bar_width = 20;
-var yScaleMargin  = 100;
-var xScaleBottomMargin = 120;
-var color =['steelblue','orange'];
-var desc=['Runtime in seconds','count'];
-var h = 840;
-var w = 1400;
-var toolbar_width = 550;
-var containerPanelPadding = 50;
-var chartPanelWidth = w+ containerPanelPadding*2;
-var chartPanelHeight  = h + containerPanelPadding*2;
-var curX  = 0;
-var curEndX  = dateTimeCount*bar_spacing;
-var curRuntimeY = 0;
-var curRuntimeEndY =  maxRuntime;
-var curCountY = 0;
-var curCountEndY =  maxCount;
-var xLabelPos = containerPanelPadding + yScaleMargin;
-var yLabelPos = 40;
-var labelWidth = 200;
-var panXFactor = 10;
-var panYFactor  = 10;
-var headerPanelWidth = w+ containerPanelPadding*2;
-var headerPanelHeight  = 100;
-var footerPanelWidth = w+ containerPanelPadding*2;
-var footerPanelHeight  = 60;
-var xScale = pv.Scale.linear(curX, curEndX).range(0, w-2*yScaleMargin);
-var yRuntimeScale = pv.Scale.linear(curRuntimeY, curRuntimeEndY).range(0, h -xScaleBottomMargin);
-var yCountScale = pv.Scale.linear(curCountY, curCountEndY).range(0, h -xScaleBottomMargin);
+tc_maxRuntime +=  tc_maxRuntime/10;
+tc_maxCount += tc_maxCount/10;
+var tc_bar_spacing = 50;
+var tc_single_bar_width = 20;
+var tc_yScaleMargin  = 100;
+var tc_xScaleBottomMargin = 120;
+var tc_color =['steelblue','orange'];
+var tc_desc=['Runtime in seconds','count'];
+var tc_h = 840;
+var tc_w = 1400;
+var tc_toolbar_width = 550;
+var tc_containerPanelPadding = 50;
+var tc_chartPanelWidth = tc_w+ tc_containerPanelPadding*2;
+var tc_chartPanelHeight  = tc_h + tc_containerPanelPadding*2;
+var tc_curX  = 0;
+var tc_curEndX  = tc_dateTimeCount*tc_bar_spacing;
+var tc_curRuntimeY = 0;
+var tc_curRuntimeEndY =  tc_maxRuntime;
+var tc_curCountY = 0;
+var tc_curCountEndY =  tc_maxCount;
+var tc_xLabelPos = tc_containerPanelPadding + tc_yScaleMargin;
+var tc_yLabelPos = 40;
+var tc_labelWidth = 200;
+var tc_panXFactor = 10;
+var tc_panYFactor  = 10;
+var tc_headerPanelWidth = tc_w+ tc_containerPanelPadding*2;
+var tc_headerPanelHeight  = 100;
+var tc_footerPanelWidth = tc_w+ tc_containerPanelPadding*2;
+var tc_footerPanelHeight  = 60;
+var tc_xScale = pv.Scale.linear(tc_curX, tc_curEndX).range(0, tc_w-2*tc_yScaleMargin);
+var tc_yRuntimeScale = pv.Scale.linear(tc_curRuntimeY, tc_curRuntimeEndY).range(0, tc_h -tc_xScaleBottomMargin);
+var tc_yCountScale = pv.Scale.linear(tc_curCountY, tc_curCountEndY).range(0, tc_h -tc_xScaleBottomMargin);
 </script>
 """
 	return var_str
@@ -423,96 +424,96 @@ def create_toolbar_panel(workflow_stat):
 	"""
 	panel_str = """
 <script type="text/javascript+protovis">
-var headerPanel = new pv.Panel()
-	.width(headerPanelWidth)
-	.height(headerPanelHeight)
+var tc_headerPanel = new pv.Panel()
+	.width(tc_headerPanelWidth)
+	.height(tc_headerPanelHeight)
 	.fillStyle('white');
 
-var panPanel  = headerPanel.add(pv.Panel)
-	.left(w + containerPanelPadding -toolbar_width)
-	.width(toolbar_width)
-	.height(headerPanelHeight);
+var tc_panPanel  = tc_headerPanel.add(pv.Panel)
+	.left(tc_w + tc_containerPanelPadding -tc_toolbar_width)
+	.width(tc_toolbar_width)
+	.height(tc_headerPanelHeight);
 
-panPanel.add(pv.Image)
+tc_panPanel.add(pv.Image)
 	.left(10)
 	.top(34)
 	.width(32)
 	.height(32)
 	.title('Pan left')
-	.url('images/left.png').event('click', panLeft);
+	.url('images/left.png').event('click', tc_panLeft);
 
-panPanel.add(pv.Image)
+tc_panPanel.add(pv.Image)
 	.left(50)
 	.top(34)
 	.width(32)
 	.height(32)
-	.url(fadeRight)
+	.url(tc_fadeRight)
 	.title('Pan right')
-	.event('click', panRight);
+	.event('click', tc_panRight);
 
-panPanel.add(pv.Image)
+tc_panPanel.add(pv.Image)
 	.left(90)
 	.top(34)
 	.width(32)
 	.height(32)
 	.url('images/up.png')
 	.title('Pan up')
-	.event('click', panUp);
+	.event('click', tc_panUp);
  
- panPanel.add(pv.Image)
+ tc_panPanel.add(pv.Image)
 	.left(140)
 	.top(34)
 	.width(32)
 	.height(32)
-	.url(fadeDown)
+	.url(tc_fadeDown)
 	.title('Pan down')
-	.event('click', panDown);
+	.event('click', tc_panDown);
 
-panPanel.add(pv.Image)
+tc_panPanel.add(pv.Image)
 	.left(190)
 	.top(34)
 	.width(32)
 	.height(32)
 	.url('images/zoom-in.png')
 	.title('Zoom in')
-	.event('click', zoomIn);
+	.event('click',tc_zoomIn);
 
-panPanel.add(pv.Image)
+tc_panPanel.add(pv.Image)
 	.left(240)
 	.top(34)
 	.width(32)
 	.height(32)
 	.url('images/zoom-out.png')
 	.title('Zoom out')
-	.event('click', zoomOut);
+	.event('click', tc_zoomOut);
 
-panPanel.add(pv.Image)
+tc_panPanel.add(pv.Image)
 	.left(290)
 	.top(34)
 	.width(32)
 	.height(32)
 	.url('images/zoom-reset.png')
 	.title('Zoom reset')
-	.event('click', resetZooming);
+	.event('click', tc_resetZooming);
 
-headerPanel.add(pv.Label)
+tc_headerPanel.add(pv.Label)
 	.top(40)
-	.left( containerPanelPadding + yScaleMargin)
+	.left( tc_containerPanelPadding + tc_yScaleMargin)
 	.font(function() {return 24 +'px sans-serif';})
 	.textAlign('left')
 	.textBaseline('bottom')
-	.text(function(){ return setChartTitle();});
+	.text(function(){ return tc_setChartTitle();});
 
-headerPanel.add(pv.Label)
+tc_headerPanel.add(pv.Label)
 	.top(80)
-	.left(containerPanelPadding + yScaleMargin)
+	.left(tc_containerPanelPadding + tc_yScaleMargin)
 	.font(function() {return 16 +'px sans-serif';})
 	.textAlign('left')
 	.textBaseline('bottom')
 """
 	panel_str += ".text('" +workflow_stat.dax_label + "');\n"
 	panel_str += """
-headerPanel.render();
+tc_headerPanel.render();
 </script>	
 """
 	return panel_str
@@ -524,81 +525,81 @@ def create_chart_panel(workflow_stat):
 	"""
 	panel_str ="""
 <script type="text/javascript+protovis">
-var rootPanel = new pv.Panel()
-	.width(chartPanelWidth)
-	.height(chartPanelHeight)
+var tc_rootPanel = new pv.Panel()
+	.width(tc_chartPanelWidth)
+	.height(tc_chartPanelHeight)
 	.fillStyle('white');
 
-var vis = rootPanel.add(pv.Panel)
-	.bottom(containerPanelPadding)
-	.top(containerPanelPadding)
-	.left(containerPanelPadding)
-	.width(w)
-	.height(h)
+var tc_vis = tc_rootPanel.add(pv.Panel)
+	.bottom(tc_containerPanelPadding)
+	.top(tc_containerPanelPadding)
+	.left(tc_containerPanelPadding)
+	.width(tc_w)
+	.height(tc_h)
 	.fillStyle('white');
 
-var rulePanelH = vis.add(pv.Panel)
+var tc_rulePanelH = tc_vis.add(pv.Panel)
 	.overflow('hidden')
-	.bottom(xScaleBottomMargin);
+	.bottom(tc_xScaleBottomMargin);
 
-rulePanelH.add(pv.Rule)
-	.left(yScaleMargin - 20)
-	.data(function()yRuntimeScale.ticks())
-	.strokeStyle(desc[0])
+tc_rulePanelH.add(pv.Rule)
+	.left(tc_yScaleMargin - 20)
+	.data(function()tc_yRuntimeScale.ticks())
+	.strokeStyle(tc_desc[0])
 	.width(20)
-	.bottom(yRuntimeScale)
+	.bottom(tc_yRuntimeScale)
 	.anchor('left').add(pv.Label)
 	.textBaseline('bottom')
-	.text(yRuntimeScale.tickFormat);
+	.text(tc_yRuntimeScale.tickFormat);
 
-rulePanelH.add(pv.Rule)
-	.left( w - yScaleMargin)
-	.data(function()yCountScale.ticks())
-	.strokeStyle(desc[1])
+tc_rulePanelH.add(pv.Rule)
+	.left( tc_w - tc_yScaleMargin)
+	.data(function()tc_yCountScale.ticks())
+	.strokeStyle(tc_desc[1])
 	.width(20)
-	.bottom(yCountScale)
+	.bottom(tc_yCountScale)
 	.anchor('right').add(pv.Label)
 	.textBaseline('bottom')
-	.text(yCountScale.tickFormat);
+	.text(tc_yCountScale.tickFormat);
 
-var rulePanelV = vis.add(pv.Panel)
+var tc_rulePanelV = tc_vis.add(pv.Panel)
 	.overflow('hidden')
-	.left(yScaleMargin)
-	.width(w-2*yScaleMargin)
+	.left(tc_yScaleMargin)
+	.width(tc_w-2*tc_yScaleMargin)
 	.bottom(0);
 
-rulePanelV.add(pv.Rule)
-	.bottom(xScaleBottomMargin)
-	.data(function(){return getData();})
+tc_rulePanelV.add(pv.Rule)
+	.bottom(tc_xScaleBottomMargin)
+	.data(function(){return tc_getData();})
 	.strokeStyle('#F8F8F8')
 	.left(function(){
-	return xScale(this.index*bar_spacing) + single_bar_width;
+	return tc_xScale(this.index*tc_bar_spacing) + tc_single_bar_width;
 	})
-	.height(h )
+	.height(tc_h )
 	.anchor('bottom').add(pv.Label)
 	.textAlign('left')
 	.textBaseline("middle")
 	.textAngle(Math.PI / 2)
 	.text(function(d){return d.datetime;});
 
-var chartPanelContainer = vis.add(pv.Panel)
-	.left(yScaleMargin)
-	.bottom(xScaleBottomMargin)
-	.width(w-2*yScaleMargin)
+var tc_chartPanelContainer = tc_vis.add(pv.Panel)
+	.left(tc_yScaleMargin)
+	.bottom(tc_xScaleBottomMargin)
+	.width(tc_w-2*tc_yScaleMargin)
 	.strokeStyle('black')
 	.overflow('hidden');
 
-var runtimePanel = chartPanelContainer.add(pv.Panel)
-	.data(function(){return getData();});
+var tc_runtimePanel = tc_chartPanelContainer.add(pv.Panel)
+	.data(function(){return tc_getData();});
   
-runtimePanel.add(pv.Bar)
+tc_runtimePanel.add(pv.Bar)
 	.bottom(0)
 	.left(function(d){
-	return xScale(this.parent.index*bar_spacing);
+	return tc_xScale(this.parent.index*tc_bar_spacing);
 	})
-	.width(single_bar_width)
+	.width(tc_single_bar_width)
 	.height(function(d){
-	return yRuntimeScale(d.runtime);})
+	return tc_yRuntimeScale(d.runtime);})
 	.fillStyle('steelblue')
 	.anchor("top").add(pv.Label)
 	.textAlign('middle')
@@ -606,14 +607,14 @@ runtimePanel.add(pv.Bar)
 	.textAngle(-Math.PI / 2)
 	.text(function(d)d.runtime);
     
-runtimePanel.add(pv.Bar)
+tc_runtimePanel.add(pv.Bar)
 	.bottom(0)
 	.left(function(d){
-	return xScale(this.parent.index*bar_spacing) + single_bar_width;
+	return tc_xScale(this.parent.index*tc_bar_spacing) + tc_single_bar_width;
 	})
-	.width(single_bar_width)
+	.width(tc_single_bar_width)
 	.height(function(d){
-	return yCountScale(d.count);})
+	return tc_yCountScale(d.count);})
 	.fillStyle('orange')
 	.anchor("top").add(pv.Label)
 	.textAlign('middle')
@@ -621,32 +622,32 @@ runtimePanel.add(pv.Bar)
 	.textAngle(-Math.PI / 2)
 	.text(function(d)d.count);
     
- rootPanel.add(pv.Label)
-	.bottom(containerPanelPadding + xScaleBottomMargin)
+ tc_rootPanel.add(pv.Label)
+	.bottom(tc_containerPanelPadding + tc_xScaleBottomMargin)
 	.font(function() {return 20 +'px sans-serif';})
 	.textAlign('left')
 	.textBaseline('top')
 	.text('Runtime in seconds -->')
 	.textAngle(-Math.PI / 2);
 
-rootPanel.add(pv.Label)
-	.bottom(containerPanelPadding + xScaleBottomMargin)
-	.left(containerPanelPadding + w)
+tc_rootPanel.add(pv.Label)
+	.bottom(tc_containerPanelPadding + tc_xScaleBottomMargin)
+	.left(tc_containerPanelPadding + tc_w)
 	.font(function() {return 20 +'px sans-serif';})
 	.textAlign('left')
 	.textBaseline('top')
 	.text('count -->')
 	.textAngle(-Math.PI / 2);
 
-rootPanel.add(pv.Label)
-	.left(containerPanelPadding + yScaleMargin)
+tc_rootPanel.add(pv.Label)
+	.left(tc_containerPanelPadding + tc_yScaleMargin)
 	.bottom(0)
 	.font(function() {return 20 +'px sans-serif';})
 	.textAlign('left')
 	.textBaseline('bottom')
 	.text('Date time -->');
  
-rootPanel.render();
+tc_rootPanel.render();
 </script>
 """
 	return panel_str
@@ -659,30 +660,30 @@ def create_legend_panel(workflow_stat):
 	"""
 	panel_str ="""
 <script type="text/javascript+protovis">
-var footerPanel = new pv.Panel()
-	.width(footerPanelWidth)
-	.height(footerPanelHeight)
+var tc_footerPanel = new pv.Panel()
+	.width(tc_footerPanelWidth)
+	.height(tc_footerPanelHeight)
 	.fillStyle('white');
-	footerPanel.add(pv.Dot)
-	.data(desc)
+	tc_footerPanel.add(pv.Dot)
+	.data(tc_desc)
 	.left( function(d){
 	if(this.index == 0){
-		xLabelPos = containerPanelPadding +  yScaleMargin;
-		yLabelPos = footerPanelHeight-15;
+		tc_xLabelPos = tc_containerPanelPadding +  tc_yScaleMargin;
+		tc_yLabelPos = tc_footerPanelHeight-15;
 	}else{
-		if(xLabelPos + labelWidth > w - (containerPanelPadding + yScaleMargin+ labelWidth)){
-			xLabelPos =  containerPanelPadding + yScaleMargin;
-			yLabelPos -=15;
+		if(tc_xLabelPos + tc_labelWidth > tc_w - (tc_containerPanelPadding + tc_yScaleMargin+ tc_labelWidth)){
+			tc_xLabelPos =  tc_containerPanelPadding + tc_yScaleMargin;
+			tc_yLabelPos -=15;
 		}
 		else{
-			xLabelPos += labelWidth;
+			tc_xLabelPos += tc_labelWidth;
 		}
 	}
-	return xLabelPos;}
+	return tc_xLabelPos;}
 	)
 	.bottom(function(d){
-	return yLabelPos;})
-	.fillStyle(function(d) color[this.index])
+	return tc_yLabelPos;})
+	.fillStyle(function(d) tc_color[this.index])
 	.strokeStyle(null)
 	.size(49)
 	.anchor('right').add(pv.Label)
@@ -690,7 +691,7 @@ var footerPanel = new pv.Panel()
 	.textAlign('left')
 	.text(function(d) d);
 
-footerPanel.render();
+tc_footerPanel.render();
 </script>
 	"""
 	return panel_str
@@ -705,13 +706,13 @@ def create_bottom_toolbar():
 <div id ='time_chart_footer_div' style='width: 1500px; margin : 0 auto;' >
 	<div style ='float:right'>
 		<div> Time filter </div>
-		<input type='radio' name='time_filter' value='by day' onclick="setTime(false);" /> by day<br />
-		<input type='radio' name='time_filter' value='by hour' onclick="setTime(true);" checked /> by hour<br />
+		<input type='radio' name='time_filter' value='by day' onclick="tc_setTime(false);" /> by day<br />
+		<input type='radio' name='time_filter' value='by hour' onclick="tc_setTime(true);" checked /> by hour<br />
 	</div>
 	<div>
 		<div>Type filter</div>
-		<input type='radio' name='type_filter' value='show jobs' onclick="setType(true);" checked/> show jobs<br />
-		<input type='radio' name='type_filter' value='show invocations' onclick="setType(false);"/> show invocations<br />
+		<input type='radio' name='type_filter' value='show jobs' onclick="tc_setType(true);" checked/> show jobs<br />
+		<input type='radio' name='type_filter' value='show invocations' onclick="tc_setType(false);"/> show invocations<br />
 	</div>
 </div>
 	
