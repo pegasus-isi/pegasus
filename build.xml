@@ -449,11 +449,15 @@
     <!-- lib -->
     <mkdir dir="${dist.lib}/javascript"/>
     <copy preservelastmodified="true" todir="${dist.lib}/javascript">
-      <fileset dir="lib/javascript" includes="**/*.js"/>
+      <fileset dir="lib/pegasus/javascript" includes="**/*.js"/>
     </copy>
     <mkdir dir="${dist.lib}/perl"/>
     <copy preservelastmodified="true" todir="${dist.lib}/perl">
-      <fileset dir="lib/perl" includes="**/*.pm"/>
+      <fileset dir="lib/pegasus/perl" includes="**/*.pm"/>
+    </copy>
+    <mkdir dir="${dist.lib}/php"/>
+    <copy preservelastmodified="true" todir="${dist.lib}/php">
+      <fileset dir="lib/pegasus/php" includes="**/*.php"/>
     </copy>
     <mkdir dir="${dist.lib}/python"/>
     <copy preservelastmodified="true" todir="${dist.lib}/python">
