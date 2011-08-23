@@ -4,7 +4,22 @@
 #
 # $Id$
 
-. "`dirname $0`/common.sh"
+set -e
+
+PEGASUS_CONFIG="`dirname $0`/pegasus-config"
+
+CLASSPATH=`$PEGASUS_CONFIG --classpath --noeoln`
+export CLASSPATH
+
+. "`$PEGASUS_CONFIG --common-sh`"
+
+# PEGASUS_HOME should not be set - this is so we can find all the
+# places in the planner which still depends on PEGASUS_HOME
+unset PEGASUS_HOME
 
 # run java program
-nice ${JAVA} "-Dpegasus.home=${PEGASUS_HOME}" $addon edu.isi.pegasus.planner.client.CPlanner "$@"
+nice ${JAVA} \
+       "-Dpegasus.home.bindir=`$PEGASUS_CONFIG --bin`" \
+       "-Dpegasus.home.schemadir=`$PEGASUS_CONFIG --schema`" \
+       $addon edu.isi.pegasus.planner.client.CPlanner "$@"
+

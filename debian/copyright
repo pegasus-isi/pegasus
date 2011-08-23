@@ -1,0 +1,28 @@
+This work was packaged for Debian by:
+
+    Mats Rynge <mats@rynge.net> on Mon, 22 Aug 2011 09:11:11 -0700
+
+It was downloaded from:
+
+    http://pegasus.isi.edu
+
+Upstream Author(s):
+
+    Pegasus Development Team
+    <pegasus-support@isi.edu>
+
+Copyright:
+
+    Copyright 2007-2011 University Of Southern California
+
+License:
+
+    Apache version 2.0
+    see "/usr/share/common-licenses/Apache-2.0"
+
+The Debian packaging is:
+
+     Copyright 2007-2011 University Of Southern California
+     and is licenced under the Apache version 2.0,
+     see "/usr/share/common-licenses/Apache-2.0"
+

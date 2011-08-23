@@ -21,6 +21,10 @@ ifndef ${prefix}
 prefix = $(PEGASUS_HOME)
 endif
 
+ifndef ${datadir}
+datadir = $(prefix)/share 
+endif
+
 NROFF   = groff -mandoc
 TEXT    = -Tlatin1
 HTML    = -Thtml
@@ -181,10 +185,10 @@ install: kickstart
 	$(INSTALL) -m 0755 kickstart $(prefix)/bin
 
 install.doc: $(GENDOC)
-	$(INSTALL) -m 0644 $(GENDOC) $(prefix)/man
+	$(INSTALL) -m 0644 $(GENDOC) $(datadir)/man
 
 install.man: kickstart.1
-	$(INSTALL) -m 0644 kickstart.1 $(prefix)/man/man1
+	$(INSTALL) -m 0644 kickstart.1 $(datadir)/man/man1
 
 install.all: install install.man install.doc
 

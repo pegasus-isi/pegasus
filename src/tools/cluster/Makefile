@@ -16,6 +16,10 @@ ifndef ${prefix}
 prefix	= $(PEGASUS_HOME)
 endif
 
+ifndef ${datadir}
+datadir = $(prefix)/share 
+endif
+
 NROFF   = groff -mandoc
 TEXT    = -Tutf8
 HTML    = -Thtml
@@ -135,10 +139,10 @@ install: seqexec
 	$(INSTALL) -m 0755 $^ $(prefix)/bin
 
 install.man: seqexec.1
-	$(INSTALL) -m 0644 $^ $(prefix)/man/man1
+	$(INSTALL) -m 0644 $^ $(datadir)/man/man1
 
 install.doc: $(GENDOC)
-	$(INSTALL) -m 0644 $(GENDOC) $(prefix)/man
+	$(INSTALL) -m 0644 $(GENDOC) $(datadir)/man
 
 install.all: install install.man install.doc
 

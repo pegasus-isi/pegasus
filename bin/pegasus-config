@@ -16,23 +16,62 @@ use Getopt::Long qw(:config bundling no_ignore_case);
 use POSIX (); 
 use Sys::Hostname; 
 
-# take a stab at guessing our PEGASUS_HOME, assuming 'bin' installation
-BEGIN { 
-    $main::home = $ENV{'PEGASUS_HOME'} = dirname(Cwd::abs_path(dirname($0)));
-    die( "FATAL: Unable to determine where Pegasus resides.\n" )
-	unless -d $main::home; 
+# We might need a better test here in the future, but for now, if common.sh
+# is in the same directory as pegasus-config, we are in tarball mode.
+# Otherwise we are in native packaging mode (FHS).
+
+my $bin_dir = Cwd::abs_path(dirname($0));
+my $fhs = 1;
+if ( -e "$bin_dir/common.sh" ) {
+    $fhs = 0;
 }
 
-use lib File::Spec->catdir( $main::home, 'lib', 'perl' );
-use Pegasus::Common; 
-
-my $tmpdir = $ENV{'MY_TMP'} ||	# MY_TMP to override standard settings
+my $tmpdir = $ENV{'MY_TMP'} ||  # MY_TMP to override standard settings
     $ENV{TMP} ||                # standard
     $ENV{TEMP} ||               # windows standard
     $ENV{TMPDIR} ||             # also somewhat used
     File::Spec->tmpdir() ||     # OK, this gets used if all above fail
     ( -d '/scratch' ? '/scratch' : '/tmp' ); # last resort
 my $userdir = $ENV{HOME} || (getpwuid($>))[7] || $tmpdir; # user $HOME
+
+# paths to different parts of Pegasus, assuming FHS mode
+my $conf_dir = "/etc/pegasus";
+my $java_dir = "/usr/share/pegasus/java";
+my $perl_dir = "/usr/lib/pegasus/perl";
+my $python_dir = "/usr/lib/pegasus/python";
+my $schema_dir = "/usr/share/pegasus/schema";
+my $common_sh = "/usr/share/pegasus/common.sh";
+my $extra_classpath = "";
+
+# paths in non-FHS mode
+if (!$fhs) {
+    # basically PEGASUS_HOME - but let's not expose that anymore
+    my $base_dir = dirname($bin_dir);
+    $conf_dir = "$base_dir/etc";
+    $java_dir = "$base_dir/share/pegasus/java";
+    $perl_dir = "$base_dir/lib/pegasus/perl";
+    $python_dir = "$base_dir/lib/pegasus/python";
+    $schema_dir = "$base_dir/etc";
+    $common_sh = "$base_dir/bin/common.sh";
+
+    if ( -e "$base_dir/build/classes" ) {
+        $extra_classpath = "$base_dir/build/classes";
+    }
+}
+
+# now check the paths
+die( "FATAL: Unable to determine location of configuration files\n" )
+unless -e $conf_dir;
+
+# classpath
+my @jars = sort(<$java_dir/*.jar>);
+if ($extra_classpath ne "") {
+    unshift(@jars, $extra_classpath);
+}
+my $classpath = join(":", @jars);
+if ($ENV{"CLASSPATH"} ne "") {
+    $classpath = $classpath . ":" . $ENV{"CLASSPATH"};
+}
 
 sub usage {
     my $app = basename($0); 
@@ -45,22 +84,23 @@ to query the current Pegasus installation.
 Arguments:
  -h|--help        Print this help and exit.
  -V|--version     Print Pegasus version information and exit. 
- --home           Print directory of Pegasus installation, 
-                  formerly known as PEGASUS_HOME location. 
- --jar            Tries to determine the pegasus.jar location. 
- -c|--classpath   TBD
- --java           TBD
+ --bin            Print the directory containing Pegasus binaries.
+ --conf           Print the directory containing configuration files.
+ --java           Print the directory containing the jars.
  --perl           Print the directory to include into your PERL5LIB.
  --python         Print the directory to include into your PYTHONLIB.
+ --schema         Print the directory containing schemas.
+ --classpath      Builds a classpath containing the Pegasus jars.
+ --common-sh      Print the path to the common.sh file.
  --noeoln         Do not produce a end-of-line after output. This is useful 
                   when being called from non-shell backticks in scripts.
  --local-site [d] Create a site catalog entry for site "local". This is only
                   an XML snippet without root element nor XML headers. The
-		  optional argument "d" points to the mount point to use.
+                  optional argument "d" points to the mount point to use.
                   If not specified, defaults to the user\'s \$HOME directory.
  --full-local [d] Create a complete site catalog with only site "local". The
                   an XML snippet without root element nor XML headers. The
-		  optional argument "d" points to the mount point to use.
+                  optional argument "d" points to the mount point to use.
                   If not specified, defaults to the user\'s \$HOME directory.
 
 EOF
@@ -74,12 +114,12 @@ sub site_snippet($) {
     # check for presence of Globus
     my $g_l = $ENV{'GLOBUS_LOCATION'};
     unless ( defined $g_l ) { 
-	my $gr = find_exec( 'globusrun' ); 
-	if ( defined $gr && -x $gr ) { 
-	    # OK, so we got Globus. Guess the globus location
-	    $g_l = dirname( Cwd::abs_path(dirname($gr)) ); 
-	}
-	undef $g_l unless -d $g_l; 
+        my $gr = find_exec( 'globusrun' ); 
+        if ( defined $gr && -x $gr ) { 
+            # OK, so we got Globus. Guess the globus location
+            $g_l = dirname( Cwd::abs_path(dirname($gr)) ); 
+        }
+        undef $g_l unless -d $g_l; 
     }
 
     print "  <!-- site: local -->\n";
@@ -135,11 +175,11 @@ sub site_snippet($) {
     print "    <profile namespace=\"env\" key=\"PEGASUS_HOME\">$main::home</profile>\n"; 
     print "    <profile namespace=\"env\" key=\"HOME\">$userdir</profile>\n"; 
     if ( defined $g_l ) {
-	print "    <profile namespace=\"env\" key=\"GLOBUS_LOCATION\">$g_l</profile>\n"; 
+        print "    <profile namespace=\"env\" key=\"GLOBUS_LOCATION\">$g_l</profile>\n"; 
     }
     if ( exists $ENV{'LD_LIBRARY_PATH'} ) { 
-	print( "    <profile namespace=\"env\" key=\"LD_LIBRARY_PATH\">", 
-	       $ENV{LD_LIBRARY_PATH}, "</profile>\n" ); 
+        print( "    <profile namespace=\"env\" key=\"LD_LIBRARY_PATH\">", 
+            $ENV{LD_LIBRARY_PATH}, "</profile>\n" ); 
     }
     print "  </site>\n";
 }
@@ -148,80 +188,69 @@ sub site_snippet($) {
 usage() unless @ARGV;
 my $eoln = 1; 
 GetOptions( "help|h" => \&usage
-	  , 'eoln|crlf!' => \$eoln
-	  , 'version|V' => sub {
-	      my $p_v= File::Spec->catfile( $main::home, 
-					    'bin', 
-					    'pegasus-version' ); 
-	      my $p = `$p_v`; 
-	      chomp($p) if ! $eoln;
-	      print $p;
-	      exit 0; 
-	  }
-	  , 'home' => sub {
-	      print $main::home;
-	      print "\n" if $eoln; 
-	      exit 0; 
-	  }
-	  , 'java' => sub {
-	      die "to be done";
-	  }
-	  , 'classpath|c' => sub {
-	      die "to be done";
-	  }
-	  , 'jar' => sub {
-	      my $p = File::Spec->catfile( $main::home,
-					   'lib',
-					   'pegasus.jar' ); 
-	      if ( ! -r $p ) { 
-		  # try development version locations
-		  my $a = File::Spec->catfile( $main::home, 
-					       'build', 'classes' ); 
-		  if ( -d $a ) {
-		      $p = $a;
-		  } else {
-		      die( "FATAL: Unable to locate pegasus.jar\n" );
-		  }
-	      }
-
-	      print $p;
-	      print "\n" if $eoln; 
-	      exit 0;
-	  }
-	  , 'perl' => sub {
-	      my $p = File::Spec->catfile( $main::home,
-					   'lib',
-					   'perl' ); 
-	      die( "FATAL: Unable to locate PERL5LIB path\n" )
-		  unless -d $p; 
-	      print $p;
-	      print "\n" if $eoln; 
-	      exit 0;
-	  }
-	  , 'python' => sub {
-	      my $p = File::Spec->catfile( $main::home,
-					   'lib',
-					   'python' ); 
-	      die( "FATAL: Unable to locate PYTHONLIB path\n" )
-		  unless -d $p; 
-	      print $p;
-	      print "\n" if $eoln; 
-	      exit 0; 
-	  }
-	  , 'local-site:s' => sub {
-	      site_snippet( ($_[1] || $userdir) ); 
-	      exit 0; 
-	  }
-	  , 'full-local:s' => sub {
-	      print "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
-	      print '<!-- generated: ', isodate, " -->\n"; 
-	      print( '<sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog"',
-		     ' xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"',
-		     ' xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog',
-		     ' http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0">', "\n" ); 
-	      site_snippet( ($_[1] || $userdir) ); 
-	      print "</sitecatalog>\n";
-	      exit 0;
-	  }
-	  );
+    , 'eoln|crlf!' => \$eoln
+    , 'version|V' => sub {
+        my $p_v= File::Spec->catfile( $bin_dir, 
+            'pegasus-version' ); 
+        my $p = `$p_v`; 
+        chomp($p) if ! $eoln;
+        print $p;
+        exit 0; 
+    }
+    , 'bin' => sub {
+        print $bin_dir;
+        print "\n" if $eoln; 
+        exit 0; 
+    }
+    , 'conf' => sub {
+        print $conf_dir;
+        print "\n" if $eoln; 
+        exit 0; 
+    }
+    , 'classpath' => sub {
+        print $classpath;
+        print "\n" if $eoln; 
+        exit 0; 
+    }
+    , 'java' => sub {
+        print $java_dir;
+        print "\n" if $eoln; 
+        exit 0; 
+    }
+    , 'perl' => sub {
+        print $perl_dir;
+        print "\n" if $eoln; 
+        exit 0; 
+    }
+    , 'python' => sub {
+        print $python_dir;
+        print "\n" if $eoln; 
+        exit 0; 
+    }
+    , 'schema' => sub {
+        print $schema_dir;
+        print "\n" if $eoln; 
+        exit 0; 
+    }
+    , 'common-sh' => sub {
+        print $common_sh;
+        print "\n" if $eoln; 
+        exit 0; 
+    }
+    , 'local-site:s' => sub {
+        site_snippet( ($_[1] || $userdir) ); 
+        exit 0; 
+    }
+    , 'full-local:s' => sub {
+        print "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
+        #print '<!-- generated: ', isodate, " -->\n"; 
+        print('<sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog"',
+              ' xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"',
+              ' xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog',
+              ' http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0">', "\n" ); 
+        site_snippet( ($_[1] || $userdir) ); 
+        print "</sitecatalog>\n";
+        exit 0;
+    }
+);
 usage(); 
