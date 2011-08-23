@@ -66,7 +66,14 @@ _LEVELS = [logging.ERROR, logging.WARN, logging.INFO, logging.DEBUG]
 prog_base = os.path.split(sys.argv[0])[1]
 
 # Import our modules
-import common   # Takes care of setting up PEGASUS_HOME and PYTHONPATH
+# use pegasus-config to find our lib path
+bin_dir = os.path.normpath(os.path.join(os.path.dirname(sys.argv[0])))
+pegasus_config = os.path.join(bin_dir, "pegasus-config") + " --noeoln --python"
+lib_dir = subprocess.Popen(pegasus_config, stdout=subprocess.PIPE, shell=True).communicate()[0]
+# Insert this directory in our search path
+os.sys.path.insert(0, lib_dir)
+
+import Pegasus.common
 from Pegasus.tools import utils
 from Pegasus.tools import properties
 from Pegasus.tools import kickstart_parser
