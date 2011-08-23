@@ -32,8 +32,8 @@ pegasus\-status \- Pegasus workflow- and run\-time status
 [\-w|\-\-watch\~[s]] [\-L|\-\-[no]legend] [\-c|\-\-[no]color]
 [\-U|\-\-[no]utf8] [\-Q|\-\-[no]queue] [\-v|\-\-verbose]
 [\-d|\-\-debug] [\-u|\-\-user\~name] [\-i|\-\-[no]idle] [\-\-[no]held]
-[\-\-[no]heavy] [\-j|\-\-jobtype\~jt] [\-s|\-\-site\~sid] [\-l|\-\-long]
-[\-S|\-\-[no]success] [rundir]
+[\-\-[no]heavy] [\-j|\-\-jobtype\~jt] [\-s|\-\-site\~sid]
+[\-S|\-\-[no]success] { [\-l|\-\-long] | [\-r|\-\-rows] } [rundir]
 .SH "DESCRIPTION"
 .B pegasus\-status
 shows the current state of the Condor Q and a workflow, depending on settings.
@@ -262,9 +262,36 @@ By default, all sites are shown.
 This option will show one line per sub-DAG, including one line for the
 workflow. If there is only a single DAG pertaining to the 
 .IR rundir , 
-only total will be shown. 
+only total will be shown.
+.IP
+This option is mutually exclusive with the 
+.I \-\-rows
+option. If both are specified, the 
+.I \-\-long
+option takes precedence. 
 .IP
 By default, only DAG totals (sums) are shown. 
+.TP
+.B \-r
+.PD 0
+.TP
+.PD 1
+.B \-\-rows
+.PD 0
+.TP
+.PD 1
+.B \-\-norows
+This option is shows the workflow summary statistics in rows instead of
+columns. This option is useful for sending the statistics in email and
+later viewing them in a proportional font. 
+.IP
+This option is mutually exclusive with the 
+.I \-\-long 
+option. If both are specified, the 
+.I \-\-long
+option takes precedence.  
+.IP
+By default, the summary is shown in columns. 
 .TP
 .B \-S
 .PD 0
