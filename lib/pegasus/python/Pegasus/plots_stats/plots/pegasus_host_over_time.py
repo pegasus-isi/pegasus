@@ -33,7 +33,7 @@ logger = logging.getLogger()
 # Set default level to INFO
 logger.setLevel(logging.INFO)
 
-import common
+import Pegasus.common
 from Pegasus.tools import utils
 from Pegasus.plots_stats import utils as plot_utils
 import populate
@@ -972,7 +972,7 @@ def setup(submit_dir,out_dir,log_level):
 		log_level = "info"
 	setup_logger(log_level)
 	plot_utils.create_directory(output_dir)
-	src_js_path = os.path.join(common.pegasus_home, "lib/javascript")
+	src_js_path = os.path.join(common.pegasus_home, "lib/pegasus/javascript")
 	src_img_path = os.path.join(common.pegasus_home, "share/plots/images/protovis/")
 	dest_js_path = os.path.join(output_dir, "js")
 	dest_img_path = os.path.join(output_dir, "images/")
