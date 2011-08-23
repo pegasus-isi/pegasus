@@ -23,7 +23,6 @@
     <mkdir dir="dist"/>  
     <mkdir dir="${build.src}"/>
     <copy preservelastmodified="true" todir="${build.src}" file="LICENSE"/>
-    <copy preservelastmodified="true" todir="${build.src}" file="GTPL"/>
     <tstamp>
       <format property="ISODATE.full" pattern="yyyy-MM-dd'T'HH:mm:ssZZZZZ"/>
       <format property="ISODATE.short" pattern="yyyyMMdd"/>
@@ -495,10 +494,7 @@
       <fileset dir=".">
         <include name="README"/>
         <include name="LICENSE"/>                                                               
-        <include name="GTPL"/> 
-        <include name="MIGRATING_FROM_VDS"/>
         <include name="RELEASE_NOTES"/>
-        <include name="CHANGELOG"/>
       </fileset>
     </copy>
 
