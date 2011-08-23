@@ -17,7 +17,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 
-import common
+import Pegasus.common
 from Pegasus.plots_stats import utils as plot_stats_utils
 from Pegasus.tools import utils
 
@@ -132,7 +132,7 @@ def setup(output_dir):
 	plot_stats_utils.create_directory(dest_css_path)
 	src_css_path =os.path.join(common.pegasus_home, "share/plots/css/default.css")
 	shutil.copy(src_css_path, dest_css_path)
-	src_php_path =os.path.join(common.pegasus_home, "lib/php/")
+	src_php_path =os.path.join(common.pegasus_home, "lib/pegasus/php/")
 	plot_stats_utils.copy_files(src_php_path, output_dir )
 	return
 

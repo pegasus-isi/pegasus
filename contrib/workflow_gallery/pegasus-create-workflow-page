@@ -18,7 +18,7 @@ logger = logging.getLogger()
 #logger.setLevel(logging.INFO)
 
 
-import common
+import Pegasus.common
 from Pegasus.tools import utils
 from Pegasus.plots_stats import utils as plot_stats_utils
 from Pegasus.plots_stats.plots import populate
@@ -321,7 +321,7 @@ def setup_run_dir(output_dir):
 	
 
 def setup(output_dir):
-	src_php_path =os.path.join(common.pegasus_home, "lib/php/")
+	src_php_path =os.path.join(common.pegasus_home, "lib/pegasus/php/")
 	plot_stats_utils.copy_files(src_php_path, output_dir )
 
 def create_workflow_page(tar_file_name , output_dir , log_level):
