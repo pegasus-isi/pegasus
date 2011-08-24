@@ -12,6 +12,7 @@
  * Copyright 1999-2004 University of Chicago and The University of
  * Southern California. All rights reserved.
  */
+#include <sys/param.h>
 #include <limits.h>
 #include <errno.h>
 #include <stdlib.h>
@@ -338,23 +339,6 @@ preserveFile( const char* fn )
   }
 }
 
-static
-char*
-canonicalize( const char* filename )
-/* purpose: Try to obtain the realpath(3) to the given filename.
- * paramtr: filename (IN): filename to memorize (deep copy)
- * returns: the real path or original filename in a new buffer.
- */
-{
-#ifdef HAS_REALPATH_EXT
-  /* these OS have a *safe* usage extension to the standard */
-  return realpath( filename, NULL ); 
-#else
-  /* these OS may not have a safe realpath(), so don't use it */
-  return strdup(filename); 
-#endif /* HAS_REALPATH_EXT */
-}
-
 int
 initStatInfoFromName( StatInfo* statinfo, const char* filename, int openmode,
 		      int flag )
@@ -371,7 +355,7 @@ initStatInfoFromName( StatInfo* statinfo, const char* filename, int openmode,
   memset( statinfo, 0, sizeof(StatInfo) );
   statinfo->source = IS_FILE;
   statinfo->file.descriptor = openmode;
-  statinfo->file.name = canonicalize(filename);
+  statinfo->file.name = strdup(filename);
 
   if ( (flag & 0x01) == 1 ) {
     /* FIXME: As long as we use shared stdio for stdout and stderr, we need
@@ -502,6 +486,8 @@ printXMLStatInfo( char* buffer, const size_t size, size_t* len, size_t indent,
  * returns: number of characters put into buffer (buffer length)
  */
 {
+  char* real = NULL; 
+
   /* sanity check */
   if ( info->source == IS_INVALID ) return *len;
 
@@ -565,8 +551,16 @@ printXMLStatInfo( char* buffer, const size_t size, size_t* len, size_t indent,
 	     indent+2, "", info->deferred );
 #endif
 
+#ifdef HAS_REALPATH_EXT
+    real = realpath( info->file.name, NULL );
+#endif /* HAS_REALPATH_EXT */
     myprint( buffer, size, len, 
-	     "%*s<file name=\"%s\"", indent+2, "", info->file.name );
+	     "%*s<file name=\"%s\"", indent+2, "", 
+	     real ? real : info->file.name );
+#ifdef HAS_REALPATH_EXT
+    if ( real ) free((void*)real);
+#endif /* HAS_REALPATH_EXT */
+
     if ( info->error == 0 && S_ISREG(info->info.st_mode) && 
 	 info->info.st_size > 0 ) {
       /* optional hex information */
