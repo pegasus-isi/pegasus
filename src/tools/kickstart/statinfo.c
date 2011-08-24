@@ -558,7 +558,7 @@ printXMLStatInfo( char* buffer, const size_t size, size_t* len, size_t indent,
 	     "%*s<file name=\"%s\"", indent+2, "", 
 	     real ? real : info->file.name );
 #ifdef HAS_REALPATH_EXT
-    free((void*) real);
+    if ( real ) free((void*) real);
 #endif /* HAS_REALPATH_EXT */
 
     if ( info->error == 0 && S_ISREG(info->info.st_mode) && 
