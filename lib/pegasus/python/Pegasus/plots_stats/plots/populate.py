@@ -14,7 +14,6 @@ logger = logging.getLogger()
 # Set default level to INFO
 logger.setLevel(logging.INFO)
 
-import common
 from Pegasus.tools import utils
 from Pegasus.plots_stats import utils as plot_utils
 from workflow_info import WorkflowInfo, JobInfo , TransformationInfo

@@ -36,7 +36,6 @@ logger = logging.getLogger()
 # Set default level to INFO
 logger.setLevel(logging.INFO)
 
-import common
 from Pegasus.plots_stats import utils as plot_utils
 from datetime import timedelta
 from datetime import datetime
