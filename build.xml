@@ -482,7 +482,7 @@
     <!-- share -->
     <mkdir dir="${dist.share}"/>
     <copy preservelastmodified="true" todir="${dist.share}">
-      <fileset dir="share" includes="**/*"/>
+      <fileset dir="share/pegasus" includes="**/*"/>
     </copy>
 
     <!-- sql -->

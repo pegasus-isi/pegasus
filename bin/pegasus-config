@@ -34,6 +34,8 @@ my $share_dir = "$base_dir/share/pegasus";
 my $java_dir = "$share_dir/java";
 my $perl_dir = "$base_dir/lib/pegasus/perl";
 my $python_dir = "$base_dir/lib/pegasus/python";
+my $php_dir = "$base_dir/lib/pegasus/php";
+my $js_dir = "$base_dir/lib/pegasus/javascript";
 my $schema_dir = "$base_dir/etc";
 my $extra_classpath = "";
 
@@ -196,6 +198,8 @@ GetOptions( "help|h" => \&usage
         print "my \$pegasus_java_dir = \"$java_dir\";\n";
         print "my \$pegasus_perl_dir = \"$perl_dir\";\n";
         print "my \$pegasus_python_dir = \"$python_dir\";\n";
+        print "my \$pegasus_php_dir = \"$php_dir\";\n";
+        print "my \$pegasus_javascript_dir = \"$js_dir\";\n";
         print "my \$pegasus_share_dir = \"$share_dir\";\n";
         print "unshift(\@INC, \$pegasus_perl_dir);\n";
         exit 0; 
@@ -206,6 +210,8 @@ GetOptions( "help|h" => \&usage
         print "pegasus_java_dir = \"$java_dir\"\n";
         print "pegasus_perl_dir = \"$perl_dir\"\n";
         print "pegasus_python_dir = \"$python_dir\"\n";
+        print "pegasus_php_dir = \"$php_dir\"\n";
+        print "pegasus_javascript_dir = \"$js_dir\"\n";
         print "pegasus_share_dir = \"$share_dir\"\n";
         print "os.sys.path.insert(0, pegasus_python_dir)\n";
         exit 0; 
