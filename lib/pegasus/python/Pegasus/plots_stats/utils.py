@@ -12,6 +12,7 @@ import shutil
 from datetime import datetime
 
 from Pegasus.tools import properties
+from Pegasus.tools import utils
 
 # Initialize logging object
 logger = logging.getLogger()
