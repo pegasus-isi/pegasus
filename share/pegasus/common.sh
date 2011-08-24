@@ -38,29 +38,11 @@ if [ ! -e "${JAVA}" ]; then
 	exit 1
 fi
 
-JAVA_VERSION=`${JAVA} -version 2>&1 | awk '/^java version/ {gsub(/"/,""); print $3}'`
+JAVA_VERSION=`${JAVA} -mx128m -version 2>&1 | awk '/^java version/ {gsub(/"/,""); print $3}'`
 if [ `echo ${JAVA_VERSION} | cut -c1,3` -lt 16 ]; then
 	echo "ERROR: Java 1.6 or later required. Please set JAVA_HOME or PATH to point to a newer Java."
 	exit 1
 fi
-
-# Find PEGASUS_HOME
-if [ "X${PEGASUS_HOME}" = "X" ]; then
-	PEGASUS_HOME="`dirname $0`/.."
-fi
-
-# normalize PEGASUS_HOME - remove trailing slashes, double slashes, ...
-# this is needed as the java code do string compares on the classpath
-PEGASUS_HOME=`(cd $PEGASUS_HOME && pwd)`
-export PEGASUS_HOME
-
-# build the classpath
-CLASSPATH=`( find ${PEGASUS_HOME}/lib -name '*.jar' | sort | tr '\012' ':' ; echo "" ) | sed -e 's/::/:/g' -e 's/^://' -e 's/:$//'`
-if [ "x${PEGASUS_CLASSPATH_PREPEND}" != "x" ]; then
-    CLASSPATH="${PEGASUS_CLASSPATH_PREPEND}:${CLASSPATH}"
-fi
-CLASSPATH=$PEGASUS_HOME/build/classes:$CLASSPATH
-export CLASSPATH
 
 addon=''
 while [ true ]; do
@@ -87,3 +69,4 @@ if [ "X$no_heap_setup" = "X" ]; then
     test "X${JAVA_HEAPMAX}" = "X" || addon="$addon -Xmx${JAVA_HEAPMAX}m"
     test "X${JAVA_HEAPMIN}" = "X" || addon="$addon -Xms${JAVA_HEAPMIN}m"
 fi
+

@@ -38,4 +38,3 @@ else:
 cl.setFormatter(formatter)
 logger.addHandler(cl)
 
-

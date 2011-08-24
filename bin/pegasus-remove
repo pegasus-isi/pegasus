@@ -25,8 +25,8 @@ use File::Spec;			# standard module since 5.005 or 5.6.0
 use Getopt::Long qw(:config bundling no_ignore_case);
 
 BEGIN { 
-    require File::Spec->catfile( dirname($0), 'common.pm' );
-    common->import(':all');
+    my $pegasus_config = File::Spec->catfile( dirname($0), 'pegasus-config' );
+    eval `$pegasus_config --perl-dump` or die("Unable to eval pegasus-config output. $@");
 }
 use Pegasus::Common;
 
