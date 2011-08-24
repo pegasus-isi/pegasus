@@ -137,7 +137,8 @@ def get_job_inst_sub_workflow_map(workflow ):
 	job_inst_wf_uuid_map ={}
 	jb_inst_sub_wf_list = workflow.get_job_instance_sub_wf_map()
 	for jb_inst_sub_wf in jb_inst_sub_wf_list:
-		job_inst_wf_uuid_map[jb_inst_sub_wf.job_instance_id] = global_wf_id_uuid_map[jb_inst_sub_wf.subwf_id]
+		if jb_inst_sub_wf.subwf_id is not None:
+			job_inst_wf_uuid_map[jb_inst_sub_wf.job_instance_id] = global_wf_id_uuid_map[jb_inst_sub_wf.subwf_id]
 	return job_inst_wf_uuid_map
 
 
