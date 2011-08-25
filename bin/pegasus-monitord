@@ -4183,7 +4183,7 @@ def prog_sigint_handler(signum, frame):
     """
     This function catches SIGINT.
     """
-    logger.info("graceful exit on signal %d" % (signum))
+    logger.warning("graceful exit on signal %d" % (signum))
     # Go through all workflows we are tracking
     for my_wf in wfs:
         if my_wf.wf is not None:
