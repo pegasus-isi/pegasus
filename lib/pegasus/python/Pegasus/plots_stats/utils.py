@@ -76,7 +76,7 @@ def print_property_table(props , border= True , separator =""):
 	return html_content
 	
 
-def print_sub_wf_links(wf_id_uuid_list ):
+def print_sub_wf_links(wf_id_uuid_list , extn = "html"):
 	"""
 	Utility method for printing the link to sub workflow pages
 	@param wf_id_uuid_list list of wf_id and wf_uuid
@@ -87,7 +87,7 @@ def print_sub_wf_links(wf_id_uuid_list ):
 	
 	html_content ="\n<div>"
 	for wf_id_uuid in wf_id_uuid_list:
-		html_content += "\n<a href ='"+ str(wf_id_uuid.wf_uuid) +".html'>"+ str(wf_id_uuid.wf_uuid) +" - " + str(wf_id_uuid.dax_label) + "</a><br/>"
+		html_content += "\n<a href ='"+ str(wf_id_uuid.wf_uuid) +"."+extn+"'>"+ str(wf_id_uuid.wf_uuid) +" - " + str(wf_id_uuid.dax_label) + "</a><br/>"
 	html_content +="\n</div>"
 	return html_content
 	
