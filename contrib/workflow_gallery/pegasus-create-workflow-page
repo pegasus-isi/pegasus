@@ -475,13 +475,13 @@ def create_workflow_page(tar_file_name , output_dir , log_level):
 <div id ='gantt_chart_div' class = 'header_level2' > Workflow execution gantt chart
 </div>
 		"""
-		html_content += pegasus_gantt.create_gantt_plot(wf_info , output_dir)
+		html_content += pegasus_gantt.create_gantt_plot(wf_info , output_dir ,"php")
 		logger.debug("Generating the host over time chart...  ")
 		html_content +="""
 <div id ='host_chart_div' class = 'header_level2' > Host over time chart
 </div>
 		"""
-		html_content += pegasus_host_over_time.create_host_plot(wf_info , output_dir)
+		html_content += pegasus_host_over_time.create_host_plot(wf_info , output_dir ,"php")
 		
 		logger.debug("Generating the invocation breakdown chart...  ")
 		html_content +="""
@@ -492,7 +492,7 @@ def create_workflow_page(tar_file_name , output_dir , log_level):
 		
 		if len(wf_info.sub_wf_id_uuids) >0:
 			html_content += """<div id ='sub_div' class ='header_level2'> Sub workflows </div>"""
-			html_content += plot_stats_utils.print_sub_wf_links(wf_info.sub_wf_id_uuids)
+			html_content += plot_stats_utils.print_sub_wf_links(wf_info.sub_wf_id_uuids ,"php")
 		html_content += """
 </div>
 </div>
