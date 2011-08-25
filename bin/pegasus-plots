@@ -6,6 +6,7 @@ import sys
 import logging
 import optparse
 import commands
+import subprocess
 import shutil
 from datetime import timedelta
 import traceback
@@ -15,8 +16,14 @@ logger = logging.getLogger()
 # Set default level to INFO
 logger.setLevel(logging.INFO)
 
+# use pegasus-config to get basic pegasus settings
+bin_dir = os.path.normpath(os.path.join(os.path.dirname(sys.argv[0])))
+pegasus_config = os.path.join(bin_dir, "pegasus-config") + " --python-dump"
+config = subprocess.Popen(pegasus_config, stdout=subprocess.PIPE, shell=True).communicate()[0]
+exec config
 
-import common
+
+import Pegasus.common
 from Pegasus.plots_stats import utils as plot_utils
 from Pegasus.plots_stats.plots import populate
 from Pegasus.plots_stats.plots import pegasus_gantt
@@ -41,6 +48,16 @@ calc_time_chart = False
 calc_breakdown_chart = False
 max_graph_nodes = MAX_GRAPH_NODES
 DEFAULT_OUTPUT_DIR = "plots"
+pegasus_env_path ={
+'pegasus_bin_dir'       : pegasus_bin_dir,
+'pegasus_conf_dir'      : pegasus_conf_dir,
+'pegasus_java_dir'      : pegasus_java_dir,
+'pegasus_perl_dir'      : pegasus_perl_dir,
+'pegasus_python_dir'    : pegasus_python_dir,
+'pegasus_php_dir'       : pegasus_php_dir,
+'pegasus_javascript_dir': pegasus_javascript_dir,
+'pegasus_share_dir'     : pegasus_share_dir
+}
 	
 def setup_logger(level_str):
 	"""
@@ -64,7 +81,7 @@ def setup(output_dir):
 	Set up the pegaus plots. 
 	@param output_dir output directory path
 	"""
-	src_img_path = os.path.join(common.pegasus_home, "share/plots/images/common/")
+	src_img_path = os.path.join(pegasus_share_dir, "plots/images/common/")
 	dest_img_path = os.path.join(output_dir, "images/")
 	if os.path.isdir(dest_img_path):
 		logger.warning("Image directory exists. Deleting... " + dest_img_path)
@@ -84,7 +101,7 @@ def generate_dag_graph(wf_info, output_dir):
 	dag_file_path = wf_info.dag_file_path
 	title =  str(wf_info.wf_uuid) + " (" + str(wf_info.dax_label) +")"
 	if dag_file_path is not None:
-		dag2dot_file_path = os.path.join(common.pegasus_home, "libexec/visualize/dag2dot")
+		dag2dot_file_path = os.path.join(pegasus_share_dir, "visualize/dag2dot")
 		dot_file_path = os.path.join(output_dir, wf_info.wf_uuid+".dot")
 		dag_cmd = dag2dot_file_path 
 		dag_cmd +=" --output "+ dot_file_path
@@ -125,7 +142,7 @@ def generate_dax_graph(wf_info, output_dir):
 	dax_file_path = wf_info.dax_file_path
 	title =  str(wf_info.wf_uuid) + " (" + str(wf_info.dax_label) +")"
 	if dax_file_path is not None:
-		dax2dot_file_path = os.path.join(common.pegasus_home, "libexec/visualize/dax2dot")
+		dax2dot_file_path = os.path.join(pegasus_share_dir, "visualize/dax2dot")
 		dot_file_path = os.path.join(output_dir, wf_info.wf_uuid + ".dot")
 		dax_cmd = dax2dot_file_path 
 		dax_cmd +=" --output "+ dot_file_path
@@ -286,10 +303,10 @@ def createOuterhtml(wf_stats, wf_info,  submit_dir, output_dir , log_level ):
 	breakdown_summary_output_dir = None
 	if calc_time_chart :
 		time_summary_output_dir = output_dir
-		pegasus_time.setup(submit_dir,time_summary_output_dir ,log_level)
+		pegasus_time.setup(submit_dir,time_summary_output_dir ,pegasus_env_path ,log_level)
 	if  calc_breakdown_chart:
 		breakdown_summary_output_dir = output_dir
-		pegasus_breakdown.setup(submit_dir,breakdown_summary_output_dir ,log_level)
+		pegasus_breakdown.setup(submit_dir,breakdown_summary_output_dir ,pegasus_env_path ,log_level)
 	try:
 		fh = open(data_file, "w")
 		content = """
@@ -404,13 +421,13 @@ def create_charts(submit_dir , output_dir, config_properties , log_level ):
 		logger.error("Unable to populate workflow information.")
 	if calc_gantt_chart :
 		gantt_chart_output_dir = os.path.join(output_dir,"gantt_chart")
-		pegasus_gantt.setup(submit_dir,gantt_chart_output_dir ,log_level)
+		pegasus_gantt.setup(submit_dir,gantt_chart_output_dir ,pegasus_env_path ,log_level)
 	if calc_host_chart :
 		host_chart_output_dir = os.path.join(output_dir,"host_chart")
-		pegasus_host_over_time.setup(submit_dir,host_chart_output_dir ,log_level)
+		pegasus_host_over_time.setup(submit_dir,host_chart_output_dir ,pegasus_env_path ,log_level)
 	if calc_breakdown_chart:
 		breakdown_chart_output_dir = os.path.join(output_dir,"breakdown_chart")
-		pegasus_breakdown.setup(submit_dir,breakdown_chart_output_dir ,log_level)
+		pegasus_breakdown.setup(submit_dir,breakdown_chart_output_dir ,pegasus_env_path ,log_level)
 		
 	if calc_dag_graph :
 		dag_graph_output_dir = os.path.join(output_dir,"dag_graph")
