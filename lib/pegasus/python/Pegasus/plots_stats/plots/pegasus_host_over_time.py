@@ -66,13 +66,13 @@ def setup_logger(level_str):
 
 
 #----------print workflow details--------
-def print_workflow_details(workflow_stat ,output_dir):
+def print_workflow_details(workflow_stat ,output_dir , extn):
 	"""
 	Prints the data required for generating the host chart into data file.
 	@param workflow_stat the WorkflowInfo object reference 
 	@param output_dir output directory path
 	"""
-	job_info = "var hc_data = [" + workflow_stat.get_formatted_host_data() + "];"
+	job_info = "var hc_data = [" + workflow_stat.get_formatted_host_data(extn) + "];"
 	# print javascript file
 	data_file = os.path.join(output_dir,  "hc_"+workflow_stat.wf_uuid+"_data.js")
 	try:
@@ -486,7 +486,7 @@ var hc_footerPanelHeight  = "+ str(45 + len(workflow_stat.transformation_statist
 	return var_str
 	
 
-def create_toolbar_panel(workflow_stat):
+def create_toolbar_panel(workflow_stat, extn):
 	"""
 	Generates the top level toolbar content.
 	@param workflow_stat the WorkflowInfo object reference 
@@ -582,7 +582,7 @@ hc_panPanel.add(pv.Bar)\n\
 	.textBaseline('middle')\n\
 	.text(hc_setShowLabel);\n\n"
 	if workflow_stat.parent_wf_uuid is not None:
-		panel_str += "hc_panPanel.add(pv.Image)\n.left(500)\n.top(34)\n.width(32)\n.height(32)\n.url('images/return.png')\n.title('Return to parent workflow')\n.event('click', function(){\nself.location = '" +  workflow_stat.parent_wf_uuid+".html' ;\n});"
+		panel_str += "hc_panPanel.add(pv.Image)\n.left(500)\n.top(34)\n.width(32)\n.height(32)\n.url('images/return.png')\n.title('Return to parent workflow')\n.event('click', function(){\nself.location = '" +  workflow_stat.parent_wf_uuid+"."+extn+"' ;\n});"
 	panel_str += "hc_headerPanel.add(pv.Label)\n\
 .top(40)\n\
 .left( hc_containerPanelPadding + hc_nameMargin)\n\
@@ -872,13 +872,13 @@ def create_bottom_toolbar():
 	""" 
 	return toolbar_content
 
-def create_host_plot(workflow_info,output_dir):
+def create_host_plot(workflow_info,output_dir , extn ="html"):
 	"""
 	Generates the html page content for displaying the host chart.
 	@param workflow_stat the WorkflowInfo object reference 
 	@output_dir the output directory path
 	"""
-	print_workflow_details(workflow_info ,output_dir)
+	print_workflow_details(workflow_info ,output_dir, extn)
 	str_list = []
 	wf_content = create_include(workflow_info)
 	str_list.append(wf_content)
@@ -888,7 +888,7 @@ def create_host_plot(workflow_info,output_dir):
 	# adding the tool bar panel
 	wf_content = "<div id ='host_chart' style='width: 1500px; margin : 0 auto;' >\n"
 	str_list.append(wf_content)
-	wf_content =create_toolbar_panel(workflow_info)
+	wf_content =create_toolbar_panel(workflow_info , extn)
 	str_list.append(wf_content)
 	# Adding the chart panel
 	wf_content =create_chart_panel(workflow_info)
@@ -902,7 +902,7 @@ def create_host_plot(workflow_info,output_dir):
 	str_list.append(wf_content)
 	return "".join(str_list)
 
-def create_host_plot_page(workflow_info , output_dir ):
+def create_host_plot_page(workflow_info , output_dir , extn ="html"):
 	"""
 	Prints the complete html page with the host chart and workflow details.
 	@param workflow_stat the WorkflowInfo object reference 
@@ -919,7 +919,7 @@ def create_host_plot_page(workflow_info , output_dir ):
 	str_list.append(wf_page)
 	wf_page = """<div id ='chart_div' class ='header_level2'> Host over time chart </div>"""
 	str_list.append(wf_page)
-	wf_page = create_host_plot(workflow_info , output_dir)
+	wf_page = create_host_plot(workflow_info , output_dir ,extn)
 	str_list.append(wf_page)
 	# printing the brain dump content
 	wf_page = """<div id ='env_div' class ='header_level2'> Workflow environment </div>"""
@@ -947,7 +947,7 @@ def create_host_plot_page(workflow_info , output_dir ):
 	"""
 	str_list.append(wf_page)
 	# print html file
-	data_file = os.path.join(output_dir,  workflow_info.wf_uuid+".html")
+	data_file = os.path.join(output_dir,  workflow_info.wf_uuid+"."+extn)
 	try:
 		fh = open(data_file, "w")
 		fh.write( "\n")

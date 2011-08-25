@@ -67,7 +67,7 @@ class WorkflowInfo:
 		self.wf_job_instances_over_time_statistics = {}
 		self.wf_invocations_over_time_statistics = {}
 				
-	def get_formatted_host_data(self ):
+	def get_formatted_host_data(self , extn = "html" ):
 		"""
 		Returns formatted host information data.
 		"""
@@ -106,26 +106,12 @@ class WorkflowInfo:
 				else:
 					# there is no compute task
 					job_info += ( "\"color\": 'white' , ")
-				"""
-				if plot_utils.isSubWfJob(job_stat_det['name']):
-					job_info += ( "\"sub_wf\":1 , "  )
-					corresponding_dax =''
-					if (self.job_instance_id_sub_wf_uuid_map.has_key(job_stat_det['name'])): 
-						corresponding_dax = self.job_instance_id_sub_wf_uuid_map[job_stat_det['name']]
-						job_info += ( "\"sub_wf_name\":\""+ corresponding_dax+ ".html\"")
-					else:
-						job_info += ( "\"sub_wf_name\":''")	
-						
-				else:
-					job_info += ( "\"sub_wf\":0 , " )	
-					job_info += ( "\"sub_wf_name\":''")
-				"""
 				if plot_utils.isSubWfJob(job_stat_det['name']):
 					job_info += ( "\"sub_wf\":1 , "  )
 					corresponding_dax =''
 					if (self.job_instance_id_sub_wf_uuid_map.has_key(job_stat_det['instance_id'])): 
 						corresponding_dax = self.job_instance_id_sub_wf_uuid_map[job_stat_det['instance_id']]
-						job_info += ( "\"sub_wf_name\":\""+ corresponding_dax+ ".html\"")
+						job_info += ( "\"sub_wf_name\":\""+ corresponding_dax+ "." + extn +"\"")
 					else:
 						job_info += ( "\"sub_wf_name\":''")	
 						
@@ -171,7 +157,7 @@ class WorkflowInfo:
 			total_runtime +=trans_stat.total_runtime
 		return total_invoc_count, total_runtime
 		
-	def get_formatted_job_data(self ):
+	def get_formatted_job_data(self ,extn ="html" ):
 		"""
 		Returns formatted job information data.
 		"""
@@ -208,7 +194,7 @@ class WorkflowInfo:
 				corresponding_dax =''
 				if (self.job_instance_id_sub_wf_uuid_map.has_key(job_stat_det['instance_id'])): 
 					corresponding_dax = self.job_instance_id_sub_wf_uuid_map[job_stat_det['instance_id']]
-					job_info += ( "\"sub_wf_name\":\""+ corresponding_dax+ ".html\"")
+					job_info += ( "\"sub_wf_name\":\""+ corresponding_dax+ "." + extn+"\"")
 				else:
 					job_info += ( "\"sub_wf_name\":''")	
 					

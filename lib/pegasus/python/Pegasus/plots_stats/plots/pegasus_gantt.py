@@ -65,13 +65,13 @@ def setup_logger(level_str):
 
 
 #----------print workflow details--------
-def print_workflow_details(workflow_stat , output_dir):
+def print_workflow_details(workflow_stat , output_dir , extn):
 	"""
 	Prints the data required for generating the gantt chart into data file.
 	@param workflow_stat the WorkflowInfo object reference 
 	@param output_dir output directory path
 	"""
-	job_info =  "var data = [" + workflow_stat.get_formatted_job_data() + "];"
+	job_info =  "var data = [" + workflow_stat.get_formatted_job_data(extn) + "];"
 	# print javascript file
 	data_file = os.path.join(output_dir,  "gc_" + workflow_stat.wf_uuid+"_data.js")
 	try:
@@ -530,7 +530,7 @@ var footerPanelHeight  = "+ str(45 + len(workflow_stat.transformation_statistics
 	return var_str
 	
 
-def create_toolbar_panel(workflow_stat):
+def create_toolbar_panel(workflow_stat , extn):
 	"""
 	Generates the top level toolbar content.
 	@param workflow_stat the WorkflowInfo object reference 
@@ -626,7 +626,7 @@ panPanel.add(pv.Bar)\n\
 	.textBaseline('middle')\n\
 	.text(setShowLabel);\n\n"
 	if workflow_stat.parent_wf_uuid is not None:
-		panel_str += "panPanel.add(pv.Image)\n.left(500)\n.top(34)\n.width(32)\n.height(32)\n.url('images/return.png')\n.title('Return to parent workflow')\n.event('click', function(){\nself.location = '" +  workflow_stat.parent_wf_uuid+".html' ;\n});"
+		panel_str += "panPanel.add(pv.Image)\n.left(500)\n.top(34)\n.width(32)\n.height(32)\n.url('images/return.png')\n.title('Return to parent workflow')\n.event('click', function(){\nself.location = '" +  workflow_stat.parent_wf_uuid+"."+extn+"' ;\n});"
 	panel_str += "headerPanel.add(pv.Label)\n\
 .top(40)\n\
 .left( containerPanelPadding + nameMargin)\n\
@@ -953,13 +953,13 @@ def create_bottom_toolbar():
 	return toolbar_content
 
 
-def create_gantt_plot(workflow_info , output_dir):
+def create_gantt_plot(workflow_info , output_dir , extn = "html"):
 	"""
 	Generates the html page content for displaying the gantt chart.
 	@param workflow_stat the WorkflowInfo object reference 
 	@output_dir the output directory path
 	"""
-	print_workflow_details(workflow_info ,output_dir)
+	print_workflow_details(workflow_info ,output_dir , extn)
 	str_list = []
 	wf_content = create_include(workflow_info)
 	str_list.append(wf_content)
@@ -969,7 +969,7 @@ def create_gantt_plot(workflow_info , output_dir):
 	wf_content = "<div id ='gantt_chart' style='width: 1500px; margin : 0 auto;' >\n"
 	str_list.append(wf_content)
 	# adding the tool bar panel
-	wf_content =create_toolbar_panel(workflow_info)
+	wf_content =create_toolbar_panel(workflow_info , extn )
 	str_list.append(wf_content)
 	# Adding the chart panel
 	wf_content =create_chart_panel(workflow_info)
@@ -986,7 +986,7 @@ def create_gantt_plot(workflow_info , output_dir):
 		
 	
 
-def create_gantt_plot_page(workflow_info ,output_dir):
+def create_gantt_plot_page(workflow_info ,output_dir, extn = "html"):
 	"""
 	Prints the complete html page with the gantt chart and workflow details.
 	@param workflow_stat the WorkflowInfo object reference 
@@ -1017,7 +1017,7 @@ def create_gantt_plot_page(workflow_info ,output_dir):
 	if len(workflow_info.sub_wf_id_uuids) >0:
 		wf_page = """<div id ='sub_div' class ='header_level2'> Sub workflows </div>"""
 		str_list.append(wf_page)
-		wf_page = plot_utils.print_sub_wf_links(workflow_info.sub_wf_id_uuids)
+		wf_page = plot_utils.print_sub_wf_links(workflow_info.sub_wf_id_uuids , extn)
 		str_list.append(wf_page)
 	wf_page = """
 </center>
@@ -1030,7 +1030,7 @@ def create_gantt_plot_page(workflow_info ,output_dir):
 </html>
 	"""
 	str_list.append(wf_page)
-	data_file = os.path.join(output_dir,  workflow_info.wf_uuid+".html")
+	data_file = os.path.join(output_dir,  workflow_info.wf_uuid+"." + extn)
 	try:
 		fh = open(data_file, "w")
 		fh.write( "\n")
