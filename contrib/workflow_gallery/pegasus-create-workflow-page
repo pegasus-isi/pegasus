@@ -18,12 +18,12 @@ logger = logging.getLogger()
 # Set default level to INFO
 #logger.setLevel(logging.INFO)
 
-# use pegasus-config to find our lib path
+# use pegasus-config to get basic pegasus settings
 bin_dir = os.path.normpath(os.path.join(os.path.dirname(sys.argv[0])))
-pegasus_config = os.path.join(bin_dir, "pegasus-config") + " --noeoln --python"
-lib_dir = subprocess.Popen(pegasus_config, stdout=subprocess.PIPE, shell=True).communicate()[0]
-# Insert this directory in our search path
-os.sys.path.insert(0, lib_dir)
+pegasus_config = os.path.join(bin_dir, "pegasus-config") + " --python-dump"
+config = subprocess.Popen(pegasus_config, stdout=subprocess.PIPE, shell=True).communicate()[0]
+exec config
+
 
 import Pegasus.common
 from Pegasus.tools import utils
@@ -38,25 +38,30 @@ from Pegasus.plots_stats.stats import workflow_stats
 
 from netlogger.analysis.workflow.stampede_statistics import StampedeStatistics
 
+#regular expressions
+re_parse_property = re.compile(r'([^:= \t]+)\s*[:=]?\s*(.*)')
 
-
+#Global variables----
 submit_dir = None
 prefix =""
 no_dax = 0
 no_dag = 0
 monitord = True
 MAX_GRAPH_LIMIT = 100
-
 DEFAULT_OUTPUT_DIR = "gallery"
-
-
-#regular expressions
-re_parse_property = re.compile(r'([^:= \t]+)\s*[:=]?\s*(.*)')
-
-#Global variables----
 brainbase ='braindump.txt'
 dagman_extension = ".dagman.out"
 prog_base = os.path.split(sys.argv[0])[1]	# Name of this program
+pegasus_env_path ={
+'pegasus_bin_dir'       : pegasus_bin_dir,
+'pegasus_conf_dir'      : pegasus_conf_dir,
+'pegasus_java_dir'      : pegasus_java_dir,
+'pegasus_perl_dir'      : pegasus_perl_dir,
+'pegasus_python_dir'    : pegasus_python_dir,
+'pegasus_php_dir'       : pegasus_php_dir,
+'pegasus_javascript_dir': pegasus_javascript_dir,
+'pegasus_share_dir'     : pegasus_share_dir
+}
 	
 def setup_logger(level_str):
 	level_str = level_str.lower()
@@ -73,7 +78,7 @@ def setup_logger(level_str):
 
 
 def run_pegasus_monitord(dagman_out_file):
-	monitord_path = os.path.join(common.pegasus_home, "bin/pegasus-monitord")
+	monitord_path = os.path.join(pegasus_bin_dir, "pegasus-monitord")
 	monitord_cmd = monitord_path 
 	monitord_cmd += " -r "+ dagman_out_file
 	logger.info("Executing command :\n"  + monitord_cmd)
@@ -234,7 +239,7 @@ def generate_dag_graph(wf_info, output_dir):
 	logger.info("Generating dag graph for  workflow "  + wf_info.wf_uuid)
 	dag_file_path = wf_info.dag_file_path
 	if dag_file_path is not None:
-		dag2dot_file_path = os.path.join(common.pegasus_home, "libexec/visualize/dag2dot")
+		dag2dot_file_path = os.path.join(pegasus_share_dir, "visualize/dag2dot")
 		dot_file_path = os.path.join(output_dir, wf_info.wf_uuid+".dot")
 		dag_cmd = dag2dot_file_path 
 		dag_cmd +=" --output "+ dot_file_path
@@ -270,7 +275,7 @@ def generate_dax_graph(wf_info, output_dir):
 	logger.info("Generating dax graph for  workflow "  + wf_info.wf_uuid)
 	dax_file_path = wf_info.dax_file_path
 	if dax_file_path is not None:
-		dax2dot_file_path = os.path.join(common.pegasus_home, "libexec/visualize/dax2dot")
+		dax2dot_file_path = os.path.join(pegasus_share_dir, "visualize/dax2dot")
 		dot_file_path = os.path.join(output_dir, wf_info.wf_uuid + ".dot")
 		dax_cmd = dax2dot_file_path 
 		dax_cmd +=" --output "+ dot_file_path
@@ -317,19 +322,18 @@ def create_footer():
 def setup_run_dir(output_dir):
 	dest_img_path = os.path.join(output_dir, "images/")
 	plot_stats_utils.create_directory(dest_img_path)
-	src_img_path = os.path.join(common.pegasus_home, "share/plots/images/common/not_available.jpg")
+	src_img_path = os.path.join(pegasus_share_dir, "plots/images/common/not_available.jpg")
 	shutil.copy(src_img_path, dest_img_path)
-	src_img_path = os.path.join(common.pegasus_home, "share/plots/images/common/download.jpg")
+	src_img_path = os.path.join(pegasus_share_dir, "plots/images/common/download.jpg")
 	shutil.copy(src_img_path, dest_img_path)
 	dest_css_path = os.path.join(output_dir, "css/")
 	plot_stats_utils.create_directory(dest_css_path)
-	src_css_path =os.path.join(common.pegasus_home, "share/plots/css/default.css")
+	src_css_path =os.path.join(pegasus_share_dir, "plots/css/default.css")
 	shutil.copy(src_css_path, dest_css_path)
 	
 
 def setup(output_dir):
-	src_php_path =os.path.join(common.pegasus_home, "lib/pegasus/php/")
-	plot_stats_utils.copy_files(src_php_path, output_dir )
+	plot_stats_utils.copy_files(pegasus_php_dir, output_dir )
 
 def create_workflow_page(tar_file_name , output_dir , log_level):
 	setup_run_dir(output_dir)
@@ -367,10 +371,10 @@ def create_workflow_page(tar_file_name , output_dir , log_level):
 	dax_graph_output_dir = os.path.join(output_dir,"dax_graph")
 	plot_stats_utils.create_directory(dag_graph_output_dir)
 	plot_stats_utils.create_directory(dax_graph_output_dir)
-	pegasus_gantt.setup(submit_dir,output_dir ,log_level)
-	pegasus_host_over_time.setup(submit_dir,output_dir ,log_level)
-	pegasus_breakdown.setup(submit_dir, output_dir, log_level)
-	pegasus_time.setup(submit_dir,output_dir ,log_level)
+	pegasus_gantt.setup(submit_dir,output_dir ,pegasus_env_path ,log_level)
+	pegasus_host_over_time.setup(submit_dir,output_dir ,pegasus_env_path , log_level)
+	pegasus_breakdown.setup(submit_dir, output_dir, pegasus_env_path, log_level)
+	pegasus_time.setup(submit_dir,output_dir ,pegasus_env_path ,log_level)
 	top_level_wf_uuid  = None
 	workflow_run_time = 0
 	workflow_cpu_time = 0
