@@ -33,7 +33,7 @@ logger = logging.getLogger()
 # Set default level to INFO
 logger.setLevel(logging.INFO)
 
-import Pegasus.common
+
 from Pegasus.tools import utils
 from Pegasus.plots_stats import utils as plot_utils
 import populate
@@ -959,11 +959,12 @@ def create_host_plot_page(workflow_info , output_dir ):
 		fh.close()	
 	return
 	
-def setup(submit_dir,out_dir,log_level):
+def setup(submit_dir,out_dir,env,log_level):
 	"""
 	Setup the pegasus host over time module
 	@param submit_dir submit directory path 
 	@out_dir the output directory path
+	@env the environment variables
 	@log_level logging level
 	"""
 	global output_dir
@@ -972,8 +973,8 @@ def setup(submit_dir,out_dir,log_level):
 		log_level = "info"
 	setup_logger(log_level)
 	plot_utils.create_directory(output_dir)
-	src_js_path = os.path.join(common.pegasus_home, "lib/pegasus/javascript")
-	src_img_path = os.path.join(common.pegasus_home, "share/plots/images/protovis/")
+	src_js_path = env['pegasus_javascript_dir'] 
+	src_img_path = os.path.join(env['pegasus_share_dir']  , "plots/images/protovis/")
 	dest_js_path = os.path.join(output_dir, "js")
 	dest_img_path = os.path.join(output_dir, "images/")
 	plot_utils.create_directory(dest_js_path)
@@ -981,7 +982,7 @@ def setup(submit_dir,out_dir,log_level):
 	plot_utils.copy_files(src_js_path , dest_js_path)
 	plot_utils.copy_files(src_img_path, dest_img_path)
 	# copy images from common
-	src_img_path = os.path.join(common.pegasus_home, "share/plots/images/common/")
+	src_img_path = os.path.join(env['pegasus_share_dir']  , "plots/images/common/")
 	plot_utils.copy_files(src_img_path, dest_img_path) 
 	create_action_script(output_dir)
 
