@@ -40,9 +40,10 @@ use Getopt::Long qw(:config bundling no_ignore_case);
 use Data::Dumper; 
 
 # Path to load Pegasus Perl modules
-BEGIN {
-    require File::Spec->catfile( dirname($0), 'common.pm' );
-    common->import(':all');
+BEGIN { 
+    my $pegasus_config = File::Spec->catfile( dirname($0), 'pegasus-config' );
+    eval `$pegasus_config --perl-dump`;
+    die("Unable to eval pegasus-config output. $@") if $@;
 }
 use Pegasus::Common;
 use Pegasus::Properties qw(%initial); # parses -Dprop=val from @ARGV

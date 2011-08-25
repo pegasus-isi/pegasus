@@ -27,8 +27,9 @@ use File::Basename qw(basename dirname);
 use Getopt::Long qw(:config bundling no_ignore_case);
 use Data::Dumper;
 BEGIN { 
-    require File::Spec->catfile( dirname($0), 'common.pm' );
-    common->import(':all');
+    my $pegasus_config = File::Spec->catfile( dirname($0), 'pegasus-config' );
+    eval `$pegasus_config --perl-dump`;
+    die("Unable to eval pegasus-config output. $@") if $@;
 }
 
 # load our own local modules, see PERL5LIB settings

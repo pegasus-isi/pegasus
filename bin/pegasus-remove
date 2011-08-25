@@ -26,7 +26,8 @@ use Getopt::Long qw(:config bundling no_ignore_case);
 
 BEGIN { 
     my $pegasus_config = File::Spec->catfile( dirname($0), 'pegasus-config' );
-    eval `$pegasus_config --perl-dump` or die("Unable to eval pegasus-config output. $@");
+    eval `$pegasus_config --perl-dump`;
+    die("Unable to eval pegasus-config output. $@") if $@;
 }
 use Pegasus::Common;
 
