@@ -500,6 +500,7 @@ def finish_stampede_loader():
     into the database. It will also produce stats for benchmarking.
     """
     if wf_event_sink is not None:
+        print (utils.isodate(time.time()) + " - pegasus-monitord - DB flushing beginning ").ljust(80, "-")
         try:
             if db_stats == 'yes' and logger.getEffectiveLevel() > logging.INFO:
                 # Make sure log level is enough to display database
@@ -509,6 +510,7 @@ def finish_stampede_loader():
         except:
             logger.warning("could not call the finish method "+\
                                "in the nl loader class... exiting anyway")
+        print (utils.isodate(time.time()) + " - pegasus-monitord - DB flushing ended ").ljust(80, "-")
 
 def out2log(rundir, outfile):
     """
