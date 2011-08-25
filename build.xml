@@ -434,7 +434,7 @@
     <copy preservelastmodified="true" todir="${dist.share}/examples">
       <fileset dir="examples" includes="**/*"/>
     </copy>
-    <chmod perm="ugo+rx" type="file">
+    <chmod perm="0755" type="file">
       <fileset dir="${dist.share}/examples" includes="**/submit"/>
       <fileset dir="${dist.share}/examples" includes="**/*.sh"/>
       <fileset dir="${dist.share}/examples" includes="**/*.py"/>
@@ -484,6 +484,16 @@
     <copy preservelastmodified="true" todir="${dist.share}">
       <fileset dir="share/pegasus" includes="**/*"/>
     </copy>
+    <chmod perm="0755" type="file">
+      <fileset dir="${dist.share}" includes="**/*.sh"/>
+      <fileset dir="${dist.share}" includes="**/*.py"/>
+      <fileset dir="${dist.share}" includes="**/*.pl"/>
+    </chmod>
+    <chmod perm="0755" type="file">
+      <fileset dir="${dist.share}/visualize">
+        <exclude name="README"/>
+      </fileset>
+    </chmod>
 
     <!-- sql -->
     <mkdir dir="${dist.share}/sql"/>

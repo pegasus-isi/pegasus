@@ -37,16 +37,14 @@ install: build
 	# /usr/share/
 	mkdir -p debian/pegasus/usr
 	cp -a dist/pegasus/share debian/pegasus/usr/
+	rm -f debian/pegasus/usr/share/pegasus/java/COPYING.*
+	rm -f debian/pegasus/usr/share/pegasus/java/LICENSE.*
 	
 	# /usr/lib
 	mkdir -p debian/pegasus/usr
 	cp -a dist/pegasus/lib debian/pegasus/usr/
 	strip debian/pegasus/usr/lib/pegasus/python/pysqlite2/_sqlite.so
 	
-	# move the common.*s to their right places
-	mv debian/pegasus/usr/bin/common.sh debian/pegasus/usr/share/pegasus/
-	mv debian/pegasus/usr/bin/common.pm debian/pegasus/usr/lib/pegasus/perl/
-	mv debian/pegasus/usr/bin/common.py debian/pegasus/usr/lib/pegasus/python/
 
 # Build architecture-independent files here.
 binary-indep: build install
