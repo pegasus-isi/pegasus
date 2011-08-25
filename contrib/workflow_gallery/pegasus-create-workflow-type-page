@@ -116,7 +116,7 @@ def print_workflow_type_details(type_dir):
 	workflow_type_file_name = "workflow_type.txt"
 	if os.path.exists(os.path.join(type_dir,workflow_type_file_name)):
 		if os.path.exists(os.path.join(type_dir,workflow_type_file_name)):
-			props = plot_stats_utils.parse_property_file(os.path.join(type_dir,workflow_type_file_name),":")
+			props = parse_property_file(os.path.join(type_dir,workflow_type_file_name)," ")
 	
 	if props.has_key('name'):
 		html_content += "<h3>" + props['name'] + "</h3>"
