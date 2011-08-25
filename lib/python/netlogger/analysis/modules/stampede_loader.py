@@ -16,7 +16,7 @@ the Stampede DB.
 
 See http://www.sqlalchemy.org/ for details on SQLAlchemy
 """
-__rcsid__ = "$Id: stampede_loader.py 28289 2011-08-18 15:45:00Z mgoode $"
+__rcsid__ = "$Id: stampede_loader.py 28321 2011-08-25 18:56:34Z mgoode $"
 __author__ = "Monte Goode"
 
 from netlogger.analysis.schema.stampede_schema import *
@@ -354,7 +354,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
             self.hard_flush(batch_flush=False)
         except exceptions.OperationalError, e:
             self.log.error('batch_flush',
-                msg='Connection problem during commit - reattempting batch')
+                msg='Connection problem during commit: %s - reattempting batch' % e)
             self.session.rollback()
             self.hard_flush()
         
