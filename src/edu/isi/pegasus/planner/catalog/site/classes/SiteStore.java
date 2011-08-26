@@ -284,9 +284,11 @@ public class SiteStore extends AbstractSiteData{
     }
 
     
+
     /**
-     * Returns an environment variable associated with the site. For local site
-     * it prefers the value retrieved from the environment.
+     * Returns an environment variable associated with the site. If a env value
+     * is not specified in the site catalog, then only for local site
+     * it falls back on the value retrieved from the environment.
      *
      * @param handle   the site handle / identifier.
      * @param variable the name of the environment variable.
@@ -294,25 +296,28 @@ public class SiteStore extends AbstractSiteData{
      * @return value of the environment variable if found, else null
      */
     public String getEnvironmentVariable( String handle, String variable ){
-
-        if( handle.equals( "local" ) ){
-            //try to retrieve value from environment
-            //for local site.
-            String value = System.getenv( variable );
-            if( value != null ){
-                return value;
-            }
-        }
-
+        
+        String value = null;
         //sanity check
         if( !this.contains( handle ) ) {
-            return null;
+            value = null;
         }
         else{
-            return this.lookup( handle ).getEnvironmentVariable( variable );
+            value = this.lookup( handle ).getEnvironmentVariable( variable );
         }
+        
+        //change the preference order because of JIRA PM-471
+        if( value == null ){
+            //fall back only for local site the value in the env
+            if( handle != null && handle.equals( "local" ) ){
+                //try to retrieve value from environment
+                //for local site.
+                value = System.getenv( variable );
+            }
+        }
+        return value;
     }
-    
+        
     /**
      * This is a soft state remove, that removes a GridGateway from a particular
      * site. The cause of this removal could be the inability to
