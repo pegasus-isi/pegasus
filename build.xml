@@ -300,7 +300,7 @@
     <apply executable="${basedir}/libexec/groff.sh" dest="${dist.man}">
       <srcfile/>
       <targetfile/>
-      <fileset dir="man/man1" includes="*.1"/>
+      <fileset dir="share/man/man1" includes="*.1"/>
       <mapper type="glob" from="*.1" to="*.ps"/>
     </apply>
   </target>
@@ -311,7 +311,7 @@
     <apply executable="${basedir}/libexec/groff.sh" dest="${dist.man}">
       <srcfile/>
       <targetfile/>
-      <fileset dir="man/man1" includes="*.1"/>
+      <fileset dir="share/man/man1" includes="*.1"/>
       <mapper type="glob" from="*.1" to="*.txt"/>
     </apply>
   </target>
@@ -322,7 +322,7 @@
     <apply executable="${basedir}/libexec/groff.sh" dest="${dist.man}">
       <srcfile/>
       <targetfile/>
-      <fileset dir="man/man1" includes="*.1"/>
+      <fileset dir="share/man/man1" includes="*.1"/>
       <mapper type="glob" from="*.1" to="*.html"/>
     </apply>
   </target>
@@ -331,7 +331,7 @@
           description="[internal] Copies roff sources to distribution">
     <mkdir dir="${dist.man}/man1"/>
     <copy preservelastmodified="true" todir="${dist.man}/man1">
-      <fileset dir="man/man1" includes="*.1"/>
+      <fileset dir="share/man/man1" includes="*.1"/>
     </copy>
   </target>
 
@@ -429,23 +429,6 @@
       <fileset dir="etc" includes="**/*"/>
     </copy>
 
-    <!-- examples -->
-    <mkdir dir="${dist.share}/examples"/>
-    <copy preservelastmodified="true" todir="${dist.share}/examples">
-      <fileset dir="examples" includes="**/*"/>
-    </copy>
-    <chmod perm="0755" type="file">
-      <fileset dir="${dist.share}/examples" includes="**/submit"/>
-      <fileset dir="${dist.share}/examples" includes="**/*.sh"/>
-      <fileset dir="${dist.share}/examples" includes="**/*.py"/>
-      <fileset dir="${dist.share}/examples" includes="**/*.pl"/>
-      <fileset dir="${dist.share}/examples" includes="**/*.exe"/>
-      <fileset dir="${dist.share}/examples" includes="**/submit-workflow*"/>
-      <fileset dir="${dist.share}/examples" includes="**/galactic-plane/galactic-plane"/>
-      <fileset dir="${dist.share}/examples" includes="**/galactic-plane/local*"/>
-      <fileset dir="${dist.share}/examples" includes="**/galactic-plane/remote*"/>
-    </chmod>
-
     <!-- lib -->
     <mkdir dir="${dist.lib}/javascript"/>
     <copy preservelastmodified="true" todir="${dist.lib}/javascript">
@@ -463,21 +446,6 @@
     <copy preservelastmodified="true" todir="${dist.lib}/python">
       <fileset dir="lib/pegasus/python" includes="**/*.py"/>
     </copy>
-    
-    <!-- jars -->
-    <mkdir dir="${dist.jars}"/>
-    <copy preservelastmodified="true" todir="${dist.jars}">
-      <fileset dir="lib" includes="*.jar"/>
-      <fileset dir="lib">
-        <include name="0*"/>
-        <include name="C*"/>
-        <include name="L*"/>
-        <include name="R*"/>
-      </fileset>
-    </copy>
-    <chmod perm="0644" type="file">
-      <fileset dir="${dist.jars}" includes="*.jar"/>
-    </chmod>
 
     <!-- share -->
     <mkdir dir="${dist.share}"/>
@@ -497,12 +465,20 @@
         <exclude name="README"/>
       </fileset>
     </chmod>
-
-    <!-- sql -->
-    <mkdir dir="${dist.share}/sql"/>
-    <copy preservelastmodified="true" todir="${dist.share}/sql">
-      <fileset dir="sql" includes="README*,*my*,*pg*"/>
-    </copy>
+    <chmod perm="0755" type="file">
+      <fileset dir="${dist.share}/examples" includes="**/submit"/>
+      <fileset dir="${dist.share}/examples" includes="**/*.sh"/>
+      <fileset dir="${dist.share}/examples" includes="**/*.py"/>
+      <fileset dir="${dist.share}/examples" includes="**/*.pl"/>
+      <fileset dir="${dist.share}/examples" includes="**/*.exe"/>
+      <fileset dir="${dist.share}/examples" includes="**/submit-workflow*"/>
+      <fileset dir="${dist.share}/examples" includes="**/galactic-plane/galactic-plane"/>
+      <fileset dir="${dist.share}/examples" includes="**/galactic-plane/local*"/>
+      <fileset dir="${dist.share}/examples" includes="**/galactic-plane/remote*"/>
+    </chmod>
+    <chmod perm="0644" type="file">
+      <fileset dir="${dist.jars}" includes="*.jar"/>
+    </chmod>
     <fixcrlf srcdir="${dist.share}/sql" tab="remove" tablength="8" 
              excludes="README*" eol="lf"/>
 

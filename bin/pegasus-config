@@ -36,7 +36,7 @@ my $perl_dir = "$base_dir/lib/pegasus/perl";
 my $python_dir = "$base_dir/lib/pegasus/python";
 my $php_dir = "$base_dir/lib/pegasus/php";
 my $js_dir = "$base_dir/lib/pegasus/javascript";
-my $schema_dir = "$base_dir/etc";
+my $schema_dir = "$share_dir/schema";
 my $extra_classpath = "";
 
 # for development - running out of a svn checkout
@@ -47,7 +47,6 @@ if ( -e "$base_dir/build/classes" ) {
 # in native packaging mode, some directories move
 if ($base_dir eq "/usr") {
     $conf_dir = "/etc/pegasus";
-    $schema_dir = "$share_dir/schema";
 }
 
 # now check the paths
