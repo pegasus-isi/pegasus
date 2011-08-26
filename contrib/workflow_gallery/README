@@ -7,11 +7,12 @@ pegasus-create-workflow-type-page for generating workflow gallery.
 Prerequisite
 ------------
 
-Utility has a dependency on the common.py file in the pegasus.home/bin directory. 
-So pegasus-create-workflow-page and pegasus-create-workflow-type-page should be 
-copied to bin directory for running the the utility.The tool also copies the 
-protovis javascript file from pegasus.home/lib/javascript , php files from
-pegasus.home/lib/javascript and image and cssfiles from /share/plots/ directory. 
+Utility has a dependency on the pegasus-config file in the pegasus.home/bin 
+directory. So pegasus-create-workflow-page and pegasus-create-workflow-type-page  
+should be copied to bin directory for running the the utility.The tool also copies  
+the protovis javascript file from pegasus.home/lib/javascript , php files from
+pegasus.home/lib/javascript and image and cssfiles from /share/pegasus/plots/ 
+directory. 
 
 
 Functionality
@@ -21,7 +22,9 @@ pegasus-create-workflow-page - Parses the given directory for workflow tar files
 and generates a run directory corresponding to each workflow run which 
 contains workflow page which contains statistics information and charts to
 visualize the run. It also generates a workflow_info.txt file which is 
-used by the pegasus-create-workflow-type-page. 
+used by the pegasus-create-workflow-type-page. If output option is given 
+the files are generated to a gallery folder inside the given directory where
+tar files are copied. 
 
 pegasus-create-workflow-type-page - Parses the run directory created by the 
 pegasus-create-workflow-page and generates an index file that is used to
