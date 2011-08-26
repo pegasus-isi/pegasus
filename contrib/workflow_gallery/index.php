@@ -22,24 +22,6 @@
 			<tr>
 				<td>
 					<p>
-					<h3><a href ="gallery/broadband/index.php">Broadband</a></h3>
-					<pre>
-Broadband platform enables researchers to combine
-long period (<1.0Hz) deterministic seismograms 
-with high frequency (~10Hz) stochastic seismograms.
-					</pre>
-					</p>
-				</td>
-				<td>
-					<div class = "gallery_image" >					
-						<img src="images/broadband.jpg" align="bottom" width="200"  /> 
-					</div>
-				</td>
-			</tr>
-
-			<tr>
-				<td>
-					<p>
 					<h3><a href ="gallery/cybershake/index.php">CyberShake</a></h3>
 					<pre>
 The CyberShake workflow is used
@@ -56,6 +38,89 @@ earthquake hazards in a region.
 				</td>
 			</tr>
 			
+			<tr>
+				<td>
+					<p>
+					<h3><a href ="gallery/galactic/index.php">Galactic</a></h3>
+					<pre>
+The Galactic Plane workflow will use the 
+Montage image mosaic engine to transform 
+all the images in 17 sky surveys to a 
+common pixel scale of 1 second or arc, 
+where all the pixels are co-registered 
+on the sky and represented in Galactic 
+coordinates and the Cartesian projection. 
+					</pre>
+					</p>
+				</td>
+				<td>
+					<div class = "gallery_image" >
+						<img src="images/galactic.jpg"  align="bottom" width="200"  />
+					</div>
+				</td>
+			</tr>
+			
+			<tr>
+				<td>
+					<p>
+					<h3><a href ="gallery/periodogram/index.php">Periodogram</a></h3>
+					<pre>
+NASA’s Infared Processing and Analysis 
+Center (IPAC) use workflow technologies to 
+process the large amount of data produced 
+by the Kepler mission. IPAC has developed
+a set of analysis codes to compute periodograms
+from light curves. These periodograms reveal 
+periodic signals in the light curves that arise 
+from transiting planets and stellar variability.
+					</pre>
+					</p>
+				</td>
+				<td>
+					<div class = "gallery_image" >
+						<img src="images/periodogram.jpg"  align="bottom" width="200"  />
+					</div>
+				</td>
+			</tr>
+			
+			<tr>
+				<td>
+					<p>
+					<h3><a href ="gallery/sipht/index.php">Sipht</a></h3>
+					<pre>
+The SIPHT workflow, from the
+bioinformatics project at Harvard,
+is used to automate the search for
+untranslated RNAs (sRNAs) for bacterial
+replicons in the NCBI database.  
+					</pre>
+					</p>
+				</td>
+				<td>
+					<div class = "gallery_image" >
+						<img src="images/sipht.jpg"  align="bottom" width="200"  />
+					</div>
+				</td>
+			</tr>
+			
+			<tr>
+				<td>
+					<p>
+					<h3><a href ="gallery/broadband/index.php">Broadband</a></h3>
+					<pre>
+Broadband platform enables researchers to combine
+long period (<1.0Hz) deterministic seismograms 
+with high frequency (~10Hz) stochastic seismograms.
+					</pre>
+					</p>
+				</td>
+				<td>
+					<div class = "gallery_image" >					
+						<img src="images/broadband.jpg" align="bottom" width="200"  /> 
+					</div>
+				</td>
+			</tr>
+
 			<tr>
 				<td>
 					<p>
@@ -117,29 +182,6 @@ custom mosaics of the sky.
 			<tr>
 				<td>
 					<p>
-					<h3><a href ="gallery/periodogram/index.php">Periodogram</a></h3>
-					<pre>
-NASA’s Infared Processing and Analysis 
-Center (IPAC) use workflow technologies to 
-process the large amount of data produced 
-by the Kepler mission. IPAC has developed
-a set of analysis codes to compute periodograms
-from light curves. These periodograms reveal 
-periodic signals in the light curves that arise 
-from transiting planets and stellar variability.
-					</pre>
-					</p>
-				</td>
-				<td>
-					<div class = "gallery_image" >
-						<img src="images/periodogram.jpg"  align="bottom" width="200"  />
-					</div>
-				</td>
-				</tr>
-
-			<tr>
-				<td>
-					<p>
 					<h3><a href ="gallery/proteomics/index.php">Proteomics</a></h3>
 					<pre>
 Scientists at OSU use Pegasus for 
@@ -156,27 +198,7 @@ executed on local clusters and cloud resources.
 				</td>
 			</tr>
 
-			<tr>
-				<td>
-					<p>
-					<h3><a href ="gallery/sipht/index.php">Sipht</a></h3>
-					<pre>
-The SIPHT workflow, from the
-bioinformatics project at Harvard,
-is used to automate the search for
-untranslated RNAs (sRNAs) for bacterial
-replicons in the NCBI database.  
-					</pre>
-					</p>
-				</td>
-				<td>
-					<div class = "gallery_image" >
-						<img src="images/sipht.jpg"  align="bottom" width="200"  />
-					</div>
-				</td>
-			</tr>
-
-
+		
 		</table>
 		</center>
 		</div>
