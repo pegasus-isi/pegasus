@@ -83,6 +83,7 @@ def run_pegasus_monitord(dagman_out_file):
 	monitord_cmd += " -r "+ dagman_out_file
 	logger.info("Executing command :\n"  + monitord_cmd)
 	status, output = commands.getstatusoutput(monitord_cmd)
+	logger.info("Pegasus monitord log. " + output)
 	if status == 0:
 		logger.info("Finished executing command." )
 		return 0
