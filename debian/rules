@@ -38,7 +38,9 @@ install: build
 	mkdir -p debian/pegasus/usr
 	cp -a dist/pegasus/share debian/pegasus/usr/
 	rm -f debian/pegasus/usr/share/pegasus/java/COPYING.*
+	rm -f debian/pegasus/usr/share/pegasus/java/EXCEPTIONS.*
 	rm -f debian/pegasus/usr/share/pegasus/java/LICENSE.*
+	rm -f debian/pegasus/usr/share/pegasus/java/NOTICE.*
 	
 	# /usr/lib
 	mkdir -p debian/pegasus/usr

@@ -1,4 +1,4 @@
-#!/bin/env perl
+#!/usr/bin/env perl
 #
 # converts the dependencies in an ant build file into graphviz format
 # $Id$

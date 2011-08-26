@@ -5,7 +5,7 @@
   <property name="build.src" location="build/classes"/>
   <property environment="env"/>
   <path id="build.classpath">
-    <fileset dir="lib" includes="*.jar"/>
+    <fileset dir="share/pegasus/java" includes="*.jar"/>
   </path>
   
   <target name="get-system"
@@ -488,6 +488,9 @@
       <fileset dir="${dist.share}" includes="**/*.sh"/>
       <fileset dir="${dist.share}" includes="**/*.py"/>
       <fileset dir="${dist.share}" includes="**/*.pl"/>
+    </chmod>
+    <chmod perm="0755" type="file">
+      <fileset dir="${dist.share}/notification" includes="*"/>
     </chmod>
     <chmod perm="0755" type="file">
       <fileset dir="${dist.share}/visualize">

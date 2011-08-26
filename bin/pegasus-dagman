@@ -34,7 +34,14 @@ import os, sys, signal, subprocess
 import logging
 import time
 import math
-import common   # Takes care of setting up PEGASUS_HOME and PYTHONPATH
+
+# use pegasus-config to get basic pegasus settings
+bin_dir = os.path.normpath(os.path.join(os.path.dirname(sys.argv[0])))
+pegasus_config = os.path.join(bin_dir, "pegasus-config") + " --python-dump"
+config = subprocess.Popen(pegasus_config, stdout=subprocess.PIPE, shell=True).communicate()[0]
+exec config
+
+import Pegasus.common 
 from Pegasus.tools.utils import find_exec
 
 # logger is setup in common

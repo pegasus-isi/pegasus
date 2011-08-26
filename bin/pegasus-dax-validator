@@ -5,7 +5,9 @@
 #
 # $Id$
 
-. "`dirname $0`/common.sh"
+PEGASUS_CONFIG="`dirname $0`/pegasus-config"
+eval `$PEGASUS_CONFIG --sh-dump`
+. $PEGASUS_SHARE_DIR/common.sh
 
 # check version of Xerces-J
 xerces=`${JAVA} org.apache.xerces.impl.Version`
