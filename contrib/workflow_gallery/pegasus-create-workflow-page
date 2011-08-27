@@ -222,13 +222,16 @@ def create_toc(workflow_info , isRoot = False):
 	"""
 	if isRoot:
 		content += """
+<a href ="#inv_chart_div">Invocation breakdown chart(Across workflow)</a><br/>
 <a href ='#time_chart_div'>Time chart(Across workflows)</a><br/>
 		"""
+	else:
+		content += """
+<a href ="#inv_chart_div">Invocation breakdown chart(Per workflow)</a><br/>
+		"""
 	content += """
-<a href ="#host_chart_div">Host over time chart(Per workflow)</a><br/>
 <a href ='#gantt_chart_div'>Workflow execution gantt chart(Per workflow)</a><br/>
 <a href ="#host_chart_div">Host over time chart(Per workflow)</a><br/>
-<a href ="#inv_chart_div">Invocation breakdown chart(Per workflow)</a><br/>
 	"""
 	if len(workflow_info.sub_wf_id_uuids) >0:
 		content += """
@@ -394,7 +397,6 @@ def create_workflow_page(tar_file_name , output_dir , log_level):
 		logger.debug("Populating the workflow information...  "+ wf_uuid)
 		st_stats,wf_info = populate.populate_chart(wf_uuid)
 		populate.populate_job_instance_details(st_stats, wf_info)
-		populate.populate_transformation_details(st_stats, wf_info)
 		populate.populate_job_details(st_stats, wf_info)
 		populate.populate_task_details(st_stats, wf_info)
 		populate.populate_time_details(st_stats ,wf_info)
@@ -464,6 +466,13 @@ def create_workflow_page(tar_file_name , output_dir , log_level):
 				
 		if top_level_wf_uuid == wf_uuid:
 			top_level_stats ,top_level_info = populate.populate_chart(top_level_wf_uuid , True)
+			populate.populate_transformation_details(top_level_stats, top_level_info)
+			logger.debug("Generating the invocation breakdown chart...  ")
+			html_content +="""
+<div id ='inv_chart_div' class = 'header_level2' > Invocation breakdown chart
+</div>
+			"""
+			html_content += pegasus_breakdown.create_breakdown_plot(top_level_info , output_dir)
 			populate.populate_time_details(top_level_stats ,top_level_info)
 			logger.debug("Generating the time chart...  ")
 			html_content +="""
@@ -471,6 +480,15 @@ def create_workflow_page(tar_file_name , output_dir , log_level):
 </div>
 			"""
 			html_content += pegasus_time.create_time_plot(top_level_info , output_dir)
+			
+		else:
+			populate.populate_transformation_details(st_stats, wf_info)
+			logger.debug("Generating the invocation breakdown chart...  ")
+			html_content +="""
+<div id ='inv_chart_div' class = 'header_level2' > Invocation breakdown chart
+</div>
+			"""
+			html_content += pegasus_breakdown.create_breakdown_plot(wf_info , output_dir)
 		logger.debug("Generating the workflow execution gantt chart...  ")
 		html_content +="""
 <div id ='gantt_chart_div' class = 'header_level2' > Workflow execution gantt chart
@@ -483,13 +501,6 @@ def create_workflow_page(tar_file_name , output_dir , log_level):
 </div>
 		"""
 		html_content += pegasus_host_over_time.create_host_plot(wf_info , output_dir ,"php")
-		
-		logger.debug("Generating the invocation breakdown chart...  ")
-		html_content +="""
-<div id ='inv_chart_div' class = 'header_level2' > Invocation breakdown chart
-</div>
-		"""
-		html_content += pegasus_breakdown.create_breakdown_plot(wf_info , output_dir)
 		
 		if len(wf_info.sub_wf_id_uuids) >0:
 			html_content += """<div id ='sub_div' class ='header_level2'> Sub workflows </div>"""
