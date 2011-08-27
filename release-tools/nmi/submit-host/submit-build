@@ -27,7 +27,7 @@ cat >cmdfile <<EOF
 
 project = Pegasus
 project_release = $VERSION
-component = Mapper/Worker/WMS
+component = $VERSION - Full build
 component_version = $VERSION
 description = Pegasus Build and Test
 run_type = build
