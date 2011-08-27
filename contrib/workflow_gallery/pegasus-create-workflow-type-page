@@ -92,7 +92,7 @@ def listFiles(basedir):
 
 def create_header(workflow_type):
 	header_str = """
-<?php include("gallery_header.php"); ?>
+<?php include("gallery_type_header.php"); ?>
 
 <div id = 'header_div' class ='header'>
 </div>
@@ -104,7 +104,7 @@ def create_header(workflow_type):
 
 def create_footer():
 	footer_str = """
-<?php include("gallery_footer.php"); ?>
+<?php include("gallery_type_footer.php"); ?>
 	"""
 	return footer_str
 	
