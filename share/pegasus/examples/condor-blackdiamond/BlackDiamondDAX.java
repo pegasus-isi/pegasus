@@ -24,7 +24,7 @@ public class BlackDiamondDAX {
      */
     public static void main(String[] args) {
         if (args.length != 2) {
-            System.out.println("Usage: java ADAG <site_handle> <pegasus_location> <filename.dax>");
+            System.out.println("Usage: java ADAG <pegasus_bin_dir> <filename.dax>");
             System.exit(1);
         }
 
@@ -37,7 +37,7 @@ public class BlackDiamondDAX {
 
     }
 
-    private static ADAG Diamond(String pegasus_location) throws Exception {
+    private static ADAG Diamond(String pegasus_bin_dir) throws Exception {
 
         java.io.File cwdFile = new java.io.File (".");
         String cwd = cwdFile.getCanonicalPath(); 
@@ -58,17 +58,17 @@ public class BlackDiamondDAX {
         Executable preprocess = new Executable("pegasus", "preprocess", "4.0");
         preprocess.setArchitecture(Executable.ARCH.X86).setOS(Executable.OS.LINUX);
         preprocess.setInstalled(true);
-        preprocess.addPhysicalFile("file://" + pegasus_location + "/bin/keg", "condorpool");
+        preprocess.addPhysicalFile("file://" + pegasus_bin_dir + "/keg", "condorpool");
 
         Executable findrange = new Executable("pegasus", "findrange", "4.0");
         findrange.setArchitecture(Executable.ARCH.X86).setOS(Executable.OS.LINUX);
         findrange.setInstalled(true);
-        findrange.addPhysicalFile("file://" + pegasus_location + "/bin/keg", "condorpool");
+        findrange.addPhysicalFile("file://" + pegasus_bin_dir + "/keg", "condorpool");
 
         Executable analyze = new Executable("pegasus", "analyze", "4.0");
         analyze.setArchitecture(Executable.ARCH.X86).setOS(Executable.OS.LINUX);
         analyze.setInstalled(true);
-        analyze.addPhysicalFile("file://" + pegasus_location + "/bin/keg", "condorpool");
+        analyze.addPhysicalFile("file://" + pegasus_bin_dir + "/keg", "condorpool");
 
         dax.addExecutable(preprocess).addExecutable(findrange).addExecutable(analyze);
 

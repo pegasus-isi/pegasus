@@ -307,7 +307,6 @@ public class PegasusProperties {
         
         mDeprecatedProperties   = new HashSet(5);
         initializePropertyFile( confProperties  );
-        mPegasusHome = mProps.getPegasusHome();
 
         mDefaultPoolFile        = getDefaultPathToSC();
         mDefaultTC              = getDefaultPathToTC();
@@ -353,7 +352,34 @@ public class PegasusProperties {
         }
         return profiles;
     }
+    
+    /**
+     * Accessor to the bin directory of the Pegasus install
+     *
+     * @return the "etc" directory of the VDS runtime system.
+     */
+    public File getBinDir() {
+        return mProps.getBinDir();
+    }
 
+    /**
+     * Accessor to the schema directory of the Pegasus install
+     *
+     * @return the "etc" directory of the VDS runtime system.
+     */
+    public File getSchemaDir() {
+        return mProps.getSchemaDir();
+    }
+    
+    /**
+     * Accessor to the bin directory of the Pegasus install
+     *
+     * @return the "etc" directory of the VDS runtime system.
+     */
+    public File getSharedDir() {
+        return mProps.getSharedStateDir();
+    }
+    
     /**
      * Returns all the profiles relevant to a particular namespace
      * 
@@ -447,7 +473,7 @@ public class PegasusProperties {
             System.err.println( mLogMsg );
             System.exit( 1 );
         } catch ( MissingResourceException e ) {
-            mLogMsg = "You forgot to set -Dpegasus.home=$PEGASUS_HOME!";
+            mLogMsg = "A required property is missing: " + e.getMessage();
             System.err.println( mLogMsg );
             System.exit( 1 );
         }
@@ -557,18 +583,7 @@ public class PegasusProperties {
     public File getSysConfDir() {
         return mProps.getSysConfDir();
     }
-
-    /**
-     * Accessor: Obtains the root directory of the Pegasus runtime
-     * system.
-     *
-     * @return the root directory of the Pegasus runtime system, as initially
-     * set from the system properties.
-     */
-    public String getPegasusHome() {
-        return mProps.getPegasusHome();
-    }
-
+    
     //PROPERTIES RELATED TO SCHEMAS
     /**
      * Returns the location of the schema for the DAX.
@@ -1979,7 +1994,8 @@ public class PegasusProperties {
      * @return boolean in the properties, else true
      */
     public boolean writeOutMetrics(){
-        return Boolean.parse( mProps.getProperty( "pegasus.log.metrics" ), true );
+        return Boolean.parse( mProps.getProperty( "pegasus.log.metrics" ), true ) &&
+               (this.getMetricsLogFile() != null);
     }
 
     /**
@@ -1987,15 +2003,10 @@ public class PegasusProperties {
      *
      * Referred to by the "pegasus.log.metrics.file" property.
      *
-     * @return path to the metrics file if specified, else $PEGASUS_HOME/var/pegasus.log
+     * @return path to the metrics file if specified, else rundir/pegasus.metrics
      */
     public String getMetricsLogFile(){
         String file = mProps.getProperty( "pegasus.log.metrics.file" );
-        if( file == null || file.length() == 0 ){
-            //construct the default path
-            File dir = new File( this.getPegasusHome(), "var" );
-            file = new File( dir, "pegasus.log" ).getAbsolutePath();
-        }
         return file;
     }
 

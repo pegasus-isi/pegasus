@@ -577,42 +577,11 @@ public class ReplicaCatalogBridge
         String site = "local";
         //generate only once.
         if( !mDefaultTCRCCreated ){
-            //check if PEGASUS_HOME is set
-            String home = mProps.getPegasusHome(  );
-            //if PEGASUS_HOME is not set, use VDS_HOME
-            //home = ( home == null )? mPoolHandle.getVDS_HOME( site ): home;
-
-            //if home is still null
-            if ( home == null ){
-                //cannot create default TC
-                mLogger.log( "Unable to create a default entry for " +
-                             Separator.combine( this.RC_TRANSFORMATION_NS,
-                                                this.RC_TRANSFORMATION_NAME,
-                                                this.RC_TRANSFORMATION_VERSION ),
-                             LogManager.DEBUG_MESSAGE_LEVEL );
-                //set the flag back to true
-                mDefaultTCRCCreated = true;
-                return mDefaultTCRCEntry;
-            }
-            //remove trailing / if specified
-            home = ( home.charAt( home.length() - 1 ) == File.separatorChar )?
-                     home.substring( 0, home.length() - 1 ):
-                     home;
 
             //construct the path to it
             StringBuffer path = new StringBuffer();
-            path.append( home ).append( File.separator ).
-                 append( "bin" ).append( File.separator ).
+            path.append( mProps.getBinDir() ).append( File.separator ).
                  append( "pegasus-rc-client" );
-
-            //create Profiles for JAVA_HOME and CLASSPATH
-            String jh = mProps.getProperty( "java.home" );
-            mLogger.log( "JAVA_HOME set to " + jh,
-                         LogManager.DEBUG_MESSAGE_LEVEL );
-            Profile javaHome = new Profile( Profile.ENV, "JAVA_HOME", jh );
-
-            Profile classpath = this.getClassPath( home );
-            if( classpath == null ){ return mDefaultTCRCEntry ; }
 
             mDefaultTCRCEntry = new TransformationCatalogEntry( this.RC_TRANSFORMATION_NS,
                                                                 this.RC_TRANSFORMATION_NAME,
@@ -620,11 +589,7 @@ public class ReplicaCatalogBridge
 
             mDefaultTCRCEntry.setPhysicalTransformation( path.toString() );
             mDefaultTCRCEntry.setResourceId( site );
-            mDefaultTCRCEntry.addProfile( classpath );
-            mDefaultTCRCEntry.addProfile( javaHome );
-            mDefaultTCRCEntry.addProfile( new Profile( Profile.ENV,
-                                                       "PEGASUS_HOME",
-                                                       mProps.getPegasusHome() ));
+
             //set the flag back to true
             mDefaultTCRCCreated = true;
         }

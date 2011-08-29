@@ -54,6 +54,11 @@ import java.io.IOException;
 public class SiteCatalogEntry extends AbstractSiteData{
 
     /**
+     * The name of the environment variable PEGASUS_BIN_DIR.
+     */
+    public static final String PEGASUS_BIN_DIR = "PEGASUS_BIN_DIR";
+    
+    /**
      * The name of the environment variable PEGASUS_HOME.
      */
     public static final String PEGASUS_HOME = "PEGASUS_HOME";
@@ -394,8 +399,20 @@ public class SiteCatalogEntry extends AbstractSiteData{
      * 
      * @return value if set else null.
      */
-    public String getVDSHome( ){
-        return this.getEnvironmentVariable( VDS_HOME );
+    @Deprecated public String getVDSHome( ){
+        
+        String s = this.getEnvironmentVariable( VDS_HOME );
+        if (s != null && s.length() > 0) {
+            return s;
+        }
+        
+        // fall back on bin dir - this is to ensure  a smooth transition to FHS
+        s = this.getEnvironmentVariable( PEGASUS_BIN_DIR );
+        if (s != null && s.length() > 0) {
+            return s + "/..";
+        }
+
+        return null;
     }
 
 
@@ -405,8 +422,20 @@ public class SiteCatalogEntry extends AbstractSiteData{
      * 
      * @return value if set else null.
      */
-    public String getPegasusHome( ){
-        return this.getEnvironmentVariable(  PEGASUS_HOME );
+    @Deprecated public String getPegasusHome( ){
+        
+        String s = this.getEnvironmentVariable( PEGASUS_HOME );
+        if (s != null && s.length() > 0) {
+            return s;
+        }
+        
+        // fall back on bin dir - this is to ensure  a smooth transition to FHS
+        s = this.getEnvironmentVariable( PEGASUS_BIN_DIR );
+        if (s != null && s.length() > 0) {
+            return s + "/..";
+        }
+        
+        return null;
     }
     
     /**

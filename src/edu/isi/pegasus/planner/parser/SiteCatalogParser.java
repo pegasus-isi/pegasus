@@ -795,7 +795,7 @@ public class SiteCatalogParser extends StackBasedXMLParser {
         // treat URI as File, yes, I know - I need the basename
         File uri = new File( SiteCatalogParser.SCHEMA_LOCATION );
         // create a pointer to the default local position
-        File poolconfig = new File( this.mProps.getSysConfDir(),  uri.getName() );
+        File poolconfig = new File( this.mProps.getSchemaDir(),  uri.getName() );
 
         return this.mProps.getPoolSchemaLocation( poolconfig.getAbsolutePath() );
 

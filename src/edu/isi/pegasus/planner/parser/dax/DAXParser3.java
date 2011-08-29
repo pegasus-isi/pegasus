@@ -202,7 +202,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
         // treat URI as File, yes, I know - I need the basename
         File uri = new File( DAXParser3.SCHEMA_LOCATION );
         // create a pointer to the default local position
-        File dax = new File( this.mProps.getSysConfDir(),  uri.getName() );
+        File dax = new File( this.mProps.getSchemaDir(),  uri.getName() );
 
         return this.mProps.getDAXSchemaLocation( dax.getAbsolutePath() );
 

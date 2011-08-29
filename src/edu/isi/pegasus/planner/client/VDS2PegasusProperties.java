@@ -217,8 +217,6 @@ public class VDS2PegasusProperties extends Executable {
             return mVDSToPegasusPropertiesTable;
         }
 
-        associate( "vds.home", "pegasus.home" );
-
         //PROPERTIES RELATED TO SCHEMAS
         associate( "vds.schema.dax",  "pegasus.schema.dax" );
         associate( "vds.schema.pdax", "pegasus.schema.pdax" );

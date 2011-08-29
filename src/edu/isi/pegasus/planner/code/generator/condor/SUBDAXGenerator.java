@@ -1075,8 +1075,8 @@ public class SUBDAXGenerator{
                         LogManager.DEBUG_MESSAGE_LEVEL);
 
             //construct the default path to the executable
-            script.append( mProps.getPegasusHome()).append( File.separator ).
-                   append( "bin" ).append( File.separator ).
+            script.append( mProps.getBinDir() ).
+                   append( File.separator ).
                    append( "pegasus-plan" );
         }
         else{

@@ -234,7 +234,7 @@ if ( $grid ) {
 
 if ( $config{dag} ) {
     # find pegasus-submit-dag
-    my $psd = File::Spec->catfile( $config{pegasushome}, 'bin', 'pegasus-submit-dag' );
+    my $psd = File::Spec->catfile( $config{bindir}, 'pegasus-submit-dag' );
     die "ERROR: Unable to access $psd\n" unless -x $psd;
     print STDERR "# found $psd\n" if $main::DEBUG;
 

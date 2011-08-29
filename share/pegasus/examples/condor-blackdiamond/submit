@@ -4,13 +4,15 @@ set -e
 
 TOPDIR=`pwd`
 
-# figure out where Pegasus is installed
-export PEGASUS_HOME=`which pegasus-plan | sed 's:/bin/pegasus-plan::'`
-if [ "x$PEGASUS_HOME" = "x" ]; then
-    echo "Unable to determine location of your Pegasus install"
-    echo "Please make sure pegasus-plan is in your path"
+# set up pegasus classpath
+export CLASSPATH=`pegasus-config --classpath`
+if [ "x$CLASSPATH" = "x" ]; then
+    echo "ERROR: Unable to run pegasus-config to get the classpath"
     exit 1
-fi 
+fi
+
+# pegasus bin directory is needed to find keg
+BIN_DIR=`pegasus-config --bin`
 
 # generate the input file
 echo "This is sample input to KEG" >f.a
@@ -19,11 +21,11 @@ echo "This is sample input to KEG" >f.a
 mkdir -p outputs
 
 # build the dax generator
-export CLASSPATH=.:$PEGASUS_HOME/lib/pegasus.jar:$CLASSPATH
+export CLASSPATH=".:$CLASSPATH"
 javac BlackDiamondDAX.java
 
 # generate the dax
-java BlackDiamondDAX $PEGASUS_HOME blackdiamond.dax
+java BlackDiamondDAX $BIN_DIR blackdiamond.dax
 
 # create the site catalog
 cat >sites.xml <<EOF
@@ -44,7 +46,6 @@ cat >sites.xml <<EOF
                 </shared>
             </storage>
         </head-fs>
-        <profile namespace="env" key="PEGASUS_HOME" >$PEGASUS_HOME</profile>
     </site>
     <site  handle="condorpool" arch="x86" os="LINUX">
         <head-fs>
@@ -60,7 +61,7 @@ cat >sites.xml <<EOF
         </head-fs>
         <profile namespace="pegasus" key="style" >condor</profile>
         <profile namespace="condor" key="universe" >vanilla</profile>
-        <profile namespace="env" key="PEGASUS_HOME" >$PEGASUS_HOME</profile>
+        <profile namespace="env" key="PEGASUS_HOME" >$BIN_DIR/..</profile>
     </site>
 </sitecatalog>
 EOF

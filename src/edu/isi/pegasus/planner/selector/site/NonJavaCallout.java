@@ -684,7 +684,6 @@ public class NonJavaCallout extends AbstractPerJob {
         // load the default environment variables
         String value = null;
         mEnvVar = new HashMap();
-        mEnvVar.put("PEGASUS_HOME", mProps.getPegasusHome());
         mEnvVar.put("CLASSPATH",mProps.getProperty("java.class.path"));
         mEnvVar.put("JAVA_HOME",mProps.getProperty("java.home"));
 

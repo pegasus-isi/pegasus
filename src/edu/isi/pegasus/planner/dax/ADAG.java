@@ -279,7 +279,8 @@ public class ADAG {
         mFiles = new LinkedList<File>();
         mInvokes = new LinkedList<Invoke>();
         mDependencies = new LinkedHashMap<String, List<Parent>>();
-        System.setProperty("pegasus.home", System.getProperty("user.dir"));
+        // PM-435 - commented this out for FHS work - do we need references to the bin/schema/...?
+        // System.setProperty("pegasus.home", System.getProperty("user.dir"));
         mLogger = LogManagerFactory.loadSingletonInstance();
         mLogger.logEventStart("event.dax.generate", "pegasus.version", Version.
                 instance().toString());

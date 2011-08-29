@@ -1463,7 +1463,7 @@ public class DAXParser2 extends Parser implements DAXParser {
                        "dax-" + mDaxSchemaVersion + ".xsd";
 
         // create a pointer to the default local position
-        File dax = new File(this.mProps.getSysConfDir(), child);
+        File dax = new File(this.mProps.getSchemaDir(), child);
 
         //System.out.println("\nDefault Location of Dax is " + dax.getAbsolutePath());
 

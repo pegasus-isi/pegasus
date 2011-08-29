@@ -60,7 +60,7 @@ public class ExitPOST extends VDSPOSTScript {
      */
     public String getDefaultExitCodePath(){
         StringBuffer sb = new StringBuffer();
-        sb.append(mProps.getPegasusHome()).append(File.separator).append("archive");
+        sb.append(mProps.getBinDir());
         sb.append(File.separator).append("exitpost");
 
         return sb.toString();

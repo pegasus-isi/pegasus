@@ -96,7 +96,7 @@ public class SingleFileSchema extends InMemorySchema
     Logging.instance().log( "dbschema", 3, "created reader" );
 
     // obtain the file location from the schema properties
-    File db = new File( props.getLocalStateDir(), "vds.db" );
+    File db = new File( props.getSysConfDir(), "vds.db" );
     this.m_filename = 
       this.m_dbschemaprops.getProperty( "file.store", db.getAbsolutePath() );
     Logging.instance().log( "dbschema", 3, "filename=" + m_filename );

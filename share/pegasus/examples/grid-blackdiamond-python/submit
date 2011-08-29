@@ -34,7 +34,7 @@ fi
 echo "This is sample input to KEG" >f.a
 
 # generate the dax
-export PYTHONPATH=$PEGASUS_HOME/lib/python
+export PYTHONPATH=`pegasus-config --python`
 ./blackdiamond.py $CLUSTER_PEGASUS_HOME >blackdiamond.dax
 
 # create the site catalog

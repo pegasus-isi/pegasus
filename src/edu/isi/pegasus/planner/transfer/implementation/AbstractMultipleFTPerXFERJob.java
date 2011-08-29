@@ -250,8 +250,6 @@ public abstract class AbstractMultipleFTPerXFERJob extends Abstract
         TransformationCatalogEntry defaultTCEntry = null;
         //check if PEGASUS_HOME is set
         String home = mSiteStore.getPegasusHome( site );
-        //if PEGASUS_HOME is not set, use VDS_HOME
-        home = ( home == null )? mSiteStore.getVDSHome( site ): home;
 
         mLogger.log( "Creating a default TC entry for " +
                      Separator.combine( namespace, name, version ) +

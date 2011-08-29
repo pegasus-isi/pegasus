@@ -213,7 +213,7 @@ public class NetloggerPostScript implements POSTScript {
      */
     public String getNetloggerExitCodePath(){
         StringBuffer sb = new StringBuffer();
-        sb.append(mProps.getPegasusHome()).append(File.separator).append("bin");
+        sb.append(mProps.getBinDir());
         sb.append(File.separator).append("netlogger-exitcode");
 
         return sb.toString();

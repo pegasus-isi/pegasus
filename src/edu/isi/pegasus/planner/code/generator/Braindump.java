@@ -291,8 +291,7 @@ public class Braindump {
         
         //information about the planner
         StringBuffer planner = new StringBuffer();
-        planner.append( mProps.getPegasusHome() ).append( File.separator ).
-                append( "bin" ).append( File.separator ).append( "pegasus-plan" );
+        planner.append( mProps.getBinDir() ).append( File.separator ).append( "pegasus-plan" );
         entries.put( "planner", planner.toString() );
         
         //planner version and build
@@ -307,7 +306,7 @@ public class Braindump {
         //required by tailstatd
         entries.put( "jsd" , "jobstate.log");
         entries.put( "rundir" , directory.getName());
-        entries.put( "pegasushome", mProps.getPegasusHome());
+        entries.put( "bindir" , mProps.getBinDir().getAbsolutePath());
         entries.put( "vogroup" , mPOptions.getVOGroup() );
         
         

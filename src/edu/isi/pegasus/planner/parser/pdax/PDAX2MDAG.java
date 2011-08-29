@@ -1019,7 +1019,7 @@ public class PDAX2MDAG implements Callback {
                  append("run ").append(absPath).append("\n").
                  append("jsd ").append(absPath).append(mSeparator).append("jobstate.log").append("\n").
                  append("rundir ").append(directory.getName()).append("\n").
-                 append("pegasushome ").append(mProps.getPegasusHome()).append("\n").
+                 append("bindir ").append(mProps.getBinDir()).append("\n").
                  append("vogroup pegasus").append("\n").//for time being
                  append("label " + partition.getName());
 
@@ -1142,8 +1142,7 @@ public class PDAX2MDAG implements Callback {
                         LogManager.DEBUG_MESSAGE_LEVEL);
 
             //construct the default path to the executable
-            script.append( mProps.getPegasusHome()).append(mSeparator).
-                   append( "bin" ).append( mSeparator ).
+            script.append( mProps.getBinDir() ).append( mSeparator ).
                    append( RETRY_LOGICAL_NAME );
         }
         else{

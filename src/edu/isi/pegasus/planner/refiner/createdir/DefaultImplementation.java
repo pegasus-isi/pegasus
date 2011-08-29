@@ -211,7 +211,7 @@ public class DefaultImplementation implements Implementation {
             newJob.vdsNS.construct( Pegasus.GRIDSTART_KEY, "None" );
 
             StringBuffer sb = new StringBuffer();
-            sb.append( mProps.getPegasusHome() ).append( File.separator ).append( "bin" ).
+            sb.append( mProps.getBinDir() ).
                append( File.separator ).append( DefaultImplementation.EXECUTABLE_BASENAME );
             execPath = sb.toString();
             argString = "--create --dir " +
@@ -281,8 +281,9 @@ public class DefaultImplementation implements Implementation {
         TransformationCatalogEntry defaultTCEntry = null;
         //check if PEGASUS_HOME is set
         String home = mSiteStore.getPegasusHome( site );
+
         //if PEGASUS_HOME is not set, use VDS_HOME
-        home = ( home == null )? mSiteStore.getVDSHome( site ): home;
+        //home = ( home == null )? mSiteStore.getVDSHome( site ): home;
 
         mLogger.log( "Creating a default TC entry for " +
                      COMPLETE_TRANSFORMATION_NAME +

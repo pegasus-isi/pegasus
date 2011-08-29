@@ -61,7 +61,7 @@ public class PegasusExitCode extends VDSPOSTScript {
      */
     public String getDefaultExitCodePath(){
         StringBuffer sb = new StringBuffer();
-        sb.append( mProps.getPegasusHome() ).append( File.separator ).append( "bin" );
+        sb.append( mProps.getBinDir() );
         sb.append( File.separator ).append( "pegasus-exitcode" );
 
         return sb.toString();

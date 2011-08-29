@@ -320,7 +320,7 @@ public class RemoveDirectory extends Engine {
             newJob.vdsNS.construct( Pegasus.GRIDSTART_KEY, "None" );
 
             StringBuffer sb = new StringBuffer();
-            sb.append( mProps.getPegasusHome() ).append( File.separator ).append( "bin" ).
+            sb.append( mProps.getBinDir() ).
                append( File.separator ).append( RemoveDirectory.REMOVE_DIR_EXECUTABLE_BASENAME );
             execPath = sb.toString();
             newJob.condorVariables.construct( "transfer_executable", "true" );

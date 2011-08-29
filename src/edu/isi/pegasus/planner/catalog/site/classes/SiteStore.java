@@ -20,32 +20,27 @@ package edu.isi.pegasus.planner.catalog.site.classes;
 
 
 import java.io.File;
-import java.util.List;
-import java.util.Set;
-import edu.isi.pegasus.planner.classes.Job;
-
-import edu.isi.pegasus.planner.namespace.Pegasus;
-
-import edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo;
-        
-import edu.isi.pegasus.common.util.Currently;
-
-
-import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 import java.io.IOException;
 import java.io.Writer;
-
-import java.util.Set;
-import java.util.Map;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import edu.isi.pegasus.common.util.Currently;
+import edu.isi.pegasus.planner.catalog.classes.SysInfo;
+import edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo;
+import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+import edu.isi.pegasus.planner.namespace.Pegasus;
 
 /**
  * The site store contains the collection of sites backed by a HashMap.
  * 
  * @author Karan Vahi
+ * @author Mats Rynge
  * @version $Revision$
  */
 public class SiteStore extends AbstractSiteData{
@@ -64,8 +59,6 @@ public class SiteStore extends AbstractSiteData{
      * The version to report.
      */
     public static final String SCHEMA_VERSION = "3.0";
-    
-    
     
     /**
      * The internal map that maps a site catalog entry to the site handle.
@@ -256,7 +249,7 @@ public class SiteStore extends AbstractSiteData{
      * 
      * @return value if set else null.
      */
-    public String getVDSHome( String handle ){
+    @Deprecated public String getVDSHome( String handle ){
         //sanity check
         if( !this.contains( handle ) ) {
             return null;
@@ -274,7 +267,7 @@ public class SiteStore extends AbstractSiteData{
      * 
      * @return value if set else null.
      */
-    public String getPegasusHome( String handle ){        
+    @Deprecated public String getPegasusHome( String handle ){        
         if( !this.contains( handle ) ) {
             return null;
         }

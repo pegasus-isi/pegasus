@@ -640,8 +640,8 @@ public class CPlanner extends Executable{
             if( mPOptions.submitToScheduler() ){//submit the jobs
                 StringBuffer invocation = new StringBuffer();
                 //construct the path to the bin directory
-                invocation.append( mProps.getPegasusHome() ).append( File.separator ).
-                           append( "bin" ).append( File.separator ).append( getPegasusRunInvocation (  ) );
+                invocation.append( mProps.getBinDir() ).append( File.separator ).
+                                   append( getPegasusRunInvocation (  ) );
 
                 boolean submit = submitWorkflow( invocation.toString() );
                 if ( !submit ){
@@ -1490,6 +1490,7 @@ public class CPlanner extends Executable{
         boolean result = false;
         if ( mProps.writeOutMetrics() ) {
             File log = new File( mProps.getMetricsLogFile() );
+            
 
             //do a sanity check on the directory
             try{

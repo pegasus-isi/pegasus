@@ -91,7 +91,7 @@ public static final String DB_ALL_PREFIX =
     throws IOException, MissingResourceException
   {
     m_props = getVDSPropertiesInstance();
-    m_home = m_props.getVDSHome();
+    m_home = m_props.getBinDir() + "/..";
   }
 
   /**
@@ -146,19 +146,7 @@ public static final String DB_ALL_PREFIX =
    */
   public String getVDSHome()
   {
-    return m_props.getVDSHome();
-  }
-
-  /**
-   * Accessor to $PEGASUS_HOME/var. The files in this directory have a high
-   * change frequency, are effectively read-write, they reside on a
-   * per-machine basis, and they are valid usually for a single user.
-   *
-   * @return the "var" directory of the VDS runtime system.
-   */
-  public File getLocalStateDir()
-  {
-    return m_props.getLocalStateDir();
+    return m_home;
   }
 
   /**
@@ -170,7 +158,7 @@ public static final String DB_ALL_PREFIX =
    */
   public File getDataDir()
   {
-    return m_props.getDataDir();
+    return m_props.getSharedStateDir();
   }
 
   /**
@@ -307,7 +295,7 @@ public static final String DB_ALL_PREFIX =
    */
   public String getRCLocation()
   {
-    File rcFile = new File( m_props.getLocalStateDir(), "rc.data" );
+    File rcFile = new File( m_props.getSysConfDir(), "rc.data" );
     return m_props.getProperty( "pegasus.db.rc", rcFile.getAbsolutePath() );
   }
 
@@ -317,7 +305,7 @@ public static final String DB_ALL_PREFIX =
    */
   public String getTCLocation()
   {
-    File tcFile = new File( m_props.getLocalStateDir(), "tc.data" );
+    File tcFile = new File( m_props.getSysConfDir(), "tc.data" );
     return m_props.getProperty( "pegasus.db.tc", tcFile.getAbsolutePath() );
   }
 

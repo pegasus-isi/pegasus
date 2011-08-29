@@ -195,7 +195,7 @@ public class PegasusGetSites extends Executable{
         if(mSCFile == null){
             //no sc path is passed using command line                                
             //sc path is not set in the properties file go to default
-            File f = new File(p.getPegasusHome(), "var/sites.xml");
+            File f = new File(p.getSysConfDir(), "/sites.xml");
             mSCFile = f.getAbsolutePath();
                 
         }            

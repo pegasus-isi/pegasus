@@ -161,7 +161,7 @@ public class UserPOSTScript implements POSTScript {
      */
     public String getExitCodePath(){
         StringBuffer sb = new StringBuffer();
-        sb.append(mProps.getPegasusHome()).append(File.separator).append("bin");
+        sb.append(mProps.getBinDir());
         sb.append(File.separator).append("exitcode");
 
         return sb.toString();

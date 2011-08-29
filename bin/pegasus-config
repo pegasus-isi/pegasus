@@ -200,6 +200,7 @@ GetOptions( "help|h" => \&usage
         print "my \$pegasus_php_dir = \"$php_dir\";\n";
         print "my \$pegasus_javascript_dir = \"$js_dir\";\n";
         print "my \$pegasus_share_dir = \"$share_dir\";\n";
+        print "my \$pegasus_schema_dir = \"$schema_dir\";\n";
         print "unshift(\@INC, \$pegasus_perl_dir);\n";
         exit 0; 
     }
@@ -212,6 +213,7 @@ GetOptions( "help|h" => \&usage
         print "pegasus_php_dir = \"$php_dir\"\n";
         print "pegasus_javascript_dir = \"$js_dir\"\n";
         print "pegasus_share_dir = \"$share_dir\"\n";
+        print "pegasus_schema_dir = \"$schema_dir\"\n";
         print "os.sys.path.insert(0, pegasus_python_dir)\n";
         exit 0; 
     }
@@ -228,6 +230,8 @@ GetOptions( "help|h" => \&usage
         print "export PEGASUS_PYTHON_DIR\n";
         print "PEGASUS_SHARE_DIR=\"$share_dir\"\n";
         print "export PEGASUS_SHARE_DIR\n";
+        print "PEGASUS_SCHEMA_DIR=\"$schema_dir\"\n";
+        print "export PEGASUS_SCHEMA_DIR\n";
         print "CLASSPATH=\"$classpath\"\n";
         print "export CLASSPATH\n";
         exit 0; 

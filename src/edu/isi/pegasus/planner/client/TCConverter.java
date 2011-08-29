@@ -571,7 +571,7 @@ public class TCConverter
                             if (!jdbcTC.createDatabase(mDatabaseName)) {
                                 throw new RuntimeException("Failed to create database " + mDatabaseName);
                             }
-                            String initFilePath = mProps.getPegasusHome() + File.separator + "sql" + File.separator ;
+                            String initFilePath = mProps.getSharedDir() + File.separator + "sql" + File.separator ;
                             for (String name : TC_INITIALIZATION_FILES) {
                                 if (!jdbcTC.initializeDatabase(mDatabaseName, initFilePath + name)) {
                                     jdbcTC.deleteDatabase(mDatabaseName);
