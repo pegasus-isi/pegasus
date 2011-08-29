@@ -208,13 +208,18 @@ padding:25px 0px 25px 0px;
 </style>
 </div>
 	"""
+	header_str += """
+<a href="../index.php" target="_self">
+<img src="images/home.png" width =72 height =72 border =0 title ="Home" alt ="Home">
+</a>
+	"""
 	return header_str
 	
 def create_toc(workflow_info , isRoot = False):
 	content = """
 <div class ='header_level1'>Table of contents </div>
-<a href ='#exec_div '>Workflow execution details </a><br/>
 <a href ='#env_div'>Workflow environment details</a><br/>
+<a href ='#exec_div '>Workflow execution details </a><br/>
 <a href ='#job_stats_div'>Job statistics</a><br/>
 <a href ='#inv_stats_div'>Invocation statistics</a><br/>
 <a href ='#dax_div'>DAX graph</a><br/>
@@ -418,16 +423,21 @@ def create_workflow_page(tar_file_name , output_dir , log_level):
 <script type='text/javascript' src='js/protovis-r3.2.js'></script>
 		"""
 		html_content +=  create_toc(wf_info , isRootWF )
-		html_content += """
-<div id ='exec_div' class = 'header_level2' > Workflow execution details <span style =' font-style:italic;font-size:14px;'>( Download tar: <a href= '"""+   tar_file_name + """'><img src='images/download.jpg' alt='Download' align='bottom' width='16' height='16' border ='0' /></a>)</span>
-</div>
-		"""
-		html_content += workflow_stats.print_individual_workflow_stats(st_stats , title )
+		
 		html_content +="""
-<div id ='env_div' class = 'header_level2' > Workflow execution environment 
+<div id ='env_div' class = 'header_level2' > Workflow environment details
+<span style =' font-style:italic;font-size:16px;'>( Download tar: <a href= '"""+   tar_file_name + """'>
+<img src='images/download.jpg' alt='Download' align='bottom' width='16' height='16' border ='0' /></a>)
+</span> 
 </div>
 		"""
 		html_content += plot_stats_utils.print_property_table(wf_info.wf_env , False ,":")
+		html_content += """
+<div id ='exec_div' class = 'header_level2' > Workflow execution details 
+</div>
+		"""
+		html_content += workflow_stats.print_individual_workflow_stats(st_stats , title )
+		
 		html_content +="""
 <div id ='job_stats_div' class = 'header_level2' > Job statistics
 </div> 
