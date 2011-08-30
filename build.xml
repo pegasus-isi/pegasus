@@ -422,6 +422,7 @@
     <copy preservelastmodified="true" todir="${dist.doc}/schemas">
       <fileset dir="doc/schemas" includes="**/*"/>
     </copy>
+    <fixcrlf srcdir="${dist.doc}/schemas" includes="**/*.xsd" eol="lf"/>
 
     <!-- etc -->
     <mkdir dir="${dist.etc}"/>
@@ -446,6 +447,17 @@
     <copy preservelastmodified="true" todir="${dist.lib}/python">
       <fileset dir="lib/pegasus/python" includes="**/*.py"/>
     </copy>
+    <chmod perm="0755" type="file">
+      <fileset dir="${dist.lib}/python/boto/tests" includes="*.py"/>
+    </chmod>
+    <chmod perm="0755" type="file">
+      <fileset dir="${dist.lib}/python">
+        <include name="Pegasus/plots_stats/plots/populate.py"/>
+        <include name="Pegasus/plots_stats/plots/pegasus_breakdown.py"/>
+        <include name="Pegasus/plots_stats/plots/pegasus_time.py"/>
+        <include name="Pegasus/tools/kickstart_parser.py"/>
+      </fileset>
+    </chmod>
 
     <!-- share -->
     <mkdir dir="${dist.share}"/>
@@ -481,6 +493,7 @@
     </chmod>
     <fixcrlf srcdir="${dist.share}/sql" tab="remove" tablength="8" 
              excludes="README*" eol="lf"/>
+    <fixcrlf srcdir="${dist.share}/schema" eol="lf"/>
 
     <!-- . -->
     <copy preservelastmodified="true" todir="${dist.dir}">
