@@ -409,7 +409,8 @@ public class SiteCatalogEntry extends AbstractSiteData{
         // fall back on bin dir - this is to ensure  a smooth transition to FHS
         s = this.getEnvironmentVariable( PEGASUS_BIN_DIR );
         if (s != null && s.length() > 0) {
-            return s + "/..";
+            File f = new File(s + "/..");
+            return f.getAbsolutePath();
         }
 
         return null;
@@ -432,7 +433,8 @@ public class SiteCatalogEntry extends AbstractSiteData{
         // fall back on bin dir - this is to ensure  a smooth transition to FHS
         s = this.getEnvironmentVariable( PEGASUS_BIN_DIR );
         if (s != null && s.length() > 0) {
-            return s + "/..";
+            File f = new File(s + "/..");
+            return f.getAbsolutePath();
         }
         
         return null;
