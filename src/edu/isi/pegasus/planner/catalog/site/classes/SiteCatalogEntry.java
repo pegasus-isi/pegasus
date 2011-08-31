@@ -426,18 +426,30 @@ public class SiteCatalogEntry extends AbstractSiteData{
     @Deprecated public String getPegasusHome( ){
         
         String s = this.getEnvironmentVariable( PEGASUS_HOME );
-        if (s != null && s.length() > 0) {
-            return s;
+        if (s == null || s.length() == 0) {
+            // fall back on bin dir - this is to ensure  a smooth transition to FHS
+            s = this.getEnvironmentVariable( PEGASUS_BIN_DIR );
+            if (s != null && s.length() > 0) {
+                s += "/..";
+            }
+            
         }
         
-        // fall back on bin dir - this is to ensure  a smooth transition to FHS
-        s = this.getEnvironmentVariable( PEGASUS_BIN_DIR );
+        // normalize the path
         if (s != null && s.length() > 0) {
-            File f = new File(s + "/..");
-            return f.getAbsolutePath();
+            File f = new File(s);
+            try {
+                s = f.getCanonicalPath();
+            }
+            catch (Exception e) {
+                // ignore - just leave s alone
+            }
+        }
+        else {
+            s = null;
         }
         
-        return null;
+        return s;
     }
     
     /**
