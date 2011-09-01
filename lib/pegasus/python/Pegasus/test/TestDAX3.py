@@ -582,9 +582,11 @@ class TestJob(unittest.TestCase):
         self.assertEquals(j.getArguments(), 'a "gideon is cool" b \'apple bananna\'')
         j.clearArguments()
         
-        # Bad arguments
+        # Non-string arguments
         e = Executable("exe")
         self.assertRaises(FormatError, j.addArguments, e)
+        self.assertRaises(FormatError, j.addArguments, 1)
+        self.assertRaises(FormatError, j.addArguments, 1.0)
         
     def testInvoke(self):
         """Jobs should support invoke"""
