@@ -19,6 +19,7 @@
 #include <unistd.h>
 
 #include "parser.h"
+#include "tools.h"
 
 static const char* RCS_ID =
   "$Id$";
@@ -101,8 +102,8 @@ interpreteArguments( char* cmd, char*** argv )
 
   while ( state < 6 ) {
     if ( (class = charclass((ch=*s))) != 5 ) s++;
-    if ( debug > 2 ) printf( "[debug state=\"%d\" class=\"%d\" ch=\"%c\"]\n",
-			     state, class, ch );
+    if ( debug > 2 ) showerr( "[debug state=\"%d\" class=\"%d\" ch=\"%c\"]\n",
+			      state, class, ch );
 
     /* handle action */
     switch ( c_action[state][class] ) {
@@ -155,8 +156,8 @@ interpreteArguments( char* cmd, char*** argv )
 
   /* FIXME: What if state is not 6 ? */
   if ( state != 6 ) {
-    printf( "[syntax-error state=\"%d\" argc=\"%zu\" cmd=\"%s\"]\n",
-	    state, argc, cmd );
+    showerr( "[syntax-error state=\"%d\" argc=\"%zu\" cmd=\"%s\"]\n",
+	     state, argc, cmd );
     free((void*) store);
     return 0;
   }

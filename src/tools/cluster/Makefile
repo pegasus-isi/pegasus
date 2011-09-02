@@ -113,7 +113,7 @@ mei.o: mei.c mypopen.h
 #mympi.o: mympi.c mympi.h
 mypopen.o: mypopen.c mypopen.h
 mysystem.o: mysystem.c tools.h report.h mysystem.h
-parser.o: parser.c parser.h
+parser.o: parser.c parser.h tools.h
 report.o: report.c tools.h report.h
 seqexec.o: seqexec.c tools.h parser.h report.h mysystem.h job.h
 tools.o: tools.c tools.h

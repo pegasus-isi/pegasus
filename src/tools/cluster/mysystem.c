@@ -151,14 +151,14 @@ mysystem( char* argv[], char* envp[], const char* special )
 
   /* 20110419 PM-364: new requirement */
   diff = now(&then) - start;
-  printf( "[seqexec-task id=%s, start=\"%s\", duration=%.3f, status=%d, "
-	  "pid=%d, app=\"%s\"]\n",
-	  special ? special : "(unknown)", 
-	  iso2date( start, date, sizeof(date) ),
-	  diff, 
-	  status,
-	  child, 
-	  argv[ find_application(argv) ] ); 
+  showout( "[seqexec-task id=%s, start=\"%s\", duration=%.3f, status=%d, "
+	   "pid=%d, app=\"%s\"]\n",
+	   special ? special : "(unknown)", 
+	   iso2date( start, date, sizeof(date) ),
+	   diff, 
+	   status,
+	   child, 
+	   argv[ find_application(argv) ] ); 
 
   /* progress report finish */
   if ( progress != -1 ) {

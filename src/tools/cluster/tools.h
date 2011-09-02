@@ -28,6 +28,19 @@
 
 extern
 ssize_t
+writen( int fd, const char* buffer, ssize_t n, unsigned restart );
+/* purpose: write all n bytes in buffer, if possible at all
+ * paramtr: fd (IN): filedescriptor open for writing
+ *          buffer (IN): bytes to write (must be at least n byte long)
+ *          n (IN): number of bytes to write
+ *          restart (IN): if true, try to restart write at max that often
+ * returns: n, if everything was written, or
+ *          [0..n-1], if some bytes were written, but then failed,
+ *          < 0, if some error occurred.
+ */
+
+extern
+ssize_t
 showerr( const char* fmt, ... );
 /* purpose: printf-like error using (hopefully) atomic writes
  * paramtr: see printf()
