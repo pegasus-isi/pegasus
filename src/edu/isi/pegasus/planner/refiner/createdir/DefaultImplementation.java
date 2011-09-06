@@ -192,7 +192,11 @@ public class DefaultImplementation implements Implementation {
             throw new RuntimeException( error.toString() );
         }
 
-
+        // FIXME: This is probably a too broad solution
+        if (("condor").equalsIgnoreCase(mProps.getProperty("pegasus.transfer.refiner"))) {
+            // running on a local condor pool - move the mkdir job to local site
+            site = "local";
+        }
 
         SiteCatalogEntry ePool = mSiteStore.lookup( site );
 
