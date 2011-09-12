@@ -4795,11 +4795,9 @@ $ <command>cat xx</command>
       <title>OUTPUT FORMAT</title>
 
       <para>Refer to <emphasis><ulink
-      url="https://pegasus.isi.edu/wms/docs/schemas/iv-2.1/iv-2.1.html">https://pegasus.isi.edu/wms/docs/schemas/iv-2.1/iv-2.1.html</ulink></emphasis>
-      for an up-to-date description of elements and their attributes. Check
-      with <emphasis><ulink
-      url="https://pegasus.isi.edu/wms/schema.php">https://pegasus.isi.edu/wms/schema.php</ulink></emphasis>
-      for invocation schemas with a higher version number.</para>
+      url="http://pegasus.isi.edu/documentation">http://pegasus.isi.edu/documentation</ulink></emphasis>
+      for an up-to-date description of elements and their attributes and
+      with for invocation schemas with a higher version number.</para>
     </section>
 
     <section id="kickstart_restrictions">
