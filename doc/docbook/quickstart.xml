@@ -11,7 +11,7 @@
     Pegasus planner with minimal effort.</para>
 
     <para>Download the latest release of Pegasus WMS 3.0 from <ulink
-    url="http://pegasus.isi.edu/wms/download.php">http://pegasus.isi.edu/wms/download.php</ulink></para>
+    url="http://pegasus.isi.edu/wms/downloads">http://pegasus.isi.edu/wms/downloads</ulink></para>
 
     <para>For convenience, there are Pegasus WMS tarballs which has Condor
     included. This way you can instlal Pegasus and Condor at the same time,
