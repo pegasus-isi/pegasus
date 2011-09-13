@@ -203,7 +203,7 @@
     <mkdir dir="${dist.doc}/html/python"/>
     <exec executable="pydoc" dir="${dist.doc}/html/python" failonerror="true">
       <arg line="-w"/>
-      <arg line="${basedir}/lib/python/Pegasus/DAX3.py"/>
+      <arg line="${basedir}/lib/pegasus/python/Pegasus/DAX3.py"/>
     </exec>
     <exec executable="/bin/mv" dir="${dist.doc}/html/python" failonerror="true">
       <arg line="DAX3.html"/>

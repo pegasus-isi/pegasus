@@ -12,7 +12,7 @@ fi
 mkdir -p $TARGET_DIR/Pegasus/DAX
 TARGET_DIR=`cd $TARGET_DIR && pwd`
 
-cd lib/perl/
+cd lib/pegasus/perl/
 for i in Pegasus/DAX/*.pm; do 
     pod2html --htmldir /tmp/xxx --podroot $PWD --podpath Pegasus/DAX \
              --infile $i --outfile $TARGET_DIR/`basename $i .pm`.html
