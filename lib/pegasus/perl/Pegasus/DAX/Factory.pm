@@ -87,7 +87,7 @@ Pegasus::DAX::Factory - convenience module
 
     my $a = newProfile( PROFILE_ENV, 'FOO', 'bar' ); 
     my $b = newFilename( name => 'fubar', link => LINK_OUT ); 
-  
+
 =head1 DESCRIPTION
 
 This class exports all constructors as convenience functions into the
