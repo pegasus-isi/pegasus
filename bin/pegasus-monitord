@@ -176,6 +176,7 @@ MONITORD_NOTIFICATION_FILE = "monitord-notifications.log" # filename for writing
 MAX_SLEEP_TIME = 10     	          # in seconds
 SLEEP_WAIT_NOTIFICATION = 5               # in seconds
 WAIT_CHILD_FINISH = 5                     # in seconds
+MAX_OUTPUT_LENGTH = 2**16-1               # in bytes, maximum we can put into the database for job's stdout and stderr
 
 unsubmitted_events = {"UN_READY": 1,
                       "PRE_SCRIPT_STARTED": 1,
@@ -2243,9 +2244,21 @@ class Workflow:
         else:
             kwargs["stderr__file"] = ""
         if my_job._stdout_text is not None:
-            kwargs["stdout__text"] = my_job._stdout_text
+            if len(my_job._stdout_text) > MAX_OUTPUT_LENGTH:
+                # Need to truncate to avoid database problems...
+                kwargs["stdout__text"] = my_job._stdout_text[:MAX_OUTPUT_LENGTH]
+                logger.warning("truncating stdout for job %s" % (my_job._exec_job_id))
+            else:
+                # Put everything in
+                kwargs["stdout__text"] = my_job._stdout_text
         if my_job._stderr_text is not None:
-            kwargs["stderr__text"] = my_job._stderr_text
+            if len(my_job._stderr_text) > MAX_OUTPUT_LENGTH:
+                # Need to truncate to avoid database problems...
+                kwargs["stderr__text"] = my_job._stderr_text[:MAX_OUTPUT_LENGTH]
+                logger.warning("truncating stderr for job %s" % (my_job._exec_job_id))
+            else:
+                # Put everything in
+                kwargs["stderr__text"] = my_job._stderr_text
 
         if my_job._sched_id is not None:
             kwargs["sched__id"] = my_job._sched_id
