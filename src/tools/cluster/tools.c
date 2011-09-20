@@ -13,6 +13,7 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
+#include <errno.h>
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
@@ -21,6 +22,31 @@
 
 static const char* RCS_ID =
   "$Id$";
+
+ssize_t
+writen( int fd, const char* buffer, ssize_t n, unsigned restart )
+/* purpose: write all n bytes in buffer, if possible at all
+ * paramtr: fd (IN): filedescriptor open for writing
+ *          buffer (IN): bytes to write (must be at least n byte long)
+ *          n (IN): number of bytes to write
+ *          restart (IN): if true, try to restart write at max that often
+ * returns: n, if everything was written, or
+ *          [0..n-1], if some bytes were written, but then failed,
+ *          < 0, if some error occurred.
+ */
+{
+  int start = 0;
+  while ( start < n ) {
+    int size = write( fd, buffer+start, n-start );
+    if ( size < 0 ) {
+      if ( restart && errno == EINTR ) { restart--; continue; }
+      return size;
+    } else {
+      start += size;
+    }
+  }
+  return n;
+}
 
 ssize_t
 showerr( const char* fmt, ... )
@@ -32,8 +58,8 @@ showerr( const char* fmt, ... )
   vsnprintf( line, sizeof(line), fmt, ap );
   va_end(ap);
 
-  /* atomic write */
-  return write( STDOUT_FILENO, line, strlen(line) );
+  /* (almost) atomic write */
+  return writen( STDOUT_FILENO, line, strlen(line), 3 );
 }
 
 double 
