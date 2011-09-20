@@ -343,7 +343,7 @@
     <!-- bin -->
     <copy preservelastmodified="true" todir="${dist.bin}">
       <fileset dir="bin">
-          <include name="pegasus-dirmanager"/>
+          <include name="pegasus-create-dir"/>
           <include name="pegasus-cleanup"/>
           <include name="pegasus-s3"/>
           <include name="pegasus-transfer"/>
