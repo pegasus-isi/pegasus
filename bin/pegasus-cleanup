@@ -1,88 +1,550 @@
 #!/usr/bin/env python
+
+"""
+Pegasus utility for removing of files during workflow enactment
+
+Usage: pegasus-cleanup [options]
+
+"""
+
+##
+#  Copyright 2007-2011 University Of Southern California
 #
-# Copyright 2010 University Of Southern California
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+#  http://www.apache.org/licenses/LICENSE-2.0
 #
-# http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing,
-# software distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
-import sys
+#  Unless required by applicable law or agreed to in writing,
+#  software distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+##
+
 import os
-from optparse import OptionParser
+import re
+import sys
+import errno
+import logging
+import optparse
+import tempfile
+import subprocess
+import signal
+import string
+import stat
+import time
+from collections import deque
 
-__author__ = "Gideon Juve <juve@usc.edu>"
 
-def cleanup(input, stat=False, verbose=False):
-	"""
-	Read 'input' line by line and delete the files specified. Skip blank lines
-	and lines beginning with '#'. If 'stat' is True, then stat the files before
-	they are deleted and report the total number of bytes deleted.
-	"""
-	bytes = 0
-	dir = os.getcwd()
-	for f in input.readlines():
-		f = f.strip()
-		if len(f) == 0 or f.startswith("#"):
-			continue
-		path = f
-		if verbose:
-			print 'cleanup: removing "%s"' % f
-		if not os.path.isabs(f):
-			path = os.path.join(dir,f)
-		if os.path.isfile(path):
-			if stat:
-				info = os.stat(path)
-				bytes += info.st_size
-				if verbose: 
-					print 'cleanup: "%s" was %d bytes' % (f, info.st_size)
-			os.remove(path)
-		elif os.path.isdir(path):
-			os.removedirs(path)
-		elif verbose:
-			print 'cleanup: "%s" not found' % f
-	if stat:
-		print 'cleanup: deleted %d bytes' % bytes
+__author__ = "Mats Rynge <rynge@isi.edu>"
 
-def main():
-	usage = """Usage: %prog [options]
+# --- regular expressions -------------------------------------------------------------
 
-Deletes a list of files. Each file to delete
-should be on a separate line in the input. Absolute paths are allowed,
-otherwise files are assumed to be relative to the current directory. 
-Directories are allowed, but must be empty. Blank lines and lines 
-beginning with the '#' character are skipped. Input is taken from
-STDIN by default, but a file can be specified using -f/--file."""
-	parser = OptionParser(usage)
-	
-	parser.add_option("-s", "--stat", action="store_true", default=False,
-		dest="stat", help="Print total size of deleted files.")
-	parser.add_option("-f", "--file", action="store", dest="file",
-		help="Read list of files from FILE [default: stdin]")
-	parser.add_option("-v", action="store_true", default=False,
-		dest="verbose", help="Print verbose messages")
-		
-	(options, args) = parser.parse_args()
-	
-	if len(args) > 0:
-		parser.error("Unrecognized argument")
+re_parse_url = re.compile(r'([\w]+)://([\w\.\-:@]*)(/[\S]*)')
 
-	if options.file:
-		input = open(options.file)
-	else:
-		input = sys.stdin	
-	
-	cleanup(input, options.stat, options.verbose)
+# --- classes -------------------------------------------------------------------------
 
-	if options.file:
-		input.close()
+class URL:
 
-if __name__ == '__main__':
-	main()
+    proto      = ""
+    host       = ""
+    path       = ""
+
+    def set_url(self, url):
+        self.proto, self.host, self.path = self.parse_url(url)
+    
+    def parse_url(self, url):
+
+        proto = ""
+        host  = ""
+        path  = ""
+
+        # default protocol is file://
+        if string.find(url, ":") == -1:
+            logger.debug("URL without protocol (" + url + ") - assuming file://")
+            url = "file://" + url
+
+        # file url is a special cases as it can contain relative paths and env vars
+        if string.find(url, "file:") == 0:
+            proto = "file"
+            # file urls can either start with file://[\w]*/ or file: (no //)
+            path = re.sub("^file:(//[\w\.\-:@]*)?", "", url)
+            path = expand_env_vars(path)
+            return proto, host, path
+
+        # other than file urls
+        r = re_parse_url.search(url)
+        if not r:
+            raise RuntimeError("Unable to parse URL: %s" % (url))
+        
+        # Parse successful
+        proto = r.group(1)
+        host = r.group(2)
+        path = r.group(3)
+        
+        # no double slashes in urls
+        path = re.sub('//+', '/', path)
+        
+        return proto, host, path
+
+    def url(self):
+        return "%s://%s%s" % (self.proto, self.host, self.path)
+    
+    def url_dirname(self):
+        dn = os.path.dirname(self.path)
+        return "%s://%s%s" % (self.proto, self.host, dn)
+
+
+class Alarm(Exception):
+    pass
+
+
+# --- global variables ----------------------------------------------------------------
+
+prog_base = os.path.split(sys.argv[0])[1]   # Name of this program
+
+logger = logging.getLogger("my_logger")
+
+# this is the map of what tool to use for a given protocol pair (src, dest)
+tool_map = {}
+tool_map['file'  ] = 'rm'
+tool_map['ftp'   ] = 'gsiftp'
+tool_map['gsiftp'] = 'gsiftp'
+tool_map['irods' ] = 'irods'
+tool_map['s3'    ] = 's3'
+tool_map['s3s'   ] = 's3'
+tool_map['scp'   ] = 'scp'
+tool_map['srm'   ] = 'srm'
+
+tool_info = {}
+
+
+# --- functions -----------------------------------------------------------------------
+
+
+def setup_logger(level_str):
+    
+    # log to the console
+    console = logging.StreamHandler()
+    
+    # default log level - make logger/console match
+    logger.setLevel(logging.INFO)
+    console.setLevel(logging.INFO)
+
+    # level - from the command line
+    level_str = level_str.lower()
+    if level_str == "debug":
+        logger.setLevel(logging.DEBUG)
+        console.setLevel(logging.DEBUG)
+    if level_str == "warning":
+        logger.setLevel(logging.WARNING)
+        console.setLevel(logging.WARNING)
+    if level_str == "error":
+        logger.setLevel(logging.ERROR)
+        console.setLevel(logging.ERROR)
+
+    # formatter
+    formatter = logging.Formatter("%(asctime)s %(levelname)7s:  %(message)s")
+    console.setFormatter(formatter)
+    logger.addHandler(console)
+    logger.debug("Logger has been configured")
+
+
+def prog_sigint_handler(signum, frame):
+    logger.warn("Exiting due to signal %d" % (signum))
+    myexit(1)
+
+
+def alarm_handler(signum, frame):
+    raise Alarm
+
+
+def expand_env_vars(s):
+    re_env_var = re.compile(r'\${?([a-zA-Z0-9_]+)}?')
+    s = re.sub(re_env_var, get_env_var, s)
+    return s
+
+
+def get_env_var(match):
+    name = match.group(1)
+    value = ""
+    logger.debug("Looking up " + name)
+    if name in os.environ:
+        value = os.environ[name]
+    return value
+
+
+def myexec(cmd_line, timeout_secs, should_log):
+    """
+    executes shell commands with the ability to time out if the command hangs
+    """
+    global delay_exit_code
+    if should_log or logger.isEnabledFor(logging.DEBUG):
+        logger.info(cmd_line)
+    sys.stdout.flush()
+
+    # set up signal handler for timeout
+    signal.signal(signal.SIGALRM, alarm_handler)
+    signal.alarm(timeout_secs)
+
+    p = subprocess.Popen(cmd_line + " 2>&1", shell=True)
+    try:
+        stdoutdata, stderrdata = p.communicate()
+    except Alarm:
+        if sys.version_info >= (2, 6):
+            p.terminate()
+        raise RuntimeError("Command '%s' timed out after %s seconds" % (cmd_line, timeout_secs))
+    rc = p.returncode
+    if rc != 0:
+        raise RuntimeError("Command '%s' failed with error code %s" % (cmd_line, rc))
+
+
+def backticks(cmd_line):
+    """
+    what would a python program be without some perl love?
+    """
+    return subprocess.Popen(cmd_line, shell=True, stdout=subprocess.PIPE).communicate()[0]
+
+
+def check_tool(executable, version_arg, version_regex):
+    # initialize the global tool info for this executable
+    tool_info[executable] = {}
+    tool_info[executable]['full_path'] = None
+    tool_info[executable]['version'] = None
+    tool_info[executable]['version_major'] = None
+    tool_info[executable]['version_minor'] = None
+    tool_info[executable]['version_patch'] = None
+
+    # figure out the full path to the executable
+    full_path = backticks("which " + executable + " 2>/dev/null") 
+    full_path = full_path.rstrip('\n')
+    if full_path == "":
+        logger.info("Command '%s' not found in the current environment" %(executable))
+        return
+    tool_info[executable]['full_path'] = full_path
+
+    # version
+    if version_regex == None:
+        version = "N/A"
+    else:
+        version = backticks(executable + " " + version_arg + " 2>&1")
+        version = version.replace('\n', "")
+        re_version = re.compile(version_regex)
+        result = re_version.search(version)
+        if result:
+            version = result.group(1)
+        tool_info[executable]['version'] = version
+
+    # if possible, break up version into major, minor, patch
+    re_version = re.compile("([0-9]+)\.([0-9]+)(\.([0-9]+)){0,1}")
+    result = re_version.search(version)
+    if result:
+        tool_info[executable]['version_major'] = int(result.group(1))
+        tool_info[executable]['version_minor'] = int(result.group(2))
+        tool_info[executable]['version_patch'] = result.group(4)
+    if tool_info[executable]['version_patch'] == None or tool_info[executable]['version_patch'] == "":
+        tool_info[executable]['version_patch'] = None
+    else:
+        tool_info[executable]['version_patch'] = int(tool_info[executable]['version_patch'])
+
+    logger.info("  %-18s Version: %-7s Path: %s" % (executable, version, full_path))
+
+
+def check_env_and_tools():
+    
+    # PATH setup
+    path = "/usr/bin:/bin"
+    if "PATH" in os.environ:
+        path = os.environ['PATH']
+    path_entries = path.split(':')
+    
+    # is /usr/bin in the path?
+    if not("/usr/bin" in path_entries):
+        path_entries.append("/usr/bin")
+        path_entries.append("/bin")
+       
+    # need LD_LIBRARY_PATH for Globus tools
+    ld_library_path = ""
+    if "LD_LIBRARY_PATH" in os.environ:
+        ld_library_path = os.environ['LD_LIBRARY_PATH']
+    ld_library_path_entries = ld_library_path.split(':')
+    
+    # if PEGASUS_HOME is set, prepend it to the PATH (we want it early to override other cruft)
+    if "PEGASUS_HOME" in os.environ:
+        try:
+            path_entries.remove(os.environ['PEGASUS_HOME'] + "/bin")
+        except Exception:
+            pass
+        path_entries.insert(0, os.environ['PEGASUS_HOME'] + "/bin")
+    
+    # if GLOBUS_LOCATION is set, prepend it to the PATH and LD_LIBRARY_PATH 
+    # (we want it early to override other cruft)
+    if "GLOBUS_LOCATION" in os.environ:
+        try:
+            path_entries.remove(os.environ['GLOBUS_LOCATION'] + "/bin")
+        except Exception:
+            pass
+        path_entries.insert(0, os.environ['GLOBUS_LOCATION'] + "/bin")
+        try:
+            ld_library_path_entries.remove(os.environ['GLOBUS_LOCATION'] + "/lib")
+        except Exception:
+            pass
+        ld_library_path_entries.insert(0, os.environ['GLOBUS_LOCATION'] + "/lib")
+
+    os.environ['PATH'] = ":".join(path_entries)
+    os.environ['LD_LIBRARY_PATH'] = ":".join(ld_library_path_entries)
+    os.environ['DYLD_LIBRARY_PATH'] = ":".join(ld_library_path_entries)
+    logger.info("PATH=" + os.environ['PATH'])
+    logger.info("LD_LIBRARY_PATH=" + os.environ['LD_LIBRARY_PATH'])
+    
+    # irods requires a password hash file
+    os.environ['irodsAuthFileName'] = os.getcwd() + "/.irodsA"
+    
+    # tools we might need later
+    check_tool("globus-url-copy", "-version", "([0-9]+\.[0-9]+)")
+    check_tool("srm-rm", "-version", "srm-copy[ \t]+([\.0-9a-zA-Z]+)")
+    check_tool("irm", "-h", "Version[ \t]+([\.0-9a-zA-Z]+)")
+    check_tool("pegasus-s3", "help", None)
+
+
+def rm(url):
+    """
+    removes locally using /bin/rm
+    """
+    cmd = "/bin/rm -f \"%s\"" % (url.path)
+    try:
+        myexec(cmd, 60, True)
+    except RuntimeError, err:
+        logger.error(err)
+
+
+def scp(url):
+    """
+    removes using ssh+rm
+    """
+    cmd = "/usr/bin/ssh -q  -o StrictHostKeyChecking=no" + \
+          " " + url.host + " " + \
+          " \"/bin/rm -f " + url.path + "\""
+    try:
+        myexec(cmd, 60, True)
+    except RuntimeError, err:
+        logger.error(err)
+
+
+def gsiftp(url):
+    """
+    remove files on gridftp servers
+    """
+ 
+    if tool_info['globus-url-copy']['full_path'] == None:
+        raise RuntimeError("Unable to do gsiftp rm becuase globus-url-copy could not be found")
+   
+    # build command line for globus-url-copy
+    cmd = tool_info['globus-url-copy']['full_path']
+
+    # make output from guc match our current log level
+    if logger.isEnabledFor(logging.DEBUG):
+        cmd += " -dbg"
+
+    cmd += " -create-dest"
+    cmd += " -no-third-party-transfers -no-data-channel-authentication"
+    cmd += " file:///dev/null " + url.url()
+
+    try:
+        myexec(cmd, 60, True)
+    except RuntimeError, err:
+        logger.error(err)
+
+
+def irods_login():
+    """
+    log in to irods by using the iinit command - if the file already exists,
+    we are already logged in
+    """
+    f = os.environ['irodsAuthFileName']
+    if os.path.exists(f):
+        return
+    
+    # read password from env file
+    if not "irodsEnvFile" in os.environ:
+        raise RuntimeError("Missing irodsEnvFile - unable to do irods transfers")
+    password = None
+    h = open(os.environ['irodsEnvFile'], 'r')
+    for line in h:
+        items = line.split(" ", 2)
+        if items[0].lower() == "irodspassword":
+            password = items[1].strip(" \t'\"\r\n")
+    h.close()
+    if password == None:
+        raise RuntimeError("No irodsPassword specified in irods env file")
+    
+    h = open(".irodsAc", "w")
+    h.write(password + "\n")
+    h.close()
+    
+    cmd = "cat .irodsAc | iinit"
+    myexec(cmd, 60*60, True)
+        
+    os.unlink(".irodsAc")
+
+
+def irods(url):
+    """
+    irods - use the icommands to interact with irods
+    """
+
+    if tool_info['irm']['full_path'] == None:
+        raise RuntimeError("Unable to do irods transfers becuase iget could not be found in the current path")
+
+    # log in to irods
+    try:
+        irods_login()
+    except Exception, loginErr:
+        logger.error(loginErr)
+        raise RuntimError("Unable to log into irods")
+
+    cmd = "irm -f " + url.path
+
+    try:
+        myexec(cmd, 60, True)
+    except Exception, err:
+        logger.error(err)
+
+
+
+def srm(url):
+    """
+    srm - use srm-rm
+    """
+
+    if tool_info['srm-rm']['full_path'] == None:
+        raise RuntimeError("Unable to do srm remove becuase srm-rm could not be found")
+
+    cmd = "srm-rm " + url.url()
+        
+    try:
+        myexec(cmd, 60, True)
+    except Exception, err:
+        logger.error(err)
+
+
+def s3(url):
+    """
+    s3 - uses pegasus-s3 to interact with Amazon S3 
+    """
+
+    if tool_info['pegasus-s3']['full_path'] == None:
+        raise RuntimeError("Unable to do S3 transfers becuase pegasus-s3 could not be found")
+
+    cmd = "pegasus-s3 rm " + url.url()
+
+    try:
+        myexec(cmd, 60, True)
+    except Exception, err:
+        logger.error(err)
+
+
+def remove(url):
+    """
+    removes the file with the given url
+    """
+    try:
+        if tool_map.has_key(url.proto):
+            tool = tool_map[url.proto]
+            if tool == "rm":
+                rm(url)
+            elif tool == "scp":
+                scp(url)
+            elif tool == "gsiftp":
+                gsiftp(url)
+            elif tool == "irods":
+                irods(url)
+            elif tool == "srm":
+                srm(url)
+            elif tool == "s3":
+                s3(url)
+            else:
+                logger.critical("Error: No mapping for the tool '%s'" %(tool))
+                myexit(1)
+        else:
+            logger.critical("Error: This tool does not know how to remove from %s://" % (url.proto))
+            myexit(1)
+
+    except RuntimeError, err:
+        logger.critical(err)
+        myexit(1)
+
+
+def myexit(rc):
+    """
+    system exit without a stack trace - silly python
+    """
+    try:
+        sys.exit(rc)
+    except SystemExit:
+        sys.exit(rc)
+
+
+# --- main ----------------------------------------------------------------------------
+
+# dup stderr onto stdout
+sys.stderr = sys.stdout
+
+# Configure command line option parser
+prog_usage = "usage: %s [options]" % (prog_base)
+parser = optparse.OptionParser(usage=prog_usage)
+parser.add_option("-l", "--loglevel", action = "store", dest = "log_level",
+                  help = "Log level. Valid levels are: debug,info,warning,error, Default is info.")
+parser.add_option("-f", "--file", action = "store", dest = "file",
+                  help = "File containing URLs to be removed. If not given, list is read from stdin.")
+
+# Parse command line options
+(options, args) = parser.parse_args()
+if options.log_level == None:
+    options.log_level = "info"
+setup_logger(options.log_level)
+
+# Die nicely when asked to (Ctrl+C, system shutdown)
+signal.signal(signal.SIGINT, prog_sigint_handler)
+
+# stdin or file input?
+if options.file == None:
+    logger.info("Reading URL pairs from stdin")
+    input_file = sys.stdin
+else:
+    logger.info("Reading URL pairs from %s" % (options.file))
+    try:
+        input_file = open(options.file, 'r')
+    except Exception, err:
+        logger.critical('Error reading url pair list: %s' % (err))
+        myexit(1)
+
+# check environment and tools
+try:
+    check_env_and_tools()
+except Exception, err:
+    logger.critical(err)
+    myexit(1)
+
+# queues to track the work
+url_q = deque()
+
+# fill the url queue with user provided entries
+line_nr = 0
+try:
+    for line in input_file.readlines():
+        line_nr += 1
+        if line[0] != '#' and len(line) > 4:
+            line = line.rstrip('\n')
+            url = URL()
+            url.set_url(line)
+            remove(url)
+except Exception, err:
+    logger.critical('Error handling url: %s' % (err))
+    myexit(1)
+
+myexit(0)
+
+

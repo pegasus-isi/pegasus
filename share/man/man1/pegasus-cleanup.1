@@ -1,0 +1,57 @@
+.\"  Copyright 2010-2011 University Of Southern California
+.\"
+.\" Licensed under the Apache License, Version 2.0 (the "License");
+.\" you may not use this file except in compliance with the License.
+.\" You may obtain a copy of the License at
+.\"
+.\"  http://www.apache.org/licenses/LICENSE-2.0
+.\"
+.\"  Unless required by applicable law or agreed to in writing,
+.\"  software distributed under the License is distributed on an "AS IS" BASIS,
+.\"  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+.\"  See the License for the specific language governing permissions and
+.\" limitations under the License.
+.\"
+.\" 
+.\" $Id: pegasus-cleanup.1 4110 2011-07-06 19:29:14Z voeckler $
+.TH "pegasus-cleanup" "1" "3.1" "Pegasus Cleanup"
+.SH "NAME"
+.LP 
+pegasus\-cleanup \- Removes files during Pegasus workflows enactment.
+.SH "SYNTAX"
+.TP 17 
+.B pegasus\-cleanup [\-\-help|\-h]
+.br
+.B [\-\-loglevel|\-l level] 
+.br
+.B [\-\-file|\-f URL] 
+.SH "DESCRIPTION"
+.LP 
+.B "pegasus\-cleanup"
+Removes the file associated with the given URL. Some of the protocols
+pegasus-cleanup can handle are GridFTP,
+SRM, Amazon S3, HTTP, and local mkdir.
+.SH "ARGUMENTS"
+.TP
+.B \-\-help | \-h
+Prints a usage summary with all the available command-line options.
+.TP
+.B \-\-loglevel | \-l level
+he debugging output level. Valid values are
+.IR debug , 
+.IR info ,
+.IR warning , 
+.IR error .
+Default value is
+.IR info .
+.TP
+.B \-\-file | \-f FILE
+Specifies the file with URLs (one per line). If this option is not given
+it is assumed that the lisf of URLs will be given on stdin.
+
+.SH "EXAMPLES"
+.LP
+echo gsiftp://somehost/some/path | pegasus-cleanup
+.SH PEGASUS
+.B http://pegasus.isi.edu
+
