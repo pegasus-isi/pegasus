@@ -970,7 +970,8 @@ class Workflow:
                 try:
                     my_task_info = tasks[my_task_id]
                 except:
-                    logger.warning("cannot locate task %d in dictionary... skipping this task" % (my_task_id))
+                    logger.warning("cannot locate task %d in dictionary... skipping this task for job: %s, dag file: %s" %
+                                   (my_task_id, jobname, os.path.join(self._run_dir, self._dag_file_name)))
                     continue
                 my_task_info["transformation"] = my_transformation
                 my_task_info["derivation"] = my_derivation
@@ -993,7 +994,8 @@ class Workflow:
                 try:
                     my_task_info = tasks[tasks_found]
                 except:
-                    logger.warning("cannot locate task %d in dictionary... skipping this task" % (tasks_found))
+                    logger.warning("cannot locate task %d in dictionary... skipping this task for job: %s, dag file: %s" %
+                                   (my_task_id, jobname, os.path.join(self._run_dir, self._dag_file_name)))
                     continue
                 my_task_info["argument-vector"] = my_argv
                 my_task_info["name"] = my_executable

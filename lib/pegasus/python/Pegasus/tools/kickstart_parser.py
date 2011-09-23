@@ -138,7 +138,8 @@ class Parser:
                 return buffer[:end]
 
             # clustered record should be in a single line!
-            return None
+            logger.warning("%s: seqexec-summary line is malformed... ignoring it..." % (self._kickstart_output_file))
+            return ""
         elif line.find("[seqexec-task") >= 0:
             # Found line with task information
             start = line.find("[seqexec-task")
@@ -150,9 +151,10 @@ class Parser:
                 return buffer[:end]
 
             # task record should be in a single line!
-            return None
+            logger.warning("%s: seqexec-task line is malformed... ignoring it..." % (self._kickstart_output_file))
+            return ""
         else:
-            return None
+            return ""
 
         # Ok, now continue reading the file until we get a full record
         while True:
@@ -167,7 +169,7 @@ class Parser:
         # Now, we got it, let's make sure
         end = buffer.find("</invocation>")
         if end == -1:
-            return None
+            return ""
 
         end = end + len("</invocation>")
         return buffer[:end]
