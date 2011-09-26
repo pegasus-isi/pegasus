@@ -13,6 +13,7 @@
  * Southern California. All rights reserved.
  */
 #include "debug.h"
+#include "rwio.h"
 
 #include <errno.h>
 #include <string.h>
@@ -25,7 +26,7 @@
 static const char* RCS_ID =
   "$Id$";
 
-int
+ssize_t
 debugmsg( char* fmt, ... )
 /* purpose: create a log line on stderr.
  * paramtr: fmt (IN): printf-style format string
@@ -33,7 +34,7 @@ debugmsg( char* fmt, ... )
  * returns: number of bytes written to STDERR via write()
  */
 {
-  int result;
+  ssize_t result;
   va_list ap;
   char buffer[4096];
   int saverr = errno;
@@ -42,7 +43,7 @@ debugmsg( char* fmt, ... )
   vsnprintf( buffer, sizeof(buffer), fmt, ap );
   va_end( ap );
 
-  result = write( STDERR_FILENO, buffer, strlen(buffer) );
+  result = writen( STDERR_FILENO, buffer, strlen(buffer), 3 );
   errno = saverr;
   return result;
 }

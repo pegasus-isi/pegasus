@@ -23,6 +23,7 @@
 #include <fcntl.h>
 #include <stdio.h>
 
+#include "debug.h"
 #include "tools.h"
 #include "appinfo.h"
 #include "statinfo.h"
@@ -50,7 +51,7 @@ pid_t
 mywait4( pid_t wpid, int* status, int options, struct rusage* rusage )
 {
   pid_t result = wait4( wpid, status, options, rusage );
-  fprintf( stderr, "# wait4(%d,%p=%d,%d,%p) = %d\n",
+  debugmsg( "# wait4(%d,%p=%d,%d,%p) = %d\n",
 	   wpid, status, *status, options, rusage, result );
   return result;
 }
@@ -69,7 +70,7 @@ sig_child( SIGPARAM signo )
    * that may have been sent only once, grrrr. 
    */
 #ifdef DEBUG_WAIT
-  fprintf( stderr, "# child.count == %d\n", child.count );
+  debugmsg( "# child.count == %d\n", child.count );
 #endif /* DEBUG_WAIT */
 
   if ( child.job != NULL ) {
@@ -92,7 +93,7 @@ sig_child( SIGPARAM signo )
   }
 
 #ifdef DEBUG_WAIT
-  fprintf( stderr, "# child.done := (%d != 0) => %d\n", rc, (rc != 0) );
+  debugmsg( "# child.done := (%d != 0) => %d\n", rc, (rc != 0) );
 #endif /* DEBUG_WAIT */
 
   /* once set, never reset */
@@ -199,7 +200,7 @@ mysystem( AppInfo* appinfo, JobInfo* jobinfo, char* envp[] )
     /* sanity check */
     saverr = errno;
     if ( kill( jobinfo->child, 0 ) == 0 ) {
-      fprintf( stderr, "ERROR: job %d is still running!\n", jobinfo->child );
+      debugmsg( "ERROR: job %d is still running!\n", jobinfo->child );
       if ( ! child.error ) child.error = EINPROGRESS;
     }
     errno = child.error ? child.error : saverr;

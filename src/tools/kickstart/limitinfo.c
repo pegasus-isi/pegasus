@@ -19,6 +19,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include "debug.h"
 #include "tools.h"
 #include "limitinfo.h"
 
@@ -69,7 +70,7 @@ deleteLimitInfo( LimitInfo* limits )
  */
 {
 #ifdef EXTRA_DEBUG
-  fprintf( stderr, "# deleteLimitInfo(%p)\n", limits );
+  debugmsg( "# deleteLimitInfo(%p)\n", limits );
 #endif
 
   if ( limits != NULL ) {

@@ -18,7 +18,7 @@
 #include <sys/types.h>
 
 extern
-int
+ssize_t
 debugmsg( char* fmt, ... );
 /* purpose: create a log line on stderr.
  * paramtr: fmt (IN): printf-style format string

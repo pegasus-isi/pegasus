@@ -26,11 +26,13 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include "rwio.h"
+#include "debug.h"
 #include "appinfo.h"
 #include "mysystem.h"
-#include "rwio.h"
 #include "mylist.h"
 #include "invoke.h"
+#include "tools.h"
 
 /* truely shared globals */
 int isExtended = 1;     /* timestamp format concise or extended */
@@ -39,6 +41,7 @@ extern int make_application_executable;
 extern size_t data_section_size;
 
 /* module local globals */
+static int doFlush = 0; /* apply fsync() on kickstart's stdout if true */ 
 static AppInfo appinfo; /* sigh, needs to be global for atexit handler */
 static volatile sig_atomic_t global_no_atexit;
 
@@ -157,7 +160,7 @@ helpMe( const AppInfo* run )
   fprintf( stderr, 
 "Usage:\t%s [-i fn] [-o fn] [-e fn] [-l fn] [-n xid] [-N did] \\\n"
 "\t[-w|-W cwd] [-R res] [-s [l=]p] [-S [l=]p] [-X] [-H] [-L lbl -T iso] \\\n" 
-"\t[-B sz] (-I fn | app [appflags])\n", p );
+"\t[-B sz] [-F] (-I fn | app [appflags])\n", p );
   fprintf( stderr, 
 " -i fn\tConnects stdin of app to file fn, default is \"%s\".\n", 
 	   xlate(&run->input) );
@@ -190,7 +193,9 @@ helpMe( const AppInfo* run )
 " -S l=p\tProvides filename pairs to stat after start, multi-option.\n"
 " \tIf the arg is prefixed with '@', it is a list-of-filenames file.\n"
 " -s l=p\tProvides filename pairs to stat before exit, multi-option.\n"
-" \tIf the arg is prefixed with '@', it is a list-of-filenames file.\n" );
+" \tIf the arg is prefixed with '@', it is a list-of-filenames file.\n"
+" -F\tAttempt to fsync kickstart's stdout at exit (should not be necessary).\n"
+ );
 
   /* avoid printing of results in exit handler */
   ((AppInfo*) run)->isPrinted = 1;
@@ -211,6 +216,19 @@ finish( void )
     deleteAppInfo( &appinfo );
   }
 
+  /* PM-466 debugging */
+  if ( doFlush ) {
+    struct timeval start, final;
+    int status;
+
+    now(&start);
+    status = fsync( STDOUT_FILENO ); 
+    now(&final); 
+    debugmsg( "# fsync(%d)=%d (errno=%d) in %.3f s\n", 
+	      STDOUT_FILENO, status, errno,
+	      mymaketime(final)-mymaketime(start) ); 
+  }
+
   nfs_sync( STDERR_FILENO, DEFAULT_SYNC_IDLE );
 }
 
@@ -220,10 +238,10 @@ void
 show_args( const char* prefix, char** argv, int argc )
 {
   int i;
-  fprintf( stderr, "argc=%d\n", argc );
+  debugmsg( "argc=%d\n", argc );
   for ( i=0; i<argc; ++i )
-    fprintf( stderr, "%s%2d: %s\n", (prefix ? prefix : ""), i, 
-	     (argv[i] ? argv[i] : "(null)" ) );
+    debugmsg( "%s%2d: %s\n", (prefix ? prefix : ""), i, 
+	      (argv[i] ? argv[i] : "(null)" ) );
 }
 #endif
 
@@ -311,7 +329,7 @@ areWeSane( const char* what )
   }
 
   if ( ! count ) 
-    fprintf( stderr, "Warning! Did not find %s in environment!\n", what );
+    debugmsg( "Warning! Did not find %s in environment!\n", what );
   return count;
 }
 
@@ -343,6 +361,9 @@ main( int argc, char* argv[] )
   int status, result;
   int i, j, keeploop;
   int createDir = 0;
+#if 0
+  long fsflags = -1; 
+#endif
   const char* temp;
   const char* workdir = NULL;
   mylist_t initial;
@@ -354,9 +375,17 @@ main( int argc, char* argv[] )
   initAppInfo( &appinfo, argc, argv );
 
 #if 0
-  fprintf( stderr, "# appinfo=%d, jobinfo=%d, statinfo=%d, useinfo=%d\n",
-	   sizeof(AppInfo), sizeof(JobInfo), sizeof(StatInfo),
-	   sizeof(struct rusage) );
+  debugmsg( "# appinfo=%d, jobinfo=%d, statinfo=%d, useinfo=%d\n",
+	    sizeof(AppInfo), sizeof(JobInfo), sizeof(StatInfo),
+	    sizeof(struct rusage) );
+#endif
+
+#if 0
+  /* NEW: 2011-08-19: PM-466 -- best effort add O_SYNC flag to stdout */
+  /* Handled differently in finish() above using fsync() on stdout */
+  if ( (fsflags=fcntl( STDOUT_FILENO, F_GETFL )) != -1 ) { 
+    fcntl( STDOUT_FILENO, F_SETFL, ( fsflags | O_SYNC ) ); 
+  }
 #endif
 
   /* register emergency exit handler */
@@ -419,13 +448,16 @@ main( int argc, char* argv[] )
     case 'H':
       appinfo.noHeader++;
       break;
+    case 'F':
+      doFlush++;
+      break;
     case 'I':
       /* invoke application and args from given file */
       temp = argv[i][2] ? &argv[i][2] : argv[++i];
       if ( readFromFile( temp, &argv, &argc, &i, j ) == -1 ) {
 	int saverr = errno;
-	fprintf( stderr, "ERROR: While parsing -I %s: %d: %s\n",
-		 temp, errno, strerror(saverr) );
+	debugmsg( "ERROR: While parsing -I %s: %d: %s\n",
+		  temp, errno, strerror(saverr) );
 	appinfo.application.prefix = strerror(saverr);
 	appinfo.application.status = -1;
 	return 127;
@@ -464,13 +496,13 @@ main( int argc, char* argv[] )
       if ( temp[0] == '@' ) {
 	/* list-of-filenames file */
 	if ( (result=mylist_fill( &initial, temp+1 )) )
-	  fprintf( stderr, "ERROR: initial %s: %d: %s\n", 
-		   temp+1, result, strerror(result) );
+	  debugmsg( "ERROR: initial %s: %d: %s\n", 
+		    temp+1, result, strerror(result) );
       } else {
 	/* direct filename */
 	if ( (result=mylist_add( &initial, temp )) )
-	  fprintf( stderr, "ERROR: initial %s: %d: %s\n", 
-		   temp, result, strerror(result) );
+	  debugmsg( "ERROR: initial %s: %d: %s\n", 
+		    temp, result, strerror(result) );
       }
       break;
     case 's':
@@ -478,12 +510,12 @@ main( int argc, char* argv[] )
       if ( temp[0] == '@' ) {
 	/* list-of-filenames file */
 	if ( (result=mylist_fill( &final, temp+1 )) )
-	  fprintf( stderr, "ERROR: final %s: %d: %s\n", 
+	  debugmsg( "ERROR: final %s: %d: %s\n", 
 		   temp+1, result, strerror(result) );
       } else {
 	/* direct filename */
 	if ( (result=mylist_add( &final, temp )) )
-	  fprintf( stderr, "ERROR: final %s: %d: %s\n", 
+	  debugmsg( "ERROR: final %s: %d: %s\n", 
 		   temp, result, strerror(result) );
       }
       break;
@@ -545,7 +577,7 @@ main( int argc, char* argv[] )
       }
       /* else */
       appinfo.application.saverr = errno;
-      fprintf( stderr, "Unable to mkdir %s: %d: %s\n", 
+      debugmsg( "Unable to mkdir %s: %d: %s\n", 
 	       workdir, errno, strerror(errno) );
       appinfo.application.prefix = "Unable to mkdir: ";
       appinfo.application.status = -1;
@@ -554,7 +586,7 @@ main( int argc, char* argv[] )
 
     /* unable to use alternate workdir */
     appinfo.application.saverr = errno;
-    fprintf( stderr, "Unable to chdir %s: %d: %s\n", 
+    debugmsg( "Unable to chdir %s: %d: %s\n", 
 	     workdir, errno, strerror(errno) );
     appinfo.application.prefix = "Unable to chdir: ";
     appinfo.application.status = -1;

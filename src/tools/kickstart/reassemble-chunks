@@ -20,9 +20,8 @@ $main::head = "<?xml version=\"1.0\"?>\n" .
     " <!ATTLIST chunk channel CDATA \"0\">" .
     " <!ATTLIST chunk size CDATA #REQUIRED>" .
     " <!ATTLIST chunk start CDATA #REQUIRED>" .
-    "]>\n" . "<foo>\n";
-
-
+    "]>\n" . 
+    "<foo>\n";
 
 sub start_element {
     # purpose: callback for open tag

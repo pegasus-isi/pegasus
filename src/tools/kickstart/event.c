@@ -23,6 +23,7 @@
 #include <stdio.h>
 
 #include "rwio.h"
+#include "debug.h"
 #include "tools.h"
 #include "event.h"
 #include "mysignal.h"
@@ -210,9 +211,9 @@ eventLoop( int outfd, StatInfo* fifo, volatile sig_atomic_t* terminate )
     pfds.revents = 0;
 
 #ifdef DEBUG_EVENTLOOP
-    fprintf( stderr, "# tm=%d, s_sp=%d, calling poll([%d:%x:%x],%d,%d)\n", 
-	     *terminate, seen_sigpipe, 
-	     pfds.fd, pfds.events, pfds.revents, 1, timeout );
+    debugmsg( "# tm=%d, s_sp=%d, calling poll([%d:%x:%x],%d,%d)\n", 
+	      *terminate, seen_sigpipe, 
+	      pfds.fd, pfds.events, pfds.revents, 1, timeout );
 #endif /* DEBUG_EVENTLOOP */
 
     errno = 0;
@@ -224,9 +225,9 @@ eventLoop( int outfd, StatInfo* fifo, volatile sig_atomic_t* terminate )
     saverr = errno;
 
 #ifdef DEBUG_EVENTLOOP
-    fprintf( stderr, "# poll() returned %d [errno=%d: %s] [%d:%x:%x]\n", 
-	     status, saverr, strerror(saverr),
-	     pfds.fd, pfds.events, pfds.revents );
+    debugmsg( "# poll() returned %d [errno=%d: %s] [%d:%x:%x]\n", 
+	      status, saverr, strerror(saverr),
+	      pfds.fd, pfds.events, pfds.revents );
 #endif /* DEBUG_EVENTLOOP */
 
     errno = saverr;

@@ -22,6 +22,7 @@
 
 #include <unistd.h>
 #include <fcntl.h>
+#include "debug.h"
 
 static const char* RCS_ID =
 "$Id$";
@@ -63,6 +64,6 @@ deleteMemInfo( MemInfo* meminfo )
  */
 {
 #ifdef EXTRA_DEBUG
-  fprintf( stderr, "# deleteMemInfo(%p)\n", meminfo );
+  debugmsg( "# deleteMemInfo(%p)\n", meminfo );
 #endif
 }

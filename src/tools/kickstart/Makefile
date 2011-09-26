@@ -139,28 +139,29 @@ show-if: show-if.o getif.o debug.o
 try-parse: try-parse.o parse.o
 	$(LD) $(EXTRA_LDFLAGS) $(CFLAGS) $^ -o $@ $(LOADLIBES)
 
-appinfo.o: appinfo.c getif.h rwio.h tools.h useinfo.h machine.h jobinfo.h \
-  statinfo.h appinfo.h limitinfo.h mynss.h
-debug.o: debug.c debug.h
-event.o: event.c rwio.h tools.h event.h statinfo.h mysignal.h
+appinfo.o: appinfo.c getif.h rwio.h debug.h tools.h useinfo.h machine.h \
+  jobinfo.h statinfo.h appinfo.h limitinfo.h mynss.h
+debug.o: debug.c debug.h rwio.h
+event.o: event.c rwio.h debug.h tools.h event.h statinfo.h mysignal.h
 fail.o: fail.c
 getif.o: getif.c debug.h getif.h
 invoke.o: invoke.c invoke.h
-jobinfo.o: jobinfo.c getif.h tools.h useinfo.h jobinfo.h statinfo.h \
-  parse.h
-kickstart.o: kickstart.c appinfo.h statinfo.h jobinfo.h limitinfo.h \
-  machine.h mysystem.h rwio.h mylist.h invoke.h
-limitinfo.o: limitinfo.c tools.h limitinfo.h
-machine.o: machine.c machine.h machine/*.h
-meminfo.o: meminfo.c meminfo.h
+jobinfo.o: jobinfo.c getif.h debug.h tools.h useinfo.h jobinfo.h \
+  statinfo.h parse.h
+kickstart.o: kickstart.c rwio.h debug.h appinfo.h statinfo.h jobinfo.h \
+  limitinfo.h machine.h mysystem.h mylist.h invoke.h tools.h
+limitinfo.o: limitinfo.c debug.h tools.h limitinfo.h
+machine.o: machine.c machine.h machine/basic.h debug.h
+meminfo.o: meminfo.c meminfo.h debug.h
+msave.o: msave.c machine.h debug.h tools.h
 mylist.o: mylist.c mylist.h
 mynss.o: mynss.c mynss.h
-mysystem.o: mysystem.c tools.h appinfo.h statinfo.h jobinfo.h limitinfo.h \
-  machine.h event.h mysystem.h mysignal.h
-parse.o: parse.c parse.h
+mysystem.o: mysystem.c debug.h tools.h appinfo.h statinfo.h jobinfo.h \
+  limitinfo.h machine.h event.h mysystem.h mysignal.h
+parse.o: parse.c debug.h parse.h
 rwio.o: rwio.c rwio.h
 show-if.o: show-if.c getif.h
-statinfo.o: statinfo.c mynss.h statinfo.h tools.h
+statinfo.o: statinfo.c mynss.h debug.h statinfo.h tools.h
 test-ascii.o: test-ascii.c
 test-post.o: test-post.c
 test-pre.o: test-pre.c

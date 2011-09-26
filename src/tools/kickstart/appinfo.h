@@ -30,7 +30,7 @@ typedef struct {
   struct timeval start;      /* point of time that app was started */
   struct timeval finish;     /* point of time that app was reaped */
   int            isPrinted;  /* flag to set after successful print op */
-  int            noHeader;   /* avoid <?xml ?> premable */
+  int            noHeader;   /* avoid <?xml ?> premable and other things */
 
   char* const*   argv;       /* application executable and arguments */
   int            argc;       /* application CLI number of arguments */

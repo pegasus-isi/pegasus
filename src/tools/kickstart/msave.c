@@ -13,6 +13,7 @@
  * Southern California. All rights reserved.
  */
 #include "machine.h"
+#include "debug.h"
 #include "tools.h"
 
 #include <sys/types.h>
@@ -417,7 +418,7 @@ deleteMachineInfo( MachineInfo* machine )
  */
 {
 #ifdef EXTRA_DEBUG
-  fprintf( stderr, "# deleteAppInfo(%p)\n", runinfo );
+  debugmsg( "# deleteAppInfo(%p)\n", runinfo );
 #endif
 
   machine->pagesize = 0; 

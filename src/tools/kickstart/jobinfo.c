@@ -13,6 +13,7 @@
  * Southern California. All rights reserved.
  */
 #include "getif.h"
+#include "debug.h"
 #include "tools.h"
 #include "useinfo.h"
 #include "jobinfo.h"
@@ -412,7 +413,7 @@ deleteJobInfo( JobInfo* jobinfo )
     return;
 
 #ifdef EXTRA_DEBUG
-  fprintf( stderr, "# deleteJobInfo(%p)\n", jobinfo );
+  debugmsg( "# deleteJobInfo(%p)\n", jobinfo );
 #endif
 
   if ( jobinfo->isValid ) {

@@ -14,6 +14,7 @@
  */
 #include "getif.h"
 #include "rwio.h"
+#include "debug.h"
 #include "tools.h"
 #include "useinfo.h"
 #include "machine.h"
@@ -425,7 +426,7 @@ deleteAppInfo( AppInfo* runinfo )
   size_t i;
 
 #ifdef EXTRA_DEBUG
-  fprintf( stderr, "# deleteAppInfo(%p)\n", runinfo );
+  debugmsg( "# deleteAppInfo(%p)\n", runinfo );
 #endif
 
   deleteLimitInfo( &runinfo->limits );

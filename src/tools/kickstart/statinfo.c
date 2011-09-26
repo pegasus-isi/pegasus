@@ -26,6 +26,7 @@
 #include <pwd.h>
 
 #include "mynss.h"
+#include "debug.h"
 #include "statinfo.h"
 #include "tools.h"
 
@@ -231,7 +232,7 @@ initStatInfoAsFifo( StatInfo* statinfo, char* pattern, const char* key )
     /* mkstemp has failed, au weia! */
     statinfo->source = IS_INVALID;
     statinfo->error = errno;
-    fprintf( stderr, "Warning! Invalid FIFO: mkstemp failed: %d: %s\n",
+    debugmsg( "Warning! Invalid FIFO: mkstemp failed: %d: %s\n",
 	     errno, strerror(errno) );
 
   } else {
@@ -249,7 +250,7 @@ initStatInfoAsFifo( StatInfo* statinfo, char* pattern, const char* key )
 	/* other errors are treated as more fatal */
 	statinfo->source = IS_INVALID;
 	statinfo->error = errno;
-	fprintf( stderr, "Warning! Invalid FIFO: mkfifo failed: %d: %s\n",
+	debugmsg( "Warning! Invalid FIFO: mkfifo failed: %d: %s\n",
 		 errno, strerror(errno) );
       }
     } else {
@@ -260,7 +261,7 @@ initStatInfoAsFifo( StatInfo* statinfo, char* pattern, const char* key )
       if ( (result = open( pattern, O_RDWR | O_NONBLOCK )) == -1 ) {
 	statinfo->source = IS_INVALID;
 	statinfo->error = errno;
-	fprintf( stderr, "Warning! Invalid FIFO: open failed: %d: %s\n",
+	debugmsg( "Warning! Invalid FIFO: open failed: %d: %s\n",
 		 errno, strerror(errno) );
       } else {
 	/* this file descriptor is NOT to be passed to the jobs? So far,
@@ -284,7 +285,7 @@ initStatInfoAsFifo( StatInfo* statinfo, char* pattern, const char* key )
 	  strncat( temp, "=", size );
 	  strncat( temp, pattern, size );
 	  if ( putenv( temp ) == -1 )
-	    fprintf( stderr, "Warning: Unable to putenv %s: %d: %s\n", 
+	    debugmsg( "Warning: Unable to putenv %s: %d: %s\n", 
 		     key, errno, strerror(errno) );
 	  /* do not free this string here nor now */
 	}
@@ -677,7 +678,7 @@ deleteStatInfo( StatInfo* statinfo )
  * paramtr: statinfo (IO): clean up record. */
 {
 #ifdef EXTRA_DEBUG
-  fprintf( stderr, "# deleteStatInfo(%p)\n", statinfo );
+  debugmsg( "# deleteStatInfo(%p)\n", statinfo );
 #endif
 
   if ( statinfo->source == IS_FILE || statinfo->source == IS_TEMP || 

@@ -22,8 +22,8 @@ kickstart \- run an executable in a more universal environment.
 .SH "SYNTAX"
 .B kickstart
 [\-n\~tr] [\-N\~dv] [\-H] [\-R site] [\-W | \-w\~dir] [\-L\~lbl \-T\~iso]
- [\-s [l=]p | @fn] [\-S [l=]p | @fn] [\-i\~fn] [\-o\~fn] [\-e\~fn] [-X] 
- [\-l\~fn\~sz] (-I fn | app [appflags] )
+ [\-s [l=]p | @fn] [\-S [l=]p | @fn] [\-i\~fn] [\-o\~fn] [\-e\~fn] [\-X] 
+ [\-l\~fn\~sz] [\-F] (\-I fn | app [appflags] )
 .br
 .B kickstart
 \-V
@@ -363,6 +363,19 @@ using arbitrary large arguments may result in failures of
 itself to allocate the necessary memory. 
 .IP
 The default maximum size of the data section is 262144 byte. 
+.TP
+.B \-F
+This flag will issue an explicit 
+.I fsync()
+call on kickstart's own 
+.I stdout
+file. Typically you won't need this flag. Albeit, certain shared file
+system situations may improve when adding a flush after the written 
+invocation record. 
+.IP
+The default is to just use kickstart's NFS alleviation strategy by 
+locking and unlocking 
+.IR stdout . 
 .TP
 .B \-I fn
 In this mode, the application name and any arguments to the application
@@ -724,14 +737,14 @@ after any of the previous jobs, see above for a detailled description.
 .B GRIDSTART_CHANNEL
 is the name of a FIFO for an application-specific feedback-channel,
 see above for a detailled description.
-.SH "AUTHORS"
+.SH "RETIRED AUTHORS"
 Michael Milligan <mbmillig at uchicago dot edu>,
-.br
-Jens-S. Vöckler <voeckler at isi dot edu>,
 .br
 Mike Wilde <wilde at mcs dot anl dot gov>,
 .br
 Yong Zhao <yongzh at cs dot uchicago dot edu>.
+.SH "ACTIVE AUTHORS"
+Jens-S. Vöckler <voeckler at isi dot edu>,
 .PP
 Pegasus 
 .BR http://pegasus.isi.edu/

@@ -17,6 +17,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+
+#include "debug.h"
 #include "parse.h"
 
 static const char* RCS_ID =
@@ -86,11 +88,11 @@ resolve( char** v, char* varname, char** p, char* buffer, size_t size )
   **v = 0;
   if ( (value = getenv(varname)) ) {
     char* pp = *p;
-    if ( debug ) fprintf( stderr, "# %s=%s\n", varname, value );
+    if ( debug ) debugmsg( "# %s=%s\n", varname, value );
     while ( pp - buffer < size && *value ) *pp++ = *value++; 
     *p = pp;
   } else {
-    if ( debug ) fprintf( stderr, "# %s does not exist\n", varname );
+    if ( debug ) debugmsg( "# %s does not exist\n", varname );
   }
 
   *v = varname;
@@ -303,7 +305,7 @@ internalParse( const char* line, const char** cursor, int* state,
     int newstate = statemap[*state][charclass];
 
     if ( debug )
-      fprintf( stderr, "# state=%02d, class=%d, action=%d, newstate=%02d, char=%02X (%c)\n",
+      debugmsg( "# state=%02d, class=%d, action=%d, newstate=%02d, char=%02X (%c)\n",
 	       *state, charclass, actionmap[*state][charclass], newstate, *s,
 	       ((*s & 127) >= 32) ? *s : '.' );
 
@@ -334,7 +336,7 @@ internalParse( const char* line, const char** cursor, int* state,
       if ( p-buffer < size ) {
 	char* x = strchr( translation, *s );
 	*p++ = ( x == NULL ? *s : translationmap[x-translation] );
-	if ( debug ) fprintf( stderr, "# escape %c -> %d\n", *s, *(p-1) );
+	if ( debug ) debugmsg( "# escape %c -> %d\n", *s, *(p-1) );
       }
       break;
     case 7: /* case 3 followed by case 0 */
@@ -345,7 +347,7 @@ internalParse( const char* line, const char** cursor, int* state,
       if ( newstate > 32 )
 	fputs( errormessage[newstate-33], stderr );
       else
-	fprintf( stderr, "# PARSER ERROR: state=%02d, class=%d, action=%d, newstate=%02d, char=%02X (%c)\n",
+	debugmsg( "# PARSER ERROR: state=%02d, class=%d, action=%d, newstate=%02d, char=%02X (%c)\n",
 		 *state, charclass, 8, newstate, *s, ((*s & 127) >= 32) ? *s : '.' );
       break;
     }

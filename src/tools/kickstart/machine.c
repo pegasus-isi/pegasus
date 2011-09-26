@@ -92,7 +92,7 @@ deleteMachineInfo( MachineInfo* machine )
  */
 {
 #ifdef EXTRA_DEBUG
-  fprintf( stderr, "# deleteMachineInfo(%p)\n", machine );
+  debugmsg( "# deleteMachineInfo(%p)\n", machine );
 #endif
 
   machine->dtor( machine->data ); 
