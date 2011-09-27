@@ -1,8 +1,8 @@
 This directory contains an example of multi-level recursive workflows.
 
 The workflows are simplistic, run on the local Condor (assumed), and
-each workflow runs a 'keg' in sleep mode plus its sub-workflow (except
-for the bottom leaf, of course).
+each workflow runs a 'pegasus-keg' in sleep mode plus its sub-workflow
+(except for the bottom leaf, of course).
 
 To create, plan and run the workflow, please make sure that you have
 a valid Condor on your system that you can submit jobs into. 

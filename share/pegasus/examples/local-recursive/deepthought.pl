@@ -11,8 +11,10 @@ use File::Spec;
 use File::Basename; 
 use POSIX (); 
 
-BEGIN { $ENV{'PEGASUS_HOME'} ||= `pegasus-config --nocrlf --home` }
-use lib File::Spec->catdir( $ENV{'PEGASUS_HOME'}, 'lib', 'perl' ); 
+BEGIN { 
+    eval `pegasus-config --perl-hash`;
+    die "Unable to eval pegasus-config: $@" if $@;
+}
 use Pegasus::DAX::Factory qw(:all); 
 use Pegasus::Common qw(find_exec); 
 
@@ -20,8 +22,8 @@ my $depth = shift || die "Usage: $0 depths [sleeptime]";
 my $sleep = shift || 600; 	# 10 minutes for now
 
 my %hash = ( namespace => 'deepthought' ); 
-my $keg = find_exec( 'keg', File::Spec->catdir($ENV{'PEGASUS_HOME'},'bin') ); 
-die "FATAL: Unable to find a \'keg\'\n" unless defined $keg; 
+my $keg = find_exec( 'pegasus-keg', $pegasus{bin} ); 
+die "FATAL: Unable to find a \'pegasus-keg\'\n" unless defined $keg; 
 
 my @os = POSIX::uname(); 
 $os[2] =~ s/^(\d+(\.\d+(\.\d+)?)?).*/$1/;
