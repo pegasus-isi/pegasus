@@ -192,7 +192,8 @@ GetOptions( "help|h" => \&usage
     }
     , 'perl-hash' => sub {
 	print << "EOF";
-\%__PACKAGE__::pegasus = 
+use vars qw(\%pegasus);
+\%pegasus = 
 	( bin => \"$bin_dir\"
 	, conf => \"$conf_dir\"
 	, java => \"$java_dir\"
@@ -203,7 +204,7 @@ GetOptions( "help|h" => \&usage
 	, share => \"$share_dir\"
 	, schema => \"$schema_dir\"
 	); 
-unshift( \@INC, \$__PACKAGE__::pegasus{perl} );
+unshift( \@INC, \$pegasus{perl} );
 EOF
     exit 0; 
     }
