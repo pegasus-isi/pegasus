@@ -389,7 +389,12 @@ public class Job extends Data implements GraphNodeContent{
      * All the notifications associated with the job
      */
     private Notifications mNotifications;
-    
+
+    /**
+     * The staging site associated with the job
+     */
+    private String mStagingSite;
+
     /**
      * The relative path to the submit directory for the job, from the workflows
      * base submit directory.
@@ -431,6 +436,7 @@ public class Job extends Data implements GraphNodeContent{
         mRuntime = -1;
         mJobExecutablesStaged = false;
         mNotifications   = new Notifications();
+        mStagingSite     = null;
 //        submitDirectory  = null;
     }
 
@@ -470,6 +476,7 @@ public class Job extends Data implements GraphNodeContent{
         mRuntime = job.mRuntime;
         mJobExecutablesStaged = job.mJobExecutablesStaged;
         mNotifications   = job.mNotifications;
+        mStagingSite     = job.mStagingSite;
 //        submitDirectory  = job.submitDirectory;
     }
 
@@ -525,6 +532,7 @@ public class Job extends Data implements GraphNodeContent{
         
         newSub.mJobExecutablesStaged = this.mJobExecutablesStaged;
         newSub.mNotifications = (Notifications)this.getNotifications().clone();
+        newSub.mStagingSite   = this.mStagingSite;
                 
         return newSub;
     }
@@ -907,6 +915,25 @@ public class Job extends Data implements GraphNodeContent{
      */
     public String getID(){
         return getName();
+    }
+
+    /**
+     * Sets the staging site.
+     *
+     * @param site    the staging
+     */
+    public void setStagingSiteHandle( String site ){
+        this.mStagingSite = site;
+    }
+
+
+    /**
+     * Returns the staging site.
+     *
+     * @return    the staging
+     */
+    public String getStagingSiteHandle( ){
+        return this.mStagingSite;
     }
 
     /**
@@ -1698,6 +1725,7 @@ public class Job extends Data implements GraphNodeContent{
         append( sb, "Standard Error" , this.stdErr , newline );
         append( sb, "Argument String" , this.strargs , newline );
         append( sb, "Execution Site", this.executionPool , newline );
+        append( sb, "Staging Site", this.mStagingSite , newline );
         append( sb, "Globus RSL" ,  str , newline );
         append( sb, "Environment Variables" , envStr , newline );
         append( sb, "Dagman Variables" , this.dagmanVariables , newline );
@@ -1884,5 +1912,6 @@ public class Job extends Data implements GraphNodeContent{
 
             }
     }
+
 
 }
