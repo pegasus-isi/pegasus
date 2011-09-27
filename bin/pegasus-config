@@ -27,22 +27,20 @@ my $userdir = $ENV{HOME} || (getpwuid($>))[7] || $tmpdir; # user $HOME
 my $bin_dir = Cwd::abs_path(dirname($0));
 
 # basically PEGASUS_HOME - but let's not expose that anymore
-my $base_dir = dirname($bin_dir);
-    
-my $conf_dir = "$base_dir/etc";
-my $share_dir = "$base_dir/share/pegasus";
-my $java_dir = "$share_dir/java";
-my $perl_dir = "$base_dir/lib/pegasus/perl";
-my $python_dir = "$base_dir/lib/pegasus/python";
-my $php_dir = "$base_dir/lib/pegasus/php";
-my $js_dir = "$base_dir/lib/pegasus/javascript";
-my $schema_dir = "$share_dir/schema";
-my $extra_classpath = "";
+my $base_dir	= dirname($bin_dir);
+my $conf_dir	= File::Spec->catdir( $base_dir, 'etc' );
+my $share_dir	= File::Spec->catdir( $base_dir, 'share', 'pegasus' );
+my $java_dir	= File::Spec->catdir( $share_dir, 'java' );
+my $perl_dir	= File::Spec->catdir( $base_dir, 'lib', 'pegasus', 'perl' );
+my $python_dir	= File::Spec->catdir( $base_dir, 'lib', 'pegasus', 'python' );
+my $php_dir	= File::Spec->catdir( $base_dir, 'lib', 'pegasus', 'php' );
+my $js_dir	= File::Spec->catdir( $base_dir, 'lib', 'pegasus', 'javascript' );
+my $schema_dir	= File::Spec->catdir( $share_dir, 'schema' );
+my $extra_classpath = '';
 
 # for development - running out of a svn checkout
-if ( -e "$base_dir/build/classes" ) {
-    $extra_classpath = "$base_dir/build/classes";
-}
+my $test = File::Spec->catdir( $base_dir, 'build', 'classes' );
+$extra_classpath = $test if -e $test;
 
 # in native packaging mode, some directories move
 if ($base_dir eq "/usr") {
@@ -51,7 +49,7 @@ if ($base_dir eq "/usr") {
 
 # now check the paths
 die( "FATAL: Unable to determine location of configuration files\n" )
-unless -e $conf_dir;
+    unless -e $conf_dir;
 
 # classpath
 my @jars = sort(<$java_dir/*.jar>);
@@ -75,7 +73,8 @@ Arguments:
  -h|--help        Print this help and exit.
  -V|--version     Print Pegasus version information and exit. 
 
- --perl-dump      Dumps all settings in perl format.
+ --perl-dump      Dumps all settings in perl format as separate variables.
+ --perl-hash      Dumps all settings in perl format as single perl hash.
  --python-dump    Dumps all settings in python format.
  --sh-dump        Dumps all settings in shell format.
 
@@ -190,6 +189,23 @@ GetOptions( "help|h" => \&usage
         chomp($p) if ! $eoln;
         print $p;
         exit 0; 
+    }
+    , 'perl-hash' => sub {
+	print << "EOF";
+my \%pegasus = 
+	( bin => \"$bin_dir\"
+	, conf => \"$conf_dir\"
+	, java => \"$java_dir\"
+	, perl => \"$perl_dir\"
+	, python => \"$python_dir\"
+	, php => \"$php_dir\"
+	, js => \"$js_dir\"
+	, share => \"$share_dir\"
+	, schema => \"$schema_dir\"
+	); 
+unshift( \@INC, \$pegasus{perl} );
+EOF
+    exit 0; 
     }
     , 'perl-dump' => sub {
         print "my \$pegasus_bin_dir = \"$bin_dir\";\n";
