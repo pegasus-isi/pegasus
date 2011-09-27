@@ -53,7 +53,7 @@ ifeq (SUNOS,${SYSTEM})
 ifeq (5,${MAJOR})
 # use these for the SUN CC compiler
 # on Solaris use this link string with gcc 
-# gcc -Wl,-Bstatic keg.o -lstdc++ -lm -lnsl -lsocket -Wl,-Bdynamic -ldl -o keg
+# gcc -Wl,-Bstatic pegasus-keg.o -lstdc++ -lm -lnsl -lsocket -Wl,-Bdynamic -ldl -o pegasus-keg
 CXX     = CC 
 ## SPARCv7
 LFS_CFLAGS = $(shell getconf LFS_CFLAGS 2>>/dev/null)
@@ -128,7 +128,7 @@ endif
 ##ifneq (,${STATVFS})
 ##CXXFLAGS += -DHAS_SYS_STATVFS=1
 ##endif
-GENDOC = keg.html keg.txt keg.ps
+GENDOC = pegasus-keg.html pegasus-keg.txt pegasus-keg.ps
 CONDOR_LD = $(CONDOR) $(LD)
 CONDOR_CXX = $(CONDOR) $(CXX)
 
@@ -157,13 +157,13 @@ endif
 %.co : %.cc
 	$(CONDOR_CXX) $(CXXFLAGS) $< -c -o $@
 
-TARGET	= keg
+TARGET	= pegasus-keg
 INST_TG = install-keg
 ifneq (,${CONDOR_LOCATION})
 ifneq (ia64,${MARCH})
 ifneq (x86_64,${MARCH})
 ifneq (DARWIN,${SYSTEM})
-TARGET += keg.condor
+TARGET += pegasus-keg.condor
 INST_TG += install-condor
 endif
 endif
@@ -173,15 +173,15 @@ endif
 all : $(TARGET) $(GENDOC)
 EXTRA_COBJ = $(EXTRA_OBJ:.o=.co)
 
-keg.o: keg.cc $(EXTRA_INC)
+pegasus-keg.o: pegasus-keg.cc $(EXTRA_INC)
 
-keg: keg.o $(EXTRA_OBJ)
+pegasus-keg: pegasus-keg.o $(EXTRA_OBJ)
 	$(LD) $(LDFLAGS) $^ -o $@ $(LOADLIBES_VANILLA) $(LOADLIBES)
 
-keg.condor: keg.co $(EXTRA_COBJ)
+pegasus-keg.condor: pegasus-keg.co $(EXTRA_COBJ)
 	$(CONDOR_LD) $(LDFLAGS) $^ -o $@ $(LOADLIBES_CONDOR) $(LOADLIBES)
 
-keg.co: keg.cc $(EXTRA_INC)
+pegasus-keg.co: pegasus-keg.cc $(EXTRA_INC)
 	$(CONDOR_CXX) $(CXXFLAGS) $< -c -o $@
 
 basic.o: basic.cc basic.hh
@@ -197,21 +197,21 @@ sunos-swap.o: sunos-swap.cc sunos-swap.hh
 sunos-swap.co: sunos-swap.cc sunos-swap.hh
 	$(CONDOR_CXX) $(NOLFS_CFLAGS) $< -c -o $@
 
-$(GENDOC): keg.1
+$(GENDOC): pegasus-keg.1
 
-install-keg: keg
-	$(INSTALL) -m 0755 keg $(prefix)/bin
+install-keg: pegasus-keg
+	$(INSTALL) -m 0755 pegasus-keg $(prefix)/bin
 
-install-condor: keg.condor
-	$(INSTALL) -m 0755 keg.condor $(prefix)/bin
+install-condor: pegasus-keg.condor
+	$(INSTALL) -m 0755 pegasus-keg.condor $(prefix)/bin
 
 install: $(INST_TG)
 
 install.doc: $(GENDOC)
 	$(INSTALL) -m 0644 $(GENDOC) $(datadir)/man
 
-install.man: keg.1
-	$(INSTALL) -m 0644 keg.1 $(datadir)/man/man1
+install.man: pegasus-keg.1
+	$(INSTALL) -m 0644 pegasus-keg.1 $(datadir)/man/man1
 
 install.all: install install.man install.doc
 
@@ -219,11 +219,11 @@ doc: $(GENDOC)
 
 man: $(GENDOC)
 
-test check: keg
-	@./keg -o /dev/fd/1 || echo "test failed" && echo "test ok"
+test check: pegasus-keg
+	@./pegasus-keg -o /dev/fd/1 || echo "test failed" && echo "test ok"
 
 clean:
-	$(RM) keg.o keg.co $(GENDOC) core $(EXTRA_OBJ) $(EXTRA_COBJ)
+	$(RM) pegasus-keg.o pegasus-keg.co $(GENDOC) core $(EXTRA_OBJ) $(EXTRA_COBJ)
 
 distclean: clean
-	$(RM) keg keg.condor
+	$(RM) pegasus-keg pegasus-keg.condor

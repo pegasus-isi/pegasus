@@ -3,7 +3,7 @@
 #
 # $Id$
 #
-TARGET	= kickstart keg cluster invoke # free
+TARGET	= kickstart pegasus-keg cluster invoke # free
 CONDOR_VERSION	= $(shell condor_version | awk '{ print $2; exit }')
 MARCH   = $(shell uname -m | tr '[A-Z]' '[a-z]')
 

@@ -400,10 +400,10 @@
       <exclude name="T2"/>
       <exclude name="kickstart"/>
       <exclude name="k.2"/>
-      <exclude name="keg"/>
+      <exclude name="pegasus-keg"/>
       <exclude name="guc"/>
       <exclude name="invoke"/>
-      <exclude name="keg.condor"/>
+      <exclude name="pegasus-keg.condor"/>
       <exclude name="seqexec"/>
       <exclude name="newexec"/>
       <exclude name="mpi*"/>
