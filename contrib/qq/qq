@@ -17,14 +17,20 @@ my $debug = 0;
 
 sub usage;			# { }
 sub count_deps($);		# { }
+sub showdag($$);		# { }
 
-my $dagid_width = 12;
+my ($rows,$cols) = (25,80);	# will be auto-detected later
+my $isa_terminal = -t STDOUT; 	# auto-set with override
+my $dagid_width = 20;
 my $args_width = 60;
+my ($machine_width);
 my $user = $ENV{USER} || $ENV{LOGNAME} || scalar getpwuid($>);
 GetOptions( 'help|h' => \&usage,
 	    'debug|d+' => \$debug,
 	    'all', sub { undef $user },
 	    'user|u=s' => \$user,
+	    'terminal|t!' => \$isa_terminal,
+	    'machine-width|mw=i', \$machine_width,
 	    'args-width|args=i', \$args_width,
 	    'dagid-width|dagid=i', \$dagid_width );
 
@@ -35,10 +41,12 @@ sub usage {
     print << "EOF";
 Usage: $me [options]
 
- --help    display this usage info.
- --dagid n width of DAG job identifiers, 0 off, default 12.
- --user id limit output to the jobs of specified user id.
- --args n  maximum width of args to be displayed.
+ --help     display this usage info.
+ --dagid n  width of DAG job identifiers, 0 off, default 12.
+ --user id  limit output to the jobs of specified user id.
+ --args n   maximum width of args to be displayed.
+ --terminal permit terminal ansi sequences even in pipes. 
+ --mw n     show Condor RemoteHost with maximum width of n. 
 
 Columns in output:
  ID        Condor job identification number.
@@ -64,6 +72,20 @@ Columns in output:
  
 EOF
    exit 1;
+}
+
+sub levels($$) { 
+    my $n = shift;
+    my $s = shift; 
+    my @s = split /\//, $s;
+    if ( $n > 0 ) {
+	$n > @s ? $s : join( '/', @s[ 0 .. ($n-1) ] );
+    } elsif ( $n < 0 ) {
+	my $i = @s + $n;
+	$i <= 0 ? $s : join( '/', @s[ $i .. $#s ] ); 
+    } else {
+	$s; 
+    }
 }
 
 sub trim($) {
@@ -201,6 +223,14 @@ sub parsersl($) {
     %result;
 }
 
+sub mybold {
+    $isa_terminal ? "\033[1m" : '';
+}
+
+sub myreset {
+    $isa_terminal ? "\033[0m" : '';
+}
+
 sub showjob($\%) {
     my $prefix = shift;
     my $r = shift;
@@ -217,7 +247,11 @@ sub showjob($\%) {
     print $x, ' ', $prefix;
     if ( $dagid_width > 0 && length($prefix) ) {
 	if ( exists $r->{dagnodename} ) {
-	    print '[', fit(-$dagid_width,$r->{dagnodename}), '] ';
+	    print '[', mybold(), fit(-$dagid_width,$r->{dagnodename}), myreset(); 
+	    if ( defined $machine_width && exists $r->{remotehost} ) {
+		print ' ', fit($machine_width,$r->{remotehost});
+	    }
+	    print '] ';
 	    $flag = 1;
 	}
     }
@@ -245,7 +279,11 @@ sub showjob($\%) {
 #	}
 #    }
     if ( exists $dagman_p{$cmd} ) { 
-	print ' [', $r->{iwd}, ']';
+	if ( exists $r->{'wf_uuid'} ) {
+	    print ' [', mybold(), levels(-2,$r->{iwd}), myreset(), ' ', $r->{'wf_uuid'}, ']';
+	} else {
+	    print ' [', mybold(), $r->{iwd}, myreset(), ']';
+	}
 	print ' # dj=', scalar count_deps( $r->{clusterid} ); 
     } elsif ( length($prefix) == 0 ) {
 	print "\n\twd=", $r->{iwd};
@@ -313,7 +351,6 @@ sub condor_q(\%\%\$;$) {
 #
 # determine termininal size
 #
-my ($rows,$cols) = (25,80);
 if ( -t STDOUT ) {
     my $x;
     eval {

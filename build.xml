@@ -404,7 +404,7 @@
       <exclude name="guc"/>
       <exclude name="invoke"/>
       <exclude name="pegasus-keg.condor"/>
-      <exclude name="seqexec"/>
+      <exclude name="pegasus-cluster"/>
       <exclude name="newexec"/>
       <exclude name="mpi*"/>
       <exclude name="condor-log-parser"/>
