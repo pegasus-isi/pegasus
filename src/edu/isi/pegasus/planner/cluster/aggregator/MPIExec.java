@@ -16,19 +16,10 @@
 
 package edu.isi.pegasus.planner.cluster.aggregator;
 
-import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 
 import edu.isi.pegasus.planner.classes.ADag;
-import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
 
-
-import edu.isi.pegasus.planner.namespace.Pegasus;
-
-import edu.isi.pegasus.planner.code.GridStartFactory;
-
-import java.util.List;
-import edu.isi.pegasus.planner.code.GridStart;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 
 /**
@@ -46,9 +37,15 @@ public class MPIExec extends Abstract {
 
     /**
      * The logical name of the transformation that is able to run multiple
-     * jobs sequentially.
+     * jobs via mpi.
      */
     public static final String COLLAPSE_LOGICAL_NAME = "mpiexec";
+
+    /**
+     * The basename of the executable that is able to run multiple
+     * jobs via mpi.
+     */
+    public static String EXECUTABLE_BASENAME = "mpiexec";
 
 
     /**
@@ -165,8 +162,18 @@ public class MPIExec extends Abstract {
      * @return the the logical name of the collapser executable.
      * @see #COLLAPSE_LOGICAL_NAME
      */
-    public String getCollapserLFN(){
+    public String getClusterExecutableLFN(){
         return COLLAPSE_LOGICAL_NAME;
+    }
+
+    /**
+     * Returns the executable basename of the clustering executable used.
+     *
+     * @return the executable basename.
+     * @see #EXECUTABLE_BASENAME
+     */
+    public String getClusterExecutableBasename(){
+        return MPIExec.EXECUTABLE_BASENAME;
     }
 
     /**
@@ -178,9 +185,10 @@ public class MPIExec extends Abstract {
      * @return boolean  true if an entry does not exists, false otherwise.
      */
     public boolean entryNotInTC(String site) {
-        return this.entryNotInTC( this.TRANSFORMATION_NAMESPACE,
-                                  COLLAPSE_LOGICAL_NAME,
-                                  this.TRANSFORMATION_VERSION,
+        return this.entryNotInTC( MPIExec.TRANSFORMATION_NAMESPACE,
+                                  MPIExec.COLLAPSE_LOGICAL_NAME,
+                                  MPIExec.TRANSFORMATION_VERSION,
+                                  this.getClusterExecutableBasename(),
                                   site);
     }
 

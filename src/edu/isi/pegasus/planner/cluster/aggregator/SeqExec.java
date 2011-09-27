@@ -17,7 +17,6 @@
 
 package edu.isi.pegasus.planner.cluster.aggregator;
 
-import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 
 import edu.isi.pegasus.planner.code.GridStartFactory;
 import edu.isi.pegasus.planner.code.gridstart.PegasusExitCode;
@@ -32,11 +31,9 @@ import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.namespace.Dagman;
 
 
-import edu.isi.pegasus.planner.code.GridStart;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 
 
-import java.util.List;
 
 /**
  * This class aggregates the smaller jobs in a manner such that
@@ -55,6 +52,12 @@ public class SeqExec extends Abstract {
      * jobs sequentially.
      */
     public static final String COLLAPSE_LOGICAL_NAME = "seqexec";
+
+    /**
+     * The basename of the pegasus cluster executable.
+     */
+    public static final String EXECUTABLE_BASENAME = "pegasus-cluster";
+
 
 
     /**
@@ -93,7 +96,7 @@ public class SeqExec extends Abstract {
      */
     public void initialize( ADag dag , PegasusBag bag  ){
         super.initialize( dag, bag );
-        mGlobalLog = mProps.logJobAggregatorProgressToGlobal();
+        mGlobalLog   = mProps.logJobAggregatorProgressToGlobal();
         mLogProgress = mProps.logJobAggregatorProgress();
         //set abort of first job failure
         this.setAbortOnFirstJobFailure( mProps.abortOnFirstJobFailure() );
@@ -242,8 +245,18 @@ public class SeqExec extends Abstract {
      * @return the the logical name of the collapser executable.
      * @see #COLLAPSE_LOGICAL_NAME
      */
-    public String getCollapserLFN(){
+    public String getClusterExecutableLFN(){
         return COLLAPSE_LOGICAL_NAME;
+    }
+
+    /**
+     * Returns the executable basename of the clustering executable used.
+     *
+     * @return the executable basename.
+     * @see #EXECUTABLE_BASENAME
+     */
+    public String getClusterExecutableBasename(){
+        return SeqExec.EXECUTABLE_BASENAME;
     }
 
     /**
@@ -255,9 +268,10 @@ public class SeqExec extends Abstract {
      * @return boolean  true if an entry does not exists, false otherwise.
      */
     public boolean entryNotInTC(String site) {
-        return this.entryNotInTC( this.TRANSFORMATION_NAMESPACE,
-                                  COLLAPSE_LOGICAL_NAME,
-                                  this.TRANSFORMATION_VERSION,
+        return this.entryNotInTC( SeqExec.TRANSFORMATION_NAMESPACE,
+                                  SeqExec.COLLAPSE_LOGICAL_NAME,
+                                  SeqExec.TRANSFORMATION_VERSION,
+                                  this.getClusterExecutableBasename(),
                                   site);
     }
 

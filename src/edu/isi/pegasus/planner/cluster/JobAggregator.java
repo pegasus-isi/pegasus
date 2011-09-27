@@ -21,7 +21,6 @@ import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
 
-import edu.isi.pegasus.planner.code.GridStart;
 import java.util.List;
 
 
@@ -39,7 +38,7 @@ public interface JobAggregator {
     /**
      * The version number associated with this API of Job Aggregator.
      */
-    public static final String VERSION = "1.4";
+    public static final String VERSION = "1.5";
 
     /**
      *Initializes the JobAggregator impelementation
@@ -131,7 +130,16 @@ public interface JobAggregator {
      *
      * @return the the logical name of the collapser executable.
      */
-    public String getCollapserLFN();
+    public String getClusterExecutableLFN();
+
+
+    
+    /**
+     * Returns the executable basename of the clustering executable used.
+     * 
+     * @return the executable basename.
+     */
+    public String getClusterExecutableBasename();
 
 
     }

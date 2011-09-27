@@ -508,7 +508,7 @@ public class Horizontal implements Clusterer,
         sb.append( indent );
         sb.append( "<clustered ");
         appendAttribute( sb, "job", clusteredJob.getName() );
-        appendAttribute( sb, "type", aggregator.getCollapserLFN() );
+        appendAttribute( sb, "type", aggregator.getClusterExecutableLFN() );
         sb.append( ">" ).append( "\n" );
 
         //traverse through all the files

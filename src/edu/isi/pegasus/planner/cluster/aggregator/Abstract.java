@@ -227,7 +227,7 @@ public abstract class Abstract implements JobAggregator {
      *          null if the list of jobs is empty
      */
     public AggregatedJob constructAbstractAggregatedJob(List jobs,String name,String id){
-        return constructAbstractAggregatedJob(jobs,name,id,getCollapserLFN());
+        return constructAbstractAggregatedJob(jobs,name,id,getClusterExecutableLFN());
     }
 
     /**
@@ -528,7 +528,7 @@ public abstract class Abstract implements JobAggregator {
      */
     /*
     public AggregatedJob construct(List jobs,String name,String id){
-        return construct(jobs,name,id,getCollapserLFN());
+        return construct(jobs,name,id,getClusterExecutableLFN());
     }
     */
 
@@ -769,7 +769,9 @@ public abstract class Abstract implements JobAggregator {
         }
 
         entry = ( tcentries == null ) ?
-                 this.defaultTCEntry( job.getTXName(), job.getSiteHandle() ): //try using a default one
+                 this.defaultTCEntry( this.getClusterExecutableLFN(),
+                                      this.getClusterExecutableBasename(),
+                                      job.getSiteHandle() ): //try using a default one
                  (TransformationCatalogEntry) tcentries.get(0);
 
         if( entry == null ){
@@ -795,13 +797,17 @@ public abstract class Abstract implements JobAggregator {
      * Returns a default TC entry to be used in case entry is not found in the
      * transformation catalog.
      *
-     * @param name  the logical name of the clustering executable.
+     * @param name                the logical name for the clustering transformation.
+     * @param executableBasename  the basename for the executable in the bin directory
+     *                            of a Pegasus installation
      * @param site  the site for which the default entry is required.
      *
      *
      * @return  the default entry.
      */
-    private  TransformationCatalogEntry defaultTCEntry( String name, String site ){
+    private  TransformationCatalogEntry defaultTCEntry( String name,
+                                                        String executableBasename,
+                                                        String site ){
         TransformationCatalogEntry defaultTCEntry = null;
         //check if PEGASUS_HOME is set
         String home = mSiteStore.getPegasusHome( site );
@@ -832,12 +838,12 @@ public abstract class Abstract implements JobAggregator {
         StringBuffer path = new StringBuffer();
         path.append( home ).append( File.separator ).
             append( "bin" ).append( File.separator ).
-            append( name );
+            append( executableBasename );
 
 
-        defaultTCEntry = new TransformationCatalogEntry( this.TRANSFORMATION_NAMESPACE,
+        defaultTCEntry = new TransformationCatalogEntry( Abstract.TRANSFORMATION_NAMESPACE,
                                                          name,
-                                                         this.TRANSFORMATION_VERSION );
+                                                         Abstract.TRANSFORMATION_VERSION );
 
         defaultTCEntry.setPhysicalTransformation( path.toString() );
         defaultTCEntry.setResourceId( site );
@@ -870,12 +876,16 @@ public abstract class Abstract implements JobAggregator {
      * @param namespace  the logical namespace of the transformation.
      * @param name       the logical name of the transformation.
      * @param version    the version of the transformation.
+     * @param executableBasename  basename of the executable that does the clustering.
      * @param site       the site at which existence check is required.
      *
      * @return boolean  true if an entry does not exists, false otherwise.
      */
-    protected boolean entryNotInTC(String namespace,String name,
-                                   String version,String site){
+    protected boolean entryNotInTC(String namespace,
+                                   String name,
+                                   String version,
+                                   String executableBasename,
+                                   String site){
 
         //check on for pfn for existence. gmehta says lesser queries
         //underneath
@@ -892,7 +902,7 @@ public abstract class Abstract implements JobAggregator {
 
         //a double negative
         return  ( l == null || l.isEmpty() ) ?
-                  (( this.defaultTCEntry( name,  site ) ) == null ) ://construct a default tc entry
+                  (( this.defaultTCEntry( name, executableBasename, site ) ) == null ) ://construct a default tc entry
                   false ;
     }
 
