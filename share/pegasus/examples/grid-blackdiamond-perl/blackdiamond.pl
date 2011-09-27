@@ -9,9 +9,10 @@ use File::Basename;
 use Sys::Hostname;
 use POSIX ();
 
-BEGIN { $ENV{'PEGASUS_HOME'} ||= `pegasus-config --nocrlf --home` }
-use lib File::Spec->catdir( $ENV{'PEGASUS_HOME'}, 'lib', 'perl' ); 
-
+BEGIN { 
+    eval `pegasus-config --perl-hash`;
+    die "Unable to eval pegasus-config: $@" if $@;
+}
 use Pegasus::DAX::Factory qw(:all); 
 use constant NS => 'diamond'; 
 
@@ -34,9 +35,9 @@ $file->addPFN( newPFN( url => 'file://' . Cwd::abs_path($fn),
 		       site => 'local' ) ); 
 $adag->addFile($file); 
 
-# follow this path, if the PEGASUS_HOME was determined
-if ( exists $ENV{'PEGASUS_HOME'} ) {
-    my $keg = File::Spec->catfile( $ENV{'PEGASUS_HOME'}, 'bin', 'keg' ); 
+# follow this path, if we know how to find 'pegasus-keg'
+my $keg = File::Spec->catfile( $pegasus{bin}, 'pegasus-keg' ); 
+if ( -x $keg ) { 
     my @os = POSIX::uname(); 
     # $os[2] =~ s/^(\d+(\.\d+(\.\d+)?)?).*/$1/;  ## create a proper osversion
     $os[4] =~ s/i.86/x86/;
@@ -60,6 +61,8 @@ if ( exists $ENV{'PEGASUS_HOME'} ) {
 	    $adag->addExecutable($app); 
 	}
     }
+} else {
+    die "Hmmm, where is pegasus-keg? I thought it was \"$keg\", giving up for now.\n";
 }
 
 my %hash = ( link => LINK_OUT, register => 'false', transfer => 'true' ); 
