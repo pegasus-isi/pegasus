@@ -192,7 +192,7 @@ GetOptions( "help|h" => \&usage
     }
     , 'perl-hash' => sub {
 	print << "EOF";
-my \%pegasus = 
+\%__PACKAGE__::pegasus = 
 	( bin => \"$bin_dir\"
 	, conf => \"$conf_dir\"
 	, java => \"$java_dir\"
@@ -203,11 +203,13 @@ my \%pegasus =
 	, share => \"$share_dir\"
 	, schema => \"$schema_dir\"
 	); 
-unshift( \@INC, \$pegasus{perl} );
+unshift( \@INC, \$__PACKAGE__::pegasus{perl} );
 EOF
     exit 0; 
     }
     , 'perl-dump' => sub {
+	# This won't work, because the "my" variables inside a BEGIN/eval block
+	# won't make it outside the BEGIN (i.e. not available to main program). 
         print "my \$pegasus_bin_dir = \"$bin_dir\";\n";
         print "my \$pegasus_conf_dir = \"$conf_dir\";\n";
         print "my \$pegasus_java_dir = \"$java_dir\";\n";
