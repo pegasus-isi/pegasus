@@ -158,7 +158,7 @@ public class HourGlass extends AbstractStrategy{
             jobName = getCreateDirJobName( dag, pool);
             newJob = mImpl.makeCreateDirJob( pool, 
                                              jobName,
-                                             mSiteStore.getInternalWorkDirectory( pool ) );
+                                             mSiteStore.getExternalWorkDirectoryURL( pool ) );
             dag.add(newJob);
 
             //add the relation to the concat job

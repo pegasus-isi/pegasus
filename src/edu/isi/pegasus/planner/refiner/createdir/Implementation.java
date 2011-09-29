@@ -34,7 +34,7 @@ public interface Implementation {
     /**
      * The version number associated with this API.
      */
-    public static final String VERSION = "1.0";
+    public static final String VERSION = "1.1";
     
      /**
      * Intializes the class.
@@ -51,11 +51,12 @@ public interface Implementation {
      * @param site  the execution site for which the create dir job is to be
      *                  created.
      * @param name  the name that is to be assigned to the job.
-     * @param directory  the directory to be created on the site.
+     * @param directoryURL   the externally accessible URL to the directory that is
+     *              created
      *
      * @return create dir job.
      */
-    public Job makeCreateDirJob( String site, String name, String directory );
+    public Job makeCreateDirJob( String site, String name, String directoryURL );
 
 
 

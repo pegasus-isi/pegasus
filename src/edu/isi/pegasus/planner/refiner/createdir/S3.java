@@ -148,7 +148,7 @@ public class S3 implements Implementation {
     
     
     /**
-     * The directory to be created in the already existing bucket.
+     * The directoryURL to be created in the already existing bucket.
      */
     protected String mRelativeBucketDir;
     
@@ -173,7 +173,7 @@ public class S3 implements Implementation {
         
         mRelativeBucketDir = bag.getPlannerOptions().getRelativeDirectory();
 
-        //replace file separators in directory with -
+        //replace file separators in directoryURL with -
         mRelativeBucketDir = mRelativeBucketDir.replace( File.separatorChar,  '-' );
 
         
@@ -238,18 +238,20 @@ public class S3 implements Implementation {
     }
     
     /**
-     * It creates a noop job that executes on the submit host. The directory in 
+     * It creates a noop job that executes on the submit host. The directoryURL in
      * the bucket is created when s3cmd issues get or put requests
      * to the bucket.
      * 
      * @param site  the execution site for which the create dir job is to be
      *                  created.
-     * @param name  the name that is to be assigned to the job.     * 
-     * @param directory  the directory to be created on the site.
+     * @param name  the name that is to be assigned to the job.
+     * @param directoryURL   the externally accessible URL to the directoryURL that is
+     *              created
+     *
      *
      * @return create dir job.
      */
-    public Job makeCreateDirJob( String site, String name, String directory ) {
+    public Job makeCreateDirJob( String site, String name, String directoryURL ) {
         //figure out if we need to create a bucket or not.
         SiteCatalogEntry entry = mSiteStore.lookup( site );
         if( entry == null ){
@@ -265,7 +267,7 @@ public class S3 implements Implementation {
             //is specified
             mLogger.log( "Creating a create bucket job for site "  + site,
                          LogManager.DEBUG_MESSAGE_LEVEL );
-            createDirJob = this.makeCreateBucketJob(site, name, directory);
+            createDirJob = this.makeCreateBucketJob(site, name, directoryURL);
         }
         else{
             //we create a NOOP job
@@ -341,7 +343,7 @@ public class S3 implements Implementation {
      * @param site  the execution site for which the create dir job is to be
      *                  created.
      * @param name  the name that is to be assigned to the job.     * 
-     * @param directory  the directory to be created on the site.
+     * @param directoryURL  the directoryURL to be created on the site.
      *
      * @return create dir job.
      */

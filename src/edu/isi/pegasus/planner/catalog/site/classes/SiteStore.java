@@ -351,6 +351,30 @@ public class SiteStore extends AbstractSiteData{
         throw new UnsupportedOperationException( "Method remove( String , String ) not yet implmeneted" );
     }
 
+
+    /**
+     * Returns a  URL to the work directory as seen externally ( including external
+     * mount point ).
+     *
+     * @param siteHandle    the site handle.
+     *
+     * @return the url
+     */
+    public String getExternalWorkDirectoryURL( String siteHandle ){
+        String url = null;
+
+        SiteCatalogEntry site = this.lookup( siteHandle );
+        if( site == null ){
+            return url;
+        }
+
+        //select a file server
+        FileServer fs = site.getHeadNodeFS().selectScratchSharedFileServer();
+
+        url = fs.getURLPrefix() + this.getExternalWorkDirectory( fs, siteHandle );
+
+        return url;
+    }
     
     /**
      * Return the work directory as seen externally (including external mount point)

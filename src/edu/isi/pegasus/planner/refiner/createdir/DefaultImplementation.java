@@ -69,7 +69,7 @@ public class DefaultImplementation implements Implementation {
     /**
      * The basename of the pegasus cleanup executable.
      */
-    public static final String EXECUTABLE_BASENAME = "pegasus-dirmanager";
+    public static final String EXECUTABLE_BASENAME = "pegasus-create-dir";
     
     /**
      * The path to be set for create dir jobs.
@@ -143,18 +143,19 @@ public class DefaultImplementation implements Implementation {
     }
     
     /**
-     * It creates a make directory job that creates a directory on the remote pool
+     * It creates a make directoryURL job that creates a directoryURL on the remote pool
      * using the perl executable that Gaurang wrote. It access mkdir underneath.
      * 
      *
      * @param site  the execution site for which the create dir job is to be
      *                  created.
-     * @param name  the name that is to be assigned to the job.     * 
-     * @param directory  the directory to be created on the site.
+     * @param name  the name that is to be assigned to the job.
+     * @param directoryURL   the externally accessible URL to the directoryURL that is
+     *              created
      *
      * @return create dir job.
      */
-    public Job makeCreateDirJob( String site, String name, String directory ) {
+    public Job makeCreateDirJob( String site, String name, String directoryURL ) {
         Job newJob  = new Job();
         List entries    = null;
         String execPath = null;
@@ -200,6 +201,10 @@ public class DefaultImplementation implements Implementation {
         jobManager = ePool.selectGridGateway( GridGateway.JOB_TYPE.cleanup );
 */
         String argString = null;
+        System.out.println( "directory passed is " + directoryURL );
+        System.out.println( "internal directory is " + mSiteStore.getInternalWorkDirectory( site ) );
+        System.out.println( " external directory is  "  + mSiteStore.getExternalWorkDirectory( mSiteStore.lookup( site ).getHeadNodeFS().selectScratchSharedFileServer(),
+                                                               site ));
         if( mUseMkdir ){
             /*
             //we are using mkdir directly
@@ -214,17 +219,17 @@ public class DefaultImplementation implements Implementation {
             sb.append( mProps.getBinDir() ).
                append( File.separator ).append( DefaultImplementation.EXECUTABLE_BASENAME );
             execPath = sb.toString();
-            argString = "--create --dir " +
-                        mSiteStore.getInternalWorkDirectory( site );
+
+            argString = "-u " +
+                        mSiteStore.getExternalWorkDirectoryURL( site );
             
             newJob.condorVariables.setExecutableForTransfer();
             
         }
         else{
             execPath = entry.getPhysicalTransformation();
-            argString = "--create --dir " + 
-                        directory;
-//                        mSiteStore.getWorkDirectory( site );
+            argString = "-u " +
+                        directoryURL;
         }
 
         newJob.jobName = name;
