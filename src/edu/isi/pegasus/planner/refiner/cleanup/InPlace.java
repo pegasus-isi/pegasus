@@ -18,7 +18,6 @@ package edu.isi.pegasus.planner.refiner.cleanup;
 
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusFile;
-import edu.isi.pegasus.planner.classes.PlannerOptions;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.common.logging.LogManager;
@@ -28,21 +27,18 @@ import edu.isi.pegasus.planner.namespace.Condor;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import edu.isi.pegasus.planner.partitioner.graph.Graph;
 
+import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.classes.TransferJob;
+
+
 
 import java.util.Map;
 import java.util.Iterator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.LinkedList;
-import java.util.ArrayList;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.HashSet;
-import java.lang.StringBuffer;
-import edu.isi.pegasus.planner.classes.PegasusBag;
-import edu.isi.pegasus.planner.classes.TransferJob;
-import edu.isi.pegasus.planner.partitioner.graph.MapGraph;
-
 
 /**
  * This generates  cleanup jobs in the workflow itself.
@@ -273,9 +269,7 @@ public class InPlace implements CleanupStrategy{
 //            ((Set)mResMap.get( si.getSiteHandle() )).add( curGN );
             
 
-            String site =  typeStageOut( si.getJobType() )?
-                             ((TransferJob)si).getNonThirdPartySite():   
-                             si.getSiteHandle();   
+            String site = getSiteForCleanup( si ); 
             if( !mResMap.containsKey( site ) ){
                 mResMap.put( site, new HashSet() );
 
@@ -623,5 +617,40 @@ public class InPlace implements CleanupStrategy{
         return (   type == Job.STAGE_OUT_JOB
                 || type == Job.INTER_POOL_JOB
                 );
+    }
+
+    /**
+     * Returns site to be used for the cleanup algorithm.
+     * For compute jobs the staging site is used, while for stageout jobs 
+     *   is used.
+     * 
+     * For all other jobs the execution site is used.
+     * 
+     * @param job   the job
+     * 
+     * @return the site to be used
+     */
+    protected String getSiteForCleanup( Job job ) {
+        /*
+        String site =  typeStageOut( job.getJobType() )?
+                             ((TransferJob)job).getNonThirdPartySite():
+                             job.getStagingSiteHandle();
+         */
+
+        String site = null;
+
+        if( typeStageOut( job.getJobType() )){
+            //for stage out jobs we prefer the non third party site
+            site = ((TransferJob)job).getNonThirdPartySite();
+        }
+        else if ( job.getJobType() == Job.COMPUTE_JOB ){
+            //for compute jobs we refer to the staging site
+            site = job.getStagingSiteHandle();
+        }
+        else{
+            //for all other jobs we use the execution site
+            site = job.getSiteHandle();
+        }
+        return site;
     }
 }
