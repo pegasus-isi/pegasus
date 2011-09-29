@@ -554,8 +554,16 @@ main( int argc, char* argv[] )
     /* is there really something to run? */
     if ( appinfo.application.isValid != 1 ) {
       appinfo.application.status = -1;
-      appinfo.application.saverr = 2;
-      fputs( "The main job specification is invalid or missing\n", stderr );
+      switch ( appinfo.application.isValid ) { 
+      case 2: /* permissions? */
+	appinfo.application.saverr = EACCES;
+	break; 
+      default: /* no such file? */
+	appinfo.application.saverr = ENOENT; 
+	break;
+      }
+      fputs( "FATAL: The main job specification is invalid or missing.\n",
+	     stderr );
       return 127;
     }
   } else {
