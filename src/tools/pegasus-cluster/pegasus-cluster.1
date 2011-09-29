@@ -17,24 +17,26 @@
 .\" Authors: Jens-S. Vöckler
 .\"
 .\"
-.TH "seqexec" "1" "3.0.0" "Pegasus"
+.TH "pegasus\-cluster" "1" "3.2.0" "Pegasus"
 .SH "NAME"
-seqexec \- run a bunch of applications
+pegasus\-cluster \- run a list of applications
 .SH "SYNTAX"
-.B seqexec [\-d] [\-f [\-S\~ec]] [\-s\~fn] [\-R\~fn] [\-n\~nr] [inputfile]
+.B pegasus\-cluster [\-d] [\-f [\-S\~ec]] [\-s\~fn] [\-R\~fn] [\-n\~nr] [inputfile]
 .SH "DESCRIPTION"
 The 
-.B seqexec
-tool executes a list of application in the order specified. It
-is generally used to do horizontal clustering of independent
-application, and does not care about any application failures.
-Such failures should be caught by using
+.B pegasus\-cluster
+tool executes a list of application in the order specified (assuming
+sequential mode.) It is generally used to do horizontal clustering of
+independent application, and does not care about any application
+failures. Such failures should be caught by using
 .B kickstart
-to start application. In vertical clustering mode, the 
+to start application. 
+.PP
+In vertical clustering mode, the 
 .I hard failure
 mode is encouraged, ending execution as soon as one application
 fails. When running a complex workflow through 
-.BR seqexec ,
+.BR pegasus\-cluster ,
 the order of applications must be topologically sorted.
 .PP
 Applications are usually using
@@ -47,9 +49,10 @@ except the first should add the
 .B kickstart
 option
 .I \-H
-to supress repeating the XML preamble. 
+to supress repeating the XML preamble and certain other headers
+of no interest when repeated. 
 .PP
-.B seqexec
+.B pegasus\-cluster
 permits shell-style quoting. One level of quoting is removed from the 
 arguments. Please note that 
 .B kickstart
@@ -102,7 +105,7 @@ each given non-zero exit-code of an application, mark it as a form
 of success. In 
 .B \-f
 mode, this means that 
-.B seqexec
+.B pegasus\-cluster
 will not fail when seeing this exit code from any application it runs. 
 .IP
 By default, all non-zero exit code constitute failure. 
@@ -123,7 +126,7 @@ a non-negative integer, the word
 is also understood. When
 .I auto
 is specified, 
-.B seqexec
+.B pegasus\-cluster
 will attempt to automatically determine the number of cores 
 available in the system.
 .IP 
@@ -139,13 +142,13 @@ Comments and empty lines are permitted. The comment character is the
 octothorpe (#), and extends to the end of line. 
 .IP
 By default, 
-.B seqexec
+.B pegasus\-cluster
 uses
 .I stdin
 to read the list of applications to execute. 
 .SH "RETURN VALUE"
 The
-.B seqexec
+.B pegasus\-cluster
 tool returns 1, if an illegal option was used. It returns 2, if the
 status file from option
 .B \-s
@@ -158,7 +161,7 @@ where it will return 5 for true failure. The latter is modified by the
 option. 
 .PP
 All other internal errors being absent, 
-.B seqexec
+.B pegasus\-cluster
 will always return 0 when run without
 .BR \-f . 
 Unlike shell, it will 
@@ -167,12 +170,12 @@ return the last application's exit code.
 However, in 
 .B \-f
 mode, 
-.B seqexec
+.B pegasus\-cluster
 returns either 0 if all main sequence applications succeeded, or
 5 if one failed; or more than one in parallel execution mode. 
 .PP
 The 
-.B seqexec 
+.B pegasus\-cluster 
 application will also create a small summary on 
 .I stdout
 for each job, and one for itself, about the success and failure. The
@@ -186,7 +189,7 @@ include non-zero exit codes that were marked as success using the
 option.
 .SH "TASK SUMMARY"
 Each task executed by 
-.B seqexec
+.B pegasus\-cluster
 generates a record bracketed by square brackets like this (each entry
 is broken over two lines for readability): 
 .nf
@@ -242,7 +245,7 @@ is the path to the application that was started. As with the progress
 record, any 
 .B kickstart
 will be parsed out so that you see the true application. 
-.SH "SEQEXEC SUMMARY"
+.SH "PEGASUS\-CLUSTER SUMMARY"
 The final summary of counts is a record bracketed by square brackets
 like this (broken over two lines for readability):
 .nf
@@ -289,12 +292,12 @@ is 0, 1 or 2, depending on the existence of setup- and cleanup jobs.
 .TP
 .B duration 
 is the duration in seconds, with millisecond resolution, how long 
-.B seqexec
+.B pegasus\-cluster
 ran. 
 .TP
 .B start
 is the start time of 
-.B seqexec
+.B pegasus\-cluster
 as ISO 8601 time stamp. 
 .SH "SEE ALSO"
 .BR kickstart (1).
@@ -308,7 +311,7 @@ handler. In better plannable environments, you should use an application wrapper
 instead.
 .SH "EXAMPLE"
 The following shows an example input file to
-.B seqexec
+.B pegasus\-cluster
 making use of 
 .B kickstart
 to track applications. 
@@ -331,7 +334,7 @@ to track applications.
 .PP
 .SH "ENVIRONMENT VARIABLES"
 A number of environment variables permits to influence the behavior of 
-.B seqexec
+.B pegasus\-cluster
 during run-time. 
 .TP
 .B SEQEXEC_PROGRESS_REPORT
@@ -339,7 +342,7 @@ If this variable is set, and points to a writable file location,
 progress report records are appended to the file. While care is
 taken to atomically append records to the log file, in case 
 concurrent instances of
-.B seqexec
+.B pegasus\-cluster
 are running, broken Linux NFS may still garble some content. 
 .TP
 .B SEQEXEC_CPUS
@@ -347,7 +350,7 @@ If this variable is set to a non-negative integer, that many CPUs are
 attempted to be used. The special value
 .I auto
 permits to auto-detect the number of CPUs available to 
-.B seqexec
+.B pegasus\-cluster
 on the system.
 .TP
 .B SEQEXEC_SETUP
@@ -360,11 +363,20 @@ counted towards the summary.
 .B SEQEXEC_CLEANUP
 If this variable is set, and contains a single fully-qualified path
 to an executable and arguments, this executable will be before 
-.B seqexec
+.B pegasus\-cluster
 quits. Failure of any previous job will have no effect on the ability 
 to run this job. The exit code of the cleanup job will have no effect 
 on the overall success or failure state. Success or failure will not be
 counted towards the summary. 
+.SH "HISTORY"
+As you may have noticed, 
+.B pegasus\-cluster
+had the name
+.B seqexec
+in previous incantations. We are slowly moving to the new name to avoid
+clashes in a larger OS installation setting. However, there is no
+pertinent need to change the internal name, too, as no name clashes are
+expected.
 .SH "AUTHORS"
 Jens-S. Vöckler <voeckler at isi dot edu>
 .PP
