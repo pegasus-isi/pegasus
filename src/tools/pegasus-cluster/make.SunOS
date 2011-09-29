@@ -1,8 +1,8 @@
 #!/bin/sh
 gmake distclean
-gmake EXTRACFLAGS='$(V7FLAGS)' seqexec
-mv seqexec seqexec.sparcv7
+gmake EXTRACFLAGS='$(V7FLAGS)' pegasus-cluster
+mv pegasus-cluster pegasus-cluster.sparcv7
 gmake clean
-gmake EXTRACFLAGS='$(V9FLAGS)' seqexec
-mv seqexec seqexec.sparcv9
+gmake EXTRACFLAGS='$(V9FLAGS)' pegasus-cluster
+mv pegasus-cluster pegasus-cluster.sparcv9
 gmake clean
