@@ -3659,7 +3659,7 @@ sys.stderr = sys.stdout
 
 # Touch logfile with start event
 print
-print (utils.isodate(time.time()) + " - pegasus-monitord starting ").ljust(80, "-")
+print (utils.isodate(time.time()) + " - pegasus-monitord starting - pid %d " % (os.getpid())).ljust(80, "-")
 print
 
 # Ignore dying shells
@@ -4151,7 +4151,7 @@ logger.info("finishing, exit with 0")
 
 # Touch logfile with end event
 print
-print (utils.isodate(time.time()) + " - pegasus-monitord ending ").ljust(80, "-")
+print (utils.isodate(time.time()) + " - pegasus-monitord ending - pid %d " % (os.getpid())).ljust(80, "-")
 print
 
 sys.exit(0)
