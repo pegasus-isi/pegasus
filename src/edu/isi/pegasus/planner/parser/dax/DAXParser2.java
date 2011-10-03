@@ -250,52 +250,6 @@ public class DAXParser2 extends Parser implements DAXParser {
                        bag.getPlannerOptions().getJobnamePrefix();
     }
 
-    /**
-     * The constructor initialises the parser, and turns on the validation feature
-     * in Xerces.
-     *
-     * @param daxFileName the file which you want to parse.
-     * @param bag   the bag of objects that is useful for initialization.
-     * @param callback    the object which implements the callback.
-     */
-    /*public DAXParser2(String daxFileName, PegasusBag bag, Callback callback) {
-        this( bag );
-
-        try{
-            this.testForFile(daxFileName);
-        }
-        catch( Exception e){
-            throw new RuntimeException( e );
-        }
-
-        //try to get the version number
-        //of the dax
-        mDaxSchemaVersion = getVersionOfDAX( daxFileName );
-        mLogger.log( "Version of DAX as picked up from the DAX " + mDaxSchemaVersion,
-                      LogManager.DEBUG_MESSAGE_LEVEL );
-        String schemaLoc = getSchemaLocation();
-        mLogger.log( "Picking schema for DAX" + schemaLoc, LogManager.CONFIG_MESSAGE_LEVEL );
-        String list = DAXParser2.SCHEMA_NAMESPACE + " " + schemaLoc;
-        setSchemaLocations(list);
-
-        //figure out whether to pick up the double negative flags or not
-        mUseDoubleNegative = useDoubleNegative( mDaxSchemaVersion );
-        mLogger.log( "Picking up the dontTransfer and dontRegister flags " + mUseDoubleNegative,
-                     LogManager.DEBUG_MESSAGE_LEVEL );
-
-        mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_PARSE_DAX, LoggingKeys.DAX_ID, daxFileName );
-
-        mCurrentJobSubInfo.condorUniverse = GridGateway.JOB_TYPE.compute.toString(); //default value
-
-        //initialising the namespace handles
-        //namespace class member variables removed
-      
-
-        mCallback = callback;
-
-        startParser(daxFileName);
-        mLogger.logEventCompletion();
-    }*/
 
     /**
      * Set the DAXCallback for the parser to call out to.

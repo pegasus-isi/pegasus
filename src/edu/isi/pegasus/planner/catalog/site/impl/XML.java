@@ -360,7 +360,7 @@ public class XML extends Parser implements SiteCatalog{
         // treat URI as File, yes, I know - I need the basename
         File uri = new File( XML.SCHEMA_LOCATION );
         // create a pointer to the default local position
-        File poolconfig = new File( this.mProps.getSysConfDir(),
+        File poolconfig = new File( this.mProps.getSchemaDir(),
             uri.getName() );
 
         return this.mProps.getPoolSchemaLocation( poolconfig.getAbsolutePath() );
