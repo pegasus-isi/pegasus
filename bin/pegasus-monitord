@@ -2528,7 +2528,7 @@ if not utils.make_boolean(props.property("pegasus.monitord.notifications") or 't
 # Parse stdout/stderr disable parsing property
 
 # Copy command line options into our variables
-if utils.make_boolean(props.property("pegasus.monitord.disable.stdout.parsing") or 'false'):
+if utils.make_boolean(props.property("pegasus.monitord.stdout.disable.parsing") or 'false'):
     store_stdout_stderr = False
 
 if options.vb == 0:
