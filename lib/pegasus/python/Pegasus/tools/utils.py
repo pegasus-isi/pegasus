@@ -46,8 +46,13 @@ for i, c in  zip(xrange(256), ''.join([chr(x) for x in xrange(256)])):
         _mapping[c] = ('%%%02X'%i)
 del i; del c
 
-# Regular expressions
+# Compile our regular expressions
+
+# Used in epochdate
 parse_iso8601 = re.compile(r'(\d{4})-?(\d{2})-?(\d{2})[ tT]?(\d{2}):?(\d{2}):?(\d{2})([.,]\d+)?([zZ]|[-+](\d{2}):?(\d{2}))')
+
+# Used in out2log
+re_remove_extensions = re.compile(r"(?:\.(?:rescue|dag))+$")
 
 # Module variables
 MAXLOGFILE = 1000                # For log rotation, check files from .000 to .999
@@ -310,6 +315,26 @@ def check_rescue(dir, dag):
     my_result.sort()
 
     return my_result
+
+def out2log(rundir, outfile):
+    """
+    purpose: infer output symlink for Condor common user log
+    paramtr: rundir (IN): the run directory
+    paramtr: outfile (IN): the name of the out file we use
+    returns: the name of the log file to use
+    """
+
+    # Get the basename
+    my_base = os.path.basename(outfile)
+    # NEW: Account for rescue DAGs
+    my_base = my_base[:my_base.find(".dagman.out")]
+    my_base = re_remove_extensions.sub('', my_base)
+    # Add .log extension
+    my_base = my_base + ".log"
+    # Create path
+    my_log = os.path.join(rundir, my_base)
+
+    return my_log, my_base
 
 def monitoring_running(run_dir):
     """
