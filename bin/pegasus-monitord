@@ -41,7 +41,6 @@ import calendar
 import commands
 import datetime
 import optparse
-import urlparse
 import traceback
 import subprocess
 
@@ -74,35 +73,15 @@ from Pegasus.tools import utils
 from Pegasus.tools import properties
 from Pegasus.tools import kickstart_parser
 from Pegasus.monitoring import notifications
+from Pegasus.monitoring import event_output as eo
 
 # Optional imports, only generate 'warnings' if they fail
-nlapi = None
-stampede_loader = None
-bson = None
-amqp = None
 NLSimpleParser = None
 
-try:
-    from netlogger import nlapi
-except:
-    logger.info("cannot import netlogger.nlapi")
-try:
-    from netlogger.analysis.modules import stampede_loader
-    from netlogger.analysis.workflow.util import Expunge
-except:
-    logger.info("cannot import NetLogger's stampede_loader")
 try:
     from netlogger.parsers.base import NLSimpleParser
 except:
     logger.info("cannot import NL parser")
-try:
-    import bson
-except:
-    logger.info("cannot import BSON library, 'bson'")
-try:
-    from amqplib import client_0_8 as amqp
-except:
-    logger.info("cannot import AMQP library")
 
 # Import Python > 2.5 modules
 try:
@@ -204,9 +183,9 @@ do_notifications = True         # Flag to enable notifications
 monitord_notifications = None   # Notifications' manager class
 max_parallel_notifications = 10 # Maximum number of notifications we can do in parallel
 notifications_timeout = 0	# Time to wait for notification scripts to finish (0 means wait forever)
+store_stdout_stderr = True      # Flag for storing jobs' stdout and stderr in our output
 
 wf_event_sink = None            # Where wf events go
-STAMPEDE_NS = "stampede."       # Event name-space
 
 # Revision handling
 revision = "$Revision: 2012 $" # Let cvs handle this, do not edit manually
@@ -223,276 +202,6 @@ condor_dagman_executable = utils.find_exec("condor_dagman")
 if condor_dagman_executable is None:
     # Default value
     condor_dagman_executable = "condor_dagman"
-
-def purge_wf_uuid_from_database(rundir, output_db):
-    """
-    This function purges a workflow id from the output database.
-    """
-    if output_db.lower().find('sqlite:///') == 0:
-        # Ok, we have a SQLite database, let's get the filename and check if it exists
-        filename = output_db[10:]
-
-        # Check if SQLite database exists
-        if not os.path.isfile(filename):
-            # No, nothing to do
-            return
-
-    # Parse the braindump file
-    wfparams = utils.slurp_braindb(rundir)
-    
-    if "wf_uuid" in wfparams:
-        if wfparams["wf_uuid"] is not None:
-            # Get wf_uuid
-            wf_uuid = wfparams["wf_uuid"]
-            e = Expunge(output_db, wf_uuid)
-            e.expunge()
-
-            # Done, make this connection go away
-            e = None
-
-class OutputURL:
-    """
-    Break output URL into named parts for easier handling.
-    """
-    def __init__(self, url):
-
-        # Fix for Python 2.5 and earlier 2.6, as their urlparse module
-        # does not handle these schemes correctly (netloc empty and
-        # everything after the scheme in path)
-        if (url.startswith("amqp:")
-            or url.startswith("mysql:")
-            or url.startswith("x-tcp:")
-            or url.startswith("sqlite:")):
-            self.scheme, rest_url = url.split(":", 1)
-            url = "http:" + rest_url
-
-            http_scheme, self.netloc, self.path, self.params, query, frag = urlparse.urlparse(url)
-        else:
-            # No need to change anything
-            self.scheme, self.netloc, self.path, self.params, query, frag = urlparse.urlparse(url)
-
-        host_port = ''
-        user_pass = ''
-
-        if '@' in self.netloc:
-            user_pass, host_port = self.netloc.split('@', 1)
-        else:
-            host_port = self.netloc
-        if ':' in host_port:
-            self.host, portstr = host_port.split(':', 1)
-            self.port = int(portstr)
-        else:
-            self.host = self.netloc
-            self.port = None
-
-class EventSink(object):
-    """
-    Base class for an Event Sink.
-    """
-    def __init__(self):
-        name = self.__class__.__name__.split('.')[-1]
-        self._log = logging.getLogger("pegasus.monitord." + name)
-        self._isdbg = self._log.isEnabledFor(logging.DEBUG)
-        
-    def send(self, event, kw):
-        """
-        Clients call this function to send an event to the sink.
-        """
-        pass
-
-    def close(self):
-        """
-        Clients call this function to close the output to this sink.
-        """
-        pass
-
-class EmptySink(EventSink):
-    """
-    Empty class, doesn't do anything, events go nowhere...
-    Just a placeholder in case we need to do something different later...
-    """
-    def __init__(self):
-        super(EmptySink, self).__init__()
-
-    def send(self, event, kw):
-        pass
-
-    def close(self):
-        pass
-
-class DBEventSink(EventSink):
-    """
-    Write wflow event logs to database via loader
-    """
-    def __init__(self, dest, db_stats=False, **kw):
-        assert stampede_loader is not None, "Database destination selected, "+\
-               "but cannot import stampede loader"
-        self._db = stampede_loader.Analyzer(dest, perf=db_stats, batch="yes", mysql_engine='InnoDB')
-        super(DBEventSink, self).__init__()
-        
-    def send(self, event, kw):
-        if self._isdbg:
-            self._log.debug("send.start event=%s" % (event))
-        d = {'event' : "stampede." + event}
-        for k, v in kw.iteritems():
-            d[k.replace('__','.')] = v
-        self._db.notify(d)
-        if self._isdbg:
-            self._log.debug("send.end event=%s" % (event))
-        
-    def close(self):
-        self._log.debug("close.start")
-        self._db.finish()
-        self._log.debug("close.end")
-    
-class FileEventSink(EventSink):
-    """
-    Write wflow event logs to a file.
-    """
-    def __init__(self, path, restart=False, encoder=None, **kw):
-        assert nlapi is not None, "File/socket destination selected, "+\
-               "but cannot import NetLogger API"
-        super(FileEventSink, self).__init__()
-        if restart:
-            self._output = open(path, 'w')
-        else:
-            self._output = open(path, 'a')
-        self._encoder = encoder
-
-    def send(self, event, kw):
-        if self._isdbg:
-            self._log.debug("send.start event=%s" % (event))
-        self._output.write(self._encoder(event=event, **kw))
-        if self._isdbg:
-            self._log.debug("send.end event=%s" % (event))
-
-    def close(self):
-        self._log.debug("close.start")
-        self._output.close()
-        self._log.debug("close.end")
-
-class TCPEventSink(EventSink):
-    """
-    Write wflow event logs to a host:port.
-    """
-    def __init__(self, host, port, encoder=None, **kw):
-        super(TCPEventSink, self).__init__()
-        self._encoder = encoder
-        self._sock = socket.socket()
-        self._sock.connect((host, port))
-
-    def send(self, event, kw):
-        if self._isdbg:
-            self._log.debug("send.start event=%s" % (event))
-        self._sock.send(self._encoder(event=event, **kw))
-        if self._isdbg:
-            self._log.debug("send.end event=%s" % (event))
-
-    def close(self):
-        self._log.debug("close.start")
-        self._sock.close()
-        self._log.debug("close.end")
-
-class AMQPEventSink(EventSink):
-    """
-    Write wflow event logs to an AMQP server.
-    """
-    EXCH_OPTS = {'type' : 'topic'}
-    def __init__(self, host, port, exch=None, encoder=None,
-                 userid='guest', password='guest', virtual_host='/',
-                 ssl=False, connect_timeout=None, **kw):
-        super(AMQPEventSink, self).__init__()
-        self._encoder = encoder
-        self._conn = amqp.Connection(host="%s:%s" % (host, port),
-                                     userid=userid, password=password,
-                                     virtual_host=virtual_host, ssl=ssl,
-                                     connect_timeout=connect_timeout, **kw)
-        self._channel = self._conn.channel()
-        self._exch = exch
-        self._channel.exchange_declare(exch, **self.EXCH_OPTS)
-
-    def send(self, event, kw):
-        full_event = STAMPEDE_NS + event
-        if self._isdbg:
-            self._log.debug("send.start event=%s" % (full_event))
-        data = self._encoder(event=event, **kw)
-        self._channel.basic_publish(amqp.Message(body=data),
-                                    exchange=self._exch, routing_key=full_event)
-        if self._isdbg:
-            self._log.debug("send.end event=%s" % (event))
-
-    def close(self):
-        self._log.debug("close.start")
-        self._conn.close()
-        self._log.debug("close.end")
-
-def get_default_sqlite_db(dagman_file):
-    """
-    This function returns the default connection string for a sqlite
-    database.
-    """
-    return "sqlite:///" + dagman_file[:dagman_file.find(".dag.dagman.out")] + ".stampede.db"
-
-def bson_encode(event, **kw):
-    """
-    Adapt bson.dumps() to NetLogger's Log.write() signature.
-    """
-    kw['event'] = STAMPEDE_NS + event
-    return bson.dumps(kw)        
-
-def create_wf_event_sink(dest, enc=None, **kw):
-    """
-    Create & return subclass of EventSink, chosen by value of 'dest'
-    and parameterized by values (if any) in 'kw'.
-    """
-    url = OutputURL(dest)
-    
-    # Pick an encoder
-
-    def pick_encfn(enc_name):
-        ##enc_name = url.query.get('enc', 'bp').lower()
-        if enc_name is None or enc_name == 'bp':
-            assert nlapi is not None, "NetLogger encoding selected, "+\
-                "but cannot import nlapi library"
-            # NetLogger name=value encoding
-            encfn = nlapi.Log(level=nlapi.Level.ALL, prefix=STAMPEDE_NS)
-        elif enc_name == 'bson':
-            # BSON
-            assert bson is not None, "BSON encoding selected, "+\
-                "but cannot import bson library"
-            encfn = bson_encode
-        else:
-            raise ValueError("Unknown encoding '%s'" % (enc_name))
-        return encfn
-
-    # Branch on scheme
-    if url.scheme == '':
-        sink = FileEventSink(dest, encoder=pick_encfn(enc), **kw)
-        _type, _name = "file", dest
-    elif url.scheme == 'file':
-        sink = FileEventSink(url.path, encoder=pick_encfn(enc), **kw)
-        _type, _name = "file", url.path
-    elif url.scheme == 'x-tcp':
-        if url.port is None:
-            url.port = 14380
-        sink = TCPEventSink(url.host, url.port, encoder=pick_encfn(enc), **kw)
-        _type, _name = "network", "%s:%s" % (url.host, url.port)
-    elif url.scheme == 'amqp':
-        assert amqp is not None, "AMQP destination selected, "+\
-            "but cannot import AMQP library"
-        if url.port is None:
-            url.port = 5672 # RabbitMQ default
-        while url.path.startswith('/'):
-            url.path = url.path[1:]
-        sink = AMQPEventSink(url.host, url.port, exch=url.path,
-                             encoder=pick_encfn(enc), **kw)
-        _type, _name="AMQP", "%s:%s/%s" % (url.host, url.port, url.path)
-    else:
-        sink = DBEventSink(dest, **kw)
-        _type, _name = "DB", dest
-    logger.info("output type=%s name=%s" % (_type, _name))
-
-    return sink
 
 def finish_stampede_loader():
     """
@@ -1348,7 +1057,8 @@ class Workflow:
                  workflow_config_file=None, jsd=None, root_id=None,
                  parent_id=None, parent_jobid=None, parent_jobseq=None,
                  enable_notifications=True, replay_mode=False,
-                 output_dir=None, notifications_manager=None):
+                 store_stdout_stderr=True, output_dir=None,
+                 notifications_manager=None):
         """
         This function initializes the workflow object. It looks for
         the workflow configuration file (or for workflow_config_file,
@@ -1367,6 +1077,7 @@ class Workflow:
         self._replay_mode = replay_mode
         self._notifications_manager = notifications_manager
         self._output_dir = output_dir
+        self._store_stdout_stderr = store_stdout_stderr
 
         # Initialize other class variables
         self._wf_uuid = None
@@ -1893,22 +1604,24 @@ class Workflow:
             kwargs["stderr__file"] = my_job._error_file + ".%03d" % (my_job._job_output_counter)
         else:
             kwargs["stderr__file"] = ""
-        if my_job._stdout_text is not None:
-            if len(my_job._stdout_text) > MAX_OUTPUT_LENGTH:
-                # Need to truncate to avoid database problems...
-                kwargs["stdout__text"] = my_job._stdout_text[:MAX_OUTPUT_LENGTH]
-                logger.warning("truncating stdout for job %s" % (my_job._exec_job_id))
-            else:
-                # Put everything in
-                kwargs["stdout__text"] = my_job._stdout_text
-        if my_job._stderr_text is not None:
-            if len(my_job._stderr_text) > MAX_OUTPUT_LENGTH:
-                # Need to truncate to avoid database problems...
-                kwargs["stderr__text"] = my_job._stderr_text[:MAX_OUTPUT_LENGTH]
-                logger.warning("truncating stderr for job %s" % (my_job._exec_job_id))
-            else:
-                # Put everything in
-                kwargs["stderr__text"] = my_job._stderr_text
+        if self._store_stdout_stderr:
+            # Only add stdout and stderr text fields if user hasn't disabled it
+            if my_job._stdout_text is not None:
+                if len(my_job._stdout_text) > MAX_OUTPUT_LENGTH:
+                    # Need to truncate to avoid database problems...
+                    kwargs["stdout__text"] = my_job._stdout_text[:MAX_OUTPUT_LENGTH]
+                    logger.warning("truncating stdout for job %s" % (my_job._exec_job_id))
+                else:
+                    # Put everything in
+                    kwargs["stdout__text"] = my_job._stdout_text
+            if my_job._stderr_text is not None:
+                if len(my_job._stderr_text) > MAX_OUTPUT_LENGTH:
+                    # Need to truncate to avoid database problems...
+                    kwargs["stderr__text"] = my_job._stderr_text[:MAX_OUTPUT_LENGTH]
+                    logger.warning("truncating stderr for job %s" % (my_job._exec_job_id))
+                else:
+                    # Put everything in
+                    kwargs["stderr__text"] = my_job._stderr_text
 
         if my_job._sched_id is not None:
             kwargs["sched__id"] = my_job._sched_id
@@ -2722,6 +2435,8 @@ parser.add_option("-j", "--job", action = "store", type = "string", dest = "jsd"
 parser.add_option("-l", "--log", action = "store", type = "string", dest = "logfile",
 		  help = "alternative %s log file, default is %s in the workflow's directory"
 		  % (prog_base, logbase))
+parser.add_option("-o", "--output-dir", action = "store", type = "string", dest = "output_dir",
+                  help = "provides an output directory for all monitord log files")
 parser.add_option("--conf", action = "store", type = "string", dest = "config_properties",
 		  help = "specifies the properties' file to use. This option overrides all other property files.")
 parser.add_option("--no-recursive", action = "store_const", const = 1, dest = "disable_subworkflows",
@@ -2744,8 +2459,8 @@ parser.add_option("--keep-state", action = "store_const", const = 1, dest = "kee
                   help = "keep state across several DAGMan start/stop cycles (development option)")
 parser.add_option("--socket", action = "store_const", const = "yes", dest = "socket_enabled",
                   help = "enables a socket interface for debugging")
-parser.add_option("-o", "--output-dir", action = "store", type = "string", dest = "output_dir",
-                  help = "provides an output directory for all monitord log files")
+parser.add_option("--skip-stdout", action = "store_const", const = 0, dest = "skip_stdout",
+                  help = "disables storing both stdout and stderr in our output")
 parser.add_option("-v", "--verbose", action="count", default=0, dest="vb", help="Increase verbosity, repeatable")
 grp = optparse.OptionGroup(parser, "Output options")
 grp.add_option("-d", "--dest", action="store", dest="event_dest", metavar="PATH or URL",
@@ -2810,7 +2525,11 @@ if max_parallel_notifications == 0:
 if not utils.make_boolean(props.property("pegasus.monitord.notifications") or 'true'):
     do_notifications = False
 
+# Parse stdout/stderr disable parsing property
+
 # Copy command line options into our variables
+if utils.make_boolean(props.property("pegasus.monitord.disable.stdout.parsing") or 'false'):
+    store_stdout_stderr = False
 
 if options.vb == 0:
     lvl = logging.WARN
@@ -2862,6 +2581,8 @@ if options.db_stats is not None:
     db_stats = options.db_stats
 if options.keep_state is not None:
     keep_state = options.keep_state
+if options.skip_stdout is not None:
+    store_stdout_stderr = False
 if options.output_dir is not None:
     output_dir = options.output_dir
     try:
@@ -2886,7 +2607,7 @@ if options.event_dest is None:
 
     if props.property("pegasus.monitord.output") is None:
         # No command-line or property specified, use default
-        event_dest = get_default_sqlite_db(out)
+        event_dest = "sqlite:///" + out[:out.find(".dag.dagman.out")] + ".stampede.db"
     else:
         # Ok, get it from the properties file
         event_dest = props.property("pegasus.monitord.output")
@@ -3685,8 +3406,8 @@ else:
     if replay_mode or os.access(os.path.join(run, MONITORD_RECOVER_FILE), os.F_OK):
         restart_logging = True
     try:
-        wf_event_sink = create_wf_event_sink(event_dest, db_stats=db_stats,
-                                             restart=restart_logging, enc=encoding)
+        wf_event_sink = eo.create_wf_event_sink(event_dest, db_stats=db_stats,
+                                                restart=restart_logging, enc=encoding)
         atexit.register(finish_stampede_loader)
     except:
         logger.error(traceback.format_exc())
@@ -3694,10 +3415,10 @@ else:
         wf_event_sink = None
     else:
         try:
-            if restart_logging and isinstance(wf_event_sink, DBEventSink):
+            if restart_logging and isinstance(wf_event_sink, eo.DBEventSink):
                 # If in replay mode or recovery mode and it is a DB,
                 # attempt to purge wf_uuid_first
-                purge_wf_uuid_from_database(run, event_dest)
+                eo.purge_wf_uuid_from_database(run, event_dest)
         except:
             logger.error(traceback.format_exc())
             logger.error("error flushing previous wf_uuid from database... continuing...")
@@ -3788,6 +3509,7 @@ wf = Workflow(run, out, database=wf_event_sink, jsd=jsd,
               enable_notifications=do_notifications,
               replay_mode=replay_mode,
               output_dir=output_dir,
+              store_stdout_stderr=store_stdout_stderr,
               notifications_manager=monitord_notifications)
 # If everything went well, create a workflow entry for this workflow
 if wf._monitord_exit_code == 0:
@@ -4022,6 +3744,7 @@ while (len(wfs) > 0):
                                                   jsd=jsd, replay_mode=replay_mode,
                                                   enable_notifications=do_notifications,
                                                   output_dir=output_dir,
+                                                  store_stdout_stderr=store_stdout_stderr,
                                                   notifications_manager=monitord_notifications)
 
                                 if new_wf._monitord_exit_code == 0:
