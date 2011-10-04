@@ -51,6 +51,11 @@ import java.util.List;
 public class DefaultImplementation implements Implementation {
 
     /**
+     * The scheme name for file url.
+     */
+    public static final String FILE_URL_SCHEME = "file:";
+
+    /**
      * The transformation namespace for the create dir jobs.
      */
     public static final String TRANSFORMATION_NAMESPACE = "pegasus";
@@ -147,8 +152,7 @@ public class DefaultImplementation implements Implementation {
      * using the perl executable that Gaurang wrote. It access mkdir underneath.
      * 
      *
-     * @param site  the execution site for which the create dir job is to be
-     *                  created.
+     * @param site  the  site for which the create dir job is to be  created.
      * @param name  the name that is to be assigned to the job.
      * @param directoryURL   the externally accessible URL to the directoryURL that is
      *              created
@@ -160,14 +164,16 @@ public class DefaultImplementation implements Implementation {
         List entries    = null;
         String execPath = null;
         TransformationCatalogEntry entry   = null;
-        
-//        GridGateway jobManager = null;
+
+        //figure out on the basis of directory URL
+        //where to run the job.
+        String eSite = getCreateDirJobExecutionSite( site, directoryURL );
 
         try {
             entries = mTCHandle.lookup( DefaultImplementation.TRANSFORMATION_NAMESPACE,
                                               DefaultImplementation.TRANSFORMATION_NAME,
                                               DefaultImplementation.TRANSFORMATION_VERSION,
-                                              site, 
+                                              eSite,
                                               TCType.INSTALLED);
         }
         catch (Exception e) {
@@ -177,7 +183,7 @@ public class DefaultImplementation implements Implementation {
         }
 
         entry = ( entries == null ) ?
-            this.defaultTCEntry( site ): //try using a default one
+            this.defaultTCEntry( eSite ): //try using a default one
             (TransformationCatalogEntry) entries.get(0);
 
         if( entry == null ){
@@ -187,7 +193,7 @@ public class DefaultImplementation implements Implementation {
             StringBuffer error = new StringBuffer();
             error.append("Could not find entry in tc for lfn ").
                 append( COMPLETE_TRANSFORMATION_NAME ).
-                append(" at site ").append( site );
+                append(" at site ").append( eSite );
 
             mLogger.log( error.toString(), LogManager.ERROR_MESSAGE_LEVEL);
             throw new RuntimeException( error.toString() );
@@ -195,16 +201,11 @@ public class DefaultImplementation implements Implementation {
 
 
 
-        SiteCatalogEntry ePool = mSiteStore.lookup( site );
+        SiteCatalogEntry ePool = mSiteStore.lookup( eSite );
 
-/*      JIRA PM-277
-        jobManager = ePool.selectGridGateway( GridGateway.JOB_TYPE.cleanup );
-*/
+
         String argString = null;
-        System.out.println( "directory passed is " + directoryURL );
-        System.out.println( "internal directory is " + mSiteStore.getInternalWorkDirectory( site ) );
-        System.out.println( " external directory is  "  + mSiteStore.getExternalWorkDirectory( mSiteStore.lookup( site ).getHeadNodeFS().selectScratchSharedFileServer(),
-                                                               site ));
+       
         if( mUseMkdir ){
             /*
             //we are using mkdir directly
@@ -239,13 +240,9 @@ public class DefaultImplementation implements Implementation {
         newJob.setDerivation( DefaultImplementation.DERIVATION_NAMESPACE,
                               DefaultImplementation.DERIVATION_NAME,
                               DefaultImplementation.DERIVATION_VERSION );
-//        newJob.condorUniverse = "vanilla";
-/*      JIRA PM-277 
-        newJob.condorUniverse = jobManager.getJobType().toString();
-        newJob.globusScheduler = jobManager.getContact();
-*/ 
+
         newJob.executable = execPath;
-        newJob.executionPool = site;
+        newJob.executionPool = eSite;
         newJob.strargs = argString;
         newJob.jobClass = Job.CREATE_DIR_JOB;
         newJob.jobID = name;
@@ -341,6 +338,29 @@ public class DefaultImplementation implements Implementation {
         }
 
         return defaultTCEntry;
+
+    }
+
+    /**
+     * Determines the site where the create dir job should be run , looking at the
+     * directory URL passed. Preference is given to local site unless the directoryURL
+     * is a file URL. In that case, the create dir job is executed on the site
+     * where the directory is to be created.
+     *
+     * @param site            the site where the directory is to be created
+     * @param directoryURL    the URL to the directory.
+     *
+     * @return  the site for create dir job
+     */
+    protected String getCreateDirJobExecutionSite( String site, String directoryURL ) {
+
+        String result = "local";
+
+        if( directoryURL != null && directoryURL.startsWith( this.FILE_URL_SCHEME ) ){
+            result = site;
+        }
+
+        return result;
 
     }
 
