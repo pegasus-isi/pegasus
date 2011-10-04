@@ -452,28 +452,6 @@ public class SiteCatalogEntry extends AbstractSiteData{
         return s;
     }
     
-    /**
-     * Returns the default path to kickstart as constructed from the
-     * environment variable.
-     * 
-     * @return value if set else null
-     */
-    public String getKickstartPath() {
-        
-        
-        //try to construct the default path on basis of
-        //PEGASUS_HOME environment variable.
-        String home = this.getPegasusHome();
-        if( home == null ){
-            return null;
-        }
-        
-        StringBuffer ks = new StringBuffer();
-        ks.append( home ).append( File.separator ).
-           append( "bin").append( File.separator ).
-           append( "kickstart" );
-        return ks.toString();
-    }
     
     
     /**

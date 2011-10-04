@@ -384,15 +384,17 @@ public class SiteStore extends AbstractSiteData{
      *
      * @return    String corresponding to the mount point
      */    
-    public String getExternalWorkDirectory(FileServer fs, String siteHandle) {
+    public String getExternalWorkDirectory( FileServer fs, String siteHandle) {
         
         String path = "";
-            
+
+        /* To verify with Mats about this.
         SiteCatalogEntry execPool = this.lookup(siteHandle);
         if(execPool == null){
             throw new RuntimeException("Entry for " + siteHandle +
                                        " does not exist in the Site Catalog");
         }
+         */
 
         path = mWorkDir;
 

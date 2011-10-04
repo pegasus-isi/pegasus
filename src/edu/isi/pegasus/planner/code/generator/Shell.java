@@ -222,8 +222,11 @@ public class Shell extends Abstract {
         job.condorVariables.construct( "universe", "local" );
 
         SiteCatalogEntry site = mSiteStore.lookup( job.getSiteHandle() );
-        String gridStartPath = site.getKickstartPath();
-        GridStart gridStart = mGridStartFactory.loadGridStart( job , gridStartPath );
+
+        //JIRA PM-491 . Path to kickstart should not be passed
+        //to the factory.
+//        String gridStartPath = site.getKickstartPath();
+        GridStart gridStart = mGridStartFactory.loadGridStart( job , null );
 
         //enable the job
         if( !gridStart.enable( job,false ) ){

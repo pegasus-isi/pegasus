@@ -51,7 +51,7 @@ import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 
 import edu.isi.pegasus.planner.cluster.JobAggregator;
-import java.util.Collection;
+
 import java.util.Iterator;
 import java.util.StringTokenizer;
 import java.util.Set;
@@ -97,6 +97,11 @@ public class Kickstart implements GridStart {
      * The version number for kickstart.
      */
     public static final String TRANSFORMATION_VERSION = null;
+
+    /**
+     * The basename of the kickstart executable.
+     */
+    public static final String EXECUTABLE_BASENAME = "pegasus-kickstart";
 
 
     /**
@@ -447,7 +452,7 @@ public class Kickstart implements GridStart {
         //in the Condor namespace and not printed to the
         //file so that they can be overriden if desired
         //later through profiles and key transfer_executable
-        String gridStartPath = handleTransferOfExecutable( job, site.getKickstartPath() );
+        String gridStartPath = handleTransferOfExecutable( job, getKickstartPath( site ) );
         
         //sanity check
         if (gridStartPath == null){
@@ -767,7 +772,7 @@ public class Kickstart implements GridStart {
             
             String gridStartPath = ( entry == null )?
                              //rely on the path determined from sc
-                             site.getKickstartPath():
+                             getKickstartPath( site ):
                              //the tc entry has highest priority
                              entry.getPhysicalTransformation();
             
@@ -858,6 +863,31 @@ public class Kickstart implements GridStart {
         return ( entries == null ) ?
                 null  :
                (TransformationCatalogEntry) entries.get(0);
+    }
+
+    /**
+     * Returns the default path to kickstart as constructed from the
+     * environment variable associated with a site in the site catalog
+     *
+     * @param site   the SiteCatalogEntry object for the site.
+     *
+     * @return value if set else null
+     */
+    public String getKickstartPath( SiteCatalogEntry site ) {
+
+
+        //try to construct the default path on basis of
+        //PEGASUS_HOME environment variable.
+        String home = site.getPegasusHome();
+        if( home == null ){
+            return null;
+        }
+
+        StringBuffer ks = new StringBuffer();
+        ks.append( home ).append( File.separator ).
+           append( "bin").append( File.separator ).
+           append( Kickstart.EXECUTABLE_BASENAME );
+        return ks.toString();
     }
 
 

@@ -1558,6 +1558,7 @@ public class CondorGenerator extends Abstract {
      *
      * @throws CodeGeneratorException
      */
+/*
     protected void handleTransferOfExecutable(Job sinfo) throws CodeGeneratorException{
         Condor cvar = sinfo.condorVariables;
 
@@ -1610,6 +1611,7 @@ public class CondorGenerator extends Abstract {
 
         }
     }
+ */
 
     /**
      * Applies a submit file style to the job, according to the fact whether
@@ -1796,8 +1798,12 @@ public class CondorGenerator extends Abstract {
 //                                                 Condor.VANILLA_UNIVERSE);
         
         SiteCatalogEntry site = mSiteStore.lookup( job.getSiteHandle() );
-        String gridStartPath = site.getKickstartPath();
 
+        //JIRA PM-491 . Path to kickstart should not be passed
+        //to the factory.
+//        String gridStartPath = site.getKickstartPath();
+
+        
         StringBuffer rslString = new StringBuffer();
         String jobName = job.jobName;
         String script = null;
@@ -1840,7 +1846,7 @@ public class CondorGenerator extends Abstract {
             writer.println("stream_output = false" );
         }
 
-        GridStart gridStart = mGridStartFactory.loadGridStart( job, gridStartPath );
+        GridStart gridStart = mGridStartFactory.loadGridStart( job, null );
 
         //enable the job
         boolean enable = false;
