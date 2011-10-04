@@ -402,7 +402,7 @@
       <exclude name="k.2"/>
       <exclude name="pegasus-keg"/>
       <exclude name="guc"/>
-      <exclude name="invoke"/>
+      <exclude name="pegasus-invoke"/>
       <exclude name="pegasus-keg.condor"/>
       <exclude name="pegasus-cluster"/>
       <exclude name="newexec"/>

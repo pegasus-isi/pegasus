@@ -17,21 +17,21 @@
 .\" Authors: Jens-S. Vöckler, Yong Zhao
 .\"
 .\"
-.TH "invoke" "1" "1.4.2" "GriPhyN Virtual Data System"
+.TH "pegasus\-invoke" "1" "3.2.0" "Pegasus WMS"
 .SH "NAME"
-invoke \- invokes a command from a file
+pegasus\-invoke \- invokes a command from a file
 .SH "SYNTAX"
-.B invoke ( app | @fn ) [ arg | @fn [..]]
+.B pegasus\-invoke ( app | @fn ) [ arg | @fn [..]]
 .SH "DESCRIPTION"
 The 
-.B invoke
+.B pegasus\-invoke
 tool invokes a single application with as many arguments as your Unix
 permits (128k characters for Linux). Arguments are come from two places,
 either the command-line as regular arguments, or from a special file, 
 which contains one argument per line. 
 .PP
 The
-.B invoke
+.B pegasus\-invoke
 tool became necessary to work around the 4k argument length limit in
 Condor. It also permits to use arguments inside argument files without
 worry about shell, Condor or Globus escape necessities. All argument
@@ -69,12 +69,12 @@ The textual file may contain long arguments and filenames. However,
 Unices still impose limits on the maximum length of a directory name,
 and the maximum length of a file name. These lengths are not checked, 
 because 
-.B invoke
+.B pegasus\-invoke
 is oblivious of the application (e.g. what argument is a filename, and
 what argument is a mere string resembling a filename). 
 .SH "RETURN VALUE"
 The
-.B invoke
+.B pegasus\-invoke
 tool returns 127, if it was unable to find the application. It returns
 126, if there was a problem parsing the file. All other exit status,
 including 126 and 127, come from the application. 
@@ -85,7 +85,7 @@ including 126 and 127, come from the application.
 \f(CB
 $ echo "/bin/date" > X
 $ echo "-Isec" >> X
-$ invoke @X
+$ pegasus\-invoke @X
 2005-11-03T15:07:01-0600
 \fP
 .fi
@@ -103,7 +103,7 @@ $ cat test.2
 @test.3
 @@test.3
 
-$ invoke @test.2
+$ pegasus\-invoke @test.2
 This is test 3 @test.3
 \fP
 .fi
@@ -113,16 +113,19 @@ parse, starting with an at (@) sign as before, the maximum recursion
 limit is 32 levels of inclusions. It is not possible (yet) to use
 .I stdin
 as source of inclusion.
-.SH "AUTHORS"
-Jens-S. Vöckler <voeckler at cs dot uchicago dot edu>,
-.\"Jens-S. V\*:ockler 
-.br
+.SH "HISTORY"
+As you may have noticed,
+.B pegasus\-invoke
+had the name
+.B invoke
+in previous incantations. We are slowly moving to the new name to avoid
+clashes in a larger OS installation setting. However, there is no
+pertinent need to change the internal name, too, as no name clashes are
+expected.
+.SH "RETIRED AUTHORS"
 Mike Wilde <wilde at mcs dot anl dot gov>
+.SH "AUTHORS"
+Jens-S. Vöckler <voeckler at isi dot edu>
 .PP
-VDS
-.B http://vds.isi.edu/
-and
-.B http://vds.uchicago.edu/
-.br
-GriPhyN
-.BR http://www.griphyn.org/
+Pegasus 
+.BR http://pegasus.isi.edu/

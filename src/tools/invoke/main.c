@@ -7,7 +7,7 @@
 #include <unistd.h>
 #include <limits.h>
 
-#include "invoke.h"
+#include "pegasus-invoke.h"
 
 static const char* RCS_ID =
 "$Id$";

@@ -82,7 +82,7 @@ endif
 # There is no need to change things below this line.
 CFLAGS += -D${SYSTEM} -DMAJOR=${MAJOR} -DMINOR=${MINOR}
 #CFLAGS += -D_POSIX_C_SOURCE=199506 -D__USE_XOPEN_EXTENDED
-GENDOC = invoke.html invoke.txt invoke.ps
+GENDOC = pegasus-invoke.html pegasus-invoke.txt pegasus-invoke.ps
 
 %.html : %.1 ;
 	$(NROFF) $(HTML) $< > $@
@@ -93,24 +93,24 @@ GENDOC = invoke.html invoke.txt invoke.ps
 %.o : %.c
 	$(CC) $(CFLAGS) $< -c -o $@
 
-all : invoke $(GENDOC)
+all : pegasus-invoke $(GENDOC)
 
-invoke: invoke.o main.o
+pegasus-invoke: pegasus-invoke.o main.o
 	$(LD) $(LDFLAGS) $(CFLAGS) $(OBJS) $^ -o $@ $(LOADLIBES)
 
-invoke.o: invoke.c invoke.h
+pegasus-invoke.o: pegasus-invoke.c pegasus-invoke.h
 main.o: main.c
 
-$(GENDOC): invoke.1
+$(GENDOC): pegasus-invoke.1
 
-install: invoke
-	$(INSTALL) -m 0755 invoke $(prefix)/bin
+install: pegasus-invoke
+	$(INSTALL) -m 0755 pegasus-invoke $(prefix)/bin
 
 install.doc: $(GENDOC)
 	$(INSTALL) -m 0644 $(GENDOC) $(datadir)/man
 
-install.man: invoke.1
-	$(INSTALL) -m 0644 invoke.1 $(datadir)/man/man1
+install.man: pegasus-invoke.1
+	$(INSTALL) -m 0644 pegasus-invoke.1 $(datadir)/man/man1
 
 install.all: install install.man install.doc
 
@@ -120,4 +120,4 @@ clean:
 	$(RM) *.o $(GENDOC) core core.*
 
 distclean: clean
-	$(RM) invoke
+	$(RM) pegasus-invoke

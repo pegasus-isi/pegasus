@@ -16,7 +16,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include "invoke.h"
+#include "pegasus-invoke.h"
 
 static const char* RCS_ID =
 "$Id$";

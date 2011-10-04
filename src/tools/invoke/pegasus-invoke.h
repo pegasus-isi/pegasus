@@ -12,8 +12,8 @@
  * Copyright 1999-2004 University of Chicago and The University of
  * Southern California. All rights reserved.
  */
-#ifndef _INVOKE_H
-#define _INVOKE_H
+#ifndef _PEGASUS_INVOKE_H
+#define _PEGASUS_INVOKE_H
 
 #include <sys/types.h>
 
@@ -69,4 +69,4 @@ add_arg( char* data, char*** arg, size_t* index, size_t* capacity,
  * returns: 0 means ok, -1 means error, see errno
  */
 
-#endif /* _INVOKE_H */
+#endif /* _PEGASUS_INVOKE_H */

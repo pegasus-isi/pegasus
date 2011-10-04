@@ -1,8 +1,8 @@
 #!/bin/sh
 gmake distclean
-gmake EXTRACFLAGS='$(V7FLAGS)' invoke
-mv invoke invoke.sparcv7
+gmake EXTRACFLAGS='$(V7FLAGS)' pegasus-invoke
+mv pegasus-invoke pegasus-invoke.sparcv7
 gmake clean
-gmake EXTRACFLAGS='$(V9FLAGS)' invoke
-mv invoke invoke.sparcv9
+gmake EXTRACFLAGS='$(V9FLAGS)' pegasus-invoke
+mv pegasus-invoke pegasus-invoke.sparcv9
 gmake clean
