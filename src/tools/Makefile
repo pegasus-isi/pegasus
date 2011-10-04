@@ -3,7 +3,7 @@
 #
 # $Id$
 #
-TARGET	= kickstart pegasus-keg pegasus-cluster invoke # free
+TARGET	= pegasus-kickstart pegasus-keg pegasus-cluster invoke # free
 CONDOR_VERSION	= $(shell condor_version | awk '{ print $2; exit }')
 MARCH   = $(shell uname -m | tr '[A-Z]' '[a-z]')
 

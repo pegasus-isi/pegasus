@@ -1,0 +1,8 @@
+#!/bin/sh
+gmake distclean
+gmake EXTRACFLAGS='$(V7FLAGS)' pegasus-kickstart
+mv pegasus-kickstart pegasus-kickstart.sparcv7
+gmake clean
+gmake EXTRACFLAGS='$(V9FLAGS)' pegasus-kickstart
+mv pegasus-kickstart pegasus-kickstart.sparcv9
+gmake clean

@@ -398,7 +398,7 @@
       <exclude name="*.cmd"/>
       <exclude name="*-free"/>
       <exclude name="T2"/>
-      <exclude name="kickstart"/>
+      <exclude name="pegasus-kickstart"/>
       <exclude name="k.2"/>
       <exclude name="pegasus-keg"/>
       <exclude name="guc"/>

@@ -9,43 +9,44 @@
 .\" some other similar material which is provided with the Software (if
 .\" any).
 .\"
-.\" Copyright 1999-2004 University of Chicago and The University of
+.\" Copyright 1999-2011 University of Chicago and The University of
 .\" Southern California. All rights reserved.
 .\"
 .\" $Id$
 .\"
 .\" Authors: Jens-S. Vöckler, Yong Zhao
 .\"
-.TH "kickstart" "1" "3.1.0" "Pegasus WMS"
+.TH "pegasus\-kickstart" "1" "3.1.0" "Pegasus WMS"
 .SH "NAME"
-kickstart \- run an executable in a more universal environment.
+pegasus\-kickstart \- run an executable in a more universal environment.
 .SH "SYNTAX"
-.B kickstart
-[\-n\~tr] [\-N\~dv] [\-H] [\-R site] [\-W | \-w\~dir] [\-L\~lbl \-T\~iso]
- [\-s [l=]p | @fn] [\-S [l=]p | @fn] [\-i\~fn] [\-o\~fn] [\-e\~fn] [\-X] 
- [\-l\~fn\~sz] [\-F] (\-I fn | app [appflags] )
+.B pegasus\-kickstart
+[\-n\~tr] [\-N\~dv] [\-H] [\-R site] [\-W | \-w\~dir]
+ [\-L\~lbl \-T\~iso] [\-s [l=]p | @fn] [\-S [l=]p | @fn] [\-i\~fn]
+ [\-o\~fn] [\-e\~fn] [\-X] [\-l\~fn\~sz] [\-F] (\-I fn | app [appflags] )
 .br
-.B kickstart
+.B pegasus\-kickstart
 \-V
 .SH "DESCRIPTION"
 The 
-.B kickstart 
-executable is a light-weight program which connects the
+.B pegasus\-kickstart 
+executable is a light wrapper program which connects the
 .IR stdin ,
 .I stdout
 and 
 .I stderr
-filehandles for grid jobs on the remote site. 
+filehandles for grid jobs on the remote site, and reports back the
+remote application termination condition. 
 .PP 
 Sitting in between the remote scheduler and the executable, it is
 possible for
-.B kickstart 
+.B pegasus\-kickstart 
 to gather additional information about the executable run-time behavior
 and resource usage, including the exit status of jobs. This information
 is important for the Pegasus invocation tracking as well as to Condor
 DAGMan's awareness of Globus job failures.
 .PP
-.B Kickstart
+.B Pegasus\-kickstart
 allows the optional execution of jobs before and after the main
 application job that run in chained execution with the main application
 job. See section
@@ -94,15 +95,15 @@ only the name portion being mandatory.
 There is no default. If no value is given, "null" will be reported.
 .TP
 .B \-H 
-This option avoids kickstart writing the XML preamble (entity), if you 
-need to combine multiple kickstart records into one document. 
+This option avoids pegasus\-kickstart writing the XML preamble (entity), if you 
+need to combine multiple pegasus\-kickstart records into one document. 
 .IP
 Additionally, if specified, the environment and the resource usage
 segments will not be written, assuming that a in a concatinated
 record version, the initial run will have captured those settings. 
 .TP
 .B \-R site
-In order to provide the greater picture, kickstart can reflect the
+In order to provide the greater picture, pegasus\-kickstart can reflect the
 site handle (resource identifier) into its output. 
 .IP
 There is no default. If no value is given, the attribute will not be
@@ -183,12 +184,12 @@ There is no default.
 .TP
 .B \-i fn
 This option allows 
-.B kickstart
+.B pegasus\-kickstart
 to re-connect the stdin of the application that it starts. Use a single
 hyphen to share 
 .I stdin 
 with the one provided to 
-.BR kickstart .
+.BR pegasus\-kickstart .
 .IP
 The default is to connect 
 .I stdin
@@ -197,7 +198,7 @@ to
 .TP
 .B \-o fn
 This option allows 
-.B kickstart
+.B pegasus\-kickstart
 to re-connect the 
 .I stdout 
 of the application that it starts. The mode is used whenever an application
@@ -211,9 +212,9 @@ is used to propagate the invocation record back to the submit site. Use
 the single hyphen to share the application's
 .I stdout 
 with the one that is provided to 
-.BR kickstart .
+.BR pegasus\-kickstart .
 In that case, the output from
-.B kickstart
+.B pegasus\-kickstart
 will interleave with application output. For this reason, such a mode
 is not recommended.
 .IP
@@ -223,14 +224,14 @@ as part of the results, it is the default to connect the
 .I stdout 
 of the application to a temporary file. The content of this temporary
 file will be transferred as payload data in the
-.B kickstart
+.B pegasus\-kickstart
 results. The content size is subject to payload limits, see the
 .B \-B 
 option. If the content grows large, only an initial portion will become
 part of the payload. If the temporary file grows too large, it may flood
 the worker node's temporary space. The temporary file will be deleted
 after
-.B kickstart
+.B pegasus\-kickstart
 finishes.
 .IP
 If the filename is prefixed with an exclaimation point, the file will
@@ -243,7 +244,7 @@ to a temporary file.
 .TP
 .B \-e fn
 This option allows 
-.B kickstart
+.B pegasus\-kickstart
 to re-connect the 
 .I stderr
 of the application that it starts. This option is used whenever an
@@ -253,14 +254,14 @@ that needs tracking by Pegasus. The real
 .I stderr
 of Globus jobs is staged via GASS (GT2) or RFT (GT4). It is used to
 propagate abnormal behaviour from both,
-.B kickstart
+.B pegasus\-kickstart
 and the application that it starts, though its main use is to propagate
 application dependent data and heartbeats. Use a single hyphen to share
 .I stderr 
 with the 
 .I stderr
 that is provided to 
-.BR kickstart .
+.BR pegasus\-kickstart .
 This is the backward compatible behavior.
 .IP
 In order to provide an uncaptured 
@@ -269,11 +270,11 @@ as part of the results, by default the
 .I stderr 
 of the application will be connected to a temporary file. Its content is
 transferred as payload data in the
-.B kickstart
+.B pegasus\-kickstart
 results. If too large, only the an initial portion will become part of
 the payload. If the temporary file grows too large, it may flood the
 worker node's temporary space. The temporary file will be deleted after
-.B kickstart
+.B pegasus\-kickstart
 finishes.
 .IP
 If the filename is prefixed with an exclaimation point, the file will
@@ -293,18 +294,18 @@ is normally used to stream back the results. Usually, this is a
 GASS-staged stream. Use a single hyphen to generate the output on the
 .I stdout 
 that was provided to
-.BR kickstart ,
+.BR pegasus\-kickstart ,
 the default behavior.
 .IP
 Default is to append the invocation record onto the provided
 .IR stdout .
 .TP
 .B \-w dir
-permits the explicit setting of a new working directory once kickstart
+permits the explicit setting of a new working directory once pegasus\-kickstart
 is started. This is useful in a remote scheduling environment, when the
 chosen working directory is not visible on the job submitting host. If
 the directory does not exist,
-.B kickstart
+.B pegasus\-kickstart
 will fail. This option is mutually exclusive with the 
 .I \-W dir 
 option.
@@ -314,10 +315,10 @@ in. This is usually set up by a remote scheduling environment.
 .TP
 .B \-W dir
 permits the explicit creation and setting of a new working directory
-once kickstart is started. This is useful in a remote scheduling
+once pegasus\-kickstart is started. This is useful in a remote scheduling
 environment, when the chosen working directory is not visible on the job
 submitting host. If the directory does not exist,
-.B kickstart
+.B pegasus\-kickstart
 will attempt to create it, and then change into it. Both, creation and
 directory change may still fail. This option is mutually exclusive with
 the  
@@ -349,7 +350,7 @@ descriptors
 and 
 .I stderr
 remain untracked, 
-.B kickstart
+.B pegasus\-kickstart
 tracks that output in temporary files. The first few pages from this
 output is copied into a data section in the output. In order to resize
 the length of the output within reasonable boundaries, this option
@@ -359,7 +360,7 @@ truncated.
 Warning: This is not a cheap way to obtain the stdio file handle data.
 Please use tracked files for that. Due to output buffer pre-allocation,
 using arbitrary large arguments may result in failures of 
-.B kickstart
+.B pegasus\-kickstart
 itself to allocate the necessary memory. 
 .IP
 The default maximum size of the data section is 262144 byte. 
@@ -387,7 +388,7 @@ maximum possible commandline length of the underlying operationg system,
 e.g. 128k for Linux. Using the 
 .B \-I
 mode stops any further commandline processing of 
-.B kickstart
+.B pegasus\-kickstart
 command lines. 
 .IP
 Default is to use the 
@@ -402,27 +403,27 @@ application is a mandatory option.
 .B appflags
 Application may or may not have additional flags.
 .SH "RETURN VALUE"
-.B kickstart
+.B pegasus\-kickstart
 will return the return value of the main job. In addition, the error
 code 127 signals that the call to exec failed, and 126 that reconnecting
 the stdio failed. A job failing with the same exit codes is indistinguishable 
 from
-.B kickstart
+.B pegasus\-kickstart
 failures.
 .SH "SEE ALSO"
+.BR pegasus\-plan (1),
 .BR condor_submit_dag (1),
 .BR condor_submit (1),
-.BR getrusage (3c),
-.BR gencdag (1).
+.BR getrusage (3c).
 .PP
-.BR https://pegasus.isi.edu/wms/docs/schemas/iv-2.1/iv-2.1.html ,
+.BR http://pegasus.isi.edu/wms/docs/schemas/iv-2.1/iv-2.1.html ,
 .br
-.BR https://pegasus.isi.edu/wms/ link Documentation.
+.BR http://pegasus.isi.edu/documentation
 .SH "SUBJOBS"
 Subjobs are a new feature and may have a few wrinkles left.
 .PP
 In order to allow specific setups and assertion checks for compute nodes,
-.B kickstart
+.B pegasus\-kickstart
 allows the optional execution of a 
 .IR prejob .
 This
@@ -456,7 +457,7 @@ clean-up job is not meant to affect the progress of the remote workflow
 The setup-, pre-, and post- and cleanup-job run on the same compute node
 as the main job to execute. However, since they run in separate
 processes as children of
-.BR kickstart , 
+.BR pegasus\-kickstart , 
 they are unable to influence each others nor the main jobs environment
 settings.
 .PP
@@ -552,7 +553,7 @@ The variable substitution assumptions for the main job differ
 slightly from the prejob and postjob for technical reasions. The pre-
 and postjob commandlines are passed as one string. However, the main
 jobs commandline is already split into pieces by the time it reaches
-.BR kickstart .
+.BR pegasus\-kickstart .
 Thus, any whitespace on the main job's commandline must be preserved,
 and further argument splitting avoided.
 .PP
@@ -566,11 +567,11 @@ needed to achieve variable substitution.
 A long-running application may consider to stream back heart beats
 and other application-specific monitoring and progress data. For this
 reason, 
-.I kickstart
+.I pegasus\-kickstart
 provides a feedback channel. At start-up, a transient named pipe,
 also known as FIFO, is created. While waiting for started jobs to
 finish, 
-.I kickstart
+.I pegasus\-kickstart
 will attempt to read from the FIFO. By default, any information read
 will be encapsulated in XML tags, and written to 
 .I stderr .
@@ -580,7 +581,7 @@ will be GASS streamed or staged to the submit host. At the submit host, an
 application specific monitor may unpack the data chunks and could
 for instance visually display them, or aggregate them with other
 data. Please note that
-.I kickstart
+.I pegasus\-kickstart
 only provides a feedback channel. The content and interpretation
 is up to, and specific for the application. 
 .PP
@@ -593,7 +594,7 @@ must be prepared to handle the PIPE signal when writing to a FIFO,
 and must be able to cope with failing write operations. 
 .SH "EXAMPLE"
 You can run the
-.B kickstart
+.B pegasus\-kickstart
 executable locallly to verify that it is functioning well. In the
 initial phase, the format of the performance data may be slightly
 adjusted.
@@ -601,7 +602,7 @@ adjusted.
 \f(CB
 $ env GRIDSTART_PREJOB='/bin/usleep 250000' \\
   GRIDSTART_POSTJOB='/bin/date -u' \\
-  kickstart -l xx \\$PEGASUS_HOME/bin/keg -T1 -o-
+  pegasus\-kickstart -l xx \\$PEGASUS_HOME/bin/keg -T1 -o-
 $ cat xx
 <?xml version="1.0" encoding="ISO-8859-1"?>
   ...
@@ -625,9 +626,9 @@ socket file descriptor, though.
 .PP
 The file descriptors reported for the temporary files are from the 
 perspective of 
-.BR kickstart .
+.BR pegasus\-kickstart .
 Since the temporary files have the close-on-exec flag set, 
-.BR kickstart 's
+.BR pegasus\-kickstart 's
 filedescriptors are invisible to the job processes. Still, the 
 .I stdio
 of the job processes are connected to the temporary files.
@@ -639,9 +640,9 @@ NFS) are atomically written.
 The current format of the performance data is as follows:
 .SH "OUTPUT FORMAT"
 Refer to
-.B https://pegasus.isi.edu/wms/docs/schemas/iv-2.1/iv-2.1.html
+.B http://pegasus.isi.edu/wms/docs/schemas/iv-2.1/iv-2.1.html
 for an up-to-date description of elements and their attributes. Check with
-.B https://pegasus.isi.edu/wms/schema.php
+.B http://pegasus.isi.edu/documentation
 for invocation schemas with a higher version number.
 .SH "RESTRICTIONS"
 There is no version for the Condor
@@ -649,7 +650,7 @@ There is no version for the Condor
 universe. It is simply not possible within the constraints of Condor. 
 .PP
 Due to its very nature,
-.B kickstart
+.B pegasus\-kickstart
 will also prove difficult to port outside the Unix environment.
 .PP
 Any of the pre-, main-, cleanup and postjob are unable to influence one anothers
@@ -665,7 +666,7 @@ overflow the maximum space, and cause applications to fail. If you suspect
 to work with many argument, try an argument-file based approach.
 .PP
 A job failing with exit code 126 or 127 is indistinguishable from
-.B kickstart
+.B pegasus\-kickstart
 failing with the same exit codes. Sometimes, careful examination of the
 returned data can help.
 .PP
@@ -674,11 +675,11 @@ data, simultaneous appends on a shared filesystem from different
 machines may still mangle data. Currently, file locking is not even
 attempted, although all data is written atomically from the perspective
 of 
-.BR kickstart .
+.BR pegasus\-kickstart .
 .PP
 The upper limit of characters of commandline characters is currently not 
 checked by 
-.BR kickstart .
+.BR pegasus\-kickstart .
 Thus, some variable substitutions could potentially result in a
 commandline that is larger than permissable.
 .PP
@@ -692,7 +693,7 @@ the resulting file will still be truncated. This is correct behavior,
 but sometimes not obvious.
 .SH "FILES"
 .TP
-.B $PEGASUS_HOME/etc/iv-2.1.xsd
+.B /usr/share/pegasus/schema/iv-2.1.xsd
 is the suggested location of the latest XML schema describing the data
 on the submit host.
 .SH "ENVIRONMENT VARIABLES"

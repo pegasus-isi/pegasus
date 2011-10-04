@@ -109,7 +109,7 @@ CFLAGS += -D${SYSTEM} -DMAJOR=${MAJOR} -DWITH_NEW_ARGS=1 # -DSOCKLEN=${SOCKLEN}
 ifneq (,${SOCKIO})
 CFLAGS += -DHAS_SYS_SOCKIO=1
 endif
-GENDOC = kickstart.html kickstart.txt kickstart.ps
+GENDOC = pegasus-kickstart.html pegasus-kickstart.txt pegasus-kickstart.ps
 CFLAGS += -DUSE_PARSE=1 # -ggdb
 
 # add large file support
@@ -130,9 +130,9 @@ endif
 %.o : %.c
 	$(CC) $(CFLAGS) $< -c -o $@
 
-all : kickstart $(GENDOC)
+all : pegasus-kickstart $(GENDOC)
 
-kickstart: debug.o getif.o rwio.o tools.o useinfo.o mynss.o statinfo.o event.o jobinfo.o limitinfo.o $(EXTRA_OBJ) machine.o appinfo.o parse.o mysystem.o mylist.o invoke.o kickstart.o
+pegasus-kickstart: debug.o getif.o rwio.o tools.o useinfo.o mynss.o statinfo.o event.o jobinfo.o limitinfo.o $(EXTRA_OBJ) machine.o appinfo.o parse.o mysystem.o mylist.o invoke.o pegasus-kickstart.o
 	$(LD) $(EXTRA_LDFLAGS) $(CFLAGS) $^ -o $@ $(LOADLIBES)
 show-if: show-if.o getif.o debug.o
 	$(LD) $(EXTRA_LDFLAGS) $(CFLAGS) $^ -o $@ $(LOADLIBES)
@@ -148,8 +148,9 @@ getif.o: getif.c debug.h getif.h
 invoke.o: invoke.c invoke.h
 jobinfo.o: jobinfo.c getif.h debug.h tools.h useinfo.h jobinfo.h \
   statinfo.h parse.h
-kickstart.o: kickstart.c rwio.h debug.h appinfo.h statinfo.h jobinfo.h \
-  limitinfo.h machine.h mysystem.h mylist.h invoke.h tools.h
+pegasus-kickstart.o: pegasus-kickstart.c rwio.h debug.h appinfo.h \
+  statinfo.h jobinfo.h limitinfo.h machine.h mysystem.h mylist.h \
+  invoke.h tools.h
 limitinfo.o: limitinfo.c debug.h tools.h limitinfo.h
 machine.o: machine.c machine.h machine/basic.h debug.h
 meminfo.o: meminfo.c meminfo.h debug.h
@@ -180,16 +181,16 @@ machine/linux.o: machine/linux.c machine/basic.c machine/linux.h \
 machine/darwin.o: machine/darwin.c machine/basic.c machine/darwin.h \
   machine/../tools.h
 
-$(GENDOC): kickstart.1
+$(GENDOC): pegasus-kickstart.1
 
-install: kickstart
-	$(INSTALL) -m 0755 kickstart $(prefix)/bin
+install: pegasus-kickstart
+	$(INSTALL) -m 0755 pegasus-kickstart $(prefix)/bin
 
 install.doc: $(GENDOC)
 	$(INSTALL) -m 0644 $(GENDOC) $(datadir)/man
 
-install.man: kickstart.1
-	$(INSTALL) -m 0644 kickstart.1 $(datadir)/man/man1
+install.man: pegasus-kickstart.1
+	$(INSTALL) -m 0644 pegasus-kickstart.1 $(datadir)/man/man1
 
 install.all: install install.man install.doc
 
@@ -199,4 +200,4 @@ clean:
 	$(RM) *.o machine/*.o $(GENDOC) core core.*
 
 distclean: clean
-	$(RM) kickstart fail test-post test-pre test-ascii show-if
+	$(RM) pegasus-kickstart fail test-post test-pre test-ascii show-if
