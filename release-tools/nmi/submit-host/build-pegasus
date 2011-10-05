@@ -348,12 +348,12 @@ sub test_worker
     # make sure we are not missing any expected files
     announce("Checking install for missing files");
     my @expected_files = (
-        'bin/pegasus-dirmanager',
-        'bin/keg',
-        'bin/kickstart',
         'bin/pegasus-cleanup',
+        'bin/pegasus-cluster',
+        'bin/pegasus-create-dir',
+        'bin/pegasus-keg',
+        'bin/pegasus-kickstart',
         'bin/pegasus-transfer',
-        'bin/seqexec',
     );
     foreach my $efile (@expected_files) {
         my $msg = "Checking install for $efile...";
