@@ -285,7 +285,10 @@ public class Bundle extends Default {
                                       Implementation implementation ){
 
         String jobName    = job.getName();
-        String siteHandle = job.getSiteHandle();
+
+//      instead of site handle now we refer to the staging site handle
+//        String siteHandle = job.getSiteHandle();
+        String siteHandle = job.getStagingSiteHandle();
         String key = null;
         String par = null;
         int bundle = -1;
@@ -481,7 +484,11 @@ public class Bundle extends Default {
         boolean makeRNode = !regFiles.isEmpty();
 
         int level   = job.getLevel();
-        String site = job.getSiteHandle();
+
+        //      instead of site handle now we refer to the staging site handle
+//        String site = job.getSiteHandle();
+        String site = job.getStagingSiteHandle();
+
         int bundle = bundleValue.determine( this.mTXStageOutImplementation, job );
 
         if ( level != mCurrentSOLevel ){
@@ -622,6 +629,7 @@ public class Bundle extends Default {
                 //mDag.addNewJob(tc.getName());
                 //we just need the execution pool in the job object
                 job.executionPool = key;
+                job.setStagingSiteHandle( key );
 
                 String site = localTransfer ? "local" : job.getSiteHandle();
                 
@@ -703,6 +711,8 @@ public class Bundle extends Default {
             for( Iterator it = map.values().iterator(); it.hasNext(); ){
                 PoolTransfer pt = ( PoolTransfer ) it.next();
                 job.setSiteHandle( pt.mPool );
+                job.setStagingSiteHandle( pt.mPool );
+                
                 //site is where transfer job runs
                 String site = localTransfer ? "local" : job.getSiteHandle();
 

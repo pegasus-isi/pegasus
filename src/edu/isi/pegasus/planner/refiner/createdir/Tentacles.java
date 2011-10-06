@@ -20,7 +20,6 @@ package edu.isi.pegasus.planner.refiner.createdir;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.TransferJob;
-import edu.isi.pegasus.planner.classes.TransferJob;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 
 import edu.isi.pegasus.common.logging.LogManager;
@@ -88,11 +87,20 @@ public class Tentacles extends AbstractStrategy {
             jobName = job.getName();
             pool    = job.getSiteHandle();
 
+            //for chmod jobs skip adding any edges.
+            //for 3.2 not clear if we will have any chmod jobs or not
+            if( job.getJobType() == Job.CHMOD_JOB ){
+                continue;
+                //parent = getCreateDirJobName( dag, job.getSiteHandle() );
+            }
+            else{
+
             //the parent in case of a transfer job
             //is the non third party site
             parent = (job instanceof TransferJob)?
                     getCreateDirJobName( dag, ((TransferJob)job).getNonThirdPartySite()):
-                    getCreateDirJobName( dag, pool);
+                    getCreateDirJobName( dag, job.getStagingSiteHandle() );
+            }
 
             //put in the dependency only for transfer jobs that stage in data
             //or are jobs running on remote sites
