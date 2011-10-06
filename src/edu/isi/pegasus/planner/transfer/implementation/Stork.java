@@ -191,7 +191,7 @@ public class Stork extends AbstractSingleFTPerXFERJob {
         //the non third party site for the transfer job is
         //always the job execution site for which the transfer
         //job is being created.
-        txJob.setNonThirdPartySite(job.getSiteHandle());
+        txJob.setNonThirdPartySite( job.getStagingSiteHandle() );
 
 
         //we first check if there entry for transfer universe,
