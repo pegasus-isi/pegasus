@@ -64,8 +64,9 @@ import edu.isi.pegasus.planner.code.GridStartFactory;
 
 
 import edu.isi.pegasus.planner.classes.Job;
+
 import edu.isi.pegasus.planner.common.PegasusConfiguration;
-import edu.isi.pegasus.planner.common.PegasusConfiguration;
+
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.parser.Parser;
 import edu.isi.pegasus.planner.parser.dax.DAXParser;
@@ -93,7 +94,6 @@ import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.LinkedList;
 
-import java.util.Properties;
 import java.util.Set;
 import java.io.BufferedReader;
 import java.io.FilenameFilter;
@@ -241,7 +241,7 @@ public class CPlanner extends Executable{
         double execTime  = -1;
 
         try{
-        	cPlanner.initialize(args , '6');
+            cPlanner.initialize(args , '6');
             cPlanner.executeCommand();
         }
         catch ( FactoryException fe){
@@ -763,7 +763,7 @@ public class CPlanner extends Executable{
         options.setOriginalArgString( args );
         
         Getopt g = new Getopt("pegasus-plan",args,
-                              "vqhfSnzpVr::aD:d:s:o:P:c:C:b:g:2:j:3:F:X:4:5:6:7",
+                              "vqhfSnzpVr::aD:d:s:o:P:c:C:b:g:2:j:3:F:X:4:5:6:78:9:",
                               longOptions,false);
         g.setOpterr(false);
 
@@ -909,6 +909,9 @@ public class CPlanner extends Executable{
                     options.setExecutionSites( g.getOptarg() );
                     break;
 
+                case '9'://staging-sites
+                    options.addToStagingSitesMappings( g.getOptarg() );
+                    break;
 
                 case 'v'://verbose
                     options.incrementLogging();
@@ -929,6 +932,8 @@ public class CPlanner extends Executable{
 
             }
         }
+
+
         return options;
 
     }
@@ -1097,7 +1102,7 @@ public class CPlanner extends Executable{
      * options
      */
     public LongOpt[] generateValidOptions(){
-        LongOpt[] longopts = new LongOpt[31];
+        LongOpt[] longopts = new LongOpt[32];
 
         longopts[0]   = new LongOpt( "dir", LongOpt.REQUIRED_ARGUMENT, null, '8' );
         longopts[1]   = new LongOpt( "dax", LongOpt.REQUIRED_ARGUMENT, null, 'd' );
@@ -1133,6 +1138,7 @@ public class CPlanner extends Executable{
         longopts[28]  = new LongOpt( "quiet", LongOpt.NO_ARGUMENT, null, 'q' );
         longopts[29]  = new LongOpt( "inherited-rc-files", LongOpt.REQUIRED_ARGUMENT, null, '5' );
         longopts[30]  = new LongOpt( "force-replan" , LongOpt.NO_ARGUMENT, null, '7' );
+        longopts[31]  = new LongOpt( "staging-site", LongOpt.REQUIRED_ARGUMENT, null, '9' );
         return longopts;
     }
 
@@ -1167,7 +1173,7 @@ public class CPlanner extends Executable{
            "\n " + getGVDSVersion() +
            "\n pegasus-plan - The main class which is used to run  Pegasus. "  +
            "\n Usage: pegasus-plan [-Dprop  [..]] --dax|--pdax <file> [--sites <execution sites>] " +
-           "\n [--authenticate] [--basename prefix] [--cache f1[,f2[..]] [--cluster t1[,t2[..]] [--conf <path to property file>]" +
+           "\n [--staging-site s1=ss1[,s2=ss2[..]] [--basename prefix] [--cache f1[,f2[..]] [--cluster t1[,t2[..]] [--conf <path to property file>]" +
            "\n [--dir <dir for o/p files>] [--force] [--force-replan] [--forward option=[value] ] [--group vogroup] [--nocleanup] " +
            "\n [--output output site] [--randomdir=[dir name]]   [--verbose] [--version][--help] " +
            "\n" +
@@ -1198,7 +1204,7 @@ public class CPlanner extends Executable{
            "\n                    can optionally specify the basename of the remote directories" +
            "\n -n |--nocleanup    generates only the separate cleanup workflow. Does not add cleanup nodes to the concrete workflow." +
            "\n -S |--submit       submit the executable workflow generated" +
-           "\n --conf             path to  property file" +
+           "\n --staging-site     comma separated list of key=value pairs, where key is the execution site and value is the staging site" +
            "\n -v |--verbose      increases the verbosity of messages about what is going on" +
            "\n -q |--quiet        decreases the verbosity of messages about what is going on" +
            "\n -V |--version      displays the version of the Pegasus Workflow Management System" +
@@ -1761,6 +1767,9 @@ public class CPlanner extends Executable{
         /* always load local site */
         Set<String> toLoad = new HashSet<String>( sites );
         toLoad.add( "local" );
+
+        /* for time being load isi_wind always*/
+        toLoad.add( "isi_viz" );
 
         
         /* load the sites in site catalog */

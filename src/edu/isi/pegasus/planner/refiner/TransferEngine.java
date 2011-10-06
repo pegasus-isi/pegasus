@@ -127,14 +127,7 @@ public class TransferEngine extends Engine {
      */ 
     private Map<String, NameValue> mSRMServiceURLToMountPointMap;
 
-    /**
-     * The classname of the class that stores the file transfer information for
-     * a transfer object.
-     *
-     * @see org.griphyn.cPlanner.classes.FileTransfer
-     */
-    private static final String FILE_TX_CLASS_NAME =
-        "org.griphyn.cPlanner.classes.FileTransfer";
+   
 
     /**
      * The DAG object to which the transfer nodes are to be added. This is the
@@ -480,14 +473,16 @@ public class TransferEngine extends Engine {
 
 
     /**
-     * Returns the staging site to be used for a job
+     * Returns the staging site to be used for a job. If a staging site is not
+     * determined from the options it is set to be the execution site for the job
      *
      * @param job  the job for which to determine the staging site
      *
-     * @return
+     * @return the staging site
      */
     public String getStagingSite( Job job ){
-        return "local";
+        String ss =  this.mPOptions.getStagingSite( job.getSiteHandle() );
+        return (ss == null) ? job.getSiteHandle(): ss;
     }
 
     /**

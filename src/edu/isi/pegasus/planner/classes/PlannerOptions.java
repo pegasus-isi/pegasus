@@ -30,6 +30,8 @@ import java.util.StringTokenizer;
 import java.util.Properties;
 
 import edu.isi.pegasus.common.util.Currently;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Holds the information about thevarious options which user specifies to
@@ -254,6 +256,11 @@ public class PlannerOptions extends Data implements Cloneable{
     private String mOriginalArgumentString;
 
     /**
+     * A map that maps an execution site to a staging site.
+     */
+    private Map<String,String> mStagingSitesMap;
+
+    /**
      * Default Constructor.
      */
     public PlannerOptions(){
@@ -293,6 +300,7 @@ public class PlannerOptions extends Data implements Cloneable{
         mProperties       = new Properties();
         mForceReplan      = false;
         mOriginalArgumentString = null;
+        mStagingSitesMap  = new HashMap<String,String>();
     }
 
     /**
@@ -1173,6 +1181,77 @@ public class PlannerOptions extends Data implements Cloneable{
     public Set<String> getNonStandardJavaOptions( ){
         return this.mNonStandardJavaOptions;
     }
+
+    /**
+     * Adds to the staging sites
+     *
+     * @param value    comma separated key=value pairs where key is execution site
+     *                 and value is the staging site to use for that execution site
+     */
+    public void addToStagingSitesMappings( String value ) {
+        if( value == null ){
+            //do nothing
+            return;
+        }
+
+        for( String kvstr : value.split( "," ) ){
+            //kvstr  is of form key=value
+            String[] kv = kvstr.split( "=" );
+            if ( kv.length == 1 ){
+                //add a * notation
+                this.mStagingSitesMap.put( "*", kv[0] );
+            }
+            else{
+                this.mStagingSitesMap.put( kv[0], kv[1] );
+            }
+        }
+
+    }
+
+
+    /**
+     * Returns the staging site for an execution site.
+     *
+     * @param executionSite   the execution site
+     *
+     * @return  the staging site corresponding to an execution site, else null
+     */
+    public String getStagingSite( String executionSite ){
+
+        return ( this.mStagingSitesMap.containsKey( executionSite ) ?
+                 this.mStagingSitesMap.get( executionSite )://the mapping for the execution site
+                 this.mStagingSitesMap.get( "*" ) //the value for the star site if specified
+               );
+    }
+
+
+    /**
+     * Convers the staging site mappings to comma separated list of
+     * executionsite=stagingsite mappings
+     *
+     * @return mappings as string
+     */
+    protected String stagingSiteMappingToString(){
+        StringBuffer sb = new StringBuffer();
+
+        for( Map.Entry<String,String> entry : this.mStagingSitesMap.entrySet() ){
+            String eSite = entry.getKey();
+            String sSite = entry.getValue();
+            if( eSite.equals( "*" ) ){
+                //for a star notation just add the corresponding staging site
+                sb.append( sSite );
+            }
+            else{
+                sb.append( eSite ).
+                   append( "=" ).
+                   append( sSite );
+            }
+            sb.append( "," );
+        }
+
+        return sb.toString();
+    }
+
     
     /**
      * Returns the textual description of all the options that were set for
@@ -1190,7 +1269,8 @@ public class PlannerOptions extends Data implements Cloneable{
                     "\n Jobname Prefix       " + mJobPrefix +
                     "\n Abstract Dag File    " + mDAXFile +
                     "\n Partition File       " + mPDAXFile +
-                    "\n Execution Pools      " + this.setToString(mvExecPools,",")+
+                    "\n Execution Sites      " + this.setToString(mvExecPools,",")+
+                    "\n Staging Sites        " + this.stagingSiteMappingToString() +
                     "\n Cache Files          " + this.setToString(mCacheFiles,",") +
                     "\n Inherited RC Files   " + this.setToString(mInheritedRCFiles,",") +
                     "\n Output Pool          " + mOutputPool +
@@ -1246,6 +1326,11 @@ public class PlannerOptions extends Data implements Cloneable{
             //generate the comma separated string
             //for the execution pools
             sb.append(setToString(mvExecPools,","));
+        }
+
+        if( !this.mStagingSitesMap.isEmpty() ){
+            sb.append( "--staging-site " ).
+               append( this.stagingSiteMappingToString() );
         }
 
         //cache files
@@ -1416,6 +1501,7 @@ public class PlannerOptions extends Data implements Cloneable{
         pOpt.mDAXFile        = this.mDAXFile;
         pOpt.mPDAXFile       = this.mPDAXFile;
         pOpt.mvExecPools     = cloneSet(this.mvExecPools);
+        pOpt.mStagingSitesMap = new HashMap<String,String>( this.mStagingSitesMap );
         pOpt.mCacheFiles     = cloneSet(this.mCacheFiles);
         pOpt.mInheritedRCFiles       = cloneSet(this.mInheritedRCFiles);
         pOpt.mNonStandardJavaOptions = cloneSet( this.mNonStandardJavaOptions );
@@ -1515,6 +1601,9 @@ public class PlannerOptions extends Data implements Cloneable{
 
         return absPath;
     }
+
+ 
+
 
 
 
