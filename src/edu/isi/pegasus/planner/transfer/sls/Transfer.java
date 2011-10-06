@@ -359,7 +359,7 @@ public class Transfer   implements SLS {
      * @param job           job for which the file is being created
      * @param fileName      name of the file that needs to be written out.
      * @param submitDir     submit directory where it has to be written out.
-     * @param headNodeDirectory    directory on the head node of the compute site.
+     * @param stagingSiteDirectory    directory on the head node of the staging site.
      * @param workerNodeDirectory  worker node directory
      *
      * @return the full path to lof file created, else null if no file is
@@ -368,7 +368,7 @@ public class Transfer   implements SLS {
     public File generateSLSInputFile( Job job,
                                       String fileName,
                                       String submitDir,
-                                      String headNodeDirectory,
+                                      String stagingSiteDirectory,
                                       String workerNodeDirectory ) {
 
         //sanity check
@@ -386,7 +386,7 @@ public class Transfer   implements SLS {
         //and the working directory on it.
         //the below should be cached somehow
         String sourceURLPrefix = mSiteStore.lookup( job.getSiteHandle() ).getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix( );
-        String sourceDir = headNodeDirectory;
+        String sourceDir = stagingSiteDirectory;
         String destDir = workerNodeDirectory;
 
 
@@ -450,18 +450,19 @@ public class Transfer   implements SLS {
      * @param job the job for which the file is being created
      * @param fileName the name of the file that needs to be written out.
      * @param submitDir the submit directory where it has to be written out.
-     * @param headNodeDirectory the directory on the head node of the
-     *   compute site.
+     * @param stagingSiteDirectory the directory on the head node of the
+     *   staging site.
      * @param workerNodeDirectory the worker node directory
      *
      * @return the full path to lof file created, else null if no file is
      *   written out.
      *
      */
-    public File generateSLSOutputFile(Job job, String fileName,
-                                      String submitDir,
-                                      String headNodeDirectory,
-                                      String workerNodeDirectory) {
+    public File generateSLSOutputFile( Job job,
+                                       String fileName,
+                                       String submitDir,
+                                       String stagingSiteDirectory,
+                                       String workerNodeDirectory ) {
 
 
         //sanity check
@@ -478,7 +479,7 @@ public class Transfer   implements SLS {
         //and the working directory on it.
         //the below should be cached somehow
         String destURLPrefix = mSiteStore.lookup( job.getSiteHandle() ).getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix();
-        String destDir = headNodeDirectory;
+        String destDir = stagingSiteDirectory;
         String sourceDir = workerNodeDirectory;
 
 

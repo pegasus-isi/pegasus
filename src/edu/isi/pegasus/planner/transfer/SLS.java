@@ -19,10 +19,7 @@ package edu.isi.pegasus.planner.transfer;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.Job;
 
-import edu.isi.pegasus.planner.code.GridStart;
 
-import edu.isi.pegasus.common.logging.LogManager;
-import edu.isi.pegasus.planner.common.PegasusProperties;
 
 import java.io.File;
 
@@ -39,7 +36,7 @@ public interface SLS {
     /**
      * The version associated with the API.
      */
-    public static final String VERSION = "1.0";
+    public static final String VERSION = "1.1";
 
     /**
      * Initializes the SLS implementation.
@@ -121,7 +118,7 @@ public interface SLS {
      * @param job        the job for which the file is being created
      * @param submitDir  the submit directory where it has to be written out.
      * @param fileName    the name of the file that needs to be written out.
-     * @param headNodeDirectory  the directory on the head node of the compute site.
+     * @param stagingSiteDirectory  the directory on the head node of the staging site.
      * @param workerNodeDirectory  the worker node directory
      *
      * @return the full path to lof file created, else null if no file is written out.
@@ -131,7 +128,7 @@ public interface SLS {
     public File generateSLSInputFile( Job job,
                                       String fileName,
                                       String submitDir,
-                                      String headNodeDirectory,
+                                      String stagingSiteDirectory,
                                       String workerNodeDirectory );
 
     /**
@@ -141,7 +138,7 @@ public interface SLS {
      * @param job        the job for which the file is being created
      * @param submitDir  the submit directory where it has to be written out.
      * @param fileName    the name of the file that needs to be written out.
-     * @param headNodeDirectory  the directory on the head node of the compute site.
+     * @param stagingSiteDirectory  the directory on the head node of the staging site.
      * @param workerNodeDirectory  the worker node directory
      *
      * @return the full path to lof file created, else null if no file is written out.
@@ -151,7 +148,7 @@ public interface SLS {
     public File generateSLSOutputFile( Job job,
                                        String fileName,
                                        String submitDir,
-                                       String headNodeDirectory,
+                                       String stagingSiteDirectory,
                                        String workerNodeDirectory );
 
 
@@ -187,7 +184,7 @@ public interface SLS {
      *
      * @param job                 the job to be modified.
      * @param headNodeURLPrefix   the url prefix for the server on the headnode
-     * @param headNodeDirectory   the directory on the headnode, where the input data is
+     * @param stagingSiteDirectory   the directory on the headnode, where the input data is
      *                            read from and the output data written out.
      * @param workerNodeDirectory the directory in the worker node tmp
      *

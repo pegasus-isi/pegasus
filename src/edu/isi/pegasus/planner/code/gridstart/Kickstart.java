@@ -185,7 +185,7 @@ public class Kickstart implements GridStart {
     private TransformationCatalog mTCHandle;
 
     /**
-     * The submit directory where the submit files are being generated for
+     * The submit exectionSiteDirectory where the submit files are being generated for
      * the workflow.
      */
     private String mSubmitDir;
@@ -315,7 +315,7 @@ public class Kickstart implements GridStart {
         
         boolean partOfClusteredJob = true;
         
-        //we want to evaluate the directory only once
+        //we want to evaluate the exectionSiteDirectory only once
         //for the clustered job
         String directory = ( mWorkerNodeExecution ) ? getWorkerNodeDirectory( job ) : null ;
         for (Iterator it = job.constituentJobsIterator(); it.hasNext(); ) {
@@ -340,7 +340,7 @@ public class Kickstart implements GridStart {
             //option -w to get kickstart to change directories
             if( mWorkerNodeExecution ){
 
-                //we want the constitutent jobs to run in the same directory
+                //we want the constitutent jobs to run in the same exectionSiteDirectory
                 //as the aggreagated job
                 constituentJob.vdsNS.construct( Pegasus.WORKER_NODE_DIRECTORY_KEY,
                                                 directory );
@@ -438,7 +438,7 @@ public class Kickstart implements GridStart {
      */
     protected boolean enable( Job job, boolean isGlobusJob, boolean stat, boolean addPostScript , boolean partOfClusteredJob) {
 
-        //take care of relative submit directory if specified.
+        //take care of relative submit exectionSiteDirectory if specified.
         String submitDir = mSubmitDir + mSeparator;
 //        String submitDir = getSubmitDirectory( mSubmitDir , constituentJob) + mSeparator;
 
@@ -550,23 +550,23 @@ public class Kickstart implements GridStart {
             
             
             //handle the -w option that asks kickstart to change
-            //directory before launching an executable.
+            //exectionSiteDirectory before launching an executable.
             if(job.vdsNS.getBooleanValue(Pegasus.CHANGE_DIR_KEY)  ){
 
                 
-                //check for removing the directory keys only if worker node
+                //check for removing the exectionSiteDirectory keys only if worker node
                 //execution is disabled and the constituent constituentJob is not enabled
                 //during clustering. JIRA Bug 80 and Bug 263
                 String directory = null;
                 String key = getDirectoryKey( job );
                 //we remove the key JIRA PM-80
                 directory = (String)job.condorVariables.removeKey( key );
-                //pass the directory as an argument to kickstart
+                //pass the exectionSiteDirectory as an argument to kickstart
                 gridStartArgs.append(" -w ").append( directory ).append(' ');
             }
 
             //handle the -W option that asks kickstart to create and change
-            //directory before launching an executable.
+            //exectionSiteDirectory before launching an executable.
             if(job.vdsNS.getBooleanValue(Pegasus.CREATE_AND_CHANGE_DIR_KEY ) ){
 	    
 //            Commented to take account of submitting to condor pool
@@ -579,14 +579,14 @@ public class Kickstart implements GridStart {
                 String key = getDirectoryKey( job );
                 //we remove the key JIRA PM-80
                 directory = (String)job.condorVariables.removeKey( key );
-                //pass the directory as an argument to kickstart
+                //pass the exectionSiteDirectory as an argument to kickstart
                 gridStartArgs.append(" -W ").append(directory).append(' ');
             }
 
             if(  /*!mEnablingPartOfAggregatedJob && */job.vdsNS.getBooleanValue(Pegasus.TRANSFER_PROXY_KEY) ){
                 String key = getDirectoryKey( job );
                 //just remove the remote_initialdir key
-                //the constituentJob needs to be run in the directory
+                //the constituentJob needs to be run in the exectionSiteDirectory
                 //Condor or GRAM decides to run
                 job.condorVariables.removeKey( key );
             }
@@ -699,7 +699,7 @@ public class Kickstart implements GridStart {
         else{
             if( this.mWorkerNodeExecution && job.userExecutablesStagedForJob() ){
                 //we need to put the path of the executable
-                //staged in the worker node temp directory
+                //staged in the worker node temp exectionSiteDirectory
                 //JIRA PM-20 and PM-68
                 gridStartArgs.append( this.getWorkerNodeDirectory( job ) ).append( File.separator ).
                               append( this.mSLS.doesCondorModifications() ?
@@ -750,7 +750,7 @@ public class Kickstart implements GridStart {
      *  be shipped.
      *
      * If the worker package is being deployed dynamically, then the path is set
-     * to the directory where the worker package is deployed.
+     * to the exectionSiteDirectory where the worker package is deployed.
      *
      * Else, we pick up the path from the site catalog that is passed as input
      *
@@ -792,7 +792,7 @@ public class Kickstart implements GridStart {
         else if( mDynamicDeployment &&
                  job.runInWorkDirectory()  ){
             //worker package deployment 
-            //any jobs that run in submit directory use local kickstart path
+            //any jobs that run in submit exectionSiteDirectory use local kickstart path
             //pick up the path from the transformation catalog of
             //dynamic deployment
             TransformationCatalogEntry entry = this.getTransformationCatalogEntry( job.getSiteHandle() );
@@ -917,9 +917,9 @@ public class Kickstart implements GridStart {
             //remove the remote or initial dir's for the compute jobs
             String key = getDirectoryKey( job );
 
-            String directory = (String)job.condorVariables.removeKey( key );
-
-            String workerNodeDir = getWorkerNodeDirectory( job );
+            String exectionSiteDirectory = (String)job.condorVariables.removeKey( key );
+            String stagingSiteDirectory  = mSiteStore.getExternalWorkDirectoryURL( job.getStagingSiteHandle() );
+            String workerNodeDir         = getWorkerNodeDirectory( job );
             
             //pass the worker node directory as an argument to kickstart
             //because most jobmanagers cannot handle worker node tmp
@@ -949,28 +949,28 @@ public class Kickstart implements GridStart {
             }
 
             //always have the remote dir set to /tmp as we are
-            //banking upon kickstart to change the directory for us
+            //banking upon kickstart to change the exectionSiteDirectory for us
             //For worker node execution we no longer set any key, as
             //it creates problems with condor file staging of proxy and
             //other things. Karan Oct 11th , 2010
             //constituentJob.condorVariables.construct( key, "/tmp" );
 
-            //see if we need to generate a SLS input file in the submit directory
+            //see if we need to generate a SLS input file in the submit exectionSiteDirectory
             File slsInputFile  = null;
             if( generateSLSFile && mSLS.needsSLSInput( job ) ){
-                //generate the sls file with the mappings in the submit directory
+                //generate the sls file with the mappings in the submit exectionSiteDirectory
                 slsInputFile = mSLS.generateSLSInputFile( job,
                                                           mSLS.getSLSInputLFN( job ),
                                                           mSubmitDir,
-                                                          directory,
+                                                          stagingSiteDirectory,
                                                           workerNodeDir );
 
-                //construct a setup constituentJob not reqd as kickstart creating the directory
+                //construct a setup constituentJob not reqd as kickstart creating the exectionSiteDirectory
                 //String setupJob = constructSetupJob( constituentJob, workerNodeDir );
                 //setupJob = quote( setupJob );
                 //constituentJob.envVariables.construct( this.KICKSTART_SETUP, setupJob );
 
-                File headNodeSLS = new File( directory, slsInputFile.getName() );
+                File headNodeSLS = new File( exectionSiteDirectory, slsInputFile.getName() );
                 String preJob = mSLS.invocationString( job, headNodeSLS );
 
 
@@ -1001,21 +1001,21 @@ public class Kickstart implements GridStart {
             }
 
 
-            //see if we need to generate a SLS output file in the submit directory
+            //see if we need to generate a SLS output file in the submit exectionSiteDirectory
             File slsOutputFile = null;
             if( generateSLSFile && mSLS.needsSLSOutput( job ) ){
                 //construct the postjob that transfers the output files
-                //back to head node directory
+                //back to head node exectionSiteDirectory
                 //to fix later. right now post constituentJob only created is pre constituentJob
                 //created
                 slsOutputFile = mSLS.generateSLSOutputFile( job,
                                                             mSLS.getSLSOutputLFN( job ),
                                                             mSubmitDir,
-                                                            directory,
+                                                            stagingSiteDirectory,
                                                             workerNodeDir );
 
                 //generate the post constituentJob
-                File headNodeSLS = new File( directory, slsOutputFile.getName() );
+                File headNodeSLS = new File( exectionSiteDirectory, slsOutputFile.getName() );
                 String postJob = mSLS.invocationString( job, headNodeSLS );
                 if( postJob != null ){
                     postJob = quote( postJob );
@@ -1027,7 +1027,7 @@ public class Kickstart implements GridStart {
             if ( !mSLS.modifyJobForWorkerNodeExecution( job,
                                                         //mSiteHandle.getURLPrefix( constituentJob.getSiteHandle() ),
                                                         mSiteStore.lookup( job.getSiteHandle() ).getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix(),    
-                                                        directory,
+                                                        exectionSiteDirectory,
                                                         workerNodeDir ) ){
 
                 throw new RuntimeException( "Unable to modify job " + job.getName() + " for worker node execution" );
@@ -1048,12 +1048,12 @@ public class Kickstart implements GridStart {
     
 
     /**
-     * Returns the directory in which the constituentJob executes on the worker node.
+     * Returns the exectionSiteDirectory in which the constituentJob executes on the worker node.
      *
      * 
      * @param constituentJob
      * 
-     * @return  the full path to the directory where the constituentJob executes
+     * @return  the full path to the exectionSiteDirectory where the constituentJob executes
      */
     public String getWorkerNodeDirectory( Job job ){
         //check for Pegasus Profile
@@ -1062,7 +1062,7 @@ public class Kickstart implements GridStart {
         }
         
         if( mSLS.doesCondorModifications() ){
-            //indicates the worker node directory is the directory
+            //indicates the worker node exectionSiteDirectory is the exectionSiteDirectory
             //in which condor launches the job
             // JIRA PM-380
             return ".";
@@ -1131,15 +1131,15 @@ public class Kickstart implements GridStart {
     }
     
     /**
-     * Returns the directory that is associated with the constituentJob to specify
-     * the directory in which the constituentJob needs to run
+     * Returns the exectionSiteDirectory that is associated with the constituentJob to specify
+     * the exectionSiteDirectory in which the constituentJob needs to run
      * 
      * @param constituentJob  the constituentJob
      * 
      * @return the condor key . can be initialdir or remote_initialdir
      */
     private String getDirectoryKey(Job job) {
-        /*String directory = (style.equalsIgnoreCase(Pegasus.GLOBUS_STYLE) ||
+        /*String exectionSiteDirectory = (style.equalsIgnoreCase(Pegasus.GLOBUS_STYLE) ||
                                 style.equalsIgnoreCase(Pegasus.GLIDEIN_STYLE) ||
                                 style.equalsIgnoreCase(Pegasus.GLITE_STYLE))?
                      (String)constituentJob.condorVariables.removeKey("remote_initialdir"):
@@ -1159,7 +1159,7 @@ public class Kickstart implements GridStart {
     /**
      * Triggers the creation of the kickstart input file, that contains the
      * the remote executable and the arguments with which it has to be invoked.
-     * The kickstart input file is created in the submit directory.
+     * The kickstart input file is created in the submit exectionSiteDirectory.
      *
      * @param constituentJob  the <code>Job</code> object containing the constituentJob description.
      * @param args the arguments buffer for gridstart invocation so far.

@@ -190,7 +190,7 @@ public class Condor   implements SLS {
      * @param job           job for which the file is being created
      * @param fileName      name of the file that needs to be written out.
      * @param submitDir     submit directory where it has to be written out.
-     * @param headNodeDirectory    directory on the head node of the compute site.
+     * @param stagingSiteDirectory    directory on the head node of the compute site.
      * @param workerNodeDirectory  worker node directory
      *
      * @return null as no SLS file is generated.
@@ -198,7 +198,7 @@ public class Condor   implements SLS {
     public File generateSLSInputFile( Job job,
                                       String fileName,
                                       String submitDir,
-                                      String headNodeDirectory,
+                                      String stagingSiteDirectory,
                                       String workerNodeDirectory ) {
 
         return null;
@@ -211,7 +211,7 @@ public class Condor   implements SLS {
      * @param job the job for which the file is being created
      * @param fileName the name of the file that needs to be written out.
      * @param submitDir the submit directory where it has to be written out.
-     * @param headNodeDirectory the directory on the head node of the
+     * @param stagingSiteDirectory the directory on the head node of the
      *   compute site.
      * @param workerNodeDirectory the worker node directory
      *
@@ -220,7 +220,7 @@ public class Condor   implements SLS {
      */
     public File generateSLSOutputFile(Job job, String fileName,
                                       String submitDir,
-                                      String headNodeDirectory,
+                                      String stagingSiteDirectory,
                                       String workerNodeDirectory) {
 
 
@@ -308,7 +308,7 @@ public class Condor   implements SLS {
 
             String lfn = pf.getLFN();
             //add an input file for transfer
-            //job.condorVariables.addIPFileForTransfer( headNodeDirectory + File.separator + lfn );
+            //job.condorVariables.addIPFileForTransfer( stagingSiteDirectory + File.separator + lfn );
             //we add just the lfn as we are setting initialdir
             job.condorVariables.addIPFileForTransfer( lfn );
         }
