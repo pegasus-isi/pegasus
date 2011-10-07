@@ -1151,8 +1151,8 @@ public class CPlanner extends Executable{
           "\n $Id$ " +
           "\n " + getGVDSVersion() +
           "\n Usage : pegasus-plan [-Dprop  [..]] -d <dax file> " +
-          " [-s site[,site[..]]] [-b prefix] [-c f1[,f2[..]]] [--conf <path to property file>] [-f] [--force-replan] "+
-          "\n [-b basename] [-C t1[,t2[..]]  [--dir  <base dir  for o/p files>] [-j <job-prefix>] " +
+          " [-s site[,site[..]]] [--staging-site s1=ss1[,s2=ss2[..]][-b prefix] [-c f1[,f2[..]]] [--conf <path to property file>] "+
+          "\n [-f] [--force-replan]  [-b basename] [-C t1[,t2[..]]  [--dir  <base dir  for o/p files>] [-j <job-prefix>] " +
           "\n [--relative-dir <relative directory to base directory> ] [--relative-submit-dir <relative submit directory to base directory>]" +
           "\n [--inherited-rc-files f1[,f2[..]]]  " +
           "\n [-g <vogroup>] [-o <output site>]  [-r[dir name]] [-F option[=value] ] " +
@@ -1199,6 +1199,7 @@ public class CPlanner extends Executable{
            "\n -j |--job-prefix   the prefix to be applied while construction job submit filenames " +
            "\n -o |--output       the output site where the data products during workflow execution are transferred to." +
            "\n -s |--sites        comma separated list of executions sites on which to map the workflow." +
+           "\n --staging-site     comma separated list of key=value pairs , where the key is the execution site and value is the staging site for that execution site." +
            "\n -r |--randomdir    create random directories on remote execution sites in which jobs are executed" +
           // "\n --rescue           the number of times rescue dag should be submitted for sub workflows before triggering re-planning" +
            "\n                    can optionally specify the basename of the remote directories" +
@@ -1752,6 +1753,7 @@ public class CPlanner extends Executable{
     }
 
     /**
+     * Loads the sites from the site catalog into the site store
      * 
      * @param sites
      * @return SiteStore object containing the information about the sites.
@@ -1763,13 +1765,21 @@ public class CPlanner extends Executable{
         
         /* load the catalog using the factory */
         catalog = SiteFactory.loadInstance( mProps );
-        
-        /* always load local site */
+
         Set<String> toLoad = new HashSet<String>( sites );
+
+        /* we want to load the staging sites mentioned for the execution sites */
+        for( String eSite: sites ){
+            String ss = this.mPOptions.getStagingSite( eSite );
+            if( eSite != null ){
+               toLoad.add( ss );
+            }
+        }
+
+        /* always load local site */
         toLoad.add( "local" );
 
-        /* for time being load isi_wind always*/
-        toLoad.add( "isi_viz" );
+        
 
         
         /* load the sites in site catalog */
