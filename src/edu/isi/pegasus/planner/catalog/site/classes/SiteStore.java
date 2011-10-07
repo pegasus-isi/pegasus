@@ -497,11 +497,27 @@ public class SiteStore extends AbstractSiteData{
      * @throws RuntimeException in case of site not found in the site catalog.
      */
     public String getInternalWorkDirectory( Job job ) {
-        return this.getInternalWorkDirectory( job.executionPool,
-            job.vdsNS.getStringValue(
-            Pegasus.REMOTE_INITIALDIR_KEY ),
-            job.jobClass );
+        return this.getInternalWorkDirectory( job, false );
     }
+
+    /**
+     * This determines the working directory on remote execution pool or a staging
+     * site for a particular job. The job should have it's execution pool set.
+     *
+     * @param job            <code>Job</code> object for the job.
+     * @param onStagingSite  boolean indicating whether the work directory required
+     *                       is the one on staging site.
+     *
+     * @return the path to the pool work dir.
+     * @throws RuntimeException in case of site not found in the site catalog.
+     */
+    public String getInternalWorkDirectory( Job job , boolean onStagingSite ) {
+        return this.getInternalWorkDirectory(
+                            onStagingSite ? job.getStagingSiteHandle() : job.getSiteHandle(),
+                            job.vdsNS.getStringValue( Pegasus.REMOTE_INITIALDIR_KEY ),
+                            job.jobClass );
+    }
+
 
     /**
      * This determines the working directory on remote execution pool on the

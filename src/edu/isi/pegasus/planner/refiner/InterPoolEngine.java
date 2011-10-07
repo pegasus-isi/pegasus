@@ -300,6 +300,11 @@ public class InterPoolEngine extends Engine implements Refiner {
             site  = job.getSiteHandle();
             mLogger.log( "Mapping Job "  + job.getName(), 
                          LogManager.DEBUG_MESSAGE_LEVEL );
+
+
+            //set the staging site for the job
+            job.setStagingSiteHandle( getStagingSite( job ) );
+
             //check if the user has specified any hints in the dax
 
 //          replaced with jobmanager-type
@@ -391,7 +396,18 @@ public class InterPoolEngine extends Engine implements Refiner {
 
     }
 
-   
+    /**
+     * Returns the staging site to be used for a job. If a staging site is not
+     * determined from the options it is set to be the execution site for the job
+     *
+     * @param job  the job for which to determine the staging site
+     *
+     * @return the staging site
+     */
+    public String getStagingSite( Job job ){
+        String ss =  this.mPOptions.getStagingSite( job.getSiteHandle() );
+        return (ss == null) ? job.getSiteHandle(): ss;
+    }
 
     /**
      * Incorporates the profiles from the various sources into the job.
@@ -408,8 +424,9 @@ public class InterPoolEngine extends Engine implements Refiner {
      */
     private boolean incorporateProfiles(Job job){
         TransformationCatalogEntry tcEntry = null;
-        List tcEntries = null;
-        String siteHandle = job.getSiteHandle();
+        List tcEntries           = null;
+        String siteHandle        = job.getSiteHandle();
+        String stagingSiteHandle = job.getStagingSiteHandle();
 
         //the profile information from the pool catalog needs to be
         //assimilated into the job.
@@ -473,7 +490,7 @@ public class InterPoolEngine extends Engine implements Refiner {
         //Need to verify further after more runs. (Gaurang 2-7-2006).
 //            tcEntry = (TransformationCatalogEntry) tcEntries.get(0);
         if(tcEntry.getType().equals( TCType.STAGEABLE )){
-            SiteCatalogEntry site = mSiteStore.lookup( siteHandle );
+            SiteCatalogEntry site = mSiteStore.lookup( stagingSiteHandle );
             //construct a file transfer object and add it
             //as an input file to the job in the dag
             fTx = new FileTransfer( job.getStagedExecutableBaseName(),
@@ -490,10 +507,10 @@ public class InterPoolEngine extends Engine implements Refiner {
             //pool where it needs to be staged to
             //always creating a third party transfer URL
             //for the destination.
-            String stagedPath =  mSiteStore.getInternalWorkDirectory(job)
+            String stagedPath =  mSiteStore.getInternalWorkDirectory( job, true )
                                 + File.separator + job.getStagedExecutableBaseName();
 
-            fTx.addDestination( siteHandle,
+            fTx.addDestination( stagingSiteHandle,
                                 site.getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix() + stagedPath);
 
             //added in the end now after dependant executables
@@ -566,7 +583,8 @@ public class InterPoolEngine extends Engine implements Refiner {
      *
      */
     private void handleDependantExecutables( Job job ){
-        String siteHandle = job.getSiteHandle();
+        String siteHandle        = job.getSiteHandle();
+        String stagingSiteHandle = job.getStagingSiteHandle();
         boolean installedTX =  !( job.userExecutablesStagedForJob() );
 
         List dependantExecutables = new ArrayList();
@@ -610,7 +628,7 @@ public class InterPoolEngine extends Engine implements Refiner {
 //                        SiteInfo site = mPoolHandle.getPoolEntry(siteHandle,
 //                            "vanilla");
                         
-                        SiteCatalogEntry site = mSiteStore.lookup( siteHandle );
+                        SiteCatalogEntry site = mSiteStore.lookup( stagingSiteHandle );
                         //construct a file transfer object and add it
                         //as an input file to the job in the dag
 
@@ -634,7 +652,7 @@ public class InterPoolEngine extends Engine implements Refiner {
 //                        fTx.addDestination(siteHandle,
 //                                           site.getURLPrefix(false) + stagedPath);
                         
-                        String stagedPath = mSiteStore.getInternalWorkDirectory(job)
+                        String stagedPath = mSiteStore.getInternalWorkDirectory( job, true )
                             + File.separator + basename;
                         fTx.addDestination(siteHandle,
                                            site.getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix() + stagedPath);

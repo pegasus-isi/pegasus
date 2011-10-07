@@ -380,7 +380,7 @@ public class TransferEngine extends Engine {
             currentJob = (Job)node.getContent();
 
             //set the staging site for the job
-            currentJob.setStagingSiteHandle( getStagingSite( currentJob ) );
+            //currentJob.setStagingSiteHandle( getStagingSite( currentJob ) );
             
             //modify the jobs if required for worker node execution
             if( mWorkerNodeExecution ){
