@@ -301,6 +301,7 @@ public abstract class Abstract implements JobAggregator {
         //the site handle needs to be set for the aggregated job
         //before it is enabled.
         mergedJob.setSiteHandle( firstJob.getSiteHandle() );
+        mergedJob.setStagingSiteHandle( firstJob.getStagingSiteHandle() );
 
 
         Set ipFiles = new HashSet();
