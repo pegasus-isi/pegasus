@@ -20,6 +20,7 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 
 import edu.isi.pegasus.common.logging.LogManager;
 
+import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 
 import edu.isi.pegasus.planner.code.GridStart;
@@ -481,7 +482,9 @@ public class NoGridStart implements GridStart {
                     String key = getDirectoryKey( job );
 
                     String executionSiteDirectory = (String)job.condorVariables.removeKey( key );
-                    String stagingSiteDirectory  = mSiteStore.getExternalWorkDirectoryURL( job.getStagingSiteHandle() );
+
+                    FileServer stagingSiteFileServer =  mSiteStore.lookup( job.getStagingSiteHandle() ).getHeadNodeFS().selectScratchSharedFileServer();
+                    String stagingSiteDirectory      = mSiteStore.getExternalWorkDirectory(stagingSiteFileServer, job.getStagingSiteHandle() );
                     String destDir = mSiteStore.getEnvironmentVariable( job.getSiteHandle() , "wntmp" );
                     destDir = ( destDir == null ) ? "/tmp" : destDir;
                     
@@ -497,7 +500,7 @@ public class NoGridStart implements GridStart {
 
                     //modify the job if required
                     if ( !mSLS.modifyJobForWorkerNodeExecution( job,
-                                                                null,
+                                                                stagingSiteFileServer.getURLPrefix(),
                                                                 stagingSiteDirectory,
                                                                 mSiteStore.lookup( job.getSiteHandle() ).getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix(),    
                                                                 executionSiteDirectory,
