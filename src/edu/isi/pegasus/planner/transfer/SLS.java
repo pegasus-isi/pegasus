@@ -183,14 +183,19 @@ public interface SLS {
      * Modifies a compute job for second level staging.
      *
      * @param job                 the job to be modified.
+     * @param stagingSiteURLPrefix   the url prefix for the server on the staging site
+     * @param stagingSitedirectory   the directory on the staging site, where the input data is
+     *                            read from and the output data written out.
      * @param headNodeURLPrefix   the url prefix for the server on the headnode
-     * @param stagingSiteDirectory   the directory on the headnode, where the input data is
+     * @param headNodeDirectory   the directory on the headnode, where the input data is
      *                            read from and the output data written out.
      * @param workerNodeDirectory the directory in the worker node tmp
      *
      * @return boolean indicating whether job was successfully modified or not.
      */
-    public boolean modifyJobForWorkerNodeExecution( Job job,
+    public boolean modifyJobForWorkerNodeExecution( Job job, 
+                                                    String stagingSiteURLPrefix,
+                                                    String stagingSitedirectory,
                                                     String headNodeURLPrefix,
                                                     String headNodeDirectory,
                                                     String workerNodeDirectory  );

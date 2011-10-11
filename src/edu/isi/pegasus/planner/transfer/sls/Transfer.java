@@ -635,9 +635,11 @@ public class Transfer   implements SLS {
      * Modifies a compute job for second level staging. The only modification
      * it does is add the appropriate environment varialbes to the job
      *
-     * @param job the job to be modified.
-     * @param headNodeURLPrefix the url prefix for the server on the headnode
-     * @param headNodeDirectory the directory on the headnode, where the
+     * @param job                    the job to be modified.
+     * @param stagingSiteURLPrefix   the url prefix for the server on the staging site
+     * @param stagingSitedirectory   the directory on the staging site, where the inp
+     * @param headNodeURLPrefix      the url prefix for the server on the headnode
+     * @param headNodeDirectory      the directory on the headnode, where the
      *   input data is read from and the output data written out.
      * @param workerNodeDirectory the directory in the worker node tmp
      *
@@ -645,7 +647,9 @@ public class Transfer   implements SLS {
      *   not.
      *
      */
-    public boolean modifyJobForWorkerNodeExecution( Job job,
+    public boolean modifyJobForWorkerNodeExecution( Job job, 
+                                                    String stagingSiteURLPrefix,
+                                                    String stagingSitedirectory,
                                                     String headNodeURLPrefix,
                                                     String headNodeDirectory,
                                                     String workerNodeDirectory ) {

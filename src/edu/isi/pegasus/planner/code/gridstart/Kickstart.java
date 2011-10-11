@@ -48,6 +48,7 @@ import edu.isi.pegasus.common.util.Separator;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
+import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 
 import edu.isi.pegasus.planner.cluster.JobAggregator;
@@ -918,8 +919,9 @@ public class Kickstart implements GridStart {
             String key = getDirectoryKey( job );
 
             String exectionSiteDirectory = (String)job.condorVariables.removeKey( key );
-            String stagingSiteDirectory  = mSiteStore.getExternalWorkDirectoryURL( job.getStagingSiteHandle() );
-            String workerNodeDir         = getWorkerNodeDirectory( job );
+            FileServer stagingSiteFileServer =  mSiteStore.lookup( job.getStagingSiteHandle() ).getHeadNodeFS().selectScratchSharedFileServer();
+            String stagingSiteDirectory      = mSiteStore.getExternalWorkDirectory(stagingSiteFileServer, job.getStagingSiteHandle() );
+            String workerNodeDir             = getWorkerNodeDirectory( job );
             
             //pass the worker node directory as an argument to kickstart
             //because most jobmanagers cannot handle worker node tmp
@@ -1024,7 +1026,9 @@ public class Kickstart implements GridStart {
             }
 
             //modify the constituentJob if required
-            if ( !mSLS.modifyJobForWorkerNodeExecution( job,
+            if ( !mSLS.modifyJobForWorkerNodeExecution( job, 
+                                                        stagingSiteFileServer.getURLPrefix(),
+                                                        stagingSiteDirectory,
                                                         //mSiteHandle.getURLPrefix( constituentJob.getSiteHandle() ),
                                                         mSiteStore.lookup( job.getSiteHandle() ).getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix(),    
                                                         exectionSiteDirectory,

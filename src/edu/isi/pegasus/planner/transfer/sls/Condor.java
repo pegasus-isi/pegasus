@@ -218,7 +218,8 @@ public class Condor   implements SLS {
      * @return null as no SLS file is generated.
      *
      */
-    public File generateSLSOutputFile(Job job, String fileName,
+    public File generateSLSOutputFile(Job job,
+                                      String fileName,
                                       String submitDir,
                                       String stagingSiteDirectory,
                                       String workerNodeDirectory) {
@@ -260,17 +261,21 @@ public class Condor   implements SLS {
      * the submit directory directly. Ignores any headnode parameters passed.
      *
      *
-     * @param job the job to be modified.
-     * @param headNodeURLPrefix the url prefix for the server on the headnode
-     * @param headNodeDirectory the directory on the headnode, where the
-     *   input data is read from and the output data written out.
-     * @param workerNodeDirectory the directory in the worker node tmp
+     * @param job                    the job to be modified.
+     * @param stagingSiteURLPrefix   the url prefix for the server on the staging site
+     * @param stagingSitedirectory   the directory on the staging site, where the inp
+     * @param headNodeURLPrefix      the url prefix for the server on the headnode
+     * @param headNodeDirectory      the directory on the headnode, where the
+     *                               input data is read from and the output data written out.
+     * @param workerNodeDirectory    the directory in the worker node tmp
      *
      * @return boolean indicating whether job was successfully modified or
      *   not.
      *
      */
-    public boolean modifyJobForWorkerNodeExecution( Job job,
+    public boolean modifyJobForWorkerNodeExecution( Job job, 
+                                                    String stagingSiteURLPrefix,
+                                                    String stagingSiteDirectory,
                                                     String headNodeURLPrefix,
                                                     String headNodeDirectory,
                                                     String workerNodeDirectory ) {
@@ -293,18 +298,19 @@ public class Condor   implements SLS {
         //set the initial dir to the headnode directory
         //as this is the directory where we are staging 
         //the input and output data
-        job.condorVariables.construct( "initialdir", headNodeDirectory );
+        job.condorVariables.construct( "initialdir", stagingSiteDirectory );
 
         //iterate through all the input files
         for( Iterator it = job.getInputFiles().iterator(); it.hasNext(); ){
             PegasusFile pf = ( PegasusFile )it.next();
 
+/* not reqd for 3.2
             //ignore any input files of FileTransfer as they are first level
             //staging put in by Condor Transfer refiner
             if( pf instanceof FileTransfer ){
                 continue;
             }
-
+*/
 
             String lfn = pf.getLFN();
             //add an input file for transfer

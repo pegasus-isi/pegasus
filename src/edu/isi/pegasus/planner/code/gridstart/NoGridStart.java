@@ -43,7 +43,6 @@ import edu.isi.pegasus.planner.namespace.Pegasus;
 import java.io.File;
 
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Set;
@@ -51,7 +50,6 @@ import java.io.IOException;
 import java.io.FileWriter;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.PrintWriter;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.cluster.JobAggregator;
 import edu.isi.pegasus.planner.namespace.Condor;
@@ -482,8 +480,8 @@ public class NoGridStart implements GridStart {
                     //remove the remote or initial dir's for the compute jobs
                     String key = getDirectoryKey( job );
 
-                    String directory = (String)job.condorVariables.removeKey( key );
-
+                    String executionSiteDirectory = (String)job.condorVariables.removeKey( key );
+                    String stagingSiteDirectory  = mSiteStore.getExternalWorkDirectoryURL( job.getStagingSiteHandle() );
                     String destDir = mSiteStore.getEnvironmentVariable( job.getSiteHandle() , "wntmp" );
                     destDir = ( destDir == null ) ? "/tmp" : destDir;
                     
@@ -499,9 +497,10 @@ public class NoGridStart implements GridStart {
 
                     //modify the job if required
                     if ( !mSLS.modifyJobForWorkerNodeExecution( job,
-                                                            //mSiteHandle.getURLPrefix( job.getSiteHandle() ),
+                                                                null,
+                                                                stagingSiteDirectory,
                                                                 mSiteStore.lookup( job.getSiteHandle() ).getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix(),    
-                                                                directory,
+                                                                executionSiteDirectory,
                                                                 workerNodeDir ) ){
                         throw new RuntimeException( "Unable to modify job " + job.getName() + " for worker node execution" );
                     }
