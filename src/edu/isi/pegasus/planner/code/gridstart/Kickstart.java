@@ -703,11 +703,7 @@ public class Kickstart implements GridStart {
                 //staged in the worker node temp exectionSiteDirectory
                 //JIRA PM-20 and PM-68
                 gridStartArgs.append( this.getWorkerNodeDirectory( job ) ).append( File.separator ).
-                              append( this.mSLS.doesCondorModifications() ?
-                                      //condor File IO does not allow for renaming
-                                      //of files on destination end. JIRA PM-380
-                                      job.getRemoteExecutable():
-                                      job.getStagedExecutableBaseName() );
+                              append( job.getStagedExecutableBaseName() );
             }
             else{
                 gridStartArgs.append(job.executable);
