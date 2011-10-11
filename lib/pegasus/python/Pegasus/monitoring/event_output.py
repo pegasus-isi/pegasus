@@ -22,6 +22,7 @@ Functions for output pegasus-monitord events to various destinations.
 
 # Import Python modules
 import os
+import sys
 import socket
 import logging
 import urlparse

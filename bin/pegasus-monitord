@@ -35,7 +35,6 @@ import atexit
 import select
 import shelve
 import signal
-import socket
 import logging
 import calendar
 import commands
