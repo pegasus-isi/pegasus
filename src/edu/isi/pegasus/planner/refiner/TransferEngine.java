@@ -33,7 +33,7 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.common.Utility;
 
-import edu.isi.pegasus.planner.refiner.createdir.S3;
+//import edu.isi.pegasus.planner.refiner.createdir.S3;
 
 import edu.isi.pegasus.planner.namespace.Pegasus;
 
@@ -1637,6 +1637,9 @@ public class TransferEngine extends Engine {
                                      String site, 
                                      boolean modifyURL ){
 
+/*
+ //     For JIRA PM-501. We dont want to do anyting specific on basis of custom
+ //     S3 implementations.
         if( this.mS3BucketUsedForStorage ){
             //modify the PFN only for non raw input files.
             //This takes care of the case, where
@@ -1648,7 +1651,7 @@ public class TransferEngine extends Engine {
                 pfn = execURL.toString();
             }
         }
-        
+ */
         mTransientRC.insert( lfn, pfn, site );
     }
 
@@ -1656,52 +1659,7 @@ public class TransferEngine extends Engine {
 
    
 
-    /**
-     * Return the storage mount point for a particular pool.
-     *
-     * @param site  SiteInfo object of the site for which you want the
-     *              storage-mount-point.
-     *
-     * @return    String corresponding to the mount point if the pool is found.
-     *            null if pool entry is not found.
-     *//*
-    public String getStorageMountPoint( SiteCatalogEntry site ) {
-        String storageDir = mStorageDir;
-        String mount_point = storageDir;
-        FileServer server = null;
-        if ( storageDir.length() == 0 || storageDir.charAt( 0 ) != '/' ) {
-            server = site.getHeadNodeFS().selectStorageLocalFileServer();
-            mount_point = server.getMountPoint();
-
-            //removing the trailing slash if there
-            int length = mount_point.length();
-            if ( length > 1 && mount_point.charAt( length - 1 ) == '/' ) {
-                mount_point = mount_point.substring( 0, length - 1 );
-            }
-
-            //append the Storage Dir
-            File f = new File( mount_point, storageDir );
-            mount_point = f.getAbsolutePath();
-
-        }
-
-        //check if we need to replicate the submit directory
-        //structure on the storage directory
-        if( mDeepStorageStructure ){
-            String leaf = ( this.mPOptions.partOfDeferredRun() )?
-                             //if a deferred run then pick up the relative random directory
-                             //this.mUserOpts.getOptions().getRandomDir():
-                             this.mPOptions.getRelativeDirectory():
-                             //for a normal run add the relative submit directory
-                             this.mPOptions.getRelativeDirectory();
-            File f = new File( mount_point, leaf );
-            mount_point = f.getAbsolutePath();
-        }
-
-
-        return mount_point;
-
-    }*/
+    
 
 
 }

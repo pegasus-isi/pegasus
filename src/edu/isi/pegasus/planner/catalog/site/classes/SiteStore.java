@@ -386,26 +386,33 @@ public class SiteStore extends AbstractSiteData{
      */    
     public String getExternalWorkDirectory( FileServer fs, String siteHandle) {
         
-        String path = "";
+        StringBuffer path = new StringBuffer();
 
-        /* To verify with Mats about this.
-        SiteCatalogEntry execPool = this.lookup(siteHandle);
-        if(execPool == null){
-            throw new RuntimeException("Entry for " + siteHandle +
-                                       " does not exist in the Site Catalog");
-        }
-         */
-
-        path = mWorkDir;
+        boolean s3FileServer = fs.getProtocol().startsWith( "s3" ) || fs.getURLPrefix().startsWith( "s3" );
 
         if ( mWorkDir.length() == 0 ) {
             // special case - no pegasus.dir.exec
-            path = fs.getMountPoint();
+            path.append( fs.getMountPoint() );
         }
         else if ( mWorkDir.charAt( 0 ) != '/' ) {
+            String mountPoint = fs.getMountPoint();
+
+            
+//            path = fs.getMountPoint() + File.separator + mWorkDir;
+
             // not a absolute path given - append
-            path = fs.getMountPoint() + File.separator + mWorkDir;
+            path.append( mountPoint );
+            if( mountPoint.charAt( mountPoint.length() - 1 ) == File.separatorChar ){
+                //no need to add path separator
+            }
+            else{
+                path.append( File.separator );
+            }
         }
+
+        //always add the mWorkDir, whatever it is
+        StringBuffer addon = new StringBuffer();
+        addon.append( mWorkDir );
 
         
         String randDir = mPlannerOptions.getRandomDirName();
@@ -413,10 +420,22 @@ public class SiteStore extends AbstractSiteData{
         if ( randDir != null) {
             //append the random dir name to the
             //work dir constructed till now
-            path += File.separator + randDir;
+            addon.append( File.separator );
+             //append withtout any modifications
+            addon.append( randDir );
         }
-        
-        return path;
+
+
+        //for s3 case, to create a bucket we replace / with a - in the
+        //random directory part
+        if( s3FileServer ){
+            path.append( addon.toString().replace( '/', '-' ) );
+        }
+        else{
+            path.append( addon.toString() );
+        }
+
+        return path.toString();
     }
 
      
@@ -535,6 +554,8 @@ public class SiteStore extends AbstractSiteData{
         return this.getInternalWorkDirectory( handle, path, -1 );
     }
 
+    
+
     /**
      * This determines the working directory on remote execution pool on the
      * basis of whether an absolute path is specified in the pegasus.dir.exec directory
@@ -558,14 +579,6 @@ public class SiteStore extends AbstractSiteData{
                     "The initializeUseForPlanner() was not called before calling getWorkDirectory");
         }
     
-        SiteCatalogEntry execPool = this.lookup( handle );
-        if(execPool == null){
-            throw new RuntimeException("Entry for " + handle +
-                                       " does not exist in the Site Catalog");
-        }
-        
-        String execPoolDir = mWorkDir;
-
         if(jobClass == Job.CREATE_DIR_JOB ){
             //the create dir jobs always run in the
             //workdir specified in the site catalog
@@ -577,6 +590,19 @@ public class SiteStore extends AbstractSiteData{
             //by default. Hence the job needs to be launched in /tmp
             return File.separator + "tmp";
         }
+
+        SiteCatalogEntry execPool = this.lookup( handle );
+        if(execPool == null){
+            throw new RuntimeException("Entry for " + handle +
+                                       " does not exist in the Site Catalog");
+        }
+
+
+
+        String execPoolDir = mWorkDir;
+
+
+
 
         if ( mWorkDir.length() == 0 || mWorkDir.charAt( 0 ) != '/' ) {
             //means you have to append the
