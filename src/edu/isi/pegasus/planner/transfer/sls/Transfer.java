@@ -544,6 +544,23 @@ public class Transfer   implements SLS {
 
         String separator = File.separator;
 
+        //holds the externally accessible path to the directory on the staging site
+        String externalWorkDirectoryURL = mSiteStore.getExternalWorkDirectoryURL( job.getStagingSiteHandle() );
+        //add the proxy as input file if required.
+        if( mLocalUserProxy != null ){
+            FileTransfer proxy = new FileTransfer( ENV.X509_USER_PROXY_KEY, job.getName() );
+            StringBuffer sourceURL = new StringBuffer();
+            sourceURL.append( mLocalURLPrefix ).append( mLocalUserProxy );
+            proxy.addSource( "local" , sourceURL.toString() );
+
+            StringBuffer destURL = new StringBuffer();
+
+            destURL.append( externalWorkDirectoryURL ).append( separator ).
+                    append( mLocalUserProxyBasename );
+            proxy.addDestination( job.getSiteHandle(), destURL.toString()  );
+            job.addInputFile( proxy );
+        }
+
         //sanity check
         if( !this.mStageSLSFile ){
 
@@ -558,6 +575,7 @@ public class Transfer   implements SLS {
             return true;
         }
 
+        
         //incorporate the sls input file if required
         if( slsInputLFN != null ){
 
@@ -574,11 +592,10 @@ public class Transfer   implements SLS {
             //the destination URL is the working directory on the filesystem
             //on the head node where the job is to be run.
             StringBuffer destURL = new StringBuffer();
-            destURL.append( mSiteStore.lookup( job.getSiteHandle() ).getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix() ).
+            destURL.append( externalWorkDirectoryURL ).
                     append( separator ).
-                    append( mSiteStore.getInternalWorkDirectory( job ) ).append( separator ).
                     append( slsInputLFN );
-            ft.addDestination( job.getSiteHandle(), destURL.toString() );
+            ft.addDestination( job.getStagingSiteHandle(), destURL.toString() );
 
             //add this as input file for the job
             job.addInputFile( ft );
@@ -600,32 +617,17 @@ public class Transfer   implements SLS {
             //the destination URL is the working directory on the filesystem
             //on the head node where the job is to be run.
             StringBuffer destURL = new StringBuffer();
-            destURL.append( mSiteStore.lookup( job.getSiteHandle() ).getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix() )
+            destURL.append( externalWorkDirectoryURL )
                     .append( separator ).
-                    append( mSiteStore.getInternalWorkDirectory( job ) ).append( separator ).
                     append( slsOutputLFN );
 
-            ft.addDestination( job.getSiteHandle(), destURL.toString()  );
+            ft.addDestination( job.getStagingSiteHandle(), destURL.toString()  );
 
             //add this as input file for the job
             job.addInputFile( ft );
         }
 
-        //add the proxy as input file if required.
-        if( mLocalUserProxy != null ){
-            FileTransfer proxy = new FileTransfer( ENV.X509_USER_PROXY_KEY, job.getName() );
-            StringBuffer sourceURL = new StringBuffer();
-            sourceURL.append( mLocalURLPrefix ).append( mLocalUserProxy );
-            proxy.addSource( "local" , sourceURL.toString() );
-
-            StringBuffer destURL = new StringBuffer();
-            
-            destURL.append( mSiteStore.lookup( job.getSiteHandle() ).getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix() ).append( separator ).
-                    append( mSiteStore.getInternalWorkDirectory( job ) ).append( separator ).
-                    append( mLocalUserProxyBasename );
-            proxy.addDestination( job.getSiteHandle(), destURL.toString()  );
-            job.addInputFile( proxy );
-        }
+        
 
        return true;
 
