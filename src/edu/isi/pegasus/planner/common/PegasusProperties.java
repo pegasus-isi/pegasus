@@ -1040,7 +1040,7 @@ public class PegasusProperties {
      */
     public boolean stageSLSFilesViaFirstLevelStaging( ){
         return Boolean.parse( mProps.getProperty( "pegasus.transfer.stage.sls.file" ),
-                              true );
+                              false );
     }
 
     /**
