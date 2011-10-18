@@ -2898,13 +2898,16 @@ class Workflow:
         if not jobid in self._job_info:
             return None, None
 
+        # Got corresponding job
+        my_job = self._jobs[jobid, job_submit_seq]
+
         # Make sure if we have a file for this entry
         # (should always be there, except for SUBDAG jobs)
         if self._job_info[jobid][0] is None:
+            if self._job_info[jobid][5] is True:
+                # Yes, this is a SUBDAG job... let's set the site as local for this job
+                my_job._site_name = "local"
             return None, None
-
-        # Got everything
-        my_job = self._jobs[jobid, job_submit_seq]
 
         # Parse sub file
         my_diff, my_site = my_job.parse_sub_file(self._current_timestamp, self._job_info[jobid][0])

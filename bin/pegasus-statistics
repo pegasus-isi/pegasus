@@ -42,8 +42,8 @@ DEFAULT_OUTPUT_DIR = "statistics"
 transformation_stats_col_name =["Transformation","Count","Succeeded" , "Failed", "Min","Max","Mean","Total"]
 transformation_stats_col_size =[60,12,12,12,20,20,20,12]
 
-job_stats_col_name =['#Job','Try','Site','Kickstart','Post' ,'CondorQTime','Resource','Runtime','Seqexec','Seqexec-Delay']
-job_stats_col_size =[60,4,15,12,12,12,12,12,12,12]
+job_stats_col_name =['#Job','Try','Site','Kickstart','Post' ,'CondorQTime','Resource','Runtime','Seqexec','Seqexec-Delay', 'Exitcode', 'Hostname']
+job_stats_col_size =[60,4,15,12,12,12,12,12,12,15,10,30]
 
 worklow_summary_col_name =["Type" ,"Succeeded","Failed","Incomplete" ,"Total" , " " ,"Retries" , "Total Run (Retries Included)"]
 worklow_summary_col_size =[20,20,20,20,20,5,20,20]
@@ -69,6 +69,8 @@ class JobStatistics:
 		self.seqexec= None
 		self.seqexec_delay = None
 		self.retry_count = 0
+                self.exitcode = None
+                self.hostname = None
 	
 	def getFormattedJobStatistics(self):
 		"""
@@ -76,7 +78,7 @@ class JobStatistics:
 		@return:    formatted job statistics information
 		"""
 		formatted_job_stats = [self.name]
-		formatted_job_stats.append(str(self.retry_count))
+		formatted_job_stats.append(" " + str(self.retry_count))
 		if self.site is None:
 			formatted_job_stats.append('-')
 		else:
@@ -88,6 +90,9 @@ class JobStatistics:
 		formatted_job_stats.append(round_to_str(self.runtime))
 		formatted_job_stats.append(round_to_str(self.seqexec))
 		formatted_job_stats.append(round_to_str(self.seqexec_delay))
+                formatted_job_stats.append(str(self.exitcode))
+                formatted_job_stats.append(self.hostname)
+
 		return formatted_job_stats
 
 
@@ -563,6 +568,8 @@ def print_individual_wf_job_stats(workflow_stats , title):
 		job_stats.condor_delay = job.condor_q_time
 		job_stats.resource = job.resource_delay
 		job_stats.seqexec = job.seqexec
+                job_stats.exitcode = job.exit_code
+                job_stats.hostname = job.host_name
 		if job_stats.seqexec is not None and job_stats.kickstart is not None:
 			job_stats.seqexec_delay = (float(job_stats.seqexec) - float(job_stats.kickstart))
 		if job_retry_count_dict.has_key(job.job_name):
