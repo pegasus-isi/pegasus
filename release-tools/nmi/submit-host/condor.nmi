@@ -1,7 +1,7 @@
 method = nmi
 
-# this is the pinned Condor 7.6.2 release
-input_runids = 351672
+# this is the pinned Condor 7.6.3 release
+input_runids = 361356
 
 # map some platforms to others
 # see: https://nmi.cs.wisc.edu/node/1804
