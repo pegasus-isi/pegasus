@@ -1,5 +1,26 @@
 #!/usr/bin/env python
 
+"""
+This file implements several utility functions pegasus-statistics and pegasus-plots.
+"""
+
+##
+#  Copyright 2007-2011 University Of Southern California
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing,
+#  software distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+##
+
+# Import Python modules
 import os
 import re
 import sys
@@ -19,13 +40,15 @@ logger = logging.getLogger()
 
 def isSubWfJob(job_name):
 	"""
-		Returns whether the given job is a sub workflow or not
+        Returns whether the given job is a sub workflow or not
 	"""
-	if job_name.lstrip().startswith('subdax_') or job_name.lstrip().startswith('pegasus-plan_') or job_name.lstrip().startswith('subdag_'):
+	if (job_name.lstrip().startswith('subdax_') or
+            job_name.lstrip().startswith('pegasus-plan_') or
+            job_name.lstrip().startswith('subdag_')):
 		return True;
 	return False;
 	
-def rlb(file_path ,parent_wf_braindb_submit_dir , parent_submit_dir):
+def rlb(file_path, parent_wf_braindb_submit_dir, parent_submit_dir):
 	"""
 	This function converts the path relative to base path
 	param file_path : file path for which the relative path needs to be calculated.
@@ -33,9 +56,8 @@ def rlb(file_path ,parent_wf_braindb_submit_dir , parent_submit_dir):
 	param parent_submit_dir : submit directory given by the user
 	Returns : path relative to the base 
 	"""
-	file_path = file_path.replace(parent_wf_braindb_submit_dir,parent_submit_dir)
+	file_path = file_path.replace(parent_wf_braindb_submit_dir, parent_submit_dir)
 	return file_path
-	
 	
 def parse_workflow_environment(wf_det):
 	"""
@@ -56,14 +78,14 @@ def parse_workflow_environment(wf_det):
 	return config
 
 
-def print_property_table(props , border= True , separator =""):
+def print_property_table(props, border= True, separator =""):
 	"""
 	Utility method for printing a property table
 	@props dictionary of the property key and value.
 	@border boolean indication whether to draw a border or not.
 	@separator string to separate key value pair.
 	"""
-	html_content =''
+	html_content = ''
 	if border:
 		html_content ="\n<table border = 1 style='color:#600000;'>"
 	else:
@@ -72,25 +94,23 @@ def print_property_table(props , border= True , separator =""):
 		if value is None:
 			value ='-'
 		html_content += "\n<tr>\n<th align ='left' style ='color:#600000'>"+ key +"</th>\n<td style ='color:#888888'>" + separator +str(value) +"</td>\n</tr>"
-	html_content +="\n</table>"
+	html_content += "\n</table>"
 	return html_content
-	
 
-def print_sub_wf_links(wf_id_uuid_list , extn = "html"):
+def print_sub_wf_links(wf_id_uuid_list, extn = "html"):
 	"""
 	Utility method for printing the link to sub workflow pages
 	@param wf_id_uuid_list list of wf_id and wf_uuid
 	"""
-	html_content =''
+	html_content = ''
 	if len(wf_id_uuid_list) == 0:
 		return  html_content
-	
+
 	html_content ="\n<div>"
 	for wf_id_uuid in wf_id_uuid_list:
-		html_content += "\n<a href ='"+ str(wf_id_uuid.wf_uuid) +"."+extn+"'>"+ str(wf_id_uuid.wf_uuid) +" - " + str(wf_id_uuid.dax_label) + "</a><br/>"
-	html_content +="\n</div>"
+		html_content += "\n<a href ='" + str(wf_id_uuid.wf_uuid) + "." + extn + "'>" + str(wf_id_uuid.wf_uuid) + " - " + str(wf_id_uuid.dax_label) + "</a><br/>"
+	html_content += "\n</div>"
 	return html_content
-	
 
 def create_home_button():
 	"""
@@ -101,15 +121,14 @@ def create_home_button():
 	"""
 	return html_content
 
-
 def convert_to_seconds(time):
 	"""
 	Converts the timedelta to seconds format 
 	Param: time delta reference
 	"""
-	return (time.microseconds + (time.seconds + time.days * 24 * 3600) * pow(10,6)) / pow(10,6)
+	return (time.microseconds + (time.seconds + time.days * 24 * 3600) * pow(10, 6)) / pow(10, 6)
 
-def create_directory(dir_name , delete_if_exists = False ):
+def create_directory(dir_name, delete_if_exists = False):
 	"""
 	Utility method for creating directory
 	@param dir_name the directory path
@@ -128,7 +147,7 @@ def create_directory(dir_name , delete_if_exists = False ):
 		try:
 			os.mkdir(dir_name)
 		except:
-			logger.error("Unable to create directory."+dir_name)
+			logger.error("Unable to create directory." + dir_name)
 			sys.exit(1)
 
 def copy_files(src, dest):
@@ -143,7 +162,7 @@ def copy_files(src, dest):
 				if not os.path.exists(os.path.join(dest,file)):
 					shutil.copy(os.path.join(src,file), dest)
 			except:
-				logger.error("Unable to copy file "+ file +  " to "+ dest)
+				logger.error("Unable to copy file " + file +  " to " + dest)
 				sys.exit(1)
 	
 def format_seconds(duration, max_comp = 2):
@@ -160,46 +179,45 @@ def format_seconds(duration, max_comp = 2):
 	sec = int(duration)
 	formatted_duration = ''
 	days = sec / 86400
-	sec -= 86400*days
+	sec -= 86400 * days
 	hrs = sec / 3600
-	sec -= 3600*hrs
+	sec -= 3600 * hrs
 	mins = sec / 60
-	sec -= 60*mins
+	sec -= 60 * mins
 
    	# days
 	if comp < max_comp and (days >= 1 or comp > 0):
 		comp += 1
 		if days == 1:
-			formatted_duration  += str(days) + ' day, '
+			formatted_duration += str(days) + ' day, '
 		else:
-			formatted_duration  += str(days) + ' days, '
+			formatted_duration += str(days) + ' days, '
 
 	# hours
-	if comp < max_comp and (hrs >=1 or comp > 0):
+	if comp < max_comp and (hrs >= 1 or comp > 0):
 		comp += 1
 		if hrs == 1:
-			formatted_duration  += str(hrs) + ' hr, ' 
+			formatted_duration += str(hrs) + ' hr, ' 
 		else:
-			formatted_duration  += str(hrs) + ' hrs, '
+			formatted_duration += str(hrs) + ' hrs, '
 	
 	# mins
-	if comp < max_comp and (mins >=1 or comp > 0):
+	if comp < max_comp and (mins >= 1 or comp > 0):
 		comp += 1
 		if mins == 1:
-			formatted_duration  += str(mins) + ' min, '
+			formatted_duration += str(mins) + ' min, '
 		else:
-			formatted_duration  += str(mins) + ' mins, '
+			formatted_duration += str(mins) + ' mins, '
 
 	# seconds
-	if comp < max_comp and (sec >=1 or comp > 0):
+	if comp < max_comp and (sec >= 1 or comp > 0):
 		comp += 1
-		if sec ==1:
-			formatted_duration  += str(sec) + " sec, "
+		if sec == 1:
+			formatted_duration += str(sec) + " sec, "
 		else:
-			formatted_duration  += str(sec) + " secs, "
+			formatted_duration += str(sec) + " secs, "
 
 	return formatted_duration
-	
 
 def get_workflow_wall_time(workflow_states_list):
 	"""
@@ -207,24 +225,24 @@ def get_workflow_wall_time(workflow_states_list):
 	@worklow_states_list list of all workflow states.
 	"""
 	workflow_wall_time = None
-	workflow_start_event_count  =0 
+	workflow_start_event_count = 0 
 	workflow_end_event_count = 0
 	is_end = False
 	workflow_start_cum = 0
-	workflow_end_cum =0
+	workflow_end_cum = 0
 	for workflow_state in workflow_states_list:
 		if workflow_state.state == 'WORKFLOW_STARTED':
-			workflow_start_event_count +=1
+			workflow_start_event_count += 1
 			workflow_start_cum += workflow_state.timestamp
 		else:
-			workflow_end_event_count +=1
+			workflow_end_event_count += 1
 			workflow_end_cum += workflow_state.timestamp
 	if workflow_start_event_count >0 and workflow_end_event_count > 0:
 		if workflow_start_event_count == workflow_end_event_count:
 			workflow_wall_time = workflow_end_cum - workflow_start_cum
 	return workflow_wall_time
 	
-def get_db_url_wf_uuid(submit_dir , config_properties):
+def get_db_url_wf_uuid(submit_dir, config_properties):
 	"""
 	Utility method for returning the db_url and wf_uuid given the submit_dir and pegasus properties file.
 	@submit_dir submit directory path
@@ -235,16 +253,15 @@ def get_db_url_wf_uuid(submit_dir , config_properties):
 	top_level_prop_file = None
 	if not top_level_wf_params:
 		logger.error("Unable to process braindump.txt ")
-		return None ,None
+		return None, None
 	wf_uuid = None
 	if (top_level_wf_params.has_key('wf_uuid')):
 		wf_uuid = top_level_wf_params['wf_uuid']
 	else:
 		logger.error("workflow id cannot be found in the braindump.txt ")
-		return None ,None
+		return None, None
 	
 	# Get the location of the properties file from braindump
-	
 	
 	# Get properties tag from braindump
 	if "properties" in top_level_wf_params:
@@ -257,26 +274,26 @@ def get_db_url_wf_uuid(submit_dir , config_properties):
 	props = properties.Properties()
 	props.new(config_file=config_properties, rundir_propfile=top_level_prop_file)
 	
-	output_db_url= None
+	output_db_url = None
 	if props.property('pegasus.monitord.output') is not None:
 		output_db_url = props.property('pegasus.monitord.output')
 		if not (output_db_url.startswith("mysql:") or output_db_url.startswith("sqlite:")):
 			logger.error("Unable to find database file from the properties file ")
-			return None ,None
+			return None, None
 	else:
-		dag_file_name =''
+		dag_file_name = ''
 		if (top_level_wf_params.has_key('dag')):
 			dag_file_name = top_level_wf_params['dag']
 		else:
 			logger.error("Dag file name cannot be found in the braindump.txt ")
-			return None ,None
+			return None, None
 		# Create the sqllite db url
-		output_db_file =submit_dir +"/"+ dag_file_name[:dag_file_name.find(".dag")] + ".stampede.db"
+		output_db_file = submit_dir + "/" + dag_file_name[:dag_file_name.find(".dag")] + ".stampede.db"
 		output_db_url = "sqlite:///" + output_db_file
 		if not os.path.isfile(output_db_file):
-			logger.error("Unable to find database file in "+ submit_dir)
-			return None , None
-	return output_db_url , wf_uuid
+			logger.error("Unable to find database file in " + submit_dir)
+			return None, None
+	return output_db_url, wf_uuid
 	
 def get_date_multiplier(date_filter):
 	"""
@@ -301,7 +318,6 @@ def get_date_format(date_filter):
 	'hour': '%Y-%m-%d : %H'
 	}
 	return vals[date_filter]
-	
 
 def get_date_print_format(date_filter):
 	"""
@@ -315,8 +331,7 @@ def get_date_print_format(date_filter):
 	}
 	return vals[date_filter]
 
-
-def convert_datetime_to_printable_format(timestamp , date_time_filter = 'hour'):
+def convert_datetime_to_printable_format(timestamp, date_time_filter = 'hour'):
 	"""
 	Utility for returning the date format  in human readable format
 	@param timestamp :  the unix timestamp
@@ -324,8 +339,8 @@ def convert_datetime_to_printable_format(timestamp , date_time_filter = 'hour'):
 	@return the date format in human readable format
 	"""
 
-	local_date_time= convert_utc_to_local_datetime(timestamp)
-	date_formatted =  local_date_time.strftime(get_date_format(date_time_filter))
+	local_date_time = convert_utc_to_local_datetime(timestamp)
+	date_formatted = local_date_time.strftime(get_date_format(date_time_filter))
 	return date_formatted
 
 def convert_utc_to_local_datetime(utc_timestamp):
@@ -338,7 +353,7 @@ def convert_utc_to_local_datetime(utc_timestamp):
 	return local_datetime
 	
 
-def convert_stats_to_base_time(stats_by_time , date_time_filter = 'hour' ,isHost = False ):
+def convert_stats_to_base_time(stats_by_time, date_time_filter = 'hour', isHost = False):
 	"""
 	Converts the time grouped by hour into local time.Converts the time grouped by hours into day based on the date_time_filter
 	@param stats_by_time : ime grouped by hou
@@ -349,7 +364,7 @@ def convert_stats_to_base_time(stats_by_time , date_time_filter = 'hour' ,isHost
 	formatted_stats_by_hour_list = []
 	for stats in stats_by_time:
 		timestamp = stats.date_format*get_date_multiplier('hour')
-		formatted_stats ={}
+		formatted_stats = {}
 		formatted_stats['timestamp'] = timestamp
 		formatted_stats['count'] = stats.count
 		formatted_stats['runtime'] = stats.total_runtime
@@ -358,23 +373,23 @@ def convert_stats_to_base_time(stats_by_time , date_time_filter = 'hour' ,isHost
 		formatted_stats_by_hour_list.append(formatted_stats)
 		formatted_stats = None
 	
-	if date_time_filter =='hour':
+	if date_time_filter == 'hour':
 		for formatted_stats in formatted_stats_by_hour_list:
-			formatted_stats['date_format'] = convert_datetime_to_printable_format(formatted_stats['timestamp'] , date_time_filter)
+			formatted_stats['date_format'] = convert_datetime_to_printable_format(formatted_stats['timestamp'], date_time_filter)
 		return formatted_stats_by_hour_list
 	else:
-		day_to_hour_mapping ={}
-		formatted_stats_by_day_list =[]
+		day_to_hour_mapping = {}
+		formatted_stats_by_day_list = []
 		for formatted_stats_by_hour in formatted_stats_by_hour_list:
 			formatted_stats_by_day = None
-			corresponding_day = convert_datetime_to_printable_format(formatted_stats_by_hour['timestamp'] , date_time_filter)
-			id =''
+			corresponding_day = convert_datetime_to_printable_format(formatted_stats_by_hour['timestamp'], date_time_filter)
+			id = ''
 			if isHost:
-				id += formatted_stats_by_hour['host'] +":" 
+				id += formatted_stats_by_hour['host'] + ":" 
 			id += corresponding_day
 			if day_to_hour_mapping.has_key(id):
 				formatted_stats_by_day = day_to_hour_mapping[id]
-				formatted_stats_by_day['count']   += formatted_stats_by_hour['count']
+				formatted_stats_by_day['count'] += formatted_stats_by_hour['count']
 				formatted_stats_by_day['runtime'] += formatted_stats_by_hour['runtime']
 			else:
 				formatted_stats_by_day = formatted_stats_by_hour
@@ -382,17 +397,15 @@ def convert_stats_to_base_time(stats_by_time , date_time_filter = 'hour' ,isHost
 				day_to_hour_mapping[id] = formatted_stats_by_day
 				formatted_stats_by_day_list.append(formatted_stats_by_day)
 		return formatted_stats_by_day_list
-	
 
 def round_decimal_to_str(value , to=3):
 	"""
-Utility method for rounding the decimal value to string to given digits
-@param value :  value to round 
-@param to    :  how many decimal points to round to
+        Utility method for rounding the decimal value to string to given digits
+        @param value :  value to round 
+        @param to    :  how many decimal points to round to
 	"""
 	rounded_value = '-'
 	if value is None:
 		return rounded_value
-	rounded_value = str(round(float(value) , to))
+	rounded_value = str(round(float(value), to))
 	return rounded_value
-	

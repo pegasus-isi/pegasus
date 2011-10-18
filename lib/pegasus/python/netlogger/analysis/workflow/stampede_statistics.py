@@ -148,7 +148,7 @@ Methods listed in order of query list on wiki.
 
 https://confluence.pegasus.isi.edu/display/pegasus/Pegasus+Statistics+Python+Version+Modified
 """
-__rcsid__ = "$Id: stampede_statistics.py 28263 2011-08-10 16:47:16Z mgoode $"
+__rcsid__ = "$Id: stampede_statistics.py 28641 2011-10-18 15:33:19Z mgoode $"
 __author__ = "Monte Goode"
 
 from netlogger.analysis.modules._base import SQLAlchemyInit
@@ -675,6 +675,19 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         sq_7 = sq_7.filter(or_(Jobstate.state == 'POST_SCRIPT_STARTED', Jobstate.state == 'JOB_TERMINATED'))
         sq_7 = sq_7.subquery()
         
+        sq_8 = self.session.query(func.max(Invocation.exitcode))
+        sq_8 = sq_8.filter(Invocation.job_instance_id == JobInstance.job_instance_id).correlate(JobInstance)
+        sq_8 = sq_8.filter(Invocation.wf_id == Job.wf_id).correlate(Job)
+        sq_8 = sq_8.filter(Invocation.task_submit_seq >= 0)
+        sq_8 = sq_8.group_by().subquery()
+        
+        JobInstanceSub = orm.aliased(JobInstance)
+        
+        sq_9 = self.session.query(Host.hostname)
+        sq_9 = sq_9.filter(JobInstanceSub.job_instance_id == JobInstance.job_instance_id).correlate(JobInstance)
+        sq_9 = sq_9.filter(Host.host_id == JobInstanceSub.host_id)
+        sq_9 = sq_9.subquery()
+        
         
         q = self.session.query(Job.job_id, JobInstance.job_instance_id, JobInstance.job_submit_seq,
             Job.exec_job_id.label('job_name'), JobInstance.site,
@@ -683,7 +696,9 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
             cast(JobInstance.local_duration, Float).label('runtime'),
             cast(sq_5.as_scalar(), Float).label('kickstart'),
             cast(sq_6.as_scalar() - sq_7.as_scalar(), Float).label('post_time'),
-            cast(JobInstance.cluster_duration, Float).label('seqexec'))
+            cast(JobInstance.cluster_duration, Float).label('seqexec'),
+            sq_8.as_scalar().label('exit_code'),
+            sq_9.as_scalar().label('host_name'))
         q = q.filter(JobInstance.job_id == Job.job_id)
         q = q.filter(Job.wf_id.in_(self._wfs))
         
