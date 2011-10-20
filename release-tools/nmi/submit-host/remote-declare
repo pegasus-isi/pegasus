@@ -3,10 +3,14 @@
 use strict;
 
 
-# some platforms only get worker packages
+# platforms with special needs
 my $lite = 0;
 if ( $ENV{NMI_PLATFORM} =~ /rhas_4/ ) {
     $lite = 1;
+}
+my $wms = 1;
+if ( $ENV{NMI_PLATFORM} =~ /deb_5/ or $ENV{NMI_PLATFORM} =~ /rhap_6/ ) {
+    $wms = 0;
 }
 
 open( LIST, ">tasklist.nmi" ) || die "Can't open tasklist.nmi: $!\n";
@@ -14,7 +18,9 @@ open( LIST, ">tasklist.nmi" ) || die "Can't open tasklist.nmi: $!\n";
 # builds
 if ( ! $lite ) {
     print LIST "build-binary\n";
-    print LIST "build-wms\n";
+    if ( $wms ) {
+        print LIST "build-wms\n";
+    }
 }
 print LIST "build-worker\n";
 
@@ -34,7 +40,9 @@ if ( ! $lite ) {
 # tests
 if ( ! $lite ) {
     print LIST "test-binary\n";
-    print LIST "test-wms\n";
+    if ( $wms ) {
+        print LIST "test-wms\n";
+    }
 }
 print LIST "test-worker\n";
 
