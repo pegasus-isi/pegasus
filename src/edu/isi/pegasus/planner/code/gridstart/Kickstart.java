@@ -214,7 +214,7 @@ public class Kickstart implements GridStart {
     /**
      * A boolean indicating whether to have worker node execution or not.
      */
-    private boolean mWorkerNodeExecution;
+    boolean mWorkerNodeExecution;
 
     /**
      * The handle to the SLS implementor
@@ -272,12 +272,13 @@ public class Kickstart implements GridStart {
         mTCHandle     = bag.getHandleToTransformationCatalog();
 
         mDynamicDeployment =  mProps.transferWorkerPackage();
-
+        
         mWorkerNodeExecution = mProps.executeOnWorkerNode();
         if( mWorkerNodeExecution ){
             //load SLS
             mSLS = SLSFactory.loadInstance( bag );
         }
+
         mEnablingPartOfAggregatedJob = false;
         mSetXBit = mProps.setXBitWithKickstart();
         

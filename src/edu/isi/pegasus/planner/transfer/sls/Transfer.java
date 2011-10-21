@@ -34,7 +34,7 @@ import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry
 import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 
 
-import edu.isi.pegasus.planner.code.gridstart.SeqExec;
+import edu.isi.pegasus.planner.code.gridstart.PegasusLite;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.FileTransfer;
 import edu.isi.pegasus.planner.classes.Job;
@@ -159,7 +159,7 @@ public class Transfer   implements SLS {
     protected boolean mStageSLSFile;
 
     /**
-     * Boolean to track whether the gridstart used in SeqExec or not
+     * Boolean to track whether the gridstart used in PegasusLite or not
      */
     protected boolean mSeqExecGridStartUsed;
 
@@ -209,7 +209,7 @@ public class Transfer   implements SLS {
         mTransientRC = bag.getHandleToTransientReplicaCatalog();
         mExtraArguments = mProps.getSLSTransferArguments();
         mStageSLSFile = mProps.stageSLSFilesViaFirstLevelStaging();
-        mSeqExecGridStartUsed = mProps.getGridStart().equals( SeqExec.CLASSNAME );
+        mSeqExecGridStartUsed = mProps.getGridStart().equals( PegasusLite.CLASSNAME );
     }
 
     /**
@@ -248,7 +248,7 @@ public class Transfer   implements SLS {
         }
 
         //we need to set the x bit on proxy correctly first as a
-        //GRIDSTART prejob only if SeqExec is not used for launching jobs
+        //GRIDSTART prejob only if PegasusLite is not used for launching jobs
         if( mLocalUserProxyBasename != null && !this.mSeqExecGridStartUsed ){
             StringBuffer proxy = new StringBuffer( );
             proxy.append( slsFile.getParent() ).append( File.separator ).

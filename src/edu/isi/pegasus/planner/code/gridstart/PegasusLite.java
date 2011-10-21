@@ -1,0 +1,743 @@
+/**
+ *  Copyright 2007-2008 University Of Southern California
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
+
+package edu.isi.pegasus.planner.code.gridstart;
+
+import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
+
+import edu.isi.pegasus.common.logging.LogManager;
+
+import edu.isi.pegasus.common.util.Proxy;
+import edu.isi.pegasus.common.util.S3cfg;
+
+import edu.isi.pegasus.planner.common.PegasusProperties;
+
+import edu.isi.pegasus.planner.code.GridStart;
+
+import edu.isi.pegasus.planner.classes.ADag;
+import edu.isi.pegasus.planner.classes.Job;
+import edu.isi.pegasus.planner.classes.AggregatedJob;
+import edu.isi.pegasus.planner.classes.PegasusFile;
+import edu.isi.pegasus.planner.classes.TransferJob;
+import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.classes.PlannerOptions;
+
+import edu.isi.pegasus.planner.namespace.Condor;
+import edu.isi.pegasus.planner.namespace.Pegasus;
+
+import edu.isi.pegasus.planner.transfer.sls.SLSFactory;
+import edu.isi.pegasus.planner.transfer.SLS;
+
+import edu.isi.pegasus.planner.catalog.TransformationCatalog;
+
+import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.FileWriter;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+
+import java.util.Iterator;
+import java.util.Set;
+
+/**
+ * This class launches all the jobs using Pegasus Lite a shell script based wrapper.
+ *
+ * The Pegasus Lite shell script for the compute jobs contains the commands to
+ * 
+ * <pre>
+ * 1) create directory on worker node
+ * 2) fetch input data files
+ * 3) execute the job
+ * 4) transfer the output data files
+ * 5) cleanup the directory
+ * </pre>
+ *
+ * 
+ * The following property should be set to false to disable the staging of the 
+ * SLS files via the first level staging jobs
+ * 
+ * <pre>
+ * pegasus.transfer.stage.sls.file     false
+ * </pre>
+ *
+ * To enable this implementation at runtime set the following property
+ * <pre>
+ * pegasus.gridstart PegasusLite
+ * </pre>
+ *
+ * 
+ * @author Karan Vahi
+ * @version $Revision$
+ */
+
+public class PegasusLite implements GridStart {
+    private PegasusBag mBag;
+    private ADag mDAG;
+
+    /**
+     * The basename of the class that is implmenting this. Could have
+     * been determined by reflection.
+     */
+    public static final String CLASSNAME = "PegasusLite";
+
+    /**
+     * The SHORTNAME for this implementation.
+     */
+    public static final String SHORT_NAME = "pegasus-lite";
+
+  
+
+    /**
+     * The LogManager object which is used to log all the messages.
+     */
+    protected LogManager mLogger;
+
+    /**
+     * The object holding all the properties pertaining to Pegasus.
+     */
+    protected PegasusProperties mProps;
+
+    /**
+     * The submit directory where the submit files are being generated for
+     * the workflow.
+     */
+    protected String mSubmitDir;
+
+    /**
+     * The argument string containing the arguments with which the exitcode
+     * is invoked on kickstart output.
+     */
+//    protected String mExitParserArguments;
+
+    /**
+     * A boolean indicating whether to generate lof files or not.
+     */
+    protected boolean mGenerateLOF;
+
+    /**
+     * A boolean indicating whether to have worker node execution or not.
+     */
+    protected boolean mWorkerNodeExecution;
+
+    /**
+     * The handle to the SLS implementor
+     */
+    protected SLS mSLS;
+
+    /**
+     * The options passed to the planner.
+     */
+    protected PlannerOptions mPOptions;
+
+
+    /**
+     * Handle to the site catalog store.
+     */
+    //protected PoolInfoProvider mSiteHandle;
+    protected SiteStore mSiteStore;
+
+    /**
+     * An instance variable to track if enabling is happening as part of a clustered job.
+     * See Bug 21 comments on Pegasus Bugzilla
+     */
+    protected boolean mEnablingPartOfAggregatedJob;
+
+    /**
+     * Handle to kickstart GridStart implementation.
+     */
+    private Kickstart mKickstartGridStartImpl;
+
+   
+     /**
+     * Handle to Transformation Catalog.
+     */
+    private TransformationCatalog mTCHandle;
+
+    /**
+     * Boolean to track whether to stage sls file or not
+     */
+    protected boolean mStageSLSFile;
+
+    /**
+     * The path to local user proxy.
+     */
+    protected String mLocalUserProxy;
+
+    /**
+     * The basename of the proxy
+     */
+    protected String mLocalUserProxyBasename;
+
+    /**
+     * The path to local user s3cfg.
+     */
+    protected String mLocalS3cfg;
+
+    /**
+     * The basename of the s3cfg
+     */
+    protected String mLocalS3cfgBasename;
+
+
+    /**
+     * Initializes the GridStart implementation.
+     *
+     *  @param bag   the bag of objects that is used for initialization.
+     * @param dag   the concrete dag so far.
+     */
+    public void initialize( PegasusBag bag, ADag dag ){
+        mBag       = bag;
+        mDAG       = dag;
+        mLogger    = bag.getLogger();
+        mSiteStore = bag.getHandleToSiteStore();
+        mPOptions  = bag.getPlannerOptions();
+        mSubmitDir = mPOptions.getSubmitDirectory();
+        mProps     = bag.getPegasusProperties();
+        mGenerateLOF  = mProps.generateLOFFiles();
+        mTCHandle  = bag.getHandleToTransformationCatalog();
+
+        mWorkerNodeExecution = mProps.executeOnWorkerNode();
+        if( mWorkerNodeExecution ){
+            //load SLS
+            mSLS = SLSFactory.loadInstance( bag );
+        }
+        mEnablingPartOfAggregatedJob = false;
+        mKickstartGridStartImpl = new Kickstart();
+        mKickstartGridStartImpl.initialize( bag, dag );
+
+        //for pegasus-lite work, worker node execution is no
+        //longer handled in kickstart/no kickstart cases
+        mKickstartGridStartImpl.mWorkerNodeExecution = false;
+
+        mStageSLSFile = mProps.stageSLSFilesViaFirstLevelStaging();
+        mLocalUserProxy = Proxy.getPathToUserProxy(bag);
+
+        //set the path to user proxy only if the proxy exists
+        if( !new File( mLocalUserProxy).exists() ){
+            mLogger.log( "The user proxy does not exist - " + mLocalUserProxy,
+                         LogManager.DEBUG_MESSAGE_LEVEL );
+            mLocalUserProxy = null;
+        }
+        mLocalUserProxyBasename = (mLocalUserProxy == null) ?
+                                  null :
+                                  new File(mLocalUserProxy).getName();
+
+        mLocalS3cfg = S3cfg.getPathToS3cfg(bag);
+        //set the path to user proxy only if the proxy exists
+        if( mLocalS3cfg != null && !new File(mLocalS3cfg).exists() ){
+            mLogger.log( "The s3cfg file does not exist - " + mLocalUserProxy,
+                         LogManager.DEBUG_MESSAGE_LEVEL );
+            mLocalS3cfg = null;
+        }
+
+        mLocalS3cfgBasename = (mLocalS3cfg == null) ?
+                                  null :
+                                  new File(mLocalS3cfg).getName();
+    }
+    
+    /**
+     * Enables a job to run on the grid. This also determines how the
+     * stdin,stderr and stdout of the job are to be propogated.
+     * To grid enable a job, the job may need to be wrapped into another
+     * job, that actually launches the job. It usually results in the job
+     * description passed being modified modified.
+     *
+     * @param job  the <code>Job</code> object containing the job description
+     *             of the job that has to be enabled on the grid.
+     * @param isGlobusJob is <code>true</code>, if the job generated a
+     *        line <code>universe = globus</code>, and thus runs remotely.
+     *        Set to <code>false</code>, if the job runs on the submit
+     *        host in any way.
+     *
+     * @return boolean true if enabling was successful,else false.
+     */
+    public boolean enable( AggregatedJob job,boolean isGlobusJob){
+
+        //for time being we treat clustered jobs same as normal jobs
+        //in pegasus-lite
+        return this.enable( (Job)job, isGlobusJob );
+
+        /*
+        boolean result = true;
+
+        if( mWorkerNodeExecution ){
+            File seqxecIPFile = wrapJobWithPegasusLite( job, isGlobusJob );
+             //the .sh file is set as the executable for the job
+            //in addition to setting transfer_executable as true
+            job.setRemoteExecutable( seqxecIPFile.getAbsolutePath() );
+            job.condorVariables.construct( "transfer_executable", "true" );
+        }
+        return result;
+         */
+    }
+
+
+    /**
+     * Enables a job to run on the grid by launching it directly. It ends
+     * up running the executable directly without going through any intermediate
+     * launcher executable. It connects the stdio, and stderr to underlying
+     * condor mechanisms so that they are transported back to the submit host.
+     *
+     * @param job  the <code>Job</code> object containing the job description
+     *             of the job that has to be enabled on the grid.
+     * @param isGlobusJob is <code>true</code>, if the job generated a
+     *        line <code>universe = globus</code>, and thus runs remotely.
+     *        Set to <code>false</code>, if the job runs on the submit
+     *        host in any way.
+     *
+     * @return boolean true if enabling was successful,else false in case when
+     *         the path to kickstart could not be determined on the site where
+     *         the job is scheduled.
+     */
+    public boolean enable(Job job, boolean isGlobusJob) {
+        //take care of relative submit directory if specified
+        String submitDir = mSubmitDir + mSeparator;
+
+
+        //NOT CLEAR HOW Pegasus-Lite will handle stdout and stdin
+        // handle stdin
+        if (job.stdIn.length() > 0) {
+            construct(job,"input",submitDir + job.stdIn);
+            if (isGlobusJob) {
+                //this needs to be true as you want the stdin
+                //to be transfered to the remote execution
+                //pool, as in case of the transfer script.
+                //it needs to be set if the stdin is already
+                //prepopulated at the remote side which
+                //it is not.
+                construct(job,"transfer_input","true");
+            }
+        }
+
+        if (job.stdOut.length() > 0) {
+            //handle stdout
+            construct(job,"output",job.stdOut);
+            if (isGlobusJob) {
+                construct(job,"transfer_output","false");
+            }
+        } else {
+            // transfer output back to submit host, if unused
+            construct(job,"output",submitDir + job.jobName + ".out");
+            if (isGlobusJob) {
+                construct(job,"transfer_output","true");
+            }
+        }
+
+        if (job.stdErr.length() > 0) {
+            //handle stderr
+            construct(job,"error",job.stdErr);
+            if (isGlobusJob) {
+                construct(job,"transfer_error","false");
+            }
+        } else {
+            // transfer error back to submit host, if unused
+            construct(job,"error",submitDir + job.jobName + ".err");
+            if (isGlobusJob) {
+                construct(job,"transfer_error","true");
+            }
+        }
+        
+        //consider case for non worker node execution first
+
+        if( !mWorkerNodeExecution ){
+            //shared filesystem case.
+
+            //for now a single job is launched via kickstart only
+            //no point launching it via seqexec and then kickstart
+            return mKickstartGridStartImpl.enable( job, isGlobusJob );
+                
+        }//end of handling of non worker node execution
+        else{
+            //handle stuff differently 
+            enableForWorkerNodeExecution( job, isGlobusJob );
+        }//end of worker node execution
+
+
+
+        if( mGenerateLOF ){
+            //but generate lof files nevertheless
+
+
+            //inefficient check here again. just a prototype
+            //we need to generate -S option only for non transfer jobs
+            //generate the list of filenames file for the input and output files.
+            if (! (job instanceof TransferJob)) {
+                generateListofFilenamesFile( job.getInputFiles(),
+                                             job.getID() + ".in.lof");
+            }
+
+            //for cleanup jobs no generation of stats for output files
+            if (job.getJobType() != Job.CLEANUP_JOB) {
+                generateListofFilenamesFile(job.getOutputFiles(),
+                                           job.getID() + ".out.lof");
+
+            }
+        }///end of mGenerateLOF
+
+        return true;
+    }
+
+    /**
+     * Enables jobs for worker node execution.
+     *
+     *
+     *
+     * @param job           the job to be enabled.
+     * @param isGlobusJob is <code>true</code>, if the job generated a
+     *        line <code>universe = globus</code>, and thus runs remotely.
+     *        Set to <code>false</code>, if the job runs on the submit
+     *        host in any way.
+     */
+    private void enableForWorkerNodeExecution(Job job, boolean isGlobusJob ) {
+
+        if( job.getJobType() == Job.COMPUTE_JOB  ){
+
+            //in pegasus lite mode we dont want kickstart to change or create
+            //worker node directories
+            job.vdsNS.construct( Pegasus.CHANGE_DIR_KEY , "false" );
+            job.vdsNS.construct( Pegasus.CREATE_AND_CHANGE_DIR_KEY, "false" );
+
+            //enable the job via kickstart
+            //separate calls for aggregated and normal jobs
+            if( job instanceof AggregatedJob ){
+                this.mKickstartGridStartImpl.enable( (AggregatedJob)job, isGlobusJob );
+            }
+            else{
+                this.mKickstartGridStartImpl.enable( job, isGlobusJob );
+            }
+
+            File seqxecIPFile = wrapJobWithPegasusLite( job, isGlobusJob );
+
+            //the .sh file is set as the executable for the job
+            //in addition to setting transfer_executable as true
+            job.setRemoteExecutable( seqxecIPFile.getAbsolutePath() );
+            job.condorVariables.construct( "transfer_executable", "true" );
+        }
+        //for all auxillary jobs let kickstart figure what to do
+        else{
+            mKickstartGridStartImpl.enable( job, isGlobusJob );
+        }
+
+    }
+
+   
+
+
+    
+    /**
+     * Indicates whether the enabling mechanism can set the X bit
+     * on the executable on the remote grid site, in addition to launching
+     * it on the remote grid stie
+     *
+     * @return false, as no wrapper executable is being used.
+     */
+    public  boolean canSetXBit(){
+        return false;
+    }
+
+    /**
+     * Returns the value of the vds profile with key as Pegasus.GRIDSTART_KEY,
+     * that would result in the loading of this particular implementation.
+     * It is usually the name of the implementing class without the
+     * package name.
+     *
+     * @return the value of the profile key.
+     * @see org.griphyn.cPlanner.namespace.Pegasus#GRIDSTART_KEY
+     */
+    public  String getVDSKeyValue(){
+        return PegasusLite.CLASSNAME;
+    }
+
+
+    /**
+     * Returns a short textual description in the form of the name of the class.
+     *
+     * @return  short textual description.
+     */
+    public String shortDescribe(){
+        return PegasusLite.SHORT_NAME;
+    }
+
+    /**
+     * Returns the SHORT_NAME for the POSTScript implementation that is used
+     * to be as default with this GridStart implementation.
+     *
+     * @return  the identifier for the default POSTScript implementation for
+     *          kickstart gridstart module.
+     *
+     * @see Kickstart#defaultPOSTScript() 
+     */
+    public String defaultPOSTScript(){
+        return this.mKickstartGridStartImpl.defaultPOSTScript();
+    }
+
+    /**
+     * Returns the directory that is associated with the job to specify
+     * the directory in which the job needs to run
+     * 
+     * @param job  the job
+     * 
+     * @return the condor key . can be initialdir or remote_initialdir
+     */
+    private String getDirectoryKey(Job job) {
+        /*
+        String style = (String)job.vdsNS.get( Pegasus.STYLE_KEY );
+                    //remove the remote or initial dir's for the compute jobs
+                    String key = ( style.equalsIgnoreCase( Pegasus.GLOBUS_STYLE )  )?
+                                   "remote_initialdir" :
+                                   "initialdir";
+         */
+        String universe = (String) job.condorVariables.get( Condor.UNIVERSE_KEY );
+        return ( universe.equals( Condor.STANDARD_UNIVERSE ) ||
+                 universe.equals( Condor.LOCAL_UNIVERSE) ||
+                 universe.equals( Condor.SCHEDULER_UNIVERSE ) )?
+                "initialdir" :
+                "remote_initialdir";
+    }
+
+
+    /**
+     * Returns a boolean indicating whether to remove remote directory
+     * information or not from the job. This is determined on the basis of the
+     * style key that is associated with the job.
+     *
+     * @param job the job in question.
+     *
+     * @return boolean
+     */
+    private boolean removeDirectoryKey(Job job){
+        String style = job.vdsNS.containsKey(Pegasus.STYLE_KEY) ?
+                       null :
+                       (String)job.vdsNS.get(Pegasus.STYLE_KEY);
+
+        //is being run. Remove remote_initialdir if there
+        //condor style associated with the job
+        //Karan Nov 15,2005
+        return (style == null)?
+                false:
+                style.equalsIgnoreCase(Pegasus.CONDOR_STYLE);
+
+    }
+
+    /**
+     * Constructs a condor variable in the condor profile namespace
+     * associated with the job. Overrides any preexisting key values.
+     *
+     * @param job   contains the job description.
+     * @param key   the key of the profile.
+     * @param value the associated value.
+     */
+    private void construct(Job job, String key, String value){
+        job.condorVariables.construct(key,value);
+    }
+
+    /**
+     * Writes out the list of filenames file for the job.
+     *
+     * @param files  the list of <code>PegasusFile</code> objects contains the files
+     *               whose stat information is required.
+     *
+     * @param basename   the basename of the file that is to be created
+     *
+     * @return the full path to lof file created, else null if no file is written out.
+     */
+     public String generateListofFilenamesFile( Set files, String basename ){
+         //sanity check
+         if ( files == null || files.isEmpty() ){
+             return null;
+         }
+
+         String result = null;
+         //writing the stdin file
+        try {
+            File f = new File( mSubmitDir, basename );
+            FileWriter input;
+            input = new FileWriter( f );
+            PegasusFile pf;
+            for( Iterator it = files.iterator(); it.hasNext(); ){
+                pf = ( PegasusFile ) it.next();
+                input.write( pf.getLFN() );
+                input.write( "\n" );
+            }
+            //close the stream
+            input.close();
+            result = f.getAbsolutePath();
+
+        } catch ( IOException e) {
+            mLogger.log("Unable to write the lof file " + basename, e ,
+                        LogManager.ERROR_MESSAGE_LEVEL);
+        }
+
+        return result;
+     }
+
+     
+     
+     /**
+     * Returns the directory in which the job executes on the worker node.
+     * 
+     * @param job
+     * 
+     * @return  the full path to the directory where the job executes
+     */
+    public String getWorkerNodeDirectory( Job job ){
+        //for pegasus-lite for time being we rely on 
+        //$PWD that is resolved in the directory at runtime
+        return "$PWD";
+    }
+
+    
+    /**
+     * Generates a seqexec input file for the job. The function first enables the
+     * job via kickstart module for worker node execution and then retrieves
+     * the commands to put in the input file from the environment variables specified
+     * for kickstart.
+     *
+     * It creates a single input file for the seqexec invocation.
+     * The input file contains commands to
+     *
+     * <pre>
+     * 1) create directory on worker node
+     * 2) fetch input data files
+     * 3) execute the job
+     * 4) transfer the output data files
+     * 5) cleanup the directory
+     * </pre>
+     *
+     * @param job          the job to be enabled.
+     * @param isGlobusJob is <code>true</code>, if the job generated a
+     *        line <code>universe = globus</code>, and thus runs remotely.
+     *        Set to <code>false</code>, if the job runs on the submit
+     *        host in any way.
+     * 
+     * @return the file handle to the seqexec input file
+     */
+    protected File wrapJobWithPegasusLite(Job job, boolean isGlobusJob) {
+        File shellWrapper = new File( mSubmitDir, job.getID() + ".sh" );
+
+
+        //remove the remote or initial dir's for the compute jobs
+        String key = getDirectoryKey( job );
+
+        String exectionSiteDirectory = (String)job.condorVariables.removeKey( key );
+        FileServer stagingSiteFileServer =  mSiteStore.lookup( job.getStagingSiteHandle() ).getHeadNodeFS().selectScratchSharedFileServer();
+        String stagingSiteDirectory      = mSiteStore.getExternalWorkDirectory(stagingSiteFileServer, job.getStagingSiteHandle() );
+        String workerNodeDir             = getWorkerNodeDirectory( job );
+
+
+        try{
+            OutputStream ostream = new FileOutputStream( shellWrapper , true );
+            PrintWriter writer = new PrintWriter( new BufferedWriter(new OutputStreamWriter(ostream)) );
+
+            StringBuffer sb = new StringBuffer( );
+            sb.append( "#!/bin/bash" ).append( '\n' );
+            sb.append( "set -e" ).append( '\n' );
+            sb.append( "pegasus_lite_version_major=\"" ).append( "3" ).append( "\"").append( '\n' );
+            sb.append( "pegasus_lite_version_minor=\"" ).append( "2" ).append( "\"").append( '\n' );
+            sb.append( "pegasus_lite_version_patch=\"" ).append( "0cvs" ).append( "\"").append( '\n' );
+            //sb.append( '\n' );
+
+            sb.append( ". pegasus-lite-common.sh" ).append( '\n' );
+            //sb.append( '\n' );
+
+            sb.append( "# cleanup in case of failures" ).append( '\n' );
+            sb.append( "trap pegasus_lite_exit INT TERM EXIT" ).append( '\n' );
+            //sb.append( '\n' );
+
+            sb.append( "# work dir" ).append( '\n' );
+            sb.append( "pegasus_lite_setup_work_dir" ).append( '\n' );
+            //sb.append( '\n' );
+
+            File slsInputFile  = null;
+            if(  mSLS.needsSLSInput( job ) ){
+                //generate the sls file with the mappings in the submit exectionSiteDirectory
+                slsInputFile = mSLS.generateSLSInputFile( job,
+                                                          mSLS.getSLSInputLFN( job ),
+                                                          mSubmitDir,
+                                                          stagingSiteDirectory,
+                                                          workerNodeDir );
+
+                //construct a setup constituentJob not reqd as kickstart creating the exectionSiteDirectory
+                //String setupJob = constructSetupJob( constituentJob, workerNodeDir );
+                //setupJob = quote( setupJob );
+                //constituentJob.envVariables.construct( this.KICKSTART_SETUP, setupJob );
+
+                File slsFile = new File( exectionSiteDirectory, slsInputFile.getName() );
+                sb.append( "# stage in " ).append( '\n' );
+                sb.append(  mSLS.invocationString( job, slsFile ) ).append( '\n' );
+            }
+
+            sb.append( "# execute the tasks" ).append( '\n' );
+
+            
+            sb.append( job.getRemoteExecutable() ).append( job.getArguments() ).append( '\n' );
+
+
+             if( mSLS.needsSLSOutput( job ) ){
+                //construct the postjob that transfers the output files
+                //back to head node exectionSiteDirectory
+                //to fix later. right now post constituentJob only created is pre constituentJob
+                //created
+                File slsOutputFile = mSLS.generateSLSOutputFile( job,
+                                                            mSLS.getSLSOutputLFN( job ),
+                                                            mSubmitDir,
+                                                            stagingSiteDirectory,
+                                                            workerNodeDir );
+
+
+                //generate the post constituentJob
+                File slsFile = new File( exectionSiteDirectory, slsOutputFile.getName() );
+                String postJob = mSLS.invocationString( job, slsFile );
+                sb.append( "# stage out" ).append( '\n' );
+                sb.append( postJob ).append( '\n' );
+               
+            }
+            
+           
+            writer.print( sb.toString() );
+            writer.flush();
+            
+            writer.close();
+            ostream.close();
+        }
+        catch( IOException ioe ){
+            throw new RuntimeException( "[Pegasus-Lite] Error while writing out pegasus lite wrapper " + shellWrapper , ioe );
+        }
+
+        //modify the constituentJob if required
+        if ( !mSLS.modifyJobForWorkerNodeExecution( job,
+                                                    stagingSiteFileServer.getURLPrefix(),
+                                                    stagingSiteDirectory,
+                                                    mSiteStore.lookup( job.getSiteHandle() ).getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix(),
+                                                    exectionSiteDirectory,
+                                                    workerNodeDir ) ){
+
+                throw new RuntimeException( "Unable to modify job " + job.getName() + " for worker node execution" );
+
+            }
+
+
+        return shellWrapper;
+    }
+    
+   
+    
+}
