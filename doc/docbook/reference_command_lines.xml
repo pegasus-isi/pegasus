@@ -4108,6 +4108,11 @@ secret_key = asdhfuinakwjelfuhalsdflahsdl</programlisting>
 
     <orderedlist>
       <listitem>
+        <para>The STDOUT file does not exist. If it is missing, then the job 
+        failed.</para>
+      </listitem>
+      
+      <listitem>
         <para>Is STDOUT empty? If it is empty, then the job failed.</para>
       </listitem>
 
