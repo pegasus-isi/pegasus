@@ -9,18 +9,25 @@ HTML	= -Thtml
 INSTALL	= install
 
 SRC	= pegasus-analyzer.1 \
-	pegasus-check-sites.1 \
+	pegasus-cleanup.1 \
+	pegasus-create-dir.1 \
+	pegasus-dax-validator.1 \
+	pegasus-exitcode.1 \
 	pegasus-monitord.1 \
 	pegasus-plan.1 \
 	pegasus-plots.1 \
 	pegasus-rc-client.1 \
+	pegasus-remove.1 \
 	pegasus-run.1 \
+	pegasus-s3.1 \
+	pegasus-sc-client.1 \
 	pegasus-sc-converter.1 \
 	pegasus-statistics.1 \
+	pegasus-status.1 \
 	pegasus-tc-client.1 \
 	pegasus-tc-converter.1 \
-	pegasus-version.1 \
-	s3cmd.1
+	pegasus-transfer.1 \
+	pegasus-version.1
 
 OUTPS	= $(SRC:.1=.ps)
 OUTPDF	= $(SRC:.1=.pdf)
