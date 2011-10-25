@@ -217,7 +217,8 @@ parser.add_option("--socket", action = "store_const", const = "yes", dest = "soc
                   help = "enables a socket interface for debugging")
 parser.add_option("--skip-stdout", action = "store_const", const = 0, dest = "skip_stdout",
                   help = "disables storing both stdout and stderr in our output")
-parser.add_option("-v", "--verbose", action="count", default=0, dest="vb", help="Increase verbosity, repeatable")
+parser.add_option("-v", "--verbose", action="count", default=0, dest="vb",
+                  help="Increase verbosity, repeatable")
 grp = optparse.OptionGroup(parser, "Output options")
 grp.add_option("-d", "--dest", action="store", dest="event_dest", metavar="PATH or URL",
                help="Output destination URL [<scheme>]<params>, where "

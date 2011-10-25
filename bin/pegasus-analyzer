@@ -915,11 +915,10 @@ def debug_workflow():
 # --- main ----------------------------------------------------------------------------
 
 # Configure command line option parser
-prog_usage = "usage: %s [options]" % (prog_base)
+prog_usage = "usage: %s [options] workflow_directory" % (prog_base)
 parser = optparse.OptionParser(usage=prog_usage)
-parser.add_option("--debug", action = "store", type = "string", dest = "debug_level",
-		  help = "set log level, possible values are INFO, DEBUG, WARNING, ERROR, CRITICAL. Default level is %s."
-		  % logging.getLevelName(debug_level))
+parser.add_option("-v", "--verbose", action="count", default=0, dest="vb",
+                  help="Increase verbosity, repeatable")
 parser.add_option("-i", "-d", "--dir", action = "store", type = "string", dest = "input_dir",
 		  help = "input directory where the jobstate.log file is located, default is the current directory")
 parser.add_option("-f", "--file", action = "store", type = "string", dest = "dag_filename",
@@ -947,13 +946,16 @@ parser.add_option("--type", action = "store", type = "string", dest = "workflow_
 print "%s: initializing..." % (prog_base)
 
 # Copy options from the command line parser
-if options.debug_level is not None:
-    try:
-        # Convert the user-specified debug level (string) into a logging level value
-        debug_level = LOG_LEVELS.get(options.debug_level.lower(), debug_level)
-        logger.setLevel(debug_level)
-    except:
-        logger.warning("could not set logging level to %s" % options.debug_level)
+
+if options.vb == 0:
+    lvl = logging.WARN
+elif options.vb == 1:
+    lvl = logging.INFO
+else:
+    lvl = logging.DEBUG
+# Set logging level
+logger.setLevel(lvl)
+
 if options.run_monitord is not None:
     run_monitord = options.run_monitord
 if options.strict_mode is not None:
@@ -988,7 +990,13 @@ else:
     if options.input_dir is not None:
 	input_dir = os.path.abspath(options.input_dir)
     else:
-	input_dir = os.getcwd()
+        if len(args) > 1:
+            parser.print_help()
+            sys.exit(1)
+        elif len(args) == 1:
+            input_dir = args[0]
+        else:
+            input_dir = os.getcwd()
 
 if debug_mode == 1:
     # Enter debug mode if job name given

@@ -14,15 +14,15 @@
 .\"
 .\" 
 .\" $Id$
-.TH "pegasus-analyzer" "1" "3.1" "Pegasus Analyzer"
+.TH "pegasus-analyzer" "1" "3.2" "Pegasus Analyzer"
 .SH "NAME"
 .LP 
-pegasus\-analyzer \- debug a workflow.
+pegasus\-analyzer \- debugs a workflow.
 .SH "SYNTAX"
 .TP 17 
 .B pegasus\-analyzer [\-\-help|\-h] [\-\-quiet|\-q] [\-\-strict|\-s]
 .br
-.B [\-\-monitord|\-m|\-t] [\-\-debug level]
+.B [\-\-monitord|\-m|\-t] [\-\-verbose|\-v]
 .br
 .B [\-\-output\-dir|\-o output_dir]
 .br
@@ -31,6 +31,8 @@ pegasus\-analyzer \- debug a workflow.
 .B [\-\-print|\-p print_options] [\-\-debug\-job job]
 .br
 .B [\-\-debug\-dir debug_dir] [\-\-type workflow_type]
+.br
+.B [workflow_directory]
 .SH "DESCRIPTION"
 .LP 
 .B "pegasus\-analyzer"
@@ -89,22 +91,17 @@ option, in order to provide an alternative location for
 .B "pegasus\-monitord"
 log files.
 .TP
-.B \-\-debug level
+.B \-\-verbose | \-v
 Sets the log level for
 .BR "pegasus\-analyzer" .
-Possible values are
-.IR "INFO" ,
-.IR "DEBUG" ,
-.IR "WARNING" ,
-.IR "ERROR"
-and
-.IR "CRITICAL" ,
-in the more verbose to least verbose order.
-.br
 If omitted, the default
 .I level
 will be set to
 .IR "WARNING" .
+When this option is given, the log level is changed to
+.IR "INFO" .
+If this option is repeated, the log level will be changed to
+.IR "DEBUG" .
 .TP
 .B \-\-output\-dir | \-o output_dir
 This option provides an alternative location for all monitoring log files
