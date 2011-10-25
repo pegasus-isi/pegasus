@@ -20,8 +20,13 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 
 import edu.isi.pegasus.common.logging.LogManager;
 
+import edu.isi.pegasus.common.util.DefaultStreamGobblerCallback;
 import edu.isi.pegasus.common.util.Proxy;
 import edu.isi.pegasus.common.util.S3cfg;
+
+import edu.isi.pegasus.common.util.StreamGobbler;
+import edu.isi.pegasus.common.util.StreamGobblerCallback;
+import edu.isi.pegasus.common.util.Version;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
 
@@ -45,9 +50,12 @@ import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.BufferedWriter;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.FileWriter;
 import java.io.OutputStream;
@@ -104,6 +112,21 @@ public class PegasusLite implements GridStart {
     public static final String SHORT_NAME = "pegasus-lite";
 
   
+    /**
+     * Stores the major version of the planner.
+     */
+    private String mMajorVersionLevel;
+
+    /**
+     * Stores the major version of the planner.
+     */
+    private String mMinorVersionLevel;
+
+    /**
+     * Stores the major version of the planner.
+     */
+    private String mPatchVersionLevel;
+
 
     /**
      * The LogManager object which is used to log all the messages.
@@ -214,6 +237,16 @@ public class PegasusLite implements GridStart {
         mGenerateLOF  = mProps.generateLOFFiles();
         mTCHandle  = bag.getHandleToTransformationCatalog();
 
+
+        Version version = Version.instance();
+        mMajorVersionLevel = Integer.toString( Version.MAJOR );
+        mMinorVersionLevel = Integer.toString( Version.MINOR );
+        mPatchVersionLevel = Integer.toString( Version.PLEVEL );
+        if( version.toString().endsWith( "cvs" ) ){
+            mPatchVersionLevel += "cvs";
+        }
+
+
         mWorkerNodeExecution = mProps.executeOnWorkerNode();
         if( mWorkerNodeExecution ){
             //load SLS
@@ -270,6 +303,14 @@ public class PegasusLite implements GridStart {
      * @return boolean true if enabling was successful,else false.
      */
     public boolean enable( AggregatedJob job,boolean isGlobusJob){
+
+        //in pegasus lite mode we dont want kickstart to change or create
+        //worker node directories
+        for( Iterator it = job.constituentJobsIterator(); it.hasNext() ; ){
+            Job j = (Job) it.next();
+            j.vdsNS.construct( Pegasus.CHANGE_DIR_KEY , "false" );
+            j.vdsNS.construct( Pegasus.CREATE_AND_CHANGE_DIR_KEY, "false" );
+        }
 
         //for time being we treat clustered jobs same as normal jobs
         //in pegasus-lite
@@ -414,15 +455,6 @@ public class PegasusLite implements GridStart {
             //worker node directories
             job.vdsNS.construct( Pegasus.CHANGE_DIR_KEY , "false" );
             job.vdsNS.construct( Pegasus.CREATE_AND_CHANGE_DIR_KEY, "false" );
-
-            //enable the job via kickstart
-            //separate calls for aggregated and normal jobs
-            if( job instanceof AggregatedJob ){
-                this.mKickstartGridStartImpl.enable( (AggregatedJob)job, isGlobusJob );
-            }
-            else{
-                this.mKickstartGridStartImpl.enable( job, isGlobusJob );
-            }
 
             File seqxecIPFile = wrapJobWithPegasusLite( job, isGlobusJob );
 
@@ -637,8 +669,8 @@ public class PegasusLite implements GridStart {
         //remove the remote or initial dir's for the compute jobs
         String key = getDirectoryKey( job );
 
-        String exectionSiteDirectory = (String)job.condorVariables.removeKey( key );
-        FileServer stagingSiteFileServer =  mSiteStore.lookup( job.getStagingSiteHandle() ).getHeadNodeFS().selectScratchSharedFileServer();
+        String exectionSiteDirectory     = (String)job.condorVariables.removeKey( key );
+        FileServer stagingSiteFileServer = mSiteStore.lookup( job.getStagingSiteHandle() ).getHeadNodeFS().selectScratchSharedFileServer();
         String stagingSiteDirectory      = mSiteStore.getExternalWorkDirectory(stagingSiteFileServer, job.getStagingSiteHandle() );
         String workerNodeDir             = getWorkerNodeDirectory( job );
 
@@ -650,21 +682,21 @@ public class PegasusLite implements GridStart {
             StringBuffer sb = new StringBuffer( );
             sb.append( "#!/bin/bash" ).append( '\n' );
             sb.append( "set -e" ).append( '\n' );
-            sb.append( "pegasus_lite_version_major=\"" ).append( "3" ).append( "\"").append( '\n' );
-            sb.append( "pegasus_lite_version_minor=\"" ).append( "2" ).append( "\"").append( '\n' );
-            sb.append( "pegasus_lite_version_patch=\"" ).append( "0cvs" ).append( "\"").append( '\n' );
-            //sb.append( '\n' );
+            sb.append( "pegasus_lite_version_major=\"" ).append( this.mMajorVersionLevel ).append( "\"").append( '\n' );
+            sb.append( "pegasus_lite_version_minor=\"" ).append( this.mMinorVersionLevel ).append( "\"").append( '\n' );
+            sb.append( "pegasus_lite_version_patch=\"" ).append( this.mPatchVersionLevel ).append( "\"").append( '\n' );
+            sb.append( '\n' );
 
             sb.append( ". pegasus-lite-common.sh" ).append( '\n' );
-            //sb.append( '\n' );
+            sb.append( '\n' );
 
             sb.append( "# cleanup in case of failures" ).append( '\n' );
             sb.append( "trap pegasus_lite_exit INT TERM EXIT" ).append( '\n' );
-            //sb.append( '\n' );
+            sb.append( '\n' );
 
             sb.append( "# work dir" ).append( '\n' );
             sb.append( "pegasus_lite_setup_work_dir" ).append( '\n' );
-            //sb.append( '\n' );
+            sb.append( '\n' );
 
             File slsInputFile  = null;
             if(  mSLS.needsSLSInput( job ) ){
@@ -675,20 +707,41 @@ public class PegasusLite implements GridStart {
                                                           stagingSiteDirectory,
                                                           workerNodeDir );
 
-                //construct a setup constituentJob not reqd as kickstart creating the exectionSiteDirectory
-                //String setupJob = constructSetupJob( constituentJob, workerNodeDir );
-                //setupJob = quote( setupJob );
-                //constituentJob.envVariables.construct( this.KICKSTART_SETUP, setupJob );
-
                 File slsFile = new File( exectionSiteDirectory, slsInputFile.getName() );
                 sb.append( "# stage in " ).append( '\n' );
                 sb.append(  mSLS.invocationString( job, slsFile ) ).append( '\n' );
+                sb.append( '\n' );
             }
 
             sb.append( "# execute the tasks" ).append( '\n' );
 
+            writer.print( sb.toString() );
+            writer.flush();
             
-            sb.append( job.getRemoteExecutable() ).append( job.getArguments() ).append( '\n' );
+            sb = new StringBuffer();
+
+            //enable the job via kickstart
+            //separate calls for aggregated and normal jobs
+            if( job instanceof AggregatedJob ){
+                this.mKickstartGridStartImpl.enable( (AggregatedJob)job, isGlobusJob );
+                //for clustered jobs we embed the contents of the input
+                //file in the shell wrapper itself
+                sb.append( job.getRemoteExecutable() ).append( job.getArguments() );
+                sb.append( " 1>&2" ).append( " << EOF" ).append( '\n' );
+
+                sb.append( slurpInFile( mSubmitDir, job.getStdIn() ) );
+                sb.append( "EOF" ).append( '\n' );
+
+                //rest the jobs stdin
+                job.setStdIn( "" );
+                job.condorVariables.removeKey( "input" );
+            }
+            else{
+                this.mKickstartGridStartImpl.enable( job, isGlobusJob );
+                sb.append( job.getRemoteExecutable() ).append( job.getArguments() ).append( '\n' );
+            }
+            sb.append( '\n' );
+            
 
 
              if( mSLS.needsSLSOutput( job ) ){
@@ -708,7 +761,7 @@ public class PegasusLite implements GridStart {
                 String postJob = mSLS.invocationString( job, slsFile );
                 sb.append( "# stage out" ).append( '\n' );
                 sb.append( postJob ).append( '\n' );
-               
+                sb.append( '\n' );
             }
             
            
@@ -717,6 +770,12 @@ public class PegasusLite implements GridStart {
             
             writer.close();
             ostream.close();
+
+            //set the xbit on the shell script
+            //for 3.2, we will have 1.6 as the minimum jdk requirement
+            shellWrapper.setExecutable( true );
+            
+            //this.setXBitOnFile( shellWrapper.getAbsolutePath() );
         }
         catch( IOException ioe ){
             throw new RuntimeException( "[Pegasus-Lite] Error while writing out pegasus lite wrapper " + shellWrapper , ioe );
@@ -739,5 +798,94 @@ public class PegasusLite implements GridStart {
     }
     
    
-    
+    /**
+     * Convenience method to slurp in contents of a file into memory.
+     *
+     * @param directory  the directory where the file resides
+     * @param file    the file to be slurped in.
+     * 
+     * @return StringBuffer containing the contents
+     */
+    protected StringBuffer slurpInFile( String directory, String file ) throws  IOException{
+        StringBuffer result = new StringBuffer();
+        //sanity check
+        if( file == null ){
+            return result;
+        }
+
+        BufferedReader in = new BufferedReader( new FileReader( new File(  directory, file )) );
+
+        String line = null;
+
+        while(( line = in.readLine() ) != null ){
+            //System.out.println( line );
+            result.append( line ).append( '\n' );
+        }
+
+        in.close();
+
+
+        return result;
+    }
+
+     /**
+     * Sets the xbit on the file.
+     *
+     * @param file   the file for which the xbit is to be set
+     *
+     * @return boolean indicating whether xbit was set or not.
+     */
+    protected boolean  setXBitOnFile( String file ) {
+        boolean result = false;
+
+        //do some sanity checks on the source and the destination
+        File f = new File( file );
+        if( !f.exists() || !f.canRead()){
+            mLogger.log("The file does not exist " + file,
+                        LogManager.ERROR_MESSAGE_LEVEL);
+            return result;
+        }
+
+        try{
+            //set the callback and run the grep command
+            Runtime r = Runtime.getRuntime();
+            String command = "chmod +x " + file;
+            mLogger.log("Setting xbit " + command,
+                        LogManager.DEBUG_MESSAGE_LEVEL);
+            Process p = r.exec(command);
+
+            //the default gobbler callback always log to debug level
+            StreamGobblerCallback callback =
+               new DefaultStreamGobblerCallback(LogManager.DEBUG_MESSAGE_LEVEL);
+            //spawn off the gobblers with the already initialized default callback
+            StreamGobbler ips =
+                new StreamGobbler(p.getInputStream(), callback);
+            StreamGobbler eps =
+                new StreamGobbler(p.getErrorStream(), callback);
+
+            ips.start();
+            eps.start();
+
+            //wait for the threads to finish off
+            ips.join();
+            eps.join();
+
+            //get the status
+            int status = p.waitFor();
+            if( status != 0){
+                mLogger.log("Command " + command + " exited with status " + status,
+                            LogManager.DEBUG_MESSAGE_LEVEL);
+                return result;
+            }
+            result = true;
+        }
+        catch(IOException ioe){
+            mLogger.log("IOException while creating symbolic links ", ioe,
+                        LogManager.ERROR_MESSAGE_LEVEL);
+        }
+        catch( InterruptedException ie){
+            //ignore
+        }
+        return result;
+    }
 }
