@@ -111,6 +111,11 @@ public class PegasusLite implements GridStart {
      */
     public static final String SHORT_NAME = "pegasus-lite";
 
+
+    /**
+     * The basename of the pegasus lite common shell functions file.
+     */
+    public static final String PEGASUS_LITE_COMMON_FILE_BASENAME = "pegasus-lite-common.sh";
   
     /**
      * Stores the major version of the planner.
@@ -221,6 +226,15 @@ public class PegasusLite implements GridStart {
 
 
     /**
+     * The local path on the submit host to pegasus-lite-common.sh
+     */
+    protected String mLocalPathToPegasusLiteCommon;
+
+    /**
+     * The path to the pegasus lite common functions file.
+     */
+
+    /**
      * Initializes the GridStart implementation.
      *
      *  @param bag   the bag of objects that is used for initialization.
@@ -284,6 +298,8 @@ public class PegasusLite implements GridStart {
         mLocalS3cfgBasename = (mLocalS3cfg == null) ?
                                   null :
                                   new File(mLocalS3cfg).getName();
+
+        mLocalPathToPegasusLiteCommon = getSubmitHostPathToPegasusLiteCommon( );
     }
     
     /**
@@ -320,10 +336,10 @@ public class PegasusLite implements GridStart {
         boolean result = true;
 
         if( mWorkerNodeExecution ){
-            File seqxecIPFile = wrapJobWithPegasusLite( job, isGlobusJob );
+            File jobWrapper = wrapJobWithPegasusLite( job, isGlobusJob );
              //the .sh file is set as the executable for the job
             //in addition to setting transfer_executable as true
-            job.setRemoteExecutable( seqxecIPFile.getAbsolutePath() );
+            job.setRemoteExecutable( jobWrapper.getAbsolutePath() );
             job.condorVariables.construct( "transfer_executable", "true" );
         }
         return result;
@@ -456,11 +472,15 @@ public class PegasusLite implements GridStart {
             job.vdsNS.construct( Pegasus.CHANGE_DIR_KEY , "false" );
             job.vdsNS.construct( Pegasus.CREATE_AND_CHANGE_DIR_KEY, "false" );
 
-            File seqxecIPFile = wrapJobWithPegasusLite( job, isGlobusJob );
+            File jobWrapper = wrapJobWithPegasusLite( job, isGlobusJob );
+
+            //the job wrapper requires the common functions file
+            //from the submit host
+            job.condorVariables.addIPFileForTransfer( this.mLocalPathToPegasusLiteCommon );
 
             //the .sh file is set as the executable for the job
             //in addition to setting transfer_executable as true
-            job.setRemoteExecutable( seqxecIPFile.getAbsolutePath() );
+            job.setRemoteExecutable( jobWrapper.getAbsolutePath() );
             job.condorVariables.construct( "transfer_executable", "true" );
         }
         //for all auxillary jobs let kickstart figure what to do
@@ -687,7 +707,7 @@ public class PegasusLite implements GridStart {
             sb.append( "pegasus_lite_version_patch=\"" ).append( this.mPatchVersionLevel ).append( "\"").append( '\n' );
             sb.append( '\n' );
 
-            sb.append( ". pegasus-lite-common.sh" ).append( '\n' );
+            sb.append( ". " ).append( PegasusLite.PEGASUS_LITE_COMMON_FILE_BASENAME ).append( '\n' );
             sb.append( '\n' );
 
             sb.append( "# cleanup in case of failures" ).append( '\n' );
@@ -887,5 +907,26 @@ public class PegasusLite implements GridStart {
             //ignore
         }
         return result;
+    }
+
+    /**
+     * Determines the path to common shell functions file that Pegasus Lite 
+     * wrapped jobs use.
+     * 
+     * @return the path on the submit host.
+     */
+    protected String getSubmitHostPathToPegasusLiteCommon() {
+        StringBuffer path = new StringBuffer();
+
+        //first get the path to the share directory
+        File share = mProps.getSharedDir();
+        if( share == null ){
+            throw new RuntimeException( "Property for Pegasus share directory is not set" );
+        }
+
+        path.append( share.getAbsolutePath() ).append( File.separator ).
+             append( "sh" ).append( File.separator ).append( PegasusLite.PEGASUS_LITE_COMMON_FILE_BASENAME );
+
+        return path.toString();
     }
 }

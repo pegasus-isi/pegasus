@@ -254,15 +254,17 @@ public class CommonProperties
                     "java.util.Properties", "pegasus.home.schemadir" );
         }
 
+        if ( System.getProperty( "pegasus.home.sharedstatedir" ) == null ) {
+            throw new MissingResourceException( "The pegasus.home.sharedstatedir property was not set ",
+                    "java.util.Properties", "pegasus.home.sharedstatedir" );
+        }
+
  /*
         if ( System.getProperty( "pegasus.home.sysconfdir" ) == null ) {
             throw new MissingResourceException( "The pegasus.home.sysconfdir property was not set ",
                     "java.util.Properties", "pegasus.home.sysconfdir" );
         }
-        if ( System.getProperty( "pegasus.home.sharedstatedir" ) == null ) {
-            throw new MissingResourceException( "The pegasus.home.sharedstatedir property was not set ",
-                    "java.util.Properties", "pegasus.home.sharedstatedir" );
-        }
+   
 */
         
     }
