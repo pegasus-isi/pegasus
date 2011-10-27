@@ -51,6 +51,7 @@ import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 
+import edu.isi.pegasus.planner.classes.FileTransfer;
 import edu.isi.pegasus.planner.cluster.JobAggregator;
 
 import java.util.Iterator;
@@ -62,6 +63,7 @@ import java.util.ArrayList;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Collection;
 
 
 /**
@@ -956,13 +958,15 @@ public class Kickstart implements GridStart {
 
             //see if we need to generate a SLS input file in the submit exectionSiteDirectory
             File slsInputFile  = null;
-            if( generateSLSFile && mSLS.needsSLSInput( job ) ){
+            if( generateSLSFile && mSLS.needsSLSInputTransfers( job ) ){
                 //generate the sls file with the mappings in the submit exectionSiteDirectory
-                slsInputFile = mSLS.generateSLSInputFile( job,
+                Collection<FileTransfer> files = mSLS.determineSLSInputTransfers( job,
                                                           mSLS.getSLSInputLFN( job ),
                                                           mSubmitDir,
                                                           stagingSiteDirectory,
                                                           workerNodeDir );
+
+                slsInputFile = writeToFile( files , mSubmitDir, mSLS.getSLSInputLFN( job ) );
 
                 //construct a setup constituentJob not reqd as kickstart creating the exectionSiteDirectory
                 //String setupJob = constructSetupJob( constituentJob, workerNodeDir );
@@ -1002,16 +1006,18 @@ public class Kickstart implements GridStart {
 
             //see if we need to generate a SLS output file in the submit exectionSiteDirectory
             File slsOutputFile = null;
-            if( generateSLSFile && mSLS.needsSLSOutput( job ) ){
+            if( generateSLSFile && mSLS.needsSLSOutputTransfers( job ) ){
                 //construct the postjob that transfers the output files
                 //back to head node exectionSiteDirectory
                 //to fix later. right now post constituentJob only created is pre constituentJob
                 //created
-                slsOutputFile = mSLS.generateSLSOutputFile( job,
+                Collection<FileTransfer> files  = mSLS.determineSLSOutputTransfers( job,
                                                             mSLS.getSLSOutputLFN( job ),
                                                             mSubmitDir,
                                                             stagingSiteDirectory,
                                                             workerNodeDir );
+
+                slsOutputFile = writeToFile( files , mSubmitDir, mSLS.getSLSOutputLFN( job ) );
 
                 //generate the post constituentJob
                 File headNodeSLS = new File( exectionSiteDirectory, slsOutputFile.getName() );
@@ -1404,6 +1410,18 @@ public class Kickstart implements GridStart {
         job.envVariables.construct( this.KICKSTART_CLEANUP, ps.toString() );
 
         return;
+    }
+
+
+    /**
+     * Writes the files to
+     *
+     * @param files
+     * @param path
+     * @return
+     */
+    private File writeToFile(Collection<FileTransfer> files, String directory, String name ) {
+        throw new UnsupportedOperationException("Not yet implemented");
     }
 
 

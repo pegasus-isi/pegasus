@@ -52,6 +52,8 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedList;
 
 /**
  * This uses the transfer executable distributed with Pegasus to do the
@@ -235,8 +237,8 @@ public class Transfer   implements SLS {
      * @return invocation string
      */
     public String invocationString( Job job, File slsFile ){
-        //sanity check
-        if( slsFile == null ) { return null; }
+
+
 
         StringBuffer invocation = new StringBuffer();
 
@@ -271,16 +273,18 @@ public class Transfer   implements SLS {
 
         //add the required arguments to transfer
         invocation.append( " base mnt " );
-        
-        //we add absolute path if the sls files are staged via
-        //first level staging
-        if( this.mStageSLSFile ){
-            invocation.append( slsFile.getAbsolutePath() );
 
-        }
-        else{
-            //only the basename
-            invocation.append( slsFile.getName() );
+        if( slsFile != null ){
+            //we add absolute path if the sls files are staged via
+            //first level staging
+            if( this.mStageSLSFile ){
+                invocation.append( slsFile.getAbsolutePath() );
+
+            }
+            else{
+                //only the basename
+                invocation.append( slsFile.getName() );
+            }
         }
 
 
@@ -306,7 +310,7 @@ public class Transfer   implements SLS {
      *
      * @return true
      */
-    public boolean needsSLSInput( Job job ) {
+    public boolean needsSLSInputTransfers( Job job ) {
         return true;
     }
 
@@ -319,7 +323,7 @@ public class Transfer   implements SLS {
      *
      * @return true
      */
-    public boolean needsSLSOutput( Job job ) {
+    public boolean needsSLSOutputTransfers( Job job ) {
         Set files = job.getOutputFiles();
         return! (files == null || files.isEmpty());
     }
@@ -362,17 +366,19 @@ public class Transfer   implements SLS {
      * @param stagingSiteDirectory    directory on the head node of the staging site.
      * @param workerNodeDirectory  worker node directory
      *
-     * @return the full path to lof file created, else null if no file is
-     *   written out.
+     * @return a Collection of FileTransfer objects listing the transfers that
+     *         need to be done.
+     *
+     * @see #needsSLSInputTransfers( Job)
      */
-    public File generateSLSInputFile( Job job,
+    public Collection<FileTransfer>  determineSLSInputTransfers( Job job,
                                       String fileName,
                                       String submitDir,
                                       String stagingSiteDirectory,
                                       String workerNodeDirectory ) {
 
         //sanity check
-        if ( !needsSLSInput( job ) ){
+        if ( !needsSLSInputTransfers( job ) ){
             mLogger.log( "Not Writing out a SLS input file for job " + job.getName() ,
                          LogManager.DEBUG_MESSAGE_LEVEL );
             return null;
@@ -380,67 +386,62 @@ public class Transfer   implements SLS {
 
 
         Set files = job.getInputFiles();
-        File sls = null;
+
+//      To handle for null conditions?
+//        File sls = null;
+        Collection<FileTransfer> result = new LinkedList();
 
         //figure out the remote site's headnode gridftp server
         //and the working directory on it.
         //the below should be cached somehow
-        String sourceURLPrefix = mSiteStore.lookup( job.getSiteHandle() ).getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix( );
+        String sourceURLPrefix = mSiteStore.lookup( job.getStagingSiteHandle() ).getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix( );
         String sourceDir = stagingSiteDirectory;
         String destDir = workerNodeDirectory;
 
 
-        //writing the stdin file
-        try {
-            sls = new File( submitDir, fileName );
-            FileWriter input = new FileWriter( sls );
-            PegasusFile pf;
+        PegasusFile pf;
 
-            //To do. distinguish the sls file from the other input files
-            for( Iterator it = files.iterator(); it.hasNext(); ){
-                pf = ( PegasusFile ) it.next();
-                String lfn = pf.getLFN();
+        //To do. distinguish the sls file from the other input files
+        for( Iterator it = files.iterator(); it.hasNext(); ){
+            pf = ( PegasusFile ) it.next();
+            String lfn = pf.getLFN();
 
-                if( lfn.equals( ENV.X509_USER_PROXY_KEY ) ){
-                    //ignore the proxy file for time being
-                    //as we picking it from the head node directory
-                    continue;
-                }
+            if( lfn.equals( ENV.X509_USER_PROXY_KEY ) ){
+                //ignore the proxy file for time being
+                //as we picking it from the head node directory
+                continue;
+            }
 
-                //check if the input file is in the transient RC
-                //all files in the DAX should be in the transient RC
-                String transientPFN =  mTransientRC.lookup( lfn, job.getSiteHandle() );
-                if( transientPFN == null ){
-                    //create the default path from the directory 
-                    //on the head node
-                    input.write( sourceURLPrefix ); input.write( File.separator );
-                    input.write( sourceDir ); input.write( File.separator );
-                    input.write( lfn );
-                }
-                else{
-                    //use the location specified in 
-                    //the transient replica catalog
-                    input.write( transientPFN );
-                }
-                input.write( "\n" );
+            //check if the input file is in the transient RC
+            //all files in the DAX should be in the transient RC
+            String transientPFN =  mTransientRC.lookup( lfn, job.getSiteHandle() );
+            FileTransfer ft = new FileTransfer();
+            if( transientPFN == null ){
+                //create the default path from the directory
+                //on the head node
+                StringBuffer url = new StringBuffer();
+                url.append( sourceURLPrefix ).append( File.separator );
+                url.append( sourceDir ).append( File.separator );
+                url.append( lfn );
+                ft.addSource( job.getStagingSiteHandle(), url.toString() );
+            }
+            else{
+                //use the location specified in
+                //the transient replica catalog
+//                    input.write( transientPFN );
+                ft.addSource( job.getStagingSiteHandle(), transientPFN );
+            }
                 
 
-                //destination
-                input.write( "file://" );
-                input.write( destDir ); input.write( File.separator );
-                input.write( pf.getLFN() );
-                input.write( "\n" );
+            //destination
+            StringBuffer url = new StringBuffer();
+            url.append( "file://" ).append( destDir ).append( File.separator ).
+                append( pf.getLFN() );
+            ft.addDestination( job.getSiteHandle(), url.toString() );
 
-
-            }
-            //close the stream
-            input.close();
-
-        } catch ( IOException e) {
-            mLogger.log( "Unable to write the sls file for job " + job.getName(), e ,
-                         LogManager.ERROR_MESSAGE_LEVEL);
+            result.add( ft );
         }
-        return sls;
+        return result;
     }
 
     /**
@@ -454,11 +455,12 @@ public class Transfer   implements SLS {
      *   staging site.
      * @param workerNodeDirectory the worker node directory
      *
-     * @return the full path to lof file created, else null if no file is
-     *   written out.
+     * @return a Collection of FileTransfer objects listing the transfers that
+     *         need to be done.
      *
+     * @see #needsSLSOutputTransfers( Job)
      */
-    public File generateSLSOutputFile( Job job,
+    public Collection<FileTransfer>  determineSLSOutputTransfers( Job job,
                                        String fileName,
                                        String submitDir,
                                        String stagingSiteDirectory,
@@ -466,13 +468,16 @@ public class Transfer   implements SLS {
 
 
         //sanity check
-        if ( !needsSLSOutput( job ) ){
+        if ( !needsSLSOutputTransfers( job ) ){
             mLogger.log( "Not Writing out a SLS output file for job " + job.getName() ,
                          LogManager.DEBUG_MESSAGE_LEVEL );
             return null;
         }
 
-        File sls = null;
+        //      To handle for null conditions?
+//        File sls = null;
+        Collection<FileTransfer> result = new LinkedList();
+
         Set files = job.getOutputFiles();
 
         //figure out the remote site's headnode gridftp server
@@ -482,41 +487,32 @@ public class Transfer   implements SLS {
         String destDir = stagingSiteDirectory;
         String sourceDir = workerNodeDirectory;
 
+        PegasusFile pf;
 
-        //writing the stdin file
-        try {
-            StringBuffer name = new StringBuffer();
-            name.append( "sls_" ).append( job.getName() ).append( ".out" );
-            sls = new File( submitDir, name.toString() );
-            FileWriter input = new FileWriter( sls );
-            PegasusFile pf;
+        //To do. distinguish the sls file from the other input files
+        for( Iterator it = files.iterator(); it.hasNext(); ){
+            pf = ( PegasusFile ) it.next();
 
-            //To do. distinguish the sls file from the other input files
-            for( Iterator it = files.iterator(); it.hasNext(); ){
-                pf = ( PegasusFile ) it.next();
+            FileTransfer ft = new FileTransfer();
+            //source
+            StringBuffer url = new StringBuffer();
+            url.append( "file://" ).append( sourceDir ).append( File.separator ).
+                append( pf.getLFN() );
+            ft.addSource( job.getSiteHandle(), url.toString() );
 
-                //source
-                input.write( "file://" );
-                input.write( sourceDir ); input.write( File.separator );
-                input.write( pf.getLFN() );
-                input.write( "\n" );
+            //destination
+            url = new StringBuffer();
+            url.append( destURLPrefix ).append( File.separator );
+            url.append( destDir ).append( File.separator );
+            url.append( pf.getLFN() );
+            ft.addDestination( job.getStagingSiteHandle(), url.toString() );
 
-                //destination
-                input.write( destURLPrefix ); input.write( File.separator );
-                input.write( destDir ); input.write( File.separator );
-                input.write( pf.getLFN() );
-                input.write( "\n" );
+            result.add(ft);
 
-            }
-            //close the stream
-            input.close();
-
-        } catch ( IOException e) {
-            mLogger.log( "Unable to write the sls output file for job " + job.getName(), e ,
-                         LogManager.ERROR_MESSAGE_LEVEL);
         }
 
-        return sls;
+        return result;
+
 
 
     }

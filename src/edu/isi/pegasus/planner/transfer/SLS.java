@@ -16,12 +16,14 @@
 
 package edu.isi.pegasus.planner.transfer;
 
+import edu.isi.pegasus.planner.classes.FileTransfer;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.Job;
 
 
 
 import java.io.File;
+import java.util.Collection;
 
 /**
  * This interface defines the second level staging process, that manages
@@ -36,7 +38,7 @@ public interface SLS {
     /**
      * The version associated with the API.
      */
-    public static final String VERSION = "1.1";
+    public static final String VERSION = "1.2";
 
     /**
      * Initializes the SLS implementation.
@@ -77,7 +79,7 @@ public interface SLS {
      *
      * @return true
      */
-    public boolean needsSLSInput( Job job );
+    public boolean needsSLSInputTransfers( Job job );
 
     /**
      * Returns a boolean indicating whether it will an output file for a job
@@ -88,7 +90,7 @@ public interface SLS {
      *
      * @return true
      */
-    public boolean needsSLSOutput( Job job );
+    public boolean needsSLSOutputTransfers( Job job );
 
 
     /**
@@ -121,11 +123,12 @@ public interface SLS {
      * @param stagingSiteDirectory  the directory on the head node of the staging site.
      * @param workerNodeDirectory  the worker node directory
      *
-     * @return the full path to lof file created, else null if no file is written out.
+     * @return a Collection of FileTransfer objects listing the transfers that
+     *         need to be done.
      *
-     * @see #needsSLSInput( Job)
+     * @see #needsSLSInputTransfers( Job)
      */
-    public File generateSLSInputFile( Job job,
+    public Collection<FileTransfer> determineSLSInputTransfers( Job job,
                                       String fileName,
                                       String submitDir,
                                       String stagingSiteDirectory,
@@ -141,11 +144,12 @@ public interface SLS {
      * @param stagingSiteDirectory  the directory on the head node of the staging site.
      * @param workerNodeDirectory  the worker node directory
      *
-     * @return the full path to lof file created, else null if no file is written out.
+     * @return a Collection of FileTransfer objects listing the transfers that
+     *         need to be done.
      *
-     * @see #needsSLSOutput( Job)
+     * @see #needsSLSOutputTransfers( Job)
      */
-    public File generateSLSOutputFile( Job job,
+    public Collection<FileTransfer> determineSLSOutputTransfers( Job job,
                                        String fileName,
                                        String submitDir,
                                        String stagingSiteDirectory,

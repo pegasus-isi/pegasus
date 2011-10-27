@@ -871,11 +871,11 @@ public class SeqExec implements GridStart {
                 //we let condor transfer the file from the submit directory
                 //to a directory on the headnode/worker node.
                 
-                if( mSLS.needsSLSInput( job ) ){
+                if( mSLS.needsSLSInputTransfers( job ) ){
                       filesToBeCopied.add( mSLS.getSLSInputLFN( job ) );
  
                 }
-                if( mSLS.needsSLSOutput( job ) ){
+                if( mSLS.needsSLSOutputTransfers( job ) ){
                       filesToBeCopied.add( mSLS.getSLSOutputLFN( job ) );
   
                 }
@@ -1105,10 +1105,10 @@ public class SeqExec implements GridStart {
                 //we let condor transfer the file from the submit directory
                 //to a directory on the headnode/worker node.
                 //we need seqexec to cp the sls files to the worker node directories
-                if( mSLS.needsSLSInput( job ) ){
+                if( mSLS.needsSLSInputTransfers( job ) ){
                     filesToBeCopied.add( mSLS.getSLSInputLFN(job) );
                 }
-                if( mSLS.needsSLSOutput( job ) ){
+                if( mSLS.needsSLSOutputTransfers( job ) ){
                     filesToBeCopied.add( mSLS.getSLSOutputLFN(job) );
                 }
                 

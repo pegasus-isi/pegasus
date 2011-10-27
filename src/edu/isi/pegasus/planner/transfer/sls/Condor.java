@@ -31,15 +31,11 @@ import edu.isi.pegasus.planner.transfer.SLS;
 
 import edu.isi.pegasus.planner.namespace.Pegasus;
 
-import edu.isi.pegasus.planner.catalog.site.impl.old.PoolInfoProvider;
 
 import java.io.File;
-import java.io.IOException;
-import java.io.FileWriter;
 
 import java.util.Iterator;
-import java.util.Set;
-
+import java.util.Collection;
 
 
 /**
@@ -142,7 +138,7 @@ public class Condor   implements SLS {
      *
      * @return false
      */
-    public boolean needsSLSInput( Job job ) {
+    public boolean needsSLSInputTransfers( Job job ) {
         return false;
     }
 
@@ -155,7 +151,7 @@ public class Condor   implements SLS {
      *
      * @return false
      */
-    public boolean needsSLSOutput( Job job ) {
+    public boolean needsSLSOutputTransfers( Job job ) {
         return false;
     }
 
@@ -193,9 +189,12 @@ public class Condor   implements SLS {
      * @param stagingSiteDirectory    directory on the head node of the compute site.
      * @param workerNodeDirectory  worker node directory
      *
-     * @return null as no SLS file is generated.
+     * @return a Collection of FileTransfer objects listing the transfers that
+     *         need to be done.
+     *
+     * @see #needsSLSInputTransfers( Job)
      */
-    public File generateSLSInputFile( Job job,
+    public Collection<FileTransfer>  determineSLSInputTransfers( Job job,
                                       String fileName,
                                       String submitDir,
                                       String stagingSiteDirectory,
@@ -215,10 +214,12 @@ public class Condor   implements SLS {
      *   compute site.
      * @param workerNodeDirectory the worker node directory
      *
-     * @return null as no SLS file is generated.
+     * @return a Collection of FileTransfer objects listing the transfers that
+     *         need to be done.
      *
+     * @see #needsSLSOutputTransfers( Job)
      */
-    public File generateSLSOutputFile(Job job,
+    public Collection<FileTransfer>  determineSLSOutputTransfers(Job job,
                                       String fileName,
                                       String submitDir,
                                       String stagingSiteDirectory,

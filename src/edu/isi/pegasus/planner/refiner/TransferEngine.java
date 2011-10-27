@@ -381,7 +381,10 @@ public class TransferEngine extends Engine {
 
             //set the staging site for the job
             //currentJob.setStagingSiteHandle( getStagingSite( currentJob ) );
-            
+
+            //For 3.2 release we may not need this, as credentials will be handled
+            //explicitly. And no SLS files exist any longer.
+/*
             //modify the jobs if required for worker node execution
             if( mWorkerNodeExecution ){
                 mSLS.modifyJobForFirstLevelStaging( currentJob,
@@ -389,7 +392,7 @@ public class TransferEngine extends Engine {
                                                     mSLS.getSLSInputLFN( currentJob ),
                                                     mSLS.getSLSOutputLFN( currentJob )   );
             }
-            
+ */
             //set the node depth as the level
             currentJob.setLevel( node.getDepth() );
             currentJobName = currentJob.getName();

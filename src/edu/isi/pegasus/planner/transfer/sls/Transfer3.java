@@ -116,8 +116,7 @@ public class Transfer3 extends Transfer implements SLS {
      * @return invocation string
      */
     public String invocationString( Job job, File slsFile ){
-        //sanity check
-        if( slsFile == null ) { return null; }
+
 
         StringBuffer invocation = new StringBuffer();
 
@@ -150,17 +149,19 @@ public class Transfer3 extends Transfer implements SLS {
         }
         
 
-        //add the required arguments to transfer
-        invocation.append( " -f " );
-        //we add absolute path if the sls files are staged via
-        //first level staging
-        if( this.mStageSLSFile ){
-            invocation.append( slsFile.getAbsolutePath() );
-            
-        }
-        else{
-            //only the basename
-            invocation.append( slsFile.getName() );
+        if( slsFile != null ){
+            //add the required arguments to transfer
+            invocation.append( " -f " );
+            //we add absolute path if the sls files are staged via
+            //first level staging
+            if( this.mStageSLSFile ){
+                invocation.append( slsFile.getAbsolutePath() );
+
+            }
+           else{
+                //only the basename
+                invocation.append( slsFile.getName() );
+            }
         }
 
 

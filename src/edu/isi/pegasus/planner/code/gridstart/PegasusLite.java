@@ -50,6 +50,8 @@ import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
 
+import edu.isi.pegasus.planner.classes.FileTransfer;
+import edu.isi.pegasus.planner.classes.NameValue;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -62,6 +64,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.Set;
 
@@ -718,18 +721,24 @@ public class PegasusLite implements GridStart {
             sb.append( "pegasus_lite_setup_work_dir" ).append( '\n' );
             sb.append( '\n' );
 
-            File slsInputFile  = null;
-            if(  mSLS.needsSLSInput( job ) ){
+
+            if(  mSLS.needsSLSInputTransfers( job ) ){
                 //generate the sls file with the mappings in the submit exectionSiteDirectory
-                slsInputFile = mSLS.generateSLSInputFile( job,
+                Collection<FileTransfer> files = mSLS.determineSLSInputTransfers( job,
                                                           mSLS.getSLSInputLFN( job ),
                                                           mSubmitDir,
                                                           stagingSiteDirectory,
                                                           workerNodeDir );
 
-                File slsFile = new File( exectionSiteDirectory, slsInputFile.getName() );
+
                 sb.append( "# stage in " ).append( '\n' );
-                sb.append(  mSLS.invocationString( job, slsFile ) ).append( '\n' );
+                sb.append(  mSLS.invocationString( job, null ) );
+
+                sb.append( " 1>&2" ).append( " << EOF" ).append( '\n' );
+
+                sb.append( convertToTransferInputFormat( files ) );
+                sb.append( "EOF" ).append( '\n' );
+
                 sb.append( '\n' );
             }
 
@@ -764,12 +773,12 @@ public class PegasusLite implements GridStart {
             
 
 
-             if( mSLS.needsSLSOutput( job ) ){
+             if( mSLS.needsSLSOutputTransfers( job ) ){
                 //construct the postjob that transfers the output files
                 //back to head node exectionSiteDirectory
                 //to fix later. right now post constituentJob only created is pre constituentJob
                 //created
-                File slsOutputFile = mSLS.generateSLSOutputFile( job,
+                Collection<FileTransfer> files = mSLS.determineSLSOutputTransfers( job,
                                                             mSLS.getSLSOutputLFN( job ),
                                                             mSubmitDir,
                                                             stagingSiteDirectory,
@@ -777,10 +786,13 @@ public class PegasusLite implements GridStart {
 
 
                 //generate the post constituentJob
-                File slsFile = new File( exectionSiteDirectory, slsOutputFile.getName() );
-                String postJob = mSLS.invocationString( job, slsFile );
+                String postJob = mSLS.invocationString( job, null );
                 sb.append( "# stage out" ).append( '\n' );
-                sb.append( postJob ).append( '\n' );
+                sb.append( postJob );
+                
+                sb.append( " 1>&2" ).append( " << EOF" ).append( '\n' );
+                sb.append( convertToTransferInputFormat( files ) );
+                sb.append( "EOF" ).append( '\n' );
                 sb.append( '\n' );
             }
             
@@ -818,6 +830,34 @@ public class PegasusLite implements GridStart {
     }
     
    
+    /**
+     * Convers the collection of files into an input format suitable for the
+     * transfer executable
+     * 
+     * @param files   Collection of <code>FileTransfer</code> objects.
+     * 
+     * @return  the blurb containing the files in the input format for the transfer
+     *          executable
+     */
+    protected StringBuffer convertToTransferInputFormat( Collection<FileTransfer> files ){
+        StringBuffer sb = new StringBuffer();
+
+        for( FileTransfer ft :  files ){
+            NameValue nv = ft.getSourceURL();
+            sb.append( "# "  ).append( nv.getKey() ).append( '\n' );
+            sb.append( nv.getValue() );
+            sb.append( '\n' );
+
+            nv = ft.getDestURL();
+            sb.append( "# "  ).append( nv.getKey() ).append( '\n' );
+            sb.append( nv.getValue() );
+            sb.append( '\n' );
+
+        }
+
+        return sb;
+    }
+
     /**
      * Convenience method to slurp in contents of a file into memory.
      *
