@@ -101,6 +101,11 @@ public class Transfer   implements SLS {
     public static final String DESCRIPTION = "Pegasus Transfer Wrapper around GUC";
 
     /**
+     * The executable basename
+     */
+    public static final String EXECUTABLE_BASENAME = "transfer";
+
+    /**
      * The handle to the site catalog.
      */
     protected SiteStore mSiteStore;
@@ -164,6 +169,7 @@ public class Transfer   implements SLS {
      * Boolean to track whether the gridstart used in PegasusLite or not
      */
     protected boolean mSeqExecGridStartUsed;
+
 
     /**
      * The default constructor.
@@ -243,11 +249,10 @@ public class Transfer   implements SLS {
         StringBuffer invocation = new StringBuffer();
 
         TransformationCatalogEntry entry = this.getTransformationCatalogEntry( job.getSiteHandle() );
-        if( entry == null ){
-            //cannot create an invocation
-            return null;
-
-        }
+        
+        String executable = ( entry == null )?
+                             this.getExecutableBasename() ://nothing in the transformation catalog, rely on the executable basenmae
+                             entry.getPhysicalTransformation();//rely on what is in the transformation catalog
 
         //we need to set the x bit on proxy correctly first as a
         //GRIDSTART prejob only if PegasusLite is not used for launching jobs
@@ -261,7 +266,7 @@ public class Transfer   implements SLS {
             //backdoor to set the X509_USER_PROXY
             job.envVariables.construct( ENV.X509_USER_PROXY_KEY, proxy.toString() );
         }
-        invocation.append( entry.getPhysicalTransformation() );
+        invocation.append( executable );
 
         
         //append any extra arguments set by user
@@ -677,7 +682,8 @@ public class Transfer   implements SLS {
 
     /**
      * Retrieves the transformation catalog entry for the executable that is
-     * being used to transfer the files in the implementation.
+     * being used to transfer the files in the implementation. If an entry is
+     * not specified in the Transformation Catalog, then null is returned.
      *
      * @param siteHandle  the handle of the  site where the transformation is
      *                    to be searched.
@@ -703,10 +709,7 @@ public class Transfer   implements SLS {
         }
 
         return ( tcentries == null ) ?
-                 this.defaultTCEntry( this.TRANSFORMATION_NAMESPACE,
-                                      this.TRANSFORMATION_NAME,
-                                      this.TRANSFORMATION_VERSION,
-                                      siteHandle ): //try using a default one
+                 null:
                  (TransformationCatalogEntry) tcentries.get(0);
 
 
@@ -838,6 +841,15 @@ public class Transfer   implements SLS {
         result.add( new Profile( Profile.ENV, "LD_LIBRARY_PATH", ldpath) );
 
         return result;
+    }
+
+    /**
+     * Return the executable basename for transfer executable used.
+     *
+     * @return the executable basename.
+     */
+    protected String getExecutableBasename() {
+        return this.EXECUTABLE_BASENAME;
     }
 
 

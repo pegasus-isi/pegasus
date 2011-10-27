@@ -83,7 +83,11 @@ public class Transfer3 extends Transfer implements SLS {
      */
     public static final String DESCRIPTION = "Python based Transfer Script for 3.0";
 
-  
+    /**
+     * The executable basename
+     */
+    public static final String EXECUTABLE_BASENAME = "pegasus-transfer";
+
     
     /**
      * The default constructor.
@@ -120,12 +124,11 @@ public class Transfer3 extends Transfer implements SLS {
 
         StringBuffer invocation = new StringBuffer();
 
-        TransformationCatalogEntry entry = this.getTransformationCatalogEntry( job.getSiteHandle() );
-        if( entry == null ){
-            //cannot create an invocation
-            return null;
 
-        }
+        TransformationCatalogEntry entry = this.getTransformationCatalogEntry( job.getSiteHandle() );
+        String executable = ( entry == null )?
+                             this.getExecutableBasename() ://nothing in the transformation catalog, rely on the executable basenmae
+                             entry.getPhysicalTransformation();//rely on what is in the transformation catalog
 
         //we need to set the x bit on proxy correctly first as a
         //GRIDSTART prejob only if SeqExec is not used for launching jobs
@@ -139,7 +142,7 @@ public class Transfer3 extends Transfer implements SLS {
             //backdoor to set the X509_USER_PROXY
             job.envVariables.construct( ENV.X509_USER_PROXY_KEY, proxy.toString() );
         }
-        invocation.append( entry.getPhysicalTransformation() );
+        invocation.append( executable );
 
         
         //append any extra arguments set by user
@@ -204,10 +207,7 @@ public class Transfer3 extends Transfer implements SLS {
         }
 
         return ( tcentries == null ) ?
-                 this.defaultTCEntry( Transfer3.TRANSFORMATION_NAMESPACE,
-                                      Transfer3.TRANSFORMATION_NAME,
-                                      Transfer3.TRANSFORMATION_VERSION,
-                                      siteHandle ): //try using a default one
+                 null:
                  (TransformationCatalogEntry) tcentries.get(0);
 
 
@@ -345,6 +345,15 @@ public class Transfer3 extends Transfer implements SLS {
         }
 
         return result;
+    }
+
+    /**
+     * Return the executable basename for transfer executable used.
+     *
+     * @return the executable basename.
+     */
+    protected String getExecutableBasename() {
+        return Transfer3.EXECUTABLE_BASENAME;
     }
 
 
