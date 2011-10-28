@@ -838,7 +838,10 @@ public class Kickstart implements GridStart {
                              entry.getPhysicalTransformation();
 
 
-            if( mUseFullPathToGridStart ){
+            //we use full paths  for pegasus auxillary jobs
+            //even when pegasus lite is used i.e mUseFullPathToGridStart is set to true
+            boolean useFullPath = mUseFullPathToGridStart || job.getJobType() != Job.COMPUTE_JOB ;
+            if( useFullPath ){
                 ksPath =  ( ksPath == null )?
                           //rely on the path from the site catalog
                           path:
