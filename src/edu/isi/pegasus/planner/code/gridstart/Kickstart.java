@@ -251,6 +251,11 @@ public class Kickstart implements GridStart {
 
 
     /**
+     * Boolean indicating whether to use full path or not
+     */
+    private boolean mUseFullPathToGridStart;
+
+    /**
      * Initializes the GridStart implementation.
      *
      * @param bag   the bag of objects that is used for initialization.
@@ -286,6 +291,17 @@ public class Kickstart implements GridStart {
         
         mNoGridStartImpl = new NoGridStart();
         mNoGridStartImpl.initialize( bag, dag );
+        mUseFullPathToGridStart = true;
+    }
+
+     /**
+     * Setter method to control whether a full path to Gridstart should be
+     * returned while wrapping a job or not.
+     *
+     * @param fullPath    if set to true, indicates that full path would be used.
+     */
+    public void useFullPathToGridStarts( boolean fullPath ){
+        this.mUseFullPathToGridStart = fullPath;
     }
 
     /**
@@ -820,12 +836,21 @@ public class Kickstart implements GridStart {
                              (String)job.vdsNS.get( Pegasus.GRIDSTART_PATH_KEY ):
                              //the tc entry has highest priority
                              entry.getPhysicalTransformation();
-            
-            
-            ksPath =  ( ksPath == null )?
-                      //rely on the path from the site catalog
-                      path:
-                      ksPath;
+
+
+            if( mUseFullPathToGridStart ){
+                ksPath =  ( ksPath == null )?
+                          //rely on the path from the site catalog
+                          path:
+                          ksPath;
+            }
+            else{
+                //pegasus lite case. we dont want to rely on site catalog
+                //constructed path
+                ksPath = ( ksPath == null )?
+                          this.EXECUTABLE_BASENAME ://use the basename
+                          ksPath;
+            }
             
             //sanity check 
             if( ksPath == null ){

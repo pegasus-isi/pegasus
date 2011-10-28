@@ -782,4 +782,8 @@ public class NoGridStart implements GridStart {
         return workerNodeDir.toString();
     }
 
+    public void useFullPathToGridStarts(boolean fullPath) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
 }

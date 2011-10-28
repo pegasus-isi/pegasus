@@ -272,6 +272,9 @@ public class PegasusLite implements GridStart {
         mEnablingPartOfAggregatedJob = false;
         mKickstartGridStartImpl = new Kickstart();
         mKickstartGridStartImpl.initialize( bag, dag );
+        //for pegasus lite we dont want ot use the full path, unless
+        //a user has specifically catalogued in the transformation catalog
+        mKickstartGridStartImpl.useFullPathToGridStarts( false );
 
         //for pegasus-lite work, worker node execution is no
         //longer handled in kickstart/no kickstart cases
@@ -303,6 +306,8 @@ public class PegasusLite implements GridStart {
                                   new File(mLocalS3cfg).getName();
 
         mLocalPathToPegasusLiteCommon = getSubmitHostPathToPegasusLiteCommon( );
+
+
     }
     
     /**
@@ -968,5 +973,9 @@ public class PegasusLite implements GridStart {
              append( "sh" ).append( File.separator ).append( PegasusLite.PEGASUS_LITE_COMMON_FILE_BASENAME );
 
         return path.toString();
+    }
+
+    public void useFullPathToGridStarts(boolean fullPath) {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 }

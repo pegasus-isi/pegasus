@@ -61,21 +61,7 @@ public interface  GridStart {
      */
     public void initialize( PegasusBag bag, ADag dag );
 
-    /**
-     * Enables a collection of jobs and puts them into an AggregatedJob.
-     * The assumption here is that all the jobs are being enabled by the same
-     * implementation. It is upto the implementation to determine whether it
-     * wants to return a new AggregatedJob by cloning the one passed or just
-     * modify the one passed to it.
-     *
-     * @param aggJob the AggregatedJob into which the collection has to be
-     *               integrated.
-     * @param jobs   the collection of jobs (Job) that need to be enabled.
-     *
-     * @return the AggregatedJob containing the enabled jobs.
-     * @see #enable(Job,boolean)
-     */
-    //public  AggregatedJob enable(AggregatedJob aggJob,Collection jobs);
+   
 
     /**
      * Enables a job to run on the grid. This also determines how the
@@ -112,6 +98,14 @@ public interface  GridStart {
      * @return boolean true if enabling was successful,else false.
      */
     public boolean enable(Job job,boolean isGlobusJob);
+
+    /**
+     * Setter method to control whether a full path to Gridstart should be 
+     * returned while wrapping a job or not.
+     * 
+     * @param fullPath    if set to true, indicates that full path would be used.
+     */
+    public void useFullPathToGridStarts( boolean fullPath );
 
     /**
      * Constructs the postscript that has to be invoked on the submit host
