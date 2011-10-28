@@ -723,6 +723,14 @@ public class PegasusLite implements GridStart {
             sb.append( '\n' );
 
             sb.append( "# work dir" ).append( '\n' );
+
+            if( mSLS.doesCondorModifications() ){
+                //when using condor IO with pegasus lite we dont want
+                //pegasus lite to change the directory where condor
+                //launches the jobs
+                sb.append( "export pegasus_lite_work_dir=$PWD" ).append( '\n' );
+            }
+
             sb.append( "pegasus_lite_setup_work_dir" ).append( '\n' );
             sb.append( '\n' );
 
