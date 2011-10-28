@@ -822,8 +822,10 @@ public class PegasusLite implements GridStart {
         if ( !mSLS.modifyJobForWorkerNodeExecution( job,
                                                     stagingSiteFileServer.getURLPrefix(),
                                                     stagingSiteDirectory,
+                                                    /*
                                                     mSiteStore.lookup( job.getSiteHandle() ).getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix(),
                                                     exectionSiteDirectory,
+                                                     */ 
                                                     workerNodeDir ) ){
 
                 throw new RuntimeException( "Unable to modify job " + job.getName() + " for worker node execution" );

@@ -488,7 +488,7 @@ public class Transfer   implements SLS {
         //figure out the remote site's headnode gridftp server
         //and the working directory on it.
         //the below should be cached somehow
-        String destURLPrefix = mSiteStore.lookup( job.getSiteHandle() ).getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix();
+        String destURLPrefix = mSiteStore.lookup( job.getStagingSiteHandle() ).getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix();
         String destDir = stagingSiteDirectory;
         String sourceDir = workerNodeDirectory;
 
@@ -641,9 +641,7 @@ public class Transfer   implements SLS {
      * @param job                    the job to be modified.
      * @param stagingSiteURLPrefix   the url prefix for the server on the staging site
      * @param stagingSitedirectory   the directory on the staging site, where the inp
-     * @param headNodeURLPrefix      the url prefix for the server on the headnode
-     * @param headNodeDirectory      the directory on the headnode, where the
-     *   input data is read from and the output data written out.
+     * 
      * @param workerNodeDirectory the directory in the worker node tmp
      *
      * @return boolean indicating whether job was successfully modified or
@@ -653,8 +651,6 @@ public class Transfer   implements SLS {
     public boolean modifyJobForWorkerNodeExecution( Job job, 
                                                     String stagingSiteURLPrefix,
                                                     String stagingSitedirectory,
-                                                    String headNodeURLPrefix,
-                                                    String headNodeDirectory,
                                                     String workerNodeDirectory ) {
 
 
