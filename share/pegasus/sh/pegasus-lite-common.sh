@@ -94,6 +94,11 @@ function pegasus_lite_setup_work_dir()
     # remember where we started from
     pegasus_lite_start_dir=`pwd`
 
+    if [ "x$pegasus_lite_work_dir" != "x" ]; then
+        pegasus_lite_log "Not creating a new work directory as it is already set to $pegasus_lite_work_dir"
+        return
+    fi
+
     targets="$PEGASUS_WN_TMP $_CONDOR_SCRATCH_DIR $OSG_WN_TMP $TG_NODE_SCRATCH $TG_CLUSTER_SCRATCH $SCRATCH $TMPDIR $TMP /tmp"
     unset TMPDIR
 
