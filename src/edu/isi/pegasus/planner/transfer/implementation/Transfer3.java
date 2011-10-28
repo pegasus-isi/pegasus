@@ -220,7 +220,7 @@ public class Transfer3 extends AbstractMultipleFTPerXFERJob {
         }
 
         String globus = mSiteStore.getEnvironmentVariable( site, "GLOBUS_LOCATION" );
-        if( globus != null ){
+        if( globus != null && globus.length() > 1 ){
             //check for LD_LIBRARY_PATH
             String ldpath = mSiteStore.getEnvironmentVariable( site, "LD_LIBRARY_PATH" );
             if ( ldpath == null ){
