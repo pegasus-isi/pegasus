@@ -94,7 +94,7 @@ public class PegasusConfiguration {
         Properties p = new Properties( );
         if( configuration.equalsIgnoreCase( S3_CONFIGURATION_VALUE ) ){
             p.setProperty( "pegasus.execute.*.filesystem.local", "true" );
-            p.setProperty( "pegasus.gridstart", "SeqExec" );
+            p.setProperty( "pegasus.gridstart", "PegasusLite" );
 
             /* For 3.2 we dont need any S3 specific implementations
             p.setProperty( "pegasus.dir.create.impl", "S3" );
@@ -104,11 +104,9 @@ public class PegasusConfiguration {
             */
         }
         else if ( configuration.equalsIgnoreCase( CONDOR_CONFIGURATION_VALUE )  ){
-            p.setProperty( "pegasus.transfer.refiner", "Condor" );
             p.setProperty( "pegasus.transfer.sls.*.impl", "Condor" );
-            p.setProperty( "pegasus.selector.replica", "Local" );
             p.setProperty( "pegasus.execute.*.filesystem.local", "true" );
-
+            p.setProperty( "pegasus.gridstart", "PegasusLite" );
         }
         
         return p;
