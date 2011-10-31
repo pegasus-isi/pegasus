@@ -857,7 +857,7 @@ public class Kickstart implements GridStart {
             
             //sanity check 
             if( ksPath == null ){
-                throw new RuntimeException( "Unable to determine path to kickstart for site " + job.getSiteHandle() );
+                throw new RuntimeException( "Unable to determine path to kickstart for site " + job.getSiteHandle() + " for job " + job.getID() );
             }
             
             return ksPath;
