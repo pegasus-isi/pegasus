@@ -857,17 +857,19 @@ public class PegasusLite implements GridStart {
     protected StringBuffer convertToTransferInputFormat( Collection<FileTransfer> files ){
         StringBuffer sb = new StringBuffer();
 
+        int num = 1;
         for( FileTransfer ft :  files ){
             NameValue nv = ft.getSourceURL();
-            sb.append( "# "  ).append( nv.getKey() ).append( '\n' );
+            sb.append( "# "  ).append( "src " ).append( num ).append( " " ).append( nv.getKey() ).append( '\n' );
             sb.append( nv.getValue() );
             sb.append( '\n' );
 
             nv = ft.getDestURL();
-            sb.append( "# "  ).append( nv.getKey() ).append( '\n' );
+            sb.append( "# "  ).append( "dst " ).append( num ).append( " " ).append( nv.getKey() ).append( '\n' );
             sb.append( nv.getValue() );
             sb.append( '\n' );
 
+            num++;
         }
 
         return sb;

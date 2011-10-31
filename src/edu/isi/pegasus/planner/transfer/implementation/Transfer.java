@@ -321,7 +321,8 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
      */
     protected void writeJumboStdIn(FileWriter writer, Collection files, String stagingSite, int jobClass ) throws
         Exception {
-        for(Iterator it = files.iterator();it.hasNext();){
+        int num = 1;
+        for( Iterator it = files.iterator(); it.hasNext(); ){
             FileTransfer ft = (FileTransfer) it.next();
             NameValue source = ft.getSourceURL();
             //we want to leverage multiple dests if possible
@@ -329,12 +330,13 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
 
             //write to the file one URL pair at a time
             StringBuffer urlPair = new StringBuffer( );
-            urlPair.append( "#" ).append( source.getKey() ).append( "\n" ).
+            urlPair.append( "# " ).append( "src " ).append( num ).append( " " ).append( source.getKey() ).append( "\n" ).
                     append( source.getValue() ).append( "\n" ).
-                    append( "#" ).append( dest.getKey() ).append( "\n" ).
+                    append( "# " ).append( "dst " ).append( num ).append( " " ).append( dest.getKey() ).append( "\n" ).
                     append( dest.getValue() ).append( "\n" );
             writer.write( urlPair.toString() );
             writer.flush();
+            num++;
         }
 
 
