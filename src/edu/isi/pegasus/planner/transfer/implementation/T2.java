@@ -18,11 +18,9 @@ package edu.isi.pegasus.planner.transfer.implementation;
 
 import edu.isi.pegasus.planner.classes.TransferJob;
 import edu.isi.pegasus.planner.classes.Profile;
-import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.classes.FileTransfer;
 
 import edu.isi.pegasus.common.logging.LogManager;
-import edu.isi.pegasus.planner.common.PegasusProperties;
 
 import edu.isi.pegasus.planner.namespace.Pegasus;
 
@@ -187,7 +185,7 @@ public class T2 extends AbstractMultipleFTPerXFERJob {
      * @return a short textual description
      */
     public  String getDescription(){
-        return this.DESCRIPTION;
+        return T2.DESCRIPTION;
     }
 
     /**
@@ -203,9 +201,9 @@ public class T2 extends AbstractMultipleFTPerXFERJob {
         List tcentries = null;
         try {
             //namespace and version are null for time being
-            tcentries = mTCHandle.lookup(this.TRANSFORMATION_NAMESPACE,
-                                               this.TRANSFORMATION_NAME,
-                                               this.TRANSFORMATION_VERSION,
+            tcentries = mTCHandle.lookup(T2.TRANSFORMATION_NAMESPACE,
+                                               T2.TRANSFORMATION_NAME,
+                                               T2.TRANSFORMATION_VERSION,
                                                siteHandle,
                                                TCType.INSTALLED);
         } catch (Exception e) {
@@ -215,9 +213,10 @@ public class T2 extends AbstractMultipleFTPerXFERJob {
         }
 
         return ( tcentries == null ) ?
-                 this.defaultTCEntry( this.TRANSFORMATION_NAMESPACE,
-                                      this.TRANSFORMATION_NAME,
-                                      this.TRANSFORMATION_VERSION,
+                 this.defaultTCEntry( T2.TRANSFORMATION_NAMESPACE,
+                                      T2.TRANSFORMATION_NAME,
+                                      T2.TRANSFORMATION_VERSION,
+                                      T2.TRANSFORMATION_NAME,
                                       siteHandle ): //try using a default one
                  (TransformationCatalogEntry) tcentries.get(0);
 
@@ -232,7 +231,7 @@ public class T2 extends AbstractMultipleFTPerXFERJob {
      * @return the namespace of the derivation.
      */
     protected String getDerivationNamespace(){
-        return this.DERIVATION_NAMESPACE;
+        return T2.DERIVATION_NAMESPACE;
     }
 
 
@@ -243,7 +242,7 @@ public class T2 extends AbstractMultipleFTPerXFERJob {
      * @return the name of the derivation.
      */
     protected String getDerivationName(){
-        return this.DERIVATION_NAME;
+        return T2.DERIVATION_NAME;
     }
 
     /**
@@ -253,7 +252,7 @@ public class T2 extends AbstractMultipleFTPerXFERJob {
      * @return the version of the derivation.
      */
     protected String getDerivationVersion(){
-        return this.DERIVATION_VERSION;
+        return T2.DERIVATION_VERSION;
     }
 
 
@@ -320,9 +319,9 @@ public class T2 extends AbstractMultipleFTPerXFERJob {
      * @return the complete name.
      */
     protected String getCompleteTCName(){
-        return Separator.combine(this.TRANSFORMATION_NAMESPACE,
-                                 this.TRANSFORMATION_NAME,
-                                 this.TRANSFORMATION_VERSION);
+        return Separator.combine(T2.TRANSFORMATION_NAMESPACE,
+                                 T2.TRANSFORMATION_NAME,
+                                 T2.TRANSFORMATION_VERSION);
     }
 
     /**

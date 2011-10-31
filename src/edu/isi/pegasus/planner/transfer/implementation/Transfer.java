@@ -49,7 +49,7 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
  * transfer script distributed with Pegasus since version 3.0
  *
  * <p>
- * Transfer3 is distributed as part of the Pegasus worker package and can be found at
+ * Transfer is distributed as part of the Pegasus worker package and can be found at
  * $PEGASUS_HOME/bin/pegasus-transfer.
  *
  * <p>
@@ -61,7 +61,7 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
  * <p>
  * In order to use the transfer implementation implemented by this class, the
  * property <code>pegasus.transfer.*.impl</code> must be set to
- * value <code>Transfer3</code>.
+ * value <code>Transfer</code>.
  *
  * The arguments with which the pegasus-transfer client is invoked can be specified
  * <pre>
@@ -72,7 +72,7 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
  * @author Karan Vahi
  * @version $Revision$
  */
-public class Transfer3 extends AbstractMultipleFTPerXFERJob {
+public class Transfer extends AbstractMultipleFTPerXFERJob {
 
     /**
      * The transformation namespace for the transfer job.
@@ -83,7 +83,7 @@ public class Transfer3 extends AbstractMultipleFTPerXFERJob {
      * The name of the underlying transformation that is queried for in the
      * Transformation Catalog.
      */
-    public static final String TRANSFORMATION_NAME = "pegasus-transfer";
+    public static final String TRANSFORMATION_NAME = "transfer";
 
     /**
      * The version number for the transfer job.
@@ -98,7 +98,7 @@ public class Transfer3 extends AbstractMultipleFTPerXFERJob {
     /**
      * The name of the underlying derivation.
      */
-    public static final String DERIVATION_NAME = "pegasus-transfer";
+    public static final String DERIVATION_NAME = "transfer";
 
     /**
      * The derivation version number for the transfer job.
@@ -111,6 +111,10 @@ public class Transfer3 extends AbstractMultipleFTPerXFERJob {
     public static final String DESCRIPTION = "Python based Transfer Script";
 
 
+    /**
+     * The executable basename for the transfer executable.
+     */
+    public static final String EXECUTABLE_BASENAME = "pegasus-transfer";
 
 
     /**
@@ -119,7 +123,7 @@ public class Transfer3 extends AbstractMultipleFTPerXFERJob {
      *
      * @param bag   the bag of initialization objects.
      */
-    public Transfer3( PegasusBag bag ){
+    public Transfer( PegasusBag bag ){
         super( bag );
     }
 
@@ -156,7 +160,7 @@ public class Transfer3 extends AbstractMultipleFTPerXFERJob {
      * @return a short textual description
      */
     public  String getDescription(){
-        return Transfer3.DESCRIPTION;
+        return Transfer.DESCRIPTION;
     }
 
     /**
@@ -172,9 +176,9 @@ public class Transfer3 extends AbstractMultipleFTPerXFERJob {
         List tcentries = null;
         try {
             //namespace and version are null for time being
-            tcentries = mTCHandle.lookup( Transfer3.TRANSFORMATION_NAMESPACE,
-                                          Transfer3.TRANSFORMATION_NAME,
-                                          Transfer3.TRANSFORMATION_VERSION,
+            tcentries = mTCHandle.lookup( Transfer.TRANSFORMATION_NAMESPACE,
+                                          Transfer.TRANSFORMATION_NAME,
+                                          Transfer.TRANSFORMATION_VERSION,
                                           siteHandle,
                                           TCType.INSTALLED);
         } catch (Exception e) {
@@ -184,9 +188,10 @@ public class Transfer3 extends AbstractMultipleFTPerXFERJob {
         }
 
         return ( tcentries == null ) ?
-                 this.defaultTCEntry( Transfer3.TRANSFORMATION_NAMESPACE,
-                                      Transfer3.TRANSFORMATION_NAME,
-                                      Transfer3.TRANSFORMATION_VERSION,
+                 this.defaultTCEntry( Transfer.TRANSFORMATION_NAMESPACE,
+                                      Transfer.TRANSFORMATION_NAME,
+                                      Transfer.TRANSFORMATION_VERSION,
+                                      Transfer.EXECUTABLE_BASENAME,
                                       siteHandle ): //try using a default one
                  (TransformationCatalogEntry) tcentries.get(0);
 
@@ -245,28 +250,6 @@ public class Transfer3 extends AbstractMultipleFTPerXFERJob {
     }
 
 
-    /**
-     * Returns a default TC entry to be used in case entry is not found in the
-     * transformation catalog.
-     *
-     * @param namespace  the namespace of the transfer transformation
-     * @param name       the logical name of the transfer transformation
-     * @param version    the version of the transfer transformation
-     *
-     * @param site  the site for which the default entry is required.
-     *
-     *
-     * @return  the default entry.
-     */
-    /*protected  TransformationCatalogEntry defaultTCEntry(
-                                                       String namespace,
-                                                       String name,
-                                                       String version,
-                                                       String site ){
-
-        return super.defaultTCEntry( namespace, "pegasus-transfer", version, site );
-
-    }*/
 
     /**
      * Returns the namespace of the derivation that this implementation
@@ -275,7 +258,7 @@ public class Transfer3 extends AbstractMultipleFTPerXFERJob {
      * @return the namespace of the derivation.
      */
     protected String getDerivationNamespace(){
-        return Transfer3.DERIVATION_NAMESPACE;
+        return Transfer.DERIVATION_NAMESPACE;
     }
 
 
@@ -286,7 +269,7 @@ public class Transfer3 extends AbstractMultipleFTPerXFERJob {
      * @return the name of the derivation.
      */
     protected String getDerivationName(){
-        return Transfer3.DERIVATION_NAME;
+        return Transfer.DERIVATION_NAME;
     }
 
     /**
@@ -296,7 +279,7 @@ public class Transfer3 extends AbstractMultipleFTPerXFERJob {
      * @return the version of the derivation.
      */
     protected String getDerivationVersion(){
-        return Transfer3.DERIVATION_VERSION;
+        return Transfer.DERIVATION_VERSION;
     }
 
 
@@ -363,8 +346,8 @@ public class Transfer3 extends AbstractMultipleFTPerXFERJob {
      * @return the complete name.
      */
     protected String getCompleteTCName(){
-        return Separator.combine( Transfer3.TRANSFORMATION_NAMESPACE,
-                                  Transfer3.TRANSFORMATION_NAME,
-                                  Transfer3.TRANSFORMATION_VERSION);
+        return Separator.combine( Transfer.TRANSFORMATION_NAMESPACE,
+                                  Transfer.TRANSFORMATION_NAME,
+                                  Transfer.TRANSFORMATION_VERSION);
     }
 }

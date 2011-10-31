@@ -21,8 +21,6 @@ import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.TransferJob;
-import edu.isi.pegasus.planner.catalog.site.impl.old.classes.SiteInfo;
-import edu.isi.pegasus.planner.catalog.site.impl.old.classes.JobManager;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 
 import edu.isi.pegasus.common.logging.LogManager;
@@ -235,7 +233,7 @@ public abstract class AbstractMultipleFTPerXFERJob extends Abstract
      * @param namespace  the namespace of the transfer transformation
      * @param name       the logical name of the transfer transformation
      * @param version    the version of the transfer transformation
-     *
+     * @param executableBasename  the basename of the executable
      * @param site  the site for which the default entry is required.
      *
      *
@@ -245,6 +243,7 @@ public abstract class AbstractMultipleFTPerXFERJob extends Abstract
                                                        String namespace,
                                                        String name,
                                                        String version,
+                                                       String executableBasename,
                                                        String site ){
 
         TransformationCatalogEntry defaultTCEntry = null;
@@ -289,7 +288,7 @@ public abstract class AbstractMultipleFTPerXFERJob extends Abstract
         StringBuffer path = new StringBuffer();
         path.append( home ).append( File.separator ).
             append( "bin" ).append( File.separator ).
-            append( name );
+            append( executableBasename );
 
 
         defaultTCEntry = new TransformationCatalogEntry( namespace,

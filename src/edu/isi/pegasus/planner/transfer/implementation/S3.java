@@ -32,7 +32,7 @@ import edu.isi.pegasus.planner.refiner.createdir.Implementation;
 
 
 /**
- * A S3 implementation that extends on Transfer3 to creates the URL's to refer
+ * A S3 implementation that extends on Transfer to creates the URL's to refer
  * to a S3 bucket instead of a directory on the head node of a cloud site.
  * 
  * @author Karan Vahi
@@ -40,7 +40,7 @@ import edu.isi.pegasus.planner.refiner.createdir.Implementation;
  * @version $Revision$
  */
 
-public class S3 extends Transfer3 {
+public class S3 extends Transfer {
 
 
     
