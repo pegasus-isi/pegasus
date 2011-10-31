@@ -42,7 +42,7 @@ public  class ImplementationFactory {
         "edu.isi.pegasus.planner.transfer.implementation";
 
 
-    public static final String DEFAULT_TRANSFER_IMPLEMENTATION = "Transfer3";
+    public static final String DEFAULT_TRANSFER_IMPLEMENTATION = "Transfer";
 
     public static final String DEFAULT_SETUP_TRANSFER_IMPLEMENTATION = "GUC";
 

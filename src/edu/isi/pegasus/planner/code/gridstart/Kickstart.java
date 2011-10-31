@@ -499,12 +499,6 @@ public class Kickstart implements GridStart {
             //standard stdin by giving the input file name as -
             if (job.logicalName.equals(
                 edu.isi.pegasus.planner.transfer.implementation.Transfer.TRANSFORMATION_NAME)
-                || job.logicalName.equals(
-                                edu.isi.pegasus.planner.transfer.implementation.Transfer3.TRANSFORMATION_NAME )
-                ||job.logicalName.equals(
-                edu.isi.pegasus.planner.transfer.implementation.T2.TRANSFORMATION_NAME)
-                || job.logicalName.equals(edu.isi.pegasus.planner.transfer.implementation.Symlink.TRANSFORMATION_NAME )
-
                 ||job.logicalName.equals(edu.isi.pegasus.planner.cluster.aggregator.SeqExec.
                                          COLLAPSE_LOGICAL_NAME)
                 ||job.logicalName.equals(edu.isi.pegasus.planner.cluster.aggregator.MPIExec.

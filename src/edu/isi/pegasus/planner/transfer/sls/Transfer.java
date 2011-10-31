@@ -45,8 +45,6 @@ import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 
 import java.io.File;
-import java.io.IOException;
-import java.io.FileWriter;
 
 import java.util.Iterator;
 import java.util.Set;
@@ -103,7 +101,7 @@ public class Transfer   implements SLS {
     /**
      * The executable basename
      */
-    public static final String EXECUTABLE_BASENAME = "transfer";
+    public static final String EXECUTABLE_BASENAME = "pegasus-transfer";
 
     /**
      * The handle to the site catalog.
@@ -243,19 +241,16 @@ public class Transfer   implements SLS {
      * @return invocation string
      */
     public String invocationString( Job job, File slsFile ){
-
-
-
         StringBuffer invocation = new StringBuffer();
 
+
         TransformationCatalogEntry entry = this.getTransformationCatalogEntry( job.getSiteHandle() );
-        
         String executable = ( entry == null )?
                              this.getExecutableBasename() ://nothing in the transformation catalog, rely on the executable basenmae
                              entry.getPhysicalTransformation();//rely on what is in the transformation catalog
 
         //we need to set the x bit on proxy correctly first as a
-        //GRIDSTART prejob only if PegasusLite is not used for launching jobs
+        //GRIDSTART prejob only if SeqExec is not used for launching jobs
         if( mLocalUserProxyBasename != null && !this.mSeqExecGridStartUsed ){
             StringBuffer proxy = new StringBuffer( );
             proxy.append( slsFile.getParent() ).append( File.separator ).
@@ -268,32 +263,32 @@ public class Transfer   implements SLS {
         }
         invocation.append( executable );
 
-        
+
         //append any extra arguments set by user
         //in properties
         if( mExtraArguments != null ){
             invocation.append( " " ).append( mExtraArguments );
         }
-        
 
-        //add the required arguments to transfer
-        invocation.append( " base mnt " );
 
         if( slsFile != null ){
+            //add the required arguments to transfer
+            invocation.append( " -f " );
             //we add absolute path if the sls files are staged via
             //first level staging
             if( this.mStageSLSFile ){
                 invocation.append( slsFile.getAbsolutePath() );
 
             }
-            else{
+           else{
                 //only the basename
                 invocation.append( slsFile.getName() );
             }
         }
 
 
-        if( mLocalUserProxyBasename != null && !this.mSeqExecGridStartUsed  ){
+
+        if( mLocalUserProxyBasename != null && !this.mSeqExecGridStartUsed ){
             invocation.append( "\"" );
         }
 
@@ -690,17 +685,17 @@ public class Transfer   implements SLS {
         List tcentries = null;
         try {
             //namespace and version are null for time being
-            tcentries = mTCHandle.lookup( this.TRANSFORMATION_NAMESPACE,
-                                                this.TRANSFORMATION_NAME,
-                                                this.TRANSFORMATION_VERSION,
+            tcentries = mTCHandle.lookup( Transfer.TRANSFORMATION_NAMESPACE,
+                                                Transfer.TRANSFORMATION_NAME,
+                                                Transfer.TRANSFORMATION_VERSION,
                                                 siteHandle,
                                                 TCType.INSTALLED);
         } catch (Exception e) {
             mLogger.log(
                 "Unable to retrieve entry from TC for " +
-                Separator.combine( this.TRANSFORMATION_NAMESPACE,
-                                   this.TRANSFORMATION_NAME,
-                                   this.TRANSFORMATION_VERSION ) +
+                Separator.combine( Transfer.TRANSFORMATION_NAMESPACE,
+                                   Transfer.TRANSFORMATION_NAME,
+                                   Transfer.TRANSFORMATION_VERSION ) +
                 " Cause:" + e, LogManager.DEBUG_MESSAGE_LEVEL );
         }
 
@@ -713,6 +708,7 @@ public class Transfer   implements SLS {
     }
 
 
+
     /**
      * Returns a default TC entry to be used in case entry is not found in the
      * transformation catalog.
@@ -720,16 +716,16 @@ public class Transfer   implements SLS {
      * @param namespace  the namespace of the transfer transformation
      * @param name       the logical name of the transfer transformation
      * @param version    the version of the transfer transformation
-     *
+     * @param executableBasename  the basename of the executable
      * @param site  the site for which the default entry is required.
      *
      *
      * @return  the default entry.
      */
-    protected  TransformationCatalogEntry defaultTCEntry(
-                                                          String namespace,
+    protected  TransformationCatalogEntry defaultTCEntry( String namespace,
                                                           String name,
                                                           String version,
+                                                          String executableBasename,
                                                           String site ){
 
         TransformationCatalogEntry defaultTCEntry = null;
@@ -764,7 +760,7 @@ public class Transfer   implements SLS {
         StringBuffer path = new StringBuffer();
         path.append( home ).append( File.separator ).
             append( "bin" ).append( File.separator ).
-            append( name );
+            append( Transfer.EXECUTABLE_BASENAME );
 
 
         defaultTCEntry = new TransformationCatalogEntry( namespace,
@@ -797,44 +793,49 @@ public class Transfer   implements SLS {
 
     /**
      * Returns the environment profiles that are required for the default
-     * entry to sensibly work.
+     * entry to sensibly work. Tries to retrieve the following variables
+     *
+     * <pre>
+     * PEGASUS_HOME
+     * GLOBUS_LOCATION
+     * LD_LIBRARY_PATH
+     * </pre>
+     *
      *
      * @param site the site where the job is going to run.
      *
-     * @return List of environment variables, else null in case where the
-     *         required environment variables could not be found.
+     * @return List of environment variables, else empty list if none are found
      */
     protected List getEnvironmentVariables( String site ){
         List result = new ArrayList(2) ;
 
-        //create the CLASSPATH from home
-        String globus = mSiteStore.getEnvironmentVariable( site, "GLOBUS_LOCATION" );
-        if( globus == null ){
-            mLogger.log( "GLOBUS_LOCATION not set in site catalog for site " + site,
-                         LogManager.DEBUG_MESSAGE_LEVEL );
-            return null;
+        String pegasusHome =  mSiteStore.getEnvironmentVariable( site, "PEGASUS_HOME" );
+        if( pegasusHome != null ){
+            //we have both the environment variables
+            result.add( new Profile( Profile.ENV, "PEGASUS_HOME", pegasusHome ) );
         }
 
-
-
-        //check for LD_LIBRARY_PATH
-        String ldpath = mSiteStore.getEnvironmentVariable( site, "LD_LIBRARY_PATH" );
-        if ( ldpath == null ){
-            //construct a default LD_LIBRARY_PATH
-            ldpath = globus;
-            //remove trailing / if specified
-            ldpath = ( ldpath.charAt( ldpath.length() - 1 ) == File.separatorChar )?
+        String globus = mSiteStore.getEnvironmentVariable( site, "GLOBUS_LOCATION" );
+        if( globus != null ){
+            //check for LD_LIBRARY_PATH
+            String ldpath = mSiteStore.getEnvironmentVariable( site, "LD_LIBRARY_PATH" );
+            if ( ldpath == null ){
+                //construct a default LD_LIBRARY_PATH
+                ldpath = globus;
+                //remove trailing / if specified
+                ldpath = ( ldpath.charAt( ldpath.length() - 1 ) == File.separatorChar )?
                                 ldpath.substring( 0, ldpath.length() - 1 ):
                                 ldpath;
 
-            ldpath = ldpath + File.separator + "lib";
-            mLogger.log( "Constructed default LD_LIBRARY_PATH " + ldpath,
+                ldpath = ldpath + File.separator + "lib";
+                mLogger.log( "Constructed default LD_LIBRARY_PATH " + ldpath,
                          LogManager.DEBUG_MESSAGE_LEVEL );
-        }
+            }
 
-        //we have both the environment variables
-        result.add( new Profile( Profile.ENV, "GLOBUS_LOCATION", globus) );
-        result.add( new Profile( Profile.ENV, "LD_LIBRARY_PATH", ldpath) );
+            //we have both the environment variables
+            result.add( new Profile( Profile.ENV, "GLOBUS_LOCATION", globus) );
+            result.add( new Profile( Profile.ENV, "LD_LIBRARY_PATH", ldpath) );
+        }
 
         return result;
     }
@@ -845,7 +846,7 @@ public class Transfer   implements SLS {
      * @return the executable basename.
      */
     protected String getExecutableBasename() {
-        return this.EXECUTABLE_BASENAME;
+        return Transfer.EXECUTABLE_BASENAME;
     }
 
 
