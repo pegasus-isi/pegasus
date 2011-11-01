@@ -26,9 +26,10 @@ def returns_json(fn):
     """
     def new(self, *args, **kwarg):
         json_header()
-        s = json.dumps(fn(self, *args, **kwarg))
-        web.header('Content-Length', str(len(s)))
-        return s
+        print(json.dumps(fn(self, *args, **kwarg)))
+        return json.dumps(fn(self, *args, **kwarg))
+        #web.header('Content-Length', '{0:d}'.format(len(s)))
+        #return s
     return new
 
 def find_workflows(engine, dburl, label=None, submit_host=None, user=None,
@@ -64,7 +65,7 @@ def find_workflows(engine, dburl, label=None, submit_host=None, user=None,
                 'restarted': retry, 'queued': ttl - retry - succ - fail },
             'subwf' : [ ] }
         workflows[wf_id] = datum
-        stats.close()
+        #stats.close()
     # Nest children under parents
     delete_later = [ ]
     for wfid, datum in workflows.iteritems():
@@ -97,22 +98,28 @@ class Index(object):
                            'path':'/workflows/'},
                           ]}
 
+class Home(object):
+    def GET(self):
+        lines = file("dash.html").readlines()
+        return '\n'.join(lines)
+
 class Workflows(object):
     @returns_json
     def GET(self, n=None):
         fltr = web.input() #XXX: mostly ignored    
         workflow_data = find_workflows(g_engine, DB_URL)
-        return {'title':'workflow list',
-                'filter':str(fltr),
+        result = {'title':'workflow list',
+                'filter': "NULL",
                 'data': {
                     'wf':workflow_data,
                     'max_timestamp' : get_max_ts(g_engine),
                     }
                 }
-    
+        return result
+
 urls = (
-    '/', 'Index',
-    '/workflows/', 'Workflows',
+    '/', 'Home',
+    '/workflows/.*', 'Workflows',
     '/workflow/(.*)', 'Workflow')
 
 if __name__ == "__main__":

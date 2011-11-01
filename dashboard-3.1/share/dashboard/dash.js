@@ -70,11 +70,16 @@ function set_wf_display(hide_subwf) {
         })
 }
 
+show_success = function(container, text_status, jqxhr) {
+    jqxhr.success(show_workflows)
+}
+
 // Show all the workflow bars
-show_workflows = function(container) {
+show_workflows = function(container, text_status, jqxhr) {
     var data = container.data,
     workflows = data.wf,
     now = new Date()
+    alert(""+data.wf)
     // Set workflow num. ranges
     $("#wf_first").text("1")
     $("#wf_last").text(""+workflows.length)
@@ -129,7 +134,12 @@ show_workflows = function(container) {
 
 // Refresh table
 refresh = function() {
-    $.getJSON("http://0.0.0.0:8080/workflows/", show_workflows)
+    $.ajax({
+        url: "http://0.0.0.0:8080/workflows/",
+        dataType: 'json',
+        data: "",
+        success: show_success
+    });
 }
 
 
@@ -158,7 +168,7 @@ function run() {
     })
 
     // Draw, first time
-    //alert("draw1")
+    alert("draw1")
     refresh()
  }
 
