@@ -135,7 +135,7 @@ show_workflows = function(container, text_status, jqxhr) {
 // Refresh table
 refresh = function() {
     $.ajax({
-        url: "http://0.0.0.0:8080/workflows/",
+        url: "http://localhost:8080/workflows/",
         dataType: 'json',
         data: "",
         success: show_success

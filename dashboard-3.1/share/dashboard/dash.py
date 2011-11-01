@@ -118,7 +118,7 @@ class Workflows(object):
         return result
 
 urls = (
-    '/', 'Home',
+    '/', 'Index',
     '/workflows/.*', 'Workflows',
     '/workflow/(.*)', 'Workflow')
 
