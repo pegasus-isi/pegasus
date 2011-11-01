@@ -20,6 +20,6 @@ Then simply run it:
    python dash.py
 
 In your web browser, navigate to:
-   http://localhost:8080/dash.html
+   http://localhost:8080/static/dash.html
 
 You should see the dashboard.
