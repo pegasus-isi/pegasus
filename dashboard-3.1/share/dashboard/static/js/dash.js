@@ -79,7 +79,6 @@ show_workflows = function(container, text_status, jqxhr) {
     var data = container.data,
     workflows = data.wf,
     now = new Date()
-    alert(""+data.wf)
     // Set workflow num. ranges
     $("#wf_first").text("1")
     $("#wf_last").text(""+workflows.length)
@@ -168,7 +167,6 @@ function run() {
     })
 
     // Draw, first time
-    alert("draw1")
     refresh()
  }
 
