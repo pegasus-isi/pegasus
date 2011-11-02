@@ -32,11 +32,15 @@ re_parse_property = re.compile(r'([^:= \t]+)\s*[:=]?\s*(.*)')
 # Global variables
 prog_base = os.path.split(sys.argv[0])[1]	# Name of this program
 
-workflow_summary_file_name = "summary.txt";
-workflow_statistics_file_name = "workflow.txt";
-job_statistics_file_name = "jobs.txt";
-logical_transformation_statistics_file_name = "breakdown.txt";
-time_statistics_file_name = "time.txt"
+workflow_summary_file_name = "summary"
+workflow_summary_time_file_name = "summary-time"
+workflow_statistics_file_name = "workflow"
+job_statistics_file_name = "jobs"
+logical_transformation_statistics_file_name = "breakdown"
+time_statistics_file_name = "time"
+time_statistics_per_host_file_name = "time-per-host"
+text_file_extension = ".txt"
+csv_file_extension = ".csv"
 calc_wf_stats = False
 calc_wf_summary = False
 calc_jb_stats = False
@@ -46,46 +50,63 @@ time_filter = None
 NEW_LINE_STR ="\n"
 DEFAULT_OUTPUT_DIR = "statistics"
 
-transformation_stats_col_name = ["Transformation", "Count", "Succeeded", "Failed", "Min", "Max", "Mean", "Total"]
+# Transformations file column names
+transformation_stats_col_name_text = ["Transformation", "Count", "Succeeded", "Failed", "Min", "Max", "Mean", "Total"]
+transformation_stats_col_name_csv = ["Workflow_Id", "Dax_Label", "Transformation", "Count", "Succeeded", "Failed", "Min", "Max", "Mean", "Total"]
 transformation_stats_col_size = [60, 12, 12, 12, 20, 20, 20, 12]
 
-job_stats_col_name = ['#Job', 'Try', 'Site', 'Kickstart', 'Post', 'CondorQTime', 'Resource', 'Runtime', 'Seqexec', 'Seqexec-Delay', 'Exitcode', 'Hostname']
+# Jobs file column names
+job_stats_col_name_text = ['#Job', 'Try', 'Site', 'Kickstart', 'Post', 'CondorQTime', 'Resource', 'Runtime', 'Seqexec', 'Seqexec-Delay', 'Exitcode', 'Hostname']
+job_stats_col_name_csv = ['Workflow_Id', 'Dax_Label', 'Job', 'Try', 'Site', 'Kickstart', 'Post', 'CondorQTime', 'Resource', 'Runtime', 'Seqexec', 'Seqexec-Delay', 'Exitcode', 'Hostname']
 job_stats_col_size = [60, 4, 15, 12, 12, 12, 12, 12, 12, 15, 10, 30]
 
-worklow_summary_col_name = ["Type", "Succeeded", "Failed", "Incomplete", "Total", " ", "Retries", "Total Run (Retries Included)"]
-worklow_summary_col_size = [20, 20, 20, 20, 20, 5, 20, 20]
+# Summary file column names
+workflow_summary_col_name_csv = ["Type", "Succeeded", "Failed", "Incomplete", "Total", "Retries", "Total_Run)"]
+workflow_summary_col_name_text = ["Type", "Succeeded", "Failed", "Incomplete", "Total", " ", "Retries", "Total Run (Retries Included)"]
+workflow_summary_col_size = [20, 20, 20, 20, 20, 5, 20, 20]
+workflow_time_summary_col_name_csv = ["Stat_Type", "time_seconds"]
 
-worklow_status_col_name = ["#", "Type", "Succeeded", "Failed", "Incomplete", "Total", " ", "Retries", "Total Run (Retries Included)", "Workflow Retries"]
-worklow_status_col_size = [40, 15, 12, 12, 12, 12, 5, 12, 30, 18]
+# Workflow file column names
+workflow_status_col_name_text = ["#", "Type", "Succeeded", "Failed", "Incomplete", "Total", " ",
+                                   "Retries", "Total Run (Retries Included)", "Workflow Retries"]
+workflow_status_col_name_csv = ["Workflow_Id", "Dax_Label", "Type", "Succeeded", "Failed", "Incomplete",
+                                "Total", "Retries", "Total_Run", "Workflow_Retries"]
+workflow_status_col_size = [40, 15, 12, 12, 12, 12, 5, 12, 30, 18]
 
-time_stats_col_name = ["Date", "Count", "Runtime"]
+# Time file column names
+time_stats_col_name_csv = ["Stat_Type", "Date", "Count", "Runtime"]
+time_stats_col_name_text = ["Date", "Count", "Runtime"]
 time_stats_col_size = [30, 20, 20]
-time_host_stats_col_name = ["Date", "Host", "Count", "Runtime (Sec.)"]
+time_host_stats_col_name_csv = ["Stat_Type", "Date", "Host", "Count", "Runtime(sec)"]
+time_host_stats_col_name_text = ["Date", "Host", "Count", "Runtime (sec)"]
 time_host_stats_col_size = [30, 80, 20, 20]
 
 class JobStatistics:
 	def __init__(self):
 		self.name = None
 		self.site = None
-		self.kickstart =None
+		self.kickstart = None
 		self.post = None
 		self.condor_delay = None
 		self.resource = None
 		self.runtime = None
 		self.condorQlen =None
-		self.seqexec= None
+		self.seqexec = None
 		self.seqexec_delay = None
 		self.retry_count = 0
                 self.exitcode = None
                 self.hostname = None
 	
-	def getFormattedJobStatistics(self):
+	def getFormattedJobStatistics(self, output_format):
 		"""
 		Returns the formatted job statistics information  
 		@return:    formatted job statistics information
 		"""
 		formatted_job_stats = [self.name]
-		formatted_job_stats.append(" " + str(self.retry_count))
+                if output_format == "text":
+                        formatted_job_stats.append(" " + str(self.retry_count))
+                else:
+                        formatted_job_stats.append(str(self.retry_count))
 		if self.site is None:
 			formatted_job_stats.append('-')
 		else:
@@ -118,53 +139,93 @@ def setup_logger(level_str):
 		logger.setLevel(logging.INFO)
 	return
 
-def formatted_wf_summary_legends():
+def formatted_wf_summary_legends_part1():
 	"""
-	Returns the workflow summary legend  
+	Returns the first part of the workflow summary legend  
 	@return :  workflow summary legend
 	"""
-	formatted_wf_statistics_legend ="#legends \n"
-	
+        formatted_wf_statistics_legend = ""
 	formatted_wf_statistics_legend += """
-Workflow summary - Summary of the workflow execution. It shows total
-		tasks/jobs/sub workflows run, how many succeeded/failed etc.
-		In case of hierarchical workflow the calculation shows the 
-		statistics across all the sub workflows.It shows the following 
-		statistics about tasks, jobs and sub workflows.
-		* Succeeded - total count of succeeded tasks/jobs/sub workflows.
-		* Failed - total count of failed tasks/jobs/sub workflows.
-		* Incomplete - total count of tasks/jobs/sub workflows that are 
-		not in succeeded or failed state. This includes all the jobs 
-		that are not submitted, submitted but not completed etc. This  
-		is calculated as  difference between 'total' count and sum of 
-		'succeeded' and 'failed' count.
-		* Total - total count of tasks/jobs/sub workflows.
-		* Retries - total retry count of tasks/jobs/sub workflows.
-		* Total Run - total count of tasks/jobs/sub workflows executed 
-		during workflow run. This is the cumulative of retries, 
-		succeeded and failed count. 
+# Workflow summary:
+#               Summary of the workflow execution. It shows total
+#		tasks/jobs/sub workflows run, how many succeeded/failed etc.
+#		In case of hierarchical workflow the calculation shows the 
+#		statistics across all the sub workflows.It shows the following 
+#		statistics about tasks, jobs and sub workflows.
+#		* Succeeded - total count of succeeded tasks/jobs/sub workflows.
+#		* Failed - total count of failed tasks/jobs/sub workflows.
+#		* Incomplete - total count of tasks/jobs/sub workflows that are 
+#		  not in succeeded or failed state. This includes all the jobs 
+#		  that are not submitted, submitted but not completed etc. This  
+#		  is calculated as  difference between 'total' count and sum of 
+#		  'succeeded' and 'failed' count.
+#		* Total - total count of tasks/jobs/sub workflows.
+#		* Retries - total retry count of tasks/jobs/sub workflows.
+#		* Total Run - total count of tasks/jobs/sub workflows executed 
+#		  during workflow run. This is the cumulative of retries, 
+#		  succeeded and failed count. 
+"""
+        return formatted_wf_statistics_legend
+
+def formatted_wf_summary_legends_part2():
+	"""
+	Returns the second part of the workflow summary legend  
+	@return :  workflow summary legend
+	"""
+        formatted_wf_statistics_legend = ""
+	formatted_wf_statistics_legend += """
+# Workflow wall time:
+#               The walltime from the start of the workflow execution
+#		to the end as reported by the DAGMAN.In case of rescue dag the value
+#		is the cumulative of all retries.
 """
 	formatted_wf_statistics_legend += """
-Workflow wall time - The walltime from the start of the workflow execution
-		to the end as reported by the DAGMAN.In case of rescue dag the value
-		is the cumulative of all retries.
+# Workflow cumulative job wall time:
+#               The sum of the walltime of all jobs as reported by kickstart. 
+#		In case of job retries the value is the cumulative of all retries.
+#		For workflows having sub workflow jobs (i.e SUBDAG and SUBDAX jobs),
+#		the walltime value includes jobs from the sub workflows as well.
 """
 	formatted_wf_statistics_legend += """
-Workflow cumulative job wall time - The sum of the walltime of all jobs as
-		reported by kickstart. In case of job retries the value is the
-		cumulative of all retries. For workflows having sub workflow jobs
-		(i.e SUBDAG and SUBDAX jobs), the walltime value includes jobs from
-		the sub workflows as well.
+# Cumulative job walltime as seen from submit side:
+#               The sum of the walltime of all jobs as reported by DAGMan.
+#		This is similar to the regular cumulative job walltime, but includes
+#		job management overhead and delays. In case of job retries the value is
+#		the cumulative of all retries. For workflows having sub workflow jobs 
+#		(i.e SUBDAG and SUBDAX jobs), the walltime value includes jobs
+#		from the sub workflows as well.
 """
-	formatted_wf_statistics_legend += """
-Cumulative job walltime as seen from submit side - The sum of the walltime of
-		all jobs as reported by DAGMan. This is similar to the regular
-		cumulative job walltime, but includes job management overhead and
-		delays. In case of job retries the value is the cumulative of all
-		retries. For workflows having sub workflow jobs (i.e SUBDAG and
-		SUBDAX jobs), the walltime value includes jobs from the sub workflows
-		as well.
-"""
+	return formatted_wf_statistics_legend
+
+def formatted_wf_summary_legends_txt():
+	"""
+	Returns the complete workflow summary legend  
+	@return :  workflow summary legend
+	"""
+	formatted_wf_statistics_legend ="# legends\n"
+        formatted_wf_statistics_legend += formatted_wf_summary_legends_part1()
+        formatted_wf_statistics_legend += formatted_wf_summary_legends_part2()
+
+	return formatted_wf_statistics_legend
+
+def formatted_wf_summary_legends_csv1():
+	"""
+	Returns the workflow summary legend for the first summary csv file
+	@return :  workflow summary legend
+	"""
+	formatted_wf_statistics_legend ="# legends\n"
+        formatted_wf_statistics_legend += formatted_wf_summary_legends_part1()
+
+	return formatted_wf_statistics_legend
+
+def formatted_wf_summary_legends_csv2():
+	"""
+	Returns the workflow summary legend for the second summary csv file
+	@return :  workflow summary legend
+	"""
+	formatted_wf_statistics_legend ="# legends\n"
+        formatted_wf_statistics_legend += formatted_wf_summary_legends_part2()
+
 	return formatted_wf_statistics_legend
 
 def formatted_wf_status_legends():
@@ -172,29 +233,32 @@ def formatted_wf_status_legends():
 	Returns the workflow table legend
 	@return :  workflow table legend
 	"""
-	formatted_wf_statistics_legend ="#legends \n"
+	formatted_wf_statistics_legend ="# legends\n"
 	
 	formatted_wf_statistics_legend +="""
-Workflow summary - Summary of the workflow execution. It shows total
-		tasks/jobs/sub workflows run, how many succeeded/failed etc.
-		In case of hierarchical workflow the calculation shows the 
-		statistics of each individual sub workflow.The file also 
-		contains a 'Total' table at the bottom which is the cummulative 
-		of all the individual statistics details.t shows the following 
-		statistics about tasks, jobs and sub workflows.
-		*Workflow Retries - number of times a workflow was retried.
-		* Succeeded - total count of succeeded tasks/jobs/sub workflows.
-		* Failed - total count of failed tasks/jobs/sub workflows.
-		* Incomplete - total count of tasks/jobs/sub workflows that are 
-		not in succeeded or failed state. This includes all the jobs 
-		that are not submitted, submitted but not completed etc. This  
-		is calculated as  difference between 'total' count and sum of 
-		'succeeded' and 'failed' count.
-		* Total - total count of tasks/jobs/sub workflows.
-		* Retries - total retry count of tasks/jobs/sub workflows.
-		* Total Run - total count of tasks/jobs/sub workflows executed 
-		during workflow run. This is the cumulative of retries, 
-		succeeded and failed count.
+#Workflow summary - Summary of the workflow execution. It shows total
+#		tasks/jobs/sub workflows run, how many succeeded/failed etc.
+#		In case of hierarchical workflow the calculation shows the 
+#		statistics of each individual sub workflow.The file also 
+#		contains a 'Total' table at the bottom which is the cummulative 
+#		of all the individual statistics details.t shows the following 
+#		statistics about tasks, jobs and sub workflows.
+#
+#		* Workflow Retries - number of times a workflow was retried.
+#		* Succeeded - total count of succeeded tasks/jobs/sub workflows.
+#		* Failed - total count of failed tasks/jobs/sub workflows.
+#		* Incomplete - total count of tasks/jobs/sub workflows that are 
+#		  not in succeeded or failed state. This includes all the jobs 
+#		  that are not submitted, submitted but not completed etc. This  
+#		  is calculated as  difference between 'total' count and sum of 
+#		  'succeeded' and 'failed' count.
+#		* Total - total count of tasks/jobs/sub workflows.
+#		* Retries - total retry count of tasks/jobs/sub workflows.
+#		* Total Run - total count of tasks/jobs/sub workflows executed 
+#		  during workflow run. This is the cumulative of retries, 
+#		  succeeded and failed count.
+#
+
 """
 	return formatted_wf_statistics_legend
 	
@@ -203,19 +267,19 @@ def formatted_job_stats_legends():
 	Returns the job table legend 
 	@return :  job table legend
 	"""
-	formatted_job_stats_legend = "#legends \n"
-	formatted_job_stats_legend += "#Job           - name of the job\n"
-	formatted_job_stats_legend += "#Try           - number representing the job instance run count\n"
-	formatted_job_stats_legend += "#Site          - site where the job ran\n"
-	formatted_job_stats_legend += "#Kickstart     - actual duration of the job instance in seconds on the remote compute node\n"
-	formatted_job_stats_legend += "#Post          - postscript time as reported by DAGMan\n"
-	formatted_job_stats_legend += "#CondorQTime   - time between submission by DAGMan and the remote Grid submission. It is an estimate of the time spent in the condor q on the submit node\n"
-	formatted_job_stats_legend += "#Resource      - time between the remote Grid submission and start of remote execution. It is an estimate of the time job spent in the remote queue\n"
-	formatted_job_stats_legend += "#Runtime       - time spent on the resource as seen by Condor DAGMan. Is always >=kickstart\n"
-	formatted_job_stats_legend += "#Seqexec       - time taken for the completion of a clustered job\n"
-	formatted_job_stats_legend += "#Seqexec-Delay - time difference between the time for the completion of a clustered job and sum of all the individual tasks kickstart time\n"
-        formatted_job_stats_legend += "#Exitcode      - exitcode for this job\n"
-        formatted_job_stats_legend += "#Hostname      - name of the host where the job ran, as reported by kickstart\n"
+	formatted_job_stats_legend = "# legends\n"
+	formatted_job_stats_legend += "# Job           - name of the job\n"
+	formatted_job_stats_legend += "# Try           - number representing the job instance run count\n"
+	formatted_job_stats_legend += "# Site          - site where the job ran\n"
+	formatted_job_stats_legend += "# Kickstart     - actual duration of the job instance in seconds on the remote compute node\n"
+	formatted_job_stats_legend += "# Post          - postscript time as reported by DAGMan\n"
+	formatted_job_stats_legend += "# CondorQTime   - time between submission by DAGMan and the remote Grid submission. It is an estimate of the time spent in the condor q on the submit node\n"
+	formatted_job_stats_legend += "# Resource      - time between the remote Grid submission and start of remote execution. It is an estimate of the time job spent in the remote queue\n"
+	formatted_job_stats_legend += "# Runtime       - time spent on the resource as seen by Condor DAGMan. Is always >=kickstart\n"
+	formatted_job_stats_legend += "# Seqexec       - time taken for the completion of a clustered job\n"
+	formatted_job_stats_legend += "# Seqexec-Delay - time difference between the time for the completion of a clustered job and sum of all the individual tasks kickstart time\n"
+        formatted_job_stats_legend += "# Exitcode      - exitcode for this job\n"
+        formatted_job_stats_legend += "# Hostname      - name of the host where the job ran, as reported by kickstart\n"
 	return formatted_job_stats_legend
 
 def formatted_transformation_stats_legends():
@@ -223,28 +287,52 @@ def formatted_transformation_stats_legends():
 	Returns the transformation table legend
 	@return :  transformation table legend
 	"""	
-	formatted_transformation_stats_legend="#legends \n"
-	formatted_transformation_stats_legend +="#Transformation - name of the transformation.\n"
-	formatted_transformation_stats_legend +="#Count - the number of times the invocations corresponding to the transformation was executed. \n"
-	formatted_transformation_stats_legend +="#Succeeded - the count of the succeeded invocations corresponding to the transformation. \n"
-	formatted_transformation_stats_legend +="#Failed - the count of the failed invocations corresponding to the transformation. \n"
-	formatted_transformation_stats_legend +="#Min(sec.) - the minimum invocation runtime value corresponding to the transformation. \n"
-	formatted_transformation_stats_legend +="#Max(sec.) - the maximum invocation runtime value corresponding to the transformation. \n"
-	formatted_transformation_stats_legend +="#Mean(sec.) - the mean of the invocation runtime corresponding to the transformation. \n"
-	formatted_transformation_stats_legend +="#Total(sec.) - the cumulative of invocation runtime corresponding to the transformation. \n"
+	formatted_transformation_stats_legend="# legends\n"
+	formatted_transformation_stats_legend +="# Transformation - name of the transformation.\n"
+	formatted_transformation_stats_legend +="# Count          - the number of times the invocations corresponding to the transformation was executed.\n"
+	formatted_transformation_stats_legend +="# Succeeded      - the count of the succeeded invocations corresponding to the transformation.\n"
+	formatted_transformation_stats_legend +="# Failed         - the count of the failed invocations corresponding to the transformation.\n"
+	formatted_transformation_stats_legend +="# Min(sec)       - the minimum invocation runtime value corresponding to the transformation.\n"
+	formatted_transformation_stats_legend +="# Max(sec)       - the maximum invocation runtime value corresponding to the transformation.\n"
+	formatted_transformation_stats_legend +="# Mean(sec)      - the mean of the invocation runtime corresponding to the transformation.\n"
+	formatted_transformation_stats_legend +="# Total(sec)     - the cumulative of invocation runtime corresponding to the transformation.\n"
 	return formatted_transformation_stats_legend
 
-def formatted_time_stats_legends():
+def formatted_time_stats_legends_text():
 	"""
 	Returns the time table legend
 	@return :  time table legend
 	"""	
 	filter = str(time_filter)
-	formatted_time_stats_legend="#legends" + NEW_LINE_STR
-	formatted_time_stats_legend +="#Job instance statistics per " + filter + " : " +" the number of job instances run, total runtime sorted by " + filter+ NEW_LINE_STR
-	formatted_time_stats_legend +="#Invocation statistics per " + filter + " : " +" the number of invocations , total runtime sorted by " + filter+ NEW_LINE_STR
-	formatted_time_stats_legend +="#Job instance statistics by host per " + filter + " : " +" the number of job instance run, total runtime on each host sorted by " + filter+ NEW_LINE_STR
-	formatted_time_stats_legend +="#Invocation by host per " + filter + " : " +" the number of invocations, total runtime on each host sorted by " + filter + NEW_LINE_STR
+	formatted_time_stats_legend = "# legends" + NEW_LINE_STR
+	formatted_time_stats_legend += "# Job instance statistics per " + filter + "         : the number of job instances run, total runtime sorted by " + filter+ NEW_LINE_STR
+	formatted_time_stats_legend += "# Invocation statistics per " + filter + "           : the number of invocations , total runtime sorted by " + filter+ NEW_LINE_STR
+	formatted_time_stats_legend += "# Job instance statistics by host per " + filter + " : the number of job instance run, total runtime on each host sorted by " + filter+ NEW_LINE_STR
+	formatted_time_stats_legend += "# Invocation by host per " + filter + "              : the number of invocations, total runtime on each host sorted by " + filter + NEW_LINE_STR
+	
+	return formatted_time_stats_legend	
+
+def formatted_time_stats_legends_csv():
+	"""
+	Returns the time table legend
+	@return :  time table legend
+	"""	
+	filter = str(time_filter)
+	formatted_time_stats_legend = "# legends" + NEW_LINE_STR
+	formatted_time_stats_legend += "# Job instance statistics per " + filter + " : the number of job instances run, total runtime sorted by " + filter+ NEW_LINE_STR
+	formatted_time_stats_legend += "# Invocation statistics per " + filter + "   : the number of invocations , total runtime sorted by " + filter+ NEW_LINE_STR
+	
+	return formatted_time_stats_legend	
+
+def formatted_time_host_stats_legends_csv():
+	"""
+	Returns the time table legend
+	@return :  time table legend
+	"""	
+	filter = str(time_filter)
+	formatted_time_stats_legend = "# legends" + NEW_LINE_STR
+	formatted_time_stats_legend += "# Job instance statistics by host per " + filter + " : the number of job instance run, total runtime on each host sorted by " + filter + NEW_LINE_STR
+	formatted_time_stats_legend += "# Invocation by host per " + filter + "              : the number of invocations, total runtime on each host sorted by " + filter + NEW_LINE_STR
 	
 	return formatted_time_stats_legend	
 
@@ -272,7 +360,37 @@ def format_seconds(duration):
 	"""
 	return stats_utils.format_seconds(duration)
 
-def print_workflow_details(output_db_url , wf_uuid , output_dir):
+def convert_to_str(value):
+	"""
+	Utility for returning a str representation of the given value.
+	Return '-' if value is None
+	@parem value : the given value that need to be converted to string
+	"""
+	if value is None:
+		return '-'
+	return str(value)
+
+def print_row(content, column_format, output_format):
+	"""
+	Utility method for generating formatted row based on the column format given
+	@param content        :  list of column values
+	@param column_format  :  column_size of each columns
+	"""
+	row_str = ""
+        if output_format == "text":
+                for index in range(len(content)):
+                        row_str += (content[index].ljust(column_format[index]))
+        elif output_format == "csv":
+                for word in content:
+                        if row_str != "":
+                                row_str += ","
+                        row_str += word
+        else:
+                print "%s: error: output format %s not recognized!" % (prog_base, output_format)
+                sys.exit(1)
+	return row_str
+	
+def print_workflow_details(output_db_url, wf_uuid, output_dir):
 	"""
 	Prints the workflow statistics information of all workflows
 	@param output_db_url :  time in seconds and miliseconds
@@ -294,23 +412,62 @@ def print_workflow_details(output_db_url , wf_uuid , output_dir):
 		wf_uuid_list.append(wf_det.wf_uuid)
 	
 	if calc_wf_stats:
-		wf_stats_file = os.path.join(output_dir, workflow_statistics_file_name)
-		write_to_file(wf_stats_file, "w" , formatted_wf_status_legends())
-		workflow_status_table_header_str = print_row(worklow_status_col_name, worklow_status_col_size)
-		workflow_status_table_header_str +=NEW_LINE_STR
-		write_to_file(wf_stats_file, "a", workflow_status_table_header_str)
+                # Do it for the text file
+		wf_stats_file_txt = os.path.join(output_dir,
+                                                 workflow_statistics_file_name + text_file_extension)
+		write_to_file(wf_stats_file_txt, "w", formatted_wf_status_legends())
+		workflow_status_table_header_str = print_row(workflow_status_col_name_text,
+                                                             workflow_status_col_size,
+                                                             "text")
+		workflow_status_table_header_str += NEW_LINE_STR
+		write_to_file(wf_stats_file_txt, "a", workflow_status_table_header_str)
+                # Now output the csv file too
+		wf_stats_file_csv = os.path.join(output_dir,
+                                                 workflow_statistics_file_name + csv_file_extension)
+		write_to_file(wf_stats_file_csv, "w", formatted_wf_status_legends())
+		workflow_status_table_header_str = print_row(workflow_status_col_name_csv,
+                                                             workflow_status_col_size,
+                                                             "csv")
+		workflow_status_table_header_str += NEW_LINE_STR
+		write_to_file(wf_stats_file_csv, "a", workflow_status_table_header_str)
 	if calc_jb_stats:
-		jobs_stats_file = os.path.join(output_dir, job_statistics_file_name)
-		write_to_file(jobs_stats_file, "w", formatted_job_stats_legends())
+                # Write the text file
+		jobs_stats_file_txt = os.path.join(output_dir, job_statistics_file_name + text_file_extension)
+		write_to_file(jobs_stats_file_txt, "w", formatted_job_stats_legends())
+                # Now write the csv file
+		jobs_stats_file_csv = os.path.join(output_dir, job_statistics_file_name + csv_file_extension)
+		write_to_file(jobs_stats_file_csv, "w", formatted_job_stats_legends())
 	if calc_tf_stats:
-		transformation_stats_file = os.path.join(output_dir, logical_transformation_statistics_file_name)
-		write_to_file(transformation_stats_file, "w", formatted_transformation_stats_legends())
+                # Write the text file
+		transformation_stats_file_txt = os.path.join(output_dir,
+                                                             logical_transformation_statistics_file_name +
+                                                             text_file_extension)
+		write_to_file(transformation_stats_file_txt, "w", formatted_transformation_stats_legends())
+                # Now write the csv file
+		transformation_stats_file_csv = os.path.join(output_dir,
+                                                             logical_transformation_statistics_file_name +
+                                                             csv_file_extension)
+		write_to_file(transformation_stats_file_csv, "w", formatted_transformation_stats_legends())
 	if calc_ti_stats:
-		time_stats_file = os.path.join(output_dir, time_statistics_file_name)
-		write_to_file(time_stats_file, "w", formatted_time_stats_legends())
-		content = print_statistics_by_time_and_host(expanded_workflow_stats)
-		write_to_file(time_stats_file, "a", content)
-		
+                # Create the text file
+		time_stats_file_txt = os.path.join(output_dir, time_statistics_file_name + text_file_extension)
+		write_to_file(time_stats_file_txt, "w", formatted_time_stats_legends_text())
+		content = print_statistics_by_time_and_host(expanded_workflow_stats, "text",
+                                                            combined=True, per_host=True)
+		write_to_file(time_stats_file_txt, "a", content)
+                # Now create the csv file
+		time_stats_file_csv = os.path.join(output_dir, time_statistics_file_name + csv_file_extension)
+		write_to_file(time_stats_file_csv, "w", formatted_time_stats_legends_csv())
+		content = print_statistics_by_time_and_host(expanded_workflow_stats, "csv",
+                                                            combined=True, per_host=False)
+		write_to_file(time_stats_file_csv, "a", content)
+                # Now create the second, per-host csv file
+                time_stats_file2_csv = os.path.join(output_dir, time_statistics_per_host_file_name +
+                                                    csv_file_extension)
+		write_to_file(time_stats_file2_csv, "w", formatted_time_host_stats_legends_csv())
+		content = print_statistics_by_time_and_host(expanded_workflow_stats, "csv",
+                                                            combined=False, per_host=True)
+		write_to_file(time_stats_file2_csv, "a", content)
 	if calc_jb_stats or calc_tf_stats or calc_wf_stats:
 		for sub_wf_uuid in wf_uuid_list:
 			try:
@@ -321,235 +478,404 @@ def print_workflow_details(output_db_url , wf_uuid , output_dir):
  				logger.warning(traceback.format_exc())
 				sys.exit(1)
 			wf_det = individual_workflow_stats.get_workflow_details()[0]
-			title =  str(sub_wf_uuid) + " (" + str(wf_det.dax_label) +")"
-			logger.info("Generating statistics information about the workflow " + title + " ... ")
+			workflow_id =  str(sub_wf_uuid)
+                        dax_label = str(wf_det.dax_label)
+			logger.info("Generating statistics information about the workflow " +
+                                    workflow_id + " ... ")
 			if calc_jb_stats:
-				logger.debug("Generating job instance statistics information about the workflow " + title + " ... ")
+				logger.debug("Generating job instance statistics information for workflow " +
+                                             workflow_id + " ... ")
 				individual_workflow_stats.set_job_filter('all')
-				content = print_individual_wf_job_stats(individual_workflow_stats, title)
-				write_to_file(jobs_stats_file, "a", content)
+                                # Write the text file
+				content = print_individual_wf_job_stats(individual_workflow_stats,
+                                                                        workflow_id, dax_label, "text")
+				write_to_file(jobs_stats_file_txt, "a", content)
+                                # Now write the csv file
+				content = print_individual_wf_job_stats(individual_workflow_stats,
+                                                                        workflow_id, dax_label, "csv")
+				write_to_file(jobs_stats_file_csv, "a", content)
 			if calc_tf_stats:
-				logger.debug("Generating invocation statistics information about the workflow " + title + " ... ")
+				logger.debug("Generating invocation statistics information for workflow " +
+                                             workflow_id + " ... ")
 				individual_workflow_stats.set_job_filter('all')
-				content = print_wf_transformation_stats(individual_workflow_stats, title)
-				write_to_file(transformation_stats_file, "a", content)
+                                # Write the text file
+				content = print_wf_transformation_stats(individual_workflow_stats,
+                                                                        workflow_id, dax_label, "text")
+				write_to_file(transformation_stats_file_txt, "a", content)
+                                # Now write the csv file
+				content = print_wf_transformation_stats(individual_workflow_stats,
+                                                                        workflow_id, dax_label, "csv")
+				write_to_file(transformation_stats_file_csv, "a", content)
 			if calc_wf_stats:
-				logger.debug("Generating workflow statistics information about the workflow " + title  + " ... ")
+				logger.debug("Generating workflow statistics information for workflow " +
+                                             workflow_id  + " ... ")
 				individual_workflow_stats.set_job_filter('all')
-				content = print_individual_workflow_stats(individual_workflow_stats, title)
-				write_to_file(wf_stats_file, "a", content)
+                                # Write text file
+				content = print_individual_workflow_stats(individual_workflow_stats,
+                                                                          workflow_id, dax_label, "text")
+				write_to_file(wf_stats_file_txt, "a", content)
+                                # Write csv file
+				content = print_individual_workflow_stats(individual_workflow_stats,
+                                                                          workflow_id, dax_label, "csv")
+				write_to_file(wf_stats_file_csv, "a", content)
 			individual_workflow_stats.close()
 	stats_output = NEW_LINE_STR + "SUMMARY".center(100, '*')
 	stats_output +=  NEW_LINE_STR
 	if calc_wf_summary:
-		summary_output = formatted_wf_summary_legends()
+                # First we generate the txt file
+		summary_output = formatted_wf_summary_legends_txt()
 		summary_output += NEW_LINE_STR
 		logger.info("Generating workflow summary ... ")
-		summary_output += print_workflow_summary(expanded_workflow_stats)
-		wf_summary_file = os.path.join(output_dir, workflow_summary_file_name)
-		write_to_file(wf_summary_file, "w", summary_output)
+		summary_output += print_workflow_summary(expanded_workflow_stats, "text",
+                                                         wf_summary=True, time_summary=True)
+		wf_summary_file_txt = os.path.join(output_dir,
+                                                   workflow_summary_file_name + text_file_extension)
+		write_to_file(wf_summary_file_txt, "w", summary_output)
 		stats_output += summary_output
 		stats_output += NEW_LINE_STR
 		stats_output += "Summary                           : "
-		stats_output += wf_summary_file + "\n"
+		stats_output += wf_summary_file_txt + "\n"
+                # Now we generate the first csv summary file
+		summary_output = formatted_wf_summary_legends_csv1()
+		summary_output += NEW_LINE_STR
+		summary_output += print_workflow_summary(expanded_workflow_stats, "csv",
+                                                         wf_summary=True, time_summary=False)
+		wf_summary_file_csv = os.path.join(output_dir,
+                                                   workflow_summary_file_name + csv_file_extension)
+		write_to_file(wf_summary_file_csv, "w", summary_output)
+                # Now we generate the second csv summary file
+		summary_output = formatted_wf_summary_legends_csv2()
+		summary_output += NEW_LINE_STR
+		summary_output += print_workflow_summary(expanded_workflow_stats, "csv",
+                                                         wf_summary=False, time_summary=True)
+		wf_summary_file2_csv = os.path.join(output_dir,
+                                                    workflow_summary_time_file_name + csv_file_extension)
+		write_to_file(wf_summary_file2_csv, "w", summary_output)
 	if calc_wf_stats:
 		stats_output +=  NEW_LINE_STR
-		content = print_individual_workflow_stats(expanded_workflow_stats , "Total")
-		write_to_file(wf_stats_file, "a" , content)
+                # Write text file
+		content = print_individual_workflow_stats(expanded_workflow_stats , "Total", "", "text")
+		write_to_file(wf_stats_file_txt, "a" , content)
 		stats_output += "Workflow execution statistics     : "
-		stats_output += wf_stats_file +"\n"
+		stats_output += wf_stats_file_txt +"\n"
+                # Now write the csv file
+		content = print_individual_workflow_stats(expanded_workflow_stats , "TOTAL", "", "csv")
+		write_to_file(wf_stats_file_csv, "a" , content)
 	if calc_jb_stats:
 		stats_output +=  NEW_LINE_STR
 		stats_output += "Job instance statistics           : "
-		stats_output += jobs_stats_file +"\n"
+		stats_output += jobs_stats_file_txt +"\n"
 	if calc_tf_stats:
 		stats_output +=  NEW_LINE_STR
 		expanded_workflow_stats.set_job_filter('all')
-		content = print_wf_transformation_stats(expanded_workflow_stats , "All")
-		write_to_file(transformation_stats_file, "a" , content)
+                # Write the text file
+		content = print_wf_transformation_stats(expanded_workflow_stats , "All", "", "text")
+		write_to_file(transformation_stats_file_txt, "a" , content)
 		stats_output += "Transformation statistics         : "
-		stats_output += transformation_stats_file +"\n"
+		stats_output += transformation_stats_file_txt +"\n"
+                # Now write the csv file
+		content = print_wf_transformation_stats(expanded_workflow_stats , "ALL", "", "csv")
+		write_to_file(transformation_stats_file_csv, "a" , content)
 	if calc_ti_stats:
 		stats_output +=  NEW_LINE_STR
 		stats_output += "Time statistics                   : "
-		stats_output += time_stats_file +"\n"
+		stats_output += time_stats_file_txt +"\n"
 	expanded_workflow_stats.close()
 	stats_output += NEW_LINE_STR
 	stats_output += "".center(100, '*')
-	print stats_output
 	return
 
-def convert_to_str(value):
-	"""
-	Utility for returning a str representation of the given value.
-	Return '-' if value is None
-	@parem value : the given value that need to be converted to string
-	"""
-	if value is None:
-		return '-'
-	return str(value)
-
-def print_workflow_summary(workflow_stats ):
+def print_workflow_summary(workflow_stats, output_format, wf_summary=True, time_summary=True):
 	"""
 	Prints the workflow statistics summary of an top level workflow
 	@param workflow_stats :  workflow statistics object reference
 	"""
-	# status
-	workflow_stats.set_job_filter('nonsub')
-	# Tasks
-	total_tasks = workflow_stats.get_total_tasks_status()
-	total_succeeded_tasks = workflow_stats.get_total_succeeded_tasks_status()
-	total_failed_tasks = workflow_stats.get_total_failed_tasks_status()
-	total_unsubmitted_tasks = total_tasks -(total_succeeded_tasks + total_failed_tasks)
-	total_task_retries =  workflow_stats.get_total_tasks_retries()
-	total_invocations = total_succeeded_tasks + total_failed_tasks + total_task_retries
-	# Jobs
-	total_jobs = workflow_stats.get_total_jobs_status()
-	total_succeeded_jobs = workflow_stats.get_total_succeeded_jobs_status()
-	total_failed_jobs = workflow_stats.get_total_failed_jobs_status()
-	total_unsubmitted_jobs = total_jobs - (total_succeeded_jobs + total_failed_jobs )
-	total_job_retries = workflow_stats.get_total_jobs_retries()
-	total_job_instance_retries =  total_succeeded_jobs + total_failed_jobs + total_job_retries
-	# Sub workflows
-	workflow_stats.set_job_filter('subwf')
-	total_sub_wfs = workflow_stats.get_total_jobs_status()
-	total_succeeded_sub_wfs = workflow_stats.get_total_succeeded_jobs_status()
-	total_failed_sub_wfs = workflow_stats.get_total_failed_jobs_status()
-	total_unsubmitted_sub_wfs = total_sub_wfs - (total_succeeded_sub_wfs + total_failed_sub_wfs)
-	total_sub_wfs_retries = workflow_stats.get_total_jobs_retries()
-	total_sub_wfs_tries =  total_succeeded_sub_wfs + total_failed_sub_wfs + total_sub_wfs_retries
-	
-	summary_str = "".center(sum(worklow_summary_col_size), '-')
-	summary_str += NEW_LINE_STR
-	summary_str+= print_row(worklow_summary_col_name , worklow_summary_col_size)
-	
-	content = ["Tasks " , convert_to_str(total_succeeded_tasks), convert_to_str(total_failed_tasks), convert_to_str(total_unsubmitted_tasks) ,convert_to_str(total_tasks),"||",convert_to_str(total_task_retries), convert_to_str(total_invocations) ]
-	summary_str += NEW_LINE_STR
-	summary_str+= print_row(content, worklow_summary_col_size)
-	
-	content =[ "Jobs" , convert_to_str(total_succeeded_jobs), convert_to_str(total_failed_jobs), convert_to_str(total_unsubmitted_jobs) , convert_to_str(total_jobs) ,"||",str(total_job_retries), convert_to_str(total_job_instance_retries) ]
-	summary_str += NEW_LINE_STR		
-	summary_str+= print_row(content, worklow_summary_col_size)
-	
-	content =[ "Sub Workflows" , convert_to_str(total_succeeded_sub_wfs), convert_to_str(total_failed_sub_wfs), convert_to_str(total_unsubmitted_sub_wfs) , convert_to_str(total_sub_wfs) ,"||",str(total_sub_wfs_retries), convert_to_str(total_sub_wfs_tries) ]
-	summary_str += NEW_LINE_STR		
-	summary_str+= print_row(content, worklow_summary_col_size)
-	summary_str += NEW_LINE_STR
-	summary_str+= "".center(sum(worklow_summary_col_size), '-')
-	summary_str += NEW_LINE_STR
-	
-	workflow_states_list = workflow_stats.get_workflow_states()
-	workflow_wall_time = stats_utils.get_workflow_wall_time(workflow_states_list)
-	summary_str += NEW_LINE_STR
-	if workflow_wall_time is None:
-		summary_str += "Workflow wall time                               : -\n"
-	else:
-		summary_str += "Workflow wall time                               : %-20s (total %d seconds)\n" % \
-				(format_seconds(workflow_wall_time), (workflow_wall_time))
-	summary_str += NEW_LINE_STR
-	workflow_cum_job_wall_time = workflow_stats.get_workflow_cum_job_wall_time()
-	if workflow_cum_job_wall_time is None:
-		summary_str += "Workflow cumulative job wall time                : -\n"
-	else:
-		summary_str += "Workflow cumulative job wall time                : %-20s (total %d seconds)\n" % \
-			(format_seconds(workflow_cum_job_wall_time),workflow_cum_job_wall_time)
-	summary_str += NEW_LINE_STR	
-	submit_side_job_wall_time =  workflow_stats.get_submit_side_job_wall_time()
-	if submit_side_job_wall_time is None:
-		summary_str += "Cumulative job walltime as seen from submit side : -\n"
-	else:
-		summary_str += "Cumulative job walltime as seen from submit side : %-20s (total %d seconds)\n" % \
-			(format_seconds(submit_side_job_wall_time), submit_side_job_wall_time)
-	return summary_str
+        summary_str = ""
 
-def print_row(content , format):
-	"""
-	Utility method for generating formatted row based on the format given
-	@param content :  list of column values
-	@param format  :  column_size of each columns
-	"""
-	row_str =""
-	for index in range(len(content)):
-		row_str += (content[index].ljust(format[index]))
-	return row_str
-	
+        if wf_summary == True:
+                # status
+                workflow_stats.set_job_filter('nonsub')
 
-def print_individual_workflow_stats(workflow_stats , title):
+                # Tasks
+                total_tasks = workflow_stats.get_total_tasks_status()
+                total_succeeded_tasks = workflow_stats.get_total_succeeded_tasks_status()
+                total_failed_tasks = workflow_stats.get_total_failed_tasks_status()
+                total_unsubmitted_tasks = total_tasks -(total_succeeded_tasks + total_failed_tasks)
+                total_task_retries = workflow_stats.get_total_tasks_retries()
+                total_invocations = total_succeeded_tasks + total_failed_tasks + total_task_retries
+
+                # Jobs
+                total_jobs = workflow_stats.get_total_jobs_status()
+                total_succeeded_jobs = workflow_stats.get_total_succeeded_jobs_status()
+                total_failed_jobs = workflow_stats.get_total_failed_jobs_status()
+                total_unsubmitted_jobs = total_jobs - (total_succeeded_jobs + total_failed_jobs)
+                total_job_retries = workflow_stats.get_total_jobs_retries()
+                total_job_instance_retries =  total_succeeded_jobs + total_failed_jobs + total_job_retries
+
+                # Sub workflows
+                workflow_stats.set_job_filter('subwf')
+                total_sub_wfs = workflow_stats.get_total_jobs_status()
+                total_succeeded_sub_wfs = workflow_stats.get_total_succeeded_jobs_status()
+                total_failed_sub_wfs = workflow_stats.get_total_failed_jobs_status()
+                total_unsubmitted_sub_wfs = total_sub_wfs - (total_succeeded_sub_wfs + total_failed_sub_wfs)
+                total_sub_wfs_retries = workflow_stats.get_total_jobs_retries()
+                total_sub_wfs_tries =  total_succeeded_sub_wfs + total_failed_sub_wfs + total_sub_wfs_retries
+	
+                # Format the output
+                if output_format == "text":
+                        summary_str += "".center(sum(workflow_summary_col_size), '-')
+                        summary_str += NEW_LINE_STR
+                if output_format == "text":
+                        summary_str += print_row(workflow_summary_col_name_text, workflow_summary_col_size,
+                                                 output_format)
+                        content = ["Tasks", convert_to_str(total_succeeded_tasks),
+                                   convert_to_str(total_failed_tasks),
+                                   convert_to_str(total_unsubmitted_tasks), convert_to_str(total_tasks),
+                                   "||", convert_to_str(total_task_retries), convert_to_str(total_invocations)]
+                elif output_format == "csv":
+                        summary_str += print_row(workflow_summary_col_name_csv, workflow_summary_col_size,
+                                                 output_format)
+                        content = ["Tasks", convert_to_str(total_succeeded_tasks),
+                                   convert_to_str(total_failed_tasks),
+                                   convert_to_str(total_unsubmitted_tasks), convert_to_str(total_tasks),
+                                   convert_to_str(total_task_retries), convert_to_str(total_invocations)]
+                else:
+                        print "%s: error: output format %s not recognized!" % (prog_base, output_format)
+                        sys.exit(1)
+	
+                summary_str += NEW_LINE_STR
+                summary_str += print_row(content, workflow_summary_col_size, output_format)
+	
+                if output_format == "text":
+                        content =["Jobs", convert_to_str(total_succeeded_jobs),
+                                  convert_to_str(total_failed_jobs),
+                                  convert_to_str(total_unsubmitted_jobs), convert_to_str(total_jobs),
+                                  "||", str(total_job_retries), convert_to_str(total_job_instance_retries)]
+                elif output_format == "csv":
+                        content =["Jobs", convert_to_str(total_succeeded_jobs),
+                                  convert_to_str(total_failed_jobs),
+                                  convert_to_str(total_unsubmitted_jobs), convert_to_str(total_jobs),
+                                  str(total_job_retries), convert_to_str(total_job_instance_retries)]
+                else:
+                        print "%s: error: output format %s not recognized!" % (prog_base, output_format)
+                        sys.exit(1)
+
+                summary_str += NEW_LINE_STR		
+                summary_str += print_row(content, workflow_summary_col_size, output_format)
+	
+                if output_format == "text":
+                        content =["Sub Workflows", convert_to_str(total_succeeded_sub_wfs),
+                                  convert_to_str(total_failed_sub_wfs),
+                                  convert_to_str(total_unsubmitted_sub_wfs),
+                                  convert_to_str(total_sub_wfs), "||", str(total_sub_wfs_retries),
+                                  convert_to_str(total_sub_wfs_tries)]
+                elif output_format == "csv":
+                        content =["Sub_Workflows", convert_to_str(total_succeeded_sub_wfs),
+                                  convert_to_str(total_failed_sub_wfs),
+                                  convert_to_str(total_unsubmitted_sub_wfs),
+                                  convert_to_str(total_sub_wfs), str(total_sub_wfs_retries),
+                                  convert_to_str(total_sub_wfs_tries)]
+                else:
+                        print "%s: error: output format %s not recognized!" % (prog_base, output_format)
+                        sys.exit(1)
+
+                summary_str += NEW_LINE_STR		
+                summary_str += print_row(content, workflow_summary_col_size, output_format)
+                summary_str += NEW_LINE_STR
+
+                if output_format == "text":
+                        summary_str += "".center(sum(workflow_summary_col_size), '-')
+                        summary_str += NEW_LINE_STR
+
+        if time_summary == True:
+                workflow_states_list = workflow_stats.get_workflow_states()
+                workflow_wall_time = stats_utils.get_workflow_wall_time(workflow_states_list)
+                workflow_cum_job_wall_time = workflow_stats.get_workflow_cum_job_wall_time()
+                submit_side_job_wall_time = workflow_stats.get_submit_side_job_wall_time()
+                summary_str += NEW_LINE_STR
+                if output_format == "text":
+                        if workflow_wall_time is None:
+                                summary_str += "Workflow wall time                               : -\n"
+                        else:
+                                summary_str += "Workflow wall time                               : %-20s (total %d seconds)\n" % \
+                                    (format_seconds(workflow_wall_time), (workflow_wall_time))
+                        summary_str += NEW_LINE_STR
+                        if workflow_cum_job_wall_time is None:
+                                summary_str += "Workflow cumulative job wall time                : -\n"
+                        else:
+                                summary_str += "Workflow cumulative job wall time                : %-20s (total %d seconds)\n" % \
+                                    (format_seconds(workflow_cum_job_wall_time), workflow_cum_job_wall_time)
+                        summary_str += NEW_LINE_STR
+
+                        if submit_side_job_wall_time is None:
+                                summary_str += "Cumulative job walltime as seen from submit side : -\n"
+                        else:
+                                summary_str += "Cumulative job walltime as seen from submit side : %-20s (total %d seconds)\n" % \
+                                    (format_seconds(submit_side_job_wall_time), submit_side_job_wall_time)
+                elif output_format == "csv":
+                        # Print header line
+                        summary_str += print_row(workflow_time_summary_col_name_csv, None, output_format)
+                        summary_str += NEW_LINE_STR
+                        if workflow_wall_time is None:
+                                summary_str += "Workflow_wall_time,"
+                        else:
+                                summary_str += ('Workflow_wall_time,%s' % workflow_wall_time)
+                        summary_str += NEW_LINE_STR
+                        if workflow_cum_job_wall_time is None:
+                                summary_str += "Workflow_cumulative_job_wall_time,"
+                        else:
+                                summary_str += ('Workflow_cumulative_job_wall_time,%s' %
+                                                workflow_cum_job_wall_time)
+                        summary_str += NEW_LINE_STR
+                        if submit_side_job_wall_time is None:
+                                summary_str += "Cumulative_job_walltime_from_submit_side,"
+                        else:
+                                summary_str += ('Cumulative_job_walltime_from_submit_side,%s' %
+                                                submit_side_job_wall_time)
+                        summary_str += NEW_LINE_STR
+                else:
+                        print "%s: error: output format %s not recognized!" % (prog_base, output_format)
+                        sys.exit(1)
+
+        return summary_str
+
+def print_individual_workflow_stats(workflow_stats, workflow_id, dax_label, output_format):
 	"""
 	Prints the workflow statistics of workflow
 	@param workflow_stats :  workflow statistics object reference
-	@param title  : title of the workflow table
+	@param workflow_id  : workflow_id (title of the workflow table)
 	"""
-	content_str =""
+	content_str = "\n"
 	# individual workflow status
+
+        # Add dax_label to workflow_id if writing text file
+        if output_format == "text" and dax_label != "":
+                workflow_id =  workflow_id + " (" + dax_label +")"
 	
 	# workflow status
 	workflow_stats.set_job_filter('all')
-	total_wf_retries = workflow_stats.get_workflow_retries() 
-	content = [title,convert_to_str(total_wf_retries) ]
-	retry_col_size =  worklow_status_col_size[len(worklow_status_col_size) -1]
-	wf_status_str = print_row(content, [sum(worklow_status_col_size) -retry_col_size , retry_col_size])
-			
-	#tasks
+	total_wf_retries = workflow_stats.get_workflow_retries()
+        # only used for the text output...
+	content = [workflow_id, convert_to_str(total_wf_retries)]
+	retry_col_size = workflow_status_col_size[len(workflow_status_col_size) - 1]
+	wf_status_str = print_row(content,
+                                  [sum(workflow_status_col_size) - retry_col_size, retry_col_size],
+                                  output_format)
+
+	# tasks
 	workflow_stats.set_job_filter('nonsub')
 	total_tasks = workflow_stats.get_total_tasks_status()
 	total_succeeded_tasks = workflow_stats.get_total_succeeded_tasks_status()
 	total_failed_tasks = workflow_stats.get_total_failed_tasks_status()
-	total_unsubmitted_tasks = total_tasks -(total_succeeded_tasks + total_failed_tasks )
+	total_unsubmitted_tasks = total_tasks - (total_succeeded_tasks + total_failed_tasks)
 	total_task_retries =  workflow_stats.get_total_tasks_retries()
 	total_task_invocations = total_succeeded_tasks + total_failed_tasks + total_task_retries
-	content =["","Tasks",  convert_to_str(total_succeeded_tasks) , convert_to_str(total_failed_tasks), convert_to_str(total_unsubmitted_tasks) , convert_to_str(total_tasks) ,"||",convert_to_str(total_task_retries), convert_to_str(total_task_invocations) ,""]
-	tasks_status_str =  print_row(content,worklow_status_col_size)
+        if output_format == "text":
+                content = ["", "Tasks", convert_to_str(total_succeeded_tasks),
+                           convert_to_str(total_failed_tasks),
+                           convert_to_str(total_unsubmitted_tasks), convert_to_str(total_tasks), "||",
+                           convert_to_str(total_task_retries), convert_to_str(total_task_invocations), ""]
+        elif output_format == "csv":
+                content = [workflow_id, dax_label, "Tasks", convert_to_str(total_succeeded_tasks),
+                           convert_to_str(total_failed_tasks),
+                           convert_to_str(total_unsubmitted_tasks), convert_to_str(total_tasks),
+                           convert_to_str(total_task_retries), convert_to_str(total_task_invocations),
+                           convert_to_str(total_wf_retries)]
+        else:
+                print "%s: error: output format %s not recognized!" % (prog_base, output_format)
+                
+	tasks_status_str = print_row(content, workflow_status_col_size, output_format)
 	
 	# job status
 	workflow_stats.set_job_filter('nonsub')
 	total_jobs = workflow_stats.get_total_jobs_status()
 	total_succeeded_jobs = workflow_stats.get_total_succeeded_jobs_status()
 	total_failed_jobs = workflow_stats.get_total_failed_jobs_status()
-	total_unsubmitted_jobs = total_jobs - (total_succeeded_jobs + total_failed_jobs )
+	total_unsubmitted_jobs = total_jobs - (total_succeeded_jobs + total_failed_jobs)
 	total_job_retries = workflow_stats.get_total_jobs_retries()
-	total_job_invocations =  total_succeeded_jobs + total_failed_jobs + total_job_retries
-	content = ["","Jobs",convert_to_str(total_succeeded_jobs), convert_to_str(total_failed_jobs) , convert_to_str(total_unsubmitted_jobs), convert_to_str(total_jobs) ,"||",convert_to_str(total_job_retries), convert_to_str(total_job_invocations) ,"" ]
-	jobs_status_str = print_row(content,worklow_status_col_size)
+	total_job_invocations = total_succeeded_jobs + total_failed_jobs + total_job_retries
+        if output_format == "text":
+                content = ["", "Jobs", convert_to_str(total_succeeded_jobs), convert_to_str(total_failed_jobs),
+                           convert_to_str(total_unsubmitted_jobs), convert_to_str(total_jobs),
+                           "||", convert_to_str(total_job_retries), convert_to_str(total_job_invocations), ""]
+        elif output_format == "csv":
+                content = [workflow_id, dax_label, "Jobs", convert_to_str(total_succeeded_jobs),
+                           convert_to_str(total_failed_jobs),
+                           convert_to_str(total_unsubmitted_jobs), convert_to_str(total_jobs),
+                           convert_to_str(total_job_retries), convert_to_str(total_job_invocations),
+                           convert_to_str(total_wf_retries)]
+        else:
+                print "%s: error: output format %s not recognized!" % (prog_base, output_format)
+
+	jobs_status_str = print_row(content, workflow_status_col_size, output_format)
 	
 	# sub workflow
 	workflow_stats.set_job_filter('subwf')
 	total_sub_wfs = workflow_stats.get_total_jobs_status()
 	total_succeeded_sub_wfs = workflow_stats.get_total_succeeded_jobs_status()
 	total_failed_sub_wfs = workflow_stats.get_total_failed_jobs_status()
-	total_unsubmitted_sub_wfs = total_sub_wfs - (total_succeeded_sub_wfs + total_failed_sub_wfs )
+	total_unsubmitted_sub_wfs = total_sub_wfs - (total_succeeded_sub_wfs + total_failed_sub_wfs)
 	total_sub_wfs_retries = workflow_stats.get_total_jobs_retries()
-	total_sub_wfs_invocations =  total_succeeded_sub_wfs + total_failed_sub_wfs + total_sub_wfs_retries
-	content = ["","Sub Workflows",convert_to_str(total_succeeded_sub_wfs), convert_to_str(total_failed_sub_wfs) , convert_to_str(total_unsubmitted_sub_wfs), convert_to_str(total_sub_wfs) ,"||",convert_to_str(total_sub_wfs_retries), convert_to_str(total_sub_wfs_invocations) ,"" ]
-	sub_wf_status_str = print_row(content,worklow_status_col_size)
+	total_sub_wfs_invocations = total_succeeded_sub_wfs + total_failed_sub_wfs + total_sub_wfs_retries
+        if output_format == "text":
+                content = ["", "Sub Workflows", convert_to_str(total_succeeded_sub_wfs),
+                           convert_to_str(total_failed_sub_wfs), convert_to_str(total_unsubmitted_sub_wfs),
+                           convert_to_str(total_sub_wfs), "||", convert_to_str(total_sub_wfs_retries),
+                           convert_to_str(total_sub_wfs_invocations), ""]
+        elif output_format == "csv":
+                content = [workflow_id, dax_label, "Sub_Workflows", convert_to_str(total_succeeded_sub_wfs),
+                           convert_to_str(total_failed_sub_wfs), convert_to_str(total_unsubmitted_sub_wfs),
+                           convert_to_str(total_sub_wfs), convert_to_str(total_sub_wfs_retries),
+                           convert_to_str(total_sub_wfs_invocations), convert_to_str(total_wf_retries)]
+        else:
+                print "%s: error: output format %s not recognized!" % (prog_base, output_format)
+
+	sub_wf_status_str = print_row(content, workflow_status_col_size, output_format)
 	
-	
-	content_str += "".center(sum(worklow_status_col_size), '-') +"\n"
-	content_str += wf_status_str +"\n"
-	content_str += tasks_status_str +"\n"
-	content_str += jobs_status_str +"\n"
-	content_str += sub_wf_status_str +"\n"
+	if output_format == "text":
+                # Only print these in the text format output
+                content_str += "".center(sum(workflow_status_col_size), '-') + "\n"
+                content_str += wf_status_str + "\n"
+
+	content_str += tasks_status_str + "\n"
+	content_str += jobs_status_str + "\n"
+	content_str += sub_wf_status_str + "\n"
 	
 	return content_str
 	
-def print_individual_wf_job_stats(workflow_stats, title):
+def print_individual_wf_job_stats(workflow_stats, workflow_id, dax_label, output_format):
 	"""
 	Prints the job statistics of workflow
 	@param workflow_stats :  workflow statistics object reference
-	@param title  : title for the table
+	@param workflow_id : workflow_id (title for the table)
 	"""	
 	job_stats_dict = {}
 	job_stats_list = []
 	job_retry_count_dict = {}
-	job_status_str = "\n\n# " + title + "\n"
+
+        # Add dax_label to workflow_id if writing text file
+        if output_format == "text":
+                workflow_id =  workflow_id + " (" + dax_label +")"
+
+        if output_format == "text":
+                job_status_str = "\n# " + workflow_id + "\n"
+        else:
+                job_status_str = "\n"
 
         # Print header
-	for index in range(len(job_stats_col_name)):
-                job_status_str += (job_stats_col_name[index].ljust(job_stats_col_size[index]))
-	job_status_str +="\n"
+        if output_format == "text":
+                job_status_str += print_row(job_stats_col_name_text, job_stats_col_size, output_format)
+        elif output_format == "csv":
+                job_status_str += print_row(job_stats_col_name_csv, job_stats_col_size, output_format)
+        else:
+                print "%s: error: output format %s not recognized!" % (prog_base, output_format)
+                sys.exit(1)
+        
+        job_status_str += "\n"
 			
 	wf_job_stats_list = workflow_stats.get_job_statistics()
 	
+        # Go through each job in the workflow
 	for job in wf_job_stats_list:
 		job_stats = JobStatistics()
 		job_stats.name = job.job_name
@@ -575,11 +901,21 @@ def print_individual_wf_job_stats(workflow_stats, title):
 	content_list = []
 	# find the pretty print length
 	for job_stat in job_stats_list:
-		job_det = job_stat.getFormattedJobStatistics()
-		index = 0
-		for content in job_det:
-			job_status_str += str(content).ljust(job_stats_col_size[index])
-			index = index + 1
+		job_det = job_stat.getFormattedJobStatistics(output_format)
+                if output_format == "text":
+                        index = 0
+                        for content in job_det:
+                                job_status_str += str(content).ljust(job_stats_col_size[index])
+                                index = index + 1
+                elif output_format == "csv":
+                        job_status_str += workflow_id
+                        job_status_str += ","
+                        job_status_str += dax_label
+                        for content in job_det:
+                                job_status_str += "," + str(content)
+                else:
+                        print "%s: error: output format %s not recognized!" % (prog_base, output_format)
+                        sys.exit(1)
 		job_status_str += NEW_LINE_STR
 	return job_status_str
 
@@ -591,78 +927,188 @@ def round_to_str(value , to=3):
 	"""
 	return stats_utils.round_decimal_to_str(value,to)
 
-def print_wf_transformation_stats(workflow_stats , title):
+def print_wf_transformation_stats(workflow_stats, workflow_id, dax_label, output_format):
 	"""
         Prints the transformation statistics of workflow
         @param workflow_stats :  workflow statistics object reference
-        @param title  : title of the transformation statistics
+        @param workflow_id  : workflow_id (title of the transformation statistics)
 	"""
-	transformation_status_str = "\n\n# " +  title +"\n"
-	transformation_status_str += print_row(transformation_stats_col_name , transformation_stats_col_size)
+        transformation_status_str = "\n"
+
+        # Add dax_label to workflow_id if writing text file
+        if output_format == "text" and dax_label != "":
+                workflow_id =  workflow_id + " (" + dax_label +")"
+
+        # In text file, we need a line with the workflow id first
+        if output_format == "text":
+                transformation_status_str = "\n# " + workflow_id + "\n"
+
+        if output_format == "text":
+                transformation_status_str += print_row(transformation_stats_col_name_text,
+                                                       transformation_stats_col_size,
+                                                       output_format)
+        elif output_format == "csv":
+                transformation_status_str += print_row(transformation_stats_col_name_csv,
+                                                       transformation_stats_col_size,
+                                                       output_format)
+        else:
+                print "%s: error: output format %s not recognized!" % (prog_base, output_format)
+                sys.exit(1)
+
 	transformation_status_str += NEW_LINE_STR
 	for transformation in workflow_stats.get_transformation_statistics():
-		content = [transformation.transformation ,str(transformation.count),str(transformation.success) , str(transformation.failure), round_to_str(transformation.min),round_to_str(transformation.max),round_to_str(transformation.avg),round_to_str(transformation.sum)]
-		transformation_status_str += print_row(content , transformation_stats_col_size)
+                if output_format == "text":
+                        content = [transformation.transformation, str(transformation.count),
+                                   str(transformation.success), str(transformation.failure),
+                                   round_to_str(transformation.min), round_to_str(transformation.max),
+                                   round_to_str(transformation.avg), round_to_str(transformation.sum)]
+                elif output_format == "csv":
+                        content = [workflow_id, dax_label, transformation.transformation,
+                                   str(transformation.count),
+                                   str(transformation.success), str(transformation.failure),
+                                   round_to_str(transformation.min), round_to_str(transformation.max),
+                                   round_to_str(transformation.avg), round_to_str(transformation.sum)]
+                else:
+                        print "%s: error: output format %s not recognized!" % (prog_base, output_format)
+                        sys.exit(1)
+		transformation_status_str += print_row(content, transformation_stats_col_size, output_format)
 		transformation_status_str += NEW_LINE_STR
 	return transformation_status_str
-	
 
-def print_statistics_by_time_and_host(workflow_stats ):
+def print_statistics_by_time_and_host(workflow_stats, output_format, combined=True, per_host=True):
 	"""
 	Prints the job instance and invocation statistics sorted by time
-	@param workflow_stats :  workflow statistics object reference
+	@param workflow_stats : workflow statistics object reference
+        @param output_format  : indicates how to format the output, currently supported "text" and "csv"
+        @param combined       : print combined output (all hosts consolidated)
+        @param per_host       : print per-host totals
 	"""
 	statistics_by_time_str = NEW_LINE_STR
 	workflow_stats.set_job_filter('nonsub')
 	workflow_stats.set_time_filter('hour')
 	workflow_stats.set_transformation_filter(exclude=['condor::dagman'])
+
+	if combined == True:
+                statistics_by_time_str +="# Job instances statistics per " + time_filter
+                statistics_by_time_str += NEW_LINE_STR
+                if output_format == "text":
+                        statistics_by_time_str += print_row(time_stats_col_name_text,
+                                                            time_stats_col_size, output_format)
+                elif output_format == "csv":
+                        statistics_by_time_str += print_row(time_stats_col_name_csv,
+                                                            time_stats_col_size, output_format)
+                else:
+                        print "%s: error: output format %s not recognized!" % (prog_base, output_format)
+                        sys.exit(1)
+                statistics_by_time_str += NEW_LINE_STR
+                stats_by_time = workflow_stats.get_jobs_run_by_time()
+                formatted_stats_list = stats_utils.convert_stats_to_base_time(stats_by_time, time_filter)
+                for stats in formatted_stats_list:
+                        if output_format == "text":
+                                content = [stats['date_format'], str(stats['count']),
+                                           round_to_str(stats['runtime'])]
+                        elif output_format == "csv":
+                                content = ["Job instances/" + time_filter, stats['date_format'],
+                                           str(stats['count']), round_to_str(stats['runtime'])]
+                        else:
+                                print "%s: error: output format %s not recognized!" % (prog_base,
+                                                                                       output_format)
+                                sys.exit(1)
+                                statistics_by_time_str += print_row(content,
+                                                                    time_stats_col_size, output_format)
+                                statistics_by_time_str += NEW_LINE_STR
 	
-	statistics_by_time_str +="#Job instances statistics per " + time_filter
-	statistics_by_time_str += NEW_LINE_STR
-	statistics_by_time_str +=print_row(time_stats_col_name , time_stats_col_size)
-	statistics_by_time_str += NEW_LINE_STR
-	stats_by_time = workflow_stats.get_jobs_run_by_time()
-	formatted_stats_list = stats_utils.convert_stats_to_base_time(stats_by_time , time_filter)
-	for stats in formatted_stats_list:
-		content = [stats['date_format'] , str(stats['count']),round_to_str(stats['runtime'])]
-		statistics_by_time_str += print_row(content , time_stats_col_size)
-		statistics_by_time_str += NEW_LINE_STR
+	if combined == True:
+                statistics_by_time_str += NEW_LINE_STR	
+                statistics_by_time_str += "# Invocation statistics run per " + time_filter
+                statistics_by_time_str += NEW_LINE_STR
+                if output_format == "text":
+                        statistics_by_time_str += print_row(time_stats_col_name_text,
+                                                            time_stats_col_size, output_format)
+                elif output_format == "csv":
+                        statistics_by_time_str += print_row(time_stats_col_name_csv,
+                                                            time_stats_col_size, output_format)
+                else:
+                        print "%s: error: output format %s not recognized!" % (prog_base, output_format)
+                        sys.exit(1)
+                statistics_by_time_str += NEW_LINE_STR
+                stats_by_time = workflow_stats.get_invocation_by_time()
+                formatted_stats_list = stats_utils.convert_stats_to_base_time(stats_by_time, time_filter)
+                for stats in formatted_stats_list:
+                        if output_format == "text":
+                                content = [stats['date_format'], str(stats['count']),
+                                           round_to_str(stats['runtime'])]
+                        elif output_format == "csv":
+                                content = ["Invocations/" + time_filter, stats['date_format'],
+                                           str(stats['count']), round_to_str(stats['runtime'])]
+                        else:
+                                print "%s: error: output format %s not recognized!" % (prog_base,
+                                                                                       output_format)
+                                sys.exit(1)
+                        statistics_by_time_str += print_row(content, time_stats_col_size, output_format)
+                        statistics_by_time_str += NEW_LINE_STR
 	
-	statistics_by_time_str += NEW_LINE_STR	
-	statistics_by_time_str +="#Invocation statistics run per " + time_filter
-	statistics_by_time_str += NEW_LINE_STR
-	statistics_by_time_str +=print_row(time_stats_col_name , time_stats_col_size)
-	statistics_by_time_str += NEW_LINE_STR
-	stats_by_time = workflow_stats.get_invocation_by_time()
-	formatted_stats_list = stats_utils.convert_stats_to_base_time(stats_by_time , time_filter)
-	for stats in formatted_stats_list:
-		content = [stats['date_format'] , str(stats['count']),round_to_str(stats['runtime'])]
-		statistics_by_time_str += print_row(content , time_stats_col_size)
-		statistics_by_time_str += NEW_LINE_STR
+	if per_host == True:
+                statistics_by_time_str += NEW_LINE_STR
+                statistics_by_time_str += "# Job instances statistics on host per " + time_filter
+                statistics_by_time_str += NEW_LINE_STR
+                if output_format == "text":
+                        statistics_by_time_str += print_row(time_host_stats_col_name_text,
+                                                            time_host_stats_col_size, output_format)
+                elif output_format == "csv":
+                        statistics_by_time_str += print_row(time_host_stats_col_name_csv,
+                                                            time_host_stats_col_size, output_format)
+                else:
+                        print "%s: error: output format %s not recognized!" % (prog_base, output_format)
+                        sys.exit(1)
+                statistics_by_time_str += NEW_LINE_STR
+                stats_by_time = workflow_stats.get_jobs_run_by_time_per_host()
+                formatted_stats_list = stats_utils.convert_stats_to_base_time(stats_by_time, time_filter, True)
+                for stats in formatted_stats_list:
+                        if output_format == "text":
+                                content = [stats['date_format'], str(stats['host']), str(stats['count']),
+                                           round_to_str(stats['runtime'])]
+                        elif output_format == "csv":
+                                content = ["Job_instances/host/" + time_filter, stats['date_format'],
+                                           str(stats['host']), str(stats['count']),
+                                           round_to_str(stats['runtime'])]
+                        else:
+                                print "%s: error: output format %s not recognized!" % (prog_base,
+                                                                                       output_format)
+                                sys.exit(1)
+                        statistics_by_time_str += print_row(content, time_host_stats_col_size, output_format)
+                        statistics_by_time_str += NEW_LINE_STR
 	
-	statistics_by_time_str += NEW_LINE_STR
-	statistics_by_time_str +="#Job instances statistics on host per " + time_filter
-	statistics_by_time_str += NEW_LINE_STR
-	statistics_by_time_str +=print_row(time_host_stats_col_name , time_host_stats_col_size)
-	statistics_by_time_str += NEW_LINE_STR
-	stats_by_time = workflow_stats.get_jobs_run_by_time_per_host()
-	formatted_stats_list = stats_utils.convert_stats_to_base_time(stats_by_time , time_filter, True)
-	for stats in formatted_stats_list:
-		content = [stats['date_format'] ,str(stats['host']) , str(stats['count']),round_to_str(stats['runtime'])]
-		statistics_by_time_str += print_row(content , time_host_stats_col_size)
-		statistics_by_time_str += NEW_LINE_STR
-	
-	statistics_by_time_str += NEW_LINE_STR
-	statistics_by_time_str +="#Invocation statistics on host per " + time_filter
-	statistics_by_time_str += NEW_LINE_STR
-	statistics_by_time_str +=print_row(time_host_stats_col_name , time_host_stats_col_size)
-	statistics_by_time_str += NEW_LINE_STR
-	stats_by_time = workflow_stats.get_invocation_by_time_per_host()
-	formatted_stats_list = stats_utils.convert_stats_to_base_time(stats_by_time , time_filter, True)
-	for stats in formatted_stats_list:
-		content = [stats['date_format'] ,str(stats['host']) , str(stats['count']),round_to_str(stats['runtime'])]
-		statistics_by_time_str += print_row(content , time_host_stats_col_size)
-		statistics_by_time_str += NEW_LINE_STR
+        if per_host == True:
+                statistics_by_time_str += NEW_LINE_STR
+                statistics_by_time_str += "# Invocation statistics on host per " + time_filter
+                statistics_by_time_str += NEW_LINE_STR
+                if output_format == "text":
+                        statistics_by_time_str += print_row(time_host_stats_col_name_text,
+                                                            time_host_stats_col_size, output_format)
+                elif output_format == "csv":
+                        statistics_by_time_str += print_row(time_host_stats_col_name_csv,
+                                                            time_host_stats_col_size, output_format)
+                else:
+                        print "%s: error: output format %s not recognized!" % (prog_base, output_format)
+                        sys.exit(1)
+                statistics_by_time_str += NEW_LINE_STR
+                stats_by_time = workflow_stats.get_invocation_by_time_per_host()
+                formatted_stats_list = stats_utils.convert_stats_to_base_time(stats_by_time, time_filter, True)
+                for stats in formatted_stats_list:
+                        if output_format == "text":
+                                content = [stats['date_format'], str(stats['host']), str(stats['count']),
+                                           round_to_str(stats['runtime'])]
+                        elif output_format == "csv":
+                                content = ["Invocations/host/" + time_filter, stats['date_format'],
+                                           str(stats['host']), str(stats['count']),
+                                           round_to_str(stats['runtime'])]
+                        else:
+                                print "%s: error: output format %s not recognized!" % (prog_base,
+                                                                                       output_format)
+                                sys.exit(1)
+                        statistics_by_time_str += print_row(content, time_host_stats_col_size, output_format)
+                        statistics_by_time_str += NEW_LINE_STR
 	
 	return statistics_by_time_str
 	
@@ -676,6 +1122,7 @@ def set_statistics_level(stats_level):
 	global calc_jb_stats
 	global calc_tf_stats
 	global calc_ti_stats
+
 	if stats_level =='all':
 		calc_wf_stats = True
 		calc_wf_summary = True
@@ -697,24 +1144,26 @@ def set_statistics_level(stats_level):
 
 def main():
 	# Configure command line option parser
-	prog_usage = prog_base +" [options] SUBMIT DIRECTORY" 
+	prog_usage = prog_base +" [options] SUBMIT_DIRECTORY" 
 	parser = optparse.OptionParser(usage=prog_usage)
 	parser.add_option("-o", "--output", action = "store", dest = "output_dir",
-			help = "writes the output to given directory.")
+                          help = "Writes the output to given directory.")
 	parser.add_option("-c","--conf", action = "store", type = "string", dest = "config_properties",
-			  help = "specifies the properties file to use. This option overrides all other property files.")
+			  help = "Specifies the properties file to use. This option overrides all other property files.")
 	parser.add_option("-s", "--statistics-level", action = "store", dest = "statistics_level",
-			choices=['all', 'summary', 'wf_stats','jb_stats','tf_stats' ,'ti_stats' ],
-			help = "Valid levels are: all,summary,wf_stats,jb_stats,tf_stats , ti_stats; Default is summary.")
+                          choices=['all', 'summary', 'wf_stats', 'jb_stats', 'tf_stats', 'ti_stats'],
+                          help = "Valid levels are: all,summary,wf_stats,jb_stats,tf_stats,ti_stats; Default is summary.")
 	parser.add_option("-t", "--time-filter", action = "store", dest = "time_filter",
-			choices=[ 'day','hour' ],
-			help = "Valid levels are: day,hour; Default is day.")
-	parser.add_option("-i", "--ignore-db-inconsistency", action = "store_const", const = 0, dest = "ignore_db_inconsistency",
-                  help = "turn off the check for db consistency")
+                          choices=['day', 'hour'],
+                          help = "Valid levels are: day,hour; Default is day.")
+	parser.add_option("-i", "--ignore-db-inconsistency", action = "store_const", const = 0,
+                          dest = "ignore_db_inconsistency",
+                          help = "turn off the check for db consistency")
 	parser.add_option("-v", "--verbose", action="count", default=0, dest="verbose", 
-			help="Increase verbosity, repeatable")
+                          help="Increase verbosity, repeatable")
 	parser.add_option("-q", "--quiet", action="count", default=0, dest="quiet", 
-			help="Decrease verbosity, repeatable")
+                          help="Decrease verbosity, repeatable")
+
 	# Parse command line options
 	(options, args) = parser.parse_args()
 	
@@ -755,6 +1204,7 @@ def main():
 	else:
 		logger.warning("The tool is meant to be run after the completion of workflow run.")
 	
+        # Figure out what statistics we need to calculate
 	if options.statistics_level is not None:
                 statistics_level = options.statistics_level
 	else:
@@ -768,9 +1218,11 @@ def main():
 		time_filter =  'day'
 
 	# Change the legend to show the time filter format
-	time_stats_col_name[0] += str(stats_utils.get_date_print_format(time_filter))
-	time_host_stats_col_name[0] += str(stats_utils.get_date_print_format(time_filter))
-	
+        time_stats_col_name_text[0] += str(stats_utils.get_date_print_format(time_filter))
+        time_stats_col_name_csv[1] += str(stats_utils.get_date_print_format(time_filter))
+        time_host_stats_col_name_text[0] += str(stats_utils.get_date_print_format(time_filter))
+        time_host_stats_col_name_csv[1] += str(stats_utils.get_date_print_format(time_filter))
+
 	global output_dir
 	if options.output_dir is not None:
 		output_dir = options.output_dir
@@ -784,7 +1236,7 @@ def main():
 	else:
 		output_dir = os.path.join(submit_dir, DEFAULT_OUTPUT_DIR)
 		stats_utils.create_directory(output_dir, True)
-		
+
 	output_db_url, wf_uuid = stats_utils.get_db_url_wf_uuid(submit_dir, options.config_properties)
 	if output_db_url is not None:
 		print_workflow_details(output_db_url, wf_uuid, output_dir)
