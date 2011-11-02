@@ -98,8 +98,7 @@ public class GridStartFactory {
      */
     public static String[] GRIDSTART_IMPLEMENTING_CLASSES = {
                                                      "Kickstart",
-                                                     "NoGridStart",
-                                                     "SeqExec"
+                                                     "NoGridStart"
                                                     };
 
     //
