@@ -278,7 +278,7 @@ public class PegasusLite implements GridStart {
 
         //for pegasus-lite work, worker node execution is no
         //longer handled in kickstart/no kickstart cases
-        mKickstartGridStartImpl.mWorkerNodeExecution = false;
+        //mKickstartGridStartImpl.mWorkerNodeExecution = false;
 
         mStageSLSFile = mProps.stageSLSFilesViaFirstLevelStaging();
         mLocalUserProxy = Proxy.getPathToUserProxy(bag);

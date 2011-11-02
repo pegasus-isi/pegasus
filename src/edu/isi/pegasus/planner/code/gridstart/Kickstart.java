@@ -281,10 +281,14 @@ public class Kickstart implements GridStart {
         mDynamicDeployment =  mProps.transferWorkerPackage();
         
         mWorkerNodeExecution = mProps.executeOnWorkerNode();
+
+/*
+ //JIRA PM-495. No worker node execution logic in Kickstart
         if( mWorkerNodeExecution ){
             //load SLS
             mSLS = SLSFactory.loadInstance( bag );
         }
+ */
 
         mEnablingPartOfAggregatedJob = false;
         mSetXBit = mProps.setXBitWithKickstart();
@@ -337,7 +341,10 @@ public class Kickstart implements GridStart {
         
         //we want to evaluate the exectionSiteDirectory only once
         //for the clustered job
+/*
+ * //JIRA PM-495. No worker node execution logic in Kickstart
         String directory = ( mWorkerNodeExecution ) ? getWorkerNodeDirectory( job ) : null ;
+ */
         for (Iterator it = job.constituentJobsIterator(); it.hasNext(); ) {
             Job constituentJob = (Job)it.next();
 
@@ -355,7 +362,8 @@ public class Kickstart implements GridStart {
             }
 
 
-            
+/*
+ * //JIRA PM-495. No worker node execution logic in Kickstart
             //for worker node execution prepend an extra
             //option -w to get kickstart to change directories
             if( mWorkerNodeExecution ){
@@ -366,31 +374,20 @@ public class Kickstart implements GridStart {
                                                 directory );
                 //now enable
                 this.enable( constituentJob, isGlobusJob, mDoStat, false, partOfClusteredJob );
-
-/*
-                //add a -w only for compute or staged compute jobs
-                if( constituentJob.getJobType() == Job.COMPUTE_JOB || constituentJob.getJobType() == Job.STAGED_COMPUTE_JOB ){
-                    StringBuffer args = new StringBuffer( );
-                     
-                     //we append -w only if we are not using condor file transfers
-                     //JIRA BUG 145
-                     if( !mSLS.doesCondorModifications() ){
-                        args.append( " -w " ).append( getWorkerNodeDirectory( job ) );
-                     }
-                     args.append( " " ).append( constituentJob.condorVariables.removeKey( "arguments" ) );
-                     construct(constituentJob, "arguments", args.toString());                     
-                }
- */
             }
             else{
+ */
                 //no worker node case
                 //always pass isGlobus true as always
                 //interested only in executable strargs
                 //due to the fact that seqexec does not allow for setting environment
                 //per constitutent constituentJob, we cannot set the postscript removal option
                 this.enable( constituentJob, isGlobusJob, mDoStat, false, partOfClusteredJob  );
-            }
+/*
+ * //JIRA PM-495. No worker node execution logic in Kickstart
 
+            }
+*/
         }
 
         //all the constitutent jobs are enabled.
@@ -398,14 +395,7 @@ public class Kickstart implements GridStart {
         //to it's executable form
         aggregator.makeAbstractAggregatedJobConcrete( job  );
 
-        /* For JIRA PM-380. Was intially added for clustering refactoring PM-316
-        if( mWorkerNodeExecution ){
-            //lets enable the AggregatedJob directly for worker node execution
-            //before handing to the NoGridStart implementation
-            StringBuffer args = new StringBuffer();
-            this.enableForWorkerNodeExecution( job, args , false );
-        }
-         */
+        
         //the aggregated job itself needs to be enabled via NoGridStart
         mNoGridStartImpl.enable( (Job)job, isGlobusJob);
         
@@ -559,9 +549,11 @@ public class Kickstart implements GridStart {
         gridStartArgs.append("-R ").append(job.executionPool).append(' ');
 
         
+/*
+ * //JIRA PM-495. No worker node execution logic in Kickstart
         
         if( !mWorkerNodeExecution ){
-            
+*/
             
             //handle the -w option that asks kickstart to change
             //exectionSiteDirectory before launching an executable.
@@ -604,12 +596,20 @@ public class Kickstart implements GridStart {
                 //Condor or GRAM decides to run
                 job.condorVariables.removeKey( key );
             }
+/*
+ * //JIRA PM-495. No worker node execution logic in Kickstart
+
         }
+*/
 
 
-        if ( mWorkerNodeExecution /*&& !mEnablingPartOfAggregatedJob*/ ){
+ /*
+ * //JIRA PM-495. No worker node execution logic in Kickstart
+
+        if ( mWorkerNodeExecution  ){
             enableForWorkerNodeExecution( job , gridStartArgs, partOfClusteredJob );
         }
+ */
 
         //check if the constituentJob type indicates staging of executable
         //The -X functionality is handled by the setup jobs that
@@ -711,6 +711,9 @@ public class Kickstart implements GridStart {
             }
         }
         else{
+            /*
+             * //JIRA PM-495. No worker node execution logic in Kickstart
+
             if( this.mWorkerNodeExecution && job.userExecutablesStagedForJob() ){
                 //we need to put the path of the executable
                 //staged in the worker node temp exectionSiteDirectory
@@ -719,9 +722,14 @@ public class Kickstart implements GridStart {
                               append( job.getStagedExecutableBaseName() );
             }
             else{
+             */
                 gridStartArgs.append(job.executable);
 
+/*
+ * //JIRA PM-495. No worker node execution logic in Kickstart
+
             }
+ */
             gridStartArgs.append(' ').append(job.strargs);
         }
 
@@ -800,7 +808,10 @@ public class Kickstart implements GridStart {
             return gridStartPath;
         }
         else if( mDynamicDeployment &&
-                 job.runInWorkDirectory()  ){
+                 job.runInWorkDirectory() /*&& mUseFullPathToGridStart */){
+
+            //mUseFullPathToGridStart should not be used above as a condition. Karan Nov 2, 2011
+
             //worker package deployment 
             //any jobs that run in submit exectionSiteDirectory use local kickstart path
             //pick up the path from the transformation catalog of
