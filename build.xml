@@ -528,9 +528,22 @@
     <delete file="stamp"/>
   </target>
 
-  <target name="clean" depends="build-clean,ctools-clean,externals-clean"/>
+  <target name="clean" depends="build-clean,ctools-clean,externals-clean"
+	  description="Run {build,ctools,externals}-clean" />
   <target name="build" depends="ctools-all,externals,jar,vdl-jar"/>
+
+  <target name="junit" depends="jar"
+	  description="Execute the Java unit testing (not yet)">
+    <echo>FIXME: This is a stand-in dummy for Java unit testing.</echo>
+  </target>
+  <target name="pyunit" depends="jar"
+	  description="Execute the Python unit testing (not yet)">
+    <echo>FIXME: This is a stand-in dummy for Python unit testing.</echo>
+  </target>
+  <target name="perltest" depends="jar"
+	  description="Execute the Perl unit testing (not yet)">
+    <echo>FIXME: This is a stand-in dummy for Perl testing wrapping into JUnit API.</echo>
+  </target>
+  <target name="unittest" depends="junit,pyunit,perltest"
+	  description="Execute all unit test (for CLI users)"/>
 </project>
-
-
-
