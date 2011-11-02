@@ -368,15 +368,7 @@ public class NoGridStart implements GridStart {
         if( mWorkerNodeExecution  ){
             if( job instanceof AggregatedJob && !mSLS.doesCondorModifications()){
 
- /*
-                try {
-  */
-                    //this approach only works for S3 for time being!
-                    //do a sanity check
-                    /*if (!(mSLS instanceof edu.isi.pegasus.planner.transfer.sls.S3)) {
-                        throw new RuntimeException("Second Level Staging with NoGridStart for clustered jobs only works with S3");
-                    }*/
-
+ 
 
 
                     String key = getDirectoryKey( job );
@@ -388,12 +380,7 @@ public class NoGridStart implements GridStart {
                     factory.initialize(mBag, mDAG);
                     GridStart gs = factory.loadGridStart(firstJob, "/tmp");
                     
-                    //now that we have a seqxec gridlaunch 
-                    //let the figure out how to handle clustered jobs
-                    if( /*gs instanceof SeqExecOld ||*/ gs instanceof SeqExec ){
-                        return gs.enable( job, isGlobusJob );
-                    }
-                    else{
+                    
                         //always have the remote dir set to /tmp as
                         //we are banking on kickstart to change directory 
                         //for us for compute jobs
@@ -403,68 +390,7 @@ public class NoGridStart implements GridStart {
                         //remote_initialdir overriden before handing over 
                         //to SeqExec launcher.
                         job.condorVariables.construct( key, "/tmp" );
-                    }
                     
-                    //if gs is  not of type seqexec we revert to 
-                    //the original solution as implemented for
-                    //JIRA Bug PM-59
-                    //http://jira.pegasus.isi.edu/browse/PM-59
-/*
-                    //enable the whole clustered job via kickstart
-                    Job j = (Job) clusteredJob.clone();
-                    gs.enable(j, isGlobusJob);
-
-                    //enable all constitutents jobs through the factory
-                    for (Iterator it = clusteredJob.constituentJobsIterator(); it.hasNext();) {
-                        Job cJob = (Job) it.next();
-                        gs.enable(cJob, isGlobusJob);
-                    }
-
-                    //we merge the sls input and sls output files into
-                    //the stdin of the clustered job
-                    File slsInputFile = new File( mSubmitDir, mSLS.getSLSInputLFN(job));
-                    File slsOutputFile = new File( mSubmitDir, mSLS.getSLSOutputLFN(job));
-                    File stdin = new File( mSubmitDir, job.getStdIn());
-
-                    //create a temp file first
-                    File temp = File.createTempFile("sls", null, new File( mSubmitDir ));
-                    
-                    //add an entry to create the worker node directory
-                    PrintWriter writer = new PrintWriter( new FileWriter( temp ) );
-                    writer.println( "/bin/mkdir -p " + gs.getWorkerNodeDirectory( job ) );
-                    writer.close();
-                    
-                    OutputStream tmpOStream = new FileOutputStream( temp , true );
-                    //append the sls input file to temp file
-                    addToFile( slsInputFile, tmpOStream );
-                    //append the stdin to the tmp file
-                    addToFile( stdin, tmpOStream );
-                    //append the sls output to temp file
-                    addToFile( slsOutputFile, tmpOStream );
-                    tmpOStream.close();
-                    
-                    //we need to remove the directory
-                    writer = new PrintWriter( new FileWriter( temp, true ) );
-                    writer.println( "/bin/rm -rf " + gs.getWorkerNodeDirectory( job ) );
-                    writer.close();
-                    
-                    
-                    //delete the stdin file and sls files
-                    stdin.delete();
-                    slsInputFile.delete();
-                    slsOutputFile.delete();
-                    
-                    //rename tmp to stdin
-                    temp.renameTo( stdin );
- 
-                    
-                }
-
-                catch (IOException ex) {
-                    
-                }
-  */
-                
             }
             else if( !mEnablingPartOfAggregatedJob ){
                 if( job.getJobType() == Job.COMPUTE_JOB /*||
