@@ -41,14 +41,12 @@ import edu.isi.pegasus.planner.code.generator.condor.CondorQuoteParserException;
 
 import edu.isi.pegasus.planner.transfer.SLS;
 
-import edu.isi.pegasus.planner.transfer.sls.SLSFactory;
 
 import edu.isi.pegasus.common.util.Separator;
 
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
-import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 
 import edu.isi.pegasus.planner.classes.FileTransfer;
@@ -282,13 +280,7 @@ public class Kickstart implements GridStart {
         
         mWorkerNodeExecution = mProps.executeOnWorkerNode();
 
-/*
- //JIRA PM-495. No worker node execution logic in Kickstart
-        if( mWorkerNodeExecution ){
-            //load SLS
-            mSLS = SLSFactory.loadInstance( bag );
-        }
- */
+
 
         mEnablingPartOfAggregatedJob = false;
         mSetXBit = mProps.setXBitWithKickstart();
@@ -341,11 +333,7 @@ public class Kickstart implements GridStart {
         
         //we want to evaluate the exectionSiteDirectory only once
         //for the clustered job
-/*
- * //JIRA PM-495. No worker node execution logic in Kickstart
-        String directory = ( mWorkerNodeExecution ) ? getWorkerNodeDirectory( job ) : null ;
- */
-        for (Iterator it = job.constituentJobsIterator(); it.hasNext(); ) {
+       for (Iterator it = job.constituentJobsIterator(); it.hasNext(); ) {
             Job constituentJob = (Job)it.next();
 
             //earlier was set in SeqExec JobAggregator in the enable function
@@ -362,32 +350,12 @@ public class Kickstart implements GridStart {
             }
 
 
-/*
- * //JIRA PM-495. No worker node execution logic in Kickstart
-            //for worker node execution prepend an extra
-            //option -w to get kickstart to change directories
-            if( mWorkerNodeExecution ){
-
-                //we want the constitutent jobs to run in the same exectionSiteDirectory
-                //as the aggreagated job
-                constituentJob.vdsNS.construct( Pegasus.WORKER_NODE_DIRECTORY_KEY,
-                                                directory );
-                //now enable
-                this.enable( constituentJob, isGlobusJob, mDoStat, false, partOfClusteredJob );
-            }
-            else{
- */
-                //no worker node case
+          //no worker node case
                 //always pass isGlobus true as always
                 //interested only in executable strargs
                 //due to the fact that seqexec does not allow for setting environment
                 //per constitutent constituentJob, we cannot set the postscript removal option
                 this.enable( constituentJob, isGlobusJob, mDoStat, false, partOfClusteredJob  );
-/*
- * //JIRA PM-495. No worker node execution logic in Kickstart
-
-            }
-*/
         }
 
         //all the constitutent jobs are enabled.
@@ -548,13 +516,7 @@ public class Kickstart implements GridStart {
         //to kickstart as argument
         gridStartArgs.append("-R ").append(job.executionPool).append(' ');
 
-        
-/*
- * //JIRA PM-495. No worker node execution logic in Kickstart
-        
-        if( !mWorkerNodeExecution ){
-*/
-            
+          
             //handle the -w option that asks kickstart to change
             //exectionSiteDirectory before launching an executable.
             if(job.vdsNS.getBooleanValue(Pegasus.CHANGE_DIR_KEY)  ){
@@ -596,20 +558,6 @@ public class Kickstart implements GridStart {
                 //Condor or GRAM decides to run
                 job.condorVariables.removeKey( key );
             }
-/*
- * //JIRA PM-495. No worker node execution logic in Kickstart
-
-        }
-*/
-
-
- /*
- * //JIRA PM-495. No worker node execution logic in Kickstart
-
-        if ( mWorkerNodeExecution  ){
-            enableForWorkerNodeExecution( job , gridStartArgs, partOfClusteredJob );
-        }
- */
 
         //check if the constituentJob type indicates staging of executable
         //The -X functionality is handled by the setup jobs that
@@ -711,26 +659,10 @@ public class Kickstart implements GridStart {
             }
         }
         else{
-            /*
-             * //JIRA PM-495. No worker node execution logic in Kickstart
+            
+             gridStartArgs.append(job.executable);
 
-            if( this.mWorkerNodeExecution && job.userExecutablesStagedForJob() ){
-                //we need to put the path of the executable
-                //staged in the worker node temp exectionSiteDirectory
-                //JIRA PM-20 and PM-68
-                gridStartArgs.append( this.getWorkerNodeDirectory( job ) ).append( File.separator ).
-                              append( job.getStagedExecutableBaseName() );
-            }
-            else{
-             */
-                gridStartArgs.append(job.executable);
-
-/*
- * //JIRA PM-495. No worker node execution logic in Kickstart
-
-            }
- */
-            gridStartArgs.append(' ').append(job.strargs);
+             gridStartArgs.append(' ').append(job.strargs);
         }
 
 
@@ -924,165 +856,6 @@ public class Kickstart implements GridStart {
     }
 
 
-    /**
-     * Enables a constituentJob for worker node execution, by calling out to the SLS
-     * interface to do the second level staging. Also adds the appropriate
-     * prejob/setup constituentJob/post/cleanup jobs to the constituentJob if required.
-     *
-     *
-     * @param constituentJob     the constituentJob to be enabled
-     * @param args    the arguments constructed so far.
-     * @param partOfClusteredJob whether part of clustered job or not.
-     */
-    protected void enableForWorkerNodeExecution( Job job, StringBuffer args , boolean partOfClusteredJob){
-        
-        //for clustered jobs we dont generate sls files
-        boolean generateSLSFile = !partOfClusteredJob;
-
-        if( job.getJobType() == Job.COMPUTE_JOB /*||
-            job.getJobType() == Job.STAGED_COMPUTE_JOB */){
-            mLogger.log( "Enabling job for worker node execution " + job.getName() ,
-                         LogManager.DEBUG_MESSAGE_LEVEL );
-
-            //To Do handle staged compute jobs also.
-            //and clustered jobs
-
-            //remove the remote or initial dir's for the compute jobs
-            String key = getDirectoryKey( job );
-
-            String exectionSiteDirectory = (String)job.condorVariables.removeKey( key );
-            FileServer stagingSiteFileServer =  mSiteStore.lookup( job.getStagingSiteHandle() ).getHeadNodeFS().selectScratchSharedFileServer();
-            String stagingSiteDirectory      = mSiteStore.getExternalWorkDirectory(stagingSiteFileServer, job.getStagingSiteHandle() );
-            String workerNodeDir             = getWorkerNodeDirectory( job );
-            
-            //pass the worker node directory as an argument to kickstart
-            //because most jobmanagers cannot handle worker node tmp
-            //as they check for existance on the head node
-            StringBuffer xBitSetInvocation = null;
-            if( !mSLS.doesCondorModifications() ){
-                //only valid if constituentJob does not use SLS condor
-                args.append("-W ").append(workerNodeDir).append(' ');
-
-                //handle for staged compute jobs. set their X bit after
-                // SLS has happened
-                if( job.userExecutablesStagedForJob() ){
-                    xBitSetInvocation = new StringBuffer();
-                    xBitSetInvocation.append( "/bin/chmod 777 " );
-
-                    for( Iterator it = job.getInputFiles().iterator(); it.hasNext(); ){
-                        PegasusFile pf = ( PegasusFile )it.next();
-                        if( pf.getType() == PegasusFile.EXECUTABLE_FILE ){
-//                            //the below does not work as kickstart attempts to
-//                            //set the X bit before running any prejobs
-//                            args.append( "-X " ).append( workerNodeDir ).
-//                                append( File.separator ).append( pf.getLFN() ).append(' ');
-                            xBitSetInvocation.append( pf.getLFN() ).append( " " );
-                        }
-                    }
-                }
-            }
-
-            //always have the remote dir set to /tmp as we are
-            //banking upon kickstart to change the exectionSiteDirectory for us
-            //For worker node execution we no longer set any key, as
-            //it creates problems with condor file staging of proxy and
-            //other things. Karan Oct 11th , 2010
-            //constituentJob.condorVariables.construct( key, "/tmp" );
-
-            //see if we need to generate a SLS input file in the submit exectionSiteDirectory
-            File slsInputFile  = null;
-            if( generateSLSFile && mSLS.needsSLSInputTransfers( job ) ){
-                //generate the sls file with the mappings in the submit exectionSiteDirectory
-                Collection<FileTransfer> files = mSLS.determineSLSInputTransfers( job,
-                                                          mSLS.getSLSInputLFN( job ),
-                                                          mSubmitDir,
-                                                          stagingSiteDirectory,
-                                                          workerNodeDir );
-
-                slsInputFile = writeToFile( files , mSubmitDir, mSLS.getSLSInputLFN( job ) );
-
-                //construct a setup constituentJob not reqd as kickstart creating the exectionSiteDirectory
-                //String setupJob = constructSetupJob( constituentJob, workerNodeDir );
-                //setupJob = quote( setupJob );
-                //constituentJob.envVariables.construct( this.KICKSTART_SETUP, setupJob );
-
-                File headNodeSLS = new File( exectionSiteDirectory, slsInputFile.getName() );
-                String preJob = mSLS.invocationString( job, headNodeSLS );
-
-
-                if( preJob != null ){
-                //comment out section start
-                    //add the x bit invocation if required
-                    //this is required till kickstart -X feature is fixed
-                    //it needs to be invoked after the prejob
-                    if( xBitSetInvocation != null ){
-                        if( preJob.startsWith( "/bin/bash" ) ){
-                            //remove the last " and add the x bit invocation
-                            if( preJob.lastIndexOf( "\"" ) == preJob.length() - 1 ){
-                                preJob = preJob.substring( 0, preJob.length() - 1 );
-                                xBitSetInvocation.append( "\"" );
-                                preJob += " && " + xBitSetInvocation.toString();
-                            }
-                        }
-                        else{
-                            //prepend a /bin/bash -c invocation
-                            preJob = "/bin/bash -c \"" + preJob  + " && "  + xBitSetInvocation.toString() + "\"";
-                        }
-                    }
-                 //comment out section end
-
-                    preJob = quote( preJob );
-                    job.envVariables.construct( this.KICKSTART_PREJOB, preJob );
-                }
-            }
-
-
-            //see if we need to generate a SLS output file in the submit exectionSiteDirectory
-            File slsOutputFile = null;
-            if( generateSLSFile && mSLS.needsSLSOutputTransfers( job ) ){
-                //construct the postjob that transfers the output files
-                //back to head node exectionSiteDirectory
-                //to fix later. right now post constituentJob only created is pre constituentJob
-                //created
-                Collection<FileTransfer> files  = mSLS.determineSLSOutputTransfers( job,
-                                                            mSLS.getSLSOutputLFN( job ),
-                                                            mSubmitDir,
-                                                            stagingSiteDirectory,
-                                                            workerNodeDir );
-
-                slsOutputFile = writeToFile( files , mSubmitDir, mSLS.getSLSOutputLFN( job ) );
-
-                //generate the post constituentJob
-                File headNodeSLS = new File( exectionSiteDirectory, slsOutputFile.getName() );
-                String postJob = mSLS.invocationString( job, headNodeSLS );
-                if( postJob != null ){
-                    postJob = quote( postJob );
-                    job.envVariables.construct( this.KICKSTART_POSTJOB, postJob );
-                }
-            }
-
-            //modify the constituentJob if required
-            if ( !mSLS.modifyJobForWorkerNodeExecution( job, 
-                                                        stagingSiteFileServer.getURLPrefix(),
-                                                        stagingSiteDirectory,
-                                                        workerNodeDir ) ){
-
-                throw new RuntimeException( "Unable to modify job " + job.getName() + " for worker node execution" );
-
-            }
-
-            //only to have cleanup constituentJob when not using condor modifications
-            if( !partOfClusteredJob && !mSLS.doesCondorModifications() ){
-                String cleanupJob = constructCleanupJob( job, workerNodeDir );
-                if( cleanupJob != null ){
-                    cleanupJob = quote( cleanupJob );
-                    job.envVariables.construct( this.KICKSTART_CLEANUP, cleanupJob );
-                }
-            }
-        }
-    }
-
-    
 
     /**
      * Returns the exectionSiteDirectory in which the constituentJob executes on the worker node.
