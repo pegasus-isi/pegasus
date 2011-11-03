@@ -18,7 +18,6 @@ package edu.isi.pegasus.planner.refiner;
 
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
-import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
 
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.Job;
@@ -57,6 +56,7 @@ import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry
 
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 
+import edu.isi.pegasus.planner.classes.TransferJob;
 import edu.isi.pegasus.planner.transfer.RemoteTransfer;
 import java.util.List;
 import java.util.ArrayList;
@@ -107,16 +107,13 @@ public class DeployWorkerPackage
      * Associates the transformation name with the executable basenames
      */
     public static final String PEGASUS_WORKER_EXECUTABLES[][] = {
-        { "transfer", "transfer" },
-        { "kickstart", "kickstart" },
+        { "transfer", "pegasus-transfer" },
+        { "kickstart", "pegasus-kickstart" },
         { "cleanup", "pegasus-cleanup" },
-        { "seqexec", "seqexec"},
-        { "dirmanager", "pegasus-dirmanager" },
+        { "seqexec", "pegasus-cluster"},
+        { "dirmanager", "pegasus-create-dir" },
         { "invoke", "invoke" },
         { "keg" , "keg" },
-        { "symlink", "symlink"},
-        { "pegasus-transfer", "pegasus-transfer" },
-        { "s3", "pegasus-s3" }
 
     };
 
@@ -323,6 +320,11 @@ public class DeployWorkerPackage
     protected String mPlannerMajorMinorVersion;
 
     /**
+     * Boolean indicating worker node execution.
+     */
+    protected boolean mWorkerNodeExecution;
+
+    /**
      * Loads the implementing class corresponding to the mode specified by the
      * user at runtime.
      *
@@ -369,6 +371,7 @@ public class DeployWorkerPackage
         mJobPrefix  = bag.getPlannerOptions().getJobnamePrefix();
 
         mTransferWorkerPackage = mProps.transferWorkerPackage();
+        mWorkerNodeExecution   = mProps.executeOnWorkerNode();
 
         //load the transfer setup implementation
         //To DO . specify type for loading
@@ -419,7 +422,13 @@ public class DeployWorkerPackage
 
         Refiner defaultRefiner = RefinerFactory.loadInstance( DeployWorkerPackage.DEFAULT_REFINER, mBag, scheduledDAG ) ;
         mSetupTransferImplementation.setRefiner( defaultRefiner );
-        
+
+
+        //a map indexed by execution site and the corresponding worker package
+        //location in the submit directory
+        Map<String,String> workerPackageMap = new HashMap<String,String>();
+
+
         //for each site insert default entries in the Transformation Catalog
         //for each scheduled site query TCMapper
         Set deploymentSites = this.getDeploymentSites( scheduledDAG );
@@ -455,6 +464,7 @@ public class DeployWorkerPackage
         //for each scheduled site query TCMapper
         for( Iterator it = deploymentSites.iterator(); it.hasNext(); ){
             String site = ( String ) it.next();
+            String stagingSite = this.getStagingSite( site );
             //get the set of valid tc entries
             List entries = m.getTCList( DeployWorkerPackage.TRANSFORMATION_NAMESPACE,
                                         DeployWorkerPackage.TRANSFORMATION_NAME,
@@ -474,26 +484,41 @@ public class DeployWorkerPackage
             mLogger.log( "Selected entry " + selected, LogManager.DEBUG_MESSAGE_LEVEL );
 
             //figure out the directory where to stage the data
-            String baseRemoteWorkDir = siteStore.getInternalWorkDirectory( site );
-            String name = getRootDirectoryNameForPegasus( selected.getPhysicalTransformation() );
-            File pegasusHome = new File( baseRemoteWorkDir, name );
+            //data will be staged to the staging site corresponding to
+            //the execution site
+            String baseRemoteWorkDir = (  mWorkerNodeExecution )?
+                                        //for pegasus-lite the worker package goes
+                                        //to the submit directory on the local site.
+                                        this.mPOptions.getSubmitDirectory() :
+                                        siteStore.getInternalWorkDirectory( stagingSite );
 
-            StringBuffer sb = new StringBuffer();
-            sb.append( "Directory where pegasus worker executables will reside on site ").append( site ).
-               append( " " ).append( pegasusHome.getAbsolutePath() );
-            mLogger.log( sb.toString(), LogManager.DEBUG_MESSAGE_LEVEL );
-            mSiteToPegasusHomeMap.put( site, pegasusHome.getAbsolutePath() );
+
+            //for the non pegasus lite case, we insert entries into the
+            //transformation catalog for all worker package executables
+            //the planner requires
+            if( !mWorkerNodeExecution ){
+                String name = getRootDirectoryNameForPegasus( selected.getPhysicalTransformation() );
+                File pegasusHome = new File( baseRemoteWorkDir, name );
+
+
+
+                StringBuffer sb = new StringBuffer();
+                sb.append( "Directory where pegasus worker executables will reside on site ").append( stagingSite ).
+                   append( " " ).append( pegasusHome.getAbsolutePath() );
+                mLogger.log( sb.toString(), LogManager.DEBUG_MESSAGE_LEVEL );
+                mSiteToPegasusHomeMap.put( stagingSite, pegasusHome.getAbsolutePath() );
             
-            //now create transformation catalog entry objects for each
-            //worker package executable
-            for( int i = 0; i < PEGASUS_WORKER_EXECUTABLES.length; i++){
-                TransformationCatalogEntry entry = addDefaultTCEntry( site,
-                                                                      pegasusHome.getAbsolutePath(),
-                                                                      selected.getSysInfo(),
-                                                                      PEGASUS_WORKER_EXECUTABLES[i][0],
-                                                                      PEGASUS_WORKER_EXECUTABLES[i][1]  );
+                //now create transformation catalog entry objects for each
+                //worker package executable
+                for( int i = 0; i < PEGASUS_WORKER_EXECUTABLES.length; i++){
+                    TransformationCatalogEntry entry = addDefaultTCEntry( stagingSite,
+                                                                        pegasusHome.getAbsolutePath(),
+                                                                        selected.getSysInfo(),
+                                                                        PEGASUS_WORKER_EXECUTABLES[i][0],
+                                                                        PEGASUS_WORKER_EXECUTABLES[i][1]  );
 
-                mLogger.log( "Entry constructed " + entry , LogManager.DEBUG_MESSAGE_LEVEL );
+                    mLogger.log( "Entry constructed " + entry , LogManager.DEBUG_MESSAGE_LEVEL );
+                }
             }
 
             //create the File Transfer object for shipping the worker executable
@@ -505,17 +530,30 @@ public class DeployWorkerPackage
             //figure out the URL prefix depending on
             //the TPT configuration
             String destURLPrefix = 
-                               siteStore.lookup( site ).getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix();
+                               siteStore.lookup( stagingSite ).getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix();
             
-            boolean localTransfer = this.runTransferOnLocalSite( defaultRefiner, site, destURLPrefix, Job.STAGE_IN_JOB);
+            boolean localTransfer = this.runTransferOnLocalSite( defaultRefiner, stagingSite, destURLPrefix, Job.STAGE_IN_JOB);
             String urlPrefix =  localTransfer ?
                                //lookup the site catalog to get the URL prefix
                                destURLPrefix :
                                //push pull mode. File URL will do
                                "file://";
-            ft.addDestination( site, urlPrefix + new File( baseRemoteWorkDir, baseName ).getAbsolutePath() );
+            ft.addDestination( stagingSite, urlPrefix + new File( baseRemoteWorkDir, baseName ).getAbsolutePath() );
+
+            if( mWorkerNodeExecution ){
+                //populate the map with the submit directory locations
+                workerPackageMap.put( site, new File( baseRemoteWorkDir, baseName ).getAbsolutePath() );
+            }
+
             mFTMap.put( site, ft );
-            mLocalTransfers.put( site, localTransfer );
+            mLocalTransfers.put( stagingSite, localTransfer );
+        }
+
+
+        //for pegasus lite and worker package execution
+        //we add the worker package map to PegasusBag
+        if( mWorkerNodeExecution ){
+            mBag.add( PegasusBag.WORKER_PACKAGE_MAP,  workerPackageMap );
         }
     }
 
@@ -610,70 +648,18 @@ public class DeployWorkerPackage
             return dag;
         }
 
-        //convert the dag to a graph representation and walk it
-        //in a top down manner
-        Graph workflow = Adapter.convert( dag );
 
+        //we add untar nodes only if worker node execution/pegasus lite
+        //mode is disabled
+        boolean addUntarJobs = !mWorkerNodeExecution;
 
-        //get the root nodes of the workflow
-        List roots = workflow.getRoots();
-
-        //add a setup job per execution site
         Set deploymentSites = this.getDeploymentSites( dag );
-        for( Iterator it = deploymentSites.iterator(); it.hasNext(); ){
-            String site = ( String ) it.next();
-            mLogger.log( "Adding worker package deployment node for " + site,
-                         LogManager.DEBUG_MESSAGE_LEVEL );
-
-
-            FileTransfer ft = (FileTransfer)mFTMap.get( site ); 
-            List<FileTransfer> fts = new ArrayList<FileTransfer>(1);
-            fts.add( ft );
-            
-            //hmm need to propogate site info with a dummy job on fly
-            Job dummy = new Job() ;
-            dummy.setSiteHandle( site );
-            
-            boolean localTransfer = mLocalTransfers.get( site ) ;
-            String tsite = localTransfer? "local" : site;
-            
-            Job setupTXJob = mSetupTransferImplementation.createTransferJob(
-                                         dummy,
-                                         tsite,
-                                         fts,
-                                         null,
-                                         this.getDeployJobName( dag, site , localTransfer),
-                                         Job.STAGE_IN_JOB );
-
-            
-            //add the untar job
-            Job untarJob = this.makeUntarJob( site,
-                                                  this.getUntarJobName( dag, site ),  
-                                                  getBasename( ((NameValue)ft.getSourceURL()).getValue() )
-                                                  );
-            
-            //the setup and untar jobs need to be launched without kickstart.
-            setupTXJob.vdsNS.construct( Pegasus.GRIDSTART_KEY, "None" );
-            untarJob.vdsNS.construct( Pegasus.GRIDSTART_KEY, "None" );
-            
-            GraphNode untarNode  = new GraphNode( untarJob.getName(), untarJob );
-            GraphNode setupNode = new GraphNode( setupTXJob.getName(), setupTXJob );
-
-            //untar node is child of setup
-            setupNode.addChild( untarNode );
-            
-            //add the original roots as children to untar node 
-            for( Iterator rIt = roots.iterator(); rIt.hasNext(); ){
-                GraphNode n = ( GraphNode ) rIt.next();
-                mLogger.log( "Added edge " + untarNode.getID() + " -> " + n.getID(),
-                              LogManager.DEBUG_MESSAGE_LEVEL );
-                untarNode.addChild( n );
-            }
-
-            workflow.addNode( setupNode );
-            workflow.addNode( untarNode );
-        }
-
+        Graph workflow = ( addUntarJobs )?
+                         addSetupNodesWithUntarNodes( dag , deploymentSites ): //non pegasus lite case. shared fs
+                         addSetupNodesWithoutUntarNodes( dag, deploymentSites );
+        
+        
+        
        
         //convert back to ADag and return
         ADag result = dag;
@@ -697,6 +683,169 @@ public class DeployWorkerPackage
         return result;
     }
 
+    /**
+     * Adds untar nodes to the workflow, in addition to the stage worker nodes
+     * 
+     * @param dag  the dag
+     * @param deploymentSites    the sites for which the worker package has to be deployed
+     * 
+     * @return  the workflow in the graph representation with the nodes added.
+     */
+    private Graph addSetupNodesWithUntarNodes( ADag dag, Set<String> deploymentSites ) {
+        //convert the dag to a graph representation and walk it
+        //in a top down manner
+        Graph workflow = Adapter.convert( dag );
+        
+        //get the root nodes of the workflow
+        List roots = workflow.getRoots();
+
+        //add a setup job per execution site
+        for( Iterator it = deploymentSites.iterator(); it.hasNext(); ){
+            String site = ( String ) it.next();
+
+            //for pegauss lite mode the staging site for worker package
+            //should be local site , submit directory.
+            String stagingSite = this.getStagingSite(site);
+
+            mLogger.log( "Adding worker package deployment node for " + site +
+                         " and staging site as " + stagingSite,
+                         LogManager.DEBUG_MESSAGE_LEVEL );
+
+
+
+            FileTransfer ft = (FileTransfer)mFTMap.get( site );
+            List<FileTransfer> fts = new ArrayList<FileTransfer>(1);
+            fts.add( ft );
+            
+            //hmm need to propogate site info with a dummy job on fly
+            Job dummy = new Job() ;
+            dummy.setSiteHandle( site );
+
+            //stage worker job runs locally or on the staging site
+            boolean localTransfer = mLocalTransfers.get( stagingSite ) ;
+            String tsite = localTransfer? "local" : stagingSite;
+            
+            TransferJob setupTXJob = mSetupTransferImplementation.createTransferJob(
+                                         dummy,
+                                         tsite,
+                                         fts,
+                                         null,
+                                         this.getDeployJobName( dag, site , localTransfer),
+                                         Job.STAGE_IN_JOB );
+
+            //the setupTXJob non third party site, has to be the staging site
+            setupTXJob.setNonThirdPartySite( stagingSite );
+
+            
+            //the setup and untar jobs need to be launched without kickstart.
+            setupTXJob.vdsNS.construct( Pegasus.GRIDSTART_KEY, "None" );
+            GraphNode setupNode = new GraphNode( setupTXJob.getName(), setupTXJob );
+
+
+            //add the untar job
+            Job untarJob = this.makeUntarJob( stagingSite,
+                                              this.getUntarJobName( dag, site ),
+                                              getBasename( ((NameValue)ft.getSourceURL()).getValue() )
+                                                  );
+            untarJob.vdsNS.construct( Pegasus.GRIDSTART_KEY, "None" );
+            
+            GraphNode untarNode  = new GraphNode( untarJob.getName(), untarJob );
+
+            //untar node is child of setup
+            setupNode.addChild( untarNode );
+            
+            //add the original roots as children to untar node
+            for( Iterator rIt = roots.iterator(); rIt.hasNext(); ){
+                    GraphNode n = ( GraphNode ) rIt.next();
+                    mLogger.log( "Added edge " + untarNode.getID() + " -> " + n.getID(),
+                                  LogManager.DEBUG_MESSAGE_LEVEL );
+                    untarNode.addChild( n );
+            }
+                
+            workflow.addNode( untarNode );
+            workflow.addNode( setupNode );
+        }
+        
+        return workflow;
+        
+    }
+    
+    /**
+     * Adds only the stage worker nodes to the workflow. This is used when
+     * Pegasus Lite is used to launch the jobs on the execution sites.
+     *
+     * @param dag  the dag
+     * @param deploymentSites    the sites for which the worker package has to be deployed
+     * 
+     * @return  the workflow in the graph representation with the nodes added.
+     */
+    private Graph addSetupNodesWithoutUntarNodes( ADag dag, Set<String> deploymentSites ) {
+        //convert the dag to a graph representation and walk it
+        //in a top down manner
+        Graph workflow = Adapter.convert( dag );
+        
+        //get the root nodes of the workflow
+        List roots = workflow.getRoots();
+
+        
+        Set<FileTransfer> fts = new HashSet<FileTransfer>();
+
+        //for pegauss lite mode the staging site for worker package
+        //should be local site , submit directory.
+        String stagingSite = "local";
+
+        //stage worker job runs locally or on the staging site
+        boolean localTransfer = mLocalTransfers.get( stagingSite ) ;
+
+        //add a setup job per execution site
+        for( Iterator it = deploymentSites.iterator(); it.hasNext(); ){
+            String site = ( String ) it.next();
+
+            mLogger.log( "Adding worker package deployment node for " + site,
+                         LogManager.DEBUG_MESSAGE_LEVEL );
+
+            FileTransfer ft = (FileTransfer)mFTMap.get( site );
+            
+            fts.add( ft );
+            
+        }
+
+        //hmm need to propogate site info with a dummy job on fly
+        Job dummy = new Job() ;
+        dummy.setSiteHandle( stagingSite );
+
+        String tsite =  "local" ;
+
+        TransferJob setupTXJob = mSetupTransferImplementation.createTransferJob(
+                                         dummy,
+                                         tsite,
+                                         fts,
+                                         null,
+                                         this.getDeployJobName( dag, tsite , localTransfer),
+                                         Job.STAGE_IN_JOB );
+
+        //the setupTXJob non third party site, has to be the staging site
+        setupTXJob.setNonThirdPartySite( stagingSite );
+
+        //the setup and untar jobs need to be launched without kickstart.
+        setupTXJob.vdsNS.construct( Pegasus.GRIDSTART_KEY, "None" );
+        GraphNode setupNode = new GraphNode( setupTXJob.getName(), setupTXJob );
+
+
+        //add the original roots as children to setup node
+        for( Iterator rIt = roots.iterator(); rIt.hasNext(); ){
+            GraphNode n = ( GraphNode ) rIt.next();
+            mLogger.log( "Added edge " + setupNode.getID() + " -> " + n.getID(),
+                                  LogManager.DEBUG_MESSAGE_LEVEL );
+            setupNode.addChild( n );
+
+        }
+
+        workflow.addNode( setupNode );
+
+        return workflow;
+    }
+    
     /**
      * Adds cleanup nodes in the workflow for sites specified.
      * 
@@ -1282,6 +1431,24 @@ public class DeployWorkerPackage
                  null:
                  url.substring( url.lastIndexOf( File.separator ) + 1 );
     }
+
+    /**
+     * Returns the staging site for a particular execution site. If worker node
+     * execution is enabled, then the staging site is the submit directory
+     * for the workflow on the local sit.e
+     *
+     * @param site    the execution site.
+     *
+     * @return the staging site
+     */
+    private String getStagingSite(String site) {
+        //for pegauss lite mode the staging site for worker package
+        //should be local site , submit directory.
+        return mWorkerNodeExecution ?  "local":
+                                        site;
+    }
+
+    
 
     
 }

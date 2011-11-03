@@ -31,6 +31,7 @@ import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 
 import edu.isi.pegasus.planner.catalog.transformation.Mapper;
+import java.util.Map;
 
 /**
  * A bag of objects that needs to be passed to various refiners.
@@ -50,7 +51,7 @@ public class PegasusBag
     public static final String PEGASUS_INFO[] = {
         "pegasus-properties", "planner-options", "replica-catalog", "site-catalog",
         "transformation-catalog", "transformation-mapper", "pegasus-logger", "site-store",
-        "transient-rc"
+        "transient-rc", "worker-package-map"
     };
 
 
@@ -110,6 +111,13 @@ public class PegasusBag
      */
     public static final Integer TRANSIENT_REPLICA_CATALOG = new Integer( 8 );
 
+
+    /**
+     * The constant to be passed to the accessor functions to get or set the
+     * handle to the worker package maps
+     */
+    public static final Integer WORKER_PACKAGE_MAP = new Integer( 9  );
+
     /**
      * The handle to the <code>PegasusProperties</code>.
      */
@@ -155,6 +163,13 @@ public class PegasusBag
      * during the workflow
      */
     private ReplicaCatalog mTransientRC;
+
+
+    /**
+     * Worker Package Map, that indexes execution site with the location of the
+     * corresponding worker package in the submit directory
+     */
+    private Map<String,String> mWorkerPackageMap;
     
     /**
      * The default constructor.
@@ -241,6 +256,13 @@ public class PegasusBag
                     valid = false;
                 break;
                 
+            case 9: //WORKER_PACKAGE_MAP
+                if ( value != null && value instanceof Map )
+                    mWorkerPackageMap = ( Map ) value;
+                else
+                    valid = false;
+                break;
+
             default:
                 throw new RuntimeException(
                       " Wrong Pegasus Bag key. Please use one of the predefined Integer key types");
@@ -271,7 +293,7 @@ public class PegasusBag
         }
         catch( Exception e ){}
 
-        return ( k >= this.PEGASUS_PROPERTIES.intValue() && k <= this.TRANSIENT_REPLICA_CATALOG.intValue() );
+        return ( k >= PegasusBag.PEGASUS_PROPERTIES.intValue() && k <= PegasusBag.WORKER_PACKAGE_MAP.intValue() );
     }
 
     /**
@@ -314,7 +336,10 @@ public class PegasusBag
                 
             case 8://TRANSIENT_RC
                 return this.mTransientRC;
-                
+
+            case 9://WORKER PACKAGE MAP
+                return this.mWorkerPackageMap;
+
             default:
                 throw new RuntimeException(
                     " Wrong Pegasus Bag key. Please use one of the predefined Integer key types");
@@ -397,7 +422,14 @@ public class PegasusBag
         return ( Mapper )get( PegasusBag.TRANSFORMATION_MAPPER );
     }
 
-
+    /**
+     * A convenice method to get the worker package
+     *
+     * @return  the handle to worker package map
+     */
+    public Map<String,String> getWorkerPackageMap(){
+        return ( Map )get( PegasusBag.WORKER_PACKAGE_MAP );
+    }
 
     /**
      * A convenience method to get the intValue for the object passed.

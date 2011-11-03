@@ -65,7 +65,9 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -234,8 +236,14 @@ public class PegasusLite implements GridStart {
     protected String mLocalPathToPegasusLiteCommon;
 
     /**
-     * The path to the pegasus lite common functions file.
+     * Boolean indicating whether worker package transfer is enabled or not
      */
+    protected boolean mTransferWorkerPackage;
+
+    /** A map indexed by execution site and the corresponding worker package
+     *location in the submit directory
+     */
+    Map<String,String> mWorkerPackageMap ;
 
     /**
      * Initializes the GridStart implementation.
@@ -254,6 +262,14 @@ public class PegasusLite implements GridStart {
         mGenerateLOF  = mProps.generateLOFFiles();
         mTCHandle  = bag.getHandleToTransformationCatalog();
 
+        mTransferWorkerPackage = mProps.transferWorkerPackage();
+
+        if( mTransferWorkerPackage ){
+            mWorkerPackageMap = bag.getWorkerPackageMap();
+            if( mWorkerPackageMap == null ){
+                mWorkerPackageMap = new HashMap<String,String>();
+            }
+        }
 
         Version version = Version.instance();
         mMajorVersionLevel = Integer.toString( Version.MAJOR );
@@ -485,6 +501,25 @@ public class PegasusLite implements GridStart {
             //the job wrapper requires the common functions file
             //from the submit host
             job.condorVariables.addIPFileForTransfer( this.mLocalPathToPegasusLiteCommon );
+
+            //figure out transfer of worker package
+            if( mTransferWorkerPackage ){
+                //sanity check to see if PEGASUS_HOME is defined
+                if( mSiteStore.getEnvironmentVariable( job.getSiteHandle(), "PEGASUS_HOME" ) == null ){
+                    //yes we need to add from the location in the worker package map
+                    String location = this.mWorkerPackageMap.get( job.getSiteHandle() );
+
+                    if( location == null ){
+                        throw new RuntimeException( "Unable to figure out worker package location for job " + job.getID() );
+                    }
+                    job.condorVariables.addIPFileForTransfer(location);
+                }
+                else{
+                    mLogger.log( "No worker package staging for job " + job.getSiteHandle() +
+                                 " PEGASUS_HOME specified in the site catalog for site " + job.getSiteHandle(),
+                                 LogManager.DEBUG_MESSAGE_LEVEL );
+                }
+            }
 
             //the .sh file is set as the executable for the job
             //in addition to setting transfer_executable as true
@@ -830,10 +865,6 @@ public class PegasusLite implements GridStart {
         if ( !mSLS.modifyJobForWorkerNodeExecution( job,
                                                     stagingSiteFileServer.getURLPrefix(),
                                                     stagingSiteDirectory,
-                                                    /*
-                                                    mSiteStore.lookup( job.getSiteHandle() ).getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix(),
-                                                    exectionSiteDirectory,
-                                                     */ 
                                                     workerNodeDir ) ){
 
                 throw new RuntimeException( "Unable to modify job " + job.getName() + " for worker node execution" );

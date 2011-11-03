@@ -740,14 +740,13 @@ public class Kickstart implements GridStart {
             return gridStartPath;
         }
         else if( mDynamicDeployment &&
-                 job.runInWorkDirectory() /*&& mUseFullPathToGridStart */){
-
-            //mUseFullPathToGridStart should not be used above as a condition. Karan Nov 2, 2011
+                 job.runInWorkDirectory()  && !mWorkerNodeExecution ){
 
             //worker package deployment 
             //any jobs that run in submit exectionSiteDirectory use local kickstart path
             //pick up the path from the transformation catalog of
             //dynamic deployment
+            //in case of pegasus lite mode, we dont look up here.
             TransformationCatalogEntry entry = this.getTransformationCatalogEntry( job.getSiteHandle() );
 
             if( entry == null ){
