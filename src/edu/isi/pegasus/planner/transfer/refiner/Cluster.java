@@ -460,6 +460,7 @@ public class Cluster extends Bundle {
                 PoolTransfer pt = ( PoolTransfer ) it.next();
                 String site = pt.getPoolName() ;
                 job.setSiteHandle( site );
+                job.setStagingSiteHandle( site );
 
                 Job parentSyncJob = this.getSyncJob( site );
                 
