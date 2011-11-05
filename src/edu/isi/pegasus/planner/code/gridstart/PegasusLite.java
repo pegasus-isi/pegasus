@@ -785,7 +785,7 @@ public class PegasusLite implements GridStart {
                 sb.append( "# stage in " ).append( '\n' );
                 sb.append(  mSLS.invocationString( job, null ) );
 
-                sb.append( " 1>&2" ).append( " << EOF" ).append( '\n' );
+                sb.append( " << EOF" ).append( '\n' );
 
                 sb.append( convertToTransferInputFormat( files ) );
                 sb.append( "EOF" ).append( '\n' );
