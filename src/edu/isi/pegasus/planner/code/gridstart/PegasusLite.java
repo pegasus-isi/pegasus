@@ -769,6 +769,9 @@ public class PegasusLite implements GridStart {
             sb.append( "pegasus_lite_setup_work_dir" ).append( '\n' );
             sb.append( '\n' );
 
+            sb.append( "# figure out the worker package to use" ).append( '\n' );
+            sb.append( "pegasus_lite_worker_package" );
+            sb.append( '\n' );
 
             if(  mSLS.needsSLSInputTransfers( job ) ){
                 //generate the sls file with the mappings in the submit exectionSiteDirectory
