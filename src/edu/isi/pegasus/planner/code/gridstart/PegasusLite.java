@@ -785,7 +785,7 @@ public class PegasusLite implements GridStart {
                 sb.append( "# stage in " ).append( '\n' );
                 sb.append(  mSLS.invocationString( job, null ) );
 
-                sb.append( " << EOF" ).append( '\n' );
+                sb.append( " 1>&2" ).append( " << EOF" ).append( '\n' );
 
                 sb.append( convertToTransferInputFormat( files ) );
                 sb.append( "EOF" ).append( '\n' );
@@ -807,7 +807,7 @@ public class PegasusLite implements GridStart {
                 //for clustered jobs we embed the contents of the input
                 //file in the shell wrapper itself
                 sb.append( job.getRemoteExecutable() ).append( job.getArguments() );
-                sb.append( " 1>&2" ).append( " << EOF" ).append( '\n' );
+                sb.append( " << EOF" ).append( '\n' );
 
                 sb.append( slurpInFile( mSubmitDir, job.getStdIn() ) );
                 sb.append( "EOF" ).append( '\n' );
