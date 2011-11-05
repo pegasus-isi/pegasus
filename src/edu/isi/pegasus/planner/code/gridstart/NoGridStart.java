@@ -111,7 +111,7 @@ public class NoGridStart implements GridStart {
     /**
      * A boolean indicating whether to have worker node execution or not.
      */
-    protected boolean mWorkerNodeExecution;
+    //protected boolean mWorkerNodeExecution;
 
     /**
      * The handle to the SLS implementor
@@ -160,11 +160,13 @@ public class NoGridStart implements GridStart {
         mWorkerPackageStagingEnabled = mProps.transferWorkerPackage();
 //        mExitParserArguments = getExitCodeArguments();
 
+/* JIRA PM-495
         mWorkerNodeExecution = mProps.executeOnWorkerNode();
         if( mWorkerNodeExecution ){
             //load SLS
             mSLS = SLSFactory.loadInstance( bag );
         }
+ */
         mEnablingPartOfAggregatedJob = false;
     }
 
@@ -363,79 +365,6 @@ public class NoGridStart implements GridStart {
             }
         }
 
-        //handle stuff differently for clustered jobs
-        //for non condor modified SLS
-        if( mWorkerNodeExecution  ){
-            if( job instanceof AggregatedJob && !mSLS.doesCondorModifications()){
-
- 
-
-
-                    String key = getDirectoryKey( job );
-                    
-                    AggregatedJob clusteredJob = (AggregatedJob) job;
-                    Job firstJob = clusteredJob.getConstituentJob(0);
-
-                    GridStartFactory factory = new GridStartFactory();
-                    factory.initialize(mBag, mDAG);
-                    GridStart gs = factory.loadGridStart(firstJob, "/tmp");
-                    
-                    
-                        //always have the remote dir set to /tmp as
-                        //we are banking on kickstart to change directory 
-                        //for us for compute jobs
-                    
-                        //Bug fix for JIRA PM-250
-                        //for worker node execution we dont want existing
-                        //remote_initialdir overriden before handing over 
-                        //to SeqExec launcher.
-                        job.condorVariables.construct( key, "/tmp" );
-                    
-            }
-            else if( !mEnablingPartOfAggregatedJob ){
-                if( job.getJobType() == Job.COMPUTE_JOB /*||
-                    job.getJobType() == Job.STAGED_COMPUTE_JOB*/ ){
-
-                    if( !mSLS.doesCondorModifications() && 
-                            //do the check only if input/output files are not empty
-                            !( job.getInputFiles().isEmpty() && job.getOutputFiles().isEmpty())){
-                        throw new RuntimeException( "Second Level Staging with NoGridStart only works with Condor SLS" );
-                    }
-
-                    
-
-                    //remove the remote or initial dir's for the compute jobs
-                    String key = getDirectoryKey( job );
-
-                    String executionSiteDirectory = (String)job.condorVariables.removeKey( key );
-
-                    FileServer stagingSiteFileServer =  mSiteStore.lookup( job.getStagingSiteHandle() ).getHeadNodeFS().selectScratchSharedFileServer();
-                    String stagingSiteDirectory      = mSiteStore.getExternalWorkDirectory(stagingSiteFileServer, job.getStagingSiteHandle() );
-                    String destDir = mSiteStore.getEnvironmentVariable( job.getSiteHandle() , "wntmp" );
-                    destDir = ( destDir == null ) ? "/tmp" : destDir;
-                    
-                    String relativeDir = mPOptions.getRelativeDirectory();
-                    String workerNodeDir = destDir + File.separator + relativeDir.replaceAll( "/" , "-" );
-
-
-
-                    //always have the remote dir set to /tmp as we are
-                    //banking upon kickstart to change the directory for us
-                    job.condorVariables.construct( key, "/tmp" );
-
-
-                    //modify the job if required
-                    if ( !mSLS.modifyJobForWorkerNodeExecution( job,
-                                                                stagingSiteFileServer.getURLPrefix(),
-                                                                stagingSiteDirectory,
-                                                                workerNodeDir ) ){
-                        throw new RuntimeException( "Unable to modify job " + job.getName() + " for worker node execution" );
-                    }
-
-
-                }
-            }//end of enabling worker node execution for non clustered jobs
-        }//end of worker node execution
 
 
         if( mGenerateLOF ){
