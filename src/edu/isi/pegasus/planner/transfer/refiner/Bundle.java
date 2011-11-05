@@ -26,6 +26,10 @@ import edu.isi.pegasus.planner.classes.FileTransfer;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.common.logging.LogManager;
 
+import edu.isi.pegasus.planner.catalog.classes.Profiles;
+import edu.isi.pegasus.planner.catalog.classes.Profiles.NAMESPACES;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
@@ -176,6 +180,16 @@ public class Bundle extends Default {
 
 
     /**
+     * Pegasus Profiles specified in the properties.
+     */
+    protected Pegasus mPegasusProfilesInProperties;
+
+    /**
+     * Handle to the SiteStore
+     */
+    protected SiteStore mSiteStore;
+
+    /**
      * The overloaded constructor.
      *
      * @param dag        the workflow to which transfer nodes need to be added.
@@ -191,7 +205,9 @@ public class Bundle extends Default {
         mSetupMap     = new HashMap();
         mCurrentSOLevel = -1;
         mJobPrefix    = mPOptions.getJobnamePrefix();
-        
+
+        mSiteStore    = bag.getHandleToSiteStore();
+        mPegasusProfilesInProperties = (Pegasus) mProps.getProfiles( NAMESPACES.pegasus );
         initializeBundleValues();
     }
     
@@ -203,27 +219,69 @@ public class Bundle extends Default {
         mStageinLocalBundleValue = new BundleValue();
         mStageinLocalBundleValue.initialize( Pegasus.BUNDLE_LOCAL_STAGE_IN_KEY,
                                              Pegasus.BUNDLE_STAGE_IN_KEY,
-                                             Bundle.DEFAULT_LOCAL_STAGE_IN_BUNDLE_FACTOR );
+                                             getDefaultBundleValueFromProperties( Pegasus.BUNDLE_LOCAL_STAGE_IN_KEY,
+                                                                    Pegasus.BUNDLE_STAGE_IN_KEY,
+                                                                    Bundle.DEFAULT_LOCAL_STAGE_IN_BUNDLE_FACTOR ) );
         
         mStageInRemoteBundleValue = new BundleValue();
         mStageInRemoteBundleValue.initialize( Pegasus.BUNDLE_REMOTE_STAGE_IN_KEY,
                                               Pegasus.BUNDLE_STAGE_IN_KEY,
-                                              Bundle.DEFAULT_REMOTE_STAGE_IN_BUNDLE_FACTOR );
+                                              getDefaultBundleValueFromProperties( Pegasus.BUNDLE_LOCAL_STAGE_IN_KEY,
+                                                                     Pegasus.BUNDLE_STAGE_IN_KEY,
+                                                                     Bundle.DEFAULT_REMOTE_STAGE_IN_BUNDLE_FACTOR ) );
 
 
         mStageOutLocalBundleValue = new BundleValue();
         mStageOutLocalBundleValue.initialize( Pegasus.BUNDLE_LOCAL_STAGE_OUT_KEY,
-                                             Pegasus.BUNDLE_STAGE_OUT_KEY,
-                                             Bundle.DEFAULT_LOCAL_STAGE_OUT_BUNDLE_FACTOR );
+                                              Pegasus.BUNDLE_STAGE_OUT_KEY,
+                                              getDefaultBundleValueFromProperties( Pegasus.BUNDLE_LOCAL_STAGE_OUT_KEY,
+                                                                     Pegasus.BUNDLE_STAGE_OUT_KEY,
+                                                                     Bundle.DEFAULT_LOCAL_STAGE_OUT_BUNDLE_FACTOR ));
 
         mStageOutRemoteBundleValue = new BundleValue();
         mStageOutRemoteBundleValue.initialize( Pegasus.BUNDLE_REMOTE_STAGE_OUT_KEY,
-                                              Pegasus.BUNDLE_STAGE_OUT_KEY,
-                                              Bundle.DEFAULT_REMOTE_STAGE_OUT_BUNDLE_FACTOR );
+                                               Pegasus.BUNDLE_STAGE_OUT_KEY,
+                                               getDefaultBundleValueFromProperties( Pegasus.BUNDLE_REMOTE_STAGE_OUT_KEY,
+                                                                      Pegasus.BUNDLE_STAGE_OUT_KEY,
+                                                                      Bundle.DEFAULT_REMOTE_STAGE_OUT_BUNDLE_FACTOR ));
 
     }
 
     
+    /**
+     * Returns the default value for the clustering/bundling of jobs to be used.
+     * 
+     * The factor is computed by looking up the pegasus profiles in the properties.
+     * <pre>
+     *    return value of pegasus profile key if it exists,
+     *    else return value of pegasus profile defaultKey if it exists, 
+     *    else the defaultValue
+     * </pre>
+     * 
+     * @param key            the pegasus profile key  
+     * @param defaultKey     the default pegasus profile key
+     * @param defaultValue   the default value.
+     *
+     * @return the value as string.
+     */
+    protected String getDefaultBundleValueFromProperties( String key, String defaultKey, String defaultValue ){
+
+        String result = mPegasusProfilesInProperties.getStringValue( key );
+
+        if( result == null ){
+            //rely on defaultKey value
+            result = mPegasusProfilesInProperties.getStringValue( defaultKey );
+
+            if( result == null ){
+                //none of the keys are mentioned in properties
+                //use the default value
+                result = defaultValue;
+            }
+        }
+
+        return result;
+
+    }
     
     /**
      * Adds the stage in transfer nodes which transfer the input files for a job,
@@ -959,7 +1017,7 @@ public class Bundle extends Default {
             mPool     = null;
             mTXContainers = null;
             mLocalTransfer = true;
-        }
+         }
 
         /**
          * Convenience constructor.
@@ -1188,7 +1246,7 @@ public class Bundle extends Default {
     
    
     
-    protected static class BundleValue {
+    protected  class BundleValue {
         
        
         /**
@@ -1208,11 +1266,12 @@ public class Bundle extends Default {
         private String mDefaultProfileKey;
 
 
+
         /**
          * The default constructor.
          */
         public BundleValue(){
-            
+
         }
         
         /**
@@ -1250,63 +1309,34 @@ public class Bundle extends Default {
         * @return the bundle factor.
         */
         public int determine(  Implementation implementation, Job job  ){
-            return determine( implementation,
-                              job.getSiteHandle(), 
-                              job.vdsNS.getStringValue( mProfileKey ),
-                              job.vdsNS.getStringValue( mDefaultProfileKey ));
-        }
-       
-       /**
-        * Determines the bundle factor for a particular site on the basis of the
-        * stage in bundle value associcated with the underlying transfer
-        * transformation in the transformation catalog. If the key is not found,
-        * then the default value is returned. In case of the default value being
-        * null the global default is returned.
-        * 
-        * The value is tored internally to ensure that a subsequent
-        * call to get(String site) returns the value determined.
-        *
-        * 
-        * @param implementation        the transfer implementation being used
-        * @param site                  the site at which the value is desired.
-        * @param profileValue          the value of the profile key
-        * @param defaultProfileValue   the value of the default profile key
-        *
-        * @return the bundle factor.
-        *
-        */
-        public  int determine( Implementation implementation, String site, String profileValue,String defaultProfileValue ){
-            //this should be parameterised Karan Dec 20,2005
-        
-           Job sub = new Job();
+           String site = job.getStagingSiteHandle();
 
-           //check for profile value first
-           String value = profileValue;
-           if( value == null ){
-               value = defaultProfileValue;
+            //look up the value in SiteCatalogEntry for the store
+           SiteCatalogEntry entry = Bundle.this.mSiteStore.lookup( site );
+
+           //sanity check
+           if( entry == null ){
+               return Integer.parseInt( mDefaultBundleValue );
            }
 
-           //if value is still null apply the default bundle value
+           //check for Pegasus Profile mProfileKey in the site entry
+           Pegasus profiles = (Pegasus) entry.getProfiles().get( NAMESPACES.pegasus );
+           String value = profiles.getStringValue( mProfileKey );
+           if( value == null ){
+               //try to look up value of default key
+               value = profiles.getStringValue( mDefaultProfileKey );
+           }
+
+           //if value is still null , rely of the default bundle value
            value = ( value == null )?
                    this.mDefaultBundleValue:
                    value;
 
+           return Integer.parseInt(value);
 
-           //we dont pick up any value from transformation catalog
-           //for time being. Karan Sept 23rd 2010
-           /*
-           TransformationCatalogEntry entry  =
-             implementation.getTransformationCatalogEntry(site);
-            if(entry != null){
-                sub.updateProfiles(entry);
-                value = (sub.vdsNS.containsKey( mProfileKey ))?
-                         sub.vdsNS.getStringValue( mProfileKey ):
-                         value;
-            }
-            */
-
-            return Integer.parseInt(value);
         }
+       
+       
     
     }
     
