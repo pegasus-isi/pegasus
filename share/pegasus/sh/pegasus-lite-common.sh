@@ -33,6 +33,16 @@ function pegasus_lite_log()
 
 function pegasus_lite_worker_package()
 {
+    # many ways of providing worker package
+    if pegasus_lite_internal_wp_shipped || pegasus_lite_internal_wp_in_env || pegasus_lite_internal_wp_download; then
+        return 0
+    fi
+    return 1
+}
+
+
+function pegasus_lite_internal_wp_shipped()
+{
     # was the job shipped with a Pegasus worker package?
     if ls $pegasus_lite_start_dir/pegasus-worker-*.tar.gz >/dev/null 2>&1; then
         pegasus_lite_log "The job contained a Pegasus worker package, installing to $pegasus_lite_work_dir/pegasus-worker"
@@ -42,15 +52,43 @@ function pegasus_lite_worker_package()
         export PATH=$pegasus_lite_work_dir/pegasus-worker/bin:$PATH
         return 0
     fi
+    return 1
+}
+
+
+function pegasus_lite_internal_wp_in_env()
+{
+    old_path=$PATH
+
+    # use PEGASUS_HOME if set
+    if [ "x$PEGASUS_HOME" != "x" ]; then
+        PATH="$PEGASUS_HOME/bin:$PATH"
+        export PATH
+    fi
 
     # is there already a pegasus install in our path?
     detected_pegasus_bin=`which pegasus-version 2>&1 || /bin/true`
     if [ "x$detected_pegasus_bin" != "x" ]; then
         detected_pegasus_bin=`dirname $detected_pegasus_bin`
-        pegasus_lite_log "Using existing Pegasus binaries in $detected_pegasus_bin"
-        return 0
+
+        # does the version match?
+        if $detected_pegasus_bin/pegasus-version 2>/dev/null | grep -E "^${pegasus_lite_version_major}\.${pegasus_lite_version_minor}\." >/dev/null 2>/dev/null; then
+            pegasus_lite_log "Using existing Pegasus binaries in $detected_pegasus_bin"
+            return 0
+        fi
     fi
 
+    # back out env changes
+    unset PEGASUS_HOME
+    PATH=$old_path
+    export PATH
+
+    return 1
+}
+
+
+function pegasus_lite_internal_wp_download() 
+{
     # fall back - download a worker package from pegasus.isi.edu
     os=rhel
     major=5
@@ -72,7 +110,7 @@ function pegasus_lite_worker_package()
     
     url="http://pegasus.isi.edu/wms/download/${pegasus_lite_version_major}"
     url="${url}.${pegasus_lite_version_minor}"
-    if echo ${pegasus_lite_version_patch} | grep cvs; then
+    if echo ${pegasus_lite_version_patch} | grep cvs >/dev/null 2>/dev/null; then
         url="${url}/nightly"
     fi
     url="${url}/pegasus-worker"
