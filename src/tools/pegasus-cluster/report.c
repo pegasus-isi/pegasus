@@ -59,16 +59,23 @@ find_application( char* argv[] )
  * returns: start of argv. Returns 0 if unsure.
  */
 {
-  size_t slen;
   int i, flag = 0;
+#if 0
+  /* FIXME: Maybe use this starting with 3.3? */
+  static const char* ks = "pegasus-kickstart";
+  static const size_t kslen = 17; /* strlen(ks); */ 
+#else
+  /* backward compatible - for now */ 
   static const char* ks = "kickstart";
+  static const size_t kslen = 9; /* strlen(ks); */ 
+#endif
 
   for ( i=0 ; argv[i]; ++i ) { 
     char* s = argv[i];
-    slen = strlen(s);
+    size_t slen = strlen(s);
 
     /* detect presence of kickstart */
-    if ( i == 0 && strcmp( s+slen-strlen(ks), ks ) == 0 ) {
+    if ( i == 0 && slen>=kslen && strcmp( s+slen-kslen, ks ) == 0 ) {
       flag = 1;
       continue;
     }
@@ -79,7 +86,7 @@ find_application( char* argv[] )
 	/* option with argument */
 	if ( s[2] == 0 ) ++i;
 	continue;
-      } else if ( s[0] == '-' && strchr( "HVX", s[1] ) != NULL ) {
+      } else if ( s[0] == '-' && strchr( "FHVX", s[1] ) != NULL ) {
 	/* option without argument */
 	continue;
       } else {

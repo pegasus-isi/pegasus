@@ -29,7 +29,7 @@ tool executes a list of application in the order specified (assuming
 sequential mode.) It is generally used to do horizontal clustering of
 independent application, and does not care about any application
 failures. Such failures should be caught by using
-.B kickstart
+.B pegasus\-kickstart
 to start application. 
 .PP
 In vertical clustering mode, the 
@@ -40,13 +40,13 @@ fails. When running a complex workflow through
 the order of applications must be topologically sorted.
 .PP
 Applications are usually using
-.B kickstart
+.B pegasus\-kickstart
 to execute. In the
-.B kickstart 
+.B pegasus\-kickstart 
 case, all invocations of 
-.B kickstart
+.B pegasus\-kickstart
 except the first should add the 
-.B kickstart
+.B pegasus\-kickstart
 option
 .I \-H
 to supress repeating the XML preamble and certain other headers
@@ -55,7 +55,7 @@ of no interest when repeated.
 .B pegasus\-cluster
 permits shell-style quoting. One level of quoting is removed from the 
 arguments. Please note that 
-.B kickstart
+.B pegasus\-kickstart
 will also remove one level of quoting. 
 .SH "ARGUMENTS"
 .TP
@@ -243,7 +243,7 @@ is the process id under which the application had run.
 .B app
 is the path to the application that was started. As with the progress
 record, any 
-.B kickstart
+.B pegasus\-kickstart
 will be parsed out so that you see the true application. 
 .SH "PEGASUS\-CLUSTER SUMMARY"
 The final summary of counts is a record bracketed by square brackets
@@ -300,7 +300,7 @@ is the start time of
 .B pegasus\-cluster
 as ISO 8601 time stamp. 
 .SH "SEE ALSO"
-.BR kickstart (1).
+.BR pegasus\-kickstart (1).
 .SH "CAVEATS"
 The
 .B \-S
@@ -313,22 +313,22 @@ instead.
 The following shows an example input file to
 .B pegasus\-cluster
 making use of 
-.B kickstart
+.B pegasus\-kickstart
 to track applications. 
 .nf
 \f(CB
 #
 # mkdir
-/path/to/kickstart -R HPC -n mkdir /bin/mkdir -m 2755 -p split-corpus split-ne-corpus
+/path/to/pegasus-kickstart -R HPC -n mkdir /bin/mkdir -m 2755 -p split-corpus split-ne-corpus
 #
 # drop-dian
-/path/to/kickstart -H -R HPC -n drop-dian -o '^f-new.plain' /path/to/drop-dian /path/to/f-tok.plain /path/to/f-tok.NE
+/path/to/pegasus-kickstart -H -R HPC -n drop-dian -o '^f-new.plain' /path/to/drop-dian /path/to/f-tok.plain /path/to/f-tok.NE
 #
 # split-corpus
-/path/to/kickstart -H -R HPC -n split-corpus /path/to/split-seq-new.pl 23 f-new.plain split-corpus/corpus.
+/path/to/pegasus-kickstart -H -R HPC -n split-corpus /path/to/split-seq-new.pl 23 f-new.plain split-corpus/corpus.
 #
 # split-corpus
-/path/to/kickstart -H -R HPC -n split-corpus /path/to/split-seq-new.pl 23 /path/to/f-tok.NE split-ne-corpus/corpus.
+/path/to/pegasus-kickstart -H -R HPC -n split-corpus /path/to/split-seq-new.pl 23 /path/to/f-tok.NE split-ne-corpus/corpus.
 \fP
 .fi
 .PP
