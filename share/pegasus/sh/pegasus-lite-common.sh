@@ -67,14 +67,16 @@ function pegasus_lite_internal_wp_in_env()
     fi
 
     # is there already a pegasus install in our path?
-    detected_pegasus_bin=`which pegasus-version 2>/dev/null || /bin/true`
+    detected_pegasus_bin=`which pegasus-config 2>/dev/null || /bin/true`
     if [ "x$detected_pegasus_bin" != "x" ]; then
         detected_pegasus_bin=`dirname $detected_pegasus_bin`
 
         # does the version match?
-        if $detected_pegasus_bin/pegasus-version 2>/dev/null | grep -E "^${pegasus_lite_version_major}\.${pegasus_lite_version_minor}\." >/dev/null 2>/dev/null; then
+        if $detected_pegasus_bin/pegasus-config --version 2>/dev/null | grep -E "^${pegasus_lite_version_major}\.${pegasus_lite_version_minor}\." >/dev/null 2>/dev/null; then
             pegasus_lite_log "Using existing Pegasus binaries in $detected_pegasus_bin"
             return 0
+        else
+            pegasus_lite_log "Pegasus binaries in $detected_pegasus_bin do not match Pegasus version used for current workflow"
         fi
     fi
 
@@ -167,7 +169,7 @@ function pegasus_lite_setup_work_dir()
             d=`mktemp -d $d/pegasus.XXXXXX`
             export pegasus_lite_work_dir=$d
             export pegasus_lite_work_dir_created=1
-            pegasus_lite_log "  Work dir is $d"
+            pegasus_lite_log "  Work dir is $d - $free kB available"
             cd $pegasus_lite_work_dir
             return 0
         fi

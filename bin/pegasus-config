@@ -33,8 +33,8 @@ my $share_dir	= File::Spec->catdir( $base_dir, 'share', 'pegasus' );
 my $java_dir	= File::Spec->catdir( $share_dir, 'java' );
 my $perl_dir	= File::Spec->catdir( $base_dir, 'lib', 'pegasus', 'perl' );
 my $python_dir	= File::Spec->catdir( $base_dir, 'lib', 'pegasus', 'python' );
-my $php_dir	= File::Spec->catdir( $base_dir, 'lib', 'pegasus', 'php' );
-my $js_dir	= File::Spec->catdir( $base_dir, 'lib', 'pegasus', 'javascript' );
+my $php_dir	    = File::Spec->catdir( $base_dir, 'lib', 'pegasus', 'php' );
+my $js_dir	    = File::Spec->catdir( $base_dir, 'lib', 'pegasus', 'javascript' );
 my $schema_dir	= File::Spec->catdir( $share_dir, 'schema' );
 my $extra_classpath = '';
 
@@ -46,10 +46,6 @@ $extra_classpath = $test if -e $test;
 if ($base_dir eq "/usr") {
     $conf_dir = "/etc/pegasus";
 }
-
-# now check the paths
-die( "FATAL: Unable to determine location of configuration files\n" )
-    unless -e $conf_dir;
 
 # classpath
 my @jars = sort(<$java_dir/*.jar>);
@@ -183,11 +179,8 @@ my $eoln = 1;
 GetOptions( "help|h" => \&usage
     , 'eoln|crlf!' => \$eoln
     , 'version|V' => sub {
-        my $p_v= File::Spec->catfile( $bin_dir, 
-            'pegasus-version' ); 
-        my $p = `$p_v`; 
-        chomp($p) if ! $eoln;
-        print $p;
+        print "#PEGASUS_VERSION#";
+        print "\n" if $eoln; 
         exit 0; 
     }
     , 'perl-hash' => sub {
