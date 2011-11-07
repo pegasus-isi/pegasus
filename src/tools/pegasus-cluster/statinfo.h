@@ -27,10 +27,11 @@ myaccess( const char* path );
 
 extern
 char*
-findApp( const char* fn );
+find_executable( const char* fn );
 /* purpose: check the executable filename and correct it if necessary
  * paramtr: fn (IN): current knowledge of filename
  * returns: newly allocated fqpn of path to exectuble, or NULL if not found
+ * globals: this will muck up the value in 'errno'. 
  */
 
 #endif /* _STATINFO_H */

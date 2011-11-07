@@ -226,7 +226,7 @@ wait_for_child( Jobs* jobs, int* status )
    * send the signals to the children, though (which hopefully exit.)
    */ 
   save_signals(&save); 
-
+  errno = 0; /* we rely later on wait4 results */ 
   while ( (child = wait4( ((pid_t) 0), status, 0, &usage )) < 0 ) {
     saverr = errno;
     perror( "wait4" ); 
@@ -295,7 +295,7 @@ run_independent_task( char* cmd, char* envp[], unsigned long* extra )
 
     if ( (appc = interpreteArguments( cmd, &appv )) > 0 ) {
       /* determine full path to application according to PATH */ 
-      char* fqpn = findApp( appv[0] ); 
+      char* fqpn = find_executable( appv[0] ); 
       if ( fqpn ) {
 	/* found a FQPN, exchange first item in argument vector */ 
 	free((void*) appv[0]); 
@@ -446,7 +446,7 @@ main( int argc, char* argv[], char* envp[] )
       Job* j = jobs.jobs + slot; 
       if ( (j->argc = interpreteArguments( cmd, &(j->argv) )) > 0 ) {
 	/* determine full path to application according to PATH */ 
-	char* fqpn = findApp( j->argv[0] ); 
+	char* fqpn = find_executable( j->argv[0] ); 
 	if ( fqpn ) { 
 	  /* found a FQPN, exchange first item in argument vector */ 
 	  free((void*) j->argv[0]); 
