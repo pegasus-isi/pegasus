@@ -31,6 +31,7 @@
 #include "report.h"
 #include "mysystem.h"
 #include "job.h"
+#include "statinfo.h"
 
 static const char* RCS_ID =
 "$Id$";
@@ -289,11 +290,19 @@ run_independent_task( char* cmd, char* envp[], unsigned long* extra )
   if ( cmd != NULL ) { 
 #ifndef USE_SYSTEM_SYSTEM
     size_t len; 
-    int    appc;
+    int    appc, other;
     char** appv;
 
     if ( (appc = interpreteArguments( cmd, &appv )) > 0 ) {
-      int other = mysystem( appv, envp, "setup" ); 
+      /* determine full path to application according to PATH */ 
+      char* fqpn = findApp( appv[0] ); 
+      if ( fqpn ) {
+	/* found a FQPN, exchange first item in argument vector */ 
+	free((void*) appv[0]); 
+	appv[0] = fqpn; 
+      }
+
+      other = mysystem( appv, envp, "setup" ); 
       if ( other || debug )
 	showerr( "%s: setup returned %d/%d\n", application,
 		 (other >> 8), (other & 127) ); 
@@ -436,6 +445,14 @@ main( int argc, char* argv[], char* envp[] )
       Signals save; 
       Job* j = jobs.jobs + slot; 
       if ( (j->argc = interpreteArguments( cmd, &(j->argv) )) > 0 ) {
+	/* determine full path to application according to PATH */ 
+	char* fqpn = findApp( j->argv[0] ); 
+	if ( fqpn ) { 
+	  /* found a FQPN, exchange first item in argument vector */ 
+	  free((void*) j->argv[0]); 
+	  j->argv[0] = fqpn; 
+	}
+
 	total++;
 	j->envp = envp; /* for now */ 
 	j->lineno = lineno; 
