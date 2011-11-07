@@ -64,19 +64,19 @@ public abstract class Abstract implements Implementation{
      * The logical name of the transformation that creates directories on the
      * remote execution pools.
      */
-    public static final String CHANGE_XBIT_TRANSFORMATION = "dirmanager";
+    public static final String CHANGE_XBIT_TRANSFORMATION = "chmod";
     
     
     /**
      * The basename of the pegasus dirmanager  executable.
      */
-    public static final String XBIT_EXECUTABLE_BASENAME = "pegasus-dirmanager";
+    public static final String XBIT_EXECUTABLE_BASENAME = "chmod";
     
 
     /**
      * The transformation namespace for the setXBit jobs.
      */
-    public static final String XBIT_TRANSFORMATION_NS = "pegasus";
+    public static final String XBIT_TRANSFORMATION_NS = "system";
 
     /**
      * The version number for the derivations for setXBit  jobs.
@@ -86,7 +86,7 @@ public abstract class Abstract implements Implementation{
     /**
      * The derivation namespace for the setXBit  jobs.
      */
-    public static final String XBIT_DERIVATION_NS = "pegasus";
+    public static final String XBIT_DERIVATION_NS = "system";
 
     /**
      * The version number for the derivations for setXBit  jobs.
@@ -750,21 +750,12 @@ public abstract class Abstract implements Implementation{
 */
         
         StringBuffer arguments = new StringBuffer();
-        arguments.append( " -X -f " );
-        arguments.append( "'" );
-        boolean first = true;
+        arguments.append( " +x " );
         for( FileTransfer file : files ){
             NameValue destURL  = (NameValue)file.getDestURL();
-            if( first ){
-                first = false;
-            }
-            else{
-                arguments.append( " " );
-            }
+            arguments.append( " " );
             arguments.append( Utility.getAbsolutePath(destURL.getValue()) );
         }
-        arguments.append( "'" );
-
         xBitJob.jobName     = name;
         xBitJob.logicalName = Abstract.CHANGE_XBIT_TRANSFORMATION;
         xBitJob.namespace   = Abstract.XBIT_TRANSFORMATION_NS;
@@ -905,33 +896,12 @@ public abstract class Abstract implements Implementation{
      */
     private  TransformationCatalogEntry defaultXBitTCEntry( String site ){
         TransformationCatalogEntry defaultTCEntry = null;
-        //check if PEGASUS_HOME is set
-        String home = mSiteStore.getPegasusHome( site );
-        //if PEGASUS_HOME is not set, use VDS_HOME
-        home = ( home == null )? mSiteStore.getVDSHome( site ): home;
 
-        //if home is still null
-        if ( home == null ){
-            //cannot create default TC
-            mLogger.log( "Unable to create a default entry for " +
-                         Separator.combine( Abstract.XBIT_TRANSFORMATION_NS,
-                                           Abstract.CHANGE_XBIT_TRANSFORMATION,
-                                           Abstract.XBIT_TRANSFORMATION_VERSION  ),
-                         LogManager.DEBUG_MESSAGE_LEVEL );
-            //set the flag back to true
-            return defaultTCEntry;
-        }
-
-        //remove trailing / if specified
-        home = ( home.charAt( home.length() - 1 ) == File.separatorChar )?
-            home.substring( 0, home.length() - 1 ):
-            home;
 
         //construct the path to it
         StringBuffer path = new StringBuffer();
-        path.append( home ).append( File.separator ).
-            append( "bin" ).append( File.separator ).
-            append( Abstract.XBIT_EXECUTABLE_BASENAME  );
+        path.append( File.separator ).append( "bin" ).append( File.separator ).
+             append( Abstract.XBIT_EXECUTABLE_BASENAME  );
 
 
         defaultTCEntry = new TransformationCatalogEntry( Abstract.XBIT_TRANSFORMATION_NS,
