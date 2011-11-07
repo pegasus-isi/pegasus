@@ -67,7 +67,7 @@ function pegasus_lite_internal_wp_in_env()
     fi
 
     # is there already a pegasus install in our path?
-    detected_pegasus_bin=`which pegasus-version 2>&1 || /bin/true`
+    detected_pegasus_bin=`which pegasus-version 2>/dev/null || /bin/true`
     if [ "x$detected_pegasus_bin" != "x" ]; then
         detected_pegasus_bin=`dirname $detected_pegasus_bin`
 
