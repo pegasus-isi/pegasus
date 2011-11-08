@@ -653,11 +653,12 @@ public class Transfer   implements SLS {
         List envs = this.getEnvironmentVariables( job.getSiteHandle() );
 
         if( envs == null || envs.isEmpty()){
-            //cannot create default TC
-            mLogger.log( "Unable to set the necessary environment " +
-                         Separator.combine( this.TRANSFORMATION_NAMESPACE, this.TRANSFORMATION_NAME, this.TRANSFORMATION_VERSION ) ,
-                         LogManager.DEBUG_MESSAGE_LEVEL );
-            return false;
+            //no hard failure.
+            mLogger.log( "No special environment set for  " +
+                         Separator.combine( this.TRANSFORMATION_NAMESPACE, this.TRANSFORMATION_NAME, this.TRANSFORMATION_VERSION ) +
+                         " for job " + job.getID(),
+                         LogManager.TRACE_MESSAGE_LEVEL );
+            return true;
         }
 
 
