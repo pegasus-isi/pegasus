@@ -87,11 +87,8 @@ public class Tentacles extends AbstractStrategy {
             jobName = job.getName();
             pool    = job.getSiteHandle();
 
-            //for chmod jobs skip adding any edges.
-            //for 3.2 not clear if we will have any chmod jobs or not
             if( job.getJobType() == Job.CHMOD_JOB ){
-                continue;
-                //parent = getCreateDirJobName( dag, job.getSiteHandle() );
+                parent = getCreateDirJobName( dag, job.getSiteHandle() );
             }
             else{
 
