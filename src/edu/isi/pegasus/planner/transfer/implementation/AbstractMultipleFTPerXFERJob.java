@@ -213,7 +213,7 @@ public abstract class AbstractMultipleFTPerXFERJob extends Abstract
         //profile incorporation
         txJob.strargs = this.generateArgumentString(txJob);
 
-        if(execFiles != null){
+        if(execFiles != null && this.mAddNodesForSettingXBit ){
             //we need to add setup jobs to change the XBit
             super.addSetXBitJobs(job,txJob,execFiles);
         }

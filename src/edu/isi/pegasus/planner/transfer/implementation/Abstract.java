@@ -187,7 +187,14 @@ public abstract class Abstract implements Implementation{
      * A boolean indicating whether chmod is disabled for all sites.
      */
     protected boolean mChmodDisabledForAllSites;
-    
+
+
+    /**
+     * A boolean indicating whether chmod jobs should be created that set the
+     * xbit in case of executable staging.
+     */
+    protected boolean mAddNodesForSettingXBit;
+
     /**
      * The overloaded constructor, that is called by the Factory to load the
      * class.
@@ -204,6 +211,10 @@ public abstract class Abstract implements Implementation{
         //build up the set of disabled chmod sites
         mDisabledChmodSites = determineDisabledChmodSites( mProps.getChmodDisabledSites() );
         mChmodDisabledForAllSites = mDisabledChmodSites.contains( "*" );
+
+        //from pegasus release 3.2 onwards xbit jobs are not added
+        //for worker node execution/Pegasus Lite
+        mAddNodesForSettingXBit = !mProps.executeOnWorkerNode();
 
         mLocalUserProxy = Proxy.getPathToUserProxy(bag);
         //set the path to user proxy only if the proxy exists

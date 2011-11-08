@@ -342,7 +342,7 @@ public class Cluster extends Bundle {
                 FileTransfer ft = ( FileTransfer)it.next();
                 String key = this.constructFileKey( ft.getLFN(), job.getSiteHandle() );
                 
-                if( ft.isTransferringExecutableFile() ){
+                if( ft.isTransferringExecutableFile() && this.mAddNodesForSettingXBit ){
                     //the staged execution file should be having the setup
                     //job as parent if it does not preserve x bit
                     if( implementation.doesPreserveXBit()){
@@ -369,7 +369,7 @@ public class Cluster extends Bundle {
                 addRelation( dataFileSiJob, jobName  );
             }
             
-            if( !stagedExecFiles.isEmpty() ){
+            if( !stagedExecFiles.isEmpty() && mAddNodesForSettingXBit ){
                 //create en-mass the setXBit jobs
                 //if there were any staged files
                /*implementation.addSetXBitJobs( job,

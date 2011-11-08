@@ -190,6 +190,12 @@ public class Bundle extends Default {
     protected SiteStore mSiteStore;
 
     /**
+     * A boolean indicating whether chmod jobs should be created that set the
+     * xbit in case of executable staging.
+     */
+    protected boolean mAddNodesForSettingXBit;
+
+    /**
      * The overloaded constructor.
      *
      * @param dag        the workflow to which transfer nodes need to be added.
@@ -198,6 +204,11 @@ public class Bundle extends Default {
      */
     public Bundle( ADag dag, PegasusBag bag ){
         super( dag, bag );
+
+        //from pegasus release 3.2 onwards xbit jobs are not added
+        //for worker node execution/Pegasus Lite
+        mAddNodesForSettingXBit = !mProps.executeOnWorkerNode();
+
         mStageInLocalMap   = new HashMap( mPOptions.getExecutionSites().size());
         mStageInRemoteMap   = new HashMap( mPOptions.getExecutionSites().size());
         
@@ -376,7 +387,7 @@ public class Bundle extends Default {
                 //fix for sonal's bug
                 tempSet.add(par);
 
-                if(ft.isTransferringExecutableFile()){
+                if(ft.isTransferringExecutableFile() && this.mAddNodesForSettingXBit ){
                     //currently we have only one file to be staged per
                     //compute job . Taking a short cut in determining
                     //the name of setXBit job
@@ -440,7 +451,7 @@ public class Bundle extends Default {
         //stageInExecJobs has corresponding list of transfer
         //jobs that transfer the files
       
-        if( !stagedExecutableFiles.isEmpty() ){
+        if( !stagedExecutableFiles.isEmpty() && mAddNodesForSettingXBit ){
             Job xBitJob = implementation.createSetXBitJob( job,
                                                                stagedExecutableFiles,
                                                                Job.STAGE_IN_JOB,
