@@ -150,23 +150,31 @@ public class Cluster extends Bundle {
         mStageinLocalBundleValue = new BundleValue();
         mStageinLocalBundleValue.initialize( Pegasus.CLUSTER_LOCAL_STAGE_IN_KEY,
                                              Pegasus.CLUSTER_STAGE_IN_KEY,
-                                             Cluster.DEFAULT_LOCAL_STAGE_IN_CLUSTER_FACTOR );
+                                             getDefaultBundleValueFromProperties( Pegasus.CLUSTER_LOCAL_STAGE_IN_KEY,
+                                                                                  Pegasus.CLUSTER_STAGE_IN_KEY,
+                                                                                  Cluster.DEFAULT_LOCAL_STAGE_IN_CLUSTER_FACTOR ));
         
         mStageInRemoteBundleValue = new BundleValue();
         mStageInRemoteBundleValue.initialize( Pegasus.CLUSTER_REMOTE_STAGE_IN_KEY,
                                               Pegasus.CLUSTER_STAGE_IN_KEY,
-                                              Cluster.DEFAULT_REMOTE_STAGE_IN_CLUSTER_FACTOR );
+                                              getDefaultBundleValueFromProperties( Pegasus.CLUSTER_LOCAL_STAGE_IN_KEY,
+                                                                                   Pegasus.CLUSTER_STAGE_IN_KEY, 
+                                                                                   Cluster.DEFAULT_REMOTE_STAGE_IN_CLUSTER_FACTOR ));
 
 
         mStageOutLocalBundleValue = new BundleValue();
         mStageOutLocalBundleValue.initialize( Pegasus.CLUSTER_LOCAL_STAGE_OUT_KEY,
                                               Pegasus.CLUSTER_STAGE_OUT_KEY,
-                                              Cluster.DEFAULT_LOCAL_STAGE_OUT_CLUSTER_FACTOR );
+                                              getDefaultBundleValueFromProperties( Pegasus.CLUSTER_LOCAL_STAGE_OUT_KEY,
+                                                                                   Pegasus.CLUSTER_STAGE_OUT_KEY,
+                                                                                   Cluster.DEFAULT_LOCAL_STAGE_OUT_CLUSTER_FACTOR ));
 
         mStageOutRemoteBundleValue = new BundleValue();
         mStageOutRemoteBundleValue.initialize( Pegasus.BUNDLE_REMOTE_STAGE_OUT_KEY,
                                                Pegasus.BUNDLE_STAGE_OUT_KEY,
-                                               Cluster.DEFAULT_REMOTE_STAGE_OUT_CLUSTER_FACTOR );
+                                               getDefaultBundleValueFromProperties( Pegasus.BUNDLE_REMOTE_STAGE_OUT_KEY,
+                                                                                    Pegasus.BUNDLE_STAGE_OUT_KEY,
+                                                                                    Cluster.DEFAULT_REMOTE_STAGE_OUT_CLUSTER_FACTOR ));
     }
 
     
@@ -252,7 +260,7 @@ public class Cluster extends Bundle {
             mLogger.log( "File being looked at is " + lfn, LogManager.DEBUG_MESSAGE_LEVEL );
             //check for transfer flag to see if we need to transfer the file.
             if ( !ft.getTransientTransferFlag() ) {
-                String key = this.constructFileKey( ft.getLFN(), job.getSiteHandle() );
+                String key = this.constructFileKey( ft.getLFN(), job.getStagingSiteHandle() );
                 //check to see if the file is already being transferred by
                 //some other stage in job to that site
                 String existingSiTX = (String) mFileTable.get( key );
@@ -276,14 +284,14 @@ public class Cluster extends Bundle {
                         msg.append( "IGNORING TO ADD rc pull relation from rc tx node: " ).
                             append( existingSiTX ).append( " -> " ).append( jobName ).
                             append( " for transferring file " ).append( lfn ).append( " to site " ).
-                            append( job.getSiteHandle() );
+                            append( job.getStagingSiteHandle() );
 
                         mLogger.log( msg.toString(), LogManager.DEBUG_MESSAGE_LEVEL );
 
                     } else {
                         
                         mLogger.log( " For transferring file " + lfn, LogManager.DEBUG_MESSAGE_LEVEL );
-                        addRelation( existingSiTX, jobName, job.getSiteHandle(), false );
+                        addRelation( existingSiTX, jobName, job.getStagingSiteHandle(), false );
                         tempSet.add( existingSiTX );
                     }
                 }
@@ -296,7 +304,7 @@ public class Cluster extends Bundle {
         boolean makeTNode = !txFiles.isEmpty();
         
         int level   = job.getLevel();
-        String site = job.getSiteHandle();
+        String site = job.getStagingSiteHandle();
         int clusterValue = cValue.determine( implementation, job );
         /*
         int clusterValue = getSISiteBundleValue( site,
@@ -340,7 +348,7 @@ public class Cluster extends Bundle {
             String dataFileSiJob = null;//the si job that stages in data files
             for( Iterator it = txFiles.iterator(); it.hasNext(); ){
                 FileTransfer ft = ( FileTransfer)it.next();
-                String key = this.constructFileKey( ft.getLFN(), job.getSiteHandle() );
+                String key = this.constructFileKey( ft.getLFN(), job.getStagingSiteHandle() );
                 
                 if( ft.isTransferringExecutableFile() && this.mAddNodesForSettingXBit ){
                     //the staged execution file should be having the setup
