@@ -50,6 +50,8 @@ import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
 
+import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
+import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import edu.isi.pegasus.planner.classes.FileTransfer;
 import edu.isi.pegasus.planner.classes.NameValue;
 import java.io.BufferedReader;
@@ -67,6 +69,7 @@ import java.io.PrintWriter;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -121,6 +124,39 @@ public class PegasusLite implements GridStart {
      * The basename of the pegasus lite common shell functions file.
      */
     public static final String PEGASUS_LITE_COMMON_FILE_BASENAME = "pegasus-lite-common.sh";
+
+    /**
+     * The logical name of the transformation that creates directories on the
+     * remote execution pools.
+     */
+    public static final String XBIT_TRANSFORMATION = "chmod";
+
+
+    /**
+     * The basename of the pegasus dirmanager  executable.
+     */
+    public static final String XBIT_EXECUTABLE_BASENAME = "chmod";
+
+
+    /**
+     * The transformation namespace for the setXBit jobs.
+     */
+    public static final String XBIT_TRANSFORMATION_NS = "system";
+
+    /**
+     * The version number for the derivations for setXBit  jobs.
+     */
+    public static final String XBIT_TRANSFORMATION_VERSION = null;
+
+    /**
+     * The derivation namespace for the setXBit  jobs.
+     */
+    public static final String XBIT_DERIVATION_NS = "system";
+
+    /**
+     * The version number for the derivations for setXBit  jobs.
+     */
+    public static final String XBIT_DERIVATION_VERSION = null;
   
     /**
      * Stores the major version of the planner.
@@ -246,6 +282,12 @@ public class PegasusLite implements GridStart {
     Map<String,String> mWorkerPackageMap ;
 
     /**
+     * A map indexed by the execution site and value is the path to chmod on
+     * that site.
+     */
+    private Map<String,String> mChmodOnExecutionSiteMap;
+
+    /**
      * Initializes the GridStart implementation.
      *
      *  @param bag   the bag of objects that is used for initialization.
@@ -270,6 +312,8 @@ public class PegasusLite implements GridStart {
                 mWorkerPackageMap = new HashMap<String,String>();
             }
         }
+
+        mChmodOnExecutionSiteMap = new HashMap<String,String>();
 
         Version version = Version.instance();
         mMajorVersionLevel = Integer.toString( Version.MAJOR );
@@ -770,7 +814,7 @@ public class PegasusLite implements GridStart {
             sb.append( '\n' );
 
             sb.append( "# figure out the worker package to use" ).append( '\n' );
-            sb.append( "pegasus_lite_worker_package" );
+            sb.append( "pegasus_lite_worker_package" ).append( '\n' );
             sb.append( '\n' );
 
             if(  mSLS.needsSLSInputTransfers( job ) ){
@@ -792,6 +836,23 @@ public class PegasusLite implements GridStart {
 
                 sb.append( '\n' );
             }
+
+            if( job.userExecutablesStagedForJob() ){
+                sb.append( "# set the xbit for any executables staged" ).append( '\n' );
+                sb.append( getPathToChmodExecutable( job.getSiteHandle() ) );
+                sb.append( " +x " );
+
+                for( Iterator it = job.getInputFiles().iterator(); it.hasNext(); ){
+                    PegasusFile pf = ( PegasusFile )it.next();
+                    if( pf.getType() == PegasusFile.EXECUTABLE_FILE ){
+                        sb.append( pf.getLFN() ).append( " " );
+                    }
+
+                }
+                sb.append( '\n' );
+                sb.append( '\n' );
+            }
+           
 
             sb.append( "# execute the tasks" ).append( '\n' );
 
@@ -937,6 +998,61 @@ public class PegasusLite implements GridStart {
 
 
         return result;
+    }
+
+    /**
+     * Returns the path to the chmod executable for a particular execution
+     * site by looking up the transformation executable.
+     * 
+     * @param site   the execution site.
+     * 
+     * @return   the path to chmod executable
+     */
+    protected String getPathToChmodExecutable( String site ){
+        String path;
+
+        //check if the internal map has anything
+        path = mChmodOnExecutionSiteMap.get( site );
+
+        if( path != null ){
+            //return the cached path
+            return path;
+        }
+
+        List entries;
+        try {
+            //try to look up the transformation catalog for the path
+            entries = mTCHandle.lookup( PegasusLite.XBIT_TRANSFORMATION_NS,
+                          PegasusLite.XBIT_TRANSFORMATION,
+                          PegasusLite.XBIT_TRANSFORMATION_VERSION,
+                          site,
+                          TCType.INSTALLED );
+        } catch (Exception e) {
+            //non sensical catching
+            mLogger.log("Unable to retrieve entries from TC " +
+                        e.getMessage(), LogManager.ERROR_MESSAGE_LEVEL );
+            return null;
+        }
+
+        TransformationCatalogEntry entry = ( entries == null ) ?
+                                       null: //try using a default one
+                                       (TransformationCatalogEntry) entries.get(0);
+
+        if( entry == null ){
+            //construct the path the default path.
+            //construct the path to it
+            StringBuffer sb = new StringBuffer();
+            sb.append( File.separator ).append( "bin" ).append( File.separator ).
+               append( PegasusLite.XBIT_EXECUTABLE_BASENAME  );
+            path = sb.toString();
+        }
+        else{
+            path = entry.getPhysicalTransformation();
+        }
+
+        mChmodOnExecutionSiteMap.put( site, path );
+
+        return path;
     }
 
      /**
