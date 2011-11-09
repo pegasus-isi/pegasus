@@ -278,7 +278,9 @@ public class RemoveDirectory extends Engine {
         TransformationCatalogEntry entry   = null;
 //        GridGateway jm = null;
 
-        SiteCatalogEntry ePool = mSiteStore.lookup( site );
+        //the site where the cleanup job will run
+        String eSite = "local";
+        SiteCatalogEntry ePool = mSiteStore.lookup( eSite );
 
         try {
             entries = mTCHandle.lookup( RemoveDirectory.TRANSFORMATION_NAMESPACE,
@@ -358,7 +360,7 @@ public class RemoveDirectory extends Engine {
         newJob.globusScheduler = jm.getContact();
  */ 
         newJob.executable = execPath;
-        newJob.setSiteHandle( site );
+        newJob.setSiteHandle( eSite );
         newJob.setArguments( arguments.toString() );
         newJob.jobClass = Job.CREATE_DIR_JOB;
         newJob.jobID = jobName;
