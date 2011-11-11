@@ -29,10 +29,10 @@ install: build
 	# /usr/bin
 	mkdir -p debian/pegasus/usr
 	cp -a dist/pegasus/bin debian/pegasus/usr/
-	strip debian/pegasus/usr/bin/invoke
-	strip debian/pegasus/usr/bin/keg
-	strip debian/pegasus/usr/bin/kickstart
-	strip debian/pegasus/usr/bin/seqexec
+	strip debian/pegasus/usr/bin/pegasus-cluster
+	strip debian/pegasus/usr/bin/pegasus-invoke
+	strip debian/pegasus/usr/bin/pegasus-keg
+	strip debian/pegasus/usr/bin/pegasus-kickstart
 	
 	# /usr/share/
 	mkdir -p debian/pegasus/usr
@@ -46,6 +46,9 @@ install: build
 	mkdir -p debian/pegasus/usr
 	cp -a dist/pegasus/lib debian/pegasus/usr/
 	strip debian/pegasus/usr/lib/pegasus/python/pysqlite2/_sqlite.so
+	
+	# remove stuff we don't need
+	rm -rf debian/pegasus/usr/lib/pegasus/python/boto/tests
 	
 
 # Build architecture-independent files here.

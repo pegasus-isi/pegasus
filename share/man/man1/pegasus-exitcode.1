@@ -38,8 +38,8 @@ failed or not. These checks include:
     6. The number of non-zero <status> records is less than or greater
        than expected (optional, See -t/--tasks).
 .LP
-pegasus-exitcode also renames the .out and .err file to .out.XXX and 
-.err.XXX where XXX is a sequence number starting at 000. This sequence 
+pegasus-exitcode also renames the .out and .err file to .out.XXX and .err.XXX
+where XXX is a sequence number starting at 000. This sequence 
 number is incremented each time the script is run with the same 
 kickstart.out argument. This is used as a means to prevent the output
 files from being overwritten when the job is retried by Condor.
