@@ -243,30 +243,6 @@ public class CommonProperties
         this.m_schemaDir = pickPath(
                 this.m_props.getProperty( "pegasus.home.schemadir" ),
                 System.getProperty( "pegasus.home.schemadir" ) );
-        
-        // check required properties
-        if ( System.getProperty( "pegasus.home.bindir" ) == null ) {
-            throw new MissingResourceException( "The pegasus.home.bindir property was not set ",
-                    "java.util.Properties", "pegasus.home.bindir" );
-        }
-        if ( System.getProperty( "pegasus.home.schemadir" ) == null ) {
-            throw new MissingResourceException( "The pegasus.home.schemadir property was not set ",
-                    "java.util.Properties", "pegasus.home.schemadir" );
-        }
-
-        if ( System.getProperty( "pegasus.home.sharedstatedir" ) == null ) {
-            throw new MissingResourceException( "The pegasus.home.sharedstatedir property was not set ",
-                    "java.util.Properties", "pegasus.home.sharedstatedir" );
-        }
-
- /*
-        if ( System.getProperty( "pegasus.home.sysconfdir" ) == null ) {
-            throw new MissingResourceException( "The pegasus.home.sysconfdir property was not set ",
-                    "java.util.Properties", "pegasus.home.sysconfdir" );
-        }
-   
-*/
-        
     }
 
     private File pickPath(String p1, String p2) {
