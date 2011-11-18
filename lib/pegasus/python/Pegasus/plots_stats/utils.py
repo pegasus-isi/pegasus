@@ -128,28 +128,6 @@ def convert_to_seconds(time):
 	"""
 	return (time.microseconds + (time.seconds + time.days * 24 * 3600) * pow(10, 6)) / pow(10, 6)
 
-def create_directory(dir_name, delete_if_exists = False):
-	"""
-	Utility method for creating directory
-	@param dir_name the directory path
-	@param delete_if_exists boolean indication whether to delete the directory if it exists.
-	"""
-	if delete_if_exists:
-		if os.path.isdir(dir_name):
-			logger.warning("Deleting existing directory. Deleting... " + dir_name)
-			try:
-				shutil.rmtree(dir_name)
-			except:
-				logger.error("Unable to remove existing directory." + dir_name)
-				sys.exit(1)
-	if not os.path.isdir(dir_name):
-		logger.info("Creating directory... " + dir_name)
-		try:
-			os.mkdir(dir_name)
-		except:
-			logger.error("Unable to create directory." + dir_name)
-			sys.exit(1)
-
 def copy_files(src, dest):
 	"""
 	Utility method for recursively copying from a directory to another
@@ -241,59 +219,6 @@ def get_workflow_wall_time(workflow_states_list):
 		if workflow_start_event_count == workflow_end_event_count:
 			workflow_wall_time = workflow_end_cum - workflow_start_cum
 	return workflow_wall_time
-	
-def get_db_url_wf_uuid(submit_dir, config_properties):
-	"""
-	Utility method for returning the db_url and wf_uuid given the submit_dir and pegasus properties file.
-	@submit_dir submit directory path
-	@config_properties config properties file path
-	"""
-	#Getting values from braindump file
-	top_level_wf_params = utils.slurp_braindb(submit_dir)
-	top_level_prop_file = None
-	if not top_level_wf_params:
-		logger.error("Unable to process braindump.txt ")
-		return None, None
-	wf_uuid = None
-	if (top_level_wf_params.has_key('wf_uuid')):
-		wf_uuid = top_level_wf_params['wf_uuid']
-	else:
-		logger.error("workflow id cannot be found in the braindump.txt ")
-		return None, None
-	
-	# Get the location of the properties file from braindump
-	
-	# Get properties tag from braindump
-	if "properties" in top_level_wf_params:
-	    top_level_prop_file = top_level_wf_params["properties"]
-	    # Create the full path by using the submit_dir key from braindump
-	    if "submit_dir" in top_level_wf_params:
-	        top_level_prop_file = os.path.join(top_level_wf_params["submit_dir"], top_level_prop_file)
-	
-	# Parse, and process properties
-	props = properties.Properties()
-	props.new(config_file=config_properties, rundir_propfile=top_level_prop_file)
-	
-	output_db_url = None
-	if props.property('pegasus.monitord.output') is not None:
-		output_db_url = props.property('pegasus.monitord.output')
-		if not (output_db_url.startswith("mysql:") or output_db_url.startswith("sqlite:")):
-			logger.error("Unable to find database file from the properties file ")
-			return None, None
-	else:
-		dag_file_name = ''
-		if (top_level_wf_params.has_key('dag')):
-			dag_file_name = top_level_wf_params['dag']
-		else:
-			logger.error("Dag file name cannot be found in the braindump.txt ")
-			return None, None
-		# Create the sqllite db url
-		output_db_file = submit_dir + "/" + dag_file_name[:dag_file_name.find(".dag")] + ".stampede.db"
-		output_db_url = "sqlite:///" + output_db_file
-		if not os.path.isfile(output_db_file):
-			logger.error("Unable to find database file in " + submit_dir)
-			return None, None
-	return output_db_url, wf_uuid
 	
 def get_date_multiplier(date_filter):
 	"""

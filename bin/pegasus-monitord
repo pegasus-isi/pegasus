@@ -51,7 +51,7 @@ logger.setLevel(logging.WARNING)
 # Don't send events further up
 logger.propagate = 0
 # Cached debugging state
-g_isdgb = 0
+g_isdbg = 0
 
 # Ordered logging levels
 _LEVELS = [logging.ERROR, logging.WARN, logging.INFO, logging.DEBUG]
@@ -134,6 +134,7 @@ monitord_exit_code = 0          # Exit code for pegasus-monitord
 socket_enabled = False          # Enable socket for real-time debugging
 start_server = False            # Keep track if socket server needs to be started
 do_notifications = True         # Flag to enable notifications
+skip_pid_check = False          # Flag to skip checking if a previous monitord is still running using the pid file
 monitord_notifications = None   # Notifications' manager class
 max_parallel_notifications = 10 # Maximum number of notifications we can do in parallel
 notifications_timeout = 0	# Time to wait for notification scripts to finish (0 means wait forever)
@@ -149,6 +150,66 @@ out = None                      # .dag.dagman.out file from command-line
 run = None                      # run directory from command-line dagman.out file
 server = None                   # server socket
 sockfn = None                   # socket filename
+
+#
+# --- at exit handlers -------------------------------------------------------------------
+#
+
+def delete_pid_file():
+    """
+    This function deletes the pid file when exiting.
+    """
+    try:
+        os.unlink(pid_filename)
+    except:
+        logger.error("cannot delete pid file %s" % (pid_filename))
+
+def socket_exit_handler():
+    """
+    This function closes the socket server, and removes the sockfn file.
+    """
+    if server is not None:
+        server.close()
+        try:
+            os.unlink(sockfn)
+        except:
+            # Just be silent
+            pass
+
+def close_wf_retry_file():
+    """
+    This function closes the persistent storage file containing sub-workflow retry information.
+    """
+    if wf_retry_dict is not None:
+        wf_retry_dict.close()
+
+def finish_notifications():
+    """
+    This function flushes all notifications, and closes the
+    notifications' log file. It also logs all pending (but not yet
+    issued) notifications.
+    """
+    if monitord_notifications is not None:
+        monitord_notifications.finish_notifications()
+
+def finish_stampede_loader():
+    """
+    This function is called by the atexit module when monitord exits.
+    It is used to make sure the loader has finished loading all data
+    into the database. It will also produce stats for benchmarking.
+    """
+    if wf_event_sink is not None:
+        print (utils.isodate(time.time()) + " - pegasus-monitord - DB flushing beginning ").ljust(80, "-")
+        try:
+            if db_stats == 'yes' and logger.getEffectiveLevel() > logging.INFO:
+                # Make sure log level is enough to display database
+                # benchmarking information
+                logger.setLevel(logging.INFO)
+            wf_event_sink.close()
+        except:
+            logger.warning("could not call the finish method "+\
+                               "in the nl loader class... exiting anyway")
+        print (utils.isodate(time.time()) + " - pegasus-monitord - DB flushing ended ").ljust(80, "-")
 
 # Workflow Entry Class
 class WorkflowEntry:
@@ -255,6 +316,17 @@ run = os.path.dirname(out)
 if options.event_dest is not None and options.no_events is not None:
     logger.warning("the --no-events and --dest options conflict, please use only one of them")
     sys.exit(1)
+
+# Make sure no other pegasus-monitord instances are running...
+pid_filename = os.path.join(run, "monitord.pid")
+if not skip_pid_check and utils.pid_running(pid_filename):
+    logger.critical("it appears that pegasus-monitord is still running on this workflow... exiting")
+    # Exit with exitcode 43
+    sys.exit(43)
+# Create pid file
+utils.write_pid_file(pid_filename)
+# Make sure we delete it when we are done
+atexit.register(delete_pid_file)
 
 # Get the location of the properties file from braindump
 top_level_wf_params = utils.slurp_braindb(run)
@@ -771,33 +843,9 @@ def sleeptime(retries):
 
     return my_y
 
-def finish_notifications():
-    """
-    This function flushes all notifications, and closes the
-    notifications' log file. It also logs all pending (but not yet
-    issued) notifications.
-    """
-    if monitord_notifications is not None:
-        monitord_notifications.finish_notifications()
-
-def finish_stampede_loader():
-    """
-    This function is called by the atexit module when monitord exits.
-    It is used to make sure the loader has finished loading all data
-    into the database. It will also produce stats for benchmarking.
-    """
-    if wf_event_sink is not None:
-        print (utils.isodate(time.time()) + " - pegasus-monitord - DB flushing beginning ").ljust(80, "-")
-        try:
-            if db_stats == 'yes' and logger.getEffectiveLevel() > logging.INFO:
-                # Make sure log level is enough to display database
-                # benchmarking information
-                logger.setLevel(logging.INFO)
-            wf_event_sink.close()
-        except:
-            logger.warning("could not call the finish method "+\
-                               "in the nl loader class... exiting anyway")
-        print (utils.isodate(time.time()) + " - pegasus-monitord - DB flushing ended ").ljust(80, "-")
+#
+# --- signal handlers -------------------------------------------------------------------
+#
 
 def prog_sighup_handler(signum, frame):
     """
@@ -861,29 +909,6 @@ def prog_sigusr2_handler(signum, frame):
         logger.error("Unknown current level = %s, setting to WARN" % (cur_level))
 
     g_isdbg = logger.isEnabledFor(logging.DEBUG)
-
-#
-# --- at exit handlers -------------------------------------------------------------------
-#
-
-def socket_exit_handler():
-    """
-    This function closes the socket server, and removes the sockfn file.
-    """
-    if server is not None:
-        server.close()
-        try:
-            os.unlink(sockfn)
-        except:
-            # Just be silent
-            pass
-
-def close_wf_retry_file():
-    """
-    This function closes the persistent storage file containing sub-workflow retry information.
-    """
-    if wf_retry_dict is not None:
-        wf_retry_dict.close()
 
 #
 # --- main ------------------------------------------------------------------------------

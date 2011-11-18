@@ -573,16 +573,16 @@ def main():
 	log_level = 1
 	log_level_str = "info" 
 	log_level += (options.verbose - options.quiet)
-	if log_level <=0:
+	if log_level <= 0:
 		log_level_str = "error"
-	elif log_level ==1:
+	elif log_level == 1:
 		log_level_str = "warning"
-	elif log_level ==2:
+	elif log_level == 2:
 		log_level_str = "info"
-	elif log_level >=3:
+	elif log_level >= 3:
 		log_level_str = "debug"
 	setup_logger(log_level_str)
-	logger.info(prog_base +" : initializing...")
+	logger.info(prog_base + " : initializing...")
 	
 	if options.ignore_db_inconsistency is None:
 		if not utils.loading_completed(submit_dir):
@@ -604,7 +604,7 @@ def main():
 		output_dir = options.output_dir
 	else :
 		output_dir = os.path.join(submit_dir, DEFAULT_OUTPUT_DIR)
-	plot_utils.create_directory(output_dir, True)
+	utils.create_directory(output_dir, True)
 	if options.max_graph_nodes is not None:
 		global max_graph_nodes
 		max_graph_nodes = options.max_graph_nodes

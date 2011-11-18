@@ -34,6 +34,7 @@ import errno
 import logging
 import commands
 import optparse
+import traceback
 import subprocess
 import tempfile
 
@@ -51,7 +52,9 @@ exec config
 # Import our modules
 import Pegasus.common
 from Pegasus.tools import utils
+from Pegasus.tools import db_utils
 from Pegasus.tools import kickstart_parser
+from netlogger.analysis.workflow import stampede_statistics
 
 # --- regular expressions -------------------------------------------------------------
 
@@ -107,8 +110,6 @@ debug_level = logging.WARNING			# For now
 prog_base = os.path.split(sys.argv[0])[1]	# Name of this program
 input_dir = None				# Directory given in -i command line option
 dag_path = None					# Path of the dag file
-dagman_out_path = None				# Path to the dagman.out file
-jsdl_path = None				# Path of the jobstate.log file
 tsdl_path = None				# Path to monitord's log file
 temp_dir = None					# Temporary log file created
 debug_job = None				# Path of a submit file to debug
@@ -116,8 +117,8 @@ debug_dir = None				# Temp directory to use while debugging a job
 workflow_type = None				# Type of the workflow being debugged
 workflow_base_dir = ""				# Workflow submit_dir or dirname(jsd) from braindump file
 run_monitord = 0				# Run monitord before trying to analyze the output
-run_directory_writable = False			# Flag to indicate if we can write to the run directory
 output_dir = None                               # Output_dir for all files written by monitord
+use_files = False                               # Flag for using files in the workflow dir instead of the db
 quiet_mode = 0					# Prints out/err filenames instead of dumping their contents
 strict_mode = 0					# Gets out/err filenames from submit file
 debug_mode = 0					# Mode that enables debugging a single job
@@ -125,8 +126,11 @@ print_invocation = 0				# Prints invocation command for failed jobs
 print_pre_script = 0				# Prints the SCRIPT PRE line for failed jobs, if present
 jsdl_filename = "jobstate.log"			# Default name of the log file to use
 jobs = {}					# List of jobs found in the jobstate.log file
+total = 0					# Number of total jobs
 success = 0					# Number of successful jobs
+failed = 0					# Number of failed jobs
 unsubmitted = 0					# Number of unsubmitted jobs
+unknown = 0					# Number of jobs in an unknown state
 failed_jobs = []				# List of jobs that failed
 unknown_jobs = []				# List of jobs that neither succeeded nor failed
 
@@ -225,20 +229,23 @@ def analyze():
     """
     This function processes all currently known jobs, generating some statistics
     """
-    global success, unsubmitted
+    global total, success, failed, unsubmitted, unknown
 
     for my_job in jobs:
+        total = total + 1
 	if (jobs[my_job].state == "POST_SCRIPT_SUCCESS" or
 	    jobs[my_job].state == "JOB_SUCCESS"):
 	    success = success + 1
 	elif (jobs[my_job].state == "POST_SCRIPT_FAILURE" or
 	      jobs[my_job].state == "JOB_FAILURE"):
 	    failed_jobs.append(my_job)
+            failed = failed + 1
 	elif (jobs[my_job].state == "UNSUBMITTED"):
 	    unsubmitted = unsubmitted + 1
 	else:
 	    # It seems we don't have a final result for this job
 	    unknown_jobs.append(my_job)
+            unknown = unknown + 1
 
 def parse_submit_file(my_job):
     """
@@ -737,14 +744,13 @@ def print_top_summary():
     print
     print "Summary".center(80, '*')
     print
-    print " Total jobs         : % 6d (%3.2f%%)" % (len(jobs), 100 * (1.0 * len(jobs)/(len(jobs) or 1)))
-    print " # jobs succeeded   : % 6d (%3.2f%%)" % (success, 100 * (1.0 * success/(len(jobs) or 1)))
-    print " # jobs failed      : % 6d (%3.2f%%)" % (len(failed_jobs), 100 * (1.0 * len(failed_jobs)/(len(jobs) or 1)))
-    print " # jobs unsubmitted : % 6d (%3.2f%%)" % (unsubmitted, 100 * (1.0 * unsubmitted/(len(jobs) or 1)))
-    if len(unknown_jobs):
-	print " # jobs unknown     : % 6d (%3.2f%%)" % (len(unknown_jobs), 100 * (1.0 * len(unknown_jobs)/(len(jobs) or 1)))
+    print " Total jobs         : % 6d (%3.2f%%)" % (total, 100 * (1.0 * total/(total or 1)))
+    print " # jobs succeeded   : % 6d (%3.2f%%)" % (success, 100 * (1.0 * success/(total or 1)))
+    print " # jobs failed      : % 6d (%3.2f%%)" % (failed, 100 * (1.0 * failed/(total or 1)))
+    print " # jobs unsubmitted : % 6d (%3.2f%%)" % (unsubmitted, 100 * (1.0 * unsubmitted/(total or 1)))
+    if unknown > 0:
+	print " # jobs unknown     : % 6d (%3.2f%%)" % (unknown, 100 * (1.0 * unknown/(total or 1)))
     print
-
 
 def print_summary():
     """
@@ -765,6 +771,131 @@ def print_summary():
 	print "Unknown jobs' details".center(80, '*')
 	for job in unknown_jobs:
 	    print_job_info(job)
+
+def analyze_files():
+    """
+    This function runs the analyzer using the files in the workflow
+    directory as the data source.
+    """
+    jsdl_path = None                            # Path of the jobstate.log file
+    run_directory_writable = False              # Flag to indicate if we can write to the run directory
+    dagman_out_path = None			# Path to the dagman.out file
+
+    global workflow_base_dir, dag_path
+
+    # Get the dag file if it was not specified by the user
+    if dag_path is None:
+        dag_path = find_file(input_dir, ".dag")
+        logger.info("using %s, use the --dag option to override" % (dag_path))
+
+    # Build dagman.out path
+    dagman_out_path = dag_path + ".dagman.out"
+
+    # Check if we can write to the run directory
+    run_directory_writable = os.access(input_dir, os.W_OK)
+
+    # Invoke monitord if requested
+    if run_monitord:
+        if output_dir is not None:
+            # If output_dir is specified, invoke monitord with that path
+            invoke_monitord("%s.dagman.out" % (dag_path), output_dir)
+            # jobstate.log file uses wf_uuid as prefix
+            jsdl_path = os.path.join(output_dir, get_jsdl_filename(input_dir))
+        else:
+            if run_directory_writable:
+                # Run directory is writable, write monitord output to jobstate.log file
+                jsdl_path = os.path.join(input_dir, jsdl_filename)
+                # Invoke monitord
+                invoke_monitord("%s.dagman.out" % (dag_path), None)
+            else:
+                # User must provide the --output-dir option
+                logger.error("%s is not writable" % (input_dir))
+                logger.error("user must specify directory for new monitord logs with the --output-dir option")
+                logger.error("exiting...")
+                sys.exit(1)
+    else:
+        if output_dir is not None:
+            # jobstate.log file uses wf_uuid as prefix and is inside output_dir
+            jsdl_path = os.path.join(output_dir, get_jsdl_filename(input_dir))
+        else:
+            jsdl_path = os.path.join(input_dir, jsdl_filename)
+
+    # Compare timestamps of jsdl_path with dagman_out_path
+    try:
+        jsdl_stat = os.stat(jsdl_path)
+    except:
+        logger.error("could not access %s, exiting..." % (jsdl_path))
+        sys.exit(1)
+
+    try:
+        dagman_out_stat = os.stat(dagman_out_path)
+    except:
+        logger.error("could not access %s, exiting..." % (dagman_out_path))
+        sys.exit(1)
+
+    # Compare mtime for both files
+    if dagman_out_stat[8] > jsdl_stat[8]:
+        logger.warning("jobstate.log older than the dagman.out file, workflow logs may not be up to date...")
+
+    # Try to parse workflow parameters from braindump.txt file
+    wfparams = utils.slurp_braindb(input_dir)
+    if "submit_dir" in wfparams:
+        workflow_base_dir = os.path.normpath(wfparams["submit_dir"])
+    elif "jsd" in wfparams:
+        workflow_base_dir = os.path.dirname(os.path.normpath(wfparams["jsd"]))
+
+    # First we learn about jobs by going through the dag file
+    parse_dag_file(dag_path)
+
+    # Read logfile
+    parse_jobstate_log(jsdl_path)
+
+    # Process our jobs
+    analyze()
+
+    # Print summary of our analysis
+    print_summary()
+
+def analyze_db(config_properties):
+    """
+    This function runs the analyzer using data from the database.
+    """
+    global total, success, failed, unsubmitted, unknown
+
+    # Get the database URL
+    output_db_url, wf_uuid = db_utils.get_db_url_wf_uuid(input_dir, config_properties)
+
+    # Nothing to do if we cannot resolve the database URL
+    if output_db_url is None:
+        logger.error("cannot find database URL, exiting...")
+        sys.exit(1)
+
+    # Now, let's try to access the database
+    try:
+        workflow_stats = stampede_statistics.StampedeStatistics(output_db_url, False)
+        workflow_stats.initialize(wf_uuid)
+    except:
+        logger.error("Failed to load the database." + output_db_url )
+        logger.warning(traceback.format_exc())
+        sys.exit(1)
+
+    total = workflow_stats.get_total_jobs_status()
+    success = workflow_stats.get_total_succeeded_jobs_status()
+    failed = workflow_stats.get_total_failed_jobs_status()
+    unsubmitted = total - success - failed
+
+    # Let's print the results
+    print_summary()
+
+    # Working here!!!!!!!!!!!
+    print "*** Detailed info not available in database mode yet!"
+    print "*** Run pegasus-analyzer with --files for more info"
+    #k = workflow_stats.get_failed_job_instances()
+    #print len(k)
+    #print k
+
+    # Done with the database
+    workflow_stats.close()
 
 def debug_condor(my_job):
     """
@@ -921,12 +1052,16 @@ parser.add_option("-v", "--verbose", action="count", default=0, dest="vb",
                   help="Increase verbosity, repeatable")
 parser.add_option("-i", "-d", "--dir", action = "store", type = "string", dest = "input_dir",
 		  help = "input directory where the jobstate.log file is located, default is the current directory")
-parser.add_option("-f", "--file", action = "store", type = "string", dest = "dag_filename",
+parser.add_option("--dag", action = "store", type = "string", dest = "dag_filename",
 		  help = "full path to the dag file to use -- this option overrides the -d option")
+parser.add_option("-f", "--files", action = "store_const", const = 1, dest = "use_files",
+		  help = "disables the database mode and forces the use of workflow directory files")
 parser.add_option("-m", "-t", "--monitord", action = "store_const", const = 1, dest = "run_monitord",
 		  help = "run pegasus-monitord before analyzing the output")
 parser.add_option("-o", "--output-dir", action = "store", type = "string", dest = "output_dir",
                   help = "provides an output directory for all monitord log files")
+parser.add_option("-c","--conf", action = "store", type = "string", dest = "config_properties",
+                  help = "Specifies the properties file to use. This overrides all other property files.")
 parser.add_option("-q", "--quiet", action = "store_const", const = 1, dest = "quiet_mode",
 		  help = "output out/err filenames instead of their contents")
 parser.add_option("-p", "--print", action = "store", type = "string" , dest = "print_options",
@@ -962,6 +1097,8 @@ if options.strict_mode is not None:
     strict_mode = options.strict_mode
 if options.quiet_mode is not None:
     quiet_mode = options.quiet_mode
+if options.use_files is not None:
+    use_files = True
 if options.print_options is not None:
     my_options = options.print_options.split(",")
     if "pre" in my_options or "all" in my_options:
@@ -1003,78 +1140,11 @@ if debug_mode == 1:
     # This function does not return
     debug_workflow()
 
-# Get the dag file if it was not specified by the user
-if dag_path is None:
-    dag_path = find_file(input_dir, ".dag")
-    logger.info("using %s, use -f/--file option to override this" % (dag_path))
-
-# Build dagman.out path
-dagman_out_path = dag_path + ".dagman.out"
-
-# Check if we can write to the run directory
-run_directory_writable = os.access(input_dir, os.W_OK)
-
-# Invoke monitord if requested
-if run_monitord:
-    if output_dir is not None:
-        # If output_dir is specified, invoke monitord with that path
-        invoke_monitord("%s.dagman.out" % (dag_path), output_dir)
-        # jobstate.log file uses wf_uuid as prefix
-        jsdl_path = os.path.join(output_dir, get_jsdl_filename(input_dir))
-    else:
-        if run_directory_writable:
-            # Run directory is writable, write monitord output to jobstate.log file
-            jsdl_path = os.path.join(input_dir, jsdl_filename)
-            # Invoke monitord
-            invoke_monitord("%s.dagman.out" % (dag_path), None)
-        else:
-            # User must provide the --output-dir option
-            logger.error("%s is not writable" % (input_dir))
-            logger.error("user must specify directory for new monitord logs with the --output-dir option")
-            logger.error("exiting...")
-            sys.exit(1)
+# Run the analyzer
+if use_files:
+    analyze_files()
 else:
-    if output_dir is not None:
-        # jobstate.log file uses wf_uuid as prefix and is inside output_dir
-        jsdl_path = os.path.join(output_dir, get_jsdl_filename(input_dir))
-    else:
-        jsdl_path = os.path.join(input_dir, jsdl_filename)
-
-# Compare timestamps of jsdl_path with dagman_out_path
-try:
-    jsdl_stat = os.stat(jsdl_path)
-except:
-    logger.error("could not access %s, exiting..." % (jsdl_path))
-    sys.exit(1)
-
-try:
-    dagman_out_stat = os.stat(dagman_out_path)
-except:
-    logger.error("could not access %s, exiting..." % (dagman_out_path))
-    sys.exit(1)
-
-# Compare mtime for both files
-if dagman_out_stat[8] > jsdl_stat[8]:
-    logger.warning("jobstate.log is older than the dagman.out file, workflow logs may not be up to date...")
-
-# Try to parse workflow parameters from braindump.txt file
-wfparams = utils.slurp_braindb(input_dir)
-if "submit_dir" in wfparams:
-    workflow_base_dir = os.path.normpath(wfparams["submit_dir"])
-elif "jsd" in wfparams:
-    workflow_base_dir = os.path.dirname(os.path.normpath(wfparams["jsd"]))
-
-# First we learn about jobs by going through the dag file
-parse_dag_file(dag_path)
-
-# Read logfile
-parse_jobstate_log(jsdl_path)
-
-# Process our jobs
-analyze()
-
-# Print summary of our analysis
-print_summary()
+    analyze_db(options.config_properties)
 
 # Done!
 print "Done".center(80, '*')

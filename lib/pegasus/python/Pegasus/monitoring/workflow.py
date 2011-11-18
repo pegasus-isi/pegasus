@@ -835,13 +835,7 @@ class Workflow:
         else:
             my_start_file = os.path.join(self._output_dir, "%s-%s" % (self._wf_uuid, MONITORD_START_FILE))
 
-        try:
-            STARTED = open(my_start_file, "w")
-            STARTED.write("pid %d\n" % (os.getpid()))
-            STARTED.write("timestamp %s\n" % (utils.isodate(my_now)))
-            STARTED.close()
-        except:
-            logger.error("writing %s" % (my_start_file))
+        utils.write_pid_file(my_start_file, my_now)
 
         # Remove monitord.done file, if it is there
         if self._output_dir is None:

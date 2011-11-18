@@ -3,7 +3,7 @@ utils.py: Provides common functions used by all workflow programs
 """
 
 ##
-#  Copyright 2007-2010 University Of Southern California
+#  Copyright 2007-2011 University Of Southern California
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@ import os
 import sys
 import time
 import errno
+import shutil
 import logging
 import calendar
 import commands
@@ -135,6 +136,27 @@ def epochdate(timestamp):
         logger.warn("unable to parse timestamp \"%s\"" % timestamp)
         return None
 
+def create_directory(dir_name, delete_if_exists=False):
+    """
+    Utility method for creating directory
+    @param dir_name the directory path
+    @param delete_if_exists specifies whether to delete the directory if it exists
+    """
+    if delete_if_exists:
+        if os.path.isdir(dir_name):
+            logger.warning("Deleting existing directory. Deleting... " + dir_name)
+            try:
+                shutil.rmtree(dir_name)
+            except:
+                logger.error("Unable to remove existing directory." + dir_name)
+                sys.exit(1)
+    if not os.path.isdir(dir_name):
+        logger.info("Creating directory... " + dir_name)
+        try:
+            os.mkdir(dir_name)
+        except:
+            logger.error("Unable to create directory." + dir_name)
+            sys.exit(1)
 
 def find_exec(program, curdir=False):
     """
@@ -336,33 +358,40 @@ def out2log(rundir, outfile):
 
     return my_log, my_base
 
-def monitoring_running(run_dir):
+def write_pid_file(pid_filename, ts=int(time.time())):
     """
-    This function takes a run directory and returns true if it appears
-    that pegasus-monitord is still running, or false if it has
-    finished (or perhaps it was never started).
+    This function writes a pid file with name 'filename' containing
+    the current pid and timestamp.
     """
-    start_file = os.path.join(run_dir, "monitord.started")
-    done_file = os.path.join(run_dir, "monitord.done")
+    try:
+        PIDFILE = open(pid_filename, "w")
+        PIDFILE.write("pid %s\n" % (os.getpid()))
+        PIDFILE.write("timestamp %s\n" % (isodate(ts)))
+        PIDFILE.close()
+    except:
+        logger.error("cannot write PID file %s" % (pid_filename))
 
-    # If monitord finished, it is not running anymore
-    if os.access(done_file, os.F_OK):
-        return False
-
-    # If monitord started, it is (possibly) still running
-    if os.access(start_file, os.F_OK):
+def pid_running(filename):
+    """
+    This function takes a file containing a single line in the format
+    of pid 'xxxxxx'. If the file exists, it reads the line and checks if
+    the process id 'xxxxxx' is still running. The function returns True
+    if the process is still running, or False if not.
+    """
+    # First, we check if file exists
+    if os.access(filename, os.F_OK):
         try:
-            # Open monitord's start file
-            START = open(start_file, 'r')
+            # Open pid file
+            PIDFILE = open(filename, 'r')
 
             # Look for pid line
-            for line in START:
+            for line in PIDFILE:
                 line = line.strip()
                 if line.startswith("pid"):
                     # Get pid
                     my_pid = int(line.split(" ")[1])
                     # We are done with this file, just close it...
-                    START.close()
+                    PIDFILE.close()
                     # Now let's see if process still around...
                     try:
                         os.kill(my_pid, 0)
@@ -387,16 +416,37 @@ def monitoring_running(run_dir):
                         logger.debug("pid %d still running..." % (my_pid))
                         return True
 
-            logger.warning("could not find pid line in file %s. continuing..." % (start_file))
+            logger.warning("could not find pid line in file %s. continuing..." % (filename))
 
             # Don't forget to close file
-            START.close()
+            PIDFILE.close()
         except:
-            logger.warning("error processing file %s. continuing..." % (start_file))
+            logger.warning("error processing file %s. continuing..." % (filename))
             logger.warning(traceback.format_exc())
 
         return True
 
+    # PID file doesn't exist
+    return False
+
+def monitoring_running(run_dir):
+    """
+    This function takes a run directory and returns true if it appears
+    that pegasus-monitord is still running, or false if it has
+    finished (or perhaps it was never started).
+    """
+    start_file = os.path.join(run_dir, "monitord.started")
+    done_file = os.path.join(run_dir, "monitord.done")
+
+    # If monitord finished, it is not running anymore
+    if os.access(done_file, os.F_OK):
+        return False
+
+    # If monitord started, it is (possibly) still running
+    if os.access(start_file, os.F_OK):
+        # Let's check
+        return pid_running(start_file)
+    
     # Otherwise, monitord was never executed (so it is not running right now...)
     return False
 

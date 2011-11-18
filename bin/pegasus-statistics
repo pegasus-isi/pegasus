@@ -5,9 +5,7 @@ import re
 import sys
 import logging
 import optparse
-import math
 import subprocess
-import tempfile
 import traceback
 
 # Initialize logging object
@@ -22,9 +20,9 @@ exec config
 import Pegasus.common
 
 from Pegasus.tools import utils
+from Pegasus.tools import db_utils
 from Pegasus.plots_stats import utils as stats_utils
 from netlogger.analysis.workflow.stampede_statistics import StampedeStatistics
-from datetime import datetime
 
 # Regular expressions
 re_parse_property = re.compile(r'([^:= \t]+)\s*[:=]?\s*(.*)')
@@ -583,6 +581,8 @@ def print_workflow_details(output_db_url, wf_uuid, output_dir):
 	expanded_workflow_stats.close()
 	stats_output += NEW_LINE_STR
 	stats_output += "".center(100, '*')
+        print stats_output
+
 	return
 
 def print_workflow_summary(workflow_stats, output_format, wf_summary=True, time_summary=True):
@@ -647,15 +647,15 @@ def print_workflow_summary(workflow_stats, output_format, wf_summary=True, time_
                 summary_str += print_row(content, workflow_summary_col_size, output_format)
 	
                 if output_format == "text":
-                        content =["Jobs", convert_to_str(total_succeeded_jobs),
-                                  convert_to_str(total_failed_jobs),
-                                  convert_to_str(total_unsubmitted_jobs), convert_to_str(total_jobs),
-                                  "||", str(total_job_retries), convert_to_str(total_job_instance_retries)]
+                        content = ["Jobs", convert_to_str(total_succeeded_jobs),
+                                   convert_to_str(total_failed_jobs),
+                                   convert_to_str(total_unsubmitted_jobs), convert_to_str(total_jobs),
+                                   "||", str(total_job_retries), convert_to_str(total_job_instance_retries)]
                 elif output_format == "csv":
-                        content =["Jobs", convert_to_str(total_succeeded_jobs),
-                                  convert_to_str(total_failed_jobs),
-                                  convert_to_str(total_unsubmitted_jobs), convert_to_str(total_jobs),
-                                  str(total_job_retries), convert_to_str(total_job_instance_retries)]
+                        content = ["Jobs", convert_to_str(total_succeeded_jobs),
+                                   convert_to_str(total_failed_jobs),
+                                   convert_to_str(total_unsubmitted_jobs), convert_to_str(total_jobs),
+                                   str(total_job_retries), convert_to_str(total_job_instance_retries)]
                 else:
                         print "%s: error: output format %s not recognized!" % (prog_base, output_format)
                         sys.exit(1)
@@ -664,17 +664,17 @@ def print_workflow_summary(workflow_stats, output_format, wf_summary=True, time_
                 summary_str += print_row(content, workflow_summary_col_size, output_format)
 	
                 if output_format == "text":
-                        content =["Sub Workflows", convert_to_str(total_succeeded_sub_wfs),
-                                  convert_to_str(total_failed_sub_wfs),
-                                  convert_to_str(total_unsubmitted_sub_wfs),
-                                  convert_to_str(total_sub_wfs), "||", str(total_sub_wfs_retries),
-                                  convert_to_str(total_sub_wfs_tries)]
+                        content = ["Sub Workflows", convert_to_str(total_succeeded_sub_wfs),
+                                   convert_to_str(total_failed_sub_wfs),
+                                   convert_to_str(total_unsubmitted_sub_wfs),
+                                   convert_to_str(total_sub_wfs), "||", str(total_sub_wfs_retries),
+                                   convert_to_str(total_sub_wfs_tries)]
                 elif output_format == "csv":
-                        content =["Sub_Workflows", convert_to_str(total_succeeded_sub_wfs),
-                                  convert_to_str(total_failed_sub_wfs),
-                                  convert_to_str(total_unsubmitted_sub_wfs),
-                                  convert_to_str(total_sub_wfs), str(total_sub_wfs_retries),
-                                  convert_to_str(total_sub_wfs_tries)]
+                        content = ["Sub_Workflows", convert_to_str(total_succeeded_sub_wfs),
+                                   convert_to_str(total_failed_sub_wfs),
+                                   convert_to_str(total_unsubmitted_sub_wfs),
+                                   convert_to_str(total_sub_wfs), str(total_sub_wfs_retries),
+                                   convert_to_str(total_sub_wfs_tries)]
                 else:
                         print "%s: error: output format %s not recognized!" % (prog_base, output_format)
                         sys.exit(1)
@@ -1223,7 +1223,6 @@ def main():
         time_host_stats_col_name_text[0] += str(stats_utils.get_date_print_format(time_filter))
         time_host_stats_col_name_csv[1] += str(stats_utils.get_date_print_format(time_filter))
 
-	global output_dir
 	if options.output_dir is not None:
 		output_dir = options.output_dir
 		if not os.path.isdir(output_dir):
@@ -1235,9 +1234,9 @@ def main():
 				sys.exit(1) 	
 	else:
 		output_dir = os.path.join(submit_dir, DEFAULT_OUTPUT_DIR)
-		stats_utils.create_directory(output_dir, True)
+		utils.create_directory(output_dir, True)
 
-	output_db_url, wf_uuid = stats_utils.get_db_url_wf_uuid(submit_dir, options.config_properties)
+	output_db_url, wf_uuid = db_utils.get_db_url_wf_uuid(submit_dir, options.config_properties)
 	if output_db_url is not None:
 		print_workflow_details(output_db_url, wf_uuid, output_dir)
 	sys.exit(0)
