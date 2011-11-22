@@ -102,9 +102,10 @@ Python 2.6.2</programlisting></para>
       <filename>/etc/yum.repos.d/pegasus.repo</filename></emphasis> with the
       content:</para>
 
-      <programlisting># Pegasus 3.0
-name=Pegasus30
-baseurl=http://pegasus.isi.edu/wms/download/3.0/yum/rhel/$releasever/$basearch/
+      <programlisting># Pegasus 3.2
+[Pegasus32]
+name=Pegasus32
+baseurl=http://pegasus.isi.edu/wms/download/3.2/yum/rhel/$releasever/$basearch/
 gpgcheck=0
 enabled=1</programlisting>
 
