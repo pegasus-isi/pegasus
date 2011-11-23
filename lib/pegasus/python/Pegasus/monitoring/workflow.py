@@ -918,6 +918,17 @@ class Workflow:
         if len(missing_keys) > 0:
             utils.add_to_braindb(rundir, missing_keys, workflow_config_file)
 
+    def map_subwf(parent_jobid, parent_jobseq):
+        """
+        This function creates a link between a subworkflow and its parent job
+        """
+        # If this workflow is a subworkflow and has a parent_id,
+        # parent_jobid and parent_jobseq, we send an event to link
+        # this workflow's id to the parent job...
+        if (self._sink is not None and self._parent_workflow_id is not None
+            and parent_jobid is not None and parent_jobseq is not None):
+            self.db_send_subwf_link(parent_jobid, parent_jobseq)
+
     def end_workflow(self):
         """
         This function writes the last line in the jobstate.log and closes

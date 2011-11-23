@@ -885,14 +885,71 @@ def analyze_db(config_properties):
     unsubmitted = total - success - failed
 
     # Let's print the results
-    print_summary()
+    print_top_summary()
 
-    # Working here!!!!!!!!!!!
-    print "*** Detailed info not available in database mode yet!"
-    print "*** Run pegasus-analyzer with --files for more info"
-    #k = workflow_stats.get_failed_job_instances()
-    #print len(k)
-    #print k
+    # Now, print information about jobs that failed...
+    if failed > 0:
+        # Get list of failed jobs from database
+        my_failed_jobs = workflow_stats.get_failed_job_instances(final=True)
+
+        # Print header
+	print "Failed jobs' details".center(80, '*')
+
+        # Now process one by one...
+        for my_job in my_failed_jobs:
+            my_info = workflow_stats.get_job_instance_info(my_job[0])[0]
+            if my_job[0] == my_info.job_instance_id:
+
+                print
+                print my_info.job_name.center(80, '=')
+                print
+                print " last state: %s" % (my_info.state or '-')
+
+                print "       site: %s" % (my_info.site or '-')
+                print "submit file: %s" % (my_info.submit_file or '-')
+                print "output file: %s" % (my_info.stdout_file or '-')
+                print " error file: %s" % (my_info.stderr_file or '-')
+                if print_invocation:
+                    print
+                    print "To re-run this job, use: %s %s" % ((my_info.executable or '-'), (my_info.argv or '-'))
+                    print
+                if print_pre_script and len((my_info.pre_executable or "")) > 0:
+                    print
+                    print "SCRIPT PRE:"
+                    print "%s %s" % ((my_info.pre_executable or ""), (my_info.pre_argv or ""))
+                    print
+                if my_info.subwf_dir is not None:
+                    # This job has a sub workflow
+                    print " This job contains sub workflows!"
+                    print " Please run the command below for more information:"
+                    user_cmd = " %s" % (prog_base)
+                    my_wfdir = os.path.normpath(my_info.subwf_dir)
+                    if my_wfdir.find(my_info.submit_dir) >= 0:
+                        # Path to dagman_out file includes original submit_dir, let's try to change it...
+                        my_wfdir = os.path.normpath(my_wfdir.replace((my_info.submit_dir + os.sep), '', 1))
+                        my_wfdir = os.path.join(input_dir, my_wfdir)
+                    if output_dir is not None:
+                        user_cmd = user_cmd + " --output-dir %s" % (output_dir)
+                        print "%s -d %s" % (user_cmd, my_wfdir)
+                        print
+                print
+
+                # Now dump file contents to screen if we are not in quiet mode
+                if not quiet_mode:
+                    if my_info.stdout_text is not None:
+                        print my_info.stdout_file.center(80, '-')
+                        print
+                        print my_info.stdout_text
+                        print
+                    if my_info.stderr_text is not None:
+                        print my_info.stderr_file.center(80, '-')
+                        print
+                        print my_info.stderr_text
+                        print
+            else:
+                log.error("unexpected job instance returned by database!")
+                log.error("returned: %d - expected: %d" % (my_info[0], my_job[0]))
+                continue
 
     # Done with the database
     workflow_stats.close()

@@ -1321,6 +1321,11 @@ while (len(wfs) > 0):
                                     if replay_mode:
                                         tracked_workflows.append(new_dagman_out)
 
+                            else:
+                                # Just make sure we link the workflow to its parent job,
+                                # which in this case is a job retry...
+                                pass
+
                         if millisleep is not None:
                             if server is not None:
                                 socket_interface.check_request(server, wfs, millisleep / 1000.0)

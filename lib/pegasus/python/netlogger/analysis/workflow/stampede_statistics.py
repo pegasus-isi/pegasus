@@ -130,6 +130,7 @@ Methods::
  get_job_states
  get_job_instance_sub_wf_map
  get_failed_job_instances
+ get_job_instance_info
  get_job_name
  get_job_site
  get_job_kickstart
@@ -148,7 +149,7 @@ Methods listed in order of query list on wiki.
 
 https://confluence.pegasus.isi.edu/display/pegasus/Pegasus+Statistics+Python+Version+Modified
 """
-__rcsid__ = "$Id: stampede_statistics.py 28641 2011-10-18 15:33:19Z mgoode $"
+__rcsid__ = "$Id: stampede_statistics.py 28974 2011-11-23 18:43:41Z mgoode $"
 __author__ = "Monte Goode"
 
 from netlogger.analysis.modules._base import SQLAlchemyInit
@@ -804,7 +805,7 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         q = q.filter(self._dax_or_dag_cond())
         return q.all()
         
-    def get_failed_job_instances(self):
+    def get_failed_job_instances(self, final=False):
         """
         https://confluence.pegasus.isi.edu/display/pegasus/Job+Statistics+file#JobStatisticsfile-Failedjobinstances
         """
@@ -812,13 +813,91 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
             return []
         d_or_d = self._dax_or_dag_cond()
         
-        q = self.session.query(JobInstance.job_instance_id)
+        if not final:
+            # default behavior - return all failed job instances
+            q = self.session.query(JobInstance.job_instance_id)
+        else:
+            # filter - return only the final failed job instance for a given job
+            q = self.session.query(func.max(JobInstance.job_instance_id).label('job_instance_id'))
         q = q.filter(Job.wf_id.in_(self._wfs))
         q = q.filter(Job.job_id == JobInstance.job_id)
         q = q.filter(JobInstance.job_instance_id == Jobstate.job_instance_id)
         q = q.filter(or_(not_(d_or_d), and_(d_or_d, JobInstance.subwf_id == None)))
         q = q.filter(Jobstate.state.in_(['PRE_SCRIPT_FAILED','SUBMIT_FAILED','JOB_FAILURE' ,'POST_SCRIPT_FAILED']))
         
+        if final:
+            # the max() can produce a single None so twit that
+            if len(q.all()) == 1 and q.all()[0].job_instance_id == None:
+                    return []
+        
+        return q.all()
+        
+    def get_job_instance_info(self, job_instance_id=None):
+        """
+        Job instance information.  Pulls all or for one instance.
+        https://confluence.pegasus.isi.edu/pages/viewpage.action?pageId=14876831
+        """
+        if self._expand:
+            return []
+
+        sq_0 = self.session.query(Workflow.submit_dir)
+        sq_0 = sq_0.filter(Workflow.wf_id == JobInstance.subwf_id).correlate(JobInstance)
+        sq_0 = sq_0.subquery()
+
+        sq_1 = self.session.query(Job.exec_job_id)
+        sq_1 = sq_1.filter(Job.job_id == JobInstance.job_id).correlate(JobInstance)
+        sq_1 = sq_1.subquery()
+        
+        sq_2 = self.session.query(Job.submit_file)
+        sq_2 = sq_2.filter(Job.job_id == JobInstance.job_id).correlate(JobInstance)
+        sq_2 = sq_2.subquery()
+        
+        sq_3 = self.session.query(Job.executable)
+        sq_3 = sq_3.filter(Job.job_id == JobInstance.job_id).correlate(JobInstance)
+        sq_3 = sq_3.subquery()
+        
+        sq_4 = self.session.query(Job.argv)
+        sq_4 = sq_4.filter(Job.job_id == JobInstance.job_id).correlate(JobInstance)
+        sq_4 = sq_4.subquery()
+        
+        sq_5 = self.session.query(Workflow.submit_dir)
+        sq_5 = sq_5.filter(Workflow.wf_id == self._root_wf_id).subquery()
+        
+        sq_6 = self.session.query(func.max(Jobstate.jobstate_submit_seq).label('max_job_submit_seq'))
+        sq_6 = sq_6.filter(Jobstate.job_instance_id == JobInstance.job_instance_id).correlate(JobInstance)
+        sq_6 = sq_6.subquery()
+        
+        sq_7 = self.session.query(Jobstate.state)
+        sq_7 = sq_7.filter(Jobstate.job_instance_id == JobInstance.job_instance_id).correlate(JobInstance)
+        sq_7 = sq_7.filter(Jobstate.jobstate_submit_seq == sq_6.c.max_job_submit_seq)
+        sq_7 = sq_7.subquery()
+        
+        sq_8 = self.session.query(Invocation.executable)
+        sq_8 = sq_8.filter(Invocation.job_instance_id == JobInstance.job_instance_id).correlate(JobInstance)
+        sq_8 = sq_8.filter(Invocation.task_submit_seq == -1)
+        sq_8 = sq_8.subquery()
+        
+        sq_9 = self.session.query(Invocation.argv)
+        sq_9 = sq_9.filter(Invocation.job_instance_id == JobInstance.job_instance_id).correlate(JobInstance)
+        sq_9 = sq_9.filter(Invocation.task_submit_seq == -1)
+        sq_9 = sq_9.subquery()
+        
+        q = self.session.query(JobInstance.job_instance_id, JobInstance.site, JobInstance.stdout_file, JobInstance.stderr_file,
+                JobInstance.stdout_text, JobInstance.stderr_text,
+                sq_0.as_scalar().label('subwf_dir'),
+                sq_1.as_scalar().label('job_name'),
+                sq_2.as_scalar().label('submit_file'),
+                sq_3.as_scalar().label('executable'),
+                sq_4.as_scalar().label('argv'),
+                sq_5.as_scalar().label('submit_dir'),
+                sq_7.as_scalar().label('state'),
+                sq_8.as_scalar().label('pre_executable'),
+                sq_9.as_scalar().label('pre_argv')
+                )
+                
+        if job_instance_id:
+            q = q.filter(JobInstance.job_instance_id == job_instance_id)
+                
         return q.all()
     
     def get_job_name(self):
