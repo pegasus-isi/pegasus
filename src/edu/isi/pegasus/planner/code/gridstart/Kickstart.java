@@ -680,11 +680,15 @@ public class Kickstart implements GridStart {
             gridStartArgs.append("-T ").append(mConcDAG.getMTime()).append(" ");
         }
 
+        
         long argumentLength = gridStartArgs.length() +
                               job.executable.length() +
                               1 +
                               job.strargs.length();
-        if(mInvokeAlways || argumentLength > mInvokeLength){
+
+        //for constituent jobs part of a clustered job
+        //invoke is never used JIRA PM-526
+        if( !partOfClusteredJob && (mInvokeAlways || argumentLength > mInvokeLength) ){
             if(!useInvoke(job,gridStartArgs)){
                 mLogger.log("Unable to use invoke for job ",
                             LogManager.ERROR_MESSAGE_LEVEL);
@@ -1143,10 +1147,10 @@ public class Kickstart implements GridStart {
         String inputBaseName = job.jobName + "." + Kickstart.KICKSTART_INPUT_SUFFIX;
 
         //writing the stdin file
+        File argFile = new File(mSubmitDir, inputBaseName);
         try {
             FileWriter input;
-            input = new FileWriter(new File(mSubmitDir,
-                                            inputBaseName));
+            input = new FileWriter( argFile );
             //the first thing that goes in is the executable name
             input.write(job.executable);
             input.write("\n");
@@ -1166,23 +1170,7 @@ public class Kickstart implements GridStart {
             return false;
         }
 
-        //construct list of files that need to be transferred
-        //via Condor file transfer mechanism
-        String fileList;
-        if(job.condorVariables.containsKey(Condor.TRANSFER_IP_FILES_KEY)){
-            //update the existing list.
-            fileList = (String)job.condorVariables.get(Condor.TRANSFER_IP_FILES_KEY);
-            if(fileList != null){
-                fileList += "," + inputBaseName;
-            }
-        }
-        else{
-            fileList = inputBaseName;
-        }
-
-        construct(job,Condor.TRANSFER_IP_FILES_KEY,fileList);
-        construct(job,"should_transfer_files","YES");
-        construct(job,"when_to_transfer_output","ON_EXIT");
+        job.condorVariables.addIPFileForTransfer( argFile.getAbsolutePath() );
 
         //add the -I argument to kickstart
         args.append("-I ").append(inputBaseName).append(" ");
