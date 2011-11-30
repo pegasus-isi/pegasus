@@ -1,0 +1,56 @@
+The newly revamped show-run replaces show-chimera. There is one subtle
+change in commandline options, which should make things easier:
+
+   OLD STYLE                           NEW STYLE
+   ---------                           ---------
+   -b base (mandatory)                 -b base is optional
+   -l clog (mandatory)                 log location is "found"
+
+   n.a.                                -D dag file, mandatory
+
+The show-run tool relies on a number of files: The .dag file, the .log
+file that all your Condor jobs logged into, the .sub files and the .out
+files produced by kickstart. The submit files will be found relative to
+the base directory, from information inside the DAG file. The kickstart
+output records are expected to be found in the same location. 
+
+gensim
+------
+Produces job and file statistics from execution logs.
+
+Outputs are:
+
+DAG and dax including annotated with job runtimes and file sizes (if available)and source locations.
+Relative jobstate.log
+Job statistics (kickstart runtime, delays due to DagMAN, Condor-G, etc.)
+File statistics (name, size, initial location)
+
+Usage: gensim --dag=<dag name> --jobstate|--no-jobstate --jobstate-log=<jobstate log> --output=<output directory> --help 
+
+Mandatory arguments:
+ -d|--dag dagname       name of the dag file to process
+  -o|--output dir        write outputs in given directory
+
+  Complex arguments:
+   -j|--jobstate          yes, we have jobstate
+   --no-jobstate          no, we don't have jobstate
+   -l|--jobstate-log log  jobstate log to process
+
+     Optional arguments:
+      -h|--help              print this help message and exit
+      -i|--input dir         read inputs from given directory
+
+
+gentimes
+--------
+Produces another form of job runtime statistics. 
+Outputs are:
+For each transformation, mean runtime (as reported by kickstart) and variance.
+
+Usage: gentimes --help --output=<output file>
+
+Optional arguments:
+-h|--help           Print this help message.
+-o|--output file    Write outputs to specified file.
+-x|--extra          Generate individual statistics for each run directory.
+

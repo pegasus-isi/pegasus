@@ -1,0 +1,460 @@
+#!/usr/bin/env perl
+#
+# show Condor Q, assuming mostly DAGMan and Condor-G jobs
+#
+use 5.006;
+use strict;
+use File::Basename;
+use File::Spec;
+use POSIX qw(strftime);
+use Getopt::Long qw(:config bundling no_ignore_case);
+
+my $condor=0;
+my $globus=0;
+my %condor=();
+my %globus=();
+my $debug = 0;
+
+sub usage;			# { }
+sub count_deps($);		# { }
+sub showdag($$);		# { }
+
+my ($rows,$cols) = (25,80);	# will be auto-detected later
+my $isa_terminal = -t STDOUT; 	# auto-set with override
+my $dagid_width = 20;
+my $args_width = 60;
+my ($machine_width);
+my $user = $ENV{USER} || $ENV{LOGNAME} || scalar getpwuid($>);
+GetOptions( 'help|h' => \&usage,
+	    'debug|d+' => \$debug,
+	    'all', sub { undef $user },
+	    'user|u=s' => \$user,
+	    'terminal|t!' => \$isa_terminal,
+	    'machine-width|mw=i', \$machine_width,
+	    'args-width|args=i', \$args_width,
+	    'dagid-width|dagid=i', \$dagid_width );
+
+# --- subs ------------------------------------------------------
+
+sub usage {
+    my $me = basename($0);
+    print << "EOF";
+Usage: $me [options]
+
+ --help     display this usage info.
+ --dagid n  width of DAG job identifiers, 0 off, default 12.
+ --user id  limit output to the jobs of specified user id.
+ --args n   maximum width of args to be displayed.
+ --terminal permit terminal ansi sequences even in pipes. 
+ --mw n     show Condor RemoteHost with maximum width of n. 
+
+Columns in output:
+ ID        Condor job identification number.
+ DATE      Point of time when the job was submitted.
+ TIME      Point of time when the job was submitted.
+ U         Condor job universe: 7=scheduler (local), 9=Grid, 
+           5=vanilla, 1=standard, 8=MPI, 4=PVM, ...
+ C/G       Local Condor status and remote Globus status:
+           (R)unning         (A)ctive
+           (I)dle            (P)ending
+           (H)eld            (?) unknown
+           (X) removing      (F)ailed
+           (C)ompleting      (D)one
+                             (S)uspended
+                             (U)nsubmitted
+                             stage-(I)n
+                             stage-(O)out
+                             (-) local job
+ IN-STATE  Amount of time the job spent in the Condor state
+ JOB       Summary of job and arguments. Paths are abbreviated to basenames. 
+           Kickstart has its own arguments removed. Seqexec counts the number
+           of jobs.
+ 
+EOF
+   exit 1;
+}
+
+sub levels($$) { 
+    my $n = shift;
+    my $s = shift; 
+    my @s = split /\//, $s;
+    if ( $n > 0 ) {
+	$n > @s ? $s : join( '/', @s[ 0 .. ($n-1) ] );
+    } elsif ( $n < 0 ) {
+	my $i = @s + $n;
+	$i <= 0 ? $s : join( '/', @s[ $i .. $#s ] ); 
+    } else {
+	$s; 
+    }
+}
+
+sub trim($) {
+    local $_ = shift;
+    s/^\s*//;
+    s/\s*$//;
+    $_ = substr($_,1,-1) if ( substr($_,0,1) eq '"' || substr($_,0,1) eq "'" );
+    $_;
+}
+
+sub dateme($) {
+    strftime '%m/%d %H:%M:%S', localtime(shift());
+}
+
+sub interval($) {
+    use integer;
+    my $total = shift;
+    my $s = $total % 60;
+    my $m = ($total % 3600) / 60;
+    my $h = ($total % 86400 ) / 3600;
+    my $d = $total / 86400;
+    sprintf '%d+%02d:%02d:%02d', $d, $h, $m, $s;
+}
+
+sub fit($$) {
+    my $width = shift;
+    my $s = shift;
+    if ( length($s) > abs($width)+2 ) {
+	if ( $width < 0 ) {
+	    # fit from back
+	    '..' . substr($s,$width);
+	} else {
+	    # forward fit
+	    substr($s,0,$width) . '..';
+	}
+    } else {
+	$s;
+    }
+}
+
+sub kickstart($) {
+    my @arg = split /\s+/, shift();
+    my @result = ();
+    my $state = 0;
+    for ( my $i=0; $i<@arg; ++$i ) {
+	if ( $state == 0 ) {
+	    if ( substr($arg[$i],0,1) eq '-' ) {
+		my $opt = substr($arg[$i],1,1);
+		if ( index('ioelnNRBLTIwWSs',$opt) >= 0 ) {
+		    # skip argument
+		    ++$i;
+		} elsif ( index('HVX',$opt) >= 0 ) {
+		    # do nothing
+		} else {
+		    warn "# unknown kickstart argument $arg[$i]\n";
+		}
+	    } else {
+		$state = 1;
+		push( @result, basename($arg[$i]) );
+	    }
+	} else {
+	    if ( substr($arg[$i],0,1) eq '/' ) {
+		push( @result, basename($arg[$i]) );
+	    } else {
+		push( @result, $arg[$i] );
+	    }
+	}
+    }
+
+    join( ' ', @result );
+}
+
+sub seqexec(\%) {
+    my $r = shift;
+    my $result = '';
+
+    my $fn = File::Spec->rel2abs( $r->{in}, $r->{iwd} );
+    if ( open( S, "<$fn" ) ) {
+	my @ok = ();
+	while ( <S> ) {
+	    s/[ \r\n]+$//;
+	    s/\#.*//;
+	    next if length($_) < 3;
+	    push( @ok, $_ );
+	}
+	close S;
+	$result = "[@{[@ok+0]} jobs]";
+    } else {
+	warn "open $fn: $!\n";
+    }
+
+    $result;
+}
+
+my @cstat = qw(U I R X C H);
+sub cstat($) {
+    my $s = shift;
+    $condor{$s}++;
+    $s < @cstat ? $cstat[$s] : "$s";
+}
+
+my %gstat = 
+    (   0 => '?',		# unknown
+        1 => 'P',		# pending
+        2 => 'A',		# active
+        4 => 'F',		# failed
+        8 => 'D',		# done
+       16 => 'S',		# suspended
+       32 => 'U',		# unsuspended, unsubmitted
+       64 => 'I',		# stage in
+      128 => 'O' );		# stage out
+
+my %dagman_p = map { $_ => 1 } qw(pegasus-dagman condor_dagman); 
+
+sub gstat($) {
+    if ( defined $_[0] ) {
+	my $s = shift;
+	$globus++;
+	$globus{$s}++;
+	exists $gstat{$s} ? $gstat{$s} : "$s";
+    } else {
+	$condor++;
+	'-';
+    }
+}
+
+sub parsersl($) {
+    my %result = ();
+    local $_ = shift;
+    while ( /\(([^)]+)\)/g ) {
+        my ($k,$v) = split /=/, $1, 2;
+	$k =~ s/[-_]//g;
+	$result{lc $k} = $v;
+    }
+    %result;
+}
+
+sub mybold {
+    $isa_terminal ? "\033[1m" : '';
+}
+
+sub myreset {
+    $isa_terminal ? "\033[0m" : '';
+}
+
+sub showjob($\%) {
+    my $prefix = shift;
+    my $r = shift;
+    my $flag = 0;
+
+    my $x = '';
+    $x .= sprintf "%*d", $r->{width}, $r->{clusterid};
+    $x .= ' ' . dateme($r->{qdate});
+    $x .= ' ' . $r->{jobuniverse};
+    $x .= ' ' . cstat($r->{jobstatus});
+    $x .= '/' . gstat($r->{globusstatus});
+    my $diff = $^T - $r->{enteredcurrentstatus};
+    $x .= ' ' . interval($diff);
+    print $x, ' ', $prefix;
+    if ( $dagid_width > 0 && length($prefix) ) {
+	if ( exists $r->{dagnodename} ) {
+	    print '[', mybold(), fit(-$dagid_width,$r->{dagnodename}), myreset(); 
+	    if ( defined $machine_width && exists $r->{remotehost} ) {
+		print ' ', fit($machine_width,$r->{remotehost});
+	    }
+	    print '] ';
+	    $flag = 1;
+	}
+    }
+    my $cmd = basename($r->{cmd} || '');
+    print $cmd;
+    if ( $args_width > length($cmd) && ! exists $dagman_p{$cmd} ) {
+	if ( $cmd eq 'kickstart' ) {
+	    print ' ', fit( $args_width-length($cmd), kickstart($r->{arguments}) );
+	} elsif ( $cmd eq 'seqexec' || $cmd eq 'giraffe.pl' ) {
+	    print ' ', fit( $args_width-length($cmd), seqexec(%{$r}) );
+	} else {
+	    print ' ', fit( $args_width-length($cmd), $r->{arguments} );
+	}
+	if ( $cmd eq 'seqexec' ) {
+	    print " $2 $1" if ( exists $r->{gridresource} && 
+		$r->{gridresource} =~ m{\w+ ([^/]+)/jobmanager-(\S+)} );
+	}
+    }
+
+#    if ( length($prefix) == 0 ) {
+#	if ( $cmd eq 'condor_dagman' ) {
+#	    print '[', $r->{iwd}, ']';
+#	} else {
+#	    print "\n\twd=", $r->{iwd};
+#	}
+#    }
+    if ( exists $dagman_p{$cmd} ) { 
+	if ( exists $r->{'wf_uuid'} ) {
+	    print ' [', mybold(), levels(-2,$r->{iwd}), myreset(), ' ', $r->{'wf_uuid'}, ']';
+	} else {
+	    print ' [', mybold(), $r->{iwd}, myreset(), ']';
+	}
+	print ' # dj=', scalar count_deps( $r->{clusterid} ); 
+    } elsif ( length($prefix) == 0 ) {
+	print "\n\twd=", $r->{iwd};
+    }
+
+    if ( exists $r->{globusrsl} ) {
+	my %x = parsersl($r->{globusrsl});
+	print ' [', ( $x{name} || basename($r->{out},'.out') ), ']' 
+	    unless $flag;
+	print " # q=", ( $x{queue} || 'default' ); 
+
+	my $x = $x{maxtime} || $x{maxwalltime} || $x{maxcputime};
+	if ( defined $x && $x > 0 ) {
+	    printf " t=%d:%02d", ( $x /60 ), ( $x % 60 );
+	}
+
+	my $p = $x{hostcount} || $x{'host_count'} || $x{count};
+	printf( " p=%d", $p ) if $p > 1; 
+    }
+    print "\n";
+}
+
+sub condor_q(\%\%\$;$) {
+    my $jobref = shift;
+    my $dagref = shift;
+    my $maxref = shift;
+
+    my $user = shift;
+    local(*Q);
+    if ( defined $user ) { open( Q, "condor_q -l $user|" ) }
+    else { open( Q, "condor_q -l|" ) }
+
+    # skip intro
+    while ( <Q> ) {
+	last if /^--/;
+    }
+
+    $$maxref = 0;
+    my (@x,%db);
+    while ( <Q> ) {
+	s/[\r\n]+$//;
+	if ( length($_) > 2 ) {
+	    # regular class-ad line
+	    @x = split /\s=\s/, $_, 2;
+	    die if exists $db{lc($x[0])};
+	    $db{lc($x[0])} = trim($x[1]);
+	} else {
+	    # end of job class-ad
+	    $jobref->{$db{clusterid}} = { %db };
+	    if ( exists $db{dagmanjobid} ) {
+		push( @{$dagref->{$db{dagmanjobid}}}, $db{clusterid} );
+	    } else {
+		$dagref->{$db{clusterid}} = [] 
+		    unless exists $dagref->{$db{clusterid}};
+	    }
+	    $$maxref = length($db{clusterid}) if $$maxref < length($db{clusterid});
+	    %db = ();
+	}
+    }
+    close Q || die "pclose: $!\n";
+}
+
+# --- main ------------------------------------------------------
+
+#
+# determine termininal size
+#
+if ( -t STDOUT ) {
+    my $x;
+    eval {
+	require "sys/ioctl.ph";
+	ioctl( STDOUT, &TIOCGWINSZ, $x ) || die "ioctl";
+    };
+    if ( ! $@ && defined $x && length($x) ) {
+	($rows,$cols) = unpack("S2",$x);
+    }
+} else {
+    $rows = $cols = 1E10;	# unlimited
+}
+
+
+my (%dag,%job,$max);
+condor_q( %job, %dag, $max, $user );
+
+# artificial width classad
+my %seen = ();
+my $total = 0;
+foreach my $j ( keys %job ) { 
+    $job{$j}{width} = $max;
+    $seen{$j} = 1;
+    ++$total;
+}
+
+# find children and parents that are dags
+my (%parent,%leaves);
+foreach my $d ( keys %dag ) {
+    foreach my $v ( @{$dag{$d}} ) {
+	$parent{$v}{$d} = 1
+	    if exists $dag{$v};
+    }
+}
+
+# find leaves
+my @fifo = keys %dag;
+while ( @fifo ) {
+    my $d = pop(@fifo);
+    if ( exists $parent{$d} ) {
+	push( @fifo, keys %{$parent{$d}} );
+    } else {
+	$leaves{$d} = 1;
+    }
+}
+
+
+printf( "%*s %5s %8s U C/G %10s JOB\n", $max, 'ID',
+	'DATE', 'TIME', 'IN_STATE' ) if $total > 0;
+
+sub count_deps($) {
+    my $jobid = shift;
+    if ( exists $dag{$jobid} ) {
+	@{$dag{$jobid}};
+    } else {
+	();
+    }
+}
+
+sub showdag($$) {
+    my $indented = shift || '';
+    my $dagid = shift;
+
+    showjob( $indented, %{$job{$dagid}} );
+    delete $seen{$dagid};
+
+    my @x = sort { $a <=> $b } @{$dag{$dagid}};
+    my $indent = ' ' x length($indented);
+    for ( my $j=0; $j<@x; ++$j ) {
+	my $xtra = ( $j == $#x ) ? '\-' : '|-';
+	if ( exists $dag{$x[$j]} ) {
+	    # it's a sub-DAG
+	    showdag( "$indent $xtra", $x[$j] );
+	} else {
+	    # it's a job
+	    showjob( "$indent $xtra", %{$job{$x[$j]}} );
+	}
+	delete $seen{$x[$j]};
+    }
+}
+
+foreach my $i ( sort { $a <=> $b } keys %leaves ) {
+    showdag( '', $i );
+}
+
+if ( $total > 0 ) {
+    my $f;
+    printf( "%d Condor-G job%s", $globus, ( $globus == 1 ? '' : 's' ) ) ;
+
+    $f = 0;
+    foreach my $g ( sort { $a <=> $b } keys %globus ) {
+	print( $f++ ? ' ' : ' (' );
+	printf "%s:%d", $gstat{$g}, $globus{$g};
+    }
+    print ')' if $f; 
+
+    printf( ", %d job%s total", $total, ( $total == 1 ? '' : 's' ) );
+    $f = 0;
+    foreach my $c ( sort { $a <=> $b } keys %condor ) {
+	print( $f++ ? ' ' : ' (' );
+	printf "%s:%d", $cstat[$c], $condor{$c};
+    }
+    print ')' if $f; 
+
+    print "\n";
+}
+warn "I am missing some jobs :=(\n" if ( scalar %seen );

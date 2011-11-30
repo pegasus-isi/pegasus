@@ -1,0 +1,30 @@
+#!/bin/bash
+
+set -e
+
+if [ "x$_NMI_STEP_FAILED" != "x" ]; then
+    echo "Previous step failed, exiting\n" >&2
+    exit 1
+fi
+
+TOP_DIR=`pwd`
+
+rm -rf build-results
+mkdir -p build-results
+cd build-results
+tar xzf ../results.tar.gz
+
+echo
+echo "Files in result set:"
+find . -type f -exec ls -l -h {} \;
+
+# use the worker package to figure out target version
+DOWNLOAD_SECTION=`ls pegasus-worker-*.tar.gz | head -n 1 | sed -r 's/pegasus-worker-([0-9]+\.[0-9]+)\..*/\1/'`
+TARGET_DIR=/lfs2/webspace/pegasus4/wms/download/$DOWNLOAD_SECTION/nightly/
+
+# upload to pegasus.isi.edu
+echo "Uploading to $TARGET_DIR"
+scp -r * nmibuild@pegasus.isi.edu:$TARGET_DIR 2>&1
+
+echo "Results uploaded!"
+

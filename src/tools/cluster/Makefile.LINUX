@@ -1,0 +1,52 @@
+# Filename: Makefile.LINUX
+
+# Version  Developer        Date     Change
+# -------  ---------------  -------  -----------------------
+# 1.1      Mei-Hui Su       20Sep04  Added into montage v3.0
+
+.SUFFIXES:
+.SUFFIXES: .c .o
+
+
+#ISI dc/condor
+MPICC_LSF     =  /cluster/mpich/mpich-1.2.5.3/bin/mpicc
+MPICC_CONDOR  =  /nfs/asd2/pegasus/software/linux/mpi/mpich-1.2.5-gt3.0.2/bin/mpicc
+#SDSC teragrid
+MPICC_PBS     =  /usr/local/apps/mpich-vmi-intel/bin/mpicc
+#UC teragrid
+#MPICC_PBS     =  /soft/mpich-gm-1.2.5..10-intel-r2/bin/mpicc
+#CALTECH teragrid
+#MPICC_PBS     =  /usr/local/mpich/mpich-gm-1.2.5..10-intel-r2/bin/mpicc
+#NCSA teragrid
+#MPICC_PBS     =  /usr/local/mpich/mpich-gm-1.2.5..10-intel-r2/bin/mpicc
+
+MPICC = $(MPICC_CONDOR)
+
+CC     =	cc -D_FILE_OFFSET_BITS=64
+CFLAGS =	-D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -D_LARGEFILE64_SOURCE -g -I. 
+LIBS   =	-static -lnsl -lm
+
+.c.o:
+		$(CC) $(CFLAGS)  -c  $*.c
+
+all:		seqexec
+
+seqexec:	seqexec.o mypopen.o
+		$(CC) -o seqexec seqexec.o mypopen.o $(LIBS)
+
+mpiexec: mpiexec.c mypopen.c mympi.c
+		$(MPICC) $(CFLAGS) -c -o mypopenMPI.o mypopen.c ;\
+		$(MPICC) $(CFLAGS) -c -o mympiMPI.o mympi.c ;\
+		$(MPICC) $(CFLAGS) -o mpiexec mpiexec.c mypopenMPI.o mympiMPI.o $(LIBS) -lpthread
+
+mpiexec.condor: mpiexec.c mypopen.c
+		$(MPICC_CONDOR) $(CFLAGS) -c -o mypopenMPI_condor.o mypopen.c ;\
+		$(MPICC_CONDOR) $(CFLAGS) -c -o mympiMPI_condor.o mympi.c ;\
+		$(MPICC_CONDOR) $(CFLAGS) -o mpiexec.condor mpiexec.c mypopenMPI_condor.o mympiMPI_condor.o $(LIBS) -lpthread
+
+
+install:
+		cp seqexec ../../bin
+
+clean:
+		rm -f seqexec mpiexec *.o

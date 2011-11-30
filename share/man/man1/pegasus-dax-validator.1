@@ -1,0 +1,87 @@
+.\"  Copyright 2010-2011 University Of Southern California
+.\"
+.\" Licensed under the Apache License, Version 2.0 (the "License");
+.\" you may not use this file except in compliance with the License.
+.\" You may obtain a copy of the License at
+.\"
+.\"  http://www.apache.org/licenses/LICENSE-2.0
+.\"
+.\"  Unless required by applicable law or agreed to in writing,
+.\"  software distributed under the License is distributed on an "AS IS" BASIS,
+.\"  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+.\"  See the License for the specific language governing permissions and
+.\" limitations under the License.
+.\" Southern California. All rights reserved.
+.\"
+.\" $Id$
+.\"
+.\" Authors: Jens-S. VÃ¶ckler
+.\"
+.TH "pegasus-dax-validator" "1" "3.1.0" "Pegasus WMS"
+.SH "NAME"
+pegasus\-dax\-validator \- determines if a given DAX file is valid. 
+.SH "SYNOPSIS"
+.B pegasus-dax-validator daxfile [verbose]
+.SH "DESCRIPTION"
+The
+.I pegasus-dax-validator
+is a simplistic application that determines, if a given DAX file is
+valid XML. For this, it parses the file with as many XML validity 
+checks that the Apache Xerces XML parser framework supports. 
+.SH "ARGUMENTS"
+.TP
+.B daxfile
+is the mandatory argument, the location of the file containing the DAX. 
+.TP
+.B verbose
+is an optional argument. If any kind of second argument was specified, 
+not limited to the string
+.IR verbose ,
+the verbose output mode is switched on. 
+.SH "RETURN VALUE"
+If the DAX was parsed successfully, or only 
+.I warnings 
+were issued, the
+exit code is 0. Any 
+.I error 
+or 
+.I fatal error 
+will result in an exit code of 1. 
+.PP
+Additionally, a summary statistics with counts of warnings, errors, and
+fatal errors will be displayed.
+.SH "EXAMPLE"
+The following shows the parsing of a DAX file that uses the wrong kind 
+of value for certain enumerations. The output shows the errors with the
+respective line number and column number of the input DAX file, so that
+one can find and fix them more easily. (The lines in the example were
+broken to fit the manpage format.)
+.PP
+.nf
+\f(CB
+$ pegasus-dax-validator bd.dax 
+ERROR in line 14, col 110: cvc-enumeration-valid: Value 'i386' is not
+ facet-valid with respect to enumeration '[x86, x86_64, ppc, ppc_64,
+ ia64, sparcv7, sparcv9, amd64]'. It must be a value from the
+ enumeration.
+ERROR in line 14, col 110: cvc-attribute.3: The value 'i386' of
+ attribute 'arch' on element 'executable' is not valid with respect to
+ its type, 'ArchitectureType'.
+ERROR in line 14, col 110: cvc-enumeration-valid: Value 'darwin' is
+ not facet-valid with respect to enumeration '[aix, sunos, linux, macosx,
+ windows]'. It must be a value from the enumeration.
+ERROR in line 14, col 110: cvc-attribute.3: The value 'darwin' of
+ attribute 'os' on element 'executable' is not valid with respect to
+ its type, 'OSType'.
+
+0 warnings, 4 errors, and 0 fatal errors detected.
+\fP
+.fi
+.SH "SEE ALSO"
+Apache Xerces-J
+.B http://xerces.apache.org/xerces2-j/
+.SH "AUTHORS"
+Jens-S. VÃ¶ckler <voeckler at isi dot edu>
+.PP
+Pegasus
+.B http://pegasus.isi.edu/

@@ -1,0 +1,53 @@
+#poolname	log. TR			physical transformation          environment String
+
+uofc	@USER@__hw_1.0	/home/voeckler/bin/keg	null
+uofc	globus-url-copy	/opt/globus/globus-2.4.0/bin/globus-url-copy GLOBUS_LOCATION=/opt/globus/globus-2.4.0;LD_LIBRARY_PATH=/opt/globus/globus-2.4.0/lib
+uofc	transfer	/home/voeckler/bin/transfer GLOBUS_LOCATION=/opt/globus/globus-2.4.0;LD_LIBRARY_PATH=/opt/globus/globus-2.4.0/lib
+
+ucngs	@USER@__hw_1.0	/home/voeckler/bin/keg	null
+ucngs	globus-url-copy	/opt/globus/globus-2.4.0/bin/globus-url-copy GLOBUS_LOCATION=/opt/globus/globus-2.4.0;LD_LIBRARY_PATH=/opt/globus/globus-2.4.0/lib
+ucngs	transfer	/home/voeckler/vdldemo/bin/transfer GLOBUS_LOCATION=/opt/globus/globus-2.4.0;LD_LIBRARY_PATH=/opt/globus/globus-2.4.0/lib
+
+uw	@USER@__hw_1.0	/u/v/o/voeckler/vdldemo/bin/keg	HOME=/u/v/o/voeckler
+uw	globus-url-copy	/scratch/vdt/bin/globus-url-copy GLOBUS_LOCATION=/scratch/vdt;LD_LIBRARY_PATH=/scratch/vdt/lib
+#uw	transfer	/u/v/o/voeckler/vdldemo/bin/transfer GLOBUS_LOCATION=/scratch/vdt;LD_LIBRARY_PATH=/scratch/vdt/lib
+
+uwm	@USER@__hw_1.0	/home/voeckler/bin/keg	null
+uwm	globus-url-copy	/opt/globus-location/bin/globus-url-copy GLOBUS_LOCATION=/opt/globus-location;LD_LIBRARY_PATH=/opt/globus-location/lib
+# uwm	transfer	/home/voeckler/vdldemo/bin/transfer GLOBUS_LOCATION=/opt/globus-location
+
+utb	@USER@__hw_1.0	/home/chicago/bin/keg	null
+utb	globus-url-copy	/vdt/bin/globus-url-copy GLOBUS_LOCATION=/vdt;LD_LIBRARY_PATH=/vdt/lib
+# utb	transfer	/home/chicago/vdldemo/bin/transfer GLOBUS_LOCATION=/opt/globus-location
+
+ufl	@USER@__hw_1.0	/users/voeckler/bin/keg	HOME=/users/voeckler
+ufl	globus-url-copy	/vdt/bin/globus-url-copy	GLOBUS_LOCATION=/vdt;LD_LIBRARY_PATH=/vdt/lib
+#ufl	transfer	/users/voeckler/vdldemo/bin/transfer GLOBUS_LOCATION=/vdt
+gfl	@USER@__hw_1.0	/users/voeckler/bin/keg	HOME=/users/voeckler
+gfl	globus-url-copy	/usr/local/vdt/bin/globus-url-copy  GLOBUS_LOCATION=/usr/local/vdt;LD_LIBRARY_PATH=/usr/local/vdt/lib
+#gfl	transfer	/users/voeckler/vdldemo/bin/transfer GLOBUS_LOCATION=/usr/local/vdt
+ufeng	@USER@__hw_1.0	/home/ivdgl/bin/keg	null
+ufeng	globus-url-copy	/usr/drives/hcs_ufl4/linux_local/vdt-1.1.4/bin/globus-url-copy	GLOBUS_LOCATION=/usr/drives/hcs_ufl4/linux_local/vdt-1.1.4;LD_LIBRARY_PATH=/usr/drives/hcs_ufl4/linux_local/vdt-1.1.4/lib
+#ufeng	transfer	/home/ivdgl/vdldemo/bin/transfer GLOBUS_LOCATION=/usr/drives/hcs_ufl4/linux_local/vdt-1.1.4;LD_LIBRARY_PATH=/usr/drives/hcs_ufl4/linux_local/vdt-1.1.4/lib
+
+anl	@USER@__hw_1.0	/homes/voeckler/bin/keg	HOME=/homes/voeckler
+anl	globus-url-copy	/sandbox/globus/globus-2.4.0/bin/globus-url-copy GLOBUS_LOCATION=/sandbox/globus/globus-2.4.0;LD_LIBRARY_PATH=/sandbox/globus/globus-2.4.0/lib
+anl	transfer	/homes/voeckler/bin/transfer GLOBUS_LOCATION=/sandbox/globus/globus-2.4.0;LD_LIBRARY_PATH=/sandbox/globus/globus-2.4.0/lib
+
+dgc	@USER@__hw_1.0	/homes/voeckler/bin/keg	null
+dgc	globus-url-copy	/soft/pub/packages/globus/globus-current/bin/globus-url-copy GLOBUS_LOCATION=/soft/pub/packages/globus/globus-current;LD_LIBRARY_PATH=/soft/pub/packages/globus/globus-current/lib
+# dgc	transfer	/home/voeckler/bin/transfer	GLOBUS_LOCATION=/soft/pub/packages/globus/globus-current;LD_LIBRARY_PATH=/soft/pub/package
+
+dgc2	@USER@__hw_1.0	/homes/voeckler/bin/keg	null
+dgc2	globus-url-copy	/opt/globus-2.4.0/bin/globus-url-copy GLOBUS_LOCATION=/opt/globus-2.4.0;LD_LIBRARY_PATH=/opt/globus-2.4.0/lib
+# dgc2	transfer	/homes/voeckler/bin/transfer	GLOBUS_LOCATION=/opt/globus-2.4.0;LD_LIBRARY_PATH=/opt/globus-2.4.0/lib
+
+dsl	@USER@__hw_1.0	/home/voeckler/bin/keg	HOME=/home/voeckler
+dsl	globus-url-copy	/opt/globus/globus-2.4.0/bin/globus-url-copy GLOBUS_LOCATION=/opt/globus/globus-2.4.0;LD_LIBRARY_PATH=/opt/globus/globus-2.4.0/lib
+dsl	transfer	/home/voeckler/bin/transfer GLOBUS_LOCATION=/opt/globus/globus-2.4.0;LD_LIBRARY_PATH=/opt/globus/globus-2.4.0/lib
+
+
+local	RLS_Client	@VDS@/bin/rls-client JAVA_HOME=@JAVA@;VDS_HOME=@VDS@;CLASSPATH=@VDS@/lib/gvds.jar:@VDS@/lib/rls.jar:@VDS@/lib/java-getopt-1.0.9.jar;GLOBUS_LOCATION=@GL@;LD_LIBRARY_PATH=@GL@/lib
+local	GriphynRC	@VDS@/bin/replica-catalog JAVA_HOME=@JAVA@;VDS_HOME=@VDS@;CLASSPATH=@VDS@/lib/gvds.jar:@VDS@/lib/g2rc.jar:@VDS@/lib/java-getopt-1.0.9.jar
+local	globus-url-copy	@GL@/bin/globus-url-copy GLOBUS_LOCATION=@GL@;LD_LIBRARY_PATH=@GL@/lib
+local	transfer	@VDS@/bin/transfer GLOBUS_LOCATION=@GL@;LD_LIBRARY_PATH=@GL@/lib

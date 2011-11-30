@@ -1,0 +1,50 @@
+#!/usr/bin/env perl
+
+use strict;
+
+
+# platforms with special needs
+my $lite = 0;
+if ( $ENV{NMI_PLATFORM} =~ /rhas_4/ ) {
+    $lite = 1;
+}
+my $wms = 1;
+if ( $ENV{NMI_PLATFORM} =~ /deb_5/ or $ENV{NMI_PLATFORM} =~ /rhap_6/ ) {
+    $wms = 0;
+}
+
+open( LIST, ">tasklist.nmi" ) || die "Can't open tasklist.nmi: $!\n";
+
+# builds
+if ( ! $lite ) {
+    print LIST "build-binary\n";
+    if ( $wms ) {
+        print LIST "build-wms\n";
+    }
+}
+print LIST "build-worker\n";
+
+# clean
+print LIST "clean-sources\n";
+
+# rpms/ debs
+if ( ! $lite ) {
+    if ($ENV{NMI_PLATFORM} =~ /deb/ || $ENV{NMI_PLATFORM} =~ /ubuntu/) {
+        print LIST "build-deb\n";
+    }
+    if ($ENV{NMI_PLATFORM} =~ /rhas/ || $ENV{NMI_PLATFORM} =~ /rhap/) {
+        print LIST "build-rpm\n";
+    }
+}
+
+# tests
+if ( ! $lite ) {
+    print LIST "test-binary\n";
+    if ( $wms ) {
+        print LIST "test-wms\n";
+    }
+}
+print LIST "test-worker\n";
+
+close( LIST );
+

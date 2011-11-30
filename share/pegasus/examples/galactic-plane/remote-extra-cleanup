@@ -1,0 +1,12 @@
+#!/bin/bash
+
+set -e
+
+TILE_ID=$1
+. $TILE_ID.params
+
+START_DIR=`pwd`
+
+rm -rf tile-setup/$TILE_ID
+rm -rf $TILE_ID
+

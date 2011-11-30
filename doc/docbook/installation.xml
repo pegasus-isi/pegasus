@@ -1,0 +1,316 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+"http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<chapter id="installation">
+  <title>Installation</title>
+
+  <section id="prereqs">
+    <title>Prerequisites</title>
+
+    <para>Pegasus has a few dependencies:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para><emphasis role="bold">Java 1.6 or higher</emphasis>. Check
+        with:</para>
+
+        <para><programlisting>$ <emphasis>java -version</emphasis>
+java version "1.6.0_07"
+Java(TM) 2 Runtime Environment, Standard Edition (build 1.6.0_07-164)
+Java HotSpot(TM) Client VM (build 1.6.0_07-87, mixed mode, sharing)</programlisting></para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis role="bold">Python 2.4 or higher</emphasis>. Check
+        with:</para>
+
+        <para><programlisting>$ <emphasis>python -v</emphasis>
+Python 2.6.2</programlisting></para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis role="bold">Condor 7.4 or higher</emphasis>. See
+        h<ulink
+        url="ttp://www.cs.wisc.edu/condor/">ttp://www.cs.wisc.edu/condor/</ulink>
+        for more information. You should be able to run
+        <filename>condor_q</filename> and
+        <filename>condor_status</filename>.</para>
+      </listitem>
+    </itemizedlist>
+  </section>
+
+  <section id="optional">
+    <title>Optional Software</title>
+
+    <itemizedlist>
+      <listitem>
+        <para><emphasis role="bold">Globus 4.0 or higher</emphasis>. Globus is
+        only needed if you want to run against grid sites or use GridFTP for
+        data transfers. See <ulink
+        url="http://www.globus.org/">http://www.globus.org/</ulink> for more
+        information. Check Globus Installation</para>
+
+        <programlisting>$ <emphasis>echo $GLOBUS_LOCATION</emphasis>
+/path/to/globus/install</programlisting>
+
+        <para>Make sure you source the Globus environment</para>
+
+        <para><programlisting>$<emphasis> GLOBUS_LOCATION/etc/globus-user-env.sh</emphasis></programlisting></para>
+
+        <para>Check the setup by running:</para>
+
+        <para><programlisting>$<emphasis> globus-version</emphasis>
+5.0.1</programlisting></para>
+      </listitem>
+    </itemizedlist>
+  </section>
+
+  <section id="env">
+    <title>Environment</title>
+
+    <para>To use Pegasus, add the bin/ directory to your PATH.</para>
+
+    <programlisting>  Example for bourne shells:
+
+    $ <emphasis role="bold">export PATH=/some/install/pegasus-3.0.0/bin:$PATH</emphasis></programlisting>
+
+    <note>
+      <para>Pegasus 3.0 is different from previous versions of Pegasus in that
+      it does not require PEGASUS_HOME to be set or sourcing of any
+      environtment setup scripts.</para>
+    </note>
+  </section>
+
+  <section id="native_packages">
+    <title>Native Packages (RPM/DEB)</title>
+
+    <para>The preferred way to install Pegasus is with native (RPM/DEB)
+    packages. Using this package, Pegasus is installed into
+    <filename>/opt/pegasus/{major_version}.{minor_version}</filename>, and the
+    packages have {major_version}.{minor_version} in the package name. This
+    allows for multiple installed Pegasus versions installed. For example, if
+    you installed Pegasus 2.4.3 and 3.0.0, you will have: with:</para>
+
+    <programlisting>/opt/pegasus/2.4/
+/opt/pegasus/3.0/</programlisting>
+
+    <section id="rhel5">
+      <title>RHEL 5 / CentOS 5 / Scientific Linux 5</title>
+
+      <para>Add the Pegasus repository to yum by creating a file named
+      <emphasis role="bold">
+      <filename>/etc/yum.repos.d/pegasus.repo</filename></emphasis> with the
+      content:</para>
+
+      <programlisting># Pegasus 3.2
+[Pegasus32]
+name=Pegasus32
+baseurl=http://pegasus.isi.edu/wms/download/3.2/yum/rhel/$releasever/$basearch/
+gpgcheck=0
+enabled=1</programlisting>
+
+      <para>Search for, and install Pegasus:</para>
+
+      <programlisting># <emphasis role="bold">yum search pegasus</emphasis>
+pegasus-3.0 : Pegasus Workflow Management System
+# <emphasis role="bold">yum install pegasus</emphasis>
+Running Transaction
+Installing     : pegasus-3.0 
+
+Installed:
+pegasus-3.0 :3.0.0-1                                                                                                                        
+
+Complete!</programlisting>
+    </section>
+
+    <section id="deb5">
+      <title>Debian 5 (Lenny)</title>
+
+      <para>To be able to install and upgrade from the Pegasus <emphasis
+      role="bold">APT</emphasis> repository, you will have to trust the
+      repository key. You only need to add the repository key once.</para>
+
+      <programlisting># <emphasis role="bold">gpg --keyserver keyring.debian.org --recv-keys 81C2A4AC</emphasis>
+# <emphasis role="bold">gpg -a --export 81C2A4AC | apt-key add -</emphasis>  </programlisting>
+
+      <para>Add the Pegasus apt repository to your
+      <filename>/etc/apt/sources.list</filename> file:</para>
+
+      <programlisting>deb http://pegasus.isi.edu/wms/download/3.0/apt/debian lenny main</programlisting>
+
+      <para>Install Pegasus with <emphasis role="bold">apt-get
+      :</emphasis></para>
+
+      <programlisting># <emphasis role="bold">apt-get update</emphasis>
+...
+# <emphasis role="bold">apt-get install pegasus-3.0</emphasis></programlisting>
+    </section>
+  </section>
+
+  <section id="tarballs">
+    <title>Pegasus from Tarballs</title>
+
+    <para>The Pegaus prebuild tarballs can be downloaded from the <ulink
+    url="http://pegasus.isi.edu/wms/downloads"><emphasis>Pegasus Download
+    Page</emphasis></ulink>.</para>
+
+    <section>
+      <title id="tarballs_plain">Tarball without Condor</title>
+
+      <para>Use these tarballs if you already have Condor installed or prefer
+      to keep the Condor installation separate from the Pegasus
+      installation.</para>
+
+      <itemizedlist>
+        <listitem>
+          <para>Untar the tarball</para>
+
+          <para><programlisting>$ tar zxf pegasus-*.tar.gz</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>include the Pegasus bin directory in your PATH</para>
+
+          <para><programlisting>$ export PATH=/path/to/pegasus-3.0.0:$PATH</programlisting></para>
+        </listitem>
+      </itemizedlist>
+    </section>
+
+    <section id="tarball_condor">
+      <title>Tarball with Included Condor</title>
+
+      <para>For convenience, there is Pegasus WMS tarballs which has Condor
+      included. This way you can install Pegasus and Condor at the same time,
+      with just minor configuration to get up and running.</para>
+
+      <itemizedlist>
+        <listitem>
+          <para>Untar the tarball</para>
+
+          <para><programlisting>$ tar zxf pegasus-wms-*.tar.gz</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>Edit the Condor Configuration file. The configuration file is
+          currently configured to run only as a submit side (Runs schedd)
+          supporting schedule, local and grid universe. If you want to use it
+          for gt4, lsf, pbs or condor-c additional configuration changes may
+          be required. Please check the Condor Manual for appropriate
+          parameters.</para>
+
+          <para>2 parameters need to change at this point. Change <emphasis
+          role="bold">!!PEGASUS_HOME!!</emphasis> to the actual path where
+          PEGASUS_WMS is installed and <emphasis role="bold">CHANGE
+          !!USER!!</emphasis> to the user who will receive email in case of
+          error. (This can be just your username )</para>
+
+          <para><programlisting>$ vim $PEGASUS_HOME/etc/condor_config
+
+
+RELEASE_DIR = !!PEGASUS_HOME!!    # CHANGE THIS TO PATH OF PEGASUS_WMS INSTALLATION
+WILL GET EMAIL IN CASE OF ERROR.</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>Set up the environment:</para>
+
+          <para><programlisting>$ export PATH=PEGASUS_HOME/bin:PEGASUS_HOME/condor/bin:$PATH
+$ export CONDOR_CONFIG=PEGASUS_HOME/etc/condor_config</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>Start Condor by running ./sbin/condor_master</para>
+
+          <para><programlisting>$ ./sbin/condor_master</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>Verify that Condor is up by running the <emphasis
+          role="bold">condor-q</emphasis> command</para>
+
+          <para><programlisting>$ condor_q
+
+-- Submitter: gmehta@smarty.isi.edu : &lt;128.9.72.26:60126&gt; : smarty.isi.edu
+ ID      OWNER            SUBMITTED     RUN_TIME ST PRI SIZE CMD               
+
+0 jobs; 0 idle, 0 running, 0 held</programlisting></para>
+        </listitem>
+      </itemizedlist>
+    </section>
+  </section>
+
+  <section id="basic_configuration">
+    <title>Basic Configuration Control</title>
+
+    <para>Basic system configuration is controlled through the properties
+    settings selected for Pegasus Planner, Pegasus Home, and Catalogs.</para>
+
+    <note>
+      Values rely on proper capitalization, unless explicitly noted otherwise.
+    </note>
+
+    <itemizedlist>
+      <listitem>
+        <para>Some default property values depend on the value of other
+        properties.</para>
+      </listitem>
+
+      <listitem>
+        <para>Curly braces refer to the value of the named property. For
+        instance,<emphasis role="bold">${pegasus.home}</emphasis> means that
+        the value depends on the value of the pegasus.home property plus any
+        noted additions. You can use this notation to refer to other
+        properties, though the extent of the subsitutions are limited.
+        Usually, you want to refer to a set of the standard system
+        properties.</para>
+      </listitem>
+
+      <listitem>
+        <para>Nesting is not allowed.</para>
+      </listitem>
+
+      <listitem>
+        <para>Substitutions shall only be done once.</para>
+      </listitem>
+
+      <listitem>
+        <para>There is a priority to the order of reading and evaluating
+        properties. Usually there is no need to worry about the priorities.
+        However, it is good to know the details of when which property
+        applies, and how one property is able to overwrite another.</para>
+      </listitem>
+
+      <listitem>
+        <para>Property definitions in the system property file, usually found
+        in <emphasis
+        role="bold">${pegasus.home.sysconfdir}/properties</emphasis> , have
+        the lowest priority. These properties are expected to be set up by the
+        submit host's administrator.</para>
+      </listitem>
+
+      <listitem>
+        <para>The properties defined in the user property file <emphasis
+        role="bold">${user.home}/.pegasusrc</emphasis> have higher priority.
+        These can overwrite settings found in the system's properties.</para>
+      </listitem>
+
+      <listitem>
+        <para>Commandline properties have the highest priority. Each
+        commandline property is introduced by a <emphasis
+        role="bold">-D</emphasis> argument.</para>
+      </listitem>
+    </itemizedlist>
+
+    <note>
+      These arguments are parsed by the shell wrapper, and thus the 
+
+      <emphasis role="bold">-D</emphasis>
+
+       arguments must be the first arguments to any command. Commandline properties are useful for debugging purposes. 
+    </note>
+
+    <para>For more details see the <emphasis role="bold">Basic
+    Properties</emphasis> section of the <link
+    linkend="running_workflows">Running Workflows</link> chapter</para>
+  </section>
+</chapter>

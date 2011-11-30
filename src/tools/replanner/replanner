@@ -1,0 +1,187 @@
+#!/usr/bin/env perl
+#
+# replanner - use cplan output, and change around the .sub files
+#
+require 5.005;
+use strict;
+use Getopt::Std;
+use File::Spec;
+use File::Basename;
+
+if ( @ARGV == 0 || $ARGV[0] eq '-?' || $ARGV[0] eq '--help' ) {
+    print "Usage: $0 [-p pool.config] -d plandir\n";
+    exit 0;
+}
+
+my %opts;
+getopt( 'd:p:', \%opts );
+
+unless ( exists $opts{d} ) {
+    print "Error!\n";
+    print "I must know about a directory where the .sub files reside.\n";
+    exit(1);
+}
+
+unless ( exists $opts{p} ) {
+    if ( length($ENV{'PEGASUS_HOME'}) > 0 ) {
+	$opts{p} = File::Spec->catfile($ENV{'PEGASUS_HOME'},'etc','pool.config');
+    } else {
+	print "Error!\n";
+	print "I must know about a position of a valid pool.config file.\n";
+	exit(1);
+    }
+}
+
+my @dagfn = glob("$opts{d}/*.dag");
+if ( @dagfn > 1 ) {
+    print "Error!\n";
+    print "There are multiple .dag files in the $opts{d} directory.\n";
+    exit 1;
+} elsif ( @dagfn < 1 ) {
+    print "Error!\n";
+    print "There is not .dag file in the $opts{d} directory.\n";
+    exit 1;
+}
+my $dagfn = basename($dagfn[0],'.dag');
+print STDERR "# basename of DAG file is \"$dagfn\"\n";
+
+# slurp pool config
+my $comment = '#.*$'; # ' 
+my (%pool,%jm);
+if ( open( IN, "<$opts{p}" ) ) {
+    print STDERR "# reading pool.config file $opts{p}\n";
+    while (<IN>) {
+	s/[\r\n]*$//;
+	s/$comment//;
+	next unless length($_) > 1;
+	my @column = split(/\s+/,$_,6);
+	$pool{$column[0]}{lc($column[1])} = [ @column[2..5] ];
+	$jm{lc($column[2])}{lc($column[1])} = $column[0];
+    }
+    close(IN);
+} else {
+    die "ropen $opts{p}: $!\n";
+}
+
+foreach my $fn ( glob("$opts{d}/*.sub") ) {
+    if ( open( IN, "<$fn" ) ) {
+	print STDERR "<<< processing $fn\n";
+
+	# guess at grid id of job
+	my $outfn = substr($fn,0,rindex($fn,'.'));
+	$outfn = basename($outfn) unless ( substr($outfn,0,1) eq '/' );
+	my $gridid = "null";
+	$gridid = $1 if ( $outfn =~ /_(ID\d+)/ );
+	my $errfn = $outfn . '.err';
+	$outfn .= '.out';
+
+	# input
+	my (@lines,%lines,$save,$flag,$universe,$handle);
+	while ( <IN> ) {
+	    s/[\r\n]*$//;
+	    # weed out special errors
+	    next if ( /^\s*Error\s*=\s*(.*)/i && index($1,$dagfn) >= 0 );
+	    push( @lines, $_ );
+	    s/$comment//;
+	    next unless length($_) > 1;
+	    $lines{lc($1)}=$2 if /\s*(\S+)\s*=\s*(.*)/;
+	}
+	close(IN);
+
+	# obtain universe
+	$universe = 'vanilla';
+	$universe = lc($lines{universe}) if exists $lines{universe};
+	print STDERR "## initial universe = $universe\n"
+	    if $main::DEBUG;
+
+	# guess at pool handle
+	if ( $universe eq 'globus' ) {
+	    $_ = $lines{globusrsl};
+	    $universe = ( /jobType=condor/i ) ? 'standard' : 'vanilla';
+	    $_ = $lines{executable};
+	    $universe = 'transfer' if ( /gsincftp/i && $universe eq 'vanilla' );
+	    my $jm = lc($lines{globusscheduler});
+	    $handle = $jm{$jm}{$universe};
+	    if ( length($handle) == 0 ) {
+		if ( exists $jm{$jm}{globus} ) {
+		    $universe = 'globus';
+		    $handle = $jm{$jm}{$universe};
+		} else {
+		    warn "unable to determine pool handle\n";
+		    next;
+		}
+	    }
+	} else {
+	    $handle = 'local';
+	}
+
+	# obtain kickstart location (and opt. args) from pool file
+	my ($kickstart,$remainder) = split(/\s+/,$pool{$handle}{$universe}[3],2);
+	if ( length($kickstart) == 0 || lc($kickstart) eq 'null' ) {
+	    print STDERR "gridstart empty or not found for ($handle,$universe), skipping $fn\n";
+	    next;
+	}
+	print STDERR "# $handle:$universe => $kickstart $remainder\n";
+
+	# change stdio files
+	$remainder .= " -i $lines{input}" if ( exists $lines{input} );
+	$remainder .= " -o $lines{output}" if ( exists $lines{output} && index($lines{output},$dagfn) == -1 );
+	$remainder .= " -e $lines{error}" if ( exists $lines{error} && index($lines{output},$dagfn) == -1 );
+	$remainder .= " -n $gridid" if ( length($gridid) && $gridid ne 'null' );
+
+	# real processing
+	for ( my $i=0; $i < @lines; ++$i ) {
+	    if ( $lines[$i] =~ /^Executable/i ) {
+		$save = $lines{executable};
+		$lines[$i] = "Executable\t= $kickstart";
+		$flag |= 1;
+	    } elsif ( $lines[$i] =~ /^Arguments/i ) {
+		$lines[$i] = "Arguments\t=$remainder $save $lines{arguments}";
+		$flag |= 2;
+	    } elsif ( $lines[$i] =~ /^Input/i ) {
+		$lines[$i] = "Input \t= /dev/null";
+	    } elsif ( $lines[$i] =~ /^Output/i ) {
+		$lines[$i] = "Output\t= $outfn";
+		$flag |= 4;
+	    } elsif ( $lines[$i] =~ /^Error/i ) {
+		$lines[$i] = "Error \t= $errfn";
+		$flag |= 8;
+	    }
+	}
+
+	# post-processing (cmd w/o arguments)
+	if ( ($flag & 2) == 0 ) {
+	    splice(@lines,1,0,"Arguments\t=$remainder $save");
+	    $flag |= 2;
+	}
+
+	# we need to capture the output - always
+	if ( ($flag & 4) == 0 ) {
+	    splice(@lines,1,0,"Output\t= $outfn");
+	    $flag |= 4;
+	}
+
+	# we should add the error capture just in case
+	if ( ($flag & 8) == 0 ) {
+	    splice(@lines,1,0,"Error \t= $errfn");
+	    $flag |= 8;
+	}
+
+	# output
+	if ( ($flag & 7) == 7 ) {
+	    rename($fn,"$fn.bak");
+	    if ( open( OUT, ">$fn" ) ) {
+		print OUT join("\n",@lines);
+		close(OUT);
+	    } else {
+		warn "wopen $fn: $!\n";
+	    }
+	} else {
+	    warn "incomplete submit file $fn!\n";
+	}
+
+	print STDERR ">>> done with $fn\n";
+    } else {
+	warn "ropen $fn: $!\n";
+    }
+}

@@ -1,0 +1,330 @@
+#!/usr/bin/env perl
+#
+# Parses $PEGASUS_HOME/etc/basic.properties and generated docbook from it
+# $Id$
+#
+# Usage: docbook-sample-props [basic.properties] > properties.xml
+#
+# The following markup is required to be adhered to:
+#
+# 1. Any new section starts like this:
+#
+# #
+# # SECTION "ALL CAPS TITLE IN QUOTES"
+# #
+#
+# Three comment-marked lines, the reserved word SECTION (all caps), 
+# and the section's title inside quotes. Use all caps for the title.
+# It will be word-wise de-capped into the LaTeX document.
+#
+# #
+# # SUBSECTION "ALL CAPS SUBTITLE IN QUOTES"
+# #
+#
+# See above, except that a sub-section will be generated.
+#
+# 2. Item format
+#
+# Any item starts out with the key "Property: some.prop", followed
+# by other such tabular keywords, colon, and their respective values. 
+# The following keywords are approved, parsed, and may have special
+# meaning:
+# 
+#    Systems     the subsystem this applies to, e.g. Pegasus, Chimera
+#    Type        a symbolic description of the type the prop can have
+#    Value[X]    For enumeration types, the possible values 1 <= X <= N
+#    Default     value assumed in absence of property
+#    See also    Cross reference to other props, repeat as necessary!
+#    Example     Sample for complex properties
+#    Moved to    Cross references the new name of a property (deprecated)
+#    New Name    Cross references the new name of a property (preferred)
+#
+# After the initial table comes the description. Please use paragraphs
+# (empty comment lines) as necessary. 
+#
+# The final section in any item is always the property followed by its
+# default value in a paragraph of its own. It is followed by an empty (!)
+# line without comment. This final section is skipped in the output. 
+#
+# 3. The following markup is permitted inside sample.properties:
+#
+# as is verbatim <screen></screen>
+# visual markup  <emphasis></emphasis>
+# numbered list  <orderedlist><listitem></listitem></orderedlist>
+# bullet list    <itemizedlist><listitem></listitem></itemizedlist>
+# definitions    <variablelist><term></term><listitem></listitem></variablelist>
+# 2-column table <tb2> & </te></tb2>
+# 3-column table <tb3> & & </te></tb3>
+#
+#
+
+use 5.006;
+use strict;
+use File::Spec;
+use File::Temp qw(tempfile);
+use POSIX qw(strftime);
+
+die "Set your PEGASUS_HOME environment variable\n" 
+    unless exists $ENV{'PEGASUS_HOME'};
+my $fn = shift || 
+    File::Spec->catfile( $ENV{'PEGASUS_HOME'}, 'etc', 'sample.properties' );
+
+my %replace = ( 'tb2' => "<informaltable frame='none'><tgroup cols='2' align='left' colsep='1' rowsep='1'><tbody><row><entry>\n"
+              , '/tb2' => "</entry></row></tbody></tgroup></informaltable>\n"
+              , 'tb3' => "<informaltable frame='none'><tgroup cols='3' align='left' colsep='1' rowsep='1'><tbody><row><entry>\n"
+              , '/tb3' => "</entry></row></tbody></tgroup></informaltable>\n"
+              , '/te' => "</entry></row><row><entry>\n" );
+
+# we only need to escape the basic three, ignoring quot and apos
+my %escape = ( '&' => '&amp;', '<' => '&lt;', '>' => '&gt;' );
+my $rx_escape = '([' . join('',keys %escape) . '])';
+
+# but on the reverse track, we need to do the right thing.
+my %unescape = ( 'amp' => '&', 'lt' => '<', 'gt' => '>',
+                 'quot' => '"', 'apos' => "'" );
+my $rx_unescape = '&(' . join('|',keys %unescape) . ');';
+
+
+sub lookup($) {
+    my $key = shift;
+    exists $replace{$key} ? $replace{$key} : "<$key>";
+}
+
+sub escape($) {
+    # purpose: XML escape an arbitrary sentence (imperfect)
+    # paramtr: $x (IN): some raw string
+    # returns: cooked string
+    local $_ = shift;
+
+    # are we inside a screen?
+    $main::inpre=1 if m{<screen>};
+    $main::inpre=0 if m{</screen>};
+
+    # replace only known <TAG> items with Docbook formatting.
+    # unknown "TAG" strings are copied verbatim.
+    s/<([^>]+)>/lookup($1)/eg;
+    s{&}{</entry><entry>}g;
+
+    # special escape for 1-line verbatims -- only do once per line
+    #s{<pre>(.*?)</pre>}{<tt>$1</tt>}; 
+
+    # done
+    $_;
+}
+
+sub trim($) {
+    # purpose: Trims redundant whitespace from head and tail of a string
+    # paramtr: $x (IN): some raw string
+    # returns: trimmed string, may be identical to argument, or even empty. 
+    local $_ = shift;
+    s/^\s+//;
+    s/\s+$//;
+    $_;
+}
+
+my $__flag = 0;
+sub regular($) {
+    my $p = shift;
+    if ( length($p) > 1 ) {
+        $__flag = 0;
+        print "$p\n";
+    } else {
+        print "</para>\n\n<para>" unless ( $__flag || $main::inpre );
+        $__flag = 1;
+    }
+}
+
+#
+# --- main ---
+#
+my $tmp = $ENV{'MY_TMP'} ||     # Wei likes MY_TMP, so try that first
+    $ENV{TMP} ||                # standard
+    $ENV{TEMP} ||               # windows standard
+    $ENV{TMPDIR} ||             # also somewhat used
+    File::Spec->tmpdir() ||     # OK, this gets used if all above fail
+    '/tmp';                     # last resort
+
+my ($tmpfh,$tmpfn) = tempfile( 'tmp-XXXXXX', DIR => $tmp, UNLINK => 1 );
+die "FATAL: Unable to create files in $tmp\n" unless defined $tmpfh;
+warn "# toc into $tmpfn\n";
+
+# open file (and fail) before printing docbook preambles
+$/ = '';                        # activate paragraph mode
+open( SP, '<' . $fn ) || die "open $fn: $!\n";
+
+
+#
+# print DOCBOOK preamble -- do not interpolate anything here
+#
+my $now = POSIX::strftime("%Y-%m-%d %H:%M", localtime());
+print << "EOF";
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE section PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+"http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+
+EOF
+
+select $tmpfh;			# write all regular prints to tmpfh
+
+my %index = ();
+my (@line,%line,$k,$v,$i);
+my $depth = 0;
+my @count = ( 0, 0, 0 ); # section, subsection, subsubsection
+my $idbase = "";
+while ( <SP> ) {
+    if ( /^\# Property : (.*)/ ) {
+        my $title = $1;
+        my $secmark = undef;
+        if ( $depth == 2 ) {
+            $count[2]++;
+            $secmark = join('.',@count[0,1,2]);
+            print "\n\n\n<section id=\"$idbase$title\">\n";
+            print "    <title>$title</title>\n";
+            print "<para>\n";
+        } else {
+            $count[1]++;
+            $count[2] = 0;
+            $secmark = join('.',@count[0,1]);
+            print "\n\n\n<section id=\"$idbase$title\">\n";
+            print "    <title>$title</title>\n";
+            print "<para>\n";
+        }
+
+        $index{$title} = defined $secmark ? $secmark : 42;
+        print "\n";
+
+        # break paragraph into lines, and remove comment+space
+        @line = map { trim($_) } map { substr($_,2) } split /[\r\n]/;
+
+        # rip first section
+        %line = ();
+        print "<informaltable frame='none'>\n";
+        print "<tgroup cols='2' align='left' colsep='1' rowsep='1'>\n";
+        print "<tbody>\n";
+        for ( $i=0; $i<@line; ++$i ) {
+            # exit at first empty line
+            last if length($line[$i]) < 1;
+            ($k,$v) = map { escape($_) } split( /\s+:\s+/, $line[$i], 2 );
+            $line{$k} = $v;
+            if ( $k eq 'Property' ) {
+                # ignore - this is already the subsection
+            } elsif ( $k =~ /moved?\s*to/i || $k =~ /see\s*also/i ||
+                $k =~ /new\s*name/i ) {
+                # generate cross reference
+                $k = "New name" if $k =~ /moved?\s*to/i; 
+                print "<row><entry>$k:</entry>";
+                print "<entry>$v</entry></row>\n";
+            } else {
+                # default action
+                print "<row><entry>$k:</entry>";
+                print "<entry>$v</entry></row>\n";
+            }
+        }
+        print "</tbody>\n";
+        print "</tgroup>\n";
+        print "</informaltable>\n"; 
+        print "</para>\n\n"; 
+
+        # print everything but last paragraph
+        print "<para>";
+        for ( ; $i < @line - 2; ++$i ) {
+            regular( escape($line[$i]) );
+        }
+        print "</para>\n\n";
+                    
+        print "\n</section><!-- end section -->\n";
+
+    } elsif ( /\# (SECTION|SUBSECTION|TITLE)/ ) {
+        @line = map { trim($_) } map { substr($_,2) } split /[\r\n]/;
+        my $flag = undef;
+        for ( $i=0; $i<@line; ++$i ) {
+            last if ( length($line[$i]) <= 1 && $flag );
+            if ( $line[$i] =~ /^SECTION "([^\"]+)"/ ) {
+                if ($depth >= 2) {
+                    print "\n</section><!-- end subsection -->\n";
+                }
+                if ($depth >= 1) {
+                    print "\n</section><!-- end section -->\n";
+                }
+                my @title = map { ucfirst lc } split /\s+/,$1;
+                $count[0]++;
+                $count[1] = $count[2] = 0;
+                my $title = join('',@title);
+                print "\n\n\n<section id=\"$idbase$title\">\n";
+                print "    <title>@title</title>\n\n";
+
+                $flag = 1;
+                $depth = 1;
+            } elsif ( $line[$i] =~ /^SUBSECTION "([^\"]+)"/ ) {
+                if ($depth >= 2) {
+                    print "\n</section><!-- end subsection -->\n";
+                }
+                my @title = map { ucfirst lc } split /\s+/,$1;
+                my $title = join('',@title);
+                $count[1]++;
+                $count[2] = 0;
+                my $mark = join('.',@count[0,1]);
+                print "\n\n\n<section id=\"$idbase$title\">\n";
+                print "    <title>@title</title>\n\n";
+                $flag = 1;
+                $depth = 2;
+            } elsif ( $line[$i] =~ /^TITLE "([^\"]+)"/ ) {
+                my @title = map { ucfirst lc } split /\s+/,$1;
+                my $title = join('',@title);
+                print "<section id='$title'>\n";
+                print "    <title>@title</title>\n\n";
+                $idbase = $title; # used for unique ids across the book
+                $flag = 1;
+                $depth = 0;
+            }
+        }
+
+        print "<para>";
+        for ( ; $i<@line; ++$i ) {
+            regular( escape($line[$i]) );
+        }
+        print "</para>\n\n"; 
+
+    } elsif ( /^\#/ ) {
+        warn "Warning: $.: Found regular textual paragraph, copying\n";
+        warn "<<<$_>>>\n";
+
+        print "<para>";
+        @line = map { trim($_) } map { substr($_,2) } split /[\r\n]/;
+        for ( $i=0; $i<@line; ++$i ) {
+            regular( escape($line[$i]) );
+        }
+        print "</para>\n\n"; 
+
+    } else {
+        warn "Warning: $.: Found uncommented paragraph, ignoring\n";
+        warn "<<<$_>>>\n";
+    }
+}
+close SP;
+
+select STDOUT;
+$/="\n";
+seek( $tmpfh, 0, 0 ) || die "FATAL: seek $tmpfn: $!\n";
+while ( <$tmpfh> ) {
+    print STDOUT $_ ;
+}
+close $tmpfh;
+unlink $tmpfn if -e $tmpfn;
+                
+if ($depth >= 2) {
+    print "\n</section><!-- end subsection -->\n";
+}
+if ($depth >= 1) {
+    print "\n</section><!-- end section -->\n";
+}
+
+#
+# print Docbook post-amble
+#
+print << 'EOF';
+
+</section>
+
+EOF
+

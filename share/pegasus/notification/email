@@ -1,0 +1,171 @@
+#!/usr/bin/env python
+
+"""
+Pegasus utility for sending workflow notifications over email
+
+"""
+
+##
+#  Copyright 2007-2011 University Of Southern California
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing,
+#  software distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+##
+
+import os
+import sys
+import optparse
+import smtplib
+import subprocess
+
+__author__ = "Mats Rynge <rynge@isi.edu>"
+
+# --- functions -----------------------------------------------------------------------
+
+
+def usage(parser):
+    print ""
+    print "Usage: This tool is used by pegasus-monitord to send event notifications"
+    print "over email. A set of environment variables are expected to be set:"
+    print "   PEGASUS_HOME"
+    print "   PEGASUS_SUBMIT_DIR"
+    print "   PEGASUS_EVENT"
+    print "   PEGASUS_EVENT_TIMESTAMP"
+    print "   PEGASUS_JOBID"
+    print "   PEGASUS_STATUS (only for end events)"
+    print ""
+    parser.print_help()
+    print ""
+    myexit(1)
+    
+
+def validate_env_var(key):
+    if not key in os.environ:
+        raise RuntimeError(key + " is not defined in the current environment")
+
+
+def send_using_smtp(sender, recipient, msg):
+    server = smtplib.SMTP('localhost')
+    server.sendmail(sender, recipient, msg)
+    server.quit()
+    
+    
+def send_using_sendmail(sender, recipient, msg):
+    p = os.popen("/usr/sbin/sendmail -t", "w")
+    p.write(msg)
+    rc = p.close()
+    if rc is not None and rc >> 8:
+        raise RuntimeError("Sendmail exit status: %d" % (rc >> 8))
+
+
+def backticks(cmd_line):
+    """
+    what would a python program be without some perl love?
+    """
+    return subprocess.Popen(cmd_line, shell=True, stdout=subprocess.PIPE).communicate()[0]
+
+
+def myexit(rc):
+    """
+    system exit without a stack trace - silly python
+    """
+    try:
+        sys.exit(rc)
+    except SystemExit:
+        sys.exit(rc)
+
+
+# --- main ----------------------------------------------------------------------------
+
+# Configure command line option parser
+parser = optparse.OptionParser()
+parser.add_option("-t", "--to", action = "store", dest = "to_address",
+                  help = "The To: email address. Defines the recipient for the notification.")
+parser.add_option("-f", "--from", action = "store", dest = "from_address",
+                  help = "The From: email address. Defaults to the required To: address.")
+parser.add_option("-r", "--report", action = "store", dest = "report",
+                  help = "Include workflow report. Valid values are: none pegasus-analyzer pegasus-status (default)")
+
+
+# Parse command line options
+(options, args) = parser.parse_args()
+if options.to_address == None:
+    print >> sys.stderr, "You have to provide a To: email address"
+    usage(parser)
+to_address = options.to_address
+from_address = to_address
+if options.from_address != None:
+    from_address = options.from_address
+report = "pegasus-status"
+if options.report != None:
+    report = str.lower(options.report)
+        
+try:
+    validate_env_var("PEGASUS_HOME")
+    validate_env_var("PEGASUS_SUBMIT_DIR")
+    validate_env_var("PEGASUS_EVENT")
+    validate_env_var("PEGASUS_EVENT_TIMESTAMP_ISO")
+    validate_env_var("PEGASUS_JOBID")
+except RuntimeError, err:
+    print >> sys.stderr, err
+    usage(parser)
+
+subject = "** Pegasus Notification - " + os.environ['PEGASUS_JOBID'] + " - " \
+        + os.environ['PEGASUS_EVENT'] + " **"
+
+msg = "From: " + from_address + "\r\n" \
+    + "To: " + to_address + "\r\n" \
+    + "Subject: " + subject + "\r\n" \
+    + "\r\n" \
+    + "***** Pegasus Workflow Event ****\r\n" \
+    + "\r\n" \
+    + "Time:     " + os.environ['PEGASUS_EVENT_TIMESTAMP_ISO'] + "\r\n" \
+    + "Workflow: " + os.environ['PEGASUS_SUBMIT_DIR'] + "\r\n" \
+    + "Job id:   " + os.environ['PEGASUS_JOBID'] + "\r\n" \
+    + "Event:    " + os.environ['PEGASUS_EVENT'] + "\r\n"
+    
+if 'PEGASUS_STATUS' in os.environ:
+    msg = msg \
+        + "Status: " + os.environ['PEGASUS_STATUS'] + "\r\n"
+    
+# pegasus-status report
+if report == "pegasus-status":
+    msg = msg + "\r\n\r\npegasus-status:\r\n\r\n"
+    try:
+        out = backticks(os.environ['PEGASUS_HOME'] + "/bin/pegasus-status --noutf8 --nocolor" \
+                      + " --noqueue" \
+                      + " " + os.environ['PEGASUS_SUBMIT_DIR'] + " 2>&1") 
+        msg = msg + out
+    except err:
+        print >> sys.stderr, "Error running pegasus-status: " + err
+
+# pegasus-analyzer report             
+if report == "pegasus-analyzer":
+    try:
+        msg = msg + "\r\n\r\npegasus-analyzer:\r\n\r\n"
+        out = backticks(os.environ['PEGASUS_HOME'] + "/bin/pegasus-analyzer -d " \
+                      + os.environ['PEGASUS_SUBMIT_DIR'] + " 2>&1") 
+        msg = msg + out
+    except err:
+        print >> sys.stderr, "Error running pegasus-analyzer: " + err 
+
+# try to send using smtp first, and if that does not work, sendmail
+try:
+    send_using_smtp(from_address, to_address, msg)
+except Exception, e1:
+    try:
+        send_using_sendmail(from_address, to_address, msg)
+    except Exception, e2:
+        print >> sys.stderr, "Unable to send email:\n", e1, "\n", e2
+        myexit(1)
+
+myexit(0)

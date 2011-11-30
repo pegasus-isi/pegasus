@@ -1,0 +1,150 @@
+#!/bin/bash
+
+set -e
+
+PEGASUS_TAR=$1
+echo "Input tar file: $PEGASUS_TAR"
+
+START_DIR=`pwd`
+
+BASE_DIR=`dirname $0`
+BASE_DIR=`(cd $BASE_DIR && pwd)`
+
+WORK_DIR=`mktemp -t -d rpm.XXXXXX`
+
+# os name (rhel) and major version
+if [ -e /etc/redhat-release ]; then
+    OS_NAME="rhel"
+    OS_MAJOR=`cat /etc/redhat-release | sed 's/.*release //' | sed 's/[\. ].*//'`
+else
+    echo "Unable to determine OS name and version"
+    exit 1
+fi
+
+# arch
+ARCH=`uname -m`
+if [ $ARCH = "x86_64" ]; then
+    ARCH="x86_64"
+else
+    ARCH="i386"
+fi
+
+# output target dir
+DIST_DIR="$OS_NAME/$OS_MAJOR/$ARCH"
+echo "Output directory: $DIST_DIR"
+
+# untar the pegasus original tarball
+cd $WORK_DIR
+if [ "x$PEGASUS_TAR" = "x" -o ! -e "$PEGASUS_TAR" ]; then
+    echo "The pegasus tar file specified as the first arg does not exist"
+    echo "or it was not specified with the full path."
+    exit 1
+fi
+
+# pegasus version
+VERSION=`ls $PEGASUS_TAR | sed 's/.*binary-//' | sed 's/-.*//' | sed 's/\.tar.*//'`
+MAJOR_VERSION=`echo $VERSION | sed -r 's/\.[0-9]+([0-9a-zA-Z]*)$/\1/'`
+
+RPM_VERSION="1"
+# cvs versions get a timestamp in the version to help yum figure out updates
+if echo $VERSION | grep cvs >/dev/null 2>&1; then
+    RPM_VERSION=`date +'%Y%m%d%H%M'`
+fi
+
+echo "Pegasus version: $VERSION"
+echo "RPM package version: $RPM_VERSION"
+echo "Pegasus package major version: $MAJOR_VERSION"
+
+# build dirs
+cd $WORK_DIR
+mkdir SOURCES SPECS BUILD SRPMS
+mkdir -p RPMS/i386 RPMS/i486 RPMS/i586 RPMS/i686 RPMS/x86_64 RPMS/noarch
+mkdir tmp
+
+# input tar
+tar xzf $PEGASUS_TAR
+mv pegasus-* pegasus-${MAJOR_VERSION}-${VERSION}
+tar czf SOURCES/pegasus-${MAJOR_VERSION}-${VERSION}.tar.gz pegasus-${MAJOR_VERSION}-${VERSION}
+rm -rf pegasus-*
+
+# spec file
+cat >SPECS/pegasus.spec <<EOF
+%define debug_package %{nil}
+
+Summary: Pegasus Workflow Management System
+Vendor: USC/ISI
+Name: pegasus-$MAJOR_VERSION
+Packager: Pegasus Team <pegasus-support@isi.edu>
+License: Apache License 
+Version: $VERSION
+Release: $RPM_VERSION
+URL: http://pegasus.isi.edu/wms/
+Group: Applications/Internet
+
+Source: %{name}-%{version}.tar.gz
+
+BuildRoot: %{_tmppath}/%{name}-%{version}-buildroot
+
+BuildRequires: tar
+
+Requires: java-1.6.0-openjdk >= 1.6.0, perl >= 5.8
+
+Prefix: /opt
+
+AutoReq: no
+
+%description
+The Pegasus project encompasses a set of technologies the help
+workflow-based applications execute in a number of different
+environments including desktops, campus clusters, grids, and now
+clouds. Scientific workflows allow users to easily express
+multi-step computations, for example retrieve data from a
+database, reformat the data, and run an analysis. Once an
+application is formalized as a workflow the Pegasus Workflow
+Management Service can map it onto available compute resources
+and execute the steps in appropriate order. Pegasus can handle
+1 to 1 million computational tasks.
+
+%define __jar_repack %{nil}
+
+%prep
+
+%setup
+
+%build
+ls -l
+
+%install
+mkdir -p \$RPM_BUILD_ROOT/opt/pegasus/$MAJOR_VERSION/
+mv * \$RPM_BUILD_ROOT/opt/pegasus/$MAJOR_VERSION/
+
+%clean
+rm -rf \$RPM_BUILD_ROOT
+
+%post 
+
+%files 
+%defattr(-,root,root)
+/opt
+
+%changelog
+* Tue Apr 20 2010 Mats Rynge 2.4.0-1
+* Tue Jan 13 2009 Gaurang Mehta 2.2.0-1
+* Thu Oct 23 2008 Scott Koranda <skoranda@gravity.phys.uwm.edu> - 2.1.0-1
+- first RPM
+EOF
+
+
+
+# now build the rpm
+rpmbuild --define="_topdir $WORK_DIR" --define="_tmppath $WORK_DIR/tmp" -bb SPECS/pegasus.spec
+
+find . -name \*.rpm
+mkdir -p $START_DIR/$DIST_DIR
+for RPM in `find . -name \*.rpm | grep -v debuginfo`; do
+    cp $RPM $START_DIR/$DIST_DIR
+done
+
+cd $START_DIR
+rm -rf $WORK_DIR
+

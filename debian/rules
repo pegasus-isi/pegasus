@@ -1,0 +1,94 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+
+
+build: build-stamp
+
+
+build-stamp:
+	dh_testdir
+	ant dist
+	rm -f dist/*.tar.gz
+	mv dist/pegasus-* dist/pegasus
+	touch build-stamp
+
+
+install: build
+	dh_testdir
+	dh_testroot
+	dh_prep
+	dh_installdirs
+	
+	# /etc/pegasus
+	mkdir -p debian/pegasus/etc/pegasus
+	cp -a dist/pegasus/etc/* debian/pegasus/etc/pegasus/
+	
+	# /usr/bin
+	mkdir -p debian/pegasus/usr
+	cp -a dist/pegasus/bin debian/pegasus/usr/
+	strip debian/pegasus/usr/bin/pegasus-cluster
+	strip debian/pegasus/usr/bin/pegasus-invoke
+	strip debian/pegasus/usr/bin/pegasus-keg
+	strip debian/pegasus/usr/bin/pegasus-kickstart
+	
+	# /usr/share/
+	mkdir -p debian/pegasus/usr
+	cp -a dist/pegasus/share debian/pegasus/usr/
+	rm -f debian/pegasus/usr/share/pegasus/java/COPYING.*
+	rm -f debian/pegasus/usr/share/pegasus/java/EXCEPTIONS.*
+	rm -f debian/pegasus/usr/share/pegasus/java/LICENSE.*
+	rm -f debian/pegasus/usr/share/pegasus/java/NOTICE.*
+	
+	# /usr/lib
+	mkdir -p debian/pegasus/usr
+	cp -a dist/pegasus/lib debian/pegasus/usr/
+	strip debian/pegasus/usr/lib/pegasus/python/pysqlite2/_sqlite.so
+	
+	# remove stuff we don't need
+	rm -rf debian/pegasus/usr/lib/pegasus/python/boto/tests
+	
+
+# Build architecture-independent files here.
+binary-indep: build install
+	# We have nothing to do by default.
+
+# Build architecture-dependent files here.
+binary-arch: build install
+	dh_testdir
+	dh_testroot
+	dh_installchangelogs
+	dh_installdocs
+	dh_installman
+	dh_compress
+	dh_fixperms
+	dh_installdeb
+	dh_shlibdeps
+	dh_gencontrol
+	dh_md5sums
+	dh_builddeb
+
+
+binary: binary-indep binary-arch
+
+
+clean:
+	dh_testdir
+	dh_testroot
+	rm -f build-stamp
+	ant clean
+	rm -f src/externals/._boto*
+	rm -rf dist
+	dh_clean
+
+
+%:
+	echo "dh $@"
+	exit 1
+
+
+.PHONY: build  binary-indep binary-arch binary install clean
+
+

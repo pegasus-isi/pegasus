@@ -1,0 +1,760 @@
+.\"
+.\" This file or a portion of this file is licensed under the terms of
+.\" the Globus Toolkit Public License, found in file GTPL, or at
+.\" http://www.globus.org/toolkit/download/license.html. This notice must
+.\" appear in redistributions of this file, with or without modification.
+.\"
+.\" Redistributions of this Software, with or without modification, must
+.\" reproduce the GTPL in: (1) the Software, or (2) the Documentation or
+.\" some other similar material which is provided with the Software (if
+.\" any).
+.\"
+.\" Copyright 1999-2011 University of Chicago and The University of
+.\" Southern California. All rights reserved.
+.\"
+.\" $Id$
+.\"
+.\" Authors: Jens-S. Vöckler, Yong Zhao
+.\"
+.TH "pegasus\-kickstart" "1" "3.1.0" "Pegasus WMS"
+.SH "NAME"
+pegasus\-kickstart \- run an executable in a more universal environment.
+.SH "SYNTAX"
+.B pegasus\-kickstart
+[\-n\~tr] [\-N\~dv] [\-H] [\-R site] [\-W | \-w\~dir]
+ [\-L\~lbl \-T\~iso] [\-s [l=]p | @fn] [\-S [l=]p | @fn] [\-i\~fn]
+ [\-o\~fn] [\-e\~fn] [\-X] [\-l\~fn\~sz] [\-F] (\-I fn | app [appflags] )
+.br
+.B pegasus\-kickstart
+\-V
+.SH "DESCRIPTION"
+The 
+.B pegasus\-kickstart 
+executable is a light wrapper program which connects the
+.IR stdin ,
+.I stdout
+and 
+.I stderr
+filehandles for grid jobs on the remote site, and reports back the
+remote application termination condition. 
+.PP 
+Sitting in between the remote scheduler and the executable, it is
+possible for
+.B pegasus\-kickstart 
+to gather additional information about the executable run-time behavior
+and resource usage, including the exit status of jobs. This information
+is important for the Pegasus invocation tracking as well as to Condor
+DAGMan's awareness of Globus job failures.
+.PP
+.B Pegasus\-kickstart
+allows the optional execution of jobs before and after the main
+application job that run in chained execution with the main application
+job. See section
+.B SUBJOBS
+for details about this feature. 
+.PP
+All jobs with relative path specifications to the application are part
+of search relative to the current working directory (yes, this is unsafe),
+and by prepending each component from the
+.I PATH
+environment variable. The first match is used. Jobs that use absolute
+pathnames, starting in a slash, are exempt. Using an absolute path to
+your executable is the safe and recommended option. 
+.PP
+.B Kickstart
+rewrites the commandline of any job (pre, post and main) with variable
+substitutions from Unix environment variables. See section
+.B VARIABLE REWRITING
+below for details on this feature.
+.PP
+.B Kickstart
+provides a temporary named pipe (fifo) for applications that are gridstart
+aware. Any data an application writes to the FIFO will be propagated back
+to the submit host, thus enabling progress meters and other application
+dependent monitoring. See section
+.B FEEDBACK CHANNEL
+below for details on this feature. 
+.SH "ARGUMENTS"
+.TP
+.B \-n tr
+In order to associate the minimal performance information of the job
+with the invocation records, the jobs needs to carry which
+.I transformation 
+was responsible for producing it. The format
+is the textual notation for fully-qualified definition names, like
+namespace::name:version, with only the name portion being mandatory.
+.IP
+There is no default. If no value is given, "null" will be reported.
+.TP
+.B \-N dv
+The jobs may carry which instantiation of a transformation was
+responsible for producing it. The format is the textual notation for
+fully-qualified definition names, like namespace::name:version, with
+only the name portion being mandatory.
+.IP
+There is no default. If no value is given, "null" will be reported.
+.TP
+.B \-H 
+This option avoids pegasus\-kickstart writing the XML preamble (entity), if you 
+need to combine multiple pegasus\-kickstart records into one document. 
+.IP
+Additionally, if specified, the environment and the resource usage
+segments will not be written, assuming that a in a concatinated
+record version, the initial run will have captured those settings. 
+.TP
+.B \-R site
+In order to provide the greater picture, pegasus\-kickstart can reflect the
+site handle (resource identifier) into its output. 
+.IP
+There is no default. If no value is given, the attribute will not be
+generated. 
+.TP
+.B \-L lbl
+.TP
+.B \-T iso
+These optional arguments denote the workflow label (from DAX) and the 
+workflow's last modification time (from DAX). The label
+.I lbl
+can be any sensible string of up to 32 characters, but should use C
+identifier characters. The timestamp 
+.I iso
+must be an ISO 8601 compliant time-stamp.
+.TP
+.B \-S l=p
+If stat information on any file is required 
+.I before 
+any jobs were started,
+logical to physical file mappings to stat can be passed using the
+.B \-S 
+option. The LFN and PFN are concatenated by an equals (=) sign. The
+LFN is optional: If no equals sign is found, the argument is taken as 
+sole PFN specification without LFN.
+.IP
+This option may be specified multiple times. To reduce and overcome
+commandline length limits, if the argument is prefixed with an at (@) 
+sign, the argument is taken to be a textual file of LFN to PFN mappings.
+The optionality mentioned above applies. Each line inside the file
+argument is the name of a file to stat. Comments (#) and empty lines
+are permitted.
+.IP
+Each PFN will incur a 
+.I statcall
+record (element) with attribute
+.I id
+set to value
+.IR initial .
+The optional 
+.I lfn
+attribute is set to the LFN stat'ed. The filename is part of the 
+.I statinfo
+record inside.
+.IP 
+There is no default.
+.TP
+.B \-s fn
+If stat information on any file is required 
+.I after 
+all jobs have finished,
+logical to physical file mappings to stat can be passed using the
+.B \-s 
+option. The LFN and PFN are concatenated by an equals (=) sign. The
+LFN is optional: If no equals sign is found, the argument is taken as 
+sole PFN specification without LFN.
+.IP
+This option may be specified multiple times. To reduce and overcome
+commandline length limits, if the argument is prefixed with an at (@) 
+sign, the argument is taken to be a textual file of LFN to PFN mappings.
+The optionality mentioned above applies. Each line inside the file
+argument is the name of a file to stat. Comments (#) and empty lines
+are permitted.
+.IP
+Each PFN will incur a 
+.I statcall
+record (element) with attribute
+.I id
+set to value
+.IR final .
+The optional 
+.I lfn
+attribute is set to the LFN stat'ed. The filename is part of the 
+.I statinfo
+record inside.
+.IP 
+There is no default.
+.TP
+.B \-i fn
+This option allows 
+.B pegasus\-kickstart
+to re-connect the stdin of the application that it starts. Use a single
+hyphen to share 
+.I stdin 
+with the one provided to 
+.BR pegasus\-kickstart .
+.IP
+The default is to connect 
+.I stdin
+to
+.IR /dev/null .
+.TP
+.B \-o fn
+This option allows 
+.B pegasus\-kickstart
+to re-connect the 
+.I stdout 
+of the application that it starts. The mode is used whenever an application
+produces meaningful results on its 
+.I stdout
+that need to be tracked by Pegasus. The real
+.I stdout 
+of Globus jobs is staged via GASS (GT2) or RFT (GT4). The real 
+.I stdout
+is used to propagate the invocation record back to the submit site. Use
+the single hyphen to share the application's
+.I stdout 
+with the one that is provided to 
+.BR pegasus\-kickstart .
+In that case, the output from
+.B pegasus\-kickstart
+will interleave with application output. For this reason, such a mode
+is not recommended.
+.IP
+In order to provide an uncaptured 
+.I stdout
+as part of the results, it is the default to connect the
+.I stdout 
+of the application to a temporary file. The content of this temporary
+file will be transferred as payload data in the
+.B pegasus\-kickstart
+results. The content size is subject to payload limits, see the
+.B \-B 
+option. If the content grows large, only an initial portion will become
+part of the payload. If the temporary file grows too large, it may flood
+the worker node's temporary space. The temporary file will be deleted
+after
+.B pegasus\-kickstart
+finishes.
+.IP
+If the filename is prefixed with an exclaimation point, the file will
+be opened in append mode instead of overwrite mode. Note that you may
+need to escape the exclaimation point from the shell.
+.IP
+The default is to connect 
+.I stdout
+to a temporary file. 
+.TP
+.B \-e fn
+This option allows 
+.B pegasus\-kickstart
+to re-connect the 
+.I stderr
+of the application that it starts. This option is used whenever an
+application produces meaningful results on
+.I stderr
+that needs tracking by Pegasus. The real
+.I stderr
+of Globus jobs is staged via GASS (GT2) or RFT (GT4). It is used to
+propagate abnormal behaviour from both,
+.B pegasus\-kickstart
+and the application that it starts, though its main use is to propagate
+application dependent data and heartbeats. Use a single hyphen to share
+.I stderr 
+with the 
+.I stderr
+that is provided to 
+.BR pegasus\-kickstart .
+This is the backward compatible behavior.
+.IP
+In order to provide an uncaptured 
+.I stderr
+as part of the results, by default the
+.I stderr 
+of the application will be connected to a temporary file. Its content is
+transferred as payload data in the
+.B pegasus\-kickstart
+results. If too large, only the an initial portion will become part of
+the payload. If the temporary file grows too large, it may flood the
+worker node's temporary space. The temporary file will be deleted after
+.B pegasus\-kickstart
+finishes.
+.IP
+If the filename is prefixed with an exclaimation point, the file will
+be opened in append mode instead of overwrite mode. Note that you may
+need to escape the exclaimation point from the shell.
+.IP
+The default is to connect 
+.I stderr
+to a temporary file.
+.TP
+.B \-l logfn
+allows to append the performance data to the specified file. Thus,
+multiple XML documents may end up in the same file, including their XML
+preamble. 
+.I stdout
+is normally used to stream back the results. Usually, this is a
+GASS-staged stream. Use a single hyphen to generate the output on the
+.I stdout 
+that was provided to
+.BR pegasus\-kickstart ,
+the default behavior.
+.IP
+Default is to append the invocation record onto the provided
+.IR stdout .
+.TP
+.B \-w dir
+permits the explicit setting of a new working directory once pegasus\-kickstart
+is started. This is useful in a remote scheduling environment, when the
+chosen working directory is not visible on the job submitting host. If
+the directory does not exist,
+.B pegasus\-kickstart
+will fail. This option is mutually exclusive with the 
+.I \-W dir 
+option.
+.IP
+Default is to use the working directory that the application was started
+in. This is usually set up by a remote scheduling environment. 
+.TP
+.B \-W dir
+permits the explicit creation and setting of a new working directory
+once pegasus\-kickstart is started. This is useful in a remote scheduling
+environment, when the chosen working directory is not visible on the job
+submitting host. If the directory does not exist,
+.B pegasus\-kickstart
+will attempt to create it, and then change into it. Both, creation and
+directory change may still fail. This option is mutually exclusive with
+the  
+.I \-w dir 
+option.
+.IP
+Default is to use the working directory that the application was started
+in. This is usually set up by a remote scheduling environment. 
+.TP
+.B \-X
+make an application executable, no matter what. It is a work-around code
+for a weakness of  
+.I globus\-url\-copy 
+which does not copy the permissions of the source to the destination. 
+Thus, if an executable is staged-in using GridFTP, it will have the
+wrong permissions. Specifying the 
+.I \-X 
+flag will attempt to change the mode to include the necessary x (and r)
+bits to make the application executable. 
+.IP
+Default is not to change the mode of the application. Note that this
+feature can be misused by hackers, as it is attempted to call chmod
+on whatever path is specified. 
+.TP
+.B \-B sz
+varies the size of the debug output data section. If the file
+descriptors
+.I stdout
+and 
+.I stderr
+remain untracked, 
+.B pegasus\-kickstart
+tracks that output in temporary files. The first few pages from this
+output is copied into a data section in the output. In order to resize
+the length of the output within reasonable boundaries, this option
+permits a changes. Data beyond the size will not be copied, i.e. is
+truncated. 
+.IP
+Warning: This is not a cheap way to obtain the stdio file handle data.
+Please use tracked files for that. Due to output buffer pre-allocation,
+using arbitrary large arguments may result in failures of 
+.B pegasus\-kickstart
+itself to allocate the necessary memory. 
+.IP
+The default maximum size of the data section is 262144 byte. 
+.TP
+.B \-F
+This flag will issue an explicit 
+.I fsync()
+call on kickstart's own 
+.I stdout
+file. Typically you won't need this flag. Albeit, certain shared file
+system situations may improve when adding a flush after the written 
+invocation record. 
+.IP
+The default is to just use kickstart's NFS alleviation strategy by 
+locking and unlocking 
+.IR stdout . 
+.TP
+.B \-I fn
+In this mode, the application name and any arguments to the application
+are specified inside of file 
+.IR fn .
+The file contains one argument per line. Escapeing from Globus, Condor
+and shell meta characters is not required. This mode permits to use the
+maximum possible commandline length of the underlying operationg system,
+e.g. 128k for Linux. Using the 
+.B \-I
+mode stops any further commandline processing of 
+.B pegasus\-kickstart
+command lines. 
+.IP
+Default is to use the 
+.I app flags
+mode, where the application is specified explicitely on the
+command-line. 
+.TP
+.B app
+The path to the application has to be completely specified. The
+application is a mandatory option.
+.TP
+.B appflags
+Application may or may not have additional flags.
+.SH "RETURN VALUE"
+.B pegasus\-kickstart
+will return the return value of the main job. In addition, the error
+code 127 signals that the call to exec failed, and 126 that reconnecting
+the stdio failed. A job failing with the same exit codes is indistinguishable 
+from
+.B pegasus\-kickstart
+failures.
+.SH "SEE ALSO"
+.BR pegasus\-plan (1),
+.BR condor_submit_dag (1),
+.BR condor_submit (1),
+.BR getrusage (3c).
+.PP
+.BR http://pegasus.isi.edu/wms/docs/schemas/iv-2.1/iv-2.1.html ,
+.br
+.BR http://pegasus.isi.edu/documentation
+.SH "SUBJOBS"
+Subjobs are a new feature and may have a few wrinkles left.
+.PP
+In order to allow specific setups and assertion checks for compute nodes,
+.B pegasus\-kickstart
+allows the optional execution of a 
+.IR prejob .
+This
+.I prejob
+is anything that the remote compute node is capable of executing. For
+modern Unix systems, this includes #! scripts interpreter invocations,
+as long as the x bits on the executed file are set. The main job is run
+if and only if the prejob returned regularly with an exit code of zero.
+.PP
+With similar restrictions, the optional execution of a
+.I postjob
+is chained to the success of the main job. The postjob will be run,
+if the main job terminated normally with an exit code of zero. 
+.PP
+In addition, a user may specify a 
+.I setup
+and a
+.I cleanup
+job. The 
+.I setup 
+job sets up the remote execution environment. The
+.I cleanup
+job may tear down and clean-up after any job ran. Failure to run the
+setup job has no impact on subsequent jobs. The cleanup is a job that
+will even be attempted to run for all failed jobs. No job information is
+passed. If you need to invoke multiple setup or clean-up jobs, bundle
+them into a script, and invoke the clean-up script. Failure of the
+clean-up job is not meant to affect the progress of the remote workflow
+(DAGMan). This may change in the future.
+.PP
+The setup-, pre-, and post- and cleanup-job run on the same compute node
+as the main job to execute. However, since they run in separate
+processes as children of
+.BR pegasus\-kickstart , 
+they are unable to influence each others nor the main jobs environment
+settings.
+.PP
+All jobs and their arguments are subject to variable substitutions as
+explained in the next section.
+.PP
+To specify the prejob, insert the the application invocation and any
+optional commandline argument into the environment variable 
+.IR GRIDSTART_PREJOB .
+If you are invoking from a shell, you might want to use single quotes
+to protect against the shell. If you are invoking from Globus, you can
+append the RSL string feature. From Condor, you can use Condor's notion
+of environment settings. In Pegasus use the 
+.I profile
+command to set generic scripts that will work on multiple sites, 
+or the transformation catalog to set environment variables in a pool-specific
+fashion. Please remember that the execution of the main job is chained
+to the success of the prejob. 
+.PP
+To set up the postjob, use the environment variable 
+.I GRIDSTART_POSTJOB
+to point to an application with potential arguments to execute. The same
+restrictions as for the prejob apply. Please note that the execution of
+the post job is chained to the main job. 
+.PP
+To provide the independent setup job, use the environment variable
+.IR GRIDSTART_SETUP .
+The exit code of the setup job has no influence on the remaining chain
+of jobs. To provide an independent cleanup job, use the environment variable
+.I GRIDSTART_CLEANUP
+to point to an application with possible arguments to execute. The same
+restrictions as for prejob and postjob apply. The cleanup is run regardless
+of the exit status of any other jobs.
+.SH "VARIABLE REWRITING"
+Variable substitution is a new feature and may have a few wrinkles left.
+.PP
+The variable substitution employs simple rules from the Bourne shell
+syntax. Simple quoting rules for backslashed characters, double quotes
+and single quotes are obeyed. Thus, in order to pass a dollar sign to
+as argument to your job, it must be escaped with a backslash from the 
+variable rewriting.
+.PP
+For pre- and postjobs, double quotes allow the preservation of whitespace
+and the insertion of special characters like \\a (alarm), \\b (backspace),
+\\n (newline), \\r (carriage return), \\t (horizontal tab), and \\v 
+(vertical tab). Octal modes are 
+.I not
+allowed. Variables are still substituted in double quotes. Single quotes
+inside double quotes have no special meaning.
+.PP
+Inside single quotes, no variables are expanded. The backslash only
+escapes a single quote or backslash. 
+.PP
+Backticks are not supported.
+.PP
+Variables are only substituted once. You cannot have variables in
+variables. If you need this feature, please request it. 
+.PP 
+Outside quotes, arguments from the pre- and postjob are split on linear
+whitespace. The backslash makes the next character verbatim. 
+.PP
+Variables that are rewritten must start with a dollar sign either
+outside quotes or inside double quotes. The dollar may be followed by a
+valid identifier. A valid identifier starts with a letter or the
+underscore. A valid identifier may contain further letters, digits or
+underscores. The identifier is case sensitive. 
+.PP
+The alternative use is to enclose the identifier inside curly braces. In
+this case, almost any character is allowed for the identifier, including
+whitespace. This is the 
+.I only
+curly brace expansion. No other Bourne magic involving curly braces is
+supported.
+.PP
+One of the advantages of variable substitution is, for example, the
+ability to specify the application as
+.I $HOME/bin/app1 
+in the transformation catalog, and thus to gridstart. As long as your
+home directory on any compute node has a
+.I bin 
+directory that contains the application, the transformation catalog does
+not need to care about the true location of the application path on each
+pool. Even better, an administrator may decide to move your home
+directory to a different place. As long as the compute node is set up
+correctly, you don't have to adjust any Pegasus data.
+.PP 
+Mind that variable substitution is an expert feature, as some degree of
+tricky quoting is required to protect substitutable variables and quotes
+from Globus, Condor and Pegasus in that order. Note that Condor uses the
+dollar sign for its own variables. 
+.PP
+The variable substitution assumptions for the main job differ
+slightly from the prejob and postjob for technical reasions. The pre-
+and postjob commandlines are passed as one string. However, the main
+jobs commandline is already split into pieces by the time it reaches
+.BR pegasus\-kickstart .
+Thus, any whitespace on the main job's commandline must be preserved,
+and further argument splitting avoided.
+.PP
+It is highly recommended to experiment on the Unix commandline with the
+.I echo
+and
+.I env
+applications to obtain a feeling for the different quoting mechanisms
+needed to achieve variable substitution. 
+.SH "FEEDBACK CHANNEL"
+A long-running application may consider to stream back heart beats
+and other application-specific monitoring and progress data. For this
+reason, 
+.I pegasus\-kickstart
+provides a feedback channel. At start-up, a transient named pipe,
+also known as FIFO, is created. While waiting for started jobs to
+finish, 
+.I pegasus\-kickstart
+will attempt to read from the FIFO. By default, any information read
+will be encapsulated in XML tags, and written to 
+.I stderr .
+Please note that in a Pegasus, Globus, Condor-G environment, 
+.I stderr
+will be GASS streamed or staged to the submit host. At the submit host, an
+application specific monitor may unpack the data chunks and could
+for instance visually display them, or aggregate them with other
+data. Please note that
+.I pegasus\-kickstart
+only provides a feedback channel. The content and interpretation
+is up to, and specific for the application. 
+.PP
+In order to make an application gridstart aware, it needs to be
+able to write to a FIFO. The filename can be picked up from the
+environment variable
+.B GRIDSTART_CHANNEL
+which is provided to all jobs. Please note that the application 
+must be prepared to handle the PIPE signal when writing to a FIFO, 
+and must be able to cope with failing write operations. 
+.SH "EXAMPLE"
+You can run the
+.B pegasus\-kickstart
+executable locallly to verify that it is functioning well. In the
+initial phase, the format of the performance data may be slightly
+adjusted.
+.nf
+\f(CB
+$ env GRIDSTART_PREJOB='/bin/usleep 250000' \\
+  GRIDSTART_POSTJOB='/bin/date -u' \\
+  pegasus\-kickstart -l xx \\$PEGASUS_HOME/bin/keg -T1 -o-
+$ cat xx
+<?xml version="1.0" encoding="ISO-8859-1"?>
+  ...
+  </statcall>
+</invocation>
+\fP
+.fi
+.PP
+Please take note a few things in the above example:
+.PP
+The output from the postjob is appended to the output of the main job on
+.IR stdout .
+The output could potentially be separated into different data sections
+through different temporary files. If you truly need the separation,
+request that feature.
+.PP
+The log file is reported with a size of zero, because the log file did
+indeed barely exist at the time the data structure was (re-)
+initialized. With regular GASS output, it will report the status of the
+socket file descriptor, though.
+.PP
+The file descriptors reported for the temporary files are from the 
+perspective of 
+.BR pegasus\-kickstart .
+Since the temporary files have the close-on-exec flag set, 
+.BR pegasus\-kickstart 's
+filedescriptors are invisible to the job processes. Still, the 
+.I stdio
+of the job processes are connected to the temporary files.
+.PP
+Even this output already appears large. The output may already be too
+large to guarantee that the append operation on networked pipes (GASS,
+NFS) are atomically written.
+.PP
+The current format of the performance data is as follows:
+.SH "OUTPUT FORMAT"
+Refer to
+.B http://pegasus.isi.edu/wms/docs/schemas/iv-2.1/iv-2.1.html
+for an up-to-date description of elements and their attributes. Check with
+.B http://pegasus.isi.edu/documentation
+for invocation schemas with a higher version number.
+.SH "RESTRICTIONS"
+There is no version for the Condor
+.I standard 
+universe. It is simply not possible within the constraints of Condor. 
+.PP
+Due to its very nature,
+.B pegasus\-kickstart
+will also prove difficult to port outside the Unix environment.
+.PP
+Any of the pre-, main-, cleanup and postjob are unable to influence one anothers
+visible environment.
+.PP
+Do not use a Pegasus transformation with just the name
+.I null 
+and no namespace nor version.
+.PP 
+First Condor, and then Unix, place a limit on the length of the commandline. 
+The additional space required for the gridstart invocation may silently 
+overflow the maximum space, and cause applications to fail. If you suspect
+to work with many argument, try an argument-file based approach.
+.PP
+A job failing with exit code 126 or 127 is indistinguishable from
+.B pegasus\-kickstart
+failing with the same exit codes. Sometimes, careful examination of the
+returned data can help.
+.PP
+If the logfile is collected into a shared file, due to the size of the
+data, simultaneous appends on a shared filesystem from different
+machines may still mangle data. Currently, file locking is not even
+attempted, although all data is written atomically from the perspective
+of 
+.BR pegasus\-kickstart .
+.PP
+The upper limit of characters of commandline characters is currently not 
+checked by 
+.BR pegasus\-kickstart .
+Thus, some variable substitutions could potentially result in a
+commandline that is larger than permissable.
+.PP
+If the output or error file is opened in append mode, but the
+application decides to truncate its output file, as in aboves example
+by opening 
+.I /dev/fd/1
+inside
+.IR keg ,
+the resulting file will still be truncated. This is correct behavior,
+but sometimes not obvious.
+.SH "FILES"
+.TP
+.B /usr/share/pegasus/schema/iv-2.1.xsd
+is the suggested location of the latest XML schema describing the data
+on the submit host.
+.SH "ENVIRONMENT VARIABLES"
+.TP
+.B GRIDSTART_TMP
+is the hightest priority to look for a temporary directory, if
+specified. This rather special variable was introduced to overcome
+some peculiarities with the FNAL cluster. 
+.TP
+.B TMP
+is the next hightest priority to look for a temporary directory, if
+specified. 
+.TP
+.B TEMP
+is the next priority for an environment variable denoting a 
+temporary files directory.
+.TP
+.B TMPDIR
+is next in the checklist. If none of these are found, either the
+.I stdio
+definition 
+.I P_tmpdir
+is taken, or the fixed string
+.I /tmp .
+.TP
+.B GRIDSTART_SETUP
+contains a string that starts a job to be executed unconditionally
+before any other jobs, see above for a detailled description.
+.TP
+.B GRIDSTART_PREJOB
+contains a string that starts a job to be executed before the main
+job, see above for a detailled description.
+.TP
+.B GRIDSTART_POSTJOB
+contains a string that starts a job to be executed conditionally 
+after the main job, see above for a detailled description.
+.TP
+.B GRIDSTART_CLEANUP
+contains a string that starts a job to be executed unconditionally
+after any of the previous jobs, see above for a detailled description.
+.TP
+.B GRIDSTART_CHANNEL
+is the name of a FIFO for an application-specific feedback-channel,
+see above for a detailled description.
+.SH "HISTORY"
+As you may have noticed,
+.B pegasus\-kickstart
+had the name
+.B kickstart
+in previous incantations. We are slowly moving to the new name to avoid
+clashes in a larger OS installation setting. However, there is no
+pertinent need to change the internal name, too, as no name clashes are
+expected.
+.SH "RETIRED AUTHORS"
+Michael Milligan <mbmillig at uchicago dot edu>,
+.br
+Mike Wilde <wilde at mcs dot anl dot gov>,
+.br
+Yong Zhao <yongzh at cs dot uchicago dot edu>.
+.SH "ACTIVE AUTHORS"
+Jens-S. Vöckler <voeckler at isi dot edu>,
+.PP
+Pegasus 
+.BR http://pegasus.isi.edu/

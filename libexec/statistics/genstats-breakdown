@@ -1,0 +1,220 @@
+#!/usr/bin/perl
+
+use Getopt::Long;
+use List::Util qw[min max];
+use File::Basename qw(dirname basename);
+use File::Path;
+use File::Copy;
+use File::Spec;
+use Cwd;
+use POSIX qw(ceil floor);
+
+sub usage(;$) {
+    my $ec = shift || 0;
+    my $basename = basename($0);
+    print << "EOF";
+
+Usage: $basename --help --output=<output file>
+
+Optional arguments:
+-h|--help           Print this help message.
+-o|--output file    Write outputs to specified file.
+-f|--file           input file path which contains newline separated run directory path.
+-x|--extra          Generate individual statistics for each run directory.
+EOF
+    exit($ec);
+}
+
+sub parse_kick_start_files($$){
+	($cur,$dir) =@_;
+	chdir $dir;
+    $samples{$dir} = ();
+    @kickstartFiles = glob "*.out*";
+    for $file (@kickstartFiles) {
+        if (open(FILE, $file)) {
+            while ($line = <FILE>) {
+                chomp $line;
+                if ($line =~ /.* duration=\"([\.0-9]*)\" transformation=\"([-_A-Za-z0-9:\.]*)\" .*/) {
+                    $duration = $1;
+                    $transformation = $2;
+                    if (!defined($samples{$dir}{$transformation})) {
+                        $samples{$dir}{$transformation}{'count'} = 0;
+                        $samples{$dir}{$transformation}{'mean'} = 0;
+                        $samples{$dir}{$transformation}{'diff'} = 0;
+						$samples{$dir}{$transformation}{'min'} = 1e100;
+						$samples{$dir}{$transformation}{'max'} = 0;
+
+                        if (!defined($samples{$allKey}{$transformation})) {
+                            $samples{$allKey}{$transformation}{'count'} = 0;
+                            $samples{$allKey}{$transformation}{'mean'} = 0;
+                            $samples{$allKey}{$transformation}{'diff'} = 0;
+							$samples{$allKey}{$transformation}{'min'} = 1e100;
+							$samples{$allKey}{$transformation}{'max'} = 0;
+                        }
+                    }
+                    $samples{$allKey}{$transformation}{'count'}++;
+                    $delta = $duration - $samples{$allKey}{$transformation}{'mean'};
+                    $samples{$allKey}{$transformation}{'mean'} += $delta / $samples{$allKey}{$transformation}{'count'};
+                    $samples{$allKey}{$transformation}{'diff'} += $delta * ($duration - $samples{$allKey}{$transformation}{'mean'});
+					$min = $samples{$allKey}{$transformation}{'min'};
+					$samples{$allKey}{$transformation}{'min'} = ($duration < $min) ? $duration : $min;
+					$max = $samples{$allKey}{$transformation}{'max'};
+					$samples{$allKey}{$transformation}{'max'} = ($duration > $max) ? $duration : $max;
+
+                    $samples{$dir}{$transformation}{'count'}++;
+                    $delta = $duration - $samples{$dir}{$transformation}{'mean'};
+                    $samples{$dir}{$transformation}{'mean'} += $delta / $samples{$dir}{$transformation}{'count'};
+                    $samples{$dir}{$transformation}{'diff'} += $delta * ($duration - $samples{$dir}{$transformation}{'mean'});
+					$min = $samples{$dir}{$transformation}{'min'};
+					$samples{$dir}{$transformation}{'min'} = ($duration < $min) ? $duration : $min;
+					$max = $samples{$dir}{$transformation}{'max'};
+					$samples{$dir}{$transformation}{'max'} = ($duration > $max) ? $duration : $max;
+
+                }
+            }
+        }
+    }
+	chdir $cur;
+}
+
+sub directory_exists(\@$){
+	# purpose : checks if the directory exists in the directory list.
+	#returns : 1 if directory exists,0 otherwise
+	($list_ref) = shift; 
+	($check_dir) =shift;
+	foreach $dir (@$list_ref) {
+		if ( (File::Spec->canonpath($dir)) eq (File::Spec->canonpath($check_dir))){
+			return 1;
+		}
+	}
+	return 0;
+}
+
+
+
+
+$extra = 0;
+$file = undef;
+$result = GetOptions(
+    "help|h" => \&usage,
+    "output|o=s" => \$output,
+    "file|f=s" =>\$file,
+    "extra|x" => sub { $extra++; },
+);
+
+if(!$file){
+	if ($#ARGV < 0) {
+	    push @ARGV, getcwd();
+	}
+}
+%samples = ();
+$allKey = "__ALL__";
+$samples{$allKey} = ();
+
+
+
+$cur = getcwd();
+for $dir (@ARGV) {
+    parse_kick_start_files($cur ,$dir);
+}
+
+if($file){
+	@dirs_arr = keys(%samples);
+	$file= File::Spec->rel2abs($file);
+	open CONFIG, "$file" or die "Unable to open file: $file . $! \n";
+	for (<CONFIG>) {
+    	chomp;
+    	s/\#.*//;
+    	s/^\s+//;
+    	s/\s+$//;
+    	next unless length;
+    	$dir = $_;
+    	#check if the directory exists in the list created by -x option
+    	
+    	if(!directory_exists(@dirs_arr,$dir)){
+    		parse_kick_start_files($cur ,$dir);
+    	}
+    }
+    close CONFIG;
+}
+
+
+if (defined($output)) {
+    open $oldout, ">&STDOUT" or die "Can't dup STDOUT $!";
+    open STDOUT, '>', $output or die "Can't redirect STDOUT $!";
+}
+my $submit_dir_count = 0;
+print "#Legends ";
+print "\n#Transformation - name of the transformation";
+print "\n#Count - the number of times the transformation was executed";
+print "\n#Mean(sec.) - the mean of the transformation runtime ";
+print "\n#Variance(sec.) - the variance of the transformation runtime";
+print "\n#Min(sec.) - the minimum transformation runtime value";
+print "\n#Max(sec.) - the maximum transformation runtime value";
+print "\n#Total(sec.) - the cumulative of transformation runtime \n";
+if ($extra) {
+    for $dir (@ARGV) {
+        print sprintf("\n#$dir\n#%-39s % 6s % 12s % 16s % 12s % 12s % 12s\n", "Transformation", "Count", "Mean", "Variance", "Min", "Max", "Total");
+        for $transformation (keys %{$samples{$dir}}) {
+			$count = $samples{$dir}{$transformation}{'count'};
+            if ($count == 1) {
+                $denom = 1;
+            } else {
+                $denom = $count - 1;
+            }
+
+            $out = sprintf("%-40s % 6d % 12.4f % 16.4f % 12.4f % 12.4f % 12.4f\n", $transformation, $count, $samples{$dir}{$transformation}{'mean'}, $samples{$dir}{$transformation}{'diff'} / $denom, $samples{$dir}{$transformation}{'min'}, $samples{$dir}{$transformation}{'max'}, $count * $samples{$dir}{$transformation}{'mean'});
+            print $out;
+        }
+        ++$submit_dir_count;
+    }
+}
+
+# Read the element from the file and print the breakdown result
+if($file){
+	open CONFIG, "$file" or die "Unable to open file: $file . $! \n";
+	for (<CONFIG>) {
+    	chomp;
+    	s/\#.*//;
+    	s/^\s+//;
+    	s/\s+$//;
+    	next unless length;
+    	$dir = $_;
+    	# check if the element exists in the arguments passed through -x option
+    	if(!directory_exists(@ARGV,$dir)){
+	    	print sprintf("\n#$dir\n#%-39s % 6s % 12s % 16s % 12s % 12s % 12s\n", "Transformation", "Count", "Mean", "Variance", "Min", "Max", "Total");
+	        for $transformation (keys %{$samples{$dir}}) {
+				$count = $samples{$dir}{$transformation}{'count'};
+	            if ($count == 1) {
+	                $denom = 1;
+	            } else {
+	                $denom = $count - 1;
+	            }
+	
+	            $out = sprintf("%-40s % 6d % 12.4f % 16.4f % 12.4f % 12.4f % 12.4f\n", $transformation, $count, $samples{$dir}{$transformation}{'mean'}, $samples{$dir}{$transformation}{'diff'} / $denom, $samples{$dir}{$transformation}{'min'}, $samples{$dir}{$transformation}{'max'}, $count * $samples{$dir}{$transformation}{'mean'});
+	            print $out;
+	        }
+	        ++$submit_dir_count;
+        }
+    }
+    close CONFIG;
+}
+if ($submit_dir_count >1){
+	print sprintf("\n#All\n#%-39s % 6s % 12s % 16s % 12s % 12s % 12s\n", "Transformation", "Count", "Mean", "Variance", "Min", "Max", "Total");
+	for $transformation (keys %{$samples{$allKey}}) {
+		$count = $samples{$allKey}{$transformation}{'count'};
+	    if ($count == 1) {
+	        $denom = 1;
+	    } else {
+	        $denom = $count - 1;
+	    }
+	
+	    $out = sprintf("%-40s % 6d % 12.4f % 16.4f % 12.4f % 12.4f % 12.4f\n", $transformation, $count, $samples{$allKey}{$transformation}{'mean'}, $samples{$allKey}{$transformation}{'diff'} / $denom, $samples{$allKey}{$transformation}{'min'}, $samples{$allKey}{$transformation}{'max'}, $count * $samples{$allKey}{$transformation}{'mean'});
+	    print $out;
+	}
+}
+
+if (defined($output)) {
+    open STDOUT, '>&', $oldout or die "Can't dup \$oldout $!";
+    close $oldout;
+}

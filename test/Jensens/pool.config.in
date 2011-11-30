@@ -1,0 +1,194 @@
+#
+# [1] HU_huatlas @ xena.hamptonu.edu : 2
+#
+HU_huatlas	vanilla	xena.hamptonu.edu/jobmanager-condor	gsiftp://xena.hamptonu.edu/opt/data/vdldemo	/opt/data/vdldemo	/opt/data/vdldemo/bin/kickstart	rls://terminable.uchicago.edu
+HU_huatlas	globus	xena.hamptonu.edu/jobmanager-condor	gsiftp://xena.hamptonu.edu/opt/data/vdldemo	/opt/data/vdldemo	/opt/data/vdldemo/bin/kickstart	null
+HU_huatlas	transfer xena.hamptonu.edu/jobmanager-fork	gsiftp://xena.hamptonu.edu/opt/data/vdldemo	/opt/data/vdldemo	/opt/data/vdldemo/bin/kickstart	null
+#
+# [2] UCSanDiego @ uscmstb0.ucsd.edu : 3
+#
+UCSanDiego	vanilla	uscmstb0.ucsd.edu/jobmanager-condor	gsiftp://uscmstb0.ucsd.edu/grid3/data/vdldemo	/grid3/data/vdldemo	/grid3/data/vdldemo/bin/kickstart	rls://terminable.uchicago.edu
+UCSanDiego	globus	uscmstb0.ucsd.edu/jobmanager-condor	gsiftp://uscmstb0.ucsd.edu/grid3/data/vdldemo	/grid3/data/vdldemo	/grid3/data/vdldemo/bin/kickstart	null
+UCSanDiego	transfer uscmstb0.ucsd.edu/jobmanager-fork	gsiftp://uscmstb0.ucsd.edu/grid3/data/vdldemo	/grid3/data/vdldemo	/grid3/data/vdldemo/bin/kickstart	null
+#
+# [3] Vanderbilt @ spike.accre.vanderbilt.edu : 6
+#
+Vanderbilt	vanilla	spike.accre.vanderbilt.edu/jobmanager-pbs	gsiftp://spike.accre.vanderbilt.edu/grid/grid3-data/vdldemo	/grid/grid3-data/vdldemo	/grid/grid3-data/vdldemo/bin/kickstart	rls://terminable.uchicago.edu
+Vanderbilt	globus	spike.accre.vanderbilt.edu/jobmanager-pbs	gsiftp://spike.accre.vanderbilt.edu/grid/grid3-data/vdldemo	/grid/grid3-data/vdldemo	/grid/grid3-data/vdldemo/bin/kickstart	null
+Vanderbilt	transfer spike.accre.vanderbilt.edu/jobmanager-fork	gsiftp://spike.accre.vanderbilt.edu/grid/grid3-data/vdldemo	/grid/grid3-data/vdldemo	/grid/grid3-data/vdldemo/bin/kickstart	null
+#
+# [5] UM_ATLAS @ linat09.grid.umich.edu : 12
+#
+UM_ATLAS	vanilla	linat09.grid.umich.edu/jobmanager-pbs	gsiftp://linat09.grid.umich.edu/Grid3/Data/vdldemo	/Grid3/Data/vdldemo	/Grid3/Data/vdldemo/bin/kickstart	rls://terminable.uchicago.edu
+UM_ATLAS	globus	linat09.grid.umich.edu/jobmanager-pbs	gsiftp://linat09.grid.umich.edu/Grid3/Data/vdldemo	/Grid3/Data/vdldemo	/Grid3/Data/vdldemo/bin/kickstart	null
+UM_ATLAS	transfer linat09.grid.umich.edu/jobmanager-fork	gsiftp://linat09.grid.umich.edu/Grid3/Data/vdldemo	/Grid3/Data/vdldemo	/Grid3/Data/vdldemo/bin/kickstart	null
+#
+# [6] OUHEP @ ouhep0.nhn.ou.edu : 18
+#
+OUHEP	vanilla	ouhep0.nhn.ou.edu/jobmanager-condor	gsiftp://ouhep0.nhn.ou.edu/atlas2/software/grid3appdata/data/vdldemo	/atlas2/software/grid3appdata/data/vdldemo	/atlas2/software/grid3appdata/data/vdldemo/bin/kickstart	rls://terminable.uchicago.edu
+OUHEP	globus	ouhep0.nhn.ou.edu/jobmanager-condor	gsiftp://ouhep0.nhn.ou.edu/atlas2/software/grid3appdata/data/vdldemo	/atlas2/software/grid3appdata/data/vdldemo	/atlas2/software/grid3appdata/data/vdldemo/bin/kickstart	null
+OUHEP	transfer ouhep0.nhn.ou.edu/jobmanager-fork	gsiftp://ouhep0.nhn.ou.edu/atlas2/software/grid3appdata/data/vdldemo	/atlas2/software/grid3appdata/data/vdldemo	/atlas2/software/grid3appdata/data/vdldemo/bin/kickstart	null
+#
+# [7] Rice-Grid3 @ bonner-pcs11.rice.edu : 22
+#
+Rice_Grid3	vanilla	bonner-pcs11.rice.edu/jobmanager-condor	gsiftp://bonner-pcs11.rice.edu/net/data15/Grid-data/vdldemo	/net/data15/Grid-data/vdldemo	/net/data15/Grid-data/vdldemo/bin/kickstart	rls://terminable.uchicago.edu
+Rice_Grid3	globus	bonner-pcs11.rice.edu/jobmanager-condor	gsiftp://bonner-pcs11.rice.edu/net/data15/Grid-data/vdldemo	/net/data15/Grid-data/vdldemo	/net/data15/Grid-data/vdldemo/bin/kickstart	null
+Rice_Grid3	transfer bonner-pcs11.rice.edu/jobmanager-fork	gsiftp://bonner-pcs11.rice.edu/net/data15/Grid-data/vdldemo	/net/data15/Grid-data/vdldemo	/net/data15/Grid-data/vdldemo/bin/kickstart	null
+#
+# [8] SMU_ATLAS @ mcfarm.physics.smu.edu : 24
+#
+SMU_ATLAS	vanilla	mcfarm.physics.smu.edu/jobmanager-condor	gsiftp://mcfarm.physics.smu.edu/data/vdldemo	/data/vdldemo	/data/vdldemo/bin/kickstart	rls://terminable.uchicago.edu
+SMU_ATLAS	globus	mcfarm.physics.smu.edu/jobmanager-condor	gsiftp://mcfarm.physics.smu.edu/data/vdldemo	/data/vdldemo	/data/vdldemo/bin/kickstart	null
+SMU_ATLAS	transfer mcfarm.physics.smu.edu/jobmanager-fork	gsiftp://mcfarm.physics.smu.edu/data/vdldemo	/data/vdldemo	/data/vdldemo/bin/kickstart	null
+#
+# [9] CalTech-Grid3 @ citgrid3.cacr.caltech.edu : 24
+#
+CalTech_Grid3	vanilla	citgrid3.cacr.caltech.edu/jobmanager-condor	gsiftp://citgrid3.cacr.caltech.edu/raid/Grid3-data/vdldemo	/raid/Grid3-data/vdldemo	/raid/Grid3-data/vdldemo/bin/kickstart	rls://terminable.uchicago.edu
+CalTech_Grid3	globus	citgrid3.cacr.caltech.edu/jobmanager-condor	gsiftp://citgrid3.cacr.caltech.edu/raid/Grid3-data/vdldemo	/raid/Grid3-data/vdldemo	/raid/Grid3-data/vdldemo/bin/kickstart	null
+CalTech_Grid3	transfer citgrid3.cacr.caltech.edu/jobmanager-fork	gsiftp://citgrid3.cacr.caltech.edu/raid/Grid3-data/vdldemo	/raid/Grid3-data/vdldemo	/raid/Grid3-data/vdldemo/bin/kickstart	null
+#
+# [10] BU_AGT_Tier2 @ agt-login.bu.edu : 32
+#
+BU_AGT_Tier2	vanilla	agt-login.bu.edu/jobmanager-pbs	gsiftp://agt-login.bu.edu/home/atlas/data/vdldemo	/home/atlas/data/vdldemo	/home/atlas/data/vdldemo/bin/kickstart	rls://terminable.uchicago.edu
+BU_AGT_Tier2	globus	agt-login.bu.edu/jobmanager-pbs	gsiftp://agt-login.bu.edu/home/atlas/data/vdldemo	/home/atlas/data/vdldemo	/home/atlas/data/vdldemo/bin/kickstart	null
+BU_AGT_Tier2	transfer agt-login.bu.edu/jobmanager-fork	gsiftp://agt-login.bu.edu/home/atlas/data/vdldemo	/home/atlas/data/vdldemo	/home/atlas/data/vdldemo/bin/kickstart	null
+#
+# [11] UFlorida-Grid3 @ ufgrid01.phys.ufl.edu : 40
+#
+UFlorida_Grid3	vanilla	ufgrid01.phys.ufl.edu/jobmanager-condor	gsiftp://ufgrid01.phys.ufl.edu/raid/data1/grid01/data/vdldemo	/raid/data1/grid01/data/vdldemo	/raid/data1/grid01/data/vdldemo/bin/kickstart	rls://terminable.uchicago.edu
+UFlorida_Grid3	globus	ufgrid01.phys.ufl.edu/jobmanager-condor	gsiftp://ufgrid01.phys.ufl.edu/raid/data1/grid01/data/vdldemo	/raid/data1/grid01/data/vdldemo	/raid/data1/grid01/data/vdldemo/bin/kickstart	null
+UFlorida_Grid3	transfer ufgrid01.phys.ufl.edu/jobmanager-fork	gsiftp://ufgrid01.phys.ufl.edu/raid/data1/grid01/data/vdldemo	/raid/data1/grid01/data/vdldemo	/raid/data1/grid01/data/vdldemo/bin/kickstart	null
+#
+# [12] JHopkins @ hydra.pha.jhu.edu : 42
+#
+JHopkins	vanilla	hydra.pha.jhu.edu/jobmanager-condor	gsiftp://hydra.pha.jhu.edu/data1/gfs/gridshare/data/vdldemo	/data1/gfs/gridshare/data/vdldemo	/data1/gfs/gridshare/data/vdldemo/bin/kickstart	rls://terminable.uchicago.edu
+JHopkins	globus	hydra.pha.jhu.edu/jobmanager-condor	gsiftp://hydra.pha.jhu.edu/data1/gfs/gridshare/data/vdldemo	/data1/gfs/gridshare/data/vdldemo	/data1/gfs/gridshare/data/vdldemo/bin/kickstart	null
+JHopkins	transfer hydra.pha.jhu.edu/jobmanager-fork	gsiftp://hydra.pha.jhu.edu/data1/gfs/gridshare/data/vdldemo	/data1/gfs/gridshare/data/vdldemo	/data1/gfs/gridshare/data/vdldemo/bin/kickstart	null
+#
+# [13] Purdue-Physics @ grid.physics.purdue.edu : 53
+#
+Purdue_Physics	vanilla	grid.physics.purdue.edu/jobmanager-pbs	gsiftp://grid.physics.purdue.edu/project/grid/data/vdldemo	/project/grid/data/vdldemo	/project/grid/data/vdldemo/bin/kickstart	rls://terminable.uchicago.edu
+Purdue_Physics	globus	grid.physics.purdue.edu/jobmanager-pbs	gsiftp://grid.physics.purdue.edu/project/grid/data/vdldemo	/project/grid/data/vdldemo	/project/grid/data/vdldemo/bin/kickstart	null
+Purdue_Physics	transfer grid.physics.purdue.edu/jobmanager-fork	gsiftp://grid.physics.purdue.edu/project/grid/data/vdldemo	/project/grid/data/vdldemo	/project/grid/data/vdldemo/bin/kickstart	null
+#
+# [14] NTUHEP @ grid1.phys.ntu.edu.tw : 53
+#
+NTUHEP	vanilla	grid1.phys.ntu.edu.tw/jobmanager-condor	gsiftp://grid1.phys.ntu.edu.tw/disk1/grid3data/vdldemo	/disk1/grid3data/vdldemo	/disk1/grid3data/vdldemo/bin/kickstart	rls://terminable.uchicago.edu
+NTUHEP	globus	grid1.phys.ntu.edu.tw/jobmanager-condor	gsiftp://grid1.phys.ntu.edu.tw/disk1/grid3data/vdldemo	/disk1/grid3data/vdldemo	/disk1/grid3data/vdldemo/bin/kickstart	null
+NTUHEP	transfer grid1.phys.ntu.edu.tw/jobmanager-fork	gsiftp://grid1.phys.ntu.edu.tw/disk1/grid3data/vdldemo	/disk1/grid3data/vdldemo	/disk1/grid3data/vdldemo/bin/kickstart	null
+#
+# [15] UCSanDiegoProd @ t2cms0.sdsc.edu : 57
+#
+UCSanDiegoProd	vanilla	t2cms0.sdsc.edu/jobmanager-condor	gsiftp://t2cms0.sdsc.edu/groot/data/vdldemo	/groot/data/vdldemo	/groot/data/vdldemo/bin/kickstart	rls://terminable.uchicago.edu
+UCSanDiegoProd	globus	t2cms0.sdsc.edu/jobmanager-condor	gsiftp://t2cms0.sdsc.edu/groot/data/vdldemo	/groot/data/vdldemo	/groot/data/vdldemo/bin/kickstart	null
+UCSanDiegoProd	transfer t2cms0.sdsc.edu/jobmanager-fork	gsiftp://t2cms0.sdsc.edu/groot/data/vdldemo	/groot/data/vdldemo	/groot/data/vdldemo/bin/kickstart	null
+#
+# [16] KNU @ cluster28.knu.ac.kr : 59
+#
+KNU	vanilla	cluster28.knu.ac.kr/jobmanager-condor	gsiftp://cluster28.knu.ac.kr/usr/local/grid3_data/vdldemo	/usr/local/grid3_data/vdldemo	/usr/local/grid3_data/vdldemo/bin/kickstart	rls://terminable.uchicago.edu
+KNU	globus	cluster28.knu.ac.kr/jobmanager-condor	gsiftp://cluster28.knu.ac.kr/usr/local/grid3_data/vdldemo	/usr/local/grid3_data/vdldemo	/usr/local/grid3_data/vdldemo/bin/kickstart	null
+KNU	transfer cluster28.knu.ac.kr/jobmanager-fork	gsiftp://cluster28.knu.ac.kr/usr/local/grid3_data/vdldemo	/usr/local/grid3_data/vdldemo	/usr/local/grid3_data/vdldemo/bin/kickstart	null
+#
+# [17] UC_ATLAS_Tier2 @ tier2-01.uchicago.edu : 64
+#
+UC_ATLAS_Tier2	vanilla	tier2-01.uchicago.edu/jobmanager-condor	gsiftp://tier2-01.uchicago.edu/share/data2/vdldemo	/share/data2/vdldemo	/share/data2/vdldemo/bin/kickstart	rls://terminable.uchicago.edu
+UC_ATLAS_Tier2	globus	tier2-01.uchicago.edu/jobmanager-condor	gsiftp://tier2-01.uchicago.edu/share/data2/vdldemo	/share/data2/vdldemo	/share/data2/vdldemo/bin/kickstart	null
+UC_ATLAS_Tier2	transfer tier2-01.uchicago.edu/jobmanager-fork	gsiftp://tier2-01.uchicago.edu/share/data2/vdldemo	/share/data2/vdldemo	/share/data2/vdldemo/bin/kickstart	null
+#
+# [18] UFlorida-PG @ ufloridaPG.phys.ufl.edu : 80
+#
+UFlorida_PG	vanilla	ufloridaPG.phys.ufl.edu/jobmanager-condor	gsiftp://ufloridaPG.phys.ufl.edu/raid/data1/pg/data/vdldemo	/raid/data1/pg/data/vdldemo	/raid/data1/pg/data/vdldemo/bin/kickstart	rls://terminable.uchicago.edu
+UFlorida_PG	globus	ufloridaPG.phys.ufl.edu/jobmanager-condor	gsiftp://ufloridaPG.phys.ufl.edu/raid/data1/pg/data/vdldemo	/raid/data1/pg/data/vdldemo	/raid/data1/pg/data/vdldemo/bin/kickstart	null
+UFlorida_PG	transfer ufloridaPG.phys.ufl.edu/jobmanager-fork	gsiftp://ufloridaPG.phys.ufl.edu/raid/data1/pg/data/vdldemo	/raid/data1/pg/data/vdldemo	/raid/data1/pg/data/vdldemo/bin/kickstart	null
+#
+# [19] CHEPREO_FIU @ grid3.ampath.net : 92
+#
+CHEPREO_FIU	vanilla	grid3.ampath.net/jobmanager-pbs	gsiftp://grid3.ampath.net/export/home/grid3/data/vdldemo	/export/home/grid3/data/vdldemo	/export/home/grid3/data/vdldemo/bin/kickstart	rls://terminable.uchicago.edu
+CHEPREO_FIU	globus	grid3.ampath.net/jobmanager-pbs	gsiftp://grid3.ampath.net/export/home/grid3/data/vdldemo	/export/home/grid3/data/vdldemo	/export/home/grid3/data/vdldemo/bin/kickstart	null
+CHEPREO_FIU	transfer grid3.ampath.net/jobmanager-fork	gsiftp://grid3.ampath.net/export/home/grid3/data/vdldemo	/export/home/grid3/data/vdldemo	/export/home/grid3/data/vdldemo/bin/kickstart	null
+#
+# [20] UWMadison @ cmsgrid.hep.wisc.edu : 99
+#
+UWMadison	vanilla	cmsgrid.hep.wisc.edu/jobmanager-condor	gsiftp://cmsgrid.hep.wisc.edu/afs/hep.wisc.edu/grid3/data/vdldemo	/afs/hep.wisc.edu/grid3/data/vdldemo	/afs/hep.wisc.edu/grid3/data/vdldemo/bin/kickstart	rls://terminable.uchicago.edu
+UWMadison	globus	cmsgrid.hep.wisc.edu/jobmanager-condor	gsiftp://cmsgrid.hep.wisc.edu/afs/hep.wisc.edu/grid3/data/vdldemo	/afs/hep.wisc.edu/grid3/data/vdldemo	/afs/hep.wisc.edu/grid3/data/vdldemo/bin/kickstart	null
+UWMadison	vanilla	cmsgrid.hep.wisc.edu/jobmanager-condor_rh7_rh9	gsiftp://cmsgrid.hep.wisc.edu/afs/hep.wisc.edu/grid3/data/vdldemo	/afs/hep.wisc.edu/grid3/data/vdldemo	/afs/hep.wisc.edu/grid3/data/vdldemo/bin/kickstart	rls://terminable.uchicago.edu
+UWMadison	globus	cmsgrid.hep.wisc.edu/jobmanager-condor_rh7_rh9	gsiftp://cmsgrid.hep.wisc.edu/afs/hep.wisc.edu/grid3/data/vdldemo	/afs/hep.wisc.edu/grid3/data/vdldemo	/afs/hep.wisc.edu/grid3/data/vdldemo/bin/kickstart	null
+UWMadison	transfer cmsgrid.hep.wisc.edu/jobmanager-fork	gsiftp://cmsgrid.hep.wisc.edu/afs/hep.wisc.edu/grid3/data/vdldemo	/afs/hep.wisc.edu/grid3/data/vdldemo	/afs/hep.wisc.edu/grid3/data/vdldemo/bin/kickstart	null
+#
+# [21] uofc @ e.cs.uchicago.edu : 100
+#
+uofc	vanilla	e.cs.uchicago.edu/jobmanager-condor	gsiftp://e.cs.uchicago.edu/home/voeckler/vdldemo	/home/voeckler/vdldemo	/home/voeckler/vdldemo/bin/kickstart	rls://terminable.uchicago.edu
+uofc	globus	e.cs.uchicago.edu/jobmanager-condor	gsiftp://e.cs.uchicago.edu/home/voeckler/vdldemo	/home/voeckler/vdldemo	/home/voeckler/vdldemo/bin/kickstart	null
+uofc	transfer e.cs.uchicago.edu/jobmanager-fork	gsiftp://e.cs.uchicago.edu/home/voeckler/vdldemo	/home/voeckler/vdldemo	/home/voeckler/vdldemo/bin/kickstart	null
+#
+# [22] FNAL_CMS @ cmssrv04.fnal.gov : 105
+#
+FNAL_CMS	vanilla	cmssrv04.fnal.gov/jobmanager-fbsng	gsiftp://cmssrv04.fnal.gov/storage/remote/data1/g3-data/vdldemo	/storage/remote/data1/g3-data/vdldemo	/storage/remote/data1/g3-data/vdldemo/bin/kickstart	rls://terminable.uchicago.edu
+FNAL_CMS	globus	cmssrv04.fnal.gov/jobmanager-fbsng	gsiftp://cmssrv04.fnal.gov/storage/remote/data1/g3-data/vdldemo	/storage/remote/data1/g3-data/vdldemo	/storage/remote/data1/g3-data/vdldemo/bin/kickstart	null
+FNAL_CMS	transfer cmssrv04.fnal.gov/jobmanager-fork	gsiftp://cmssrv04.fnal.gov/storage/remote/data1/g3-data/vdldemo	/storage/remote/data1/g3-data/vdldemo	/storage/remote/data1/g3-data/vdldemo/bin/kickstart	null
+#
+# [23] BU_ATLAS_Tier2 @ atlas.bu.edu : 112
+#
+BU_ATLAS_Tier2	vanilla	atlas.bu.edu/jobmanager-pbs	gsiftp://atlas.bu.edu/atlasgrid/Grid3-data/vdldemo	/atlasgrid/Grid3-data/vdldemo	/atlasgrid/Grid3-data/vdldemo/bin/kickstart	rls://terminable.uchicago.edu
+BU_ATLAS_Tier2	globus	atlas.bu.edu/jobmanager-pbs	gsiftp://atlas.bu.edu/atlasgrid/Grid3-data/vdldemo	/atlasgrid/Grid3-data/vdldemo	/atlasgrid/Grid3-data/vdldemo/bin/kickstart	null
+BU_ATLAS_Tier2	transfer atlas.bu.edu/jobmanager-fork	gsiftp://atlas.bu.edu/atlasgrid/Grid3-data/vdldemo	/atlasgrid/Grid3-data/vdldemo	/atlasgrid/Grid3-data/vdldemo/bin/kickstart	null
+#
+# [24] Caltech-PG @ tier2b.cacr.caltech.edu : 124
+#
+Caltech_PG	vanilla	tier2b.cacr.caltech.edu/jobmanager-condor	gsiftp://tier2b.cacr.caltech.edu/raid1/Grid3-data/vdldemo	/raid1/Grid3-data/vdldemo	/raid1/Grid3-data/vdldemo/bin/kickstart	rls://terminable.uchicago.edu
+Caltech_PG	globus	tier2b.cacr.caltech.edu/jobmanager-condor	gsiftp://tier2b.cacr.caltech.edu/raid1/Grid3-data/vdldemo	/raid1/Grid3-data/vdldemo	/raid1/Grid3-data/vdldemo/bin/kickstart	null
+Caltech_PG	transfer tier2b.cacr.caltech.edu/jobmanager-fork	gsiftp://tier2b.cacr.caltech.edu/raid1/Grid3-data/vdldemo	/raid1/Grid3-data/vdldemo	/raid1/Grid3-data/vdldemo/bin/kickstart	null
+#
+# [25] FNAL_CMS2 @ cmssrv05.fnal.gov : 158
+#
+FNAL_CMS2	vanilla	cmssrv05.fnal.gov/jobmanager-fbsng	gsiftp://cmssrv05.fnal.gov/storage/remote/data3/g3-data/vdldemo	/storage/remote/data3/g3-data/vdldemo	/storage/remote/data3/g3-data/vdldemo/bin/kickstart	rls://terminable.uchicago.edu
+FNAL_CMS2	globus	cmssrv05.fnal.gov/jobmanager-fbsng	gsiftp://cmssrv05.fnal.gov/storage/remote/data3/g3-data/vdldemo	/storage/remote/data3/g3-data/vdldemo	/storage/remote/data3/g3-data/vdldemo/bin/kickstart	null
+FNAL_CMS2	transfer cmssrv05.fnal.gov/jobmanager-fork	gsiftp://cmssrv05.fnal.gov/storage/remote/data3/g3-data/vdldemo	/storage/remote/data3/g3-data/vdldemo	/storage/remote/data3/g3-data/vdldemo/bin/kickstart	null
+#
+# [26] UTA-DPCC @ atlas.dpcc.uta.edu : 158
+#
+UTA_DPCC	vanilla	atlas.dpcc.uta.edu/jobmanager-pbs	gsiftp://atlas.dpcc.uta.edu/data73/grid3-1.1.11/data/vdldemo	/data73/grid3-1.1.11/data/vdldemo	/data73/grid3-1.1.11/data/vdldemo/bin/kickstart	rls://terminable.uchicago.edu
+UTA_DPCC	globus	atlas.dpcc.uta.edu/jobmanager-pbs	gsiftp://atlas.dpcc.uta.edu/data73/grid3-1.1.11/data/vdldemo	/data73/grid3-1.1.11/data/vdldemo	/data73/grid3-1.1.11/data/vdldemo/bin/kickstart	null
+UTA_DPCC	transfer atlas.dpcc.uta.edu/jobmanager-fork	gsiftp://atlas.dpcc.uta.edu/data73/grid3-1.1.11/data/vdldemo	/data73/grid3-1.1.11/data/vdldemo	/data73/grid3-1.1.11/data/vdldemo/bin/kickstart	null
+#
+# [27] FNAL_CMS3 @ cmssrv10.fnal.gov : 272
+#
+FNAL_CMS3	vanilla	cmssrv10.fnal.gov/jobmanager-condor	gsiftp://cmssrv10.fnal.gov/storage/remote/data1/g3-data/vdldemo	/storage/remote/data1/g3-data/vdldemo	/storage/remote/data1/g3-data/vdldemo/bin/kickstart	rls://terminable.uchicago.edu
+FNAL_CMS3	globus	cmssrv10.fnal.gov/jobmanager-condor	gsiftp://cmssrv10.fnal.gov/storage/remote/data1/g3-data/vdldemo	/storage/remote/data1/g3-data/vdldemo	/storage/remote/data1/g3-data/vdldemo/bin/kickstart	null
+FNAL_CMS3	transfer cmssrv10.fnal.gov/jobmanager-fork	gsiftp://cmssrv10.fnal.gov/storage/remote/data1/g3-data/vdldemo	/storage/remote/data1/g3-data/vdldemo	/storage/remote/data1/g3-data/vdldemo/bin/kickstart	null
+#
+# [28] PSU_Grid3 @ grid3.aset.psu.edu : 312
+#
+PSU_Grid3	vanilla	grid3.aset.psu.edu/jobmanager-pbs	gsiftp://grid3.aset.psu.edu/usr16/grid3/data/vdldemo	/usr16/grid3/data/vdldemo	/usr16/grid3/data/vdldemo/bin/kickstart	rls://terminable.uchicago.edu
+PSU_Grid3	globus	grid3.aset.psu.edu/jobmanager-pbs	gsiftp://grid3.aset.psu.edu/usr16/grid3/data/vdldemo	/usr16/grid3/data/vdldemo	/usr16/grid3/data/vdldemo/bin/kickstart	null
+PSU_Grid3	transfer grid3.aset.psu.edu/jobmanager-fork	gsiftp://grid3.aset.psu.edu/usr16/grid3/data/vdldemo	/usr16/grid3/data/vdldemo	/usr16/grid3/data/vdldemo/bin/kickstart	null
+#
+# [29] ANL_Jazz @ jmayor1.lcrc.anl.gov : 350
+#
+ANL_Jazz	vanilla	jmayor1.lcrc.anl.gov:2121/jobmanager-pbs	gsiftp://jmayor1.lcrc.anl.gov:2812/home/gose/grid3/data/vdldemo	/home/gose/grid3/data/vdldemo	/home/gose/grid3/data/vdldemo/bin/kickstart	rls://terminable.uchicago.edu
+ANL_Jazz	globus	jmayor1.lcrc.anl.gov:2121/jobmanager-pbs	gsiftp://jmayor1.lcrc.anl.gov:2812/home/gose/grid3/data/vdldemo	/home/gose/grid3/data/vdldemo	/home/gose/grid3/data/vdldemo/bin/kickstart	null
+ANL_Jazz	transfer jmayor1.lcrc.anl.gov:2121/jobmanager-fork	gsiftp://jmayor1.lcrc.anl.gov:2812/home/gose/grid3/data/vdldemo	/home/gose/grid3/data/vdldemo	/home/gose/grid3/data/vdldemo/bin/kickstart	null
+#
+# [30] PDSF @ pdsfgrid3.nersc.gov : 376
+#
+PDSF	vanilla	pdsfgrid3.nersc.gov/jobmanager-lsf	gsiftp://pdsfgrid3.nersc.gov/auto/atlas/Grid3-v1.2/data/vdldemo	/auto/atlas/Grid3-v1.2/data/vdldemo	/auto/atlas/Grid3-v1.2/data/vdldemo/bin/kickstart	rls://terminable.uchicago.edu
+PDSF	globus	pdsfgrid3.nersc.gov/jobmanager-lsf	gsiftp://pdsfgrid3.nersc.gov/auto/atlas/Grid3-v1.2/data/vdldemo	/auto/atlas/Grid3-v1.2/data/vdldemo	/auto/atlas/Grid3-v1.2/data/vdldemo/bin/kickstart	null
+PDSF	transfer pdsfgrid3.nersc.gov/jobmanager-fork	gsiftp://pdsfgrid3.nersc.gov/auto/atlas/Grid3-v1.2/data/vdldemo	/auto/atlas/Grid3-v1.2/data/vdldemo	/auto/atlas/Grid3-v1.2/data/vdldemo/bin/kickstart	null
+#
+# [31] BNL_ATLAS @ agridgk01.usatlas.bnl.gov : 400
+#
+BNL_ATLAS	vanilla	agridgk01.usatlas.bnl.gov/jobmanager-condor	gsiftp://agridgk01.usatlas.bnl.gov/usatlas/prodjob/share/vdldemo	/usatlas/prodjob/share/vdldemo	/usatlas/prodjob/share/vdldemo/bin/kickstart	rls://terminable.uchicago.edu
+BNL_ATLAS	globus	agridgk01.usatlas.bnl.gov/jobmanager-condor	gsiftp://agridgk01.usatlas.bnl.gov/usatlas/prodjob/share/vdldemo	/usatlas/prodjob/share/vdldemo	/usatlas/prodjob/share/vdldemo/bin/kickstart	null
+BNL_ATLAS	transfer agridgk01.usatlas.bnl.gov/jobmanager-fork	gsiftp://agridgk01.usatlas.bnl.gov/usatlas/prodjob/share/vdldemo	/usatlas/prodjob/share/vdldemo	/usatlas/prodjob/share/vdldemo/bin/kickstart	null
+#
+# [32] UNM_HPC @ ll03.alliance.unm.edu : 507
+#
+UNM_HPC	vanilla	ll03.alliance.unm.edu/jobmanager-pbs	gsiftp://ll03.alliance.unm.edu/Grid2003/raid1/data/vdldemo	/Grid2003/raid1/data/vdldemo	/Grid2003/raid1/data/vdldemo/bin/kickstart	rls://terminable.uchicago.edu
+UNM_HPC	globus	ll03.alliance.unm.edu/jobmanager-pbs	gsiftp://ll03.alliance.unm.edu/Grid2003/raid1/data/vdldemo	/Grid2003/raid1/data/vdldemo	/Grid2003/raid1/data/vdldemo/bin/kickstart	null
+UNM_HPC	transfer ll03.alliance.unm.edu/jobmanager-fork	gsiftp://ll03.alliance.unm.edu/Grid2003/raid1/data/vdldemo	/Grid2003/raid1/data/vdldemo	/Grid2003/raid1/data/vdldemo/bin/kickstart	null
+#
+# [33] local @ @HOST@ : 2
+#
+local	vanilla	@HOST@/jobmanager-condor	gsiftp://@HOST@/home/@USER@/vdldemo	/home/@USER@/vdldemo	@VDS@/bin/linux/kickstart	rls://terminable.uchicago.edu
+local	globus	@HOST@/jobmanager-condor	gsiftp://@HOST@/home/@USER@/vdldemo	/home/@USER@/vdldemo	@VDS@/bin/linux/kickstart	null
+local	transfer @HOST@/jobmanager-fork	gsiftp://@HOST@/home/@USER@/vdldemo	/home/@USER@/vdldemo	@VDS@/bin/linux/kickstart	null

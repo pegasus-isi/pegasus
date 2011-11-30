@@ -1,0 +1,53 @@
+
+
+NOTE: Do not copy and paste the commands below without double checking.
+      The commands contain version numbers which are probably not 
+      correct for what you are trying to do!
+      
+
+1.  Check out the branch. For example:
+
+       svn co https://pegasus.isi.edu/svn/pegasus/branches/N.M N.M-branch
+
+2.  Generate documentation PDFs:
+
+       ant doc
+
+3.  Copy and check the PDFs in:
+
+       cp dist/pegasus-*/doc/html/*.pdf doc/
+       svn commit -m "Updated PDFs"
+
+4.  Set the version number in Version.in and commit:
+
+       vim ./src/edu/isi/pegasus/common/util/Version.in
+       svn commit -m "Setting version for tag"
+
+5.  Tag. Example:
+
+      svn copy https://pegasus.isi.edu/svn/pegasus/branches/N.M \
+               https://pegasus.isi.edu/svn/pegasus/tags/N.M.O
+
+6.  Open branch for new checkins with new version:
+
+       vim ./src/edu/isi/pegasus/common/util/Version.in
+       svn commit -m "Branch reopen for checkins"
+
+7.  Build using the NMI system.
+
+8.  Copy the build binaries from nightlies to their final place.
+
+9.  Build APT repo. First copy the debs into their final place in 
+    the apt tree. Then run update-pegasus-apt-repo on a Debian
+    machine. Note that Mats' Debian key is used to sign the
+    repository, so currently he has to do this step.
+
+10. Built Yum repo. Similar to Apt repo, but the step has to be
+    done on a RHEL machine.
+
+11. Update download page (and test the links!)
+
+12. Send annouce email to pegasus-announce@mailman.isi.edu
+    (Karan or Gaurang has to do this step)
+
+

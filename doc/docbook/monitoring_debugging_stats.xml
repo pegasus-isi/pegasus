@@ -1,0 +1,1520 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+"http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<chapter id="monitoring_debugging_stats">
+  <title>Monitoring, Debugging and Statistics</title>
+
+  <para>Pegasus comes bundled with useful tools that help users debug
+  workflows and generate useful statistics and plots about their workflow
+  runs. These tools internally parse the Condor log files and have a similar
+  interface. With the exception of pegasus-monitord (see below), all tools
+  take in the submit directory as an argument. Users can invoke the tools
+  listed in this chapter as follows:</para>
+
+  <programlisting>$ pegasus-[toolname]   &lt;path to the submit directory&gt;</programlisting>
+
+  <section id="workflow_status">
+    <title>Workflow Status</title>
+
+    <para>As the number of jobs and tasks in workflows increase, the ability
+    to track the progress and quickly debug a workflow becomes more and more
+    important. Pegasus comes with a series of utilities that can be used to
+    monitor and debug workflows both in real-time as well as after execution
+    is already completed.</para>
+
+    <section id="monitoring_pegasus-monitord" os="">
+      <title>pegasus-monitord</title>
+
+      <para><emphasis role="bold">Pegasus-monitord</emphasis> is used to
+      follow workflows, parsing the output of DAGMan's dagman.out file. In
+      addition to generating the jobstate.log file, which contains the various
+      states that a job goes through during the workflow execution, <emphasis
+      role="bold">pegasus-monitord</emphasis> can also be used to mine
+      information from jobs' submit and output files, and either populate a
+      database, or write a file with NetLogger events containing this
+      information. <emphasis role="bold">Pegasus-monitord</emphasis> can also
+      send notifications to users in real-time as it parses the workflow
+      execution logs.</para>
+
+      <para><emphasis role="bold">Pegasus-monitord</emphasis> is automatically
+      invoked by <emphasis role="bold">pegasus-run</emphasis>, and tracks
+      workflows in real-time. By default, it produces the jobstate.log file,
+      and a SQLite database, which contains all the information listed in the
+      <link linkend="stampede-schema">Stampede schema</link>. When a workflow
+      fails, and is re-submitted with a rescue DAG, <emphasis
+      role="bold">pegasus-monitord</emphasis> will automatically pick up from
+      where it left previously and continue to write the jobstate.log file and
+      populate the database.</para>
+
+      <para>If, after the workflow has already finished, users need to
+      re-create the jobstate.log file, or re-populate the database from
+      scratch, <emphasis role="bold">pegasus-monitord</emphasis>'s <emphasis
+      role="bold">--replay</emphasis> option should be used when running it
+      manually.</para>
+
+      <section>
+        <title>Populating to different backend databases</title>
+
+        <para>In addition to SQLite, <emphasis
+        role="bold">pegasus-monitord</emphasis> supports other types of
+        databases, such as MySQL and Postgres. Users will need to install the
+        low-level database drivers, and can use the <emphasis
+        role="bold">--dest</emphasis> command-line option, or the <emphasis
+        role="bold">pegasus.monitord.output</emphasis> property to select
+        where the logs should go.</para>
+
+        <para>As an example, the command:</para>
+
+        <programlisting>$ pegasus-monitord -r diamond-0.dag.dagman.out</programlisting>
+
+        <para>will launch <emphasis role="bold">pegasus-monitord</emphasis> in
+        replay mode. In this case, if a jobstate.log file already exists, it
+        will be rotated and a new file will be created. It will also
+        create/use a SQLite database in the workflow's run directory, with the
+        name of diamond-0.stampede.db. If the database already exists, it will
+        make sure to remove any references to the current workflow before it
+        populates the database. In this case, <emphasis
+        role="bold">pegasus-monitord</emphasis> will process the workflow
+        information from start to finish, including any restarts that may have
+        happened.</para>
+
+        <para>Users can specify an alternative database for the events, as
+        illustrated by the following examples:</para>
+
+        <programlisting>$ pegasus-monitord -r -d mysql://username:userpass@hostname/database_name diamond-0.dag.dagman.out</programlisting>
+
+        <programlisting>$ pegasus-monitord -r -d sqlite:////tmp/diamond-0.db diamond-0.dag.dagman.out</programlisting>
+
+        <para>In the first example, <emphasis
+        role="bold">pegasus-monitord</emphasis> will send the data to the
+        <emphasis role="bold">database_name</emphasis> database located at
+        server <emphasis role="bold">hostname</emphasis>, using the <emphasis
+        role="bold">username</emphasis> and <emphasis
+        role="bold">userpass</emphasis> provided. In the second example,
+        <emphasis role="bold">pegasus-monitord</emphasis> will store the data
+        in the /tmp/diamond-0.db SQLite database. </para>
+
+        <note>
+          <para>For absolute paths four slashes are required when specifying
+          an alternative database path in SQLite.</para>
+        </note>
+
+        <para>Users should also be aware that in all cases, with the exception
+        of SQLite, the database should exist before <emphasis
+        role="bold">pegasus-monitord</emphasis> is run (as it creates all
+        needed tables but does not create the database itself).</para>
+
+        <para>Finally, the following example:</para>
+
+        <programlisting>$ pegasus-monitord -r --dest diamond-0.bp diamond-0.dag.dagman.out</programlisting>
+
+        <para>sends events to the diamond-0.bp file. (please note that in
+        replay mode, any data on the file will be overwritten).</para>
+
+        <para>One important detail is that while processing a workflow,
+        <emphasis role="bold">pegasus-monitord</emphasis> will automatically
+        detect if/when sub-workflows are initiated, and will automatically
+        track those sub-workflows as well. In this case, although <emphasis
+        role="bold">pegasus-monitord</emphasis> will create a separate
+        jobstate.log file in each workflow directory, the database at the
+        top-level workflow will contain the information from not only the main
+        workflow, but also from all sub-workflows.</para>
+
+        <figure>
+          <title>Stampede Database Schema</title>
+
+          <mediaobject>
+            <imageobject>
+              <imagedata fileref="images/stampede-schema-small.png"
+                         id="stampede-schema" scale="" />
+            </imageobject>
+          </mediaobject>
+        </figure>
+      </section>
+
+      <section id="monitoring-files">
+        <title>Monitoring related files in the workflow directory</title>
+
+        <para><emphasis role="bold">Pegasus-monitord</emphasis> generates a
+        number of files in each workflow directory:</para>
+
+        <itemizedlist>
+          <listitem>
+            <para><emphasis role="bold">jobstate.log</emphasis>: contains a
+            summary of workflow and job execution. </para>
+          </listitem>
+        </itemizedlist>
+
+        <itemizedlist>
+          <listitem>
+            <para><emphasis role="bold">monitord.log</emphasis>: contains any
+            log messages generated by <emphasis
+            role="bold">pegasus-monitord</emphasis>. It is not overwritten
+            when it restarts. This file is not generated in replay mode, as
+            all log messages from <emphasis
+            role="bold">pegasus-monitord</emphasis> are output to the console.
+            Also, when sub-workflows are involved, only the top-level workflow
+            will have this log file.</para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis role="bold">monitord.started</emphasis>: contains
+            a timestamp indicating when <emphasis
+            role="bold">pegasus-monitord</emphasis> was started. This file get
+            overwritten every time <emphasis
+            role="bold">pegasus-monitord</emphasis> starts.</para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis role="bold">monitord.done</emphasis>: contains a
+            timestamp indicating when <emphasis
+            role="bold">pegasus-monitord</emphasis> finished. This file is
+            overwritten every time <emphasis
+            role="bold">pegasus-monitord</emphasis> starts.</para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis role="bold">monitord.info</emphasis>: contains
+            <emphasis role="bold">pegasus-monitord</emphasis> state
+            information, which allows it to resume processing if a workflow
+            does not finish properly and a rescue dag is submitted. This file
+            is erased when <emphasis role="bold">pegasus-monitord</emphasis>
+            is executed in replay mode.</para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis role="bold">monitord.recover</emphasis>: contains
+            <emphasis role="bold">pegasus-monitord</emphasis> state
+            information that allows it to detect that a previous instance of
+            <emphasis role="bold">pegasus-monitord</emphasis> failed (or was
+            killed) midway through parsing a workflow's execution logs. This
+            file is only present while <emphasis
+            role="bold">pegasus-monitord</emphasis> is running, as it is
+            deleted when it ends and the <emphasis
+            role="bold">monitord.info</emphasis> file is generated.</para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis role="bold">monitord.subwf.db</emphasis>: contains
+            information that aids <emphasis
+            role="bold">pegasus-monitord</emphasis> to track when
+            sub-workflows fail and are re-planned/re-tried. It is overwritten
+            when <emphasis role="bold">pegasus-monitord</emphasis> is started
+            in replay mode.</para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis role="bold">monitord-notifications.log</emphasis>:
+            contains the log file for notification-related messages. Normally,
+            this file only includes logs for failed notifications, but can be
+            populated with all notification information when <emphasis
+            role="bold">pegasus-monitord</emphasis> is run in verbose mode via
+            the <emphasis role="bold">-v</emphasis> command-line option.
+            </para>
+          </listitem>
+        </itemizedlist>
+      </section>
+    </section>
+
+    <section id="monitoring_pegasus-status">
+      <title>pegasus-status</title>
+
+      <para>To monitor the execution of the workflow run the
+      <command>pegasus-status</command> command as suggested by the output of
+      the <command>pegasus-run</command> command.
+      <command>pegasus-status</command> shows the current status of the Condor
+      Q as pertaining to the master workflow from the workflow directory you
+      are pointing it to. In a second section, it will show a summary of the
+      state of all jobs in the workflow and all of its sub-workflows.</para>
+
+      <para>The details of <command>pegasus-status</command> are described in
+      its respective <link linkend="cli-pegasus-status">manual page</link>.
+      There are many options to help you gather the most out of this tool,
+      including a watch-mode to repeatedly draw information, various modes to
+      add more information, and legends if you are new to it, or need to
+      present it.</para>
+
+      <programlisting><command>$ pegasus-status /Workflow/dags/directory</command>
+STAT  IN_STATE  JOB
+Run      05:08  level-3-0
+Run      04:32   |-sleep_ID000005
+Run      04:27   \_subdax_level-2_ID000004
+Run      03:51      |-sleep_ID000003
+Run      03:46      \_subdax_level-1_ID000002
+Run      03:10         \_sleep_ID000001
+Summary: 6 Condor jobs total (R:6)
+
+UNREADY   READY     PRE  QUEUED    POST SUCCESS FAILURE %DONE
+      0       0       0       6       0       3       0  33.3
+Summary: 3 DAGs total (Running:3)</programlisting>
+
+      <para>Without the <parameter>-l</parameter> option, the only a summary
+      of the workflow statistics is shown under the current queue status.
+      However, with the <parameter>-l</parameter> option, it will show each
+      sub-workflow separately:</para>
+
+      <programlisting><command>$ pegasus-status -l /Workflow/dags/directory</command>
+STAT  IN_STATE  JOB
+Run      07:01  level-3-0
+Run      06:25   |-sleep_ID000005
+Run      06:20   \_subdax_level-2_ID000004
+Run      05:44      |-sleep_ID000003
+Run      05:39      \_subdax_level-1_ID000002
+Run      05:03         \_sleep_ID000001
+Summary: 6 Condor jobs total (R:6)
+
+UNRDY READY   PRE  IN_Q  POST  DONE  FAIL %DONE STATE   DAGNAME
+    0     0     0     1     0     1     0  50.0 Running level-2_ID000004/level-1_ID000002/level-1-0.dag
+    0     0     0     2     0     1     0  33.3 Running level-2_ID000004/level-2-0.dag
+    0     0     0     3     0     1     0  25.0 Running *level-3-0.dag
+    0     0     0     6     0     3     0  33.3         TOTALS (9 jobs)
+Summary: 3 DAGs total (Running:3)</programlisting>
+
+      <para>The following output shows a successful workflow of workflow
+      summary after it has finished.</para>
+
+      <programlisting><command>$ pegasus-status work/2011080514</command>
+(no matching jobs found in Condor Q)
+UNREADY   READY     PRE  QUEUED    POST SUCCESS FAILURE %DONE
+      0       0       0       0       0   7,137       0 100.0
+Summary: 44 DAGs total (Success:44)</programlisting>
+
+      <para><warning>
+          <para>For large workflows with many jobs, please note that
+          <command>pegasus-status</command> will take time to compile state
+          from all workflow files. This typically affects the initial run, and
+          sub-sequent runs are faster due to the file system's buffer cache.
+          However, on a low-RAM machine, thrashing is a possibility.</para>
+        </warning>The following output show a failed workflow after no more
+      jobs from it exist. Please note how no active jobs are shown, and the
+      failure status of the total workflow.</para>
+
+      <programlisting><command>$ pegasus-status work/submit</command>
+(no matching jobs found in Condor Q)
+UNREADY   READY     PRE  QUEUED    POST SUCCESS FAILURE %DONE
+     20       0       0       0       0       0       2   0.0
+Summary: 1 DAG total (Failure:1)</programlisting>
+    </section>
+
+    <section id="monitoring_pegasus-analyzer">
+      <title>pegasus-analyzer</title>
+
+      <para>Pegasus-analyzer is a command-line utility for parsing several
+      files in the workflow directory and summarizing useful information to
+      the user. It should be used after the workflow has already finished
+      execution. pegasus-analyzer quickly goes through the jobstate.log file,
+      and isolates jobs that did not complete successfully. It then parses
+      their submit, and kickstart output files, printing to the user detailed
+      information for helping the user debug what happened to his/her
+      workflow.</para>
+
+      <para>The simplest way to invoke pegasus-analyzer is to simply give it a
+      workflow run directory, like in the example below:</para>
+
+      <para><programlisting>$ pegasus-analyzer -d /home/user/run0004
+pegasus-analyzer: initializing...
+
+************************************Summary*************************************
+
+ Total jobs         :     26 (100.00%)
+ # jobs succeeded   :     25 (96.15%)
+ # jobs failed      :      1 (3.84%)
+ # jobs unsubmitted :      0 (0.00%)
+
+******************************Failed jobs' details******************************
+
+============================register_viz_glidein_7_0============================
+
+ last state: POST_SCRIPT_FAILURE
+       site: local
+submit file: /home/user/run0004/register_viz_glidein_7_0.sub
+output file: /home/user/run0004/register_viz_glidein_7_0.out.002
+ error file: /home/user/run0004/register_viz_glidein_7_0.err.002
+
+-------------------------------Task #1 - Summary--------------------------------
+
+site        : local
+executable  : /lfs1/software/install/pegasus/default/bin/rc-client
+arguments   : -Dpegasus.user.properties=/lfs1/work/pegasus/run0004/pegasus.15181.properties \
+-Dpegasus.catalog.replica.url=rlsn://smarty.isi.edu --insert register_viz_glidein_7_0.in
+exitcode    : 1
+working dir : /lfs1/work/pegasus/run0004
+
+---------Task #1 - pegasus::rc-client - pegasus::rc-client:1.0 - stdout---------
+
+2009-02-20 16:25:13.467 ERROR [root] You need to specify the pegasus.catalog.replica property
+2009-02-20 16:25:13.468 WARN  [root] non-zero exit-code 1</programlisting>In
+      the case above, pegasus-analyzer's output contains a brief summary
+      section, showing how many jobs have succeeded and how many have failed.
+      After that, pegasus-analyzer will print information about each job that
+      failed, showing its last known state, along with the location of its
+      submit, output, and error files. pegasus-analyzer will also display any
+      stdout and stderr from the job, as recorded in its kickstart record.
+      Please consult pegasus-analyzer's man page for more examples and a
+      detailed description of its various command-line options.</para>
+    </section>
+
+    <section id="monitoring_pegasus-remove">
+      <title>pegasus-remove</title>
+
+      <para>If you want to abort your workflow for any reason you can use the
+      pegasus-remove command listed in the output of pegasus-run invocation or
+      by specifying the Dag directory for the workflow you want to
+      terminate.</para>
+
+      <programlisting><emphasis role="bold">$ pegasus-remove /PATH/To/WORKFLOW DIRECTORY</emphasis></programlisting>
+    </section>
+
+    <section>
+      <title>Resubmitting failed workflows</title>
+
+      <para>Pegasus will remove the DAGMan and all the jobs related to the
+      DAGMan from the condor queue. A rescue DAG will be generated in case you
+      want to resubmit the same workflow and continue execution from where it
+      last stopped. A rescue DAG only skips jobs that have completely
+      finished. It does not continue a partially running job unless the
+      executable supports checkpointing.</para>
+
+      <para>To resubmit an aborted or failed workflow with the same submit
+      files and rescue Dag just rerun the pegasus-run command</para>
+
+      <programlisting><emphasis role="bold">$ pegasus-run /Path/To/Workflow/Directory</emphasis></programlisting>
+    </section>
+  </section>
+
+  <section id="plotting_statistics">
+    <title>Plotting and Statistics</title>
+
+    <para>Pegasus plotting and statistics tools queries the Stampede database
+    created by pegasus-monitord for generating the output.The stampede scheme
+    can be found <link linkend="stampede-schema">here</link>.</para>
+
+    <para>The statistics and plotting tools use the following terminology for
+    defining tasks, jobs etc. Pegasus takes in a DAX which is composed of
+    tasks. Pegasus plans it into a Condor DAG / Executable workflow that
+    consists of Jobs. In case of Clustering, multiple tasks in the DAX can be
+    captured into a single job in the Executable workflow. When DAGMan
+    executes a job, a job instance is populated . Job instances capture
+    information as seen by DAGMan. In case DAGMan retires a job on detecting a
+    failure , a new job instance is populated. When DAGMan finds a job
+    instance has finished , an invocation is associated with job instance. In
+    case of clustered job, multiple invocations will be associated with a
+    single job instance. If a Pre script or Post Script is associated with a
+    job instance, then invocations are populated in the database for the
+    corresponding job instance.</para>
+
+    <section>
+      <title>pegasus-statistics</title>
+
+      <para>Pegasus-statistics generates workflow execution statistics. To
+      generate statistics run the command as shown below.</para>
+
+      <programlisting>$ <emphasis>pegasus-statistics /scratch/grid-setup/run0001/ -s all </emphasis>
+
+
+...
+
+******************************************** SUMMARY ********************************************
+...
+
+-----------------------------------------------------------------------------------------------------
+Type            Succeeded  Failed  Incomplete   Total      Retries  Total Run (Retries Included)
+Tasks           8          0       0            8      ||  0        8                   
+Jobs            27         0       0            27     ||  0        27                  
+Sub Workflows   2          0       0            2      ||  0        2                   
+-----------------------------------------------------------------------------------------------------
+
+Workflow wall time                               : 21 mins, 9 secs,     (total 1269 seconds)
+
+Workflow cumulative job wall time                : 8 mins, 4 secs,      (total 484 seconds)
+
+Cumulative job walltime as seen from submit side : 8 mins, 0 secs,      (total 480 seconds)
+
+Workflow execution statistics     : /scratch/grid-setup/run0001/statistics/workflow.txt
+
+Job instance statistics           : /scratch/grid-setup/run0001/statistics/jobs.txt
+
+Transformation statistics         : /scratch/grid-setup/run0001/statistics/breakdown.txt
+
+Time statistics                   : /scratch/grid-setup/run0001/statistics/time.txt
+
+**************************************************************************************************</programlisting>
+
+      <para>By default the output gets generated to a statistics folder inside
+      the submit directory. The output that is generated by pegasus-statistics
+      is based on the value set for command line option 's'(statistics_level).
+      In the sample run the command line option 's' is set to 'all' to
+      generate all the statistics information for the workflow run. Please
+      consult the pegasus-statistics man page to find a detailed description
+      of various command line options.</para>
+
+      <note>
+        <para>In case of hierarchal workflows, the metrics that are displayed
+        on stdout take into account all the jobs/tasks/sub workflows that make
+        up the workflow by recursively iterating through each sub
+        workflow.</para>
+      </note>
+
+      <para>pegasus-statistics summary which is printed on the stdout contains
+      the following information.</para>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">Workflow summary</emphasis> - Summary of
+          the workflow execution. In case of hierarchical workflow the
+          calculation shows the statistics across all the sub workflows.It
+          shows the following statistics about tasks, jobs and sub
+          workflows.</para>
+
+          <itemizedlist>
+            <listitem>
+              <para><emphasis role="bold">Succeeded</emphasis> - total count
+              of succeeded tasks/jobs/sub workflows.</para>
+            </listitem>
+
+            <listitem>
+              <para><emphasis role="bold">Failed</emphasis> - total count of
+              failed tasks/jobs/sub workflows.</para>
+            </listitem>
+
+            <listitem>
+              <para><emphasis role="bold">Incomplete</emphasis> - total count
+              of tasks/jobs/sub workflows that are not in succeeded or failed
+              state. This includes all the jobs that are not submitted,
+              submitted but not completed etc. This is calculated as
+              difference between 'total' count and sum of 'succeeded' and
+              'failed' count.</para>
+            </listitem>
+
+            <listitem>
+              <para><emphasis role="bold">Total</emphasis> - total count of
+              tasks/jobs/sub workflows.</para>
+            </listitem>
+
+            <listitem>
+              <para><emphasis role="bold">Retries</emphasis> - total retry
+              count of tasks/jobs/sub workflows.</para>
+            </listitem>
+
+            <listitem>
+              <para><emphasis role="bold">Total Run</emphasis> - total count
+              of tasks/jobs/sub workflows executed during workflow run. This
+              is the cumulative of total retries, succeeded and failed
+              count.</para>
+            </listitem>
+          </itemizedlist>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">Workflow wall time</emphasis> - The
+          walltime from the start of the workflow execution to the end as
+          reported by the DAGMAN.In case of rescue dag the value is the
+          cumulative of all retries.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">Workflow cummulate job wall
+          time</emphasis> - The sum of the walltime of all jobs as reported by
+          kickstart. In case of job retries the value is the cumulative of all
+          retries. For workflows having sub workflow jobs (i.e SUBDAG and
+          SUBDAX jobs), the walltime value includes jobs from the sub
+          workflows as well.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">Cumulative job walltime as seen from
+          submit side</emphasis> - The sum of the walltime of all jobs as
+          reported by DAGMan. This is similar to the regular cumulative job
+          walltime, but includes job management overhead and delays. In case
+          of job retries the value is the cumulative of all retries. For
+          workflows having sub workflow jobs (i.e SUBDAG and SUBDAX jobs), the
+          walltime value includes jobs from the sub workflows</para>
+        </listitem>
+      </itemizedlist>
+
+      <para>pegasus-statistics generates the following statistics files based
+      on the command line options set.</para>
+
+      <para><emphasis role="bold">Workflow statistics file per workflow
+      [workflow.txt]</emphasis></para>
+
+      <para>Workflow statistics file per workflow contains the following
+      information about each workflow run. In case of hierarchal workflows,
+      the file contains a table for each sub workflow. The file also contains
+      a 'Total' table at the bottom which is the cummulative of all the
+      individual statistics details.</para>
+
+      <para>A sample table is shown below. It shows the following statistics
+      about tasks, jobs and sub workflows.</para>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">Workflow retries</emphasis> - number of
+          times a workflow was retried.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">Succeeded</emphasis> - total count of
+          succeeded tasks/jobs/sub workflows.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">Failed</emphasis> - total count of
+          failed tasks/jobs/sub workflows.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">Incomplete</emphasis> - total count of
+          tasks/jobs/sub workflows that are not in succeeded or failed state.
+          This includes all the jobs that are not submitted, submitted but not
+          completed etc. This is calculated as difference between 'total'
+          count and sum of 'succeeded' and 'failed' count.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">Total</emphasis> - total count of
+          tasks/jobs/sub workflows.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">Retries</emphasis> - total retry count
+          of tasks/jobs/sub workflows.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">Total Run</emphasis> - total count of
+          tasks/jobs/sub workflows executed during workflow run. This is the
+          cumulative of total retries, succeeded and failed count.</para>
+        </listitem>
+      </itemizedlist>
+
+      <table>
+        <title>Workflow Statistics</title>
+
+        <tgroup align="center" cols="9">
+          <thead>
+            <row>
+              <entry align="center">#</entry>
+
+              <entry align="center">Type</entry>
+
+              <entry align="center">Succeeded</entry>
+
+              <entry align="center">Failed</entry>
+
+              <entry align="center">Incomplete</entry>
+
+              <entry align="center">Total</entry>
+
+              <entry align="center">Retries</entry>
+
+              <entry align="center">Total Run</entry>
+
+              <entry align="center">Workflow Retries</entry>
+            </row>
+          </thead>
+
+          <tbody>
+            <row>
+              <entry>2a6df11b-9972-4ba0-b4ba-4fd39c357af4</entry>
+
+              <entry></entry>
+
+              <entry></entry>
+
+              <entry></entry>
+
+              <entry></entry>
+
+              <entry></entry>
+
+              <entry></entry>
+
+              <entry></entry>
+
+              <entry>0</entry>
+            </row>
+
+            <row>
+              <entry></entry>
+
+              <entry>Tasks</entry>
+
+              <entry>4</entry>
+
+              <entry>0</entry>
+
+              <entry>0</entry>
+
+              <entry>4</entry>
+
+              <entry>0</entry>
+
+              <entry>4</entry>
+
+              <entry></entry>
+            </row>
+
+            <row>
+              <entry></entry>
+
+              <entry>Jobs</entry>
+
+              <entry>13</entry>
+
+              <entry>0</entry>
+
+              <entry>0</entry>
+
+              <entry>13</entry>
+
+              <entry>0</entry>
+
+              <entry>13</entry>
+
+              <entry></entry>
+            </row>
+
+            <row>
+              <entry></entry>
+
+              <entry>Sub Workflows</entry>
+
+              <entry>0</entry>
+
+              <entry>0</entry>
+
+              <entry>0</entry>
+
+              <entry>0</entry>
+
+              <entry>0</entry>
+
+              <entry>0</entry>
+
+              <entry></entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+
+      <para><emphasis role="bold">Job statistics file per workflow
+      [jobs.txt]</emphasis></para>
+
+      <para>Job statistics file per workflow contains the following details
+      about the job instances in each workflow. A sample file is shown
+      below.</para>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">Job</emphasis> - the name of the job
+          instance</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">Try</emphasis> - the number representing
+          the job instance run count.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">Site</emphasis> - the site where the job
+          instance ran</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">Kickstart(sec.)</emphasis> - the actual
+          duration of the job instance in seconds on the remote compute
+          node.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">Post(sec.)</emphasis> - the postscript
+          time as reported by DAGMan .</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">CondorQTime(sec.)</emphasis> - the time
+          between submission by DAGMan and the remote Grid submission. It is
+          an estimate of the time spent in the condor q on the submit node
+          .</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">Resource(sec.)</emphasis> - the time
+          between the remote Grid submission and start of remote execution .
+          It is an estimate of the time job instance spent in the remote queue
+          .</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">Runtime(sec.)</emphasis> - the time
+          spent on the resource as seen by Condor DAGMan . Is always
+          &gt;=kickstart .</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">Seqexec(sec.)</emphasis> - the time
+          taken for the completion of a clustered job instance .</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">Seqexec-Delay(sec.)</emphasis> - the
+          time difference between the time for the completion of a clustered
+          job instance and sum of all the individual tasks kickstart time
+          .</para>
+        </listitem>
+      </itemizedlist>
+
+      <table>
+        <title>Job statistics</title>
+
+        <tgroup align="center" cols="10">
+          <thead>
+            <row>
+              <entry align="center">Job</entry>
+
+              <entry align="center">Try</entry>
+
+              <entry align="center">Site</entry>
+
+              <entry align="center">Kickstart</entry>
+
+              <entry align="center">Post</entry>
+
+              <entry align="center">CondorQTime</entry>
+
+              <entry align="center">Resource</entry>
+
+              <entry align="center">Runtime</entry>
+
+              <entry align="center">Seqexec</entry>
+
+              <entry align="center">Seqexec-Delay</entry>
+            </row>
+          </thead>
+
+          <tbody>
+            <row>
+              <entry>analyze_ID0000004</entry>
+
+              <entry>1</entry>
+
+              <entry>local</entry>
+
+              <entry>60.002</entry>
+
+              <entry>5.0</entry>
+
+              <entry>0.0</entry>
+
+              <entry>-</entry>
+
+              <entry>62.0</entry>
+
+              <entry>-</entry>
+
+              <entry>-</entry>
+            </row>
+
+            <row>
+              <entry>create_dir_diamond_0_local</entry>
+
+              <entry>1</entry>
+
+              <entry>local</entry>
+
+              <entry>0.027</entry>
+
+              <entry>5.0</entry>
+
+              <entry>5.0</entry>
+
+              <entry>-</entry>
+
+              <entry>0.0</entry>
+
+              <entry>-</entry>
+
+              <entry>-</entry>
+            </row>
+
+            <row>
+              <entry>findrange_ID0000002</entry>
+
+              <entry>1</entry>
+
+              <entry>local</entry>
+
+              <entry>60.001</entry>
+
+              <entry>5.0</entry>
+
+              <entry>0.0</entry>
+
+              <entry>-</entry>
+
+              <entry>60.0</entry>
+
+              <entry>-</entry>
+
+              <entry>-</entry>
+            </row>
+
+            <row>
+              <entry>findrange_ID0000003</entry>
+
+              <entry>1</entry>
+
+              <entry>local</entry>
+
+              <entry>60.002</entry>
+
+              <entry>5.0</entry>
+
+              <entry>10.0</entry>
+
+              <entry>-</entry>
+
+              <entry>61.0</entry>
+
+              <entry>-</entry>
+
+              <entry>-</entry>
+            </row>
+
+            <row>
+              <entry>preprocess_ID0000001</entry>
+
+              <entry>1</entry>
+
+              <entry>local</entry>
+
+              <entry>60.002</entry>
+
+              <entry>5.0</entry>
+
+              <entry>5.0</entry>
+
+              <entry>-</entry>
+
+              <entry>60.0</entry>
+
+              <entry>-</entry>
+
+              <entry>-</entry>
+            </row>
+
+            <row>
+              <entry>register_local_1_0</entry>
+
+              <entry>1</entry>
+
+              <entry>local</entry>
+
+              <entry>0.459</entry>
+
+              <entry>6.0</entry>
+
+              <entry>5.0</entry>
+
+              <entry>-</entry>
+
+              <entry>0.0</entry>
+
+              <entry>-</entry>
+
+              <entry>-</entry>
+            </row>
+
+            <row>
+              <entry>register_local_1_1</entry>
+
+              <entry>1</entry>
+
+              <entry>local</entry>
+
+              <entry>0.338</entry>
+
+              <entry>5.0</entry>
+
+              <entry>5.0</entry>
+
+              <entry>-</entry>
+
+              <entry>0.0</entry>
+
+              <entry>-</entry>
+
+              <entry>-</entry>
+            </row>
+
+            <row>
+              <entry>register_local_2_0</entry>
+
+              <entry>1</entry>
+
+              <entry>local</entry>
+
+              <entry>0.348</entry>
+
+              <entry>5.0</entry>
+
+              <entry>5.0</entry>
+
+              <entry>-</entry>
+
+              <entry>0.0</entry>
+
+              <entry>-</entry>
+
+              <entry>-</entry>
+            </row>
+
+            <row>
+              <entry>stage_in_local_local_0</entry>
+
+              <entry>1</entry>
+
+              <entry>local</entry>
+
+              <entry>0.39</entry>
+
+              <entry>5.0</entry>
+
+              <entry>5.0</entry>
+
+              <entry>-</entry>
+
+              <entry>0.0</entry>
+
+              <entry>-</entry>
+
+              <entry>-</entry>
+            </row>
+
+            <row>
+              <entry>stage_out_local_local_0_0</entry>
+
+              <entry>1</entry>
+
+              <entry>local</entry>
+
+              <entry>0.165</entry>
+
+              <entry>5.0</entry>
+
+              <entry>10.0</entry>
+
+              <entry>-</entry>
+
+              <entry>0.0</entry>
+
+              <entry>-</entry>
+
+              <entry>-</entry>
+            </row>
+
+            <row>
+              <entry>stage_out_local_local_1_0</entry>
+
+              <entry>1</entry>
+
+              <entry>local</entry>
+
+              <entry>0.147</entry>
+
+              <entry>7.0</entry>
+
+              <entry>5.0</entry>
+
+              <entry>-</entry>
+
+              <entry>0.0</entry>
+
+              <entry>-</entry>
+
+              <entry>-</entry>
+            </row>
+
+            <row>
+              <entry>stage_out_local_local_1_1</entry>
+
+              <entry>1</entry>
+
+              <entry>local</entry>
+
+              <entry>0.139</entry>
+
+              <entry>5.0</entry>
+
+              <entry>6.0</entry>
+
+              <entry>-</entry>
+
+              <entry>0.0</entry>
+
+              <entry>-</entry>
+
+              <entry>-</entry>
+            </row>
+
+            <row>
+              <entry>stage_out_local_local_2_0</entry>
+
+              <entry>1</entry>
+
+              <entry>local</entry>
+
+              <entry>0.145</entry>
+
+              <entry>5.0</entry>
+
+              <entry>5.0</entry>
+
+              <entry>-</entry>
+
+              <entry>0.0</entry>
+
+              <entry>-</entry>
+
+              <entry>-</entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+
+      <para><emphasis role="bold">Transformation statistics file per workflow
+      [breakdown.txt]</emphasis></para>
+
+      <para>Transformation statistics file per workflow contains information
+      about the invocations in each workflow grouped by transformation name. A
+      sample file is shown below.</para>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">Transformation</emphasis> - name of the
+          transformation.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">Count</emphasis> - the number of times
+          invocations with a given transformation name was executed.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">Succeeded</emphasis> - the count of
+          succeeded invocations with a given logical transformation name
+          .</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">Failed</emphasis> - the count of failed
+          invocations with a given logical transformation name .</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">Min (sec.)</emphasis> - the minimum
+          runtime value of invocations with a given logical transformation
+          name.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">Max (sec.)</emphasis> - the minimum
+          runtime value of invocations with a given logical transformation
+          name.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">Mean (sec.)</emphasis> - the mean of the
+          invocation runtimes with a given logical transformation name.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">Total (sec.)</emphasis> - the cumulative
+          of runtime value of invocations with a given logical transformation
+          name</para>
+        </listitem>
+      </itemizedlist>
+
+      <table>
+        <title>Transformation Statistics</title>
+
+        <tgroup align="center" cols="8">
+          <thead>
+            <row>
+              <entry align="center">Transformation</entry>
+
+              <entry align="center">Count</entry>
+
+              <entry align="center">Succeeded</entry>
+
+              <entry align="center">Failed</entry>
+
+              <entry align="center">Min</entry>
+
+              <entry align="center">Max</entry>
+
+              <entry align="center">Mean</entry>
+
+              <entry align="center">Total</entry>
+            </row>
+          </thead>
+
+          <tbody>
+            <row>
+              <entry>dagman::post</entry>
+
+              <entry>13</entry>
+
+              <entry>13</entry>
+
+              <entry>0</entry>
+
+              <entry>5.0</entry>
+
+              <entry>7.0</entry>
+
+              <entry>5.231</entry>
+
+              <entry>68.0</entry>
+            </row>
+
+            <row>
+              <entry>diamond::analyze</entry>
+
+              <entry>1</entry>
+
+              <entry>1</entry>
+
+              <entry>0</entry>
+
+              <entry>60.002</entry>
+
+              <entry>60.002</entry>
+
+              <entry>60.002</entry>
+
+              <entry>60.002</entry>
+            </row>
+
+            <row>
+              <entry>diamond::findrange</entry>
+
+              <entry>2</entry>
+
+              <entry>2</entry>
+
+              <entry>0</entry>
+
+              <entry>60.001</entry>
+
+              <entry>60.002</entry>
+
+              <entry>60.002</entry>
+
+              <entry>120.003</entry>
+            </row>
+
+            <row>
+              <entry>diamond::preprocess</entry>
+
+              <entry>1</entry>
+
+              <entry>1</entry>
+
+              <entry>0</entry>
+
+              <entry>60.002</entry>
+
+              <entry>60.002</entry>
+
+              <entry>60.002</entry>
+
+              <entry>60.002</entry>
+            </row>
+
+            <row>
+              <entry>pegasus::dirmanager</entry>
+
+              <entry>1</entry>
+
+              <entry>1</entry>
+
+              <entry>0</entry>
+
+              <entry>0.027</entry>
+
+              <entry>0.027</entry>
+
+              <entry>0.027</entry>
+
+              <entry>0.027</entry>
+            </row>
+
+            <row>
+              <entry>pegasus::pegasus-transfer</entry>
+
+              <entry>5</entry>
+
+              <entry>5</entry>
+
+              <entry>0</entry>
+
+              <entry>0.139</entry>
+
+              <entry>0.39</entry>
+
+              <entry>0.197</entry>
+
+              <entry>0.986</entry>
+            </row>
+
+            <row>
+              <entry>pegasus::rc-client</entry>
+
+              <entry>3</entry>
+
+              <entry>3</entry>
+
+              <entry>0</entry>
+
+              <entry>0.338</entry>
+
+              <entry>0.459</entry>
+
+              <entry>0.382</entry>
+
+              <entry>1.145</entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+
+      <para><emphasis role="bold">Time statistics file
+      [time.txt]</emphasis></para>
+
+      <para>Time statistics file contains job instance and invocation
+      statistics information grouped by time and host. The time grouping can
+      be on day/hour. The file contains the following tables Job instance
+      statistics per day/hour, Invocation statistics per day/hour, Job
+      instance statistics by host per day/hour and Invocation by host per
+      day/hour. A sample Invocation statistics by host per day table is shown
+      below.</para>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">Job instance statistics per
+          day/hour</emphasis> - the number of job instances run, total runtime
+          sorted by day/hour.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">Invocation statistics per
+          day/hour</emphasis> - the number of invocations , total runtime
+          sorted by day/hour.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">Job instance statistics by host per
+          day/hour</emphasis> - the number of job instances run, total runtime
+          on each host sorted by day/hour.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">Invocation statistics by host per
+          day/hour</emphasis> - the number of invocations , total runtime on
+          each host sorted by day/hour.</para>
+        </listitem>
+      </itemizedlist>
+
+      <table>
+        <title>Invocation statistics by host per day</title>
+
+        <tgroup align="center" cols="4">
+          <thead>
+            <row>
+              <entry align="center">Date [YYYY-MM-DD]</entry>
+
+              <entry align="center">Host</entry>
+
+              <entry align="center">Count</entry>
+
+              <entry align="center">Runtime (Sec.)</entry>
+            </row>
+          </thead>
+
+          <tbody>
+            <row>
+              <entry>2011-07-15</entry>
+
+              <entry>butterfly.isi.edu</entry>
+
+              <entry>54</entry>
+
+              <entry>625.094</entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+    </section>
+
+    <section>
+      <title>pegasus-plots</title>
+
+      <para>Pegasus-plots generates graphs and charts to visualize workflow
+      execution. To generate graphs and charts run the command as shown
+      below.</para>
+
+      <programlisting>$ <emphasis>pegasus-plots  -p all  /scratch/grid-setup/run0001/</emphasis>
+
+
+...
+
+******************************************** SUMMARY ********************************************
+
+Graphs and charts generated by pegasus-plots can be viewed by opening the generated html file in the web browser  : 
+/scratch/grid-setup/run0001/plots/index.html
+ 
+**************************************************************************************************</programlisting>
+
+      <para>By default the output gets generated to plots folder inside the
+      submit directory. The output that is generated by pegasus-plots is based
+      on the value set for command line option 'p'(plotting_level).In the
+      sample run the command line option 'p' is set to 'all' to generate all
+      the charts and graphs for the workflow run. Please consult the
+      pegasus-plots man page to find a detailed description of various command
+      line options.pegasus-plots generates an index.html file which provides
+      links to all the generated charts and plots. A sample index.html page is
+      show below.</para>
+
+      <figure>
+        <title>pegasus-plot index page</title>
+
+        <mediaobject>
+          <imageobject>
+            <imagedata contentwidth="720px"
+                       fileref="images/pegasus_plots_index.png" />
+          </imageobject>
+        </mediaobject>
+      </figure>
+
+      <para>pegasus-plots generates the following plots and charts.</para>
+
+      <para><emphasis role="bold">Dax Graph</emphasis></para>
+
+      <para>Graph representation of the DAX file. A sample page is shown
+      below.</para>
+
+      <figure>
+        <title>DAX Graph</title>
+
+        <mediaobject>
+          <imageobject>
+            <imagedata contentwidth="720px" fileref="images/dax_page.png" />
+          </imageobject>
+        </mediaobject>
+      </figure>
+
+      <para><emphasis role="bold">Dag Graph</emphasis></para>
+
+      <para>Graph representation of the DAG file. A sample page is shown
+      below.</para>
+
+      <figure>
+        <title>DAG Graph</title>
+
+        <mediaobject>
+          <imageobject>
+            <imagedata contentwidth="720px" fileref="images/dag_page.png" />
+          </imageobject>
+        </mediaobject>
+      </figure>
+
+      <para><emphasis role="bold">Gantt workflow execution
+      chart</emphasis></para>
+
+      <para>Gantt chart of the workflow execution run. A sample page is shown
+      below.</para>
+
+      <figure>
+        <title>Gantt Chart</title>
+
+        <mediaobject>
+          <imageobject>
+            <imagedata contentwidth="720px"
+                       fileref="images/gantt_chart_page.png" />
+          </imageobject>
+        </mediaobject>
+      </figure>
+
+      <para>The toolbar at the top provides zoom in/out , pan
+      left/right/top/bottom and show/hide job name functionality.The toolbar
+      at the bottom can be used to show/hide job states. Failed job instances
+      are shown in red border in the chart. Clicking on a sub workflow job
+      instance will take you to the corresponding sub workflow chart.</para>
+
+      <para><emphasis role="bold">Host over time chart</emphasis></para>
+
+      <para>Host over time chart of the workflow execution run. A sample page
+      is shown below.</para>
+
+      <figure>
+        <title>Host over time chart</title>
+
+        <mediaobject>
+          <imageobject>
+            <imagedata contentwidth="720px"
+                       fileref="images/host_chart_page.png" />
+          </imageobject>
+        </mediaobject>
+      </figure>
+
+      <para>The toolbar at the top provides zoom in/out , pan
+      left/right/top/bottom and show/hide host name functionality.The toolbar
+      at the bottom can be used to show/hide job states. Failed job instances
+      are shown in red border in the chart. Clicking on a sub workflow job
+      instance will take you to the corresponding sub workflow chart.</para>
+
+      <para><emphasis role="bold">Time chart</emphasis></para>
+
+      <para>Time chart shows job instance/invocation count and runtime of the
+      workflow run over time. A sample page is shown below.</para>
+
+      <figure>
+        <title>Time chart</title>
+
+        <mediaobject>
+          <imageobject>
+            <imagedata contentwidth="720px"
+                       fileref="images/time_chart_page.png" />
+          </imageobject>
+        </mediaobject>
+      </figure>
+
+      <para>The toolbar at the top provides zoom in/out and pan
+      left/right/top/bottom functionality.The toolbar at the bottom can be
+      used to switch between job instances/ invocations and day/hour
+      filtering.</para>
+
+      <para><emphasis role="bold">Breakdown chart</emphasis></para>
+
+      <para>Breakdown chart shows invocation count and runtime of the workflow
+      run grouped by transformation name. A sample page is shown below.</para>
+
+      <figure>
+        <title>Breakdown chart</title>
+
+        <mediaobject>
+          <imageobject>
+            <imagedata contentwidth="720px"
+                       fileref="images/breakdown_chart_page.png" />
+          </imageobject>
+        </mediaobject>
+      </figure>
+
+      <para>The toolbar at the bottom can be used to switch between invocation
+      count and runtime filtering. Legends can be clicked to get more
+      details.</para>
+    </section>
+  </section>
+</chapter>

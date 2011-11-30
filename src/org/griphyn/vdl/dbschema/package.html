@@ -1,0 +1,83 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<html>
+<head>
+<!--
+
+  $Id$
+
+  Copyright (c) 2003 The University of Chicago and The University of 
+  Southern California. All Rights Reserved.
+
+-->
+</head>
+<body bgcolor="white">
+
+Provides the database schema encapsulation.
+
+<h2>Package Specification</h2>
+
+The classes in this package provide a database independent abstraction 
+of database access for a variety of catalogs.<p>
+
+<center>
+<map name="p0">
+<AREA SHAPE="RECT" COORDS="400,0,550,30" HREF="Catalog.html">
+<AREA SHAPE="RECT" COORDS="250,100,350,130" HREF="VDC.html">
+<AREA SHAPE="RECT" COORDS="600,100,700,130" HREF="PTC.html">
+<AREA SHAPE="RECT" COORDS="400,100,550,130" HREF="DatabaseSchema.html">
+<AREA SHAPE="RECT" COORDS="0,100,100,130" HREF="Annotation.html">
+<AREA SHAPE="RECT" COORDS="575,320,725,350" HREF="InvocationSchema.html">
+<AREA SHAPE="RECT" COORDS="225,320,375,350" HREF="ChunkSchema.html">
+<AREA SHAPE="RECT" COORDS="400,320,550,350" HREF="SingleFileSchema.html">
+<AREA SHAPE="RECT" COORDS="400,220,550,250" HREF="InMemorySchema.html">
+<AREA SHAPE="RECT" COORDS="65,200,165,230" HREF="Advanced.html">
+<AREA SHAPE="RECT" COORDS="25,320,200,350" HREF="AnnotationSchema.html">
+<AREA SHAPE="RECT" COORDS="750,320,900,350" HREF="WorkflowSchema.html">
+<AREA SHAPE="RECT" COORDS="775,100,875,130" HREF="WF.html">
+
+</map>
+<img src="doc-files/dbschema-1.gif" usemap="#p0" border="0">
+</center><p>
+
+<p>
+
+To provide an alternative implementation for an existing catalog, you
+need to:
+
+<ol>
+  <li>extend the {@link org.griphyn.vdl.dbschema.DatabaseSchema} class.
+  <li>implement the appropriate {@link org.griphyn.vdl.dbschema.Catalog} 
+    child interface.
+</ol>
+
+To provide an addition catalog implementation, you need to extend the 
+{@link org.griphyn.vdl.dbschema.Catalog} interface. In the next step, 
+you will need to provide an implementation as before.<p>
+
+Currently, several concrete catalogs are implemented in Chimera:
+
+<ul>
+  <li>The Provenance Tracking Catalog {@link org.griphyn.vdl.dbschema.PTC}
+  <li>The Virtual Data Catalog {@link org.griphyn.vdl.dbschema.VDC}
+  <li>An extension of the VDC {@link org.griphyn.vdl.dbschema.Advanced}
+  <li>Joining attributes to Virtual Data objects {@link org.griphyn.vdl.dbschema.Annotation}
+</ul>
+
+<h2>Related Documentation</h2>
+
+For overviews, tutorials, examples, guides, and tool documentation,
+please see:
+
+<ul>
+  <li><a href="http://www.griphyn.org/workspace/VDS/">GVDS</a>
+  <li><a href="http://www.griphyn.org/chimera/">Chimera</a>
+  <li><a href="http://www.griphyn.org/">GriPhyN</a>
+</ul>
+
+<!-- Put @see and @since tags down here. -->
+
+@see org.griphyn.vdl.dbdriver
+@see org.griphyn.vdl.annotation
+
+</body>
+</html>

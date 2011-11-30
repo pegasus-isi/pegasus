@@ -1,0 +1,4960 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE section PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+"http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<section id="cli">
+  <title>Command Line Tools</title>
+
+  <para>This chapter contains reference material for all the command-line
+  tools distributed with Pegasus.</para>
+
+  <section id="cli-pegasus-version">
+    <title>pegasus-version</title>
+
+    <para>pegasus-version is a simple command-line tool that reports the
+    version number of the Pegasus distribution being used.</para>
+
+    <para>In its most basic invocation, it will show the current version of
+    the Pegasus software you have installed:</para>
+
+    <para><screen>$ <command>pegasus-version</command>
+3.1.0cvs</screen>If you want to know more details about the installed version,
+    i.e. which system it was compiled for and when, use the
+    <emphasis>long</emphasis> or <emphasis>full</emphasis> mode:</para>
+
+    <para><screen>$ <command>pegasus-version</command> <command><replaceable>-f</replaceable></command>
+3.1.0cvs-x86_64_cent_5.6-20110706191019Z</screen>The reported version may
+    sometimes not be the version you would expect, if the Pegasus jar file got
+    updated but not the remainder of the installation environment. To check
+    this case, you use <emphasis>match</emphasis> mode:</para>
+
+    <para><screen>$ <command>pegasus-version</command> <command><replaceable>-m</replaceable></command>
+Compiled into PEGASUS: 20110706191019Z x86_64_cent_5.6
+Installation provides: 20110706191019Z x86_64_cent_5.6
+OK: Internal version matches installation.
+Complete version info: 3.1.0cvs-x86_64_cent_5.6-20110706191019Z</screen></para>
+
+    <para>The <emphasis>match</emphasis> mode implies
+    <emphasis>long</emphasis> mode, and will thus show the full version as
+    part of its output.</para>
+
+    <para>In <emphasis>quiet</emphasis> mode, which can only be applied to
+    <emphasis>match</emphasis> mode, no output is written unless there is an
+    error. You would use <emphasis>quiet</emphasis> mode to check the exit
+    code of <literal>pegasus-version</literal> to determine a problem while
+    being in a scripted environment.</para>
+
+    <para><screen>$ <command>pegasus-version</command> <command><replaceable>-mq</replaceable></command>
+$ <command>echo $?</command>
+0</screen>The manual page for <literal>pegasus-version</literal> will show
+    more details, and long options availble to the user.</para>
+  </section>
+
+  <section id="cli-pegasus-plan">
+    <title>pegasus-plan</title>
+
+    <para>pegasus-plan generates an executable workflow from an abstract
+    workflow description (DAX).</para>
+
+    <section>
+      <title>SYNOPSIS</title>
+
+      <para><emphasis role="bold">pegasus-plan</emphasis> -h|--help</para>
+
+      <para><emphasis role="bold">pegasus-plan</emphasis> -V|--version</para>
+
+      <para><emphasis role="bold">pegasus-plan</emphasis> [-Dprop [..]] -d
+      &lt;dax file&gt; [-b prefix] [--conf &lt;path to properties file&gt;]
+      [-c f1[,f2[..]]] [-C &lt;clustering technique&gt;] [--dir &lt;base
+      directory for o/p files&gt;] [-f] [--force-replan] [
+      --inherited-rc-files] [-j job-prefix] [-n] [-o &lt;out- put site&gt;]
+      [-r[directoryname]] [--relative-dir &lt;relative directory to base
+      directory&gt;] [--relative-submit-dir &lt;relative sub- mit directory to
+      the base directory&gt;] [-s site1[,site2[..]]] [-v] [-q] [-V]
+      [-h]</para>
+    </section>
+
+    <section>
+      <title>DESCRIPTION</title>
+
+      <para>The pegasus-plan command takes in as input the DAX and generates
+      an executable workflow usually in form of condor submit files, which can
+      be submitted to an execution site for execution.</para>
+
+      <para>As part of generating the executable workflow, the planner needs
+      to discover</para>
+
+      <itemizedlist>
+        <listitem>
+          <para>data</para>
+
+          <para>The Pegasus Workflow Planner ensures that all the data
+          required for the execution of the executable workflow is transferred
+          to the execution site by adding transfer nodes at appropriate points
+          in the DAG. This is done by looking up an appropriate Replica
+          Catalog to determine the locations of the input files for the
+          various jobs. At present the default replica mechanism used is RLS
+          .</para>
+
+          <para>The Pegasus Workflow Planner also tries to reduce the
+          workflow, unless specified otherwise. This is done by deleting the
+          jobs whose output files have been found in some location in the
+          Replica Catalog . At present no cost metrics are used. However
+          preference is given to a location corresponding to the execution
+          site.</para>
+
+          <para>The planner can also add nodes to transfer all the
+          materialized files to an output site. The location on the output
+          site is determined by looking up the site catalog file, the path to
+          which is picked up from the <emphasis
+          role="bold">pegasus.catalog.site.file</emphasis> property
+          value.</para>
+        </listitem>
+
+        <listitem>
+          <para>executables</para>
+
+          <para>The planner looks up a Transformation Catalog to discover
+          locations of the executables referred to in the executable workflow.
+          Users can specify INSTALLED or STAGEABLE executables in the catalog.
+          Stageable executables can be used by Pegasus to stage executables to
+          resources where they are not pre-installed.</para>
+        </listitem>
+
+        <listitem>
+          <para>resources</para>
+
+          <para>The layout of the sites , where Pegasus can schedule jobs of a
+          workflow are described in the Site Catalog. The planner looks up the
+          site catalog to determine for a site what directories a job can be
+          executed in, what servers to use for staging in and out data and
+          what jobmanagers ( if applicable) can be used for submitting
+          jobs.</para>
+        </listitem>
+      </itemizedlist>
+
+      <para>The data and executable locations can now be specified in DAX'es
+      conforming to DAX schema version 3.2 or higher.</para>
+    </section>
+
+    <section>
+      <title>ARGUMENTS</title>
+
+      <para>Any option will be displayed with its long options
+      synonym(s).</para>
+
+      <itemizedlist>
+        <listitem>
+          <para>-<emphasis role="bold">Dprop</emphasis></para>
+
+          <para>The -D options allows an experienced user to override certain
+          properties which influence the program execution, among them the
+          default location of the user's properties file and the PEGASUS home
+          location. One may set several CLI properties by giving this option
+          multiple times. The -D option(s) must be the first option on the
+          command line. A CLI property take precedence over the properties
+          file property of the same key.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-d filename</emphasis></para>
+
+          <para><emphasis role="bold">--dax filename</emphasis></para>
+
+          <para>The DAX is the XML input file that describes an abstract
+          workflow.</para>
+
+          <para>This is a mandatory option, which has to be used.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-b prefix</emphasis></para>
+
+          <para><emphasis role="bold">--basename prefix</emphasis></para>
+
+          <para>The basename prefix to be used while constructing per workflow
+          files like the dagman file (.dag file) and other work- flow specific
+          files that are created by Condor. Usually this prefix, is taken from
+          the name attribute specified in the root element of the dax
+          files.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-c list of cache files</emphasis></para>
+
+          <para><emphasis role="bold">--cache list of cache
+          files</emphasis></para>
+
+          <para>A comma separated list of paths to replica cache files that
+          override the results from the replica catalog for a particular
+          lfn.</para>
+
+          <para>Each entry in the cache file describes a LFN , the
+          corresponding PFN and the associated attributes. The pool attribute
+          should be specified for each entry.</para>
+
+          <programlisting>LFN_1 PFN_1 pool=[site handle 1]
+LFN_2 PFN_2 pool=[site handle 2]
+...
+LFN_N PFN_N [site handle N]</programlisting>
+
+          <para>To treat the cache files as supplemental replica catalogs set
+          the property <emphasis
+          role="bold">pegasus.catalog.replica.cache.asrc </emphasis>to true.
+          This results in the mapping in the cache files to be merged with the
+          mappings in the replica catalog. Thus, for a particular lfn both the
+          entries in the cache file and replica catalog are available for
+          replica selection.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-C comma separated list of clustering
+          styles</emphasis></para>
+
+          <para><emphasis role="bold">--cluster comma separated list of
+          clustering styles</emphasis></para>
+
+          <para>This mode of operation results in clustering of n compute jobs
+          into a larger jobs to reduce remote scheduling overhead. You can
+          specify a list of clustering techniques to recursively apply them to
+          the workflow. For example, this allows you to cluster some jobs in
+          the workflow using horizontal clustering and then use label based
+          clustering on the intermediate workflow to do vertical
+          clustering.</para>
+
+          <para>The clustered jobs can be run at the remote site, either
+          sequentially or by using mpi. This can be specified by setting the
+          property pegasus.job.aggregator. The property can be overridden by
+          associating the PEGASUS profile key <emphasis
+          role="bold">collapser</emphasis> either with the transformation in
+          the transformation catalog or the execution site in the site
+          catalog. The value specified (to the property or the profile), is
+          the logical name of the transformation that is to be used for
+          clustering jobs. Note that clustering will only happen if the
+          corresponding transformations are catalogued in the transformation
+          catalog.</para>
+
+          <para>PEGASUS ships with a clustering executable <emphasis
+          role="bold">seqexec</emphasis> that can be found in
+          $PEGASUS_HOME/bin directory. It runs the jobs in the clustered job
+          sequentially on the same node at the remote site.</para>
+
+          <para>In addition, a mpi wrapper <emphasis
+          role="bold">mpiexec</emphasis> is distributed as source with the
+          PEGASUS. It can be found in $PEGASUS_HOME/src/tools/cluster
+          directory. The wrapper is run on every mpi node, with the first one
+          being the master and the rest of the ones as workers. The number of
+          instances of mpiexec that are invoked is equal to the value of the
+          globus rsl key nodecount. The master distributes the smaller
+          constituent jobs to the workers. For e.g. If there were 10 jobs in
+          the clustered job and nodecount was 5, then one node acts as master,
+          and the 10 jobs are distributed amongst the 4 slaves on demand. The
+          master hands off a job to the slave node as and when it gets free.
+          So initially all the 4 nodes are given a single job each, and then
+          as and when they get done are handed more jobs till all the 10 jobs
+          have been executed.</para>
+
+          <para>By default, seqexec is used for clustering jobs unless
+          overridden in the properties or by the <emphasis role="bold">pegasus
+          profile key collapser</emphasis>.</para>
+
+          <para>The following type of clustering styles are currently
+          supported</para>
+
+          <orderedlist>
+            <listitem>
+              <para><emphasis role="bold">horizontal</emphasis></para>
+
+              <para>is the style of clustering in which jobs on the same level
+              are aggregated into larger jobs. A level of the workflow is
+              defined as the greatest distance of a node, from the root of the
+              workflow. Clustering occurs only on jobs of the same type i.e
+              they refer to the same logical transformation in the
+              transformation catalog.</para>
+
+              <para>The granularity of clustering can be specified by
+              associating either the PEGASUS profile key <emphasis
+              role="bold">clusters.size</emphasis> or the PEGASUS profile key
+              <emphasis role="bold">clusters.num</emphasis> with the
+              transformation. The clusters.size key indicates how many jobs
+              need to be clustered into the larger clustered job. The
+              clusters.num key indicates how many clustered jobs are to be
+              created for a particular level at a particular execution site.
+              If both keys are specified for a particular transformation, then
+              the clusters.num key value is used to determine the clustering
+              granularity.</para>
+            </listitem>
+
+            <listitem>
+              <para><emphasis role="bold">label</emphasis></para>
+
+              <para>is the style of clustering in which you can label the jobs
+              in your workflow. The jobs with the same level are put in the
+              same clustered job. This allows you to aggregate jobs across
+              levels, or in a manner that is best suited to your
+              application.</para>
+
+              <para>To label the workflow, you need to associate PEGASUS
+              profiles with the jobs in the DAX. The profile key to use for
+              labelling the workflow can be set by the property <emphasis
+              role="bold">pegasus.clusterer.label.key</emphasis> . It defaults
+              to label, meaning if you have a PEGASUS profile key label with
+              jobs, the jobs with the same value for the pegasus profile key
+              label will go into the same clustered job.</para>
+            </listitem>
+          </orderedlist>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">--conf path to properties
+          file</emphasis></para>
+
+          <para>The path to properties file that contains the properties
+          planner needs to use while planning the workflow.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">--dir dir name</emphasis></para>
+
+          <para>The base directory where you want the output of the Pegasus
+          Workflow Planner usually condor submit files, to be generated.
+          Pegasus creates a directory structure in this base directory on the
+          basis of username, VO Group and the label of the workflow in the
+          DAX.</para>
+
+          <para>By default the base directory is the directory from which one
+          runs the pegasus-plan command.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-f</emphasis></para>
+
+          <para><emphasis role="bold">--force</emphasis></para>
+
+          <para>This bypasses the reduction phase in which the abstract DAG is
+          reduced, on the basis of the locations of the output files returned
+          by the replica catalog. This is analogous to a make style generation
+          of the executable workflow.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">--force-replan</emphasis></para>
+
+          <para>By default, for hierarchal workflows if a dax job fails, then
+          on job retry the rescue dag of the associated workflow is submitted.
+          This option causes Pegasus to replan the dax job in case of failure
+          instead.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-g</emphasis></para>
+
+          <para><emphasis role="bold">--group</emphasis></para>
+
+          <para>The VO Group to which the user belongs to.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-h</emphasis></para>
+
+          <para><emphasis role="bold">--help</emphasis> displays the options
+          to pegasus-plan command.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">--inherited-rc-files</emphasis> comma
+          separated list of replica catalog files</para>
+
+          <para>A comma separated list of paths to replica files. Locations
+          mentioned in these have a lower priority than the locations in the
+          DAX file. This option is usually used internally for hierarichal
+          workflows, where the file locations mentioned in the parent (
+          encompassing) workflow DAX, passed to the sub workflows (
+          corresponding) to the dax jobs.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-j</emphasis></para>
+
+          <para><emphasis role="bold">--j</emphasis></para>
+
+          <para>The job prefix to be applied for constructing the filenames
+          for the job submit files.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-n</emphasis></para>
+
+          <para><emphasis role="bold">--no-cleanup</emphasis></para>
+
+          <para>This results in the generation of the separate cleanup
+          workflow that removes the directories created during the execution
+          of the executable workflow. The cleanup workflow is to be submitted
+          after the executable workflow has finished. If this option is not
+          specified, then Pegasus adds cleanup nodes to the executable
+          workflow itself that cleanup files on the remote sites when they are
+          no longer required.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-o</emphasis> output site</para>
+
+          <para><emphasis role="bold">--output </emphasis>output site</para>
+
+          <para>The output site where all the materialized data is transferred
+          to.</para>
+
+          <para>By default the materialized data remains in the working
+          directory on the execution site where it was created. Only those
+          output files are transferred to an output site for which transfer
+          attribute is set to true in the DAX.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-q</emphasis></para>
+
+          <para><emphasis role="bold">--quiet</emphasis></para>
+
+          <para>decreases the logging level</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">--relative-dir</emphasis> dir
+          name</para>
+
+          <para>The directory relative to the base directory where the
+          executable workflow it to be generated and executed. This over-
+          rides the default directory structure that Pegasus creates based on
+          username, VO Group and the DAX label.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">--relative-submit-dir</emphasis> dir
+          name</para>
+
+          <para>The directory relative to the base directory where the
+          executable workflow it to be generated. This overrides the default
+          directory structure that Pegasus creates based on username, VO Group
+          and the DAX label. By specifying --relative-dir and
+          --relative-submit-dir you can have different relative execution
+          directory on the remote site and different relative sub- mit
+          directory on the submit host.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-s</emphasis> list of execution
+          sites</para>
+
+          <para><emphasis role="bold">--sites</emphasis> list of execution
+          sites</para>
+
+          <para>A comma separated list of execution sites on which the
+          workflow is to be executed. Each of the sites should have an entry
+          in the site catalog, that is being used. To run on the submit host,
+          specify the execution site as<emphasis role="bold"> local
+          .</emphasis></para>
+
+          <para>In case this option is not specified, all the sites in the
+          site catalog are picked up as candidates for running the work-
+          flow.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-s</emphasis></para>
+
+          <para><emphasis role="bold">--submit</emphasis></para>
+
+          <para>Submits the generated executable workflow using pegasus-run
+          script in $PEGASUS_HOME/bin directory.</para>
+
+          <para>By default, the Pegasus Workflow Planner only generates the
+          Condor submit files and does not submit them.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-v</emphasis></para>
+
+          <para><emphasis role="bold">--verbose</emphasis></para>
+
+          <para>increases the verbosity of messages about what is going
+          on.</para>
+
+          <para>By default, all FATAL, ERROR, CONSOLE and WARN messages are
+          logged.</para>
+
+          <para>The logging hierarchy is as follows</para>
+
+          <itemizedlist>
+            <listitem>
+              <para>FATAL</para>
+            </listitem>
+
+            <listitem>
+              <para>ERROR</para>
+            </listitem>
+
+            <listitem>
+              <para>CONSOLE</para>
+            </listitem>
+
+            <listitem>
+              <para>WARN</para>
+            </listitem>
+
+            <listitem>
+              <para>INFO</para>
+            </listitem>
+
+            <listitem>
+              <para>CONFIG</para>
+            </listitem>
+
+            <listitem>
+              <para>DEBUG</para>
+            </listitem>
+
+            <listitem>
+              <para>TRACE</para>
+            </listitem>
+          </itemizedlist>
+
+          <para>For example, to see the INFO, CONFIG and DEBUG messages
+          additionally, set -vvv.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-V</emphasis></para>
+
+          <para><emphasis role="bold">--version</emphasis></para>
+
+          <para>Displays the current version number of the Pegasus Workflow
+          Management System.</para>
+        </listitem>
+      </itemizedlist>
+    </section>
+
+    <section>
+      <title>RETURN VALUE</title>
+
+      <para>If the Pegasus Workflow Planner is able to generate an executable
+      workflow successfully, the exitcode will be 0. All runtime errors result
+      in an exitcode of 1. This is usually in the case when you have
+      mis-configured your catalogs etc. In the case of an error occurring
+      while loading a specific module implementation at run time, the exitcode
+      will be 2. This is usually due to factory methods failing while loading
+      a module. In case of any other error occurring during the running of the
+      command, the exit- code will be 1. In most cases, the error message
+      logged should give a clear indication as to where things went
+      wrong.</para>
+    </section>
+
+    <section>
+      <title>PEGASUS PROPERTIES</title>
+
+      <para>This is not an exhaustive list of properties used. For the
+      complete description and list of properties refer to <emphasis
+      role="bold">$PEGASUS_HOME/doc/advanced-properties.pdf</emphasis> or the
+      properties chapter.</para>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis
+          role="bold">pegasus.catalog.replica</emphasis></para>
+
+          <para>Specifies the type of replica catalog to be used. If not
+          specified, then RLS is used as a Replica Catalog Backend.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis
+          role="bold">pegasus.catalog.replica.url</emphasis></para>
+
+          <para>Contact string to access the replica catalog. In case of RLS
+          it is the RLI url. I</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">pegasus.dir.exec</emphasis></para>
+
+          <para>A suffix to the workdir in the site catalog to determine the
+          current working directory. If relative, the value will be appended
+          to the working directory from the site.config file. If absolute it
+          constitutes the working directory.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis
+          role="bold">pegasus.catalog.transformation</emphasis></para>
+
+          <para>Specifies the type of transformation catalog to be used. One
+          can use either a file based or a database based transforma- tion
+          catalog. At present the default is Text .</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis
+          role="bold">pegasus.catalog.transformation.file</emphasis></para>
+
+          <para>The location of file to use as transformation catalog.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">pegasus.catalog.site</emphasis></para>
+
+          <para>Specifies the type of site catalog to be used. At present the
+          default is <emphasis role="bold">XML3</emphasis> .</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis
+          role="bold">pegasus.catalog.site.file</emphasis></para>
+
+          <para>The location of file to use as a site catalog. If not
+          specified, then default value of $PEGASUS_HOME/etc/sites.xml is used
+          in case of the xml based site catalog and
+          $PEGASUS_HOME/etc/sites.txt in case of the text based site
+          catalog.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">pegasus.code.generator</emphasis></para>
+
+          <para>The code generator to use. By default, Condor submit files are
+          generated for the executable workflow. Setting to <emphasis
+          role="bold">Shell</emphasis> results in Pegasus generating a shell
+          script that can be executed on the submit host.</para>
+        </listitem>
+      </itemizedlist>
+    </section>
+
+    <section>
+      <title>FILES</title>
+
+      <para></para>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis
+          role="bold">$PEGASUS_HOME/etc/dax-3.2.xsd</emphasis></para>
+
+          <para>It is the suggested location of the latest DAX schema to
+          produce DAX output.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis
+          role="bold">$PEGASUS_HOME/etc/tc.data.text</emphasis></para>
+
+          <para>is the suggested location for the file corresponding to the
+          Transformation Catalog.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis
+          role="bold">$PEGASUS_HOME/etc/sc-3.0.xsd</emphasis></para>
+
+          <para>is the suggested location of the latest Site Catalog schema
+          that is used to create the XML3 version of the site catalog</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">$PEGASUS_HOME/etc/sites.xml3 |
+          $PEGASUS_HOME/etc/sites.xml</emphasis></para>
+
+          <para>is the suggested location for the file containing the site
+          information.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis
+          role="bold">$PEGASUS_HOME/lib/pegasus.jar</emphasis></para>
+
+          <para>contains all compiled Java bytecode to run the Pegasus
+          Workflow Planner.</para>
+        </listitem>
+      </itemizedlist>
+    </section>
+  </section>
+
+  <section id="cli-pegasus-run">
+    <title>pegasus-run</title>
+
+    <para>pegasus-run executes a workflow that has been planned using
+    pegasus-plan.</para>
+
+    <section>
+      <title>SYNTAX</title>
+
+      <para>pegasus-run [options] [rundir]</para>
+    </section>
+
+    <section>
+      <title>DESCRIPTION</title>
+
+      <para>The pegasus-run command executes a workflow that has been planned
+      using pegasus-plan. By default pegasus-run can be invoked either in the
+      planned directory with no options and arguments or just the full path to
+      the run directory. pegasus-run also can be used to resubmit a failed
+      workflow by running the same command again.</para>
+    </section>
+
+    <section>
+      <title>ARGUMENTS</title>
+
+      <para>By default pegasus-run does not require any options or arguments
+      if invoked from within the planned workflow directory. If running the
+      command outside the workflow directory then a full path to the workflow
+      directory needs to be specified.</para>
+
+      <para>pegasus-run takes the following options</para>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">-Dpropkey=propvalue</emphasis></para>
+
+          <para>The -D options allows an advanced user to override certain
+          properties which influence pegasus-run. One may set several CLI
+          properties by giving this option multiple times. The -D option(s)
+          must be the first option on the command line. CLI properties take
+          precedence over the file-based properties of the same key.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-c
+          pegasus_properties_file</emphasis></para>
+
+          <para><emphasis role="bold">--conf
+          pegasus_properties_file</emphasis></para>
+
+          <para>Provide a property file to override the default pegasus
+          properties file from the planning directory. Ordinary users do not
+          need to use this option unless the specifically want to override
+          several properties</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-d</emphasis></para>
+
+          <para><emphasis role="bold">--debug level</emphasis></para>
+
+          <para>Set the debug level for the client. Default is 0.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-v</emphasis></para>
+
+          <para><emphasis role="bold">--verbose</emphasis></para>
+
+          <para>Raises debug level. Each invocation increase the level by
+          1.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">--grid</emphasis></para>
+
+          <para>Enable grid checks to see if your submit machine is GRID
+          enabled.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">rundir</emphasis></para>
+
+          <para>Is the full qualified path to the base directory containing
+          the planned workflow dag and submit files. This is optional if
+          pegasus-run command is invoked from within the run directory.</para>
+        </listitem>
+      </itemizedlist>
+    </section>
+
+    <section>
+      <title>RETURN VALUE</title>
+
+      <para>If the workflow is submitted for execution pegasus-run returns
+      with an exit code of 0. However, in case of error, a non-zero exit code
+      indicates problems. An error message clearly marks the cause.</para>
+    </section>
+
+    <section>
+      <title>FILES AND DIRECTORIES</title>
+
+      <para>The following files are created, opened or written to.</para>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">braindump</emphasis></para>
+
+          <para>This file is located in the rundir. pegasus-run uses this file
+          to find out paths to several other files, properties configurations
+          etc</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis
+          role="bold">pegasus.?????????.properties</emphasis></para>
+
+          <para>This file is located in the rundir. pegasus-run uses this
+          properties file by default to configure its internal
+          settings.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">workflowname.dag</emphasis></para>
+
+          <para>pegasus-run uses the workflowname.dag or workflowname.sh file
+          and submits it either to condor for execution or runs it locally in
+          a shell environment</para>
+        </listitem>
+      </itemizedlist>
+    </section>
+
+    <section>
+      <title>PROPERTIES</title>
+
+      <para>pegasus-run reads its properties from several locations. By
+      default the properties are read from the file
+      RUNDIR/pegasus.??????????.properties. If the --conf option is provided
+      then the properties file provided in the conf option is used. If both
+      the default properties file in the rundir as well as --conf file is not
+      found or provided then the properties file located at $HOME/.pegasusrc
+      will be used. Additionally properties can be provided individually using
+      the -D&lt;key&gt;=&lt;value&gt; option on the command line before all
+      other options. These properties will override properties provided using
+      either --conf or RUNDIR/pegasus.???????.properties or the
+      $HOME/.pegasusrc</para>
+
+      <para>The merge logic is CONF PROPERTIES || DEFAULT RUNDIR PROPERTIES ||
+      PEGASUSRC overriden by Command line properties</para>
+    </section>
+
+    <section>
+      <title>ENVIRONMENT VARIABLES</title>
+
+      <para>The following environment variables are used by pegasus-run</para>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">PATH</emphasis></para>
+
+          <para>The path variable is used to locate binaries for
+          condor-submit-dag, condor-dagman, condor-submit,pegasus-submit-dag,
+          pegasus-dagman and pegasus-monitord</para>
+        </listitem>
+      </itemizedlist>
+    </section>
+  </section>
+
+  <section id="cli-pegasus-remove">
+    <title>pegasus-remove</title>
+
+    <para>pegasus-remove removes a workflow that has been planned and
+    submitted using pegasus-plan and pegasus-run</para>
+
+    <section>
+      <title>SYNTAX</title>
+
+      <para>pegasus-remove [options] [rundir]</para>
+    </section>
+
+    <section>
+      <title>DESCRIPTION</title>
+
+      <para>The pegasus-remove command removes a submitted/running workflow
+      that has been planned and submitted using pegsus-plan and pegasus-run.
+      The command can be invoked either in the planned directory with no
+      options and arguments or just the full path to the run directory.</para>
+    </section>
+
+    <section>
+      <title>ARGUMENTS</title>
+
+      <para>By default pegasus-remove does not require any options or
+      arguments if invoked from within the planned workflow directory. If
+      running the command outside the workflow directory then a full path to
+      the workflow directory needs to be specified or the dagid of the
+      workflow to be removed.</para>
+
+      <para>pegasus-remove takes the following options</para>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">-d</emphasis></para>
+
+          <para><emphasis role="bold">--dagid dagid</emphasis></para>
+
+          <para>The workflow dagid to remove.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-v</emphasis></para>
+
+          <para><emphasis role="bold">--verbose</emphasis></para>
+
+          <para>Raises debug level. Each invocation increase the level by
+          1.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">rundir</emphasis></para>
+
+          <para>Is the full qualified path to the base directory containing
+          the planned workflow dag and submit files. This is optional if
+          pegasus-remove command is invoked from within the run
+          directory.</para>
+        </listitem>
+      </itemizedlist>
+    </section>
+
+    <section>
+      <title>RETURN VALUE</title>
+
+      <para>If the workflow is removed successfully pegasus-remove returns
+      with an exit code of 0. However, in case of error, a non-zero exit code
+      indicates problems. An error message clearly marks the cause.</para>
+    </section>
+
+    <section>
+      <title>ENVIRONMENT VARIABLES</title>
+
+      <para>The following environment variables are used by
+      pegasus-remove</para>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">PATH</emphasis></para>
+
+          <para>The path variable is used to locate binaries for
+          condor-rm</para>
+        </listitem>
+      </itemizedlist>
+    </section>
+  </section>
+
+  <section id="cli-pegasus-status">
+    <title>pegasus-status</title>
+
+    <para>pegasus-status reports on the status of a workflow.</para>
+
+    <section>
+      <title>SYNTAX</title>
+
+      <cmdsynopsis>
+        <command>pegasus-status</command>
+
+        <group choice="plain">
+          <arg choice="plain">-h</arg>
+
+          <arg choice="plain">--help</arg>
+        </group>
+      </cmdsynopsis>
+
+      <cmdsynopsis>
+        <command>pegasus-status</command>
+
+        <group choice="plain">
+          <arg choice="plain">-V</arg>
+
+          <arg choice="plain">--version</arg>
+        </group>
+      </cmdsynopsis>
+
+      <cmdsynopsis>
+        <command>pegasus-status</command>
+
+        <group choice="opt">
+          <arg choice="plain">-w</arg>
+
+          <arg choice="plain">--watch <replaceable>s</replaceable></arg>
+        </group>
+
+        <group choice="opt">
+          <arg choice="plain">-L</arg>
+
+          <arg choice="plain">--<arg choice="opt">no</arg>legend</arg>
+        </group>
+
+        <group choice="opt">
+          <arg choice="plain">-c</arg>
+
+          <arg choice="plain">--<arg choice="opt">no</arg>color</arg>
+        </group>
+
+        <group choice="opt">
+          <arg choice="plain">-U</arg>
+
+          <arg choice="plain">--<arg choice="opt">no</arg>utf8</arg>
+        </group>
+
+        <group choice="opt">
+          <arg choice="plain">-Q</arg>
+
+          <arg choice="plain">--<arg choice="opt">no</arg>queue</arg>
+        </group>
+
+        <group choice="opt">
+          <arg choice="plain">-v</arg>
+
+          <arg choice="plain">--verbose</arg>
+        </group>
+
+        <group choice="opt">
+          <arg choice="plain">-d</arg>
+
+          <arg choice="plain">--debug</arg>
+        </group>
+
+        <group choice="opt">
+          <arg choice="plain">-u</arg>
+
+          <arg choice="plain">--user <replaceable>name</replaceable></arg>
+        </group>
+
+        <group choice="opt">
+          <arg choice="plain">-i</arg>
+
+          <arg choice="plain">--<arg choice="opt">no</arg>idle</arg>
+        </group>
+
+        <group choice="opt">
+          <arg choice="plain">--<arg choice="opt">no</arg>held</arg>
+        </group>
+
+        <group choice="opt">
+          <arg choice="plain">--<arg choice="opt">no</arg>heavy</arg>
+        </group>
+
+        <group choice="opt">
+          <arg choice="plain">-j</arg>
+
+          <arg choice="plain">--jobtype <replaceable>jt</replaceable></arg>
+        </group>
+
+        <group choice="opt">
+          <arg choice="plain">-s</arg>
+
+          <arg choice="plain">--site <replaceable>sid</replaceable></arg>
+        </group>
+
+        <group choice="opt">
+          <arg choice="plain">-l</arg>
+
+          <arg choice="plain">--long</arg>
+        </group>
+
+        <group choice="opt">
+          <arg choice="plain">-S</arg>
+
+          <arg choice="plain">--<arg choice="opt">no</arg>success</arg>
+        </group>
+
+        <arg choice="opt"><replaceable>rundir</replaceable></arg>
+      </cmdsynopsis>
+
+      <para><command>pegasus-status</command> shows the current state of the
+      Condor Q and a workflow, depending on settings. If no valid run
+      directory could be determined, including the current directory,
+      <command>pegasus-status</command> will show all jobs of the current user
+      and no workflows. If a run directory was specified, or the current
+      directory is a valid run directory, status about the workflow will also
+      be shown.</para>
+
+      <para>Many option will modify the behavior of this program, not
+      withstanding a proper UTF-8 capable terminal, watch mode, the presence
+      of jobs in the queue, progress in the workflow directory, etc.</para>
+    </section>
+
+    <section id="pegasus_status_arguments">
+      <title>ARGUMENTS</title>
+
+      <variablelist>
+        <varlistentry>
+          <term><option>-h</option></term>
+
+          <term><option>--help</option></term>
+
+          <listitem>
+            <para>Prints a concise help and exits.</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+
+      <variablelist>
+        <varlistentry>
+          <term><option>-V</option></term>
+
+          <term><option>--version</option></term>
+
+          <listitem>
+            <para>Prints the version information and exits.</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+
+      <variablelist>
+        <varlistentry>
+          <term><option>-w<replaceable> sec</replaceable></option></term>
+
+          <term><option>--watch <replaceable>sec</replaceable></option></term>
+
+          <listitem>
+            <para>This option enables the <emphasis>watch mode.</emphasis> In
+            watch mode, the program repeated polls the status sources and
+            shows them in an updating window. The optional argument
+            <replaceable>sec</replaceable> to this option determines how often
+            these sources are polled.</para>
+
+            <para>We <emphasis>strongly</emphasis> recommend to set this
+            interval not too low, as frequent polling will degrade the
+            scheduler performance and increase the host load. In watch mode,
+            the terminal size is the limiting factor, and parts of the output
+            may be truncated to fit it onto the given terminal.</para>
+
+            <para>Watch mode is disabled by default. The
+            <replaceable>sec</replaceable> argument defaults to 60
+            seconds.</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+
+      <variablelist>
+        <varlistentry>
+          <term><option>-L</option></term>
+
+          <term><option>--legend</option></term>
+
+          <term><option>--nolegend</option></term>
+
+          <listitem>
+            <para>This option shows a legend explaining the columns in the
+            output, or turns off legends.</para>
+
+            <para>By default, legends are turned off to save terminal real
+            estate.</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+
+      <variablelist>
+        <varlistentry>
+          <term><option>-c</option></term>
+
+          <term><option>--color</option></term>
+
+          <term><option>--nocolor</option></term>
+
+          <listitem>
+            <para>This option turns on (or off) ANSI color escape sequences in
+            the output. The single letter option can only switch on
+            colors.</para>
+
+            <para>By default, colors are turned off, as they will not display
+            well on a terminal with black background.</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+
+      <variablelist>
+        <varlistentry>
+          <term><option>-U</option></term>
+
+          <term><option>--utf8</option></term>
+
+          <term><option>--noutf8</option></term>
+
+          <listitem>
+            <para>This option turns on (or off) the output of Unicode box
+            drawing characters as UTF-8 encoded sequences. The single option
+            can only turn on box drawing characters.</para>
+
+            <para>The defaults for this setting depend on the
+            <envar>LANG</envar> environment variable. If the variable contains
+            a value ending in something indicating UTF-8 capabilities, the
+            option is turned on by default. It is off otherwise.</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+
+      <variablelist>
+        <varlistentry>
+          <term><option>-Q</option></term>
+
+          <term><option>--queue</option></term>
+
+          <term><option>--noqueue</option></term>
+
+          <listitem>
+            <para>This option turns on (or off) the output from parsing Condor
+            Q.</para>
+
+            <para>By default, Condor Q will be parsed for jobs of the current
+            user. If a workflow run directory is specified, it will
+            furthermore be limited to jobs only belonging to the
+            workflow.</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+
+      <variablelist>
+        <varlistentry>
+          <term><option>-v</option></term>
+
+          <term><option>--verbose</option></term>
+
+          <listitem>
+            <para>This option increases the expert level, showing more
+            information about the Condor Q state. Being an incremental option,
+            two incrases are supported.</para>
+
+            <para>Additionally, the signals <emphasis>SIGUSR1</emphasis> and
+            <emphasis>SIGUSR2</emphasis> will increase and decrease the expert
+            level respectively during run-time.</para>
+
+            <para>By default, the simplest queue view is enabled.</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+
+      <variablelist>
+        <varlistentry>
+          <term><option>-d</option></term>
+
+          <term><option>--debug</option></term>
+
+          <listitem>
+            <para>This is an internal debugging tool and should not be used
+            outside the development team. As incremental option, it will show
+            Pegasus-specific ClassAd tuples for each job, more in the second
+            level.</para>
+
+            <para>By default, debug mode is off.</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+
+      <variablelist>
+        <varlistentry>
+          <term><option>-u <replaceable>name</replaceable></option></term>
+
+          <term><option>--user <replaceable>name</replaceable></option></term>
+
+          <listitem>
+            <para>This option permits to query the queue for a different
+            <replaceable>user</replaceable> than the current one. This may be
+            of interest, if you are debugging the workflow of another
+            user.</para>
+
+            <para>By default, the current user is assumed.</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+
+      <variablelist>
+        <varlistentry>
+          <term><option>-i</option></term>
+
+          <term><option>--idle</option></term>
+
+          <term><option>--noidle</option></term>
+
+          <listitem>
+            <para>With this option, jobs in Condor state
+            <emphasis>idle</emphasis> are omitted from the queue
+            output.</para>
+
+            <para>By default, <emphasis>idle</emphasis> jobs are shown.</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+
+      <variablelist>
+        <varlistentry>
+          <term><option>--held</option></term>
+
+          <term><option>--noheld</option></term>
+
+          <listitem>
+            <para>This option enables or disabled showing of the reason a job
+            entered Condor's <emphasis>held</emphasis> state. The reason will
+            somewhat destroy the screen layout.</para>
+
+            <para>By default, the reason is shown.</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+
+      <variablelist>
+        <varlistentry>
+          <term><option>--heavy</option></term>
+
+          <term><option>--noheavy</option></term>
+
+          <listitem>
+            <para>If the terminal is UTF-8 capable, and output is to a
+            terminal, this option decides whether to use heavyweight or
+            lightweight line drawing characters.</para>
+
+            <para>By default, heavy lines connect the jobs to
+            workflows.</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+
+      <variablelist>
+        <varlistentry>
+          <term><option>-j <replaceable>jt</replaceable></option></term>
+
+          <term><option>--jobtype<replaceable>
+          jt</replaceable></option></term>
+
+          <listitem>
+            <para>This option filters the Condor jobs shown only to the
+            Pegasus jobtypes given as argument or arguments to this option. It
+            is a multi-option, and may be specified multiple times, and may
+            use comma-separated lists. Use this option with an argument
+            <replaceable>help</replaceable> to see all valid and recognized
+            jobtypes.</para>
+
+            <para>By default, all Pegasus jobtypes are shown.</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+
+      <variablelist>
+        <varlistentry>
+          <term><option>-s <replaceable>site</replaceable></option></term>
+
+          <term><option>--site <replaceable>site</replaceable></option></term>
+
+          <listitem>
+            <para>This option limits the Condor jobs shown to only those
+            pertaining to the (remote) site <replaceable>site</replaceable>
+            This is an multi-option, and may be specified multiple times, and
+            may use comma-separated lists.</para>
+
+            <para>By default, all sites are shown.</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+
+      <variablelist>
+        <varlistentry>
+          <term><option>-l</option></term>
+
+          <term><option>--long</option></term>
+
+          <listitem>
+            <para>This option will show one line per sub-DAG, including one
+            line for the workflow. If there is only a single DAG pertaining to
+            the <replaceable>rundir</replaceable>, only total will be
+            shown.</para>
+
+            <para>By default, only DAG totals (sums) are shown.</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+
+      <variablelist>
+        <varlistentry>
+          <term><option>-S</option></term>
+
+          <term><option>--success</option></term>
+
+          <term><option>--nosuccess</option></term>
+
+          <listitem>
+            <para>This option modifies the previous <option>--long</option>
+            option. It will omit (or show) fully successful sub-DAGs from the
+            output.</para>
+
+            <para>By default, all DAGs are shown.</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+
+      <variablelist>
+        <varlistentry>
+          <term><replaceable>rundir</replaceable></term>
+
+          <listitem>
+            <para>This option show statistics about the given DAG that runs in
+            <replaceable>rundir</replaceable>. To gather proper statistics,
+            <command>pegasus-status</command> needs to traverse the directory
+            and all sub-directories. This can become an expensive operation on
+            shared filesystems.</para>
+
+            <para>By default, the <replaceable>rundir</replaceable> is assumed
+            to be the current directory. If the current directory is not a
+            valid <replaceable>rundir</replaceable>, no DAG statistics will be
+            shown.</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+    </section>
+
+    <section>
+      <title>RETURN VALUE</title>
+
+      <para><command>pegasus-status</command> will typically return success in
+      regular mode, and the termination signal in watch mode. Abnormal
+      behavior will result in a non-zero exit code.</para>
+    </section>
+
+    <section>
+      <title>EXAMPLE</title>
+
+      <screen><command>pegasus-status</command></screen>
+
+      <para>This invocation will parse the Condor Q for the current user and
+      show all her jobs. Additionally, if the current directory is a valid
+      Pegasus workflow directory, totals about the DAG in that directory are
+      displayed.</para>
+
+      <screen><command>pegasus-status</command> -l <filename>rundir</filename></screen>
+
+      <para>As above, but providing a specific Pegasus workflow directory in
+      argument <filename>rundir</filename> and requesting to itemize
+      sub-DAGs.</para>
+
+      <screen><command>pegasus-status</command> -j help</screen>
+
+      <para>This option will show all permissible job types and exit.</para>
+
+      <screen><command>pegasus-status</command> -vvw 300 -Ll</screen>
+
+      <para>This invocation will parse the queue, print it in high-expert
+      mode, show legends, itemize DAG statistics of the current working
+      directory, and redraw the terminal every five minutes with updated
+      statistics.</para>
+    </section>
+
+    <section>
+      <title>RESTRICTIONS</title>
+
+      <para>Currently only supports a single (optional) run directory. If you
+      want to watch multiple run directories, I suggest to open multiple
+      terminals and watch them separately. If that is not an option, or deemed
+      too expensive, you can ask <email>pegasus-support at isi dot edu</email>
+      to extend the program.</para>
+    </section>
+  </section>
+
+  <section>
+    <title>pegasus-monitord</title>
+
+    <para>pegasus-monitord tracks a workflow's progress in real time and mines
+    information. </para>
+
+    <section>
+      <title>SYNOPSIS</title>
+
+      <para>pegasus-monitord [--help | -help] [--verbose | -v] [--adjust | -a
+      i] [--foreground | -N] [--no-daemon | -n] [--job | -j jobstate.log file]
+      [--log | -l logfile] [--conf properties file] [--no-recursive]
+      [--no-database | --no-events] [--replay | -r] [--no-notifications]
+      [--notifications-max max_notifications] [--notifications-timeout
+      timeout] [--sim | -s millisleep] [--db-stats] [--socket] [--output-dir |
+      -o dir] [--dest | -d PATH or URL] [--encoding | -e bp | bson] DAGMan
+      output file</para>
+    </section>
+
+    <section>
+      <title>DESCRIPTION</title>
+
+      <para>This program follows a workflow, parsing the output of DAGMAN's
+      dagman.out file. In addition to generating the jobstate.log file,
+      <emphasis role="bold">pegasus-monitord</emphasis> can also be used mine
+      information from the workflow dag file and jobs' submit and output
+      files, and either populate a database or write a NetLogger events file
+      with that information. <emphasis role="bold">pegasus-monitord</emphasis>
+      can also perform notifications when tracking a workflow's progress in
+      real-time.</para>
+    </section>
+
+    <section>
+      <title>ARGUMENTS</title>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">-h</emphasis></para>
+
+          <para><emphasis role="bold">--help</emphasis></para>
+
+          <para>Prints a usage summary with all the available command-line
+          options.</para>
+        </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">-v</emphasis></para>
+
+          <para><emphasis role="bold">--verbose</emphasis></para>
+
+          <para>Sets the log level for .<emphasis
+          role="bold">pegasus-monitord</emphasis>. If omitted, the default
+          level will be set to WARNING. When this option is given, the log
+          level is changed to "INFO. If this option is repeated, the log level
+          will be changed to DEBUG. The log level in <emphasis
+          role="bold">pegasus-monitord</emphasis> can also be adjusted
+          interactively, by sending the USR1 and USR2 signals to the process,
+          respectively for incrementing and decrementing the log level.</para>
+        </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">-a i</emphasis></para>
+
+          <para><emphasis role="bold">--adjust i</emphasis></para>
+
+          <para>For adjusting time zone differences by i seconds, default is
+          0.</para>
+        </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">-N</emphasis></para>
+
+          <para><emphasis role="bold">--foreground</emphasis></para>
+
+          <para>Do not daemonize <emphasis
+          role="bold">pegasus-monitord</emphasis>, go through the motions as
+          if (Condor).</para>
+        </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">-n</emphasis></para>
+
+          <para><emphasis role="bold">--no-daemon</emphasis></para>
+
+          <para>Do not daemonize <emphasis
+          role="bold">pegasus-monitord</emphasis>, keep it in the foreground
+          (for debugging).</para>
+        </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">-j
+          &lt;jobstate.log&gt;</emphasis></para>
+
+          <para><emphasis role="bold">--job
+          &lt;jobstate.log&gt;</emphasis></para>
+
+          <para>Alternative location for the jobstate.log file. The default is
+          to write a jobstate.log in the workflow directory. An absolute file
+          name should only be used if the workflow does not have any
+          sub-workflows, as each sub-workflow will generate its own
+          jobstate.log file. If an alternative, non-absolute, filename is
+          given with this option, <emphasis
+          role="bold">pegasus-monitord</emphasis> will create one file in each
+          workflow (and sub-workflow) directory with the filename provided by
+          the user with this option. If an absolute filename is provided and
+          sub-workflows are found, a warning message will be printed and
+          <emphasis role="bold">pegasus-monitord</emphasis> will not track any
+          sub-workflows.</para>
+        </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">-l &lt;logfile&gt;</emphasis></para>
+
+          <para><emphasis role="bold">--log-file
+          &lt;logfile&gt;</emphasis></para>
+
+          <para>Specifies an alternative logfile to use instead of the
+          monitord.log file in the main workflow directory. Differently from
+          the jobstate.log file above, <emphasis
+          role="bold">pegasus-monitord</emphasis> only generates one logfile
+          per execution (and not one per workflow and sub-workflow it
+          tracks).</para>
+        </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">--conf &lt;properties
+          file&gt;</emphasis></para>
+
+          <para><emphasis role="bold">properties file</emphasis> is an
+          alternative file containing properties in the <emphasis
+          role="bold">key=value</emphasis> format, and allows users to
+          override values read from the braindump.txt file. This option has
+          precedence over the properties file specified in the braindump.txt
+          file. Please note that these properties will apply not only to the
+          main workflow, but also to all sub-workflows found.</para>
+        </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">--no-recursive</emphasis></para>
+
+          <para>This options disables <emphasis
+          role="bold">pegasus-monitord</emphasis> to automatically follow any
+          sub-workflows that are found.</para>
+        </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">--no-database</emphasis></para>
+
+          <para><emphasis role="bold">--nodatabase</emphasis></para>
+
+          <para><emphasis role="bold">--no-events</emphasis></para>
+
+          <para>Turns off generating events (when this option is given,
+          <emphasis role="bold">pegasus-monitord</emphasis> will only generate
+          the jobstate.log file). The default is to automatically log
+          information to a SQLite database (see the <emphasis
+          role="bold">--dest</emphasis> option below for more details). This
+          option overrides any parameter given by the<emphasis role="bold">
+          --dest</emphasis> option. </para>
+        </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">-r</emphasis></para>
+
+          <para><emphasis role="bold">--replay</emphasis></para>
+
+          <para>This option is used to replay the output of an already
+          finished workflow. It should only be used after the workflow is
+          finished (not necessarily successfully). If a jobstate.log file is
+          found, it will be rotated. However, when using a database, all
+          previous references to that workflow (and all its sub-workflows)
+          will be erased from it. When outputing to a bp file, the file will
+          be deleted. When running in replay mode, <emphasis
+          role="bold">pegasus-monitord</emphasis> will always run with the
+          <emphasis role="bold">--no-daemon</emphasis> option, and any errors
+          will be output directly to the terminal. Also, <emphasis
+          role="bold">pegasus-monitord</emphasis> will not process any
+          notifications while in replay mode.</para>
+        </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">--no-notifications</emphasis></para>
+
+          <para> This options disables notifications completely, making
+          <emphasis role="bold">pegasus-monitord</emphasis> ignore all the
+          .notify files for all workflows it tracks.</para>
+        </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">--notifications-max &lt;max
+          notifications&gt;</emphasis></para>
+
+          <para>This option sets the maximum number of concurrent
+          notifications that <emphasis role="bold">pegasus-monitord</emphasis>
+          will start. When the <emphasis role="bold">max
+          notifications</emphasis> limit is reached, <emphasis
+          role="bold">pegasus-monitord</emphasis> will queue notifications and
+          wait for a pending notification script to finish before starting a
+          new one. If <emphasis role="bold">max notifications</emphasis> is
+          set to 0, notifications will be disabled.</para>
+        </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">--notifications-timeout
+          &lt;timeout&gt;</emphasis></para>
+
+          <para>Normally, <emphasis role="bold">pegasus-monitord</emphasis>
+          will start a notification script and wait indefinitely for it to
+          finish. This option allows users to set up a maximum <emphasis
+          role="bold">timeout</emphasis> that <emphasis
+          role="bold">pegasus-monitord</emphasis> will wait for a notification
+          script to finish before terminating it. If notification scripts do
+          not finish in a reasonable amount of time, it can cause other
+          notification scripts to be queued due to the maximum number of
+          concurrent scripts allowed by <emphasis
+          role="bold">pegasus-monitord</emphasis>. Additionally, until all
+          notification scripts finish, <emphasis
+          role="bold">pegasus-monitord</emphasis> will not terminate.</para>
+        </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">-s &lt;millisleep&gt;</emphasis></para>
+
+          <para><emphasis role="bold">--sim
+          &lt;millisleep&gt;</emphasis></para>
+
+          <para>This option simulates delays between reads, by sleeping
+          millisleep milliseconds. This option is mainly used by
+          developers.</para>
+        </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">--db-stats</emphasis></para>
+
+          <para>This option causes the database module to collect and print
+          database statistics at the end of the execution. It has no effect if
+          the <emphasis role="bold">--no-database</emphasis> option is
+          given.</para>
+        </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">--socket</emphasis></para>
+
+          <para>This option causes <emphasis
+          role="bold">pegasus-monitord</emphasis> to start a socket interface
+          that can be used for advanced debugging. The port number for
+          connecting to <emphasis role="bold">pegasus-monitord</emphasis> can
+          be found in the monitord.sock file in the workflow directory (the
+          file is deleted when <emphasis
+          role="bold">pegasus-monitord</emphasis> finishes). If not already
+          started, the socket interface is also created when <emphasis
+          role="bold">pegasus-monitord</emphasis> receives a USR1
+          signal.</para>
+        </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">-o &lt;dir&gt;</emphasis></para>
+
+          <para><emphasis role="bold">--output-dir
+          &lt;dir&gt;</emphasis></para>
+
+          <para>When this option is given, .<emphasis
+          role="bold">pegasus-monitord</emphasis> will create all its output
+          files in the directory specified by <emphasis
+          role="bold">dir</emphasis>. This option is useful for allowing a
+          user to debug a workflow in a directory the user does not have write
+          permissions. In this case, all files generated by <emphasis
+          role="bold">pegasus-monitord</emphasis> will have the workflow
+          <emphasis role="bold">wf_uuid</emphasis> as a prefix so that files
+          from multiple sub-workflows can be placed in the same directory.
+          This option is mainly used by <emphasis
+          role="bold">pegasus-analyzer</emphasis>. It is important to note
+          that the location for the output BP file or database is not changed
+          by this option and should be set via the <emphasis
+          role="bold">--dest</emphasis> option.</para>
+        </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">-d
+          URL[&lt;scheme&gt;]&lt;params&gt;</emphasis></para>
+
+          <para><emphasis role="bold">--dest
+          URL[&lt;scheme&gt;]&lt;params&gt;</emphasis></para>
+
+          <para>This option allows users to specify the destination for the
+          log events generated by <emphasis
+          role="bold">pegasus-monitord</emphasis>. If this option is omitted,
+          <firstterm>pegasus-monitord</firstterm> will create a SQLite
+          database in the workflow's run directory with the same name as the
+          workflow, but with a .<emphasis role="bold">stampede.db</emphasis>
+          prefix. For an empty <emphasis role="bold">scheme</emphasis>,
+          <emphasis role="bold">params</emphasis> are a file path with "-"
+          meaning standard output. For a x-tcp <emphasis
+          role="bold">scheme</emphasis>, <emphasis
+          role="bold">params</emphasis> are TCP_host[:port=14380]. For a
+          database <emphasis role="bold">scheme</emphasis>, <emphasis
+          role="bold">params</emphasis> are a SQLAlchemy engine URL with a
+          database connection string that can be used to specify different
+          database engines. Please see the examples section below for more
+          information on how to use this option. Note that when using a
+          database engine other than sqlite, the necessary Python database
+          drivers will need to be installed.</para>
+        </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">-e &lt;bp | bson&gt;</emphasis></para>
+
+          <para><emphasis role="bold">--encoding &lt;bp |
+          bson&gt;</emphasis></para>
+
+          <para>This option specifies how to encode log events. The two
+          available possibilities are <emphasis role="bold">bp</emphasis> and
+          <emphasis role="bold">bson</emphasis>. If this option is not
+          specified, events will be generated in the <emphasis
+          role="bold">bp</emphasis> format.</para>
+        </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">DAGMan output file</emphasis></para>
+
+          <para>The <emphasis role="bold">DAGMan output file</emphasis> is the
+          only requires command-line argument in <emphasis
+          role="bold">pegasus-monitord</emphasis> and must have the <emphasis
+          role="bold">.dag.dagman.out</emphasis> extension.</para>
+        </listitem>
+      </itemizedlist>
+    </section>
+
+    <section>
+      <title>RETURN VALUE</title>
+
+      <para>If the plan could be constructed, <emphasis
+      role="bold">pegasus-monitord</emphasis> returns with an exit code of 0.
+      However, in case of error, a non-zero exit code indicates problems. In
+      that case, the logfile should contain additional information about the
+      error condition.</para>
+    </section>
+
+    <section>
+      <title>EXAMPLES</title>
+
+      <para>Usually, <emphasis role="bold">pegasus-monitord</emphasis> is
+      invoked automatically by <emphasis role="bold">pegasus-run</emphasis>
+      and tracks the workflow progress in real-time, producing the
+      jobstate.log file and a corresponding SQLite database. When a workflow
+      fails, and is re-submitted with a rescue DAG, <emphasis
+      role="bold">pegasus-monitord</emphasis> will automatically pick up from
+      where it left previously and continue the jobstate.log file and the
+      database.</para>
+
+      <para>If users need to create the jobstate.log file after a workflow is
+      already finished, the <emphasis role="bold">--replay | -r</emphasis>
+      option should be used when running <emphasis
+      role="bold">pegasus-monitord</emphasis> manually. For example:</para>
+
+      <screen><emphasis role="bold">pegasus_monitord -r diamond-0.dag.dagman.out</emphasis></screen>
+
+      <para>will launch <emphasis role="bold">pegasus-monitord</emphasis> in
+      replay mode. In this case, if a jobstate.log file already exists, it
+      will be rotated and a new file will be created. If a
+      diamond-0.stampede.db SQLite database already exists, <emphasis
+      role="bold">pegasus-monitord</emphasis> will purge all references to the
+      workflow id specified in the braindump.txt file, including all
+      sub-workflows associated with that workflow id.</para>
+
+      <screen><emphasis role="bold">pegasus_monitord -r --no-database diamond-0.dag.dagman.out</emphasis></screen>
+
+      <para>will do the same thing, but without generating any log
+      events.</para>
+
+      <screen><emphasis role="bold">pegasus_monitord -r --dest `pwd`/diamond-0.bp diamond-0.dag.dagman.out</emphasis></screen>
+
+      <para>will create the file diamond-0.bp in the current directory,
+      containing NetLogger events with all the workflow data. This is in
+      addition to the jobstate.log file.</para>
+
+      <para>For using a database, users should provide a database connection
+      string in the format of:</para>
+
+      <screen>dialect://username:password@host:port/database</screen>
+
+      <para>Where <emphasis role="bold">dialect</emphasis> is the name of the
+      underlying driver (<emphasis role="bold">mysql</emphasis>, <emphasis
+      role="bold">sqlite</emphasis>, <emphasis role="bold">oracle</emphasis>,
+      <emphasis role="bold">postgres</emphasis>) and <emphasis
+      role="bold">database</emphasis> is the name of the database running on
+      the server at the host computer.</para>
+
+      <para>If users want to use a different SQLite database, <emphasis
+      role="bold">pegasus-monitord</emphasis> requires them to specify the
+      absolute path of the alternate file. For example:</para>
+
+      <screen><emphasis role="bold">pegasus_monitord -r --dest sqlite:////home/user/diamond_database.db diamond-0.dag.dagman.out</emphasis></screen>
+
+      <para>Here are docs with details for all of the supported drivers:
+          <ulink url="http://www.sqlalchemy.org/docs/05/reference/dialects/index.html">http://www.sqlalchemy.org/docs/05/reference/dialects/index.html</ulink>
+      </para>
+
+      <para>Additional per-database options that work into the connection
+      strings are outlined there.</para>
+
+      <para>It is important to note that one will need to have the appropriate
+      db interface library installed. Which is to say, SQLAlchemy is a wrapper
+      around the mysql interface library (for instance), it does not provide a
+      MySQL driver itself. The Pegasus distribution includes both SQLAlchemy
+      and the SQLite Python driver.</para>
+
+      <para>As a final note, it is important to mention that unlike when using
+      SQLite databases, using SQLAlchemy with other database servers, e.g.
+      MySQL or Postgres, the target database needs to exist. So, if a user
+      wanted to connect to:</para>
+
+      <screen>mysql://pegasus-user:supersecret@localhost:localport/diamond</screen>
+
+      <para>it would need to first connect to the server at <emphasis
+      role="bold">localhost</emphasis> and issue the appropriate create
+      database command before running <emphasis
+      role="bold">pegasus-monitord</emphasis> as SQLAlchemy will take care of
+      creating the tables and indexes if they do not already exist.</para>
+    </section>
+  </section>
+
+  <section id="cli-pegasus-analyzer">
+    <title>pegasus-analyzer</title>
+
+    <para>pegasus-analyzer is used to debug failed workflows.</para>
+
+    <section>
+      <title>SYNOPSIS</title>
+
+      <para>pegasus-analyzer [--help | -h] [--quiet | -q] [--strict | -s]
+      [--monitord | -m | -t] [--debug level] [--output-dir | -o output_dir]
+      [--file | -f dag_filename] [--dir | -d| -i input_dir] [--print | -p
+      print_options] [--debug-job job] [--debug-dir debug_dir] [--type
+      workflow_type]</para>
+    </section>
+
+    <section>
+      <title>DESCRIPTION</title>
+
+      <para>Pegasus-analyzer is a command-line utility for parsing the
+      jobstate.log file and reporting succesful and failed jobs. It quickly
+      goes through several log files, isolates jobs that did not complete
+      sucessfully, and prints their stdout and stderr so that users can get
+      detailed information about their workflow runs.</para>
+    </section>
+
+    <section>
+      <title>ARGUMENTS</title>
+
+      <para>Any option will be displayed with its long options
+      synonym(s).</para>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">-h</emphasis></para>
+
+          <para><emphasis role="bold">--help</emphasis></para>
+
+          <para>Prints a usage summary with all the available command-line
+          options.</para>
+        </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">-q</emphasis></para>
+
+          <para><emphasis role="bold">--quiet</emphasis></para>
+
+          <para>Only print the the output and error filenames instead of their
+          contents.</para>
+        </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">-s</emphasis></para>
+
+          <para><emphasis role="bold">--strict</emphasis></para>
+
+          <para>Get jobs' output and error filenames from the job's submit
+          file.</para>
+        </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">-m</emphasis></para>
+
+          <para><emphasis role="bold">-t</emphasis></para>
+
+          <para><emphasis role="bold">--monitord</emphasis></para>
+
+          <para>Invoke <emphasis role="bold">pegasus-monitord</emphasis>
+          before analyzing the jobstate.log file. Although <emphasis
+          role="bold">pegasus-analyzer</emphasis> can be executed during the
+          workflow execution as well as after the workflow has already
+          completed execution, <emphasis
+          role="bold">pegasus-monitord</emphasis> is always invoked with the
+          <emphasis role="bold">--replay</emphasis> option. Since multiple
+          instances of <emphasis role="bold">pegasus-monitord</emphasis>
+          should not be executed simultanesouly in the same workflow
+          directory, the user should ensure that no other instances of
+          <emphasis role="bold">pegasus-monitord</emphasis> are running. If
+          the run_directory is writable, <emphasis
+          role="bold">pegasus-analyzer</emphasis> will create a jobstate.log
+          file there, rotating an older log, if it is found. If the
+          run_directory is not writable (e.g. when the user debugging the
+          workflow is not the same user that ran the workflow), <emphasis
+          role="bold">pegasus-analyzer</emphasis> will exit and ask the user
+          to provide the <emphasis role="bold">--output-dir</emphasis> option,
+          in order to provide an alternative location for <emphasis
+          role="bold">pegasus-monitord</emphasis> log files.</para>
+        </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">--debug-level</emphasis></para>
+
+          <para>Sets the log level for <emphasis
+          role="bold">pegasus-analyzer</emphasis> . Possible values, in the
+          more verbose to least verbose order, are: </para>
+
+          <itemizedlist>
+            <listitem>
+              <para>INFO</para>
+            </listitem>
+
+            <listitem>
+              <para>DEBUG</para>
+            </listitem>
+
+            <listitem>
+              <para>WARNING</para>
+            </listitem>
+
+            <listitem>
+              <para>ERROR</para>
+            </listitem>
+
+            <listitem>
+              <para>CRITICAL</para>
+            </listitem>
+          </itemizedlist>
+
+          <para>If omitted, the default level will be set to WARNING.</para>
+        </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">-o &lt;output
+          directory&gt;</emphasis></para>
+
+          <para><emphasis role="bold">--output-dir &lt;output
+          directory&gt;</emphasis></para>
+
+          <para>This option provides an alternative location for all
+          monitoring log files for a particular workflow. It is mainly used
+          when an user does not have write privileges to a workflow directory
+          and needs to generate the log files needed by <emphasis
+          role="bold">pegasus-analyzer</emphasis>. If this option is used in
+          conjunction with the <emphasis role="bold">--monitord
+          option</emphasis>, it will invoke <emphasis
+          role="bold">pegasus-monitord</emphasis> using output_dir to store
+          all output files. Because workflows can have sub-workflows,
+          <emphasis role="bold">pegasus-monitord</emphasis> will create its
+          files prepending the workflow wf_uuid to each filename. This way,
+          multiple workflow files can be stored in the same directory.
+          <emphasis role="bold">pegasus-analyzer</emphasis> has built-in logic
+          to find the specific jobstate.log file by looking at the workflow
+          braindump.txt file first and figuring out the corresponding wf_uuid.
+          If output_dir does not exist, it will be created.</para>
+        </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">-f &lt;dag
+          filename&gt;</emphasis></para>
+
+          <para><emphasis role="bold">--file &lt;dag
+          filename&gt;</emphasis></para>
+
+          <para>In this option, <emphasis role="bold">dag filename</emphasis>
+          specifies the path to the DAG file to use. <emphasis
+          role="bold">pegasus-analyzer</emphasis> will get the directory
+          information from the <emphasis role="bold">dag filename</emphasis>.
+          This option overrides the <emphasis role="bold">--dir</emphasis>
+          option below.</para>
+        </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">-d &lt;input dir&gt;</emphasis></para>
+
+          <para><emphasis role="bold">-i &lt;input dir&gt;</emphasis></para>
+
+          <para><emphasis role="bold">--dir &lt;input
+          dir&gt;</emphasis></para>
+
+          <para>Makes <emphasis role="bold">pegasus-analyzer</emphasis> look
+          for the jobstate.log file in the <emphasis role="bold">input
+          dir</emphasis> directory. If this option is omitted, <emphasis
+          role="bold">pegasus-analyzer</emphasis> will look in the current
+          directory.</para>
+        </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">-p &lt;print
+          options&gt;</emphasis></para>
+
+          <para><emphasis role="bold">--print &lt;print
+          options&gt;</emphasis></para>
+
+          <para>Tells <emphasis role="bold">pegasus-analyzer</emphasis> what
+          extra information it should print for failed jobs. <emphasis
+          role="bold">print options</emphasis> is a comma-delimited list of
+          options, that include <emphasis role="bold">pre</emphasis>,
+          <emphasis role="bold">invocation</emphasis>, and/or <emphasis
+          role="bold">all</emphasis>, which activates all printing options.
+          With the <emphasis role="bold">pre</emphasis> option, <emphasis
+          role="bold">pegasus-analyzer</emphasis> will print the pre-script
+          information for failed jobs. For the <emphasis
+          role="bold">invocation</emphasis> option, <emphasis
+          role="bold">pegasus-analyzer</emphasis> will print the invocation
+          command, so users can manually run the failed job.</para>
+        </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">--debug-job
+          &lt;job&gt;</emphasis></para>
+
+          <para>When given this option, <emphasis
+          role="bold">pegasus-analyzer</emphasis> turns on its debug_mode,
+          which can be used to debug a particular job. In this mode, <emphasis
+          role="bold">pegasus-analyzer</emphasis> will create a shell script
+          in the <emphasis role="bold">debug dir</emphasis> (see below, for
+          specifying it) and copy all necessary files to this local directory
+          and then execute the job locally. </para>
+        </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">--debug-dir &lt;debug
+          dir&gt;</emphasis></para>
+
+          <para>When in debug mode, <emphasis
+          role="bold">pegasus-analyzer</emphasis> will create a temporary
+          debug directory. Users can give this option in order to specify a
+          particular <emphasis role="bold">debug dir</emphasis> directory to
+          be used instead.</para>
+        </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">--type &lt;workflow
+          type&gt;</emphasis></para>
+
+          <para>In this options, users specify what <emphasis
+          role="bold">workflow type</emphasis> they want to debug. At this
+          moment, the only <emphasis role="bold">workflow type</emphasis>
+          available is <emphasis role="bold">condor</emphasis> and it is the
+          default value if this option is not specified.</para>
+        </listitem>
+      </itemizedlist>
+    </section>
+
+    <section>
+      <title>EXAMPLES</title>
+
+      <para>The simplest way to use <emphasis
+      role="bold">pegasus-analyzer</emphasis> is to go to the run directory
+      and invoke the analyzer:</para>
+
+      <screen><emphasis role="bold">pegasus-analyzer .</emphasis></screen>
+
+      <para>which will cause <emphasis role="bold">pegasus-analyzer</emphasis>
+      to print information about the workflow in the current directory.</para>
+
+      <para><emphasis role="bold">pegasus-analyzer</emphasis> output contains
+      a summary, followed by detailed information about each job that either
+      failed, or is in an unknown state. Here is the summary section of the
+      output:</para>
+
+      <programlisting>**************************Summary***************************
+
+ Total jobs         :     75 (100.00%)
+ # jobs succeeded   :     41 (54.67%)
+ # jobs failed      :      0 (0.00%)
+ # jobs unsubmitted :     33 (44.00%)
+ # jobs unknown     :      1 (1.33%)</programlisting>
+
+      <para><emphasis role="bold">jobs succeeded</emphasis> are jobs that have
+      completed succesfully. <emphasis role="bold">jobs failed</emphasis> are
+      jobs that have finished, but that did not complete successfully.
+      <emphasis role="bold">jobs unsubmitted</emphasis> are jobs that are
+      listed in the dag file, but no information about them was found in the
+      jobstate.log file. Finally, <emphasis role="bold">jobs
+      unknown</emphasis> are jobs that have started, but have not reached
+      completion.</para>
+
+      <para>After the summary section, <emphasis
+      role="bold">pegasus-analyzer</emphasis> will display information about
+      each job in the <emphasis role="bold">job failed</emphasis> and
+      <emphasis role="bold">job unknown</emphasis> categories.</para>
+
+      <programlisting>******************Failed jobs' details**********************
+
+=======================findrange_j3=========================
+
+  last state: POST_SCRIPT_FAILURE
+        site: local
+ submit file: /home/user/diamond\-submit/findrange_j3.sub
+ output file: /home/user/diamond\-submit/findrange_j3.out.000
+  error file: /home/user/diamond\-submit/findrange_j3.err.000
+
+--------------------Task #1 - Summary-----------------------
+
+ site        : local
+ hostname    : server-machine.domain.com
+ executable  : (null)
+ arguments   : -a findrange -T 60 -i f.b2 -o f.c2
+ error       : 2
+ working dir : </programlisting>
+
+      <para>In the example above, the <emphasis
+      role="bold">findrange_j3</emphasis> job has failed, and the analyzer
+      displays information about the job, showing that the job finished with a
+      <emphasis role="bold">POST_SCRIPT_FAILURE</emphasis>, and lists the
+      submit, output and error files for this job. Whenever <emphasis
+      role="bold">pegasus-analyzer</emphasis> detects that the output file
+      contains a kickstart record, it will display the breakdown containing
+      each task in the job (in this case we only have one task). Because
+      <emphasis role="bold">pegasus-analyzer</emphasis> was not invoked with
+      the <emphasis role="bold">--quiet</emphasis> flag, it will also display
+      the contents of the output and error files (or the stdout and stderr
+      sections of the kickstart record), which in this case are both empty.
+      </para>
+
+      <para>In the case of SUBDAG and subdax jobs, <emphasis
+      role="bold">pegasus-analyzer</emphasis> will indicate it, and show the
+      command needed for the user to debug that sub-workflow. For
+      example:</para>
+
+      <programlisting>=================subdax_black_ID000009=====================
+
+  last state: JOB_FAILURE
+        site: local
+ submit file: /home/user/run1/subdax_black_ID000009.sub
+ output file: /home/user/run1/subdax_black_ID000009.out
+  error file: /home/user/run1/subdax_black_ID000009.err
+  This job contains sub workflows!
+  Please run the command below for more information:
+  pegasus-analyzer -d /home/user/run1/blackdiamond_ID000009.000
+
+-----------------subdax_black_ID000009.out-----------------
+
+Executing condor dagman ...
+
+-----------------subdax_black_ID000009.err-----------------</programlisting>
+
+      <para>tells the user the subdax_black_ID000009 sub-workflow failed, and
+      that it can be debugged by using the indicated <emphasis
+      role="bold">pegasus-analyzer</emphasis> command.</para>
+    </section>
+  </section>
+
+  <section id="cli-pegasus-statistics">
+    <title>pegasus-statistics</title>
+
+    <para>pegasus-statistics reports statistics about a workflow.</para>
+
+    <section>
+      <title>SYNOPSIS</title>
+
+      <para><emphasis role="bold">pegasus-statistics</emphasis> &lt;submit
+      directory&gt; [-h | --help] [-o | --output &lt;output directory&gt;] [-c
+      | --conf &lt;property file path&gt;] [-p | --statistics-level level_str]
+      [-t | --time-filter filter_str] [-i | --ignore-db-inconsistency] [-v |
+      --verbose] [-q | --quiet]</para>
+    </section>
+
+    <section>
+      <title>DESCRIPTION</title>
+
+      <para>pegasus-statistics generates statistics about the workflow run
+      like total jobs/tasks/sub workflows ran , how many succeeded/failed etc.
+      It generates job instance statistics like run time, condor queue delay
+      etc. It generates invocation statistics information grouped by
+      transformation name. It also generates job instance and invocation
+      statistics information grouped by time and host.</para>
+    </section>
+
+    <section>
+      <title>ARGUMENTS</title>
+
+      <para>Any option will be displayed with its long options
+      synonym(s).</para>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">-h </emphasis></para>
+
+          <para><emphasis role="bold">--help</emphasis></para>
+
+          <para>Prints a usage summary with all the available command-line
+          options.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-o &lt;output directory
+          &gt;</emphasis></para>
+
+          <para><emphasis role="bold">--output &lt;output directory
+          &gt;</emphasis></para>
+
+          <para>Writes the output to the given directory.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-c &lt;property file path
+          &gt;</emphasis></para>
+
+          <para><emphasis role="bold">--conf &lt;property file path
+          &gt;</emphasis></para>
+
+          <para>The properties file to use. This option overrides all other
+          property files.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-s level_str</emphasis></para>
+
+          <para><emphasis role="bold">--statistics-level
+          level_str</emphasis></para>
+
+          <para>Specifies the statistics information to generate. Valid levels
+          are: all,summary,wf_stats,jb_stats,tf_stats,ti_stats; Default is
+          summary. The output generated by pegasus-statistics is based on the
+          statistics_level set.</para>
+
+          <itemizedlist>
+            <listitem>
+              <para><emphasis role="bold">all</emphasis></para>
+
+              <para>generates all the statistics information.</para>
+            </listitem>
+
+            <listitem>
+              <para><emphasis role="bold">summary</emphasis></para>
+
+              <para>generates the workflow statistics summary .In case of
+              hierarchical workflow the summary is across all sub
+              workflows.</para>
+            </listitem>
+
+            <listitem>
+              <para><emphasis role="bold">wf_stats</emphasis></para>
+
+              <para>generates the workflow statistics information of each
+              individual workflow. In case of hierarchical workflow the
+              workflow statistics is created for each sub workflows.</para>
+            </listitem>
+
+            <listitem>
+              <para><emphasis role="bold">jb_stats</emphasis></para>
+
+              <para>generates the job statistics information of each
+              individual workflow. In case of hierarchical workflow the job
+              statistics is created for each sub workflows.</para>
+            </listitem>
+
+            <listitem>
+              <para><emphasis role="bold">tf_stats</emphasis></para>
+
+              <para>generates the invocation statistics information of each
+              individual workflow grouped by transformation name .In case of
+              hierarchical workflow the transformation statistics is created
+              for each sub workflows.</para>
+            </listitem>
+
+            <listitem>
+              <para><emphasis role="bold">ti_stats</emphasis></para>
+
+              <para>generates the job instance and invocation statistics like
+              total count and runtime grouped by time and host.</para>
+            </listitem>
+          </itemizedlist>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-t filter_str</emphasis></para>
+
+          <para><emphasis role="bold">--time-filter
+          filter_str</emphasis></para>
+
+          <para>Specifies the time filter to group the time statistics. Valid
+          levels are: month,week,day,hour; Default is day.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-i </emphasis></para>
+
+          <para><emphasis
+          role="bold">--ignore-db-inconsistency</emphasis></para>
+
+          <para>Turns off the the check for database consistency.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-v </emphasis></para>
+
+          <para><emphasis role="bold">--verbose</emphasis></para>
+
+          <para>Increases the log level. If omitted, the default level will be
+          set to WARNING. When this option is given, the log level is changed
+          to INFO. If this option is repeated, the log level will be changed
+          to DEBUG.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-q</emphasis></para>
+
+          <para><emphasis role="bold">--quiet</emphasis></para>
+
+          <para>Decreases the log level. If omitted, the default level will be
+          set to WARNING. When this option is given, the log level is changed
+          to ERROR.</para>
+        </listitem>
+      </itemizedlist>
+    </section>
+
+    <section>
+      <title>EXAMPLE</title>
+
+      <screen><command>pegasus-statistics   /scratch/grid-setup/run0001</command></screen>
+
+      <para>Runs pegasus-statistics and prints the workflow summary statistics
+      on the command line output.</para>
+
+      <screen><command>pegasus-statistics  -o /scratch/statistics -s all /scratch/grid-setup/run0001</command></screen>
+
+      <para>Runs pegasus-statistics and prints the workflow summary statistics
+      on the command line output and generates all statistics information
+      files to the given directory.</para>
+    </section>
+  </section>
+
+  <section id="cli-pegasus-plots">
+    <title>pegasus-plots</title>
+
+    <para>pegasus-plots generates charts and graphs that illustrate the
+    statistics and execution of a workflow.</para>
+
+    <section>
+      <title>SYNOPSIS</title>
+
+      <para><emphasis role="bold">pegasus-statistics</emphasis> &lt;submit
+      directory&gt; [-h | --help] [-o | --output &lt;output directory&gt;] [-c
+      | --conf &lt;property file path&gt;] [-m | --max-graph-nodes max_value]
+      [-p | --plotting-level level_str] [-i | --ignore-db-inconsistency] [-v |
+      --verbose] [-q | --quiet]</para>
+    </section>
+
+    <section>
+      <title>DESCRIPTION</title>
+
+      <para>pegasus-plots generates graphs and charts to visualize workflow
+      run. It generates workflow execution Gantt chart, job over time chart,
+      time chart, breakdown chart, dax and dag graph. It uses executable 'dot'
+      to generate graphs. pegasus-plots looks for the executable in your path
+      and generates graphs based on it's availability .</para>
+    </section>
+
+    <section>
+      <title>ARGUMENTS</title>
+
+      <para>Any option will be displayed with its long options
+      synonym(s).</para>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">-h </emphasis></para>
+
+          <para><emphasis role="bold">--help</emphasis></para>
+
+          <para>Prints a usage summary with all the available command-line
+          options.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-o &lt;output directory
+          &gt;</emphasis></para>
+
+          <para><emphasis role="bold">--output &lt;output directory
+          &gt;</emphasis></para>
+
+          <para>Writes the output to the given directory.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-c &lt;property file path
+          &gt;</emphasis></para>
+
+          <para><emphasis role="bold">--conf &lt;property file path
+          &gt;</emphasis></para>
+
+          <para>The properties file to use. This option overrides all other
+          property files.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-m max_value</emphasis></para>
+
+          <para><emphasis role="bold">--max-graph-nodes
+          max_value</emphasis></para>
+
+          <para>Maximum limit on the number of tasks/jobs in the dax/dag upto
+          which the graph should be generated;The default value is 100</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-p level_str</emphasis></para>
+
+          <para><emphasis role="bold">--plotting-level
+          level_str</emphasis></para>
+
+          <para>Specifies the charts and graphs to generate. Valid levels are:
+          all,all_charts,
+          all_graphs,dax_graph,dag_graph,gantt_chart,host_chart,
+          time_chart,breakdown_chart;Default is all_charts. The output
+          generated by pegasus-plots is based on the plotting_level
+          set.</para>
+
+          <itemizedlist>
+            <listitem>
+              <para><emphasis role="bold">all</emphasis></para>
+
+              <para>generates all charts and graphs.</para>
+            </listitem>
+
+            <listitem>
+              <para><emphasis role="bold">all_charts</emphasis></para>
+
+              <para>generates all charts.</para>
+            </listitem>
+
+            <listitem>
+              <para><emphasis role="bold">all_graphs</emphasis></para>
+
+              <para>generates all graphs.</para>
+            </listitem>
+
+            <listitem>
+              <para><emphasis role="bold">dax_graph</emphasis></para>
+
+              <para>generates dax graph.</para>
+            </listitem>
+
+            <listitem>
+              <para><emphasis role="bold">dag_graph</emphasis></para>
+
+              <para>generates dag graph.</para>
+            </listitem>
+
+            <listitem>
+              <para><emphasis role="bold">gantt_chart</emphasis></para>
+
+              <para>generates the workflow execution Gantt chart.</para>
+            </listitem>
+
+            <listitem>
+              <para><emphasis role="bold">host_chart</emphasis></para>
+
+              <para>generates the host over time chart.</para>
+            </listitem>
+
+            <listitem>
+              <para><emphasis role="bold">time_chart</emphasis></para>
+
+              <para>generates the time chart which shows the job instance/
+              invocation count and runtime over time.</para>
+            </listitem>
+
+            <listitem>
+              <para><emphasis role="bold">breakdown_chart</emphasis></para>
+
+              <para>generates the breakdown chart which shows the invocation
+              count and runtime grouped by transformation name.</para>
+            </listitem>
+          </itemizedlist>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-i </emphasis></para>
+
+          <para><emphasis
+          role="bold">--ignore-db-inconsistency</emphasis></para>
+
+          <para>Turns off the the check for database consistency.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-v </emphasis></para>
+
+          <para><emphasis role="bold">--verbose</emphasis></para>
+
+          <para>Increases the log level. If omitted, the default level will be
+          set to WARNING. When this option is given, the log level is changed
+          to INFO. If this option is repeated, the log level will be changed
+          to DEBUG.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-q</emphasis></para>
+
+          <para><emphasis role="bold">--quiet</emphasis></para>
+
+          <para>Decreases the log level. If omitted, the default level will be
+          set to WARNING. When this option is given, the log level is changed
+          to ERROR.</para>
+        </listitem>
+      </itemizedlist>
+    </section>
+
+    <section>
+      <title>EXAMPLE</title>
+
+      <screen><command>pegasus-plots  -o /scratch/plots  /scratch/grid-setup/run0001</command></screen>
+
+      <para>Runs pegasus-plots and generates all the charts and graphs to the
+      given directory.</para>
+    </section>
+  </section>
+
+  <section id="cli-pegasus-transfer">
+    <title>pegasus-transfer</title>
+
+    <para>pegasus-transfer is a wrapper for several file transfer clients. The
+    tool is used whenever Pegasus plans a transfer of data.</para>
+
+    <section>
+      <title>SYNOPSIS</title>
+
+      <para><emphasis role="bold">pegasus-transfer </emphasis>[-h | --help]
+      [-l | --loglevel &lt;level&gt;] [-f | --file=&lt;input file&gt;]
+      [--max-attempts=&lt;attempts&gt;]</para>
+    </section>
+
+    <section>
+      <title>DESCRIPTION</title>
+
+      <para>pegasus-transfer takes a list of url pairs, either on stdin or
+      with an input file, determines the correct tool to use for the transfer
+      and executes the transfer. Some of the protocols pegasus-transfer can
+      handle are GridFTP, SRM, Amazon S3, HTTP, and local cp/symlinking.
+      Failed transfers are retried.</para>
+    </section>
+
+    <section>
+      <title>ARGUMENTS</title>
+
+      <para>Any option will be displayed with its long options
+      synonym(s).</para>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">-h </emphasis></para>
+
+          <para><emphasis role="bold">--help</emphasis></para>
+
+          <para>Prints a usage summary with all the available command-line
+          options.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-l &lt;level&gt;</emphasis></para>
+
+          <para><emphasis role="bold">--loglevel
+          &lt;level&gt;</emphasis></para>
+
+          <para>The debugging output level. Valid values are
+          debug,info.warning,error. Default value is info.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-f &lt;input file&gt;</emphasis></para>
+
+          <para><emphasis role="bold">--file &lt;input
+          file&gt;</emphasis></para>
+
+          <para>File with input pairs. If not given, stdin will be
+          used.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">--max-attempts
+          &lt;attempts&gt;</emphasis></para>
+
+          <para>Maximum number of attempts for retrying failed
+          transfers.</para>
+        </listitem>
+      </itemizedlist>
+    </section>
+
+    <section>
+      <title>EXAMPLE</title>
+
+      <screen><command>pegasus-transfer
+file:///etc/hosts
+file:///tmp/foo
+CTRL+D</command></screen>
+    </section>
+  </section>
+
+  <section id="cli-pegasus-sc-client">
+    <title>pegasus-sc-client</title>
+
+    <para>pegasus-sc-client is used to generate and modify site
+    catalogs.</para>
+  </section>
+
+  <section id="cli-pegasus-rc-client">
+    <title>pegasus-rc-client</title>
+
+    <para>pegasus-rc-client - shell client for replica implementations</para>
+
+    <section>
+      <title>SYNOPSIS</title>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">pegasus-rc-client</emphasis> [-Dprop
+          [...]] [-c fn] [-p k=v] [[-f fn]|[-i|-d fn]|[cmd [args]]</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">pegasus-rc-client</emphasis> [-c fn]
+          -V</para>
+        </listitem>
+      </itemizedlist>
+    </section>
+
+    <section>
+      <title>DESCRIPTION</title>
+
+      <para>The shell interface to replica catalog implementations is a
+      prototype. It determines from various property setting which class
+      implements the replica manager interface, and loads that driver at
+      run-time. Some commands depend on the implementation.</para>
+    </section>
+
+    <section>
+      <title>ARGUMENTS</title>
+
+      <para>Any option will be displayed with its long options
+      synonym(s).</para>
+
+      <para></para>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">-h, --help</emphasis></para>
+
+          <para>print this help text</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-V, --version</emphasis></para>
+
+          <para>print some version identification string and exit</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-Dprop</emphasis></para>
+
+          <para>The -D options allows an experienced user to override certain
+          properties which influence the program execution, among them the
+          default location of the user's properties file and the PEGASUS home
+          location. One may set several CLI properties by giving this option
+          multiple times. The -D option(s) must be the first option on the
+          command line. A CLI property take precedence over the properties
+          file property of the same key.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-f, --file fn</emphasis></para>
+
+          <para>uses non-interactive mode, reading from file fn. The special
+          filename hyphen reads from pipes</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-c, --conf fn</emphasis></para>
+
+          <para>path to the property file</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-v, --verbose</emphasis></para>
+
+          <para>increases the verbosity level</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-p, --pref k=v</emphasis></para>
+
+          <para>enters the specified mapping into preferences (multi-use).
+          remember quoting, e.g. -p 'format=%l %p %a'</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-i, --insert fn</emphasis></para>
+
+          <para>the path to the file containing the mappings to be inserted.
+          Each line in the file denotes one mapping of format &lt;LFN&gt;
+          &lt;PFN&gt; [k=v [..]]</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-d, --delete fn</emphasis></para>
+
+          <para>the path to the file containing the mappings to be deleted.
+          Each line in the file denotes one mapping of format &lt;LFN&gt;
+          &lt;PFN&gt; [k=v [..]].</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-l, --lookup fn</emphasis></para>
+
+          <para>the path to the file containing the LFN's to be looked up.
+          Each line in the file denotes one LFN</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">cmd [args]</emphasis></para>
+
+          <para>If not in file-driven mode, a single command can be specified
+          with its arguments.</para>
+        </listitem>
+      </itemizedlist>
+    </section>
+
+    <section>
+      <title>RETURN VALUE</title>
+
+      <para>Regular and planned program terminations will result in an exit
+      code of 0. Abnormal termination will result in a non-zero exit
+      code.</para>
+    </section>
+
+    <section>
+      <title>FILES</title>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis
+          role="bold">$PEGASUS_HOME/etc/properties</emphasis></para>
+
+          <para>contains the basic properties with all configurable
+          options.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">$HOME/.pegasusrc</emphasis></para>
+
+          <para>contains the basic properties with all configurable
+          options.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">pegasus.jar</emphasis></para>
+
+          <para>contains all compiled Java bytecode to run the replica
+          manager.</para>
+        </listitem>
+      </itemizedlist>
+    </section>
+
+    <section>
+      <title>ENVIRONMENT VARIABLES</title>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">$PEGASUS_HOME</emphasis></para>
+
+          <para>is the suggested base directory of your the execution
+          environment.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">$JAVA_HOME</emphasis></para>
+
+          <para>should be set and point to a valid location to start the
+          intended Java virtual machine as $JAVA_HOME/bin/java.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">$CLASSPATH</emphasis></para>
+
+          <para>should be set to contain all necessary files for the execution
+          environment. Please make sure that your CLASSPATH includes pointer
+          to the replica implementation required jar files.</para>
+        </listitem>
+      </itemizedlist>
+    </section>
+
+    <section>
+      <title>PROPERTIES</title>
+
+      <para>The complete branch of properties pegasus.catalog.replica
+      including itself are interpreted by the prototype. While the
+      pegasus.catalog.replica property itself steers the backend to connect
+      to, any meaning of branched keys is dependent on the backend. The same
+      key may have different meanings for different backends.</para>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis
+          role="bold">pegasus.catalog.replica</emphasis></para>
+
+          <para>determines the name of the implementing class to load at
+          run-time. If the class resides in org.griphyn.common.catalog.replica
+          no prefix is required. Otherwise, the fully qualified class name
+          must be specified.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis
+          role="bold">pegasus.catalog.replica.url</emphasis></para>
+
+          <para>is used by the RLS|LRC implementations. It determines the RLI
+          / LRC url to use.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">p<emphasis
+          role="bold">egasus.catalog.replica.file</emphasis></emphasis></para>
+
+          <para>is used by the SimpleFile implementation. It specifies the
+          path to the file to use as the backend for the catalog.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis
+          role="bold">pegasus.catalog.replica.db.driver</emphasis></para>
+
+          <para>is used by a simple rDBMs implementation. The string is the
+          fully-qualified class name of the JDBC driver used by the rDBMS
+          implementer.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis
+          role="bold">pegasus.catalog.replica.db.url</emphasis></para>
+
+          <para>is the jdbc url to use to connect to the database.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis
+          role="bold">pegasus.catalog.replica.db.user</emphasis></para>
+
+          <para>is used by a simple rDBMS implementation. It constitutes the
+          database user account that contains the RC_LFN and RC_ATTR
+          tables.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis
+          role="bold">pegasus.catalog.replica.db.password</emphasis></para>
+
+          <para>is used by a simple rDBMS implementation. It constitutes the
+          database user account that contains the RC_LFN and RC_ATTR
+          tables.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis
+          role="bold">pegasus.catalog.replica.chunk.size</emphasis></para>
+
+          <para>is used by the pegasus-rc-client for the bulk insert and
+          delete operations. The value determines the number of lines that are
+          read in at a time, and worked upon at together.</para>
+        </listitem>
+      </itemizedlist>
+    </section>
+
+    <section>
+      <title>COMMANDS</title>
+
+      <para>The commandline tool provides a simplified shell-wrappable
+      interface to manage a replica catalog backend. The commands can either
+      be specified in a file in bulk mode, in a pipe, or as additional
+      arguments to the invocation.</para>
+
+      <para></para>
+
+      <para>Note that you must escape special characters from the
+      shell.</para>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">help</emphasis></para>
+
+          <para>displays a small resume of the commands.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">exit, quit</emphasis></para>
+
+          <para><emphasis role="bold"><emphasis>should only be used in
+          interactive mode to exit the interactive
+          mode.</emphasis></emphasis></para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">clear</emphasis></para>
+
+          <para>drops all contents from the backend. Use with special
+          care!</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">insert &lt;lfn&gt; &lt;pfn&gt; [k=v
+          [..]]</emphasis></para>
+
+          <para>inserts a given lfn and pfn, and an optional site string into
+          the backend. If the site is not specified, a null value is inserted
+          for the site.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">delete &lt;lfn&gt; &lt;pfn&gt; [k=v
+          [..]]</emphasis></para>
+
+          <para>removes a triple of lfn, pfn and, optionally, site from the
+          replica backend. If the site was not specified, all matches of the
+          lfn pfn pairs will be removed, regardless of the site.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">lookup &lt;lfn&gt; [&lt;lfn&gt;
+          [..]]</emphasis></para>
+
+          <para>retrieves one or more mappings for a given lfn from the
+          replica backend.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">remove &lt;lfn&gt; [&lt;lfn&gt;
+          [..]]</emphasis></para>
+
+          <para>removes all mappings for each lfn from the replica
+          backend.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">list [lfn &lt;pat&gt;] [pfn &lt;pat&gt;]
+          [&lt;name&gt; &lt;pat&gt;]</emphasis></para>
+
+          <para>obtains all matches from the replica backend. If no arguments
+          were specified, all contents of the replica backend are matched. You
+          must use the word lfn, pfn or &lt;name&gt; before specifying a
+          pattern. The pattern is meaningful only to the implementation. Thus,
+          a SQL implementation may chose to permit SQL wild-card characters. A
+          memory-resident service may chose to interpret the pattern as
+          regular expression.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">set [var [value]]</emphasis></para>
+
+          <para>sets an internal variable that controls the behavior of the
+          front-end. With no arguments, all possible behaviors are displayed.
+          With one argument, just the matching behavior is listed. With two
+          arguments, the matching behavior is set to the value.</para>
+        </listitem>
+      </itemizedlist>
+    </section>
+
+    <section>
+      <title>DATABASE SCHEMA</title>
+
+      <para>The tables are set up as part of the PEGASUS database setup. The
+      files concerned with the database have a suffix -rc.sql.</para>
+    </section>
+  </section>
+
+  <section id="cli-pegasus-tc-client">
+    <title>pegasus-tc-client</title>
+
+    <para>A full featured generic client to handle adds, delete and queries to
+    the Transformation Catalog (TC).</para>
+
+    <section>
+      <title>SYNOPSIS</title>
+
+      <para><emphasis role="bold">pegasus-tc-client</emphasis> [-Dprop [...]]
+      OPERATION TRIGGERS [OPTIONS] [-h] [-v] [-V]</para>
+    </section>
+
+    <section>
+      <title>DESCRIPTION</title>
+
+      <para>The tc-client command is a generic client that performs the three
+      basic operation of adding, deleting and querying of any Transformation
+      Catalog impemented to the TC API. The client implements all the
+      operations supported by the TC Api. It is upto the TC implementation
+      whether they support all operations or modes.</para>
+
+      <para></para>
+
+      <para>The following 3 operations are supported by the tc-client. One of
+      these operations have to be specified to run the client.</para>
+
+      <orderedlist>
+        <listitem>
+          <para><emphasis role="bold">ADD</emphasis></para>
+
+          <para>This operation allows the client to add or update entries in
+          the Transformation Catalog. Entries can be added one by one on the
+          command line or in bulk by using the BULK Trigger and pro‐ viding a
+          file with the necessary entries. Also Profiles can be added to
+          either the logical transformation or the physical
+          transformation.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">DELETE</emphasis></para>
+
+          <para>This operation allows the client to delete entries from the
+          Transformation Catalog. Entries can be deleted based on logical
+          transformation, by resource, by transformation type as well as the
+          transformation system information. Also Profiles associated with the
+          logical or physical transformation can be deleted.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">QUERY</emphasis></para>
+
+          <para>This opeartion allows the client to query for entries from the
+          Transformation Catalog. Queries can be made for printing all the
+          contents of the Catalog or for specific entries, for all the logical
+          transformations or resources etc. See the TRIGGERS and VALID
+          COMBINATIONS section for more details.</para>
+        </listitem>
+      </orderedlist>
+    </section>
+
+    <section>
+      <title>OPERATIONS</title>
+
+      <para>To select one of the 3 operations.</para>
+
+      <para></para>
+
+      <orderedlist>
+        <listitem>
+          <para><emphasis role="bold">-a , --add</emphasis></para>
+
+          <para>Perform addition operations on the TC.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-d , --delete </emphasis></para>
+
+          <para>Perform delete operations on the TC.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis>-q , --query</emphasis></para>
+
+          <para>Perform query operations on the TC.</para>
+        </listitem>
+      </orderedlist>
+    </section>
+
+    <section>
+      <title>TRIGGERS</title>
+
+      <para>Triggers modify an OPERATIONS behaviour. E.g. if you want to
+      perform a bulk operation you would use a BULK Trigger or if you want to
+      perform an operation on a Logical Transformation then you would use the
+      LFN Trigger.</para>
+
+      <para></para>
+
+      <para>The following 7 Triggers are available. See the VALID COMBINATIONS
+      section for the correct grouping and usage.</para>
+
+      <para></para>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">-B </emphasis></para>
+
+          <para>Triggers a bulk operation.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-L</emphasis></para>
+
+          <para><emphasis role="bold"><emphasis>Triggers an operation on a
+          logical transformation.</emphasis></emphasis></para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-P</emphasis></para>
+
+          <para><emphasis role="bold"><emphasis>Triggers an operation on a
+          physical transformation.</emphasis></emphasis></para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-R</emphasis></para>
+
+          <para><emphasis role="bold"><emphasis>Triggers an operation on a
+          resource.</emphasis></emphasis></para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-E</emphasis></para>
+
+          <para><emphasis role="bold"><emphasis>Triggers an operation on a
+          Profile.</emphasis></emphasis></para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-T</emphasis></para>
+
+          <para><emphasis role="bold"><emphasis>Triggers an operation on a
+          Type.</emphasis></emphasis></para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-S</emphasis></para>
+
+          <para><emphasis role="bold"><emphasis>Triggers an operation on a
+          System information.</emphasis></emphasis></para>
+        </listitem>
+      </itemizedlist>
+    </section>
+
+    <section>
+      <title>OPTIONS</title>
+
+      <para>The following options are applicable for all the
+      operations.</para>
+
+      <para></para>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">-l, --lfn logicalTR</emphasis></para>
+
+          <para>The logical transformation to be added. The format is
+          NAMESPACE::NAME:VERSION. The name is always required, namespace and
+          version are optional.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-p, --pfn physical TR</emphasis></para>
+
+          <para>The physical transfromation to be added. For INSTALLED
+          executables its a local file path, for all others its a url.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-t , --type type</emphasis></para>
+
+          <para>The type of physical transformation. Valid values are :
+          INSTALLED, STATIC_BINARY, DYNAMIC_BINARY, SCRIPT, SOURCE,
+          PACMAN_PACKAGE.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-r , --resource
+          resourceID</emphasis></para>
+
+          <para>The resourceID where the transformation is located.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-e , --profile
+          profiles</emphasis></para>
+
+          <para>The profiles for the transformation. Mulitple profiles of same
+          namespace can be added simultaneously by seperating them with a
+          comma ",". Each profile section is written as
+          NAMESPACE::KEY=VALUE,KEY2=VALUE2 e.g.
+          ENV::JAVA_HOME=/usr/bin/java2,PEGASUS_HOME=/usr/local/pegasus. To
+          add muliple namespaces you need to repeat the -e option for each
+          namespace.</para>
+
+          <para>e.g. -e ENV::JAVA_HOME=/usr/bin/java -e
+          GLOBUS::JobType=MPI,COUNT=10</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">-s , --system
+          systeminfo</emphasis></para>
+
+          <para>The architecture, os, osversion and glibc if any for the
+          executable. Each system info is written in the form
+          ARCH::OS:OSVER:GLIBC</para>
+        </listitem>
+      </itemizedlist>
+    </section>
+
+    <section>
+      <title>OTHER OPTIONS</title>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">-Dprop</emphasis></para>
+
+          <para>The -D options allows an experienced user to override certain
+          properties which influence the program execution, among them the
+          default location of the user's properties file and the PEGASUS home
+          location. One may set several CLI properties by giving this option
+          multiple times. The -D option(s) must be the first option on the
+          command line. A CLI property take precedence over the properties
+          file property of the same key.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">--oldformat, -o</emphasis></para>
+
+          <para>Generates the output in the old single line format</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">--conf, -c</emphasis></para>
+
+          <para>path to property file</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">--verbose, -v</emphasis></para>
+
+          <para>increases the verbosity level</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">--version, -V</emphasis></para>
+
+          <para>Displays the version number of the Griphyn Virtual Data System
+          software</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">--help, -h</emphasis></para>
+
+          <para>Generates this help</para>
+        </listitem>
+      </itemizedlist>
+    </section>
+
+    <section>
+      <title>VALID COMBINATIONS</title>
+
+      <para>The following are valid combinations of OPERATIONS, TRIGGERS,
+      OPTIONS for the tc-client</para>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">ADD</emphasis></para>
+
+          <itemizedlist>
+            <listitem>
+              <para><emphasis>ADD TC ENTRY</emphasis></para>
+
+              <para><emphasis><emphasis>-a -l lfn -p pfn -t type -r resource
+              -s system [-e profiles..] </emphasis></emphasis></para>
+
+              <para><emphasis><emphasis>Adds a single entry into the
+              transformation catalog.</emphasis></emphasis></para>
+            </listitem>
+
+            <listitem>
+              <para><emphasis>ADD PFN PROFILE</emphasis></para>
+
+              <para>-a -P -E -p pfn -t type -r resource -e profiles
+              ....</para>
+
+              <para>Adds profiles to a specified physical transformation on a
+              given resource and of a given type.</para>
+            </listitem>
+
+            <listitem>
+              <para><emphasis>ADD LFN PROFILE</emphasis></para>
+
+              <para>-a -L -E -l lfn -e profiles ....</para>
+
+              <para>Adds profiles to a specified logical
+              transformation.</para>
+            </listitem>
+
+            <listitem>
+              <para><emphasis>Add Bulk Entries</emphasis></para>
+
+              <para>-a -B -f file</para>
+
+              <para>Adds entries in bulk mode by supplying a file containg the
+              entries.</para>
+
+              <para>The format of the file cotnains 6 columns. E.g.</para>
+
+              <para>#RESOURCE LFN PFN TYPE SYSINFO PROFILES # isi NS::NAME:VER
+              /bin/date INSTALLED ARCH::OS:OSVERS:GLIBC
+              NS::KEY=VALUE,KEY=VALUE;NS2::KEY=VALUE,KEY=VALUE</para>
+            </listitem>
+          </itemizedlist>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">DELETE</emphasis></para>
+
+          <itemizedlist>
+            <listitem>
+              <para><emphasis>Delete all TC </emphasis></para>
+
+              <para>-d -BPRELST</para>
+
+              <para>Deletes the entire contents of the TC. WARNING : USE WITH
+              CAUTION.</para>
+            </listitem>
+
+            <listitem>
+              <para><emphasis>Delete by LFN </emphasis></para>
+
+              <para>-d -L -l lfn [-r resource] [-t type]</para>
+
+              <para>Deletes entries from the TC for a particular logical
+              transformation and additionaly a resource and or type.</para>
+            </listitem>
+
+            <listitem>
+              <para><emphasis>Delete by PFN </emphasis></para>
+
+              <para>-d -P -l lfn -p pfn [-r resource] [-t type]</para>
+
+              <para>Deletes entries from the TC for a given logical and
+              physical transformation and additionaly on a particular resource
+              and or of a particular type.</para>
+            </listitem>
+
+            <listitem>
+              <para><emphasis>Delete by Type </emphasis></para>
+
+              <para>-d -T -t type [-r resource]</para>
+
+              <para>Deletes entries from TC of a specific type and/or on a
+              specific resource.</para>
+            </listitem>
+
+            <listitem>
+              <para><emphasis>Delete by Resource </emphasis></para>
+
+              <para>-d -R -r resource</para>
+
+              <para>Deletes the entries from the TC on a particular
+              resource.</para>
+            </listitem>
+
+            <listitem>
+              <para><emphasis>Delete by SysInfo </emphasis></para>
+
+              <para>-d -S -s sysinfo</para>
+
+              <para>Deletes the entries from the TC for a particular system
+              information type.</para>
+            </listitem>
+
+            <listitem>
+              <para><emphasis>Delete Pfn Profile </emphasis></para>
+
+              <para>-d -P -E -p pfn -r resource -t type [-e profiles
+              ..]</para>
+
+              <para>Deletes all or specific profiles associated with a
+              physical transformation.</para>
+            </listitem>
+
+            <listitem>
+              <para><emphasis>Delete Lfn Profile </emphasis></para>
+
+              <para>-d -L -E -l lfn -e profiles ....</para>
+
+              <para>Deletes all or specific profiles associated with a logical
+              transformation.</para>
+            </listitem>
+          </itemizedlist>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">QUERY</emphasis></para>
+
+          <itemizedlist>
+            <listitem>
+              <para><emphasis>Query Bulk </emphasis></para>
+
+              <para>-q -B Queries for all the contents of the TC.</para>
+
+              <para>It produces a file format TC which can be added to another
+              TC using the bulk option.</para>
+            </listitem>
+
+            <listitem>
+              <para><emphasis>Query LFN </emphasis></para>
+
+              <para>-q -L [-r resource] [-t type]</para>
+
+              <para>Queries the TC for logical transformation and/or on a
+              particular resource and/or of a particular type.</para>
+            </listitem>
+
+            <listitem>
+              <para><emphasis> Query PFN </emphasis></para>
+
+              <para>-q -P -l lfn [-r resource] [-t type]</para>
+
+              <para>Queries the TC for physical transformations for a give
+              logical transformation and/or on a particular resource and/or of
+              a particular type.</para>
+            </listitem>
+
+            <listitem>
+              <para><emphasis>Query Resource </emphasis></para>
+
+              <para>-q -R -l lfn [-t type]</para>
+
+              <para>Queries the TC for resources that are registered and/or
+              resources registered for a specific type of
+              transformation.</para>
+            </listitem>
+
+            <listitem>
+              <para><emphasis>Query Lfn Profile </emphasis></para>
+
+              <para>-q -L -E -l lfn</para>
+
+              <para>Queries for profiles associated with a particular logical
+              transformation</para>
+            </listitem>
+
+            <listitem>
+              <para><emphasis>Query Pfn Profile </emphasis></para>
+
+              <para>-q -P -E -p pfn -r resource -t type</para>
+
+              <para>Queries for profiles associated with a particular physical
+              transformation</para>
+            </listitem>
+          </itemizedlist>
+        </listitem>
+      </itemizedlist>
+    </section>
+
+    <section>
+      <title>PROPERTIES</title>
+
+      <para>This are the properties you will need to set to use either the
+      File or Text TC. For more details please check the
+      $PEGASUS_HOME/etc/sample.properties file.</para>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis
+          role="bold">pegasus.catalog.transformation</emphasis></para>
+
+          <para>Identifies what impelemntation of TC will be used. If relative
+          name is used then the path org.griphyn.cPlanner.tc is prefixed to
+          the name and used as the class name to load. The default value is
+          Text. Other supported mode is File</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis
+          role="bold">pegasus.catalog.transformation.file</emphasis></para>
+
+          <para>The file path where the text based TC is located. By default
+          the path $PEGASUS_HOME/var/tc.data is used.</para>
+        </listitem>
+      </itemizedlist>
+    </section>
+
+    <section>
+      <title>FILES</title>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis
+          role="bold">$PEGASUS_HOME/var/tc.data</emphasis></para>
+
+          <para>is the suggested location for the file corresponding to the
+          Transformation Catalog</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis
+          role="bold">$PEGASUS_HOME/etc/properties</emphasis></para>
+
+          <para>is the location to specify properties to change what
+          Tranformation Catalog Implementation to use and the implementation
+          related PROPERTIES.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">pegasus.jar</emphasis></para>
+
+          <para>contains all compiled Java bytecode to run the PEGASUS
+          Planner.</para>
+        </listitem>
+      </itemizedlist>
+    </section>
+
+    <section>
+      <title>ENVIRONMENT VARIABLES</title>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">$PEGASUS_HOME </emphasis></para>
+
+          <para>Path to the PEGASUS installation directory.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">$JAVA_HOME </emphasis></para>
+
+          <para>Path to the JAVA 1.4.x installation directory.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">$CLASSPATH </emphasis></para>
+
+          <para>The classpath should be set to contain all necessary PEGASUS
+          files for the execution environment. To automatically add the
+          CLASSPATH to you environment, in the $PEGASUS_HOME directory run the
+          script source setup-user-env.csh or source setup-user-env.sh.</para>
+        </listitem>
+      </itemizedlist>
+    </section>
+  </section>
+
+  <section id="cli-pegasus-s3">
+    <title>pegasus-s3</title>
+
+    <para>pegasus-s3 is a client for the Amazon S3 object storage service and
+    any other storage services that conform to the Amazon S3 API, such as
+    Eucalyptus Walrus.</para>
+
+    <section>
+      <title>URL Format</title>
+
+      <para>All URLs for objects stored in S3 should be specified in the
+      following format:</para>
+
+      <programlisting>s3[s]://USER@SITE[/BUCKET[/KEY]]</programlisting>
+
+      <para>The protocol part can be s3:// or s3s://. If s3s:// is used, then
+      pegasus-s3 will force the connection to use SSL and override the setting
+      in the configuration file. If s3:// is used, then whether the connection
+      uses SSL or not is determined by the value of the 'endpoint' variable in
+      the configuration for the site.</para>
+
+      <para>The <emphasis>USER@SITE</emphasis> part is required, but the
+      <emphasis>BUCKET</emphasis> and <emphasis>KEY</emphasis> parts may be
+      optional depending on the context.</para>
+
+      <para>The <emphasis>USER@SITE</emphasis> portion is referred to as the
+      'identity', and the <emphasis>SITE</emphasis> portion is referred to as
+      the site. Both the identity and the site are looked up in the
+      configuration file (see pegasus-s3 Configuration) to determine the
+      parameters to use when establishing a connection to the service. The
+      site portion is used to find the host and port, whether to use SSL, and
+      other things. The identity portion is used to determine which
+      authentication tokens to use. This format is designed to enable users to
+      easily use multiple services with multiple authentication tokens. Note
+      that neither the <emphasis>USER</emphasis> nor the
+      <emphasis>SITE</emphasis> portion of the URL have any meaning outside of
+      pegasus-s3. They do not refer to real usernames or hostnames, but are
+      rather handles used to look up configuration values in the configuration
+      file.</para>
+
+      <para>The <emphasis>BUCKET</emphasis> portion of the URL is the part
+      between the 3rd and 4th slashes. Buckets are part of a global namespace
+      that is shared with other users of the storage service. As such, they
+      should be unique.</para>
+
+      <para>The <emphasis>KEY</emphasis> portion of the URL is anything after
+      the 4th slash. Keys can include slashes, but S3-like storage services do
+      not have the concept of a directory like regular file systems. Instead,
+      keys are treated like opaque identifiers for individual objects. So, for
+      example, the keys 'a/b' and 'a/c' have a common prefix, but cannot be
+      said to be in the same 'directory'.</para>
+
+      <para>Some example URLs are:</para>
+
+      <programlisting>s3://ewa@amazon
+s3://juve@skynet/gideon.isi.edu
+s3://juve@magellan/pegasus-images/centos-5.5-x86_64-20101101.part.1
+s3s://ewa@amazon/pegasus-images/data.tar.gz</programlisting>
+    </section>
+
+    <section>
+      <title>Subcommands</title>
+
+      <para>pegasus-s3 has several subcommands for different storage service
+      operations.</para>
+
+      <section>
+        <title>help</title>
+
+        <para><emphasis role="bold">pegasus-s3 help</emphasis></para>
+
+        <para>The <emphasis role="bold">help</emphasis> subcommand lists all
+        available subcommands.</para>
+      </section>
+
+      <section>
+        <title>ls</title>
+
+        <para><emphasis role="bold">pegasus-s3 ls [options]
+        URL...</emphasis></para>
+
+        <para>The <emphasis role="bold">ls</emphasis> subcommand lists the
+        contents of a URL. If the URL does not contain a bucket, then all the
+        buckets owned by the user are listed. If the URL contains a bucket,
+        but no key, then all the keys in the bucket are listed. If the URL
+        contains a bucket and a key, then all keys in the bucket that begin
+        with the specified key are listed.</para>
+      </section>
+
+      <section>
+        <title>mkdir</title>
+
+        <para><emphasis role="bold">pegasus-s3 mkdir [options]
+        URL...</emphasis></para>
+
+        <para>The <emphasis role="bold">mkdir</emphasis> subcommand creates
+        one or more buckets.</para>
+      </section>
+
+      <section>
+        <title>rmdir</title>
+
+        <para><emphasis role="bold">pegasus-s3 rmdir [options]
+        URL...</emphasis></para>
+
+        <para>The <emphasis role="bold">rmdir</emphasis> subcommand deletes
+        one or more buckets from the storage service. In order to delete a
+        bucket, the bucket must be empty.</para>
+      </section>
+
+      <section>
+        <title>rm</title>
+
+        <para><emphasis role="bold">pegasus-s3 rm [options]
+        URL...</emphasis></para>
+
+        <para>The <emphasis role="bold">rm</emphasis> subcommand deletes one
+        or more keys from the storage service.</para>
+      </section>
+
+      <section>
+        <title>put</title>
+
+        <para><emphasis role="bold">pegasus-s3 put [options] FILE
+        URL</emphasis></para>
+
+        <para>The <emphasis role="bold">put</emphasis> subcommand stores the
+        file specified by <emphasis>FILE</emphasis> in the storage service
+        under the bucket and key specified by <emphasis>URL</emphasis>. If the
+        URL contains a bucket, but not a key, then the file name is used as
+        the key.</para>
+
+        <para>If a transient failure occurs, then the upload will be retried
+        several times before pegasus-s3 gives up and fails.</para>
+
+        <para>The put subcommand can do both chunked and parallel uploads if
+        the service supports multipart uploads (see multipart_uploads in the
+        configuration). Currently only Amazon S3 supports multipart
+        uploads.</para>
+
+        <para>This subcommand will check the size of the file to make sure it
+        can be stored before attempting to store it.</para>
+
+        <para>Chunked uploads are useful to reduce the probability of an
+        upload failing. If an upload is chunked, then pegasus-s3 issues
+        separate PUT requests for each chunk of the file. Specifying smaller
+        chunks (using --chunksize) will reduce the chances of an upload
+        failing due to a transient error. Chunksizes can range from 5 MB to
+        1GB (chunk sizes smaller than 5 MB produced incomplete uploads on
+        Amazon S3). The maximum number of chunks for any single file is
+        10,000, so if a large file is being uploaded with a small chunksize,
+        then the chunksize will be increased to fit within the 10,000 chunk
+        limit. By default, the file will be split into 10 MB chunks if the
+        storage service supports multipart uploads. Chunked uploads can be
+        disabled by specifying a chunksize of 0. If the upload is chunked,
+        then each chunk is retried independently under transient failures. If
+        any chunk fails permanently, then the upload is aborted.</para>
+
+        <para>Parallel uploads can increase performance for services that
+        support multipart uploads. In a parallel upload the file is split into
+        N chunks and each chunk is uploaded concurrently by one of M threads
+        in first-come, first-served fashion. If the chunksize is set to 0,
+        then parallel uploads are disabled. If M &gt; N, then the actual
+        number of threads used will be reduced to N. The number of threads can
+        be specified using the --parallel argument. If --parallel is 0 or 1,
+        then only a single thread is used. The default value is 0. There is no
+        maximum number of threads, but it is likely that the link will be
+        saturated by ~4 threads. Very high-bandwidth, long-delay links may get
+        better results with up to ~8 threads.</para>
+
+        <note>
+          <para>Under certain circumstances, when a multipart upload fails it
+          could leave behind data on the server. When a failure occurs the put
+          subcommand will attempt to abort the upload. If the upload cannot be
+          aborted, then a partial upload may remain on the server. To check
+          for partial uploads run the <emphasis role="bold">lsup</emphasis>
+          subcommand. If you see an upload that failed in the output of lsup,
+          then run the <emphasis role="bold">rmup</emphasis> subcommand to
+          remove it.</para>
+        </note>
+      </section>
+
+      <section>
+        <title>get</title>
+
+        <para><emphasis role="bold">pegasus-s3 get [options] URL
+        [FILE]</emphasis></para>
+
+        <para>The <emphasis role="bold">get</emphasis> subcommand retrives an
+        object from the storage service identified by <emphasis>URL</emphasis>
+        and stores it in the file specified by <emphasis>FILE</emphasis>. If
+        FILE is not specified, then the key is used as the file name (Note: if
+        the key has slashes, then the file name will be a relative
+        subdirectory, but pegasus-s3 will not create the subdirectory if it
+        does not exist).</para>
+
+        <para>If a transient failure occurs, then the download will be retried
+        several times before pegasus-s3 gives up and fails.</para>
+
+        <para>The get subcommand can do both chunked and parallel downloads if
+        the service supports ranged downloads (see ranged_downloads in the
+        configuration). Currently only Amazon S3 has good support for ranged
+        downloads. Eucalyptus Walrus supports ranged downloads, but the
+        current release, 1.6, is inconsistent with the Amazon interface and
+        has a bug that causes ranged downloads to hang in some cases. It is
+        recommended that ranged downloads not be used with Eucalyptus until
+        these issues are resolved.</para>
+
+        <para>Chunked downloads can be used to reduce the probability of a
+        download failing. When a download is chunked, pegasus-s3 issues
+        separate GET requests for each chunk of the file. Specifying smaller
+        chunks (uisng --chunksize) will reduce the chances that a download
+        will fail to do a transient error. Chunk sizes can range from 1 MB to
+        1 GB. By default, a download will be split into 10 MB chunks if the
+        site supports ranged downloads. Chunked downloads can be disabled by
+        specifying a chunksize of 0. If a download is chunked, then each chunk
+        is retried independently under transient failures. If any chunk fails
+        permanently, then the download is aborted.</para>
+
+        <para>Parallel downloads can increase performance for services that
+        support ranged downloads. In a parallel download, the file to be
+        retrieved is split into N chunks and each chunk is downloaded
+        concurrently by one of M threads in a first-come, first-served
+        fashion. If the chunksize is 0, then parallel downloads are disabled.
+        If M &gt; N, then the actual number of threads used will be reduced to
+        N. The number of threads can be specified using the --parallel
+        argument. If --parallel is 0 or 1, then only a single thread is used.
+        The default value is 0. There is no maximum number of threads, but it
+        is likely that the link will be saturated by ~4 threads. Very
+        high-bandwidth, long-delay links may get better results with up to ~8
+        threads.</para>
+      </section>
+
+      <section>
+        <title>lsup</title>
+
+        <para><emphasis role="bold">pegasus-s3 lsup [options]
+        URL</emphasis></para>
+
+        <para>The <emphasis role="bold">lsup</emphasis> subcommand lists
+        active uploads. The URL specified should point to a bucket. This
+        command is only valid if the site supports multipart uploads. The
+        output of this command is a list of keys and upload IDs.</para>
+
+        <para>This subcommand is used with <emphasis
+        role="bold">rmup</emphasis> to help recover from failures of multipart
+        uploads.</para>
+      </section>
+
+      <section>
+        <title>rmup</title>
+
+        <para><emphasis role="bold">pegasus-s3 rmup [options] URL
+        UPLOAD</emphasis></para>
+
+        <para>The <emphasis role="bold">rmup</emphasis> subcommand cancels and
+        active upload. The <emphasis>URL</emphasis> specified should point to
+        a bucket, and <emphasis>UPLOAD</emphasis> is the long, complicated
+        upload ID shown by the <emphasis role="bold">lsup</emphasis>
+        subcommand.</para>
+
+        <para>This subcommand is used with <emphasis
+        role="bold">lsup</emphasis> to recover from failures of multipart
+        uploads.</para>
+      </section>
+    </section>
+
+    <section>
+      <title>pegasus-s3 Configuration</title>
+
+      <para>Each user should specify a configuration file that pegasus-s3 will
+      use to look up connection parameters and authentication tokens.</para>
+
+      <section>
+        <title>Configuration file search path</title>
+
+        <para>This client will look in the following locations, in order, to
+        locate the user's configuration file:</para>
+
+        <orderedlist>
+          <listitem>
+             The -C/--conf argument 
+          </listitem>
+
+          <listitem>
+             The S3CFG environment variable 
+          </listitem>
+
+          <listitem>
+             ~/.s3cfg 
+          </listitem>
+        </orderedlist>
+
+        <para>If it does not find the configuration file in one of these
+        locations it will fail with an error.</para>
+      </section>
+
+      <section>
+        <title>Configuration file format</title>
+
+        <para>The configuration file is in INI format and contains two types
+        of entries.</para>
+
+        <para>The first type of entry is a <emphasis role="bold">site
+        entry</emphasis>, which specifies the configuration for a storage
+        service. This entry specifies the service endpoint that pegasus-s3
+        should connect to for the site, and some optional features that the
+        site may support. Here is an example of a site entry for Amazon
+        S3:</para>
+
+        <programlisting>[amazon]
+endpoint = http://s3.amazonaws.com/</programlisting>
+
+        <para>The other type of entry is an <emphasis role="bold">identity
+        entry</emphasis>, which specifies the authentication information for a
+        user at a particular site. Here is an example of an identity
+        entry:</para>
+
+        <programlisting>[pegasus@amazon]
+access_key = 90c4143642cb097c88fe2ec66ce4ad4e
+secret_key = a0e3840e5baee6abb08be68e81674dca</programlisting>
+
+        <para>It is important to note that user names and site names used are
+        only logical--they do not correspond to actual hostnames or usernames,
+        but are simply used as a convenient way to refer to the services and
+        identities used by the client.</para>
+
+        <para>The configuration file should be saved with limited permissions.
+        Only the owner of the file should be able to read from it and write to
+        it (i.e. it should have permissions of 0600 or 0400). If the file has
+        more liberal permissions, then pegasus-s3 will fail with an error
+        message. The purpose of this is to prevent the authentication tokens
+        stored in the configuration file from being accessed by other
+        users.</para>
+      </section>
+
+      <section>
+        <title>Configuration variables</title>
+
+        <table>
+          <tgroup cols="3">
+            <thead>
+              <row>
+                <entry>Variable</entry>
+
+                <entry>Scope</entry>
+
+                <entry>Description</entry>
+              </row>
+            </thead>
+
+            <tbody>
+              <row>
+                <entry>endpoint</entry>
+
+                <entry>site</entry>
+
+                <entry>The URL of the web service endpoint. If the URL begins
+                with 'https', then SSL will be used.</entry>
+              </row>
+
+              <row>
+                <entry>max_object_size</entry>
+
+                <entry>site</entry>
+
+                <entry>The maximum size of an object in GB (default:
+                5GB)</entry>
+              </row>
+
+              <row>
+                <entry>multipart_uploads</entry>
+
+                <entry>site</entry>
+
+                <entry>Does the service support multipart uploads (True/False,
+                default: False)</entry>
+              </row>
+
+              <row>
+                <entry>ranged_downloads</entry>
+
+                <entry>site</entry>
+
+                <entry>Does the service support ranged downloads? (True/False,
+                default: False)</entry>
+              </row>
+
+              <row>
+                <entry>access_key</entry>
+
+                <entry>identity</entry>
+
+                <entry>The access key for the identity</entry>
+              </row>
+
+              <row>
+                <entry>secret_key</entry>
+
+                <entry>identity</entry>
+
+                <entry>The secret key for the identity</entry>
+              </row>
+            </tbody>
+          </tgroup>
+        </table>
+      </section>
+
+      <section>
+        <title>Example configuration</title>
+
+        <para>This is an example configuration that specifies a single site
+        (amazon) and a single identity (pegasus@amazon). For this site the
+        maximum object size is 5TB, and the site supports both multipart
+        uploads and ranged downloads, so both uploads and downloads can be
+        done in parallel.</para>
+
+        <programlisting>[amazon]
+endpoint = https://s3.amazonaws.com/
+max_object_size = 5120
+multipart_uploads = True
+ranged_downloads = True
+
+[pegasus@amazon]
+access_key = 90c4143642cb097c88fe2ec66ce4ad4e
+secret_key = a0e3840e5baee6abb08be68e81674dca
+
+[magellan]
+# NERSC Magellan is a Eucalyptus site. It doesn't support multipart uploads,
+# or ranged downloads (the defaults), and the maximum object size is 5GB
+# (also the default)
+endpoint = https://128.55.69.235:8773/services/Walrus
+
+[juve@magellan]
+access_key = quwefahsdpfwlkewqjsdoijldsdf
+secret_key = asdfa9wejalsdjfljasldjfasdfa
+
+[voeckler@magellan]
+# Each site can have multiple associated identities
+access_key = asdkfaweasdfbaeiwhkjfbaqwhei
+secret_key = asdhfuinakwjelfuhalsdflahsdl</programlisting>
+      </section>
+    </section>
+  </section>
+
+  <section id="cli-pegasus-exitcode">
+    <title>pegasus-exitcode</title>
+
+    <para>pegasus-exitcode is a utility that examines the STDOUT of a job to
+    determine if the job failed, and renames the STDOUT and STDERR files of a
+    job to preserve them in case the job is retried.</para>
+
+    <para>Pegasus uses pegasus-exitcode as the DAGMan postscript for all jobs
+    submitted via Globus GRAM. This tool exists as a workaround to a known
+    problem with Globus where the exitcodes of GRAM jobs are not returned.
+    This is a problem because Pegasus uses the exitcode of a job to determine
+    if the job failed or not.</para>
+
+    <para>In order to get around the exitcode problem, Pegasus wraps all GRAM
+    jobs with Kickstart, which records the exitcode of the job in an XML
+    invocation record, which it writes to the job's STDOUT. The STDOUT is
+    transferred from the execution host back to the submit host when the job
+    terminates. After the job terminates, DAGMan runs the job's postscript,
+    which Pegasus sets to be pegasus-exitcode. pegasus-exitcode looks at the
+    invocation record generated by kickstart to see if the job succeeded or
+    failed. If the invocation record indicates a failure, then
+    pegasus-exitcode returns a non-zero result, which indicates to DAGMan that
+    the job has failed. If the invocation record indicates that the job
+    succeeded, then pegasus-exitcode returns 0, which tells DAGMan that the
+    job succeeeded.</para>
+
+    <para>pegasus-exitcode performs several checks to determine whether a job
+    failed or not. These checks include:</para>
+
+    <orderedlist>
+      <listitem>
+        <para>The STDOUT file does not exist. If it is missing, then the job 
+        failed.</para>
+      </listitem>
+      
+      <listitem>
+        <para>Is STDOUT empty? If it is empty, then the job failed.</para>
+      </listitem>
+
+      <listitem>
+        <para>Are there any &lt;status&gt; tags with a non-zero value? If
+        there are, then the job failed. Note that, if this is a clustered job,
+        there could be multiple &lt;status&gt; tags, one for each task. If any
+        of them are non-zero, then the job failed.</para>
+      </listitem>
+
+      <listitem>
+        <para>Is there at least one &lt;status&gt; tag with a zero value?
+        There must be at least one successful invocation or the job has
+        failed.</para>
+      </listitem>
+    </orderedlist>
+
+    <para>In addition, pegasus-exitcode allows the caller to specify the
+    exitcode returned by Condor using the --return argument. This can be
+    passed to pegasus-exitcode in a DAGMan post script by using the $RETURN
+    variable. If this value is non-zero, then pegasus-exitcode returns a
+    non-zero result before performing any other checks. For GRAM jobs, the
+    value of $RETURN will always be 0 regardless of whether the job failed or
+    not.</para>
+
+    <para>Also, pegasus-exitcode allows the caller to specify the number of
+    successful tasks it should see using the --tasks argument. If
+    pegasus-exitcode does not see N successful tasks, where N is set by
+    --tasks, then it will return a non-zero result. The default value is 1.
+    This can be used to detect failures in clustered jobs where, for any
+    number of reasons, invocation records do not get generated for all the
+    tasks in the clustered job.</para>
+
+    <para>In addition to checking the success/failure of a job,
+    pegasus-exitcode also renames the STDOUT and STDERR files of the job so
+    that if the job is retried, the STDOUT and STDERR of the previous run are
+    not lost. It does this by appending a sequence number to the end of the
+    files. For example, if the STDOUT file is called "job.out", then the first
+    time the job is run pegasus-exitcode will rename the file "job.out.000".
+    If the job is run again, then pegasus-exitcode sees that "job.out.000"
+    already exists and renames the file "job.out.001". It will continue to
+    rename the file by incrementing the sequence number every time the job is
+    executed.</para>
+  </section>
+
+  <section id="cli-kickstart">
+    <title>Kickstart</title>
+
+    <para>Kickstart is a job wrapper that collects data about a job's
+    execution environment, performance, and output.</para>
+
+    <section id="kickstart_syntax">
+      <title>SYNTAX</title>
+
+      <para><command>kickstart</command> [-n tr] [-N dv] [-H] [-R site] [-W |
+      -w dir] [-L lbl -T iso] [-s [l=]p | @fn] [-S [l=]p | @fn] [-i fn]
+      [-o fn] [-e fn] [-X] [-l fn sz] (-I fn | app [appflags] )</para>
+
+      <para><command>kickstart</command> -V</para>
+
+      <para>The <command>kickstart</command> executable is a light-weight
+      program which connects the <emphasis>stdin</emphasis>,
+      <emphasis>stdout</emphasis> and <emphasis>stderr</emphasis> filehandles
+      for grid jobs on the remote site.</para>
+
+      <para>Sitting in between the remote scheduler and the executable, it is
+      possible for <command>kickstart</command> to gather additional
+      information about the executable run-time behavior and resource usage,
+      including the exit status of jobs. This information is important for the
+      Pegasus invocation tracking as well as to Condor DAGMan's awareness of
+      Globus job failures.</para>
+
+      <para><command>Kickstart</command> allows the optional execution of jobs
+      before and after the main application job that run in chained execution
+      with the main application job. See section <link
+      linkend="kickstart_subjobs">SUBJOBS</link> for details about this
+      feature.</para>
+
+      <para>All jobs with relative path specifications to the application are
+      part of search relative to the current working directory (yes, this is
+      unsafe), and by prepending each component from the <envar>PATH</envar>
+      environment variable. The first match is used. Jobs that use absolute
+      pathnames, starting in a slash, are exempt. Using an absolute path to
+      your executable is the safe and recommended option.</para>
+
+      <para><command>Kickstart</command> rewrites the commandline of any job
+      (pre, post and main) with variable substitutions from Unix environment
+      variables. See section <link
+      linkend="kickstart_variable_rewriting">VARIABLE REWRITING</link> below
+      for details on this feature.</para>
+
+      <para><command>Kickstart</command> provides a temporary named pipe
+      (fifo) for applications that are gridstart aware. Any data an
+      application writes to the FIFO will be propagated back to the submit
+      host, thus enabling progress meters and other application dependent
+      monitoring. See section <link
+      linkend="kickstart_feedback_channel">FEEDBACK CHANNEL</link> below for
+      details on this feature.</para>
+    </section>
+
+    <section id="kickstart_arguments">
+      <title>ARGUMENTS</title>
+
+      <variablelist>
+        <varlistentry>
+          <term><option>-n tr</option></term>
+
+          <listitem>
+            <para>In order to associate the minimal performance information of
+            the job with the invocation records, the jobs needs to carry which
+            <emphasis>transformation</emphasis> was responsible for producing
+            it. The format is the notation for fully-qualified definition
+            names, like namespace::name:version, with only the name portion
+            being mandatory.</para>
+
+            <para>There is no default. If no value is given, "null" will be
+            reported.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><option>-N dv</option></term>
+
+          <listitem>
+            <para>the job may carry which instantiation of a transformation
+            was responsible for producing it. The format is the notation for
+            fully-qualified definition names, like namespace::name:version,
+            with only the name portion being mandatory.</para>
+
+            <para>There is no default. If no value is given, "null" will be
+            reported.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><option>-H</option></term>
+
+          <listitem>
+            <para>This option avoids kickstart writing the XML preamble
+            (entity), if you need to combine multiple kickstart records into
+            one document.</para>
+
+            <para>Additionally, if specified, the environment and the resource
+            usage segments will not be written, assuming that a in a
+            concatinated record version, the initial run will have captured
+            those settings.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><option>-R site</option></term>
+
+          <listitem>
+            <para>In order to provide the greater picture, kickstart can
+            reflect the site handle (resource identifier) into its
+            output.</para>
+
+            <para>There is no default. If no value is given, the attribute
+            will not be generated.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><option>-L lbl</option></term>
+
+          <term><option>-T iso</option></term>
+
+          <listitem>
+            <para>These optional arguments denote the workflow label (from
+            DAX) and the workflow's last modification time (from DAX). The
+            label <emphasis>lbl</emphasis> can be any sensible string of up to
+            32 characters, but should use C identifier characters. The
+            timestamp <emphasis>iso</emphasis> must be an ISO 8601 compliant
+            time-stamp.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><option>-S l=p</option></term>
+
+          <listitem>
+            <para>If stat information on any file is required
+            <emphasis>before</emphasis> any jobs were started, logical to
+            physical file mappings to stat can be passed using the
+            <option>-S</option> option. The LFN and PFN are concatenated by an
+            equals (=) sign. The LFN is optional: If no equals sign is found,
+            the argument is taken as sole PFN specification without
+            LFN.</para>
+
+            <para>This option may be specified multiple times. To reduce and
+            overcome commandline length limits, if the argument is prefixed
+            with an at (@) sign, the argument is taken to be a textual file of
+            LFN to PFN mappings. The optionality mentioned above applies. Each
+            line inside the file argument is the name of a file to stat.
+            Comments (#) and empty lines are permitted.</para>
+
+            <para>Each PFN will incur a <markup>statcall</markup> record
+            (element) with attribute <emphasis>id</emphasis> set to value
+            <emphasis>initial</emphasis>. The optional
+            <emphasis>lfn</emphasis> attribute is set to the LFN stat'ed. The
+            filename is part of the <markup>statinfo</markup> record
+            inside.</para>
+
+            <para>There is no default.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><option>-s fn</option></term>
+
+          <listitem>
+            <para>If stat information on any file is required
+            <emphasis>after</emphasis> all jobs have finished, logical to
+            physical file mappings to stat can be passed using the
+            <option>-s</option> option. The LFN and PFN are concatenated by an
+            equals (=) sign. The LFN is optional: If no equals sign is found,
+            the argument is taken as sole PFN specification without
+            LFN.</para>
+
+            <para>This option may be specified multiple times. To reduce and
+            overcome commandline length limits, if the argument is prefixed
+            with an at (@) sign, the argument is taken to be a textual file of
+            LFN to PFN mappings. The optionality mentioned above applies. Each
+            line inside the file argument is the name of a file to stat.
+            Comments (#) and empty lines are permitted.</para>
+
+            <para>Each PFN will incur a <markup>statcall</markup> record
+            (element) with attribute <emphasis>id</emphasis> set to value
+            <emphasis>final</emphasis>. The optional <emphasis>lfn</emphasis>
+            attribute is set to the LFN stat'ed. The filename is part of the
+            <markup>statinfo</markup> record inside.</para>
+
+            <para>There is no default.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><option>-i fn</option></term>
+
+          <listitem>
+            <para>This option allows <emphasis>kickstart</emphasis> to
+            re-connect the stdin of the application that it starts. Use a
+            single hyphen to share <emphasis>stdin</emphasis> with the one
+            provided to <command>kickstart</command>.</para>
+
+            <para>The default is to connect <emphasis>stdin</emphasis> to
+            <filename>/dev/null</filename>.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><option>-o fn</option></term>
+
+          <listitem>
+            <para>This option allows <command>kickstart</command> to
+            re-connect the <emphasis>stdout</emphasis> of the application that
+            it starts. The mode is used whenever an application produces
+            meaningful results on its <emphasis>stdout</emphasis> that need to
+            be tracked by Pegasus. The real<emphasis>stdout</emphasis> of
+            Globus jobs is staged via GASS (GT2) or RFT (GT4), or whichever
+            other means your grid middleware uses. The real
+            <emphasis>stdout</emphasis> is used to propagate the invocation
+            record back to the submit site. Use the single hyphen to share the
+            application's <emphasis>stdout</emphasis> with the one that is
+            provided to <command>kickstart</command>. In that case, the output
+            from <emphasis>kickstart</emphasis> will interleave with
+            application output. For this reason, such a mode is not
+            recommended.</para>
+
+            <para>In order to provide an uncaptured
+            <emphasis>stdout</emphasis> as part of the results, it is the
+            default to connect the <emphasis>stdout</emphasis> of the
+            application to a temporary file. The content of this temporary
+            file will be transferred as payload data in the
+            <emphasis>kickstart</emphasis> results. The content size is
+            subject to payload limits, see the <option>-B</option> option. If
+            the content grows large, only an initial portion will become part
+            of the payload. If the temporary file grows too large, it may
+            flood the worker node's temporary space. The temporary file will
+            be deleted after <command>kickstart</command> finishes.</para>
+
+            <para>If the filename is prefixed with an exclaimation point, the
+            file will be opened in append mode instead of overwrite mode. Note
+            that you may need to escape the exclaimation point from the
+            shell.</para>
+
+            <para>The default is to connect <emphasis>stdout</emphasis> to a
+            temporary file.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><option>-e fn</option></term>
+
+          <listitem>
+            <para>This option allows <command>kickstart</command> to
+            re-connect the <emphasis>stderr</emphasis> of the application that
+            it starts. This option is used whenever an application produces
+            meaningful results on <emphasis>stderr</emphasis> that needs
+            tracking by Pegasus. The real <emphasis>stderr</emphasis> of
+            Globus jobs is staged via GASS (GT2) or RFT (GT4). It is used to
+            propagate abnormal behaviour from both,
+            <emphasis>kickstart</emphasis> and the application that it starts,
+            though its main use is to propagate application dependent data and
+            heartbeats. Use a single hyphen to share
+            <emphasis>stderr</emphasis> with the <emphasis>stderr</emphasis>
+            that is provided to <command>kickstart</command>. This is the
+            backward compatible behavior.</para>
+
+            <para>In order to provide an uncaptured
+            <emphasis>stderr</emphasis> as part of the results, by default the
+            <emphasis>stderr</emphasis> of the application will be connected
+            to a temporary file. Its content is transferred as payload data in
+            the <emphasis>kickstart</emphasis> results. If too large, only the
+            an initial portion will become part of the payload. If the
+            temporary file grows too large, it may flood the worker node's
+            temporary space. The temporary file will be deleted after
+            <command>kickstart</command> finishes.</para>
+
+            <para>If the filename is prefixed with an exclaimation point, the
+            file will be opened in append mode instead of overwrite mode. Note
+            that you may need to escape the exclaimation point from the
+            shell.</para>
+
+            <para>The default is to connect <emphasis>stderr</emphasis> to a
+            temporary file.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><option>-l logfn</option></term>
+
+          <listitem>
+            <para>allows to append the performance data to the specified file.
+            Thus, multiple XML documents may end up in the same file,
+            including their XML preamble. <emphasis>stdout</emphasis> is
+            normally used to stream back the results. Usually, this is a
+            GASS-staged stream. Use a single hyphen to generate the output on
+            the <emphasis>stdout</emphasis> that was provided to
+            <command>kickstart</command>, the default behavior.</para>
+
+            <para>Default is to append the invocation record onto the provided
+            <emphasis>stdout</emphasis>.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><option>-w dir</option></term>
+
+          <listitem>
+            <para>permits the explicit setting of a new working directory once
+            <command>kickstart</command> is started. This is useful in a
+            remote scheduling environment, when the chosen working directory
+            is not visible on the job submitting host. If the directory does
+            not exist, <command>kickstart</command> will fail. This option is
+            mutually exclusive with the <option>-W dir</option> option.</para>
+
+            <para>Default is to use the working directory that the application
+            was started in. This is usually set up by a remote scheduling
+            environment.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><option>-W dir</option></term>
+
+          <listitem>
+            <para>permits the explicit creation and setting of a new working
+            directory once <command>kickstart</command> is started. This is
+            useful in a remote scheduling environment, when the chosen working
+            directory is not visible on the job submitting host. If the
+            directory does not exist, <command>kickstart</command> will
+            attempt to create it, and then change into it. Both, creation and
+            directory change may still fail. This option is mutually exclusive
+            with the <option>-w dir</option> option.</para>
+
+            <para>Default is to use the working directory that the application
+            was started in. This is usually set up by a remote scheduling
+            environment.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><option>-X</option></term>
+
+          <listitem>
+            <para>make an application executable, no matter what. It is a
+            work-around code for a weakness of
+            <command>globus-url-copy</command> which does not copy the
+            permissions of the source to the destination. Thus, if an
+            executable is staged-in using GridFTP, it will have the wrong
+            permissions. Specifying the <option>-X</option> flag will attempt
+            to change the mode to include the necessary x (and r) bits to make
+            the application executable.</para>
+
+            <para>Default is not to change the mode of the application. Note
+            that this feature can be misused by hackers, as it is attempted to
+            call <command>chmod</command> on whatever path is
+            specified.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><option>-B sz</option></term>
+
+          <listitem>
+            <para>varies the size of the debug output data section. If the
+            file descriptors <emphasis>stdout</emphasis> and
+            <emphasis>stderr</emphasis> remain untracked,
+            <command>kickstart</command> tracks that output in temporary
+            files. The first few pages from this output is copied into a data
+            section in the output. In order to resize the length of the output
+            within reasonable boundaries, this option permits a changes. Data
+            beyond the size will not be copied, i.e. is truncated.</para>
+
+            <para>Warning: This is <emphasis>not</emphasis> a cheap way to
+            obtain the stdio file handle data. Please use tracked files for
+            that. Due to output buffer pre-allocation, using arbitrary large
+            arguments may result in failures of <command>kickstart</command>
+            itself to allocate the necessary memory.</para>
+
+            <para>The default maximum size of the data section is 262144
+            byte.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><option>-I fn</option></term>
+
+          <listitem>
+            <para>In this mode, the application name and any arguments to the
+            application are specified inside of file <filename>fn</filename>.
+            The file contains one argument per line. Escapeing from Globus,
+            Condor and shell meta characters is not required. This mode
+            permits to use the maximum possible commandline length of the
+            underlying operationg system, e.g. 128k for Linux. Using the
+            <option>-I</option> mode stops any further commandline processing
+            of <command>kickstart</command> command lines.</para>
+
+            <para>Default is to use the <emphasis>app flags</emphasis> mode,
+            where the application is specified explicitely on the
+            command-line.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><emphasis>app</emphasis></term>
+
+          <listitem>
+            <para>The path to the application has to be completely specified.
+            The application is a mandatory option.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><emphasis>appflags</emphasis></term>
+
+          <listitem>
+            <para>Application may or may not have additional flags.</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+    </section>
+
+    <section id="kickstart_return_value">
+      <title>RETURN VALUE</title>
+
+      <para><command>Kickstart</command> will return the return value of the
+      main job. In addition, the error code 127 signals that the call to exec
+      failed, and 126 that reconnecting the stdio failed. A job failing with
+      the same exit codes is indistinguishable from
+      <emphasis><command>kickstart</command></emphasis> failures.</para>
+    </section>
+
+    <section id="kickstart_subjobs">
+      <title>SUBJOBS</title>
+
+      <para>Subjobs are a new feature and may have a few wrinkles left.</para>
+
+      <para>In order to allow specific setups and assertion checks for compute
+      nodes, <command>kickstart</command> allows the optional execution of a
+      <emphasis>prejob</emphasis>. This <emphasis>prejob</emphasis> is
+      anything that the remote compute node is capable of executing. For
+      modern Unix systems, this includes <token>#!</token> scripts interpreter
+      invocations, as long as the x bits on the executed file are set. The
+      main job is run if and only if the prejob returned regularly with an
+      exit code of zero.</para>
+
+      <para>With similar restrictions, the optional execution of a
+      <emphasis>postjob</emphasis> is chained to the success of the main job.
+      The postjob will be run, if the main job terminated normally with an
+      exit code of zero.</para>
+
+      <para>In addition, a user may specify a <emphasis>setup</emphasis> and a
+      <emphasis>cleanup</emphasis> job. The <emphasis>setup</emphasis> job
+      sets up the remote execution environment. The
+      <emphasis>cleanup</emphasis> job may tear down and clean-up after any
+      job ran. Failure to run the setup job has no impact on subsequent jobs.
+      The cleanup is a job that will even be attempted to run for all failed
+      jobs. No job information is passed. If you need to invoke multiple setup
+      or clean-up jobs, bundle them into a script, and invoke the clean-up
+      script. Failure of the clean-up job is not meant to affect the progress
+      of the remote workflow (DAGMan). This may change in the future.</para>
+
+      <para>The setup-, pre-, and post- and cleanup-job run on the same
+      compute node as the main job to execute. However, since they run in
+      separate processes as children of <emphasis>kickstart</emphasis>, they
+      are unable to influence each others nor the main jobs environment
+      settings.</para>
+
+      <para>All jobs and their arguments are subject to variable substitutions
+      as explained in the next section.</para>
+
+      <para>To specify the prejob, insert the the application invocation and
+      any optional commandline argument into the environment variable
+      <envar>GRIDSTART_PREJOB</envar>. If you are invoking from a shell, you
+      might want to use single quotes to protect against the shell. If you are
+      invoking from Globus, you can append the RSL string feature. From
+      Condor, you can use Condor's notion of environment settings. From
+      Pegasus, use the <emphasis>profile</emphasis> command to set generic
+      scripts that will work on multiple sites, or the transformation catalog
+      to set environment variables in a pool-specific fashion. Please remember
+      that the execution of the main job is chained to the success of the
+      prejob.</para>
+
+      <para>To set up the postjob, use the environment variable
+      <envar>GRIDSTART_POSTJOB</envar> to point to an application with
+      potential arguments to execute. The same restrictions as for the prejob
+      apply. Please note that the execution of the post job is chained to the
+      main job.</para>
+
+      <para>To provide the independent setup job, use the environment variable
+      <envar>GRIDSTART_SETUP</envar>. The exit code of the setup job has no
+      influence on the remaining chain of jobs. To provide an independent
+      cleanup job, use the environment variable
+      <envar>GRIDSTART_CLEANUP</envar> to point to an application with
+      possible arguments to execute. The same restrictions as for prejob and
+      postjob apply. The cleanup is run regardless of the exit status of any
+      other jobs.</para>
+    </section>
+
+    <section id="kickstart_variable_rewriting">
+      <title>VARIABLE REWRITING</title>
+
+      <para>Variable substitution is a new feature and may have a few wrinkles
+      left.</para>
+
+      <para>The variable substitution employs simple rules from the Bourne
+      shell syntax. Simple quoting rules for backslashed characters, double
+      quotes and single quotes are obeyed. Thus, in order to pass a dollar
+      sign to as argument to your job, it must be escaped with a backslash
+      from the variable rewriting.</para>
+
+      <para>For pre- and postjobs, double quotes allow the preservation of
+      whitespace and the insertion of special characters like \a (alarm), \b
+      (backspace), \n (newline), \r (carriage return), \t (horizontal tab),
+      and \v (vertical tab). Octal modes are <emphasis>not</emphasis> allowed.
+      Variables are still substituted in double quotes. Single quotes inside
+      double quotes have no special meaning.</para>
+
+      <para>Inside single quotes, no variables are expanded. The backslash
+      only escapes a single quote or backslash.</para>
+
+      <para>Backticks are not supported.</para>
+
+      <para>Variables are only substituted once. You cannot have variables in
+      variables. If you need this feature, please request it.</para>
+
+      <para>Outside quotes, arguments from the pre- and postjob are split on
+      linear whitespace. The backslash makes the next character
+      verbatim.</para>
+
+      <para>Variables that are rewritten must start with a dollar sign either
+      outside quotes or inside double quotes. The dollar may be followed by a
+      valid identifier. A valid identifier starts with a letter or the
+      underscore. A valid identifier may contain further letters, digits or
+      underscores. The identifier is case sensitive.</para>
+
+      <para>The alternative use is to enclose the identifier inside curly
+      braces. In this case, almost any character is allowed for the
+      identifier, including whitespace. This is the <emphasis>only</emphasis>
+      curly brace expansion. No other Bourne magic involving curly braces is
+      supported.</para>
+
+      <para>One of the advantages of variable substitution is, for example,
+      the ability to specify the application as
+      <userinput>$HOME/bin/app1</userinput> in the transformation catalog, and
+      thus to gridstart. As long as your home directory on any compute node
+      has a <filename>bin</filename> directory that contains the application,
+      the transformation catalog does not need to care about the true location
+      of the application path on each pool. Even better, an administrator may
+      decide to move your home directory to a different place. As long as the
+      compute node is set up correctly, you don't have to adjust any Pegasus
+      data.</para>
+
+      <para>Mind that variable substitution is an expert feature, as some
+      degree of tricky quoting is required to protect substitutable variables
+      and quotes from Globus, Condor and Pegasus in that order. Note that
+      Condor uses the dollar sign for its own variables.</para>
+
+      <para>The variable substitution assumptions for the main job differ
+      slightly from the prejob and postjob for technical reasions. The pre-
+      and postjob commandlines are passed as one string. However, the main
+      jobs commandline is already split into pieces by the time it reaches
+      <emphasis>kickstart</emphasis>. Thus, any whitespace on the main job's
+      commandline must be preserved, and further argument splitting
+      avoided.</para>
+
+      <para>It is highly recommended to experiment on the Unix commandline
+      with the <emphasis>echo</emphasis> and <emphasis>env</emphasis>
+      applications to obtain a feeling for the different quoting mechanisms
+      needed to achieve variable substitution.</para>
+    </section>
+
+    <section id="kickstart_feedback_channel">
+      <title>FEEDBACK CHANNEL</title>
+
+      <para>A long-running application may consider to stream back heart beats
+      and other application-specific monitoring and progress data. For this
+      reason, <command>kickstart</command> provides a feedback channel. At
+      start-up, a transient named pipe, also known as FIFO, is created. While
+      waiting for started jobs to finish, <emphasis>kickstart</emphasis> will
+      attempt to read from the FIFO. By default, any information read will be
+      encapsulated in XML tags, and written to <emphasis>stderr .</emphasis>
+      Please note that in a Pegasus, Globus, Condor-G environment,
+      <emphasis>stderr</emphasis> will be GASS streamed or staged to the
+      submit host. At the submit host, an application specific monitor may
+      unpack the data chunks and could for instance visually display them, or
+      aggregate them with other data. Please note that
+      <emphasis>kickstart</emphasis> only provides a feedback channel. The
+      content and interpretation is up to, and specific for the
+      application.</para>
+
+      <para>In order to make an application gridstart aware, it needs to be
+      able to write to a FIFO. The filename can be picked up from the
+      environment variable <envar>GRIDSTART_CHANNEL</envar> which is provided
+      to all jobs. Please note that the application must be prepared to handle
+      the PIPE signal when writing to a FIFO, and must be able to cope with
+      failing write operations.</para>
+    </section>
+
+    <section id="kickstart_example">
+      <title>EXAMPLE</title>
+
+      <para>You can run the <command>kickstart</command> executable locallly
+      to verify that it is functioning well. In the initial phase, the format
+      of the performance data may be slightly adjusted.</para>
+
+      <para><screen>$ <command>env GRIDSTART_PREJOB='/bin/usleep 250000' \\
+  GRIDSTART_POSTJOB='/bin/date -u' \\
+  kickstart -l xx \\$PEGASUS_HOME/bin/keg -T1 -o-</command>
+$ <command>cat xx</command>
+&lt;?xml version="1.0" encoding="ISO-8859-1"?&gt;
+  ...
+  &lt;/statcall&gt;
+&lt;/invocation&gt;</screen></para>
+
+      <para>Please take note a few things in the above example:</para>
+
+      <para>The output from the postjob is appended to the output of the main
+      job on <emphasis>stdout</emphasis>. The output could potentially be
+      separated into different data sections through different temporary
+      files. If you truly need the separation, request that feature.</para>
+
+      <para>The log file is reported with a size of zero, because the log file
+      did indeed barely exist at the time the data structure was (re-)
+      initialized. With regular GASS output, it will report the status of the
+      socket file descriptor, though.</para>
+
+      <para>The file descriptors reported for the temporary files are from the
+      perspective of <command>kickstart</command>. Since the temporary files
+      have the <emphasis>close-on-exec</emphasis> flag set,
+      <command>kickstart</command>'s filedescriptors are invisible to the job
+      processes. Still, the <emphasis>stdio</emphasis> of the job processes
+      are connected to the temporary files.</para>
+
+      <para>Even this output already appears large. The output may already be
+      too large to guarantee that the append operation on networked pipes
+      (GASS, NFS) are atomically written.</para>
+
+      <para>The current format of the performance data is as follows:</para>
+    </section>
+
+    <section id="kickstart_output_format">
+      <title>OUTPUT FORMAT</title>
+
+      <para>Refer to <emphasis><ulink
+      url="http://pegasus.isi.edu/documentation">http://pegasus.isi.edu/documentation</ulink></emphasis>
+      for an up-to-date description of elements and their attributes and
+      with for invocation schemas with a higher version number.</para>
+    </section>
+
+    <section id="kickstart_restrictions">
+      <title>RESTRICTIONS</title>
+
+      <para>There is no version for the Condor <emphasis>standard</emphasis>
+      universe. It is simply not possible within the constraints of
+      Condor.</para>
+
+      <para>Due to its very nature, <command>kickstart</command> will also
+      prove difficult to port outside the Unix environment.</para>
+
+      <para>Any of the pre-, main-, cleanup and postjob are unable to
+      influence one anothers visible environment.</para>
+
+      <para>Do not use a Pegasus transformation with just the name
+      <emphasis>null</emphasis> and no namespace nor version.</para>
+
+      <para>First Condor, and then Unix, place a limit on the length of the
+      commandline. The additional space required for the gridstart invocation
+      may silently overflow the maximum space, and cause applications to fail.
+      If you suspect to work with many arguments, try an argument-file based
+      approach.</para>
+
+      <para>A job failing with exit code 126 or 127 is indistinguishable from
+      <command>kickstart</command> failing with the same exit codes.
+      Sometimes, careful examination of the returned data can help.</para>
+
+      <para>If the logfile is collected into a shared file, due to the size of
+      the data, simultaneous appends on a shared filesystem from different
+      machines may still mangle data. Currently, file locking is not even
+      attempted, although all data is written atomically from the perspective
+      of <command>kickstart</command>.</para>
+
+      <para>The upper limit of characters of commandline characters is
+      currently not checked by <command>kickstart</command>. Thus, some
+      variable substitutions could potentially result in a commandline that is
+      larger than permissable.</para>
+
+      <para>If the output or error file is opened in append mode, but the
+      application decides to truncate its output file, as in aboves example by
+      opening <filename>/dev/fd/1</filename> inside <command>keg</command>,
+      the resulting file will still be truncated. This is correct behavior,
+      but sometimes not obvious.</para>
+    </section>
+
+    <section id="kickstart_files">
+      <title>FILES</title>
+
+      <variablelist>
+        <varlistentry>
+          <term><emphasis>$PEGASUS_HOME/etc/iv-2.1.xsd</emphasis></term>
+
+          <listitem>
+            <para>is the suggested location of the latest XML schema
+            describing the data on the submit host.</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+    </section>
+
+    <section id="kickstart_environment_variables">
+      <title>ENVIRONMENT VARIABLES</title>
+
+      <variablelist>
+        <varlistentry>
+          <term><envar>GRIDSTART_TMP</envar></term>
+
+          <listitem>
+            <para>is the hightest priority to look for a temporary directory,
+            if specified. This rather special variable was introduced to
+            overcome some peculiarities with the FNAL cluster.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><envar>TMP</envar></term>
+
+          <listitem>
+            <para>is the next hightest priority to look for a temporary
+            directory, if specified.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><envar>TEMP</envar></term>
+
+          <listitem>
+            <para>is the next priority for an environment variable denoting a
+            temporary files directory.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><envar>TMPDIR</envar></term>
+
+          <listitem>
+            <para>is next in the checklist. If none of these are found, either
+            the <emphasis>stdio</emphasis> definition
+            <emphasis>P_tmpdir</emphasis> is taken, or the fixed
+            string<filename>/tmp .</filename></para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><envar>GRIDSTART_SETUP</envar></term>
+
+          <listitem>
+            <para>contains a string that starts a job to be executed
+            unconditionally before any other jobs, see above for a detailled
+            description.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><envar>GRIDSTART_PREJOB</envar></term>
+
+          <listitem>
+            <para>contains a string that starts a job to be executed before
+            the main job, see above for a detailled description.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><envar>GRIDSTART_POSTJOB</envar></term>
+
+          <listitem>
+            <para>contains a string that starts a job to be executed
+            conditionally after the main job, see above for a detailled
+            description.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><envar>GRIDSTART_CLEANUP</envar></term>
+
+          <listitem>
+            <para>contains a string that starts a job to be executed
+            unconditionally after any of the previous jobs, see above for a
+            detailled description.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><envar>GRIDSTART_CHANNEL</envar></term>
+
+          <listitem>
+            <para>is the name of a FIFO for an application-specific
+            feedback-channel, see above for a detailled description.</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+    </section>
+  </section>
+</section>

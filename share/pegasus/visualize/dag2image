@@ -1,0 +1,273 @@
+#!/usr/bin/env perl
+#
+# Convert DAG into image representing the workflow
+#
+use 5.006;
+use strict;
+use warnings;
+use Getopt::Long qw(:config no_bundling no_ignore_case);
+use File::Temp ();
+use File::Spec;
+use File::Basename qw(basename dirname);
+
+my @relations = ();
+my @jobs = ();
+my @postjobs = ();
+my %color = ( 'local' => [ '"#CCCCFF"', '"#5555FF"' ],
+	      'fork'  => [ '"#CCFFCC"', '"#00FF00"' ],
+	      'batch' => [ 'yellow', 'gold' ] );
+
+my $image = '';
+my $verbose = 0;
+my $concentrate = 0;
+my $size = 3;
+my $processor = 'dot';
+my $nodeshape = 'ellipse';
+my $label = 'verbose';
+my $arrowhead = 'normal';
+my $arrowsize = '1.0';
+my $type = 'eps';
+my $keep;
+my $remove;
+my @extra = ();
+
+sub usage {
+    my $basename = basename( $0, '.pl' );
+    print << "EOF";
+
+Usage: $basename -o imagefile [options] dagfile
+       $basename --output imagefile [options] dagfile
+
+Mandatory arguments:
+ dagfile          Path to the .dag file for Condor DAGMan.
+
+Optional arguments: 
+ -o|--output fn   Path where to put the output, default is stdout.
+                  The use of this option is highly recommended.
+ -t|--type type   Output image representation, default eps.
+ -s|--size n      1: 10x8, 2: 17x11, 3: unlimited, default 3.
+ -l|--label style (none,info,submit,verbose)
+                  Labelling of the workflow nodes, default is verbose.
+ -c|--color t=a,b For given job type t, use color a for single jobs and 
+                  color b for multi jobs. You need to dquote \#RBG specs.
+                  Supported types are: local, fork, batch.
+ --processor s    GraphViz graph processor, default is dot.
+ --extra 'ins'    Add instruction to graph\'s top-level spec.
+ --keep fn        If specified, copy GraphViz file to fn.
+ --remove re      regular expression of nodes to preclude from graph.
+ --concentrate    Apply -Gconcentrate to processor options.
+ --shape shape    (circle,ellipse,doublecircle,point,sqare,triangle)
+                  Shape to draw the graph nodes with, default is circle.
+ --ahead style    (normal,dot,invdot,open,invnormal)
+                  Arrow-head drawing, default style is normal.
+ --asize size     Arrow size. 
+
+EOF
+    exit(1);
+}
+
+usage unless @ARGV;
+my $result = 
+    GetOptions( 'help|h' => \&usage
+	      , 'color|c=s' => sub {
+		  my ($k,$v) = split /[:=]/, $_[1], 2;
+		  $k = lc($k);
+		  die "ERROR: Illegal job type $k\n"
+		      unless exists $color{$k};
+		  $color{$k} = [ split /,/, $v ];
+	      }
+	      , 'output|o=s' => \$image
+	      , 'type|t=s' => \$type
+	      , 'size|s=i' => \$size
+	      , 'label|l=s' => sub { $label = lc($_[1]) }
+	      , 'processor=s' => \$processor
+	      , 'extra=s@' => \@extra
+	      , 'keep=s' => \$keep
+	      , 'remove=s' => \$remove
+	      , 'concentrate' => \$concentrate
+	      , 'shape=s' => \$nodeshape
+	      , 'ahead=s' => \$arrowhead
+	      , 'asize=s' => \$arrowsize
+	      ) ||
+    die "ERROR: Unknown option in arguments:\n@ARGV\n";
+
+my $dagfile = shift || 
+    die "ERROR: The .dag file is a mandatory argument, see --help\n";
+die "ERROR: $dagfile does not exist\n" unless -e $dagfile;
+die "ERROR: $dagfile not readable\n" unless -r _;
+my $dagdir = dirname(File::Spec->rel2abs($dagfile));
+
+my $tmp = $ENV{TMPDIR} || $ENV{TMP} || $ENV{TEMP} || 
+    File::Spec->tmpdir() || '/tmp';
+my $dot = new File::Temp( TEMPLATE => 'dotXXXXXX', DIR => $tmp, 
+			  SUFFIX => '.dot', UNLINK => 1 );
+my $dotfile = $dot->filename;
+open( DAG, "<$dagfile" ) || die "ERROR: open $dagfile $!\n";
+
+sub process_submit($) {
+    # purpose: slurp submit file contents
+    # paramtr: $fn (IN): submit filename
+    # returns: hash of submit command to value
+    #
+    my $subfn = File::Spec->catfile( $dagdir, shift() );
+    my %result = ();
+    local(*SUB);
+    if ( open( SUB, "<$subfn" ) ) {
+	my ($k,$v);
+	while ( <SUB> ) {
+            next if substr($_,0,1) eq '#';
+            s/[\r\n\t ]+$//;
+            s/^\s*//;
+            next unless length($_);
+
+            ($k,$v) = split /\s*=\s*/, $_, 2;
+            $v=substr($v,1,-1) while ( defined $v && length($v) > 2 && 
+				       ( substr($v,0,1) eq '"' || 
+					 substr($v,0,1) eq "'" ) );
+            $k = lc($k) if ( $k =~ /^[a-z]/i );
+            $result{$k} = $v;
+	}
+	close SUB;
+    } else {
+	warn "Warning: Read $subfn: $!\n";
+    }
+    %result;
+}
+
+# set up counter for statistics
+my %count = ( dep => 0, job => 0, post => 0,
+	      fork => 0, batch => 0, local => 0 );
+
+print $dot "digraph E {\n";
+foreach my $e ( @extra ) {
+    print $dot "$e\n";
+}
+
+if ( $size==2 ) {
+    print $dot " size=\"17.0,11.0\"\n ratio=auto\n";
+} elsif ( $size==1 ) {
+    print $dot " size=\"11.5,10.0\"\n ratio=auto\n";
+} 
+print $dot " node [shape=$nodeshape fontname=Helvetica]\n";
+print $dot " edge [arrowhead=$arrowhead, arrowsize=$arrowsize]\n";
+
+my %remove = ();		# which DAG-IDs to remove
+while ( <DAG> ) {
+    next if /^\#/;		# skip comments
+    s/^\s+//; 			# remove leading whitespace
+    s/[ \r\n\t]+$//;		# remove trailing whitespace including CRLF
+   
+    if ( /^PARENT\s/i && /\sCHILD\s/i ) {
+	s/^PARENT\s+//i;
+	my ($parents,$children) = split /\s+CHILD\s+/i, $_, 2;
+	foreach my $parent ( split( /\s+/, $parents ) ) {
+	    next if ( exists $remove{$parent} && $remove{$parent} );
+	    foreach my $child ( split( /\s+/, $children ) ) {
+		# one line per link
+		next if ( exists $remove{$child} && $remove{$child} );
+
+		my $what = "\"$parent\" -> \"$child\"";
+		$relations[$count{dep}] = $what;
+		$count{dep}++;
+		print $dot " $what\n";
+		print STDERR "Adding arc $what\n" if $verbose;
+	    }
+	}
+    } elsif ( /^JOB\s/i ) {
+	# special job processing
+	my @x = split;
+	my $job = $jobs[$count{job}] = $x[1];
+
+	if ( defined $remove && $x[2] =~ m/$remove/o ) {
+	    $remove{$x[1]} = $x[2];
+	    next;
+	}
+
+	my %submit = process_submit($x[2]);
+	my $tempstring = " \"$job\"";
+
+	my $templabel = '';
+	$templabel=basename( $x[2], '.sub' ) if $label eq 'submit';
+	$templabel=$job if $label eq 'verbose';
+
+	# local or remote job?
+	my $multijob = 1;
+	$multijob = ( $submit{executable} =~ /(seq|mpi)exec/ ) if exists $submit{executable};
+	if ( lc($submit{universe}) eq 'grid' || ! exists $submit{universe} ) {
+	    # remote
+	    if ( $submit{'grid_resource'} =~ /jobmanager-fork/ ) {
+		$tempstring .= " [color=" . $color{fork}[$multijob] . ", style=filled";
+		$templabel = "fork-$count{fork}" if $label eq 'info';
+		$count{fork}++;
+	    } else {
+		$tempstring .= " [color=" . $color{batch}[$multijob] . ", style=filled";
+		$templabel = "batch-$count{fork}" if $label eq 'info';
+		$count{batch}++;
+	    }
+	} elsif ( lc($submit{universe}) eq 'globus' ) {
+	    # remote
+	    die "Sorry, not supported any more";
+	} else {
+	    # local 
+	    $tempstring .= " [color=" . $color{local}[$multijob] . ", style=filled";
+	    $templabel = "local-$count{local}" if $label eq 'info';
+	    $count{local}++;
+	}
+
+	print $dot $tempstring, ', label="', $templabel, "\"]\n";
+	print STDERR "Adding node $job\n" if $verbose;
+	$count{job}++;
+    } elsif ( /^POSTJOB\s/i ) {
+	$postjobs[$count{post}]=$_;
+	$count{post}++;
+    }
+}
+print STDERR "$count{job} jobs, $count{dep} dependencies, $count{post} post scripts\n";
+close DAG;
+
+print $dot "}\n";
+if ( defined $keep ) {
+    open( KEEP, ">$keep" ) || die "ERROR: open $keep: $!\n";
+    seek( $dot, 0, 0 ) || die "ERROR: seek $dotfile: $!\n";
+    while ( <$dot> ) {
+	print KEEP ;
+    }
+    close KEEP;
+}
+
+close $dot;
+print STDERR "Written dot file $dotfile\n";
+
+print STDERR "Generating Image...\n";
+my $command = $processor;
+$command .= " -Gconcentrate" if $concentrate;
+if ( $type eq 'eps' ) {
+    # eps is not supported by dot. 
+    # This is evil trickery to generate LaTeX figures ;-P
+    $command .= " -Tps2 $dotfile";
+    $command .= ' | perl -pe \'$_="%!PS-Adobe-3.0 EPSF-3.0\n" if ( /^%!PS-Adobe-/ )\'';
+    $command .= " > $image" if $image;
+} else {
+    # the normal path
+    $command .= " -o$image" if $image;
+    $command .= " -T$type $dotfile";
+}
+
+$result='';
+if ( $image ) {
+    $result = `$command`;
+} else {
+    system($command);
+}
+
+my $rc = $?;
+if ( ($rc & 127) > 0 ) {
+    print STDERR $result if $image;
+    die "ERROR: Died on signal", ($rc & 127), "\n";
+} elsif ( ($rc >> 8) > 0 ) { 
+    print STDERR $result if $image;
+    die "ERROR: Unsuccessful execution: ", $rc >> 8, "\n";
+} else {
+    print STDERR "Successful graphics generation\n";
+    exit 0;
+}

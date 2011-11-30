@@ -1,0 +1,42 @@
+Hi folks,
+
+you need at least a version 5.6.0 of Perl to be able to run things.
+
+Futhermore, if your version of Perl is below 5.6.1, you will need to
+install the File::Temp module, a copy of which can be found in the
+contrib directory. Please refer to its readme file for installation
+instructions. It should be pretty forward, there is nothing special
+about this module. 
+
+If your Perl installation has the Time::HiRes module installed, it will
+be used for improved measurements, otherwise things also work without
+Time::HiRes. If you already are in the process of installing File::Temp,
+you might as well install Time::HiRes (unless it already exists). Many
+Linux distributions bundle these modules into their Perl installations.
+
+Try to run "perl test.pl --help" to find out, which options are
+available to you. Mine yields:
+
+   test.pl [options]
+
+    --contact      Use once for each job manager contact string.
+    --gridftp      Use once for each gridftp server.
+    --non-stop     Run in non-stop mode and assume defaults.
+    --skip-globus  Skip the Globus2 tests.
+    --skip-gridftp Skip the GridFTP tests (not really implemented).
+    --skip-condor  Skip the Condor tests.
+    --skip-java    Skip the JavaVM tests.
+    --skip-chimera Skip the Chimera tests.
+
+   Default: Run all tests (recommended), use "xxx.uchicago.edu/jobmanager"
+   as contact, and "xxx.uchicago.edu" as gridftp service contact.
+
+You can check several Globus2 jobmanager contacts, including personal
+gatekeeper contacts, by repeatedly specifying the --contact clause. 
+
+You can skip some test, which is of interest, if you re-run after some
+tests failed. 
+
+Usually, the testing is fairly interactive, and expects you to hit
+enter frequently, after about a screen full of information was shown.
+If you don't like this, try the non-stop mode.

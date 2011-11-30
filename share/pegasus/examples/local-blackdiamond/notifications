@@ -1,0 +1,13 @@
+# Pegasus ships with a couple of basic notification tools. Below
+# we show how to notify via email and gtalk.
+# all notifications will be sent to email
+# change $USER to your full email addess
+export NOTIFY="$PEGASUS_HOME/libexec/notification/email -t $USER"
+
+# this sends notifications about failed jobs to gtalk.
+# note that you can also set which events to trigger on in your DAX.
+# set jabberid to your jabber username address, and put in your 
+# password and jabber host. 
+# uncomment to enable jabber
+#export NOTIFY="$PEGASUS_HOME/libexec/notification/jabber --jabberid USER@gmail.com --password PASSWORD --host talk.google.com"
+

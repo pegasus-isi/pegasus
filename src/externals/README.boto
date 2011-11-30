@@ -1,0 +1,12 @@
+boto-2.0b3-24047c8.tar.gz
+
+This the the boto library for Amazon AWS. It also supports services
+that conform to the AWS APIs, such as Eucalyptus.
+
+This library is used by pegasus-s3.
+
+The version included here (2.0b3-24047c8) is not a released 
+version, but rather a snapshot of the boto repository from 
+12/15/2010. This library will need to be updated to a formal 
+boto release as soon as one is available with support for 
+multipart uploads.

@@ -1,0 +1,8 @@
+#!/bin/sh
+gmake distclean
+gmake EXTRACXXFLAGS='$(V7FLAGS)' pegasus-keg
+mv pegasus-keg pegasus-keg.sparcv7
+gmake clean
+gmake EXTRACXXFLAGS='$(V9FLAGS)' pegasus-keg
+mv pegasus-keg pegasus-keg.sparcv9
+gmake clean

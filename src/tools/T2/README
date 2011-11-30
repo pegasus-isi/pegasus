@@ -1,0 +1,68 @@
+Input file format
+-----------------
+
+Each input record of variable length is considered a "section". Each
+section contains one header, and multiple sources and destinations. Each
+section describes exactly one transfer. Flags are attached to the
+header. A section is terminated by either the next LFN, or by the EOF.
+
+	+-------
+	|LFN_1 [flag [..]]
+	|ws TFN_src_1_1
+	|ws TFN_src_1_..
+	|ws TFN_src_1_N
+	|ws ws TFN_dst_1_1
+	|ws ws TFN_dst_1_..
+	|ws ws TFN_dst_1_M
+	|# comment
+	|LFN_2 [flag [..]]
+	|ws TFN_src_2_1
+	|ws TFN_src_2_..
+	|ws TFN_src_2_N
+	|ws ws TFN_dst_2_1
+	|ws ws TFN_dst_2_..
+	|ws ws TFN_dst_2_M
+
+comments start with a hash (#), and extend to the end of line. A comment
+is being replaced with nothing when encountered.
+
+The header starts with a logical filename (LFN) on the leftmost side. 
+A LFN must not contain any whitespaces. It may optionally be followed
+by flag, which modify the behavior for this transfer. The LFN is only
+used for reporting and debugging.
+
+A file may exist in multiple locations. Each source is a transfer
+filename (TFN). A TFN describes how to access a file from the outside
+world. Each source TFN is equivalent. At least one such must be
+specified. Each source TFN is indented with one whitespace. 
+
+There may be multiple destinations for a file. Again, a TFN is used to
+describe where to place a copy, as viewed from the outside. Each
+destination is indented by two whitespaces. 
+
+The transfer tool tries to transfer between the cartesian product of
+source and destination pairs, e.g. N x M and O x P pairs. The flags
+determine at what point and how to stop.
+
+Flags are separated by whitespace. The following optional flags are
+possible, being mutually exclusive, with "any" being the default in
+case no flag is specified:
+
+- "any" is the default option. Any source file transfer to any
+  destination success determines the success of the section. If all pair
+  candidates were exhausted without success, the transfer will fail. All
+  sources are equivalent. However, missing a file on any source will
+  result in immediate try for the next source. On the last source, it
+  will result in failure.
+
+- "optional" means that failure to transfer this file does not consitute
+  a failure of the transfer tool. All sources are equivalent. However,
+  missing a file on any source will result in immediate try for the next
+  source. On the last source, it will result still in success.
+
+- "all" is a short-cut to transfer any found source to all destinations.
+  However, this option is currently not implemented. All sources are
+  considered equivalent. It is attempted to distribute any reachable
+  source file onto all reachable destinations. Partial success is still
+  considered a failure.
+

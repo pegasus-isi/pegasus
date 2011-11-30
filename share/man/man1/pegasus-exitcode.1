@@ -1,0 +1,70 @@
+.TH "pegasus-exitcode" "1" "October 24, 2011" "Pegasus Exitcode"
+.SH "NAME"
+.LP 
+pegasus\-exitcode \- Checks the stdout/stderr of a workflow job for any
+indication that an error occurred. This script is intended to be invoked
+automatically by DAGMan as the POST script of a job.
+.SH SYNOPSIS
+.TP 17 
+.B pegasus\-exitcode [options] job.out
+.SH "DESCRIPTION"
+.LP 
+.B "pegasus\-exitcode"
+is a script used by Pegasus to check the output of the STDOUT and STDERR 
+files returned by a job for errors. This script is invoked by DAGMan when
+a job completes (i.e. it is a POST script in DAGMan terminology). When
+the script detects an error it exits with a non-zero exit code. This 
+signals DAGMan to treat the job as failed. If no errors are detected, 
+then 0 is returned, which signals DAGMan to treat the job as successful 
+(See Section 2.10.2 of the Condor manual on POST scripts for more 
+information).
+.LP
+This tool originally existed as a workaround to a known problem with 
+Globus GRAM where the exitcodes of GRAM jobs are not returned. This is 
+a problem because Pegasus uses the exitcode of a job to determine
+if the job failed or not.
+.LP
+This script is designed to work with Kickstart (See pegasus-kickstart). 
+.LP
+pegasus-exitcode performs several checks to determine whether a job
+failed or not. These checks include: 
+.LP
+    1. The .out file does not exist
+    2. DAGMan reported a non-zero exitcode for the job (optional, See 
+       -r/--return)
+    3. The .out file has no content (the file length is 0)
+    4. There is an <invocation> XML record with a <status> of non-zero
+    5. There are no <status> XML records
+    6. The number of non-zero <status> records is less than or greater
+       than expected (optional, See -t/--tasks).
+.LP
+pegasus-exitcode also renames the .out and .err file to .out.XXX and .err.XXX
+where XXX is a sequence number starting at 000. This sequence 
+number is incremented each time the script is run with the same 
+kickstart.out argument. This is used as a means to prevent the output
+files from being overwritten when the job is retried by Condor.
+.SH OPTIONS
+.TP
+.B \-\-help | \-h
+Prints a usage summary with all the available command-line options.
+.TP
+.B \-\-tasks NUM | \-t NUM
+Number of tasks expected. If less than NUM tasks succeeded, then 
+pegasus-exitcode will fail with a non-zero exit code. This is used in
+cases where we may not get a Kickstart invocation record for some tasks.
+Normally Seqexec will detect failed Kickstart invocations and fail
+accordingly.
+.TP
+.B \-\-return RET | \-r RET
+Return code reported by DAGMan. This can be specified in the DAG 
+using the $RETURN variable. If this is non-zero, then pegasus-exitcode
+immediately fails with a non-zero exit code.
+.TP
+.B \-\-no-rename | \-n
+Don't rename kickstart.out and .err to .out.XXX and .err.XXX. This is
+primarily used for testing.
+
+.SH AUTHOR
+
+Gideon Juve <juve@usc.edu>
+
