@@ -5,6 +5,23 @@ Pegasus utility for transfer of files during workflow enactment
 
 Usage: pegasus-transfer [options]
 
+If the runtime environment sets a variable PEGASUS_POLICY_CHECKS to a true
+value (e.g. True, enabled, on, yes, 1, etc.), this utility will submit the list
+of transfers to a Policy Web Service, which will optionally return the list or
+some subset of the list after applying policy restrictions to it. The returned
+list is then processed normally.
+
+Communication with the Policy Web Service is optionally controlled either by
+setting additional environment variables or command line options. (The
+additional command line options are only available if PEGASUS_POLICY_CHECKS is
+defined and True.) The environment variables are:
+
+    PEGASUS_POLICY_HOST
+    PEGASUS_POLICY_PORT
+    PEGASUS_POLICY_URL
+
+If neither environment variables nor command line options are used, the defaults
+are, respectively, localhost, 80, and /policy/transfer/. 
 """
 
 ##
@@ -56,6 +73,7 @@ class Transfer:
     dst_host       = ""      #
     dst_path       = ""      #
     allow_grouping = True    # can this transfer be grouped with others?
+    policy_id      = ""      # ID assigned by Policy Web Service (when used)
 
     def __init__(self, pair_id):
         """
@@ -68,6 +86,12 @@ class Transfer:
     
     def set_dst(self, url):
         self.dst_proto, self.dst_host, self.dst_path = self.parse_url(url)
+
+    def set_policy_id(self, id):
+        """
+        Used only when a policy service is queried about the transfer list.
+        """
+        self.policy_id = id
     
     def parse_url(self, url):
         proto = ""
@@ -208,6 +232,11 @@ stats_start = 0
 stats_end = 0
 stats_total_bytes = 0
 
+# This flag used to control calls to code that uses an external Policy Service.
+# If the runtime environment sets a variable PEGASUS_POLICY_CHECKS, the flag is
+# toggled and functions to submit the transfer list to the policy service are
+# used. Otherwise, the list is just sorted lexically.
+using_policy_service = False 
 
 # --- functions -----------------------------------------------------------------------
 
@@ -930,6 +959,90 @@ def myexit(rc):
         sys.exit(rc)
 
 
+# --- policy functions -------------------------------------------------------
+#
+# Functions post_policy_requests and delete_policy_request are only used if
+# PEGASUS_POLICY_CHECKS is set in the runtime environment.
+#
+# ----------------------------------------------------------------------------
+def post_policy_requests(inputs):
+    """
+    Format a request to the policy web service with the input Transfer objects.
+    @param inputs: List of transfers to process
+    @type inputs: list
+    @return: List of Transfer objects as modified by the web service.
+    @rtype: list
+    """
+    logger.debug("post_policy_requests entered; input list has %d Transfers", len(inputs))
+    transfers = []
+    for pt in inputs:
+        transfer = {'source' : pt.src_url(), 'destination' : pt.dst_url(), 'properties' : None }
+        transfers.append(transfer)
+
+    policy_requests = json.dumps(transfers)
+    policy_headers = {'Content-type' : 'application/json', 'Encoding' : 'latin-1'}
+    try: # TODO Change to variables instead of hardcoding
+        ws = HTTPConnection(policy_host, policy_port)
+        ws.request('POST', policy_url, policy_requests, policy_headers)
+        resp = ws.getresponse();
+        logger.info("policy web service status: %d", resp.status)
+        resp_string = resp.read()
+        ws.close()
+    except HTTPException, e:
+        logger.critical("Exception communicating with policy web servcie: %s", e.str())
+        raise RuntimeError("Exception communicating with policy web servcie: %s" %(e.str()))
+    except SocketError, (value, message):
+        logger.critical("socket exception: [ERRNO%s] %s", value, message)
+        raise RuntimeError("socket exception: [ERRNO%s] %s" %(value, message))
+
+    logger.debug("policy web service response: %s", resp_string)
+    posted_transfers = json.loads(resp_string)
+
+    inputs = []; # wipe out old list
+    pair_nr = 0
+    for pt in posted_transfers:
+        logger.debug("source = %s destination = %s properties = {%s} id = %s",
+                      pt['source'], pt['destination'], pt['properties'], pt['id'])
+        pair_nr +=1
+        policy_transfer = Transfer(pair_nr)
+        policy_transfer.set_src(pt['source']);
+        policy_transfer.set_dst(pt['destination'])
+        policy_transfer.set_policy_id(pt['id'])
+        logger.debug("appending Transfer %d, id=%s", pair_nr, policy_transfer.policy_id )
+        inputs.append(policy_transfer)
+
+    logger.debug("post_policy_requests return")
+    return inputs
+
+def delete_policy_requests(transfers):
+    """
+    Send a DELETE request to the policy web service. Uses the 'policy_id'
+    attribute of each Transfer object to remove that transfer from the web
+    service database.
+    @param transfers: A list of transfers to process.
+    @type transfers: list
+    @return: Nothing.
+    """
+    logger.debug("delete_policy_requests enter; input list has %d Transfers", len(transfers))
+    try: 
+        ws = HTTPConnection(policy_host, policy_port)
+        for transfer in transfers:
+            delete_request = policy_url + transfer.policy_id
+            logger.debug("Sending DELETE request: %s", delete_request)
+            ws.request('DELETE', delete_request)
+            resp = ws.getresponse();
+            logger.debug("status for %s: %d", delete_request, resp.status)
+
+        ws.close()
+    except HTTPException, e:
+        logger.critical("Exception communicating with policy web servcie: %s", e.str())
+        raise RuntimeError("Exception communicating with policy web servcie: %s" %(e.str()))
+    except SocketError, (value, message):
+        logger.critical("socket exception: [ERRNO%s] %s", value, message)
+        raise RuntimeError("socket exception: [ERRNO%s] %s" %(value, message))
+
+    logger.debug("delete_policy_requests exit")
+
 
 # --- main ----------------------------------------------------------------------------
 
@@ -946,11 +1059,62 @@ parser.add_option("-f", "--file", action = "store", dest = "file",
 parser.add_option("", "--max-attempts", action = "store", type="int", dest = "max_attempts", default = 2,
                   help = "Number of attempts allowed for each transfer. Default is 2.")
 
+# Check environment to decide whether to use a Policy Service.
+if 'PEGASUS_POLICY_CHECKS' in os.environ:
+    true_synonyms = ('true', '1', 't', 'y', 'yes', 'on', 'enabled', 'enable')
+    using_policy_service = os.environ['PEGASUS_POLICY_CHECKS'].lower() in true_synonyms
+    
+if using_policy_service:
+    # Extra imports to make policy service work. If not available, fail now
+    try:
+        import json
+    except ImportError:
+        print >>sys.stderr, "Cannot use Policy Check: Failed to import JSON library"
+        sys.exit(1)
+
+    try:
+        from httplib import HTTPConnection, HTTPException
+    except ImportError:
+        print >>sys.stderr, "Cannot use Policy Check: Failed to import HTTP library"
+        sys.exit(1)
+
+    from socket import error as SocketError
+
+    policy_host = "localhost"
+    policy_port = 80
+    policy_url  = "/policy/transfer/"
+
+    parser.add_option("", "--policy-host", action = "store", dest = "policy_host",
+                      help = "hostname for the Policy web service; default is '%s'" %(policy_host))
+    parser.add_option("", "--policy-port", type="int", dest = "policy_port",
+                      help = ("Port used by the policy web service; default is %d" %(policy_port)))
+    parser.add_option("", "--policy-url", dest = "policy_url",
+                      help = ("URL of the policy web service; default is '%s'" %(policy_url)))
+
+    if 'PEGASUS_POLICY_HOST' in os.environ:
+        policy_host = os.environ['PEGASUS_POLICY_HOST']
+        
+    if 'PEGASUS_POLICY_PORT' in os.environ:
+        policy_port = int(os.environ['PEGASUS_POLICY_PORT'])
+        
+    if 'PEGASUS_POLICY_URL' in os.environ:
+        policy_url = os.environ['PEGASUS_POLICY_URL']  
+
 # Parse command line options
 (options, args) = parser.parse_args()
 if options.log_level == None:
     options.log_level = "info"
 setup_logger(options.log_level)
+
+# If we're using a Policy Service, check the command line for environment
+# overrides.
+if using_policy_service:
+    if options.policy_host != None:
+        policy_host = options.policy_host
+    if options.policy_port != None:
+        policy_port = options.policy_port
+    if options.policy_url != None:
+        policy_url = options.policy_url
 
 # Die nicely when asked to (Ctrl+C, system shutdown)
 signal.signal(signal.SIGINT, prog_sigint_handler)
@@ -1003,10 +1167,18 @@ except Exception, err:
     logger.critical('Error reading url pair list: %s' % (err))
     myexit(1)
 
-# we will now sort the list as some tools (gridftp) can optimize when
-# given a group of similar transfers
-logger.info("Sorting the tranfers based on transfer type and source/destination")
-inputs.sort()
+# Check our policy service flag and branch appropriately.
+if using_policy_service:
+    # Send the input list to the policy server before continuing
+    logger.info("Using policy web service at %s on port %d with URL %s",
+                policy_host, policy_port, policy_url)
+    inputs = post_policy_requests(inputs)
+else:
+    # we will now sort the list as some tools (gridftp) can optimize when
+    # given a group of similar transfers
+    logger.info("Sorting the tranfers based on transfer type and source/destination")
+    inputs.sort()
+
 transfer_q = deque(inputs)
 
 # start the stats time
@@ -1045,6 +1217,9 @@ while not done:
         # magic!
         handle_transfers(t_list, failed_q, attempt_current)
         logger.debug("%d items in failed_q" %(len(failed_q)))
+        if using_policy_service:
+            # Remove these from policy web service
+            delete_policy_requests(t_list) 
     
     # are we done?
     if attempt_current == attempts_max or not failed_q:
