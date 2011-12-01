@@ -64,6 +64,8 @@ import java.util.Map;
  */
 public class Shell extends Abstract {
 
+    public static final String PEGASUS_SHELL_RUNNER_FUNCTIONS_BASENAME = "shell-runner-functions.sh ";
+
     /**
      * The prefix for events associated with job in jobstate.log file
      */
@@ -418,27 +420,21 @@ public class Shell extends Abstract {
            append( "#" ).append( "\n" ).
            append( "\n");
 
-        //check for PEGASUS_HOME
-        sb.append( "if [ \"X${PEGASUS_HOME}\" = \"X\" ]; then" ).append( "\n" ).
-           append( "   echo \"ERROR: Set your PEGASUS_HOME variable\" 1>&2").append( "\n" ).
-           append( "   exit 1" ).append( "\n" ).
-           append( "fi" ).append( "\n" ).
-           append( "\n" );
-
+        String runnerFunctionsFile = getSubmitHostPathToShellRunnerFunctions();
 
         //check for common shell script before sourcing
-        sb.append( "if [ ! -e ${PEGASUS_HOME}/libexec/shell-runner-functions.sh ];then" ).append( "\n" ).
+        sb.append( "if [ ! -e " ) .append( runnerFunctionsFile ).append( " ];then" ).append( "\n" ).
            append( "   echo \"Unable to find shell-runner-functions.sh file.\"" ).append( "\n" ).
-           append( "   echo   \"You need to use Pegasus Version 3.0 or higher\"").append( "\n" ).
+           append( "   echo   \"You need to use Pegasus Version 3.2 or higher\"").append( "\n" ).
            append( "   exit 1 " ).append( "\n" ).
            append( "fi" ).append( "\n" );
         
         //source the common shell script
-        sb.append( ".  ${PEGASUS_HOME}/libexec/shell-runner-functions.sh" ).append( "\n" ).
+        sb.append( ".  ").append( runnerFunctionsFile ).append( "\n" ).
            append( "" ).append( "\n" );
 
-        sb.append( "PEGASUS_SUBMIT_DIR" ).append( "=" ).append( submitDirectory ).append( "\n" );
-
+        sb.append( "PEGASUS_SUBMIT_DIR" ).append( "=" ).append( submitDirectory ).append( "\n" ).
+           append( "\n");
 
         sb.append( "#initialize jobstate.log file" ).append( "\n" ).
            append( "JOBSTATE_LOG=jobstate.log" ).append( "\n" ).
@@ -448,6 +444,28 @@ public class Shell extends Abstract {
         return sb.toString();
 
     }
+
+    /**
+     * Determines the path to common shell functions file that the generated
+     * shell script will use.
+     *
+     * @return the path on the submit host.
+     */
+    protected String getSubmitHostPathToShellRunnerFunctions() {
+        StringBuffer path = new StringBuffer();
+
+        //first get the path to the share directory
+        File share = mProps.getSharedDir();
+        if( share == null ){
+            throw new RuntimeException( "Property for Pegasus share directory is not set" );
+        }
+
+        path.append( share.getAbsolutePath() ).append( File.separator ).
+             append( "sh" ).append( File.separator ).append( Shell.PEGASUS_SHELL_RUNNER_FUNCTIONS_BASENAME );
+
+        return path.toString();
+    }
+
 
     /**
      * Returns the footer for the generated shell script.
