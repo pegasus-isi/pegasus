@@ -254,6 +254,11 @@ public class Kickstart implements GridStart {
     private boolean mUseFullPathToGridStart;
 
     /**
+     * Boolean indicating whether to disable invoke functionality.
+     */
+    private boolean mDisableInvokeFunctionality;
+
+    /**
      * Initializes the GridStart implementation.
      *
      * @param bag   the bag of objects that is used for initialization.
@@ -288,6 +293,7 @@ public class Kickstart implements GridStart {
         mNoGridStartImpl = new NoGridStart();
         mNoGridStartImpl.initialize( bag, dag );
         mUseFullPathToGridStart = true;
+        mDisableInvokeFunctionality = mProps.disableInvokeInGridStart();
     }
 
      /**
@@ -652,9 +658,11 @@ public class Kickstart implements GridStart {
                               1 +
                               job.strargs.length();
 
-        //for constituent jobs part of a clustered job
-        //invoke is never used JIRA PM-526
-        if( !partOfClusteredJob && (mInvokeAlways || argumentLength > mInvokeLength) ){
+        //invoke is disabled if part of clustered job or because of a global disable
+        //JIRA PM-526
+        boolean disableInvoke = mDisableInvokeFunctionality || partOfClusteredJob;
+
+        if( !disableInvoke && (mInvokeAlways || argumentLength > mInvokeLength) ){
             if(!useInvoke(job,gridStartArgs)){
                 mLogger.log("Unable to use invoke for job ",
                             LogManager.ERROR_MESSAGE_LEVEL);

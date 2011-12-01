@@ -18,7 +18,6 @@ package edu.isi.pegasus.planner.common;
 import edu.isi.pegasus.planner.classes.NameValue;
 
 
-import edu.isi.pegasus.planner.catalog.transformation.TCMode;
 
 import edu.isi.pegasus.common.util.CommonProperties;
 import edu.isi.pegasus.common.util.Boolean;
@@ -52,6 +51,11 @@ import java.util.Map;
  * @see org.griphyn.common.util.CommonProperties
  */
 public class PegasusProperties {
+
+    /**
+     * the name of the property to disable invoke functionality
+     */
+    public static final String DISABLE_INVOKE_PROPERTY = "pegasus.gridstart.invoke.disable";
 
     //Replica Catalog Constants
     public static final String DEFAULT_RC_COLLECTION = "GriphynData";
@@ -1619,6 +1623,19 @@ public class PegasusProperties {
      */
     public boolean useInvokeInGridStart(){
         return Boolean.parse( mProps.getProperty( "pegasus.gridstart.invoke.always"),
+                              false );
+    }
+
+    /**
+     * Returns a boolean indicating whether to disable use of invoke or not.
+     *
+     * Referred to by the "pegasus.gridstart.invoke.disable" property.
+     *
+     * @return the boolean value specified in the property file,
+     *         else false if not specified or non boolean specified.
+     */
+    public boolean disableInvokeInGridStart(){
+        return Boolean.parse( mProps.getProperty( PegasusProperties.DISABLE_INVOKE_PROPERTY ),
                               false );
     }
 

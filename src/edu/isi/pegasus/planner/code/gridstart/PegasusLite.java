@@ -329,6 +329,10 @@ public class PegasusLite implements GridStart {
             //load SLS
             mSLS = SLSFactory.loadInstance( bag );
         }
+
+        //pegasus lite needs to disable invoke functionality
+        mProps.setProperty( PegasusProperties.DISABLE_INVOKE_PROPERTY, "true" );
+
         mEnablingPartOfAggregatedJob = false;
         mKickstartGridStartImpl = new Kickstart();
         mKickstartGridStartImpl.initialize( bag, dag );
