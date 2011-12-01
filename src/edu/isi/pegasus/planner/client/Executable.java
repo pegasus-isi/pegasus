@@ -30,6 +30,7 @@ import edu.isi.pegasus.common.util.Version;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import gnu.getopt.Getopt;
 import gnu.getopt.LongOpt;
+import java.util.MissingResourceException;
 
 /**
  * The interface which defines all the methods , any executable should implement.
@@ -124,6 +125,8 @@ public abstract class Executable {
         	throw new RuntimeException("Unable to initialize the logger " , ioe);
         }
         mLogMsg = new String();
+
+        sanityCheckOnProperties( );
         loadProperties();
     }
     
@@ -313,4 +316,33 @@ public abstract class Executable {
 		}
     	return optsClone;
     }
+
+    /**
+     * Does a sanity check on the properties to make sure that all the 
+     * required properties are loaded.
+     * 
+     */
+    protected void sanityCheckOnProperties() {
+        // check required properties
+        if ( mProps.getProperty( "pegasus.home.bindir" ) == null ) {
+            throw new MissingResourceException( "The pegasus.home.bindir property was not set ",
+                    "java.util.Properties", "pegasus.home.bindir" );
+        }
+
+        if ( mProps.getProperty( "pegasus.home.schemadir" ) == null ) {
+            throw new MissingResourceException( "The pegasus.home.schemadir property was not set ",
+                    "java.util.Properties", "pegasus.home.schemadir" );
+        }
+
+       if ( mProps.getProperty( "pegasus.home.sharedstatedir" ) == null ) {
+            throw new MissingResourceException( "The pegasus.home.sharedstatedir property was not set ",
+                    "java.util.Properties", "pegasus.home.sharedstatedir" );
+        }
+
+        if ( mProps.getProperty( "pegasus.home.sysconfdir" ) == null ) {
+            throw new MissingResourceException( "The pegasus.home.sysconfdir property was not set ",
+                    "java.util.Properties", "pegasus.home.sysconfdir" );
+        }
+    }
+
 }
