@@ -55,6 +55,12 @@ import java.io.IOException;
  */
 public class Cleanup implements CleanupImplementation{
 
+
+    /**
+     * The scheme name for file url.
+     */
+    public static final String FILE_URL_SCHEME = "file:";
+
     /**
      * Default category for registration jobs
      */
@@ -111,7 +117,7 @@ public class Cleanup implements CleanupImplementation{
     protected TransformationCatalog mTCHandle;
 
     /**
-     * Handle to the site catalog.
+     * Handle to the stagingSite catalog.
      */
     protected SiteStore mSiteStore;
 
@@ -189,8 +195,53 @@ public class Cleanup implements CleanupImplementation{
         //a clustered job. PM-368
         Job cJob = new Job( job );
 
-        String site = job.getStagingSiteHandle();
-        cJob.setSiteHandle( job.getStagingSiteHandle() );
+        String stagingSite = job.getStagingSiteHandle();
+        
+        //by default execution site for a cleanup job is local unless
+        //overridden because of File URL's in list of files to be cleaned
+        String eSite = "local";
+
+        //prepare the stdin for the cleanup job
+        String stdIn = id + ".in";
+        try{
+            BufferedWriter writer;
+            writer = new BufferedWriter( new FileWriter(
+                                        new File( mSubmitDirectory, stdIn ) ));
+
+            for( Iterator it = files.iterator(); it.hasNext(); ){
+                PegasusFile file = (PegasusFile)it.next();
+                String pfn = mTransientRC.lookup( file.getLFN(), stagingSite );
+
+                if( pfn == null ){
+                    throw new RuntimeException( "Unable to determine url for lfn " + file.getLFN() + " at site " + stagingSite );
+                }
+
+                if( pfn.startsWith( Cleanup.FILE_URL_SCHEME ) ){
+                    //means the cleanup job should run on the staging site
+                    mLogger.log( " PFN for file " + file.getLFN() + " on staging site is a file URL " + pfn,
+                                 LogManager.DEBUG_MESSAGE_LEVEL );
+                    mLogger.log( "Cleanup Job " + id + " instead of running on local site , will run on site " + stagingSite,
+                                 LogManager.DEBUG_MESSAGE_LEVEL );
+                    eSite = stagingSite;
+                }
+
+                writer.write( pfn );
+                writer.write( "\n" );
+            }
+
+
+
+            //closing the handle to the writer
+            writer.close();
+        }
+        catch(IOException e){
+            mLogger.log( "While writing the stdIn file " + e.getMessage(),
+                        LogManager.ERROR_MESSAGE_LEVEL);
+            throw new RuntimeException( "While writing the stdIn file " + stdIn, e );
+        }
+
+
+        cJob.setSiteHandle( eSite );
 
         //we dont want notifications to be inherited
         cJob.resetNotifications();
@@ -224,43 +275,14 @@ public class Cleanup implements CleanupImplementation{
         cJob.setVDSSuperNode( job.getID() );
 
         //set the path to the rm executable
-        TransformationCatalogEntry entry = this.getTCEntry( job.getSiteHandle() );
+        TransformationCatalogEntry entry = this.getTCEntry( eSite );
         cJob.setRemoteExecutable( entry.getPhysicalTransformation() );
 
 
-        //prepare the stdin for the cleanup job
-        String stdIn = id + ".in";
-        try{
-            BufferedWriter writer;
-            writer = new BufferedWriter( new FileWriter(
-                                        new File( mSubmitDirectory, stdIn ) ));
-
-            for( Iterator it = files.iterator(); it.hasNext(); ){
-                PegasusFile file = (PegasusFile)it.next();
-                String pfn = mTransientRC.lookup( file.getLFN(), site );
-
-                if( pfn == null ){
-                    throw new RuntimeException( "Unable to determine url for lfn " + file.getLFN() + " at site " + site );
-                }
-
-                writer.write( pfn );
-                writer.write( "\n" );
-            }
-
-
-
-            //closing the handle to the writer
-            writer.close();
-        }
-        catch(IOException e){
-            mLogger.log( "While writing the stdIn file " + e.getMessage(),
-                        LogManager.ERROR_MESSAGE_LEVEL);
-            throw new RuntimeException( "While writing the stdIn file " + stdIn, e );
-        }
-
+        
         //we want to run the job on fork jobmanager
-        //SiteInfo site = mSiteHandle.getTXPoolEntry( cJob.getSiteHandle() );
-        //JobManager jobmanager = site.selectJobManager( Engine.TRANSFER_UNIVERSE, true );
+        //SiteInfo stagingSite = mSiteHandle.getTXPoolEntry( cJob.getSiteHandle() );
+        //JobManager jobmanager = stagingSite.selectJobManager( Engine.TRANSFER_UNIVERSE, true );
         //cJob.globusScheduler = (jobmanager == null) ?
         //                        null :
         //                       jobmanager.getInfo(JobManager.URL);
@@ -275,7 +297,7 @@ public class Cleanup implements CleanupImplementation{
 
         //the profile information from the pool catalog needs to be
         //assimilated into the job.
-        cJob.updateProfiles( mSiteStore.lookup( job.getSiteHandle() ).getProfiles()  );
+        cJob.updateProfiles( mSiteStore.lookup( eSite ).getProfiles()  );
 
         //add any notifications specified in the transformation
         //catalog for the job. JIRA PM-391
@@ -304,11 +326,11 @@ public class Cleanup implements CleanupImplementation{
     }
 
     /**
-     * Returns the TCEntry object for the rm executable on a grid site.
+     * Returns the TCEntry object for the rm executable on a grid stagingSite.
      *
-     * @param site the site corresponding to which the entry is required.
+     * @param stagingSite the stagingSite corresponding to which the entry is required.
      *
-     * @return  the TransformationCatalogEntry corresponding to the site.
+     * @return  the TransformationCatalogEntry corresponding to the stagingSite.
      */
     protected TransformationCatalogEntry getTCEntry( String site ){
         List tcentries = null;
@@ -349,7 +371,7 @@ public class Cleanup implements CleanupImplementation{
      * Returns a default TC entry to be used in case entry is not found in the
      * transformation catalog.
      *
-     * @param site   the site for which the default entry is required.
+     * @param stagingSite   the stagingSite for which the default entry is required.
      *
      *
      * @return  the default entry.
