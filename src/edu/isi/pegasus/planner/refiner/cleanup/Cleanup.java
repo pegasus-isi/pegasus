@@ -19,6 +19,8 @@ package edu.isi.pegasus.planner.refiner.cleanup;
 
 
 
+import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
+
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 
 import edu.isi.pegasus.planner.classes.Job;
@@ -111,8 +113,12 @@ public class Cleanup implements CleanupImplementation{
     /**
      * Handle to the site catalog.
      */
-//    protected PoolInfoProvider mSiteHandle;
     protected SiteStore mSiteStore;
+
+    /**
+     * Handle to the transient replica catalog.
+     */
+    protected ReplicaCatalog mTransientRC;
 
     /**
      * The handle to the properties passed to Pegasus.
@@ -160,6 +166,7 @@ public class Cleanup implements CleanupImplementation{
         mSiteStore       = bag.getHandleToSiteStore();
         mTCHandle        = bag.getHandleToTransformationCatalog(); 
         mLogger          = bag.getLogger();
+        mTransientRC     = bag.getHandleToTransientReplicaCatalog();
     }
 
 
@@ -182,6 +189,7 @@ public class Cleanup implements CleanupImplementation{
         //a clustered job. PM-368
         Job cJob = new Job( job );
 
+        String site = job.getStagingSiteHandle();
         cJob.setSiteHandle( job.getStagingSiteHandle() );
 
         //we dont want notifications to be inherited
@@ -229,7 +237,13 @@ public class Cleanup implements CleanupImplementation{
 
             for( Iterator it = files.iterator(); it.hasNext(); ){
                 PegasusFile file = (PegasusFile)it.next();
-                writer.write( file.getLFN() );
+                String pfn = mTransientRC.lookup( file.getLFN(), site );
+
+                if( pfn == null ){
+                    throw new RuntimeException( "Unable to determine url for lfn " + file.getLFN() + " at site " + site );
+                }
+
+                writer.write( pfn );
                 writer.write( "\n" );
             }
 

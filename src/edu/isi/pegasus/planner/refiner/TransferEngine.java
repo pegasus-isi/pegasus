@@ -1253,7 +1253,7 @@ public class TransferEngine extends Engine {
                 //trackInTransientRC( lfn, destURL, job.getSiteHandle() );
                 trackInTransientRC( lfn, 
                                     dDirURL + File.separator + lfn, 
-                                    job.getSiteHandle());
+                                    job.getStagingSiteHandle());
             }
             
             //construct the file transfer object
