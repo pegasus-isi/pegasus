@@ -444,6 +444,7 @@ public class CondorGenerator extends Abstract {
                     //set the arguments to the DAX job to the ones
                     //in the generated DAGJob to ensure stampede event
                     //is generated correctly
+                    daxJob.setRemoteExecutable( job.getRemoteExecutable() );
                     daxJob.setArguments( job.getArguments() );
                 }
                 
