@@ -302,20 +302,20 @@ public class InterPoolEngine extends Engine implements Refiner {
                          LogManager.DEBUG_MESSAGE_LEVEL );
 
 
-            //set the staging site for the job
-            job.setStagingSiteHandle( getStagingSite( job ) );
-
             //check if the user has specified any hints in the dax
-
-//          replaced with jobmanager-type
-//            incorporateHint(job, "pfnUniverse");
             incorporateHint(job, Hints.JOBMANAGER_UNIVERSE_KEY  );
             if (incorporateHint(job, "executionPool")) {
                 //i++;
                 incorporateProfiles(job);
+                //set the staging site for the job
+                job.setStagingSiteHandle( getStagingSite( job ) );
                 continue;
             }
 
+            //set the staging site for the job
+            job.setStagingSiteHandle( getStagingSite( job ) );
+
+ 
             if ( site == null ) {
                 error = new StringBuffer();
                 error.append( "Site Selector could not map the job " ).
