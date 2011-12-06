@@ -139,7 +139,7 @@ public abstract class AbstractStrategy implements Strategy {
             //add to the set only if the job is
             //being run in the work directory
             //this takes care of local site create dir
-            if( job.getJobType() == Job.COMPUTE_JOB &&  job.runInWorkDirectory()){
+            if( job.runInWorkDirectory()){
                 set.add( job.getStagingSiteHandle() );
             }
         }
