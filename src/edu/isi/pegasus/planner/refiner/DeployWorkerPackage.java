@@ -112,8 +112,8 @@ public class DeployWorkerPackage
         { "cleanup", "pegasus-cleanup" },
         { "seqexec", "pegasus-cluster"},
         { "dirmanager", "pegasus-create-dir" },
-        { "invoke", "invoke" },
-        { "keg" , "keg" },
+        { "invoke", "pegasus-invoke" },
+        { "keg" , "pegasus-keg" },
 
     };
 
