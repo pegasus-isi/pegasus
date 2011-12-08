@@ -41,7 +41,13 @@ import edu.isi.pegasus.planner.catalog.replica.ReplicaFactory;
 public class MainEngine
     extends Engine {
 
-        /**
+    /**
+     * The basename of the directory that contains the submit files for the
+     * cleanup DAG that for the concrete dag generated for the workflow.
+     */
+    public static final String CLEANUP_DIR  = "cleanup";
+
+    /**
      * The name of the source key for Replica Catalog Implementer that serves as
      * cache
      */
@@ -256,8 +262,11 @@ public class MainEngine
             message = "Generating the cleanup workflow";
             //mLogger.log(message,LogManager.INFO_MESSAGE_LEVEL);
             mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_GENERATE_CLEANUP_WF, LoggingKeys.DAX_ID, mOriginalDag.getAbstractWorkflowName() );
-            mRemoveEng = new RemoveDirectory( mReducedDag, mBag );
-            mCleanupDag = mRemoveEng.generateCleanUPDAG();
+            //for the cleanup dag the submit directory is the cleanup
+            //subdir
+            File submitDir = new File( this.mPOptions.getSubmitDirectory(), MainEngine.CLEANUP_DIR );
+            mRemoveEng = new RemoveDirectory( mReducedDag, mBag, submitDir.getAbsolutePath() );
+            mCleanupDag = mRemoveEng.generateCleanUPDAG( );
             mLogger.logEventCompletion();
         }
 

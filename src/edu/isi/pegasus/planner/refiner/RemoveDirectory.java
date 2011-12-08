@@ -39,6 +39,9 @@ import java.util.LinkedList;
 
 import java.io.File;
 import edu.isi.pegasus.planner.namespace.Pegasus;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 
 
 /**
@@ -57,6 +60,12 @@ import edu.isi.pegasus.planner.namespace.Pegasus;
 public class RemoveDirectory extends Engine {
 
     /**
+     * The scheme name for file url.
+     */
+    public static final String FILE_URL_SCHEME = "file:";
+
+
+    /**
      * The prefix that is attached to the name of the dag for which the
      * cleanup Dag is being generated, to generate the name of the cleanup
      * Dag.
@@ -72,13 +81,13 @@ public class RemoveDirectory extends Engine {
      * The logical name of the transformation that removes directories on the
      * remote execution pools.
      */
-    public static final String TRANSFORMATION_NAME = "dirmanager";
+    public static final String TRANSFORMATION_NAME = "cleanup";
     
     
     /**
      * The basename of the pegasus dirmanager  executable.
      */
-    public static final String REMOVE_DIR_EXECUTABLE_BASENAME = "pegasus-dirmanager";
+    public static final String REMOVE_DIR_EXECUTABLE_BASENAME = "pegasus-cleanup";
 
     /**
      * The transformation namespace for the create dir jobs.
@@ -99,7 +108,7 @@ public class RemoveDirectory extends Engine {
      * The logical name of the transformation that removes directories on the
      * remote execution pools.
      */
-    public static final String DERIVATION_NAME = "dirmanager";
+    public static final String DERIVATION_NAME = "cleanup";
 
 
     /**
@@ -132,6 +141,11 @@ public class RemoveDirectory extends Engine {
                                   TRANSFORMATION_VERSION );
     }
 
+    /**
+     * The submit directory for the workflow.
+     */
+    private  String mSubmitDirectory;
+
 
     /**
      * The overloaded constructor that sets the dag for which we have to
@@ -139,11 +153,34 @@ public class RemoveDirectory extends Engine {
      *
      * @param concDag  the concrete dag for which cleanup is reqd.
      * @param bag      the bag of initialization objects
+     * @param submitDirectory   the submit directory for the cleanup workflow
      */
-    public RemoveDirectory( ADag concDag, PegasusBag bag ) {
+    public RemoveDirectory( ADag concDag, PegasusBag bag, String submitDirectory ) {
         super( bag );
         mConcDag = concDag;
         mTransferFromSubmitHost = bag.getPegasusProperties().transferWorkerPackage();
+        mSubmitDirectory = submitDirectory;
+
+        //check to see if it exists
+        File dir = new File( submitDirectory );
+        if( !dir.exists() ){
+            // does not exist, try to make it
+            if ( ! dir.mkdirs() ) {
+
+                //try to get around JVM bug. JIRA PM-91
+                if( dir.getPath().endsWith( "." ) ){
+                    //just try to create the parent directory
+                    if( !dir.getParentFile().mkdirs() ){
+                        throw new RuntimeException( "Unable to create  directory " +
+                                       dir.getPath() );
+                    }
+                    return;
+                }
+                throw new RuntimeException( "Unable to create  directory " +
+                                       dir.getPath() );
+            }
+
+        }
     }
 
     /**
@@ -152,10 +189,9 @@ public class RemoveDirectory extends Engine {
      * sites at which the jobs in the dag have been scheduled.
      *
      * @return the cleanup DAG.
-     * @see org.griphyn.cPlanner.classes.ADag#getExecutionSites()
      */
-    public ADag generateCleanUPDAG(){
-        return this.generateCleanUPDAG(mConcDag);
+    public ADag generateCleanUPDAG(  ){
+        return this.generateCleanUPDAG( mConcDag );
     }
 
 
@@ -169,7 +205,7 @@ public class RemoveDirectory extends Engine {
      * @return the cleanup DAG.
      * @see org.griphyn.cPlanner.classes.ADag#getExecutionSites()
      */
-    public ADag generateCleanUPDAG(ADag dag){
+    public ADag generateCleanUPDAG(ADag dag  ){
         ADag cDAG = new ADag();
         cDAG.dagInfo.nameOfADag = this.CLEANUP_DAG_PREFIX + dag.dagInfo.nameOfADag;
         cDAG.dagInfo.index      = dag.dagInfo.index;
@@ -185,7 +221,7 @@ public class RemoveDirectory extends Engine {
         for(Iterator it = pools.iterator();it.hasNext();){
             pool    = (String)it.next();
             jobName = getRemoveDirJobName(dag,pool);
-            cDAG.add(makeRemoveDirJob(pool,jobName));
+            cDAG.add(makeRemoveDirJob( pool,jobName ));
         }
 
         return cDAG;
@@ -208,7 +244,7 @@ public class RemoveDirectory extends Engine {
             //add to the set only if the job is
             //being run in the work directory
             //this takes care of local site create dir
-            if( job.getJobType() == Job.COMPUTE_JOB &&  job.runInWorkDirectory()){
+            if( job.runInWorkDirectory()){
                 set.add( job.getStagingSiteHandle() );
             }
         }
@@ -254,10 +290,12 @@ public class RemoveDirectory extends Engine {
      * @return the remove dir job.
      */
     public Job makeRemoveDirJob( String site, String jobName ) {
-        List l = new LinkedList();
-        l.add( mSiteStore.getInternalWorkDirectory( site ) );
         
-        return makeRemoveDirJob( site, jobName, l );
+        List<String> l = new LinkedList<String>();
+
+        //the externally accessible url to the directory/ workspace for the workflow
+        l.add( mSiteStore.getExternalWorkDirectoryURL( site )  );
+        return makeRemoveDirJob( site, jobName, l  );
     }
     
     /**
@@ -265,28 +303,39 @@ public class RemoveDirectory extends Engine {
      * using the perl executable that Gaurang wrote. It access mkdir underneath.
      * It gets the name of the random directory from the Pool handle.
      *
-     * @param site      the site from where the files need to be removed.
+     * @param site      the site from where the directory need to be removed.
      * @param jobName   the name that is to be assigned to the job.
-     * @param files     the files to be removed
+     * @param files  the list of files to be cleaned up.
      *
      * @return the remove dir job.
      */
-    public Job makeRemoveDirJob( String site, String jobName, List files ) {
+    public Job makeRemoveDirJob( String site, String jobName, List<String> files ) {
         Job newJob  = new Job();
         List entries    = null;
         String execPath = null;
         TransformationCatalogEntry entry   = null;
-//        GridGateway jm = null;
+
+
 
         //the site where the cleanup job will run
         String eSite = "local";
+
+        for( String file: files ){
+            if( file.startsWith( this.FILE_URL_SCHEME ) ){
+                //means the cleanup job should run on the staging site
+                mLogger.log( "Directory URL is a file url for site " + site + "  " +  files,
+                                 LogManager.DEBUG_MESSAGE_LEVEL );
+                eSite = site;
+            }
+        }
+
         SiteCatalogEntry ePool = mSiteStore.lookup( eSite );
 
         try {
             entries = mTCHandle.lookup( RemoveDirectory.TRANSFORMATION_NAMESPACE,
                                               RemoveDirectory.TRANSFORMATION_NAME,
                                               RemoveDirectory.TRANSFORMATION_VERSION,
-                                              site,
+                                              eSite,
                                               TCType.INSTALLED);
         }
         catch (Exception e) {
@@ -306,7 +355,7 @@ public class RemoveDirectory extends Engine {
             StringBuffer error = new StringBuffer();
             error.append("Could not find entry in tc for lfn ").
                   append( this.getCompleteTranformationName() ).
-                  append(" at site ").append( site );
+                  append(" at site ").append( eSite );
 
             mLogger.log( error.toString(), LogManager.ERROR_MESSAGE_LEVEL);
             throw new RuntimeException( error.toString() );
@@ -331,18 +380,31 @@ public class RemoveDirectory extends Engine {
             execPath = entry.getPhysicalTransformation();
         }
 
-//        jm = ePool.selectGridGateway( GridGateway.JOB_TYPE.cleanup );
 
-        StringBuffer arguments = new StringBuffer();
-        arguments.append( "--verbose --remove --dir \"" );       
-        for( Iterator it = files.iterator(); it.hasNext(); ){
-            arguments.append( it.next() );
-            //append only if there is another file
-            if( it.hasNext()){
-                arguments.append( " " );
+        //prepare the stdin for the cleanup job
+        String stdIn = jobName + ".in";
+        try{
+            BufferedWriter writer;
+            writer = new BufferedWriter( new FileWriter(
+                                        new File( mSubmitDirectory, stdIn ) ));
+
+            for( String file: files ){
+                writer.write( file );
+                writer.write( "\n" );
             }
+            writer.write( "\n" );
+
+            //closing the handle to the writer
+            writer.close();
         }
-        arguments.append( "\"" );
+        catch(IOException e){
+            mLogger.log( "While writing the stdIn file " + e.getMessage(),
+                        LogManager.ERROR_MESSAGE_LEVEL);
+            throw new RuntimeException( "While writing the stdIn file " + stdIn, e );
+        }
+
+        //set the stdin file for the job
+        newJob.setStdIn( stdIn );
         
         newJob.jobName = jobName;
         newJob.setTransformation( RemoveDirectory.TRANSFORMATION_NAMESPACE,
@@ -353,16 +415,10 @@ public class RemoveDirectory extends Engine {
                               RemoveDirectory.DERIVATION_NAME,
                               RemoveDirectory.DERIVATION_VERSION  );
 
-//        newJob.condorUniverse = "vanilla";
-        
- /*     JIRA PM-277       
-        newJob.setUniverse( GridGateway.JOB_TYPE.cleanup.toString() );
-        newJob.globusScheduler = jm.getContact();
- */ 
+
         newJob.executable = execPath;
         newJob.setSiteHandle( eSite );
-        newJob.setArguments( arguments.toString() );
-        newJob.jobClass = Job.CREATE_DIR_JOB;
+        newJob.jobClass = Job.CLEANUP_JOB;
         newJob.jobID = jobName;
 
         //the profile information from the pool catalog needs to be

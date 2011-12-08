@@ -867,7 +867,7 @@ public class DeployWorkerPackage
         //in a top down manner
         Graph workflow = Adapter.convert( dag );
 
-        RemoveDirectory removeDirectory = new RemoveDirectory( dag, mBag );
+        RemoveDirectory removeDirectory = new RemoveDirectory( dag, mBag, this.mPOptions.getSubmitDirectory() );
         
         //add a setup job per execution site
         Set sites = this.getDeploymentSites( dag );       
