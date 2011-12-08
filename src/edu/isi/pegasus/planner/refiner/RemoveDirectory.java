@@ -392,7 +392,6 @@ public class RemoveDirectory extends Engine {
                 writer.write( file );
                 writer.write( "\n" );
             }
-            writer.write( "\n" );
 
             //closing the handle to the writer
             writer.close();
