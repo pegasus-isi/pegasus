@@ -241,10 +241,21 @@ public class RemoveDirectory extends Engine {
 
         for(Iterator it = dag.vJobSubInfos.iterator();it.hasNext();){
             Job job = (Job)it.next();
+
+            if( job.getJobType() == Job.CHMOD_JOB ){
+                //skip
+                //chmod jobs dont have a staging site associated
+                //they are only created in the shared fs mode.
+                continue;
+            }
+
             //add to the set only if the job is
             //being run in the work directory
             //this takes care of local site create dir
             if( job.runInWorkDirectory()){
+                if( job.getStagingSiteHandle() == null ){
+                    throw new RuntimeException( "Unable to figure out the staging site for job " + job.getID() );
+                }
                 set.add( job.getStagingSiteHandle() );
             }
         }
