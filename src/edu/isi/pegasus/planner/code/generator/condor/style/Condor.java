@@ -111,6 +111,9 @@ public class Condor extends Abstract {
             if (!( type == Job.COMPUTE_JOB /*|| type == Job.STAGED_COMPUTE_JOB*/ )) {
                 //set universe to vanilla universe
                 universe = Condor.VANILLA_UNIVERSE;
+                //fix for JIRA PM-531
+                //vanilla universe jobs need to have remote_initialdir key
+                useRemoteInitialDir = true;
             }
         }
         
