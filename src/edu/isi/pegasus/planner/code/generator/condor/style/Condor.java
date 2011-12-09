@@ -22,6 +22,7 @@ import edu.isi.pegasus.planner.code.generator.condor.CondorStyleException;
 
 import edu.isi.pegasus.common.logging.LogManager;
 
+import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.TransferJob;
 
@@ -108,13 +109,26 @@ public class Condor extends Abstract {
         if( universe.equals( Condor.STANDARD_UNIVERSE ) ){
             //standard universe should be only applied for compute jobs
             int type = job.getJobType();
-            if (!( type == Job.COMPUTE_JOB /*|| type == Job.STAGED_COMPUTE_JOB*/ )) {
+            if ( !( type == Job.COMPUTE_JOB ) ) {
                 //set universe to vanilla universe
                 universe = Condor.VANILLA_UNIVERSE;
                 //fix for JIRA PM-531
                 //vanilla universe jobs need to have remote_initialdir key
                 useRemoteInitialDir = true;
             }
+            else{
+                //job is a compute job.
+                //check if it is clustered . 
+                if( job instanceof AggregatedJob ){
+                    //clustered jobs can never execute in standard universe
+                    //update to vanilla universe. JIRA PM-530
+                    universe = Condor.VANILLA_UNIVERSE;
+                    //fix for JIRA PM-531
+                    //vanilla universe jobs need to have remote_initialdir key
+                    useRemoteInitialDir = true;
+                }
+            }
+
         }
         
         //set the universe for the job
