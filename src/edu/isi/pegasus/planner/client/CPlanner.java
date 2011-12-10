@@ -99,6 +99,8 @@ import java.io.BufferedReader;
 import java.io.FilenameFilter;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 
@@ -133,6 +135,12 @@ public class CPlanner extends Executable{
      * The prefix for the NoOP jobs that are created.
      */
     public static final String NOOP_PREFIX = "noop_";
+
+    /**
+     * The name of the property key that determines whether pegasus-run
+     * should monitord or not.
+     */
+    public static final String PEGASUS_MONITORD_LAUNCH_PROPERTY_KEY = "pegasus.monitord" ;
     
     /**
      * The regex used to match against a java property that is set using 
@@ -617,8 +625,20 @@ public class CPlanner extends Executable{
                 cleanupOptions.setSubmitDirectory( cleanupOptions.getSubmitDirectory(), this.CLEANUP_DIR );
                 PegasusBag bag = cwmain.getPegasusBag();
                 bag.add( PegasusBag.PLANNER_OPTIONS, cleanupOptions );
+
+                //create a separate properties file for the cleanup workflow.
+                //pegasus run should not launch monitord for the cleanup workflow
+                PegasusProperties cleanupWFProperties = PegasusProperties.nonSingletonInstance();
+                cleanupWFProperties.setProperty( PEGASUS_MONITORD_LAUNCH_PROPERTY_KEY, "false" );
+                try {
+                    cleanupWFProperties.writeOutProperties(cleanupOptions.getSubmitDirectory());
+                } catch (IOException ex) {
+                    throw new RuntimeException( "Unable to write out properties for the cleanup workflow ", ex );
+                }
+                bag.add( PegasusBag.PEGASUS_PROPERTIES , cleanupWFProperties );
+
                 codeGenerator = CodeGeneratorFactory.
-                              loadInstance( cwmain.getPegasusBag() );
+                              loadInstance( bag );
 
                 try{
                     codeGenerator.generateCode(cleanupDAG);
@@ -630,8 +650,6 @@ public class CPlanner extends Executable{
                 mLogger.log(message + " -DONE",LogManager.INFO_MESSAGE_LEVEL);
             }
 
-            //log entry in to the work catalog
-            //boolean nodatabase = logEntryInWorkCatalog( finalDag, baseDir, relativeSubmitDir );
 
             //write out  the planner metrics  to global log
             mPMetrics.setEndTime( new Date() );
