@@ -1,0 +1,201 @@
+#!/usr/bin/env python
+
+##
+#  Copyright 2007-2011 University Of Southern California
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing,
+#  software distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+##
+
+import os
+import re
+import sys
+import errno
+import logging
+import optparse
+import tempfile
+import subprocess
+import signal
+import string
+import stat
+import time
+
+# --- global variables ----------------------------------------------------------------
+
+prog_base = os.path.split(sys.argv[0])[1]   # Name of this program
+
+logger = logging.getLogger("my_logger")
+
+
+# --- functions -----------------------------------------------------------------------
+
+def setup_logger(level_str):
+
+    # log to the console
+    console = logging.StreamHandler()
+
+    # default log level - make logger/console match
+    logger.setLevel(logging.INFO)
+    console.setLevel(logging.INFO)
+
+    # level - from the command line
+    level_str = level_str.lower()
+    if level_str == "debug":
+        logger.setLevel(logging.DEBUG)
+        console.setLevel(logging.DEBUG)
+    if level_str == "warning":
+        logger.setLevel(logging.WARNING)
+        console.setLevel(logging.WARNING)
+    if level_str == "error":
+        logger.setLevel(logging.ERROR)
+        console.setLevel(logging.ERROR)
+
+    # formatter
+    formatter = logging.Formatter("%(asctime)s %(levelname)7s:  %(message)s")
+    console.setFormatter(formatter)
+    logger.addHandler(console)
+    logger.debug("Logger has been configured")
+
+
+
+def prog_sigint_handler(signum, frame):
+    logger.warn("Exiting due to signal %d" % (signum))
+    myexit(1)
+
+
+def alarm_handler(signum, frame):
+    raise Alarm
+
+
+def myexec(cmd_line, timeout_secs, should_log):
+    """
+    executes shell commands with the ability to time out if the command hangs
+    """
+    if should_log or logger.isEnabledFor(logging.DEBUG):
+        logger.info(cmd_line)
+    sys.stdout.flush()
+
+    # set up signal handler for timeout
+    signal.signal(signal.SIGALRM, alarm_handler)
+    signal.alarm(timeout_secs)
+
+    p = subprocess.Popen(cmd_line, shell=True)
+    try:
+        stdoutdata, stderrdata = p.communicate()
+    except Alarm:
+        if sys.version_info >= (2, 6):
+            p.terminate()
+        raise RuntimeError("Command '%s' timed out after %s seconds" % (cmd_line, timeout_secs))
+    rc = p.returncode
+    if rc != 0:
+        raise RuntimeError("Command '%s' failed with error code %s" % (cmd_line, rc))
+
+
+def myexit(rc):
+    """
+    system exit without a stack trace - silly python
+    """
+    try:
+        sys.exit(rc)
+    except SystemExit:
+        sys.exit(rc)
+
+
+def clean_condor_q():
+    """
+    cleans out the condor queue so we have a clean environment to start with
+    """
+    cmd = "(condor_rm $USER; sleep 10s; condor_rm -forcex $USER; sleep 10s) >/dev/null 2>&1"
+    try:
+        myexec(cmd, 60, True)
+    except Exception, e:
+        logger.error(e)
+
+
+def summarize_stdout_stderr(test_dir):
+    """
+    summaries a test output (test.stdout/test.stderr)
+    """
+    cmd = "cd %s && tail -n 100 test.stdout test.stderr" % test_dir
+    try:
+        myexec(cmd, 60, False)
+    except Exception, e:
+        logger.error(e)
+
+
+# --- main ----------------------------------------------------------------------------
+
+# keep track where we run from
+start_dir = os.path.normpath(os.path.join(os.path.dirname(sys.argv[0])))
+default_tests_dir = os.path.normpath(os.path.join(start_dir, "../core"))
+
+# Configure command line option parser
+prog_usage = "usage: pegasus-testing-glue [options]"
+parser = optparse.OptionParser(usage=prog_usage)
+parser.add_option("-l", "--loglevel", action = "store", dest = "log_level",
+                  help = "Log level. Valid levels are: debug,info,warning,error, Default is info.")
+parser.add_option("-d", "--tests-dir", action = "store", dest = "tests_dir",
+                  help = "Directory containing the tests")
+
+# Parse command line options
+(options, args) = parser.parse_args()
+if options.log_level == None:
+    options.log_level = "info"
+if options.tests_dir == None:
+    options.tests_dir = default_tests_dir
+setup_logger(options.log_level)
+
+# Die nicely when asked to (Ctrl+C, system shutdown)
+signal.signal(signal.SIGINT, prog_sigint_handler)
+
+# keep exit code and a list of failed tests
+rc = 0
+failed_tests = []
+
+# loop over the tests
+dir_list = os.listdir(options.tests_dir)
+dir_list.sort()
+for entry in dir_list:
+    
+    # ignore .files
+    if entry.find(".") == 0:
+        continue;
+
+    # make sure the test has a run-test script
+    if not os.path.exists("%s/%s/run-test" % (options.tests_dir, entry)):
+        logger.error("%s/%s does not have a run-test script" % (options.tests_dir, entry))
+        continue
+
+    logger.info("====================================================================")
+    logger.info("Preparing for test - cleaning queue")
+    clean_condor_q()
+    logger.info("Running test %s" % entry)
+    cmd = "cd %s/%s && ./run-test >test.stdout 2>test.stderr" % (options.tests_dir, entry)
+    try:
+        myexec(cmd, 600, True)
+    except Exception, e:
+        logger.error(e)
+        failed_tests.append(entry)
+        rc += 1
+        logger.info("Last 100 lines of stdout/stderr:")
+        summarize_stdout_stderr("%s/%s" % (options.tests_dir, entry))
+
+print
+if len(failed_tests) == 0:
+    print "All tests successful!"
+else:
+    print "The following tests failed:"
+    for test in failed_tests:
+        print "  %s" %(test)
+
+myexit(rc)
+

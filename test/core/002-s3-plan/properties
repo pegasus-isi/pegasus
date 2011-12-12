@@ -1,0 +1,13 @@
+
+pegasus.catalog.site = XML3
+pegasus.catalog.site.file = sites.xml3
+
+pegasus.catalog.transformation = File
+pegasus.catalog.transformation.file = tc.data
+pegasus.catalog.transformation.mapper = Installed
+
+pegasus.catalog.replica = SimpleFile
+pegasus.catalog.replica.file = rc.data
+
+pegasus.data.configuration = S3
+

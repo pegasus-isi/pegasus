@@ -1,0 +1,39 @@
+#!/bin/bash
+
+#
+# This should probably be implementd using pegasus-status or pegasus-analyzer,
+# if we can get good exit codes
+#
+
+
+function update_condor_states
+{
+    TOTAL_JOBS=`condor_q -constraint "Owner == \"$USER\"" -format '%s\n' ClusterID 2>/dev/null | wc -l`
+    if [ "x$TOTAL_JOBS" = "x" ]; then
+        TOTAL_JOBS="0"
+    fi
+    TOTAL_JOBS=$(($TOTAL_JOBS + 0))
+
+    HELD_JOBS=`condor_q -constraint "Owner == \"$USER\" && JobStatus == 5" -format '%s\n' ClusterID 2>/dev/null | wc -l`
+    if [ "x$HELD_JOBS" = "x" ]; then
+        HELD_JOBS="0"
+    fi
+    HELD_JOBS=$(($HELD_JOBS + 0))
+    
+    TS=`date +'%F %R'`
+    echo "$TS  -  Condor Jobs  -  Total: $TOTAL_JOBS   Held: $HELD_JOBS" 
+}
+
+update_condor_states
+while [ $TOTAL_JOBS -gt 0 -a $HELD_JOBS = 0 ]; do
+    sleep 1m
+    update_condor_states
+done
+
+if [ $HELD_JOBS -gt 0 ]; then
+    echo "Held jobs detected!"
+    exit 1
+fi
+
+exit 0
+

@@ -1,0 +1,81 @@
+#!/bin/bash
+
+set -e
+
+TOPDIR=`pwd`
+
+# remove previous runs
+rm -rf work
+
+# figure out where Pegasus is installed
+export PEGASUS_HOME=`which pegasus-plan | sed 's:/bin/pegasus-plan::'`
+if [ "x$PEGASUS_HOME" = "x" ]; then
+    echo "Unable to determine location of your Pegasus install"
+    echo "Please make sure pegasus-plan is in your path"
+    exit 1
+fi 
+
+# generate the input file
+echo "This is sample input to KEG" >f.a
+
+# generate the dax
+export PYTHONPATH=`pegasus-config --python`
+./blackdiamond.py $PEGASUS_HOME >blackdiamond.dax
+
+# create the site catalog
+cat >sites.xml <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0">
+    <site handle="local" arch="x86_64" os="LINUX">
+        <grid type="gt2" contact="localhost/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/>
+        <head-fs>
+            <scratch>
+                <shared>
+                    <file-server protocol="file" url="file://" mount-point="$TOPDIR/scratch"/>
+                    <internal-mount-point mount-point="$TOPDIR/scratch" free-size="100G" total-size="30G"/>
+                </shared>
+            </scratch>
+            <storage>
+                <shared>
+                    <file-server protocol="file" url="file://" mount-point="$TOPDIR/outputs"/>
+                    <internal-mount-point mount-point="$TOPDIR/outputs" free-size="100G" total-size="30G"/>
+                </shared>
+            </storage>
+        </head-fs>
+        <replica-catalog type="LRC" url="rlsn://dummyValue.url.edu" />
+        <profile namespace="env" key="PEGASUS_HOME" >$PEGASUS_HOME</profile>
+        <profile namespace="env" key="GLOBUS_LOCATION" >$GLOBUS_LOCATION</profile>
+    </site>
+    <site handle="OSG" arch="x86_64" os="LINUX">
+        <head-fs>
+            <scratch />
+            <storage />
+        </head-fs>
+        <replica-catalog type="LRC" url="rlsn://dummyValue.url.edu" />
+        <profile namespace="pegasus" key="style">condor</profile>
+    </site>
+    <site handle="SRM">
+        <head-fs>
+            <scratch>
+                <shared>
+                    <file-server protocol="srm" url="srm://se.unl.edu" mount-point="/hadoop/engage"/>
+                    <internal-mount-point mount-point="/hadoop/engage"/>
+                </shared>
+            </scratch>
+            <storage />
+        </head-fs>
+        <replica-catalog type="LRC" url="rlsn://dummyValue.url.edu" />
+    </site>
+</sitecatalog>
+EOF
+
+# plan and submit the  workflow
+pegasus-plan \
+    --conf pegasusrc \
+    --sites OSG \
+    --staging-site SRM \
+    --dir work \
+    --output local \
+    --nocleanup \
+    --dax blackdiamond.dax \
+
