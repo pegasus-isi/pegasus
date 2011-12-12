@@ -197,6 +197,8 @@ prog_base = os.path.split(sys.argv[0])[1]   # Name of this program
 
 logger = logging.getLogger("my_logger")
 
+# timeout for when shelling out
+default_subshell_timeout = 6 * 60 * 60;
 
 # this is the map of what tool to use for a given protocol pair (src, dest)
 tool_map = {}
@@ -304,7 +306,7 @@ def myexec(cmd_line, timeout_secs, should_log):
     signal.signal(signal.SIGALRM, alarm_handler)
     signal.alarm(timeout_secs)
 
-    p = subprocess.Popen(cmd_line + " 2>&1", shell=True)
+    p = subprocess.Popen(cmd_line, shell=True)
     try:
         stdoutdata, stderrdata = p.communicate()
     except Alarm:
@@ -448,7 +450,7 @@ def cp(transfers, failed_q):
         prepare_local_dir(os.path.dirname(transfer.dst_path))
         cmd = "/bin/cp -f -L \"%s\" \"%s\"" % (transfer.src_path, transfer.dst_path)
         try:
-            myexec(cmd, 6*60*60, True)
+            myexec(cmd, default_subshell_timeout, True)
         except RuntimeError, err:
             logger.error(err)
             failed_q.append(transfer)
@@ -501,7 +503,7 @@ def scp(transfers, failed_q):
             cmd += " " + transfer.dst_host + ":" + transfer.dst_path
             stats_add(transfer.src_path)
         try:
-            myexec(cmd, 60, True)
+            myexec(cmd, default_subshell_timeout, True)
             if transfer.dst_proto == "file":
                 stats_add(transfer.dst_path)    
         except RuntimeError, err:
@@ -526,7 +528,7 @@ def webget(transfers, failed_q):
             cmd += " -q"
         cmd += " --no-check-certificate -O \"" + transfer.dst_path + "\" \"" + transfer.src_url() + "\""
         try:
-            myexec(cmd, 1*60*60, True)
+            myexec(cmd, default_subshell_timeout, True)
             stats_add(transfer.dst_path)
         except RuntimeError, err:
             logger.error(err)
@@ -675,7 +677,7 @@ def gsiftp_do_transfers(transfers, failed_q, create_dest, third_party):
 
     cmd += " -f " + tmp_name
     try:
-        myexec(cmd, 6*60*60, True)
+        myexec(cmd, default_subshell_timeout, True)
     
         # stat the files
         for i, filename in enumerate(delayed_file_stat): 
@@ -714,7 +716,7 @@ def irods_login():
     h.close()
     
     cmd = "cat .irodsAc | iinit"
-    myexec(cmd, 60*60, True)
+    myexec(cmd, 5*60, True)
         
     os.unlink(".irodsAc")
 
@@ -752,7 +754,7 @@ def irods(transfers, failed_q):
             cmd = "iput -f " + url_pair.src_path + " " +  url_pair.dst_path
 
         try:
-            myexec(cmd, 6*60*60, True)
+            myexec(cmd, default_subshell_timeout, True)
             # stats      
             if url_pair.dst_proto == "file":
                 stats_add(url_pair.dst_path)
@@ -865,7 +867,7 @@ def s3(transfers, failed_q):
             cmd = "pegasus-s3 put %s %s" % (url_pair.src_path, url_pair.dst_url())
 
         try:
-            myexec(cmd, 6*60*60, True)
+            myexec(cmd, default_subshell_timeout, True)
             stats_add(local_filename)
         except Exception, err:
             logger.error(err)
@@ -1239,7 +1241,7 @@ stats_end = time.time()
 stats_summarize()
 
 if failed_q:
-    logger.critical("Some transfers failed! See above.")
+    logger.critical("Some transfers failed! See above, and possibly stderr.")
     myexit(1)
 
 logger.info("All transfers completed successfully.")
