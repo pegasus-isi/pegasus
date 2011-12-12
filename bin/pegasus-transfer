@@ -472,7 +472,7 @@ def scp(transfers, failed_q):
             cmd += " " + transfer.dst_host + ":" + transfer.dst_path
             stats_add(transfer.src_path)
         try:
-            myexec(cmd, 60, True)
+            myexec(cmd, 6*60*60, True)
             if transfer.dst_proto == "file":
                 stats_add(transfer.dst_path)    
         except RuntimeError, err:
