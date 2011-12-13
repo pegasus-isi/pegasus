@@ -602,54 +602,57 @@ public class CPlanner extends Executable{
             }
             mLogger.log( message + " -DONE", LogManager.INFO_MESSAGE_LEVEL );
 
-            //create the submit files for cleanup dag if
-            //random dir option specified
-            if(mPOptions.generateRandomDirectory() && !emptyWorkflow ){
-                ADag cleanupDAG = cwmain.getCleanupDAG();
-                
-                //the cleanup dags are never part of hierarichal workflows
-                //for time being 
-                cleanupDAG.setRootWorkflowUUID( cleanupDAG.getWorkflowUUID() );
-                
-                //set the refinement started flag to get right events
-                //generated for stampede for cleanup workflow
-                cleanupDAG.setWorkflowRefinementStarted( true );
-                
-                PlannerOptions cleanupOptions = (PlannerOptions)mPOptions.clone();
-
-                //submit files are generated in a subdirectory
-                //of the submit directory
-                message = "Generating code for the cleanup workflow";
-                mLogger.log( message, LogManager.INFO_MESSAGE_LEVEL );
-                //set the submit directory in the planner options for cleanup wf
-                cleanupOptions.setSubmitDirectory( cleanupOptions.getSubmitDirectory(), this.CLEANUP_DIR );
-                PegasusBag bag = cwmain.getPegasusBag();
-                bag.add( PegasusBag.PLANNER_OPTIONS, cleanupOptions );
-
-                //create a separate properties file for the cleanup workflow.
-                //pegasus run should not launch monitord for the cleanup workflow
-                PegasusProperties cleanupWFProperties = PegasusProperties.nonSingletonInstance();
-                cleanupWFProperties.setProperty( PEGASUS_MONITORD_LAUNCH_PROPERTY_KEY, "false" );
-                try {
-                    cleanupWFProperties.writeOutProperties(cleanupOptions.getSubmitDirectory());
-                } catch (IOException ex) {
-                    throw new RuntimeException( "Unable to write out properties for the cleanup workflow ", ex );
-                }
-                bag.add( PegasusBag.PEGASUS_PROPERTIES , cleanupWFProperties );
-
-                codeGenerator = CodeGeneratorFactory.
-                              loadInstance( bag );
-
-                try{
-                    codeGenerator.generateCode(cleanupDAG);
-                }
-                catch ( Exception e ){
-                    throw new RuntimeException( "Unable to generate code", e );
-                }
-
-                mLogger.log(message + " -DONE",LogManager.INFO_MESSAGE_LEVEL);
-            }
-
+// CLEANUP WORKFLOW GENERATION IS DISABLED FOR 3.2
+// JIRA PM-529
+//
+//            //create the submit files for cleanup dag if
+//            //random dir option specified
+//            if(mPOptions.generateRandomDirectory() && !emptyWorkflow ){
+//                ADag cleanupDAG = cwmain.getCleanupDAG();
+//
+//                //the cleanup dags are never part of hierarichal workflows
+//                //for time being
+//                cleanupDAG.setRootWorkflowUUID( cleanupDAG.getWorkflowUUID() );
+//
+//                //set the refinement started flag to get right events
+//                //generated for stampede for cleanup workflow
+//                cleanupDAG.setWorkflowRefinementStarted( true );
+//
+//                PlannerOptions cleanupOptions = (PlannerOptions)mPOptions.clone();
+//
+//                //submit files are generated in a subdirectory
+//                //of the submit directory
+//                message = "Generating code for the cleanup workflow";
+//                mLogger.log( message, LogManager.INFO_MESSAGE_LEVEL );
+//                //set the submit directory in the planner options for cleanup wf
+//                cleanupOptions.setSubmitDirectory( cleanupOptions.getSubmitDirectory(), CPlanner.CLEANUP_DIR );
+//                PegasusBag bag = cwmain.getPegasusBag();
+//                bag.add( PegasusBag.PLANNER_OPTIONS, cleanupOptions );
+//
+//                //create a separate properties file for the cleanup workflow.
+//                //pegasus run should not launch monitord for the cleanup workflow
+//                PegasusProperties cleanupWFProperties = PegasusProperties.nonSingletonInstance();
+//                cleanupWFProperties.setProperty( PEGASUS_MONITORD_LAUNCH_PROPERTY_KEY, "false" );
+//                try {
+//                    cleanupWFProperties.writeOutProperties(cleanupOptions.getSubmitDirectory());
+//                } catch (IOException ex) {
+//                    throw new RuntimeException( "Unable to write out properties for the cleanup workflow ", ex );
+//                }
+//                bag.add( PegasusBag.PEGASUS_PROPERTIES , cleanupWFProperties );
+//
+//                codeGenerator = CodeGeneratorFactory.
+//                              loadInstance( bag );
+//
+//                try{
+//                    codeGenerator.generateCode(cleanupDAG);
+//                }
+//                catch ( Exception e ){
+//                    throw new RuntimeException( "Unable to generate code", e );
+//                }
+//
+//                mLogger.log(message + " -DONE",LogManager.INFO_MESSAGE_LEVEL);
+//            }
+// END OF COMMENTED OUT CODE
 
             //write out  the planner metrics  to global log
             mPMetrics.setEndTime( new Date() );

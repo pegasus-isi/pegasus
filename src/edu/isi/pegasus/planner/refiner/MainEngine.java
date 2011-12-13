@@ -257,17 +257,20 @@ public class MainEngine
             mCreateEng.addCreateDirectoryNodes( mReducedDag );
             mCreateEng = null;
             mLogger.logEventCompletion();
-
-            //create the cleanup dag
-            message = "Generating the cleanup workflow";
-            //mLogger.log(message,LogManager.INFO_MESSAGE_LEVEL);
-            mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_GENERATE_CLEANUP_WF, LoggingKeys.DAX_ID, mOriginalDag.getAbstractWorkflowName() );
-            //for the cleanup dag the submit directory is the cleanup
-            //subdir
-            File submitDir = new File( this.mPOptions.getSubmitDirectory(), MainEngine.CLEANUP_DIR );
-            mRemoveEng = new RemoveDirectory( mReducedDag, mBag, submitDir.getAbsolutePath() );
-            mCleanupDag = mRemoveEng.generateCleanUPDAG( );
-            mLogger.logEventCompletion();
+            
+// CLEANUP WORKFLOW GENERATION IS DISABLED FOR 3.2
+// JIRA PM-529
+//            //create the cleanup dag
+//            message = "Generating the cleanup workflow";
+//            //mLogger.log(message,LogManager.INFO_MESSAGE_LEVEL);
+//            mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_GENERATE_CLEANUP_WF, LoggingKeys.DAX_ID, mOriginalDag.getAbstractWorkflowName() );
+//            //for the cleanup dag the submit directory is the cleanup
+//            //subdir
+//            File submitDir = new File( this.mPOptions.getSubmitDirectory(), MainEngine.CLEANUP_DIR );
+//            mRemoveEng = new RemoveDirectory( mReducedDag, mBag, submitDir.getAbsolutePath() );
+//            mCleanupDag = mRemoveEng.generateCleanUPDAG( );
+//            mLogger.logEventCompletion();
+// END OF COMMENTED OUT CODE
         }
 
         //add the cleanup nodes in place
