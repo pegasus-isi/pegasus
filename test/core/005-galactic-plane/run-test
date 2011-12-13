@@ -1,0 +1,16 @@
+#!/bin/bash
+
+set -e
+
+TOP_DIR=`pwd`
+
+export PATH=/ccg/software/montage/Montage_v3.3_mats/bin:$PATH
+
+USERID=`id -u`
+
+cp ccg-test.config.template ccg-test.config
+perl -p -i -e "s/\[USER\]/$USER/g" ccg-test.config
+perl -p -i -e "s/\[USERID\]/$USERID/g" ccg-test.config
+
+./galactic-plane ccg.config
+

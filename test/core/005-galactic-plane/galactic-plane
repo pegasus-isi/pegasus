@@ -1,0 +1,385 @@
+#!/usr/bin/env python
+
+"""
+Creates a uber workflow over Montage to generate tiles 
+for the galactic plane
+
+Usage: galactic-plane [options]
+"""
+
+##
+#  Copyright 2007-2010 University Of Southern California
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing,
+#  software distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+##
+
+import os
+import re
+import sys
+import errno
+import logging
+import optparse
+import tempfile
+import subprocess
+import math
+import time
+import socket
+import string
+import ConfigParser
+
+# set PEGASUS_HOME - transition from Pegasus 2.4
+pegasus_home = None
+paths = string.split(os.environ["PATH"], ":")
+for path in paths:
+    if os.path.isfile(os.path.join(path, "pegasus-plan")):
+        pegasus_home = os.path.normpath(os.path.join(path, ".."))
+        os.environ["PEGASUS_HOME"] = pegasus_home
+        break
+if pegasus_home == None:
+    raise RuntimeError("pegasus-plan not found in the PATH")
+
+sys.path.append(os.getenv("PEGASUS_HOME") + "/lib/pegasus/python")
+from Pegasus.DAX3 import *
+
+__author__ = "Mats Rynge <rynge@isi.edu>"
+
+# --- settings ------------------------------------------------------------------------
+
+monitord_output = None
+
+config = ConfigParser.ConfigParser()
+config.read(sys.argv[1])
+
+mode                     = config.get('main', 'mode')
+if config.has_option('main', 'monitord_output'):
+    monitord_output      = config.get('main', 'monitord_output')
+
+survey                   = config.get('tiles', 'survey')
+band                     = config.get('tiles', 'band')
+min_lon                  = config.getfloat('tiles', 'min_lon')
+max_lon                  = config.getfloat('tiles', 'max_lon')
+min_lat                  = config.getfloat('tiles', 'min_lat')
+max_lat                  = config.getfloat('tiles', 'max_lat')
+tile_size                = config.getfloat('tiles', 'size')
+tile_overlap             = config.getfloat('tiles', 'overlap')
+
+local_work_dir           = config.get('local', 'work_dir')
+local_montage_location   = config.get('local', 'montage_location')
+x509_user_proxy          = config.get('local', 'x509_user_proxy')
+
+cluster_name             = config.get('cluster', 'name')
+cluster_pegasus_home     = config.get('cluster', 'pegasus_home')
+cluster_globus_location  = config.get('cluster', 'globus_location')
+cluster_montage_location = config.get('cluster', 'montage_location')
+
+staging_name             = config.get('staging', 'name')
+staging_storage_proto    = config.get('staging', 'storage_proto')
+staging_storage_url      = config.get('staging', 'storage_url')
+staging_storage_mount    = config.get('staging', 'storage_mount')
+
+output_name              = config.get('output', 'name')
+output_storage_proto    = config.get('output', 'storage_proto')
+output_storage_url      = config.get('output', 'storage_url')
+output_storage_mount    = config.get('output', 'storage_mount')
+
+
+# --- classes -------------------------------------------------------------------------
+
+class Tile:
+
+    center_lon = 0.0
+    center_lat = 0.0
+    size       = 1.0
+
+    def __init__(self, center_lon, center_lat, size):
+        self.center_lon = center_lon
+        self.center_lat = center_lat
+        self.size = size
+
+
+
+# --- global variables ----------------------------------------------------------------
+
+local_galacticplane_location = os.path.dirname(os.path.realpath( __file__ ))
+local_hostname = socket.getfqdn()
+run_id = ""
+work_dir = ""
+gp_files = []
+gp_jobs = []
+gp_relations = []
+
+
+# --- functions -----------------------------------------------------------------------
+
+
+def myexec(cmd_line):
+    sys.stdout.flush()
+    p = subprocess.Popen(cmd_line + " 2>&1", shell=True)
+    stdoutdata, stderrdata = p.communicate()
+    r = p.returncode
+    if r != 0:
+        raise RuntimeError("Command '%s' failed with error code %s" % (cmd_line, r))
+
+
+def create_work_dir():
+    global run_id
+    global work_dir
+    lt = time.localtime(time.time())
+    run_id = "galactic-plane-%04d%02d%02d-%02d%02d%02d" % (lt[0], lt[1], lt[2], lt[3], lt[4], lt[5])
+    work_dir = "%s/%s" % (local_work_dir, run_id)
+    print "Work dir is: " + work_dir
+    os.makedirs(work_dir)
+
+
+def add_tile(mode, uberdax, tile_id, lon, lat):
+
+    tile_work_dir = "%s/tiles/%s" % (work_dir, tile_id)
+    
+    # parameters file
+    pf = open("%s/%s.params" % (work_dir, tile_id), 'w')
+    pf.write("export TILE_ID=\"%s\"\n" % (tile_id))
+    pf.write("export CLUSTER_NAME=\"%s\"\n" % (cluster_name))
+    pf.write("export WF_MANAGER_HOST=\"%s\"\n" % (local_hostname))
+    pf.write("export TILE_WORK_DIR=\"%s\"\n" % (tile_work_dir))
+    pf.write("export SURVEY=\"%s\"\n" % (survey))
+    pf.write("export BAND=\"%s\"\n" % (band))
+    pf.write("export CENTER_LON=\"%f\"\n" % (lon))
+    pf.write("export CENTER_LAT=\"%f\"\n" % (lat))
+    pf.write("export TILE_SIZE=\"%f\"\n"  % (tile_size))
+    pf.close()
+
+    # params input file
+    params = File("%s.params" % (tile_id))
+    params.addPFN(PFN("gsiftp://%s%s/%s.params" % (local_hostname, work_dir, tile_id), "local"))
+    uberdax.addFile(params)
+    mdagtar = File("%s.tar.gz" % (tile_id))
+
+    remote_tile_setup = Job(namespace="gp", name="remote_tile_setup", version="1.0",
+                            id="rts-%s"%(tile_id))
+    remote_tile_setup.addArguments(mode)
+    remote_tile_setup.addArguments(tile_id)
+    remote_tile_setup.addProfile(Profile("dagman", "CATEGORY", "remote_tile_setup"))
+    remote_tile_setup.uses(params, link=Link.INPUT, register=False)
+    remote_tile_setup.uses(mdagtar, link=Link.OUTPUT, register=False, transfer=True)
+    remote_tile_setup.invoke('on_error',  local_galacticplane_location + "/notify")
+    uberdax.addJob(remote_tile_setup)
+    
+    if mode == "prefetch":
+        return
+
+    local_tile_setup = Job(namespace="gp", name="local_tile_setup", version="1.0",
+                           id="lts-%s"%(tile_id))
+    local_tile_setup.addArguments(tile_id)
+    local_tile_setup.addProfile(Profile("hints", "executionPool", "local"))
+    local_tile_setup.uses(params, link=Link.INPUT, register=False)
+    local_tile_setup.uses(mdagtar, link=Link.INPUT, register=False)
+    uberdax.addJob(local_tile_setup)
+    uberdax.depends(parent=remote_tile_setup, child=local_tile_setup)
+
+    # dax file 
+    subdax_file = File("%s.dax" % (tile_id))
+    subdax_file.addPFN(PFN("file://%s/dag.xml" % (tile_work_dir), "local"))
+    uberdax.addFile(subdax_file)
+
+    subwf = DAX("%s.dax" % (tile_id), id="sub-%s" % (tile_id))
+    subwf.addArguments("-Dpegasus.catalog.replica.file=%s/rc.data" % (tile_work_dir),
+                       "-Dpegasus.catalog.site.file=%s/sites.xml" % (work_dir),
+                       "-Dpegasus.transfer.links=true",
+                       "--cluster", "horizontal",
+                       "--sites", cluster_name,
+                       "--basename", tile_id,
+                       "--force",
+                       "--force-replan",
+                       "--output", output_name)
+    subwf.addProfile(Profile("dagman", "CATEGORY", "subworkflow"))
+    subwf.uses(subdax_file, link=Link.INPUT, register=False)
+    subwf.invoke('at_end',  local_galacticplane_location + "/notify")
+    uberdax.addDAX(subwf)
+    uberdax.depends(parent=local_tile_setup, child=subwf)
+
+    remote_extra_cleanup = Job(namespace="gp", name="remote_extra_cleanup", version="1.0",
+                               id="rec-%s"%(tile_id))
+    remote_extra_cleanup.addArguments(tile_id)
+    remote_extra_cleanup.uses(params, link=Link.INPUT, register=False)
+    uberdax.addJob(remote_extra_cleanup)
+    uberdax.depends(parent=subwf, child=remote_extra_cleanup)
+
+
+
+def generate_pegasus_rc(mode):
+    rc = open(work_dir + "/pegasusrc", "w")
+    rc.write("pegasus.catalog.replica=SimpleFile\n")
+    rc.write("pegasus.catalog.replica.file=%s/rc.data\n" % (work_dir))
+    rc.write("pegasus.catalog.site=XML3\n")
+    rc.write("pegasus.catalog.site.file=%s/sites.xml\n" % (work_dir))
+    rc.write("pegasus.catalog.transformation=File\n")
+    rc.write("pegasus.catalog.transformation.file=%s/tc.data\n" % (work_dir))
+    rc.write("pegasus.execute.*.filesystem.local=true\n")
+    rc.write("pegasus.gridstart=PegasusLite\n")
+    rc.write("pegasus.clusterer.job.aggregator.seqexec.firstjobfail=true\n")
+    rc.write("pegasus.file.cleanup.scope=deferred\n")
+    rc.write("pegasus.dir.useTimestamp=true\n")
+    rc.write("pegasus.dir.storage.deep=false\n")
+    rc.write("pegasus.condor.logs.symlink=false\n")
+    rc.write("pegasus.stagein.clusters=10\n")
+    rc.write("pegasus.stageout.clusters=100\n")
+    rc.write("pegasus.transfer.stagein.remote.sites=%s\n" % (cluster_name))   
+    rc.write("condor.periodic_release=2\n")
+    rc.write("condor.periodic_remove=2\n")
+    rc.write("dagman.maxpre=5\n")
+    rc.write("dagman.retry=2\n")
+    rc.write("dagman.remote_tile_setup.maxjobs=10\n")
+    rc.write("dagman.subworkflow.maxjobs=6\n")
+    if monitord_output != None:
+        rc.write("pegasus.monitord.output=%s\n" % (monitord_output))
+
+    rc.close()
+
+
+def generate_sc():
+
+    sc = open(work_dir + "/sites.xml", 'w')
+    sc.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
+    sc.write("<sitecatalog xmlns=\"http://pegasus.isi.edu/schema/sitecatalog\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-3.0.xsd\" version=\"3.0\">\n")
+    sc.write("    <site  handle=\"local\" arch=\"x86\" os=\"LINUX\">\n")
+    sc.write("        <head-fs>\n")
+    sc.write("            <scratch>\n")
+    sc.write("                <shared>\n")
+    sc.write("                    <file-server protocol=\"gsiftp\" url=\"gsiftp://%s\" mount-point=\"%s/scratch\"/>\n" % (local_hostname, work_dir))
+    sc.write("                    <internal-mount-point mount-point=\"%s/scratch\" free-size=\"100G\" total-size=\"30G\"/>\n" % (work_dir))
+    sc.write("                </shared>\n")
+    sc.write("            </scratch>\n")
+    sc.write("            <storage />\n")
+    sc.write("        </head-fs>\n")
+    sc.write("        <replica-catalog  type=\"LRC\" url=\"rlsn://dummyValue.url.edu\" />\n")
+    sc.write("        <profile namespace=\"env\" key=\"PEGASUS_HOME\" >%s</profile>\n" % (os.environ["PEGASUS_HOME"]))
+    sc.write("        <profile namespace=\"env\" key=\"GLOBUS_LOCATION\" >%s</profile>\n" % (os.environ["GLOBUS_LOCATION"]))
+    sc.write("        <profile namespace=\"env\" key=\"PATH\" >%s:%s/bin:%s</profile>\n" %(local_galacticplane_location, local_montage_location, os.environ["PATH"]))
+    sc.write("    </site>\n")
+    sc.write("    <site  handle=\"%s\" arch=\"x86\" os=\"LINUX\">\n" %(cluster_name))
+    sc.write("        <head-fs>\n")
+    sc.write("            <scratch />\n")
+    sc.write("            <storage />\n")
+    sc.write("        </head-fs>\n")
+    sc.write("        <replica-catalog  type=\"LRC\" url=\"rlsn://dummyValue.url.edu\" />\n")
+    sc.write("        <profile namespace=\"pegasus\" key=\"style\">glideinwms</profile>\n")
+    sc.write("        <profile namespace=\"condor\" key=\"+DESIRED_Sites\">&quot;%s&quot;</profile>\n" % (cluster_name))
+    sc.write("        <profile namespace=\"condor\" key=\"x509userproxy\">%s</profile>\n" % (x509_user_proxy))
+    sc.write("        <profile namespace=\"env\" key=\"PEGASUS_HOME\" >%s</profile>\n" % (cluster_pegasus_home))
+    sc.write("        <profile namespace=\"env\" key=\"GLOBUS_LOCATION\" >%s</profile>\n" % (cluster_globus_location))
+    sc.write("        <profile namespace=\"env\" key=\"MONTAGE_HOME\" >%s</profile>\n" %(cluster_montage_location))
+    sc.write("    </site>\n")
+    sc.write("    <site  handle=\"%s\" arch=\"x86\" os=\"LINUX\">\n" %(staging_name))
+    sc.write("        <head-fs>\n")
+    sc.write("            <scratch>\n")
+    sc.write("                <shared>\n")
+    sc.write("                    <file-server protocol=\"%s\" url=\"%s\" mount-point=\"%s\"/>\n" % (staging_storage_proto, staging_storage_url, staging_storage_mount))
+    sc.write("                    <internal-mount-point mount-point=\"%s\"/>\n" % (staging_storage_mount))
+    sc.write("                </shared>\n")
+    sc.write("            </scratch>\n")
+    sc.write("        </head-fs>\n")
+    sc.write("        <replica-catalog  type=\"LRC\" url=\"rlsn://dummyValue.url.edu\" />\n")
+    sc.write("    </site>\n")
+    sc.write("    <site  handle=\"%s\" arch=\"x86\" os=\"LINUX\">\n" %(output_name))
+    sc.write("        <head-fs>\n")
+    sc.write("            <scratch />\n")
+    sc.write("            <storage>\n")
+    sc.write("                <shared>\n")
+    sc.write("                    <file-server protocol=\"%s\" url=\"%s\" mount-point=\"%s/%s\"/>\n" % (output_storage_proto, output_storage_url, output_storage_mount, run_id))
+    sc.write("                    <internal-mount-point mount-point=\"%s/%s\"/>\n" % (output_storage_mount, run_id))
+    sc.write("                </shared>\n")
+    sc.write("            </storage>\n")
+    sc.write("        </head-fs>\n")
+    sc.write("        <replica-catalog  type=\"LRC\" url=\"rlsn://dummyValue.url.edu\" />\n")
+    sc.write("    </site>\n")
+    sc.write("</sitecatalog>\n")
+    sc.close()
+
+
+def generate_tc():
+    # tc needs to be in old format to work with montage
+    tc = open(work_dir + "/tc.data", 'w')
+    tc.write("%s        gp::remote_tile_setup:1.0         gsiftp://%s%s/remote-tile-setup      STATIC_BINARY   INTEL32::LINUX     condor::priority=100\n" % (cluster_name, local_hostname, local_galacticplane_location))
+    tc.write("%s        gp::remote_extra_cleanup:1.0      gsiftp://%s%s/remote-extra-cleanup   STATIC_BINARY   INTEL32::LINUX     condor::priority=1000\n" % (cluster_name, local_hostname, local_galacticplane_location))
+    tc.write("local     gp::local_tile_setup:1.0          %s/local-tile-setup                  INSTALLED   INTEL32::LINUX\n" % (local_galacticplane_location))
+    # for the sub workflows
+    tc.write("%s        pegasus::dirmanager               %s/bin/pegasus-dirmanager            INSTALLED   INTEL32::LINUX\n" % (cluster_name, cluster_pegasus_home))
+    tc.write("%s        pegasus::kickstart                %s/bin/kickstart                     INSTALLED   INTEL32::LINUX\n" % (cluster_name, cluster_pegasus_home))
+    tc.write("%s        pegasus::seqexec                  %s/bin/seqexec                       INSTALLED   INTEL32::LINUX\n" % (cluster_name, cluster_pegasus_home))
+    tc.write("%s        pegasus::cleanup                  %s/bin/pegasus-cleanup               INSTALLED   INTEL32::LINUX\n" % (cluster_name, cluster_pegasus_home))
+    tc.write("%s        pegasus::pegasus-transfer         %s/bin/pegasus-transfer              INSTALLED   INTEL32::LINUX\n" % (cluster_name, cluster_pegasus_home))
+    # list all montage binaries
+    for binary in os.listdir(local_montage_location + "/bin/"):
+        cluster = 100
+        if binary == "mProject":
+            cluster = 50
+        tc.write("%s        %s:3.3                            %s/bin/%s                          INSTALLED   INTEL32::LINUX   PEGASUS::clusters.size=%d\n" % (cluster_name, binary, cluster_montage_location, binary, cluster))
+    tc.close()
+
+
+def main():
+
+    create_work_dir()
+
+    # find the center, and use that as a starting point for our calculations
+    # this is so that we tiles will overshoot equally much on each boundry
+    clon = (max_lon + min_lon) / 2.0
+    clat = (max_lat + min_lat) / 2.0
+    print "Center of the tiled area is: %f, %f" % (clon, clat)
+
+    # spacing between tiles
+    spacing = (float)(tile_size - tile_overlap)
+    print "Spacing between the tiles will be %f" % (spacing)
+
+    # tiles needed
+    tiles_hori = int(math.ceil((max_lon - min_lon) / spacing))
+    tiles_vert = int(math.ceil((max_lat - min_lat) / spacing))
+    print "%d tiles needed horizontally" %(tiles_hori)
+    print "%d tiles needed vertically" %(tiles_vert)
+    print "Total number of tiles: %d" % (tiles_vert * tiles_hori)
+
+    # uber dax
+    uberdax = ADAG("gp")
+    uberdax.invoke('all',  local_galacticplane_location + "/notify")
+
+    # start from top left, and move down in rows
+    start_lon = clon - spacing * (tiles_vert / 2.0) + (spacing / 2)
+    start_lat = clat + spacing * (tiles_vert / 2.0) - (spacing / 2)
+    tile_id = 0
+    for ny in range(0, tiles_vert):
+        for nx in range(0, tiles_hori):
+            lon = start_lon + (nx * spacing)
+            lat = start_lat - (ny * spacing)
+            tile_id = "tile_%+06.0f_%+06.0f" % (lat * 100, lon * 100)
+            tile_id = tile_id.replace("+", "_")
+            add_tile(mode, uberdax, tile_id, lon, lat)
+
+    generate_pegasus_rc(mode)
+    generate_sc()
+    generate_tc()
+   
+    daxfile = open(work_dir + "/gp.dax", "w")
+    uberdax.writeXML(daxfile)
+    daxfile.close()
+
+    print "Planning and submitting the uberdax..."
+    os.chdir(work_dir)
+    os.environ["JAVA_HEAPMAX"] = "512"
+    cmd = "pegasus-plan -vvvv --conf pegasusrc --relative-dir " + run_id + " --sites " + cluster_name + " --dir . --output local --dax gp.dax --nocleanup --submit 2>&1 | tee pegasus-plan.out"
+    myexec(cmd)
+
+
+# --- main ----------------------------------------------------------------------------
+
+main()
+
