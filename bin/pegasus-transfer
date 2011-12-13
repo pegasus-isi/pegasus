@@ -74,6 +74,7 @@ class Transfer:
     dst_path       = ""      #
     allow_grouping = True    # can this transfer be grouped with others?
     policy_id      = ""      # ID assigned by Policy Web Service (when used)
+    policies       = {}      # Dictionary with policy settings
 
     def __init__(self, pair_id):
         """
@@ -93,6 +94,13 @@ class Transfer:
         """
         self.policy_id = id
     
+    def set_policies(self, policies):
+        """
+        When using a policy server, add dictionary structure representing those
+        policies.
+        """
+        self.policies = policies
+
     def parse_url(self, url):
         proto = ""
         host = ""
@@ -516,7 +524,7 @@ def webget(transfers, failed_q):
     if len(transfers) == 0:
         return
     if len(transfers) > 0 and tool_info['wget']['full_path'] == None:
-        raise RuntimeError("Unable to do http/https transfers becuase wget could not be found")
+        raise RuntimeError("Unable to do http/https transfers because wget could not be found")
     for i, transfer in enumerate(transfers): 
         prepare_local_dir(os.path.dirname(transfer.dst_path))
         cmd = tool_info['wget']['full_path']
@@ -535,7 +543,7 @@ def webget(transfers, failed_q):
 
 def transfers_groupable(a, b):
     """
-    compares two url_pairs, and determins if they are similar enough to be
+    compares two url_pairs, and determines if they are similar enough to be
     grouped together for one tool
     """
     if not a.groupable() or not b.groupable():
@@ -549,9 +557,12 @@ def transfers_groupable(a, b):
 
 def gsiftp_similar(a, b):
     """
-    compares two url_pairs, and determins if they are similar enough to be
+    compares two url_pairs, and determines if they are similar enough to be
     grouped together in one transfer input file
     """
+    # When policy service used, it sets same ID for grouped files
+    if 'group_id' in a.policies and 'group_id' in b.policies :
+        return a.policies['group_id'] == b.policies['group_id']
     if a.src_host != b.src_host:
         return False
     if a.dst_host != b.dst_host:
@@ -571,7 +582,7 @@ def gsiftp(full_list, failed_q, attempt):
         return
     
     if tool_info['globus-url-copy']['full_path'] == None:
-        raise RuntimeError("Unable to do gsiftp transfers becuase globus-url-copy could not be found")
+        raise RuntimeError("Unable to do gsiftp transfers because globus-url-copy could not be found")
 
     # create lists with similar (same src host/path, same dst host/path) url pairs
     while len(full_list) > 0:
@@ -605,9 +616,10 @@ def gsiftp(full_list, failed_q, attempt):
         first_list = []
         first_list.append(similar_list.pop())
         gsiftp_do_transfers(first_list, failed_q, True, third_party)
+        delete_policy_requests(first_list)
         if len(similar_list) > 0:
             gsiftp_do_transfers(similar_list, failed_q, False, third_party)
-
+            delete_policy_requests(similar_list)
 
 
 
@@ -968,15 +980,20 @@ def myexit(rc):
 def post_policy_requests(inputs):
     """
     Format a request to the policy web service with the input Transfer objects.
-    @param inputs: List of transfers to process
+    @param inputs: List of Transfer objects to process
     @type inputs: list
     @return: List of Transfer objects as modified by the web service.
     @rtype: list
     """
+    if not using_policy_service or len(inputs) == 0:
+        return None
     logger.debug("post_policy_requests entered; input list has %d Transfers", len(inputs))
+
     transfers = []
-    for pt in inputs:
-        transfer = {'source' : pt.src_url(), 'destination' : pt.dst_url(), 'properties' : None }
+    for t in inputs:
+        logger.debug("Procing input Transfer object: ID=%d src=%s dest=%s"
+                     %(t.pair_id, t.src_url(), t.dst_url()))
+        transfer = {'source' : t.src_url(), 'destination' : t.dst_url(), 'properties' : {} }
         transfers.append(transfer)
 
     policy_requests = json.dumps(transfers)
@@ -985,12 +1002,17 @@ def post_policy_requests(inputs):
         ws = HTTPConnection(policy_host, policy_port)
         ws.request('POST', policy_url, policy_requests, policy_headers)
         resp = ws.getresponse();
+        # Check for the HTTP Success response code.
+        if resp.status != OK:
+            logger.critical("HTTP protocol error from service: %d Full text: %s" %(resp.status, resp.read()))
+            raise RuntimeError("HTTP protocol error from service: %d Reason: %s" %(resp.status, resp.reason))
         logger.info("policy web service status: %d", resp.status)
         resp_string = resp.read()
         ws.close()
+        ws = None
     except HTTPException, e:
-        logger.critical("Exception communicating with policy web servcie: %s", e.str())
-        raise RuntimeError("Exception communicating with policy web servcie: %s" %(e.str()))
+        logger.exception("HTTPException communicating with policy web servcie:")
+        raise RuntimeError("HTTPException communicating with policy web servcie.")
     except SocketError, (value, message):
         logger.critical("socket exception: [ERRNO%s] %s", value, message)
         raise RuntimeError("socket exception: [ERRNO%s] %s" %(value, message))
@@ -1008,7 +1030,8 @@ def post_policy_requests(inputs):
         policy_transfer.set_src(pt['source']);
         policy_transfer.set_dst(pt['destination'])
         policy_transfer.set_policy_id(pt['id'])
-        logger.debug("appending Transfer %d, id=%s", pair_nr, policy_transfer.policy_id )
+        policy_transfer.set_policies(pt['properties'])
+        logger.debug("appending Transfer %d, id=%s, policy properties = %s", pair_nr, policy_transfer.policy_id, policy_transfer.policies )
         inputs.append(policy_transfer)
 
     logger.debug("post_policy_requests return")
@@ -1023,27 +1046,41 @@ def delete_policy_requests(transfers):
     @type transfers: list
     @return: Nothing.
     """
-    logger.debug("delete_policy_requests enter; input list has %d Transfers", len(transfers))
+    logger.debug("delete_policy_requests enter; input list has %d Transfers",
+                 len(transfers))
+
+    if not using_policy_service or len(transfers) == 0:
+        return
+
     try: 
         ws = HTTPConnection(policy_host, policy_port)
+        ws.connect()
         for transfer in transfers:
             delete_request = policy_url + transfer.policy_id
             logger.debug("Sending DELETE request: %s", delete_request)
             ws.request('DELETE', delete_request)
+            # TODO What if the server is slow and not ready to respond? httplib
+            # throws a ResponseNotReady exception, which in 2.6 doesn't have any
+            # useful text assigned to the exception message.
             resp = ws.getresponse();
+            if resp.status != OK:
+                logger.critical("HTTP protocol error from service: %d Full text: %s" %(resp.status, resp.read()))
+                raise RuntimeError("HTTP protocol error from service: %d Reason: %s" %(resp.status, resp.reason))
+
             logger.debug("status for %s: %d", delete_request, resp.status)
 
         ws.close()
+        ws = None
     except HTTPException, e:
-        logger.critical("Exception communicating with policy web servcie: %s", e.str())
-        raise RuntimeError("Exception communicating with policy web servcie: %s" %(e.str()))
+        # 
+        logger.exception("HTTPException communicating with policy web servcie:")
+        raise RuntimeError("HTTPException communicating with policy web servcie.")
     except SocketError, (value, message):
         logger.critical("socket exception: [ERRNO%s] %s", value, message)
         raise RuntimeError("socket exception: [ERRNO%s] %s" %(value, message))
 
     logger.debug("delete_policy_requests exit")
-
-
+   
 # --- main ----------------------------------------------------------------------------
 
 # dup stderr onto stdout
@@ -1073,7 +1110,7 @@ if using_policy_service:
         sys.exit(1)
 
     try:
-        from httplib import HTTPConnection, HTTPException
+        from httplib import HTTPConnection, HTTPException, OK
     except ImportError:
         print >>sys.stderr, "Cannot use Policy Check: Failed to import HTTP library"
         sys.exit(1)
@@ -1110,11 +1147,15 @@ setup_logger(options.log_level)
 # overrides.
 if using_policy_service:
     if options.policy_host != None:
-        policy_host = options.policy_host
+        policy_host = options.policy_host.strip()
     if options.policy_port != None:
         policy_port = options.policy_port
     if options.policy_url != None:
-        policy_url = options.policy_url
+        policy_url = options.policy_url.strip()
+    # ensure URL ends in a slash.
+    if  not policy_url.endswith("/"):
+        logger.debug("Appending '/' to policy_url.")
+        policy_url = policy_url + "/"
 
 # Die nicely when asked to (Ctrl+C, system shutdown)
 signal.signal(signal.SIGINT, prog_sigint_handler)
@@ -1217,9 +1258,8 @@ while not done:
         # magic!
         handle_transfers(t_list, failed_q, attempt_current)
         logger.debug("%d items in failed_q" %(len(failed_q)))
-        if using_policy_service:
-            # Remove these from policy web service
-            delete_policy_requests(t_list) 
+        # Remove these from policy web service
+        delete_policy_requests(t_list) # returns immediately if not using policy service
     
     # are we done?
     if attempt_current == attempts_max or not failed_q:
