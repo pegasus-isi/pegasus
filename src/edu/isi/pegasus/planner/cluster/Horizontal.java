@@ -320,9 +320,7 @@ public class Horizontal implements Clusterer,
         List l      = null;
         //internal map that keeps the jobs according to the execution pool
         Map tempMap    = new java.util.HashMap();
-        int[] cFactor  = new int[2]; //the collapse factor for collapsing the jobs
-        cFactor[0]     = 0;
-        cFactor[1]     = 0;
+        int[] cFactor  = new int[] {0, 0, 0, 0}; //the collapse factor for collapsing the jobs
         AggregatedJob fatJob = null;
 
         mLogger.log("Collapsing jobs of type " + name,
@@ -356,14 +354,14 @@ public class Horizontal implements Clusterer,
         //particular type of job being merged.
         int id = 1;
 
-        for(Iterator it = tempMap.entrySet().iterator();it.hasNext();){
+        for( Iterator it = tempMap.entrySet().iterator();it.hasNext(); ){
             Map.Entry entry = (Map.Entry)it.next();
             l   = (List)entry.getValue();
             size= l.size();
             //the pool name on which the job is to run is the key
             key = (String)entry.getKey();
 
-            if(size <= 1){
+            if( size <= 1 ){
                 //no need to collapse one job. go to the next iteration
                 mLogger.log("\t No collapsing for execution pool " + key,
                             LogManager.DEBUG_MESSAGE_LEVEL);
@@ -379,79 +377,134 @@ public class Horizontal implements Clusterer,
             }
 
             //checks made ensure that l is not empty at this point
-            cFactor = getCollapseFactor(key,(Job)l.get(0),size);
-            if(cFactor[0] == 1 && cFactor[1] == 0){
+            cFactor = getCollapseFactor( key, (Job) l.get(0), size );
+            if( cFactor[0] == 1 && cFactor[1] == 0 ){
                 mLogger.log("\t Collapse factor of (" + cFactor[0] + "," + cFactor[1] +
                             ") determined for pool. " + key +
                             ". Skipping collapsing", LogManager.DEBUG_MESSAGE_LEVEL);
                 continue;
             }
 
-            mLogger.log("\t Collapsing jobs at execution pool " +
-                        key + " with collapse factor " +
-                        cFactor[0] + "," + cFactor[1],LogManager.DEBUG_MESSAGE_LEVEL);
+	    if (mProps.getHorizontalClusterPreference() != null
+		    && mProps.getHorizontalClusterPreference()
+		            .equalsIgnoreCase( "runtime" )) {
 
+		double maxRunTime = -1;
+		try {
+		    maxRunTime = Double
+			    .parseDouble( (String) ((Job) l.get( 0 )).vdsNS
+			            .get( Pegasus.MAX_RUN_TIME ) );
+		} catch (RuntimeException e) {
+		    throw new RuntimeException( "Profile key "
+			    + Pegasus.MAX_RUN_TIME
+			    + " is either not set, or is not a valid number.",
+			    e );
+		}
 
+		mLogger.log( "\t Collapsing jobs at execution pool " + key
+		        + " having maximum run time  " + cFactor[2],
+		        LogManager.DEBUG_MESSAGE_LEVEL );
 
+		Collections.sort( l, getBinPackingComparator() );
+
+		mLogger.log(
+		        "Job Type: " + ((Job) l.get( 0 )).getCompleteTCName()
+		                + " max runtime " + maxRunTime,
+		        LogManager.DEBUG_MESSAGE_LEVEL );
+
+		List<List<Job>> bins = bestFitBinPack( l, maxRunTime );
+
+		mLogger.log( "Jobs are merged into " + bins.size()
+		        + " clustered jobs.", LogManager.DEBUG_MESSAGE_LEVEL );
+
+		for (List<Job> bin : bins) {
+		    fatJob = aggregator.constructAbstractAggregatedJob( bin,
+			    name, constructID( partitionID, id ) );
+
+		    updateReplacementTable( bin, fatJob );
+
+		    // increment the id
+		    id++;
+
+		    // add the fat job to the dag
+		    // use the method to add, else add explicitly to DagInfo
+		    mScheduledDAG.add( fatJob );
+
+		    // log the refiner action capturing the creation of the job
+		    this.logRefinerAction( fatJob, aggregator );
+		}
+		tempMap = null;
+		return;
+	    }
+            	
             //we do collapsing in chunks of 3 instead of picking up
             //from the properties file. ceiling is (x + y -1)/y
             //cFactor = (size + 2)/3;
+	    else {
+		mLogger.log( "\t Collapsing jobs at execution pool " + key
+		        + " with collapse factor " + cFactor[0] + ","
+		        + cFactor[1], LogManager.DEBUG_MESSAGE_LEVEL );
+		if (cFactor[0] >= size) {
 
-            if(cFactor[0] >= size){
-                //means collapse all the jobs in the list as a fat node
-                //Note: Passing a link to iterator might be more efficient, as
-                //this would only require a single traversal through the list
-                fatJob = aggregator.constructAbstractAggregatedJob(l.subList(0,size),name,
-                                              constructID(partitionID,id));
-                updateReplacementTable(l.subList(0,size),fatJob);
+		    // means collapse all the jobs in the list as a fat node
+		    // Note: Passing a link to iterator might be more efficient,
+		    // as
+		    // this would only require a single traversal through the
+		    // list
+		    fatJob = aggregator.constructAbstractAggregatedJob(
+			    l.subList( 0, size ), name,
+			    constructID( partitionID, id ) );
+		    updateReplacementTable( l.subList( 0, size ), fatJob );
 
-                //increment the id
-                id++;
-                //add the fat job to the dag
-                //use the method to add, else add explicitly to DagInfo
-                mScheduledDAG.add(fatJob);
+		    // increment the id
+		    id++;
+		    // add the fat job to the dag
+		    // use the method to add, else add explicitly to DagInfo
+		    mScheduledDAG.add( fatJob );
 
-                //log the refiner action capturing the creation of the job
-                this.logRefinerAction( fatJob, aggregator );
-            }
-            else{
-                //do collapsing in chunks of cFactor
-                int increment = 0;
-                for(int i = 0; i < size; i = i + increment){
-                    //compute the increment and decrement cFactor[1]
-                    increment = (cFactor[1] > 0) ? cFactor[0] + 1:cFactor[0];
-                    cFactor[1]--;
+		    // log the refiner action capturing the creation of the job
+		    this.logRefinerAction( fatJob, aggregator );
+		} else {
+		    // do collapsing in chunks of cFactor
+		    int increment = 0;
+		    for (int i = 0; i < size; i = i + increment) {
+			// compute the increment and decrement cFactor[1]
+			increment = (cFactor[1] > 0) ? cFactor[0] + 1
+			        : cFactor[0];
+			cFactor[1]--;
 
-                    if(increment == 1){
-                        //we can exit out of the loop as we do not want
-                        //any merging for single jobs
-                        break;
-                    }
-                    else if( (i + increment) < size){
-                        fatJob = aggregator.constructAbstractAggregatedJob(l.subList(i, i + increment),
-                                                      name,
-                                                      constructID(partitionID,id));
+			if (increment == 1) {
+			    // we can exit out of the loop as we do not want
+			    // any merging for single jobs
+			    break;
+			} else if ((i + increment) < size) {
+			    fatJob = aggregator.constructAbstractAggregatedJob(
+				    l.subList( i, i + increment ), name,
+				    constructID( partitionID, id ) );
 
-                        updateReplacementTable(l.subList(i, i + increment), fatJob);
-                    }
-                    else{
-                        fatJob = aggregator.constructAbstractAggregatedJob(l.subList(i,size),
-                                                    name,
-                                                    constructID(partitionID,id));
-                        updateReplacementTable(l.subList(i, size),fatJob);
-                    }
+			    updateReplacementTable(
+				    l.subList( i, i + increment ), fatJob );
+			} else {
+			    fatJob = aggregator.constructAbstractAggregatedJob(
+				    l.subList( i, size ), name,
+				    constructID( partitionID, id ) );
+			    updateReplacementTable( l.subList( i, size ),
+				    fatJob );
+			}
 
-                    //increment the id
-                    id++;
+			// increment the id
+			id++;
 
-                    //add the fat job to the dag
-                    //use the method to add, else add explicitly to DagInfo
-                    mScheduledDAG.add(fatJob);
+			// add the fat job to the dag
+			// use the method to add, else add explicitly to DagInfo
+			mScheduledDAG.add( fatJob );
 
-                    //log the refiner action capturing the creation of the job
-                    this.logRefinerAction( fatJob, aggregator );
-                }
-            }
+			// log the refiner action capturing the creation of the
+			// job
+			this.logRefinerAction( fatJob, aggregator );
+		    }
+		}
+	    }
 
         }
 
@@ -459,8 +512,126 @@ public class Horizontal implements Clusterer,
         tempMap = null;
     }
 
+    /**
+     * Perform best fit bin packing.
+     * 
+     * @param jobs
+     *            List of jobs sorted in decreasing order of the job runtime.
+     * @param maxTime
+     *            The maximum time for which the clustered job should run.
+     * @return List of List of Jobs where each List <Job> is the set of jobs
+     *         which should be clustered together so as to run in under maxTime.
+     */
+    private List<List<Job>> bestFitBinPack(List<Job> jobs, double maxTime) {
 
+	List<List<Job>> bins = new LinkedList<List<Job>>();
+	List<List<Job>> returnBins = new LinkedList<List<Job>>();
+	List<Double> binTime = new LinkedList<Double>();
+	double minJobRunTime = Double.MAX_VALUE;
 
+	if (jobs != null && jobs.size() > 0) {
+	    minJobRunTime = Double
+		    .parseDouble( (String) jobs.get( jobs.size() - 1 ).vdsNS
+		            .get( Pegasus.JOB_RUN_TIME ) );
+	}
+
+	for (Job j : jobs) {
+	    List<Job> bin;
+	    double currentBinTime;
+	    boolean isBreak = false;
+	    double jobRunTime = Double.parseDouble( (String) j.vdsNS
+		    .get( Pegasus.JOB_RUN_TIME ) );
+
+	    mLogger.log( "Job " + j.getID() + " runtime " + jobRunTime,
+		    LogManager.DEBUG_MESSAGE_LEVEL );
+
+	    // Create first bin.
+	    if (bins.size() == 0) {
+		bins.add( new LinkedList<Job>() );
+		binTime.add( 0, 0d );
+	    }
+
+	    // Loop through each job.
+	    for (int i = 0, k = bins.size(); i < k; ++i) {
+		currentBinTime = binTime.get( i );
+
+		// Is the job runtime greater than the max allowed runtime? Then
+		// do not cluster this job.
+		if (maxTime < jobRunTime) {
+		    mLogger.log( "Job " + j.getID() + " runtime " + jobRunTime
+			    + " is greater than clusters max run time "
+			    + maxTime + " specified by the Pegasus profile "
+			    + Pegasus.MAX_RUN_TIME,
+			    LogManager.DEBUG_MESSAGE_LEVEL );
+		    break;
+		}
+
+		// Can we fit the job in an existing bin?
+		if (maxTime >= currentBinTime + jobRunTime) {
+		    bin = bins.get( i );
+		    bin.add( j );
+		    binTime.set( i, currentBinTime + jobRunTime );
+		    isBreak = true;
+		} else if (i == k - 1) {
+		    // We cannot fit the job in any of the open bins, so create
+		    // a new one.
+		    bin = new LinkedList<Job>();
+		    bin.add( j );
+		    bins.add( bin );
+		    binTime.add( binTime.size(), jobRunTime );
+		}
+
+		// Either this bin is full, or it does not even have space to
+		// fit the job with the smallest run time. So lets avoid trying
+		// to fit jobs in this bin.
+		if (binTime.get( i ) + minJobRunTime > maxTime) {
+		    returnBins.add( bins.remove( i ) );
+		    binTime.remove( i );
+		}
+
+		// Job has been assigned a bin, no need to check other bins for
+		// space.
+		if (isBreak)
+		    break;
+	    }
+	}
+
+	returnBins.addAll( bins );
+	return returnBins;
+    }
+
+    /**
+     * The comparator is used to sort a collection of jobs in decreasing order
+     * of their run times as specified by the Pegasus.JOB_RUN_TIME property.
+     * 
+     * @return
+     */
+    private Comparator<Job> getBinPackingComparator() {
+	return new Comparator<Job>() {
+
+	    @Override
+	    public int compare(Job job1, Job job2) {
+		String s1 = (String) job1.vdsNS.get( Pegasus.JOB_RUN_TIME );
+		String s2 = (String) job2.vdsNS.get( Pegasus.JOB_RUN_TIME );
+
+		if (s1 == null || s1.length() == 0)
+		    throw new RuntimeException( "Profile Key: "
+			    + Pegasus.JOB_RUN_TIME + " is not set for the job "
+			    + job1.getID() );
+		if (s2 == null || s2.length() == 0)
+		    throw new RuntimeException( "Profile Key: "
+			    + Pegasus.JOB_RUN_TIME + " is not set for the job "
+			    + job2.getID() );
+
+		double jobTime1 = Double.parseDouble( s1 );
+		double jobTime2 = Double.parseDouble( s2 );
+
+		return (int) (jobTime2 - jobTime1);
+	    }
+
+	};
+    }
+    
     /**
      * Returns the clustered workflow.
      *
@@ -621,39 +792,48 @@ public class Horizontal implements Clusterer,
      * @param size  the number of jobs that refer to the same logical
      *              transformation and are scheduled on the same execution pool.
      *
-     * @return int array of size 2 where int[0] is the the collapse factor
+     * @return int array of size 4 where int[0] is the the collapse factor
      *         int[1] is the number of jobs for whom collapsing is int[0] + 1.
+     *         int [2] is maximum time for which the clusterd job should run.
+     *         int [3] is time for which the single job would run.
      */
-    public int[] getCollapseFactor(String pool, Job job,int size){
-        String factor = null;
-        int result[]  = new int[2];
-        result[1]     = 0;
+    public int[] getCollapseFactor(String pool, Job job, int size) {
+	String factor = null;
+	int result[] = new int[] { 0, 0, 0, 0 };
 
-        //the job should have the collapse key from the TC if
-        //by the user specified
-        factor = (String)job.vdsNS.get(Pegasus.COLLAPSE_KEY);
+	// the job should have the collapse key from the TC if
+	// by the user specified
+	factor = (String) job.vdsNS.get( Pegasus.COLLAPSE_KEY );
 
-        //ceiling is (x + y -1)/y
-        String bundle = (String)job.vdsNS.get(Pegasus.BUNDLE_KEY);
-        if(bundle != null){
-            int b = Integer.parseInt(bundle);
-            result[0] = size/b;
-            result[1] = size%b;
-            return result;
-            //doing no boundary condition checks
-            //return (size + b -1)/b;
-        }
+	// ceiling is (x + y -1)/y
+	String bundle = (String) job.vdsNS.get( Pegasus.BUNDLE_KEY );
+	if (bundle != null) {
+	    int b = Integer.parseInt( bundle );
+	    result[0] = size / b;
+	    result[1] = size % b;
+	    return result;
+	    // doing no boundary condition checks
+	    // return (size + b -1)/b;
+	}
 
-        //return the appropriate value
-        result[0] =(factor == null)?
-                   ( (factor = (String)mCollapseMap.get(pool)) == null)?
-                         this.DEFAULT_COLLAPSE_FACTOR://the default value
-                         Integer.parseInt(factor)//use the value in the prop file
-                   :
-                   //return the value found in the TC
-                   Integer.parseInt(factor);
-        return result;
+	String runTime = (String) job.vdsNS.get( Pegasus.JOB_RUN_TIME );
+	String clusterTime = (String) job.vdsNS.get( Pegasus.MAX_RUN_TIME );
 
+	// return the appropriate value
+	result[0] = (factor == null) ? ((factor = (String) mCollapseMap
+	        .get( pool )) == null) ? this.DEFAULT_COLLAPSE_FACTOR : // the
+									// default
+									// value
+	        Integer.parseInt( factor )// use the value in the prop file
+	        :
+	        // return the value found in the TC
+	        Integer.parseInt( factor );
+	result[2] = clusterTime == null || clusterTime.length() == 0 ? 0
+	        : Integer.parseInt( clusterTime );
+	result[3] = runTime == null || runTime.length() == 0 ? 0 : Integer
+	        .parseInt( runTime );
+
+	return result;
     }
 
 

@@ -65,6 +65,21 @@ public class Pegasus extends Namespace {
      * number of jobs that are collapsed into the super job.
      */
     public static final String COLLAPSE_KEY = "clusters.size";
+    
+    /**
+     * The name of the key that if set in the Pegasus namespace specifies the
+     * approximate runtime of the job. This key is used in while clustering jobs
+     * according to run times.
+     */
+    public static final String JOB_RUN_TIME = "job.runtime";
+
+    /**
+     * The name of the key that if set in the Pegasus namespace specifies the
+     * maximum amount of time for which a cluster should run. This key is used
+     * while clustering jobs horizontally. Only those jobs are grouped together
+     * whose combined runtime is less than or equal to the max runtime.
+     */
+    public static final String MAX_RUN_TIME = "clusters.maxruntime";
 
     /**
      * The name of the key that determines the collapser executable to be used
@@ -403,6 +418,7 @@ public class Pegasus extends Namespace {
                     (key.compareTo(COLLAPSER_KEY) == 0) ||
                     (key.compareTo(CHANGE_DIR_KEY) == 0) ||
                     (key.compareTo(CHAIN_STAGE_IN_KEY) == 0) || 
+                    (key.compareTo(MAX_RUN_TIME) == 0) ||
                     (key.compareTo(CREATE_AND_CHANGE_DIR_KEY) == 0 )) {
                     res = VALID_KEY;
                 }
@@ -413,12 +429,21 @@ public class Pegasus extends Namespace {
                     res = UNKNOWN_KEY;
                 }
                 break;
-
+            
             case 'g':
                 if (key.compareTo( GROUP_KEY ) == 0 ||
                     key.compareTo( GRIDSTART_KEY ) == 0 ||
                     key.compareTo( GRIDSTART_PATH_KEY ) == 0 ||
                     key.compareTo( GRIDSTART_ARGUMENTS_KEY ) == 0 ) {
+                    res = VALID_KEY;
+                }
+                else {
+                    res = UNKNOWN_KEY;
+                }
+                break;
+
+            case 'j':
+                if (key.compareTo( JOB_RUN_TIME ) == 0) {
                     res = VALID_KEY;
                 }
                 else {

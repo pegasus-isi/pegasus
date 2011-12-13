@@ -2173,6 +2173,21 @@ public class PegasusProperties {
     public String getCollapseFactors() {
         return mProps.getProperty( "pegasus.clusterer.nodes" );
     }
+    
+    /**
+     * Returns the users horizontal clustering preference. This property
+     * determines how to cluster horizontal jobs. If this property is set with a
+     * value value of runtime, the jobs will be grouped into into clusters
+     * according to their runtimes as specified by <code>job.runtime</code>
+     * property. For all other cases the default horizontal clustering approach
+     * will be used.
+     * 
+     * @return the value specified in the properties file, else null.
+     */
+    public String getHorizontalClusterPreference() {
+	return mProps.getProperty( "pegasus.clusterer.preference" );
+    }
+    
 
     /**
      * Returns what job aggregator is to be used to aggregate multiple
