@@ -3,14 +3,24 @@
 set -e
 
 TOP_DIR=`pwd`
+WORK_DIR=$TOP_DIR/work
 
 export PATH=/ccg/software/montage/Montage_v3.3_mats/bin:$PATH
+
+export GLOBUS_LOCATION=/ccg/software/globus/default
 
 USERID=`id -u`
 
 cp ccg-test.config.template ccg-test.config
+perl -p -i -e "s:\[WORK_DIR\]:$WORK_DIR:g" ccg-test.config
 perl -p -i -e "s/\[USER\]/$USER/g" ccg-test.config
 perl -p -i -e "s/\[USERID\]/$USERID/g" ccg-test.config
 
 ./galactic-plane ccg-test.config
+
+../../common/wait-for-workflow
+
+# check success with pegasus-analyzer - does it use exit codes correctly?
+cd work/gal*/gal*/
+pegasus-analyzer
 

@@ -12,7 +12,7 @@ size:      1.0
 overlap:   0.1
 
 [local]
-work_dir:         /lfs1/scratch/[USER]
+work_dir:         [WORK_DIR]
 montage_location: /ccg/software/montage/Montage_v3.3_mats
 x509_user_proxy:  /tmp/x509up_u[USERID]
 
