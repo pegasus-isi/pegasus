@@ -90,6 +90,10 @@ def setup(output_dir):
 		except:
 			logger.error("Unable to remove image directory."+dest_img_path)
 			sys.exit(1) 	 	
+        # Need to create the path in case it doesn't exist yet when running under Python < 2.5
+        if sys.version_info < (2, 5):
+                if not os.path.isdir(output_dir):
+                        os.makedirs(output_dir)
 	shutil.copytree (src_img_path, dest_img_path)	
 
 def generate_dag_graph(wf_info, output_dir):

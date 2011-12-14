@@ -15,6 +15,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 from Pegasus.tools import utils
+from Pegasus.tools import db_utils
 from Pegasus.plots_stats import utils as plot_utils
 from workflow_info import WorkflowInfo, JobInfo , TransformationInfo
 import pegasus_gantt
@@ -443,8 +444,6 @@ def setup(submit_dir , config_properties):
 		sys.exit(1)
 	
 	# Create the sqllite db url
-	global_db_url , global_top_wf_uuid = plot_utils.get_db_url_wf_uuid(submit_dir , config_properties)
+	global_db_url, global_top_wf_uuid = db_utils.get_db_url_wf_uuid(submit_dir, config_properties)
 	if global_db_url is None:
 		sys.exit(1)
-
-	

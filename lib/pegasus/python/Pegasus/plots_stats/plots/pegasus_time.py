@@ -35,7 +35,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 from Pegasus.plots_stats import utils as plot_utils
-
+from Pegasus.tools import utils
 
 #Global variables----
 prog_base = os.path.split(sys.argv[0])[1]	# Name of this program
@@ -799,13 +799,13 @@ def setup(submit_dir,out_dir, env, log_level):
 	if log_level == None:
 		log_level = "info"
 	setup_logger(log_level)
-	plot_utils.create_directory(output_dir)
+	utils.create_directory(output_dir, True)
 	src_js_path = env['pegasus_javascript_dir'] 
 	src_img_path = os.path.join(env['pegasus_share_dir']  , "plots/images/protovis/")
 	dest_js_path = os.path.join(output_dir, "js")
 	dest_img_path = os.path.join(output_dir, "images/")
-	plot_utils.create_directory(dest_js_path)
-	plot_utils.create_directory(dest_img_path)
+	utils.create_directory(dest_js_path, True)
+	utils.create_directory(dest_img_path, True)
 	plot_utils.copy_files(src_js_path , dest_js_path)
 	plot_utils.copy_files(src_img_path, dest_img_path)
 	# copy images from common
