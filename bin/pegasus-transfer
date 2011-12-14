@@ -193,6 +193,7 @@ class Alarm(Exception):
 
 # --- global variables ----------------------------------------------------------------
 
+prog_dir  = os.path.normpath(os.path.join(os.path.dirname(sys.argv[0])))
 prog_base = os.path.split(sys.argv[0])[1]   # Name of this program
 
 logger = logging.getLogger("my_logger")
@@ -202,6 +203,8 @@ default_subshell_timeout = 6 * 60 * 60;
 
 # this is the map of what tool to use for a given protocol pair (src, dest)
 tool_map = {}
+tool_map[('fdt'     , 'file'    )] = 'fdt'
+tool_map[('file'    , 'fdt'     )] = 'fdt'
 tool_map[('file'    , 'file'    )] = 'cp'
 tool_map[('file'    , 'gsiftp'  )] = 'gsiftp'
 tool_map[('file'    , 'irods'   )] = 'irods'
@@ -495,6 +498,37 @@ def scp(transfers, failed_q):
     """
     for i, transfer in enumerate(transfers): 
         cmd = "/usr/bin/scp -q -B -o StrictHostKeyChecking=no"
+        if transfer.dst_proto == "file":
+            prepare_local_dir(os.path.dirname(transfer.dst_path))
+            cmd += " " + transfer.src_host + ":" + transfer.src_path
+            cmd += " " + transfer.dst_path
+        else:
+            cmd += " " + transfer.src_path
+            cmd += " " + transfer.dst_host + ":" + transfer.dst_path
+            stats_add(transfer.src_path)
+        try:
+            myexec(cmd, default_subshell_timeout, True)
+            if transfer.dst_proto == "file":
+                stats_add(transfer.dst_path)    
+        except RuntimeError, err:
+            logger.error(err)
+            failed_q.append(transfer)
+
+
+def fdt(transfers, failed_q):
+    """
+    copies using FDT - http://monalisa.cern.ch/FDT/license.html
+    """
+    # download fdt.jar on demand - it can not be shipped with Pegasus due to licensing
+    if not os.path.exists("fdt.jar"):
+        cmd = "wget -nv -O fdt.jar http://monalisa.cern.ch/FDT/lib/fdt.jar"
+        try:
+            myexec(cmd, 10*60, True)
+        except RuntimeError, err:
+            logger.error(err)
+
+    for i, transfer in enumerate(transfers): 
+        cmd = "echo | java -jar fdt.jar"
         if transfer.dst_proto == "file":
             prepare_local_dir(os.path.dirname(transfer.dst_path))
             cmd += " " + transfer.src_host + ":" + transfer.src_path
@@ -896,6 +930,8 @@ def handle_transfers(transfers, failed_q, attempt):
             tool = tool_map[(t_main.src_proto, t_main.dst_proto)]
             if tool == "cp":
                 cp(transfers, failed_q)
+            elif tool == "fdt":
+                fdt(transfers, failed_q)
             elif tool == "symlink":
                 symlink(transfers, failed_q)
             elif tool == "scp":
