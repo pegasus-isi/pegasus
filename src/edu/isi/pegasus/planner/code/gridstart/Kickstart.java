@@ -653,9 +653,10 @@ public class Kickstart implements GridStart {
             gridStartArgs.append("-T ").append(mConcDAG.getMTime()).append(" ");
         }
 
-
+        /*
         mLogger.log( "User executables staged for job " + job.getID() + " " + job.userExecutablesStagedForJob() ,
                      LogManager.DEBUG_MESSAGE_LEVEL );
+        */
 
         //figure out job executable
         String jobExecutable = ( !this.mUseFullPathToGridStart && job.userExecutablesStagedForJob() )?
