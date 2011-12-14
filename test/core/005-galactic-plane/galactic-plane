@@ -256,10 +256,15 @@ def generate_sc():
     sc.write("            <scratch>\n")
     sc.write("                <shared>\n")
     sc.write("                    <file-server protocol=\"gsiftp\" url=\"gsiftp://%s\" mount-point=\"%s/scratch\"/>\n" % (local_hostname, work_dir))
-    sc.write("                    <internal-mount-point mount-point=\"%s/scratch\" free-size=\"100G\" total-size=\"30G\"/>\n" % (work_dir))
+    sc.write("                    <internal-mount-point mount-point=\"%s/scratch\" />\n" % (work_dir))
     sc.write("                </shared>\n")
     sc.write("            </scratch>\n")
-    sc.write("            <storage />\n")
+    sc.write("            <storage>\n")
+    sc.write("                <shared>\n")
+    sc.write("                    <file-server protocol=\"gsiftp\" url=\"gsiftp://%s\" mount-point=\"%s/storage\"/>\n" % (local_hostname, work_dir))
+    sc.write("                    <internal-mount-point mount-point=\"%s/storage\" />\n" % (work_dir))
+    sc.write("                </shared>\n")
+    sc.write("            </storage>\n")
     sc.write("        </head-fs>\n")
     sc.write("        <replica-catalog  type=\"LRC\" url=\"rlsn://dummyValue.url.edu\" />\n")
     sc.write("        <profile namespace=\"env\" key=\"PEGASUS_HOME\" >%s</profile>\n" % (os.environ["PEGASUS_HOME"]))
@@ -272,8 +277,8 @@ def generate_sc():
     sc.write("            <storage />\n")
     sc.write("        </head-fs>\n")
     sc.write("        <replica-catalog  type=\"LRC\" url=\"rlsn://dummyValue.url.edu\" />\n")
-    sc.write("        <profile namespace=\"pegasus\" key=\"style\">glideinwms</profile>\n")
-    sc.write("        <profile namespace=\"condor\" key=\"+DESIRED_Sites\">&quot;%s&quot;</profile>\n" % (cluster_name))
+    sc.write("        <profile namespace=\"pegasus\" key=\"style\">condor</profile>\n")
+    sc.write("        <profile namespace=\"condor\" key=\"universe\">vanilla</profile>\n")
     sc.write("        <profile namespace=\"condor\" key=\"x509userproxy\">%s</profile>\n" % (x509_user_proxy))
     sc.write("        <profile namespace=\"env\" key=\"PEGASUS_HOME\" >%s</profile>\n" % (cluster_pegasus_home))
     sc.write("        <profile namespace=\"env\" key=\"GLOBUS_LOCATION\" >%s</profile>\n" % (cluster_globus_location))
@@ -309,15 +314,15 @@ def generate_sc():
 def generate_tc():
     # tc needs to be in old format to work with montage
     tc = open(work_dir + "/tc.data", 'w')
-    tc.write("%s        gp::remote_tile_setup:1.0         gsiftp://%s%s/remote-tile-setup      STATIC_BINARY   INTEL32::LINUX     condor::priority=100\n" % (cluster_name, local_hostname, local_galacticplane_location))
-    tc.write("%s        gp::remote_extra_cleanup:1.0      gsiftp://%s%s/remote-extra-cleanup   STATIC_BINARY   INTEL32::LINUX     condor::priority=1000\n" % (cluster_name, local_hostname, local_galacticplane_location))
+    tc.write("local     gp::remote_tile_setup:1.0         gsiftp://%s%s/remote-tile-setup      STATIC_BINARY   INTEL32::LINUX     condor::priority=100\n" % (local_hostname, local_galacticplane_location))
+    tc.write("local     gp::remote_extra_cleanup:1.0      gsiftp://%s%s/remote-extra-cleanup   STATIC_BINARY   INTEL32::LINUX     condor::priority=1000\n" % (local_hostname, local_galacticplane_location))
     tc.write("local     gp::local_tile_setup:1.0          %s/local-tile-setup                  INSTALLED   INTEL32::LINUX\n" % (local_galacticplane_location))
     # for the sub workflows
-    tc.write("%s        pegasus::dirmanager               %s/bin/pegasus-dirmanager            INSTALLED   INTEL32::LINUX\n" % (cluster_name, cluster_pegasus_home))
-    tc.write("%s        pegasus::kickstart                %s/bin/kickstart                     INSTALLED   INTEL32::LINUX\n" % (cluster_name, cluster_pegasus_home))
-    tc.write("%s        pegasus::seqexec                  %s/bin/seqexec                       INSTALLED   INTEL32::LINUX\n" % (cluster_name, cluster_pegasus_home))
-    tc.write("%s        pegasus::cleanup                  %s/bin/pegasus-cleanup               INSTALLED   INTEL32::LINUX\n" % (cluster_name, cluster_pegasus_home))
-    tc.write("%s        pegasus::pegasus-transfer         %s/bin/pegasus-transfer              INSTALLED   INTEL32::LINUX\n" % (cluster_name, cluster_pegasus_home))
+    #tc.write("%s        pegasus::dirmanager               %s/bin/pegasus-dirmanager            INSTALLED   INTEL32::LINUX\n" % (cluster_name, cluster_pegasus_home))
+    #tc.write("%s        pegasus::kickstart                %s/bin/pegasus-kickstart             INSTALLED   INTEL32::LINUX\n" % (cluster_name, cluster_pegasus_home))
+    #tc.write("%s        pegasus::seqexec                  %s/bin/pegasus-cluster               INSTALLED   INTEL32::LINUX\n" % (cluster_name, cluster_pegasus_home))
+    #tc.write("%s        pegasus::cleanup                  %s/bin/pegasus-cleanup               INSTALLED   INTEL32::LINUX\n" % (cluster_name, cluster_pegasus_home))
+    #tc.write("%s        pegasus::pegasus-transfer         %s/bin/pegasus-transfer              INSTALLED   INTEL32::LINUX\n" % (cluster_name, cluster_pegasus_home))
     # list all montage binaries
     for binary in os.listdir(local_montage_location + "/bin/"):
         cluster = 100
@@ -375,7 +380,7 @@ def main():
     print "Planning and submitting the uberdax..."
     os.chdir(work_dir)
     os.environ["JAVA_HEAPMAX"] = "512"
-    cmd = "pegasus-plan -vvvv --conf pegasusrc --relative-dir " + run_id + " --sites " + cluster_name + " --dir . --output local --dax gp.dax --nocleanup --submit 2>&1 | tee pegasus-plan.out"
+    cmd = "pegasus-plan -vvvv --conf pegasusrc --relative-dir " + run_id + " --sites " + cluster_name + " --staging-site " + staging_name  + " --dir . --output local --dax gp.dax --nocleanup --submit 2>&1 | tee pegasus-plan.out"
     myexec(cmd)
 
 

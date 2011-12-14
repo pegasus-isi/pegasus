@@ -4,12 +4,12 @@ mode: full
 [tiles]
 survey:    2mass
 band:      j
-min_lon:  -1.0
-max_lon:   1.0
-min_lat:  -1.0
-max_lat:   1.0
-size:      5.0
-overlap:   1.0
+min_lon:  -0.1
+max_lon:   0.1
+min_lat:  -0.1
+max_lat:   0.1
+size:      1.0
+overlap:   0.1
 
 [local]
 work_dir:         /lfs1/scratch/[USER]

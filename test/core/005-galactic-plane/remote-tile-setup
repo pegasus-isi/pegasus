@@ -1,0 +1,45 @@
+#!/bin/bash
+
+set -e
+
+MODE=$1
+TILE_ID=$2
+
+. $TILE_ID.params
+
+WORK_DIR=`pwd`/tile-setup/$TILE_ID
+
+rm -rf $WORK_DIR
+mkdir -p $WORK_DIR
+cd $WORK_DIR
+
+# generate dag for the tile
+$MONTAGE_HOME/bin/mDAGGalacticPlane $SURVEY $BAND $CENTER_LON $CENTER_LAT $TILE_SIZE $TILE_SIZE 0.0002777778 . "gsiftp://$WF_MANAGER_HOST$TILE_WORK_DIR" "gsiftp://$WF_MANAGER_HOST$TILE_WORK_DIR/inputs"
+
+echo
+echo "Number of images for this tile: "`cat images.tbl | grep http | wc -l`
+echo
+
+# add the inputs to the rc
+echo
+cd $WORK_DIR
+cat cache.list | grep -v ".fits " >rc.data
+cat url.list | sed 's/ http:.*ref=/ http:\/\/obelix.isi.edu\/irsa-cache/' >>rc.data
+
+if [ "$MODE" = "prefetch" ]; then
+    echo "Prefteching data..."
+    cat rc.data | grep obelix | sed 's/.*http:/http:/' | sed 's/fits\.gz.*/fits.gz/' >prefetch.list
+    cat prefetch.list | while read URL; do
+        echo " ... $URL"
+    	wget -q -O /dev/null $URL
+    done
+fi
+
+# prepare tarball that we can give to the local setup script
+tar czf ../../$TILE_ID.tar.gz *.hdr *.list *.data *.tbl *.xml
+
+cd ../../
+echo "Tarball created."
+pwd
+ls -l $TILE_ID.tar.gz
+
