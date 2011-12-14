@@ -223,6 +223,7 @@ tool_map[('irods'   , 'file'    )] = 'irods'
 tool_map[('s3'      , 'file'    )] = 's3'
 tool_map[('s3s'     , 'file'    )] = 's3'
 tool_map[('scp'     , 'file'    )] = 'scp'
+tool_map[('srm'     , 'file'    )] = 'srm'
 tool_map[('srm'     , 'gsiftp'  )] = 'srm'
 tool_map[('srm'     , 'srm'     )] = 'srm'
 tool_map[('symlink' , 'symlink' )] = 'symlink'
@@ -778,8 +779,8 @@ def srm(transfers, failed_q):
     for i, url_pair in enumerate(transfers): 
         if url_pair.dst_proto == "file":
             prepare_local_dir(os.path.dirname(url_pair.dst_path))
-        elif url_pair.dst_proto == "gsiftp" or url_pair.dst_proto == "srm":
-            srm_mkdir(os.path.dirname(url_pair.dst_url_srm()))
+        #elif url_pair.dst_proto == "gsiftp" or url_pair.dst_proto == "srm":
+        #    srm_mkdir(os.path.dirname(url_pair.dst_url_srm()))
             
         third_party = (url_pair.src_proto == "gsiftp" or url_pair.src_proto == "srm") and \
                       (url_pair.dst_proto == "gsiftp" or url_pair.dst_proto == "srm")
@@ -792,6 +793,9 @@ def srm(transfers, failed_q):
         cmd = "%s srm-copy  %s %s -mkdir" % (cmd, url_pair.src_url_srm(), url_pair.dst_url_srm())
         if third_party:
             cmd = cmd + " -parallelism 4 -3partycopy"
+    
+        if not logger.isEnabledFor(logging.DEBUG):
+            cmd = cmd + " >/dev/null"
             
         try:
             myexec(cmd, 6*60*60, True)
@@ -804,23 +808,32 @@ def srm_mkdir(url):
     """
     implements recursive mkdir as srm-mkdir can not handle it
     """
-    
-    # back all the way down first     
-    one_up = os.path.dirname(url)
-    if one_up.count("/") > 3:
-        srm_mkdir(one_up)
-    
-    cmd = ""
-    # srm is mostly used on OSG, so look for $OSG_GRID and if found source setup.sh
-    if "OSG_GRID" in os.environ:
-        cmd = ". $OSG_GRID/setup.sh ;"
-            
-    cmd = "%s srm-mkdir %s" %(cmd, url)
 
+    # end condition
+    if url == "/" or url == "":
+        return True
+
+    # does the url exist?
+    cmd = "srm-ls %s >/dev/null" %(url)
     try:
-        myexec(cmd, 10*60, False)
+        myexec(cmd, 10*60, True)
+        return True
     except Exception, err:
         logger.error(err)
+    
+    # if we get here, the directory does not exist
+    # create the parent first
+    one_up = os.path.dirname(url)
+    srm_mkdir(one_up)
+    
+    cmd = "srm-mkdir %s >/dev/null" %(url)
+    try:
+        myexec(cmd, 10*60, True)
+    except Exception, err:
+        logger.error(err)
+        return False
+
+    return True
     
 
 def s3(transfers, failed_q):
