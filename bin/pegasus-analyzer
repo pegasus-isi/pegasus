@@ -856,6 +856,13 @@ def analyze_files():
     # Print summary of our analysis
     print_summary()
 
+    if failed > 0:
+        # Workflow has failures, exit with exitcode 2
+        sys.exit(2)
+
+    # Workflow has no failures, exit with exitcode 0
+    sys.exit(0)
+
 def analyze_db(config_properties):
     """
     This function runs the analyzer using data from the database.
@@ -953,6 +960,13 @@ def analyze_db(config_properties):
 
     # Done with the database
     workflow_stats.close()
+
+    if failed > 0:
+        # Workflow has failures, exit with exitcode 2
+        sys.exit(2)
+
+    # Workflow has no failures, exit with exitcode 0
+    sys.exit(0)
 
 def debug_condor(my_job):
     """
