@@ -871,7 +871,7 @@ public class PegasusLite implements GridStart {
                 this.mKickstartGridStartImpl.enable( (AggregatedJob)job, isGlobusJob );
                 //for clustered jobs we embed the contents of the input
                 //file in the shell wrapper itself
-                sb.append( job.getRemoteExecutable() ).append( job.getArguments() );
+                sb.append( job.getRemoteExecutable() ).append( " " ).append( job.getArguments() );
                 sb.append( " << EOF" ).append( '\n' );
 
                 sb.append( slurpInFile( mSubmitDir, job.getStdIn() ) );
@@ -887,7 +887,9 @@ public class PegasusLite implements GridStart {
             }
             sb.append( '\n' );
             
-
+            //the pegasus lite wrapped job itself does not have any
+            //arguments passed
+            job.setArguments( "" );
 
              if( mSLS.needsSLSOutputTransfers( job ) ){
                 //construct the postjob that transfers the output files

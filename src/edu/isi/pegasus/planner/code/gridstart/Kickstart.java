@@ -653,8 +653,21 @@ public class Kickstart implements GridStart {
             gridStartArgs.append("-T ").append(mConcDAG.getMTime()).append(" ");
         }
 
+
+        mLogger.log( "User executables staged for job " + job.getID() + " " + job.userExecutablesStagedForJob() ,
+                     LogManager.DEBUG_MESSAGE_LEVEL );
+
+        //figure out job executable
+        String jobExecutable = ( !this.mUseFullPathToGridStart && job.userExecutablesStagedForJob() )?
+                                //the basename of the executable used for pegasus lite
+                                //and staging of executables
+                                job.getStagedExecutableBaseName( ):
+                                //use whatever is set in the executable field
+                                job.executable;
+
+
         long argumentLength = gridStartArgs.length() +
-                              job.executable.length() +
+                              jobExecutable.length() +
                               1 +
                               job.strargs.length();
 
@@ -663,7 +676,7 @@ public class Kickstart implements GridStart {
         boolean disableInvoke = mDisableInvokeFunctionality || partOfClusteredJob;
 
         if( !disableInvoke && (mInvokeAlways || argumentLength > mInvokeLength) ){
-            if(!useInvoke(job,gridStartArgs)){
+            if(!useInvoke(job, jobExecutable, gridStartArgs)){
                 mLogger.log("Unable to use invoke for job ",
                             LogManager.ERROR_MESSAGE_LEVEL);
                 return false;
@@ -671,7 +684,7 @@ public class Kickstart implements GridStart {
         }
         else{
             
-             gridStartArgs.append(job.executable);
+             gridStartArgs.append( jobExecutable );
 
              gridStartArgs.append(' ').append(job.strargs);
         }
@@ -981,12 +994,13 @@ public class Kickstart implements GridStart {
      * The kickstart input file is created in the submit directory.
      *
      * @param constituentJob  the <code>Job</code> object containing the constituentJob description.
-     * @param args the arguments buffer for gridstart invocation so far.
+     * @param executable      the path to the executable used.
+     * @param args            the arguments buffer for gridstart invocation so far.
      *
      * @return boolean indicating whether kickstart input file was generated or not.
      *                 false in case of any error.
      */
-    private boolean useInvoke(Job job,StringBuffer args){
+    private boolean useInvoke(Job job, String executable, StringBuffer args){
         boolean result = true;
 
         String inputBaseName = job.jobName + "." + Kickstart.KICKSTART_INPUT_SUFFIX;
@@ -997,7 +1011,7 @@ public class Kickstart implements GridStart {
             FileWriter input;
             input = new FileWriter( argFile );
             //the first thing that goes in is the executable name
-            input.write(job.executable);
+            input.write( executable );
             input.write("\n");
             //write out all the arguments
             //one on each line
