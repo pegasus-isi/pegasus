@@ -176,10 +176,7 @@ for entry in dir_list:
         continue
 
     # some space to make the output easier to read
-    logging.StreamHandler().flush()
-    for i in range(15):
-        print ""
-    logging.StreamHandler().flush()
+    logger.info("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
 
     logger.info("====================================================================")
     logger.info("Starting test: %s" %(entry))
@@ -195,7 +192,6 @@ for entry in dir_list:
         failed_tests.append(entry)
         rc += 1
         logger.info("Last 100 lines of stdout/stderr:")
-        logging.StreamHandler().flush()
         summarize_stdout_stderr("%s/%s" % (options.tests_dir, entry))
 
 print
