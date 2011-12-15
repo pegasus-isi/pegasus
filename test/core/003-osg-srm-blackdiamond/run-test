@@ -7,20 +7,12 @@ TOPDIR=`pwd`
 # remove previous runs
 rm -rf work
 
-# figure out where Pegasus is installed
-export PEGASUS_HOME=`which pegasus-plan | sed 's:/bin/pegasus-plan::'`
-if [ "x$PEGASUS_HOME" = "x" ]; then
-    echo "Unable to determine location of your Pegasus install"
-    echo "Please make sure pegasus-plan is in your path"
-    exit 1
-fi 
-
 # generate the input file
 echo "This is sample input to KEG" >f.a
 
 # generate the dax
 export PYTHONPATH=`pegasus-config --python`
-./blackdiamond.py $PEGASUS_HOME >blackdiamond.dax
+./blackdiamond.py /usr >blackdiamond.dax
 
 # create the site catalog
 cat >sites.xml <<EOF
@@ -43,7 +35,6 @@ cat >sites.xml <<EOF
             </storage>
         </head-fs>
         <replica-catalog type="LRC" url="rlsn://dummyValue.url.edu" />
-        <profile namespace="env" key="PEGASUS_HOME" >$PEGASUS_HOME</profile>
         <profile namespace="env" key="GLOBUS_LOCATION" >$GLOBUS_LOCATION</profile>
     </site>
     <site handle="OSG" arch="x86_64" os="LINUX">

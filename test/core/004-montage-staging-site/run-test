@@ -68,7 +68,6 @@ cat >sites.xml <<EOF
         <replica-catalog  type="LRC" url="rlsn://dummyValue.url.edu" />
         <profile namespace="env" key="GLOBUS_LOCATION" >/ccg/software/globus/default</profile>
         <profile namespace="env" key="GLOBUS_TCP_PORT_RANGE" >40000,50000</profile>
-        <profile namespace="env" key="PEGASUS_HOME" >/ccg/software/pegasus/dev/trunk</profile>
     </site>
     <site handle="CCG" arch="x86" os="LINUX">
         <head-fs>
@@ -79,7 +78,7 @@ cat >sites.xml <<EOF
         <profile namespace="pegasus" key="style">condor</profile>
         <profile namespace="condor" key="universe">vanilla</profile>
         <profile namespace="env" key="MONTAGE_HOME" >/ccg/software/montage/Montage_v3.3_mats</profile>
-        <profile namespace="env" key="PEGASUS_HOME" >/ccg/software/pegasus/dev/trunk</profile>
+        <profile namespace="env" key="PEGASUS_HOME" >/usr</profile>
     </site>
     <site handle="CCGData">
         <head-fs>

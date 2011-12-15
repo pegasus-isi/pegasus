@@ -267,7 +267,6 @@ def generate_sc():
     sc.write("            </storage>\n")
     sc.write("        </head-fs>\n")
     sc.write("        <replica-catalog  type=\"LRC\" url=\"rlsn://dummyValue.url.edu\" />\n")
-    sc.write("        <profile namespace=\"env\" key=\"PEGASUS_HOME\" >%s</profile>\n" % (os.environ["PEGASUS_HOME"]))
     sc.write("        <profile namespace=\"env\" key=\"GLOBUS_LOCATION\" >%s</profile>\n" % (os.environ["GLOBUS_LOCATION"]))
     sc.write("        <profile namespace=\"env\" key=\"PATH\" >%s:%s/bin:%s</profile>\n" %(local_galacticplane_location, local_montage_location, os.environ["PATH"]))
     sc.write("    </site>\n")
