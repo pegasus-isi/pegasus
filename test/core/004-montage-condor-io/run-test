@@ -77,6 +77,7 @@ cat >sites.xml <<EOF
         </head-fs>
         <replica-catalog type="LRC" url="rlsn://dummyValue.url.edu" />
         <profile namespace="pegasus" key="style">condor</profile>
+        <profile namespace="condor" key="universe">vanilla</profile>
         <profile namespace="env" key="MONTAGE_HOME" >/ccg/software/montage/Montage_v3.3_mats</profile>
         <profile namespace="env" key="PEGASUS_HOME" >/ccg/software/pegasus/dev/trunk</profile>
     </site>
