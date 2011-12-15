@@ -24,7 +24,7 @@ export CLASSPATH=.:`pegasus-config --classpath`
 javac BlackDiamondDAX.java
 
 # generate the dax
-java BlackDiamondDAX $PEGASUS_HOME blackdiamond.dax
+java BlackDiamondDAX /usr blackdiamond.dax
 
 # create the site catalog
 cat >sites.xml <<EOF
@@ -54,7 +54,7 @@ cat >sites.xml <<EOF
         </head-fs>
         <profile namespace="pegasus" key="style" >condor</profile>
         <profile namespace="condor" key="universe" >vanilla</profile>
-        <profile namespace="env" key="PEGASUS_HOME" >$PEGASUS_HOME</profile>
+        <profile namespace="env" key="PEGASUS_HOME" >/usr</profile>
     </site>
 </sitecatalog>
 EOF
