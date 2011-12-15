@@ -399,6 +399,13 @@ public class DeployWorkerPackage
      */
     public void initialize( ADag scheduledDAG ) {
         Mapper m = mBag.getHandleToTransformationMapper();
+
+        if( !m.isStageableMapper() ){
+            //we want to load a stageable mapper
+            mLogger.log( "User set mapper is not a stageable mapper. Loading a stageable mapper ", LogManager.DEBUG_MESSAGE_LEVEL );
+            m = Mapper.loadTCMapper( "Staged", mBag );
+        }
+
         SiteStore siteStore = mBag.getHandleToSiteStore();
         
         RemoteTransfer remoteTransfers = new RemoteTransfer( mProps );
