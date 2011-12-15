@@ -175,13 +175,19 @@ for entry in dir_list:
         logger.error("%s/%s does not have a run-test script" % (options.tests_dir, entry))
         continue
 
+    # some space to make the output easier to read
+    for i in range(15):
+        print ""
+
     logger.info("====================================================================")
+    logger.info("Starting test: %s" %(entry))
     logger.info("Preparing for test - cleaning queue")
     clean_condor_q()
     logger.info("Running test %s" % entry)
     cmd = "cd %s/%s && ./run-test >test.stdout 2>test.stderr" % (options.tests_dir, entry)
     try:
         myexec(cmd, 3600, True)
+        logger.info("Test successful")
     except Exception, e:
         logger.error(e)
         failed_tests.append(entry)
