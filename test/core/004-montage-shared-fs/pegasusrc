@@ -10,7 +10,5 @@ pegasus.catalog.transformation.file=tc
 
 pegasus.dir.useTimestamp=true
 
-pegasus.gridstart = PegasusLite
-
 pegasus.condor.logs.symlink = false
 
