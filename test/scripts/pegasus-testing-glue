@@ -73,7 +73,7 @@ def prog_sigint_handler(signum, frame):
 
 
 def alarm_handler(signum, frame):
-    raise Alarm
+    raise RuntimeError
 
 
 def myexec(cmd_line, timeout_secs, should_log):
@@ -91,7 +91,7 @@ def myexec(cmd_line, timeout_secs, should_log):
     p = subprocess.Popen(cmd_line, shell=True)
     try:
         stdoutdata, stderrdata = p.communicate()
-    except Alarm:
+    except RuntimeError:
         if sys.version_info >= (2, 6):
             p.terminate()
         raise RuntimeError("Command '%s' timed out after %s seconds" % (cmd_line, timeout_secs))
@@ -181,7 +181,7 @@ for entry in dir_list:
     logger.info("Running test %s" % entry)
     cmd = "cd %s/%s && ./run-test >test.stdout 2>test.stderr" % (options.tests_dir, entry)
     try:
-        myexec(cmd, 600, True)
+        myexec(cmd, 3600, True)
     except Exception, e:
         logger.error(e)
         failed_tests.append(entry)
