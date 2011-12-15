@@ -463,7 +463,21 @@ public class SiteCatalogEntry extends AbstractSiteData{
      */
     public String getEnvironmentVariable( String variable ){
         Namespace n = this.mProfiles.get( Profiles.NAMESPACES.env );
-        return ( n == null ) ? null : (String)n.get( variable );
+        String value = ( n == null ) ? null : (String)n.get( variable );
+
+
+        //change the preference order because of JIRA PM-471
+        if( value == null ){
+            //fall back only for local site the value in the env
+            String handle = this.getSiteHandle();
+            if( handle != null && handle.equals( "local" ) ){
+                //try to retrieve value from environment
+                //for local site.
+                value = System.getenv( variable );
+            }
+        }
+
+        return value;
     }
 
     

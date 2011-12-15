@@ -297,7 +297,8 @@ public class SiteStore extends AbstractSiteData{
         else{
             value = this.lookup( handle ).getEnvironmentVariable( variable );
         }
-        
+
+        /* Moved to SiteCatalogEntry Karan Dec 15, 2011
         //change the preference order because of JIRA PM-471
         if( value == null ){
             //fall back only for local site the value in the env
@@ -307,6 +308,7 @@ public class SiteStore extends AbstractSiteData{
                 value = System.getenv( variable );
             }
         }
+         */
         return value;
     }
     
