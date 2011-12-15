@@ -329,6 +329,11 @@ public class PegasusLite implements GridStart {
             //load SLS
             mSLS = SLSFactory.loadInstance( bag );
         }
+        else{
+            //sanity check
+            throw new RuntimeException( "PegasusLite only works if worker node execution is set. Please set  " +
+                                        PegasusProperties.PEGASUS_WORKER_NODE_EXECUTION_PROPERTY  + " to true .");
+        }
 
         //pegasus lite needs to disable invoke functionality
         mProps.setProperty( PegasusProperties.DISABLE_INVOKE_PROPERTY, "true" );

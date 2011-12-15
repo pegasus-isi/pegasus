@@ -57,6 +57,8 @@ public class PegasusProperties {
      */
     public static final String DISABLE_INVOKE_PROPERTY = "pegasus.gridstart.invoke.disable";
 
+    public static final String PEGASUS_WORKER_NODE_EXECUTION_PROPERTY = "pegasus.execute.*.filesystem.local";
+
     //Replica Catalog Constants
     public static final String DEFAULT_RC_COLLECTION = "GriphynData";
 
@@ -2068,7 +2070,7 @@ public class PegasusProperties {
      *         or an invalid value specified.
      */
     public boolean executeOnWorkerNode( ){
-        return Boolean.parse( mProps.getProperty( "pegasus.execute.*.filesystem.local" ) ,
+        return Boolean.parse( mProps.getProperty( PegasusProperties.PEGASUS_WORKER_NODE_EXECUTION_PROPERTY ) ,
                               false  );
     }
 
