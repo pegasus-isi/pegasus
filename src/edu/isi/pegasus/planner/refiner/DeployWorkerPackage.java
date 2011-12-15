@@ -831,8 +831,9 @@ public class DeployWorkerPackage
                                          this.getDeployJobName( dag, tsite , localTransfer),
                                          Job.STAGE_IN_JOB );
 
-        //the setupTXJob non third party site, has to be the staging site
-        setupTXJob.setNonThirdPartySite( stagingSite );
+        //the setupTXJob is null as stage worker job pulls in
+        //data to the submit host directory
+        setupTXJob.setNonThirdPartySite( null );
 
         //the setup and untar jobs need to be launched without kickstart.
         setupTXJob.vdsNS.construct( Pegasus.GRIDSTART_KEY, "None" );

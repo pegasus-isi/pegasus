@@ -92,11 +92,27 @@ public class Tentacles extends AbstractStrategy {
             }
             else{
 
-            //the parent in case of a transfer job
-            //is the non third party site
-            parent = (job instanceof TransferJob)?
-                    getCreateDirJobName( dag, ((TransferJob)job).getNonThirdPartySite()):
-                    getCreateDirJobName( dag, job.getStagingSiteHandle() );
+                //the parent in case of a transfer job
+                //is the non third party site
+                String site = ( job instanceof TransferJob )?
+                               ((TransferJob)job).getNonThirdPartySite():
+                               job.getStagingSiteHandle();
+
+                if( site == null ){
+                    //only ok for stage worker jobs
+                    if( job instanceof TransferJob ){
+                        mLogger.log( "Not adding edge to create dir job for job " + job.getID(),
+                                     LogManager.DEBUG_MESSAGE_LEVEL );
+                        continue;
+                    }
+                    else{
+                        //throw an error
+                        throw new RuntimeException( "Job not associated with staging site" + job.getID() );
+                    }
+                }
+
+                parent =  getCreateDirJobName( dag, site);
+
             }
 
             //put in the dependency only for transfer jobs that stage in data
