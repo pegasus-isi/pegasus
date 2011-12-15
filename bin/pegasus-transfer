@@ -627,7 +627,8 @@ def gsiftp_do_transfers(transfers, failed_q, create_dest, third_party):
     """
     sub to gsiftp() - transfers a list of urls
     """
-    
+    # Take the policies attached to the first Transfer object as suitable for the whole transfer group.
+    policy_properties = transfers[0].policies
     # keep track of what transfer we attempted so we can add to fail q in case of failures
     attempted_transfers = transfers[:]
     delayed_file_stat = []
@@ -671,7 +672,11 @@ def gsiftp_do_transfers(transfers, failed_q, create_dest, third_party):
     # Only do third party transfers for gsiftp->gsiftp. For other combinations, fall
     # back to settings which will for well over for example NAT
     if third_party:
-        cmd += " -parallel 4"
+        if 'parallel' in policy_properties:
+            cmd += " -parallel " + policy_properties['parallel']
+            logger.debug("Set parallel from policies to value %s", policy_properties['parallel'])
+        else:
+            cmd += " -parallel 4"
 
         # -fast only for Globus 4 and above
         if tool_info['globus-version']['version_major'] >= 4:
@@ -1072,7 +1077,7 @@ def delete_policy_requests(transfers):
         ws.close()
         ws = None
     except HTTPException, e:
-        # 
+        # These exceptions (on 2.6) don't appear to have anything in them. 
         logger.exception("HTTPException communicating with policy web servcie:")
         raise RuntimeError("HTTPException communicating with policy web servcie.")
     except SocketError, (value, message):
