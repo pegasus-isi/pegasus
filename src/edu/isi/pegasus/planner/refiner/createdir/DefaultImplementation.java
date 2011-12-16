@@ -253,8 +253,9 @@ public class DefaultImplementation implements Implementation {
 
         //add any notifications specified in the transformation
         //catalog for the job. JIRA PM-391
-        newJob.addNotifications( entry );
-
+        if( entry != null ){
+            newJob.addNotifications( entry );
+        }
         //the profile information from the transformation
         //catalog needs to be assimilated into the job
         //overriding the one from pool catalog.
