@@ -324,13 +324,6 @@ public class DeployWorkerPackage
      */
     protected boolean mWorkerNodeExecution;
 
-
-    /**
-     * A list of transformation catalog entry objects corresponding to the
-     * locations
-     */
-    protected List<TransformationCatalogEntry>mStagedPegasusWorkerExecutables;
-
     /**
      * Loads the implementing class corresponding to the mode specified by the
      * user at runtime.
@@ -394,7 +387,6 @@ public class DeployWorkerPackage
         StringBuffer sb = new StringBuffer();
         sb.append( version.MAJOR ).append( "." ).append( version.MINOR );
         mPlannerMajorMinorVersion = sb.toString();
-        mStagedPegasusWorkerExecutables = new LinkedList<TransformationCatalogEntry>();
     }
 
 
@@ -508,7 +500,6 @@ public class DeployWorkerPackage
                                         siteStore.getInternalWorkDirectory( stagingSite );
 
 
-
             //for the non pegasus lite case, we insert entries into the
             //transformation catalog for all worker package executables
             //the planner requires
@@ -527,14 +518,13 @@ public class DeployWorkerPackage
                 //now create transformation catalog entry objects for each
                 //worker package executable
                 for( int i = 0; i < PEGASUS_WORKER_EXECUTABLES.length; i++){
-                    TransformationCatalogEntry entry = getDefaultTCEntry( stagingSite,
+                    TransformationCatalogEntry entry = addDefaultTCEntry( stagingSite,
                                                                         pegasusHome.getAbsolutePath(),
                                                                         selected.getSysInfo(),
                                                                         PEGASUS_WORKER_EXECUTABLES[i][0],
                                                                         PEGASUS_WORKER_EXECUTABLES[i][1]  );
 
                     mLogger.log( "Entry constructed " + entry , LogManager.DEBUG_MESSAGE_LEVEL );
-                    mStagedPegasusWorkerExecutables.add( entry );
                 }
             }
 
@@ -694,28 +684,6 @@ public class DeployWorkerPackage
             for( Iterator childrenIt = node.getChildren().iterator(); childrenIt.hasNext(); ){
                 GraphNode child = ( GraphNode ) childrenIt.next();
                 result.addNewRelation( node.getID(), child.getID() );
-            }
-        }
-
-        if( addUntarJobs ){
-            //for the shared filesystem case we register the pegasus
-            //worker executables into the transformation catalog
-            for( TransformationCatalogEntry entry : this.mStagedPegasusWorkerExecutables ){
-                //register back into the transformation catalog
-                //so that we do not need to worry about creating it again
-                try{
-                    mTCHandle.insert( entry , false );
-                }
-                catch( Exception e ){
-                    //just log as debug. as this is more of a performance improvement
-                    //than anything else
-                    mLogger.log( "Unable to register in the TC the default entry " +
-                                 entry.getLogicalTransformation() +
-                                " for site " + entry.getResourceId(), e,
-                                LogManager.ERROR_MESSAGE_LEVEL );
-                    //throw exception as
-                    throw new RuntimeException( e );
-                }
             }
         }
 
@@ -1208,61 +1176,7 @@ public class DeployWorkerPackage
 
     }
 
-
-    /**
-     * Returns a default TC entry to be used in case entry is not found in the
-     * transformation catalog. It also attempts to add the transformation catalog
-     * entry to the underlying TC store.
-     *
-     * @param site   the site for which the default entry is required.
-     * @param pegasusHome  the path to deployed worker package
-     * @param sysinfo the system information of that site.
-     * @param name        the logical name of the transformation
-     * @param executable  the basename of the executable
-     *
-     *
-     * @return  the default entry.
-     */
-    private  TransformationCatalogEntry getDefaultTCEntry( String site,
-                                                        String pegasusHome,
-                                                        SysInfo sysinfo,
-                                                        String name,
-                                                        String executable ){
-        TransformationCatalogEntry defaultTCEntry = null;
-
-        mLogger.log( "Creating a default TC entry for " +
-                     Separator.combine( "pegasus", name, null ) +
-                     " at site " + site,
-                     LogManager.DEBUG_MESSAGE_LEVEL );
-
-
-        //construct the path to the executable
-        StringBuffer path = new StringBuffer();
-        path.append( pegasusHome ).append( File.separator ).
-            append( "bin" ).append( File.separator ).
-            append( executable );
-
-        mLogger.log( "Remote Path set is " + path.toString(),
-                     LogManager.DEBUG_MESSAGE_LEVEL );
-
-        defaultTCEntry = new TransformationCatalogEntry( "pegasus",
-                                                         name ,
-                                                         null );
-
-        defaultTCEntry.setPhysicalTransformation( path.toString() );
-        defaultTCEntry.setResourceId( site );
-        defaultTCEntry.setType( TCType.INSTALLED );
-        defaultTCEntry.setSysInfo( sysinfo );
-
-        //add pegasus home as an environment variable
-        defaultTCEntry.addProfile( new Profile( Profile.ENV, "PEGASUS_HOME", pegasusHome ));
-
-
-
-
-        return defaultTCEntry;
-    }
-
+    
     /**
      * Returns a default TC entry to be used in case entry is not found in the
      * transformation catalog. It also attempts to add the transformation catalog 
@@ -1277,7 +1191,6 @@ public class DeployWorkerPackage
      *
      * @return  the default entry.
      */
-/*
     private  TransformationCatalogEntry addDefaultTCEntry( String site,
                                                         String pegasusHome,
                                                         SysInfo sysinfo,
@@ -1332,7 +1245,6 @@ public class DeployWorkerPackage
         
         return defaultTCEntry;
     }
-*/
 
     /**
      * Returns a default TC entry for the pegasus site. The entry points to 
