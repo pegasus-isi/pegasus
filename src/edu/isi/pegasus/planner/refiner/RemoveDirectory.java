@@ -31,6 +31,7 @@ import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 
 import edu.isi.pegasus.common.util.Separator;
 
+import edu.isi.pegasus.planner.classes.TransferJob;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.HashSet;
@@ -231,15 +232,14 @@ public class RemoveDirectory extends Engine {
      * Retrieves the sites for which the create dir jobs need to be created.
      * It returns all the sites where the compute jobs have been scheduled.
      *
-     * @param dag the workflow for which the sites have to be computed.
      *
      * @return  a Set containing a list of siteID's of the sites where the
      *          dag has to be run.
      */
-    public Set getCreateDirSites(ADag dag){
+    protected Set getCreateDirSites( ADag dag ){
         Set set = new HashSet();
 
-        for(Iterator it = dag.vJobSubInfos.iterator();it.hasNext();){
+        for( Iterator it = dag.vJobSubInfos.iterator();it.hasNext();){
             Job job = (Job)it.next();
 
             if( job.getJobType() == Job.CHMOD_JOB ){
@@ -253,10 +253,15 @@ public class RemoveDirectory extends Engine {
             //being run in the work directory
             //this takes care of local site create dir
             if( job.runInWorkDirectory()){
-                if( job.getStagingSiteHandle() == null ){
-                    throw new RuntimeException( "Unable to figure out the staging site for job " + job.getID() );
+
+                String site = job.getStagingSiteHandle();
+                //sanity check for remote transfer jobs
+                if( job instanceof TransferJob ){
+                    site = ((TransferJob)job).getNonThirdPartySite();
                 }
-                set.add( job.getStagingSiteHandle() );
+
+                //System.out.println( "Job staging site handle " + job.getID() + " " + site );
+                set.add( site );
             }
         }
 

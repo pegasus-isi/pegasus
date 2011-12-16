@@ -24,6 +24,7 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 
 import edu.isi.pegasus.common.logging.LogManager;
 
+import edu.isi.pegasus.planner.classes.TransferJob;
 import edu.isi.pegasus.planner.partitioner.graph.Graph;
 
 import java.util.HashSet;
@@ -106,6 +107,12 @@ public abstract class AbstractStrategy implements Strategy {
      * @return String corresponding to the name of the job.
      */
     public String getCreateDirJobName( ADag dag, String pool){
+
+        //sanity check
+        if( pool == null ){
+            return null;
+        }
+        
         StringBuffer sb = new StringBuffer();
 
         sb.append( AbstractStrategy.CREATE_DIR_PREFIX );
@@ -148,7 +155,15 @@ public abstract class AbstractStrategy implements Strategy {
             //being run in the work directory
             //this takes care of local site create dir
             if( job.runInWorkDirectory()){
-                set.add( job.getStagingSiteHandle() );
+
+                String site = job.getStagingSiteHandle();
+                //sanity check for remote transfer jobs
+                if( job instanceof TransferJob ){
+                    site = ((TransferJob)job).getNonThirdPartySite();
+                }
+
+                //System.out.println( "Job staging site handle " + job.getID() + " " + site );
+                set.add( site );
             }
         }
 

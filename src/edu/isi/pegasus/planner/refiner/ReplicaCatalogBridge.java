@@ -483,12 +483,12 @@ public class ReplicaCatalogBridge
         Job newJob = new Job();
 
         newJob.setName( regJobName );
-        newJob.setTransformation( this.RC_TRANSFORMATION_NS,
-                                  this.RC_TRANSFORMATION_NAME,
-                                  this.RC_TRANSFORMATION_VERSION );
-        newJob.setDerivation( this.RC_DERIVATION_NS,
-                              this.RC_DERIVATION_NAME,
-                              this.RC_DERIVATION_VERSION );
+        newJob.setTransformation( ReplicaCatalogBridge.RC_TRANSFORMATION_NS,
+                                  ReplicaCatalogBridge.RC_TRANSFORMATION_NAME,
+                                  ReplicaCatalogBridge.RC_TRANSFORMATION_VERSION );
+        newJob.setDerivation( ReplicaCatalogBridge.RC_DERIVATION_NS,
+                              ReplicaCatalogBridge.RC_DERIVATION_NAME,
+                              ReplicaCatalogBridge.RC_DERIVATION_VERSION );
 
 //        SiteInfo site = mPoolHandle.getPoolEntry( mOutputPool, "vanilla" );
         SiteCatalogEntry site = mSiteStore.lookup( mOutputPool );

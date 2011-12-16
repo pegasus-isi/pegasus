@@ -105,10 +105,7 @@ public class Tentacles extends AbstractStrategy {
                                      LogManager.DEBUG_MESSAGE_LEVEL );
                         continue;
                     }
-                    else{
-                        //throw an error
-                        throw new RuntimeException( "Job not associated with staging site" + job.getID() );
-                    }
+                    
                 }
 
                 parent =  getCreateDirJobName( dag, site);
@@ -123,6 +120,14 @@ public class Tentacles extends AbstractStrategy {
             if( (job instanceof TransferJob &&  type != Job.STAGE_OUT_JOB )
                 || (!local
                           || (type == Job.COMPUTE_JOB /*|| type == Job.STAGED_COMPUTE_JOB*/ || job instanceof DAXJob || job instanceof DAGJob ))){
+
+
+                //sanity check
+                if( parent == null ){
+                        //throw an error
+                        throw new RuntimeException( "Job not associated with staging site " + job.getID() );
+                }
+
                 mLogger.log("Adding relation " + parent + " -> " + jobName,
                             LogManager.DEBUG_MESSAGE_LEVEL);
                 dag.addNewRelation(parent,jobName);
