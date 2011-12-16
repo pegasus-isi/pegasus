@@ -44,7 +44,7 @@ public  class ImplementationFactory {
 
     public static final String DEFAULT_TRANSFER_IMPLEMENTATION = "Transfer";
 
-    public static final String DEFAULT_SETUP_TRANSFER_IMPLEMENTATION = "GUC";
+    public static final String DEFAULT_SETUP_TRANSFER_IMPLEMENTATION = "Transfer";
 
     /**
      * The constant designating the implementation be loaded for stage in jobs.
