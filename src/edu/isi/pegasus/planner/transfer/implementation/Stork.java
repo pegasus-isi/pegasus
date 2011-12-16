@@ -278,10 +278,16 @@ public class Stork extends AbstractSingleFTPerXFERJob {
      *
      * @param siteHandle  the handle of the  site where the transformation is
      *                    to be searched.
+     * @param jobClass    the job Class for the newly added job. Can be one of the
+     *                    following:
+     *                              stage-in
+     *                              stage-out
+     *                              inter-pool transfer
+     *                              stage-in worker transfer
      *
      * @return  the transformation catalog entry if found, else null.
      */
-    public TransformationCatalogEntry getTransformationCatalogEntry(String siteHandle){
+    public TransformationCatalogEntry getTransformationCatalogEntry(String siteHandle, int jobClass ){
        return new TransformationCatalogEntry(this.TRANSFORMATION_NAMESPACE,
                                              this.TRANSFORMATION_NAME,
                                              this.TRANSFORMATION_VERSION);

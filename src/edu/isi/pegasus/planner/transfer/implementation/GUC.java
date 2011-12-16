@@ -178,10 +178,16 @@ public class GUC extends AbstractMultipleFTPerXFERJob {
     *
     * @param siteHandle  the handle of the  site where the transformation is
     *                    to be searched.
+    * @param jobClass    the job Class for the newly added job. Can be one of the
+    *                    following:
+    *                              stage-in
+    *                              stage-out
+    *                              inter-pool transfer
+    *                              stage-in worker transfer
     *
     * @return  the transformation catalog entry if found, else null.
     */
-   public TransformationCatalogEntry getTransformationCatalogEntry( String siteHandle ){
+   public TransformationCatalogEntry getTransformationCatalogEntry( String siteHandle, int jobClass ){
        List tcentries = null;
        try {
            //namespace and version are null for time being
@@ -422,6 +428,7 @@ public class GUC extends AbstractMultipleFTPerXFERJob {
     * @param job  the <code>TransferJob</code> that has been created.
     */
    public void postProcess( TransferJob job ){
+       super.postProcess(job);
        File f = new File( mPOptions.getSubmitDirectory(), job.getStdIn() );
        //add condor key transfer_input_files to transfer the file
        job.condorVariables.addIPFileForTransfer( f.getAbsolutePath() );

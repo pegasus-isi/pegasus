@@ -196,6 +196,7 @@ public class WorkflowMetrics extends Data {
 
 
             case Job.STAGE_IN_JOB:
+            case Job.STAGE_IN_WORKER_PACKAGE_JOB:
                 mNumSITxJobs++;
                 break;
 
@@ -270,6 +271,7 @@ public class WorkflowMetrics extends Data {
 
 
             case Job.STAGE_IN_JOB:
+            case Job.STAGE_IN_WORKER_PACKAGE_JOB:
                 mNumSITxJobs--;
                 break;
 

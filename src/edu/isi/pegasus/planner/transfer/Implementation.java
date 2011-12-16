@@ -39,9 +39,9 @@ public interface Implementation {
 
 
     /**
-     * The version number associated with this API of Code Generator.
+     * The version number associated with this API 
      */
-    public static final String VERSION = "1.5";
+    public static final String VERSION = "1.6";
 
 
     /**
@@ -203,9 +203,16 @@ public interface Implementation {
      * @param siteHandle  the handle of the  site where the transformation is
      *                    to be searched.
      *
+     * @param jobClass    the job Class for the newly added job. Can be one of the
+     *                    following:
+     *                              stage-in
+     *                              stage-out
+     *                              inter-pool transfer
+     *                              stage-in worker transfer
+     *
      * @return  the transformation catalog entry if found, else null.
      */
-    public TransformationCatalogEntry getTransformationCatalogEntry(String siteHandle);
+    public TransformationCatalogEntry getTransformationCatalogEntry(String siteHandle, int jobClass );
 
     /**
      * Return a boolean indicating whether the transfers to be done always in

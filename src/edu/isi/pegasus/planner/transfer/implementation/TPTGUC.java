@@ -128,7 +128,7 @@ public class TPTGUC extends GUC {
     * @param job  the <code>TransferJob</code> that has been created.
     */
    public void postProcess( TransferJob job ){
-       
+       super.postProcess(job);
        job.setStdIn( "" );
    }
 

@@ -33,6 +33,7 @@ import edu.isi.pegasus.common.util.Separator;
 
 
 
+import edu.isi.pegasus.planner.classes.Job;
 import java.io.FileWriter;
 
 import java.util.Collection;
@@ -169,10 +170,30 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
      *
      * @param siteHandle  the handle of the  site where the transformation is
      *                    to be searched.
+     * @param jobClass    the job Class for the newly added job. Can be one of the
+     *                    following:
+     *                              stage-in
+     *                              stage-out
+     *                              inter-pool transfer
+     *                              stage-in worker transfer
+     *
      *
      * @return  the transformation catalog entry if found, else null.
      */
-    public TransformationCatalogEntry getTransformationCatalogEntry(String siteHandle){
+    public TransformationCatalogEntry getTransformationCatalogEntry(String siteHandle, int jobClass ){
+
+        if(  jobClass == Job.STAGE_IN_WORKER_PACKAGE_JOB && !siteHandle.equalsIgnoreCase( "local") ){
+            //PM-538
+            //construct an entry for the local site and transfer it.
+
+            return this.defaultTCEntry( Transfer.TRANSFORMATION_NAMESPACE,
+                                      Transfer.TRANSFORMATION_NAME,
+                                      Transfer.TRANSFORMATION_VERSION,
+                                      Transfer.EXECUTABLE_BASENAME,
+                                      "local" );
+
+        }
+
         List tcentries = null;
         try {
             //namespace and version are null for time being
@@ -187,15 +208,48 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
                 + " Cause:" + e, LogManager.DEBUG_MESSAGE_LEVEL );
         }
 
-        return ( tcentries == null ) ?
+        TransformationCatalogEntry entry = ( tcentries == null ) ?
+                 //attempt to create a default entry on the basis of
+                 //PEGASUS_HOME defined in the site catalog
                  this.defaultTCEntry( Transfer.TRANSFORMATION_NAMESPACE,
                                       Transfer.TRANSFORMATION_NAME,
                                       Transfer.TRANSFORMATION_VERSION,
                                       Transfer.EXECUTABLE_BASENAME,
-                                      siteHandle ): //try using a default one
+                                      siteHandle ):
+                 //get what was returned in the transformation catalog
                  (TransformationCatalogEntry) tcentries.get(0);
 
+        
+        
 
+        return entry;
+
+    }
+
+
+    /**
+     * An optional method that allows the derived classes to do their own
+     * post processing on the the transfer job before it is returned to
+     * the calling module.
+     *
+     * @param job  the <code>TransferJob</code> that has been created.
+     */
+    public void postProcess( TransferJob job ){
+
+        if( job.getJobType() == Job.STAGE_IN_WORKER_PACKAGE_JOB ){
+            //all stage worker jobs are classified as stage in jobs
+            //for further use in the planner
+            job.setJobType( Job.STAGE_IN_JOB );
+
+
+            if(   !job.getSiteHandle().equalsIgnoreCase( "local" ) ){
+                //PM-538
+                //executable for remote stage worker jobs is transferred
+                //from local site.
+                job.condorVariables.setExecutableForTransfer();
+            }
+
+        }
 
     }
 

@@ -178,7 +178,7 @@ public abstract class AbstractSingleFTPerXFERJob extends Abstract
         
         txJob.setUniverse( GridGateway.JOB_TYPE.transfer.toString() );
 
-        TransformationCatalogEntry tcEntry = this.getTransformationCatalogEntry(tPool);
+        TransformationCatalogEntry tcEntry = this.getTransformationCatalogEntry(tPool, jobClass );
         if(tcEntry == null){
             //should throw a TC specific exception
             StringBuffer error = new StringBuffer();

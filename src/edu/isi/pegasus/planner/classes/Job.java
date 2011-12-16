@@ -102,6 +102,11 @@ public class Job extends Data implements GraphNodeContent{
     public static final int CREATE_DIR_JOB  = 6;
 
     /**
+     * Denotes a job that stages the worker package.
+     */
+    public static final int STAGE_IN_WORKER_PACKAGE_JOB = 7;
+
+    /**
      * Denotes a job for which the executable has been staged as part of the
      * workflow.
      */

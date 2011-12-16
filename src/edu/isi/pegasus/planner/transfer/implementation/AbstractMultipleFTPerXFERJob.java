@@ -88,6 +88,7 @@ public abstract class AbstractMultipleFTPerXFERJob extends Abstract
      *                              stage-in
      *                              stage-out
      *                              inter-pool transfer
+     *                              stage-in worker transfer
      *
      * @return  the created TransferJob.
      */
@@ -127,7 +128,7 @@ public abstract class AbstractMultipleFTPerXFERJob extends Abstract
         txJob.executionPool = tPool;
         txJob.setUniverse( GridGateway.JOB_TYPE.transfer.toString() );
 
-        TransformationCatalogEntry tcEntry = this.getTransformationCatalogEntry(tPool);
+        TransformationCatalogEntry tcEntry = this.getTransformationCatalogEntry( tPool, jobClass );
         if(tcEntry == null){
             //should throw a TC specific exception
             StringBuffer error = new StringBuffer();
@@ -340,7 +341,12 @@ public abstract class AbstractMultipleFTPerXFERJob extends Abstract
      * @param job  the <code>TransferJob</code> that has been created.
      */
     public void postProcess( TransferJob job ){
+        //JIRA PM-538
+        // change the type of stage worker job back to stage in job
 
+        if( job.getJobType() == Job.STAGE_IN_WORKER_PACKAGE_JOB ){
+            job.setJobType( Job.STAGE_IN_JOB );
+        }
     }
 
     /**

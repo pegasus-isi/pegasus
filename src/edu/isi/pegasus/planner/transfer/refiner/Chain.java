@@ -190,7 +190,7 @@ public class Chain extends Default {
 
         //this should be parameterised Karan Dec 20,2005
         TransformationCatalogEntry entry  =
-            mTXStageInImplementation.getTransformationCatalogEntry(site);
+            mTXStageInImplementation.getTransformationCatalogEntry(site, Job.STAGE_IN_JOB );
 
         //assimilate the profile information from transformation catalog
         if(entry!= null){

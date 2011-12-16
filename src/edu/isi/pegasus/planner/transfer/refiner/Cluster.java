@@ -615,7 +615,7 @@ public class Cluster extends Bundle {
     protected int getSISiteBundleValue(String site,  String deflt){
         //this should be parameterised Karan Dec 20,2005
         TransformationCatalogEntry entry  =
-            mTXStageInImplementation.getTransformationCatalogEntry(site);
+            mTXStageInImplementation.getTransformationCatalogEntry(site, Job.STAGE_IN_JOB );
         Job sub = new Job();
         String value = (deflt == null)?
                         this.DEFAULT_LOCAL_STAGE_IN_CLUSTER_FACTOR:

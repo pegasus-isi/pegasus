@@ -738,7 +738,7 @@ public class DeployWorkerPackage
                                          fts,
                                          null,
                                          this.getDeployJobName( dag, site , localTransfer),
-                                         Job.STAGE_IN_JOB );
+                                         Job.STAGE_IN_WORKER_PACKAGE_JOB );
 
             //the setupTXJob non third party site, has to be the staging site
             setupTXJob.setNonThirdPartySite( stagingSite );
@@ -829,7 +829,7 @@ public class DeployWorkerPackage
                                          fts,
                                          null,
                                          this.getDeployJobName( dag, tsite , localTransfer),
-                                         Job.STAGE_IN_JOB );
+                                         Job.STAGE_IN_WORKER_PACKAGE_JOB );
 
         //the setupTXJob is null as stage worker job pulls in
         //data to the submit host directory
