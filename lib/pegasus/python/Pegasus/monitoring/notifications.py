@@ -165,8 +165,8 @@ class Notifications:
                         logger.warning("error closing stderr file for notification %s... continuing..."
                                        % (my_finished_notification))
                 
-                    if logger.isEnabledFor(logging.INFO):
-                        if self._notifications_log is not None:
+                    if self._notifications_log is not None:
+                        if logger.isEnabledFor(logging.INFO):
                             self._notifications_log.write("%s\n" % ('-' * 80))
                             self._notifications_log.write("Notification time  : %s\n" % (utils.isodate()))
                             self._notifications_log.write("Notification event : %s\n" % (my_finished_notification))
@@ -199,8 +199,14 @@ class Notifications:
                             self._notifications_log.write("\n")
                             self._notifications_log.write("\n")
                         else:
-                            logger.critical("notifications' output log file not initialized... exiting...")
-                            sys.exit(1)
+                            # Only log a one-liner so we can debug things later if we need to
+                            self._notifications_log.write("%s - %s - %s - %s\n" % (utils.isodate(),
+                                                                                   my_finished_notification,
+                                                                                   my_finished_action,
+                                                                                   my_status))
+                    else:
+                        logger.critical("notifications' output log file not initialized... exiting...")
+                        sys.exit(1)
 
                     # Now, delete output and error files
                     try:

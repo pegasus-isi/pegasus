@@ -30,6 +30,9 @@ from Pegasus.tools import utils
 # Get logger object (initialized elsewhere)
 logger = logging.getLogger()
 
+# Global variables
+good_rsl = {"maxcputime": 1, "maxtime":1, "maxwalltime": 1}
+
 # Used in parse_sub_file
 re_rsl_string = re.compile(r"^\s*globusrsl\W", re.IGNORECASE)
 re_rsl_clean = re.compile(r"([-_])")
