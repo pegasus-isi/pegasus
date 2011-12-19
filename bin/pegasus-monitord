@@ -106,9 +106,8 @@ re_parse_condor_logfile_insane = re.compile(r"\d{2}\s{3,}(\S+)")
 re_parse_multiline_files = re.compile(r"All DAG node user log files:")
 
 # Constants
-logbase = "monitord.log"       # Basename of daemon logfile
-good_rsl = {"maxcputime": 1, "maxtime":1, "maxwalltime": 1}
-speak = "PMD/1.0"
+logbase = "monitord.log"                  # Basename of daemon logfile
+speak = "PMD/1.0"                         # Protocol version for our socket command-line interface
 MONITORD_WF_RETRY_FILE = "monitord.subwf" # filename for writing persistent sub-workflow retry information
 MAX_SLEEP_TIME = 10     	          # in seconds
 SLEEP_WAIT_NOTIFICATION = 5               # in seconds
@@ -257,7 +256,7 @@ parser.add_option("-o", "--output-dir", action = "store", type = "string", dest 
 parser.add_option("--conf", action = "store", type = "string", dest = "config_properties",
 		  help = "specifies the properties' file to use. This option overrides all other property files.")
 parser.add_option("--no-recursive", action = "store_const", const = 1, dest = "disable_subworkflows",
-		  help = "disable pegasus-monitord the automatic follow any sub-workflows that are found")
+		  help = "disables pegasus-monitord to automatic follow any sub-workflows that are found")
 parser.add_option("--no-database", "--nodatabase", "--no-events", action = "store_const", const = 0, dest = "no_events",
 		  help = "turn off event generation completely, and overrides the URL in the -d option")
 parser.add_option("--no-notifications", "--no-notification", action = "store_const", const = 0, dest = "no_notify",
@@ -278,6 +277,8 @@ parser.add_option("--socket", action = "store_const", const = "yes", dest = "soc
                   help = "enables a socket interface for debugging")
 parser.add_option("--skip-stdout", action = "store_const", const = 0, dest = "skip_stdout",
                   help = "disables storing both stdout and stderr in our output")
+parser.add_option("-f", "--force", action = "store_const", const = 1, dest = "skip_pid_check",
+                  help = "runs pegasus-monitord even if it detects a previous instance running")
 parser.add_option("-v", "--verbose", action="count", default=0, dest="vb",
                   help="Increase verbosity, repeatable")
 grp = optparse.OptionGroup(parser, "Output options")
@@ -316,6 +317,10 @@ run = os.path.dirname(out)
 if options.event_dest is not None and options.no_events is not None:
     logger.warning("the --no-events and --dest options conflict, please use only one of them")
     sys.exit(1)
+
+# Check if user wants to override pid checking
+if options.skip_pid_check is not None:
+    skip_pid_check = True
 
 # Make sure no other pegasus-monitord instances are running...
 pid_filename = os.path.join(run, "monitord.pid")
