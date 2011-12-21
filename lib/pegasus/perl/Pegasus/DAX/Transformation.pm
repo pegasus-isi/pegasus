@@ -109,7 +109,7 @@ sub toXML {
     my $f = shift; 
     my $indent = shift || '';
     my $xmlns = shift; 
-    my $tag = defined $xmlns && $xmlns ? "$xmlns:executable" : 'executable';
+    my $tag = defined $xmlns && $xmlns ? "$xmlns:transformation" : 'transformation';
 
     $f->print( "$indent<$tag"
 	     , attribute('namespace',$self->namespace,$xmlns)
