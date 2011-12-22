@@ -10,6 +10,7 @@ use Carp;
 use Pegasus::DAX::Base qw(:xml); 
 use Pegasus::DAX::Filename; 
 use Pegasus::DAX::InvokeMixin;
+use Pegasus::DAX::TUType;
 use Exporter;
 our @ISA = qw(Pegasus::DAX::Base Pegasus::DAX::InvokeMixin Exporter); 
 
