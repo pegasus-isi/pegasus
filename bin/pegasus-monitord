@@ -1329,7 +1329,12 @@ while (len(wfs) > 0):
                             else:
                                 # Just make sure we link the workflow to its parent job,
                                 # which in this case is a job retry...
-                                pass
+                                if os.path.dirname(new_dagman_out) in Workflow.wf_list:
+                                    workflow_entry.wf.map_subwf(parent_jobid, parent_jobseq,
+                                                                Workflow.wf_list[os.path.dirname(new_dagman_out)])
+                                else:
+                                    logger.warning("cannot link job %s:%s to its subwf because we don't have info for dir: %s" %
+                                                   (parent_jobid, parent_jobseq, os.path.dirname(new_dagman_out)))
 
                         if millisleep is not None:
                             if server is not None:

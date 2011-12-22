@@ -492,6 +492,7 @@ class Parser:
                              "ram": ["total"],
                              "uname": ["system", "release", "machine"],
                              "file": ["name"],
+                             "status": ["raw"],
                              "regular": ["exitcode"],
                              "argument-vector": [],
                              "cwd": [],

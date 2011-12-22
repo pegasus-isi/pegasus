@@ -40,7 +40,7 @@ __all__ = ['quote', 'unquote']
 _mapping = {}
 
 # Initialize _mapping
-for i, c in  zip(xrange(256), ''.join([chr(x) for x in xrange(256)])):
+for i, c in zip(xrange(256), ''.join([chr(x) for x in xrange(256)])):
     if (i >= 32 and i < 127 and c not in '"%\''):
         _mapping[c] = c
     else:
@@ -65,7 +65,7 @@ logger = logging.getLogger()
 
 def quote(s):
     """
-    Encodes a string using a partial URL encoding The encoding
+    Encodes a string using a partial URL encoding. The encoding
     replaces the following elements with their URL-encoded
     equivalents:
     1. Non-printing and control characters (characters < 0x20 and 0x7F [DEL])
