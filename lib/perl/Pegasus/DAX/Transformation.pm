@@ -10,6 +10,7 @@ use Carp;
 use Pegasus::DAX::Base qw(:xml); 
 use Pegasus::DAX::Filename; 
 use Pegasus::DAX::InvokeMixin;
+use Pegasus::DAX::TUType;
 use Exporter;
 our @ISA = qw(Pegasus::DAX::Base Pegasus::DAX::InvokeMixin Exporter); 
 
@@ -109,7 +110,7 @@ sub toXML {
     my $f = shift; 
     my $indent = shift || '';
     my $xmlns = shift; 
-    my $tag = defined $xmlns && $xmlns ? "$xmlns:executable" : 'executable';
+    my $tag = defined $xmlns && $xmlns ? "$xmlns:transformation" : 'transformation';
 
     $f->print( "$indent<$tag"
 	     , attribute('namespace',$self->namespace,$xmlns)
