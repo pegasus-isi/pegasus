@@ -314,8 +314,12 @@ public class NoGridStart implements GridStart {
         job.setRemoteExecutable( handleTransferOfExecutable( job ) );
 
         //JIRA PM-543
-        job.setDirectory( this.getDirectory( job ) );
+        //set the directory key with the job
+        if( requiresToSetDirectory( job ) ){
+             job.setDirectory( this.getDirectory( job ) );
 
+        }
+        
 /*
         //the executable path and arguments are put
         //in the Condor namespace and not printed to the
@@ -485,6 +489,20 @@ public class NoGridStart implements GridStart {
         return NoPOSTScript.SHORT_NAME;
     }
 
+    /**
+     * Returns a boolean indicating whether we need to set the directory for
+     * the job or not.
+     *
+     * @param job the job for which to set directory.
+     *
+     * @return
+     */
+    protected boolean requiresToSetDirectory( Job job ) {
+        //the cleanup jobs should never have directory set as full path
+        //is specified
+        return ( job.getJobType() != Job.CLEANUP_JOB );
+    }
+    
     /**
      * Returns the directory in which the job should run.
      *

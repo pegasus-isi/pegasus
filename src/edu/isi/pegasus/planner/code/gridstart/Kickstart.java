@@ -564,7 +564,9 @@ public class Kickstart implements GridStart {
         }
         else{
             //set the directory key with the job
-            job.setDirectory( directory );
+            if( requiresToSetDirectory( job ) ){
+                job.setDirectory( directory );
+            }
         }
 
 
@@ -979,6 +981,20 @@ public class Kickstart implements GridStart {
         return PegasusExitCode.SHORT_NAME;
     }
 
+    /**
+     * Returns a boolean indicating whether we need to set the directory for
+     * the job or not.
+     *
+     * @param job the job for which to set directory.
+     *
+     * @return
+     */
+    protected boolean requiresToSetDirectory( Job job ) {
+        //the cleanup jobs should never have directory set as full path
+        //is specified
+        return ( job.getJobType() != Job.CLEANUP_JOB );
+    }
+
 
     /**
      * Returns the directory in which the job should run.
@@ -1253,16 +1269,8 @@ public class Kickstart implements GridStart {
     }
 
 
-    /**
-     * Writes the files to
-     *
-     * @param files
-     * @param path
-     * @return
-     */
-    private File writeToFile(Collection<FileTransfer> files, String directory, String name ) {
-        throw new UnsupportedOperationException("Not yet implemented");
-    }
+    
+
 
 
 }
