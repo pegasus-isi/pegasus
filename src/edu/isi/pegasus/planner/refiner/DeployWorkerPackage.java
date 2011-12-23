@@ -436,6 +436,11 @@ public class DeployWorkerPackage
         Map<String,String> workerPackageMap = new HashMap<String,String>();
 
 
+        //for the   pegasus lite case, we insert entries into the
+        //transformation catalog for all worker package executables
+        //the planner requires with just the basename
+        boolean useFullPath = !( mWorkerNodeExecution );
+
         //for each site insert default entries in the Transformation Catalog
         //for each scheduled site query TCMapper
         Set deploymentSites = this.getDeploymentSites( scheduledDAG );
@@ -500,29 +505,51 @@ public class DeployWorkerPackage
                                         siteStore.getInternalWorkDirectory( stagingSite );
 
 
-            //for the non pegasus lite case, we insert entries into the
-            //transformation catalog for all worker package executables
-            //the planner requires
-            if( !mWorkerNodeExecution ){
+
+
+
+            if( useFullPath ){
+                // we insert entries into the transformation catalog for all worker
+                // package executables the planner requires with full paths
+                //this is the shared fs case
                 String name = getRootDirectoryNameForPegasus( selected.getPhysicalTransformation() );
                 File pegasusHome = new File( baseRemoteWorkDir, name );
-
-
 
                 StringBuffer sb = new StringBuffer();
                 sb.append( "Directory where pegasus worker executables will reside on site ").append( stagingSite ).
                    append( " " ).append( pegasusHome.getAbsolutePath() );
                 mLogger.log( sb.toString(), LogManager.DEBUG_MESSAGE_LEVEL );
                 mSiteToPegasusHomeMap.put( stagingSite, pegasusHome.getAbsolutePath() );
+
+                
             
                 //now create transformation catalog entry objects for each
                 //worker package executable
                 for( int i = 0; i < PEGASUS_WORKER_EXECUTABLES.length; i++){
                     TransformationCatalogEntry entry = addDefaultTCEntry( stagingSite,
-                                                                        pegasusHome.getAbsolutePath(),
-                                                                        selected.getSysInfo(),
-                                                                        PEGASUS_WORKER_EXECUTABLES[i][0],
-                                                                        PEGASUS_WORKER_EXECUTABLES[i][1]  );
+                                                                          pegasusHome.getAbsolutePath(),
+                                                                          selected.getSysInfo(),
+                                                                          useFullPath,
+                                                                          PEGASUS_WORKER_EXECUTABLES[i][0],
+                                                                          PEGASUS_WORKER_EXECUTABLES[i][1]  );
+
+                    mLogger.log( "Entry constructed " + entry , LogManager.DEBUG_MESSAGE_LEVEL );
+                }
+            }
+            else{
+                // we insert entries into the transformation catalog for all worker
+                // package executables the planner requires with relative paths
+                // and for the execution sites instead of staging site
+                //this is the PegasusLite case
+                //now create transformation catalog entry objects for each
+                //worker package executable
+                for( int i = 0; i < PEGASUS_WORKER_EXECUTABLES.length; i++){
+                    TransformationCatalogEntry entry = addDefaultTCEntry( site,
+                                                                          null,
+                                                                          selected.getSysInfo(),
+                                                                          useFullPath,
+                                                                          PEGASUS_WORKER_EXECUTABLES[i][0],
+                                                                          PEGASUS_WORKER_EXECUTABLES[i][1]  );
 
                     mLogger.log( "Entry constructed " + entry , LogManager.DEBUG_MESSAGE_LEVEL );
                 }
@@ -1182,11 +1209,13 @@ public class DeployWorkerPackage
      * transformation catalog. It also attempts to add the transformation catalog 
      * entry to the underlying TC store.
      *
-     * @param site   the site for which the default entry is required.
+     * @param site         the site for which the default entry is required.
      * @param pegasusHome  the path to deployed worker package
-     * @param sysinfo the system information of that site.
-     * @param name        the logical name of the transformation
-     * @param executable  the basename of the executable
+     * @param sysinfo      the system information of that site.
+     * @param useFullPath  boolean indicating whether to use just the basename or
+     *                     the full path
+     * @param name         the logical name of the transformation
+     * @param executable   the basename of the executable
      *
      *
      * @return  the default entry.
@@ -1194,6 +1223,7 @@ public class DeployWorkerPackage
     private  TransformationCatalogEntry addDefaultTCEntry( String site,
                                                         String pegasusHome,
                                                         SysInfo sysinfo,
+                                                        boolean useFullPath,
                                                         String name,
                                                         String executable ){
         TransformationCatalogEntry defaultTCEntry = null;
@@ -1206,9 +1236,11 @@ public class DeployWorkerPackage
 
         //construct the path to the executable
         StringBuffer path = new StringBuffer();
-        path.append( pegasusHome ).append( File.separator ).
-            append( "bin" ).append( File.separator ).
-            append( executable );
+        if( useFullPath ){
+            path.append( pegasusHome ).append( File.separator ).
+                 append( "bin" ).append( File.separator );
+        }
+        path.append( executable );
 
         mLogger.log( "Remote Path set is " + path.toString(),
                      LogManager.DEBUG_MESSAGE_LEVEL );
@@ -1222,9 +1254,10 @@ public class DeployWorkerPackage
         defaultTCEntry.setType( TCType.INSTALLED );
         defaultTCEntry.setSysInfo( sysinfo );
 
-        //add pegasus home as an environment variable
-        defaultTCEntry.addProfile( new Profile( Profile.ENV, "PEGASUS_HOME", pegasusHome ));
-
+        if( useFullPath ){
+            //add pegasus home as an environment variable
+            defaultTCEntry.addProfile( new Profile( Profile.ENV, "PEGASUS_HOME", pegasusHome ));
+        }
         
         //register back into the transformation catalog
         //so that we do not need to worry about creating it again
