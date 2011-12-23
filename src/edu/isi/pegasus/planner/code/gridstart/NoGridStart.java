@@ -312,6 +312,10 @@ public class NoGridStart implements GridStart {
         // they are now set to the corresponding profiles in
         // the Condor Code Generator only.
         job.setRemoteExecutable( handleTransferOfExecutable( job ) );
+
+        //JIRA PM-543
+        job.setDirectory( this.getDirectory( job ) );
+
 /*
         //the executable path and arguments are put
         //in the Condor namespace and not printed to the
@@ -479,6 +483,21 @@ public class NoGridStart implements GridStart {
      */
     public String defaultPOSTScript(){
         return NoPOSTScript.SHORT_NAME;
+    }
+
+    /**
+     * Returns the directory in which the job should run.
+     *
+     * @param job   the job in which the directory has to run.
+     *
+     * @return
+     */
+    protected String getDirectory( Job job ){
+        String execSiteWorkDir = mSiteStore.getInternalWorkDirectory(job);
+        String workdir = (String) job.globusRSL.removeKey("directory"); // returns old value
+        workdir = (workdir == null)?execSiteWorkDir:workdir;
+
+        return workdir;
     }
 
     /**

@@ -781,11 +781,13 @@ public class PegasusLite implements GridStart {
     protected File wrapJobWithPegasusLite(Job job, boolean isGlobusJob) {
         File shellWrapper = new File( mSubmitDir, job.getID() + ".sh" );
 
+//           Removed for JIRA PM-543
+//
+//         //remove the remote or initial dir's for the compute jobs
+//         String key = getDirectoryKey( job );
+//
+//         String exectionSiteDirectory     = (String)job.condorVariables.removeKey( key );
 
-        //remove the remote or initial dir's for the compute jobs
-        String key = getDirectoryKey( job );
-
-        String exectionSiteDirectory     = (String)job.condorVariables.removeKey( key );
         FileServer stagingSiteFileServer = mSiteStore.lookup( job.getStagingSiteHandle() ).getHeadNodeFS().selectScratchSharedFileServer();
         String stagingSiteDirectory      = mSiteStore.getExternalWorkDirectory(stagingSiteFileServer, job.getStagingSiteHandle() );
         String workerNodeDir             = getWorkerNodeDirectory( job );
@@ -929,6 +931,9 @@ public class PegasusLite implements GridStart {
             //set the xbit on the shell script
             //for 3.2, we will have 1.6 as the minimum jdk requirement
             shellWrapper.setExecutable( true );
+
+            //JIRA PM-543
+            job.setDirectory( null );
             
             //this.setXBitOnFile( shellWrapper.getAbsolutePath() );
         }

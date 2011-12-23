@@ -76,9 +76,11 @@ public class CondorGlideIN extends Abstract {
      */
     public void apply( Job job ) throws CondorStyleException{
 
-        String execSiteWorkDir = mSiteStore.getInternalWorkDirectory( job );
-        String workdir = (String) job.globusRSL.removeKey( "directory" ); // returns old value
-        workdir = (workdir == null)?execSiteWorkDir:workdir;
+        //           Removed for JIRA PM-543
+//      String execSiteWorkDir = mSiteStore.getInternalWorkDirectory( job );
+//        String workdir = (String) job.globusRSL.removeKey( "directory" ); // returns old value
+//        workdir = (workdir == null)?execSiteWorkDir:workdir;
+        String workdir = job.getDirectory();
 
         String universe = job.condorVariables.containsKey( Condor.UNIVERSE_KEY )?
                               (String)job.condorVariables.get( Condor.UNIVERSE_KEY ):
@@ -97,7 +99,9 @@ public class CondorGlideIN extends Abstract {
                 job.vdsNS.checkKeyInNS( Pegasus.CHANGE_DIR_KEY, "true" );
                 //set remote_initialdir for the job only for non transfer jobs
                 //this is removed later when kickstart is enabling.
-                job.condorVariables.construct( "remote_initialdir", workdir );
+                if( workdir != null ){
+                    job.condorVariables.construct( "remote_initialdir", workdir );
+                }
             }
             //we want the stdout and stderr to be transferred back
             //by Condor to the submit host always

@@ -522,47 +522,62 @@ public class Kickstart implements GridStart {
         //to kickstart as argument
         gridStartArgs.append("-R ").append(job.executionPool).append(' ');
 
+
+//      Added for JIRA PM-543
+        String directory = this.getDirectory( job );
+
+
           
-            //handle the -w option that asks kickstart to change
-            //exectionSiteDirectory before launching an executable.
-            if(job.vdsNS.getBooleanValue(Pegasus.CHANGE_DIR_KEY)  ){
-
-                
-                //check for removing the exectionSiteDirectory keys only if worker node
-                //execution is disabled and the constituent constituentJob is not enabled
-                //during clustering. JIRA Bug 80 and Bug 263
-                String directory = null;
-                String key = getDirectoryKey( job );
-                //we remove the key JIRA PM-80
-                directory = (String)job.condorVariables.removeKey( key );
-                //pass the exectionSiteDirectory as an argument to kickstart
-                gridStartArgs.append(" -w ").append( directory ).append(' ');
-            }
-
-            //handle the -W option that asks kickstart to create and change
-            //exectionSiteDirectory before launching an executable.
-            if(job.vdsNS.getBooleanValue(Pegasus.CREATE_AND_CHANGE_DIR_KEY ) ){
+        //handle the -W option that asks kickstart to create and change
+        //exectionSiteDirectory before launching an executable.
+        if(job.vdsNS.getBooleanValue(Pegasus.CREATE_AND_CHANGE_DIR_KEY ) ){
 	    
 //            Commented to take account of submitting to condor pool
 //            directly or glide in nodes. However, does not work for
 //            standard universe jobs. Also made change in Kickstart
 //            to pick up only remote_initialdir Karan Nov 15,2005
-                
-                String directory = null;
 
-                String key = getDirectoryKey( job );
-                //we remove the key JIRA PM-80
-                directory = (String)job.condorVariables.removeKey( key );
+
+//           Removed for JIRA PM-543
+//                String directory = null;
+//                String key = getDirectoryKey( job );
+//                //we remove the key JIRA PM-80
+//                directory = (String)job.condorVariables.removeKey( key );
+
+            //pass the exectionSiteDirectory as an argument to kickstart
+            gridStartArgs.append(" -W ").append(directory).append(' ');
+            
+        }
+        else  if(job.vdsNS.getBooleanValue(Pegasus.CHANGE_DIR_KEY)  ){
+            //handle the -w option that asks kickstart to change
+            //exectionSiteDirectory before launching an executable.
+
+
+//           Removed for JIRA PM-543
+//                String directory = null;
+//                String key = getDirectoryKey( job );\
+//                //we remove the key JIRA PM-80
+//                directory = (String)job.condorVariables.removeKey( key );
+
                 //pass the exectionSiteDirectory as an argument to kickstart
-                gridStartArgs.append(" -W ").append(directory).append(' ');
-            }
+                gridStartArgs.append(" -w ").append( directory ).append(' ');
+        }
+        else{
+            //set the directory key with the job
+            job.setDirectory( directory );
+        }
 
-            if(  /*!mEnablingPartOfAggregatedJob && */job.vdsNS.getBooleanValue(Pegasus.TRANSFER_PROXY_KEY) ){
-                String key = getDirectoryKey( job );
-                //just remove the remote_initialdir key
-                //the constituentJob needs to be run in the exectionSiteDirectory
-                //Condor or GRAM decides to run
-                job.condorVariables.removeKey( key );
+
+            if(   job.vdsNS.getBooleanValue(Pegasus.TRANSFER_PROXY_KEY) ){
+
+//           Removed for JIRA PM-543
+//
+//                String key = getDirectoryKey( job );
+//                //just remove the remote_initialdir key
+//                //the constituentJob needs to be run in the exectionSiteDirectory
+//                //Condor or GRAM decides to run
+//                job.condorVariables.removeKey( key );
+                job.setDirectory( null );
             }
 
         //check if the constituentJob type indicates staging of executable
@@ -962,6 +977,22 @@ public class Kickstart implements GridStart {
      */
     public String defaultPOSTScript(){
         return PegasusExitCode.SHORT_NAME;
+    }
+
+
+    /**
+     * Returns the directory in which the job should run.
+     *
+     * @param job   the job in which the directory has to run.
+     *
+     * @return
+     */
+    protected String getDirectory( Job job ){
+        String execSiteWorkDir = mSiteStore.getInternalWorkDirectory(job);
+        String workdir = (String) job.globusRSL.removeKey("directory"); // returns old value
+        workdir = (workdir == null)?execSiteWorkDir:workdir;
+
+        return workdir;
     }
     
     /**

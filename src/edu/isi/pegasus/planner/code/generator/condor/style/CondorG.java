@@ -63,9 +63,12 @@ public class CondorG extends Abstract {
      * @throws CondorStyleException in case of any error occuring code generation.
      */
     public void apply( Job job ) throws CondorStyleException {
-        String execSiteWorkDir = mSiteStore.getInternalWorkDirectory( job );
-        String workdir = (String) job.globusRSL.removeKey( "directory" ); // returns old value
-        workdir = (workdir == null) ? execSiteWorkDir : workdir;
+        //           Removed for JIRA PM-543
+//
+//        String execSiteWorkDir = mSiteStore.getInternalWorkDirectory( job );
+//        String workdir = (String) job.globusRSL.removeKey( "directory" ); // returns old value
+//        workdir = (workdir == null) ? execSiteWorkDir : workdir;
+        String workdir = job.getDirectory();
 
         String universe = job.condorVariables.containsKey(Condor.UNIVERSE_KEY)?
             (String)job.condorVariables.get(Condor.UNIVERSE_KEY):

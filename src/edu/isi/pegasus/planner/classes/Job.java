@@ -401,6 +401,11 @@ public class Job extends Data implements GraphNodeContent{
     private String mStagingSite;
 
     /**
+     * The directory in which the job should run.
+     */
+    private String mDirectory;
+
+    /**
      * The relative path to the submit directory for the job, from the workflows
      * base submit directory.
      */
@@ -442,6 +447,7 @@ public class Job extends Data implements GraphNodeContent{
         mJobExecutablesStaged = false;
         mNotifications   = new Notifications();
         mStagingSite     = null;
+        mDirectory       = null;
 //        submitDirectory  = null;
     }
 
@@ -482,6 +488,7 @@ public class Job extends Data implements GraphNodeContent{
         mJobExecutablesStaged = job.mJobExecutablesStaged;
         mNotifications   = job.mNotifications;
         mStagingSite     = job.mStagingSite;
+        mDirectory       = job.mDirectory;
 //        submitDirectory  = job.submitDirectory;
     }
 
@@ -538,7 +545,9 @@ public class Job extends Data implements GraphNodeContent{
         newSub.mJobExecutablesStaged = this.mJobExecutablesStaged;
         newSub.mNotifications = (Notifications)this.getNotifications().clone();
         newSub.mStagingSite   = this.mStagingSite;
-                
+
+        newSub.mDirectory     = this.mDirectory;
+
         return newSub;
     }
     
@@ -958,6 +967,25 @@ public class Job extends Data implements GraphNodeContent{
     public void setName(String name){
         jobName = name;
     }
+
+    /**
+     * Returns the directory where the job runs.
+     *
+     * @return String
+     */
+    public String getDirectory(){
+        return mDirectory ;
+    }
+
+    /**
+     * Setter method to set the name of the job.
+     *
+     * @param name   the name of the job.
+     */
+    public void setDirectory( String directory ){
+        mDirectory = directory;
+    }
+
 
     /**
      * Returns the logical id of the job.
@@ -1723,6 +1751,7 @@ public class Job extends Data implements GraphNodeContent{
         append( sb, "Job Id" , this.jobID , newline );
         append( sb, "Runtime", this.mRuntime, newline  );
         append( sb, "Executable" , this.executable , newline );
+        append( sb, "Directory", this.mDirectory, newline );
         append( sb, "Condor Universe" , this.condorUniverse , newline );
         append( sb, "Globus Scheduler" , this.globusScheduler , newline );
         append( sb, "Standard Output" ,  this.stdOut , newline );

@@ -91,9 +91,12 @@ public class Condor extends Abstract {
      * @throws CondorStyleException in case of any error occuring code generation.
      */
     public void apply(Job job) throws CondorStyleException{
-        String execSiteWorkDir = mSiteStore.getInternalWorkDirectory(job);
-        String workdir = (String) job.globusRSL.removeKey("directory"); // returns old value
-        workdir = (workdir == null)?execSiteWorkDir:workdir;
+
+        //           Removed for JIRA PM-543
+//      String execSiteWorkDir = mSiteStore.getInternalWorkDirectory(job);
+//        String workdir = (String) job.globusRSL.removeKey("directory"); // returns old value
+//        workdir = (workdir == null)?execSiteWorkDir:workdir;
+        String workdir = job.getDirectory();
 
         String universe = job.condorVariables.containsKey( Condor.UNIVERSE_KEY )?
                               (String)job.condorVariables.get( Condor.UNIVERSE_KEY):
@@ -151,10 +154,13 @@ public class Condor extends Abstract {
                 //set remote_initialdir for the job only for non transfer jobs
                 //this is removed later when kickstart is enabling.
 
-                if( useRemoteInitialDir ){
-                    job.condorVariables.construct("remote_initialdir", workdir);
-                }else{
-                    job.condorVariables.construct("initialdir", workdir);
+                //added if loop for JIRA PM-543
+                if( workdir != null ){
+                    if( useRemoteInitialDir ){
+                        job.condorVariables.construct("remote_initialdir", workdir);
+                    }else{
+                        job.condorVariables.construct("initialdir", workdir);
+                    }
                 }
             }
             else{
@@ -193,8 +199,12 @@ public class Condor extends Abstract {
                 if(job.runInWorkDirectory() && !job.condorVariables.containsKey("initialdir")){
                     //for local jobs we need initialdir
                     //instead of remote_initialdir
-                    job.condorVariables.construct("initialdir", workdir);
-                    
+
+                    //added if loop for JIRA PM-543
+                    if( workdir != null ){
+                        job.condorVariables.construct("initialdir", workdir);
+                    }
+
                     if( ipFiles !=  null ){
                         //log a warning message
                         StringBuffer sb = new StringBuffer();
