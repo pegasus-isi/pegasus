@@ -16,7 +16,7 @@ fi
 echo "This is sample input to KEG" >f.a
 
 # build the dax generator
-export CLASSPATH=.:$PEGASUS_HOME/lib/pegasus.jar:$CLASSPATH
+export CLASSPATH=.:`pegasus-config --classpath`
 
 source notifications
 #NOTIFY="$PEGASUS_HOME/libexec/notification/email -t $USER"
