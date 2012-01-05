@@ -84,6 +84,22 @@ public class Condor extends Abstract {
     public static final String PEGASUS_TRANSFER_INPUT_FILES_KEY = "_PEGASUS_TRANSFER_INPUT_FILES";
 
     /**
+     * The name of the environment variable for transferring output files
+     */
+    public static final String PEGASUS_TRANSFER_OUTPUT_FILES_KEY = "_PEGASUS_TRANSFER_OUTPUT_FILES";
+
+
+    /**
+     * The name of the environment variable for the initial dir for pegasus lite local
+     */
+    public static final String PEGASUS_INITIAL_DIR_KEY = "_PEGASUS_INITIAL_DIR";
+
+    /**
+     * Whether to connect stdin or not
+     */
+    public static final String PEGASUS_CONNECT_STDIN_KEY = "_PEGASUS_CONNECT_STDIN";
+
+    /**
      * A boolean indicating whether pegasus lite mode is picked up or not.
      */
     private boolean mPegasusLiteEnabled;
@@ -284,7 +300,7 @@ public class Condor extends Abstract {
      *
      * @param job  the job that needs to be wrapped.
      */
-    private void wrapJobWithLocalPegasusLite(Job job) {
+    private void wrapJobWithLocalPegasusLite(Job job) throws CondorStyleException {
         //for the time being doing nothing for dax or dag jobs
         if( job.getJobType() == Job.DAG_JOB || job.getJobType() == Job.DAX_JOB ){
             //do nothing return
@@ -292,6 +308,10 @@ public class Condor extends Abstract {
         }
 
         String workdir = (String)job.condorVariables.get( "initialdir" );
+
+        if( workdir != null ){
+            job.envVariables.construct( Condor.PEGASUS_INITIAL_DIR_KEY, workdir );
+        }
 
         //check if any transfer_input_files is transferred
         String ipFiles = job.condorVariables.getIPFilesForTransfer();
@@ -313,6 +333,26 @@ public class Condor extends Abstract {
             job.condorVariables.removeIPFilesForTransfer();
         }
 
+        //check if any transfer_output_files is transferred
+        String opFiles = job.condorVariables.getOutputFilesForTransfer();
+        if( opFiles != null ){
+
+            //sanity check as wrapper requires initialdir to be set
+            if( workdir == null ){
+                throw new CondorStyleException( "Condor initialdir not set for job "  + job.getID() );
+            }
+
+            String[] files = opFiles.split( "," );
+            StringBuffer value = new StringBuffer();
+            for( String f: files ){
+                value.append( f );
+                value.append( "," );
+            }
+            job.envVariables.construct( Condor.PEGASUS_TRANSFER_OUTPUT_FILES_KEY, value.toString() );
+            job.condorVariables.removeOutputFilesForTransfer();
+        }
+
+
 
         //do nothing for time being for transfer_output_files
         //check for transfer_executable and remove if set
@@ -332,6 +372,12 @@ public class Condor extends Abstract {
         StringBuffer args = new StringBuffer();
         args.append( executable ).append( " " ).append( arguments );
         job.setArguments( args.toString() );
+
+        String stdin = (String)job.condorVariables.get( "input" ) ;
+        if( stdin != null ){
+            //tell the wrapper to connect the stdin
+            job.envVariables.construct( Condor.PEGASUS_CONNECT_STDIN_KEY, "true" );
+        }
 
         //for local or scheduler universe we never should have
         //should_transfer_file or w_t_f

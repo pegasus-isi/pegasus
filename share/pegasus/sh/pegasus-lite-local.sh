@@ -64,6 +64,30 @@ if [ "X${_PEGASUS_TRANSFER_INPUT_FILES}" != "X" ]; then
 fi
 
 #execute the executable with the args
-#cat is used to connect the stdin
-cat - | $executable "$@"
+if [ "X${_PEGASUS_CONNECT_STDIN}" = "X" ]; then
+    #dont connect stdin
+    $executable "$@"
+else
+    #cat is used to connect the stdin
+    cat - | $executable "$@"
+fi
 
+# transfer any output files back to the Pegasus initial dir 
+if [ "X${_PEGASUS_TRANSFER_OUTPUT_FILES}" != "X" ]; then
+
+    #check for initialdir
+    if [ "X${_PEGASUS_INITIAL_DIR}" = "X" ]; then
+	echo "ERROR: _PEGASUS_INITIAL_DIR not populated" 1>&2
+	exit 1;
+    fi
+
+    outputdir=$_PEGASUS_INITIAL_DIR
+    #split files on ,
+    IFS=, read -a FILES <<< "$_PEGASUS_TRANSFER_OUTPUT_FILES" 
+
+    for file in "${FILES[@]}";do
+	#echo "FILES NEED TO BE TRANSFERRED $file"
+	cp $file $outputdir
+    done
+    
+fi

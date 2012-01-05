@@ -249,6 +249,18 @@ public class Condor extends Namespace{
                 (String)this.get(Condor.TRANSFER_IP_FILES_KEY):
                 null;
     }
+
+    /**
+     * Returns a comma separated list of files that are designated
+     * for transfer via condor file transfer mechanism for the job.
+     *
+     * @return  a csv file else null
+     */
+    public String getOutputFilesForTransfer(){
+        return ( this.containsKey( Condor.TRANSFER_OP_FILES_KEY ) )?
+                (String)this.get(Condor.TRANSFER_OP_FILES_KEY ):
+                null;
+    }
     
     /**
      * Remove the input files that were designated for transfer using
@@ -266,6 +278,24 @@ public class Condor extends Namespace{
             }
         }
     }
+
+    /**
+     * Remove the output files that were designated for transfer using
+     * Condor File Transfer Mechanism.
+     */
+    public void removeOutputFilesForTransfer() {
+        Object obj = this.removeKey( Condor.TRANSFER_OP_FILES_KEY );
+        if( obj != null ){
+            //delete stf and wto only if no output files tx
+            //and transfer_executable is not set
+            if( !this.containsKey( Condor.TRANSFER_IP_FILES_KEY ) &&
+                !this.containsKey( Condor.TRANSFER_EXECUTABLE_KEY )){
+                this.removeKey( "should_transfer_files" );
+                this.removeKey( "when_to_transfer_output" );
+            }
+        }
+    }
+
     
     /**
      * Adds the executable for transfer via the condor file transfer mechanism.
