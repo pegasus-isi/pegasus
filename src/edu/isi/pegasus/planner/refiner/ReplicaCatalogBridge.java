@@ -758,7 +758,7 @@ public class ReplicaCatalogBridge
                 "While writing out the registration file for job " + regJob, e );
         }
 
-        return fileName;
+        return f.getAbsolutePath();
     }
 
 
