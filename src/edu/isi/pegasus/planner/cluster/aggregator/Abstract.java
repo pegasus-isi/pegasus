@@ -306,11 +306,15 @@ public abstract class Abstract implements JobAggregator {
 
         Set ipFiles = new HashSet();
         Set opFiles = new HashSet();
+        boolean userExecutablesStaged = false;
         for( Iterator it = jobs.iterator(); it.hasNext(); ) {
                 job = (Job) it.next();
                 ipFiles.addAll( job.getInputFiles() );
                 opFiles.addAll( job.getOutputFiles() );
                 mergedJob.add(job);
+                
+                //update user executable staging.
+                userExecutablesStaged = userExecutablesStaged || job.userExecutablesStagedForJob();
 
                 //we need to merge the profiles from the constituent
                 //jobs now, rather in function makeAbstractAggreagatedJobConcrete
@@ -320,6 +324,8 @@ public abstract class Abstract implements JobAggregator {
 
         }
 
+        mergedJob.setExecutableStagingForJob(userExecutablesStaged);
+        
         //overriding the input files, output files, id
         mergedJob.setInputFiles( ipFiles );
         mergedJob.setOutputFiles( opFiles );
