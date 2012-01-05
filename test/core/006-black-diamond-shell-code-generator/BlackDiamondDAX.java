@@ -24,7 +24,7 @@ public class BlackDiamondDAX {
      */
     public static void main(String[] args) {
         if (args.length != 2) {
-            System.out.println("Usage: java ADAG <site_handle> <pegasus_location> <filename.dax>");
+            System.out.println("Usage: java ADAG <pegasus_location> <filename.dax>");
             System.exit(1);
         }
 
@@ -58,23 +58,23 @@ public class BlackDiamondDAX {
         Executable preprocess = new Executable("pegasus", "preprocess", "4.0");
         preprocess.setArchitecture(Executable.ARCH.X86).setOS(Executable.OS.LINUX);
         preprocess.setInstalled(true);
-        preprocess.addPhysicalFile("file://" + pegasus_location + "/bin/pegasus-keg", "condorpool");
+        preprocess.addPhysicalFile("file://" + pegasus_location + "/bin/pegasus-keg", "local");
 
         Executable findrange = new Executable("pegasus", "findrange", "4.0");
         findrange.setArchitecture(Executable.ARCH.X86).setOS(Executable.OS.LINUX);
         findrange.setInstalled(true);
-        findrange.addPhysicalFile("file://" + pegasus_location + "/bin/pegasus-keg", "condorpool");
+        findrange.addPhysicalFile("file://" + pegasus_location + "/bin/pegasus-keg", "local");
 
         Executable analyze = new Executable("pegasus", "analyze", "4.0");
         analyze.setArchitecture(Executable.ARCH.X86).setOS(Executable.OS.LINUX);
         analyze.setInstalled(true);
-        analyze.addPhysicalFile("file://" + pegasus_location + "/bin/pegasus-keg", "condorpool");
+        analyze.addPhysicalFile("file://" + pegasus_location + "/bin/pegasus-keg", "local");
 
         dax.addExecutable(preprocess).addExecutable(findrange).addExecutable(analyze);
 
         // Add a preprocess job
         Job j1 = new Job("j1", "pegasus", "preprocess", "4.0");
-        j1.addArgument("-a preprocess -T 60 -i ").addArgument(fa);
+        j1.addArgument("-a preprocess -T 5 -i ").addArgument(fa);
         j1.addArgument("-o ").addArgument(fb1);
         j1.addArgument(" ").addArgument(fb2);
         j1.uses(fa, File.LINK.INPUT);
@@ -84,7 +84,7 @@ public class BlackDiamondDAX {
 
         // Add left Findrange job
         Job j2 = new Job("j2", "pegasus", "findrange", "4.0");
-        j2.addArgument("-a findrange -T 60 -i ").addArgument(fb1);
+        j2.addArgument("-a findrange -T 5 -i ").addArgument(fb1);
         j2.addArgument("-o ").addArgument(fc1);
         j2.uses(fb1, File.LINK.INPUT);
         j2.uses(fc1, File.LINK.OUTPUT);
@@ -92,7 +92,7 @@ public class BlackDiamondDAX {
 
         // Add right Findrange job
         Job j3 = new Job("j3", "pegasus", "findrange", "4.0");
-        j3.addArgument("-a findrange -T 60 -i ").addArgument(fb2);
+        j3.addArgument("-a findrange -T 5 -i ").addArgument(fb2);
         j3.addArgument("-o ").addArgument(fc2);
         j3.uses(fb2, File.LINK.INPUT);
         j3.uses(fc2, File.LINK.OUTPUT);
@@ -100,7 +100,7 @@ public class BlackDiamondDAX {
 
         // Add analyze job
         Job j4 = new Job("j4", "pegasus", "analyze", "4.0");
-        j4.addArgument("-a analyze -T 60 -i ").addArgument(fc1);
+        j4.addArgument("-a analyze -T 5 -i ").addArgument(fc1);
         j4.addArgument(" ").addArgument(fc2);
         j4.addArgument("-o ").addArgument(fd);
         j4.uses(fc1, File.LINK.INPUT);
