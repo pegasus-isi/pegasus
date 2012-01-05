@@ -1,0 +1,24 @@
+#!/bin/bash                                                                                                                                                                                                                                                       
+
+echo "Checking status of {bamboo.buildKey}"
+
+
+function update_status
+{
+   STATUS=`pegasus-status --noqueue | tail -1 | sed 's/[:\(\)]/ /g'| awk '{print $5}'`
+}
+
+update_status
+
+while [ $STATUS == "Running" ]; do
+    sleep 1m
+    update_status
+done
+
+if [ $STATUS == "Success" ]; then
+    echo "*** Workflow finished succesfully ***"
+    exit 0
+else
+    echo "*** Workflow failed ***"
+    exit 1
+fi
