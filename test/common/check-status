@@ -1,6 +1,6 @@
 #!/bin/bash                                                                                                                                                                                                                                                       
 
-echo -ne "Checking status "
+echo "Checking status "
 
 
 function update_status
@@ -13,15 +13,13 @@ update_status
 while [ $STATUS == "Running" ]; do
     sleep 1m
     update_status
-    echo -ne "#"
+    echo "#"
 done
 
 if [ $STATUS == "Success" ]; then
-    echo " Success"
     echo "*** Workflow finished succesfully ***"
     exit 0
 else
-    echo " Failure"
     echo "*** Workflow failed ***"
     exit 1
 fi
