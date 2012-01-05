@@ -1,0 +1,8 @@
+TEST DESCRIPTION
+- This test runs a blackdiamond workflow in the Pegasus Lite mode on
+local site. 
+- The purpose is to make sure the pegasus-lite-local.sh wrapper works
+correctly .
+
+Associated JIRA Item
+- https://jira.isi.edu/browse/PM-542
