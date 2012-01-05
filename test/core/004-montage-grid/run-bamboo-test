@@ -109,7 +109,8 @@ pegasus-plan \
     --dax dag.xml \
     --cluster horizontal \
     --submit | tee plan.out
- 
+
+#adding fake line 
 #../../../../common/wait-for-workflow
 
 # check success with pegasus-analyzer - does it use exit codes correctly?
