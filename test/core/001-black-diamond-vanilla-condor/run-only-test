@@ -59,7 +59,9 @@ pegasus-plan \
     --output local \
     --nocleanup \
     --dax blackdiamond.dax \
-    --submit
+    --submit | tee plan.out
+
+
 
 #../../common/wait-for-workflow
 
