@@ -324,8 +324,11 @@ public class Condor extends Abstract {
                     value.append( f );
                 }
                 else{
-                    //prepend the work dir/initialdir first
-                    value.append( workdir ).append( File.separator ).append( f );
+                    //make sure workdir is not null
+                    if( workdir == null ){
+                        throw new CondorStyleException( "Condor initialdir not set for job "  + job.getID() );
+                    }
+                    value.append( f );
                 }
                 value.append( "," );
             }

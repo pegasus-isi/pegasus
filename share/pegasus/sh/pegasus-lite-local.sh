@@ -58,7 +58,20 @@ if [ "X${_PEGASUS_TRANSFER_INPUT_FILES}" != "X" ]; then
 
     for file in "${FILES[@]}";do
 	#echo "FILES NEED TO BE TRANSFERRED $file"
-	cp $file $dir
+	if [[ $file == /* ]] ; then
+	    #file starts with /
+	    cp $file $dir
+	else
+	    #file is relative grab from initialdir
+	    #check for initialdir
+	    if [ "X${_PEGASUS_INITIAL_DIR}" = "X" ]; then
+		echo "ERROR: _PEGASUS_INITIAL_DIR not populated" 1>&2
+		exit 1;
+	    fi
+	    file=$_PEGASUS_INITIAL_DIR/$file
+	    cp $file $dir
+	fi
+	
     done
     
 fi
@@ -82,6 +95,7 @@ if [ "X${_PEGASUS_TRANSFER_OUTPUT_FILES}" != "X" ]; then
     fi
 
     outputdir=$_PEGASUS_INITIAL_DIR
+
     #split files on ,
     IFS=, read -a FILES <<< "$_PEGASUS_TRANSFER_OUTPUT_FILES" 
 
