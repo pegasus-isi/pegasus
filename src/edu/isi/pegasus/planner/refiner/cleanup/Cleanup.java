@@ -246,6 +246,9 @@ public class Cleanup implements CleanupImplementation{
         //we dont want notifications to be inherited
         cJob.resetNotifications();
 
+        //also make sure that user executables staged is set to false
+        cJob.setExecutableStagingForJob( false );
+
         cJob.setJobType( Job.CLEANUP_JOB );
         cJob.setName( id );
         cJob.setArguments( "" );
