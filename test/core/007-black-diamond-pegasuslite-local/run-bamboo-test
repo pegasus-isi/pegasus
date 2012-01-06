@@ -37,6 +37,7 @@ cat >sites.xml <<EOF
                 </shared>
             </storage>
         </head-fs>
+        <profile namespace="pegasus" key="clusters.num">1</profile>
     </site>
     <site  handle="condorpool" arch="x86" os="LINUX">
         <head-fs>
@@ -56,7 +57,7 @@ pegasus-plan \
     --sites local \
     --dir work \
     --output local \
-    --nocleanup \
+    --cluster horizontal \
     --dax blackdiamond.dax \
     --submit | tee plan.out
 

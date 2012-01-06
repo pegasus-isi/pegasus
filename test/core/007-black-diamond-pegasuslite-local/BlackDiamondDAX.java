@@ -57,17 +57,17 @@ public class BlackDiamondDAX {
 
         Executable preprocess = new Executable("pegasus", "preprocess", "4.0");
         preprocess.setArchitecture(Executable.ARCH.X86).setOS(Executable.OS.LINUX);
-        preprocess.setInstalled(true);
+        preprocess.setInstalled( false );
         preprocess.addPhysicalFile("file://" + pegasus_location + "/bin/pegasus-keg", "condorpool");
 
         Executable findrange = new Executable("pegasus", "findrange", "4.0");
         findrange.setArchitecture(Executable.ARCH.X86).setOS(Executable.OS.LINUX);
-        findrange.setInstalled(true);
+        findrange.setInstalled( false );
         findrange.addPhysicalFile("file://" + pegasus_location + "/bin/pegasus-keg", "condorpool");
 
         Executable analyze = new Executable("pegasus", "analyze", "4.0");
         analyze.setArchitecture(Executable.ARCH.X86).setOS(Executable.OS.LINUX);
-        analyze.setInstalled(true);
+        analyze.setInstalled( false );
         analyze.addPhysicalFile("file://" + pegasus_location + "/bin/pegasus-keg", "condorpool");
 
         dax.addExecutable(preprocess).addExecutable(findrange).addExecutable(analyze);
