@@ -1238,7 +1238,13 @@ public class TransferEngine extends Engine {
             }
                 
             //add locations of input data on the remote site to the transient RC
-            if( mWorkerNodeExecution && selLoc.getResourceHandle().equals( job.getSiteHandle() ) ){
+            boolean bypassFirstLevelStaging = mWorkerNodeExecution && selLoc.getResourceHandle().equals( job.getSiteHandle() );
+            
+            //for 3.2 first level staging cannot be bypassed
+            //bypassing staging creates problems with in place cleanup and condor 
+            //IO case.
+            bypassFirstLevelStaging = false;
+            if( bypassFirstLevelStaging ){
                 //the selected replica already exists on
                 //the compute site.  we can bypass first level
                 //staging of the data
