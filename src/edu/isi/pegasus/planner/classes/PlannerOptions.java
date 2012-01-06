@@ -1329,7 +1329,7 @@ public class PlannerOptions extends Data implements Cloneable{
         }
 
         if( !this.mStagingSitesMap.isEmpty() ){
-            sb.append( "--staging-site " ).
+            sb.append( " --staging-site " ).
                append( this.stagingSiteMappingToString() );
         }
 
