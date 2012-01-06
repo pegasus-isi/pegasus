@@ -3,6 +3,12 @@
 set -e
 set -v
 
+
+if [ X${testdir} = "X" ]; then
+    testdir=`dirname  $0`
+    export testdir
+fi
+
 TOPDIR=`pwd`
 
 # generate the input file
