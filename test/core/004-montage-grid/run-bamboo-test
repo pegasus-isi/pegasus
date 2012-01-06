@@ -108,7 +108,7 @@ pegasus-plan \
     --nocleanup \
     --dax dag.xml \
     --cluster horizontal \
-    --submit | tee plan.out
+    --submit | tee $TOP_DIR/plan.out
 
 #adding fake line 
 #../../../../common/wait-for-workflow
