@@ -53,8 +53,7 @@ EOF
 # plan and submit the  workflow
 pegasus-plan \
     --conf pegasusrc \
-    --sites condorpool \
-    --staging-site local \
+    --sites local \
     --dir work \
     --output local \
     --nocleanup \
@@ -62,14 +61,5 @@ pegasus-plan \
     --submit | tee plan.out
 
 
-
-#../../common/wait-for-workflow
-
-# check success with pegasus-analyzer - does it use exit codes correctly?
-#cd work/*/*/*/*/
-#pegasus-analyzer
-
-# show some stats
-#pegasus-statistics `pwd`
 
 
