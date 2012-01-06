@@ -5,7 +5,7 @@ This file implements the Job class for pegasus-monitord.
 """
 
 ##
-#  Copyright 2007-2011 University Of Southern California
+#  Copyright 2007-2012 University Of Southern California
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -98,7 +98,8 @@ class Job:
         self._error_file = None
         self._stdout_text = None
         self._stderr_text = None
-        self._job_dagman_out = None # _CONDOR_DAGMAN_LOG from environment line for pegasus-plan and subdax_ jobs
+        self._job_dagman_out = None    # _CONDOR_DAGMAN_LOG from environment line for pegasus-plan and subdax_ jobs
+        self._kickstart_parsed = False # Flag indicating if the kickstart output for this job was parsed or not
 
     def set_job_state(self, job_state, sched_id, timestamp, status):
         """
@@ -225,19 +226,19 @@ class Job:
                 my_input = re_parse_input.search(my_line).group(1)
                 # Remove quotes, if any
                 my_input = my_input.strip('"')
-                self._input_file = my_input
+                self._input_file = os.path.normpath(my_input)
             elif re_parse_output.search(my_line):
                 # Found line with output file
                 my_output = re_parse_output.search(my_line).group(1)
                 # Remove quotes, if any
                 my_output = my_output.strip('"')
-                self._output_file = my_output
+                self._output_file = os.path.normpath(my_output)
             elif re_parse_error.search(my_line):
                 # Found line with error file
                 my_error = re_parse_error.search(my_line).group(1)
                 # Remove quotes, if any
                 my_error = my_error.strip('"')
-                self._error_file = my_error
+                self._error_file = os.path.normpath(my_error)
             elif parse_environment and re_parse_environment.search(my_line):
                 # Found line with environment
                 v = re_parse_environment.search(my_line).group(1)
@@ -256,7 +257,7 @@ class Job:
         # All done!
         return my_result, my_site
 
-    def extract_job_info(self, buffer):
+    def extract_job_info(self, run_dir, buffer):
         """
         This function reads the output from the kickstart parser and
         extracts the job information for the Stampede schema. It first
@@ -271,8 +272,14 @@ class Job:
         if len(buffer) == 0:
             return None
 
+        # Kickstart was parsed
+        self._kickstart_parsed = True
+
         # Let's try to find an invocation record...
         my_invocation_found = False
+        my_task_number = 0
+        self._stdout_text = "" # Initialize stdout
+
         for my_record in buffer:
             if not "invocation" in my_record:
                 # Not this one... skip to the next
@@ -280,6 +287,9 @@ class Job:
             # Ok, we have an invocation record, extract the information we
             # need. Note that this may overwrite information obtained from
             # the submit file (e.g. the site_name).
+            
+            # Increment task_number
+            my_task_number = my_task_number + 1
 
             if "resource" in my_record:
                 self._site_name = my_record["resource"]
@@ -290,12 +300,16 @@ class Job:
             if "hostname" in my_record:
                 self._host_id = my_record["hostname"]
             if "stdout" in my_record:
-                self._stdout_text = utils.quote(my_record["stdout"])
+                self._stdout_text = self._stdout_text + "#@ %d stdout\n" % (my_task_number) + my_record["stdout"] + "\n"
             if "stderr" in my_record:
-                self._stderr_text = utils.quote(my_record["stderr"])
+                self._stdout_text = self._stdout_text + "#@ %d stderr\n" % (my_task_number) + my_record["stderr"] + "\n"
             # No need to look further
             my_invocation_found = True
             break
+
+        # Now, we encode it!
+        if self._stdout_text != "":
+            self._stdout_text = utils.quote(self._stdout_text)
 
         if not my_invocation_found:
             logger.debug("cannot find invocation record in output")
@@ -321,5 +335,41 @@ class Job:
         if not my_cluster_found:
             logger.debug("cannot find cluster record in output")
 
+        # Finally, read error file
+        my_err_file = os.path.join(run_dir, self._error_file)
+        my_err_file = my_err_file + ".%03d" % (self._job_output_counter)
+
+        try:
+            ERR = open(my_err_file, 'r')
+            self._stderr_text = utils.quote(ERR.read())
+            ERR.close()
+        except:
+            self._stderr_text = None
+            logger.warning("unable to read error file: %s, continuing..." % (my_err_file))
+
         # Done populating Job class with information from the output file
         return my_invocation_found
+
+    def read_stdout_stderr_files(self, run_dir):
+        """
+        This function reads both stdout and stderr files and populates
+        these fields in the Job class.
+        """
+        my_out_file = os.path.join(run_dir, self._output_file)
+        my_err_file = os.path.join(run_dir, self._error_file)
+
+        try:
+            OUT = open(my_out_file, 'r')
+            self._stdout_text = utils.quote(OUT.read())
+            OUT.close()
+        except:
+            self._stdout_text = None
+            logger.warning("unable to read output file: %s, continuing..." % (my_out_file))
+            
+        try:
+            ERR = open(my_err_file, 'r')
+            self._stderr_text = utils.quote(ERR.read())
+            ERR.close()
+        except:
+            self._stderr_text = None
+            logger.warning("unable to read error file: %s, continuing..." % (my_err_file))

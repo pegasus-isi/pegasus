@@ -5,7 +5,7 @@ This file implements the Workflow class for pegasus-monitord.
 """
 
 ##
-#  Copyright 2007-2011 University Of Southern California
+#  Copyright 2007-2012 University Of Southern California
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -1182,11 +1182,19 @@ class Workflow:
             # This is not mandatory, according to the schema
             pass
         if my_job._output_file is not None:
-            kwargs["stdout__file"] = my_job._output_file + ".%03d" % (my_job._job_output_counter)
+            if my_job._kickstart_parsed:
+                # Only use rotated filename for job with kickstart output
+                kwargs["stdout__file"] = my_job._output_file + ".%03d" % (my_job._job_output_counter)
+            else:
+                kwargs["stdout__file"] = my_job._output_file
         else:
             kwargs["stdout__file"] = ""
         if my_job._error_file is not None:
-            kwargs["stderr__file"] = my_job._error_file + ".%03d" % (my_job._job_output_counter)
+            if my_job._kickstart_parsed:
+                # Only use rotated filename for job with kickstart output
+                kwargs["stderr__file"] = my_job._error_file + ".%03d" % (my_job._job_output_counter)
+            else:
+                kwargs["stderr__file"] = my_job._error_file
         else:
             kwargs["stderr__file"] = ""
         if self._store_stdout_stderr:
@@ -1220,6 +1228,12 @@ class Workflow:
 
         # Send job state event to database
         self.output_to_db("job_inst.main.end", kwargs)
+
+        # Clean up stdout and stderr, to avoid memory issues...
+        if my_job._stdout_text is not None:
+            my_job._stdout_text = None
+        if my_job._stderr_text is not None:
+            my_job._stderr_text = None
 
     def db_send_task_start(self, my_job, task_type, task_id=None, invocation_record={}):
         """
@@ -1539,7 +1553,7 @@ class Workflow:
             # Parsing the output file resulted in some info... let's parse it
 
             # Add job information to the Job class.
-            my_invocation_found = my_job.extract_job_info(my_output)
+            my_invocation_found = my_job.extract_job_info(self._run_dir, my_output)
 
             if my_invocation_found:
                 # Loop through all records
@@ -1617,9 +1631,13 @@ class Workflow:
             self.db_send_task_start(my_job, "MAIN_JOB", my_task_id)
             self.db_send_task_end(my_job, "MAIN_JOB", my_task_id)
 
+            # Read stdout/stderr files, if not disabled by user
+            if self._store_stdout_stderr:
+                my_job.read_stdout_stderr_files(self._run_dir)
+
             # parse_kickstart will be False for subdag jobs
             if my_job._exec_job_id.startswith("subdax_") or not parse_kickstart:
-                # For dag and subdax jobs, we also generate a host event
+                # For subdag and subdax jobs, we also generate a host event
                 record = {}
                 record["hostname"] = socket.getfqdn()
                 try:
@@ -1763,7 +1781,12 @@ class Workflow:
             self._notifications_manager.process_job_notifications(self, job_state, my_job, status)
 
         if self._sink is None:
-            # Not generating events, nothing else to do
+            # Not generating events, nothing else to do except clean
+            # up stdout and stderr, to avoid memory issues...
+            if my_job._stdout_text is not None:
+                my_job._stdout_text = None
+            if my_job._stderr_text is not None:
+                my_job._stderr_text = None
             return
 
         if my_out_of_order_events_detected:
@@ -1879,6 +1902,7 @@ class Workflow:
         except:
             # Something went wrong, let's just keep what we had...
             pass
+
         try:
             if my_job._error_file.find(self._original_submit_dir) >= 0:
                 # Path to file includes original submit_dir, let's try to remove it
