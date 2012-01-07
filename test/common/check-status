@@ -1,5 +1,4 @@
 #!/bin/bash                                                                                                                                                                                                                                                       
-echo PEGASUS-STATUS is `which pegasus-status`
 echo "CURRENT DIR is " `pwd`
 echo "Checking status "
 
@@ -10,13 +9,15 @@ function update_status
 
 update_status
 
-while [ $STATUS == "Running" ]; do
+echo STATUS is "$STATUS"
+
+while [ "$STATUS" = "Running" ]; do
     sleep 1m
     update_status
     echo "#"
 done
 
-if [ $STATUS == "Success" ]; then
+if [ "$STATUS" = "Success" ]; then
     echo "*** Workflow finished succesfully ***"
     exit 0
 else
