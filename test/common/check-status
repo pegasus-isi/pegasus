@@ -7,11 +7,12 @@ function update_status
    STATUS=`pegasus-status --noqueue | tail -1 | sed 's/[:\(\)]/ /g'| awk '{print $5}'`
 }
 
+sleep 1m
 update_status
 
 echo STATUS is "$STATUS"
 
-while [ "$STATUS" = "Running" ]; do
+while [ "$STATUS" = "Running" -o "$STATUS" = "" -o "$STATUS" = "Uknown"  ]; do
     sleep 1m
     update_status
     echo "#"
