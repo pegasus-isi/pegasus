@@ -1,0 +1,54 @@
+#!/bin/bash
+
+set -e
+set -v
+
+TOPDIR=`pwd`
+
+# generate the input file
+echo "This is sample input to KEG" >f.a
+
+# output directory
+mkdir -p outputs
+
+# build the dax generator
+export CLASSPATH=.:`pegasus-config --classpath`
+javac BlackDiamondDAX.java
+
+# generate the dax
+java BlackDiamondDAX /usr blackdiamond.dax
+
+# create the site catalog
+cat >sites.xml <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0">
+    <site  handle="local" arch="x86" os="LINUX">
+        <head-fs>
+            <scratch>
+                <shared>
+                    <file-server protocol="file" url="file://" mount-point="$TOPDIR/work"/>
+                    <internal-mount-point mount-point="$TOPDIR/work"/>
+                </shared>
+            </scratch>
+            <storage>
+                <shared>
+                    <file-server protocol="file" url="file://" mount-point="$TOPDIR/outputs"/>
+                    <internal-mount-point mount-point="$TOPDIR/outputs"/>
+                </shared>
+            </storage>
+        </head-fs>
+	<profile namespace="env" key="PEGASUS_HOME" >/usr</profile>
+    </site>
+</sitecatalog>
+EOF
+
+# plan and submit the  workflow
+pegasus-plan \
+    -Dpegasus.code.generator=Shell \
+    --conf pegasusrc \
+    --sites local \
+    --dir work \
+    --output local \
+    --nocleanup \
+    --dax blackdiamond.dax \
+    --submit
