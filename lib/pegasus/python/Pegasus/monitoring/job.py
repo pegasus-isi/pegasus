@@ -98,8 +98,10 @@ class Job:
         self._error_file = None
         self._stdout_text = None
         self._stderr_text = None
-        self._job_dagman_out = None    # _CONDOR_DAGMAN_LOG from environment line for pegasus-plan and subdax_ jobs
-        self._kickstart_parsed = False # Flag indicating if the kickstart output for this job was parsed or not
+        self._job_dagman_out = None    # _CONDOR_DAGMAN_LOG from environment
+                                       # line for pegasus-plan and subdax_ jobs
+        self._kickstart_parsed = False # Flag indicating if the kickstart
+                                       # output for this job was parsed or not
 
     def set_job_state(self, job_state, sched_id, timestamp, status):
         """
@@ -117,9 +119,10 @@ class Job:
         # Record timestamp for certain job states
         if job_state == "PRE_SCRIPT_STARTED":
             self._pre_script_start = int(timestamp)
-        elif job_state == "PRE_SCRIPT_SUCCESS" or job_state == "PRE_SCRIPT_FAILURE":
+        elif (job_state == "PRE_SCRIPT_SUCCESS" or
+              job_state == "PRE_SCRIPT_FAILURE"):
             self._pre_script_done = int(timestamp)
-            self._pre_script_exitcode = status
+            self._pre_script_exitcode = utils.regular_to_raw(status)
         elif job_state == "POST_SCRIPT_STARTED":
             self._post_script_start = int(timestamp)
         elif job_state == "POST_SCRIPT_TERMINATED":
@@ -129,9 +132,10 @@ class Job:
         elif job_state == "JOB_TERMINATED":
             self._main_job_done = int(timestamp)
         elif job_state == "JOB_SUCCESS" or job_state == "JOB_FAILURE":
-            self._main_job_exitcode = status
-        elif job_state == "POST_SCRIPT_SUCCESS" or job_state == "POST_SCRIPT_FAILURE":
-            self._post_script_exitcode = status
+            self._main_job_exitcode = utils.regular_to_raw(status)
+        elif (job_state == "POST_SCRIPT_SUCCESS" or
+              job_state == "POST_SCRIPT_FAILURE"):
+            self._post_script_exitcode = utils.regular_to_raw(status)
 
     def parse_sub_file(self, stamp, submit_file):
         """
@@ -151,23 +155,24 @@ class Job:
         # Update stat record for submit file
         try:
             my_stats = os.stat(submit_file)
-        except:
+        except OSError:
 	    # Could not stat file
             logger.error("stat %s" % (submit_file))
             return my_result, my_site
 
         # Check submit file timestamp
         if stamp < my_stats[8]: #mtime
-            logger.info("%s: submit file was modified after job ran: job timestamp=%d, sub file mtime=%d, diff = %d" %
+            logger.info("%s: sub file modified: job timestamp=%d, file mtime=%d, diff=%d" %
                         (submit_file, stamp, my_stats[8], my_stats[8]-stamp))
 
         # Check if we need to parse the environment line
-        if self._exec_job_id.startswith("pegasus-plan") or self._exec_job_id.startswith("subdax_"):
+        if (self._exec_job_id.startswith("pegasus-plan") or
+            self._exec_job_id.startswith("subdax_")):
             parse_environment = True
 
         try:
             SUB = open(submit_file, "r")
-        except:
+        except IOError:
             logger.error("unable to parse %s" % (submit_file))
             return my_result, my_site
 
@@ -183,7 +188,7 @@ class Job:
                     if my_k.lower() in good_rsl and my_v > my_result:
                         try:
                             my_result = int(my_v)
-                        except:
+                        except ValueError:
                             my_result = None
             elif re_site_parse_gvds.search(my_line):
                 # GVDS agreement
@@ -257,7 +262,7 @@ class Job:
         # All done!
         return my_result, my_site
 
-    def extract_job_info(self, run_dir, buffer):
+    def extract_job_info(self, run_dir, kickstart_output):
         """
         This function reads the output from the kickstart parser and
         extracts the job information for the Stampede schema. It first
@@ -269,7 +274,7 @@ class Job:
         """
 
         # Check if we have anything
-        if len(buffer) == 0:
+        if len(kickstart_output) == 0:
             return None
 
         # Kickstart was parsed
@@ -280,7 +285,7 @@ class Job:
         my_task_number = 0
         self._stdout_text = "" # Initialize stdout
 
-        for my_record in buffer:
+        for my_record in kickstart_output:
             if not "invocation" in my_record:
                 # Not this one... skip to the next
                 continue
@@ -316,7 +321,7 @@ class Job:
 
         # Look for clustered record...
         my_cluster_found = False
-        for my_record in buffer:
+        for my_record in kickstart_output:
             if not "clustered" in my_record:
                 # Not this one... skip to the next
                 continue
@@ -342,10 +347,11 @@ class Job:
         try:
             ERR = open(my_err_file, 'r')
             self._stderr_text = utils.quote(ERR.read())
-            ERR.close()
-        except:
+        except IOError:
             self._stderr_text = None
             logger.warning("unable to read error file: %s, continuing..." % (my_err_file))
+        else:
+            ERR.close()
 
         # Done populating Job class with information from the output file
         return my_invocation_found
@@ -361,15 +367,17 @@ class Job:
         try:
             OUT = open(my_out_file, 'r')
             self._stdout_text = utils.quote(OUT.read())
-            OUT.close()
-        except:
+        except IOError:
             self._stdout_text = None
             logger.warning("unable to read output file: %s, continuing..." % (my_out_file))
-            
+        else:
+            OUT.close()
+
         try:
             ERR = open(my_err_file, 'r')
             self._stderr_text = utils.quote(ERR.read())
-            ERR.close()
-        except:
+        except IOError:
             self._stderr_text = None
             logger.warning("unable to read error file: %s, continuing..." % (my_err_file))
+        else:
+            ERR.close()

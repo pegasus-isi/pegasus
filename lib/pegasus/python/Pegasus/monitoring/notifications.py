@@ -61,7 +61,7 @@ class Notifications:
         # Open notifications' log file
         try:
             self._notifications_log = open(self._notifications_fn, 'a')
-        except:
+        except IOError:
             logger.critical("cannot create notifications' log file... exiting...")
             sys.exit(1)
 
@@ -97,7 +97,7 @@ class Notifications:
             # Send SIGTERM first...
             try:
                 os.kill(my_pid, signal.SIGTERM)
-            except:
+            except OSError:
                 logger.info("error sending SIGTERM to notification script...")
             # Wait for child to finish
             logger.warning("waiting for notification process to finish: %s - %s"
@@ -106,18 +106,18 @@ class Notifications:
             my_p.poll()
             if my_p.returncode is None:
                 # Send SIGKILL now...
+                logger.warning("killing notification process to finish: %s - %s"
+                               % (my_notification, my_action))
                 try:
-                    logger.warning("killing notification process to finish: %s - %s"
-                                   % (my_notification, my_action))
                     os.kill(my_pid, signal.SIGKILL)
-                except:
+                except OSError:
                     logger.info("error sending SIGKILL to notification script...")
 
         # Finally, clean up files...
         try:
             os.unlink(my_out_fn)
             os.unlink(my_err_fn)
-        except:
+        except OSError:
             # No error here...
             pass
         logger.warning("notification terminated: %s - %s" % (my_notification, my_action))
@@ -156,12 +156,12 @@ class Notifications:
                     # Close out/err files, if not already closed...
                     try:
                         my_finished_out_fd.close()
-                    except:
+                    except IOError:
                         logger.warning("error closing stdout file for notification %s... continuing..."
                                        % (my_finished_notification))
                     try:
                         my_finished_err_fd.close()
-                    except:
+                    except IOError:
                         logger.warning("error closing stderr file for notification %s... continuing..."
                                        % (my_finished_notification))
                 
@@ -182,20 +182,22 @@ class Notifications:
                                 my_f = open(my_finished_out_fn, 'r')
                                 for line in my_f:
                                     self._notifications_log.write(line)
-                                my_f.close()
-                            except:
+                            except IOError:
                                 logger.warning("error processing notification stdout file: %s. continuing..."
                                                % (my_finished_out_fn))
+                            else:
+                                my_f.close()
                             self._notifications_log.write("\n")
                             self._notifications_log.write("stderr:\n")
                             try:
                                 my_f = open(my_finished_err_fn, 'r')
                                 for line in my_f:
                                     self._notifications_log.write(line)
-                                my_f.close()
-                            except:
+                            except IOError:
                                 logger.warning("error processing notification stderr file: %s. continuing..."
                                                % (my_finished_err_fn))
+                            else:
+                                my_f.close()
                             self._notifications_log.write("\n")
                             self._notifications_log.write("\n")
                         else:
@@ -211,12 +213,12 @@ class Notifications:
                     # Now, delete output and error files
                     try:
                         os.unlink(my_finished_out_fn)
-                    except:
+                    except OSError:
                         logger.warning("error deleting notification stdout file: %s. continuing..."
                                        % (my_finished_out_fn))
                     try:
                         os.unlink(my_finished_err_fn)
-                    except:
+                    except OSError:
                         logger.warning("error deleting notification stderr file: %s. continuing..."
                                        % (my_finished_err_fn))
 
@@ -241,7 +243,7 @@ class Notifications:
             # Get first notification from the list
             try:
                 my_action, my_env = self._pending_notifications.pop(0)
-            except:
+            except IndexError:
                 logger.error("error processing notification list... exiting!")
                 sys.exit(1)
 
@@ -250,7 +252,7 @@ class Notifications:
             my_complete_env.update(my_env)
             try:
                 my_notification = "%s - %s" % (my_env["PEGASUS_JOBID"], my_env["PEGASUS_EVENT"])
-            except:
+            except KeyError:
                 logger.warning("notification missing PEGASUS_JOBID or PEGASUS_EVENT... skipping...")
                 continue
 
@@ -265,7 +267,7 @@ class Notifications:
                 os.close(my_temp_err[0])
                 my_out_fn = my_temp_out[1]
                 my_err_fn = my_temp_err[1]
-            except:
+            except OSError:
                 logger.warning("cannot create temp files for notification: %s... skipping..." % (my_notification))
                 continue
 
@@ -273,12 +275,12 @@ class Notifications:
             try:
                 my_f_out = open(my_out_fn, 'w')
                 my_f_err = open(my_err_fn, 'w')
-            except:
+            except IOError:
                 logger.warning("cannot open temp files for notification: %s... skipping..." % (my_notification))
                 try:
                     os.unlink(my_out_fn)
                     os.unlink(my_err_fn)
-                except:
+                except OSError:
                     # No error here...
                     pass
                 continue
@@ -293,7 +295,7 @@ class Notifications:
                     my_f_err.close()
                     os.unlink(my_out_fn)
                     os.unlink(my_err_fn)
-                except:
+                except OSError:
                     logger.warning("found problem cleaning up notification: %s... skipping..." % (my_notification))
                     continue
                 # Clean up ok, just continue
@@ -305,7 +307,7 @@ class Notifications:
                     my_f_err.close()
                     os.unlink(my_out_fn)
                     os.unlink(my_err_fn)
-                except:
+                except OSError:
                     logger.warning("found problem cleaning up notification: %s... skipping..." % (my_notification))
                     continue
                 # Clean up ok, just continue
@@ -370,7 +372,7 @@ class Notifications:
             for my_action, my_env in self._pending_notifications:
                 try:
                     my_notification = "%s - %s" % (my_env["PEGASUS_JOBID"], my_env["PEGASUS_EVENT"])
-                except:
+                except KeyError:
                     logger.warning("notification missing PEGASUS_JOBID or PEGASUS_EVENT... skipping...")
                     continue
                 logger.warning("pending notification skipped: %s - %s" % (my_notification, my_action))
@@ -379,7 +381,7 @@ class Notifications:
         if self._notifications_log is not None:
             try:
                 self._notifications_log.close()
-            except:
+            except IOError:
                 logger.warning("error closing notifications' log file...")
             self._notifications_log = None
 
@@ -398,7 +400,7 @@ class Notifications:
         # Open file
         try:
             NOTIFY = open(notify_file, "r")
-        except:
+        except IOError:
             logger.warning("cannot load notification file %s, continuing without notifications" % (notify_file))
             return 0
 
@@ -431,7 +433,7 @@ class Notifications:
                 my_id = my_entry[1]
                 try:
                     my_inv = int(my_entry[2])
-                except:
+                except ValueError:
                     logger.warning("cannot parse notification: %s, skipping..." % (line))
                     continue
                 my_condition = my_entry[3]
@@ -497,7 +499,7 @@ class Notifications:
         # Close file
         try:
             NOTIFY.close()
-        except:
+        except IOError:
             pass
 
         # Return number of notifications read
@@ -571,6 +573,7 @@ class Notifications:
                 my_env["PEGASUS_WFID"] = ((wf._dax_label or "unknown") +
                                           "-" + (wf._dax_index or "unknown"))
                 if state == "end":
+                    # Workflow status is already in plain format, no need for conversion
                     my_env["PEGASUS_STATUS"] = str(wf._dagman_exit_code)
 
                 # Done, queue the notification
@@ -716,14 +719,14 @@ class Notifications:
         for k in my_notifications:
             # Look up the actions for this notification now
             my_actions = my_notifications[k]
-            if "exitcode" in record:
-                my_status = record["exitcode"]
+            if "raw" in record:
+                my_status = record["raw"]
             else:
                 my_status = job._main_job_exitcode
             # Convert exitcode to int
             try:
                 my_status = int(my_status)
-            except:
+            except ValueError:
                 pass
             # Now, compare to the notification condition(s)
             if my_status == 0:
@@ -754,7 +757,8 @@ class Notifications:
                 my_env["PEGASUS_STDOUT"] = my_output
                 my_env["PEGASUS_STDERR"] = my_error
                 if k != "start":
-                    my_env["PEGASUS_STATUS"] = str(my_status)
+                    # Convert raw exitcode into human-parseable format
+                    my_env["PEGASUS_STATUS"] = str(utils.raw_to_regular(my_status))
 
                 # Done, queue the notification
                 self._pending_notifications.append((action, my_env))

@@ -154,7 +154,7 @@ def create_directory(dir_name, delete_if_exists=False):
         logger.info("Creating directory... " + dir_name)
         try:
             os.mkdir(dir_name)
-        except:
+        except OSError:
             logger.error("Unable to create directory." + dir_name)
             sys.exit(1)
 
@@ -232,19 +232,19 @@ def add_to_braindb(run, missing_keys, brain_alternate=None):
 
     try:
         my_file = open(my_braindb, 'a')
-    except:
+    except IOError:
         return
 
     try:
         for key in missing_keys:
             my_file.write("%s %s\n" % (str(key), str(missing_keys[key])))
-    except:
+    except IOError:
         # Nothing to do...
         pass
 
     try:
         my_file.close()
-    except:
+    except IOError:
         pass
 
 def slurp_braindb(run, brain_alternate=None):
@@ -262,7 +262,7 @@ def slurp_braindb(run, brain_alternate=None):
 
     try:
         my_file = open(my_braindb, 'r')
-    except:
+    except IOError:
         # Error opening file
         return my_config
 
@@ -295,6 +295,34 @@ def version():
 
     return my_output[1]
 
+def raw_to_regular(exitcode):
+    """
+    This function decodes the raw exitcode into a plain format:
+    For a regular exitcode, it returns a value between 0 and 127;
+    For signals, it returns the negative signal number (-1 through -127)
+    For failures (when exitcode < 0), it returns the special value -128
+    """
+    if not type(exitcode) is int:
+        logger.warning("exitcode not an integer!")
+        return exitcode
+    if exitcode < 0:
+        return -128
+    if (exitcode & 127) > 0:
+        # Signal
+        return -(exitcode & 127)
+    return (exitcode >> 8)
+
+def regular_to_raw(exitcode):
+    """
+    This function encodes a regular exitcode into a raw exitcode.
+    """
+    if not type(exitcode) is int:
+        logger.warning("exitcode not an integer!")
+        return exitcode
+    if exitcode == -128:
+        return -1
+    return (exitcode << 8)
+
 def parse_exit(ec):
     """
     Parses an exit code any way possible
@@ -313,10 +341,10 @@ def parse_exit(ec):
 
     return my_result
 
-def check_rescue(dir, dag):
+def check_rescue(directory, dag):
     """
     Check for the existence of (multiple levels of) rescue DAGs
-    Param: dir is the directory to check for the presence of rescue DAGs
+    Param: directory is the directory to check for the presence of rescue DAGs
     Param: dag is the filename of a regular DAG file
     Returns: List of rescue DAGs (which may be empty if none found)
     """
@@ -324,14 +352,14 @@ def check_rescue(dir, dag):
     my_result = []
 
     try:
-        my_files = os.listdir(dir)
-    except:
+        my_files = os.listdir(directory)
+    except OSError:
         return my_result
 
-    for file in my_files:
+    for my_file in my_files:
         # Add file to the list if pegasus-planned DAGs that have a rescue DAG
-        if file.startswith(my_base) and file.endswith(".rescue"):
-            my_result.append(os.path.join(dir, file))
+        if my_file.startswith(my_base) and my_file.endswith(".rescue"):
+            my_result.append(os.path.join(directory, my_file))
 
     # Sort list
     my_result.sort()
@@ -367,9 +395,10 @@ def write_pid_file(pid_filename, ts=int(time.time())):
         PIDFILE = open(pid_filename, "w")
         PIDFILE.write("pid %s\n" % (os.getpid()))
         PIDFILE.write("timestamp %s\n" % (isodate(ts)))
-        PIDFILE.close()
-    except:
+    except IOError:
         logger.error("cannot write PID file %s" % (pid_filename))
+    else:
+        PIDFILE.close()
 
 def pid_running(filename):
     """
@@ -474,11 +503,14 @@ def loading_completed(run_dir):
             for line in LOG:
                 if line.find("NL-LOAD-ERROR -->") > 0:
                     # Found loading error... event processing was not completed
+                    LOG.close()
                     return False
                 if line.find("KICKSTART-PARSE-ERROR -->") > 0:
                     # Found kickstart parsing error... data not fully loaded
+                    LOG.close()
                     return False
-        except:
+            LOG.close()
+        except IOError:
             logger.warning("could not process log file: %s" % (log_file))
 
     # Otherwise, return true
@@ -515,21 +547,21 @@ def rotate_log_file(source_file):
     # Now that we have source_file and dest_file, try to rotate the logs
     try:
         os.rename(source_file, dest_file)
-    except:
+    except OSError:
         logger.error("cannot rename %s to %s" % (source_file, dest_file))
         sys.exit(1)
 
     # Done!
     return
 
-def log10(x):
+def log10(val):
     """
-    Equivalent to ceil(log(x) / log(10))
+    Equivalent to ceil(log(val) / log(10))
     """
     result = 0
-    while x > 1:
+    while val > 1:
         result = result + 1
-        x = x / 10
+        val = val / 10
 
     if result:
         return result
@@ -600,30 +632,30 @@ def keep_foreground():
     # FIX THIS: It may break some things
     try:
         os.chdir('/')
-    except:
+    except OSError:
         logger.critical("could not chdir!")
         sys.exit(1)
     
     # Although we cannot set sid, we can still become process group leader
     try:
         os.setpgid(0, 0)
-    except:
+    except OSError:
         logger.critical("could not setpgid!")
         sys.exit(1)
 
 if __name__ == "__main__":
-    now = int(time.time())
-    print "Testing isodate() function from now=%lu" % (now)
-    print " long local timestamp:", isodate(now=now)
-    print "   long utc timestamp:", isodate(now=now,utc=True)
-    print "short local timestamp:", isodate(now=now,short=True)
-    print "  short utc timestamp:", isodate(now=now,utc=True,short=True)
+    current_time = int(time.time())
+    print "Testing isodate() function from now=%lu" % (current_time)
+    print " long local timestamp:", isodate(now=current_time)
+    print "   long utc timestamp:", isodate(now=current_time, utc=True)
+    print "short local timestamp:", isodate(now=current_time, short=True)
+    print "  short utc timestamp:", isodate(now=current_time, utc=True, short=True)
     print
     print "Testing epochdate() function from above ISO dates"
-    print " long local epochdate:", epochdate(isodate(now=now))
-    print "   long utc epochdate:", epochdate(isodate(now=now,utc=True))
-    print "short local timestamp:", epochdate(isodate(now=now,short=True))
-    print "  short utc timestamp:", epochdate(isodate(now=now,utc=True,short=True))
+    print " long local epochdate:", epochdate(isodate(now=current_time))
+    print "   long utc epochdate:", epochdate(isodate(now=current_time, utc=True))
+    print "short local timestamp:", epochdate(isodate(now=current_time, short=True))
+    print "  short utc timestamp:", epochdate(isodate(now=current_time, utc=True, short=True))
     print
     print "Looking for ls...", find_exec('ls')
     print "Looking for test.pl...", find_exec('test.pl', True)

@@ -1099,6 +1099,10 @@ class Workflow:
             if status != 0:
                 kwargs["level"] = "Error"
 
+        if event == "post.end":
+            # For post-script SUCCESS/FAILED, we send the exitcode
+            kwargs["exitcode"] = str(my_job._post_script_exitcode)
+
         # Send job state event to database
         self.output_to_db("job_inst." + event, kwargs)
 
@@ -1216,6 +1220,9 @@ class Workflow:
                     # Put everything in
                     kwargs["stderr__text"] = my_job._stderr_text
 
+        # Use the job exitcode for now (if the job has a postscript, it will get updated later
+        kwargs["exitcode"] = str(my_job._main_job_exitcode)
+
         if my_job._sched_id is not None:
             kwargs["sched__id"] = my_job._sched_id
         if status is not None:
@@ -1235,7 +1242,7 @@ class Workflow:
         if my_job._stderr_text is not None:
             my_job._stderr_text = None
 
-    def db_send_task_start(self, my_job, task_type, task_id=None, invocation_record={}):
+    def db_send_task_start(self, my_job, task_type, task_id=None, invocation_record=None):
         """
         This function sends to the database task start
         events. task_type is either "PRE_SCRIPT", "MAIN_JOB", or
@@ -1247,6 +1254,9 @@ class Workflow:
 
         # Start empty
         kwargs = {}
+
+        if invocation_record is None:
+            invocation_record = {}
 
         # Sanity check, verify task type
         if task_type != "PRE_SCRIPT" and task_type != "POST_SCRIPT" and task_type != "MAIN_JOB":
@@ -1289,7 +1299,7 @@ class Workflow:
         # Send job event to database
         self.output_to_db("inv.start", kwargs)
 
-    def db_send_task_end(self, my_job, task_type, task_id=None, invocation_record={}):
+    def db_send_task_end(self, my_job, task_type, task_id=None, invocation_record=None):
         """
         This function sends to the database task end events with all
         the information. task_type is either "PRE_SCRIPT", "MAIN_JOB",
@@ -1301,6 +1311,9 @@ class Workflow:
 
         # Start empty
         kwargs = {}
+
+        if invocation_record is None:
+            invocation_record = {}
 
         # Sanity check, verify task type
         if task_type != "PRE_SCRIPT" and task_type != "POST_SCRIPT" and task_type != "MAIN_JOB":
@@ -1425,8 +1438,8 @@ class Workflow:
                     kwargs["ts"] = my_job._main_job_done
             else:
                 kwargs["ts"] = my_job._main_job_done
-            if "exitcode" in invocation_record:
-                kwargs["exitcode"] = invocation_record["exitcode"]
+            if "raw" in invocation_record:
+                kwargs["exitcode"] = invocation_record["raw"]
             else:
                 if my_job._main_job_exitcode is not None:
                     kwargs["exitcode"] = str(my_job._main_job_exitcode)
@@ -1602,6 +1615,10 @@ class Workflow:
                             # Take care of renaming the exitcode field
                             if "status" in record:
                                 record["exitcode"] = record["status"]
+                                try:
+                                    record["raw"] = str(utils.regular_to_raw(int(record["status"])))
+                                except ValueError:
+                                    logger.warning("unable to convert task status to raw value")
                             # Validate record
                             if (not "transformation" in record or not "derivation" in record or
                                 not "start" in record or not "duration" in record or

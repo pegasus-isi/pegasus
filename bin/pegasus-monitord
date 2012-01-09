@@ -32,12 +32,10 @@ import sys
 import time
 import errno
 import atexit
-import select
 import shelve
 import signal
 import logging
 import calendar
-import commands
 import datetime
 import optparse
 import traceback
@@ -160,7 +158,7 @@ def delete_pid_file():
     """
     try:
         os.unlink(pid_filename)
-    except:
+    except OSError:
         logger.error("cannot delete pid file %s" % (pid_filename))
 
 def socket_exit_handler():
@@ -171,7 +169,7 @@ def socket_exit_handler():
         server.close()
         try:
             os.unlink(sockfn)
-        except:
+        except OSError:
             # Just be silent
             pass
 
@@ -422,7 +420,7 @@ if options.output_dir is not None:
     try:
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
-    except:
+    except OSError:
         logger.critical("cannot create directory %s. exiting..." % (output_dir))
         sys.exit(1)
 if options.socket_enabled is not None:
@@ -709,7 +707,7 @@ def process_dagman_out(wf, log_line):
                 # groups = exit code (error status)
                 try:
                     my_exit_code = int(my_expr.group(1))
-                except:
+                except ValueError:
                     # Unable to convert exit code to integer -- should not happen
                     logger.warning("unable to convert exit code to integer!")
                     my_exit_code = 1
@@ -725,7 +723,7 @@ def process_dagman_out(wf, log_line):
             my_sched_id = my_expr.group(2)
             try:
                 my_jobstatus = int(my_expr.group(3))
-            except:
+            except ValueError:
                 # Unable to convert exit code to integet -- should not happen
                 logger.warning("unable to convert exit code to integer!")
                 my_jobstatus = 1
@@ -744,7 +742,7 @@ def process_dagman_out(wf, log_line):
             # groups = exit code
             try:
                 wf._dagman_exit_code = int(my_expr.group(1))
-            except:
+            except ValueError:
                 # Cannot convert exit code to integer!
                 logger.warning("cannot convert DAGMan's exit code to integer!")
                 wf._dagman_exit_code = 0
@@ -766,7 +764,7 @@ def process_dagman_out(wf, log_line):
             # groups = DAGMan's pid
             try:
                 wf._dagman_pid = int(my_expr.group(1))
-            except:
+            except ValueError:
                 logger.critical("cannot set pid: %s" % (my_expr.group(1)))
                 sys.exit(42)
             logger.info("DAGMan runs at pid %d" % (wf._dagman_pid))
@@ -808,11 +806,11 @@ def process_dagman_out(wf, log_line):
                     if os.access(my_log, os.R_OK):
                         try:
                             os.rename(my_log, "%s.bak" % (my_log))
-                        except:
+                        except OSError:
                             logger.warning("error renaming %s to %s.bak" % (my_log, my_log))
                     try:
                         os.symlink(wf._condorlog, my_log)
-                    except:
+                    except OSError:
                         logger.info("unable to symlink %s" % (wf._condorlog))
                     else:
                         logger.info("symlink %s -> %s" % (wf._condorlog, my_log))
@@ -925,7 +923,7 @@ if nodaemon == 0:
     # Open logfile as stdout
     try:
         sys.stdout = open(logfile, "a", 0)
-    except:
+    except IOError:
         logger.critical("could not open %s!" % (logfile))
         sys.exit(1)
 elif nodaemon == 2:
@@ -933,7 +931,7 @@ elif nodaemon == 2:
     # Open logfile as stdout
     try:
         sys.stdout = open(logfile, "a", 0)
-    except:
+    except IOError:
         logger.critical("could not open %s!" % (logfile))
         sys.exit(1)
 else:
@@ -1014,9 +1012,10 @@ if socket_enabled:
         try:
             OUT = open(sockfn, "w")
             OUT.write("%s %d\n" % (my_host, my_port))
-            OUT.close()
-        except:
+        except IOError:
             logger.warning("unable to write %s!" % (sockfn))
+        else:
+            OUT.close()
 
 # For future reference
 plus = ''
@@ -1050,7 +1049,7 @@ else:
 if replay_mode:
     try:
         os.unlink(wf_retry_fn)
-    except:
+    except OSError:
         # Nothing to do...
         pass
 
@@ -1111,7 +1110,7 @@ while (len(wfs) > 0):
             if replay_mode:
                 try:
                     f_stat = os.stat(workflow_entry.dagman_out)
-                except:
+                except OSError:
                     logger.critical("error: workflow not started, %s does not exist, dropping this workflow..." % (workflow_entry.dagman_out))
                     workflow_entry.delete_workflow = True
                     # Close jobstate.log, if any
@@ -1160,7 +1159,7 @@ while (len(wfs) > 0):
                 # Found it, open dagman.out file
                 try:
                     workflow_entry.DMOF = open(workflow_entry.dagman_out, "r")
-                except:
+                except IOError:
                     logger.critical("opening %s" % (workflow_entry.dagman_out))
                     workflow_entry.delete_workflow = True
                     # Close jobstate.log, if any
@@ -1176,7 +1175,7 @@ while (len(wfs) > 0):
             try:
                 f_stat = os.stat(workflow_entry.dagman_out)
                 logger.debug("stating file: %s" % (workflow_entry.dagman_out))
-            except:
+            except OSError:
                 # stat error
                 logger.critical("stat %s" % (workflow_entry.dagman_out))
                 workflow_entry.delete_workflow = True
@@ -1203,7 +1202,7 @@ while (len(wfs) > 0):
                     # Just send signal 0 to check if the pid is ours
                     try:
                         os.kill(int(workflow_entry.wf._dagman_pid), 0)
-                    except:
+                    except OSError:
                         logger.critical("DAGMan is gone! Sudden death syndrome detected!")
                         workflow_entry.wf._monitord_exit_code = 42
                         workflow_entry.delete_workflow = True
@@ -1391,9 +1390,10 @@ while (len(wfs) > 0):
             try:
                 OUT = open(sockfn, "w")
                 OUT.write("%s %d\n" % (my_host, my_port))
-                OUT.close()
-            except:
+            except IOError:
                 logger.warning("unable to write %s!" % (sockfn))
+            else:
+                OUT.close()
 
     # Periodically check for service requests
     if server is not None:
@@ -1434,7 +1434,7 @@ if socket_enabled and server is not None:
     server = None
     try:
         os.unlink(sockfn)
-    except:
+    except OSError:
         # Just be silent
         pass
 
