@@ -8,7 +8,7 @@ Usage: pegasus-analyzer [options]
 """
 
 ##
-#  Copyright 2007-2011 University Of Southern California
+#  Copyright 2007-2012 University Of Southern California
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -897,7 +897,7 @@ def analyze_db(config_properties):
     # Now, print information about jobs that failed...
     if failed > 0:
         # Get list of failed jobs from database
-        my_failed_jobs = workflow_stats.get_failed_job_instances(final=True)
+        my_failed_jobs = workflow_stats.get_failed_job_instances(final=True, all_jobs=True)
 
         # Print header
 	print "Failed jobs' details".center(80, '*')

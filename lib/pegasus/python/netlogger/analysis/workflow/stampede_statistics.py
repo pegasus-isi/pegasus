@@ -149,7 +149,7 @@ Methods listed in order of query list on wiki.
 
 https://confluence.pegasus.isi.edu/display/pegasus/Pegasus+Statistics+Python+Version+Modified
 """
-__rcsid__ = "$Id: stampede_statistics.py 28974 2011-11-23 18:43:41Z mgoode $"
+__rcsid__ = "$Id: stampede_statistics.py 29273 2012-01-09 22:17:42Z mgoode $"
 __author__ = "Monte Goode"
 
 from netlogger.analysis.modules._base import SQLAlchemyInit
@@ -805,7 +805,7 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         q = q.filter(self._dax_or_dag_cond())
         return q.all()
         
-    def get_failed_job_instances(self, final=False):
+    def get_failed_job_instances(self, final=False, all_jobs=False):
         """
         https://confluence.pegasus.isi.edu/display/pegasus/Job+Statistics+file#JobStatisticsfile-Failedjobinstances
         """
@@ -813,22 +813,15 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
             return []
         d_or_d = self._dax_or_dag_cond()
         
-        if not final:
-            # default behavior - return all failed job instances
-            q = self.session.query(JobInstance.job_instance_id)
-        else:
-            # filter - return only the final failed job instance for a given job
-            q = self.session.query(func.max(JobInstance.job_instance_id).label('job_instance_id'))
+        q = self.session.query(JobInstance.job_instance_id)
         q = q.filter(Job.wf_id.in_(self._wfs))
         q = q.filter(Job.job_id == JobInstance.job_id)
         q = q.filter(JobInstance.job_instance_id == Jobstate.job_instance_id)
-        q = q.filter(or_(not_(d_or_d), and_(d_or_d, JobInstance.subwf_id == None)))
+        if not all_jobs:
+            q = q.filter(or_(not_(d_or_d), and_(d_or_d, JobInstance.subwf_id == None)))
         q = q.filter(Jobstate.state.in_(['PRE_SCRIPT_FAILED','SUBMIT_FAILED','JOB_FAILURE' ,'POST_SCRIPT_FAILED']))
-        
         if final:
-            # the max() can produce a single None so twit that
-            if len(q.all()) == 1 and q.all()[0].job_instance_id == None:
-                    return []
+            q = q.order_by(desc(JobInstance.job_submit_seq)).limit(1)
         
         return q.all()
         
@@ -898,6 +891,19 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         if job_instance_id:
             q = q.filter(JobInstance.job_instance_id == job_instance_id)
                 
+        return q.all()
+        
+    def get_invocation_info(self, ji_id=None):
+        """
+        SELECT task_submit_seq, exitcode FROM invocation WHERE job_instance_id = 7 and wf_id = 1
+        """
+        if self._expand or not ji_id:
+            return []
+        
+        q = self.session.query(Invocation.task_submit_seq, Invocation.exitcode)
+        q = q.filter(Invocation.job_instance_id == ji_id)
+        q = q.filter(Invocation.wf_id.in_(self._wfs))
+        
         return q.all()
     
     def get_job_name(self):

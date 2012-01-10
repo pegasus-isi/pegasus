@@ -1828,7 +1828,7 @@ class Workflow:
             self.db_send_job_brief(my_job, "pre.term")
         elif job_state == "PRE_SCRIPT_SUCCESS":
             self.db_send_job_brief(my_job, "pre.end", 0)
-        elif job_state == "PRE_SCRIPT_FAILED":
+        elif job_state == "PRE_SCRIPT_FAILURE":
             self.db_send_job_brief(my_job, "pre.end", -1)
         elif job_state == "SUBMIT":
             self.db_send_job_brief(my_job, "submit.start")
@@ -1872,7 +1872,7 @@ class Workflow:
             self.db_send_job_brief(my_job, "post.term")
         elif job_state == "POST_SCRIPT_SUCCESS":
             self.db_send_job_brief(my_job, "post.end", 0)
-        elif job_state == "POST_SCRIPT_FAILED":
+        elif job_state == "POST_SCRIPT_FAILURE":
             self.db_send_job_brief(my_job, "post.end", -1)
 
     def parse_job_sub_file(self, jobid, job_submit_seq):
