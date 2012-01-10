@@ -1614,11 +1614,8 @@ class Workflow:
                             record = my_tasks[i]
                             # Take care of renaming the exitcode field
                             if "status" in record:
-                                record["exitcode"] = record["status"]
-                                try:
-                                    record["raw"] = str(utils.regular_to_raw(int(record["status"])))
-                                except ValueError:
-                                    logger.warning("unable to convert task status to raw value")
+                                record["exitcode"] = record["status"] # This should not be needed anymore...
+                                record["raw"] = record["status"]
                             # Validate record
                             if (not "transformation" in record or not "derivation" in record or
                                 not "start" in record or not "duration" in record or
