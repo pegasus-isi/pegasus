@@ -220,16 +220,7 @@ public class TransferEngine extends Engine {
     private boolean mWorkerNodeExecution;
 
             
-    /**
-     * A Boolean indicating whether S3 is being used for backend storage.
-     */
-    private boolean mS3BucketUsedForStorage;
-    
-    /**
-     * An instance to the Create Direcotry Implementation being used in Pegasus.
-     */
-    private Implementation mCreateDirImpl;
-
+  
     /**
      * The handle to the SLS implementor
      */
@@ -263,13 +254,7 @@ public class TransferEngine extends Engine {
         mDeletedJobs     = deletedJobs;
         mDeletedLeafJobs = deletedLeafJobs;
 
-        //mS3BucketURL = getS3BucketURL( bag );
-        //figure out if we are creating any s3 buckets or not
-        mCreateDirImpl = 
-                CreateDirectory.loadCreateDirectoryImplementationInstance(bag);
-        mS3BucketUsedForStorage =  mCreateDirImpl instanceof edu.isi.pegasus.planner.refiner.createdir.S3 ?
-                                   true:
-                                   false;
+      
            
         if( mWorkerNodeExecution ){
             //load SLS
