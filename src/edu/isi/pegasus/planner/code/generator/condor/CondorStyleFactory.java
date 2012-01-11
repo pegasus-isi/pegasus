@@ -17,6 +17,7 @@
 package edu.isi.pegasus.planner.code.generator.condor;
 
 
+import edu.isi.pegasus.common.credential.CredentialHandlerFactory;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 
 import edu.isi.pegasus.planner.code.generator.condor.CondorStyle;
@@ -86,6 +87,25 @@ public class CondorStyleFactory {
      */
     private static final String GLITE_STYLE_IMPLEMENTING_CLASS = "GLite";
 
+    /**
+     * Returns a table that maps, the Pegasus style keys to the names of implementing
+     * classes.
+     *
+     * @return a Map indexed by Pegasus styles, and values as names of implementing
+     *         classes.
+     */
+    private static Map implementingClassNameTable(){
+        if( mImplementingClassNameTable == null ){
+            mImplementingClassNameTable = new HashMap(3);
+            mImplementingClassNameTable.put( Pegasus.CONDOR_STYLE, CONDOR_STYLE_IMPLEMENTING_CLASS);
+            mImplementingClassNameTable.put( Pegasus.GLIDEIN_STYLE, GLIDEIN_STYLE_IMPLEMENTING_CLASS);
+            mImplementingClassNameTable.put( Pegasus.GLIDEINWMS_STYLE, GLIDEINWMS_STYLE_IMPLEMENTING_CLASS);
+            mImplementingClassNameTable.put( Pegasus.GLOBUS_STYLE, GLOBUS_STYLE_IMPLEMENTING_CLASS);
+            mImplementingClassNameTable.put( Pegasus.GLITE_STYLE, GLITE_STYLE_IMPLEMENTING_CLASS);
+            mImplementingClassNameTable.put( Pegasus.CONDORC_STYLE, CONDORC_STYLE_IMPLEMENTING_CLASS );
+        }
+        return mImplementingClassNameTable;
+    }
     
     /**
      * A table that maps, Pegasus style keys to the names of the corresponding classes
@@ -105,6 +125,10 @@ public class CondorStyleFactory {
      */
     private boolean mInitialized;
 
+    /**
+     * Handler to the Credential Handler factory.
+     */
+    private CredentialHandlerFactory mCredentialFactory;
 
     /**
      * The default constructor.
@@ -122,7 +146,7 @@ public class CondorStyleFactory {
      * @throws CondorStyleFactoryException that nests any error that
      *            might occur during the instantiation of the implementation.
      */
-    public void initialize( PegasusBag bag ) throws CondorStyleFactoryException{
+    public void initialize( PegasusBag bag  ) throws CondorStyleFactoryException{
 
         //load all the implementations that correspond to the Pegasus style keys
         for( Iterator it = this.implementingClassNameTable().entrySet().iterator(); it.hasNext(); ){
@@ -133,6 +157,12 @@ public class CondorStyleFactory {
             //load via reflection. not required in this case though
             put( style, this.loadInstance( bag, className ));
         }
+
+        //load and intialize the CredentialHandler Factory
+        mCredentialFactory = new CredentialHandlerFactory();
+
+        mCredentialFactory.initialize( bag );
+
 
         //we have successfully loaded all implementations
         mInitialized = true;
@@ -221,7 +251,7 @@ public class CondorStyleFactory {
             DynamicLoader dl = new DynamicLoader( className );
             cs = (CondorStyle) dl.instantiate( new Object[0] );
             //initialize the loaded condor style
-            cs.initialize( bag );
+            cs.initialize( bag, mCredentialFactory );
         }
         catch (Exception e) {
             throw new CondorStyleFactoryException( "Instantiating Condor Style ",
@@ -255,24 +285,6 @@ public class CondorStyleFactory {
     }
 
 
-    /**
-     * Returns a table that maps, the Pegasus style keys to the names of implementing
-     * classes.
-     *
-     * @return a Map indexed by Pegasus styles, and values as names of implementing
-     *         classes.
-     */
-    private static Map implementingClassNameTable(){
-        if( mImplementingClassNameTable == null ){
-            mImplementingClassNameTable = new HashMap(3);
-            mImplementingClassNameTable.put( Pegasus.CONDOR_STYLE, CONDOR_STYLE_IMPLEMENTING_CLASS);
-            mImplementingClassNameTable.put( Pegasus.GLIDEIN_STYLE, GLIDEIN_STYLE_IMPLEMENTING_CLASS);
-            mImplementingClassNameTable.put( Pegasus.GLIDEINWMS_STYLE, GLIDEINWMS_STYLE_IMPLEMENTING_CLASS);
-            mImplementingClassNameTable.put( Pegasus.GLOBUS_STYLE, GLOBUS_STYLE_IMPLEMENTING_CLASS);
-            mImplementingClassNameTable.put( Pegasus.GLITE_STYLE, GLITE_STYLE_IMPLEMENTING_CLASS);
-            mImplementingClassNameTable.put( Pegasus.CONDORC_STYLE, CONDORC_STYLE_IMPLEMENTING_CLASS );
-        }
-        return mImplementingClassNameTable;
-    }
+    
 
 }

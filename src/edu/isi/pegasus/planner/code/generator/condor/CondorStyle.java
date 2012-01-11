@@ -17,13 +17,12 @@
 
 package edu.isi.pegasus.planner.code.generator.condor;
 
-import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
+import edu.isi.pegasus.common.credential.CredentialHandlerFactory;
 
 import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.Job;
 
 import edu.isi.pegasus.planner.classes.PegasusBag;
-import edu.isi.pegasus.planner.common.PegasusProperties;
 
 
 /**
@@ -47,13 +46,16 @@ public interface CondorStyle {
 
 
     /**
-     * Initializes the Condor Style implementation.
+     * Initializes the Code Style implementation.
      *
      * @param bag  the bag of initialization objects
+     * @param credentialFactory   the credential handler factory
      *
-     * @throws CondorStyleException in case of any error occuring code generation.
+     *
+     * @throws CondorStyleFactoryException that nests any error that
+     *            might occur during the instantiation of the implementation.
      */
-    public void initialize( PegasusBag bag ) throws CondorStyleException;
+    public void initialize( PegasusBag bag , CredentialHandlerFactory credentialFactory ) throws CondorStyleException;
 
 
 

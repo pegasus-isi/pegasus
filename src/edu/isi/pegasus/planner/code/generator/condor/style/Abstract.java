@@ -78,16 +78,18 @@ public abstract class Abstract implements CondorStyle {
      * Initializes the Code Style implementation.
      *
      * @param bag  the bag of initialization objects
+     * @param credentialFactory   the credential handler factory
      *
-     * @throws CondorStyleException in case of any error occuring code generation.
+     *
+     * @throws CondorStyleFactoryException that nests any error that
+     *            might occur during the instantiation of the implementation.
      */
-    public void initialize( PegasusBag bag ) throws CondorStyleException{
+    public void initialize( PegasusBag bag , CredentialHandlerFactory credentialFactory )throws CondorStyleException{
 
         mProps     = bag.getPegasusProperties();
         mSiteStore = bag.getHandleToSiteStore();
         mLogger    = bag.getLogger();
-        mCredentialFactory = new CredentialHandlerFactory();
-        mCredentialFactory.initialize(bag);
+        mCredentialFactory = credentialFactory;
     }
 
 
