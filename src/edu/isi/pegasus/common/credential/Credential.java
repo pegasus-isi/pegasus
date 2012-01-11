@@ -63,4 +63,12 @@ public interface Credential {
      */
     public  String getPath( String site );
 
+
+    /**
+     * Returns the name of the environment variable that needs to be set
+     * for the job associated with the credential.
+     *
+     * @return the name of the environment variable.
+     */
+    public String getEnvironmentVariable();
 }

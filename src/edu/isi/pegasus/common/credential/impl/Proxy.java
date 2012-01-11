@@ -96,4 +96,13 @@ public class Proxy  extends Abstract implements Credential{
     }
 
 
+    /**
+     * Returns the name of the environment variable that needs to be set
+     * for the job associated with the credential.
+     *
+     * @return the name of the environment variable.
+     */
+    public String getEnvironmentVariable(){
+        return Proxy.X509_USER_PROXY_KEY;
+    }
 }
