@@ -179,6 +179,14 @@ function pegasus_lite_setup_work_dir()
 }
 
 
+function pegasus_lite_init()
+{
+    # announce version - we do this so pegasus-exitcode and other tools
+    # can tell the job was a PegasusLite job
+    echo "PegasusLite: version ${pegasus_lite_version_major}.${pegasus_lite_version_minor}.${pegasus_lite_version_patch}" 1>&2
+}
+
+
 function pegasus_lite_exit()
 {
     rc=$?
@@ -194,6 +202,8 @@ function pegasus_lite_exit()
         rm -rf $pegasus_lite_work_dir
         pegasus_lite_log "$pegasus_lite_work_dir cleaned up"
     fi
+
+    echo "PegasusLite: exitcode $rc" 1>&2
 
     exit $rc
 }

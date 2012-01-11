@@ -46,7 +46,7 @@ def fail(message=None):
 	sys.exit(1)
 	
 	
-def rename(outfile):
+def rename(outfile, errfile):
 	"""Rename .out and .err files to .out.XXX and .err.XXX where XXX
 	is the next sequence number. Returns the new name, or fails with
 	an error message and a non-zero exit code."""
@@ -54,7 +54,7 @@ def rename(outfile):
 	# This is just to prevent the file from being accidentally renamed 
 	# again in testing.
 	if re.search("\.out\.[0-9]{3}$", outfile):
-		return outfile
+		return outfile, errfile
 	
 	# Must end in .out
 	if not outfile.endswith(".out"):
@@ -79,12 +79,12 @@ def rename(outfile):
 	os.rename(outfile,newout)
 	
 	# rename .err to .err.000 if it exists
-	errfile = "%s.err" % (basename)
+	newerr = None
 	if os.path.isfile(errfile):
 		newerr = "%s.err.%03d" % (basename,retry)
 		os.rename(errfile,newerr)
 		
-	return newout
+	return newout, newerr
 	
 	
 def exitcode(outfile):
@@ -123,8 +123,32 @@ def exitcode(outfile):
 		fail("no tasks succeeded")
 	
 	return succeeded
-	
-		
+
+
+def pegasuslite_failures(errfile):
+	"""Determine if the stderr contains PegasusLite output, and if so
+	make sure that the PegasusLite tasks finished successfully"""
+
+	# Read the file first
+	f = open(errfile)
+	txt = f.read()
+	f.close()
+
+	# Is this a PegasusLite job?
+	regex = re.compile(r'^PegasusLite:', re.MULTILINE)
+	if regex.search(txt) == None:
+		return False
+
+	# If we got here, we know it is a PegasusLite job. Now check
+	# for exitcode 0
+	regex = re.compile(r'^PegasusLite: exitcode 0$', re.MULTILINE)
+	if regex.search(txt):
+		return False
+
+	# PegasusLite job without exitcode 0 - must be a failure
+	return True
+
+
 def main():
 	usage = "Usage: %prog [options] kickstart.out"
 	parser = OptionParser(usage)
@@ -145,14 +169,16 @@ def main():
 		parser.error("please specify kickstart.out")
 	
 	outfile = args[0]
+	parts = outfile.rpartition(".out")
+	errfile = parts[0] + ".err" + parts[2]
 	
 	if not os.path.isfile(outfile):
 		fail("%s does not exist" % outfile)
 	
 	# if we are renaming, then rename
 	if options.rename:
-		outfile = rename(outfile)
-	
+		outfile, errfile = rename(outfile, errfile)
+
 	# check supplied exitcode first
 	if options.exitcode != 0:
 		fail("dagman reported non-zero exitcode: %d" % options.exitcode)
@@ -164,6 +190,11 @@ def main():
 	if options.tasks and options.tasks>=0 and succeeded != options.tasks:
 		fail("wrong number of successful tasks: wanted %d got %d" % \
 			(options.tasks,succeeded))
+
+	# check stderr for PegasusLite information, and possibly non-zero exit
+	# of the wrapper tasks
+	if pegasuslite_failures(errfile):
+		fail("Some PegasusLite wrapper tasks failed")
 	
 	# If we reach this, then it was OK
 	sys.exit(0)

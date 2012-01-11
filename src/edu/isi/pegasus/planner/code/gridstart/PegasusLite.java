@@ -763,6 +763,9 @@ public class PegasusLite implements GridStart {
             sb.append( ". " ).append( PegasusLite.PEGASUS_LITE_COMMON_FILE_BASENAME ).append( '\n' );
             sb.append( '\n' );
 
+            sb.append( "pegasus_lite_init\n" );
+            sb.append( '\n' );
+
             sb.append( "# cleanup in case of failures" ).append( '\n' );
             sb.append( "trap pegasus_lite_exit INT TERM EXIT" ).append( '\n' );
             sb.append( '\n' );
