@@ -265,7 +265,7 @@ public class CondorGenerator extends Abstract {
         mAssignDefaultJobPriorities = mProps.assignDefaultJobPriorities();
 
         //instantiate and intialize the style factory
-        mStyleFactory.initialize( mProps, mSiteStore );
+        mStyleFactory.initialize( bag );
         
         //determine the condor version
         mCondorVersion = CondorVersion.getInstance( mLogger ).numericValue();

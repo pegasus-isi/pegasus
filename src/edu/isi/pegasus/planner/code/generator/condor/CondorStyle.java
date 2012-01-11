@@ -22,6 +22,7 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.Job;
 
+import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 
 
@@ -42,20 +43,17 @@ public interface CondorStyle {
     /**
      * The version number associated with this API of Code Generator.
      */
-    public static final String VERSION = "1.2";
+    public static final String VERSION = "1.3";
 
 
     /**
      * Initializes the Condor Style implementation.
      *
-     * @param properties  the <code>PegasusProperties</code> object containing all
-     *                    the properties required by Pegasus.
-     * @param siteStore   the handle to the SiteCatalog Store being used.
+     * @param bag  the bag of initialization objects
      *
      * @throws CondorStyleException in case of any error occuring code generation.
      */
-    public void initialize( PegasusProperties properties,
-                            SiteStore siteStore ) throws CondorStyleException;
+    public void initialize( PegasusBag bag ) throws CondorStyleException;
 
 
 

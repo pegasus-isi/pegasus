@@ -30,6 +30,7 @@ import edu.isi.pegasus.planner.namespace.Pegasus;
 
 import edu.isi.pegasus.common.util.DynamicLoader;
 
+import edu.isi.pegasus.planner.classes.PegasusBag;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -116,15 +117,12 @@ public class CondorStyleFactory {
     /**
      * Initializes the Factory. Loads all the implementations just once.
      *
-     * @param properties  the <code>PegasusProperties</code> object containing all
-     *                    the properties required by Pegasus.
-     * @param siteStore   the handle to the SiteCatalog Store being used.
+     * @param bag  the bag of initialization objects
      *
      * @throws CondorStyleFactoryException that nests any error that
      *            might occur during the instantiation of the implementation.
      */
-    public void initialize( PegasusProperties properties,
-                            SiteStore siteStore ) throws CondorStyleFactoryException{
+    public void initialize( PegasusBag bag ) throws CondorStyleFactoryException{
 
         //load all the implementations that correspond to the Pegasus style keys
         for( Iterator it = this.implementingClassNameTable().entrySet().iterator(); it.hasNext(); ){
@@ -133,7 +131,7 @@ public class CondorStyleFactory {
             String className= (String)entry.getValue();
 
             //load via reflection. not required in this case though
-            put( style, this.loadInstance( properties, siteStore, className ));
+            put( style, this.loadInstance( bag, className ));
         }
 
         //we have successfully loaded all implementations
@@ -187,9 +185,7 @@ public class CondorStyleFactory {
      * This method loads the appropriate Condor Style using reflection.
      *
      *
-     * @param properties  the <code>PegasusProperties</code> object containing all
-     *                    the properties required by Pegasus.
-     * @param siteStore   the handle to the SiteCatalog Store being used.
+     * @param bag  the bag of initialization objects
      * @param className  the name of the implementing class.
      *
      * @return the instance of the class implementing this interface.
@@ -199,12 +195,12 @@ public class CondorStyleFactory {
      *
      * @see #DEFAULT_PACKAGE_NAME
      */
-    private  CondorStyle loadInstance( PegasusProperties properties,
-                                       SiteStore siteStore,
+    private  CondorStyle loadInstance( PegasusBag bag,
                                        String className )
                                               throws CondorStyleFactoryException{
 
         //sanity check
+        PegasusProperties properties = bag.getPegasusProperties();
         if (properties == null) {
             throw new RuntimeException( "Invalid properties passed" );
         }
@@ -225,7 +221,7 @@ public class CondorStyleFactory {
             DynamicLoader dl = new DynamicLoader( className );
             cs = (CondorStyle) dl.instantiate( new Object[0] );
             //initialize the loaded condor style
-            cs.initialize( properties, siteStore );
+            cs.initialize( bag );
         }
         catch (Exception e) {
             throw new CondorStyleFactoryException( "Instantiating Condor Style ",

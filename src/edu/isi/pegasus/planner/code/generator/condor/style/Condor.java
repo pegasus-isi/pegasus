@@ -17,17 +17,15 @@
 
 package edu.isi.pegasus.planner.code.generator.condor.style;
 
-import edu.isi.pegasus.planner.code.generator.condor.CondorStyle;
 import edu.isi.pegasus.planner.code.generator.condor.CondorStyleException;
 
 import edu.isi.pegasus.common.logging.LogManager;
 
-import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.TransferJob;
+import edu.isi.pegasus.planner.classes.PegasusBag;
 
-import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import java.io.File;
 
@@ -119,16 +117,13 @@ public class Condor extends Abstract {
     /**
      * Initializes the Code Style implementation.
      *
-     * @param properties  the <code>PegasusProperties</code> object containing all
-     *                    the properties required by Pegasus.
-     * @param siteStore a handle to the Site Catalog being used.
+     * @param bag  the bag of initialization objects
      *
      * @throws CondorStyleException in case of any error occuring code generation.
      */
-    public void initialize( PegasusProperties properties,
-                            SiteStore siteStore ) throws CondorStyleException{
+    public void initialize( PegasusBag bag ) throws CondorStyleException{
 
-        super.initialize( properties, siteStore );
+        super.initialize( bag );
         mPegasusLiteEnabled = mProps.getGridStart().equalsIgnoreCase( "PegasusLite" );
         mPegasusLiteLocalWrapper = this.getSubmitHostPathToPegasusLiteLocal();
     }

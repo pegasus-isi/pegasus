@@ -25,9 +25,10 @@ import edu.isi.pegasus.planner.code.generator.condor.CondorStyleException;
 
 import edu.isi.pegasus.planner.classes.Job;
 
-import edu.isi.pegasus.planner.common.PegasusProperties;
+import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
+import edu.isi.pegasus.planner.common.PegasusProperties;
 import java.util.Iterator;
 
 
@@ -69,18 +70,15 @@ public abstract class Abstract implements CondorStyle {
     /**
      * Initializes the Code Style implementation.
      *
-     * @param properties  the <code>PegasusProperties</code> object containing all
-     *                    the properties required by Pegasus.
-     * @param siteStore a handle to the Site Catalog being used.
+     * @param bag  the bag of initialization objects
      *
      * @throws CondorStyleException in case of any error occuring code generation.
      */
-    public void initialize( PegasusProperties properties,
-                            SiteStore siteStore ) throws CondorStyleException{
+    public void initialize( PegasusBag bag ) throws CondorStyleException{
 
-        mProps = properties;
-        mSiteStore = siteStore;
-        mLogger = LogManagerFactory.loadSingletonInstance( properties );
+        mProps     = bag.getPegasusProperties();
+        mSiteStore = bag.getHandleToSiteStore();
+        mLogger    = bag.getLogger();
     }
 
 
