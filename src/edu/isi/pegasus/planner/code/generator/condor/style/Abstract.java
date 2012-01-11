@@ -17,7 +17,8 @@
 
 package edu.isi.pegasus.planner.code.generator.condor.style;
 
-import edu.isi.pegasus.common.logging.LogManagerFactory;
+import edu.isi.pegasus.common.credential.CredentialHandler.TYPE;
+import edu.isi.pegasus.common.credential.CredentialHandlerFactory;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 
 import edu.isi.pegasus.planner.code.generator.condor.CondorStyle;
@@ -59,6 +60,12 @@ public abstract class Abstract implements CondorStyle {
      */
     protected LogManager mLogger;
 
+
+     /**
+     * Handle to the Credential Handler Factory
+     */
+    protected CredentialHandlerFactory mCredentialFactory ;
+
     /**
      * The default constructor.
      */
@@ -79,6 +86,8 @@ public abstract class Abstract implements CondorStyle {
         mProps     = bag.getPegasusProperties();
         mSiteStore = bag.getHandleToSiteStore();
         mLogger    = bag.getLogger();
+        mCredentialFactory = new CredentialHandlerFactory();
+        mCredentialFactory.initialize(bag);
     }
 
 

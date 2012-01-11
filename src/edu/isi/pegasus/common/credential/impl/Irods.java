@@ -16,7 +16,8 @@
 
 package edu.isi.pegasus.common.credential.impl;
 
-import edu.isi.pegasus.common.credential.Credential;
+import edu.isi.pegasus.common.credential.CredentialHandler;
+
 import java.util.Map;
 
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
@@ -28,7 +29,7 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
  * @author Mats Rynge
  * @version $Revision$
  */
-public class Irods extends Abstract implements Credential{
+public class Irods extends Abstract implements CredentialHandler{
 
     /**
      * The name of the environment variable that specifies the path to the
@@ -36,6 +37,10 @@ public class Irods extends Abstract implements Credential{
      */
     public static final String IRODSENVFILE = "irodsEnvFile";
 
+    /**
+     * The description.
+     */
+    public static final String DESCRIPTION = "IRODS Credentials Handler";
 
     /**
      * The default constructor.
@@ -83,6 +88,14 @@ public class Irods extends Abstract implements Credential{
     public String getEnvironmentVariable(){
         return Irods.IRODSENVFILE;
     }
-    
+
+    /**
+     * Returns the description for the implementing handler
+     *
+     * @return  description
+     */
+    public String getDescription(){
+        return Irods.DESCRIPTION;
+    }
    
 }

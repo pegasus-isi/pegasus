@@ -16,7 +16,7 @@
 
 package edu.isi.pegasus.common.credential.impl;
 
-import edu.isi.pegasus.common.credential.Credential;
+import edu.isi.pegasus.common.credential.CredentialHandler;
 
 import java.util.Map;
 
@@ -33,13 +33,18 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
  *
  * @version $Revision$
  */
-public class S3CFG  extends Abstract implements Credential {
+public class S3CFG  extends Abstract implements CredentialHandler {
 
     /**
      * The name of the environment variable that specifies the path to the
      * s3cfg file.
      */
     public static final String S3CFG_FILE_VARIABLE = "S3CFG";
+
+    /**
+     * The description
+     */
+    private static final String DESCRIPTION = "S3 Conf File Credential Handler";
 
 
     /**
@@ -90,5 +95,13 @@ public class S3CFG  extends Abstract implements Credential {
     public String getEnvironmentVariable(){
         return S3CFG.S3CFG_FILE_VARIABLE;
     }
-  
+
+    /**
+     * Returns the description for the implementing handler
+     *
+     * @return  description
+     */
+    public String getDescription(){
+        return S3CFG.DESCRIPTION;
+    }
 }

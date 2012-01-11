@@ -24,7 +24,7 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
  *
  * @author Karan Vahi
  */
-public interface Credential {
+public interface CredentialHandler {
 
 
     /**
@@ -71,4 +71,11 @@ public interface Credential {
      * @return the name of the environment variable.
      */
     public String getEnvironmentVariable();
+
+    /**
+     * Returns the description for the implementing handler
+     *
+     * @return  description
+     */
+    public String getDescription();
 }

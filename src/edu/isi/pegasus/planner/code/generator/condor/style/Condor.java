@@ -17,6 +17,7 @@
 
 package edu.isi.pegasus.planner.code.generator.condor.style;
 
+import edu.isi.pegasus.common.credential.CredentialHandlerFactory;
 import edu.isi.pegasus.planner.code.generator.condor.CondorStyleException;
 
 import edu.isi.pegasus.common.logging.LogManager;
@@ -126,6 +127,8 @@ public class Condor extends Abstract {
         super.initialize( bag );
         mPegasusLiteEnabled = mProps.getGridStart().equalsIgnoreCase( "PegasusLite" );
         mPegasusLiteLocalWrapper = this.getSubmitHostPathToPegasusLiteLocal();
+
+
     }
 
 

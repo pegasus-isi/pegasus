@@ -17,7 +17,7 @@
 package edu.isi.pegasus.planner.classes;
 
 
-import edu.isi.pegasus.common.credential.Credential;
+import edu.isi.pegasus.common.credential.CredentialHandler;
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
 
 import edu.isi.pegasus.planner.catalog.classes.Profiles.NAMESPACES;
@@ -416,7 +416,7 @@ public class Job extends Data implements GraphNodeContent{
     /**
      * Set of credential types required by a job.
      */
-    private Set<Credential.TYPE> mCredentialsType;
+    private Set<CredentialHandler.TYPE> mCredentialsType;
 
     /**
      * Intialises the member variables.
@@ -454,7 +454,7 @@ public class Job extends Data implements GraphNodeContent{
         mNotifications   = new Notifications();
         mStagingSite     = null;
         mDirectory       = null;
-        mCredentialsType = new HashSet<Credential.TYPE>();
+        mCredentialsType = new HashSet<CredentialHandler.TYPE>();
 //        submitDirectory  = null;
     }
 
@@ -496,7 +496,7 @@ public class Job extends Data implements GraphNodeContent{
         mNotifications   = job.mNotifications;
         mStagingSite     = job.mStagingSite;
         mDirectory       = job.mDirectory;
-        mCredentialsType = new HashSet<Credential.TYPE>();
+        mCredentialsType = new HashSet<CredentialHandler.TYPE>();
 //        submitDirectory  = job.submitDirectory;
     }
 
@@ -556,7 +556,7 @@ public class Job extends Data implements GraphNodeContent{
 
         newSub.mDirectory       = this.mDirectory;
 
-        for( Credential.TYPE type : this.getCredentialTypes()  ){
+        for( CredentialHandler.TYPE type : this.getCredentialTypes()  ){
             newSub.addCredentialType( type );
         }
 
@@ -760,16 +760,16 @@ public class Job extends Data implements GraphNodeContent{
         }
 
         if( url.startsWith( "gsiftp" ) ){
-            this.addCredentialType( Credential.TYPE.x509 );
+            this.addCredentialType( CredentialHandler.TYPE.x509 );
         }
         else if( url.startsWith( "s3" ) ){
-            this.addCredentialType( Credential.TYPE.s3 );
+            this.addCredentialType( CredentialHandler.TYPE.s3 );
         }
         else if( url.startsWith( "irods" ) ){
-            this.addCredentialType( Credential.TYPE.irods );
+            this.addCredentialType( CredentialHandler.TYPE.irods );
         }
         else if( url.startsWith( "scp" ) ){
-            this.addCredentialType( Credential.TYPE.ssh );
+            this.addCredentialType( CredentialHandler.TYPE.ssh );
         }
     }
 
@@ -778,7 +778,7 @@ public class Job extends Data implements GraphNodeContent{
      *
      * @param type  the credential type.
      */
-    public void addCredentialType( Credential.TYPE type ){
+    public void addCredentialType( CredentialHandler.TYPE type ){
        this.mCredentialsType.add( type );
     }
 
@@ -788,7 +788,7 @@ public class Job extends Data implements GraphNodeContent{
      *
      * @return the set of credentials required.
      */
-    public Set<Credential.TYPE> getCredentialTypes(  ){
+    public Set<CredentialHandler.TYPE> getCredentialTypes(  ){
        return this.mCredentialsType;
     }
 

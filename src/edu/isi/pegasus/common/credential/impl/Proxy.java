@@ -16,7 +16,7 @@
 
 package edu.isi.pegasus.common.credential.impl;
 
-import edu.isi.pegasus.common.credential.Credential;
+import edu.isi.pegasus.common.credential.CredentialHandler;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 
 
@@ -33,7 +33,7 @@ import java.util.Map;
  * @author Karan Vahi
  * @version $Revision$
  */
-public class Proxy  extends Abstract implements Credential{
+public class Proxy  extends Abstract implements CredentialHandler{
 
 
     /**
@@ -41,6 +41,11 @@ public class Proxy  extends Abstract implements Credential{
      * proxy.
      */
     public static final String X509_USER_PROXY_KEY = "X509_USER_PROXY";
+
+    /**
+     * The description.
+     */
+    private static final String DESCRIPTION = "X509 Proxy Handler";
 
     /**
      * The default constructor.
@@ -104,5 +109,14 @@ public class Proxy  extends Abstract implements Credential{
      */
     public String getEnvironmentVariable(){
         return Proxy.X509_USER_PROXY_KEY;
+    }
+
+    /**
+     * Returns the description for the implementing handler
+     *
+     * @return  description
+     */
+    public String getDescription(){
+        return Proxy.DESCRIPTION;
     }
 }

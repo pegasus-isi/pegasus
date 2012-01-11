@@ -5,7 +5,7 @@
 
 package edu.isi.pegasus.common.credential.impl;
 
-import edu.isi.pegasus.common.credential.Credential;
+import edu.isi.pegasus.common.credential.CredentialHandler;
 
 import edu.isi.pegasus.common.logging.LogManager;
 
@@ -17,12 +17,12 @@ import edu.isi.pegasus.planner.common.PegasusProperties;
 
 
 /**
- * An abstract base class to be used by other Credential implementations.
+ * An abstract base class to be used by other CredentialHandler implementations.
  *
  * @author Karan Vahi
  * @version $Revision$
  */
-public abstract class Abstract implements Credential {
+public abstract class Abstract implements CredentialHandler {
 
 
     /**
