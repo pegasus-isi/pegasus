@@ -251,7 +251,7 @@ public abstract class AbstractSingleFTPerXFERJob extends Abstract
         //constructing the arguments to transfer script
         //they only have to be incorporated after the
         //profile incorporation
-        txJob.strargs = this.generateArgumentString(txJob,file);
+        txJob.strargs = this.generateArgumentStringAndAssociateCredentials(txJob,file);
 
         if(execFiles != null){
             //we need to add setup jobs to change the XBit
@@ -293,7 +293,7 @@ public abstract class AbstractSingleFTPerXFERJob extends Abstract
      * @param file the FileTransfer that needs to be done.
      * @return  the argument string
      */
-    protected abstract String generateArgumentString(TransferJob job,
+    protected abstract String generateArgumentStringAndAssociateCredentials( TransferJob job,
                                                      FileTransfer file);
 
     /**

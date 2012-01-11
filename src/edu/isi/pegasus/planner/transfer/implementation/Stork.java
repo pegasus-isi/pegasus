@@ -261,7 +261,7 @@ public class Stork extends AbstractSingleFTPerXFERJob {
         //constructing the arguments to transfer script
         //they only have to be incorporated after the
         //profile incorporation
-        txJob.strargs = this.generateArgumentString(txJob,file);
+        txJob.strargs = this.generateArgumentStringAndAssociateCredentials(txJob,file);
 
         if(execFiles != null){
             //we need to add setup jobs to change the XBit
@@ -333,15 +333,21 @@ public class Stork extends AbstractSingleFTPerXFERJob {
      * @param file the FileTransfer that needs to be done.
      * @return  the argument string
      */
-    protected String generateArgumentString(TransferJob job,FileTransfer file){
+    protected String generateArgumentStringAndAssociateCredentials(TransferJob job,FileTransfer file){
         StringBuffer sb = new StringBuffer();
         if(job.vdsNS.containsKey(Pegasus.TRANSFER_ARGUMENTS_KEY)){
             sb.append(
                 job.vdsNS.removeKey(Pegasus.TRANSFER_ARGUMENTS_KEY)
                 );
          }
-         sb.append(((NameValue)file.getSourceURL()).getValue()).append("\n").
-            append( ((NameValue)file.getDestURL()).getValue());
+         String source = ((NameValue)file.getSourceURL()).getValue();
+         String dest   = ((NameValue)file.getDestURL()).getValue();
+         sb.append( source ).append("\n").
+            append( dest );
+
+         job.addCredentialType( source );
+         job.addCredentialType( dest );
+
         return sb.toString();
     }
 

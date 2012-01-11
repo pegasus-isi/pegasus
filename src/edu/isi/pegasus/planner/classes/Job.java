@@ -17,6 +17,7 @@
 package edu.isi.pegasus.planner.classes;
 
 
+import edu.isi.pegasus.common.credential.Credential;
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
 
 import edu.isi.pegasus.planner.catalog.classes.Profiles.NAMESPACES;
@@ -413,6 +414,11 @@ public class Job extends Data implements GraphNodeContent{
 
 
     /**
+     * Set of credential types required by a job.
+     */
+    private Set<Credential.TYPE> mCredentialsType;
+
+    /**
      * Intialises the member variables.
      */
     public Job() {
@@ -448,6 +454,7 @@ public class Job extends Data implements GraphNodeContent{
         mNotifications   = new Notifications();
         mStagingSite     = null;
         mDirectory       = null;
+        mCredentialsType = new HashSet<Credential.TYPE>();
 //        submitDirectory  = null;
     }
 
@@ -489,6 +496,7 @@ public class Job extends Data implements GraphNodeContent{
         mNotifications   = job.mNotifications;
         mStagingSite     = job.mStagingSite;
         mDirectory       = job.mDirectory;
+        mCredentialsType = new HashSet<Credential.TYPE>();
 //        submitDirectory  = job.submitDirectory;
     }
 
@@ -546,7 +554,11 @@ public class Job extends Data implements GraphNodeContent{
         newSub.mNotifications = (Notifications)this.getNotifications().clone();
         newSub.mStagingSite   = this.mStagingSite;
 
-        newSub.mDirectory     = this.mDirectory;
+        newSub.mDirectory       = this.mDirectory;
+
+        for( Credential.TYPE type : this.getCredentialTypes()  ){
+            newSub.addCredentialType( type );
+        }
 
         return newSub;
     }
@@ -732,6 +744,60 @@ public class Job extends Data implements GraphNodeContent{
      */
     public Notifications getNotifications(  ){
        return this.mNotifications;
+    }
+
+
+    /**
+     * Looks at a URL to determine whether a credential should be associated with
+     * a job or not.
+     *
+     * @param url   the url for which a credential needs to be added
+     */
+    public void addCredentialType( String url ){
+        //sanity check
+        if( url == null ){
+            return;
+        }
+
+        if( url.startsWith( "gsiftp" ) ){
+            this.addCredentialType( Credential.TYPE.x509 );
+        }
+        else if( url.startsWith( "s3" ) ){
+            this.addCredentialType( Credential.TYPE.s3 );
+        }
+        else if( url.startsWith( "irods" ) ){
+            this.addCredentialType( Credential.TYPE.irods );
+        }
+        else if( url.startsWith( "scp" ) ){
+            this.addCredentialType( Credential.TYPE.ssh );
+        }
+    }
+
+    /**
+     * Adds a type of credential that will be required by a job.
+     *
+     * @param type  the credential type.
+     */
+    public void addCredentialType( Credential.TYPE type ){
+       this.mCredentialsType.add( type );
+    }
+
+
+    /**
+     * Returns the various credential types required by a job
+     *
+     * @return the set of credentials required.
+     */
+    public Set<Credential.TYPE> getCredentialTypes(  ){
+       return this.mCredentialsType;
+    }
+
+    /**
+     * Resets the credential types required by a job.
+     *
+     */
+    public void resetCredentialTypes(){
+        this.mCredentialsType.clear();
     }
 
 
@@ -1769,6 +1835,7 @@ public class Job extends Data implements GraphNodeContent{
         append( sb, "Condor Variables\n" , cVar , newline );
         append( sb, "VDS Profiles" , vdsNS , newline );
         append( sb, "Notifications", this.mNotifications, newline );
+        append( sb, "Credentials", this.mCredentialsType, newline );
         sb.append("]");
         return sb.toString();
 

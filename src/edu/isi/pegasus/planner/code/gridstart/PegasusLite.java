@@ -21,8 +21,8 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.common.logging.LogManager;
 
 import edu.isi.pegasus.common.util.DefaultStreamGobblerCallback;
-import edu.isi.pegasus.common.util.Proxy;
-import edu.isi.pegasus.common.util.S3cfg;
+import edu.isi.pegasus.common.credential.impl.Proxy;
+import edu.isi.pegasus.common.credential.impl.S3CFG;
 
 import edu.isi.pegasus.common.util.StreamGobbler;
 import edu.isi.pegasus.common.util.StreamGobblerCallback;
@@ -350,7 +350,10 @@ public class PegasusLite implements GridStart {
         //mKickstartGridStartImpl.mWorkerNodeExecution = false;
 
         mStageSLSFile = mProps.stageSLSFilesViaFirstLevelStaging();
-        mLocalUserProxy = Proxy.getPathToUserProxy(bag);
+
+        Proxy p = new Proxy();
+        p.initialize(bag);
+        mLocalUserProxy = p.getPath();
 
         //set the path to user proxy only if the proxy exists
         if( !new File( mLocalUserProxy).exists() ){
@@ -362,10 +365,12 @@ public class PegasusLite implements GridStart {
                                   null :
                                   new File(mLocalUserProxy).getName();
 
-        mLocalS3cfg = S3cfg.getPathToS3cfg(bag);
+        S3CFG s3cfg = new S3CFG();
+        s3cfg.initialize(bag);
+        mLocalS3cfg = s3cfg.getPath();
         //set the path to user proxy only if the proxy exists
         if( mLocalS3cfg != null && !new File(mLocalS3cfg).exists() ){
-            mLogger.log( "The s3cfg file does not exist - " + mLocalUserProxy,
+            mLogger.log( "The s3cfg file does not exist - " + mLocalS3cfg,
                          LogManager.DEBUG_MESSAGE_LEVEL );
             mLocalS3cfg = null;
         }
@@ -844,8 +849,10 @@ public class PegasusLite implements GridStart {
 
                 sb.append( convertToTransferInputFormat( files ) );
                 sb.append( "EOF" ).append( '\n' );
-
                 sb.append( '\n' );
+
+                //associate any credentials if required with the job
+                associateCredentials( job, files );
             }
 
             if( job.userExecutablesStagedForJob() ){
@@ -919,6 +926,9 @@ public class PegasusLite implements GridStart {
                 sb.append( convertToTransferInputFormat( files ) );
                 sb.append( "EOF" ).append( '\n' );
                 sb.append( '\n' );
+
+                //associate any credentials if required with the job
+                associateCredentials( job, files );
             }
             
            
@@ -1155,5 +1165,19 @@ public class PegasusLite implements GridStart {
 
     public void useFullPathToGridStarts(boolean fullPath) {
         throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    /**
+     * Associates credentials with the job corresponding to the files that
+     * are being transferred.
+     * 
+     * @param job    the job for which credentials need to be added.
+     * @param files  the files that are being transferred.
+     */
+    private void associateCredentials(Job job, Collection<FileTransfer> files) {
+        for( FileTransfer ft: files ){
+            job.addCredentialType( ft.getSourceURL().getValue() );
+            job.addCredentialType( ft.getDestURL().getValue() );
+        }
     }
 }

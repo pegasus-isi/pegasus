@@ -173,7 +173,9 @@ public abstract class AbstractMultipleFTPerXFERJob extends Abstract
         txJob.outputFiles = new HashSet( files );
 
         try{
-            txJob.stdIn = prepareSTDIN( txJobName, files, job.getSiteHandle(), jobClass );
+            //credentials are handled generically now when the stdin is
+            //written out
+            txJob.stdIn = prepareSTDINAndAssociateCredentials( txJob, files, job.getSiteHandle(), jobClass );
         } catch (Exception e) {
             mLogger.log("Unable to write the stdIn file for job " +
                         txJob.getCompleteTCName() + " " + e.getMessage(),
@@ -200,12 +202,6 @@ public abstract class AbstractMultipleFTPerXFERJob extends Abstract
         //catalog.
         txJob.updateProfiles(mProps);
 
-        //take care of transfer of proxies
-        this.checkAndTransferProxy(txJob);
-
-        //take care of transfer of irods files
-        this.checkAndTransferIrodsEnvFile(txJob);
-        
         //apply the priority to the transfer job
         this.applyPriority(txJob);
 
@@ -351,7 +347,8 @@ public abstract class AbstractMultipleFTPerXFERJob extends Abstract
 
     /**
      * Prepares the stdin for the transfer job. Usually involves writing out a
-     * text file that Condor transfers to the remote end.
+     * text file that Condor transfers to the remote end. Additionally, it associates
+     * credentials with the job that are requried to for the transfers.
      *
      * @param name  the name of the transfer job.
      * @param files    Collection of <code>FileTransfer</code> objects containing
@@ -368,13 +365,13 @@ public abstract class AbstractMultipleFTPerXFERJob extends Abstract
      *
      * @throws Exception in case of error.
      */
-    protected String prepareSTDIN(String name, Collection files, String stagingSite, int jobClass )throws Exception{
+    protected String prepareSTDINAndAssociateCredentials(TransferJob job,  Collection files, String stagingSite, int jobClass )throws Exception{
         //writing the stdin file
         FileWriter stdIn;
-        String basename = name + ".in";
+        String basename = job.getName() + ".in";
         stdIn = new FileWriter(new File(mPOptions.getSubmitDirectory(),
                                         basename));
-        writeJumboStdIn(stdIn, files, stagingSite, jobClass );
+        writeStdInAndAssociateCredentials(job, stdIn, files, stagingSite, jobClass );
         //close the stdin stream
         stdIn.close();
         return basename;
@@ -419,6 +416,7 @@ public abstract class AbstractMultipleFTPerXFERJob extends Abstract
      * Writes to a FileWriter stream the stdin which goes into the magic script
      * via standard input
      *
+     * @param job      the transfer job .
      * @param stdIn    the writer to the stdin file.
      * @param files    Collection of <code>FileTransfer</code> objects containing
      *                 the information about sourceam fin and destURL's.
@@ -432,7 +430,7 @@ public abstract class AbstractMultipleFTPerXFERJob extends Abstract
      *
      * @throws Exception
      */
-    protected abstract void writeJumboStdIn(FileWriter stdIn, Collection files, String stagingSite, int jobClass )
+    protected abstract void writeStdInAndAssociateCredentials( TransferJob job, FileWriter stdIn, Collection files, String stagingSite, int jobClass )
               throws Exception ;
 
     /**

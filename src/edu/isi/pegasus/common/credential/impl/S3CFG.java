@@ -14,43 +14,39 @@
  *  limitations under the License.
  */
 
-package edu.isi.pegasus.common.util;
+package edu.isi.pegasus.common.credential.impl;
 
-import java.io.File;
+import edu.isi.pegasus.common.credential.Credential;
+
 import java.util.Map;
 
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
-import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
-import edu.isi.pegasus.planner.classes.PegasusBag;
-import edu.isi.pegasus.planner.common.PegasusProperties;
+
+
 
 
 /**
  * A convenience class that allows us to determine the path to the user s3cfg file.
  *
  * @author Mats Rynge
- * @version $Revision: 2572 $
+ * @author Karan Vahi
+ *
+ * @version $Revision$
  */
-public class S3cfg {
+public class S3CFG  extends Abstract implements Credential {
 
     /**
      * The name of the environment variable that specifies the path to the
      * s3cfg file.
      */
-    public static final String S3CFG = "S3CFG";
+    public static final String S3CFG_FILE_VARIABLE = "S3CFG";
 
 
     /**
-     * Returns the path to s3cfg file.
-     *
-     * @param bag the bag of inialization objects
-     *
-     * @return  the path to user s3cfg file.
+     * The default constructor.
      */
-    public static final String getPathToS3cfg( PegasusBag bag ){
-        SiteStore s = bag.getHandleToSiteStore();
-        
-        return S3cfg.getPathToS3cfg( s.lookup( "local" ), bag.getPegasusProperties() );
+    public S3CFG(){
+        super();
     }
 
     
@@ -58,25 +54,26 @@ public class S3cfg {
      * Returns the path to s3cfg. The order of preference is as follows
      *
      * - If a s3cfg is specified in the site catalog entry that is used
-     * - Else the one pointed to by the environment variable S3CFG
+     * - Else the one pointed to by the environment variable S3Cfg
      * - Else the default path to the proxy ~/.s3cfg
      *
-     * @param site   the  site catalog entry object.
-     * @param properties  the pegasus properties object passed
+     * @param site   the  site handle
      *
      * @return  the path to s3cfg.
      */
-    public static final String getPathToS3cfg( SiteCatalogEntry site, PegasusProperties properties ){
-
+    public String getPath( String site ){
+        SiteCatalogEntry siteEntry = mSiteStore.lookup( site );
         Map<String,String> envs = System.getenv();
-        
+
+
+
         // check if one is specified in site catalog entry
-        String path = ( site == null )? null :site.getEnvironmentVariable( S3cfg.S3CFG );
+        String path = ( siteEntry == null )? null :siteEntry.getEnvironmentVariable( S3CFG.S3CFG_FILE_VARIABLE );
 
         if( path == null){
-            //check if S3CFG is specified in the environment
-            if( envs.containsKey( S3cfg.S3CFG ) ){
-                path = envs.get( S3cfg.S3CFG );
+            //check if S3Cfg is specified in the environment
+            if( envs.containsKey( S3CFG.S3CFG_FILE_VARIABLE ) ){
+                path = envs.get( S3CFG.S3CFG_FILE_VARIABLE );
             }
         }
 
@@ -84,13 +81,5 @@ public class S3cfg {
     }
 
     
-    /**
-     * Test program.
-     * 
-     * @param args
-     */
-    public static final void main( String[] args ){
-
-        System.out.println( "Location of user s3cfg is " + S3cfg.getPathToS3cfg(null, null));
-    }
+  
 }

@@ -165,6 +165,10 @@ public class DefaultImplementation implements Implementation {
         String execPath = null;
         TransformationCatalogEntry entry   = null;
 
+
+        //associate a credential if required
+        newJob.addCredentialType( directoryURL );
+
         //figure out on the basis of directory URL
         //where to run the job.
         String eSite = getCreateDirJobExecutionSite( site, directoryURL );

@@ -441,6 +441,7 @@ public class GUC extends AbstractMultipleFTPerXFERJob {
     * Writes to a FileWriter stream the stdin which goes into the magic script
     * via standard input
     *
+    * @param job       the transfer job.
     * @param writer    the writer to the stdin file.
     * @param files    Collection of <code>FileTransfer</code> objects containing
     *                 the information about sourceam fin and destURL's.
@@ -454,7 +455,7 @@ public class GUC extends AbstractMultipleFTPerXFERJob {
     *
     * @throws Exception
     */
-   protected void writeJumboStdIn(FileWriter writer, Collection files, String stagingSite, int jobClass ) throws
+   protected void writeStdInAndAssociateCredentials(TransferJob job, FileWriter writer, Collection files, String stagingSite, int jobClass ) throws
        Exception {
        for(Iterator it = files.iterator();it.hasNext();){
            FileTransfer ft = (FileTransfer) it.next();
@@ -466,7 +467,13 @@ public class GUC extends AbstractMultipleFTPerXFERJob {
                  append( source.getValue() ).append( " " ).append( dest.getValue() ).append( "\n" );
            writer.write( entry.toString() );
            writer.flush();
+
+           //associate any credential required , both with destination
+           // and the source urls
+           job.addCredentialType( source.getValue() );
+           job.addCredentialType( dest.getValue() );
        }
+
 
 
    }
@@ -477,8 +484,8 @@ public class GUC extends AbstractMultipleFTPerXFERJob {
     * @return the complete name.
     */
    protected String getCompleteTCName(){
-       return Separator.combine(this.TRANSFORMATION_NAMESPACE,
-                                this.TRANSFORMATION_NAME,
-                                this.TRANSFORMATION_VERSION);
+       return Separator.combine(GUC.TRANSFORMATION_NAMESPACE,
+                                GUC.TRANSFORMATION_NAME,
+                                GUC.TRANSFORMATION_VERSION);
    }
 }

@@ -14,23 +14,21 @@
  *  limitations under the License.
  */
 
-package edu.isi.pegasus.common.util;
+package edu.isi.pegasus.common.credential.impl;
 
+import edu.isi.pegasus.common.credential.Credential;
 import java.util.Map;
 
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
-import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
-import edu.isi.pegasus.planner.classes.PegasusBag;
-import edu.isi.pegasus.planner.common.PegasusProperties;
 
 
 /**
  * A convenience class that allows us to determine the path to the user irodsEnvFile file.
  *
  * @author Mats Rynge
- * @version $Revision: 2572 $
+ * @version $Revision$
  */
-public class IrodsEnvFile {
+public class Irods extends Abstract implements Credential{
 
     /**
      * The name of the environment variable that specifies the path to the
@@ -40,15 +38,10 @@ public class IrodsEnvFile {
 
 
     /**
-     * Returns the path to irodsEnv file.
-     *
-     * @param bag the bag of inialization objects
-     *
-     * @return  the path to user s3cfg file.
+     * The default constructor.
      */
-    public static final String getPathToIrodsEnvFile( PegasusBag bag ){
-        SiteStore s = bag.getHandleToSiteStore();
-        return IrodsEnvFile.getPathToIrodsEnvFile( s.lookup( "local" ), bag.getPegasusProperties() );
+    public Irods(){
+        super();
     }
 
     
@@ -58,22 +51,22 @@ public class IrodsEnvFile {
      * - If a s3cfg is specified in the local catalog entry
      * - Else the one pointed to by the environment variable S3CFG
      *
-     * @param site   the  site catalog entry object.
-     * @param properties  the pegasus properties object passed
+     * @param site   the  site handle
      *
      * @return  the path to s3cfg.
      */
-    public static final String getPathToIrodsEnvFile( SiteCatalogEntry site, PegasusProperties properties ){
+    public  String getPath( String site ){
 
+        SiteCatalogEntry siteEntry = mSiteStore.lookup( site );
         Map<String,String> envs = System.getenv();
         
         // check if one is specified in site catalog entry
-        String path = ( site == null )? null :site.getEnvironmentVariable( IrodsEnvFile.IRODSENVFILE );
+        String path = ( siteEntry == null )? null :siteEntry.getEnvironmentVariable( Irods.IRODSENVFILE );
 
         if( path == null){
             //check if irodsEnvFile is specified in the environment
-            if( envs.containsKey( IrodsEnvFile.IRODSENVFILE ) ){
-                path = envs.get( IrodsEnvFile.IRODSENVFILE );
+            if( envs.containsKey( Irods.IRODSENVFILE ) ){
+                path = envs.get( Irods.IRODSENVFILE );
             }
         }
 
@@ -81,13 +74,5 @@ public class IrodsEnvFile {
     }
 
     
-    /**
-     * Test program.
-     * 
-     * @param args
-     */
-    public static final void main( String[] args ){
-
-        System.out.println( "Location of user irodsEnvFile is " + IrodsEnvFile.getPathToIrodsEnvFile(null, null));
-    }
+   
 }

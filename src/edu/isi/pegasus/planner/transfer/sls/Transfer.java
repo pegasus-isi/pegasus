@@ -23,9 +23,9 @@ import edu.isi.pegasus.common.logging.LogManager;
 
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 
-import edu.isi.pegasus.common.util.S3cfg;
+import edu.isi.pegasus.common.credential.impl.S3CFG;
 import edu.isi.pegasus.common.util.Separator;
-import edu.isi.pegasus.common.util.Proxy;
+import edu.isi.pegasus.common.credential.impl.Proxy;
 
 import edu.isi.pegasus.planner.transfer.SLS;
 
@@ -186,8 +186,10 @@ public class Transfer   implements SLS {
         mLogger     = bag.getLogger();
         mSiteStore  = bag.getHandleToSiteStore();
         mTCHandle   = bag.getHandleToTransformationCatalog();
-        
-        mLocalUserProxy = Proxy.getPathToUserProxy(bag);
+
+        Proxy p = new Proxy();
+        p.initialize(bag);
+        mLocalUserProxy = p.getPath();
         //set the path to user proxy only if the proxy exists
         if( !new File( mLocalUserProxy).exists() ){
             mLogger.log( "The user proxy does not exist - " + mLocalUserProxy,
@@ -199,7 +201,9 @@ public class Transfer   implements SLS {
                                   null :
                                   new File(mLocalUserProxy).getName();
         
-        mLocalS3cfg = S3cfg.getPathToS3cfg(bag);
+        S3CFG s3cfg = new S3CFG();
+        s3cfg.initialize(bag);
+        mLocalS3cfg = s3cfg.getPath();
         //set the path to user proxy only if the proxy exists
         if( mLocalS3cfg != null && !new File(mLocalS3cfg).exists() ){
             mLogger.log( "The s3cfg file does not exist - " + mLocalUserProxy,

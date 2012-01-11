@@ -30,6 +30,7 @@ import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry
 
 import edu.isi.pegasus.common.util.Separator;
 
+import edu.isi.pegasus.planner.classes.NameValue;
 import java.io.FileWriter;
 
 import java.util.Collection;
@@ -293,6 +294,7 @@ public class T2 extends AbstractMultipleFTPerXFERJob {
     /**
      * Writes to a FileWriter stream the stdin which T2 takes via standard input.
      *
+     * @param job       the transfer job.
      * @param writer    the writer to the stdin file.
      * @param files    Collection of <code>FileTransfer</code> objects containing
      *                 the information about sourceam fin and destURL's.
@@ -307,7 +309,7 @@ public class T2 extends AbstractMultipleFTPerXFERJob {
      * @see org.griphyn.cPlanner.classes.FileTransfer#toString()
      * @throws java.lang.Exception
      */
-    protected void writeJumboStdIn(FileWriter writer, Collection files, String stagingSite, int jobClass ) throws
+    protected void writeStdInAndAssociateCredentials( TransferJob job, FileWriter writer, Collection files, String stagingSite, int jobClass ) throws
         Exception {
 
         for(Iterator it = files.iterator();it.hasNext();){
@@ -316,6 +318,15 @@ public class T2 extends AbstractMultipleFTPerXFERJob {
             writer.write(ft.toString());
             writer.write("\n");
             writer.flush();
+
+           NameValue source = ft.getSourceURL();
+           //we want to leverage multiple dests if possible
+           NameValue dest   = ft.getDestURL( true );
+
+           //associate any credential required , both with destination
+           // and the source urls
+           job.addCredentialType( source.getValue() );
+           job.addCredentialType( dest.getValue() );
         }
     }
 

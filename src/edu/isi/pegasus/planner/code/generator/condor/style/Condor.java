@@ -149,6 +149,9 @@ public class Condor extends Abstract {
      */
     public void apply(Job job) throws CondorStyleException{
 
+        //mLogger.log( "Credentials required for job " + job.getID() + " "  + job.getCredentialTypes() ,
+         //            LogManager.DEBUG_MESSAGE_LEVEL );
+
         //           Removed for JIRA PM-543
 //      String execSiteWorkDir = mSiteStore.getInternalWorkDirectory(job);
 //        String workdir = (String) job.globusRSL.removeKey("directory"); // returns old value

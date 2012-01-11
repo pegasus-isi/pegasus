@@ -195,6 +195,9 @@ public class Cleanup implements CleanupImplementation{
         //a clustered job. PM-368
         Job cJob = new Job( job );
 
+        //we dont want credentials to be inherited
+        cJob.resetCredentialTypes();
+
         String stagingSite = job.getStagingSiteHandle();
         
         //by default execution site for a cleanup job is local unless
@@ -206,7 +209,7 @@ public class Cleanup implements CleanupImplementation{
         try{
             BufferedWriter writer;
             writer = new BufferedWriter( new FileWriter(
-                                        new File( mSubmitDirectory, stdIn ) ));
+                                           new File( mSubmitDirectory, stdIn ) ));
 
             for( Iterator it = files.iterator(); it.hasNext(); ){
                 PegasusFile file = (PegasusFile)it.next();
@@ -224,6 +227,9 @@ public class Cleanup implements CleanupImplementation{
                                  LogManager.DEBUG_MESSAGE_LEVEL );
                     eSite = stagingSite;
                 }
+
+                //associate a credential if required
+                cJob.addCredentialType( pfn );
 
                 writer.write( pfn );
                 writer.write( "\n" );

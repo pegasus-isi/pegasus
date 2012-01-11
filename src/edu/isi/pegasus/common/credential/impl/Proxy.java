@@ -14,15 +14,13 @@
  *  limitations under the License.
  */
 
-package edu.isi.pegasus.common.util;
+package edu.isi.pegasus.common.credential.impl;
 
+import edu.isi.pegasus.common.credential.Credential;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 
-import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 
-import edu.isi.pegasus.planner.classes.PegasusBag;
 
-import edu.isi.pegasus.planner.common.PegasusProperties;
 
 import org.globus.common.CoGProperties;
 
@@ -35,7 +33,7 @@ import java.util.Map;
  * @author Karan Vahi
  * @version $Revision$
  */
-public class Proxy {
+public class Proxy  extends Abstract implements Credential{
 
 
     /**
@@ -44,19 +42,13 @@ public class Proxy {
      */
     public static final String X509_USER_PROXY_KEY = "X509_USER_PROXY";
 
-
-
     /**
-     * Returns the path to user proxy.
-     *
-     * @param bag the bag of inialization objects
-     *
-     * @return  the path to user proxy.
+     * The default constructor.
      */
-    public static final String getPathToUserProxy( PegasusBag bag ){
-        SiteStore s = bag.getHandleToSiteStore();
-        return Proxy.getPathToUserProxy( s.lookup( "local" ), bag.getPegasusProperties() );
+    public Proxy(){
+        super();
     }
+
 
     /**
      * Returns the path to user proxy. The order of preference is as follows
@@ -67,13 +59,14 @@ public class Proxy {
      *     CoGProperties.getDefault().getProxyFile()
      *
      * @param site   the  site catalog entry object.
-     * @param properties  the pegasus properties object passed
      *
      * @return  the path to user proxy.
      */
-    public static final String getPathToUserProxy( SiteCatalogEntry site, PegasusProperties properties ){
+    public String getPath( String site ){
+        SiteCatalogEntry siteEntry = mSiteStore.lookup( site );
+
         //check if one is specified in site catalog entry
-        String proxy = ( site == null )? null :site.getEnvironmentVariable( Proxy.X509_USER_PROXY_KEY);
+        String proxy = ( siteEntry == null )? null :siteEntry.getEnvironmentVariable( Proxy.X509_USER_PROXY_KEY);
 
         if( proxy == null){
             //check if X509_USER_PROXY is specified in the environment
@@ -102,13 +95,5 @@ public class Proxy {
         return proxy;
     }
 
-    /**
-     * Test program.
-     * 
-     * @param args
-     */
-    public static final void main( String[] args ){
 
-        System.out.println( "User proxy is " + Proxy.getPathToUserProxy(null, null));
-    }
 }

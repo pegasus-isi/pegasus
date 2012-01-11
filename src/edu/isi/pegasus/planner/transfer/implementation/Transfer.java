@@ -360,11 +360,12 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
      * Writes to a FileWriter stream the stdin which goes into the magic script
      * via standard input
      *
+     * @param job     the transfer job
      * @param writer    the writer to the stdin file.
      * @param files    Collection of <code>FileTransfer</code> objects containing
      *                 the information about sourceam fin and destURL's.
-    * @param stagingSite the site where the data will be populated by first
-    *                    level staging jobs.
+     * @param stagingSite the site where the data will be populated by first
+     *                    level staging jobs.
      * @param jobClass    the job Class for the newly added job. Can be one of the
      *                    following:
      *                              stage-in
@@ -373,7 +374,7 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
      *
      * @throws Exception
      */
-    protected void writeJumboStdIn(FileWriter writer, Collection files, String stagingSite, int jobClass ) throws
+    protected void writeStdInAndAssociateCredentials(TransferJob job, FileWriter writer, Collection files, String stagingSite, int jobClass ) throws
         Exception {
         int num = 1;
         for( Iterator it = files.iterator(); it.hasNext(); ){
@@ -391,6 +392,11 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
             writer.write( urlPair.toString() );
             writer.flush();
             num++;
+
+            //associate any credential required , both with destination
+            // and the source urls
+            job.addCredentialType( source.getValue() );
+            job.addCredentialType( dest.getValue() );
         }
 
 
