@@ -23,9 +23,7 @@ import edu.isi.pegasus.common.logging.LogManager;
 
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 
-import edu.isi.pegasus.common.credential.impl.S3CFG;
 import edu.isi.pegasus.common.util.Separator;
-import edu.isi.pegasus.common.credential.impl.Proxy;
 
 import edu.isi.pegasus.planner.transfer.SLS;
 
@@ -123,25 +121,7 @@ public class Transfer   implements SLS {
      */
     protected LogManager mLogger;
 
-    /**
-     * The path to local user proxy.
-     */
-    protected String mLocalUserProxy;
-
-    /**
-     * The basename of the proxy
-     */
-    protected String mLocalUserProxyBasename;
-
-    /**
-     * The path to local s3cfg.
-     */
-    protected String mLocalS3cfg;
-
-    /**
-     * The basename of the s3cfg
-     */
-    protected String mLocalS3cfgBasename;
+   
 
     /**
      * The local url prefix for the submit host.
@@ -187,33 +167,6 @@ public class Transfer   implements SLS {
         mSiteStore  = bag.getHandleToSiteStore();
         mTCHandle   = bag.getHandleToTransformationCatalog();
 
-        Proxy p = new Proxy();
-        p.initialize(bag);
-        mLocalUserProxy = p.getPath();
-        //set the path to user proxy only if the proxy exists
-        if( !new File( mLocalUserProxy).exists() ){
-            mLogger.log( "The user proxy does not exist - " + mLocalUserProxy,
-                         LogManager.DEBUG_MESSAGE_LEVEL );
-            mLocalUserProxy = null;
-        }
-
-        mLocalUserProxyBasename = (mLocalUserProxy == null) ?
-                                  null :
-                                  new File(mLocalUserProxy).getName();
-        
-        S3CFG s3cfg = new S3CFG();
-        s3cfg.initialize(bag);
-        mLocalS3cfg = s3cfg.getPath();
-        //set the path to user proxy only if the proxy exists
-        if( mLocalS3cfg != null && !new File(mLocalS3cfg).exists() ){
-            mLogger.log( "The s3cfg file does not exist - " + mLocalUserProxy,
-                         LogManager.DEBUG_MESSAGE_LEVEL );
-            mLocalS3cfg = null;
-        }
-
-        mLocalS3cfgBasename = (mLocalS3cfg == null) ?
-                                  null :
-                                  new File(mLocalS3cfg).getName();
 
         mLocalURLPrefix = mSiteStore.lookup( "local" ).getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix( );
         mTransientRC = bag.getHandleToTransientReplicaCatalog();
@@ -253,18 +206,7 @@ public class Transfer   implements SLS {
                              this.getExecutableBasename() ://nothing in the transformation catalog, rely on the executable basenmae
                              entry.getPhysicalTransformation();//rely on what is in the transformation catalog
 
-        //we need to set the x bit on proxy correctly first as a
-        //GRIDSTART prejob only if SeqExec is not used for launching jobs
-        if( mLocalUserProxyBasename != null && !this.mSeqExecGridStartUsed ){
-            StringBuffer proxy = new StringBuffer( );
-            proxy.append( slsFile.getParent() ).append( File.separator ).
-                  append( mLocalUserProxyBasename);
-            invocation.append( "/bin/bash -c \"chmod 600 " ).
-                              append( proxy.toString() ).append(" && ");
-
-            //backdoor to set the X509_USER_PROXY
-            job.envVariables.construct( ENV.X509_USER_PROXY_KEY, proxy.toString() );
-        }
+        
         invocation.append( executable );
 
 
@@ -292,9 +234,7 @@ public class Transfer   implements SLS {
 
 
 
-        if( mLocalUserProxyBasename != null && !this.mSeqExecGridStartUsed ){
-            invocation.append( "\"" );
-        }
+       
 
         return invocation.toString();
 
@@ -546,20 +486,7 @@ public class Transfer   implements SLS {
 
         //holds the externally accessible path to the directory on the staging site
         String externalWorkDirectoryURL = mSiteStore.getExternalWorkDirectoryURL( job.getStagingSiteHandle() );
-        //add the proxy as input file if required.
-        if( mLocalUserProxy != null ){
-            FileTransfer proxy = new FileTransfer( ENV.X509_USER_PROXY_KEY, job.getName() );
-            StringBuffer sourceURL = new StringBuffer();
-            sourceURL.append( mLocalURLPrefix ).append( mLocalUserProxy );
-            proxy.addSource( "local" , sourceURL.toString() );
-
-            StringBuffer destURL = new StringBuffer();
-
-            destURL.append( externalWorkDirectoryURL ).append( separator ).
-                    append( mLocalUserProxyBasename );
-            proxy.addDestination( job.getSiteHandle(), destURL.toString()  );
-            job.addInputFile( proxy );
-        }
+        
 
         //sanity check
         if( !this.mStageSLSFile ){

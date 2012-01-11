@@ -21,8 +21,6 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.common.logging.LogManager;
 
 import edu.isi.pegasus.common.util.DefaultStreamGobblerCallback;
-import edu.isi.pegasus.common.credential.impl.Proxy;
-import edu.isi.pegasus.common.credential.impl.S3CFG;
 
 import edu.isi.pegasus.common.util.StreamGobbler;
 import edu.isi.pegasus.common.util.StreamGobblerCallback;
@@ -56,7 +54,6 @@ import edu.isi.pegasus.planner.classes.FileTransfer;
 import edu.isi.pegasus.planner.classes.NameValue;
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.BufferedWriter;
 import java.io.FileReader;
@@ -245,26 +242,6 @@ public class PegasusLite implements GridStart {
      */
     protected boolean mStageSLSFile;
 
-    /**
-     * The path to local user proxy.
-     */
-    protected String mLocalUserProxy;
-
-    /**
-     * The basename of the proxy
-     */
-    protected String mLocalUserProxyBasename;
-
-    /**
-     * The path to local user s3cfg.
-     */
-    protected String mLocalS3cfg;
-
-    /**
-     * The basename of the s3cfg
-     */
-    protected String mLocalS3cfgBasename;
-
 
     /**
      * The local path on the submit host to pegasus-lite-common.sh
@@ -351,34 +328,7 @@ public class PegasusLite implements GridStart {
 
         mStageSLSFile = mProps.stageSLSFilesViaFirstLevelStaging();
 
-        Proxy p = new Proxy();
-        p.initialize(bag);
-        mLocalUserProxy = p.getPath();
-
-        //set the path to user proxy only if the proxy exists
-        if( !new File( mLocalUserProxy).exists() ){
-            mLogger.log( "The user proxy does not exist - " + mLocalUserProxy,
-                         LogManager.DEBUG_MESSAGE_LEVEL );
-            mLocalUserProxy = null;
-        }
-        mLocalUserProxyBasename = (mLocalUserProxy == null) ?
-                                  null :
-                                  new File(mLocalUserProxy).getName();
-
-        S3CFG s3cfg = new S3CFG();
-        s3cfg.initialize(bag);
-        mLocalS3cfg = s3cfg.getPath();
-        //set the path to user proxy only if the proxy exists
-        if( mLocalS3cfg != null && !new File(mLocalS3cfg).exists() ){
-            mLogger.log( "The s3cfg file does not exist - " + mLocalS3cfg,
-                         LogManager.DEBUG_MESSAGE_LEVEL );
-            mLocalS3cfg = null;
-        }
-
-        mLocalS3cfgBasename = (mLocalS3cfg == null) ?
-                                  null :
-                                  new File(mLocalS3cfg).getName();
-
+        
         mLocalPathToPegasusLiteCommon = getSubmitHostPathToPegasusLiteCommon( );
 
 
