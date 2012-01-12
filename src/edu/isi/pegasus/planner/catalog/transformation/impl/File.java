@@ -1259,12 +1259,12 @@ public class File  extends Abstract
                                     }
                                     catch (ProfileParserException ppe) {
                                         mLogger.log(
-                                            "Parsing profiles on line " +
-                                            linecount + " " + ppe.getMessage() +
-                                            "at position " +
-                                            ppe.getPosition(), ppe,
+                                            "Parsing profile(s) in line " +
+                                            linecount +
+                                            " near position " +
+                                            ppe.getPosition() + ": " +
+					    ppe.getMessage(),
                                             LogManager.ERROR_MESSAGE_LEVEL);
-
                                     }
                                     catch (RuntimeException e) {
                                         mLogger.log(

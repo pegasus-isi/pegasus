@@ -100,8 +100,8 @@ public class Client {
                 profiles = ProfileParser.parse( profile );
             } catch ( ProfileParserException ppe ) {
                 mLogger.log( "Parsing profiles " + ppe.getMessage() +
-                    "at position " + ppe.getPosition(), ppe,
-                    LogManager.ERROR_MESSAGE_LEVEL );
+			     " at position " + ppe.getPosition(), ppe,
+			     LogManager.ERROR_MESSAGE_LEVEL );
             }
         }
         if ( systemstring != null ) {
