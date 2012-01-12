@@ -1,20 +1,13 @@
 #!/bin/bash
-
+set -v
 #Get the Test dir from the build Plan Name or from command line
 
-TOP_DIR=`pwd`
-TEST= `/bin/echo "$1" | awk -F " - " '{print $3}'`
-
-
-echo " **** ENV **** "
-env
-echo " ***** ENV ***** "
-
-
+TOP_DIR = `pwd`
+TEST = echo "$1" | awk -F " - " '{print $3}'
 
 cd test/core/$TEST
 
-echo TEST is $TEST
+echo "TEST is $TEST"
 pwd
 
 #Launch the test
@@ -29,7 +22,7 @@ fi
 
 #Get RUNDIR from the planning output
 RUN_DIR=`grep pegasus-remove plan.out | awk '{print $5}'`
-echo RUNDIR is $RUN_DIR
+echo "RUNDIR is $RUN_DIR"
 
 # Change in to the rundir
 cd $RUN_DIR
