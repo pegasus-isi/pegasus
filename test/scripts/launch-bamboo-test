@@ -2,8 +2,8 @@
 set -v
 #Get the Test dir from the build Plan Name or from command line
 
-TOP_DIR = `pwd`
-TEST = echo "$1" | awk -F " - " '{print $3}'
+TOP_DIR=`pwd`
+TEST=`echo $1 | awk -F " - " '{print $3}'`
 
 cd test/core/$TEST
 
