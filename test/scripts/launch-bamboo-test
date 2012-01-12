@@ -1,0 +1,49 @@
+#!/bin/sh
+
+#Get the Test dir from the build Plan Name or from command line
+
+TOP_DIR=`pwd`
+if [ "X$1" = "X" ]; then
+    TEST=`echo ${bamboo_buildPlanName}| awk -F " - " '{print $3}'`
+else
+    TEST= `echo $1 | awk -F " - " '{print $3}'`
+fi
+
+echo " **** ENV **** "
+env
+echo " ***** ENV ***** "
+
+cd test/core/$TEST
+
+#Launch the test
+
+./run-bamboo-test
+
+STATUS=$?
+if [ $STATUS != 0 ]; then
+   echo "Workflow submission failed"
+   exit $STATUS
+fi
+
+#Get RUNDIR from the planning output
+RUN_DIR=`grep pegasus-remove plan.out | awk '{print $5}'`
+echo RUNDIR is $RUN_DIR
+
+# Change in to the rundir
+cd $RUN_DIR
+
+#Check status
+$TOP_DIR/test/common/check-status
+
+STATUS=$?
+
+
+if [ $STATUS = 0 ]; then
+  # Run Pegasus Statistics
+   pegasus-statistics $RUNDIR
+else 
+   echo "Pegasus statistics failed"
+   exit $STATUS
+fi
+
+exit
