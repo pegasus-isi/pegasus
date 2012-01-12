@@ -296,21 +296,24 @@ class Job:
             # Increment task_number
             my_task_number = my_task_number + 1
 
-            if "resource" in my_record:
-                self._site_name = my_record["resource"]
-            if "user" in my_record:
-                self._remote_user = my_record["user"]
-            if "cwd" in my_record:
-                self._remote_working_dir = my_record["cwd"]
-            if "hostname" in my_record:
-                self._host_id = my_record["hostname"]
+            if not my_invocation_found:
+                # Things we only need to do once
+                if "resource" in my_record:
+                    self._site_name = my_record["resource"]
+                if "user" in my_record:
+                    self._remote_user = my_record["user"]
+                if "cwd" in my_record:
+                    self._remote_working_dir = my_record["cwd"]
+                if "hostname" in my_record:
+                    self._host_id = my_record["hostname"]
+            
+                # We are done with this part
+                my_invocation_found = True
+
             if "stdout" in my_record:
                 self._stdout_text = self._stdout_text + "#@ %d stdout\n" % (my_task_number) + my_record["stdout"] + "\n"
             if "stderr" in my_record:
                 self._stdout_text = self._stdout_text + "#@ %d stderr\n" % (my_task_number) + my_record["stderr"] + "\n"
-            # No need to look further
-            my_invocation_found = True
-            break
 
         # Now, we encode it!
         if self._stdout_text != "":

@@ -898,13 +898,21 @@ def analyze_db(config_properties):
     if failed > 0:
         # Get list of failed jobs from database
         my_failed_jobs = workflow_stats.get_failed_job_instances(final=True, all_jobs=True)
-
+        
         # Print header
 	print "Failed jobs' details".center(80, '*')
 
         # Now process one by one...
         for my_job in my_failed_jobs:
             my_info = workflow_stats.get_job_instance_info(my_job[0])[0]
+            my_tasks = workflow_stats.get_invocation_info(my_job[0])
+
+            # Unquote stdout and stderr
+            my_info.stdout_text = utils.unquote(my_info.stdout_text)
+            my_info.stderr_text = utils.unquote(my_info.stderr_text)
+            my_info.stdout_text = my_info.stdout_text.strip(" \n\r\t")
+            my_info.stderr_text = my_info.stderr_text.strip(" \n\r\t")
+            
             if my_job[0] == my_info.job_instance_id:
 
                 print
@@ -941,18 +949,72 @@ def analyze_db(config_properties):
                         print
                 print
 
-                # Now dump file contents to screen if we are not in quiet mode
-                if not quiet_mode:
-                    if my_info.stdout_text is not None:
-                        print my_info.stdout_file.center(80, '-')
-                        print
-                        print my_info.stdout_text
-                        print
-                    if my_info.stderr_text is not None:
-                        print my_info.stderr_file.center(80, '-')
-                        print
-                        print my_info.stderr_text
-                        print
+                # Now, print task information
+                for my_task in my_tasks:
+                    if my_task[0] < 1:
+                        # Skip pre, and post script tasks
+                        continue
+                    if my_task[1] == 0:
+                        # Skip tasks that succeeded
+                        continue
+
+                    # Got a task with a non-zero exitcode
+                    my_exitcode = utils.raw_to_regular(my_task[1])
+
+                    # Print task summary
+                    print ("Task #" + str(my_task[0]) + " - Summary").center(80, '-')
+                    print
+                    print "site        : %s" % (my_info.site or '-')
+                    print "hostname    : %s" % (my_info.hostname or '-')
+                    print "executable  : %s" % (str(my_task[2] or '-'))
+                    print "arguments   : %s" % (str(my_task[3] or '-'))
+                    print "exitcode    : %s" % (str(my_exitcode))
+                    print "working dir : %s" % (my_info.work_dir or '-')
+                    print
+
+                    if quiet_mode:
+                        continue
+
+                    # Now, print task stdout and stderr, if anything is there
+                    my_stdout_str = "#@ %d stdout" % (my_task[0])
+                    my_stderr_str = "#@ %d stderr" % (my_task[0])
+
+                    # Start with stdout
+                    my_stdout_start = my_info.stdout_text.find(my_stdout_str)
+                    if my_stdout_start >= 0:
+                        my_stdout_start = my_stdout_start + len(my_stdout_str) + 1
+                        my_stdout_end = my_info.stdout_text.find("#@", my_stdout_start)
+                        if my_stdout_end < 0:
+                            # Next comment not found, possibly the last entry
+                            my_stdout_end = len(my_info.stdout_text)
+                        else:
+                            my_stdout_end = my_stdout_end - 1
+
+                        if my_stdout_end - my_stdout_start > 0:
+                            # Something to display
+                            print ("Task #" + str(my_task[0]) + " - " + str(my_task[4]) + " - " + str(my_task[5]) + " - stdout").center(80, '-')
+                            print
+                            print my_info.stdout_text[my_stdout_start:my_stdout_end]
+                            print
+
+                    # Now print stderr
+                    my_stderr_start = my_info.stdout_text.find(my_stderr_str)
+                    if my_stderr_start >= 0:
+                        my_stderr_start = my_stderr_start + len(my_stderr_str) + 1
+                        my_stderr_end = my_info.stdout_text.find("#@", my_stderr_start)
+                        if my_stderr_end < 0:
+                            # Next comment not found, possibly the last entry
+                            my_stderr_end = len(my_info.stdout_text)
+                        else:
+                            my_stderr_end = my_stderr_end - 1
+
+                        if my_stderr_end - my_stderr_start > 0:
+                            # Something to display
+                            print ("Task #" + str(my_task[0]) + " - " + str(my_task[4]) + " - " + str(my_task[5]) + " - stderr").center(80, '-')
+                            print
+                            print my_info.stdout_text[my_stderr_start:my_stderr_end]
+                            print
+
             else:
                 log.error("unexpected job instance returned by database!")
                 log.error("returned: %d - expected: %d" % (my_info[0], my_job[0]))

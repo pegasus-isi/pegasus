@@ -149,7 +149,7 @@ Methods listed in order of query list on wiki.
 
 https://confluence.pegasus.isi.edu/display/pegasus/Pegasus+Statistics+Python+Version+Modified
 """
-__rcsid__ = "$Id: stampede_statistics.py 29273 2012-01-09 22:17:42Z mgoode $"
+__rcsid__ = "$Id: stampede_statistics.py 29291 2012-01-11 19:37:21Z mgoode $"
 __author__ = "Monte Goode"
 
 from netlogger.analysis.modules._base import SQLAlchemyInit
@@ -875,8 +875,12 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         sq_9 = sq_9.filter(Invocation.task_submit_seq == -1)
         sq_9 = sq_9.subquery()
         
+        sq_10 = self.session.query(Host.hostname)
+        sq_10 = sq_10.filter(Host.host_id == JobInstance.host_id).correlate(JobInstance)
+        sq_10 = sq_10.subquery()
+        
         q = self.session.query(JobInstance.job_instance_id, JobInstance.site, JobInstance.stdout_file, JobInstance.stderr_file,
-                JobInstance.stdout_text, JobInstance.stderr_text,
+                JobInstance.stdout_text, JobInstance.stderr_text, JobInstance.work_dir,
                 sq_0.as_scalar().label('subwf_dir'),
                 sq_1.as_scalar().label('job_name'),
                 sq_2.as_scalar().label('submit_file'),
@@ -885,7 +889,8 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
                 sq_5.as_scalar().label('submit_dir'),
                 sq_7.as_scalar().label('state'),
                 sq_8.as_scalar().label('pre_executable'),
-                sq_9.as_scalar().label('pre_argv')
+                sq_9.as_scalar().label('pre_argv'),
+                sq_10.as_scalar().label('hostname')
                 )
                 
         if job_instance_id:
@@ -895,12 +900,14 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         
     def get_invocation_info(self, ji_id=None):
         """
-        SELECT task_submit_seq, exitcode FROM invocation WHERE job_instance_id = 7 and wf_id = 1
+        SELECT task_submit_seq, exitcode, executable, argv, transformation, abs_task_id 
+        FROM invocation WHERE job_instance_id = 7 and wf_id = 1
         """
         if self._expand or not ji_id:
             return []
         
-        q = self.session.query(Invocation.task_submit_seq, Invocation.exitcode)
+        q = self.session.query(Invocation.task_submit_seq, Invocation.exitcode, 
+                Invocation.executable, Invocation.argv, Invocation.transformation, Invocation.abs_task_id)
         q = q.filter(Invocation.job_instance_id == ji_id)
         q = q.filter(Invocation.wf_id.in_(self._wfs))
         
