@@ -1,5 +1,5 @@
 #!/bin/bash
-set -v
+#set -v
 #Get the Test dir from the build Plan Name or from command line
 
 TOP_DIR=`pwd`
@@ -35,7 +35,7 @@ STATUS=$?
 
 if [ $STATUS = 0 ]; then
   # Run Pegasus Statistics
-   pegasus-statistics $RUNDIR
+   pegasus-statistics $RUN_DIR
 else 
    echo "Pegasus statistics failed"
    exit $STATUS
