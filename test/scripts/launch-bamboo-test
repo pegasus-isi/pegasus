@@ -13,7 +13,12 @@ echo " **** ENV **** "
 env
 echo " ***** ENV ***** "
 
+
+
 cd test/core/$TEST
+
+echo TEST is $TEST
+pwd
 
 #Launch the test
 
