@@ -18,8 +18,11 @@
 package edu.isi.pegasus.planner.common;
 
 import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.planner.classes.PlannerOptions;
+import edu.isi.pegasus.planner.transfer.sls.SLSFactory;
 import java.util.Iterator;
 import java.util.Properties;
+import java.util.Set;
 
 /**
  * A utility class that returns JAVA Properties that need to be set based on
@@ -59,13 +62,61 @@ public class PegasusConfiguration {
     public PegasusConfiguration( LogManager logger ){
         mLogger = logger;
     }
+
+    /**
+     * Loads configuration specific properties into PegasusProperties,
+     * and adjusts planner options accordingly.
+     *
+     * @param properties   the Pegasus Properties
+     * @param options      the PlannerOptions .
+     */
+    public void loadConfigurationPropertiesAndOptions( PegasusProperties properties,
+                                                       PlannerOptions options ){
+
+        this.loadConfigurationProperties( properties );
+
+        //sanitize on the planner options
+        if( properties.executeOnWorkerNode() ){
+            String slsImplementor = properties.getSLSTransferImplementation();
+            if( slsImplementor == null ){
+                slsImplementor = SLSFactory.DEFAULT_SLS_IMPL_CLASS;
+            }
+            
+            //check for the sls implementation
+            if( slsImplementor.equalsIgnoreCase( CONDOR_CONFIGURATION_VALUE ) ){
+
+                for( String site : (Set<String>)options.getExecutionSites() ){
+                    //sanity check to make sure staging site is set to local
+                    String stagingSite = options.getStagingSite( site );
+                    if( stagingSite == null ){
+                        stagingSite = "local";
+                        //set it to local site
+                        mLogger.log( "Setting staging site for " + site + " to " + stagingSite ,
+                                      LogManager.CONFIG_MESSAGE_LEVEL );
+                        options.addToStagingSitesMappings( site , stagingSite );
+
+                    }
+                    else if (!( stagingSite.equalsIgnoreCase( "local" ) )){
+                        StringBuffer sb = new StringBuffer();
+
+                        sb.append( "Mismatch in the between execution site ").append( site ).
+                           append( " and staging site " ).append( stagingSite ).
+                           append( " . For Condor IO staging site should be set to local . " );
+
+                        throw new RuntimeException( sb.toString() );
+                    }
+                }
+
+            }
+        }
+    }
     
     /**
      * Loads configuration specific properties into PegasusProperties
      * 
      * @param properties   the Pegasus Properties.
      */
-    public void loadConfigurationProperties( PegasusProperties properties ){
+    private void loadConfigurationProperties( PegasusProperties properties ){
         String configuration  = properties.getProperty( PEGASUS_CONFIGURATION_PROPERTY_KEY ) ;
         
         Properties props = this.getConfigurationProperties(configuration);

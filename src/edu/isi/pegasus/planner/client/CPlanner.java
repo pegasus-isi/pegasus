@@ -293,8 +293,7 @@ public class CPlanner extends Executable{
      * Loads all the properties that are needed by this class.
      */
     public void loadProperties(){
-        PegasusConfiguration configurator = new PegasusConfiguration( mLogger );
-        configurator.loadConfigurationProperties( mProps );
+        
     }
 
     
@@ -321,6 +320,7 @@ public class CPlanner extends Executable{
         String message = new String();
         mPOptions = options;
 
+        
         mBag.add( PegasusBag.PEGASUS_PROPERTIES, mProps );
         mBag.add( PegasusBag.PLANNER_OPTIONS, mPOptions );
         mBag.add( PegasusBag.PEGASUS_LOGMANAGER, mLogger );
@@ -340,6 +340,9 @@ public class CPlanner extends Executable{
             //set log level to FATAL only
             mLogger.setLevel( LogManager.FATAL_MESSAGE_LEVEL );
         }
+
+        PegasusConfiguration configurator = new PegasusConfiguration( mLogger );
+        configurator.loadConfigurationPropertiesAndOptions( mProps , mPOptions );
 
 
         //do sanity check on dax file

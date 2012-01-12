@@ -1199,12 +1199,24 @@ public class PlannerOptions extends Data implements Cloneable{
             String[] kv = kvstr.split( "=" );
             if ( kv.length == 1 ){
                 //add a * notation
-                this.mStagingSitesMap.put( "*", kv[0] );
+                addToStagingSitesMappings( "*", kv[0] );
             }
             else{
-                this.mStagingSitesMap.put( kv[0], kv[1] );
+                addToStagingSitesMappings( kv[0], kv[1] );
             }
         }
+
+    }
+
+    /**
+     * Adds to the staging sites
+     *
+     * @param executionSite   the execution site
+     * @param stagingSite     the staging site.
+     */
+    public void addToStagingSitesMappings( String executionSite, String stagingSite ) {
+
+        this.mStagingSitesMap.put( executionSite, stagingSite );
 
     }
 
