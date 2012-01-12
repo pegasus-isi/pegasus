@@ -149,10 +149,11 @@ Methods listed in order of query list on wiki.
 
 https://confluence.pegasus.isi.edu/display/pegasus/Pegasus+Statistics+Python+Version+Modified
 """
-__rcsid__ = "$Id: stampede_statistics.py 29291 2012-01-11 19:37:21Z mgoode $"
+__rcsid__ = "$Id: stampede_statistics.py 29300 2012-01-12 16:43:29Z mgoode $"
 __author__ = "Monte Goode"
 
 from netlogger.analysis.modules._base import SQLAlchemyInit
+from netlogger.analysis.schema.schema_check import ErrorStrings
 from netlogger.analysis.schema.stampede_schema import *
 from netlogger.nllog import DoesLogging, get_logger
         
@@ -163,7 +164,11 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         if connString is None:
             raise ValueError("connString is required")
         DoesLogging.__init__(self)
-        SQLAlchemyInit.__init__(self, connString, initializeToPegasusDB)
+        try:
+            SQLAlchemyInit.__init__(self, connString, initializeToPegasusDB)
+        except exceptions.OperationalError, e:
+            self.log.error('init', msg='%s' % ErrorStrings.get_init_error(e))
+            raise RuntimeError
         
         self._expand = expand_workflow
         
@@ -813,7 +818,10 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
             return []
         d_or_d = self._dax_or_dag_cond()
         
-        q = self.session.query(JobInstance.job_instance_id)
+        if not final:
+            q = self.session.query(JobInstance.job_instance_id, JobInstance.job_submit_seq)
+        else:
+            q = self.session.query(JobInstance.job_instance_id, func.max(JobInstance.job_submit_seq))
         q = q.filter(Job.wf_id.in_(self._wfs))
         q = q.filter(Job.job_id == JobInstance.job_id)
         q = q.filter(JobInstance.job_instance_id == Jobstate.job_instance_id)
@@ -821,7 +829,7 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
             q = q.filter(or_(not_(d_or_d), and_(d_or_d, JobInstance.subwf_id == None)))
         q = q.filter(Jobstate.state.in_(['PRE_SCRIPT_FAILED','SUBMIT_FAILED','JOB_FAILURE' ,'POST_SCRIPT_FAILED']))
         if final:
-            q = q.order_by(desc(JobInstance.job_submit_seq)).limit(1)
+            q = q.group_by(JobInstance.job_id)
         
         return q.all()
         

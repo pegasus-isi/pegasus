@@ -16,9 +16,10 @@ the Stampede DB.
 
 See http://www.sqlalchemy.org/ for details on SQLAlchemy
 """
-__rcsid__ = "$Id: stampede_loader.py 28321 2011-08-25 18:56:34Z mgoode $"
+__rcsid__ = "$Id: stampede_loader.py 29293 2012-01-11 21:31:34Z mgoode $"
 __author__ = "Monte Goode"
 
+from netlogger.analysis.schema.schema_check import ErrorStrings, SchemaCheck, SchemaVersionError
 from netlogger.analysis.schema.stampede_schema import *
 from netlogger.analysis.modules._base import Analyzer as BaseAnalyzer
 from netlogger.analysis.modules._base import SQLAlchemyInit, dsn_dialect
@@ -63,8 +64,17 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         # This is the session handler that the code logic uses for queries
         # and other DB interaction.  The arg "initializeToPegasusDB" is
         # a function from the stampede_schema module.
-        SQLAlchemyInit.__init__(self, connString, initializeToPegasusDB, **_kw)
+        try:
+            SQLAlchemyInit.__init__(self, connString, initializeToPegasusDB, **_kw)
+        except exceptions.OperationalError, e:
+            self.log.error('init', msg='%s' % ErrorStrings.get_init_error(e))
+            raise RuntimeError
 
+        # Check the schema version before proceeding.
+        s_check = SchemaCheck(self.session)
+        if not s_check.check_schema():
+            raise SchemaVersionError
+        
         self.log.info('init.start')
 
         # "Case" dict to map events to handler methods
