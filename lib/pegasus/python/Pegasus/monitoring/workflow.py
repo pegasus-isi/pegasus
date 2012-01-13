@@ -1336,9 +1336,11 @@ class Workflow:
                 kwargs["start_time"] = my_job._pre_script_done
             try:
                 kwargs["dur"] = my_job._pre_script_done - my_job._pre_script_start
+                kwargs["remote_cpu_time"] = my_job._pre_script_done - my_job._pre_script_start
             except:
                 # Duration cannot be determined, possibly a missing PRE_SCRIPT_START event
                 kwargs["dur"] = 0
+                kwargs["remote_cpu_time"] = 0
             kwargs["exitcode"] = str(my_job._pre_script_exitcode)
             if my_job._exec_job_id in self._job_info:
                 if self._job_info[my_job._exec_job_id][1] is not None:
@@ -1361,9 +1363,11 @@ class Workflow:
                 kwargs["start_time"] = my_job._post_script_done
             try:
                 kwargs["dur"] = my_job._post_script_done - my_job._post_script_start
+                kwargs["remote_cpu_time"] = my_job._post_script_done - my_job._post_script_start
             except:
                 # Duration cannot be determined, possibly a missing POST_SCRIPT_START event
                 kwargs["dur"] = 0
+                kwargs["remote_cpu_time"] = 0
             kwargs["exitcode"] = str(my_job._post_script_exitcode)
             if my_job._exec_job_id in self._job_info:
                 if self._job_info[my_job._exec_job_id][3] is not None:
@@ -1429,6 +1433,14 @@ class Workflow:
                     # This must be a zero duration job (without an ULOG_EXECUTE)
                     # In this case, duration should be set to ZERO
                     kwargs["dur"] = 0
+            if "utime" in invocation_record and "stime" in invocation_record:
+                try:
+                    kwargs["remote_cpu_time"] = (float(invocation_record["utime"]) +
+                                                 float(invocation_record["stime"]))
+                except ValueError:
+                    kwargs["remote_cpu_time"] = kwargs["dur"]
+            else:
+                kwargs["remote_cpu_time"] = kwargs["dur"]
             if my_start is not None and "duration" in invocation_record:
                 # Calculate timestamp for when this task finished
                 try:

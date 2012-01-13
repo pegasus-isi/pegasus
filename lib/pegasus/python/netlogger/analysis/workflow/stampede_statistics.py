@@ -149,7 +149,7 @@ Methods listed in order of query list on wiki.
 
 https://confluence.pegasus.isi.edu/display/pegasus/Pegasus+Statistics+Python+Version+Modified
 """
-__rcsid__ = "$Id: stampede_statistics.py 29300 2012-01-12 16:43:29Z mgoode $"
+__rcsid__ = "$Id: stampede_statistics.py 29302 2012-01-12 19:02:54Z mgoode $"
 __author__ = "Monte Goode"
 
 from netlogger.analysis.modules._base import SQLAlchemyInit
@@ -830,6 +830,7 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         q = q.filter(Jobstate.state.in_(['PRE_SCRIPT_FAILED','SUBMIT_FAILED','JOB_FAILURE' ,'POST_SCRIPT_FAILED']))
         if final:
             q = q.group_by(JobInstance.job_id)
+        q = q.order_by(JobInstance.job_submit_seq)
         
         return q.all()
         

@@ -974,6 +974,12 @@ else:
         wf_event_sink = eo.create_wf_event_sink(event_dest, db_stats=db_stats,
                                                 restart=restart_logging, enc=encoding)
         atexit.register(finish_stampede_loader)
+    except eo.SchemaVersionError:
+        logger.warning("****************************************************")
+        logger.warning("Detected database schema version mismatch!")
+        logger.warning("cannot create events output... disabling event output!")
+        logger.warning("****************************************************")
+        wf_event_sink = None
     except:
         logger.error(traceback.format_exc())
         logger.error("cannot create events output... disabling event output!")

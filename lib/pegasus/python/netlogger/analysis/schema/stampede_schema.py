@@ -2,7 +2,7 @@
 Contains the code to create and map objects to the Stampede DB schema
 via a SQLAlchemy interface.
 """
-__rcsid__ = "$Id: stampede_schema.py 28267 2011-08-10 20:47:03Z mgoode $"
+__rcsid__ = "$Id: stampede_schema.py 29309 2012-01-12 21:32:56Z mgoode $"
 __author__ = "Monte Goode MMGoode@lbl.gov"
 
 from netlogger.analysis.schema._base import SABase, SchemaIntegrityError
@@ -16,6 +16,8 @@ except ImportError, e:
 
 import time
 import warnings
+
+CURRENT_SCHEMA_VERSION = 3.2
         
 # Empty classes that will be populated and mapped
 # to tables via the SQLAlch mapper.
@@ -50,6 +52,9 @@ class Invocation(SABase):
     pass
     
 class File(SABase):
+    pass
+    
+class SchemaInfo(SABase):
     pass
 
     
@@ -263,6 +268,8 @@ def initializeToPegasusDB(db, metadata, kw={}):
                     Column('stderr_file', VARCHAR(255), nullable=True),
                     Column('stderr_text', TEXT, nullable=True),
                     Column('stdin_file', VARCHAR(255), nullable=True),
+                    Column('multiplier_factor', INT, nullable=False, default=1),
+                    Column('exitcode', INT, nullable=True),
                     **kw
     )
     
@@ -363,6 +370,7 @@ def initializeToPegasusDB(db, metadata, kw={}):
                     Column('start_time', NUMERIC(16,6), nullable=False,
                             default=time.time()),
                     Column('remote_duration', NUMERIC(10,3), nullable=False),
+                    Column('remote_cpu_time', NUMERIC(10,3), nullable=False),
                     Column('exitcode', INT, nullable=False),
                     Column('transformation', TEXT, nullable=False),
                     Column('executable', TEXT, nullable=False),
@@ -404,6 +412,18 @@ def initializeToPegasusDB(db, metadata, kw={}):
     except exc.ArgumentError:
         pass
     
+    
+    st_schema_info = Table('schema_info', metadata,
+                        Column('version_number', NUMERIC(2,1), primary_key=True, nullable=False),
+                        Column('version_timestamp', NUMERIC(16,6), primary_key=True, nullable=False,
+                                default=time.time())
+    )
+
+    try:
+        orm.mapper(SchemaInfo, st_schema_info)
+    except exc.ArgumentError:
+        pass
+    pass
     
     metadata.create_all(db)
     pass

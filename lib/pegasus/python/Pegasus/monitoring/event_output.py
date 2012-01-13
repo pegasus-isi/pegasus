@@ -46,6 +46,7 @@ try:
 except:
     logger.info("cannot import netlogger.nlapi")
 try:
+    from netlogger.analysis.schema.schema_check import SchemaVersionError
     from netlogger.analysis.modules import stampede_loader
 except:
     logger.info("cannot import NetLogger's stampede_loader")

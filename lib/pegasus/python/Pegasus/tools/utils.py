@@ -509,6 +509,10 @@ def loading_completed(run_dir):
                     # Found kickstart parsing error... data not fully loaded
                     LOG.close()
                     return False
+                if line.find("cannot create events output... disabling event output") > 0:
+                    # Found loader initialization error... data not loaded
+                    LOG.close()
+                    return False
             LOG.close()
         except IOError:
             logger.warning("could not process log file: %s" % (log_file))
