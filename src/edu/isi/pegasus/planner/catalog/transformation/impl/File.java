@@ -52,7 +52,7 @@ import edu.isi.pegasus.planner.common.PegasusProperties;
 
 /**
  * This is the new file based TC implementation storing the contents of the file
- * in memory. For the old tc file implemenation see OldTC.java
+ * in memory. For the old tc file implementation see OldTC.java
  *
  * @author Gaurang Mehta
  * @author Karan Vahi
@@ -177,6 +177,7 @@ public class File  extends Abstract
      *
      * @return String containing the description.
      */
+    @Override
     public String getDescription() {
         String st = "New FILE TC Mode";
         return st;
@@ -200,6 +201,7 @@ public class File  extends Abstract
      * @see edu.isi.pegasus.planner.catalog.transformation.classes.TCType
      * @see edu.isi.pegasus.planner.catalog.TransformationCatalogEntry
      */
+    @Override
     public List<TransformationCatalogEntry> lookup( String namespace, String name, String version,
         List resourceids, TCType type ) throws Exception {
         logMessage("getTCEntries(String namespace,String name,String version," +
@@ -1199,6 +1201,7 @@ public class File  extends Abstract
             String line = null;
             //buf = new BufferedReader( new FileReader( mTCFile ) );
             while ( (line = buf.readLine()) != null) {
+                boolean profile_error=false;
                 linecount++;
                 if (! (line.startsWith("#") ||
                        line.trim().equalsIgnoreCase(""))) {
@@ -1259,19 +1262,30 @@ public class File  extends Abstract
                                     }
                                     catch (ProfileParserException ppe) {
                                         mLogger.log(
-                                            "Parsing profile(s) in line " +
-                                            linecount +
-                                            " near position " +
-                                            ppe.getPosition() + ": " +
-					    ppe.getMessage(),
+                                            "Could not parse profile(s) for transformation \""+
+                                            tc.getLogicalTransformation()+
+                                            "\" on site \""+ tc.getResourceId()+
+                                            "\" on line " + linecount,
+                                            LogManager.ERROR_MESSAGE_LEVEL);    
+                                         mLogger.log(
+                                            "The error is at position "+ ppe.getPosition() +
+                                            " for the string " + tokens[i] +
+                                            " : " + ppe.getMessage(),
                                             LogManager.ERROR_MESSAGE_LEVEL);
+                                         mLogger.log("Ignoring the current transformation. Please fix the profiles shown above."
+                                                     ,LogManager.ERROR_MESSAGE_LEVEL);
+                                        
+                                         profile_error=true;
+                                         continue;
                                     }
                                     catch (RuntimeException e) {
                                         mLogger.log(
                                             "Ignoring errors while parsing profile in Transformation Catalog on line " +
                                             linecount, e,
                                             LogManager.WARNING_MESSAGE_LEVEL);
+                                       
                                     }
+                                    
                                 }
                                 break;
                             default:
@@ -1280,6 +1294,12 @@ public class File  extends Abstract
                                             LogManager.ERROR_MESSAGE_LEVEL);
                         } //end of switch
                     } //end of for loop
+                    if (profile_error){
+                        //if there is an error while parsing the profile
+                        //Skip adding the entry to TC (As Per JIRA PM-164
+                        continue;
+                    }
+                    
                     // if (count > 0) {
 
                     //   mLogger.logMessage("Loading line number" + linecount +
