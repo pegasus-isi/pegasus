@@ -1268,9 +1268,8 @@ public class File  extends Abstract
                                             "\" on line " + linecount,
                                             LogManager.ERROR_MESSAGE_LEVEL);    
                                          mLogger.log(
-                                            "The error is at position "+ ppe.getPosition() +
-                                            " for the string " + tokens[i] +
-                                            " : " + ppe.getMessage(),
+                                            ppe.getMessage() + " at position "+ ppe.getPosition() +
+                                            " for the string \"" + tokens[i]+"\"",
                                             LogManager.ERROR_MESSAGE_LEVEL);
                                          mLogger.log("Ignoring the current transformation. Please fix the profiles shown above."
                                                      ,LogManager.ERROR_MESSAGE_LEVEL);
