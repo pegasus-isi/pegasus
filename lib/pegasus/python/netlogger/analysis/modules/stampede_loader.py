@@ -16,7 +16,7 @@ the Stampede DB.
 
 See http://www.sqlalchemy.org/ for details on SQLAlchemy
 """
-__rcsid__ = "$Id: stampede_loader.py 29293 2012-01-11 21:31:34Z mgoode $"
+__rcsid__ = "$Id: stampede_loader.py 29386 2012-01-18 23:01:27Z mgoode $"
 __author__ = "Monte Goode"
 
 from netlogger.analysis.schema.schema_check import ErrorStrings, SchemaCheck, SchemaVersionError
@@ -102,7 +102,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
             'stampede.job_inst.main.end' : self.job_instance,
             'stampede.job_inst.post.start' : self.jobstate,
             'stampede.job_inst.post.term' : self.jobstate,
-            'stampede.job_inst.post.end' : self.jobstate,
+            'stampede.job_inst.post.end' : self.job_instance,
             'stampede.job_inst.host.info' : self.host,
             'stampede.job_inst.image.info' : self.jobstate,
             'stampede.job_inst.grid.submit.start' : self.noop, # good
@@ -540,8 +540,11 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
                 self.jobstate(linedata)
             return
             
-        if job_instance.event == 'stampede.job_inst.main.end':
+        if job_instance.event == 'stampede.job_inst.main.end' or \
+            job_instance.event == 'stampede.job_inst.post.end':
+            
             job_instance.job_instance_id = self.get_job_instance_id(job_instance)
+            
             if self._batch:
                 self._batch_cache['update_events'].append(job_instance)
             else:

@@ -2,7 +2,7 @@
 Code to handle various aspects of transitioning to a new verson of the 
 Stampede schema.
 """
-__rcsid__ = "$Id: schema_check.py 29297 2012-01-12 00:24:17Z mgoode $"
+__rcsid__ = "$Id: schema_check.py 29385 2012-01-18 22:41:19Z mgoode $"
 __author__ = "Monte Goode"
 
 import exceptions
@@ -88,6 +88,8 @@ class SchemaCheck(DoesLogging):
         DoesLogging.__init__(self)
         self.session = session
         self.log.info('init')
+        
+        self._table_map = {}
         pass
         
     def _get_current_version(self):
@@ -107,6 +109,12 @@ class SchemaCheck(DoesLogging):
                 msg='Schema version %s out of date - database admin will need to run upgrade tool' % float(version_number))
             return False
             
+    def _table_scan(self, sql, table, idx):
+        if not self._table_map.has_key(table):
+            self._table_map[table] = {}
+        for row in self.session.execute(sql).fetchall():
+            self._table_map[table][row[idx]] = True
+            
     def check_schema(self):
         """
         Checks the schema to determine the version, sets the information 
@@ -124,6 +132,19 @@ class SchemaCheck(DoesLogging):
         
         self.log.info('check_schema', msg='Determining schema version.')
         
+        table_scan = ['job_instance', 'invocation']
+        
+        # Due to how the SQLAlchemy mapper works, I need to look at these with
+        # raw SQL calls to the DBM and not use the mapper objects.
+        for t in table_scan:
+            if self.session.connection().dialect.name == 'sqlite':
+                self._table_scan('PRAGMA table_info(%s)' % t, t, 1)
+            elif self.session.connection().dialect.name == 'mysql':
+                self._table_scan('desc %s' % t, t, 0)
+            else:
+                self.log.error('check_schema', msg='Dialect %s not available for scanning' \
+                    % self.session.connection().dialect.name )
+        
         #
         # Checks for version 3.2
         #
@@ -131,15 +152,13 @@ class SchemaCheck(DoesLogging):
         m_factor_check = exitcode_check = remote_cpu_check = False
         
         # Check job_instance table
-        q = self.session.query(JobInstance).limit(1)
-        if hasattr(q.column_descriptions[0]['expr'], 'multiplier_factor'):
+        if self._table_map['job_instance'].has_key('multiplier_factor'):
             m_factor_check = True
-        if hasattr(q.column_descriptions[0]['expr'], 'exitcode'):
+        if self._table_map['job_instance'].has_key('exitcode'):
             exitcode_check = True
         
         # Check invocation
-        q = self.session.query(Invocation).limit(1)
-        if hasattr(q.column_descriptions[0]['expr'], 'remote_cpu_time'):
+        if self._table_map['invocation'].has_key('remote_cpu_time'):
             remote_cpu_check = True
         
         s_info = SchemaInfo()
@@ -160,6 +179,7 @@ class SchemaCheck(DoesLogging):
         # End version 3.2 code
         #
         
+        self._table_map = {}
         return self._version_check(self._get_current_version())
         
     def check_version(self):
@@ -181,23 +201,53 @@ class SchemaCheck(DoesLogging):
         done to load data - even if the events are '3.1 style.'
         """
         self.log.info('upgrade_to_3_2', msg='Upgrading to schema version 3.2')
-        if self._get_current_version() == 3.2:
-            self.log.warn('upgrade_to_3_2', msg='Schema version already 3.2 - skipping')
+        if self._get_current_version() >= 3.2:
+            self.log.warn('upgrade_to_3_2', msg='Schema version already 3.2 - skipping upgrade')
             return
         
+        # Alter tables
         r_c_t = 'ALTER TABLE invocation ADD COLUMN remote_cpu_time NUMERIC(10,3) NOT NULL'
         if self.session.connection().dialect.name != 'sqlite':
             r_c_t += ' AFTER remote_duration'
-        m_fac = 'ALTER TABLE job_instance ADD COLUMN multiplier_factor INT NULL DEFAULT 1'
+        m_fac = 'ALTER TABLE job_instance ADD COLUMN multiplier_factor INT NOT NULL DEFAULT 1'
         e_cod  = 'ALTER TABLE job_instance ADD COLUMN exitcode INT NULL'
         
         self.session.execute(r_c_t)
         self.session.execute(m_fac)
         self.session.execute(e_cod)
         
+        # Seed new columns with data derived from existing 3.1 data
+        update = 'UPDATE invocation SET remote_cpu_time = remote_duration'
+        self.session.execute(update)
+        
+        success = ['JOB_SUCCESS', 'POST_SCRIPT_SUCCESS']
+        failure = ['PRE_SCRIPT_FAILED', 'SUBMIT_FAILED', 'JOB_FAILURE', 'POST_SCRIPT_FAILED']
+        
+        q = self.session.query(JobInstance.job_instance_id).order_by(JobInstance.job_instance_id)
+        for r in q.all():
+            qq = self.session.query(Jobstate.state)
+            qq = qq.filter(Jobstate.job_instance_id == r.job_instance_id)
+            qq = qq.order_by(Jobstate.jobstate_submit_seq.desc()).limit(1)
+            for rr in qq.all():
+                if rr.state in success:
+                    self.session.execute('UPDATE job_instance set exitcode = 0 where job_instance_id = %s' \
+                        % r.job_instance_id )
+                elif rr.state in failure:
+                    self.session.execute('UPDATE job_instance set exitcode = 256 where job_instance_id = %s' \
+                    % r.job_instance_id)
+                else:
+                    pass
+        
         s_info = SchemaInfo()
         s_info.version_number = 3.2
         s_info.commit_to_db(self.session)
+        pass
+        
+    def upgrade(self):
+        """
+        Public wrapper around the version-specific upgrade methods.
+        """
+        self.upgrade_to_3_2()
         pass
 
         

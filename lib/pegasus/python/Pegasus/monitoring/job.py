@@ -369,7 +369,7 @@ class Job:
 
         try:
             OUT = open(my_out_file, 'r')
-            self._stdout_text = utils.quote(OUT.read())
+            self._stdout_text = utils.quote("#@ 1 stdout\n" + OUT.read())
         except IOError:
             self._stdout_text = None
             logger.warning("unable to read output file: %s, continuing..." % (my_out_file))

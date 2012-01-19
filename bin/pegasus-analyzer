@@ -118,6 +118,7 @@ workflow_type = None				# Type of the workflow being debugged
 workflow_base_dir = ""				# Workflow submit_dir or dirname(jsd) from braindump file
 run_monitord = 0				# Run monitord before trying to analyze the output
 output_dir = None                               # Output_dir for all files written by monitord
+top_dir = None                                  # Top_dir of the main workflow, for obtaining the db location
 use_files = False                               # Flag for using files in the workflow dir instead of the db
 quiet_mode = 0					# Prints out/err filenames instead of dumping their contents
 strict_mode = 0					# Gets out/err filenames from submit file
@@ -870,7 +871,7 @@ def analyze_db(config_properties):
     global total, success, failed, unsubmitted, unknown
 
     # Get the database URL
-    output_db_url, wf_uuid = db_utils.get_db_url_wf_uuid(input_dir, config_properties)
+    output_db_url, wf_uuid = db_utils.get_db_url_wf_uuid(input_dir, config_properties, top_dir)
 
     # Nothing to do if we cannot resolve the database URL
     if output_db_url is None:
@@ -943,10 +944,8 @@ def analyze_db(config_properties):
                         # Path to dagman_out file includes original submit_dir, let's try to change it...
                         my_wfdir = os.path.normpath(my_wfdir.replace((my_info.submit_dir + os.sep), '', 1))
                         my_wfdir = os.path.join(input_dir, my_wfdir)
-                    if output_dir is not None:
-                        user_cmd = user_cmd + " --output-dir %s" % (output_dir)
-                        print "%s -d %s" % (user_cmd, my_wfdir)
-                        print
+                    print "%s -d %s" % (user_cmd, my_wfdir)
+                    print
                 print
 
                 # Now, print task information
@@ -997,7 +996,7 @@ def analyze_db(config_properties):
                             print my_info.stdout_text[my_stdout_start:my_stdout_end]
                             print
 
-                    # Now print stderr
+                    # Now print stderr (from the kickstart output file)
                     my_stderr_start = my_info.stdout_text.find(my_stderr_str)
                     if my_stderr_start >= 0:
                         my_stderr_start = my_stderr_start + len(my_stderr_str) + 1
@@ -1010,11 +1009,18 @@ def analyze_db(config_properties):
 
                         if my_stderr_end - my_stderr_start > 0:
                             # Something to display
-                            print ("Task #" + str(my_task[0]) + " - " + str(my_task[4]) + " - " + str(my_task[5]) + " - stderr").center(80, '-')
+                            print ("Task #" + str(my_task[0]) + " - " + str(my_task[4]) + " - " + str(my_task[5]) + " - Kickstart stderr").center(80, '-')
                             print
                             print my_info.stdout_text[my_stderr_start:my_stderr_end]
                             print
 
+                    # Now print the stderr output from the .err file
+                    if my_info.stderr_text.strip("\n\t \r") != "":
+                        # Something to display
+                        print ("Task #" + str(my_task[0]) + " - " + str(my_task[4]) + " - " + str(my_task[5]) + " - stderr").center(80, '-')
+                        print
+                        print my_info.stderr_text
+                        print
             else:
                 log.error("unexpected job instance returned by database!")
                 log.error("returned: %d - expected: %d" % (my_info[0], my_job[0]))
@@ -1193,6 +1199,8 @@ parser.add_option("-m", "-t", "--monitord", action = "store_const", const = 1, d
 		  help = "run pegasus-monitord before analyzing the output")
 parser.add_option("-o", "--output-dir", action = "store", type = "string", dest = "output_dir",
                   help = "provides an output directory for all monitord log files")
+parser.add_option("--top-dir", action = "store", type = "string", dest = "top_dir",
+                  help = "provides the location of the top-level workflow directory, needed to analyze sub-workflows")
 parser.add_option("-c","--conf", action = "store", type = "string", dest = "config_properties",
                   help = "Specifies the properties file to use. This overrides all other property files.")
 parser.add_option("-q", "--quiet", action = "store_const", const = 1, dest = "quiet_mode",
@@ -1240,6 +1248,8 @@ if options.print_options is not None:
 	print_invocation = 1
 if options.output_dir is not None:
     output_dir = options.output_dir
+if options.top_dir is not None:
+    top_dir = os.path.abspath(options.top_dir)
 if options.debug_job is not None:
     debug_job = options.debug_job
     # Enables the debugging mode

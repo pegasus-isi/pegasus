@@ -21,6 +21,7 @@ db_utils.py: Provides database related functions used by several monitoring tool
 # Revision : $Revision: 2012 $
 
 import os
+import sys
 import logging
 
 from Pegasus.tools import properties
@@ -29,20 +30,20 @@ from Pegasus.tools import utils
 # Get logger object (initialized elsewhere)
 logger = logging.getLogger()
 
-def get_db_url_wf_uuid(submit_dir, config_properties):
+def get_db_url_wf_uuid(submit_dir, config_properties, top_dir=None):
     """
     Utility method for returning the db_url and wf_uuid given the submit_dir and pegasus properties file.
     @submit_dir submit directory path
     @config_properties config properties file path
+    @top_dir directory of the top-level workflow (where the database is)
     """
-
-    # Getting values from braindump file
+    # From the submit dir, we need the wf_uuid
+    # Getting values from the submit_dir braindump file
     top_level_wf_params = utils.slurp_braindb(submit_dir)
-    top_level_prop_file = None
 
     # Return if we cannot parse the braindump.txt file
     if not top_level_wf_params:
-        logger.error("Unable to process braindump.txt ")
+        logger.error("Unable to process braindump.txt in %s" % (submit_dir))
         return None, None
 
     # Get wf_uuid for this workflow
@@ -53,7 +54,18 @@ def get_db_url_wf_uuid(submit_dir, config_properties):
         logger.error("workflow id cannot be found in the braindump.txt ")
         return None, None
 
+    # Load the top-level braindump now if top_dir is not None
+    if top_dir is not None:
+        # Getting values from the top_dir braindump file
+        top_level_wf_params = utils.slurp_braindb(top_dir)
+
+        # Return if we cannot parse the braindump.txt file
+        if not top_level_wf_params:
+            logger.error("Unable to process braindump.txt in %s" % (top_dir))
+            return None, None
+        
     # Get the location of the properties file from braindump
+    top_level_prop_file = None
 
     # Get properties tag from braindump
     if "properties" in top_level_wf_params:
@@ -86,10 +98,10 @@ def get_db_url_wf_uuid(submit_dir, config_properties):
             return None, None
 
         # Create the sqllite db url
-        output_db_file = submit_dir + "/" + dag_file_name[:dag_file_name.find(".dag")] + ".stampede.db"
+        output_db_file = (top_dir or submit_dir) + "/" + dag_file_name[:dag_file_name.find(".dag")] + ".stampede.db"
         output_db_url = "sqlite:///" + output_db_file
         if not os.path.isfile(output_db_file):
-            logger.error("Unable to find database file in " + submit_dir)
+            logger.error("Unable to find database file in " + (top_dir or submit_dir))
             return None, None
 
     # Ok, all done!
