@@ -2,7 +2,7 @@
 Code to handle various aspects of transitioning to a new verson of the 
 Stampede schema.
 """
-__rcsid__ = "$Id: schema_check.py 29385 2012-01-18 22:41:19Z mgoode $"
+__rcsid__ = "$Id: schema_check.py 29395 2012-01-19 16:50:10Z mgoode $"
 __author__ = "Monte Goode"
 
 import exceptions
@@ -56,8 +56,16 @@ class ErrorStrings:
     
     @staticmethod
     def get_init_error(e):
-        action_error = e.message.split("'")[0].split('"')[1].strip()
-        table_error  = e.message.split("'")[-2]
+        
+        action_error = table_error = None
+        
+        try:
+            action_error = e.args[0].split("'")[0].split('"')[1].strip()
+            table_error  = e.args[0].split("'")[-2]
+        except IndexError:
+            # specific parse didn't work, so pass the original
+            # exception through.
+            pass
         
         er = ''
         
@@ -69,7 +77,7 @@ class ErrorStrings:
             er += 'database admin will need to run upgrade tool'
             return er
         else:
-            er = 'Unknown error raised during database init: %s' % e
+            er = 'Error raised during database init: %s' % e.args[0]
             
         return er
         

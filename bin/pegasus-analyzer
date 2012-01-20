@@ -909,8 +909,8 @@ def analyze_db(config_properties):
             my_tasks = workflow_stats.get_invocation_info(my_job[0])
 
             # Unquote stdout and stderr
-            my_info.stdout_text = utils.unquote(my_info.stdout_text)
-            my_info.stderr_text = utils.unquote(my_info.stderr_text)
+            my_info.stdout_text = utils.unquote(my_info.stdout_text or "")
+            my_info.stderr_text = utils.unquote(my_info.stderr_text or "")
             my_info.stdout_text = my_info.stdout_text.strip(" \n\r\t")
             my_info.stderr_text = my_info.stderr_text.strip(" \n\r\t")
             
