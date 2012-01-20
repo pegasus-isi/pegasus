@@ -59,4 +59,3 @@ pegasus-plan \
     --dax blackdiamond.dax \
     --submit | tee plan.out
 
-cd ${RUN_DIR}
