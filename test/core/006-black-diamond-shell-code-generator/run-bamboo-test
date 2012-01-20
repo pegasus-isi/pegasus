@@ -5,6 +5,10 @@ set -v
 
 TOPDIR=`pwd`
 
+# unique directory for this run
+RUN_ID=`/bin/date +'%F_%H%M%S'`
+RUN_DIR=`pwd`/work/$RUN_ID
+
 # generate the input file
 echo "This is sample input to KEG" > f.a
 
@@ -37,7 +41,8 @@ cat >sites.xml <<EOF
                 </shared>
             </storage>
         </head-fs>
-	<profile namespace="env" key="PEGASUS_HOME" >/usr</profile>
+	<profile namespace="env" key="PEGASUS_HOME">/usr</profile>
+	<profile namespace="env" key="GLOBUS_LOCATION">/ccg/software/globus/default</profile>
     </site>
 </sitecatalog>
 EOF
@@ -48,7 +53,10 @@ pegasus-plan \
     --conf pegasusrc \
     --sites local \
     --dir work \
+    --relative-submit-dir ${RUN_ID} \
     --output local \
     --nocleanup \
     --dax blackdiamond.dax \
-    --submit
+    --submit | tee plan.out
+
+cd $RUN_DIR
