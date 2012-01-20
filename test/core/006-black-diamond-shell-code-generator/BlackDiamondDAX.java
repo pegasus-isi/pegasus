@@ -48,6 +48,10 @@ public class BlackDiamondDAX {
         fa.addPhysicalFile("file://" + cwd + "/f.a", "local");
         dax.addFile(fa);
 
+        File fa2 = new File("f.a2");
+        fa2.addPhysicalFile("gsiftp://cartman.isi.edu" + cwd + "/f.a", "condorpool");
+        dax.addFile(fa2);
+
         File fb1 = new File("f.b1");
         File fb2 = new File("f.b2");
         File fc1 = new File("f.c1");
@@ -78,6 +82,7 @@ public class BlackDiamondDAX {
         j1.addArgument("-o ").addArgument(fb1);
         j1.addArgument(" ").addArgument(fb2);
         j1.uses(fa, File.LINK.INPUT);
+        j1.uses(fa2, File.LINK.INPUT);
         j1.uses(fb1, File.LINK.OUTPUT);
         j1.uses(fb2, File.LINK.OUTPUT);
         dax.addJob(j1);
