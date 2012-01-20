@@ -12,7 +12,7 @@ pwd
 
 #Launch the test
 
-./run-bamboo-test
+. ./run-bamboo-test
 
 STATUS=$?
 if [ $STATUS != 0 ]; then
@@ -21,7 +21,6 @@ if [ $STATUS != 0 ]; then
 fi
 
 #Get RUNDIR from the planning output
-RUN_DIR=`grep pegasus-remove plan.out | awk '{print $5}'`
 echo "RUNDIR is $RUN_DIR"
 
 # Change in to the rundir
