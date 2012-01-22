@@ -47,7 +47,8 @@ function pegasus_lite_internal_wp_shipped()
     if ls $pegasus_lite_start_dir/pegasus-worker-*.tar.gz >/dev/null 2>&1; then
         pegasus_lite_log "The job contained a Pegasus worker package, installing to $pegasus_lite_work_dir/pegasus-worker"
         tar xzf $pegasus_lite_start_dir/pegasus-worker-*.tar.gz
-        mv pegasus-worker-* pegasus-worker
+        rm -f $pegasus_lite_start_dir/pegasus-worker-*.tar.gz
+        mv pegasus-* pegasus-worker
         unset PEGASUS_HOME
         export PATH=$pegasus_lite_work_dir/pegasus-worker/bin:$PATH
         return 0
