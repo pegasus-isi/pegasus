@@ -169,8 +169,12 @@ def main():
 		parser.error("please specify kickstart.out")
 	
 	outfile = args[0]
-	parts = outfile.rpartition(".out")
-	errfile = parts[0] + ".err" + parts[2]
+	i = outfile.rfind(".out")
+	left = outfile[0:i]
+	right = ""
+	if i + 5 < len(outfile):
+		right = outfile[i+4:]
+	errfile = left + ".err" + right
 	
 	if not os.path.isfile(outfile):
 		fail("%s does not exist" % outfile)
