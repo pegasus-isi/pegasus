@@ -73,8 +73,8 @@ cat >sites.xml <<EOF
         <head-fs>
             <scratch>
                 <shared>
-                    <file-server protocol="gsiftp" url="gsiftp://ccg-data.isi.edu" mount-point="/nfs/ccg1/90-day-scratch"/>
-                    <internal-mount-point mount-point="/nfs/ccg1/90-day-scratch"/>
+                    <file-server protocol="gsiftp" url="gsiftp://ccg-data.isi.edu" mount-point="/nfs/ccg3/scratch"/>
+                    <internal-mount-point mount-point="/nfs/ccg3/scratch/bamboo"/>
                 </shared>
             </scratch>
             <storage />
