@@ -24,6 +24,7 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 
 import org.globus.common.CoGProperties;
 
+import java.io.File;
 import java.util.Map;
 
 
@@ -98,6 +99,15 @@ public class Proxy  extends Abstract implements CredentialHandler{
         */
 
         return proxy;
+    }
+
+    
+    /**
+     * returns the basename of the path to the local credential
+     */
+    public String getBaseName() {
+        File path = new File(this.getPath());
+        return path.getName();
     }
 
 

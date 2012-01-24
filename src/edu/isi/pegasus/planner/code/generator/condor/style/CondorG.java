@@ -111,7 +111,7 @@ public class CondorG extends Abstract {
         //bwSubmit.println("remote_initialdir = " + workdir);
         job.condorVariables.construct( "remote_initialdir", workdir );
 
-
+        applyCredentialsForRemoteExec(job);
     }
 
 }

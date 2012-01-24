@@ -38,7 +38,6 @@ public interface CredentialHandler {
      */
     public static enum TYPE { x509, s3, irods, ssh };
 
-
     /**
      * Initializes the credential implementation. Implementations require
      * access to the logger, properties and the SiteCatalog Store.
@@ -78,4 +77,10 @@ public interface CredentialHandler {
      * @return  description
      */
     public String getDescription();
+
+    /**
+     * returns the basename of the credential file name
+     * @return
+     */
+    public String getBaseName();
 }

@@ -18,6 +18,7 @@ package edu.isi.pegasus.common.credential.impl;
 
 import edu.isi.pegasus.common.credential.CredentialHandler;
 
+import java.io.File;
 import java.util.Map;
 
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
@@ -78,7 +79,16 @@ public class Irods extends Abstract implements CredentialHandler{
         return path;
     }
 
-
+    
+    /**
+     * returns the basename of the path to the local credential
+     */
+    public String getBaseName() {
+        File path = new File(this.getPath());
+        return path.getName();
+    }
+    
+    
     /**
      * Returns the name of the environment variable that needs to be set
      * for the job associated with the credential.

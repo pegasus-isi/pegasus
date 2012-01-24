@@ -5,6 +5,8 @@
 
 package edu.isi.pegasus.common.credential.impl;
 
+import java.io.File;
+
 import edu.isi.pegasus.common.credential.CredentialHandler;
 
 import edu.isi.pegasus.common.logging.LogManager;

@@ -17,18 +17,21 @@
 
 package edu.isi.pegasus.planner.code.generator.condor.style;
 
+import java.io.File;
+import java.util.Iterator;
+import java.util.Set;
+
+import edu.isi.pegasus.common.credential.CredentialHandler;
 import edu.isi.pegasus.common.credential.CredentialHandlerFactory;
-import edu.isi.pegasus.planner.code.generator.condor.CondorStyleException;
-
 import edu.isi.pegasus.common.logging.LogManager;
-
+import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.Job;
-import edu.isi.pegasus.planner.classes.TransferJob;
 import edu.isi.pegasus.planner.classes.PegasusBag;
-
+import edu.isi.pegasus.planner.classes.TransferJob;
+import edu.isi.pegasus.planner.code.generator.condor.CondorStyleException;
+import edu.isi.pegasus.planner.code.generator.condor.CondorStyleFactoryException;
 import edu.isi.pegasus.planner.namespace.Pegasus;
-import java.io.File;
 
 /**
  * Enables a job to be directly submitted to the condor pool of which the
@@ -232,6 +235,8 @@ public class Condor extends Abstract {
                                               "ON_EXIT");
             }
             //isGlobus = false;
+            
+            applyCredentialsForRemoteExec(job);
         }
         else if(universe.equalsIgnoreCase(Condor.SCHEDULER_UNIVERSE) || universe.equalsIgnoreCase( Condor.LOCAL_UNIVERSE )){
 
@@ -288,6 +293,8 @@ public class Condor extends Abstract {
                         job.condorVariables.removeKey( "when_to_transfer_output" );
                     }
                 }
+                
+                applyCredentialsForLocalExec(job);
         }
         else{
             //Is invalid state
@@ -297,6 +304,7 @@ public class Condor extends Abstract {
 
     }
 
+    
     /**
      * Wraps the local universe jobs with a local Pegasus Lite wrapper to get
      * around the Condor file IO bug for local universe job

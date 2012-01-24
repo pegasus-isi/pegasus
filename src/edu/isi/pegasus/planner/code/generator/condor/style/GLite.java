@@ -161,6 +161,13 @@ public class GLite extends Abstract {
                 job.vdsNS.construct( Pegasus.CHANGE_DIR_KEY, "false" );
                 job.condorVariables.removeKey( "remote_initialdir" );
         }
+        
+        if ( job.getSiteHandle().equals("local") ) {
+            applyCredentialsForLocalExec(job);
+        }
+        else {
+            applyCredentialsForRemoteExec(job);
+        }
     }
     
    

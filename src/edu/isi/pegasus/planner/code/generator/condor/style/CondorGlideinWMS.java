@@ -70,10 +70,7 @@ public class CondorGlideinWMS extends Condor {
             job.condorVariables.construct("when_to_transfer_output", "ON_EXIT");
 
             // job requirements - steer the jobs to the glideins at the right site
-            String req = "((GLIDEIN_Site == \"" + job.getSiteHandle() + "\") ||" +
-                         " (GLIDEIN_Entry_Name == \"" + job.getSiteHandle() + "\") ||" +
-                         " (TARGET.Pegasus_Site =?= \"" + job.getSiteHandle() + "\"))" +
-                         " && (IS_MONITOR_VM == False)" +
+            String req = "(IS_MONITOR_VM == False)" +
                          " && (Arch != \"\") && (OpSys != \"\") && (Disk != -42)" +
                          " && (Memory > 1) && (FileSystemDomain != \"\")";
             job.condorVariables.construct("requirements", req);

@@ -18,6 +18,7 @@ package edu.isi.pegasus.common.credential.impl;
 
 import edu.isi.pegasus.common.credential.CredentialHandler;
 
+import java.io.File;
 import java.util.Map;
 
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
@@ -70,8 +71,6 @@ public class S3CFG  extends Abstract implements CredentialHandler {
         SiteCatalogEntry siteEntry = mSiteStore.lookup( site );
         Map<String,String> envs = System.getenv();
 
-
-
         // check if one is specified in site catalog entry
         String path = ( siteEntry == null )? null :siteEntry.getEnvironmentVariable( S3CFG.S3CFG_FILE_VARIABLE );
 
@@ -83,6 +82,15 @@ public class S3CFG  extends Abstract implements CredentialHandler {
         }
 
         return path;
+    }
+
+    
+    /**
+     * returns the basename of the path to the local credential
+     */
+    public String getBaseName() {
+        File path = new File(this.getPath());
+        return path.getName();
     }
 
 

@@ -148,6 +148,11 @@ public class CondorStyleFactory {
      */
     public void initialize( PegasusBag bag  ) throws CondorStyleFactoryException{
 
+
+        //load and intialize the CredentialHandler Factory
+        mCredentialFactory = new CredentialHandlerFactory();
+        mCredentialFactory.initialize( bag );
+        
         //load all the implementations that correspond to the Pegasus style keys
         for( Iterator it = this.implementingClassNameTable().entrySet().iterator(); it.hasNext(); ){
             Map.Entry entry = (Map.Entry) it.next();
@@ -157,12 +162,6 @@ public class CondorStyleFactory {
             //load via reflection. not required in this case though
             put( style, this.loadInstance( bag, className ));
         }
-
-        //load and intialize the CredentialHandler Factory
-        mCredentialFactory = new CredentialHandlerFactory();
-
-        mCredentialFactory.initialize( bag );
-
 
         //we have successfully loaded all implementations
         mInitialized = true;

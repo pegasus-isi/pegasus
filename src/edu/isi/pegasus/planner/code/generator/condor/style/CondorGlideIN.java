@@ -117,7 +117,8 @@ public class CondorGlideIN extends Abstract {
         //the condor universe that is determined
         //should be set back in the job.
         job.condorVariables.construct( Condor.UNIVERSE_KEY, universe );
-
+        
+        applyCredentialsForRemoteExec(job);
     }
 
 
