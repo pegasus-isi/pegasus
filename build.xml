@@ -43,7 +43,7 @@
 
   <target name="check-java"  description="Check the version of java">
      <property name="build.source" value="${ant.java.version}"/>
-     <property name="build.target" value="${ant.java.version}"/>   
+     <property name="build.target" value="1.6"/>   
      <echo>JAVA TARGET is ${build.target}</echo>
      <echo>JAVA SOURCE is ${build.source}</echo>
   </target>
