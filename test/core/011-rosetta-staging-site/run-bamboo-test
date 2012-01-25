@@ -1,0 +1,102 @@
+#!/bin/bash
+
+set -e
+
+TOPDIR=`pwd`
+
+# download rosetta binary - this is to save space in the Pegasus distribution
+if [ ! -e rosetta.exe ]; then
+   wget http://pegasus.isi.edu/wms/example-workflows/rosetta/rosetta.exe
+   chmod 755 rosetta.exe
+fi
+
+# do we have the required minirosetta_database?
+if [ ! -e minirosetta_database ]; then
+   wget http://pegasus.isi.edu/wms/example-workflows/rosetta/minirosetta_database.tar.gz
+   tar xzf minirosetta_database.tar.gz
+   rm minirosetta_database.tar.gz
+fi
+
+# what about the required pdbs?
+if [ ! -e pdbs ]; then
+   wget http://pegasus.isi.edu/wms/example-workflows/rosetta/pdbs.tar.gz
+   tar xzf pdbs.tar.gz
+   rm pdbs.tar.gz
+fi
+
+# figure out where Pegasus is installed
+export PEGASUS_BIN_DIR=`pegasus-config --bin`
+if [ "x$PEGASUS_BIN_DIR" = "x" ]; then
+    echo "Please make sure pegasus-plan is in your path"
+    exit 1
+fi 
+
+# build the dax generator
+export CLASSPATH=.:`pegasus-config --classpath`
+javac RosettaDAX.java
+
+# generate the dax
+java RosettaDAX dax.xml
+
+# site catalog
+cat >sites.xml <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0">
+    <site  handle="local" arch="x86" os="LINUX">
+        <grid  type="gt2" contact="localhost/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/>
+        <head-fs>
+            <scratch>
+                <shared>
+                    <file-server protocol="gsiftp" url="gsiftp://engage-submit3.renci.org" mount-point="$TOP_DIR/scratch"/>
+                    <internal-mount-point mount-point="$TOP_DIR/scratch" />
+                </shared>
+            </scratch>
+            <storage>
+                <shared>
+                    <file-server protocol="gsiftp" url="gsiftp://engage-submit3.renci.org" mount-point="$TOP_DIR/outputs"/>
+                    <internal-mount-point mount-point="$TOP_DIR/outputs" />
+                </shared>
+            </storage>
+        </head-fs>
+        <replica-catalog  type="LRC" url="rlsn://dummyValue.url.edu" />
+        <profile namespace="env" key="PEGASUS_BIN_DIR" >$PEGASUS_BIN_DIR</profile>
+        <profile namespace="env" key="GLOBUS_LOCATION" >/opt/globus/5.0.3</profile>
+    </site>
+    <site  handle="CCG" arch="x86" os="LINUX">
+        <grid  type="gt5" contact="obelix.isi.edu/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/>
+        <grid  type="gt5" contact="obelix.isi.edu/jobmanager-condor" scheduler="unknown" jobtype="compute"/>
+        <head-fs>
+            <scratch />
+            <storage />
+        </head-fs>
+        <replica-catalog  type="LRC" url="rlsn://dummyValue.url.edu" />
+    </site>
+    <site  handle="CCG_Staging" arch="x86" os="LINUX">
+        <head-fs>
+            <scratch>
+                <shared>
+                    <file-server protocol="gsiftp" url="gsiftp://obelix.isi.edu" mount-point="/data/scratch/ptesting"/>
+                    <internal-mount-point mount-point="/data/scratch/ptesting"/>
+                </shared>
+            </scratch>
+            <storage />
+        </head-fs>
+        <replica-catalog  type="LRC" url="rlsn://dummyValue.url.edu" />
+    </site>
+</sitecatalog>
+EOF
+
+echo
+echo
+echo "Planning and submitting the workflow..."
+pegasus-plan \
+    --vvvvv \
+    --conf pegasusrc \
+    --dir work \
+    --dax dax.xml \
+    --sites CCG \
+    --staging-site CCG_Staging \
+    --output local \
+    --submit
+
+
