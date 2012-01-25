@@ -75,17 +75,13 @@ tile_overlap             = config.getfloat('tiles', 'overlap')
 
 local_work_dir           = config.get('local', 'work_dir')
 local_montage_location   = config.get('local', 'montage_location')
-x509_user_proxy          = config.get('local', 'x509_user_proxy')
 
 cluster_name             = config.get('cluster', 'name')
 cluster_pegasus_home     = config.get('cluster', 'pegasus_home')
 cluster_globus_location  = config.get('cluster', 'globus_location')
 cluster_montage_location = config.get('cluster', 'montage_location')
-
-staging_name             = config.get('staging', 'name')
-staging_storage_proto    = config.get('staging', 'storage_proto')
-staging_storage_url      = config.get('staging', 'storage_url')
-staging_storage_mount    = config.get('staging', 'storage_mount')
+cluster_gridftp_server   = config.get('cluster', 'gridftp_server')
+cluster_work_dir         = config.get('cluster', 'work_dir')
 
 output_name              = config.get('output', 'name')
 output_storage_proto    = config.get('output', 'storage_proto')
@@ -224,8 +220,8 @@ def generate_pegasus_rc(mode):
     rc.write("pegasus.catalog.site.file=%s/sites.xml\n" % (work_dir))
     rc.write("pegasus.catalog.transformation=File\n")
     rc.write("pegasus.catalog.transformation.file=%s/tc.data\n" % (work_dir))
-    rc.write("pegasus.execute.*.filesystem.local=true\n")
-    rc.write("pegasus.gridstart=PegasusLite\n")
+    #rc.write("pegasus.execute.*.filesystem.local=true\n")
+    #rc.write("pegasus.gridstart=PegasusLite\n")
     rc.write("pegasus.clusterer.job.aggregator.seqexec.firstjobfail=true\n")
     rc.write("pegasus.file.cleanup.scope=deferred\n")
     rc.write("pegasus.dir.useTimestamp=true\n")
@@ -238,8 +234,8 @@ def generate_pegasus_rc(mode):
     rc.write("condor.periodic_remove=2\n")
     rc.write("dagman.maxpre=5\n")
     rc.write("dagman.retry=2\n")
-    rc.write("dagman.remote_tile_setup.maxjobs=10\n")
-    rc.write("dagman.subworkflow.maxjobs=6\n")
+    rc.write("dagman.remote_tile_setup.maxjobs=4\n")
+    rc.write("dagman.subworkflow.maxjobs=15\n")
     if monitord_output != None:
         rc.write("pegasus.monitord.output=%s\n" % (monitord_output))
 
@@ -272,27 +268,23 @@ def generate_sc():
     sc.write("    </site>\n")
     sc.write("    <site  handle=\"%s\" arch=\"x86\" os=\"LINUX\">\n" %(cluster_name))
     sc.write("        <head-fs>\n")
-    sc.write("            <scratch />\n")
+    sc.write("            <scratch>\n")
+    sc.write("                <shared>\n")
+    sc.write("                    <file-server protocol=\"gsiftp\" url=\"gsiftp://%s\" mount-point=\"%s\"/>\n" % (cluster_gridftp_server, cluster_work_dir))
+    sc.write("                    <internal-mount-point mount-point=\"%s\" />\n" % (cluster_work_dir))
+    sc.write("                </shared>\n")
+    sc.write("            </scratch>\n")
     sc.write("            <storage />\n")
     sc.write("        </head-fs>\n")
     sc.write("        <replica-catalog  type=\"LRC\" url=\"rlsn://dummyValue.url.edu\" />\n")
     sc.write("        <profile namespace=\"pegasus\" key=\"style\">condor</profile>\n")
     sc.write("        <profile namespace=\"condor\" key=\"universe\">vanilla</profile>\n")
-    sc.write("        <profile namespace=\"condor\" key=\"x509userproxy\">%s</profile>\n" % (x509_user_proxy))
+    sc.write("        <profile namespace=\"condor\" key=\"should_transfer_files\">True</profile>\n")
+    sc.write("        <profile namespace=\"condor\" key=\"when_to_transfer_output\">ON_EXIT</profile>\n")
+    sc.write("        <profile namespace=\"condor\" key=\"requirements\">(FileSystemDomain != &quot;&quot;)</profile>\n")
     sc.write("        <profile namespace=\"env\" key=\"PEGASUS_HOME\" >%s</profile>\n" % (cluster_pegasus_home))
     sc.write("        <profile namespace=\"env\" key=\"GLOBUS_LOCATION\" >%s</profile>\n" % (cluster_globus_location))
     sc.write("        <profile namespace=\"env\" key=\"MONTAGE_HOME\" >%s</profile>\n" %(cluster_montage_location))
-    sc.write("    </site>\n")
-    sc.write("    <site  handle=\"%s\" arch=\"x86\" os=\"LINUX\">\n" %(staging_name))
-    sc.write("        <head-fs>\n")
-    sc.write("            <scratch>\n")
-    sc.write("                <shared>\n")
-    sc.write("                    <file-server protocol=\"%s\" url=\"%s\" mount-point=\"%s\"/>\n" % (staging_storage_proto, staging_storage_url, staging_storage_mount))
-    sc.write("                    <internal-mount-point mount-point=\"%s\"/>\n" % (staging_storage_mount))
-    sc.write("                </shared>\n")
-    sc.write("            </scratch>\n")
-    sc.write("        </head-fs>\n")
-    sc.write("        <replica-catalog  type=\"LRC\" url=\"rlsn://dummyValue.url.edu\" />\n")
     sc.write("    </site>\n")
     sc.write("    <site  handle=\"%s\" arch=\"x86\" os=\"LINUX\">\n" %(output_name))
     sc.write("        <head-fs>\n")
@@ -316,18 +308,11 @@ def generate_tc():
     tc.write("local     gp::remote_tile_setup:1.0         gsiftp://%s%s/remote-tile-setup      STATIC_BINARY   INTEL32::LINUX     condor::priority=100\n" % (local_hostname, local_galacticplane_location))
     tc.write("local     gp::remote_extra_cleanup:1.0      gsiftp://%s%s/remote-extra-cleanup   STATIC_BINARY   INTEL32::LINUX     condor::priority=1000\n" % (local_hostname, local_galacticplane_location))
     tc.write("local     gp::local_tile_setup:1.0          %s/local-tile-setup                  INSTALLED   INTEL32::LINUX\n" % (local_galacticplane_location))
-    # for the sub workflows
-    #tc.write("%s        pegasus::dirmanager               %s/bin/pegasus-dirmanager            INSTALLED   INTEL32::LINUX\n" % (cluster_name, cluster_pegasus_home))
-    #tc.write("%s        pegasus::kickstart                %s/bin/pegasus-kickstart             INSTALLED   INTEL32::LINUX\n" % (cluster_name, cluster_pegasus_home))
-    #tc.write("%s        pegasus::seqexec                  %s/bin/pegasus-cluster               INSTALLED   INTEL32::LINUX\n" % (cluster_name, cluster_pegasus_home))
-    #tc.write("%s        pegasus::cleanup                  %s/bin/pegasus-cleanup               INSTALLED   INTEL32::LINUX\n" % (cluster_name, cluster_pegasus_home))
-    #tc.write("%s        pegasus::pegasus-transfer         %s/bin/pegasus-transfer              INSTALLED   INTEL32::LINUX\n" % (cluster_name, cluster_pegasus_home))
-    # list all montage binaries
     for binary in os.listdir(local_montage_location + "/bin/"):
-        cluster = 100
-        if binary == "mProject":
-            cluster = 50
-        tc.write("%s        %s:3.3                            %s/bin/%s                          INSTALLED   INTEL32::LINUX   PEGASUS::clusters.size=%d\n" % (cluster_name, binary, cluster_montage_location, binary, cluster))
+        extra = "PEGASUS::clusters.size=50"
+        if binary == "mProject" or binary == "mBackground":
+            extra = "PEGASUS::clusters.size=10"
+        tc.write("%s        %s:3.3                            %s/bin/%s                          INSTALLED   INTEL32::LINUX   %s\n" % (cluster_name, binary, cluster_montage_location, binary, extra))
     tc.close()
 
 
@@ -379,7 +364,7 @@ def main():
     print "Planning and submitting the uberdax..."
     os.chdir(work_dir)
     os.environ["JAVA_HEAPMAX"] = "512"
-    cmd = "pegasus-plan -vvvv --conf pegasusrc --relative-dir " + run_id + " --sites " + cluster_name + " --staging-site " + staging_name  + " --dir . --output local --dax gp.dax --nocleanup --submit 2>&1 | tee pegasus-plan.out"
+    cmd = "pegasus-plan --conf pegasusrc --relative-dir " + run_id + " --sites " + cluster_name + " --dir . --output local --dax gp.dax --nocleanup --submit 2>&1 | tee pegasus-plan.out"
     myexec(cmd)
 
 

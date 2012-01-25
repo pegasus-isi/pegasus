@@ -4,33 +4,28 @@ mode: full
 [tiles]
 survey:    2mass
 band:      j
-min_lon:  -0.1
-max_lon:   0.1
-min_lat:  -0.1
-max_lat:   0.1
+min_lon:  -0.2
+max_lon:   0.2
+min_lat:  -0.6
+max_lat:   0.6
 size:      1.0
 overlap:   0.1
 
 [local]
 work_dir:         [WORK_DIR]
 montage_location: /ccg/software/montage/Montage_v3.3_mats
-x509_user_proxy:  /tmp/x509up_u[USERID]
 
 [cluster]
 name:             CCG
 pegasus_home:     /ccg/software/pegasus/dev/trunk
 globus_location:  /ccg/software/globus/5.0.4
 montage_location: /ccg/software/montage/Montage_v3.3_mats
-
-[staging]
-name:             Obelix
-storage_proto:    gridftp
-storage_url:      gsiftp://obelix.isi.edu
-storage_mount:    /data/scratch
+gridftp_server:   cartman.isi.edu
+work_dir:         /nfs/ccg3/scratch/bamboo/galactic-plane-test
 
 [output]
 name:             CCG_Data
 storage_proto:    gridftp
-storage_url:      gsiftp://ccg-data.isi.edu
-storage_mount:    /nfs/ccg3/scratch
+storage_url:      gsiftp://cartman.isi.edu
+storage_mount:    /nfs/ccg3/scratch/bamboo/outputs
 
