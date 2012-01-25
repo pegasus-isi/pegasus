@@ -76,21 +76,8 @@ cat >sites.xml <<EOF
         </head-fs>
         <replica-catalog type="LRC" url="rlsn://dummyValue.url.edu" />
         <profile namespace="pegasus" key="style">condor</profile>
-        <profile namespace="condor" key="universe">vanilla</profile>
         <profile namespace="env" key="MONTAGE_HOME" >/ccg/software/montage/Montage_v3.3_mats</profile>
         <profile namespace="env" key="PEGASUS_HOME" >/usr</profile>
-    </site>
-    <site handle="CCGData">
-        <head-fs>
-            <scratch>
-                <shared>
-                    <file-server protocol="gsiftp" url="gsiftp://ccg-data.isi.edu" mount-point="/exports/ccg/ccg1/90-day-scratch"/>
-                    <internal-mount-point mount-point="/exports/ccg/ccg1/90-day-scratch"/>
-                </shared>
-            </scratch>
-            <storage />
-        </head-fs>
-        <replica-catalog type="LRC" url="rlsn://dummyValue.url.edu" />
     </site>
 </sitecatalog>
 EOF
@@ -110,20 +97,11 @@ echo "Planning and submitting the workflow..."
 pegasus-plan \
     --conf pegasusrc \
     --sites CCG \
-    --staging-site CCGData \
     --dir work \
     --output local \
     --nocleanup \
     --dax dag.xml \
     --cluster horizontal \
-    --submit
+    --submit | tee $TOP_DIR/plan.out
 
-../../../../common/wait-for-workflow
-
-# check success with pegasus-analyzer - does it use exit codes correctly?
-cd work/*/*/*/*/
-pegasus-analyzer
-
-# show some stats
-pegasus-statistics `pwd`
 

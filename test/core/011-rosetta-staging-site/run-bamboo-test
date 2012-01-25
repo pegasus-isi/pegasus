@@ -6,20 +6,20 @@ TOPDIR=`pwd`
 
 # download rosetta binary - this is to save space in the Pegasus distribution
 if [ ! -e rosetta.exe ]; then
-   wget http://pegasus.isi.edu/wms/example-workflows/rosetta/rosetta.exe
+   wget -q http://pegasus.isi.edu/wms/example-workflows/rosetta/rosetta.exe
    chmod 755 rosetta.exe
 fi
 
 # do we have the required minirosetta_database?
 if [ ! -e minirosetta_database ]; then
-   wget http://pegasus.isi.edu/wms/example-workflows/rosetta/minirosetta_database.tar.gz
+   wget -q http://pegasus.isi.edu/wms/example-workflows/rosetta/minirosetta_database.tar.gz
    tar xzf minirosetta_database.tar.gz
    rm minirosetta_database.tar.gz
 fi
 
 # what about the required pdbs?
 if [ ! -e pdbs ]; then
-   wget http://pegasus.isi.edu/wms/example-workflows/rosetta/pdbs.tar.gz
+   wget -q http://pegasus.isi.edu/wms/example-workflows/rosetta/pdbs.tar.gz
    tar xzf pdbs.tar.gz
    rm pdbs.tar.gz
 fi
@@ -90,13 +90,12 @@ echo
 echo
 echo "Planning and submitting the workflow..."
 pegasus-plan \
-    --vvvvv \
     --conf pegasusrc \
     --dir work \
     --dax dax.xml \
     --sites CCG \
     --staging-site CCG_Staging \
     --output local \
-    --submit
+    --submit | tee $TOPDIR/plan.out
 
 

@@ -118,12 +118,3 @@ pegasus-plan \
     --cluster horizontal \
     --submit | tee $TOP_DIR/plan.out
 
-#../../../../common/wait-for-workflow
-
-# check success with pegasus-analyzer - does it use exit codes correctly?
-#cd work/*/*/*/*/
-#pegasus-analyzer
-
-# show some stats
-#pegasus-statistics `pwd`
-
