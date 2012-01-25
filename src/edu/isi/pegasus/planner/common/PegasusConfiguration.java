@@ -41,13 +41,27 @@ public class PegasusConfiguration {
     /**
      * The value for the S3 configuration.
      */
-    public static final String S3_CONFIGURATION_VALUE = "S3";
-    
-    
+    public static final String DEPRECATED_S3_CONFIGURATION_VALUE = "S3";
+
+       /**
+     * The value for the non shared filesystem configuration.
+     */
+    public static final String SHARED_FS_CONFIGURATION_VALUE = "sharedfs";
+
+    /**
+     * The value for the non shared filesystem configuration.
+     */
+    public static final String NON_SHARED_FS_CONFIGURATION_VALUE = "nonsharedfs";
+
     /**
      * The value for the condor configuration.
      */
-    public static final String CONDOR_CONFIGURATION_VALUE = "Condor";
+    public static final String CONDOR_CONFIGURATION_VALUE = "condorio";
+
+    /**
+     * The value for the condor configuration.
+     */
+    public static final String DEPRECATED_CONDOR_CONFIGURATION_VALUE = "Condor";
     
     /**
      * The logger to use.
@@ -83,7 +97,7 @@ public class PegasusConfiguration {
             }
             
             //check for the sls implementation
-            if( slsImplementor.equalsIgnoreCase( CONDOR_CONFIGURATION_VALUE ) ){
+            if( slsImplementor.equalsIgnoreCase( DEPRECATED_CONDOR_CONFIGURATION_VALUE ) ){
 
                 for( String site : (Set<String>)options.getExecutionSites() ){
                     //sanity check to make sure staging site is set to local
@@ -138,12 +152,19 @@ public class PegasusConfiguration {
     public Properties getConfigurationProperties( String configuration ){
         //sanity check
         if( configuration == null ){
-            //return empty properties
-            return new Properties();
+            //default is the sharedfs
+            configuration = SHARED_FS_CONFIGURATION_VALUE;
         }        
         
         Properties p = new Properties( );
-        if( configuration.equalsIgnoreCase( S3_CONFIGURATION_VALUE ) ){
+        if( configuration.equalsIgnoreCase( DEPRECATED_S3_CONFIGURATION_VALUE ) || configuration.equalsIgnoreCase( NON_SHARED_FS_CONFIGURATION_VALUE ) ){
+
+            //throw warning for deprecated value
+            if( configuration.equalsIgnoreCase( DEPRECATED_S3_CONFIGURATION_VALUE ) ){
+                mLogger.log( deprecatedValueMessage( PEGASUS_CONFIGURATION_PROPERTY_KEY,DEPRECATED_S3_CONFIGURATION_VALUE ,NON_SHARED_FS_CONFIGURATION_VALUE ),
+                             LogManager.WARNING_MESSAGE_LEVEL );
+            }
+
             p.setProperty( "pegasus.execute.*.filesystem.local", "true" );
             p.setProperty( "pegasus.gridstart", "PegasusLite" );
 
@@ -154,10 +175,20 @@ public class PegasusConfiguration {
             p.setProperty( "pegasus.transfer.stage.sls.file", "false" );
             */
         }
-        else if ( configuration.equalsIgnoreCase( CONDOR_CONFIGURATION_VALUE )  ){
+        else if ( configuration.equalsIgnoreCase( CONDOR_CONFIGURATION_VALUE ) || configuration.equalsIgnoreCase( DEPRECATED_CONDOR_CONFIGURATION_VALUE ) ){
+
+            //throw warning for deprecated value
+            if( configuration.equalsIgnoreCase( DEPRECATED_CONDOR_CONFIGURATION_VALUE ) ){
+                mLogger.log( deprecatedValueMessage( PEGASUS_CONFIGURATION_PROPERTY_KEY,DEPRECATED_CONDOR_CONFIGURATION_VALUE ,CONDOR_CONFIGURATION_VALUE ),
+                             LogManager.WARNING_MESSAGE_LEVEL );
+            }
+
             p.setProperty( "pegasus.transfer.sls.*.impl", "Condor" );
             p.setProperty( "pegasus.execute.*.filesystem.local", "true" );
             p.setProperty( "pegasus.gridstart", "PegasusLite" );
+        }
+        else if( configuration.equalsIgnoreCase( SHARED_FS_CONFIGURATION_VALUE ) ){
+            p.setProperty( "pegasus.execute.*.filesystem.local", "false" );
         }
         
         return p;
@@ -183,6 +214,24 @@ public class PegasusConfiguration {
                append( propValue ).append( ". Will not be set to - ").append( value );
             mLogger.log( sb.toString(), LogManager.WARNING_MESSAGE_LEVEL );
         }
+    }
+
+    /**
+     * Returns the deperecated value message
+     *
+     * @param property              the property
+     * @param deprecatedValue       the deprecated value
+     * @param updatedValue           the updated value
+     *
+     * @return message
+     */
+    protected String deprecatedValueMessage(String property, String deprecatedValue, String updatedValue) {
+        StringBuffer sb = new StringBuffer();
+        sb.append( " The property " ).append(  property ) .append( " = " ).append( deprecatedValue ).
+           append( " is deprecated. Replace with ").append( property ) .append( " = " ).
+           append( updatedValue );
+
+        return sb.toString();
     }
 
 }
