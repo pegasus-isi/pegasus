@@ -161,11 +161,12 @@ public class Condor extends Abstract {
 //        workdir = (workdir == null)?execSiteWorkDir:workdir;
         String workdir = job.getDirectory();
 
+        String defaultUniverse = job.getSiteHandle().equalsIgnoreCase("local")?
+                                 Condor.LOCAL_UNIVERSE:
+                                 Condor.VANILLA_UNIVERSE;
         String universe = job.condorVariables.containsKey( Condor.UNIVERSE_KEY )?
                               (String)job.condorVariables.get( Condor.UNIVERSE_KEY):
-                              //default is Scheduler universe for condor style
-                              Condor.LOCAL_UNIVERSE;
-
+                              defaultUniverse;
 
         //boolean to indicate whether to use remote_initialdir or not
         //remote_initialdir does not work for standard universe
