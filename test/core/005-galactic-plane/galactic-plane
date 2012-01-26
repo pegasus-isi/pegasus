@@ -307,9 +307,9 @@ def generate_tc():
     tc.write("local     gp::remote_extra_cleanup:1.0      gsiftp://%s%s/remote-extra-cleanup   STATIC_BINARY   INTEL32::LINUX     condor::priority=1000\n" % (local_hostname, local_galacticplane_location))
     tc.write("local     gp::local_tile_setup:1.0          %s/local-tile-setup                  INSTALLED   INTEL32::LINUX\n" % (local_galacticplane_location))
     for binary in os.listdir(local_montage_location + "/bin/"):
-        extra = "PEGASUS::clusters.size=50"
+        extra = "PEGASUS::clusters.size=20"
         if binary == "mProject" or binary == "mBackground":
-            extra = "PEGASUS::clusters.size=10"
+            extra = "PEGASUS::clusters.size=3"
         tc.write("%s        %s:3.3                            %s/bin/%s                          INSTALLED   INTEL32::LINUX   %s\n" % (cluster_name, binary, cluster_montage_location, binary, extra))
     tc.close()
 

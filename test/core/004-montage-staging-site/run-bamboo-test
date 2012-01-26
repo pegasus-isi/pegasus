@@ -77,15 +77,16 @@ cat >sites.xml <<EOF
         <replica-catalog type="LRC" url="rlsn://dummyValue.url.edu" />
         <profile namespace="pegasus" key="style">condor</profile>
         <profile namespace="condor" key="requirements">(TARGET.FileSystemDomain =!= &quot;&quot;)</profile>
+        <profile namespace="condor" key="should_transfer_files">Yes</profile>
+        <profile namespace="condor" key="when_to_transfer_output">ON_EXIT</profile>
         <profile namespace="env" key="MONTAGE_HOME" >/ccg/software/montage/Montage_v3.3_mats</profile>
-        <profile namespace="env" key="PEGASUS_HOME" >/usr</profile>
     </site>
     <site handle="CCGData">
         <head-fs>
             <scratch>
                 <shared>
-                    <file-server protocol="gsiftp" url="gsiftp://ccg-data.isi.edu" mount-point="/exports/ccg/ccg1/90-day-scratch"/>
-                    <internal-mount-point mount-point="/exports/ccg/ccg1/90-day-scratch"/>
+                    <file-server protocol="gsiftp" url="gsiftp://obelix.isi.edu" mount-point="/data/scratch/ptesting"/>
+                    <internal-mount-point mount-point="/data/scratch/ptesting"/>
                 </shared>
             </scratch>
             <storage />
