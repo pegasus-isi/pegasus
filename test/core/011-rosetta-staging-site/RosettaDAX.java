@@ -67,7 +67,7 @@ public class RosettaDAX {
 
             java.io.File pdbDir = new java.io.File("pdbs/");
             String pdbs[] = pdbDir.list();
-            for (int i = 0; i < Math.max(10, pdbs.length); i++) {
+            for (int i = 0; i < Math.min(10, pdbs.length); i++) {
                 java.io.File pdb = new java.io.File("pdbs/" + pdbs[i]);
                 if (pdb.isFile()) {
                     Job j = createJobFromPDB(dax, pdb, inputs);
