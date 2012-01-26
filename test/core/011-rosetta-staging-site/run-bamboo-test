@@ -2,7 +2,7 @@
 
 set -e
 
-TOPDIR=`pwd`
+TOP_DIR=`pwd`
 
 # download rosetta binary - this is to save space in the Pegasus distribution
 if [ ! -e rosetta.exe ]; then
@@ -96,6 +96,6 @@ pegasus-plan \
     --sites CCG \
     --staging-site CCG_Staging \
     --output local \
-    --submit | tee $TOPDIR/plan.out
+    --submit | tee $TOP_DIR/plan.out
 
 
