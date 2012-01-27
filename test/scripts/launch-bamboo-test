@@ -4,15 +4,18 @@
 
 TOP_DIR=`pwd`
 TEST=`echo $1 | awk -F " - " '{print $3}'`
+shift
 
 cd test/core/$TEST
 
 echo "TEST is $TEST"
 pwd
 
+PLANFILE=`mktemp plan.XXXXXX`
+
 #Launch the test
 
-./run-bamboo-test
+. run-bamboo-test "$@" | tee $PLANFILE
 
 STATUS=$?
 if [ $STATUS != 0 ]; then
@@ -21,7 +24,7 @@ if [ $STATUS != 0 ]; then
 fi
 
 #Get RUNDIR from the planning output
-RUN_DIR=`grep pegasus-remove plan.out | awk '{print $5}'`
+RUN_DIR=`grep pegasus-remove $PLANFILE | awk '{print $5}'`
 echo "RUNDIR is $RUN_DIR"
 
 # Change in to the rundir
@@ -37,7 +40,7 @@ if [ $STATUS = 0 ]; then
   # Run Pegasus Statistics
    pegasus-statistics $RUN_DIR
 else 
-   echo "Pegasus statistics failed"
+   echo "Pegasus status failed"
    exit $STATUS
 fi
 
