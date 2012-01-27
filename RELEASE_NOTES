@@ -1,6 +1,104 @@
 $Id$
 
 ===============================
+Release Notes for PEGASUS 3.1.1
+===============================
+This is a minor release, that fixes some bugs and has minor enhancements. 
+
+
+NEW FEATURES
+--------------
+
+1) the jobs file created by pegasus-statistics includes hostname and
+exitcode 
+	 
+   The hostname of the host on which the job ran and the exitcode with
+   which job exited is now included in the jobs file created by
+   pegasus-statistics .
+
+   https://jira.isi.edu/browse/PM-487
+
+
+2) pegasus-monitord truncates stdout/stderr
+
+   pegasus-monitord truncates stdout/stderr if they exceed the maximum
+   size allowed by the database. 
+
+   The boolean property to disable stdout/stderr parsing is 
+
+   pegasus.monitord.stdout.disable.parsing 
+   
+3) logging improvements for pegasus-monitord
+
+   monitord adds logging information when exiting upon a signal. The
+   netlogger DB backend code is now more verbose when errors happen.
+
+   pegasus-monitord also prints the start and end of the DB flushing
+   function in it's logs.
+
+   pegasus-monitord prints it's pid whenever it outputs the
+   starting/ending messages. This can be used to track if multiple
+   pegasus-monitord instances are running at the same time.
+
+4) Switched precedence for env loading for local site.
+
+   On certain Unix systems like debian, java overrides the
+   LD_LIBRARY_PATH on linux.
+
+   Now a value specified for the local site in the site catalog is
+   preferred over the one in the environment. This is to ensure, that
+   a user can set LD_LIBRARY_PATH in the site catalog, and it
+   overrides the the JAVA provided one.
+   
+   Details at
+   https://jira.isi.edu/browse/PM-471
+
+5) seqexec always fails on first job failure
+   
+   The default behaviour for the clustered jobs has been changed to
+   make seqexec fail on first job that fails. 
+
+   To change it , to run all the jobs in a cluster users need to set
+   the following property to false
+
+   pegasus.clusterer.job.aggregator.seqexec.firstjobfail
+
+   
+
+
+BUGS FIXED
+----------
+1) kickstart with stdout redirection
+   
+   The stdout redirection feature of kickstart failed on some systems
+   failed, as newer versions of libc() don't allow for the realpath()
+   function to point to a non existing filename. This prevented
+   kickstart from redirecting the stdout of a job to a file.
+
+   This is now fixed.
+
+   More details at 
+   https://jira.isi.edu/browse/PM-469   
+
+2) seqexec incorrectly reported the summary section in it's records
+   
+   seqexec incorrectly reported the summary section in it's records,
+   when launched through condor. It reported jobs succeeded even
+   though jobs had failed.
+
+   More details at
+   https://jira.isi.edu/browse/PM-541
+
+
+3) Fixed a bug in pegasus-monitord that was preventing the database
+population of certain pre and post script events. 
+
+4) Fixed some python 2.4 compatibility issues in pegasus-plots.
+
+   More details at
+   https://jira.isi.edu/browse/PM-534
+
+===============================
 Release Notes for PEGASUS 3.1.0
 ===============================
 This is a major release of Pegasus with support for notifications and
