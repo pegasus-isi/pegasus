@@ -2241,12 +2241,12 @@ public class PegasusProperties {
      *
      * Referred to by the "pegasus.cluster.job.aggregator.seqexec.firstjobfail" property.
      *
-     * @return the value specified in the properties file, else false
+     * @return the value specified in the properties file, else true
      *
      */
     public boolean abortOnFirstJobFailure(){
         return Boolean.parse( mProps.getProperty( "pegasus.clusterer.job.aggregator.seqexec.firstjobfail" ),
-                              false );
+                              true );
     }
 
 
