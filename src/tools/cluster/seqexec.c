@@ -225,7 +225,7 @@ wait_for_child( Jobs* jobs, int* status )
    * send the signals to the children, though (which hopefully exit.)
    */ 
   save_signals(&save); 
-
+  errno = 0; /* we rely later on wait4 results */ 
   while ( (child = wait4( ((pid_t) 0), status, 0, &usage )) < 0 ) {
     saverr = errno;
     perror( "wait4" ); 
