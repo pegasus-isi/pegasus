@@ -13,6 +13,7 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -82,6 +83,17 @@ typedef struct s_node {
   struct s_node*  next;
 } t_node;
 
+char*
+format_printable( char* buf, size_t size, char ch )
+{
+  if ( isprint(ch) ) {
+    snprintf( buf, size, "\"%c\"", ch );
+  } else {
+    snprintf( buf, size, "0x%02x", (unsigned char) ch ); 
+  }
+  return buf; 
+}
+
 size_t
 interpreteArguments( char* cmd, char*** argv )
 /* purpose: removes one layer of quoting and escaping, shell-style
@@ -98,12 +110,13 @@ interpreteArguments( char* cmd, char*** argv )
   size_t argc = 0;
   char* store = (char*) malloc( capacity );
   int   class, state = 0;
-  char  ch;
+  char  ch, temp[8];
 
   while ( state < 6 ) {
     if ( (class = charclass((ch=*s))) != 5 ) s++;
-    if ( debug > 2 ) showerr( "[debug state=\"%d\" class=\"%d\" ch=\"%c\"]\n",
-			      state, class, ch );
+    if ( debug > 2 ) showerr( "[debug state=\"%d\" class=\"%d\" ch=%s]\n",
+			      state, class, 
+			      format_printable(temp,sizeof(temp),ch) );
 
     /* handle action */
     switch ( c_action[state][class] ) {
