@@ -285,7 +285,8 @@ wait_for_child( Jobs* jobs, int* status )
 }
 
 void
-run_independent_task( char* cmd, char* envp[], unsigned long* extra ) 
+run_independent_task( char* cmd, char* envp[], unsigned long* extra,
+		      const char* special ) 
 {
   if ( cmd != NULL ) { 
 #ifndef USE_SYSTEM_SYSTEM
@@ -302,20 +303,21 @@ run_independent_task( char* cmd, char* envp[], unsigned long* extra )
 	appv[0] = fqpn; 
       }
 
-      other = mysystem( appv, envp, "setup" ); 
+      other = mysystem( appv, envp, special ); 
       if ( other || debug )
-	showerr( "%s: setup returned %d/%d\n", application,
+	showerr( "%s: %s returned %d/%d\n", application, special,
 		 (other >> 8), (other & 127) ); 
       for ( len=0; len<appc; len++ ) free((void*) appv[len]);
       free((void*) appv); 
     } else {
       /* unparsable cleanup argument string */
-      showerr( "%s: unparsable setup string, ignoring\n", application ); 
+      showerr( "%s: unparsable %s string, ignoring\n", 
+	       application, special ); 
     }
 #else
     int other = system( cmd ); 
     if ( other || debug )
-      showerr( "%s: setup returned %d/%d\n", application,
+      showerr( "%s: %s returned %d/%d\n", application, special,
 	       (other >> 8), (other & 127) ); 
 #endif /* USE_SYSTEM_SYSTEM */
     (*extra)++; 
@@ -384,7 +386,7 @@ main( int argc, char* argv[], char* envp[] )
   }
 
   /* NEW: unconditionally run a setup job */
-  run_independent_task( getenv("SEQEXEC_SETUP"), envp, &extra ); 
+  run_independent_task( getenv("SEQEXEC_SETUP"), envp, &extra, "setup" ); 
 
   /* Read the commands and call each sequentially */
   while ( fgets(line,sizeof(line),stdin) != (char*) NULL ) {
@@ -510,7 +512,7 @@ main( int argc, char* argv[], char* envp[] )
   }
 
   /* NEW: unconditionally run a clean-up job */
-  run_independent_task( getenv("SEQEXEC_CLEANUP"), envp, &extra ); 
+  run_independent_task( getenv("SEQEXEC_CLEANUP"), envp, &extra, "cleanup" ); 
 
   /* provide final statistics */
   jobs_done( &jobs ); 
