@@ -111,6 +111,11 @@ public class ClassADSGenerator {
     public static final String JOB_RUNTIME_AD_KEY = "pegasus_job_runtime";
 
     /**
+     * The key for the number of cores for the multiplier factor in stampede.
+     */
+    public static final String CORES_KEY = "pegasus_cores";
+
+    /**
      * The class ad to store the execution pool at which the job is run. The
      * globusscheduler specified in the submit file refers to the jobmanager on
      * this execution pool.
@@ -210,6 +215,17 @@ public class ClassADSGenerator {
             //ignore
         }
         writer.println(generateClassAdAttribute( ClassADSGenerator.JOB_RUNTIME_AD_KEY, runtime  ) );
+
+        //write out the cores if specified for job
+        String coresvalue = job.vdsNS.getStringValue( Pegasus.CORES_KEY );
+        int cores = 1;
+        try{
+            cores = ( coresvalue == null ) ? 1 : Integer.parseInt( coresvalue );
+        }
+        catch( Exception e ){
+            //ignore
+        }
+        writer.println(generateClassAdAttribute( ClassADSGenerator.CORES_KEY, cores  ) );
      
         //determine the cluster size
         int csize = ( job instanceof AggregatedJob ) ? 

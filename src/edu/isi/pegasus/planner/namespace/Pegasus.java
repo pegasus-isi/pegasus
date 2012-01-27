@@ -138,6 +138,14 @@ public class Pegasus extends Namespace {
      */
     public static final String CREATE_AND_CHANGE_DIR_KEY = "create.dir";
 
+
+    /**
+     * The number of cores that are associated with the job. To be used for
+     * multiplying the job runtimes accordingly. This does not set the corresponding
+     * globus profiles automatically. Is only used for stampede purposes.
+     */
+    public static final String CORES_KEY = "cores";
+
     /**
      * The deprecated bundle stagein key.
      * @see #CHANGE_DIR_KEY
@@ -414,12 +422,13 @@ public class Pegasus extends Namespace {
                 break;
 
             case 'c':
-                if ((key.compareTo(COLLAPSE_KEY) == 0) ||
-                    (key.compareTo(COLLAPSER_KEY) == 0) ||
-                    (key.compareTo(CHANGE_DIR_KEY) == 0) ||
-                    (key.compareTo(CHAIN_STAGE_IN_KEY) == 0) || 
-                    (key.compareTo(MAX_RUN_TIME) == 0) ||
-                    (key.compareTo(CREATE_AND_CHANGE_DIR_KEY) == 0 )) {
+                if ((key.compareTo( COLLAPSE_KEY ) == 0) ||
+                    (key.compareTo( COLLAPSER_KEY ) == 0) ||
+                    (key.compareTo( CHANGE_DIR_KEY ) == 0) ||
+                    (key.compareTo( CHAIN_STAGE_IN_KEY ) == 0) ||
+                    (key.compareTo( MAX_RUN_TIME ) == 0) ||
+                    (key.compareTo(CREATE_AND_CHANGE_DIR_KEY ) == 0 ) ||
+                    (key.compareTo( CORES_KEY ) == 0 ) ) {
                     res = VALID_KEY;
                 }
                 else if(key.compareTo(DEPRECATED_CHANGE_DIR_KEY) == 0){
