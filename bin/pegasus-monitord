@@ -204,6 +204,7 @@ active_notifications = []       # List of active notifications
 max_parallel_notifications = 10 # Maximum number of notifications we can do in parallel
 notifications_timeout = 0	# Time to wait for notification scripts to finish (0 means wait forever)
 notifications_log = None        # File for logging notifications' output
+store_stdout_stderr = True      # Flag for storing jobs' stdout and stderr in out output
 
 wf_event_sink = None            # Where wf events go
 STAMPEDE_NS = "stampede."       # Event name-space
@@ -1706,7 +1707,8 @@ class Workflow:
                  workflow_config_file=None, jsd=None, root_id=None,
                  parent_id=None, parent_jobid=None, parent_jobseq=None,
                  enable_notifications=True, replay_mode=False,
-                 output_dir=None, notification_list=None):
+                 store_stdout_stderr=True, output_dir=None,
+                 notification_list=None):
         """
         This function initializes the workflow object. It looks for
         the workflow configuration file (or for workflow_config_file,
@@ -1725,6 +1727,7 @@ class Workflow:
         self._replay_mode = replay_mode
         self._notification_list = notification_list
         self._output_dir = output_dir
+        self._store_stdout_stderr = store_stdout_stderr
 
         # Initialize other class variables
         self._wf_uuid = None
@@ -2243,22 +2246,24 @@ class Workflow:
             kwargs["stderr__file"] = my_job._error_file + ".%03d" % (my_job._job_output_counter)
         else:
             kwargs["stderr__file"] = ""
-        if my_job._stdout_text is not None:
-            if len(my_job._stdout_text) > MAX_OUTPUT_LENGTH:
-                # Need to truncate to avoid database problems...
-                kwargs["stdout__text"] = my_job._stdout_text[:MAX_OUTPUT_LENGTH]
-                logger.warning("truncating stdout for job %s" % (my_job._exec_job_id))
-            else:
-                # Put everything in
-                kwargs["stdout__text"] = my_job._stdout_text
-        if my_job._stderr_text is not None:
-            if len(my_job._stderr_text) > MAX_OUTPUT_LENGTH:
-                # Need to truncate to avoid database problems...
-                kwargs["stderr__text"] = my_job._stderr_text[:MAX_OUTPUT_LENGTH]
-                logger.warning("truncating stderr for job %s" % (my_job._exec_job_id))
-            else:
-                # Put everything in
-                kwargs["stderr__text"] = my_job._stderr_text
+        if self._store_stdout_stderr:
+            # Only add stdout and stderr text fields if user hasn't disabled it
+            if my_job._stdout_text is not None:
+                if len(my_job._stdout_text) > MAX_OUTPUT_LENGTH:
+                    # Need to truncate to avoid database problems...
+                    kwargs["stdout__text"] = my_job._stdout_text[:MAX_OUTPUT_LENGTH]
+                    logger.warning("truncating stdout for job %s" % (my_job._exec_job_id))
+                else:
+                    # Put everything in
+                    kwargs["stdout__text"] = my_job._stdout_text
+            if my_job._stderr_text is not None:
+                if len(my_job._stderr_text) > MAX_OUTPUT_LENGTH:
+                    # Need to truncate to avoid database problems...
+                    kwargs["stderr__text"] = my_job._stderr_text[:MAX_OUTPUT_LENGTH]
+                    logger.warning("truncating stderr for job %s" % (my_job._exec_job_id))
+                else:
+                    # Put everything in
+                    kwargs["stderr__text"] = my_job._stderr_text
 
         if my_job._sched_id is not None:
             kwargs["sched__id"] = my_job._sched_id
@@ -3093,6 +3098,8 @@ parser.add_option("--keep-state", action = "store_const", const = 1, dest = "kee
                   help = "keep state across several DAGMan start/stop cycles (development option)")
 parser.add_option("--socket", action = "store_const", const = "yes", dest = "socket_enabled",
                   help = "enables a socket interface for debugging")
+parser.add_option("--skip-stdout", action = "store_const", const = 0, dest = "skip_stdout",
+                  help = "disables storing both stdout and stderr in our output")
 parser.add_option("-o", "--output-dir", action = "store", type = "string", dest = "output_dir",
                   help = "provides an output directory for all monitord log files")
 parser.add_option("-v", "--verbose", action="count", default=0, dest="vb", help="Increase verbosity, repeatable")
@@ -3159,7 +3166,11 @@ if max_parallel_notifications == 0:
 if not utils.make_boolean(props.property("pegasus.monitord.notifications") or 'true'):
     do_notifications = False
 
+# Parse stdout/stderr disable parsing property
+
 # Copy command line options into our variables
+if utils.make_boolean(props.property("pegasus.monitord.stdout.disable.parsing") or 'false'):
+    store_stdout_stderr = False
 
 if options.vb == 0:
     lvl = logging.WARN
@@ -3211,6 +3222,8 @@ if options.db_stats is not None:
     db_stats = options.db_stats
 if options.keep_state is not None:
     keep_state = options.keep_state
+if options.skip_stdout is not None:
+    store_stdout_stderr = False
 if options.output_dir is not None:
     output_dir = options.output_dir
     try:
@@ -4432,7 +4445,9 @@ if do_notifications == True:
 wf = Workflow(run, out, database=wf_event_sink, jsd=jsd,
               enable_notifications=do_notifications,
               replay_mode=replay_mode,
-              output_dir=output_dir, notification_list=pending_notifications)
+              output_dir=output_dir,
+              store_stdout_stderr=store_stdout_stderr,
+              notification_list=pending_notifications)
 # If everything went well, create a workflow entry for this workflow
 if wf._monitord_exit_code == 0:
     workflow_entry = WorkflowEntry()
@@ -4666,6 +4681,7 @@ while (len(wfs) > 0):
                                                   jsd=jsd, replay_mode=replay_mode,
                                                   enable_notifications=do_notifications,
                                                   output_dir=output_dir,
+                                                  store_stdout_stderr=store_stdout_stderr,
                                                   notification_list=pending_notifications)
 
                                 if new_wf._monitord_exit_code == 0:
