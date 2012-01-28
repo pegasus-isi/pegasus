@@ -1,0 +1,89 @@
+#!/bin/bash
+
+set -e
+set -v
+
+TOPDIR=`pwd`
+
+CONFIG=$1
+DAX=blackdiamond.dax
+
+# Unique directory for this run
+RUN_ID=`/bin/date +'%F_%H%M%S'`
+RUN_DIR=`pwd`/work/$RUN_ID
+
+properties ()
+{
+	eval $1=`grep "$2\s*=" ${CONFIG}/test.config | cut -d"=" -f2 | sed -e 's/^\s*//g' -e 's/\s*$//g'`
+}
+
+# generate the input file
+echo "This is sample input to KEG" > f.a
+
+# output directory
+mkdir -p outputs
+mkdir -p staging-site
+
+# build the dax generator
+export PYTHONPATH=`pegasus-config --python`
+./blackdiamond.py /usr ${CONFIG} > ${DAX}
+
+# create the site catalog
+cat > sites.xml << EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0">
+    <site  handle="local" arch="x86" os="LINUX">
+        <head-fs>
+            <scratch>
+                <shared>
+                    <file-server protocol="file" url="file://" mount-point="$TOPDIR/work"/>
+                    <internal-mount-point mount-point="$TOPDIR/work"/>
+                </shared>
+            </scratch>
+            <storage>
+                <shared>
+                    <file-server protocol="file" url="file://" mount-point="$TOPDIR/outputs"/>
+                    <internal-mount-point mount-point="$TOPDIR/outputs"/>
+                </shared>
+            </storage>
+        </head-fs>
+    </site>
+    <site  handle="condorpool" arch="x86" os="LINUX">
+        <head-fs>
+            <scratch />
+            <storage />
+        </head-fs>
+        <profile namespace="pegasus" key="style">condor</profile>
+        <profile namespace="condor" key="universe">vanilla</profile>
+    </site>
+    <site handle="cartman-data">
+        <head-fs>
+            <scratch>
+                <shared>
+                    <file-server protocol="gsiftp" url="gsiftp://cartman.isi.edu" mount-point="${TOPDIR}/staging-site/scratch"/>
+                    <internal-mount-point mount-point="${TOPDIR}/staging-site/scratch"/>
+                </shared>
+            </scratch>
+            <storage />
+        </head-fs>
+        <replica-catalog type="LRC" url="rlsn://dummyValue.url.edu" />
+    </site>
+</sitecatalog>
+EOF
+
+# plan and submit the  workflow
+properties execution_site execution_site
+properties staging_site staging_site
+properties output_site output_site
+
+pegasus-plan \
+    --conf ${CONFIG}/pegasusrc \
+    --sites $execution_site \
+    --staging-site $staging_site \
+    --output $output_site \
+    --dir work \
+    --relative-submit-dir ${RUN_ID} \
+    --nocleanup \
+    --dax ${DAX} \
+    --submit 
+

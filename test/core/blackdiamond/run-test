@@ -1,0 +1,18 @@
+#!/bin/bash
+
+set -e
+set -v
+
+./run-bamboo-test $1
+
+# wait for workflow to finish
+../../common/wait-for-workflow
+
+# check success with pegasus-analyzer - does it use exit codes correctly?
+cd work/*/*/*/*/
+pegasus-analyzer
+
+# show some stats
+pegasus-statistics `pwd`
+
+
