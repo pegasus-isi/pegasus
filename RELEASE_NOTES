@@ -34,9 +34,9 @@ exitcode
    netlogger DB backend code is now more verbose when errors happen.
 
    pegasus-monitord also prints the start and end of the DB flushing
-   function in it's logs.
+   function in its logs.
 
-   pegasus-monitord prints it's pid whenever it outputs the
+   pegasus-monitord prints its pid whenever it outputs the
    starting/ending messages. This can be used to track if multiple
    pegasus-monitord instances are running at the same time.
 
@@ -80,9 +80,9 @@ BUGS FIXED
    More details at 
    https://jira.isi.edu/browse/PM-469   
 
-2) seqexec incorrectly reported the summary section in it's records
+2) seqexec incorrectly reported the summary section in its records
    
-   seqexec incorrectly reported the summary section in it's records,
+   seqexec incorrectly reported the summary section in its records,
    when launched through condor. It reported jobs succeeded even
    though jobs had failed.
 
