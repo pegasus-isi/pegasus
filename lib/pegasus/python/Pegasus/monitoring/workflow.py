@@ -45,14 +45,6 @@ try:
 except:
     logger.info("cannot import NL parser")
 
-# Import Python > 2.5 modules
-try:
-    import uuid
-    uuid_present = True
-except:
-    # Import failed, make a note so we can use something else
-    uuid_present = False
-
 # Compile our regular expressions
 
 # Used while reading the DAG file
@@ -674,7 +666,6 @@ class Workflow:
         self._job_counters = {}                 # Job counters for figuring out which output file to parse
         self._job_info = {}                     # jobid --> [sub_file, pre_exec, pre_args, post_exec, post_args, is_subdag, subdag_dag, subdag_dir]
         self._valid_braindb = True              # Flag for creating a new brain db if we don't find one
-        self._write_wf_uuid = False             # Flag for appending the generated wf_uuid to the braindump file
         self._line = 0                          # line number from dagman.out file
         self._last_processed_line = 0           # line last processed by the monitoring daemon
         self._previous_processed_line = 0       # line last processed by a previous instance of monitord
@@ -693,7 +684,6 @@ class Workflow:
 
         # Parse the braindump file
         wfparams = utils.slurp_braindb(rundir, workflow_config_file)
-        missing_keys = {}
 
         if len(wfparams) == 0:
             # Set flag for creating a braindb file if nothing was read
@@ -703,15 +693,10 @@ class Workflow:
         if "wf_uuid" in wfparams:
             if wfparams["wf_uuid"] is not None:
                 self._wf_uuid = wfparams["wf_uuid"]
-        # If _wf_uuid is not defined, we create a random uuid for this workflow
-        if self._wf_uuid is None:
-            if uuid_present == True:
-                self._wf_uuid = uuid.uuid4()
-            else:
-                logger.info("uuid module is not present, using time.time() to generate wf_uuid")
-                self._wf_uuid = str(time.time())
-            self._write_wf_uuid = True
-            missing_keys["wf_uuid"] = self._wf_uuid
+        else:
+            logger.error("wf_uuid not specified in braindump, skipping this (sub-)workflow...")
+            self._monitord_exit_code = 1
+            return
         # Now that we have the wf_uuid, set root_wf_uuid if not already set
         if self._root_workflow_id is None:
             self._root_workflow_id = self._wf_uuid
@@ -924,10 +909,6 @@ class Workflow:
         if (self._sink is not None and self._parent_workflow_id is not None
             and parent_jobid is not None and parent_jobseq is not None):
             self.db_send_subwf_link(self._wf_uuid, self._parent_workflow_id, parent_jobid, parent_jobseq)
-
-        # Add any missing keys to the braindump file
-        if len(missing_keys) > 0:
-            utils.add_to_braindb(rundir, missing_keys, workflow_config_file)
 
     def map_subwf(self, parent_jobid, parent_jobseq, wf_info):
         """
