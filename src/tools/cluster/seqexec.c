@@ -58,7 +58,6 @@ helpMe( const char* programname, int rc )
 	  RCS_ID, programname );
   printf( "Optional arguments:\n"
 " -d\tIncrease debug mode.\n"
-"\tis to execute all entries in the input file regardless of their exit.\n"
 " -s fn\tProtocol anything to given status file, default stdout.\n"
 " -R fn\tRecords progress into the given file, see also SEQEXEC_PROGRESS_REPORT.\n"
 " -S ec\tMulti-option: Mark non-zero exit-code ec as success (for -f mode).\n"
