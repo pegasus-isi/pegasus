@@ -144,8 +144,11 @@ install.all: install install.man install.doc
 
 doc: $(GENDOC)
 
+check: 
+	bash check.sh || true
+
 clean:
-	$(RM) *.o $(GENDOC) core core.*
+	$(RM) *.o $(GENDOC) core core.* check.?
 
 distclean: clean
 	$(RM) seqexec mpiexec try-cpus mpiexec.condor

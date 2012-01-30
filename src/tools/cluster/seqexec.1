@@ -35,7 +35,7 @@ to start application. In vertical clustering mode, the
 mode is encouraged, ending execution as soon as one application
 fails. When running a complex workflow through 
 .BR seqexec ,
-the order of applications must be topologically sorted.
+the order of applications in the input file must be topologically sorted.
 .PP
 Applications are usually using
 .B kickstart
@@ -62,6 +62,23 @@ This option increases the debug level. Debug message are generated on
 .IP
 By default, debugging is minimal.
 .TP
+.B \-e
+This flag turns on the old behavior of 
+.B seqexec
+to always run everything 
+.I and
+return success no matter what. 
+.IP
+The
+.B \-e
+flag is mutually exclusive with the
+.B \-f
+flag. 
+.IP
+By default, all applications are executed regardles of failures. Any
+detected application failure results in a non-zero exit status from
+.BR seqexec .
+.TP
 .B \-f
 In hard failure mode, as soon as one application fails, either through
 a non-zero exit code, or by dying on a signal, further execution is
@@ -73,7 +90,15 @@ detected.
 .B Seqexec
 will wait for the completion of these applications, but not start new ones. 
 .IP
-By default, all applications are executed regardless of failures. 
+The
+.B \-f
+flag is mutually exclusive with the
+.B \-e
+flag. 
+.IP
+By default, all applications are executed regardles of failures. Any
+detected application failure results in a non-zero exit status from
+.BR seqexec .
 .TP
 .B \-h
 This option prints the help message and exits the program.
@@ -101,6 +126,8 @@ This option is a multi-option, which may be used multiple times. For
 each given non-zero exit-code of an application, mark it as a form
 of success. In 
 .B \-f
+and in
+.I default
 mode, this means that 
 .B seqexec
 will not fail when seeing this exit code from any application it runs. 
@@ -152,24 +179,43 @@ status file from option
 cannot be opened. It returns 3, if the input file cannot be opened. 
 It does
 .I not
-return any failure for failed applications, except in hard failure mode,
-where it will return 5 for true failure. The latter is modified by the
+return any failure for failed applications in old-exit
+.B \-e
+mode. In 
+.I default
+and in hard failure
+.B \-f
+mode, it will return 5 for true failure. The determination of failure is
+modified by the
 .B \-S 
 option. 
 .PP
 All other internal errors being absent, 
 .B seqexec
-will always return 0 when run without
-.BR \-f . 
+will always return 0 when run with
+.BR \-e . 
 Unlike shell, it will 
 .I not
-return the last application's exit code. 
-However, in 
+return the last application's exit code.
+.PP
+In
+.I default
+mode, it will return 5, if any application failed. Unlike shell, it will
+.I not
+return the last application's exit code. However, it will execute all
+applications. The determination of failure is modified by the
+.B \-S 
+flag.
+.PP
+In 
 .B \-f
 mode, 
 .B seqexec
 returns either 0 if all main sequence applications succeeded, or
-5 if one failed; or more than one in parallel execution mode. 
+5 if one failed; possibly more than one in parallel execution mode. It
+will run only as long as applications were successful. As before, the
+.B \-S
+flag determines what constitutes a failure. 
 .PP
 The 
 .B seqexec 
@@ -259,9 +305,13 @@ with the following constituents:
 .B stat
 The string
 .I fail
-in 
-.B \-f 
-mode when a failure occurred. Otherwise, it will always be the string
+when 
+.B seqexec
+would return with exit status 5. Concretely, this is any failure in 
+.I default
+mode, and first failure in
+.B \-f
+mode. Otherwise, it will always be the string
 .IR ok ,
 if the record is produced. 
 .TP
@@ -354,8 +404,9 @@ on the system.
 If this variable is set, and contains a single fully-qualified path
 to an executable and arguments, this executable will be run before 
 any jobs are started. The exit code of this setup job will have no
-effect upon the main job sequence. Success or failure will not be
-counted towards the summary. 
+effect upon the main job sequence. Success or failure will 
+.I not 
+be counted towards the summary. 
 .TP
 .B SEQEXEC_CLEANUP
 If this variable is set, and contains a single fully-qualified path
@@ -363,8 +414,9 @@ to an executable and arguments, this executable will be before
 .B seqexec
 quits. Failure of any previous job will have no effect on the ability 
 to run this job. The exit code of the cleanup job will have no effect 
-on the overall success or failure state. Success or failure will not be
-counted towards the summary. 
+on the overall success or failure state. Success or failure will 
+.I not 
+be counted towards the summary. 
 .SH "AUTHORS"
 Jens-S. Vöckler <voeckler at isi dot edu>
 .PP

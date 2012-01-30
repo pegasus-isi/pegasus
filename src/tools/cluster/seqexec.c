@@ -58,13 +58,17 @@ helpMe( const char* programname, int rc )
 	  RCS_ID, programname );
   printf( "Optional arguments:\n"
 " -d\tIncrease debug mode.\n"
-" -f\tFail hard on first error (non-zero exit code or signal death), default\n"
 "\tis to execute all entries in the input file regardless of their exit.\n"
 " -s fn\tProtocol anything to given status file, default stdout.\n"
 " -R fn\tRecords progress into the given file, see also SEQEXEC_PROGRESS_REPORT.\n"
 " -S ec\tMulti-option: Mark non-zero exit-code ec as success (for -f mode).\n"
 " -n nr\tNumber of CPUs to use, defaults to 1, string 'auto' permitted.\n"
-" input\tFile with list of applications and args to execute, default stdin.\n" );
+" input\tFile with list of applications and args to execute, default stdin.\n\n"
+"Execution control and exit code:\n"
+"\tExecute everything but return success only if all were successful.\n"
+" -e\tExecute everything (old default mode) and always return success.\n"
+" -f\tFail hard on first error (non-zero exit code or signal death).\n"
+"\tOption -e and -f are mutually exclusive.\n" );
   exit(rc);
 }
 
@@ -95,7 +99,8 @@ processors( void )
 
 static
 void
-parseCommandline( int argc, char* argv[], int* fail_hard, int* cpus )
+parseCommandline( int argc, char* argv[], 
+		  int* fail_hard, int* old_mode, int* cpus )
 {
   char *s, *ptr = strrchr( argv[0], '/' );
   int option, tmp;
@@ -125,7 +130,7 @@ parseCommandline( int argc, char* argv[], int* fail_hard, int* cpus )
   }
 
   opterr = 0;
-  while ( (option = getopt( argc, argv, "R:S:dfhn:s:" )) != -1 ) {
+  while ( (option = getopt( argc, argv, "R:S:defhn:s:" )) != -1 ) {
     switch ( option ) {
     case 'R':
       if ( progress != -1 ) close(progress);
@@ -145,8 +150,14 @@ parseCommandline( int argc, char* argv[], int* fail_hard, int* cpus )
       debug++;
       break;
 
+    case 'e':
+      *old_mode = 1;
+      *fail_hard = 0;
+      break;
+
     case 'f':
-      (*fail_hard)++;
+      *fail_hard = 1;
+      *old_mode = 0; 
       break;
 
     case 'n':
@@ -337,8 +348,8 @@ main( int argc, char* argv[], char* envp[] )
 {
   size_t len;
   char line[MAXSTR];
-  int other, status = 0;
-  int slot, cpus, fail_hard = 0;
+  int other, exitstatus, status = 0;
+  int slot, cpus, fail_hard = 0, old_mode = 0; 
   char* cmd;
   char* save = NULL;
   unsigned long total = 0;
@@ -348,7 +359,7 @@ main( int argc, char* argv[], char* envp[] )
   time_t when;
   Jobs jobs;
   double diff, start = now(&when);
-  parseCommandline( argc, argv, &fail_hard, &cpus );
+  parseCommandline( argc, argv, &fail_hard, &old_mode, &cpus );
   
   /* progress report finish */
   if ( progress != -1 ) {
@@ -495,17 +506,26 @@ main( int argc, char* argv[], char* envp[] )
   /* NEW: unconditionally run a clean-up job */
   run_independent_task( getenv("SEQEXEC_CLEANUP"), envp, &extra ); 
 
+  /* compute if seqexec should return any form of failure */
+  if ( old_mode ) { 
+    exitstatus = 0; 
+  } else if ( fail_hard ) {
+    exitstatus = (status && isafailure(status)) ? 5 : 0;
+  } else {
+    exitstatus = failure ? 5 : 0;
+  }
+
   /* provide final statistics */
   jobs_done( &jobs ); 
   diff = now(NULL) - start;
   showout( "[%s-summary stat=\"%s\", lines=%lu, tasks=%lu, succeeded=%lu, failed=%lu, "
 	   "extra=%lu, duration=%.3f, start=\"%s\", pid=%d, app=\"%s\"]\n",
 	   APPLICATION_NAME,
-	   ( (fail_hard && status && isafailure(status)) ? "fail" : "ok" ),
+	   exitstatus ? "fail" : "ok",
 	   lineno, total, total-failure, failure, extra,
 	   diff, iso2date(start,line,sizeof(line)),
 	   getpid(), argv[0] );
 
   fflush(stdout); /* just in case */
-  exit( (fail_hard && status && isafailure(status)) ? 5 : 0 );
+  exit( exitstatus ); 
 }
