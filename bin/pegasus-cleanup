@@ -104,6 +104,7 @@ class Alarm(Exception):
 # --- global variables ----------------------------------------------------------------
 
 prog_base = os.path.split(sys.argv[0])[1]   # Name of this program
+prog_dir = os.path.normpath(os.path.join(os.path.dirname(sys.argv[0]))) # path to bin 
 
 logger = logging.getLogger("my_logger")
 
@@ -309,53 +310,63 @@ def check_env_and_tools():
     check_tool("pegasus-s3", "help", None)
 
 
-def rm(url):
+def rm(urls):
     """
     removes locally using /bin/rm
     """
-    cmd = "/bin/rm -f \"%s\"" % (url.path)
-    try:
-        myexec(cmd, 60, True)
-    except RuntimeError, err:
-        logger.error(err)
+    for i, url in enumerate(urls):
+        cmd = "/bin/rm -f \"%s\"" % (url.path)
+        try:
+            myexec(cmd, 5*60, True)
+        except RuntimeError, err:
+            logger.error(err)
 
 
-def scp(url):
+def scp(urls):
     """
     removes using ssh+rm
     """
-    cmd = "/usr/bin/ssh -q  -o StrictHostKeyChecking=no" + \
-          " " + url.host + " " + \
-          " \"/bin/rm -f " + url.path + "\""
-    try:
-        myexec(cmd, 60, True)
-    except RuntimeError, err:
-        logger.error(err)
+    for i, url in enumerate(urls):
+        cmd = "/usr/bin/ssh -q  -o StrictHostKeyChecking=no" + \
+              " " + url.host + " " + \
+              " \"/bin/rm -f " + url.path + "\""
+        try:
+            myexec(cmd, 5*60, True)
+        except RuntimeError, err:
+            logger.error(err)
 
 
-def gsiftp(url):
+def gsiftp(urls):
     """
-    remove files on gridftp servers
+    remove files on gridftp servers - delegate run to pegasus-transfer
     """
  
-    if tool_info['globus-url-copy']['full_path'] == None:
-        raise RuntimeError("Unable to do gsiftp rm becuase globus-url-copy could not be found")
-   
-    # build command line for globus-url-copy
-    cmd = tool_info['globus-url-copy']['full_path']
+    try:
+        tmp_fd, tmp_name = tempfile.mkstemp(prefix="pegasus-cleanup-", suffix=".lst", dir="/tmp")
+        tmp_file = os.fdopen(tmp_fd, "w+b")
+    except:
+        raise RuntimeError("Unable to create tmp file for globus-url-copy transfers")
+    for i, url in enumerate(urls):
+        tmp_file.write("file:///dev/null\n")
+        tmp_file.write("%s\n" %(url.url()))
+
+    tmp_file.close()
+    
+    # use pegasus-transfer
+    cmd = prog_dir + "/pegasus-transfer"
 
     # make output from guc match our current log level
     if logger.isEnabledFor(logging.DEBUG):
-        cmd += " -dbg"
+        cmd += " -l debug"
 
-    cmd += " -create-dest"
-    cmd += " -no-third-party-transfers -no-data-channel-authentication"
-    cmd += " file:///dev/null " + url.url()
+    cmd += " -f " + tmp_name
 
     try:
-        myexec(cmd, 60, True)
+        myexec(cmd, 1*60*60, True)
     except RuntimeError, err:
         logger.error(err)
+
+    os.unlink(tmp_name)
 
 
 def irods_login():
@@ -390,7 +401,7 @@ def irods_login():
     os.unlink(".irodsAc")
 
 
-def irods(url):
+def irods(urls):
     """
     irods - use the icommands to interact with irods
     """
@@ -403,18 +414,19 @@ def irods(url):
         irods_login()
     except Exception, loginErr:
         logger.error(loginErr)
-        raise RuntimError("Unable to log into irods")
+        raise RuntimeError("Unable to log into irods")
 
-    cmd = "irm -f " + url.path
+    for i, url in enumerate(urls):
+        cmd = "irm -f " + url.path
 
-    try:
-        myexec(cmd, 60, True)
-    except Exception, err:
-        logger.error(err)
+        try:
+            myexec(cmd, 5*60, True)
+        except Exception, err:
+            logger.error(err)
 
 
 
-def srm(url):
+def srm(urls):
     """
     srm - use srm-rm
     """
@@ -422,15 +434,16 @@ def srm(url):
     if tool_info['srm-rm']['full_path'] == None:
         raise RuntimeError("Unable to do srm remove becuase srm-rm could not be found")
 
-    cmd = "srm-rm " + url.url()
+    for i, url in enumerate(urls):
+        cmd = "srm-rm " + url.url()
         
-    try:
-        myexec(cmd, 60, True)
-    except Exception, err:
-        logger.error(err)
+        try:
+            myexec(cmd, 5*60, True)
+        except Exception, err:
+            logger.error(err)
 
 
-def s3(url):
+def s3(urls):
     """
     s3 - uses pegasus-s3 to interact with Amazon S3 
     """
@@ -438,33 +451,44 @@ def s3(url):
     if tool_info['pegasus-s3']['full_path'] == None:
         raise RuntimeError("Unable to do S3 transfers becuase pegasus-s3 could not be found")
 
-    cmd = "pegasus-s3 rm " + url.url()
+    for i, url in enumerate(urls):
+        cmd = "pegasus-s3 rm " + url.url()
 
-    try:
-        myexec(cmd, 60, True)
-    except Exception, err:
-        logger.error(err)
+        try:
+            myexec(cmd, 60, True)
+        except Exception, err:
+            logger.error(err)
 
 
-def remove(url):
+def urls_groupable(a, b):
+    """
+    compares two urls, and determins if they are similar enough to be
+    grouped together for one tool
+    """
+    if a.proto != b.proto:
+        return False
+    return True
+
+
+def handle_removes(urls):
     """
     removes the file with the given url
     """
     try:
-        if tool_map.has_key(url.proto):
-            tool = tool_map[url.proto]
+        if tool_map.has_key(urls[0].proto):
+            tool = tool_map[urls[0].proto]
             if tool == "rm":
-                rm(url)
+                rm(urls)
             elif tool == "scp":
-                scp(url)
+                scp(urls)
             elif tool == "gsiftp":
-                gsiftp(url)
+                gsiftp(urls)
             elif tool == "irods":
-                irods(url)
+                irods(urls)
             elif tool == "srm":
-                srm(url)
+                srm(urls)
             elif tool == "s3":
-                s3(url)
+                s3(urls)
             else:
                 logger.critical("Error: No mapping for the tool '%s'" %(tool))
                 myexit(1)
@@ -528,7 +552,7 @@ except Exception, err:
     logger.critical(err)
     myexit(1)
 
-# queues to track the work
+# list of work
 url_q = deque()
 
 # fill the url queue with user provided entries
@@ -540,10 +564,34 @@ try:
             line = line.rstrip('\n')
             url = URL()
             url.set_url(line)
-            remove(url)
+            url_q.append(url)
 except Exception, err:
     logger.critical('Error handling url: %s' % (err))
     myexit(1)
+
+# do the removals
+while url_q:
+
+    u_main = url_q.popleft()
+
+    # create a list of urls to pass to underlying tool
+    u_list = []
+    u_list.append(u_main)
+
+    try:
+        u_next = url_q[0]
+    except IndexError, err:
+        u_next = False
+    while u_next and urls_groupable(u_main, u_next):
+        u_list.append(u_next)
+        url_q.popleft()
+        try:
+            u_next = url_q[0]
+        except IndexError, err:
+            u_next = False
+
+    # magic!
+    handle_removes(u_list)
 
 myexit(0)
 
