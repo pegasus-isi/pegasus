@@ -21,7 +21,7 @@
 .SH "NAME"
 seqexec \- run a bunch of applications
 .SH "SYNTAX"
-.B seqexec [\-d] [\-f [\-S\~ec]] [\-s\~fn] [\-R\~fn] [\-n\~nr] [inputfile]
+.B seqexec [\-d] [\-f | \-e] [\-S\~ec] [\-s\~fn] [\-R\~fn] [\-n\~nr] [inputfile]
 .SH "DESCRIPTION"
 The 
 .B seqexec
@@ -47,7 +47,8 @@ except the first should add the
 .B kickstart
 option
 .I \-H
-to supress repeating the XML preamble. 
+to supress repeating the XML preamble and certain other headers
+of no interest when repeated. 
 .PP
 .B seqexec
 permits shell-style quoting. One level of quoting is removed from the 
