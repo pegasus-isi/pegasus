@@ -21,7 +21,7 @@
 .SH "NAME"
 pegasus\-cluster \- run a list of applications
 .SH "SYNTAX"
-.B pegasus\-cluster [\-d] [\-f [\-S\~ec]] [\-s\~fn] [\-R\~fn] [\-n\~nr] [inputfile]
+.B pegasus\-cluster [\-d] [\-e | \-f] [\-S\~ec] [\-s\~fn] [\-R\~fn] [\-n\~nr] [inputfile]
 .SH "DESCRIPTION"
 The 
 .B pegasus\-cluster
@@ -37,7 +37,7 @@ In vertical clustering mode, the
 mode is encouraged, ending execution as soon as one application
 fails. When running a complex workflow through 
 .BR pegasus\-cluster ,
-the order of applications must be topologically sorted.
+the order of applications in the input file must be topologically sorted.
 .PP
 Applications are usually using
 .B pegasus\-kickstart
@@ -65,6 +65,23 @@ This option increases the debug level. Debug message are generated on
 .IP
 By default, debugging is minimal.
 .TP
+.B \-e
+This flag turns on the old behavior of 
+.B pegasus\-cluster
+to always run everything 
+.I and
+return success no matter what. 
+.IP
+The
+.B \-e
+flag is mutually exclusive with the
+.B \-f
+flag. 
+.IP
+By default, all applications are executed regardles of failures. Any
+detected application failure results in a non-zero exit status from
+.BR pegasus\-cluster .
+.TP
 .B \-f
 In hard failure mode, as soon as one application fails, either through
 a non-zero exit code, or by dying on a signal, further execution is
@@ -73,10 +90,18 @@ stopped.
 In parallel execution mode, one or more other applications later in the 
 sequence file may have been started already by the time failure is
 detected. 
-.B Seqexec
+.B Pegasus\-cluster
 will wait for the completion of these applications, but not start new ones. 
 .IP
-By default, all applications are executed regardless of failures. 
+The
+.B \-f
+flag is mutually exclusive with the
+.B \-e
+flag. 
+.IP
+By default, all applications are executed regardless of failures. Any
+detected application failure results in a non-zero exit status from
+.BR pegasus\-cluster . 
 .TP
 .B \-h
 This option prints the help message and exits the program.
@@ -155,8 +180,14 @@ status file from option
 cannot be opened. It returns 3, if the input file cannot be opened. 
 It does
 .I not
-return any failure for failed applications, except in hard failure mode,
-where it will return 5 for true failure. The latter is modified by the
+return any failure for failed applications in old-exit
+.B \-e
+mode. In
+.I default
+and hard failure
+.B \-f 
+mode, it will return 5 for true failure. The determination of failure is 
+modified by the
 .B \-S 
 option. 
 .PP
@@ -167,12 +198,25 @@ will always return 0 when run without
 Unlike shell, it will 
 .I not
 return the last application's exit code. 
-However, in 
+.PP
+In
+.I default
+mode, it will return 5, if any application failed. Unlike shell, it will
+.I not
+return the last application's exit code. However, it will execute all
+applications. The determination of failure is modified by the
+.B \-S
+flag.
+.PP
+In 
 .B \-f
 mode, 
 .B pegasus\-cluster
 returns either 0 if all main sequence applications succeeded, or
-5 if one failed; or more than one in parallel execution mode. 
+5 if one failed; or more than one in parallel execution mode. It 
+will run only as long as applications were successful. As before, the
+.B \-S
+flag determines what constitutes a failure. 
 .PP
 The 
 .B pegasus\-cluster 
@@ -262,9 +306,13 @@ with the following constituents:
 .B stat
 The string
 .I fail
-in 
+when 
+.B pegasus\-cluster
+would return with an exit status of 5. Concretely, this is any failure in
+.I default
+mode, and first failure in 
 .B \-f 
-mode when a failure occurred. Otherwise, it will always be the string
+mode. Otherwise, it will always be the string
 .IR ok ,
 if the record is produced. 
 .TP

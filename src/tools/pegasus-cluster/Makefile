@@ -122,8 +122,11 @@ install.all: install install.man install.doc
 
 doc: $(GENDOC)
 
+check:	pegasus-cluster
+	bash check.sh
+
 clean:
-	$(RM) *.o $(GENDOC) core core.*
+	$(RM) *.o $(GENDOC) core core.* check.?
 
 distclean: clean
 	$(RM) pegasus-cluster try-cpus
