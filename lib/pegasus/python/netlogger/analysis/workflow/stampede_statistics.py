@@ -149,11 +149,11 @@ Methods listed in order of query list on wiki.
 
 https://confluence.pegasus.isi.edu/display/pegasus/Pegasus+Statistics+Python+Version+Modified
 """
-__rcsid__ = "$Id: stampede_statistics.py 29302 2012-01-12 19:02:54Z mgoode $"
+__rcsid__ = "$Id: stampede_statistics.py 29762 2012-01-30 23:01:55Z mgoode $"
 __author__ = "Monte Goode"
 
 from netlogger.analysis.modules._base import SQLAlchemyInit
-from netlogger.analysis.schema.schema_check import ErrorStrings
+from netlogger.analysis.schema.schema_check import ErrorStrings, SchemaCheck, SchemaVersionError
 from netlogger.analysis.schema.stampede_schema import *
 from netlogger.nllog import DoesLogging, get_logger
         
@@ -169,6 +169,11 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         except exceptions.OperationalError, e:
             self.log.error('init', msg='%s' % ErrorStrings.get_init_error(e))
             raise RuntimeError
+            
+        # Check the schema version before proceeding.
+        s_check = SchemaCheck(self.session)
+        if not s_check.check_schema():
+            raise SchemaVersionError
         
         self._expand = expand_workflow
         
@@ -353,39 +358,20 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Summary#WorkflowSummary-Totalsucceededjobs
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Statistics+file#WorkflowStatisticsfile-Totalsucceededjobs
         """
-        JobSub1 = orm.aliased(Job, name='JobSub1')
-        JobInstanceSub1 = orm.aliased(JobInstance, name='JobInstanceSub1')
-        WorkflowSub1 = orm.aliased(Workflow, name='WorkflowSub1')
-        
-        sq_1 = self.session.query(func.max(JobInstanceSub1.job_submit_seq).label('jss'),
-                JobInstanceSub1.job_id.label('jobid'))
+        JobInstanceSub = orm.aliased(JobInstance, name='JobInstanceSub')
+        sq_1 = self.session.query(func.max(JobInstanceSub.job_submit_seq).label('jss'), JobInstanceSub.job_id.label('jobid'))
         if self._expand:
-            sq_1 = sq_1.filter(WorkflowSub1.root_wf_id == self._root_wf_id)
+            sq_1 = sq_1.filter(Workflow.root_wf_id == self._root_wf_id)
         else:
-            sq_1 = sq_1.filter(WorkflowSub1.wf_id == self._wfs[0])
+            sq_1 = sq_1.filter(Workflow.wf_id == self._wfs[0])
+        sq_1 = sq_1.filter(Workflow.wf_id == Job.wf_id)
+        sq_1 = sq_1.filter(Job.job_id == JobInstanceSub.job_id)
+        sq_1 = sq_1.filter(JobInstanceSub.exitcode == 0).filter(JobInstanceSub.exitcode != None)
+        sq_1 = sq_1.group_by(JobInstanceSub.job_id).subquery()
         
-        sq_1 = sq_1.filter(WorkflowSub1.wf_id == JobSub1.wf_id)
-        sq_1 = sq_1.filter(JobSub1.job_id == JobInstanceSub1.job_id)
-        if self._get_job_filter(JobSub1) is not None:
-            sq_1 = sq_1.filter(self._get_job_filter(JobSub1))
-        
-        sq_1 = sq_1.group_by(JobSub1.job_id).subquery()
-        
-        JobInstanceSub2 = orm.aliased(JobInstance, name='JobInstanceSub2')
-        sq_2 = self.session.query(JobInstanceSub2.job_instance_id.label('last_job_instance_id'))
-        sq_2 = sq_2.filter(JobInstanceSub2.job_id == sq_1.c.jobid)
-        sq_2 = sq_2.filter(JobInstanceSub2.job_submit_seq == sq_1.c.jss).subquery()
-        
-        JobstateSub3 = orm.aliased(Jobstate, name='JobstateSub3')
-        sq_3 = self.session.query(sq_2.c.last_job_instance_id,
-                func.max(JobstateSub3.jobstate_submit_seq).label('sjss'))
-        sq_3 = sq_3.filter(JobstateSub3.job_instance_id == sq_2.c.last_job_instance_id)
-        sq_3 = sq_3.group_by(sq_2.c.last_job_instance_id).subquery()
-        
-        q = self.session.query(sq_3.c.last_job_instance_id)
-        q = q.filter(Jobstate.job_instance_id == sq_3.c.last_job_instance_id)
-        q = q.filter(Jobstate.jobstate_submit_seq == sq_3.c.sjss)
-        q = q.filter(Jobstate.state.in_(['POST_SCRIPT_SUCCESS', 'JOB_SUCCESS']))
+        q = self.session.query(JobInstance.job_instance_id.label('last_job_instance'))
+        q = q.filter(JobInstance.job_id == sq_1.c.jobid)
+        q = q.filter(JobInstance.job_submit_seq == sq_1.c.jss)
         
         return q.count()
     
@@ -395,34 +381,22 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Summary#WorkflowSummary-Totalfailedjobs
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Statistics+file#WorkflowStatisticsfile-Totalfailedjobs
         """
-        JobSub1 = orm.aliased(Job, name='JobSub1')
-        JobInstanceSub1 = orm.aliased(JobInstance, name='JobInstanceSub1')
-        WorkflowSub1 = orm.aliased(Workflow, name='WorkflowSub1')
-        
-        sq_1 = self.session.query(func.max(JobInstanceSub1.job_submit_seq).label('jss'),
-                JobInstanceSub1.job_id.label('jobid'))
+        JobInstanceSub = orm.aliased(JobInstance, name='JobInstanceSub')
+        sq_1 = self.session.query(func.max(JobInstanceSub.job_submit_seq).label('jss'), JobInstanceSub.job_id.label('jobid'))
         if self._expand:
-            sq_1 = sq_1.filter(WorkflowSub1.root_wf_id == self._root_wf_id)
+            sq_1 = sq_1.filter(Workflow.root_wf_id == self._root_wf_id)
         else:
-            sq_1 = sq_1.filter(WorkflowSub1.wf_id == self._wfs[0])
+            sq_1 = sq_1.filter(Workflow.wf_id == self._wfs[0])
+        sq_1 = sq_1.filter(Workflow.wf_id == Job.wf_id)
+        sq_1 = sq_1.filter(Job.job_id == JobInstanceSub.job_id)
+        sq_1 = sq_1.filter(JobInstanceSub.exitcode != 0).filter(JobInstanceSub.exitcode != None)
+        sq_1 = sq_1.group_by(JobInstanceSub.job_id).subquery()
         
-        sq_1 = sq_1.filter(WorkflowSub1.wf_id == JobSub1.wf_id)
-        sq_1 = sq_1.filter(JobSub1.job_id == JobInstanceSub1.job_id)
-        if self._get_job_filter(JobSub1) is not None:
-            sq_1 = sq_1.filter(self._get_job_filter(JobSub1))
+        q = self.session.query(JobInstance.job_instance_id.label('last_job_instance'))
+        q = q.filter(JobInstance.job_id == sq_1.c.jobid)
+        q = q.filter(JobInstance.job_submit_seq == sq_1.c.jss)
         
-        sq_1 = sq_1.group_by(JobSub1.job_id).subquery()
-        
-        JobInstanceSub2 = orm.aliased(JobInstance, name='JobInstanceSub2')
-        sq_2 = self.session.query(JobInstanceSub2.job_instance_id.label('last_job_instance_id'))
-        sq_2 = sq_2.filter(JobInstanceSub2.job_id == sq_1.c.jobid)
-        sq_2 = sq_2.filter(JobInstanceSub2.job_submit_seq == sq_1.c.jss).subquery()
-        
-        q = self.session.query(sq_2.c.last_job_instance_id)
-        q = q.filter(Jobstate.job_instance_id == sq_2.c.last_job_instance_id)
-        q = q.filter(Jobstate.state.in_(['PRE_SCRIPT_FAILED','SUBMIT_FAILED','JOB_FAILURE' ,'POST_SCRIPT_FAILED']))
-        
-        return q.count()     
+        return q.count()
         
     def _query_jobstate_for_instance(self, states):
         """
@@ -824,10 +798,9 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
             q = self.session.query(JobInstance.job_instance_id, func.max(JobInstance.job_submit_seq))
         q = q.filter(Job.wf_id.in_(self._wfs))
         q = q.filter(Job.job_id == JobInstance.job_id)
-        q = q.filter(JobInstance.job_instance_id == Jobstate.job_instance_id)
         if not all_jobs:
             q = q.filter(or_(not_(d_or_d), and_(d_or_d, JobInstance.subwf_id == None)))
-        q = q.filter(Jobstate.state.in_(['PRE_SCRIPT_FAILED','SUBMIT_FAILED','JOB_FAILURE' ,'POST_SCRIPT_FAILED']))
+        q = q.filter(JobInstance.exitcode != 0).filter(JobInstance.exitcode != None)
         if final:
             q = q.group_by(JobInstance.job_id)
         q = q.order_by(JobInstance.job_submit_seq)

@@ -55,6 +55,7 @@ from Pegasus.tools import utils
 from Pegasus.tools import db_utils
 from Pegasus.tools import kickstart_parser
 from netlogger.analysis.workflow import stampede_statistics
+from netlogger.analysis.schema.schema_check import SchemaVersionError
 
 # --- regular expressions -------------------------------------------------------------
 
@@ -882,6 +883,11 @@ def analyze_db(config_properties):
     try:
         workflow_stats = stampede_statistics.StampedeStatistics(output_db_url, False)
         workflow_stats.initialize(wf_uuid)
+    except SchemaVersionError:
+        logger.error("------------------------------------------------------")
+        logger.error("Database schema mismatch! Please run the upgrade tool")
+        logger.error("to upgrade the database to the latest schema version.")
+        sys.exit(1)
     except:
         logger.error("Failed to load the database." + output_db_url )
         logger.warning(traceback.format_exc())

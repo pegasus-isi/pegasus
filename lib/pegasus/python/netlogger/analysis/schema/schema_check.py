@@ -2,7 +2,7 @@
 Code to handle various aspects of transitioning to a new verson of the 
 Stampede schema.
 """
-__rcsid__ = "$Id: schema_check.py 29395 2012-01-19 16:50:10Z mgoode $"
+__rcsid__ = "$Id: schema_check.py 29754 2012-01-30 21:18:54Z mgoode $"
 __author__ = "Monte Goode"
 
 import exceptions
@@ -214,7 +214,7 @@ class SchemaCheck(DoesLogging):
             return
         
         # Alter tables
-        r_c_t = 'ALTER TABLE invocation ADD COLUMN remote_cpu_time NUMERIC(10,3) NOT NULL'
+        r_c_t = 'ALTER TABLE invocation ADD COLUMN remote_cpu_time NUMERIC(10,3) NULL'
         if self.session.connection().dialect.name != 'sqlite':
             r_c_t += ' AFTER remote_duration'
         m_fac = 'ALTER TABLE job_instance ADD COLUMN multiplier_factor INT NOT NULL DEFAULT 1'
@@ -225,8 +225,6 @@ class SchemaCheck(DoesLogging):
         self.session.execute(e_cod)
         
         # Seed new columns with data derived from existing 3.1 data
-        update = 'UPDATE invocation SET remote_cpu_time = remote_duration'
-        self.session.execute(update)
         
         success = ['JOB_SUCCESS', 'POST_SCRIPT_SUCCESS']
         failure = ['PRE_SCRIPT_FAILED', 'SUBMIT_FAILED', 'JOB_FAILURE', 'POST_SCRIPT_FAILED']
@@ -255,6 +253,7 @@ class SchemaCheck(DoesLogging):
         """
         Public wrapper around the version-specific upgrade methods.
         """
+        self.check_schema()
         self.upgrade_to_3_2()
         pass
 
