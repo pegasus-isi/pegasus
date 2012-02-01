@@ -9,11 +9,11 @@ if len(sys.argv) != 3:
 	print "Usage: %s PEGASUS_HOME" % (sys.argv[0])
 	sys.exit(1)
 
-# Create a abstract dag
-diamond = ADAG("diamond")
-
-config = ConfigParser.ConfigParser({'input_file': os.getcwd ()})
+config = ConfigParser.ConfigParser({'input_file': os.getcwd (), 'workflow_name': 'diamond', 'executable_installed':"False"})
 config.read(sys.argv [2] + '/test.config')
+
+# Create a abstract dag
+diamond = ADAG(config.get('all', 'workflow_name'))
 
 # Add input file to the DAX-level replica catalog
 a = File("f.a")
@@ -23,15 +23,16 @@ diamond.addFile(a)
 # Add executables to the DAX-level replica catalog
 # In this case the binary is pegasus-keg, which is shipped with Pegasus, so we use
 # the remote PEGASUS_HOME to build the path.
-e_preprocess = Executable(namespace="diamond", name="preprocess", version="4.0", os="linux", arch="x86", installed=False)
+print config.getboolean ('all', 'executable_installed')
+e_preprocess = Executable(namespace="diamond", name="preprocess", version="4.0", os="linux", arch="x86", installed=config.getboolean('all', 'executable_installed'))
 e_preprocess.addPFN(PFN(config.get('all', 'executable_url') + sys.argv[1] + "/bin/pegasus-keg", config.get('all', 'executable_site')))
 diamond.addExecutable(e_preprocess)
 	
-e_findrange = Executable(namespace="diamond", name="findrange", version="4.0", os="linux", arch="x86", installed=False)
+e_findrange = Executable(namespace="diamond", name="findrange", version="4.0", os="linux", arch="x86", installed=config.getboolean('all', 'executable_installed'))
 e_findrange.addPFN(PFN(config.get('all', 'executable_url') + sys.argv[1] + "/bin/pegasus-keg", config.get('all', 'executable_site')))
 diamond.addExecutable(e_findrange)
 	
-e_analyze = Executable(namespace="diamond", name="analyze", version="4.0", os="linux", arch="x86", installed=False)
+e_analyze = Executable(namespace="diamond", name="analyze", version="4.0", os="linux", arch="x86", installed=config.getboolean('all', 'executable_installed'))
 e_analyze.addPFN(PFN(config.get('all', 'executable_url') + sys.argv[1] + "/bin/pegasus-keg", config.get('all', 'executable_site')))
 diamond.addExecutable(e_analyze)
 

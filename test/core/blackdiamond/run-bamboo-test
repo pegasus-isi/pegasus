@@ -16,6 +16,14 @@ RUN_DIR=`pwd`/work/$RUN_ID
 properties ()
 {
 	eval $1=`grep "^[\s]*[^#]*$2\s*=" ${CONFIG}/test.config | cut -d"=" -f2 | sed -e 's/^\s*//g' -e 's/\s*$//g'`
+
+	local i=\$$1
+	eval local temp=$i
+
+	# If property not set or is empty, then check if default value is provided. If Yes set property to default value.
+	if [[ -z $temp && ! -z $3 ]]; then
+		eval $1=$3
+	fi
 }
 
 # Read the physical directory where the input file is located.
