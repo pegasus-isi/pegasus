@@ -7,3 +7,4 @@ pegasus.dir.storage.deep = false
 pegasus.condor.logs.symlink = false
 
 pegasus.gridstart = PegasusLite
+pegasus.execute.*.filesystem.local = True
