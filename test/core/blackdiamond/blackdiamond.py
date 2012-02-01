@@ -12,12 +12,12 @@ if len(sys.argv) != 3:
 # Create a abstract dag
 diamond = ADAG("diamond")
 
-config = ConfigParser.ConfigParser()
+config = ConfigParser.ConfigParser({'input_file': os.getcwd ()})
 config.read(sys.argv [2] + '/test.config')
 
 # Add input file to the DAX-level replica catalog
 a = File("f.a")
-a.addPFN(PFN(config.get('all', 'file_url') + os.getcwd() + "/f.a", config.get('all', 'file_site')))
+a.addPFN(PFN(config.get('all', 'file_url') + config.get('all', 'input_file') + "/f.a", config.get('all', 'file_site')))
 diamond.addFile(a)
 	
 # Add executables to the DAX-level replica catalog
