@@ -45,10 +45,10 @@ install: build
 	# /usr/lib
 	mkdir -p debian/pegasus/usr
 	cp -a dist/pegasus/lib debian/pegasus/usr/
-	strip debian/pegasus/usr/lib/pegasus/python/pysqlite2/_sqlite.so
+	strip debian/pegasus/usr/lib/pegasus/externals/python/pysqlite2/_sqlite.so
 	
 	# remove stuff we don't need
-	rm -rf debian/pegasus/usr/lib/pegasus/python/boto/tests
+	rm -rf debian/pegasus/usr/lib/pegasus/externals/python/boto/tests
 	
 
 # Build architecture-independent files here.
