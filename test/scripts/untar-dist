@@ -1,0 +1,36 @@
+#!/bin/sh
+
+VERSION=$1
+PEGASUS_BINARY=pegasus-binary-${VERSION}.tar.gz
+PEGASUS_TEST=pegasus-test-${VERSION}.tar.gz
+
+if [ ! -e $PEGASUS_BINARY ]; then
+   echo "Pegasus distribution $PEGASUS_BINARY missing or empty."
+   exit 1
+fi
+
+if [ ! -e $PEGASUS_TEST ]; then
+   echo "Pegasus test $PEGASUS_TEST missing or empty."
+   exit	2
+fi
+
+#UNTAR PEGASUS BINARY TARBALL
+
+echo "Untaring the Pegasus distribution $PEGASUS_BINARY"
+tar zxf $PEGASUS_BINARY
+status=$?
+
+if [ $status -ne 0 ]; then
+   echo "PEGASUS BINARY UNTAR FAILED"
+   exit $status
+fi
+
+# UNTAR PEGASUS TEST TARBALL
+echo "Untaring the Pegasus test $PEGASUS_TEST"
+tar zxf $PEGASUS_TEST
+status=$?
+if [ $status -ne 0 ]; then
+   echo "PEGASUS TEST UNTAR FAILED"
+   exit $status
+fi
+exit 0
