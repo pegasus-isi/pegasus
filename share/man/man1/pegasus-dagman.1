@@ -1,0 +1,44 @@
+.\"  Copyright 2010-2011 University Of Southern California
+.\"
+.\" Licensed under the Apache License, Version 2.0 (the "License");
+.\" you may not use this file except in compliance with the License.
+.\" You may obtain a copy of the License at
+.\"
+.\"  http://www.apache.org/licenses/LICENSE-2.0
+.\"
+.\"  Unless required by applicable law or agreed to in writing,
+.\"  software distributed under the License is distributed on an "AS IS" BASIS,
+.\"  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+.\"  See the License for the specific language governing permissions and
+.\" limitations under the License.
+.\"
+.\" 
+.\" $Id: pegasus-remove.1 4235 2011-07-28 00:17:54Z gmehta $
+.TH "pegasus-dagman" "1" "3.1.0" "Pegasus Workflow Planner"
+.SH "NAME"
+pegasus\-dagman \- Wrapper around condor dagman. Not to be run by user.
+
+.SH "DESCRIPTION"
+.LP 
+This is a python wrapper that invokes monitord and condor dagman both. This is started automatically by condor_submit_dag. Do not use directly.
+
+.SH "RETURN VALUE"
+If the dagman and monitord exit successfully, pegasus\-dagman exits with 0, else exits with non\-zero.
+
+.SH "ENVIRONMENT VARIABLES"
+.TP
+.B PATH
+The path variable is used to locate binary for condor\-dagman and pegasus\-monitord
+
+.SH "SEE ALSO"
+.BR pegasus\-run (1)
+.BR pegasus\-monitord (1)
+.BR pegasus\-submit\-dag (1)
+
+.SH "AUTHORS"
+.LP
+Gaurang Mehta  <gmehta at isi dot edu>
+.PP 
+PEGASUS
+.B http://pegasus.isi.edu
+
