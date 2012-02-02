@@ -420,6 +420,14 @@
     <copy preservelastmodified="true" todir="${dist.lib}/python">
       <fileset dir="lib/python" includes="**/*.py"/>
     </copy>
+    <mkdir dir="${dist.lib}/python-tools/Pegasus"/>
+    <copy preservelastmodified="true" todir="${dist.lib}/python-tools/Pegasus">
+      <fileset dir="lib/python/Pegasus" includes="**/*.py"/>
+    </copy>
+    <mkdir dir="${dist.lib}/python-tools/netlogger"/>
+    <copy preservelastmodified="true" todir="${dist.lib}/python-tools/netlogger">
+      <fileset dir="lib/python/netlogger" includes="**/*.py"/>
+    </copy>
     <chmod perm="ugo+rx" type="file">
       <fileset dir="${dist.lib}" includes="*.jar"/>
     </chmod>
