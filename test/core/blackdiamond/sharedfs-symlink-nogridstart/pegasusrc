@@ -8,4 +8,5 @@ pegasus.condor.logs.symlink = false
 
 pegasus.transfer.links = True
 
+pegasus.data.configuration = sharedfs
 pegasus.gridstart = None

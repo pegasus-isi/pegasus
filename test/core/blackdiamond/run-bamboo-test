@@ -15,7 +15,7 @@ RUN_DIR=`pwd`/work/$RUN_ID
 # Read a property from ${CONFIG}/test.config file
 properties ()
 {
-	eval $1=`grep "^[\s]*[^#]*$2\s*=" ${CONFIG}/test.config | cut -d"=" -f2 | sed -e 's/^\s*//g' -e 's/\s*$//g'`
+	eval $1=\"`grep "^[\s]*[^#]*$2\s*=" ${CONFIG}/test.config | cut -d"=" -f2 | sed -e 's/^\s*//g' -e 's/\s*$//g'`\"
 
 	local i=\$$1
 	eval local temp=$i
@@ -65,6 +65,7 @@ cat > sites.xml << EOF
                 </shared>
             </storage>
         </head-fs>
+	<profile namespace="pegasus" key="clusters.num">1</profile>
     </site>
     <site  handle="condorpool" arch="x86" os="LINUX">
         <head-fs>
@@ -78,14 +79,14 @@ cat > sites.xml << EOF
 	<head-fs>
             <scratch>
                 <shared>
-                    <file-server protocol="file" url="file://" mount-point="/nfs/ccg3/scratch"/>
-                    <internal-mount-point mount-point="/nfs/ccg3/scratch"/>
+                    <file-server protocol="file" url="file://" mount-point="/nfs/ccg3/scratch/testing/scratch"/>
+                    <internal-mount-point mount-point="/nfs/ccg3/scratch/testing/scratch"/>
                 </shared>
             </scratch>
             <storage>
                 <shared>
-                    <file-server protocol="file" url="file://" mount-point="/nfs/ccg3/scratch/bamboo/outputs"/>
-                    <internal-mount-point mount-point="/nfs/ccg3/scratch/bamboo/outputs"/>
+                    <file-server protocol="file" url="file://" mount-point="/nfs/ccg3/scratch/testing/storage/black-diamond-output"/>
+                    <internal-mount-point mount-point="/nfs/ccg3/scratch/testing/storage/black-diamond-output"/>
                 </shared>
             </storage>
         </head-fs>
@@ -125,5 +126,5 @@ pegasus-plan \
     --dir work/ \
     --nocleanup \
     --dax ${DAX} \
-    --submit ${planner_args} 
+    --submit ${planner_args}
 
