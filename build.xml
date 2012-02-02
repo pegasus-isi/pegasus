@@ -381,6 +381,22 @@
     </exec>
   </target>
 
+ <target name="dist-trunk" depends="dist" description="Creates a dist tarball with the trunk dir name">
+     <exec executable="sh" dir="dist">
+      <arg value="-c"/>
+      <arg value="tar --exclude=\.svn -zcf pegasus-binary-${pegasus.version}.tar.gz pegasus-${pegasus.version}"/>
+    </exec>
+</target>
+
+ <target name="dist-test" depends="dist" description="Creates a dist tarball with the trunk dir name">
+     <exec executable="sh">
+      <arg value="-c"/>
+      <arg value="tar --exclude=\.svn -zcf dist/pegasus-test-${pegasus.version}.tar.gz test"/>
+    </exec>
+</target>
+
+
+
   <target name="dist" depends="jar,vdl-jar,man-roff,ctools-all,externals"
           description="Sets up the dist directory">
     <!-- bin -->
