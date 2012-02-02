@@ -267,11 +267,11 @@
   <target name="externals" depends="build-setup,validate-make"
           description="INTERNAL: Compiles and installs external dependencies" 
           if="make.available">
-    <mkdir dir="${dist.lib}/python"/>
+    <mkdir dir="${dist.lib}/externals/python"/>
     <exec executable="${basedir}/src/tools/make.pl" dir="src/externals" failonerror="true">
       <env key="prefix" value="${dist.dir}"/>
       <env key="libdir" value="${dist.lib}"/>
-      <arg line="prefix=${dist.dir} libdir=${dist.lib} all"/>
+      <arg line="prefix=${dist.dir} libdir=${dist.lib}/externals all"/>
     </exec>
   </target>
 
@@ -458,7 +458,7 @@
       <fileset dir="lib/pegasus/python" includes="**/*.py"/>
     </copy>
     <chmod perm="0755" type="file">
-      <fileset dir="${dist.lib}/python/boto/tests" includes="*.py"/>
+      <fileset dir="${dist.lib}/externals/python/boto/tests" includes="*.py"/>
     </chmod>
     <chmod perm="0755" type="file">
       <fileset dir="${dist.lib}/python">

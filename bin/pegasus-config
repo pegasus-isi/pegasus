@@ -33,6 +33,7 @@ my $share_dir	= File::Spec->catdir( $base_dir, 'share', 'pegasus' );
 my $java_dir	= File::Spec->catdir( $share_dir, 'java' );
 my $perl_dir	= File::Spec->catdir( $base_dir, 'lib', 'pegasus', 'perl' );
 my $python_dir	= File::Spec->catdir( $base_dir, 'lib', 'pegasus', 'python' );
+my $python_externals_dir	= File::Spec->catdir( $base_dir, 'lib', 'pegasus', 'externals', 'python' );
 my $php_dir	    = File::Spec->catdir( $base_dir, 'lib', 'pegasus', 'php' );
 my $js_dir	    = File::Spec->catdir( $base_dir, 'lib', 'pegasus', 'javascript' );
 my $schema_dir	= File::Spec->catdir( $share_dir, 'schema' );
@@ -66,31 +67,34 @@ This is NOT an application to configure Pegasus, but an application
 to query the current Pegasus installation.
 
 Arguments:
- -h|--help        Print this help and exit.
- -V|--version     Print Pegasus version information and exit. 
+ -h|--help            Print this help and exit.
+ -V|--version         Print Pegasus version information and exit. 
 
- --perl-dump      Dumps all settings in perl format as separate variables.
- --perl-hash      Dumps all settings in perl format as single perl hash.
- --python-dump    Dumps all settings in python format.
- --sh-dump        Dumps all settings in shell format.
+ --perl-dump          Dumps all settings in perl format as separate variables.
+ --perl-hash          Dumps all settings in perl format as single perl hash.
+ --python-dump        Dumps all settings in python format.
+ --sh-dump            Dumps all settings in shell format.
 
- --bin            Print the directory containing Pegasus binaries.
- --conf           Print the directory containing configuration files.
- --java           Print the directory containing the jars.
- --perl           Print the directory to include into your PERL5LIB.
- --python         Print the directory to include into your PYTHONLIB.
- --schema         Print the directory containing schemas.
- --classpath      Builds a classpath containing the Pegasus jars.
- --noeoln         Do not produce a end-of-line after output. This is useful 
-                  when being called from non-shell backticks in scripts.
- --local-site [d] Create a site catalog entry for site "local". This is only
-                  an XML snippet without root element nor XML headers. The
-                  optional argument "d" points to the mount point to use.
-                  If not specified, defaults to the user\'s \$HOME directory.
- --full-local [d] Create a complete site catalog with only site "local". The
-                  an XML snippet without root element nor XML headers. The
-                  optional argument "d" points to the mount point to use.
-                  If not specified, defaults to the user\'s \$HOME directory.
+ --bin                Print the directory containing Pegasus binaries.
+ --conf               Print the directory containing configuration files.
+ --java               Print the directory containing the jars.
+ --perl               Print the directory to include into your PERL5LIB.
+ --python             Print the directory to include into your PYTHONLIB.
+ --python-externals   Print the directory to the external Python libraries.
+ --schema             Print the directory containing schemas.
+ --classpath          Builds a classpath containing the Pegasus jars.
+ --noeoln             Do not produce a end-of-line after output. This is useful
+                      when being called from non-shell backticks in scripts.
+ --local-site [d]     Create a site catalog entry for site "local". This is
+                      only an XML snippet without root element nor XML
+                      headers. The optional argument "d" points to the mount
+                      point to use. If not specified, defaults to the user\'s
+                      \$HOME directory.
+ --full-local [d]     Create a complete site catalog with only site "local".
+                      The an XML snippet without root element nor XML headers.
+                      The optional argument "d" points to the mount point to
+                      use. If not specified, defaults to the user\'s \$HOME
+                      directory.
 
 EOF
     exit 1;
@@ -209,6 +213,7 @@ EOF
         print "my \$pegasus_java_dir = \"$java_dir\";\n";
         print "my \$pegasus_perl_dir = \"$perl_dir\";\n";
         print "my \$pegasus_python_dir = \"$python_dir\";\n";
+        print "my \$pegasus_python_externals_dir = \"$python_externals_dir\";\n";
         print "my \$pegasus_php_dir = \"$php_dir\";\n";
         print "my \$pegasus_javascript_dir = \"$js_dir\";\n";
         print "my \$pegasus_share_dir = \"$share_dir\";\n";
@@ -222,6 +227,7 @@ EOF
         print "pegasus_java_dir = \"$java_dir\"\n";
         print "pegasus_perl_dir = \"$perl_dir\"\n";
         print "pegasus_python_dir = \"$python_dir\"\n";
+        print "pegasus_python_externals_dir = \"$python_externals_dir\"\n";
         print "pegasus_php_dir = \"$php_dir\"\n";
         print "pegasus_javascript_dir = \"$js_dir\"\n";
         print "pegasus_share_dir = \"$share_dir\"\n";
@@ -240,6 +246,8 @@ EOF
         print "export PEGASUS_PERL_DIR\n";
         print "PEGASUS_PYTHON_DIR=\"$python_dir\"\n";
         print "export PEGASUS_PYTHON_DIR\n";
+        print "PEGASUS_PYTHON_EXTERNALS_DIR=\"$python_externals_dir\"\n";
+        print "export PEGASUS_PYTHON_EXTERNALS_DIR\n";
         print "PEGASUS_SHARE_DIR=\"$share_dir\"\n";
         print "export PEGASUS_SHARE_DIR\n";
         print "PEGASUS_SCHEMA_DIR=\"$schema_dir\"\n";
@@ -275,6 +283,11 @@ EOF
     }
     , 'python' => sub {
         print $python_dir;
+        print "\n" if $eoln; 
+        exit 0; 
+    }
+    , 'python-externals' => sub {
+        print $python_externals_dir;
         print "\n" if $eoln; 
         exit 0; 
     }
