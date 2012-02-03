@@ -1151,7 +1151,7 @@ public class TransferEngine extends Engine {
             
             
             if ( symLinkSelectedLocation = 
-                    (mUseSymLinks && selLoc.getResourceHandle().equals( job.getSiteHandle() )) ) {
+                    (mUseSymLinks && selLoc.getResourceHandle().equals( job.getStagingSiteHandle() )) ) {
                 
                 //resolve any srm url's that are specified
                 selLoc = replaceSourceProtocolFromURL( selLoc );
