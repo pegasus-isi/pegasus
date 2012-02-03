@@ -679,7 +679,7 @@ public class Kickstart implements GridStart {
         String jobExecutable = ( !this.mUseFullPathToGridStart && job.userExecutablesStagedForJob() )?
                                 //the basename of the executable used for pegasus lite
                                 //and staging of executables
-                                job.getStagedExecutableBaseName( ):
+                                "." + File.separator  + job.getStagedExecutableBaseName( ):
                                 //use whatever is set in the executable field
                                 job.executable;
 
