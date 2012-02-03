@@ -102,6 +102,7 @@ cat > sites.xml << EOF
             <storage />
         </head-fs>
         <replica-catalog type="LRC" url="rlsn://dummyValue.url.edu" />
+        <profile namespace="env" key="PEGASUS_HOME" >/usr</profile>
     </site>
 </sitecatalog>
 EOF
