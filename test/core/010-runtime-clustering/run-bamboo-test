@@ -10,9 +10,40 @@ fi
 
 TOPDIR=`pwd`
 
+CONFIG=$1
+DAX=horizontal-cluster.dax
+
+# Read a property from ${CONFIG}/test.config file
+properties ()
+{
+        eval $1=\"`grep "^[\s]*[^#]*$2\s*=" ${CONFIG}/test.config | cut -d"=" -f2 | sed -e 's/^\s*//g' -e 's/\s*$//g'`\"
+
+        local i=\$$1
+        eval local temp=$i
+
+        # If property not set or is empty, then check if default value is provided. If Yes set property to default value.
+        if [[ -z $temp && ! -z $3 ]]; then
+                eval $1=$3
+        fi
+}
+
+# Read the physical directory where the input file is located.
+properties input_file input_file
+
+if [ -z ${input_file} ]; then
+        input_file='./f.a'
+else
+        input_file=${input_file}/f.a
+fi
+
+# generate the input file
+echo "This is sample input to KEG" > ${input_file}
+
+mkdir -p staging-site
+
 # build the dax generator
 export PYTHONPATH=`pegasus-config --python`
-$testdir/cluster.py /usr > horizontal-cluster.dax
+./cluster.py /usr $CONFIG > ${DAX}
 
 # create the site catalog
 cat > sites.xml << EOF
@@ -35,36 +66,65 @@ cat > sites.xml << EOF
         </head-fs>
     </site>
     <site  handle="condorpool" arch="x86" os="LINUX">
-	<head-fs>
+        <head-fs>
+            <scratch />
+            <storage />
+        </head-fs>
+        <profile namespace="pegasus" key="style">condor</profile>
+        <profile namespace="condor" key="universe">vanilla</profile>
+        <profile namespace="env" key="PEGASUS_HOME" >/usr</profile>
+    </site>
+    <site  handle="sharedfs" arch="x86" os="LINUX">
+        <head-fs>
             <scratch>
                 <shared>
-                    <file-server protocol="file" url="file://" mount-point="/nfs/ccg3/scratch"/>
-                    <internal-mount-point mount-point="/nfs/ccg3/scratch"/>
+                    <file-server protocol="file" url="file://" mount-point="/nfs/ccg3/scratch/testing/scratch"/>
+                    <internal-mount-point mount-point="/nfs/ccg3/scratch/testing/scratch"/>
                 </shared>
             </scratch>
             <storage>
                 <shared>
-                    <file-server protocol="file" url="file://" mount-point="/nfs/ccg3/scratch/bamboo/outputs"/>
-                    <internal-mount-point mount-point="/nfs/ccg3/scratch/bamboo/outputs"/>
+                    <file-server protocol="file" url="file://" mount-point="/nfs/ccg3/scratch/testing/storage/black-diamond-output"/>
+                    <internal-mount-point mount-point="/nfs/ccg3/scratch/testing/storage/black-diamond-output"/>
                 </shared>
             </storage>
         </head-fs>
+        <replica-catalog type="LRC" url="rlsn://dummyValue.url.edu" />
         <profile namespace="condor" key="should_transfer_files">Yes</profile>
         <profile namespace="condor" key="when_to_transfer_output">ON_EXIT</profile>
+        <profile namespace="env" key="PEGASUS_HOME" >/usr</profile>
         <profile namespace="pegasus" key="style">condor</profile>
-        <profile namespace="condor" key="universe">Vanilla</profile>
-        <profile namespace="env" key="PEGASUS_HOME">/usr</profile>
+        <profile namespace="condor" key="universe">vanilla</profile>
+    </site>
+    <site handle="cartman-data">
+        <head-fs>
+            <scratch>
+                <shared>
+                    <file-server protocol="gsiftp" url="gsiftp://cartman.isi.edu" mount-point="${TOPDIR}/staging-site/scratch"/>
+                    <internal-mount-point mount-point="${TOPDIR}/staging-site/scratch"/>
+                </shared>
+            </scratch>
+            <storage />
+        </head-fs>
+        <replica-catalog type="LRC" url="rlsn://dummyValue.url.edu" />
     </site>
 </sitecatalog>
 EOF
 
 # plan and submit the  workflow
+properties execution_site execution_site local
+properties staging_site staging_site local
+properties output_site output_site local
+properties planner_args planner_args
+
 pegasus-plan \
-    --conf $testdir/pegasusrc \
-    --sites condorpool \
+    --conf ${CONFIG}/pegasusrc \
+    --sites ${execution_site} \
+    --staging-site $staging_site \
+    --output $output_site \
     --dir work \
     --nocleanup \
-    --dax horizontal-cluster.dax \
+    --dax ${DAX} \
     --cluster horizontal \
-    --submit | tee plan.out
+    --submit ${planner_args}
 
