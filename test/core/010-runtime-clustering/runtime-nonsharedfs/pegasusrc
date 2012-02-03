@@ -7,4 +7,5 @@ pegasus.condor.logs.symlink = false
 
 pegasus.data.configuration = nonsharedfs
 pegasus.clusterer.preference = Runtime
+pegasus.catalog.transformation.mapper = Staged
 pegasus.transfer.links = true
