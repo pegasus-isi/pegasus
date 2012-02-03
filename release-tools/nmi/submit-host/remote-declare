@@ -28,14 +28,14 @@ print LIST "build-worker\n";
 print LIST "clean-sources\n";
 
 # rpms/ debs
-if ( ! $lite ) {
-    if ($ENV{NMI_PLATFORM} =~ /deb/ || $ENV{NMI_PLATFORM} =~ /ubuntu/) {
-        print LIST "build-deb\n";
-    }
-    if ($ENV{NMI_PLATFORM} =~ /rhas/ || $ENV{NMI_PLATFORM} =~ /rhap/) {
-        print LIST "build-rpm\n";
-    }
-}
+#if ( ! $lite ) {
+#    if ($ENV{NMI_PLATFORM} =~ /deb/ || $ENV{NMI_PLATFORM} =~ /ubuntu/) {
+#        print LIST "build-deb\n";
+#    }
+#    if ($ENV{NMI_PLATFORM} =~ /rhas/ || $ENV{NMI_PLATFORM} =~ /rhap/) {
+#        print LIST "build-rpm\n";
+#    }
+#}
 
 # tests
 if ( ! $lite ) {
