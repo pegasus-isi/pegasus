@@ -94,6 +94,11 @@ public class CondorG extends Abstract {
             //default type is gt2
             SiteCatalogEntry s = mSiteStore.lookup( job.getSiteHandle() );
             GridGateway g = s.selectGridGateway( job.getGridGatewayJobType() );
+
+            if( g == null ){
+                throw new CondorStyleException( "No valid grid gateway found for site " + job.getSiteHandle() + " for job " + job.getID() );
+            }
+
             gridResource.append( g.getType() ).append( " " ).append( g.getContact() );
 
             //System.out.println( "Grid Resource for job " + job.getName() + " is " + gridResource.toString() );
