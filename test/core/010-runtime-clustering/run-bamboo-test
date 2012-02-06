@@ -40,6 +40,9 @@ mkdir -p staging-site
 export PYTHONPATH=`pegasus-config --python`
 ./cluster.py /usr $CONFIG > ${DAX}
 
+properties local_site_protocol local_site_protocol file://
+properties local_site_url local_site_url 
+
 # create the site catalog
 cat > sites.xml << EOF
 <?xml version="1.0" encoding="UTF-8"?>
@@ -48,13 +51,13 @@ cat > sites.xml << EOF
         <head-fs>
             <scratch>
                 <shared>
-                    <file-server protocol="file" url="file://" mount-point="$TOPDIR/work"/>
+                    <file-server protocol="${local_site_protocol}" url="${local_site_url}" mount-point="$TOPDIR/work"/>
                     <internal-mount-point mount-point="$TOPDIR/work"/>
                 </shared>
             </scratch>
             <storage>
                 <shared>
-                    <file-server protocol="file" url="file://" mount-point="$TOPDIR/outputs"/>
+                    <file-server protocol="${local_site_protocol}" url="${local_site_url}" mount-point="$TOPDIR/outputs"/>
                     <internal-mount-point mount-point="$TOPDIR/outputs"/>
                 </shared>
             </storage>
