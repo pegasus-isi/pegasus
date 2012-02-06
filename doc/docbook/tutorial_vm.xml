@@ -392,7 +392,8 @@ statfile_20080505_143233_14944.tbl
         /scratch/tutorial/inputdata/diamond/f.a . Let us insert a single entry
         into the replica catalog.</para>
 
-        <programlisting><command>$  cat 
+        <programlisting><command>$  pegasus-rc-client  insert f.a \
+          gsiftp://pegasus-vm/scratch/tutorial/inputdata/diamond/f.a pool=local 
 </command></programlisting>
 
         <para>Let us know verify if f.a has been registered successfully by
