@@ -28,14 +28,15 @@ my $bin_dir = Cwd::abs_path(dirname($0));
 
 # basically PEGASUS_HOME - but let's not expose that anymore
 my $base_dir	= dirname($bin_dir);
+my $lib         = "lib"; # lib64 for 64bit RPMS
 my $conf_dir	= File::Spec->catdir( $base_dir, 'etc' );
 my $share_dir	= File::Spec->catdir( $base_dir, 'share', 'pegasus' );
 my $java_dir	= File::Spec->catdir( $share_dir, 'java' );
-my $perl_dir	= File::Spec->catdir( $base_dir, 'lib', 'pegasus', 'perl' );
-my $python_dir	= File::Spec->catdir( $base_dir, 'lib', 'pegasus', 'python' );
+my $perl_dir	= File::Spec->catdir( $base_dir, $lib, 'pegasus', 'perl' );
+my $python_dir	= File::Spec->catdir( $base_dir, $lib, 'pegasus', 'python' );
 my $python_externals_dir	= File::Spec->catdir( $base_dir, 'lib', 'pegasus', 'externals', 'python' );
-my $php_dir	    = File::Spec->catdir( $base_dir, 'lib', 'pegasus', 'php' );
-my $js_dir	    = File::Spec->catdir( $base_dir, 'lib', 'pegasus', 'javascript' );
+my $php_dir	    = File::Spec->catdir( $base_dir, $lib, 'pegasus', 'php' );
+my $js_dir	    = File::Spec->catdir( $base_dir, $lib, 'pegasus', 'javascript' );
 my $schema_dir	= File::Spec->catdir( $share_dir, 'schema' );
 my $extra_classpath = '';
 
