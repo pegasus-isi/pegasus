@@ -59,9 +59,9 @@ transformation_stats_col_name_csv = ["Workflow_Id", "Dax_Label", "Transformation
 transformation_stats_col_size = [60, 12, 12, 12, 20, 20, 20, 12]
 
 # Jobs file column names
-job_stats_col_name_text = ['#Job', 'Try', 'Site', 'Kickstart', 'Post', 'CondorQTime', 'Resource', 'Runtime', 'Seqexec', 'Seqexec-Delay', 'Exitcode', 'Hostname']
-job_stats_col_name_csv = ['Workflow_Id', 'Dax_Label', 'Job', 'Try', 'Site', 'Kickstart', 'Post', 'CondorQTime', 'Resource', 'Runtime', 'Seqexec', 'Seqexec-Delay', 'Exitcode', 'Hostname']
-job_stats_col_size = [60, 4, 15, 12, 12, 12, 12, 12, 12, 15, 10, 30]
+job_stats_col_name_text = ['#Job', 'Try', 'Site', 'Kickstart', 'Mult', 'Kickstart-Mult', 'CPU-Time', 'Post', 'CondorQTime', 'Resource', 'Runtime', 'Seqexec', 'Seqexec-Delay', 'Exitcode', 'Hostname']
+job_stats_col_name_csv = ['Workflow_Id', 'Dax_Label', 'Job', 'Try', 'Site', 'Kickstart', 'Mult', 'Kickstart-Mult', 'CPU-Time', 'Post', 'CondorQTime', 'Resource', 'Runtime', 'Seqexec', 'Seqexec-Delay', 'Exitcode', 'Hostname']
+job_stats_col_size = [60, 4, 15, 12, 6, 16, 12, 12, 12, 12, 12, 12, 15, 10, 30]
 
 # Summary file column names
 workflow_summary_col_name_csv = ["Type", "Succeeded", "Failed", "Incomplete", "Total", "Retries", "Total_Run)"]
@@ -89,6 +89,9 @@ class JobStatistics:
 		self.name = None
 		self.site = None
 		self.kickstart = None
+                self.multiplier_factor = None
+                self.kickstart_mult = None
+                self.remote_cpu_time = None
 		self.post = None
 		self.condor_delay = None
 		self.resource = None
@@ -115,6 +118,12 @@ class JobStatistics:
 		else:
 			formatted_job_stats.append(self.site)
 		formatted_job_stats.append(round_to_str(self.kickstart))
+                formatted_job_stats.append(str(self.multiplier_factor))
+                formatted_job_stats.append(round_to_str(self.kickstart_mult))
+                if self.remote_cpu_time is None:
+			formatted_job_stats.append('-')
+                else:
+                        formatted_job_stats.append(round_to_str(self.remote_cpu_time))
 		formatted_job_stats.append(round_to_str(self.post))
 		formatted_job_stats.append(round_to_str(self.condor_delay))
 		formatted_job_stats.append(round_to_str(self.resource))
@@ -271,18 +280,21 @@ def formatted_job_stats_legends():
 	@return :  job table legend
 	"""
 	formatted_job_stats_legend = "# legends\n"
-	formatted_job_stats_legend += "# Job           - name of the job\n"
-	formatted_job_stats_legend += "# Try           - number representing the job instance run count\n"
-	formatted_job_stats_legend += "# Site          - site where the job ran\n"
-	formatted_job_stats_legend += "# Kickstart     - actual duration of the job instance in seconds on the remote compute node\n"
-	formatted_job_stats_legend += "# Post          - postscript time as reported by DAGMan\n"
-	formatted_job_stats_legend += "# CondorQTime   - time between submission by DAGMan and the remote Grid submission. It is an estimate of the time spent in the condor q on the submit node\n"
-	formatted_job_stats_legend += "# Resource      - time between the remote Grid submission and start of remote execution. It is an estimate of the time job spent in the remote queue\n"
-	formatted_job_stats_legend += "# Runtime       - time spent on the resource as seen by Condor DAGMan. Is always >=kickstart\n"
-	formatted_job_stats_legend += "# Seqexec       - time taken for the completion of a clustered job\n"
-	formatted_job_stats_legend += "# Seqexec-Delay - time difference between the time for the completion of a clustered job and sum of all the individual tasks kickstart time\n"
-        formatted_job_stats_legend += "# Exitcode      - exitcode for this job\n"
-        formatted_job_stats_legend += "# Hostname      - name of the host where the job ran, as reported by kickstart\n"
+	formatted_job_stats_legend += "# Job            - name of the job\n"
+	formatted_job_stats_legend += "# Try            - number representing the job instance run count\n"
+	formatted_job_stats_legend += "# Site           - site where the job ran\n"
+	formatted_job_stats_legend += "# Kickstart      - actual duration of the job instance in seconds on the remote compute node\n"
+        formatted_job_stats_legend += "# Mult           - multiplier factor specified by the user\n"
+        formatted_job_stats_legend += "# Kickstart-Mult - Kickstart time multiplied by the multiplier factor\n"
+        formatted_job_stats_legend += "# CPU-Time       - remote cpu time computed as the stime + utime\n"
+	formatted_job_stats_legend += "# Post           - postscript time as reported by DAGMan\n"
+	formatted_job_stats_legend += "# CondorQTime    - time between submission by DAGMan and the remote Grid submission. It is an estimate of the time spent in the condor q on the submit node\n"
+	formatted_job_stats_legend += "# Resource       - time between the remote Grid submission and start of remote execution. It is an estimate of the time job spent in the remote queue\n"
+	formatted_job_stats_legend += "# Runtime        - time spent on the resource as seen by Condor DAGMan. Is always >=kickstart\n"
+	formatted_job_stats_legend += "# Seqexec        - time taken for the completion of a clustered job\n"
+	formatted_job_stats_legend += "# Seqexec-Delay  - time difference between the time for the completion of a clustered job and sum of all the individual tasks kickstart time\n"
+        formatted_job_stats_legend += "# Exitcode       - exitcode for this job\n"
+        formatted_job_stats_legend += "# Hostname       - name of the host where the job ran, as reported by kickstart\n"
 	return formatted_job_stats_legend
 
 def formatted_transformation_stats_legends():
@@ -605,7 +617,7 @@ def print_workflow_summary(workflow_stats, output_format, wf_summary=True, time_
                 total_tasks = workflow_stats.get_total_tasks_status()
                 total_succeeded_tasks = workflow_stats.get_total_succeeded_tasks_status()
                 total_failed_tasks = workflow_stats.get_total_failed_tasks_status()
-                total_unsubmitted_tasks = total_tasks -(total_succeeded_tasks + total_failed_tasks)
+                total_unsubmitted_tasks = total_tasks - (total_succeeded_tasks + total_failed_tasks)
                 total_task_retries = workflow_stats.get_total_tasks_retries()
                 total_invocations = total_succeeded_tasks + total_failed_tasks + total_task_retries
 
@@ -886,6 +898,9 @@ def print_individual_wf_job_stats(workflow_stats, workflow_id, dax_label, output
 		job_stats.name = job.job_name
 		job_stats.site = job.site
 		job_stats.kickstart = job.kickstart
+                job_stats.multiplier_factor = job.multiplier_factor
+                job_stats.kickstart_mult = job.kickstart_multi
+                job_stats.remote_cpu_time = job.remote_cpu_time
 		job_stats.post = job.post_time
 		job_stats.runtime = job.runtime
 		job_stats.condor_delay = job.condor_q_time

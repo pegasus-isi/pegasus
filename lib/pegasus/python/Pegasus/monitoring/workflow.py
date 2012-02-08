@@ -1324,7 +1324,6 @@ class Workflow:
             except:
                 # Duration cannot be determined, possibly a missing PRE_SCRIPT_START event
                 kwargs["dur"] = 0
-                kwargs["remote_cpu_time"] = 0
             kwargs["exitcode"] = str(my_job._pre_script_exitcode)
             if my_job._exec_job_id in self._job_info:
                 if self._job_info[my_job._exec_job_id][1] is not None:
@@ -1351,7 +1350,6 @@ class Workflow:
             except:
                 # Duration cannot be determined, possibly a missing POST_SCRIPT_START event
                 kwargs["dur"] = 0
-                kwargs["remote_cpu_time"] = 0
             kwargs["exitcode"] = str(my_job._post_script_exitcode)
             if my_job._exec_job_id in self._job_info:
                 if self._job_info[my_job._exec_job_id][3] is not None:
@@ -1422,9 +1420,7 @@ class Workflow:
                     kwargs["remote_cpu_time"] = (float(invocation_record["utime"]) +
                                                  float(invocation_record["stime"]))
                 except ValueError:
-                    kwargs["remote_cpu_time"] = kwargs["dur"]
-            else:
-                kwargs["remote_cpu_time"] = kwargs["dur"]
+                    pass
             if my_start is not None and "duration" in invocation_record:
                 # Calculate timestamp for when this task finished
                 try:

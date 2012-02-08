@@ -113,6 +113,7 @@ it will display as a tuple of results per row.
 Methods::
  get_sub_workflow_ids
  get_descendant_workflow_ids
+ get_schema_version
  get_total_jobs_status
  get_total_succeeded_jobs_status
  get_total_failed_jobs_status
@@ -149,7 +150,7 @@ Methods listed in order of query list on wiki.
 
 https://confluence.pegasus.isi.edu/display/pegasus/Pegasus+Statistics+Python+Version+Modified
 """
-__rcsid__ = "$Id: stampede_statistics.py 29762 2012-01-30 23:01:55Z mgoode $"
+__rcsid__ = "$Id: stampede_statistics.py 30043 2012-02-08 15:57:34Z mgoode $"
 __author__ = "Monte Goode"
 
 from netlogger.analysis.modules._base import SQLAlchemyInit
@@ -171,8 +172,8 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
             raise RuntimeError
             
         # Check the schema version before proceeding.
-        s_check = SchemaCheck(self.session)
-        if not s_check.check_schema():
+        self.s_check = SchemaCheck(self.session)
+        if not self.s_check.check_schema():
             raise SchemaVersionError
         
         self._expand = expand_workflow
@@ -288,6 +289,9 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         q = q.filter(Workflow.root_wf_id == self._root_wf_id)
         q = q.filter(Workflow.wf_id != self._root_wf_id)
         return q.all()
+        
+    def get_schema_version(self):
+        return self.s_check.check_version()
             
     #
     # Status of initially planned wf components.
@@ -366,6 +370,8 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
             sq_1 = sq_1.filter(Workflow.wf_id == self._wfs[0])
         sq_1 = sq_1.filter(Workflow.wf_id == Job.wf_id)
         sq_1 = sq_1.filter(Job.job_id == JobInstanceSub.job_id)
+        if self._get_job_filter() is not None:
+            sq_1 = sq_1.filter(self._get_job_filter())
         sq_1 = sq_1.filter(JobInstanceSub.exitcode == 0).filter(JobInstanceSub.exitcode != None)
         sq_1 = sq_1.group_by(JobInstanceSub.job_id).subquery()
         
@@ -389,6 +395,8 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
             sq_1 = sq_1.filter(Workflow.wf_id == self._wfs[0])
         sq_1 = sq_1.filter(Workflow.wf_id == Job.wf_id)
         sq_1 = sq_1.filter(Job.job_id == JobInstanceSub.job_id)
+        if self._get_job_filter() is not None:
+            sq_1 = sq_1.filter(self._get_job_filter())
         sq_1 = sq_1.filter(JobInstanceSub.exitcode != 0).filter(JobInstanceSub.exitcode != None)
         sq_1 = sq_1.group_by(JobInstanceSub.job_id).subquery()
         
@@ -551,25 +559,38 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
 
     def get_workflow_cum_job_wall_time(self):
         """
-        select sum(remote_duration) from invocation as invoc 
-           where  invoc.task_submit_seq >=0 and invoc.wf_id in(
-              1,2,3
-           )
+        select sum(remote_duration * multiplier_factor) FROM
+        invocation as invoc, job_instance as ji WHERE
+        invoc.task_submit_seq >= 0 and
+        invoc.job_instance_id = ji.job_instance_id and
+        invoc.wf_id in (1,2,3) and
+        invoc.transformation <> 'condor::dagman'
+        
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Summary#WorkflowSummary-Workflowcumulativejobwalltime
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Statistics+file#WorkflowStatisticsfile-Workflowcumulativejobwalltime
         """
-        q = self.session.query(func.sum(Invocation.remote_duration))
+        q = self.session.query(cast(func.sum(Invocation.remote_duration * JobInstance.multiplier_factor), Float))
         q = q.filter(Invocation.task_submit_seq >= 0)
+        q = q.filter(Invocation.job_instance_id == JobInstance.job_instance_id)
         q = q.filter(Invocation.wf_id.in_(self._wfs))
         q = q.filter(Invocation.transformation != 'condor::dagman')
         return q.first()[0]
 
     def get_submit_side_job_wall_time(self):
         """
+        select sum(local_duration * multiplier_factor) FROM
+        job_instance as jb_inst, job as jb WHERE
+        jb_inst.job_id  = jb.job_id and
+        jb.wf_id in (1,2,3) and
+        ((not (jb.type_desc ='dax' or jb.type_desc ='dag'))
+          or
+         ((jb.type_desc ='dax' or jb.type_desc ='dag') and jb_inst.subwf_id is NULL)
+        )
+        
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Summary#WorkflowSummary-Cumulativejobwalltimeasseenfromsubmitside
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Statistics+file#WorkflowStatisticsfile-Cumulativejobwalltimeasseenfromsubmitside
         """
-        q = self.session.query(func.sum(JobInstance.local_duration).label('wall_time'))
+        q = self.session.query(cast(func.sum(JobInstance.local_duration * JobInstance.multiplier_factor), Float).label('wall_time'))
         q = q.filter(JobInstance.job_id == Job.job_id)
         q = q.filter(Job.wf_id.in_(self._wfs))
         if self._expand:
@@ -668,6 +689,18 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         sq_9 = sq_9.filter(Host.host_id == JobInstanceSub.host_id)
         sq_9 = sq_9.subquery()
         
+        sq_10 = self.session.query(func.sum(Invocation.remote_duration * JobInstance.multiplier_factor))
+        sq_10 = sq_10.filter(Invocation.job_instance_id == JobInstance.job_instance_id).correlate(JobInstance)
+        sq_10 = sq_10.filter(Invocation.wf_id == Job.wf_id).correlate(Job)
+        sq_10 = sq_10.filter(Invocation.task_submit_seq >= 0)
+        sq_10 = sq_10.group_by().subquery()
+        
+        sq_11 = self.session.query(func.sum(Invocation.remote_cpu_time))
+        sq_11 = sq_11.filter(Invocation.job_instance_id == JobInstance.job_instance_id).correlate(JobInstance)
+        sq_11 = sq_11.filter(Invocation.wf_id == Job.wf_id).correlate(Job)
+        sq_11 = sq_11.filter(Invocation.task_submit_seq >= 0)
+        sq_11 = sq_11.group_by().subquery()
+        
         
         q = self.session.query(Job.job_id, JobInstance.job_instance_id, JobInstance.job_submit_seq,
             Job.exec_job_id.label('job_name'), JobInstance.site,
@@ -678,9 +711,13 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
             cast(sq_6.as_scalar() - sq_7.as_scalar(), Float).label('post_time'),
             cast(JobInstance.cluster_duration, Float).label('seqexec'),
             sq_8.as_scalar().label('exit_code'),
-            sq_9.as_scalar().label('host_name'))
+            sq_9.as_scalar().label('host_name'),
+            JobInstance.multiplier_factor,
+            cast(sq_10.as_scalar(), Float).label('kickstart_multi'),
+            sq_11.as_scalar().label('remote_cpu_time'))
         q = q.filter(JobInstance.job_id == Job.job_id)
         q = q.filter(Job.wf_id.in_(self._wfs))
+        q = q.order_by(JobInstance.job_submit_seq)
         
         return q.all()
         
@@ -926,8 +963,9 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         """
         if self._expand:
             return []
+        
             
-        sq_1 = self.session.query(func.sum(Invocation.remote_duration))
+        sq_1 = self.session.query(func.sum(Invocation.remote_duration * JobInstance.multiplier_factor))
         sq_1 = sq_1.filter(Invocation.job_instance_id == JobInstance.job_instance_id).correlate(JobInstance)
         sq_1 = sq_1.filter(Invocation.wf_id == Job.wf_id).correlate(Job)
         sq_1 = sq_1.filter(Invocation.task_submit_seq >= 0)
@@ -1055,19 +1093,27 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         
     def get_transformation_statistics(self):
         """
-        select transformation, count(*), 
-        min(remote_duration) , max(remote_duration) , 
-        avg(remote_duration)  , sum(remote_duration) 
-        from invocation as invoc where invoc.wf_id = 3 group by transformation
+        SELECT transformation,
+               count(invocation_id) as count,
+               min(remote_duration * multiplier_factor) as min,
+               count(CASE WHEN (invoc.exitcode = 0 and invoc.exitcode is NOT NULL) THEN invoc.exitcode END) AS success,
+               count(CASE WHEN (invoc.exitcode != 0 and invoc.exitcode is NOT NULL) THEN invoc.exitcode END) AS failure,
+               max(remote_duration * multiplier_factor) as max,
+               avg(remote_duration * multiplier_factor) as avg,
+               sum(remote_duration * multiplier_factor) as sum FROM
+        invocation as invoc, job_instance as ji WHERE
+        invoc.job_instance_id = ji.job_instance_id and
+        invoc.wf_id IN (1,2,3) GROUP BY transformation
         """
         q = self.session.query(Invocation.transformation, 
                 func.count(Invocation.invocation_id).label('count'),
-                func.min(Invocation.remote_duration).label('min'),
+                cast(func.min(Invocation.remote_duration * JobInstance.multiplier_factor), Float).label('min'),
                 func.count(case([(Invocation.exitcode == 0, Invocation.exitcode)])).label('success'),
                 func.count(case([(Invocation.exitcode != 0, Invocation.exitcode)])).label('failure'),
-                func.max(Invocation.remote_duration).label('max'),
-                func.avg(Invocation.remote_duration).label('avg'), 
-                func.sum(Invocation.remote_duration).label('sum'))
+                cast(func.max(Invocation.remote_duration * JobInstance.multiplier_factor), Float).label('max'),
+                cast(func.avg(Invocation.remote_duration * JobInstance.multiplier_factor), Float).label('avg'), 
+                cast(func.sum(Invocation.remote_duration * JobInstance.multiplier_factor), Float).label('sum'))
+        q = q.filter(Invocation.job_instance_id == JobInstance.job_instance_id)
         q = q.filter(Invocation.wf_id.in_(self._wfs))
         q = q.group_by(Invocation.transformation)
         

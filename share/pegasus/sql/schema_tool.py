@@ -20,13 +20,17 @@ import subprocess
 
 # use pegasus-config to get basic pegasus settings
 bin_dir = os.path.join(os.path.normpath(os.path.join(os.path.dirname(sys.argv[0]))), "../../../bin")
-pegasus_config = os.path.join(bin_dir, "pegasus-config") + " --python-dump"
-config = subprocess.Popen(pegasus_config, stdout=subprocess.PIPE, shell=True).communicate()[0]
-exec config
+pegasus_config = os.path.join(bin_dir, "pegasus-config") + " --noeoln --python"
+lib_dir = subprocess.Popen(pegasus_config, stdout=subprocess.PIPE, shell=True).communicate()[0]
+pegasus_config = os.path.join(bin_dir, "pegasus-config") + " --noeoln --python-externals"
+lib_ext_dir = subprocess.Popen(pegasus_config, stdout=subprocess.PIPE, shell=True).communicate()[0]
+
+# Insert this directory in our search path
+os.sys.path.insert(0, lib_ext_dir)
+os.sys.path.insert(0, lib_dir)
 
 from netlogger.analysis.schema.schema_check import ConnHandle, SchemaCheck
 from netlogger.nllog import OptionParser, get_logger
-
 
 def main():
     usage = "%prog {-c | -u} connString='required' mysql_engine='optional'"
