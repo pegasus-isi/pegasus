@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
 "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
-<chapter id="running_workflows">
+<chapter id="execution_environments">
   <title>Execution Environments</title>
 
   <para>Pegasus supports a number of execution environments. An execution
@@ -381,7 +381,7 @@ requirements = ((GLIDEIN_Entry_Name == "isi_iz") || (TARGET.Pegasus_Site == "isi
     Pegasus 3.1.</para>
   </section>
 
-  <section>
+  <section id="amazon_aws">
     <title>Amazon AWS Cloud</title>
 
     <section>

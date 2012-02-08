@@ -128,11 +128,6 @@
           <xsl:if test="$row1 or $row2">
             <table width="100%" summary="Navigation header">
               <xsl:if test="$row1">
-                <tr>
-                  <th colspan="3" align="center">
-                    <xsl:apply-templates select="." mode="object.title.markup"/>
-                  </th>
-                </tr>
               </xsl:if>
     
               <xsl:if test="$row2">

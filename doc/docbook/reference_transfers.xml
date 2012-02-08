@@ -561,7 +561,7 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
     <para>This mode is especially useful for running in the cloud environments
     where you don't want to setup a shared filesystem between the worker
     nodes. Running in that mode is explained in detail <link
-    linkend="running_on_cloud">here.</link></para>
+    linkend="amazon_aws">here.</link></para>
 
     <para>To turn on second level staging for the workflows users should set
     the following properties</para>
