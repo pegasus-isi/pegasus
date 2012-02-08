@@ -244,13 +244,14 @@ $verbose = 1 if lc($props->property('dagman.verbose')) =~ /(true|on|1)/ || $verb
 
 # construct commandline
 my @arg = ( $c_s_d );
-push( @arg, '-dagman', $dagman ) if $dagman;
+#push( @arg, '-dagman', $dagman ) if $dagman;
 push( @arg, '-MaxPre', $maxpre ) if $maxpre > 0;
 push( @arg, '-MaxPost', $maxpost ) if $maxpost > 0;
 push( @arg, '-maxjobs', $maxjobs ) if $maxjobs > 0;
 push( @arg, '-maxidle', $maxidle ) if $maxidle > 0;
 push( @arg, '-notification', $notify );
 push( @arg, '-verbose' ) if $verbose;
+push( @arg, '-append', 'executable='.$dagman ) if $dagman;
 push( @arg, '-append', '+pegasus_wf_uuid="'.$config{'wf_uuid'}.'"' );
 push( @arg, '-append', '+pegasus_root_wf_uuid="'.$config{'root_wf_uuid'}.'"' );
 push( @arg, '-append', '+pegasus_wf_name="'.$config{'pegasus_wf_name'}.'"' );
