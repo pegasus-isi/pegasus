@@ -51,6 +51,9 @@ class URL:
     proto      = ""
     host       = ""
     path       = ""
+    # Only used with Policy Service
+    id         = ""
+    properties = {}
 
     def set_url(self, url):
         self.proto, self.host, self.path = self.parse_url(url)
@@ -96,6 +99,12 @@ class URL:
         dn = os.path.dirname(self.path)
         return "%s://%s%s" % (self.proto, self.host, dn)
 
+    def set_id(self, id):
+        self.id = id
+        return self.id
+    
+    def set_properties(self, properties):
+        self.properties = properties
 
 class Alarm(Exception):
     pass
@@ -486,6 +495,114 @@ def myexit(rc):
     except SystemExit:
         sys.exit(rc)
 
+def post_cleanup_requests(inputs):
+    """
+    Format a request to the policy web service with the input URL objects.
+    @param inputs: List of URL objects to process
+    @type inputs: list
+    @return: List of URL objects as modified by the web service.
+    @rtype: list
+    """
+    if not using_policy_service or len(inputs) == 0:
+        return None
+    logger.debug("post_cleanup_requests entered; input list has %d URLs", len(inputs))
+
+    cleanups = []
+    for t in inputs:
+        logger.debug("Processing input URL object: url=%s" %(t.url()))
+        cleanup = {'uri' : t.url(), 'properties' : {} }
+        cleanups.append(cleanup)
+
+    policy_requests = json.dumps(cleanups)
+    policy_headers = {'Content-type' : 'application/json', 'Encoding' : 'latin-1'}
+    try: # TODO Change to variables instead of hardcoding
+        ws = HTTPConnection(policy_host, policy_port)
+        logger.debug("Sending POST to URL %s:\n%s\n%s"%(policy_url,policy_requests,policy_headers))
+        ws.request('POST', policy_url, policy_requests, policy_headers)
+        resp = ws.getresponse();
+        # Check for the HTTP Success response code.
+        if resp.status != OK:
+            logger.critical("HTTP protocol error from service: %d Full text: %s" %(resp.status, resp.read()))
+            raise RuntimeError("HTTP protocol error from service: %d Reason: %s" %(resp.status, resp.reason))
+        logger.info("policy web service status: %d", resp.status)
+        resp_string = resp.read()
+        ws.close()
+        ws = None
+    except HTTPException, e:
+        logger.exception("HTTPException communicating with policy web service:")
+        raise RuntimeError("HTTPException communicating with policy web service.")
+    except SocketError, (value, message):
+        logger.critical("socket exception: [ERRNO%s] %s", value, message)
+        raise RuntimeError("socket exception: [ERRNO%s] %s" %(value, message))
+
+    logger.debug("policy web service response: %s", resp_string)
+    posted_cleanups = json.loads(resp_string)
+
+    inputs = []; # wipe out old list
+    for pc in posted_cleanups:
+        logger.debug("url = %s  properties = {%s} id = %s",
+                      pc['uri'], pc['properties'], pc['id'])
+        cleanup = URL();
+        cleanup.set_url(pc['uri'])
+        cleanup.set_id(pc['id'])
+        cleanup.set_properties(pc['properties'])
+        logger.debug("appending cleanup id %s for url %s" %(cleanup.id,cleanup.url()))
+        inputs.append(cleanup)
+
+    logger.debug("post_cleanup_requests return")
+    return inputs
+
+def close_cleanup_requests(inputs, status='COMPLETED'):
+    """
+    Send a PUT request to the policy web service to notify it that the cleanups
+    have been processed.
+    @param inputs: A list of URL objects to process.
+    @type inputs: list
+    @return: Nothing.
+    """
+    if not using_policy_service or len(inputs) == 0:
+        return
+
+    logger.debug("close_cleanup_requests enter; input list has %d URLs",
+                 len(inputs))
+
+    cleanups = []
+    for u in inputs:
+        logger.debug("Processing URL object: url= %s" % (u.url()))
+        cleanup = {'uri': u.url(), 'id': u.id, 'properties': {'STATUS':status}}
+        for p in u.properties.keys():
+            if p != 'STATUS':
+                cleanup['properties'][p] = u.properties[p]
+        cleanups.append(cleanup)
+    
+    policy_cleanups = json.dumps(cleanups)
+    logger.debug("policy_cleanups=%s"%(policy_cleanups))
+    policy_headers = {'Content-type' : 'application/json', 'Encoding' : 'latin-1'}
+    try: 
+        ws = HTTPConnection(policy_host, policy_port)
+        logger.debug("Sending PUT to URL %s" %(policy_url))
+        ws.request('PUT', policy_url, policy_cleanups, policy_headers)
+        # TODO What if the server is slow and not ready to respond? httplib
+        # throws a ResponseNotReady exception, which in 2.6 doesn't have any
+        # useful text assigned to the exception message.
+        resp = ws.getresponse();
+        if resp.status != OK:
+            logger.critical("HTTP protocol error from service: %d Full text: %s" %(resp.status, resp.read()))
+            raise RuntimeError("HTTP protocol error from service: %d Reason: %s" %(resp.status, resp.reason))
+
+        logger.debug("status for PUT: %d" %(resp.status))
+
+        ws.close()
+        ws = None
+    except HTTPException, e:
+        # These exceptions (on 2.6) don't appear to have anything in them. 
+        logger.exception("HTTPException communicating with policy web service:")
+        raise RuntimeError("HTTPException communicating with policy web service.")
+    except SocketError, (value, message):
+        logger.critical("socket exception: [ERRNO%s] %s", value, message)
+        raise RuntimeError("socket exception: [ERRNO%s] %s" %(value, message))
+
+    logger.debug("close_cleanup_requests exit")
 
 # --- main ----------------------------------------------------------------------------
 
@@ -499,12 +616,73 @@ parser.add_option("-l", "--loglevel", action = "store", dest = "log_level",
                   help = "Log level. Valid levels are: debug,info,warning,error, Default is info.")
 parser.add_option("-f", "--file", action = "store", dest = "file",
                   help = "File containing URLs to be removed. If not given, list is read from stdin.")
+# Check environment to decide whether to use a Policy Service.
+if 'PEGASUS_POLICY_CHECKS' in os.environ:
+    true_synonyms = ('true', '1', 't', 'y', 'yes', 'on', 'enabled', 'enable')
+    using_policy_service = os.environ['PEGASUS_POLICY_CHECKS'].lower() in true_synonyms
+    
+if using_policy_service:
+    # Extra imports to make policy service work. If not available, fail now
+    try:
+        import json
+    except ImportError:
+        print >>sys.stderr, "Cannot use Policy Check: Failed to import JSON library"
+        myexit(1)
+
+    try:
+        from httplib import HTTPConnection, HTTPException, OK
+    except ImportError:
+        print >>sys.stderr, "Cannot use Policy Check: Failed to import HTTP library"
+        myexit(1)
+
+#    try:
+#        from urllib import quote
+#    except ImportError:
+#        print >>sys.stderr, "Cannot use Policy Check: Failed to import URL library"
+#        sys.exit(1)
+        
+    from socket import error as SocketError
+
+    policy_host = "localhost"
+    policy_port = 80
+    policy_url  = "/policy/cleanup/list/"
+
+    parser.add_option("", "--policy-host", action = "store", dest = "policy_host",
+                      help = "hostname for the Policy web service; default is '%s'" %(policy_host))
+    parser.add_option("", "--policy-port", type="int", dest = "policy_port",
+                      help = ("Port used by the policy web service; default is %d" %(policy_port)))
+    parser.add_option("", "--policy-url", dest = "policy_url",
+                      help = ("URL of the policy web service; default is '%s'" %(policy_url)))
+
+    if 'PEGASUS_POLICY_HOST' in os.environ:
+        policy_host = os.environ['PEGASUS_POLICY_HOST']
+        
+    if 'PEGASUS_POLICY_PORT' in os.environ:
+        policy_port = int(os.environ['PEGASUS_POLICY_PORT'])
+        
+    if 'PEGASUS_POLICY_URL' in os.environ:
+        policy_url = os.environ['PEGASUS_POLICY_URL']  
 
 # Parse command line options
 (options, args) = parser.parse_args()
 if options.log_level == None:
     options.log_level = "info"
 setup_logger(options.log_level)
+
+# If we're using a Policy Service, check the command line for environment
+# overrides.
+if using_policy_service:
+    if options.policy_host != None:
+        policy_host = options.policy_host.strip()
+    if options.policy_port != None:
+        policy_port = options.policy_port
+    if options.policy_url != None:
+        policy_url = options.policy_url.strip()
+    # ensure URL ends in a slash.
+    if  not policy_url.endswith("/"):
+        logger.debug("Appending '/' to policy_url.")
+        policy_url = policy_url + "/"
+    logger.debug("policy service at http://%s:%d%s"%(policy_host, policy_port, policy_url))
 
 # Die nicely when asked to (Ctrl+C, system shutdown)
 signal.signal(signal.SIGINT, prog_sigint_handler)
@@ -528,11 +706,9 @@ except Exception, err:
     logger.critical(err)
     myexit(1)
 
-# queues to track the work
-url_q = deque()
-
 # fill the url queue with user provided entries
 line_nr = 0
+input_urls = []
 try:
     for line in input_file.readlines():
         line_nr += 1
@@ -540,7 +716,22 @@ try:
             line = line.rstrip('\n')
             url = URL()
             url.set_url(line)
-            remove(url)
+            #remove(url) Don't do it yet...
+            input_urls.append(url)
+
+    if using_policy_service:
+        input_urls = post_cleanup_requests(input_urls)
+    else:
+        input_urls.sort()
+
+    # queues to track the work
+    url_q = deque(input_urls)
+    while url_q:
+        next_url = url_q.pop()
+        remove(next_url)
+
+    close_cleanup_requests(input_urls) # returns immediately if not using policy
+
 except Exception, err:
     logger.critical('Error handling url: %s' % (err))
     myexit(1)
