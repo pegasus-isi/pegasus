@@ -1284,20 +1284,7 @@ public class PegasusProperties {
     }
 
 
-    /**
-     * It specifies if for a job execution the proxy is to be transferred
-     * from the submit host or not.
-     *
-     * Referred to by "pegasus.transfer.proxy" property.
-     *
-     * @return boolean value specified in the properties file,else
-     *         false in case of non boolean value being specified or
-     *         property not being set.
-     */
-    public boolean transferProxy() {
-        return Boolean.parse(mProps.getProperty( "pegasus.transfer.proxy"),
-                             false);
-    }
+   
 
     /**
      * It specifies if the worker package needs to be staged to the remote site
