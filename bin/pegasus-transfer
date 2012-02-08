@@ -579,11 +579,14 @@ def gsiftp(full_list, failed_q, attempt):
     gsiftp - globus-url-copy for now, maybe uberftp in the future
     """
     if len(full_list) == 0:
-        return
+        return []
     
     if tool_info['globus-url-copy']['full_path'] == None:
         raise RuntimeError("Unable to do gsiftp transfers because globus-url-copy could not be found")
 
+    # To use a policy service, successes need to be tracked and returned. The
+    # full_list itself is destroyed by the loop so is not usable for this purpose.
+    successes = []
     # create lists with similar (same src host/path, same dst host/path) url pairs
     while len(full_list) > 0:
 
@@ -615,12 +618,11 @@ def gsiftp(full_list, failed_q, attempt):
         # and the rest with no create dir options
         first_list = []
         first_list.append(similar_list.pop())
-        gsiftp_do_transfers(first_list, failed_q, True, third_party)
-        delete_policy_requests(first_list)
+        successes.extend(gsiftp_do_transfers(first_list, failed_q, True, third_party))
         if len(similar_list) > 0:
-            gsiftp_do_transfers(similar_list, failed_q, False, third_party)
-            delete_policy_requests(similar_list)
-
+            successes.extend(gsiftp_do_transfers(similar_list, failed_q, False, third_party))
+            
+    return successes
 
 
 def gsiftp_do_transfers(transfers, failed_q, create_dest, third_party):
@@ -702,7 +704,10 @@ def gsiftp_do_transfers(transfers, failed_q, create_dest, third_party):
         for i, t in enumerate(attempted_transfers):
             failed_q.append(t)
     os.unlink(tmp_name)
-
+    
+    if len(failed_q) > 0:
+        return []
+    return attempted_transfers
 
 def irods_login():
     """
@@ -905,7 +910,8 @@ def handle_transfers(transfers, failed_q, attempt):
             elif tool == "webget":
                 webget(transfers, failed_q)
             elif tool == "gsiftp":
-                gsiftp(transfers, failed_q, attempt)
+                # old gsiftp destroyed list as it processed; modified to return successes.
+                return gsiftp(transfers, failed_q, attempt)
             elif tool == "irods":
                 irods(transfers, failed_q)
             elif tool == "srm":
@@ -923,7 +929,7 @@ def handle_transfers(transfers, failed_q, attempt):
     except RuntimeError, err:
         logger.critical(err)
         myexit(1)
-
+    return transfers # for transfer subroutines that do NOT eat the list
 
 def stats_add(filename):
     global stats_total_bytes
@@ -996,7 +1002,7 @@ def post_policy_requests(inputs):
 
     transfers = []
     for t in inputs:
-        logger.debug("Procing input Transfer object: ID=%d src=%s dest=%s"
+        logger.debug("Processing input Transfer object: ID=%d src=%s dest=%s"
                      %(t.pair_id, t.src_url(), t.dst_url()))
         transfer = {'source' : t.src_url(), 'destination' : t.dst_url(), 'properties' : {} }
         transfers.append(transfer)
@@ -1042,49 +1048,59 @@ def post_policy_requests(inputs):
     logger.debug("post_policy_requests return")
     return inputs
 
-def delete_policy_requests(transfers):
+def complete_policy_requests(transfers, status="COMPLETED"):
     """
-    Send a DELETE request to the policy web service. Uses the 'policy_id'
-    attribute of each Transfer object to remove that transfer from the web
-    service database.
+    Send notice to the policy server that the transfers are complete.
     @param transfers: A list of transfers to process.
     @type transfers: list
+    @param status: Status code to send to the policy server
+    @type status: string
     @return: Nothing.
     """
-    logger.debug("delete_policy_requests enter; input list has %d Transfers",
+    logger.debug("complete_policy_requests enter; input list has %d Transfers",
                  len(transfers))
 
     if not using_policy_service or len(transfers) == 0:
         return
 
+    completed = []
+    for t in transfers:
+        logger.debug("Processing input Transfer object: ID=%s src=%s dest=%s properties=%s"
+                     %(t.policy_id, t.src_url(), t.dst_url(), t.policies))
+        complete = {'source': t.src_url(), 'destination': t.dst_url(), 'id': t.policy_id, 'properties': {'STATUS':status} }
+        for p in t.policies.keys():
+            if p != 'STATUS':
+                complete['properties'][p] = t.policies[p]
+        completed.append(complete)
+
+    completed_transfers = json.dumps(completed)
+    logger.debug("completed_transfers=%s" %(completed_transfers))
+    policy_headers = {'Content-type' : 'application/json', 'Encoding' : 'latin-1'}
+
     try: 
         ws = HTTPConnection(policy_host, policy_port)
-        ws.connect()
-        for transfer in transfers:
-            delete_request = policy_url + transfer.policy_id
-            logger.debug("Sending DELETE request: %s", delete_request)
-            ws.request('DELETE', delete_request)
-            # TODO What if the server is slow and not ready to respond? httplib
-            # throws a ResponseNotReady exception, which in 2.6 doesn't have any
-            # useful text assigned to the exception message.
-            resp = ws.getresponse();
-            if resp.status != OK:
-                logger.critical("HTTP protocol error from service: %d Full text: %s" %(resp.status, resp.read()))
-                raise RuntimeError("HTTP protocol error from service: %d Reason: %s" %(resp.status, resp.reason))
+        ws.request("PUT", policy_url, completed_transfers, policy_headers)
+        # TODO What if the server is slow and not ready to respond? httplib
+        # throws a ResponseNotReady exception, which in 2.6 doesn't have any
+        # useful text assigned to the exception message.
+        resp = ws.getresponse();
+        if resp.status != OK:
+            logger.critical("HTTP protocol error from service: %d Full text: %s" %(resp.status, resp.read()))
+            raise RuntimeError("HTTP protocol error from service: %d Reason: %s" %(resp.status, resp.reason))
 
-            logger.debug("status for %s: %d", delete_request, resp.status)
+        logger.debug("status for PUT: %d" % (resp.status))
 
         ws.close()
         ws = None
     except HTTPException, e:
         # These exceptions (on 2.6) don't appear to have anything in them. 
-        logger.exception("HTTPException communicating with policy web servcie:")
-        raise RuntimeError("HTTPException communicating with policy web servcie.")
+        logger.exception("HTTPException communicating with policy web service:")
+        raise RuntimeError("HTTPException communicating with policy web service.")
     except SocketError, (value, message):
         logger.critical("socket exception: [ERRNO%s] %s", value, message)
         raise RuntimeError("socket exception: [ERRNO%s] %s" %(value, message))
 
-    logger.debug("delete_policy_requests exit")
+    logger.debug("complete_policy_requests exit")
    
 # --- main ----------------------------------------------------------------------------
 
@@ -1124,7 +1140,7 @@ if using_policy_service:
 
     policy_host = "localhost"
     policy_port = 80
-    policy_url  = "/policy/transfer/"
+    policy_url  = "/policy/transfer/list/"
 
     parser.add_option("", "--policy-host", action = "store", dest = "policy_host",
                       help = "hostname for the Policy web service; default is '%s'" %(policy_host))
@@ -1261,10 +1277,10 @@ while not done:
                 t_next = False
 
         # magic!
-        handle_transfers(t_list, failed_q, attempt_current)
+        successes = handle_transfers(t_list, failed_q, attempt_current)
         logger.debug("%d items in failed_q" %(len(failed_q)))
-        # Remove these from policy web service
-        delete_policy_requests(t_list) # returns immediately if not using policy service
+        # Notify policy service that these are completed
+        complete_policy_requests(successes) # returns immediately if not using policy service
     
     # are we done?
     if attempt_current == attempts_max or not failed_q:
@@ -1284,6 +1300,7 @@ stats_end = time.time()
 stats_summarize()
 
 if failed_q:
+    complete_policy_requests(failed_q, "FAILED") # returns immediately if not using policy service
     logger.critical("Some transfers failed! See above.")
     myexit(1)
 
