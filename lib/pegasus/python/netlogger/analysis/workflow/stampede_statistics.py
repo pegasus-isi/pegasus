@@ -150,7 +150,7 @@ Methods listed in order of query list on wiki.
 
 https://confluence.pegasus.isi.edu/display/pegasus/Pegasus+Statistics+Python+Version+Modified
 """
-__rcsid__ = "$Id: stampede_statistics.py 30043 2012-02-08 15:57:34Z mgoode $"
+__rcsid__ = "$Id: stampede_statistics.py 30077 2012-02-09 17:25:51Z mgoode $"
 __author__ = "Monte Goode"
 
 from netlogger.analysis.modules._base import SQLAlchemyInit
@@ -363,7 +363,8 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Statistics+file#WorkflowStatisticsfile-Totalsucceededjobs
         """
         JobInstanceSub = orm.aliased(JobInstance, name='JobInstanceSub')
-        sq_1 = self.session.query(func.max(JobInstanceSub.job_submit_seq).label('jss'), JobInstanceSub.job_id.label('jobid'))
+        sq_1 = self.session.query(func.max(JobInstanceSub.job_submit_seq).label('jss'), JobInstanceSub.job_id.label('jobid'),
+                JobInstanceSub.exitcode.label('ec'))
         if self._expand:
             sq_1 = sq_1.filter(Workflow.root_wf_id == self._root_wf_id)
         else:
@@ -372,12 +373,12 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         sq_1 = sq_1.filter(Job.job_id == JobInstanceSub.job_id)
         if self._get_job_filter() is not None:
             sq_1 = sq_1.filter(self._get_job_filter())
-        sq_1 = sq_1.filter(JobInstanceSub.exitcode == 0).filter(JobInstanceSub.exitcode != None)
         sq_1 = sq_1.group_by(JobInstanceSub.job_id).subquery()
         
         q = self.session.query(JobInstance.job_instance_id.label('last_job_instance'))
         q = q.filter(JobInstance.job_id == sq_1.c.jobid)
         q = q.filter(JobInstance.job_submit_seq == sq_1.c.jss)
+        q = q.filter(sq_1.c.ec == 0).filter(sq_1.c.ec != None)
         
         return q.count()
     
@@ -388,7 +389,8 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Statistics+file#WorkflowStatisticsfile-Totalfailedjobs
         """
         JobInstanceSub = orm.aliased(JobInstance, name='JobInstanceSub')
-        sq_1 = self.session.query(func.max(JobInstanceSub.job_submit_seq).label('jss'), JobInstanceSub.job_id.label('jobid'))
+        sq_1 = self.session.query(func.max(JobInstanceSub.job_submit_seq).label('jss'), JobInstanceSub.job_id.label('jobid'),
+                JobInstanceSub.exitcode.label('ec'))
         if self._expand:
             sq_1 = sq_1.filter(Workflow.root_wf_id == self._root_wf_id)
         else:
@@ -397,12 +399,12 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         sq_1 = sq_1.filter(Job.job_id == JobInstanceSub.job_id)
         if self._get_job_filter() is not None:
             sq_1 = sq_1.filter(self._get_job_filter())
-        sq_1 = sq_1.filter(JobInstanceSub.exitcode != 0).filter(JobInstanceSub.exitcode != None)
         sq_1 = sq_1.group_by(JobInstanceSub.job_id).subquery()
         
         q = self.session.query(JobInstance.job_instance_id.label('last_job_instance'))
         q = q.filter(JobInstance.job_id == sq_1.c.jobid)
         q = q.filter(JobInstance.job_submit_seq == sq_1.c.jss)
+        q = q.filter(sq_1.c.ec != 0).filter(sq_1.c.ec != None)
         
         return q.count()
         
@@ -552,7 +554,8 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Summary#WorkflowSummary-Workflowwalltime
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Statistics+file#WorkflowStatisticsfile-Workflowwalltime
         """
-        q = self.session.query(Workflowstate.wf_id, Workflowstate.state, Workflowstate.timestamp)
+        q = self.session.query(Workflowstate.wf_id, Workflowstate.state, Workflowstate.timestamp, 
+            Workflowstate.restart_count, Workflowstate.status)
         q = q.filter(Workflowstate.wf_id == self._root_wf_id).order_by(Workflowstate.restart_count)
 
         return q.all()
