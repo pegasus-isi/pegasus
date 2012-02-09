@@ -428,6 +428,10 @@ public class InterPoolEngine extends Engine implements Refiner {
         String siteHandle        = job.getSiteHandle();
         String stagingSiteHandle = job.getStagingSiteHandle();
 
+        
+        mLogger.log( "For job "  + job.getName() + " updating profiles from site " + job.getSiteHandle() ,
+                     LogManager.TRACE_MESSAGE_LEVEL );
+
         //the profile information from the pool catalog needs to be
         //assimilated into the job.
         job.updateProfiles( mSiteStore.lookup( siteHandle ).getProfiles() );
