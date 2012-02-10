@@ -45,12 +45,11 @@ function pegasus_lite_internal_wp_shipped()
 {
     # was the job shipped with a Pegasus worker package?
     if ls $pegasus_lite_start_dir/pegasus-worker-*.tar.gz >/dev/null 2>&1; then
-        pegasus_lite_log "The job contained a Pegasus worker package, installing to $pegasus_lite_work_dir/pegasus-worker"
+        pegasus_lite_log "The job contained a Pegasus worker package"
         tar xzf $pegasus_lite_start_dir/pegasus-worker-*.tar.gz
         rm -f $pegasus_lite_start_dir/pegasus-worker-*.tar.gz
-        mv pegasus-* pegasus-worker
         unset PEGASUS_HOME
-        export PATH=$pegasus_lite_work_dir/pegasus-worker/bin:$PATH
+        export PATH=${pegasus_lite_work_dir}/pegasus-${pegasus_lite_full_version}/bin:$PATH
         return 0
     fi
     return 1
@@ -123,10 +122,9 @@ function pegasus_lite_internal_wp_download()
     wget -q -O pegasus-worker.tar.gz "$url"
     tar xzf pegasus-worker.tar.gz
     rm -f pegasus-worker.tar.gz
-    mv pegasus-* pegasus-worker
 
     unset PEGASUS_HOME
-    export PATH=$pegasus_lite_work_dir/pegasus-worker/bin:$PATH
+    export PATH="${pegasus_lite_work_dir}/pegasus-${pegasus_lite_full_version}/bin:$PATH"
 }
 
 
@@ -182,9 +180,11 @@ function pegasus_lite_setup_work_dir()
 
 function pegasus_lite_init()
 {
+    pegasus_lite_full_version=${pegasus_lite_version_major}.${pegasus_lite_version_minor}.${pegasus_lite_version_patch}
+
     # announce version - we do this so pegasus-exitcode and other tools
     # can tell the job was a PegasusLite job
-    echo "PegasusLite: version ${pegasus_lite_version_major}.${pegasus_lite_version_minor}.${pegasus_lite_version_patch}" 1>&2
+    echo "PegasusLite: version ${pegasus_lite_full_version}" 1>&2
 }
 
 
