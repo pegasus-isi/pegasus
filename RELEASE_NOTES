@@ -105,7 +105,17 @@ population of certain pre and post script events.
    being launched by condor_dagman. This is now fixed
 
    More details at
-  https://jira.isi.edu/browse/PM-553
+   https://jira.isi.edu/browse/PM-553
+
+6)  invoke option for kickstart -I flag triggered incorrectly for  clustered jobs 
+
+    There was a bug in how pegasus handled invoke to get around the 
+    long arguments specified for the jobs in the DAX. In that case, a .arg
+    created that is transferred with the job. This was not happening for
+    clustered jobs.
+
+    More details at
+    https://jira.isi.edu/browse/PM-526
 
 
 ===============================
