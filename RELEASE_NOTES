@@ -98,6 +98,16 @@ population of certain pre and post script events.
    More details at
    https://jira.isi.edu/browse/PM-534
 
+5) SubDAG jobs referred in a DAX were launched by pegasus-dagman
+
+   DAX can contain references to condor DAGS, that are not planned through
+   Pegasus. They were launched by pegasus-dagman instead of directly
+   being launched by condor_dagman. This is now fixed
+
+   More details at
+  https://jira.isi.edu/browse/PM-553
+
+
 ===============================
 Release Notes for PEGASUS 3.1.0
 ===============================
