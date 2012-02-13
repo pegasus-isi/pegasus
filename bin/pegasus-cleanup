@@ -506,11 +506,13 @@ def post_cleanup_requests(inputs):
     if not using_policy_service or len(inputs) == 0:
         return None
     logger.debug("post_cleanup_requests entered; input list has %d URLs", len(inputs))
-
+    hostname = gethostname()
     cleanups = []
     for t in inputs:
         logger.debug("Processing input URL object: url=%s" %(t.url()))
         cleanup = {'uri' : t.url(), 'properties' : {} }
+        if t.proto == 'file':
+            cleanup['properties']['local_file_host'] = hostname
         cleanups.append(cleanup)
 
     policy_requests = json.dumps(cleanups)
@@ -634,15 +636,10 @@ if using_policy_service:
     except ImportError:
         print >>sys.stderr, "Cannot use Policy Check: Failed to import HTTP library"
         myexit(1)
-
-#    try:
-#        from urllib import quote
-#    except ImportError:
-#        print >>sys.stderr, "Cannot use Policy Check: Failed to import URL library"
-#        sys.exit(1)
         
     from socket import error as SocketError
-
+    from socket import gethostname
+    
     policy_host = "localhost"
     policy_port = 80
     policy_url  = "/policy/cleanup/list/"

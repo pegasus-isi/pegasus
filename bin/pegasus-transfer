@@ -999,12 +999,14 @@ def post_policy_requests(inputs):
     if not using_policy_service or len(inputs) == 0:
         return None
     logger.debug("post_policy_requests entered; input list has %d Transfers", len(inputs))
-
+    hostname = gethostname();
     transfers = []
     for t in inputs:
         logger.debug("Processing input Transfer object: ID=%d src=%s dest=%s"
                      %(t.pair_id, t.src_url(), t.dst_url()))
         transfer = {'source' : t.src_url(), 'destination' : t.dst_url(), 'properties' : {} }
+        if t.src_proto == 'file':
+            transfer['properties']['local_file_host'] = hostname
         transfers.append(transfer)
 
     policy_requests = json.dumps(transfers)
@@ -1137,6 +1139,7 @@ if using_policy_service:
         sys.exit(1)
 
     from socket import error as SocketError
+    from socket import gethostname
 
     policy_host = "localhost"
     policy_port = 80
