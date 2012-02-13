@@ -819,12 +819,7 @@ def srm(transfers, failed_q):
         third_party = (url_pair.src_proto == "gsiftp" or url_pair.src_proto == "srm") and \
                       (url_pair.dst_proto == "gsiftp" or url_pair.dst_proto == "srm")
             
-        cmd = ""
-        # srm is mostly used on OSG, so look for $OSG_GRID and if found source setup.sh
-        if "OSG_GRID" in os.environ:
-            cmd = ". $OSG_GRID/setup.sh ;"
-            
-        cmd = "%s srm-copy  %s %s -mkdir" % (cmd, url_pair.src_url_srm(), url_pair.dst_url_srm())
+        cmd = "srm-copy  %s %s -mkdir" % (url_pair.src_url_srm(), url_pair.dst_url_srm())
         if third_party:
             cmd = cmd + " -parallelism 4 -3partycopy"
     
