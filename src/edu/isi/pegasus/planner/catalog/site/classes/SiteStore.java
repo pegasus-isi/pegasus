@@ -390,8 +390,6 @@ public class SiteStore extends AbstractSiteData{
         
         StringBuffer path = new StringBuffer();
 
-        boolean s3FileServer = fs.getProtocol().startsWith( "s3" ) || fs.getURLPrefix().startsWith( "s3" );
-
         if ( mWorkDir.length() == 0 ) {
             // special case - no pegasus.dir.exec
             path.append( fs.getMountPoint() );
@@ -427,15 +425,7 @@ public class SiteStore extends AbstractSiteData{
             addon.append( randDir );
         }
 
-
-        //for s3 case, to create a bucket we replace / with a - in the
-        //random directory part
-        if( s3FileServer ){
-            path.append( addon.toString().replace( '/', '-' ) );
-        }
-        else{
-            path.append( addon.toString() );
-        }
+        path.append( addon.toString() );
 
         return path.toString();
     }

@@ -450,7 +450,7 @@ def s3(url):
 
     # extract the bucket part
     re_bucket = re.compile(r'(s3(s){0,1}://\w+@\w+/+[\w]+)')
-    bucket = url.url_dirname()
+    bucket = url.url()
     r = re_bucket.search(bucket)
     if r:
         bucket = r.group(1)

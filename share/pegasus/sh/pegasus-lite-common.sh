@@ -185,6 +185,22 @@ function pegasus_lite_init()
     # announce version - we do this so pegasus-exitcode and other tools
     # can tell the job was a PegasusLite job
     echo "PegasusLite: version ${pegasus_lite_full_version}" 1>&2
+
+    # for S3CFG, axpand to include local path if needed
+    if [ "x$S3CFG" != "x" ]; then
+        if ! (echo $S3CFG | grep "^/") >/dev/null 2>&1; then
+            S3CFG=`pwd`"/$S3CFG"
+            pegasus_lite_log "Expanded \$S3CFG to $S3CFG"
+        fi
+    fi
+    
+    # for irodsEnvFile, axpand to include local path if needed
+    if [ "x$irodsEnvFile" != "x" ]; then
+        if ! (echo $irodsEnvFile | grep "^/") >/dev/null 2>&1; then
+            irodsEnvFile=`pwd`"/$irodsEnvFile"
+            pegasus_lite_log "Expanded \$irodsEnvFile to $irodsEnvFile"
+        fi
+    fi
 }
 
 
