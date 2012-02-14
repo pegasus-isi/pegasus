@@ -15,6 +15,8 @@ config.read(sys.argv [2] + '/test.config')
 # Create a abstract dag
 diamond = ADAG(config.get('all', 'workflow_name'))
 
+diamond.invoke ('all', os.getcwd() + "/my-notify.sh")
+
 # Add input file to the DAX-level replica catalog
 a = File("f.a")
 a.addPFN(PFN(config.get('all', 'file_url') + config.get('all', 'input_file') + "/f.a", config.get('all', 'file_site')))
@@ -69,6 +71,8 @@ analyze.uses(c1, link=Link.INPUT)
 analyze.uses(c2, link=Link.INPUT)
 analyze.uses(d, link=Link.OUTPUT, register=True)
 diamond.addJob(analyze)
+
+analyze.invoke ('at_end', os.getcwd() + "/my-notify.sh")
 
 # Add control-flow dependencies
 diamond.addDependency(Dependency(parent=preprocess, child=frl))

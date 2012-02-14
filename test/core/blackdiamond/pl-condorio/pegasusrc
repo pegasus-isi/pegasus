@@ -8,3 +8,4 @@ pegasus.condor.logs.symlink = false
 
 pegasus.data.configuration = CondorIO
 pegasus.transfer.worker.package = True
+pegasus.monitord.notifications = False
