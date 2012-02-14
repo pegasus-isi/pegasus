@@ -39,6 +39,7 @@ re_rsl_clean = re.compile(r"([-_])")
 re_site_parse_gvds = re.compile(r"^\s*\+(pegasus|wf)_(site|resource)\s*=\s*([\'\"])?(\S+)\3")
 re_parse_transformation = re.compile(r"^\s*\+pegasus_wf_xformation\s*=\s*(\S+)")
 re_parse_derivation = re.compile(r"^\s*\+pegasus_wf_dax_job_id\s*=\s*(\S+)")
+re_parse_multiplier_factor = re.compile(r"^\s*\+pegasus_cores\s=\s(\S+)")
 re_parse_executable = re.compile(r"^\s*executable\s*=\s*(\S+)")
 re_parse_arguments = re.compile(r'^\s*arguments\s*=\s*"([^"\r\n]*)"')
 re_parse_environment = re.compile(r'^\s*environment\s*=\s*(.*)')
@@ -90,6 +91,7 @@ class Job:
         self._main_job_executable = None
         self._main_job_arguments = None
         self._main_job_exitcode = None
+        self._main_job_multiplier_factor = None
         self._post_script_start = None
         self._post_script_done = None
         self._post_script_exitcode = None
@@ -226,6 +228,15 @@ class Job:
                 # Remove quotes, if any
                 my_arguments = my_arguments.strip('"')
                 self._main_job_arguments = my_arguments
+            elif re_parse_multiplier_factor.search(my_line):
+                # Found line with multiplier_factor
+                my_multiplier_factor = re_parse_multiplier_factor.search(my_line).group(1)
+                try:
+                    self._main_job_multiplier_factor = int(my_multiplier_factor)
+                except ValueError:
+                    logger.warning("%s: cannot convert multiplier factor: %s" % (os.path.basename(submit_file),
+                                                                                 my_multiplier_factor))
+                    self._main_job_multiplier_factor = None
             elif re_parse_input.search(my_line):
                 # Found line with input file
                 my_input = re_parse_input.search(my_line).group(1)

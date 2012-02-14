@@ -1202,7 +1202,8 @@ class Workflow:
                     kwargs["stderr__text"] = my_job._stderr_text
 
         # Use constant for now... will change it
-        kwargs["multiplier_factor"] = 2
+        if my_job._main_job_multiplier_factor is not None:
+            kwargs["multiplier_factor"] = str(my_job._main_job_multiplier_factor)
 
         # Use the job exitcode for now (if the job has a postscript, it will get updated later
         kwargs["exitcode"] = str(my_job._main_job_exitcode)
