@@ -15,18 +15,23 @@ fi
 
 OUTFILE=`mktemp` || exit 1
 ERRFILE=`mktemp` || exit 1
-for try in hello forkme grandfather threadme threadach alarmme; do
+trap 'rm -f $OUTFILE $ERRFILE' 0
+
+kickstart=../pegasus-kickstart
+for try in hello forkme grandfather threadme threadach alarmme \
+    fifo5lf.sh fifo5nolf.sh; do
     echo '+---------------------------------------------------------+'
-    printf "| %-55s |\n"   "$try @ `date -Ins`"
+    printf "| %-55s |\n"   "`date -Ins` $try"
     echo '+---------------------------------------------------------+' 
 
-    ../pegasus-kickstart $try > $OUTFILE 2> $ERRFILE
+    $kickstart $try > $OUTFILE 2> $ERRFILE
     rc=$?
+    echo "kickstart itself returned with exit code $rc"
 
     $xml_grep --nowrap 'invocation/statcall[@id="stdout"]/data' $OUTFILE
     $xml_grep --nowrap 'invocation/statcall[@id="stderr"]/data' $OUTFILE
     $xml_grep --nowrap 'invocation/mainjob/status' $OUTFILE
-    if [ $rc -ne 0 ]; then
+    if [ -s $ERRFILE ]; then
 	# something happened
 	echo "--- &< stderr &< ---"
 	cat $ERRFILE

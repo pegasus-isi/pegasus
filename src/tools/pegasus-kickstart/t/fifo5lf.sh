@@ -10,8 +10,6 @@ if [ "X$GRIDSTART_CHANNEL" = 'X' ]; then
     test -w $GRIDSTART_CHANNEL || exit 42
 fi
 
-/usr/bin/env | sort
-
 i=0
 while [[ $i -lt 5 ]]; do 
     i=$(( $i + 1 ))
