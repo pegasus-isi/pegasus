@@ -2,7 +2,7 @@
 #
 # $Id$
 #
-if [ -z "$1" ]; then
+if [ "X$1" = 'X' ]; then
     exit 1
 else
     kill -$1 $$
