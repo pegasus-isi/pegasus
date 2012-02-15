@@ -918,8 +918,7 @@ public class DeployWorkerPackage
             List<String> cleanupFiles = new LinkedList<String>();
             cleanupFiles.add( new File ( baseRemoteWorkDir,
                                          getBasename( ft.getSourceURL().getValue() )).getAbsolutePath() );
-            cleanupFiles.add(  new File ( baseRemoteWorkDir,
-                                          this.getDeployJobName( dag, site, this.mLocalTransfers.get( site ) ) + ".in" ).getAbsolutePath() );//to remove the GUC .in file
+            
             for( String f : cleanupFiles ){
                 StringBuffer sb = new StringBuffer();
                 sb.append( "Need to cleanup file " ).append( f ).append( " on site " ).append( site );
