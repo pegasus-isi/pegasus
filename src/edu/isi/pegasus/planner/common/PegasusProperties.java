@@ -59,6 +59,8 @@ public class PegasusProperties {
 
     public static final String PEGASUS_WORKER_NODE_EXECUTION_PROPERTY = "pegasus.execute.*.filesystem.local";
 
+    public static final String PEGASUS_TRANSFER_WORKER_PACKAGE_PROPERTY = "pegasus.transfer.worker.package";
+
     //Replica Catalog Constants
     public static final String DEFAULT_RC_COLLECTION = "GriphynData";
 
@@ -1297,7 +1299,7 @@ public class PegasusProperties {
      *         property not being set.
      */
     public boolean transferWorkerPackage() {
-        return Boolean.parse( mProps.getProperty( "pegasus.transfer.worker.package" ),
+        return Boolean.parse( mProps.getProperty( PEGASUS_TRANSFER_WORKER_PACKAGE_PROPERTY ),
                               false );
     }
 

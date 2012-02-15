@@ -168,12 +168,8 @@ public class PegasusConfiguration {
             p.setProperty( "pegasus.execute.*.filesystem.local", "true" );
             p.setProperty( "pegasus.gridstart", "PegasusLite" );
 
-            /* For 3.2 we dont need any S3 specific implementations
-            p.setProperty( "pegasus.dir.create.impl", "S3" );
-            p.setProperty( "pegasus.file.cleanup.impl", "S3" );
-            p.setProperty( "pegasus.transfer.*.impl", "S3" );
-            p.setProperty( "pegasus.transfer.stage.sls.file", "false" );
-            */
+            //we want the worker package to be staged, unless user sets it to false explicitly
+            p.setProperty( PegasusProperties.PEGASUS_TRANSFER_WORKER_PACKAGE_PROPERTY, "true" );
         }
         else if ( configuration.equalsIgnoreCase( CONDOR_CONFIGURATION_VALUE ) || configuration.equalsIgnoreCase( DEPRECATED_CONDOR_CONFIGURATION_VALUE ) ){
 
@@ -186,6 +182,10 @@ public class PegasusConfiguration {
             p.setProperty( "pegasus.transfer.sls.*.impl", "Condor" );
             p.setProperty( "pegasus.execute.*.filesystem.local", "true" );
             p.setProperty( "pegasus.gridstart", "PegasusLite" );
+            
+            //we want the worker package to be staged, unless user sets it to false explicitly
+            p.setProperty( PegasusProperties.PEGASUS_TRANSFER_WORKER_PACKAGE_PROPERTY, "true" );
+
         }
         else if( configuration.equalsIgnoreCase( SHARED_FS_CONFIGURATION_VALUE ) ){
             p.setProperty( "pegasus.execute.*.filesystem.local", "false" );
