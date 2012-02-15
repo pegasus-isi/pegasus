@@ -2,6 +2,8 @@
 echo "CURRENT DIR is " `pwd`
 echo "Checking status "
 
+TIMEOUT=180
+COUNT=0
 function update_status
 {
    STATUS=`pegasus-status --noqueue | tail -1 | sed 's/[:\(\)]/ /g'| awk '{print $5}'`
@@ -12,7 +14,15 @@ update_status
 
 echo "#" STATUS is "$STATUS"
 
-while [ "$STATUS" = "Running" -o "$STATUS" = "" -o "$STATUS" = "Unknown"  ]; do
+while [ "$STATUS" = "Running" -o "$STATUS" = "" -o "$STATUS" = "Unknown"  ] ; do 
+    if [ $COUNT -lt $TIMEOUT ]; then
+	echo "Reached TIMEOUT of $TIMEOUT. Calling pegasus-remove"
+	pegasus-remove `pwd`
+	STATUS=TIMEOUT
+	sleep 1m
+	break;
+    fi
+    ((COUNT++))
     sleep 1m
     update_status
     echo "#" STATUS is "$STATUS"
