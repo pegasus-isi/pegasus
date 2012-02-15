@@ -15,7 +15,7 @@ update_status
 echo "#" STATUS is "$STATUS"
 
 while [ "$STATUS" = "Running" -o "$STATUS" = "" -o "$STATUS" = "Unknown"  ] ; do 
-    if [ $COUNT -lt $TIMEOUT ]; then
+    if [ $COUNT -ge $TIMEOUT ]; then
 	echo "Reached TIMEOUT of $TIMEOUT. Calling pegasus-remove"
 	pegasus-remove `pwd`
 	STATUS=TIMEOUT
