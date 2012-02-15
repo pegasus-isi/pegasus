@@ -61,7 +61,7 @@ public class S3CFG  extends Abstract implements CredentialHandler {
      *
      * - If a s3cfg is specified in the site catalog entry that is used
      * - Else the one pointed to by the environment variable S3Cfg
-     * - Else the default path to the proxy ~/.s3cfg
+     * - Else the default path to the ~/.s3cfg
      *
      * @param site   the  site handle
      *
@@ -79,6 +79,11 @@ public class S3CFG  extends Abstract implements CredentialHandler {
             if( envs.containsKey( S3CFG.S3CFG_FILE_VARIABLE ) ){
                 path = envs.get( S3CFG.S3CFG_FILE_VARIABLE );
             }
+        }
+        
+        if (path == null) {
+            // default location
+            path = envs.get("HOME") + "/.s3cfg";
         }
 
         return path;

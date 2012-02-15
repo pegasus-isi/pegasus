@@ -327,9 +327,13 @@ def scp(urls):
     removes using ssh+rm
     """
     for i, url in enumerate(urls):
-        cmd = "/usr/bin/ssh -q  -o StrictHostKeyChecking=no" + \
-              " " + url.host + " " + \
-              " \"/bin/rm -f " + url.path + "\""
+        cmd = "/usr/bin/ssh"
+        if "SSH_PRIVATE_KEY" in os.environ:
+            cmd += " -i " + os.environ['SSH_PRIVATE_KEY']
+        cmd += " -o PasswordAuthentication=no"
+        cmd += " -o StrictHostKeyChecking=no" + \
+               " " + url.host + " " + \
+               " \"/bin/rm -f " + url.path + "\""
         try:
             myexec(cmd, 5*60, True)
         except RuntimeError, err:

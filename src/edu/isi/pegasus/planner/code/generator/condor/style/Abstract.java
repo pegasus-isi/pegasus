@@ -17,23 +17,21 @@
 
 package edu.isi.pegasus.planner.code.generator.condor.style;
 
-import edu.isi.pegasus.common.credential.CredentialHandler.TYPE;
-import edu.isi.pegasus.common.credential.CredentialHandler;
-import edu.isi.pegasus.common.credential.CredentialHandlerFactory;
-import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
-import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
-
-import edu.isi.pegasus.planner.code.generator.condor.CondorStyle;
-import edu.isi.pegasus.planner.code.generator.condor.CondorStyleException;
-
-import edu.isi.pegasus.planner.classes.Job;
-
-import edu.isi.pegasus.planner.classes.PegasusBag;
-import edu.isi.pegasus.common.logging.LogManager;
-import edu.isi.pegasus.planner.classes.AggregatedJob;
-import edu.isi.pegasus.planner.common.PegasusProperties;
 import java.util.Iterator;
 import java.util.Set;
+
+import edu.isi.pegasus.common.credential.CredentialHandler;
+import edu.isi.pegasus.common.credential.CredentialHandlerFactory;
+import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
+import edu.isi.pegasus.planner.classes.AggregatedJob;
+import edu.isi.pegasus.planner.classes.Job;
+import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.code.generator.condor.CondorStyle;
+import edu.isi.pegasus.planner.code.generator.condor.CondorStyleException;
+import edu.isi.pegasus.planner.code.generator.condor.CondorStyleFactoryException;
+import edu.isi.pegasus.planner.common.PegasusProperties;
 
 
 
@@ -168,6 +166,7 @@ public abstract class Abstract implements CondorStyle {
                 
                 case irods:
                 case s3:
+                case ssh:
                     // transfer using condor file transfer, and advertise in env
                     // but first make sure it is specified in our environment
                     if (handler.getPath() == null) {
@@ -178,7 +177,7 @@ public abstract class Abstract implements CondorStyle {
                     job.condorVariables.addIPFileForTransfer(handler.getPath());
                     job.envVariables.construct(handler.getEnvironmentVariable(), handler.getBaseName());
                     break;
-                        
+                    
                 default:
                     throw new CondorStyleException("Job has been tagged with unknown credential type");
                     
@@ -214,6 +213,7 @@ public abstract class Abstract implements CondorStyle {
                 case x509:
                 case irods:
                 case s3:
+                case ssh:
                     // for local exec, just set envionment variables to full path
                     if (handler.getPath() == null) {
                         throw new CondorStyleException("Unable to find required credential for file transfers. " +

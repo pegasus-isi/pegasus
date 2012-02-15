@@ -16,63 +16,62 @@
 
 package edu.isi.pegasus.common.credential.impl;
 
-import edu.isi.pegasus.common.credential.CredentialHandler;
-
 import java.io.File;
 import java.util.Map;
 
+import edu.isi.pegasus.common.credential.CredentialHandler;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 
 
+
+
 /**
- * A convenience class that allows us to determine the path to the user irodsEnvFile file.
+ * A convenience class that allows us to determine the path to the user ssh private key file.
  *
  * @author Mats Rynge
- * @version $Revision$
+ * @author Karan Vahi
+ *
+ * @version $Revision: 4817 $
  */
-public class Irods extends Abstract implements CredentialHandler{
+public class Ssh extends Abstract implements CredentialHandler {
 
     /**
      * The name of the environment variable that specifies the path to the
      * s3cfg file.
      */
-    public static final String IRODSENVFILE = "irodsEnvFile";
+    public static final String SSH_PRIVATE_KEY_VARIABLE = "SSH_PRIVATE_KEY";
 
     /**
-     * The description.
+     * The description
      */
-    public static final String DESCRIPTION = "IRODS Credentials Handler";
+    private static final String DESCRIPTION = "SSH private key Credential Handler";
+
 
     /**
      * The default constructor.
      */
-    public Irods(){
+    public Ssh(){
         super();
     }
 
     
     /**
-     * Returns the path to irodsEnv. The order of preference is as follows
-     *
-     * - If a irods is specified in the local catalog entry
-     * - Else the one pointed to by the environment variable S3CFG
-     *
+     * Returns the path to ssh private key. The key has to be specifically listed in the environment
      * @param site   the  site handle
      *
      * @return  the path to s3cfg.
      */
-    public  String getPath( String site ){
-
+    public String getPath( String site ){
         SiteCatalogEntry siteEntry = mSiteStore.lookup( site );
         Map<String,String> envs = System.getenv();
-        
+
         // check if one is specified in site catalog entry
-        String path = ( siteEntry == null )? null :siteEntry.getEnvironmentVariable( Irods.IRODSENVFILE );
+        String path = ( siteEntry == null )? null :siteEntry.getEnvironmentVariable( Ssh.SSH_PRIVATE_KEY_VARIABLE);
 
         if( path == null){
-            //check if irodsEnvFile is specified in the environment
-            if( envs.containsKey( Irods.IRODSENVFILE ) ){
-                path = envs.get( Irods.IRODSENVFILE );
+            //check if specified in the environment
+            if( envs.containsKey( Ssh.SSH_PRIVATE_KEY_VARIABLE ) ){
+                path = envs.get( Ssh.SSH_PRIVATE_KEY_VARIABLE );
             }
         }
 
@@ -87,8 +86,8 @@ public class Irods extends Abstract implements CredentialHandler{
         File path = new File(this.getPath());
         return path.getName();
     }
-    
-    
+
+
     /**
      * Returns the name of the environment variable that needs to be set
      * for the job associated with the credential.
@@ -96,7 +95,7 @@ public class Irods extends Abstract implements CredentialHandler{
      * @return the name of the environment variable.
      */
     public String getEnvironmentVariable(){
-        return Irods.IRODSENVFILE;
+        return Ssh.SSH_PRIVATE_KEY_VARIABLE;
     }
 
     /**
@@ -105,7 +104,6 @@ public class Irods extends Abstract implements CredentialHandler{
      * @return  description
      */
     public String getDescription(){
-        return Irods.DESCRIPTION;
+        return Ssh.DESCRIPTION;
     }
-   
 }

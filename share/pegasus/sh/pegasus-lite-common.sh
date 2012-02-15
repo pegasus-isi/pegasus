@@ -192,6 +192,7 @@ function pegasus_lite_init()
             S3CFG=`pwd`"/$S3CFG"
             pegasus_lite_log "Expanded \$S3CFG to $S3CFG"
         fi
+        chmod 0600 $S3CFG
     fi
     
     # for irodsEnvFile, axpand to include local path if needed
@@ -200,6 +201,16 @@ function pegasus_lite_init()
             irodsEnvFile=`pwd`"/$irodsEnvFile"
             pegasus_lite_log "Expanded \$irodsEnvFile to $irodsEnvFile"
         fi
+        chmod 0600 $irodsEnvFile
+    fi
+    
+    # for ssh private key, axpand to include local path if needed
+    if [ "x$SSH_PRIVATE_KEY" != "x" ]; then
+        if ! (echo $SSH_PRIVATE_KEY | grep "^/") >/dev/null 2>&1; then
+            SSH_PRIVATE_KEY=`pwd`"/$SSH_PRIVATE_KEY"
+            pegasus_lite_log "Expanded \$SSH_PRIVATE_KEY to $SSH_PRIVATE_KEY"
+        fi
+        chmod 0600 $SSH_PRIVATE_KEY
     fi
 }
 
