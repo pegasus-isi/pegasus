@@ -785,12 +785,10 @@ public class Kickstart implements GridStart {
                  job.runInWorkDirectory()  && !mWorkerNodeExecution ){
 
             //worker package deployment 
-            //any jobs that run in submit exectionSiteDirectory use local kickstart path
             //pick up the path from the transformation catalog of
             //dynamic deployment
             //in case of pegasus lite mode, we dont look up here.
             TransformationCatalogEntry entry = this.getTransformationCatalogEntry( job.getSiteHandle() );
-
             if( entry == null ){
                 //NOW THROWN AN EXCEPTION
 
@@ -799,6 +797,18 @@ public class Kickstart implements GridStart {
                 error.append("Could not find entry in tc for lfn ").
                     append( COMPLETE_TRANSFORMATION_NAME ).
                     append(" at site ").append( job.getSiteHandle() );
+
+                if ( job.getSiteHandle().equalsIgnoreCase( "local" ) ){
+                    //for local site in case of worker package staging also
+                    //we can pick up the path on submit host, if not staged
+                    //PM-497
+                    SiteCatalogEntry site = mSiteStore.lookup( "local" );
+                    String p = this.getKickstartPath( site );
+
+                    if( p != null ){
+                        return p;
+                    }
+                }
 
                 mLogger.log( error.toString(), LogManager.ERROR_MESSAGE_LEVEL);
                 throw new RuntimeException( error.toString() );

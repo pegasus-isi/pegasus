@@ -981,6 +981,14 @@ public class DeployWorkerPackage
 
         for(Iterator it = dag.vJobSubInfos.iterator();it.hasNext();){
             Job job = (Job)it.next();
+
+
+            //PM-497
+            //we ignore any clean up jobs that may be running
+            if( job.getJobType() == Job.CLEANUP_JOB ){
+                continue;
+            }
+
             //add to the set only if the job is
             //being run in the work directory
             //this takes care of local site create dir
