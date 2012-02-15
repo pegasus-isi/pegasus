@@ -2,32 +2,35 @@
 
 set -e
 
-REMOTE_REPO_DIR=/lfs1/webspace/pegasus/wms/download/3.0/apt
-REPO_DIR=~/tmp/apt-repo
+REPO_DIR=`mktemp -d`
+REMOTE_REPO_DIR=/lfs2/webspace/pegasus4/wms/download/debian
 
 rm -rf $REPO_DIR
 rsync -a -v -e ssh pegasus.isi.edu:$REMOTE_REPO_DIR/ $REPO_DIR/
 
 # debian
-for DIST in lenny;do
+for DIST in lenny squeeze; do
+
     for ARCH in i386 amd64; do
         echo
         echo "Updating Debian packages list for $DIST-$ARCH"
-        cd $REPO_DIR/debian
+        cd $REPO_DIR
         dpkg-scanpackages --arch $ARCH dists/$DIST/main/binary-$ARCH/ /dev/null \
             >dists/$DIST/main/binary-$ARCH/Packages
-        cd $REPO_DIR/debian/dists/$DIST/main/binary-$ARCH/
+        cd $REPO_DIR/dists/$DIST/main/binary-$ARCH/
         gzip -9c Packages >Packages.gz
         bzip2 -9 -k -f Packages
-  done
+    done
 
-  # generate a release file and sign the repository 
-  cd $REPO_DIR/debian/dists/$DIST
-  apt-ftparchive -o APT::FTPArchive::Release::Codename=$DIST release . >Release
-  rm -f Release.gpg
-  gpg -abs -o Release.gpg Release
+    # generate a release file and sign the repository 
+    cd $REPO_DIR/dists/$DIST
+    apt-ftparchive -o APT::FTPArchive::Release::Codename=$DIST release . >Release
+    rm -f Release.gpg
+    gpg -abs -o Release.gpg Release
 
 done
 
 rsync -a -v -e ssh $REPO_DIR/ pegasus.isi.edu:$REMOTE_REPO_DIR/
+
+rm -rf $REPO_DIR
 

@@ -2,17 +2,19 @@
 
 set -e
 
-REPO_DIR=~/tmp/yum-repo
+WORK_DIR=`mktemp -d`
+WEB_SERVER_DIR=/lfs2/webspace/pegasus4/wms/download/rhel
 
 rm -rf $REPO_DIR
-rsync -a -v -e ssh pegasus.isi.edu:/lfs1/webspace/pegasus/wms/download/3.0/yum/ $REPO_DIR/
+rsync -a -v -e ssh pegasus.isi.edu:$WEB_SERVER_DIR/ $WORK_DIR/
 
-cd $REPO_DIR
+cd $WORK_DIR
 for DER in `find . -type d -name i386 -o -name x86_64`; do 
-    cd $REPO_DIR/$DER
+    cd $WORK_DIR/$DER
     createrepo .
 done
 
-rsync -a -v -e ssh $REPO_DIR/ pegasus.isi.edu:/lfs1/webspace/pegasus/wms/download/3.0/yum/
+rsync -a -v -e ssh $WORK_DIR/ pegasus.isi.edu:$WEB_SERVER_DIR/
 
+rm -rf $WORK_DIR
 
