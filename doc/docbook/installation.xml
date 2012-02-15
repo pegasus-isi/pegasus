@@ -14,7 +14,7 @@
         <para><emphasis role="bold">Java 1.6 or higher</emphasis>. Check
         with:</para>
 
-        <para><programlisting>$ <emphasis>java -version</emphasis>
+        <para><programlisting>$ <emphasis role="bold"><emphasis>java -version</emphasis></emphasis>
 java version "1.6.0_07"
 Java(TM) 2 Runtime Environment, Standard Edition (build 1.6.0_07-164)
 Java HotSpot(TM) Client VM (build 1.6.0_07-87, mixed mode, sharing)</programlisting></para>
@@ -29,7 +29,7 @@ Python 2.6.2</programlisting></para>
       </listitem>
 
       <listitem>
-        <para><emphasis role="bold">Condor 7.4 or higher</emphasis>. See
+        <para><emphasis role="bold">Condor 7.6 or higher</emphasis>. See
         h<ulink
         url="ttp://www.cs.wisc.edu/condor/">ttp://www.cs.wisc.edu/condor/</ulink>
         for more information. You should be able to run
@@ -60,7 +60,7 @@ Python 2.6.2</programlisting></para>
         <para>Check the setup by running:</para>
 
         <para><programlisting>$<emphasis> globus-version</emphasis>
-5.0.1</programlisting></para>
+5.2.0</programlisting></para>
       </listitem>
     </itemizedlist>
   </section>
@@ -68,67 +68,70 @@ Python 2.6.2</programlisting></para>
   <section id="env">
     <title>Environment</title>
 
-    <para>To use Pegasus, add the bin/ directory to your PATH.</para>
+    <para>To use Pegasus, you need ot have the pegasus-* tools in your PATH.
+    If you have installed Pegasus from RPM/DEB packages. the tools will be in
+    the default PATH, in /usr/bin. If you have installed Pegasus from binary
+    tarballs or source, add the bin/ directory to your PATH.</para>
 
     <programlisting>  Example for bourne shells:
 
-    $ <emphasis role="bold">export PATH=/some/install/pegasus-3.0.0/bin:$PATH</emphasis></programlisting>
+    $ <emphasis role="bold">export PATH=/some/install/pegasus-4.0.0/bin:$PATH</emphasis></programlisting>
 
     <note>
-      <para>Pegasus 3.0 is different from previous versions of Pegasus in that
+      <para>Pegasus 4.0 is different from previous versions of Pegasus in that
       it does not require PEGASUS_HOME to be set or sourcing of any
       environtment setup scripts.</para>
     </note>
+
+    <para>If you want to use the <link linkend="api">DAX APIs</link>, you
+    might also need to set your PYTHONPATH, PERLLIB, or CLASSPATH. The right
+    setting can be found by using pegasus-config:</para>
+
+    <programlisting>$ <emphasis role="bold">export PYTHONPATH=`pegasus-config --python`</emphasis>
+$ <emphasis role="bold">export PERLLIB=`pegasus-config --perl`</emphasis>
+$ <emphasis role="bold">export CLASSPATH=`pegasus-config --classpath`</emphasis></programlisting>
   </section>
 
   <section id="native_packages">
     <title>Native Packages (RPM/DEB)</title>
 
     <para>The preferred way to install Pegasus is with native (RPM/DEB)
-    packages. Using this package, Pegasus is installed into
-    <filename>/opt/pegasus/{major_version}.{minor_version}</filename>, and the
-    packages have {major_version}.{minor_version} in the package name. This
-    allows for multiple installed Pegasus versions installed. For example, if
-    you installed Pegasus 2.4.3 and 3.0.0, you will have: with:</para>
-
-    <programlisting>/opt/pegasus/2.4/
-/opt/pegasus/3.0/</programlisting>
+    packages.</para>
 
     <section id="rhel5">
-      <title>RHEL 5 / CentOS 5 / Scientific Linux 5</title>
+      <title>RHEL / CentOS / Scientific Linux</title>
 
-      <para>Add the Pegasus repository to yum by creating a file named
-      <emphasis role="bold">
-      <filename>/etc/yum.repos.d/pegasus.repo</filename></emphasis> with the
-      content:</para>
+      <para>Add the Pegasus repository to yum downloading the Pegasus repos
+      file and adding it to<emphasis role="bold">
+      <filename>/etc/yum.repos.d/</filename></emphasis>. For RHEL 5 based
+      systemes:</para>
 
-      <programlisting># Pegasus 3.2
-[Pegasus32]
-name=Pegasus32
-baseurl=http://pegasus.isi.edu/wms/download/3.2/yum/rhel/$releasever/$basearch/
-gpgcheck=0
-enabled=1</programlisting>
+      <programlisting># <emphasis role="bold">wget -O /etc/yum.repos.d/pegasus.repo http://pegasus.isi.edu/wms/download/rhel/5/pegasus.repo</emphasis></programlisting>
+
+      <para>For RHEL 6 based systems:</para>
+
+      <para><programlisting># <emphasis role="bold">wget -O /etc/yum.repos.d/pegasus.repo http://pegasus.isi.edu/wms/download/rhel/6/pegasus.repo</emphasis></programlisting></para>
 
       <para>Search for, and install Pegasus:</para>
 
       <programlisting># <emphasis role="bold">yum search pegasus</emphasis>
-pegasus-3.0 : Pegasus Workflow Management System
+pegasus : Pegasus Workflow Management System
 # <emphasis role="bold">yum install pegasus</emphasis>
 Running Transaction
-Installing     : pegasus-3.0 
+Installing     : pegasus
 
 Installed:
-pegasus-3.0 :3.0.0-1                                                                                                                        
+pegasus   :4.0.0-1                                                                                                                        
 
 Complete!</programlisting>
     </section>
 
     <section id="deb5">
-      <title>Debian 5 (Lenny)</title>
+      <title>Debian</title>
 
-      <para>To be able to install and upgrade from the Pegasus <emphasis
-      role="bold">APT</emphasis> repository, you will have to trust the
-      repository key. You only need to add the repository key once.</para>
+      <para>To be able to install and upgrade from the Pegasus apt repository,
+      you will have to trust the repository key. You only need to add the
+      repository key once:</para>
 
       <programlisting># <emphasis role="bold">gpg --keyserver keyring.debian.org --recv-keys 81C2A4AC</emphasis>
 # <emphasis role="bold">gpg -a --export 81C2A4AC | apt-key add -</emphasis>  </programlisting>
@@ -136,14 +139,14 @@ Complete!</programlisting>
       <para>Add the Pegasus apt repository to your
       <filename>/etc/apt/sources.list</filename> file:</para>
 
-      <programlisting>deb http://pegasus.isi.edu/wms/download/3.0/apt/debian lenny main</programlisting>
+      <programlisting>deb http://pegasus.isi.edu/wms/download/debian squeeze main</programlisting>
 
       <para>Install Pegasus with <emphasis role="bold">apt-get
       :</emphasis></para>
 
       <programlisting># <emphasis role="bold">apt-get update</emphasis>
 ...
-# <emphasis role="bold">apt-get install pegasus-3.0</emphasis></programlisting>
+# <emphasis role="bold">apt-get install pegasus</emphasis></programlisting>
     </section>
   </section>
 
@@ -237,80 +240,5 @@ $ export CONDOR_CONFIG=PEGASUS_HOME/etc/condor_config</programlisting></para>
         </listitem>
       </itemizedlist>
     </section>
-  </section>
-
-  <section id="basic_configuration">
-    <title>Basic Configuration Control</title>
-
-    <para>Basic system configuration is controlled through the properties
-    settings selected for Pegasus Planner, Pegasus Home, and Catalogs.</para>
-
-    <note>
-      Values rely on proper capitalization, unless explicitly noted otherwise.
-    </note>
-
-    <itemizedlist>
-      <listitem>
-        <para>Some default property values depend on the value of other
-        properties.</para>
-      </listitem>
-
-      <listitem>
-        <para>Curly braces refer to the value of the named property. For
-        instance,<emphasis role="bold">${pegasus.home}</emphasis> means that
-        the value depends on the value of the pegasus.home property plus any
-        noted additions. You can use this notation to refer to other
-        properties, though the extent of the subsitutions are limited.
-        Usually, you want to refer to a set of the standard system
-        properties.</para>
-      </listitem>
-
-      <listitem>
-        <para>Nesting is not allowed.</para>
-      </listitem>
-
-      <listitem>
-        <para>Substitutions shall only be done once.</para>
-      </listitem>
-
-      <listitem>
-        <para>There is a priority to the order of reading and evaluating
-        properties. Usually there is no need to worry about the priorities.
-        However, it is good to know the details of when which property
-        applies, and how one property is able to overwrite another.</para>
-      </listitem>
-
-      <listitem>
-        <para>Property definitions in the system property file, usually found
-        in <emphasis
-        role="bold">${pegasus.home.sysconfdir}/properties</emphasis> , have
-        the lowest priority. These properties are expected to be set up by the
-        submit host's administrator.</para>
-      </listitem>
-
-      <listitem>
-        <para>The properties defined in the user property file <emphasis
-        role="bold">${user.home}/.pegasusrc</emphasis> have higher priority.
-        These can overwrite settings found in the system's properties.</para>
-      </listitem>
-
-      <listitem>
-        <para>Commandline properties have the highest priority. Each
-        commandline property is introduced by a <emphasis
-        role="bold">-D</emphasis> argument.</para>
-      </listitem>
-    </itemizedlist>
-
-    <note>
-      These arguments are parsed by the shell wrapper, and thus the 
-
-      <emphasis role="bold">-D</emphasis>
-
-       arguments must be the first arguments to any command. Commandline properties are useful for debugging purposes. 
-    </note>
-
-    <para>For more details see the <emphasis role="bold">Basic
-    Properties</emphasis> section of the <link
-    linkend="running_workflows">Running Workflows</link> chapter</para>
   </section>
 </chapter>
