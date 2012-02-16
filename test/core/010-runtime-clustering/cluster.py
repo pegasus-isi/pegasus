@@ -9,15 +9,21 @@ if len(sys.argv) != 3:
     print "Usage: %s PEGASUS_HOME" % (sys.argv[0])
     sys.exit(1)
 
-config = ConfigParser.ConfigParser({'input_file':os.getcwd (), 'workflow_name':'horizontal-clustering-test', 'executable_installed':"False", 'clusters_size':"3", 'clusters_maxruntime':"7"})
-config.read(sys.argv[2] + './test.config')
+config = ConfigParser.ConfigParser({'input_file':'', 'workflow_name':'horizontal-clustering-test', 'executable_installed':"False", 'clusters_size':"3", 'clusters_maxruntime':"7"})
+config.read(sys.argv[2] + '/test.config')
 
 # Create an abstract dag
 cluster = ADAG (config.get('all', 'workflow_name'))
 
+input_file = config.get('all', 'input_file')
+if (input_file == ''):
+        input_file = os.getcwd ()
+else:
+        input_file += '/' + os.getenv ('USER') + '/inputs'
+
 # Add input file to the DAX-level replica catalog
 a = File("f.a")
-a.addPFN(PFN(config.get('all', 'file_url') + config.get('all', 'input_file') + "/f.a", config.get('all', 'file_site')))
+a.addPFN(PFN(config.get('all', 'file_url') + input_file + "/f.a", config.get('all', 'file_site')))
 cluster.addFile(a)
 
 for i in range (1, 3):

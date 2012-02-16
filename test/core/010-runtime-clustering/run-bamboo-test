@@ -5,8 +5,12 @@ set -v
 
 TOPDIR=`pwd`
 
+#CONFIG=`basename $1`
 CONFIG=$1
 DAX=horizontal-cluster.dax
+
+# Unique directory for this run
+RUN_ID=`/bin/date +'%Y%m%d_%H%M%S%N'`
 
 # Read a property from ${CONFIG}/test.config file
 properties ()
@@ -28,8 +32,8 @@ properties input_file input_file
 if [ -z ${input_file} ]; then
         input_file='./f.a'
 else
-	mkdir -p ${input_file}
-        input_file=${input_file}/f.a
+	mkdir -p ${input_file}/$USER/inputs
+        input_file=${input_file}/$USER/inputs/f.a
 fi
 
 # generate the input file
@@ -48,7 +52,7 @@ properties local_site_url local_site_url
 cat > sites.xml << EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0">
-    <site  handle="local" arch="x86" os="LINUX">
+    <site handle="local" arch="x86" os="LINUX">
         <head-fs>
             <scratch>
                 <shared>
@@ -64,27 +68,26 @@ cat > sites.xml << EOF
             </storage>
         </head-fs>
     </site>
-    <site  handle="condorpool" arch="x86" os="LINUX">
+    <site handle="condorpool" arch="x86" os="LINUX">
         <head-fs>
             <scratch />
             <storage />
         </head-fs>
         <profile namespace="pegasus" key="style">condor</profile>
         <profile namespace="condor" key="universe">vanilla</profile>
-        <profile namespace="env" key="PEGASUS_HOME" >/usr</profile>
     </site>
-    <site  handle="sharedfs" arch="x86" os="LINUX">
+    <site handle="sharedfs" arch="x86" os="LINUX">
         <head-fs>
             <scratch>
                 <shared>
-                    <file-server protocol="file" url="file://" mount-point="/nfs/ccg3/scratch/testing/scratch"/>
-                    <internal-mount-point mount-point="/nfs/ccg3/scratch/testing/scratch"/>
+                    <file-server protocol="file" url="file://" mount-point="/nfs/ccg3/scratch/$USER/scratch/$RUN_ID"/>
+                    <internal-mount-point mount-point="/nfs/ccg3/scratch/$USER/scratch/$RUN_ID"/>
                 </shared>
             </scratch>
             <storage>
                 <shared>
-                    <file-server protocol="file" url="file://" mount-point="/nfs/ccg3/scratch/testing/storage/black-diamond-output"/>
-                    <internal-mount-point mount-point="/nfs/ccg3/scratch/testing/storage/black-diamond-output"/>
+                    <file-server protocol="file" url="file://" mount-point="/nfs/ccg3/scratch/$USER/storage/black-diamond-output/$RUN_ID"/>
+                    <internal-mount-point mount-point="/nfs/ccg3/scratch/$USER/storage/black-diamond-output/$RUN_ID"/>
                 </shared>
             </storage>
         </head-fs>
@@ -111,11 +114,13 @@ cat > sites.xml << EOF
 </sitecatalog>
 EOF
 
-# plan and submit the  workflow
+# plan and submit the workflow
 properties execution_site execution_site local
 properties staging_site staging_site local
 properties output_site output_site local
 properties planner_args planner_args
+
+set -x
 
 pegasus-plan \
     --conf ${CONFIG}/pegasusrc \
@@ -127,4 +132,6 @@ pegasus-plan \
     --dax ${DAX} \
     --cluster horizontal \
     --submit ${planner_args}
+
+set +x
 
