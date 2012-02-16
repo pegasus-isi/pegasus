@@ -7,5 +7,5 @@ pegasus.dir.storage.deep=false
 pegasus.condor.logs.symlink = false
 
 pegasus.data.configuration = CondorIO
-pegasus.transfer.worker.package = True
+pegasus.transfer.worker.package = False
 pegasus.monitord.notifications = False

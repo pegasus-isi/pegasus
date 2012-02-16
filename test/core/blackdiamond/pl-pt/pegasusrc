@@ -8,4 +8,4 @@ pegasus.condor.logs.symlink = false
 
 pegasus.data.configuration = nonsharedfs
 
-pegasus.transfer.worker.package = True
+pegasus.transfer.worker.package = False
