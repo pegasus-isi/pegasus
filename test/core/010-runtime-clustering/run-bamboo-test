@@ -28,6 +28,7 @@ properties input_file input_file
 if [ -z ${input_file} ]; then
         input_file='./f.a'
 else
+	mkdir -p ${input_file}
         input_file=${input_file}/f.a
 fi
 
