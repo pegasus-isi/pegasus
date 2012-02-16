@@ -79,14 +79,14 @@ cat > sites.xml << EOF
 	<head-fs>
             <scratch>
                 <shared>
-                    <file-server protocol="file" url="file://" mount-point="/nfs/ccg3/scratch/testing/scratch/$RUN_ID"/>
-                    <internal-mount-point mount-point="/nfs/ccg3/scratch/testing/scratch/$RUN_ID"/>
+                    <file-server protocol="file" url="file://" mount-point="/nfs/ccg3/scratch/$USER/scratch/$RUN_ID"/>
+                    <internal-mount-point mount-point="/nfs/ccg3/scratch/$USER/scratch/$RUN_ID"/>
                 </shared>
             </scratch>
             <storage>
                 <shared>
-                    <file-server protocol="file" url="file://" mount-point="/nfs/ccg3/scratch/testing/storage/black-diamond-output/$RUN_ID"/>
-                    <internal-mount-point mount-point="/nfs/ccg3/scratch/testing/storage/black-diamond-output/$RUN_ID"/>
+                    <file-server protocol="file" url="file://" mount-point="/nfs/ccg3/scratch/$USER/storage/black-diamond-output/$RUN_ID"/>
+                    <internal-mount-point mount-point="/nfs/ccg3/scratch/$USER/storage/black-diamond-output/$RUN_ID"/>
                 </shared>
             </storage>
         </head-fs>
@@ -123,6 +123,8 @@ if [ "$clean_up" = 'True' ]; then
 	clean_up=''
 fi 
 
+set -x
+
 pegasus-plan \
     --conf ${CONFIG}/pegasusrc \
     --sites $execution_site \
@@ -132,4 +134,6 @@ pegasus-plan \
     $clean_up \
     --dax ${DAX} \
     --submit ${planner_args}
+
+set +x
 
