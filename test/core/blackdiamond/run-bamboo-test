@@ -5,7 +5,7 @@ set -v
 
 TOPDIR=`pwd`
 
-CONFIG=$1
+CONFIG=`basename $1`
 DAX=blackdiamond.dax
 
 # Unique directory for this run
@@ -50,7 +50,7 @@ export PYTHONPATH=`pegasus-config --python`
 cat > sites.xml << EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0">
-    <site  handle="local" arch="x86" os="LINUX">
+    <site handle="local" arch="x86" os="LINUX">
         <head-fs>
             <scratch>
                 <shared>
@@ -67,7 +67,7 @@ cat > sites.xml << EOF
         </head-fs>
 	<profile namespace="pegasus" key="clusters.num">1</profile>
     </site>
-    <site  handle="condorpool" arch="x86" os="LINUX">
+    <site handle="condorpool" arch="x86" os="LINUX">
         <head-fs>
             <scratch />
             <storage />
@@ -112,7 +112,7 @@ cat > sites.xml << EOF
 </sitecatalog>
 EOF
 
-# plan and submit the  workflow
+# plan and submit the workflow
 properties execution_site execution_site
 properties staging_site staging_site
 properties output_site output_site
