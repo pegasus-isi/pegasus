@@ -612,6 +612,59 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
     </section>
   </section>
 
+  <section>
+    <title>Pegasus Data Configuration </title>
+
+    <para>Pegasus can be broadly setup to run workflows in the following
+    configurations</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>Shared File System </para>
+
+        <para>This setup applies to where the head node and the worker nodes
+        of a cluster share a filesystem. Compute jobs in the workflow run in a
+        directory on the shared filesystem.</para>
+      </listitem>
+
+      <listitem>
+        <para>NonShared FileSystem</para>
+
+        <para>This setup applies to where the head node and the worker nodes
+        of a cluster don't share a filesystem. Compute jobs in the workflow
+        run in a local directory on the worker node</para>
+      </listitem>
+
+      <listitem>
+        <para>Condor Pool Without a shared filesystem</para>
+
+        <para>This setup applies to a condor pool where the worker nodes
+        making up a condor pool don't share a filesystem. All data IO is
+        achieved using Condor File IO. This is a special case of the non
+        shared filesystem setup, where instead of using pegasus-transfer to
+        transfer input and output data, Condor File IO is used.</para>
+      </listitem>
+    </itemizedlist>
+
+    <section>
+      <title>Shared File System</title>
+
+      <para></para>
+    </section>
+
+    <section>
+      <title>Non Shared Filesystem</title>
+
+      <para></para>
+    </section>
+
+    <section>
+      <title>Condor Pool Without a Shared Filesystem</title>
+
+      <para></para>
+    </section>
+  </section>
+
   <section id="pegasus-plan">
     <title>Pegasus-Plan</title>
 
@@ -741,5 +794,4 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
 
   <xi:include href="configuration.xml"
               xmlns:xi="http://www.w3.org/2001/XInclude" />
-
 </chapter>
