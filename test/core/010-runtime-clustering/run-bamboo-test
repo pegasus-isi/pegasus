@@ -5,8 +5,7 @@ set -v
 
 TOPDIR=`pwd`
 
-#CONFIG=`basename $1`
-CONFIG=$1
+CONFIG=`basename $1`
 DAX=horizontal-cluster.dax
 
 # Unique directory for this run
