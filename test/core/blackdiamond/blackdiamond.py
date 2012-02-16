@@ -9,7 +9,7 @@ if len(sys.argv) != 3:
 	print "Usage: %s PEGASUS_HOME" % (sys.argv[0])
 	sys.exit(1)
 
-config = ConfigParser.ConfigParser({'input_file': os.getcwd (), 'workflow_name': 'diamond', 'executable_installed':"False"})
+config = ConfigParser.ConfigParser({'input_file': '', 'workflow_name': 'diamond', 'executable_installed':"False"})
 config.read(sys.argv [2] + '/test.config')
 
 # Create a abstract dag
@@ -17,9 +17,15 @@ diamond = ADAG(config.get('all', 'workflow_name'))
 
 diamond.invoke ('all', os.getcwd() + "/my-notify.sh")
 
+input_file = config.get('all', 'input_file')
+if (input_file == ''):
+	input_file = os.getcwd ()
+else:
+	input_file += '/' + os.getlogin () + '/inputs'
+ 
 # Add input file to the DAX-level replica catalog
 a = File("f.a")
-a.addPFN(PFN(config.get('all', 'file_url') + config.get('all', 'input_file') + "/f.a", config.get('all', 'file_site')))
+a.addPFN(PFN(config.get('all', 'file_url') + input_file + "/f.a", config.get('all', 'file_site')))
 diamond.addFile(a)
 	
 # Add executables to the DAX-level replica catalog

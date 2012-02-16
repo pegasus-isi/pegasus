@@ -32,7 +32,8 @@ properties input_file input_file
 if [ -z ${input_file} ]; then
 	input_file='./f.a'
 else
-	input_file=${input_file}/f.a
+	mkdir -p ${input_file}/$USER/inputs
+	input_file=${input_file}/$USER/inputs/f.a
 fi
 
 # generate the input file
@@ -86,7 +87,7 @@ cat > sites.xml << EOF
             <storage>
                 <shared>
                     <file-server protocol="file" url="file://" mount-point="/nfs/ccg3/scratch/$USER/storage/black-diamond-output/$RUN_ID"/>
-                    <internal-mount-point mount-point="/nfs/ccg3/scratch/$USER/storage/black-diamond-output/$RUN_ID"/>
+                    <internal-mount-point mount-point="/nfs/ccg3/scratch/testing/$USER/black-diamond-output/$RUN_ID"/>
                 </shared>
             </storage>
         </head-fs>
