@@ -1574,9 +1574,9 @@ public class TransferEngine extends Engine {
                                                  Pegasus.REMOTE_INITIALDIR_KEY );
 
 //        SiteInfo stagingSite = mPoolHandle.getPoolEntry( job.getSiteHandle(), "vanilla" );
-        SiteCatalogEntry ePool = mSiteStore.lookup( job.getSiteHandle() );
-        if ( ePool == null ) {
-            this.poolNotFoundMsg( job.getSiteHandle(), "vanilla" ) ;
+        SiteCatalogEntry stagingSiteEntry = mSiteStore.lookup( job.getStagingSiteHandle() );
+        if ( stagingSiteEntry == null ) {
+            this.poolNotFoundMsg( job.getStagingSiteHandle(), "vanilla" ) ;
             mLogger.log( mLogMsg, LogManager.ERROR_MESSAGE_LEVEL );
             throw new RuntimeException( mLogMsg );
         }
@@ -1586,14 +1586,14 @@ public class TransferEngine extends Engine {
             PegasusFile pf = (PegasusFile) it.next();
             String lfn = pf.getLFN();
 
-            StringBuffer execURL = new StringBuffer();
-            FileServer server = ePool.getHeadNodeFS().selectScratchSharedFileServer();
-            execURL.append( server.getURLPrefix() ).
+            StringBuffer stagingSiteURL = new StringBuffer();
+            FileServer server = stagingSiteEntry.getHeadNodeFS().selectScratchSharedFileServer();
+            stagingSiteURL.append( server.getURLPrefix() ).
                     append( mSiteStore.getExternalWorkDirectory(server, job.getSiteHandle() ) ).
                     append( File.separatorChar ).append( lfn );
 
             
-            trackInTransientRC( lfn, execURL.toString(), job.getSiteHandle() );
+            trackInTransientRC( lfn, stagingSiteURL.toString(), job.getSiteHandle() );
 
         }
     }
