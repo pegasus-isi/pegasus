@@ -21,7 +21,7 @@ input_file = config.get('all', 'input_file')
 if (input_file == ''):
 	input_file = os.getcwd ()
 else:
-	input_file += '/' + os.getlogin () + '/inputs'
+	input_file += '/' + os.getenv ('USER') + '/inputs'
  
 # Add input file to the DAX-level replica catalog
 a = File("f.a")

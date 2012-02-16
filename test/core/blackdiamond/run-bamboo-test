@@ -10,7 +10,6 @@ DAX=blackdiamond.dax
 
 # Unique directory for this run
 RUN_ID=`/bin/date +'%Y%m%d_%H%M%S%N'`
-RUN_DIR=`pwd`/work/$RUN_ID
 
 # Read a property from ${CONFIG}/test.config file
 properties ()
@@ -76,7 +75,7 @@ cat > sites.xml << EOF
         <profile namespace="pegasus" key="style">condor</profile>
         <profile namespace="condor" key="universe">vanilla</profile>
     </site>
-    <site  handle="sharedfs" arch="x86" os="LINUX">
+    <site handle="sharedfs" arch="x86" os="LINUX">
 	<head-fs>
             <scratch>
                 <shared>
