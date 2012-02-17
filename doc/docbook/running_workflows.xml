@@ -470,7 +470,8 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
     </section>
 
     <section>
-      <title>Addition of Data Transfer and Registration Nodes</title>
+      <title id="planning_add_txfer_nodes">Addition of Data Transfer and
+      Registration Nodes</title>
 
       <para>After job clustering, the workflow is handed to the Data Transfer
       module that adds data stage-in , inter site and stage-out nodes to the
@@ -647,7 +648,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
   </section>
 
   <section>
-    <title id="data_staging_configuration">Data Staging Configuration</title>
+    <title>Data Staging Configuration</title>
 
     <para>Pegasus can be broadly setup to run workflows in the following
     configurations</para>
@@ -905,6 +906,11 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
         </listitem>
       </orderedlist>
 
+      <para>This mode is especially useful for running in the cloud
+      environments where you don't want to setup a shared filesystem between
+      the worker nodes. Running in that mode is explained in detail <link
+      linkend="amazon_aws">here.</link></para>
+
       <tip>
         <para>Set p<emphasis role="bold">egasus.data.configuration</emphasis>
         to <emphasis role="bold">nonsharedfs</emphasis> to run in this
@@ -994,16 +1000,20 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
           <para>Stageout Job executes ( either on Submit Host or staging site
           ) to stage out output data from the workflow specific execution
           directory to a directory on the final output site.</para>
-
-          <tip>
-            <para>Set p<emphasis
-            role="bold">egasus.data.configuration</emphasis> to <emphasis
-            role="bold">condorio</emphasis> to run in this configuration. In
-            this mode, the staging site is automatically set to site <emphasis
-            role="bold">local</emphasis></para>
-          </tip>
         </listitem>
       </orderedlist>
+
+      <para>This mode is especially useful for running in the cloud
+      environments where you don't want to setup a shared filesystem between
+      the worker nodes. Running in that mode is explained in detail <link
+      linkend="amazon_aws">here.</link></para>
+
+      <tip>
+        <para>Set p<emphasis role="bold">egasus.data.configuration</emphasis>
+        to <emphasis role="bold">condorio</emphasis> to run in this
+        configuration. In this mode, the staging site is automatically set to
+        site <emphasis role="bold">local</emphasis></para>
+      </tip>
     </section>
   </section>
 
