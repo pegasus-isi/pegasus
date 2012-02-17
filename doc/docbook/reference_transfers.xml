@@ -396,14 +396,14 @@
 
     <para>As far as possible, Pegasus will ensure that the transfer jobs added
     to the executable workflow are executed on the submit host. By default,
-    Pegasus will schedule a transfer to be executed on the remote compute site
+    Pegasus will schedule a transfer to be executed on the remote staging site
     only if there is no way to execute it on the submit host. For e.g if the
-    file server specified for the compute site is a file server, then Pegasus
-    will schedule all the stage in data movement jobs on the compute site to
-    stage-in the input data for the workflow. Another case would be if a user
-    has symlinking turned on. In that case, the transfer jobs that symlink
-    against the input data on the compute site, will be executed remotely ( on
-    the compute site ).</para>
+    file server specified for the staging site/compute site is a file server,
+    then Pegasus will schedule all the stage in data movement jobs on the
+    compute site to stage-in the input data for the workflow. Another case
+    would be if a user has symlinking turned on. In that case, the transfer
+    jobs that symlink against the input data on the compute site, will be
+    executed remotely ( on the compute site ).</para>
 
     <para>Users can specify the property <emphasis
     role="bold">pegasus.transfer.*.remote.sites</emphasis> to change the
@@ -683,6 +683,25 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
 
             <entry>symlinking against input files.</entry>
           </row>
+
+          <row>
+            <entry>pegasus-s3/s3cmd</entry>
+
+            <entry>staging files to and from s3 bucket in the amazon
+            cloud</entry>
+          </row>
+
+          <row>
+            <entry>scp</entry>
+
+            <entry>staging files using scp</entry>
+          </row>
+
+          <row>
+            <entry>iget</entry>
+
+            <entry>staging files to and from a irods server.</entry>
+          </row>
         </tbody>
       </tgroup>
     </table>
@@ -693,6 +712,12 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
     users can add an entry into the transformation catalog with fully
     qualified logical name as <emphasis
     role="bold">pegasus::pegasus-transfer</emphasis></para>
+  </section>
+
+  <section>
+    <title>Credentials Staging</title>
+
+    <para>[To be filled by Mats]</para>
   </section>
 
   <section>
@@ -860,5 +885,28 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
         the compute site.</para>
       </listitem>
     </itemizedlist>
+
+    <section>
+      <title>Worker Package Staging in Non Shared Filesystem setup</title>
+
+      <para>Worker package staging is automatically set to true , when
+      workflows are setup to run in a non shared filesystem setup i.e.
+      <emphasis role="bold">pegasus.data.configuration</emphasis> is set to
+      <emphasis role="bold">nonsharedfs</emphasis> or <emphasis
+      role="bold">condorio</emphasis> . In these configurations, a
+      stage_worker job is created that brings in the worker package to the
+      submit directory of the workflow. For each job, the worker package is
+      then transferred with the job using Condor File Transfers ( <emphasis
+      role="bold">transfer_input_files</emphasis> ) . This transfer always
+      happens unless, PEGASUS_HOME is specified in the site catalog for the
+      site on which the job is scheduled to run.</para>
+
+      <para>Users can explicitly set the following property to false, to turn
+      off worker package staging by the Planner. This is applicable , when
+      running in the cloud and virtual machines / worker nodes already have
+      the pegasus worker tools installed. </para>
+
+      <programlisting><emphasis role="bold">pegasus.transfer.worker.package          false</emphasis> </programlisting>
+    </section>
   </section>
 </section>
