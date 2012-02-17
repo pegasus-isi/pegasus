@@ -613,14 +613,14 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
   </section>
 
   <section>
-    <title>Pegasus Data Configuration </title>
+    <title>Data Staging Configuration </title>
 
     <para>Pegasus can be broadly setup to run workflows in the following
     configurations</para>
 
     <itemizedlist>
       <listitem>
-        <para>Shared File System </para>
+        <para><emphasis role="bold">Shared File System </emphasis></para>
 
         <para>This setup applies to where the head node and the worker nodes
         of a cluster share a filesystem. Compute jobs in the workflow run in a
@@ -628,7 +628,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
       </listitem>
 
       <listitem>
-        <para>NonShared FileSystem</para>
+        <para><emphasis role="bold">NonShared FileSystem</emphasis></para>
 
         <para>This setup applies to where the head node and the worker nodes
         of a cluster don't share a filesystem. Compute jobs in the workflow
@@ -636,7 +636,8 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
       </listitem>
 
       <listitem>
-        <para>Condor Pool Without a shared filesystem</para>
+        <para><emphasis role="bold">Condor Pool Without a shared
+        filesystem</emphasis></para>
 
         <para>This setup applies to a condor pool where the worker nodes
         making up a condor pool don't share a filesystem. All data IO is
@@ -651,7 +652,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
 
     <orderedlist>
       <listitem>
-        <para>Submit Host</para>
+        <para><emphasis role="bold">Submit Host</emphasis></para>
 
         <para>The host from where the workflows are submitted . This is where
         Pegasus and Condor DAGMan are installed. This is referred to as the
@@ -660,7 +661,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
       </listitem>
 
       <listitem>
-        <para>Compute Site</para>
+        <para><emphasis role="bold">Compute Site</emphasis></para>
 
         <para>The site where the jobs mentioned in the DAX are executed. There
         needs to be an entry in the Site Catalog for every compute site. The
@@ -669,7 +670,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
       </listitem>
 
       <listitem>
-        <para>Staging Site</para>
+        <para><emphasis role="bold">Staging Site</emphasis></para>
 
         <para>A site to which the separate transfer jobs in the executable
         workflow ( jobs with stage_in , stage_out and stage_inter prefixes
@@ -680,7 +681,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
       </listitem>
 
       <listitem>
-        <para>Output Site</para>
+        <para><emphasis role="bold">Output Site</emphasis></para>
 
         <para>The output site is the final storage site where the users want
         the output data from jobs to go to. The output site is passed to
@@ -690,7 +691,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
       </listitem>
 
       <listitem>
-        <para>Input Site</para>
+        <para><emphasis role="bold">Input Site</emphasis></para>
 
         <para>The site where the input data is stored. The locations of the
         input data are catalogued in the Replica Catalog, and the pool
@@ -699,7 +700,8 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
       </listitem>
 
       <listitem>
-        <para>Workflow Execution Directory</para>
+        <para><emphasis role="bold">Workflow Execution
+        Directory</emphasis></para>
 
         <para>This is the directory created by the create dir jobs in the
         executable workflow on the Staging Site. This is a directory per
@@ -708,7 +710,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
       </listitem>
 
       <listitem>
-        <para>Worker Node Directory</para>
+        <para><emphasis role="bold">Worker Node Directory</emphasis></para>
 
         <para>This is the directory created on the worker nodes per job
         usually by the job wrapper that launches the job.</para>
