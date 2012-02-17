@@ -646,22 +646,299 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
       </listitem>
     </itemizedlist>
 
+    <para>For the purposes of data configuration various sites, and
+    directories are defined below.</para>
+
+    <orderedlist>
+      <listitem>
+        <para>Submit Host</para>
+
+        <para>The host from where the workflows are submitted . This is where
+        Pegasus and Condor DAGMan are installed. This is referred to as the
+        <emphasis role="bold">"local"</emphasis> site in the site catalog
+        .</para>
+      </listitem>
+
+      <listitem>
+        <para>Compute Site</para>
+
+        <para>The site where the jobs mentioned in the DAX are executed. There
+        needs to be an entry in the Site Catalog for every compute site. The
+        compute site is passed to pegasus-plan using <emphasis
+        role="bold">--sites</emphasis> option</para>
+      </listitem>
+
+      <listitem>
+        <para>Staging Site</para>
+
+        <para>A site to which the separate transfer jobs in the executable
+        workflow ( jobs with stage_in , stage_out and stage_inter prefixes
+        that Pegasus adds using the transfer refiners) stage the input data to
+        and the output data from to transfer to the final output site.
+        Currently, the staging site is always the compute site where the jobs
+        execute.</para>
+      </listitem>
+
+      <listitem>
+        <para>Output Site</para>
+
+        <para>The output site is the final storage site where the users want
+        the output data from jobs to go to. The output site is passed to
+        pegasus-plan using the <emphasis role="bold">--output</emphasis>
+        option. The stageout jobs in the workflow stage the data from the
+        staging site to the final storage site.</para>
+      </listitem>
+
+      <listitem>
+        <para>Input Site</para>
+
+        <para>The site where the input data is stored. The locations of the
+        input data are catalogued in the Replica Catalog, and the pool
+        attribute of the locations gives us the site handle for the input
+        site.</para>
+      </listitem>
+
+      <listitem>
+        <para>Workflow Execution Directory</para>
+
+        <para>This is the directory created by the create dir jobs in the
+        executable workflow on the Staging Site. This is a directory per
+        workflow per staging site. Currently, the Staging site is always the
+        Compute Site.</para>
+      </listitem>
+
+      <listitem>
+        <para>Worker Node Directory</para>
+
+        <para>This is the directory created on the worker nodes per job
+        usually by the job wrapper that launches the job.</para>
+      </listitem>
+    </orderedlist>
+
     <section>
       <title>Shared File System</title>
 
-      <para></para>
+      <para>By default Pegasus is setup to run workflows in the shared file
+      system setup, where the worker nodes and the head node of a cluster
+      share a filesystem.</para>
+
+      <figure>
+        <title>Shared File System Setup</title>
+
+        <mediaobject>
+          <imageobject>
+            <imagedata align="left"
+                       fileref="images/data-configuration-sharedfs.png"
+                       role="" scale="" width="" wordsize="" />
+          </imageobject>
+        </mediaobject>
+      </figure>
+
+      <para>The data flow is as follows in this case</para>
+
+      <orderedlist>
+        <listitem>
+          <para>Stagein Job executes ( either on Submit Host or Head Node ) to
+          stage in input data from Input Sites ( 1---n) to a workflow specific
+          execution directory on the shared filesystem.</para>
+        </listitem>
+
+        <listitem>
+          <para>Compute Job starts on a worker node in the workflow execution
+          directory. Accesses the input data using Posix IO</para>
+        </listitem>
+
+        <listitem>
+          <para>Compute Job executes on the worker node and writes out output
+          data to workflow execution directory using Posix IO</para>
+        </listitem>
+
+        <listitem>
+          <para>Stageout Job executes ( either on Submit Host or Head Node )
+          to stage out output data from the workflow specific execution
+          directory to a directory on the final output site.</para>
+        </listitem>
+      </orderedlist>
+
+      <tip>
+        <para>Set <emphasis role="bold">pegasus.data.configuration</emphasis>
+        to <emphasis role="bold">sharedfs</emphasis> to run in this
+        configuration. </para>
+      </tip>
     </section>
 
     <section>
       <title>Non Shared Filesystem</title>
 
-      <para></para>
+      <para>In this setup , Pegasus runs workflows on local file-systems of
+      worker nodes with the the worker nodes not sharing a filesystem. The
+      data transfers happen between the worker node and a staging / data
+      coordination site. The staging site server can be a file server on the
+      head node of a cluster or can be on a separate machine. </para>
+
+      <para><emphasis role="bold">Setup</emphasis><itemizedlist>
+          <listitem>
+            <para>compute and staging site are the different</para>
+          </listitem>
+
+          <listitem>
+            <para>head node and worker nodes of compute site don't share a
+            filesystem</para>
+          </listitem>
+
+          <listitem>
+            <para>Input Data is staged from remote sites.</para>
+          </listitem>
+
+          <listitem>
+            <para>Remote Output Site i.e site other than compute site. Can be
+            submit host.</para>
+          </listitem>
+        </itemizedlist></para>
+
+      <figure>
+        <title>Non Shared Filesystem Setup</title>
+
+        <mediaobject>
+          <imageobject>
+            <imagedata align="left"
+                       fileref="images/data-configuration-nonsharedfs.png"
+                       id="Figure2" />
+          </imageobject>
+        </mediaobject>
+      </figure>
+
+      <para>The data flow is as follows in this case</para>
+
+      <orderedlist>
+        <listitem>
+          <para>Stagein Job executes ( either on Submit Host or on staging
+          site ) to stage in input data from Input Sites ( 1---n) to a
+          workflow specific execution directory on the staging site.</para>
+        </listitem>
+
+        <listitem>
+          <para>Compute Job starts on a worker node in a local execution
+          directory. Accesses the input data using pegasus transfer to
+          transfer the data from the staging site to a local directory on the
+          worker node</para>
+        </listitem>
+
+        <listitem>
+          <para>The compute job executes in the worker node, and executes on
+          the worker node.</para>
+        </listitem>
+
+        <listitem>
+          <para>The compute Job writes out output data to the local directory
+          on the worker node using Posix IO</para>
+        </listitem>
+
+        <listitem>
+          <para>Output Data is pushed out to the staging site from the worker
+          node using pegasus-transfer. </para>
+        </listitem>
+
+        <listitem>
+          <para>Stageout Job executes ( either on Submit Host or staging site
+          ) to stage out output data from the workflow specific execution
+          directory to a directory on the final output site.</para>
+        </listitem>
+      </orderedlist>
+
+      <tip>
+        <para>Set p<emphasis role="bold">egasus.data.configuration</emphasis>
+        to <emphasis role="bold">nonsharedfs</emphasis> to run in this
+        configuration.</para>
+      </tip>
     </section>
 
     <section>
       <title>Condor Pool Without a Shared Filesystem</title>
 
-      <para></para>
+      <para>This setup applies to a condor pool where the worker nodes making
+      up a condor pool don't share a filesystem. All data IO is achieved using
+      Condor File IO. This is a special case of the non shared filesystem
+      setup, where instead of using pegasus-transfer to transfer input and
+      output data, Condor File IO is used.</para>
+
+      <para><emphasis role="bold">Setup</emphasis><itemizedlist>
+          <listitem>
+            <para>Submit Host and staging site are same</para>
+          </listitem>
+
+          <listitem>
+            <para>head node and worker nodes of compute site don't share a
+            filesystem</para>
+          </listitem>
+
+          <listitem>
+            <para>Input Data is staged from remote sites.</para>
+          </listitem>
+
+          <listitem>
+            <para>Remote Output Site i.e site other than compute site. Can be
+            submit host.</para>
+          </listitem>
+        </itemizedlist></para>
+
+      <figure>
+        <title>Condor Pool Without a Shared Filesystem</title>
+
+        <mediaobject>
+          <imageobject>
+            <imagedata align="left"
+                       fileref="images/data-configuration-condorio.png"
+                       id="Figure13" role="" scale="" width="" wordsize="" />
+          </imageobject>
+        </mediaobject>
+      </figure>
+
+      <para>The data flow is as follows in this case</para>
+
+      <orderedlist>
+        <listitem>
+          <para>Stagein Job executeson the submit host to stage in input data
+          from Input Sites ( 1---n) to a workflow specific execution directory
+          on the submit host</para>
+        </listitem>
+
+        <listitem>
+          <para>Compute Job starts on a worker node in a local execution
+          directory. Before the compute job starts, Condor transfers the input
+          data for the job from the workflow execution directory on thesubmit
+          host to the local execution directory on the worker node.</para>
+        </listitem>
+
+        <listitem>
+          <para>The compute job executes in the worker node, and executes on
+          the worker node.</para>
+        </listitem>
+
+        <listitem>
+          <para>The compute Job writes out output data to the local directory
+          on the worker node using Posix IO</para>
+        </listitem>
+
+        <listitem>
+          <para>When the compute job finishes, Condor transfers the output
+          data for the job from the local execution directory on the worker
+          node to the workflow execution directory on the submit host.</para>
+        </listitem>
+
+        <listitem>
+          <para>Stageout Job executes ( either on Submit Host or staging site
+          ) to stage out output data from the workflow specific execution
+          directory to a directory on the final output site.</para>
+
+          <tip>
+            <para>Set p<emphasis
+            role="bold">egasus.data.configuration</emphasis> to <emphasis
+            role="bold">condorio</emphasis> to run in this
+            configuration.</para>
+          </tip>
+        </listitem>
+      </orderedlist>
     </section>
   </section>
 
