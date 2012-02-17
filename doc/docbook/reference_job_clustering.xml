@@ -190,7 +190,7 @@ siteX    B     /shared/PEGASUS/bin/jobB INSTALLED       INTEL32::LINUX PEGASUS::
         jobs get clustered together, while the larger jobs are clustered
         together. In such scenarios it would be beneficial to be able to
         cluster jobs together such that all clustered jobs have similar
-        runtimes. </para>
+        runtimes.</para>
 
         <para>In case of runtime clustering, jobs in the workflow are
         associated with a level. The levels of the workflow are determined in
@@ -218,13 +218,23 @@ siteX    B     /shared/PEGASUS/bin/jobB INSTALLED       INTEL32::LINUX PEGASUS::
 siteX    C     /shared/PEGASUS/bin/jobC INSTALLED       INTEL32::LINUX PEGASUS::clusters.maxruntime=300,job.runtime=100
 </programlisting>
 
+        <figure>
+          <title></title>
+
+          <mediaobject>
+            <imageobject>
+              <imagedata fileref="images/advanced-clustering-4.png" />
+            </imageobject>
+          </mediaobject>
+        </figure>
+
         <para>In the above case the jobs referring to logical transformation B
         scheduled on siteX will be clustered such that all clustered jobs will
         run approximately for the same duration specified by the
         clusters.maxruntime property. In the above case we assume all jobs
         referring to transformation B run for 100 seconds. For jobs with
         significantly differeing runtime, the job.runtime property will be
-        associated with the jobs in the DAX. </para>
+        associated with the jobs in the DAX.</para>
 
         <para>In addition to the above two profiles, we need to inform
         pegasus-plan to use runtime clustering. This is done by seeting the
@@ -247,7 +257,7 @@ siteX    C     /shared/PEGASUS/bin/jobC INSTALLED       INTEL32::LINUX PEGASUS::
 
             <mediaobject>
               <imageobject>
-                <imagedata fileref="images/advanced-clustering-3.png" />
+                <imagedata fileref="images/advanced-clustering-5.png" />
               </imageobject>
             </mediaobject>
           </figure></para>
