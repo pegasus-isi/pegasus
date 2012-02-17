@@ -10,15 +10,19 @@ BIN_DIR=`pegasus-config --bin`
 # generate the input file
 echo "This is sample input to KEG" >f.a
 
+# build the dax generator
+CLASSPATH=`pegasus-config --classpath`
+export CLASSPATH=".:$CLASSPATH"
+javac BlackDiamondDAX.java
+
 # generate the dax
-export PYTHONPATH=`pegasus-config --python`
-./blackdiamond.py $BIN_DIR >blackdiamond.dax
+java BlackDiamondDAX $BIN_DIR blackdiamond.dax
 
 # create the site catalog
 cat >sites.xml <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0">
-    <site  handle="local" arch="x86_64" os="LINUX">
+    <site  handle="local" arch="x86" os="LINUX">
         <head-fs>
             <scratch>
                 <shared>
@@ -33,7 +37,14 @@ cat >sites.xml <<EOF
                 </shared>
             </storage>
         </head-fs>
-        <profile namespace="env" key="PEGASUS_BIN" >$BIN_DIR</profile>
+    </site>
+    <site  handle="condorpool" arch="x86" os="LINUX">
+        <head-fs>
+            <scratch />
+            <storage />
+        </head-fs>
+        <profile namespace="pegasus" key="style" >condor</profile>
+        <profile namespace="condor" key="universe" >vanilla</profile>
     </site>
 </sitecatalog>
 EOF
@@ -41,8 +52,9 @@ EOF
 # plan and submit the  workflow
 pegasus-plan \
     --conf pegasusrc \
-    --sites local \
+    --sites condorpool \
     --dir work \
     --output local \
     --dax blackdiamond.dax \
     --submit
+

@@ -1,124 +1,107 @@
 #!/bin/bash
 
 set -e
-
-# note - this requires Montage 3.2beta6 or higher
-
-#######################################################################
-#
-#  Settings
-#
-DEGREES=0.5
-LOCAL_PEGASUS_HOME="/home/rynge/Pegasus/install/current"
-LOCAL_GLOBUS_LOCATION="/opt/globus/5.0.1"
-LOCAL_GLOBUS_TCP_PORT_RANGE="40000,50000"
-LOCAL_MONTAGE_LOCATION="/home/rynge/Projects/Montage/src/Montage_v3.2_beta6_mats"
-CLUSTER_NAME="RENCI-Engagement"
-CLUSTER_HOSTNAME="belhaven-1.renci.org"
-CLUSTER_WORK_DIR="/nfs/osg-data/engage/tmp"
-CLUSTER_PEGASUS_HOME="/nfs/software/pegasus/pegasus-3.0.0cvs"
-CLUSTER_GLOBUS_LOCATION="/nfs/software/osg-wn/current/globus"
-CLUSTER_MONTAGE_LOCATION="/nfs/software/montage/Montage_v3.2_beta6_mats"
-#######################################################################
+set -x
 
 TOP_DIR=`pwd`
-LOCAL_HOSTNAME=`hostname -f`
 
-export PATH=$LOCAL_PEGASUS_HOME/bin:$LOCAL_MONTAGE_LOCATION/bin:$PATH
+DEGREES=1.0
+MONTAGE_HOME=/ccg/software/montage/Montage_v3.3_patched_2
 
 # unique directory for this run
 RUN_ID=`/bin/date +'%F_%H%M%S'`
-RUN_DIR=`pwd`/work/$RUN_ID
+RUN_DIR=$TOP_DIR/work/$RUN_ID
+mkdir -p $RUN_DIR
 
+echo
 echo "Work directory: $RUN_DIR"
+echo
 
-mkdir -p $RUN_DIR/inputs
 cd $RUN_DIR
 
 cp $TOP_DIR/pegasusrc .
 
-# create the transformation catalogue (tc)
+# create the transformation catalog (tc)
 echo
 echo "Creating the transformation catalog..."
-for BINARY in `(cd $LOCAL_MONTAGE_LOCATION/bin && ls)`; do
+for BINARY in `(cd $MONTAGE_HOME/bin && ls)`; do
+    name=$BINARY:3.3
+    if [ "${BINARY}" = "mFitplane" ] || [ "$BINARY" = "mDiff" ]; then
+        name=$BINARY
+    fi
+
     cat >>tc <<EOF
-tr $BINARY:3.0 {
-    site $CLUSTER_NAME {
-        pfn "$CLUSTER_MONTAGE_LOCATION/bin/$BINARY"
-        arch "x86"
+tr $name {
+    site local {
+        pfn "$MONTAGE_HOME/bin/$BINARY"
+        arch "x86_64"
         os "linux"
-        type "INSTALLED"
+        type "STAGEABLE"
+        profile pegasus "clusters.size" "20"
+        profile env "MONTAGE_BIN" "."
     }
 }
 EOF
+    
 done
-
-# site catalog
+    
 echo
 echo "Creating the site catalog..."
 cat >sites.xml <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0">
-    <site handle="local" arch="x86" os="LINUX">
+    <site handle="local" arch="x86_64" os="LINUX">
         <grid  type="gt2" contact="localhost/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/>
         <head-fs>
-            <scratch />
+            <scratch>
+                <shared>
+                    <file-server protocol="file" url="file://" mount-point="$RUN_DIR/scratch"/>
+                    <internal-mount-point mount-point="$RUN_DIR/scratch"/>
+                </shared>
+            </scratch>
             <storage>
                 <shared>
                     <file-server protocol="file" url="file://" mount-point="$RUN_DIR/outputs"/>
-                    <internal-mount-point mount-point="$RUN_DIR/outputs" free-size="100G" total-size="30G"/>
                 </shared>
             </storage>
         </head-fs>
         <replica-catalog  type="LRC" url="rlsn://dummyValue.url.edu" />
-        <profile namespace="env" key="PEGASUS_HOME" >$LOCAL_PEGASUS_HOME</profile>
-        <profile namespace="env" key="GLOBUS_LOCATION" >$LOCAL_GLOBUS_LOCATION</profile>
-        <profile namespace="env" key="GLOBUS_TCP_PORT_RANGE" >$LOCAL_GLOBUS_TCP_PORT_RANGE</profile>
+        <profile namespace="env" key="MONTAGE_HOME" >$MONTAGE_HOME</profile>
+        <profile namespace="env" key="PEGASUS_HOME" >/usr</profile>
     </site>
-    <site handle="$CLUSTER_NAME" arch="x86" os="LINUX">
-        <grid  type="gt2" contact="localhost/jobmanager-fork" scheduler="Fork" jobtype="compute"/>
+
+    <site handle="glideinwms" arch="x86_64" os="LINUX">
         <head-fs>
-            <scratch>
-                <shared>
-                    <file-server protocol="gsiftp" url="gsiftp://$CLUSTER_HOSTNAME" mount-point="$CLUSTER_WORK_DIR"/>
-                    <internal-mount-point mount-point="$CLUSTER_WORK_DIR"/>
-                </shared>
-            </scratch>
+            <scratch />
             <storage />
         </head-fs>
-
-        <profile namespace="pegasus" key="style">glideinwms</profile>
-
-        <profile namespace="env" key="PEGASUS_HOME" >$CLUSTER_PEGASUS_HOME</profile>
-        <profile namespace="env" key="GLOBUS_LOCATION" >$CLUSTER_GLOBUS_LOCATION</profile>
-        <profile namespace="env" key="PATH" >$CLUSTER_MONTAGE_LOCATION/bin:$CLUSTER_GLOBUS_LOCATION/bin:/usr/local/bin:/bin:/usr/bin</profile>
+        <replica-catalog  type="LRC" url="rlsn://dummyValue.url.edu" />
+        <profile namespace="pegasus" key="style">condor</profile>
+        <profile namespace="condor" key="universe">vanilla</profile>
+        <profile namespace="condor" key="requirements" >(Target.Arch == "X86_64")</profile>
     </site>
 </sitecatalog>
 EOF
 
 echo
 echo "Running mDAG (finding input images, generating DAX, ...)..."
-mDAG 2mass j M17 $DEGREES $DEGREES 0.0002777778 . "gsiftp://$LOCAL_HOSTNAME$RUN_DIR" "gsiftp://$LOCAL_HOSTNAME$RUN_DIR/inputs"
+mDAG 2mass j M17 $DEGREES $DEGREES 0.0002777778 . "file://$RUN_DIR" "gsiftp://$RUN_DIR/inputs"
 
 echo
-echo "Downloading input images from NASA IPAC at Caltech..."
-cd inputs
-mArchiveExec ../images.tbl
-cd ..
+echo "Adding input images to the replica catalog..."
+echo "  " `cat cache.list | wc -l` "images found"
+cat cache.list | grep -v ".fits " | sed 's/ipac_cluster/local/' >rc
+cat url.list | sed 's/ http:.*ref=/ http:\/\/obelix.isi.edu\/irsa-cache/' >>rc
 
 echo
-echo "Setting up the replica catalog..."
-cp cache.list rc
-perl -p -i -e 's/ipac_cluster/local/' rc
-
 echo "Planning and submitting the workflow..."
 pegasus-plan \
-    -D pegasus.user.properties=pegasusrc \
-    --sites $CLUSTER_NAME \
+    --conf pegasusrc \
+    --sites glideinwms \
     --dir work \
     --output local \
+    --nocleanup \
     --dax dag.xml \
-    --submit \
-    2>&1 | tee pegasus-plan.out
-
+    --cluster horizontal \
+    --submit
 

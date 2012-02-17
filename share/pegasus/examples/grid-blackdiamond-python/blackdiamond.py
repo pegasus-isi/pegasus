@@ -20,15 +20,15 @@ diamond.addFile(a)
 # In this case the binary is keg, which is shipped with Pegasus, so we use
 # the remote PEGASUS_HOME to build the path.
 e_preprocess = Executable(namespace="diamond", name="preprocess", version="4.0", os="linux", arch="x86_64", installed=True)
-e_preprocess.addPFN(PFN("file://" + sys.argv[1] + "/bin/keg", "TestCluster"))
+e_preprocess.addPFN(PFN("file://" + sys.argv[1] + "/bin/pegasus-keg", "TestCluster"))
 diamond.addExecutable(e_preprocess)
 	
 e_findrange = Executable(namespace="diamond", name="findrange", version="4.0", os="linux", arch="x86_64", installed=True)
-e_findrange.addPFN(PFN("file://" + sys.argv[1] + "/bin/keg", "TestCluster"))
+e_findrange.addPFN(PFN("file://" + sys.argv[1] + "/bin/pegasus-keg", "TestCluster"))
 diamond.addExecutable(e_findrange)
 	
 e_analyze = Executable(namespace="diamond", name="analyze", version="4.0", os="linux", arch="x86_64", installed=True)
-e_analyze.addPFN(PFN("file://" + sys.argv[1] + "/bin/keg", "TestCluster"))
+e_analyze.addPFN(PFN("file://" + sys.argv[1] + "/bin/pegasus-keg", "TestCluster"))
 diamond.addExecutable(e_analyze)
 
 # Add a preprocess job

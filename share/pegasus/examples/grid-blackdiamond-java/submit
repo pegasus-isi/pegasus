@@ -10,7 +10,7 @@ set -e
 CLUSTER_NAME="Obelix"
 CLUSTER_HOSTNAME="obelix.isi.edu"
 CLUSTER_SCHEDULER="condor"
-CLUSTER_WORK_DIR="/nfs/ccg1/90-day-scratch"
+CLUSTER_WORK_DIR="/nfs/ccg3/scratch"
 CLUSTER_PEGASUS_HOME="/ccg/software/pegasus/dev/trunk"
 CLUSTER_GLOBUS_LOCATION="/ccg/software/globus/default"
 #######################################################################
@@ -18,13 +18,9 @@ CLUSTER_GLOBUS_LOCATION="/ccg/software/globus/default"
 
 TOPDIR=`pwd`
 
+# pegasus bin directory is needed to find keg
+BIN_DIR=`pegasus-config --bin`
 # figure out where Pegasus is installed
-export PEGASUS_HOME=`which pegasus-plan | sed 's:/bin/pegasus-plan::'`
-if [ "x$PEGASUS_HOME" = "x" ]; then
-    echo "Unable to determine location of your Pegasus install"
-    echo "Please make sure pegasus-plan is in your path"
-    exit 1
-fi 
 
 if [ "x$GLOBUS_LOCATION" = "x" ]; then
     echo "Pelase set GLOBUS_LOCATION to the location of your Pegasus install"
@@ -35,7 +31,8 @@ fi
 echo "This is sample input to KEG" >f.a
 
 # build the dax generator
-export CLASSPATH=.:$PEGASUS_HOME/lib/pegasus.jar:$CLASSPATH
+CLASSPATH=`pegasus-config --classpath`
+export CLASSPATH=".:$CLASSPATH"
 javac BlackDiamondDAX.java
 
 # generate the dax
@@ -63,7 +60,7 @@ cat >sites.xml <<EOF
             </storage>
         </head-fs>
         <replica-catalog  type="LRC" url="rlsn://dummyValue.url.edu" />
-        <profile namespace="env" key="PEGASUS_HOME" >$PEGASUS_HOME</profile>
+        <profile namespace="env" key="PEGASUS_BIN" >$PEGASUS_BIN_DIR</profile>
         <profile namespace="env" key="GLOBUS_LOCATION" >$GLOBUS_LOCATION</profile>
     </site>
     <site  handle="$CLUSTER_NAME" arch="x86" os="LINUX">

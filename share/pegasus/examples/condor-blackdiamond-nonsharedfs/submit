@@ -10,30 +10,44 @@ BIN_DIR=`pegasus-config --bin`
 # generate the input file
 echo "This is sample input to KEG" >f.a
 
+# hostname for gridftp server
+HOSTNAME=`hostname -f`
+
+# build the dax generator
+CLASSPATH=`pegasus-config --classpath`
+export CLASSPATH=".:$CLASSPATH"
+javac BlackDiamondDAX.java
+
 # generate the dax
-export PYTHONPATH=`pegasus-config --python`
-./blackdiamond.py $BIN_DIR >blackdiamond.dax
+java BlackDiamondDAX $HOSTNAME $BIN_DIR blackdiamond.dax
 
 # create the site catalog
 cat >sites.xml <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0">
-    <site  handle="local" arch="x86_64" os="LINUX">
+    <site  handle="local" arch="x86" os="LINUX">
         <head-fs>
             <scratch>
                 <shared>
-                    <file-server protocol="file" url="file://" mount-point="$TOPDIR/work"/>
+                    <file-server protocol="gsiftp" url="gsiftp://$HOSTNAME" mount-point="$TOPDIR/work"/>
                     <internal-mount-point mount-point="$TOPDIR/work"/>
                 </shared>
             </scratch>
             <storage>
                 <shared>
-                    <file-server protocol="file" url="file://" mount-point="$TOPDIR/outputs"/>
+                    <file-server protocol="gsiftp" url="gsiftp://$HOSTNAME" mount-point="$TOPDIR/outputs"/>
                     <internal-mount-point mount-point="$TOPDIR/outputs"/>
                 </shared>
             </storage>
         </head-fs>
-        <profile namespace="env" key="PEGASUS_BIN" >$BIN_DIR</profile>
+    </site>
+    <site  handle="condorpool" arch="x86" os="LINUX">
+        <head-fs>
+            <scratch />
+            <storage />
+        </head-fs>
+        <profile namespace="pegasus" key="style" >condor</profile>
+        <profile namespace="condor" key="universe" >vanilla</profile>
     </site>
 </sitecatalog>
 EOF
@@ -41,8 +55,10 @@ EOF
 # plan and submit the  workflow
 pegasus-plan \
     --conf pegasusrc \
-    --sites local \
+    --sites condorpool \
+    --staging-site local \
     --dir work \
     --output local \
     --dax blackdiamond.dax \
     --submit
+

@@ -4,23 +4,14 @@ set -e
 
 TOPDIR=`pwd`
 
-# set up pegasus classpath
-export CLASSPATH=`pegasus-config --classpath`
-if [ "x$CLASSPATH" = "x" ]; then
-    echo "ERROR: Unable to run pegasus-config to get the classpath"
-    exit 1
-fi
-
 # pegasus bin directory is needed to find keg
 BIN_DIR=`pegasus-config --bin`
 
 # generate the input file
 echo "This is sample input to KEG" >f.a
 
-# output directory
-mkdir -p outputs
-
 # build the dax generator
+CLASSPATH=`pegasus-config --classpath`
 export CLASSPATH=".:$CLASSPATH"
 javac BlackDiamondDAX.java
 
@@ -49,19 +40,19 @@ cat >sites.xml <<EOF
     </site>
     <site  handle="condorpool" arch="x86" os="LINUX">
         <head-fs>
-            <!-- the paths for scratch filesystem are the paths on local site as we execute create dir job
-            on local site. -->
             <scratch>
                 <shared>
-                    <file-server protocol="file" url="file:///" mount-point="$TOPDIR/work"/>
-                    <internal-mount-point mount-point="$TOPDIR/work"/>
+                    <file-server protocol="gsiftp" url="gsiftp://obelix.isi.edu" mount-point="/nfs/ccg3/scratch"/>
+                    <internal-mount-point mount-point="/nfs/ccg3/scratch"/>
                 </shared>
             </scratch>
             <storage />
         </head-fs>
         <profile namespace="pegasus" key="style" >condor</profile>
         <profile namespace="condor" key="universe" >vanilla</profile>
-        <profile namespace="env" key="PEGASUS_HOME" >$BIN_DIR/..</profile>
+        <profile namespace="condor" key="requirements" >TARGET.FileSystemDomain != &quot;&quot;</profile>
+        <profile namespace="condor" key="should_transfer_files">Yes</profile>
+        <profile namespace="condor" key="when_to_transfer_output">ON_EXIT</profile>
     </site>
 </sitecatalog>
 EOF
