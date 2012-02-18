@@ -732,18 +732,39 @@
             <row>
               <entry>clusters.num</entry>
 
-              <entry>Please refer to the Pegasus Clustering Guide for detailed
-              description. This option determines the total number of clusters
-              per level. Jobs are evenly spread across clusters.</entry>
+              <entry>Please refer to the <link
+              linkend="horizontal_clustering">Pegasus Clustering Guide</link>
+              for detailed description. This option determines the total
+              number of clusters per level. Jobs are evenly spread across
+              clusters.</entry>
             </row>
 
             <row>
               <entry>clusters.size</entry>
 
-              <entry>Please refer to the Pegasus Clustering Guide for detailed
-              description. This profile determines the number of jobs in each
-              cluster. The number of clusters depends on the total number of
-              jobs on the level.</entry>
+              <entry>Please refer to the <link
+              linkend="horizontal_clustering">Pegasus Clustering Guide</link>
+              for detailed description. This profile determines the number of
+              jobs in each cluster. The number of clusters depends on the
+              total number of jobs on the level.</entry>
+            </row>
+
+            <row>
+              <entry>job.runtime</entry>
+
+              <entry>Please refer to the <link
+              linkend="runtime_clustering">Pegasus Clustering Guide</link> for
+              detailed description. This profile specifies the expected
+              runtime of a job.</entry>
+            </row>
+
+            <row>
+              <entry>clusters.maxruntime</entry>
+
+              <entry>Please refer to the <link
+              linkend="runtime_clustering">Pegasus Clustering Guide</link> for
+              detailed description. This profile specifies the maximum runtime
+              of a job.</entry>
             </row>
 
             <row>
