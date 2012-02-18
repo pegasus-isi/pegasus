@@ -63,7 +63,7 @@ Valid clustering techniques are horizontal and label.</programlisting></para>
       input file contains the respective execution targets and the arguments
       for each of the jobs that make up the clustered job.</para>
 
-      <section>
+      <section id="horizontal_clustering">
         <title>Horizontal Clustering</title>
 
         <para>In case of horizontal clustering, each job in the workflow is
@@ -176,7 +176,7 @@ siteX    B     /shared/PEGASUS/bin/jobB INSTALLED       INTEL32::LINUX PEGASUS::
         </section>
       </section>
 
-      <section>
+      <section id="runtime_clustering">
         <title>Runtime Clustering</title>
 
         <para>Workflows often consist of jobs of same type, but have varying
@@ -203,14 +203,30 @@ siteX    B     /shared/PEGASUS/bin/jobB INSTALLED       INTEL32::LINUX PEGASUS::
 
         <para>The runtime of a job, and maximum runtime for which a clustered
         jobs should run, is determined by the value of two parameters
-        associated with the jobs. Both these parameters are specified by the
-        use of a PEGASUS namespace profile keys. The keys can be specified at
-        any of the placeholders for the profiles (abstract transformation in
-        the DAX, site in the site catalog, transformation in the
-        transformation catalog). The normal overloading semantics apply i.e.
-        profile in transformation catalog overrides the one in the site
-        catalog and that in turn overrides the one in the DAX. The two
-        parameters are described below.</para>
+        associated with the jobs. </para>
+
+        <itemizedlist>
+          <listitem>
+            <para><emphasis role="bold">job.runtime</emphasis> </para>
+
+            <para>expected runtime for a job</para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis role="bold">clusters.maxruntime</emphasis></para>
+
+            <para>maxruntime for the clustered job </para>
+          </listitem>
+        </itemizedlist>
+
+        <para>Both these parameters are specified by the use of a PEGASUS
+        namespace profile keys. The keys can be specified at any of the
+        placeholders for the profiles (abstract transformation in the DAX,
+        site in the site catalog, transformation in the transformation
+        catalog). The normal overloading semantics apply i.e. profile in
+        transformation catalog overrides the one in the site catalog and that
+        in turn overrides the one in the DAX. The two parameters are described
+        below.</para>
 
         <programlisting><emphasis role="bold">#site  transformation   pfn             type             architecture   profiles
 </emphasis>
@@ -223,7 +239,7 @@ siteX    C     /shared/PEGASUS/bin/jobC INSTALLED       INTEL32::LINUX PEGASUS::
 
           <mediaobject>
             <imageobject>
-              <imagedata fileref="images/advanced-clustering-4.png" />
+              <imagedata fileref="images/advanced-clustering-5.png" />
             </imageobject>
           </mediaobject>
         </figure>
@@ -237,14 +253,15 @@ siteX    C     /shared/PEGASUS/bin/jobC INSTALLED       INTEL32::LINUX PEGASUS::
         associated with the jobs in the DAX.</para>
 
         <para>In addition to the above two profiles, we need to inform
-        pegasus-plan to use runtime clustering. This is done by seeting the
-        pegasus.clusterer.preference property to Runtime in the pegasus
-        properties file.</para>
+        pegasus-plan to use runtime clustering. This is done by setting the
+        following property .</para>
+
+        <programlisting><emphasis role="bold"> pegasus.clusterer.preference          Runtime</emphasis> </programlisting>
 
         <para></para>
       </section>
 
-      <section>
+      <section id="label_clustering">
         <title>Label Clustering</title>
 
         <para>In label based clustering, the user labels the workflow. All
