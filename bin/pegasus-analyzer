@@ -955,7 +955,7 @@ def analyze_db(config_properties):
                         # Path to dagman_out file includes original submit_dir, let's try to change it...
                         my_wfdir = os.path.normpath(my_wfdir.replace((my_info.submit_dir + os.sep), '', 1))
                         my_wfdir = os.path.join(input_dir, my_wfdir)
-                    print "%s -d %s" % (user_cmd, my_wfdir)
+                    print "%s -d %s --top-dir %s" % (user_cmd, my_wfdir, (top_dir or input_dir))
                     print
                 print
 

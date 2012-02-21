@@ -39,10 +39,10 @@ from Pegasus.plots_stats.plots import pegasus_time
 from Pegasus.tools import utils
 
 
-#regular expressions
+# Regular expressions
 re_parse_property = re.compile(r'([^:= \t]+)\s*[:=]?\s*(.*)')
 
-#Global variables----
+# Global variables----
 prog_base = os.path.split(sys.argv[0])[1]	# Name of this program
 NEW_LINE_STR ="\n"
 MAX_GRAPH_NODES = 100
@@ -54,7 +54,7 @@ calc_time_chart = False
 calc_breakdown_chart = False
 max_graph_nodes = MAX_GRAPH_NODES
 DEFAULT_OUTPUT_DIR = "plots"
-pegasus_env_path ={
+pegasus_env_path = {
 'pegasus_bin_dir'       : pegasus_bin_dir,
 'pegasus_conf_dir'      : pegasus_conf_dir,
 'pegasus_java_dir'      : pegasus_java_dir,
@@ -94,7 +94,7 @@ def setup(output_dir):
 		try:
 			shutil.rmtree(dest_img_path)
 		except:
-			logger.error("Unable to remove image directory."+dest_img_path)
+			logger.error("Unable to remove image directory." + dest_img_path)
 			sys.exit(1) 	 	
         # Need to create the path in case it doesn't exist yet when running under Python < 2.5
         if sys.version_info < (2, 5):
@@ -109,29 +109,29 @@ def generate_dag_graph(wf_info, output_dir):
 	@output_dir the output directory path
 	"""
 	dag_file_path = wf_info.dag_file_path
-	title =  str(wf_info.wf_uuid) + " (" + str(wf_info.dax_label) +")"
+	title = str(wf_info.wf_uuid) + " (" + str(wf_info.dax_label) +")"
 	if dag_file_path is not None:
 		dag2dot_file_path = os.path.join(pegasus_share_dir, "visualize/dag2dot")
-		dot_file_path = os.path.join(output_dir, wf_info.wf_uuid+".dot")
+		dot_file_path = os.path.join(output_dir, wf_info.wf_uuid + ".dot")
 		dag_cmd = dag2dot_file_path 
-		dag_cmd +=" --output "+ dot_file_path
-		dag_cmd += " "+ dag_file_path
-		logger.debug("Executing command :\n"  + dag_cmd)
+		dag_cmd += " --output " + dot_file_path
+		dag_cmd += " " + dag_file_path
+		logger.debug("Executing command :\n" + dag_cmd)
 		status, output = commands.getstatusoutput(dag_cmd)
 		if status == 0:
 			logger.info("Finished executing command." )
 		else:
-			logger.warn("Failed to generate dag graph for workflow "+ title)
+			logger.warn("Failed to generate dag graph for workflow " + title)
 			logger.debug("%s: %d:%s" % (dag_cmd, status, output))
 			return None
-		png_file_path = os.path.join(output_dir, wf_info.wf_uuid+".png")
+		png_file_path = os.path.join(output_dir, wf_info.wf_uuid + ".png")
 		dot_png_cmd = utils.find_exec("dot")
 		if dot_png_cmd is None:
 			logger.warn("dot is not present . Unable to create chart in png format. ")
 			return None
-		dot_png_cmd +=" -Tpng -o" + png_file_path
-		dot_png_cmd += " "+ dot_file_path
-		logger.debug("Executing command :\n"  + dot_png_cmd)
+		dot_png_cmd += " -Tpng -o" + png_file_path
+		dot_png_cmd += " " + dot_file_path
+		logger.debug("Executing command :\n" + dot_png_cmd)
 		status, output = commands.getstatusoutput(dot_png_cmd)
 		if status == 0:
 			logger.debug("Finished executing command." )
@@ -291,7 +291,7 @@ clear:both;
 
 
 
-def createOuterhtml(wf_stats, wf_info,  submit_dir, output_dir , log_level ):
+def createOuterhtml(wf_stats, wf_info, submit_dir, output_dir, log_level):
 	"""
 	Generates the outer html file which links to all the charts and graph
 	@param wf_info WorkflowInfo object reference
@@ -302,21 +302,21 @@ def createOuterhtml(wf_stats, wf_info,  submit_dir, output_dir , log_level ):
 	"""
 	wf_uuid = wf_info.wf_uuid
 	title =  str(wf_info.wf_uuid) + " (" + str(wf_info.dax_label) +")"
-	data_file = os.path.join(output_dir,  "index.html")
-	gantt_chart_parent_file = os.path.join("gantt_chart/" + wf_uuid +".html")
-	dag_graph_parent_file = os.path.join("dag_graph/" + wf_uuid +".html")
-	dax_graph_parent_file = os.path.join("dax_graph/" + wf_uuid +".html")
-	host_chart_parent_file = os.path.join("host_chart/" + wf_uuid +".html")
-	breakdown_chart_parent_file = os.path.join("breakdown_chart/" + wf_uuid +".html")
+	data_file = os.path.join(output_dir, "index.html")
+	gantt_chart_parent_file = os.path.join("gantt_chart/" + wf_uuid + ".html")
+	dag_graph_parent_file = os.path.join("dag_graph/" + wf_uuid + ".html")
+	dax_graph_parent_file = os.path.join("dax_graph/" + wf_uuid + ".html")
+	host_chart_parent_file = os.path.join("host_chart/" + wf_uuid + ".html")
+	breakdown_chart_parent_file = os.path.join("breakdown_chart/" + wf_uuid + ".html")
 	
 	time_summary_output_dir = None
 	breakdown_summary_output_dir = None
-	if calc_time_chart :
+	if calc_time_chart:
 		time_summary_output_dir = output_dir
-		pegasus_time.setup(submit_dir,time_summary_output_dir ,pegasus_env_path ,log_level)
+		pegasus_time.setup(submit_dir, time_summary_output_dir, pegasus_env_path, log_level)
 	if  calc_breakdown_chart:
 		breakdown_summary_output_dir = output_dir
-		pegasus_breakdown.setup(submit_dir,breakdown_summary_output_dir ,pegasus_env_path ,log_level)
+		pegasus_breakdown.setup(submit_dir, breakdown_summary_output_dir, pegasus_env_path, log_level)
 	try:
 		fh = open(data_file, "w")
 		content = """
@@ -569,17 +569,16 @@ def main():
 	# Parse command line options
 	(options, args) = parser.parse_args()
 	
-	
-	if len(args) < 1:
-		parser.error("Please specify Submit Directory")
-		sys.exit(1)
-	
 	if len(args) > 1:
 		parser.error("Invalid argument")
 		sys.exit(1) 
 	
-	submit_dir = os.path.abspath(args[0])
-	# Copy options from the command line parser
+	if len(args) < 1:
+                submit_dir = os.getcwd()	
+	else:
+		submit_dir = os.path.abspath(args[0])
+	
+        # Copy options from the command line parser
 	log_level = 1
 	log_level_str = "info" 
 	log_level += (options.verbose - options.quiet)

@@ -1164,7 +1164,7 @@ def set_statistics_level(stats_level):
 
 def main():
 	# Configure command line option parser
-	prog_usage = prog_base +" [options] SUBMIT_DIRECTORY" 
+	prog_usage = prog_base +" [options] [SUBMIT_DIRECTORY]"
 	parser = optparse.OptionParser(usage=prog_usage)
 	parser.add_option("-o", "--output", action = "store", dest = "output_dir",
                           help = "Writes the output to given directory.")
@@ -1179,23 +1179,22 @@ def main():
 	parser.add_option("-i", "--ignore-db-inconsistency", action = "store_const", const = 0,
                           dest = "ignore_db_inconsistency",
                           help = "turn off the check for db consistency")
-	parser.add_option("-v", "--verbose", action="count", default=0, dest="verbose", 
+	parser.add_option("-v", "--verbose", action="count", default=0, dest="verbose",
                           help="Increase verbosity, repeatable")
-	parser.add_option("-q", "--quiet", action="count", default=0, dest="quiet", 
+	parser.add_option("-q", "--quiet", action="count", default=0, dest="quiet",
                           help="Decrease verbosity, repeatable")
 
 	# Parse command line options
 	(options, args) = parser.parse_args()
 	
-	if len(args) < 1:
-		parser.error("Please specify Submit Directory")
-		sys.exit(1)
-	
 	if len(args) > 1:
 		parser.error("Invalid argument")
 		sys.exit(1) 
-	
-	submit_dir = os.path.abspath(args[0])
+
+	if len(args) < 1:
+                submit_dir = os.getcwd()
+        else:
+		submit_dir = os.path.abspath(args[0])
 	
 	# Copy options from the command line parser
 	
