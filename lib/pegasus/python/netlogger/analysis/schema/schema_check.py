@@ -2,7 +2,7 @@
 Code to handle various aspects of transitioning to a new verson of the 
 Stampede schema.
 """
-__rcsid__ = "$Id: schema_check.py 29818 2012-01-31 20:41:59Z mgoode $"
+__rcsid__ = "$Id: schema_check.py 30421 2012-02-21 21:20:02Z mgoode $"
 __author__ = "Monte Goode"
 
 import exceptions
@@ -47,7 +47,7 @@ class ErrorStrings:
     """
     Parses SQLAlchemy OperationalErrors to generate error strings.
     Currently just handles case of when a user with limited permissions
-    might hit a wall when running 3.2 code on an existing 3.1 DB.
+    might hit a wall when running 4.0 code on an existing 3.1 DB.
     """
     # Actions
     create_failure = 'CREATE command denied to user'
@@ -136,10 +136,12 @@ class SchemaCheck(DoesLogging):
         version_number = self._get_current_version()
         if not version_number:
             self.log.info('check_schema', msg='No version_number set in schema_info')
+        elif version_number == 3.2:
+            self.log.info('check_schema', msg='Schema set to 3.2 deveopment version - resetting to release version')
         else:
             return self._version_check(version_number)
         
-        self.log.info('check_schema', msg='Determining schema version.')
+        self.log.info('check_schema', msg='Determining schema version')
         
         table_scan = ['job_instance', 'invocation']
         
@@ -155,7 +157,7 @@ class SchemaCheck(DoesLogging):
                     % self.session.connection().dialect.name )
         
         #
-        # Checks for version 3.2
+        # Checks for version 4.0
         #
         
         m_factor_check = exitcode_check = remote_cpu_check = False
@@ -176,8 +178,8 @@ class SchemaCheck(DoesLogging):
             self.log.info('check_schema', msg='Setting schema to version 3.1')
             s_info.version_number = 3.1
         elif m_factor_check and exitcode_check and remote_cpu_check:
-            s_info.version_number = 3.2
-            self.log.info('check_schema', msg='Setting schema to version 3.2')
+            s_info.version_number = 4.0
+            self.log.info('check_schema', msg='Setting schema to version 4.0')
         else:
             self.log.error('check_schema', msg='Error in determining database schema')
             raise RuntimeError
@@ -185,7 +187,7 @@ class SchemaCheck(DoesLogging):
         s_info.commit_to_db(self.session)
         
         #
-        # End version 3.2 code
+        # End version 4.0 code
         #
         
         self._table_map = {}
@@ -203,15 +205,14 @@ class SchemaCheck(DoesLogging):
         else:
             return version_number
             
-    def upgrade_to_3_2(self):
+    def upgrade_to_4_0(self):
         """
         Called by the "upgrade tool" - upgrades a populated 3.1 DB to
-        3.2.  This is not necessary for querying the DB, but must be
-        done to load data - even if the events are '3.1 style.'
+        4.0.
         """
-        self.log.info('upgrade_to_3_2', msg='Upgrading to schema version 3.2')
-        if self._get_current_version() >= 3.2:
-            self.log.warn('upgrade_to_3_2', msg='Schema version already 3.2 - skipping upgrade')
+        self.log.info('upgrade_to_4_0', msg='Upgrading to schema version 4.0')
+        if self._get_current_version() >= 4.0:
+            self.log.warn('upgrade_to_4_0', msg='Schema version already 4.0 - skipping upgrade')
             return
         
         # Alter tables
@@ -246,7 +247,7 @@ class SchemaCheck(DoesLogging):
                     pass
         
         s_info = SchemaInfo()
-        s_info.version_number = 3.2
+        s_info.version_number = 4.0
         s_info.commit_to_db(self.session)
         pass
         
@@ -255,7 +256,7 @@ class SchemaCheck(DoesLogging):
         Public wrapper around the version-specific upgrade methods.
         """
         self.check_schema()
-        self.upgrade_to_3_2()
+        self.upgrade_to_4_0()
         pass
 
         

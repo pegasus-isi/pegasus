@@ -2,7 +2,7 @@
 Contains the code to create and map objects to the Stampede DB schema
 via a SQLAlchemy interface.
 """
-__rcsid__ = "$Id: stampede_schema.py 29753 2012-01-30 21:17:31Z mgoode $"
+__rcsid__ = "$Id: stampede_schema.py 30421 2012-02-21 21:20:02Z mgoode $"
 __author__ = "Monte Goode MMGoode@lbl.gov"
 
 from netlogger.analysis.schema._base import SABase, SchemaIntegrityError
@@ -17,7 +17,7 @@ except ImportError, e:
 import time
 import warnings
 
-CURRENT_SCHEMA_VERSION = 3.2
+CURRENT_SCHEMA_VERSION = 4.0
         
 # Empty classes that will be populated and mapped
 # to tables via the SQLAlch mapper.

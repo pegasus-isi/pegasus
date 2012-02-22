@@ -30,7 +30,7 @@ os.sys.path.insert(0, lib_ext_dir)
 os.sys.path.insert(0, lib_dir)
 
 from netlogger.analysis.schema.schema_check import ConnHandle, SchemaCheck
-from netlogger.nllog import OptionParser, get_logger
+from netlogger.nllog import OptionParser, get_logger, get_root_logger
 
 def main():
     usage = "%prog {-c | -u} connString='required' mysql_engine='optional'"
@@ -43,6 +43,13 @@ def main():
     options, args = parser.parse_args(sys.argv[1:])
     log = get_logger(__file__)
     
+    if len(args) == 0:
+        parser.print_help()
+        parser.error("Option flag and connection string required.")
+
+    if log.getEffectiveLevel() >= logging.DEBUG:
+        get_root_logger().setLevel(logging.INFO)
+
     num_modes = (0,1)[bool(options.schema_check)] + (0,1)[bool(options.upgrade)]
     if num_modes > 1:
         parser.error('Choose only one option flag')
