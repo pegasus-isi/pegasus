@@ -162,7 +162,7 @@ def generate_dax_graph(wf_info, output_dir):
 		if status == 0:
 			logger.debug("Finished executing command." )
 		else:
-			logger.warn("Failed to generate dax graph for workflow "+ title)
+			logger.warn("Failed to generate dax graph for workflow " + title)
 			logger.debug("%s: %d:%s" % (dax_cmd, status, output))
 			return None
 		# Find dot command
@@ -170,7 +170,7 @@ def generate_dax_graph(wf_info, output_dir):
 		if dot_png_cmd is None:
 			logger.warn("dot is not present . Unable to create chart in png format. ")
 			return None
-		png_file_path = os.path.join(output_dir, wf_info.wf_uuid +".png")
+		png_file_path = os.path.join(output_dir, wf_info.wf_uuid + ".png")
 		dot_png_cmd +=" -Tpng -o" + png_file_path
 		dot_png_cmd += " "+ dot_file_path
 		logger.debug("Executing command :\n"  + dot_png_cmd)
@@ -186,7 +186,7 @@ def generate_dax_graph(wf_info, output_dir):
 	return None
 	
 	
-def create_image_gallery(file_name ,wf_uuid_list , wf_parent_uuid_list, uuid_image_map,wf_uuid_label_map , isDax):
+def create_image_gallery(file_name, wf_uuid_list, wf_parent_uuid_list, uuid_image_map, wf_uuid_label_map, isDax):
 	"""
 	Creates the image gallery.
 	@param file_mame the output file name
@@ -231,7 +231,7 @@ clear:both;
 </style>
 </head>
 <body>
-"""+plot_utils.create_home_button()+"""
+""" + plot_utils.create_home_button() + """
 <center>
 """
 		if isDax:
@@ -244,7 +244,7 @@ clear:both;
 			label = wf_uuid_label_map[index]
 			parent_uuid =wf_parent_uuid_list[index]
 			if parent_uuid is None:
-				content += "<h3 class= 'workflow'> Top level workflow ("+ uuid+")</h3>"
+				content += "<h3 class= 'workflow'> Top level workflow (" + uuid + ")</h3>"
 			else:
 				if parent_uuid != wf_uuid_parent_ref:
 					wf_uuid_parent_ref = parent_uuid 
@@ -254,28 +254,28 @@ clear:both;
 				content += "<a class= 'thumbnail' href ='#'>\n"
 				content +="<img src ='images/not_available.jpg' height='300px' width='300px'>\n"
 				content +="</img>\n</a>"
-				content+="<div class ='box'>\n"
-				content+= "wf_uuid :" + uuid +"<br/>"
+				content +="<div class ='box'>\n"
+				content += "wf_uuid :" + uuid +"<br/>"
 				if isDax:
 					content+= "dax label :" + label
 				else:
 					if image is not None:
-						content+= "dag label :" + image
+						content += "dag label :" + image
 				content +="</div>"					
 			else:
-				content +="<a class= 'thumbnail'  href ='"+image+ "'>"
-				content +="<img src ='"+image+ "' height='300px' width='300px'>"
+				content +="<a class= 'thumbnail'  href ='" + image + "'>"
+				content +="<img src ='" + image + "' height='300px' width='300px'>"
 				content +="</img>\n</a>\n"
-				content+="<div class ='box'>\n"
-				content+= "wf_uuid :" + uuid +"<br/>"
+				content +="<div class ='box'>\n"
+				content += "wf_uuid :" + uuid +"<br/>"
 				if isDax:
-					content+= "dax label :" +label
+					content += "dax label :" + label
 				else:
 					if label is not None:
-						content+= "dag label :" + label
-				content +="</div>"
+						content += "dag label :" + label
+				content += "</div>"
 			content += "</div>"
-		content +="""
+		content += """
 </center>
 </body>
 </html>
@@ -301,7 +301,7 @@ def createOuterhtml(wf_stats, wf_info, submit_dir, output_dir, log_level):
 	@param log_level logging level
 	"""
 	wf_uuid = wf_info.wf_uuid
-	title =  str(wf_info.wf_uuid) + " (" + str(wf_info.dax_label) +")"
+	title =  str(wf_info.wf_uuid) + " (" + str(wf_info.dax_label) + ")"
 	data_file = os.path.join(output_dir, "index.html")
 	gantt_chart_parent_file = os.path.join("gantt_chart/" + wf_uuid + ".html")
 	dag_graph_parent_file = os.path.join("dag_graph/" + wf_uuid + ".html")
@@ -371,34 +371,34 @@ padding-top:25px;
 		if calc_time_chart :
 			content += """<a href ="#time_chart_div">Time Chart (Across workflows)</a><br/>""" + NEW_LINE_STR
 		if calc_dax_graph :
-			content += "<a href ='" + dax_graph_parent_file +  "'>DAX graph</a><br/>" + NEW_LINE_STR
+			content += "<a href ='" + dax_graph_parent_file + "'>DAX graph</a><br/>" + NEW_LINE_STR
 		if calc_dag_graph :
 			content += "<a href ='" + dag_graph_parent_file + "'>DAG graph</a><br/>" + NEW_LINE_STR
-		content += """<a href ='#env_div'> Workflow environment</a><br/><br/><br/>"""+ NEW_LINE_STR
+		content += """<a href ='#env_div'> Workflow environment</a><br/><br/><br/>""" + NEW_LINE_STR
 		content += """<div id ='env_div' class ='header_level2'> Workflow environment </div>"""
-		content += plot_utils.print_property_table(wf_info.wf_env , False ,":")
+		content += plot_utils.print_property_table(wf_info.wf_env, False, ":")
 		if calc_breakdown_chart:
 			content += """
 <div id ='breakdown_chart_div' class ='header_level2'> Invocation breakdown chart (Across workflows) </div>
 			"""
-			populate.populate_transformation_details(wf_stats,wf_info)
-			logger.debug("Generating breakdown chart for the workflow " + title +" ... ")
+			populate.populate_transformation_details(wf_stats, wf_info)
+			logger.debug("Generating breakdown chart for the workflow " + title + " ... ")
 			content += pegasus_breakdown.create_breakdown_plot(wf_info, breakdown_summary_output_dir)
 		if calc_time_chart :
-			populate.populate_time_details(wf_stats ,wf_info)
-			logger.debug("Generating time chart for the workflow " + title +" ... ")
+			populate.populate_time_details(wf_stats, wf_info)
+			logger.debug("Generating time chart for the workflow " + title + " ... ")
 			content += """
 <div id ='time_chart_div' class ='header_level2'> Time chart (Across workflows) </div>
 			"""
-			content += pegasus_time.create_time_plot(wf_info ,time_summary_output_dir)
+			content += pegasus_time.create_time_plot(wf_info, time_summary_output_dir)
 		
 		content += """
 </center>
 </body>
 </html>
 """
-		fh.write( content)
-		plots_output =  NEW_LINE_STR+ "SUMMARY".center(100, '*')
+		fh.write(content)
+		plots_output = NEW_LINE_STR + "SUMMARY".center(100, '*')
 		plots_output +=  NEW_LINE_STR
 		plots_output +=  NEW_LINE_STR
 		plots_output += "Graphs and charts generated by pegasus-plots can be viewed by opening the generated html file in the web browser  : \n" + data_file
@@ -412,7 +412,7 @@ padding-top:25px;
 	else:
 		fh.close()
 		
-def create_charts(submit_dir , output_dir, config_properties , log_level ):
+def create_charts(submit_dir, output_dir, config_properties, log_level):
 	"""
 	Generates all the graphs and charts 
 	@submit_dir submit directory pathd
@@ -420,30 +420,30 @@ def create_charts(submit_dir , output_dir, config_properties , log_level ):
 	@config_properties path to the pegasus property file
 	@log_level logging level
 	"""
-	wf_uuid_dax_image =[]
-	wf_uuid_dax_label =[]
-	wf_uuid_dag_image =[]
-	wf_uuid_dag_label =[]
-	wf_uuid_parent =[]
-	populate.setup(submit_dir , config_properties)
+	wf_uuid_dax_image = []
+	wf_uuid_dax_label = []
+	wf_uuid_dag_image = []
+	wf_uuid_dag_label = []
+	wf_uuid_parent = []
+	populate.setup(submit_dir, config_properties)
 	wf_uuid_list = populate.get_workflows_uuid()
 	if len(wf_uuid_list) == 0:
 		logger.error("Unable to populate workflow information.")
-	if calc_gantt_chart :
-		gantt_chart_output_dir = os.path.join(output_dir,"gantt_chart")
-		pegasus_gantt.setup(submit_dir,gantt_chart_output_dir ,pegasus_env_path ,log_level)
-	if calc_host_chart :
-		host_chart_output_dir = os.path.join(output_dir,"host_chart")
-		pegasus_host_over_time.setup(submit_dir,host_chart_output_dir ,pegasus_env_path ,log_level)
+	if calc_gantt_chart:
+		gantt_chart_output_dir = os.path.join(output_dir, "gantt_chart")
+		pegasus_gantt.setup(submit_dir, gantt_chart_output_dir, pegasus_env_path, log_level)
+	if calc_host_chart:
+		host_chart_output_dir = os.path.join(output_dir, "host_chart")
+		pegasus_host_over_time.setup(submit_dir, host_chart_output_dir, pegasus_env_path, log_level)
 	if calc_breakdown_chart:
-		breakdown_chart_output_dir = os.path.join(output_dir,"breakdown_chart")
-		pegasus_breakdown.setup(submit_dir,breakdown_chart_output_dir ,pegasus_env_path ,log_level)
+		breakdown_chart_output_dir = os.path.join(output_dir, "breakdown_chart")
+		pegasus_breakdown.setup(submit_dir, breakdown_chart_output_dir, pegasus_env_path, log_level)
 		
-	if calc_dag_graph :
-		dag_graph_output_dir = os.path.join(output_dir,"dag_graph")
+	if calc_dag_graph:
+		dag_graph_output_dir = os.path.join(output_dir, "dag_graph")
 		setup(dag_graph_output_dir)
 	if calc_dax_graph :
-		dax_graph_output_dir = os.path.join(output_dir,"dax_graph")
+		dax_graph_output_dir = os.path.join(output_dir, "dax_graph")
 		setup(dax_graph_output_dir)
 	for wf_uuid in wf_uuid_list:
 		wf_stats, wf_info = populate.populate_chart(wf_uuid)
@@ -467,7 +467,7 @@ def create_charts(submit_dir , output_dir, config_properties , log_level ):
 			populate.populate_job_details(wf_stats, wf_info)
 			if wf_info.total_jobs <= max_graph_nodes:
 				logger.debug("Generating dag graph for the workflow " + title +" ... ")
-				if generate_dag_graph(wf_info,dag_graph_output_dir) is None:
+				if generate_dag_graph(wf_info, dag_graph_output_dir) is None:
 					wf_uuid_dag_image.append(None)
 				else:
 					wf_uuid_dag_image.append(wf_info.wf_uuid+".png")
@@ -479,7 +479,7 @@ def create_charts(submit_dir , output_dir, config_properties , log_level ):
 			populate.populate_task_details(wf_stats, wf_info)
 			if wf_info.total_tasks <= max_graph_nodes:
 				logger.debug("Generating dax graph for the workflow " + title +" ... ")
-				if generate_dax_graph(wf_info,dax_graph_output_dir) is None:
+				if generate_dax_graph(wf_info, dax_graph_output_dir) is None:
 					wf_uuid_dax_image.append(None)
 				else:
 					wf_uuid_dax_image.append(wf_info.wf_uuid+".png")
@@ -491,15 +491,15 @@ def create_charts(submit_dir , output_dir, config_properties , log_level ):
 		wf_stats = None
 		wf_info = None
 	
-	root_wf_stats ,root_wf_info = populate.populate_chart(wf_uuid_list[0] , True)
+	root_wf_stats, root_wf_info = populate.populate_chart(wf_uuid_list[0], True)
 	if calc_dax_graph :
-		data_file =  os.path.join(dax_graph_output_dir,wf_uuid_list[0]+".html")
-		create_image_gallery(data_file, wf_uuid_list,wf_uuid_parent, wf_uuid_dax_image ,wf_uuid_dax_label, True )
+		data_file =  os.path.join(dax_graph_output_dir, wf_uuid_list[0] + ".html")
+		create_image_gallery(data_file, wf_uuid_list, wf_uuid_parent, wf_uuid_dax_image, wf_uuid_dax_label, True )
 	if calc_dag_graph :
-		data_file =  os.path.join(dag_graph_output_dir,wf_uuid_list[0]+".html")
-		create_image_gallery(data_file, wf_uuid_list,wf_uuid_parent, wf_uuid_dag_image ,wf_uuid_dag_label, False )
+		data_file =  os.path.join(dag_graph_output_dir, wf_uuid_list[0] + ".html")
+		create_image_gallery(data_file, wf_uuid_list, wf_uuid_parent, wf_uuid_dag_image, wf_uuid_dag_label, False )
 	
-	createOuterhtml(root_wf_stats, root_wf_info , submit_dir, output_dir ,log_level )
+	createOuterhtml(root_wf_stats, root_wf_info, submit_dir, output_dir, log_level)
 	root_wf_stats.close()
 	return
 	
@@ -552,14 +552,14 @@ def main():
 	parser = optparse.OptionParser(usage=prog_usage)
 	parser.add_option("-o", "--output", action = "store", dest = "output_dir",
 			help = "writes the output to given directory.")
-	parser.add_option("-c","--conf", action = "store", type = "string", dest = "config_properties",
+	parser.add_option("-c", "--conf", action = "store", type = "string", dest = "config_properties",
 			  help = "specifies the properties file to use. This option overrides all other property files.")
 	parser.add_option("-m", "--max-graph-nodes", action = "store", type = "int", dest = "max_graph_nodes",
 		  help = "Maximum limit on the number of tasks/jobs in the dax/dag upto which the graph should be generated; Default value is 100")
 	parser.add_option("-p", "--plotting-level", action = "store", dest = "plotting_level",
-			choices=['all', 'all_charts', 'all_graphs' ,'dax_graph', 'dag_graph','gantt_chart','host_chart','time_chart','breakdown_chart' ],
-			help = "specifies the chart and graphs to generate. Valid levels are: all,all_charts, all_graphs, dax_graph,\
-					dag_graph,gantt_chart,host_chart,time_chart, breakdown_chart; Default is all_charts.")
+			choices=['all', 'all_charts', 'all_graphs', 'dax_graph', 'dag_graph', 'gantt_chart', 'host_chart', 'time_chart', 'breakdown_chart'],
+			help = "specifies the chart and graphs to generate. Valid levels are: all, all_charts, all_graphs, dax_graph,\
+					dag_graph, gantt_chart, host_chart, time_chart, breakdown_chart; Default is all_charts.")
 	parser.add_option("-i", "--ignore-db-inconsistency", action = "store_const", const = 0, dest = "ignore_db_inconsistency",
 			help = "turn off the check for db consistency")
 	parser.add_option("-v", "--verbose", action="count", default=0, dest="verbose", 
@@ -619,14 +619,12 @@ def main():
 		max_graph_nodes = options.max_graph_nodes
 	
 	try:
-		create_charts(submit_dir, output_dir,options.config_properties, log_level_str)
+		create_charts(submit_dir, output_dir, options.config_properties, log_level_str)
 	except:
 		logger.warning(traceback.format_exc())
 		sys.exit(1)
 
 	sys.exit(0)
-	
-	
 
 if __name__ == '__main__':
 	main()
