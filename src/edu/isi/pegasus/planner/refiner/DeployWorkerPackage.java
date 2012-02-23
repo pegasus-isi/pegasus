@@ -223,7 +223,7 @@ public class DeployWorkerPackage
     /**
      * The base directory URL for the builds.
      */
-    public static final String BASE_BUILD_DIRECTORY_URL = "http://pegasus.isi.edu/wms/download/";
+    public static final String BASE_BUILD_DIRECTORY_URL = "http://download.pegasus.isi.edu/wms/download/";
     
     
     /**
