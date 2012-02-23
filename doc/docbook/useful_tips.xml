@@ -4,7 +4,7 @@
 <chapter id="useful_tips" lang="">
   <title>Useful Tips</title>
 
-  <section id="migrating_from_3x">
+  <section id="migrating_from_2x">
     <title>Migrating From Pegasus 3.1 to Pegasus 4.X</title>
 
     <para>With Pegasus 4.0 effort has been made to move the Pegasus
@@ -37,7 +37,7 @@
       with a non shared filesystem setup have to do some trickery in the site
       catalog to include placeholders for local/submit host paths for
       execution sites when using CondorIO. In Pegasus 4.0, this has been
-      rectified. </para>
+      rectified.</para>
 
       <para>For example, for a 3.1 user, to run on a local-condor pool without
       a shared filesystem and use Condor file IO for file transfers, the site
@@ -99,6 +99,139 @@
       <para>Users should read pegasus data staging configuration <link
       linkend="data_staging_configuration">chapter</link> and also look in the
       examples directory ( share/pegasus/examples).</para>
+    </section>
+
+    <section>
+      <title>New Clients for directory creation and file cleanup</title>
+
+      <para>Pegasus 4.0 has new clients for directory creation and cleanup.
+      </para>
+
+      <itemizedlist>
+        <listitem>
+          <para>pegasus-create-dir</para>
+        </listitem>
+
+        <listitem>
+          <para>pegasus-cleanup</para>
+        </listitem>
+      </itemizedlist>
+
+      <para>Both these clients are python based wrapper scripts around various
+      protocol specific clients that are used to determine what client to pick
+      up. </para>
+
+      <table>
+        <title> Clients interfaced to by pegasus-create-dir</title>
+
+        <tgroup cols="2">
+          <thead>
+            <row>
+              <entry> Client</entry>
+
+              <entry>Used For</entry>
+            </row>
+          </thead>
+
+          <tbody>
+            <row>
+              <entry>globus-url-copy</entry>
+
+              <entry>to create directories against a gridftp/ftp
+              server</entry>
+            </row>
+
+            <row>
+              <entry>srm-mkdir</entry>
+
+              <entry>to create directories against a SRM server.</entry>
+            </row>
+
+            <row>
+              <entry>mkdir</entry>
+
+              <entry>to create a directory on the local filesystem</entry>
+            </row>
+
+            <row>
+              <entry>pegasus-s3</entry>
+
+              <entry>to create a s3 bucket in the amazon cloud</entry>
+            </row>
+
+            <row>
+              <entry>scp</entry>
+
+              <entry>staging files using scp</entry>
+            </row>
+
+            <row>
+              <entry>imkdir</entry>
+
+              <entry>to create a directory against an IRODS server</entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+
+      <table>
+        <title>Clients interfaced to by pegasus-cleanup</title>
+
+        <tgroup cols="2">
+          <thead>
+            <row>
+              <entry> Client</entry>
+
+              <entry>Used For</entry>
+            </row>
+          </thead>
+
+          <tbody>
+            <row>
+              <entry>globus-url-copy</entry>
+
+              <entry>to remove a file against a gridftp/ftp server. In this
+              case a zero byte file is created</entry>
+            </row>
+
+            <row>
+              <entry>srm-rm</entry>
+
+              <entry>to remove files against a SRM server.</entry>
+            </row>
+
+            <row>
+              <entry>rm</entry>
+
+              <entry>to remove a file on the local filesystem</entry>
+            </row>
+
+            <row>
+              <entry>pegasus-s3</entry>
+
+              <entry>to remove a file from the s3 bucket.</entry>
+            </row>
+
+            <row>
+              <entry>scp</entry>
+
+              <entry>to remove a file against a scp server. In this case a
+              zero byte file is created.</entry>
+            </row>
+
+            <row>
+              <entry>irm</entry>
+
+              <entry>to remove a file against an IRODS server</entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+
+      <para>With Pegasus 4.0, the planner will prefer to run the create dir
+      and cleanup jobs locally on the submit host. The only case, where these
+      jobs are scheduled to run remotely is when for the staging site, a file
+      server is specified.</para>
     </section>
   </section>
 
