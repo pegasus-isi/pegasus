@@ -4,7 +4,7 @@
 <chapter id="useful_tips" lang="">
   <title>Useful Tips</title>
 
-  <section id="migrating_from_2x">
+  <section id="migrating_from_3x">
     <title>Migrating From Pegasus 3.1 to Pegasus 4.X</title>
 
     <para>With Pegasus 4.0 effort has been made to move the Pegasus
@@ -104,8 +104,8 @@
     <section>
       <title>New Clients for directory creation and file cleanup</title>
 
-      <para>Pegasus 4.0 has new clients for directory creation and cleanup.
-      </para>
+      <para>Pegasus 4.0 has new clients for directory creation and
+      cleanup.</para>
 
       <itemizedlist>
         <listitem>
@@ -119,15 +119,15 @@
 
       <para>Both these clients are python based wrapper scripts around various
       protocol specific clients that are used to determine what client to pick
-      up. </para>
+      up.</para>
 
       <table>
-        <title> Clients interfaced to by pegasus-create-dir</title>
+        <title>Clients interfaced to by pegasus-create-dir</title>
 
         <tgroup cols="2">
           <thead>
             <row>
-              <entry> Client</entry>
+              <entry>Client</entry>
 
               <entry>Used For</entry>
             </row>
@@ -180,7 +180,7 @@
         <tgroup cols="2">
           <thead>
             <row>
-              <entry> Client</entry>
+              <entry>Client</entry>
 
               <entry>Used For</entry>
             </row>
