@@ -28,6 +28,7 @@ from Pegasus.tools import utils
 from Pegasus.tools import db_utils
 from Pegasus.plots_stats import utils as stats_utils
 from netlogger.analysis.workflow.stampede_statistics import StampedeStatistics
+from netlogger.analysis.schema.schema_check import SchemaVersionError
 
 # Regular expressions
 re_parse_property = re.compile(r'([^:= \t]+)\s*[:=]?\s*(.*)')
@@ -415,6 +416,11 @@ def print_workflow_details(output_db_url, wf_uuid, output_dir):
 	try:
 		expanded_workflow_stats = StampedeStatistics(output_db_url)
 		expanded_workflow_stats.initialize(wf_uuid)
+        except SchemaVersionError:
+                logger.error("------------------------------------------------------")
+                logger.error("Database schema mismatch! Please run the upgrade tool")
+                logger.error("to upgrade the database to the latest schema version.")
+                sys.exit(1)
  	except:
  		logger.error("Failed to load the database." + output_db_url )
  		logger.warning(traceback.format_exc())
@@ -488,6 +494,11 @@ def print_workflow_details(output_db_url, wf_uuid, output_dir):
 			try:
 				individual_workflow_stats = StampedeStatistics(output_db_url, False)
 				individual_workflow_stats.initialize(sub_wf_uuid)
+                        except SchemaVersionError:
+                                logger.error("------------------------------------------------------")
+                                logger.error("Database schema mismatch! Please run the upgrade tool")
+                                logger.error("to upgrade the database to the latest schema version.")
+                                sys.exit(1)
 			except:
  				logger.error("Failed to load the database." + output_db_url )
  				logger.warning(traceback.format_exc())

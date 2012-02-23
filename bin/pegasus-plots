@@ -38,7 +38,6 @@ from Pegasus.plots_stats.plots import pegasus_breakdown
 from Pegasus.plots_stats.plots import pegasus_time
 from Pegasus.tools import utils
 
-
 # Regular expressions
 re_parse_property = re.compile(r'([^:= \t]+)\s*[:=]?\s*(.*)')
 
