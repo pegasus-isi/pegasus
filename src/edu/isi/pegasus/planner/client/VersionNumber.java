@@ -53,19 +53,16 @@ public class VersionNumber
 "$Id$" + linefeed +
 "PEGASUS version " + Version.instance().toString() + linefeed );
 
-    System.out.println( "Usage: " + m_application + " [-f | -V | -m]" );
+    System.out.println( "Usage: " + m_application + " [-f | -V ]" );
     System.out.println( linefeed +
 "Options:" + linefeed +
 " -V|--version   print version information about itself and exit." + linefeed +
 "    --verbose   increases the verbosity level (ignored)." + linefeed +
 " -f|--full      also shows the internal built time stamp." + linefeed +
 " -l|--long      alias for --full." + linefeed +
-" -m|--match     matches internal version with installation, implies long." + linefeed +
-" -q|--quiet     in match mode, no news are good news, use exit code." + linefeed +
 linefeed +
 "The following exit codes are produced:" + linefeed +
 " 0  :-)  Success" + linefeed +
-" 1  :-|  Detected a mis-match in match mode. Your installation is bad!" + linefeed +
 " 2  :-(  Runtime error detected, please read the message." + linefeed +
 " 3  8-O  Fatal error merits a program abortion." + linefeed );
   }
@@ -85,8 +82,6 @@ linefeed +
     lo[3] = new LongOpt( "full", LongOpt.NO_ARGUMENT, null, 'f' );
     lo[4] = new LongOpt( "long", LongOpt.NO_ARGUMENT, null, 'l' );
     lo[5] = new LongOpt( "build", LongOpt.NO_ARGUMENT, null, 'f' );
-    lo[6] = new LongOpt( "match", LongOpt.NO_ARGUMENT, null, 'm' );
-    lo[7] = new LongOpt( "quiet", LongOpt.NO_ARGUMENT, null, 'q' );
 
 
     return lo;
@@ -120,8 +115,6 @@ linefeed +
       String installed = null;
       String internal = null;
       boolean build = false;
-      boolean quiet = false;
-      boolean match = false; 
       Version v = Version.instance();
 
       int option = 0;
@@ -140,14 +133,6 @@ linefeed +
 	  build = true;
 	  break;
 
-	case 'm':
-	  match = true;
-	  break;
-
-	case 'q':
-	  quiet = true;
-	  break;
-
 	case 'h':
 	default:
 	  me.showUsage();
@@ -155,31 +140,7 @@ linefeed +
 	}
       }
 
-      // 20110706 (jsv): Moving code section ensures that -fmq behaves like -qfm
-      if ( match ) { 
-	installed = v.determineInstalled();
-	internal  = v.determineBuilt() + " " + v.determinePlatform();
-	if ( ! quiet ) {
-	  System.out.println( "Compiled into PEGASUS: " + internal );
-	  System.out.println( "Installation provides: " + installed );
-	}
-
-	if ( v.matches() ) {
-	  if ( ! quiet ) System.out.println( "OK: Internal version matches installation." );
-	  // see pegasus-devel 2011-03-29: A user should not have to run both,
-	  // first "pegasus-version -fm" and then "pegasus-version". The version
-	  // info should also be returned by "pegasus-version -fm". 
-	  build = true; // successful -m should imply -f
-	  if ( ! quiet ) System.out.print( "Complete version info: " );
-	} else {
-	  System.out.println( "ERROR: Internal version does not match installed version!" );
-	  System.out.println( "Your installation is suspicious, please correct!" );
-	  System.exit(1);
-	}
-      }
-
-      // action
-      if ( match && ! quiet || ! match ) showVersion(v,build); 
+      showVersion(v,build);
 
     } catch ( RuntimeException rte ) {
       System.err.println( "ERROR: " + rte.getMessage() );
