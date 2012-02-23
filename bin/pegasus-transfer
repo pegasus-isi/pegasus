@@ -385,6 +385,10 @@ def check_env_and_tools():
     if not("/usr/bin" in path_entries):
         path_entries.append("/usr/bin")
         path_entries.append("/bin")
+
+    # fink on macos x
+    if os.path.exists("/sw/bin") and not("/sw/bin" in path_entries):
+        path_entries.append("/sw/bin")
        
     # need LD_LIBRARY_PATH for Globus tools
     ld_library_path = ""
