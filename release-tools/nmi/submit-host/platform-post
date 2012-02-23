@@ -24,7 +24,7 @@ TARGET_DIR=/lfs2/webspace/pegasus4/wms/download/$DOWNLOAD_SECTION/nightly/
 
 # upload to pegasus.isi.edu
 echo "Uploading to $TARGET_DIR"
-scp -r * nmibuild@pegasus.isi.edu:$TARGET_DIR 2>&1
+scp -r * nmibuild@download.pegasus.isi.edu:$TARGET_DIR 2>&1
 
 echo "Results uploaded!"
 
