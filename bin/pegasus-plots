@@ -38,6 +38,7 @@ from Pegasus.plots_stats.plots import pegasus_breakdown
 from Pegasus.plots_stats.plots import pegasus_time
 from Pegasus.tools import utils
 
+
 # Regular expressions
 re_parse_property = re.compile(r'([^:= \t]+)\s*[:=]?\s*(.*)')
 
@@ -619,6 +620,8 @@ def main():
 	
 	try:
 		create_charts(submit_dir, output_dir, options.config_properties, log_level_str)
+	except SystemExit:
+		sys.exit(1)
 	except:
 		logger.warning(traceback.format_exc())
 		sys.exit(1)
