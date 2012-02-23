@@ -147,7 +147,9 @@ function getInnerRadius(d){
 		return bc_radius*(d.failure/d.count);
 	}
 	else{
-		return bc_radius*d.total*(d.failure/d.count);
+		// Changed to fix JIRA issue PM-566
+		return bc_radius*(d.failure/d.count);
+		// return bc_radius*d.total*(d.failure/d.count);
 	}
 }
 

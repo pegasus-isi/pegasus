@@ -4285,6 +4285,9 @@ def close_wf_retry_file():
 # --- main ------------------------------------------------------------------------------
 #
 
+# Rotate log file, if it exists
+utils.rotate_log_file(logfile)
+
 # Turn into daemon process
 if nodaemon == 0:
     utils.daemonize()
