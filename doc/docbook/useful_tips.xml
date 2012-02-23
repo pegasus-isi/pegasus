@@ -4,7 +4,7 @@
 <chapter id="useful_tips" lang="">
   <title>Useful Tips</title>
 
-  <section id="migrating_from_2x">
+  <section id="migrating_from_3x">
     <title>Migrating From Pegasus 3.1 to Pegasus 4.X</title>
 
     <para>With Pegasus 4.0 effort has been made to move the Pegasus
