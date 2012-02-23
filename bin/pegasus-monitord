@@ -920,6 +920,9 @@ def prog_sigusr2_handler(signum, frame):
 # --- main ------------------------------------------------------------------------------
 #
 
+# Rotate log file, if it exists
+utils.rotate_log_file(logfile)
+
 # Turn into daemon process
 if nodaemon == 0:
     utils.daemonize()
