@@ -5,6 +5,104 @@
   <title>Useful Tips</title>
 
   <section id="migrating_from_2x">
+    <title>Migrating From Pegasus 3.1 to Pegasus 4.X</title>
+
+    <para>With Pegasus 4.0 effort has been made to move the Pegasus
+    installation to be FHS compliant, make workflows run better in Cloud
+    environments. This chapter is for existing users of Pegasus who use
+    Pegasus 3.1 to run their workflows and walks through the steps to move to
+    using Pegasus 4.0</para>
+
+    <section>
+      <title>Move to FHS layout [Mats]</title>
+
+      <para>Talk a bit about FHS layout, and include references if any. Also
+      talk about pegasus-config and how they can be used in a DAX
+      generator.</para>
+    </section>
+
+    <section>
+      <title>Stampede Schema Upgrade Tool [Gaurang]</title>
+
+      <para>Include a reference to the new stampede schema. Talk about how to
+      use the upgrade tool. Where it is. Include sample steps to highlight how
+      to use it.</para>
+    </section>
+
+    <section>
+      <title>Existing users running in a condor pool with a non shared
+      filesystem setup</title>
+
+      <para>Existing users that are running workflows in a cloud environment
+      with a non shared filesystem setup have to do some trickery in the site
+      catalog to include placeholders for local/submit host paths for
+      execution sites when using CondorIO. In Pegasus 4.0, this has been
+      rectified. </para>
+
+      <para>For example, for a 3.1 user, to run on a local-condor pool without
+      a shared filesystem and use Condor file IO for file transfers, the site
+      entry looks something like this</para>
+
+      <programlisting> &lt;site  handle="local-condor" arch="x86" os="LINUX"&gt;
+        &lt;grid  type="gt2" contact="localhost/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/&gt;
+        &lt;grid  type="gt2" contact="localhost/jobmanager-condor" scheduler="unknown" jobtype="compute"/&gt;
+        &lt;head-fs&gt;
+
+          <emphasis role="bold">&lt;!-- the paths for scratch filesystem are the paths on local site as we execute create dir job
+               on local site. Improvements planned for 4.0 release.--&gt;</emphasis>
+            &lt;scratch&gt;
+                &lt;shared&gt;
+                    &lt;file-server protocol="file" url="file:///" mount-point="/submit-host/scratch"/&gt;
+                    &lt;internal-mount-point mount-point="/submit-host/scratch"/&gt;
+                &lt;/shared&gt;
+            &lt;/scratch&gt;
+            &lt;storage&gt;
+                &lt;shared&gt;
+                    &lt;file-server protocol="file" url="file:///" mount-point="/glusterfs/scratch"/&gt;
+                    &lt;internal-mount-point mount-point="/glusterfs/scratch"/&gt;
+                &lt;/shared&gt;
+            &lt;/storage&gt;
+        &lt;/head-fs&gt;
+        &lt;replica-catalog  type="LRC" url="rlsn://dummyValue.url.edu" /&gt;
+        &lt;profile namespace="env" key="PEGASUS_HOME" &gt;/cluster-software/pegasus/2.4.1&lt;/profile&gt;
+        &lt;profile namespace="env" key="GLOBUS_LOCATION" &gt;/cluster-software/globus/5.0.1&lt;/profile&gt;
+
+        <emphasis role="bold">&lt;!-- profies for site to be treated as condor pool --&gt;</emphasis>
+        &lt;profile namespace="pegasus" key="style" &gt;condor&lt;/profile&gt;
+        &lt;profile namespace="condor" key="universe" &gt;vanilla&lt;/profile&gt;
+
+        
+        <emphasis role="bold">&lt;!-- to enable kickstart staging from local site--&gt;</emphasis>
+        &lt;profile namespace="condor" key="transfer_executable"&gt;true&lt;/profile&gt;
+
+
+    &lt;/site&gt;
+</programlisting>
+
+      <para>With Pegasus 4.0 the site entry for a local-condor pool can be as
+      concise as the following</para>
+
+      <programlisting> &lt;site  handle="condorpool" arch="x86" os="LINUX"&gt;
+        &lt;head-fs&gt;
+            &lt;scratch /&gt;
+            &lt;storage /&gt;
+        &lt;/head-fs&gt;
+        &lt;profile namespace="pegasus" key="style" &gt;condor&lt;/profile&gt;
+        &lt;profile namespace="condor" key="universe" &gt;vanilla&lt;/profile&gt;
+    &lt;/site&gt;
+</programlisting>
+
+      <para>The planner in 4.0 correctly picks up the paths from the local
+      site entry to determine the staging location for the condor io on the
+      submit host.</para>
+
+      <para>Users should read pegasus data staging configuration <link
+      linkend="data_staging_configuration">chapter</link> and also look in the
+      examples directory ( share/pegasus/examples).</para>
+    </section>
+  </section>
+
+  <section id="migrating_from_2x">
     <title>Migrating From Pegasus 2.X to Pegasus 3.X</title>
 
     <para>With Pegasus 3.0 effort has been made to simplify configuration.
