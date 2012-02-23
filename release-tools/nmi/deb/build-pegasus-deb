@@ -57,6 +57,35 @@ echo "Debian package major version: $MAJOR_VERSION"
 DEB_NAME=pegasus-${MAJOR_VERSION}_${DEB_VERSION}_${ARCH}
 mkdir -p $DEB_NAME/opt/pegasus
 mv pegasus-$VERSION $DEB_NAME/opt/pegasus/$MAJOR_VERSION
+
+# ligo environment files
+mkdir -p $DEB_NAME/etc/profile.d
+cat >$DEB_NAME/etc/profile.d/pegasusenvironment.sh <<EOF
+JAVA_HEAPMAX=2048
+export JAVA_HEAPMAX
+PEGASUS_HOME=/opt/pegasus/3.1
+export PEGASUS_HOME
+if [ "\$PYTHONPATH"  = "x" ]; then
+    PYTHONPATH=\${PEGASUS_HOME}/lib/python-tools
+else
+    PYTHONPATH=\${PYTHONPATH}:\${PEGASUS_HOME}/lib/python-tools
+fi
+export PYTHONPATH
+PATH=\${PATH}:\${PEGASUS_HOME}/bin
+export PATH
+EOF
+
+cat >$DEB_NAME/etc/profile.d/pegasusenvironment.csh <<EOF
+setenv JAVA_HEAPMAX 2048
+setenv PEGASUS_HOME /opt/pegasus/3.1
+if ( \$?PYTHONPATH ) then
+    setenv PYTHONPATH \${PYTHONPATH}:\${PEGASUS_HOME}/lib/python-tools
+else
+    setenv PYTHONPATH \${PEGASUS_HOME}/lib/python-tools
+endif
+setenv PATH \${PATH}:\${PEGASUS_HOME}/bin
+EOF
+
 cd $DEB_NAME
 
 # debian control files

@@ -68,7 +68,7 @@ tar czf SOURCES/pegasus-${MAJOR_VERSION}-${VERSION}.tar.gz pegasus-${MAJOR_VERSI
 rm -rf pegasus-*
 
 # spec file
-cat >SPECS/pegasus.spec <<EOF
+cat >SPECS/pegasus.spec <<OUTER_EOF
 %define debug_package %{nil}
 
 Summary: Pegasus Workflow Management System
@@ -89,7 +89,7 @@ BuildRequires: tar
 
 Requires: java-1.6.0-openjdk >= 1.6.0, perl >= 5.8
 
-Prefix: /opt
+Prefix: /
 
 AutoReq: no
 
@@ -118,6 +118,33 @@ ls -l
 mkdir -p \$RPM_BUILD_ROOT/opt/pegasus/$MAJOR_VERSION/
 mv * \$RPM_BUILD_ROOT/opt/pegasus/$MAJOR_VERSION/
 
+mkdir -p \$RPM_BUILD_ROOT//etc/profile.d
+cat >\$RPM_BUILD_ROOT/etc/profile.d/pegasusenvironment.sh <<EOF
+JAVA_HEAPMAX=2048
+export JAVA_HEAPMAX
+PEGASUS_HOME=/opt/pegasus/3.1
+export PEGASUS_HOME
+if [ "\\\$PYTHONPATH"  = "x" ]; then
+    PYTHONPATH=\\\${PEGASUS_HOME}/lib/python-tools
+else
+    PYTHONPATH=\\\${PYTHONPATH}:\\\${PEGASUS_HOME}/lib/python-tools
+fi
+export PYTHONPATH
+PATH=\\\${PATH}:\\\${PEGASUS_HOME}/bin
+export PATH
+EOF
+
+cat >\$RPM_BUILD_ROOT/etc/profile.d/pegasusenvironment.csh <<EOF
+setenv JAVA_HEAPMAX 2048
+setenv PEGASUS_HOME /opt/pegasus/3.1
+if ( \\\$?PYTHONPATH ) then
+    setenv PYTHONPATH \\\${PYTHONPATH}:\\\${PEGASUS_HOME}/lib/python-tools
+else
+    setenv PYTHONPATH \\\${PEGASUS_HOME}/lib/python-tools
+endif
+setenv PATH \\\${PATH}:\\\${PEGASUS_HOME}/bin
+EOF
+
 %clean
 rm -rf \$RPM_BUILD_ROOT
 
@@ -125,14 +152,14 @@ rm -rf \$RPM_BUILD_ROOT
 
 %files 
 %defattr(-,root,root)
-/opt
+/
 
 %changelog
 * Tue Apr 20 2010 Mats Rynge 2.4.0-1
 * Tue Jan 13 2009 Gaurang Mehta 2.2.0-1
 * Thu Oct 23 2008 Scott Koranda <skoranda@gravity.phys.uwm.edu> - 2.1.0-1
 - first RPM
-EOF
+OUTER_EOF
 
 
 
