@@ -25,9 +25,6 @@
   <xi:include href="manpage.pegasus-exitcode.xml"
               xmlns:xi="http://www.w3.org/2001/XInclude" />
 
-  <xi:include href="manpage.pegasus-kickstart.xml"
-              xmlns:xi="http://www.w3.org/2001/XInclude" />
-
   <xi:include href="manpage.pegasus-monitord.xml"
               xmlns:xi="http://www.w3.org/2001/XInclude" />
 
