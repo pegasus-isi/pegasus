@@ -20,7 +20,8 @@ Synopsis
              [*--force*] [*--force-replan*] 
              [*--inherited-rc-files*] [*-j* 'prefix'] 
              [*-n*] [*-o* 'site']
-             [*-s* 'site1'[,'site2'...]] 
+             [*-s* 'site1'[,'site2'...]]
+	     [*--staging-site* s1=ss1[,s2=ss2[..]] 
              [*--randomdir*[='dirname']]
              [*--relative-dir* 'dir']
              [*--relative-submit-dir* 'dir']
@@ -306,6 +307,18 @@ site as *local*.
 In case this option is not specified, all the sites in the site
 catalog are picked up as candidates for running the workflow.
 
+*--staging-site* 's1=ss1'[,s2=ss2[..]]::
+A comma separated list of key=value pairs , where the key is the
+execution site and value is the staging site for that execution
+site. 
++
+In case of running on a shared filesystem, the staging site is
+automatically associated by the planner to be the execution site.  If
+only a value is specified, then that is taken to be the staging site
+for all the execution sites. e.g *--staging-site* local means that the
+planner will use the local site as the staging site for all jobs in
+the workflow.
+
 *-s*::
 *--submit*::
 Submits the generated *executable workflow* using *pegasus-run* script in 
@@ -398,6 +411,26 @@ default value of $PEGASUS_HOME/etc/sites.xml is used in case of the xml
 based site catalog and $PEGASUS_HOME/etc/sites.txt in case of the text 
 based site catalog.
 
+*pegasus.data.configuration*::
+This property sets up Pegasus to run in different environments. This
+can be set to 
++
+*sharedfs* 
+If this is set, Pegasus will be setup to execute jobs on the shared
+filesystem on the execution site. This assumes, that the head node of
+a cluster and the worker nodes share a filesystem. The staging site in
+this case is the same as the execution site. 
++
+*nonsharedfs*
+If this is set, Pegasus will be setup to execute jobs on an execution
+site without relying on a shared filesystem between the head node and
+the worker nodes.
++
+*condorio*
+If this is set, Pegasus will be setup to run jobs in a pure condor
+pool, with the nodes not sharing a filesystem. Data is staged to the
+compute nodes from the submit host using Condor File IO.
+
 *pegasus.code.generator*::
 The code generator to use. By default, Condor submit files are generated 
 for the executable workflow. Setting to *Shell* results in Pegasus 
@@ -406,7 +439,7 @@ generating a shell script that can be executed on the submit host.
 
 Files
 -----
-*$PEGASUS_HOME/etc/dax-3.2.xsd*::
+*$PEGASUS_HOME/etc/dax-3.3.xsd*::
 is the suggested location of the latest DAX schema to produce DAX
 output.
 
