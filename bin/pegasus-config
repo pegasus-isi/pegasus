@@ -101,6 +101,19 @@ EOF
     exit 1;
 }
 
+sub find_exec($;@) {
+    # purpose: determine location of given binary in $PATH
+    # paramtr: $program (IN): executable basename to look for
+    #          @extra (opt. IN): additional directories to search
+    # returns: fully qualified path to binary, undef if not found
+    my $program = shift;
+    foreach my $dir ( ( File::Spec->path, @_ ) ) {
+        my $fs = File::Spec->catfile( $dir, $program );
+        return $fs if -x $fs;
+    }
+    undef;
+}
+
 sub site_snippet($) {
     my $home = shift;
     my @u = POSIX::uname(); 
@@ -166,7 +179,6 @@ sub site_snippet($) {
     print "      </storage>\n";
     print "    </head-fs>\n"; 
     print "    <replica-catalog type=\"LRC\" url=\"dummyValue.url.edu\" />\n";
-    print "    <profile namespace=\"env\" key=\"PEGASUS_HOME\">$main::home</profile>\n"; 
     print "    <profile namespace=\"env\" key=\"HOME\">$userdir</profile>\n"; 
     if ( defined $g_l ) {
         print "    <profile namespace=\"env\" key=\"GLOBUS_LOCATION\">$g_l</profile>\n"; 
