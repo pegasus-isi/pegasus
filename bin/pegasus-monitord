@@ -1362,6 +1362,8 @@ while (len(wfs) > 0):
 
             workflow_entry.sleep_time = time.time() + sleeptime(workflow_entry.ml_retries)
 
+    # End of main for loop, still in the while loop...
+
     # Print number of workflows we currently have
     logger.info("currently tracking %d workflow(s)..." % (len(wfs)))
     
@@ -1411,7 +1413,8 @@ while (len(wfs) > 0):
     if server is not None:
         socket_interface.check_request(server, wfs)
 
-    # Service notifications
+    # Service notifications once per while loop, in the future we can
+    # move this into the for loop and service notifications more often
     if do_notifications == True and monitord_notifications is not None:
         logger.info("servicing notifications...")
         monitord_notifications.service_notifications()

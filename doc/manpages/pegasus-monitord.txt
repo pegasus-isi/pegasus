@@ -20,6 +20,7 @@ Synopsis
                  [*--notifications-max* 'max_notifications']
                  [*--notifications-timeout* 'timeout']
                  [*--sim*|*-s* 'millisleep'] [*--db-stats*]
+                 [*--skip-stdout*] [*--force*|*-f*]
                  [*--socket*] [*--output-dir* | *-o* 'dir']
                  [*--dest*|*-d* 'PATH' or 'URL'] [*--encoding*|*-e* 'bp' | 'bson']
                  'DAGMan output file'
@@ -151,6 +152,22 @@ milliseconds. This option is mainly used by developers.
 This option causes the database module to collect and print database
 statistics at the end of the execution. It has no effect if the
 *--no-database* option is given.
+
+*--skip-stdout*::
+This option causes *pegasus-monitord* not to populate jobs' stdout and
+stderr into the BP file or the Stampede database. It should be used to
+avoid increasing the database size substantially in cases where jobs
+are very verbose in their output.
+
+*-f*::
+*--force*::
+This option causes *pegasus-monitord* to skip checking for another
+instance of itself already running on the same workflow directory. The
+default behavior prevents two or more *pegasus-monitord* instances
+from starting and running simultaneously (which would cause the bp
+file and database to be left in an unstable state). This option should
+noly be used when the user knows the previous instance of
+*pegasus-monitord* is *NOT* running anymore.
 
 *--socket*::
 This option causes *pegasus-monitord* to start a socket interface that 

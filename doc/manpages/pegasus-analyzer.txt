@@ -13,20 +13,25 @@ Synopsis
 [verse]
 *pegasus-analyzer* [*--help*|*-h*] [*--quiet*|*-q*] [*--strict*|*-s*]
                  [*--monitord*|*-m*|*-t*] [*--verbose*|*-v*]
-                 [*--output-dir*|*-o* 'output_dir']
-                 [*--file*|*-f* 'dag_filename'] [*--dir*|*-d*|*-i* 'input_dir']
+                 [*--output-dir*|*-o* 'output_dir'] 
+                 [*--dag* 'dag_filename'] [*--dir*|*-d*|*-i* 'input_dir']
                  [*--print*|*-p* 'print_options'] [*--debug-job* 'job']
                  [*--debug-dir* 'debug_dir'] [*--type* 'workflow_type']
-                 ['workflow_directory']
+                 [*--conf*|*-c* 'property_file'] [*--files*]
+                 [*--top-dir* 'dir_name'] ['workflow_directory']
 
 
 Description
 -----------
-*pegasus-analyzer* is a command-line utility for parsing the 'jobstate.log'
-file and reporting successful and failed jobs. It quickly goes through
-several log files, isolates jobs that did not complete successfully,
-and prints their 'stdout' and 'stderr' so that users can get detailed 
-information about their workflow runs.
+
+*pegasus-analyzer* is a command-line utility for parsing the
+'jobstate.log' file and reporting successful and failed jobs. When
+executed without any options, it will query the *SQLite* or *MySQL*
+database and retrieve failed job information for the particular
+workflow. When invoked with the *--files* option, it will retrieve
+information from several log files, isolating jobs that did not
+complete successfully, and printing their 'stdout' and 'stderr' so
+that users can get detailed information about their workflow runs.
 
 
 Options
@@ -83,8 +88,7 @@ logic to find the specific 'jobstate.log' file by looking at the workflow
 'braindump.txt' file first and figuring out the corresponding 'wf_uuid.'
 If 'output_dir' does not exist, it will be created.
 
-*-f* 'dag_filename'::
-*--file* 'dag_filename::
+*--dag* 'dag_filename::
 In this option, 'dag_filename' specifies the path to the 'DAG' file to use.
 *pegasus-analyzer* will get the directory information from the 'dag_filename'.
 This option overrides the *--dir* option below.
@@ -121,6 +125,26 @@ directory. Users can give this option in order to specify a particular
 In this options, users specify what 'workflow_type' they want to debug. At 
 this moment, the only 'workflow_type' available is *condor* and it is the 
 default value if this option is not specified.
+
+*-c* 'property_file'::
+*--conf* 'property_file'::
+This option is used to specify an alternative property file, which may
+contain the path to the database to be used by *pegasus-analyzer*. If this
+option is not specified, the config file specified in the *braindump.txt*
+file will take precedence.
+
+*--files*::
+This option allows users to run *pegasus-analyzer* using the files in the
+workflow directory instead of the database as the source of information.
+*pegasus-analyzer* will output the same information, this option only
+changes where the data comes from.
+
+*--top-dir* 'dir_name'::
+This option enables *pegasus-analyzer* to show information about
+sub-workflows when using the database mode. When debugging a top-level
+workflow with failures in sub-workflows, the analyzer will automatically
+print the command users should use to debug a failed sub-workflow. This
+allows the analyzer to find the database it needs to access.
 
 
 Environment Variables

@@ -19,7 +19,7 @@ Synopsis
               [*-i*|*--ignore-db-inconsistency*]
               [*-v*|*--verbose*]
               [*-q*|*--quiet*] 
-              'submitdir'
+              ['submitdir']
 
 
 Description
