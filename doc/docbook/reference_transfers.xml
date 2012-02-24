@@ -165,7 +165,7 @@
 
         <mediaobject>
           <imageobject>
-            <imagedata align="left"
+            <imagedata align="center"
                        fileref="images/data-configuration-sharedfs.png"
                        role="" scale="" width="" wordsize="" />
           </imageobject>
@@ -239,7 +239,7 @@
 
         <mediaobject>
           <imageobject>
-            <imagedata align="left"
+            <imagedata align="center"
                        fileref="images/data-configuration-nonsharedfs.png"
                        id="Figure2" />
           </imageobject>
@@ -283,6 +283,9 @@
           directory to a directory on the final output site.</para>
         </listitem>
       </orderedlist>
+
+      <para>In this case, the compute jobs are wrapped as <link
+      linkend="pegasuslite">PegasusLite</link> instances.</para>
 
       <para>This mode is especially useful for running in the cloud
       environments where you don't want to setup a shared filesystem between
@@ -331,7 +334,7 @@
 
         <mediaobject>
           <imageobject>
-            <imagedata align="left"
+            <imagedata align="center"
                        fileref="images/data-configuration-condorio.png"
                        id="Figure13" role="" scale="" width="" wordsize="" />
           </imageobject>
@@ -376,6 +379,9 @@
           directory to a directory on the final output site.</para>
         </listitem>
       </orderedlist>
+
+      <para>In this case, the compute jobs are wrapped as <link
+      linkend="pegasuslite">PegasusLite</link> instances.</para>
 
       <para>This mode is especially useful for running in the cloud
       environments where you don't want to setup a shared filesystem between
@@ -904,7 +910,7 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
       <para>Users can explicitly set the following property to false, to turn
       off worker package staging by the Planner. This is applicable , when
       running in the cloud and virtual machines / worker nodes already have
-      the pegasus worker tools installed. </para>
+      the pegasus worker tools installed.</para>
 
       <programlisting><emphasis role="bold">pegasus.transfer.worker.package          false</emphasis> </programlisting>
     </section>
