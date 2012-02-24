@@ -101,6 +101,17 @@ Python 2.6.2</programlisting></para>
     url="http://research.cs.wisc.edu/condor/debian/">debian</ulink>) from
     native packages.</para>
 
+    <note>
+      <para>Pegasus 4.0 is the first release of Pegasus which is <ulink
+      url="http://www.pathname.com/fhs/">Filesystem Hierarchy Standard
+      (FHS)</ulink> compliant. The native packages no longer installs under
+      /opt. Instead, pegasus-* binaries are in /usr/bin/ and example workflows
+      can be found under /usr/share/pegasus/examples/. To find Pegasus system
+      components, a pegasus-config tool is provided. For example, to find the
+      PYTHONPATH for the DAX API, run: export PYTHONPATH=`pegasus-config
+      --python`</para>
+    </note>
+
     <section id="rhel">
       <title>RHEL / CentOS / Scientific Linux</title>
 
@@ -157,8 +168,8 @@ Complete!</programlisting>
     <title>Pegasus from Tarballs</title>
 
     <para>The Pegaus prebuild tarballs can be downloaded from the <ulink
-    url="http://download.pegasus.isi.edu/wms/downloads"><emphasis>Pegasus Download
-    Page</emphasis></ulink>.</para>
+    url="http://download.pegasus.isi.edu/wms/downloads"><emphasis>Pegasus
+    Download Page</emphasis></ulink>.</para>
 
     <section>
       <title id="tarballs_plain">Tarball without Condor</title>

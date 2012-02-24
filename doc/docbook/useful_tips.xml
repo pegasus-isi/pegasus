@@ -16,9 +16,15 @@
     <section>
       <title>Move to FHS layout [Mats]</title>
 
-      <para>Talk a bit about FHS layout, and include references if any. Also
-      talk about pegasus-config and how they can be used in a DAX
-      generator.</para>
+      <para>Pegasus 4.0 is the first release of Pegasus which is <ulink
+      url="http://www.pathname.com/fhs/">Filesystem Hierarchy Standard
+      (FHS)</ulink> compliant. The native packages no longer installs under
+      /opt. Instead, pegasus-* binaries are in /usr/bin/ and example workflows
+      can be found under /usr/share/pegasus/examples/. To find Pegasus system
+      components, a pegasus-config tool is provided. For example, to find the
+      PYTHONPATH for the DAX API, run:</para>
+
+      <programlisting>export PYTHONPATH=`pegasus-config --python`</programlisting>
     </section>
 
     <section>
@@ -981,3 +987,4 @@ $ echo $?
     </section>
   </section>
 </chapter>
+
