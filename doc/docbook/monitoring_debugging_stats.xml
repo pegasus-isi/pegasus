@@ -92,7 +92,7 @@
         role="bold">username</emphasis> and <emphasis
         role="bold">userpass</emphasis> provided. In the second example,
         <emphasis role="bold">pegasus-monitord</emphasis> will store the data
-        in the /tmp/diamond-0.db SQLite database. </para>
+        in the /tmp/diamond-0.db SQLite database.</para>
 
         <note>
           <para>For absolute paths four slashes are required when specifying
@@ -130,6 +130,41 @@
             </imageobject>
           </mediaobject>
         </figure>
+
+        <section>
+          <title>Overview of the schema.</title>
+
+          <para>Pegasus takes in a DAX which is composed of tasks. Pegasus
+          plans it into a Condor DAG / Executable workflow that consists of
+          Jobs. In case of Clustering, multiple tasks in the DAX can be
+          captured into a single job in the Executable workflow. When DAGMan
+          executes a job, a job instance is populated . Job instances capture
+          information as seen by DAGMan. In case DAGMan retires a job on
+          detecting a failure , a new job instance is populated. When DAGMan
+          finds a job instance has finished , an invocation is associated with
+          job instance. In case of clustered job, multiple invocations will be
+          associated with a single job instance. If a Pre script or Post
+          Script is associated with a job instance, then invocations are
+          populated in the database for the corresponding job instance.</para>
+
+          <para>The current schema version is <emphasis
+          role="bold">4.0</emphasis> that is stored in the schema_info
+          table.</para>
+        </section>
+
+        <section>
+          <title>Storing of Exitcode in the database</title>
+
+          <para>Kickstart records capture raw status in addition to the
+          exitcode . The exitcode is derived from the raw status. Starting
+          with Pegasus 4.0 release, all exitcode columns ( i.e invocation and
+          job instance table columns ) are stored with the raw status by
+          pegasus-monitord. If an exitcode is encountered while parsing the
+          dagman log files , the value is converted to the corresponding raw
+          status before it is stored. All user tools, pegasus-analyzer and
+          pegasus-statistics then convert the raw status to exitcode when
+          retrieving from the database.</para>
+        </section>
       </section>
 
       <section id="monitoring-files">
@@ -141,7 +176,7 @@
         <itemizedlist>
           <listitem>
             <para><emphasis role="bold">jobstate.log</emphasis>: contains a
-            summary of workflow and job execution. </para>
+            summary of workflow and job execution.</para>
           </listitem>
         </itemizedlist>
 
@@ -154,7 +189,8 @@
             all log messages from <emphasis
             role="bold">pegasus-monitord</emphasis> are output to the console.
             Also, when sub-workflows are involved, only the top-level workflow
-            will have this log file.</para>
+            will have this log file. Starting with release 4.0 and 3.1.1,
+            monitord.log file is rotated if it exists already.</para>
           </listitem>
 
           <listitem>
@@ -209,8 +245,8 @@
             this file only includes logs for failed notifications, but can be
             populated with all notification information when <emphasis
             role="bold">pegasus-monitord</emphasis> is run in verbose mode via
-            the <emphasis role="bold">-v</emphasis> command-line option.
-            </para>
+            the <emphasis role="bold">-v</emphasis> command-line
+            option.</para>
           </listitem>
         </itemizedlist>
       </section>
