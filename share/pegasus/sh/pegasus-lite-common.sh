@@ -110,7 +110,7 @@ function pegasus_lite_internal_wp_download()
         fi
     fi
     
-    url="http://pegasus.isi.edu/wms/download/${pegasus_lite_version_major}"
+    url="http://download.pegasus.isi.edu/wms/download/${pegasus_lite_version_major}"
     url="${url}.${pegasus_lite_version_minor}"
     if echo ${pegasus_lite_version_patch} | grep cvs >/dev/null 2>/dev/null; then
         url="${url}/nightly"
