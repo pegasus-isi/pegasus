@@ -9,4 +9,9 @@ eval `$PEGASUS_CONFIG --sh-dump`
 . $PEGASUS_SHARE_DIR/common.sh
 
 # run java program
-${JAVA} "-Dpegasus.home=${PEGASUS_HOME}" $addon edu.isi.pegasus.planner.client.TCConverter "$@"
+${JAVA} \
+       "-Dpegasus.home.sysconfdir=$PEGASUS_CONF_DIR" \
+       "-Dpegasus.home.bindir=$PEGASUS_BIN_DIR" \
+       "-Dpegasus.home.sharedstatedir=$PEGASUS_SHARE_DIR" \
+       "-Dpegasus.home.schemadir=$PEGASUS_SCHEMA_DIR" \
+       $addon edu.isi.pegasus.planner.client.TCConverter "$@"
