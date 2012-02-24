@@ -209,6 +209,7 @@ use vars qw(\%pegasus);
 	, java => \"$java_dir\"
 	, perl => \"$perl_dir\"
 	, python => \"$python_dir\"
+	, pyexts => \"$python_externals_dir\"
 	, php => \"$php_dir\"
 	, js => \"$js_dir\"
 	, share => \"$share_dir\"
