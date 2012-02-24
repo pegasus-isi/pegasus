@@ -20,7 +20,7 @@ find . -type f -exec ls -l -h {} \;
 
 # use the worker package to figure out target version
 DOWNLOAD_SECTION=`ls pegasus-worker-*.tar.gz | head -n 1 | sed -r 's/pegasus-worker-([0-9]+\.[0-9]+)\..*/\1/'`
-TARGET_DIR=/data/webspace/download.isi.edu/wms/download/$DOWNLOAD_SECTION/nightly/
+TARGET_DIR=/data/webspace/download.pegasus.isi.edu/wms/download/$DOWNLOAD_SECTION/nightly/
 
 # upload to pegasus.isi.edu
 echo "Uploading to $TARGET_DIR"
