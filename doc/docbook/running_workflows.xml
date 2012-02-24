@@ -19,7 +19,8 @@
     role="bold">hpcc</emphasis>, and plan the workflow without clean-up nodes,
     the following concrete workflow is built:</para>
 
-    <para><figure id="concepts-fig-dag">
+    <para>
+      <figure id="concepts-fig-dag">
         <title>Black Diamond DAG</title>
 
         <mediaobject>
@@ -29,7 +30,8 @@
                        valign="middle" width="100%" />
           </imageobject>
         </mediaobject>
-      </figure></para>
+      </figure>
+    </para>
 
     <para>Planning augments the original abstract workflow with ancillary
     tasks to facility the proper execution of the workflow. These tasks
@@ -204,7 +206,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
 
         <mediaobject>
           <imageobject>
-            <imagedata contentdepth="100%"
+            <imagedata align="center" contentdepth="100%"
                        fileref="./images/refinement-data-reuse.png"
                        scalefit="1" width="100%" />
           </imageobject>
@@ -237,14 +239,18 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
 
           <itemizedlist>
             <listitem>
-              <para><emphasis role="bold">Random</emphasis></para>
+              <para>
+                <emphasis role="bold">Random</emphasis>
+              </para>
 
               <para>The jobs will be randomly distributed among the sites that
               can execute them.</para>
             </listitem>
 
             <listitem>
-              <para><emphasis role="bold">RoundRobin</emphasis></para>
+              <para>
+                <emphasis role="bold">RoundRobin</emphasis>
+              </para>
 
               <para>The jobs will be assigned in a round robin manner amongst
               the sites that can execute them. Since each site cannot execute
@@ -260,7 +266,9 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
             </listitem>
 
             <listitem>
-              <para><emphasis role="bold">Group</emphasis></para>
+              <para>
+                <emphasis role="bold">Group</emphasis>
+              </para>
 
               <para>Group of jobs will be assigned to the same site that can
               execute them. The use of the<emphasis role="bold"> PEGASUS
@@ -272,7 +280,9 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
             </listitem>
 
             <listitem>
-              <para><emphasis role="bold">Heft</emphasis></para>
+              <para>
+                <emphasis role="bold">Heft</emphasis>
+              </para>
 
               <para>A version of the HEFT processor scheduling algorithm is
               used to schedule jobs in the workflow to multiple grid sites.
@@ -292,7 +302,9 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
             </listitem>
 
             <listitem>
-              <para><emphasis role="bold">NonJavaCallout</emphasis></para>
+              <para>
+                <emphasis role="bold">NonJavaCallout</emphasis>
+              </para>
 
               <para>Pegasus will callout to an external site selector.In this
               mode a temporary file is prepared containing the job information
@@ -318,9 +330,13 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
                 <tgroup cols="2">
                   <tbody>
                     <row>
-                      <entry><emphasis role="bold">Key</emphasis></entry>
+                      <entry>
+                        <emphasis role="bold">Key</emphasis>
+                      </entry>
 
-                      <entry><emphasis role="bold">Value</emphasis></entry>
+                      <entry>
+                        <emphasis role="bold">Value</emphasis>
+                      </entry>
                     </row>
 
                     <row>
@@ -429,7 +445,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
 
         <mediaobject>
           <imageobject>
-            <imagedata contentdepth="100%"
+            <imagedata align="center" contentdepth="100%"
                        fileref="./images/refinement-site-selection.png"
                        scalefit="1" width="100%" />
           </imageobject>
@@ -493,7 +509,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
 
         <mediaobject>
           <imageobject>
-            <imagedata contentdepth="100%"
+            <imagedata align="center" contentdepth="100%"
                        fileref="./images/refinement-transfer-jobs.png"
                        scalefit="1" width="100%" />
           </imageobject>
@@ -511,7 +527,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
 
         <mediaobject>
           <imageobject>
-            <imagedata contentdepth="100%"
+            <imagedata align="center" contentdepth="100%"
                        fileref="./images/refinement-registration-jobs.png"
                        scalefit="1" width="100%" />
           </imageobject>
@@ -571,7 +587,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
 
         <mediaobject>
           <imageobject>
-            <imagedata contentdepth="100%"
+            <imagedata align="center" contentdepth="100%"
                        fileref="./images/refinement-creadir-rm-jobs.png"
                        scalefit="1" width="100%" />
           </imageobject>
@@ -589,7 +605,9 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
 
       <orderedlist>
         <listitem>
-          <para><emphasis role="bold">Condor</emphasis></para>
+          <para>
+            <emphasis role="bold">Condor</emphasis>
+          </para>
 
           <para>This is the default code generator for Pegasus . This
           generator generates the executable workflow as a Condor DAG file and
@@ -598,7 +616,9 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
         </listitem>
 
         <listitem>
-          <para><emphasis role="bold">Shell</emphasis></para>
+          <para>
+            <emphasis role="bold">Shell</emphasis>
+          </para>
 
           <para>This Code Generator generates the executable workflow as a
           shell script that can be executed on the submit host. While using
@@ -618,7 +638,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
 
         <mediaobject>
           <imageobject>
-            <imagedata contentdepth="100%"
+            <imagedata align="center" contentdepth="100%"
                        fileref="./images/refinement-final-executable-wf.png"
                        scalefit="1" width="100%" />
           </imageobject>
@@ -635,7 +655,9 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
 
     <itemizedlist>
       <listitem>
-        <para><emphasis role="bold">Shared File System</emphasis></para>
+        <para>
+          <emphasis role="bold">Shared File System</emphasis>
+        </para>
 
         <para>This setup applies to where the head node and the worker nodes
         of a cluster share a filesystem. Compute jobs in the workflow run in a
@@ -643,7 +665,9 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
       </listitem>
 
       <listitem>
-        <para><emphasis role="bold">NonShared FileSystem</emphasis></para>
+        <para>
+          <emphasis role="bold">NonShared FileSystem</emphasis>
+        </para>
 
         <para>This setup applies to where the head node and the worker nodes
         of a cluster don't share a filesystem. Compute jobs in the workflow
@@ -651,8 +675,10 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
       </listitem>
 
       <listitem>
-        <para><emphasis role="bold">Condor Pool Without a shared
-        filesystem</emphasis></para>
+        <para>
+          <emphasis role="bold">Condor Pool Without a shared
+          filesystem</emphasis>
+        </para>
 
         <para>This setup applies to a condor pool where the worker nodes
         making up a condor pool don't share a filesystem. All data IO is
@@ -667,7 +693,9 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
 
     <orderedlist>
       <listitem>
-        <para><emphasis role="bold">Submit Host</emphasis></para>
+        <para>
+          <emphasis role="bold">Submit Host</emphasis>
+        </para>
 
         <para>The host from where the workflows are submitted . This is where
         Pegasus and Condor DAGMan are installed. This is referred to as the
@@ -676,7 +704,9 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
       </listitem>
 
       <listitem>
-        <para><emphasis role="bold">Compute Site</emphasis></para>
+        <para>
+          <emphasis role="bold">Compute Site</emphasis>
+        </para>
 
         <para>The site where the jobs mentioned in the DAX are executed. There
         needs to be an entry in the Site Catalog for every compute site. The
@@ -685,7 +715,9 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
       </listitem>
 
       <listitem>
-        <para><emphasis role="bold">Staging Site</emphasis></para>
+        <para>
+          <emphasis role="bold">Staging Site</emphasis>
+        </para>
 
         <para>A site to which the separate transfer jobs in the executable
         workflow ( jobs with stage_in , stage_out and stage_inter prefixes
@@ -696,7 +728,9 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
       </listitem>
 
       <listitem>
-        <para><emphasis role="bold">Output Site</emphasis></para>
+        <para>
+          <emphasis role="bold">Output Site</emphasis>
+        </para>
 
         <para>The output site is the final storage site where the users want
         the output data from jobs to go to. The output site is passed to
@@ -706,7 +740,9 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
       </listitem>
 
       <listitem>
-        <para><emphasis role="bold">Input Site</emphasis></para>
+        <para>
+          <emphasis role="bold">Input Site</emphasis>
+        </para>
 
         <para>The site where the input data is stored. The locations of the
         input data are catalogued in the Replica Catalog, and the pool
@@ -715,8 +751,9 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
       </listitem>
 
       <listitem>
-        <para><emphasis role="bold">Workflow Execution
-        Directory</emphasis></para>
+        <para>
+          <emphasis role="bold">Workflow Execution Directory</emphasis>
+        </para>
 
         <para>This is the directory created by the create dir jobs in the
         executable workflow on the Staging Site. This is a directory per
@@ -725,7 +762,9 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
       </listitem>
 
       <listitem>
-        <para><emphasis role="bold">Worker Node Directory</emphasis></para>
+        <para>
+          <emphasis role="bold">Worker Node Directory</emphasis>
+        </para>
 
         <para>This is the directory created on the worker nodes per job
         usually by the job wrapper that launches the job.</para>
@@ -794,7 +833,10 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
       coordination site. The staging site server can be a file server on the
       head node of a cluster or can be on a separate machine.</para>
 
-      <para><emphasis role="bold">Setup</emphasis> <itemizedlist>
+      <para>
+        <emphasis role="bold">Setup</emphasis>
+
+        <itemizedlist>
           <listitem>
             <para>compute and staging site are the different</para>
           </listitem>
@@ -812,7 +854,8 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
             <para>Remote Output Site i.e site other than compute site. Can be
             submit host.</para>
           </listitem>
-        </itemizedlist></para>
+        </itemizedlist>
+      </para>
 
       <figure>
         <title>Non Shared Filesystem Setup</title>
@@ -865,7 +908,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
       </orderedlist>
 
       <para>In this case, the compute jobs are wrapped as <link
-      linkend="pegasuslite">PegasusLite</link> instances. </para>
+      linkend="pegasuslite">PegasusLite</link> instances.</para>
 
       <para>This mode is especially useful for running in the cloud
       environments where you don't want to setup a shared filesystem between
@@ -889,7 +932,10 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
       setup, where instead of using pegasus-transfer to transfer input and
       output data, Condor File IO is used.</para>
 
-      <para><emphasis role="bold">Setup</emphasis> <itemizedlist>
+      <para>
+        <emphasis role="bold">Setup</emphasis>
+
+        <itemizedlist>
           <listitem>
             <para>Submit Host and staging site are same</para>
           </listitem>
@@ -907,7 +953,8 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
             <para>Remote Output Site i.e site other than compute site. Can be
             submit host.</para>
           </listitem>
-        </itemizedlist></para>
+        </itemizedlist>
+      </para>
 
       <figure>
         <title>Condor Pool Without a Shared Filesystem</title>
@@ -1049,7 +1096,9 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
 
         <orderedlist>
           <listitem>
-            <para><emphasis role="bold">Replica Catalog</emphasis></para>
+            <para>
+              <emphasis role="bold">Replica Catalog</emphasis>
+            </para>
 
             <para>The Replica Catalog needs to be catalogued with the
             locations of the input files required by the workflows. This can
@@ -1059,8 +1108,9 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
           </listitem>
 
           <listitem>
-            <para><emphasis role="bold">Transformation
-            Catalog</emphasis></para>
+            <para>
+              <emphasis role="bold">Transformation Catalog</emphasis>
+            </para>
 
             <para>The Transformation Catalog needs to be catalogued with the
             locations of the executables that the workflows will use. This can
@@ -1070,7 +1120,9 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
           </listitem>
 
           <listitem>
-            <para><emphasis role="bold">Site Catalog</emphasis></para>
+            <para>
+              <emphasis role="bold">Site Catalog</emphasis>
+            </para>
 
             <para>The Site Catalog needs to be catalogued with the site layout
             of the various sites that the workflows can execute on. A site
