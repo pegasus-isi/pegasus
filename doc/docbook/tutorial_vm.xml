@@ -40,7 +40,7 @@ Wed Jun 24 14:47:59 PST 2011
       <itemizedlist>
         <listitem>
           <para><ulink
-          url="http://pegasus.isi.edu/wms/download/3.1/Pegasus-3.1.0-Debian-6-x86.vbox.zip"
+          url="http://download.pegasus.isi.edu/wms/download/3.1/Pegasus-3.1.0-Debian-6-x86.vbox.zip"
           xml:base="">Virtual Box Pegasus Image</ulink></para>
 
           <para>It is around <emphasis role="bold">1.2 GB</emphasis> in size.
@@ -48,9 +48,9 @@ Wed Jun 24 14:47:59 PST 2011
           role="bold">wget</emphasis> to download the image. Downloading the
           image using the browser sometimes corrupts the image.</para>
 
-          <programlisting>$ <emphasis role="bold">wget http://pegasus.isi.edu/wms/download/3.1/Pegasus-3.1.1-Debian-6-x86.vbox.zip
+          <programlisting>$ <emphasis role="bold">wget http://download.pegasus.isi.edu/wms/download/3.1/Pegasus-3.1.1-Debian-6-x86.vbox.zip
 
-</emphasis> http://pegasus.isi.edu/wms/download/3.1/Pegasus-3.1.1-Debian-6-x86.vbox.zip
+</emphasis> http://download.pegasus.isi.edu/wms/download/3.1/Pegasus-3.1.1-Debian-6-x86.vbox.zip
            =&gt; `Pegasus-3.1.1-Debian-6-x86.vbox.zip'
 Resolving pegasus.isi.edu... 128.9.64.219
 Connecting to pegasus.isi.edu|128.9.64.219|:80... connected.
