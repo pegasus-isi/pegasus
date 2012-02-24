@@ -750,6 +750,16 @@
             </row>
 
             <row>
+              <entry>cores</entry>
+
+              <entry>The number of cores, associated with the job. This is
+              solely used for accounting purposes in the database while
+              generating statistics. It corresponds to the multiplier_factor
+              in the job_instance table described <link
+              linkend="stampede-schema">here</link>.</entry>
+            </row>
+
+            <row>
               <entry>job.runtime</entry>
 
               <entry>Please refer to the <link
