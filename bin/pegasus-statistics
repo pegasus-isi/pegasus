@@ -917,7 +917,7 @@ def print_individual_wf_job_stats(workflow_stats, workflow_id, dax_label, output
 		job_stats.condor_delay = job.condor_q_time
 		job_stats.resource = job.resource_delay
 		job_stats.seqexec = job.seqexec
-                job_stats.exitcode = job.exit_code
+                job_stats.exitcode = utils.raw_to_regular(job.exit_code)
                 job_stats.hostname = job.host_name
 		if job_stats.seqexec is not None and job_stats.kickstart is not None:
 			job_stats.seqexec_delay = (float(job_stats.seqexec) - float(job_stats.kickstart))
