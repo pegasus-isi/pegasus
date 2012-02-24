@@ -1,220 +1,219 @@
-.\"  Copyright 2010-2011 University Of Southern California
+'\" t
+.\"     Title: pegasus-sc-converter
+.\"    Author: [see the "Authors" section]
+.\" Generator: DocBook XSL Stylesheets v1.75.2 <http://docbook.sf.net/>
+.\"      Date: 02/23/2012
+.\"    Manual: \ \&
+.\"    Source: \ \&
+.\"  Language: English
 .\"
-.\" Licensed under the Apache License, Version 2.0 (the "License");
-.\" you may not use this file except in compliance with the License.
-.\" You may obtain a copy of the License at
-.\"
-.\"  http://www.apache.org/licenses/LICENSE-2.0
-.\"
-.\"  Unless required by applicable law or agreed to in writing,
-.\"  software distributed under the License is distributed on an "AS IS" BASIS,
-.\"  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-.\"  See the License for the specific language governing permissions and
-.\" limitations under the License.
-.\"
-.\" 
-.\" $Id$
-.\" 
-.\" Authors: Karan Vahi
-.\" 
-.\" 
-.TH "pegasus-sc-converter" "1" "2.2.0" "PEGASUS Workflow Planner"
+.TH "PEGASUS\-SC\-CONVERT" "1" "02/23/2012" "\ \&" "\ \&"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
 .SH "NAME"
-pegasus-sc-converter \- A client to convert site catalog from one format to another format.
-
+pegasus-sc-converter \- A client to convert site catalog from one format to another format\&.
 .SH "SYNOPSIS"
-.B pegasus-sc-converter
- [\-Dprop  [..]]  \-i <list of input files> \-o <output file to write> 
-        [\-I input format] [\-O <output format> [\-v] [\-V] [\-h]
+.sp
+.nf
+\fBpegasus\-sc\-converter\fR [\fB\-v\fR] [\fB\-V\fR] [\fB\-h\fR] [\fB\-Dproperty\fR=\fIvalue\fR\&...]
+                     [\fB\-I\fR \fIfmt\fR] [\fB\-O\fR \fIfmt\fR]
+                     \fB\-i\fR \fIinfile\fR[,\fIinfile\fR,\&...] \fB\-o\fR \fIoutfile\fR
+.fi
 .SH "DESCRIPTION"
-The pegasus-sc-converter program is used to convert the site catalog from one format to another. 
-.IP
-Currently, the following formats of site catalog exist.
-.TP
-.B Text
-This is a easy to read  multiline textual format.
-.IP
+.sp
+The \fBpegasus\-sc\-converter\fR program is used to convert the site catalog from one format to another\&.
+.sp
+Currently, the following formats of site catalog exist\&.
+.PP
+\fBText\fR
+.RS 4
+This is a easy to read multiline textual format\&.
+.sp
 A sample entry in this format looks as follows
-
+.sp
+.if n \{\
+.RS 4
+.\}
 .nf
-\f(CB
-site local{ 
-sysinfo "INTEL32::LINUX"
-gridlaunch "/nfs/software/pegasus/default/bin/kickstart"
-workdir "/scratch"
-gridftp "gsiftp://viz-login.isi.edu/scratch" "4.0.4"
-universe transfer "viz-login.isi.edu/jobmanager-fork" "4.0.4"
-universe vanilla "viz-login.isi.edu/jobmanager-pbs" "4.0.4"
-lrc "rlsn://smarty.isi.edu"
-profile  env "GLOBUS_LOCATION" "/nfs/software/globus/default"
-profile  env "LD_LIBRARY_PATH" "/nfs/software/globus/default/lib"
-profile  env "PEGASUS_HOME" "/nfs/software/pegasus/default"
+site local{
+  sysinfo "INTEL32::LINUX"
+  gridlaunch "/nfs/software/pegasus/default/bin/kickstart"
+  workdir "/scratch"
+  gridftp "gsiftp://viz\-login\&.isi\&.edu/scratch" "4\&.0\&.4"
+  universe transfer "viz\-login\&.isi\&.edu/jobmanager\-fork" "4\&.0\&.4"
+  universe vanilla "viz\-login\&.isi\&.edu/jobmanager\-pbs" "4\&.0\&.4"
+  lrc "rlsn://smarty\&.isi\&.edu"
+  profile  env "GLOBUS_LOCATION" "/nfs/software/globus/default"
+  profile  env "LD_LIBRARY_PATH" "/nfs/software/globus/default/lib"
+  profile  env "PEGASUS_HOME" "/nfs/software/pegasus/default"
 }
-\fP
 .fi
-
-.TP
-.B XML
+.if n \{\
+.RE
+.\}
+.RE
+.PP
+\fBXML\fR
+.RS 4
 This is equivalent to the
-.B Text
-format in XML. All information in the Text format can be represented in the XMLS format and vice-a-versa.
-.IP
+\fBText\fR
+format in XML\&. All information in the Text format can be represented in the XMLS format and vice\-a\-versa\&.
+.sp
 A sample entry in this format looks as follows
-
+.sp
+.if n \{\
+.RS 4
+.\}
 .nf
-\f(CB
 <site handle="local" gridlaunch="/nfs/software/pegasus/default/bin/kickstart" sysinfo="INTEL32::LINUX">
-    <profile namespace="env" key="GLOBUS_LOCATION" >/nfs/software/globus/default</profile>
-    <profile namespace="env" key="LD_LIBRARY_PATH" >/nfs/software/globus/default/lib</profile>
-    <profile namespace="env" key="PEGASUS_HOME" >/nfs/software/pegasus/default</profile>
-    <lrc url="rlsn://smarty.isi.edu" />
-    <gridftp  url="gsiftp://viz-login.isi.edu" storage="/scratch" major="4" minor="0" patch="4"> 
-    </gridftp>
-    <jobmanager universe="transfer" url="viz-login.isi.edu/jobmanager-fork" major="4" minor="0" patch="4" />
-    <jobmanager universe="vanilla" url="viz-login.isi.edu/jobmanager-pbs" major="4" minor="0" patch="4" />
-    <workdirectory >/scratch</workdirectory>
-  </site>
-\fP
+  <profile namespace="env" key="GLOBUS_LOCATION" >/nfs/software/globus/default</profile>
+  <profile namespace="env" key="LD_LIBRARY_PATH" >/nfs/software/globus/default/lib</profile>
+  <profile namespace="env" key="PEGASUS_HOME" >/nfs/software/pegasus/default</profile>
+  <lrc url="rlsn://smarty\&.isi\&.edu" />
+  <gridftp  url="gsiftp://viz\-login\&.isi\&.edu" storage="/scratch" major="4" minor="0" patch="4">
+  </gridftp>
+  <jobmanager universe="transfer" url="viz\-login\&.isi\&.edu/jobmanager\-fork" major="4" minor="0" patch="4" />
+  <jobmanager universe="vanilla" url="viz\-login\&.isi\&.edu/jobmanager\-pbs" major="4" minor="0" patch="4" />
+  <workdirectory >/scratch</workdirectory>
+</site>
 .fi
-.IP
-This format conforms to the  XML schema found at
-.B http://pegasus.isi.edu/schema/sc-2.0.xsd
-
-.TP
-.B XML3
-This format is a superset of previous formats.  All information about a site that can be described about a site can be described in this format. In addition, the user has finer grained control over the specification of directories and FTP servers that are accessible at the 
-.B head node
-and the 
-.B worker node
-.
-
-.IP
+.if n \{\
+.RE
+.\}
+.sp
+This format conforms to the XML schema found at
+\m[blue]\fBhttp://pegasus\&.isi\&.edu/schema/sc\-2\&.0\&.xsd\fR\m[]\&.
+.RE
+.PP
+\fBXML3\fR
+.RS 4
+This format is a superset of previous formats\&. All information about a site that can be described about a site can be described in this format\&. In addition, the user has finer grained control over the specification of directories and FTP servers that are accessible at the
+\fBhead node\fR
+and the
+\fBworker node\fR\&.
+.sp
 A sample entry in this format looks as follows
+.sp
+.if n \{\
+.RS 4
+.\}
 .nf
-\f(CB
 <site  handle="local" arch="x86" os="LINUX">
-		<grid  type="gt2" contact="viz-login.isi.edu/jobmanager-pbs" scheduler="PBS" jobtype="compute"/>
-		<grid  type="gt2" contact="viz-login.isi.edu/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/>
-		<head-fs>
-			<scratch>
-				<shared>
-					<file-server protocol="gsiftp" url="gsiftp://viz-login.isi.edu" mount-point="/scratch">
-					</file-server>
-					<internal-mount-point mount-point="/scratch" free-size="null" total-size="null"/>
-				</shared>
-			</scratch>
-			<storage>
-				<shared>
-					<file-server protocol="gsiftp" url="gsiftp://viz-login.isi.edu" mount-point="/scratch">
-					</file-server>
-					<internal-mount-point mount-point="/scratch" free-size="null" total-size="null"/>
-				</shared>
-			</storage>
-		</head-fs>
-		<replica-catalog  type="LRC" url="rlsn://smarty.isi.edu">
-		</replica-catalog>
-		<profile namespace="env" key="GLOBUS_LOCATION" >/nfs/software/globus/default</profile>
-		<profile namespace="env" key="LD_LIBRARY_PATH" >/nfs/software/globus/default/lib</profile>
-		<profile namespace="env" key="PEGASUS_HOME" >/nfs/software/pegasus/default</profile>
-	</site>
-\fP
+  <grid  type="gt2" contact="viz\-login\&.isi\&.edu/jobmanager\-pbs" scheduler="PBS" jobtype="compute"/>
+  <grid  type="gt2" contact="viz\-login\&.isi\&.edu/jobmanager\-fork" scheduler="Fork" jobtype="auxillary"/>
+  <head\-fs>
+    <scratch>
+      <shared>
+        <file\-server protocol="gsiftp" url="gsiftp://viz\-login\&.isi\&.edu" mount\-point="/scratch">
+        </file\-server>
+        <internal\-mount\-point mount\-point="/scratch" free\-size="null" total\-size="null"/>
+      </shared>
+    </scratch>
+    <storage>
+      <shared>
+        <file\-server protocol="gsiftp" url="gsiftp://viz\-login\&.isi\&.edu" mount\-point="/scratch">
+        </file\-server>
+        <internal\-mount\-point mount\-point="/scratch" free\-size="null" total\-size="null"/>
+      </shared>
+    </storage>
+  </head\-fs>
+  <replica\-catalog  type="LRC" url="rlsn://smarty\&.isi\&.edu">
+  </replica\-catalog>
+  <profile namespace="env" key="GLOBUS_LOCATION" >/nfs/software/globus/default</profile>
+  <profile namespace="env" key="LD_LIBRARY_PATH" >/nfs/software/globus/default/lib</profile>
+  <profile namespace="env" key="PEGASUS_HOME" >/nfs/software/pegasus/default</profile>
+</site>
 .fi
-.IP
-This format conforms to the  XML schema found at
-.B http://pegasus.isi.edu/schema/sc-3.0.xsd
-
-
-.SH "ARGUMENTS"
-.TP 
-.B \-i <comma separated list of input files>
-.PD 0
-.TP
-.PD 1
-.B \-\- input <comma separated list of input files>
+.if n \{\
+.RE
+.\}
+.sp
+This format conforms to the XML schema found at
+\m[blue]\fBhttp://pegasus\&.isi\&.edu/schema/sc\-3\&.0\&.xsd\fR\m[]\&.
+.RE
+.SH "OPTIONS"
+.PP
+\fB\-i\fR \fIinfile\fR[,\fIinfile\fR,\&...], \fB\-\-input\fR \fIinfile\fR[,\fIinfile\fR,\&...]
+.RS 4
 The comma separated list of input files that need to be converted to a file in the format specified by
-.B oformat
-option.
-
-.TP
-.B \-o output file
-.PD 0
-.TP
-.PD 1
-.B \-\- output  the output file 
-The output file to which the output needs to be written out to.
-
-.TP 
-.B Other Options
-
-.TP
-.B \-I input format
-.PD 0
-.TP
-.PD 1
-.B \-\-iformat  input format
-The input format of the input files. 
-.IP
+\fB\-\-oformat\fR
+option\&.
+.RE
+.PP
+\fB\-o\fR \fIoutfile\fR, \fB\-\-output\fR \fIoutfile\fR
+.RS 4
+The output file to which the output needs to be written out to\&.
+.RE
+.SS "Other Options"
+.PP
+\fB\-I\fR \fIfmt\fR, \fB\-\-iformat\fR \fIfmt\fR
+.RS 4
+The input format of the input files\&.
+.sp
 Valid values for the input format are
-.B XML
+\fBXML\fR
 and
-.B Text
-.
-
-.TP
-.B \-O output format
-.PD 0
-.TP
-.PD 1
-.B \-\-oformat  input format
-The output format of the output file.
-.IP
+\fBText\fR\&.
+.RE
+.PP
+\fB\-O\fR \fIfmt\fR, \fB\-\-oformat\fR \fIfmt\fR
+.RS 4
+The output format of the output file\&.
+.sp
 Valid values for the output format is
-.B XML3
-.
-
-.TP
-.B \-v
-.PD 0
-.TP
-.PD 1
-.B \-\-verbose
-increases the verbosity of messages about what is going on.
-.IP
-By default, all FATAL ERROR, ERROR , WARNINGS and INFO messages are
-logged.
-
-.TP
-.B \-V
-.PD 0
-.TP
-.PD 1
-.B \-\-version
-Displays the current version number of the  Pegasus Workflow Planner
-Software.
-
-
-.TP
-.B \-h
-.PD 0
-.TP
-.PD 1
-.B \-\-help
+\fBXML3\fR\&.
+.RE
+.PP
+\fB\-v\fR, \fB\-\-verbose\fR
+.RS 4
+Increases the verbosity of messages about what is going on\&.
+.sp
+By default, all FATAL ERROR, ERROR , WARNINGS and INFO messages are logged\&.
+.RE
+.PP
+\fB\-V\fR, \fB\-\-version\fR
+.RS 4
+Displays the current version number of the Pegasus Workflow Planner Software\&.
+.RE
+.PP
+\fB\-h\fR, \fB\-\-help\fR
+.RS 4
 Displays all the options to the
-.B pegasus-plan
-command.
-
+\fBpegasus\-plan\fR
+command\&.
+.RE
 .SH "EXAMPLE"
-.nf 
-\f(CB
- pegasus-sc-converter  -i sites.xml -I XML -o sites.xml.new  -O XML3 -vvvvv
-\fP
-.fi 
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+pegasus\-sc\-converter \-i sites\&.xml \-I XML \-o sites\&.xml\&.new \-O XML3 \-vvvvv
+.fi
+.if n \{\
+.RE
+.\}
 .SH "AUTHORS"
+.sp
 Karan Vahi <vahi at isi dot edu>
-.br
+.sp
 Gaurang Mehta <gmehta at isi dot edu>
-.PP 
-.br 
-PEGASUS
-.B http://pegasus.isi.edu
-
+.sp
+Pegasus Team \m[blue]\fBhttp://pegasus\&.isi\&.edu\fR\m[]

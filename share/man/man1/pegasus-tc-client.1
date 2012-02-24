@@ -1,266 +1,470 @@
-.\"  Copyright 2010-2011 University Of Southern California
+'\" t
+.\"     Title: pegasus-tc-client
+.\"    Author: [see the "Authors" section]
+.\" Generator: DocBook XSL Stylesheets v1.75.2 <http://docbook.sf.net/>
+.\"      Date: 02/23/2012
+.\"    Manual: \ \&
+.\"    Source: \ \&
+.\"  Language: English
 .\"
-.\" Licensed under the Apache License, Version 2.0 (the "License");
-.\" you may not use this file except in compliance with the License.
-.\" You may obtain a copy of the License at
-.\"
-.\"  http://www.apache.org/licenses/LICENSE-2.0
-.\"
-.\"  Unless required by applicable law or agreed to in writing,
-.\"  software distributed under the License is distributed on an "AS IS" BASIS,
-.\"  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-.\"  See the License for the specific language governing permissions and
-.\" limitations under the License.
-.\"
-.\" 
-.\" Author: Gaurang Mehta gmehta@isi.edu
-.\" 
-.\" $REVISION$
-.\" 
-.\" 
-.TH "pegasus-tc-client" "1" "3.1.0" "PEGASUS Workflow Planner"
+.TH "PEGASUS\-TC\-CLIENT" "1" "02/23/2012" "\ \&" "\ \&"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
 .SH "NAME"
-\fBpegasus\-tc\-client\fR \- A full featured generic client to handle adds, delete and queries to the \fITransformation Catalog (TC).
+pegasus-tc-client \- A full featured generic client to handle adds, deletes and queries to the Transformation Catalog (TC)\&.
 .SH "SYNOPSIS"
-\fBpegasus\-tc\-client\fR [\fI\-Dprop [...]\fR] \fIOPERATION TRIGGERS\fR [\fIOPTIONS\fR] [\fI\-h\fR] [\fI\-v\fR] [\fI\-V\fR]
+.sp
+.nf
+\fBpegasus\-tc\-client\fR [\fB\-D\fR\fIproperty=value\fR\&...] [\fI\-h\fR] [\fI\-v\fR] [\fI\-V\fR]
+                  \fIOPERATION\fR \fITRIGGERS\fR [\fIOPTIONS\fR]
+.fi
 .SH "DESCRIPTION"
-The
-\fBpegasus\-tc\-client\fR command is a generic client that performs the three basic operation of adding, deleting and querying of any \fITransformation Catalog\fR impemented to the \fITC Api\fR. The client implements all the operations supported by the \fITC Api\fR. It is upto the TC implementation whether they support all operations or modes.
-.LP 
-The following 3 operations are supported by the \fBpegasus\-tc\-client\fR. One of these operations have to be specified to run the client.
-.TP 
+.sp
+The \fBpegasus\-tc\-client\fR command is a generic client that performs the three basic operation of adding, deleting and querying of any Transformation Catalog implemented to the TC API\&. The client implements all the operations supported by the TC API\&. It is up to the TC implementation whether they support all operations or modes\&.
+.sp
+The following 3 operations are supported by the \fBpegasus\-tc\-client\fR\&. One of these operations have to be specified to run the client\&.
+.PP
 \fBADD\fR
-.br 
-This operation allows the client to add or update entries in the \fITransformation Catalog\fR. Entries can be added one by one on the command line or in bulk by using the \fIBULK\fR Trigger and providing a file with the necessary entries. Also Profiles can be added to either the logical transformation or the physical transformation.
-.TP 
+.RS 4
+This operation allows the client to add or update entries in the Transformation Catalog\&. Entries can be added one by one on the command line or in bulk by using the
+\fIBULK\fR
+Trigger and providing a file with the necessary entries\&. Also Profiles can be added to either the logical transformation or the physical transformation\&.
+.RE
+.PP
 \fBDELETE\fR
-.br 
-This operation allows the client to delete entries from the \fITransformation Catalog\fR. Entries can be deleted based on logical transformation, by resource, by transformation type as well as the transformation system information. Also Profiles associated with the logical or physical transformation can be deleted.
-.TP 
+.RS 4
+This operation allows the client to delete entries from the Transformation Catalog\&. Entries can be deleted based on logical transformation, by resource, by transformation type as well as the transformation system information\&. Also Profiles associated with the logical or physical transformation can be deleted\&.
+.RE
+.PP
 \fBQUERY\fR
-.br 
-This opeartion allows the client to query for entries from the \fITransformation Catalog\fR. Queries can be made for printing all the contents of the Catalog or for specific entries, for all the logical transformations or resources etc. 
-.LP 
-See the \fBTRIGGERS\fR and \fBVALID COMBINATIONS\fR section for more details.
+.RS 4
+This operation allows the client to query for entries from the Transformation Catalog\&. Queries can be made for printing all the contents of the Catalog or for specific entries, for all the logical transformations or resources etc\&.
+.RE
+.sp
+See the \fBTRIGGERS\fR and \fBVALID COMBINATIONS\fR section for more details\&.
 .SH "OPERATIONS"
-To select one of the 3 operations.
-.TP 
-\fB\-a , \-\-add\fR     Perform addition operations on the TC.
-.TP 
-\fB\-d , \-\-delete\fR  Perform delete operations on the TC.
-.TP 
-\fB\-q , \-\-query\fR   Perform query operations on the TC.
+.sp
+To select one of the 3 operations\&.
+.PP
+\fB\-a, \-\-add\fR
+.RS 4
+Perform addition operations on the TC\&.
+.RE
+.PP
+\fB\-d, \-\-delete\fR
+.RS 4
+Perform delete operations on the TC\&.
+.RE
+.PP
+\fB\-q, \-\-query\fR
+.RS 4
+Perform query operations on the TC\&.
+.RE
 .SH "TRIGGERS"
-Triggers modify an \fBOPERATIONS\fR behaviour. E.g. if you want to perform a bulk operation you would use a \fIBULK\fR Trigger or if you want to perform an operation on a Logical Transformation then you would use the \fILFN\fR Trigger.
-.LP 
-The following 7 Triggers are available. See the \fBVALID COMBINATIONS\fR section for the correct grouping and usage.
-.TP 
-\fB\-B\fR Triggers a bulk operation.
-.TP 
-\fB\-L\fR Triggers an operation on a logical transformation.
-.TP 
-\fB\-P\fR Triggers an operation on a physical transformation
-.TP 
-\fB\-R\fR Triggers an operation on a resource.
-.TP 
-\fB\-E\fR Triggers an operation on a Profile.
-.TP 
-\fB\-T\fR Triggers an operation on a Type.
-.TP 
-\fB\-S\fR Triggers an operation on a System information.
+.sp
+Triggers modify the behavior of an \fBOPERATION\fR\&. For example, if you want to perform a bulk operation you would use a \fIBULK\fR Trigger or if you want to perform an operation on a Logical Transformation then you would use the \fILFN\fR Trigger\&.
+.sp
+The following 7 Triggers are available\&. See the \fBVALID COMBINATIONS\fR section for the correct grouping and usage\&.
+.PP
+\fB\-B\fR
+.RS 4
+Triggers a bulk operation\&.
+.RE
+.PP
+\fB\-L\fR
+.RS 4
+Triggers an operation on a logical transformation\&.
+.RE
+.PP
+\fB\-P\fR
+.RS 4
+Triggers an operation on a physical transformation
+.RE
+.PP
+\fB\-R\fR
+.RS 4
+Triggers an operation on a resource\&.
+.RE
+.PP
+\fB\-E\fR
+.RS 4
+Triggers an operation on a Profile\&.
+.RE
+.PP
+\fB\-T\fR
+.RS 4
+Triggers an operation on a Type\&.
+.RE
+.PP
+\fB\-S\fR
+.RS 4
+Triggers an operation on a System information\&.
+.RE
 .SH "OPTIONS"
-The following options are applicable for all the operations.
-.TP
-.PD 0
-.B \-Dprop \fIvalue\fR
-The \-D options allows an experienced user to override certain properties which influence the program execution, 
-among them the default location of the user's properties file and the PEGASUS home location. 
-One may set several CLI properties by giving this option multiple times. The -D option(s) must be the first option 
-on the command line. A CLI property take precedence over the properties file property of the same key.
-.TP 
-\fB\-l , \-\-lfn\fR \fIlogicalTR
-The logical transformation to be added. The format is 
-.br 
-\fBNAMESPACE::NAME:VERSION\fB. The name is always required, namespace and version are optional.
-.TP 
-\fB\-p , \-\-pfn\fR \fIphysicalTR
-The physical transfromation to be added. For INSTALLED executables its a local file path, for all others its a url.
-.TP 
-\fB\-t , \-\-type\fR \fItype  
-The type of physical transformation. Valid values are : \fBINSTALLED, STATIC_BINARY, DYNAMIC_BINARY, SCRIPT, SOURCE, PACMAN_PACKAGE.
-.TP 
-\fB\-r , \-\-resource\fR \fIresourceID
-The resourceID where the transformation is located.
-.TP 
-\fB\-e , \-\-profile\fR \fIprofiles
-The profiles for the transformation. Mulitple profiles of same namespace can be added simultaneously by seperating them with a comma \fB","\fR. Each profile section is written as
-.br 
+.sp
+The following options are applicable for all the operations\&.
+.PP
+\fB\-D\fR\fIproperty=value\fR
+.RS 4
+The \-D options allows an experienced user to override certain properties which influence the program execution, among them the default location of the user\(cqs properties file and the PEGASUS home location\&. One may set several CLI properties by giving this option multiple times\&. The
+\fB\-D\fR
+option(s) must be the first option on the command line\&. A CLI property take precedence over the properties file property of the same key\&.
+.RE
+.PP
+\fB\-l, \-\-lfn\fR \fIlogical\fR
+.RS 4
+The logical transformation to be added\&. The format is:
+\fBNAMESPACE::NAME:VERSION\fR\&. The name is always required, namespace and version are optional\&.
+.RE
+.PP
+\fB\-p, \-\-pfn\fR \fIphysical\fR
+.RS 4
+The physical transformation to be added\&. For INSTALLED executables its a local file path, for all others its a url\&.
+.RE
+.PP
+\fB\-t, \-\-type\fR \fItype\fR
+.RS 4
+The type of physical transformation\&. Valid values are: INSTALLED, STATIC_BINARY, DYNAMIC_BINARY, SCRIPT, SOURCE, PACMAN_PACKAGE\&.
+.RE
+.PP
+\fB\-r, \-\-resource\fR \fIresource\fR
+.RS 4
+The resourceID where the transformation is located\&.
+.RE
+.PP
+\fB\-e, \-\-profile\fR \fIprofiles\fR
+.RS 4
+The profiles for the transformation\&. Multiple profiles of same namespace can be added simultaneously by separating them with a comma
+\fB","\fR\&. Each profile section is written as
 \fBNAMESPACE::KEY=VALUE,KEY2=VALUE2\fR
-.br 
-\fIe.g.\fR ENV::JAVA_HOME=/usr/bin/java2,PEGASUS_HOME=/usr/local/pegasus. To add muliple namespaces you need to repeat the \-e option for each namespace. \fIe.g.\fR 
-.br 
+e\&.g\&.
+ENV::JAVA_HOME=/usr/bin/java2,PEGASUS_HOME=/usr/local/pegasus\&. To add multiple namespaces you need to repeat the \-e option for each namespace\&. e\&.g\&.
 \-e ENV::JAVA_HOME=/usr/bin/java \-e GLOBUS::JobType=MPI,COUNT=10
-.TP 
-\fB\-s , \-\-system\fR \fIsysteminfo     
-The architecture, os, osversion and glibc if any for the executable. Each system info is written in the form \fBARCH::OS:OSVER:GLIBC\fR
-.TP 
-\fB\-v , \-\-verbose\fR
-Displays the output in verbose mode (Lots of Debugging info).
-.TP 
-\fB\-V , \-\-version\fR
-Displays the version number of the PEGASUS Workflow Planner software.
-.TP 
-\fB\-h , \-\-help\fR
+.RE
+.PP
+\fB\-s, \-\-system\fR \fIsysteminfo\fR
+.RS 4
+The architecture, os, osversion and glibc if any for the executable\&. Each system info is written in the form
+\fBARCH::OS:OSVER:GLIBC\fR
+.RE
+.PP
+\fB\-v, \-\-verbose\fR
+.RS 4
+Displays the output in verbose mode (Lots of Debugging info)\&.
+.RE
+.PP
+\fB\-V, \-\-version\fR
+.RS 4
+Displays the Pegasus version\&.
+.RE
+.PP
+\fB\-h, \-\-help\fR
+.RS 4
 Generates help
+.RE
 .SH "OTHER OPTIONS"
-.TP 
-\fB\-o , \-\-oldformat
+.PP
+\fB\-o, \-\-oldformat\fR
+.RS 4
 Generates the output in the old single line format
-.br 
-.TP 
-\fB\-c , \-\-conf
+.RE
+.PP
+\fB\-c, \-\-conf\fR
+.RS 4
 path to property file
-.br
+.RE
 .SH "VALID COMBINATIONS"
-The following are valid combinations of \fBOPERATIONS, TRIGGERS, OPTIONS\fR for the \fBpegasus\-tc\-client\fR
-.SS
-\fBADD\fR
-.TP 
+.sp
+The following are valid combinations of \fBOPERATIONS, TRIGGERS, OPTIONS\fR for the \fBpegasus\-tc\-client\fR\&.
+.SS "ADD"
+.PP
 \fBAdd TC Entry\fR
-\-a \-l \fIlfn\fR \-p \fIpfn\fR \-t \fItype\fR \-r \fIresource\fR \-s \fIsystem\fR [\-e \fIprofiles\fR..]
-.br 
-Adds a single entry into the transformation catalog.
-.TP 
+.RS 4
+\-a \-l
+\fIlfn\fR
+\-p
+\fIpfn\fR
+\-t
+\fItype\fR
+\-r
+\fIresource\fR
+\-s
+\fIsystem\fR
+[\-e
+\fIprofiles\fR\&...]
+.sp
+Adds a single entry into the transformation catalog\&.
+.RE
+.PP
 \fBAdd PFN Profile\fR
-\-a \-P \-E \-p \fIpfn\fR \-t \fItype\fR \-r \fIresource\fR \-e \fIprofiles\fR ....
-.br 
-Adds profiles to a specified physical transformation on a given resource and of a given type.
-.TP 
-\fBAdd LFN Profile
-\-a \-L \-E \-l \fIlfn\fR \-e \fIprofiles\fR ....
-.br 
-Adds profiles to a specified logical transformation.
-.TP 
-\fBAdd Bulk Entries
-\-a \-B \-f \fIfile\fR
-.br 
-Adds entries in bulk mode by supplying a file containg the entries. The format of the file cotnains 6 columns. E.g.
-.br 
+.RS 4
+\-a \-P \-E \-p
+\fIpfn\fR
+\-t
+\fItype\fR
+\-r
+\fIresource\fR
+\-e
+\fIprofiles\fR
+\&...
+.sp
+Adds profiles to a specified physical transformation on a given resource and of a given type\&.
+.RE
+.PP
+\fBAdd LFN Profile\fR
+.RS 4
+\-a \-L \-E \-l
+\fIlfn\fR
+\-e
+\fIprofiles\fR
+\&...
+.sp
+Adds profiles to a specified logical transformation\&.
+.RE
+.PP
+\fBAdd Bulk Entries\fR
+.RS 4
+\-a \-B \-f
+\fIfile\fR
+.sp
+Adds entries in bulk mode by supplying a file containing the entries\&. The format of the file contains 6 columns\&. E\&.g\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
 #RESOURCE   LFN         PFN      TYPE      SYSINFO      PROFILES
-.br 
 #
-.br 
-isi NS::NAME:VER  /bin/date  INSTALLED  ARCH::OS:OSVERS:GLIBC  NS::KEY=VALUE,KEY=VALUE;NS2::KEY=VALUE,KEY=VALUE 
-.SS
-\fBDELETE\fR
-.TP 
+isi NS::NAME:VER  /bin/date  INSTALLED  ARCH::OS:OSVERS:GLIBC  NS::KEY=VALUE,KEY=VALUE;NS2::KEY=VALUE,KEY=VALUE
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.SS "DELETE"
+.PP
 \fBDelete all TC\fR
+.RS 4
 \-d \-BPRELST
-.br 
-Deletes the entire contents of the TC.
-.br 
-\fBWARNING : USE WITH CAUTION.
-.TP 
+.sp
+Deletes the entire contents of the TC\&.
+.sp
+\fBWARNING : USE WITH CAUTION\&.\fR
+.RE
+.PP
 \fBDelete by LFN\fR
-\-d \-L \-l \fIlfn\fR [\-r \fIresource\fR] [\-t \fItype\fR]
-.br 
-Deletes entries from the TC for a particular logical transformation and additionaly a resource and or type.
-.TP 
+.RS 4
+\-d \-L \-l
+\fIlfn\fR
+[\-r
+\fIresource\fR] [\-t
+\fItype\fR]
+.sp
+Deletes entries from the TC for a particular logical transformation and additionally a resource and or type\&.
+.RE
+.PP
 \fBDelete by PFN\fR
-\-d \-P \-l \fIlfn\fR \-p \fIpfn\fR [\-r \fIresource\fR] [\-t \fItype\fR]
-.br 
-Deletes entries from the TC for a given logical and physical transformation and additionaly on a particular resource and or of a particular type.
-.TP 
+.RS 4
+\-d \-P \-l
+\fIlfn\fR
+\-p
+\fIpfn\fR
+[\-r
+\fIresource\fR] [\-t
+\fItype\fR]
+.sp
+Deletes entries from the TC for a given logical and physical transformation and additionally on a particular resource and or of a particular type\&.
+.RE
+.PP
 \fBDelete by Type\fR
-\-d \-T \-t \fItype\fR [\-r \fIresource\fR]
-.br 
-Deletes entries from TC of a specific type and/or on a specific resource.
-.TP 
+.RS 4
+\-d \-T \-t
+\fItype\fR
+[\-r
+\fIresource\fR]
+.sp
+Deletes entries from TC of a specific type and/or on a specific resource\&.
+.RE
+.PP
 \fBDelete by Resource\fR
-\-d \-R \-r \fIresource\fR
-.br 
-Deletes the entries from the TC on a particular resource.
-.TP 
+.RS 4
+\-d \-R \-r
+\fIresource\fR
+.sp
+Deletes the entries from the TC on a particular resource\&.
+.RE
+.PP
 \fBDelete by SysInfo\fR
-\-d \-S \-s \fIsysinfo\fR
-.br 
-Deletes the entries from the TC for a particular system information type.
-.TP 
+.RS 4
+\-d \-S \-s
+\fIsysinfo\fR
+.sp
+Deletes the entries from the TC for a particular system information type\&.
+.RE
+.PP
 \fBDelete Pfn Profile\fR
-\-d \-P \-E \-p \fIpfn\fR \-r \fIresource\fR \-t \fItype\fR [\-e \fIprofiles\fR ..]
-Deletes all or specific profiles associated with a physical transformation.
-.TP 
+.RS 4
+\-d \-P \-E \-p
+\fIpfn\fR
+\-r
+\fIresource\fR
+\-t
+\fItype\fR
+[\-e
+\fIprofiles\fR
+\&.\&.]
+.sp
+Deletes all or specific profiles associated with a physical transformation\&.
+.RE
+.PP
 \fBDelete Lfn Profile\fR
-\-d \-L \-E \-l \fIlfn\fR \-e \fIprofiles\fR ....
-.br 
-Deletes all or specific profiles associated with a logical transformation.
-.SS
-\fBQUERY\fR
-.TP 
+.RS 4
+\-d \-L \-E \-l
+\fIlfn\fR
+\-e
+\fIprofiles\fR
+\&...\&.
+.sp
+Deletes all or specific profiles associated with a logical transformation\&.
+.RE
+.SS "QUERY"
+.PP
 \fBQuery Bulk\fR
+.RS 4
 \-q \-B
-.br 
-Queries for all the contents of the TC. It produces a file format TC which can be added to another TC using the bulk option.
-.TP 
+.sp
+Queries for all the contents of the TC\&. It produces a file format TC which can be added to another TC using the bulk option\&.
+.RE
+.PP
 \fBQuery LFN\fR
-\-q \-L [\-r \fIresource\fR] [\-t \fItype\fR]
-.br 
-Queries the TC for logical transformation and/or on a particular resource and/or of a particular type.
-.TP 
+.RS 4
+\-q \-L [\-r
+\fIresource\fR] [\-t
+\fItype\fR]
+.sp
+Queries the TC for logical transformation and/or on a particular resource and/or of a particular type\&.
+.RE
+.PP
 \fBQuery PFN\fR
-\-q \-P \-l \fIlfn\fR [\-r \fIresource\fR] [\-t \fItype\fR]
-.br 
-Queries the TC for physical transformations for a give logical transformation and/or on a particular resource and/or of a particular type.
-.TP 
+.RS 4
+\-q \-P \-l
+\fIlfn\fR
+[\-r
+\fIresource\fR] [\-t
+\fItype\fR]
+.sp
+Queries the TC for physical transformations for a give logical transformation and/or on a particular resource and/or of a particular type\&.
+.RE
+.PP
 \fBQuery Resource\fR
-\-q \-R \-l \fIlfn\fR [\-t \fItype\fR]
-.br 
-Queries the TC for resources that are registered and/or resources registered for a specific type of transformation.
-.TP 
-\fBQuery Lfn Profile\fR
-\-q \-L \-E \-l \fIlfn\fR
-.br 
+.RS 4
+\-q \-R \-l
+\fIlfn\fR
+[\-t
+\fItype\fR]
+.sp
+Queries the TC for resources that are registered and/or resources registered for a specific type of transformation\&.
+.RE
+.PP
+\fBQuery LFN Profile\fR
+.RS 4
+\-q \-L \-E \-l
+\fIlfn\fR
+.sp
 Queries for profiles associated with a particular logical transformation
-.TP 
+.RE
+.PP
 \fBQuery Pfn Profile\fR
-\-q \-P \-E \-p \fIpfn\fR \-r \fIresource\fR \-t \fItype\fR
-.br 
+.RS 4
+\-q \-P \-E \-p
+\fIpfn\fR
+\-r
+\fIresource\fR
+\-t
+\fItype\fR
+.sp
 Queries for profiles associated with a particular physical transformation
-
+.RE
 .SH "PROPERTIES"
-This are the properties you will need to set to use either the \fBFile\fR or \fBDatabase\fR TC.
-.br 
-For more details please check the \fB$PEGASUS_HOME/etc/sample.properties\fR file.
-.TP 
-\fBpegasus.catalog.transformation
-Identifies what impelemntation of TC will be used. If relative name is used then the path org.griphyn.cPlanner.tc is prefixed to the name and used as the class name to load. The default value if \fBText\fR. Other supported mode is \fBFile\fR
-.TP 
-\fBpegasus.catalog.transformation.file
-The file path where the text based TC is located. By default the path \fB$PEGASUS_HOME/var/tc.data\fR is used.
+.sp
+These are the properties you will need to set to use either the \fBFile\fR or \fBDatabase\fR TC\&.
+.sp
+For more details please check the \fB$PEGASUS_HOME/etc/sample\&.properties\fR file\&.
+.PP
+\fBpegasus\&.catalog\&.transformation\fR
+.RS 4
+Identifies what impelemntation of TC will be used\&. If relative name is used then the path org\&.griphyn\&.cPlanner\&.tc is prefixed to the name and used as the class name to load\&. The default value if
+\fBText\fR\&. Other supported mode is
+\fBFile\fR
+.RE
+.PP
+\fBpegasus\&.catalog\&.transformation\&.file\fR
+.RS 4
+The file path where the text based TC is located\&. By default the path
+\fB$PEGASUS_HOME/var/tc\&.data\fR
+is used\&.
+.RE
 .SH "FILES"
-.TP 
-\fB$PEGASUS_HOME/var/tc.data\fR is the suggested location for the file corresponding to the \fITransformation Catalog
-.TP 
-\fB$PEGASUS_HOME/etc/properties\fR is the location to specify properties to change what Tranformation Catalog Implementation to use and the implementation related \fBPROPERTIES\fR.
-.TP 
-\fBpegasus.jar\fR contains all compiled Java bytecode to run the Griphyn PEGASUS Planner.
-
+.PP
+\fB$PEGASUS_HOME/var/tc\&.data\fR
+.RS 4
+is the suggested location for the file corresponding to the Transformation Catalog
+.RE
+.PP
+\fB$PEGASUS_HOME/etc/properties\fR
+.RS 4
+is the location to specify properties to change what Transformation Catalog Implementation to use and the implementation related
+\fBPROPERTIES\fR\&.
+.RE
+.PP
+\fBpegasus\&.jar\fR
+.RS 4
+contains all compiled Java bytecode to run the Pegasus planner\&.
+.RE
 .SH "ENVIRONMENT VARIABLES"
-.TP 
-\fB$PEGASUS_HOME\fR 
-Path to the PEGASUS installation directory.
-.TP 
-\fB$JAVA_HOME
-Path to the JAVA 1.4.x installation directory.
-.TP 
-\fB$CLASSPATH
-The classpath should be set to contain all necessary PEGASUS files for the execution environment.
-To automatically add the \fICLASSPATH\fR to you environment, in the \fI$PEGASUS_HOME\fR directory run the script \fIsource setup\-user\-env.csh\fR or \fIsource setup\-user\-env.sh\fR.
+.PP
+\fBPEGASUS_HOME\fR
+.RS 4
+Path to the PEGASUS installation directory\&.
+.RE
+.PP
+\fBJAVA_HOME\fR
+.RS 4
+Path to the JAVA 1\&.4\&.x installation directory\&.
+.RE
+.PP
+\fBCLASSPATH\fR
+.RS 4
+The classpath should be set to contain all necessary PEGASUS files for the execution environment\&. To automatically add the
+\fICLASSPATH\fR
+to you environment, in the
+\fI$PEGASUS_HOME\fR
+directory run the script
+\fIsource setup\-user\-env\&.csh\fR
+or
+\fIsource setup\-user\-env\&.sh\fR\&.
+.RE
 .SH "AUTHORS"
+.sp
 Gaurang Mehta <gmehta at isi dot edu>
-.br
+.sp
 Karan Vahi <vahi at isi dot edu>
-.PP 
-Pegasus
-.B http://pegasus.isi.edu
-
+.sp
+Pegasus Team \m[blue]\fBhttp://pegasus\&.isi\&.edu\fR\m[]

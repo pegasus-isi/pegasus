@@ -1,0 +1,103 @@
+pegasus-sc-client(1)
+====================
+:doctype: manpage
+
+
+Name
+----
+pegasus-sc-client - generates a site catalog by querying sources.
+
+
+Synopsis
+--------
+[verse]
+*pegasus-sc-client* [*-D*'property=value'...]
+                  [*--source* 'src'] 
+                  [*-g*|*--grid* 'grid'] 
+                  [*-o*|*--vo* 'vo']
+                  [*-s*|*--sc* 'scfile'] 
+                  [*-p*|*--properties* 'propfile']
+                  [*-V*|*--version*]
+                  [*-v*|*--verbose*] 
+                  [*-h*|*--help*]
+
+
+Description
+-----------
+*pegasus-sc-client* generates site catalog by querying sources like OSGMM, 
+MYSOG, etc.
+
+
+Options
+-------
+*-D*'property=value'::
+The *-D* option allows an experienced user to override certain properties
+which influence the program execution, among them the default location of
+the user's properties file and the *PEGASUS_HOME* location. One may set several
+CLI properties by giving this option multiple times. 
++
+The *-D* option(s) must be the first option on the command line. CLI properties 
+take precedence over the file-based properties of the same key.
+
+*--source* 'src'::
+the source to query for site information. Valid sources are: OSGMM|MYOSG|VORS
+
+
+*-g* 'grid'::
+*--grid* 'grid'::
+the grid for which to generate the site catalog information.
+
+
+*-o* 'vo'::
+*--vo* 'vo'::
+The Virtual Organization (VO) to which the user belongs. The default VO is 
+LIGO. The collector host should be set by default unless overridden by the 
+property *pegasus.catalog.site.osgmm.collector.host* according to the 
+following rules:
+- if VO is ligo then collector host queried is ligo-osgmm.renci.org
+- if VO is engage then collector host queried is engage-central.renci.org
+- for any other VO, engage-central.renci.org will be queried and in all the 
+paths the name of the engage VO will be replaced with the name of the VO 
+passed. e.g if user specifies the VO to be *cigi*, *engage* will be 
+replaced by *cigi* in the directory paths.
+
+
+*-s* 'scfile'::
+*--sc* 'scfile'::
+The path to the created site catalog file
+
+
+*-p* 'propfile'::
+*--properties* 'propfile'::
+Generate a Pegasus properties file containing the SRM properties. The 
+properties file is created only if *--source* is set to 'OSGMM'.
+
+
+*-v*::
+*--verbose*::
+Increases the verbosity of messages about what is going on.
+
+
+*-V*::
+*--version*::
+Displays the current version of Pegasus.
+
+
+*-h*::
+*--help*::
+Displays all the options to the *pegasus-sc-client* command.
+
+
+Example
+-------
+Runs *pegasus-sc-client* and generates the site catalog:
+----------
+$ pegasus-sc-client --source OSGMM --sc osg-sites.xml --vo LIGO --grid OSG
+----------
+
+
+Authors
+-------
+Prasanth Thomas 
+
+Pegasus Team <http://pegasus.isi.edu>

@@ -1,0 +1,59 @@
+pegasus-transfer(1)
+===================
+:doctype: manpage
+
+
+Name
+----
+pegasus-transfer - Handles data transfers in Pegasus workflows.
+
+
+Synopsis
+--------
+[verse]
+*pegasus-transfer* [*-h*]
+                 [*-l* 'level'] [-f 'inputfile']
+                 [*--max-attempts* 'attempts']
+
+
+Description
+-----------
+*pegasus-transfer* takes a list of url pairs, either on stdin or with 
+an input file, determines the correct tool to use for the transfer and 
+executes the transfer. Some of the protocols pegasus-transfer can handle 
+are GridFTP, SRM, Amazon S3, HTTP, and local cp/symlinking. Failed 
+transfers are retried.
+
+
+Options
+-------
+*-h*::
+*--help*::
+Prints a usage summary with all the available command-line options.
+
+*-l* 'level'::
+*--loglevel* 'level'::
+The debugging output level. Valid values are: *debug*, *info*, *warning*, 
+*error*. Default value is *info*.
+
+*-f* 'inputfile'::
+*--file* 'inputfile'::
+File with input pairs. If not given, stdin will be used.
+
+*--max-attempts* 'attempts'::
+Maximum number of attempts for retrying failed transfers.
+
+
+Example
+-------
+-----------
+$ pegasus-transfer
+file:///etc/hosts
+file:///tmp/foo
+CTRL+D
+-----------
+
+
+Author
+------
+Pegasus Team <http://pegasus.isi.edu>

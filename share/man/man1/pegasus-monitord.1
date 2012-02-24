@@ -1,458 +1,401 @@
-.\"  Copyright 2010-2011 University Of Southern California
+'\" t
+.\"     Title: pegasus-monitord
+.\"    Author: [see the "Authors" section]
+.\" Generator: DocBook XSL Stylesheets v1.75.2 <http://docbook.sf.net/>
+.\"      Date: 02/23/2012
+.\"    Manual: \ \&
+.\"    Source: \ \&
+.\"  Language: English
 .\"
-.\" Licensed under the Apache License, Version 2.0 (the "License");
-.\" you may not use this file except in compliance with the License.
-.\" You may obtain a copy of the License at
-.\"
-.\"  http://www.apache.org/licenses/LICENSE-2.0
-.\"
-.\"  Unless required by applicable law or agreed to in writing,
-.\"  software distributed under the License is distributed on an "AS IS" BASIS,
-.\"  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-.\"  See the License for the specific language governing permissions and
-.\" limitations under the License.
-.\"
-.\" 
-.\" $Id$
-.TH "pegasus-monitord" "1" "3.2" "Pegasus Monitoring Daemon"
+.TH "PEGASUS\-MONITORD" "1" "02/23/2012" "\ \&" "\ \&"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
 .SH "NAME"
-.LP 
-pegasus\-monitord \- tracks a workflow progress, mining information
-.SH "SYNTAX"
-.TP 17
-.B pegasus\-monitord [\-\-help|\-help] [\-\-verbose|\-v]
-.br
-.B [\-\-adjust|\-a i] [\-\-foreground|\-N]
-.br
-.B [\-\-no-daemon|\-n] [\-\-job|\-j jobstate.log file]
-.br
-.B [\-\-log|\-l logfile] [\-\-conf properties file]
-.br
-.B [\-\-no\-recursive] [\-\-no\-database | \-\-no\-events]
-.br
-.B [\-\-replay|\-r] [\-\-no\-notifications]
-.br
-.B [\-\-notifications\-max max_notifications]
-.br
-.B [\-\-notifications\-timeout timeout]
-.br
-.B [\-\-sim|\-s millisleep] [\-\-db\-stats]
-.br
-.B [\-\-socket] [\-\-output\-dir | \-o dir]
-.br
-.B [\-\-dest|\-d PATH or URL] [\-\-encoding|\-e bp | bson]
-.br
-.B DAGMan output file
-.br
+pegasus-monitord \- tracks a workflow progress, mining information
+.SH "SYNOPSIS"
+.sp
+.nf
+\fBpegasus\-monitord\fR [\fB\-\-help\fR|\fB\-help\fR] [\fB\-\-verbose\fR|\fB\-v\fR]
+                 [\fB\-\-adjust\fR|\fB\-a\fR \fIi\fR] [\fB\-\-foreground\fR|\fB\-N\fR]
+                 [\fB\-\-no\-daemon\fR|\fB\-n\fR] [\fB\-\-job\fR|\fB\-j\fR \fIjobstate\&.log file\fR]
+                 [\fB\-\-log\fR|\fB\-l\fR \fIlogfile\fR] [\fB\-\-conf\fR \fIproperties file\fR]
+                 [\fB\-\-no\-recursive\fR] [\fB\-\-no\-database\fR | \fB\-\-no\-events\fR]
+                 [\fB\-\-replay\fR|\fB\-r\fR] [\fB\-\-no\-notifications\fR]
+                 [\fB\-\-notifications\-max\fR \fImax_notifications\fR]
+                 [\fB\-\-notifications\-timeout\fR \fItimeout\fR]
+                 [\fB\-\-sim\fR|\fB\-s\fR \fImillisleep\fR] [\fB\-\-db\-stats\fR]
+                 [\fB\-\-socket\fR] [\fB\-\-output\-dir\fR | \fB\-o\fR \fIdir\fR]
+                 [\fB\-\-dest\fR|\fB\-d\fR \fIPATH\fR or \fIURL\fR] [\fB\-\-encoding\fR|\fB\-e\fR \fIbp\fR | \fIbson\fR]
+                 \fIDAGMan output file\fR
+.fi
 .SH "DESCRIPTION"
-.LP 
-This program follows a workflow, parsing the output of DAGMAN's
-dagman.out file. In addition to generating the jobstate.log file,
-.B "pegasus\-monitord"
-can also be used mine information from the workflow
-dag file and jobs' submit and output files, and either populate a
-database or write a NetLogger events file with that information.
-.B "pegasus\-monitord"
-can also perform notifications when tracking
-a workflow's progress in real-time.
-.SH "ARGUMENTS"
-.TP
-.B \-\-help | \-h
-Prints a usage summary with all the available command-line options.
-.TP
-.B \-\-verbose | \-v
+.sp
+This program follows a workflow, parsing the output of DAGMAN\(cqs dagman\&.out file\&. In addition to generating the jobstate\&.log file, \fBpegasus\-monitord\fR can also be used mine information from the workflow dag file and jobs\*(Aq submit and output files, and either populate a database or write a NetLogger events file with that information\&. \fBpegasus\-monitord\fR can also perform notifications when tracking a workflow\(cqs progress in real\-time\&.
+.SH "OPTIONS"
+.PP
+\fB\-h\fR, \fB\-\-help\fR
+.RS 4
+Prints a usage summary with all the available command\-line options\&.
+.RE
+.PP
+\fB\-v\fR, \fB\-\-verbose\fR
+.RS 4
 Sets the log level for
-.BR "pegasus\-monitord" .
-If omitted, the default
-.I level
+\fBpegasus\-monitord\fR\&. If omitted, the default
+\fIlevel\fR
 will be set to
-.IR "WARNING" .
-When this option is given, the log level is changed to
-.IR "INFO" .
-If this option is repeated, the log level will be changed to
-.IR "DEBUG" .
-.br
+\fIWARNING\fR\&. When this option is given, the log level is changed to
+\fIINFO\fR\&. If this option is repeated, the log level will be changed to
+\fIDEBUG\fR\&.
+.sp
 The log level in
-.B "pegasus\-monitord"
+\fBpegasus\-monitord\fR
 can also be adjusted interactively, by sending the
-.I USR1
+\fIUSR1\fR
 and
-.I USR2
-signals to the process, respectively for incrementing and decrementing the log level.
-.TP
-.B \-\-adjust | \-a i
+\fIUSR2\fR
+signals to the process, respectively for incrementing and decrementing the log level\&.
+.RE
+.PP
+\fB\-a\fR \fIi\fR, \fB\-\-adjust\fR \fIi\fR
+.RS 4
 For adjusting time zone differences by
-.I i
-seconds, default is 0.
-.TP
-.B \-\-foreground | \-N
+\fIi\fR
+seconds, default is 0\&.
+.RE
+.PP
+\fB\-N\fR, \fB\-\-foreground\fR
+.RS 4
 Do not daemonize
-.B "pegasus\-monitord"
-, go through the motions as if (Condor).
-.TP
-.B \-\-no\-daemon | \-n	
+\fBpegasus\-monitord\fR, go through the motions as if (Condor)\&.
+.RE
+.PP
+\fB\-n\fR, \fB\-\-no\-daemon\fR
+.RS 4
 Do not daemonize
-.B "pegasus\-monitord"
-, keep it in the foreground (for debugging).
-.TP
-.B \-\-job | \-j jobstate.log file
+\fBpegasus\-monitord\fR, keep it in the foreground (for debugging)\&.
+.RE
+.PP
+\fB\-j\fR \fIjobstate\&.log file\fR, \fB\-\-job\fR \fIjobstate\&.log file\fR
+.RS 4
 Alternative location for the
-.I jobstate.log
-file. The default is to write a 
-.I jobstate.log
-in the workflow directory. An absolute file name should only be used
-if the workflow does not have any sub-workflows, as each sub-workflow
-will generate its own 
-.I jobstate.log
-file. If an alternative, non-absolute, filename is given with this
-option,
-.B "pegasus\-monitord"
-will create one file in each workflow (and sub-workflow) directory
-with the filename provided by the user with this option. If an absolute
-filename is provided and sub-workflows are found, a warning message
-will be printed and
-.B "pegasus\-monitord"
-will not track any sub-workflows.
-.TP
-.B \-\-log\-file | \-\-log logfile
-Specifies an alternative 
-.I logfile
-to use instead of the 
-.I monitord.log
-file in the main workflow directory. Differently from the 
-.I jobstate.log
-file above, 
-.B "pegasus\-monitord"
-only generates one 
-.I logfile
-per execution (and not one per workflow and sub-workflow it tracks).
-.TP
-.B \-\-conf
-.I properties_file
+\fIjobstate\&.log\fR
+file\&. The default is to write a
+\fIjobstate\&.log\fR
+in the workflow directory\&. An absolute file name should only be used if the workflow does not have any sub\-workflows, as each sub\-workflow will generate its own
+\fIjobstate\&.log\fR
+file\&. If an alternative, non\-absolute, filename is given with this option,
+\fBpegasus\-monitord\fR
+will create one file in each workflow (and sub\-workflow) directory with the filename provided by the user with this option\&. If an absolute filename is provided and sub\-workflows are found, a warning message will be printed and
+\fBpegasus\-monitord\fR
+will not track any sub\-workflows\&.
+.RE
+.PP
+\fB\-\-log\fR \fIlogfile\fR, \fB\-\-log\-file\fR \fIlogfile\fR
+.RS 4
+Specifies an alternative
+\fIlogfile\fR
+to use instead of the
+\fImonitord\&.log\fR
+file in the main workflow directory\&. Differently from the
+\fIjobstate\&.log\fR
+file above,
+\fBpegasus\-monitord\fR
+only generates one
+\fIlogfile\fR
+per execution (and not one per workflow and sub\-workflow it tracks)\&.
+.RE
+.PP
+\fB\-\-conf\fR \fIproperties_file\fR
+.RS 4
 is an alternative file containing properties in the
-.I key=value
+\fIkey=value\fR
 format, and allows users to override values read from the
-.I braindump.txt
-file. This option has precedence over the properties file specified in the
-.I braindump.txt
-file. Please note that these properties will apply not only to 
-the main workflow, but also to all sub-workflows found.
-.TP
-.B \-\-no\-recursive
+\fIbraindump\&.txt\fR
+file\&. This option has precedence over the properties file specified in the
+\fIbraindump\&.txt\fR
+file\&. Please note that these properties will apply not only to the main workflow, but also to all sub\-workflows found\&.
+.RE
+.PP
+\fB\-\-no\-recursive\fR
+.RS 4
 This options disables
-.B "pegasus\-monitord"
-to automatically follow any sub-workflows that are found.
-.TP
-.B \-\-no\-database | \-\-nodatabase | \-\-no\-events
+\fBpegasus\-monitord\fR
+to automatically follow any sub\-workflows that are found\&.
+.RE
+.PP
+\fB\-\-nodatabase\fR, \fB\-\-no\-database\fR, \fB\-\-no\-events\fR
+.RS 4
 Turns off generating events (when this option is given,
-.B "pegasus\-monitord"
-will only generate the jobstate.log file). The default is to
-automatically log information to a SQLite database (see the
-.B \-\-dest
-option below for more details). This option overrides any parameter given
-by the
-.B \-\-dest
-option.
-.TP
-.B \-\-replay | \-r
-This option is used to replay the output of an already finished
-workflow. It should only be used after the workflow is finished (not
-necessarily successfully). If a
-.I jobstate.log
-file is found, it will be rotated. However, when using a database,
-all previous references to that workflow (and all its sub-workflows)
-will be erased from it. When outputing to a bp file, the file
-will be deleted. When running in replay mode, 
-.B "pegasus\-monitord"
-will always run with the 
-.B \-\-no\-daemon
-option, and any errors will be output directly to the terminal. Also,
-.B "pegasus\-monitord"
-will not process any notifications while in replay mode.
-.TP
-.B \-\-no\-notifications
+\fBpegasus\-monitord\fR
+will only generate the jobstate\&.log file)\&. The default is to automatically log information to a SQLite database (see the
+\fB\-\-dest\fR
+option below for more details)\&. This option overrides any parameter given by the
+\fB\-\-dest\fR
+option\&.
+.RE
+.PP
+\fB\-r\fR, \fB\-\-replay\fR
+.RS 4
+This option is used to replay the output of an already finished workflow\&. It should only be used after the workflow is finished (not necessarily successfully)\&. If a
+\fIjobstate\&.log\fR
+file is found, it will be rotated\&. However, when using a database, all previous references to that workflow (and all its sub\-workflows) will be erased from it\&. When outputing to a bp file, the file will be deleted\&. When running in replay mode,
+\fBpegasus\-monitord\fR
+will always run with the
+\fB\-\-no\-daemon\fR
+option, and any errors will be output directly to the terminal\&. Also,
+\fBpegasus\-monitord\fR
+will not process any notifications while in replay mode\&.
+.RE
+.PP
+\fB\-\-no\-notifications\fR
+.RS 4
 This options disables notifications completely, making
-.B "pegasus\-monitord"
-ignore all the .notify files for all workflows it tracks.
-.TP
-.B \-\-notifications\-max max_notifications
+\fBpegasus\-monitord\fR
+ignore all the \&.notify files for all workflows it tracks\&.
+.RE
+.PP
+\fB\-\-notifications\-max\fR \fImax_notifications\fR
+.RS 4
 This option sets the maximum number of concurrent notifications that
-.B "pegasus\-monitord"
-will start. When the
-.I max_notifications
+\fBpegasus\-monitord\fR
+will start\&. When the
+\fImax_notifications\fR
 limit is reached,
-.B "pegasus\-monitord"
-will queue notifications and wait for a pending notification
-script to finish before starting a new one. If
-.I max_notifications
-is set to 0, notifications will be disabled.
-.TP
-.B \-\-notifications\-timeout timeout
+\fBpegasus\-monitord\fR
+will queue notifications and wait for a pending notification script to finish before starting a new one\&. If
+\fImax_notifications\fR
+is set to 0, notifications will be disabled\&.
+.RE
+.PP
+\fB\-\-notifications\-timeout\fR \fItimeout\fR
+.RS 4
 Normally,
-.B "pegasus\-monitord"
-will start a notification script and wait indefinitely for it to finish.
-This option allows users to set up a maximum
-.I timeout
+\fBpegasus\-monitord\fR
+will start a notification script and wait indefinitely for it to finish\&. This option allows users to set up a maximum
+\fItimeout\fR
 that
-.B "pegasus\-monitord"
-will wait for a notification script to finish before terminating it.
-If notification scripts do not finish in a reasonable amount of time,
-it can cause other notification scripts to be queued due to
-the maximum number of concurrent scripts allowed by
-.B "pegasus\-monitord."
-Additionally, until all notification scripts finish,
-.B "pegasus\-monitord"
-will not terminate.
-.TP
-.B \-\-sim | \-s millisleep
+\fBpegasus\-monitord\fR
+will wait for a notification script to finish before terminating it\&. If notification scripts do not finish in a reasonable amount of time, it can cause other notification scripts to be queued due to the maximum number of concurrent scripts allowed by
+\fBpegasus\-monitord\fR\&. Additionally, until all notification scripts finish,
+\fBpegasus\-monitord\fR
+will not terminate\&.
+.RE
+.PP
+\fB\-s\fR \fImillisleep\fR, \fB\-\-sim\fR \fImillisleep\fR
+.RS 4
 This option simulates delays between reads, by sleeping
-.I millisleep
-milliseconds. This option is mainly used by developers.
-.TP
-.B \-\-db\-stats
-This option causes the database module to collect and print database
-statistics at the end of the execution. It has no effect if the
-.B \-\-no\-database
-option is given.
-.TP
-.B \-\-socket
+\fImillisleep\fR
+milliseconds\&. This option is mainly used by developers\&.
+.RE
+.PP
+\fB\-\-db\-stats\fR
+.RS 4
+This option causes the database module to collect and print database statistics at the end of the execution\&. It has no effect if the
+\fB\-\-no\-database\fR
+option is given\&.
+.RE
+.PP
+\fB\-\-socket\fR
+.RS 4
 This option causes
-.B "pegasus\-monitord"
-to start a socket interface that can be used for advanced debugging.
-The port number for connecting to
-.B "pegasus\-monitord"
+\fBpegasus\-monitord\fR
+to start a socket interface that can be used for advanced debugging\&. The port number for connecting to
+\fBpegasus\-monitord\fR
 can be found in the
-.I monitord.sock
+\fImonitord\&.sock\fR
 file in the workflow directory (the file is deleted when
-.B "pegasus\-monitord"
-finishes).
-If not already started, the socket interface is also created when
-.B "pegasus\-monitord"
-receives a 
-.I USR1
-signal.
-.TP
-.B \-\-ouput\-dir | \-o dir
+\fBpegasus\-monitord\fR
+finishes)\&. If not already started, the socket interface is also created when
+\fBpegasus\-monitord\fR
+receives a
+\fIUSR1\fR
+signal\&.
+.RE
+.PP
+\fB\-o\fR \fIdir\fR, \fB\-\-ouput\-dir\fR \fIdir\fR
+.RS 4
 When this option is given,
-.B "pegasus\-monitord"
+\fBpegasus\-monitord\fR
 will create all its output files in the directory specified by
-.I dir.
-This option is useful for allowing a user to debug a workflow in a
-directory the user does not have write permissions.
-In this case, all files generated by
-.B "pegasus\-monitord"
+\fIdir\&.\fR
+This option is useful for allowing a user to debug a workflow in a directory the user does not have write permissions\&. In this case, all files generated by
+\fBpegasus\-monitord\fR
 will have the workflow
-.I wf_uuid
-as a prefix so that files from multiple sub-workflows can
-be placed in the same directory. This option is mainly used by
-.B "pegasus\-analyzer."
-It is important to note that the location for the output BP file
-or database is not changed by this option and should be set via the
-.B \-\-dest
-option.
-.TP
-.B \-\-dest | \-d URL [<scheme>]<params>
-This option allows users to specify the destination for the log events
-generated by 
-.BR "pegasus\-monitord".
-If this option is omitted,
-.B "pegasus\-monitord"
-will create a SQLite database in the workflow's run directory with the
-same name as the workflow, but with a
-.I .stampede.db
-prefix.
-For an
-.IR empty
-.BR scheme
-,
-.BR params
+\fIwf_uuid\fR
+as a prefix so that files from multiple sub\-workflows can be placed in the same directory\&. This option is mainly used by
+\fBpegasus\-analyzer\fR\&. It is important to note that the location for the output BP file or database is not changed by this option and should be set via the
+\fB\-\-dest\fR
+option\&.
+.RE
+.PP
+\fB\-d\fR \fIURL\fR \fIparams\fR, \fB\-\-dest\fR \fIURL\fR \fIparams\fR
+.RS 4
+This option allows users to specify the destination for the log events generated by
+\fBpegasus\-monitord\fR\&. If this option is omitted,
+\fBpegasus\-monitord\fR
+will create a SQLite database in the workflow\(cqs run directory with the same name as the workflow, but with a
+\fI\&.stampede\&.db\fR
+prefix\&. For an
+\fIempty\fR
+scheme,
+\fIparams\fR
 are a file path with
-.BR "-"
-meaning standard output.
-For a
-.IR x-tcp
-.BR scheme
-,
-.BR params
+\fB\-\fR
+meaning standard output\&. For a
+\fIx\-tcp\fR
+scheme,
+\fIparams\fR
 are
-.IR TCP_host[:port=14380] .
-For a database
-.BR scheme
-,
-.BR params
+\fITCP_host[:port=14380]\fR\&. For a database scheme,
+\fIparams\fR
 are a
-.I SQLAlchemy engine URL
-with a database connection string that can be used to specify
-different database engines.  Please see the examples section below for
-more information on how to use this option.  Note that when using a
-database engine other than
-.BR sqlite
-, the necessary Python database drivers will need to be installed.
-.TP
-.B \-\-encoding | \-e bp|bson
-This option specifies how to encode log events. The two available
-possibilities are
-.IR bp
+\fISQLAlchemy engine URL\fR
+with a database connection string that can be used to specify different database engines\&. Please see the examples section below for more information on how to use this option\&. Note that when using a database engine other than
+\fBsqlite\fR, the necessary Python database drivers will need to be installed\&.
+.RE
+.PP
+\fB\-e\fR \fIencoding\fR, \fB\-\-encoding\fR \fIencoding\fR
+.RS 4
+This option specifies how to encode log events\&. The two available possibilities are
+\fIbp\fR
 and
-.IR bson .
-If this option is not specified, events will be generated in the
-.IR bp
-format.
-.TP
-.B DAGMan output file
+\fIbson\fR\&. If this option is not specified, events will be generated in the
+\fIbp\fR
+format\&.
+.RE
+.PP
+\fIDAGMan_output_file\fR
+.RS 4
 The
-.I DAGMan_output_file
+\fIDAGMan_output_file\fR
 is the only requires command\-line argument in
-.B "pegasus\-monitord"
+\fBpegasus\-monitord\fR
 and must have the
-.I .dag.dagman.out
-extension.
+\fI\&.dag\&.dagman\&.out\fR
+extension\&.
+.RE
 .SH "RETURN VALUE"
-If the plan could be constructed, 
-.B pegasus\-monitord
-returns with an exit code of 0. However, in case of error, a non-zero
-exit code indicates problems. In that case, the
-.I logfile
-should contain additional information about the error condition.
+.sp
+If the plan could be constructed, \fBpegasus\-monitord\fR returns with an exit code of 0\&. However, in case of error, a non\-zero exit code indicates problems\&. In that case, the \fIlogfile\fR should contain additional information about the error condition\&.
 .SH "ENVIRONMENT VARIABLES"
-.LP
-.B "pegasus\-monitord"
-does not require that any environmental variables be set. It locates
-its required Python modules based on its own location, and therefore
-should not be moved outside of Pegasus' bin directory.
+.sp
+\fBpegasus\-monitord\fR does not require that any environmental variables be set\&. It locates its required Python modules based on its own location, and therefore should not be moved outside of Pegasus\*(Aq bin directory\&.
 .SH "EXAMPLES"
-.LP
-Usually,
-.B "pegasus\-monitord"
-is invoked automatically by
-.B "pegasus\-run"
-and tracks the workflow progress in real-time, producing the
-.I jobstate.log
-file and a corresponding SQLite database. When a workflow fails, and
-is re-submitted with a rescue DAG,
-.B "pegasus\-monitord"
-will automatically pick up from where it left previously and continue
-the
-.I jobstate.log
-file and the database.
-.LP
-If users need to create the
-.I jobstate.log
-file after a workflow is already finished, the
-.B \-\-replay | -r
-option should be used when running
-.B "pegasus\-monitord"
-manually. For example:
-.TP
-$ pegasus_monitord -r diamond-0.dag.dagman.out
-.LP
-will launch
-.B "pegasus\-monitord"
-in replay mode. In this case, if a
-.I jobstate.log
-file already exists, it will be rotated and a new file will be
-created. If a
-.I diamond-0.stampede.db
-SQLite database already exists,
-.B "pegasus\-monitord"
-will purge all references to the workflow id specified in the
-.I braindump.txt
-file, including all sub-workflows associated with that workflow id.
-.TP
-$ pegasus_monitord -r --no-database diamond-0.dag.dagman.out
-.LP
-will do the same thing, but without generating any log events.
-.TP
-$ pegasus_monitord -r --dest `pwd`/diamond-0.bp diamond-0.dag.dagman.out
-.LP
-will create the file
-.B diamond-0.bp
-in the current directory, containing
-NetLogger events with all the workflow data. This is in addition to the
-.I jobstate.log
-file.
-.LP
-For using a database, users should provide a database connection string in the
-format of:
-.TP
+.sp
+Usually, \fBpegasus\-monitord\fR is invoked automatically by \fBpegasus\-run\fR and tracks the workflow progress in real\-time, producing the \fIjobstate\&.log\fR file and a corresponding SQLite database\&. When a workflow fails, and is re\-submitted with a rescue DAG, \fBpegasus\-monitord\fR will automatically pick up from where it left previously and continue the \fIjobstate\&.log\fR file and the database\&.
+.sp
+If users need to create the \fIjobstate\&.log\fR file after a workflow is already finished, the \fB\-\-replay | \-r\fR option should be used when running \fBpegasus\-monitord\fR manually\&. For example:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ pegasus_monitord \-r diamond\-0\&.dag\&.dagman\&.out
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+will launch \fBpegasus\-monitord\fR in replay mode\&. In this case, if a \fIjobstate\&.log\fR file already exists, it will be rotated and a new file will be created\&. If a \fIdiamond\-0\&.stampede\&.db\fR SQLite database already exists, \fBpegasus\-monitord\fR will purge all references to the workflow id specified in the \fIbraindump\&.txt\fR file, including all sub\-workflows associated with that workflow id\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ pegasus_monitord \-r \-\-no\-database diamond\-0\&.dag\&.dagman\&.out
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+will do the same thing, but without generating any log events\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ pegasus_monitord \-r \-\-dest `pwd`/diamond\-0\&.bp diamond\-0\&.dag\&.dagman\&.out
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+will create the file \fIdiamond\-0\&.bp\fR in the current directory, containing NetLogger events with all the workflow data\&. This is in addition to the \fIjobstate\&.log\fR file\&.
+.sp
+For using a database, users should provide a database connection string in the format of:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
 dialect://username:password@host:port/database
-.LP
-Where
-.I dialect
-is the name of the underlying driver (
-.I mysql
-,
-.I sqlite
-,
-.I oracle
-,
-.I postgres
-) and
-.I database
-is the name of the database running on the server at the
-.I host
-computer.
-.LP
-If users want to use a different
-.I SQLite
-database,
-.B "pegasus\-monitord"
-requires them to specify the absolute path of the alternate file. For example:
-.TP
-$ pegasus_monitord -r --dest sqlite:////home/user/diamond_database.db diamond-0.dag.dagman.out
-.TP
-Here are docs with details for all of the supported drivers:
-.TP
-.B http://www.sqlalchemy.org/docs/05/reference/dialects/index.html
-.LP
-Additional per-database options that work into the connection strings
-are outlined there.
-.LP
-It is important to note that one will need to have the appropriate db
-interface library installed. Which is to say,
-.I SQLAlchemy
-is a wrapper around the mysql interface library (for instance), it
-does not provide a
-.I MySQL
-driver itself. The
-.B Pegasus
-distribution includes both
-.B SQLAlchemy
-and the
-.B SQLite
-Python driver.
-.LP
-As a final note, it is important to mention that unlike when using
-.I SQLite
-databases, using
-.B SQLAlchemy
-with other database servers, e.g.
-.I MySQL
-or
-.I Postgres
-, the target database needs to exist. So, if a user wanted to connect to:
-.LP
-.B mysql://pegasus-user:supersecret@localhost:localport/diamond
-.LP
-it would need to first connect to the server at
-.I localhost
-and issue the appropriate create database command before running
-.B "pegasus\-monitord"
-as
-.B SQLAlchemy
-will take care of creating the tables and indexes if they do not
-already exist.
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Where \fIdialect\fR is the name of the underlying driver (\fImysql\fR, \fIsqlite\fR, \fIoracle\fR, \fIpostgres\fR) and \fIdatabase\fR is the name of the database running on the server at the \fIhost\fR computer\&.
+.sp
+If users want to use a different \fISQLite\fR database, \fBpegasus\-monitord\fR requires them to specify the absolute path of the alternate file\&. For example:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ pegasus_monitord \-r \-\-dest sqlite:////home/user/diamond_database\&.db diamond\-0\&.dag\&.dagman\&.out
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Here are docs with details for all of the supported drivers: \m[blue]\fBhttp://www\&.sqlalchemy\&.org/docs/05/reference/dialects/index\&.html\fR\m[]
+.sp
+Additional per\-database options that work into the connection strings are outlined there\&.
+.sp
+It is important to note that one will need to have the appropriate db interface library installed\&. Which is to say, \fISQLAlchemy\fR is a wrapper around the mysql interface library (for instance), it does not provide a \fIMySQL\fR driver itself\&. The \fBPegasus\fR distribution includes both \fBSQLAlchemy\fR and the \fBSQLite\fR Python driver\&.
+.sp
+As a final note, it is important to mention that unlike when using \fISQLite\fR databases, using \fBSQLAlchemy\fR with other database servers, e\&.g\&. \fIMySQL\fR or \fIPostgres\fR, the target database needs to exist\&. So, if a user wanted to connect to:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+mysql://pegasus\-user:supersecret@localhost:localport/diamond
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+it would need to first connect to the server at \fIlocalhost\fR and issue the appropriate create database command before running \fBpegasus\-monitord\fR as \fBSQLAlchemy\fR will take care of creating the tables and indexes if they do not already exist\&.
 .SH "SEE ALSO"
-.BR pegasus\-run (1).
+.sp
+pegasus\-run(1)
 .SH "AUTHORS"
-.LP
+.sp
 Gaurang Mehta <gmehta at isi dot edu>
-.br
-Fabio Silva   <fabio at isi dot edu>
-.br
-Karan Vahi    <vahi at isi dot edu>
-.br
-Jens\-S. Vöckler <voeckler at isi dot edu>
-.PP 
-PEGASUS
-.B http://pegasus.isi.edu
+.sp
+Fabio Silva <fabio at isi dot edu>
+.sp
+Karan Vahi <vahi at isi dot edu>
+.sp
+Jens\-S\&. Vöckler <voeckler at isi dot edu>
+.sp
+Pegasus Team \m[blue]\fBhttp://pegasus\&.isi\&.edu\fR\m[]

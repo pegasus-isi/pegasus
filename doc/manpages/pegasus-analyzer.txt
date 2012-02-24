@@ -1,0 +1,238 @@
+pegasus-analyzer(1)
+===================
+:doctype: manpage
+
+
+Name
+----
+pegasus-analyzer - debugs a workflow.
+
+
+Synopsis
+--------
+[verse]
+*pegasus-analyzer* [*--help*|*-h*] [*--quiet*|*-q*] [*--strict*|*-s*]
+                 [*--monitord*|*-m*|*-t*] [*--verbose*|*-v*]
+                 [*--output-dir*|*-o* 'output_dir']
+                 [*--file*|*-f* 'dag_filename'] [*--dir*|*-d*|*-i* 'input_dir']
+                 [*--print*|*-p* 'print_options'] [*--debug-job* 'job']
+                 [*--debug-dir* 'debug_dir'] [*--type* 'workflow_type']
+                 ['workflow_directory']
+
+
+Description
+-----------
+*pegasus-analyzer* is a command-line utility for parsing the 'jobstate.log'
+file and reporting successful and failed jobs. It quickly goes through
+several log files, isolates jobs that did not complete successfully,
+and prints their 'stdout' and 'stderr' so that users can get detailed 
+information about their workflow runs.
+
+
+Options
+-------
+
+*-h*::
+*--help*::
+Prints a usage summary with all the available command-line options.
+
+*-q*::
+*--quiet*::
+Only print the the output and error filenames instead of their contents.
+
+*-s*::
+*--strict*::
+Get jobs' output and error filenames from the job's submit file.
+
+*-m*::
+*-t*::
+*--monitord*::
+Invoke *pegasus-monitord* before analyzing the 'jobstate.log' file. Although
+*pegasus-analyzer* can be executed during the workflow execution as well as
+after the workflow has already completed execution, *pegasus-monitord"*
+is always invoked with the *--replay* option. Since multiple instances of
+*pegasus-monitord"* should not be executed simultaneously in the same 
+workflow directory, the user should ensure that no other instances of
+*pegasus-monitord* are running. If the 'run_directory' is writable,
+*pegasus-analyzer* will create a 'jobstate.log' file there, rotating an 
+older log, if it is found. If the 'run_directory' is not writable (e.g. 
+when the user debugging the workflow is not the same user that ran the 
+workflow), *pegasus-analyzer* will exit and ask the user to provide the
+*--output-dir* option, in order to provide an alternative location for
+*pegasus-monitord* log files.
+
+*-v*::
+*--verbose*::
+Sets the log level for *pegasus-analyzer*. If omitted, the default
+'level' will be set to 'WARNING'. When this option is given, the log 
+level is changed to 'INFO'. If this option is repeated, the log level 
+will be changed to 'DEBUG'.
+
+*-o* 'output_dir'::
+*--output-dir* 'output_dir'::
+This option provides an alternative location for all monitoring log files
+for a particular workflow. It is mainly used when an user does not have
+write privileges to a workflow directory and needs to generate the log
+files needed by *pegasus-analyzer*. If this option is used in conjunction 
+with the *--monitord* option, it will invoke *pegasus-monitord* using
+'output_dir' to store all output files. Because workflows can have 
+sub-workflows, *pegasus-monitord* will create its files prepending the 
+workflow 'wf_uuid' to each filename. This way, multiple workflow files 
+can be stored in the same directory. *pegasus-analyzer* has built-in 
+logic to find the specific 'jobstate.log' file by looking at the workflow
+'braindump.txt' file first and figuring out the corresponding 'wf_uuid.'
+If 'output_dir' does not exist, it will be created.
+
+*-f* 'dag_filename'::
+*--file* 'dag_filename::
+In this option, 'dag_filename' specifies the path to the 'DAG' file to use.
+*pegasus-analyzer* will get the directory information from the 'dag_filename'.
+This option overrides the *--dir* option below.
+
+*-d* 'input_dir'::
+*-i* 'input_dir'::
+*--dir* 'input_dir'::
+Makes *pegasus-analyzer* look for the 'jobstate.log' file in the 'input_dir'
+directory. If this option is omitted, *pegasus-analyzer* will look in the 
+current directory.
+
+*-p* 'print_options'::
+*--print* 'print_options'::
+Tells *pegasus-analyzer* what extra information it should print for failed 
+jobs. 'print_options' is a comma-delimited list of options, that include
+'pre', 'invocation', and/or 'all', which activates all printing options.
+With the 'pre' option, *pegasus-analyzer* will print the 'pre-script'
+information for failed jobs. For the 'invocation' option, *pegasus-analyzer*
+will print the 'invocation' command, so users can manually run the failed job.
+
+*--debug-job* 'job'::
+When given this option, *pegasus-analyzer* turns on its 'debug_mode', when it 
+can be used to debug a particular job. In this mode, *pegasus-analyzer* will 
+create a shell script in the 'debug_dir' (see below, for specifying it) and 
+copy all necessary files to this local directory and then execute the job 
+locally.
+
+*--debug-dir* 'debug_dir'::
+When in 'debug_mode', *pegasus-analyzer* will create a temporary debug 
+directory. Users can give this option in order to specify a particular
+'debug_dir' directory to be used instead.
+
+*--type* 'workflow_type'::
+In this options, users specify what 'workflow_type' they want to debug. At 
+this moment, the only 'workflow_type' available is *condor* and it is the 
+default value if this option is not specified.
+
+
+Environment Variables
+---------------------
+*pegasus-analyzer* does not require that any environmental variables be set. 
+It locates its required Python modules based on its own location, and 
+therefore should not be moved outside of Pegasus' bin directory.
+
+
+Example
+-------
+The simplest way to use *pegasus-analyzer* is to go to the 'run_directory'
+and invoke the analyzer:
+
+----------------
+$ pegasus-analyzer .
+----------------
+
+which will cause *pegasus-analyzer* to print information about the workflow 
+in the current directory.
+
+*pegasus-analyzer* output contains a summary, followed by detailed information 
+about each job that either failed, or is in an unknown state. Here is the summary
+section of the output:
+
+----------------
+**************************Summary***************************
+
+ Total jobs         :     75 (100.00%)
+ # jobs succeeded   :     41 (54.67%)
+ # jobs failed      :      0 (0.00%)
+ # jobs unsubmitted :     33 (44.00%)
+ # jobs unknown     :      1 (1.33%)
+----------------
+
+'jobs_succeeded' are jobs that have completed successfully. 'jobs_failed'
+are jobs that have finished, but that did not complete successfully.
+'jobs_unsubmitted' are jobs that are listed in the 'dag_file', but no 
+information about them was found in the 'jobstate.log' file. Finally,
+'jobs_unknown' are jobs that have started, but have not reached completion.
+
+After the summary section, *pegasus-analyzer* will display information about 
+each job in the 'job_failed' and 'job_unknown' categories.
+
+----------------
+******************Failed jobs' details**********************
+
+=======================findrange_j3=========================
+
+  last state: POST_SCRIPT_FAILURE
+        site: local
+ submit file: /home/user/diamond-submit/findrange_j3.sub
+ output file: /home/user/diamond-submit/findrange_j3.out.000
+  error file: /home/user/diamond-submit/findrange_j3.err.000
+
+--------------------Task #1 - Summary-----------------------
+
+ site        : local
+ hostname    : server-machine.domain.com
+ executable  : (null)
+ arguments   : -a findrange -T 60 -i f.b2 -o f.c2
+ error       : 2
+ working dir : 
+----------------
+
+In the example above, the 'findrange_j3' job has failed, and the analyzer 
+displays information about the job, showing that the job finished with a
+'POST_SCRIPT_FAILURE', and lists the 'submit', 'output' and 'error'
+files for this job. Whenever *pegasus-analyzer* detects that the output 
+file contains a kickstart record, it will display the breakdown containing 
+each task in the job (in this case we only have one task). Because
+*pegasus-analyzer* was not invoked with the *--quiet* flag, it will also 
+display the contents of the 'output' and 'error' files (or the stdout and 
+stderr sections of the kickstart record), which in this case are both empty.
+
+In the case of 'SUBDAG' and 'subdax' jobs, *pegasus-analyzer* will indicate 
+it, and show the command needed for the user to debug that sub-workflow. For 
+example:
+
+----------------
+=================subdax_black_ID000009=====================
+
+  last state: JOB_FAILURE
+        site: local
+ submit file: /home/user/run1/subdax_black_ID000009.sub
+ output file: /home/user/run1/subdax_black_ID000009.out
+  error file: /home/user/run1/subdax_black_ID000009.err
+  This job contains sub workflows!
+  Please run the command below for more information:
+  pegasus-analyzer -d /home/user/run1/blackdiamond_ID000009.000
+
+-----------------subdax_black_ID000009.out-----------------
+
+Executing condor dagman ...
+
+-----------------subdax_black_ID000009.err-----------------
+
+----------------
+
+tells the user the 'subdax_black_ID000009' sub-workflow failed, and that 
+it can be debugged by using the indicated *pegasus-analyzer* command.
+
+
+See Also
+--------
+pegasus-status(1), pegasus-monitord(1), pegasus-statistics(1).
+
+
+Authors
+-------
+Fabio Silva `<fabio at isi dot edu>`
+
+Karan Vahi `<vahi at isi dot edu>`
+
+Pegasus Team <http://pegasus.isi.edu>

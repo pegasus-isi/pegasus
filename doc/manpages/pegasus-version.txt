@@ -1,0 +1,149 @@
+pegasus-version(1)
+==================
+:doctype: manpage
+
+
+Name
+----
+pegasus-version - print or match the version of the toolkit.
+
+
+Synopsis
+--------
+[verse]
+*pegasus-version* [*-D*'property=value'] [*-m* [*-q*]] [*-V*] [*-f*] [*-l*]
+
+
+Description
+-----------
+This program prints the version string of the currently active Pegasus
+toolkit on 'stdout'.
+
+pegasus-version is a simple command-line tool that reports the version 
+number of the Pegasus distribution being used. In its most basic invocation, 
+it will show the current version of the Pegasus software you have installed:
+----------
+$ pegasus-version
+3.1.0cvs
+----------
+If you want to know more details about the installed version, i.e. which 
+system it was compiled for and when, use the long or full mode:
+----------
+$ pegasus-version -f
+3.1.0cvs-x86_64_cent_5.6-20110706191019Z
+----------
+The reported version may sometimes not be the version you would expect, if 
+the Pegasus jar file got updated but not the remainder of the installation 
+environment. To check this case, you use match mode:
+----------
+$ pegasus-version -m
+Compiled into PEGASUS: 20110706191019Z x86_64_cent_5.6
+Installation provides: 20110706191019Z x86_64_cent_5.6
+OK: Internal version matches installation.
+Complete version info: 3.1.0cvs-x86_64_cent_5.6-20110706191019Z
+----------
+The match mode implies long mode, and will thus show the full version as 
+part of its output.
+
+In quiet mode, which can only be applied to match mode, no output is written 
+unless there is an error. You would use quiet mode to check the exit code of 
+pegasus-version to determine a problem while being in a scripted environment.
+----------
+$ pegasus-version -mq
+$ echo $? 
+0
+----------
+
+
+Options
+-------
+
+*-D*'property=value'::
+The *-D* option allows an experienced user to override certain properties
+which influence the program execution, among them the default location of
+the user's properties file and the *PEGASUS_HOME* location. One may set several
+CLI properties by giving this option multiple times. 
++
+The *-D* option(s) must be the first option on the command line. CLI properties 
+take precedence over the file-based properties of the same key.
+
+*-f*::
+*--full*::
+The *--full* mode displays internal build metrics, like OS type and libc
+version, addition to the version number. It appends the build time as
+time stamp to the version. The time stamp uses ISO 8601 format, and is a
+UTC stamp.
+
+*-l*::
+*--long*::
+This option is an alias for *--full*.
+
+*-m*::
+*--match*::
+In match mode, the internal version is checked against the external
+version of the installation. This mode will detect if a jar has been
+updated but not the installation it is in. Mismatches will result in an
+exit code of 1. 
++
+In addition, *--match* implies *--full*. It will print the full version 
+number, unless *--quiet* is active.
+
+*-q*::
+*--quiet*::
+This flag is to be combined with match mode above only. If present, the
+match mode will not display any message, if the versions match (all is
+well). In case of a mismatch, it will only print the error and exit with
+status 1.
+
+*-V*::
+*--version*::
+Displays the version of the Pegasus planner you are using.
+
+*--verbose*::
+is ignored in this tool. However, to provide a uniform interface for all
+tools, the option is recognized and will not trigger an error. 
+
+
+Return Value
+------------
+The program will usually return with success (0). In match mode, if the
+internal version does not match the external installation, an exit code
+of 1 is returned. If run-time errors are detected, an exit code of 2 is
+returned, 3 for fatal errors.
+
+
+Environment Variables
+---------------------
+*PEGASUS_HOME*::
+is the suggested base directory of your the execution environment.
+
+*JAVA_HOME*::
+should be set and point to a valid location to start the intended Java
+virtual machine as '$JAVA_HOME/bin/java'.
+
+*CLASSPATH*::
+should be set to contain all necessary files for the execution environment.
+
+
+Example
+-------
+------------
+$ pegasus-version   
+3.1.0cvs
+
+$ pegasus-version -f
+3.1.0cvs-x86_64_cent_5.6-20110706191019Z
+
+$ pegasus-version -m 
+Compiled into PEGASUS: 20110706191019Z x86_64_cent_5.6
+Installation provides: 20110706191019Z x86_64_cent_5.6
+OK: Internal version matches installation.
+Complete version info: 3.1.0cvs-x86_64_cent_5.6-20110706191019Z
+------------
+
+
+Authors
+-------
+Jens-S. Vöckler `<voeckler at isi dot edu>`
+
+Pegasus Team <http://pegasus.isi.edu>

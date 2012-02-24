@@ -1,0 +1,50 @@
+pegasus-cleanup(1)
+==================
+:doctype: manpage
+
+
+Name
+----
+pegasus-cleanup - Removes files during Pegasus workflows enactment.
+
+
+Synopsis
+--------
+[verse]
+*pegasus-cleanup* [*-h*][*-l* 'level'][*-f* 'urls']
+
+
+Description
+-----------
+*pegasus-cleanup* removes the files associated with the given URL. Some of 
+the protocols it can handle are GridFTP, SRM, Amazon S3, HTTP, and file://.
+
+
+Options
+-------
+
+*-h*::
+*--help*::
+Prints a usage summary with all the available command-line options.
+
+*-l* 'level'::
+*--loglevel* 'level'::
+The debugging output level. Valid values are 'debug', 'info', 'warning', 
+and 'error'. Default value is 'info'.
+
+*-f* 'urls'::
+*--file* 'urls'::
+Specifies the file with URLs to clean up (one per line). If this option 
+is not given the list of URLs will be read from stdin.
+
+
+Example
+-------
+-------------
+echo gsiftp://somehost/some/path | pegasus-cleanup
+-------------
+
+
+Authors
+-------
+Pegasus Team <http://pegasus.isi.edu>

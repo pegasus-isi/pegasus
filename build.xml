@@ -168,6 +168,9 @@
   <target name="docbook" depends="build-setup,validate-make"
           description="Generates documentation from docbook source">
     <mkdir dir="${dist.doc}/html"/>
+    <exec executable="${basedir}/src/tools/make.pl" dir="doc/manpages" failonerror="true">
+      <arg line="all"/>
+    </exec>
     <exec executable="${basedir}/src/tools/make.pl" dir="doc/docbook" failonerror="true">
       <env key="prefix" value="${dist.doc}/html"/>
       <arg line="prefix=${dist.doc}/html"/>

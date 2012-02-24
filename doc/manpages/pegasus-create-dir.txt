@@ -1,0 +1,47 @@
+pegasus-create-dir(1)
+=====================
+:doctype: manpage
+
+Name
+----
+pegasus-create-dir - Creates work directories in Pegasus workflows.
+
+
+Synopsis
+--------
+[verse]
+*pegasus-create-dir* [*-h*][*-l* 'level'][*-u* 'URL'] 
+
+
+Description
+-----------
+*pegasus-create-dir* creates a directory for the given URL. Some of the protocols
+it can handle are GridFTP, SRM, Amazon S3, HTTP, and file:// (using mkdir).
+
+
+Options
+-------
+*-h*::
+*--help*::
+Prints a usage summary with all the available command-line options.
+
+*-l* 'level'::
+*--loglevel* 'level'::
+The debugging output level. Valid values are 'debug', 'info', 'warning', 
+and 'error'. Default value is 'info'.
+
+*-u* 'URL'::
+*--url* 'URL'::
+Specifies the directory to create.
+
+
+Example
+-------
+-----------
+$ pegasus-create-dir -u gsiftp://somehost/some/path
+-----------
+
+
+Authors
+-------
+Pegasus Team <http://pegasus.isi.edu>

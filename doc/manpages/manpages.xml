@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE reference PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+"http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<reference>
+    <title>Man Pages</title>
+    
+    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="pegasus-analyzer.xml"/>
+    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="pegasus-cleanup.xml"/>
+    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="pegasus-create-dir.xml"/>
+    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="pegasus-dax-validator.xml"/>
+    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="pegasus-exitcode.xml"/>
+    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="pegasus-monitord.xml"/>
+    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="pegasus-plan.xml"/>
+    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="pegasus-plots.xml"/>
+    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="pegasus-rc-client.xml"/>
+    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="pegasus-remove.xml"/>
+    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="pegasus-run.xml"/>
+    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="pegasus-s3.xml"/>
+    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="pegasus-sc-client.xml"/>
+    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="pegasus-sc-converter.xml"/>
+    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="pegasus-statistics.xml"/>
+    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="pegasus-status.xml"/>
+    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="pegasus-tc-client.xml"/>
+    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="pegasus-tc-converter.xml"/>
+    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="pegasus-transfer.xml"/>
+    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="pegasus-version.xml"/>
+</reference>
