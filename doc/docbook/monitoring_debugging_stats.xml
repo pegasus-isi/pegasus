@@ -181,8 +181,8 @@
 
           <itemizedlist>
             <listitem>
-              <para>In the summary, the workflow cumulative job walltime
-              </para>
+              <para>In the summary, the workflow cumulative job
+              walltime</para>
             </listitem>
 
             <listitem>
@@ -598,7 +598,8 @@ Time statistics                   : /scratch/grid-setup/run0001/statistics/time.
           kickstart. In case of job retries the value is the cumulative of all
           retries. For workflows having sub workflow jobs (i.e SUBDAG and
           SUBDAX jobs), the walltime value includes jobs from the sub
-          workflows as well.</para>
+          workflows as well. This value is multiplied by the multiplier_factor
+          in the job instance table.</para>
         </listitem>
 
         <listitem>
@@ -608,7 +609,9 @@ Time statistics                   : /scratch/grid-setup/run0001/statistics/time.
           walltime, but includes job management overhead and delays. In case
           of job retries the value is the cumulative of all retries. For
           workflows having sub workflow jobs (i.e SUBDAG and SUBDAX jobs), the
-          walltime value includes jobs from the sub workflows</para>
+          walltime value includes jobs from the sub workflows. This value is
+          multiplied by the multiplier_factor in the job instance
+          table.</para>
         </listitem>
       </itemizedlist>
 
@@ -798,7 +801,7 @@ Time statistics                   : /scratch/grid-setup/run0001/statistics/time.
 
         <listitem>
           <para><emphasis role="bold">Site</emphasis> - the site where the job
-          instance ran</para>
+          instance ran.</para>
         </listitem>
 
         <listitem>
@@ -808,8 +811,18 @@ Time statistics                   : /scratch/grid-setup/run0001/statistics/time.
         </listitem>
 
         <listitem>
+          <para><emphasis role="bold">Mult</emphasis> - multiplier factor from
+          the job instance table for the job.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">Kickstart_Mult</emphasis> - value of the
+          Kickstart column multiplied by Mult. </para>
+        </listitem>
+
+        <listitem>
           <para><emphasis role="bold">Post(sec.)</emphasis> - the postscript
-          time as reported by DAGMan .</para>
+          time as reported by DAGMan.</para>
         </listitem>
 
         <listitem>
