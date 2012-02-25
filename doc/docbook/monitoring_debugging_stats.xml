@@ -817,7 +817,13 @@ Time statistics                   : /scratch/grid-setup/run0001/statistics/time.
 
         <listitem>
           <para><emphasis role="bold">Kickstart_Mult</emphasis> - value of the
-          Kickstart column multiplied by Mult. </para>
+          Kickstart column multiplied by Mult.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">CPU-Time</emphasis> - remote CPU time
+          computed as the stime + utime (when Kickstart is not used, this is
+          empty).</para>
         </listitem>
 
         <listitem>
@@ -861,7 +867,7 @@ Time statistics                   : /scratch/grid-setup/run0001/statistics/time.
       <table>
         <title>Job statistics</title>
 
-        <tgroup align="center" cols="10">
+        <tgroup align="center" cols="13">
           <thead>
             <row>
               <entry align="center">Job</entry>
@@ -871,6 +877,12 @@ Time statistics                   : /scratch/grid-setup/run0001/statistics/time.
               <entry align="center">Site</entry>
 
               <entry align="center">Kickstart</entry>
+
+              <entry align="center">Mult</entry>
+
+              <entry align="center">Kickstart_Mult</entry>
+
+              <entry align="center">CPU-Time</entry>
 
               <entry align="center">Post</entry>
 
@@ -896,6 +908,12 @@ Time statistics                   : /scratch/grid-setup/run0001/statistics/time.
 
               <entry>60.002</entry>
 
+              <entry>1</entry>
+
+              <entry>60.002</entry>
+
+              <entry>59.843</entry>
+
               <entry>5.0</entry>
 
               <entry>0.0</entry>
@@ -917,6 +935,12 @@ Time statistics                   : /scratch/grid-setup/run0001/statistics/time.
               <entry>local</entry>
 
               <entry>0.027</entry>
+
+              <entry>1</entry>
+
+              <entry>0.027</entry>
+
+              <entry>0.003</entry>
 
               <entry>5.0</entry>
 
@@ -940,6 +964,12 @@ Time statistics                   : /scratch/grid-setup/run0001/statistics/time.
 
               <entry>60.001</entry>
 
+              <entry>10</entry>
+
+              <entry>600.01</entry>
+
+              <entry>59.921</entry>
+
               <entry>5.0</entry>
 
               <entry>0.0</entry>
@@ -961,6 +991,12 @@ Time statistics                   : /scratch/grid-setup/run0001/statistics/time.
               <entry>local</entry>
 
               <entry>60.002</entry>
+
+              <entry>10</entry>
+
+              <entry>600.02</entry>
+
+              <entry>59.912</entry>
 
               <entry>5.0</entry>
 
@@ -984,6 +1020,12 @@ Time statistics                   : /scratch/grid-setup/run0001/statistics/time.
 
               <entry>60.002</entry>
 
+              <entry>1</entry>
+
+              <entry>60.002</entry>
+
+              <entry>59.898</entry>
+
               <entry>5.0</entry>
 
               <entry>5.0</entry>
@@ -1005,6 +1047,12 @@ Time statistics                   : /scratch/grid-setup/run0001/statistics/time.
               <entry>local</entry>
 
               <entry>0.459</entry>
+
+              <entry>1</entry>
+
+              <entry>0.459</entry>
+
+              <entry>0.432</entry>
 
               <entry>6.0</entry>
 
@@ -1028,6 +1076,12 @@ Time statistics                   : /scratch/grid-setup/run0001/statistics/time.
 
               <entry>0.338</entry>
 
+              <entry>1</entry>
+
+              <entry>0.338</entry>
+
+              <entry>0.331</entry>
+
               <entry>5.0</entry>
 
               <entry>5.0</entry>
@@ -1049,6 +1103,12 @@ Time statistics                   : /scratch/grid-setup/run0001/statistics/time.
               <entry>local</entry>
 
               <entry>0.348</entry>
+
+              <entry>1</entry>
+
+              <entry>0.348</entry>
+
+              <entry>0.342</entry>
 
               <entry>5.0</entry>
 
@@ -1072,6 +1132,12 @@ Time statistics                   : /scratch/grid-setup/run0001/statistics/time.
 
               <entry>0.39</entry>
 
+              <entry>1</entry>
+
+              <entry>0.39</entry>
+
+              <entry>0.032</entry>
+
               <entry>5.0</entry>
 
               <entry>5.0</entry>
@@ -1093,6 +1159,12 @@ Time statistics                   : /scratch/grid-setup/run0001/statistics/time.
               <entry>local</entry>
 
               <entry>0.165</entry>
+
+              <entry>1</entry>
+
+              <entry>0.165</entry>
+
+              <entry>0.108</entry>
 
               <entry>5.0</entry>
 
@@ -1116,6 +1188,12 @@ Time statistics                   : /scratch/grid-setup/run0001/statistics/time.
 
               <entry>0.147</entry>
 
+              <entry>1</entry>
+
+              <entry>0.147</entry>
+
+              <entry>0.098</entry>
+
               <entry>7.0</entry>
 
               <entry>5.0</entry>
@@ -1138,6 +1216,12 @@ Time statistics                   : /scratch/grid-setup/run0001/statistics/time.
 
               <entry>0.139</entry>
 
+              <entry>1</entry>
+
+              <entry>0.139</entry>
+
+              <entry>0.089</entry>
+
               <entry>5.0</entry>
 
               <entry>6.0</entry>
@@ -1159,6 +1243,12 @@ Time statistics                   : /scratch/grid-setup/run0001/statistics/time.
               <entry>local</entry>
 
               <entry>0.145</entry>
+
+              <entry>1</entry>
+
+              <entry>0.145</entry>
+
+              <entry>0.101</entry>
 
               <entry>5.0</entry>
 
@@ -1208,24 +1298,25 @@ Time statistics                   : /scratch/grid-setup/run0001/statistics/time.
         <listitem>
           <para><emphasis role="bold">Min (sec.)</emphasis> - the minimum
           runtime value of invocations with a given logical transformation
-          name.</para>
+          name times the multipler_factor.</para>
         </listitem>
 
         <listitem>
           <para><emphasis role="bold">Max (sec.)</emphasis> - the minimum
           runtime value of invocations with a given logical transformation
-          name.</para>
+          name times the multiplier_factor.</para>
         </listitem>
 
         <listitem>
           <para><emphasis role="bold">Mean (sec.)</emphasis> - the mean of the
-          invocation runtimes with a given logical transformation name.</para>
+          invocation runtimes with a given logical transformation name times
+          the multiplier_factor.</para>
         </listitem>
 
         <listitem>
           <para><emphasis role="bold">Total (sec.)</emphasis> - the cumulative
           of runtime value of invocations with a given logical transformation
-          name</para>
+          name times the multiplier_factor.</para>
         </listitem>
       </itemizedlist>
 
@@ -1299,13 +1390,13 @@ Time statistics                   : /scratch/grid-setup/run0001/statistics/time.
 
               <entry>0</entry>
 
-              <entry>60.001</entry>
+              <entry>600.01</entry>
 
-              <entry>60.002</entry>
+              <entry>600.02</entry>
 
-              <entry>60.002</entry>
+              <entry>600.02</entry>
 
-              <entry>120.003</entry>
+              <entry>1200.03</entry>
             </row>
 
             <row>
