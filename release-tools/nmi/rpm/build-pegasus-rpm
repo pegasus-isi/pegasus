@@ -119,12 +119,12 @@ mkdir -p \$RPM_BUILD_ROOT/opt/pegasus/$MAJOR_VERSION/
 mv * \$RPM_BUILD_ROOT/opt/pegasus/$MAJOR_VERSION/
 
 mkdir -p \$RPM_BUILD_ROOT//etc/profile.d
-cat >\$RPM_BUILD_ROOT/etc/profile.d/pegasusenvironment.sh <<EOF
+cat >\$RPM_BUILD_ROOT/etc/profile.d/pegasus.sh <<EOF
 JAVA_HEAPMAX=2048
 export JAVA_HEAPMAX
 PEGASUS_HOME=/opt/pegasus/3.1
 export PEGASUS_HOME
-if [ "\\\$PYTHONPATH"  = "x" ]; then
+if [ "x\\\$PYTHONPATH"  = "x" ]; then
     PYTHONPATH=\\\${PEGASUS_HOME}/lib/python-tools
 else
     PYTHONPATH=\\\${PYTHONPATH}:\\\${PEGASUS_HOME}/lib/python-tools
@@ -134,7 +134,7 @@ PATH=\\\${PATH}:\\\${PEGASUS_HOME}/bin
 export PATH
 EOF
 
-cat >\$RPM_BUILD_ROOT/etc/profile.d/pegasusenvironment.csh <<EOF
+cat >\$RPM_BUILD_ROOT/etc/profile.d/pegasus.csh <<EOF
 setenv JAVA_HEAPMAX 2048
 setenv PEGASUS_HOME /opt/pegasus/3.1
 if ( \\\$?PYTHONPATH ) then

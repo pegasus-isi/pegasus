@@ -60,12 +60,12 @@ mv pegasus-$VERSION $DEB_NAME/opt/pegasus/$MAJOR_VERSION
 
 # ligo environment files
 mkdir -p $DEB_NAME/etc/profile.d
-cat >$DEB_NAME/etc/profile.d/pegasusenvironment.sh <<EOF
+cat >$DEB_NAME/etc/profile.d/pegasus.sh <<EOF
 JAVA_HEAPMAX=2048
 export JAVA_HEAPMAX
 PEGASUS_HOME=/opt/pegasus/3.1
 export PEGASUS_HOME
-if [ "\$PYTHONPATH"  = "x" ]; then
+if [ "x\$PYTHONPATH"  = "x" ]; then
     PYTHONPATH=\${PEGASUS_HOME}/lib/python-tools
 else
     PYTHONPATH=\${PYTHONPATH}:\${PEGASUS_HOME}/lib/python-tools
@@ -75,7 +75,7 @@ PATH=\${PATH}:\${PEGASUS_HOME}/bin
 export PATH
 EOF
 
-cat >$DEB_NAME/etc/profile.d/pegasusenvironment.csh <<EOF
+cat >$DEB_NAME/etc/profile.d/pegasus.csh <<EOF
 setenv JAVA_HEAPMAX 2048
 setenv PEGASUS_HOME /opt/pegasus/3.1
 if ( \$?PYTHONPATH ) then
