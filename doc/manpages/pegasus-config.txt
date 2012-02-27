@@ -112,6 +112,36 @@ config = subprocess.Popen(pegasus_config, stdout=subprocess.PIPE, shell=True).co
 exec config
 -----------
 
+To set the PERL5LIB variable in your shell for using the Perl DAX API:
+
+
+-----------
+export PERL5LIB=`pegasus-config --perl`
+-----------
+
+To set the same path inside Perl:
+
+[source,perl]
+-----------
+eval `pegasus-config --perl-dump`;
+die("Unable to eval pegasus-config output: $@") if $@;
+-----------
+
+will set variables a number of lexically local-scoped *my* variables
+with prefix "pegasus_" and expand Perl's search path for this script.
+
+Alternatively, you can fail early and collect all Pegasus-related
+variables into a single global +%pegasus+ variable for convenience:
+
+[source,perl]
+-----------
+BEGIN { 
+    eval `pegasus-config --perl-hash`;
+    die("Unable to eval pegasus-config output: $@") if $@;
+}
+-----------
+
+
 Author
 ------
 Pegasus Team <http://pegasus.isi.edu>
