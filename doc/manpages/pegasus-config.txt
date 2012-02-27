@@ -95,10 +95,11 @@ directory.
 Example
 -------
 
-To set the PYTHONPATH for using the Python DAX API:
+To set the PYTHONPATH variable in your shell for using the Python DAX
+API:
 
 -----------
-export PYTHONPATH=`pegasus-config --python --noeoln`
+export PYTHONPATH=`pegasus-config --python`
 -----------
 
 To set the same path inside Python:
