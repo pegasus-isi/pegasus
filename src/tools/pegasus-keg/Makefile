@@ -31,10 +31,6 @@ ifndef ${datadir}
 datadir = $(prefix)/share 
 endif
 
-NROFF   = groff -mandoc
-TEXT    = -Tlatin1
-HTML    = -Thtml
-
 ifeq (DARWIN,${SYSTEM})
 #SDK=/Developer/SDKs/MacOSX10.6.sdk
 SDK=$(lastword $(sort $(wildcard /Developer/SDKs/MacOSX10.*.sdk)))
@@ -128,7 +124,6 @@ endif
 ##ifneq (,${STATVFS})
 ##CXXFLAGS += -DHAS_SYS_STATVFS=1
 ##endif
-GENDOC = pegasus-keg.html pegasus-keg.txt pegasus-keg.ps
 CONDOR_LD = $(CONDOR) $(LD)
 CONDOR_CXX = $(CONDOR) $(CXX)
 
@@ -146,12 +141,6 @@ ifneq (,${LFS_LDFLAGS})
 LDFLAGS += $(LFS_LDFLAGS)
 endif
 
-%.html : %.1 ;
-	$(NROFF) $(HTML) $< > $@
-%.ps : %.1 ;
-	$(NROFF) $< > $@
-%.txt : %.1 ;
-	$(NROFF) $(TEXT) $< > $@
 %.o : %.cc
 	$(CXX) $(CXXFLAGS) $< -c -o $@
 %.co : %.cc
@@ -170,7 +159,7 @@ endif
 endif
 endif
 
-all : $(TARGET) $(GENDOC)
+all : $(TARGET)
 EXTRA_COBJ = $(EXTRA_OBJ:.o=.co)
 
 pegasus-keg.o: pegasus-keg.cc $(EXTRA_INC)
@@ -197,8 +186,6 @@ sunos-swap.o: sunos-swap.cc sunos-swap.hh
 sunos-swap.co: sunos-swap.cc sunos-swap.hh
 	$(CONDOR_CXX) $(NOLFS_CFLAGS) $< -c -o $@
 
-$(GENDOC): pegasus-keg.1
-
 install-keg: pegasus-keg
 	$(INSTALL) -m 0755 pegasus-keg $(prefix)/bin
 
@@ -207,23 +194,11 @@ install-condor: pegasus-keg.condor
 
 install: $(INST_TG)
 
-install.doc: $(GENDOC)
-	$(INSTALL) -m 0644 $(GENDOC) $(datadir)/man
-
-install.man: pegasus-keg.1
-	$(INSTALL) -m 0644 pegasus-keg.1 $(datadir)/man/man1
-
-install.all: install install.man install.doc
-
-doc: $(GENDOC)
-
-man: $(GENDOC)
-
 test check: pegasus-keg
 	@./pegasus-keg -o /dev/fd/1 || echo "test failed" && echo "test ok"
 
 clean:
-	$(RM) pegasus-keg.o pegasus-keg.co $(GENDOC) core $(EXTRA_OBJ) $(EXTRA_COBJ)
+	$(RM) pegasus-keg.o pegasus-keg.co core core.* $(EXTRA_OBJ) $(EXTRA_COBJ)
 
 distclean: clean
 	$(RM) pegasus-keg pegasus-keg.condor

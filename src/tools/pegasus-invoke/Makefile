@@ -19,10 +19,6 @@ ifndef ${datadir}
 datadir = $(prefix)/share 
 endif
 
-NROFF   = groff -mandoc
-TEXT    = -Tutf8
-HTML    = -Thtml
-
 ifeq (SUNOS,${SYSTEM})
 ifeq (5,${MAJOR})
 # use these for the SUN CC compiler
@@ -82,18 +78,11 @@ endif
 # There is no need to change things below this line.
 CFLAGS += -D${SYSTEM} -DMAJOR=${MAJOR} -DMINOR=${MINOR}
 #CFLAGS += -D_POSIX_C_SOURCE=199506 -D__USE_XOPEN_EXTENDED
-GENDOC = pegasus-invoke.html pegasus-invoke.txt pegasus-invoke.ps
 
-%.html : %.1 ;
-	$(NROFF) $(HTML) $< > $@
-%.ps : %.1 ;
-	$(NROFF) $< > $@
-%.txt : %.1 ;
-	$(NROFF) $(TEXT) $< > $@
 %.o : %.c
 	$(CC) $(CFLAGS) $< -c -o $@
 
-all : pegasus-invoke $(GENDOC)
+all : pegasus-invoke
 
 pegasus-invoke: pegasus-invoke.o main.o
 	$(LD) $(LDFLAGS) $(CFLAGS) $(OBJS) $^ -o $@ $(LOADLIBES)
@@ -101,23 +90,11 @@ pegasus-invoke: pegasus-invoke.o main.o
 pegasus-invoke.o: pegasus-invoke.c pegasus-invoke.h
 main.o: main.c
 
-$(GENDOC): pegasus-invoke.1
-
 install: pegasus-invoke
 	$(INSTALL) -m 0755 pegasus-invoke $(prefix)/bin
 
-install.doc: $(GENDOC)
-	$(INSTALL) -m 0644 $(GENDOC) $(datadir)/man
-
-install.man: pegasus-invoke.1
-	$(INSTALL) -m 0644 pegasus-invoke.1 $(datadir)/man/man1
-
-install.all: install install.man install.doc
-
-doc : $(GENDOC)
-
 clean:
-	$(RM) *.o $(GENDOC) core core.*
+	$(RM) *.o core core.*
 
 distclean: clean
 	$(RM) pegasus-invoke

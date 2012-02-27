@@ -3,7 +3,7 @@
 #
 # $Id$
 #
-TARGET	= pegasus-kickstart pegasus-keg pegasus-cluster pegasus-invoke # free
+TARGET	= pegasus-cluster pegasus-invoke pegasus-keg pegasus-kickstart
 CONDOR_VERSION	= $(shell condor_version | awk '{ print $2; exit }')
 MARCH   = $(shell uname -m | tr '[A-Z]' '[a-z]')
 
@@ -12,7 +12,7 @@ prefix = $(PEGASUS_HOME)
 endif
 
 .ONESHELL:
-all clean distclean install install.man install.doc install.all:
+all clean distclean install:
 	for i in $(TARGET); do \
 	    if [ -d $$i ]; then \
 		$(MAKE) -C $$i $@ || exit 1; \

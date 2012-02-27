@@ -25,10 +25,6 @@ ifndef ${datadir}
 datadir = $(prefix)/share 
 endif
 
-NROFF   = groff -mandoc
-TEXT    = -Tlatin1
-HTML    = -Thtml
-
 ifeq (SUNOS,${SYSTEM})
 ifeq (5,${MAJOR})
 # use these for the SUN CC compiler
@@ -111,7 +107,6 @@ CFLAGS += -D${SYSTEM} -DMAJOR=${MAJOR} -DWITH_NEW_ARGS=1 # -DSOCKLEN=${SOCKLEN}
 ifneq (,${SOCKIO})
 CFLAGS += -DHAS_SYS_SOCKIO=1
 endif
-GENDOC = pegasus-kickstart.html pegasus-kickstart.txt pegasus-kickstart.ps
 CFLAGS += -DUSE_PARSE=1 # -ggdb
 
 # add large file support
@@ -123,16 +118,10 @@ ifneq (,${LFS_LDFLAGS})
 LDFLAGS += $(LFS_LDFLAGS)
 endif
 
-%.html : %.1 ;
-	$(NROFF) $(HTML) $< > $@
-%.ps : %.1 ;
-	$(NROFF) $< > $@
-%.txt : %.1 ;
-	$(NROFF) $(TEXT) $< > $@
 %.o : %.c
 	$(CC) $(CFLAGS) $< -c -o $@
 
-all : pegasus-kickstart $(GENDOC)
+all : pegasus-kickstart
 
 pegasus-kickstart: debug.o getif.o rwio.o tools.o useinfo.o mynss.o statinfo.o event.o jobinfo.o limitinfo.o $(EXTRA_OBJ) machine.o appinfo.o parse.o mysystem.o mylist.o invoke.o pegasus-kickstart.o
 	$(LD) $(EXTRA_LDFLAGS) $(CFLAGS) $^ -o $@ $(LOADLIBES)
@@ -183,23 +172,11 @@ machine/linux.o: machine/linux.c machine/basic.c machine/linux.h \
 machine/darwin.o: machine/darwin.c machine/basic.c machine/darwin.h \
   machine/../tools.h
 
-$(GENDOC): pegasus-kickstart.1
-
 install: pegasus-kickstart
 	$(INSTALL) -m 0755 pegasus-kickstart $(prefix)/bin
 
-install.doc: $(GENDOC)
-	$(INSTALL) -m 0644 $(GENDOC) $(datadir)/man
-
-install.man: pegasus-kickstart.1
-	$(INSTALL) -m 0644 pegasus-kickstart.1 $(datadir)/man/man1
-
-install.all: install install.man install.doc
-
-doc: $(GENDOC)
-
 clean:
-	$(RM) *.o machine/*.o $(GENDOC) core core.*
+	$(RM) *.o machine/*.o core core.*
 
 distclean: clean
 	$(RM) pegasus-kickstart fail test-post test-pre test-ascii show-if

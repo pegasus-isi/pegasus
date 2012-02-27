@@ -20,10 +20,6 @@ ifndef ${datadir}
 datadir = $(prefix)/share 
 endif
 
-NROFF   = groff -mandoc
-TEXT    = -Tutf8
-HTML    = -Thtml
-
 ifeq (SUNOS,${SYSTEM})
 ifeq (5,${MAJOR})
 CC	= cc
@@ -79,7 +75,6 @@ CFLAGS	+= -D${SYSTEM} -DMAJOR=${MAJOR}
 LD	= $(CC) -D_FILE_OFFSET_BITS=64
 CC	+= -D_FILE_OFFSET_BITS=64
 CFLAGS	+= -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -D_LARGEFILE64_SOURCE
-GENDOC = pegasus-cluster.html pegasus-cluster.txt pegasus-cluster.ps
 
 %.html : %.1 ;
 	$(NROFF) $(HTML) $< > $@
@@ -90,7 +85,7 @@ GENDOC = pegasus-cluster.html pegasus-cluster.txt pegasus-cluster.ps
 %.o : %.c
 	$(CC) $(CFLAGS) $< -c -o $@
 
-all: pegasus-cluster $(GENDOC)
+all: pegasus-cluster
 
 job.o: job.c job.h
 mysystem.o: mysystem.c tools.h report.h mysystem.h
@@ -112,21 +107,11 @@ try-cpus: try-cpus.o
 install: pegasus-cluster
 	$(INSTALL) -m 0755 $^ $(prefix)/bin
 
-install.man: pegasus-cluster.1
-	$(INSTALL) -m 0644 $^ $(datadir)/man/man1
-
-install.doc: $(GENDOC)
-	$(INSTALL) -m 0644 $(GENDOC) $(datadir)/man
-
-install.all: install install.man install.doc
-
-doc: $(GENDOC)
-
 check:	pegasus-cluster
 	bash check.sh
 
 clean:
-	$(RM) *.o $(GENDOC) core core.* check.?
+	$(RM) *.o core core.* check.?
 
 distclean: clean
 	$(RM) pegasus-cluster try-cpus
