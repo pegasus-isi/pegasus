@@ -169,6 +169,9 @@ greatest distance of a node, from the root of the workflow. Clustering
 occurs only on jobs of the same type i.e they refer to the same
 logical transformation in the transformation catalog. 
 +
+Horizontal Clustering can operate in one of two modes. 
+a. Job count based.
++
 The granularity of clustering can be specified by associating either 
 the PEGASUS profile key  'clusters.size' or the PEGASUS profile key
 'clusters.num' with the transformation.
@@ -179,6 +182,15 @@ jobs are to be created for a particular level at a particular
 execution site. If both keys are specified for a particular
 transformation, then the clusters.num key value is used to determine the
 clustering granularity.
++
+b. Runtime based.
++
+To cluster jobs according to runtimes user needs to set one property and two profile keys.
+The property pegasus.clusterer.preference must be set to the value 'runtime'.
+In addition user needs to specify two Pegasus profiles.
+a. clusters.maxruntime which specifies the maximum duration for which the clustered job should run for.
+b. job.runtime which specifies the duration for which the job with which the profile key is associated, runs for.
+Ideally, clusters.maxruntime should be set in transformation catalog and job.runtime should be set for each job individually.
 +
 - *label* is the style of clustering in which you can label the jobs in 
 your workflow. The jobs with the same level are put in the same clustered
