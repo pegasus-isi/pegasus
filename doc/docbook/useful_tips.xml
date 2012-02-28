@@ -8,23 +8,47 @@
     <title>Migrating From Pegasus 3.1 to Pegasus 4.X</title>
 
     <para>With Pegasus 4.0 effort has been made to move the Pegasus
-    installation to be FHS compliant, make workflows run better in Cloud
-    environments. This chapter is for existing users of Pegasus who use
-    Pegasus 3.1 to run their workflows and walks through the steps to move to
-    using Pegasus 4.0</para>
+    installation to be FHS compliant, and to make workflows run better in
+    Cloud environments and distributed grid environments. This chapter is for
+    existing users of Pegasus who use Pegasus 3.1 to run their workflows and
+    walks through the steps to move to using Pegasus 4.0</para>
 
     <section>
-      <title>Move to FHS layout [Mats]</title>
+      <title>Move to FHS layout</title>
 
       <para>Pegasus 4.0 is the first release of Pegasus which is <ulink
       url="http://www.pathname.com/fhs/">Filesystem Hierarchy Standard
       (FHS)</ulink> compliant. The native packages no longer installs under
       /opt. Instead, pegasus-* binaries are in /usr/bin/ and example workflows
-      can be found under /usr/share/pegasus/examples/. To find Pegasus system
-      components, a pegasus-config tool is provided. For example, to find the
-      PYTHONPATH for the DAX API, run:</para>
+      can be found under /usr/share/pegasus/examples/.</para>
+
+      <para>To find Pegasus system components, a pegasus-config tool is
+      provided. pegasus-config supports setting up the environment for </para>
+
+      <itemizedlist>
+        <listitem>
+          <para>Python</para>
+        </listitem>
+
+        <listitem>
+          <para>Perl</para>
+        </listitem>
+
+        <listitem>
+          <para>Java</para>
+        </listitem>
+
+        <listitem>
+          <para>Shell</para>
+        </listitem>
+      </itemizedlist>
+
+      <para>For example, to find the PYTHONPATH for the DAX API, run:</para>
 
       <programlisting>export PYTHONPATH=`pegasus-config --python`</programlisting>
+
+      <para>For complete description of pegasus-config, see the <link
+      linkend="cli-pegasus-config">man page</link>.</para>
     </section>
 
     <section>
@@ -987,4 +1011,3 @@ $ echo $?
     </section>
   </section>
 </chapter>
-

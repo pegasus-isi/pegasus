@@ -54,6 +54,14 @@
   Condor pool and the rest are executed on remote resources using
   Condor-G.</para>
 
+  <para></para>
+
+  <section>
+    <title>General Supported Execution Environments</title>
+
+    <para></para>
+  </section>
+
   <section>
     <title>Localhost</title>
 
@@ -85,16 +93,17 @@
       </mediaobject>
     </figure>
 
-      <figure>
-        <title />
+    <figure>
+      <title></title>
 
-        <mediaobject>
-          <imageobject>
-            <imagedata contentdepth="100%" fileref="images/condor_layout.png"
-                       scalefit="1" width="100%" />
-          </imageobject>
-        </mediaobject>
-      </figure>
+      <mediaobject>
+        <imageobject>
+          <imagedata contentdepth="100%" fileref="images/condor_layout.png"
+                     scalefit="1" width="100%" />
+        </imageobject>
+      </mediaobject>
+    </figure>
+
     <para>The workflow is submitted using DAGMan from one of the job
     submission machines in the Condor pool. It is the responsibility of the
     Central Manager of the pool to match the task in the workflow submitted by
@@ -252,7 +261,6 @@ local-condor pegasus::dirmanager /path/on/submithost/pegasus/bin/dirmanager INST
       </note>
     </section>
   </section>
-
 
   <section>
     <title>Campus Cluster</title>
