@@ -1630,6 +1630,8 @@ class Workflow:
                     # No tasks found...
                     logger.info("no tasks found for job %s..." % (my_job._exec_job_id))
         else:
+            # This is the case where we cannot find kickstart records in the output file
+
             # Take care of invocation-level notifications
             if self.check_notifications() == True and self._notifications_manager is not None:
                 self._notifications_manager.process_invocation_notifications(self, my_job, my_task_id)

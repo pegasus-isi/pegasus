@@ -375,23 +375,32 @@ class Job:
         This function reads both stdout and stderr files and populates
         these fields in the Job class.
         """
-        my_out_file = os.path.join(run_dir, self._output_file)
-        my_err_file = os.path.join(run_dir, self._error_file)
-
-        try:
-            OUT = open(my_out_file, 'r')
-            self._stdout_text = utils.quote("#@ 1 stdout\n" + OUT.read())
-        except IOError:
+        if self._output_file is None:
+            # This is the case for SUBDAG jobs
             self._stdout_text = None
-            logger.warning("unable to read output file: %s, continuing..." % (my_out_file))
         else:
-            OUT.close()
+            my_out_file = os.path.join(run_dir, self._output_file)
 
-        try:
-            ERR = open(my_err_file, 'r')
-            self._stderr_text = utils.quote(ERR.read())
-        except IOError:
+            try:
+                OUT = open(my_out_file, 'r')
+                self._stdout_text = utils.quote("#@ 1 stdout\n" + OUT.read())
+            except IOError:
+                self._stdout_text = None
+                logger.warning("unable to read output file: %s, continuing..." % (my_out_file))
+            else:
+                OUT.close()
+
+        if self._error_file is None:
+            # This is the case for SUBDAG jobs
             self._stderr_text = None
-            logger.warning("unable to read error file: %s, continuing..." % (my_err_file))
         else:
-            ERR.close()
+            my_err_file = os.path.join(run_dir, self._error_file)
+
+            try:
+                ERR = open(my_err_file, 'r')
+                self._stderr_text = utils.quote(ERR.read())
+            except IOError:
+                self._stderr_text = None
+                logger.warning("unable to read error file: %s, continuing..." % (my_err_file))
+            else:
+                ERR.close()
