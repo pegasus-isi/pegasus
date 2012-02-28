@@ -246,7 +246,6 @@
   <target name="ctools-all" depends="build-setup,validate-make"
           description="INTERNAL: Compiles all C tools and installs them"
           if="make.available">
-    <mkdir dir="${dist.man}/man1"/>
     <mkdir dir="${dist.bin}"/>
     <exec executable="${basedir}/src/tools/make.pl" dir="src/tools" failonerror="true">
       <env key="prefix" value="${dist.dir}"/>
@@ -254,8 +253,7 @@
       <arg line="prefix=${dist.dir}"/>
       <arg line="datadir=${dist.data}"/>
       <arg line="install"/>
-      <arg line="install.man"/>
-      <!-- TODO: Add test for groff devices and then add groff targets accordingly. -->
+      <!-- Note: moved manpages via asciidoc into docbook -->
     </exec>
   </target>
 
