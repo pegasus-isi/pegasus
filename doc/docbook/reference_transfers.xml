@@ -721,6 +721,143 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
   </section>
 
   <section>
+    <title>Executables used for Directory Creation and Cleanup Jobs</title>
+
+    <para>Starting 4.0, Pegasus has changed the way how the scratch
+    directories are created on the staging site. The planner now prefers to
+    schedule the directory creation and cleanup jobs locally. The jobs refer
+    to python based tools, that call out to protocol specific clients to
+    determine what client is picked up. For protocols, where specific remote
+    cleanup and directory creation clients don't exist ( for example gridftp
+    ), the python tools rely on the corresponding transfer tool to create a
+    directory by initiating a transfer of an empty file. The python clients
+    used to create directories and remove files are called</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>pegasus-create-dir</para>
+      </listitem>
+
+      <listitem>
+        <para>pegasus-cleanup</para>
+      </listitem>
+    </itemizedlist>
+
+    <para>Both these clients inspect the URL's to to determine what underlying
+    client to pick up.</para>
+
+    <table>
+      <title>Clients interfaced to by pegasus-create-dir</title>
+
+      <tgroup cols="2">
+        <thead>
+          <row>
+            <entry>Client</entry>
+
+            <entry>Used For</entry>
+          </row>
+        </thead>
+
+        <tbody>
+          <row>
+            <entry>globus-url-copy</entry>
+
+            <entry>to create directories against a gridftp/ftp server</entry>
+          </row>
+
+          <row>
+            <entry>srm-mkdir</entry>
+
+            <entry>to create directories against a SRM server.</entry>
+          </row>
+
+          <row>
+            <entry>mkdir</entry>
+
+            <entry>to create a directory on the local filesystem</entry>
+          </row>
+
+          <row>
+            <entry>pegasus-s3</entry>
+
+            <entry>to create a s3 bucket in the amazon cloud</entry>
+          </row>
+
+          <row>
+            <entry>scp</entry>
+
+            <entry>staging files using scp</entry>
+          </row>
+
+          <row>
+            <entry>imkdir</entry>
+
+            <entry>to create a directory against an IRODS server</entry>
+          </row>
+        </tbody>
+      </tgroup>
+    </table>
+
+    <table>
+      <title>Clients interfaced to by pegasus-cleanup</title>
+
+      <tgroup cols="2">
+        <thead>
+          <row>
+            <entry>Client</entry>
+
+            <entry>Used For</entry>
+          </row>
+        </thead>
+
+        <tbody>
+          <row>
+            <entry>globus-url-copy</entry>
+
+            <entry>to remove a file against a gridftp/ftp server. In this case
+            a zero byte file is created</entry>
+          </row>
+
+          <row>
+            <entry>srm-rm</entry>
+
+            <entry>to remove files against a SRM server.</entry>
+          </row>
+
+          <row>
+            <entry>rm</entry>
+
+            <entry>to remove a file on the local filesystem</entry>
+          </row>
+
+          <row>
+            <entry>pegasus-s3</entry>
+
+            <entry>to remove a file from the s3 bucket.</entry>
+          </row>
+
+          <row>
+            <entry>scp</entry>
+
+            <entry>to remove a file against a scp server. In this case a zero
+            byte file is created.</entry>
+          </row>
+
+          <row>
+            <entry>irm</entry>
+
+            <entry>to remove a file against an IRODS server</entry>
+          </row>
+        </tbody>
+      </tgroup>
+    </table>
+
+    <para> The only case, where the create dir and cleanup jobs are scheduled
+    to run remotely is when for the staging site, a file server is
+    specified.</para>
+  </section>
+
+  <section>
     <title>Credentials Staging</title>
 
     <para>[To be filled by Mats]</para>
