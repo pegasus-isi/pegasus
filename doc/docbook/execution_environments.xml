@@ -54,16 +54,8 @@
   Condor pool and the rest are executed on remote resources using
   Condor-G.</para>
 
-  <para></para>
-
   <section>
-    <title>General Supported Execution Environments</title>
-
-    <para></para>
-  </section>
-
-  <section>
-    <title>Localhost</title>
+    <title>General execution environment: Localhost</title>
 
     <para>In this configuration , Pegasus schedules the jobs to run locally on
     the submit host. This is achieved by executing the workflow on site local
@@ -74,7 +66,7 @@
   </section>
 
   <section>
-    <title>Condor Pool</title>
+    <title>General execution environment: Condor Pool</title>
 
     <para>A Condor pool is a set of machines that use Condor for resource
     management. A Condor pool can be a cluster of dedicated machines or a set
@@ -263,250 +255,101 @@ local-condor pegasus::dirmanager /path/on/submithost/pegasus/bin/dirmanager INST
   </section>
 
   <section>
-    <title>Campus Cluster</title>
+    <title>General execution environment: Globus GRAM enabled Cluster</title>
 
-    <para>TODO</para>
+    <para><figure id="concepts-fig-site-layout">
+        <title>Grid Sample Site Layout</title>
+
+        <mediaobject>
+          <imageobject>
+            <imagedata align="center" contentdepth="100%"
+                       fileref="images/concepts-site-layout.jpg" scalefit="1"
+                       valign="middle" width="100%" />
+          </imageobject>
+        </mediaobject>
+      </figure></para>
+
+    <para>The vanilla grid environment shown in the figure <link
+    linkend="concepts-fig-site-layout">above</link>. We will work from the
+    left to the right top, then the right bottom.</para>
+
+    <para>On the left side, you have a submit machine where Pegasus runs,
+    Condor schedules jobs, and workflows are executed. We call it the
+    <emphasis>submit host</emphasis> (SH), though its functionality can be
+    assumed by a virtual machine image. In order to properly communicate over
+    secured channels, it is important that the submit machine has a proper
+    notion of time, i.e. runs an NTP daemon to keep accurate time. To be able
+    to connect to remote clusters and receive connections from the remote
+    clusters, the submit host has a public IP address to facilitate this
+    communication.</para>
+
+    <para>In order to send a job request to the remote cluster, Condor wraps
+    the job into Globus calls via Condor-G. Globus uses GRAM to manage jobs on
+    remote sites. In terms of a software stack, Pegasus wraps the job into
+    Condor. Condor wraps the job into Globus. Globus transports the job to the
+    remote site, and unwraps the Globus component, sending it to the remote
+    site's <emphasis>resource manager</emphasis> (RM).</para>
+
+    <para>To be able to communicate using the Globus security infrastructure
+    (GSI), the submit machine needs to have the certificate authority (CA)
+    certificates configured, requires a host certificate in certain
+    circumstances, and the user a user certificate that is enabled on the
+    remote site. On the remote end, the remote gatekeeper node requires a host
+    certificate, all signing CA certificate chains and policy files, and a
+    goot time source.</para>
+
+    <para>In a grid environment, there are one or more clusters accessible via
+    grid middleware like the <ulink url="http://www.globus.org/">Globus
+    Toolkit</ulink>. In case of Globus, there is the Globus gatekeeper
+    listening on TCP port 2119 of the remote cluster. The port is opened to a
+    single machine called <emphasis>head node</emphasis> (HN).The head-node is
+    typically located in a de-militarized zone (DMZ) of the firewall setup, as
+    it requires limited outside connectivity and a public IP address so that
+    it can be contacted. Additionally, once the gatekeeper accepted a job, it
+    passes it on to a jobmanager. Often, these jobmanagers require a limited
+    port range, in the example TCP ports 40000-41000, to call back to the
+    submit machine.</para>
+
+    <para>For the user to be able to run jobs on the remote site, the user
+    must have some form of an account on the remtoe site. The user's grid
+    identity is passed from the submit host. An entity called <emphasis>grid
+    mapfile</emphasis> on the gatekeeper maps the user's grid identity into a
+    remote account. While most sites do not permit account sharing, it is
+    possible to map multiple user certificates to the same account.</para>
+
+    <para>The gatekeeper is the interface through which jobs are submitted to
+    the remote cluster's resource manager. A resource manager is a scheduling
+    system like PBS, Maui, LSF, FBSNG or Condor that queues tasks and
+    allocates worker nodes. The <emphasis>worker nodes</emphasis> (WN) in the
+    remote cluster might not have outside connectivity and often use all
+    private IP addresses. The Globus toolkit requires a shared filesystem to
+    properly stage files between the head node and worker nodes.</para>
+
+    <note>
+      <para>The shared filesystem requirement is imposed by Globus. Pegasus is
+      capable of supporting advanced site layouts that do not require a shared
+      filesystem. Please contact us for details, should you require such a
+      setup.</para>
+    </note>
+
+    <para>To stage data between external sites for the job, it is recommended
+    to enable a GridFTP server. If a shared networked filesystem is involved,
+    the GridFTP server should be located as close to the file-server as
+    possible. The GridFTP server requires TCP port 2811 for the control
+    channel, and a limited port range for data channels, here as an example
+    the TPC ports from 40000 to 41000. The GridFTP server requires a host
+    certificate, the signing CA chain and policy files, a stable time source,
+    and a gridmap file that maps between a user's grid identify and the user's
+    account on the remote site.</para>
+
+    <para>The GridFTP server is often installed on the head node, the same as
+    the gatekeeper, so that they can share the grid mapfile, CA certificate
+    chains and other setups. However, for performance purposes it is
+    recommended that the GridFTP server has its own machine.</para>
   </section>
 
   <section>
-    <title>XSEDE</title>
-
-    <para>Two alternatives: GRAM or glideins.</para>
-
-    <para></para>
-
-    <section>
-      <title>Globus GRAM</title>
-
-      <para><figure id="concepts-fig-site-layout">
-          <title>Grid Sample Site Layout</title>
-
-          <mediaobject>
-            <imageobject>
-              <imagedata align="center" contentdepth="100%"
-                         fileref="images/concepts-site-layout.jpg"
-                         scalefit="1" valign="middle" width="100%" />
-            </imageobject>
-          </mediaobject>
-        </figure></para>
-
-      <para>The vanilla grid environment shown in the figure <link
-      linkend="concepts-fig-site-layout">above</link>. We will work from the
-      left to the right top, then the right bottom.</para>
-
-      <para>On the left side, you have a submit machine where Pegasus runs,
-      Condor schedules jobs, and workflows are executed. We call it the
-      <emphasis>submit host</emphasis> (SH), though its functionality can be
-      assumed by a virtual machine image. In order to properly communicate
-      over secured channels, it is important that the submit machine has a
-      proper notion of time, i.e. runs an NTP daemon to keep accurate time. To
-      be able to connect to remote clusters and receive connections from the
-      remote clusters, the submit host has a public IP address to facilitate
-      this communication.</para>
-
-      <para>In order to send a job request to the remote cluster, Condor wraps
-      the job into Globus calls via Condor-G. Globus uses GRAM to manage jobs
-      on remote sites. In terms of a software stack, Pegasus wraps the job
-      into Condor. Condor wraps the job into Globus. Globus transports the job
-      to the remote site, and unwraps the Globus component, sending it to the
-      remote site's <emphasis>resource manager</emphasis> (RM).</para>
-
-      <para>To be able to communicate using the Globus security infrastructure
-      (GSI), the submit machine needs to have the certificate authority (CA)
-      certificates configured, requires a host certificate in certain
-      circumstances, and the user a user certificate that is enabled on the
-      remote site. On the remote end, the remote gatekeeper node requires a
-      host certificate, all signing CA certificate chains and policy files,
-      and a goot time source.</para>
-
-      <para>In a grid environment, there are one or more clusters accessible
-      via grid middleware like the <ulink url="http://www.globus.org/">Globus
-      Toolkit</ulink>. In case of Globus, there is the Globus gatekeeper
-      listening on TCP port 2119 of the remote cluster. The port is opened to
-      a single machine called <emphasis>head node</emphasis> (HN).The
-      head-node is typically located in a de-militarized zone (DMZ) of the
-      firewall setup, as it requires limited outside connectivity and a public
-      IP address so that it can be contacted. Additionally, once the
-      gatekeeper accepted a job, it passes it on to a jobmanager. Often, these
-      jobmanagers require a limited port range, in the example TCP ports
-      40000-41000, to call back to the submit machine.</para>
-
-      <para>For the user to be able to run jobs on the remote site, the user
-      must have some form of an account on the remtoe site. The user's grid
-      identity is passed from the submit host. An entity called <emphasis>grid
-      mapfile</emphasis> on the gatekeeper maps the user's grid identity into
-      a remote account. While most sites do not permit account sharing, it is
-      possible to map multiple user certificates to the same account.</para>
-
-      <para>The gatekeeper is the interface through which jobs are submitted
-      to the remote cluster's resource manager. A resource manager is a
-      scheduling system like PBS, Maui, LSF, FBSNG or Condor that queues tasks
-      and allocates worker nodes. The <emphasis>worker nodes</emphasis> (WN)
-      in the remote cluster might not have outside connectivity and often use
-      all private IP addresses. The Globus toolkit requires a shared
-      filesystem to properly stage files between the head node and worker
-      nodes.</para>
-
-      <note>
-        <para>The shared filesystem requirement is imposed by Globus. Pegasus
-        is capable of supporting advanced site layouts that do not require a
-        shared filesystem. Please contact us for details, should you require
-        such a setup.</para>
-      </note>
-
-      <para>To stage data between external sites for the job, it is
-      recommended to enable a GridFTP server. If a shared networked filesystem
-      is involved, the GridFTP server should be located as close to the
-      file-server as possible. The GridFTP server requires TCP port 2811 for
-      the control channel, and a limited port range for data channels, here as
-      an example the TPC ports from 40000 to 41000. The GridFTP server
-      requires a host certificate, the signing CA chain and policy files, a
-      stable time source, and a gridmap file that maps between a user's grid
-      identify and the user's account on the remote site.</para>
-
-      <para>The GridFTP server is often installed on the head node, the same
-      as the gatekeeper, so that they can share the grid mapfile, CA
-      certificate chains and other setups. However, for performance purposes
-      it is recommended that the GridFTP server has its own machine.</para>
-    </section>
-
-    <section>
-      <title>Glideins</title>
-
-      <para>Pegasus WMS can execute workflows over Condor pool. This pool can
-      contain machines managed by a single institution or department and
-      belonging to a single administrative domain. This is the case for most
-      of the Condor pools. In this section we describe how machines from
-      different administrative domains and supercomputing centers can be
-      dynamically added to a Condor pool for certain timeframe. These machines
-      join the Condor pool temporarily and can be used to execute jobs in a
-      non preemptive manner. This functionality is achieved using a Condor
-      feature called Glide-in http://cs.wisc.edu/condor/glidein that uses
-      Globus GRAM interface for migrating machines from different domains to a
-      Condor pool. The number of machines and the duration for which they are
-      required can be specified</para>
-
-      <para>In this case, we use the abstraction of a local Condor pool to
-      execute the jobs in the workflow over remote resources that have joined
-      the pool for certain timeframe. Details about the use of this feature
-      can be found in the condor manual
-      (http://cs.wisc.edu/condor/manual/).</para>
-
-      <para>A basic step to migrate in a job to a local condor pool is
-      described below.</para>
-
-      <programlisting><emphasis role="bold">$condor_glidein -count 10 gatekeeper.site.edu/jobmanager-pbs</emphasis></programlisting>
-
-      <para><emphasis role="bold">GlideIn of Remote Globus
-      Resources</emphasis></para>
-
-      <para>The above step glides in 10 nodes to the user&amp;rsquor;s local
-      condor pool, from the remote pbs scheduler running at
-      gatekeeper.site.edu. By default, the glide in binaries are installed in
-      the users home directory on the remote host.</para>
-
-      <para>It is possible that the Condor pool can contain resources from
-      multiple Grid sites. It is normally the case that the resources from a
-      particular site share the same file system and thus use the same
-      FileSystemDomain attribute while advertising their presence to the
-      Central Manager of the pool. If the user wants to run his jobs on
-      machines from a particular Grid site, he has to specify the
-      FileSystemDomain attribute in the requirements classad expression in the
-      submit files with a value matching the FileSystemDomain of the machines
-      from that site. For example, the user migrates nodes from the ISI
-      cluster (with FileSystemDomain viz.isi.org) into a Condor pool and
-      specifies FileSystemDomain == &amp;ldquo;viz.isi.edu&amp;rdquor;. Condor
-      would then schedule the jobs only on the nodes from the ISI VIZ cluster
-      in the local condor pool. The FileSystemDomain can be specified for an
-      execution site in the site catalog with condor profile namespace as
-      follows</para>
-
-      <programlisting> &lt;site  handle="isi_viz" arch="x86" os="LINUX" osrelease="" osversion="" glibc=""&gt;
-       &lt;grid  type="gt2" contact="smarty.isi.edu/jobmanager-pbs" scheduler="PBS" jobtype="auxillary"/&gt;
-       &lt;grid  type="gt2" contact="smarty.isi.edu/jobmanager-pbs" scheduler="PBS" jobtype="compute"/&gt;
-       &lt;head-fs&gt;
-              &lt;scratch&gt;
-                    &lt;shared&gt;
-                         &lt;file-server protocol="gsiftp" url="gsiftp://viz-login.isi.edu" \
-                                                                 mount-point="/nfs/scratch01"/&gt;
-                         &lt;internal-mount-point mount-point="/nfs/scratch01"/&gt;
-                    &lt;/shared&gt;
-              &lt;/scratch&gt;
-              &lt;storage&gt;
-                     &lt;shared&gt;
-                          &lt;file-server protocol="gsiftp" url="gsiftp://viz-login.isi.edu" \
-                                                                      mount-point="/exports/storage01"/&gt;
-                          &lt;internal-mount-point mount-point="/exports/storage01"/&gt;
-                     &lt;/shared&gt;
-              &lt;/storage&gt;
-       &lt;/head-fs&gt;
-       &lt;replica-catalog  type="LRC" url="rlsn://smarty.isi.edu"/&gt;
-       <emphasis role="bold">&lt;profile namespace="pegasus" key="style"&gt;glidein&lt;/profile&gt;</emphasis>
-       <emphasis role="bold">&lt;profile namespace="condor" key="universe"&gt;vanilla&lt;/profile&gt; 
-       &lt;profile namespace="condor" key="FileSystemDomain"&gt;viz.isi.edu&lt;/profile&gt;</emphasis>
- &lt;/site&gt;
-</programlisting>
-
-      <para>Specifying the FileSystemDomain key in condor namespace for a
-      site, triggers Pegasus into generating the requirements classad
-      expression in the submit file for all the jobs scheduled on that
-      particular site. For example, in the above case all jobs scheduled on
-      site isi_condor would have the following expression in the submit
-      file.</para>
-
-      <programlisting>requirements = FileSystemDomain == &amp;ldquo;viz.isi.edu&amp;rdquor;</programlisting>
-
-      <para></para>
-    </section>
-  </section>
-
-  <section>
-    <title>Open Science Grid / glideinWMS</title>
-
-    <section>
-      <para><ulink url="???">glideinWMS</ulink> is a glidein system widely
-      used on Open Science Grid. Pegasus has a convenience style named
-      glideinWMS to make running workflows on top of glideinWMS easy. This
-      style is similar to the Condor style, but provides some more defaults
-      set up to work well with glideinWMS. All you have to do is specify the
-      style profile in the site catalog:</para>
-
-      <programlisting> &lt;site  handle="isi_viz" arch="x86" os="LINUX" osrelease="" osversion="" glibc=""&gt;
-       &lt;grid  type="gt2" contact="smarty.isi.edu/jobmanager-pbs" scheduler="PBS" jobtype="auxillary"/&gt;
-       &lt;grid  type="gt2" contact="smarty.isi.edu/jobmanager-pbs" scheduler="PBS" jobtype="compute"/&gt;
-       &lt;head-fs&gt;
-              &lt;scratch&gt;
-                    &lt;shared&gt;
-                         &lt;file-server protocol="gsiftp" url="gsiftp://viz-login.isi.edu" \
-                                                                 mount-point="/nfs/scratch01"/&gt;
-                         &lt;internal-mount-point mount-point="/nfs/scratch01"/&gt;
-                    &lt;/shared&gt;
-              &lt;/scratch&gt;
-              &lt;storage&gt;
-                     &lt;shared&gt;
-                          &lt;file-server protocol="gsiftp" url="gsiftp://viz-login.isi.edu" \
-                                                                      mount-point="/exports/storage01"/&gt;
-                          &lt;internal-mount-point mount-point="/exports/storage01"/&gt;
-                     &lt;/shared&gt;
-              &lt;/storage&gt;
-       &lt;/head-fs&gt;
-       &lt;replica-catalog  type="LRC" url="rlsn://smarty.isi.edu"/&gt;
-       <emphasis role="bold">&lt;profile namespace="pegasus" key="style"&gt;glideinwms&lt;/profile&gt;</emphasis>
- &lt;/site&gt;</programlisting>
-
-      <para>Planned jobs will have universe, requirements and rank set:</para>
-
-      <programlisting>universe = vanilla
-rank = DaemonStartTime
-requirements = ((GLIDEIN_Entry_Name == "isi_iz") || (TARGET.Pegasus_Site == "isi_viz")) \
-               &amp;&amp; (IS_MONITOR_VM == False) &amp;&amp; (Arch != "") &amp;&amp; (OpSys != "") \
-               &amp;&amp; (Disk != -42) &amp;&amp; (Memory &gt; 1) &amp;&amp; (FileSystemDomain != "")
-</programlisting>
-    </section>
-  </section>
-
-  <section>
-    <title>Glite</title>
+    <title>General execution environment: Glite</title>
 
     <para>This section describes the various changes required in the site
     catalog for Pegasus to generate an executable workflow that uses gLite
@@ -653,6 +496,154 @@ requirements = ((GLIDEIN_Entry_Name == "isi_iz") || (TARGET.Pegasus_Site == "isi
         Instead, Pegasus relies on kickstart to change to the working
         directory when the job is launched on the remote node.</para>
       </section>
+    </section>
+  </section>
+
+  <section>
+    <title>Campus Cluster</title>
+
+    <para>TODO</para>
+  </section>
+
+  <section>
+    <title>XSEDE</title>
+
+    <para>Two alternatives: GRAM or glideins.</para>
+
+    <para></para>
+
+    <section>
+      <title>Glideins</title>
+
+      <para>Pegasus WMS can execute workflows over Condor pool. This pool can
+      contain machines managed by a single institution or department and
+      belonging to a single administrative domain. This is the case for most
+      of the Condor pools. In this section we describe how machines from
+      different administrative domains and supercomputing centers can be
+      dynamically added to a Condor pool for certain timeframe. These machines
+      join the Condor pool temporarily and can be used to execute jobs in a
+      non preemptive manner. This functionality is achieved using a Condor
+      feature called Glide-in http://cs.wisc.edu/condor/glidein that uses
+      Globus GRAM interface for migrating machines from different domains to a
+      Condor pool. The number of machines and the duration for which they are
+      required can be specified</para>
+
+      <para>In this case, we use the abstraction of a local Condor pool to
+      execute the jobs in the workflow over remote resources that have joined
+      the pool for certain timeframe. Details about the use of this feature
+      can be found in the condor manual
+      (http://cs.wisc.edu/condor/manual/).</para>
+
+      <para>A basic step to migrate in a job to a local condor pool is
+      described below.</para>
+
+      <programlisting><emphasis role="bold">$condor_glidein -count 10 gatekeeper.site.edu/jobmanager-pbs</emphasis></programlisting>
+
+      <para><emphasis role="bold">GlideIn of Remote Globus
+      Resources</emphasis></para>
+
+      <para>The above step glides in 10 nodes to the user&amp;rsquor;s local
+      condor pool, from the remote pbs scheduler running at
+      gatekeeper.site.edu. By default, the glide in binaries are installed in
+      the users home directory on the remote host.</para>
+
+      <para>It is possible that the Condor pool can contain resources from
+      multiple Grid sites. It is normally the case that the resources from a
+      particular site share the same file system and thus use the same
+      FileSystemDomain attribute while advertising their presence to the
+      Central Manager of the pool. If the user wants to run his jobs on
+      machines from a particular Grid site, he has to specify the
+      FileSystemDomain attribute in the requirements classad expression in the
+      submit files with a value matching the FileSystemDomain of the machines
+      from that site. For example, the user migrates nodes from the ISI
+      cluster (with FileSystemDomain viz.isi.org) into a Condor pool and
+      specifies FileSystemDomain == &amp;ldquo;viz.isi.edu&amp;rdquor;. Condor
+      would then schedule the jobs only on the nodes from the ISI VIZ cluster
+      in the local condor pool. The FileSystemDomain can be specified for an
+      execution site in the site catalog with condor profile namespace as
+      follows</para>
+
+      <programlisting> &lt;site  handle="isi_viz" arch="x86" os="LINUX" osrelease="" osversion="" glibc=""&gt;
+       &lt;grid  type="gt2" contact="smarty.isi.edu/jobmanager-pbs" scheduler="PBS" jobtype="auxillary"/&gt;
+       &lt;grid  type="gt2" contact="smarty.isi.edu/jobmanager-pbs" scheduler="PBS" jobtype="compute"/&gt;
+       &lt;head-fs&gt;
+              &lt;scratch&gt;
+                    &lt;shared&gt;
+                         &lt;file-server protocol="gsiftp" url="gsiftp://viz-login.isi.edu" \
+                                                                 mount-point="/nfs/scratch01"/&gt;
+                         &lt;internal-mount-point mount-point="/nfs/scratch01"/&gt;
+                    &lt;/shared&gt;
+              &lt;/scratch&gt;
+              &lt;storage&gt;
+                     &lt;shared&gt;
+                          &lt;file-server protocol="gsiftp" url="gsiftp://viz-login.isi.edu" \
+                                                                      mount-point="/exports/storage01"/&gt;
+                          &lt;internal-mount-point mount-point="/exports/storage01"/&gt;
+                     &lt;/shared&gt;
+              &lt;/storage&gt;
+       &lt;/head-fs&gt;
+       &lt;replica-catalog  type="LRC" url="rlsn://smarty.isi.edu"/&gt;
+       <emphasis role="bold">&lt;profile namespace="pegasus" key="style"&gt;glidein&lt;/profile&gt;</emphasis>
+       <emphasis role="bold">&lt;profile namespace="condor" key="universe"&gt;vanilla&lt;/profile&gt; 
+       &lt;profile namespace="condor" key="FileSystemDomain"&gt;viz.isi.edu&lt;/profile&gt;</emphasis>
+ &lt;/site&gt;
+</programlisting>
+
+      <para>Specifying the FileSystemDomain key in condor namespace for a
+      site, triggers Pegasus into generating the requirements classad
+      expression in the submit file for all the jobs scheduled on that
+      particular site. For example, in the above case all jobs scheduled on
+      site isi_condor would have the following expression in the submit
+      file.</para>
+
+      <programlisting>requirements = FileSystemDomain == &amp;ldquo;viz.isi.edu&amp;rdquor;</programlisting>
+
+      <para></para>
+    </section>
+  </section>
+
+  <section>
+    <title>Open Science Grid / glideinWMS</title>
+
+    <section>
+      <para><ulink url="???">glideinWMS</ulink> is a glidein system widely
+      used on Open Science Grid. Pegasus has a convenience style named
+      glideinWMS to make running workflows on top of glideinWMS easy. This
+      style is similar to the Condor style, but provides some more defaults
+      set up to work well with glideinWMS. All you have to do is specify the
+      style profile in the site catalog:</para>
+
+      <programlisting> &lt;site  handle="isi_viz" arch="x86" os="LINUX" osrelease="" osversion="" glibc=""&gt;
+       &lt;grid  type="gt2" contact="smarty.isi.edu/jobmanager-pbs" scheduler="PBS" jobtype="auxillary"/&gt;
+       &lt;grid  type="gt2" contact="smarty.isi.edu/jobmanager-pbs" scheduler="PBS" jobtype="compute"/&gt;
+       &lt;head-fs&gt;
+              &lt;scratch&gt;
+                    &lt;shared&gt;
+                         &lt;file-server protocol="gsiftp" url="gsiftp://viz-login.isi.edu" \
+                                                                 mount-point="/nfs/scratch01"/&gt;
+                         &lt;internal-mount-point mount-point="/nfs/scratch01"/&gt;
+                    &lt;/shared&gt;
+              &lt;/scratch&gt;
+              &lt;storage&gt;
+                     &lt;shared&gt;
+                          &lt;file-server protocol="gsiftp" url="gsiftp://viz-login.isi.edu" \
+                                                                      mount-point="/exports/storage01"/&gt;
+                          &lt;internal-mount-point mount-point="/exports/storage01"/&gt;
+                     &lt;/shared&gt;
+              &lt;/storage&gt;
+       &lt;/head-fs&gt;
+       &lt;replica-catalog  type="LRC" url="rlsn://smarty.isi.edu"/&gt;
+       <emphasis role="bold">&lt;profile namespace="pegasus" key="style"&gt;glideinwms&lt;/profile&gt;</emphasis>
+ &lt;/site&gt;</programlisting>
+
+      <para>Planned jobs will have universe, requirements and rank set:</para>
+
+      <programlisting>universe = vanilla
+rank = DaemonStartTime
+requirements = ((GLIDEIN_Entry_Name == "isi_iz") || (TARGET.Pegasus_Site == "isi_viz")) \
+               &amp;&amp; (IS_MONITOR_VM == False) &amp;&amp; (Arch != "") &amp;&amp; (OpSys != "") \
+               &amp;&amp; (Disk != -42) &amp;&amp; (Memory &gt; 1) &amp;&amp; (FileSystemDomain != "")
+</programlisting>
     </section>
   </section>
 
@@ -932,17 +923,5 @@ verbosity = WARNING</programlisting>
   &lt;/shared&gt;
 &lt;/scratch&gt;</programlisting>
     </section>
-  </section>
-
-  <section>
-    <title>Experimental tool for provisioning cloud resources</title>
-
-    <para></para>
-  </section>
-
-  <section>
-    <title>Hints on running across infrastructures</title>
-
-    <para></para>
   </section>
 </chapter>
