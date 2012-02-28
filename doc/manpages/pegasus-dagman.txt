@@ -1,4 +1,5 @@
 pegasus-dagman(1)
+=================
 :doctype: manpage
 
 Name

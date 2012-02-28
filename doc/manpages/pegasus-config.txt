@@ -105,10 +105,7 @@ export PYTHONPATH=`pegasus-config --python`
 To set the same path inside Python:
 
 -----------
-# Use pegasus-config to find our Pegasus environment
-bin_dir = os.path.normpath(os.path.join(os.path.dirname(sys.argv[0])))
-pegasus_config = os.path.join(bin_dir, "pegasus-config") + " --python-dump"
-config = subprocess.Popen(pegasus_config, stdout=subprocess.PIPE, shell=True).communicate()[0]
+config = subprocess.Popen("pegasus-config --python-dump", stdout=subprocess.PIPE, shell=True).communicate()[0]
 exec config
 -----------
 

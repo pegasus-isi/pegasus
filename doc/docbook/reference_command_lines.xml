@@ -31,6 +31,9 @@
   <xi:include href="manpage.pegasus-invoke.xml"
               xmlns:xi="http://www.w3.org/2001/XInclude" />
 
+  <xi:include href="manpage.pegasus-keg.xml"
+              xmlns:xi="http://www.w3.org/2001/XInclude" />
+
   <xi:include href="manpage.pegasus-kickstart.xml"
               xmlns:xi="http://www.w3.org/2001/XInclude" />
 
@@ -66,6 +69,9 @@
 
   <xi:include href="manpage.pegasus-status.xml"
               xmlns:xi="http://www.w3.org/2001/XInclude" />
+
+  <xi:include href="manpage.pegasus-submit-dag.xml"
+	  xmlns:xi="http://www.w3.org/2001/XInclude" />
 
   <xi:include href="manpage.pegasus-tc-client.xml"
               xmlns:xi="http://www.w3.org/2001/XInclude" />

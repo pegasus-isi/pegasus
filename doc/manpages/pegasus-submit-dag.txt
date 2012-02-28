@@ -1,4 +1,5 @@
 pegasus-submit-dag(1)
+=====================
 :doctype: manpage
 
 Name
