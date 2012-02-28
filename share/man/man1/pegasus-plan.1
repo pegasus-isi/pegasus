@@ -2,12 +2,12 @@
 .\"     Title: pegasus-plan
 .\"    Author: [see the "Authors" section]
 .\" Generator: DocBook XSL Stylesheets v1.75.2 <http://docbook.sf.net/>
-.\"      Date: 02/23/2012
+.\"      Date: 02/27/2012
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "PEGASUS\-PLAN" "1" "02/23/2012" "\ \&" "\ \&"
+.TH "PEGASUS\-PLAN" "1" "02/27/2012" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -42,6 +42,7 @@ pegasus-plan \- runs Pegasus to generate the executable workflow
              [\fB\-\-inherited\-rc\-files\fR] [\fB\-j\fR \fIprefix\fR]
              [\fB\-n\fR] [\fB\-o\fR \fIsite\fR]
              [\fB\-s\fR \fIsite1\fR[,\fIsite2\fR\&...]]
+             [\fB\-\-staging\-site\fR s1=ss1[,s2=ss2[\&.\&.]]
              [\fB\-\-randomdir\fR[=\fIdirname\fR]]
              [\fB\-\-relative\-dir\fR \fIdir\fR]
              [\fB\-\-relative\-submit\-dir\fR \fIdir\fR]
@@ -168,6 +169,8 @@ The following type of clustering styles are currently supported:
 \fBhorizontal\fR
 is the style of clustering in which jobs on the same level are aggregated into larger jobs\&. A level of the workflow is defined as the greatest distance of a node, from the root of the workflow\&. Clustering occurs only on jobs of the same type i\&.e they refer to the same logical transformation in the transformation catalog\&.
 .sp
+Horizontal Clustering can operate in one of two modes\&. a\&. Job count based\&.
+.sp
 The granularity of clustering can be specified by associating either the PEGASUS profile key
 \fIclusters\&.size\fR
 or the PEGASUS profile key
@@ -177,6 +180,20 @@ with the transformation\&.
 The
 \fIclusters\&.size\fR
 key indicates how many jobs need to be clustered into the larger clustered job\&. The clusters\&.num key indicates how many clustered jobs are to be created for a particular level at a particular execution site\&. If both keys are specified for a particular transformation, then the clusters\&.num key value is used to determine the clustering granularity\&.
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 1.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  1." 4.2
+.\}
+Runtime based\&.
+.sp
+To cluster jobs according to runtimes user needs to set one property and two profile keys\&. The property pegasus\&.clusterer\&.preference must be set to the value
+\fIruntime\fR\&. In addition user needs to specify two Pegasus profiles\&. a\&. clusters\&.maxruntime which specifies the maximum duration for which the clustered job should run for\&. b\&. job\&.runtime which specifies the duration for which the job with which the profile key is associated, runs for\&. Ideally, clusters\&.maxruntime should be set in transformation catalog and job\&.runtime should be set for each job individually\&.
+.RE
 .RE
 .sp
 .RS 4
@@ -302,6 +319,15 @@ A comma separated list of execution sites on which the workflow is to be execute
 \fBlocal\fR\&.
 .sp
 In case this option is not specified, all the sites in the site catalog are picked up as candidates for running the workflow\&.
+.RE
+.PP
+\fB\-\-staging\-site\fR \fIs1=ss1\fR[,s2=ss2[\&.\&.]]
+.RS 4
+A comma separated list of key=value pairs , where the key is the execution site and value is the staging site for that execution site\&.
+.sp
+In case of running on a shared filesystem, the staging site is automatically associated by the planner to be the execution site\&. If only a value is specified, then that is taken to be the staging site for all the execution sites\&. e\&.g
+\fB\-\-staging\-site\fR
+local means that the planner will use the local site as the staging site for all jobs in the workflow\&.
 .RE
 .PP
 \fB\-s\fR, \fB\-\-submit\fR
@@ -473,6 +499,20 @@ Specifies the type of site catalog to be used\&. One can use either a text based
 The location of file to use as a site catalog\&. If not specified, then default value of $PEGASUS_HOME/etc/sites\&.xml is used in case of the xml based site catalog and $PEGASUS_HOME/etc/sites\&.txt in case of the text based site catalog\&.
 .RE
 .PP
+\fBpegasus\&.data\&.configuration\fR
+.RS 4
+This property sets up Pegasus to run in different environments\&. This can be set to
+.sp
+\fBsharedfs\fR
+If this is set, Pegasus will be setup to execute jobs on the shared filesystem on the execution site\&. This assumes, that the head node of a cluster and the worker nodes share a filesystem\&. The staging site in this case is the same as the execution site\&.
+.sp
+\fBnonsharedfs\fR
+If this is set, Pegasus will be setup to execute jobs on an execution site without relying on a shared filesystem between the head node and the worker nodes\&.
+.sp
+\fBcondorio\fR
+If this is set, Pegasus will be setup to run jobs in a pure condor pool, with the nodes not sharing a filesystem\&. Data is staged to the compute nodes from the submit host using Condor File IO\&.
+.RE
+.PP
 \fBpegasus\&.code\&.generator\fR
 .RS 4
 The code generator to use\&. By default, Condor submit files are generated for the executable workflow\&. Setting to
@@ -481,7 +521,7 @@ results in Pegasus generating a shell script that can be executed on the submit 
 .RE
 .SH "FILES"
 .PP
-\fB$PEGASUS_HOME/etc/dax\-3\&.2\&.xsd\fR
+\fB$PEGASUS_HOME/etc/dax\-3\&.3\&.xsd\fR
 .RS 4
 is the suggested location of the latest DAX schema to produce DAX output\&.
 .RE

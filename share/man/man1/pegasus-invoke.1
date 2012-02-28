@@ -1,0 +1,119 @@
+'\" t
+.\"     Title: pegasus-invoke
+.\"    Author: [see the "Authors" section]
+.\" Generator: DocBook XSL Stylesheets v1.75.2 <http://docbook.sf.net/>
+.\"      Date: 02/27/2012
+.\"    Manual: \ \&
+.\"    Source: \ \&
+.\"  Language: English
+.\"
+.TH "PEGASUS\-INVOKE" "1" "02/27/2012" "\ \&" "\ \&"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+pegasus-invoke \- invokes a command from a file
+.SH "SYNOPSIS"
+.sp
+.nf
+\fBpegasus\-invoke\fR ( \fBapp\fR | \fB@fn\fR ) [ \fBarg | *@fn\fR [\&.\&.]]
+.fi
+.SH "DESCRIPTION"
+.sp
+The \fBpegasus\-invoke\fR tool invokes a single application with as many arguments as your Unix permits (128k characters for Linux)\&. Arguments are come from two places, either the command\-line as regular arguments, or from a special file, which contains one argument per line\&.
+.sp
+The \fBpegasus\-invoke\fR tool became necessary to work around the 4k argument length limit in Condor\&. It also permits to use arguments inside argument files without worry about shell, Condor or Globus escape necessities\&. All argument file contents are passed as is, one line per argument entry\&.
+.SH "ARGUMENTS"
+.PP
+\fB\-d\fR
+.RS 4
+This option increases the debug level\&. Currently, only debugging or no debugging is distinguished\&. Debug message are generated on
+\fIstdout\fR
+\&. By default, debugging is disabled\&.
+.RE
+.PP
+\fB\-h\fR
+.RS 4
+This option prints the help message and exits the program\&.
+.RE
+.PP
+\fB\-\-\fR
+.RS 4
+This option stops any option processing\&. It may only be necessary, if the application is stated on the command\-line, and starts with a hyphen itself\&.The first argument must either be the application to run as fully\-specified location (either absolute, or relative to current wd), or a file containing one argument per line\&. The
+\fIPATH\fR
+environment variables is
+\fBnot\fR
+used to locate an application\&. Subsequent arguments may either be specified explicitely on the commandline\&. Any argument that starts with an at (@) sign is taken to introduce a filename, which contains one argument per line\&. The textual file may contain long arguments and filenames\&. However, Unices still impose limits on the maximum length of a directory name, and the maximum length of a file name\&. These lengths are not checked, because
+\fBpegasus\-invoke\fR
+is oblivious of the application (e\&.g\&. what argument is a filename, and what argument is a mere string resembling a filename)\&.
+.RE
+.SH "RETURN VALUE"
+.sp
+The \fBpegasus\-invoke\fR tool returns 127, if it was unable to find the application\&. It returns 126, if there was a problem parsing the file\&. All other exit status, including 126 and 127, come from the application\&.
+.SH "SEE ALSO"
+.sp
+\fBpegasus\-kickstart(1)\fR
+.SH "EXAMPLE"
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ echo "/bin/date" > X
+$ echo "\-Isec" >> X
+$ pegasus\-invoke @X
+2005\-11\-03T15:07:01\-0600
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Recursion is also possible\&. Please mind not to use circular inclusions\&. Also note how duplicating the initial at (@) sign will escape its meaning as inclusion symbol\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ cat test\&.3
+This is test 3
+
+$ cat test\&.2
+/bin/echo
+@test\&.3
+@@test\&.3
+
+$ pegasus\-invoke @test\&.2
+This is test 3 @test\&.3
+.fi
+.if n \{\
+.RE
+.\}
+.SH "RESTRICTIONS"
+.sp
+While the arguments themselves may contain files with arguments to parse, starting with an at (@) sign as before, the maximum recursion limit is 32 levels of inclusions\&. It is not possible (yet) to use \fIstdin\fR as source of inclusion\&.
+.SH "HISTORY"
+.sp
+As you may have noticed, \fBpegasus\-invoke\fR had the name \fBinvoke\fR in previous incantations\&. We are slowly moving to the new name to avoid clashes in a larger OS installation setting\&. However, there is no pertinent need to change the internal name, too, as no name clashes are expected\&.
+.SH "AUTHORS"
+.sp
+Mike Wilde <wilde at mcs dot anl dot gov>
+.sp
+Jens\-S\&. Vöckler <voeckler at isi dot edu>
+.sp
+Pegasus \fBhttp://pegasus\&.isi\&.edu/\fR
