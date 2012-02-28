@@ -1583,6 +1583,7 @@ class Workflow:
                     self.db_send_host_info(my_job, record)
             else:
                 # No invocation found, but possibly task records are present...
+                # This can be the case for clustered jobs when Kickstart is not used.
                 my_tasks = {}
                 for record in my_output:
                     if "task" in record:
@@ -1630,7 +1631,8 @@ class Workflow:
                     # No tasks found...
                     logger.info("no tasks found for job %s..." % (my_job._exec_job_id))
         else:
-            # This is the case where we cannot find kickstart records in the output file
+            # This is the case where we cannot find kickstart records
+            # in the output file, this will be true for SUBDAG jobs as well
 
             # Take care of invocation-level notifications
             if self.check_notifications() == True and self._notifications_manager is not None:
@@ -1739,7 +1741,7 @@ class Workflow:
     def update_job_state(self, jobid, sched_id, job_submit_seq, job_state, status, walltime):
         """
         This function updates a	job's state, and also writes
-        a line in our output file.
+        a line in our jobstate.out file.
         """
         # Find job
         if job_submit_seq is None:

@@ -354,9 +354,13 @@ class Job:
         if not my_cluster_found:
             logger.debug("cannot find cluster record in output")
 
-        # Finally, read error file
+        # Finally, read error file only 
         my_err_file = os.path.join(run_dir, self._error_file)
-        my_err_file = my_err_file + ".%03d" % (self._job_output_counter)
+
+        if my_invocation_found:
+            # in my job output there were some invocation records
+            # assume then that they are rotated also
+            my_err_file = my_err_file + ".%03d" % (self._job_output_counter)
 
         try:
             ERR = open(my_err_file, 'r')

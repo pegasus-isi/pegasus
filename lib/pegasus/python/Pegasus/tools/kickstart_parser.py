@@ -482,6 +482,7 @@ class Parser:
             elif self.is_clustered_record(my_buffer) == True:
                 # Check if we want clustered records too
                 if clustered:
+                    # Clustered records are seqexec summary records for clustered jobs
                     # We have a clustered record, parse it!
                     my_reply.append(self.parse_clustered_record(my_buffer))
             elif self.is_task_record(my_buffer) == True:
