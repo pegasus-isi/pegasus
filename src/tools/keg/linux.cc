@@ -34,7 +34,7 @@ pegasus_statfs( char* buffer, size_t capacity )
 
     while ( (mtab = getfsent()) ) {
       struct statvfs vfs; 
-      if ( mtab->fs_spec[0] == '/' && statvfs( mtab->fs_file, &vfs ) != -1 ) {
+      if ( mtab->fs_file[0] == '/' && statvfs( mtab->fs_file, &vfs ) != -1 ) {
 	if ( vfs.f_bsize > 0 && vfs.f_blocks > 0 ) { 
 	  char total[16], avail[16]; 
 	  unsigned long long size = vfs.f_frsize;
