@@ -3151,7 +3151,8 @@ on="3.2" name="superdiamond" index="0" count="1"&gt;
       clusters which would not allow you install anything on the compute
       nodes.</para>
 
-      <para>For additional information visit running_workflows page.</para>
+      <para>For additional information visit pegasus-lite section in <link
+      linkend="running_workflows">running workflows</link> page.</para>
 
       <section>
         <title>CondorIO</title>
@@ -3170,7 +3171,7 @@ on="3.2" name="superdiamond" index="0" count="1"&gt;
         <programlisting><emphasis role="bold">$ cd $HOME/pegasus-wms</emphasis><emphasis
             role="bold">
 
-$ pegasus-plan -Dpegasus.data.configuration=condorio --dir `pwd`/dags --sites cluster --output local --nocleanup --force \
+$ pegasus-plan -Dpegasus.data.configuration=condorio --dir `pwd`/dags --sites condor-pool --output local --nocleanup --force \
                --dax `pwd`/dax/montage.dax --submit -v<emphasis>
 
 2012.02.24 14:33:09.312 PST: [INFO] event.pegasus.parse.dax dax.id /home/tutorial/pegasus-wms/dax/montage.dax  - STARTED 
@@ -3243,7 +3244,7 @@ $ pegasus-plan -Dpegasus.data.configuration=condorio --dir `pwd`/dags --sites cl
         <programlisting><emphasis role="bold">$ cd $HOME/pegasus-wms</emphasis><emphasis
             role="bold">
 
-$ pegasus-plan -Dpegasus.data.configuration=nonsharedfs --dir `pwd`/dags --sites cluster --staging-site local --output local --nocleanup --force \
+$ pegasus-plan -Dpegasus.data.configuration=nonsharedfs --dir `pwd`/dags --sites condor-pool --staging-site local --output local --nocleanup --force \
                --dax `pwd`/dax/montage.dax --submit -v<emphasis>
 
 2012.02.24 14:26:16.770 PST: [INFO] event.pegasus.parse.dax dax.id /home/tutorial/pegasus-wms/dax/montage.dax  - STARTED 
