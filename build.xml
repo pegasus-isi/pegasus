@@ -295,49 +295,13 @@
     <echo>groff.available=${groff.available}</echo>
   </target>
 
-  <target name="man-ps" depends="validate-groff,build-setup" 
-          if="groff.available">
-    <mkdir dir="${dist.man}"/>
-    <apply executable="${basedir}/libexec/groff.sh" dest="${dist.man}">
-      <srcfile/>
-      <targetfile/>
-      <fileset dir="share/man/man1" includes="*.1"/>
-      <mapper type="glob" from="*.1" to="*.ps"/>
-    </apply>
-  </target>
-
-  <target name="man-txt" depends="validate-groff,build-setup" 
-          if="groff.available">
-    <mkdir dir="${dist.man}"/>
-    <apply executable="${basedir}/libexec/groff.sh" dest="${dist.man}">
-      <srcfile/>
-      <targetfile/>
-      <fileset dir="share/man/man1" includes="*.1"/>
-      <mapper type="glob" from="*.1" to="*.txt"/>
-    </apply>
-  </target>
-
-  <target name="man-html" depends="validate-groff,build-setup" 
-          if="groff.available">
-    <mkdir dir="${dist.man}"/>
-    <apply executable="${basedir}/libexec/groff.sh" dest="${dist.man}">
-      <srcfile/>
-      <targetfile/>
-      <fileset dir="share/man/man1" includes="*.1"/>
-      <mapper type="glob" from="*.1" to="*.html"/>
-    </apply>
-  </target>
-
-  <target name="man-roff" depends="build-setup"
+  <target name="man-install" depends="build-setup"
           description="[internal] Copies roff sources to distribution">
     <mkdir dir="${dist.man}/man1"/>
     <copy preservelastmodified="true" todir="${dist.man}/man1">
       <fileset dir="share/man/man1" includes="*.1"/>
     </copy>
   </target>
-
-  <target name="man" depends="man-roff,man-ps,man-html,man-txt"
-          description="Copies and formats the client tool manpages"/>
 
   <target name="dist-worker" depends="build-setup,ctools-all"
           description="Creates a distribution of only workflow runtime tools">
@@ -398,7 +362,7 @@
 
 
 
-  <target name="dist" depends="jar,vdl-jar,man-roff,ctools-all,externals"
+  <target name="dist" depends="jar,vdl-jar,man-install,ctools-all,externals"
           description="Sets up the dist directory">
     <!-- bin -->
     <mkdir dir="${dist.bin}"/>
