@@ -2,12 +2,12 @@
 .\"     Title: pegasus-version
 .\"    Author: [see the "Authors" section]
 .\" Generator: DocBook XSL Stylesheets v1.75.2 <http://docbook.sf.net/>
-.\"      Date: 02/27/2012
+.\"      Date: 02/28/2012
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "PEGASUS\-VERSION" "1" "02/27/2012" "\ \&" "\ \&"
+.TH "PEGASUS\-VERSION" "1" "02/28/2012" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -63,38 +63,6 @@ $ pegasus\-version \-f
 .if n \{\
 .RE
 .\}
-.sp
-The reported version may sometimes not be the version you would expect, if the Pegasus jar file got updated but not the remainder of the installation environment\&. To check this case, you use match mode:
-.sp
-.if n \{\
-.RS 4
-.\}
-.nf
-$ pegasus\-version \-m
-Compiled into PEGASUS: 20110706191019Z x86_64_cent_5\&.6
-Installation provides: 20110706191019Z x86_64_cent_5\&.6
-OK: Internal version matches installation\&.
-Complete version info: 3\&.1\&.0cvs\-x86_64_cent_5\&.6\-20110706191019Z
-.fi
-.if n \{\
-.RE
-.\}
-.sp
-The match mode implies long mode, and will thus show the full version as part of its output\&.
-.sp
-In quiet mode, which can only be applied to match mode, no output is written unless there is an error\&. You would use quiet mode to check the exit code of pegasus\-version to determine a problem while being in a scripted environment\&.
-.sp
-.if n \{\
-.RS 4
-.\}
-.nf
-$ pegasus\-version \-mq
-$ echo $?
-0
-.fi
-.if n \{\
-.RE
-.\}
 .SH "OPTIONS"
 .PP
 \fB\-D\fR\fIproperty=value\fR
@@ -123,23 +91,6 @@ This option is an alias for
 \fB\-\-full\fR\&.
 .RE
 .PP
-\fB\-m\fR, \fB\-\-match\fR
-.RS 4
-In match mode, the internal version is checked against the external version of the installation\&. This mode will detect if a jar has been updated but not the installation it is in\&. Mismatches will result in an exit code of 1\&.
-.sp
-In addition,
-\fB\-\-match\fR
-implies
-\fB\-\-full\fR\&. It will print the full version number, unless
-\fB\-\-quiet\fR
-is active\&.
-.RE
-.PP
-\fB\-q\fR, \fB\-\-quiet\fR
-.RS 4
-This flag is to be combined with match mode above only\&. If present, the match mode will not display any message, if the versions match (all is well)\&. In case of a mismatch, it will only print the error and exit with status 1\&.
-.RE
-.PP
 \fB\-V\fR, \fB\-\-version\fR
 .RS 4
 Displays the version of the Pegasus planner you are using\&.
@@ -154,20 +105,10 @@ is ignored in this tool\&. However, to provide a uniform interface for all tools
 The program will usually return with success (0)\&. In match mode, if the internal version does not match the external installation, an exit code of 1 is returned\&. If run\-time errors are detected, an exit code of 2 is returned, 3 for fatal errors\&.
 .SH "ENVIRONMENT VARIABLES"
 .PP
-\fBPEGASUS_HOME\fR
-.RS 4
-is the suggested base directory of your the execution environment\&.
-.RE
-.PP
 \fBJAVA_HOME\fR
 .RS 4
 should be set and point to a valid location to start the intended Java virtual machine as
 \fI$JAVA_HOME/bin/java\fR\&.
-.RE
-.PP
-\fBCLASSPATH\fR
-.RS 4
-should be set to contain all necessary files for the execution environment\&.
 .RE
 .SH "EXAMPLE"
 .sp
@@ -180,12 +121,6 @@ $ pegasus\-version
 
 $ pegasus\-version \-f
 3\&.1\&.0cvs\-x86_64_cent_5\&.6\-20110706191019Z
-
-$ pegasus\-version \-m
-Compiled into PEGASUS: 20110706191019Z x86_64_cent_5\&.6
-Installation provides: 20110706191019Z x86_64_cent_5\&.6
-OK: Internal version matches installation\&.
-Complete version info: 3\&.1\&.0cvs\-x86_64_cent_5\&.6\-20110706191019Z
 .fi
 .if n \{\
 .RE
