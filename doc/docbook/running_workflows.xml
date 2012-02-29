@@ -785,7 +785,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
       </tip>
     </section>
 
-    <section>
+    <section id="non_shared_fs">
       <title>Non Shared Filesystem</title>
 
       <para>In this setup , Pegasus runs workflows on local file-systems of

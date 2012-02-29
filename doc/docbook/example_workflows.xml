@@ -5,7 +5,9 @@
   <title>Example Workflows</title>
 
   <para>These examples are included in the Pegasus distribution and can be
-  found under <filename>$PEGASUS_HOME/examples/</filename></para>
+  found under <filename>share/pegasus/examples</filename> in your Pegasus
+  install (<filename>/usr/share/pegasus/examples</filename> for native
+  packages)</para>
 
   <section id="grid_examples">
     <title>Grid Examples</title>
@@ -22,9 +24,9 @@
       grid. This is to highlight the available DAX APIs which are Java, Perl
       and Python. The examples can be found under:</para>
 
-      <programlisting>examples/grid-blackdiamond-java/
-examples/grid-blackdiamond-perl/
-examples/grid-blackdiamond-python/</programlisting>
+      <programlisting>share/pegasus/examples/grid-blackdiamond-java/
+share/pegasus/examples/grid-blackdiamond-perl/
+share/pegasus/examples/grid-blackdiamond-python/</programlisting>
 
       <para>The workflow has 4 nodes, layed out in a diamond shape, with files
       being passed between them (f.*):</para>
@@ -77,16 +79,16 @@ examples/grid-blackdiamond-python/</programlisting>
 
       <para>This example can be found under</para>
 
-      <programlisting><filename>examples/grid-montage/</filename></programlisting>
+      <programlisting><filename>share/pegasus/examples/grid-montage/</filename></programlisting>
 
       <para>The NASA IPAC Montage (<ulink
       url="http://montage.ipac.caltech.edu/">http://montage.ipac.caltech.edu/</ulink>)
       workflow projects/montages a set of input images from telescopes like
       Hubble and end up with images like <ulink
-          url="http://montage.ipac.caltech.edu/images/m104.jpg">http://montage.ipac.caltech.edu/images/m104.jpg</ulink> . The
-      test workflow is for a 1 by 1 degrees tile. It has about 45 input images
-      which all have to be projected, background modeled and adjusted to come
-      out as one seamless image.</para>
+      url="http://montage.ipac.caltech.edu/images/m104.jpg">http://montage.ipac.caltech.edu/images/m104.jpg</ulink>
+      . The test workflow is for a 1 by 1 degrees tile. It has about 45 input
+      images which all have to be projected, background modeled and adjusted
+      to come out as one seamless image.</para>
 
       <para>Just like the <xref linkend="example_black_diamond">
            black diamond example 
@@ -103,7 +105,7 @@ examples/grid-blackdiamond-python/</programlisting>
 
       <para>This example can be found under</para>
 
-      <programlisting><filename>examples/grid-rosetta/</filename></programlisting>
+      <programlisting><filename>share/pegasus/examples/grid-rosetta/</filename></programlisting>
 
       <para>Rosetta (<ulink
       url="http://www.rosettacommons.org/">http://www.rosettacommons.org/</ulink>)
@@ -143,26 +145,26 @@ examples/grid-blackdiamond-python/</programlisting>
     <title>Condor Examples</title>
 
     <section>
-      <title>Black Diamond</title>
+      <title>Black Diamond - condorio</title>
 
-      <para>This example can be found under</para>
+      <para>There are a set of Condor examples available, highlighting
+      different <link linkend="data_staging_configuration">data staging
+      configurations</link>.The most basic one is condorio, and the example
+      can be found under:</para>
 
-      <programlisting><filename>examples/condor-blackdiamond/</filename></programlisting>
+      <programlisting><filename>share/pegasus/examples/condor-blackdiamond-condorio/</filename></programlisting>
 
       <para>This example is using the same abstract workflow as the <xref
           linkend="example_black_diamond">
            Black Diamond 
         </xref> grid example above, and can be executed either on the submit
       machine (universe="local") or on a local Condor pool
-      (universe="vanilla"). The latter requires a shared filesystem for the
-      pool.</para>
+      (universe="vanilla").</para>
 
       <para>You can run this example with the <filename>./submit</filename>
-      script, but you have to pass an argument: <emphasis>condor</emphasis>
-      for universe=local or <emphasis>condorpool</emphasis> for
-      universe="vanilla". Example:</para>
+      script. Example:</para>
 
-      <programlisting>$ <emphasis role="bold">./submit condorpool</emphasis></programlisting>
+      <programlisting>$ <emphasis role="bold">./submit</emphasis></programlisting>
     </section>
   </section>
 
@@ -188,47 +190,6 @@ pegasus.code.generator = Shell</programlisting>
 
       <para>You can run this example with the <filename>./submit</filename>
       script.</para>
-    </section>
-  </section>
-
-  <section id="glideinwms_examples">
-    <title>GlideinWMS Examples</title>
-
-    <section>
-      <title>NASA/IPAC Montage</title>
-
-      <para>By default Pegasus generates Condor-G compute jobs, but there are
-      a couple of other job styles available. One is to run the workflow on a
-      local Condor pool (<emphasis>pegasus.style=condor</emphasis>), and an
-      extension of that is the glideinWMS style
-      (<emphasis>pegasus.style=glideinwms</emphasis>).</para>
-
-      <para>glideinWMS is a Condor glidein system which creates an Condor
-      overlay over one or more grid resources. More information can be found
-      at <ulink
-      url="http://www.uscms.org/SoftwareComputing/Grid/WMS/glideinWMS/">http://www.uscms.org/SoftwareComputing/Grid/WMS/glideinWMS/</ulink>.
-      A glidein system is usually better than Condor-G at handling short jobs.
-      Because of the overlay effect, hides some of the issues with the low
-      level grid protocol, and provides a more homogeneous user
-      environment.</para>
-
-      <para>In this example, Pegasus is told to use the glideinwms styple by
-      setting the style property in the site catalog:</para>
-
-      <programlisting>&lt;profile namespace="pegasus" key="style"&gt;glideinwms&lt;/profile&gt;</programlisting>
-
-      <para>Once submitted, the jobs have attributes fitting for a glideinWMS
-      setup:</para>
-
-      <programlisting>universe = vanilla
-rank = DaemonStartTime
-requirements = ((GLIDEIN_Entry_Name == "ISIViz") || (TARGET.Pegasus_Site == "ISIViz")) \
-               &amp;&amp; (IS_MONITOR_VM == False) &amp;&amp; (Arch != "") &amp;&amp; (OpSys != "") \
-               &amp;&amp; (Disk != -42) &amp;&amp; (Memory &gt; 1) &amp;&amp; (FileSystemDomain != "")
-</programlisting>
-
-      <para>This example should work against other Condor based glidein
-      systems as well by changing the style to condor.</para>
     </section>
   </section>
 
