@@ -627,7 +627,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
     </section>
   </section>
 
-  <section>
+  <section id="data_staging_configuration">
     <title>Data Staging Configuration</title>
 
     <para>Pegasus can be broadly setup to run workflows in the following
@@ -993,7 +993,7 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
         <imageobject>
           <imagedata align="center"
                      fileref="images/data-configuration-pegasuslite.png"
-                     id="Figure13" role="" scale="" valign="middle" width=""
+                     id="image-pegasuslite" role="" scale="" valign="middle" width=""
                      wordsize="" />
         </imageobject>
       </mediaobject>

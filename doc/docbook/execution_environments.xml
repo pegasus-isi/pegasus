@@ -54,7 +54,7 @@
   Condor pool and the rest are executed on remote resources using
   Condor-G.</para>
 
-  <section>
+  <section id="localhost">
     <title>General execution environment: Localhost</title>
 
     <para>In this configuration , Pegasus schedules the jobs to run locally on
@@ -65,7 +65,7 @@
     universe local.</para>
   </section>
 
-  <section>
+  <section id="condor_pool">
     <title>General execution environment: Condor Pool</title>
 
     <para>A Condor pool is a set of machines that use Condor for resource
@@ -254,7 +254,7 @@ local-condor pegasus::dirmanager /path/on/submithost/pegasus/bin/dirmanager INST
     </section>
   </section>
 
-  <section>
+  <section id="globus_gram">
     <title>General execution environment: Globus GRAM enabled Cluster</title>
 
     <para><figure id="concepts-fig-site-layout">
@@ -348,7 +348,7 @@ local-condor pegasus::dirmanager /path/on/submithost/pegasus/bin/dirmanager INST
     recommended that the GridFTP server has its own machine.</para>
   </section>
 
-  <section>
+  <section id="glite">
     <title>General execution environment: Glite</title>
 
     <para>This section describes the various changes required in the site
@@ -499,13 +499,13 @@ local-condor pegasus::dirmanager /path/on/submithost/pegasus/bin/dirmanager INST
     </section>
   </section>
 
-  <section>
+  <section id="campus_cluster">
     <title>Campus Cluster</title>
 
     <para>TODO</para>
   </section>
 
-  <section>
+  <section id="xsede">
     <title>XSEDE</title>
 
     <para>Two alternatives: GRAM or glideins.</para>
@@ -602,11 +602,11 @@ local-condor pegasus::dirmanager /path/on/submithost/pegasus/bin/dirmanager INST
     </section>
   </section>
 
-  <section>
+  <section id="open_science_grid">
     <title>Open Science Grid / glideinWMS</title>
 
     <section>
-      <para><ulink url="???">glideinWMS</ulink> is a glidein system widely
+        <para><ulink url="http://www.uscms.org/SoftwareComputing/Grid/WMS/glideinWMS/">glideinWMS</ulink> is a glidein system widely
       used on Open Science Grid. Pegasus has a convenience style named
       glideinWMS to make running workflows on top of glideinWMS easy. This
       style is similar to the Condor style, but provides some more defaults
@@ -647,7 +647,7 @@ requirements = ((GLIDEIN_Entry_Name == "isi_iz") || (TARGET.Pegasus_Site == "isi
     </section>
   </section>
 
-  <section>
+  <section id="futuregrid_nimbus">
     <title>FutureGrid Cloud / Nimbus</title>
 
     <para><figure id="concepts-fig-cloud-layout">

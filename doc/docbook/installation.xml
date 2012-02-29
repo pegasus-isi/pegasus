@@ -97,7 +97,7 @@ Python 2.6.2</programlisting></para>
 
     <para>The preferred way to install Pegasus is with native (RPM/DEB)
     packages. It is recommended that you also install Condor (<ulink
-    url="???">yum</ulink>, <ulink
+    url="http://research.cs.wisc.edu/condor/yum/">yum</ulink>, <ulink
     url="http://research.cs.wisc.edu/condor/debian/">debian</ulink>) from
     native packages.</para>
 

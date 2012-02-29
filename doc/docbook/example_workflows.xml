@@ -83,7 +83,7 @@ examples/grid-blackdiamond-python/</programlisting>
       url="http://montage.ipac.caltech.edu/">http://montage.ipac.caltech.edu/</ulink>)
       workflow projects/montages a set of input images from telescopes like
       Hubble and end up with images like <ulink
-      url="???">http://montage.ipac.caltech.edu/images/m104.jpg</ulink> . The
+          url="http://montage.ipac.caltech.edu/images/m104.jpg">http://montage.ipac.caltech.edu/images/m104.jpg</ulink> . The
       test workflow is for a 1 by 1 degrees tile. It has about 45 input images
       which all have to be projected, background modeled and adjusted to come
       out as one seamless image.</para>

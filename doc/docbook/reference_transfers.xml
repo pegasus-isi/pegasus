@@ -48,7 +48,7 @@
   before hand. This chapter gives an overview of how transfers of data and
   executables is managed in Pegasus.</para>
 
-  <section id="data_staging_configuration">
+  <section id="ref_data_staging_configuration">
     <title>Data Staging Configuration</title>
 
     <para>Pegasus can be broadly setup to run workflows in the following
@@ -397,7 +397,7 @@
     </section>
   </section>
 
-  <section>
+  <section id="local_vs_remote_transfers">
     <title>Local versus Remote Transfers</title>
 
     <para>As far as possible, Pegasus will ensure that the transfer jobs added
@@ -852,15 +852,106 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
       </tgroup>
     </table>
 
-    <para> The only case, where the create dir and cleanup jobs are scheduled
+    <para>The only case, where the create dir and cleanup jobs are scheduled
     to run remotely is when for the staging site, a file server is
     specified.</para>
   </section>
 
-  <section>
+  <section id="cred_staging">
     <title>Credentials Staging</title>
 
-    <para>[To be filled by Mats]</para>
+    <para>Pegasus tries to do data staging from localhost by default, but some
+    data scenarios makes some <link linkend="local_vs_remote_transfers">remote jobs do data
+    staging</link>. An example of such a case is when running in <link
+    linkend="ref_data_staging_configuration">nonsharedfs</link> mode. Depending on
+    the transfer protocols used, the job may have to carry credentials to
+    enable these datat transfers. To specify where which credential to use and
+    where Pegasus can find it, use environment variable profiles in your site
+    catalog. The supported credential types are X.509 grid proxies, Amazon AWS
+    S3 keys, iRods password and SSH keys.</para>
+
+    <section id="x509_cred">
+      <title>X.509 Grid Proxies</title>
+
+      <para>If the grid proxy is required by transfer jobs, and the proxy is
+      in the standard location, Pegasus will pick the proxy up automatically.
+      For non-standard proxy locations, you can use the
+      <varname>X509_USER_PROXY</varname> environment variable. Site catalog
+      example:</para>
+
+      <programlisting>&lt;profile namespace="env" key="X509_USER_PROXY" &gt;/some/location/x509up&lt;/profile&gt;</programlisting>
+    </section>
+
+    <section id="s3_cred">
+      <title>Amazon AWS S3</title>
+
+      <para>If a workflow is using s3 URLs, Pegasus has to be told where to
+      find the .s3cfg file. This format of the file is described in the <link
+      linkend="cli-pegasus-s3">pegaus-s3 command line client's man
+      page</link>. For the file to be picked up by the workflow, set the
+      <varname>S3CFG</varname> environment profile to the location of the
+      file. Site catalog example:</para>
+
+      <programlisting>&lt;profile namespace="env" key="S3CFG" &gt;/home/user/.s3cfg&lt;/profile&gt;</programlisting>
+    </section>
+
+    <section id="irods_cred">
+      <title>iRods Password</title>
+
+      <para>If a workflow is using irods URLs, Pegasus has to be given an
+      irodsEnv file. It is a standard file, with the addtion of an password
+      attribute. Example:</para>
+
+      <programlisting># iRODS personal configuration file.
+#
+# iRODS server host name:
+irodsHost 'iren.renci.org'
+# iRODS server port number:
+irodsPort 1259
+
+# Default storage resource name:
+irodsDefResource 'renResc'
+# Home directory in iRODS:
+irodsHome '/tip-renci/home/mats'
+# Current directory in iRODS:
+irodsCwd '/tip-renci/home/mats'
+# Account name:
+irodsUserName 'mats'
+# Zone:
+irodsZone 'tip-renci' 
+
+# this is used with Pegasus
+irodsPassword 'somesecretpassword'</programlisting>
+
+      <para>The location of the file can be given to the workflow using the
+      <varname>irodsEnvFile</varname> environment profile. Site catalog
+      example:</para>
+
+      <programlisting>&lt;profile namespace="env" key="irodsEnvFile" &gt;/home/user/.irods/.irodsEnv&lt;/profile&gt;</programlisting>
+    </section>
+
+    <section id="ssh_cred">
+      <title>SSH Keys</title>
+
+      <para>New in Pegasus 4.0 is the support for data staging with scp using
+      ssh public/private key authentication. In this mode, Pegasus transports
+      a private key with the jobs. The storage machines will have to have the
+      public part of the key listed in ~/.ssh/authorized_keys.</para>
+
+      <warning>
+        <para>SSH keys should be handled in a secure manner. In order to keep
+        your personal ssh keys secure, It is recommended that a special set of
+        keys are created for use with the workflow. Note that Pegasus will not
+        pick up ssh keys automatically. The user will have to specify which
+        key to use with <varname>SSH_PRIVATE_KEY</varname>.</para>
+      </warning>
+
+      <para>The location of the ssh private key can be specified with the
+      <varname>SSH_PRIVATE_KEY</varname> environment profile. Site catalog
+      example:</para>
+
+      <programlisting>&lt;profile namespace="env" key="SSH_PRIVATE_KEY" &gt;/home/user/wf/wfsshkey&lt;/profile&gt;</programlisting>
+    </section>
   </section>
 
   <section>
