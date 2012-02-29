@@ -46,7 +46,7 @@
       </mediaobject>
     </figure>
 
-    <section>
+    <section id="schema_upgrade_tool">
       <title>Stampede Schema Upgrade Tool</title>
 
       <para>Starting Pegasus 4.x the monitoring and statistics database schema
@@ -206,7 +206,7 @@ E.g.<emphasis role="bold">
       role="bold">--replay</emphasis> option should be used when running it
       manually.</para>
 
-      <section id="schema_upgrade_tool">
+      <section>
         <title>Populating to different backend databases</title>
 
         <para>In addition to SQLite, <emphasis
