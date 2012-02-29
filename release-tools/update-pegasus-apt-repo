@@ -3,13 +3,13 @@
 set -e
 
 REPO_DIR=`mktemp -d`
-REMOTE_REPO_DIR=/lfs2/webspace/pegasus4/wms/download/debian
+REMOTE_REPO=download.pegasus.isi.edu:/data/webspace/download.pegasus.isi.edu/wms/download/debian
 
 rm -rf $REPO_DIR
-rsync -a -v -e ssh pegasus.isi.edu:$REMOTE_REPO_DIR/ $REPO_DIR/
+rsync -a -v -e ssh $REMOTE_REPO/ $REPO_DIR/
 
 # debian
-for DIST in lenny squeeze; do
+for DIST in squeeze; do
 
     for ARCH in i386 amd64; do
         echo
@@ -30,7 +30,7 @@ for DIST in lenny squeeze; do
 
 done
 
-rsync -a -v -e ssh $REPO_DIR/ pegasus.isi.edu:$REMOTE_REPO_DIR/
+rsync -a -v -e ssh $REPO_DIR/ $REMOTE_REPO/
 
 rm -rf $REPO_DIR
 
