@@ -70,6 +70,8 @@ EOF
 sub site_snippet($) {
     my $home = shift;
     my @u = POSIX::uname(); 
+    $u[2] =~ s/^(\d+(\.\d+(\.\d+)?)?).*/$1/;
+    $u[4] =~ s/i.86/x86/;
 
     # check for presence of Globus
     my $g_l = $ENV{'GLOBUS_LOCATION'};
