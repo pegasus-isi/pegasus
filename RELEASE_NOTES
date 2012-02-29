@@ -28,8 +28,38 @@ NEW FEATURES
      - Java
      - Shell
 
+3) Improved Credential Handling
+   
+   Pegasus 4.0 has improved credential handling. The planner while
+   planning the worklfow automatically associates the jobs with the
+   credentials it may require. This is done by inspecting the URL's
+   for the files a job requires. 
 
-3) runtime based clustering
+   More details on how the credentials are set can be found here
+   http://pegasus.isi.edu/wms/docs/4.0/reference.php#cred_staging
+
+
+4) New clients for directory creation and file cleanup
+
+   Starting 4.0, Pegasus has changed the way how the scratch
+   directories are created on the staging site. The planner now
+   prefers to schedule the directory creation and cleanup jobs
+   locally. The jobs refer to python based tools, that call out to
+   protocol specific clients to determine what client is picked
+   up. For protocols, where specific remote cleanup and directory
+   creation clients don't exist ( for example gridftp ), the python
+   tools rely on the corresponding transfer tool to create a directory
+   by initiating a transfer of an empty file. The python clients used
+   to create directories and remove files are called
+      - pegasus-create-dir
+      - pegasus-cleanup
+
+    More details about the clients can be found in the transfers
+    chapter
+    
+    http://pegasus.isi.edu/wms/docs/trunk/reference.php#transfer
+
+5) Runtime based clustering
 
    Users can now do horizontal clustering based on job runtimes. If
    the jobs in the DAX are annotated with job runtimes ( use of
@@ -42,13 +72,13 @@ NEW FEATURES
    guide. 
    http://pegasus.isi.edu/wms/docs/4.0/reference.php#job_clustering
 
-4) CSV formatted output files for pegasus statistcs
+6) CSV formatted output files for pegasus statistcs
    
    pegasus-statistics now generates it's output in a csv formatted
    file also, in addition to the txt files it creates. This is useful,
    for importing statistics in tools like Mircrosoft Excel.
 
-5) Tracking of job exitcode in the stampede schema
+7) Tracking of job exitcode in the stampede schema
    
    The stampede database schema was updated to associate a job
    exitcode field with the job_instance table. This makes it easier
@@ -62,7 +92,7 @@ NEW FEATURES
 
    http://pegasus.isi.edu/wms/docs/4.0/monitoring_debugging_stats.php#monitoring_pegasus-monitord
    
-6) Change to how exitcode is stored in the stampede database
+8) Change to how exitcode is stored in the stampede database
    
    Kickstart records capture raw status in addition to the exitcode
    . The exitcode is derived from the raw status. Starting with
@@ -74,7 +104,7 @@ NEW FEATURES
    pegasus-statistics then convert the raw status to exitcode when
    retrieving from the database.
 
-7) Accounting for MPI jobs in the stampede database
+9) Accounting for MPI jobs in the stampede database
 
    Starting with the 4.0 release, there is a multiplier factor
    associated with the jobs in the job_instance table. It defaults to
@@ -85,7 +115,7 @@ NEW FEATURES
 
    Full details in the pegasus-monitord chapter.
 
-8) Stampede database upgrade tool
+10) Stampede database upgrade tool
 
    Starting with the 4.0 release, users can use the stampede database
    upgrade tool to upgrade a 3.1.x database to the latest version.
