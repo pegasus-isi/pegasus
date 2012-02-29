@@ -1,6 +1,102 @@
 $Id$
 
 ===============================
+Release Notes for PEGASUS 4.0.0
+===============================
+This is a major release of Pegasus that overhauls the data management
+for the workflows
+
+
+NEW FEATURES
+--------------
+
+1)
+
+2) Move to FHS layout
+
+   Pegasus 4.0 is the first release of Pegasus which is Filesystem
+   Hierarchy Standard (FHS) compliant. The native packages no longer
+   installs under /opt. Instead, pegasus-* binaries are in /usr/bin/
+   and example workflows can be found under
+   /usr/share/pegasus/examples/.
+
+   To find Pegasus system components, a pegasus-config tool is
+   provided. pegasus-config supports setting up the environment for
+
+     - Python
+     - Perl
+     - Java
+     - Shell
+
+
+3) runtime based clustering
+
+   Users can now do horizontal clustering based on job runtimes. If
+   the jobs in the DAX are annotated with job runtimes ( use of
+   pegasus profile key job.runtime ) , then Pegasus can horizontally
+   cluster the jobs in such a way that the clustered job will not run
+   more than a maxruntime ( specified by use of profile
+   clusters.maxruntime). 
+
+   More details can be found in the clustering chapter of the online
+   guide. 
+   http://pegasus.isi.edu/wms/docs/4.0/reference.php#job_clustering
+
+4) CSV formatted output files for pegasus statistcs
+   
+   pegasus-statistics now generates it's output in a csv formatted
+   file also, in addition to the txt files it creates. This is useful,
+   for importing statistics in tools like Mircrosoft Excel.
+
+5) Tracking of job exitcode in the stampede schema
+   
+   The stampede database schema was updated to associate a job
+   exitcode field with the job_instance table. This makes it easier
+   for the user and the mining tools to determine whether a job
+   succeeded for failed at the Condor level.
+
+   Earlier that was handled at query time by looking up the last state
+   in the jobstate table.
+
+   The updated stampede schema can be found here
+
+   http://pegasus.isi.edu/wms/docs/4.0/monitoring_debugging_stats.php#monitoring_pegasus-monitord
+   
+6) Change to how exitcode is stored in the stampede database
+   
+   Kickstart records capture raw status in addition to the exitcode
+   . The exitcode is derived from the raw status. Starting with
+   Pegasus 4.0 release, all exitcode columns ( i.e invocation and job
+   instance table columns ) are stored with the raw status by
+   pegasus-monitord. If an exitcode is encountered while parsing the
+   dagman log files , the value is converted to the corresponding raw
+   status before it is stored. All user tools, pegasus-analyzer and
+   pegasus-statistics then convert the raw status to exitcode when
+   retrieving from the database.
+
+7) Accounting for MPI jobs in the stampede database
+
+   Starting with the 4.0 release, there is a multiplier factor
+   associated with the jobs in the job_instance table. It defaults to
+   one, unless the user associates a Pegasus profile key named cores
+   with the job in the DAX. The factor can be used for getting more
+   accurate accounting statistics for jobs that run on multiple
+   processors/cores or mpi jobs.
+
+   Full details in the pegasus-monitord chapter.
+
+8) Stampede database upgrade tool
+
+   Starting with the 4.0 release, users can use the stampede database
+   upgrade tool to upgrade a 3.1.x database to the latest version.
+
+   All statistics and debugging tools will complain if they determine
+   at runtime that the database is from an old version.
+
+   More details can be found in the migration guide
+   http://pegasus.isi.edu/wms/docs/4.0/useful_tips.php#id727831
+
+===============================
 Release Notes for PEGASUS 3.1.1
 ===============================
 This is a minor release, that fixes some bugs and has minor enhancements. 
