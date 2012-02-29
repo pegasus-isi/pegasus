@@ -23,7 +23,7 @@
       can be found under /usr/share/pegasus/examples/.</para>
 
       <para>To find Pegasus system components, a pegasus-config tool is
-      provided. pegasus-config supports setting up the environment for </para>
+      provided. pegasus-config supports setting up the environment for</para>
 
       <itemizedlist>
         <listitem>
@@ -52,11 +52,74 @@
     </section>
 
     <section>
-      <title>Stampede Schema Upgrade Tool [Gaurang]</title>
+      <title>Stampede Schema Upgrade Tool</title>
 
-      <para>Include a reference to the new stampede schema. Talk about how to
-      use the upgrade tool. Where it is. Include sample steps to highlight how
-      to use it.</para>
+      <para>Starting Pegasus 4.x the monitoring and statistics database schema
+      has changed. If you want to use the pegasus-statistics, pegasus-analyzer
+      and pegasus-plots against a 3.x database you will need to upgrade the
+      schema first using the schema upgrade tool
+      /usr/share/pegasus/sql/schema_tool.py or
+      /path/to/pegasus-4.x/share/pegasus/sql/schema_tool.py</para>
+
+      <para>Upgrading the schema is required for people using the MySQL
+      database for storing their monitoring information if it was setup with
+      3.x monitoring tools.</para>
+
+      <para>If your setup uses the default SQLite database then the new
+      databases run with Pegasus 4.x are automatically created with the
+      correct schema. In this case you only need to upgrade the SQLite
+      database from older runs if you wish to query them with the newer
+      clients.</para>
+
+      <para>To upgrade the database</para>
+
+      <programlisting>For SQLite Database
+
+<emphasis role="bold">cd /to/the/workflow/directory/with/3.x.monitord.db</emphasis>
+
+Check the db version<emphasis role="bold">
+
+/usr/share/pegasus/sql/schema_tool.py -c connString=sqlite:////to/the/workflow/directory/with/workflow.stampede.db</emphasis>
+2012-02-29T01:29:43.330476Z INFO   netlogger.analysis.schema.schema_check.SchemaCheck.init | 
+2012-02-29T01:29:43.330708Z INFO   netlogger.analysis.schema.schema_check.SchemaCheck.check_schema.start | 
+2012-02-29T01:29:43.348995Z INFO   netlogger.analysis.schema.schema_check.SchemaCheck.check_schema 
+                                   | Current version set to: 3.1. 
+2012-02-29T01:29:43.349133Z ERROR  netlogger.analysis.schema.schema_check.SchemaCheck.check_schema 
+                                   | Schema version 3.1 found - expecting 4.0 - database admin will need to run upgrade tool.
+
+
+Convert the Database to be version 4.x compliant<emphasis role="bold">
+
+/usr/share/pegasus/sql/schema_tool.py -u connString=sqlite:////to/the/workflow/directory/with/workflow.stampede.db
+</emphasis>2012-02-29T01:35:35.046317Z INFO   netlogger.analysis.schema.schema_check.SchemaCheck.init | 
+2012-02-29T01:35:35.046554Z INFO   netlogger.analysis.schema.schema_check.SchemaCheck.check_schema.start | 
+2012-02-29T01:35:35.064762Z INFO   netlogger.analysis.schema.schema_check.SchemaCheck.check_schema 
+                                  | Current version set to: 3.1. 
+2012-02-29T01:35:35.064902Z ERROR  netlogger.analysis.schema.schema_check.SchemaCheck.check_schema 
+                                  | Schema version 3.1 found - expecting 4.0 - database admin will need to run upgrade tool. 
+2012-02-29T01:35:35.065001Z INFO   netlogger.analysis.schema.schema_check.SchemaCheck.upgrade_to_4_0 
+                                  | Upgrading to schema version 4.0.
+
+Verify if the database has been converted to Version 4.x<emphasis role="bold">
+
+/usr/share/pegasus/sql/schema_tool.py -c connString=sqlite:////to/the/workflow/directory/with/workflow.stampede.db</emphasis>
+2012-02-29T01:39:17.218902Z INFO   netlogger.analysis.schema.schema_check.SchemaCheck.init | 
+2012-02-29T01:39:17.219141Z INFO   netlogger.analysis.schema.schema_check.SchemaCheck.check_schema.start | 
+2012-02-29T01:39:17.237492Z INFO   netlogger.analysis.schema.schema_check.SchemaCheck.check_schema | Current version set to: 4.0. 
+2012-02-29T01:39:17.237624Z INFO   netlogger.analysis.schema.schema_check.SchemaCheck.check_schema | Schema up to date. 
+
+For upgrading a MySQL database the steps remain the same. The only thing that changes is the connection String to the database
+E.g.<emphasis role="bold">
+
+/usr/share/pegasus/sql/schema_tool.py -u connString=mysql://username:password@server:port/dbname
+
+</emphasis></programlisting>
+
+      <para>After the database has been upgraded you can use either 3.x or 4.x
+      clients to query the database with <emphasis
+      role="bold">pegasus-statistics</emphasis>, as well as <emphasis
+      role="bold">pegasus-plots </emphasis>and <emphasis
+      role="bold">pegasus-analyzer.</emphasis></para>
     </section>
 
     <section>
