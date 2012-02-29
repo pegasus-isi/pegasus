@@ -86,6 +86,7 @@ Arguments:
  --classpath          Builds a classpath containing the Pegasus jars.
  --noeoln             Do not produce a end-of-line after output. This is useful
                       when being called from non-shell backticks in scripts.
+                      Order is important for this option; specify first.
  --local-site [d]     Create a site catalog entry for site "local". This is
                       only an XML snippet without root element nor XML
                       headers. The optional argument "d" points to the mount
