@@ -3172,7 +3172,7 @@ on="3.2" name="superdiamond" index="0" count="1"&gt;
             role="bold">
 
 $ pegasus-plan -Dpegasus.data.configuration=condorio --dir `pwd`/dags --sites condor-pool --output local --nocleanup --force \
-               --dax `pwd`/dax/montage.dax --submit -v<emphasis>
+               --dax `pwd`/dax/montage.dax --submit -v</emphasis>
 
 2012.02.24 14:33:09.312 PST: [INFO] event.pegasus.parse.dax dax.id /home/tutorial/pegasus-wms/dax/montage.dax  - STARTED 
 2012.02.24 14:33:09.484 PST: [INFO]  Generating Stampede Events for Abstract Workflow 
@@ -3214,7 +3214,7 @@ $ pegasus-plan -Dpegasus.data.configuration=condorio --dir `pwd`/dags --sites co
 2012.02.24 14:33:10.379 PST:   pegasus-remove /home/tutorial/pegasus-wms/dags/tutorial/pegasus/montage/run0003 
 2012.02.24 14:33:10.387 PST:    
 2012.02.24 14:33:10.396 PST:   Time taken to execute is 1.422 seconds 
-2012.02.24 14:33:10.396 PST: [INFO] event.pegasus.parse.dax dax.id /home/tutorial/pegasus-wms/dax/montage.dax  - FINISHED</emphasis></emphasis></programlisting>
+2012.02.24 14:33:10.396 PST: [INFO] event.pegasus.parse.dax dax.id /home/tutorial/pegasus-wms/dax/montage.dax  - FINISHED</programlisting>
 
         <para>You can track the workflow using the pegasus-status
         command</para>
@@ -3245,7 +3245,7 @@ $ pegasus-plan -Dpegasus.data.configuration=condorio --dir `pwd`/dags --sites co
             role="bold">
 
 $ pegasus-plan -Dpegasus.data.configuration=nonsharedfs --dir `pwd`/dags --sites condor-pool --staging-site local --output local --nocleanup --force \
-               --dax `pwd`/dax/montage.dax --submit -v<emphasis>
+               --dax `pwd`/dax/montage.dax --submit -v</emphasis>
 
 2012.02.24 14:26:16.770 PST: [INFO] event.pegasus.parse.dax dax.id /home/tutorial/pegasus-wms/dax/montage.dax  - STARTED 
 2012.02.24 14:26:16.933 PST: [INFO]  Generating Stampede Events for Abstract Workflow 
@@ -3287,7 +3287,7 @@ $ pegasus-plan -Dpegasus.data.configuration=nonsharedfs --dir `pwd`/dags --sites
 2012.02.24 14:26:17.868 PST:   pegasus-remove /home/tutorial/pegasus-wms/dags/tutorial/pegasus/montage/run0004 
 2012.02.24 14:26:17.875 PST:    
 2012.02.24 14:26:17.884 PST:   Time taken to execute is 1.455 seconds 
-2012.02.24 14:26:17.885 PST: [INFO] event.pegasus.parse.dax dax.id /home/tutorial/pegasus-wms/dax/montage.dax  - FINISHED</emphasis></emphasis></programlisting>
+2012.02.24 14:26:17.885 PST: [INFO] event.pegasus.parse.dax dax.id /home/tutorial/pegasus-wms/dax/montage.dax  - FINISHED</programlisting>
 
         <para>You can track the workflow using the pegasus-status
         command.</para>
