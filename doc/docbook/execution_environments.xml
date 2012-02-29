@@ -7,62 +7,54 @@
   <para>Pegasus supports a number of execution environments. An execution
   environment is a setup where jobs from a workflow are running.</para>
 
-  <itemizedlist>
-    <listitem>
-      <para>The simplest execution environment does not involve Condor.
-      Pegasus is capable of planning small workflows for full-local execution
-      using a shell planner. Please refer to the <filename
-      class="directory">examples</filename> directory in your Pegasus
-      installation, the shell planner's <link
-      linkend="local_shell_examples">documentation section</link>, or the
-      tutorials, for details.</para>
-    </listitem>
-
-    <listitem>
-      <para>A slighly more challenging setup is still all-local, but Condor
-      manages queued jobs and Condor DAGMan the workflow. This setup permits
-      limited parallelism with full scalability. With proper setup, Condor can
-      scavenge cycles from unused computers in your department, enabling a
-      pool of more than just a single machine.</para>
-    </listitem>
-
-    <listitem>
-      <para>The vanilla setup are workflows to be executed in a grid
-      environment. This setup requires a number of configurations, and an
-      understanding of remote sites.</para>
-    </listitem>
-
-    <listitem>
-      <para>Various advanced execution environment setups deal with minimally
-      using Globus to obtain remote resources (Glide-ins), by-passing Globus
-      completely (Condor-C), or supporting cloud computing (Nimbus,
-      Eucalyptus, EC2). You should be familiar with the Grid Execution
-      Environment, as some concept are borrowed.</para>
-    </listitem>
-  </itemizedlist>
-
-  <para>This section discusses the various resource configurations that can be
-  used with Pegasus when Condor DAGMan is used as the workflow execution
-  engine. It is assumed that there is a submit host where the workflow is
-  submitted for execution. The following classification is done based the
-  mechanism used for submitting jobs to the Grid resources and monitoring
-  them. The classifications explored in this document are using Globus GRAM
-  and using a Condor pool. Both of the configurations use Condor DAGMan to
-  maintain the dependencies between the jobs, but differ in the manner as to
-  how the jobs are launched. A combination of the above mentioned approach is
-  also possible where some of the tasks in the workflow are executed in the
-  Condor pool and the rest are executed on remote resources using
-  Condor-G.</para>
-
   <section id="localhost">
     <title>General execution environment: Localhost</title>
 
     <para>In this configuration , Pegasus schedules the jobs to run locally on
-    the submit host. This is achieved by executing the workflow on site local
-    ( <emphasis role="bold">--sites local </emphasis>option to pegasus-plan ).
-    The <emphasis role="bold">site "local" is a reserved site</emphasis> in
-    Pegasus and results in the jobs to run on the submit host in condor
-    universe local.</para>
+    the submit host. Running locally is a good approach for smaller workflows,
+    testing workflows, and for demonstations such as the <link
+    linkend="tutorial_vm">Pegasus tutorial using Virtual
+    Machines</link>.Pegasus supports two methods of local execution: local
+    Condor pool, and shell planner. The former is preferred as the latter does
+    not support all Pegasus' features (such as notifications).</para>
+
+    <para>Running on a local Condor pool is achieved by executing the workflow
+    on site local ( <emphasis role="bold">--sites local </emphasis>option to
+    pegasus-plan ). The site "local" is a reserved site in Pegasus and results
+    in the jobs to run on the submit host in condor universe local. The site
+    catalog can be left very simple in this case:</para>
+
+    <programlisting>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog
+             http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
+    &lt;site  handle="local" arch="x86_64" os="LINUX"&gt;
+        &lt;head-fs&gt;
+            &lt;scratch&gt;
+                &lt;shared&gt;
+                    &lt;file-server protocol="file" url="file://" mount-point="/tmp/wf/work"/&gt;
+                    &lt;internal-mount-point mount-point="/tmp/wf/work"/&gt;
+                &lt;/shared&gt;
+            &lt;/scratch&gt;
+            &lt;storage&gt;
+                &lt;shared&gt;
+                    &lt;file-server protocol="file" url="file://" mount-point="/tmp/wf/storage"/&gt;
+                    &lt;internal-mount-point mount-point="/tmp/wf/storage"/&gt;
+                &lt;/shared&gt;
+            &lt;/storage&gt;
+        &lt;/head-fs&gt;
+    &lt;/site&gt;
+&lt;/sitecatalog&gt;
+</programlisting>
+
+    <para>The simplest execution environment does not involve Condor. Pegasus
+    is capable of planning small workflows for local execution using a shell
+    planner. Please refer to the <filename
+    class="directory">share/pegasus/examples</filename> directory in your
+    Pegasus installation, the shell planner's <link
+    linkend="local_shell_examples">documentation section</link>, or the
+    tutorials, for details.</para>
   </section>
 
   <section id="condor_pool">
@@ -85,17 +77,6 @@
       </mediaobject>
     </figure>
 
-    <figure>
-      <title></title>
-
-      <mediaobject>
-        <imageobject>
-          <imagedata contentdepth="100%" fileref="images/condor_layout.png"
-                     scalefit="1" width="100%" />
-        </imageobject>
-      </mediaobject>
-    </figure>
-
     <para>The workflow is submitted using DAGMan from one of the job
     submission machines in the Condor pool. It is the responsibility of the
     Central Manager of the pool to match the task in the workflow submitted by
@@ -106,152 +87,200 @@
     site catalog which represents these execution machines. The universe
     attribute of the resource should be vanilla. There can be multiple
     resources associated with a single Condor pool, where each resource
-    identifies a subset of machine (worker nodes) in the pool. Pegasus
-    currently uses the FileSystemDomain classad[] attribute to restrict the
-    set of machines that make up a single resource. To clarify this point,
-    suppose there are certain execution machines in the Condor pool whose
-    FileSystemDomain is set to &amp;ldquo;viz.isi.edu&amp;rdquor;. If the user
-    wants to execute the workflow on these machines, then there should be a
-    site, say &amp;ldquo;isi_viz&amp;rdquor; defined in the site catalog and
-    the FileSystemDomain and universe attributes for this resource should be
-    defined as &amp;ldquo;viz.isi.edu&amp;rdquor; and
-    &amp;ldquo;vanilla&amp;rdquor; respectively. When invoking Pegasus, the
-    user should select isi_viz as the compute resource.</para>
+    identifies a subset of machine (worker nodes) in the pool.</para>
 
-    <programlisting> &lt;site  handle="isi_viz" arch="x86" os="LINUX" osrelease="" osversion="" glibc=""&gt;
-       &lt;grid  type="gt2" contact="smarty.isi.edu/jobmanager-pbs" scheduler="PBS" jobtype="auxillary"/&gt;
-       &lt;grid  type="gt2" contact="smarty.isi.edu/jobmanager-pbs" scheduler="PBS" jobtype="compute"/&gt;
-       &lt;head-fs&gt;
-              &lt;scratch&gt;
-                    &lt;shared&gt;
-                           &lt;file-server protocol="gsiftp" url="gsiftp://viz-login.isi.edu" \
-                                                              mount-point="/nfs/scratch01"/&gt;
-                           &lt;internal-mount-point mount-point="/nfs/scratch01"/&gt;
-                    &lt;/shared&gt;
-              &lt;/scratch&gt;
-              &lt;storage&gt;
-                    &lt;shared&gt;
-                           &lt;file-server protocol="gsiftp" url="gsiftp://viz-login.isi.edu" \
-                                                           mount-point="/exports/storage01"/&gt;
-                           &lt;internal-mount-point mount-point="/exports/storage01"/&gt;
-                           &lt;/shared&gt;
-               &lt;/storage&gt;
-       &lt;/head-fs&gt;
-       &lt;replica-catalog  type="LRC" url="rlsn://smarty.isi.edu"/&gt;
-       <emphasis role="bold">&lt;profile namespace="condor" key="universe"&gt;vanilla&lt;/profile&gt; 
-       &lt;profile namespace="condor" key="FileSystemDomain"&gt;viz.isi.edu&lt;/profile&gt;</emphasis>
- &lt;/site&gt;</programlisting>
+    <para>When running on a Condor pool, the user has to decide how Pegasus
+    should transfer data. Please see the <link
+    linkend="data_staging_configuration">Data Staging Configuration</link> for
+    the options. The easiest is to use <emphasis
+    role="bold">condorio</emphasis> as that mode does not require any extra
+    setup - Condor will do the transfers using the existing Condor daemons.
+    For an example of this mode see the example workflow in
+    <filename>share/pegasus/examples/condor-blackdiamond-condorio/</filename>
+    . In condorio mode, the site catalog for the execution site is very simple
+    as storage is provided by Condor:</para>
 
-    <para></para>
-
-    <section>
-      <para>It is possible to run on a condor pool without the worker nodes
-      sharing a filesystem and relying on Condor to do the file transfers.
-      However, for the Condor file to transfer the input data for a job, all
-      the input data</para>
-
-      <orderedlist>
-        <listitem>
-          <para>Must be on the submit host</para>
-        </listitem>
-
-        <listitem>
-          <para>The input files should be catalogued as file URL's in the
-          Replica Catalog with the pool attribute set as local for all the
-          locations. To make sure that local URL's are always picked up use
-          the Local Replica Selector.</para>
-        </listitem>
-      </orderedlist>
-
-      <para>To set up Pegasus to plan workflows for Amazon you need to create
-      an 'local-condor' entry your site catalog. The site configuration is
-      similar to what you would create for running on a local Condor pool (See
-      previous section).</para>
-
-      <programlisting> &lt;site  handle="local-condor" arch="x86" os="LINUX"&gt;
-        &lt;grid  type="gt2" contact="localhost/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/&gt;
-        &lt;grid  type="gt2" contact="localhost/jobmanager-condor" scheduler="unknown" jobtype="compute"/&gt;
+    <programlisting>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog
+             http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
+    &lt;site  handle="local" arch="x86_64" os="LINUX"&gt;
         &lt;head-fs&gt;
-
-          <emphasis role="bold">&lt;!-- the paths for scratch filesystem are the paths on local site as we execute create dir job
-               on local site. Improvements planned for 3.1 release.--&gt;</emphasis>
             &lt;scratch&gt;
                 &lt;shared&gt;
-                    &lt;file-server protocol="file" url="file:///" mount-point="/submit-host/scratch"/&gt;
-                    &lt;internal-mount-point mount-point="/submit-host/scratch"/&gt;
+                    &lt;file-server protocol="file" url="file://" mount-point="/tmp/wf/work"/&gt;
+                    &lt;internal-mount-point mount-point="/tmp/wf/work"/&gt;
                 &lt;/shared&gt;
             &lt;/scratch&gt;
             &lt;storage&gt;
                 &lt;shared&gt;
-                    &lt;file-server protocol="file" url="file:///" mount-point="/glusterfs/scratch"/&gt;
-                    &lt;internal-mount-point mount-point="/glusterfs/scratch"/&gt;
+                    &lt;file-server protocol="file" url="file://" mount-point="/tmp/wf/storage"/&gt;
+                    &lt;internal-mount-point mount-point="/tmp/wf/storage"/&gt;
                 &lt;/shared&gt;
             &lt;/storage&gt;
         &lt;/head-fs&gt;
-        &lt;replica-catalog  type="LRC" url="rlsn://dummyValue.url.edu" /&gt;
-        &lt;profile namespace="env" key="PEGASUS_HOME" &gt;/cluster-software/pegasus/2.4.1&lt;/profile&gt;
-        &lt;profile namespace="env" key="GLOBUS_LOCATION" &gt;/cluster-software/globus/5.0.1&lt;/profile&gt;
-
-        <emphasis role="bold">&lt;!-- profies for site to be treated as condor pool --&gt;</emphasis>
-        &lt;profile namespace="pegasus" key="style" &gt;condor&lt;/profile&gt;
-        &lt;profile namespace="condor" key="universe" &gt;vanilla&lt;/profile&gt;
-
-        <emphasis role="bold">&lt;!-- required for Condor File IO and transferring stdout and stderr back --&gt;</emphasis>
-        &lt;profile namespace="condor" key="should_transfer_files"&gt;YES&lt;/profile&gt;
-        &lt;profile namespace="condor" key="transfer_output"&gt;true&lt;/profile&gt;
-        &lt;profile namespace="condor" key="transfer_error"&gt;true&lt;/profile&gt;
-        &lt;profile namespace="condor" key="WhenToTransferOutput"&gt;ON_EXIT&lt;/profile&gt;
-        
-        <emphasis role="bold">&lt;!-- to enable kickstart staging from local site--&gt;</emphasis>
-        &lt;profile namespace="condor" key="transfer_executable"&gt;true&lt;/profile&gt;
-
-
     &lt;/site&gt;
-</programlisting>
+    &lt;site  handle="condorpool" arch="x86_86" os="LINUX"&gt;
+        &lt;head-fs&gt;
+            &lt;scratch /&gt;
+            &lt;storage /&gt;
+        &lt;/head-fs&gt;
+        &lt;profile namespace="pegasus" key="style" &gt;condor&lt;/profile&gt;
+        &lt;profile namespace="condor" key="universe" &gt;vanilla&lt;/profhile&gt;
+    &lt;/site&gt;
+&lt;/sitecatalog&gt;</programlisting>
 
-      <para>Next you need need to update pegasus.properties to tell Pegasus to
-      turn on Condor File IO and execute jobs on the worker nodes
-      filesystem.</para>
+    <section id="glideins">
+      <title>Glideins</title>
 
-      <programlisting>pegasus.data.configuration = Condor</programlisting>
+      <para>In this section we describe how machines from different
+      administrative domains and supercomputing centers can be dynamically
+      added to a Condor pool for certain timeframe. These machines join the
+      Condor pool temporarily and can be used to execute jobs in a non
+      preemptive manner. This functionality is achieved using a Condor feature
+      called <emphasis role="bold">glideins</emphasis> (see <ulink
+      url="http://cs.wisc.edu/condor/glidein">http://cs.wisc.edu/condor/glidein</ulink>)
+      . The startd daemon is the Condor daemon which provides the compute
+      slots and runs the jobs. In the glidein case, the submit machine is
+      usually a static machine and the glideins are told configued to report
+      to that submit machine. The glideins can be submitted to any type of
+      resource: a GRAM enabled cluster, a campus cluster, a cloud environment
+      such as Amazon AWS, or even another Condor cluster.</para>
 
-      <para>By default, Pegasus creates a workflow specific execution
-      directory that is associated with the compute site ( in this case
-      local-condor). However, in this scenario, the workflow specific
-      execution directory needs to be created on the submit host, as native
-      Condor File I/O only works against local directories. To ensure that the
-      create dir job for the workflow for the local-condor site, you need to
-      do the following</para>
+      <tip>
+        <para>As glideins are usually coming from different compute resource,
+        and/or the glideins are running in an administrative domain different
+        from the submit node, there is usually no shared filesystem available.
+        Thus the most common <link linkend="data_staging_configuration">data
+        staging modes</link> are <emphasis role="bold">condorio</emphasis> and
+        <emphasis role="bold">nonsharedfs</emphasis> .</para>
+      </tip>
 
-      <orderedlist>
+      <para>There are many useful tools which submits and manages glideins for
+      you:</para>
+
+      <itemizedlist>
         <listitem>
-          <para>the paths for the scratch filesystem in the site catalog entry
-          for local-condor site should actually refer to paths on the submit
-          host. It is illustrated in the example site catalog entry
-          above.</para>
+          <para><ulink
+          url="http://www.uscms.org/SoftwareComputing/Grid/WMS/glideinWMS/">GlideinWMS</ulink>
+          is a tool and host environment used mostly on the <ulink
+          url="http://www.opensciencegrid.org/">Open Science
+          Grid</ulink>.</para>
         </listitem>
 
         <listitem>
-          <para>have an entry in the transformation catalog for
-          pegasus::dirmanager for site local-condor that has a condor profile
-          that makes the create dir job run in local universe instead of
-          vanilla.</para>
-
-          <programlisting># This entry for pegaasus-dirmanager is to force the create dir jobs to run in the local universe instead of
-# the vanilla universe. The CONDOR transfer settings are so that stdout and stderr are
-# not redirected to initialdir instead of the submit dir
-
-local-condor pegasus::dirmanager /path/on/submithost/pegasus/bin/dirmanager INSTALLED INTEL32::LINUX CONDOR:
-:universe="local"CONDOR::requirements="";CONDOR::transfer_output="";CONDOR::transfer_error="";CONDOR::whentotransferoutput=""
-</programlisting>
+          <para><ulink
+          url="http://pegasus.isi.edu/projects/corralwms">CorralWMS</ulink> is
+          a personal frontend for GlideinWMS. CorralWMS was developed by the
+          Pegasus team and works very well for high throughput
+          workflows.</para>
         </listitem>
-      </orderedlist>
 
-      <note>
-        <para>In Pegasus 3.1, running workflows in this setup will be made
-        much simpler.</para>
-      </note>
+        <listitem>
+          <para><ulink
+          url="http://research.cs.wisc.edu/condor/manual/v7.6/condor_glidein.html">condor_glidein</ulink>
+          is a simple glidein tool for Globus GRAM clusters. condor_glidein is
+          shipped with Condor.</para>
+        </listitem>
+
+        <listitem>
+          <para>Glideins can also be created by hand or scripts. This is a
+          useful solution for example for cluster which have no external job
+          submit mechanisms or do not allow outside networking.</para>
+        </listitem>
+      </itemizedlist>
     </section>
+  </section>
+
+  <section id="cloud">
+    <title>General execution environment: Clouds</title>
+
+    <para><figure id="concepts-fig-cloud-layout">
+        <title>Cloud Sample Site Layout</title>
+
+        <mediaobject>
+          <imageobject>
+            <imagedata align="center" contentdepth="100%"
+                       fileref="images/fg-pwms-prefio.3.png" scalefit="1"
+                       valign="middle" width="100%" />
+          </imageobject>
+        </mediaobject>
+      </figure></para>
+
+    <para>The pevious figure shows a sample layout for sky computing (as in:
+    multiple clouds) as supported by Pegasus. At this point, it is up to the
+    user to provision the remote resources with a proper VM image that
+    includes a Condor startd and proper Condor configuration to report back to
+    a Condor collector that the Condor schedd has access to.</para>
+
+    <para>In this discussion, the <emphasis>submit host</emphasis> (SH) is
+    located logically external to the cloud provider(s). The SH is the point
+    where a user submits Pegasus workflows for execution. This site typically
+    runs a Condor collector to gather resource announcements, or is part of a
+    larger Condor pool that collects these announcement. Condor makes the
+    remote resources available to the submit host&amp;rsquor;s Condor
+    installation.</para>
+
+    <para>The <link linkend="concepts-fig-cloud-layout">figure above</link>
+    shows the way Pegasus WMS is deployed in cloud computing resources,
+    ignoring how these resources were provisioned. The provisioning request
+    shows multiple resources per provisioning request.</para>
+
+    <para>The provisioning broker -- Nimbus, Eucalyptus or EC2 -- at the
+    remote site is responsible to allocate and set up the resources. For a
+    multi-node request, the worker nodes often require access to a form of
+    shared data storage. Concretely, either a POSIX-compliant shared file
+    system (e.g. NFS, PVFS) is available to the nodes, or can be brought up
+    for the lifetime of the application workflow. The task steps of the
+    application workflow facilitate shared file systems to exchange
+    intermediary results between tasks on the same cloud site. Pegasus also
+    supports an S3 data mode for the application workflow data staging.</para>
+
+    <para>The initial stage-in and final stage-out of application data into
+    and out of the node set is part of any Pegasus-planned workflow. Several
+    configuration options exist in Pegasus to deal with the dynamics of push
+    and pull of data, and when to stage data. In many use-cases, some form of
+    external access to or from the shared file system that is visible to the
+    application workflow is required to facilitate successful data staging.
+    However, Pegasus is prepared to deal with a set of boundary cases.</para>
+
+    <para>The data server in the figure is shown at the submit host. This is
+    not a strict requirement. The data server for consumed data and data
+    products may both be different and external to the submit host.</para>
+
+    <para>Once resources begin appearing in the pool managed by the submit
+    machine&amp;rsquor;s Condor collector, the application workflow can be
+    submitted to Condor. A Condor DAGMan will manage the application workflow
+    execution. Pegasus run-time tools obtain timing-, performance and
+    provenance information as the application workflow is executed. At this
+    point, it is the user's responsibility to de-provision the allocated
+    resources.</para>
+
+    <para>In the figure, the cloud resources on the right side are assumed to
+    have uninhibited outside connectivity. This enables the Condor I/O to
+    communicate with the resources. The right side includes a setup where the
+    worker nodes use all private IP, but have out-going connectivity and a NAT
+    router to talk to the internet. The <emphasis>Condor connection
+    broker</emphasis> (CCB) facilitates this setup almost effortlessly.</para>
+
+    <para>The left side shows a more difficult setup where the connectivity is
+    fully firewalled without any connectivity except to in-site nodes. In this
+    case, a proxy server process, the <emphasis>generic connection
+    broker</emphasis> (GCB), needs to be set up in the DMZ of the cloud site
+    to facilitate Condor I/O between the submit host and worker nodes.</para>
+
+    <para>If the cloud supports data storage servers, Pegasus is starting to
+    support workflows that require staging in two steps: Consumed data is
+    first staged to a data server in the remote site's DMZ, and then a second
+    staging task moves the data from the data server to the worker node where
+    the job runs. For staging out, data needs to be first staged from the
+    job's worker node to the site's data server, and possibly from there to
+    another data server external to the site. Pegasus is capable to plan both
+    steps: Normal staging to the site's data server, and the worker-node
+    staging from and to the site's data server as part of the job. We are
+    working on expanding the current code to support a more generic set by
+    Pegasus 3.1.</para>
   </section>
 
   <section id="globus_gram">
@@ -269,7 +298,7 @@ local-condor pegasus::dirmanager /path/on/submithost/pegasus/bin/dirmanager INST
         </mediaobject>
       </figure></para>
 
-    <para>The vanilla grid environment shown in the figure <link
+    <para>A generic grid environment shown in the figure <link
     linkend="concepts-fig-site-layout">above</link>. We will work from the
     left to the right top, then the right bottom.</para>
 
@@ -377,7 +406,7 @@ local-condor pegasus::dirmanager /path/on/submithost/pegasus/bin/dirmanager INST
     <para>An example site catalog entry for a glite site looks as follows in
     the site catalog</para>
 
-    <programlisting> &lt;site  handle="isi_viz_glite" arch="x86" os="LINUX" osrelease="" osversion="" glibc=""&gt;
+    <programlisting> &lt;site  handle="isi_viz_glite" arch="x86_64" os="LINUX"&gt;
        &lt;grid  type="gt2" contact="smarty.isi.edu/jobmanager-pbs" scheduler="PBS" jobtype="auxillary"/&gt;
        &lt;grid  type="gt2" contact="smarty.isi.edu/jobmanager-pbs" scheduler="PBS" jobtype="compute"/&gt;
        &lt;head-fs&gt;
@@ -404,8 +433,6 @@ local-condor pegasus::dirmanager /path/on/submithost/pegasus/bin/dirmanager INST
  &lt;/site&gt;
 </programlisting>
 
-    <para></para>
-
     <section>
       <title>Changes to Jobs</title>
 
@@ -422,8 +449,6 @@ local-condor pegasus::dirmanager /path/on/submithost/pegasus/bin/dirmanager INST
           <para>+remote_cerequirements - See below</para>
         </listitem>
       </orderedlist>
-
-      <para></para>
 
       <section>
         <title>Remote CE Requirements</title>
@@ -511,107 +536,19 @@ local-condor pegasus::dirmanager /path/on/submithost/pegasus/bin/dirmanager INST
     <para>Two alternatives: GRAM or glideins.</para>
 
     <para></para>
-
-    <section>
-      <title>Glideins</title>
-
-      <para>Pegasus WMS can execute workflows over Condor pool. This pool can
-      contain machines managed by a single institution or department and
-      belonging to a single administrative domain. This is the case for most
-      of the Condor pools. In this section we describe how machines from
-      different administrative domains and supercomputing centers can be
-      dynamically added to a Condor pool for certain timeframe. These machines
-      join the Condor pool temporarily and can be used to execute jobs in a
-      non preemptive manner. This functionality is achieved using a Condor
-      feature called Glide-in http://cs.wisc.edu/condor/glidein that uses
-      Globus GRAM interface for migrating machines from different domains to a
-      Condor pool. The number of machines and the duration for which they are
-      required can be specified</para>
-
-      <para>In this case, we use the abstraction of a local Condor pool to
-      execute the jobs in the workflow over remote resources that have joined
-      the pool for certain timeframe. Details about the use of this feature
-      can be found in the condor manual
-      (http://cs.wisc.edu/condor/manual/).</para>
-
-      <para>A basic step to migrate in a job to a local condor pool is
-      described below.</para>
-
-      <programlisting><emphasis role="bold">$condor_glidein -count 10 gatekeeper.site.edu/jobmanager-pbs</emphasis></programlisting>
-
-      <para><emphasis role="bold">GlideIn of Remote Globus
-      Resources</emphasis></para>
-
-      <para>The above step glides in 10 nodes to the user&amp;rsquor;s local
-      condor pool, from the remote pbs scheduler running at
-      gatekeeper.site.edu. By default, the glide in binaries are installed in
-      the users home directory on the remote host.</para>
-
-      <para>It is possible that the Condor pool can contain resources from
-      multiple Grid sites. It is normally the case that the resources from a
-      particular site share the same file system and thus use the same
-      FileSystemDomain attribute while advertising their presence to the
-      Central Manager of the pool. If the user wants to run his jobs on
-      machines from a particular Grid site, he has to specify the
-      FileSystemDomain attribute in the requirements classad expression in the
-      submit files with a value matching the FileSystemDomain of the machines
-      from that site. For example, the user migrates nodes from the ISI
-      cluster (with FileSystemDomain viz.isi.org) into a Condor pool and
-      specifies FileSystemDomain == &amp;ldquo;viz.isi.edu&amp;rdquor;. Condor
-      would then schedule the jobs only on the nodes from the ISI VIZ cluster
-      in the local condor pool. The FileSystemDomain can be specified for an
-      execution site in the site catalog with condor profile namespace as
-      follows</para>
-
-      <programlisting> &lt;site  handle="isi_viz" arch="x86" os="LINUX" osrelease="" osversion="" glibc=""&gt;
-       &lt;grid  type="gt2" contact="smarty.isi.edu/jobmanager-pbs" scheduler="PBS" jobtype="auxillary"/&gt;
-       &lt;grid  type="gt2" contact="smarty.isi.edu/jobmanager-pbs" scheduler="PBS" jobtype="compute"/&gt;
-       &lt;head-fs&gt;
-              &lt;scratch&gt;
-                    &lt;shared&gt;
-                         &lt;file-server protocol="gsiftp" url="gsiftp://viz-login.isi.edu" \
-                                                                 mount-point="/nfs/scratch01"/&gt;
-                         &lt;internal-mount-point mount-point="/nfs/scratch01"/&gt;
-                    &lt;/shared&gt;
-              &lt;/scratch&gt;
-              &lt;storage&gt;
-                     &lt;shared&gt;
-                          &lt;file-server protocol="gsiftp" url="gsiftp://viz-login.isi.edu" \
-                                                                      mount-point="/exports/storage01"/&gt;
-                          &lt;internal-mount-point mount-point="/exports/storage01"/&gt;
-                     &lt;/shared&gt;
-              &lt;/storage&gt;
-       &lt;/head-fs&gt;
-       &lt;replica-catalog  type="LRC" url="rlsn://smarty.isi.edu"/&gt;
-       <emphasis role="bold">&lt;profile namespace="pegasus" key="style"&gt;glidein&lt;/profile&gt;</emphasis>
-       <emphasis role="bold">&lt;profile namespace="condor" key="universe"&gt;vanilla&lt;/profile&gt; 
-       &lt;profile namespace="condor" key="FileSystemDomain"&gt;viz.isi.edu&lt;/profile&gt;</emphasis>
- &lt;/site&gt;
-</programlisting>
-
-      <para>Specifying the FileSystemDomain key in condor namespace for a
-      site, triggers Pegasus into generating the requirements classad
-      expression in the submit file for all the jobs scheduled on that
-      particular site. For example, in the above case all jobs scheduled on
-      site isi_condor would have the following expression in the submit
-      file.</para>
-
-      <programlisting>requirements = FileSystemDomain == &amp;ldquo;viz.isi.edu&amp;rdquor;</programlisting>
-
-      <para></para>
-    </section>
   </section>
 
   <section id="open_science_grid">
     <title>Open Science Grid / glideinWMS</title>
 
     <section>
-        <para><ulink url="http://www.uscms.org/SoftwareComputing/Grid/WMS/glideinWMS/">glideinWMS</ulink> is a glidein system widely
-      used on Open Science Grid. Pegasus has a convenience style named
-      glideinWMS to make running workflows on top of glideinWMS easy. This
-      style is similar to the Condor style, but provides some more defaults
-      set up to work well with glideinWMS. All you have to do is specify the
-      style profile in the site catalog:</para>
+      <para><ulink
+      url="http://www.uscms.org/SoftwareComputing/Grid/WMS/glideinWMS/">glideinWMS</ulink>
+      is a glidein system widely used on Open Science Grid. Pegasus has a
+      convenience style named glideinWMS to make running workflows on top of
+      glideinWMS easy. This style is similar to the Condor style, but provides
+      some more defaults set up to work well with glideinWMS. All you have to
+      do is specify the style profile in the site catalog:</para>
 
       <programlisting> &lt;site  handle="isi_viz" arch="x86" os="LINUX" osrelease="" osversion="" glibc=""&gt;
        &lt;grid  type="gt2" contact="smarty.isi.edu/jobmanager-pbs" scheduler="PBS" jobtype="auxillary"/&gt;
@@ -649,92 +586,6 @@ requirements = ((GLIDEIN_Entry_Name == "isi_iz") || (TARGET.Pegasus_Site == "isi
 
   <section id="futuregrid_nimbus">
     <title>FutureGrid Cloud / Nimbus</title>
-
-    <para><figure id="concepts-fig-cloud-layout">
-        <title>Cloud Sample Site Layout</title>
-
-        <mediaobject>
-          <imageobject>
-            <imagedata align="center" contentdepth="100%"
-                       fileref="images/fg-pwms-prefio.3.png" scalefit="1"
-                       valign="middle" width="100%" />
-          </imageobject>
-        </mediaobject>
-      </figure></para>
-
-    <para>The pevious figure shows a sample layout for sky computing (as in:
-    multiple clouds) as supported by Pegasus. At this point, it is up to the
-    user to provision the remote resources with a proper VM image that
-    includes a Condor startd and proper Condor configuration to report back to
-    a Condor collector that the Condor schedd has access to.</para>
-
-    <para>In this discussion, the <emphasis>submit host</emphasis> (SH) is
-    located logically external to the cloud provider(s). The SH is the point
-    where a user submits Pegasus workflows for execution. This site typically
-    runs a Condor collector to gather resource announcements, or is part of a
-    larger Condor pool that collects these announcement. Condor makes the
-    remote resources available to the submit host&amp;rsquor;s Condor
-    installation.</para>
-
-    <para>The <link linkend="concepts-fig-cloud-layout">figure above</link>
-    shows the way Pegasus WMS is deployed in cloud computing resources,
-    ignoring how these resources were provisioned. The provisioning request
-    shows multiple resources per provisioning request.</para>
-
-    <para>The provisioning broker -- Nimbus, Eucalyptus or EC2 -- at the
-    remote site is responsible to allocate and set up the resources. For a
-    multi-node request, the worker nodes often require access to a form of
-    shared data storage. Concretely, either a POSIX-compliant shared file
-    system (e.g. NFS, PVFS) is available to the nodes, or can be brought up
-    for the lifetime of the application workflow. The task steps of the
-    application workflow facilitate shared file systems to exchange
-    intermediary results between tasks on the same cloud site. Pegasus also
-    supports an S3 data mode for the application workflow data staging.</para>
-
-    <para>The initial stage-in and final stage-out of application data into
-    and out of the node set is part of any Pegasus-planned workflow. Several
-    configuration options exist in Pegasus to deal with the dynamics of push
-    and pull of data, and when to stage data. In many use-cases, some form of
-    external access to or from the shared file system that is visible to the
-    application workflow is required to facilitate successful data staging.
-    However, Pegasus is prepared to deal with a set of boundary cases.</para>
-
-    <para>The data server in the figure is shown at the submit host. This is
-    not a strict requirement. The data server for consumed data and data
-    products may both be different and external to the submit host.</para>
-
-    <para>Once resources begin appearing in the pool managed by the submit
-    machine&amp;rsquor;s Condor collector, the application workflow can be
-    submitted to Condor. A Condor DAGMan will manage the application workflow
-    execution. Pegasus run-time tools obtain timing-, performance and
-    provenance information as the application workflow is executed. At this
-    point, it is the user's responsibility to de-provision the allocated
-    resources.</para>
-
-    <para>In the figure, the cloud resources on the right side are assumed to
-    have uninhibited outside connectivity. This enables the Condor I/O to
-    communicate with the resources. The right side includes a setup where the
-    worker nodes use all private IP, but have out-going connectivity and a NAT
-    router to talk to the internet. The <emphasis>Condor connection
-    broker</emphasis> (CCB) facilitates this setup almost effortlessly.</para>
-
-    <para>The left side shows a more difficult setup where the connectivity is
-    fully firewalled without any connectivity except to in-site nodes. In this
-    case, a proxy server process, the <emphasis>generic connection
-    broker</emphasis> (GCB), needs to be set up in the DMZ of the cloud site
-    to facilitate Condor I/O between the submit host and worker nodes.</para>
-
-    <para>If the cloud supports data storage servers, Pegasus is starting to
-    support workflows that require staging in two steps: Consumed data is
-    first staged to a data server in the remote site's DMZ, and then a second
-    staging task moves the data from the data server to the worker node where
-    the job runs. For staging out, data needs to be first staged from the
-    job's worker node to the site's data server, and possibly from there to
-    another data server external to the site. Pegasus is capable to plan both
-    steps: Normal staging to the site's data server, and the worker-node
-    staging from and to the site's data server as part of the job. We are
-    working on expanding the current code to support a more generic set by
-    Pegasus 3.1.</para>
   </section>
 
   <section id="amazon_aws">
