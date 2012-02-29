@@ -34,9 +34,9 @@ my $share_dir	= File::Spec->catdir( $base_dir, 'share', 'pegasus' );
 my $java_dir	= File::Spec->catdir( $share_dir, 'java' );
 my $perl_dir	= File::Spec->catdir( $base_dir, $lib, 'pegasus', 'perl' );
 my $python_dir	= File::Spec->catdir( $base_dir, $lib, 'pegasus', 'python' );
-my $python_externals_dir	= File::Spec->catdir( $base_dir, $lib, 'pegasus', 'externals', 'python' );
-my $php_dir	    = File::Spec->catdir( $base_dir, $lib, 'pegasus', 'php' );
-my $js_dir	    = File::Spec->catdir( $base_dir, $lib, 'pegasus', 'javascript' );
+my $python_externals_dir = File::Spec->catdir( $base_dir, $lib, 'pegasus', 'externals', 'python' );
+my $php_dir	= File::Spec->catdir( $base_dir, $lib, 'pegasus', 'php' );
+my $js_dir	= File::Spec->catdir( $base_dir, $lib, 'pegasus', 'javascript' );
 my $schema_dir	= File::Spec->catdir( $share_dir, 'schema' );
 my $extra_classpath = '';
 
@@ -117,6 +117,8 @@ sub find_exec($;@) {
 sub site_snippet($) {
     my $home = shift;
     my @u = POSIX::uname(); 
+    $u[2] =~ s/^(\d+(\.\d+(\.\d+)?)?).*/$1/;
+    $u[4] =~ s/i.86/x86/;
 
     # check for presence of Globus
     my $g_l = $ENV{'GLOBUS_LOCATION'};
