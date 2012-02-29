@@ -201,13 +201,30 @@ siteX    B     /shared/PEGASUS/bin/jobB INSTALLED       INTEL32::LINUX PEGASUS::
         needs to set the <emphasis role="bold">--cluster</emphasis> option of
         <emphasis role="bold">pegasus-plan to horizontal</emphasis>.</para>
 
+        <para>Basic Algorithm of grouping jobs into clusters is as
+        follows</para>
+
+        <programlisting>// cluster.maxruntime - Is the maximum runtime for which the clustered job should run.
+// j.runtime - Is the runtime of the job j.
+1. Create a set of jobs of the same type (txnamespace, txname, txversion), and that run on the same site.
+2. Sort the jobs in decreasing order of their runtime.
+3. For each job j, repeat
+  a. If j.runtime &gt; cluster.maxruntime then 
+        ignore j.
+  // Sum of runtime of jobs already in the bin + j.runtime &lt;= cluster.maxruntime
+  b. If j can be added to any existing bin (clustered job) then 
+        Add j to bin
+     Else
+        Add a new bin
+        Add job j to newly added bin</programlisting>
+
         <para>The runtime of a job, and maximum runtime for which a clustered
         jobs should run, is determined by the value of two parameters
-        associated with the jobs. </para>
+        associated with the jobs.</para>
 
         <itemizedlist>
           <listitem>
-            <para><emphasis role="bold">job.runtime</emphasis> </para>
+            <para><emphasis role="bold">job.runtime</emphasis></para>
 
             <para>expected runtime for a job</para>
           </listitem>
@@ -215,7 +232,7 @@ siteX    B     /shared/PEGASUS/bin/jobB INSTALLED       INTEL32::LINUX PEGASUS::
           <listitem>
             <para><emphasis role="bold">clusters.maxruntime</emphasis></para>
 
-            <para>maxruntime for the clustered job </para>
+            <para>maxruntime for the clustered job</para>
           </listitem>
         </itemizedlist>
 
@@ -231,8 +248,7 @@ siteX    B     /shared/PEGASUS/bin/jobB INSTALLED       INTEL32::LINUX PEGASUS::
         <programlisting><emphasis role="bold">#site  transformation   pfn             type             architecture   profiles
 </emphasis>
 siteX    B     /shared/PEGASUS/bin/jobB INSTALLED       INTEL32::LINUX PEGASUS::clusters.maxruntime=250,job.runtime=100
-siteX    C     /shared/PEGASUS/bin/jobC INSTALLED       INTEL32::LINUX PEGASUS::clusters.maxruntime=300,job.runtime=100
-</programlisting>
+siteX    C     /shared/PEGASUS/bin/jobC INSTALLED       INTEL32::LINUX PEGASUS::clusters.maxruntime=300,job.runtime=100</programlisting>
 
         <figure>
           <title></title>
