@@ -1,3 +1,9 @@
+pegasus (4.0.1cvs-1) unstable; urgency=low
+
+  * Initial packaging of Pegasus 4.0.1
+
+ -- Mats Rynge <mats@rynge.net>  Wed, 29 Feb 2012 16:31:15 -0800
+
 pegasus (4.0.0-1) unstable; urgency=low
 
   * Initial FHS packaging
