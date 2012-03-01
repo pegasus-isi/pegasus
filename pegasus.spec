@@ -1,5 +1,5 @@
 Name:           pegasus
-Version:        4.0.0cvs
+Version:        4.0.0
 Release:        1%{?dist}
 Summary:        Workflow management system for Condor, grids, and clouds
 Group:          Applications/System
