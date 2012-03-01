@@ -4,10 +4,16 @@ $Id$
 Release Notes for PEGASUS 4.0.0
 ===============================
 
-This is a major release of Pegasus that introduces PegasusLite and
-improved support for running workflows in a cloud environment and a
-non shared filesystem setup.  It is the first release of Pegasus which
-is Filesystem Hierarchy Standard (FHS) compliant.
+This is a major release of Pegasus that introduces new advanced data
+handling capabilities, and contains improved support for running
+workflows in non-shared filesystem scenarios such as clouds and Condor
+pools. Pegasus now optionally separates the data staging site from the
+workflow execution site for more flexible data management. A new
+feature is PegasusLite - an autonomous lightweight execution
+environment to manage jobs on the compute nodes and handles data
+movement to/from such jobs against the workflow staging site. The RPM
+and Debian packages conform to the Filesystem Hierarchy Standard
+(FHS).
 
 
 NEW FEATURES
