@@ -452,7 +452,8 @@ initMachine( void )
   gather_proc_uptime( &p->boottime, &p->idletime ); 
 
   version = extract_version( p->basic->uname.release ); 
-  if ( version >= 2006000 && version <= 2006999 ) {
+  /* PM-571: We are safe including 3.2 series */ 
+  if ( version >= 2006000 && version <= 3002999 ) {
     gather_linux_proc26( &p->procs, &p->tasks ); 
   } else if ( version >= 2004000 && version <= 2004999 ) {
     gather_linux_proc24( &p->procs, &p->tasks ); 
