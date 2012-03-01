@@ -2,12 +2,12 @@
 .\"     Title: pegasus-config
 .\"    Author: [see the "Author" section]
 .\" Generator: DocBook XSL Stylesheets v1.75.2 <http://docbook.sf.net/>
-.\"      Date: 02/28/2012
+.\"      Date: 02/29/2012
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "PEGASUS\-CONFIG" "1" "02/28/2012" "\ \&" "\ \&"
+.TH "PEGASUS\-CONFIG" "1" "02/29/2012" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,7 +32,7 @@ pegasus-config \- The authority for where parts of the Pegasus system exists on 
 .SH "SYNOPSIS"
 .sp
 .nf
-\fBpegasus\-config\fR [\fB\-h\fR] [\fB\-\-help\fR] [\fB\-V\fR] [\fB\-\-version\fR]
+\fBpegasus\-config\fR [\fB\-h\fR] [\fB\-\-help\fR] [\fB\-V\fR] [\fB\-\-version\fR] [\fB\-\-noeoln\fR]
                [\fB\-\-perl\-dump\fR] [\fB\-\-perl\-hash\fR] [\fB\-\-python\-dump\fR] [\fB\-\-sh\-dump\fR]
                [\fB\-\-bin\fR] [\fB\-\-conf\fR] [\fB\-\-java\fR] [\fB\-\-perl\fR] [\fB\-\-python\fR]
                [\fB\-\-python\-externals\fR] [\fB\-\-schema\fR] [\fB\-\-classpath\fR]
@@ -115,7 +115,7 @@ Builds a classpath containing the Pegasus jars\&.
 .PP
 \fB\-\-noeoln\fR
 .RS 4
-Do not produce a end\-of\-line after output\&. This is useful when being called from non\-shell backticks in scripts\&.
+Do not produce a end\-of\-line after output\&. This is useful when being called from non\-shell backticks in scripts\&. However, order is important for this option: If you intend to use it, specify it first\&.
 .RE
 .PP
 \fB\-\-local\-site\fR [d]

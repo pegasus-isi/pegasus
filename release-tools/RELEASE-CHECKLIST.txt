@@ -9,14 +9,14 @@ NOTE: Do not copy and paste the commands below without double checking.
 
        svn co https://pegasus.isi.edu/svn/pegasus/branches/N.M N.M-branch
 
-2.  Generate documentation PDFs:
+2.  Generate man pages documentation PDFs:
 
        ant doc
 
 3.  Copy and check the PDFs in:
 
-       cp dist/pegasus-*/doc/html/*.pdf doc/
-       svn commit -m "Updated PDFs"
+       cp dist/pegasus-*/share/doc/pegasus/html/*.pdf doc/
+       svn commit -m "Updated man pages PDFs"
 
 4.  Set the version number in Version.in and commit:
 
