@@ -10,9 +10,9 @@
     <para>The DAX is a description of an abstract workflow in XML format that
     is used as the primary input into Pegasus. The DAX schema is described in
     <ulink
-    url="http://pegasus.isi.edu/wms/docs/schemas/dax-3.2/dax-3.2.xsd">dax-3.2.xsd</ulink>
+    url="http://pegasus.isi.edu/wms/docs/schemas/dax-3.3/dax-3.3.xsd">dax-3.3.xsd</ulink>
     The documentation of the schema and its elements can be found in <ulink
-    url="http://pegasus.isi.edu/wms/docs/schemas/dax-3.2/dax-3.2.html">dax-3.2.html</ulink>.</para>
+    url="http://pegasus.isi.edu/wms/docs/schemas/dax-3.3/dax-3.3.html">dax-3.3.html</ulink>.</para>
 
     <para>A DAX can be created by all users with the DAX generating API in
     Java, Perl, or Python format</para>
@@ -904,7 +904,7 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
 
       <para>Pegasus 3.0 by default now parses Site Catalog format conforming
       to the SC schema 3.0 ( XML3 ) available <ulink role=""
-      url="http://pegasus.isi.edu/wms/docs/schemas/dax-3.2/dax-3.2.xsd"
+      url="http://pegasus.isi.edu/wms/docs/schemas/sc-3.0/sc-3.0.xsd"
       userlevel="">here</ulink> and is explained in detail in the Catalog
       Properties section of <link linkend="running_workflows">Running
       Workflows</link>.</para>
