@@ -1200,10 +1200,9 @@
       California Earthquake Center, uses this API in their CyberShake workflow
       generator to generate huge DAX containing 10&amp;rsquor;s of thousands
       of tasks with 100&amp;rsquor;s of thousands of input and output files.
-      The <ulink
-      url="http://pegasus.isi.edu/wms/docs/3.0/javadoc/index.html">Java
+      The <ulink url="javadoc/index.html">Java
       API</ulink> is well documented using <ulink
-      url="http://pegasus.isi.edu/wms/docs/3.0/javadoc/edu/isi/pegasus/planner/dax/ADAG.html">Javadoc
+      url="javadoc/edu/isi/pegasus/planner/dax/ADAG.html">Javadoc
       for ADAGs</ulink> .</para>
 
       <para>The steps involved in creating a DAX using the API are</para>
@@ -1402,8 +1401,7 @@ public class BlackDiamondDAX {
     <section id="api-python">
       <title>The Python DAX Generator API</title>
 
-      <para>Refer to the <ulink
-      url="http://pegasus.isi.edu/wms/docs/3.0/python/">auto-generated python
+      <para>Refer to the <ulink url="python/">auto-generated python
       documentation</ulink> explaining this API.</para>
 
       <programlisting>#!/usr/bin/env python
