@@ -77,8 +77,9 @@ import gnu.getopt.LongOpt;
 import java.io.File;
 import java.io.IOException;
 import java.io.FileOutputStream;
-
+import java.io.FileInputStream;
 import java.nio.channels.FileLock;
+import java.nio.channels.FileChannel;
 
 import java.util.Collection;
 import java.util.List;
@@ -272,6 +273,32 @@ public class CPlanner extends Executable{
             double endtime = new Date().getTime();
             execTime = (endtime - starttime)/1000;
         }
+
+	// 2012-03-06 (jsv): Copy dax file to submit directory. It's
+	// MUCH SIMPLER to use the parsed CLI options at this point than
+	// drill open the shell wrapper without messing up everything. 
+	if ( result == 0 ) { 
+	  try {
+	    File src_file = new File( cPlanner.mPOptions.getDAX() ); 
+	    File dst_file = new File( cPlanner.mPOptions.getSubmitDirectory(), src_file.getName() ); 
+	    if ( ! dst_file.exists() ) dst_file.createNewFile();
+
+	    FileChannel fc_src = null;
+	    FileChannel fc_dst = null;
+	    try {
+	      fc_src = new FileInputStream( src_file ).getChannel();
+	      fc_dst = new FileOutputStream( dst_file ).getChannel();
+	      fc_dst.transferFrom( fc_src, 0, fc_src.size() );
+	    } finally {
+	      if ( fc_src != null ) fc_src.close();
+	      if ( fc_dst != null ) fc_dst.close(); 
+	    }
+	  } catch ( IOException ieo ) {
+	    // ignore -- copy is best effort for now
+	  } catch ( NullPointerException npe ) { 
+	    // also ignore
+	  }
+	}
 
         // warn about non zero exit code
         if ( result != 0 ) {
