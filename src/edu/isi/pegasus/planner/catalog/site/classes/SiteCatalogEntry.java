@@ -439,7 +439,7 @@ public class SiteCatalogEntry extends AbstractSiteData{
         if (s != null && s.length() > 0) {
             File f = new File(s);
             try {
-                s = f.getCanonicalPath();
+                s = f.getAbsolutePath();
             }
             catch (Exception e) {
                 // ignore - just leave s alone
