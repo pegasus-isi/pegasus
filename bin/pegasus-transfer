@@ -233,6 +233,10 @@ tool_map[('symlink' , 'symlink' )] = 'symlink'
 
 tool_info = {}
 
+# track remote directories created so that don't have to
+# try to create them over and over again
+remote_dirs_created = {}
+
 # stats
 stats_start = 0
 stats_end = 0
@@ -496,6 +500,18 @@ def symlink(transfers, failed_q):
             failed_q.append(transfer)
 
 
+def prepare_scp_dir(rhost, rdir):
+    """
+    makes sure a local path exists before putting files into it
+    """
+    cmd = "/usr/bin/ssh"
+    if "SSH_PRIVATE_KEY" in os.environ:
+        cmd += " -i " + os.environ['SSH_PRIVATE_KEY']
+    cmd += " -q -o StrictHostKeyChecking=no"
+    cmd += " " + rhost + " '/bin/mkdir -p " + rdir + "'"
+    myexec(cmd, default_subshell_timeout, True)
+
+
 def scp(transfers, failed_q):
     """
     copies using scp
@@ -505,18 +521,24 @@ def scp(transfers, failed_q):
         if "SSH_PRIVATE_KEY" in os.environ:
             cmd += " -i " + os.environ['SSH_PRIVATE_KEY']
         cmd += " -q -B -o StrictHostKeyChecking=no"
-        if transfer.dst_proto == "file":
-            prepare_local_dir(os.path.dirname(transfer.dst_path))
-            cmd += " " + transfer.src_host + ":" + transfer.src_path
-            cmd += " " + transfer.dst_path
-        else:
-            cmd += " " + transfer.src_path
-            cmd += " " + transfer.dst_host + ":" + transfer.dst_path
-            stats_add(transfer.src_path)
         try:
+            if transfer.dst_proto == "file":
+                prepare_local_dir(os.path.dirname(transfer.dst_path))
+                cmd += " " + transfer.src_host + ":" + transfer.src_path
+                cmd += " " + transfer.dst_path
+            else:
+                mkdir_key = "scp://" + transfer.dst_host + ":" + os.path.dirname(transfer.dst_path)
+                if not mkdir_key in remote_dirs_created:
+                    prepare_scp_dir(transfer.dst_host, os.path.dirname(transfer.dst_path))
+                    remote_dirs_created[mkdir_key] = True
+                cmd += " " + transfer.src_path
+                cmd += " " + transfer.dst_host + ":" + transfer.dst_path
+                stats_add(transfer.src_path)
+
             myexec(cmd, default_subshell_timeout, True)
             if transfer.dst_proto == "file":
                 stats_add(transfer.dst_path)    
+
         except RuntimeError, err:
             logger.error(err)
             failed_q.append(transfer)
