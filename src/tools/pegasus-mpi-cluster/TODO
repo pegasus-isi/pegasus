@@ -1,0 +1,14 @@
+This is a list of items that are planned in future versions of mpidag.
+
+* Add task runtime to rescue file?
+* Allow tries to be specified with -t/--tries in DAG (e.g. TASK A -t 3 /bin/date)
+* Add task runtimes in rescue file (e.g. DONE foo 10.0)?
+* Enable weight in DAG with -w/--weight (e.g. TASK A -w 10 /bin/date)
+* Enable -p/--priority as an alias for -w/--weight in DAG
+* Add support for priority-based scheduling using weights
+* Add BFS and DFS mode via level-based weights
+* Add support for more sophisticated scheduling? (e.g. homogeneous task 
+  scheduling like FCFS, EFT, ETF, HLFET, MCP, DCP, MD, and others described 
+  in the DCP paper) Some algorithms could use the weight as a strict 
+  priority, some could use the weight as a runtime estimate, and some could 
+  use weight as a, well, weight.

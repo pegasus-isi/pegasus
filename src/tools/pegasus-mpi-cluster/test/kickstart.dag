@@ -1,0 +1,9 @@
+TASK A /usr/local/pegasus/bin/kickstart /bin/echo A
+TASK B /usr/local/pegasus/bin/kickstart /bin/echo B
+TASK C /usr/local/pegasus/bin/kickstart /bin/echo C
+TASK D /usr/local/pegasus/bin/kickstart /bin/echo D
+
+EDGE A B
+EDGE A C
+EDGE B D
+EDGE C D

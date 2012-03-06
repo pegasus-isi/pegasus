@@ -1,0 +1,9 @@
+TASK A /bin/echo A
+TASK B /bin/echo B
+TASK C /bin/echo C
+TASK D /bin/echo D
+
+EDGE A B
+EDGE A C
+EDGE B D
+EDGE C D

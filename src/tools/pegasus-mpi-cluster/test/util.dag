@@ -1,0 +1,9 @@
+TASK A /bin/sleep 1
+TASK B /bin/sleep 1
+TASK C /bin/sleep 1
+TASK D /bin/sleep 1
+
+EDGE A B
+EDGE A C
+EDGE B D
+EDGE C D
