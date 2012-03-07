@@ -23,6 +23,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.Enumeration;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.MissingResourceException;
 import java.util.Properties;
 import java.util.regex.Matcher;
@@ -483,19 +485,31 @@ public class CommonProperties
         // Remark 2: We need to give priority to System properties. This is done
         // automatically by calling this class's getProperty method.
         String key;
-        for ( Enumeration e = propertyNames(); e.hasMoreElements(); ) {
-            key = (String) e.nextElement();
 
-            if ( keepPrefix ) {
-                // keep full prefix in result, also copy direct matches
-                if ( key.startsWith(prefixMatch) || key.equals(prefixSelf) )
-                    result.setProperty( key,
-                            getProperty(key) );
-            } else {
-                // remove full prefix in result, dont copy direct matches
-                if ( key.startsWith(prefixMatch) )
-                    result.setProperty( key.substring( prefixMatch.length() ),
-                            getProperty(key) );
+        List<Enumeration> enumerations = new LinkedList();
+
+        //take cares of only the properties specified in the properties file
+        enumerations.add( propertyNames() );
+        //user may have specified profiles as properties in the system
+        //fix for PM-581
+        enumerations.add( System.getProperties().propertyNames() );
+
+        for( Enumeration e: enumerations ){
+            while( e.hasMoreElements() ){
+                key = (String) e.nextElement();
+
+                if ( keepPrefix ) {
+                    // keep full prefix in result, also copy direct matches
+                    if ( key.startsWith(prefixMatch) || key.equals(prefixSelf) )
+                        result.setProperty( key,
+                                getProperty(key) );
+                } else {
+                    // remove full prefix in result, dont copy direct matches
+                    if ( key.startsWith(prefixMatch) )
+                        result.setProperty( key.substring( prefixMatch.length() ),
+                                getProperty(key) );
+                        
+                }
             }
         }
 
