@@ -147,7 +147,7 @@ public class Partition extends Data {
      *
      * @return  List of <code>GraphNode</code> objects.
      */
-    public List getNodes(){
+    public List<GraphNode> getNodes(){
         return this.mNodeList;
     }
 

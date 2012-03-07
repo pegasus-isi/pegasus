@@ -40,6 +40,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;
 import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+import java.util.LinkedList;
 
 /**
  * An abstract clusterer that the other clusterers can extend. The abstract
@@ -114,17 +116,18 @@ public abstract class Abstract implements Clusterer {
      *
      * @throws ClustererException in case of error.
      */
-    public abstract List order( Partition p ) throws ClustererException;
+    public abstract List<String> order( Partition p ) throws ClustererException;
 
     /**
      * Determine the input and output files of the job on the basis of the
      * order of the constituent jobs in the AggregatedJob.
      *
      * @param job  the <code>AggregatedJob</code>
+     * @param orderedJobs  the List of Jobs that is ordered as determined by the clustererr
      *
      * @throws ClustererException in case of error.
      */
-    public abstract void determineInputOutputFiles( AggregatedJob job );
+    public abstract void determineInputOutputFiles( AggregatedJob job , List<Job> orderedJobs );
 
     /*{
         //by default we do not care about order
@@ -185,9 +188,9 @@ public abstract class Abstract implements Clusterer {
         String pID = partition.getID();
 
         //do the ordering on the partition as required.
-        List nodes  = order( partition );
+        List<String> nodes  = order( partition );
 
-        List l     = new ArrayList( nodes.size() );
+        List l     = new LinkedList(  );
 
         mLogger.log( "Clustering jobs in partition " + pID +
                      " " +  nodes,
@@ -255,8 +258,22 @@ public abstract class Abstract implements Clusterer {
             }
         }
 
+        //add edges in the partition to the clustered job
+        List<GraphNode> gns = partition.getNodes();
+        for( GraphNode gn: gns ){
+            List<GraphNode> parents = gn.getParents();
+            
+            List<String> parentEdges = new LinkedList();
+            for( GraphNode parent : parents ){
+                parentEdges.add( parent.getID() );
+            }
+            
+            clusteredJob.addEdges( gn.getID(), parentEdges );
+
+        }
+
         //get the correct input and output files for the job
-        this.determineInputOutputFiles( clusteredJob );
+        this.determineInputOutputFiles( clusteredJob, l );
 
         //System.out.println(" Clustered Job is " + clusteredJob );
 

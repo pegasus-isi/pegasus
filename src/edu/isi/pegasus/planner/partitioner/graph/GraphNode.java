@@ -61,13 +61,13 @@ public class GraphNode extends Data {
      * The list of parents of the job/node in the abstract graph. Each element
      * of the list is a <code>GraphNode</code> object.
      */
-    private List mParents;
+    private List<GraphNode> mParents;
 
     /**
      * The list of children of the job/node in the abstract graph. Each element
      * of the list is a <code>GraphNode</code> object.
      */
-    private List mChildren;
+    private List<GraphNode> mChildren;
 
     /**
      * The content associated with this node.
@@ -146,7 +146,7 @@ public class GraphNode extends Data {
      * It adds the parents to the node. It ends up overwriting all the existing
      * parents if some already exist.
      */
-    public void setParents( List parents ) {
+    public void setParents( List<GraphNode> parents ) {
         mParents = parents;
     }
 
@@ -154,7 +154,7 @@ public class GraphNode extends Data {
      * It sets the children to the node. It ends up overwriting all the existing
      * parents if some already exist.
      */
-    public void setChildren( List children ) {
+    public void setChildren( List<GraphNode> children ) {
         mChildren = children;
     }
 
@@ -339,6 +339,7 @@ public class GraphNode extends Data {
     }
 
 
+   
     /**
      * Returns a copy of the object.
      */

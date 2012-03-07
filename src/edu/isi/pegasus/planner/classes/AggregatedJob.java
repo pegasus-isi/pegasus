@@ -19,10 +19,12 @@ package edu.isi.pegasus.planner.classes;
 
 import edu.isi.pegasus.planner.cluster.JobAggregator;
 
-import java.util.Collection;
+import edu.isi.pegasus.planner.partitioner.graph.Graph;
+import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+import edu.isi.pegasus.planner.partitioner.graph.MapGraph;
 import java.util.List;
-import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedList;
 
 /**
  * This class holds all the specifics of an aggregated job. An aggregated job
@@ -35,12 +37,12 @@ import java.util.Iterator;
  * @version $Revision$
  */
 
-public class AggregatedJob extends Job {
+public class AggregatedJob extends Job implements Graph{
 
     /**
      * The collection of jobs that are contained in the aggregated job.
      */
-    private List mConstituentJobs;
+//    private List mConstituentJobs;
 
     /**
      * Boolean indicating whether a job has been fully rendered to an executable
@@ -54,14 +56,21 @@ public class AggregatedJob extends Job {
      */
     private JobAggregator mJobAggregator;
 
+
+    /**
+     * Handle to the Graph implementor.
+     */
+    private Graph mGraphImplementor;
+
     /**
      * The default constructor.
      */
     public AggregatedJob() {
         super();
-        mConstituentJobs = new ArrayList(3);
+//        mConstituentJobs = new ArrayList(3);
         mHasBeenRenderedToExecutableForm = false;
         this.mJobAggregator = null;
+        mGraphImplementor = new MapGraph();
     }
 
     /**
@@ -71,7 +80,7 @@ public class AggregatedJob extends Job {
      */
     public AggregatedJob(int num) {
         this();
-        mConstituentJobs = new ArrayList(num);
+//        mConstituentJobs = new ArrayList(num);
     }
 
     /**
@@ -82,9 +91,10 @@ public class AggregatedJob extends Job {
      */
     public AggregatedJob(Job job,int num) {
         super((Job)job.clone());
-        mConstituentJobs = new ArrayList(num);
+//        mConstituentJobs = new ArrayList(num);
         mHasBeenRenderedToExecutableForm = false;
         this.mJobAggregator = null;
+        this.mGraphImplementor = new MapGraph();
     }
 
     /**
@@ -134,7 +144,12 @@ public class AggregatedJob extends Job {
      * @param job  the job to be added.
      */
     public void add(Job job){
-        mConstituentJobs.add(job);
+//        mConstituentJobs.add(job);
+
+        //should be getID() instead of logicalID
+        //however that requires change in vertical clusterer where
+        //partition object is indexed by logical id's
+        this.addNode(new GraphNode( job.getLogicalID(), job ) );
     }
 
     /**
@@ -153,10 +168,15 @@ public class AggregatedJob extends Job {
      */
     public Object clone(){
         AggregatedJob newJob = new AggregatedJob((Job)super.clone(),
-                                              mConstituentJobs.size());
+                                              this.size());
+        /*
         for(Iterator it = this.mConstituentJobs.iterator();it.hasNext();){
             newJob.add( (Job)(((Job)it.next()).clone()));
-        }
+        }*/
+        //shallow clone. Fix me.
+        newJob.mGraphImplementor = (Graph)((MapGraph)this.mGraphImplementor).clone();
+
+
         newJob.mHasBeenRenderedToExecutableForm = this.mHasBeenRenderedToExecutableForm;
         newJob.mJobAggregator = this.mJobAggregator;
 
@@ -169,8 +189,15 @@ public class AggregatedJob extends Job {
      *
      * @return Iterator
      */
-    public Iterator constituentJobsIterator(){
-        return mConstituentJobs.iterator();
+    public Iterator<Job> constituentJobsIterator(){
+//        return mConstituentJobs.iterator();
+        //need to use the toplogical sort iterator for label based clustering
+        List<Job> l = new LinkedList();
+        for( Iterator<GraphNode> it = this.nodeIterator(); it.hasNext(); ){
+           GraphNode n = it.next();
+           l.add( (Job)n.getContent() );
+        }
+        return l.iterator();
     }
     
     /**
@@ -181,7 +208,17 @@ public class AggregatedJob extends Job {
      * @return   a constituent job.
      */
     public Job getConstituentJob( int index ){
-        return (Job) this.mConstituentJobs.get( index );
+//        return (Job) this.mConstituentJobs.get( index );
+       
+        //should be deprecated
+        int i =0;
+        for( Iterator<GraphNode> it = this.nodeIterator(); it.hasNext(); i++ ){
+            GraphNode n = it.next();
+            if( i == index ){
+                return (Job)n.getContent();
+            }
+        }
+        return null;
     }
     
     /**
@@ -190,7 +227,8 @@ public class AggregatedJob extends Job {
      * @return Iterator
      */
     public int numberOfConsitutentJobs(){
-        return mConstituentJobs.size();
+//        return mConstituentJobs.size();
+        return this.size();
     }
     /**
      * Returns a textual description of the object.
@@ -202,11 +240,143 @@ public class AggregatedJob extends Job {
         sb.append("\n").append("[MAIN JOB]").append(super.toString());
         sb.append("\n").append("[CONSTITUENT JOBS]");
         int num = 0;
-        for(Iterator it = mConstituentJobs.iterator();it.hasNext();++num){
+        for(Iterator it = this.nodeIterator();it.hasNext();++num){
             sb.append("\n").append("[CONSTITUENT JOB] :").append(num);
             sb.append(it.next());
         }
         return sb.toString();
+    }
+
+    /**
+     * Adds a node to the Graph. It overwrites an already existing node with the
+     * same ID.
+     *
+     * @param node  the node to be added to the Graph.
+     */
+    public void addNode(GraphNode node) {
+        this.mGraphImplementor.addNode(node);
+    }
+
+    /**
+     * Adds an edge between two already existing nodes in the graph.
+     *
+     * @param parent   the parent node ID.
+     * @param child    the child node ID.
+     */
+    public void addEdge(String parent, String child) {
+        this.mGraphImplementor.addEdge(parent, child);
+    }
+
+    /**
+     * A convenience method that allows for bulk addition of edges between
+     * already existing nodes in the graph.
+     *
+     * @param child   the child node ID
+     * @param parents list of parent identifiers as <code>String</code>.
+     */
+    public void addEdges(String child, List parents) {
+        this.mGraphImplementor.addEdges(child, parents);
+    }
+
+    /**
+     * Returns the node matching the id passed.
+     *
+     * @param identifier  the id of the node.
+     *
+     * @return the node matching the ID else null.
+     */
+    public GraphNode getNode(String identifier) {
+        return this.mGraphImplementor.getNode(identifier);
+    }
+
+    /**
+     * Adds a single root node to the Graph. All the exisitng roots of the
+     * Graph become children of the root.
+     *
+     * @param root  the <code>GraphNode</code> to be added as a root.
+     *
+     * @throws RuntimeException if a node with the same id already exists.
+     */
+    public void addRoot(GraphNode root) {
+        this.mGraphImplementor.addRoot(root);
+    }
+
+    /**
+     * Removes a node from the Graph.
+     *
+     * @param identifier   the id of the node to be removed.
+     *
+     * @return boolean indicating whether the node was removed or not.
+     */
+    public boolean remove(String identifier) {
+        return this.mGraphImplementor.remove(identifier);
+    }
+
+     /**
+     * Returns an iterator for the nodes in the Graph. These iterators are
+     * fail safe.
+     *
+     * @return Iterator
+     */
+    public Iterator<GraphNode> nodeIterator() {
+        return this.mGraphImplementor.nodeIterator();
+    }
+
+    /**
+     * Returns an iterator that traverses through the graph using a graph
+     * traversal algorithm.
+     *
+     * @return Iterator through the nodes of the graph.
+     */
+    public Iterator<GraphNode> iterator() {
+        return this.mGraphImplementor.iterator();
+    }
+
+    /**
+     * Returns an iterator for the graph that traverses in topological sort
+     * order.
+     *
+     * @return Iterator through the nodes of the graph.
+     */
+    public Iterator<GraphNode> topologicalSortIterator() {
+        return this.mGraphImplementor.topologicalSortIterator();
+    }
+
+
+    /**
+     * Returns the number of nodes in the graph.
+     */
+    public int size() {
+        return this.mGraphImplementor.size();
+    }
+
+    /**
+     * Returns the root nodes of the Graph.
+     *
+     * @return  a list containing <code>GraphNode</code> corressponding to the
+     *          root nodes.
+     */
+    public List<GraphNode> getRoots() {
+        return this.mGraphImplementor.getRoots();
+    }
+
+    /**
+     * Returns the leaf nodes of the Graph.
+     *
+     * @return  a list containing <code>GraphNode</code> corressponding to the
+     *          leaf nodes.
+     */
+    public List<GraphNode> getLeaves() {
+        return this.mGraphImplementor.getLeaves();
+    }
+
+    /**
+     * Returns a boolean if there are no nodes in the graph.
+     *
+     * @return boolean
+     */
+    public boolean isEmpty() {
+        return this.mGraphImplementor.isEmpty();
     }
 
 }

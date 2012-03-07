@@ -91,10 +91,11 @@ public class Vertical extends Abstract {
      * sorted order of the constituent jobs.
      *
      * @param job  the <code>AggregatedJob</code>
+     * @param orderedJobs  the List of Jobs that is ordered as determined by the clustererr
      *
      * @throws ClustererException in case of error.
      */
-    public void determineInputOutputFiles( AggregatedJob job ){
+    public  void determineInputOutputFiles( AggregatedJob job , List<Job> orderedJobs ){
 
         //set the input files to null for time being
         job.inputFiles  = null;
@@ -105,10 +106,14 @@ public class Vertical extends Abstract {
 
         PegasusFile file;
 
+
+
         //the constituent jobs are topologically sorted
         //traverse through them and build up the ip and op files
-        for( Iterator it = job.constituentJobsIterator(); it.hasNext();){
+        for( Iterator it = orderedJobs.iterator(); it.hasNext();){
             Job cjob = (Job)it.next();
+
+            System.out.println( cjob.getID() );
 
             //traverse through input files of constituent job
             for( Iterator fileIt = cjob.getInputFiles().iterator(); fileIt.hasNext();){

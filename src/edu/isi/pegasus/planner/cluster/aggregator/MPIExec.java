@@ -45,7 +45,7 @@ public class MPIExec extends Abstract {
      * The basename of the executable that is able to run multiple
      * jobs via mpi.
      */
-    public static String EXECUTABLE_BASENAME = "mpiexec";
+    public static String EXECUTABLE_BASENAME = "pegasus-mpi-cluster";
 
 
     /**
@@ -84,77 +84,7 @@ public class MPIExec extends Abstract {
         return;
     }
 
-    /**
-     * Constructs a new aggregated job that contains all the jobs passed to it.
-     * The new aggregated job, appears as a single job in the workflow and
-     * replaces the jobs it contains in the workflow.
-     * <p>
-     * The aggregated job is executed at a site, using mpiexec that
-     * executes each of the smaller jobs in the aggregated job on n number of
-     * nodes where n is the nodecount associated with the job.
-     * All the sub jobs are in turn launched via kickstart if kickstart is
-     * installed at the site where the job resides.
-     *
-     * @param jobs the list of <code>Job</code> objects that need to be
-     *             collapsed. All the jobs being collapsed should be scheduled
-     *             at the same pool, to maintain correct semantics.
-     * @param name  the logical name of the jobs in the list passed to this
-     *              function.
-     * @param id   the id that is given to the new job.
-     *
-     *
-     * @return  the <code>AggregatedJob</code> object corresponding to the aggregated
-     *          job containing the jobs passed as List in the input,
-     *          null if the list of jobs is empty
-     */
-/*
-    public AggregatedJob construct(List jobs,String name, String id) {
-        AggregatedJob mergedJob = super.construct(jobs,name,id);
-        //also put in jobType as mpi
-        mergedJob.globusRSL.checkKeyInNS("jobtype","mpi");
-
-        //ensure that AggregatedJob is invoked via NoGridStart
-        mergedJob.vdsNS.construct( Pegasus.GRIDSTART_KEY,
-                                   GridStartFactory.GRIDSTART_SHORT_NAMES[
-                                                          GridStartFactory.NO_GRIDSTART_INDEX] );
-
-        return mergedJob;
-    }
-
-*/
-
-
-
-    /**
-     * Enables the constitutent jobs that make up a aggregated job. Makes sure
-     * that they all are enabled via no kickstart
-     *
-     * @param mergedJob   the clusteredJob
-     * @param jobs         the constitutent jobs
-     *
-     * @return AggregatedJob
-     */
-/*
-    protected AggregatedJob enable(  AggregatedJob mergedJob, List jobs  ){
-        //we cannot invoke any of clustered jobs also via kickstart
-        //as the output will be clobbered
-        Job firstJob = (Job)jobs.get(0);
-
-        SiteCatalogEntry site = mSiteStore.lookup( firstJob.getSiteHandle() );
-        firstJob.vdsNS.construct( Pegasus.GRIDSTART_KEY,
-                                   GridStartFactory.GRIDSTART_SHORT_NAMES[
-                                                          GridStartFactory.NO_GRIDSTART_INDEX] );
-
-        //NEEDS TO BE FIXED AS CURRENTLY NO PLACEHOLDER FOR Kickstart 
-        //PATH IN THE NEW SITE CATALOG Karan July 10, 2008
-        GridStart gridStart = mGridStartFactory.loadGridStart( firstJob,
-                                                               site.getKickstartPath() );
-
-
-        return gridStart.enable( mergedJob, jobs );
-    }
-*/
-
+    
     /**
      * Returns the logical name of the transformation that is used to
      * collapse the jobs.
