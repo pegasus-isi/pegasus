@@ -2,7 +2,7 @@
 Code to handle various aspects of transitioning to a new verson of the 
 Stampede schema.
 """
-__rcsid__ = "$Id: schema_check.py 30421 2012-02-21 21:20:02Z mgoode $"
+__rcsid__ = "$Id: schema_check.py 30802 2012-03-07 17:01:34Z mgoode $"
 __author__ = "Monte Goode"
 
 import exceptions
@@ -105,7 +105,7 @@ class SchemaCheck(DoesLogging):
         if not q.one()[0]:
             return q.one()[0]
         else:
-            return float(q.one()[0])
+            return round(q.one()[0],1)
         
     def _version_check(self, version_number):
         self.log.info('check_schema', msg='Current version set to: %s' % version_number)
