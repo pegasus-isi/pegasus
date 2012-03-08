@@ -156,7 +156,7 @@ def create_directory(dir_name, delete_if_exists=False):
             logger.error("Unable to create directory." + dir_name)
             sys.exit(1)
 
-def find_exec(program, curdir=False):
+def find_exec(program, curdir=False, otherdirs=[]):
     """
     Determine logical location of a given binary in PATH
     """
@@ -165,7 +165,7 @@ def find_exec(program, curdir=False):
     # Returns fully qualified path to binary, None if not found
     my_path = os.getenv("PATH","/bin:/usr/bin")
 
-    for my_dir in my_path.split(':'):
+    for my_dir in my_path.split(':')+otherdirs:
         my_file = os.path.join(os.path.expanduser(my_dir), program)
         # Test if file is 'executable'
         if os.access(my_file, os.X_OK):
@@ -659,8 +659,11 @@ if __name__ == "__main__":
     print "short local timestamp:", epochdate(isodate(now=current_time, short=True))
     print "  short utc timestamp:", epochdate(isodate(now=current_time, utc=True, short=True))
     print
+    print "Testing find exec"
     print "Looking for ls...", find_exec('ls')
     print "Looking for test.pl...", find_exec('test.pl', True)
+    print "Monitord 1", find_exec("pegasus-mointord")
+    print "Monitord 2", find_exec(program="pegasus-monitord",otherdirs=["/usr/local/pegasus/src/4.0-branch/bin","/usr/local/pegasus"])
     print
     print "Testing parse_exit() function"
     print "ec = 5   ==> ", parse_exit(5)
@@ -677,3 +680,6 @@ if __name__ == "__main__":
     print repr(str(bytearray(xrange(256))))
     print quote(str(bytearray(xrange(256))))
     print unquote("carriage return: %0Apercent: %25%0Aquote: %27%0Adouble quote: %22")
+    print
+    print
+
