@@ -113,8 +113,6 @@ public class Vertical extends Abstract {
         for( Iterator it = orderedJobs.iterator(); it.hasNext();){
             Job cjob = (Job)it.next();
 
-            System.out.println( cjob.getID() );
-
             //traverse through input files of constituent job
             for( Iterator fileIt = cjob.getInputFiles().iterator(); fileIt.hasNext();){
                 file = (PegasusFile)fileIt.next();
