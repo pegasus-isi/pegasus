@@ -362,8 +362,7 @@ public abstract class Abstract implements JobAggregator {
      */
     public void makeAbstractAggregatedJobConcrete( AggregatedJob job ){
 
-        String stdIn  = null;
-
+        
         //containers for the input and output
         //files of fat job. Set insures no duplication
         //The multiple transfer ensures no duplicate transfer of
@@ -373,68 +372,9 @@ public abstract class Abstract implements JobAggregator {
   
 //        mergedJob = enable( mergedJob, jobs  );
 
-        
-        Job firstJob = (Job)job.getConstituentJob( 0 );
-        try {
-            BufferedWriter writer;
-            stdIn = job.getID() + ".in";
-            writer = new BufferedWriter(new FileWriter(
-                                                       new File(mDirectory,stdIn)));
-
-            //traverse throught the jobs to determine input/output files
-            //and merge the profiles for the jobs
-            int taskid = 1;
-            for( Iterator it = job.constituentJobsIterator(); it.hasNext(); taskid++ ) {
-                Job constitutentJob = (Job) it.next();
 
 
-
-                //handle stdin
-                if( constitutentJob instanceof AggregatedJob ){
-                    //slurp in contents of it's stdin
-                    File file = new File ( mDirectory, job.getStdIn() );
-                    BufferedReader reader = new BufferedReader(
-                                                             new FileReader( file )
-                                                               );
-                    String line;
-                    while( (line = reader.readLine()) != null ){
-                        //ignore comment out lines
-                        if( line.startsWith( "#" ) ){
-                            continue;
-                        }
-                        writer.write( line );
-                        writer.write( "\n" );
-                        taskid++;
-                    }
-                    reader.close();
-                    //delete the previous stdin file
-                    file.delete();
-                }
-                else{
-                    //write out the argument string to the
-                    //stdin file for the fat job
-
-                    //genereate the comment string that has the 
-                    //taskid transformation derivation
-                    writer.write( getCommentString( constitutentJob, taskid ) + "\n" );
-
-                    // the arguments are no longer set as condor profiles
-                    // they are now set to the corresponding profiles in
-                    // the Condor Code Generator only.
-                    writer.write( constitutentJob.getRemoteExecutable()  + " " +
-                                   constitutentJob.getArguments() + "\n");
-                }
-            }
-
-            //closing the handle to the writer
-            writer.close();
-        }
-        catch(IOException e){
-            mLogger.log("While writing the stdIn file " + e.getMessage(),
-                        LogManager.ERROR_MESSAGE_LEVEL);
-            throw new RuntimeException( "While writing the stdIn file " + stdIn, e );
-        }
-
+        File stdIn = writeOutInputFileForJobAggregator( job );
         
         
 /*      JIRA PM-277
@@ -450,7 +390,7 @@ public abstract class Abstract implements JobAggregator {
 
         //stdin file is the file containing the arguments
         //for the jobs being collapsed
-        job.setStdIn( stdIn );
+        job.setStdIn( stdIn.getName() );
 
         //explicitly set stdout to null overriding any stdout
         //that might have been inherited in the clone operation.
@@ -926,6 +866,79 @@ public abstract class Abstract implements JobAggregator {
                       ".":
                       //user specified directory picked up
                       directory;
+
+    }
+
+    /**
+     * Writes out the input file for the aggregated job
+     *
+     * @param job   the aggregated job
+     *
+     * @return path to the input file
+     */
+    protected File writeOutInputFileForJobAggregator(AggregatedJob job) {
+        File stdin = null;
+        try {
+            BufferedWriter writer;
+            String name = job.getID() + ".in";
+            stdin = new File(mDirectory, name );
+            writer = new BufferedWriter(new FileWriter( stdin ) );
+
+            //traverse throught the jobs to determine input/output files
+            //and merge the profiles for the jobs
+            int taskid = 1;
+            for( Iterator it = job.constituentJobsIterator(); it.hasNext(); taskid++ ) {
+                Job constitutentJob = (Job) it.next();
+
+
+
+                //handle stdin
+                if( constitutentJob instanceof AggregatedJob ){
+                    //slurp in contents of it's stdin
+                    File file = new File ( mDirectory, job.getStdIn() );
+                    BufferedReader reader = new BufferedReader(
+                                                             new FileReader( file )
+                                                               );
+                    String line;
+                    while( (line = reader.readLine()) != null ){
+                        //ignore comment out lines
+                        if( line.startsWith( "#" ) ){
+                            continue;
+                        }
+                        writer.write( line );
+                        writer.write( "\n" );
+                        taskid++;
+                    }
+                    reader.close();
+                    //delete the previous stdin file
+                    file.delete();
+                }
+                else{
+                    //write out the argument string to the
+                    //stdin file for the fat job
+
+                    //genereate the comment string that has the
+                    //taskid transformation derivation
+                    writer.write( getCommentString( constitutentJob, taskid ) + "\n" );
+
+                    // the arguments are no longer set as condor profiles
+                    // they are now set to the corresponding profiles in
+                    // the Condor Code Generator only.
+                    writer.write( constitutentJob.getRemoteExecutable()  + " " +
+                                   constitutentJob.getArguments() + "\n");
+                }
+            }
+
+            //closing the handle to the writer
+            writer.close();
+        }
+        catch(IOException e){
+            mLogger.log("While writing the stdIn file " + e.getMessage(),
+                        LogManager.ERROR_MESSAGE_LEVEL);
+            throw new RuntimeException( "While writing the stdIn file " + stdin, e );
+        }
+
+        return stdin;
 
     }
 

@@ -17,10 +17,20 @@
 package edu.isi.pegasus.planner.cluster.aggregator;
 
 
+import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
 
+import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.Iterator;
 
 /**
  * This class aggregates the smaller jobs in a manner such that
@@ -81,7 +91,108 @@ public class MPIExec extends Abstract {
         //also put in jobType as mpi
         job.globusRSL.checkKeyInNS("jobtype","mpi");
 
+        //the stdin of the job actually needs to be passed as arguments
+        String stdin = job.getStdIn();
+        job.setStdIn( "" );
+        
+        //slight cheating here.
+        File stdinFile = new File( mDirectory, stdin );
+
+        StringBuffer args = new StringBuffer();
+        args.append( stdinFile.getName() );
+        job.setArguments( args.toString() );
+
+        job.condorVariables.addIPFileForTransfer( stdinFile.getAbsolutePath() );
         return;
+    }
+
+
+    /**
+     * Writes out the input file for the aggregated job
+     *
+     * @param job   the aggregated job
+     *
+     * @return path to the input file
+     */
+    protected File writeOutInputFileForJobAggregator(AggregatedJob job) {
+        File stdIn = null;
+        try {
+            BufferedWriter writer;
+            String name = job.getID() + ".in";
+            stdIn = new File(mDirectory,name);
+            writer = new BufferedWriter(new FileWriter( stdIn ));
+
+            //traverse throught the jobs to determine input/output files
+            //and merge the profiles for the jobs
+            int taskid = 1;
+            for( Iterator it = job.constituentJobsIterator(); it.hasNext(); taskid++ ) {
+                Job constitutentJob = (Job) it.next();
+
+
+
+                //handle stdin
+                if( constitutentJob instanceof AggregatedJob ){
+                    //slurp in contents of it's stdin
+                    File file = new File ( mDirectory, job.getStdIn() );
+                    BufferedReader reader = new BufferedReader(
+                                                             new FileReader( file )
+                                                               );
+                    String line;
+                    while( (line = reader.readLine()) != null ){
+                        //ignore comment out lines
+                        if( line.startsWith( "#" ) ){
+                            continue;
+                        }
+                        writer.write( line );
+                        writer.write( "\n" );
+                        taskid++;
+                    }
+                    reader.close();
+                    //delete the previous stdin file
+                    file.delete();
+                }
+                else{
+                    //write out the argument string to the
+                    //stdin file for the fat job
+
+                    //genereate the comment string that has the
+                    //taskid transformation derivation
+                    writer.write( getCommentString( constitutentJob, taskid ) + "\n" );
+
+                    StringBuffer task = new StringBuffer();
+                    task.append( "TASK" ).append( " " ).append( constitutentJob.getLogicalID() ).append( " " ).
+                         append( constitutentJob.getRemoteExecutable() ).append( " " ).
+                         append(  constitutentJob.getArguments() ).append( "\n" );
+                    writer.write( task.toString() );
+                }
+            }
+
+            writer.write( "\n" );
+
+            //lets write out the edges
+            for( Iterator it = job.nodeIterator(); it.hasNext() ; ){
+                GraphNode gn = (GraphNode) it.next();
+
+                //get a list of parents of the node
+                for( GraphNode child : gn.getChildren() ){
+                    StringBuffer edge = new StringBuffer();
+                    edge.append(  "EDGE" ).append( " " ).append( gn.getID() ).
+                         append( " " ).append( child.getID() ).append( "\n" );
+                    writer.write( edge.toString() );
+                }
+            }
+
+            //closing the handle to the writer
+            writer.close();
+        }
+        catch(IOException e){
+            mLogger.log("While writing the stdIn file " + e.getMessage(),
+                        LogManager.ERROR_MESSAGE_LEVEL);
+            throw new RuntimeException( "While writing the stdIn file " + stdIn, e );
+        }
+
+        return stdIn;
+
     }
 
     
