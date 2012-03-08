@@ -67,7 +67,7 @@ monitord_current_restarts = 0
 def dagman_launch(arguments):
     '''Launches the condor_dagman program with all
        the arguments passed to pegasus-dagman'''
-    dagman_bin = find_exec("condor_dagman")
+    dagman_bin = find_exec("condor_dagman", False,[bin_dir])
     if dagman_bin != None :
         arguments.insert(0, "condor_scheduniv_exec."+os.getenv("CONDOR_ID"))
         try :
@@ -87,7 +87,7 @@ def dagman_launch(arguments):
 
 def monitord_launch():
     '''Launches Monitord in condor foreground mode'''
-    monitord_bin = find_exec("pegasus-monitord")
+    monitord_bin = find_exec("pegasus-monitord",False,[bin_dir])
     if monitord_bin != None :
         try :
             log = open("monitord.log", 'a')
@@ -103,7 +103,6 @@ def monitord_launch():
             logger.error("Could not launch Monitord.", err)
     else :
         logger.error("pegausus-monitord not found")
-
     return None
 
 def sighandler(signum, frame):
