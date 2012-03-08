@@ -76,25 +76,23 @@ def quote(s):
 
 def isodate(now=int(time.time()), utc=False, short=False):
     """
-    This function converts seconds since epoch into ISO timestamp
+    This function converts seconds since epoch into ISO 8601 timestamp
     """
-
+    my_time_u = time.gmtime(now)
     if utc:
-        my_time = time.gmtime(now)
-    else:
-        # FIXME: Zone offset is wrong on CentOS 5.5 with python 2.4
-        my_time = time.localtime(now)
-        
-    if short:
-        if utc:
-            return time.strftime("%Y%m%dT%H%M%SZ", my_time)
+        if short:
+            return time.strftime("%Y%m%dT%H%M%SZ", my_time_u)
         else:
-            return time.strftime("%Y%m%dT%H%M%S%z", my_time)
+            return time.strftime("%Y-%m-%dT%H:%M:%SZ", my_time_u)
     else:
-        if utc:
-            return time.strftime("%Y-%m-%dT%H:%M:%SZ", my_time)
+        my_time_l = time.localtime(now)
+        my_offset = int( time.mktime(my_time_l) - time.mktime(my_time_u) )
+        offset = "%+03d%02d" % ( my_offset / 3600, (abs(my_offset) % 3600) / 60)
+        if short:
+            return time.strftime("%Y%m%dT%H%M%S", my_time_l) + offset
         else:
-            return time.strftime("%Y-%m-%dT%H:%M:%S%z", my_time)
+            return time.strftime("%Y-%m-%dT%H:%M:%S", my_time_l) + offset
+
 
 def epochdate(timestamp):
     """
