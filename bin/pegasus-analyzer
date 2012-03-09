@@ -128,6 +128,7 @@ top_dir = None                                  # Top_dir of the main workflow, 
 use_files = False                               # Flag for using files in the workflow dir instead of the db
 quiet_mode = 0					# Prints out/err filenames instead of dumping their contents
 strict_mode = 0					# Gets out/err filenames from submit file
+summary_mode = 0                                # Print just the summary output
 debug_mode = 0					# Mode that enables debugging a single job
 print_invocation = 0				# Prints invocation command for failed jobs
 print_pre_script = 0				# Prints the SCRIPT PRE line for failed jobs, if present
@@ -861,12 +862,15 @@ def analyze_files():
     analyze()
 
     # Print summary of our analysis
-    print_summary()
+    if summary_mode :
+        print_top_summary()
+    else :
+        # This is non summary mode despite of the name (go figure)    
+        print_summary()
 
     if failed > 0:
         # Workflow has failures, exit with exitcode 2
         sys.exit(2)
-
     # Workflow has no failures, exit with exitcode 0
     sys.exit(0)
 
@@ -904,7 +908,16 @@ def analyze_db(config_properties):
     unsubmitted = total - success - failed
 
     # Let's print the results
+    
     print_top_summary()
+
+    # Exit if summary mode is on
+    if summary_mode :
+         if failed > 0:
+             # Workflow has failures, exit with exitcode 2
+             sys.exit(2)
+         # Workflow has no failures, exit with exitcode 0  
+         sys.exit(0)
 
     # Now, print information about jobs that failed...
     if failed > 0:
@@ -1220,6 +1233,8 @@ parser.add_option("-p", "--print", action = "store", type = "string" , dest = "p
 		  help = "specifies print options from pre,invocation")
 parser.add_option("-s", "--strict", action = "store_const", const = 1, dest = "strict_mode",
 		  help = "gets a job's out and err files from the submit file")
+parser.add_option("-S", "--summary", action = "store_const", const = 1, dest = "summary_mode",
+		  help = "Just print the summary and exit")
 parser.add_option("--debug-job", action = "store", type = "string", dest = "debug_job",
 		  help = "specifies a job to debug (can be either the job base name or the submit file name) -- this option enables debugging a single job")
 parser.add_option("--debug-dir", action = "store", type = "string", dest = "debug_dir",
@@ -1247,6 +1262,8 @@ if options.run_monitord is not None:
     run_monitord = options.run_monitord
 if options.strict_mode is not None:
     strict_mode = options.strict_mode
+if options.summary_mode is not None:
+    summary_mode = options.summary_mode
 if options.quiet_mode is not None:
     quiet_mode = options.quiet_mode
 if options.use_files is not None:
