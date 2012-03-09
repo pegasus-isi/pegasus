@@ -84,11 +84,11 @@ Python 2.6.2</programlisting></para>
     </note>
 
     <para>If you want to use the <link linkend="api">DAX APIs</link>, you
-    might also need to set your PYTHONPATH, PERLLIB, or CLASSPATH. The right
+    might also need to set your PYTHONPATH, PERL5LIB, or CLASSPATH. The right
     setting can be found by using pegasus-config:</para>
 
     <programlisting># <emphasis role="bold">export PYTHONPATH=`pegasus-config --python`</emphasis>
-# <emphasis role="bold">export PERLLIB=`pegasus-config --perl`</emphasis>
+# <emphasis role="bold">export PERL5LIB=`pegasus-config --perl`</emphasis>
 # <emphasis role="bold">export CLASSPATH=`pegasus-config --classpath`</emphasis></programlisting>
   </section>
 
