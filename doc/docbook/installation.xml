@@ -147,7 +147,7 @@ Complete!</programlisting>
       you will have to trust the repository key. You only need to add the
       repository key once:</para>
 
-      <programlisting># <emphasis role="bold">gpg --keyserver keyring.debian.org --recv-keys 81C2A4AC</emphasis>
+      <programlisting># <emphasis role="bold">gpg --keyserver pgp.mit.edu --recv-keys 81C2A4AC</emphasis>
 # <emphasis role="bold">gpg -a --export 81C2A4AC | apt-key add -</emphasis>  </programlisting>
 
       <para>Add the Pegasus apt repository to your
