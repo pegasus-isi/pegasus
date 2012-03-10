@@ -9,6 +9,7 @@ use Carp;
 
 use Pegasus::DAX::Base qw(:xml); 
 use Pegasus::DAX::InvokeMixin;
+use Pegasus::DAX::Filename qw(LINK_IN LINK_OUT); 
 use Exporter;
 our @ISA = qw(Pegasus::DAX::Base Pegasus::DAX::InvokeMixin Exporter); 
 
@@ -236,21 +237,21 @@ sub innerXML {
 	my $tag = defined $xmlns && $xmlns ? "$xmlns:stdin" : 'stdin'; 
 	$f->print( "$indent<$tag"
 		 , attribute('name',$self->stdin,$xmlns)
-		 , attribute('link','in',$xmlns)
+		 , attribute('link',LINK_IN,$xmlns)
 		 , " />\n" );
     }
     if ( exists $self->{stdout} && $self->{stdout} ) { 
 	my $tag = defined $xmlns && $xmlns ? "$xmlns:stdout" : 'stdout'; 
 	$f->print( "$indent<$tag"
 		 , attribute('name',$self->stdout,$xmlns)
-		 , attribute('link','out',$xmlns)
+		 , attribute('link',LINK_OUT,$xmlns)
 		 , " />\n" );
     }
     if ( exists $self->{stderr} && $self->{stderr} ) { 
 	my $tag = defined $xmlns && $xmlns ? "$xmlns:stderr" : 'stderr'; 
 	$f->print( "$indent<$tag"
 		 , attribute('name',$self->stderr,$xmlns)
-		 , attribute('link','out',$xmlns)
+		 , attribute('link',LINK_OUT,$xmlns)
 		 , " />\n" );
     }
 
