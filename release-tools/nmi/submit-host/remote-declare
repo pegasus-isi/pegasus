@@ -9,7 +9,11 @@ if ( $ENV{NMI_PLATFORM} =~ /rhas_4/ ) {
     $lite = 1;
 }
 my $wms = 1;
-if ( $ENV{NMI_PLATFORM} =~ /deb_5/ or $ENV{NMI_PLATFORM} =~ /rhap_6/ ) {
+if ( 
+     $ENV{NMI_PLATFORM} =~ /deb_5/ or
+     $ENV{NMI_PLATFORM} =~ /x86_deb_6/ or
+     $ENV{NMI_PLATFORM} =~ /rhap_6/
+   ) {
     $wms = 0;
 }
 
