@@ -6,7 +6,7 @@
 
 # Schema directory is by default relative to
 # this directory
-schemadir := ../../../etc
+schemadir := ../../../share/pegasus/schema
 
 # Python Yang (pyang) setup
 PYANG_HOME := $(HOME)/local
@@ -27,7 +27,7 @@ transform: output-file.xml
 
 # Validate XML
 validate: transform
-	$(yang2dsdl) -v output-file.xml $(schemadir)/stampede-$(schema_ver).yang 
+	$(yang2dsdl) -v output-file.xml $(schemadir)/stampede-schema.yang 
 
 # Clean up
 clean:

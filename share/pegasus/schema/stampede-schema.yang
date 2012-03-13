@@ -1,4 +1,4 @@
-module stampede-2011-05-04 {
+module stampede-schema {
     namespace "http://stampede-project.nsf.gov";
 
     prefix "stmp"; // used when imported
