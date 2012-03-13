@@ -1,0 +1,975 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" 
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>YANG Module stampede-schema Version 2011-05-04</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <meta name="description" content="YANG data model documentation"/>
+  <meta name="generator" content="yangdump 1.15-1 (http://www.netconfcentral.org/)"/>
+  <link rel="stylesheet" href="http://netconfcentral.org/static/css/style.css" type="text/css"/>
+</head>
+<body>
+  <h1 class="yang">stampede-schema.yang</h1>
+
+  <ul id="nav">
+    <li><a href="#">Typedefs</a>
+      <ul>
+        <li><a href="#distinguished-name.27">distinguished-name</a></li>
+        <li><a href="#uuid.34">uuid</a></li>
+        <li><a href="#intbool.42">intbool</a></li>
+        <li><a href="#nl_ts.49">nl_ts</a></li>
+        <li><a href="#peg_inttype.57">peg_inttype</a></li>
+        <li><a href="#peg_strtype.64">peg_strtype</a></li>
+        <li><a href="#condor_jobstates.83">condor_jobstates</a></li>
+        <li><a href="#condor_wfstates.110">condor_wfstates</a></li>
+      </ul>
+    </li>
+    <li><a href="#">Groupings</a>
+      <ul>
+        <li class="daddy"><a href="#base-event.121">base-event</a>
+          <ul>
+            <li><a href="#ts.124">ts</a></li>
+            <li><a href="#level.136">level</a></li>
+            <li><a href="#xwf.id.146">xwf.id</a></li>
+          </ul>
+        </li>
+        <li class="daddy"><a href="#base-job-inst.152">base-job-inst</a>
+          <ul>
+            <li><a href="#uses.153">uses</a></li>
+            <li><a href="#job_inst.id.158">job_inst.id</a></li>
+            <li><a href="#js.id.163">js.id</a></li>
+            <li><a href="#job.id.167">job.id</a></li>
+          </ul>
+        </li>
+        <li class="daddy"><a href="#sched-job-inst.174">sched-job-inst</a>
+          <ul>
+            <li><a href="#uses.175">uses</a></li>
+            <li><a href="#sched.id.179">sched.id</a></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+    <li><a href="#">Objects</a>
+      <ul>
+        <li class="daddy"><a href="#events.200">events</a>
+          <ul>
+            <li class="daddy"><a href="#event.201">event</a>
+              <ul>
+                <li class="daddy"><a href="#an_event.203">an_event</a>
+                  <ul>
+                    <li><a href="#stampede.wf.plan.204">stampede.wf.plan</a></li>
+                    <li><a href="#stampede.static.start.270">stampede.static.start</a></li>
+                    <li><a href="#stampede.static.end.274">stampede.static.end</a></li>
+                    <li><a href="#stampede.xwf.start.278">stampede.xwf.start</a></li>
+                    <li><a href="#stampede.xwf.end.287">stampede.xwf.end</a></li>
+                    <li><a href="#stampede.task.info.301">stampede.task.info</a></li>
+                    <li><a href="#stampede.task.edge.330">stampede.task.edge</a></li>
+                    <li><a href="#stampede.wf.map.task_job.346">stampede.wf.map.task_job</a></li>
+                    <li><a href="#stampede.xwf.map.subwf_job.362">stampede.xwf.map.subwf_job</a></li>
+                    <li><a href="#stampede.job.info.384">stampede.job.info</a></li>
+                    <li><a href="#stampede.job.edge.435">stampede.job.edge</a></li>
+                    <li><a href="#stampede.job_inst.pre.start.452">stampede.job_inst.pre.start</a></li>
+                    <li><a href="#stampede.job_inst.pre.term.457">stampede.job_inst.pre.term</a></li>
+                    <li><a href="#stampede.job_inst.pre.end.462">stampede.job_inst.pre.end</a></li>
+                    <li><a href="#stampede.job_inst.submit.start.473">stampede.job_inst.submit.start</a></li>
+                    <li><a href="#stampede.job_inst.submit.end.479">stampede.job_inst.submit.end</a></li>
+                    <li><a href="#stampede.job_inst.held.start.490">stampede.job_inst.held.start</a></li>
+                    <li><a href="#stampede.job_inst.held.end.495">stampede.job_inst.held.end</a></li>
+                    <li><a href="#stampede.job_inst.main.start.507">stampede.job_inst.main.start</a></li>
+                    <li><a href="#stampede.job_inst.main.term.528">stampede.job_inst.main.term</a></li>
+                    <li><a href="#stampede.job_inst.main.end.539">stampede.job_inst.main.end</a></li>
+                    <li><a href="#stampede.job_inst.post.start.604">stampede.job_inst.post.start</a></li>
+                    <li><a href="#stampede.job_inst.post.term.609">stampede.job_inst.post.term</a></li>
+                    <li><a href="#stampede.job_inst.post.end.614">stampede.job_inst.post.end</a></li>
+                    <li><a href="#stampede.job_inst.host.info.625">stampede.job_inst.host.info</a></li>
+                    <li><a href="#stampede.job_inst.image.info.656">stampede.job_inst.image.info</a></li>
+                    <li><a href="#stampede.inv.start.666">stampede.inv.start</a></li>
+                    <li><a href="#stampede.inv.end.689">stampede.inv.end</a></li>
+                  </ul>
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+  </ul>
+
+<br />
+<div class="yang">
+<pre>
+
+  <span class="yang_kw">module</span> <span class="yang_id">stampede-schema</span> {
+
+    <span class="yang_kw">yang-version</span> <span class="yang_str">1</span>;
+
+    <span class="yang_kw">namespace</span> <span class="yang_str">"http://stampede-project.nsf.gov"</span>;
+
+    <span class="yang_kw">prefix</span> <span class="yang_str">"stmp"</span>;
+
+    <span class="yang_kw">import</span> <a href="ietf-inet-types">ietf-inet-types</a> {
+      <span class="yang_kw">prefix</span> <span class="yang_str">"inet"</span>;
+    }
+
+    <span class="yang_kw">organization</span>
+      <span class="yang_str">"STAMPEDE project. NSF grant OCI-0943705"</span>;
+
+    <span class="yang_kw">contact</span>
+      <span class="yang_str">"Dan Gunter 
+                   Lawrence Berkeley National Laboratory
+                   Email: dkgunter@lbl.gov"</span>;
+
+    <span class="yang_kw">reference</span>
+      <span class="yang_str">"https://confluence.pegasus.isi.edu/display/stampede/"</span>;
+
+
+    <span class="yang_kw">revision</span> <span class="yang_str">"2011-05-04"</span> {
+      <span class="yang_kw">description</span> <span class="yang_str">"Updated schema"</span>;
+    }
+
+
+    <a name="distinguished-name.27"></a><span class="yang_kw">typedef</span> <span class="yang_id">distinguished-name</span> {
+      <span class="yang_kw">type</span> <span class="yang_id">string</span>;
+    }
+
+    <a name="uuid.34"></a><span class="yang_kw">typedef</span> <span class="yang_id">uuid</span> {
+      <span class="yang_kw">type</span> <span class="yang_id">string</span> {
+        <span class="yang_kw">length</span> <span class="yang_str">"36"</span>;
+        <span class="yang_kw">pattern</span>
+          <span class="yang_str">'[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}'</span>;
+      }
+    }
+
+    <a name="intbool.42"></a><span class="yang_kw">typedef</span> <span class="yang_id">intbool</span> {
+      <span class="yang_kw">type</span> <span class="yang_id">uint8</span> {
+        <span class="yang_kw">range</span> <span class="yang_str">"0 .. 1"</span>;
+      }
+    }
+
+    <a name="nl_ts.49"></a><span class="yang_kw">typedef</span> <span class="yang_id">nl_ts</span> {
+      <span class="yang_kw">type</span> <span class="yang_id">string</span>;
+    }
+
+    <a name="peg_inttype.57"></a><span class="yang_kw">typedef</span> <span class="yang_id">peg_inttype</span> {
+      <span class="yang_kw">type</span> <span class="yang_id">uint8</span> {
+        <span class="yang_kw">range</span> <span class="yang_str">"0 .. 11"</span>;
+      }
+    }
+
+    <a name="peg_strtype.64"></a><span class="yang_kw">typedef</span> <span class="yang_id">peg_strtype</span> {
+      <span class="yang_kw">type</span> <span class="yang_id">enumeration</span> {
+        <span class="yang_kw">enum</span> <span class="yang_str">"unknown"</span> {
+          <span class="yang_kw">value</span> <span class="yang_str">0</span>;
+        }
+        <span class="yang_kw">enum</span> <span class="yang_str">"compute"</span> {
+          <span class="yang_kw">value</span> <span class="yang_str">1</span>;
+        }
+        <span class="yang_kw">enum</span> <span class="yang_str">"stage-in-tx"</span> {
+          <span class="yang_kw">value</span> <span class="yang_str">2</span>;
+        }
+        <span class="yang_kw">enum</span> <span class="yang_str">"stage-out-tx"</span> {
+          <span class="yang_kw">value</span> <span class="yang_str">3</span>;
+        }
+        <span class="yang_kw">enum</span> <span class="yang_str">"registration"</span> {
+          <span class="yang_kw">value</span> <span class="yang_str">4</span>;
+        }
+        <span class="yang_kw">enum</span> <span class="yang_str">"inter-site-tx"</span> {
+          <span class="yang_kw">value</span> <span class="yang_str">5</span>;
+        }
+        <span class="yang_kw">enum</span> <span class="yang_str">"create-dir"</span> {
+          <span class="yang_kw">value</span> <span class="yang_str">6</span>;
+        }
+        <span class="yang_kw">enum</span> <span class="yang_str">"staged-compute"</span> {
+          <span class="yang_kw">value</span> <span class="yang_str">7</span>;
+        }
+        <span class="yang_kw">enum</span> <span class="yang_str">"cleanup"</span> {
+          <span class="yang_kw">value</span> <span class="yang_str">8</span>;
+        }
+        <span class="yang_kw">enum</span> <span class="yang_str">"chmod"</span> {
+          <span class="yang_kw">value</span> <span class="yang_str">9</span>;
+        }
+        <span class="yang_kw">enum</span> <span class="yang_str">"dax"</span> {
+          <span class="yang_kw">value</span> <span class="yang_str">10</span>;
+        }
+        <span class="yang_kw">enum</span> <span class="yang_str">"dag"</span> {
+          <span class="yang_kw">value</span> <span class="yang_str">11</span>;
+        }
+      }
+    }
+
+    <a name="condor_jobstates.83"></a><span class="yang_kw">typedef</span> <span class="yang_id">condor_jobstates</span> {
+      <span class="yang_kw">type</span> <span class="yang_id">enumeration</span> {
+        <span class="yang_kw">enum</span> <span class="yang_str">"PRE_SCRIPT_STARTED"</span> {
+          <span class="yang_kw">value</span> <span class="yang_str">0</span>;
+        }
+        <span class="yang_kw">enum</span> <span class="yang_str">"PRE_SCRIPT_TERMINATED"</span> {
+          <span class="yang_kw">value</span> <span class="yang_str">1</span>;
+        }
+        <span class="yang_kw">enum</span> <span class="yang_str">"PRE_SCRIPT_SUCCESS"</span> {
+          <span class="yang_kw">value</span> <span class="yang_str">2</span>;
+        }
+        <span class="yang_kw">enum</span> <span class="yang_str">"PRE_SCRIPT_FAILED"</span> {
+          <span class="yang_kw">value</span> <span class="yang_str">3</span>;
+        }
+        <span class="yang_kw">enum</span> <span class="yang_str">"SUBMIT"</span> {
+          <span class="yang_kw">value</span> <span class="yang_str">4</span>;
+        }
+        <span class="yang_kw">enum</span> <span class="yang_str">"GRID_SUBMIT"</span> {
+          <span class="yang_kw">value</span> <span class="yang_str">5</span>;
+        }
+        <span class="yang_kw">enum</span> <span class="yang_str">"GLOBUS_SUBMIT"</span> {
+          <span class="yang_kw">value</span> <span class="yang_str">6</span>;
+        }
+        <span class="yang_kw">enum</span> <span class="yang_str">"SUBMIT_FAILED"</span> {
+          <span class="yang_kw">value</span> <span class="yang_str">7</span>;
+        }
+        <span class="yang_kw">enum</span> <span class="yang_str">"EXECUTE"</span> {
+          <span class="yang_kw">value</span> <span class="yang_str">8</span>;
+        }
+        <span class="yang_kw">enum</span> <span class="yang_str">"REMOTE_ERROR"</span> {
+          <span class="yang_kw">value</span> <span class="yang_str">9</span>;
+        }
+        <span class="yang_kw">enum</span> <span class="yang_str">"IMAGE_SIZE"</span> {
+          <span class="yang_kw">value</span> <span class="yang_str">10</span>;
+        }
+        <span class="yang_kw">enum</span> <span class="yang_str">"JOB_TERMINATED"</span> {
+          <span class="yang_kw">value</span> <span class="yang_str">11</span>;
+        }
+        <span class="yang_kw">enum</span> <span class="yang_str">"JOB_SUCCESS"</span> {
+          <span class="yang_kw">value</span> <span class="yang_str">12</span>;
+        }
+        <span class="yang_kw">enum</span> <span class="yang_str">"JOB_FAILURE"</span> {
+          <span class="yang_kw">value</span> <span class="yang_str">13</span>;
+        }
+        <span class="yang_kw">enum</span> <span class="yang_str">"JOB_HELD"</span> {
+          <span class="yang_kw">value</span> <span class="yang_str">14</span>;
+        }
+        <span class="yang_kw">enum</span> <span class="yang_str">"JOB_EVICTED"</span> {
+          <span class="yang_kw">value</span> <span class="yang_str">15</span>;
+        }
+        <span class="yang_kw">enum</span> <span class="yang_str">"JOB_RELEASED"</span> {
+          <span class="yang_kw">value</span> <span class="yang_str">16</span>;
+        }
+        <span class="yang_kw">enum</span> <span class="yang_str">"POST_SCRIPT_STARTED"</span> {
+          <span class="yang_kw">value</span> <span class="yang_str">17</span>;
+        }
+        <span class="yang_kw">enum</span> <span class="yang_str">"POST_SCRIPT_TERMINATED"</span> {
+          <span class="yang_kw">value</span> <span class="yang_str">18</span>;
+        }
+        <span class="yang_kw">enum</span> <span class="yang_str">"POST_SCRIPT_SUCCESS"</span> {
+          <span class="yang_kw">value</span> <span class="yang_str">19</span>;
+        }
+        <span class="yang_kw">enum</span> <span class="yang_str">"POST_SCRIPT_FAILED"</span> {
+          <span class="yang_kw">value</span> <span class="yang_str">20</span>;
+        }
+      }
+    }
+
+    <a name="condor_wfstates.110"></a><span class="yang_kw">typedef</span> <span class="yang_id">condor_wfstates</span> {
+      <span class="yang_kw">type</span> <span class="yang_id">enumeration</span> {
+        <span class="yang_kw">enum</span> <span class="yang_str">"WORKFLOW_STARTED"</span> {
+          <span class="yang_kw">value</span> <span class="yang_str">0</span>;
+        }
+        <span class="yang_kw">enum</span> <span class="yang_str">"WORKFLOW_TERMINATED"</span> {
+          <span class="yang_kw">value</span> <span class="yang_str">1</span>;
+        }
+      }
+    }
+
+    <a name="base-event.121"></a><span class="yang_kw">grouping</span> <span class="yang_id">base-event</span> {
+      <span class="yang_kw">description</span> <span class="yang_str">"Common components in all events"</span>;
+      <a name="ts.124"></a><span class="yang_kw">leaf</span> <span class="yang_id">ts</span> {
+        <span class="yang_kw">type</span> <span class="yang_id"><a href="#nl_ts.49">nl_ts</a></span>;
+        <span class="yang_kw">mandatory</span> <span class="yang_str">"true"</span>;
+        <span class="yang_kw">description</span>
+          <span class="yang_str">"Timestamp, ISO8601 or numeric seconds since 1/1/1970"</span>;
+      }
+
+      <a name="level.136"></a><span class="yang_kw">leaf</span> <span class="yang_id">level</span> {
+        <span class="yang_kw">type</span> <span class="yang_id">enumeration</span> {
+          <span class="yang_kw">enum</span> <span class="yang_str">"Info"</span> {
+            <span class="yang_kw">value</span> <span class="yang_str">0</span>;
+          }
+          <span class="yang_kw">enum</span> <span class="yang_str">"Error"</span> {
+            <span class="yang_kw">value</span> <span class="yang_str">1</span>;
+          }
+        }
+        <span class="yang_kw">description</span>
+          <span class="yang_str">"Severity level of event. "</span>
+            + <span class="yang_str">"Subset of NetLogger BP levels. "</span>
+            + <span class="yang_str">"For '*.end' events, if status is non-zero then level should be Error."</span>;
+      }
+
+      <a name="xwf.id.146"></a><span class="yang_kw">leaf</span> <span class="yang_id">xwf.id</span> {
+        <span class="yang_kw">type</span> <span class="yang_id"><a href="#uuid.34">uuid</a></span>;
+        <span class="yang_kw">description</span> <span class="yang_str">"DAG workflow id"</span>;
+      }
+    }  <span class="yang_cmt">// grouping base-event</span>
+
+    <a name="base-job-inst.152"></a><span class="yang_kw">grouping</span> <span class="yang_id">base-job-inst</span> {
+      <span class="yang_kw">description</span>
+        <span class="yang_str">"Common components for all job instance events"</span>;
+      <a name="uses.153"></a><span class="yang_kw">uses</span> <a href="#base-event.121">base-event</a>;
+
+      <a name="job_inst.id.158"></a><span class="yang_kw">leaf</span> <span class="yang_id">job_inst.id</span> {
+        <span class="yang_kw">type</span> <span class="yang_id">int32</span>;
+        <span class="yang_kw">mandatory</span> <span class="yang_str">"true"</span>;
+        <span class="yang_kw">description</span>
+          <span class="yang_str">"Job instance identifier i.e the submit sequence generated by monitord"</span>;
+      }
+
+      <a name="js.id.163"></a><span class="yang_kw">leaf</span> <span class="yang_id">js.id</span> {
+        <span class="yang_kw">type</span> <span class="yang_id">int32</span>;
+        <span class="yang_kw">description</span> <span class="yang_str">"Jobstate identifier"</span>;
+      }
+
+      <a name="job.id.167"></a><span class="yang_kw">leaf</span> <span class="yang_id">job.id</span> {
+        <span class="yang_kw">type</span> <span class="yang_id">string</span>;
+        <span class="yang_kw">mandatory</span> <span class="yang_str">"true"</span>;
+        <span class="yang_kw">description</span>
+          <span class="yang_str">"Identifier for corresponding job in the DAG"</span>;
+      }
+    }  <span class="yang_cmt">// grouping base-job-inst</span>
+
+    <a name="sched-job-inst.174"></a><span class="yang_kw">grouping</span> <span class="yang_id">sched-job-inst</span> {
+      <span class="yang_kw">description</span> <span class="yang_str">"Scheduled job instance"</span>;
+      <a name="uses.175"></a><span class="yang_kw">uses</span> <a href="#base-job-inst.152">base-job-inst</a>;
+
+      <a name="sched.id.179"></a><span class="yang_kw">leaf</span> <span class="yang_id">sched.id</span> {
+        <span class="yang_kw">type</span> <span class="yang_id">string</span>;
+        <span class="yang_kw">mandatory</span> <span class="yang_str">"true"</span>;
+        <span class="yang_kw">description</span> <span class="yang_str">"Identifier for job in scheduler"</span>;
+      }
+    }  <span class="yang_cmt">// grouping sched-job-inst</span>
+
+    <a name="events.200"></a><span class="yang_kw">container</span> <span class="yang_id">events</span> {
+      <a name="event.201"></a><span class="yang_kw">list</span> <span class="yang_id">event</span> {
+        <span class="yang_kw">config</span> <span class="yang_str">"false"</span>;
+        <a name="an_event.203"></a><span class="yang_kw">choice</span> <span class="yang_id">an_event</span> {
+          <a name="stampede.wf.plan.204"></a><span class="yang_kw">container</span> <span class="yang_id">stampede.wf.plan</span> {
+            <a name="uses.205"></a><span class="yang_kw">uses</span> <a href="#base-event.121">base-event</a>;
+
+            <a name="submit.hostname.206"></a><span class="yang_kw">leaf</span> <span class="yang_id">submit.hostname</span> {
+              <span class="yang_kw">type</span> <span class="yang_id"><a href="ietf-inet-types/2010-09-24#host.369">inet:host</a></span>;
+              <span class="yang_kw">mandatory</span> <span class="yang_str">"true"</span>;
+              <span class="yang_kw">description</span>
+                <span class="yang_str">"The hostname of the Pegasus submit host"</span>;
+            }
+
+            <a name="dax.label.211"></a><span class="yang_kw">leaf</span> <span class="yang_id">dax.label</span> {
+              <span class="yang_kw">type</span> <span class="yang_id">string</span>;
+              <span class="yang_kw">default</span> <span class="yang_str">"workflow"</span>;
+              <span class="yang_kw">description</span>
+                <span class="yang_str">"Label for abstract workflow specification"</span>;
+            }
+
+            <a name="dax.index.216"></a><span class="yang_kw">leaf</span> <span class="yang_id">dax.index</span> {
+              <span class="yang_kw">type</span> <span class="yang_id">string</span>;
+              <span class="yang_kw">default</span> <span class="yang_str">"workflow"</span>;
+              <span class="yang_kw">description</span> <span class="yang_str">"Index for the DAX"</span>;
+            }
+
+            <a name="dax.version.221"></a><span class="yang_kw">leaf</span> <span class="yang_id">dax.version</span> {
+              <span class="yang_kw">type</span> <span class="yang_id">string</span>;
+              <span class="yang_kw">mandatory</span> <span class="yang_str">"true"</span>;
+              <span class="yang_kw">description</span> <span class="yang_str">"Version number for DAX"</span>;
+            }
+
+            <a name="dax.file.226"></a><span class="yang_kw">leaf</span> <span class="yang_id">dax.file</span> {
+              <span class="yang_kw">type</span> <span class="yang_id">string</span>;
+              <span class="yang_kw">mandatory</span> <span class="yang_str">"true"</span>;
+              <span class="yang_kw">description</span> <span class="yang_str">"Filename for for the DAX"</span>;
+            }
+
+            <a name="dag.file.name.231"></a><span class="yang_kw">leaf</span> <span class="yang_id">dag.file.name</span> {
+              <span class="yang_kw">type</span> <span class="yang_id">string</span>;
+              <span class="yang_kw">mandatory</span> <span class="yang_str">"true"</span>;
+              <span class="yang_kw">description</span> <span class="yang_str">"Filename for the DAG"</span>;
+            }
+
+            <a name="planner.version.236"></a><span class="yang_kw">leaf</span> <span class="yang_id">planner.version</span> {
+              <span class="yang_kw">type</span> <span class="yang_id">string</span>;
+              <span class="yang_kw">mandatory</span> <span class="yang_str">"true"</span>;
+              <span class="yang_kw">description</span>
+                <span class="yang_str">"Version string for Pegasus planner, e.g. 3.0.0cvs"</span>;
+            }
+
+            <a name="grid_dn.241"></a><span class="yang_kw">leaf</span> <span class="yang_id">grid_dn</span> {
+              <span class="yang_kw">type</span> <span class="yang_id"><a href="#distinguished-name.27">distinguished-name</a></span>;
+              <span class="yang_kw">description</span> <span class="yang_str">"Grid DN of submitter"</span>;
+            }
+
+            <a name="user.245"></a><span class="yang_kw">leaf</span> <span class="yang_id">user</span> {
+              <span class="yang_kw">type</span> <span class="yang_id">string</span>;
+              <span class="yang_kw">description</span> <span class="yang_str">"User name of submitter"</span>;
+            }
+
+            <a name="submit.dir.249"></a><span class="yang_kw">leaf</span> <span class="yang_id">submit.dir</span> {
+              <span class="yang_kw">type</span> <span class="yang_id">string</span>;
+              <span class="yang_kw">mandatory</span> <span class="yang_str">"true"</span>;
+              <span class="yang_kw">description</span>
+                <span class="yang_str">"Directory path from which workflow was submitted"</span>;
+            }
+
+            <a name="argv.254"></a><span class="yang_kw">leaf</span> <span class="yang_id">argv</span> {
+              <span class="yang_kw">type</span> <span class="yang_id">string</span>;
+              <span class="yang_kw">description</span>
+                <span class="yang_str">"All arguments given to planner on command-line"</span>;
+            }
+
+            <a name="parent.xwf.id.258"></a><span class="yang_kw">leaf</span> <span class="yang_id">parent.xwf.id</span> {
+              <span class="yang_kw">type</span> <span class="yang_id"><a href="#uuid.34">uuid</a></span>;
+              <span class="yang_kw">description</span> <span class="yang_str">"Parent workflow in DAG, if any"</span>;
+            }
+
+            <a name="root.xwf.id.262"></a><span class="yang_kw">leaf</span> <span class="yang_id">root.xwf.id</span> {
+              <span class="yang_kw">type</span> <span class="yang_id">string</span>;
+              <span class="yang_kw">mandatory</span> <span class="yang_str">"true"</span>;
+              <span class="yang_kw">description</span>
+                <span class="yang_str">"Root of workflow hierarchy, in DAG. "</span>
+                  + <span class="yang_str">"Use this workflow's UUID if it is the root"</span>;
+            }
+          }  <span class="yang_cmt">// container stampede.wf.plan</span>
+          <a name="stampede.static.start.270"></a><span class="yang_kw">container</span> <span class="yang_id">stampede.static.start</span> {
+            <a name="uses.271"></a><span class="yang_kw">uses</span> <a href="#base-event.121">base-event</a>;
+          }  <span class="yang_cmt">// container stampede.static.start</span>
+          <a name="stampede.static.end.274"></a><span class="yang_kw">container</span> <span class="yang_id">stampede.static.end</span> {
+            <a name="uses.275"></a><span class="yang_kw">uses</span> <a href="#base-event.121">base-event</a>;
+          }  <span class="yang_cmt">// container stampede.static.end</span>
+          <a name="stampede.xwf.start.278"></a><span class="yang_kw">container</span> <span class="yang_id">stampede.xwf.start</span> {
+            <a name="uses.279"></a><span class="yang_kw">uses</span> <a href="#base-event.121">base-event</a>;
+
+            <a name="restart_count.280"></a><span class="yang_kw">leaf</span> <span class="yang_id">restart_count</span> {
+              <span class="yang_kw">type</span> <span class="yang_id">uint32</span>;
+              <span class="yang_kw">mandatory</span> <span class="yang_str">"true"</span>;
+              <span class="yang_kw">description</span>
+                <span class="yang_str">"Number of times workflow was restarted (due to failures)"</span>;
+            }
+          }  <span class="yang_cmt">// container stampede.xwf.start</span>
+          <a name="stampede.xwf.end.287"></a><span class="yang_kw">container</span> <span class="yang_id">stampede.xwf.end</span> {
+            <a name="uses.288"></a><span class="yang_kw">uses</span> <a href="#base-event.121">base-event</a>;
+
+            <a name="restart_count.289"></a><span class="yang_kw">leaf</span> <span class="yang_id">restart_count</span> {
+              <span class="yang_kw">type</span> <span class="yang_id">uint32</span>;
+              <span class="yang_kw">mandatory</span> <span class="yang_str">"true"</span>;
+              <span class="yang_kw">description</span>
+                <span class="yang_str">"Number of times workflow was restarted (due to failures)"</span>;
+            }
+
+            <a name="status.294"></a><span class="yang_kw">leaf</span> <span class="yang_id">status</span> {
+              <span class="yang_kw">type</span> <span class="yang_id">int16</span>;
+              <span class="yang_kw">mandatory</span> <span class="yang_str">"true"</span>;
+              <span class="yang_kw">description</span>
+                <span class="yang_str">"Status of workflow. 0=success, -1=failure"</span>;
+            }
+          }  <span class="yang_cmt">// container stampede.xwf.end</span>
+          <a name="stampede.task.info.301"></a><span class="yang_kw">container</span> <span class="yang_id">stampede.task.info</span> {
+            <span class="yang_kw">description</span> <span class="yang_str">"Information about task in DAX"</span>;
+            <a name="uses.303"></a><span class="yang_kw">uses</span> <a href="#base-event.121">base-event</a>;
+
+            <a name="transformation.304"></a><span class="yang_kw">leaf</span> <span class="yang_id">transformation</span> {
+              <span class="yang_kw">type</span> <span class="yang_id">string</span>;
+              <span class="yang_kw">mandatory</span> <span class="yang_str">"true"</span>;
+              <span class="yang_kw">description</span>
+                <span class="yang_str">"Logical name of the underlying executable"</span>;
+            }
+
+            <a name="argv.309"></a><span class="yang_kw">leaf</span> <span class="yang_id">argv</span> {
+              <span class="yang_kw">type</span> <span class="yang_id">string</span>;
+              <span class="yang_kw">description</span>
+                <span class="yang_str">"All arguments given to transformation on command-line"</span>;
+            }
+
+            <a name="type.313"></a><span class="yang_kw">leaf</span> <span class="yang_id">type</span> {
+              <span class="yang_kw">type</span> <span class="yang_id"><a href="#peg_inttype.57">peg_inttype</a></span>;
+              <span class="yang_kw">mandatory</span> <span class="yang_str">"true"</span>;
+              <span class="yang_kw">description</span> <span class="yang_str">"Type of task"</span>;
+            }
+
+            <a name="type_desc.318"></a><span class="yang_kw">leaf</span> <span class="yang_id">type_desc</span> {
+              <span class="yang_kw">type</span> <span class="yang_id"><a href="#peg_strtype.64">peg_strtype</a></span>;
+              <span class="yang_kw">mandatory</span> <span class="yang_str">"true"</span>;
+              <span class="yang_kw">description</span> <span class="yang_str">"String description of task type"</span>;
+            }
+
+            <a name="task.id.323"></a><span class="yang_kw">leaf</span> <span class="yang_id">task.id</span> {
+              <span class="yang_kw">type</span> <span class="yang_id">string</span>;
+              <span class="yang_kw">mandatory</span> <span class="yang_str">"true"</span>;
+              <span class="yang_kw">description</span> <span class="yang_str">"Identifier for this task in the DAX"</span>;
+            }
+          }  <span class="yang_cmt">// container stampede.task.info</span>
+          <a name="stampede.task.edge.330"></a><span class="yang_kw">container</span> <span class="yang_id">stampede.task.edge</span> {
+            <span class="yang_kw">description</span>
+              <span class="yang_str">"Represents child/parent relationship between two tasks in DAX"</span>;
+            <a name="uses.332"></a><span class="yang_kw">uses</span> <a href="#base-event.121">base-event</a>;
+
+            <a name="parent.task.id.334"></a><span class="yang_kw">leaf</span> <span class="yang_id">parent.task.id</span> {
+              <span class="yang_kw">type</span> <span class="yang_id">string</span>;
+              <span class="yang_kw">mandatory</span> <span class="yang_str">"true"</span>;
+              <span class="yang_kw">description</span> <span class="yang_str">"Parent task"</span>;
+            }
+
+            <a name="child.task.id.339"></a><span class="yang_kw">leaf</span> <span class="yang_id">child.task.id</span> {
+              <span class="yang_kw">type</span> <span class="yang_id">string</span>;
+              <span class="yang_kw">mandatory</span> <span class="yang_str">"true"</span>;
+              <span class="yang_kw">description</span> <span class="yang_str">"Child task"</span>;
+            }
+          }  <span class="yang_cmt">// container stampede.task.edge</span>
+          <a name="stampede.wf.map.task_job.346"></a><span class="yang_kw">container</span> <span class="yang_id">stampede.wf.map.task_job</span> {
+            <span class="yang_kw">description</span> <span class="yang_str">"Relates a DAX task to a DAG job."</span>;
+            <a name="uses.348"></a><span class="yang_kw">uses</span> <a href="#base-event.121">base-event</a>;
+
+            <a name="task.id.350"></a><span class="yang_kw">leaf</span> <span class="yang_id">task.id</span> {
+              <span class="yang_kw">type</span> <span class="yang_id">string</span>;
+              <span class="yang_kw">mandatory</span> <span class="yang_str">"true"</span>;
+              <span class="yang_kw">description</span> <span class="yang_str">"Identifier for the task in the DAX"</span>;
+            }
+
+            <a name="job.id.355"></a><span class="yang_kw">leaf</span> <span class="yang_id">job.id</span> {
+              <span class="yang_kw">type</span> <span class="yang_id">string</span>;
+              <span class="yang_kw">mandatory</span> <span class="yang_str">"true"</span>;
+              <span class="yang_kw">description</span>
+                <span class="yang_str">"Identifier for corresponding job in the DAG"</span>;
+            }
+          }  <span class="yang_cmt">// container stampede.wf.map.task_job</span>
+          <a name="stampede.xwf.map.subwf_job.362"></a><span class="yang_kw">container</span> <span class="yang_id">stampede.xwf.map.subwf_job</span> {
+            <span class="yang_kw">description</span>
+              <span class="yang_str">"Relates a sub workflow to the corresponding job instance"</span>;
+            <a name="uses.364"></a><span class="yang_kw">uses</span> <a href="#base-event.121">base-event</a>;
+
+            <a name="subwf.id.366"></a><span class="yang_kw">leaf</span> <span class="yang_id">subwf.id</span> {
+              <span class="yang_kw">type</span> <span class="yang_id">string</span>;
+              <span class="yang_kw">mandatory</span> <span class="yang_str">"true"</span>;
+              <span class="yang_kw">description</span> <span class="yang_str">"Sub Workflow Identified / UUID"</span>;
+            }
+
+            <a name="job.id.371"></a><span class="yang_kw">leaf</span> <span class="yang_id">job.id</span> {
+              <span class="yang_kw">type</span> <span class="yang_id">string</span>;
+              <span class="yang_kw">mandatory</span> <span class="yang_str">"true"</span>;
+              <span class="yang_kw">description</span>
+                <span class="yang_str">"Identifier for corresponding job in the DAG"</span>;
+            }
+
+            <a name="job_inst.id.376"></a><span class="yang_kw">leaf</span> <span class="yang_id">job_inst.id</span> {
+              <span class="yang_kw">type</span> <span class="yang_id">int32</span>;
+              <span class="yang_kw">mandatory</span> <span class="yang_str">"true"</span>;
+              <span class="yang_kw">description</span>
+                <span class="yang_str">"Job instance identifier i.e the submit sequence generated by monitord"</span>;
+            }
+          }  <span class="yang_cmt">// container stampede.xwf.map.subwf_job</span>
+          <a name="stampede.job.info.384"></a><span class="yang_kw">container</span> <span class="yang_id">stampede.job.info</span> {
+            <span class="yang_kw">description</span> <span class="yang_str">"A description of a job in the DAG"</span>;
+            <a name="uses.386"></a><span class="yang_kw">uses</span> <a href="#base-event.121">base-event</a>;
+
+            <a name="job.id.388"></a><span class="yang_kw">leaf</span> <span class="yang_id">job.id</span> {
+              <span class="yang_kw">type</span> <span class="yang_id">string</span>;
+              <span class="yang_kw">mandatory</span> <span class="yang_str">"true"</span>;
+              <span class="yang_kw">description</span> <span class="yang_str">"Identifier for job in the DAG"</span>;
+            }
+
+            <a name="submit_file.393"></a><span class="yang_kw">leaf</span> <span class="yang_id">submit_file</span> {
+              <span class="yang_kw">type</span> <span class="yang_id">string</span>;
+              <span class="yang_kw">mandatory</span> <span class="yang_str">"true"</span>;
+              <span class="yang_kw">description</span>
+                <span class="yang_str">"Name of file being submitted to the scheduler"</span>;
+            }
+
+            <a name="type.398"></a><span class="yang_kw">leaf</span> <span class="yang_id">type</span> {
+              <span class="yang_kw">type</span> <span class="yang_id"><a href="#peg_inttype.57">peg_inttype</a></span>;
+              <span class="yang_kw">mandatory</span> <span class="yang_str">"true"</span>;
+              <span class="yang_kw">description</span> <span class="yang_str">"Type of task"</span>;
+            }
+
+            <a name="type_desc.403"></a><span class="yang_kw">leaf</span> <span class="yang_id">type_desc</span> {
+              <span class="yang_kw">type</span> <span class="yang_id"><a href="#peg_strtype.64">peg_strtype</a></span>;
+              <span class="yang_kw">mandatory</span> <span class="yang_str">"true"</span>;
+              <span class="yang_kw">description</span> <span class="yang_str">"String description of task type"</span>;
+            }
+
+            <a name="clustered.408"></a><span class="yang_kw">leaf</span> <span class="yang_id">clustered</span> {
+              <span class="yang_kw">type</span> <span class="yang_id"><a href="#intbool.42">intbool</a></span>;
+              <span class="yang_kw">mandatory</span> <span class="yang_str">"true"</span>;
+              <span class="yang_kw">description</span> <span class="yang_str">"Whether job is clustered or not"</span>;
+            }
+
+            <a name="max_retries.413"></a><span class="yang_kw">leaf</span> <span class="yang_id">max_retries</span> {
+              <span class="yang_kw">type</span> <span class="yang_id">uint32</span>;
+              <span class="yang_kw">mandatory</span> <span class="yang_str">"true"</span>;
+              <span class="yang_kw">description</span>
+                <span class="yang_str">"How many retries are allowed for this job before giving up"</span>;
+            }
+
+            <a name="task_count.418"></a><span class="yang_kw">leaf</span> <span class="yang_id">task_count</span> {
+              <span class="yang_kw">type</span> <span class="yang_id">uint32</span>;
+              <span class="yang_kw">mandatory</span> <span class="yang_str">"true"</span>;
+              <span class="yang_kw">description</span>
+                <span class="yang_str">"Number of DAX tasks for this job. "</span>
+                  + <span class="yang_str">"Auxiliary jobs without a task in the DAX will have the value '0'"</span>;
+            }
+
+            <a name="executable.424"></a><span class="yang_kw">leaf</span> <span class="yang_id">executable</span> {
+              <span class="yang_kw">type</span> <span class="yang_id">string</span>;
+              <span class="yang_kw">mandatory</span> <span class="yang_str">"true"</span>;
+              <span class="yang_kw">description</span> <span class="yang_str">"Program to execute"</span>;
+            }
+
+            <a name="argv.429"></a><span class="yang_kw">leaf</span> <span class="yang_id">argv</span> {
+              <span class="yang_kw">type</span> <span class="yang_id">string</span>;
+              <span class="yang_kw">description</span>
+                <span class="yang_str">"All arguments given to executable (on command-line)"</span>;
+            }
+          }  <span class="yang_cmt">// container stampede.job.info</span>
+          <a name="stampede.job.edge.435"></a><span class="yang_kw">container</span> <span class="yang_id">stampede.job.edge</span> {
+            <span class="yang_kw">description</span>
+              <span class="yang_str">"Parent/child relationship between two jobs in the DAG"</span>;
+            <a name="uses.437"></a><span class="yang_kw">uses</span> <a href="#base-event.121">base-event</a>;
+
+            <a name="parent.job.id.439"></a><span class="yang_kw">leaf</span> <span class="yang_id">parent.job.id</span> {
+              <span class="yang_kw">type</span> <span class="yang_id">string</span>;
+              <span class="yang_kw">mandatory</span> <span class="yang_str">"true"</span>;
+              <span class="yang_kw">description</span> <span class="yang_str">"Parent job"</span>;
+            }
+
+            <a name="child.job.id.444"></a><span class="yang_kw">leaf</span> <span class="yang_id">child.job.id</span> {
+              <span class="yang_kw">type</span> <span class="yang_id">string</span>;
+              <span class="yang_kw">mandatory</span> <span class="yang_str">"true"</span>;
+              <span class="yang_kw">description</span> <span class="yang_str">"Child job"</span>;
+            }
+          }  <span class="yang_cmt">// container stampede.job.edge</span>
+          <a name="stampede.job_inst.pre.start.452"></a><span class="yang_kw">container</span> <span class="yang_id">stampede.job_inst.pre.start</span> {
+            <span class="yang_kw">description</span>
+              <span class="yang_str">"Start of a prescript for a job instance"</span>;
+            <a name="uses.454"></a><span class="yang_kw">uses</span> <a href="#base-job-inst.152">base-job-inst</a>;
+          }  <span class="yang_cmt">// container stampede.job_inst.pre.start</span>
+          <a name="stampede.job_inst.pre.term.457"></a><span class="yang_kw">container</span> <span class="yang_id">stampede.job_inst.pre.term</span> {
+            <span class="yang_kw">description</span>
+              <span class="yang_str">"Job prescript is terminated (success or failure not yet known)"</span>;
+            <a name="uses.459"></a><span class="yang_kw">uses</span> <a href="#base-job-inst.152">base-job-inst</a>;
+          }  <span class="yang_cmt">// container stampede.job_inst.pre.term</span>
+          <a name="stampede.job_inst.pre.end.462"></a><span class="yang_kw">container</span> <span class="yang_id">stampede.job_inst.pre.end</span> {
+            <span class="yang_kw">description</span> <span class="yang_str">"End of a prescript for a job instance"</span>;
+            <a name="uses.464"></a><span class="yang_kw">uses</span> <a href="#base-job-inst.152">base-job-inst</a>;
+
+            <a name="status.466"></a><span class="yang_kw">leaf</span> <span class="yang_id">status</span> {
+              <span class="yang_kw">type</span> <span class="yang_id">int32</span>;
+              <span class="yang_kw">mandatory</span> <span class="yang_str">"true"</span>;
+              <span class="yang_kw">description</span>
+                <span class="yang_str">"Status of prescript. 0 is success, -1 is error"</span>;
+            }
+          }  <span class="yang_cmt">// container stampede.job_inst.pre.end</span>
+          <a name="stampede.job_inst.submit.start.473"></a><span class="yang_kw">container</span> <span class="yang_id">stampede.job_inst.submit.start</span> {
+            <span class="yang_kw">description</span>
+              <span class="yang_str">"When job instance is going to be submitted. "</span>
+                + <span class="yang_str">"Scheduler job id is not yet known"</span>;
+            <a name="uses.474"></a><span class="yang_kw">uses</span> <a href="#sched-job-inst.174">sched-job-inst</a>;
+          }  <span class="yang_cmt">// container stampede.job_inst.submit.start</span>
+          <a name="stampede.job_inst.submit.end.479"></a><span class="yang_kw">container</span> <span class="yang_id">stampede.job_inst.submit.end</span> {
+            <span class="yang_kw">description</span> <span class="yang_str">"When executable job is submitted"</span>;
+            <a name="uses.480"></a><span class="yang_kw">uses</span> <a href="#sched-job-inst.174">sched-job-inst</a>;
+
+            <a name="status.483"></a><span class="yang_kw">leaf</span> <span class="yang_id">status</span> {
+              <span class="yang_kw">type</span> <span class="yang_id">int16</span>;
+              <span class="yang_kw">mandatory</span> <span class="yang_str">"true"</span>;
+              <span class="yang_kw">description</span>
+                <span class="yang_str">"Status of workflow. 0=success, -1=failure"</span>;
+            }
+          }  <span class="yang_cmt">// container stampede.job_inst.submit.end</span>
+          <a name="stampede.job_inst.held.start.490"></a><span class="yang_kw">container</span> <span class="yang_id">stampede.job_inst.held.start</span> {
+            <span class="yang_kw">description</span> <span class="yang_str">"When Condor holds the jobs"</span>;
+            <a name="uses.491"></a><span class="yang_kw">uses</span> <a href="#sched-job-inst.174">sched-job-inst</a>;
+          }  <span class="yang_cmt">// container stampede.job_inst.held.start</span>
+          <a name="stampede.job_inst.held.end.495"></a><span class="yang_kw">container</span> <span class="yang_id">stampede.job_inst.held.end</span> {
+            <span class="yang_kw">description</span>
+              <span class="yang_str">"When the job is released after being held"</span>;
+            <a name="uses.496"></a><span class="yang_kw">uses</span> <a href="#sched-job-inst.174">sched-job-inst</a>;
+
+            <a name="status.499"></a><span class="yang_kw">leaf</span> <span class="yang_id">status</span> {
+              <span class="yang_kw">type</span> <span class="yang_id">int16</span>;
+              <span class="yang_kw">mandatory</span> <span class="yang_str">"true"</span>;
+              <span class="yang_kw">description</span>
+                <span class="yang_str">"Status of workflow. 0=success, -1=failure"</span>;
+            }
+          }  <span class="yang_cmt">// container stampede.job_inst.held.end</span>
+          <a name="stampede.job_inst.main.start.507"></a><span class="yang_kw">container</span> <span class="yang_id">stampede.job_inst.main.start</span> {
+            <span class="yang_kw">description</span> <span class="yang_str">"Start of execution of a scheduler job"</span>;
+            <a name="uses.508"></a><span class="yang_kw">uses</span> <a href="#sched-job-inst.174">sched-job-inst</a>;
+
+            <a name="stdin.file.511"></a><span class="yang_kw">leaf</span> <span class="yang_id">stdin.file</span> {
+              <span class="yang_kw">type</span> <span class="yang_id">string</span>;
+              <span class="yang_kw">description</span>
+                <span class="yang_str">"Path to file containing standard input of job"</span>;
+            }
+
+            <a name="stdout.file.516"></a><span class="yang_kw">leaf</span> <span class="yang_id">stdout.file</span> {
+              <span class="yang_kw">type</span> <span class="yang_id">string</span>;
+              <span class="yang_kw">mandatory</span> <span class="yang_str">"true"</span>;
+              <span class="yang_kw">description</span>
+                <span class="yang_str">"Path to file containing standard output of job"</span>;
+            }
+
+            <a name="stderr.file.521"></a><span class="yang_kw">leaf</span> <span class="yang_id">stderr.file</span> {
+              <span class="yang_kw">type</span> <span class="yang_id">string</span>;
+              <span class="yang_kw">mandatory</span> <span class="yang_str">"true"</span>;
+              <span class="yang_kw">description</span>
+                <span class="yang_str">"Path to file containing standard error of job"</span>;
+            }
+          }  <span class="yang_cmt">// container stampede.job_inst.main.start</span>
+          <a name="stampede.job_inst.main.term.528"></a><span class="yang_kw">container</span> <span class="yang_id">stampede.job_inst.main.term</span> {
+            <span class="yang_kw">description</span>
+              <span class="yang_str">"Job is terminated (success or failure not yet known)"</span>;
+            <a name="uses.529"></a><span class="yang_kw">uses</span> <a href="#sched-job-inst.174">sched-job-inst</a>;
+
+            <a name="status.532"></a><span class="yang_kw">leaf</span> <span class="yang_id">status</span> {
+              <span class="yang_kw">type</span> <span class="yang_id">int32</span>;
+              <span class="yang_kw">mandatory</span> <span class="yang_str">"true"</span>;
+              <span class="yang_kw">description</span>
+                <span class="yang_str">"Execution status. 0=means job terminated, -1=job was evicted, not terminated"</span>;
+            }
+          }  <span class="yang_cmt">// container stampede.job_inst.main.term</span>
+          <a name="stampede.job_inst.main.end.539"></a><span class="yang_kw">container</span> <span class="yang_id">stampede.job_inst.main.end</span> {
+            <span class="yang_kw">description</span> <span class="yang_str">"End of main part of scheduler job"</span>;
+            <a name="uses.540"></a><span class="yang_kw">uses</span> <a href="#sched-job-inst.174">sched-job-inst</a>;
+
+            <a name="stdin.file.543"></a><span class="yang_kw">leaf</span> <span class="yang_id">stdin.file</span> {
+              <span class="yang_kw">type</span> <span class="yang_id">string</span>;
+              <span class="yang_kw">description</span>
+                <span class="yang_str">"Path to file containing standard input of job"</span>;
+            }
+
+            <a name="stdout.file.547"></a><span class="yang_kw">leaf</span> <span class="yang_id">stdout.file</span> {
+              <span class="yang_kw">type</span> <span class="yang_id">string</span>;
+              <span class="yang_kw">mandatory</span> <span class="yang_str">"true"</span>;
+              <span class="yang_kw">description</span>
+                <span class="yang_str">"Path to file containing standard output of job"</span>;
+            }
+
+            <a name="stdout.text.552"></a><span class="yang_kw">leaf</span> <span class="yang_id">stdout.text</span> {
+              <span class="yang_kw">type</span> <span class="yang_id">string</span>;
+              <span class="yang_kw">description</span> <span class="yang_str">"Text containing output of job"</span>;
+            }
+
+            <a name="stderr.file.556"></a><span class="yang_kw">leaf</span> <span class="yang_id">stderr.file</span> {
+              <span class="yang_kw">type</span> <span class="yang_id">string</span>;
+              <span class="yang_kw">mandatory</span> <span class="yang_str">"true"</span>;
+              <span class="yang_kw">description</span>
+                <span class="yang_str">"Path to file containing standard error of job"</span>;
+            }
+
+            <a name="stderr.text.561"></a><span class="yang_kw">leaf</span> <span class="yang_id">stderr.text</span> {
+              <span class="yang_kw">type</span> <span class="yang_id">string</span>;
+              <span class="yang_kw">description</span> <span class="yang_str">"Text containing standard error of job"</span>;
+            }
+
+            <a name="user.565"></a><span class="yang_kw">leaf</span> <span class="yang_id">user</span> {
+              <span class="yang_kw">type</span> <span class="yang_id">string</span>;
+              <span class="yang_kw">description</span> <span class="yang_str">"Scheduler's name for user"</span>;
+            }
+
+            <a name="site.569"></a><span class="yang_kw">leaf</span> <span class="yang_id">site</span> {
+              <span class="yang_kw">type</span> <span class="yang_id">string</span>;
+              <span class="yang_kw">mandatory</span> <span class="yang_str">"true"</span>;
+              <span class="yang_kw">description</span>
+                <span class="yang_str">"DAX name for the site at which the job ran"</span>;
+            }
+
+            <a name="work_dir.574"></a><span class="yang_kw">leaf</span> <span class="yang_id">work_dir</span> {
+              <span class="yang_kw">type</span> <span class="yang_id">string</span>;
+              <span class="yang_kw">description</span> <span class="yang_str">"Path to working directory"</span>;
+            }
+
+            <a name="local.dur.578"></a><span class="yang_kw">leaf</span> <span class="yang_id">local.dur</span> {
+              <span class="yang_kw">type</span> <span class="yang_id">decimal64</span> {
+                <span class="yang_kw">fraction-digits</span> <span class="yang_str">6</span> {
+              }
+              <span class="yang_kw">units</span> <span class="yang_str">"seconds"</span>;
+              <span class="yang_kw">description</span> <span class="yang_str">"Duration as seen at the local node"</span>;
+            }
+
+            <a name="status.585"></a><span class="yang_kw">leaf</span> <span class="yang_id">status</span> {
+              <span class="yang_kw">type</span> <span class="yang_id">int32</span>;
+              <span class="yang_kw">mandatory</span> <span class="yang_str">"true"</span>;
+              <span class="yang_kw">description</span>
+                <span class="yang_str">"Execution status. 0=success, -1=failure"</span>;
+            }
+
+            <a name="cluster.start.591"></a><span class="yang_kw">leaf</span> <span class="yang_id">cluster.start</span> {
+              <span class="yang_kw">type</span> <span class="yang_id"><a href="#nl_ts.49">nl_ts</a></span>;
+              <span class="yang_kw">description</span> <span class="yang_str">"When the enclosing cluster started"</span>;
+            }
+
+            <a name="cluster.dur.595"></a><span class="yang_kw">leaf</span> <span class="yang_id">cluster.dur</span> {
+              <span class="yang_kw">type</span> <span class="yang_id">decimal64</span> {
+                <span class="yang_kw">fraction-digits</span> <span class="yang_str">6</span> {
+              }
+              <span class="yang_kw">units</span> <span class="yang_str">"seconds"</span>;
+              <span class="yang_kw">description</span> <span class="yang_str">"Duration of enclosing cluster"</span>;
+            }
+          }  <span class="yang_cmt">// container stampede.job_inst.main.end</span>
+          <a name="stampede.job_inst.post.start.604"></a><span class="yang_kw">container</span> <span class="yang_id">stampede.job_inst.post.start</span> {
+            <span class="yang_kw">description</span>
+              <span class="yang_str">"Start of a postscript for a job instance"</span>;
+            <a name="uses.606"></a><span class="yang_kw">uses</span> <a href="#sched-job-inst.174">sched-job-inst</a>;
+          }  <span class="yang_cmt">// container stampede.job_inst.post.start</span>
+          <a name="stampede.job_inst.post.term.609"></a><span class="yang_kw">container</span> <span class="yang_id">stampede.job_inst.post.term</span> {
+            <span class="yang_kw">description</span>
+              <span class="yang_str">"Job postscript is terminated (success or failure not yet known)"</span>;
+            <a name="uses.611"></a><span class="yang_kw">uses</span> <a href="#sched-job-inst.174">sched-job-inst</a>;
+          }  <span class="yang_cmt">// container stampede.job_inst.post.term</span>
+          <a name="stampede.job_inst.post.end.614"></a><span class="yang_kw">container</span> <span class="yang_id">stampede.job_inst.post.end</span> {
+            <span class="yang_kw">description</span> <span class="yang_str">"End of a postscript for a job instance"</span>;
+            <a name="uses.616"></a><span class="yang_kw">uses</span> <a href="#sched-job-inst.174">sched-job-inst</a>;
+
+            <a name="status.618"></a><span class="yang_kw">leaf</span> <span class="yang_id">status</span> {
+              <span class="yang_kw">type</span> <span class="yang_id">int32</span>;
+              <span class="yang_kw">mandatory</span> <span class="yang_str">"true"</span>;
+              <span class="yang_kw">description</span>
+                <span class="yang_str">"Status of postscript. 0 is success, -1=failure"</span>;
+            }
+          }  <span class="yang_cmt">// container stampede.job_inst.post.end</span>
+          <a name="stampede.job_inst.host.info.625"></a><span class="yang_kw">container</span> <span class="yang_id">stampede.job_inst.host.info</span> {
+            <span class="yang_kw">description</span>
+              <span class="yang_str">"Host information associated with a job instance"</span>;
+            <a name="uses.627"></a><span class="yang_kw">uses</span> <a href="#base-job-inst.152">base-job-inst</a>;
+
+            <a name="site.629"></a><span class="yang_kw">leaf</span> <span class="yang_id">site</span> {
+              <span class="yang_kw">type</span> <span class="yang_id">string</span>;
+              <span class="yang_kw">mandatory</span> <span class="yang_str">"true"</span>;
+              <span class="yang_kw">description</span> <span class="yang_str">"Site name"</span>;
+            }
+
+            <a name="hostname.634"></a><span class="yang_kw">leaf</span> <span class="yang_id">hostname</span> {
+              <span class="yang_kw">type</span> <span class="yang_id"><a href="ietf-inet-types/2010-09-24#host.369">inet:host</a></span>;
+              <span class="yang_kw">mandatory</span> <span class="yang_str">"true"</span>;
+              <span class="yang_kw">description</span> <span class="yang_str">"Host name"</span>;
+            }
+
+            <a name="ip.639"></a><span class="yang_kw">leaf</span> <span class="yang_id">ip</span> {
+              <span class="yang_kw">type</span> <span class="yang_id"><a href="ietf-inet-types/2010-09-24#ip-address.168">inet:ip-address</a></span>;
+              <span class="yang_kw">mandatory</span> <span class="yang_str">"true"</span>;
+              <span class="yang_kw">description</span> <span class="yang_str">"IP address"</span>;
+            }
+
+            <a name="total_memory.644"></a><span class="yang_kw">leaf</span> <span class="yang_id">total_memory</span> {
+              <span class="yang_kw">type</span> <span class="yang_id">uint64</span>;
+              <span class="yang_kw">description</span> <span class="yang_str">"Total RAM on host"</span>;
+            }
+
+            <a name="uname.649"></a><span class="yang_kw">leaf</span> <span class="yang_id">uname</span> {
+              <span class="yang_kw">type</span> <span class="yang_id">string</span>;
+              <span class="yang_kw">description</span> <span class="yang_str">"Operating system name"</span>;
+            }
+          }  <span class="yang_cmt">// container stampede.job_inst.host.info</span>
+          <a name="stampede.job_inst.image.info.656"></a><span class="yang_kw">container</span> <span class="yang_id">stampede.job_inst.image.info</span> {
+            <span class="yang_kw">description</span>
+              <span class="yang_str">"Image size associated with a job instance"</span>;
+            <a name="uses.658"></a><span class="yang_kw">uses</span> <a href="#base-job-inst.152">base-job-inst</a>;
+
+            <a name="size.660"></a><span class="yang_kw">leaf</span> <span class="yang_id">size</span> {
+              <span class="yang_kw">type</span> <span class="yang_id">uint64</span>;
+              <span class="yang_kw">description</span> <span class="yang_str">"Image size"</span>;
+            }
+          }  <span class="yang_cmt">// container stampede.job_inst.image.info</span>
+          <a name="stampede.inv.start.666"></a><span class="yang_kw">container</span> <span class="yang_id">stampede.inv.start</span> {
+            <span class="yang_kw">description</span> <span class="yang_str">"Start of an invocation"</span>;
+            <a name="uses.668"></a><span class="yang_kw">uses</span> <a href="#base-event.121">base-event</a>;
+
+            <a name="job_inst.id.670"></a><span class="yang_kw">leaf</span> <span class="yang_id">job_inst.id</span> {
+              <span class="yang_kw">type</span> <span class="yang_id">int32</span>;
+              <span class="yang_kw">mandatory</span> <span class="yang_str">"true"</span>;
+              <span class="yang_kw">description</span>
+                <span class="yang_str">"Job instance identifier i.e the submit sequence generated by monitord"</span>;
+            }
+
+            <a name="job.id.675"></a><span class="yang_kw">leaf</span> <span class="yang_id">job.id</span> {
+              <span class="yang_kw">type</span> <span class="yang_id">string</span>;
+              <span class="yang_kw">mandatory</span> <span class="yang_str">"true"</span>;
+              <span class="yang_kw">description</span>
+                <span class="yang_str">"Identifier for corresponding job in the DAG"</span>;
+            }
+
+            <a name="inv.id.680"></a><span class="yang_kw">leaf</span> <span class="yang_id">inv.id</span> {
+              <span class="yang_kw">type</span> <span class="yang_id">int32</span>;
+              <span class="yang_kw">mandatory</span> <span class="yang_str">"true"</span>;
+              <span class="yang_kw">description</span>
+                <span class="yang_str">"Identifier for invocation. "</span>
+                  + <span class="yang_str">"Sequence number, with -1=prescript and -2=postscript"</span>;
+            }
+          }  <span class="yang_cmt">// container stampede.inv.start</span>
+          <a name="stampede.inv.end.689"></a><span class="yang_kw">container</span> <span class="yang_id">stampede.inv.end</span> {
+            <span class="yang_kw">description</span> <span class="yang_str">"End of an invocation"</span>;
+            <a name="uses.691"></a><span class="yang_kw">uses</span> <a href="#base-event.121">base-event</a>;
+
+            <a name="job_inst.id.693"></a><span class="yang_kw">leaf</span> <span class="yang_id">job_inst.id</span> {
+              <span class="yang_kw">type</span> <span class="yang_id">int32</span>;
+              <span class="yang_kw">mandatory</span> <span class="yang_str">"true"</span>;
+              <span class="yang_kw">description</span>
+                <span class="yang_str">"Job instance identifier i.e the submit sequence generated by monitord"</span>;
+            }
+
+            <a name="inv.id.698"></a><span class="yang_kw">leaf</span> <span class="yang_id">inv.id</span> {
+              <span class="yang_kw">type</span> <span class="yang_id">int32</span>;
+              <span class="yang_kw">mandatory</span> <span class="yang_str">"true"</span>;
+              <span class="yang_kw">description</span>
+                <span class="yang_str">"Identifier for invocation. "</span>
+                  + <span class="yang_str">"Sequence number, with -1=prescript and -2=postscript"</span>;
+            }
+
+            <a name="job.id.704"></a><span class="yang_kw">leaf</span> <span class="yang_id">job.id</span> {
+              <span class="yang_kw">type</span> <span class="yang_id">string</span>;
+              <span class="yang_kw">mandatory</span> <span class="yang_str">"true"</span>;
+              <span class="yang_kw">description</span>
+                <span class="yang_str">"Identifier for corresponding job in the DAG"</span>;
+            }
+
+            <a name="start_time.709"></a><span class="yang_kw">leaf</span> <span class="yang_id">start_time</span> {
+              <span class="yang_kw">type</span> <span class="yang_id"><a href="#nl_ts.49">nl_ts</a></span>;
+              <span class="yang_kw">description</span> <span class="yang_str">"The start time of the event"</span>;
+            }
+
+            <a name="dur.713"></a><span class="yang_kw">leaf</span> <span class="yang_id">dur</span> {
+              <span class="yang_kw">type</span> <span class="yang_id">decimal64</span> {
+                <span class="yang_kw">fraction-digits</span> <span class="yang_str">6</span> {
+              }
+              <span class="yang_kw">units</span> <span class="yang_str">"seconds"</span>;
+              <span class="yang_kw">description</span> <span class="yang_str">"Duration of invocation"</span>;
+            }
+
+            <a name="exitcode.720"></a><span class="yang_kw">leaf</span> <span class="yang_id">exitcode</span> {
+              <span class="yang_kw">type</span> <span class="yang_id">int32</span>;
+              <span class="yang_kw">description</span>
+                <span class="yang_str">"the exitcode with which the executable exited"</span>;
+            }
+
+            <a name="transformation.724"></a><span class="yang_kw">leaf</span> <span class="yang_id">transformation</span> {
+              <span class="yang_kw">type</span> <span class="yang_id">string</span>;
+              <span class="yang_kw">mandatory</span> <span class="yang_str">"true"</span>;
+              <span class="yang_kw">description</span>
+                <span class="yang_str">"Transformation associated with this invocation"</span>;
+            }
+
+            <a name="executable.729"></a><span class="yang_kw">leaf</span> <span class="yang_id">executable</span> {
+              <span class="yang_kw">type</span> <span class="yang_id">string</span>;
+              <span class="yang_kw">mandatory</span> <span class="yang_str">"true"</span>;
+              <span class="yang_kw">description</span> <span class="yang_str">"Program executed for this invocation"</span>;
+            }
+
+            <a name="argv.734"></a><span class="yang_kw">leaf</span> <span class="yang_id">argv</span> {
+              <span class="yang_kw">type</span> <span class="yang_id">string</span>;
+              <span class="yang_kw">description</span>
+                <span class="yang_str">"All arguments given to executable on command-line"</span>;
+            }
+
+            <a name="task.id.738"></a><span class="yang_kw">leaf</span> <span class="yang_id">task.id</span> {
+              <span class="yang_kw">type</span> <span class="yang_id">string</span>;
+              <span class="yang_kw">description</span> <span class="yang_str">"Identifier for related task in the DAX"</span>;
+            }
+          }  <span class="yang_cmt">// container stampede.inv.end</span>
+        }  <span class="yang_cmt">// choice an_event</span>
+      }  <span class="yang_cmt">// list event</span>
+    }  <span class="yang_cmt">// container events</span>
+  }  <span class="yang_cmt">// module stampede-schema</span>
+</pre>
+</div>
+</body>
+</html>
