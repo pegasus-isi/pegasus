@@ -21,7 +21,8 @@ defined and True.) The environment variables are:
     PEGASUS_POLICY_URL
 
 If neither environment variables nor command line options are used, the defaults
-are, respectively, localhost, 80, and /policy/transfer/. 
+are, respectively, localhost, 80, and /policy/. (The transfer function,
+"transfer/list", is appended to the URL for this script.)
 """
 
 ##
@@ -1019,7 +1020,7 @@ def post_policy_requests(inputs):
         if resp.status != OK:
             logger.critical("HTTP protocol error from service: %d Full text: %s" %(resp.status, resp.read()))
             raise RuntimeError("HTTP protocol error from service: %d Reason: %s" %(resp.status, resp.reason))
-        logger.info("policy web service status: %d", resp.status)
+        logger.debug("policy web service status: %d", resp.status)
         resp_string = resp.read()
         ws.close()
         ws = None
@@ -1125,6 +1126,7 @@ if 'PEGASUS_POLICY_CHECKS' in os.environ:
     using_policy_service = os.environ['PEGASUS_POLICY_CHECKS'].lower() in true_synonyms
     
 if using_policy_service:
+    logger.info("Attempting to use Policy Service for transfers.")
     # Extra imports to make policy service work. If not available, fail now
     try:
         import json
@@ -1143,7 +1145,9 @@ if using_policy_service:
 
     policy_host = "localhost"
     policy_port = 80
-    policy_url  = "/policy/transfer/list/"
+    policy_url_root  = "/policy/"
+    policy_service   = "transfer/list/"
+    policy_url = policy_url_root + policy_service
 
     parser.add_option("", "--policy-host", action = "store", dest = "policy_host",
                       help = "hostname for the Policy web service; default is '%s'" %(policy_host))
@@ -1159,7 +1163,8 @@ if using_policy_service:
         policy_port = int(os.environ['PEGASUS_POLICY_PORT'])
         
     if 'PEGASUS_POLICY_URL' in os.environ:
-        policy_url = os.environ['PEGASUS_POLICY_URL']  
+        policy_url_root = os.environ['PEGASUS_POLICY_URL']
+        policy_url = policy_url_root + policy_service
 
 # Parse command line options
 (options, args) = parser.parse_args()
@@ -1180,7 +1185,8 @@ if using_policy_service:
     if  not policy_url.endswith("/"):
         logger.debug("Appending '/' to policy_url.")
         policy_url = policy_url + "/"
-
+    logger.debug("policy service at http://%s:%d%s"%(policy_host, policy_port, policy_url))
+    
 # Die nicely when asked to (Ctrl+C, system shutdown)
 signal.signal(signal.SIGINT, prog_sigint_handler)
 

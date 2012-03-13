@@ -129,6 +129,12 @@ tool_map['srm'   ] = 'srm'
 
 tool_info = {}
 
+# This flag used to control calls to code that uses an external Policy Service.
+# If the runtime environment sets a variable PEGASUS_POLICY_CHECKS, the flag is
+# toggled and functions to submit the transfer list to the policy service are
+# used. Otherwise, the list is just sorted lexically.
+using_policy_service = False 
+
 
 # --- functions -----------------------------------------------------------------------
 
@@ -624,6 +630,7 @@ if 'PEGASUS_POLICY_CHECKS' in os.environ:
     using_policy_service = os.environ['PEGASUS_POLICY_CHECKS'].lower() in true_synonyms
     
 if using_policy_service:
+    logger.info("Attempting to use Policy Service for cleanups.")
     # Extra imports to make policy service work. If not available, fail now
     try:
         import json
@@ -642,7 +649,9 @@ if using_policy_service:
     
     policy_host = "localhost"
     policy_port = 80
-    policy_url  = "/policy/cleanup/list/"
+    policy_url_root = "/policy/"
+    policy_service = "cleanup/list/"
+    policy_url  = policy_url_root + policy_service
 
     parser.add_option("", "--policy-host", action = "store", dest = "policy_host",
                       help = "hostname for the Policy web service; default is '%s'" %(policy_host))
@@ -658,7 +667,8 @@ if using_policy_service:
         policy_port = int(os.environ['PEGASUS_POLICY_PORT'])
         
     if 'PEGASUS_POLICY_URL' in os.environ:
-        policy_url = os.environ['PEGASUS_POLICY_URL']  
+        policy_url_root = os.environ['PEGASUS_POLICY_URL']
+        policy_url  = policy_url_root + policy_service
 
 # Parse command line options
 (options, args) = parser.parse_args()
@@ -717,6 +727,8 @@ try:
             input_urls.append(url)
 
     if using_policy_service:
+        logger.info("cleanups: Using policy web service at %s on port %d with URL %s",
+                    policy_host, policy_port, policy_url)
         input_urls = post_cleanup_requests(input_urls)
     else:
         input_urls.sort()
