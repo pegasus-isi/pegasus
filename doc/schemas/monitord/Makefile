@@ -9,10 +9,13 @@
 schemadir := ../../../share/pegasus/schema
 
 # Python Yang (pyang) setup
-PYANG_HOME := $(HOME)/local
-yang2dsdl := PYANG_XSLT_DIR=$(PYANG_HOME)/share/yang/xslt	\
+# Yang should be installed by user
+#PYANG_HOME := $(HOME)/local
+#yang2dsdl := PYANG_XSLT_DIR=$(PYANG_HOME)/share/yang/xslt	\
 	     PYANG_RNG_LIBDIR=$(PYANG_HOME)/share/yang/schema \
 	     yang2dsdl
+
+yang2dsdl := yang2dsdl
 
 # Pick a schema version
 schema_ver=2011-05-04
