@@ -36,7 +36,7 @@ def usage(parser):
     print ""
     print "Usage: This tool is used by pegasus-monitord to send event notifications"
     print "over email. A set of environment variables are expected to be set:"
-    print "   PEGASUS_BIN"
+    print "   PEGASUS_BIN_DIR"
     print "   PEGASUS_SUBMIT_DIR"
     print "   PEGASUS_EVENT"
     print "   PEGASUS_EVENT_TIMESTAMP"
@@ -110,7 +110,7 @@ if options.report != None:
     report = str.lower(options.report)
         
 try:
-    validate_env_var("PEGASUS_BIN")
+    validate_env_var("PEGASUS_BIN_DIR")
     validate_env_var("PEGASUS_SUBMIT_DIR")
     validate_env_var("PEGASUS_EVENT")
     validate_env_var("PEGASUS_EVENT_TIMESTAMP_ISO")
@@ -141,7 +141,7 @@ if 'PEGASUS_STATUS' in os.environ:
 if report == "pegasus-status":
     msg = msg + "\r\n\r\npegasus-status:\r\n\r\n"
     try:
-        out = backticks(os.environ['PEGASUS_BIN'] + "/pegasus-status --noutf8 --nocolor" \
+        out = backticks(os.environ['PEGASUS_BIN_DIR'] + "/pegasus-status --noutf8 --nocolor" \
                       + " --noqueue" \
                       + " " + os.environ['PEGASUS_SUBMIT_DIR'] + " 2>&1") 
         msg = msg + out
@@ -152,7 +152,7 @@ if report == "pegasus-status":
 if report == "pegasus-analyzer":
     try:
         msg = msg + "\r\n\r\npegasus-analyzer:\r\n\r\n"
-        out = backticks(os.environ['PEGASUS_BIN'] + "/pegasus-analyzer -d " \
+        out = backticks(os.environ['PEGASUS_BIN_DIR'] + "/pegasus-analyzer -d " \
                       + os.environ['PEGASUS_SUBMIT_DIR'] + " 2>&1") 
         msg = msg + out
     except err:
