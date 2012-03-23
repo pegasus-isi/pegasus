@@ -110,14 +110,14 @@ class Transfer:
         # default protocol is file://
         if string.find(url, ":") == -1:
             logger.debug("URL without protocol (" + url + ") - assuming file://")
-            url = "file://" + url
+            url = "file://" + os.path.abspath(url)
 
         # file url is a special cases as it can contain relative paths and env vars
         if string.find(url, "file:") == 0:
             proto = "file"
             # file urls can either start with file://[\w]*/ or file: (no //)
             path = re.sub("^file:(//[\w\.\-:@]*)?", "", url)
-            path = expand_env_vars(path)
+            path = os.path.abspath(expand_env_vars(path))
             return proto, host, path
         
         # symlink url is a special cases as it can contain relative paths and env vars
@@ -323,7 +323,7 @@ def myexec(cmd_line, timeout_secs, should_log):
     rc = p.returncode
     if rc != 0:
         raise RuntimeError("Command '%s' failed with error code %s" % (cmd_line, rc))
-
+    return rc
 
 def backticks(cmd_line):
     """
@@ -453,22 +453,27 @@ def cp(transfers, failed_q):
     """
     copies locally using /bin/cp
     """
-    for i, transfer in enumerate(transfers): 
+    successes = []
+    for i, transfer in enumerate(transfers):
         prepare_local_dir(os.path.dirname(transfer.dst_path))
         cmd = "/bin/cp -f -L \"%s\" \"%s\"" % (transfer.src_path, transfer.dst_path)
         try:
-            myexec(cmd, 6*60*60, True)
+            rc = myexec(cmd, 6*60*60, True)
+            if rc == 0 :
+                successes.append(transfer)
+            else:
+                failed_q.append(transfer)
         except RuntimeError, err:
             logger.error(err)
             failed_q.append(transfer)
         stats_add(transfer.dst_path)
-
+    return successes
 
 def symlink(transfers, failed_q):
     """
     symlinks locally using ln
     """
-
+    successes = []
     for i, transfer in enumerate(transfers): 
         prepare_local_dir(os.path.dirname(transfer.dst_path))
 
@@ -489,16 +494,21 @@ def symlink(transfers, failed_q):
 
         cmd = "ln -f -s %s %s" % (transfer.src_path, transfer.dst_path)
         try:
-            myexec(cmd, 60, True)
+            rc = myexec(cmd, 60, True)
+            if rc == 0:
+                successes.append(transfer)
+            else:
+                failed_q.append(transfer)
         except RuntimeError, err:
             logger.error(err)
             failed_q.append(transfer)
-
+    return successes
 
 def scp(transfers, failed_q):
     """
     copies using scp
     """
+    successes = []
     for i, transfer in enumerate(transfers): 
         cmd = "/usr/bin/scp -q -B -o StrictHostKeyChecking=no"
         if transfer.dst_proto == "file":
@@ -510,22 +520,28 @@ def scp(transfers, failed_q):
             cmd += " " + transfer.dst_host + ":" + transfer.dst_path
             stats_add(transfer.src_path)
         try:
-            myexec(cmd, 60, True)
+            rc = myexec(cmd, 60, True)
+            if rc == 0:
+                successes.append(transfer)
+            else:
+                failed_q.append(transfer)
             if transfer.dst_proto == "file":
                 stats_add(transfer.dst_path)    
         except RuntimeError, err:
             logger.error(err)
             failed_q.append(transfer)
-
+    return successes
 
 def webget(transfers, failed_q):
     """
     pulls http/https using wget
     """
     if len(transfers) == 0:
-        return
+        return []
     if len(transfers) > 0 and tool_info['wget']['full_path'] == None:
         raise RuntimeError("Unable to do http/https transfers because wget could not be found")
+
+    successes = []
     for i, transfer in enumerate(transfers): 
         prepare_local_dir(os.path.dirname(transfer.dst_path))
         cmd = tool_info['wget']['full_path']
@@ -535,12 +551,16 @@ def webget(transfers, failed_q):
             cmd += " -q"
         cmd += " --no-check-certificate -O \"" + transfer.dst_path + "\" \"" + transfer.src_url() + "\""
         try:
-            myexec(cmd, 1*60*60, True)
+            rc = myexec(cmd, 1*60*60, True)
+            if rc == 0:
+                successes.append(transfer)
+            else:
+                failed_q.append(transfer)
             stats_add(transfer.dst_path)
         except RuntimeError, err:
             logger.error(err)
             failed_q.append(transfer)
-
+    return successes
 
 def transfers_groupable(a, b):
     """
@@ -747,7 +767,7 @@ def irods(transfers, failed_q):
     irods - use the icommands to interact with irods
     """
     if len(transfers) == 0:
-        return
+        return []
 
     if tool_info['iget']['full_path'] == None:
         raise RuntimeError("Unable to do irods transfers becuase iget could not be found in the current path")
@@ -759,6 +779,7 @@ def irods(transfers, failed_q):
         logger.error(loginErr)
         raise RuntimError("Unable to log into irods")
 
+    successes = []
     for i, url_pair in enumerate(transfers): 
         if url_pair.dst_proto == "file":
             # irods->file
@@ -775,7 +796,11 @@ def irods(transfers, failed_q):
             cmd = "iput -f " + url_pair.src_path + " " +  url_pair.dst_path
 
         try:
-            myexec(cmd, 6*60*60, True)
+            rc = myexec(cmd, 6*60*60, True)
+            if rc == 0:
+                successes.append(url_pair)
+            else:
+                failed_q.append(url_pair)
             # stats      
             if url_pair.dst_proto == "file":
                 stats_add(url_pair.dst_path)
@@ -784,18 +809,19 @@ def irods(transfers, failed_q):
         except Exception, err:
             logger.error(err)
             failed_q.append(url_pair)
-
+    return successes
 
 def srm(transfers, failed_q):
     """
     srm - use srm-copy (Is this generic enough? Do we need to handle space tokens?)
     """
     if len(transfers) == 0:
-        return
+        return []
 
     if tool_info['srm-copy']['full_path'] == None:
         raise RuntimeError("Unable to do srm transfers becuase srm-copy could not be found")
 
+    successes = []
     for i, url_pair in enumerate(transfers): 
         if url_pair.dst_proto == "file":
             prepare_local_dir(os.path.dirname(url_pair.dst_path))
@@ -815,7 +841,11 @@ def srm(transfers, failed_q):
             cmd = cmd + " -parallelism 4 -3partycopy"
             
         try:
-            myexec(cmd, 6*60*60, True)
+            rc = myexec(cmd, 6*60*60, True)
+            if rc == 0:
+                successes.append(url_pair)
+            else:
+                failed_q.append(url_pair)
         except Exception, err:
             logger.error(err)
             failed_q.append(url_pair)
@@ -849,10 +879,12 @@ def s3(transfers, failed_q):
     s3 - uses pegasus-s3 to interact with Amazon S3 
     """
     if len(transfers) == 0:
-        return
+        return []
 
     if tool_info['pegasus-s3']['full_path'] == None:
         raise RuntimeError("Unable to do S3 transfers becuase pegasus-s3 could not be found")
+
+    successes = []
 
     buckets_created = {}
 
@@ -888,12 +920,16 @@ def s3(transfers, failed_q):
             cmd = "pegasus-s3 put %s %s" % (url_pair.src_path, url_pair.dst_url())
 
         try:
-            myexec(cmd, 6*60*60, True)
+            rc = myexec(cmd, 6*60*60, True)
+            if rc == 0:
+                successes.append(url_pair)
+            else:
+                failed_q.append(url_pair)
             stats_add(local_filename)
         except Exception, err:
             logger.error(err)
             failed_q.append(url_pair)
-
+    return successes
 
 def handle_transfers(transfers, failed_q, attempt):
     """
@@ -903,22 +939,21 @@ def handle_transfers(transfers, failed_q, attempt):
         if tool_map.has_key((t_main.src_proto, t_main.dst_proto)):
             tool = tool_map[(t_main.src_proto, t_main.dst_proto)]
             if tool == "cp":
-                cp(transfers, failed_q)
+                return cp(transfers, failed_q)
             elif tool == "symlink":
-                symlink(transfers, failed_q)
+                return symlink(transfers, failed_q)
             elif tool == "scp":
-                scp(transfers, failed_q)
+                return scp(transfers, failed_q)
             elif tool == "webget":
-                webget(transfers, failed_q)
+                return webget(transfers, failed_q)
             elif tool == "gsiftp":
-                # old gsiftp destroyed list as it processed; modified to return successes.
                 return gsiftp(transfers, failed_q, attempt)
             elif tool == "irods":
-                irods(transfers, failed_q)
+                return irods(transfers, failed_q)
             elif tool == "srm":
-                srm(transfers, failed_q)
+                return srm(transfers, failed_q)
             elif tool == "s3":
-                s3(transfers, failed_q)
+                return s3(transfers, failed_q)
             else:
                 logger.critical("Error: No mapping for the tool '%s'" %(tool))
                 myexit(1)
@@ -930,7 +965,9 @@ def handle_transfers(transfers, failed_q, attempt):
     except RuntimeError, err:
         logger.critical(err)
         myexit(1)
-    return transfers # for transfer subroutines that do NOT eat the list
+    # For transfer agent methods that do not return a list of successes and
+    # failures, just return the list. Could allow invisible failures.
+    return transfers
 
 def stats_add(filename):
     global stats_total_bytes
@@ -1000,20 +1037,21 @@ def post_policy_requests(inputs):
     if not using_policy_service or len(inputs) == 0:
         return None
     logger.debug("post_policy_requests entered; input list has %d Transfers", len(inputs))
-    hostname = gethostname();
+    hostname = getfqdn();
     transfers = []
     for t in inputs:
         logger.debug("Processing input Transfer object: ID=%d src=%s dest=%s"
                      %(t.pair_id, t.src_url(), t.dst_url()))
         transfer = {'source' : t.src_url(), 'destination' : t.dst_url(), 'properties' : {} }
-        if t.src_proto == 'file':
+        if t.src_proto == 'file' or t.dst_proto == 'file':
             transfer['properties']['local_file_host'] = hostname
         transfers.append(transfer)
 
     policy_requests = json.dumps(transfers)
     policy_headers = {'Content-type' : 'application/json', 'Encoding' : 'latin-1'}
-    try: # TODO Change to variables instead of hardcoding
+    try:
         ws = HTTPConnection(policy_host, policy_port)
+        logger.debug("Sending POST to URL %s:\n%s\n%s"%(policy_url,policy_requests,policy_headers))
         ws.request('POST', policy_url, policy_requests, policy_headers)
         resp = ws.getresponse();
         # Check for the HTTP Success response code.
@@ -1141,7 +1179,7 @@ if using_policy_service:
         sys.exit(1)
 
     from socket import error as SocketError
-    from socket import gethostname
+    from socket import getfqdn
 
     policy_host = "localhost"
     policy_port = 80
