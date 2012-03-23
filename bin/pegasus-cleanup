@@ -56,6 +56,7 @@ class URL:
     properties = {}
 
     def set_url(self, url):
+        logger.debug("set_url using '" + url + "'")
         self.proto, self.host, self.path = self.parse_url(url)
     
     def parse_url(self, url):
@@ -67,14 +68,14 @@ class URL:
         # default protocol is file://
         if string.find(url, ":") == -1:
             logger.debug("URL without protocol (" + url + ") - assuming file://")
-            url = "file://" + url
+            url = "file://" + os.path.abspath(url) # assume we're the file source
 
         # file url is a special cases as it can contain relative paths and env vars
         if string.find(url, "file:") == 0:
             proto = "file"
             # file urls can either start with file://[\w]*/ or file: (no //)
             path = re.sub("^file:(//[\w\.\-:@]*)?", "", url)
-            path = expand_env_vars(path)
+            path = os.path.abspath(expand_env_vars(path))
             return proto, host, path
 
         # other than file urls
@@ -214,7 +215,7 @@ def myexec(cmd_line, timeout_secs, should_log):
     rc = p.returncode
     if rc != 0:
         raise RuntimeError("Command '%s' failed with error code %s" % (cmd_line, rc))
-
+    return rc
 
 def backticks(cmd_line):
     """
@@ -330,10 +331,10 @@ def rm(url):
     """
     cmd = "/bin/rm -f \"%s\"" % (url.path)
     try:
-        myexec(cmd, 60, True)
+        rc = myexec(cmd, 60, True)
     except RuntimeError, err:
         logger.error(err)
-
+    return rc
 
 def scp(url):
     """
@@ -343,10 +344,10 @@ def scp(url):
           " " + url.host + " " + \
           " \"/bin/rm -f " + url.path + "\""
     try:
-        myexec(cmd, 60, True)
+       rc = myexec(cmd, 60, True)
     except RuntimeError, err:
         logger.error(err)
-
+    return rc
 
 def gsiftp(url):
     """
@@ -368,10 +369,10 @@ def gsiftp(url):
     cmd += " file:///dev/null " + url.url()
 
     try:
-        myexec(cmd, 60, True)
+        rc = myexec(cmd, 60, True)
     except RuntimeError, err:
         logger.error(err)
-
+    return rc
 
 def irods_login():
     """
@@ -423,10 +424,10 @@ def irods(url):
     cmd = "irm -f " + url.path
 
     try:
-        myexec(cmd, 60, True)
+        rc = myexec(cmd, 60, True)
     except Exception, err:
         logger.error(err)
-
+    return rc
 
 
 def srm(url):
@@ -440,10 +441,10 @@ def srm(url):
     cmd = "srm-rm " + url.url()
         
     try:
-        myexec(cmd, 60, True)
+       rc = myexec(cmd, 60, True)
     except Exception, err:
         logger.error(err)
-
+    return rc
 
 def s3(url):
     """
@@ -456,10 +457,10 @@ def s3(url):
     cmd = "pegasus-s3 rm " + url.url()
 
     try:
-        myexec(cmd, 60, True)
+        rc = myexec(cmd, 60, True)
     except Exception, err:
         logger.error(err)
-
+    return rc
 
 def remove(url):
     """
@@ -469,17 +470,17 @@ def remove(url):
         if tool_map.has_key(url.proto):
             tool = tool_map[url.proto]
             if tool == "rm":
-                rm(url)
+                rc = rm(url)
             elif tool == "scp":
-                scp(url)
+                rc = scp(url)
             elif tool == "gsiftp":
-                gsiftp(url)
+                rc = gsiftp(url)
             elif tool == "irods":
-                irods(url)
+                rc = irods(url)
             elif tool == "srm":
-                srm(url)
+                rc = srm(url)
             elif tool == "s3":
-                s3(url)
+                rc = s3(url)
             else:
                 logger.critical("Error: No mapping for the tool '%s'" %(tool))
                 myexit(1)
@@ -490,7 +491,7 @@ def remove(url):
     except RuntimeError, err:
         logger.critical(err)
         myexit(1)
-
+    return rc
 
 def myexit(rc):
     """
@@ -512,7 +513,7 @@ def post_cleanup_requests(inputs):
     if not using_policy_service or len(inputs) == 0:
         return None
     logger.debug("post_cleanup_requests entered; input list has %d URLs", len(inputs))
-    hostname = gethostname()
+    hostname = getfqdn()
     cleanups = []
     for t in inputs:
         logger.debug("Processing input URL object: url=%s" %(t.url()))
@@ -523,7 +524,7 @@ def post_cleanup_requests(inputs):
 
     policy_requests = json.dumps(cleanups)
     policy_headers = {'Content-type' : 'application/json', 'Encoding' : 'latin-1'}
-    try: # TODO Change to variables instead of hardcoding
+    try:
         ws = HTTPConnection(policy_host, policy_port)
         logger.debug("Sending POST to URL %s:\n%s\n%s"%(policy_url,policy_requests,policy_headers))
         ws.request('POST', policy_url, policy_requests, policy_headers)
@@ -544,6 +545,7 @@ def post_cleanup_requests(inputs):
         raise RuntimeError("socket exception: [ERRNO%s] %s" %(value, message))
 
     logger.debug("policy web service response: %s", resp_string)
+
     posted_cleanups = json.loads(resp_string)
 
     inputs = []; # wipe out old list
@@ -560,7 +562,7 @@ def post_cleanup_requests(inputs):
     logger.debug("post_cleanup_requests return")
     return inputs
 
-def close_cleanup_requests(inputs, status='COMPLETED'):
+def close_cleanup_requests(inputs):
     """
     Send a PUT request to the policy web service to notify it that the cleanups
     have been processed.
@@ -577,10 +579,9 @@ def close_cleanup_requests(inputs, status='COMPLETED'):
     cleanups = []
     for u in inputs:
         logger.debug("Processing URL object: url= %s" % (u.url()))
-        cleanup = {'uri': u.url(), 'id': u.id, 'properties': {'STATUS':status}}
+        cleanup = {'uri': u.url(), 'id': u.id, 'properties': {}}
         for p in u.properties.keys():
-            if p != 'STATUS':
-                cleanup['properties'][p] = u.properties[p]
+            cleanup['properties'][p] = u.properties[p]
         cleanups.append(cleanup)
     
     policy_cleanups = json.dumps(cleanups)
@@ -645,7 +646,7 @@ if using_policy_service:
         myexit(1)
         
     from socket import error as SocketError
-    from socket import gethostname
+    from socket import getfqdn
     
     policy_host = "localhost"
     policy_port = 80
@@ -696,10 +697,10 @@ signal.signal(signal.SIGINT, prog_sigint_handler)
 
 # stdin or file input?
 if options.file == None:
-    logger.info("Reading URL pairs from stdin")
+    logger.info("Reading URLs from stdin")
     input_file = sys.stdin
 else:
-    logger.info("Reading URL pairs from %s" % (options.file))
+    logger.info("Reading URLs from %s" % (options.file))
     try:
         input_file = open(options.file, 'r')
     except Exception, err:
@@ -730,14 +731,16 @@ try:
         logger.info("cleanups: Using policy web service at %s on port %d with URL %s",
                     policy_host, policy_port, policy_url)
         input_urls = post_cleanup_requests(input_urls)
-    else:
-        input_urls.sort()
 
     # queues to track the work
     url_q = deque(input_urls)
     while url_q:
         next_url = url_q.pop()
-        remove(next_url)
+        rc = remove(next_url)
+        if rc == 0:
+            next_url.properties['STATUS'] = 'COMPLETED'
+        else:
+            next_url.properties['STATUS'] = 'FAILED'
 
     close_cleanup_requests(input_urls) # returns immediately if not using policy
 
