@@ -104,6 +104,9 @@ class Parser:
         """
         buffer = ""
 
+        #valid token that is parsed
+        token = ""
+
         # First, we find the beginning <invocation xmlns....
         while True:
             line = self._fh.readline()
@@ -111,14 +114,26 @@ class Parser:
                 # End of file, record not found
                 return None
             if line.find("<invocation") != -1:
+                token = "<invocation"
                 break
-            if line.find("[seqexec-task") != -1:
+            if ( line.find("[cluster-task") != -1 ):
+                token = "<cluster-task"
                 break
-            if line.find("[seqexec-summary") != -1:
+            if ( line.find("[cluster-summary") != -1 ):
+                token = "[cluster-summary"
+                break
+            if ( line.find("[seqexec-task") != -1 ):
+                #deprecated token
+                token = "<seqexec-task"
+                break
+            if ( line.find("[seqexec-summary") != -1 ):
+                #deprecated token
+                token = "[seqexec-summary"
                 break
 
         # Found something!
-        if line.find("<invocation") >= 0:
+        #if line.find("<invocation") >= 0:
+        if token == "<invocation" :
             # Found invocation record
             start = line.find("<invocation")
             buffer = line[start:]
@@ -128,9 +143,10 @@ class Parser:
             if end >= 0:
                 end = end + len("</invocation>")
                 return buffer[:end]
-        elif line.find("[seqexec-summary") >= 0:
+        #elif line.find("[seqexec-summary") >= 0:
+        elif ( token == "[cluster-summary" or token == "[seqexec-summary" ):
             # Found line with cluster jobs summary
-            start = line.find("[seqexec-summary")
+            start = line.find(token)
             buffer = line[start:]
             end = buffer.find("]")
 
@@ -139,11 +155,12 @@ class Parser:
                 return buffer[:end]
 
             # clustered record should be in a single line!
-            logger.warning("%s: seqexec-summary line is malformed... ignoring it..." % (self._kickstart_output_file))
+            logger.warning("%s: %s line is malformed... ignoring it..." % (self._kickstart_output_file, token ))
             return ""
-        elif line.find("[seqexec-task") >= 0:
+        #elif line.find("[seqexec-task") >= 0:
+        elif ( token == "[cluster-task" or token == "[seqexec-task" ):
             # Found line with task information
-            start = line.find("[seqexec-task")
+            start = line.find( token )
             buffer = line[start:]
             end = buffer.find("]")
 
@@ -152,7 +169,7 @@ class Parser:
                 return buffer[:end]
 
             # task record should be in a single line!
-            logger.warning("%s: seqexec-task line is malformed... ignoring it..." % (self._kickstart_output_file))
+            logger.warning("%s: %s line is malformed... ignoring it..." % (self._kickstart_output_file, token))
             return ""
         else:
             return ""
