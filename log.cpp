@@ -7,7 +7,7 @@
 #define MAX_LOG_MESSAGE 8192
 
 static int loglevel = LOG_INFO;
-static FILE *logfile = stdout;
+static FILE *logfile = stderr;
 
 void log_set_level(int level) {
     loglevel = level;
@@ -41,12 +41,12 @@ static void timestr(char *dest) {
 void log_message(int level, const char *message, va_list args) {
     // Just in case...
     if (logfile == NULL || ferror(logfile) || ftell(logfile) < 0) {
-        logfile = stdout;
+        logfile = stderr;
     }
     
     if (log_test(level)) {
         char logformat[MAX_LOG_MESSAGE];
-        if (logfile == stdout) {
+        if (logfile == stderr) {
             snprintf(logformat, MAX_LOG_MESSAGE, "%s\n", message);    
         } else {
             // If logging to a file, add the date
@@ -55,12 +55,7 @@ void log_message(int level, const char *message, va_list args) {
             snprintf(logformat, MAX_LOG_MESSAGE, "%s: %s\n", ts, message);
         }
         
-        // If logging to stdio, send ERROR and FATAL to stderr, others to stdout
-        if (logfile == stdout && level <= LOG_ERROR) {
-            vfprintf(stderr, logformat, args);
-        } else {
-            vfprintf(logfile, logformat, args);
-        }
+        vfprintf(logfile, logformat, args);
     }
 }
 

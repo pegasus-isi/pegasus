@@ -13,6 +13,7 @@ MAKE = make
 
 
 OBJS += strlib.o
+OBJS += tools.o
 OBJS += failure.o
 OBJS += engine.o
 OBJS += dag.o
@@ -50,6 +51,6 @@ clean:
 	$(RM) *.o $(PROGRAMS) $(TESTS)
 
 depends:
-	g++ $(CXXFLAGS) -MM *.cpp > depends.mk
+	mpiCC $(CXXFLAGS) -MM *.cpp > depends.mk
 
 include depends.mk

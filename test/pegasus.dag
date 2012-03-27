@@ -1,0 +1,16 @@
+#@ 1 mDiffFit:3.3 A
+TASK A /bin/echo A
+
+#@ 2 mDiff:3.3 B
+TASK B /bin/echo B
+
+#@ 3 mDiffSoo:3.3 C
+TASK C /bin/echo C
+
+#@ 4 mDiffFit:3.3 D
+TASK D /bin/echo D
+
+EDGE A B
+EDGE A C
+EDGE B D
+EDGE C D

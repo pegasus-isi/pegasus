@@ -36,6 +36,14 @@ bool Task::is_ready() {
     
     return true;
 }
+    
+void Task::set_extra_id(const std::string &extra_id) {
+    this->extra_id = extra_id;
+}
+
+void Task::set_extra_transformation(const std::string &extra_transformation) {
+    this->extra_transformation = extra_transformation;
+}
 
 DAG::DAG(const std::string &dagfile, const std::string &rescuefile) {
     this->read_dag(dagfile);
@@ -91,7 +99,10 @@ void DAG::read_dag(const std::string &filename) {
     if (dagfile == NULL) {
         failures("Unable to open DAG file: %s", filename.c_str());
     }
-    
+   
+    std::string extra_id = "";
+    std::string extra_transformation = "";
+    std::string extra_name = ""; 
     char line[MAX_LINE];
     while (fgets(line, MAX_LINE, dagfile) != NULL) {
         std::string rec(line);
@@ -102,10 +113,6 @@ void DAG::read_dag(const std::string &filename) {
             continue;
         }
         
-        // Comments
-        if (rec[0] == '#') {
-            continue;
-        }
         
         if (rec.find("TASK", 0, 4) == 0) {
             std::vector<std::string> v;
@@ -125,7 +132,19 @@ void DAG::read_dag(const std::string &filename) {
             }
             
             Task *t = new Task(name, cmd);
-            
+            if (extra_id.length() > 0) {
+                if (extra_name != name) {
+                    failure("Name from comment do not match task: %s %s\n",
+                            extra_name.c_str(), name.c_str());
+                }
+                t->set_extra_id(extra_id);
+                t->set_extra_transformation(extra_transformation);
+
+                // reset the extra parameters
+                extra_id = "";
+                extra_transformation = "";
+                extra_name = "";
+            }
             this->add_task(t);
         } else if (rec.find("EDGE", 0, 4) == 0) {
             
@@ -141,6 +160,21 @@ void DAG::read_dag(const std::string &filename) {
             std::string child = v[2];
             
             this->add_edge(parent, child);
+        } else if (rec.find("#@", 0, 2) == 0) {
+            // Pegasus cluster comment - includes extra task information
+            std::vector<std::string> v;
+            
+            split(v, rec, DELIM, 3);
+            
+            if (v.size() < 4) {
+                failure("Invalid #@ record: %s\n", line);
+            }
+
+            extra_id = v[1];
+            extra_transformation = v[2];
+            extra_name = v[3];
+        } else if (rec[0] == '#') {
+            // Comments
         } else {
             failure("Invalid DAG record: %s", line);
         }

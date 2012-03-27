@@ -11,6 +11,10 @@ public:
     std::string command;
     std::vector<Task *> children;
     std::vector<Task *> parents;
+
+    // this comes from the Pegasus cluster comments
+    std::string extra_id;
+    std::string extra_transformation;
     
     bool success;
     int failures;
@@ -19,6 +23,10 @@ public:
     ~Task();
     
     bool is_ready();
+    
+    void set_extra_id(const std::string &extra_id);
+    void set_extra_transformation(const std::string &extra_transformation);
+    
 };
 
 class DAG {
@@ -33,7 +41,7 @@ public:
 
     DAG(const std::string &dagfile, const std::string &rescuefile = "");
     ~DAG();
-    
+
     bool has_task(const std::string &name) const;
     Task *get_task(const std::string &name) const;
     iterator begin() { return this->tasks.begin(); }

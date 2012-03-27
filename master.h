@@ -7,12 +7,17 @@
 #include "dag.h"
 
 class Master {
+    std::string program;
     std::string dagfile;
     std::string outfile;
     std::string errfile;
     DAG *dag;
     Engine *engine;
     std::queue<int> idle;
+
+    long total_count;
+    long success_count;
+    long failed_count;
     
     void submit_task(Task *t, int worker);
     void wait_for_result();
@@ -22,7 +27,7 @@ class Master {
     int next_idle_worker();
     void merge_task_stdio(FILE *dest, const std::string &src, const std::string &stream);
 public:
-    Master(Engine &engine, DAG &dag, const std::string &outfile, const std::string &errfile);
+    Master(const std::string &program, Engine &engine, DAG &dag, const std::string &dagfile, const std::string &outfile, const std::string &errfile);
     ~Master();
     int run();
 };
