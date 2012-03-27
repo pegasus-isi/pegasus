@@ -9,6 +9,7 @@
 #include "worker.h"
 #include "failure.h"
 #include "log.h"
+#include "protocol.h"
 
 static char *program;
 static int rank;
@@ -221,19 +222,21 @@ int mpidag(int argc, char *argv[]) {
             
             // Determine task stdout file
             if (outfile.size() == 0) {
-                outfile = dagfile;
-                outfile += ".out";
+                outfile = "stdout";
             }
-            next_retry_file(outfile);
+            if (outfile != "stdout") {
+                next_retry_file(outfile);
+            }
             log_debug("Using stdout file: %s", outfile.c_str());
             
             
             // Determine task stderr file
             if (errfile.size() == 0) {
-                errfile = dagfile;
-                errfile += ".err";
+                errfile = "stderr";
             }
-            next_retry_file(errfile);
+            if (errfile != "stderr") {
+                next_retry_file(errfile);
+            }
             log_debug("Using stderr file: %s", errfile.c_str());
             
             
@@ -259,7 +262,7 @@ int mpidag(int argc, char *argv[]) {
             DAG dag(dagfile, oldrescue);
             Engine engine(dag, newrescue, max_failures, tries);
             
-            return Master(engine, dag, outfile, errfile).run();
+            return Master(program, engine, dag, dagfile, outfile, errfile).run();
         } else {
             return Worker().run();
         }
@@ -281,6 +284,8 @@ int mpidag(int argc, char *argv[]) {
 int main(int argc, char *argv[]) {
     try {
         MPI_Init(&argc, &argv);
+        protocol_request_struct();
+        protocol_response_struct();
         int rc = mpidag(argc, argv);
         MPI_Finalize();
         return rc;

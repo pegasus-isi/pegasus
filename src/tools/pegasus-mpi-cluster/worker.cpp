@@ -12,6 +12,7 @@
 #include "protocol.h"
 #include "log.h"
 #include "failure.h"
+#include "tools.h"
 
 extern char **environ;
 
@@ -26,6 +27,8 @@ int Worker::run() {
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     
     log_info("Worker %d: Starting...", rank);
+
+    char buf[10000];
     
     std::string outfile;
     std::string errfile;
@@ -57,8 +60,11 @@ int Worker::run() {
     while (1) {
         std::string name;
         std::string command;
+        std::string extra_id;
         
-        int shutdown = recv_request(name, command);
+        log_trace("Worker %d: Waiting for request", rank);
+        int shutdown = recv_request(name, command, extra_id);
+        log_trace("Worker %d: Got request", rank);
         
         if (shutdown) {
             log_trace("Worker %d: Got shutdown message", rank);
@@ -69,19 +75,20 @@ int Worker::run() {
 
         struct timeval task_start;
         gettimeofday(&task_start, NULL);
+            
+        // Process arguments
+        std::vector<std::string> args;
+        split_args(args, command);
+        // N + 1 for null-termination
+        char **argv = new char*[args.size()+1];
+        for (unsigned i=0; i<args.size(); i++) {
+            argv[i] = new char[args[i].size()+1];
+            strcpy(argv[i], args[i].c_str());
+        }
+        argv[args.size()] = NULL; // Last one is null
         
         pid_t pid = fork();
         if (pid == 0) {
-            // Process arguments
-            std::vector<std::string> args;
-            split_args(args, command);
-            // N + 1 for null-termination
-            char **argv = new char*[args.size()+1];
-            for (unsigned i=0; i<args.size(); i++) {
-                argv[i] = new char[args[i].size()+1];
-                strcpy(argv[i], args[i].c_str());
-            }
-            argv[args.size()] = NULL; // Last one is null
             
             // Redirect stdout/stderr
             close(STDOUT_FILENO);
@@ -118,8 +125,15 @@ int Worker::run() {
 
         log_debug("Worker %d: Task %s finished with exitcode %d in %f seconds", 
             rank, name.c_str(), exitcode, task_runtime);
+
+        // pegasus cluster output - used for provenance
+        char date[32];
+        iso2date(task_stime, date, sizeof(date));
+        sprintf(buf, "[cluster-task id=%s, start=\"%s\", duration=%.3f, status=%d, app=\"%s\"]\n",
+                     extra_id.c_str(), date, task_runtime, exitcode, argv[0]);
+        write(out, buf, strlen(buf));
         
-        send_response(name, exitcode);
+        send_response(name, task_stime, task_ftime, exitcode);
     }
 
     close(out);

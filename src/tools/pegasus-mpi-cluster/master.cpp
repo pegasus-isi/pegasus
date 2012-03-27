@@ -7,21 +7,35 @@
 #include "failure.h"
 #include "protocol.h"
 #include "log.h"
+#include "tools.h"
 
-Master::Master(Engine &engine, DAG &dag, const std::string &outfile, const std::string &errfile) {
+Master::Master(const std::string &program, Engine &engine, DAG &dag,
+               const std::string &dagfile, const std::string &outfile,
+               const std::string &errfile) {
+    this->program = program;
     this->dagfile = dagfile;
-    this->outfile = outfile;
-    this->errfile = errfile;
+    this->outfile = dagfile + "." + outfile;
+    this->errfile = dagfile + "." + errfile;
     this->engine = &engine;
     this->dag = &dag;
+
+    total_count = 0;
+    success_count = 0;
+    failed_count = 0;
 }
 
 Master::~Master() {
 }
 
 void Master::submit_task(Task *task, int worker) {
+    int rc;
     log_debug("Submitting task %s to worker %d", task->name.c_str(), worker);
-    send_request(task->name, task->command, worker);
+    rc = send_request(task->name, task->command, task->extra_id, worker);
+    if (rc != 0 ) {
+        failure("Sending task failed");
+    }
+
+    this->total_count++;
 }
 
 void Master::wait_for_result() {
@@ -29,8 +43,10 @@ void Master::wait_for_result() {
     
     std::string name;
     int exitcode;
+    double start_time;
+    double end_time;
     int worker;
-    recv_response(name, exitcode, worker);
+    recv_response(name, start_time, end_time, exitcode, worker);
     
     // Mark worker idle
     log_trace("Worker %d is idle", worker);
@@ -39,8 +55,10 @@ void Master::wait_for_result() {
     // Mark task finished
     if (exitcode == 0) {
         log_debug("Task %s finished with exitcode %d", name.c_str(), exitcode);
+        this->success_count++;
     } else {
         log_error("Task %s failed with exitcode %d", name.c_str(), exitcode);
+        this->failed_count++;
     }
     Task *t = this->dag->get_task(name);
     this->engine->mark_task_finished(t, exitcode);
@@ -180,13 +198,19 @@ int Master::run() {
 
     // Merge stdout/stderr from all tasks
     log_trace("Merging stdio from workers");
-    FILE *outf = fopen(this->outfile.c_str(), "w");
-    if (outf == NULL) {
-        failures("Unable to open stdout file: %s\n", this->outfile.c_str());
+    FILE *outf = stdout;
+    if (outfile != "stdout") {
+        fopen(this->outfile.c_str(), "w");
+        if (outf == NULL) {
+            failures("Unable to open stdout file: %s\n", this->outfile.c_str());
+        }
     }
-    FILE *errf = fopen(this->errfile.c_str(), "w");
-    if (errf == NULL) {
-        failures("Unable to open stderr file: %s\n", this->outfile.c_str());
+    FILE *errf = stderr;
+    if (errfile != "stderr") {
+        fopen(this->errfile.c_str(), "w");
+        if (errf == NULL) {
+            failures("Unable to open stderr file: %s\n", this->outfile.c_str());
+        }
     }
     
     // Collect all stdout/stderr
@@ -202,14 +226,42 @@ int Master::run() {
         terrfile += dotrank;
         this->merge_task_stdio(errf, terrfile, "stderr");
     }
+   
+    // pegasus cluster output - used for provenance
+    char buf[BUFSIZ];
+    char stat[10];
+    char date[32];
+    if (this->engine->is_failed()) {
+        strcpy(stat, "failed");
+    }
+    else {
+        strcpy(stat, "ok");
+    }
+    iso2date(stime, date, sizeof(date));
+    sprintf(buf, "[cluster-summary stat=\"%s\" tasks=%ld, succeeded=%ld, failed=%ld, extra=%d,"
+                 " start=\"%s\", duration=%.3f, pid=%d, app=\"%s\"]\n",
+                 stat, 
+                 this->total_count,
+                 this->success_count, 
+                 this->failed_count,
+                 0,
+                 date,
+                 walltime,
+                 getpid(),
+                 this->program.c_str());
+    fwrite(buf, 1, strlen(buf), outf);
     
-    fclose(errf);
-    fclose(outf);
+    if (errfile != "stderr") { 
+        fclose(errf);
+    }
+    if (outfile != "stdout") {
+        fclose(outf);
+    }
         
     if (this->engine->max_failures_reached()) {
         log_error("Max failures reached: DAG prematurely aborted");
     }
-    
+        
     if (this->engine->is_failed()) {
         log_error("Workflow failed");
         return 1;
