@@ -232,11 +232,12 @@ class Workflow:
                     continue
                 my_task_info["transformation"] = my_transformation
                 my_task_info["derivation"] = my_derivation
-            elif line.startswith("#"):
+            elif line.startswith("#") or line.startswith( "EDGE"):
                 # Regular comment line... just skip it
+                # Or it can be the EDGES descriped in input file for pegasus-mpi-cluster
                 continue
             else:
-                # This is regular line, so we assume it is a task
+                # This is regular line, so we assume it is a task                
                 split_line = line.split(None, 1)
                 if len(split_line) == 0:
                     # Nothing here

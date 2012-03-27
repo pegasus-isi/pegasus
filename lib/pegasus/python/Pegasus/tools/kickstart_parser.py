@@ -117,21 +117,21 @@ class Parser:
                 token = "<invocation"
                 break
             if ( line.find("[cluster-task") != -1 ):
-                token = "<cluster-task"
+                token = "[cluster-task"
                 break
             if ( line.find("[cluster-summary") != -1 ):
                 token = "[cluster-summary"
                 break
             if ( line.find("[seqexec-task") != -1 ):
                 #deprecated token
-                token = "<seqexec-task"
+                token = "[seqexec-task"
                 break
             if ( line.find("[seqexec-summary") != -1 ):
                 #deprecated token
                 token = "[seqexec-summary"
                 break
 
-        # Found something!
+        # Found something!        
         #if line.find("<invocation") >= 0:
         if token == "<invocation" :
             # Found invocation record
@@ -165,7 +165,7 @@ class Parser:
             end = buffer.find("]")
 
             if end >= 0:
-                end = end + len("]")
+                end = end + len("]")                
                 return buffer[:end]
 
             # task record should be in a single line!
@@ -204,17 +204,17 @@ class Parser:
         """
         Returns True if buffer contains a task record.
         """
-        if buffer.find("[seqexec-task") == -1:
-            return False
-        return True
+        if ( buffer.find("[seqexec-task") != -1 or buffer.find( "[cluster-task" ) != -1 ):
+            return True
+        return False
 
     def is_clustered_record(self, buffer=''):
         """
         Returns True if buffer contains a clustered record.
         """
-        if buffer.find("[seqexec-summary") == -1:
-            return False
-        return True
+        if ( buffer.find("[seqexec-summary") != -1 or buffer.find( "[cluster-summary" ) != -1):
+            return True
+        return False
 
     def start_element(self, name, attrs):
         """
