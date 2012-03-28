@@ -273,29 +273,31 @@ public class GridStartFactory {
                 "GridStartFactory needs to be initialized first before using" );
         }
         GridStart gs = null;
-        if ( /*gridStartPath == null ||*/ job.isMPIJob()){
-            //return NoGridStart implementation
+
+        if ( job.isMPIJob() && !(job instanceof AggregatedJob )){
+            //we only associate no gridstart for mpi jobs that are not clustered
+            //that takes care of pegasus-mpi-cluster
             gs = (GridStart)this.gridStart( GRIDSTART_SHORT_NAMES[ NO_GRIDSTART_INDEX ] );
+            return gs;
         }
-        else{
-            //determine the short name of GridStart implementation
-            //on the basis of any profile associated or from the properties file
-            String shortName = ( job.vdsNS.containsKey( Pegasus.GRIDSTART_KEY) ) ?
-                                //pick the one associated in profiles
-                                ( String ) job.vdsNS.get( Pegasus.GRIDSTART_KEY ):
-                                //pick the one in the properties file
-                                mProps.getGridStart();
 
-            //try loading on the basis of short name from the cache
-            Object obj = this.gridStart( shortName );
+        //determine the short name of GridStart implementation
+        //on the basis of any profile associated or from the properties file
+        String shortName = ( job.vdsNS.containsKey( Pegasus.GRIDSTART_KEY) ) ?
+                           //pick the one associated in profiles
+                           ( String ) job.vdsNS.get( Pegasus.GRIDSTART_KEY ):
+                           //pick the one in the properties file
+                           mProps.getGridStart();
 
-            if( obj == null ){
-                //load via reflection and register in the cache
-                obj = this.loadGridStart( mBag, mDAG, shortName );
-                this.registerGridStart( shortName, (GridStart)obj );
-            }
-            gs = (GridStart) obj;
+        //try loading on the basis of short name from the cache
+        Object obj = this.gridStart( shortName );
+        if( obj == null ){
+            //load via reflection and register in the cache
+            obj = this.loadGridStart( mBag, mDAG, shortName );
+            this.registerGridStart( shortName, (GridStart)obj );
         }
+        gs = (GridStart) obj;
+
         return gs;
      }
 
