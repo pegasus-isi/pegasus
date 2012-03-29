@@ -17,14 +17,14 @@ public:
 
 #define MAX_FAILURE_MSG 2048
 
-#define failure(format, args...) \
+#define myfailure(format, args...) \
     do { \
         char msg[MAX_FAILURE_MSG]; \
         snprintf(msg, MAX_FAILURE_MSG, "%s(%d): "format, __FILE__, __LINE__, ##args); \
         throw Failure(msg); \
     } while (0);
 
-#define failures(format, args...) \
+#define myfailures(format, args...) \
     do { \
         char msg[MAX_FAILURE_MSG]; \
         snprintf(msg, MAX_FAILURE_MSG, "%s(%d): "format": %s", __FILE__, __LINE__, ##args, strerror(errno)); \

@@ -47,12 +47,12 @@ int Worker::run() {
     
     int out = open(outfile.c_str(), O_WRONLY|O_CREAT|O_TRUNC, 0000644);
     if (out < 0) {
-        failures("Worker %d: unable to open task stdout", rank);
+        myfailures("Worker %d: unable to open task stdout", rank);
     }
     
     int err = open(errfile.c_str(), O_WRONLY|O_CREAT|O_TRUNC, 0000644);
     if (err < 0) {
-        failures("Worker %d: unable to open task stderr", rank);
+        myfailures("Worker %d: unable to open task stderr", rank);
     }
     
     double total_runtime = 0.0;

@@ -72,17 +72,17 @@ Task *DAG::get_task(const std::string &name) const {
 
 void DAG::add_task(Task *task) {
     if (this->has_task(task->name)) {
-        failure("Duplicate task: %s\n", task->name.c_str());
+        myfailure("Duplicate task: %s\n", task->name.c_str());
     }
     this->tasks[task->name] = task;
 }
 
 void DAG::add_edge(const std::string &parent, const std::string &child) {
     if (!this->has_task(parent)) {
-        failure("No such task: %s\n", parent.c_str());
+        myfailure("No such task: %s\n", parent.c_str());
     }
     if (!this->has_task(child)) {
-        failure("No such task: %s\n", child.c_str());
+        myfailure("No such task: %s\n", child.c_str());
     }
     
     Task *p = get_task(parent);
@@ -97,7 +97,7 @@ void DAG::read_dag(const std::string &filename) {
     
     FILE *dagfile = fopen(filename.c_str(), "r");
     if (dagfile == NULL) {
-        failures("Unable to open DAG file: %s", filename.c_str());
+        myfailures("Unable to open DAG file: %s", filename.c_str());
     }
    
     std::string extra_id = "";
@@ -120,7 +120,7 @@ void DAG::read_dag(const std::string &filename) {
             split(v, rec, DELIM, 2);
             
             if (v.size() < 3) {
-                failure("Invalid TASK record: %s\n", line);
+                myfailure("Invalid TASK record: %s\n", line);
             }
             
             std::string name = v[1];
@@ -128,13 +128,13 @@ void DAG::read_dag(const std::string &filename) {
                         
             // Check for duplicate tasks
             if (this->has_task(name)) {
-                failure("Duplicate task: %s", name.c_str());
+                myfailure("Duplicate task: %s", name.c_str());
             }
             
             Task *t = new Task(name, cmd);
             if (extra_id.length() > 0) {
                 if (extra_name != name) {
-                    failure("Name from comment do not match task: %s %s\n",
+                    myfailure("Name from comment do not match task: %s %s\n",
                             extra_name.c_str(), name.c_str());
                 }
                 t->set_extra_id(extra_id);
@@ -153,7 +153,7 @@ void DAG::read_dag(const std::string &filename) {
             split(v, rec, DELIM, 2);
             
             if (v.size() < 3) {
-                failure("Invalid EDGE record: %s\n", line);
+                myfailure("Invalid EDGE record: %s\n", line);
             }
             
             std::string parent = v[1];
@@ -167,7 +167,7 @@ void DAG::read_dag(const std::string &filename) {
             split(v, rec, DELIM, 3);
             
             if (v.size() < 4) {
-                failure("Invalid #@ record: %s\n", line);
+                myfailure("Invalid #@ record: %s\n", line);
             }
 
             extra_id = v[1];
@@ -176,7 +176,7 @@ void DAG::read_dag(const std::string &filename) {
         } else if (rec[0] == '#') {
             // Comments
         } else {
-            failure("Invalid DAG record: %s", line);
+            myfailure("Invalid DAG record: %s", line);
         }
     }
     
@@ -192,12 +192,12 @@ void DAG::read_rescue(const std::string &filename) {
             // File doesn't exist
             return;
         }
-        failures("Unable to read rescue file: %s", filename.c_str());
+        myfailures("Unable to read rescue file: %s", filename.c_str());
     }
     
     FILE *rescuefile = fopen(filename.c_str(), "r");
     if (rescuefile == NULL) {
-        failures("Unable to open rescue file: %s", filename.c_str());
+        myfailures("Unable to open rescue file: %s", filename.c_str());
     }
     
     const char *DELIM = " \t\n\r";
@@ -222,19 +222,19 @@ void DAG::read_rescue(const std::string &filename) {
             split(v, rec, DELIM, 1);
             
             if (v.size() < 2) {
-                failure("Invalid DONE record: %s\n", line);
+                myfailure("Invalid DONE record: %s\n", line);
             }
             
             std::string name = v[1];
             
             if (!this->has_task(name)) {
-                failure("Unknown task %s in rescue file", name.c_str());
+                myfailure("Unknown task %s in rescue file", name.c_str());
             }
             
             Task *task = this->get_task(name);
             task->success = true;
         } else {
-            failure("Invalid rescue record: %s", line);
+            myfailure("Invalid rescue record: %s", line);
         }
     }
     

@@ -12,10 +12,10 @@
 
 Engine::Engine(DAG &dag, const std::string &rescuefile, int max_failures, int tries) {
     if (max_failures < 0) {
-        failure("max_failures must be >= 0");
+        myfailure("max_failures must be >= 0");
     }
     if (tries < 1) {
-        failure("tries must be >= 1");
+        myfailure("tries must be >= 1");
     }
     this->max_failures = max_failures;
     this->tries = tries;
@@ -49,7 +49,7 @@ void Engine::queue_ready_task(Task *t) {
 void Engine::open_rescue(const std::string &filename) {
     this->rescue = fopen(filename.c_str(), "a");
     if (this->rescue == NULL) {
-        failure("Unable to open rescue file: %s", filename.c_str());
+        myfailure("Unable to open rescue file: %s", filename.c_str());
     }
     
     // Mark done tasks as done in the new rescue file
@@ -138,7 +138,7 @@ bool Engine::has_ready_task() {
 
 Task *Engine::next_ready_task() {
     if (!this->has_ready_task()) {
-        failure("No ready tasks");
+        myfailure("No ready tasks");
     }
     Task *t = this->ready.front();
     this->ready.pop();
@@ -152,7 +152,7 @@ bool Engine::is_finished() {
 bool Engine::is_failed() {
     bool finished = this->is_finished();
     if (!finished) {
-        failure("Not finished");
+        myfailure("Not finished");
     }
     
     for (DAG::iterator i=this->dag->begin(); i!=this->dag->end(); i++) {
