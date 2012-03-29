@@ -246,7 +246,7 @@ int Master::run() {
                  this->failed_count,
                  0,
                  date,
-                 walltime,
+                 walltime * numprocs, /* duration is for all cores */
                  getpid(),
                  this->program.c_str());
     fwrite(buf, 1, strlen(buf), outf);
