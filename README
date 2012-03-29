@@ -11,7 +11,7 @@ order, according to the dependencies specified in the DAG.
 
 To build the code run:
 
-    $ make
+    $ CC=mpicc CXX=mpic++ LD=mpic++ make
 
 If the system you are on does not have an 'mpicxx' wrapper for the C++
 compiler then you will have to set CC, CXX, and friend to point to the 
