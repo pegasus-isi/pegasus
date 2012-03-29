@@ -16,7 +16,7 @@ the Stampede DB.
 
 See http://www.sqlalchemy.org/ for details on SQLAlchemy
 """
-__rcsid__ = "$Id: stampede_loader.py 29386 2012-01-18 23:01:27Z mgoode $"
+__rcsid__ = "$Id: stampede_loader.py 31116 2012-03-29 15:45:15Z mgoode $"
 __author__ = "Monte Goode"
 
 from netlogger.analysis.schema.schema_check import ErrorStrings, SchemaCheck, SchemaVersionError
@@ -257,8 +257,6 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
             o.start_time = float(o.start_time)
         if hasattr(o, 'cluster_start_time') and o.cluster_start_time != None:
             o.cluster_start_time = float(o.cluster_start_time)
-        if hasattr(o, 'cluster_duration') and o.cluster_duration != None:
-            o.cluster_duration = float(o.cluster_duration)
         if hasattr(o, 'duration') and o.duration != None:
             o.duration = float(o.duration)
         if hasattr(o, 'restart_count') and o.restart_count != None:
