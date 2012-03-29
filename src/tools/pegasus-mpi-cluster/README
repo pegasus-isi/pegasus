@@ -14,8 +14,11 @@ To build the code run:
     $ make
 
 If the system you are on does not have an 'mpicxx' wrapper for the C++
-compiler then you will have to edit the makefile and change the CXX and CC
-variables to point at the right compiler.
+compiler then you will have to set CC, CXX, and friend to point to the 
+system equivalents. For example, to build on a Cray XT5 with the PGI
+compiler:
+
+    $ CC=cc CXX=CC LD=CC CXXFLAGS="" make
 
 To run the tests do:
 

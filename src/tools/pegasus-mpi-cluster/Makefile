@@ -3,10 +3,10 @@ prefix = $(HOME)
 endif
 bindir = $(prefix)/bin
 
-CXX = mpicxx
-CC = mpicxx
-CXXFLAGS = -g -Wall
-LDFLAGS = 
+CXX ?= mpicxx
+CC ?= mpicxx
+CXXFLAGS ?= -g -Wall
+LDFLAGS ?= 
 RM = rm -f
 INSTALL = install
 MAKE = make
@@ -32,6 +32,7 @@ TESTS += test-engine
 all: $(PROGRAMS)
 
 pegasus-mpi-cluster: pegasus-mpi-cluster.o $(OBJS)
+	$(LD) $(LDFLAGS) -o pegasus-mpi-cluster pegasus-mpi-cluster.o $(OBJS)
 
 test-strlib: test-strlib.o $(OBJS)
 test-dag: test-dag.o $(OBJS)

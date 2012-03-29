@@ -2,6 +2,7 @@
 #include "stdio.h"
 #include "stdlib.h"
 #include "mpi.h"
+#include "unistd.h"
 
 #include "dag.h"
 #include "engine.h"
@@ -44,11 +45,11 @@ bool file_exists(const std::string &filename) {
             return false;
         } else {
             // It exists, but we can't access it
-            failures("Error accessing file %s", filename.c_str());
+            myfailures("Error accessing file %s", filename.c_str());
         }
     }
     
-    failure("Unreachable");
+    //myfailure("Unreachable");
 }
 
 int next_retry_file(std::string &name) {
@@ -64,7 +65,7 @@ int next_retry_file(std::string &name) {
         }
     }
     if (i >= 100) {
-        failure("Too many retry files: %s", name.c_str());
+        myfailure("Too many retry files: %s", name.c_str());
     }
     return i;
 }
@@ -204,7 +205,7 @@ int mpidag(int argc, char *argv[]) {
         logfile += dotrank;
         log = fopen(logfile.c_str(), "w");
         if (log == NULL) {
-            failure("Unable to open log file: %s: %s\n", 
+            myfailure("Unable to open log file: %s: %s\n", 
                 logfile.c_str(), strerror(errno));
         }
         log_set_file(log);
@@ -273,12 +274,6 @@ int mpidag(int argc, char *argv[]) {
         }
         throw;
     }
-    
-    if (log != NULL) {
-        fclose(log);
-    }
-
-    return 0;
 }
 
 int main(int argc, char *argv[]) {

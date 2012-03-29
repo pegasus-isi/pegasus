@@ -32,7 +32,7 @@ void Master::submit_task(Task *task, int worker) {
     log_debug("Submitting task %s to worker %d", task->name.c_str(), worker);
     rc = send_request(task->name, task->command, task->extra_id, worker);
     if (rc != 0 ) {
-        failure("Sending task failed");
+        myfailure("Sending task failed");
     }
 
     this->total_count++;
@@ -74,7 +74,7 @@ bool Master::has_idle_worker() {
 
 int Master::next_idle_worker() {
     if (!this->has_idle_worker()) {
-        failure("No idle workers");
+        myfailure("No idle workers");
     }
     int worker = this->idle.front();
     this->idle.pop();
@@ -95,7 +95,7 @@ void Master::merge_task_stdio(FILE *dest, const std::string &srcfile, const std:
             log_warn("No %s file: %s", stream.c_str(), srcfile.c_str());
             return;
         } else {
-            failures("Unable to open task %s file: %s", stream.c_str(), srcfile.c_str());
+            myfailures("Unable to open task %s file: %s", stream.c_str(), srcfile.c_str());
         }
     }
     
@@ -103,21 +103,21 @@ void Master::merge_task_stdio(FILE *dest, const std::string &srcfile, const std:
     while (1) {
         int r = fread(buf, 1, BUFSIZ, src);
         if (r < 0) {
-            failures("Error reading source file: %s", srcfile.c_str());
+            myfailures("Error reading source file: %s", srcfile.c_str());
         }
         if (r == 0) {
             break;
         }
         int w = fwrite(buf, 1, r, dest);
         if (w < r) {
-            failures("Error writing to dest file");
+            myfailures("Error writing to dest file");
         }
     }
     
     fclose(src);
     
     if (unlink(srcfile.c_str())) {
-        failures("Unable to delete task %s file: %s", stream.c_str(), srcfile.c_str());
+        myfailures("Unable to delete task %s file: %s", stream.c_str(), srcfile.c_str());
     }
 }
 
@@ -131,7 +131,7 @@ int Master::run() {
     
     int numworkers = numprocs - 1;
     if (numworkers == 0) {
-        failure("Need at least 1 worker");
+        myfailure("Need at least 1 worker");
     }
     
     log_info("Master starting with %d workers", numworkers);
@@ -202,14 +202,14 @@ int Master::run() {
     if (outfile != "stdout") {
         fopen(this->outfile.c_str(), "w");
         if (outf == NULL) {
-            failures("Unable to open stdout file: %s\n", this->outfile.c_str());
+            myfailures("Unable to open stdout file: %s\n", this->outfile.c_str());
         }
     }
     FILE *errf = stderr;
     if (errfile != "stderr") {
         fopen(this->errfile.c_str(), "w");
         if (errf == NULL) {
-            failures("Unable to open stderr file: %s\n", this->outfile.c_str());
+            myfailures("Unable to open stderr file: %s\n", this->outfile.c_str());
         }
     }
     
@@ -259,7 +259,7 @@ int Master::run() {
     }
         
     if (this->engine->max_failures_reached()) {
-        log_error("Max failures reached: DAG prematurely aborted");
+        log_error("Max myfailures reached: DAG prematurely aborted");
     }
         
     if (this->engine->is_failed()) {
