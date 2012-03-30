@@ -24,6 +24,11 @@ pegasus_config = os.path.join(bin_dir, "pegasus-config") + " --python-dump"
 config = subprocess.Popen(pegasus_config, stdout=subprocess.PIPE, shell=True).communicate()[0]
 exec config
 
+# Insert this directory in our search path
+os.sys.path.insert(0, pegasus_python_dir)
+os.sys.path.insert(0, pegasus_python_externals_dir)
+
+
 
 import Pegasus.common
 from Pegasus.tools import utils
@@ -62,6 +67,13 @@ pegasus_env_path ={
 'pegasus_javascript_dir': pegasus_javascript_dir,
 'pegasus_share_dir'     : pegasus_share_dir
 }
+
+logger.info( "PEGASUS SHARE DIR is                %s " %(pegasus_share_dir))
+logger.info( "PEGASUS PHP DIR is                  %s " %(pegasus_php_dir))
+logger.info( "PEGASUS PYTHON LIB DIR is           %s " %(pegasus_python_dir))
+logger.info( "PEGASUS PYTHON EXTERNALS LIB DIR is %s" %(pegasus_python_externals_dir))
+
+
 	
 def setup_logger(level_str):
 	level_str = level_str.lower()
@@ -331,13 +343,13 @@ def create_footer():
 	
 def setup_run_dir(output_dir):
 	dest_img_path = os.path.join(output_dir, "images/")
-	plot_stats_utils.create_directory(dest_img_path)
+	utils.create_directory(dest_img_path)
 	src_img_path = os.path.join(pegasus_share_dir, "plots/images/common/not_available.jpg")
 	shutil.copy(src_img_path, dest_img_path)
 	src_img_path = os.path.join(pegasus_share_dir, "plots/images/common/download.jpg")
 	shutil.copy(src_img_path, dest_img_path)
 	dest_css_path = os.path.join(output_dir, "css/")
-	plot_stats_utils.create_directory(dest_css_path)
+	utils.create_directory(dest_css_path)
 	src_css_path =os.path.join(pegasus_share_dir, "plots/css/default.css")
 	shutil.copy(src_css_path, dest_css_path)
 	
@@ -379,8 +391,8 @@ def create_workflow_page(tar_file_name , output_dir , log_level):
 	populate.setup(submit_dir , None)
 	dag_graph_output_dir = os.path.join(output_dir,"dag_graph")
 	dax_graph_output_dir = os.path.join(output_dir,"dax_graph")
-	plot_stats_utils.create_directory(dag_graph_output_dir)
-	plot_stats_utils.create_directory(dax_graph_output_dir)
+	utils.create_directory(dag_graph_output_dir)
+	utils.create_directory(dax_graph_output_dir)
 	pegasus_gantt.setup(submit_dir,output_dir ,pegasus_env_path ,log_level)
 	pegasus_host_over_time.setup(submit_dir,output_dir ,pegasus_env_path , log_level)
 	pegasus_breakdown.setup(submit_dir, output_dir, pegasus_env_path, log_level)
@@ -607,10 +619,10 @@ def main():
 	setup_logger(options.log_level)
 	if options.output_dir is not None:
 		output_dir = options.output_dir
-		plot_stats_utils.create_directory(output_dir)
+		utils.create_directory(output_dir)
 	else :
 		output_dir = os.path.join(tar_dir, DEFAULT_OUTPUT_DIR)
-		plot_stats_utils.create_directory(output_dir)
+		utils.create_directory(output_dir)
 	tarCount = 0
 	base = 1
 	setup(output_dir)
@@ -620,7 +632,7 @@ def main():
 				tarCount =tarCount+1
 				run_dir, base = get_next_file_name(os.path.join(output_dir , prefix + "run_" ), base)
 				
-				plot_stats_utils.create_directory(run_dir)
+				utils.create_directory(run_dir)
 				shutil.copy(os.path.join(tar_dir,tar_file_name), run_dir)
 				create_workflow_page(tar_file_name,run_dir , options.log_level)			
 		else:

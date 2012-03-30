@@ -23,6 +23,9 @@ pegasus_config = os.path.join(bin_dir, "pegasus-config") + " --python-dump"
 config = subprocess.Popen(pegasus_config, stdout=subprocess.PIPE, shell=True).communicate()[0]
 exec config
 
+# Insert this directory in our search path
+os.sys.path.insert(0, pegasus_python_dir)
+os.sys.path.insert(0, pegasus_python_externals_dir)
 
 import Pegasus.common
 from Pegasus.plots_stats import utils as plot_stats_utils
@@ -132,11 +135,11 @@ def print_workflow_type_details(type_dir):
 
 def setup(output_dir):
 	dest_img_path = os.path.join(output_dir, "images/")
-	plot_stats_utils.create_directory(dest_img_path)
+	utils.create_directory(dest_img_path)
 	src_img_path = os.path.join(pegasus_share_dir , "plots/images/common/download.jpg")
 	shutil.copy(src_img_path, dest_img_path)
 	dest_css_path = os.path.join(output_dir, "css/")
-	plot_stats_utils.create_directory(dest_css_path)
+	utils.create_directory(dest_css_path)
 	src_css_path =os.path.join(pegasus_share_dir , "plots/css/default.css")
 	shutil.copy(src_css_path, dest_css_path)
 	plot_stats_utils.copy_files(pegasus_php_dir, output_dir )
