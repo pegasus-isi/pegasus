@@ -17,11 +17,34 @@ logger = logging.getLogger()
 # Set default level to INFO
 logger.setLevel(logging.INFO)
 
-# use pegasus-config to get basic pegasus settings
+
+# Import our modules                                                                                                                                                                                                                                                                                                                                                                         
+# Use pegasus-config to find our lib path                                                                                                                                                                                                                                                                                                                                                    
 bin_dir = os.path.normpath(os.path.join(os.path.dirname(sys.argv[0])))
+
 pegasus_config = os.path.join(bin_dir, "pegasus-config") + " --python-dump"
 config = subprocess.Popen(pegasus_config, stdout=subprocess.PIPE, shell=True).communicate()[0]
 exec config
+
+# Insert this directory in our search path                                                                                                                                                                                                                                                                                                                                                    
+os.sys.path.insert(0, pegasus_python_dir)
+os.sys.path.insert(0, pegasus_python_externals_dir)
+
+pegasus_env_path = {
+'pegasus_bin_dir'       : pegasus_bin_dir,
+'pegasus_conf_dir'      : pegasus_conf_dir,
+'pegasus_java_dir'      : pegasus_java_dir,
+'pegasus_perl_dir'      : pegasus_perl_dir,
+'pegasus_python_dir'    : pegasus_python_dir,
+'pegasus_php_dir'       : pegasus_php_dir,
+'pegasus_javascript_dir': pegasus_javascript_dir,
+'pegasus_share_dir'     : pegasus_share_dir
+}
+
+logger.info( "PEGASUS SHARE DIR is                %s " %(pegasus_share_dir))
+logger.info( "PEGASUS PHP DIR is                  %s " %(pegasus_php_dir))
+logger.info( "PEGASUS PYTHON LIB DIR is           %s " %(pegasus_python_dir))
+logger.info( "PEGASUS PYTHON EXTERNALS LIB DIR is %s" %(pegasus_python_externals_dir))
 
 
 import Pegasus.common
@@ -60,6 +83,8 @@ def parse_property_file(file_name, separator=" "):
 	"""
 	my_config = {}
 
+	print " PROPERTY FILE %s " %(file_name)
+
 	try:
 		my_file = open(file_name, 'r')
 	except:
@@ -92,7 +117,7 @@ def listFiles(basedir):
 
 def create_header(workflow_type):
 	header_str = """
-<?php include("gallery_type_header.php"); ?>
+<?php include("gallery_header.php"); ?>
 
 <div id = 'header_div' class ='header'>
 </div>
@@ -104,7 +129,7 @@ def create_header(workflow_type):
 
 def create_footer():
 	footer_str = """
-<?php include("gallery_type_footer.php"); ?>
+<?php include("gallery_footer.php"); ?>
 	"""
 	return footer_str
 	
@@ -116,7 +141,7 @@ def print_workflow_type_details(type_dir):
 	workflow_type_file_name = "workflow_type.txt"
 	if os.path.exists(os.path.join(type_dir,workflow_type_file_name)):
 		if os.path.exists(os.path.join(type_dir,workflow_type_file_name)):
-			props = parse_property_file(os.path.join(type_dir,workflow_type_file_name)," ")
+			props = parse_property_file(os.path.join(type_dir,workflow_type_file_name)," ")#not sure about this. karan whether to separate on : or  " "
 	
 	if props.has_key('name'):
 		html_content += "<h3>" + props['name'] + "</h3>"
@@ -132,14 +157,15 @@ def print_workflow_type_details(type_dir):
 
 def setup(output_dir):
 	dest_img_path = os.path.join(output_dir, "images/")
-	plot_stats_utils.create_directory(dest_img_path)
-	src_img_path = os.path.join(pegasus_share_dir , "plots/images/common/download.jpg")
+	utils.create_directory(dest_img_path)
+	src_img_path = os.path.join( pegasus_share_dir, "plots/images/common/download.jpg")
 	shutil.copy(src_img_path, dest_img_path)
 	dest_css_path = os.path.join(output_dir, "css/")
-	plot_stats_utils.create_directory(dest_css_path)
-	src_css_path =os.path.join(pegasus_share_dir , "plots/css/default.css")
+	utils.create_directory(dest_css_path)
+	src_css_path =os.path.join( pegasus_share_dir, "plots/css/default.css")
 	shutil.copy(src_css_path, dest_css_path)
-	plot_stats_utils.copy_files(pegasus_php_dir, output_dir )
+	src_php_path =os.path.join( pegasus_php_dir, ".")
+	plot_stats_utils.copy_files(src_php_path, output_dir )
 	return
 
 def create_workflow_type_page(type_dir , output_dir , log_level):
@@ -165,34 +191,21 @@ def create_workflow_type_page(type_dir , output_dir , log_level):
 			html_content += "<a href ='"+ os.path.basename(workflow_dir) +"/" + props['wf_uuid']+".php' ><h3> Run "+ str(workflow_run_count) +"</h3></a>"
 			workflow_info = ''
 			workflow_info += "<div> <table style='color:#600000;'>\n"
-			workflow_info +="<tr><th style ='color:#600000'><pre>Workflow runtime                   :</pre></th><td style ='color:#888888'>" + str(props['workflow_runtime']) + "</td></tr>"
+			workflow_info +="<tr><th style ='color:#600000'><pre>Workflow runtime                   :</pre></th><td style ='color:#888888'>" + str(props['workflow_runtime']) 
 			workflow_info +="\n"
-			workflow_info +="<tr><th style ='color:#600000'><pre>Cumulative workflow runtime        :</pre></th><td style ='color:#888888'>" + str(props['cumulative_workflow_runtime_dagman'])+ "</td></tr>"
+			workflow_info +="<tr><th style ='color:#600000'><pre>Cumulative workflow runtime        :</pre></th><td style ='color:#888888'>" + str(props['cumulative_workflow_runtime_dagman'])
 			workflow_info +="\n"
-			workflow_info +="<tr><th style ='color:#600000'><pre>Total tasks                        :</pre></th><td style ='color:#888888'>" + str(props['total_tasks'])+ "</td></tr>"
-			workflow_info +="\n"
-			workflow_info +="<tr><th style ='color:#600000'><pre># tasks succeeded                  :</pre></th><td style ='color:#888888'>" + str(props['total_succeeded_tasks'])+ "</td></tr>"
-			workflow_info +="\n"
-			workflow_info +="<tr><th style ='color:#600000'><pre># tasks failed                     :</pre></th><td style ='color:#888888'>" + str(props['total_failed_tasks'])+ "</td></tr>"
-			workflow_info +="\n"
-			workflow_info +="<tr><th style ='color:#600000'><pre># tasks incomplete                 :</pre></th><td style ='color:#888888'>" + str(props['total_unsubmitted_tasks'])+ "</td></tr>"
-			workflow_info +="\n"
-			workflow_info +="<tr><th style ='color:#600000'><pre>Total jobs                         :</pre></th><td style ='color:#888888'>" + str(props['total_jobs'])+ "</td></tr>"
+			workflow_info +="<tr><th style ='color:#600000'><pre>Total jobs run                     :</pre></th><td style ='color:#888888'>" + str(props['total_jobs'])+ "</td></tr>"
 			workflow_info +="\n"	
 			workflow_info +="<tr><th style ='color:#600000'><pre># jobs succeeded                   :</pre></th><td style ='color:#888888'>" + str(props['total_succeeded_jobs'])+ "</td></tr>"
 			workflow_info +="\n"
 			workflow_info +="<tr><th style ='color:#600000'><pre># jobs failed                      :</pre></th><td style ='color:#888888'>" + str(props['total_failed_jobs'])+ "</td></tr>"
 			workflow_info +="\n"
-			workflow_info +="<tr><th style ='color:#600000'><pre># jobs incomplete                  :</pre></th><td style ='color:#888888'>" + str(props['total_unsubmitted_jobs'])+ "</td></tr>"
+			workflow_info +="<tr><th style ='color:#600000'><pre># jobs incomplete                 :</pre></th><td style ='color:#888888'>" + str(props['total_unsubmitted_jobs'])+ "</td></tr>"
 			workflow_info +="\n"
-			if int(props['total_sub_wfs']) > 0 :
-				workflow_info +="<tr><th style ='color:#600000'><pre>Total sub workflows                :</pre></th><td style ='color:#888888'>" + str(props['total_sub_wfs'])+ "</td></tr>"
-				workflow_info +="\n"	
-				workflow_info +="<tr><th style ='color:#600000'><pre># sub workflows succeeded          :</pre></th><td style ='color:#888888'>" + str(props['total_succeeded_sub_wfs'])+ "</td></tr>"
-				workflow_info +="\n"
-				workflow_info +="<tr><th style ='color:#600000'><pre># sub workflows failed             :</pre></th><td style ='color:#888888'>" + str(props['total_failed_sub_wfs'])+ "</td></tr>"
-				workflow_info +="\n"
-				workflow_info +="<tr><th style ='color:#600000'><pre># sub workflows incomplete         :</pre></th><td style ='color:#888888'>" + str(props['total_unsubmitted_sub_wfs'])+ "</td></tr>"
+			workflow_info +="<tr><th style ='color:#600000'><pre># Total tasks succeeded            :</pre></th><td style ='color:#888888'>" + str(props['total_succeeded_tasks'])+ "</td></tr>"
+			workflow_info +="\n"
+			workflow_info +="<tr><th style ='color:#600000'><pre># Total tasks failed               :</pre></th><td style ='color:#888888'>" + str(props['total_failed_tasks'])+ "</td></tr>"
 			workflow_info +="</table></div>"
 			html_content +=workflow_info
 			html_content += "Download tar : <a href ='"+ os.path.basename(workflow_dir) +"/" + props['tar_file']+"' ><img src='images/download.jpg' alt='Download' align='bottom' width='16' height='16' border ='0' /></a>"
