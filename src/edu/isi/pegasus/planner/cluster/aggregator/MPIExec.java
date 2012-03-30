@@ -91,16 +91,16 @@ public class MPIExec extends Abstract {
         //also put in jobType as mpi
         job.globusRSL.checkKeyInNS("jobtype","mpi");
 
-        //the stdin of the job actually needs to be passed as arguments
+        
+        job.setArguments( this.aggregatedJobArguments( job ) );
+        
+        //reset the stdin as we use condor file io to transfer
+        //the input file
         String stdin = job.getStdIn();
         job.setStdIn( "" );
         
         //slight cheating here.
         File stdinFile = new File( mDirectory, stdin );
-
-        StringBuffer args = new StringBuffer();
-        args.append( stdinFile.getName() );
-        job.setArguments( args.toString() );
 
         job.condorVariables.addIPFileForTransfer( stdinFile.getAbsolutePath() );
         return;
@@ -245,7 +245,15 @@ public class MPIExec extends Abstract {
      * @return argument string
      */
     public String aggregatedJobArguments( AggregatedJob job ){
-        return "";
+        //the stdin of the job actually needs to be passed as arguments
+        String stdin  = job.getStdIn();
+
+
+        StringBuffer args = new StringBuffer();
+        args.append( "--skip-rescue" ).append( " " );
+        args.append( stdin );
+
+        return args.toString();
     }
 
 
