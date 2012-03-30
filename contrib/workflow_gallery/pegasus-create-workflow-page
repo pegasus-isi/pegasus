@@ -16,7 +16,7 @@ from datetime import timedelta
 # Initialize logging object
 logger = logging.getLogger()
 # Set default level to INFO
-#logger.setLevel(logging.INFO)
+logger.setLevel(logging.INFO)
 
 # use pegasus-config to get basic pegasus settings
 bin_dir = os.path.normpath(os.path.join(os.path.dirname(sys.argv[0])))
@@ -27,7 +27,6 @@ exec config
 # Insert this directory in our search path
 os.sys.path.insert(0, pegasus_python_dir)
 os.sys.path.insert(0, pegasus_python_externals_dir)
-
 
 
 import Pegasus.common
@@ -67,12 +66,6 @@ pegasus_env_path ={
 'pegasus_javascript_dir': pegasus_javascript_dir,
 'pegasus_share_dir'     : pegasus_share_dir
 }
-
-logger.info( "PEGASUS SHARE DIR is                %s " %(pegasus_share_dir))
-logger.info( "PEGASUS PHP DIR is                  %s " %(pegasus_php_dir))
-logger.info( "PEGASUS PYTHON LIB DIR is           %s " %(pegasus_python_dir))
-logger.info( "PEGASUS PYTHON EXTERNALS LIB DIR is %s" %(pegasus_python_externals_dir))
-
 
 	
 def setup_logger(level_str):
@@ -625,6 +618,12 @@ def main():
 		utils.create_directory(output_dir)
 	tarCount = 0
 	base = 1
+	
+        logger.info( "PEGASUS SHARE DIR is                %s " %(pegasus_share_dir))
+	logger.info( "PEGASUS PHP DIR is                  %s " %(pegasus_php_dir))
+        logger.info( "PEGASUS PYTHON LIB DIR is           %s " %(pegasus_python_dir))
+	logger.info( "PEGASUS PYTHON EXTERNALS LIB DIR is %s" %(pegasus_python_externals_dir))
+	
 	setup(output_dir)
 	for tar_file_name in os.listdir(tar_dir):
 		if os.path.isfile(os.path.join(tar_dir, tar_file_name)):
