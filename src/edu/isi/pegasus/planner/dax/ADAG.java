@@ -1,17 +1,17 @@
 /**
- *  Copyright 2007-2008 University Of Southern California
+ * Copyright 2007-2012 University Of Southern California
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
- *  Unless required by applicable law or agreed to in writing,
- *  software distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
  */
 package edu.isi.pegasus.planner.dax;
 
@@ -41,141 +41,101 @@ import edu.isi.pegasus.planner.dax.Invoke.WHEN;
  * and documentation available at <a href="http://pegasus.isi.edu/wms/docs/schemas/dax-3.3/dax-3.3.html">http://pegasus.isi.edu/wms/docs/schemas/dax-3.3/dax-3.3.html</a>
  *
  * The DAX consists of 6 parts the first 4 are optional and the last is optional.
- * </pre>
- * <ol>
- *  <li><b>file:</b>Used as "In DAX" Replica Catalog (Optional)</li><br>
- *  <li><b>executable:</b> Used as "In DAX" Transformation Catalog (Optional)</li><br>
- *  <li><b>transformation:</b> Used to describe compound executables. i.e. Executable depending on other executables (Optional)</li><br>
- *  <li><b>job|dax|dag:</b> Used to describe a single job or sub dax or sub dax. Atleast 1 required.</li><br>
- *  <li><b>child:</b> The dependency section to describe dependencies between job|dax|dag elements. (Optional)</li><br>
- * </ol>
- * <center><img src="http://pegasus.isi.edu/wms/docs/schemas/dax-3.3/dax-3.3_p1.png"/></center>
+ * </pre> <ol> <li><b>file:</b>Used as "In DAX" Replica Catalog
+ * (Optional)</li><br> <li><b>executable:</b> Used as "In DAX" Transformation
+ * Catalog (Optional)</li><br> <li><b>transformation:</b> Used to describe
+ * compound executables. i.e. Executable depending on other executables
+ * (Optional)</li><br> <li><b>job|dax|dag:</b> Used to describe a single job or
+ * sub dax or sub dax. Atleast 1 required.</li><br> <li><b>child:</b> The
+ * dependency section to describe dependencies between job|dax|dag elements.
+ * (Optional)</li><br> </ol> <center><img
+ * src="http://pegasus.isi.edu/wms/docs/schemas/dax-3.3/dax-3.3_p1.png"/></center>
  * <pre>
  * To generate an example DIAMOND DAX run the ADAG Class as shown below
  * <b>java ADAG filename</b>
  * <b>NOTE: This is an illustrative example only. Please see examples directory for a working example</b>
  *
  * Shown below are some of the steps in creating a  DIAMOND DAX.
- * </pre>
- * <ol>
- *   <li>
- *   <B>Create a new {@link ADAG} object </B><br><br>
- *   <i>ADAG dax = new ADAG("test");</i>
- *   </li><br>
- * <li>
- * <B>Add notifications to the workflow</B><br><br>
- * <i>j3.addNotification(WHEN.start,"/usr/local/pegasus/libexec/notification/email -t notify@example.com -f workflow@example.com");<br><br>
- *    j3.addNotification(WHEN.at_end,"/usr/local/pegasus/libexec/notification/email -t notify@example.com -f workflow@example.com");</i>
- *  </li><br>
- *  <li>
- *     <B>Create a {@link File} object</B><br>
- *      You only need to add entries to this section if you want to use an "IN-DAX" Replica Catalog"<br><br>
- *     <i>File fa = new File("f.a");</i>
- *  </li><br>
- *    <ol type=a>
- *      <li><b>Add {@link MetaData} entry to the file objects</b><br><br>
- *          <i>fa.addMetaData("string", "foo", "bar");</i><br>
- *          <i>fa.addMetaData("int", "num", "1");</i><br>
- *      </li><br>
- *      <li><b>Add {@link Profile} entry to the file objects</b><br><br>
- *          <i>fa.addProfile("env", "FOO", "/usr/bar");</i><br>
- *          <i>fa.addProfile("globus", "walltime", "40");</i>
- *      </li><br>
- *      <li><b>Add {@link PFN} to the File object</b><br><br>
- *          <i>fa.addPhysicalFile("file:///scratch/f.a", "local");</i>
- *      </li><br>
- *      <li><b>Add the File object to the Replica Catalog section of the DAX</b><br><br>
- *          <i>dax.addFile(fa);</i>
- *      </li><br>
- *    </ol>
- * <li><b>Create an {@link Executable} object</b><br>
- *      You only need to add entries to this section if you want to use an "IN-DAX" Replica Catalog"<br><br>
- *      <i>Executable preprocess = new Executable("pegasus", "preproces", "1.0");</i><br>
- *      <ol type=a>
- *      <li><b>Set the {@link Executable.ARCH} and {@link Executable.OS} for the executable. Default is x86 and LINUX</b><br><br>
- *          <i>preprocess.setArchitecture(Executable.ARCH.x86).setOS(Executable.OS.LINUX);</i>
- *      </li><br>
- *      <li><b>Set the executable as available to be staged. Default is installed executable</b><br><br>
- *          <i>preprocess.unsetInstalled();</i>
- *      </li><br>
- *      <li><b>Add the physical location {@link PFN} of the executable. In case of stageable executables the path should be a url</b><br><br>
- *          <i>preprocess.addPhysicalFile(new PFN("file:///opt/pegasus/default/bin/keg"));</i>
- *      </li><br>
- *      <li><b>Add {@link Profile} and {@link MetaData} objects to the executable</b><br><br>
- *          <i>preprocess.addProfile(Profile.NAMESPACE.globus, "walltime", "120");</i><br>
- *          <i>preprocess.addMetaData("string", "project", "pegasus");</i>
- *      </li><br>
- *      <li><b>Add the {@link Executable} object to the {@link ADAG} object</b><br><br>
- *          <i>dax.addExecutable(preprocess);</i>
- *      </li>
- *    </ol>
- * </li><br>
- * <li><b>Create a {@link Transformation} object : compound Executable (Executable depending on other executable and files)</b><Br><br>
- *     <i>Transformation diamond = new Transformation("pegasus", "diamond", "1.0");</i><br>
- *     <ol type=a>
- *          <li><b>Add the sub executable for this transformation</b><br><br>
- *              <i>diamond.uses(preprocess).uses(findrange).uses(analyze);</i><br>
- *          </li><br>
- *          <li><b>Add the sub files(e.g config files) for this transformation</b><br><br>
- *               <i>diamond.uses(new File("config", File.LINK.INPUT));</i><br>
- *          </li><br>
- *          <li><b>Finally Add the Transformation to the {@link ADAG} object</b><br><br>
- *              <i>dax.addTransformation(diamond);</i>
- *          </li>
- *      </ol>
- * </li><br>
- * <li><b>Create a {@link Job} object</b><br><br>
- *      <i>Job j1 = new Job("j1", "pegasus", "preprocess", "1.0", "j1");</i><br>
- *     <ol type=a>
- *       <li><b>Add Arguments to the job object</b><br><br>
- *           <i>j1.addArgument("-a","preprocess")<br>
- *              j1.addArgument("-T","60").addArgument("-i",fa);<br>
- *              j1.addArgument("-o").addArgument(fb1).addArgument(fb2);</i>
- *       </li><br>
- *       <li><b>Add the Files that are used by this job</b><br><br>
- *           <i>j1.uses(fa, File.LINK.INPUT);<br>
- *              j1.uses(fb1, File.LINK.OUTPUT);<br>
- *              j1.uses(new File("f.b2"), File.LINK.OUTPUT);</i>
- *      </li><br>
- *      <li><b>Add the Notifications to this job</b><br><br
- *         <i>j3.addNotification(WHEN.start,"/usr/local/pegasus/libexec/notification/email -t notify@example.com -f workflow@example.com");<br>
- *            j3.addNotification(WHEN.at_end,"/usr/local/pegasus/libexec/notification/email -t notify@example.com -f workflow@example.com");</i>
+ * </pre> <ol> <li> <B>Create a new {@link ADAG} object </B><br><br> <i>ADAG dax
+ * = new ADAG("test");</i> </li><br> <li> <B>Add notifications to the
+ * workflow</B><br><br>
+ * <i>j3.addNotification(WHEN.start,"/usr/local/pegasus/libexec/notification/email
+ * -t notify@example.com -f workflow@example.com");<br><br>
+ * j3.addNotification(WHEN.at_end,"/usr/local/pegasus/libexec/notification/email
+ * -t notify@example.com -f workflow@example.com");</i> </li><br> <li> <B>Create
+ * a {@link File} object</B><br> You only need to add entries to this section if
+ * you want to use an "IN-DAX" Replica Catalog"<br><br> <i>File fa = new
+ * File("f.a");</i> </li><br> <ol type=a> <li><b>Add {@link MetaData} entry to
+ * the file objects</b><br><br> <i>fa.addMetaData("string", "foo",
+ * "bar");</i><br> <i>fa.addMetaData("int", "num", "1");</i><br> </li><br>
+ * <li><b>Add {@link Profile} entry to the file objects</b><br><br>
+ * <i>fa.addProfile("env", "FOO", "/usr/bar");</i><br>
+ * <i>fa.addProfile("globus", "walltime", "40");</i> </li><br> <li><b>Add {@link PFN}
+ * to the File object</b><br><br> <i>fa.addPhysicalFile("file:///scratch/f.a",
+ * "local");</i> </li><br> <li><b>Add the File object to the Replica Catalog
+ * section of the DAX</b><br><br> <i>dax.addFile(fa);</i> </li><br> </ol>
+ * <li><b>Create an {@link Executable} object</b><br> You only need to add
+ * entries to this section if you want to use an "IN-DAX" Replica
+ * Catalog"<br><br> <i>Executable preprocess = new Executable("pegasus",
+ * "preproces", "1.0");</i><br> <ol type=a> <li><b>Set the {@link Executable.ARCH}
+ * and {@link Executable.OS} for the executable. Default is x86 and
+ * LINUX</b><br><br>
+ * <i>preprocess.setArchitecture(Executable.ARCH.x86).setOS(Executable.OS.LINUX);</i>
+ * </li><br> <li><b>Set the executable as available to be staged. Default is
+ * installed executable</b><br><br> <i>preprocess.unsetInstalled();</i>
+ * </li><br> <li><b>Add the physical location {@link PFN} of the executable. In
+ * case of stageable executables the path should be a url</b><br><br>
+ * <i>preprocess.addPhysicalFile(new
+ * PFN("file:///opt/pegasus/default/bin/keg"));</i> </li><br> <li><b>Add {@link Profile}
+ * and {@link MetaData} objects to the executable</b><br><br>
+ * <i>preprocess.addProfile(Profile.NAMESPACE.globus, "walltime",
+ * "120");</i><br> <i>preprocess.addMetaData("string", "project",
+ * "pegasus");</i> </li><br> <li><b>Add the {@link Executable} object to the {@link ADAG}
+ * object</b><br><br> <i>dax.addExecutable(preprocess);</i> </li> </ol>
+ * </li><br> <li><b>Create a {@link Transformation} object : compound Executable
+ * (Executable depending on other executable and files)</b><Br><br>
+ * <i>Transformation diamond = new Transformation("pegasus", "diamond",
+ * "1.0");</i><br> <ol type=a> <li><b>Add the sub executable for this
+ * transformation</b><br><br>
+ * <i>diamond.uses(preprocess).uses(findrange).uses(analyze);</i><br> </li><br>
+ * <li><b>Add the sub files(e.g config files) for this
+ * transformation</b><br><br> <i>diamond.uses(new File("config",
+ * File.LINK.INPUT));</i><br> </li><br> <li><b>Finally Add the Transformation to
+ * the {@link ADAG} object</b><br><br> <i>dax.addTransformation(diamond);</i>
+ * </li> </ol> </li><br> <li><b>Create a {@link Job} object</b><br><br> <i>Job
+ * j1 = new Job("j1", "pegasus", "preprocess", "1.0", "j1");</i><br> <ol type=a>
+ * <li><b>Add Arguments to the job object</b><br><br>
+ * <i>j1.addArgument("-a","preprocess")<br>
+ * j1.addArgument("-T","60").addArgument("-i",fa);<br>
+ * j1.addArgument("-o").addArgument(fb1).addArgument(fb2);</i> </li><br>
+ * <li><b>Add the Files that are used by this job</b><br><br> <i>j1.uses(fa,
+ * File.LINK.INPUT);<br> j1.uses(fb1, File.LINK.OUTPUT);<br> j1.uses(new
+ * File("f.b2"), File.LINK.OUTPUT);</i> </li><br> <li><b>Add the Notifications
+ * to this job</b><br><br
+ * <i>j3.addNotification(WHEN.start,"/usr/local/pegasus/libexec/notification/email
+ * -t notify@example.com -f workflow@example.com");<br>
+ * j3.addNotification(WHEN.at_end,"/usr/local/pegasus/libexec/notification/email
+ * -t notify@example.com -f workflow@example.com");</i>
  *
- *      </li><br>
- *      <li><b>Add {@link Profile}s to the job</b><br><br>
- *          <i>j1.addProfile(Profile.NAMESPACE.dagman, "pre", "20");</i>
- *      </li><br>
- *      <li><b>Add the Job object to {@link ADAG}</b><br><br>
- *          <i>dax.addJob(j1);</i>
- *       </li>
- *      </ol>
- * </li><br>
- * <li><b>Add a {@link DAG} object</b><br><br>
- *      <i>DAG j2 = new DAG("j2", "findrange.dag", "j2");<br>
- *      j2.uses(new File("f.b1"), File.LINK.INPUT);<br>
- *      j2.uses(new File("f.c1"), File.LINK.OUTPUT);<br>
- *      j2.addProfile(Profile.NAMESPACE.dagman, "pre", "20");<br>
- *      j2.addProfile("condor", "universe", "vanilla");<br>
- *      dax.addDAG(j2);</i>
- * </li><br>
- * <li><b>Add a {@link DAX} job object.</b><br><br>
- *      <i>DAX j3 = new DAX("j3", "findrange.dax", "j3");<br>
- *      j3.addArgument("--site").addArgument("local");<br>
- *      j3.uses(new File("f.b2"), File.LINK.INPUT);<br>
- *      j3.uses(new File("f.c2"), File.LINK.OUTPUT);<br>
- *      j3.addProfile("ENV", "HAHA", "YADAYADAYADA");<br>
- *      dax.addDAX(j3);</i>
- * </li><br>
- * <li><b>Add the Job dependencies</b><br><br>
- * Dependencies can be added by specifiying the job id's like so<br><br>
- * <i>dax.addDependency("j1", "j2", "1-2").addDependency("j1", "j3", "1-3");</i><br><br>
- * or by specifying the job|dax|dag objects directly as below<br><br>
- * <i>dax.addDependency(j1,j3);</i>
- * </li><br>
- *  <li><b>Finally write the dax to a file</b><br><br>
- *  <i>dax.writeToFile("diamond.dax");</i>
- * </li>
- * </ol>
+ * </li><br> <li><b>Add {@link Profile}s to the job</b><br><br>
+ * <i>j1.addProfile(Profile.NAMESPACE.dagman, "pre", "20");</i> </li><br>
+ * <li><b>Add the Job object to {@link ADAG}</b><br><br> <i>dax.addJob(j1);</i>
+ * </li> </ol> </li><br> <li><b>Add a {@link DAG} object</b><br><br> <i>DAG j2 =
+ * new DAG("j2", "findrange.dag", "j2");<br> j2.uses(new File("f.b1"),
+ * File.LINK.INPUT);<br> j2.uses(new File("f.c1"), File.LINK.OUTPUT);<br>
+ * j2.addProfile(Profile.NAMESPACE.dagman, "pre", "20");<br>
+ * j2.addProfile("condor", "universe", "vanilla");<br> dax.addDAG(j2);</i>
+ * </li><br> <li><b>Add a {@link DAX} job object.</b><br><br> <i>DAX j3 = new
+ * DAX("j3", "findrange.dax", "j3");<br>
+ * j3.addArgument("--site").addArgument("local");<br> j3.uses(new File("f.b2"),
+ * File.LINK.INPUT);<br> j3.uses(new File("f.c2"), File.LINK.OUTPUT);<br>
+ * j3.addProfile("ENV", "HAHA", "YADAYADAYADA");<br> dax.addDAX(j3);</i>
+ * </li><br> <li><b>Add the Job dependencies</b><br><br> Dependencies can be
+ * added by specifiying the job id's like so<br><br> <i>dax.addDependency("j1",
+ * "j2", "1-2").addDependency("j1", "j3", "1-3");</i><br><br> or by specifying
+ * the job|dax|dag objects directly as below<br><br>
+ * <i>dax.addDependency(j1,j3);</i> </li><br> <li><b>Finally write the dax to a
+ * file</b><br><br> <i>dax.writeToFile("diamond.dax");</i> </li> </ol>
  *
  * @author Gaurang Mehta gmehta at isi dot edu
  * @version $Revision$
@@ -202,11 +162,11 @@ public class ADAG {
      */
     public static final String SCHEMA_VERSION = "3.3";
     /**
-     *  The Name / Label of the DAX
+     * The Name / Label of the DAX
      */
     private String mName;
     /**
-     *  The Index of the dax object. I out of N
+     * The Index of the dax object. I out of N
      */
     private int mIndex;
     /**
@@ -214,48 +174,55 @@ public class ADAG {
      */
     private int mCount;
     /**
-     *  The List of Job,DAX and DAG objects
+     * The List of Job,DAX and DAG objects
+     *
      * @see DAG
      * @see DAX
      * @see Job
      * @see AbstractJob
      */
-    private Map<String,AbstractJob> mJobs;
+    private Map<String, AbstractJob> mJobs;
+    private List<Job> mLJobs;
+    private List<DAG> mLDAGs;
+    private List<DAX> mLDAXs;
     /**
      * The List of Transformation objects
+     *
      * @see Transformation
      */
     private Set<Transformation> mTransformations;
     /**
      * The list of Executable objects
+     *
      * @see Executable
      */
     private Set<Executable> mExecutables;
     /**
      * The list of edu.isi.pegasus.planner.dax.File objects
+     *
      * @see File
      */
     private List<File> mFiles;
     /**
-     * Map of Dependencies between Job,DAX,DAG objects.
-     * Map key is a string that holds the child element reference, the value is a List of Parent objects
+     * Map of Dependencies between Job,DAX,DAG objects. Map key is a string that
+     * holds the child element reference, the value is a List of Parent objects
+     *
      * @see Parent
      */
     private Map<String, List<Parent>> mDependencies;
-    
-    
     /**
-     * List of Notification objects 
+     * List of Notification objects
      */
     private List<Invoke> mInvokes;
     /**
-     *  Handle the XML writer
+     * Handle the XML writer
      */
     private XMLWriter mWriter;
     private LogManager mLogger;
 
     /**
      * The Simple constructor for the DAX object
+     *
      * @param name DAX LABEL
      */
     public ADAG(String name) {
@@ -264,16 +231,20 @@ public class ADAG {
 
     /**
      * DAX Constructor
-     * @param name  DAX Label
-     * @param index  Index of DAX out of N DAX's
-     * @param count  Number of DAXS in a group
+     *
+     * @param name DAX Label
+     * @param index Index of DAX out of N DAX's
+     * @param count Number of DAXS in a group
      */
     public ADAG(String name, int index, int count) {
         //initialize everything
         mName = name;
         mIndex = index;
         mCount = count;
-        mJobs = new LinkedHashMap<String,AbstractJob>();
+        mJobs = new LinkedHashMap<String, AbstractJob>();
+        mLJobs = new LinkedList<Job>();
+        mLDAGs = new LinkedList<DAG>();
+        mLDAXs = new LinkedList<DAX>();
         mTransformations = new LinkedHashSet<Transformation>();
         mExecutables = new LinkedHashSet<Executable>();
         mFiles = new LinkedList<File>();
@@ -287,10 +258,34 @@ public class ADAG {
 
     }
 
-    
-    
+    /**
+     * Return the name/label of the dax
+     *
+     * @return
+     */
+    public String getName() {
+        return mName;
+    }
+
+    /* Return the index of the dax
+     * @return int
+     */
+    public int getIndex() {
+        return mIndex;
+    }
+
+    /**
+     * Returns the total count of the dax collection. (legacy)
+     *
+     * @return int
+     */
+    public int getCount() {
+        return mCount;
+    }
+
     /**
      * Add a Notification for this Workflow
+     *
      * @param when
      * @param what
      * @return ADAG
@@ -303,6 +298,7 @@ public class ADAG {
 
     /**
      * Add a Notification for this Workflow
+     *
      * @param when
      * @param what
      * @return ADAG
@@ -310,10 +306,10 @@ public class ADAG {
     public ADAG addNotification(Invoke.WHEN when, String what) {
         return addInvoke(when, what);
     }
-    
-    
-   /**
+
+    /**
      * Add a Notification for this Workflow
+     *
      * @param invoke
      * @return ADAG
      */
@@ -324,6 +320,7 @@ public class ADAG {
 
     /**
      * Add a Notification for this Workflow
+     *
      * @param invoke
      * @return ADAG
      */
@@ -331,9 +328,9 @@ public class ADAG {
         return addInvoke(invoke);
     }
 
-
     /**
      * Add a List of Notifications for this Workflow
+     *
      * @param invokes
      * @return ADAG
      */
@@ -344,17 +341,38 @@ public class ADAG {
         return this;
     }
 
-
     /**
      * Add a List of Notifications for this Workflow
+     *
      * @param invokes
      * @return ADAG
      */
     public ADAG addNotifications(List<Invoke> invokes) {
         return addInvokes(invokes);
     }
+
+    /**
+     * Returns a list of Invoke objects associated with the workflow
+     *
+     * @return
+     */
+    public List<Invoke> getInvoke() {
+        return mInvokes;
+    }
+
+    /**
+     * Returns a list of Invoke objects associated with the workflow. Same as
+     * getInvoke()
+     *
+     * @return
+     */
+    public List<Invoke> getNotification() {
+        return getInvoke();
+    }
+
     /**
      * Add a RC File object to the top of the DAX.
+     *
      * @param file File object to be added to the RC section
      * @return ADAG
      * @see File
@@ -366,7 +384,9 @@ public class ADAG {
 
     /**
      * Add Files to the RC Section on top of the DAX
-     * @param files List<File> List of file objects to be added to the RC Section
+     *
+     * @param files List<File> List of file objects to be added to the RC
+     * Section
      * @return ADAG
      * @see File
      *
@@ -377,118 +397,186 @@ public class ADAG {
     }
 
     /**
+     * Returns a list of File objects defined as the inDax Replica Catalog
+     *
+     * @return
+     */
+    public List<File> getFiles() {
+        return mFiles;
+    }
+
+    /**
      * Add Executable to the DAX
+     *
      * @param executable Executable to be added
      * @return ADAG
      * @see Executable
      */
     public ADAG addExecutable(Executable executable) {
-        if (!mExecutables.contains(executable)){
-            mExecutables.add(new Executable(executable));
+        if (executable != null) {
+            if (!mExecutables.contains(executable)) {
+                mExecutables.add(executable);
+            } else {
+                throw new RuntimeException("Error: Executable " + executable.
+                        toString() + " already exists in the DAX.\n");
+            }
         } else {
-            throw new RuntimeException("Error: Executable "+executable.toString()+" already exists in the DAX.\n");
-        }       
+            throw new RuntimeException("Error: The executable passed is null\n");
+        }
         return this;
     }
 
     /**
      * Add Multiple Executable objects to the DAX
+     *
      * @param executables List of Executable objects to be added
      * @return ADAG
      * @see Executable
      */
     public ADAG addExecutables(List<Executable> executables) {
-        for (Executable executable : executables) {
-           addExecutable(executable);
+        if (executables != null && !executables.isEmpty()) {
+            for (Executable executable : executables) {
+                addExecutable(executable);
+            }
+        } else {
+            throw new RuntimeException(
+                    "Error: The executables list to be added is either null or empty\n");
         }
         return this;
     }
-    
+
     /**
-     * Checks if a given executable exists in the DAX based Transformation Catalog
+     * Returns a set of Executable Objects stored as part of the inDAX
+     * Transformation Catalog;
+     *
+     * @return
+     */
+    public Set<Executable> getExecutables() {
+        return mExecutables;
+    }
+
+    /**
+     * Checks if a given executable exists in the DAX based Transformation
+     * Catalog
+     *
      * @param executable
      * @return boolean
      */
-    public boolean containsExecutable(Executable executable){
+    public boolean containsExecutable(Executable executable) {
         return mExecutables.contains(executable);
     }
 
     /**
      * Add Transformation to the DAX
+     *
      * @param transformation Transformation object to be added
      * @return ADAG
      * @see Transformation
      */
     public ADAG addTransformation(Transformation transformation) {
-        if (!mTransformations.contains(transformation)){
-            mTransformations.add(new Transformation(transformation));
+        if (transformation != null) {
+            if (!mTransformations.contains(transformation)) {
+                mTransformations.add(transformation);
+            } else {
+                throw new RuntimeException("Error: Transformation " + transformation.
+                        toString() + " already exists in the DAX.\n");
+            }
         } else {
-            throw new RuntimeException("Error: Transformation "+transformation.toString()+" already exists in the DAX.\n");
+            throw new RuntimeException("Transformation provided is null\n");
         }
         return this;
     }
 
     /**
      * Add Multiple Transformation to the DAX
+     *
      * @param transformations List of Transformation objects
      * @return ADAG
      * @see Transformation
      */
     public ADAG addTransformations(List<Transformation> transformations) {
-        for (Transformation transformation: transformations){
-            addTransformation(transformation);
+        if (transformations != null && !transformations.isEmpty()) {
+
+            for (Transformation transformation : transformations) {
+                addTransformation(transformation);
+            }
+        } else {
+            throw new RuntimeException(
+                    "List of transformations provided is null");
         }
         return this;
     }
 
-     /**
-     * Checks if a given Transformation exists in the DAX based Transformation Catalog
+    /**
+     * Checks if a given Transformation exists in the DAX based Transformation
+     * Catalog
+     *
      * @param transformation Transformation
      * @return boolean
      */
-    public boolean containsTransformation(Transformation transformation){
+    public boolean containsTransformation(Transformation transformation) {
         return mTransformations.contains(transformation);
     }
-    
-    
+
+    /**
+     * Returns a set of Transformation Objects (complex executables) stored in
+     * the DAX based Transformation Catalog
+     *
+     * @return
+     */
+    public Set<Transformation> getTransformations() {
+        return mTransformations;
+    }
+
     /**
      * Add AbstractJob to the DAX
-     * @param ajob  AbstractJob 
+     *
+     * @param ajob AbstractJob
      * @return ADAG
-     * @see Job 
+     * @see Job
      * @see DAG
      * @see DAX
      * @see AbstractJob
      */
     private ADAG addAbstractJob(AbstractJob ajob) {
         if (!mJobs.containsKey(ajob.mId)) {
-            mJobs.put(ajob.mId,ajob);
+            mJobs.put(ajob.mId, ajob);
+            if (ajob.isDAG()) {
+                mLDAGs.add((DAG) ajob);
+            } else if (ajob.isDAX()) {
+                mLDAXs.add((DAX) ajob);
+            } else if (ajob.isJob()) {
+                mLJobs.add((Job) ajob);
+            }
         } else {
-            throw new RuntimeException("Job of type"+ajob.getClass().getSimpleName()+" with jobid "+ajob.mId+" already exists in the DAX");
+            throw new RuntimeException(
+                    "Job of type" + ajob.getClass().getSimpleName() + " with jobid " + ajob.mId + " already exists in the DAX");
         }
         return this;
     }
-    
-   /**
+
+    /**
      * Add AbstractJobs to the DAX
-     * @param ajobs  AbstractJob 
+     *
+     * @param ajobs AbstractJob
      * @return ADAG
-     * @see Job 
+     * @see Job
      * @see DAG
      * @see DAX
      * @see AbstractJob
      */
     private ADAG addAbstractJobs(List<AbstractJob> ajobs) {
-        for (AbstractJob ajob: ajobs) {
+        for (AbstractJob ajob : ajobs) {
             addAbstractJob(ajob);
         }
         return this;
     }
-    
+
     /**
      * Returns an abstract Job with id ajobid if present otherwise null.
+     *
      * @param ajobid
-     * @return 
+     * @return
      */
     private AbstractJob getAbstractJob(String ajobid) {
         if (ajobid != null) {
@@ -496,33 +584,36 @@ public class ADAG {
             if (j != null) {
                 return j;
             } else {
-                mLogger.log("No Job/DAX/DAG found with id " + ajobid, LogManager.ERROR_MESSAGE_LEVEL);
+                mLogger.log("No Job/DAX/DAG found with id " + ajobid,
+                        LogManager.ERROR_MESSAGE_LEVEL);
             }
         }
-        return null; 
+        return null;
     }
-    
+
     /**
      * Check if an abstractjob exists in the DAX
+     *
      * @param ajob
-     * @return 
+     * @return
      */
-    private boolean containsAbstractJob(AbstractJob ajob){
-            return mJobs.containsKey(ajob.mId);
+    private boolean containsAbstractJob(AbstractJob ajob) {
+        return containsAbstractJobId(ajob.mId);
     }
-    
-    
+
     /**
      * Check if a jobid exists in the DAX
+     *
      * @param ajobid
-     * @return 
+     * @return
      */
-    private boolean containsAbstractJobId(String ajobid){
-            return mJobs.containsKey(ajobid);
+    private boolean containsAbstractJobId(String ajobid) {
+        return mJobs.containsKey(ajobid);
     }
-    
+
     /**
      * Add Job to the DAX
+     *
      * @param job
      * @return ADAG
      * @see Job
@@ -534,13 +625,14 @@ public class ADAG {
 
     /**
      * Add multiple Jobs to the DAX
+     *
      * @param jobs
      * @return ADAG
      * @see Job
      * @see AbstractJob
      */
     public ADAG addJobs(List<Job> jobs) {
-        for(Job job: jobs){
+        for (Job job : jobs) {
             addJob(job);
         }
         return this;
@@ -548,77 +640,115 @@ public class ADAG {
 
     /**
      * Check if a job exists in the DAX
+     *
      * @param job
-     * @return 
+     * @return
      */
-    public boolean containsJob(Job job){
-            return containsAbstractJob(job);
+    public boolean containsJob(Job job) {
+        return containsAbstractJob(job);
     }
-    
+
     /**
      * Check if a jobid exists in the DAX
+     *
      * @param jobid
-     * @return 
+     * @return
      */
-    public boolean containsJobId(String jobid){
-            return containsAbstractJobId(jobid);
+    public boolean containsJobId(String jobid) {
+        return containsAbstractJobId(jobid);
     }
-    
-     /**
+
+    /**
      * Returns a Job object with id jobid if present otherwise null.
+     *
      * @param jobid
-     * @return 
+     * @return
      */
-    public Job getJob(String jobid){
+    public Job getJob(String jobid) {
         AbstractJob j = getAbstractJob(jobid);
-                if (j!=null){
-                    if (j.isJob()) {
-                        return (Job)j; 
-                    } else {
-                        mLogger.log("Returned object is not of type Job, but "+j.getClass().getSimpleName(),LogManager.ERROR_MESSAGE_LEVEL);
-                    }
-                }
-        return null;            
+        if (j != null) {
+            if (j.isJob()) {
+                return (Job) j;
+            } else {
+                mLogger.log("Returned object is not of type Job, but " + j.
+                        getClass().getSimpleName(),
+                        LogManager.ERROR_MESSAGE_LEVEL);
+            }
+        }
+        return null;
     }
-    
-       /**
+
+    /**
+     * Get a list of all the DAG jobs.
+     *
+     * @return
+     */
+    public List<Job> getJobs() {
+        return mLJobs;
+    }
+
+    /**
+     * Get a list of all the DAX jobs.
+     *
+     * @return
+     */
+    public List<DAX> getDAXs() {
+        return mLDAXs;
+    }
+
+    /**
      * Returns a DAX object with id daxid if present otherwise null.
+     *
      * @param daxid
-     * @return 
+     * @return
      */
-    public DAX getDAX(String daxid){
-        
-            AbstractJob j = getAbstractJob(daxid);
-                if (j!=null){
-                    if (j.isDAX()) {
-                        return (DAX)j; 
-                    } else {
-                        mLogger.log("Return object is not of type DAX, but "+j.getClass().getSimpleName(),LogManager.ERROR_MESSAGE_LEVEL);
-                    }
-                 } 
-        return null;            
+    public DAX getDAX(String daxid) {
+
+        AbstractJob j = getAbstractJob(daxid);
+        if (j != null) {
+            if (j.isDAX()) {
+                return (DAX) j;
+            } else {
+                mLogger.log("Return object is not of type DAX, but " + j.
+                        getClass().getSimpleName(),
+                        LogManager.ERROR_MESSAGE_LEVEL);
+            }
+        }
+        return null;
     }
-    
-    
-       /**
+
+    /**
+     * Get a list of all the DAG jobs.
+     *
+     * @return
+     */
+    public List<DAG> getDAGs() {
+        return mLDAGs;
+    }
+
+    /**
      * Returns a DAG object with id dagid if present otherwise null.
+     *
      * @param dagid
-     * @return 
+     * @return
      */
-    public DAG getDAG(String dagid){
-            AbstractJob j = getAbstractJob(dagid);
-                if (j!=null){
-                    if (j.isDAG()) {
-                        return (DAG)j; 
-                    } else {
-                        mLogger.log("Return object is not of type DAG, but "+j.getClass().getSimpleName(),LogManager.ERROR_MESSAGE_LEVEL);
-                    }
-                 } 
-        return null;            
+    public DAG getDAG(String dagid) {
+        AbstractJob j = getAbstractJob(dagid);
+        if (j != null) {
+            if (j.isDAG()) {
+                return (DAG) j;
+            } else {
+                mLogger.log("Return object is not of type DAG, but " + j.
+                        getClass().getSimpleName(),
+                        LogManager.ERROR_MESSAGE_LEVEL);
+            }
+        }
+        return null;
     }
-        
+
     /**
      * Add a DAG job to the DAX
+     *
      * @param dag the DAG to be added
      * @return ADAG
      * @see DAG
@@ -630,40 +760,42 @@ public class ADAG {
 
     /**
      * Add multiple DAG jobs to the DAX
+     *
      * @param dags List of DAG jobs to be added
      * @return ADAG
      * @see DAG
      * @see AbstractJob
      */
     public ADAG addDAGs(List<DAG> dags) {
-        for(DAG dag: dags){
+        for (DAG dag : dags) {
             addDAG(dag);
         }
         return this;
     }
 
-        /**
+    /**
      * Check if a DAG job exists in the DAX
+     *
      * @param dag
-     * @return 
+     * @return
      */
-    public boolean containsDAG(DAG dag){
-            return  containsAbstractJob(dag);
+    public boolean containsDAG(DAG dag) {
+        return containsAbstractJob(dag);
     }
-    
-            /**
+
+    /**
      * Check if a DAG job id exists in the DAX
+     *
      * @param dagid
-     * @return 
+     * @return
      */
-    public boolean containsDAGId(String dagid){
-            return  containsAbstractJobId(dagid);
+    public boolean containsDAGId(String dagid) {
+        return containsAbstractJobId(dagid);
     }
-    
-    
-    
+
     /**
      * Add a DAX job to the DAX
+     *
      * @param dax DAX to be added
      * @return ADAG
      * @see DAX
@@ -675,41 +807,43 @@ public class ADAG {
 
     /**
      * Add multiple DAX jobs to the DAX
+     *
      * @param daxs LIST of DAX jobs to be added
      * @return ADAG
      * @see DAX
      * @see AbstractJob
      */
     public ADAG addDAXs(List<DAX> daxs) {
-        for(DAX dax: daxs){
-           addDAX(dax);
+        for (DAX dax : daxs) {
+            addDAX(dax);
         }
         return this;
     }
-    
-   
 
-   /**
+    /**
      * Check if a DAX job exists in the DAX
+     *
      * @param dax
-     * @return 
+     * @return
      */
-    public boolean containsDAX(DAX dax){
+    public boolean containsDAX(DAX dax) {
         return containsAbstractJob(dax);
-            
-    }    
-    
-     /**
-     * Check if a DAX job id exists in the DAX
-     * @param daxid
-     * @return 
-     */
-    public boolean containsDAXId(String daxid){
-            return  containsAbstractJobId(daxid);
+
     }
-   
+
+    /**
+     * Check if a DAX job id exists in the DAX
+     *
+     * @param daxid
+     * @return
+     */
+    public boolean containsDAXId(String daxid) {
+        return containsAbstractJobId(daxid);
+    }
+
     /**
      * Add a parent child dependency between two jobs,dax,dag
+     *
      * @param parent String job,dax,dag id
      * @param child String job,dax,dag,id
      * @return ADAG
@@ -722,6 +856,7 @@ public class ADAG {
 
     /**
      * Add a parent child dependency between two jobs,dax,dag
+     *
      * @param parent Job|DAX|DAG object
      * @param child Job|DAX|DAG object
      * @return
@@ -733,31 +868,50 @@ public class ADAG {
 
     /**
      * Add a parent child dependency with a dependency label
+     *
      * @param parent String job,dax,dag id
      * @param child String job,dax,dag id
      * @param label String dependency label
      * @return ADAG
      */
     public ADAG addDependency(String parent, String child, String label) {
-        if(containsAbstractJobId(parent)&& containsAbstractJobId(child)){
+        if (containsAbstractJobId(parent) && containsAbstractJobId(child)) {
             List<Parent> parents = mDependencies.get(child);
             if (parents == null) {
-                 parents = new LinkedList<Parent>();
+                parents = new LinkedList<Parent>();
             }
             Parent p = new Parent(parent, label);
             parents.add(p);
             mDependencies.put(child, parents);
         } else {
-            throw new RuntimeException("Either Job with id "+parent+" or "+child+"is not added to the DAX.\n"
+            throw new RuntimeException(
+                    "Either Job with id " + parent + " or " + child + "is not added to the DAX.\n"
                     + "Please add the jobs first to the dax and then add the dependencies between them\n");
         }
         return this;
     }
 
     /**
-     *  Add a parent child  dependency with a dependency label
-     * @param parent  Job|DAX|DAG object
-     * @param child  Job|DAX|DAG object
+     * Returns a list of Parent objects for a child job/dax/dag id. Returns an
+     * empty list if the child does not have any parents Returns null if the
+     * child is not a valid job/dax/dag id
+     *
+     * @param child
+     * @return
+     */
+    public List<Parent> getParents(String child) {
+        if (child != null && mJobs.containsKey(child)) {
+            return mDependencies.containsKey(child) ? mDependencies.get(child)
+                    : new LinkedList<Parent>();
+        }
+        return null;
+    }
+
+    /**
+     * Add a parent child dependency with a dependency label
+     *
+     * @param parent Job|DAX|DAG object
+     * @param child Job|DAX|DAG object
      * @param label String label for annotation
      * @return ADAG
      */
@@ -769,6 +923,7 @@ public class ADAG {
 
     /**
      * Generate a DAX File out of this object;
+     *
      * @param daxfile The file to write the DAX to
      */
     public void writeToFile(String daxfile) {
@@ -793,8 +948,9 @@ public class ADAG {
 
     /**
      * Generate a DAX representation and pipe it into the Writer
+     *
      * @param writer A Writer object
-     * @param close Whether writer should be closed on return. 
+     * @param close Whether writer should be closed on return.
      */
     public void writeToWriter(Writer writer, boolean close) {
         mWriter = new XMLWriter(writer);
@@ -806,8 +962,8 @@ public class ADAG {
 
     /**
      * Generates a DAX representation.
-     * @param writer
-     * @
+     *
+     * @param writer @
      */
     public void toXML(XMLWriter writer) {
         int indent = 0;
@@ -822,7 +978,8 @@ public class ADAG {
         writer.writeAttribute("count", Integer.toString(mCount));
 
         //print notification invokes
-        writer.writeXMLComment(
+        writer.
+                writeXMLComment(
                 "Section 1: Invokes - Adds notifications for a workflow (can be empty)",
                 true);
         for (Invoke i : mInvokes) {
@@ -837,7 +994,8 @@ public class ADAG {
         }
 
         //print executable
-        writer.writeXMLComment(
+        writer.
+                writeXMLComment(
                 "Section 3: Executables - Acts as a Transformaton Catalog (can be empty)",
                 true);
         for (Executable e : mExecutables) {
@@ -845,26 +1003,30 @@ public class ADAG {
         }
 
         //print transformation
-        writer.writeXMLComment(
+        writer.
+                writeXMLComment(
                 "Section 4: Transformations - Aggregates executables and Files (can be empty)",
                 true);
         for (Transformation t : mTransformations) {
             t.toXML(writer, indent + 1);
         }
         //print jobs, daxes and dags
-        writer.writeXMLComment(
+        writer.
+                writeXMLComment(
                 "Section 5: Job's, DAX's or Dag's - Defines a JOB or DAX or DAG (Atleast 1 required)",
                 true);
         for (AbstractJob j : mJobs.values()) {
             j.toXML(writer, indent + 1);
         }
         //print dependencies
-        writer.writeXMLComment(
+        writer.
+                writeXMLComment(
                 "Section 6: Dependencies - Parent Child relationships (can be empty)",
                 true);
 
         for (String child : mDependencies.keySet()) {
-            writer.startElement("child", indent + 1).writeAttribute("ref", child);
+            writer.startElement("child", indent + 1).
+                    writeAttribute("ref", child);
             for (Parent p : mDependencies.get(child)) {
                 p.toXML(writer, indent + 2);
             }
@@ -876,6 +1038,7 @@ public class ADAG {
 
     /**
      * Create an example DIAMOND DAX
+     *
      * @param args
      */
     public static void main(String[] args) {
@@ -935,9 +1098,11 @@ public class ADAG {
         preprocess.addMetaData("string", "project", "pegasus");
 
         Executable findrange = new Executable("pegasus", "findrange", "1.0");
-        findrange.setArchitecture(Executable.ARCH.X86).setOS(Executable.OS.LINUX);
+        findrange.setArchitecture(Executable.ARCH.X86).
+                setOS(Executable.OS.LINUX);
         findrange.unsetInstalled();
-        findrange.addPhysicalFile(new PFN("http://pegasus.isi.edu/code/bin/keg"));
+        findrange.
+                addPhysicalFile(new PFN("http://pegasus.isi.edu/code/bin/keg"));
         findrange.addProfile(Profile.NAMESPACE.globus, "walltime", "120");
         findrange.addMetaData("string", "project", "pegasus");
 
@@ -967,8 +1132,12 @@ public class ADAG {
         j1.uses(fb1, File.LINK.OUTPUT);
         j1.uses("f.b2", File.LINK.OUTPUT);
         j1.addProfile(Profile.NAMESPACE.dagman, "pre", "20");
-        j1.addInvoke(WHEN.start,"/usr/local/pegasus/libexec/notification/email -t notify@example.com -f workflow@example.com");
-        j1.addInvoke(WHEN.at_end,"/usr/local/pegasus/libexec/notification/email -t notify@example.com -f workflow@example.com");
+        j1.
+                addInvoke(WHEN.start,
+                "/usr/local/pegasus/libexec/notification/email -t notify@example.com -f workflow@example.com");
+        j1.
+                addInvoke(WHEN.at_end,
+                "/usr/local/pegasus/libexec/notification/email -t notify@example.com -f workflow@example.com");
         dax.addJob(j1);
 
         DAG j2 = new DAG("j2", "findrange.dag", "j2");
@@ -976,8 +1145,12 @@ public class ADAG {
         j2.uses("f.c1", File.LINK.OUTPUT, File.TRANSFER.FALSE, false);
         j2.addProfile(Profile.NAMESPACE.dagman, "pre", "20");
         j2.addProfile("condor", "universe", "vanilla");
-        j2.addInvoke(WHEN.start,"/usr/local/pegasus/libexec/notification/email -t notify@example.com -f workflow@example.com");
-        j2.addInvoke(WHEN.at_end,"/usr/local/pegasus/libexec/notification/email -t notify@example.com -f workflow@example.com");
+        j2.
+                addInvoke(WHEN.start,
+                "/usr/local/pegasus/libexec/notification/email -t notify@example.com -f workflow@example.com");
+        j2.
+                addInvoke(WHEN.at_end,
+                "/usr/local/pegasus/libexec/notification/email -t notify@example.com -f workflow@example.com");
         dax.addDAG(j2);
 
         DAX j3 = new DAX("j3", "findrange.dax", "j3");
@@ -986,8 +1159,12 @@ public class ADAG {
         j3.uses(new File("f.c2"), File.LINK.OUTPUT, File.TRANSFER.FALSE, false);
         j3.addInvoke(Invoke.WHEN.start, "/bin/notify -m START gmehta@isi.edu");
         j3.addInvoke(Invoke.WHEN.at_end, "/bin/notify -m END gmehta@isi.edu");
-        j3.addInvoke(WHEN.start,"/usr/local/pegasus/libexec/notification/email -t notify@example.com -f workflow@example.com");
-        j3.addInvoke(WHEN.at_end,"/usr/local/pegasus/libexec/notification/email -t notify@example.com -f workflow@example.com");
+        j3.
+                addInvoke(WHEN.start,
+                "/usr/local/pegasus/libexec/notification/email -t notify@example.com -f workflow@example.com");
+        j3.
+                addInvoke(WHEN.at_end,
+                "/usr/local/pegasus/libexec/notification/email -t notify@example.com -f workflow@example.com");
         j3.addProfile("ENV", "HAHA", "YADAYADAYADA");
         dax.addDAX(j3);
 
@@ -999,8 +1176,12 @@ public class ADAG {
         j4.uses(fc1, File.LINK.INPUT);
         j4.uses(fc2, File.LINK.INPUT);
         j4.uses(fd, File.LINK.OUTPUT);
-        j4.addInvoke(WHEN.start,"/usr/local/pegasus/libexec/notification/email -t notify@example.com -f workflow@example.com");
-        j4.addInvoke(WHEN.at_end,"/usr/local/pegasus/libexec/notification/email -t notify@example.com -f workflow@example.com");
+        j4.
+                addInvoke(WHEN.start,
+                "/usr/local/pegasus/libexec/notification/email -t notify@example.com -f workflow@example.com");
+        j4.
+                addInvoke(WHEN.at_end,
+                "/usr/local/pegasus/libexec/notification/email -t notify@example.com -f workflow@example.com");
         dax.addJob(j4);
 
         dax.addDependency("j1", "j2", "1-2");

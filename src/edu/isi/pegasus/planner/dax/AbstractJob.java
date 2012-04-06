@@ -1,5 +1,5 @@
 /**
- *  Copyright 2007-2008 University Of Southern California
+ *  Copyright 2007-2012 University Of Southern California
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -47,6 +47,7 @@ public class AbstractJob {
     protected static LogManager mLogger;
     private static final String ARG_DELIMITER = " ";
     private static final String FILE_DELIMITER = " ";
+    private static final String JOBTYPE="AbstractJob";
 
     protected AbstractJob() {
         mLogger = LogManagerFactory.loadSingletonInstance();
@@ -92,7 +93,7 @@ public class AbstractJob {
      * @return List
      */
     public List getArguments() {
-        return Collections.unmodifiableList(mArguments);
+        return mArguments;
     }
 
     /**
@@ -396,7 +397,7 @@ public class AbstractJob {
      * @see Profile
      */
     public AbstractJob addProfile(Profile profile) {
-        mProfiles.add(new Profile(profile));
+        mProfiles.add(profile);
         return this;
     }
 
@@ -406,8 +407,16 @@ public class AbstractJob {
      * @return
      */
     public AbstractJob addProfiles(List<Profile> profiles) {
-        mProfiles.addAll(Collections.unmodifiableCollection(profiles));
+        mProfiles.addAll(profiles);
         return this;
+    }
+
+    /**
+     * Return the profile List. The List contains both {@link Profile} objects
+     * @return List
+     */
+    public List getProfiles() {
+        return mProfiles;
     }
 
     /**
@@ -955,7 +964,7 @@ public class AbstractJob {
      * @return Set<File>
      */
     public Set<File> getUses() {
-        return Collections.unmodifiableSet(mUses);
+        return mUses;
     }
 
     /**
@@ -1208,13 +1217,22 @@ public class AbstractJob {
     }
 
     /**
-     *
+     * Returns list of Invoke objects
      * @return List<Invoke>
      */
     public List<Invoke> getInvoke() {
-        return Collections.unmodifiableList(mInvokes);
+        return mInvokes;
     }
 
+    
+    /**
+     * Same as getInvoke(). Returns list of Invoke objects
+     * @return List<Invoke>
+     */
+    public List<Invoke> getNotification() {
+        return getInvoke();
+    }
+    
     /**
      * Add Notification to the job
      * @param when

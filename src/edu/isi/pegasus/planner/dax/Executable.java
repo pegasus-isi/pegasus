@@ -15,11 +15,11 @@
  */
 package edu.isi.pegasus.planner.dax;
 
-import java.util.List;
-import java.util.LinkedList;
-import java.util.Collections;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.XMLWriter;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * The Transformation Catalog object the represent the entries in the DAX transformation section.
@@ -143,7 +143,7 @@ public class Executable extends CatalogType {
     }
 
     /**
-     * Get the version of the executablle
+     * Get the version of the executable
      * @return
      */
     public String getVersion() {
@@ -155,7 +155,15 @@ public class Executable extends CatalogType {
      * @return List<Invoke>
      */
     public List<Invoke> getInvoke() {
-        return Collections.unmodifiableList(mInvokes);
+        return mInvokes;
+    }
+    
+    /**
+     * Return the list of Notification objects (same as getInvoke)
+     * @return List<Invoke>
+     */
+    public List<Invoke> getNotification() {
+        return getInvoke();
     }
     
     
@@ -353,6 +361,10 @@ public class Executable extends CatalogType {
     }
        
 
+    public boolean isExecutable(){
+        return true;        
+    }
+    
     @Override
     public boolean equals(Object obj) {
         if (obj == null) {

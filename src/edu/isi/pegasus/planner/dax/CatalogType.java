@@ -1,5 +1,5 @@
 /**
- *  Copyright 2007-2008 University Of Southern California
+ *  Copyright 2007-2012 University Of Southern California
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -17,10 +17,10 @@ package edu.isi.pegasus.planner.dax;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
-import java.util.List;
-import java.util.LinkedList;
-import java.util.Collections;
 import edu.isi.pegasus.common.util.XMLWriter;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * Abstract Type for RC and TC Sections of the DAX. Extended by {@link Executable} and {@link File}
@@ -105,7 +105,7 @@ public class CatalogType {
      * @see PFN
      */
     public List<PFN> getPhysicalFiles() {
-        return Collections.unmodifiableList(mPFNs);
+        return mPFNs;
     }
 
     /**
@@ -150,7 +150,7 @@ public class CatalogType {
      * @see MetaData
      */
     public List<MetaData> getMetaData() {
-        return Collections.unmodifiableList(mMetadata);
+        return mMetadata;
     }
 
     /**
@@ -208,9 +208,18 @@ public class CatalogType {
      * @see Profile
      */
     public List<Profile> getProfiles() {
-        return Collections.unmodifiableList(mProfiles);
+        return mProfiles;
     }
 
+    public boolean isFile(){
+        return false;
+    }
+    
+    public boolean isExecutable(){
+        return false;
+    }
+    
+    
     /**
      * Write the XML representation of this object
      * @param writer
@@ -219,6 +228,8 @@ public class CatalogType {
     public void toXML(XMLWriter writer) {
         toXML(writer, 0);
     }
+    
+    
 
     /**
      * Write the XML representation of this object

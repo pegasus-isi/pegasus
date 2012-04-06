@@ -262,15 +262,6 @@ public class File extends CatalogType {
         return this;
     }
 
-    /**
-     * Use setExecutable instead.
-     * @deprecated
-     * @return
-     */
-    public File SetExecutable() {
-        mExecutable = true;
-        return this;
-    }
 
     /**
      * Check if the file is an executable
@@ -280,6 +271,11 @@ public class File extends CatalogType {
         return mExecutable;
     }
 
+    
+    public boolean isFile(){
+        return true;
+    }
+    
     /**
      * Check if this File is equal to Object o
      * @param o

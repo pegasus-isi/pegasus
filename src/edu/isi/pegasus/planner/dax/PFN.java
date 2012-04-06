@@ -77,7 +77,7 @@ public class PFN {
     }
 
     public List<Profile> getProfiles() {
-        return Collections.unmodifiableList(mProfiles);
+        return mProfiles;
     }
 
     public void toXML(XMLWriter writer) {

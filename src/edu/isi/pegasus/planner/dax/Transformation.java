@@ -15,7 +15,6 @@
  */
 package edu.isi.pegasus.planner.dax;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.LinkedList;
 import edu.isi.pegasus.common.util.XMLWriter;
@@ -110,9 +109,16 @@ public class Transformation {
      * @return List<Invoke>
      */
     public List<Invoke> getInvoke() {
-        return Collections.unmodifiableList(mInvokes);
+        return mInvokes;
     }
     
+     /**
+     * Return the list of Notification objects (same as getInvoke()
+     * @return List<Invoke>
+     */
+    public List<Invoke> getNotification() {
+        return getInvoke();
+    }
     
     /**
      * Add a Notification for this Transformation
@@ -126,6 +132,15 @@ public class Transformation {
         return this;
     }
     
+    /**
+     * Add a Notification for this Transformation same as addInvoke()
+     * @param when
+     * @param what
+     * @return Transformation
+     */
+    public Transformation addNotification(Invoke.WHEN when, String what) {
+        return addInvoke(when,what);
+    }
     
    /**
      * Add a Notification for this Transformation
@@ -147,6 +162,16 @@ public class Transformation {
             this.addInvoke(invoke);
         }
         return this;
+    }
+    
+    
+    /**
+     * Add a List of Notifications for this Transformation. Same as addInvokes()
+     * @param invokes
+     * @return Transformation
+     */
+    public Transformation addNotifications(List<Invoke> invokes) {
+        return addInvokes(invokes);
     }
     
     /**
@@ -175,7 +200,7 @@ public class Transformation {
      * @return
      */
     public List<CatalogType> getUses() {
-        return Collections.unmodifiableList(mUses);
+        return mUses;
     }
 
     @Override
