@@ -46,10 +46,21 @@ cat >sites.xml <<EOF
         <profile namespace="pegasus" key="clusters.num">1</profile>
     </site>
     <site  handle="condorpool" arch="x86" os="LINUX">
-        <head-fs>
-            <scratch />
-            <storage />
+       <head-fs>
+            <scratch>
+                <shared>
+                    <file-server protocol="gsiftp" url="gsiftp://cartman.isi.edu" mount-point="/nfs/ccg3/scratch/bamboo/scratch"/>
+                    <internal-mount-point mount-point="/nfs/ccg3/scratch/bamboo/scratch"/>
+                </shared>
+            </scratch>
+            <storage>
+                <shared>
+                    <file-server protocol="gsiftp" url="gsiftp://cartman.isi.edu" mount-point="/nfs/ccg3/scratch/bamboo/outputs"/>
+                    <internal-mount-point mount-point="/nfs/ccg3/scratch/bamboo/outputs"/>
+                </shared>
+            </storage>
         </head-fs>
+
         <profile namespace="pegasus" key="style" >condor</profile>
         <profile namespace="condor" key="universe" >vanilla</profile>
         <profile namespace="env" key="PEGASUS_HOME" >/usr</profile>
@@ -60,7 +71,7 @@ EOF
 # plan and submit the  workflow
 pegasus-plan \
     --conf $testdir/pegasusrc \
-    --sites local \
+    --sites condorpool \
     --dir work \
     --output local \
     --cluster horizontal \
