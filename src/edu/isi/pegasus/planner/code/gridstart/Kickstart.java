@@ -49,7 +49,6 @@ import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 
-import edu.isi.pegasus.planner.classes.FileTransfer;
 import edu.isi.pegasus.planner.cluster.JobAggregator;
 
 import java.util.Iterator;
@@ -61,7 +60,6 @@ import java.util.ArrayList;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Collection;
 
 
 /**
@@ -1002,7 +1000,8 @@ public class Kickstart implements GridStart {
     protected boolean requiresToSetDirectory( Job job ) {
         //the cleanup jobs should never have directory set as full path
         //is specified
-        return ( job.getJobType() != Job.CLEANUP_JOB );
+        return ( job.getJobType() != Job.CLEANUP_JOB &&
+                 job.getJobType() != Job.REPLICA_REG_JOB );
     }
 
 
@@ -1087,10 +1086,22 @@ public class Kickstart implements GridStart {
             return false;
         }
 
+        //check if a directory is associated with the job
+        String directory = job.getDirectory();
+        if( directory != null ){
+            //for PM-526
+            //we want to trigger the -w option if a directory is associated with
+            //the jobs
+            args.append( " -w " ).append( directory );
+            job.setDirectory( null );
+
+        }
+
+
         job.condorVariables.addIPFileForTransfer( argFile.getAbsolutePath() );
 
         //add the -I argument to kickstart
-        args.append("-I ").append(inputBaseName).append(" ");
+        args.append(" -I ").append(inputBaseName).append(" ");
         return result;
     }
 

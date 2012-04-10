@@ -18,13 +18,8 @@
 package edu.isi.pegasus.planner.code.generator.condor.style;
 
 import java.io.File;
-import java.util.Iterator;
-import java.util.Set;
 
-import edu.isi.pegasus.common.credential.CredentialHandler;
 import edu.isi.pegasus.common.credential.CredentialHandlerFactory;
-import edu.isi.pegasus.common.logging.LogManager;
-import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
@@ -256,6 +251,10 @@ public class Condor extends Abstract {
                 }
 
 
+
+                wrapJobWithLocalPegasusLite( job );
+
+                /*
                 if( this.mPegasusLiteEnabled ){
                     //wrap the job with local pegasus lite wrapped job
                     //to work around the Condor IO bug for PegasusLite
@@ -294,7 +293,7 @@ public class Condor extends Abstract {
                         job.condorVariables.removeKey( "when_to_transfer_output" );
                     }
                 }
-                
+                */
                 applyCredentialsForLocalExec(job);
         }
         else{
