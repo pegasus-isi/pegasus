@@ -329,7 +329,17 @@ public class Condor extends Abstract {
         if( ipFiles == null && opFiles == null ){
             if( job.getRemoteExecutable().startsWith( File.separator ) ){
                 //absoluate path specified
-                //nothing to do 
+                //nothing to do other than check for transfer_executable
+                
+                //check for transfer_executable and remove if set
+                //transfer_executable does not work in local/scheduler universe
+                if( job.condorVariables.containsKey( Condor.TRANSFER_EXECUTABLE_KEY )){
+
+                    job.condorVariables.removeKey( Condor.TRANSFER_EXECUTABLE_KEY );
+                    job.condorVariables.removeKey( "should_transfer_files" );
+                    job.condorVariables.removeKey( "when_to_transfer_output" );
+                }
+
                 return;
             }
             //for relative paths for local universe jobs it is better to wrap
@@ -394,7 +404,6 @@ public class Condor extends Abstract {
 
 
 
-        //do nothing for time being for transfer_output_files
         //check for transfer_executable and remove if set
         //transfer_executable does not work in local/scheduler universe
         if( job.condorVariables.containsKey( Condor.TRANSFER_EXECUTABLE_KEY )){
