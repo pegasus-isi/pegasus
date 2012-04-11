@@ -18,13 +18,8 @@
 package edu.isi.pegasus.planner.code.generator.condor.style;
 
 import java.io.File;
-import java.util.Iterator;
-import java.util.Set;
 
-import edu.isi.pegasus.common.credential.CredentialHandler;
 import edu.isi.pegasus.common.credential.CredentialHandlerFactory;
-import edu.isi.pegasus.common.logging.LogManager;
-import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
@@ -95,6 +90,11 @@ public class Condor extends Abstract {
      * The name of the environment variable for the initial dir for pegasus lite local
      */
     public static final String PEGASUS_INITIAL_DIR_KEY = "_PEGASUS_INITIAL_DIR";
+
+    /**
+     * The name of the environment variable that determines if job should be executed in initial dir or not
+     */
+    public static final String PEGASUS_EXECUTE_IN_INITIAL_DIR = "_PEGASUS_EXECUTE_IN_INITIAL_DIR";
 
     /**
      * Whether to connect stdin or not
@@ -256,6 +256,10 @@ public class Condor extends Abstract {
                 }
 
 
+
+                wrapJobWithLocalPegasusLite( job );
+
+                /*
                 if( this.mPegasusLiteEnabled ){
                     //wrap the job with local pegasus lite wrapped job
                     //to work around the Condor IO bug for PegasusLite
@@ -294,7 +298,7 @@ public class Condor extends Abstract {
                         job.condorVariables.removeKey( "when_to_transfer_output" );
                     }
                 }
-                
+                */
                 applyCredentialsForLocalExec(job);
         }
         else{
@@ -319,14 +323,46 @@ public class Condor extends Abstract {
             return;
         }
 
+        String ipFiles = job.condorVariables.getIPFilesForTransfer();
+        String opFiles = job.condorVariables.getOutputFilesForTransfer();
+        
+        if( ipFiles == null && opFiles == null ){
+            if( job.getRemoteExecutable().startsWith( File.separator ) ){
+                //absoluate path specified
+                //nothing to do other than check for transfer_executable
+                
+                //check for transfer_executable and remove if set
+                //transfer_executable does not work in local/scheduler universe
+                if( job.condorVariables.containsKey( Condor.TRANSFER_EXECUTABLE_KEY )){
+
+                    job.condorVariables.removeKey( Condor.TRANSFER_EXECUTABLE_KEY );
+                    job.condorVariables.removeKey( "should_transfer_files" );
+                    job.condorVariables.removeKey( "when_to_transfer_output" );
+                }
+
+                return;
+            }
+            //for relative paths for local universe jobs it is better to wrap
+            //with wrapper as condor else assumes the executable is in the 
+            //directory where the job is launched.
+        }
+        
         String workdir = (String)job.condorVariables.get( "initialdir" );
 
         if( workdir != null ){
             job.envVariables.construct( Condor.PEGASUS_INITIAL_DIR_KEY, workdir );
+
+
+            if ( !this.mPegasusLiteEnabled ){
+                //for shared file system mode we want the wrapped job
+                //to execute in workdir
+                job.envVariables.construct( Condor.PEGASUS_EXECUTE_IN_INITIAL_DIR, "true" );
+            }
         }
 
+
+
         //check if any transfer_input_files is transferred
-        String ipFiles = job.condorVariables.getIPFilesForTransfer();
         if( ipFiles != null ){
             String[] files = ipFiles.split( "," );
             StringBuffer value = new StringBuffer();
@@ -349,7 +385,6 @@ public class Condor extends Abstract {
         }
 
         //check if any transfer_output_files is transferred
-        String opFiles = job.condorVariables.getOutputFilesForTransfer();
         if( opFiles != null ){
 
             //sanity check as wrapper requires initialdir to be set
@@ -369,7 +404,6 @@ public class Condor extends Abstract {
 
 
 
-        //do nothing for time being for transfer_output_files
         //check for transfer_executable and remove if set
         //transfer_executable does not work in local/scheduler universe
         if( job.condorVariables.containsKey( Condor.TRANSFER_EXECUTABLE_KEY )){
