@@ -323,6 +323,14 @@ public class Condor extends Abstract {
             return;
         }
 
+        String ipFiles = job.condorVariables.getIPFilesForTransfer();
+        String opFiles = job.condorVariables.getOutputFilesForTransfer();
+        
+        if( ipFiles == null && opFiles == null ){
+            //nothing to do 
+            return;
+        }
+        
         String workdir = (String)job.condorVariables.get( "initialdir" );
 
         if( workdir != null ){
@@ -339,7 +347,6 @@ public class Condor extends Abstract {
 
 
         //check if any transfer_input_files is transferred
-        String ipFiles = job.condorVariables.getIPFilesForTransfer();
         if( ipFiles != null ){
             String[] files = ipFiles.split( "," );
             StringBuffer value = new StringBuffer();
@@ -362,7 +369,6 @@ public class Condor extends Abstract {
         }
 
         //check if any transfer_output_files is transferred
-        String opFiles = job.condorVariables.getOutputFilesForTransfer();
         if( opFiles != null ){
 
             //sanity check as wrapper requires initialdir to be set
