@@ -39,7 +39,7 @@
     role="bold">pegasus-plan</emphasis> .</para>
 
     <section>
-      <title>Generating Clustered Concrete DAG</title>
+      <title>Generating Clustered Executable Workflow</title>
 
       <para>The clustering of a workflow is activated by passing the <emphasis
       role="bold">--cluster|-C</emphasis> option to <emphasis
@@ -290,7 +290,7 @@ siteX    C     /shared/PEGASUS/bin/jobC INSTALLED       INTEL32::LINUX PEGASUS::
 
             <mediaobject>
               <imageobject>
-                <imagedata fileref="images/advanced-clustering-5.png" />
+                <imagedata fileref="images/advanced-clustering-3.png" />
               </imageobject>
             </mediaobject>
           </figure></para>
