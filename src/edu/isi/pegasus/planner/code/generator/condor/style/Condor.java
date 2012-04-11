@@ -327,8 +327,14 @@ public class Condor extends Abstract {
         String opFiles = job.condorVariables.getOutputFilesForTransfer();
         
         if( ipFiles == null && opFiles == null ){
-            //nothing to do 
-            return;
+            if( job.getRemoteExecutable().startsWith( File.separator ) ){
+                //absoluate path specified
+                //nothing to do 
+                return;
+            }
+            //for relative paths for local universe jobs it is better to wrap
+            //with wrapper as condor else assumes the executable is in the 
+            //directory where the job is launched.
         }
         
         String workdir = (String)job.condorVariables.get( "initialdir" );
