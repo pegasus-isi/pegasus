@@ -92,6 +92,11 @@ public class Condor extends Abstract {
     public static final String PEGASUS_INITIAL_DIR_KEY = "_PEGASUS_INITIAL_DIR";
 
     /**
+     * The name of the environment variable that determines if job should be executed in initial dir or not
+     */
+    public static final String PEGASUS_EXECUTE_IN_INITIAL_DIR = "_PEGASUS_EXECUTE_IN_INITIAL_DIR";
+
+    /**
      * Whether to connect stdin or not
      */
     public static final String PEGASUS_CONNECT_STDIN_KEY = "_PEGASUS_CONNECT_STDIN";
@@ -322,7 +327,16 @@ public class Condor extends Abstract {
 
         if( workdir != null ){
             job.envVariables.construct( Condor.PEGASUS_INITIAL_DIR_KEY, workdir );
+
+
+            if ( !this.mPegasusLiteEnabled ){
+                //for shared file system mode we want the wrapped job
+                //to execute in workdir
+                job.envVariables.construct( Condor.PEGASUS_EXECUTE_IN_INITIAL_DIR, "true" );
+            }
         }
+
+
 
         //check if any transfer_input_files is transferred
         String ipFiles = job.condorVariables.getIPFilesForTransfer();
