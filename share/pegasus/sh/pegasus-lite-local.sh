@@ -40,6 +40,11 @@ check_predefined_variables
 
 dir=$_CONDOR_SCRATCH_DIR
 
+if [ "${_PEGASUS_EXECUTE_IN_INITIAL_DIR}" = "true" ];then
+    dir=$_PEGASUS_INITIAL_DIR
+fi
+
+
 #sanity check on arguments
 if [ $# -lt 1 ] ; then
     echo "pegasus-lite-local requires path to executable followed by arguments";
