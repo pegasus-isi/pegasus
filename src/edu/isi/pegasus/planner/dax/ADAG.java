@@ -209,7 +209,7 @@ public class ADAG {
      *
      * @see Parent
      */
-    private Map<String, List<Parent>> mDependencies;
+    private Map<String, Set<Edge>> mDependencies;
     /**
      * List of Notification objects
      */
@@ -249,7 +249,7 @@ public class ADAG {
         mExecutables = new LinkedHashSet<Executable>();
         mFiles = new LinkedList<File>();
         mInvokes = new LinkedList<Invoke>();
-        mDependencies = new LinkedHashMap<String, List<Parent>>();
+        mDependencies = new LinkedHashMap<String, Set<Edge>>();
         // PM-435 - commented this out for FHS work - do we need references to the bin/schema/...?
         // System.setProperty("pegasus.home", System.getProperty("user.dir"));
         mLogger = LogManagerFactory.loadSingletonInstance();
@@ -876,13 +876,13 @@ public class ADAG {
      */
     public ADAG addDependency(String parent, String child, String label) {
         if (containsAbstractJobId(parent) && containsAbstractJobId(child)) {
-            List<Parent> parents = mDependencies.get(child);
-            if (parents == null) {
-                parents = new LinkedList<Parent>();
+            Set<Edge> edges = mDependencies.get(child);
+            if (edges == null) {
+                edges = new LinkedHashSet<Edge>();
             }
-            Parent p = new Parent(parent, label);
-            parents.add(p);
-            mDependencies.put(child, parents);
+            Edge e = new Edge(parent,child, label);
+            edges.add(e);
+            mDependencies.put(child, edges);
         } else {
             throw new RuntimeException(
                     "Either Job with id " + parent + " or " + child + "is not added to the DAX.\n"
@@ -892,21 +892,35 @@ public class ADAG {
     }
 
     /**
-     * Returns a list of Parent objects for a child job/dax/dag id. Returns an
-     * empty list if the child does not have any parents Returns null if the
+     * Returns a list of Edge objects for a child job/dax/dag id. Returns an
+     * empty set if the child does not have any parents Returns null if the
      * child is not a valid job/dax/dag id
      *
      * @param child
      * @return
      */
-    public List<Parent> getParents(String child) {
+    public Set<Edge> getEdges(String child) {
         if (child != null && mJobs.containsKey(child)) {
             return mDependencies.containsKey(child) ? mDependencies.get(child)
-                    : new LinkedList<Parent>();
+                    : new LinkedHashSet<Edge>();
         }
         return null;
     }
 
+        /**
+     * Returns a Set of all the Edge objects for the DAX. Returns empty if no dependencies.
+     *
+     * @param child
+     * @return
+     */
+    public Set<Edge> getEdges() {
+        Set<Edge> edges = new LinkedHashSet<Edge>();
+        for(Set<Edge>s : mDependencies.values()){
+                edges.addAll(s);
+             }
+        return edges;
+        
+    }
     /**
      * Add a parent child dependency with a dependency label
      *
@@ -1027,8 +1041,8 @@ public class ADAG {
         for (String child : mDependencies.keySet()) {
             writer.startElement("child", indent + 1).
                     writeAttribute("ref", child);
-            for (Parent p : mDependencies.get(child)) {
-                p.toXML(writer, indent + 2);
+            for (Edge e : mDependencies.get(child)) {
+                e.toXMLParent(writer, indent + 2);
             }
             writer.endElement(indent + 1);
         }
