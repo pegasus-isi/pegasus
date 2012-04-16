@@ -1,24 +1,24 @@
-mpidag(1)
-=========
+pegasus-mpi-cluster(1)
+======================
 :doctype: manpage
 
 
 Name
 ----
-mpidag - a tool for running computational workflows expressed as DAGs
+pegasus-mpi-cluster - a tool for running computational workflows expressed as DAGs
 (Directed Acyclic Graphs) on computational clusters using MPI.
 
 
 Synopsis
 --------
 [verse]
-*mpidag* [*-h*][*-v*][*-q*][*-s*][*-L* 'path'][*-o* 'path'][*-e* 'path'] 
-       [*-m* 'M'][*-t* 'T'] 'workflow.dag'
+*pegasus-mpi-cluster* [*-h*][*-v*][*-q*][*-s*][*-L* 'path'][*-o* 'path'][*-e* 'path'] 
+                    [*-m* 'M'][*-t* 'T'] 'workflow.dag'
 
 
 Description
 -----------
-*mpidag* is a tool used to run HTC (High Throughput Computing) scientific
+*pegasus-mpi-cluster* is a tool used to run HTC (High Throughput Computing) scientific
 workflows on systems designed for HPC (High Performance Computing).
 Many HPC systems have custom architectures that are optimized for
 tightly-coupled, parallel applications. These systems commonly have
@@ -28,22 +28,22 @@ highly optimized that the compute nodes do not even support a TCP/IP
 stack. This makes it impossible to run HTC applications using software
 that was designed for commodity clusters, such as Condor.
 
-*mpidag* was developed to enable loosely-coupled HTC applications such as
+*pegasus-mpi-cluster* was developed to enable loosely-coupled HTC applications such as
 scientific workflows to take advantage of HPC systems. In order to get
-around the network issues outlined above, *mpidag* uses MPI (Message
+around the network issues outlined above, *pegasus-mpi-cluster* uses MPI (Message
 Passing Interface), a commonly used API for writing SPMD (Single
 Process, Multiple Data) parallel applications. Most HPC systems have an
 MPI implementation that works on whatever exotic network architecture
 the system uses.
 
-An *mpidag* job consists of a single master process (this process is rank
+An *pegasus-mpi-cluster* job consists of a single master process (this process is rank
 0 in MPI parlance) and several worker processes. The master process
 manages the workflow and assigns workflow tasks to workers for execution. 
 The workers execute the tasks and return the results to the master. Any 
 output written to stdout or stderr by the tasks is captured (see 
 <<TASK_STDIO,*TASK STDIO*>>).
 
-*mpidag* applications are expressed as DAGs (Directed Acyclic Graphs)
+*pegasus-mpi-cluster* applications are expressed as DAGs (Directed Acyclic Graphs)
 (see <<DAG_FILES,*DAG FILES*>>). Each node in the graph represents a task, 
 and the edges represent dependencies between the tasks that constrain the 
 order in which the tasks are executed. Each task is a program and a set of
@@ -55,9 +55,9 @@ as inputs for another.
 If an error occurs while executing a DAG that causes the workflow to
 stop, it can be restarted using a rescue file, which records the
 progress of the workflow (see <<RESCUE_FILES,*RESCUE FILES*>>). This 
-enables *mpidag* to pick up running the workflow where it stopped.
+enables *pegasus-mpi-cluster* to pick up running the workflow where it stopped.
 
-*mpidag* allows applications expressed as a DAG to be executed in 
+*pegasus-mpi-cluster* allows applications expressed as a DAG to be executed in 
 parallel on a large number of compute nodes. It is designed to be simple,
 lightweight and robust.
 
@@ -83,7 +83,7 @@ Options
 *-s*::
 *--skip-rescue*::
     Ignore the rescue file for 'workflow.dag' if it exists. Note that
-    *mpidag* will still create a new rescue file for the current run.
+    *pegasus-mpi-cluster* will still create a new rescue file for the current run.
     The default behavior is to use the rescue file if one is found.
     (see <<RESCUE_FILES,*RESCUE FILES*>>)
 
@@ -95,14 +95,14 @@ Options
 
 *-o* 'path'::
 *--stdout* 'path'::
-    Path to file for task stdout. *mpidag* will append '.XXX' to path
+    Path to file for task stdout. *pegasus-mpi-cluster* will append '.XXX' to path
     where 'XXX' is the retry number according to the retry numbering
     scheme. The default is to use 'PATH.out.XXX' where 'PATH' is the 
     path to the input DAG file. (see <<TASK_STDIO,*TASK STDIO*>>)
 
 *-e* 'path'::
 *--stderr* 'path'::
-    Path to file for task stderr. *mpidag* will append '.XXX' to path
+    Path to file for task stderr. *pegasus-mpi-cluster* will append '.XXX' to path
     where 'XXX' is the retry number according to the retry numbering
     scheme. The default is to use 'PATH.err.XXX' where 'PATH' is the
     path to the input DAG file. (see <<TASK_STDIO,*TASK STDIO*>>)
@@ -110,9 +110,9 @@ Options
 *-m* 'M'::
 *--max-failures* 'M'::
     Stop submitting new tasks after 'M' tasks have failed. Once 'M' 
-    has been reached, *mpidag* will finish running any tasks that have
+    has been reached, *pegasus-mpi-cluster* will finish running any tasks that have
     been started, but will not start any more tasks. This option is
-    used to prevent *mpidag* from continuing to run a workflow that 
+    used to prevent *pegasus-mpi-cluster* from continuing to run a workflow that 
     is suffering from a systematic error, such as a missing binary or
     an invalid path. The default for 'M' is 0, which means unlimited 
     failures are allowed.
@@ -129,7 +129,7 @@ Options
 [[DAG_FILES]]
 DAG Files
 ---------
-*mpidag* workflows are expressed using a simple text-based format similar
+*pegasus-mpi-cluster* workflows are expressed using a simple text-based format similar
 to that used by Condor DAGMan. There are only two record types allowed
 in a DAG file: *TASK* and *EDGE*. Any blank lines in the DAG (lines with
 all whitespace characters) are ignored, as are any lines beginning with
@@ -175,14 +175,14 @@ Rescue Files
 ------------
 Many different types of errors can occur when running a DAG. One or
 more of the tasks may fail, the MPI job may run out of wall time,
-*mpidag* may segfault (we hope not), the system may crash, etc. In order
+*pegasus-mpi-cluster* may segfault (we hope not), the system may crash, etc. In order
 to ensure that the DAG does not need to be restarted from the beginning
-after an error, *mpidag* generates a rescue file for each workflow.
+after an error, *pegasus-mpi-cluster* generates a rescue file for each workflow.
 
 The rescue file is a simple text file that lists all of the tasks in
 the workflow that have finished successfully. This file is updated each
 time a task finishes, and is flushed periodically so that if the work-
-flow fails and the user restarts it, *mpidag* can determine which tasks
+flow fails and the user restarts it, *pegasus-mpi-cluster* can determine which tasks
 still need to be executed. As such, the rescue file is a sort-of trans-
 action log for the workflow.
 
@@ -242,7 +242,7 @@ Retry Numbering
 Each of the output, error, and rescue files are numbered with a suffix
 that starts at '.000' and increments by 1 each time the workflow is run
 (e.g. '.000', '.001', '.002', and so on). This is done so that the user and
-*mpidag* can distinguish between the outputs of different workflow runs.
+*pegasus-mpi-cluster* can distinguish between the outputs of different workflow runs.
 
 
 Misc
@@ -270,7 +270,7 @@ In order for the worker processes to start tasks on the compute
 node the compute nodes must support the *fork()* and *exec()* system
 calls. If your target machine runs a stripped-down OS on the
 compute nodes that does not support these system calls, then
-*mpidag* will not work.
+*pegasus-mpi-cluster* will not work.
 
 CPU Usage
 ~~~~~~~~~
@@ -282,7 +282,7 @@ instead of blocking can produce better performance. On those
 MPI implementations the master and worker processes will run at
 100% CPU usage even when they are waiting. If this is a problem
 on your system, then there are some MPI implementations that
-'do' block on message send and receive. To test *mpidag*, for
+'do' block on message send and receive. To test *pegasus-mpi-cluster*, for
 example, we use MPICH2 with the ch3:sock device instead of the
 ch3:nemesis device to avoid this issue.
 
