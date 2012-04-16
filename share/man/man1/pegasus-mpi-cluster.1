@@ -1,0 +1,286 @@
+'\" t
+.\"     Title: pegasus-mpi-cluster
+.\"    Author: [see the "Author" section]
+.\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
+.\"      Date: 04/16/2012
+.\"    Manual: \ \&
+.\"    Source: \ \&
+.\"  Language: English
+.\"
+.TH "PEGASUS\-MPI\-CLUSTE" "1" "04/16/2012" "\ \&" "\ \&"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+pegasus-mpi-cluster \- a tool for running computational workflows expressed as DAGs (Directed Acyclic Graphs) on computational clusters using MPI\&.
+.SH "SYNOPSIS"
+.sp
+.nf
+\fBpegasus\-mpi\-cluster\fR [\fB\-h\fR][\fB\-v\fR][\fB\-q\fR][\fB\-s\fR][\fB\-L\fR \fIpath\fR][\fB\-o\fR \fIpath\fR][\fB\-e\fR \fIpath\fR]
+                    [\fB\-m\fR \fIM\fR][\fB\-t\fR \fIT\fR] \fIworkflow\&.dag\fR
+.fi
+.SH "DESCRIPTION"
+.sp
+\fBpegasus\-mpi\-cluster\fR is a tool used to run HTC (High Throughput Computing) scientific workflows on systems designed for HPC (High Performance Computing)\&. Many HPC systems have custom architectures that are optimized for tightly\-coupled, parallel applications\&. These systems commonly have exotic, low\-latency networks that are designed for passing short messages very quickly between compute nodes\&. Many of these networks are so highly optimized that the compute nodes do not even support a TCP/IP stack\&. This makes it impossible to run HTC applications using software that was designed for commodity clusters, such as Condor\&.
+.sp
+\fBpegasus\-mpi\-cluster\fR was developed to enable loosely\-coupled HTC applications such as scientific workflows to take advantage of HPC systems\&. In order to get around the network issues outlined above, \fBpegasus\-mpi\-cluster\fR uses MPI (Message Passing Interface), a commonly used API for writing SPMD (Single Process, Multiple Data) parallel applications\&. Most HPC systems have an MPI implementation that works on whatever exotic network architecture the system uses\&.
+.sp
+An \fBpegasus\-mpi\-cluster\fR job consists of a single master process (this process is rank 0 in MPI parlance) and several worker processes\&. The master process manages the workflow and assigns workflow tasks to workers for execution\&. The workers execute the tasks and return the results to the master\&. Any output written to stdout or stderr by the tasks is captured (see \fBTASK STDIO\fR)\&.
+.sp
+\fBpegasus\-mpi\-cluster\fR applications are expressed as DAGs (Directed Acyclic Graphs) (see \fBDAG FILES\fR)\&. Each node in the graph represents a task, and the edges represent dependencies between the tasks that constrain the order in which the tasks are executed\&. Each task is a program and a set of parameters that need to be run (i\&.e\&. a command and some optional arguments)\&. The dependencies typically represent data flow dependencies in the application, where the output files produced by one task are needed as inputs for another\&.
+.sp
+If an error occurs while executing a DAG that causes the workflow to stop, it can be restarted using a rescue file, which records the progress of the workflow (see \fBRESCUE FILES\fR)\&. This enables \fBpegasus\-mpi\-cluster\fR to pick up running the workflow where it stopped\&.
+.sp
+\fBpegasus\-mpi\-cluster\fR allows applications expressed as a DAG to be executed in parallel on a large number of compute nodes\&. It is designed to be simple, lightweight and robust\&.
+.SH "OPTIONS"
+.PP
+\fB\-h\fR, \fB\-\-help\fR
+.RS 4
+Print help message
+.RE
+.PP
+\fB\-v\fR, \fB\-\-verbose\fR
+.RS 4
+Increase logging verbosity\&. Adding multiple
+\fB\-v\fR
+increases the level more\&. The default log level is
+\fIINFO\fR\&. (see
+\fBLOGGING\fR)
+.RE
+.PP
+\fB\-q\fR, \fB\-\-quiet\fR
+.RS 4
+Decrease logging verbosity\&. Adding multiple
+\fB\-q\fR
+decreases the level more\&. The default log level is
+\fIINFO\fR\&. (see
+\fBLOGGING\fR)
+.RE
+.PP
+\fB\-s\fR, \fB\-\-skip\-rescue\fR
+.RS 4
+Ignore the rescue file for
+\fIworkflow\&.dag\fR
+if it exists\&. Note that
+\fBpegasus\-mpi\-cluster\fR
+will still create a new rescue file for the current run\&. The default behavior is to use the rescue file if one is found\&. (see
+\fBRESCUE FILES\fR)
+.RE
+.PP
+\fB\-L\fR \fIpath\fR, \fB\-\-logfile\fR \fIpath\fR
+.RS 4
+Path to file for logging messages\&. By default, error\-type log messages go to stderr, and info\-type log messages go to stdout\&. (see
+\fBLOGGING\fR)
+.RE
+.PP
+\fB\-o\fR \fIpath\fR, \fB\-\-stdout\fR \fIpath\fR
+.RS 4
+Path to file for task stdout\&.
+\fBpegasus\-mpi\-cluster\fR
+will append
+\fI\&.XXX\fR
+to path where
+\fIXXX\fR
+is the retry number according to the retry numbering scheme\&. The default is to use
+\fIPATH\&.out\&.XXX\fR
+where
+\fIPATH\fR
+is the path to the input DAG file\&. (see
+\fBTASK STDIO\fR)
+.RE
+.PP
+\fB\-e\fR \fIpath\fR, \fB\-\-stderr\fR \fIpath\fR
+.RS 4
+Path to file for task stderr\&.
+\fBpegasus\-mpi\-cluster\fR
+will append
+\fI\&.XXX\fR
+to path where
+\fIXXX\fR
+is the retry number according to the retry numbering scheme\&. The default is to use
+\fIPATH\&.err\&.XXX\fR
+where
+\fIPATH\fR
+is the path to the input DAG file\&. (see
+\fBTASK STDIO\fR)
+.RE
+.PP
+\fB\-m\fR \fIM\fR, \fB\-\-max\-failures\fR \fIM\fR
+.RS 4
+Stop submitting new tasks after
+\fIM\fR
+tasks have failed\&. Once
+\fIM\fR
+has been reached,
+\fBpegasus\-mpi\-cluster\fR
+will finish running any tasks that have been started, but will not start any more tasks\&. This option is used to prevent
+\fBpegasus\-mpi\-cluster\fR
+from continuing to run a workflow that is suffering from a systematic error, such as a missing binary or an invalid path\&. The default for
+\fIM\fR
+is 0, which means unlimited failures are allowed\&.
+.RE
+.PP
+\fB\-t\fR \fIT\fR, \fB\-\-tries\fR \fIT\fR
+.RS 4
+Attempt to run each task
+\fIT\fR
+times before marking the task as failed\&. Note that the
+\fIT\fR
+tries do not count as failures for the purposes of the
+\fB\-m\fR
+option\&. A task is only considered failed if it is tried
+\fIT\fR
+times and all
+\fIT\fR
+attempts result in a non\-zero exitcode\&. The value of
+\fIT\fR
+must be at least 1\&. The default is 1\&.
+.RE
+.SH "DAG FILES"
+.sp
+\fBpegasus\-mpi\-cluster\fR workflows are expressed using a simple text\-based format similar to that used by Condor DAGMan\&. There are only two record types allowed in a DAG file: \fBTASK\fR and \fBEDGE\fR\&. Any blank lines in the DAG (lines with all whitespace characters) are ignored, as are any lines beginning with # (note that # can only appear at the beginning of a line, not in the middle)\&.
+.sp
+The format of a \fBTASK\fR record is:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+\fBTASK\fR \fIid\fR \fIexecutable\fR [\fIarguments\&...\fR]
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Where \fIid\fR is the ID of the task, \fIexecutable\fR is the path to the executable or script to run, and \fIarguments\&...\fR is a space\-separated list of arguments to pass to the task\&. An example is:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+    TASK t01 /bin/program \-a \-b
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+The format of an \fBEDGE\fR record is:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+\fBEDGE\fR \fIparent\fR \fIchild\fR
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Where \fIparent\fR is the ID of the parent task, and \fIchild\fR is the ID of the child task\&. An example \fBEDGE\fR record is:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+    EDGE t01 t02
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+A simple diamond\-shaped workflow would look like this:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+    # diamond\&.dag
+    TASK A /bin/echo "I am A"
+    TASK B /bin/echo "I am B"
+    TASK C /bin/echo "I am C"
+    TASK D /bin/echo "I am D"
+
+    EDGE A B
+    EDGE A C
+    EDGE B D
+    EDGE C D
+.fi
+.if n \{\
+.RE
+.\}
+.SH "RESCUE FILES"
+.sp
+Many different types of errors can occur when running a DAG\&. One or more of the tasks may fail, the MPI job may run out of wall time, \fBpegasus\-mpi\-cluster\fR may segfault (we hope not), the system may crash, etc\&. In order to ensure that the DAG does not need to be restarted from the beginning after an error, \fBpegasus\-mpi\-cluster\fR generates a rescue file for each workflow\&.
+.sp
+The rescue file is a simple text file that lists all of the tasks in the workflow that have finished successfully\&. This file is updated each time a task finishes, and is flushed periodically so that if the work\- flow fails and the user restarts it, \fBpegasus\-mpi\-cluster\fR can determine which tasks still need to be executed\&. As such, the rescue file is a sort\-of trans\- action log for the workflow\&.
+.sp
+The rescue file contains zero or more DONE records\&. The format of these records is:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+\fBDONE\fR \fItaskid\fR
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+Where \fItaskid\fR is the ID of the task that finished successfully\&.
+.sp
+Rescue files are named \fIDAGNAME\&.rescue\&.XXX\fR where \fIDAGNAME\fR is the path to the input DAG file, and XXX is the current retry sequence number for the rescue file (see \fBRETRY NUMBERING\fR)\&.
+.SH "LOGGING"
+.sp
+By default, all logging messages are printed to stdout\&. If you turn up the logging using \fB\-v\fR then you may end up with a lot of stdout being forwarded from the workers to the master\&. To avoid that you can specify a log file using the \fB\-L\fR argument\&. Note that if you use \fB\-L\fR you will get N log files where N is the number of processes (master and workers), and that these N log files will not be merged into one at the end\&. Each process will append its rank to the log file name, so if you use:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+    \-L log/foo\&.log
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+you will get \fIlog/foo\&.log\&.0\fR, \fIlog/foo\&.log\&.1\fR, and so on\&.
+.sp
+The log levels in order of severity are: FATAL, ERROR, WARN, INFO, DEBUG, and TRACE\&.
+.sp
+The default logging level is INFO\&. The logging levels can be increased/decreased with \fB\-v\fR and \fB\-q\fR\&.
+.SH "TASK STDIO"
+.sp
+By default the stdout/stderr of tasks will be saved into files called \fIDAGNAME\&.out\&.XXX\fR and \fIDAGNAME\&.err\&.XXX\fR, where \fIDAGNAME\fR is the path to the input DAG file, and \fIXXX\fR is the current retry sequence number for the out/err file (see \fBRETRY NUMBERING\fR)\&. You can change the path of these files with the \fB\-o\fR and \fB\-e\fR arguments\&. Note that the stdio of all workers will be merged into one out and one err file by the master at the end, so I/O from different workers will appear in a random order, but I/O from each worker will appear in the order that it was generated\&. Also note that, if the job fails for any reason, the outputs will not be merged, but instead there will be one file for each worker named as above, but with \fI\&.X\fR appended where \fIX\fR is the worker\(cqs rank\&.
+.SH "RETRY NUMBERING"
+.sp
+Each of the output, error, and rescue files are numbered with a suffix that starts at \fI\&.000\fR and increments by 1 each time the workflow is run (e\&.g\&. \fI\&.000\fR, \fI\&.001\fR, \fI\&.002\fR, and so on)\&. This is done so that the user and \fBpegasus\-mpi\-cluster\fR can distinguish between the outputs of different workflow runs\&.
+.SH "MISC"
+.SS "Resource Utilization"
+.sp
+At the end of the workflow run, the master will report the resource utilization of the job\&. This is done by adding up the total runtimes of all the tasks executed (including failed tasks) and dividing by the total wall time of the job times N, where N is both the total number of processes including the master, and the total number of workers\&. These two resource utilization values are provided so that users can get an idea about how efficiently they are making use of the resources they allocated\&. Low resource utilization values suggest that the user should use fewer cores, and longer wall time, on future runs, while high resource utilization values suggest that the user could use more cores for future runs and get a shorter wall time\&.
+.SH "KNOWN ISSUES"
+.SS "fork() and exec()"
+.sp
+In order for the worker processes to start tasks on the compute node the compute nodes must support the \fBfork()\fR and \fBexec()\fR system calls\&. If your target machine runs a stripped\-down OS on the compute nodes that does not support these system calls, then \fBpegasus\-mpi\-cluster\fR will not work\&.
+.SS "CPU Usage"
+.sp
+Many MPI implementations are optimized so that message sends and receives do not block\&. The reasoning is that blocking adds over\- head and, since many HPC systems use space sharing on dedicated hardware, there are no other processes competing, so spinning instead of blocking can produce better performance\&. On those MPI implementations the master and worker processes will run at 100% CPU usage even when they are waiting\&. If this is a problem on your system, then there are some MPI implementations that \fIdo\fR block on message send and receive\&. To test \fBpegasus\-mpi\-cluster\fR, for example, we use MPICH2 with the ch3:sock device instead of the ch3:nemesis device to avoid this issue\&.
+.SH "AUTHOR"
+.sp
+Gideon Juve <juve@usc\&.edu>
