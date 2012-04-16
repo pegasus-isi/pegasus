@@ -11,69 +11,69 @@ void diamond_dag() {
     Engine engine(dag);
 
     if (!engine.has_ready_task()) {
-        failure("Did not queue root tasks");
+        myfailure("Did not queue root tasks");
     }
     
     Task *a = engine.next_ready_task();
     if (a->name.compare("A") != 0) {
-        failure("Queued non root task %s", a->name.c_str());
+        myfailure("Queued non root task %s", a->name.c_str());
     }
     
     if (engine.has_ready_task()) {
-        failure("Queued non-root tasks");
+        myfailure("Queued non-root tasks");
     }
     
     engine.mark_task_finished(a, 0);
     
     if (!engine.has_ready_task()) {
-        failure("Marking did not release tasks");
+        myfailure("Marking did not release tasks");
     }
     
     Task *bc = engine.next_ready_task();
     if (!engine.has_ready_task()) {
-        failure("Marking did not release tasks");
+        myfailure("Marking did not release tasks");
     }
     
     Task *cb = engine.next_ready_task();
     if (engine.has_ready_task()) {
-        failure("Marking released too many tasks");
+        myfailure("Marking released too many tasks");
     }
     
     if (bc->name.compare("B") != 0 && bc->name.compare("C") != 0) {
-        failure("Wrong task released: %s", bc->name.c_str());
+        myfailure("Wrong task released: %s", bc->name.c_str());
     }
     
     if (cb->name.compare("B") != 0 && cb->name.compare("C") != 0) {
-        failure("Wrong task released: %s", cb->name.c_str());
+        myfailure("Wrong task released: %s", cb->name.c_str());
     }
     
     engine.mark_task_finished(bc, 0);
     if (engine.has_ready_task()) {
-        failure("Marking released a task when it shouldn't");
+        myfailure("Marking released a task when it shouldn't");
     }
     
     engine.mark_task_finished(cb, 0);
     if (!engine.has_ready_task()) {
-        failure("Marking all parents did not release task D");
+        myfailure("Marking all parents did not release task D");
     }
     
     Task *d = engine.next_ready_task();
     if (d->name.compare("D") != 0) {
-        failure("Not task D");
+        myfailure("Not task D");
     }
     
     if (engine.has_ready_task()) {
-        failure("No more tasks are available");
+        myfailure("No more tasks are available");
     }
     
     if (engine.is_finished()) {
-        failure("DAG is not finished");
+        myfailure("DAG is not finished");
     }
     
     engine.mark_task_finished(d, 0);
     
     if (!engine.is_finished()) {
-        failure("DAG is finished");
+        myfailure("DAG is finished");
     }
 }
 
@@ -82,26 +82,26 @@ void diamond_dag_rescue() {
     Engine engine(dag);
 
     if (!engine.has_ready_task()) {
-        failure("Should have ready D task");
+        myfailure("Should have ready D task");
     }
     
     Task *d = engine.next_ready_task();
     if (d->name.compare("D") != 0) {
-        failure("Ready task is not D");
+        myfailure("Ready task is not D");
     }
     
     engine.mark_task_finished(d, 1);
     
     if (engine.has_ready_task()) {
-        failure("Ready tasks even though D failed");
+        myfailure("Ready tasks even though D failed");
     }
     
     if (!engine.is_finished()) {
-        failure("DAG should have been finished after D failed");
+        myfailure("DAG should have been finished after D failed");
     }
     
     if (!engine.is_failed()) {
-        failure("DAG should be failed");
+        myfailure("DAG should be failed");
     }
 }
 
@@ -110,26 +110,26 @@ void diamond_dag_failure() {
     Engine engine(dag);
 
     if (!engine.has_ready_task()) {
-        failure("Did not queue root tasks");
+        myfailure("Did not queue root tasks");
     }
     
     Task *a = engine.next_ready_task();
     if (a->name.compare("A") != 0) {
-        failure("Queued non root task %s", a->name.c_str());
+        myfailure("Queued non root task %s", a->name.c_str());
     }
     
     if (engine.has_ready_task()) {
-        failure("Queued non-root tasks");
+        myfailure("Queued non-root tasks");
     }
     
     engine.mark_task_finished(a, 1);
     
     if (engine.has_ready_task()) {
-        failure("Released tasks even though parent failed");
+        myfailure("Released tasks even though parent failed");
     }
     
     if (!engine.is_finished()) {
-        failure("DAG should have been finished after A failed");
+        myfailure("DAG should have been finished after A failed");
     }
 }
 
@@ -162,17 +162,17 @@ void diamond_dag_newrescue() {
     engine.mark_task_finished(d, 1);
     
     if (!engine.is_finished()) {
-        failure("DAG should be finished");
+        myfailure("DAG should be finished");
     }
     
     if (!engine.is_failed()) {
-        failure("DAG should be failed");
+        myfailure("DAG should be failed");
     }
     
     char buf[1024];
     read_file(temp, buf);
     if (strcmp(buf, "\nDONE A\nDONE B\nDONE C") != 0) {
-        failure("Rescue file not updated properly: %s", temp);
+        myfailure("Rescue file not updated properly: %s", temp);
     } else {
         unlink(temp);
     }
@@ -187,32 +187,32 @@ void diamond_dag_oldrescue() {
     Engine engine(dag, temp);
 
     if (!engine.has_ready_task()) {
-        failure("Should have ready D task");
+        myfailure("Should have ready D task");
     }
     
     Task *d = engine.next_ready_task();
     if (d->name.compare("D") != 0) {
-        failure("Ready task is not D");
+        myfailure("Ready task is not D");
     }
     
     engine.mark_task_finished(d, 0);
     
     if (engine.has_ready_task()) {
-        failure("Ready tasks even though D finished");
+        myfailure("Ready tasks even though D finished");
     }
     
     if (!engine.is_finished()) {
-        failure("DAG should have been finished after D finished");
+        myfailure("DAG should have been finished after D finished");
     }
     
     if (engine.is_failed()) {
-        failure("DAG should not be failed");
+        myfailure("DAG should not be failed");
     }
     
     char buf[1024];
     read_file(temp, buf);
     if (strcmp(buf, "\nDONE A\nDONE B\nDONE C\nDONE D") != 0) {
-        failure("Rescue file not updated properly: %s: %s", temp, buf);
+        myfailure("Rescue file not updated properly: %s: %s", temp, buf);
     } else {
         unlink(temp);
     }
@@ -223,16 +223,16 @@ void diamond_dag_max_failures() {
     Engine engine(dag, "", 1);
 
     if (!engine.has_ready_task()) {
-        failure("Did not queue root tasks");
+        myfailure("Did not queue root tasks");
     }
     
     Task *a = engine.next_ready_task();
     if (a->name.compare("A") != 0) {
-        failure("Queued non root task %s", a->name.c_str());
+        myfailure("Queued non root task %s", a->name.c_str());
     }
     
     if (engine.has_ready_task()) {
-        failure("Queued non-root tasks");
+        myfailure("Queued non-root tasks");
     }
     
     engine.mark_task_finished(a, 0);
@@ -242,7 +242,7 @@ void diamond_dag_max_failures() {
     engine.mark_task_finished(bc, 1);
 
     if (engine.has_ready_task()) {
-        failure("DAG should not have a ready task because %s failed", bc->name.c_str());
+        myfailure("DAG should not have a ready task because %s failed", bc->name.c_str());
     }
 }
 
@@ -256,19 +256,19 @@ void diamond_dag_retries() {
     
     for (int i=0; i<tries; i++) {
         if (!engine.has_ready_task()) {
-            failure("A should have been ready");
+            myfailure("A should have been ready");
         }
 
         a = engine.next_ready_task();
         if (a->name.compare("A") != 0) {
-            failure("A should have been ready");
+            myfailure("A should have been ready");
         }
 
         engine.mark_task_finished(a, 1);
     }
     
     if (engine.has_ready_task()) {
-        failure("DAG should not have a ready task because A failed");
+        myfailure("DAG should not have a ready task because A failed");
     }
 }
 
@@ -282,35 +282,35 @@ void diamond_dag_retries2() {
     
     for (int i=0; i<tries-1; i++) {
         if (!engine.has_ready_task()) {
-            failure("A should have been ready");
+            myfailure("A should have been ready");
         }
         
         a = engine.next_ready_task();
         if (a->name.compare("A") != 0) {
-            failure("A should have been ready");
+            myfailure("A should have been ready");
         }
         
         engine.mark_task_finished(a, 1);
     }
     
     if (!engine.has_ready_task()) {
-        failure("A should have been ready");
+        myfailure("A should have been ready");
     }
     
     a = engine.next_ready_task();
     if (a->name.compare("A") != 0) {
-        failure("A should have been ready");
+        myfailure("A should have been ready");
     }
     
     engine.mark_task_finished(a, 0);
 
     if (!engine.has_ready_task()) {
-        failure("DAG should have a ready task because A finally succeeded");
+        myfailure("DAG should have a ready task because A finally succeeded");
     }
 
     Task *bc = engine.next_ready_task();
     if (bc->name.compare("B")!=0 && bc->name.compare("C")!=0) {
-        failure("B or C should have been ready");
+        myfailure("B or C should have been ready");
     }
 }
 

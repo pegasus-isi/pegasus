@@ -10,26 +10,26 @@ void test_dag() {
     
     Task *alpha = dag.get_task("Alpha");
     if (alpha == NULL) {
-        failure("Didn't parse Alpha");
+        myfailure("Didn't parse Alpha");
     }
     if (alpha->command.compare("/bin/echo Alpha") != 0) {
-        failure("Command failed for Alpha: %s", alpha->command.c_str());
+        myfailure("Command failed for Alpha: %s", alpha->command.c_str());
     }
     
     Task *beta = dag.get_task("Beta");
     if (beta == NULL) {
-        failure("Didn't parse Beta");
+        myfailure("Didn't parse Beta");
     }
     if (beta->command.compare("/bin/echo Beta") != 0) {
-        failure("Command failed for Beta: %s", beta->command.c_str());
+        myfailure("Command failed for Beta: %s", beta->command.c_str());
     }
     
     if (alpha->children[0] != beta) {
-        failure("No children");
+        myfailure("No children");
     }
     
     if (beta->parents[0] != alpha) {
-        failure("No parents");
+        myfailure("No parents");
     }
 }
 
@@ -42,19 +42,19 @@ void test_rescue() {
     Task *d = dag.get_task("D");
     
     if (!a->success) {
-        failure("A should have been successful");
+        myfailure("A should have been successful");
     }
 
     if (!b->success) {
-        failure("B should have been successful");
+        myfailure("B should have been successful");
     }
 
     if (!c->success) {
-        failure("C should have been successful");
+        myfailure("C should have been successful");
     }
 
     if (d->success) {
-        failure("D should have been failed");
+        myfailure("D should have been failed");
     }
 }
 
