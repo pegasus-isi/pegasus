@@ -3,10 +3,11 @@ prefix = $(HOME)
 endif
 bindir = $(prefix)/bin
 
-CXX ?= mpicxx
-CC ?= mpicxx
-CXXFLAGS ?= -g -Wall
-LDFLAGS ?= 
+CXX = mpicxx
+CC = $(CXX)
+LD = $(CXX)
+CXXFLAGS = -g -Wall
+LDFLAGS = 
 RM = rm -f
 INSTALL = install
 MAKE = make
@@ -32,8 +33,6 @@ TESTS += test-engine
 all: $(PROGRAMS)
 
 pegasus-mpi-cluster: pegasus-mpi-cluster.o $(OBJS)
-	$(LD) $(LDFLAGS) -o pegasus-mpi-cluster pegasus-mpi-cluster.o $(OBJS)
-
 test-strlib: test-strlib.o $(OBJS)
 test-dag: test-dag.o $(OBJS)
 test-log: test-log.o $(OBJS)
@@ -52,6 +51,6 @@ clean:
 	$(RM) *.o $(PROGRAMS) $(TESTS)
 
 depends:
-	mpiCC $(CXXFLAGS) -MM *.cpp > depends.mk
+	g++ -MM *.cpp > depends.mk
 
 include depends.mk

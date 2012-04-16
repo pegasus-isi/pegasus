@@ -11,14 +11,13 @@ order, according to the dependencies specified in the DAG.
 
 To build the code run:
 
-    $ CC=mpicc CXX=mpic++ LD=mpic++ make
+    $ make
 
 If the system you are on does not have an 'mpicxx' wrapper for the C++
-compiler then you will have to set CC, CXX, and friend to point to the 
-system equivalents. For example, to build on a Cray XT5 with the PGI
-compiler:
+compiler then you will have to set CXX to point to the system equivalents. 
+For example, to build on a Cray XT5 with the PGI compiler:
 
-    $ CC=cc CXX=CC LD=CC CXXFLAGS="" make
+    $ make CXX=CC CXXFLAGS=""
 
 To run the tests do:
 
