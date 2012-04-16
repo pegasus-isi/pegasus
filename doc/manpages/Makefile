@@ -1,4 +1,4 @@
-DOCBOOK_XSL = /usr/share/sgml/docbook/stylesheet/xsl/docbook-xsl
+DOCBOOK_XSL = /opt/local/share/xsl/docbook-xsl
 ifeq ($(shell test -d $(DOCBOOK_XSL) || echo n),n)
 $(error Set DOCBOOK_XSL to the path to your DocBook stylesheets)
 endif
@@ -53,8 +53,9 @@ manpages.html : manpages.xml $(XMLMANPAGES)
 %.xml : %.txt
 	$(ASCIIDOC) -o $@ $<
 	BASENAME=`echo $< | sed 's/.txt//'`; \
-	sed -E "s/id=\"(_[^\"]+)\"/id=\"$$BASENAME\1\"/" -i"" $@; \
-	sed -E "s/<refentry lang.*/<refentry lang='en' id='cli-$$BASENAME'>/" -i"" $@
+	sed -i.bak -E "s/id=\"(_[^\"]+)\"/id=\"$$BASENAME\1\"/" $@ ; \
+	sed -i.bak -E "s/<refentry lang.*/<refentry lang='en' id='cli-$$BASENAME'>/" $@ ; \
+	rm $@.bak
 
 clean:
 	rm -f pegasus-*.xml *.fo *.pdf *.1 *.html
