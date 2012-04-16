@@ -30,7 +30,7 @@ TESTS += test-dag
 TESTS += test-log
 TESTS += test-engine
 
-all: $(PROGRAMS)
+all: $(PROGRAMS) $(TESTS)
 
 pegasus-mpi-cluster: pegasus-mpi-cluster.o $(OBJS)
 test-strlib: test-strlib.o $(OBJS)
