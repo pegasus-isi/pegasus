@@ -9,7 +9,7 @@ void test_trim(std::string &before, const std::string &after, const std::string 
     trim(before, delim);
     
     if (before.compare(after) != 0) {
-        failure("Trim didn't work: '%s' != '%s'", before.c_str(), after.c_str());
+        myfailure("Trim didn't work: '%s' != '%s'", before.c_str(), after.c_str());
     }
 }
 
@@ -19,14 +19,14 @@ void test_split_args(const std::string &arg, const std::vector<std::string> &res
     split_args(args, arg);
     
     if (result.size() != args.size()) {
-        failure("Size mismatch");
+        myfailure("Size mismatch");
     }
     
     for (unsigned i=0; i<args.size(); i++) {
         std::string l = args[i];
         std::string r = result[i];
         if (l.compare(r) != 0) {
-            failure("Strings don't match: '%s' != '%s'", l.c_str(), r.c_str());
+            myfailure("Strings don't match: '%s' != '%s'", l.c_str(), r.c_str());
         }
     }
 }
@@ -37,14 +37,14 @@ void test_split(const std::string &arg, const std::vector<std::string> &result, 
     split(v, arg, delim, max);
     
     if (result.size() != v.size()) {
-        failure("Size mismatch: %d != %d", (unsigned)result.size(), (unsigned)v.size());
+        myfailure("Size mismatch: %d != %d", (unsigned)result.size(), (unsigned)v.size());
     }
     
     for (unsigned i = 0; i < v.size(); i++) {
         std::string l = v[i];
         std::string r = result[i];
         if (l.compare(r) != 0) {
-            failure("Strings don't match: '%s' != '%s'", l.c_str(), r.c_str());
+            myfailure("Strings don't match: '%s' != '%s'", l.c_str(), r.c_str());
         }
     }
 }
