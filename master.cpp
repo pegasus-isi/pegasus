@@ -9,6 +9,8 @@
 #include "log.h"
 #include "tools.h"
 
+#include <sstream>
+
 Master::Master(const std::string &program, Engine &engine, DAG &dag,
                const std::string &dagfile, const std::string &outfile,
                const std::string &errfile) {
@@ -136,8 +138,13 @@ int Master::run() {
     
     log_info("Master starting with %d workers", numworkers);
     
-    // First, send out the paths to the outfile/errfile
-    send_stdio_paths(this->outfile, this->errfile);
+    // First, send out a unique path workers can use for their out/err files
+    pid_t pid = getpid();
+    char dotpid[10];
+    snprintf(dotpid, 10, ".%d", pid);
+    std::string worker_out_path = this->dagfile + dotpid + ".out";
+    std::string worker_err_path = this->dagfile + dotpid + ".err";
+    send_stdio_paths(worker_out_path, worker_err_path);
     
     // Queue up the workers
     for (int i=1; i<=numworkers; i++) {
@@ -218,15 +225,13 @@ int Master::run() {
     for (int i=1; i<=numworkers; i++) {
         sprintf(dotrank, ".%d", i);
         
-        std::string toutfile = this->outfile;
-        toutfile += dotrank;
+        std::string toutfile = worker_out_path + dotrank;
         this->merge_task_stdio(outf, toutfile, "stdout");
         
-        std::string terrfile = this->errfile;
-        terrfile += dotrank;
+        std::string terrfile = worker_err_path + dotrank;
         this->merge_task_stdio(errf, terrfile, "stderr");
     }
-   
+    
     // pegasus cluster output - used for provenance
     char buf[BUFSIZ];
     char stat[10];

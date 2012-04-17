@@ -49,7 +49,7 @@ bool file_exists(const std::string &filename) {
         }
     }
     
-    //myfailure("Unreachable");
+    myfailure("Unreachable");
 }
 
 int next_retry_file(std::string &name) {
@@ -81,8 +81,8 @@ int mpidag(int argc, char *argv[]) {
         flags.push_back(argv[i]);
     }
     
-    std::string outfile;
-    std::string errfile;
+    std::string outfile = "stdout";
+    std::string errfile = "stderr";
     std::string logfile;
     std::list<std::string> args;
     int loglevel = LOG_INFO;
@@ -220,26 +220,6 @@ int mpidag(int argc, char *argv[]) {
             // the out/err/rescue files exist. The master will figure
             // it out here, and then broadcast it to the workers when
             // it starts up.
-            
-            // Determine task stdout file
-            if (outfile.size() == 0) {
-                outfile = "stdout";
-            }
-            if (outfile != "stdout") {
-                next_retry_file(outfile);
-            }
-            log_debug("Using stdout file: %s", outfile.c_str());
-            
-            
-            // Determine task stderr file
-            if (errfile.size() == 0) {
-                errfile = "stderr";
-            }
-            if (errfile != "stderr") {
-                next_retry_file(errfile);
-            }
-            log_debug("Using stderr file: %s", errfile.c_str());
-            
             
             // Determine old and new rescue files
             std::string rescuebase = dagfile;
