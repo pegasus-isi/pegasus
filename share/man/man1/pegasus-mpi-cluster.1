@@ -2,12 +2,12 @@
 .\"     Title: pegasus-mpi-cluster
 .\"    Author: [see the "Author" section]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 04/16/2012
+.\"      Date: 04/17/2012
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "PEGASUS\-MPI\-CLUSTE" "1" "04/16/2012" "\ \&" "\ \&"
+.TH "PEGASUS\-MPI\-CLUSTE" "1" "04/17/2012" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,7 +32,7 @@ pegasus-mpi-cluster \- a tool for running computational workflows expressed as D
 .SH "SYNOPSIS"
 .sp
 .nf
-\fBpegasus\-mpi\-cluster\fR [\fB\-h\fR][\fB\-v\fR][\fB\-q\fR][\fB\-s\fR][\fB\-L\fR \fIpath\fR][\fB\-o\fR \fIpath\fR][\fB\-e\fR \fIpath\fR]
+\fBpegasus\-mpi\-cluster\fR [\fB\-h\fR][\fB\-v\fR][\fB\-q\fR][\fB\-s\fR][\fB\-o\fR \fIpath\fR][\fB\-e\fR \fIpath\fR]
                     [\fB\-m\fR \fIM\fR][\fB\-t\fR \fIT\fR] \fIworkflow\&.dag\fR
 .fi
 .SH "DESCRIPTION"
@@ -83,41 +83,15 @@ will still create a new rescue file for the current run\&. The default behavior 
 \fBRESCUE FILES\fR)
 .RE
 .PP
-\fB\-L\fR \fIpath\fR, \fB\-\-logfile\fR \fIpath\fR
-.RS 4
-Path to file for logging messages\&. By default, error\-type log messages go to stderr, and info\-type log messages go to stdout\&. (see
-\fBLOGGING\fR)
-.RE
-.PP
 \fB\-o\fR \fIpath\fR, \fB\-\-stdout\fR \fIpath\fR
 .RS 4
-Path to file for task stdout\&.
-\fBpegasus\-mpi\-cluster\fR
-will append
-\fI\&.XXX\fR
-to path where
-\fIXXX\fR
-is the retry number according to the retry numbering scheme\&. The default is to use
-\fIPATH\&.out\&.XXX\fR
-where
-\fIPATH\fR
-is the path to the input DAG file\&. (see
+Path to file for task stdout\&. (see
 \fBTASK STDIO\fR)
 .RE
 .PP
 \fB\-e\fR \fIpath\fR, \fB\-\-stderr\fR \fIpath\fR
 .RS 4
-Path to file for task stderr\&.
-\fBpegasus\-mpi\-cluster\fR
-will append
-\fI\&.XXX\fR
-to path where
-\fIXXX\fR
-is the retry number according to the retry numbering scheme\&. The default is to use
-\fIPATH\&.err\&.XXX\fR
-where
-\fIPATH\fR
-is the path to the input DAG file\&. (see
+Path to file for task stderr\&. (see
 \fBTASK STDIO\fR)
 .RE
 .PP
@@ -244,32 +218,17 @@ The rescue file contains zero or more DONE records\&. The format of these record
 .sp
 Where \fItaskid\fR is the ID of the task that finished successfully\&.
 .sp
-Rescue files are named \fIDAGNAME\&.rescue\&.XXX\fR where \fIDAGNAME\fR is the path to the input DAG file, and XXX is the current retry sequence number for the rescue file (see \fBRETRY NUMBERING\fR)\&.
+Rescue files are named \fIDAGNAME\&.rescue\&.XXX\fR where \fIDAGNAME\fR is the path to the input DAG file, and XXX is the current retry sequence number for the rescue file\&. The sequence number suffix starts at \fI\&.000\fR and increments by 1 each time the workflow is run (e\&.g\&. \fI\&.000\fR, \fI\&.001\fR, \fI\&.002\fR, and so on)\&. This is done so that the user and \fBpegasus\-mpi\-cluster\fR can distinguish between the rescue files of different workflow runs\&.
 .SH "LOGGING"
 .sp
-By default, all logging messages are printed to stdout\&. If you turn up the logging using \fB\-v\fR then you may end up with a lot of stdout being forwarded from the workers to the master\&. To avoid that you can specify a log file using the \fB\-L\fR argument\&. Note that if you use \fB\-L\fR you will get N log files where N is the number of processes (master and workers), and that these N log files will not be merged into one at the end\&. Each process will append its rank to the log file name, so if you use:
-.sp
-.if n \{\
-.RS 4
-.\}
-.nf
-    \-L log/foo\&.log
-.fi
-.if n \{\
-.RE
-.\}
-.sp
-you will get \fIlog/foo\&.log\&.0\fR, \fIlog/foo\&.log\&.1\fR, and so on\&.
+By default, all logging messages are printed to stderr\&. If you turn up the logging using \fB\-v\fR then you may end up with a lot of stderr being forwarded from the workers to the master\&.
 .sp
 The log levels in order of severity are: FATAL, ERROR, WARN, INFO, DEBUG, and TRACE\&.
 .sp
-The default logging level is INFO\&. The logging levels can be increased/decreased with \fB\-v\fR and \fB\-q\fR\&.
+The default logging level is INFO\&. The logging levels can be increased with \fB\-v\fR and decreased with \fB\-q\fR\&.
 .SH "TASK STDIO"
 .sp
-By default the stdout/stderr of tasks will be saved into files called \fIDAGNAME\&.out\&.XXX\fR and \fIDAGNAME\&.err\&.XXX\fR, where \fIDAGNAME\fR is the path to the input DAG file, and \fIXXX\fR is the current retry sequence number for the out/err file (see \fBRETRY NUMBERING\fR)\&. You can change the path of these files with the \fB\-o\fR and \fB\-e\fR arguments\&. Note that the stdio of all workers will be merged into one out and one err file by the master at the end, so I/O from different workers will appear in a random order, but I/O from each worker will appear in the order that it was generated\&. Also note that, if the job fails for any reason, the outputs will not be merged, but instead there will be one file for each worker named as above, but with \fI\&.X\fR appended where \fIX\fR is the worker\(cqs rank\&.
-.SH "RETRY NUMBERING"
-.sp
-Each of the output, error, and rescue files are numbered with a suffix that starts at \fI\&.000\fR and increments by 1 each time the workflow is run (e\&.g\&. \fI\&.000\fR, \fI\&.001\fR, \fI\&.002\fR, and so on)\&. This is done so that the user and \fBpegasus\-mpi\-cluster\fR can distinguish between the outputs of different workflow runs\&.
+By default the stdout and stderr of tasks will be redirected to the master\(cqs stdout and stderr\&. You can change the path of these files with the \fB\-o\fR and \fB\-e\fR arguments\&. Note that the stdio of all workers will be merged into one out and one err file by the master at the end, so I/O from different workers will not be interleaved, but I/O from each worker will appear in the order that it was generated\&. Also note that, if the job fails for any reason, the outputs will not be merged, but instead there will be one file for each worker named DAGFILE\&.MPID\&.out\&.X and DAGFILE\&.MPID\&.err\&.X, where DAGFILE is the path to the input DAG, MPID is the master\(cqs process ID, and \fIX\fR is the worker\(cqs rank\&.
 .SH "MISC"
 .SS "Resource Utilization"
 .sp
@@ -283,4 +242,6 @@ In order for the worker processes to start tasks on the compute node the compute
 Many MPI implementations are optimized so that message sends and receives do not block\&. The reasoning is that blocking adds over\- head and, since many HPC systems use space sharing on dedicated hardware, there are no other processes competing, so spinning instead of blocking can produce better performance\&. On those MPI implementations the master and worker processes will run at 100% CPU usage even when they are waiting\&. If this is a problem on your system, then there are some MPI implementations that \fIdo\fR block on message send and receive\&. To test \fBpegasus\-mpi\-cluster\fR, for example, we use MPICH2 with the ch3:sock device instead of the ch3:nemesis device to avoid this issue\&.
 .SH "AUTHOR"
 .sp
-Gideon Juve <juve@usc\&.edu>
+Gideon Juve <gideon@isi\&.edu>
+.sp
+Mats Rynge <rynge@isi\&.edu>
