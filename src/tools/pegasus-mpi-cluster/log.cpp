@@ -40,7 +40,7 @@ static void timestr(char *dest) {
 
 void log_message(int level, const char *message, va_list args) {
     // Just in case...
-    if (logfile == NULL || ferror(logfile) || ftell(logfile) < 0) {
+    if (logfile == NULL || fileno(logfile) == -1 || ferror(logfile) || ftell(logfile) < 0) {
         logfile = DEFAULT_LOG_FILE;
     }
     
