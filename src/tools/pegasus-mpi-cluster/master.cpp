@@ -14,8 +14,8 @@ Master::Master(const std::string &program, Engine &engine, DAG &dag,
                const std::string &errfile) {
     this->program = program;
     this->dagfile = dagfile;
-    this->outfile = dagfile + "." + outfile;
-    this->errfile = dagfile + "." + errfile;
+    this->outfile = outfile;
+    this->errfile = errfile;
     this->engine = &engine;
     this->dag = &dag;
 
@@ -200,14 +200,14 @@ int Master::run() {
     log_trace("Merging stdio from workers");
     FILE *outf = stdout;
     if (outfile != "stdout") {
-        fopen(this->outfile.c_str(), "w");
+        outf = fopen(this->outfile.c_str(), "w");
         if (outf == NULL) {
             myfailures("Unable to open stdout file: %s\n", this->outfile.c_str());
         }
     }
     FILE *errf = stderr;
     if (errfile != "stderr") {
-        fopen(this->errfile.c_str(), "w");
+        errf = fopen(this->errfile.c_str(), "w");
         if (errf == NULL) {
             myfailures("Unable to open stderr file: %s\n", this->outfile.c_str());
         }
@@ -259,7 +259,7 @@ int Master::run() {
     }
         
     if (this->engine->max_failures_reached()) {
-        log_error("Max myfailures reached: DAG prematurely aborted");
+        log_error("Max failures reached: DAG prematurely aborted");
     }
         
     if (this->engine->is_failed()) {
