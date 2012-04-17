@@ -23,6 +23,7 @@ import edu.isi.pegasus.planner.classes.AggregatedJob;
 
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -249,8 +250,17 @@ public class MPIExec extends Abstract {
         String stdin  = job.getStdIn();
 
 
+
         StringBuffer args = new StringBuffer();
-        args.append( "--skip-rescue" ).append( " " );
+        
+        //construct any extra arguments specified in profiles
+        //or properties
+        String extraArgs = job.vdsNS.getStringValue( Pegasus.CLUSTER_ARGUMENTS );
+        
+        if( extraArgs != null ){
+            args.append( extraArgs ).append( " " );
+        }
+
         args.append( stdin );
 
         return args.toString();

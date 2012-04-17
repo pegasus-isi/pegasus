@@ -260,6 +260,11 @@ public class Pegasus extends Namespace {
     public static final String WORKER_NODE_DIRECTORY_KEY = "wntmp";
 
     /**
+     * Arguments that need to be passed to the clustering executable.
+     */
+    public static final String CLUSTER_ARGUMENTS = "cluster.arguments";
+
+    /**
      * The name of the key, that denotes the style of the dag that is constructed.
      * Possible styles can be
      *      -condor(glidein,flocking,submitting directly to condor pool)
@@ -428,6 +433,7 @@ public class Pegasus extends Namespace {
                     (key.compareTo( CHAIN_STAGE_IN_KEY ) == 0) ||
                     (key.compareTo( MAX_RUN_TIME ) == 0) ||
                     (key.compareTo(CREATE_AND_CHANGE_DIR_KEY ) == 0 ) ||
+                    (key.compareTo( CLUSTER_ARGUMENTS) == 0 ) ||
                     (key.compareTo( CORES_KEY ) == 0 ) ) {
                     res = VALID_KEY;
                 }
