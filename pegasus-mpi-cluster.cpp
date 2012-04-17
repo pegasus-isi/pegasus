@@ -227,6 +227,7 @@ int mpidag(int argc, char *argv[]) {
 int main(int argc, char *argv[]) {
     try {
         MPI_Init(&argc, &argv);
+        MPI_Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_ARE_FATAL);
         int rc = mpidag(argc, argv);
         MPI_Finalize();
         return rc;
