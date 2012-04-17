@@ -56,14 +56,15 @@ int Worker::run() {
     }
     
     double total_runtime = 0.0;
-
+    
     while (1) {
         std::string name;
         std::string command;
         std::string extra_id;
+        int shutdown;
         
         log_trace("Worker %d: Waiting for request", rank);
-        int shutdown = recv_request(name, command, extra_id);
+        recv_request(name, command, extra_id, shutdown);
         log_trace("Worker %d: Got request", rank);
         
         if (shutdown) {
@@ -133,7 +134,7 @@ int Worker::run() {
                      extra_id.c_str(), date, task_runtime, exitcode, argv[0]);
         write(out, buf, strlen(buf));
         
-        send_response(name, task_stime, task_ftime, exitcode);
+        send_response(name, exitcode);
     }
 
     close(out);

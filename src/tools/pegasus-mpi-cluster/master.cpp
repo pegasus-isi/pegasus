@@ -30,13 +30,9 @@ Master::~Master() {
 }
 
 void Master::submit_task(Task *task, int worker) {
-    int rc;
     log_debug("Submitting task %s to worker %d", task->name.c_str(), worker);
-    rc = send_request(task->name, task->command, task->extra_id, worker);
-    if (rc != 0 ) {
-        myfailure("Sending task failed");
-    }
-
+    send_request(task->name, task->command, task->extra_id, worker);
+    
     this->total_count++;
 }
 
@@ -45,10 +41,8 @@ void Master::wait_for_result() {
     
     std::string name;
     int exitcode;
-    double start_time;
-    double end_time;
     int worker;
-    recv_response(name, start_time, end_time, exitcode, worker);
+    recv_response(name, exitcode, worker);
     
     // Mark worker idle
     log_trace("Worker %d is idle", worker);
