@@ -6,8 +6,11 @@
 
 #define MAX_LOG_MESSAGE 8192
 
+// This is set to stderr so that it works nicely with Pegasus
+#define DEFAULT_LOG_FILE stderr
+
 static int loglevel = LOG_INFO;
-static FILE *logfile = stderr;
+static FILE *logfile = DEFAULT_LOG_FILE;
 
 void log_set_level(int level) {
     loglevel = level;
@@ -18,9 +21,6 @@ int log_get_level() {
 }
 
 void log_set_file(FILE *log) {
-    if (log == NULL) {
-        log_warn("Log file being set to NULL");
-    }
     logfile = log;
 }
 
@@ -41,12 +41,12 @@ static void timestr(char *dest) {
 void log_message(int level, const char *message, va_list args) {
     // Just in case...
     if (logfile == NULL || ferror(logfile) || ftell(logfile) < 0) {
-        logfile = stderr;
+        logfile = DEFAULT_LOG_FILE;
     }
     
     if (log_test(level)) {
         char logformat[MAX_LOG_MESSAGE];
-        if (logfile == stderr) {
+        if (logfile == DEFAULT_LOG_FILE) {
             snprintf(logformat, MAX_LOG_MESSAGE, "%s\n", message);    
         } else {
             // If logging to a file, add the date

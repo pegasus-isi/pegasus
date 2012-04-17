@@ -24,7 +24,6 @@ void usage() {
             "   -h|--help            Print this message\n"
             "   -v|--verbose         Increase logging level\n"
             "   -q|--quiet           Decrease logging level\n"
-            "   -L|--logfile PATH    Path to log file\n"
             "   -o|--stdout PATH     Path to stdout file for tasks\n"
             "   -e|--stderr PATH     Path to stderr file for tasks\n"
             "   -s|--skip-rescue     Ignore existing rescue file (still creates one)\n"
@@ -83,7 +82,6 @@ int mpidag(int argc, char *argv[]) {
     
     std::string outfile = "stdout";
     std::string errfile = "stderr";
-    std::string logfile;
     std::list<std::string> args;
     int loglevel = LOG_INFO;
     bool skiprescue = false;
@@ -117,15 +115,6 @@ int mpidag(int argc, char *argv[]) {
             loglevel -= 1;
         } else if (flag == "-v" || flag == "--verbose") {
             loglevel += 1;
-        } else if (flag == "-L" || flag == "--logfile") {
-            flags.pop_front();
-            if (flags.size() == 0) {
-                if (rank == 0) {
-                    fprintf(stderr, "-L/--logfile requires PATH\n");
-                }
-                return 1;
-            }
-            logfile = flags.front();
         } else if (flag == "-s" || flag == "--skip-rescue") {
             skiprescue = true;
         } else if (flag == "-m" || flag == "--max-failures") {
@@ -190,69 +179,48 @@ int mpidag(int argc, char *argv[]) {
         return 1;
     }
     
+    log_set_level(loglevel);
+    
     // Everything is pretty deterministic up until the processes reach
     // this point. Once we get here the different processes can diverge 
     // in their behavior for many reasons (file systems issues, bad nodes,
     // etc.), so be careful how failures are handled after this point
     // and make sure MPI_Abort is called when something bad happens.
     
-    char dotrank[25];
-    sprintf(dotrank, ".%d", rank);
-    
-    FILE *log = NULL;
-    log_set_level(loglevel);
-    if (logfile.size() > 0) {
-        logfile += dotrank;
-        log = fopen(logfile.c_str(), "w");
-        if (log == NULL) {
-            myfailure("Unable to open log file: %s: %s\n", 
-                logfile.c_str(), strerror(errno));
-        }
-        log_set_file(log);
-    }
-    
-    try {
-        if (rank == 0) {
-            
-            // IMPORTANT: The rank 0 process figures out the names
-            // of these files so that we don't have 1000 workers all
-            // slamming the file system with stat() calls to check if
-            // the out/err/rescue files exist. The master will figure
-            // it out here, and then broadcast it to the workers when
-            // it starts up.
-            
-            // Determine old and new rescue files
-            std::string rescuebase = dagfile;
-            rescuebase += ".rescue";
-            std::string oldrescue;
-            std::string newrescue = rescuebase;
-            int next = next_retry_file(newrescue);
-            if (next == 0 || skiprescue) {
-                // Either there is no old rescue file, or the
-                // user doesnt want to read it.
-                oldrescue = "";
-            } else {
-                char rbuf[5];
-                snprintf(rbuf, 5, ".%03d", next-1);
-                oldrescue = rescuebase;
-                oldrescue += rbuf;
-            }
-            log_debug("Using old rescue file: %s", oldrescue.c_str());
-            log_debug("Using new rescue file: %s", newrescue.c_str());
-            
-            DAG dag(dagfile, oldrescue);
-            Engine engine(dag, newrescue, max_failures, tries);
-            
-            return Master(program, engine, dag, dagfile, outfile, errfile).run();
+    if (rank == 0) {
+        
+        // IMPORTANT: The rank 0 process figures out the names
+        // of these files so that we don't have 1000 workers all
+        // slamming the file system with stat() calls to check if
+        // the out/err/rescue files exist. The master will figure
+        // it out here, and then broadcast it to the workers when
+        // it starts up.
+        
+        // Determine old and new rescue files
+        std::string rescuebase = dagfile;
+        rescuebase += ".rescue";
+        std::string oldrescue;
+        std::string newrescue = rescuebase;
+        int next = next_retry_file(newrescue);
+        if (next == 0 || skiprescue) {
+            // Either there is no old rescue file, or the
+            // user doesnt want to read it.
+            oldrescue = "";
         } else {
-            return Worker().run();
+            char rbuf[5];
+            snprintf(rbuf, 5, ".%03d", next-1);
+            oldrescue = rescuebase;
+            oldrescue += rbuf;
         }
-    } catch (...) {
-        // Make sure we close the log
-        if (log != NULL) {
-            fclose(log);
-        }
-        throw;
+        log_debug("Using old rescue file: %s", oldrescue.c_str());
+        log_debug("Using new rescue file: %s", newrescue.c_str());
+        
+        DAG dag(dagfile, oldrescue);
+        Engine engine(dag, newrescue, max_failures, tries);
+        
+        return Master(program, engine, dag, dagfile, outfile, errfile).run();
+    } else {
+        return Worker().run();
     }
 }
 
