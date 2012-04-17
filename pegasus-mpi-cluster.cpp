@@ -227,8 +227,6 @@ int mpidag(int argc, char *argv[]) {
 int main(int argc, char *argv[]) {
     try {
         MPI_Init(&argc, &argv);
-        protocol_request_struct();
-        protocol_response_struct();
         int rc = mpidag(argc, argv);
         MPI_Finalize();
         return rc;
