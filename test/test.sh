@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 PMC=./pegasus-mpi-cluster
 
