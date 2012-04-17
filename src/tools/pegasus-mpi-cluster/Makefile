@@ -38,8 +38,8 @@ test-dag: test-dag.o $(OBJS)
 test-log: test-log.o $(OBJS)
 test-engine: test-engine.o $(OBJS)
 
-test: $(TESTS)
-	for test in $^; do echo $$test; ./$$test; done
+test: $(TESTS) $(PROGRAMS)
+	test/test.sh
 
 .PHONY: clean depends test install 
 
