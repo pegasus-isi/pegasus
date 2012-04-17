@@ -58,8 +58,33 @@ void test_rescue() {
     }
 }
 
+void test_pegasus_dag() {
+    DAG dag("test/pegasus.dag");
+    
+    Task *a = dag.get_task("A");
+    
+    if (a->extra_id.compare("1") != 0) {
+        myfailure("A should have had extra_id");
+    }
+    
+    if (a->extra_transformation.compare("mDiffFit:3.3") != 0) {
+        myfailure("A should have had extra_transformation");
+    }
+    
+    Task *b = dag.get_task("B");
+    
+    if (b->extra_id.compare("2") != 0) {
+        myfailure("B should have had extra_id");
+    }
+    
+    if (b->extra_transformation.compare("mDiff:3.3") != 0) {
+        myfailure("B should have had extra_transformation");
+    }
+}
+
 int main(int argc, char *argv[]) {
     test_dag();
     test_rescue();
+    test_pegasus_dag();
     return 0;
 }
