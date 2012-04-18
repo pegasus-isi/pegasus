@@ -19,11 +19,11 @@ class TestISODate(unittest.TestCase):
     
     def testLocal(self):
         "Long local timestamp"
-        self.assertEquals("2012-04-17T18:55:32-0800", utils.isodate(now=self.now))
+        self.assertEquals("2012-04-17T18:55:32-0700", utils.isodate(now=self.now))
     
     def testShortLocal(self):
         "Short local timestamp"
-        self.assertEquals("20120417T185532-0800", utils.isodate(now=self.now, short=True))
+        self.assertEquals("20120417T185532-0700", utils.isodate(now=self.now, short=True))
     
     def testUTC(self):
         "Long UTC timestamp"
@@ -37,15 +37,13 @@ class TestEpochDate(unittest.TestCase):
     def setUp(self):
         self.now = 1334714132
     
-    # These two tests fail, because of some daylight savings time issue I think
-    # 
-    #def testLocal(self):
-    #    "Should be able to get the epoch from a local isodate"
-    #    self.assertEquals(self.now, utils.epochdate(utils.isodate(now=self.now)))
-    #
-    #def testShortLocal(self):
-    #    "Should be able to get the epoch from a short local isodate"
-    #    self.assertEquals(self.now, utils.epochdate(utils.isodate(now=self.now, short=True)))
+    def testLocal(self):
+        "Should be able to get the epoch from a local isodate"
+        self.assertEquals(self.now, utils.epochdate(utils.isodate(now=self.now)))
+    
+    def testShortLocal(self):
+        "Should be able to get the epoch from a short local isodate"
+        self.assertEquals(self.now, utils.epochdate(utils.isodate(now=self.now, short=True)))
     
     def testUTC(self):
         "Should be able to get the epoch from a UTC isodate"

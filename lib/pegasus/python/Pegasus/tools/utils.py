@@ -78,15 +78,15 @@ def isodate(now=int(time.time()), utc=False, short=False):
     """
     This function converts seconds since epoch into ISO 8601 timestamp
     """
-    my_time_u = time.gmtime(now)
     if utc:
+        my_time_u = time.gmtime(now)
         if short:
             return time.strftime("%Y%m%dT%H%M%SZ", my_time_u)
         else:
             return time.strftime("%Y-%m-%dT%H:%M:%SZ", my_time_u)
     else:
         my_time_l = time.localtime(now)
-        my_offset = int( time.mktime(my_time_l) - time.mktime(my_time_u) )
+        my_offset = int( calendar.timegm(my_time_l) - time.mktime(my_time_l) )
         offset = "%+03d%02d" % ( my_offset / 3600, (abs(my_offset) % 3600) / 60)
         if short:
             return time.strftime("%Y%m%dT%H%M%S", my_time_l) + offset
@@ -126,7 +126,7 @@ def epochdate(timestamp):
                 my_time = my_time + my_offset
             else:
                 my_time = my_time - my_offset
-
+        
         # Turn my_time into Epoch format
         return int(calendar.timegm(my_time.timetuple()))
 
