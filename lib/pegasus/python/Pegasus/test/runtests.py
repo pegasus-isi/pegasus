@@ -12,14 +12,19 @@ sys.path.insert(0, LIB_DIR)
 
 def main():
     from Pegasus.test import test_dax3
+    from Pegasus.test import test_utils
+    
+    modules = [
+        test_dax3,
+        test_utils
+    ]
     
     loader = unittest.TestLoader()
     
-    suites = [
-        loader.loadTestsFromModule(test_dax3)
-    ]
+    suites = [loader.loadTestsFromModule(m) for m in modules]
     
     alltests = unittest.TestSuite(suites)
+    
     unittest.TextTestRunner(verbosity=2).run(alltests)
 
 if __name__ == '__main__':
