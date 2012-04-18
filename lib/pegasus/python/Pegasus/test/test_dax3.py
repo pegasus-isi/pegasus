@@ -1,3 +1,7 @@
+"""
+This runs the unit test suite for the DAX3 module
+"""
+
 import unittest
 from Pegasus.DAX3 import *
 from Pegasus.DAX3 import Element, CatalogType
@@ -1167,6 +1171,6 @@ class TestScale(unittest.TestCase):
     
     def tearDown(self):
         os.remove(self.TESTFILE)
-        
+
 if __name__ == "__main__":
     unittest.main()
