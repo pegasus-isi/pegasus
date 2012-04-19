@@ -12,7 +12,7 @@ pegasus-mpi-cluster - a tool for running computational workflows expressed as DA
 Synopsis
 --------
 [verse]
-*pegasus-mpi-cluster* [*-h*][*-v*][*-q*][*-s*][*-L* 'path'][*-o* 'path'][*-e* 'path'] 
+*pegasus-mpi-cluster* [*-h*][*-v*][*-q*][*-s*][*-o* 'path'][*-e* 'path'] 
                     [*-m* 'M'][*-t* 'T'] 'workflow.dag'
 
 
@@ -83,29 +83,17 @@ Options
 *-s*::
 *--skip-rescue*::
     Ignore the rescue file for 'workflow.dag' if it exists. Note that
-    *pegasus-mpi-cluster* will still create a new rescue file for the current run.
-    The default behavior is to use the rescue file if one is found.
-    (see <<RESCUE_FILES,*RESCUE FILES*>>)
-
-*-L* 'path'::
-*--logfile* 'path'::
-    Path to file for logging messages. By default, error-type log messages
-    go to stderr, and info-type log messages go to stdout. (see <<LOGGING,
-    *LOGGING*>>)
+    *pegasus-mpi-cluster* will still create a new rescue file for the 
+    current run. The default behavior is to use the rescue file if one 
+    is found. (see <<RESCUE_FILES,*RESCUE FILES*>>)
 
 *-o* 'path'::
 *--stdout* 'path'::
-    Path to file for task stdout. *pegasus-mpi-cluster* will append '.XXX' to path
-    where 'XXX' is the retry number according to the retry numbering
-    scheme. The default is to use 'PATH.out.XXX' where 'PATH' is the 
-    path to the input DAG file. (see <<TASK_STDIO,*TASK STDIO*>>)
+    Path to file for task stdout. (see <<TASK_STDIO,*TASK STDIO*>>)
 
 *-e* 'path'::
 *--stderr* 'path'::
-    Path to file for task stderr. *pegasus-mpi-cluster* will append '.XXX' to path
-    where 'XXX' is the retry number according to the retry numbering
-    scheme. The default is to use 'PATH.err.XXX' where 'PATH' is the
-    path to the input DAG file. (see <<TASK_STDIO,*TASK STDIO*>>)
+    Path to file for task stderr. (see <<TASK_STDIO,*TASK STDIO*>>)
 
 *-m* 'M'::
 *--max-failures* 'M'::
@@ -195,54 +183,38 @@ Where 'taskid' is the ID of the task that finished successfully.
 
 Rescue files are named 'DAGNAME.rescue.XXX' where 'DAGNAME' is the path to
 the input DAG file, and XXX is the current retry sequence number for
-the rescue file (see <<RETRY_NUMBERING,*RETRY NUMBERING*>>).
+the rescue file. The sequence number suffix starts at '.000' and increments 
+by 1 each time the workflow is run (e.g. '.000', '.001', '.002', and so on). 
+This is done so that the user and *pegasus-mpi-cluster* can distinguish 
+between the rescue files of different workflow runs.
 
 
 [[LOGGING]]
 Logging
 -------
-By default, all logging messages are printed to stdout. If you turn up
-the logging using *-v* then you may end up with a lot of stdout being
-forwarded from the workers to the master. To avoid that you can specify
-a log file using the *-L* argument. Note that if you use *-L* you will get
-N log files where N is the number of processes (master and workers),
-and that these N log files will not be merged into one at the end. Each
-process will append its rank to the log file name, so if you use:
-------------
-    -L log/foo.log
-------------
-you will get 'log/foo.log.0', 'log/foo.log.1', and so on.
+By default, all logging messages are printed to stderr. If you turn up
+the logging using *-v* then you may end up with a lot of stderr being
+forwarded from the workers to the master.
 
 The log levels in order of severity are: FATAL, ERROR, WARN, INFO, DEBUG, 
 and TRACE.
 
 The default logging level is INFO. The logging levels can be
-increased/decreased with *-v* and *-q*.
+increased with *-v* and decreased with *-q*.
 
 
 [[TASK_STDIO]]
 Task STDIO
 ----------
-By default the stdout/stderr of tasks will be saved into files called
-'DAGNAME.out.XXX' and 'DAGNAME.err.XXX', where 'DAGNAME' is the path to the
-input DAG file, and 'XXX' is the current retry sequence number for the 
-out/err file  (see <<RETRY_NUMBERING,*RETRY NUMBERING*>>). You can change 
-the path of these files with the *-o* and *-e* arguments. Note that the 
-stdio of all workers will be merged into one out and one err file by the 
-master at the end, so I/O from different workers will appear in a random 
-order, but I/O from each worker will appear in the order that it was 
-generated. Also note that, if the job fails for any reason, the outputs 
+By default the stdout and stderr of tasks will be redirected to the master's
+stdout and stderr. You can change the path of these files with the *-o* and 
+*-e* arguments. Note that the stdio of all workers will be merged into one 
+out and one err file by the master at the end, so I/O from different workers 
+will not be interleaved, but I/O from each worker will appear in the order 
+that it was generated. Also note that, if the job fails for any reason, the outputs 
 will not be merged, but instead there will be one file for each worker 
-named as above, but with '.X' appended where 'X' is the worker's rank.
-
-
-[[RETRY_NUMBERING]]
-Retry Numbering
----------------
-Each of the output, error, and rescue files are numbered with a suffix
-that starts at '.000' and increments by 1 each time the workflow is run
-(e.g. '.000', '.001', '.002', and so on). This is done so that the user and
-*pegasus-mpi-cluster* can distinguish between the outputs of different workflow runs.
+named DAGFILE.MPID.out.X and DAGFILE.MPID.err.X, where DAGFILE is the path to
+the input DAG, MPID is the master's process ID, and 'X' is the worker's rank.
 
 
 Misc
@@ -286,6 +258,9 @@ on your system, then there are some MPI implementations that
 example, we use MPICH2 with the ch3:sock device instead of the
 ch3:nemesis device to avoid this issue.
 
+
 Author
 ------
-Gideon Juve `<juve@usc.edu>`
+Gideon Juve `<gideon@isi.edu>`
+
+Mats Rynge `<rynge@isi.edu>`
