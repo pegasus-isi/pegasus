@@ -121,8 +121,6 @@ Methods::
  get_total_tasks_status
  get_total_succeeded_tasks_status
  get_total_failed_tasks_status
- get_task_success_report
- get_task_failure_report
  get_total_tasks_retries
  get_workflow_states
  get_workflow_cum_job_wall_time
@@ -152,7 +150,7 @@ Methods listed in order of query list on wiki.
 
 https://confluence.pegasus.isi.edu/display/pegasus/Pegasus+Statistics+Python+Version+Modified
 """
-__rcsid__ = "$Id: stampede_statistics.py 31185 2012-04-16 17:57:46Z mgoode $"
+__rcsid__ = "$Id: stampede_statistics.py 30814 2012-03-07 21:08:23Z mgoode $"
 __author__ = "Monte Goode"
 
 from netlogger.analysis.modules._base import SQLAlchemyInit
@@ -473,14 +471,11 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         return q.count()
     
         
-    def _base_task_status_query_old(self):
+    def _base_task_status_query(self):
         """
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Summary#WorkflowSummary-Totalsucceededtasks
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Statistics+file#WorkflowStatisticsfile-Totalsucceededtasks
         """
-        # This query generation method is obsolete and is only being
-        # kept for optimization reference.
-        
         WorkflowSub1 = orm.aliased(Workflow, name='WorkflowSub1')
         JobInstanceSub1 = orm.aliased(JobInstance, name='JobInstanceSub1')
         JobSub1 = orm.aliased(Job, name='JobSub1')
@@ -511,63 +506,17 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         q = q.filter(Invocation.job_instance_id == sq_2.c.last_job_instance_id)
         q = q.filter(Invocation.wf_id == sq_2.c.wf_id)
         
-        # Calling wrapper methods would invoke like so:
-        # q = self._base_task_status_query()
-        # q = q.filter(Invocation.exitcode == 0)
-        # return q.count()
-        
         return q
         
-    def _base_task_statistics_query(self, success=True):
-        w = orm.aliased(Workflow, name='w')
-        j = orm.aliased(Job, name='j')
-        ji = orm.aliased(JobInstance, name='ji')
-        tk = orm.aliased(Task, name='tk')
-
-        sq_1 = self.session.query(w.wf_id, 
-                j.job_id,
-                ji.job_instance_id.label('jiid'),
-                ji.job_submit_seq.label('jss'),
-                func.max(ji.job_submit_seq).label('maxjss'))
-        sq_1 = sq_1.join(j, w.wf_id == j.wf_id)
-        sq_1 = sq_1.join(ji, j.job_id == ji.job_id)
-        if self._expand:
-            sq_1 = sq_1.filter(w.root_wf_id == self._root_wf_id)
-        else:
-            sq_1 = sq_1.filter(w.wf_id == self._wfs[0])
-        sq_1 = sq_1.group_by(j.job_id)
-        sq_1 = sq_1.subquery('t')
-
-        sq_2 = self.session.query(sq_1.c.wf_id, func.count(Invocation.exitcode).label('count'))
-        sq_2 = sq_2.select_from(orm.join(sq_1, Invocation, sq_1.c.jiid == Invocation.job_instance_id))
-        sq_2 = sq_2.join(tk, tk.abs_task_id == Invocation.abs_task_id)
-        sq_2 = sq_2.filter(tk.type_desc != 'dax')
-        sq_2 = sq_2.filter(sq_1.c.jss == sq_1.c.maxjss)
-        sq_2 = sq_2.filter(Invocation.abs_task_id != None)
-        if success:
-            sq_2 = sq_2.filter(Invocation.exitcode == 0)
-        else:
-            sq_2 = sq_2.filter(Invocation.exitcode != 0)
-        sq_2 = sq_2.group_by(sq_1.c.wf_id)
-        
-        return sq_2
-        
-    def _task_statistics_query_sum(self, success=True):
-        s = self._base_task_statistics_query(success).subquery('tt')
-        q = self.session.query(func.sum(s.c.count).label('task_count'))
-        return q.one()[0] or 0
-    
     def get_total_succeeded_tasks_status(self):
-        return self._task_statistics_query_sum(success=True)
-
+        q = self._base_task_status_query()
+        q = q.filter(Invocation.exitcode == 0)
+        return q.count()
+        
     def get_total_failed_tasks_status(self):
-        return self._task_statistics_query_sum(success=False)
-        
-    def get_task_success_report(self):
-        return self._base_task_statistics_query(True).all()
-        
-    def get_task_failure_report(self):
-        return self._base_task_statistics_query(False).all()
+        q = self._base_task_status_query()
+        q = q.filter(Invocation.exitcode != 0)
+        return q.count()
         
     def get_total_tasks_retries(self):
         """
