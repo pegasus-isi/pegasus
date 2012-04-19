@@ -89,8 +89,11 @@ public class MPIExec extends Abstract {
     public void makeAbstractAggregatedJobConcrete( AggregatedJob job ){
         super.makeAbstractAggregatedJobConcrete(job);
 
-        //also put in jobType as mpi
-        job.globusRSL.checkKeyInNS("jobtype","mpi");
+        //also put in jobType as mpi only if a user has not specified
+        //any other jobtype before hand
+        if( !job.globusRSL.containsKey( "jobtype" ) ){
+            job.globusRSL.checkKeyInNS("jobtype","mpi");
+        }
 
         
         job.setArguments( this.aggregatedJobArguments( job ) );
