@@ -6,18 +6,19 @@ ifndef ${libdir}
 libdir = ${prefix}/lib
 endif
 
+PySQLite=pysqlite-2.6.3
 BOTO=boto-2.0b3-24047c8
-SQLAlchemy=SQLAlchemy-0.7.2
+SQLAlchemy=SQLAlchemy-0.7.6
 all: ${libdir}/python/pysqlite2 ${libdir}/python/sqlalchemy ${libdir}/python/boto
 
 ${libdir}/python/pysqlite2:
-	@rm -rf pysqlite-2.6.3
-	tar xzf pysqlite-2.6.3.tar.gz
-	(cd pysqlite-2.6.3 && \
+	@rm -rf ${PySQLite)
+	tar xzf ${PySQLite).tar.gz
+	(cd ${PySQLite) && \
 	  python setup.py build_static && \
 	  cp -R build/lib*/pysqlite2 ${libdir}/python/ \
 	)
-	@rm -rf pysqlite-2.6.3
+	@rm -rf ${PySQLite)
 
 ${libdir}/python/sqlalchemy:
 	@rm -rf $(SQLAlchemy)
