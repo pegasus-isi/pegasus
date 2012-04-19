@@ -34,20 +34,41 @@ import os, sys, signal, subprocess
 import logging
 import time
 import math
+import shutil
+
+def find_prog(prog,dir=[]):
+    def is_prog(fpath):
+        return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
+
+    fpath, fname = os.path.split(prog)
+    if fpath:
+        if is_prog(prog):
+            return prog
+    else:
+        for path in dir+os.environ["PATH"].split(os.pathsep):
+            exe_file = os.path.join(path, prog)
+            if is_prog(exe_file):
+                return exe_file
+    return None
 
 # Use pegasus-config to find our lib path
 bin_dir = os.path.normpath(os.path.join(os.path.dirname(sys.argv[0])))
-pegasus_config = os.path.join(bin_dir, "pegasus-config") + " --noeoln --python"
-lib_dir = subprocess.Popen(pegasus_config, stdout=subprocess.PIPE, shell=True).communicate()[0]
-pegasus_config = os.path.join(bin_dir, "pegasus-config") + " --noeoln --python-externals"
-lib_ext_dir = subprocess.Popen(pegasus_config, stdout=subprocess.PIPE, shell=True).communicate()[0]
+pegasus_config = find_prog("pegasus-config",[bin_dir])
+lib_dir = subprocess.Popen([pegasus_config,"--noeoln","--python"], stdout=subprocess.PIPE, shell=False).communicate()[0]
+lib_ext_dir = subprocess.Popen([pegasus_config,"--noeoln","--python-externals"], stdout=subprocess.PIPE, shell=False).communicate()[0]
+print "Pegasus LIB %s" % lib_dir
+print "Pegasus LIB %s" % lib_ext_dir
+print "Pegasus BIN_DIR %s" % bin_dir
+print "Pegasus DAGMAN is  %s" % sys.argv[0]
+
+
+
 
 # Insert this directory in our search path
 os.sys.path.insert(0, lib_ext_dir)
 os.sys.path.insert(0, lib_dir)
 
-import Pegasus.common 
-from Pegasus.tools.utils import find_exec
+import Pegasus.common
 
 # logger is setup in common
 logger = logging.getLogger()
@@ -64,11 +85,10 @@ monitord_next_start = 0
 monitord_current_restarts = 0
 
 
-def dagman_launch(arguments):
+def dagman_launch(dagman_bin,arguments=[]):
     '''Launches the condor_dagman program with all
        the arguments passed to pegasus-dagman'''
-    dagman_bin = find_exec("condor_dagman", False,[bin_dir])
-    if dagman_bin != None :
+    if dagman_bin !=  None :
         arguments.insert(0, "condor_scheduniv_exec."+os.getenv("CONDOR_ID"))
         try :
             dagman_proc = subprocess.Popen(arguments, 
@@ -85,9 +105,8 @@ def dagman_launch(arguments):
 
     return dagman_proc
 
-def monitord_launch():
+def monitord_launch(monitord_bin,arguments=[]):
     '''Launches Monitord in condor foreground mode'''
-    monitord_bin = find_exec("pegasus-monitord",False,[bin_dir])
     if monitord_bin != None :
         try :
             log = open("monitord.log", 'a')
@@ -104,6 +123,19 @@ def monitord_launch():
     else :
         logger.error("pegausus-monitord not found")
     return None
+
+
+def is_dagman_copy_to_spool():
+    '''Checks using condor_config_val if dagman_copy_to_spool is set
+    then copy condor_dagman to the current dir "bin_dir" 
+    '''
+    condor_config_val = find_prog("condor_config_val")
+    copy_to_spool = subprocess.Popen([condor_config_val,"DAGMAN_COPY_TO_SPOOL"], stdout=subprocess.PIPE, shell=False).communicate()[0]
+    logger.info("DAGMAN_COPY_TO_SPOOL is set to %s" % copy_to_spool)
+    if copy_to_spool.lower().strip() == "true":
+        return True
+    else :
+        return False
 
 def sighandler(signum, frame):
     ''' Signal handler to catch and pass SIGTERM, SIGABRT, SIGUSR1, SIGTERM '''
@@ -127,11 +159,28 @@ if __name__ == "__main__":
     signal.signal(signal.SIGUSR1, sighandler)
     signal.signal(signal.SIGUSR2, sighandler)
  
+    copy_to_spool = is_dagman_copy_to_spool()
+
+    # Find dagman Binary
+    dagman_bin = find_prog("condor_dagman", [bin_dir])
+
+    if dagman_bin != None :
+        # If copy_to_spool is set copy dagman binary to dag submit directory
+        if copy_to_spool :
+            old_dagman_bin=dagman_bin
+            dagman_bin=os.path.join(os.getcwd(),"condor_scheduniv_exec."+os.getenv("CONDOR_ID"))
+            shutil.copy2(old_dagman_bin,dagman_bin)
+            logger.info("Copied condor_dagman from %s to %s" % (old_dagman_bin, dagman_bin))
+
+
     # Launch DAGMAN
-    dagman = dagman_launch(sys.argv[1:])
+    dagman = dagman_launch(dagman_bin,sys.argv[1:])
     
+    # Find monitord Binary
+    monitord_bin = find_prog("pegasus-monitord",[bin_dir])
+
     # Launch Monitord
-    monitord = monitord_launch()
+    monitord = monitord_launch(monitord_bin)
         
     dagman.poll()
     monitord.poll()
@@ -167,4 +216,7 @@ if __name__ == "__main__":
     #a merged returncode
     logger.info("Dagman exited with code %d" % dagman.returncode)
     logger.info("Monitord exited with code %d" % monitord.returncode)
+    if copy_to_spool:
+        logger.info("Removing copied condor_dagman from submit directory %s" % dagman_bin)
+        os.remove(dagman_bin);
     sys.exit(dagman.returncode & monitord.returncode)
