@@ -1,0 +1,5 @@
+#!/bin/bash
+set -e
+
+echo "Running pegasus-mpi-dag"
+$MPIEXEC -n 4 $PEGASUS_BIN_DIR/pegasus-mpi-cluster "$@"
