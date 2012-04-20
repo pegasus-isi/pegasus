@@ -575,7 +575,7 @@ def fdt(transfers, failed_q):
             failed_q.append(transfer)
 
 
-def webget(transfers, failed_q):
+def webget(transfers, failed_q, attempt):
     """
     pulls http/https using wget
     """
@@ -583,7 +583,18 @@ def webget(transfers, failed_q):
         return
     if len(transfers) > 0 and tool_info['wget']['full_path'] == None:
         raise RuntimeError("Unable to do http/https transfers becuase wget could not be found")
+
     for i, transfer in enumerate(transfers): 
+
+        # Open Science Grid sites can inform us about local Squid proxies
+        if "OSG_SQUID_LOCATION" in os.environ and not "http_proxy" in os.environ:
+            os.environ['http_proxy'] = os.environ['OSG_SQUID_LOCATION']
+
+        # but only allow squid caching for the first try - after that go to the source
+        if attempt > 1 and "http_proxy" in os.environ:
+            logger.info("Disabling HTTP proxy due to previous failures")
+            del os.environ['http_proxy']
+
         prepare_local_dir(os.path.dirname(transfer.dst_path))
         cmd = tool_info['wget']['full_path']
         if logger.isEnabledFor(logging.DEBUG):
@@ -961,7 +972,7 @@ def handle_transfers(transfers, failed_q, attempt):
             elif tool == "scp":
                 scp(transfers, failed_q)
             elif tool == "webget":
-                webget(transfers, failed_q)
+                webget(transfers, failed_q, attempt)
             elif tool == "gsiftp":
                 gsiftp(transfers, failed_q, attempt)
             elif tool == "irods":
