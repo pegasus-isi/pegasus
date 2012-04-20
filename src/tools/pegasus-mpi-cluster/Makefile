@@ -1,5 +1,5 @@
 ifndef prefix
-prefix = $(HOME)
+prefix = $(PEGASUS_HOME)
 endif
 bindir = $(prefix)/bin
 
@@ -11,7 +11,6 @@ LDFLAGS =
 RM = rm -f
 INSTALL = install
 MAKE = make
-
 
 OBJS += strlib.o
 OBJS += tools.o
@@ -30,7 +29,17 @@ TESTS += test-dag
 TESTS += test-log
 TESTS += test-engine
 
-all: $(PROGRAMS) $(TESTS)
+.PHONY: clean depends test install 
+
+ifeq ($(shell which $(CXX) || echo n),n)
+$(warning To build pegasus-mpi-cluster set CXX to the path to your MPI C++ compiler wrapper)
+all:
+install:
+else
+all: $(PROGRAMS)
+install: $(PROGRAMS)
+	$(INSTALL) -m 0755 $(PROGRAMS) $(bindir)
+endif
 
 pegasus-mpi-cluster: pegasus-mpi-cluster.o $(OBJS)
 test-strlib: test-strlib.o $(OBJS)
@@ -41,14 +50,11 @@ test-engine: test-engine.o $(OBJS)
 test: $(TESTS) $(PROGRAMS)
 	test/test.sh
 
-.PHONY: clean depends test install 
-
-install: $(PROGRAMS)
-	$(INSTALL) -d -m 755 $(bindir)
-	$(INSTALL) -m 755 $(PROGRAMS) $(bindir)
+distclean: clean
+	$(RM) $(PROGRAMS)
 
 clean:
-	$(RM) *.o $(PROGRAMS) $(TESTS)
+	$(RM) *.o $(TESTS)
 
 depends:
 	g++ -MM *.cpp > depends.mk
