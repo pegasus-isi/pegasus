@@ -376,23 +376,6 @@
       </fileset>
     </copy>
     <replace file="${dist.bin}/pegasus-config" token="#PEGASUS_VERSION#" value="${pegasus.version}"/>
-    <fixcrlf srcdir="${dist.bin}" eol="crlf" includes="*.bat,*.cmd" />
-    <fixcrlf srcdir="${dist.bin}" eol="lf">
-      <exclude name="*.bat"/>
-      <exclude name="*.cmd"/>
-      <exclude name="*-free"/>
-      <exclude name="T2"/>
-      <exclude name="pegasus-kickstart"/>
-      <exclude name="k.2"/>
-      <exclude name="pegasus-keg"/>
-      <exclude name="guc"/>
-      <exclude name="pegasus-invoke"/>
-      <exclude name="pegasus-keg.condor"/>
-      <exclude name="pegasus-cluster"/>
-      <exclude name="newexec"/>
-      <exclude name="mpi*"/>
-      <exclude name="condor-log-parser"/>
-    </fixcrlf>
     <chmod perm="0755" type="file">
       <fileset dir="${dist.bin}">
         <include name="*"/>
@@ -413,7 +396,6 @@
     <copy preservelastmodified="true" todir="${dist.doc}/schemas">
       <fileset dir="doc/schemas" includes="**/*"/>
     </copy>
-    <fixcrlf srcdir="${dist.doc}/schemas" includes="**/*.xsd" eol="lf"/>
 
     <!-- etc -->
     <mkdir dir="${dist.etc}"/>
@@ -482,10 +464,7 @@
     <chmod perm="0644" type="file">
       <fileset dir="${dist.jars}" includes="*.jar"/>
     </chmod>
-    <fixcrlf srcdir="${dist.share}/sql" tab="remove" tablength="8" 
-             excludes="README*" eol="lf"/>
-    <fixcrlf srcdir="${dist.share}/schema" eol="lf"/>
-
+    
     <!-- . -->
     <copy preservelastmodified="true" todir="${dist.dir}">
       <fileset dir=".">
