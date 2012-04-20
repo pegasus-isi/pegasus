@@ -12,13 +12,13 @@ SQLAlchemy=SQLAlchemy-0.7.6
 all: ${libdir}/python/pysqlite2 ${libdir}/python/sqlalchemy ${libdir}/python/boto
 
 ${libdir}/python/pysqlite2:
-	@rm -rf ${PySQLite)
-	tar xzf ${PySQLite).tar.gz
-	(cd ${PySQLite) && \
+	@rm -rf $(PySQLite)
+	tar xzf $(PySQLite).tar.gz
+	(cd $(PySQLite) && \
 	  python setup.py build_static && \
 	  cp -R build/lib*/pysqlite2 ${libdir}/python/ \
 	)
-	@rm -rf ${PySQLite)
+	@rm -rf $(PySQLite)
 
 ${libdir}/python/sqlalchemy:
 	@rm -rf $(SQLAlchemy)
