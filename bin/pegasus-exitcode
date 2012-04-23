@@ -85,8 +85,8 @@ def rename(outfile, errfile):
 		os.rename(errfile,newerr)
 		
 	return newout, newerr
-	
-	
+
+
 def exitcode(outfile):
 	"""Parse invocation records looking for status codes. Returns
 	the number of successful invocations, or fails with an error
@@ -101,7 +101,47 @@ def exitcode(outfile):
 	if len(txt) == 0:
 		fail("kickstart produced no output")
 	
-	# Check the exitcode of all tasks
+	# Check cluster-summary first if it exists
+	#[cluster-summary stat="ok" tasks=9628, succeeded=9628, failed=0, extra=0, \
+	# start="2012-04-20T15:37:48.523-04:00", duration=116129.649, pid=5170, \
+	# app="/lustre/scratch/proj/tera3d/pegasus/default/bin/pegasus-mpi-cluster"]
+	b = txt.find("[cluster-summary")
+	if b < 0:
+		b = txt.find("[seqexec-summary") # Older seqexec used this
+	if b >= 0:
+		e = txt.find("]", b)
+		if e < 0:
+			fail("Invalid cluster-summary record")
+		
+		# If any of the tasks failed, then job failed
+		re_failed = re.compile(r'failed=([0-9]+)')
+		m = re_failed.search(txt[b:e])
+		if m:
+			failed = int(m.group(1))
+			if failed > 0:
+				fail("Failures occurred")
+		
+		# If there were no tasks, then the job was successful
+		re_tasks = re.compile(r'tasks=([0-9]+)')
+		m = re_tasks.search(txt[b:e])
+		if m:
+			tasks = int(m.group(1))
+			if tasks == 0:
+				return 0
+		
+		# If the number of successes was zero, then the job failed
+		re_succeeded = re.compile(r'succeeded=([0-9]+)')
+		m = re_succeeded.search(txt[b:e])
+		if m:
+			succeeded = int(m.group(1))
+			
+			if succeeded == 0:
+				fail("No successful tasks")
+			
+			# No need to check the individual tasks in this case
+			return succeeded
+	
+	# Check the exitcodes of all tasks
 	regex = re.compile(r'raw="(-?[0-9]+)"')
 	succeeded = 0
 	e = 0
@@ -117,10 +157,10 @@ def exitcode(outfile):
 		if raw != 0:
 			fail("task exited with raw status %d" % raw)
 		succeeded = succeeded + 1
-		
-	# Require at least one task to succeed
+	
+	# Fail if there were no invocation records and no cluster-summary
 	if succeeded == 0:
-		fail("no tasks succeeded")
+		fail("No successful tasks")
 	
 	return succeeded
 
@@ -128,7 +168,10 @@ def exitcode(outfile):
 def pegasuslite_failures(errfile):
 	"""Determine if the stderr contains PegasusLite output, and if so
 	make sure that the PegasusLite tasks finished successfully"""
-
+	
+	if not os.path.isfile(errfile):
+		return False
+	
 	# Read the file first
 	f = open(errfile)
 	txt = f.read()
@@ -138,7 +181,7 @@ def pegasuslite_failures(errfile):
 	regex = re.compile(r'^PegasusLite:', re.MULTILINE)
 	if regex.search(txt) == None:
 		return False
-
+	
 	# If we got here, we know it is a PegasusLite job. Now check
 	# for exitcode 0
 	regex = re.compile(r'^PegasusLite: exitcode 0$', re.MULTILINE)
@@ -162,7 +205,7 @@ def main():
 	parser.add_option("-n", "--no-rename", action="store_false",
 		dest="rename", default=True, 
 		help="Don't rename kickstart.out and .err to .out.XXX and .err.XXX. Useful for testing.")
-		
+	
 	(options, args) = parser.parse_args()
 	
 	if len(args) != 1:
