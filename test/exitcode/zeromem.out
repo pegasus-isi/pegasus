@@ -1,0 +1,188 @@
+----------------------------------------
+Begin PBS Prologue Wed Jun  4 10:24:48 PDT 2008
+Job ID:            3638699.hpc-pbs.usc.edu
+Username:          dpmeyers
+Group:             m-geol
+Name:              kickstart
+Queue:             scec
+Shared Access:     no
+Nodes:             hpc0607 
+TMPDIR:            /tmp/3638699.hpc-pbs.usc.edu
+End PBS Prologue Wed Jun  4 10:24:48 PDT 2008
+----------------------------------------
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<invocation xmlns="http://pegasus.isi.edu/schema/invocation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/invocation http://pegasus.isi.edu/schema/iv-2.0.xsd" version="2.0" start="2008-06-04T10:24:48.617-07:00" duration="1404.494" hostaddr="10.125.3.107" hostname="hpc0607-e0.usc.edu" pid="21415" uid="86226" user="dpmeyers" gid="451" group="m-geol" umask="0077">
+  <mainjob start="2008-06-04T10:24:48.619-07:00" duration="1404.492" pid="21416">
+    <usage utime="1139.352" stime="108.250" minflt="616408" majflt="9" nswap="0" nsignals="0" nvcsw="22686" nivcsw="4770"/>
+    <status raw="0"><regular exitcode="0"/></status>
+    <statcall error="0">
+      <!-- deferred flag: 0 -->
+      <file name="/auto/scec-00/dpmeyers/bband-new/comps/run_project.py">23212F62696E2F656E7620707974686F</file>
+      <statinfo mode="0100755" size="3248" inode="25379752" nlink="1" blksize="32768" blocks="512" mtime="2008-05-16T17:29:02-07:00" atime="2008-06-04T10:24:48-07:00" ctime="2008-05-16T17:29:02-07:00" uid="86226" user="dpmeyers" gid="451" group="m-geol"/>
+    </statcall>
+    <argument-vector>
+      <arg nr="1">s004_ra.ucsb_ucsb_ucsb.proj</arg>
+    </argument-vector>
+  </mainjob>
+  <cwd>/auto/scec-00/dpmeyers/bband-new/start</cwd>
+  <usage utime="0.000" stime="0.005" minflt="220" majflt="1" nswap="0" nsignals="0" nvcsw="81" nivcsw="2"/>
+  <uname system="linux" archmode="IA32" nodename="hpc0607" release="2.6.9-67.0.7.ELsmp" machine="x86_64">#1 SMP Sat Mar 15 06:33:45 EDT 2008</uname>
+  <statcall error="0" id="stdin">
+    <!-- deferred flag: 0 -->
+    <file name="/dev/null"/>
+    <statinfo mode="020666" size="0" inode="1872" nlink="1" blksize="4096" blocks="0" mtime="2008-04-25T12:53:31-07:00" atime="2008-04-25T12:53:31-07:00" ctime="2008-04-25T12:53:31-07:00" uid="0" user="root" gid="0" group="root"/>
+  </statcall>
+  <statcall error="0" id="stdout">
+    <temporary name="/tmp/3638699.hpc-pbs.usc.edu/gs.out.JYp2T7" descriptor="3"/>
+    <statinfo mode="0100600" size="1361" inode="2719746" nlink="1" blksize="4096" blocks="8" mtime="2008-06-04T10:48:13-07:00" atime="2008-06-04T10:24:48-07:00" ctime="2008-06-04T10:48:13-07:00" uid="86226" user="dpmeyers" gid="451" group="m-geol"/>
+    <data>Running Project file: /auto/scec-00/dpmeyers/bband-new/start/s004_ra.ucsb_ucsb_ucsb.proj
+Finished reading simulation list file that contains 10 simulations: /auto/scec-00/dpmeyers/bband-new/start/s004_ra.ucsb_ucsb_ucsb.proj
+This project contains 10 simulations with an estimated running time of  0.8 hours.
+
+Running: mkdir -p /auto/scec-00/dpmeyers/bband-new/indata
+Running: mkdir -p /auto/scec-00/dpmeyers/bband-new/tmpdata
+Running: mkdir -p /auto/scec-00/dpmeyers/bband-new/outdata
+Running: mkdir -p /auto/scec-00/dpmeyers/bband-new/logs
+Running simulation id: 600288064 numbering 1 out of 10
+
+Running 4: ucsb ucsb ucsb
+Running simulation id: 600426803 numbering 2 out of 10
+
+Running 4: ucsb ucsb ucsb
+Running simulation id: 600561380 numbering 3 out of 10
+
+Running 4: ucsb ucsb ucsb
+Running simulation id: 600702855 numbering 4 out of 10
+
+Running 4: ucsb ucsb ucsb
+Running simulation id: 600831910 numbering 5 out of 10
+
+Running 4: ucsb ucsb ucsb
+Running simulation id: 600974549 numbering 6 out of 10
+
+Running 4: ucsb ucsb ucsb
+Running simulation id: 601112112 numbering 7 out of 10
+
+Running 4: ucsb ucsb ucsb
+Running simulation id: 601263273 numbering 8 out of 10
+
+Running 4: ucsb ucsb ucsb
+Running simulation id: 601415266 numbering 9 out of 10
+
+Running 4: ucsb ucsb ucsb
+Running simulation id: 601557727 numbering 10 out of 10
+
+Running 4: ucsb ucsb ucsb
+</data>
+  </statcall>
+  <statcall error="0" id="stderr">
+    <temporary name="/tmp/3638699.hpc-pbs.usc.edu/gs.err.EhUdMo" descriptor="4"/>
+    <statinfo mode="0100600" size="0" inode="2719747" nlink="1" blksize="4096" blocks="0" mtime="2008-06-04T10:24:48-07:00" atime="2008-06-04T10:24:48-07:00" ctime="2008-06-04T10:24:48-07:00" uid="86226" user="dpmeyers" gid="451" group="m-geol"/>
+  </statcall>
+  <statcall error="0" id="gridstart">
+    <!-- deferred flag: 0 -->
+    <file name="/auto/rcf-104/dpmeyers/proj/pegasus-2.0.0RC1/bin/kickstart">7F454C46010101000000000000000000</file>
+    <statinfo mode="0100755" size="133757" inode="329914" nlink="1" blksize="32768" blocks="512" mtime="2008-06-04T10:24:24-07:00" atime="2008-06-04T10:24:48-07:00" ctime="2008-06-04T10:24:24-07:00" uid="86226" user="dpmeyers" gid="451" group="m-geol"/>
+  </statcall>
+  <statcall error="0" id="logfile">
+    <descriptor number="1"/>
+    <statinfo mode="0100600" size="424" inode="114726" nlink="1" blksize="4096" blocks="8" mtime="2008-06-04T10:24:48-07:00" atime="2008-06-04T10:24:48-07:00" ctime="2008-06-04T10:24:48-07:00" uid="86226" user="dpmeyers" gid="451" group="m-geol"/>
+  </statcall>
+  <statcall error="0" id="channel">
+    <fifo name="/tmp/3638699.hpc-pbs.usc.edu/gs.app.ugupEF" descriptor="5" count="0" rsize="0" wsize="0"/>
+    <statinfo mode="010600" size="0" inode="2719748" nlink="1" blksize="4096" blocks="0" mtime="2008-06-04T10:24:48-07:00" atime="2008-06-04T10:24:48-07:00" ctime="2008-06-04T10:24:48-07:00" uid="86226" user="dpmeyers" gid="451" group="m-geol"/>
+  </statcall>
+  <environment>
+    <env key="BROADBAND_HOME">/auto/scec-00/dpmeyers/bband-new</env>
+    <env key="ENVIRONMENT">BATCH</env>
+    <env key="GLOBUS_GRAM_JOB_CONTACT">https://hpc-login2.usc.edu:20014/1525/1212600253/</env>
+    <env key="GLOBUS_GRAM_MYJOB_CONTACT">URLx-nexus://hpc-login2.usc.edu:20016/</env>
+    <env key="GLOBUS_LOCATION">/var/local/globus/4.0.4</env>
+    <env key="GLOBUS_REMOTE_IO_URL">/home/rcf-11/dpmeyers/.globus/job/hpc-login2.usc.edu/1525.1212600253/remote_io_url</env>
+    <env key="GRIDSTART_CHANNEL">/tmp/3638699.hpc-pbs.usc.edu/gs.app.ugupEF</env>
+    <env key="G_BROKEN_FILENAMES">1</env>
+    <env key="HISTSIZE">1000</env>
+    <env key="HOME">/home/rcf-11/dpmeyers</env>
+    <env key="HOSTNAME">hpc0607</env>
+    <env key="INPUTRC">/etc/inputrc</env>
+    <env key="JAVA_HOME">/usr/java/jdk1.5.0_13</env>
+    <env key="JREHOME">/usr/java/jdk1.5.0_13/jre/lib/amd64</env>
+    <env key="LANG">en_US.UTF-8</env>
+    <env key="LD_LIBRARY_PATH">/auto/usc/intel/9.1/x86_64/lib:/auto/scec-00/dpmeyers/bband-new/comps:/usr/usc/python/2.5/lib:</env>
+    <env key="LESSOPEN">|/usr/bin/lesspipe.sh %s</env>
+    <env key="LOGNAME">dpmeyers</env>
+    <env key="LS_COLORS"></env>
+    <env key="MAIL">/var/spool/mail/dpmeyers</env>
+    <env key="OLDPWD">/auto/rcf-11/dpmeyers</env>
+    <env key="PATH">/auto/usc/intel/9.1/x86_64/bin:/usr/usc/python/2.5/bin:/var/local/globus/4.0.4/sbin:/auto/scec-00/dpmeyers/bband-new/comps:/usr/usc/gnu/gcc/default/bin:/usr/usc/intel/9.1/x86_64/bin:/usr/usc/sas/9.1.3/bin:/usr/kerberos/bin:/usr/local/bin:/bin:/usr/bin:/usr/java/jdk1.5.0_13/bin:/usr/X11R6/bin</env>
+    <env key="PBS_ENVIRONMENT">PBS_BATCH</env>
+    <env key="PBS_JOBCOOKIE">DCCF53A247AB6CEB333C29D3AA357663</env>
+    <env key="PBS_JOBID">3638699.hpc-pbs.usc.edu</env>
+    <env key="PBS_JOBNAME">kickstart</env>
+    <env key="PBS_MOMPORT">15003</env>
+    <env key="PBS_NODEFILE">/var/spool/torque/aux//3638699.hpc-pbs.usc.edu</env>
+    <env key="PBS_NODENUM">0</env>
+    <env key="PBS_O_HOME">/home/rcf-11/dpmeyers</env>
+    <env key="PBS_O_HOST">hpc-login2.usc.edu</env>
+    <env key="PBS_O_LANG">en_US</env>
+    <env key="PBS_O_LOGNAME">dpmeyers</env>
+    <env key="PBS_O_PATH">/sbin:/usr/sbin:/bin:/usr/bin:/usr/X11R6/bin</env>
+    <env key="PBS_O_QUEUE">scec</env>
+    <env key="PBS_O_SHELL">/bin/bash</env>
+    <env key="PBS_O_WORKDIR">/auto/scec-00/dpmeyers/bband-new/start</env>
+    <env key="PBS_QUEUE">scec</env>
+    <env key="PBS_SCHED_HINT">RESTARTABLE:DEDICATEDNODE:IGNNODEPERUSER</env>
+    <env key="PBS_TASKNUM">1</env>
+    <env key="PBS_VNODENUM">0</env>
+    <env key="PEGASUS_HOME">/auto/rcf-104/dpmeyers/proj/pegasus-2.0.0RC1</env>
+    <env key="PWD">/auto/scec-00/dpmeyers/bband-new/start</env>
+    <env key="PYTHONHOME">/usr/usc/python/2.5</env>
+    <env key="PYTHONPATH">.:/auto/scec-00/dpmeyers/bband-new/comps:/auto/scec-00/dpmeyers/bband-new/comps/tests</env>
+    <env key="SHELL">/bin/sh</env>
+    <env key="SHLVL">2</env>
+    <env key="TMPDIR">/tmp/3638699.hpc-pbs.usc.edu</env>
+    <env key="USER">dpmeyers</env>
+    <env key="X509_USER_PROXY">/home/rcf-11/dpmeyers/.globus/job/hpc-login2.usc.edu/1525.1212600253/x509_up</env>
+    <env key="_">/auto/rcf-104/dpmeyers/proj/pegasus-2.0.0RC1/bin/kickstart</env>
+  </environment>
+  <resource>
+    <soft id="RLIMIT_CPU">unlimited</soft>
+    <hard id="RLIMIT_CPU">unlimited</hard>
+    <soft id="RLIMIT_FSIZE">unlimited</soft>
+    <hard id="RLIMIT_FSIZE">unlimited</hard>
+    <soft id="RLIMIT_DATA">unlimited</soft>
+    <hard id="RLIMIT_DATA">unlimited</hard>
+    <soft id="RLIMIT_STACK">10485760</soft>
+    <hard id="RLIMIT_STACK">unlimited</hard>
+    <soft id="RLIMIT_CORE">0</soft>
+    <hard id="RLIMIT_CORE">unlimited</hard>
+    <soft id="RESOURCE_5">unlimited</soft>
+    <hard id="RESOURCE_5">unlimited</hard>
+    <soft id="RLIMIT_NPROC">16379</soft>
+    <hard id="RLIMIT_NPROC">16379</hard>
+    <soft id="RLIMIT_NOFILE">32768</soft>
+    <hard id="RLIMIT_NOFILE">32768</hard>
+    <soft id="RLIMIT_MEMLOCK">32768</soft>
+    <hard id="RLIMIT_MEMLOCK">32768</hard>
+    <soft id="RLIMIT_AS">unlimited</soft>
+    <hard id="RLIMIT_AS">unlimited</hard>
+    <soft id="RLIMIT_LOCKS">unlimited</soft>
+    <hard id="RLIMIT_LOCKS">unlimited</hard>
+    <soft id="RLIMIT_SIGPENDING">1024</soft>
+    <hard id="RLIMIT_SIGPENDING">1024</hard>
+    <soft id="RLIMIT_MSGQUEUE">819200</soft>
+    <hard id="RLIMIT_MSGQUEUE">819200</hard>
+  </resource>
+</invocation>
+----------------------------------------
+Begin PBS Epilogue Wed Jun  4 10:48:13 PDT 2008
+Job ID:           3638699.hpc-pbs.usc.edu
+Username:         dpmeyers
+Group:            m-geol
+Job Name:         kickstart
+Session:          21362
+Limits:           neednodes=1,nodes=1,walltime=02:00:00
+Resources:        cput=00:20:47,mem=0kb,vmem=2382896kb,walltime=00:23:25
+Queue:            scec
+End PBS Epilogue Wed Jun  4 10:48:13 PDT 2008
+----------------------------------------

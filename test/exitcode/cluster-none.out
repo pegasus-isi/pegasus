@@ -1,0 +1,3 @@
+Some junk here
+[cluster-summary stat="ok" tasks=0, succeeded=0, failed=0, extra=0, start="2012-04-20T15:37:48.523-04:00", duration=116129.649, pid=5170, app="/lustre/scratch/proj/tera3d/pegasus/default/bin/pegasus-mpi-cluster"]
+More junk here

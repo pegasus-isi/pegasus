@@ -1,0 +1,25 @@
+----------------------------------------
+Begin PBS Prologue Tue Oct  7 20:17:48 PDT 2008
+Job ID:            4570898.hpc-pbs.usc.edu
+Username:          tera3d
+Group:             m-geol
+Name:              kickstart
+Queue:             main
+Shared Access:     no
+Nodes:             hpc0069 hpc0070 hpc0076 hpc0077 hpc0078 hpc0079 hpc0080 hpc0081 hpc0082 hpc0083 hpc0084 hpc0085 hpc0086 hpc0087 hpc0088 hpc0089 hpc0090 hpc0091 hpc0092 hpc0093 hpc0094 hpc0095 hpc0096 hpc0097 hpc0098 hpc0099 hpc0100 hpc0101 hpc0102 hpc0103 hpc0104 hpc0105 hpc0106 hpc0107 hpc0108 hpc0109 hpc0110 hpc0111 hpc0112 hpc0113 
+PVFS:              /scratch (1.2T)
+TMPDIR:            /tmp/4570898.hpc-pbs.usc.edu
+End PBS Prologue Tue Oct  7 20:17:56 PDT 2008
+----------------------------------------
+----------------------------------------
+Begin PBS Epilogue Tue Oct  7 23:19:11 PDT 2008
+Job ID:           4570898.hpc-pbs.usc.edu
+Username:         tera3d
+Group:            m-geol
+Job Name:         kickstart
+Session:          24139
+Limits:           neednodes=40:ppn=4,nodes=40:ppn=4,walltime=03:00:00
+Resources:        cput=348:17:10,mem=8705304kb,vmem=62746656kb,walltime=03:00:55
+Queue:            main
+End PBS Epilogue Tue Oct  7 23:19:17 PDT 2008
+----------------------------------------

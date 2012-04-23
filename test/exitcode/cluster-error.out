@@ -1,0 +1,1 @@
+[cluster-summary stat="error" tasks=5, succeeded=4, failed=1, extra=0, start="2012-04-20T15:37:48.523-04:00", duration=116129.649, pid=5170, app="/lustre/scratch/proj/tera3d/pegasus/default/bin/pegasus-mpi-cluster"]

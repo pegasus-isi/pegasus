@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<invocation xmlns="http://pegasus.isi.edu/schema/invocation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/invocation http://pegasus.isi.edu/schema/iv-2.0.xsd" version="2.0" start="2008-05-30T14:31:30.800-07:00" duration="0.000" hostaddr="128.125.230.95" hostname="intensity.usc.edu" pid="22782" uid="0" user="root" gid="0" group="root" umask="0022">
+  <mainjob start="1969-12-31T16:00:00.000-08:00" duration="0.000">
+    <usage utime="0.000" stime="0.000" minflt="0" majflt="0" nswap="0" nsignals="0" nvcsw="0" nivcsw="0"/>
+    <status raw="-1"><failure error="2">No such file or directory</failure></status>
+    <statcall error="2">
+      <!-- deferred flag: 0 -->
+      <file name="/bin/hostname2"/>
+    </statcall>
+    <argument-vector/>
+  </mainjob>
+  <cwd/>
+  <usage utime="0.000" stime="0.001" minflt="221" majflt="0" nswap="0" nsignals="0" nvcsw="1" nivcsw="1"/>
+  <uname system="linux" archmode="IA32" nodename="intensity.usc.edu" release="2.6.20-1.2307.fc5" machine="x86_64">#1 SMP Sun Mar 18 20:58:09 EDT 2007</uname>
+  <statcall error="0" id="stdin">
+    <!-- deferred flag: 0 -->
+    <file name="/dev/null"/>
+    <statinfo mode="020666" size="0" inode="1625" nlink="1" blksize="4096" blocks="0" mtime="2008-05-09T17:04:02-07:00" atime="2008-05-09T17:04:02-07:00" ctime="2008-05-09T17:04:02-07:00" uid="0" user="root" gid="0" group="root"/>
+  </statcall>
+  <statcall error="0" id="stdout">
+    <temporary name="/tmp/gs.out.IGcrpD" descriptor="3"/>
+    <statinfo mode="0100600" size="0" inode="26706817" nlink="1" blksize="4096" blocks="0" mtime="2008-05-30T14:31:30-07:00" atime="2008-05-30T14:31:30-07:00" ctime="2008-05-30T14:31:30-07:00" uid="0" user="root" gid="0" group="root"/>
+  </statcall>
+  <statcall error="0" id="stderr">
+    <temporary name="/tmp/gs.err.RXym49" descriptor="4"/>
+    <statinfo mode="0100600" size="0" inode="26706819" nlink="1" blksize="4096" blocks="0" mtime="2008-05-30T14:31:30-07:00" atime="2008-05-30T14:31:30-07:00" ctime="2008-05-30T14:31:30-07:00" uid="0" user="root" gid="0" group="root"/>
+  </statcall>
+  <statcall error="0" id="gridstart">
+    <!-- deferred flag: 0 -->
+    <file name="/usr/scec/pegasus/pegasus-2.1.0/bin/kickstart">7F454C46010101000000000000000000</file>
+    <statinfo mode="0100755" size="145152" inode="42598756" nlink="1" blksize="4096" blocks="296" mtime="2008-02-21T12:13:36-08:00" atime="2008-05-30T14:31:30-07:00" ctime="2008-02-25T14:02:38-08:00" uid="30101" gid="30101"/>
+  </statcall>
+  <statcall error="0" id="logfile">
+    <descriptor number="1"/>
+    <statinfo mode="0100644" size="0" inode="34111489" nlink="1" blksize="4096" blocks="0" mtime="2008-05-30T14:31:30-07:00" atime="2008-05-30T14:31:30-07:00" ctime="2008-05-30T14:31:30-07:00" uid="0" user="root" gid="0" group="root"/>
+  </statcall>
+  <statcall error="0" id="channel">
+    <fifo name="/tmp/gs.app.n2jiJG" descriptor="5" count="0" rsize="0" wsize="0"/>
+    <statinfo mode="010640" size="0" inode="26706825" nlink="1" blksize="4096" blocks="0" mtime="2008-05-30T14:31:30-07:00" atime="2008-05-30T14:31:30-07:00" ctime="2008-05-30T14:31:30-07:00" uid="0" user="root" gid="0" group="root"/>
+  </statcall>
+  <resource>
+    <soft id="RLIMIT_CPU">unlimited</soft>
+    <hard id="RLIMIT_CPU">unlimited</hard>
+    <soft id="RLIMIT_FSIZE">unlimited</soft>
+    <hard id="RLIMIT_FSIZE">unlimited</hard>
+    <soft id="RLIMIT_DATA">unlimited</soft>
+    <hard id="RLIMIT_DATA">unlimited</hard>
+    <soft id="RLIMIT_STACK">10485760</soft>
+    <hard id="RLIMIT_STACK">unlimited</hard>
+    <soft id="RLIMIT_CORE">0</soft>
+    <hard id="RLIMIT_CORE">unlimited</hard>
+    <soft id="RESOURCE_5">unlimited</soft>
+    <hard id="RESOURCE_5">unlimited</hard>
+    <soft id="RLIMIT_NPROC">69632</soft>
+    <hard id="RLIMIT_NPROC">69632</hard>
+    <soft id="RLIMIT_NOFILE">1024</soft>
+    <hard id="RLIMIT_NOFILE">1024</hard>
+    <soft id="RLIMIT_MEMLOCK">32768</soft>
+    <hard id="RLIMIT_MEMLOCK">32768</hard>
+    <soft id="RLIMIT_AS">unlimited</soft>
+    <hard id="RLIMIT_AS">unlimited</hard>
+    <soft id="RLIMIT_LOCKS">unlimited</soft>
+    <hard id="RLIMIT_LOCKS">unlimited</hard>
+    <soft id="RLIMIT_SIGPENDING">69632</soft>
+    <hard id="RLIMIT_SIGPENDING">69632</hard>
+    <soft id="RLIMIT_MSGQUEUE">819200</soft>
+    <hard id="RLIMIT_MSGQUEUE">819200</hard>
+    <soft id="RLIMIT_NICE">0</soft>
+    <hard id="RLIMIT_NICE">0</hard>
+    <soft id="RLIMIT_RTPRIO">0</soft>
+    <hard id="RLIMIT_RTPRIO">0</hard>
+  </resource>
+</invocation>
