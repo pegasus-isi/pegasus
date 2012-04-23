@@ -1,14 +1,14 @@
 #!/bin/bash
 
-export PEGASUS_BIN_DIR=`pegasus-config --bin`
-if [ "x$PEGASUS_BIN_DIR" = "x" ]; then
-    echo "Please make sure pegasus-config is in your path"
-    exit 1
-fi
+cd `dirname $0`
+cwd=`pwd`
+tests=`dirname $cwd`
+home=`dirname $tests`
+bin=$home/bin
 
 function exitcode {
 	echo "Testing $2..."
-	result=`$PEGASUS_BIN_DIR/pegasus-exitcode --no-rename $2 2>&1`
+	result=`$bin/pegasus-exitcode --no-rename $2 2>&1`
 	rc=$?
 	if [ $rc -ne $1 ]; then
 		echo "$result" >&2
