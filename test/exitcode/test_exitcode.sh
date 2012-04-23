@@ -31,3 +31,4 @@ exitcode 1 cluster-error.out
 exitcode 1 nonzero.out
 exitcode 1 signalled.out
 exitcode 0 seqexec-ok.out
+exitcode 1 largecode.out
