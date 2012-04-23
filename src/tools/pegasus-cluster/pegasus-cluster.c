@@ -37,8 +37,13 @@ static const char* RCS_ID =
 "$Id$";
 
 #ifndef APPLICATION_NAME
-#define APPLICATION_NAME "seqexec"
+#define APPLICATION_NAME "pegasus-cluster"
 #endif /* APPLICATION_NAME */
+
+#ifndef RECORD_PREFIX
+#define RECORD_PREFIX "cluster"
+#endif /* RECORD_PREFIX */
+
 
 extern char *optarg;
 extern int optind, opterr, optopt;
@@ -269,7 +274,7 @@ wait_for_child( Jobs* jobs, int* status )
 
     /* 20110419 PM-364: new requirement */
     showout( "[%s-task id=%lu, start=\"%s\", duration=%.3f, status=%d, "
-	     "line=%lu, pid=%d, app=\"%s\"]\n", APPLICATION_NAME,
+	     "line=%lu, pid=%d, app=\"%s\"]\n", RECORD_PREFIX,
 	     j->count,
 	     iso2date( j->start, date, sizeof(date) ),
 	     (final - j->start), 
@@ -538,7 +543,7 @@ main( int argc, char* argv[], char* envp[] )
   diff = now(NULL) - start;
   showout( "[%s-summary stat=\"%s\", lines=%lu, tasks=%lu, succeeded=%lu, failed=%lu, "
 	   "extra=%lu, duration=%.3f, start=\"%s\", pid=%d, app=\"%s\"]\n",
-	   APPLICATION_NAME,
+	   RECORD_PREFIX,
 	   exitstatus ? "fail" : "ok",
 	   lineno, total, total-failure, failure, extra,
 	   diff, iso2date(start,line,sizeof(line)),

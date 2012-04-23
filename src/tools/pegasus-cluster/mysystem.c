@@ -151,7 +151,7 @@ mysystem( char* argv[], char* envp[], const char* special )
 
   /* 20110419 PM-364: new requirement */
   diff = now(&then) - start;
-  showout( "[seqexec-task id=%s, start=\"%s\", duration=%.3f, status=%d, "
+  showout( "[cluster-task id=%s, start=\"%s\", duration=%.3f, status=%d, "
 	   "pid=%d, app=\"%s\"]\n",
 	   special ? special : "(unknown)", 
 	   iso2date( start, date, sizeof(date) ),
