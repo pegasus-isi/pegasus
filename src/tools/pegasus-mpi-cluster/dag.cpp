@@ -55,6 +55,8 @@ DAG::DAG(const std::string &dagfile, const std::string &rescuefile, const bool l
     }
     
     if (this->lock) {
+        log_debug("Locking DAG file...");
+        
         int dagfd = fileno(this->dag);
         struct flock exclusive;
         
@@ -82,6 +84,25 @@ DAG::DAG(const std::string &dagfile, const std::string &rescuefile, const bool l
 }
 
 DAG::~DAG() {
+    
+    if (this->lock) {
+        log_debug("Unlocking DAG file...");
+        
+        int dagfd = fileno(this->dag);
+        struct flock clear;
+        
+        clear.l_start = 0;
+        clear.l_len = 0;
+        clear.l_type = F_UNLCK;
+        clear.l_whence = SEEK_SET;
+        clear.l_pid = getpid();
+        
+        int locked = fcntl(dagfd, F_SETLK, &clear);
+        if (locked < 0) {
+            log_error("Error unlocking DAG file: %s", strerror(errno));
+        }
+    }
+    
     fclose(this->dag);
     
     // Delete all tasks
