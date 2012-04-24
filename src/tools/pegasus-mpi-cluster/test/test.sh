@@ -37,10 +37,10 @@ function test_one_worker_required {
 
 # Make sure it will run the simple diamond dag
 function test_run_diamond {
-	output=$(mpiexec -n 2 $PMC -s test/diamond.dag 2>/dev/null)
+	output=$(mpiexec -n 2 $PMC -s test/diamond.dag 2>&1)
 	RC=$?
 	
-	rm test/diamond.dag.rescue.???
+	rm -f test/diamond.dag.rescue.???
 	
 	if [ $RC -ne 0 ]; then
 		echo "$output"
@@ -67,7 +67,7 @@ function test_run_diamond {
 function test_out_err {
 	mpiexec -n 2 $PMC -s test/diamond.dag -o /dev/null -e /dev/null 2>/dev/null
 	
-	rm test/diamond.dag.rescue.???
+	rm -f test/diamond.dag.rescue.???
 	
 	if [ $RC -ne 0 ]; then
 		return 1

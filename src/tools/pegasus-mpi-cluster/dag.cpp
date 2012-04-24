@@ -3,6 +3,7 @@
 #include "string.h"
 #include "stdio.h"
 #include "unistd.h"
+#include "fcntl.h"
 
 #include "strlib.h"
 #include "dag.h"
@@ -45,14 +46,44 @@ void Task::set_extra_transformation(const std::string &extra_transformation) {
     this->extra_transformation = extra_transformation;
 }
 
-DAG::DAG(const std::string &dagfile, const std::string &rescuefile) {
-    this->read_dag(dagfile);
+DAG::DAG(const std::string &dagfile, const std::string &rescuefile, const bool lock) {
+    this->lock = lock;
+    
+    this->dag = fopen(dagfile.c_str(), "r+");
+    if (this->dag == NULL) {
+        myfailures("Unable to open DAG file: %s", dagfile.c_str());
+    }
+    
+    if (this->lock) {
+        int dagfd = fileno(this->dag);
+        struct flock exclusive;
+        
+        exclusive.l_start = 0;
+        exclusive.l_len = 0;
+        exclusive.l_type = F_WRLCK;
+        exclusive.l_whence = SEEK_SET;
+        exclusive.l_pid = getpid();
+        
+        int locked = fcntl(dagfd, F_SETLK, &exclusive);
+        if (locked < 0) {
+            if (errno == EAGAIN || errno == EACCES) {
+                myfailures("DAG file is already locked by another process: %s", dagfile.c_str());
+            } else {
+                myfailures("Unable to lock DAG file: %s", dagfile.c_str());
+            }
+        }
+    }
+    
+    this->read_dag();
+    
     if (!rescuefile.empty()) {
         this->read_rescue(rescuefile);
     }
 }
 
 DAG::~DAG() {
+    fclose(this->dag);
+    
     // Delete all tasks
     for (iterator i = this->begin(); i != this->end(); i++) {
         delete (*i).second;
@@ -92,19 +123,14 @@ void DAG::add_edge(const std::string &parent, const std::string &child) {
     c->parents.push_back(p);
 }
 
-void DAG::read_dag(const std::string &filename) {
+void DAG::read_dag() {
     const char *DELIM = " \t\n\r";
     
-    FILE *dagfile = fopen(filename.c_str(), "r");
-    if (dagfile == NULL) {
-        myfailures("Unable to open DAG file: %s", filename.c_str());
-    }
-   
     std::string extra_id = "";
     std::string extra_transformation = "";
     std::string extra_name = ""; 
     char line[MAX_LINE];
-    while (fgets(line, MAX_LINE, dagfile) != NULL) {
+    while (fgets(line, MAX_LINE, this->dag) != NULL) {
         std::string rec(line);
         trim(rec);
         
@@ -179,9 +205,6 @@ void DAG::read_dag(const std::string &filename) {
             myfailure("Invalid DAG record: %s", line);
         }
     }
-    
-    
-    fclose(dagfile);
 }
 
 void DAG::read_rescue(const std::string &filename) {

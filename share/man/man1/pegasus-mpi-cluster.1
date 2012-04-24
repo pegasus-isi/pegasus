@@ -2,12 +2,12 @@
 .\"     Title: pegasus-mpi-cluster
 .\"    Author: [see the "Author" section]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 04/17/2012
+.\"      Date: 04/23/2012
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "PEGASUS\-MPI\-CLUSTE" "1" "04/17/2012" "\ \&" "\ \&"
+.TH "PEGASUS\-MPI\-CLUSTE" "1" "04/23/2012" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -33,7 +33,7 @@ pegasus-mpi-cluster \- a tool for running computational workflows expressed as D
 .sp
 .nf
 \fBpegasus\-mpi\-cluster\fR [\fB\-h\fR][\fB\-v\fR][\fB\-q\fR][\fB\-s\fR][\fB\-o\fR \fIpath\fR][\fB\-e\fR \fIpath\fR]
-                    [\fB\-m\fR \fIM\fR][\fB\-t\fR \fIT\fR] \fIworkflow\&.dag\fR
+                    [\fB\-m\fR \fIM\fR][\fB\-t\fR \fIT\fR][\fB\-n\fR] \fIworkflow\&.dag\fR
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -125,6 +125,11 @@ times and all
 attempts result in a non\-zero exitcode\&. The value of
 \fIT\fR
 must be at least 1\&. The default is 1\&.
+.RE
+.PP
+\fB\-n\fR, \fB\-\-nolock\fR
+.RS 4
+Do not lock DAGFILE\&. By default, pegasus\-mpi\-cluster will attempt to acquire an exclusive lock on DAGFILE to prevent multiple MPI jobs from running the same DAG at the same time\&. If this option is specified, then the lock will not be acquired\&.
 .RE
 .SH "DAG FILES"
 .sp

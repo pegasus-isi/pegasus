@@ -30,16 +30,18 @@ public:
 };
 
 class DAG {
+    FILE *dag;
     std::map<std::string, Task *> tasks;
-
-    void read_dag(const std::string &filename);
+    bool lock;
+    
+    void read_dag();
     void read_rescue(const std::string &filename);
     void add_task(Task *task);
     void add_edge(const std::string &parent, const std::string &child);
 public:
     typedef std::map<std::string, Task *>::iterator iterator;
 
-    DAG(const std::string &dagfile, const std::string &rescuefile = "");
+    DAG(const std::string &dagfile, const std::string &rescuefile = "", const bool lock = true);
     ~DAG();
 
     bool has_task(const std::string &name) const;

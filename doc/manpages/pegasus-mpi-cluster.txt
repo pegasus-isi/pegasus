@@ -13,7 +13,7 @@ Synopsis
 --------
 [verse]
 *pegasus-mpi-cluster* [*-h*][*-v*][*-q*][*-s*][*-o* 'path'][*-e* 'path'] 
-                    [*-m* 'M'][*-t* 'T'] 'workflow.dag'
+                    [*-m* 'M'][*-t* 'T'][*-n*] 'workflow.dag'
 
 
 Description
@@ -112,6 +112,13 @@ Options
     *-m* option. A task is only considered failed if it is tried 'T' times
     and all 'T' attempts result in a non-zero exitcode. The value of 'T' must 
     be at least 1. The default is 1.
+
+*-n*::
+*--nolock*::
+    Do not lock DAGFILE. By default, pegasus-mpi-cluster will attempt to acquire
+    an exclusive lock on DAGFILE to prevent multiple MPI jobs from running the same
+    DAG at the same time. If this option is specified, then the lock will not be
+    acquired.
 
 
 [[DAG_FILES]]
