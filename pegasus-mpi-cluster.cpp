@@ -28,7 +28,8 @@ void usage() {
             "   -e|--stderr PATH     Path to stderr file for tasks\n"
             "   -s|--skip-rescue     Ignore existing rescue file (still creates one)\n"
             "   -m|--max-failures N  Stop submitting tasks after N tasks have failed\n"
-            "   -t|--tries N         Try tasks N times before marking them failed\n",
+            "   -t|--tries N         Try tasks N times before marking them failed\n"
+            "   -n|--nolock          Do not try to lock DAGFILE",
             program
         );
     }
@@ -87,6 +88,7 @@ int mpidag(int argc, char *argv[]) {
     bool skiprescue = false;
     int max_failures = 0;
     int tries = 1;
+    bool lock = true;
     
     while (flags.size() > 0) {
         std::string flag = flags.front();
@@ -151,6 +153,8 @@ int mpidag(int argc, char *argv[]) {
                 fprintf(stderr, "N for -t/--tries must be >= 1\n");
                 return 1;
             }
+        } else if (flag == "-n" || flag == "--nolock") {
+            lock = false;
         } else if (flag[0] == '-') {
             if (rank == 0) {
                 fprintf(stderr, "Unrecognized argument: %s\n", flag.c_str());
@@ -215,7 +219,8 @@ int mpidag(int argc, char *argv[]) {
         log_debug("Using old rescue file: %s", oldrescue.c_str());
         log_debug("Using new rescue file: %s", newrescue.c_str());
         
-        DAG dag(dagfile, oldrescue);
+        DAG dag(dagfile, oldrescue, lock);
+        
         Engine engine(dag, newrescue, max_failures, tries);
         
         return Master(program, engine, dag, dagfile, outfile, errfile).run();
