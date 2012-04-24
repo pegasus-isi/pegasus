@@ -75,7 +75,7 @@ cat >sites.xml <<EOF
         <head-fs>
             <scratch>
                 <shared>
-                    <file-server protocol="gsiftp" url="gsiftp://ccg-data.isi.edu" mount-point="/nfs/ccg4/scratch-6-months-purge"/>
+                    <file-server protocol="gsiftp" url="gsiftp://obelix.isi.edu" mount-point="/nfs/ccg4/scratch-6-months-purge"/>
                     <internal-mount-point mount-point="/nfs/ccg4/scratch-6-months-purge"/>
                 </shared>
             </scratch>
