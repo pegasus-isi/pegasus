@@ -6,27 +6,28 @@ ifndef ${libdir}
 libdir = ${prefix}/lib
 endif
 
+PySQLite=pysqlite-2.6.3
 BOTO=boto-2.0b3-24047c8
-
+SQLAlchemy=SQLAlchemy-0.7.6
 all: ${libdir}/python/pysqlite2 ${libdir}/python/sqlalchemy ${libdir}/python/boto
 
 ${libdir}/python/pysqlite2:
-	@rm -rf pysqlite-2.6.3
-	tar xzf pysqlite-2.6.3.tar.gz
-	(cd pysqlite-2.6.3 && \
+	@rm -rf $(PySQLite)
+	tar xzf $(PySQLite).tar.gz
+	(cd $(PySQLite) && \
 	  python setup.py build_static && \
 	  cp -R build/lib*/pysqlite2 ${libdir}/python/ \
 	)
-	@rm -rf pysqlite-2.6.3
+	@rm -rf $(PySQLite)
 
 ${libdir}/python/sqlalchemy:
-	@rm -rf SQLAlchemy-0.6.4
-	tar xzf SQLAlchemy-0.6.4.tar.gz
-	(cd SQLAlchemy-0.6.4 && \
+	@rm -rf $(SQLAlchemy)
+	tar xzf $(SQLAlchemy).tar.gz
+	(cd $(SQLAlchemy) && \
 	  python setup.py build && \
 	  cp -R build/lib*/sqlalchemy ${libdir}/python/ \
 	)
-	@rm -rf SQLAlchemy-0.6.4
+	@rm -rf $(SQLAlchemy)
 
 ${libdir}/python/boto:
 	@rm -rf $(BOTO)
@@ -40,6 +41,6 @@ ${libdir}/python/boto:
 	
 clean:
 	rm -rf touch.pysqlite pysqlite-2.6.0
-	rm -rf touch.sqlalchemy SQLAlchemy-0.6.4
+	rm -rf touch.sqlalchemy $(SQLAlchemy)
 	rm -rf touch.boto $(BOTO) .boto*
 
