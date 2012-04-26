@@ -152,7 +152,7 @@ Methods listed in order of query list on wiki.
 
 https://confluence.pegasus.isi.edu/display/pegasus/Pegasus+Statistics+Python+Version+Modified
 """
-__rcsid__ = "$Id: stampede_statistics.py 31115 2012-03-27 19:35:06Z mgoode $"
+__rcsid__ = "$Id: stampede_statistics.py 31499 2012-04-25 19:48:35Z mgoode $"
 __author__ = "Monte Goode"
 
 from netlogger.analysis.modules._base import SQLAlchemyInit
@@ -522,6 +522,7 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         w = orm.aliased(Workflow, name='w')
         j = orm.aliased(Job, name='j')
         ji = orm.aliased(JobInstance, name='ji')
+        tk = orm.aliased(Task, name='tk')
 
         sq_1 = self.session.query(w.wf_id, 
                 j.job_id,
@@ -535,10 +536,14 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         else:
             sq_1 = sq_1.filter(w.wf_id == self._wfs[0])
         sq_1 = sq_1.group_by(j.job_id)
+        if self._get_job_filter(j) is not None:
+            sq_1 = sq_1.filter(self._get_job_filter(j))
         sq_1 = sq_1.subquery('t')
 
         sq_2 = self.session.query(sq_1.c.wf_id, func.count(Invocation.exitcode).label('count'))
         sq_2 = sq_2.select_from(orm.join(sq_1, Invocation, sq_1.c.jiid == Invocation.job_instance_id))
+        #sq_2 = sq_2.join(tk, tk.abs_task_id == Invocation.abs_task_id)
+        #sq_2 = sq_2.filter(tk.type_desc != 'dax')
         sq_2 = sq_2.filter(sq_1.c.jss == sq_1.c.maxjss)
         sq_2 = sq_2.filter(Invocation.abs_task_id != None)
         if success:
