@@ -39,7 +39,7 @@ def usage(parser):
     print "   PEGASUS_BIN_DIR"
     print "   PEGASUS_SUBMIT_DIR"
     print "   PEGASUS_EVENT"
-    print "   PEGASUS_EVENT_TIMESTAMP"
+    print "   PEGASUS_EVENT_TIMESTAMP_ISO"
     print "   PEGASUS_JOBID"
     print "   PEGASUS_STATUS (only for end events)"
     print ""
