@@ -61,14 +61,12 @@ prog_base = os.path.split(sys.argv[0])[1]
 
 # Use pegasus-config to find our lib path
 bin_dir = os.path.normpath(os.path.join(os.path.dirname(sys.argv[0])))
-pegasus_config = os.path.join(bin_dir, "pegasus-config") + " --noeoln --python"
-lib_dir = subprocess.Popen(pegasus_config, stdout=subprocess.PIPE, shell=True).communicate()[0]
-pegasus_config = os.path.join(bin_dir, "pegasus-config") + " --noeoln --python-externals"
-lib_ext_dir = subprocess.Popen(pegasus_config, stdout=subprocess.PIPE, shell=True).communicate()[0]
+pegasus_config = os.path.join(bin_dir, "pegasus-config") + " --python-dump"
+config = subprocess.Popen(pegasus_config, stdout=subprocess.PIPE, shell=True).communicate()[0]
+exec config
 
-# Insert this directory in our search path
-os.sys.path.insert(0, lib_ext_dir)
-os.sys.path.insert(0, lib_dir)
+# also need the python externals dir
+os.sys.path.insert(0, pegasus_python_externals_dir)
 
 import Pegasus.common
 from Pegasus.tools import utils
@@ -81,6 +79,16 @@ from Pegasus.monitoring import socket_interface
 # Add SEEK_CUR to os if Python version < 2.5
 if sys.version_info < (2, 5):
     os.SEEK_CUR = 1
+
+# set up the environment - this is to control and provide a sane environment
+# when calling out to sub programs - for example notification scripts
+os.environ['PEGASUS_BIN_DIR'] = pegasus_bin_dir
+os.environ['PEGASUS_CONF_DIR'] = pegasus_conf_dir
+os.environ['PEGASUS_JAVA_DIR'] =  pegasus_java_dir
+os.environ['PEGASUS_PERL_DIR'] = pegasus_perl_dir
+os.environ['PEGASUS_PYTHON_DIR'] = pegasus_python_dir
+os.environ['PEGASUS_SHARE_DIR'] = pegasus_share_dir
+os.environ['PEGASUS_SCHEMA_DIR'] = pegasus_schema_dir
 
 # Compile our regular expressions
 
