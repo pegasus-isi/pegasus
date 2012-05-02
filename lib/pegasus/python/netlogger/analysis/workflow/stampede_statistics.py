@@ -711,7 +711,7 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         sq_3 = sq_3.filter(Jobstate.state == 'EXECUTE')
         sq_3 = sq_3.subquery()
         
-        sq_4 = self.session.query(Jobstate.timestamp)
+        sq_4 = self.session.query(func.min(Jobstate.timestamp))
         sq_4 = sq_4.filter(Jobstate.job_instance_id == JobInstance.job_instance_id).correlate(JobInstance)
         sq_4 = sq_4.filter(or_(Jobstate.state == 'GRID_SUBMIT', Jobstate.state == 'GLOBUS_SUBMIT'))
         sq_4 = sq_4.subquery()
