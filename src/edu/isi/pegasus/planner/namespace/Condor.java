@@ -173,6 +173,11 @@ public class Condor extends Namespace{
      * The condor universe key value for grid universe.
      */
     public static final String GRID_UNIVERSE = "grid";
+    
+    /**
+     * The condor key for using the local environment
+     */
+    public static final String GET_ENV_KEY = "getenv";
 
     /**
      * The condor universe key value for vanilla universe.
@@ -385,6 +390,7 @@ public class Condor extends Namespace{
      *                    it's planning strategy
      * globusrsl        - not supported, rsl to populated through Globus namespace.
      * grid_type        - OK (like gt2, gt4, condor)
+     * getevn           - OK
      * log              - not supported, as it has to be same for the whole dag
      * notification     - OK
      * noop_job         - OK (used for synchronizing jobs in graph)
@@ -478,6 +484,9 @@ public class Condor extends Namespace{
 
             case 'g':
                 if (key.compareTo(GRID_JOB_TYPE_KEY) == 0){
+                    res = VALID_KEY;
+                }
+                else if ( key.compareTo(GET_ENV_KEY) == 0 ){
                     res = VALID_KEY;
                 }
                 else if (key.compareTo("globusscheduler") == 0 ||
