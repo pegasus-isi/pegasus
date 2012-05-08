@@ -44,6 +44,7 @@ import edu.isi.pegasus.planner.code.CodeGeneratorException;
 import edu.isi.pegasus.planner.code.GridStart;
 import edu.isi.pegasus.planner.code.GridStartFactory;
 import edu.isi.pegasus.planner.code.POSTScript;
+import edu.isi.pegasus.planner.code.generator.condor.SUBDAXGenerator;
 import edu.isi.pegasus.planner.namespace.Dagman;
 import edu.isi.pegasus.planner.partitioner.graph.Adapter;
 import edu.isi.pegasus.planner.partitioner.graph.Graph;
@@ -203,7 +204,12 @@ public class Shell extends Abstract {
         if( !job.getSiteHandle().equals( "local" ) ){
             throw new CodeGeneratorException( "Shell Code generator only works for jobs scheduled to site local" );
         }
-
+        if ( job.getJobType () == Job.DAX_JOB ) {
+            SUBDAXGenerator subdax = new SUBDAXGenerator ();
+            subdax.initialize ( mBag, dag, Adapter.convert( dag ), mWriteHandle );
+            subdax.generateCode ( job );
+        }
+        
 	CredentialHandlerFactory factory = new CredentialHandlerFactory();
 	factory.initialize( mBag );
 
@@ -292,7 +298,7 @@ public class Shell extends Abstract {
      */
     protected String generateCallToCheckExitcode( Job job,
                                                   String prefix ){
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
             sb.append( "check_exitcode" ).append( " " ).
                append(  job.getID() ).append( " " ).
                append(  prefix ).append( " " ).
@@ -312,13 +318,13 @@ public class Shell extends Abstract {
      */
     protected String generateCallToExecutePostScript( Job job,
                                                       String directory ){
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         
         //gridstart modules right now store the executable
         //and arguments as condor profiles. Should be fixed.
         //This setting should happen only in Condor Generator
         String executable = (String) job.dagmanVariables.get( Dagman.POST_SCRIPT_KEY );
-        StringBuffer args = new StringBuffer();
+        StringBuilder args = new StringBuilder();
         args.append( (String)job.dagmanVariables.get( Dagman.POST_SCRIPT_ARGUMENTS_KEY ) ).
              append( " " ).append( (String)job.dagmanVariables.get( Dagman.OUTPUT_KEY)  ); 
         
@@ -356,7 +362,7 @@ public class Shell extends Abstract {
     protected String generateCallToExecuteJob( Job job,
                                                String scratchDirectory,
                                                String submitDirectory ){
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         
         //gridstart modules right now store the executable
         //and arguments as condor profiles. Should be fixed.
@@ -366,9 +372,10 @@ public class Shell extends Abstract {
         String arguments = (String)job.condorVariables.get( Condor.ARGUMENTS_KEY );
  */
         String executable = job.getRemoteExecutable();
-        String arguments = job.getArguments();
+        String arguments = job.getJobType() == Job.DAX_JOB ? job.getPreScriptPath() + job.getPreScriptArguments()+ " --submit" : job.getArguments();
         arguments = ( arguments == null ) ? "" : arguments;
-
+        //arguments = job.getJobType() == Job.DAX_JOB ? arguments + " --submit" : arguments;
+        
         String directory = job.runInWorkDirectory() ? scratchDirectory : submitDirectory;
 
         //generate the call to execute job function
@@ -419,7 +426,7 @@ public class Shell extends Abstract {
      */
     protected String getScriptHeader( String submitDirectory ){
 
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         sb.append( "#!/bin/bash" ).append( "\n" ).
            append( "#" ).append( "\n" ).
            append( "# executes the workflow in shell mode " ).append( "\n" ).
@@ -458,7 +465,7 @@ public class Shell extends Abstract {
      * @return the path on the submit host.
      */
     protected String getSubmitHostPathToShellRunnerFunctions() {
-        StringBuffer path = new StringBuffer();
+        StringBuilder path = new StringBuilder();
 
         //first get the path to the share directory
         File share = mProps.getSharedDir();
@@ -480,7 +487,7 @@ public class Shell extends Abstract {
      */
     protected String getScriptFooter(){
 
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         sb.append( "echo \"INTERNAL *** SHELL_SCRIPT_FINISHED 0 ***\" >> $JOBSTATE_LOG" );
 
         return sb.toString();
@@ -494,7 +501,7 @@ public class Shell extends Abstract {
      * @return path
      */
     protected String getPathToShellScript(ADag dag) {
-        StringBuffer script = new StringBuffer();
+        StringBuilder script = new StringBuilder();
         script.append( this.mSubmitFileDir ).append( File.separator ).
                append( dag.dagInfo.nameOfADag ).append( ".sh" );
         return script.toString();
