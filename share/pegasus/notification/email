@@ -39,7 +39,7 @@ def usage(parser):
     print "   PEGASUS_BIN_DIR"
     print "   PEGASUS_SUBMIT_DIR"
     print "   PEGASUS_EVENT"
-    print "   PEGASUS_EVENT_TIMESTAMP"
+    print "   PEGASUS_EVENT_TIMESTAMP_ISO"
     print "   PEGASUS_JOBID"
     print "   PEGASUS_STATUS (only for end events)"
     print ""
@@ -88,8 +88,8 @@ def myexit(rc):
 
 # Configure command line option parser
 parser = optparse.OptionParser()
-parser.add_option("-t", "--to", action = "store", dest = "to_address",
-                  help = "The To: email address. Defines the recipient for the notification.")
+parser.add_option("-t", "--to", action = "append", dest = "to_address",
+                  help = "The To: email address. Defines the recipient(s) for the notification.")
 parser.add_option("-f", "--from", action = "store", dest = "from_address",
                   help = "The From: email address. Defaults to the required To: address.")
 parser.add_option("-r", "--report", action = "store", dest = "report",
@@ -101,8 +101,8 @@ parser.add_option("-r", "--report", action = "store", dest = "report",
 if options.to_address == None:
     print >> sys.stderr, "You have to provide a To: email address"
     usage(parser)
-to_address = options.to_address
-from_address = to_address
+to_address = ','.join(options.to_address)
+from_address = options.to_address[0]
 if options.from_address != None:
     from_address = options.from_address
 report = "pegasus-status"
