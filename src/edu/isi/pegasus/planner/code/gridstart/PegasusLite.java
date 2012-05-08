@@ -48,10 +48,12 @@ import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
 
+import edu.isi.pegasus.planner.catalog.transformation.Mapper;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import edu.isi.pegasus.planner.classes.FileTransfer;
 import edu.isi.pegasus.planner.classes.NameValue;
+import edu.isi.pegasus.planner.refiner.DeployWorkerPackage;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -289,6 +291,9 @@ public class PegasusLite implements GridStart {
                 mWorkerPackageMap = new HashMap<String,String>();
             }
         }
+        else{
+            mWorkerPackageMap = new HashMap<String,String>();
+        }
 
         mChmodOnExecutionSiteMap = new HashMap<String,String>();
 
@@ -523,7 +528,30 @@ public class PegasusLite implements GridStart {
                     job.condorVariables.addIPFileForTransfer(location);
                 }
                 else{
-                    mLogger.log( "No worker package staging for job " + job.getSiteHandle() +
+                    mLogger.log( "No worker package staging for job " + job.getID() +
+                                 " PEGASUS_HOME specified in the site catalog for site " + job.getSiteHandle(),
+                                 LogManager.DEBUG_MESSAGE_LEVEL );
+                }
+            }
+            else{
+                //we don't want pegasus to add a stage worker job.
+                //but transfer directly if required.
+                if( mSiteStore.getEnvironmentVariable( job.getSiteHandle(), "PEGASUS_HOME" ) == null ){
+                    //yes we need to add from the location in the worker package map
+                    String location = this.mWorkerPackageMap.get( job.getSiteHandle() );
+
+                    if( !mWorkerPackageMap.containsKey( job.getSiteHandle()) ){
+                        location = retrieveLocationForWorkerPackageFromTC( job.getSiteHandle() );
+                        //null can be populated as value
+                        this.mWorkerPackageMap.put( job.getSiteHandle(), location );
+                    }
+                    //add only if location is not null
+                    if( location != null ){
+                        job.condorVariables.addIPFileForTransfer( location );
+                    }
+                }
+                else{
+                    mLogger.log( "No worker package staging for job " + job.getID()  +
                                  " PEGASUS_HOME specified in the site catalog for site " + job.getSiteHandle(),
                                  LogManager.DEBUG_MESSAGE_LEVEL );
                 }
@@ -1132,5 +1160,49 @@ public class PegasusLite implements GridStart {
             job.addCredentialType( ft.getSourceURL().getValue() );
             job.addCredentialType( ft.getDestURL().getValue() );
         }
+    }
+
+    /**
+     * Retrieves the location for the pegasus worker package from the TC for a site
+     * 
+     * 
+     * @return the path to worker package tar file on the site, else null if unable
+     *         to determine
+     */
+    protected String retrieveLocationForWorkerPackageFromTC( String site ) {
+        String location = null;
+        Mapper m = mBag.getHandleToTransformationMapper();
+
+        if( !m.isStageableMapper() ){
+            //we want to load a stageable mapper
+            mLogger.log( "User set mapper is not a stageable mapper. Loading a stageable mapper ", LogManager.DEBUG_MESSAGE_LEVEL );
+            m = Mapper.loadTCMapper( "Staged", mBag );
+        }
+
+        //check if there is a valid entry for worker package
+        List entries, selectedEntries = null;
+        TransformationCatalogEntry entry = null;
+        try{
+            entries = m.getTCList( DeployWorkerPackage.TRANSFORMATION_NAMESPACE,
+                                   DeployWorkerPackage.TRANSFORMATION_NAME,
+                                   DeployWorkerPackage.TRANSFORMATION_VERSION,
+                                   site );
+
+            if( entries != null && !entries.isEmpty() ){
+                entry = (TransformationCatalogEntry)entries.get( 0 );
+            }
+
+        }catch( Exception e ){
+            mLogger.log( "Unable to figure out worker package location for site " + site ,
+                          LogManager.DEBUG_MESSAGE_LEVEL );
+
+        }
+        if( entry != null ){
+            location = entry.getPhysicalTransformation();
+            if( location.startsWith( "file:/") ){
+                location = location.substring( 6 );
+            }
+        }
+        return location;
     }
 }
