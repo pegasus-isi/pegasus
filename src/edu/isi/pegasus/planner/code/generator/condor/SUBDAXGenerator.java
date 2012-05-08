@@ -494,12 +494,12 @@ public class SUBDAXGenerator{
         StringBuffer log = new StringBuffer();
         log.append( mPegasusPlanOptions.getSubmitDirectory() ).append( File.separator ).
             append( job.getName() ).append( ".pre.log" );
-        String prescript = constructPegasusPlanPrescript( job, 
+        Job prescript = constructPegasusPlanPrescript( job, 
                                                           options,
                                                           mDAG.getRootWorkflowUUID(), 
                                                           propertiesFile,
                                                           log.toString() );
-        job.setPreScript( prescript );
+        //job.setPreScript( prescript );
         
         //determine the path to the dag file that will be constructed
         if( GENERATE_SUBDAG_KEYWORD ){
@@ -539,7 +539,7 @@ public class SUBDAXGenerator{
                                     basenamePrefix.toString()
                                   );
             //set the prescript
-            dagJob.setPreScript( prescript );
+            dagJob.setPreScript( job.getPreScriptPath(), job.getPreScriptArguments() );
             return dagJob;
         }
 
@@ -1037,12 +1037,12 @@ public class SUBDAXGenerator{
      * 
      * @return  the prescript
      */
-    public String constructPegasusPlanPrescript( Job job,
+    public Job constructPegasusPlanPrescript( Job job,
                                                  PlannerOptions options,
                                                  String rootUUID,
                                                  String properties,
                                                  String log ){
-        StringBuffer prescript = new StringBuffer();
+        //StringBuffer prescript = new StringBuffer();
 
     
         String site = job.getSiteHandle();
@@ -1113,9 +1113,9 @@ public class SUBDAXGenerator{
         //add the --dax option explicitly in the end
         arguments.append( " --dax " ).append( options.getDAX() );
 
-        prescript.append( script ).append( " " ).append( arguments );
-        
-        return prescript.toString();
+        //prescript.append( script ).append( " " ).append( arguments );
+        job.setPreScript( script.toString(), arguments.toString() );
+        return job;
     }
 
 
