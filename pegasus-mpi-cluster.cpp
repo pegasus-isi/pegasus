@@ -29,45 +29,17 @@ void usage() {
             "   -s|--skip-rescue     Ignore existing rescue file (still creates one)\n"
             "   -m|--max-failures N  Stop submitting tasks after N tasks have failed\n"
             "   -t|--tries N         Try tasks N times before marking them failed\n"
-            "   -n|--nolock          Do not try to lock DAGFILE",
+            "   -n|--nolock          Do not try to lock DAGFILE\n"
+            "   -r|--rescue PATH     Path to rescue file [default: DAGFILE.rescue]\n",
             program
         );
     }
 }
 
-bool file_exists(const std::string &filename) {
-    int readok = access(filename.c_str(), R_OK);
-    if (readok == 0) {
-        return true;
-    } else {
-        if (errno == ENOENT) {
-            // File does not exist
-            return false;
-        } else {
-            // It exists, but we can't access it
-            myfailures("Error accessing file %s", filename.c_str());
-        }
+void argerror(const std::string message) {
+    if (rank == 0) {
+        fprintf(stderr, "%s\n", message.c_str());
     }
-    
-    myfailure("Unreachable");
-}
-
-int next_retry_file(std::string &name) {
-    std::string base = name;
-    int i;
-    for (i=0; i<=100; i++) {
-        char rbuf[5];
-        snprintf(rbuf, 5, ".%03d", i);
-        name = base;
-        name += rbuf;
-        if (!file_exists(name)) {
-            break;
-        }
-    }
-    if (i >= 100) {
-        myfailure("Too many retry files: %s", name.c_str());
-    }
-    return i;
 }
 
 int mpidag(int argc, char *argv[]) {
@@ -89,6 +61,7 @@ int mpidag(int argc, char *argv[]) {
     int max_failures = 0;
     int tries = 1;
     bool lock = true;
+    std::string rescuefile = "";
     
     while (flags.size() > 0) {
         std::string flag = flags.front();
@@ -98,18 +71,14 @@ int mpidag(int argc, char *argv[]) {
         } else if (flag == "-o" || flag == "--stdout") {
             flags.pop_front();
             if (flags.size() == 0) {
-                if (rank == 0) {
-                    fprintf(stderr, "-o/--stdout requires PATH\n");
-                }
+                argerror("-o/--stdout requires PATH");
                 return 1;
             }
             outfile = flags.front();
         } else if (flag == "-e" || flag == "--stderr") {
             flags.pop_front();
             if (flags.size() == 0) {
-                if (rank == 0) {
-                    fprintf(stderr, "-e/--stderr requires PATH\n");
-                }
+                argerror("-e/--stderr requires PATH");
                 return 1;
             }
             errfile = flags.front();
@@ -122,43 +91,46 @@ int mpidag(int argc, char *argv[]) {
         } else if (flag == "-m" || flag == "--max-failures") {
             flags.pop_front();
             if (flags.size() == 0) {
-                if (rank == 0) {
-                    fprintf(stderr, "-m/--max-failures requires N\n");
-                }
+                argerror("-m/--max-failures requires N");
                 return 1;
             }
             std::string N = flags.front();
             if (!sscanf(N.c_str(), "%d", &max_failures)) {
-                fprintf(stderr, "N for -m/--max-failures is invalid\n");
+                argerror("N for -m/--max-failures is invalid");
                 return 1;
             }
             if (max_failures < 0) {
-                fprintf(stderr, "N for -m/--max-failures must be >= 0\n");
+                argerror("N for -m/--max-failures must be >= 0");
                 return 1;
             }
         } else if (flag == "-t" || flag == "--tries") {
             flags.pop_front();
             if (flags.size() == 0) {
-                if (rank == 0) {
-                    fprintf(stderr, "-t/--tries requires N\n");
-                }
+                argerror("-t/--tries requires N");
                 return 1;
             }
             std::string N = flags.front();
             if (!sscanf(N.c_str(), "%d", &tries)) {
-                fprintf(stderr, "N for -t/--tries is invalid\n");
+                argerror("N for -t/--tries is invalid");
                 return 1;
             }
             if (tries < 1) {
-                fprintf(stderr, "N for -t/--tries must be >= 1\n");
+                argerror("N for -t/--tries must be >= 1");
                 return 1;
             }
         } else if (flag == "-n" || flag == "--nolock") {
             lock = false;
-        } else if (flag[0] == '-') {
-            if (rank == 0) {
-                fprintf(stderr, "Unrecognized argument: %s\n", flag.c_str());
+        } else if (flag == "-r" || flag == "--rescue") {
+            flags.pop_front();
+            if (flags.size() == 0) {
+                argerror("-r/--rescue requires PATH");
+                return 1;
             }
+            rescuefile = flags.front();
+        } else if (flag[0] == '-') {
+            std::string message = "Unrecognized argument: ";
+            message += flag[0];
+            argerror(message);
             return 1;
         } else {
             args.push_back(flag);
@@ -172,18 +144,34 @@ int mpidag(int argc, char *argv[]) {
     }
     
     if (args.size() > 1) {
-        fprintf(stderr, "Invalid argument\n");
+        argerror("Invalid argument\n");
         return 1;
     }
     
     std::string dagfile = args.front();
     
+    // If no rescue file specified, use default
+    if (rescuefile == "") {
+        rescuefile = dagfile + ".rescue";
+    }
+    
+    std::string oldrescue = rescuefile;
+    std::string newrescue = rescuefile;
+    
+    if (skiprescue) {
+        // User does not want to read old rescue file
+        oldrescue = "";
+    }
+    
+    log_set_level(loglevel);
+    
+    log_debug("Using old rescue file: %s", oldrescue.c_str());
+    log_debug("Using new rescue file: %s", newrescue.c_str());
+    
     if (numprocs < 2) {
         fprintf(stderr, "At least one worker process is required\n");
         return 1;
     }
-    
-    log_set_level(loglevel);
     
     // Everything is pretty deterministic up until the processes reach
     // this point. Once we get here the different processes can diverge 
@@ -192,37 +180,8 @@ int mpidag(int argc, char *argv[]) {
     // and make sure MPI_Abort is called when something bad happens.
     
     if (rank == 0) {
-        
-        // IMPORTANT: The rank 0 process figures out the names
-        // of these files so that we don't have 1000 workers all
-        // slamming the file system with stat() calls to check if
-        // the out/err/rescue files exist. The master will figure
-        // it out here, and then broadcast it to the workers when
-        // it starts up.
-        
-        // Determine old and new rescue files
-        std::string rescuebase = dagfile;
-        rescuebase += ".rescue";
-        std::string oldrescue;
-        std::string newrescue = rescuebase;
-        int next = next_retry_file(newrescue);
-        if (next == 0 || skiprescue) {
-            // Either there is no old rescue file, or the
-            // user doesnt want to read it.
-            oldrescue = "";
-        } else {
-            char rbuf[5];
-            snprintf(rbuf, 5, ".%03d", next-1);
-            oldrescue = rescuebase;
-            oldrescue += rbuf;
-        }
-        log_debug("Using old rescue file: %s", oldrescue.c_str());
-        log_debug("Using new rescue file: %s", newrescue.c_str());
-        
         DAG dag(dagfile, oldrescue, lock);
-        
         Engine engine(dag, newrescue, max_failures, tries);
-        
         return Master(program, engine, dag, dagfile, outfile, errfile).run();
     } else {
         return Worker().run();
