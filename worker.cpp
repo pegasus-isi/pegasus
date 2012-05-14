@@ -60,11 +60,11 @@ int Worker::run() {
     while (1) {
         std::string name;
         std::string command;
-        std::string extra_id;
+        std::string pegasus_id;
         int shutdown;
         
         log_trace("Worker %d: Waiting for request", rank);
-        recv_request(name, command, extra_id, shutdown);
+        recv_request(name, command, pegasus_id, shutdown);
         log_trace("Worker %d: Got request", rank);
         
         if (shutdown) {
@@ -131,7 +131,7 @@ int Worker::run() {
         char date[32];
         iso2date(task_stime, date, sizeof(date));
         sprintf(buf, "[cluster-task id=%s, start=\"%s\", duration=%.3f, status=%d, app=\"%s\"]\n",
-                     extra_id.c_str(), date, task_runtime, exitcode, argv[0]);
+                     pegasus_id.c_str(), date, task_runtime, exitcode, argv[0]);
         write(out, buf, strlen(buf));
         
         send_response(name, exitcode);
@@ -139,7 +139,7 @@ int Worker::run() {
 
     close(out);
     close(err);
-
+    
     // Send total_runtime
     log_trace("Worker %d: Sending total runtime to master", rank);
     send_total_runtime(total_runtime);

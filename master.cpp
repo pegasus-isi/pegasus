@@ -31,7 +31,7 @@ Master::~Master() {
 
 void Master::submit_task(Task *task, int worker) {
     log_debug("Submitting task %s to worker %d", task->name.c_str(), worker);
-    send_request(task->name, task->command, task->extra_id, worker);
+    send_request(task->name, task->command, task->pegasus_id, worker);
     
     this->total_count++;
 }

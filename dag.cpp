@@ -37,14 +37,6 @@ bool Task::is_ready() {
     
     return true;
 }
-    
-void Task::set_extra_id(const std::string &extra_id) {
-    this->extra_id = extra_id;
-}
-
-void Task::set_extra_transformation(const std::string &extra_transformation) {
-    this->extra_transformation = extra_transformation;
-}
 
 DAG::DAG(const std::string &dagfile, const std::string &rescuefile, const bool lock) {
     this->lock = lock;
@@ -147,9 +139,9 @@ void DAG::add_edge(const std::string &parent, const std::string &child) {
 void DAG::read_dag() {
     const char *DELIM = " \t\n\r";
     
-    std::string extra_id = "";
-    std::string extra_transformation = "";
-    std::string extra_name = ""; 
+    std::string pegasus_id = "";
+    std::string pegasus_transformation = "";
+    std::string pegasus_name = ""; 
     char line[MAX_LINE];
     while (fgets(line, MAX_LINE, this->dag) != NULL) {
         std::string rec(line);
@@ -179,18 +171,18 @@ void DAG::read_dag() {
             }
             
             Task *t = new Task(name, cmd);
-            if (extra_id.length() > 0) {
-                if (extra_name != name) {
+            if (pegasus_id.length() > 0) {
+                if (pegasus_name != name) {
                     myfailure("Name from comment do not match task: %s %s\n",
-                            extra_name.c_str(), name.c_str());
+                            pegasus_name.c_str(), name.c_str());
                 }
-                t->set_extra_id(extra_id);
-                t->set_extra_transformation(extra_transformation);
+                t->pegasus_id = pegasus_id;
+                t->pegasus_transformation = pegasus_transformation;
 
                 // reset the extra parameters
-                extra_id = "";
-                extra_transformation = "";
-                extra_name = "";
+                pegasus_id = "";
+                pegasus_transformation = "";
+                pegasus_name = "";
             }
             this->add_task(t);
         } else if (rec.find("EDGE", 0, 4) == 0) {
@@ -217,9 +209,9 @@ void DAG::read_dag() {
                 myfailure("Invalid #@ record: %s\n", line);
             }
 
-            extra_id = v[1];
-            extra_transformation = v[2];
-            extra_name = v[3];
+            pegasus_id = v[1];
+            pegasus_transformation = v[2];
+            pegasus_name = v[3];
         } else if (rec[0] == '#') {
             // Comments
         } else {

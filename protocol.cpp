@@ -23,17 +23,17 @@ void recv_stdio_paths(std::string &outfile, std::string &errfile) {
     errfile = buf+strlen(buf)+1;
 }
 
-void send_request(const std::string &name, const std::string &command, const std::string &extra_id, int worker) {
+void send_request(const std::string &name, const std::string &command, const std::string &pegasus_id, int worker) {
     // Pack message
     strcpy(buf, name.c_str());
     strcpy(buf+name.size()+1, command.c_str());
-    strcpy(buf+name.size()+command.size()+2, extra_id.c_str());
+    strcpy(buf+name.size()+command.size()+2, pegasus_id.c_str());
     
     // Send message
-    MPI_Send(buf, name.size()+command.size()+extra_id.size()+3, MPI_CHAR, worker, TAG_COMMAND, MPI_COMM_WORLD);
+    MPI_Send(buf, name.size()+command.size()+pegasus_id.size()+3, MPI_CHAR, worker, TAG_COMMAND, MPI_COMM_WORLD);
 }
 
-void recv_request(std::string &name, std::string &command, std::string &extra_id, int &shutdown) {
+void recv_request(std::string &name, std::string &command, std::string &pegasus_id, int &shutdown) {
     // Recv message
     MPI_Status status;
     MPI_Recv(buf, MAX_MESSAGE, MPI_CHAR, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
@@ -48,7 +48,7 @@ void recv_request(std::string &name, std::string &command, std::string &extra_id
     // Unpack message
     name = buf;
     command = buf+name.size()+1;
-    extra_id = buf+name.size()+command.size()+2;
+    pegasus_id = buf+name.size()+command.size()+2;
 }
 
 void send_shutdown(int worker) {
