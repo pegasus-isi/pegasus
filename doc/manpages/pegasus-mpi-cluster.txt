@@ -13,7 +13,7 @@ Synopsis
 --------
 [verse]
 *pegasus-mpi-cluster* [*-h*][*-v*][*-q*][*-s*][*-o* 'path'][*-e* 'path'] 
-                    [*-m* 'M'][*-t* 'T'][*-n*] 'workflow.dag'
+                    [*-m* 'M'][*-t* 'T'][*-n*][*-r*] 'workflow.dag'
 
 
 Description
@@ -115,11 +115,17 @@ Options
 
 *-n*::
 *--nolock*::
-    Do not lock DAGFILE. By default, pegasus-mpi-cluster will attempt to acquire
+    Do not lock DAGFILE. By default, *pegasus-mpi-cluster* will attempt to acquire
     an exclusive lock on DAGFILE to prevent multiple MPI jobs from running the same
     DAG at the same time. If this option is specified, then the lock will not be
     acquired.
 
+*-r*::
+*--rescue* 'path'::
+    Path to rescue log. If the file exists, and *-s* is not specified, then 
+    the log will be used to recover the state of the workflow. The file is truncated
+    after it is read and a new rescue log is created in its place. The default is to
+    append '.rescue' to the DAG file name. (see <<RESCUE_FILES,*RESCUE FILES*>>)
 
 [[DAG_FILES]]
 DAG Files
@@ -188,12 +194,9 @@ records is:
 
 Where 'taskid' is the ID of the task that finished successfully.
 
-Rescue files are named 'DAGNAME.rescue.XXX' where 'DAGNAME' is the path to
-the input DAG file, and XXX is the current retry sequence number for
-the rescue file. The sequence number suffix starts at '.000' and increments 
-by 1 each time the workflow is run (e.g. '.000', '.001', '.002', and so on). 
-This is done so that the user and *pegasus-mpi-cluster* can distinguish 
-between the rescue files of different workflow runs.
+By default, rescue files are named 'DAGNAME.rescue' where 'DAGNAME' is the
+path to the input DAG file. The file name can be changed by specifying the
+*-r* argument.
 
 
 [[LOGGING]]

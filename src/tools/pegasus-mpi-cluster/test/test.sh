@@ -40,7 +40,7 @@ function test_run_diamond {
 	output=$(mpiexec -n 2 $PMC -s test/diamond.dag 2>&1)
 	RC=$?
 	
-	rm -f test/diamond.dag.rescue.???
+	rm -f test/diamond.dag.rescue*
 	
 	if [ $RC -ne 0 ]; then
 		echo "$output"
@@ -66,8 +66,9 @@ function test_run_diamond {
 # Make sure we can redirect task stdout/stderr to /dev/null
 function test_out_err {
 	mpiexec -n 2 $PMC -s test/diamond.dag -o /dev/null -e /dev/null 2>/dev/null
+	RC=$?
 	
-	rm -f test/diamond.dag.rescue.???
+	rm -f test/diamond.dag.rescue*
 	
 	if [ $RC -ne 0 ]; then
 		return 1
@@ -76,6 +77,30 @@ function test_out_err {
 	return 0
 }
 
+function test_rescue_file {
+	RESCUE=$(mktemp rescue.XXXXXX)
+	
+	mpiexec -n 2 $PMC -s test/diamond.dag -o /dev/null -e /dev/null -r $RESCUE 2>/dev/null
+	RC=$?
+	
+	LOG=$(cat $RESCUE)
+	
+	rm -f $RESCUE
+	
+	if [ $RC -ne 0 ]; then
+		return 1
+	fi
+	
+	CORRECT=$(printf "\nDONE A\nDONE B\nDONE C\nDONE D\n")
+	
+	if [ "$LOG" != "$CORRECT" ]; then
+		echo "Rescue file was incorrect"
+		echo "$LOG"
+		return 1
+	fi
+	
+	return 0
+}
 
 run_test ./test-strlib
 run_test ./test-dag
@@ -85,3 +110,4 @@ run_test test_help
 run_test test_one_worker_required
 run_test test_run_diamond
 run_test test_out_err
+run_test test_rescue_file
