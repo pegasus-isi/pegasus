@@ -190,13 +190,15 @@ int Master::run() {
     log_info("Wall time: %lf seconds", walltime);
 
     // Compute resource utilization
-    if (total_runtime > 0) {
-        double master_util = total_runtime / (walltime * numprocs);
-        double worker_util = total_runtime / (walltime * numworkers);
-        log_info("Resource utilization (with master): %lf", master_util);
-        log_info("Resource utilization (without master): %lf", worker_util);
+    double master_util = total_runtime / (walltime * numprocs);
+    double worker_util = total_runtime / (walltime * numworkers);
+    if (total_runtime <= 0) {
+        master_util = 0.0;
+        worker_util = 0.0;
     }
-
+    log_info("Resource utilization (with master): %lf", master_util);
+    log_info("Resource utilization (without master): %lf", worker_util);
+    
     // Merge stdout/stderr from all tasks
     log_trace("Merging stdio from workers");
     FILE *outf = stdout;
@@ -238,16 +240,18 @@ int Master::run() {
     }
     iso2date(stime, date, sizeof(date));
     sprintf(buf, "[cluster-summary stat=\"%s\" tasks=%ld, succeeded=%ld, failed=%ld, extra=%d,"
-                 " start=\"%s\", duration=%.3f, pid=%d, app=\"%s\"]\n",
+                 " start=\"%s\", duration=%.3f, pid=%d, app=\"%s\", cores=%d, utilization=%.3f]\n",
                  stat, 
                  this->total_count,
                  this->success_count, 
                  this->failed_count,
                  0,
                  date,
-                 walltime * numprocs, /* duration is for all cores */
+                 walltime,
                  getpid(),
-                 this->program.c_str());
+                 this->program.c_str(),
+                 numprocs,
+                 master_util);
     fwrite(buf, 1, strlen(buf), outf);
     
     if (errfile != "stderr") { 
