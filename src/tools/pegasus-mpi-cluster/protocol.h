@@ -9,9 +9,9 @@
 
 void send_stdio_paths(const std::string &outfile, const std::string &errfile);
 void recv_stdio_paths(std::string &outfile, std::string &errfile);
-void send_request(const std::string &name, const std::string &command, const std::string &extra_id, int worker);
+void send_request(const std::string &name, const std::string &command, const std::string &pegasus_id, int worker);
 void send_shutdown(int worker);
-void recv_request(std::string &name, std::string &command, std::string &extra_id, int &shutdown);
+void recv_request(std::string &name, std::string &command, std::string &pegasus_id, int &shutdown);
 void send_response(const std::string &name, int exitcode);
 void recv_response(std::string &name, int &exitcode, int &worker);
 double collect_total_runtimes();
