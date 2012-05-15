@@ -2,6 +2,7 @@
 #include "mpi.h"
 
 #include "protocol.h"
+#include "failure.h"
 
 #define MAX_MESSAGE 16384
 
@@ -21,6 +22,29 @@ void recv_stdio_paths(std::string &outfile, std::string &errfile) {
     MPI_Bcast(buf, size, MPI_CHAR, 0, MPI_COMM_WORLD); // Then get message
     outfile = buf;
     errfile = buf+strlen(buf)+1;
+}
+
+void send_hostname(const std::string &hostname) {
+    // Send the hostname
+    strcpy(buf, hostname.c_str());
+    int size = hostname.size()+1;
+    MPI_Send(buf, size, MPI_CHAR, 0, TAG_HOSTNAME, MPI_COMM_WORLD);
+}
+
+void recv_hostname(std::string &hostname, int &worker) {
+    MPI_Status status;
+    MPI_Recv(buf, MAX_MESSAGE, MPI_CHAR, MPI_ANY_SOURCE, TAG_HOSTNAME, MPI_COMM_WORLD, &status);
+    hostname = buf;
+    worker = status.MPI_SOURCE;
+}
+
+void recv_hostrank(int &hostrank) {
+    MPI_Status status;
+    MPI_Recv(&hostrank, 1, MPI_INT, 0, TAG_HOSTRANK, MPI_COMM_WORLD, &status);
+}
+
+void send_hostrank(int worker, int hostrank) {
+    MPI_Send(&hostrank, 1, MPI_INT, worker, TAG_HOSTRANK, MPI_COMM_WORLD);
 }
 
 void send_request(const std::string &name, const std::string &command, const std::string &pegasus_id, int worker) {

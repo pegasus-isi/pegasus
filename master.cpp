@@ -1,3 +1,4 @@
+#include <map>
 #include "stdio.h"
 #include "unistd.h"
 #include "sys/time.h"
@@ -8,8 +9,6 @@
 #include "protocol.h"
 #include "log.h"
 #include "tools.h"
-
-#include <sstream>
 
 Master::Master(const std::string &program, Engine &engine, DAG &dag,
                const std::string &dagfile, const std::string &outfile,
@@ -24,6 +23,14 @@ Master::Master(const std::string &program, Engine &engine, DAG &dag,
     total_count = 0;
     success_count = 0;
     failed_count = 0;
+    
+    // Determine the number of workers we have
+    int numprocs;
+    MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
+    numworkers = numprocs - 1;
+    if (numworkers == 0) {
+        myfailure("Need at least 1 worker");
+    }
 }
 
 Master::~Master() {
@@ -117,22 +124,51 @@ void Master::merge_task_stdio(FILE *dest, const std::string &srcfile, const std:
     }
 }
 
+/*
+ * Assign a host-centric rank to each of the workers. The worker with the lowest
+ * global rank on each host is given host rank 0, the next lowest is given host
+ * rank 1, and so on. The master is not given a host rank.
+ */
+void Master::hostrank_workers() {
+    typedef std::map<int, std::string> HostMap;
+    HostMap hosts;
+    
+    // Collect host names from all workers
+    for (int i=0; i<numworkers; i++) {
+        int worker;
+        std::string hostname;
+        recv_hostname(hostname, worker);
+        hosts[worker] = hostname;
+        log_debug("Worker %d on host %s", worker, hostname.c_str());
+    }
+    
+    typedef std::map<std::string, int> RankMap;
+    RankMap ranks;
+    
+    // Assign a host rank to each worker
+    for (int worker=1; worker<=numworkers; worker++) {
+        std::string hostname = hosts.find(worker)->second;
+        RankMap::iterator nextrank = ranks.find(hostname);
+        int hostrank = 0;
+        if (nextrank != ranks.end()) {
+            hostrank = nextrank->second;
+        }
+        ranks[hostname] = hostrank + 1;
+        send_hostrank(worker, hostrank);
+        log_debug("Host rank of worker %d is %d", worker, hostrank);
+    }
+}
+
 int Master::run() {
     // Start time of workflow
     struct timeval start;
     gettimeofday(&start, NULL);
-
-    int numprocs;
-    MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
-    
-    int numworkers = numprocs - 1;
-    if (numworkers == 0) {
-        myfailure("Need at least 1 worker");
-    }
     
     log_info("Master starting with %d workers", numworkers);
     
-    // First, send out a unique path workers can use for their out/err files
+    hostrank_workers();
+    
+    // Send out a unique path workers can use for their out/err files
     pid_t pid = getpid();
     char dotpid[10];
     snprintf(dotpid, 10, ".%d", pid);
@@ -141,8 +177,8 @@ int Master::run() {
     send_stdio_paths(worker_out_path, worker_err_path);
     
     // Queue up the workers
-    for (int i=1; i<=numworkers; i++) {
-        this->add_worker(i);
+    for (int worker=1; worker<=numworkers; worker++) {
+        this->add_worker(worker);
     }
     
     // While DAG has tasks to run
@@ -190,7 +226,7 @@ int Master::run() {
     log_info("Wall time: %lf seconds", walltime);
 
     // Compute resource utilization
-    double master_util = total_runtime / (walltime * numprocs);
+    double master_util = total_runtime / (walltime * (numworkers+1));
     double worker_util = total_runtime / (walltime * numworkers);
     if (total_runtime <= 0) {
         master_util = 0.0;
@@ -229,7 +265,7 @@ int Master::run() {
     }
     
     // pegasus cluster output - used for provenance
-    char buf[BUFSIZ];
+    char summary[BUFSIZ];
     char stat[10];
     char date[32];
     if (this->engine->is_failed()) {
@@ -239,7 +275,7 @@ int Master::run() {
         strcpy(stat, "ok");
     }
     iso2date(stime, date, sizeof(date));
-    sprintf(buf, "[cluster-summary stat=\"%s\" tasks=%ld, succeeded=%ld, failed=%ld, extra=%d,"
+    sprintf(summary, "[cluster-summary stat=\"%s\" tasks=%ld, succeeded=%ld, failed=%ld, extra=%d,"
                  " start=\"%s\", duration=%.3f, pid=%d, app=\"%s\", cores=%d, utilization=%.3f]\n",
                  stat, 
                  this->total_count,
@@ -250,9 +286,9 @@ int Master::run() {
                  walltime,
                  getpid(),
                  this->program.c_str(),
-                 numprocs,
+                 numworkers+1,
                  master_util);
-    fwrite(buf, 1, strlen(buf), outf);
+    fwrite(summary, 1, strlen(summary), outf);
     
     if (errfile != "stderr") { 
         fclose(errf);

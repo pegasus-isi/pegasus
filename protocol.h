@@ -6,7 +6,13 @@
 #define TAG_COMMAND 1
 #define TAG_RESULT 2
 #define TAG_SHUTDOWN 3
+#define TAG_HOSTNAME 4
+#define TAG_HOSTRANK 5
 
+void send_hostname(const std::string &hostname);
+void recv_hostname(std::string &hostname, int &worker);
+void send_hostrank(int worker, int hostrank);
+void recv_hostrank(int &hostrank);
 void send_stdio_paths(const std::string &outfile, const std::string &errfile);
 void recv_stdio_paths(std::string &outfile, std::string &errfile);
 void send_request(const std::string &name, const std::string &command, const std::string &pegasus_id, int worker);
