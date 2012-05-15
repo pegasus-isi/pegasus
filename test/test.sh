@@ -94,8 +94,60 @@ function test_rescue_file {
 	CORRECT=$(printf "\nDONE A\nDONE B\nDONE C\nDONE D\n")
 	
 	if [ "$LOG" != "$CORRECT" ]; then
-		echo "Rescue file was incorrect"
 		echo "$LOG"
+		echo "ERROR Rescue file was incorrect"
+		return 1
+	fi
+	
+	return 0
+}
+
+function test_host_script {
+	OUTPUT=$(mpiexec -n 2 $PMC -s test/diamond.dag -o /dev/null -e /dev/null --host-script test/hostscript.sh 2>&1)
+	RC=$?
+	
+	if [ $RC -ne 0 ]; then
+		return 1
+	fi
+	
+	if [ $(echo "$OUTPUT" | grep "Worker 1: Launching host script" | wc -l) -ne 1 ]; then
+		echo "$OUTPUT"
+		echo "ERROR: Host script was not launched"
+		return 1
+	fi
+	
+	if [ $(echo "$OUTPUT" | grep "HOSTSCRIPT std" | wc -l) -ne 2 ]; then
+		echo "$OUTPUT"
+		echo "ERROR: Host script did not generate the right output"
+		return 1
+	fi
+	
+	if [ $(echo "$OUTPUT" | grep "Host script exited with status 0" | wc -l) -ne 1 ]; then
+		echo "$OUTPUT"
+		echo "ERROR: Host script test failed"
+		return 1
+	fi
+	
+	return 0
+}
+
+function test_hang_script {
+	OUTPUT=$(mpiexec -n 2 $PMC -s test/diamond.dag -o /dev/null -e /dev/null --host-script test/hangscript.sh 2>&1)
+	RC=$?
+	
+	if [ $RC -ne 0 ]; then
+		return 1
+	fi
+	
+	if [ $(echo "$OUTPUT" | grep "Worker 1: Launching host script" | wc -l) -ne 1 ]; then
+		echo "$OUTPUT"
+		echo "ERROR: Host script was not launched"
+		return 1
+	fi
+	
+	if [ $(echo "$OUTPUT" | grep "Host script exited on signal 15" | wc -l) -ne 1 ]; then
+		echo "$OUTPUT"
+		echo "ERROR: Hang script test failed"
 		return 1
 	fi
 	
@@ -111,3 +163,5 @@ run_test test_one_worker_required
 run_test test_run_diamond
 run_test test_out_err
 run_test test_rescue_file
+run_test test_host_script
+run_test test_hang_script

@@ -1,13 +1,14 @@
-#include "strlib.h"
-#include "errno.h"
-#include "stdlib.h"
-#include "unistd.h"
-#include "stdio.h"
-#include "sys/wait.h"
-#include "sys/time.h"
-#include "fcntl.h"
+#include <errno.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <sys/wait.h>
+#include <sys/time.h>
+#include <fcntl.h>
+#include <signal.h>
 #include "mpi.h"
 
+#include "strlib.h"
 #include "worker.h"
 #include "protocol.h"
 #include "log.h"
@@ -16,12 +17,104 @@
 
 extern char **environ;
 
-Worker::Worker() {
+Worker::Worker(const std::string &hostscript) {
+    this->hostscript = hostscript;
+    this->hostscript_pid = 0;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     get_host_name(hostname);
 }
 
 Worker::~Worker() {
+}
+
+/**
+ * Launch the host script if a) this worker has host rank 0, and 
+ * b) the host script is valid 
+ */
+void Worker::launch_host_script() {
+    // Only launch it if it exists
+    if (hostscript == "")
+        return;
+    
+    // Only hostrank 0 launches a script
+    if (hostrank > 0)
+        return;
+    
+    log_info("Worker %d: Launching host script %s", rank, hostscript.c_str());
+    
+    pid_t pid = fork();
+    if (pid < 0) {
+        myfailures("Unable to fork()"); 
+    } else if (pid == 0) {
+        // Redirect stdout to stderr
+        close(STDOUT_FILENO);
+        dup2(STDERR_FILENO, STDOUT_FILENO);
+        
+        // Create a new process group so we can kill it later if
+        // it runs longer than the workflow
+        if (setpgid(0, 0) < 0) {
+            fprintf(stderr, 
+                "Unable to set process group for host script: %s\n", 
+                strerror(errno));
+            exit(1);
+        }
+        
+        // Exec process
+        char *argv[2] = {
+            (char *)hostscript.c_str(),
+            NULL
+        };
+        execve(hostscript.c_str(), argv, environ);
+        fprintf(stderr, "Unable to execve host script: %s\n", strerror(errno));
+        exit(1);
+    } else {
+        hostscript_pid = pid;
+    } 
+}
+
+/**
+ * Check to see if the host script exited. If it did, then log the status.
+ * If terminate is true, then send SIGTERM to the host script's process group
+ * and block until it exits.
+ */
+void Worker::check_host_script(bool terminate) {
+    // Workers with hostrank > 0 will not have host scripts
+    if (hostrank > 0)
+        return;
+    
+    // If there is no pid to wait for then skip the check
+    if (hostscript_pid <= 0)
+        return;
+    
+    int options = WNOHANG;
+    
+    if (terminate) {
+        log_warn("Worker %d: Terminating host script with SIGTERM", rank);
+        
+        if (killpg(hostscript_pid, SIGTERM) < 0) {
+            log_error("Worker %d: Error terminating host script process group: %s", 
+                rank, strerror(errno));
+        }
+        
+        // If we are killing it we want to wait
+        options = 0;
+    }
+    
+    int status = 0;
+    pid_t pid = waitpid(hostscript_pid, &status, options);
+    
+    if (pid < 0) {
+        log_error("Worker %d: Error checking host script: %s", rank, strerror(errno));
+    } else if (pid > 0) {
+        if (WIFEXITED(status)) {
+            log_info("Worker %d: Host script exited with status %d (%d)", 
+                rank, WEXITSTATUS(status), status);
+        } else {
+            log_info("Worker %d: Host script exited on signal %d (%d)", 
+                rank, WTERMSIG(status), status);
+        }
+        hostscript_pid = 0;
+    }
 }
 
 int Worker::run() {
@@ -59,15 +152,18 @@ int Worker::run() {
         myfailures("Worker %d: unable to open task stderr", rank);
     }
     
+    launch_host_script();
+    
     double total_runtime = 0.0;
     
     while (1) {
+        check_host_script(false);
+        
+        log_trace("Worker %d: Waiting for request", rank);
         std::string name;
         std::string command;
         std::string pegasus_id;
         int shutdown;
-        
-        log_trace("Worker %d: Waiting for request", rank);
         recv_request(name, command, pegasus_id, shutdown);
         log_trace("Worker %d: Got request", rank);
         
@@ -144,6 +240,8 @@ int Worker::run() {
 
     close(out);
     close(err);
+    
+    check_host_script(true);
     
     // Send total_runtime
     log_trace("Worker %d: Sending total runtime to master", rank);
