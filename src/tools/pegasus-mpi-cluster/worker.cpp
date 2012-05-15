@@ -210,9 +210,9 @@ int Worker::run() {
         
         // Wait for task to complete
         struct rusage usage;
-        int exitcode = 1;
-        if (wait4(pid, &exitcode, 0, &usage) == -1) {
-            log_warn("Failed waiting for task: %s", strerror(errno));
+        int status = 0;
+        if (wait4(pid, &status, 0, &usage) < 0) {
+            log_error("Failed waiting for task: %s", strerror(errno));
         }
         
         struct timeval task_finish;
@@ -224,18 +224,23 @@ int Worker::run() {
 
         total_runtime += task_runtime;
 
-        log_debug("Worker %d: Task %s finished with exitcode %d in %f seconds", 
-            rank, name.c_str(), exitcode, task_runtime);
-
+        if (WIFEXITED(status)) {
+            log_debug("Worker %d: Task %s exited with status %d (%d) in %f seconds", 
+                rank, name.c_str(), WEXITSTATUS(status), status, task_runtime);
+        } else {
+            log_debug("Worker %d: Task %s exited on signal %d (%d) in %f seconds", 
+                rank, name.c_str(), WTERMSIG(status), status, task_runtime);
+        }
+        
         // pegasus cluster output - used for provenance
         char summary[BUFSIZ];
         char date[32];
         iso2date(task_stime, date, sizeof(date));
         sprintf(summary, "[cluster-task id=%s, start=\"%s\", duration=%.3f, status=%d, app=\"%s\"]\n",
-                     pegasus_id.c_str(), date, task_runtime, exitcode, argv[0]);
+                     pegasus_id.c_str(), date, task_runtime, status, argv[0]);
         write(out, summary, strlen(summary));
         
-        send_response(name, exitcode);
+        send_response(name, status);
     }
 
     close(out);
