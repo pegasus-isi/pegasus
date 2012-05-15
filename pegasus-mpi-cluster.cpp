@@ -165,23 +165,7 @@ int mpidag(int argc, char *argv[]) {
     
     std::string dagfile = args.front();
     
-    // If no rescue file specified, use default
-    if (rescuefile == "") {
-        rescuefile = dagfile + ".rescue";
-    }
-    
-    std::string oldrescue = rescuefile;
-    std::string newrescue = rescuefile;
-    
-    if (skiprescue) {
-        // User does not want to read old rescue file
-        oldrescue = "";
-    }
-    
     log_set_level(loglevel);
-    
-    log_debug("Using old rescue file: %s", oldrescue.c_str());
-    log_debug("Using new rescue file: %s", newrescue.c_str());
     
     if (numprocs < 2) {
         fprintf(stderr, "At least one worker process is required\n");
@@ -195,6 +179,22 @@ int mpidag(int argc, char *argv[]) {
     // and make sure MPI_Abort is called when something bad happens.
     
     if (rank == 0) {
+        // If no rescue file specified, use default
+        if (rescuefile == "") {
+            rescuefile = dagfile + ".rescue";
+        }
+        
+        std::string oldrescue = rescuefile;
+        std::string newrescue = rescuefile;
+        
+        if (skiprescue) {
+            // User does not want to read old rescue file
+            oldrescue = "";
+        }
+        
+        log_debug("Using old rescue file: %s", oldrescue.c_str());
+        log_debug("Using new rescue file: %s", newrescue.c_str());
+        
         DAG dag(dagfile, oldrescue, lock);
         Engine engine(dag, newrescue, max_failures, tries);
         return Master(program, engine, dag, dagfile, outfile, errfile).run();
