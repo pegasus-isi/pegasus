@@ -30,7 +30,8 @@ void usage() {
             "   -m|--max-failures N  Stop submitting tasks after N tasks have failed\n"
             "   -t|--tries N         Try tasks N times before marking them failed\n"
             "   -n|--nolock          Do not try to lock DAGFILE\n"
-            "   -r|--rescue PATH     Path to rescue file [default: DAGFILE.rescue]\n",
+            "   -r|--rescue PATH     Path to rescue file [default: DAGFILE.rescue]\n"
+            "   --host-script PATH   Path to script that will be launched on each host\n",
             program
         );
     }
@@ -62,6 +63,13 @@ int mpidag(int argc, char *argv[]) {
     int tries = 1;
     bool lock = true;
     std::string rescuefile = "";
+    std::string hostscript = "";
+    
+    // Environment variable defaults
+    char *env_hostscript = getenv("PMC_HOST_SCRIPT");
+    if (env_hostscript != NULL) {
+        hostscript = env_hostscript;
+    }
     
     while (flags.size() > 0) {
         std::string flag = flags.front();
@@ -127,6 +135,13 @@ int mpidag(int argc, char *argv[]) {
                 return 1;
             }
             rescuefile = flags.front();
+        } else if (flag == "--host-script") {
+            flags.pop_front();
+            if (flags.size() == 0) {
+                argerror("--host-script requires PATH");
+                return 1;
+            }
+            hostscript = flags.front();
         } else if (flag[0] == '-') {
             std::string message = "Unrecognized argument: ";
             message += flag[0];
@@ -184,7 +199,7 @@ int mpidag(int argc, char *argv[]) {
         Engine engine(dag, newrescue, max_failures, tries);
         return Master(program, engine, dag, dagfile, outfile, errfile).run();
     } else {
-        return Worker().run();
+        return Worker(hostscript).run();
     }
 }
 

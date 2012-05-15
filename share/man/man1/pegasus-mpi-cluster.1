@@ -2,12 +2,12 @@
 .\"     Title: pegasus-mpi-cluster
 .\"    Author: [see the "Author" section]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 05/14/2012
+.\"      Date: 05/15/2012
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "PEGASUS\-MPI\-CLUSTE" "1" "05/14/2012" "\ \&" "\ \&"
+.TH "PEGASUS\-MPI\-CLUSTE" "1" "05/15/2012" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -143,6 +143,14 @@ is not specified, then the log will be used to recover the state of the workflow
 to the DAG file name\&. (see
 \fBRESCUE FILES\fR)
 .RE
+.PP
+\fB\-\-host\-script\fR \fIpath\fR
+.RS 4
+Path to a script or executable to launch on each unique host that
+\fBpegasus\-mpi\-cluster\fR
+is running on\&. (see
+\fBHOST SCRIPTS\fR)
+.RE
 .SH "DAG FILES"
 .sp
 \fBpegasus\-mpi\-cluster\fR workflows are expressed using a simple text\-based format similar to that used by Condor DAGMan\&. There are only two record types allowed in a DAG file: \fBTASK\fR and \fBEDGE\fR\&. Any blank lines in the DAG (lines with all whitespace characters) are ignored, as are any lines beginning with # (note that # can only appear at the beginning of a line, not in the middle)\&.
@@ -246,6 +254,13 @@ The default logging level is INFO\&. The logging levels can be increased with \f
 .SH "TASK STDIO"
 .sp
 By default the stdout and stderr of tasks will be redirected to the master\(cqs stdout and stderr\&. You can change the path of these files with the \fB\-o\fR and \fB\-e\fR arguments\&. Note that the stdio of all workers will be merged into one out and one err file by the master at the end, so I/O from different workers will not be interleaved, but I/O from each worker will appear in the order that it was generated\&. Also note that, if the job fails for any reason, the outputs will not be merged, but instead there will be one file for each worker named DAGFILE\&.MPID\&.out\&.X and DAGFILE\&.MPID\&.err\&.X, where DAGFILE is the path to the input DAG, MPID is the master\(cqs process ID, and \fIX\fR is the worker\(cqs rank\&.
+.SH "HOST SCRIPTS"
+.sp
+A host script is a shell script or executable that \fBpegasus\-mpi\-cluster\fR launches on each unique host on which it is running\&. They can be used to start auxilliary services, such as memcached, that the tasks in a workflow require\&.
+.sp
+Host scripts are specified using either the \fB\-\-host\-script\fR argument or the \fBPMC_HOST_SCRIPT\fR environment variable\&.
+.sp
+The host script is started before any tasks are launched\&. If it runs for longer than the workflow, then it is sent a SIGTERM signal when the workflow completes\&.
 .SH "MISC"
 .SS "Resource Utilization"
 .sp
@@ -257,6 +272,16 @@ In order for the worker processes to start tasks on the compute node the compute
 .SS "CPU Usage"
 .sp
 Many MPI implementations are optimized so that message sends and receives do not block\&. The reasoning is that blocking adds over\- head and, since many HPC systems use space sharing on dedicated hardware, there are no other processes competing, so spinning instead of blocking can produce better performance\&. On those MPI implementations the master and worker processes will run at 100% CPU usage even when they are waiting\&. If this is a problem on your system, then there are some MPI implementations that \fIdo\fR block on message send and receive\&. To test \fBpegasus\-mpi\-cluster\fR, for example, we use MPICH2 with the ch3:sock device instead of the ch3:nemesis device to avoid this issue\&.
+.SH "ENVIRONMENT VARIABLES"
+.PP
+\fBPMC_HOST_SCRIPT\fR
+.RS 4
+Path to a script to launch on each host\&. This variable is an alias for
+\fB\-\-host\-script\fR\&. If it is defined then it is used as the default value for
+\fB\-\-host\-script\fR\&. If both are defined then the value for
+\fB\-\-host\-script\fR
+is used\&.
+.RE
 .SH "AUTHOR"
 .sp
 Gideon Juve <gideon@isi\&.edu>

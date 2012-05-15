@@ -127,6 +127,11 @@ Options
     after it is read and a new rescue log is created in its place. The default is to
     append '.rescue' to the DAG file name. (see <<RESCUE_FILES,*RESCUE FILES*>>)
 
+*--host-script* 'path'::
+    Path to a script or executable to launch on each unique host that 
+    *pegasus-mpi-cluster* is running on. (see <<HOST_SCRIPTS,*HOST SCRIPTS*>>)
+
+
 [[DAG_FILES]]
 DAG Files
 ---------
@@ -227,6 +232,22 @@ named DAGFILE.MPID.out.X and DAGFILE.MPID.err.X, where DAGFILE is the path to
 the input DAG, MPID is the master's process ID, and 'X' is the worker's rank.
 
 
+[[HOST_SCRIPTS]]
+Host Scripts
+------------
+A host script is a shell script or executable that *pegasus-mpi-cluster*
+launches on each unique host on which it is running. They can be used to 
+start auxilliary services, such as memcached, that the tasks in a workflow
+require.
+
+Host scripts are specified using either the *--host-script* argument or
+the *PMC_HOST_SCRIPT* environment variable.
+
+The host script is started before any tasks are launched. If it runs for
+longer than the workflow, then it is sent a SIGTERM signal when the workflow
+completes.
+
+
 Misc
 ----
 Resource Utilization
@@ -268,6 +289,15 @@ on your system, then there are some MPI implementations that
 example, we use MPICH2 with the ch3:sock device instead of the
 ch3:nemesis device to avoid this issue.
 
+
+Environment Variables
+---------------------
+
+*PMC_HOST_SCRIPT*::
+    Path to a script to launch on each host. This variable is an alias
+    for *--host-script*. If it is defined then it is used as the default
+    value for *--host-script*. If both are defined then the value for
+    *--host-script* is used.
 
 Author
 ------
