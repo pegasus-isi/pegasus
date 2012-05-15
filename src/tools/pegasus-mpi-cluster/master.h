@@ -14,10 +14,14 @@ class Master {
     DAG *dag;
     Engine *engine;
     std::queue<int> idle;
+    
+    int numworkers;
 
     long total_count;
     long success_count;
     long failed_count;
+    
+    void hostrank_workers();
     
     void submit_task(Task *t, int worker);
     void wait_for_result();

@@ -17,23 +17,27 @@
 extern char **environ;
 
 Worker::Worker() {
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    get_host_name(hostname);
 }
 
 Worker::~Worker() {
 }
 
 int Worker::run() {
-    int rank;
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    
     log_info("Worker %d: Starting...", rank);
-
-    char buf[10000];
     
-    std::string outfile;
-    std::string errfile;
+    // Send worker's hostname
+    send_hostname(hostname);
+    log_trace("Hostname: %s", hostname.c_str());
+    
+    // Get worker's host rank
+    recv_hostrank(hostrank);
+    log_trace("Hostrank: %d", hostrank);
     
     // Get outfile/errfile
+    std::string outfile;
+    std::string errfile;
     recv_stdio_paths(outfile, errfile);
     
     // Append rank to outfile/errfile
@@ -73,10 +77,10 @@ int Worker::run() {
         }
         
         log_debug("Worker %d: Running task %s", rank, name.c_str());
-
+        
         struct timeval task_start;
         gettimeofday(&task_start, NULL);
-            
+        
         // Process arguments
         std::vector<std::string> args;
         split_args(args, command);
@@ -128,11 +132,12 @@ int Worker::run() {
             rank, name.c_str(), exitcode, task_runtime);
 
         // pegasus cluster output - used for provenance
+        char summary[BUFSIZ];
         char date[32];
         iso2date(task_stime, date, sizeof(date));
-        sprintf(buf, "[cluster-task id=%s, start=\"%s\", duration=%.3f, status=%d, app=\"%s\"]\n",
+        sprintf(summary, "[cluster-task id=%s, start=\"%s\", duration=%.3f, status=%d, app=\"%s\"]\n",
                      pegasus_id.c_str(), date, task_runtime, exitcode, argv[0]);
-        write(out, buf, strlen(buf));
+        write(out, summary, strlen(summary));
         
         send_response(name, exitcode);
     }
