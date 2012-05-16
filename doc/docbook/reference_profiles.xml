@@ -943,6 +943,15 @@
               condor pool. The default style that is applied is
               globus.</entry>
             </row>
+
+            <row>
+              <entry>request_memory</entry>
+
+              <entry>This key is used to set the -m option for
+              pegasus-mpi-cluster. It specifies the amount of memory in MB
+              that a job requires. This profile is usually set in the DAX for
+              each job.</entry>
+            </row>
           </tbody>
         </tgroup>
       </table>

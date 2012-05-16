@@ -164,8 +164,17 @@ public class MPIExec extends Abstract {
                     writer.write( getCommentString( constitutentJob, taskid ) + "\n" );
 
                     StringBuffer task = new StringBuffer();
-                    task.append( "TASK" ).append( " " ).append( constitutentJob.getLogicalID() ).append( " " ).
-                         append( constitutentJob.getRemoteExecutable() ).append( " " ).
+                    task.append( "TASK" ).append( " " ).append( constitutentJob.getLogicalID() ).append( " " );
+
+                    //check and add if a job has requested any memory
+                    //JIRA PM-601
+                    String memory = constitutentJob.vdsNS.getStringValue( Pegasus.REQUEST_MEMORY_KEY );
+                    if( memory != null ){
+                        task.append( "-m ").
+                             append( memory ).append( " " );
+                    }
+
+                    task.append( constitutentJob.getRemoteExecutable() ).append( " " ).
                          append(  constitutentJob.getArguments() ).append( "\n" );
                     writer.write( task.toString() );
                 }

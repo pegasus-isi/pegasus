@@ -314,7 +314,12 @@ public class Pegasus extends Namespace {
      */
     public static final String GLITE_STYLE = "glite";
 
-    
+
+    /**
+     * A key to designate the memory required by a job in MB by pegasus-mpi-cluster.
+     */
+    public static final String REQUEST_MEMORY_KEY = "request_memory";
+
     /**
      * Static Handle to the sum aggregator.
      */
@@ -477,6 +482,9 @@ public class Pegasus extends Namespace {
 
             case 'r':
                 if( key.compareTo( RUNTIME_KEY ) == 0 ){
+                    res = VALID_KEY;
+                }
+                else if ( key.compareTo( REQUEST_MEMORY_KEY ) == 0 ){
                     res = VALID_KEY;
                 }
                 else{
