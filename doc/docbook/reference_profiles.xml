@@ -379,6 +379,27 @@
               vanilla / standard/ local universe jobs. Determines the order in
               which a users own jobs are executed.</entry>
             </row>
+
+            <row>
+              <entry>request_cpus</entry>
+
+              <entry>New in Condor 7.8.0 . Number of CPU's a job
+              requires.</entry>
+            </row>
+
+            <row>
+              <entry>request_memory</entry>
+
+              <entry>New in Condor 7.8.0 . Amount of memory a job
+              requires.</entry>
+            </row>
+
+            <row>
+              <entry>request_disk</entry>
+
+              <entry>New in Condor 7.8.0 . Amount of disk a job
+              requires.</entry>
+            </row>
           </tbody>
         </tgroup>
       </table>
