@@ -66,7 +66,7 @@ void split(std::vector<std::string> &v, const std::string &line, const std::stri
 /**
  * Split line using command-line argument splitting and store the result in args
  */
-void split_args(std::vector<std::string> &args, const std::string &line) {
+void split_args(std::list<std::string> &args, const std::string &line) {
     std::string arg;
     bool inquote = false;
     for (unsigned i=0; i<line.length(); i++) {

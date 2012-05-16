@@ -82,9 +82,35 @@ void test_pegasus_dag() {
     }
 }
 
+void test_memory_dag() {
+    DAG dag("test/memory.dag");
+    
+    Task *a = dag.get_task("A");
+    Task *b = dag.get_task("B");
+    Task *c = dag.get_task("C");
+    Task *d = dag.get_task("D");
+    
+    if (a->memory != 0) {
+        myfailure("A should require 0 MB memory");
+    }
+    
+    if (b->memory != 100) {
+        myfailure("B should require 100 MB memory");
+    }
+    
+    if (c->memory != 100) {
+        myfailure("C should require 100 MB memory");
+    }
+    
+    if (d->memory != 100) {
+        myfailure("D should require 100 MB memory");
+    }
+}
+
 int main(int argc, char *argv[]) {
     test_dag();
     test_rescue();
     test_pegasus_dag();
+    test_memory_dag();
     return 0;
 }

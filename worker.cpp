@@ -178,15 +178,18 @@ int Worker::run() {
         gettimeofday(&task_start, NULL);
         
         // Process arguments
-        std::vector<std::string> args;
+        std::list<std::string> args;
         split_args(args, command);
+        unsigned nargs = args.size();
         // N + 1 for null-termination
-        char **argv = new char*[args.size()+1];
-        for (unsigned i=0; i<args.size(); i++) {
-            argv[i] = new char[args[i].size()+1];
-            strcpy(argv[i], args[i].c_str());
+        char **argv = new char*[nargs+1];
+        for (unsigned i=0; i<nargs; i++) {
+            std::string arg = args.front();
+            args.pop_front();
+            argv[i] = new char[arg.size()+1];
+            strcpy(argv[i], arg.c_str());
         }
-        argv[args.size()] = NULL; // Last one is null
+        argv[nargs] = NULL; // Last one is null
         
         pid_t pid = fork();
         if (pid == 0) {

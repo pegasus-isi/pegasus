@@ -1,4 +1,5 @@
 #include <string>
+#include <list>
 #include <vector>
 #include "stdio.h"
 
@@ -14,7 +15,7 @@ void test_trim(std::string &before, const std::string &after, const std::string 
 }
 
 void test_split_args(const std::string &arg, const std::vector<std::string> &result) {
-    std::vector<std::string> args;
+    std::list<std::string> args;
     
     split_args(args, arg);
     
@@ -22,9 +23,10 @@ void test_split_args(const std::string &arg, const std::vector<std::string> &res
         myfailure("Size mismatch");
     }
     
-    for (unsigned i=0; i<args.size(); i++) {
-        std::string l = args[i];
+    for (unsigned i=0; i<result.size(); i++) {
         std::string r = result[i];
+        std::string l = args.front();
+        args.pop_front();
         if (l.compare(r) != 0) {
             myfailure("Strings don't match: '%s' != '%s'", l.c_str(), r.c_str());
         }

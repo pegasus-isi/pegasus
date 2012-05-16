@@ -19,6 +19,8 @@ public:
     bool success;
     int failures;
     
+    unsigned memory;
+    
     Task(const std::string &name, const std::string &command);
     ~Task();
     

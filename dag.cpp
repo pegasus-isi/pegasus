@@ -1,9 +1,10 @@
 #include <map>
 #include <vector>
-#include "string.h"
-#include "stdio.h"
-#include "unistd.h"
-#include "fcntl.h"
+#include <string.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <math.h>
 
 #include "strlib.h"
 #include "dag.h"
@@ -17,6 +18,7 @@ Task::Task(const std::string &name, const std::string &command) {
     this->command = command;
     this->success = false;
     this->failures = 0;
+    this->memory = 0;
 }
 
 Task::~Task() {
@@ -163,22 +165,73 @@ void DAG::read_dag() {
             }
             
             std::string name = v[1];
-            std::string cmd = v[2];
-                        
+            
             // Check for duplicate tasks
             if (this->has_task(name)) {
                 myfailure("Duplicate task: %s", name.c_str());
             }
             
-            Task *t = new Task(name, cmd);
+            // Default task arguments
+            unsigned memory = 0;
+            
+            // Parse task arguments
+            std::list<std::string> args;
+            split_args(args, v[2]);
+            while (true) {
+                std::string arg = args.front();
+                if (arg[0] == '-') {
+                    if (arg == "-m" || arg == "--memory") {
+                        args.pop_front();
+                        if (args.size() == 0) {
+                            myfailure("-m/--memory requires N for task %s", 
+                                name.c_str());
+                        }
+                        std::string smemory = args.front();
+                        float fmemory;
+                        if (sscanf(smemory.c_str(), "%f", &fmemory) != 1) {
+                            myfailure(
+                                "Invalid memory requirement '%s' for task %s", 
+                                smemory.c_str(), name.c_str());
+                        }
+                        if (fmemory < 0) {
+                            myfailure(
+                                "Negative memory requirement not allowed for task %s", 
+                                name.c_str());
+                        }
+                        // We round up to the next integer
+                        memory = ceil(fmemory);
+                        log_trace("Required memory %u MB for task %s", 
+                            memory, name.c_str());
+                    } else {
+                        myfailure("Invalid argument '%s' for task %s", 
+                            arg.c_str(), name.c_str());
+                    }
+                    args.pop_front();
+                } else {
+                    break;
+                }
+            }
+            
+            // Copy all the arguments into a single string
+            std::string command = "";
+            while (args.size() > 0) {
+                command += args.front();
+                args.pop_front();
+                if (args.size() > 0) {
+                    command += " ";
+                }
+            }
+            
+            Task *t = new Task(name, command);
+            t->memory = memory;
             if (pegasus_id.length() > 0) {
                 if (pegasus_name != name) {
-                    myfailure("Name from comment do not match task: %s %s\n",
+                    myfailure("Name from Pegasus does not match task: %s != %s\n",
                             pegasus_name.c_str(), name.c_str());
                 }
                 t->pegasus_id = pegasus_id;
                 t->pegasus_transformation = pegasus_transformation;
-
+                
                 // reset the extra parameters
                 pegasus_id = "";
                 pegasus_transformation = "";
