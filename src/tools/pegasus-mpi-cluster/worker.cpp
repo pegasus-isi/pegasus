@@ -6,7 +6,7 @@
 #include <sys/time.h>
 #include <fcntl.h>
 #include <signal.h>
-#include "mpi.h"
+#include <mpi.h>
 
 #include "strlib.h"
 #include "worker.h"
@@ -17,11 +17,12 @@
 
 extern char **environ;
 
-Worker::Worker(const std::string &hostscript) {
-    this->hostscript = hostscript;
-    this->hostscript_pid = 0;
+Worker::Worker(const std::string &host_script, unsigned host_memory) {
+    this->host_script = host_script;
+    this->host_memory = host_memory;
+    this->host_script_pid = 0;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    get_host_name(hostname);
+    get_host_name(host_name);
 }
 
 Worker::~Worker() {
@@ -33,18 +34,18 @@ Worker::~Worker() {
  */
 void Worker::launch_host_script() {
     // Only launch it if it exists
-    if (hostscript == "")
+    if (host_script == "")
         return;
     
-    // Only hostrank 0 launches a script
-    if (hostrank > 0)
+    // Only host_rank 0 launches a script
+    if (host_rank > 0)
         return;
     
-    log_info("Worker %d: Launching host script %s", rank, hostscript.c_str());
+    log_info("Worker %d: Launching host script %s", rank, host_script.c_str());
     
     pid_t pid = fork();
     if (pid < 0) {
-        myfailures("Unable to fork()"); 
+        myfailures("Worker %d: Unable to fork host script", rank); 
     } else if (pid == 0) {
         // Redirect stdout to stderr
         close(STDOUT_FILENO);
@@ -61,14 +62,14 @@ void Worker::launch_host_script() {
         
         // Exec process
         char *argv[2] = {
-            (char *)hostscript.c_str(),
+            (char *)host_script.c_str(),
             NULL
         };
-        execve(hostscript.c_str(), argv, environ);
+        execve(host_script.c_str(), argv, environ);
         fprintf(stderr, "Unable to execve host script: %s\n", strerror(errno));
         exit(1);
     } else {
-        hostscript_pid = pid;
+        host_script_pid = pid;
     } 
 }
 
@@ -78,12 +79,12 @@ void Worker::launch_host_script() {
  * and block until it exits.
  */
 void Worker::check_host_script(bool terminate) {
-    // Workers with hostrank > 0 will not have host scripts
-    if (hostrank > 0)
+    // Workers with host_rank > 0 will not have host scripts
+    if (host_rank > 0)
         return;
     
     // If there is no pid to wait for then skip the check
-    if (hostscript_pid <= 0)
+    if (host_script_pid <= 0)
         return;
     
     int options = WNOHANG;
@@ -91,7 +92,7 @@ void Worker::check_host_script(bool terminate) {
     if (terminate) {
         log_warn("Worker %d: Terminating host script with SIGTERM", rank);
         
-        if (killpg(hostscript_pid, SIGTERM) < 0) {
+        if (killpg(host_script_pid, SIGTERM) < 0) {
             log_error("Worker %d: Error terminating host script process group: %s", 
                 rank, strerror(errno));
         }
@@ -101,7 +102,7 @@ void Worker::check_host_script(bool terminate) {
     }
     
     int status = 0;
-    pid_t pid = waitpid(hostscript_pid, &status, options);
+    pid_t pid = waitpid(host_script_pid, &status, options);
     
     if (pid < 0) {
         log_error("Worker %d: Error checking host script: %s", rank, strerror(errno));
@@ -113,7 +114,7 @@ void Worker::check_host_script(bool terminate) {
             log_info("Worker %d: Host script exited on signal %d (%d)", 
                 rank, WTERMSIG(status), status);
         }
-        hostscript_pid = 0;
+        host_script_pid = 0;
     }
 }
 
@@ -121,12 +122,12 @@ int Worker::run() {
     log_info("Worker %d: Starting...", rank);
     
     // Send worker's hostname
-    send_hostname(hostname);
-    log_trace("Hostname: %s", hostname.c_str());
+    send_hostname(host_name);
+    log_trace("Host name: %s", host_name.c_str());
     
     // Get worker's host rank
-    recv_hostrank(hostrank);
-    log_trace("Hostrank: %d", hostrank);
+    recv_hostrank(host_rank);
+    log_trace("Host rank: %d", host_rank);
     
     // Get outfile/errfile
     std::string outfile;
