@@ -5,15 +5,16 @@
 
 class Worker {
 	int rank;
-	int hostrank;
-	std::string hostname;
-	std::string hostscript;
-	pid_t hostscript_pid;
+	int host_rank;
+	std::string host_name;
+	std::string host_script;
+	pid_t host_script_pid;
+	unsigned host_memory;
 	
 	void launch_host_script();
 	void check_host_script(bool terminate);
 public:
-    Worker(const std::string &hostscript);
+    Worker(const std::string &host_script, unsigned host_memory);
     ~Worker();
     int run();
 };

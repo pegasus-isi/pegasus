@@ -1,8 +1,9 @@
 #include <list>
-#include "stdio.h"
-#include "stdlib.h"
-#include "mpi.h"
-#include "unistd.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <mpi.h>
+#include <unistd.h>
+#include <math.h>
 
 #include "dag.h"
 #include "engine.h"
@@ -31,7 +32,8 @@ void usage() {
             "   -t|--tries N         Try tasks N times before marking them failed\n"
             "   -n|--nolock          Do not try to lock DAGFILE\n"
             "   -r|--rescue PATH     Path to rescue file [default: DAGFILE.rescue]\n"
-            "   --host-script PATH   Path to script that will be launched on each host\n",
+            "   --host-script PATH   Path to script that will be launched on each host\n"
+            "   --host-memory N      Amount of memory per host in MB\n",
             program
         );
     }
@@ -63,12 +65,21 @@ int mpidag(int argc, char *argv[]) {
     int tries = 1;
     bool lock = true;
     std::string rescuefile = "";
-    std::string hostscript = "";
+    std::string host_script = "";
+    unsigned host_memory = 0;
     
     // Environment variable defaults
-    char *env_hostscript = getenv("PMC_HOST_SCRIPT");
-    if (env_hostscript != NULL) {
-        hostscript = env_hostscript;
+    char *env_host_script = getenv("PMC_HOST_SCRIPT");
+    if (env_host_script != NULL) {
+        host_script = env_host_script;
+    }
+    
+    char *env_host_memory = getenv("PMC_HOST_MEMORY");
+    if (env_host_memory != NULL) {
+        if (sscanf(env_host_memory, "%u", &host_memory) != 1) {
+            argerror("Invalid value for PMC_HOST_MEMORY");
+            return 1;
+        }
     }
     
     while (flags.size() > 0) {
@@ -141,7 +152,17 @@ int mpidag(int argc, char *argv[]) {
                 argerror("--host-script requires PATH");
                 return 1;
             }
-            hostscript = flags.front();
+            host_script = flags.front();
+        } else if (flag == "--host-memory") {
+            flags.pop_front();
+            if (flags.size() == 0) {
+                argerror("--host-memory requires MEM");
+                return 1;
+            }
+            std::string host_memory_string = flags.front();
+            if (sscanf(host_memory_string.c_str(), "%u", &host_memory) != 1) {
+                argerror("Invalid value for --host-memory");
+            }
         } else if (flag[0] == '-') {
             std::string message = "Unrecognized argument: ";
             message += flag[0];
@@ -172,6 +193,8 @@ int mpidag(int argc, char *argv[]) {
         return 1;
     }
     
+    log_info("Memory per host: %u", host_memory);
+    
     // Everything is pretty deterministic up until the processes reach
     // this point. Once we get here the different processes can diverge 
     // in their behavior for many reasons (file systems issues, bad nodes,
@@ -199,7 +222,7 @@ int mpidag(int argc, char *argv[]) {
         Engine engine(dag, newrescue, max_failures, tries);
         return Master(program, engine, dag, dagfile, outfile, errfile).run();
     } else {
-        return Worker(hostscript).run();
+        return Worker(host_script, host_memory).run();
     }
 }
 
