@@ -15,8 +15,6 @@
 #include "failure.h"
 #include "tools.h"
 
-extern char **environ;
-
 Worker::Worker(const std::string &host_script, unsigned host_memory) {
     this->host_script = host_script;
     this->host_memory = host_memory;
@@ -48,8 +46,12 @@ void Worker::launch_host_script() {
         myfailures("Worker %d: Unable to fork host script", rank); 
     } else if (pid == 0) {
         // Redirect stdout to stderr
-        close(STDOUT_FILENO);
-        dup2(STDERR_FILENO, STDOUT_FILENO);
+        if (dup2(STDERR_FILENO, STDOUT_FILENO) < 0) {
+            fprintf(stderr,
+                "Unable to redirect host script stdout to stderr: %s\n", 
+                strerror(errno));
+            exit(1);
+        }
         
         // Create a new process group so we can kill it later if
         // it runs longer than the workflow
@@ -60,13 +62,20 @@ void Worker::launch_host_script() {
             exit(1);
         }
         
+        // Close any other open descriptors. This will not really close
+        // everything, but it is unlikely that we will have more than a 
+        // few descriptors open. It depends on MPI.
+        for (int i=3; i<32; i++) {
+            close(i);
+        }
+        
         // Exec process
         char *argv[2] = {
             (char *)host_script.c_str(),
             NULL
         };
-        execve(host_script.c_str(), argv, environ);
-        fprintf(stderr, "Unable to execve host script: %s\n", strerror(errno));
+        execvp(argv[0], argv);
+        fprintf(stderr, "Unable to exec host script: %s\n", strerror(errno));
         exit(1);
     } else {
         
@@ -218,18 +227,25 @@ int Worker::run() {
             argv[nargs] = NULL; // Last one is null
             
             // Redirect stdout/stderr
-            close(STDOUT_FILENO);
-            dup2(out, STDOUT_FILENO);
+            if (dup2(out, STDOUT_FILENO) < 0) {
+                fprintf(stderr, "Error redirecting stdout of task %s: %s\n", 
+                    name.c_str(), strerror(errno));
+            }
+            if (dup2(err, STDERR_FILENO) < 0) {
+                fprintf(stderr, "Error redirecting stderr of task %s: %s\n", 
+                    name.c_str(), strerror(errno));
+            }
             
-            close(STDERR_FILENO);
-            dup2(err, STDERR_FILENO);
-            
-            close(out);
-            close(err);
+            // Close any other open descriptors. This will not really close
+            // everything, but it is unlikely that we will have more than a 
+            // few descriptors open. It depends on MPI.
+            for (int i=3; i<32; i++) {
+                close(i);
+            }
             
             // Exec process
-            execve(argv[0], argv, environ);
-            fprintf(stderr, "Unable to execve command for task %s: %s\n", 
+            execvp(argv[0], argv);
+            fprintf(stderr, "Unable to exec command for task %s: %s\n", 
                 name.c_str(), strerror(errno));
             exit(1);
         } else {
