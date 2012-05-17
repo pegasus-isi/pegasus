@@ -192,8 +192,18 @@ int Worker::run() {
         }
         argv[nargs] = NULL; // Last one is null
         
+        std::string app = argv[0];
+        
+        // Status of task
+        int status = 256; // 256 is exit code 1
+        
         pid_t pid = fork();
-        if (pid == 0) {
+        if (pid < 0) {
+            // Fork failed
+            log_error("Unable to fork task %s: %s", 
+                name.c_str(), strerror(errno));
+        } else if (pid == 0) {
+            // In child
             
             // Redirect stdout/stderr
             close(STDOUT_FILENO);
@@ -207,17 +217,21 @@ int Worker::run() {
             
             // Exec process
             execve(argv[0], argv, environ);
-            fprintf(stderr, "%s: unable to execve command: %s\n", 
+            fprintf(stderr, "Unable to execve command for task %s: %s\n", 
                 name.c_str(), strerror(errno));
             exit(1);
+        } else {
+            // Wait for task to complete
+            if (waitpid(pid, &status, 0) < 0) {
+                log_error("Failed waiting for task: %s", strerror(errno));
+            }
         }
         
-        // Wait for task to complete
-        struct rusage usage;
-        int status = 0;
-        if (wait4(pid, &status, 0, &usage) < 0) {
-            log_error("Failed waiting for task: %s", strerror(errno));
+        // Free arguments
+        for (unsigned i=0; i<nargs; i++) {
+            delete [] argv[i];
         }
+        delete [] argv;
         
         struct timeval task_finish;
         gettimeofday(&task_finish, NULL);
@@ -225,9 +239,9 @@ int Worker::run() {
         double task_stime = task_start.tv_sec + (task_start.tv_usec/1000000.0);
         double task_ftime = task_finish.tv_sec + (task_finish.tv_usec/1000000.0);
         double task_runtime = task_ftime - task_stime;
-
+        
         total_runtime += task_runtime;
-
+        
         if (WIFEXITED(status)) {
             log_debug("Worker %d: Task %s exited with status %d (%d) in %f seconds", 
                 rank, name.c_str(), WEXITSTATUS(status), status, task_runtime);
@@ -241,16 +255,16 @@ int Worker::run() {
         char date[32];
         iso2date(task_stime, date, sizeof(date));
         sprintf(summary, "[cluster-task id=%s, start=\"%s\", duration=%.3f, status=%d, app=\"%s\"]\n",
-                     pegasus_id.c_str(), date, task_runtime, status, argv[0]);
+                     pegasus_id.c_str(), date, task_runtime, status, app.c_str());
         write(out, summary, strlen(summary));
         
         send_response(name, status);
     }
 
+    check_host_script(true);
+    
     close(out);
     close(err);
-    
-    check_host_script(true);
     
     // Send total_runtime
     log_trace("Worker %d: Sending total runtime to master", rank);
