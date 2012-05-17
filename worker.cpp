@@ -275,12 +275,24 @@ int Worker::run() {
         }
         
         // pegasus cluster output - used for provenance
+        
+        // If the Pegasus id is missing then don't add it to the message
+        std::string id = "";
+        if (pegasus_id.size() > 0) {
+            id = "id=" + pegasus_id + ", ";
+        }
+        
         std::string app = args.front();
-        char summary[BUFSIZ];
+        
         char date[32];
         iso2date(task_stime, date, sizeof(date));
-        sprintf(summary, "[cluster-task id=%s, start=\"%s\", duration=%.3f, status=%d, app=\"%s\"]\n",
-                     pegasus_id.c_str(), date, task_runtime, status, app.c_str());
+        
+        char summary[BUFSIZ];
+        sprintf(summary, 
+            "[cluster-task %sname=%s, start=\"%s\", duration=%.3f, "
+            "status=%d, app=\"%s\", hostname=\"%s\", slot=%d]\n",
+            id.c_str(), name.c_str(), date, task_runtime, status, app.c_str(), 
+            host_name.c_str(), rank);
         write(out, summary, strlen(summary));
         
         send_response(name, status);
