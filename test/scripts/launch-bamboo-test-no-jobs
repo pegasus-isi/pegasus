@@ -1,0 +1,23 @@
+#!/bin/bash
+
+TOP_DIR=`pwd`
+TEST=`echo $1 | awk -F " - " '{print $3}'`
+shift
+
+cd test/core/$TEST
+
+echo "TEST is $TEST"
+pwd
+
+PLANFILE=`mktemp plan.XXXXXX`
+
+#Launch the test
+./run-bamboo-test "$@" | tee $PLANFILE
+
+STATUS=$?
+if [ $STATUS != 0 ]; then
+   echo "Test failed!"
+   exit $STATUS
+fi
+
+exit

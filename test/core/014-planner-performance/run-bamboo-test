@@ -1,0 +1,81 @@
+#!/bin/bash
+
+#######################################################################
+# settings
+
+# number of max number of minutes allowed for the planner to plan the
+# dax - if these limit is exeeded, the test fails
+MAX_MINUTES=4
+
+# control the environment
+export JAVA_HEAPMAX=1024
+export JAVA_HEAPMIN=512
+
+#######################################################################
+
+set -e
+
+TOPDIR=`pwd`
+
+# create the site catalog
+cat >sites.xml <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0">
+    <site  handle="local" arch="x86_64" os="LINUX">
+        <head-fs>
+            <scratch>
+                <shared>
+                    <file-server protocol="file" url="file://" mount-point="$TOPDIR/work"/>
+                    <internal-mount-point mount-point="$TOPDIR/work"/>
+                </shared>
+            </scratch>
+            <storage>
+                <shared>
+                    <file-server protocol="file" url="file://" mount-point="$TOPDIR/outputs"/>
+                    <internal-mount-point mount-point="$TOPDIR/outputs"/>
+                </shared>
+            </storage>
+        </head-fs>
+    </site>
+    <site  handle="condorpool" arch="x86_64" os="LINUX">
+        <head-fs>
+            <scratch />
+            <storage />
+        </head-fs>
+        <profile namespace="pegasus" key="style" >condor</profile>
+        <profile namespace="condor" key="universe" >vanilla</profile>
+        <profile namespace="env" key="PEGASUS_HOME" >/usr</profile>
+    </site>
+</sitecatalog>
+EOF
+
+START_TS=`/bin/date +'%s'`
+
+# plan the workflow
+/usr/bin/time pegasus-plan \
+    -v \
+    --conf pegasusrc \
+    --sites condorpool \
+    --staging-site local \
+    --dir work \
+    --output local \
+    --nocleanup \
+    --dax dax.xml \
+    | tee plan.out
+
+
+END_TS=`/bin/date +'%s'`
+DURATION=$(($END_TS - $START_TS))
+DURATION_MINUTES=$(($DURATION / 60))
+echo
+echo "Planner took $DURATION_MINUTES minutes and the limit was $MAX_MINUTES minutes"
+
+if [ $DURATION_MINUTES -gt $MAX_MINUTES ]; then
+    echo "Limit exceeded! Test failed!"
+    exit 1
+else
+    echo "Test passed!"
+fi
+
+exit 0
+
