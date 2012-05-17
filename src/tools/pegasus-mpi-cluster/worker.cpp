@@ -47,8 +47,7 @@ void Worker::launch_host_script() {
     } else if (pid == 0) {
         // Redirect stdout to stderr
         if (dup2(STDERR_FILENO, STDOUT_FILENO) < 0) {
-            fprintf(stderr,
-                "Unable to redirect host script stdout to stderr: %s\n", 
+            log_fatal("Unable to redirect host script stdout to stderr: %s", 
                 strerror(errno));
             exit(1);
         }
@@ -56,8 +55,7 @@ void Worker::launch_host_script() {
         // Create a new process group so we can kill it later if
         // it runs longer than the workflow
         if (setpgid(0, 0) < 0) {
-            fprintf(stderr, 
-                "Unable to set process group in host script: %s\n", 
+            log_fatal("Unable to set process group in host script: %s", 
                 strerror(errno));
             exit(1);
         }
@@ -228,12 +226,12 @@ int Worker::run() {
             
             // Redirect stdout/stderr
             if (dup2(out, STDOUT_FILENO) < 0) {
-                fprintf(stderr, "Error redirecting stdout of task %s: %s\n", 
+                log_fatal("Error redirecting stdout of task %s: %s", 
                     name.c_str(), strerror(errno));
                 exit(1);
             }
             if (dup2(err, STDERR_FILENO) < 0) {
-                fprintf(stderr, "Error redirecting stderr of task %s: %s\n", 
+                log_fatal("Error redirecting stderr of task %s: %s", 
                     name.c_str(), strerror(errno));
                 exit(1);
             }
