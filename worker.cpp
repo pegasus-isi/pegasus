@@ -175,27 +175,16 @@ int Worker::run() {
         
         log_debug("Worker %d: Running task %s", rank, name.c_str());
         
-        struct timeval task_start;
-        gettimeofday(&task_start, NULL);
-        
         // Process arguments
         std::list<std::string> args;
         split_args(args, command);
-        unsigned nargs = args.size();
-        // N + 1 for null-termination
-        char **argv = new char*[nargs+1];
-        for (unsigned i=0; i<nargs; i++) {
-            std::string arg = args.front();
-            args.pop_front();
-            argv[i] = new char[arg.size()+1];
-            strcpy(argv[i], arg.c_str());
-        }
-        argv[nargs] = NULL; // Last one is null
         
-        std::string app = argv[0];
-        
-        // Status of task
+        // Task status is exit code 1 by default
         int status = 256; // 256 is exit code 1
+        
+        // Get start time
+        struct timeval task_start;
+        gettimeofday(&task_start, NULL);
         
         pid_t pid = fork();
         if (pid < 0) {
@@ -204,6 +193,18 @@ int Worker::run() {
                 name.c_str(), strerror(errno));
         } else if (pid == 0) {
             // In child
+            
+            // Create argument structure
+            unsigned nargs = args.size();
+            // N + 1 for null-termination
+            char **argv = new char*[nargs+1];
+            for (unsigned i=0; i<nargs; i++) {
+                std::string arg = args.front();
+                args.pop_front();
+                argv[i] = new char[arg.size()+1];
+                strcpy(argv[i], arg.c_str());
+            }
+            argv[nargs] = NULL; // Last one is null
             
             // Redirect stdout/stderr
             close(STDOUT_FILENO);
@@ -227,15 +228,11 @@ int Worker::run() {
             }
         }
         
-        // Free arguments
-        for (unsigned i=0; i<nargs; i++) {
-            delete [] argv[i];
-        }
-        delete [] argv;
-        
+        // Finish time
         struct timeval task_finish;
         gettimeofday(&task_finish, NULL);
-
+        
+        // Elapsed time
         double task_stime = task_start.tv_sec + (task_start.tv_usec/1000000.0);
         double task_ftime = task_finish.tv_sec + (task_finish.tv_usec/1000000.0);
         double task_runtime = task_ftime - task_stime;
@@ -251,6 +248,7 @@ int Worker::run() {
         }
         
         // pegasus cluster output - used for provenance
+        std::string app = args.front();
         char summary[BUFSIZ];
         char date[32];
         iso2date(task_stime, date, sizeof(date));
