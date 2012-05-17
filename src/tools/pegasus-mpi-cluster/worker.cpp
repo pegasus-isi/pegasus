@@ -6,6 +6,7 @@
 #include <sys/time.h>
 #include <fcntl.h>
 #include <signal.h>
+#include <math.h>
 #include <mpi.h>
 
 #include "strlib.h"
@@ -17,7 +18,15 @@
 
 Worker::Worker(const std::string &host_script, unsigned host_memory) {
     this->host_script = host_script;
-    this->host_memory = host_memory;
+    if (host_memory == 0) {
+        // If host memory is not specified by the user, then get the amount
+        // of physical memory on the host and convert it to MB. 1 MB is the 
+        // minimum, but that shouldn't ever happen.
+        unsigned long bytes = get_host_memory();
+        this->host_memory = ceil(bytes / (1024.0*1024.0)); // bytes -> MB
+    } else {
+        this->host_memory = host_memory;
+    }
     this->host_script_pid = 0;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     get_host_name(host_name);
@@ -141,11 +150,12 @@ int Worker::run() {
     
     // Send worker's hostname
     send_hostname(host_name);
-    log_trace("Host name: %s", host_name.c_str());
+    log_trace("Worker %d: Host name: %s", rank, host_name.c_str());
+    log_trace("Worker %d: Host memory: %u MB", rank, this->host_memory);
     
     // Get worker's host rank
     recv_hostrank(host_rank);
-    log_trace("Host rank: %d", host_rank);
+    log_trace("Worker %d: Host rank: %d", rank, host_rank);
     
     // Get outfile/errfile
     std::string outfile;

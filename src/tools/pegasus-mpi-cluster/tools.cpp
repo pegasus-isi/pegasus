@@ -4,6 +4,11 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#ifdef DARWIN
+#include <sys/param.h>
+#include <sys/sysctl.h>
+#endif
+
 #include "tools.h"
 #include "failure.h"
 
@@ -61,4 +66,30 @@ void get_host_name(std::string &hostname) {
         myfailures("Unable to get host name");
     }
     hostname = name;
+}
+
+
+/* Get the total amount of physical memory in bytes */
+unsigned long get_host_memory() {
+    unsigned long memory;
+#ifdef DARWIN
+    size_t size = sizeof(memory);
+    if (sysctlbyname("hw.memsize", &memory, &size, NULL, 0) < 0) {
+        myfailures("Unable to get host physical memory size");
+    }
+#else
+    long pages = sysconf(_SC_PHYS_PAGES);
+    if (pages < 0) {
+        myfailures("Unable to get number of host physical memory pages");
+    }
+    long pagesize = sysconf(_SC_PAGE_SIZE);
+    if (pagesize < 0) {
+        myfailures("Unable to get physical page size");
+    }
+    memory = pages * pagesize;
+#endif
+    if (memory == 0) {
+        myfailure("Invalid memory size: %lu bytes", memory);
+    }
+    return memory;
 }
