@@ -5,7 +5,7 @@
 
 # number of max number of minutes allowed for the planner to plan the
 # dax - if these limit is exeeded, the test fails
-MAX_MINUTES=4
+MAX_MINUTES=1
 
 # control the environment
 export JAVA_HEAPMAX=1024
@@ -71,7 +71,7 @@ echo
 echo "Planner took $DURATION_MINUTES minutes and the limit was $MAX_MINUTES minutes"
 
 if [ $DURATION_MINUTES -gt $MAX_MINUTES ]; then
-    echo "Limit exceeded! Test failed!"
+    echo "Error: Limit exceeded!"
     exit 1
 else
     echo "Test passed!"

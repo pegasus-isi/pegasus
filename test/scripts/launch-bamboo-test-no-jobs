@@ -9,10 +9,8 @@ cd test/core/$TEST
 echo "TEST is $TEST"
 pwd
 
-PLANFILE=`mktemp plan.XXXXXX`
-
 #Launch the test
-./run-bamboo-test "$@" | tee $PLANFILE
+./run-bamboo-test "$@"
 
 STATUS=$?
 if [ $STATUS != 0 ]; then
