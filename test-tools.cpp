@@ -1,5 +1,4 @@
 #include <string>
-#include <stdio.h>
 
 #include "tools.h"
 #include "failure.h"
