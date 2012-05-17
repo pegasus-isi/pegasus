@@ -35,7 +35,5 @@ if [ "$STATUS" = "Success" ]; then
     exit 0
 else
     echo "*** Workflow failed ***"
-    echo "Running Pegasus analyzer"
-    pegasus-analyzer
     exit 1
 fi

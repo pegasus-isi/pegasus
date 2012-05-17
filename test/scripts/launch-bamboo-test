@@ -31,15 +31,19 @@ cd $RUN_DIR
 
 #Check status
 $TOP_DIR/test/common/check-status
-
 STATUS=$?
 
+# Run pegasus-analyzer to detect other problems
+if [ $STATUS = 0 ]; then
+   pegasus-analyzer $RUN_DIR
+   STATUS=$?
+fi
 
 if [ $STATUS = 0 ]; then
-  # Run Pegasus Statistics
+   # Run Pegasus Statistics
    pegasus-statistics $RUN_DIR
 else 
-   echo "Pegasus status failed"
+   echo "ERROR: Test failed"
    exit $STATUS
 fi
 
