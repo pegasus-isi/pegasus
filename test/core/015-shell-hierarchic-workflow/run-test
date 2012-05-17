@@ -1,0 +1,7 @@
+#!/bin/bash
+
+. ./run-bamboo-test
+
+cd ${RUN_DIR}
+
+tail -n 5 jobstate.log

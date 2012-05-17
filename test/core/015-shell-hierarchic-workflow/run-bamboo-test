@@ -1,0 +1,64 @@
+#!/bin/bash
+
+set -e
+set -v
+
+TOPDIR=`pwd`
+DAX=main.dax
+
+# Unique directory for this run
+RUN_ID=`/bin/date +'%Y%m%d_%H%M%S%N'`
+RUN_DIR=`pwd`/work/$RUN_ID
+
+# create the site catalog
+cat > sites.xml << EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0">
+        <site  handle="local" arch="x86_64" os="LINUX">
+                <grid  type="gt2" contact="localhost/jobmanager-fork" scheduler="Fork" jobtype="compute"/>
+                <grid  type="gt2" contact="localhost/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/>
+                <head-fs>
+                        <scratch>
+                                <shared>
+                                        <file-server protocol="file" url="" mount-point="$TOPDIR/work"/>
+                                        <internal-mount-point mount-point="$TOPDIR/work"/>
+                                </shared>
+                        </scratch>
+                        <storage>
+                                <shared>
+                                        <file-server protocol="file" url="" mount-point="$TOPDIR/work"/>
+                                        <internal-mount-point mount-point="$TOPDIR/work"/>
+                                </shared>
+                        </storage>
+                </head-fs>
+                <replica-catalog  type="RLS" url="rlsn://devrandom">
+                </replica-catalog>
+        </site>
+</sitecatalog>
+EOF
+
+cat > $DAX << EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<adag xmlns="http://pegasus.isi.edu/schema/DAX" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.3.xsd" version="3.3" name="main" index="0" count="1">
+   <file name="dax">
+      <pfn url="file://$TOPDIR/inner.dax" site="local"/>
+   </file>
+   <dax id="daxid" file="dax"/>
+</adag>
+EOF
+
+set -x
+
+pegasus-plan \
+    -Dpegasus.code.generator=Shell \
+    --conf pegasusrc \
+    --sites local \
+    --output local \
+    --dir work/ \
+    --relative-submit-dir ${RUN_ID} \
+    --nocleanup \
+    --dax ${DAX} \
+    --submit 
+
+set +x
+

@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<adag xmlns="http://pegasus.isi.edu/schema/DAX" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.3.xsd" version="3.3" name="inner">
+	<executable name="level1" namespace="cluster" version="1.0" arch="x86_64" os="linux">
+		<pfn url="file:///bin/sleep" site="local"/>
+	</executable>
+	<executable name="level2" namespace="cluster" version="1.0" arch="x86_64" os="linux">
+		<pfn url="file:///bin/sleep" site="local"/>
+	</executable>
+	<job id="ID0000001" namespace="cluster" name="level1" version="1.0">
+		<argument>1</argument>
+		<profile namespace="pegasus" key="job.runtime">1</profile>
+	</job>
+	<job id="ID0000002" namespace="cluster" name="level2" version="1.0">
+		<argument>2</argument>
+		<profile namespace="pegasus" key="job.runtime">2</profile>
+	</job>
+	<job id="ID0000003" namespace="cluster" name="level2" version="1.0">
+		<argument>4</argument>
+		<profile namespace="pegasus" key="job.runtime">4</profile>
+	</job>
+	<job id="ID0000004" namespace="cluster" name="level2" version="1.0">
+		<argument>6</argument>
+		<profile namespace="pegasus" key="job.runtime">6</profile>
+	</job>
+	<job id="ID0000005" namespace="cluster" name="level2" version="1.0">
+		<argument>8</argument>
+		<profile namespace="pegasus" key="job.runtime">8</profile>
+	</job>
+	<job id="ID0000006" namespace="cluster" name="level1" version="1.0">
+		<argument>2</argument>
+		<profile namespace="pegasus" key="job.runtime">2</profile>
+	</job>
+	<job id="ID0000007" namespace="cluster" name="level2" version="1.0">
+		<argument>2</argument>
+		<profile namespace="pegasus" key="job.runtime">2</profile>
+	</job>
+	<job id="ID0000008" namespace="cluster" name="level2" version="1.0">
+		<argument>4</argument>
+		<profile namespace="pegasus" key="job.runtime">4</profile>
+	</job>
+	<job id="ID0000009" namespace="cluster" name="level2" version="1.0">
+		<argument>6</argument>
+		<profile namespace="pegasus" key="job.runtime">6</profile>
+	</job>
+	<job id="ID0000010" namespace="cluster" name="level2" version="1.0">
+		<argument>8</argument>
+		<profile namespace="pegasus" key="job.runtime">8</profile>
+	</job>
+	<job id="ID0000011" namespace="cluster" name="level1" version="1.0">
+		<argument>3</argument>
+		<profile namespace="pegasus" key="job.runtime">3</profile>
+	</job>
+	<job id="ID0000012" namespace="cluster" name="level2" version="1.0">
+		<argument>2</argument>
+		<profile namespace="pegasus" key="job.runtime">2</profile>
+	</job>
+	<job id="ID0000013" namespace="cluster" name="level2" version="1.0">
+		<argument>4</argument>
+		<profile namespace="pegasus" key="job.runtime">4</profile>
+	</job>
+	<job id="ID0000014" namespace="cluster" name="level2" version="1.0">
+		<argument>6</argument>
+		<profile namespace="pegasus" key="job.runtime">6</profile>
+	</job>
+	<job id="ID0000015" namespace="cluster" name="level2" version="1.0">
+		<argument>8</argument>
+		<profile namespace="pegasus" key="job.runtime">8</profile>
+	</job>
+	<job id="ID0000016" namespace="cluster" name="level1" version="1.0">
+		<argument>4</argument>
+		<profile namespace="pegasus" key="job.runtime">4</profile>
+	</job>
+	<job id="ID0000017" namespace="cluster" name="level2" version="1.0">
+		<argument>2</argument>
+		<profile namespace="pegasus" key="job.runtime">2</profile>
+	</job>
+	<job id="ID0000018" namespace="cluster" name="level2" version="1.0">
+		<argument>4</argument>
+		<profile namespace="pegasus" key="job.runtime">4</profile>
+	</job>
+	<job id="ID0000019" namespace="cluster" name="level2" version="1.0">
+		<argument>6</argument>
+		<profile namespace="pegasus" key="job.runtime">6</profile>
+	</job>
+	<job id="ID0000020" namespace="cluster" name="level2" version="1.0">
+		<argument>8</argument>
+		<profile namespace="pegasus" key="job.runtime">8</profile>
+	</job>
+	<child ref="ID0000002">
+		<parent ref="ID0000001"/>
+	</child>
+	<child ref="ID0000003">
+		<parent ref="ID0000001"/>
+	</child>
+	<child ref="ID0000004">
+		<parent ref="ID0000001"/>
+	</child>
+	<child ref="ID0000005">
+		<parent ref="ID0000001"/>
+	</child>
+	<child ref="ID0000007">
+		<parent ref="ID0000006"/>
+	</child>
+	<child ref="ID0000008">
+		<parent ref="ID0000006"/>
+	</child>
+	<child ref="ID0000009">
+		<parent ref="ID0000006"/>
+	</child>
+	<child ref="ID0000010">
+		<parent ref="ID0000006"/>
+	</child>
+	<child ref="ID0000012">
+		<parent ref="ID0000011"/>
+	</child>
+	<child ref="ID0000013">
+		<parent ref="ID0000011"/>
+	</child>
+	<child ref="ID0000014">
+		<parent ref="ID0000011"/>
+	</child>
+	<child ref="ID0000015">
+		<parent ref="ID0000011"/>
+	</child>
+	<child ref="ID0000017">
+		<parent ref="ID0000016"/>
+	</child>
+	<child ref="ID0000018">
+		<parent ref="ID0000016"/>
+	</child>
+	<child ref="ID0000019">
+		<parent ref="ID0000016"/>
+	</child>
+	<child ref="ID0000020">
+		<parent ref="ID0000016"/>
+	</child>
+</adag>
