@@ -12,6 +12,19 @@ RM = rm -f
 INSTALL = install
 MAKE = make
 
+OS=$(shell uname -s)
+ifeq (Linux,$(OS))
+  OPSYS = LINUX
+endif
+ifeq (Darwin,$(OS))
+  OPSYS = DARWIN
+endif
+ifndef OPSYS
+  $(error Unsupported OS: $(OS))
+endif
+
+CXXFLAGS += -D$(OPSYS)
+
 OBJS += strlib.o
 OBJS += tools.o
 OBJS += failure.o
