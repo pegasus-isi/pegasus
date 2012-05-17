@@ -155,6 +155,7 @@ function test_hang_script {
 }
 
 run_test ./test-strlib
+run_test ./test-tools
 run_test ./test-dag
 run_test ./test-log
 run_test ./test-engine

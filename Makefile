@@ -41,6 +41,7 @@ TESTS += test-strlib
 TESTS += test-dag
 TESTS += test-log
 TESTS += test-engine
+TESTS += test-tools
 
 .PHONY: clean depends test install 
 
@@ -59,6 +60,7 @@ test-strlib: test-strlib.o $(OBJS)
 test-dag: test-dag.o $(OBJS)
 test-log: test-log.o $(OBJS)
 test-engine: test-engine.o $(OBJS)
+test-tools: test-tools.o $(OBJS)
 
 test: $(TESTS) $(PROGRAMS)
 	test/test.sh

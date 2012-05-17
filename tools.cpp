@@ -93,3 +93,24 @@ unsigned long get_host_memory() {
     }
     return memory;
 }
+
+
+/* Get the total number of cpus on the host */
+unsigned int get_host_cpus() {
+    unsigned int cpus;
+#ifdef __MACH__ 
+    size_t size = sizeof(cpus);
+    if (sysctlbyname("hw.physicalcpu", &cpus, &size, NULL, 0) < 0) {
+        myfailures("Unable to get number of physical CPUs");
+    }
+#else
+    cpus = sysconf(_SC_NPROCESSORS_CONF);
+    if (cpus < 0) {
+        myfailures("Unable to get number of physical CPUs");
+    }
+#endif
+    if (cpus <= 0) {
+        myfailure("Invalid number of CPUs: %u", cpus);
+    }
+    return cpus;
+}
