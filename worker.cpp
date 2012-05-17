@@ -55,7 +55,7 @@ void Worker::launch_host_script() {
         // it runs longer than the workflow
         if (setpgid(0, 0) < 0) {
             fprintf(stderr, 
-                "Unable to set process group for host script: %s\n", 
+                "Unable to set process group in host script: %s\n", 
                 strerror(errno));
             exit(1);
         }
@@ -69,6 +69,17 @@ void Worker::launch_host_script() {
         fprintf(stderr, "Unable to execve host script: %s\n", strerror(errno));
         exit(1);
     } else {
+        
+        // Also set process group here to avoid potential races. It is 
+        // possible that we might try to call killpg() before the child
+        // has a chance to run. Calling setpgid() here ensures that the
+        // child's process group will always be set before killpg() is 
+        // called so that it doesn't fail.
+        if (setpgid(pid, pid) < 0) {
+            log_error("Unable to set process group for host script: %s", 
+                strerror(errno));
+        }
+        
         host_script_pid = pid;
     } 
 }
