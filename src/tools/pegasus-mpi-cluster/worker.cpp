@@ -230,10 +230,12 @@ int Worker::run() {
             if (dup2(out, STDOUT_FILENO) < 0) {
                 fprintf(stderr, "Error redirecting stdout of task %s: %s\n", 
                     name.c_str(), strerror(errno));
+                exit(1);
             }
             if (dup2(err, STDERR_FILENO) < 0) {
                 fprintf(stderr, "Error redirecting stderr of task %s: %s\n", 
                     name.c_str(), strerror(errno));
+                exit(1);
             }
             
             // Close any other open descriptors. This will not really close
