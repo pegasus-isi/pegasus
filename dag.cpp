@@ -180,10 +180,10 @@ void DAG::read_dag() {
             while (true) {
                 std::string arg = args.front();
                 if (arg[0] == '-') {
-                    if (arg == "-m" || arg == "--memory") {
+                    if (arg == "-m" || arg == "--request-memory") {
                         args.pop_front();
                         if (args.size() == 0) {
-                            myfailure("-m/--memory requires N for task %s", 
+                            myfailure("-m/--request-memory requires N for task %s", 
                                 name.c_str());
                         }
                         std::string smemory = args.front();
@@ -200,7 +200,7 @@ void DAG::read_dag() {
                         }
                         // We round up to the next integer
                         memory = ceil(fmemory);
-                        log_trace("Required memory %u MB for task %s", 
+                        log_trace("Requested %u MB memory for task %s", 
                             memory, name.c_str());
                     } else {
                         myfailure("Invalid argument '%s' for task %s", 
