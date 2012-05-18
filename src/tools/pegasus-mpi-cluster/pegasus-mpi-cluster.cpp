@@ -193,8 +193,6 @@ int mpidag(int argc, char *argv[]) {
         return 1;
     }
     
-    log_info("Memory per host: %u", host_memory);
-    
     // Everything is pretty deterministic up until the processes reach
     // this point. Once we get here the different processes can diverge 
     // in their behavior for many reasons (file systems issues, bad nodes,

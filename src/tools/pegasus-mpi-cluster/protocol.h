@@ -9,8 +9,8 @@
 #define TAG_HOSTNAME 4
 #define TAG_HOSTRANK 5
 
-void send_hostname(const std::string &hostname);
-void recv_hostname(std::string &hostname, int &worker);
+void send_registration(const std::string &hostname, unsigned int memory, unsigned int cpus);
+void recv_registration(int &worker, std::string &hostname, unsigned int &memory, unsigned int &cpus);
 void send_hostrank(int worker, int hostrank);
 void recv_hostrank(int &hostrank);
 void send_stdio_paths(const std::string &outfile, const std::string &errfile);

@@ -16,7 +16,7 @@
 #include "failure.h"
 #include "tools.h"
 
-Worker::Worker(const std::string &host_script, unsigned host_memory) {
+Worker::Worker(const std::string &host_script, unsigned int host_memory) {
     this->host_script = host_script;
     if (host_memory == 0) {
         // If host memory is not specified by the user, then get the amount
@@ -27,6 +27,7 @@ Worker::Worker(const std::string &host_script, unsigned host_memory) {
     } else {
         this->host_memory = host_memory;
     }
+    this->host_cpus = get_host_cpus();
     this->host_script_pid = 0;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     get_host_name(host_name);
@@ -146,12 +147,13 @@ void Worker::check_host_script(bool terminate) {
 }
 
 int Worker::run() {
-    log_info("Worker %d: Starting...", rank);
+    log_debug("Worker %d: Starting...", rank);
     
     // Send worker's hostname
-    send_hostname(host_name);
+    send_registration(host_name, host_memory, host_cpus);
     log_trace("Worker %d: Host name: %s", rank, host_name.c_str());
     log_trace("Worker %d: Host memory: %u MB", rank, this->host_memory);
+    log_trace("Worker %d: Host CPUs: %u", rank, this->host_cpus);
     
     // Get worker's host rank
     recv_hostrank(host_rank);
@@ -317,7 +319,7 @@ int Worker::run() {
     log_trace("Worker %d: Sending total runtime to master", rank);
     send_total_runtime(total_runtime);
     
-    log_info("Worker %d: Exiting...", rank);
+    log_debug("Worker %d: Exiting...", rank);
     
     return 0;
 }
