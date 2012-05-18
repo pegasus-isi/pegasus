@@ -1,7 +1,7 @@
 TASK A /bin/echo A
 TASK B -m 100 /bin/echo B
-TASK C --memory 100 /bin/echo C
-TASK D --memory 99.1 /bin/echo D
+TASK C --request-memory 100 /bin/echo C
+TASK D --request-memory 99.1 /bin/echo D
 #TASK E -m -10.0 /bin/echo E
 #TASK F -m a /bin/echo F
 
