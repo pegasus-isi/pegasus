@@ -1,7 +1,6 @@
 #ifndef MASTER_H
 #define MASTER_H
 
-#include <queue>
 #include <list>
 #include <vector>
 
@@ -19,6 +18,8 @@ public:
         this->memory = memory;
         this->cpus = cpus;
     }
+    
+    void log_status();
 };
 
 class Slot {
@@ -32,6 +33,9 @@ public:
     }
 };
 
+typedef std::list<Slot *> SlotList;
+typedef std::list<Task *> TaskList;
+
 class Master {
     std::string program;
     std::string dagfile;
@@ -39,27 +43,25 @@ class Master {
     std::string errfile;
     DAG *dag;
     Engine *engine;
-    std::queue<int> idle;
     
     std::vector<Slot *> slots;
     std::vector<Host *> hosts;
-    std::list<Slot *> free_slots;
-    std::list<Task *> ready_tasks;
+    SlotList free_slots;
+    TaskList ready_tasks;
     
     int numworkers;
-
+    
     long total_count;
     long success_count;
     long failed_count;
     
-    void register_workers();
+    unsigned total_cpus;
     
-    void submit_task(Task *t, int worker);
+    void register_workers();
+    void schedule_tasks();
     void wait_for_result();
-    void add_worker(int worker);
-    bool has_idle_worker();
-    void mark_worker_idle(int worker);
-    int next_idle_worker();
+    void queue_ready_tasks();
+    void submit_task(Task *t, int worker);
     void merge_task_stdio(FILE *dest, const std::string &src, const std::string &stream);
 public:
     Master(const std::string &program, Engine &engine, DAG &dag, const std::string &dagfile, const std::string &outfile, const std::string &errfile);

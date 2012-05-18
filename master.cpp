@@ -1,14 +1,19 @@
 #include <map>
-#include "stdio.h"
-#include "unistd.h"
-#include "sys/time.h"
-#include "mpi.h"
+#include <stdio.h>
+#include <unistd.h>
+#include <sys/time.h>
+#include <mpi.h>
 
 #include "master.h"
 #include "failure.h"
 #include "protocol.h"
 #include "log.h"
 #include "tools.h"
+
+void Host::log_status() {
+    log_trace("Host %s now has %u MB and %u CPUs free", 
+        this->host_name.c_str(), this->memory, this->cpus);
+}
 
 Master::Master(const std::string &program, Engine &engine, DAG &dag,
                const std::string &dagfile, const std::string &outfile,
@@ -19,10 +24,12 @@ Master::Master(const std::string &program, Engine &engine, DAG &dag,
     this->errfile = errfile;
     this->engine = &engine;
     this->dag = &dag;
-
+    
     total_count = 0;
     success_count = 0;
     failed_count = 0;
+    
+    total_cpus = 0;
     
     // Determine the number of workers we have
     int numprocs;
@@ -45,9 +52,9 @@ Master::~Master() {
     }
 }
 
-void Master::submit_task(Task *task, int worker) {
-    log_debug("Submitting task %s to worker %d", task->name.c_str(), worker);
-    send_request(task->name, task->command, task->pegasus_id, worker);
+void Master::submit_task(Task *task, int rank) {
+    log_debug("Submitting task %s to slot %d", task->name.c_str(), rank);
+    send_request(task->name, task->command, task->pegasus_id, rank);
     
     this->total_count++;
 }
@@ -57,12 +64,8 @@ void Master::wait_for_result() {
     
     std::string name;
     int exitcode;
-    int worker;
-    recv_response(name, exitcode, worker);
-    
-    // Mark worker idle
-    log_trace("Worker %d is idle", worker);
-    this->mark_worker_idle(worker);
+    int rank;
+    recv_response(name, exitcode, rank);
     
     // Mark task finished
     if (exitcode == 0) {
@@ -72,29 +75,20 @@ void Master::wait_for_result() {
         log_error("Task %s failed with exitcode %d", name.c_str(), exitcode);
         this->failed_count++;
     }
-    Task *t = this->dag->get_task(name);
-    this->engine->mark_task_finished(t, exitcode);
-}
-
-void Master::add_worker(int worker) {
-    this->mark_worker_idle(worker);
-}
-
-bool Master::has_idle_worker() {
-    return !this->idle.empty();
-}
-
-int Master::next_idle_worker() {
-    if (!this->has_idle_worker()) {
-        myfailure("No idle workers");
-    }
-    int worker = this->idle.front();
-    this->idle.pop();
-    return worker;
-}
-
-void Master::mark_worker_idle(int worker) {
-    this->idle.push(worker);
+    Task *task = this->dag->get_task(name);
+    this->engine->mark_task_finished(task, exitcode);
+    
+    // Mark slot idle
+    log_trace("Worker %d is idle", rank);
+    Slot *slot = slots[rank-1];
+    
+    // Return resources to host
+    Host *host = slot->host;
+    host->memory += task->memory;
+    host->log_status();
+    
+    // Mark slot as free
+    free_slots.push_back(slot);
 }
 
 void Master::merge_task_stdio(FILE *dest, const std::string &srcfile, const std::string &stream) {
@@ -148,14 +142,14 @@ void Master::register_workers() {
     
     // Collect host names from all workers, create host objects
     for (int i=0; i<numworkers; i++) {
-        int worker;
+        int rank;
         std::string hostname;
         unsigned int memory = 0;
         unsigned int cpus = 0;
         
-        recv_registration(worker, hostname, memory, cpus);
+        recv_registration(rank, hostname, memory, cpus);
         
-        hostnames[worker] = hostname;
+        hostnames[rank] = hostname;
         
         // If the host is not found, create a new one
         if (hostmap.find(hostname) == hostmap.end()) {
@@ -163,23 +157,25 @@ void Master::register_workers() {
             Host *newhost = new Host(hostname, memory, cpus);
             hosts.push_back(newhost);
             hostmap[hostname] = newhost;
+            
+            total_cpus += cpus;
         }
         
-        log_debug("Worker %d on host %s", worker, hostname.c_str());
+        log_debug("Slot %d on host %s", rank, hostname.c_str());
     }
     
     typedef std::map<std::string, int> RankMap;
     RankMap ranks;
     
-    // Create slots, Assign a host rank to each worker
-    for (int worker=1; worker<=numworkers; worker++) {
-        std::string hostname = hostnames.find(worker)->second;
+    // Create slots, assign a host rank to each worker
+    for (int rank=1; rank<=numworkers; rank++) {
+        std::string hostname = hostnames.find(rank)->second;
         
         // Find host
         Host *host = hostmap.find(hostname)->second;
         
         // Create new slot
-        Slot *slot = new Slot(worker, host);
+        Slot *slot = new Slot(rank, host);
         slots.push_back(slot);
         free_slots.push_back(slot);
         
@@ -191,8 +187,62 @@ void Master::register_workers() {
         }
         ranks[hostname] = hostrank + 1;
         
-        send_hostrank(worker, hostrank);
-        log_debug("Host rank of worker %d is %d", worker, hostrank);
+        send_hostrank(rank, hostrank);
+        log_debug("Host rank of worker %d is %d", rank, hostrank);
+    }
+}
+
+void Master::schedule_tasks() {
+    log_debug("Scheduling tasks...");
+    
+    // Keep scheduling tasks until no matches are found
+    bool match = true;
+    while (match) {
+        match = false;
+        
+        for (SlotList::iterator s = free_slots.begin(); s != free_slots.end(); s++) {
+            Slot *slot = *s;
+            Host *host = slot->host;
+            
+            for (TaskList::iterator t = ready_tasks.begin(); t != ready_tasks.end(); t++) {
+                Task *task = *t;
+                
+                // If the task fits, send it
+                if (host->memory >= task->memory) {
+                    
+                    // We found a match
+                    log_debug("Matched task %s to slot %d on host %s", 
+                        task->name.c_str(), slot->rank, host->host_name.c_str());
+                    match = true;
+                    
+                    // Submit the task
+                    host->memory -= task->memory;
+                    submit_task(task, slot->rank);
+                    host->log_status();
+                    
+                    // Dequeue task
+                    t = ready_tasks.erase(t);
+                    
+                    // Mark slot as busy
+                    s = free_slots.erase(s);
+                    
+                    // so that the s++ in the loop doesn't skip one
+                    s--;
+                    
+                    // This is to break out of the task loop so that we can 
+                    // consider the next slot
+                    break;
+                }
+            }
+        }
+    }
+}
+
+void Master::queue_ready_tasks() {
+    while (this->engine->has_ready_task()) {
+        Task *task = this->engine->next_ready_task();
+        log_debug("Queueing task %s", task->name.c_str());
+        ready_tasks.push_back(task);
     }
 }
 
@@ -213,30 +263,34 @@ int Master::run() {
     std::string worker_err_path = this->dagfile + dotpid + ".err";
     send_stdio_paths(worker_out_path, worker_err_path);
     
-    // Queue up the workers
-    for (int worker=1; worker<=numworkers; worker++) {
-        this->add_worker(worker);
+    // Check to make sure that there is at least one host capable
+    // of executing every task
+    for (DAG::iterator t = dag->begin(); t != dag->end(); t++){
+        Task *task = (*t).second;
+        
+        // Check all the hosts for one that can run the task
+        bool match = false;
+        for (unsigned h=0; h<hosts.size(); h++) {
+            Host *host = hosts[h];
+            if (host->memory >= task->memory) {
+                match = true;
+                break;
+            }
+        }
+        
+        if (!match) {
+            // There was no host found that was capable of executing the
+            // task, so we must abort
+            myfailure("FATAL ERROR: No host is capable of running task %s", 
+                task->name.c_str());
+        }
     }
     
-    // While DAG has tasks to run
+    // Execute the workflow
     while (!this->engine->is_finished()) {
-        
-        // Submit as many tasks as we can
-        while (this->engine->has_ready_task() && this->has_idle_worker()) {
-            int worker = this->next_idle_worker();
-            Task *task = this->engine->next_ready_task();
-            this->submit_task(task, worker);
-        }
-        
-        if (!this->engine->has_ready_task()) {
-            log_debug("No ready tasks");
-        }
-        
-        if (!this->has_idle_worker()) {
-            log_debug("No idle workers");
-        }
-        
-        this->wait_for_result();
+        queue_ready_tasks();
+        schedule_tasks();
+        wait_for_result();
     }
     
     log_info("Workflow finished");
@@ -246,17 +300,16 @@ int Master::run() {
     gettimeofday(&finish, NULL);
     
     // Tell workers to exit
-    // TODO Change this to MPI_Bcast
     log_trace("Sending workers shutdown messages");
     for (int i=1; i<=numworkers; i++) {
         send_shutdown(i);
     }
-
+    
     log_trace("Waiting for workers to finish");
-
+    
     double total_runtime = collect_total_runtimes();
     log_info("Total runtime of tasks: %f", total_runtime);
-
+    
     double stime = start.tv_sec + (start.tv_usec/1000000.0);
     double ftime = finish.tv_sec + (finish.tv_usec/1000000.0);
     double walltime = ftime - stime;
@@ -313,7 +366,8 @@ int Master::run() {
     }
     iso2date(stime, date, sizeof(date));
     sprintf(summary, "[cluster-summary stat=\"%s\" tasks=%ld, succeeded=%ld, failed=%ld, extra=%d,"
-                 " start=\"%s\", duration=%.3f, pid=%d, app=\"%s\", cores=%d, utilization=%.3f]\n",
+                 " start=\"%s\", duration=%.3f, pid=%d, app=\"%s\", runtime=%.3f, slots=%d, cpus=%u,"
+                 " utilization=%.3f]\n",
                  stat, 
                  this->total_count,
                  this->success_count, 
@@ -323,8 +377,10 @@ int Master::run() {
                  walltime,
                  getpid(),
                  this->program.c_str(),
-                 numworkers+1,
-                 master_util);
+                 total_runtime,
+                 numworkers,
+                 total_cpus,
+                 worker_util);
     fwrite(summary, 1, strlen(summary), outf);
     
     if (errfile != "stderr") { 
@@ -333,11 +389,11 @@ int Master::run() {
     if (outfile != "stdout") {
         fclose(outf);
     }
-        
+    
     if (this->engine->max_failures_reached()) {
         log_error("Max failures reached: DAG prematurely aborted");
     }
-        
+    
     if (this->engine->is_failed()) {
         log_error("Workflow failed");
         return 1;
