@@ -1,6 +1,7 @@
-#include "string.h"
-#include "mpi.h"
+#include <string.h>
+#include <mpi.h>
 
+#include "tools.h"
 #include "protocol.h"
 #include "failure.h"
 
@@ -24,18 +25,21 @@ void recv_stdio_paths(std::string &outfile, std::string &errfile) {
     errfile = buf+strlen(buf)+1;
 }
 
-void send_hostname(const std::string &hostname) {
+void send_registration(const std::string &hostname, unsigned int memory, unsigned int cpus) {
     // Send the hostname
-    strcpy(buf, hostname.c_str());
-    int size = hostname.size()+1;
+    sprintf(buf, "%s %u %u", hostname.c_str(), memory, cpus);
+    int size = strlen(buf) + 1;
     MPI_Send(buf, size, MPI_CHAR, 0, TAG_HOSTNAME, MPI_COMM_WORLD);
 }
 
-void recv_hostname(std::string &hostname, int &worker) {
+void recv_registration(int &worker, std::string &hostname, unsigned int &memory, unsigned int &cpus) {
     MPI_Status status;
     MPI_Recv(buf, MAX_MESSAGE, MPI_CHAR, MPI_ANY_SOURCE, TAG_HOSTNAME, MPI_COMM_WORLD, &status);
-    hostname = buf;
     worker = status.MPI_SOURCE;
+    char name[HOST_NAME_MAX];
+    hostname = buf;
+    sscanf(buf, "%s %u %u", name, &memory, &cpus);
+    hostname = name;
 }
 
 void recv_hostrank(int &hostrank) {

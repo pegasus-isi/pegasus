@@ -34,6 +34,15 @@ Master::Master(const std::string &program, Engine &engine, DAG &dag,
 }
 
 Master::~Master() {
+    std::vector<Slot *>::iterator s;
+    for (s = slots.begin(); s != slots.end(); s++) {
+        delete *s;
+    }
+    
+    std::vector<Host *>::iterator h;
+    for (h = hosts.begin(); h != hosts.end(); h++) {
+        delete *h;
+    }
 }
 
 void Master::submit_task(Task *task, int worker) {
@@ -125,35 +134,63 @@ void Master::merge_task_stdio(FILE *dest, const std::string &srcfile, const std:
 }
 
 /*
- * Assign a host-centric rank to each of the workers. The worker with the lowest
- * global rank on each host is given host rank 0, the next lowest is given host
- * rank 1, and so on. The master is not given a host rank.
+ * Register all workers, create hosts, create slots. Assign a host-centric 
+ * rank to each of the workers. The worker with the lowest global rank on 
+ * each host is given host rank 0, the next lowest is given host rank 1, 
+ * and so on. The master is not given a host rank.
  */
-void Master::hostrank_workers() {
-    typedef std::map<int, std::string> HostMap;
-    HostMap hosts;
+void Master::register_workers() {
+    typedef std::map<std::string, Host *> HostMap;
+    HostMap hostmap;
     
-    // Collect host names from all workers
+    typedef std::map<int, std::string> HostnameMap;
+    HostnameMap hostnames;
+    
+    // Collect host names from all workers, create host objects
     for (int i=0; i<numworkers; i++) {
         int worker;
         std::string hostname;
-        recv_hostname(hostname, worker);
-        hosts[worker] = hostname;
+        unsigned int memory = 0;
+        unsigned int cpus = 0;
+        
+        recv_registration(worker, hostname, memory, cpus);
+        
+        hostnames[worker] = hostname;
+        
+        // If the host is not found, create a new one
+        if (hostmap.find(hostname) == hostmap.end()) {
+            log_debug("Got new host: name=%s, mem=%u, cpus=%u", hostname.c_str(), memory, cpus);
+            Host *newhost = new Host(hostname, memory, cpus);
+            hosts.push_back(newhost);
+            hostmap[hostname] = newhost;
+        }
+        
         log_debug("Worker %d on host %s", worker, hostname.c_str());
     }
     
     typedef std::map<std::string, int> RankMap;
     RankMap ranks;
     
-    // Assign a host rank to each worker
+    // Create slots, Assign a host rank to each worker
     for (int worker=1; worker<=numworkers; worker++) {
-        std::string hostname = hosts.find(worker)->second;
+        std::string hostname = hostnames.find(worker)->second;
+        
+        // Find host
+        Host *host = hostmap.find(hostname)->second;
+        
+        // Create new slot
+        Slot *slot = new Slot(worker, host);
+        slots.push_back(slot);
+        free_slots.push_back(slot);
+        
+        // Compute hostrank for this slot
         RankMap::iterator nextrank = ranks.find(hostname);
         int hostrank = 0;
         if (nextrank != ranks.end()) {
             hostrank = nextrank->second;
         }
         ranks[hostname] = hostrank + 1;
+        
         send_hostrank(worker, hostrank);
         log_debug("Host rank of worker %d is %d", worker, hostrank);
     }
@@ -166,7 +203,7 @@ int Master::run() {
     
     log_info("Master starting with %d workers", numworkers);
     
-    hostrank_workers();
+    register_workers();
     
     // Send out a unique path workers can use for their out/err files
     pid_t pid = getpid();

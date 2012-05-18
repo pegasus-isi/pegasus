@@ -6,10 +6,13 @@
 class Worker {
 	int rank;
 	int host_rank;
-	std::string host_name;
+	
 	std::string host_script;
 	pid_t host_script_pid;
-	unsigned host_memory;
+	
+	std::string host_name;
+	unsigned int host_memory;
+	unsigned int host_cpus;
 	
 	void launch_host_script();
 	void check_host_script(bool terminate);
