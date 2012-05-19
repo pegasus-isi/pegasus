@@ -104,12 +104,13 @@ unsigned int get_host_cpus() {
         myfailures("Unable to get number of physical CPUs");
     }
 #else
-    cpus = sysconf(_SC_NPROCESSORS_CONF);
-    if (cpus < 0) {
+    long nprocessors = sysconf(_SC_NPROCESSORS_CONF);
+    if (nprocessors <= 0) {
         myfailures("Unable to get number of physical CPUs");
     }
+    cpus = nprocessors;
 #endif
-    if (cpus <= 0) {
+    if (cpus == 0) {
         myfailure("Invalid number of CPUs: %u", cpus);
     }
     return cpus;
