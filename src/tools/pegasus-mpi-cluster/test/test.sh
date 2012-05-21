@@ -40,7 +40,7 @@ function test_run_diamond {
 	output=$(mpiexec -n 2 $PMC -s test/diamond.dag 2>&1)
 	RC=$?
 	
-	rm -f test/diamond.dag.rescue*
+	rm -f test/diamond.dag.*
 	
 	if [ $RC -ne 0 ]; then
 		echo "$output"
@@ -68,7 +68,7 @@ function test_out_err {
 	mpiexec -n 2 $PMC -s test/diamond.dag -o /dev/null -e /dev/null 2>/dev/null
 	RC=$?
 	
-	rm -f test/diamond.dag.rescue*
+	rm -f test/diamond.dag.*
 	
 	if [ $RC -ne 0 ]; then
 		return 1
@@ -106,6 +106,8 @@ function test_host_script {
 	OUTPUT=$(mpiexec -n 2 $PMC -s test/diamond.dag -o /dev/null -e /dev/null --host-script test/hostscript.sh 2>&1)
 	RC=$?
 	
+	rm -f test/diamond.dag.*
+	
 	if [ $RC -ne 0 ]; then
 		return 1
 	fi
@@ -135,6 +137,8 @@ function test_hang_script {
 	OUTPUT=$(mpiexec -n 2 $PMC -s test/diamond.dag -o /dev/null -e /dev/null --host-script test/hangscript.sh 2>&1)
 	RC=$?
 	
+	rm -f test/diamond.dag.*
+	
 	if [ $RC -ne 0 ]; then
 		return 1
 	fi
@@ -154,6 +158,39 @@ function test_hang_script {
 	return 0
 }
 
+function test_memory_limit {
+	OUTPUT=$(mpiexec -n 2 $PMC -s test/memory.dag -o /dev/null -e /dev/null --host-memory 100 2>&1)
+	RC=$?
+	
+	rm -rf test/memory.dag.*
+	
+	if [ $RC -ne 0 ]; then
+		return 1
+	fi
+	
+	return 0
+}
+
+function test_insufficient_memory {
+	OUTPUT=$(mpiexec -n 2 $PMC -s test/memory.dag -o /dev/null -e /dev/null --host-memory 99 2>&1)
+	RC=$?
+	
+	rm -f test/memory.dag.*
+	
+	# This test should fail because 99 MB isn't enough to run the tasks in the DAG
+	if [ $RC -ne 1 ]; then
+		return 1
+	fi
+	
+	if ! [[ "$OUTPUT" =~ "FATAL ERROR: No host is capable of running task" ]]; then
+		echo "$OUTPUT"
+		echo "ERROR: Insufficient memory test failed"
+		return 1
+	fi
+	
+	return 0
+}
+
 run_test ./test-strlib
 run_test ./test-tools
 run_test ./test-dag
@@ -166,3 +203,5 @@ run_test test_out_err
 run_test test_rescue_file
 run_test test_host_script
 run_test test_hang_script
+run_test test_memory_limit
+run_test test_insufficient_memory
