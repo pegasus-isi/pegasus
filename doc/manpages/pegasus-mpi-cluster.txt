@@ -131,6 +131,10 @@ Options
     Path to a script or executable to launch on each unique host that 
     *pegasus-mpi-cluster* is running on. (see <<HOST_SCRIPTS,*HOST SCRIPTS*>>)
 
+*--host-memory* 'size'::
+    Amount of memory available on each host in MB. The default is to determine the
+    amount of physical RAM automatically. (see <<RESOURCE_SCHED, *RESOURCE-BASED 
+    SCHEDULING*>>)
 
 [[DAG_FILES]]
 DAG Files
@@ -144,14 +148,22 @@ middle).
 
 The format of a *TASK* record is:
 [verse]
-    *TASK* 'id' 'executable' ['arguments...']
+    *TASK* 'id' ['options...'] 'executable' ['arguments...']
 
-Where 'id' is the ID of the task, 'executable' is the path to the executable
-or script to run, and 'arguments...' is a space-separated list of
-arguments to pass to the task. An example is:
+Where 'id' is the ID of the task, 'options' is a list of task options, 'executable' is 
+the path to the executable or script to run, and 'arguments...' is a space-separated 
+list of arguments to pass to the task. An example is:
 ------------
-    TASK t01 /bin/program -a -b
+    TASK t01 -m 10 /bin/program -a -b
 ------------
+This example specifies a task 't01' that requires 10 MB memory to run '/bin/program'
+with the arguments '-a' and '-b'. The available task options are:
+
+    *-m* 'M'::
+    *--request-memory* 'M'::
+        The amount of memory required by the task in MB. (see <<RESOURCE_SCHED, 
+        *RESOURCE-BASED SCHEDULING*>>)
+
 The format of an *EDGE* record is:
 [verse]
     *EDGE* 'parent' 'child'
@@ -246,6 +258,33 @@ the *PMC_HOST_SCRIPT* environment variable.
 The host script is started before any tasks are launched. If it runs for
 longer than the workflow, then it is sent a SIGTERM signal when the workflow
 completes.
+
+
+[[RESOURCE_SCHED]]
+Resource-Based Scheduling
+-------------------------
+
+High-performance computing resources often have a low ratio of memory to CPUs.
+At the same time, workflow tasks often have high memory requirements. Often,
+the memory requirements of a workflow task exceed the amount of memory
+available to each CPU on a given host. As a result, it may be necessary to
+disable some CPUs in order to free up enough memory to run the tasks.
+
+In order to make this process more efficient, *pegasus-mpi-cluster* supports
+resource-based scheduling. In resource-based scheduling the tasks in the
+workflow can specify how much memory they require, and *pegasus-mpi-cluster*
+will schedule them so that the tasks running on a given host do not exceed the
+amount of physical memory available. This enables *pegasus-mpi-cluster* to take
+advantage of all the CPUs available when the tasks' memory requirement is low,
+but also disable some CPUs when the tasks' memory requirement is higher.
+
+Users can specify both the amount of memory required per task, and the amount
+of memory available per host. If the amount of memory required by any task
+exceeds the available memory of all the hosts, then the workflow will be
+aborted. By default, the host memory is determined automatically, however the
+user can specify *--host-memory* to "lie" to *pegasus-mpi-cluster*. The amount
+of memory required for each task is specified in the DAG using the 
+*-m*/*--request-memory* argument (see <<DAG_FILES, *DAG Files*>>.
 
 
 Misc
