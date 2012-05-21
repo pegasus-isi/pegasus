@@ -393,24 +393,24 @@ public class CPlanner extends Executable{
         //check if sites set by user. If user has not specified any sites then
         //load all sites from site catalog.
         Collection eSites  = mPOptions.getExecutionSites();
-        Set<String> toLoad = new HashSet<String>( mPOptions.getExecutionSites() );
-        //add the output site if specified
-        if( mPOptions.getOutputSite() != null ){
-            toLoad.add( mPOptions.getOutputSite() );
-        }
+        
+        Set<String> toLoad = new HashSet<String>();
+        mLogger.log( "All sites will be loaded from the site catalog",
+                     LogManager.DEBUG_MESSAGE_LEVEL );
+        toLoad.add( "*" );
         if( eSites.isEmpty() ) {
             mLogger.log("No sites given by user. Will use sites from the site catalog",
                         LogManager.DEBUG_MESSAGE_LEVEL);
-            toLoad.add( "*" );
+            eSites.add( "*" );
         }
-        mLogger.log( "Sites to load in site store " + toLoad, LogManager.DEBUG_MESSAGE_LEVEL );        
         
         //load the site catalog and transformation catalog accordingly
         SiteStore s = loadSiteStore( toLoad );
         s.setForPlannerUse( mProps, mPOptions);
         
-        if( toLoad.contains( "*" ) ){
+        if( eSites.contains( "*" ) ){
             //set execution sites to all sites that are loaded into site store
+            //only if a user passed * option on command line or did not specify
             eSites.addAll( s.list() );
         }
         mLogger.log( "Execution sites are         " + eSites, LogManager.DEBUG_MESSAGE_LEVEL );
