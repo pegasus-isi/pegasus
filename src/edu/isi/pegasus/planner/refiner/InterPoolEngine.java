@@ -521,10 +521,12 @@ public class InterPoolEngine extends Engine implements Refiner {
             //have been handled Karan May 31 2007
             //job.addInputFile(fTx);
 
+            /* Karan April 27, 2012. No longer required
             if( mWorkerNodeExecution ){
                 //do not specify the full path as we do not know worker
                 //node directory
 
+                
                 if( mSLS.doesCondorModifications() ){
                     //we need to take the basename of the source url
                     //as condor file transfer mech does not allow to
@@ -532,6 +534,7 @@ public class InterPoolEngine extends Engine implements Refiner {
                     job.setRemoteExecutable( new File( tcEntry.getPhysicalTransformation() ).getName() );
                 }
                 else{
+                  
                     //do this only when kickstart executable existance check is fixed
                     //Karan Nov 30 2007
                     //job.setRemoteExecutable(job.getStagedExecutableBaseName());
@@ -543,6 +546,9 @@ public class InterPoolEngine extends Engine implements Refiner {
                 //the executable is going to be staged
                 job.executable = stagedPath;
             }
+            */
+            job.setRemoteExecutable(  stagedPath );
+            
             //setting the job type of the job to
             //denote the executable is being staged
             //job.setJobType(Job.STAGED_COMPUTE_JOB);
