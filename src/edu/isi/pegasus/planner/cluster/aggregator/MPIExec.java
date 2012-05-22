@@ -168,10 +168,29 @@ public class MPIExec extends Abstract {
 
                     //check and add if a job has requested any memory
                     //JIRA PM-601
-                    String memory = constitutentJob.vdsNS.getStringValue( Pegasus.REQUEST_MEMORY_KEY );
-                    if( memory != null ){
-                        task.append( "-m ").
-                             append( memory ).append( " " );
+                    String value = constitutentJob.vdsNS.getStringValue( Pegasus.REQUEST_MEMORY_KEY );
+
+                    if( value != null ){
+                        double memory = -1;
+                        //sanity check on the value
+                        try{
+                            memory = Double.parseDouble( value );
+                        }
+                        catch( Exception e ){
+                            /* ignore */
+                        }
+
+                        if ( memory < 0 ){
+                            //throw an error for negative value
+                            complainForInvalidMemory( constitutentJob.getID(), value );
+                        }
+
+                        //add only if we have a +ve memory value
+                        if( memory > 0 ){
+                            task.append( "-m ").
+                                 append( (long)memory ).append( " " );
+                        }
+
                     }
 
                     task.append( constitutentJob.getRemoteExecutable() ).append( " " ).
@@ -298,6 +317,20 @@ public class MPIExec extends Abstract {
      */
     public boolean abortOnFristJobFailure(){
         return false;
+    }
+
+    /**
+     * Complains for invalid memory.
+     *
+     * @param id        id of the job
+     * @param value     value of the memory passed
+     */
+    private void complainForInvalidMemory(String id, String value) {
+        StringBuffer sb = new StringBuffer();
+        sb.append( "Invalid Value specified for memory  ").append( value ).append( " for job " )
+          .append( id );
+
+        throw new RuntimeException( sb.toString() );
     }
 
 }
