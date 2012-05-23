@@ -1,8 +1,11 @@
-This is a list of items that are planned in future versions of mpidag.
+This is a list of items that are planned in future versions of pegasus-mpi-cluster.
 
-* Add task runtime to rescue file?
+* Have workers create task stdout/stderr file names that are guaranteed to be unique
+* Implement a better, object-oriented logging interface
+* Allow runtime estimates to be specified in DAG with -r/--runtime
+* Implement hard limits on task runtime
+* Add support for CPU resource scheduling (-c/--request-cpus in DAG and --host-cpus in PMC)
 * Allow tries to be specified with -t/--tries in DAG (e.g. TASK A -t 3 /bin/date)
-* Add task runtimes in rescue file (e.g. DONE foo 10.0)?
 * Enable weight in DAG with -w/--weight (e.g. TASK A -w 10 /bin/date)
 * Enable -p/--priority as an alias for -w/--weight in DAG
 * Add support for priority-based scheduling using weights
