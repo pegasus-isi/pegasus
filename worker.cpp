@@ -260,11 +260,20 @@ int Worker::run() {
                 memlimit.rlim_cur = bytes;
                 memlimit.rlim_max = bytes;
                 
+                // These limits don't always seem to work, so set all of them
                 if (setrlimit(RLIMIT_DATA, &memlimit) < 0) {
-                    log_fatal("Unable to set memory limit for task %s: %s",
+                    log_fatal("Unable to set memory limit (RLIMIT_DATA) for task %s: %s",
                         name.c_str(), strerror(errno));
                     exit(1);
                 }
+                if (setrlimit(RLIMIT_STACK, &memlimit) < 0) {
+                    log_fatal("Unable to set memory limit (RLIMIT_STACK) for task %s: %s",
+                        name.c_str(), strerror(errno));
+                }
+                if (setrlimit(RLIMIT_AS, &memlimit) < 0) {
+                    log_fatal("Unable to set memory limit (RLIMIT_AS) for task %s: %s",
+                        name.c_str(), strerror(errno));
+                }   
             }
             
             // Close any other open descriptors. This will not really close
