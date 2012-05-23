@@ -103,10 +103,10 @@ function test_rescue_file {
 }
 
 function test_host_script {
-	OUTPUT=$(mpiexec -n 2 $PMC -s test/diamond.dag -o /dev/null -e /dev/null --host-script test/hostscript.sh 2>&1)
+	OUTPUT=$(mpiexec -n 2 $PMC -s test/sleep.dag -o /dev/null -e /dev/null --host-script test/hostscript.sh 2>&1)
 	RC=$?
 	
-	rm -f test/diamond.dag.*
+	rm -f test/sleep.dag.*
 	
 	if [ $RC -ne 0 ]; then
 		return 1
@@ -134,10 +134,10 @@ function test_host_script {
 }
 
 function test_hang_script {
-	OUTPUT=$(mpiexec -n 2 $PMC -s test/diamond.dag -o /dev/null -e /dev/null --host-script test/hangscript.sh 2>&1)
+	OUTPUT=$(mpiexec -n 2 $PMC -s test/sleep.dag -o /dev/null -e /dev/null --host-script test/hangscript.sh 2>&1)
 	RC=$?
 	
-	rm -f test/diamond.dag.*
+	rm -f test/sleep.dag.*
 	
 	if [ $RC -ne 0 ]; then
 		return 1
