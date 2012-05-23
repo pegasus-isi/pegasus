@@ -33,7 +33,8 @@ void usage() {
             "   -n|--nolock          Do not try to lock DAGFILE\n"
             "   -r|--rescue PATH     Path to rescue file [default: DAGFILE.rescue]\n"
             "   --host-script PATH   Path to script that will be launched on each host\n"
-            "   --host-memory N      Amount of memory per host in MB\n",
+            "   --host-memory N      Amount of memory per host in MB\n"
+            "   --strict-limits      Enforce strict task resource limits\n",
             program
         );
     }
@@ -67,6 +68,7 @@ int mpidag(int argc, char *argv[]) {
     std::string rescuefile = "";
     std::string host_script = "";
     unsigned host_memory = 0;
+    bool strict_limits = false;
     
     // Environment variable defaults
     char *env_host_script = getenv("PMC_HOST_SCRIPT");
@@ -163,6 +165,8 @@ int mpidag(int argc, char *argv[]) {
             if (sscanf(host_memory_string.c_str(), "%u", &host_memory) != 1) {
                 argerror("Invalid value for --host-memory");
             }
+        } else if (flag == "--strict-limits") {
+            strict_limits = true;
         } else if (flag[0] == '-') {
             std::string message = "Unrecognized argument: ";
             message += flag[0];
@@ -220,7 +224,7 @@ int mpidag(int argc, char *argv[]) {
         Engine engine(dag, newrescue, max_failures, tries);
         return Master(program, engine, dag, dagfile, outfile, errfile).run();
     } else {
-        return Worker(host_script, host_memory).run();
+        return Worker(host_script, host_memory, strict_limits).run();
     }
 }
 

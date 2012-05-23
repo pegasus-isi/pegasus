@@ -14,10 +14,12 @@ class Worker {
 	unsigned int host_memory;
 	unsigned int host_cpus;
 	
+	bool strict_limits;
+	
 	void launch_host_script();
 	void check_host_script(bool terminate);
 public:
-    Worker(const std::string &host_script, unsigned host_memory);
+    Worker(const std::string &host_script, unsigned host_memory = 0, bool strict_limits = false);
     ~Worker();
     int run();
 };

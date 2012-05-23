@@ -8,6 +8,7 @@
 #include <signal.h>
 #include <math.h>
 #include <mpi.h>
+#include <sys/resource.h>
 
 #include "strlib.h"
 #include "worker.h"
@@ -16,7 +17,7 @@
 #include "failure.h"
 #include "tools.h"
 
-Worker::Worker(const std::string &host_script, unsigned int host_memory) {
+Worker::Worker(const std::string &host_script, unsigned int host_memory, bool strict_limits) {
     this->host_script = host_script;
     if (host_memory == 0) {
         // If host memory is not specified by the user, then get the amount
@@ -27,6 +28,7 @@ Worker::Worker(const std::string &host_script, unsigned int host_memory) {
     } else {
         this->host_memory = host_memory;
     }
+    this->strict_limits = strict_limits;
     this->host_cpus = get_host_cpus();
     this->host_script_pid = 0;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -194,8 +196,9 @@ int Worker::run() {
         std::string name;
         std::string command;
         std::string pegasus_id;
+        unsigned int memory = 0;
         int shutdown;
-        recv_request(name, command, pegasus_id, shutdown);
+        recv_request(name, command, pegasus_id, memory, shutdown);
         log_trace("Worker %d: Got request", rank);
         
         if (shutdown) {
@@ -204,6 +207,8 @@ int Worker::run() {
         }
         
         log_debug("Worker %d: Running task %s", rank, name.c_str());
+        
+        log_info("Task memory: %u", memory);
         
         // Process arguments
         std::list<std::string> args;
@@ -246,6 +251,20 @@ int Worker::run() {
                 log_fatal("Error redirecting stderr of task %s: %s", 
                     name.c_str(), strerror(errno));
                 exit(1);
+            }
+            
+            // Set strict resource limits
+            if (strict_limits && memory > 0) {
+                rlim_t bytes = memory * 1024 * 1024;
+                struct rlimit memlimit;
+                memlimit.rlim_cur = bytes;
+                memlimit.rlim_max = bytes;
+                
+                if (setrlimit(RLIMIT_DATA, &memlimit) < 0) {
+                    log_fatal("Unable to set memory limit for task %s: %s",
+                        name.c_str(), strerror(errno));
+                    exit(1);
+                }
             }
             
             // Close any other open descriptors. This will not really close

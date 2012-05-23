@@ -54,7 +54,7 @@ Master::~Master() {
 
 void Master::submit_task(Task *task, int rank) {
     log_debug("Submitting task %s to slot %d", task->name.c_str(), rank);
-    send_request(task->name, task->command, task->pegasus_id, rank);
+    send_request(task->name, task->command, task->pegasus_id, task->memory, rank);
     
     this->total_count++;
 }
