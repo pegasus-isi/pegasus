@@ -270,10 +270,14 @@ int Worker::run() {
                     log_fatal("Unable to set memory limit (RLIMIT_STACK) for task %s: %s",
                         name.c_str(), strerror(errno));
                 }
+                if (setrlimit(RLIMIT_RSS, &memlimit) < 0) {
+                    log_fatal("Unable to set memory limit (RLIMIT_RSS) for task %s: %s",
+                        name.c_str(), strerror(errno));
+                }
                 if (setrlimit(RLIMIT_AS, &memlimit) < 0) {
                     log_fatal("Unable to set memory limit (RLIMIT_AS) for task %s: %s",
                         name.c_str(), strerror(errno));
-                }   
+                }
             }
             
             // Close any other open descriptors. This will not really close
