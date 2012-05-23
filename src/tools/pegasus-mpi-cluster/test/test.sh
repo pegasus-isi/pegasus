@@ -165,6 +165,8 @@ function test_memory_limit {
 	rm -rf test/memory.dag.*
 	
 	if [ $RC -ne 0 ]; then
+		echo "$OUTPUT"
+		echo "ERROR: Host memory test failed"
 		return 1
 	fi
 	
@@ -179,12 +181,30 @@ function test_insufficient_memory {
 	
 	# This test should fail because 99 MB isn't enough to run the tasks in the DAG
 	if [ $RC -ne 1 ]; then
+		echo "$OUTPUT"
+		echo "ERROR: Insufficient memory test failed (1)"
 		return 1
 	fi
 	
 	if ! [[ "$OUTPUT" =~ "FATAL ERROR: No host is capable of running task" ]]; then
 		echo "$OUTPUT"
-		echo "ERROR: Insufficient memory test failed"
+		echo "ERROR: Insufficient memory test failed (2)"
+		return 1
+	fi
+	
+	return 0
+}
+
+function test_strict_limits {
+	OUTPUT=$(mpiexec -n 2 $PMC -s test/limit.dag --strict-limits 2>&1)
+	RC=$?
+	
+	rm -f test/limit.dag.*
+	
+	# This test should fail because 1 MB isn't enough to run the task in the DAG
+	if [ $RC -eq 0 ]; then
+		echo "$OUTPUT"
+		echo "ERROR: Memory limit test failed"
 		return 1
 	fi
 	
@@ -205,3 +225,8 @@ run_test test_host_script
 run_test test_hang_script
 run_test test_memory_limit
 run_test test_insufficient_memory
+
+# setrlimit is broken on Darwin, so the strict limits test won't work
+if [ $(uname -s) != "Darwin" ]; then
+	run_test test_strict_limits
+fi

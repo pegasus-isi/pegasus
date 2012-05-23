@@ -2,12 +2,12 @@
 .\"     Title: pegasus-mpi-cluster
 .\"    Author: [see the "Author" section]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 05/21/2012
+.\"      Date: 05/23/2012
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "PEGASUS\-MPI\-CLUSTE" "1" "05/21/2012" "\ \&" "\ \&"
+.TH "PEGASUS\-MPI\-CLUSTE" "1" "05/23/2012" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -156,6 +156,11 @@ is running on\&. (see
 .RS 4
 Amount of memory available on each host in MB\&. The default is to determine the amount of physical RAM automatically\&. (see
 \fBRESOURCE\-BASED SCHEDULING\fR)
+.RE
+.PP
+\fB\-\-strict\-limits\fR
+.RS 4
+This enables strict memory usage limits for tasks\&. When this option is specified, and a task tries to allocate more memory than was requested in the DAG, the memory allocation operation will fail\&.
 .RE
 .SH "DAG FILES"
 .sp

@@ -136,6 +136,12 @@ Options
     amount of physical RAM automatically. (see <<RESOURCE_SCHED, *RESOURCE-BASED 
     SCHEDULING*>>)
 
+*--strict-limits*::
+    This enables strict memory usage limits for tasks. When this option is specified,
+    and a task tries to allocate more memory than was requested in the DAG, the memory
+    allocation operation will fail.
+
+
 [[DAG_FILES]]
 DAG Files
 ---------
