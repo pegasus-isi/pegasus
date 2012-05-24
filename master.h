@@ -59,7 +59,8 @@ class Master {
     
     void register_workers();
     void schedule_tasks();
-    void wait_for_result();
+    void wait_for_results();
+    void process_result();
     void queue_ready_tasks();
     void submit_task(Task *t, int worker);
     void merge_task_stdio(FILE *dest, const std::string &src, const std::string &stream);

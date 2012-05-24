@@ -111,6 +111,12 @@ void recv_response(std::string &name, int &exitcode, int &worker) {
     worker = status.MPI_SOURCE;
 }
 
+bool response_waiting() {
+    int flag;
+    MPI_Iprobe(MPI_ANY_SOURCE, TAG_RESULT, MPI_COMM_WORLD, &flag, MPI_STATUS_IGNORE);
+    return flag != 0;
+}
+
 void send_total_runtime(double total_runtime) {
     MPI_Reduce(&total_runtime, NULL, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
 }

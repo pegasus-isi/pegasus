@@ -20,6 +20,7 @@ void send_shutdown(int worker);
 void recv_request(std::string &name, std::string &command, std::string &pegasus_id, unsigned int &memory, int &shutdown);
 void send_response(const std::string &name, int exitcode);
 void recv_response(std::string &name, int &exitcode, int &worker);
+bool response_waiting();
 double collect_total_runtimes();
 void send_total_runtime(double total_runtime);
 
