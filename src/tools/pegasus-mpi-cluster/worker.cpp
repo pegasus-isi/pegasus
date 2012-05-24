@@ -208,8 +208,6 @@ int Worker::run() {
         
         log_debug("Worker %d: Running task %s", rank, name.c_str());
         
-        log_info("Task memory: %u", memory);
-        
         // Process arguments
         std::list<std::string> args;
         split_args(args, command);
