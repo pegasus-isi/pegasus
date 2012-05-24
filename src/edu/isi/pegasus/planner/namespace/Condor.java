@@ -163,6 +163,22 @@ public class Condor extends Namespace{
      * The key that overrides the default x509 proxy location.
      */
     public static final String X509USERPROXY_KEY = "x509userproxy";
+
+    //new condor keys starting 7.8.0
+    /**
+     * The Condor Key designating the numnber of cpu's to request.
+     */
+    public static final String REQUEST_CPUS_KEY = "request_cpus";
+
+    /**
+     * The Condor Key designating the amount of memory to request.
+     */
+    public static final String REQUEST_MEMORY_KEY = "request_memory";
+
+    /**
+     * The Condor Key designating the amount of disk to request.
+     */
+    public static final String REQUEST_DISK_KEY = "request_disk";
     
     /**
      * The condor universe key value for vanilla universe.
@@ -203,6 +219,10 @@ public class Condor extends Namespace{
      * The condor universe key value for parallel universe.
      */
     public static final String PARALLEL_UNIVERSE = "parallel";
+
+
+
+
 
 
     /**
@@ -402,6 +422,9 @@ public class Condor extends Namespace{
      * queue		- required thing. always added
      * remote_initialdir- not allowed, the working directory is picked up from
      *                    pool file and properties file
+     * request_cpus     - number of cpu's required. New in Condor 7.8.0
+     * request_memory   - amount of memory required . New in Condor 7.8.0
+     * request_disk     - amount of disk required. New in Condor 7.8.0.
      * stream_error     -  supported,however it is applicable only for globus jobs.
      *                   
      * stream_output    -  supported, however it is applicable only for globus jobs.
@@ -558,6 +581,11 @@ public class Condor extends Namespace{
                     res = VALID_KEY;
                 }
                 else if( key.compareTo( "rank" ) == 0 ){
+                    res = VALID_KEY;
+                }
+                else if ( key.compareTo( Condor.REQUEST_CPUS_KEY ) == 0  ||
+                          key.compareTo( Condor.REQUEST_MEMORY_KEY) == 0  ||
+                          key.compareTo( Condor.REQUEST_DISK_KEY) == 0 ){
                     res = VALID_KEY;
                 }
                 else {
