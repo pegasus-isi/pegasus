@@ -59,7 +59,20 @@ void Master::submit_task(Task *task, int rank) {
     this->total_count++;
 }
 
-void Master::wait_for_result() {
+void Master::wait_for_results() {
+    // This will process all the waiting responses. If there are none 
+    // waiting, then it will block until one arrives. If there are 
+    // several waiting, then it will process them all and return without 
+    // waiting.
+    unsigned int tasks = 0;
+    while (tasks == 0 || response_waiting()) {
+        process_result();
+        tasks++;
+    }
+    log_trace("Processed %u task(s) this cycle", tasks);
+}
+
+void Master::process_result() {
     log_trace("Waiting for task to finish");
     
     std::string name;
@@ -200,9 +213,19 @@ void Master::schedule_tasks() {
     while (match) {
         match = false;
         
+        // Shortcut when there are no more free slots
+        if (free_slots.size() == 0) {
+            return;
+        }
+        
         for (SlotList::iterator s = free_slots.begin(); s != free_slots.end(); s++) {
             Slot *slot = *s;
             Host *host = slot->host;
+            
+            // Shortcut when there are no more ready tasks
+            if (ready_tasks.size() == 0) {
+                return;
+            }
             
             for (TaskList::iterator t = ready_tasks.begin(); t != ready_tasks.end(); t++) {
                 Task *task = *t;
@@ -290,7 +313,7 @@ int Master::run() {
     while (!this->engine->is_finished()) {
         queue_ready_tasks();
         schedule_tasks();
-        wait_for_result();
+        wait_for_results();
     }
     
     log_info("Workflow finished");
