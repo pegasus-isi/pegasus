@@ -1,6 +1,125 @@
 $Id$
 
 ===============================
+Release Notes for PEGASUS 4.0.1
+===============================
+This is a minor release, that fixes some bugs and has minor enhancements. 
+
+
+NEW FEATURES
+--------------
+
+1) pegasus lite local wrapper is now used for local universe jobs in
+   shared fs mode also, if condor io is detected. 
+
+   Also  remote_initialdir is not implemented consistently across
+   universes in Condor.  For vanilla universe condor file io does not
+   transfer the file to the remote_initialdir.
+
+2) task summary queries were reimplemented
+
+   The task summary queries ( that list the number of successful and
+   failed tasks )  in the Stampede Statisitcs API was
+   reimplemented for better performance.
+
+
+3) pegasus-monitord sets PEGASUS_BIN_DIR while calling out notfication
+scripts . 
+	
+   https://jira.isi.edu/browse/PM-598
+
+4) the default notification script can send out emails to multiple
+recipients. 
+
+5) Support for new condor keys 
+
+   Pegasus allows users to specify the following condor keys as
+   profiles in the Condor namespace. The new keys have been introduced
+   in Condor 7.8.0
+
+   request_cpus 
+   request_memory 
+   request_disk 
+   
+   https://jira.isi.edu/browse/PM-600
+
+
+BUGS FIXED
+----------
+1) pegasus-kickstart does not collect procs and tasks statistics on kernels >= 3.0
+   
+   When kickstart is executed on a Linux kernel >= 3.0, logic in the
+   machine extensions prevented the proc statistics gathering, because
+   it was a reasonable assumption that the API might have changed (it
+   did between 2.4 and 2.6). This is now fixed, as it is supported for
+   kernels 3.0 through 3.2
+
+   https://jira.isi.edu/browse/PM-571
+
+2) scp transfer mode did not create remote directories
+   
+   When transferring to a scp endpoint, pegasus-transfer failed unless
+   the remote directory already existed. This broke deep LFNs and
+   staging to output sites.  This is now fixed.
+
+   https://jira.isi.edu/browse/PM-579
+
+3) Incorrect resolution of PEGASUS_HOME path in the site catalog for
+remote sites  in some cases
+       
+   If a user specified a path to PEGASUS_HOME for remote sites in the
+   site catalog and the directory also existed on the submit machine,
+   the path was resolved locally. Hence if the local directory was a
+   symlink, the symlink was resolved and that path was used for the
+   remote site's PEGASUS_HOME.
+
+   https://jira.isi.edu/browse/PM-577
+
+4) pegasus-analyzer did not work correctly against the MySQL Stampede
+DB
+	
+   pegasus-analyzer had problems querying MySQL stampede database
+   because of a query aliasing error in the API underneath. This is
+   now fixed.
+
+   https://jira.isi.edu/browse/PM-580
+
+5) Wrong timezone offsets for ISO timestamps 
+
+   Pegasus python library was generating the wrong time zone offset
+   for ISO 8601 time stamps. This was because of an underlying bug in
+   python where %z does not work correctly across all platforms.
+
+   https://jira.isi.edu/browse/PM-576
+
+6) pegasus-analyzer warns about "exitcode not an integer!"
+ 
+   pegasus-analyzer throwed a warning if a long value for an exitcode
+   was detected.
+ 
+    https://jira.isi.edu/browse/PM-584
+
+7) Perl DAX generator uses 'out' instead of 'output' for stderr and
+stdout linkage 
+
+  The perl DAX generator API generated the wrong link attribute for
+  stdout files. Instead of having link = output it generated link =
+  out.
+
+  https://jira.isi.edu/browse/PM-585
+
+8) Updated Stampede Queries to handle both GRID_SUBMIT and
+GLOBUS_SUBMIT events.
+
+  Two of the queries ( get_job_statistics and get_job_state ) were
+  broken for CondorG workflows when operating against a MySQL database
+  backend. In that case,  both GRID_SUBMIT and GLOBUS_SUBMIT can be
+  logged for the jobs. In that case, some of the subqueries were
+  breaking against MySQL has MySQL has stricter checks on queries
+  returning a single value.
+
+
+===============================
 Release Notes for PEGASUS 4.0.0
 ===============================
 
