@@ -41,7 +41,7 @@ fi
 
 if [ $STATUS = 0 ]; then
    # Run Pegasus Statistics
-   pegasus-statistics $RUN_DIR
+   pegasus-statistics -s all $RUN_DIR
 else 
    echo "ERROR: Test failed"
    exit $STATUS
