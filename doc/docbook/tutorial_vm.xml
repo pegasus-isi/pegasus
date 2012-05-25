@@ -48,10 +48,10 @@ Wed Jun 24 14:47:59 PST 2011
           role="bold">wget</emphasis> to download the image. Downloading the
           image using the browser sometimes corrupts the image.</para>
 
-          <programlisting>$ <emphasis role="bold">wget http://pegasus.isi.edu/wms/download/4.0/Pegasus-4.0.0-Debian-6-x86.vbox.zip
+          <programlisting>$ <emphasis role="bold">wget http://pegasus.isi.edu/wms/download/4.0/Pegasus-4.0.1-Debian-6-x86.vbox.zip
 </emphasis>
-http://pegasus.isi.edu/wms/download/4.0/Pegasus-4.0.0-Debian-6-x86.vbox.zip
-           =&gt; `Pegasus-4.0.0-Debian-6-x86.vbox.zip'
+http://pegasus.isi.edu/wms/download/4.0/Pegasus-4.0.1-Debian-6-x86.vbox.zip
+           =&gt; `Pegasus-4.0.1-Debian-6-x86.vbox.zip'
 Resolving pegasus.isi.edu... 128.9.64.219
 Connecting to pegasus.isi.edu|128.9.64.219|:80... connected.
 HTTP request sent, awaiting response... 200 OK
@@ -62,10 +62,10 @@ Length: 1,336,554,492 (1.2G) [application/x-zip]
 
           <para>If you have unzip you can do this directly</para>
 
-          <programlisting><emphasis role="bold">$ unzip Pegasus-4.0.0-Debian-6-x86.vbox.zip</emphasis></programlisting>
+          <programlisting><emphasis role="bold">$ unzip Pegasus-4.0.1-Debian-6-x86.vbox.zip</emphasis></programlisting>
 
           <para>After unzipping a folder named<emphasis role="bold">
-          Pegasus-4.0.0-Debian-6-x86.vbox</emphasis> will be created that has
+          Pegasus-4.0.1-Debian-6-x86.vbox</emphasis> will be created that has
           the vmdk files for the VM.</para>
         </listitem>
       </itemizedlist>
@@ -90,7 +90,7 @@ Length: 1,336,554,492 (1.2G) [application/x-zip]
 
         <listitem>
           <para>Click on "Add" button to add the<emphasis role="bold">
-          Pegasus-4.0.0-Debian-6-x86.vbox/Debian-6-x86.vmdk</emphasis> file
+          Pegasus-4.0.1-Debian-6-x86.vbox/Debian-6-x86.vmdk</emphasis> file
           that you just downloaded and unzipped.</para>
         </listitem>
 
@@ -119,7 +119,7 @@ Length: 1,336,554,492 (1.2G) [application/x-zip]
 
         <listitem>
           <para>In the VM Name and OS Type Window specify the name as<emphasis
-          role="bold"> PegasusVM-4.0.0</emphasis>.</para>
+          role="bold"> PegasusVM-4.0.1</emphasis>.</para>
         </listitem>
 
         <listitem>
@@ -145,7 +145,7 @@ Length: 1,336,554,492 (1.2G) [application/x-zip]
         </listitem>
 
         <listitem>
-          <para>Now in the Virtual Box , start the PegasusVM-4.0.0
+          <para>Now in the Virtual Box , start the PegasusVM-4.0.1
           machine.</para>
         </listitem>
       </orderedlist>
@@ -646,7 +646,7 @@ xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi
 2012.02.24 12:19:05.141 PST:   Number of SRM Properties retrieved 10 
 2012.02.24 12:19:05.154 PST:   Writing out properties to /home/tutorial/pegasus-wms/./pegasus.2927071066946861892.properties 
 2012.02.24 12:19:05.155 PST: [INFO]  Time taken to execute is 0.869 seconds 
-2012.02.24 12:19:05.155 PST: [INFO] event.pegasus.planner planner.version 4.0.0  - FINISHED
+2012.02.24 12:19:05.155 PST: [INFO] event.pegasus.planner planner.version 4.0.1  - FINISHED
 </computeroutput></programlisting>
       </section>
     </section>
@@ -1517,7 +1517,7 @@ output file: stage_in_local_local_0.out.002
 
 site        : local
 hostname    : pegasus-vm.local
-executable  : /opt/pegasus/4.0.0/bin/pegasus-transfer
+executable  : /opt/pegasus/4.0.1/bin/pegasus-transfer
 arguments   : -
 exitcode    : 1
 working dir : /home/tutorial/pegasus-wms/dags/tutorial/pegasus/blackdiamond/run0002
