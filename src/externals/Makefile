@@ -9,7 +9,8 @@ endif
 PySQLite=pysqlite-2.6.3
 BOTO=boto-2.0b3-24047c8
 SQLAlchemy=SQLAlchemy-0.7.6
-all: ${libdir}/python/pysqlite2 ${libdir}/python/sqlalchemy ${libdir}/python/boto
+#all: ${libdir}/python/pysqlite2 ${libdir}/python/sqlalchemy ${libdir}/python/boto
+all: ${libdir}/python/sqlalchemy ${libdir}/python/boto
 
 ${libdir}/python/pysqlite2:
 	@rm -rf $(PySQLite)
