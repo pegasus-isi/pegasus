@@ -1,0 +1,354 @@
+<?php
+
+function pegasus_download_permission() {
+  return array(
+    'access pegasus download settings' => array(
+      'title' => t('Change Pegasus download settings')
+    ), 
+    'access pegasus download data' => array(
+      'title' => t('Access Pegasus download history')
+    )
+  );
+}
+
+function pegasus_download_mail($key, &$message, $params) {
+  switch ($key) {
+    case 'subscribe':
+      $message['body'][] = t('subscribe address=@email', $params);
+      break;
+  }
+}
+
+function pegasus_download_subscribe_to_list($email, $list) {
+  $module = 'pegasus_download';
+  $key = 'subscribe';
+  $to = $list;
+  $from = variable_get('site_mail', 'ccg@isi.edu');
+  $params = array('@email' => $email);
+  $language = language_default();
+  $send = TRUE;
+  
+  $result = drupal_mail($module, $key, $to, $language, $params, $from, $send);
+  if ($result['result'] == TRUE) {
+    watchdog('pegasus download', 'Sent subscribe message from @email to @list', 
+      array('@email' => $email, '@list' => $list), WATCHDOG_INFO);
+  } else {
+    watchdog('pegasus download', 'Error sending subscribe message from @email to @list', 
+      array('@email' => $email, '@list' => $list), WATCHDOG_ERROR);
+  }
+}
+
+function pegasus_download_entry_load() {
+  $select = db_select('pegasus_download', 'd');
+  $select->fields('d');
+  return $select->execute()->fetchAll();
+}
+
+function pegasus_download_entry_insert($entry) {
+  try {
+    $entry['timestamp'] = time();
+    db_insert('pegasus_download')
+      ->fields($entry)
+      ->execute();
+  }
+  catch (Exception $e) {
+    watchdog('pegasus download', 
+      'Error inserting downloader into database. Message = %message, query = %query', 
+      array('%message' => $e->getMessage(), '%query' => $e->query_string), 
+      WATCHDOG_ERROR);
+  }
+}
+
+function pegasus_download_admin() {
+  $form = array();
+  
+  $form['pegasus_download_url_prefix'] = array(
+    '#type' => 'textfield',
+    '#title' => t('URL prefix for Pegasus downloads'),
+    '#default_value' => variable_get('pegasus_download_url_prefix', 'http://download.pegasus.isi.edu/wms/download'),
+    '#size' => 50,
+    '#maxlength' => 255,
+    '#description' => t("This prefix is added to file names to construct the download URL."),
+    '#required' => TRUE
+  );
+  
+  $form['pegasus_download_users_request'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Email for pegasus-users requests'),
+    '#default_value' => variable_get('pegasus_download_users_request', 'pegasus-users-request@mailman.isi.edu'),
+    '#size' => 50,
+    '#maxlength' => 255,
+    '#description' => t("The email address to send messages to when subscribing to the pegasus-users mailing list."),
+    '#required' => TRUE
+  );
+  
+  $form['pegasus_download_announce_request'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Email for pegasus-announce requests'),
+    '#default_value' => variable_get('pegasus_download_announce_request', 'pegasus-announce-request@mailman.isi.edu'),
+    '#size' => 50,
+    '#maxlength' => 255,
+    '#description' => t("The email address to send messages to when subscribing to the pegasus-announce mailing list."),
+    '#required' => TRUE
+  );
+  
+  return system_settings_form($form);
+}
+
+function pegasus_download_admin_validate($form, &$form_state) {
+  $values = $form_state['values'];
+  
+  $url_prefix = $values['pegasus_download_url_prefix'];
+  if (!valid_url($url_prefix, TRUE)) {
+    form_set_error('pegasus_download_url_prefix', t('Valid URL required for download URL prefix'));
+  }
+  
+  $pegasus_users = $values['pegasus_download_users_request'];
+  if (!valid_email_address($pegasus_users)) {
+    form_set_error('pegasus_download_users_request', t('Valid email required for pegasus-users request address'));
+  }
+  
+  $pegasus_announce = $values['pegasus_download_announce_request'];
+  if (!valid_email_address($pegasus_users)) {
+    form_set_error('pegasus_download_announce_request', t('Valid email required for pegasus-announce request address'));
+  }
+}
+
+function pegasus_download_menu() {
+  $items = array();
+
+  $items['admin/pegasus/download'] = array(
+    'title' => 'Pegasus Downloads',
+    'description' => 'Information provided by users who downloaded Pegasus',
+    'page callback' => 'pegasus_download_list',
+    'access arguments' => array('access pegasus download data'),
+    'type' =>  MENU_NORMAL_ITEM
+  );
+  $items['admin/pegasus/download/list'] = array(
+    'title' => 'Downloads',
+    'description' => 'Information provided by users who downloaded Pegasus',
+    'page callback' => 'pegasus_download_list',
+    'access arguments' => array('access pegasus download data'),
+    'type' =>  MENU_DEFAULT_LOCAL_TASK
+  );
+  $items['admin/pegasus/download/settings'] = array(
+    'title' => 'Settings',
+    'description' => 'Configure pegasus download module',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('pegasus_download_admin'),
+    'access arguments' => array('access pegasus download settings'),
+    'type' => MENU_LOCAL_TASK
+  );
+  $items['pegasus/download'] = array(
+    'title' => 'Download Pegasus',
+    'description' => 'Download user information form',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('pegasus_download_user_form'),
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK
+  );
+  
+  return $items;
+}
+
+function pegasus_download_admin_paths() {
+  $paths = array(
+    'admin/pegasus/download/list' => TRUE,
+    'admin/pegasus/download/settings' => TRUE
+  );
+  return $paths;
+}
+
+function pegasus_download_user_form($form, &$form_state) {
+  $params = drupal_get_query_parameters();
+  if (array_key_exists('filename', $params)) {
+  	$filename = $params['filename'];
+  } else {
+  	drupal_set_message(t('No file to download'), 'error');
+  	return NULL;
+  }
+  
+  $form['description'] = array(
+    '#type' => 'item',
+    '#prefix' => 
+    	'<p>In order to help us serve you better and to help us provide usage '.
+    	'statistics to our funding agencies we would appreciate it if you '.
+    	'could tell us a little about yourself and your application.</p>'.
+    	'<p>Providing this information is optional.</p>'
+  );
+  $form['name'] = array(
+    '#type' => 'textfield',
+    '#title' => 'Name',
+    '#size' => 20,
+    '#maxlength' => 255
+  );
+  $form['organization'] = array(
+    '#type' => 'textfield',
+    '#title' => 'Organization',
+    '#size' => 20,
+    '#maxlength' => 255
+  );
+  $form['email'] = array(
+    '#type' => 'textfield',
+    '#title' => 'Email',
+    '#size' => 20,
+    '#maxlength' => 255
+  );
+  $form['users'] = array(
+    '#type' => 'checkbox',
+    '#title' => 'Subscribe to pegasus-users mailing list'
+  );
+  $form['announce'] = array(
+  	'#type' => 'checkbox',
+    '#title' => 'Subscribe to pegasus-announce mailing list'
+  );
+  $form['domain'] = array(
+    '#type' => 'textfield',
+    '#title' => 'Application Domain',
+    '#description' => '(e.g. Earth Science)',
+    '#size' => 20,
+    '#maxlength' => 255
+  );
+  $form['application'] = array(
+    '#type' => 'textfield',
+    '#title' => 'Application Description',
+    '#description' => '(e.g. seismic hazard analysis)',
+    '#size' => 20,
+    '#maxlength' => 255
+  );
+  $form['howheard'] = array(
+    '#type' => 'textarea',
+    '#title' =>'How did you hear about Pegasus?',
+    '#cols' => 20,
+    '#rows' => 1
+  );
+  $form['oldfeatures'] = array(
+    '#type' => 'textarea',
+    '#title' => 'What features of Pegasus interest you most?',
+    '#cols' => 20,
+    '#rows' => 1
+  );
+  $form['newfeatures'] = array(
+    '#type' => 'textarea',
+    '#title' => 'What feature(s) would you like to see supported?',
+    '#cols' => 20,
+    '#rows' => 1
+  );
+  $form['howhelp'] = array(
+    '#type' => 'textarea',
+    '#title' => 'What could we do to help you and your research?',
+    '#cols' => 20,
+    '#rows' => 3
+  );
+  $form['filename'] = array(
+  	'#type' => 'hidden',
+  	'#value' => $filename,
+  	'#prefix' => t('<h2><b>File Name: @filename</b></h2>', array('@filename' => $filename))
+  );
+  $form['submit'] = array(
+   	'#type' => 'submit',
+   	'#value' => 'Download file'
+  );
+  
+  return $form;
+}
+
+function pegasus_download_user_form_validate($form, &$form_state) {
+  $values = $form_state['values'];
+  if (empty($values['filename'])) {
+  	form_set_error('filename', t('No file to download'));
+  }
+  
+  if (!empty($values['email']) && !valid_email_address($values['email'])) {
+    form_set_error('email', 'Invalid email address');
+  }
+  
+  if (empty($values['email'])) {
+    if ($values['announce']) {
+  	  form_set_error('email', t('Email is required to subscribe to pegasus-announce'));
+    }
+    if ($values['users']) {
+  	  form_set_error('email', t('Email is required to subscribe to pegasus-users'));
+  	}
+  }
+}
+
+function pegasus_download_user_form_submit($form, &$form_state) {
+  $values = $form_state['values'];
+  
+  $entry = array(
+    'name' => $values['name'],
+    'organization' => $values['organization'],
+  	'email' => $values['email'],
+  	'users' => $values['users'],
+  	'announce' => $values['announce'],
+  	'domain' => $values['domain'],
+  	'application' => $values['application'],
+  	'howheard' => $values['howheard'],
+  	'oldfeatures' => $values['oldfeatures'],
+  	'newfeatures' => $values['newfeatures'],
+  	'howhelp' => $values['howhelp'],
+  	'filename' => $values['filename']
+  );
+  
+  // We should insert if there is anything in the form besides filename
+  $insert = false;
+  foreach ($entry as $key => $value) {
+  	if ($key != 'filename' && !empty($value)) {
+  		$insert = true;
+  	}
+  }
+  
+  if ($insert) {
+    // Subscribe downloader to pegasus-users
+  	if ($entry['users']) {
+      $users_request = variable_get('pegasus_download_users_request', 'pegasus-users-request@mailman.isi.edu');
+      pegasus_download_subscribe_to_list($entry['email'], $users_request);
+    }
+    
+    // Subscribe downloader to pegasus-announce
+    if ($entry['announce']) {
+      $announce_request = variable_get('pegasus_download_announce_request', 'pegasus-announce-request@mailman.isi.edu');
+      pegasus_download_subscribe_to_list($entry['email'], $announce_request);
+    }
+    
+  	pegasus_download_entry_insert($entry);
+  }
+  
+  // Redirect the user to the download
+  $url_prefix = variable_get('pegasus_download_url_prefix', 'http://download.pegasus.isi.edu/wms/download');
+  $form_state['redirect'] = array($url_prefix . '/' . $entry['filename']);
+}
+
+function pegasus_download_list() {
+  $output = '';
+  if ($entries = pegasus_download_entry_load()) {
+    $rows = array();
+    foreach ($entries as $entry) {
+      // Sanitize the data before handing it off to the theme layer.
+      $row = array_map('check_plain', (array) $entry);
+      $row['timestamp'] = strftime('%Y-%m-%d %H:%M:%S', $row['timestamp']);
+      if ($row['users']) {
+        $row['users'] = 'Yes';
+      } else {
+        $row['users'] = 'No';
+      }
+      if ($row['announce']) {
+        $row['announce'] = 'Yes';
+      } else {
+        $row['announce'] = 'No';
+      }
+      $rows[] = $row;
+    }
+    // Make a table for them.
+    $header = array(t('DID'), t('Name'), t('Email'), t('Organization'), 
+    	t('Domain'), t('Application'), t('How they heard'), t('Old features'),
+    	t('New features'), t('How we can help'), t('File Name'), t('pegasus-announce'), 
+    	t('pegasus-users'), t('Timestamp'));
+    $output .= theme('table', array('header' => $header, 'rows' => $rows));
+  }
+  else {
+    drupal_set_message(t('No entries have been added yet.'));
+  }
+  return $output;
+}

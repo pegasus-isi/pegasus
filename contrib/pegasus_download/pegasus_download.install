@@ -1,0 +1,104 @@
+<?php
+
+function pegasus_download_install() {
+}
+
+function pegasus_download_uninstall() {
+}
+
+function pegasus_download_schema() {
+  $schema['pegasus_download'] = array(
+    'description' => 'Stores example person entries for demonstration purposes.',
+    'fields' => array(
+      'did'  => array(
+        'type' => 'serial',
+        'not null' => TRUE,
+        'description' => 'Primary Key: Unique download ID.',
+      ),
+      'name' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => FALSE,
+        'description' => 'Name of the downloader.',
+      ),
+      'email' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => FALSE,
+        'description' => 'Email of the downloader.',
+      ),
+      'organization' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => FALSE,
+        'description' => 'Organization of the downloader.',
+      ),
+      'domain' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => FALSE,
+        'description' => 'Downloaders application domain',
+      ),
+      'application' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => FALSE,
+        'description' => 'Downloaders application.',
+      ),
+      'howheard' => array(
+        'type' => 'text',
+        'not null' => FALSE,
+        'description' => 'How the downloader heard about Pegasus',
+      ),
+      'oldfeatures' => array(
+        'type' => 'text',
+        'not null' => FALSE,
+        'description' => 'Existing features of Pegasus that interest the downloader.',
+      ),
+      'newfeatures' => array(
+        'type' => 'text',
+        'not null' => FALSE,
+        'description' => 'New features of Pegasus the downloader would like to see.',
+      ),
+      'howhelp' => array(
+        'type' => 'text',
+        'not null' => FALSE,
+        'description' => 'How the Pegasus team could help the downloader.',
+      ),
+      'filename' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => FALSE,
+        'description' => 'File that the downloader downloaded.',
+      ),
+      'announce' => array(
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'The downloader subscribed to pegasus announce mail list.',
+      ),
+      'users' => array(
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'The downloader subscribed to pegasus users mail list.',
+      ),
+      'timestamp' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'description' => 'Time of download.'
+      )
+    ),
+    'primary key' => array('did'),
+    /*
+    'indexes' => array(
+      'name'    => array('name'),
+      'email'   => array('email'),
+    ),
+    */
+  );
+  
+  return $schema;
+}
