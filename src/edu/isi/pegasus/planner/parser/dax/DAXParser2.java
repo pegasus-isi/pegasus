@@ -141,14 +141,14 @@ public class DAXParser2 extends Parser implements DAXParser {
     /**
      * For holding the key attribute in profile tag.
      */
-    private String mProfileKey = new String();
+    private String mProfileKey = "";
 
    
 
     /**
      * For holding the namespace if specified in the Profile Element.
      */
-    private String mNamespace = new String();
+    private String mNamespace = "";
 
     /**
      * Set as and when Profile and Argument tags are started and ended.
@@ -165,7 +165,7 @@ public class DAXParser2 extends Parser implements DAXParser {
      * We get nested parent elements in a child element. Hence the child remains
      * the same while the parent id for the relationship varies.
      */
-    private String mCurrentChildId = new String();
+    private String mCurrentChildId = "";
 
     /**
      * The list of parents of a node referred to by mCurrentChildId.

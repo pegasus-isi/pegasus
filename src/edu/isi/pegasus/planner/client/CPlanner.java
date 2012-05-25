@@ -218,7 +218,7 @@ public class CPlanner extends Executable{
     
     public void initialize(String [] opts , char confChar){
     	super.initialize(opts , confChar);
-    	mLogMsg = new String();
+    	mLogMsg = "";
         mVersion = Version.instance().toString();
         mNumFormatter = new DecimalFormat( "0000" );
 
@@ -344,7 +344,7 @@ public class CPlanner extends Executable{
      *         out.
      */
     public Collection<File> executeCommand( PlannerOptions options ) {
-        String message = new String();
+        String message = "";
         mPOptions = options;
 
         

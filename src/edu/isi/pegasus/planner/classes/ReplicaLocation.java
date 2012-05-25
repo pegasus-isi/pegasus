@@ -62,7 +62,7 @@ public class ReplicaLocation
      * Default constructor.
      */
     public ReplicaLocation(){
-        mLFN     = new String();
+        mLFN     = "";
         mPFNList = new ArrayList();
     }
 

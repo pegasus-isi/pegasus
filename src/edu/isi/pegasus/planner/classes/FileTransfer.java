@@ -71,7 +71,7 @@ public class FileTransfer extends PegasusFile {
      */
     public FileTransfer(){
         super();
-        mJob         = new String();
+        mJob         = "";
         mFlags       = new BitSet(NO_OF_TRANSIENT_FLAGS);
         mSourceMap   = new HashMap();
         mDestMap     = new HashMap();
@@ -89,7 +89,7 @@ public class FileTransfer extends PegasusFile {
         this.mSize         = pf.mSize;
         this.mFlags        = pf.getFlags();
         this.mType         = pf.getType();
-        this.mJob          = new String();
+        this.mJob          = "";
         this.mSourceMap    = new HashMap();
         this.mDestMap      = new HashMap();
 

@@ -165,7 +165,7 @@ public class PegasusFile extends Data {
     public PegasusFile() {
         super();
         mFlags       = new BitSet(NO_OF_TRANSIENT_FLAGS);
-        mLogicalFile = new String();
+        mLogicalFile = "";
         //by default the type is DATA
         //and transfers are mandatory
         mType        = DATA_FILE;
@@ -581,7 +581,7 @@ public class PegasusFile extends Data {
      */
     public Object clone(){
         PegasusFile pf   = new PegasusFile();
-        pf.mLogicalFile  = new String(mLogicalFile);
+        pf.mLogicalFile  = mLogicalFile;
         pf.mFlags        = (BitSet)this.mFlags.clone();
         pf.mType         = mType;
         pf.mTransferFlag = mTransferFlag;

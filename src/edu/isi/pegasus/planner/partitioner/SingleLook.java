@@ -190,7 +190,7 @@ public class SingleLook extends DAXWriter{
         //do the actual writing to the file
         this.initializeWriteHandle(index);
         try{
-            mPartADAG.toXML(mWriteHandle, new String());
+            mPartADAG.toXML(mWriteHandle, "");
         }
         catch(IOException e){
             mLogger.log("Error while writing out a partition dax :" +

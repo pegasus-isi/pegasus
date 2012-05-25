@@ -143,15 +143,15 @@ public class DagInfo extends Data {
     public DagInfo() {
         dagJobs        = new Vector();
         relations      = new Vector();
-        nameOfADag     = new String();
-        count          = new String();
-        index          = new String();
-        flowID         = new String();
-        flowIDName     = new String();
-        mFlowTimestamp = new String();
-        mDAXMTime      = new String();
-        releaseVersion = new String();
-        mDAXVersion    = new String();
+        nameOfADag     = "";
+        count          = "";
+        index          = "";
+        flowID         = "";
+        flowIDName     = "";
+        mFlowTimestamp = "";
+        mDAXMTime      = "";
+        releaseVersion = "";
+        mDAXVersion    = "";
         lfnMap         = new TreeMap();
         mWFMetrics     = new WorkflowMetrics();
     }
@@ -355,7 +355,7 @@ public class DagInfo extends Data {
         while (ePcRel.hasMoreElements()) {
             currentRelPair = (PCRelation) ePcRel.nextElement();
             if (currentRelPair.child.trim().equalsIgnoreCase(node)) {
-                vParents.addElement(new String(currentRelPair.parent));
+                vParents.addElement( currentRelPair.parent );
             }
         }
 
@@ -426,7 +426,7 @@ public class DagInfo extends Data {
             //adding if leaf to vector
             if (isLeaf) {
                 mLogger.log("Leaf job is " + job, LogManager.DEBUG_MESSAGE_LEVEL);
-                leafJobs.addElement(new String(job));
+                leafJobs.addElement( job );
             }
         }
 
@@ -477,7 +477,7 @@ public class DagInfo extends Data {
             //adding if Root to vector
             if (isRoot) {
                 mLogger.log("Root job is " + job, LogManager.DEBUG_MESSAGE_LEVEL);
-                rootJobs.addElement(new String(job));
+                rootJobs.addElement( job );
             }
         }
 
@@ -621,15 +621,15 @@ public class DagInfo extends Data {
 
         dag.dagJobs = (Vector)this.dagJobs.clone();
         dag.relations = (Vector)this.relations.clone();
-        dag.nameOfADag = new String(this.nameOfADag);
-        dag.count = new String(this.count);
-        dag.index = new String(this.index);
+        dag.nameOfADag =  this.nameOfADag;
+        dag.count =  this.count;
+        dag.index =  this.index;
         dag.mDAXVersion = this.mDAXVersion;
-        dag.flowID = new String(this.flowID);
-        dag.flowIDName     = new String(this.flowIDName);
-        dag.mFlowTimestamp  = new String(this.mFlowTimestamp);
-        dag.mDAXMTime       = new String(this.mDAXMTime);
-        dag.releaseVersion = new String(this.releaseVersion);
+        dag.flowID = this.flowID;
+        dag.flowIDName     = this.flowIDName;
+        dag.mFlowTimestamp  = this.mFlowTimestamp;
+        dag.mDAXMTime       = this.mDAXMTime;
+        dag.releaseVersion = this.releaseVersion;
         dag.lfnMap = (TreeMap)this.lfnMap.clone();
         dag.mWFMetrics = ( WorkflowMetrics )this.mWFMetrics.clone();
         return dag;

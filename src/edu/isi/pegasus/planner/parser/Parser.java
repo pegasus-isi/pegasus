@@ -112,10 +112,10 @@ public abstract class Parser extends DefaultHandler{
      */
     public Parser( PegasusBag bag ) {
         mTextContent  = new StringBuffer();
-        mLogMsg       = new String();
+        mLogMsg       = "";
         mLogger       = bag.getLogger();
         mProps        = bag.getPegasusProperties();
-        mTextString   = new String();
+        mTextString   = "";
         mAdjFName     = false;
         mTextContent.setLength(0);
         createParserInstance();
@@ -129,10 +129,10 @@ public abstract class Parser extends DefaultHandler{
      */
     public Parser( PegasusProperties properties ) {
         mTextContent  = new StringBuffer();
-        mLogMsg       = new String();
+        mLogMsg       = "";
         mLogger       = LogManagerFactory.loadSingletonInstance( properties );
         mProps        = properties;
-        mTextString   = new String();
+        mTextString   = "";
         mAdjFName     = false;
         mTextContent.setLength(0);
         createParserInstance();

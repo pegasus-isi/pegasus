@@ -85,11 +85,11 @@ public class GraphNode extends Data {
      * The default constructor.
      */
     public GraphNode() {
-        mLogicalID = new String();
+        mLogicalID = "";
         mParents = new java.util.LinkedList();
         mChildren = new java.util.LinkedList();
         mDepth = -1;
-        mLogicalName = new String();
+        mLogicalName = "";
         mColor = this.WHITE_COLOR;
         mBag   = null;
     }

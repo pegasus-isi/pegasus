@@ -59,9 +59,9 @@ public abstract class FileServerType extends AbstractSiteData {
      * The default constructor.
      */
     public FileServerType() {
-        mProtocol = new String();
-        mURLPrefix = new String();
-        mMountPoint = new String();
+        mProtocol = "";
+        mURLPrefix = "";
+        mMountPoint = "";
         mProfiles = new Profiles();
     }
     

@@ -1766,7 +1766,7 @@ if(!write) return false;
      * @return String
      */
     public String getDescription() {
-        return new String(PegasusProperties.nonSingletonInstance().getTCMode());
+        return PegasusProperties.nonSingletonInstance().getTCMode();
     }
 
     public void close() {

@@ -42,8 +42,8 @@ implements Comparable{
      * the default constructor  which initialises the class member variables.
      */
     public NameValue(){
-        name  = new String();
-        value = new String();
+        name  = "";
+        value = "";
     }
 
     /**

@@ -80,9 +80,9 @@ public class LRCResult extends Data {
      * The default constructor
      */
     public LRCResult() {
-        lfn = new String();
-        pfn = new String();
-        pool= new String();
+        lfn = "";
+        pfn = "";
+        pool= "";
         LRCExitStatus = 0;
     }
 

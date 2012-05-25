@@ -69,10 +69,10 @@ public class PCRelation extends Data /*implements Comparable*/{
      * the default constructor
      */
     public PCRelation(){
-        parent = new String();
-        child = new String();
-        mAbstractParentID = new String();
-        mAbstractChildID = new String();
+        parent = "";
+        child = "";
+        mAbstractParentID = "";
+        mAbstractChildID = "";
         isDeleted = false;
     }
 
@@ -81,8 +81,8 @@ public class PCRelation extends Data /*implements Comparable*/{
      */
     public PCRelation(String parentName,String childName,boolean deleted){
         this();
-        parent = new String(parentName);
-        child  = new String(childName);
+        parent = parentName;
+        child  = childName;
         isDeleted = deleted;
 
     }
@@ -92,8 +92,8 @@ public class PCRelation extends Data /*implements Comparable*/{
      */
     public PCRelation(String parentName,String childName){
         this();
-        parent = new String(parentName);
-        child  = new String(childName);
+        parent = parentName;
+        child  = childName;
         isDeleted = false;
 
     }

@@ -49,7 +49,7 @@ public abstract class Data implements Cloneable {
      * The default constructor.
      */
     public Data(){
-        mLogMsg = new String();
+        mLogMsg = "";
     }
 
 

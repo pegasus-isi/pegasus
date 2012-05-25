@@ -137,9 +137,9 @@ public class Profile
      */
     public Profile( String namespace, String key, String value ) {
         if ( namespaceValid( namespace ) ){
-            mNamespace = new String( namespace );
-            mKey = new String( key );
-            mValue = new String( value );
+            mNamespace =  namespace;
+            mKey =  key ;
+            mValue =  value ;
         } else {
             throw new RuntimeException( unknownNamespaceMessage( namespace ) );
         }

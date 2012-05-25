@@ -90,12 +90,12 @@ public abstract  class Engine {
     /**
      * Contains the message which is to be logged by Pegasus.
      */
-    protected String mLogMsg = new String();
+    protected String mLogMsg = "";
 
     /**
      * The Replica Location Index URL got from vds.rls.url property
      */
-    protected String mRLIUrl = new String();
+    protected String mRLIUrl = "";
 
 
     /**

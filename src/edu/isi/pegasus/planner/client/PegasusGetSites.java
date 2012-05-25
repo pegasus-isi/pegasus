@@ -85,7 +85,7 @@ public class PegasusGetSites extends Executable{
      
     public void intialize(String [] opts){
     	super.initialize(opts);
-    	mLogMsg = new String();
+    	mLogMsg = "";
         mVersion = Version.instance().toString();
     }
 

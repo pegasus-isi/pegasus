@@ -151,8 +151,8 @@ public abstract class StackBasedXMLParser extends Parser {
         List names = new java.util.ArrayList();
         List values = new java.util.ArrayList();
         for ( int i=0; i < atts.getLength(); ++i ) {
-            String name = new String( atts.getLocalName(i) );
-            String value = new String( atts.getValue(i) );            
+            String name  =  atts.getLocalName(i) ;
+            String value =  atts.getValue(i) ;            
             names.add(name);
             values.add(value);
         }

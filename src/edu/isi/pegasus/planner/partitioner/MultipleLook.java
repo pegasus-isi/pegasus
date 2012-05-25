@@ -123,7 +123,7 @@ public class MultipleLook extends DAXWriter{
         //do the actual writing to the file
         this.initializeWriteHandle(mIndex);
         try{
-            mPartADAG.toXML(mWriteHandle, new String());
+            mPartADAG.toXML(mWriteHandle, "");
         }
         catch(IOException e){
             mLogger.log("Error while writing out a partition dax :" +
