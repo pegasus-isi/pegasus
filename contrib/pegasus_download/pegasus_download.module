@@ -147,6 +147,13 @@ function pegasus_download_menu() {
     'access callback' => TRUE,
     'type' => MENU_CALLBACK
   );
+  $items['pegasus/download/link'] = array(
+    'title' => 'Download Pegasus',
+    'description' => 'Link to download file',
+    'page callback' => 'pegasus_download_link',
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK
+  );
   
   return $items;
 }
@@ -315,9 +322,30 @@ function pegasus_download_user_form_submit($form, &$form_state) {
   	pegasus_download_entry_insert($entry);
   }
   
-  // Redirect the user to the download
+  // Redirect user to the download link page
+  $filename = $values['filename'];
+  $query = array('filename' => $filename);
+  $form_state['redirect'] = array('pegasus/download/link', array('query' => $query));
+}
+
+function pegasus_download_link() {
+  $params = drupal_get_query_parameters();
+  if (array_key_exists('filename', $params)) {
+    $filename = $params['filename'];
+  } else {
+    drupal_set_message(t('No file to download'), 'error');
+    return '';
+  }
+  
+  // Build the actual URL
   $url_prefix = variable_get('pegasus_download_url_prefix', 'http://download.pegasus.isi.edu/wms/download');
-  $form_state['redirect'] = array($url_prefix . '/' . $entry['filename']);
+  $url = $url_prefix . '/' . $filename;
+  
+  return t(
+    '<h1><a href="@url">Click here to download the file you requested</a></h1>'.
+    '<h1>Or copy the URL below:</h1>'.
+    '<p>@url</p>', 
+    array('@url' => $url, '@filename' => $filename));
 }
 
 function pegasus_download_list() {
