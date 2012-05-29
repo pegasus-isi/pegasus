@@ -40,7 +40,7 @@ ${libdir}/python/boto:
 	@rm -rf $(BOTO)
 	
 clean:
-	rm -rf touch.pysqlite pysqlite-2.6.0
+	rm -rf touch.pysqlite $(PySQLite)
 	rm -rf touch.sqlalchemy $(SQLAlchemy)
 	rm -rf touch.boto $(BOTO) .boto*
 
