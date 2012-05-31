@@ -42,7 +42,7 @@ import java.util.regex.Pattern;
  * @author Mats Rynge
  * @version $Revision$
  * */
-public class CommonProperties
+public class CommonProperties implements Cloneable
 {
     /**
      * implements the singleton access via class variable.
@@ -430,8 +430,10 @@ public class CommonProperties
     {
         //set in internal properties object also
         //else prefix option does not work. Karan Oct 1, 2008
-        this.m_props.setProperty( key, value );
-        return System.setProperty( key, value );
+        return this.m_props.setProperty( key, value );
+        //we don't set System properties, else it makes the clone method
+        //unusable
+        //return System.setProperty( key, value );
     }
 
     /**
@@ -602,5 +604,33 @@ public class CommonProperties
         else cp = CommonProperties.instance(); 
 
         cp.list( System.out );
+    }
+
+    /**
+     * Returns the clone of the object.
+     *
+     * @return the clone
+     */
+    public Object clone(){
+        CommonProperties props;
+        try{
+
+            //this will do a shallow clone for all member variables
+            //that is fine for the string variables
+            props = ( CommonProperties ) super.clone();
+
+            //do a deep clone for the underlying properties
+            //can be expensive
+            props.m_props  = new Properties();
+            for( Object key: this.m_props.keySet() ){
+                props.m_props.put(key, this.m_props.get(key));
+            }
+        }
+        catch( CloneNotSupportedException e ){
+            //somewhere in the hierarch chain clone is not implemented
+            throw new RuntimeException("Clone not implemented in the base class of " + this.getClass().getName(),
+                                       e );
+        }
+        return props;
     }
 }

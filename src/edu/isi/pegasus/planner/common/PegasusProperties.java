@@ -50,7 +50,7 @@ import java.util.Map;
  *
  * @see org.griphyn.common.util.CommonProperties
  */
-public class PegasusProperties {
+public class PegasusProperties implements Cloneable {
 
     /**
      * the name of the property to disable invoke functionality
@@ -168,10 +168,6 @@ public class PegasusProperties {
      */
     private static final String DEFAULT_DAX_CALLBACK = "DAX2Graph";
 
-    /**
-     * Ensures only one object is created always. Implements the Singleton.
-     */
-    private static PegasusProperties pegProperties = null;
 
 
     /**
@@ -184,15 +180,7 @@ public class PegasusProperties {
      */
     private CommonProperties mProps;
 
-    /**
-     * The Logger object.
-     */
-//    private LogManager mLogger;
 
-    /**
-     * The String containing the messages to be logged.
-     */
-    private String mLogMsg;
 
     /**
      * The default path to the transformation catalog.
@@ -360,7 +348,32 @@ public class PegasusProperties {
         }
         return profiles;
     }
-    
+
+
+    /**
+     * Returns the clone of the object.
+     *
+     * @return the clone
+     */
+    public Object clone(){
+        PegasusProperties props;
+        try{
+            //this will do a shallow clone for all member variables
+            //that is fine for the string variables
+            props = ( PegasusProperties ) super.clone();
+
+            //clone the CommonProperties
+            props.mProfiles =  ( this.mProfiles == null ) ? null :(Profiles) this.mProfiles.clone();
+            props.mProps =  ( this.mProps == null )  ?  null: (CommonProperties) this.mProps.clone();
+        }
+        catch( CloneNotSupportedException e ){
+            //somewhere in the hierarch chain clone is not implemented
+            throw new RuntimeException("Clone not implemented in the base class of " + this.getClass().getName(),
+                                       e );
+        }
+        return props;
+    }
+
     /**
      * Accessor to the bin directory of the Pegasus install
      *
@@ -477,12 +490,10 @@ public class PegasusProperties {
             //Karan April 27, 2011
             mProps = CommonProperties.nonSingletonInstance( confProperties );
         } catch ( IOException e ) {
-            mLogMsg = "unable to read property file: " + e.getMessage();
-            System.err.println( mLogMsg );
+            System.err.println( "unable to read property file: " + e.getMessage() );
             System.exit( 1 );
         } catch ( MissingResourceException e ) {
-            mLogMsg = "A required property is missing: " + e.getMessage();
-            System.err.println( mLogMsg );
+            System.err.println( "A required property is missing: " + e.getMessage() );
             System.exit( 1 );
         }
 

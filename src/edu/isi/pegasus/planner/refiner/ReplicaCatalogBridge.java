@@ -279,10 +279,19 @@ public class ReplicaCatalogBridge
             //Karan May 1 2007
             mReplicaCatalog = null;
             if ( mSearchFiles != null && !mSearchFiles.isEmpty() ){
-               mReplicaCatalog = ReplicaFactory.loadInstance(properties);
 
-               //load all the mappings.
-               mReplicaStore = new ReplicaStore( mReplicaCatalog.lookup( mSearchFiles ) );
+                //need to clone before setting any read only properites
+                PegasusProperties props = (PegasusProperties) properties.clone();
+
+                //set the read only property for the file based rc
+                //we are connecting via PegasusProperties add the prefix
+                String name =  ReplicaCatalog.c_prefix + "." + ReplicaCatalogBridge.CACHE_READ_ONLY_KEY;
+                props.setProperty( name, "true" );
+                
+                mReplicaCatalog = ReplicaFactory.loadInstance( props );          
+
+                //load all the mappings.
+                mReplicaStore = new ReplicaStore( mReplicaCatalog.lookup( mSearchFiles ) );
             }
 
         } catch ( Exception ex ) {
