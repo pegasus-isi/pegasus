@@ -279,10 +279,20 @@ public class ReplicaCatalogBridge
             //Karan May 1 2007
             mReplicaCatalog = null;
             if ( mSearchFiles != null && !mSearchFiles.isEmpty() ){
-               mReplicaCatalog = ReplicaFactory.loadInstance(properties);
 
-               //load all the mappings.
-               mReplicaStore = new ReplicaStore( mReplicaCatalog.lookup( mSearchFiles ) );
+                //set the read only property for the file based rc
+                //we are connecting via PegasusProperties add the prefix
+                //PM-606
+                String name =  ReplicaCatalog.c_prefix + "." + ReplicaCatalogBridge.CACHE_READ_ONLY_KEY;
+                properties.setProperty( name, "true" );
+
+                mReplicaCatalog = ReplicaFactory.loadInstance(properties);
+
+                //set it back to false, we don't want it globally set
+                properties.setProperty( name, "false" );
+
+                //load all the mappings.
+                mReplicaStore = new ReplicaStore( mReplicaCatalog.lookup( mSearchFiles ) );
             }
 
         } catch ( Exception ex ) {
