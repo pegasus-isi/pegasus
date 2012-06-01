@@ -119,6 +119,22 @@ GLOBUS_SUBMIT events.
   returning a single value.
 
 
+9) Support for DAGMAN_COPY_TO_SPOOL Condor configuration parameter
+
+   Condor has a setting DAGMAN_COPY_TO_SPOOL that if set to true,
+   results in Condor copying the DAGMan binary to the spool directory
+   before launching the workflow. In case of Pegasus, condor dagman is
+   launched by a wrapper called pegasus-dagman. Because of this ,
+   pegasus dagman was copied to the condor spool directory before
+   being launched in lieu of condor dagman binary.
+
+   This is now fixed whereby pegasus-dagman will copy condor_dagman
+   binary to the submit directory for the workflow before launching
+   the workflow.
+
+   More details at 
+   https://jira.isi.edu/browse/PM-595
+
 ===============================
 Release Notes for PEGASUS 4.0.0
 ===============================
