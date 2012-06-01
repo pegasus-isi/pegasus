@@ -1123,6 +1123,7 @@ def debug_condor(my_job):
         debug_script.write('   echo "executable ran successfully"\n')
         debug_script.write("else\n")
         debug_script.write('   echo "executable failed with error $?"\n')
+        debug_script.write('fi\n')
     except:
 	logger.error("cannot write to file %s" % (debug_script))
 	sys.exit(1)
