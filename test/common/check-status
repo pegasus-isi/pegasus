@@ -29,6 +29,8 @@ while [ "$STATUS" = "Running" -o "$STATUS" = "" -o "$STATUS" = "Unknown"  ] ; do
 done
 
 if [ "$STATUS" = "Success" ]; then
+    # give monitord some time to finish
+    sleep 1m
     echo "*** Workflow finished succesfully ***"
     exit 0
 else
