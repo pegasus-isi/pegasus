@@ -6,19 +6,25 @@ ifndef ${libdir}
 libdir = ${prefix}/lib
 endif
 
-PySQLite=pysqlite-2.6.3
+PySQLite=pysqlite-2.6.0
 BOTO=boto-2.0b3-24047c8
 SQLAlchemy=SQLAlchemy-0.7.6
+need_pysqlite2=$(shell if python -V 2>&1 | grep -qE 'ython 2\.[3-4]'; then echo 1; else echo 0; fi)
+
 all: ${libdir}/python/pysqlite2 ${libdir}/python/sqlalchemy ${libdir}/python/boto
 
 ${libdir}/python/pysqlite2:
+ifeq ($(need_pysqlite2), 1)
 	@rm -rf $(PySQLite)
 	tar xzf $(PySQLite).tar.gz
 	(cd $(PySQLite) && \
-	  python setup.py build_static && \
-	  cp -R build/lib*/pysqlite2 ${libdir}/python/ \
+	    python setup.py build_static && \
+	    cp -R build/lib*/pysqlite2 ${libdir}/python/ \
 	)
 	@rm -rf $(PySQLite)
+else
+	mkdir -p ${libdir}/python/pysqlite2
+endif
 
 ${libdir}/python/sqlalchemy:
 	@rm -rf $(SQLAlchemy)
