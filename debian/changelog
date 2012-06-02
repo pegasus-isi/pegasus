@@ -1,6 +1,6 @@
-pegasus (4.0.1-1) unstable; urgency=low
+pegasus (4.0.2cvs-1) unstable; urgency=low
 
-  * Initial packaging of Pegasus 4.0.1
+  * Initial packaging of Pegasus 4.0.2
 
  -- Mats Rynge <mats@rynge.net>  Wed, 29 Feb 2012 16:31:15 -0800
 
