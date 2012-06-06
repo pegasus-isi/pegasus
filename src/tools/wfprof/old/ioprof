@@ -559,7 +559,7 @@ def parse_strace_output(log):
 def main():
 
   # Look for kickstart in locak directory
-  KICKSTART = './kickstart'
+  KICKSTART = './pegasus-kickstart'
   if not (os.path.isfile(KICKSTART) and os.access(KICKSTART, os.X_OK)):
     # Check for PEGASUS_HOME
     PEGASUS_HOME = os.getenv('PEGASUS_HOME')
@@ -568,7 +568,7 @@ def main():
       sys.exit(1)
     
     # Look for kickstart in $PEGASUS_HOME/bin
-    KICKSTART = os.path.join(PEGASUS_HOME,'bin','kickstart')
+    KICKSTART = os.path.join(PEGASUS_HOME,'bin','pegasus-kickstart')
     if not (os.path.isfile(KICKSTART) and os.access(KICKSTART, os.X_OK)):
       sys.stderr.write('Kickstart not found: %s\n' % KICKSTART)
       sys.exit(1)
