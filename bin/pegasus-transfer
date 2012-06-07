@@ -659,7 +659,7 @@ def gsiftp(full_list, failed_q, attempt):
         prev = curr
         third_party = curr.src_proto == "gsiftp" and curr.dst_proto == "gsiftp"
 
-        while gsiftp_similar(curr, prev):
+        while gsiftp_similar(curr, prev) and len(similar_list) < 1000:
             
             similar_list.append(curr)
 
