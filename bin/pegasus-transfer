@@ -45,6 +45,7 @@ import re
 import sys
 import errno
 import logging
+import math
 import optparse
 import tempfile
 import subprocess
@@ -640,6 +641,21 @@ def gsiftp_similar(a, b):
     return True
 
 
+def gsiftp_split_similar(full_list):
+    """
+    splits up a long list of similar transfers into smaller
+    pieces which can easily be handled by g-u-c
+    """
+    chunks = []
+    size = 1000
+    num_chunks = int(math.ceil(len(full_list) / float(size)))
+    for i in range(num_chunks):
+        start = i * size
+        end  = min((i + 1) * size, len(full_list))
+        chunks.append(full_list[start:end])
+    return chunks
+
+
 def gsiftp(full_list, failed_q, attempt):
     """
     gsiftp - globus-url-copy for now, maybe uberftp in the future
@@ -659,7 +675,7 @@ def gsiftp(full_list, failed_q, attempt):
         prev = curr
         third_party = curr.src_proto == "gsiftp" and curr.dst_proto == "gsiftp"
 
-        while gsiftp_similar(curr, prev) and len(similar_list) < 1000:
+        while gsiftp_similar(curr, prev):
             
             similar_list.append(curr)
 
@@ -682,10 +698,12 @@ def gsiftp(full_list, failed_q, attempt):
         first_list = []
         first_list.append(similar_list.pop())
         gsiftp_do_transfers(first_list, failed_q, True, third_party)
-        if len(similar_list) > 0:
-            gsiftp_do_transfers(similar_list, failed_q, False, third_party)
 
+        # limit the number of entries for each pipeline
+        chunks = gsiftp_split_similar(similar_list)
 
+        for l in chunks:
+            gsiftp_do_transfers(l, failed_q, False, third_party)
 
 
 def gsiftp_do_transfers(transfers, failed_q, create_dest, third_party):
