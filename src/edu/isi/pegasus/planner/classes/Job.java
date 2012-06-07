@@ -1584,6 +1584,7 @@ public class Job extends Data implements GraphNodeContent{
         globusRSL.checkKeyInNS(entry);
         envVariables.checkKeyInNS(entry);
         vdsNS.checkKeyInNS(entry);
+        hints.checkKeyInNS( entry );
     }
 
     /**
@@ -1603,6 +1604,7 @@ public class Job extends Data implements GraphNodeContent{
         globusRSL.checkKeyInNS(properties,executionPool);
         envVariables.checkKeyInNS(properties,executionPool);
         vdsNS.checkKeyInNS(properties,executionPool);
+        hints.checkKeyInNS(properties, executionPool );
     }
     
     /**
@@ -1655,6 +1657,11 @@ public class Job extends Data implements GraphNodeContent{
             dagmanVariables.checkKeyInNS( key, (String)n.get( key ) );
         }
 
+        n = profiles.get( NAMESPACES.hints );
+        for( Iterator it = n.getProfileKeyIterator(); it.hasNext(); ){
+            key = (String)it.next();
+            hints.checkKeyInNS( key, (String)n.get( key ) );
+        }
     }
 
 
@@ -1694,6 +1701,9 @@ public class Job extends Data implements GraphNodeContent{
 
             else if(profile.getProfileNamespace().equals(Profile.DAGMAN))
                 dagmanVariables.checkKeyInNS(profile);
+
+            else if(profile.getProfileNamespace().equals(Profile.HINTS))
+                hints.checkKeyInNS(profile);
             else{
                 //unknown profile.
                 mLogger.log("Unknown Profile: " + profile + " for job" +
