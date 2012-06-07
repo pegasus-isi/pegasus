@@ -48,7 +48,7 @@ public class Hints extends Namespace {
     /**
      * The jobmanager universe key.
      */
-    public static final String JOBMANAGER_UNIVERSE_KEY = "jobmanager.universe";
+    public static final String GRID_JOB_TYPE_KEY = "grid.jobtype";
     
     /**
      * The execution pool key
@@ -181,19 +181,15 @@ public class Hints extends Namespace {
                 if (key.compareTo( Hints.GLOBUS_SCHEDULER_KEY ) == 0) {
                     res = VALID_KEY;
                 }
-                else {
-                    res = NOT_PERMITTED_KEY;
-                }
-                break;
-
-            case 'j':
-                if (key.compareTo( Hints.JOBMANAGER_UNIVERSE_KEY  ) == 0 ) {
+                else if (key.compareTo( Hints.GRID_JOB_TYPE_KEY  ) == 0 ) {
                     res = VALID_KEY;
                 }
                 else {
                     res = NOT_PERMITTED_KEY;
                 }
                 break;
+
+         
 
 
             case 'p':

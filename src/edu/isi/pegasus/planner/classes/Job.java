@@ -1137,8 +1137,8 @@ public class Job extends Data implements GraphNodeContent{
 //        JIRA PM-277
 //        return Job.jobType2GridGatewayJobType( this.getJobType() );
         
-        return this.hints.containsKey( Hints.JOBMANAGER_UNIVERSE_KEY  ) ?
-               GridGateway.JOB_TYPE.valueOf( (String)this.hints.get( Hints.JOBMANAGER_UNIVERSE_KEY  )  ):
+        return this.hints.containsKey( Hints.GRID_JOB_TYPE_KEY  ) ?
+               GridGateway.JOB_TYPE.valueOf( (String)this.hints.get( Hints.GRID_JOB_TYPE_KEY  )  ):
                Job.jobType2GridGatewayJobType( this.getJobType() );
     }
 
