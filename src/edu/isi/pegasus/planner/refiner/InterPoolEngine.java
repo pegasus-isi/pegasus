@@ -780,32 +780,7 @@ public class InterPoolEngine extends Engine implements Refiner {
                     return true;
                 }
                 break;
-/*
-            case 'g':
-                if (key.equals("globusScheduler")) {
-                    if( job.hints.containsKey( Hints.GLOBUS_SCHEDULER_KEY ) ){
-                        //user specified the jobmanager on which they want 
-                        //the job to execute on
-                        job.globusScheduler = (String) job.hints.removeKey("globusScheduler");
-                    }
-                    else{
-                        //try to lookup in the site catalog
-                        SiteCatalogEntry s = mSiteStore.lookup( job.getSiteHandle() );
-                        if( s == null ){
-                            throw new RuntimeException( "Unable to find entry for site in site catalog " + job.getSiteHandle() );
-                        }
-                        GridGateway gw = s.selectGridGateway( 
-                                                    GridGateway.JOB_TYPE.valueOf(job.condorUniverse));
-                        if( gw == null ){
-                            throw new RuntimeException( 
-                                    "No GridGateway specified for compute jobs for site  " + job.getSiteHandle() );
-                        }
-                        job.globusScheduler =  gw.getContact();
-                    }
-                    return true;
-                }
-                break;
-*/
+
             
             case 'p':
 
@@ -820,7 +795,10 @@ public class InterPoolEngine extends Engine implements Refiner {
 
                 }
                 break;
-                
+
+            // the hint Hints.JOBMANAGER_UNIVERSE_KEY is handled in
+            // Job class getGridGatewayJobType
+                /*
             case 'j':
                 if (key.equals( Hints.JOBMANAGER_UNIVERSE_KEY  )) {
                  job.condorUniverse = job.hints.containsKey( Hints.JOBMANAGER_UNIVERSE_KEY  ) ?
@@ -831,7 +809,7 @@ public class InterPoolEngine extends Engine implements Refiner {
 
              }
              break;
-
+             */
 
             default:
                 break;
