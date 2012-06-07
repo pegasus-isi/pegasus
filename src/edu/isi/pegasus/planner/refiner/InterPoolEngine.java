@@ -303,7 +303,6 @@ public class InterPoolEngine extends Engine implements Refiner {
 
 
             //check if the user has specified any hints in the dax
-            incorporateHint(job, Hints.JOBMANAGER_UNIVERSE_KEY  );
             if (incorporateHint(job, "executionPool")) {
                 //i++;
                 incorporateProfiles(job);
