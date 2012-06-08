@@ -36,6 +36,7 @@ import java.io.File;
 
 import java.util.Iterator;
 import java.util.Collection;
+import java.util.LinkedList;
 
 
 /**
@@ -297,6 +298,8 @@ public class Condor   implements SLS {
         //the input and output data
         job.condorVariables.construct( "initialdir", stagingSiteDirectory );
 
+        Collection<String> files = new LinkedList();
+
         //iterate through all the input files
         for( Iterator it = job.getInputFiles().iterator(); it.hasNext(); ){
             PegasusFile pf = ( PegasusFile )it.next();
@@ -313,9 +316,11 @@ public class Condor   implements SLS {
             //add an input file for transfer
             //job.condorVariables.addIPFileForTransfer( stagingSiteDirectory + File.separator + lfn );
             //we add just the lfn as we are setting initialdir
-            job.condorVariables.addIPFileForTransfer( lfn );
+            files.add( lfn );
         }
+        job.condorVariables.addIPFileForTransfer( files );
 
+        files = new LinkedList();
         //iterate and add output files for transfer back
         for( Iterator it = job.getOutputFiles().iterator(); it.hasNext(); ){
             PegasusFile pf = ( PegasusFile )it.next();
@@ -328,9 +333,11 @@ public class Condor   implements SLS {
             }
 
 
-            //add an input file for transfer
-            job.condorVariables.addOPFileForTransfer( lfn );
+            //add an output file for transfer
+            files.add( lfn );
+            
         }
+        job.condorVariables.addOPFileForTransfer( files );
 
 
         return true;
