@@ -5,13 +5,13 @@
 
 # Max number of minutes allowed for the planner to plan the
 # dax - if these limit is exeeded, the test fails
-MAX_MINUTES=13
+MAX_MINUTES=4
 
 # Min number of minutes allowed for the planner to plan the
 # dax - if these limit is exeeded, the test fails. This is used
 # to detect big improvements in the planner which would mean it
 # is time to lower the upper (and lower) limits of this test
-MIN_MINUTES=5
+MIN_MINUTES=2
 
 # control the environment
 export JAVA_HEAPMAX=1024
