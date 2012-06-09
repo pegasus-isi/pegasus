@@ -24,6 +24,7 @@ import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.TreeMap;
@@ -332,7 +333,20 @@ public class Condor extends Namespace{
         this.construct("should_transfer_files","YES");
         this.construct("when_to_transfer_output","ON_EXIT");
     }
-    
+
+    /**
+     * Adds multiple files that are to be transferred from the submit host via
+     * the Condor File Transfer Mechanism. It also sets the associated condor
+     * keys like when_to_transfer and should_transfer_files.
+     *
+     * @param file  the path to the file on the submit host.
+     */
+    public void addIPFileForTransfer(Collection<String> files){
+
+        this.addFilesForTransfer( files, Condor.TRANSFER_IP_FILES_KEY );
+        
+    }
+
     /**
      * Adds an input file that is to be transferred from the submit host via
      * the Condor File Transfer Mechanism. It also sets the associated condor
@@ -341,24 +355,20 @@ public class Condor extends Namespace{
      * @param file  the path to the file on the submit host.
      */
     public void addIPFileForTransfer(String file){
-        //sanity check
-        if(file == null || file.length() == 0){
-            return ;
-        }
-        String files;
-        //check if the key is already set.
-        if(this.containsKey(Condor.TRANSFER_IP_FILES_KEY)){
-            //update the existing list.
-            files = (String)this.get(Condor.TRANSFER_IP_FILES_KEY);
-            files =  files + "," + file;
-        }
-        else{
-            files = file;
-            //set the additional keys only once
-            this.construct("should_transfer_files","YES");
-            this.construct("when_to_transfer_output","ON_EXIT");
-        }
-        this.construct(Condor.TRANSFER_IP_FILES_KEY,files);
+        this.addFilesForTransfer( file, Condor.TRANSFER_IP_FILES_KEY );
+    }
+
+    /**
+     * Adds multiple output files that are to be transferred from the submit host via
+     * the Condor File Transfer Mechanism. It also sets the associated condor
+     * keys like when_to_transfer and should_transfer_files.
+     *
+     * @param file  the path to the file on the submit host.
+     */
+    public void addOPFileForTransfer(Collection<String> files){
+
+        this.addFilesForTransfer( files, Condor.TRANSFER_OP_FILES_KEY );
+
     }
 
     /**
@@ -369,16 +379,67 @@ public class Condor extends Namespace{
      * @param file  the path to the file on the submit host.
      */
     public void addOPFileForTransfer( String file ){
+        this.addFilesForTransfer( file, Condor.TRANSFER_OP_FILES_KEY );
+    }
+
+    /**
+     * Adds multiple files that are to be transferred from the submit host via
+     * the Condor File Transfer Mechanism. It also sets the associated condor
+     * keys like when_to_transfer and should_transfer_files.
+     *
+     * @param file  the path to the file on the submit host.
+     * @param key   the name of the Condor key to be added
+     */
+    public void addFilesForTransfer(Collection<String> files, String key ){
+        //sanity check
+        if(files == null || files.isEmpty()){
+            return ;
+        }
+
+        StringBuffer addon = new StringBuffer();
+        for( String f: files ){
+            addon.append( f ).append( "," );
+        }
+        String existing;
+        //check if the key is already set.
+        if(this.containsKey( key )){
+            //update the existing list.
+            existing = (String)this.get( key );
+            addon.append( existing );
+        }
+        else{
+            //set the additional keys only once
+            this.construct("should_transfer_files","YES");
+            this.construct("when_to_transfer_output","ON_EXIT");
+        }
+        this.construct( key, addon.toString() );
+    }
+
+    /**
+     * Adds an input file that is to be transferred from the submit host via
+     * the Condor File Transfer Mechanism. It also sets the associated condor
+     * keys like when_to_transfer and should_transfer_files.
+     *
+     * @param file  the path to the file on the submit host.
+     * @param key   the name of the Condor key
+     */
+    public void addFilesForTransfer( String file, String key ){
         //sanity check
         if(file == null || file.length() == 0){
             return ;
         }
         String files;
         //check if the key is already set.
-        if(this.containsKey( Condor.TRANSFER_OP_FILES_KEY )){
+        if(this.containsKey( key )){
             //update the existing list.
-            files = (String)this.get( Condor.TRANSFER_OP_FILES_KEY );
-            files =  files + "," + file;
+            files = (String)this.get( key );
+
+            if( files.charAt( files.length() -1 ) == ',' ){
+                files = files + file;
+            }
+            else{
+                files =  files + "," + file;
+            }
         }
         else{
             files = file;
@@ -386,9 +447,12 @@ public class Condor extends Namespace{
             this.construct("should_transfer_files","YES");
             this.construct("when_to_transfer_output","ON_EXIT");
         }
-        this.construct( Condor.TRANSFER_OP_FILES_KEY, files );
+        this.construct( key ,files);
     }
 
+    
+
+    
 
     /**
      * Additional method to handle the Condor namespace with
