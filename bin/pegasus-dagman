@@ -204,7 +204,7 @@ if __name__ == "__main__":
             if monitord_next_start <= t:
                 monitord_next_start = 0
                 monitord_last_start = t
-                monitord = monitord_launch()
+                monitord = monitord_launch(monitord_bin)
 
         # sleep in between polls
         time.sleep(SLEEP_TIME)
