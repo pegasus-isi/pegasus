@@ -38,13 +38,52 @@ if [ ! -e "${JAVA}" ]; then
 	exit 1
 fi
 
-JAVA_VERSION=`${JAVA} -mx128m -version 2>&1 | awk '/^java version/ {gsub(/"/,""); print $3}'`
+# start with empty arguments
+addon=''
+
+# pegasus will figure out java heap min/max unless the user has set
+# JAVA_HEAPMIN/JAVA_HEAPMIN
+if [ "X${JAVA_HEAPMIN}" = "X" -a "X${JAVA_HEAPMAX}" = "X" ]; then
+
+    # default - should be ok on most systems
+    heap_max=512
+
+    # Linux: use /proc/meminfo to determine better defaults
+    if [ -e /proc/meminfo ]; then
+        mem_total=`(cat /proc/meminfo | grep MemTotal: | awk '{print $2;}') 2>/dev/null`
+        if [ "X$mem_total" != "X" -a $mem_total -gt 0 ]; then
+            heap_max=$(($mem_total / 1024 / 10))
+        fi
+    fi
+
+    # MacOSX: sysctl
+    if [ -e /Library -a -e /usr/sbin/sysctl ]; then
+        mem_total=`/usr/sbin/sysctl -n hw.memsize 2>/dev/null`
+        if [ "X$mem_total" != "X" -a $mem_total -gt 0 ]; then
+            heap_max=$(($mem_total / 1024 / 1024 / 10))
+        fi
+    fi
+
+    # upper limit - useful for large memory systems
+    if [ $heap_max -gt 4096 ]; then
+        heap_max=4096
+    fi
+
+    # min is 1/2 of max - should provide good performance
+    heap_min=$(($heap_max / 2))
+
+    addon="$addon -Xms${heap_min}m -Xmx${heap_max}m"
+else
+    test "X${JAVA_HEAPMIN}" = "X" || addon="$addon -Xms${JAVA_HEAPMIN}m"
+    test "X${JAVA_HEAPMAX}" = "X" || addon="$addon -Xmx${JAVA_HEAPMAX}m"
+fi
+
+JAVA_VERSION=`${JAVA} $addon -version 2>&1 | awk '/^java version/ {gsub(/"/,""); print $3}'`
 if [ `echo ${JAVA_VERSION} | cut -c1,3` -lt 16 ]; then
 	echo "ERROR: Java 1.6 or later required. Please set JAVA_HOME or PATH to point to a newer Java."
 	exit 1
 fi
 
-addon=''
 while [ true ]; do
     case "$1" in
 	-[XD][_a-zA-Z]*)
@@ -61,12 +100,4 @@ while [ true ]; do
 	    ;;
      esac
 done
-
-# set no_heap_setup to anything, if you do NOT want heap setup
-# FIXME: What about a user specifying their own values, but not
-#        using the env vars? Will JRE take the first or last found?
-if [ "X$no_heap_setup" = "X" ]; then
-    test "X${JAVA_HEAPMAX}" = "X" || addon="$addon -Xmx${JAVA_HEAPMAX}m"
-    test "X${JAVA_HEAPMIN}" = "X" || addon="$addon -Xms${JAVA_HEAPMIN}m"
-fi
 
