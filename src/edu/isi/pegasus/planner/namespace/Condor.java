@@ -858,9 +858,16 @@ public class Condor extends Namespace{
      * @param value is the right hand side
      */
     public void construct(String key, String value) {
-        mProfileMap.put(key.toLowerCase(), value);
-    }
+        if( key.startsWith( "+" ) ){
+            //we preserve the case
+            //PM-615
+        }
+        else{
+            key = key.toLowerCase();
+        }
 
+        mProfileMap.put( key, value );
+    }
 
     /**
      * Returns a boolean value, that a particular key is mapped to in this
