@@ -892,7 +892,7 @@ sub condor_q(\%\%\@;%) {
 	my $s = ''; 
 	foreach my $n ( @{ $flags{rootuuid} } ) { 
 	    $s .= ' || ' if $s; 
-	    $s .= "(pegasus_root_wf_uuid==\\\"$n\\\")"; 
+	    $s .= "(pegasus_root_wf_uuid=?=\\\"$n\\\")"; 
 	}
 	if ( $s ) { 
 	    if ( $constraint ) { 
@@ -908,7 +908,7 @@ sub condor_q(\%\%\@;%) {
 	my $s = ''; 
 	foreach my $n ( @{ $flags{jobtypes} } ) {
 	    $s .= ' || ' if $s;
-	    $s .= "(pegasus_job_class==$n)"; 
+	    $s .= "(pegasus_job_class=?=$n)"; 
 	}
 	if ( $s ) {
 	    if ( $constraint ) { 
@@ -924,7 +924,7 @@ sub condor_q(\%\%\@;%) {
 	my $s = ''; 
 	foreach my $site ( @{ $flags{jobsites} } ) { 
 	    $s .= ' || ' if $s;
-	    $s .= "(pegasus_site==\\\"$site\\\")"; 
+	    $s .= "(pegasus_site=?=\\\"$site\\\")"; 
 	}
 	if ( $s ) { 
 	    if ( $constraint ) { 
