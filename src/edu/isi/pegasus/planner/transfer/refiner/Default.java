@@ -104,9 +104,10 @@ public class Default extends MultipleFTPerXFERJobRefiner {
         mLogMsg = null;
         mFileTable = new TreeMap();
         
-        mCreateRegistrationJobs = ( mProps.getReplicaMode() != null );
+        mCreateRegistrationJobs = ( mProps.getReplicaMode() != null ) &&
+                                    mProps.createRegistrationJobs();
         if( !mCreateRegistrationJobs ){
-            mLogger.log( "No Replica Registration Jobs will be created as Replica Catalog not configured.",
+            mLogger.log( "No Replica Registration Jobs will be created .",
                           LogManager.CONFIG_MESSAGE_LEVEL );
         }
         

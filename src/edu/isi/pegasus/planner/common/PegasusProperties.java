@@ -154,6 +154,7 @@ public class PegasusProperties implements Cloneable {
      * The property key designated the root workflow uuid.
      */
     public static final String ROOT_WORKFLOW_UUID_PROPERTY_KEY = "pegasus.workflow.root.uuid";
+
     
 
     
@@ -2039,10 +2040,22 @@ public class PegasusProperties implements Cloneable {
      * 
      * Referred to by the "pegasus.job.priority.assign" property.
      *
-     * @return boolean value specified in properties else false.
+     * @return boolean value specified in properties else true.
      */
     public boolean assignDefaultJobPriorities() {
         return Boolean.parse( mProps.getProperty( "pegasus.job.priority.assign" ) ,
+                              true  );
+    }
+
+    /**
+     * Returns a boolean indicating whether we create registration jobs or not.
+     * 
+     * Referred to by the "pegasus.register" property.
+     *
+     * @return boolean value specified in properties else true.
+     */
+    public boolean createRegistrationJobs() {
+        return Boolean.parse( mProps.getProperty( "pegasus.register" ) ,
                               true  );
     }
 
