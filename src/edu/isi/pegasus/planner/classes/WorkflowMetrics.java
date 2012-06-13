@@ -17,6 +17,8 @@
 
 package edu.isi.pegasus.planner.classes;
 
+import java.util.Iterator;
+
 /**
  * A Workflow metrics class that stores the metrics about the workflow.
  *
@@ -159,16 +161,27 @@ public class WorkflowMetrics extends Data {
     /**
      * Increment the metrics when on the basis of type of job.
      *
-     * @param job  the job being added.
+     * @param job                the job being added.
      */
-    public void increment( Job job ){
+    public void increment( Job job  ){
+         this.increment( job, true );
+    }
+    /**
+     * Increment the metrics when on the basis of type of job.
+     *
+     * @param job                the job being added.
+     * @param incrementJobs       boolean whether to increment  jobs or not
+     */
+    public void increment( Job job, boolean incrementJobs ){
         //sanity check
         if( job == null ){
             return;
         }
 
         //increment the total
-        mNumTotalJobs++;
+        if( incrementJobs ){
+            mNumTotalJobs++;
+        }
 
         //increment on basis of type of job
         int type = job.getJobType();
@@ -178,19 +191,31 @@ public class WorkflowMetrics extends Data {
             case Job.COMPUTE_JOB:
                 if( job instanceof AggregatedJob ){
                     mNumClusteredJobs++;
+                    
+                    for( Iterator<Job> it = ((AggregatedJob)job).constituentJobsIterator(); it.hasNext(); ){
+                        Job j = it.next();
+                        this.increment( j , false );
+                    }
+                    
                 }else{
-                    mNumComputeJobs++;
+                    if( incrementJobs ){
+                        mNumComputeJobs++;
+                    }
                     mNumComputeTasks++;
                 }
                 break;
 
             case Job.DAX_JOB:
-                mNumDAXJobs++;
+                if ( incrementJobs ){
+                    mNumDAXJobs++;
+                }
                 mNumDAXTasks++;
                 break;
 
             case Job.DAG_JOB:
-                mNumDAGJobs++;
+                if( incrementJobs ){
+                    mNumDAGJobs++;
+                }
                 mNumDAGTasks++;
                 break;
 
@@ -255,9 +280,15 @@ public class WorkflowMetrics extends Data {
             case Job.COMPUTE_JOB:
                 if( job instanceof AggregatedJob ){
                     mNumClusteredJobs--;
+                    //for each constituent do the remove
+                    for( Iterator<Job> it = ((AggregatedJob)job).constituentJobsIterator(); it.hasNext(); ){
+                        Job j = it.next();
+                        this.decrement( j );
+                    }
                 }
                 else{
                     mNumComputeJobs--;
+                    mNumComputeTasks--;
                 }
                 break;
 
