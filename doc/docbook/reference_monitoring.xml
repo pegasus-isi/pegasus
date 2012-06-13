@@ -1,0 +1,344 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE section PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+"http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<section id="profiles">
+  <title>Population of Runtime Information to Stampede Database</title>
+
+  <para>Pegasus launches a monitoring daemon called pegasus-monitord per
+  workflow ( a single daemon is launched if a user submits a hierarchal
+  workflow ) . pegasus-monitord parses the workflow and job logs in the submit
+  directory and populates to a database. This chapter gives an overview of the
+  pegasus-monitord and describes the schema of the runtime database.</para>
+
+  <section id="monitoring_pegasus-monitord" os="">
+    <title>pegasus-monitord</title>
+
+    <para><emphasis role="bold">Pegasus-monitord</emphasis> is used to follow
+    workflows, parsing the output of DAGMan's dagman.out file. In addition to
+    generating the jobstate.log file, which contains the various states that a
+    job goes through during the workflow execution, <emphasis
+    role="bold">pegasus-monitord</emphasis> can also be used to mine
+    information from jobs' submit and output files, and either populate a
+    database, or write a file with NetLogger events containing this
+    information. <emphasis role="bold">Pegasus-monitord</emphasis> can also
+    send notifications to users in real-time as it parses the workflow
+    execution logs.</para>
+
+    <para><emphasis role="bold">Pegasus-monitord</emphasis> is automatically
+    invoked by <emphasis role="bold">pegasus-run</emphasis>, and tracks
+    workflows in real-time. By default, it produces the jobstate.log file, and
+    a SQLite database, which contains all the information listed in the <link
+    linkend="stampede-schema">Stampede schema</link>. When a workflow fails,
+    and is re-submitted with a rescue DAG, <emphasis
+    role="bold">pegasus-monitord</emphasis> will automatically pick up from
+    where it left previously and continue to write the jobstate.log file and
+    populate the database.</para>
+
+    <para>If, after the workflow has already finished, users need to re-create
+    the jobstate.log file, or re-populate the database from scratch, <emphasis
+    role="bold">pegasus-monitord</emphasis>'s <emphasis
+    role="bold">--replay</emphasis> option should be used when running it
+    manually.</para>
+
+    <section>
+      <title>Populating to different backend databases</title>
+
+      <para>In addition to SQLite, <emphasis
+      role="bold">pegasus-monitord</emphasis> supports other types of
+      databases, such as MySQL and Postgres. Users will need to install the
+      low-level database drivers, and can use the <emphasis
+      role="bold">--dest</emphasis> command-line option, or the <emphasis
+      role="bold">pegasus.monitord.output</emphasis> property to select where
+      the logs should go.</para>
+
+      <para>As an example, the command:</para>
+
+      <programlisting>$ pegasus-monitord -r diamond-0.dag.dagman.out</programlisting>
+
+      <para>will launch <emphasis role="bold">pegasus-monitord</emphasis> in
+      replay mode. In this case, if a jobstate.log file already exists, it
+      will be rotated and a new file will be created. It will also create/use
+      a SQLite database in the workflow's run directory, with the name of
+      diamond-0.stampede.db. If the database already exists, it will make sure
+      to remove any references to the current workflow before it populates the
+      database. In this case, <emphasis
+      role="bold">pegasus-monitord</emphasis> will process the workflow
+      information from start to finish, including any restarts that may have
+      happened.</para>
+
+      <para>Users can specify an alternative database for the events, as
+      illustrated by the following examples:</para>
+
+      <programlisting>$ pegasus-monitord -r -d mysql://username:userpass@hostname/database_name diamond-0.dag.dagman.out</programlisting>
+
+      <programlisting>$ pegasus-monitord -r -d sqlite:////tmp/diamond-0.db diamond-0.dag.dagman.out</programlisting>
+
+      <para>In the first example, <emphasis
+      role="bold">pegasus-monitord</emphasis> will send the data to the
+      <emphasis role="bold">database_name</emphasis> database located at
+      server <emphasis role="bold">hostname</emphasis>, using the <emphasis
+      role="bold">username</emphasis> and <emphasis
+      role="bold">userpass</emphasis> provided. In the second example,
+      <emphasis role="bold">pegasus-monitord</emphasis> will store the data in
+      the /tmp/diamond-0.db SQLite database.</para>
+
+      <note>
+        <para>For absolute paths four slashes are required when specifying an
+        alternative database path in SQLite.</para>
+      </note>
+
+      <para>Users should also be aware that in all cases, with the exception
+      of SQLite, the database should exist before <emphasis
+      role="bold">pegasus-monitord</emphasis> is run (as it creates all needed
+      tables but does not create the database itself).</para>
+
+      <para>Finally, the following example:</para>
+
+      <programlisting>$ pegasus-monitord -r --dest diamond-0.bp diamond-0.dag.dagman.out</programlisting>
+
+      <para>sends events to the diamond-0.bp file. (please note that in replay
+      mode, any data on the file will be overwritten).</para>
+
+      <para>One important detail is that while processing a workflow,
+      <emphasis role="bold">pegasus-monitord</emphasis> will automatically
+      detect if/when sub-workflows are initiated, and will automatically track
+      those sub-workflows as well. In this case, although <emphasis
+      role="bold">pegasus-monitord</emphasis> will create a separate
+      jobstate.log file in each workflow directory, the database at the
+      top-level workflow will contain the information from not only the main
+      workflow, but also from all sub-workflows.</para>
+    </section>
+
+    <section id="monitoring-files">
+      <title>Monitoring related files in the workflow directory</title>
+
+      <para><emphasis role="bold">Pegasus-monitord</emphasis> generates a
+      number of files in each workflow directory:</para>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">jobstate.log</emphasis>: contains a
+          summary of workflow and job execution.</para>
+        </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">monitord.log</emphasis>: contains any
+          log messages generated by <emphasis
+          role="bold">pegasus-monitord</emphasis>. It is not overwritten when
+          it restarts. This file is not generated in replay mode, as all log
+          messages from <emphasis role="bold">pegasus-monitord</emphasis> are
+          output to the console. Also, when sub-workflows are involved, only
+          the top-level workflow will have this log file. Starting with
+          release 4.0 and 3.1.1, monitord.log file is rotated if it exists
+          already.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">monitord.started</emphasis>: contains a
+          timestamp indicating when <emphasis
+          role="bold">pegasus-monitord</emphasis> was started. This file get
+          overwritten every time <emphasis
+          role="bold">pegasus-monitord</emphasis> starts.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">monitord.done</emphasis>: contains a
+          timestamp indicating when <emphasis
+          role="bold">pegasus-monitord</emphasis> finished. This file is
+          overwritten every time <emphasis
+          role="bold">pegasus-monitord</emphasis> starts.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">monitord.info</emphasis>: contains
+          <emphasis role="bold">pegasus-monitord</emphasis> state information,
+          which allows it to resume processing if a workflow does not finish
+          properly and a rescue dag is submitted. This file is erased when
+          <emphasis role="bold">pegasus-monitord</emphasis> is executed in
+          replay mode.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">monitord.recover</emphasis>: contains
+          <emphasis role="bold">pegasus-monitord</emphasis> state information
+          that allows it to detect that a previous instance of <emphasis
+          role="bold">pegasus-monitord</emphasis> failed (or was killed)
+          midway through parsing a workflow's execution logs. This file is
+          only present while <emphasis role="bold">pegasus-monitord</emphasis>
+          is running, as it is deleted when it ends and the <emphasis
+          role="bold">monitord.info</emphasis> file is generated.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">monitord.subwf.db</emphasis>: contains
+          information that aids <emphasis
+          role="bold">pegasus-monitord</emphasis> to track when sub-workflows
+          fail and are re-planned/re-tried. It is overwritten when <emphasis
+          role="bold">pegasus-monitord</emphasis> is started in replay
+          mode.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">monitord-notifications.log</emphasis>:
+          contains the log file for notification-related messages. Normally,
+          this file only includes logs for failed notifications, but can be
+          populated with all notification information when <emphasis
+          role="bold">pegasus-monitord</emphasis> is run in verbose mode via
+          the <emphasis role="bold">-v</emphasis> command-line option.</para>
+        </listitem>
+      </itemizedlist>
+    </section>
+  </section>
+
+  <section id="stampede_schema_overview">
+    <title>Overview of the Stampede Database Schema.</title>
+
+    <para>Pegasus takes in a DAX which is composed of tasks. Pegasus plans it
+    into a Condor DAG / Executable workflow that consists of Jobs. In case of
+    Clustering, multiple tasks in the DAX can be captured into a single job in
+    the Executable workflow. When DAGMan executes a job, a job instance is
+    populated . Job instances capture information as seen by DAGMan. In case
+    DAGMan retires a job on detecting a failure , a new job instance is
+    populated. When DAGMan finds a job instance has finished , an invocation
+    is associated with job instance. In case of clustered job, multiple
+    invocations will be associated with a single job instance. If a Pre script
+    or Post Script is associated with a job instance, then invocations are
+    populated in the database for the corresponding job instance.</para>
+
+    <para>The current schema version is <emphasis role="bold">4.0</emphasis>
+    that is stored in the schema_info table.</para>
+
+    <figure>
+      <title>Stampede Database Schema</title>
+
+      <mediaobject>
+        <imageobject>
+          <imagedata fileref="images/stampede-schema-small.png"
+                     id="stampede-schema" scale="" />
+        </imageobject>
+      </mediaobject>
+    </figure>
+
+    <section id="schema_upgrade_tool">
+      <title>Stampede Schema Upgrade Tool</title>
+
+      <para>Starting Pegasus 4.x the monitoring and statistics database schema
+      has changed. If you want to use the pegasus-statistics, pegasus-analyzer
+      and pegasus-plots against a 3.x database you will need to upgrade the
+      schema first using the schema upgrade tool
+      /usr/share/pegasus/sql/schema_tool.py or
+      /path/to/pegasus-4.x/share/pegasus/sql/schema_tool.py</para>
+
+      <para>Upgrading the schema is required for people using the MySQL
+      database for storing their monitoring information if it was setup with
+      3.x monitoring tools.</para>
+
+      <para>If your setup uses the default SQLite database then the new
+      databases run with Pegasus 4.x are automatically created with the
+      correct schema. In this case you only need to upgrade the SQLite
+      database from older runs if you wish to query them with the newer
+      clients.</para>
+
+      <para>To upgrade the database</para>
+
+      <programlisting>For SQLite Database
+
+<emphasis role="bold">cd /to/the/workflow/directory/with/3.x.monitord.db</emphasis>
+
+Check the db version<emphasis role="bold">
+
+/usr/share/pegasus/sql/schema_tool.py -c connString=sqlite:////to/the/workflow/directory/with/workflow.stampede.db</emphasis>
+2012-02-29T01:29:43.330476Z INFO   netlogger.analysis.schema.schema_check.SchemaCheck.init | 
+2012-02-29T01:29:43.330708Z INFO   netlogger.analysis.schema.schema_check.SchemaCheck.check_schema.start | 
+2012-02-29T01:29:43.348995Z INFO   netlogger.analysis.schema.schema_check.SchemaCheck.check_schema 
+                                   | Current version set to: 3.1. 
+2012-02-29T01:29:43.349133Z ERROR  netlogger.analysis.schema.schema_check.SchemaCheck.check_schema 
+                                   | Schema version 3.1 found - expecting 4.0 - database admin will need to run upgrade tool.
+
+
+Convert the Database to be version 4.x compliant<emphasis role="bold">
+
+/usr/share/pegasus/sql/schema_tool.py -u connString=sqlite:////to/the/workflow/directory/with/workflow.stampede.db
+</emphasis>2012-02-29T01:35:35.046317Z INFO   netlogger.analysis.schema.schema_check.SchemaCheck.init | 
+2012-02-29T01:35:35.046554Z INFO   netlogger.analysis.schema.schema_check.SchemaCheck.check_schema.start | 
+2012-02-29T01:35:35.064762Z INFO   netlogger.analysis.schema.schema_check.SchemaCheck.check_schema 
+                                  | Current version set to: 3.1. 
+2012-02-29T01:35:35.064902Z ERROR  netlogger.analysis.schema.schema_check.SchemaCheck.check_schema 
+                                  | Schema version 3.1 found - expecting 4.0 - database admin will need to run upgrade tool. 
+2012-02-29T01:35:35.065001Z INFO   netlogger.analysis.schema.schema_check.SchemaCheck.upgrade_to_4_0 
+                                  | Upgrading to schema version 4.0.
+
+Verify if the database has been converted to Version 4.x<emphasis role="bold">
+
+/usr/share/pegasus/sql/schema_tool.py -c connString=sqlite:////to/the/workflow/directory/with/workflow.stampede.db</emphasis>
+2012-02-29T01:39:17.218902Z INFO   netlogger.analysis.schema.schema_check.SchemaCheck.init | 
+2012-02-29T01:39:17.219141Z INFO   netlogger.analysis.schema.schema_check.SchemaCheck.check_schema.start | 
+2012-02-29T01:39:17.237492Z INFO   netlogger.analysis.schema.schema_check.SchemaCheck.check_schema | Current version set to: 4.0. 
+2012-02-29T01:39:17.237624Z INFO   netlogger.analysis.schema.schema_check.SchemaCheck.check_schema | Schema up to date. 
+
+For upgrading a MySQL database the steps remain the same. The only thing that changes is the connection String to the database
+E.g.<emphasis role="bold">
+
+/usr/share/pegasus/sql/schema_tool.py -u connString=mysql://username:password@server:port/dbname
+
+</emphasis></programlisting>
+
+      <para>After the database has been upgraded you can use either 3.x or 4.x
+      clients to query the database with <emphasis
+      role="bold">pegasus-statistics</emphasis>, as well as <emphasis
+      role="bold">pegasus-plots </emphasis>and <emphasis
+      role="bold">pegasus-analyzer.</emphasis></para>
+    </section>
+
+    <section>
+      <title>Storing of Exitcode in the database</title>
+
+      <para>Kickstart records capture raw status in addition to the exitcode .
+      The exitcode is derived from the raw status. Starting with Pegasus 4.0
+      release, all exitcode columns ( i.e invocation and job instance table
+      columns ) are stored with the raw status by pegasus-monitord. If an
+      exitcode is encountered while parsing the dagman log files , the value
+      is converted to the corresponding raw status before it is stored. All
+      user tools, pegasus-analyzer and pegasus-statistics then convert the raw
+      status to exitcode when retrieving from the database.</para>
+    </section>
+
+    <section>
+      <title>Multiplier Factor</title>
+
+      <para>Starting with the 4.0 release, there is a multiplier factor
+      associated with the jobs in the job_instance table. It defaults to one,
+      unless the user associates a Pegasus profile key named <emphasis
+      role="bold">cores</emphasis> with the job in the DAX. The factor can be
+      used for getting more accurate statistics for jobs that run on multiple
+      processors/cores or mpi jobs.</para>
+
+      <para>The multiplier factor is used for computing the following metrics
+      by pegasus statistics.</para>
+
+      <itemizedlist>
+        <listitem>
+          <para>In the summary, the workflow cumulative job walltime</para>
+        </listitem>
+
+        <listitem>
+          <para>In the summary, the cumulative job walltime as seen from the
+          submit side</para>
+        </listitem>
+
+        <listitem>
+          <para>In the jobs file, the multiplier factor is listed along-with
+          the multiplied kickstart time.</para>
+        </listitem>
+
+        <listitem>
+          <para>In the breakdown file, where statistics are listed per
+          transformation the mean, min , max and average values take into
+          account the multiplier factor.</para>
+        </listitem>
+      </itemizedlist>
+    </section>
+  </section>
+</section>
