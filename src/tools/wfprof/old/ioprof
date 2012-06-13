@@ -276,6 +276,7 @@ match_connect = re.compile(r'^\d+\s+connect\((\d+),\s({.*}),.*\)')
 match_recvmsg = re.compile(r'^\d+\s+recvmsg\((\d+),.*\)\s+=\s+(-?\d+)')
 match_recvfrom = re.compile(r'^\d+\s+recvfrom\((\d+),.*\)\s+=\s+(-?\d+)')
 match_exit = re.compile(r'^\d+\s+exit(_group)?\((\d+)\)\s+=\s+\?')
+match_exit_group = match_exit
 
 def usage():
   sys.stderr.write('Usage: %s [kickstart args] app [app args]\n' % sys.argv[0])
@@ -512,9 +513,11 @@ parse_recvfrom = parse_recvmsg
 
 
 def parse_exit(p,rec):
-    rc = int(rec[0])
-    if rc != 0:
-        raise Exception("Child processes exited with non-zero value", rc)
+  rc = int(rec[1])
+  if rc == 0:
+    p.failed = False
+  else:
+    p.failed = True
 
 parse_exit_group = parse_exit
 
@@ -548,8 +551,10 @@ def parse_strace_output(log):
       call = m.group(2)
       ret = m.group(3)
       # skip unknown lines
-      if '?' in ret: continue
-      result = int(m.group(3))
+      if '?' in ret:
+        result = 0
+      else:
+        result = int(m.group(3))
       # skip failed calls except connect
       # connect is a special case because if the socket is
       # set to non-blocking, then connect will return -1 with
@@ -623,12 +628,13 @@ def main():
 
   # Launch kickstart + strace + application
   p = Popen(myargs)
-
+  p.failed = False
+  
   # Make sure it didn't fail immediately
-  time.sleep(0.5)
-  if p.poll() is not None:
-    os.unlink(fifo)
-    sys.exit(p.wait())
+  #time.sleep(0.5)
+  #if p.poll() is not None:
+  #  os.unlink(fifo)
+  #  sys.exit(p.wait())
 
   try:
     try:
@@ -644,6 +650,11 @@ def main():
 
   # Wait for kickstart
   result = p.wait()
+  
+  # If we saw a non-zero final exit,
+  # then force a failure
+  if result == 0 and p.failed:
+    result = 1
 
   # Print stats if result OK
   if result == 0:
@@ -656,7 +667,7 @@ def main():
       if p.thread: continue
       for file in p.files:
         print >> sys.stderr,XFORM,pid,p.exe,file.fname,file.bread,file.nread,file.bwrite,file.nwrite,file.nseek,file.mode,file.flags
-
+  
   # Report the status from kickstart
   sys.exit(result)
 
