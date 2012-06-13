@@ -171,8 +171,10 @@ SYSCALLS = [
   'signalfd',
   'mq_open',
   'eventfd',
-  'epoll_create'
-  #'timerfd_create'
+  'epoll_create',
+  #'timerfd_create',
+  '60', # This is the old exit
+  'exit_group'
 ]
 
 
@@ -273,7 +275,7 @@ match_bind = re.compile(r'^\d+\s+bind\((\d+),\s({.*}),.*\)\s+=\s+(-?\d+)')
 match_connect = re.compile(r'^\d+\s+connect\((\d+),\s({.*}),.*\)')
 match_recvmsg = re.compile(r'^\d+\s+recvmsg\((\d+),.*\)\s+=\s+(-?\d+)')
 match_recvfrom = re.compile(r'^\d+\s+recvfrom\((\d+),.*\)\s+=\s+(-?\d+)')
-
+match_exit = re.compile(r'^\d+\s+exit(_group)?\((\d+)\)\s+=\s+\?')
 
 def usage():
   sys.stderr.write('Usage: %s [kickstart args] app [app args]\n' % sys.argv[0])
@@ -508,6 +510,13 @@ def parse_recvmsg(p,rec):
 
 parse_recvfrom = parse_recvmsg
 
+
+def parse_exit(p,rec):
+    rc = int(rec[0])
+    if rc != 0:
+        raise Exception("Child processes exited with non-zero value", rc)
+
+parse_exit_group = parse_exit
 
 def join_lines(unfinished,resumed):
   unfinished = unfinished[0:unfinished.find('<unfinished')]
