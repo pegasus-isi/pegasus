@@ -40,7 +40,7 @@ Wed Jun 24 14:47:59 PST 2011
       <itemizedlist>
         <listitem>
           <para><ulink
-          url="http://pegasus.isi.edu/wms/download/3.1/Pegasus-3.1.0-Debian-6-x86.vbox.zip"
+          url="http://pegasus.isi.edu/wms/download/4.0/Pegasus-4.0.1-Debian-6-x86.vbox.zip"
           xml:base="">Virtual Box Pegasus Image</ulink></para>
 
           <para>It is around <emphasis role="bold">1.2 GB</emphasis> in size.
@@ -55,7 +55,7 @@ http://pegasus.isi.edu/wms/download/4.0/Pegasus-4.0.1-Debian-6-x86.vbox.zip
 Resolving pegasus.isi.edu... 128.9.64.219
 Connecting to pegasus.isi.edu|128.9.64.219|:80... connected.
 HTTP request sent, awaiting response... 200 OK
-Length: 1,336,554,492 (1.2G) [application/x-zip]
+Length: 711028435 (678M) [application/x-zip]
 </programlisting>
 
           <para>The Image is zipped. You will need to unzip it.</para>
