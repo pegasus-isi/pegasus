@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="US-ASCII"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
 "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <chapter id="about">
@@ -174,8 +174,8 @@
     review example workflows, see the <link
     linkend="example_workflows">Example Workflows</link> chapter. To see
     additional details about the workflows of the applications see the <ulink
-    url="http://confluence.pegasus.isi.edu/display/pegasus/WorkflowGenerator">Gallery
-    of Workflows</ulink>.</para>
+    url="http://pegasus.isi.edu/workflow_gallery/">Gallery of
+    Workflows</ulink>.</para>
 
     <para>We are always looking for new applications willing to leverage our
     workflow technologies. If you are interested please contact us at pegasus
@@ -194,6 +194,5 @@
     themselves with the components on a deeper level to understand how to
     integrate Pegasus with your own data resources to resolve your individual
     computational challenges.</para>
-
   </section>
 </chapter>
