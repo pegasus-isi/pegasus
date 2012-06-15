@@ -305,9 +305,12 @@ public class InterPoolEngine extends Engine implements Refiner {
             //check if the user has specified any hints in the dax
             if (incorporateHint(job, "executionPool")) {
                 //i++;
-                incorporateProfiles(job);
                 //set the staging site for the job
+                //the staging site needs to be set before any
+                //profiles are incorporated PM-618
                 job.setStagingSiteHandle( getStagingSite( job ) );
+
+                incorporateProfiles(job);
                 continue;
             }
 
