@@ -109,6 +109,8 @@ function test_host_script {
 	rm -f test/sleep.dag.*
 	
 	if [ $RC -ne 0 ]; then
+		echo "$OUTPUT"
+		echo "ERROR: Host script test failed"
 		return 1
 	fi
 	
@@ -133,23 +135,63 @@ function test_host_script {
 	return 0
 }
 
-function test_hang_script {
-	OUTPUT=$(mpiexec -n 2 $PMC -s test/sleep.dag -o /dev/null -e /dev/null --host-script test/hangscript.sh 2>&1)
+function test_fail_script {
+	OUTPUT=$(mpiexec -n 2 $PMC -s test/sleep.dag -o /dev/null -e /dev/null --host-script /usr/bin/false 2>&1)
+	RC=$?
+	
+	rm -f test/sleep.dag.*
+	
+	if [ $RC -eq 0 ]; then
+		echo "$OUTPUT"
+		echo "ERROR: Fail script test failed"
+		return 1
+	fi
+	
+	if [ $(echo "$OUTPUT" | grep "Host script failed" | wc -l) -ne 1 ]; then
+		echo "$OUTPUT"
+		echo "ERROR: Fail script test failed"
+		return 1
+	fi
+	
+	return 0
+}
+
+function test_fork_script {
+	OUTPUT=$(mpiexec -n 2 $PMC -s test/sleep.dag -o /dev/null -e /dev/null --host-script test/forkscript.sh -v 2>&1)
 	RC=$?
 	
 	rm -f test/sleep.dag.*
 	
 	if [ $RC -ne 0 ]; then
-		return 1
-	fi
-	
-	if [ $(echo "$OUTPUT" | grep "Worker 1: Launching host script" | wc -l) -ne 1 ]; then
 		echo "$OUTPUT"
-		echo "ERROR: Host script was not launched"
+		echo "ERROR: Fork script test failed"
 		return 1
 	fi
 	
-	if [ $(echo "$OUTPUT" | grep "Host script exited on signal 15" | wc -l) -ne 1 ]; then
+	if [ $(echo "$OUTPUT" | grep "Unable to terminate host script process group" | wc -l) -ne 0 ]; then
+		echo "$OUTPUT"
+		echo "ERROR: Fork script test failed"
+		return 1
+	fi
+	
+	return 0
+}
+
+function test_hang_script {
+	echo "This should take 60 seconds..."
+	
+	OUTPUT=$(mpiexec -n 2 $PMC -s test/sleep.dag -o /dev/null -e /dev/null --host-script test/hangscript.sh -v 2>&1)
+	RC=$?
+	
+	rm -f test/sleep.dag.*
+	
+	if [ $RC -eq 0 ]; then
+		echo "$OUTPUT"
+		echo "ERROR: Hang script test failed"
+		return 1
+	fi
+	
+	if [ $(echo "$OUTPUT" | grep "Host script exited on signal" | wc -l) -ne 1 ]; then
 		echo "$OUTPUT"
 		echo "ERROR: Hang script test failed"
 		return 1
@@ -238,6 +280,8 @@ run_test test_run_diamond
 run_test test_out_err
 run_test test_rescue_file
 run_test test_host_script
+run_test test_fail_script
+run_test test_fork_script
 run_test test_hang_script
 run_test test_memory_limit
 run_test test_insufficient_memory

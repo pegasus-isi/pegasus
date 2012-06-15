@@ -2,12 +2,12 @@
 .\"     Title: pegasus-mpi-cluster
 .\"    Author: [see the "Author" section]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 05/23/2012
+.\"      Date: 06/15/2012
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "PEGASUS\-MPI\-CLUSTE" "1" "05/23/2012" "\ \&" "\ \&"
+.TH "PEGASUS\-MPI\-CLUSTE" "1" "06/15/2012" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -279,7 +279,9 @@ A host script is a shell script or executable that \fBpegasus\-mpi\-cluster\fR l
 .sp
 Host scripts are specified using either the \fB\-\-host\-script\fR argument or the \fBPMC_HOST_SCRIPT\fR environment variable\&.
 .sp
-The host script is started before any tasks are launched\&. If it runs for longer than the workflow, then it is sent a SIGTERM signal when the workflow completes\&.
+The host script is started when \fBpegasus\-mpi\-cluster\fR starts and must exit with an exitcode of 0 before any tasks can be executed\&. If it the host script returns a non\-zero exitcode, then the workflow is aborted\&. The host script is given 60 seconds to do any setup that is required\&. If it doesn\(cqt exit in 60 seconds then a SIGALRM signal is delivered to the process, which, if not handled, will cause the process to terminate\&.
+.sp
+When the workflow finishes, \fBpegasus\-mpi\-cluster\fR will deliver a SIGTERM signal to the host script\(cqs process group\&. Any child processes left running by the host script will receive this signal unless they created their own process group\&. If there were any processes left to receive this signal, then they will be given a few seconds to exit, then they will be sent SIGKILL\&. This is the mechanism by which processes started by the host script can be informed of the termination of the workflow\&.
 .SH "RESOURCE-BASED SCHEDULING"
 .sp
 High\-performance computing resources often have a low ratio of memory to CPUs\&. At the same time, workflow tasks often have high memory requirements\&. Often, the memory requirements of a workflow task exceed the amount of memory available to each CPU on a given host\&. As a result, it may be necessary to disable some CPUs in order to free up enough memory to run the tasks\&.

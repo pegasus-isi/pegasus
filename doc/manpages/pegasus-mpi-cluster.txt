@@ -261,9 +261,20 @@ require.
 Host scripts are specified using either the *--host-script* argument or
 the *PMC_HOST_SCRIPT* environment variable.
 
-The host script is started before any tasks are launched. If it runs for
-longer than the workflow, then it is sent a SIGTERM signal when the workflow
-completes.
+The host script is started when *pegasus-mpi-cluster* starts and must exit 
+with an exitcode of 0 before any tasks can be executed. If it the host script
+returns a non-zero exitcode, then the workflow is aborted. The host script
+is given 60 seconds to do any setup that is required. If it doesn't exit
+in 60 seconds then a SIGALRM signal is delivered to the process, which, if not
+handled, will cause the process to terminate.
+
+When the workflow finishes, *pegasus-mpi-cluster* will deliver a SIGTERM 
+signal to the host script's process group. Any child processes left running
+by the host script will receive this signal unless they created their own
+process group. If there were any processes left to receive this signal, then
+they will be given a few seconds to exit, then they will be sent SIGKILL. 
+This is the mechanism by which processes started by the host script can be 
+informed of the termination of the workflow.
 
 
 [[RESOURCE_SCHED]]

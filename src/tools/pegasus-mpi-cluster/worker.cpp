@@ -30,7 +30,7 @@ Worker::Worker(const std::string &host_script, unsigned int host_memory, bool st
     }
     this->strict_limits = strict_limits;
     this->host_cpus = get_host_cpus();
-    this->host_script_pid = 0;
+    this->host_script_pgid = 0;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     get_host_name(host_name);
 }
@@ -42,12 +42,12 @@ Worker::~Worker() {
  * Launch the host script if a) this worker has host rank 0, and 
  * b) the host script is valid 
  */
-void Worker::launch_host_script() {
+void Worker::run_host_script() {
     // Only launch it if it exists
     if (host_script == "")
         return;
     
-    // Only host_rank 0 launches a script
+    // Only host_rank 0 launches a script, the others need to wait
     if (host_rank > 0)
         return;
     
@@ -57,6 +57,9 @@ void Worker::launch_host_script() {
     if (pid < 0) {
         myfailures("Worker %d: Unable to fork host script", rank); 
     } else if (pid == 0) {
+        // Give this process a timeout
+        alarm(HOST_SCRIPT_TIMEOUT);
+        
         // Redirect stdout to stderr
         if (dup2(STDERR_FILENO, STDOUT_FILENO) < 0) {
             log_fatal("Unable to redirect host script stdout to stderr: %s", 
@@ -99,52 +102,66 @@ void Worker::launch_host_script() {
                 strerror(errno));
         }
         
-        host_script_pid = pid;
-    } 
+        // Record the process group id so we can kill it when the workflow finishes
+        host_script_pgid = pid;
+        
+        // Wait for the host script to exit
+        int status;
+        pid_t result = waitpid(pid, &status, 0);
+        
+        if (result < 0) {
+            myfailures("Worker %d: Error waiting for host script", rank);
+        } else {
+            if (WIFEXITED(status)) {
+                log_info("Worker %d: Host script exited with status %d (%d)", 
+                    rank, WEXITSTATUS(status), status);
+            } else {
+                log_info("Worker %d: Host script exited on signal %d (%d)", 
+                    rank, WTERMSIG(status), status);
+            }
+            
+            if (status != 0) {
+                myfailure("Worker %d: Host script failed", rank);
+            }
+        }
+    }
 }
 
 /**
- * Check to see if the host script exited. If it did, then log the status.
- * If terminate is true, then send SIGTERM to the host script's process group
- * and block until it exits.
+ * Send SIGTERM to the host script's process group to shut down any services that
+ * it left running.
  */
-void Worker::check_host_script(bool terminate) {
+void Worker::kill_host_script_group() {
     // Workers with host_rank > 0 will not have host scripts
     if (host_rank > 0)
         return;
     
-    // If there is no pid to wait for then skip the check
-    if (host_script_pid <= 0)
+    // Not necessary if there is no pgid to kill
+    if (host_script_pgid <= 0)
         return;
     
-    int options = WNOHANG;
+    log_debug("Worker %d: Terminating host script process group with SIGTERM", rank);
     
-    if (terminate) {
-        log_warn("Worker %d: Terminating host script with SIGTERM", rank);
-        
-        if (killpg(host_script_pid, SIGTERM) < 0) {
-            log_error("Worker %d: Error terminating host script process group: %s", 
+    if (killpg(host_script_pgid, SIGTERM) < 0) {
+        if (errno != ESRCH) {
+            log_warn("Worker %d: Unable to terminate host script process group: %s", 
                 rank, strerror(errno));
         }
-        
-        // If we are killing it we want to wait
-        options = 0;
-    }
-    
-    int status = 0;
-    pid_t pid = waitpid(host_script_pid, &status, options);
-    
-    if (pid < 0) {
-        log_error("Worker %d: Error checking host script: %s", rank, strerror(errno));
-    } else if (pid > 0) {
-        if (WIFEXITED(status)) {
-            log_info("Worker %d: Host script exited with status %d (%d)", 
-                rank, WEXITSTATUS(status), status);
-        } else {
-            log_info("Worker %d: Host script exited on signal %d (%d)", 
-                rank, WTERMSIG(status), status);
+    } else {
+        // There must have been some processes in the process group, give 
+        // them a few seconds and then kill them hard
+        if (sleep(HOST_SCRIPT_GRACE_PERIOD) != 0) {
+            log_warn("Worker %d: sleep() finished prematurely", rank);
         }
-        host_script_pid = 0;
+        if (killpg(host_script_pgid, SIGKILL) < 0) {
+            if (errno != ESRCH) {
+                log_warn("Worker %d: Unable to kill host script process group: %s", 
+                    rank, strerror(errno));
+            }
+        } else {
+            // If the call didn't fail, then there were some remaining
+            log_warn("Worker %d: Sent SIGKILL to resilient host script processes", rank);
+        }
     }
 }
 
@@ -185,13 +202,15 @@ int Worker::run() {
         myfailures("Worker %d: unable to open task stderr", rank);
     }
     
-    launch_host_script();
+    // If there is a host script, then run it and wait here for all the host scripts to finish
+    if ("" != host_script) {
+        run_host_script();
+        MPI_Barrier(MPI_COMM_WORLD);
+    }
     
     double total_runtime = 0.0;
     
     while (1) {
-        check_host_script(false);
-        
         log_trace("Worker %d: Waiting for request", rank);
         std::string name;
         std::string command;
@@ -338,8 +357,8 @@ int Worker::run() {
         
         send_response(name, status);
     }
-
-    check_host_script(true);
+    
+    kill_host_script_group();
     
     close(out);
     close(err);

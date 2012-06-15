@@ -57,6 +57,8 @@ class Master {
     
     unsigned total_cpus;
     
+    bool has_host_script;
+    
     void register_workers();
     void schedule_tasks();
     void wait_for_results();
@@ -65,7 +67,7 @@ class Master {
     void submit_task(Task *t, int worker);
     void merge_task_stdio(FILE *dest, const std::string &src, const std::string &stream);
 public:
-    Master(const std::string &program, Engine &engine, DAG &dag, const std::string &dagfile, const std::string &outfile, const std::string &errfile);
+    Master(const std::string &program, Engine &engine, DAG &dag, const std::string &dagfile, const std::string &outfile, const std::string &errfile, bool has_host_script = false);
     ~Master();
     int run();
 };
