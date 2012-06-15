@@ -870,6 +870,11 @@ public class TransferEngine extends Engine {
                     ft.setSize( pf.getSize() );
                     ft.addDestination(destSiteHandle,destURL);
 
+                    //for intersite transfers we need to track in transient rc
+                    //for the cleanup algorithm
+                    //only the destination is tracked as source will have been
+                    //tracked for the parent jobs
+                    this.trackInTransientRC( outFile, destURL, destSiteHandle );
 
                     //add all the possible source urls iterating through
                     //the list of grid ftp servers associated with the dest pool.
