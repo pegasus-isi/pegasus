@@ -17,13 +17,14 @@ void Host::log_status() {
 
 Master::Master(const std::string &program, Engine &engine, DAG &dag,
                const std::string &dagfile, const std::string &outfile,
-               const std::string &errfile) {
+               const std::string &errfile, bool has_host_script) {
     this->program = program;
     this->dagfile = dagfile;
     this->outfile = outfile;
     this->errfile = errfile;
     this->engine = &engine;
     this->dag = &dag;
+    this->has_host_script = has_host_script;
     
     total_count = 0;
     success_count = 0;
@@ -307,6 +308,11 @@ int Master::run() {
             myfailure("FATAL ERROR: No host is capable of running task %s", 
                 task->name.c_str());
         }
+    }
+    
+    // If there is a host script, wait here for it to run
+    if (has_host_script) {
+        MPI_Barrier(MPI_COMM_WORLD);
     }
     
     // Execute the workflow

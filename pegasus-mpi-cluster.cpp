@@ -220,9 +220,11 @@ int mpidag(int argc, char *argv[]) {
         log_debug("Using old rescue file: %s", oldrescue.c_str());
         log_debug("Using new rescue file: %s", newrescue.c_str());
         
+        bool has_host_script = ("" != host_script);
+        
         DAG dag(dagfile, oldrescue, lock);
         Engine engine(dag, newrescue, max_failures, tries);
-        return Master(program, engine, dag, dagfile, outfile, errfile).run();
+        return Master(program, engine, dag, dagfile, outfile, errfile, has_host_script).run();
     } else {
         return Worker(host_script, host_memory, strict_limits).run();
     }

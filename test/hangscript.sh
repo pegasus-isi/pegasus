@@ -1,8 +1,6 @@
 #!/bin/bash
 
-# This script hangs for a long time so that PMC has
-# to kill it when the workflow finishes.
+# This script waits for a longer than the host script timeout so
+# that PMC fails.
 
 sleep 300
-
-echo "FAILURE: Did not get killed"
