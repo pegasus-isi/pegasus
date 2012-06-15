@@ -321,6 +321,11 @@ public class Pegasus extends Namespace {
     public static final String REQUEST_MEMORY_KEY = "request_memory";
 
     /**
+     * A key to designate the number of CPU's requested by pegasus-mpi-cluster.
+     */
+    public static final String REQUEST_CPUS_KEY = "request_cpus";
+
+    /**
      * Static Handle to the sum aggregator.
      */
     private static Aggregator SUM_AGGREGATOR = new Sum();
@@ -481,10 +486,9 @@ public class Pegasus extends Namespace {
                 break;
 
             case 'r':
-                if( key.compareTo( RUNTIME_KEY ) == 0 ){
-                    res = VALID_KEY;
-                }
-                else if ( key.compareTo( REQUEST_MEMORY_KEY ) == 0 ){
+                if( key.compareTo( RUNTIME_KEY ) == 0 ||
+                    key.compareTo( REQUEST_MEMORY_KEY ) == 0 ||
+                    key.compareTo( REQUEST_CPUS_KEY ) == 0 ){
                     res = VALID_KEY;
                 }
                 else{

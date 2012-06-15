@@ -166,32 +166,10 @@ public class MPIExec extends Abstract {
                     StringBuffer task = new StringBuffer();
                     task.append( "TASK" ).append( " " ).append( constitutentJob.getLogicalID() ).append( " " );
 
-                    //check and add if a job has requested any memory
-                    //JIRA PM-601
-                    String value = constitutentJob.vdsNS.getStringValue( Pegasus.REQUEST_MEMORY_KEY );
-
-                    if( value != null ){
-                        double memory = -1;
-                        //sanity check on the value
-                        try{
-                            memory = Double.parseDouble( value );
-                        }
-                        catch( Exception e ){
-                            /* ignore */
-                        }
-
-                        if ( memory < 0 ){
-                            //throw an error for negative value
-                            complainForInvalidMemory( constitutentJob.getID(), value );
-                        }
-
-                        //add only if we have a +ve memory value
-                        if( memory > 0 ){
-                            task.append( "-m ").
-                                 append( (long)memory ).append( " " );
-                        }
-
-                    }
+                    //check and add if a job has requested any memory or cpus
+                    //JIRA PM-601 and PM-620
+                    task.append( getMemoryRequirementsArgument( constitutentJob ) );
+                    task.append( getCPURequirementsArgument( constitutentJob ) );
 
                     task.append( constitutentJob.getRemoteExecutable() ).append( " " ).
                          append(  constitutentJob.getArguments() ).append( "\n" );
@@ -317,6 +295,102 @@ public class MPIExec extends Abstract {
      */
     public boolean abortOnFristJobFailure(){
         return false;
+    }
+
+    /**
+     * Looks at the profile keys associated with the job to generate the argument
+     * string fragment containing the cpu required for the job.
+     * 
+     * @param job   the Job for which memory requirements has to be determined.
+     * 
+     * @return  the arguments fragment else empty string
+     */
+    public String getCPURequirementsArgument( Job job ){
+        StringBuffer result = new StringBuffer();
+        String value = job.vdsNS.getStringValue( Pegasus.REQUEST_CPUS_KEY );
+
+        if( value != null ){
+        
+            int cpus = -1;
+            
+            //sanity check on the value
+            try{
+                cpus = Integer.parseInt( value );
+            }
+            catch( Exception e ){
+                            /* ignore */
+            }
+
+            if ( cpus < 0 ){
+                //throw an error for negative value
+                complainForInvalidCPUCount( job.getID(), value );
+            }
+
+            //add only if we have a +ve memory value
+            if( cpus > 0 ){
+                result.append( "-c ").append( cpus ).append( " " );
+                        
+            }
+
+            
+        }
+        
+        return result.toString();
+    }
+
+    /**
+     * Looks at the profile keys associated with the job to generate the argument
+     * string fragment containing the memory required for the job.
+     *
+     * @param job   the Job for which memory requirements has to be determined.
+     *
+     * @return  the arguments fragment else empty string
+     */
+    public String getMemoryRequirementsArgument( Job job ){
+        StringBuffer result = new StringBuffer();
+        String value = job.vdsNS.getStringValue( Pegasus.REQUEST_MEMORY_KEY );
+
+        if( value != null ){
+
+            double memory = -1;
+
+            //sanity check on the value
+            try{
+                memory = Double.parseDouble( value );
+            }
+            catch( Exception e ){
+                            /* ignore */
+            }
+
+            if ( memory < 0 ){
+                //throw an error for negative value
+                complainForInvalidMemory( job.getID(), value );
+            }
+
+            //add only if we have a +ve memory value
+            if( memory > 0 ){
+                result.append( "-m ").append( (long)memory ).append( " " );
+
+            }
+
+
+        }
+
+        return result.toString();
+    }
+
+    /**
+     * Complains for invalid CPU.
+     *
+     * @param id        id of the job
+     * @param value     value of the CPU passed
+     */
+    private void complainForInvalidCPUCount(String id, String value) {
+        StringBuffer sb = new StringBuffer();
+        sb.append( "Invalid Value specified for cpu count  ").append( value ).append( " for job " )
+          .append( id );
+
+        throw new RuntimeException( sb.toString() );
     }
 
     /**
