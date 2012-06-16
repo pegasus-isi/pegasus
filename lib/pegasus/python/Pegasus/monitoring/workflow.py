@@ -613,6 +613,16 @@ class Workflow:
 
         return True
 
+    def init_clean(self):
+        """
+        Remove monitord.done file if it already exists.
+        """
+        if os.path.isfile(os.path.join(self._run_dir, MONITORD_DONE_FILE)):
+            try:
+                os.remove(os.path.join(self._run_dir, MONITORD_DONE_FILE))
+            except BaseException:
+                pass
+
     def __init__(self, rundir, outfile, database=None,
                  workflow_config_file=None, jsd=None, root_id=None,
                  parent_id=None, parent_jobid=None, parent_jobseq=None,
@@ -682,6 +692,8 @@ class Workflow:
         self._multiline_file_flag = False       # Track multiline user log files, DAGMan > 6.6
         self._walltime = {}                     # jid --> walltime
         self._job_site = {}                     # last site a job was planned for
+
+        self.init_clean()
 
         # Parse the braindump file
         wfparams = utils.slurp_braindb(rundir, workflow_config_file)
