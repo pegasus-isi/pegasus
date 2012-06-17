@@ -17,7 +17,11 @@
 #include "failure.h"
 #include "tools.h"
 
-Worker::Worker(const std::string &host_script, unsigned int host_memory, bool strict_limits) {
+static void log_signal(int signo) {
+    log_warn("Caught signal %d", signo);
+}
+
+Worker::Worker(const std::string &host_script, unsigned int host_memory, unsigned host_cpus, bool strict_limits) {
     this->host_script = host_script;
     if (host_memory == 0) {
         // If host memory is not specified by the user, then get the amount
@@ -28,8 +32,12 @@ Worker::Worker(const std::string &host_script, unsigned int host_memory, bool st
     } else {
         this->host_memory = host_memory;
     }
+    if (host_cpus == 0) {
+        this->host_cpus = get_host_cpus();
+    } else {
+        this->host_cpus = host_cpus;
+    }
     this->strict_limits = strict_limits;
-    this->host_cpus = get_host_cpus();
     this->host_script_pgid = 0;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     get_host_name(host_name);
@@ -57,9 +65,6 @@ void Worker::run_host_script() {
     if (pid < 0) {
         myfailures("Worker %d: Unable to fork host script", rank); 
     } else if (pid == 0) {
-        // Give this process a timeout
-        alarm(HOST_SCRIPT_TIMEOUT);
-        
         // Redirect stdout to stderr
         if (dup2(STDERR_FILENO, STDOUT_FILENO) < 0) {
             log_fatal("Unable to redirect host script stdout to stderr: %s", 
@@ -105,12 +110,36 @@ void Worker::run_host_script() {
         // Record the process group id so we can kill it when the workflow finishes
         host_script_pgid = pid;
         
+        // Give this process a timeout
+        struct sigaction act;
+        struct sigaction oact;
+        act.sa_handler = log_signal;
+        if (sigaction(SIGALRM, &act, &oact) < 0) {
+            myfailures(
+                "Worker %d: Unable to set signal handler for SIGALRM", rank);
+        }
+        alarm(HOST_SCRIPT_TIMEOUT);
+        
         // Wait for the host script to exit
-        int status;
-        pid_t result = waitpid(pid, &status, 0);
+        int status; pid_t result = waitpid(pid, &status, 0);
+        
+        // Reset timer
+        alarm(0);
+        if (sigaction(SIGALRM, &oact, NULL) < 0) {
+            myfailures(
+                "Worker %d: Unable to clear signal handler for SIGALRM", rank);
+        }
         
         if (result < 0) {
-            myfailures("Worker %d: Error waiting for host script", rank);
+            if (errno == EINTR) {
+                // If waitpid was interrupted, then the host script timed out
+                // Kill the host script's process group
+                killpg(pid, SIGKILL);
+                myfailure("Worker %d: Host script timed out after %d seconds", 
+                    rank, HOST_SCRIPT_TIMEOUT);
+            } else {
+                myfailures("Worker %d: Error waiting for host script", rank);
+            }
         } else {
             if (WIFEXITED(status)) {
                 log_info("Worker %d: Host script exited with status %d (%d)", 
@@ -149,7 +178,7 @@ void Worker::kill_host_script_group() {
         }
     } else {
         // There must have been some processes in the process group, give 
-        // them a few seconds and then kill them hard
+        // them a few seconds and then kill them
         if (sleep(HOST_SCRIPT_GRACE_PERIOD) != 0) {
             log_warn("Worker %d: sleep() finished prematurely", rank);
         }

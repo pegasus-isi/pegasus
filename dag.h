@@ -20,6 +20,7 @@ public:
     int failures;
     
     unsigned memory;
+    unsigned cpus;
     
     Task(const std::string &name, const std::string &command);
     ~Task();

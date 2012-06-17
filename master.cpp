@@ -99,6 +99,7 @@ void Master::process_result() {
     // Return resources to host
     Host *host = slot->host;
     host->memory += task->memory;
+    host->cpus += task->cpus;
     host->log_status();
     
     // Mark slot as free
@@ -232,7 +233,7 @@ void Master::schedule_tasks() {
                 Task *task = *t;
                 
                 // If the task fits, send it
-                if (host->memory >= task->memory) {
+                if (host->memory >= task->memory && host->cpus >= task->cpus) {
                     
                     // We found a match
                     log_debug("Matched task %s to slot %d on host %s", 
@@ -241,6 +242,7 @@ void Master::schedule_tasks() {
                     
                     // Submit the task
                     host->memory -= task->memory;
+                    host->cpus -= task->cpus;
                     submit_task(task, slot->rank);
                     host->log_status();
                     
@@ -296,7 +298,7 @@ int Master::run() {
         bool match = false;
         for (unsigned h=0; h<hosts.size(); h++) {
             Host *host = hosts[h];
-            if (host->memory >= task->memory) {
+            if (host->memory >= task->memory && host->cpus >= task->cpus) {
                 match = true;
                 break;
             }

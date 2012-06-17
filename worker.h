@@ -26,7 +26,7 @@ class Worker {
 	void run_host_script();
 	void kill_host_script_group();
 public:
-    Worker(const std::string &host_script, unsigned host_memory = 0, bool strict_limits = false);
+    Worker(const std::string &host_script, unsigned host_memory = 0, unsigned host_cpus = 0, bool strict_limits = false);
     ~Worker();
     int run();
 };

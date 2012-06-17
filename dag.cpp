@@ -19,6 +19,7 @@ Task::Task(const std::string &name, const std::string &command) {
     this->success = false;
     this->failures = 0;
     this->memory = 0;
+    this->cpus = 0;
 }
 
 Task::~Task() {
@@ -173,6 +174,7 @@ void DAG::read_dag() {
             
             // Default task arguments
             unsigned memory = 0;
+            unsigned cpus = 0;
             
             // Parse task arguments
             std::list<std::string> args;
@@ -202,6 +204,28 @@ void DAG::read_dag() {
                         memory = ceil(fmemory);
                         log_trace("Requested %u MB memory for task %s", 
                             memory, name.c_str());
+                    } else if (arg == "-c" || arg == "--request-cpus") {
+                        args.pop_front();
+                        if (args.size() == 0) {
+                            myfailure("-c/--request-cpus requires N for task %s", 
+                                name.c_str());
+                        }
+                        std::string scpus = args.front();
+                        float fcpus;
+                        if (sscanf(scpus.c_str(), "%f", &fcpus) != 1) {
+                            myfailure(
+                                "Invalid CPU requirement '%s' for task %s", 
+                                scpus.c_str(), name.c_str());
+                        }
+                        if (fcpus < 0) {
+                            myfailure(
+                                "Negative CPU requirement not allowed for task %s", 
+                                name.c_str());
+                        }
+                        // We round up to the next integer
+                        cpus = ceil(fcpus);
+                        log_trace("Requested %u CPUs for task %s", 
+                            cpus, name.c_str());
                     } else {
                         myfailure("Invalid argument '%s' for task %s", 
                             arg.c_str(), name.c_str());
@@ -224,6 +248,7 @@ void DAG::read_dag() {
             
             Task *t = new Task(name, command);
             t->memory = memory;
+            t->cpus = cpus;
             if (pegasus_id.length() > 0) {
                 if (pegasus_name != name) {
                     myfailure("Name from Pegasus does not match task: %s != %s\n",

@@ -114,19 +114,19 @@ function test_host_script {
 		return 1
 	fi
 	
-	if [ $(echo "$OUTPUT" | grep "Worker 1: Launching host script" | wc -l) -ne 1 ]; then
+	if ! [[ "$OUTPUT" =~ "Worker 1: Launching host script" ]]; then
 		echo "$OUTPUT"
 		echo "ERROR: Host script was not launched"
 		return 1
 	fi
 	
-	if [ $(echo "$OUTPUT" | grep "HOSTSCRIPT std" | wc -l) -ne 2 ]; then
+	if ! [[ "$OUTPUT" =~ "HOSTSCRIPT stdout" ]] && ! [[ "$OUTPUT" =~ "HOSTSCRIPT stderr" ]]; then
 		echo "$OUTPUT"
 		echo "ERROR: Host script did not generate the right output"
 		return 1
 	fi
 	
-	if [ $(echo "$OUTPUT" | grep "Host script exited with status 0" | wc -l) -ne 1 ]; then
+	if ! [[ "$OUTPUT" =~ "Host script exited with status 0" ]]; then
 		echo "$OUTPUT"
 		echo "ERROR: Host script test failed"
 		return 1
@@ -147,7 +147,7 @@ function test_fail_script {
 		return 1
 	fi
 	
-	if [ $(echo "$OUTPUT" | grep "Host script failed" | wc -l) -ne 1 ]; then
+	if ! [[ "$OUTPUT" =~ "Host script failed" ]]; then
 		echo "$OUTPUT"
 		echo "ERROR: Fail script test failed"
 		return 1
@@ -168,7 +168,7 @@ function test_fork_script {
 		return 1
 	fi
 	
-	if [ $(echo "$OUTPUT" | grep "Unable to terminate host script process group" | wc -l) -ne 0 ]; then
+	if [[ "$OUTPUT" =~ "Unable to terminate host script process group" ]]; then
 		echo "$OUTPUT"
 		echo "ERROR: Fork script test failed"
 		return 1
@@ -180,8 +180,10 @@ function test_fork_script {
 function test_hang_script {
 	echo "This should take 60 seconds..."
 	
+	START=$(date +%s)
 	OUTPUT=$(mpiexec -n 2 $PMC -s test/sleep.dag -o /dev/null -e /dev/null --host-script test/hangscript.sh -v 2>&1)
 	RC=$?
+	END=$(date +%s)
 	
 	rm -f test/sleep.dag.*
 	
@@ -191,9 +193,18 @@ function test_hang_script {
 		return 1
 	fi
 	
-	if [ $(echo "$OUTPUT" | grep "Host script exited on signal" | wc -l) -ne 1 ]; then
+	if ! [[ "$OUTPUT" =~ "Host script timed out" ]]; then
 		echo "$OUTPUT"
 		echo "ERROR: Hang script test failed"
+		return 1
+	fi
+	
+	ELAPSED=$(expr $END - $START)
+	
+	if [ $ELAPSED -gt 65 ]; then
+		echo "$OUTPUT"
+		echo "Ran in $ELAPSED seconds"
+		echo "ERROR: Hang script test took too long"
 		return 1
 	fi
 	
@@ -269,6 +280,43 @@ function test_strict_limits_failure {
 	return 0
 }
 
+function test_cpus_limit {
+	OUTPUT=$(mpiexec -n 2 $PMC -s test/cpus.dag -o /dev/null -e /dev/null --host-memory 100 --host-cpus 2 2>&1)
+	RC=$?
+	
+	rm -rf test/cpus.dag.*
+	
+	if [ $RC -ne 0 ]; then
+		echo "$OUTPUT"
+		echo "ERROR: Host CPUs test failed"
+		return 1
+	fi
+	
+	return 0
+}
+
+function test_insufficient_cpus {
+	OUTPUT=$(mpiexec -n 2 $PMC -s test/cpus.dag -o /dev/null -e /dev/null --host-cpus 1 2>&1)
+	RC=$?
+	
+	rm -f test/cpus.dag.*
+	
+	# This test should fail because 1 CPU isn't enough to run the tasks in the DAG
+	if [ $RC -ne 1 ]; then
+		echo "$OUTPUT"
+		echo "ERROR: Insufficient CPUs test failed (1)"
+		return 1
+	fi
+	
+	if ! [[ "$OUTPUT" =~ "FATAL ERROR: No host is capable of running task" ]]; then
+		echo "$OUTPUT"
+		echo "ERROR: Insufficient CPUs test failed (2)"
+		return 1
+	fi
+	
+	return 0
+}
+
 run_test ./test-strlib
 run_test ./test-tools
 run_test ./test-dag
@@ -279,13 +327,15 @@ run_test test_one_worker_required
 run_test test_run_diamond
 run_test test_out_err
 run_test test_rescue_file
+run_test test_memory_limit
+run_test test_insufficient_memory
+run_test test_strict_limits
+run_test test_cpus_limit
+run_test test_insufficient_cpus
 run_test test_host_script
 run_test test_fail_script
 run_test test_fork_script
 run_test test_hang_script
-run_test test_memory_limit
-run_test test_insufficient_memory
-run_test test_strict_limits
 
 # setrlimit is broken on Darwin, so the strict limits test won't work
 if [ $(uname -s) != "Darwin" ]; then
