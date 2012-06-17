@@ -41,8 +41,9 @@ bool Task::is_ready() {
     return true;
 }
 
-DAG::DAG(const std::string &dagfile, const std::string &rescuefile, const bool lock) {
+DAG::DAG(const std::string &dagfile, const std::string &rescuefile, const bool lock, unsigned tries) {
     this->lock = lock;
+    this->tries = tries;
     
     this->dag = fopen(dagfile.c_str(), "r+");
     if (this->dag == NULL) {
@@ -175,6 +176,7 @@ void DAG::read_dag() {
             // Default task arguments
             unsigned memory = 0;
             unsigned cpus = 0;
+            unsigned tries = this->tries;
             
             // Parse task arguments
             std::list<std::string> args;
@@ -226,6 +228,23 @@ void DAG::read_dag() {
                         cpus = ceil(fcpus);
                         log_trace("Requested %u CPUs for task %s", 
                             cpus, name.c_str());
+                    } else if (arg == "-t" || arg == "--tries") {
+                        args.pop_front();
+                        if (args.size() == 0) {
+                            myfailure("-t/--tries requires N for task %s", 
+                                name.c_str());
+                        }
+                        std::string stries = args.front();
+                        if (sscanf(stries.c_str(), "%u", &tries) != 1) {
+                            myfailure("Invalid tries '%s' for task %s", 
+                                stries.c_str(), name.c_str());
+                        }
+                        if (tries < 0) {
+                            myfailure("Negative tries not allowed for task %s", 
+                                name.c_str());
+                        }
+                        log_trace("Requested %u tries for task %s", 
+                            tries, name.c_str());
                     } else {
                         myfailure("Invalid argument '%s' for task %s", 
                             arg.c_str(), name.c_str());
@@ -249,6 +268,8 @@ void DAG::read_dag() {
             Task *t = new Task(name, command);
             t->memory = memory;
             t->cpus = cpus;
+            t->tries = tries;
+            
             if (pegasus_id.length() > 0) {
                 if (pegasus_name != name) {
                     myfailure("Name from Pegasus does not match task: %s != %s\n",

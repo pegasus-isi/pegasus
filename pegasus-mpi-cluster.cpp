@@ -252,8 +252,8 @@ int mpidag(int argc, char *argv[]) {
         
         bool has_host_script = ("" != host_script);
         
-        DAG dag(dagfile, oldrescue, lock);
-        Engine engine(dag, newrescue, max_failures, tries);
+        DAG dag(dagfile, oldrescue, lock, tries);
+        Engine engine(dag, newrescue, max_failures);
         return Master(program, engine, dag, dagfile, outfile, errfile, has_host_script).run();
     } else {
         return Worker(host_script, host_memory, host_cpus, strict_limits).run();

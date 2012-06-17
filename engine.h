@@ -14,7 +14,6 @@ class Engine {
     FILE *rescue;
     int failures;
     int max_failures;
-    int tries;
     
     void queue_ready_task(Task *t);
 
@@ -23,7 +22,7 @@ class Engine {
     void write_rescue(Task *task);
     bool has_rescue();
 public:
-    Engine(DAG &dag, const std::string &rescuefile = "", int max_failures = 0, int tries = 1);
+    Engine(DAG &dag, const std::string &rescuefile = "", int max_failures = 0);
     ~Engine();
     
     bool max_failures_reached();

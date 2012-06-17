@@ -250,9 +250,9 @@ void diamond_dag_max_failures() {
 void diamond_dag_retries() {
     int tries = 3;
 
-    DAG dag("test/diamond.dag");
-    Engine engine(dag, "", 0, tries);
-
+    DAG dag("test/diamond.dag", "", true, tries);
+    Engine engine(dag, "", 0);
+    
     Task *a;
     
     for (int i=0; i<tries; i++) {
@@ -276,8 +276,8 @@ void diamond_dag_retries() {
 void diamond_dag_retries2() {
     int tries = 3;
 
-    DAG dag("test/diamond.dag");
-    Engine engine(dag, "", 0, tries);
+    DAG dag("test/diamond.dag", "", true, tries);
+    Engine engine(dag, "", 0);
 
     Task *a;
     

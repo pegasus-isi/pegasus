@@ -17,10 +17,11 @@ public:
     std::string pegasus_transformation;
     
     bool success;
-    int failures;
     
     unsigned memory;
     unsigned cpus;
+    unsigned tries;
+    unsigned failures;
     
     Task(const std::string &name, const std::string &command);
     ~Task();
@@ -32,6 +33,7 @@ class DAG {
     FILE *dag;
     std::map<std::string, Task *> tasks;
     bool lock;
+    unsigned tries;
     
     void read_dag();
     void read_rescue(const std::string &filename);
@@ -40,7 +42,7 @@ class DAG {
 public:
     typedef std::map<std::string, Task *>::iterator iterator;
 
-    DAG(const std::string &dagfile, const std::string &rescuefile = "", const bool lock = true);
+    DAG(const std::string &dagfile, const std::string &rescuefile = "", const bool lock = true, unsigned tries = 1);
     ~DAG();
 
     bool has_task(const std::string &name) const;

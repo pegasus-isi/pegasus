@@ -317,6 +317,34 @@ function test_insufficient_cpus {
 	return 0
 }
 
+function test_tries {
+	OUTPUT=$(mpiexec -n 2 $PMC -s test/tries.dag -o /dev/null -e /dev/null -t 3 2>&1)
+	RC=$?
+	
+	rm -f test/tries.dag.*
+	
+	# This test should fail because task B will fail twice
+	if [ $RC -eq 0 ]; then
+		echo "$OUTPUT"
+		echo "ERROR: Tries test failed"
+		return 1
+	fi
+	
+	if [ $(echo "$OUTPUT" | grep "Task B failed" | wc -l) -ne 5 ]; then
+		echo "$OUTPUT"
+		echo "ERROR: Tries test failed"
+		return 1
+	fi
+	
+	if [ $(echo "$OUTPUT" | grep "Task C failed" | wc -l) -ne 3 ]; then
+		echo "$OUTPUT"
+		echo "ERROR: Tries test failed"
+		return 1
+	fi
+	
+	return 0
+}
+
 run_test ./test-strlib
 run_test ./test-tools
 run_test ./test-dag
@@ -332,6 +360,7 @@ run_test test_insufficient_memory
 run_test test_strict_limits
 run_test test_cpus_limit
 run_test test_insufficient_cpus
+run_test test_tries
 run_test test_host_script
 run_test test_fail_script
 run_test test_fork_script
