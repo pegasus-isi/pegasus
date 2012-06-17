@@ -178,6 +178,11 @@ with the arguments '-a' and '-b'. The available task options are:
     *--request-cpus* 'N'::
         The number of CPUs required by the task. (see <<RESOURCE_SCHED,
         *RESOURCE-BASED SCHEDULING*>>)
+    
+    *-t* 'T'::
+    *--tries* 'T'::
+        The number of times to try to execute the task before failing permanently.
+        This is the task-level equivalent of the *--tries* command-line option.
 
 The format of an *EDGE* record is:
 [verse]

@@ -2,12 +2,12 @@
 .\"     Title: pegasus-mpi-cluster
 .\"    Author: [see the "Author" section]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 06/16/2012
+.\"      Date: 06/17/2012
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "PEGASUS\-MPI\-CLUSTE" "1" "06/16/2012" "\ \&" "\ \&"
+.TH "PEGASUS\-MPI\-CLUSTE" "1" "06/17/2012" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -208,6 +208,13 @@ The amount of memory required by the task in MB\&. (see
 .RS 4
 The number of CPUs required by the task\&. (see
 \fBRESOURCE\-BASED SCHEDULING\fR)
+.RE
+.PP
+\fB\-t\fR \fIT\fR, \fB\-\-tries\fR \fIT\fR
+.RS 4
+The number of times to try to execute the task before failing permanently\&. This is the task\-level equivalent of the
+\fB\-\-tries\fR
+command\-line option\&.
 .RE
 .sp
 The format of an \fBEDGE\fR record is:

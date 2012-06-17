@@ -135,11 +135,40 @@ void test_cpu_dag() {
     }
 }
 
+void test_tries_dag() {
+    DAG dag("test/tries.dag", "", true, 3);
+    
+    Task *a = dag.get_task("A");
+    Task *b = dag.get_task("B");
+    Task *c = dag.get_task("C");
+    Task *d = dag.get_task("D");
+    
+    if (a->tries != 2) {
+        myfailure("A should have 2 tries");
+    }
+    
+    if (b->tries != 5) {
+        myfailure("B should have 5 tries");
+    }
+    
+    if (c->tries != 3) {
+        myfailure("C should have 3 tries");
+    }
+    
+    if (d->tries != 2) {
+        myfailure("D should have 2 tries");
+    }
+    if (d->memory != 100) {
+        myfailure("D should require 100 MB memory");
+    }
+}
+
 int main(int argc, char *argv[]) {
     test_dag();
     test_rescue();
     test_pegasus_dag();
     test_memory_dag();
     test_cpu_dag();
+    test_tries_dag();
     return 0;
 }

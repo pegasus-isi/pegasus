@@ -10,15 +10,11 @@
 #include "log.h"
 #include "engine.h"
 
-Engine::Engine(DAG &dag, const std::string &rescuefile, int max_failures, int tries) {
+Engine::Engine(DAG &dag, const std::string &rescuefile, int max_failures) {
     if (max_failures < 0) {
         myfailure("max_failures must be >= 0");
     }
-    if (tries < 1) {
-        myfailure("tries must be >= 1");
-    }
     this->max_failures = max_failures;
-    this->tries = tries;
     this->dag = &dag;
     this->rescue = NULL;
     if (!rescuefile.empty()) {
@@ -94,7 +90,7 @@ void Engine::mark_task_finished(Task *t, int exitcode) {
         t->failures += 1;
 
         //If job can be retried, then re-submit it
-        if (t->failures < this->tries) {
+        if (t->failures < t->tries) {
             this->queue_ready_task(t);
             return;
         }
