@@ -1,0 +1,10 @@
+TASK A --tries 2 /bin/echo A
+TASK B -t 5 /usr/bin/false
+TASK C /usr/bin/false
+TASK D --tries 2 -m 100 /bin/echo D
+#TASK E -t -10 /bin/echo E
+
+EDGE A B
+EDGE A C
+EDGE B D
+EDGE C D
