@@ -136,6 +136,10 @@ Options
     amount of physical RAM automatically. (see <<RESOURCE_SCHED, *RESOURCE-BASED 
     SCHEDULING*>>)
 
+*--host-cpus* 'cpus'::
+    Number of CPUs available on each host. The default is to determine the number of
+    CPU cores automatically. (see <<RESOURCE_SCHED, *RESOURCE-BASED SCHEDULING*>>)
+
 *--strict-limits*::
     This enables strict memory usage limits for tasks. When this option is specified,
     and a task tries to allocate more memory than was requested in the DAG, the memory
@@ -168,6 +172,11 @@ with the arguments '-a' and '-b'. The available task options are:
     *-m* 'M'::
     *--request-memory* 'M'::
         The amount of memory required by the task in MB. (see <<RESOURCE_SCHED, 
+        *RESOURCE-BASED SCHEDULING*>>)
+    
+    *-c* 'N'::
+    *--request-cpus* 'N'::
+        The number of CPUs required by the task. (see <<RESOURCE_SCHED,
         *RESOURCE-BASED SCHEDULING*>>)
 
 The format of an *EDGE* record is:
@@ -285,23 +294,44 @@ High-performance computing resources often have a low ratio of memory to CPUs.
 At the same time, workflow tasks often have high memory requirements. Often,
 the memory requirements of a workflow task exceed the amount of memory
 available to each CPU on a given host. As a result, it may be necessary to
-disable some CPUs in order to free up enough memory to run the tasks.
+disable some CPUs in order to free up enough memory to run the tasks. Similarly,
+many codes have support for multicore hosts. In that case it is necessary for
+efficiency to ensure that the number of cores required by the tasks running on 
+a host do not exceed the number of cores available on that host.
 
 In order to make this process more efficient, *pegasus-mpi-cluster* supports
 resource-based scheduling. In resource-based scheduling the tasks in the
-workflow can specify how much memory they require, and *pegasus-mpi-cluster*
-will schedule them so that the tasks running on a given host do not exceed the
-amount of physical memory available. This enables *pegasus-mpi-cluster* to take
-advantage of all the CPUs available when the tasks' memory requirement is low,
-but also disable some CPUs when the tasks' memory requirement is higher.
+workflow can specify how much memory and how many CPUs they require, and 
+*pegasus-mpi-cluster* will schedule them so that the tasks running on a given 
+host do not exceed the amount of physical memory and CPUs available. This 
+enables *pegasus-mpi-cluster* to take advantage of all the CPUs available 
+when the tasks' memory requirement is low, but also disable some CPUs when 
+the tasks' memory requirement is higher. It also enables workflows with a 
+mixture of single core and multi-core tasks to be executed on a heterogenous
+pool.
 
+If there are no hosts available that have enough memory and CPUs to execute
+one of the tasks in a workflow, then the workflow is aborted.
+
+Memory
+~~~~~~
 Users can specify both the amount of memory required per task, and the amount
 of memory available per host. If the amount of memory required by any task
 exceeds the available memory of all the hosts, then the workflow will be
 aborted. By default, the host memory is determined automatically, however the
 user can specify *--host-memory* to "lie" to *pegasus-mpi-cluster*. The amount
 of memory required for each task is specified in the DAG using the 
-*-m*/*--request-memory* argument (see <<DAG_FILES, *DAG Files*>>.
+*-m*/*--request-memory* argument (see <<DAG_FILES, *DAG Files*>>).
+
+CPUs
+~~~~
+Users can specify the number of CPUs required per task, and the total number of
+CPUs available on each host. If the number of CPUs required by a task exceeds
+the available CPUs on all hosts, then the workflow will be aborted. By default,
+the number of CPUs on a host is determined automatically, but the user can 
+specify *--host-cpus* to over- or under-subscribe the host. The number of 
+CPUs required for each task is specified in the DAG using the 
+*-c*/*--request-cpus* argument (see <<DAG_FILES, *DAG Files*>>).
 
 
 Misc

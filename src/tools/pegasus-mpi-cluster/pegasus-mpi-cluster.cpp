@@ -34,6 +34,7 @@ void usage() {
             "   -r|--rescue PATH     Path to rescue file [default: DAGFILE.rescue]\n"
             "   --host-script PATH   Path to script that will be launched on each host\n"
             "   --host-memory N      Amount of memory per host in MB\n"
+            "   --host-cpus N        Number of CPUs per host\n"
             "   --strict-limits      Enforce strict task resource limits\n",
             program
         );
@@ -68,6 +69,7 @@ int mpidag(int argc, char *argv[]) {
     std::string rescuefile = "";
     std::string host_script = "";
     unsigned host_memory = 0;
+    unsigned host_cpus = 0;
     bool strict_limits = false;
     
     // Environment variable defaults
@@ -80,6 +82,14 @@ int mpidag(int argc, char *argv[]) {
     if (env_host_memory != NULL) {
         if (sscanf(env_host_memory, "%u", &host_memory) != 1) {
             argerror("Invalid value for PMC_HOST_MEMORY");
+            return 1;
+        }
+    }
+    
+    char *env_host_cpus = getenv("PMC_HOST_CPUS");
+    if (env_host_cpus != NULL) {
+        if (sscanf(env_host_cpus, "%u", &host_cpus) != 1) {
+            argerror("Invalid value of PMC_HOST_CPUS");
             return 1;
         }
     }
@@ -158,12 +168,32 @@ int mpidag(int argc, char *argv[]) {
         } else if (flag == "--host-memory") {
             flags.pop_front();
             if (flags.size() == 0) {
-                argerror("--host-memory requires MEM");
+                argerror("--host-memory requires N");
                 return 1;
             }
             std::string host_memory_string = flags.front();
             if (sscanf(host_memory_string.c_str(), "%u", &host_memory) != 1) {
                 argerror("Invalid value for --host-memory");
+                return 1;
+            }
+            if (host_memory < 1) {
+                argerror("--host-memory must be an integer >= 1");
+                return 1;
+            }
+        } else if (flag == "--host-cpus") {
+            flags.pop_front();
+            if (flags.size() == 0) {
+                argerror("--host-cpus requires N");
+                return 1;
+            }
+            std::string host_cpus_string = flags.front();
+            if (sscanf(host_cpus_string.c_str(), "%u", &host_cpus) != 1) {
+                argerror("Invalid value for --host-cpus");
+                return 1;
+            }
+            if (host_cpus < 1) {
+                argerror("--host-cpus must be an integer >= 1");
+                return 1;
             }
         } else if (flag == "--strict-limits") {
             strict_limits = true;
@@ -226,7 +256,7 @@ int mpidag(int argc, char *argv[]) {
         Engine engine(dag, newrescue, max_failures, tries);
         return Master(program, engine, dag, dagfile, outfile, errfile, has_host_script).run();
     } else {
-        return Worker(host_script, host_memory, strict_limits).run();
+        return Worker(host_script, host_memory, host_cpus, strict_limits).run();
     }
 }
 

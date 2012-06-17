@@ -2,12 +2,12 @@
 .\"     Title: pegasus-mpi-cluster
 .\"    Author: [see the "Author" section]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 06/15/2012
+.\"      Date: 06/16/2012
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "PEGASUS\-MPI\-CLUSTE" "1" "06/15/2012" "\ \&" "\ \&"
+.TH "PEGASUS\-MPI\-CLUSTE" "1" "06/16/2012" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -158,6 +158,12 @@ Amount of memory available on each host in MB\&. The default is to determine the
 \fBRESOURCE\-BASED SCHEDULING\fR)
 .RE
 .PP
+\fB\-\-host\-cpus\fR \fIcpus\fR
+.RS 4
+Number of CPUs available on each host\&. The default is to determine the number of CPU cores automatically\&. (see
+\fBRESOURCE\-BASED SCHEDULING\fR)
+.RE
+.PP
 \fB\-\-strict\-limits\fR
 .RS 4
 This enables strict memory usage limits for tasks\&. When this option is specified, and a task tries to allocate more memory than was requested in the DAG, the memory allocation operation will fail\&.
@@ -195,6 +201,12 @@ This example specifies a task \fIt01\fR that requires 10 MB memory to run \fI/bi
 \fB\-m\fR \fIM\fR, \fB\-\-request\-memory\fR \fIM\fR
 .RS 4
 The amount of memory required by the task in MB\&. (see
+\fBRESOURCE\-BASED SCHEDULING\fR)
+.RE
+.PP
+\fB\-c\fR \fIN\fR, \fB\-\-request\-cpus\fR \fIN\fR
+.RS 4
+The number of CPUs required by the task\&. (see
 \fBRESOURCE\-BASED SCHEDULING\fR)
 .RE
 .sp
@@ -284,11 +296,17 @@ The host script is started when \fBpegasus\-mpi\-cluster\fR starts and must exit
 When the workflow finishes, \fBpegasus\-mpi\-cluster\fR will deliver a SIGTERM signal to the host script\(cqs process group\&. Any child processes left running by the host script will receive this signal unless they created their own process group\&. If there were any processes left to receive this signal, then they will be given a few seconds to exit, then they will be sent SIGKILL\&. This is the mechanism by which processes started by the host script can be informed of the termination of the workflow\&.
 .SH "RESOURCE-BASED SCHEDULING"
 .sp
-High\-performance computing resources often have a low ratio of memory to CPUs\&. At the same time, workflow tasks often have high memory requirements\&. Often, the memory requirements of a workflow task exceed the amount of memory available to each CPU on a given host\&. As a result, it may be necessary to disable some CPUs in order to free up enough memory to run the tasks\&.
+High\-performance computing resources often have a low ratio of memory to CPUs\&. At the same time, workflow tasks often have high memory requirements\&. Often, the memory requirements of a workflow task exceed the amount of memory available to each CPU on a given host\&. As a result, it may be necessary to disable some CPUs in order to free up enough memory to run the tasks\&. Similarly, many codes have support for multicore hosts\&. In that case it is necessary for efficiency to ensure that the number of cores required by the tasks running on a host do not exceed the number of cores available on that host\&.
 .sp
-In order to make this process more efficient, \fBpegasus\-mpi\-cluster\fR supports resource\-based scheduling\&. In resource\-based scheduling the tasks in the workflow can specify how much memory they require, and \fBpegasus\-mpi\-cluster\fR will schedule them so that the tasks running on a given host do not exceed the amount of physical memory available\&. This enables \fBpegasus\-mpi\-cluster\fR to take advantage of all the CPUs available when the tasks\*(Aq memory requirement is low, but also disable some CPUs when the tasks\*(Aq memory requirement is higher\&.
+In order to make this process more efficient, \fBpegasus\-mpi\-cluster\fR supports resource\-based scheduling\&. In resource\-based scheduling the tasks in the workflow can specify how much memory and how many CPUs they require, and \fBpegasus\-mpi\-cluster\fR will schedule them so that the tasks running on a given host do not exceed the amount of physical memory and CPUs available\&. This enables \fBpegasus\-mpi\-cluster\fR to take advantage of all the CPUs available when the tasks\*(Aq memory requirement is low, but also disable some CPUs when the tasks\*(Aq memory requirement is higher\&. It also enables workflows with a mixture of single core and multi\-core tasks to be executed on a heterogenous pool\&.
 .sp
-Users can specify both the amount of memory required per task, and the amount of memory available per host\&. If the amount of memory required by any task exceeds the available memory of all the hosts, then the workflow will be aborted\&. By default, the host memory is determined automatically, however the user can specify \fB\-\-host\-memory\fR to "lie" to \fBpegasus\-mpi\-cluster\fR\&. The amount of memory required for each task is specified in the DAG using the \fB\-m\fR/\fB\-\-request\-memory\fR argument (see \fBDAG Files\fR\&.
+If there are no hosts available that have enough memory and CPUs to execute one of the tasks in a workflow, then the workflow is aborted\&.
+.SS "Memory"
+.sp
+Users can specify both the amount of memory required per task, and the amount of memory available per host\&. If the amount of memory required by any task exceeds the available memory of all the hosts, then the workflow will be aborted\&. By default, the host memory is determined automatically, however the user can specify \fB\-\-host\-memory\fR to "lie" to \fBpegasus\-mpi\-cluster\fR\&. The amount of memory required for each task is specified in the DAG using the \fB\-m\fR/\fB\-\-request\-memory\fR argument (see \fBDAG Files\fR)\&.
+.SS "CPUs"
+.sp
+Users can specify the number of CPUs required per task, and the total number of CPUs available on each host\&. If the number of CPUs required by a task exceeds the available CPUs on all hosts, then the workflow will be aborted\&. By default, the number of CPUs on a host is determined automatically, but the user can specify \fB\-\-host\-cpus\fR to over\- or under\-subscribe the host\&. The number of CPUs required for each task is specified in the DAG using the \fB\-c\fR/\fB\-\-request\-cpus\fR argument (see \fBDAG Files\fR)\&.
 .SH "MISC"
 .SS "Resource Utilization"
 .sp

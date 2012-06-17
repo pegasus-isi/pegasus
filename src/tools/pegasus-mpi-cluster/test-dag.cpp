@@ -107,10 +107,39 @@ void test_memory_dag() {
     }
 }
 
+void test_cpu_dag() {
+    DAG dag("test/cpus.dag");
+    
+    Task *a = dag.get_task("A");
+    Task *b = dag.get_task("B");
+    Task *c = dag.get_task("C");
+    Task *d = dag.get_task("D");
+    
+    if (a->cpus != 0) {
+        myfailure("A should require 0 CPUs");
+    }
+    
+    if (b->cpus != 2) {
+        myfailure("B should require 2 CPUs");
+    }
+    
+    if (c->cpus != 2) {
+        myfailure("C should require 2 CPUs");
+    }
+    if (c->memory != 100) {
+        myfailure("C should require 100 MB memory");
+    }
+    
+    if (d->cpus != 2) {
+        myfailure("D should require 2 CPUs");
+    }
+}
+
 int main(int argc, char *argv[]) {
     test_dag();
     test_rescue();
     test_pegasus_dag();
     test_memory_dag();
+    test_cpu_dag();
     return 0;
 }
