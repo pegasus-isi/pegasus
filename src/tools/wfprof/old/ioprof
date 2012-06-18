@@ -279,8 +279,9 @@ match_bind = re.compile(r'^\d+\s+bind\((\d+),\s({.*}),.*\)\s+=\s+(-?\d+)')
 match_connect = re.compile(r'^\d+\s+connect\((\d+),\s({.*}),.*\)')
 match_recvmsg = re.compile(r'^\d+\s+recvmsg\((\d+),.*\)\s+=\s+(-?\d+)')
 match_recvfrom = re.compile(r'^\d+\s+recvfrom\((\d+),.*\)\s+=\s+(-?\d+)')
-match_exit = re.compile(r'^\d+\s+exit(_group)?\((\d+)\)\s+=\s+\?')
+match_exit = re.compile(r'^\d+\s+_?exit(_group)?\((\d+)\)\s+=\s+\?')
 match_exit_group = match_exit
+match__exit = match_exit
 
 def usage():
   sys.stderr.write('Usage: %s [kickstart args] app [app args]\n' % sys.argv[0])
@@ -523,6 +524,7 @@ def parse_exit(p,rec):
   p.exitcode = int(rec[1])
 
 parse_exit_group = parse_exit
+parse__exit = parse_exit
 
 
 def join_lines(unfinished,resumed):
