@@ -127,56 +127,6 @@ EOF
     exit( $flag ? 1 : 0 );
 }
 
-sub create_args {
-    # purpose: create either a shell daemon, or condor-submitted job
-    # warning: It is assumed that condor-jobs require -N to foreground
-    # globals: $condor (IN): use Condor (true) or daemon (false) mode
-    # paramtr: $daemon (IN): executable location of daemon 
-    #          @args (IN): other arguments to daemon
-    # returns: argument vector ready to execute
-    my $daemon = shift || croak "Need a daemon name";
-
-    my @result;
-    if ( $condor ) {
-	# use Condor to submit a daemon -- makes it restartable on SH death
-	# however, insert -N into the daemon's argument list for foregrounding
-	my $condor_submit = find_exec('condor_submit') || 
-	    die "ERROR: Unable to find condor_submit\n";
-	my $base = 'pegasus-run-' . basename($daemon);
-	my $fn = File::Spec->catfile( $run, "$base.sub" );
-	local(*SUB);
-	open( SUB, ">$fn" ) || die "open $fn: $!\n";
-
-	# only arg
-	@result = ( );
-	foreach my $k ( keys %initial ) { push( @result, "-D$k=$initial{$k}" ) }
-	push( @result, '-N' );
-	push( @result, @_ ) if ( @_ > 0 );
-
-	# write submit file for (restartable) pegasus-monitord
-	print SUB "initialdir = $run\n";
-	print SUB 'executable = ', File::Spec->rel2abs($daemon), "\n";
-	print SUB 'arguments  = ', join(' ',@result), "\n";
-	print SUB "universe   = local\n";
-	print SUB "notification = NEVER\n";
-	print SUB "getenv = True\n";
-	print SUB "output = $base.out.txt\n";
-	print SUB "error  = $base.err.txt\n";
-	print SUB "log    = $base.log.txt\n";
-	print SUB "queue\n";
-	close SUB;
-	@result = ( $condor_submit, $fn );
-    } else {
-	# run daemon directly
-	@result = ( $daemon );
-	foreach my $k ( keys %initial ) { push( @result, "-D$k=$initial{$k}" ) }
-	push( @result, @_ ) if ( @_ > 0 );
-    }
-
-    @result;
-}
-
-
 #
 # --- main ------------------------------------------------------
 #
