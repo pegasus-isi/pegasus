@@ -11,7 +11,7 @@ public:
     std::string command;
     std::vector<Task *> children;
     std::vector<Task *> parents;
-
+    
     // These come from the Pegasus cluster comments
     std::string pegasus_id;
     std::string pegasus_transformation;
@@ -22,6 +22,7 @@ public:
     unsigned cpus;
     unsigned tries;
     unsigned failures;
+    int priority;
     
     Task(const std::string &name, const std::string &command);
     ~Task();
@@ -41,10 +42,10 @@ class DAG {
     void add_edge(const std::string &parent, const std::string &child);
 public:
     typedef std::map<std::string, Task *>::iterator iterator;
-
+    
     DAG(const std::string &dagfile, const std::string &rescuefile = "", const bool lock = true, unsigned tries = 1);
     ~DAG();
-
+    
     bool has_task(const std::string &name) const;
     Task *get_task(const std::string &name) const;
     iterator begin() { return this->tasks.begin(); }

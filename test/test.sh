@@ -345,6 +345,38 @@ function test_tries {
 	return 0
 }
 
+function test_priority {
+	OUTPUT=$(mpiexec -n 2 $PMC -v -v -s test/priority.dag -o /dev/null -e /dev/null --host-cpus 2 2>&1)
+	RC=$?
+	
+	rm -f test/priority.dag.*
+	
+	if [ $RC -ne 0 ]; then
+		echo "$OUTPUT"
+		echo "ERROR: Priority test failed"
+		return 1
+	fi
+	
+	DESIRED="Scheduling task G
+Scheduling task I
+Scheduling task D
+Scheduling task E
+Scheduling task O
+Scheduling task N"
+	
+	ACTUAL=$(echo "$OUTPUT" | grep "Scheduling task ")
+	
+	if [ "$ACTUAL" != "$DESIRED" ]; then
+		echo "$OUTPUT"
+		echo "Actual: $ACTUAL"
+		echo "Desired: $DESIRED"
+		echo "ERROR: Priority test failed"
+		return 1
+	fi
+	
+	return 0
+}
+
 run_test ./test-strlib
 run_test ./test-tools
 run_test ./test-dag
@@ -361,6 +393,7 @@ run_test test_strict_limits
 run_test test_cpus_limit
 run_test test_insufficient_cpus
 run_test test_tries
+run_test test_priority
 run_test test_host_script
 run_test test_fail_script
 run_test test_fork_script

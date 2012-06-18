@@ -4,14 +4,9 @@ This is a list of items that are planned in future versions of pegasus-mpi-clust
 * Implement a better, object-oriented logging interface
 * Allow runtime estimates to be specified in DAG with -r/--runtime
 * Implement hard limits on task runtime
-* Add support for CPU resource scheduling (-c/--request-cpus in DAG and --host-cpus in PMC)
-* Allow tries to be specified with -t/--tries in DAG (e.g. TASK A -t 3 /bin/date)
-* Enable weight in DAG with -w/--weight (e.g. TASK A -w 10 /bin/date)
-* Enable -p/--priority as an alias for -w/--weight in DAG
-* Add support for priority-based scheduling using weights
-* Add BFS and DFS mode via level-based weights
+* Add BFS and DFS mode via level-based priority?
 * Add support for more sophisticated scheduling? (e.g. homogeneous task 
   scheduling like FCFS, EFT, ETF, HLFET, MCP, DCP, MD, and others described 
-  in the DCP paper) Some algorithms could use the weight as a strict 
-  priority, some could use the weight as a runtime estimate, and some could 
-  use weight as a, well, weight.
+  in the DCP paper) Some algorithms could use the priority as a strict 
+  priority, some could use the priority as a runtime estimate, and some could 
+  use priority as a weight.

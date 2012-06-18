@@ -163,6 +163,41 @@ void test_tries_dag() {
     }
 }
 
+void test_priority_dag() {
+    DAG dag("test/priority.dag");
+    
+    Task *g = dag.get_task("G");
+    Task *i = dag.get_task("I");
+    Task *d = dag.get_task("D");
+    Task *e = dag.get_task("E");
+    Task *o = dag.get_task("O");
+    Task *n = dag.get_task("N");
+    
+    if (g->priority != 10) {
+        myfailure("G should have priority 10");
+    }
+    
+    if (i->priority != 9) {
+        myfailure("I should have priority 9");
+    }
+    
+    if (d->priority != 8) {
+        myfailure("D should have priority 8");
+    }
+    
+    if (e->priority != 7) {
+        myfailure("E should have priority 7");
+    }
+    
+    if (o->priority != -4) {
+        myfailure("O should have priority -4");
+    }
+    
+    if (n->priority != -5) {
+        myfailure("N should have priority -5");
+    }
+}
+
 int main(int argc, char *argv[]) {
     test_dag();
     test_rescue();
@@ -170,5 +205,6 @@ int main(int argc, char *argv[]) {
     test_memory_dag();
     test_cpu_dag();
     test_tries_dag();
+    test_priority_dag();
     return 0;
 }
