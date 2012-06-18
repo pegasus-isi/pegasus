@@ -33,6 +33,15 @@ public:
     }
 };
 
+class TaskPriority {
+public:
+    bool operator ()(const Task *x, const Task *y){
+        return x->priority < y->priority;
+    }
+};
+
+typedef std::priority_queue<Task *, std::vector<Task *>, TaskPriority> TaskQueue;
+
 typedef std::list<Slot *> SlotList;
 typedef std::list<Task *> TaskList;
 
@@ -47,7 +56,7 @@ class Master {
     std::vector<Slot *> slots;
     std::vector<Host *> hosts;
     SlotList free_slots;
-    TaskList ready_tasks;
+    TaskQueue ready_queue;
     
     int numworkers;
     

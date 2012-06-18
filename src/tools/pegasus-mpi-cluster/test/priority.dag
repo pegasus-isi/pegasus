@@ -1,0 +1,6 @@
+TASK N -p -5 -c 1 /bin/echo N
+TASK O -p -4 -c 1 /bin/echo O
+TASK I -p 9 -c 1 /bin/echo I
+TASK E -p 7 -c 1 /bin/echo E
+TASK D -p 8 -c 2 /bin/echo D
+TASK G -p 10 -c 1 /bin/echo G

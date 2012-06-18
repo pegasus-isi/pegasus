@@ -2,12 +2,12 @@
 .\"     Title: pegasus-mpi-cluster
 .\"    Author: [see the "Author" section]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 06/17/2012
+.\"      Date: 06/18/2012
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "PEGASUS\-MPI\-CLUSTE" "1" "06/17/2012" "\ \&" "\ \&"
+.TH "PEGASUS\-MPI\-CLUSTE" "1" "06/18/2012" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -190,13 +190,13 @@ Where \fIid\fR is the ID of the task, \fIoptions\fR is a list of task options, \
 .RS 4
 .\}
 .nf
-    TASK t01 \-m 10 /bin/program \-a \-b
+    TASK t01 \-m 10 \-c 2 /bin/program \-a \-b
 .fi
 .if n \{\
 .RE
 .\}
 .sp
-This example specifies a task \fIt01\fR that requires 10 MB memory to run \fI/bin/program\fR with the arguments \fI\-a\fR and \fI\-b\fR\&. The available task options are:
+This example specifies a task \fIt01\fR that requires 10 MB memory and 2 CPUs to run \fI/bin/program\fR with the arguments \fI\-a\fR and \fI\-b\fR\&. The available task options are:
 .PP
 \fB\-m\fR \fIM\fR, \fB\-\-request\-memory\fR \fIM\fR
 .RS 4
@@ -215,6 +215,11 @@ The number of CPUs required by the task\&. (see
 The number of times to try to execute the task before failing permanently\&. This is the task\-level equivalent of the
 \fB\-\-tries\fR
 command\-line option\&.
+.RE
+.PP
+\fB\-p\fR \fIP\fR, \fB\-\-priority\fR \fIP\fR
+.RS 4
+The priority of the task\&. P should be an integer\&. Larger values have higher priority\&. The default is 0\&. Priorities are simply hints and are not strict\(emif a task cannot be matched to an available slot (e\&.g\&. due to resource availability), but a lower\-priority task can, then the task will be deferred and the lower priority task will be executed\&.
 .RE
 .sp
 The format of an \fBEDGE\fR record is:
@@ -265,7 +270,7 @@ A simple diamond\-shaped workflow would look like this:
 .sp
 Many different types of errors can occur when running a DAG\&. One or more of the tasks may fail, the MPI job may run out of wall time, \fBpegasus\-mpi\-cluster\fR may segfault (we hope not), the system may crash, etc\&. In order to ensure that the DAG does not need to be restarted from the beginning after an error, \fBpegasus\-mpi\-cluster\fR generates a rescue file for each workflow\&.
 .sp
-The rescue file is a simple text file that lists all of the tasks in the workflow that have finished successfully\&. This file is updated each time a task finishes, and is flushed periodically so that if the work\- flow fails and the user restarts it, \fBpegasus\-mpi\-cluster\fR can determine which tasks still need to be executed\&. As such, the rescue file is a sort\-of trans\- action log for the workflow\&.
+The rescue file is a simple text file that lists all of the tasks in the workflow that have finished successfully\&. This file is updated each time a task finishes, and is flushed periodically so that if the work\- flow fails and the user restarts it, \fBpegasus\-mpi\-cluster\fR can determine which tasks still need to be executed\&. As such, the rescue file is a sort\-of transaction log for the workflow\&.
 .sp
 The rescue file contains zero or more DONE records\&. The format of these records is:
 .sp

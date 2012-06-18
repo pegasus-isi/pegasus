@@ -149,12 +149,12 @@ Options
 [[DAG_FILES]]
 DAG Files
 ---------
-*pegasus-mpi-cluster* workflows are expressed using a simple text-based format similar
-to that used by Condor DAGMan. There are only two record types allowed
-in a DAG file: *TASK* and *EDGE*. Any blank lines in the DAG (lines with
-all whitespace characters) are ignored, as are any lines beginning with
-# (note that # can only appear at the beginning of a line, not in the
-middle).
+*pegasus-mpi-cluster* workflows are expressed using a simple text-based 
+format similar to that used by Condor DAGMan. There are only two record 
+types allowed in a DAG file: *TASK* and *EDGE*. Any blank lines in the DAG 
+(lines with all whitespace characters) are ignored, as are any lines 
+beginning with # (note that # can only appear at the beginning of a line, 
+not in the middle).
 
 The format of a *TASK* record is:
 [verse]
@@ -164,10 +164,10 @@ Where 'id' is the ID of the task, 'options' is a list of task options, 'executab
 the path to the executable or script to run, and 'arguments...' is a space-separated 
 list of arguments to pass to the task. An example is:
 ------------
-    TASK t01 -m 10 /bin/program -a -b
+    TASK t01 -m 10 -c 2 /bin/program -a -b
 ------------
-This example specifies a task 't01' that requires 10 MB memory to run '/bin/program'
-with the arguments '-a' and '-b'. The available task options are:
+This example specifies a task 't01' that requires 10 MB memory and 2 CPUs to run 
+'/bin/program' with the arguments '-a' and '-b'. The available task options are:
 
     *-m* 'M'::
     *--request-memory* 'M'::
@@ -183,6 +183,15 @@ with the arguments '-a' and '-b'. The available task options are:
     *--tries* 'T'::
         The number of times to try to execute the task before failing permanently.
         This is the task-level equivalent of the *--tries* command-line option.
+    
+    *-p* 'P'::
+    *--priority* 'P'::
+        The priority of the task. P should be an integer. Larger values have 
+        higher priority. The default is 0. Priorities are simply hints and 
+        are not strict--if a task cannot be matched to an available slot 
+        (e.g. due to resource availability), but a lower-priority task can, 
+        then the task will be deferred and the lower priority task will be 
+        executed.
 
 The format of an *EDGE* record is:
 [verse]
@@ -212,17 +221,18 @@ A simple diamond-shaped workflow would look like this:
 Rescue Files
 ------------
 Many different types of errors can occur when running a DAG. One or
-more of the tasks may fail, the MPI job may run out of wall time,
-*pegasus-mpi-cluster* may segfault (we hope not), the system may crash, etc. In order
-to ensure that the DAG does not need to be restarted from the beginning
-after an error, *pegasus-mpi-cluster* generates a rescue file for each workflow.
+more of the tasks may fail, the MPI job may run out of wall time, 
+*pegasus-mpi-cluster* may segfault (we hope not), the system may crash, 
+etc. In order to ensure that the DAG does not need to be restarted from 
+the beginning after an error, *pegasus-mpi-cluster* generates a rescue 
+file for each workflow.
 
 The rescue file is a simple text file that lists all of the tasks in
 the workflow that have finished successfully. This file is updated each
 time a task finishes, and is flushed periodically so that if the work-
-flow fails and the user restarts it, *pegasus-mpi-cluster* can determine which tasks
-still need to be executed. As such, the rescue file is a sort-of trans-
-action log for the workflow.
+flow fails and the user restarts it, *pegasus-mpi-cluster* can determine 
+which tasks still need to be executed. As such, the rescue file is a 
+sort-of transaction log for the workflow.
 
 The rescue file contains zero or more DONE records. The format of these
 records is:
@@ -258,8 +268,8 @@ stdout and stderr. You can change the path of these files with the *-o* and
 *-e* arguments. Note that the stdio of all workers will be merged into one 
 out and one err file by the master at the end, so I/O from different workers 
 will not be interleaved, but I/O from each worker will appear in the order 
-that it was generated. Also note that, if the job fails for any reason, the outputs 
-will not be merged, but instead there will be one file for each worker 
+that it was generated. Also note that, if the job fails for any reason, the 
+outputs will not be merged, but instead there will be one file for each worker 
 named DAGFILE.MPID.out.X and DAGFILE.MPID.err.X, where DAGFILE is the path to
 the input DAG, MPID is the master's process ID, and 'X' is the worker's rank.
 

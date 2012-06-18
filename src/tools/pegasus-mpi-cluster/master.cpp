@@ -208,59 +208,64 @@ void Master::register_workers() {
 }
 
 void Master::schedule_tasks() {
-    log_debug("Scheduling tasks...");
+    log_debug("Scheduling %d tasks on %d slots...", 
+        ready_queue.size(), free_slots.size());
     
-    // Keep scheduling tasks until no matches are found
-    bool match = true;
-    while (match) {
-        match = false;
+    int scheduled = 0;
+    TaskList deferred_tasks;
+    
+    while (ready_queue.size() > 0 && free_slots.size() > 0) {
+        Task *task = ready_queue.top();
+        ready_queue.pop();
         
-        // Shortcut when there are no more free slots
-        if (free_slots.size() == 0) {
-            return;
-        }
+        log_trace("Scheduling task %s", task->name.c_str());
+        
+        bool match = false;
         
         for (SlotList::iterator s = free_slots.begin(); s != free_slots.end(); s++) {
             Slot *slot = *s;
             Host *host = slot->host;
             
-            // Shortcut when there are no more ready tasks
-            if (ready_tasks.size() == 0) {
-                return;
-            }
-            
-            for (TaskList::iterator t = ready_tasks.begin(); t != ready_tasks.end(); t++) {
-                Task *task = *t;
+            // If the task fits, schedule it
+            if (host->memory >= task->memory && host->cpus >= task->cpus) {
                 
-                // If the task fits, send it
-                if (host->memory >= task->memory && host->cpus >= task->cpus) {
-                    
-                    // We found a match
-                    log_debug("Matched task %s to slot %d on host %s", 
-                        task->name.c_str(), slot->rank, host->host_name.c_str());
-                    match = true;
-                    
-                    // Submit the task
-                    host->memory -= task->memory;
-                    host->cpus -= task->cpus;
-                    submit_task(task, slot->rank);
-                    host->log_status();
-                    
-                    // Dequeue task
-                    t = ready_tasks.erase(t);
-                    
-                    // Mark slot as busy
-                    s = free_slots.erase(s);
-                    
-                    // so that the s++ in the loop doesn't skip one
-                    s--;
-                    
-                    // This is to break out of the task loop so that we can 
-                    // consider the next slot
-                    break;
-                }
+                log_trace("Matched task %s to slot %d on host %s", 
+                    task->name.c_str(), slot->rank, host->host_name.c_str());
+                
+                // Reserve the resources
+                host->memory -= task->memory;
+                host->cpus -= task->cpus;
+                host->log_status();
+                
+                submit_task(task, slot->rank);
+                
+                s = free_slots.erase(s);
+                
+                // so that the s++ in the loop doesn't skip one
+                s--;
+                
+                match = true;
+                scheduled += 1;
+                
+                // This is to break out of the slot loop so that we can 
+                // consider the next task
+                break;
             }
         }
+        
+        if (!match) {
+            // If the task could not be scheduled, then we save it 
+            // and move on to the next one. It will be requeued later.
+            log_trace("No slot found for task %s", task->name.c_str());
+            deferred_tasks.push_back(task);
+        }
+    }
+    
+    log_debug("Scheduled %d tasks and deferred %d tasks", scheduled, deferred_tasks.size());
+    
+    // Requeue all the deferred tasks
+    for (TaskList::iterator t = deferred_tasks.begin(); t != deferred_tasks.end(); t++) {
+        ready_queue.push(*t);
     }
 }
 
@@ -268,7 +273,7 @@ void Master::queue_ready_tasks() {
     while (this->engine->has_ready_task()) {
         Task *task = this->engine->next_ready_task();
         log_debug("Queueing task %s", task->name.c_str());
-        ready_tasks.push_back(task);
+        ready_queue.push(task);
     }
 }
 

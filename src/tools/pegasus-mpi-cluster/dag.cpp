@@ -20,6 +20,7 @@ Task::Task(const std::string &name, const std::string &command) {
     this->failures = 0;
     this->memory = 0;
     this->cpus = 0;
+    this->priority = 0;
 }
 
 Task::~Task() {
@@ -177,6 +178,7 @@ void DAG::read_dag() {
             unsigned memory = 0;
             unsigned cpus = 0;
             unsigned tries = this->tries;
+            int priority = 0;
             
             // Parse task arguments
             std::list<std::string> args;
@@ -243,8 +245,20 @@ void DAG::read_dag() {
                             myfailure("Negative tries not allowed for task %s", 
                                 name.c_str());
                         }
-                        log_trace("Requested %u tries for task %s", 
-                            tries, name.c_str());
+                        log_trace("Task %s has %u tries", name.c_str(), tries);
+                    } else if (arg == "-p" || arg == "--priority") {
+                        args.pop_front();
+                        if (args.size() == 0) {
+                            myfailure("-p/--priority requires P for task %s", 
+                                name.c_str());
+                        }
+                        std::string spriority = args.front();
+                        if (sscanf(spriority.c_str(), "%d", &priority) != 1) {
+                            myfailure("Invalid priority '%s' for task %s", 
+                                spriority.c_str(), name.c_str());
+                        }
+                        log_trace("Task %s has priority %d", 
+                            name.c_str(), priority);
                     } else {
                         myfailure("Invalid argument '%s' for task %s", 
                             arg.c_str(), name.c_str());
@@ -269,6 +283,7 @@ void DAG::read_dag() {
             t->memory = memory;
             t->cpus = cpus;
             t->tries = tries;
+            t->priority = priority;
             
             if (pegasus_id.length() > 0) {
                 if (pegasus_name != name) {
