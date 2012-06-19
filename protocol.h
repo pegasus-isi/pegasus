@@ -21,6 +21,7 @@ void recv_request(std::string &name, std::string &command, std::string &pegasus_
 void send_response(const std::string &name, int exitcode);
 void recv_response(std::string &name, int &exitcode, int &worker);
 bool response_waiting();
+bool request_waiting();
 double collect_total_runtimes();
 void send_total_runtime(double total_runtime);
 

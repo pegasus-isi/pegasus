@@ -242,6 +242,23 @@ int Worker::run() {
     
     while (1) {
         log_trace("Worker %d: Waiting for request", rank);
+
+#ifdef SLEEP_IF_NO_REQUEST
+        /* On many MPI implementations MPI_Recv uses a busy wait loop. This
+         * really wreaks havoc on the load and CPU utilization of the workers
+         * when there are no tasks to process or some slots are idle due to 
+         * limited resource availability (memory and CPUs). In order to avoid 
+         * that we check here to see if there are any requests first, and if 
+         * there are not, then we wait for a few millis before checking again 
+         * and keep doing that until there is a request waiting. This should 
+         * reduce the load/CPU usage on workers significantly. It decreases
+         * responsiveness a bit, but it is a fair tradeoff.
+         */
+        while (!request_waiting()) {
+            usleep(NO_REQUEST_SLEEP_TIME);
+        }
+#endif
+        
         std::string name;
         std::string command;
         std::string pegasus_id;
