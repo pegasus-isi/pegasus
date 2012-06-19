@@ -237,14 +237,16 @@ void DAG::read_dag() {
                                 name.c_str());
                         }
                         std::string stries = args.front();
-                        if (sscanf(stries.c_str(), "%u", &tries) != 1) {
+                        int itries;
+                        if (sscanf(stries.c_str(), "%d", &itries) != 1) {
                             myfailure("Invalid tries '%s' for task %s", 
                                 stries.c_str(), name.c_str());
                         }
-                        if (tries < 0) {
+                        if (itries < 0) {
                             myfailure("Negative tries not allowed for task %s", 
                                 name.c_str());
                         }
+			tries = itries;
                         log_trace("Task %s has %u tries", name.c_str(), tries);
                     } else if (arg == "-p" || arg == "--priority") {
                         args.pop_front();
