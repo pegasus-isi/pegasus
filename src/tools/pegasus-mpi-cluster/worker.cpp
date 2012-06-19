@@ -246,8 +246,9 @@ int Worker::run() {
         std::string command;
         std::string pegasus_id;
         unsigned int memory = 0;
+        unsigned int cpus = 0;
         int shutdown;
-        recv_request(name, command, pegasus_id, memory, shutdown);
+        recv_request(name, command, pegasus_id, memory, cpus, shutdown);
         log_trace("Worker %d: Got request", rank);
         
         if (shutdown) {
@@ -380,9 +381,9 @@ int Worker::run() {
         char summary[BUFSIZ];
         sprintf(summary, 
             "[cluster-task %sname=%s, start=\"%s\", duration=%.3f, "
-            "status=%d, app=\"%s\", hostname=\"%s\", slot=%d]\n",
+            "status=%d, app=\"%s\", hostname=\"%s\", slot=%d, cpus=%u, memory=%u]\n",
             id.c_str(), name.c_str(), date, task_runtime, status, app.c_str(), 
-            host_name.c_str(), rank);
+            host_name.c_str(), rank, cpus, memory);
         write(out, summary, strlen(summary));
         
         send_response(name, status);

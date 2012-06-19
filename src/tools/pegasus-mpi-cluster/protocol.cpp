@@ -51,7 +51,7 @@ void send_hostrank(int worker, int hostrank) {
     MPI_Send(&hostrank, 1, MPI_INT, worker, TAG_HOSTRANK, MPI_COMM_WORLD);
 }
 
-void send_request(const std::string &name, const std::string &command, const std::string &pegasus_id, unsigned int memory, int worker) {
+void send_request(const std::string &name, const std::string &command, const std::string &pegasus_id, unsigned int memory, unsigned int cpus, int worker) {
     
     
     // Pack message
@@ -64,12 +64,14 @@ void send_request(const std::string &name, const std::string &command, const std
     size += pegasus_id.size() + 1;
     sprintf(buf+size, "%u", memory);
     size += strlen(buf+size) + 1;
+    sprintf(buf+size, "%u", cpus);
+    size += strlen(buf+size) + 1;
     
     // Send message
     MPI_Send(buf, size, MPI_CHAR, worker, TAG_COMMAND, MPI_COMM_WORLD);
 }
 
-void recv_request(std::string &name, std::string &command, std::string &pegasus_id, unsigned int &memory, int &shutdown) {
+void recv_request(std::string &name, std::string &command, std::string &pegasus_id, unsigned int &memory, unsigned int &cpus, int &shutdown) {
     // Recv message
     MPI_Status status;
     MPI_Recv(buf, MAX_MESSAGE, MPI_CHAR, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
@@ -90,6 +92,8 @@ void recv_request(std::string &name, std::string &command, std::string &pegasus_
     pegasus_id = buf+size;
     size += pegasus_id.size() + 1;
     sscanf(buf+size, "%u", &memory);
+    size += strlen(buf+size) + 1;
+    sscanf(buf+size, "%u", &cpus);
 }
 
 void send_shutdown(int worker) {
