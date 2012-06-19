@@ -205,7 +205,7 @@ void DAG::read_dag() {
                                 name.c_str());
                         }
                         // We round up to the next integer
-                        memory = ceil(fmemory);
+                        memory = (unsigned)ceil(fmemory);
                         log_trace("Requested %u MB memory for task %s", 
                             memory, name.c_str());
                     } else if (arg == "-c" || arg == "--request-cpus") {
@@ -227,7 +227,7 @@ void DAG::read_dag() {
                                 name.c_str());
                         }
                         // We round up to the next integer
-                        cpus = ceil(fcpus);
+                        cpus = (unsigned)ceil(fcpus);
                         log_trace("Requested %u CPUs for task %s", 
                             cpus, name.c_str());
                     } else if (arg == "-t" || arg == "--tries") {

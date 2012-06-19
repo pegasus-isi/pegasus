@@ -28,7 +28,7 @@ Worker::Worker(const std::string &host_script, unsigned int host_memory, unsigne
         // of physical memory on the host and convert it to MB. 1 MB is the 
         // minimum, but that shouldn't ever happen.
         unsigned long bytes = get_host_memory();
-        this->host_memory = ceil(bytes / (1024.0*1024.0)); // bytes -> MB
+        this->host_memory = (unsigned)ceil(bytes / (1024.0*1024.0)); // bytes -> MB
     } else {
         this->host_memory = host_memory;
     }
