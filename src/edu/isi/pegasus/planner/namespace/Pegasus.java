@@ -318,12 +318,14 @@ public class Pegasus extends Namespace {
     /**
      * A key to designate the memory required by a job in MB by pegasus-mpi-cluster.
      */
-    public static final String REQUEST_MEMORY_KEY = "request_memory";
+    public static final String PMC_REQUEST_MEMORY_KEY = "pmc_request_memory";
 
     /**
      * A key to designate the number of CPU's requested by pegasus-mpi-cluster.
      */
-    public static final String REQUEST_CPUS_KEY = "request_cpus";
+    public static final String PMC_REQUEST_CPUS_KEY = "pmc_request_cpus";
+
+    
 
     /**
      * Static Handle to the sum aggregator.
@@ -485,10 +487,19 @@ public class Pegasus extends Namespace {
                 }
                 break;
 
+             case 'p':
+                if(
+                    key.compareTo( PMC_REQUEST_MEMORY_KEY ) == 0 ||
+                    key.compareTo( PMC_REQUEST_CPUS_KEY ) == 0 ){
+                    res = VALID_KEY;
+                }
+                else{
+                    res = UNKNOWN_KEY;
+                }
+                break;
+
             case 'r':
-                if( key.compareTo( RUNTIME_KEY ) == 0 ||
-                    key.compareTo( REQUEST_MEMORY_KEY ) == 0 ||
-                    key.compareTo( REQUEST_CPUS_KEY ) == 0 ){
+                if( key.compareTo( RUNTIME_KEY ) == 0 ){
                     res = VALID_KEY;
                 }
                 else{

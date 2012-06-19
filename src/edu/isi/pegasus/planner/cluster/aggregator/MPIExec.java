@@ -307,7 +307,7 @@ public class MPIExec extends Abstract {
      */
     public String getCPURequirementsArgument( Job job ){
         StringBuffer result = new StringBuffer();
-        String value = job.vdsNS.getStringValue( Pegasus.REQUEST_CPUS_KEY );
+        String value = job.vdsNS.getStringValue( Pegasus.PMC_REQUEST_CPUS_KEY );
 
         if( value != null ){
         
@@ -348,7 +348,7 @@ public class MPIExec extends Abstract {
      */
     public String getMemoryRequirementsArgument( Job job ){
         StringBuffer result = new StringBuffer();
-        String value = job.vdsNS.getStringValue( Pegasus.REQUEST_MEMORY_KEY );
+        String value = job.vdsNS.getStringValue( Pegasus.PMC_REQUEST_MEMORY_KEY );
 
         if( value != null ){
 
