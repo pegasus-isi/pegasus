@@ -379,16 +379,23 @@ compute nodes that does not support these system calls, then
 CPU Usage
 ~~~~~~~~~
 Many MPI implementations are optimized so that message sends and
-receives do not block. The reasoning is that blocking adds over-
-head and, since many HPC systems use space sharing on dedicated
+receives do busy waiting (i.e. they spin/poll on a message send or
+receive instead of sleeping). The reasoning is that sleeping adds 
+overhead and, since many HPC systems use space sharing on dedicated
 hardware, there are no other processes competing, so spinning
-instead of blocking can produce better performance. On those
-MPI implementations the master and worker processes will run at
-100% CPU usage even when they are waiting. If this is a problem
-on your system, then there are some MPI implementations that
-'do' block on message send and receive. To test *pegasus-mpi-cluster*, for
-example, we use MPICH2 with the ch3:sock device instead of the
-ch3:nemesis device to avoid this issue.
+instead of sleeping can produce better performance. On those
+implementations MPI processes will run at 100% CPU usage even when 
+they are just waiting for a message. This is a big problem for 
+multicore tasks in *pegasus-mpi-cluster* because idle slots consume
+CPU resources. In order to solve this problem *pegasus-mpi-cluster*
+worker processes sleep for a short period between checks for waiting
+messages. This reduces the load significantly, but causes a short 
+delay in receiving tasks from the master process. If you are using =
+an MPI implementation that sleeps on message send and receive instead 
+of doing busy waiting, then you can disable the sleep by unsetting 
+the SLEEP_IF_NO_REQUEST compiler flag in the Makefile. For example, 
+MPICH2 with the ch3:sock device does not busy wait while the 
+ch3:nemesis device does.
 
 
 Environment Variables

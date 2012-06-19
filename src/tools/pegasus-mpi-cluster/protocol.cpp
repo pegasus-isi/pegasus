@@ -53,7 +53,6 @@ void send_hostrank(int worker, int hostrank) {
 
 void send_request(const std::string &name, const std::string &command, const std::string &pegasus_id, unsigned int memory, unsigned int cpus, int worker) {
     
-    
     // Pack message
     unsigned size = 0;
     strcpy(buf+size, name.c_str());
@@ -72,6 +71,7 @@ void send_request(const std::string &name, const std::string &command, const std
 }
 
 void recv_request(std::string &name, std::string &command, std::string &pegasus_id, unsigned int &memory, unsigned int &cpus, int &shutdown) {
+    
     // Recv message
     MPI_Status status;
     MPI_Recv(buf, MAX_MESSAGE, MPI_CHAR, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
@@ -118,6 +118,12 @@ void recv_response(std::string &name, int &exitcode, int &worker) {
 bool response_waiting() {
     int flag;
     MPI_Iprobe(MPI_ANY_SOURCE, TAG_RESULT, MPI_COMM_WORLD, &flag, MPI_STATUS_IGNORE);
+    return flag != 0;
+}
+
+bool request_waiting() {
+    int flag;
+    MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &flag, MPI_STATUS_IGNORE);
     return flag != 0;
 }
 

@@ -2,12 +2,12 @@
 .\"     Title: pegasus-mpi-cluster
 .\"    Author: [see the "Author" section]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 06/18/2012
+.\"      Date: 06/19/2012
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "PEGASUS\-MPI\-CLUSTE" "1" "06/18/2012" "\ \&" "\ \&"
+.TH "PEGASUS\-MPI\-CLUSTE" "1" "06/19/2012" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -329,7 +329,7 @@ At the end of the workflow run, the master will report the resource utilization 
 In order for the worker processes to start tasks on the compute node the compute nodes must support the \fBfork()\fR and \fBexec()\fR system calls\&. If your target machine runs a stripped\-down OS on the compute nodes that does not support these system calls, then \fBpegasus\-mpi\-cluster\fR will not work\&.
 .SS "CPU Usage"
 .sp
-Many MPI implementations are optimized so that message sends and receives do not block\&. The reasoning is that blocking adds over\- head and, since many HPC systems use space sharing on dedicated hardware, there are no other processes competing, so spinning instead of blocking can produce better performance\&. On those MPI implementations the master and worker processes will run at 100% CPU usage even when they are waiting\&. If this is a problem on your system, then there are some MPI implementations that \fIdo\fR block on message send and receive\&. To test \fBpegasus\-mpi\-cluster\fR, for example, we use MPICH2 with the ch3:sock device instead of the ch3:nemesis device to avoid this issue\&.
+Many MPI implementations are optimized so that message sends and receives do busy waiting (i\&.e\&. they spin/poll on a message send or receive instead of sleeping)\&. The reasoning is that sleeping adds overhead and, since many HPC systems use space sharing on dedicated hardware, there are no other processes competing, so spinning instead of sleeping can produce better performance\&. On those implementations MPI processes will run at 100% CPU usage even when they are just waiting for a message\&. This is a big problem for multicore tasks in \fBpegasus\-mpi\-cluster\fR because idle slots consume CPU resources\&. In order to solve this problem \fBpegasus\-mpi\-cluster\fR worker processes sleep for a short period between checks for waiting messages\&. This reduces the load significantly, but causes a short delay in receiving tasks from the master process\&. If you are using = an MPI implementation that sleeps on message send and receive instead of doing busy waiting, then you can disable the sleep by unsetting the SLEEP_IF_NO_REQUEST compiler flag in the Makefile\&. For example, MPICH2 with the ch3:sock device does not busy wait while the ch3:nemesis device does\&.
 .SH "ENVIRONMENT VARIABLES"
 .PP
 \fBPMC_HOST_SCRIPT\fR
