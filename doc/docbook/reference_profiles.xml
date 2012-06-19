@@ -945,12 +945,30 @@
             </row>
 
             <row>
-              <entry>request_memory</entry>
+              <entry>pmc_request_memory</entry>
 
               <entry>This key is used to set the -m option for
               pegasus-mpi-cluster. It specifies the amount of memory in MB
               that a job requires. This profile is usually set in the DAX for
               each job.</entry>
+            </row>
+
+            <row>
+              <entry>pmc_request_cpus</entry>
+
+              <entry>This key is used to set the -c option for
+              pegasus-mpi-cluster. It specifies the number of cpu's that a job
+              requires. This profile is usually set in the DAX for each
+              job.</entry>
+            </row>
+
+            <row>
+              <entry>pmc_priority</entry>
+
+              <entry>This key is used to set the -p option for
+              pegasus-mpi-cluster. It specifies the priority for a job . This
+              profile is usually set in the DAX for each job. Negative values
+              are allowed for priorities. </entry>
             </row>
           </tbody>
         </tgroup>

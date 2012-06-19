@@ -325,6 +325,11 @@ public class Pegasus extends Namespace {
      */
     public static final String PMC_REQUEST_CPUS_KEY = "pmc_request_cpus";
 
+    /**
+     * A key to designate a priority to the jobs run by pegasus-mpi-cluster.
+     */
+    public static final String PMC_PRIORITY_KEY = "pmc_priority";
+
     
 
     /**
@@ -490,7 +495,8 @@ public class Pegasus extends Namespace {
              case 'p':
                 if(
                     key.compareTo( PMC_REQUEST_MEMORY_KEY ) == 0 ||
-                    key.compareTo( PMC_REQUEST_CPUS_KEY ) == 0 ){
+                    key.compareTo( PMC_REQUEST_CPUS_KEY ) == 0 ||
+                    key.compareTo( PMC_PRIORITY_KEY ) == 0){
                     res = VALID_KEY;
                 }
                 else{
