@@ -115,8 +115,8 @@ void test_cpu_dag() {
     Task *c = dag.get_task("C");
     Task *d = dag.get_task("D");
     
-    if (a->cpus != 0) {
-        myfailure("A should require 0 CPUs");
+    if (a->cpus != 1) {
+        myfailure("A should require 1 CPUs");
     }
     
     if (b->cpus != 2) {
