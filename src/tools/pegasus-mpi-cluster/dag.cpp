@@ -19,7 +19,7 @@ Task::Task(const std::string &name, const std::string &command) {
     this->success = false;
     this->failures = 0;
     this->memory = 0;
-    this->cpus = 0;
+    this->cpus = 1;
     this->priority = 0;
 }
 
@@ -176,7 +176,7 @@ void DAG::read_dag() {
             
             // Default task arguments
             unsigned memory = 0;
-            unsigned cpus = 0;
+            unsigned cpus = 1;
             unsigned tries = this->tries;
             int priority = 0;
             
@@ -246,7 +246,7 @@ void DAG::read_dag() {
                             myfailure("Negative tries not allowed for task %s", 
                                 name.c_str());
                         }
-			tries = itries;
+                        tries = itries;
                         log_trace("Task %s has %u tries", name.c_str(), tries);
                     } else if (arg == "-p" || arg == "--priority") {
                         args.pop_front();

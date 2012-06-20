@@ -171,12 +171,15 @@ This example specifies a task 't01' that requires 10 MB memory and 2 CPUs to run
 
     *-m* 'M'::
     *--request-memory* 'M'::
-        The amount of memory required by the task in MB. (see <<RESOURCE_SCHED, 
+        The amount of memory required by the task in MB. The default is 0, which means
+        memory is not considered for this task. (see <<RESOURCE_SCHED, 
         *RESOURCE-BASED SCHEDULING*>>)
     
     *-c* 'N'::
     *--request-cpus* 'N'::
-        The number of CPUs required by the task. (see <<RESOURCE_SCHED,
+        The number of CPUs required by the task. The default is 1, which implies that
+        the number of slots on a host should be less than or equal to the number of
+        physical CPUs in order for all the slots to be used. (see <<RESOURCE_SCHED, 
         *RESOURCE-BASED SCHEDULING*>>)
     
     *-t* 'T'::

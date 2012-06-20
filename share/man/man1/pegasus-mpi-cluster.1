@@ -200,13 +200,13 @@ This example specifies a task \fIt01\fR that requires 10 MB memory and 2 CPUs to
 .PP
 \fB\-m\fR \fIM\fR, \fB\-\-request\-memory\fR \fIM\fR
 .RS 4
-The amount of memory required by the task in MB\&. (see
+The amount of memory required by the task in MB\&. The default is 0, which means memory is not considered for this task\&. (see
 \fBRESOURCE\-BASED SCHEDULING\fR)
 .RE
 .PP
 \fB\-c\fR \fIN\fR, \fB\-\-request\-cpus\fR \fIN\fR
 .RS 4
-The number of CPUs required by the task\&. (see
+The number of CPUs required by the task\&. The default is 1, which implies that the number of slots on a host should be less than or equal to the number of physical CPUs in order for all the slots to be used\&. (see
 \fBRESOURCE\-BASED SCHEDULING\fR)
 .RE
 .PP
