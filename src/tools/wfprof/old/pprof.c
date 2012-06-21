@@ -253,7 +253,7 @@ int main(int argc, char **argv) {
     char kickstart[BUFSIZ];
 
     /* check for kickstart in local dir */
-    sprintf(kickstart, "./kickstart");
+    sprintf(kickstart, "./pegasus-kickstart");
     if (access(kickstart, X_OK) < 0) {
 
         /* check for PEGASUS_HOME env var */
@@ -264,7 +264,7 @@ int main(int argc, char **argv) {
 	}
 
         /* check for kickstart in $PEGASUS_HOME/bin */
-    	sprintf(kickstart, "%s/bin/kickstart", PEGASUS_HOME);
+    	sprintf(kickstart, "%s/bin/pegasus-kickstart", PEGASUS_HOME);
     	if (access(kickstart, X_OK) < 0) {
     	    fprintf(stderr, "cannot execute kickstart: %s\n", kickstart);
     	    exit(1);
