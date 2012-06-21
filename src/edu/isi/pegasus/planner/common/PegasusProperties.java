@@ -23,6 +23,7 @@ import edu.isi.pegasus.common.util.CommonProperties;
 import edu.isi.pegasus.common.util.Boolean;
 
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
+import edu.isi.pegasus.planner.namespace.Dagman;
 import edu.isi.pegasus.planner.namespace.Namespace;
 import java.io.File;
 import java.io.IOException;
@@ -156,6 +157,10 @@ public class PegasusProperties implements Cloneable {
     public static final String ROOT_WORKFLOW_UUID_PROPERTY_KEY = "pegasus.workflow.root.uuid";
 
     
+    /**
+     * The default value to be assigned for dagman.maxpre .
+     */
+    public static final String DEFAULT_DAGMAN_MAX_PRE_VALUE = "2";
 
     
     /**
@@ -2437,6 +2442,16 @@ public class PegasusProperties implements Cloneable {
             sanitizePathForProperty( properties, "pegasus.catalog.site.file" );
             sanitizePathForProperty( properties, "pegasus.catalog.replica.file" );
             sanitizePathForProperty( properties, "pegasus.catalog.transformation.file" );
+        }
+
+        //put in a sensible default for dagman maxpre for pegasus-run to
+        //pick up if not specified beforehand
+        StringBuffer buffer = new StringBuffer();
+        buffer.append( Dagman.NAMESPACE_NAME ).append( "." ).append( Dagman.MAXPRE_KEY.toLowerCase() );
+        String key = buffer.toString();
+        if( !properties.containsKey( key ) ){
+            //add defautl value
+            properties.put( key , DEFAULT_DAGMAN_MAX_PRE_VALUE );
         }
 
         //create a temporary file in directory
