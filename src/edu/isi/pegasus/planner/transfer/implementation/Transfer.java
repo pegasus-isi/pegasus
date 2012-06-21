@@ -385,7 +385,7 @@ public class Transfer extends AbstractMultipleFTPerXFERJob {
 
             //write to the file one URL pair at a time
             StringBuffer urlPair = new StringBuffer( );
-            urlPair.append( "# " ).append( "src " ).append( num ).append( " " ).append( source.getKey() ).append( "\n" ).
+            urlPair.append( "# " ).append( "src " ).append( num ).append( " " ).append( source.getKey() ).append( " ").append( "prio" ).append( " ").append( ft.getPriority()).append( "\n" ).
                     append( source.getValue() ).append( "\n" ).
                     append( "# " ).append( "dst " ).append( num ).append( " " ).append( dest.getKey() ).append( "\n" ).
                     append( dest.getValue() ).append( "\n" );

@@ -66,6 +66,12 @@ public class FileTransfer extends PegasusFile {
      */
     private Map mDestMap;
 
+
+    /**
+     * A priority associated with the FileTransfer
+     */
+    private int mPriority;
+
     /**
      * Default constructor.
      */
@@ -75,6 +81,7 @@ public class FileTransfer extends PegasusFile {
         mFlags       = new BitSet(NO_OF_TRANSIENT_FLAGS);
         mSourceMap   = new HashMap();
         mDestMap     = new HashMap();
+        mPriority    = 0;
     }
 
     /**
@@ -92,7 +99,7 @@ public class FileTransfer extends PegasusFile {
         this.mJob          = "";
         this.mSourceMap    = new HashMap();
         this.mDestMap      = new HashMap();
-
+        this.mPriority     = 0;
     }
 
     /**
@@ -108,6 +115,7 @@ public class FileTransfer extends PegasusFile {
         mSourceMap   = new HashMap();
         mDestMap     = new HashMap();
         mFlags       = new BitSet(NO_OF_TRANSIENT_FLAGS);
+        this.mPriority     = 0;
     }
 
     /**
@@ -125,6 +133,7 @@ public class FileTransfer extends PegasusFile {
         mSourceMap   = new HashMap();
         mDestMap     = new HashMap();
         mFlags       = (BitSet)flags.clone();
+        this.mPriority     = 0;
     }
 
 
@@ -206,6 +215,24 @@ public class FileTransfer extends PegasusFile {
 
     }
 
+    /**
+     * Sets the priority for the File Transfer
+     * 
+     * @param priority   the priority associated with the FileTransfer
+     */
+    public void setPriority( int priority ){
+        this.mPriority = priority;
+    }
+
+
+    /**
+     * Sets the priority for the File Transfer
+     *
+     * @param priority   the priority associated with the FileTransfer
+     */
+    public int getPriority( ){
+        return this.mPriority;
+    }
 
     /**
      * Returns a single source url associated with the transfer.
@@ -412,7 +439,7 @@ public class FileTransfer extends PegasusFile {
         ft.mFlags        = (BitSet)this.mFlags.clone();
         ft.mTransferFlag = this.mTransferFlag;
         ft.mJob         = new String(this.mJob);
-
+        ft.mPriority    = this.mPriority;
         //the maps are not cloned underneath
 
         return ft;
@@ -438,7 +465,7 @@ public class FileTransfer extends PegasusFile {
      */
     public String toString() {
         StringBuffer sb = new StringBuffer();
-        String mode = (mTransferFlag == this.TRANSFER_OPTIONAL)?
+        String mode = (mTransferFlag == FileTransfer.TRANSFER_OPTIONAL)?
                       "optional" :
                       "any";
 

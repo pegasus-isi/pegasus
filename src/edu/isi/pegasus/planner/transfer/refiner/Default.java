@@ -40,6 +40,7 @@ import java.util.TreeMap;
 import java.util.Map;
 import java.util.List;
 import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.namespace.Condor;
 import edu.isi.pegasus.planner.transfer.Implementation;
 import edu.isi.pegasus.planner.transfer.Refiner;
 
@@ -197,9 +198,17 @@ public class Default extends MultipleFTPerXFERJobRefiner {
         //to prevent duplicate dependencies
         java.util.HashSet tempSet = new java.util.HashSet();
         int staged = 0;
+
+        int priority = getJobPriority( job );
+
         for (Iterator it = files.iterator();it.hasNext();) {
             FileTransfer ft = (FileTransfer) it.next();
             String lfn = ft.getLFN();
+
+            //set the priority associated with the
+            //compute job PM-622
+            ft.setPriority( priority );
+
 
             //get the key for this lfn and pool
             //if the key already in the table
@@ -338,6 +347,8 @@ public class Default extends MultipleFTPerXFERJobRefiner {
 
         String site = localTransfer ? "local" : pool;
 
+        int priority = this.getJobPriority( job );
+
         //node construction only if there is
         //a file to transfer
         if (!files.isEmpty()) {
@@ -346,6 +357,11 @@ public class Default extends MultipleFTPerXFERJobRefiner {
             for(Iterator it = files.iterator();it.hasNext();) {
                 FileTransfer ft = (FileTransfer) it.next();
                 lfn = ft.getLFN();
+
+                //set the priority associated with the
+                //compute job PM-622
+                ft.setPriority( priority );
+
                 //System.out.println("Trying to figure out for lfn " + lfn);
 
 
@@ -514,12 +530,19 @@ public class Default extends MultipleFTPerXFERJobRefiner {
 
         mLogMsg = "Adding output pool nodes for job " + jobName;
 
+        int priority = this.getJobPriority( job );
+
         //separate the files for transfer
         //and for registration
         List txFiles = new ArrayList();
         List regFiles   = new ArrayList();
         for(Iterator it = files.iterator();it.hasNext();){
             FileTransfer ft = (FileTransfer) it.next();
+
+            //set the priority associated with the
+            //compute job PM-622
+            ft.setPriority( priority );
+
             if (!ft.getTransientTransferFlag()) {
                 txFiles.add(ft);
             }
@@ -675,7 +698,32 @@ public class Default extends MultipleFTPerXFERJobRefiner {
     }
 
 
+    /**
+     * Returns the priority associated with a job based on the condor profile key
+     * priority . Defaults to 0.
+     *
+     * @param job    the job priority
+     *
+     * @return  the priority key
+     */
+    protected int getJobPriority( Job job ) {
+        //figure out priority associated with the job if any
+        int priority = 0;
+        String value = (String)job.condorVariables.get( Condor.PRIORITY_KEY );
+        if ( value != null ){
+            try{
+                priority = Integer.parseInt( value );
 
+            }
+            catch( Exception e){
+                throw new RuntimeException( "Invalid Condor Priority " +
+                                            value +
+                                            "priority associated with job " + job.getID() );
+            }
+        }
+
+        return priority;
+    }
 
     /**
      * Add a new job to the workflow being refined.

@@ -19,20 +19,16 @@ package edu.isi.pegasus.planner.transfer.refiner;
 
 
 import edu.isi.pegasus.planner.classes.ADag;
-import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.FileTransfer;
 
-import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.common.logging.LogManager;
 
-import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.catalog.classes.Profiles.NAMESPACES;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 
-import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 
 import edu.isi.pegasus.planner.transfer.Refiner;
 
@@ -362,6 +358,10 @@ public class Bundle extends Default {
         String par = null;
         int bundle = -1;
 
+        int priority = getJobPriority( job );
+
+
+
         //to prevent duplicate dependencies
         Set tempSet = new HashSet();
 
@@ -371,6 +371,10 @@ public class Bundle extends Default {
         for(Iterator it = files.iterator();it.hasNext();) {
             FileTransfer ft = (FileTransfer) it.next();
             String lfn = ft.getLFN();
+
+            //set the priority associated with the 
+            //compute job PM-622
+            ft.setPriority( priority );
 
             //get the key for this lfn and pool
             //if the key already in the table
@@ -535,12 +539,18 @@ public class Bundle extends Default {
 
         mLogMsg = "Adding stageout nodes for job " + jobName;
 
+        //PM-622
+        int priority = getJobPriority( job );
+
         //separate the files for transfer
         //and for registration
         List txFiles = new ArrayList();
         List regFiles = new ArrayList();
         for (Iterator it = files.iterator(); it.hasNext(); ) {
             FileTransfer ft = (FileTransfer) it.next();
+
+            ft.setPriority( priority );
+
             if (!ft.getTransientTransferFlag()) {
                 txFiles.add(ft);
             }
@@ -834,6 +844,8 @@ public class Bundle extends Default {
         
         return map;
     }
+
+    
 
     
     /**
