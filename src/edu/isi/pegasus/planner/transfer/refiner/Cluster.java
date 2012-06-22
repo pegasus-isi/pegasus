@@ -470,9 +470,11 @@ public class Cluster extends Bundle {
                 job.setSiteHandle( site );
                 job.setStagingSiteHandle( site );
 
+                boolean addSyncJobs = false;
+
+/**
+//disabling of sync jobs creation
                 Job parentSyncJob = this.getSyncJob( site );
-                
-                
                 //add a child synch job for this level if required
                 Job childSyncJob = null;
                 if( createChildSyncJob ){
@@ -481,7 +483,8 @@ public class Cluster extends Bundle {
                     addJob( childSyncJob );
                     mLogger.log( "Added synch job " + childSyncJob.getName(), LogManager.DEBUG_MESSAGE_LEVEL );
                 }
-                
+*/
+
                 mLogger.log( "Adding jobs for staging in data to site " + pt.getPoolName(),
                              LogManager.DEBUG_MESSAGE_LEVEL );
 
@@ -510,8 +513,10 @@ public class Cluster extends Bundle {
                         siJob.setJobType( Job.STAGE_IN_JOB );
                         addJob( siJob );
                     }
-                    
-                    //add the dependency to parent synch 
+
+/**
+//disabling of sync jobs creation
+                    //add the dependency to parent synch
                     if( parentSyncJob != null ){
                         addRelation( parentSyncJob.getName(), siJob.getName() );
                     }
@@ -521,15 +526,20 @@ public class Cluster extends Bundle {
                     if( createChildSyncJob ){
                         addRelation( siJob.getName(), childSyncJob.getName() );
                     }
+*/
 
                 }//end of traversal thru all transfer containers
                 
+
+/**
+//disabling of sync jobs creation
                 //update the synch job map if child synch job is created
                 if( createChildSyncJob ){
                     //mSyncJobMap.put( site, childSyncJob );
                     //populate to the transient job map not the main one
                     transientSynchJobMap.put( site, childSyncJob );
                 }
+ */
                 
             }//end of traversal thru all pool transfers
         }
