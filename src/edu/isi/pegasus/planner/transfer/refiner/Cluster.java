@@ -252,11 +252,20 @@ public class Cluster extends Bundle {
         List stagedExecFiles = new ArrayList();
         //to prevent duplicate dependencies
         Set tempSet = new HashSet();
-        
+
+        int priority = getJobPriority( job );
+
+
+
         //iterate through all the files
         for ( Iterator it = files.iterator(); it.hasNext(); ) {
             FileTransfer ft = ( FileTransfer ) it.next();
             String lfn = ft.getLFN();
+
+            //set priority for the jobs
+            //PM-622
+            ft.setPriority( priority );
+
             mLogger.log( "File being looked at is " + lfn, LogManager.DEBUG_MESSAGE_LEVEL );
             //check for transfer flag to see if we need to transfer the file.
             if ( !ft.getTransientTransferFlag() ) {
