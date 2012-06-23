@@ -55,7 +55,7 @@ import java.util.LinkedList;
  * @version $Revision$
  */
 
-public class Bundle extends Default {
+public class Bundle extends Basic {
 
     /**
      * A short description of the transfer refinement.

@@ -58,7 +58,7 @@ import edu.isi.pegasus.planner.transfer.Refiner;
  * @version $Revision$
  */
 
-public class Default extends MultipleFTPerXFERJobRefiner {
+public class Basic extends MultipleFTPerXFERJobRefiner {
 
     /**
      * A short description of the transfer refinement.
@@ -99,7 +99,7 @@ public class Default extends MultipleFTPerXFERJobRefiner {
      * @param bag   the bag of initialization objects.
      *
      */
-    public Default( ADag dag,
+    public Basic( ADag dag,
                     PegasusBag bag ){
         super( dag, bag );
         mLogMsg = null;

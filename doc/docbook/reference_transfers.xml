@@ -557,7 +557,7 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
     </orderedlist>
 
     <table>
-      <title>Pegasus Profile Keys For the Bundle Transfer Refiner</title>
+      <title>Pegasus Profile Keys For the Cluster Transfer Refiner</title>
 
       <tgroup cols="2">
         <thead>
@@ -627,7 +627,7 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
 
       <mediaobject>
         <imageobject>
-          <imagedata fileref="images/bundle-transfer-refiner.png" lang="" />
+          <imagedata fileref="images/cluster-transfer-refiner.png" lang="" />
         </imageobject>
       </mediaobject>
     </figure>
@@ -861,14 +861,14 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
     <title>Credentials Staging</title>
 
     <para>Pegasus tries to do data staging from localhost by default, but some
-    data scenarios makes some <link linkend="local_vs_remote_transfers">remote jobs do data
-    staging</link>. An example of such a case is when running in <link
-    linkend="ref_data_staging_configuration">nonsharedfs</link> mode. Depending on
-    the transfer protocols used, the job may have to carry credentials to
-    enable these datat transfers. To specify where which credential to use and
-    where Pegasus can find it, use environment variable profiles in your site
-    catalog. The supported credential types are X.509 grid proxies, Amazon AWS
-    S3 keys, iRods password and SSH keys.</para>
+    data scenarios makes some <link linkend="local_vs_remote_transfers">remote
+    jobs do data staging</link>. An example of such a case is when running in
+    <link linkend="ref_data_staging_configuration">nonsharedfs</link> mode.
+    Depending on the transfer protocols used, the job may have to carry
+    credentials to enable these datat transfers. To specify where which
+    credential to use and where Pegasus can find it, use environment variable
+    profiles in your site catalog. The supported credential types are X.509
+    grid proxies, Amazon AWS S3 keys, iRods password and SSH keys.</para>
 
     <section id="x509_cred">
       <title>X.509 Grid Proxies</title>

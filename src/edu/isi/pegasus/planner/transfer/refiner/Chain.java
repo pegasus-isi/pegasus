@@ -52,7 +52,7 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
  *
  * @version $Revision$
  */
-public class Chain extends Default {
+public class Chain extends Basic {
 
     /**
      * The default bundling factor that identifies the number of transfer jobs

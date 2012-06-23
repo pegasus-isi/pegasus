@@ -26,7 +26,7 @@ default: validate
 transform: output-file.xml
 
 %.xml: %.bp
-	nl_load xml pretty=true netconf=true < output-file.bp > output-file.xml
+	nl_load -v xml pretty=true netconf=true < output-file.bp > output-file.xml
 
 # Validate XML
 validate: transform
