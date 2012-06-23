@@ -148,19 +148,19 @@ to the DAG file name\&. (see
 .RS 4
 Path to a script or executable to launch on each unique host that
 \fBpegasus\-mpi\-cluster\fR
-is running on\&. (see
+is running on\&. This path can also be set using the PMC_HOST_SCRIPT environment variable\&. (see
 \fBHOST SCRIPTS\fR)
 .RE
 .PP
 \fB\-\-host\-memory\fR \fIsize\fR
 .RS 4
-Amount of memory available on each host in MB\&. The default is to determine the amount of physical RAM automatically\&. (see
+Amount of memory available on each host in MB\&. The default is to determine the amount of physical RAM automatically\&. This value can also be set using the PMC_HOST_MEMORY environment variable\&. (see
 \fBRESOURCE\-BASED SCHEDULING\fR)
 .RE
 .PP
 \fB\-\-host\-cpus\fR \fIcpus\fR
 .RS 4
-Number of CPUs available on each host\&. The default is to determine the number of CPU cores automatically\&. (see
+Number of CPUs available on each host\&. The default is to determine the number of CPU cores automatically\&. This value can also be set using the PMC_HOST_CPUS environment variable\&. (see
 \fBRESOURCE\-BASED SCHEDULING\fR)
 .RE
 .PP
@@ -175,7 +175,7 @@ This is the maximum number of minutes that
 \fBpegasus\-mpi\-cluster\fR
 will allow the workflow to run\&. When this time expires
 \fBpegasus\-mpi\-cluster\fR
-will abort the workflow and merge all of the stdout/stderr files of the workers\&. The value is in minutes, and the default is unlimited wall time\&. This option was added so that the output of a workflow will be recorded even if the workflow exceeds the max wall time of its batch job\&.
+will abort the workflow and merge all of the stdout/stderr files of the workers\&. The value is in minutes, and the default is unlimited wall time\&. This option was added so that the output of a workflow will be recorded even if the workflow exceeds the max wall time of its batch job\&. This value can also be set using the PMC_MAX_WALL_TIME environment variable\&.
 .RE
 .SH "DAG FILES"
 .sp
@@ -340,14 +340,35 @@ In order for the worker processes to start tasks on the compute node the compute
 .sp
 Many MPI implementations are optimized so that message sends and receives do busy waiting (i\&.e\&. they spin/poll on a message send or receive instead of sleeping)\&. The reasoning is that sleeping adds overhead and, since many HPC systems use space sharing on dedicated hardware, there are no other processes competing, so spinning instead of sleeping can produce better performance\&. On those implementations MPI processes will run at 100% CPU usage even when they are just waiting for a message\&. This is a big problem for multicore tasks in \fBpegasus\-mpi\-cluster\fR because idle slots consume CPU resources\&. In order to solve this problem \fBpegasus\-mpi\-cluster\fR processes sleep for a short period between checks for waiting messages\&. This reduces the load significantly, but causes a short delay in receiving messages\&. If you are using an MPI implementation that sleeps on message send and receive instead of doing busy waiting, then you can disable the sleep in the worker by unsetting the SLEEP_IF_NO_REQUEST compiler flag in the Makefile\&. It cannot be disabled in the master because MPI_Recv is not interrupted by signals and the master uses the SIGALRM signal to abort the workflow when it exceeds its max wall time\&.
 .SH "ENVIRONMENT VARIABLES"
+.sp
+The environment variables below are aliases for command\-line options\&. If the environment variable is present, then it is used as the default for the associated option\&. If both are present, then the command\-line option is used\&.
 .PP
 \fBPMC_HOST_SCRIPT\fR
 .RS 4
-Path to a script to launch on each host\&. This variable is an alias for
-\fB\-\-host\-script\fR\&. If it is defined then it is used as the default value for
-\fB\-\-host\-script\fR\&. If both are defined then the value for
+Alias for the
 \fB\-\-host\-script\fR
-is used\&.
+option\&.
+.RE
+.PP
+\fBPMC_HOST_MEMORY\fR
+.RS 4
+Alias for the
+\fB\-\-host\-memory\fR
+option\&.
+.RE
+.PP
+\fBPMC_HOST_CPUS\fR
+.RS 4
+Alias for the
+\fB\-\-host\-cpus\fR
+option\&.
+.RE
+.PP
+\fBPMC_MAX_WALL_TIME\fR
+.RS 4
+Alias for the
+\fB\-\-max\-wall\-time\fR
+option\&.
 .RE
 .SH "AUTHOR"
 .sp

@@ -129,16 +129,19 @@ Options
 
 *--host-script* 'path'::
     Path to a script or executable to launch on each unique host that 
-    *pegasus-mpi-cluster* is running on. (see <<HOST_SCRIPTS,*HOST SCRIPTS*>>)
+    *pegasus-mpi-cluster* is running on. This path can also be set using the
+    PMC_HOST_SCRIPT environment variable. (see <<HOST_SCRIPTS,*HOST SCRIPTS*>>)
 
 *--host-memory* 'size'::
     Amount of memory available on each host in MB. The default is to 
-    determine the amount of physical RAM automatically. (see <<RESOURCE_SCHED, 
-    *RESOURCE-BASED SCHEDULING*>>)
+    determine the amount of physical RAM automatically. This value can also 
+    be set using the PMC_HOST_MEMORY environment variable. (see 
+    <<RESOURCE_SCHED, *RESOURCE-BASED SCHEDULING*>>)
 
 *--host-cpus* 'cpus'::
     Number of CPUs available on each host. The default is to determine the 
-    number of CPU cores automatically. (see <<RESOURCE_SCHED, 
+    number of CPU cores automatically. This value can also be set using the
+    PMC_HOST_CPUS environment variable. (see <<RESOURCE_SCHED, 
     *RESOURCE-BASED SCHEDULING*>>)
 
 *--strict-limits*::
@@ -153,6 +156,8 @@ Options
     workers. The value is in minutes, and the default is unlimited wall 
     time. This option was added so that the output of a workflow will be 
     recorded even if the workflow exceeds the max wall time of its batch job.
+    This value can also be set using the PMC_MAX_WALL_TIME environment
+    variable.
 
 
 [[DAG_FILES]]
@@ -413,12 +418,22 @@ exceeds its max wall time.
 
 Environment Variables
 ---------------------
+The environment variables below are aliases for command-line options.
+If the environment variable is present, then it is used as the default
+for the associated option. If both are present, then the command-line
+option is used.
 
 *PMC_HOST_SCRIPT*::
-    Path to a script to launch on each host. This variable is an alias
-    for *--host-script*. If it is defined then it is used as the default
-    value for *--host-script*. If both are defined then the value for
-    *--host-script* is used.
+    Alias for the *--host-script* option.
+
+*PMC_HOST_MEMORY*::
+    Alias for the *--host-memory* option.
+
+*PMC_HOST_CPUS*::
+    Alias for the *--host-cpus* option.
+
+*PMC_MAX_WALL_TIME*::
+    Alias for the *--max-wall-time* option.
 
 Author
 ------
