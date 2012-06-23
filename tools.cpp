@@ -8,6 +8,7 @@
 #include <sys/param.h>
 #include <sys/sysctl.h>
 #endif
+#include <sys/time.h>
 
 #include "tools.h"
 #include "failure.h"
