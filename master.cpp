@@ -1,14 +1,22 @@
 #include <map>
 #include <stdio.h>
 #include <unistd.h>
-#include <sys/time.h>
 #include <mpi.h>
+#include <signal.h>
+#include <math.h>
 
 #include "master.h"
 #include "failure.h"
 #include "protocol.h"
 #include "log.h"
 #include "tools.h"
+
+static bool ABORT = false;
+
+static void on_signal(int signo) {
+    log_error("Caught signal %d", signo);
+    ABORT = true;
+}
 
 void Host::log_status() {
     log_trace("Host %s now has %u MB and %u CPUs free", 
@@ -17,7 +25,8 @@ void Host::log_status() {
 
 Master::Master(const std::string &program, Engine &engine, DAG &dag,
                const std::string &dagfile, const std::string &outfile,
-               const std::string &errfile, bool has_host_script) {
+               const std::string &errfile, bool has_host_script,
+               double max_wall_time) {
     this->program = program;
     this->dagfile = dagfile;
     this->outfile = outfile;
@@ -25,23 +34,62 @@ Master::Master(const std::string &program, Engine &engine, DAG &dag,
     this->engine = &engine;
     this->dag = &dag;
     this->has_host_script = has_host_script;
+    this->max_wall_time = max_wall_time;
     
-    total_count = 0;
-    success_count = 0;
-    failed_count = 0;
+    this->total_count = 0;
+    this->success_count = 0;
+    this->failed_count = 0;
     
-    total_cpus = 0;
+    this->start_time = 0.0;
+    this->finish_time = 0.0;
+    this->wall_time = 0.0;
+    
+    this->total_cpus = 0;
+    this->total_runtime = 0.0;
     
     // Determine the number of workers we have
     int numprocs;
     MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
-    numworkers = numprocs - 1;
+    this->numworkers = numprocs - 1;
     if (numworkers == 0) {
         myfailure("Need at least 1 worker");
     }
+    
+    // Open task stdout
+    this->task_stdout = stdout;
+    if (outfile != "stdout") {
+        this->task_stdout = fopen(this->outfile.c_str(), "w");
+        if (this->task_stdout == NULL) {
+            myfailures("Unable to open stdout file: %s\n", this->outfile.c_str());
+        }
+    }
+    
+    // Open task stderr
+    this->task_stderr = stderr;
+    if (errfile != "stderr") {
+        this->task_stderr = fopen(this->errfile.c_str(), "w");
+        if (this->task_stderr == NULL) {
+            myfailures("Unable to open stderr file: %s\n", this->outfile.c_str());
+        }
+    }
+    
+    // Set the worker stdout/stderr paths
+    pid_t pid = getpid();
+    char dotpid[10];
+    snprintf(dotpid, 10, ".%d.", pid);
+    this->worker_out_path = this->dagfile + dotpid + "out";
+    this->worker_err_path = this->dagfile + dotpid + "err";
 }
 
 Master::~Master() {
+    if (errfile != "stderr") {
+        fclose(task_stderr);
+    }
+    
+    if (outfile != "stdout") {
+        fclose(task_stdout);
+    }
+    
     std::vector<Slot *>::iterator s;
     for (s = slots.begin(); s != slots.end(); s++) {
         delete *s;
@@ -66,10 +114,42 @@ void Master::wait_for_results() {
     // several waiting, then it will process them all and return without 
     // waiting.
     unsigned int tasks = 0;
-    while (tasks == 0 || response_waiting()) {
+    do {
+        
+        /* In many MPI implementations MPI_Recv uses a busy wait loop. This
+         * really wreaks havoc on the load and CPU utilization of the master
+         * when there are no tasks to schedule or all slots are busy. In order 
+         * to avoid that we check here to see if there are any responses first, 
+         * and if there are not, then we wait for a few millis before checking 
+         * again and keep doing that until there is a response waiting. This 
+         * should reduce the load/CPU usage on master significantly. It decreases
+         * responsiveness a bit, but it is a fair tradeoff.
+         *
+         * Another issue is that if the user specifies a maximum wall time for
+         * the workflow, then the master sets a timeout by calling alarm(), which 
+         * causes the kernel to send a SIGALRM when the timer expires. Also, 
+         * on most PBS systems when the max wall time is reached PBS sends the 
+         * process a SIGTERM. We can catch these signals, however, in many MPI 
+         * implementations signals do not interrupt blocking message calls such
+         * as MPI_Recv. So we cannot be waiting in MPI_Recv when the signal is
+         * caught or we cannot respond to it. So we wait in this sleep loop and
+         * check the flag that is set by the signal handlers to detect when the
+         * master needs to abort the workflow.
+         */
+        while (!ABORT && !response_waiting()) {
+            usleep(NO_MESSAGE_SLEEP_TIME);    
+        }
+        
+        if (ABORT) {
+            // If ABORT is true, then we caught a signal and need to 
+            // abort the workflow, so return without processing any 
+            // more results.
+            return;
+        }
+        
         process_result();
         tasks++;
-    }
+    } while (response_waiting());
     log_trace("Processed %u task(s) this cycle", tasks);
 }
 
@@ -79,7 +159,10 @@ void Master::process_result() {
     std::string name;
     int exitcode;
     int rank;
-    recv_response(name, exitcode, rank);
+    double task_runtime;
+    recv_response(name, exitcode, task_runtime, rank);
+    
+    total_runtime += task_runtime;
     
     // Mark task finished
     if (exitcode == 0) {
@@ -104,6 +187,20 @@ void Master::process_result() {
     
     // Mark slot as free
     free_slots.push_back(slot);
+}
+
+void Master::merge_all_task_stdio() {
+    log_trace("Merging stdio from workers");
+    char dotrank[25];
+    for (int i=1; i<=numworkers; i++) {
+        sprintf(dotrank, ".%d", i);
+        
+        std::string task_outfile = worker_out_path + dotrank;
+        this->merge_task_stdio(task_stdout, task_outfile, "stdout");
+        
+        std::string task_errfile = worker_err_path + dotrank;
+        this->merge_task_stdio(task_stderr, task_errfile, "stderr");
+    }
 }
 
 void Master::merge_task_stdio(FILE *dest, const std::string &srcfile, const std::string &stream) {
@@ -139,6 +236,43 @@ void Master::merge_task_stdio(FILE *dest, const std::string &srcfile, const std:
     
     if (unlink(srcfile.c_str())) {
         myfailures("Unable to delete task %s file: %s", stream.c_str(), srcfile.c_str());
+    }
+}
+
+void Master::write_cluster_summary(bool failed) {
+    // pegasus cluster output - used for provenance
+    char stat[10];
+    if (failed) {
+        strcpy(stat, "failed");
+    } else {
+        strcpy(stat, "ok");
+    }
+    
+    char date[32];
+    iso2date(start_time, date, sizeof(date));
+    
+    int extra = 0;
+    
+    char summary[BUFSIZ];
+    sprintf(summary, "[cluster-summary stat=\"%s\" tasks=%ld, succeeded=%ld, failed=%ld, extra=%d,"
+                 " start=\"%s\", duration=%.3f, pid=%d, app=\"%s\", runtime=%.3f, slots=%d, cpus=%u]\n",
+                 stat, 
+                 this->total_count,
+                 this->success_count, 
+                 this->failed_count,
+                 extra,
+                 date,
+                 wall_time,
+                 getpid(),
+                 this->program.c_str(),
+                 total_runtime,
+                 this->numworkers,
+                 this->total_cpus);
+    
+    int len = strlen(summary);
+    int w = fwrite(summary, 1, len, task_stdout);
+    if (w < len) {
+        myfailures("Error writing cluster-summary");
     }
 }
 
@@ -278,20 +412,30 @@ void Master::queue_ready_tasks() {
 }
 
 int Master::run() {
-    // Start time of workflow
-    struct timeval start;
-    gettimeofday(&start, NULL);
-    
     log_info("Master starting with %d workers", numworkers);
+    
+    start_time = current_time();
+    
+    // Install signal handlers
+    struct sigaction signal_action;
+    signal_action.sa_handler = on_signal;
+    signal_action.sa_flags = SA_NODEFER;
+    if (sigaction(SIGALRM, &signal_action, NULL) < 0) {
+        myfailures("Unable to set signal handler for SIGALRM");
+    }
+    if (sigaction(SIGTERM, &signal_action, NULL) < 0) {
+        myfailures("Unable to set signal handler for SIGTERM");
+    }
+    
+    // Set alarm to interrupt the master when the walltime is up
+    if (this->max_wall_time > 0.0) {    
+        log_info("Setting max walltime to %lf minutes", this->max_wall_time);
+        alarm((unsigned)ceil(max_wall_time * 60.0));
+    }
     
     register_workers();
     
     // Send out a unique path workers can use for their out/err files
-    pid_t pid = getpid();
-    char dotpid[10];
-    snprintf(dotpid, 10, ".%d", pid);
-    std::string worker_out_path = this->dagfile + dotpid + ".out";
-    std::string worker_err_path = this->dagfile + dotpid + ".err";
     send_stdio_paths(worker_out_path, worker_err_path);
     
     // Check to make sure that there is at least one host capable
@@ -322,38 +466,40 @@ int Master::run() {
         MPI_Barrier(MPI_COMM_WORLD);
     }
     
-    // Execute the workflow
-    while (!this->engine->is_finished()) {
+    log_info("Starting workflow");
+    
+    // Keep executing tasks until the workflow is finished or the master
+    // needs to abort the workflow due to a signal being caught
+    while (!this->engine->is_finished() && !ABORT) {
         queue_ready_tasks();
         schedule_tasks();
         wait_for_results();
     }
     
-    log_info("Workflow finished");
-    
-    // Finish time of workflow
-    struct timeval finish;
-    gettimeofday(&finish, NULL);
-    
-    // Tell workers to exit
-    log_trace("Sending workers shutdown messages");
-    for (int i=1; i<=numworkers; i++) {
-        send_shutdown(i);
+    if (ABORT) {
+        log_error("Aborting workflow");
+    } else {
+        log_info("Workflow finished");
     }
     
-    log_trace("Waiting for workers to finish");
+    if (this->engine->max_failures_reached()) {
+        log_error("Max failures reached: DAG prematurely aborted");
+    }
     
-    double total_runtime = collect_total_runtimes();
-    log_info("Total runtime of tasks: %f", total_runtime);
+    merge_all_task_stdio();
     
-    double stime = start.tv_sec + (start.tv_usec/1000000.0);
-    double ftime = finish.tv_sec + (finish.tv_usec/1000000.0);
-    double walltime = ftime - stime;
-    log_info("Wall time: %lf seconds", walltime);
-
+    // This must be done before write_cluster_summary so that the
+    // wall time can be recorded in the cluster-summary record
+    finish_time = current_time();
+    wall_time = finish_time - start_time;
+    log_info("Wall time: %lf minutes", wall_time/60.0);
+    
+    bool failed = ABORT || this->engine->is_failed();
+    write_cluster_summary(failed);
+    
     // Compute resource utilization
-    double master_util = total_runtime / (walltime * (numworkers+1));
-    double worker_util = total_runtime / (walltime * numworkers);
+    double master_util = total_runtime / (wall_time * (numworkers+1));
+    double worker_util = total_runtime / (wall_time * numworkers);
     if (total_runtime <= 0) {
         master_util = 0.0;
         worker_util = 0.0;
@@ -361,76 +507,17 @@ int Master::run() {
     log_info("Resource utilization (with master): %lf", master_util);
     log_info("Resource utilization (without master): %lf", worker_util);
     
-    // Merge stdout/stderr from all tasks
-    log_trace("Merging stdio from workers");
-    FILE *outf = stdout;
-    if (outfile != "stdout") {
-        outf = fopen(this->outfile.c_str(), "w");
-        if (outf == NULL) {
-            myfailures("Unable to open stdout file: %s\n", this->outfile.c_str());
-        }
-    }
-    FILE *errf = stderr;
-    if (errfile != "stderr") {
-        errf = fopen(this->errfile.c_str(), "w");
-        if (errf == NULL) {
-            myfailures("Unable to open stderr file: %s\n", this->outfile.c_str());
-        }
-    }
+    log_info("Total runtime of tasks: %f", total_runtime);
     
-    // Collect all stdout/stderr
-    char dotrank[25];
+    log_trace("Sending workers shutdown messages");
     for (int i=1; i<=numworkers; i++) {
-        sprintf(dotrank, ".%d", i);
-        
-        std::string toutfile = worker_out_path + dotrank;
-        this->merge_task_stdio(outf, toutfile, "stdout");
-        
-        std::string terrfile = worker_err_path + dotrank;
-        this->merge_task_stdio(errf, terrfile, "stderr");
+        send_shutdown(i);
     }
     
-    // pegasus cluster output - used for provenance
-    char summary[BUFSIZ];
-    char stat[10];
-    char date[32];
-    if (this->engine->is_failed()) {
-        strcpy(stat, "failed");
-    }
-    else {
-        strcpy(stat, "ok");
-    }
-    iso2date(stime, date, sizeof(date));
-    sprintf(summary, "[cluster-summary stat=\"%s\" tasks=%ld, succeeded=%ld, failed=%ld, extra=%d,"
-                 " start=\"%s\", duration=%.3f, pid=%d, app=\"%s\", runtime=%.3f, slots=%d, cpus=%u,"
-                 " utilization=%.3f]\n",
-                 stat, 
-                 this->total_count,
-                 this->success_count, 
-                 this->failed_count,
-                 0,
-                 date,
-                 walltime,
-                 getpid(),
-                 this->program.c_str(),
-                 total_runtime,
-                 numworkers,
-                 total_cpus,
-                 worker_util);
-    fwrite(summary, 1, strlen(summary), outf);
-    
-    if (errfile != "stderr") { 
-        fclose(errf);
-    }
-    if (outfile != "stdout") {
-        fclose(outf);
-    }
-    
-    if (this->engine->max_failures_reached()) {
-        log_error("Max failures reached: DAG prematurely aborted");
-    }
-    
-    if (this->engine->is_failed()) {
+    if (ABORT) {
+        myfailure("Workflow aborted");
+        return -1; // Not reached
+    } else if (failed) {
         log_error("Workflow failed");
         return 1;
     } else {

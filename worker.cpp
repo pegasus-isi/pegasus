@@ -18,7 +18,7 @@
 #include "tools.h"
 
 static void log_signal(int signo) {
-    log_warn("Caught signal %d", signo);
+    log_error("Caught signal %d", signo);
 }
 
 Worker::Worker(const std::string &host_script, unsigned int host_memory, unsigned host_cpus, bool strict_limits) {
@@ -238,11 +238,9 @@ int Worker::run() {
         MPI_Barrier(MPI_COMM_WORLD);
     }
     
-    double total_runtime = 0.0;
-    
     while (1) {
         log_trace("Worker %d: Waiting for request", rank);
-
+        
 #ifdef SLEEP_IF_NO_REQUEST
         /* On many MPI implementations MPI_Recv uses a busy wait loop. This
          * really wreaks havoc on the load and CPU utilization of the workers
@@ -255,7 +253,7 @@ int Worker::run() {
          * responsiveness a bit, but it is a fair tradeoff.
          */
         while (!request_waiting()) {
-            usleep(NO_REQUEST_SLEEP_TIME);
+            usleep(NO_MESSAGE_SLEEP_TIME);
         }
 #endif
         
@@ -283,8 +281,7 @@ int Worker::run() {
         int status = 256; // 256 is exit code 1
         
         // Get start time
-        struct timeval task_start;
-        gettimeofday(&task_start, NULL);
+        double task_start = current_time();
         
         pid_t pid = fork();
         if (pid < 0) {
@@ -363,16 +360,9 @@ int Worker::run() {
             }
         }
         
-        // Finish time
-        struct timeval task_finish;
-        gettimeofday(&task_finish, NULL);
+        double task_finish = current_time();
         
-        // Elapsed time
-        double task_stime = task_start.tv_sec + (task_start.tv_usec/1000000.0);
-        double task_ftime = task_finish.tv_sec + (task_finish.tv_usec/1000000.0);
-        double task_runtime = task_ftime - task_stime;
-        
-        total_runtime += task_runtime;
+        double task_runtime = task_finish - task_start;
         
         if (WIFEXITED(status)) {
             log_debug("Worker %d: Task %s exited with status %d (%d) in %f seconds", 
@@ -393,7 +383,7 @@ int Worker::run() {
         std::string app = args.front();
         
         char date[32];
-        iso2date(task_stime, date, sizeof(date));
+        iso2date(task_start, date, sizeof(date));
         
         char summary[BUFSIZ];
         sprintf(summary, 
@@ -403,17 +393,13 @@ int Worker::run() {
             host_name.c_str(), rank, cpus, memory);
         write(out, summary, strlen(summary));
         
-        send_response(name, status);
+        send_response(name, status, task_runtime);
     }
     
     kill_host_script_group();
     
     close(out);
     close(err);
-    
-    // Send total_runtime
-    log_trace("Worker %d: Sending total runtime to master", rank);
-    send_total_runtime(total_runtime);
     
     log_debug("Worker %d: Exiting...", rank);
     
