@@ -383,7 +383,19 @@ public class Cluster extends Bundle {
             //June 15th, 2004
             //tempSet.add( siJob )
             if( dataFileSiJob != null ){
-                addRelation( dataFileSiJob, jobName  );
+
+                //we only add edge if temp set contains the edge
+                if ( tempSet.contains( dataFileSiJob )) {
+                    StringBuffer msg  = new StringBuffer();
+                    msg.append( "IGNORING TO ADD stagein relation from stagein node: " ).
+                            append( dataFileSiJob ).append( " -> " ).append( jobName );
+
+                    mLogger.log( msg.toString(), LogManager.DEBUG_MESSAGE_LEVEL );
+                }
+                else{
+                    addRelation( dataFileSiJob, jobName  );
+                    tempSet.add( dataFileSiJob );
+                }
             }
             
             if( !stagedExecFiles.isEmpty() && mAddNodesForSettingXBit ){
