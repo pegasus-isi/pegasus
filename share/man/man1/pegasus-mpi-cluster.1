@@ -2,12 +2,12 @@
 .\"     Title: pegasus-mpi-cluster
 .\"    Author: [see the "Author" section]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 06/19/2012
+.\"      Date: 06/22/2012
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "PEGASUS\-MPI\-CLUSTE" "1" "06/19/2012" "\ \&" "\ \&"
+.TH "PEGASUS\-MPI\-CLUSTE" "1" "06/22/2012" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -167,6 +167,15 @@ Number of CPUs available on each host\&. The default is to determine the number 
 \fB\-\-strict\-limits\fR
 .RS 4
 This enables strict memory usage limits for tasks\&. When this option is specified, and a task tries to allocate more memory than was requested in the DAG, the memory allocation operation will fail\&.
+.RE
+.PP
+\fB\-\-max\-wall\-time\fR \fIminutes\fR
+.RS 4
+This is the maximum number of minutes that
+\fBpegasus\-mpi\-cluster\fR
+will allow the workflow to run\&. When this time expires
+\fBpegasus\-mpi\-cluster\fR
+will abort the workflow and merge all of the stdout/stderr files of the workers\&. The value is in minutes, and the default is unlimited wall time\&. This option was added so that the output of a workflow will be recorded even if the workflow exceeds the max wall time of its batch job\&.
 .RE
 .SH "DAG FILES"
 .sp
@@ -329,7 +338,7 @@ At the end of the workflow run, the master will report the resource utilization 
 In order for the worker processes to start tasks on the compute node the compute nodes must support the \fBfork()\fR and \fBexec()\fR system calls\&. If your target machine runs a stripped\-down OS on the compute nodes that does not support these system calls, then \fBpegasus\-mpi\-cluster\fR will not work\&.
 .SS "CPU Usage"
 .sp
-Many MPI implementations are optimized so that message sends and receives do busy waiting (i\&.e\&. they spin/poll on a message send or receive instead of sleeping)\&. The reasoning is that sleeping adds overhead and, since many HPC systems use space sharing on dedicated hardware, there are no other processes competing, so spinning instead of sleeping can produce better performance\&. On those implementations MPI processes will run at 100% CPU usage even when they are just waiting for a message\&. This is a big problem for multicore tasks in \fBpegasus\-mpi\-cluster\fR because idle slots consume CPU resources\&. In order to solve this problem \fBpegasus\-mpi\-cluster\fR worker processes sleep for a short period between checks for waiting messages\&. This reduces the load significantly, but causes a short delay in receiving tasks from the master process\&. If you are using = an MPI implementation that sleeps on message send and receive instead of doing busy waiting, then you can disable the sleep by unsetting the SLEEP_IF_NO_REQUEST compiler flag in the Makefile\&. For example, MPICH2 with the ch3:sock device does not busy wait while the ch3:nemesis device does\&.
+Many MPI implementations are optimized so that message sends and receives do busy waiting (i\&.e\&. they spin/poll on a message send or receive instead of sleeping)\&. The reasoning is that sleeping adds overhead and, since many HPC systems use space sharing on dedicated hardware, there are no other processes competing, so spinning instead of sleeping can produce better performance\&. On those implementations MPI processes will run at 100% CPU usage even when they are just waiting for a message\&. This is a big problem for multicore tasks in \fBpegasus\-mpi\-cluster\fR because idle slots consume CPU resources\&. In order to solve this problem \fBpegasus\-mpi\-cluster\fR processes sleep for a short period between checks for waiting messages\&. This reduces the load significantly, but causes a short delay in receiving messages\&. If you are using an MPI implementation that sleeps on message send and receive instead of doing busy waiting, then you can disable the sleep in the worker by unsetting the SLEEP_IF_NO_REQUEST compiler flag in the Makefile\&. It cannot be disabled in the master because MPI_Recv is not interrupted by signals and the master uses the SIGALRM signal to abort the workflow when it exceeds its max wall time\&.
 .SH "ENVIRONMENT VARIABLES"
 .PP
 \fBPMC_HOST_SCRIPT\fR

@@ -69,6 +69,15 @@ void get_host_name(std::string &hostname) {
 }
 
 
+/* Get the current time as the number of seconds since the epoch */
+double current_time() {
+    struct timeval now;
+    gettimeofday(&now, NULL);
+    double ts = now.tv_sec + (now.tv_usec/1000000.0);
+    return ts;
+}
+
+
 /* Get the total amount of physical memory in bytes */
 unsigned long get_host_memory() {
     unsigned long memory;

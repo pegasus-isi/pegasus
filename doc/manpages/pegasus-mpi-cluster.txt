@@ -132,18 +132,27 @@ Options
     *pegasus-mpi-cluster* is running on. (see <<HOST_SCRIPTS,*HOST SCRIPTS*>>)
 
 *--host-memory* 'size'::
-    Amount of memory available on each host in MB. The default is to determine the
-    amount of physical RAM automatically. (see <<RESOURCE_SCHED, *RESOURCE-BASED 
-    SCHEDULING*>>)
+    Amount of memory available on each host in MB. The default is to 
+    determine the amount of physical RAM automatically. (see <<RESOURCE_SCHED, 
+    *RESOURCE-BASED SCHEDULING*>>)
 
 *--host-cpus* 'cpus'::
-    Number of CPUs available on each host. The default is to determine the number of
-    CPU cores automatically. (see <<RESOURCE_SCHED, *RESOURCE-BASED SCHEDULING*>>)
+    Number of CPUs available on each host. The default is to determine the 
+    number of CPU cores automatically. (see <<RESOURCE_SCHED, 
+    *RESOURCE-BASED SCHEDULING*>>)
 
 *--strict-limits*::
-    This enables strict memory usage limits for tasks. When this option is specified,
-    and a task tries to allocate more memory than was requested in the DAG, the memory
-    allocation operation will fail.
+    This enables strict memory usage limits for tasks. When this option is 
+    specified, and a task tries to allocate more memory than was requested 
+    in the DAG, the memory allocation operation will fail.
+
+*--max-wall-time* 'minutes'::
+    This is the maximum number of minutes that *pegasus-mpi-cluster* will 
+    allow the workflow to run. When this time expires *pegasus-mpi-cluster* 
+    will abort the workflow and merge all of the stdout/stderr files of the 
+    workers. The value is in minutes, and the default is unlimited wall 
+    time. This option was added so that the output of a workflow will be 
+    recorded even if the workflow exceeds the max wall time of its batch job.
 
 
 [[DAG_FILES]]
@@ -391,14 +400,15 @@ implementations MPI processes will run at 100% CPU usage even when
 they are just waiting for a message. This is a big problem for 
 multicore tasks in *pegasus-mpi-cluster* because idle slots consume
 CPU resources. In order to solve this problem *pegasus-mpi-cluster*
-worker processes sleep for a short period between checks for waiting
+processes sleep for a short period between checks for waiting
 messages. This reduces the load significantly, but causes a short 
-delay in receiving tasks from the master process. If you are using =
-an MPI implementation that sleeps on message send and receive instead 
-of doing busy waiting, then you can disable the sleep by unsetting 
-the SLEEP_IF_NO_REQUEST compiler flag in the Makefile. For example, 
-MPICH2 with the ch3:sock device does not busy wait while the 
-ch3:nemesis device does.
+delay in receiving messages. If you are using an MPI implementation 
+that sleeps on message send and receive instead of doing busy waiting, 
+then you can disable the sleep in the worker by unsetting the 
+SLEEP_IF_NO_REQUEST compiler flag in the Makefile. It cannot be
+disabled in the master because MPI_Recv is not interrupted by signals
+and the master uses the SIGALRM signal to abort the workflow when it
+exceeds its max wall time.
 
 
 Environment Variables

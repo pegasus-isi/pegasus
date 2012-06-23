@@ -100,18 +100,27 @@ void send_shutdown(int worker) {
     MPI_Send(NULL, 0, MPI_CHAR, worker, TAG_SHUTDOWN, MPI_COMM_WORLD);
 }
 
-void send_response(const std::string &name, int exitcode) {
+void send_response(const std::string &name, int exitcode, double runtime) {
+    int size = 0;
     sprintf(buf, "%d", exitcode);
-    strcpy(buf+strlen(buf)+1, name.c_str());
-    MPI_Send(buf, strlen(buf)+name.size()+2, MPI_CHAR, 0, TAG_RESULT, MPI_COMM_WORLD);
+    size += strlen(buf) + 1;
+    strcpy(buf+size, name.c_str());
+    size += name.size() + 1;
+    sprintf(buf+size, "%lf", runtime);
+    size += strlen(buf+size) + 1;
+    MPI_Send(buf, size, MPI_CHAR, 0, TAG_RESULT, MPI_COMM_WORLD);
 }
 
-void recv_response(std::string &name, int &exitcode, int &worker) {
+void recv_response(std::string &name, int &exitcode, double &runtime, int &worker) {
     MPI_Status status;
     MPI_Recv(buf, MAX_MESSAGE, MPI_CHAR, MPI_ANY_SOURCE, TAG_RESULT, MPI_COMM_WORLD, &status);
     
-    sscanf(buf,"%d",&exitcode);
-    name = buf+strlen(buf)+1;
+    int size = 0;
+    sscanf(buf, "%d", &exitcode);
+    size += strlen(buf) + 1;
+    name = buf+size;
+    size += name.size() + 1;
+    sscanf(buf+size, "%lf", &runtime);
     worker = status.MPI_SOURCE;
 }
 
@@ -125,15 +134,4 @@ bool request_waiting() {
     int flag;
     MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &flag, MPI_STATUS_IGNORE);
     return flag != 0;
-}
-
-void send_total_runtime(double total_runtime) {
-    MPI_Reduce(&total_runtime, NULL, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
-}
-
-double collect_total_runtimes() {
-    double ignore = 0.0;
-    double total_runtime = 0.0;
-    MPI_Reduce(&ignore, &total_runtime, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
-    return total_runtime;
 }

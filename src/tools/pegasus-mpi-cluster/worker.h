@@ -10,9 +10,6 @@
 // group 5 seconds after SIGTERM before sending SIGKILL
 #define HOST_SCRIPT_GRACE_PERIOD 5
 
-// Sleep for 100 milliseconds if there is no request waiting
-#define NO_REQUEST_SLEEP_TIME 100000
-
 class Worker {
 	int rank;
 	int host_rank;

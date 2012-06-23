@@ -3,6 +3,9 @@
 
 #include <string>
 
+// Time in microseconds to sleep if there is no message waiting
+#define NO_MESSAGE_SLEEP_TIME 50000
+
 #define TAG_COMMAND 1
 #define TAG_RESULT 2
 #define TAG_SHUTDOWN 3
@@ -18,11 +21,9 @@ void recv_stdio_paths(std::string &outfile, std::string &errfile);
 void send_request(const std::string &name, const std::string &command, const std::string &pegasus_id, unsigned int memory, unsigned int cpus, int worker);
 void send_shutdown(int worker);
 void recv_request(std::string &name, std::string &command, std::string &pegasus_id, unsigned int &memory, unsigned int &cpus, int &shutdown);
-void send_response(const std::string &name, int exitcode);
-void recv_response(std::string &name, int &exitcode, int &worker);
+void send_response(const std::string &name, int exitcode, double runtime);
+void recv_response(std::string &name, int &exitcode, double &runtime, int &worker);
 bool response_waiting();
 bool request_waiting();
-double collect_total_runtimes();
-void send_total_runtime(double total_runtime);
 
 #endif /* PROTOCOL_H */

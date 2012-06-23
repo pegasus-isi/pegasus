@@ -35,7 +35,8 @@ void usage() {
             "   --host-script PATH   Path to script that will be launched on each host\n"
             "   --host-memory N      Amount of memory per host in MB\n"
             "   --host-cpus N        Number of CPUs per host\n"
-            "   --strict-limits      Enforce strict task resource limits\n",
+            "   --strict-limits      Enforce strict task resource limits\n"
+            "   --max-wall-time T    Maximum wall time of the job in minutes\n",
             program
         );
     }
@@ -71,6 +72,7 @@ int mpidag(int argc, char *argv[]) {
     unsigned host_memory = 0;
     unsigned host_cpus = 0;
     bool strict_limits = false;
+    double max_wall_time = 0.0;
     
     // Environment variable defaults
     char *env_host_script = getenv("PMC_HOST_SCRIPT");
@@ -89,7 +91,15 @@ int mpidag(int argc, char *argv[]) {
     char *env_host_cpus = getenv("PMC_HOST_CPUS");
     if (env_host_cpus != NULL) {
         if (sscanf(env_host_cpus, "%u", &host_cpus) != 1) {
-            argerror("Invalid value of PMC_HOST_CPUS");
+            argerror("Invalid value for PMC_HOST_CPUS");
+            return 1;
+        }
+    }
+    
+    char *env_max_wall_time = getenv("PMC_MAX_WALL_TIME");
+    if (env_max_wall_time != NULL) {
+        if (sscanf(env_max_wall_time, "%lf", &max_wall_time) != 1) {
+            argerror("Invalid value for PMC_MAX_WALL_TIME");
             return 1;
         }
     }
@@ -197,9 +207,20 @@ int mpidag(int argc, char *argv[]) {
             }
         } else if (flag == "--strict-limits") {
             strict_limits = true;
+        } else if (flag == "--max-wall-time") {
+            flags.pop_front();
+            if (flags.size() == 0) {
+                argerror("--max-wall-time requires T");
+                return 1;
+            }
+            std::string max_wall_time_string = flags.front();
+            if (sscanf(max_wall_time_string.c_str(), "%lf", &max_wall_time) != 1) {
+                argerror("Invalid value for --max-wall-time");
+                return 1;
+            }
         } else if (flag[0] == '-') {
             std::string message = "Unrecognized argument: ";
-            message += flag[0];
+            message += flag;
             argerror(message);
             return 1;
         } else {
@@ -254,7 +275,8 @@ int mpidag(int argc, char *argv[]) {
         
         DAG dag(dagfile, oldrescue, lock, tries);
         Engine engine(dag, newrescue, max_failures);
-        return Master(program, engine, dag, dagfile, outfile, errfile, has_host_script).run();
+        return Master(program, engine, dag, dagfile, 
+            outfile, errfile, has_host_script, max_wall_time).run();
     } else {
         return Worker(host_script, host_memory, host_cpus, strict_limits).run();
     }

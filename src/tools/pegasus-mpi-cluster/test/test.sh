@@ -377,6 +377,45 @@ Scheduling task N"
 	return 0
 }
 
+function test_max_wall_time {
+	OUTPUT=$(mpiexec -n 3 $PMC -s test/walltime.dag --host-cpus 2 --max-wall-time 0.05 2>&1)
+	RC=$?
+	
+	rm -f test/walltime.dag.*
+	
+	if [ $RC -eq 0 ]; then
+		echo "$OUTPUT"
+		echo "ERROR: Max wall time test failed on exitcode"
+		return 1
+	fi
+	
+	if ! [[ "$OUTPUT" =~ "Caught signal 14" ]]; then
+		echo "$OUTPUT"
+		echo "ERROR: Max wall time test failed on catching signal"
+		return 1
+	fi
+	
+	if ! [[ "$OUTPUT" =~ "Aborting workflow" ]]; then
+		echo "$OUTPUT"
+		echo "ERROR: Max wall time test failed on aborting"
+		return 1
+	fi
+	
+	if ! [[ "$OUTPUT" =~ "TASK stdout" ]]; then
+		echo "$OUTPUT"
+		echo "ERROR: Max wall tiem test failed on task stdout"
+		return 1
+	fi
+	
+	if ! [[ "$OUTPUT" =~ "TASK stderr" ]]; then
+		echo "$OUTPUT"
+		echo "ERROR: Max wall tiem test failed on task stderr"
+		return 1
+	fi
+	
+	return 0
+}
+
 run_test ./test-strlib
 run_test ./test-tools
 run_test ./test-dag
@@ -394,6 +433,7 @@ run_test test_cpus_limit
 run_test test_insufficient_cpus
 run_test test_tries
 run_test test_priority
+run_test test_max_wall_time
 run_test test_host_script
 run_test test_fail_script
 run_test test_fork_script
