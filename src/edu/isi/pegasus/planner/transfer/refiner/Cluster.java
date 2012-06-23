@@ -252,11 +252,13 @@ public class Cluster extends Bundle {
         List stagedExecFiles = new ArrayList();
         //to prevent duplicate dependencies
         Set tempSet = new HashSet();
-        
+
+      
         //iterate through all the files
         for ( Iterator it = files.iterator(); it.hasNext(); ) {
             FileTransfer ft = ( FileTransfer ) it.next();
             String lfn = ft.getLFN();
+
             mLogger.log( "File being looked at is " + lfn, LogManager.DEBUG_MESSAGE_LEVEL );
             //check for transfer flag to see if we need to transfer the file.
             if ( !ft.getTransientTransferFlag() ) {
@@ -374,7 +376,19 @@ public class Cluster extends Bundle {
             //June 15th, 2004
             //tempSet.add( siJob )
             if( dataFileSiJob != null ){
-                addRelation( dataFileSiJob, jobName  );
+
+                //we only add edge if temp set contains the edge
+                if ( tempSet.contains( dataFileSiJob )) {
+                    StringBuffer msg  = new StringBuffer();
+                    msg.append( "IGNORING TO ADD stagein relation from stagein node: " ).
+                            append( dataFileSiJob ).append( " -> " ).append( jobName );
+
+                    mLogger.log( msg.toString(), LogManager.DEBUG_MESSAGE_LEVEL );
+                }
+                else{
+                    addRelation( dataFileSiJob, jobName  );
+                    tempSet.add( dataFileSiJob );
+                }
             }
             
             if( !stagedExecFiles.isEmpty() && mAddNodesForSettingXBit ){
@@ -470,9 +484,11 @@ public class Cluster extends Bundle {
                 job.setSiteHandle( site );
                 job.setStagingSiteHandle( site );
 
+                boolean addSyncJobs = false;
+
+/**
+//disabling of sync jobs creation
                 Job parentSyncJob = this.getSyncJob( site );
-                
-                
                 //add a child synch job for this level if required
                 Job childSyncJob = null;
                 if( createChildSyncJob ){
@@ -481,7 +497,8 @@ public class Cluster extends Bundle {
                     addJob( childSyncJob );
                     mLogger.log( "Added synch job " + childSyncJob.getName(), LogManager.DEBUG_MESSAGE_LEVEL );
                 }
-                
+*/
+
                 mLogger.log( "Adding jobs for staging in data to site " + pt.getPoolName(),
                              LogManager.DEBUG_MESSAGE_LEVEL );
 
@@ -510,8 +527,10 @@ public class Cluster extends Bundle {
                         siJob.setJobType( Job.STAGE_IN_JOB );
                         addJob( siJob );
                     }
-                    
-                    //add the dependency to parent synch 
+
+/**
+//disabling of sync jobs creation
+                    //add the dependency to parent synch
                     if( parentSyncJob != null ){
                         addRelation( parentSyncJob.getName(), siJob.getName() );
                     }
@@ -521,15 +540,20 @@ public class Cluster extends Bundle {
                     if( createChildSyncJob ){
                         addRelation( siJob.getName(), childSyncJob.getName() );
                     }
+*/
 
                 }//end of traversal thru all transfer containers
                 
+
+/**
+//disabling of sync jobs creation
                 //update the synch job map if child synch job is created
                 if( createChildSyncJob ){
                     //mSyncJobMap.put( site, childSyncJob );
                     //populate to the transient job map not the main one
                     transientSynchJobMap.put( site, childSyncJob );
                 }
+ */
                 
             }//end of traversal thru all pool transfers
         }
