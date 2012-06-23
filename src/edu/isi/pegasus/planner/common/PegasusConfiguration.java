@@ -188,7 +188,10 @@ public class PegasusConfiguration {
 
         }
         else if( configuration.equalsIgnoreCase( SHARED_FS_CONFIGURATION_VALUE ) ){
-            p.setProperty( "pegasus.execute.*.filesystem.local", "false" );
+            //PM-624
+            //we should not explicitly set it to false. false is default value
+            //in Pegasus Properties.
+            //p.setProperty( "pegasus.execute.*.filesystem.local", "false" );
         }
         
         return p;
