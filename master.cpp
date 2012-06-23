@@ -516,7 +516,6 @@ int Master::run() {
     
     if (ABORT) {
         myfailure("Workflow aborted");
-        return -1; // Not reached
     } else if (failed) {
         log_error("Workflow failed");
         return 1;
