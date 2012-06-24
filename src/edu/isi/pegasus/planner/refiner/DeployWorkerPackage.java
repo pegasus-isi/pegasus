@@ -134,7 +134,7 @@ public class DeployWorkerPackage
     /**
      * The default transfer refiner name.
      */
-    public static final String DEFAULT_REFINER = "Default";
+    public static final String DEFAULT_REFINER = "Basic";
 
     /**
      * The transformation namespace for the worker package
