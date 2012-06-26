@@ -1,0 +1,71 @@
+#!/bin/bash
+
+
+TOPDIR=`pwd`
+
+function timed_transfer
+{
+    min=$1
+    max=$2
+    cmd=$3
+
+    echo
+    echo
+    echo
+    echo
+    echo
+    echo
+    echo "================================================================="
+    echo
+
+    start_ts=`/bin/date +'%s'`
+
+    echo "Test command: $cmd"
+    echo 
+
+    $cmd
+    rc=$?
+    if [ "x$rc" != "x0" ]; then
+        echo "Error: Command returned $rc"
+        exit 1
+    fi
+
+    end_ts=`/bin/date +'%s'`
+    duration=$(($end_ts - $start_ts))
+    duration_minutes=$(($duration / 60))
+    echo
+    echo "Test took $duration_minutes minutes"
+    echo "The upper limit was $max minutes"
+    echo "The lower limit was $min minutes"
+    echo
+
+    if [ $duration_minutes -gt $max ]; then
+        echo "Error: Limit exceeded!"
+        exit 1
+    fi
+
+    if [ $duration_minutes -lt $min ]; then
+        echo "Error: Test was faster than lower limit - time to lower limits!"
+        exit 1
+    fi
+
+    echo "Test passed!"
+}
+
+timed_transfer 1 15 "pegasus-transfer -f es3-to-cartman-3rdparty.in"
+
+timed_transfer 1 15 "pegasus-transfer -f many-small-files-3rdparty.in"
+
+timed_transfer 0 5 "pegasus-transfer -f medium-files-pull.in"
+timed_transfer 0 5 "pegasus-transfer -f medium-files-push.in"
+
+# NAT/Firewall simulation - set the tcp port range to something that is firewalled 
+export GLOBUS_TCP_PORT_RANGE=5000,6000
+
+timed_transfer 1 8 "pegasus-transfer -f es3-to-file.in"
+timed_transfer 0 5 "pegasus-transfer -f medium-files-pull.in"
+timed_transfer 0 5 "pegasus-transfer -f medium-files-push.in"
+
+
+exit 0
+

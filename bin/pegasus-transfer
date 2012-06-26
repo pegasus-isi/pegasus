@@ -238,6 +238,9 @@ tool_info = {}
 # try to create them over and over again
 remote_dirs_created = {}
 
+# gsiftp failure count - used to provide sane globus-url-copy options
+gsiftp_failures = 0
+
 # stats
 stats_start = 0
 stats_end = 0
@@ -697,22 +700,82 @@ def gsiftp(full_list, failed_q, attempt):
         # and the rest with no create dir options
         first_list = []
         first_list.append(similar_list.pop())
-        gsiftp_do_transfers(first_list, failed_q, True, third_party)
+        mkdir_done = gsiftp_do_transfers(first_list, failed_q, attempt, True, third_party)
 
-        # limit the number of entries for each pipeline
-        chunks = gsiftp_split_similar(similar_list)
+        # first attempt get some extra tries - this is to drill down on guc options
+        if attempt == 1 and not mkdir_done:
+            mkdir_done = gsiftp_do_transfers(first_list, failed_q, attempt, True, third_party)
+            if not mkdir_done:
+                mkdir_done = gsiftp_do_transfers(first_list, failed_q, attempt, True, third_party)
 
-        for l in chunks:
-            gsiftp_do_transfers(l, failed_q, False, third_party)
+        if mkdir_done:
+            # run the rest of the group - but limit the number of entries for each pipeline
+            chunks = gsiftp_split_similar(similar_list)
+            for l in chunks:
+                if not gsiftp_do_transfers(l, failed_q, attempt, False, third_party):
+                    for i, t in enumerate(l):
+                        failed_q.append(t)
+        else:
+            # mkdir job failed - all subsequent jobs will fail
+            failed_q.append(first_list[0])
+            for i, t in enumerate(similar_list):
+                failed_q.append(t)
 
 
-def gsiftp_do_transfers(transfers, failed_q, create_dest, third_party):
+def gsiftp_guc_options(attempt, create_dest, third_party):
+    """
+    determine a set of globus-url-copy options based on how previous transfers went
+    """
+    global gsiftp_failures
+
+    options = ""
+
+    # make output from guc match our current log level
+    if logger.isEnabledFor(logging.DEBUG):
+        options += " -verbose"
+
+    # should we try to create directories?
+    if create_dest:
+        options += " -create-dest"
+
+    # concurrency is safe for both pull/push and 3rd party
+    options += " -concurrency 4"
+
+    # Only do third party transfers for gsiftp->gsiftp. For other combinations, fall
+    # back to settings which will for well over for example NAT
+    if third_party:
+
+        # parallism
+        options += " -parallel 4"
+
+        # some machines can not deal with tcp-bs - only allow if no failures have occurred
+        if gsiftp_failures == 0:
+            options += " -tcp-bs 15MB"
+
+        # -fast only for Globus 4 and above
+        if tool_info['globus-version']['version_major'] >= 4:
+            options += " -fast"
+    
+        # -pipeline only for 3rd party transfers and Globus 4.2 and above
+        # this is experimental so only allow this for the first attempt
+        if (attempt == 1 and \
+            tool_info['globus-version']['version_major'] == 5 \
+                or (tool_info['globus-version']['version_major'] >= 4 \
+                    and tool_info['globus-version']['version_minor'] >= 2)):
+            options += " -pipeline"
+    else:
+        # gsiftp<->file transfers
+        options += " -no-third-party-transfers -no-data-channel-authentication"
+
+    return options
+
+
+def gsiftp_do_transfers(transfers, failed_q, attempt, create_dest, third_party):
     """
     sub to gsiftp() - transfers a list of urls
     """
+    global gsiftp_failures
     
-    # keep track of what transfer we attempted so we can add to fail q in case of failures
-    attempted_transfers = transfers[:]
     delayed_file_stat = []
 
     # create tmp file with transfer src/dst pairs
@@ -738,48 +801,27 @@ def gsiftp_do_transfers(transfers, failed_q, create_dest, third_party):
     
     logger.info("Grouped %d similar gsiftp transfers together in temporary file %s" %(num_pairs, tmp_name))
 
+    transfer_success = False
+    
     # build command line for globus-url-copy
     cmd = tool_info['globus-url-copy']['full_path']
-
-    # make output from guc match our current log level
-    if logger.isEnabledFor(logging.DEBUG):
-        cmd += " -dbg"
-    elif num_pairs < 10:
-        cmd += " -verbose"
-
-    # should we try to create directories?
-    if create_dest:
-        cmd += " -create-dest"
-    
-    # Only do third party transfers for gsiftp->gsiftp. For other combinations, fall
-    # back to settings which will for well over for example NAT
-    if third_party:
-        cmd += " -parallel 4"
-
-        # -fast only for Globus 4 and above
-        if tool_info['globus-version']['version_major'] >= 4:
-            cmd += " -fast"
-        
-        # -pipeline only for Globus 4.2 and above
-        if (tool_info['globus-version']['version_major'] == 5 \
-            or (tool_info['globus-version']['version_major'] >= 4 \
-                and tool_info['globus-version']['version_minor'] >= 2)):
-            cmd += " -pipeline"       
-    else:
-        cmd += " -no-third-party-transfers -no-data-channel-authentication"
-
+    cmd += gsiftp_guc_options(attempt, create_dest, third_party)
     cmd += " -f " + tmp_name
     try:
         myexec(cmd, default_subshell_timeout, True)
-    
+        transfer_success = True
+    except Exception, err:
+        logger.error(err)
+        gsiftp_failures += 1
+
+    if transfer_success:
         # stat the files
         for i, filename in enumerate(delayed_file_stat): 
             stats_add(filename)
-    except Exception, err:
-        logger.error(err)
-        for i, t in enumerate(attempted_transfers):
-            failed_q.append(t)
+
     os.unlink(tmp_name)
+
+    return transfer_success
 
 
 def irods_login():
@@ -1160,8 +1202,8 @@ parser.add_option("-l", "--loglevel", action = "store", dest = "log_level",
                   help = "Log level. Valid levels are: debug,info,warning,error, Default is info.")
 parser.add_option("-f", "--file", action = "store", dest = "file",
                   help = "File containing URL pairs to be transferred. If not given, list is read from stdin.")
-parser.add_option("", "--max-attempts", action = "store", type="int", dest = "max_attempts", default = 2,
-                  help = "Number of attempts allowed for each transfer. Default is 2.")
+parser.add_option("", "--max-attempts", action = "store", type="int", dest = "max_attempts", default = 3,
+                  help = "Number of attempts allowed for each transfer. Default is 3.")
 
 # Check environment to decide whether to use a Policy Service.
 if 'PEGASUS_POLICY_CHECKS' in os.environ:
