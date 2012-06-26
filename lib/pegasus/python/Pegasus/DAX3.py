@@ -130,8 +130,8 @@ import shlex
 import codecs
 
 SCHEMA_NAMESPACE = "http://pegasus.isi.edu/schema/DAX"
-SCHEMA_LOCATION = "http://pegasus.isi.edu/schema/dax-3.3.xsd"
-SCHEMA_VERSION = "3.3"
+SCHEMA_LOCATION = "http://pegasus.isi.edu/schema/dax-3.4.xsd"
+SCHEMA_VERSION = "3.4"
 
 class DAX3Error(Exception): pass
 class DuplicateError(DAX3Error): pass
@@ -779,8 +779,9 @@ class Profile:
         return p
     
 class Use:
-    """Use(file[,link][,register][,transfer][,optional][,namespace][,version][,executable])
-
+    """Use(file[,link][,register][,transfer][,optional]
+           [,namespace][,version][,executable][,size])
+    
     Use of a logical file name. Used for referencing files in the DAX.
     
     Attributes:
@@ -792,9 +793,10 @@ class Use:
         namespace: Namespace of executable (optional)
         version: version of executable (optional)
         executable: Is file an executable? (True/False) (optional)
+        size: The size of the file (optional)
             
     For Use objects that are added to Transformations, the attributes 'link', 'register',
-    'transfer' and 'optional' are ignored.
+    'transfer', 'optional' and 'size' are ignored.
     
     If a File object is passed in as 'file', then the default value for executable
     is 'false'. Similarly, if an Executable object is passed in, then the default
@@ -802,7 +804,8 @@ class Use:
     """
 
     def __init__(self, name, link=None, register=None, transfer=None, 
-                optional=None, namespace=None, version=None, executable=None):
+                optional=None, namespace=None, version=None, executable=None,
+                size=None):
         if not name:
             raise FormatError('Invalid name', name)
         
@@ -814,6 +817,7 @@ class Use:
         self.namespace = namespace
         self.version = version
         self.executable = executable
+        self.size = size
     
     def __unicode__(self):
         return u"<Use %s::%s:%s>" % (self.namespace, self.name, self.version)
@@ -847,7 +851,8 @@ class Use:
             ('register',self.register),
             ('transfer',self.transfer),
             ('optional',self.optional),
-            ('executable',self.executable)
+            ('executable',self.executable),
+            ('size',self.size)
         ])
     
 
@@ -873,7 +878,8 @@ class UseMixin:
         self.used.clear()
     
     def uses(self, arg, link=None, register=None, transfer=None, 
-             optional=None, namespace=None, version=None, executable=None):
+             optional=None, namespace=None, version=None, executable=None,
+             size=None):
         
         if isinstance(arg, CatalogType):
             _name = arg.name
@@ -905,7 +911,8 @@ class UseMixin:
         if executable is not None:
             _executable = executable
         
-        use = Use(_name,link,register,transfer,optional,_namespace,_version,_executable)
+        use = Use(_name,link,register,transfer,optional,_namespace,
+            _version,_executable,size)
         self.addUse(use)
     
 

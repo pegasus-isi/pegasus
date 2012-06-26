@@ -359,6 +359,11 @@ class TestUse(unittest.TestCase):
         a = Use("name", link="link", register="true", transfer="true", 
                 optional=True, namespace="ns", version="10", executable=True)
         self.assertEquals(str(a.toJobXML()), '<uses namespace="ns" name="name" version="10" link="link" register="true" transfer="true" optional="true" executable="true"/>')
+
+        a = Use("name", link="link", register="true", transfer="true", 
+                optional=True, namespace="ns", version="10", executable=True,
+                size=1024)
+        self.assertEquals(str(a.toJobXML()), '<uses namespace="ns" name="name" version="10" link="link" register="true" transfer="true" optional="true" executable="true" size="1024"/>')
     
     def testTransformationXML(self):
         """Use.toXML should output properly formatted XML"""
@@ -378,8 +383,9 @@ class TestUse(unittest.TestCase):
         self.assertEquals(str(a.toTransformationXML()), '<uses name="name" version="version"/>')
         
         a = Use("name", link="link", register="true", transfer="true", 
-                optional=True, namespace="ns", version="10", executable=True)
+                optional=True, namespace="ns", version="10", executable=True, size=1024)
         self.assertEquals(str(a.toTransformationXML()), '<uses namespace="ns" name="name" version="10" executable="true"/>')
+
 
 class TestTransformation(unittest.TestCase):
     def testConstructor(self):
@@ -942,40 +948,40 @@ class TestADAG(unittest.TestCase):
         """ADAGs should output properly-formatted XML"""
         c = ADAG('adag',count=10,index=1)
         
-        self.assertEqualXML(c.toXML(),"""<adag xmlns="http://pegasus.isi.edu/schema/DAX" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.3.xsd" version="3.3" name="adag" count="10" index="1">
+        self.assertEqualXML(c.toXML(),"""<adag xmlns="http://pegasus.isi.edu/schema/DAX" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.4.xsd" version="3.4" name="adag" count="10" index="1">
 </adag>""")
         
         # Invoke
         c.invoke("when","what")
-        self.assertEqualXML(c.toXML(),"""<adag xmlns="http://pegasus.isi.edu/schema/DAX" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.3.xsd" version="3.3" name="adag" count="10" index="1">
+        self.assertEqualXML(c.toXML(),"""<adag xmlns="http://pegasus.isi.edu/schema/DAX" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.4.xsd" version="3.4" name="adag" count="10" index="1">
 <invoke when="when">what</invoke>
 </adag>""")
         c.clearInvokes()
         
         # File
         c.addFile(File("file"))
-        self.assertEqualXML(c.toXML(),"""<adag xmlns="http://pegasus.isi.edu/schema/DAX" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.3.xsd" version="3.3" name="adag" count="10" index="1">
+        self.assertEqualXML(c.toXML(),"""<adag xmlns="http://pegasus.isi.edu/schema/DAX" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.4.xsd" version="3.4" name="adag" count="10" index="1">
 <file name="file"/>
 </adag>""")
         c.clearFiles()
         
         # Executable
         c.addExecutable(Executable("exe"))
-        self.assertEqualXML(c.toXML(),"""<adag xmlns="http://pegasus.isi.edu/schema/DAX" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.3.xsd" version="3.3" name="adag" count="10" index="1">
+        self.assertEqualXML(c.toXML(),"""<adag xmlns="http://pegasus.isi.edu/schema/DAX" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.4.xsd" version="3.4" name="adag" count="10" index="1">
 <executable name="exe"/>
 </adag>""")
         c.clearExecutables()
         
         # Transformation
         c.addTransformation(Transformation("xform"))
-        self.assertEqualXML(c.toXML(),"""<adag xmlns="http://pegasus.isi.edu/schema/DAX" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.3.xsd" version="3.3" name="adag" count="10" index="1">
+        self.assertEqualXML(c.toXML(),"""<adag xmlns="http://pegasus.isi.edu/schema/DAX" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.4.xsd" version="3.4" name="adag" count="10" index="1">
 <transformation name="xform"/>
 </adag>""")
         c.clearTransformations()
         
         # Job
         c.addJob(Job("xform",id="ID01"))
-        self.assertEqualXML(c.toXML(),"""<adag xmlns="http://pegasus.isi.edu/schema/DAX" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.3.xsd" version="3.3" name="adag" count="10" index="1">
+        self.assertEqualXML(c.toXML(),"""<adag xmlns="http://pegasus.isi.edu/schema/DAX" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.4.xsd" version="3.4" name="adag" count="10" index="1">
 <job id="ID01" name="xform"/>
 </adag>""")
         c.clearJobs()
@@ -984,7 +990,7 @@ class TestADAG(unittest.TestCase):
         c.addJob(Job("xform",id="ID01"))
         c.addJob(Job("xform",id="ID02"))
         c.depends("ID02","ID01")
-        self.assertEqualXML(c.toXML(),"""<adag xmlns="http://pegasus.isi.edu/schema/DAX" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.3.xsd" version="3.3" name="adag" count="10" index="1">
+        self.assertEqualXML(c.toXML(),"""<adag xmlns="http://pegasus.isi.edu/schema/DAX" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.4.xsd" version="3.4" name="adag" count="10" index="1">
 <job id="ID01" name="xform"/>
 <job id="ID02" name="xform"/>
 <child ref="ID02">
@@ -997,7 +1003,7 @@ class TestADAG(unittest.TestCase):
         c.addFile(File("file"))
         c.addExecutable(Executable("exe"))
         c.addTransformation(Transformation("xform"))
-        self.assertEqualXML(c.toXML(),"""<adag xmlns="http://pegasus.isi.edu/schema/DAX" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.3.xsd" version="3.3" name="adag" count="10" index="1">
+        self.assertEqualXML(c.toXML(),"""<adag xmlns="http://pegasus.isi.edu/schema/DAX" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.4.xsd" version="3.4" name="adag" count="10" index="1">
 <invoke when="when">what</invoke>
 <file name="file"/>
 <executable name="exe"/>
