@@ -89,7 +89,17 @@ public class WorkerNodeFS extends AbstractSiteData {
      * @return <FileServer> if specified, else null
      */
     public FileServer selectScratchLocalFileServer(){
-        return this.getScratch().getLocalDirectory().selectFileServer();
+        //return this.getScratch().getLocalDirectory().selectFileServer();
+        WorkerNodeScratch scratch = this.getScratch();
+        if( scratch == null ){
+            return null;
+        }
+
+        DirectoryType directory = scratch.getLocalDirectory();
+        if( directory == null ){
+            return null;
+        }
+        return directory.selectFileServer();
     }
     
     /**
@@ -99,8 +109,19 @@ public class WorkerNodeFS extends AbstractSiteData {
      * @return <FileServer> if specified, else null
      */
     public FileServer selectScratchSharedFileServer(){
-        return this.getScratch().getSharedDirectory().selectFileServer();
+        //return this.getScratch().getSharedDirectory().selectFileServer();
+        WorkerNodeScratch scratch = this.getScratch();
+        if( scratch == null ){
+            return null;
+        }
+
+        DirectoryType directory = scratch.getSharedDirectory();
+        if( directory == null ){
+            return null;
+        }
+        return directory.selectFileServer();
     }
+    
     /**
      * Returns the scratch area on the head node.
      * 
@@ -126,7 +147,17 @@ public class WorkerNodeFS extends AbstractSiteData {
      * @return <FileServer> if specified, else null
      */
     public FileServer selectStorageLocalFileServer(){
-        return this.getStorage().getLocalDirectory().selectFileServer();
+        //return this.getStorage().getLocalDirectory().selectFileServer();
+        WorkerNodeStorage storage = this.getStorage();
+        if( storage == null ){
+            return null;
+        }
+
+        DirectoryType directory = storage.getLocalDirectory();
+        if( directory == null ){
+            return null;
+        }
+        return directory.selectFileServer();
     }
     
     /**
@@ -136,7 +167,17 @@ public class WorkerNodeFS extends AbstractSiteData {
      * @return <FileServer> if specified, else null
      */
     public FileServer selectStorageSharedFileServer(){
-        return this.getStorage().getSharedDirectory().selectFileServer();
+        //return this.getStorage().getSharedDirectory().selectFileServer();
+        WorkerNodeStorage storage = this.getStorage();
+        if( storage == null ){
+            return null;
+        }
+
+        DirectoryType directory = storage.getSharedDirectory();
+        if( directory == null ){
+            return null;
+        }
+        return directory.selectFileServer();
     }
     
     /**
