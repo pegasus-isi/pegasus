@@ -49,6 +49,7 @@ import edu.isi.pegasus.planner.classes.Notifications;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+import edu.isi.pegasus.planner.parser.ScannerException;
 
 /**
  * This is the new file based TC implementation storing the contents of the file
@@ -1204,10 +1205,14 @@ public class File  extends Abstract
                 boolean profile_error=false;
                 linecount++;
                 if (! (line.startsWith("#") ||
-                       line.trim().equalsIgnoreCase(""))) {
+                       line.trim().length() == 0)) {
                     TransformationCatalogEntry tc = new
                         TransformationCatalogEntry();
                     String[] tokens = line.trim().split("[ \t]+", 6);
+					if (tokens.length < 5) {
+						throw new ScannerException(linecount,
+								"Invalid TC entry format.");
+					}
                     for (int i = 0; i < tokens.length; i++) {
                         switch (i) {
                             case 0: //poolname
