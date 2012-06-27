@@ -32,6 +32,7 @@ import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry
 import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 
 
+import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.code.gridstart.PegasusLite;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.FileTransfer;
@@ -168,7 +169,13 @@ public class Transfer   implements SLS {
         mTCHandle   = bag.getHandleToTransformationCatalog();
 
 
-        mLocalURLPrefix = mSiteStore.lookup( "local" ).getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix( );
+        //PM-590 Stricter checks
+        //mLocalURLPrefix = mSiteStore.lookup( "local" ).getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix( );
+        mLocalURLPrefix = this.selectHeadNodeScratchSharedFileServerURLPrefix( "local" );
+        if( mLocalURLPrefix == null ){
+            this.complainForHeadNodeURLPrefix( "local" );
+        }
+        
         mTransientRC = bag.getHandleToTransientReplicaCatalog();
         mExtraArguments = mProps.getSLSTransferArguments();
         mStageSLSFile = mProps.stageSLSFilesViaFirstLevelStaging();
@@ -338,7 +345,13 @@ public class Transfer   implements SLS {
         //figure out the remote site's headnode gridftp server
         //and the working directory on it.
         //the below should be cached somehow
-        String sourceURLPrefix = mSiteStore.lookup( job.getStagingSiteHandle() ).getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix( );
+//        String sourceURLPrefix = mSiteStore.lookup( job.getStagingSiteHandle() ).getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix( );
+        //PM-590 stricter checks
+        String sourceURLPrefix = this.selectHeadNodeScratchSharedFileServerURLPrefix( job.getStagingSiteHandle() );
+        if( sourceURLPrefix == null ){
+            this.complainForHeadNodeURLPrefix( job, job.getStagingSiteHandle() );
+        }
+        
         String sourceDir = stagingSiteDirectory;
         String destDir = workerNodeDirectory;
 
@@ -427,7 +440,13 @@ public class Transfer   implements SLS {
         //figure out the remote site's headnode gridftp server
         //and the working directory on it.
         //the below should be cached somehow
-        String destURLPrefix = mSiteStore.lookup( job.getStagingSiteHandle() ).getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix();
+//        String destURLPrefix = mSiteStore.lookup( job.getStagingSiteHandle() ).getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix();
+        //PM-590 stricter checks
+        String destURLPrefix = this.selectHeadNodeScratchSharedFileServerURLPrefix( job.getStagingSiteHandle() );
+        if( destURLPrefix == null ){
+            this.complainForHeadNodeURLPrefix( job, job.getStagingSiteHandle() );
+        }
+        
         String destDir = stagingSiteDirectory;
         String sourceDir = workerNodeDirectory;
 
@@ -781,5 +800,71 @@ public class Transfer   implements SLS {
         return Transfer.EXECUTABLE_BASENAME;
     }
 
+    /**
+     * A convenience method to select the URL Prefix for the FileServer for 
+     * the shared scratch space on the HeadNode.
+     * 
+     * @param site the site for which we need the URL prefix
+     * 
+     * @return  URL Prefix for the FileServer for the shared scratch space
+     * 
+     * 
+     */
+    protected String selectHeadNodeScratchSharedFileServerURLPrefix( String site ){
+        return this.selectHeadNodeScratchSharedFileServerURLPrefix( this.mSiteStore.lookup( site ) );
+    }
+    
+    /**
+     * A convenience method to select the URL Prefix for the FileServer for 
+     * the shared scratch space on the HeadNode.
+     * 
+     * @param site the entry for the site for which we need the URL prefix
+     * 
+     * @return  URL Prefix for the FileServer for the shared scratch space
+     * 
+     * 
+     */
+    protected String selectHeadNodeScratchSharedFileServerURLPrefix( SiteCatalogEntry entry ){
+         
+        if( entry == null ){
+            return null;
+        }
+        
+        String prefix = entry.selectHeadNodeScratchSharedFileServerURLPrefix();
+        if( prefix == null ){
+            return null;
+        }
+        
+        return prefix;
+    }
+    
+    /**
+     * Complains for head node url prefix not specified
+     * 
+     * @param site   the site handle
+     * 
+     * @throws RuntimeException when URL Prefix cannot be determined for various reason.
+     */
+    protected void complainForHeadNodeURLPrefix( String site ) {
+         this.complainForHeadNodeURLPrefix( null, site );
+    }
+
+    /**
+     * Complains for head node url prefix not specified
+     * 
+     * @param job    the related job if any
+     * @param site   the site handle
+     * 
+     * @throws RuntimeException when URL Prefix cannot be determined for various reason.
+     */
+    protected void complainForHeadNodeURLPrefix(Job job, String site ) {
+        StringBuffer error = new StringBuffer();
+        if( job != null ){
+            error.append( "[SLS Transfer] For job (" ).append( job.getID() ).append( ")." );
+        }
+        error.append( "Unable to determine URL Prefix for the FileServer for scratch shared file system on site: " ).
+              append( site );
+        throw new RuntimeException( error.toString() );
+    }
 
 }

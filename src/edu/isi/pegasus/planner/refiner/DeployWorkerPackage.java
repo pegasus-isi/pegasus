@@ -231,6 +231,10 @@ public class DeployWorkerPackage
      */
     public static final String PEGASUS_VERSION = Version.instance().toString();
 
+    /**
+     * The name of the refiner for purposes of error logging
+     */
+    public static final String REFINER_NAME = "DeployWorkerPackage";
     
     /**
      * Stores compiled patterns at first use, quasi-Singleton.
@@ -562,9 +566,14 @@ public class DeployWorkerPackage
             String baseName = sourceURL.substring( sourceURL.lastIndexOf( "/" ) + 1 );
             
             //figure out the URL prefix depending on
-            //the TPT configuration
-            String destURLPrefix = 
-                               siteStore.lookup( stagingSite ).getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix();
+            //the TPT configuration                            
+//            String destURLPrefix = 
+//                               siteStore.lookup( stagingSite ).getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix();
+            //PM-590 stricter checks
+            String destURLPrefix = this.selectHeadNodeScratchSharedFileServerURLPrefix( stagingSite );
+            if( destURLPrefix == null ){
+                this.complainForHeadNodeURLPrefix( REFINER_NAME, stagingSite );
+            }   
             
             boolean localTransfer = this.runTransferOnLocalSite( defaultRefiner, stagingSite, destURLPrefix, Job.STAGE_IN_JOB);
             String urlPrefix =  localTransfer ?

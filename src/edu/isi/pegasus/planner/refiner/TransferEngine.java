@@ -123,6 +123,11 @@ public class TransferEngine extends Engine {
     public static final String SRM_MOUNT_POINT_PROPERTIES_SUFFIX = "mountpoint";
     
     /**
+     * The name of the refiner for purposes of error logging
+     */
+    public static final String REFINER_NAME = "TranferEngine";
+    
+    /**
      * A map that associates the site name with the SRM server url and mount point. 
      */ 
     private Map<String, NameValue> mSRMServiceURLToMountPointMap;
@@ -323,6 +328,34 @@ public class TransferEngine extends Engine {
     }
 
     /**
+     * Complains for a missing head node file server on a site for a job
+     * 
+     * @param job      the job
+     * @param site     the site 
+     */
+    private void complainForHeadNodeFileServer( Job job, String site) {
+        this.complainForHeadNodeFileServer( job.getID(), site);
+    }
+    
+    /**
+     * Complains for a missing head node file server on a site for a job
+     * 
+     * @param jobname  the name of the job
+     * @param site     the site 
+     */
+    private void complainForHeadNodeFileServer(String jobname, String site) {
+        StringBuffer error = new StringBuffer();
+        error.append( "[" ).append( REFINER_NAME ).append( "] ");
+        if( jobname != null ){
+            error.append( "For job (" ).append( jobname).append( ")." ); 
+        }
+        error.append( " File Server not specified for head node scratch shared filesystem for site: ").
+              append( site );
+        throw new RuntimeException( error.toString() );
+        
+    }
+
+    /**
      * Returns the Job object for the job specified.
      *
      * @param jobName  the name of the job
@@ -404,10 +437,15 @@ public class TransferEngine extends Engine {
                     throw new RuntimeException( mLogMsg );
                 }
 
-                
+                //PM-590 Stricter checks
+                String stagingSiteURLPrefix = stagingSite.selectHeadNodeScratchSharedFileServerURLPrefix();
+                if( stagingSiteURLPrefix == null ){
+                    this.complainForHeadNodeURLPrefix( REFINER_NAME, currentJob, stagingSite.getSiteHandle() );
+                }
                 boolean localTransfer = runTransferOnLocalSite( 
                                             currentJob.getSiteHandle(), 
-                                            stagingSite.getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix(),
+                                            stagingSiteURLPrefix,
+//                                            stagingSite.getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix(),
                                             Job.STAGE_OUT_JOB);
                 vOutPoolTX = getFileTX(outputSite, currentJob, localTransfer );
                 mTXRefiner.addStageOutXFERNodes( currentJob, vOutPoolTX, rcb, localTransfer );
@@ -508,8 +546,16 @@ public class TransferEngine extends Engine {
 
             //definite inconsitency as url prefix and mount point
             //are not picked up from the same server
-            String destURL =  p.getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix() +
-                                 this.getPathOnStageoutSite( lfn );
+            //PM-590 stricter checks
+//            String destURL =  p.getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix() +
+//                                 this.getPathOnStageoutSite( lfn );
+  
+            String urlPrefix = this.selectHeadNodeScratchSharedFileServerURLPrefix( p );
+            if( urlPrefix == null ){
+                this.complainForHeadNodeURLPrefix( REFINER_NAME, job, pool );
+            }
+            String destURL =  urlPrefix +
+                                this.getPathOnStageoutSite( lfn );
 
             //selLocs are all the locations found in ReplicaMechanism corr
             //to the pool pool
@@ -696,9 +742,20 @@ public class TransferEngine extends Engine {
             throw new RuntimeException( mLogMsg );
         }
 
-        String execURL = stagingSite.getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix() +
-            mSiteStore.getExternalWorkDirectory(stagingSite.getHeadNodeFS().selectScratchSharedFileServer(), stagingSiteHandle) +
-            File.separatorChar + lfn;
+        //PM-590 stricter checks
+//        String execURL = stagingSite.getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix() +
+//            mSiteStore.getExternalWorkDirectory(stagingSite.getHeadNodeFS().selectScratchSharedFileServer(), stagingSiteHandle) +
+//            File.separatorChar + lfn;
+        FileServer stagingSiteSharedScratchFS = stagingSite.selectHeadNodeScratchSharedFileServer();
+        if( stagingSiteSharedScratchFS == null ){
+            this.complainForHeadNodeFileServer( job, stagingSiteHandle );
+            
+        }
+        StringBuffer buffer = new StringBuffer();
+        buffer.append( stagingSiteSharedScratchFS.getURLPrefix() ).
+               append( mSiteStore.getExternalWorkDirectory(stagingSiteSharedScratchFS, stagingSiteHandle)).
+               append( File.separatorChar ).append( lfn );
+        String execURL = buffer.toString();
 
         //write out the exec url to the cache file
         trackInTransientRC(lfn,execURL,stagingSiteHandle);
@@ -842,10 +899,23 @@ public class TransferEngine extends Engine {
             }
 
             String sourceURI = null;
-            String thirdPartyDestURI = destSite.getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix() +
-                                       mSiteStore.getExternalWorkDirectory(
-                                               destSite.getHeadNodeFS().selectScratchSharedFileServer(),
-                                               destSiteHandle);
+            
+            //PM-590 Stricter checks
+//            String thirdPartyDestURI = destSite.getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix() +
+//                                       mSiteStore.getExternalWorkDirectory(
+//                                               destSite.getHeadNodeFS().selectScratchSharedFileServer(),
+//                                               destSiteHandle);
+
+            FileServer destSiteSharedScratchFS = destSite.selectHeadNodeScratchSharedFileServer();
+            if( destSiteSharedScratchFS == null ){
+                this.complainForHeadNodeFileServer( job, destSiteHandle );
+            }
+            StringBuffer buffer = new StringBuffer();
+            buffer.append( destSiteSharedScratchFS.getURLPrefix() ).
+                   append( mSiteStore.getExternalWorkDirectory(
+                                               destSiteSharedScratchFS,
+                                               destSiteHandle) );
+            String thirdPartyDestURI = buffer.toString();
 
             //definite inconsitency as url prefix and mount point
             //are not picked up from the same server
@@ -1057,16 +1127,24 @@ public class TransferEngine extends Engine {
 
         //sAbsPath would be just the source directory absolute path
         //dAbsPath would be just the destination directory absolute path
-        String dAbsPath = mSiteStore.getExternalWorkDirectory( stagingSite.getHeadNodeFS().selectScratchSharedFileServer(),
+        
+        //PM-590 Stricter checks
+//        String dAbsPath = mSiteStore.getExternalWorkDirectory( stagingSite.getHeadNodeFS().selectScratchSharedFileServer(),
+//                                                               stagingSiteHandle);
+        FileServer stagingSiteSharedScratchFS = stagingSite.selectHeadNodeScratchSharedFileServer();
+        if( stagingSiteSharedScratchFS == null ){
+            this.complainForHeadNodeFileServer(job, stagingSiteHandle);
+        }
+        String dAbsPath = mSiteStore.getExternalWorkDirectory( stagingSiteSharedScratchFS,
                                                                stagingSiteHandle);
         String sAbsPath = null;
 
         //sDirURL would be the url to the source directory.
         //dDirURL would be the url to the destination directoy
         //and is always a networked url.
-        //definite inconsitency as url prefix and mount point
-        //are not picked up from the same server
-        String dDirURL = stagingSite.getHeadNodeFS().selectScratchSharedFileServer( ).getURLPrefix() + dAbsPath;
+//        String dDirURL = stagingSite.getHeadNodeFS().selectScratchSharedFileServer( ).getURLPrefix() + dAbsPath;
+        String dDirURL = stagingSiteSharedScratchFS.getURLPrefix() + dAbsPath;
+  
         String sDirURL = null;
         
         
@@ -1592,7 +1670,14 @@ public class TransferEngine extends Engine {
             String lfn = pf.getLFN();
 
             StringBuffer stagingSiteURL = new StringBuffer();
-            FileServer server = stagingSiteEntry.getHeadNodeFS().selectScratchSharedFileServer();
+            
+            //PM-590 stricter checks
+//            FileServer server = stagingSiteEntry.getHeadNodeFS().selectScratchSharedFileServer();
+            FileServer server = stagingSiteEntry.selectHeadNodeScratchSharedFileServer();
+            if( server == null ){
+                this.complainForHeadNodeFileServer(job, stagingSiteEntry.getSiteHandle());
+            }
+  
             stagingSiteURL.append( server.getURLPrefix() ).
                     append( mSiteStore.getExternalWorkDirectory(server, job.getSiteHandle() ) ).
                     append( File.separatorChar ).append( lfn );
