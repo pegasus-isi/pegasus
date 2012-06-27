@@ -80,6 +80,11 @@ import java.util.Vector;
 public class InterPoolEngine extends Engine implements Refiner {
 
     /**
+     * The name of the refiner for purposes of error logging
+     */
+    public static final String REFINER_NAME = "InterPoolEngine";
+    
+    /**
      * ADag object corresponding to the Dag whose jobs we want to schedule.
      *
      */
@@ -411,6 +416,8 @@ public class InterPoolEngine extends Engine implements Refiner {
         return (ss == null) ? job.getSiteHandle(): ss;
     }
 
+    
+
     /**
      * Incorporates the profiles from the various sources into the job.
      * The profiles are incorporated in the order pool, transformation catalog,
@@ -516,8 +523,16 @@ public class InterPoolEngine extends Engine implements Refiner {
             String stagedPath =  mSiteStore.getInternalWorkDirectory( job, true )
                                 + File.separator + job.getStagedExecutableBaseName();
 
+            //PM-590 Stricter checks
+            String headnodeURLPrefix = this.selectHeadNodeScratchSharedFileServerURLPrefix( site );
+            if( headnodeURLPrefix == null ){
+                this.complainForHeadNodeURLPrefix( REFINER_NAME, job , site.getSiteHandle() );
+            }
             fTx.addDestination( stagingSiteHandle,
-                                site.getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix() + stagedPath);
+                                headnodeURLPrefix + stagedPath);
+
+//            fTx.addDestination( stagingSiteHandle,
+//                                site.getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix() + stagedPath);
 
             //added in the end now after dependant executables
             //have been handled Karan May 31 2007
@@ -650,6 +665,7 @@ public class InterPoolEngine extends Engine implements Refiner {
                         FileTransfer fTx = new FileTransfer( basename,
                                                              job.jobName );
                         fTx.setType(FileTransfer.EXECUTABLE_FILE);
+                        
                         //the physical transformation points to
                         //guc or the user specified transfer mechanism
                         //accessible url
@@ -658,16 +674,19 @@ public class InterPoolEngine extends Engine implements Refiner {
                         //the destination url is the working directory for
                         //pool where it needs to be staged to
                         //always creating a third party transfer URL
-                        //for the destination.
-//                        String stagedPath = mPoolHandle.getExecPoolWorkDir(job)
-//                            + File.separator + basename;
-//                        fTx.addDestination(siteHandle,
-//                                           site.getURLPrefix(false) + stagedPath);
-                        
+                        //for the destination.                        
                         String stagedPath = mSiteStore.getInternalWorkDirectory( job, true )
                             + File.separator + basename;
-                        fTx.addDestination(siteHandle,
-                                           site.getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix() + stagedPath);
+
+                        //PM-590 Stricter checks
+                        String headnodeURLPrefix = this.selectHeadNodeScratchSharedFileServerURLPrefix( site );
+                        if( headnodeURLPrefix == null ){
+                            this.complainForHeadNodeURLPrefix( REFINER_NAME, job , site.getSiteHandle() );
+                        }
+                        fTx.addDestination( stagingSiteHandle,
+                                            headnodeURLPrefix + stagedPath);
+//                        fTx.addDestination(siteHandle,
+//                                           site.getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix() + stagedPath);
 
 
                         dependantExecutables.add( fTx );

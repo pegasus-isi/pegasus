@@ -30,6 +30,8 @@ import edu.isi.pegasus.planner.catalog.site.impl.old.PoolMode;
 
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 
+import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
+import edu.isi.pegasus.planner.classes.Job;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Iterator;
@@ -280,5 +282,74 @@ public abstract  class Engine {
             dest.add(iter.next());
         }
     }
+    
+    /**
+     * A convenience method to select the URL Prefix for the FileServer for 
+     * the shared scratch space on the HeadNode.
+     * 
+     * @param site the site for which we need the URL prefix
+     * 
+     * @return  URL Prefix for the FileServer for the shared scratch space
+     * 
+     * 
+     */
+    protected String selectHeadNodeScratchSharedFileServerURLPrefix( String site ){
+        return this.selectHeadNodeScratchSharedFileServerURLPrefix( this.mSiteStore.lookup( site ) );
+    }
+    
+    /**
+     * A convenience method to select the URL Prefix for the FileServer for 
+     * the shared scratch space on the HeadNode.
+     * 
+     * @param site the entry for the site for which we need the URL prefix
+     * 
+     * @return  URL Prefix for the FileServer for the shared scratch space
+     * 
+     * 
+     */
+    protected String selectHeadNodeScratchSharedFileServerURLPrefix( SiteCatalogEntry entry ){
+         
+        if( entry == null ){
+            return null;
+        }
+        
+        String prefix = entry.selectHeadNodeScratchSharedFileServerURLPrefix();
+        if( prefix == null ){
+            return null;
+        }
+        
+        return prefix;
+    }
+    
+    /**
+     * Complains for head node url prefix not specified
+     * 
+     * @param refiner the name of the refiner
+     * @param site   the site handle
+     * 
+     * @throws RuntimeException when URL Prefix cannot be determined for various reason.
+     */
+    protected void complainForHeadNodeURLPrefix( String refiner, String site ) {
+         this.complainForHeadNodeURLPrefix( refiner, null, site );
+    }
 
+    /**
+     * Complains for head node url prefix not specified
+     * 
+     * @param refiner the name of the refiner
+     * @param job    the related job if any
+     * @param site   the site handle
+     * 
+     * @throws RuntimeException when URL Prefix cannot be determined for various reason.
+     */
+    protected void complainForHeadNodeURLPrefix(String refiner, Job job, String site ) {
+        StringBuffer error = new StringBuffer();
+        error.append( "[" ).append( refiner ).append( "] ");
+        if( job != null ){
+            error.append( "For job (" ).append( job.getID() ).append( ")." );
+        }
+        error.append( "Unable to determine URL Prefix for the FileServer for scratch shared file system on site: " ).
+              append( site );
+        throw new RuntimeException( error.toString() );
+    }
 }
