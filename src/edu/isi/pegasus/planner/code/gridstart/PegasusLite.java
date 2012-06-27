@@ -48,6 +48,7 @@ import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
 
+import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.transformation.Mapper;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
@@ -771,7 +772,17 @@ public class PegasusLite implements GridStart {
 //
 //         String exectionSiteDirectory     = (String)job.condorVariables.removeKey( key );
 
-        FileServer stagingSiteFileServer = mSiteStore.lookup( job.getStagingSiteHandle() ).getHeadNodeFS().selectScratchSharedFileServer();
+        //PM-590 stricter checks
+//        FileServer stagingSiteFileServer = mSiteStore.lookup( job.getStagingSiteHandle() ).getHeadNodeFS().selectScratchSharedFileServer();
+        SiteCatalogEntry stagingSiteEntry = mSiteStore.lookup( job.getStagingSiteHandle() );
+        if( stagingSiteEntry == null ){
+            this.complainForHeadNodeFileServer( job.getID(),  job.getStagingSiteHandle());
+        }
+        FileServer stagingSiteFileServer = stagingSiteEntry.selectHeadNodeScratchSharedFileServer();
+        if( stagingSiteFileServer == null ){
+            this.complainForHeadNodeFileServer( job.getID(),  job.getStagingSiteHandle());
+        }
+        
         String stagingSiteDirectory      = mSiteStore.getExternalWorkDirectory(stagingSiteFileServer, job.getStagingSiteHandle() );
         String workerNodeDir             = getWorkerNodeDirectory( job );
 
@@ -1204,5 +1215,23 @@ public class PegasusLite implements GridStart {
             }
         }
         return location;
+    }
+    
+    /**
+     * Complains for a missing head node file server on a site for a job
+     * 
+     * @param jobname  the name of the job
+     * @param site     the site 
+     */
+    private void complainForHeadNodeFileServer(String jobname, String site) {
+        StringBuffer error = new StringBuffer();
+        error.append( "[PegasusLite] " );
+        if( jobname != null ){
+            error.append( "For job (" ).append( jobname).append( ")." ); 
+        }
+        error.append( " File Server not specified for head node scratch shared filesystem for site: ").
+              append( site );
+        throw new RuntimeException( error.toString() );
+        
     }
 }
