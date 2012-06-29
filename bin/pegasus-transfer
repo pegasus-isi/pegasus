@@ -742,16 +742,16 @@ def gsiftp_guc_options(attempt, create_dest, third_party):
     if tool_info['globus-url-copy']['version_major'] >= 5:
         options += " -concurrency 4"
 
+    # some machines can not deal with tcp-bs - only allow if no failures have occurred
+    #if gsiftp_failures == 0:
+    #    options += " -tcp-bs 15MB"
+
     # Only do third party transfers for gsiftp->gsiftp. For other combinations, fall
     # back to settings which will for well over for example NAT
     if third_party:
 
         # parallism
         options += " -parallel 4"
-
-        # some machines can not deal with tcp-bs - only allow if no failures have occurred
-        if gsiftp_failures == 0:
-            options += " -tcp-bs 15MB"
 
         # -fast only for Globus 4 and above
         if tool_info['globus-version']['version_major'] >= 4:
