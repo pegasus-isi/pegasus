@@ -32,6 +32,7 @@ import edu.isi.pegasus.planner.classes.TransferJob;
 
 
 
+import edu.isi.pegasus.planner.namespace.Dagman;
 import java.util.Map;
 import java.util.Iterator;
 import java.util.HashMap;
@@ -56,6 +57,12 @@ public class InPlace implements CleanupStrategy{
      * ID of the cleanup job.
      */
     public static final String CLEANUP_JOB_PREFIX = "clean_up_";
+    
+    /**
+     * The default value for the maxjobs variable for the category of cleanup
+     * jobs.
+     */
+    public static final String DEFAULT_MAX_JOBS_FOR_CLEANUP_CATEGORY = "4";
 
     /**
      * The mapping to siteHandle to all the jobs that are mapped to it
@@ -128,6 +135,17 @@ public class InPlace implements CleanupStrategy{
         mResMapRoots  = new HashMap();
         mDoNotClean   = new HashSet();
         mMaxDepth=0;
+        
+        //set the default value for maxjobs only if not specified
+        //in the properties
+        String key = this.getDefaultCleanupMaxJobsPropertyKey();
+        if( this.mProps.getProperty(key) == null ){
+            mLogger.log( "Setting property " + key + " to  " +
+                          this.DEFAULT_MAX_JOBS_FOR_CLEANUP_CATEGORY + 
+                          " to set max jobs for cleanup jobs category",
+                          LogManager.INFO_MESSAGE_LEVEL );
+            mProps.setProperty( key, InPlace.DEFAULT_MAX_JOBS_FOR_CLEANUP_CATEGORY );
+        }
     }
 
     /**
@@ -653,4 +671,21 @@ public class InPlace implements CleanupStrategy{
         }
         return site;
     }
+    
+     /**
+     * Returns the property key that can be used to set the max jobs for the
+     * default category associated with the registration jobs.
+     * 
+     * @return the property key
+     */
+    public String getDefaultCleanupMaxJobsPropertyKey(){
+        StringBuffer key = new StringBuffer();
+        
+        key.append( Dagman.NAMESPACE_NAME ).append( "." ).
+            append( CleanupImplementation.DEFAULT_CLEANUP_CATEGORY_KEY ).
+            append( "." ).append( Dagman.MAXJOBS_KEY.toLowerCase() );
+        
+        return key.toString();
+    }
+
 }

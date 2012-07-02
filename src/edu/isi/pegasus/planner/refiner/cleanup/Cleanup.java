@@ -61,11 +61,7 @@ public class Cleanup implements CleanupImplementation{
      */
     public static final String FILE_URL_SCHEME = "file:";
 
-    /**
-     * Default category for registration jobs
-     */
-    public static final String DEFAULT_CLEANUP_CATEGORY_KEY = "cleanup";
-
+    
     /**
      * The transformation namespace for the  job.
      */
