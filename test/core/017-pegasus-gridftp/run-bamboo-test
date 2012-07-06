@@ -17,6 +17,11 @@ function run_test
     fi
 }
 
+if [ -d "/ccg/software/globus/default" ]; then
+	export GLOBUS_LOCATION=/ccg/software/globus/default
+	. $GLOBUS_LOCATION/etc/globus-user-env.sh
+fi
+
 TMPFILE=$(mktemp temp_file.XXXXX)
 
 # Create directories
