@@ -85,10 +85,11 @@
     <javac destdir="${build.src}" srcdir="src" 
            encoding="UTF-8" deprecation="true" debug="true"
            target="${build.target}" source="${build.source}"
-           includes="edu/isi/pegasus/common/**/*.java"
+           includes="edu/isi/pegasus/common/**/*.java,edu/isi/pegasus/gridftp/**/*.java"
            excludes="edu/isi/pegasus/common/**/*Test.java,edu/isi/pegasus/planner/**/*.java"
            classpathref="build.classpath"/>
   </target>
+  
 
   <target name="contrib" depends="build-setup"
           description="Compiles contributed code .e.g Clemson">
