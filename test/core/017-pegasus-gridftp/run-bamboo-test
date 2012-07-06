@@ -1,0 +1,44 @@
+#!/bin/bash
+
+
+TOPDIR=`pwd`
+
+function run_test
+{
+    cmd=$1
+
+    echo "Test command: $cmd"
+    
+    $cmd
+    rc=$?
+    if [ $rc -ne 0 ]; then
+        echo "ERROR: Command failed with exit code $rc"
+        exit 1
+    fi
+}
+
+TMPFILE=$(mktemp temp_file.XXXXX)
+
+# Create directories
+run_test "pegasus-gridftp mkdir gsiftp://cartman.isi.edu/tmp/pegasus-gridftp-test"
+run_test "pegasus-gridftp mkdir gsiftp://cartman.isi.edu/tmp/pegasus-gridftp-test/a"
+run_test "pegasus-gridftp mkdir -p gsiftp://cartman.isi.edu/tmp/pegasus-gridftp-test/b/c"
+
+run_test "globus-url-copy file://${PWD}/$TMPFILE gsiftp://cartman.isi.edu/tmp/pegasus-gridftp-test/a/1.dat"
+run_test "globus-url-copy file://${PWD}/$TMPFILE gsiftp://cartman.isi.edu/tmp/pegasus-gridftp-test/b/c/2.dat"
+run_test "globus-url-copy file://${PWD}/$TMPFILE gsiftp://cartman.isi.edu/tmp/pegasus-gridftp-test/b/c/3.dat"
+
+run_test "pegasus-gridftp ls gsiftp://cartman.isi.edu/tmp/pegasus-gridftp-test/b/c"
+run_test "pegasus-gridftp ls -a gsiftp://cartman.isi.edu/tmp/pegasus-gridftp-test/b/c"
+run_test "pegasus-gridftp ls -l gsiftp://cartman.isi.edu/tmp/pegasus-gridftp-test/b/c"
+
+run_test "pegasus-gridftp rm gsiftp://cartman.isi.edu/tmp/pegasus-gridftp-test/b/c/2.dat"
+run_test "pegasus-gridftp rm -r gsiftp://cartman.isi.edu/tmp/pegasus-gridftp-test/b"
+run_test "pegasus-gridftp rm -f gsiftp://cartman.isi.edu/tmp/pegasus-gridftp-test/b"
+
+run_test "pegasus-gridftp rm -r -f gsiftp://cartman.isi.edu/tmp/pegasus-gridftp-test"
+
+rm -f temp_file.*
+
+exit 0
+
