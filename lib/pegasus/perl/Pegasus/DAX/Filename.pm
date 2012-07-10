@@ -68,6 +68,7 @@ sub optional;
 sub register; 
 sub transfer;
 sub executable; 
+sub size;
 
 sub toXML {
     # purpose: put self onto stream as XML
@@ -90,6 +91,7 @@ sub toXML {
 	     , attribute('register',boolean($self->register),$xmlns)
 	     , attribute('transfer',$self->transfer,$xmlns)
 	     , attribute('executable',boolean($self->executable),$xmlns)
+	     , attribute('size',$self->size,$xmlns)
 	     , " />\n" ); 
 }
 
@@ -206,6 +208,10 @@ constants starting with C<LINK_>.
 =item executable
 
 Setter and getter for boolean values. Please use Perl truth. 
+
+=item size
+
+Setter and getter for file size attribute. 
 
 =item transfer
 
