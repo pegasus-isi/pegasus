@@ -42,7 +42,7 @@ printf F "%04u-%02u-%02u %02u:%02u:%02uZ\n",
 	$now[5]+1900, $now[4]+1, @now[3,2,1,0]; 
 close F; 
 
-my $file = newFile( name => 'f.a' );
+my $file = newFile( name => 'f.a', size => '300' );
 $file->addPFN( newPFN( url => 'file://' . Cwd::abs_path($fn),
 		       site => 'local' ) ); 
 $adag->addFile($file); 
@@ -50,7 +50,7 @@ $adag->addFile($file);
 if ( exists $ENV{'PEGASUS_HOME'} ) {
     use File::Spec;
     use POSIX (); 
-    my $keg = File::Spec->catfile( $ENV{'PEGASUS_HOME'}, 'bin', 'keg' ); 
+    my $keg = File::Spec->catfile( $ENV{'PEGASUS_HOME'}, 'bin', 'pegasus-keg' ); 
     my @os = POSIX::uname(); 
     $os[2] =~ s/^(\d+(\.\d+(\.\d+)?)?).*/$1/;
 
@@ -64,14 +64,15 @@ if ( exists $ENV{'PEGASUS_HOME'} ) {
 }
 
 my %hash = ( link => LINK_OUT, register => 'false', transfer => 'true' ); 
-my $fna = newFilename( name => $file->name, link => LINK_IN );
+my $fna = newFilename( name => $file->name, link => LINK_IN, size => '200' );
 my $fnb1 = newFilename( name => 'f.b1', %hash );
 my $fnb2 = newFilename( name => 'f.b2', %hash ); 
 $job1->addArgument( '-a', $job1->name, '-T60', '-i', $fna,
 		    '-o', $fnb1, $fnb2 ); 
 $adag->addJob($job1); 
 
-my $fnc1 = newFilename( name => 'f.c1', %hash );
+my %hash1 = ( link => LINK_OUT, register => 'false', transfer => 'true', size => '100' );
+my $fnc1 = newFilename( name => 'f.c1', %hash1 );
 $fnb1->link( LINK_IN ); 
 $job2->addArgument( '-a', $job2->name, '-T60', '-i', $fnb1, 
 		    '-o', $fnc1 ); 
