@@ -152,7 +152,7 @@ Methods listed in order of query list on wiki.
 
 https://confluence.pegasus.isi.edu/display/pegasus/Pegasus+Statistics+Python+Version+Modified
 """
-__rcsid__ = "$Id: stampede_statistics.py 31846 2012-05-21 18:43:33Z mgoode $"
+__rcsid__ = "$Id: stampede_statistics.py 31980 2012-07-02 15:12:17Z mgoode $"
 __author__ = "Monte Goode"
 
 from netlogger.analysis.modules._base import SQLAlchemyInit
@@ -628,7 +628,11 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         q = self.session.query(cast(func.sum(Invocation.remote_duration * JobInstance.multiplier_factor), Float))
         q = q.filter(Invocation.task_submit_seq >= 0)
         q = q.filter(Invocation.job_instance_id == JobInstance.job_instance_id)
-        q = q.filter(Invocation.wf_id.in_(self._wfs))
+        if self._expand:
+            q = q.filter(Invocation.wf_id == Workflow.wf_id)
+            q = q.filter(Workflow.root_wf_id == self._root_wf_id)
+        else:
+            q = q.filter(Invocation.wf_id.in_(self._wfs))
         q = q.filter(Invocation.transformation != 'condor::dagman')
         return q.first()[0]
 
@@ -648,7 +652,11 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         """
         q = self.session.query(cast(func.sum(JobInstance.local_duration * JobInstance.multiplier_factor), Float).label('wall_time'))
         q = q.filter(JobInstance.job_id == Job.job_id)
-        q = q.filter(Job.wf_id.in_(self._wfs))
+        if self._expand:
+            q = q.filter(Job.wf_id == Workflow.wf_id)
+            q = q.filter(Workflow.root_wf_id == self._root_wf_id)
+        else:
+            q = q.filter(Job.wf_id.in_(self._wfs))
         if self._expand:
             d_or_d = self._dax_or_dag_cond()
             q = q.filter(or_(not_(d_or_d), and_(d_or_d, JobInstance.subwf_id == None)))
