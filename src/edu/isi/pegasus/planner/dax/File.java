@@ -75,6 +75,12 @@ public class File extends CatalogType {
     protected boolean mExecutable = false;
 
     /**
+     * File size of the file no units required
+     */
+    
+    protected String mSize = "";
+    
+    /**
      * Copy constructor
      * @param f File
      */
@@ -84,6 +90,7 @@ public class File extends CatalogType {
         this.mRegister = f.getRegister();
         this.mTransfer = f.getTransfer();
         this.mExecutable = f.getExecutable();
+        this.mSize = f.getSize();
     }
 
     /**
@@ -97,6 +104,7 @@ public class File extends CatalogType {
         this.mRegister = f.getRegister();
         this.mTransfer = f.getTransfer();
         this.mExecutable = f.getExecutable();
+        this.mSize = f.getSize();
     }
 
     /**
@@ -254,7 +262,7 @@ public class File extends CatalogType {
     }
 
     /**
-     * Mart the file as executable. Default is false
+     * Mark the file as executable. Default is false
      * @return
      */
     public File setExecutable() {
@@ -271,6 +279,25 @@ public class File extends CatalogType {
         return mExecutable;
     }
 
+    /**
+     * Set the size of the file.
+     * @param size
+     * @return 
+     */
+    public File setSize(String size) {
+        if (size != null) {
+            mSize = size;
+        }
+        return this;
+    }
+    
+    /**
+     * Return the size of the file
+     * @return empty string if no size defined, otherwise returns the size
+     */
+    public String getSize(){
+        return mSize;
+    }
     
     public boolean isFile(){
         return true;
@@ -307,6 +334,7 @@ public class File extends CatalogType {
         this.mRegister = f.getRegister();
         this.mTransfer = f.getTransfer();
         this.mExecutable = f.getExecutable();
+        this.mSize = f.getSize();
         return f;
     }
 
@@ -376,6 +404,9 @@ public class File extends CatalogType {
             if (mExecutable) {
                 writer.writeAttribute("executable", "true");
             }
+            if (mSize != null &&  !mSize.isEmpty() ) {
+                writer.writeAttribute("size", mSize);
+            }   
             writer.endElement();
         } else if (elementname.equalsIgnoreCase("file")) {
             //Used by the file element at the top of the dax

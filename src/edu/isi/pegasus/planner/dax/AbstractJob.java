@@ -1007,7 +1007,49 @@ public class AbstractJob {
         }
         return this;
     }
+    
+    /**
+     *
+     * @param file
+     * @param link
+     * @param register
+     * @param size
+     * @return AbstractJob
+     */
+    public AbstractJob uses(String file, File.LINK link, boolean register,String size) {
+        File f = new File(file, link);
+        f.setRegister(register);
+        f.setSize(size);
+        if (!mUses.contains(f)) {
+            mUses.add(f);
+        } else {
+            mLogger.log("Job " + Separator.combine(mNamespace, mName, mVersion) + "already contains a file " + Separator.
+                    combine(f.mNamespace, f.mName, f.mVersion) + ". Ignoring",
+                    LogManager.WARNING_MESSAGE_LEVEL);
+        }
+        return this;
+    }
 
+    /**
+     *
+     * @param file
+     * @param link
+     * @param size
+     * @return AbstractJob
+     */
+    public AbstractJob uses(String file, File.LINK link, String size) {
+        File f = new File(file, link);
+        f.setSize(size);
+        if (!mUses.contains(f)) {
+            mUses.add(f);
+        } else {
+            mLogger.log("Job " + Separator.combine(mNamespace, mName, mVersion) + "already contains a file " + Separator.
+                    combine(f.mNamespace, f.mName, f.mVersion) + ". Ignoring",
+                    LogManager.WARNING_MESSAGE_LEVEL);
+        }
+        return this;
+    }
+    
     /**
      *
      * @param file
@@ -1033,6 +1075,28 @@ public class AbstractJob {
      * @param file
      * @param link
      * @param transfer
+     * @param size
+     * @return AbstractJob
+     */
+    public AbstractJob uses(String file, File.LINK link, File.TRANSFER transfer, String size) {
+        File f = new File(file, link);
+        f.setTransfer(transfer);
+        f.setSize(size);
+        if (!mUses.contains(f)) {
+            mUses.add(f);
+        } else {
+            mLogger.log("Job " + Separator.combine(mNamespace, mName, mVersion) + "already contains a file " + Separator.
+                    combine(f.mNamespace, f.mName, f.mVersion) + ". Ignoring",
+                    LogManager.WARNING_MESSAGE_LEVEL);
+        }
+        return this;
+    }
+    
+    /**
+     *
+     * @param file
+     * @param link
+     * @param transfer
      * @param register
      * @return AbstractJob
      */
@@ -1041,6 +1105,31 @@ public class AbstractJob {
         File f = new File(file, link);
         f.setRegister(register);
         f.setTransfer(transfer);
+        if (!mUses.contains(f)) {
+            mUses.add(f);
+        } else {
+            mLogger.log("Job " + Separator.combine(mNamespace, mName, mVersion) + "already contains a file " + Separator.
+                    combine(f.mNamespace, f.mName, f.mVersion) + ". Ignoring",
+                    LogManager.WARNING_MESSAGE_LEVEL);
+        }
+        return this;
+    }
+    
+    /**
+     *
+     * @param file
+     * @param link
+     * @param transfer
+     * @param register
+     * @param size
+     * @return AbstractJob
+     */
+    public AbstractJob uses(String file, File.LINK link, File.TRANSFER transfer,
+            boolean register, String size) {
+        File f = new File(file, link);
+        f.setRegister(register);
+        f.setTransfer(transfer);
+        f.setSize(size);
         if (!mUses.contains(f)) {
             mUses.add(f);
         } else {
@@ -1068,6 +1157,36 @@ public class AbstractJob {
         f.setOptional(optional);
         f.setTransfer(transfer);
         f.setExecutable(executable);
+        if (!mUses.contains(f)) {
+            mUses.add(f);
+        } else {
+            mLogger.log("Job " + Separator.combine(mNamespace, mName, mVersion)
+                    + "already contains a file " + Separator.combine(
+                    f.mNamespace, f.mName, f.mVersion)
+                    + ". Ignoring", LogManager.WARNING_MESSAGE_LEVEL);
+        }
+        return this;
+    }
+    
+    /**
+     * 
+     * @param file
+     * @param link
+     * @param transfer
+     * @param register
+     * @param optional
+     * @param executable
+     * @param size
+     * @return AbstractJob
+     */
+    public AbstractJob uses(String file, File.LINK link, File.TRANSFER transfer,
+            boolean register, boolean optional, boolean executable, String size) {
+        File f = new File(file, link);
+        f.setRegister(register);
+        f.setOptional(optional);
+        f.setTransfer(transfer);
+        f.setExecutable(executable);
+        f.setSize(size);
         if (!mUses.contains(f)) {
             mUses.add(f);
         } else {
@@ -1118,6 +1237,30 @@ public class AbstractJob {
         }
         return this;
     }
+    
+        /**
+     * 
+     * @param file
+     * @param link
+     * @param transfer
+     * @param size
+     * @return AbstractJob
+     */
+    public AbstractJob uses(File file, File.LINK link, File.TRANSFER transfer,String size) {
+        File f = new File(file, link);
+        f.setTransfer(transfer);
+        f.setSize(size);
+        if (!mUses.contains(f)) {
+            mUses.add(f);
+        } else {
+            mLogger.log("Job " + Separator.combine(mNamespace, mName, mVersion)
+                    + "already contains a file " + Separator.combine(
+                    f.mNamespace, f.mName, f.mVersion)
+                    + ". Ignoring", LogManager.WARNING_MESSAGE_LEVEL);
+        }
+        return this;
+    }
+
 
     /**
      * 
@@ -1141,7 +1284,55 @@ public class AbstractJob {
 
 
     }
+    
+       /**
+     * 
+     * @param file
+     * @param link
+     * @param register
+     * @param size
+     * @return AbstractJob
+     */
+    public AbstractJob uses(File file, File.LINK link, boolean register, String size) {
+        File f = new File(file, link);
+        f.setRegister(register);
+        f.setSize(size);
+        if (!mUses.contains(f)) {
+            mUses.add(f);
+        } else {
+            mLogger.log("Job " + Separator.combine(mNamespace, mName, mVersion)
+                    + "already contains a file "
+                    + Separator.combine(f.mNamespace, f.mName, f.mVersion)
+                    + ". Ignoring", LogManager.WARNING_MESSAGE_LEVEL);
+        }
+        return this;
 
+
+    }
+
+    /**
+     * 
+     * @param file
+     * @param link
+     * @param size
+     * @return AbstractJob
+     */
+    public AbstractJob uses(File file, File.LINK link, String size) {
+        File f = new File(file, link);
+        f.setSize(size);
+        if (!mUses.contains(f)) {
+            mUses.add(f);
+        } else {
+            mLogger.log("Job " + Separator.combine(mNamespace, mName, mVersion)
+                    + "already contains a file "
+                    + Separator.combine(f.mNamespace, f.mName, f.mVersion)
+                    + ". Ignoring", LogManager.WARNING_MESSAGE_LEVEL);
+        }
+        return this;
+
+
+    }
+    
     /**
      *
      * @param file
@@ -1155,6 +1346,32 @@ public class AbstractJob {
         File f = new File(file, link);
         f.setTransfer(transfer);
         f.setRegister(register);
+        if (!mUses.contains(f)) {
+            mUses.add(f);
+        } else {
+            mLogger.log("Job " + Separator.combine(mNamespace, mName, mVersion)
+                    + "already contains a file " + Separator.combine(
+                    f.mNamespace, f.mName, f.mVersion)
+                    + ". Ignoring", LogManager.WARNING_MESSAGE_LEVEL);
+        }
+        return this;
+    }
+    
+        /**
+     *
+     * @param file
+     * @param link
+     * @param transfer
+     * @param register
+     * @param size
+     * @return AbstractJob
+     */
+    public AbstractJob uses(File file, File.LINK link, File.TRANSFER transfer,
+            boolean register, String size) {
+        File f = new File(file, link);
+        f.setTransfer(transfer);
+        f.setRegister(register);
+        f.setSize(size);
         if (!mUses.contains(f)) {
             mUses.add(f);
         } else {
@@ -1183,6 +1400,37 @@ public class AbstractJob {
         f.setRegister(register);
         f.setOptional(optional);
         f.setExecutable(executable);
+        if (!mUses.contains(f)) {
+            mUses.add(f);
+        } else {
+            mLogger.log("Job " + Separator.combine(mNamespace, mName, mVersion)
+                    + "already contains a file " + Separator.combine(
+                    f.mNamespace, f.mName, f.mVersion)
+                    + ". Ignoring", LogManager.WARNING_MESSAGE_LEVEL);
+        }
+        return this;
+    }
+    
+    
+    /**
+     *
+     * @param file
+     * @param link
+     * @param transfer
+     * @param register
+     * @param optional
+     * @param executable
+     * @param size
+     * @return AbstractJob
+     */
+    public AbstractJob uses(File file, File.LINK link, File.TRANSFER transfer,
+            boolean register, boolean optional, boolean executable, String size) {
+        File f = new File(file, link);
+        f.setTransfer(transfer);
+        f.setRegister(register);
+        f.setOptional(optional);
+        f.setExecutable(executable);
+        f.setSize(size);
         if (!mUses.contains(f)) {
             mUses.add(f);
         } else {

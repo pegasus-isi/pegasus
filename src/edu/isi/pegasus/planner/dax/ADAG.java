@@ -1169,8 +1169,8 @@ public class ADAG {
 
         DAX j3 = new DAX("j3", "findrange.dax", "j3");
         j3.addArgument("--site ").addArgument("local");
-        j3.uses(new File("f.b2"), File.LINK.INPUT);
-        j3.uses(new File("f.c2"), File.LINK.OUTPUT, File.TRANSFER.FALSE, false);
+        j3.uses(new File("f.b2"), File.LINK.INPUT,"");
+        j3.uses(new File("f.c2"), File.LINK.OUTPUT, File.TRANSFER.FALSE, false,false, false,"30");
         j3.addInvoke(Invoke.WHEN.start, "/bin/notify -m START gmehta@isi.edu");
         j3.addInvoke(Invoke.WHEN.at_end, "/bin/notify -m END gmehta@isi.edu");
         j3.
