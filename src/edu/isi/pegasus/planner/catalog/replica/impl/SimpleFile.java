@@ -738,8 +738,8 @@ public class SimpleFile implements ReplicaCatalog
 
   /**
    * Inserts a new mapping into the replica catalog. Any existing
-   * mapping of the same LFN and PFN will be replaced, including all its
-   * attributes.
+   * mapping of the same LFN, PFN, and HANDLE will be replaced, including all of 
+   * its attributes.
    *
    * @param lfn is the logical filename under which to book the entry.
    * @param tuple is the physical filename and associated PFN attributes.
@@ -755,10 +755,11 @@ public class SimpleFile implements ReplicaCatalog
     if ( m_lfn.containsKey(lfn) ) {
       boolean seen = false;
       String pfn = tuple.getPFN();
+      String handle = tuple.getResourceHandle ();
       c = (Collection) m_lfn.get(lfn);
       for ( Iterator i=c.iterator(); i.hasNext() && ! seen; ) {
 	ReplicaCatalogEntry rce = (ReplicaCatalogEntry) i.next();
-	if ( (seen = pfn.equals(rce.getPFN())) ) {
+	if ( (seen = pfn.equals(rce.getPFN())) && handle.equals (rce.getResourceHandle ()) ) {
 	  try {
 	    i.remove();
 	  } catch ( UnsupportedOperationException uoe ) {
