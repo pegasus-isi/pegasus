@@ -272,12 +272,8 @@ public class Cluster extends Bundle {
                 String key = this.constructFileKey( ft.getLFN(), job.getStagingSiteHandle() );
                 //check to see if the file is already being transferred by
                 //some other stage in job to that site
-                //String existingSiTX = (String) mFileTable.get( key );
-                
-                //temporary for some performance testing
-                String existingSiTX = null;
+                String existingSiTX = (String) mFileTable.get( key );
             
-                
                 if ( existingSiTX == null) {
                     //schedule the file for transfer
                     txFiles.add( ft );
