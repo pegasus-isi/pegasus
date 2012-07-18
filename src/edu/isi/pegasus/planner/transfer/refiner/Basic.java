@@ -36,7 +36,7 @@ import edu.isi.pegasus.planner.provenance.pasoa.pps.PPSFactory;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Collection;
-import java.util.TreeMap;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
 import edu.isi.pegasus.planner.classes.PegasusBag;
@@ -103,7 +103,7 @@ public class Basic extends MultipleFTPerXFERJobRefiner {
                     PegasusBag bag ){
         super( dag, bag );
         mLogMsg = null;
-        mFileTable = new TreeMap();
+        mFileTable = new HashMap(10000);
         
         mCreateRegistrationJobs = ( mProps.getReplicaMode() != null ) &&
                                     mProps.createRegistrationJobs();
