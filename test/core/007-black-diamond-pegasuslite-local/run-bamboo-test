@@ -53,6 +53,8 @@ cat >sites.xml <<EOF
         <profile namespace="pegasus" key="style" >condor</profile>
         <profile namespace="condor" key="universe" >vanilla</profile>
         <profile namespace="env" key="PEGASUS_HOME" >/usr</profile>
+        <!-- reset the PATH so that we can check local.sh to set up the env correctly -->
+        <profile namespace="env" key="PATH" ></profile>
     </site>
 </sitecatalog>
 EOF
