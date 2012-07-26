@@ -43,18 +43,6 @@ cat >sites.xml <<EOF
                 </shared>
             </storage>
         </head-fs>
-        <profile namespace="pegasus" key="clusters.num">1</profile>
-    </site>
-    <site  handle="condorpool" arch="x86" os="LINUX">
-        <head-fs>
-            <scratch />
-            <storage />
-        </head-fs>
-        <profile namespace="pegasus" key="style" >condor</profile>
-        <profile namespace="condor" key="universe" >vanilla</profile>
-        <profile namespace="env" key="PEGASUS_HOME" >/usr</profile>
-        <!-- reset the PATH so that we can check local.sh to set up the env correctly -->
-        <profile namespace="env" key="PATH" ></profile>
     </site>
 </sitecatalog>
 EOF
