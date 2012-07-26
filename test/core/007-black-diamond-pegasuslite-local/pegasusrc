@@ -6,6 +6,6 @@ pegasus.dir.storage.deep=false
 
 pegasus.condor.logs.symlink = false
 
-pegasus.data.configuration = Condor
+pegasus.data.configuration = condorio
 
 
