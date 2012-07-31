@@ -297,6 +297,17 @@ public class MPIExec extends Abstract {
     public boolean abortOnFristJobFailure(){
         return false;
     }
+    
+    /**
+     * A boolean indicating whether ordering is important while traversing 
+     * through the aggregated job. 
+     * 
+     * @return false
+     */
+    public boolean topologicalOrderingRequired(){
+        //ordering is not important, as PMC has a graph representation
+        return false;
+    }
 
     /**
      * Looks at the profile keys associated with the job to generate the argument

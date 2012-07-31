@@ -21,6 +21,8 @@ import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.AggregatedJob;
 
+import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
+import java.util.Iterator;
 import java.util.List;
 
 
@@ -96,7 +98,15 @@ public interface JobAggregator {
      */
     public void makeAbstractAggregatedJobConcrete( AggregatedJob job );
    
-
+    /**
+     * A boolean indicating whether ordering is important while traversing 
+     * through the aggregated job.
+     * 
+     * @return a boolean
+     */
+    public boolean topologicalOrderingRequired();
+    
+    
     /**
      * Setter method to indicate , failure on first consitutent job should
      * result in the abort of the whole aggregated job.

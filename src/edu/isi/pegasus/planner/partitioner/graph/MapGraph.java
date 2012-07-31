@@ -27,6 +27,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 
 /**
  * An implementation of the Graph that is backed by a Map.
@@ -54,9 +55,22 @@ public class MapGraph implements Graph{
      * The default constructor.
      */
     public MapGraph(){
-        mStore = new HashMap();
+        this( false );
+    }
+    
+    /**
+     * The overloaded constructor
+     * 
+     * @param preserveInsertionOrder  a boolean indicating whether you want to
+     *                                preserve insertion order. If set to true, the
+     *                                nodeIterator() will return nodes in the order
+     *                                they were added.
+     */
+    public MapGraph( boolean preserveInsertionOrder ){
+        mStore = ( preserveInsertionOrder ) ? new LinkedHashMap(): new HashMap();
         mLogger =  LogManagerFactory.loadSingletonInstance();
     }
+
 
     /**
      * Adds a node to the Graph. It overwrites an already existing node with the

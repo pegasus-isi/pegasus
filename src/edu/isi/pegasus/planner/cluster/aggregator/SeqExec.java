@@ -234,6 +234,18 @@ public class SeqExec extends Abstract {
     }
 
     /**
+     * A boolean indicating whether ordering is important while traversing 
+     * through the aggregated job. 
+     * 
+     * @return true
+     */
+    public boolean topologicalOrderingRequired(){
+        //ordering is  important, as jobs need to be written out in
+        //topological order for label based clustering
+        return true;
+    }
+    
+    /**
      * Returns the name of the log file to used on the remote site, for the
      * seqexec job. Depending upon the property settings, either assigns a
      * common

@@ -50,6 +50,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.Iterator;
 import edu.isi.pegasus.common.util.Separator;
+import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import java.util.HashSet;
 
 /**
@@ -887,10 +888,13 @@ public abstract class Abstract implements JobAggregator {
             //traverse throught the jobs to determine input/output files
             //and merge the profiles for the jobs
             int taskid = 1;
-            for( Iterator it = job.constituentJobsIterator(); it.hasNext(); taskid++ ) {
-                Job constitutentJob = (Job) it.next();
-
-
+            
+            for(  Iterator it = this.topologicalOrderingRequired() ?
+                            job.topologicalSortIterator()://we care about order
+                            job.nodeIterator();//dont care about order
+                                                it.hasNext(); taskid++ ) {
+                GraphNode node = ( GraphNode )it.next();
+                Job constitutentJob = (Job) node.getContent();
 
                 //handle stdin
                 if( constitutentJob instanceof AggregatedJob ){
