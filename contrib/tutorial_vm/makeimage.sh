@@ -13,13 +13,18 @@ TUTORIALPASS="pegasus"
 #CONDOR_URL=file:///var/www/html/pub/condor/condor-7.8.1-x86_64_rhap_6.2-stripped.tar.gz
 CONDOR_URL=http://juve.isi.edu/pub/condor/condor-7.8.1-x86_64_rhap_6.2-stripped.tar.gz
 
-if ! [[ "$(cat /etc/redhat-release 2>/dev/null)" =~ "CentOS release 5" ]]; then
-    echo "This script must be run on a CentOS 5 machine"
+if ! [[ "$(cat /etc/redhat-release 2>/dev/null)" =~ "CentOS release 6" ]]; then
+    echo "This script must be run on a CentOS 6 machine"
     exit 1
 fi
 
 if [ $(id -u) -ne 0 ]; then
     echo "This script must be run as user root so that it can mount loopback devices"
+    exit 1
+fi
+
+if [ $(sestatus | grep enabled | wc -l) -ne 0 ]; then
+    echo "Disable SELinux before running this script"
     exit 1
 fi
 
@@ -51,8 +56,8 @@ if [ -f "$raw" ]; then
     exit 1
 fi
 
-echo "Creating $(SIZE)GB image..."
-dd if=/dev/zero of=$raw bs=1M count=1 seek=$((SIZE-1))
+echo "Creating $SIZE GB image..."
+dd if=/dev/zero of=$raw bs=1M count=1 seek=$(((SIZE*1024)-1))
 
 #echo "Partitioning image..."
 #parted $raw mklabel msdos
@@ -82,13 +87,11 @@ loop1=$(losetup -o 32256 -f --show $raw)
 
 echo "Formatting partition 1..."
 # For some reason this tries to create a file system that is too big unless you specify the number of blocks
-mkfs.ext4 -L rootdisk $loop1 $(((SIZE-1)*1024*1024/4096))
+mkfs.ext4 -L rootdisk $loop1 $(((((SIZE*1024)-1)*1024*1024)/4096))
 
 echo "Mounting partition 1..."
 mkdir -p $mnt
 mount $loop1 $mnt
-
-ls $mnt
 
 echo "Creating basic directory layout..."
 mkdir -p $mnt/{proc,etc,dev,var/{cache,log,lock/rpm}}
@@ -199,7 +202,6 @@ chroot $mnt useradd condor
 chroot $mnt chown -R condor:condor /var/condor /etc/condor
 chroot $mnt chkconfig --add condor
 
-exit
 
 echo "Unmounting partition 1..."
 sync
