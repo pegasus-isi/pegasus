@@ -4,85 +4,33 @@
 <section id="cli">
   <title>Command Line Tools</title>
 
-  <para>This chapter contains reference material for all the command-line
-  tools distributed with Pegasus.</para>
-
-  <xi:include href="manpage.pegasus-analyzer.xml"
-              xmlns:xi="http://www.w3.org/2001/XInclude" />
-
-  <xi:include href="manpage.pegasus-cleanup.xml"
-              xmlns:xi="http://www.w3.org/2001/XInclude" />
-
-  <xi:include href="manpage.pegasus-cluster.xml"
-              xmlns:xi="http://www.w3.org/2001/XInclude" />
-
-  <xi:include href="manpage.pegasus-config.xml"
-              xmlns:xi="http://www.w3.org/2001/XInclude" />
-
-  <xi:include href="manpage.pegasus-create-dir.xml"
-              xmlns:xi="http://www.w3.org/2001/XInclude" />
-
-  <xi:include href="manpage.pegasus-dax-validator.xml"
-              xmlns:xi="http://www.w3.org/2001/XInclude" />
-
-  <xi:include href="manpage.pegasus-exitcode.xml"
-              xmlns:xi="http://www.w3.org/2001/XInclude" />
-
-  <xi:include href="manpage.pegasus-invoke.xml"
-              xmlns:xi="http://www.w3.org/2001/XInclude" />
-
-  <xi:include href="manpage.pegasus-keg.xml"
-              xmlns:xi="http://www.w3.org/2001/XInclude" />
-
-  <xi:include href="manpage.pegasus-kickstart.xml"
-              xmlns:xi="http://www.w3.org/2001/XInclude" />
-
-  <xi:include href="manpage.pegasus-monitord.xml"
-              xmlns:xi="http://www.w3.org/2001/XInclude" />
-
-  <xi:include href="manpage.pegasus-plan.xml"
-              xmlns:xi="http://www.w3.org/2001/XInclude" />
-
-  <xi:include href="manpage.pegasus-plots.xml"
-              xmlns:xi="http://www.w3.org/2001/XInclude" />
-
-  <xi:include href="manpage.pegasus-rc-client.xml"
-              xmlns:xi="http://www.w3.org/2001/XInclude" />
-
-  <xi:include href="manpage.pegasus-remove.xml"
-              xmlns:xi="http://www.w3.org/2001/XInclude" />
-
-  <xi:include href="manpage.pegasus-run.xml"
-              xmlns:xi="http://www.w3.org/2001/XInclude" />
-
-  <xi:include href="manpage.pegasus-s3.xml"
-              xmlns:xi="http://www.w3.org/2001/XInclude" />
-
-  <xi:include href="manpage.pegasus-sc-client.xml"
-              xmlns:xi="http://www.w3.org/2001/XInclude" />
-
-  <xi:include href="manpage.pegasus-sc-converter.xml"
-              xmlns:xi="http://www.w3.org/2001/XInclude" />
-
-  <xi:include href="manpage.pegasus-statistics.xml"
-              xmlns:xi="http://www.w3.org/2001/XInclude" />
-
-  <xi:include href="manpage.pegasus-status.xml"
-              xmlns:xi="http://www.w3.org/2001/XInclude" />
-
-  <xi:include href="manpage.pegasus-submit-dag.xml"
-	  xmlns:xi="http://www.w3.org/2001/XInclude" />
-
-  <xi:include href="manpage.pegasus-tc-client.xml"
-              xmlns:xi="http://www.w3.org/2001/XInclude" />
-
-  <xi:include href="manpage.pegasus-tc-converter.xml"
-              xmlns:xi="http://www.w3.org/2001/XInclude" />
-
-  <xi:include href="manpage.pegasus-transfer.xml"
-              xmlns:xi="http://www.w3.org/2001/XInclude" />
-
-  <xi:include href="manpage.pegasus-version.xml"
-              xmlns:xi="http://www.w3.org/2001/XInclude" />
-
+  <xi:include href="manpage.pegasus-analyzer.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+  <xi:include href="manpage.pegasus-cleanup.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+  <xi:include href="manpage.pegasus-cluster.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+  <xi:include href="manpage.pegasus-config.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+  <xi:include href="manpage.pegasus-create-dir.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+  <xi:include href="manpage.pegasus-dagman.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+  <xi:include href="manpage.pegasus-dax-validator.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+  <xi:include href="manpage.pegasus-exitcode.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+  <xi:include href="manpage.pegasus-gridftp.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+  <xi:include href="manpage.pegasus-invoke.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+  <xi:include href="manpage.pegasus-keg.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+  <xi:include href="manpage.pegasus-kickstart.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+  <xi:include href="manpage.pegasus-monitord.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+  <xi:include href="manpage.pegasus-mpi-cluster.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+  <xi:include href="manpage.pegasus-plan.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+  <xi:include href="manpage.pegasus-plots.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+  <xi:include href="manpage.pegasus-rc-client.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+  <xi:include href="manpage.pegasus-remove.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+  <xi:include href="manpage.pegasus-run.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+  <xi:include href="manpage.pegasus-s3.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+  <xi:include href="manpage.pegasus-sc-client.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+  <xi:include href="manpage.pegasus-sc-converter.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+  <xi:include href="manpage.pegasus-statistics.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+  <xi:include href="manpage.pegasus-status.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+  <xi:include href="manpage.pegasus-submit-dag.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+  <xi:include href="manpage.pegasus-tc-client.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+  <xi:include href="manpage.pegasus-tc-converter.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+  <xi:include href="manpage.pegasus-transfer.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
+  <xi:include href="manpage.pegasus-version.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
 </section>
