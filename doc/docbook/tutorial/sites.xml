@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- This stuff at the beginning is just boilerplate -->
+<sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0">
+
+
+    <!-- The local site contains information about the submit host -->
+    <!-- The arch and os keywords are used to match binaries in the transformation catalog -->
+    <site handle="local" arch="x86_64" os="LINUX">
+
+        <!-- These are the paths on the submit host were Pegasus stores data -->
+        <head-fs>
+            
+            <!-- Storage is where pegasus stores output files -->
+            <storage>
+                <shared>
+                    <file-server protocol="file" url="file://" mount-point="/home/tutorial/output"/>
+                    <internal-mount-point mount-point="/home/tutorial/output"/>
+                </shared>
+            </storage>
+
+        </head-fs>
+
+	<!-- This profile tells Pegasus where to find the user's private key for SCP transfers -->
+        <profile namespace="env" key="SSH_PRIVATE_KEY">/home/tutorial/.ssh/id_rsa</profile>
+    </site>
+
+
+    <!-- This site is a Condor pool running on localhost. Normally this site would 
+         have many different machines in it, but for this tutorial it is just a 
+         "Personal Condor" pool. Really, the local site and PegasusVM are the same,
+         we just distinguish between them in this tutorial for illustrative purposes. -->
+    <site handle="PegasusVM" arch="x86_64" os="LINUX">
+
+        <!-- These are the paths on the PegasusVM site where Pegasus stores data -->
+        <head-fs>
+
+            <!-- Scratch is where Pegasus stores intermediate files -->
+            <scratch>
+                <shared>
+                    <file-server protocol="scp" url="scp://127.0.0.1" mount-point="/home/tutorial/work"/>
+                    <internal-mount-point mount-point="/home/tutorial/work"/>
+                </shared>
+            </scratch>
+
+        </head-fs>
+
+        <!-- These profiles tell Pegasus that the PegasusVM site is a plain Condor pool -->
+        <profile namespace="pegasus" key="style">condor</profile>
+        <profile namespace="condor" key="universe">vanilla</profile>
+
+        <!-- This profile tells Pegasus where the worker package is installed on PegasusVM -->
+        <profile namespace="env" key="PEGASUS_HOME">/usr/local/pegasus</profile>
+    </site>
+</sitecatalog>

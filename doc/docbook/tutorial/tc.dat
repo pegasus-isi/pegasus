@@ -1,0 +1,29 @@
+# This is the transformation catalog. It lists information about each of the
+# executables that are used by the workflow.
+
+tr preprocess {
+    site PegasusVM {
+        pfn "/home/tutorial/bin/preprocess"
+        arch "x86_64"
+        os "linux"
+        type "INSTALLED"
+    }
+}
+
+tr findrange {
+    site PegasusVM {
+        pfn "/home/tutorial/bin/findrange"
+        arch "x86_64"
+        os "linux"
+        type "INSTALLED"
+    }
+}
+
+tr analyze {
+    site PegasusVM {
+        pfn "/home/tutorial/bin/analyze"
+        arch "x86_64"
+        os "linux"
+        type "INSTALLED"
+    }
+}

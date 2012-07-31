@@ -10,11 +10,10 @@
   <section id="localhost">
     <title>General execution environment: Localhost</title>
 
-    <para>In this configuration , Pegasus schedules the jobs to run locally on
+    <para>In this configuration, Pegasus schedules the jobs to run locally on
     the submit host. Running locally is a good approach for smaller workflows,
-    testing workflows, and for demonstations such as the <link
-    linkend="tutorial_vm">Pegasus tutorial using Virtual
-    Machines</link>.Pegasus supports two methods of local execution: local
+    testing workflows, and for demonstations such as the <link linkend="tutorial">
+    Pegasus tutorial</link>. Pegasus supports two methods of local execution: local
     Condor pool, and shell planner. The former is preferred as the latter does
     not support all Pegasus' features (such as notifications).</para>
 

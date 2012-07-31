@@ -5,10 +5,10 @@
   <title>Pegasus 4.0 User Guide</title>
 
   <xi:include href="about.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
-
-  <xi:include href="walkthrough.xml"
+  
+  <xi:include href="tutorial.xml"
               xmlns:xi="http://www.w3.org/2001/XInclude" />
-
+  
   <xi:include href="installation.xml"
               xmlns:xi="http://www.w3.org/2001/XInclude" />
 
