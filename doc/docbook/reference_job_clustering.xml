@@ -49,9 +49,9 @@
       running the clustered job on a particular site is determined as
       explained in section 7.<programlisting>#Running pegasus-plan to generate clustered workflows
 
-$ <emphasis>pegasus-plan &amp;ndash;-dax example.dax --dir ./dags &amp;ndash;p siteX &amp;ndash;-output local
-               --cluster [ comma separated list of clustering techniques]  &amp;ndash;verbose
-</emphasis>
+$ pegasus-plan --dax example.dax --dir ./dags -p siteX --output local
+               --cluster [comma separated list of clustering techniques]  -verbose
+
 Valid clustering techniques are horizontal and label.</programlisting></para>
 
       <para>The naming convention of submit files of the clustered jobs
@@ -115,11 +115,12 @@ siteX    C     /shared/PEGASUS/bin/jobC INSTALLED       INTEL32::LINUX  PEGASUS:
 </programlisting>
 
               <figure>
-                <title></title>
+                <title>Clustering by clusters.size</title>
 
                 <mediaobject>
                   <imageobject>
-                    <imagedata fileref="images/advanced-clustering-1.png" />
+                    <imagedata contentdepth="8in"
+                               fileref="images/advanced-clustering-1.png"/>
                   </imageobject>
                 </mediaobject>
               </figure>
@@ -163,11 +164,12 @@ siteX    B     /shared/PEGASUS/bin/jobB INSTALLED       INTEL32::LINUX PEGASUS::
               to siteX, then 3 clustered jobs will be created.</para>
 
               <figure>
-                <title></title>
+                <title>Clustering by clusters.num</title>
 
                 <mediaobject>
                   <imageobject>
-                    <imagedata fileref="images/advanced-clustering-2.png" />
+                    <imagedata contentdepth="8in"
+                               fileref="images/advanced-clustering-2.png"/>
                   </imageobject>
                 </mediaobject>
               </figure>
@@ -251,11 +253,12 @@ siteX    B     /shared/PEGASUS/bin/jobB INSTALLED       INTEL32::LINUX PEGASUS::
 siteX    C     /shared/PEGASUS/bin/jobC INSTALLED       INTEL32::LINUX PEGASUS::clusters.maxruntime=300,job.runtime=100</programlisting>
 
         <figure>
-          <title></title>
+          <title>Clustering by runtime</title>
 
           <mediaobject>
             <imageobject>
-              <imagedata fileref="images/advanced-clustering-5.png" />
+              <imagedata contentdepth="8in"
+                         fileref="images/advanced-clustering-5.png"/>
             </imageobject>
           </mediaobject>
         </figure>
@@ -274,7 +277,7 @@ siteX    C     /shared/PEGASUS/bin/jobC INSTALLED       INTEL32::LINUX PEGASUS::
 
         <programlisting><emphasis role="bold"> pegasus.clusterer.preference          Runtime</emphasis> </programlisting>
 
-        <para></para>
+        <para/>
       </section>
 
       <section id="label_clustering">
@@ -286,11 +289,12 @@ siteX    C     /shared/PEGASUS/bin/jobC INSTALLED       INTEL32::LINUX PEGASUS::
         technique that is specific to his workflows. If there is no label
         associated with the job, the job is not clustered and is executed as
         is<figure>
-            <title></title>
+            <title>Label-based clustering</title>
 
             <mediaobject>
               <imageobject>
-                <imagedata fileref="images/advanced-clustering-3.png" />
+                <imagedata contentdepth="8in"
+                           fileref="images/advanced-clustering-3.png"/>
               </imageobject>
             </mediaobject>
           </figure></para>
@@ -326,15 +330,15 @@ siteX    C     /shared/PEGASUS/bin/jobC INSTALLED       INTEL32::LINUX PEGASUS::
           DAX looks as follows</para>
 
           <programlisting>&lt;adag &gt;
-&amp;mldr;
+...
   &lt;job id="ID000004" namespace="app" name="analyze" version="1.0" level="1" &gt;
     &lt;argument&gt;-a bottom -T60  -i &lt;filename file="user.f.c1"/&gt;  -o &lt;filename file="user.f.d"/&gt;&lt;/argument&gt;
-    &lt;profile namespace=&amp;ldquo;pegasus&amp;rdquor; key=&amp;ldquo;user_label&amp;rdquor;&gt;p1&lt;/profile&gt;
+    &lt;profile namespace="pegasus" key="user_label"&gt;p1&lt;/profile&gt;
     &lt;uses file="user.f.c1" link="input" dontRegister="false" dontTransfer="false"/&gt;
     &lt;uses file="user.f.c2" link="input" dontRegister="false" dontTransfer="false"/&gt;
     &lt;uses file="user.f.d" link="output" dontRegister="false" dontTransfer="false"/&gt;
   &lt;/job&gt;
-&amp;mldr;
+...
 &lt;/adag&gt;</programlisting>
 
           <itemizedlist>
@@ -363,21 +367,22 @@ siteX    C     /shared/PEGASUS/bin/jobC INSTALLED       INTEL32::LINUX PEGASUS::
         workflow to be horizontally clustered and some to be label clustered.
         This can be achieved by specifying a comma separated list of
         clustering techniques to the<emphasis role="bold">
-        &amp;ndash;-cluster</emphasis> option of <emphasis
+        --cluster</emphasis> option of <emphasis
         role="bold">pegasus-plan</emphasis>. In this case the clustering
         techniques are applied one after the other on the workflow in the
         order specified on the command line.</para>
 
         <para>For example</para>
 
-        <programlisting>$ <emphasis>pegasus-plan &amp;ndash;-dax example.dax --dir ./dags --cluster label,horizontal &amp;ndash;s siteX &amp;ndash;-output local --verbose</emphasis></programlisting>
+        <programlisting>$ <emphasis>pegasus-plan --dax example.dax --dir ./dags --cluster label,horizontal -s siteX --output local --verbose</emphasis></programlisting>
 
         <figure>
-          <title></title>
+          <title>Recursive clustering</title>
 
           <mediaobject>
             <imageobject>
-              <imagedata fileref="images/advanced-clustering-4.png" />
+              <imagedata contentdepth="8in"
+                         fileref="images/advanced-clustering-4.png"/>
             </imageobject>
           </mediaobject>
         </figure>

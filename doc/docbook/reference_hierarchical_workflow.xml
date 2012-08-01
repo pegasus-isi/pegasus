@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="US-ASCII"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE section PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
 "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <section id="hierarchial_workflows">
@@ -25,7 +25,9 @@
 
           <mediaobject>
             <imageobject>
-              <imagedata fileref="./images/daxjob-mapping.png" />
+              <imagedata contentdepth="100%"
+                         fileref="./images/daxjob-mapping.png" scalefit="1"
+                         width="100%"/>
             </imageobject>
           </mediaobject>
         </figure>
@@ -41,7 +43,9 @@
 
           <mediaobject>
             <imageobject>
-              <imagedata fileref="./images/dagjob-mapping.png" />
+              <imagedata contentdepth="100%"
+                         fileref="./images/dagjob-mapping.png" scalefit="1"
+                         width="100%"/>
             </imageobject>
           </mediaobject>
         </figure>
@@ -295,7 +299,9 @@
 
       <mediaobject>
         <imageobject>
-          <imagedata fileref="./images/recursion_in_hierarchal_workflows.png" />
+          <imagedata contentdepth="100%"
+                     fileref="./images/recursion_in_hierarchal_workflows.png"
+                     scalefit="1" width="100%"/>
         </imageobject>
       </mediaobject>
     </figure>
@@ -308,7 +314,9 @@
 
       <mediaobject>
         <imageobject>
-          <imagedata fileref="./images/hierarchal_workflows_execution_timeline.png" />
+          <imagedata contentdepth="100%"
+                     fileref="./images/hierarchal_workflows_execution_timeline.png"
+                     scalefit="1" width="100%"/>
         </imageobject>
       </mediaobject>
     </figure>

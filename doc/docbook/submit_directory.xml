@@ -650,7 +650,9 @@ ctime="2009-01-30T19:17:41-06:00" uid="29548" user="vahi" gid="13872" group="bvr
 
       <mediaobject>
         <imageobject>
-          <imagedata fileref="images/Pegasus_Job_State_Delay.jpg" scalefit="" />
+          <imagedata contentdepth="100%"
+                     fileref="images/Pegasus_Job_State_Delay.jpg" scalefit="1"
+                     width="100%"/>
         </imageobject>
       </mediaobject>
     </section>

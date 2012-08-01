@@ -165,9 +165,9 @@
 
         <mediaobject>
           <imageobject>
-            <imagedata align="center"
+            <imagedata align="center" contentdepth="100%"
                        fileref="images/data-configuration-sharedfs.png"
-                       role="" scale="" width="" wordsize="" />
+                       scalefit="1" width="100%"/>
           </imageobject>
         </mediaobject>
       </figure>
@@ -239,9 +239,9 @@
 
         <mediaobject>
           <imageobject>
-            <imagedata align="center"
+            <imagedata align="center" contentdepth="100%"
                        fileref="images/data-configuration-nonsharedfs.png"
-                       id="Figure2" />
+                       id="Figure2" scalefit="1" width="100%"/>
           </imageobject>
         </mediaobject>
       </figure>
@@ -334,9 +334,9 @@
 
         <mediaobject>
           <imageobject>
-            <imagedata align="center"
+            <imagedata align="center" contentdepth="100%"
                        fileref="images/data-configuration-condorio.png"
-                       id="Figure13" role="" scale="" width="" wordsize="" />
+                       id="Figure13" scalefit="1" width="100%"/>
           </imageobject>
         </mediaobject>
       </figure>
@@ -627,7 +627,9 @@ file:///shared/storage/input/data/f.input  symlink://shared-scratch/workflow-exe
 
       <mediaobject>
         <imageobject>
-          <imagedata fileref="images/cluster-transfer-refiner.png" lang="" />
+          <imagedata contentdepth="100%"
+                     fileref="images/cluster-transfer-refiner.png"
+                     scalefit="1" width="100%"/>
         </imageobject>
       </mediaobject>
     </figure>
