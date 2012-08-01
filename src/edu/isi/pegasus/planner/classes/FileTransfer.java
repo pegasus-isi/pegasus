@@ -438,8 +438,11 @@ public class FileTransfer extends PegasusFile {
         ft.mLogicalFile = new String(this.mLogicalFile);
         ft.mFlags        = (BitSet)this.mFlags.clone();
         ft.mTransferFlag = this.mTransferFlag;
+        ft.mSize        = this.mSize;
+        ft.mType        = this.mType;
         ft.mJob         = new String(this.mJob);
         ft.mPriority    = this.mPriority;
+        
         //the maps are not cloned underneath
 
         return ft;
