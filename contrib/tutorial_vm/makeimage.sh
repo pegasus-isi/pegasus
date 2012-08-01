@@ -277,8 +277,8 @@ echo 'tutorial	ALL=(ALL) 	ALL' >> /etc/sudoers
 END
 
 # Copy tutorial files into tutorial user's home dir
-if [ -d ../../doc/docbook/tutorial ]; then
-    cp -R ../../doc/docbook/tutorial/* $mnt/home/tutorial/
+if [ -d ../../doc/tutorial ]; then
+    cp -R ../../doc/tutorial/* $mnt/home/tutorial/
     rm -rf $mnt/home/tutorial/.svn $mnt/home/tutorial/bin/.svn $mnt/home/tutorial/input/.svn
 fi
 
