@@ -20,7 +20,176 @@
   <section>
     <title>VirtualBox</title>
 
-    <para>TBD</para>
+    <para>VirtualBox is a free desktop virtual machine manager. You can use it
+    to run the Pegasus Tutorial VM on your desktop or laptop.</para>
+
+    <section>
+      <title>Install VirtualBox</title>
+
+      <para>First, download and install the VirtualBox platform package from
+      the VirtualBox website: <ulink
+      url="https://www.virtualbox.org">https://www.virtualbox.org</ulink></para>
+    </section>
+
+    <section>
+      <title>Download VM Image</title>
+
+      <para>Next, download the VM image: <ulink
+      url="http://download.pegasus.isi.edu/wms/download/latest/PegasusTutorialVM.zip">http://download.pegasus.isi.edu/wms/download/latest/PegasusTutorialVM.zip</ulink></para>
+
+      <para>The download is about 350 MB.</para>
+
+      <para>Unzip the downloaded file and move the <literal>.vmdk</literal>
+      file it contains to somewhere that you can find it later.</para>
+    </section>
+
+    <section>
+      <title>Create Virtual Machine</title>
+
+      <para>Start VirtualBox. You should get a screen that looks like
+      this:</para>
+
+      <figure>
+        <title>VirtualBox Welcome Screen</title>
+
+        <mediaobject>
+          <imageobject>
+            <imagedata contentdepth="100%" fileref="images/vm_vb_01.png"
+                       scalefit="1" width="100%"/>
+          </imageobject>
+        </mediaobject>
+      </figure>
+
+      <para>Click on the "New" button. The "Create New Virtual Machine Wizard"
+      will appear:</para>
+
+      <figure>
+        <title>Create New Virtual Machine Wizard</title>
+
+        <mediaobject>
+          <imageobject>
+            <imagedata contentdepth="100%" fileref="images/vm_vb_02.png"
+                       scalefit="1" width="100%"/>
+          </imageobject>
+        </mediaobject>
+      </figure>
+
+      <para>Click "Continue" to get to the VM Name and OS Type step:</para>
+
+      <figure>
+        <title>VM Name and OS Type</title>
+
+        <mediaobject>
+          <imageobject>
+            <imagedata contentdepth="100%" fileref="images/vm_vb_03.png"
+                       scalefit="1" width="100%"/>
+          </imageobject>
+        </mediaobject>
+      </figure>
+
+      <para>In the Name field type "Pegasus Tutorial". Set the Operating
+      System to "Linux" and the Version to "Red Hat (64 bit)".</para>
+
+      <warning>
+        <para>Make sure to select "Red Hat (64 bit)" as the Version. If this
+        is incorrect the virtual machine may not be able to start.</para>
+      </warning>
+
+      <para>Click "Continue" to get to the Memory step. You can leave this at
+      the default of 512 MB.</para>
+
+      <figure>
+        <title>Memory</title>
+
+        <mediaobject>
+          <imageobject>
+            <imagedata contentdepth="100%" fileref="images/vm_vb_04.png"
+                       scalefit="1" width="100%"/>
+          </imageobject>
+        </mediaobject>
+      </figure>
+
+      <para>Click "Continue" again to get to the "Virtual Hard Disk"
+      step:</para>
+
+      <figure>
+        <title>Virtual Hard Disk</title>
+
+        <mediaobject>
+          <imageobject>
+            <imagedata contentdepth="100%" fileref="images/vm_vb_05.png"
+                       scalefit="1" width="100%"/>
+          </imageobject>
+        </mediaobject>
+      </figure>
+
+      <para>Leave "Start-up Disk" checked. Choose "Use existing hard disk".
+      Click the little folder icon and locate the .vmdk file you extracted
+      from the zip file that you downloaded earlier.</para>
+
+      <para>When you have selected the .vmdk file, choose "Open" and then
+      click "Continue" to get to the Summary page:</para>
+
+      <figure>
+        <title>Summary</title>
+
+        <mediaobject>
+          <imageobject>
+            <imagedata contentdepth="100%" fileref="images/vm_vb_06.png"
+                       scalefit="1" width="100%"/>
+          </imageobject>
+        </mediaobject>
+      </figure>
+
+      <para>Click "Create". You will get back to the welcome screen showing
+      the new virtual machine:</para>
+
+      <figure>
+        <title>Welcome Screen with new virtual machine</title>
+
+        <mediaobject>
+          <imageobject>
+            <imagedata contentdepth="100%" fileref="images/vm_vb_07.png"
+                       scalefit="1" width="100%"/>
+          </imageobject>
+        </mediaobject>
+      </figure>
+
+      <para>Click on the name of the virual machine and then click "Start".
+      After a few seconds you should get to the login screen:</para>
+
+      <figure>
+        <title>Login Screen</title>
+
+        <mediaobject>
+          <imageobject>
+            <imagedata contentdepth="100%" fileref="images/vm_vb_08.png"
+                       scalefit="1" width="100%"/>
+          </imageobject>
+        </mediaobject>
+      </figure>
+
+      <para>Log in as user "<emphasis role="bold">tutorial</emphasis>" with
+      password "<emphasis role="bold">pegasus</emphasis>".</para>
+
+      <para>After you log in you can return to the <link
+      linkend="tutorial">tutorial chapter</link> to complete the
+      tutorial.</para>
+    </section>
+
+    <section>
+      <title>Terminating the VM</title>
+
+      <para>When you are done with the tutorial you can shut down the VM by
+      typing:</para>
+
+      <programlisting>$ sudo /sbin/poweroff</programlisting>
+
+      <para>at the prompt and then entering the password "pegasus".</para>
+
+      <para>Alternatively, you can just close the window and choose "Power off
+      the machine".</para>
+    </section>
   </section>
 
   <section>
@@ -43,7 +212,8 @@
 
         <mediaobject>
           <imageobject>
-            <imagedata fileref="images/vm_ec2_01.png"/>
+            <imagedata contentdepth="100%" fileref="images/vm_ec2_01.png"
+                       scalefit="1" width="100%"/>
           </imageobject>
         </mediaobject>
       </figure>
@@ -56,7 +226,8 @@
 
         <mediaobject>
           <imageobject>
-            <imagedata fileref="images/vm_ec2_02.png"/>
+            <imagedata contentdepth="100%" fileref="images/vm_ec2_02.png"
+                       scalefit="1" width="100%"/>
           </imageobject>
         </mediaobject>
       </figure>
@@ -73,7 +244,8 @@
 
         <mediaobject>
           <imageobject>
-            <imagedata fileref="images/vm_ec2_03.png"/>
+            <imagedata contentdepth="100%" fileref="images/vm_ec2_03.png"
+                       scalefit="1" width="100%"/>
           </imageobject>
         </mediaobject>
       </figure>
@@ -89,7 +261,8 @@
 
         <mediaobject>
           <imageobject>
-            <imagedata fileref="images/vm_ec2_04.png"/>
+            <imagedata contentdepth="100%" fileref="images/vm_ec2_04.png"
+                       scalefit="1" width="100%"/>
           </imageobject>
         </mediaobject>
       </figure>
@@ -102,7 +275,8 @@
 
         <mediaobject>
           <imageobject>
-            <imagedata fileref="images/vm_ec2_05.png"/>
+            <imagedata contentdepth="100%" fileref="images/vm_ec2_05.png"
+                       scalefit="1" width="100%"/>
           </imageobject>
         </mediaobject>
       </figure>
@@ -115,7 +289,8 @@
 
         <mediaobject>
           <imageobject>
-            <imagedata fileref="images/vm_ec2_06.png"/>
+            <imagedata contentdepth="100%" fileref="images/vm_ec2_06.png"
+                       scalefit="1" width="100%"/>
           </imageobject>
         </mediaobject>
       </figure>
@@ -129,7 +304,8 @@
 
         <mediaobject>
           <imageobject>
-            <imagedata fileref="images/vm_ec2_07.png"/>
+            <imagedata contentdepth="100%" fileref="images/vm_ec2_07.png"
+                       scalefit="1" width="100%"/>
           </imageobject>
         </mediaobject>
       </figure>
@@ -142,7 +318,8 @@
 
         <mediaobject>
           <imageobject>
-            <imagedata fileref="images/vm_ec2_08.png"/>
+            <imagedata contentdepth="100%" fileref="images/vm_ec2_08.png"
+                       scalefit="1" width="100%"/>
           </imageobject>
         </mediaobject>
       </figure>
@@ -157,7 +334,8 @@
 
         <mediaobject>
           <imageobject>
-            <imagedata fileref="images/vm_ec2_09.png"/>
+            <imagedata contentdepth="100%" fileref="images/vm_ec2_09.png"
+                       scalefit="1" width="100%"/>
           </imageobject>
         </mediaobject>
       </figure>
@@ -176,7 +354,8 @@
 
         <mediaobject>
           <imageobject>
-            <imagedata fileref="images/vm_ec2_10.png"/>
+            <imagedata contentdepth="100%" fileref="images/vm_ec2_10.png"
+                       scalefit="1" width="100%"/>
           </imageobject>
         </mediaobject>
       </figure>
@@ -189,7 +368,8 @@
 
         <mediaobject>
           <imageobject>
-            <imagedata fileref="images/vm_ec2_11.png"/>
+            <imagedata contentwidth="100%" fileref="images/vm_ec2_11.png"
+                       scalefit="1" width="100%"/>
           </imageobject>
         </mediaobject>
       </figure>
@@ -249,7 +429,8 @@ tutorial's password: <emphasis role="bold">pegasus</emphasis>
 
         <mediaobject>
           <imageobject>
-            <imagedata fileref="images/vm_ec2_12.png"/>
+            <imagedata contentdepth="100%" fileref="images/vm_ec2_12.png"
+                       scalefit="1" width="100%"/>
           </imageobject>
         </mediaobject>
       </figure>
@@ -261,7 +442,8 @@ tutorial's password: <emphasis role="bold">pegasus</emphasis>
 
         <mediaobject>
           <imageobject>
-            <imagedata fileref="images/vm_ec2_13.png"/>
+            <imagedata contentdepth="100%" fileref="images/vm_ec2_13.png"
+                       scalefit="1" width="100%"/>
           </imageobject>
         </mediaobject>
       </figure>
