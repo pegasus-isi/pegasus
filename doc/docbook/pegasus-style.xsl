@@ -17,6 +17,7 @@
 
 
     <xsl:param name="generate.toc">
+        appendix toc
         book toc
         chapter toc
         section toc
