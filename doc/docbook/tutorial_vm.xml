@@ -18,7 +18,7 @@
   </section>
 
   <section>
-    <title>VirtualBox</title>
+    <title id="vm_virtualbox">VirtualBox</title>
 
     <para>VirtualBox is a free desktop virtual machine manager. You can use it
     to run the Pegasus Tutorial VM on your desktop or laptop.</para>
@@ -193,7 +193,7 @@
   </section>
 
   <section>
-    <title>Amazon EC2</title>
+    <title id="vm_amazon">Amazon EC2</title>
 
     <para>In order to launch the tutorial VM you need to sign up for an Amazon
     Web Services account here: <ulink
@@ -382,7 +382,7 @@
 
       <para>At this point your VM will take a few minutes to boot. Wait until
       the “Status Checks” column reads: “2/2 checks passed” before continuing.
-      You may need to click the Refresh button. </para>
+      You may need to click the Refresh button.</para>
     </section>
 
     <section>
@@ -409,8 +409,7 @@ tutorial's password: <emphasis role="bold">pegasus</emphasis>
       <para>If you are on Windows you will need to install an SSH client. You
       can download the PuTTY SSH client and find documentation for how to
       configure it here: <ulink
-      url="http://www.chiark.greenend.org.uk/~sgtatham/putty">http://www.chiark.greenend.org.uk/~sgtatham/putty</ulink>
-      </para>
+      url="http://www.chiark.greenend.org.uk/~sgtatham/putty">http://www.chiark.greenend.org.uk/~sgtatham/putty</ulink></para>
     </section>
 
     <section>
@@ -451,7 +450,7 @@ tutorial's password: <emphasis role="bold">pegasus</emphasis>
   </section>
 
   <section>
-    <title>FutureGrid</title>
+    <title id="vm_futuregrid">FutureGrid</title>
 
     <para>TBD</para>
   </section>

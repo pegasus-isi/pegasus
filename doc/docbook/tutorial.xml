@@ -40,34 +40,42 @@ you get this</programlisting>
   <section>
     <title>Getting Started</title>
 
-    <para>In order to reduce the amount of work required to get started with
-    this tutorial we have provided several virtual machines that have all of
-    the software required for this tutorial. Virtual machine images are
-    provided for VirtualBox, Amazon EC2 and FutureGrid. Information about
-    deploying the tutorial VM on these platforms is in <link
-    linkend="tutorial_vm">the appendix</link>. The remainder of the tutorial
-    will assume that the tutorial VM has been started and the tutorial user is
-    logged in with a terminal open.</para>
+    <para>In order to reduce the amount of work required to get started we
+    have provided several virtual machines that contain all of the software
+    required for this tutorial. Virtual machine images are provided for <link
+    linkend="vm_virtualbox">VirtualBox</link>, <link
+    linkend="vm_amazon">Amazon EC2</link> and <link
+    linkend="vm_futuregrid">FutureGrid</link>. Information about deploying the
+    tutorial VM on these platforms is in <link linkend="tutorial_vm">the
+    appendix</link>. Please go to the appendix for the platform you are using
+    and follow the instructions for starting the VM found there before
+    continuing with this tutorial.</para>
 
-    <para>In the case that you want to install Pegasus and Condor and go
-    through the tutorial on your own machine, the tutorial files are available
-    in the <filename>doc/tutorial</filename> directory of the Pegasus source
-    distribution. These files will need to be modified in several places to
-    fix the paths to the users home directory (which is assumed to be
-    <filename>/home/tutorial</filename>) and the path to the Pegasus install
-    (which is assumed to be <filename>/usr/local/pegasus</filename>). Condor
-    should be installed in the "Personal Condor" configuration. You will also
-    need a passwordless ssh key to enable SCP file transfers to/from
-    localhost. Getting everything set up correctly can be tricky, so we
-    recommend getting started with one of the VMs if you are not familiar with
-    Condor and UNIX.</para>
+    <para><emphasis role="bold">Advanced Users:</emphasis> In the case that
+    you want to install Pegasus and Condor and go through the tutorial on your
+    own machine instead of using one of the virtual machines, the tutorial
+    files are available in the <filename>doc/tutorial</filename> directory of
+    the Pegasus source distribution. These files will need to be modified in
+    several places to fix the paths to the users home directory (which is
+    assumed to be <filename>/home/tutorial</filename>) and the path to the
+    Pegasus install (which is assumed to be
+    <filename>/usr/local/pegasus</filename>). Condor should be installed in
+    the "Personal Condor" configuration. You will also need a passwordless ssh
+    key to enable SCP file transfers to/from localhost. Getting everything set
+    up correctly can be tricky, so we recommend getting started with one of
+    the VMs if you are not familiar with Condor and UNIX.</para>
+
+    <para>The remainder of this tutorial will assume that you have a terminal
+    open to the directory where the tutorial files are installed. If you are
+    using one of the tutorial VMs these files are located in the tutorial
+    user's home directory <filename>/home/tutorial</filename>.</para>
   </section>
 
   <section>
     <title>Generating the Workflow</title>
 
-    <para>In this tutorial we will be creating and running a simple
-    diamond-shaped workflow that looks like this:</para>
+    <para>We will be creating and running a simple diamond-shaped workflow
+    that looks like this:</para>
 
     <figure>
       <title>Diamond Workflow</title>
@@ -79,7 +87,7 @@ you get this</programlisting>
       </mediaobject>
     </figure>
 
-    <para>In this diagram the ovals represent computational jobs, the
+    <para>In this diagram, the ovals represent computational jobs, the
     dog-eared squares are files, and the arrows are dependencies.</para>
 
     <para>Pegasus reads workflow descriptions from DAX files. The term “DAX”
@@ -95,8 +103,18 @@ you get this</programlisting>
     <para>The DAX generator for the diamond workflow is in the file
     <filename>generate_dax.py</filename>. Look at the file by typing:</para>
 
-    <programlisting>$ <emphasis role="bold">cat generate_dax.py</emphasis>
+    <programlisting>$ <emphasis role="bold">more generate_dax.py</emphasis>
 ...</programlisting>
+
+    <tip>
+      <para>We will be using the <literal>more</literal> command to inspect
+      several files in this tutorial. <literal>more</literal> is a pager
+      application, meaning that it splits text files into pages and displays
+      the pages one at a time. You can view the next page of a file by
+      pressing the spacebar. Type 'h' to get help on using
+      <literal>more</literal>. When you are done, you can type 'q' to close
+      the file.</para>
+    </tip>
 
     <para>The code has 5 sections:</para>
 
@@ -147,9 +165,10 @@ Adding control flow dependencies...
 Writing diamond.dax</programlisting>
 
     <para>The <filename>diamond.dax</filename> file should contain an XML
-    representation of the workflow. You can inspect it by typing:</para>
+    representation of the diamond workflow. You can inspect it by
+    typing:</para>
 
-    <programlisting>$ <emphasis role="bold">cat diamond.dax</emphasis>
+    <programlisting>$ <emphasis role="bold">more diamond.dax</emphasis>
 ...</programlisting>
   </section>
 
@@ -174,7 +193,7 @@ Writing diamond.dax</programlisting>
 
       <para>The site catalog is in <filename>sites.xml</filename>:</para>
 
-      <programlisting>$ <emphasis role="bold">cat sites.xml</emphasis>
+      <programlisting>$ <emphasis role="bold">more sites.xml</emphasis>
 ...</programlisting>
 
       <para>There are two sites defined in the site catalog: “local” and
@@ -229,7 +248,7 @@ Writing diamond.dax</programlisting>
       <para>For this tutorial, the transformation catalog is in the file
       <filename>tc.dat</filename>:</para>
 
-      <programlisting>$ <emphasis role="bold">cat tc.dat</emphasis>
+      <programlisting>$ <emphasis role="bold">more tc.dat</emphasis>
 ...</programlisting>
 
       <para>The <filename>tc.dat</filename> file contains information about
@@ -261,7 +280,7 @@ Writing diamond.dax</programlisting>
       <para>The Replica Catalog for the diamond workflow is in the
       <filename>rc.dat</filename> file:</para>
 
-      <programlisting>$ <emphasis role="bold">cat rc.dat</emphasis>
+      <programlisting>$ <emphasis role="bold">more rc.dat</emphasis>
 # This is the replica catalog. It lists information about each of the
 # input files used by the workflow.
 
@@ -293,7 +312,7 @@ f.a    file:///home/tutorial/input/f.a    pool="local"</programlisting>
     information catalogs. These settings are in the
     <filename>pegasus.conf</filename> file:</para>
 
-    <programlisting>$ <emphasis role="bold">cat pegasus.conf</emphasis>
+    <programlisting>$ <emphasis role="bold">more pegasus.conf</emphasis>
 # This tells Pegasus where to find the Site Catalog
 pegasus.catalog.site=XML3
 pegasus.catalog.site.file=sites.xml
@@ -356,7 +375,7 @@ pegasus.catalog.transformation.file=tc.dat</programlisting>
     <filename>plan_dax.sh</filename> wrapper script that has all of the
     arguments required for the diamond workflow:</para>
 
-    <programlisting>$ <emphasis role="bold">cat plan_dax.sh</emphasis>
+    <programlisting>$ <emphasis role="bold">more plan_dax.sh</emphasis>
 ...</programlisting>
 
     <para>The script invokes the <literal>pegasus-plan</literal> command with
@@ -399,7 +418,8 @@ pegasus-run  /home/tutorial/submit/tutorial/pegasus/diamond/run0001
 
       <mediaobject>
         <imageobject>
-          <imagedata fileref="images/concepts-diamond-dag.png"/>
+          <imagedata contentwidth="70%"
+                     fileref="images/concepts-diamond-dag.png"/>
         </imageobject>
       </mediaobject>
     </figure>
@@ -493,7 +513,7 @@ Summary: 1 DAG total (Success:1)
     This file was created by the various transformations in the workflow and
     shows all of the executables that were invoked by the workflow:</para>
 
-    <programlisting>$ <emphasis role="bold">cat output/f.d</emphasis>
+    <programlisting>$ <emphasis role="bold">more output/f.d</emphasis>
 /home/tutorial/bin/analyze:
 /home/tutorial/bin/findrange:
 /home/tutorial/bin/preprocess:
@@ -659,7 +679,7 @@ jobs.csv       summary.csv       time.csv            workflow.txt</programlistin
     <para>The file <filename>breakdown.txt</filename>, for example, has min,
     max, and mean runtimes for each transformation:</para>
 
-    <programlisting>$ <emphasis role="bold">cat submit/tutorial/pegasus/diamond/run0001/statistics/breakdown.txt</emphasis>
+    <programlisting>$ <emphasis role="bold">more submit/tutorial/pegasus/diamond/run0001/statistics/breakdown.txt</emphasis>
 # legends
 # Transformation - name of the transformation.
 # Count          - the number of times the invocations corresponding to 
