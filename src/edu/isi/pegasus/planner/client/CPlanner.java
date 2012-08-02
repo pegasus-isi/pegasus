@@ -67,6 +67,7 @@ import edu.isi.pegasus.planner.classes.Job;
 
 import edu.isi.pegasus.planner.common.PegasusConfiguration;
 
+import edu.isi.pegasus.planner.common.Shiwa;
 import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.parser.Parser;
 import edu.isi.pegasus.planner.parser.dax.DAXParser;
@@ -100,8 +101,6 @@ import java.io.BufferedReader;
 import java.io.FilenameFilter;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 
@@ -366,6 +365,12 @@ public class CPlanner extends Executable{
         else{
             //set log level to FATAL only
             mLogger.setLevel( LogManager.FATAL_MESSAGE_LEVEL );
+        }
+        
+        String shiwaBundle = mPOptions.getShiwaBundle();
+        if( shiwaBundle != null ){
+            Shiwa shiwa = new Shiwa( mLogger );
+            shiwa.readBundle(  shiwaBundle, mProps, mPOptions );
         }
 
         PegasusConfiguration configurator = new PegasusConfiguration( mLogger );
@@ -814,7 +819,7 @@ public class CPlanner extends Executable{
         options.setOriginalArgString( args );
         
         Getopt g = new Getopt("pegasus-plan",args,
-                              "vqhfSnzpVr::aD:d:s:o:P:c:C:b:g:2:j:3:F:X:4:5:6:78:9:",
+                              "vqhfSnzpVr::aD:d:s:o:P:c:C:b:g:2:j:3:F:X:4:5:6:78:9:B:",
                               longOptions,false);
         g.setOpterr(false);
 
@@ -842,6 +847,10 @@ public class CPlanner extends Executable{
 
                 case 'b'://optional basename
                     options.setBasenamePrefix(g.getOptarg());
+                    break;
+                    
+                case 'B'://bundle
+                    options.setShiwaBundle( g.getOptarg() );
                     break;
 
                 case 'c'://cache
@@ -1153,7 +1162,7 @@ public class CPlanner extends Executable{
      * options
      */
     public LongOpt[] generateValidOptions(){
-        LongOpt[] longopts = new LongOpt[32];
+        LongOpt[] longopts = new LongOpt[33];
 
         longopts[0]   = new LongOpt( "dir", LongOpt.REQUIRED_ARGUMENT, null, '8' );
         longopts[1]   = new LongOpt( "dax", LongOpt.REQUIRED_ARGUMENT, null, 'd' );
@@ -1190,6 +1199,7 @@ public class CPlanner extends Executable{
         longopts[29]  = new LongOpt( "inherited-rc-files", LongOpt.REQUIRED_ARGUMENT, null, '5' );
         longopts[30]  = new LongOpt( "force-replan" , LongOpt.NO_ARGUMENT, null, '7' );
         longopts[31]  = new LongOpt( "staging-site", LongOpt.REQUIRED_ARGUMENT, null, '9' );
+        longopts[32]  = new LongOpt( "shiwa-bundle", LongOpt.REQUIRED_ARGUMENT, null, 'B' );
         return longopts;
     }
 
@@ -1233,6 +1243,7 @@ public class CPlanner extends Executable{
            "\n --dax       the path to the dax file containing the abstract workflow " +
            "\n Other Options  " +
            "\n -b |--basename     the basename prefix while constructing the per workflow files like .dag etc." +
+           "\n -B |--bundle       the shiwa bundle to be used. ( prototypical option )  " + 
            "\n -c |--cache        comma separated list of replica cache files." +
            "\n --inherited-rc-files  comma separated list of replica files. Locations mentioned in these have a lower priority than the locations in the DAX file" +
            "\n -C |--cluster      comma separated list of clustering techniques to be applied to the workflow to " +
@@ -1997,6 +2008,7 @@ public class CPlanner extends Executable{
 
     }
 
+    
 }
 /**
  * A filename filter for identifying the submit directory

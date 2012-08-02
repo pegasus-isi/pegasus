@@ -259,6 +259,11 @@ public class PlannerOptions extends Data implements Cloneable{
      * A map that maps an execution site to a staging site.
      */
     private Map<String,String> mStagingSitesMap;
+    
+    /**
+     * the path to the shiwa bundle
+     */
+    private String mShiwaBundle;
 
     /**
      * Default Constructor.
@@ -301,6 +306,7 @@ public class PlannerOptions extends Data implements Cloneable{
         mForceReplan      = false;
         mOriginalArgumentString = null;
         mStagingSitesMap  = new HashMap<String,String>();
+        mShiwaBundle      = null;
     }
 
     /**
@@ -449,6 +455,15 @@ public class PlannerOptions extends Data implements Cloneable{
     }
 
     /**
+     * Returns the Shiwa Bundle set
+     * 
+     * @return the shiwa bundle specified by the user
+     */
+    public String getShiwaBundle() {
+        return this.mShiwaBundle;
+    }
+
+    /**
      * Increments the logging level by 1.
      */
     public void incrementLogging(){
@@ -567,6 +582,15 @@ public class PlannerOptions extends Data implements Cloneable{
         }
         mProperties.setProperty( args[0], args[1] );
         
+    }
+
+    /**
+     * Sets the path to the Shiwa Bundle to be used.
+     * 
+     * @param bundle    the shiwa bundle
+     */
+    public void setShiwaBundle(String bundle ) {
+        this.mShiwaBundle = bundle;
     }
     
     /**
@@ -1344,6 +1368,11 @@ public class PlannerOptions extends Data implements Cloneable{
             sb.append( " --staging-site " ).
                append( this.stagingSiteMappingToString() );
         }
+        
+        if( this.mShiwaBundle != null ){
+            sb.append( " --shiwa-bundle " ).
+               append( this.mShiwaBundle );
+        }
 
         //cache files
         if(!mCacheFiles.isEmpty()){
@@ -1534,6 +1563,7 @@ public class PlannerOptions extends Data implements Cloneable{
         pOpt.mJobPrefix      = this.mJobPrefix;
         pOpt.mVOGroup        = this.mVOGroup;
         pOpt.mDeferredRun    = this.mDeferredRun;
+        pOpt.mShiwaBundle    = this.mShiwaBundle;
         pOpt.mDate           = (Date)this.mDate.clone();
         pOpt.mPartitioningType = this.mPartitioningType;
         pOpt.mNumOfRescueTries = this.mNumOfRescueTries;

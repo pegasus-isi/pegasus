@@ -62,6 +62,22 @@ public class PegasusProperties implements Cloneable {
 
     public static final String PEGASUS_TRANSFER_WORKER_PACKAGE_PROPERTY = "pegasus.transfer.worker.package";
 
+   
+    public static final String PEGASUS_TRANSFORMATION_CATALOG_PROPERTY = "pegasus.catalog.transformation";
+    
+    public static final String PEGASUS_TRANSFORMATION_CATALOG_FILE_PROPERTY = "pegasus.catalog.transformation.file";
+    
+    public static final String PEGASUS_REPLICA_CATALOG_PROPERTY = "pegasus.catalog.replica";
+    
+    public static final String PEGASUS_REPLICA_CATALOG_FILE_PROPERTY = "pegasus.catalog.replica.file";
+    
+    
+    public static final String PEGASUS_SITE_CATALOG_PROPERTY = "pegasus.catalog.site";
+    
+    public static final String PEGASUS_SITE_CATALOG_FILE_PROPERTY = "pegasus.catalog.site.file";
+    
+    
+    
     //Replica Catalog Constants
     public static final String DEFAULT_RC_COLLECTION = "GriphynData";
 
@@ -855,7 +871,7 @@ public class PegasusProperties implements Cloneable {
      * @see #DEFAULT_TC_MODE
      */
     public String getTCMode() {
-        return mProps.getProperty( "pegasus.catalog.transformation", DEFAULT_TC_MODE );
+        return mProps.getProperty( PegasusProperties.PEGASUS_TRANSFORMATION_CATALOG_PROPERTY, DEFAULT_TC_MODE );
     }
 
     /**
@@ -869,7 +885,7 @@ public class PegasusProperties implements Cloneable {
      * @see #mDefaultTC
      */
     public String getTCPath() {
-        return mProps.getProperty( "pegasus.catalog.transformation.file", mDefaultTC );
+        return mProps.getProperty( PegasusProperties.PEGASUS_TRANSFORMATION_CATALOG_FILE_PROPERTY, mDefaultTC );
     }
 
     /**
@@ -899,7 +915,7 @@ public class PegasusProperties implements Cloneable {
      *         else null
      */
     public String getReplicaMode() {
-        return mProps.getProperty( "pegasus.catalog.replica" );
+        return mProps.getProperty( PEGASUS_REPLICA_CATALOG_PROPERTY );
     }
 
     /**
@@ -954,7 +970,7 @@ public class PegasusProperties implements Cloneable {
     * @see #DEFAULT_POOL_MODE
     */
    public String getPoolMode() {
-       return mProps.getProperty( "pegasus.catalog.site", DEFAULT_POOL_MODE );
+       return mProps.getProperty( PegasusProperties.PEGASUS_SITE_CATALOG_PROPERTY, DEFAULT_POOL_MODE );
    }
 
    /**
@@ -968,7 +984,7 @@ public class PegasusProperties implements Cloneable {
     * @see #mDefaultPoolFile
     */
    public String getPoolFile() {
-       return mProps.getProperty( "pegasus.catalog.site.file",
+       return mProps.getProperty( PegasusProperties.PEGASUS_SITE_CATALOG_FILE_PROPERTY,
                                   mDefaultPoolFile );
    }
 
