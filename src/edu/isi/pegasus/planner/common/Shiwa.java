@@ -36,7 +36,6 @@ import java.io.IOException;
 
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.Properties;
 
 /**
@@ -220,7 +219,7 @@ public class Shiwa {
                                     Shiwa.REPLICA_CATALOG_IMPLEMENTER );
             bundleProperties.put( PegasusProperties.PEGASUS_REPLICA_CATALOG_PROPERTY + 
                                                 "." + Shiwa.REPLICA_CATALOG_KEY ,
-                                    Shiwa.REPLICA_CATALOG_IMPLEMENTER );
+                                    rc );
             
         
             //the properties specified in the bundle are put into Pegasus Properties
@@ -308,7 +307,7 @@ public class Shiwa {
             
             if( port.getValueType() == ValueType.BUNDLED_FILE ){
                 //prepend file url if required
-                if( pfn.startsWith( File.pathSeparator ) ){
+                if( pfn.startsWith( File.separator ) ){
                     pfn = "file://" + pfn;
                 }
             }
