@@ -95,8 +95,8 @@ public class Shiwa {
      * @param options        the planner options that are updated
      */
     public  void  readBundle( String shiwaBundle, 
-                               PegasusProperties properties, 
-                               PlannerOptions options ) {
+                              PegasusProperties properties, 
+                              PlannerOptions options ) {
         
         String dax = null;
         
@@ -105,17 +105,39 @@ public class Shiwa {
             throw new RuntimeException( "The shiwa bundle file does not exist " + shiwaBundle );
         }
         
+        //we can only untar contents of bundle to the base submit directory
+        File directory = new File( options.getSubmitDirectory() );
+        try{
+            directory = File.createTempFile( "shiwa-", "-bundle", directory );
+            
+            //potential for race condition
+            directory.delete();
+            directory.mkdir();
+        }
+        catch( IOException ioe ){
+            throw new RuntimeException( "Unable to create temp directory in directory " + directory );
+        }
+        
+        mLogger.log( "The shiwa bundle will be unzipped to directory " + directory.getAbsolutePath(),
+                     LogManager.INFO_MESSAGE_LEVEL );
+        
         BundleReader reader = null;
         Properties bundleProperties = new Properties();//stores the properties in the properties file in the bundle
         Properties catalogProperties = new Properties();
         try{
-            reader = new BundleReader( f );
+            reader = new BundleReader( f ,directory );
             dax = reader.getDefinitonFile().getAbsolutePath();
             
             mLogger.log( "DAX File in the bundle resides at " + dax,
                          LogManager.DEBUG_MESSAGE_LEVEL );
             
             TransferSignature signature = reader.getTransferSignature();
+            
+            //check to see if it is a DAX Bundle
+            String language = signature.getLanguage();
+            if( language == null ||  !signature.getLanguage().equalsIgnoreCase( "DAX") ){
+                throw new RuntimeException( "Unsupported language type in the SHIWA bundle "  + language );
+            }
             
             //iterate through all the dependencies
             for( TransferDependency dependency: signature.getDependencies() ){
@@ -170,7 +192,7 @@ public class Shiwa {
             //put in the catalog properties into the bundle properties
             bundleProperties.putAll( catalogProperties );
         
-            File directory = null;
+            
             //if dax is specified in the Shiwa Bundle
             //update the options accordingly
             if( dax != null ){
@@ -185,7 +207,7 @@ public class Shiwa {
             
                 //directory is the directory where shiwa bundle has been 
                 //untarred
-                directory = new File( dax ).getParentFile();
+                //directory = new File( dax ).getParentFile();
             }
         
             String rc = generateReplicaCatalogFile( signature, directory );
@@ -260,9 +282,25 @@ public class Shiwa {
         }
         
         //go through the port and output ports
-        Collection<TransferPort> ports = new LinkedList();
-        ports.addAll( signature.getInputs() );
-        ports.addAll( signature.getOutputs() );
+        this.addPortsToReplicaCatalog( rc, signature.getInputs(), true );
+        this.addPortsToReplicaCatalog( rc, signature.getOutputs(), false );
+        
+        //close the rc file
+        rc.close();
+        
+        return rcFile;
+        
+    }
+
+
+    /**
+     * Adds the ports specified in the bundle to the replica catalog file.
+     * 
+     * @param rc         handle to the replica catalog
+     * @param ports      the collection of ports
+     * @param inputPort  boolean indicating whether the ports passed are input ports
+     */
+    public void addPortsToReplicaCatalog( ReplicaCatalog rc , Collection<TransferPort> ports, boolean inputPort ){
         for( TransferPort port: ports ){
             String lfn = port.getName();
             String pfn = port.getValue();
@@ -284,19 +322,17 @@ public class Shiwa {
             if( pfn == null || pfn.isEmpty() ){
                 mLogger.log( "Not inserting entry for lfn retrieved from shiwa bundle " + lfn,
                              LogManager.TRACE_MESSAGE_LEVEL );
+                //log a warning for a missing input port
+                if( inputPort ){
+                    mLogger.log( "PFN not specified for input lfn retrieved from shiwa bundle " + lfn,
+                             LogManager.WARNING_MESSAGE_LEVEL );
+                }
+                
             }
             else{
                 rc.insert( lfn, pfn, pool );
             }
         }
-        
-        
-        //close the rc file
-        rc.close();
-        
-        return rcFile;
-        
     }
-
     
 }
