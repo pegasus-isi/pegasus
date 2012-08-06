@@ -1,0 +1,4 @@
+method = url
+url = http://pegasus.isi.edu/static/build/apache-ant-1.8.4-bin.tar.gz
+untar = false
+
