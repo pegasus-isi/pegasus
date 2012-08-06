@@ -22,9 +22,9 @@ open( LIST, ">tasklist.nmi" ) || die "Can't open tasklist.nmi: $!\n";
 # builds
 if ( ! $lite ) {
     print LIST "build-binary\n";
-    if ( $wms ) {
-        print LIST "build-wms\n";
-    }
+    #if ( $wms ) {
+    #    print LIST "build-wms\n";
+    #}
 }
 print LIST "build-worker\n";
 
@@ -44,9 +44,9 @@ print LIST "clean-sources\n";
 # tests
 if ( ! $lite ) {
     print LIST "test-binary\n";
-    if ( $wms ) {
-        print LIST "test-wms\n";
-    }
+    #if ( $wms ) {
+    #    print LIST "test-wms\n";
+    #}
 }
 print LIST "test-worker\n";
 

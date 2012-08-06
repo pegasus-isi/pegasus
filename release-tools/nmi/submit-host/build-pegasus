@@ -48,9 +48,15 @@ sub env_setup
     announce("env and tooling");
 
     my $JAVA_HOME="";
-    my $ANT_HOME="";
-    my $VACPP_HOME="";
-    my $VAC_HOME="";
+    
+    my $ant_version = "1.8.4";
+
+    cmd("ls -l", 1, 1);
+
+    if ( ! -e "apache-ant-$ant_version" ) {
+        cmd("tar xzf apache-ant-$ant_version-bin.tar.gz", 1, 1);
+    }
+    $ENV{ANT_HOME} = "$top_dir/apache-ant-$ant_version";
 
     # java home on macosx
     if ( -e "/System/Library/Frameworks/JavaVM.framework" ) {
@@ -58,45 +64,23 @@ sub env_setup
         if ( ! -e "/System/Library/Frameworks/JavaVM.framework/Versions/1.6" ) {
             logmsg("No java 1.6 found! Available versions:");
             cmd("ls -l /System/Library/Frameworks/JavaVM.framework/Versions/", 1, 0);
+            cmd("ls -l /System/Library/Java/JavaVirtualMachines/", 1, 0);
             die("No java 1.6 found!");
         }
         $JAVA_HOME = "/System/Library/Frameworks/JavaVM.framework/Versions/1.6/Home";
         $ENV{JAVA_HOME} = $JAVA_HOME;
     }
- 
-    # nmi prereqs
-    for my $key ( keys %ENV){
-        if ($key=~ m/_NMI_PREREQ_wget/) {
-            $ENV{'PATH'} = $ENV{$key} . "/bin:" . $ENV{'PATH'};
-        }
-        if ($key=~ m/_NMI_PREREQ_([A-Za-z0-9]+_)*java/) {
-            $JAVA_HOME=$ENV{$key};
-            $ENV{JAVA_HOME}=$JAVA_HOME;
-        }
-        if ($key=~ m/_NMI_PREREQ_apache_ant/) {
-            $ANT_HOME=$ENV{$key};
-            $ENV{ANT_HOME}=$ANT_HOME;
-        }
-        if ($key=~ m/_NMI_PREREQ_vac_ROOT/){
-            $VAC_HOME=$ENV{$key};
-        }
-        if ($key=~ m/_NMI_PREREQ_vacpp_ROOT/){
-            $VACPP_HOME=$ENV{$key};
-        }
-    }
 
     $ENV{PATH} = "$ENV{JAVA_HOME}/bin:$ENV{ANT_HOME}/bin:$ENV{PATH}";
     
-    if ($ENV{NMI_PLATFORM} =~ m/aix/){
-	    $ENV{PATH}="/usr/vac/bin:/usr/vacpp/bin:$VAC_HOME/bin:$VACPP_HOME/bin/:$ENV{PATH}";
-    }
-
     $ENV{'CLASSPATH'} = "";
     
     cmd("env", 1, 1);
-    cmd("which java 2>&1", 1, 0);
+    cmd("which java 2>&1", 1, 1);
     cmd("java -version 2>&1", 1, 0);
-    cmd("ant -version 2>&1", 1, 0);
+    cmd("which javac 2>&1", 1, 1);
+    cmd("javac -version 2>&1", 1, 0);
+    cmd("ant -version 2>&1", 1, 1);
     cmd("python -V 2>&1", 1, 0);
     cmd("(rpm -qa | grep python) 2>&1", 1, 0);
     cmd("(dpkg -l | grep python) 2>&1", 1, 0);
@@ -481,14 +465,8 @@ sub cmd
         logmsg($cmd);
     }
 
-    system("$cmd");
+    system("($cmd) 2>&1");
     $rc = $? >> 8;
-    if ($fatal and $? & 127) {
-        print "\n\n";
-        printf "'$cmd' died with signal %d, %s coredump\n",
-               ($? & 127),  ($? & 128) ? 'with' : 'without';
-        fatal_error("\n");
-    }
     if ($rc != 0) {
         if ($fatal) {
             print "\n\n";
