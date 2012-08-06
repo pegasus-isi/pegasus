@@ -288,7 +288,6 @@ pegasus-status -l $run
 *** To remove your workflow run ***
 EOF
 
-    print "pegasus-remove -d $did\nor\n" if defined $did; 
     print "pegasus-remove $run\n\n";
 
 } elsif ( $config{type}=="shell" ) {
