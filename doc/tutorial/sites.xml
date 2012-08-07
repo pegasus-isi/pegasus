@@ -50,6 +50,6 @@
         <profile namespace="condor" key="universe">vanilla</profile>
 
         <!-- This profile tells Pegasus where the worker package is installed on PegasusVM -->
-        <profile namespace="env" key="PEGASUS_HOME">/usr/local/pegasus</profile>
+        <profile namespace="env" key="PEGASUS_HOME">/usr</profile>
     </site>
 </sitecatalog>

@@ -3,18 +3,10 @@
 set -e
 
 # Size of image in GB
-SIZE=4
+SIZE=2
 
 # Password for tutorial user
 PASSWORD="pegasus"
-
-# URL to download condor from
-#CONDOR_URL=file:///var/www/html/pub/condor/condor-7.8.1-x86_64_rhap_6.2-stripped.tar.gz
-CONDOR_URL=http://juve.isi.edu/pub/condor/condor-7.8.1-x86_64_rhap_6.2-stripped.tar.gz
-
-# URL to download pegasus from
-PEGASUS_URL=http://download.pegasus.isi.edu/wms/download/4.0/pegasus-binary-4.0.1-x86_64_rhel_6.tar.gz
-
 
 
 if ! [[ "$(cat /etc/redhat-release 2>/dev/null)" =~ "CentOS release 6" ]]; then
@@ -98,7 +90,7 @@ loop1=$(losetup -o 32256 -f --show $raw)
 
 echo "Formatting partition 1..."
 # For some reason this tries to create a file system that is too big unless you specify the number of blocks
-mkfs.ext4 -L rootdisk $loop1 $(((((SIZE*1024)-1)*1024*1024)/4096))
+mkfs.ext4 -L rootdisk -b 4096 $loop1 $(((SIZE*262144)-256))
 
 
 
@@ -135,10 +127,8 @@ EOF
 
 
 echo "Installing minimal base packages..."
-yum -c yum.conf --installroot=$mnt/ -y install yum dhclient rsyslog openssh-server openssh-clients curl passwd kernel grub e2fsprogs rootfiles vim-minimal java-1.7.0-openjdk sudo perl
-yum -c yum.conf --installroot=$mnt/ -y clean all
-
-
+yum -c yum.conf --installroot=$mnt/ -y install yum dhclient rsyslog openssh-server openssh-clients curl passwd kernel grub e2fsprogs rootfiles vim-minimal sudo perl
+yum --installroot=$mnt/ -y clean all
 
 
 echo "Creating /etc files..."
@@ -195,68 +185,30 @@ EOF
 
 
 echo "Installing Condor..."
-curl -s $CONDOR_URL | tar -xz -C $mnt/usr/local
-chroot $mnt /bin/bash <<ENDL
-cd /usr/local
-
-ln -s condor-* condor
-
-mkdir -p /var/condor/{spool,execute,log} /etc/condor
-
-# Instal condor init.d script
-cp /usr/local/condor/etc/init.d/condor /etc/init.d/
-cp /usr/local/condor/etc/sysconfig/condor /etc/sysconfig/
-sed -i 's/CONDOR_CONFIG_VAL=/#CONDOR_CONFIG_VAL=/' /etc/sysconfig/condor
-echo 'CONDOR_CONFIG_VAL="/usr/local/condor/bin/condor_config_val"' >> /etc/sysconfig/condor
-
-# Update condor_config
-cp /usr/local/condor/etc/examples/condor_config /etc/condor
-sed -i 's/^LOCAL_/#LOCAL_/' /etc/condor/condor_config
-cat >> /etc/condor/condor_config <<END
-LOCAL_DIR = /var/condor
-LOCAL_CONFIG_FILE = /etc/condor/condor_config.local
+cat > $mnt/etc/yum.repos.d/condor.repo <<END
+[condor]
+name=Condor
+baseurl=http://www.cs.wisc.edu/condor/yum/stable/rhel6
+enabled=1
+gpgcheck=0
 END
 
-# Create condor_config.local
-cat > /etc/condor/condor_config.local <<END
-CONDOR_HOST = \\\$(FULL_HOSTNAME)
+yum --installroot=$mnt install -y condor
 
-DAEMON_LIST = MASTER, SCHEDD, NEGOTIATOR, COLLECTOR, STARTD
-
-START = True
-SUSPEND = False
-PREEMPT = False
-
-# This is required for Condor 7.8
-TRUST_UID_DOMAIN = True
-END
-
-# Create condor profile
-cat > /etc/profile.d/condor.sh <<END
-CONDOR_HOME=/usr/local/condor
-export PATH=\\\$PATH:\\\$CONDOR_HOME/bin:\\\$CONDOR_HOME/sbin
-END
-
-# Add condor user
-useradd condor
-chown -R condor:condor /var/condor /etc/condor
-chkconfig --add condor
-ENDL
+echo "TRUST_UID_DOMAIN = True" >> $mnt/etc/condor/condor_config.local
 
 
 
 echo "Installing Pegasus..."
-curl -s $PEGASUS_URL | tar -xz -C $mnt/usr/local
-chroot $mnt /bin/bash <<END
-cd /usr/local
-
-ln -s pegasus* pegasus
-
-cat > /etc/profile.d/pegasus.sh <<ENDL
-PEGASUS_HOME=/usr/local/pegasus
-export PATH=\\\$PATH:\\\$PEGASUS_HOME/bin
-ENDL
+cat > $mnt/etc/yum.repos.d/pegasus.repo <<END
+[pegasus]
+name=Pegasus
+baseurl=http://download.pegasus.isi.edu/wms/download/rhel/6/\$basearch/
+gpgcheck=0
+enabled=1
 END
+
+yum --installroot=$mnt install -y pegasus
 
 
 
@@ -285,6 +237,11 @@ fi
 chroot $mnt /bin/bash <<END
 chown -R tutorial:tutorial /home/tutorial
 END
+
+
+
+echo "Cleaning up image..."
+yum --installroot=$mnt/ -y clean all
 
 
 

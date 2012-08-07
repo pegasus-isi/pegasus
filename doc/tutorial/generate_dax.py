@@ -3,7 +3,7 @@ import sys
 import os
 
 # Import the Python DAX library
-os.sys.path.insert(0, "/usr/local/pegasus/lib/pegasus/python")
+os.sys.path.insert(0, "/usr/lib64/pegasus/python")
 from Pegasus.DAX3 import *
 
 

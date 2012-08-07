@@ -57,9 +57,9 @@ you get this</programlisting>
     files are available in the <filename>doc/tutorial</filename> directory of
     the Pegasus source distribution. These files will need to be modified in
     several places to fix the paths to the users home directory (which is
-    assumed to be <filename>/home/tutorial</filename>) and the path to the
-    Pegasus install (which is assumed to be
-    <filename>/usr/local/pegasus</filename>). Condor should be installed in
+    assumed to be <filename>/home/tutorial</filename>). It is assumed that 
+    Pegasus was installed from the RPM, so the path to the Pegasus install is
+    assumed to be <filename>/usr</filename>. Condor should be installed in
     the "Personal Condor" configuration. You will also need a passwordless ssh
     key to enable SCP file transfers to/from localhost. Getting everything set
     up correctly can be tricky, so we recommend getting started with one of

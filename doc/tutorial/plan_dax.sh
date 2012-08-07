@@ -13,6 +13,5 @@ DAXFILE=$1
 # The execution site is "PegasusVM" and the output site is "local".
 # --force tells Pegasus not to prune anything from the workflow, and
 # --nocleanup tells Pegasus not to generate cleanup jobs.
-/usr/local/pegasus/bin/pegasus-plan --conf pegasus.conf \
-	-d $DAXFILE --dir submit --force --sites PegasusVM \
-	-o local --nocleanup
+pegasus-plan --conf pegasus.conf -d $DAXFILE --dir submit \
+	--force --sites PegasusVM -o local --nocleanup
