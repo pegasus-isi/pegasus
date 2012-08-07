@@ -106,7 +106,17 @@ public class CondorGenerator extends Abstract {
         "######################################################################";
     
     
-    
+    /**
+     * Default value for the periodic_release for a job
+     */
+    public static final String DEFAULT_PERIODIC_RELEASE_VALUE = "False";
+
+
+    /**
+     * Default value for the periodic_remove for a job
+     */
+    public static final String DEFAULT_PERIODIC_REMOVE_VALUE = "(JobStatus == 5) && ((CurrentTime - EnteredCurrentStatus) > 14400)";
+
 
     /**
      * The namespace to use for condor dagman.
@@ -231,7 +241,8 @@ public class CondorGenerator extends Abstract {
      * Boolean indicating whether to assign job priorities or not.
      */
     private boolean mAssignDefaultJobPriorities;
-    
+
+
     /**
      * The default constructor.
      */
@@ -1458,8 +1469,8 @@ public class CondorGenerator extends Abstract {
      * 
      * The default expression for periodic_release and periodic_remove is
      * <pre>
-     *   periodic_release = (NumSystemHolds <= releasevalue)
-     *   periodic_remove = (NumSystemHolds > removevalue)
+     *  periodic_release = False
+     *  periodic_remove = (JobStatus == 5) && ((CurrentTime - EnteredCurrentStatus) > 14400)
      * </pre>
      * where releasevalue is value of condor profile periodic_release
      * and   removevalue  is value of condor profile periodic_remove
@@ -1475,56 +1486,18 @@ public class CondorGenerator extends Abstract {
         //get the periodic release values always a default
         //value is got if not specified.
         String releaseval = (String) job.condorVariables.get( Condor.PERIODIC_RELEASE_KEY );
-        releaseval = (releaseval == null) ?
-            //put in default value
-            "3" :
-            //keep the one from profiles or dax
-            releaseval;
-        
+        if( releaseval == null ){
+            //construct default value
+           job.condorVariables.construct( Condor.PERIODIC_RELEASE_KEY, CondorGenerator.DEFAULT_PERIODIC_RELEASE_VALUE );
+        }
 
         String removeval = (String) job.condorVariables.get( Condor.PERIODIC_REMOVE_KEY );
-        removeval = (removeval == null) ?
-            //put in default value
-            "3" :
-            //keep the one from profiles or dax
-            removeval;
+        if( removeval == null ){
 
-
-        int removeint  = this.getNaturalNumberValue( removeval );
-        int releaseint = this.getNaturalNumberValue( releaseval );
-
-        if( removeint > 0 && releaseint > 0 ){
-            if( removeint > releaseint ){
-                removeval = releaseval;
-                //throw a warning down
-                mLogger.log(
-                    " periodic_remove > periodic_release " +
-                    "for job " + 
-                     ". Setting periodic_remove=periodic_release",
-                    LogManager.WARNING_MESSAGE_LEVEL);
-            }
+            //construct default value
+           job.condorVariables.construct( Condor.PERIODIC_REMOVE_KEY, CondorGenerator.DEFAULT_PERIODIC_REMOVE_VALUE );
         }
-
-    
-        String value = null;
-        if( releaseint > 0){
-            value = "(NumSystemHolds <= " + releaseint + ")";
-            job.condorVariables.construct( Condor.PERIODIC_RELEASE_KEY, value);
-        }
-        else{
-            job.condorVariables.construct( Condor.PERIODIC_RELEASE_KEY, releaseval );
-        }
-
         
-        if( removeint > 0){
-            value = "(NumSystemHolds > " + removeint + ")";
-            job.condorVariables.construct( Condor.PERIODIC_REMOVE_KEY, value );
-        }
-        else{
-            job.condorVariables.construct( Condor.PERIODIC_REMOVE_KEY, removeval );
-        }
-
-    
     }
     
     
