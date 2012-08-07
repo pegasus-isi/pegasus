@@ -95,9 +95,6 @@ public class MPIExec extends Abstract {
             job.globusRSL.checkKeyInNS("jobtype","mpi");
         }
 
-        
-        job.setArguments( this.aggregatedJobArguments( job ) );
-        
         //reset the stdin as we use condor file io to transfer
         //the input file
         String stdin = job.getStdIn();
@@ -258,9 +255,6 @@ public class MPIExec extends Abstract {
     public String aggregatedJobArguments( AggregatedJob job ){
         //the stdin of the job actually needs to be passed as arguments
         String stdin  = job.getStdIn();
-
-
-
         StringBuffer args = new StringBuffer();
         
         //construct any extra arguments specified in profiles
@@ -269,6 +263,29 @@ public class MPIExec extends Abstract {
         
         if( extraArgs != null ){
             args.append( extraArgs ).append( " " );
+        }
+
+        //add --max-wall-time option PM-625
+        String walltime = (String) job.globusRSL.get( "maxwalltime" );
+        if( walltime != null ){
+            long value = -1;
+
+            try{
+                value = Integer.parseInt( walltime );
+            }
+            catch( Exception e ){
+                //ignore
+            }
+
+            //walltime is specified in minutes
+            if( value > 1 ){
+                if( value > 10 ){
+                    //subtract 5 minutes to give PMC a chance to return all stdouts
+                    //do this only if walltime is at least more than 10 minutes
+                    value = ( value - 5);
+                }
+                args.append( " --max-wall-time " ).append( value ).append( " ");
+            }
         }
 
         args.append( stdin );

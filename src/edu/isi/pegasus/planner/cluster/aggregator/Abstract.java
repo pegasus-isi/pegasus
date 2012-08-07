@@ -399,9 +399,7 @@ public abstract class Abstract implements JobAggregator {
         job.setStdOut( "" );
         job.setStdErr( "" );
 
-        //set the arguments for the clustered job
-        job.setArguments( this.aggregatedJobArguments( job ) );
-
+        
         //get hold of one of the jobs and suck init's globus namespace
         //info into the the map.
 
@@ -433,6 +431,12 @@ public abstract class Abstract implements JobAggregator {
         //is assimilated overidding the one from transformation
         //catalog.
         job.updateProfiles( mProps );
+
+        //set the arguments for the clustered job
+        //they are set in the end to ensure that profiles can
+        //be used to specify the argumetns
+        job.setArguments( this.aggregatedJobArguments( job ) );
+
 
         return ;
 
