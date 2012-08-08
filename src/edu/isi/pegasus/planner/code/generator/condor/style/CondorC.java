@@ -17,21 +17,17 @@
 
 package edu.isi.pegasus.planner.code.generator.condor.style;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import edu.isi.pegasus.planner.code.generator.condor.CondorQuoteParserException;
-import edu.isi.pegasus.planner.code.generator.condor.CondorStyle;
-import edu.isi.pegasus.planner.code.generator.condor.CondorStyleException;
-
 import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.planner.code.generator.condor.CondorQuoteParserException;
+import edu.isi.pegasus.planner.code.generator.condor.CondorStyleException;
 
 import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.classes.Job;
-import edu.isi.pegasus.planner.classes.TransferJob;
 
 import edu.isi.pegasus.planner.code.generator.condor.CondorQuoteParser;
-import edu.isi.pegasus.planner.namespace.Pegasus;
+
+
 
 /**
  * Enables a job to be directly submitted to the condor pool of which the
@@ -84,7 +80,14 @@ public class CondorC extends Condor {
      */
     public static final String COLLECTOR_KEY =
             edu.isi.pegasus.planner.namespace.Condor.COLLECTOR_KEY;
-    
+
+
+    /**
+     * The key that designates the collector associated with the job
+     */
+    public static final String GRID_RESOURCE_KEY =
+            edu.isi.pegasus.planner.namespace.Condor.GRID_RESOURCE_KEY;
+
     /**
      * The name of the style being implemented.
      */
@@ -118,6 +121,8 @@ public class CondorC extends Condor {
         
         //construct the grid_resource for the job
         String gridResource = constructGridResource( job );
+
+        job.condorVariables.construct( CondorC.GRID_RESOURCE_KEY, gridResource.toString() );
         
         //check if s_t_f and w_t_f keys are associated.
         try {
@@ -127,6 +132,11 @@ public class CondorC extends Condor {
                 job.condorVariables.construct( CondorC.REMOTE_SHOULD_TRANSFER_FILES_KEY,
                                                CondorQuoteParser.quote(s_t_f, true));
             }
+            else{
+                //create the default value
+                job.condorVariables.construct( CondorC.REMOTE_SHOULD_TRANSFER_FILES_KEY,
+                                               "YES" );
+            }
             
             String w_t_f = (String)job.condorVariables.removeKey( CondorC.WHEN_TO_TRANSFER_OUTPUT_KEY );
             if( s_t_f != null ){       
@@ -134,11 +144,15 @@ public class CondorC extends Condor {
                 job.condorVariables.construct( CondorC.REMOTE_WHEN_TO_TRANSFER_OUTPUT_KEY, 
                                                CondorQuoteParser.quote(w_t_f, true));
             }
+            else{
+                job.condorVariables.construct( CondorC.REMOTE_WHEN_TO_TRANSFER_OUTPUT_KEY,
+                                               "ON_EXIT" );
+            }
             
-            //initialdir makes sense only on submit node
             //so convert that to remote_initialdir
-            String dir = (String)job.condorVariables.removeKey( "initialdir" );
+            String dir = job.getDirectory();
             if( dir != null ){
+                //for Condor C we only use remote_initialdir
                 job.condorVariables.construct( "remote_initialdir", dir );
             }
             
@@ -168,21 +182,31 @@ public class CondorC extends Condor {
         //first field is always condor
         gridResource.append( "condor" ).append( " " );
         
-        //the second field is the remote condor schedd
-        //specified in the grid gateway for the site
-//        gridResource.append( job.globusScheduler ).append( " " );
-        
+
+
         SiteCatalogEntry s = mSiteStore.lookup( job.getSiteHandle() );
         GridGateway g = s.selectGridGateway( job.getGridGatewayJobType() );
+        String contact =  ( g == null ) ? null : g.getContact();
+
+        if( contact == null ){
+            StringBuffer error = new StringBuffer();
+            error.append( "Grid Gateway not specified for site in site catalog  " ).append( job.getSiteHandle() );
+            throw new CondorStyleException( error.toString() );
+
+        }
+
         gridResource.append( g.getContact() ).append( " " );
         
         //the job should have the collector key associated
         String collector = (String) job.condorVariables.removeKey( CondorC.COLLECTOR_KEY );
         if( collector == null ){
-            StringBuffer error = new StringBuffer();
-            error.append( "Condor Profile " ).append( CondorC.COLLECTOR_KEY ).
+            //we assume that collector is running at same place where remote_schedd
+            //is running
+            StringBuffer message = new StringBuffer();
+            message.append( "Condor Profile " ).append( CondorC.COLLECTOR_KEY ).
                   append( " not associated with job " ).append( job.getID() );
-            throw new CondorStyleException( error.toString() );
+            mLogger.log( message.toString(), LogManager.TRACE_MESSAGE_LEVEL );
+            collector = contact;
         }
         gridResource.append( collector );
         
