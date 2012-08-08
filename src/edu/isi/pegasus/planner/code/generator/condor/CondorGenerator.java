@@ -1478,45 +1478,56 @@ public class CondorGenerator extends Abstract {
      * @param job  the job object.
      */
     public void populatePeriodicReleaseAndRemoveInJob( Job job ){
-
-        //Karan Oct 19, 2005. The values in property file
-        //should only be treated as default. Need to reverse
-        //below.
-
         //get the periodic release values always a default
         //value is got if not specified.
         String releaseval = (String) job.condorVariables.get( Condor.PERIODIC_RELEASE_KEY );
+
         if( releaseval == null ){
             //construct default value
            job.condorVariables.construct( Condor.PERIODIC_RELEASE_KEY, CondorGenerator.DEFAULT_PERIODIC_RELEASE_VALUE );
         }
+        else{
+            //check if an integer value is specified PM-462
+            if ( isInteger( releaseval ) ){
+                mLogger.log( "Removing integer value " + releaseval + " for periodic_release for job " + job.getID(),
+                             LogManager.DEBUG_MESSAGE_LEVEL );
+                job.condorVariables.construct( Condor.PERIODIC_RELEASE_KEY, CondorGenerator.DEFAULT_PERIODIC_RELEASE_VALUE );
+            }
+        }
 
         String removeval = (String) job.condorVariables.get( Condor.PERIODIC_REMOVE_KEY );
         if( removeval == null ){
-
             //construct default value
            job.condorVariables.construct( Condor.PERIODIC_REMOVE_KEY, CondorGenerator.DEFAULT_PERIODIC_REMOVE_VALUE );
         }
-        
+        else{
+            //check if an integer value is specified PM-462
+            if ( isInteger( removeval ) ){
+                mLogger.log( "Removing integer value " + removeval + " for periodic_remove for job " + job.getID(),
+                             LogManager.DEBUG_MESSAGE_LEVEL );
+                job.condorVariables.construct( Condor.PERIODIC_REMOVE_KEY, CondorGenerator.DEFAULT_PERIODIC_REMOVE_VALUE );
+            }
+        }
+
     }
     
     
     /**
-     * Returns a natural number value ( > 0 ) if the parameter passed is an integer
-     * and greater than zero, else -1
+     * Returns a boolean indicating whether the value represented is an
+     * integer or not.
      * 
      * @param value   the String passed
      * 
-     * @return
+     * @return true if an int else false
      */
-    protected int getNaturalNumberValue( String value ){
-        int result = -1;
+    protected boolean isInteger ( String value ){
+        boolean result = true;
 
         try{
-            result = Integer.parseInt(value);
+             Integer.parseInt(value);
         }
         catch( Exception e ){
-
+            result = false;
         }
         return result;
     }
