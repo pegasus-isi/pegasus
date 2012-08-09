@@ -57,6 +57,7 @@ import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 
 import edu.isi.pegasus.planner.classes.TransferJob;
+import edu.isi.pegasus.planner.namespace.Dagman;
 import edu.isi.pegasus.planner.transfer.RemoteTransfer;
 import java.util.List;
 import java.util.ArrayList;
@@ -101,6 +102,11 @@ public class DeployWorkerPackage
      * Constant suffix for the names of the deployment nodes.
      */
     public static final String CLEANUP_PREFIX = "cleanup_";
+
+    /**
+     * The arguments for pegasus-exitcode when you only want the log files to be rotated.
+     */
+    public static final String POSTSCRIPT_ARGUMENTS_FOR_ONLY_ROTATING_LOG_FILE = "-r $RETURN";
 
     /**
      * Array storing the names of the executables in the $PEGASUS_HOME/bin directory
@@ -781,7 +787,11 @@ public class DeployWorkerPackage
 
             
             //the setup and untar jobs need to be launched without kickstart.
-            setupTXJob.vdsNS.construct( Pegasus.GRIDSTART_KEY, "None" );
+ //           setupTXJob.vdsNS.construct( Pegasus.GRIDSTART_KEY, "None" );
+            //no empty postscript but arguments to exitcode to add -r $RETURN
+            setupTXJob.dagmanVariables.construct( Dagman.POST_SCRIPT_ARGUMENTS_KEY,
+                                                  POSTSCRIPT_ARGUMENTS_FOR_ONLY_ROTATING_LOG_FILE );
+
             GraphNode setupNode = new GraphNode( setupTXJob.getName(), setupTXJob );
 
 
@@ -790,7 +800,9 @@ public class DeployWorkerPackage
                                               this.getUntarJobName( dag, site ),
                                               getBasename( ((NameValue)ft.getSourceURL()).getValue() )
                                                   );
-            untarJob.vdsNS.construct( Pegasus.GRIDSTART_KEY, "None" );
+//            untarJob.vdsNS.construct( Pegasus.GRIDSTART_KEY, "None" );
+            untarJob.dagmanVariables.construct( Dagman.POST_SCRIPT_ARGUMENTS_KEY,
+                                                POSTSCRIPT_ARGUMENTS_FOR_ONLY_ROTATING_LOG_FILE );
             
             GraphNode untarNode  = new GraphNode( untarJob.getName(), untarJob );
 
@@ -872,7 +884,10 @@ public class DeployWorkerPackage
         setupTXJob.setNonThirdPartySite( null );
 
         //the setup and untar jobs need to be launched without kickstart.
-        setupTXJob.vdsNS.construct( Pegasus.GRIDSTART_KEY, "None" );
+//        setupTXJob.vdsNS.construct( Pegasus.GRIDSTART_KEY, "None" );
+         //no empty postscript but arguments to exitcode to add -r $RETURN
+        setupTXJob.dagmanVariables.construct( Dagman.POST_SCRIPT_ARGUMENTS_KEY, 
+                                              POSTSCRIPT_ARGUMENTS_FOR_ONLY_ROTATING_LOG_FILE );
         GraphNode setupNode = new GraphNode( setupTXJob.getName(), setupTXJob );
 
 

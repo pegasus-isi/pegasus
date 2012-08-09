@@ -17,7 +17,6 @@
 
 package edu.isi.pegasus.planner.refiner.createdir;
 
-import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 
@@ -28,7 +27,6 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 
-import edu.isi.pegasus.planner.namespace.Pegasus;
 
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
@@ -37,6 +35,7 @@ import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 
 import edu.isi.pegasus.common.util.Separator;
 
+import edu.isi.pegasus.planner.namespace.Dagman;
 import java.io.File;
 
 import java.util.List;
@@ -80,6 +79,11 @@ public class DefaultImplementation implements Implementation {
      * The path to be set for create dir jobs.
      */
     public static final String PATH_VALUE = ".:/bin:/usr/bin:/usr/ucb/bin";
+
+    /**
+     * The arguments for pegasus-exitcode when you only want the log files to be rotated.
+     */
+    public static final String POSTSCRIPT_ARGUMENTS_FOR_ONLY_ROTATING_LOG_FILE = "-r $RETURN";
 
     /**
      * The complete TC name for kickstart.
@@ -211,14 +215,11 @@ public class DefaultImplementation implements Implementation {
         String argString = null;
        
         if( mUseMkdir ){
-            /*
-            //we are using mkdir directly
-            argString = " -p " + mPoolHandle.getExecPoolWorkDir( execPool );
-            execPath  = "mkdir";
-            //path variable needs to be set
-            newJob.envVariables.construct( "PATH", CreateDirectory.PATH_VALUE );
-            */
-            newJob.vdsNS.construct( Pegasus.GRIDSTART_KEY, "None" );
+            
+            //no empty postscript but arguments to exitcode to add -r $RETURN
+//            newJob.vdsNS.construct( Pegasus.GRIDSTART_KEY, "None" );
+            newJob.dagmanVariables.construct( Dagman.POST_SCRIPT_ARGUMENTS_KEY, DefaultImplementation.POSTSCRIPT_ARGUMENTS_FOR_ONLY_ROTATING_LOG_FILE );
+
 
             StringBuffer sb = new StringBuffer();
             sb.append( mProps.getBinDir() ).
