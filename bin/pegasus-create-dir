@@ -348,19 +348,19 @@ def gsiftp(url):
     create directories on gridftp servers
     """
  
-    if tool_info['globus-url-copy']['full_path'] == None:
-        raise RuntimeError("Unable to do gsiftp mkdir becuase globus-url-copy could not be found")
+    if tool_info['pegasus-gridftp']['full_path'] == None:
+        raise RuntimeError("Unable to do gsiftp mkdir becuase pegasus-gridftp could not be found")
    
     # build command line for globus-url-copy
-    cmd = tool_info['globus-url-copy']['full_path']
+    cmd = tool_info['pegasus-gridftp']['full_path']
+    cmd += " mkdir"
 
-    # make output from guc match our current log level
+    # make output match our current log level
     if logger.isEnabledFor(logging.DEBUG):
-        cmd += " -dbg"
+        cmd += " -v"
 
-    cmd += " -create-dest"
-    cmd += " -no-third-party-transfers -no-data-channel-authentication"
-    cmd += " file:///dev/null " + url.url() + "/.empty"
+    cmd += " -p"
+    cmd += " " + url.url()
 
     myexec(cmd, 60, True)
 
@@ -482,8 +482,7 @@ def create_dir(url):
             elif tool == "scp":
                 scp(url)
             elif tool == "gsiftp":
-                check_tool("globus-url-copy", "-version", "([0-9]+\.[0-9]+)")
-                check_tool("uberftp", "-version", "([0-9]+\.[0-9]+)")
+                check_tool("pegasus-gridftp", "", None)
                 gsiftp(url)
             elif tool == "irods":
                 check_tool("imkdir", "-h", "Version[ \t]+([\.0-9a-zA-Z]+)")

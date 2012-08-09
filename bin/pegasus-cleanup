@@ -308,9 +308,9 @@ def check_env_and_tools():
     os.environ['irodsAuthFileName'] = os.getcwd() + "/.irodsA"
     
     # tools we might need later
-    check_tool("globus-url-copy", "-version", "([0-9]+\.[0-9]+)")
     check_tool("srm-rm", "-version", "srm-copy[ \t]+([\.0-9a-zA-Z]+)")
     check_tool("irm", "-h", "Version[ \t]+([\.0-9a-zA-Z]+)")
+    check_tool("pegasus-gridftp", "", None)
     check_tool("pegasus-s3", "help", None)
 
 
@@ -346,28 +346,27 @@ def scp(urls):
 
 def gsiftp(urls):
     """
-    remove files on gridftp servers - delegate run to pegasus-transfer
+    remove files on gridftp servers - delegate run to pegasus-gridftp
     """
  
     try:
         tmp_fd, tmp_name = tempfile.mkstemp(prefix="pegasus-cleanup-", suffix=".lst", dir="/tmp")
         tmp_file = os.fdopen(tmp_fd, "w+b")
     except:
-        raise RuntimeError("Unable to create tmp file for globus-url-copy transfers")
+        raise RuntimeError("Unable to create tmp file for pegasus-gridftp cleanup")
     for i, url in enumerate(urls):
-        tmp_file.write("file:///dev/null\n")
         tmp_file.write("%s\n" %(url.url()))
 
     tmp_file.close()
     
     # use pegasus-transfer
-    cmd = prog_dir + "/pegasus-transfer"
+    cmd = prog_dir + "/pegasus-gridftp rm -f"
 
-    # make output from guc match our current log level
+    # make output match our current log level
     if logger.isEnabledFor(logging.DEBUG):
-        cmd += " -l debug"
+        cmd += " -v"
 
-    cmd += " -f " + tmp_name
+    cmd += " -i " + tmp_name
 
     try:
         myexec(cmd, 1*60*60, True)
