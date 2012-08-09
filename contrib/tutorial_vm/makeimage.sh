@@ -40,83 +40,57 @@ if [ "X$(which mkfs.ext4)" == "X" ]; then
 fi
 
 if [ $# -ne 1 ]; then
-    echo "Usage: $0 disk.img"
+    echo "Usage: $0 name"
     exit 1
 fi
 
-raw=$1
-if ! [[ "$raw" =~ ".img" ]]; then
-    echo "Image name must end with .img: $raw"
+name=$1
+
+img1=${name}.fg
+img2=${name}.ec2
+vmdk=${name}.vmdk
+
+mnt1=$PWD/image1
+mnt2=$PWD/image2
+
+if [ -f "$img1" ]; then
+    echo "$img1 exists"
     exit 1
 fi
-
-mnt=$PWD/${raw/.img/}
-
-if [ -f "$raw" ]; then
-    echo "$raw exists"
-    exit 1
-fi
-
 
 
 echo "Creating $SIZE GB image..."
-dd if=/dev/zero of=$raw bs=1M count=1 seek=$(((SIZE*1024)-1))
+dd if=/dev/zero of=$img1 bs=1M count=1 seek=$(((SIZE*1024)-1))
 
 
-
-echo "Creating first loop device..."
-loop0=$(losetup -f --show $raw)
-
+echo "Creating loop device..."
+loop0=$(losetup -f --show $img1)
 
 
-echo "Partitioning image..."
-! fdisk $loop0 <<END
-n
-p
-1
-
-
-a
-1
-w
-END
-
-
-
-echo "Creating second loop device..."
-loop1=$(losetup -o 32256 -f --show $raw)
-
-
-
-echo "Formatting partition 1..."
+echo "Formatting image..."
 # For some reason this tries to create a file system that is too big unless you specify the number of blocks
-mkfs.ext4 -L rootdisk -b 4096 $loop1 $(((SIZE*262144)-256))
+mkfs.ext4 -L rootdisk -b 4096 $loop0 $(((SIZE*262144)-256))
 
 
-
-echo "Mounting partition 1..."
-mkdir -p $mnt
-mount $loop1 $mnt
-
+echo "Mounting image..."
+mkdir -p $mnt1
+mount $loop0 $mnt1
 
 
 echo "Creating basic directory layout..."
-mkdir -p $mnt/{proc,etc,dev,var/{cache,log,lock/rpm}}
-
+mkdir -p $mnt1/{proc,etc,dev,var/{cache,log,lock/rpm}}
 
 
 echo "Creating devices..."
-MAKEDEV -d $mnt/dev -x console null zero urandom random
+MAKEDEV -d $mnt1/dev -x console null zero urandom random
 
 
-
-echo "Mounting /proc file system"
-mount -t proc none $mnt/proc
-
+echo "Mounting /proc file system..."
+mount -t proc none $mnt1/proc
 
 
 echo "Creating /etc/fstab..."
-cat > $mnt/etc/fstab << EOF
+cat > $mnt1/etc/fstab << EOF
 LABEL=rootdisk     /         ext4    defaults        1 1
 tmpfs              /dev/shm  tmpfs   defaults        0 0
 devpts             /dev/pts  devpts  gid=5,mode=620  0 0
@@ -125,67 +99,28 @@ none               /sys      sysfs   defaults        0 0
 EOF
 
 
-
 echo "Installing minimal base packages..."
-yum -c yum.conf --installroot=$mnt/ -y install yum dhclient rsyslog openssh-server openssh-clients curl passwd kernel grub e2fsprogs rootfiles vim-minimal sudo perl
-yum --installroot=$mnt/ -y clean all
+yum -c yum.conf --installroot=$mnt1/ -y install yum dhclient rsyslog openssh-server openssh-clients curl passwd kernel grub e2fsprogs rootfiles vim-minimal sudo perl
+yum --installroot=$mnt1/ -y clean all
 
 
 echo "Creating /etc files..."
 #/etc/hosts
-echo '127.0.0.1 localhost.localdomain localhost' > $mnt/etc/hosts
-cat > $mnt/etc/sysconfig/network-scripts/ifcfg-eth0 <<EOF
+echo '127.0.0.1 localhost.localdomain localhost' > $mnt1/etc/hosts
+cat > $mnt1/etc/sysconfig/network-scripts/ifcfg-eth0 <<EOF
 DEVICE=eth0
 ONBOOT=yes
 BOOTPROTO=dhcp
 EOF
-touch $mnt/etc/resolv.conf
-cat > $mnt/etc/sysconfig/network <<EOF
+touch $mnt1/etc/resolv.conf
+cat > $mnt1/etc/sysconfig/network <<EOF
 NETWORKING=yes
 HOSTNAME=localhost.localdomain
 EOF
 
 
-
-echo "Installing grub..."
-
-# Identify kernel and ramdisk
-pushd $mnt/boot
-KERNEL=$(ls vmlinuz-*)
-RAMDISK=$(ls initramfs-*)
-popd
-
-# Create grub.conf
-cat > $mnt/boot/grub/grub.conf <<EOF
-default 0
-timeout 0
-splashimage=(hd0,0)/boot/grub/splash.xpm.gz
-hiddenmenu
-title CentOS
-    root (hd0,0)
-    kernel /boot/$KERNEL ro root=LABEL=rootdisk rd_NO_LUKS rd_NO_LVM rd_NO_MD rd_NO_DM LANG=en_US.UTF-8 KEYBOARDTYPE=pc KEYTABLE=us nomodeset quiet selinux=0
-    initrd /boot/$RAMDISK
-EOF
-
-# Create menu.lst
-pushd $mnt/boot/grub
-ln -s ./grub.conf menu.lst
-popd
-
-# Install grub stages
-cp /boot/grub/stage1 /boot/grub/e2fs_stage1_5 /boot/grub/stage2 $mnt/boot/grub
-
-# Install grub to MBR
-grub --device-map=/dev/null <<EOF
-device (hd0) $raw
-root (hd0,0)
-setup (hd0)
-EOF
-
-
-
 echo "Installing Condor..."
-cat > $mnt/etc/yum.repos.d/condor.repo <<END
+cat > $mnt1/etc/yum.repos.d/condor.repo <<END
 [condor]
 name=Condor
 baseurl=http://www.cs.wisc.edu/condor/yum/stable/rhel6
@@ -193,14 +128,13 @@ enabled=1
 gpgcheck=0
 END
 
-yum --installroot=$mnt install -y condor
+yum --installroot=$mnt1 install -y condor
 
-echo "TRUST_UID_DOMAIN = True" >> $mnt/etc/condor/condor_config.local
-
+echo "TRUST_UID_DOMAIN = True" >> $mnt1/etc/condor/condor_config.local
 
 
 echo "Installing Pegasus..."
-cat > $mnt/etc/yum.repos.d/pegasus.repo <<END
+cat > $mnt1/etc/yum.repos.d/pegasus.repo <<END
 [pegasus]
 name=Pegasus
 baseurl=http://download.pegasus.isi.edu/wms/download/rhel/6/\$basearch/
@@ -208,14 +142,13 @@ gpgcheck=0
 enabled=1
 END
 
-yum --installroot=$mnt install -y pegasus
-
+yum --installroot=$mnt1 install -y pegasus
 
 
 echo "Creating tutorial user..."
 
 # Create the user, set the password, and generate an ssh key
-chroot $mnt /bin/bash <<END
+chroot $mnt1 /bin/bash <<END
 useradd tutorial
 echo $PASSWORD | passwd --stdin tutorial
 
@@ -230,35 +163,118 @@ END
 
 # Copy tutorial files into tutorial user's home dir
 if [ -d ../../doc/tutorial ]; then
-    cp -R ../../doc/tutorial/* $mnt/home/tutorial/
-    rm -rf $mnt/home/tutorial/.svn $mnt/home/tutorial/bin/.svn $mnt/home/tutorial/input/.svn
+    cp -R ../../doc/tutorial/* $mnt1/home/tutorial/
+    rm -rf $mnt1/home/tutorial/.svn $mnt1/home/tutorial/bin/.svn $mnt1/home/tutorial/input/.svn
 fi
 
-chroot $mnt /bin/bash <<END
+chroot $mnt1 /bin/bash <<END
 chown -R tutorial:tutorial /home/tutorial
 END
 
 
-
 echo "Cleaning up image..."
-yum --installroot=$mnt/ -y clean all
+yum --installroot=$mnt1/ -y clean all
 
 
+echo "Creating $SIZE GB image..."
+dd if=/dev/zero of=$img2 bs=1M count=1 seek=$(((SIZE*1024)-1))
 
-echo "Unmounting partition 1..."
+
+echo "Creating second loop device..."
+loop1=$(losetup -f --show $img2)
+
+
+echo "Partitioning second image..."
+! fdisk $loop1 <<END
+n
+p
+1
+
+
+a
+1
+w
+END
+
+
+echo "Creating third loop device..."
+loop2=$(losetup -o 32256 -f --show $img2)
+
+
+echo "Formatting second image..."
+# For some reason this tries to create a file system that is too big unless you specify the number of blocks
+mkfs.ext4 -L rootdisk -b 4096 $loop2 $(((SIZE*262144)-256))
+
+
+echo "Mounting second image..."
+mkdir -p $mnt2
+mount $loop2 $mnt2
+
+
+echo "Copying image..."
+rsync -ax -W $mnt1/ $mnt2
+
+
+echo "Mounting second proc..."
+mount -t proc none $mnt2/proc
+
+
+echo "Installing grub..."
+
+# Identify kernel and ramdisk
+pushd $mnt2/boot
+KERNEL=$(ls vmlinuz-*)
+RAMDISK=$(ls initramfs-*)
+popd
+
+# Create grub.conf
+cat > $mnt2/boot/grub/grub.conf <<EOF
+default 0
+timeout 0
+splashimage=(hd0,0)/boot/grub/splash.xpm.gz
+hiddenmenu
+title CentOS
+    root (hd0,0)
+    kernel /boot/$KERNEL ro root=LABEL=rootdisk rd_NO_LUKS rd_NO_LVM rd_NO_MD rd_NO_DM LANG=en_US.UTF-8 KEYBOARDTYPE=pc KEYTABLE=us nomodeset quiet selinux=0
+    initrd /boot/$RAMDISK
+EOF
+
+# Create menu.lst
+pushd $mnt2/boot/grub
+ln -s ./grub.conf menu.lst
+popd
+
+# Install grub stages
+cp /boot/grub/stage1 /boot/grub/e2fs_stage1_5 /boot/grub/stage2 $mnt2/boot/grub
+
+# Install grub to MBR
+grub --device-map=/dev/null <<EOF
+device (hd0) $img2
+root (hd0,0)
+setup (hd0)
+EOF
+
+
+echo "Unmounting images..."
 sync
-umount $mnt/proc
-umount $mnt
-rmdir $mnt
-
+umount $mnt1/proc
+umount $mnt2/proc
+umount $mnt1
+umount $mnt2
+rmdir $mnt1
+rmdir $mnt2
 
 
 echo "Deleting loop devices..."
+losetup -d $loop2
 losetup -d $loop1
 losetup -d $loop0
 
 
-
 echo "Creating vmdk..."
-qemu-img convert -f raw -O vmdk $raw ${raw/.img/.vmdk}
+qemu-img convert -f raw -O vmdk $img2 $vmdk
+
+
+echo "Zipping vmdk..."
+zip ${name}.zip $vmdk
 
