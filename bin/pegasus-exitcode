@@ -200,7 +200,7 @@ def main():
 		dest="tasks", metavar="N", 
 		help="Number of tasks expected. If less than N tasks succeeded, then exitcode will fail.")
 	parser.add_option("-r", "--return", action="store", type="int",
-		dest="exitcode", default=0, metavar="R", 
+		dest="exitcode", metavar="R", 
 		help="Return code reported by DAGMan. This can be specified in a DAG using the $RETURN variable.")
 	parser.add_option("-n", "--no-rename", action="store_false",
 		dest="rename", default=True, 
@@ -227,8 +227,10 @@ def main():
 		outfile, errfile = rename(outfile, errfile)
 
 	# check supplied exitcode first
-	if options.exitcode != 0:
-		fail("dagman reported non-zero exitcode: %d" % options.exitcode)
+	if options.exitcode is not None:
+		if options.exitcode != 0:
+			fail("dagman reported non-zero exitcode: %d" % options.exitcode)
+		sys.exit(options.exitcode)
 
 	# check exitcodes of all tasks
 	succeeded = exitcode(outfile)
