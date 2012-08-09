@@ -245,7 +245,7 @@ ln -s ./grub.conf menu.lst
 popd
 
 # Install grub stages
-cp /boot/grub/stage1 /boot/grub/e2fs_stage1_5 /boot/grub/stage2 $mnt2/boot/grub
+cp $mnt2/usr/share/grub/x86_64-redhat/* $mnt2/boot/grub
 
 # Install grub to MBR
 grub --device-map=/dev/null <<EOF
