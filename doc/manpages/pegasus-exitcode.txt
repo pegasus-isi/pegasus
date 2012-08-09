@@ -96,7 +96,10 @@ accordingly.
 *--return* 'rv'::
 Return value reported by DAGMan. This can be specified in the DAG 
 using the $RETURN variable. If this is non-zero, then *pegasus-exitcode*
-immediately fails with a non-zero return value itself.
+immediately fails with a non-zero return value itself. If it is
+zero, then just rotate the file and don't check for proper kickstart
+output. This option can be used in cases where kickstart cannot be used
+(such as pegasus-create-dir) to enable file rotation.
 
 *-n*::
 *--no-rename*::
