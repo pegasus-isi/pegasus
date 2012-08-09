@@ -63,6 +63,7 @@ public class PegasusGridFTP {
             System.err.printf("Usage: %s mkdir [options] [URL...]\n\n", NAME);
             options();
             System.err.println("  -p        Create intermediate directories");
+            System.err.println("  -f        Ignore error if directory exists");
         }
         else {
             System.err.printf("Unknown command: %s\n", command);

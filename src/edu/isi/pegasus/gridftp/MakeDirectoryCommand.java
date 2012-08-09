@@ -15,9 +15,11 @@ import org.apache.commons.logging.LogFactory;
 public class MakeDirectoryCommand extends Command {
     private Log logger = LogFactory.getLog(MakeDirectoryCommand.class);
     private boolean makeIntermediate;
+    private boolean allowExists;
     
-    public MakeDirectoryCommand(boolean makeIntermediate) {
+    public MakeDirectoryCommand(boolean makeIntermediate, boolean allowExists) {
         this.makeIntermediate = makeIntermediate;
+        this.allowExists = allowExists;
     }
     
     protected void run(GridFTPURL url) throws ConnectException, GridFTPException {
@@ -36,20 +38,31 @@ public class MakeDirectoryCommand extends Command {
         }
         
         logger.info(conn.getURLFor(path));
-        conn.mkdir(path);
+        try {
+            conn.mkdir(path);
+        } catch (FileExistsException fee) {
+            if (allowExists) {
+                logger.warn(fee.getMessage());
+            } else {
+                throw fee;
+            }
+        }
     }
     
     public static MakeDirectoryCommand fromArguments(List<String> args) throws IllegalArgumentException {
         boolean makeIntermediate = false;
-        
+        boolean allowExists = false;
+
         for (String arg : args) {
             if (arg.equals("-p")) {
                 makeIntermediate = true;
+            } else if (arg.equals("-f")) {
+                allowExists = true;
             } else {
                 throw new IllegalArgumentException("Invalid argument: "+arg);
             }
         }
         
-        return new MakeDirectoryCommand(makeIntermediate);
+        return new MakeDirectoryCommand(makeIntermediate, allowExists);
     }
 }
