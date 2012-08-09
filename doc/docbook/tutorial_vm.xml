@@ -251,7 +251,8 @@
       </figure>
 
       <para>If you don’t see the AMI named “Pegasus Tutorial VM” you may need
-      to click the Refresh button.</para>
+      to click the Refresh button. We update the VM regularly, so the AMI ID 
+      will not match the picture above.</para>
 
       <para>Check the check box next to the Pegasus Tutorial VM and click the
       “Launch” button. The "Request Instances Wizard" will pop up:</para>
