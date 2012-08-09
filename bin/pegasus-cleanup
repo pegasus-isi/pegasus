@@ -269,7 +269,12 @@ def check_env_and_tools():
     # fink on macos x
     if os.path.exists("/sw/bin") and not("/sw/bin" in path_entries):
         path_entries.append("/sw/bin")
-       
+    
+    # add our own path (basic way to get to other Pegasus tools)
+    my_bin_dir = os.path.normpath(os.path.join(os.path.dirname(sys.argv[0])))
+    if not(my_bin_dir in path_entries):
+        path_entries.append(my_bin_dir)
+          
     # need LD_LIBRARY_PATH for Globus tools
     ld_library_path = ""
     if "LD_LIBRARY_PATH" in os.environ:
