@@ -739,12 +739,8 @@ def gsiftp_guc_options(attempt, create_dest, third_party):
         options += " -create-dest"
 
     # concurrency is safe for both pull/push and 3rd party
-    if tool_info['globus-url-copy']['version_major'] >= 5:
+    if tool_info['globus-url-copy']['version_major'] >= 5 and gsiftp_failures == 0:
         options += " -concurrency 4"
-
-    # some machines can not deal with tcp-bs - only allow if no failures have occurred
-    #if gsiftp_failures == 0:
-    #    options += " -tcp-bs 15MB"
 
     # Only do third party transfers for gsiftp->gsiftp. For other combinations, fall
     # back to settings which will for well over for example NAT
