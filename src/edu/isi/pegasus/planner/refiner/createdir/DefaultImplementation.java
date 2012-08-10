@@ -35,7 +35,9 @@ import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 
 import edu.isi.pegasus.common.util.Separator;
 
+import edu.isi.pegasus.planner.code.gridstart.PegasusExitCode;
 import edu.isi.pegasus.planner.namespace.Dagman;
+import edu.isi.pegasus.planner.namespace.Pegasus;
 import java.io.File;
 
 import java.util.List;
@@ -216,9 +218,12 @@ public class DefaultImplementation implements Implementation {
        
         if( mUseMkdir ){
             
-            //no empty postscript but arguments to exitcode to add -r $RETURN
-//            newJob.vdsNS.construct( Pegasus.GRIDSTART_KEY, "None" );
-            newJob.dagmanVariables.construct( Dagman.POST_SCRIPT_ARGUMENTS_KEY, DefaultImplementation.POSTSCRIPT_ARGUMENTS_FOR_ONLY_ROTATING_LOG_FILE );
+            //no gridstart but arguments to exitcode to add -r $RETURN
+            newJob.vdsNS.construct( Pegasus.GRIDSTART_KEY, "None" );
+            newJob.dagmanVariables.construct( Dagman.POST_SCRIPT_KEY, 
+                                              PegasusExitCode.SHORT_NAME );
+            newJob.dagmanVariables.construct( Dagman.POST_SCRIPT_ARGUMENTS_KEY, 
+                                              DefaultImplementation.POSTSCRIPT_ARGUMENTS_FOR_ONLY_ROTATING_LOG_FILE );
 
 
             StringBuffer sb = new StringBuffer();

@@ -26,14 +26,11 @@ import edu.isi.pegasus.planner.classes.FileTransfer;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.classes.NameValue;
 
-
 import edu.isi.pegasus.common.logging.LogManager;
 
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import edu.isi.pegasus.planner.partitioner.graph.Graph;
 import edu.isi.pegasus.planner.partitioner.graph.Adapter;
-
-
 
 import edu.isi.pegasus.planner.namespace.Pegasus;
 
@@ -787,7 +784,7 @@ public class DeployWorkerPackage
 
             
             //the setup and untar jobs need to be launched without kickstart.
- //           setupTXJob.vdsNS.construct( Pegasus.GRIDSTART_KEY, "None" );
+            setupTXJob.vdsNS.construct( Pegasus.GRIDSTART_KEY, "None" );
             //no empty postscript but arguments to exitcode to add -r $RETURN
             setupTXJob.dagmanVariables.construct( Dagman.POST_SCRIPT_ARGUMENTS_KEY,
                                                   POSTSCRIPT_ARGUMENTS_FOR_ONLY_ROTATING_LOG_FILE );
@@ -800,7 +797,7 @@ public class DeployWorkerPackage
                                               this.getUntarJobName( dag, site ),
                                               getBasename( ((NameValue)ft.getSourceURL()).getValue() )
                                                   );
-//            untarJob.vdsNS.construct( Pegasus.GRIDSTART_KEY, "None" );
+            untarJob.vdsNS.construct( Pegasus.GRIDSTART_KEY, "None" );
             untarJob.dagmanVariables.construct( Dagman.POST_SCRIPT_ARGUMENTS_KEY,
                                                 POSTSCRIPT_ARGUMENTS_FOR_ONLY_ROTATING_LOG_FILE );
             
@@ -884,7 +881,7 @@ public class DeployWorkerPackage
         setupTXJob.setNonThirdPartySite( null );
 
         //the setup and untar jobs need to be launched without kickstart.
-//        setupTXJob.vdsNS.construct( Pegasus.GRIDSTART_KEY, "None" );
+        setupTXJob.vdsNS.construct( Pegasus.GRIDSTART_KEY, "None" );
          //no empty postscript but arguments to exitcode to add -r $RETURN
         setupTXJob.dagmanVariables.construct( Dagman.POST_SCRIPT_ARGUMENTS_KEY, 
                                               POSTSCRIPT_ARGUMENTS_FOR_ONLY_ROTATING_LOG_FILE );
