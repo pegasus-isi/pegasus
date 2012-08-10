@@ -14,6 +14,7 @@ import org.apache.log4j.ConsoleAppender;
 import org.apache.log4j.PatternLayout;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+import org.apache.log4j.spi.Filter;
 
 /**
  * Implements a command-line utility for performing file and directory operations
@@ -118,6 +119,10 @@ public class PegasusGridFTP {
         root.addAppender(new ConsoleAppender(new PatternLayout("%m%n")));
         root.setLevel(Level.WARN);
         
+        // Ignore most logging messages from globus by default
+        Logger globus = Logger.getLogger("org.globus");
+        globus.setLevel(Level.FATAL);
+        
         if (args.length == 0) {
             usage();
             System.exit(1);
@@ -145,8 +150,10 @@ public class PegasusGridFTP {
             } else if ("-v".equals(arg)) {
                 if (root.getLevel() == Level.WARN) {
                     root.setLevel(Level.INFO);
+                    globus.setLevel(Level.ERROR);
                 } else {
                     root.setLevel(Level.DEBUG);
+                    globus.setLevel(Level.WARN);
                 }
             } else {
                 argv.add(arg);
