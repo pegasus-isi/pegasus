@@ -3,7 +3,6 @@
 set -e
 set -v
 
-
 if [ X${testdir} = "X" ]; then
     testdir=`dirname  $0`
     export testdir
@@ -12,23 +11,22 @@ fi
 TOPDIR=`pwd`
 
 # generate the input file
-echo "This is sample input to KEG" >f.a
+echo "This is sample input to KEG" > f.a
 
 # output directory
 mkdir -p outputs
 
 # build the dax generator
-export CLASSPATH=$testdir:`pegasus-config --classpath`
-javac $testdir/BlackDiamondDAX.java
-
-# generate the dax
-java BlackDiamondDAX /usr blackdiamond.dax
+export PYTHONPATH=`pegasus-config --python`
+$testdir/blackdiamond.py /usr > blackdiamond.dax
 
 # create the site catalog
-cat >sites.xml <<EOF
+cat > sites.xml <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0">
     <site  handle="local" arch="x86" os="LINUX">
+         <grid type="condor" contact="ccg-testing1.isi.edu" scheduler="Condor" jobtype="compute" total-nodes="50"/>
+         <grid type="condor" contact="ccg-testing1.isi.edu" scheduler="Condor" jobtype="auxillary" total-nodes="50"/>
         <head-fs>
             <scratch>
                 <shared>
@@ -43,6 +41,30 @@ cat >sites.xml <<EOF
                 </shared>
             </storage>
         </head-fs>
+        <profile namespace="pegasus" key="style">condor</profile>
+        <profile namespace="condor" key="getenv">True</profile>
+    </site>
+     <site handle="isi-condorc" arch="x86" os="LINUX">
+
+
+        <head-fs>
+            <scratch />
+            <storage />
+        </head-fs>
+
+        <replica-catalog type="LRC" url="rlsn://dummyValue.url.edu" />
+        <profile namespace="pegasus" key="style">condorc</profile>
+        <profile namespace="condor" key="universe">vanilla</profile>
+        <profile namespace="pegasus" key="clusters.num">1</profile>
+    </site>
+
+    <site  handle="condorpool" arch="x86" os="LINUX">
+        <head-fs>
+            <scratch />
+            <storage />
+        </head-fs>
+        <profile namespace="pegasus" key="style">condor</profile>
+        <profile namespace="condor" key="universe">vanilla</profile>
     </site>
 </sitecatalog>
 EOF
@@ -51,12 +73,10 @@ EOF
 pegasus-plan \
     --conf $testdir/pegasusrc \
     --sites local \
-    --dir work \
     --output local \
+    --dir work \
+    --nocleanup \
     --cluster horizontal \
     --dax blackdiamond.dax \
-    --submit | tee $TOPDIR/plan.out
-
-
-
+    --submit | tee plan.out
 
