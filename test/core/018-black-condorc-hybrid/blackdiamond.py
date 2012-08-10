@@ -26,6 +26,8 @@ diamond.addExecutable(e_preprocess)
 	
 e_findrange = Executable(namespace="diamond", name="findrange", version="4.0", os="linux", arch="x86", installed=False)
 e_findrange.addPFN(PFN("file://" + keg, "local"))
+e_findrange.addProfile( Profile( Namespace.PEGASUS, "style", "condorc" ))
+
 diamond.addExecutable(e_findrange)
 	
 e_analyze = Executable(namespace="diamond", name="analyze", version="4.0", os="linux", arch="x86", installed=False)
@@ -53,7 +55,7 @@ frl.uses(b1, link=Link.INPUT)
 frl.uses(c1, link=Link.OUTPUT)
 frl.addProfile( Profile( Namespace.CONDOR, "universe", "vanilla" ))
 frl.addProfile( Profile( Namespace.PEGASUS, "gridstart", "pegasuslite" ))
-frl.addProfile( Profile( Namespace.PEGASUS, "style", "condorc" ))
+#frl.addProfile( Profile( Namespace.PEGASUS, "style", "condorc" ))
 diamond.addJob(frl)
 
 # Add right Findrange job
@@ -62,7 +64,7 @@ c2 = File("f.c2")
 frr.addArguments("-a findrange","-T5","-i",b2,"-o",c2)
 frr.uses(b2, link=Link.INPUT)
 frr.uses(c2, link=Link.OUTPUT)
-frr.addProfile( Profile( Namespace.PEGASUS, "style", "condorc" ))
+#frr.addProfile( Profile( Namespace.PEGASUS, "style", "condorc" ))
 frr.addProfile( Profile( Namespace.CONDOR, "universe", "vanilla" ))
 frr.addProfile( Profile( Namespace.PEGASUS, "gridstart", "pegasuslite" ))
 diamond.addJob(frr)
