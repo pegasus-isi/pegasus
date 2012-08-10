@@ -364,6 +364,7 @@ def gsiftp(url):
     if logger.isEnabledFor(logging.DEBUG):
         cmd += " -v"
 
+    cmd += " -f"
     cmd += " -p"
     cmd += " " + url.url()
 
