@@ -21,7 +21,7 @@ diamond.addFile(a)
 # that is stored at file:///nfs/ccg3/scratch/bamboo/inputs/pegasus-keg-x86
 keg = "/nfs/ccg3/scratch/bamboo/inputs/pegasus-keg-x86"
 e_preprocess = Executable(namespace="diamond", name="preprocess", version="4.0", os="linux", arch="x86", installed=False)
-e_preprocess.addPFN(PFN("file://" + keg, "local"))
+e_preprocess.addPFN(PFN("file://" + sys.argv[1] + "/bin/pegasus-keg", "condorpool"))
 diamond.addExecutable(e_preprocess)
 	
 e_findrange = Executable(namespace="diamond", name="findrange", version="4.0", os="linux", arch="x86", installed=False)
@@ -29,7 +29,8 @@ e_findrange.addPFN(PFN("file://" + keg, "local"))
 diamond.addExecutable(e_findrange)
 	
 e_analyze = Executable(namespace="diamond", name="analyze", version="4.0", os="linux", arch="x86", installed=False)
-e_analyze.addPFN(PFN("file://" + keg, "local"))
+e_analyze.addPFN(PFN("file://" + sys.argv[1] + "/bin/pegasus-keg", "condorpool"))
+
 diamond.addExecutable(e_analyze)
 
 # Add a preprocess job
@@ -50,6 +51,8 @@ c1 = File("f.c1")
 frl.addArguments("-a findrange","-T5","-i",b1,"-o",c1)
 frl.uses(b1, link=Link.INPUT)
 frl.uses(c1, link=Link.OUTPUT)
+frl.addProfile( Profile( Namespace.CONDOR, "universe", "vanilla" ))
+frl.addProfile( Profile( Namespace.PEGASUS, "gridstart", "pegasuslite" ))
 frl.addProfile( Profile( Namespace.PEGASUS, "style", "condorc" ))
 diamond.addJob(frl)
 
@@ -60,6 +63,8 @@ frr.addArguments("-a findrange","-T5","-i",b2,"-o",c2)
 frr.uses(b2, link=Link.INPUT)
 frr.uses(c2, link=Link.OUTPUT)
 frr.addProfile( Profile( Namespace.PEGASUS, "style", "condorc" ))
+frr.addProfile( Profile( Namespace.CONDOR, "universe", "vanilla" ))
+frr.addProfile( Profile( Namespace.PEGASUS, "gridstart", "pegasuslite" ))
 diamond.addJob(frr)
 
 # Add Analyze job
