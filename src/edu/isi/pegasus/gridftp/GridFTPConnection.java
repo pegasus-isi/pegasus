@@ -158,9 +158,10 @@ public class GridFTPConnection {
     /**
      * Return information about path
      */
-    private MlsxEntry stat(String path) throws GridFTPException {
+    public FileInfo stat(String path) throws GridFTPException {
         try {
-            return client.mlst(path);
+            MlsxEntry entry = client.mlst(path);
+            return FileInfo.fromMlsxEntry(entry);
         } catch (Exception e) {
             translateException(e, getURLFor(path));
         }

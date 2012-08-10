@@ -37,12 +37,20 @@ public class MakeDirectoryCommand extends Command {
             mkdir(conn, parent);
         }
         
-        logger.info(conn.getURLFor(path));
+        String url = conn.getURLFor(path);
+        logger.info(url);
+        
         try {
             conn.mkdir(path);
         } catch (FileExistsException fee) {
             if (allowExists) {
-                logger.warn(fee.getMessage());
+                FileInfo info = conn.stat(path);
+                if (info.isDirectory()) {
+                    logger.warn(String.format("WARNING: Directory exists: %s", url));
+                } else {
+                    String message = String.format("File exists and is not a directory: %s", url);
+                    throw new FileExistsException(message, fee);
+                }
             } else {
                 throw fee;
             }
