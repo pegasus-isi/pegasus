@@ -251,7 +251,7 @@
       </figure>
 
       <para>If you don’t see the AMI named “Pegasus Tutorial VM” you may need
-      to click the Refresh button. We update the VM regularly, so the AMI ID 
+      to click the Refresh button. We update the VM regularly, so the AMI ID
       will not match the picture above.</para>
 
       <para>Check the check box next to the Pegasus Tutorial VM and click the
@@ -453,6 +453,114 @@ tutorial's password: <emphasis role="bold">pegasus</emphasis>
   <section>
     <title id="vm_futuregrid">FutureGrid</title>
 
-    <para>TBD</para>
+    <para>The FutureGrid Project (<ulink
+    url="https://portal.futuregrid.org">https://portal.futuregrid.org</ulink>)
+    is a cloud computing testbed supported by the National Science Foundation.
+    It consists of a collection of computational, networking, and storage
+    resources located throughout the United States. The goal of the FutureGrid
+    Project is to study the behavior and usefulness of cloud computing
+    technologies. It provides a platform where researchers can experiment with
+    different cloud technologies.</para>
+
+    <section>
+      <title>Getting Started</title>
+
+      <para>The Pegasus Tutorial VM has been deployed to the FutureGrid
+      "India" site using OpenStack. In order to launch the VM, you will need
+      to have a FutureGrid account. You can get one by going to <ulink
+      url="https://portal.futuregrid.org">https://portal.futuregrid.org</ulink>
+      and either joining an existing project, or starting a new
+      project.</para>
+
+      <para>If you are not familiar with using OpenStack on FutureGrid, we
+      recommend that you review the "Using OpenStack on FutureGrid" tutorial
+      found here: <ulink
+      url="https://portal.futuregrid.org/tutorials/openstack">https://portal.futuregrid.org/tutorials/openstack</ulink>.</para>
+    </section>
+
+    <section>
+      <title>Launching the VM</title>
+
+      <para>First, log into the India site using your FutureGrid username and
+      password:</para>
+
+      <programlisting>$ <emphasis role="bold">ssh USERNAME@india.futuregrid.org</emphasis></programlisting>
+
+      <para>If you have not already done so, source the
+      <filename>novarc</filename> file that contains your OpenStack
+      credentials:</para>
+
+      <programlisting>$ <emphasis role="bold">source ~/.futuregrid/openstack/novarc</emphasis></programlisting>
+
+      <para>Also, load the euca2ools module to add them to your
+      environment:</para>
+
+      <programlisting>$ <emphasis role="bold">module load euca2ools</emphasis></programlisting>
+
+      <para>Next, query OpenStack to find the latest Pegasus Tutorial VM
+      image:</para>
+
+      <programlisting>$ <emphasis role="bold">euca-describe-images | grep PegasusTutorialVM</emphasis>
+IMAGE ami-0000003e juve/PegasusTutorialVM-4.0.1.fg.manifest.xml available public x86_64 ...</programlisting>
+
+      <para>Find the image ID (am1-0000003e in the example above). If you get
+      multiple results, use the latest version.</para>
+
+      <para>Launch the tutorial VM using the
+      <literal>euca-run-instances</literal> command with the image ID you
+      found in the previous step:</para>
+
+      <programlisting>$ <emphasis role="bold">euca-run-instances ami-0000003e</emphasis>
+RESERVATION    r-y9ue0rs7    461884eef90047fbb4eb9ec92f22a1e3   default
+INSTANCE    <emphasis role="bold">i-00000c38</emphasis>    ami-0000003e    server-3128    server-3128    pending    ...</programlisting>
+
+      <para>Note the instance ID (i-00000c38 in the example). Monitor the
+      status of your VM by invoking the
+      <literal>euca-describe-instances</literal> command periodically with the
+      instance ID until the VM status changes from "pending" to "running":
+      </para>
+
+      <programlisting>$ <emphasis role="bold">euca-describe-instances i-00000c38</emphasis>
+RESERVATION    r-y9ue0rs7    461884eef90047fbb4eb9ec92f22a1e3    default
+INSTANCE    i-00000c38    ami-0000003e    server-3128    server-3128    <emphasis
+          role="bold">pending</emphasis>   ...
+$ ...
+$ <emphasis role="bold">euca-describe-instances i-00000c38</emphasis>
+RESERVATION     r-y9ue0rs7     461884eef90047fbb4eb9ec92f22a1e3     default
+INSTANCE    i-00000c38    ami-0000003e    <emphasis role="bold">149.165.158.123</emphasis>    server-3128    <emphasis
+          role="bold">running</emphasis>    ...</programlisting>
+
+      <para>Note down the IP address of the instance (149.165.158.123 in the
+      example). Log into the VM as the tutorial user:</para>
+
+      <programlisting>$ <emphasis role="bold">ssh tutorial@149.165.158.123</emphasis></programlisting>
+
+      <para>The password is "pegasus".</para>
+
+      <para>At this point you should return to the <link
+      linkend="tutorial">tutorial chapter</link> and complete the
+      tutorial.</para>
+    </section>
+
+    <section>
+      <title>Terminating the VM</title>
+
+      <para>Log out of the VM by typing:</para>
+
+      <programlisting>$ <emphasis role="bold">exit</emphasis></programlisting>
+
+      <para>Using the instance ID you found in the last section (NOT the image
+      ID), terminate the VM by typing:</para>
+
+      <programlisting>$ <emphasis role="bold">euca-terminate-instances i-00000c38</emphasis>
+INSTANCE    i-00000c38</programlisting>
+
+      <para>When you invoke <literal>euca-describe-instances</literal> you
+      should no longer see the VM running (you should not get any
+      output):</para>
+
+      <programlisting>$ <emphasis role="bold">euca-describe-instances i-00000c38</emphasis>
+$ </programlisting>
+    </section>
   </section>
 </appendix>
