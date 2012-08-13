@@ -1,0 +1,19 @@
+#!/bin/bash
+
+set -e
+
+TOPDIR=`pwd`
+
+# populate the initial replica catalog
+echo "f.a file://"`pwd`"/f.a pool=\"local\"" >rc
+
+# plan and submit the  workflow
+pegasus-plan \
+    --conf pegasusrc \
+    --dir work \
+    --sites Trestles,Ranger \
+    --output local \
+    --nocleanup \
+    --dax blackdiamond.dax \
+    --submit
+

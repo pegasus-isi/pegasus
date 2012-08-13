@@ -1,0 +1,28 @@
+tr diamond::preprocess:4.0 {
+    site Trestles {
+        pfn "file:///home/ux454281/software/pegasus/pegasus-4.0.1/bin/pegasus-keg"
+        arch "x86_64"
+        os "LINUX"
+        type "INSTALLED"
+    }
+}
+
+tr diamond::findrange:4.0 {
+    site Ranger {
+        pfn "file:///share/home/00384/rynge/software/pegasus/4.0.0/bin/pegasus-keg"
+        arch "x86_64"
+        os "LINUX"
+        type "INSTALLED"
+    }
+}
+
+tr diamond::analyze:4.0 {
+    site Trestles {
+        pfn "file:///home/ux454281/software/pegasus/pegasus-4.0.1/bin/pegasus-keg"
+        arch "x86_64"
+        os "LINUX"
+        type "INSTALLED"
+    }
+}
+
+

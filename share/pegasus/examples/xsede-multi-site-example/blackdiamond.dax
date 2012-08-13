@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<adag xmlns="http://pegasus.isi.edu/schema/DAX" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.3.xsd" version="3.3" name="diamond">
+	<job id="ID0000001" namespace="diamond" name="preprocess" version="4.0">
+		<argument>-a preprocess -T60 -i <file name="f.a"/> -o <file name="f.b1"/> <file name="f.b2"/></argument>
+		<uses name="f.b1" link="output"/>
+		<uses name="f.a" link="input"/>
+		<uses name="f.b2" link="output"/>
+	</job>
+	<job id="ID0000002" namespace="diamond" name="findrange" version="4.0">
+		<argument>-a findrange -T60 -i <file name="f.b1"/> -o <file name="f.c1"/></argument>
+		<uses name="f.c1" link="output"/>
+		<uses name="f.b1" link="input"/>
+	</job>
+	<job id="ID0000003" namespace="diamond" name="findrange" version="4.0">
+		<argument>-a findrange -T60 -i <file name="f.b2"/> -o <file name="f.c2"/></argument>
+		<uses name="f.c2" link="output"/>
+		<uses name="f.b2" link="input"/>
+	</job>
+	<job id="ID0000004" namespace="diamond" name="analyze" version="4.0">
+		<argument>-a analyze -T60 -i <file name="f.c1"/> <file name="f.c2"/> -o <file name="f.d"/></argument>
+		<uses name="f.c2" link="input"/>
+		<uses name="f.d" link="output" register="true"/>
+		<uses name="f.c1" link="input"/>
+	</job>
+	<child ref="ID0000002">
+		<parent ref="ID0000001"/>
+	</child>
+	<child ref="ID0000003">
+		<parent ref="ID0000001"/>
+	</child>
+	<child ref="ID0000004">
+		<parent ref="ID0000002"/>
+		<parent ref="ID0000003"/>
+	</child>
+</adag>

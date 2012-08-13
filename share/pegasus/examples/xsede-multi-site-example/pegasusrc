@@ -1,0 +1,14 @@
+
+pegasus.catalog.site=XML3
+pegasus.catalog.site.file=sites.xml
+
+pegasus.catalog.replica=SimpleFile
+pegasus.catalog.replica.file=rc
+
+pegasus.catalog.transformation=Text
+pegasus.catalog.transformation.file=tc
+
+pegasus.condor.logs.symlink=false
+pegasus.dir.useTimestamp=true
+pegasus.dir.storage.deep=false
+

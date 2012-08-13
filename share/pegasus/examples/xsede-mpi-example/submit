@@ -1,0 +1,16 @@
+#!/bin/bash
+
+set -e
+
+TOPDIR=`pwd`
+
+# plan and submit the  workflow
+pegasus-plan \
+    --conf pegasusrc \
+    --dir work \
+    --sites Trestles \
+    --output local \
+    --nocleanup \
+    --dax workflow.dax \
+    --submit
+

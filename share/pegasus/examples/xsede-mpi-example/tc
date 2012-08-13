@@ -1,0 +1,13 @@
+tr examples::helloworld:1.0 {
+    site Trestles {
+        pfn "file:///home/ux454281/mpi-example/helloworld"
+        arch "x86_64"
+        os "LINUX"
+        type "INSTALLED"
+        profile globus "jobtype" "mpi"
+        profile globus "xcount" "32"
+        profile globus "host_xcount" "1"
+        profile globus "maxwalltime" "10"
+    }
+}
+
