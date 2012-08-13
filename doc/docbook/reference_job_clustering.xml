@@ -8,10 +8,10 @@
   Management System, are composed of several jobs that run for only a few
   seconds or so. The overhead of running any job on the grid is usually 60
   seconds or more. Hence, it makes sense to cluster small independent jobs
-  into a larger job. This is done while mapping an abstract workflow to a
-  concrete workflow. Site specific or transformation specific criteria are
+  into a larger job. This is done while mapping an abstract workflow to an
+  executable workflow. Site specific or transformation specific criteria are
   taken into consideration while clustering smaller jobs into a larger job in
-  the concrete workflow. The user is allowed to control the granularity of
+  the executable workflow. The user is allowed to control the granularity of
   this clustering on a per transformation per site basis.</para>
 
   <section>
@@ -120,7 +120,7 @@ siteX    C     /shared/PEGASUS/bin/jobC INSTALLED       INTEL32::LINUX  PEGASUS:
                 <mediaobject>
                   <imageobject>
                     <imagedata contentdepth="8in"
-                               fileref="images/advanced-clustering-1.png"/>
+                               fileref="images/advanced-clustering-1.png" />
                   </imageobject>
                 </mediaobject>
               </figure>
@@ -169,7 +169,7 @@ siteX    B     /shared/PEGASUS/bin/jobB INSTALLED       INTEL32::LINUX PEGASUS::
                 <mediaobject>
                   <imageobject>
                     <imagedata contentdepth="8in"
-                               fileref="images/advanced-clustering-2.png"/>
+                               fileref="images/advanced-clustering-2.png" />
                   </imageobject>
                 </mediaobject>
               </figure>
@@ -258,7 +258,7 @@ siteX    C     /shared/PEGASUS/bin/jobC INSTALLED       INTEL32::LINUX PEGASUS::
           <mediaobject>
             <imageobject>
               <imagedata contentdepth="8in"
-                         fileref="images/advanced-clustering-5.png"/>
+                         fileref="images/advanced-clustering-5.png" />
             </imageobject>
           </mediaobject>
         </figure>
@@ -277,7 +277,7 @@ siteX    C     /shared/PEGASUS/bin/jobC INSTALLED       INTEL32::LINUX PEGASUS::
 
         <programlisting><emphasis role="bold"> pegasus.clusterer.preference          Runtime</emphasis> </programlisting>
 
-        <para/>
+        <para></para>
       </section>
 
       <section id="label_clustering">
@@ -294,7 +294,7 @@ siteX    C     /shared/PEGASUS/bin/jobC INSTALLED       INTEL32::LINUX PEGASUS::
             <mediaobject>
               <imageobject>
                 <imagedata contentdepth="8in"
-                           fileref="images/advanced-clustering-3.png"/>
+                           fileref="images/advanced-clustering-3.png" />
               </imageobject>
             </mediaobject>
           </figure></para>
@@ -382,7 +382,7 @@ siteX    C     /shared/PEGASUS/bin/jobC INSTALLED       INTEL32::LINUX PEGASUS::
           <mediaobject>
             <imageobject>
               <imagedata contentdepth="8in"
-                         fileref="images/advanced-clustering-4.png"/>
+                         fileref="images/advanced-clustering-4.png" />
             </imageobject>
           </mediaobject>
         </figure>
@@ -401,61 +401,119 @@ siteX    C     /shared/PEGASUS/bin/jobC INSTALLED       INTEL32::LINUX PEGASUS::
           remote site</emphasis></para>
 
           <para>The clustered job is executed using <emphasis
-          role="bold">seqexec</emphasis>, a wrapper tool written in C that is
-          distributed as part of the PEGASUS. It takes in the jobs passed to
-          it, and ends up executing them sequentially on a single node. To use
-          &amp;ldquo;<emphasis role="bold">seqexec</emphasis>&amp;rdquor; for
-          executing any clustered job on a siteX, there needs to be an entry
-          in the transformation catalog for an executable with the logical
-          name seqexec and namespace as pegasus.</para>
+          role="bold">pegasus-cluster</emphasis>, a wrapper tool written in C
+          that is distributed as part of the PEGASUS. It takes in the jobs
+          passed to it, and ends up executing them sequentially on a single
+          node. To use pegasus-cluster for executing any clustered job on a
+          siteX, there needs to be an entry in the transformation catalog for
+          an executable with the logical name seqexec and namespace as
+          pegasus. </para>
 
           <programlisting><emphasis role="bold">#site  transformation   pfn            type                 architecture    profiles</emphasis>
 
-siteX    pegasus::seqexec     /shared/PEGASUS/bin/seqexec INSTALLED       INTEL32::LINUX NULL</programlisting>
+siteX    pegasus::seqexec     /usr/pegasus/bin/pegasus-cluster INSTALLED       INTEL32::LINUX NULL</programlisting>
 
-          <para>By default, the entry for seqexec on a site is automatically
-          picked up if $PEGASUS_HOME or $VDS_HOME is specified in the site
-          catalog for that site.</para>
+          <para>If the entry is not specified, Pegasus will attempt create a
+          default path on the basis of the environment profile PEGASUS_HOME
+          specified in the site catalog for the remote site.</para>
         </listitem>
 
         <listitem>
           <para><emphasis role="bold">On multiple nodes of the remote site
-          using MPI</emphasis></para>
+          using MPI based task management tool called Pegasus MPI Cluster
+          (PMC)</emphasis></para>
 
-          <para>The clustered job is executed using mpiexec, a wrapper mpi
-          program written in C that is distributed as part of the PEGASUS. It
-          is only distributed as source not as binary. The wrapper ends up
-          being run on every mpi node, with the first one being the master and
-          the rest of the ones as workers. The number of instances of mpiexec
-          that are invoked is equal to the value of the globus rsl key
-          nodecount. The master distributes the smaller constituent jobs to
-          the workers.</para>
+          <para>The clustered job is executed using <emphasis
+          role="bold">pegasus-mpi-cluster</emphasis>, a wrapper MPI program
+          written in C that is distributed as part of the PEGASUS. A PMC job
+          consists of a single master process (this process is rank 0 in MPI
+          parlance) and several worker processes. These processes follow the
+          standard master-worker architecture. The master process manages the
+          workflow and assigns workflow tasks to workers for execution. The
+          workers execute the tasks and return the results to the master.
+          Communication between the master and the workers is accomplished
+          using a simple text-based protocol implemented using MPI_Send and
+          MPI_Recv. PMC relies on a shared filesystem on the remote site to
+          manage the individual tasks stdout and stderr and stage it back to
+          the submit host as part of it's own stdout/stderr.</para>
 
-          <para>For e.g. If there were 10 jobs in the merged job and nodecount
-          was 5, then one node acts as master, and the 10 jobs are distributed
-          amongst the 4 slaves on demand. The master hands off a job to the
-          slave node as and when it gets free. So initially all the 4 nodes
-          are given a single job each, and then as and when they get done are
-          handed more jobs till all the 10 jobs have been executed.</para>
+          <para>The input format for PMC is a DAG based format similar to
+          Condor DAGMan's. PMC follows the dependencies specified in the DAG
+          to release the jobs in the right order and executes parallel jobs
+          via the workers when possible. The input file for PMC is
+          automatically generated by the Pegasus Planner when generating the
+          executable workflow. PMC allows for a finer grained control on how
+          each task is executed. This can be enabled by associating the
+          following pegasus profiles with the jobs in the DAX</para>
 
-          <para>To use &amp;ldquo;mpiexec&amp;rdquor; for executing the
-          clustered job on a siteX, there needs to be an entry in the
-          transformation catalog for an executable with the logical name
-          mpiexec and namespace as pegasus.</para>
+          <table>
+            <title>Table : Pegasus Profiles that can be associated with jobs
+            in the DAX for PMC </title>
+
+            <tgroup cols="2">
+              <tbody>
+                <row>
+                  <entry><emphasis role="bold">Key</emphasis></entry>
+
+                  <entry><emphasis role="bold">Description</emphasis></entry>
+                </row>
+
+                <row>
+                  <entry>stagein.remote.clusters</entry>
+
+                  <entry>This key provides finer grained control in
+                  determining the number of stage-in jobs that are executed
+                  remotely on the remote site and are responsible for staging
+                  data to it. This profile is best set in the Site Catalog or
+                  in the Properties file</entry>
+                </row>
+
+                <row>
+                  <entry>pmc_request_memory</entry>
+
+                  <entry>This key is used to set the -m option for
+                  pegasus-mpi-cluster. It specifies the amount of memory in MB
+                  that a job requires. This profile is usually set in the DAX
+                  for each job.</entry>
+                </row>
+
+                <row>
+                  <entry>pmc_request_cpus</entry>
+
+                  <entry>This key is used to set the -c option for
+                  pegasus-mpi-cluster. It specifies the number of cpu's that a
+                  job requires. This profile is usually set in the DAX for
+                  each job.</entry>
+                </row>
+
+                <row>
+                  <entry>pmc_priority</entry>
+
+                  <entry>This key is used to set the -p option for
+                  pegasus-mpi-cluster. It specifies the priority for a job .
+                  This profile is usually set in the DAX for each job.
+                  Negative values are allowed for priorities.</entry>
+                </row>
+              </tbody>
+            </tgroup>
+          </table>
+
+          <para>Refer to the pegasus-mpi-cluster man page in the <link
+          linkend="pegasus-cli-chapter">command line tools chapter</link> to
+          know more about PMC and how it schedules individual tasks.</para>
+
+          <para>It is recommended to have a pegasus::mpiexec entry in the
+          transformation catalog to specify the path to PMC on the remote and
+          specify the relevant globus profiles such as xcount, host_xcount and
+          maxwalltime to control size of the MPI job.</para>
 
           <programlisting><emphasis role="bold">#site  transformation   pfn            type                 architecture    profiles</emphasis>
 
-siteX    pegasus::seqexec     /shared/PEGASUS/bin/mpiexec INSTALLED       INTEL32::LINUX NULL</programlisting>
+siteX    pegasus::mpiexec     /usr/pegasus/bin/pegasus-mpi-cluster INSTALLED       INTEL32::LINUX globus::xcount=32;globus::host_xcount=1</programlisting>
 
-          <para>Another added advantage of using mpiexec, is that regular non
-          mpi code can be run via MPI.</para>
-
-          <para>Both the clustered job and the smaller constituent jobs are
-          invoked via kickstart, unless the clustered job is being run via mpi
-          (mpiexec). Kickstart is unable to launch mpi jobs. If kickstart is
-          not installed on a particular site i.e. the gridlaunch attribute for
-          site is not specified in the site catalog, the jobs are invoked
-          directly.</para>
+          <para>If the entry is not specified, Pegasus will attempt create a
+          default path on the basis of the environment profile PEGASUS_HOME
+          specified in the site catalog for the remote site.</para>
         </listitem>
       </itemizedlist>
 
@@ -483,9 +541,8 @@ pegasus.clusterer.job.aggregator seqexec|mpiexec</programlisting>
           </listitem>
 
           <listitem>
-            <para><emphasis role="bold">associating profile key
-            &amp;ldquo;collapser&amp;rdquor; with the site in the site
-            catalog</emphasis></para>
+            <para><emphasis role="bold">associating profile key collapser with
+            the site in the site catalog</emphasis></para>
 
             <programlisting>&lt;site handle="siteX" gridlaunch = "/shared/PEGASUS/bin/kickstart"&gt;
     &lt;profile namespace="env" key="GLOBUS_LOCATION" &gt;/home/shared/globus&lt;/profile&gt;
@@ -504,9 +561,9 @@ pegasus.clusterer.job.aggregator seqexec|mpiexec</programlisting>
           </listitem>
 
           <listitem>
-            <para><emphasis role="bold">associating profile key
-            &amp;ldquo;collapser&amp;rdquor; with the transformation that is
-            being clustered, in the transformation catalog</emphasis></para>
+            <para><emphasis role="bold">associating profile key collapser with
+            the transformation that is being clustered, in the transformation
+            catalog</emphasis></para>
 
             <programlisting><emphasis role="bold">#site  transformation   pfn            type                architecture profiles
 </emphasis>
