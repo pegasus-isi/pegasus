@@ -105,18 +105,25 @@ yum --installroot=$mnt1/ -y clean all
 
 
 echo "Creating /etc files..."
-#/etc/hosts
+
 echo '127.0.0.1 localhost.localdomain localhost' > $mnt1/etc/hosts
+
 cat > $mnt1/etc/sysconfig/network-scripts/ifcfg-eth0 <<EOF
 DEVICE=eth0
 ONBOOT=yes
 BOOTPROTO=dhcp
 EOF
+
 touch $mnt1/etc/resolv.conf
+
+# NOZEROCONF is required for the metadata server to work on Eucalyptus
 cat > $mnt1/etc/sysconfig/network <<EOF
 NETWORKING=yes
-HOSTNAME=localhost.localdomain
+NOZEROCONF=yes
 EOF
+
+# This has to be removed or the interface will not come up on Eucalyptus
+rm -f $mnt1/etc/udev/rules.d/70-persistent-net.rules
 
 
 echo "Installing Condor..."

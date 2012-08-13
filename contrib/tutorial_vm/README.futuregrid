@@ -1,0 +1,37 @@
+The tutorial VM should be deployed on OpenStack on the india resource. You should
+have already set up your environment to use OpenStack. Information on how to do
+that is available here:
+
+https://portal.futuregrid.org/tutorials/openstack
+
+1. First, log into the india headnode:
+
+ssh USER@india.futuregrid.org
+
+2. Next, download the .fg image:
+
+wget http://HOST/PATH/PegasusTutorialVM-VERSION.fg
+
+3. Next, bundle the image:
+
+euca-bundle-image -i PegasusTutorialVM-VERSION.fg --kernel aki-00000010 --ramdisk ari-00000011
+
+4. Upload the bundle to the instance store:
+
+euca-upload-bundle -b pegasus -m /tmp/PegasusTutorialVM-VERSION.fg.manifest.xml
+
+5. Register the new image with OpenStack:
+
+euca-register pegasus/PegasusTutorialVM-VERSION.fg.manifest.xml
+
+This should print out the ID of the new image. Use this ID to update Appendix A of the
+Pegasus User Guide.
+
+6. Make the image public:
+
+euca-modify-image-attribute -l -a all ami-0000003e
+
+7. Remove any files that were left over from the bundling process:
+
+rm -rf PegasusTutorialVM-* /tmp/PegasusTutorialVM-*
+
