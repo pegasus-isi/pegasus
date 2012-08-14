@@ -407,7 +407,7 @@ siteX    C     /shared/PEGASUS/bin/jobC INSTALLED       INTEL32::LINUX PEGASUS::
           node. To use pegasus-cluster for executing any clustered job on a
           siteX, there needs to be an entry in the transformation catalog for
           an executable with the logical name seqexec and namespace as
-          pegasus. </para>
+          pegasus.</para>
 
           <programlisting><emphasis role="bold">#site  transformation   pfn            type                 architecture    profiles</emphasis>
 
@@ -448,7 +448,7 @@ siteX    pegasus::seqexec     /usr/pegasus/bin/pegasus-cluster INSTALLED       I
 
           <table>
             <title>Table : Pegasus Profiles that can be associated with jobs
-            in the DAX for PMC </title>
+            in the DAX for PMC</title>
 
             <tgroup cols="2">
               <tbody>
@@ -456,16 +456,6 @@ siteX    pegasus::seqexec     /usr/pegasus/bin/pegasus-cluster INSTALLED       I
                   <entry><emphasis role="bold">Key</emphasis></entry>
 
                   <entry><emphasis role="bold">Description</emphasis></entry>
-                </row>
-
-                <row>
-                  <entry>stagein.remote.clusters</entry>
-
-                  <entry>This key provides finer grained control in
-                  determining the number of stage-in jobs that are executed
-                  remotely on the remote site and are responsible for staging
-                  data to it. This profile is best set in the Site Catalog or
-                  in the Properties file</entry>
                 </row>
 
                 <row>
@@ -514,6 +504,11 @@ siteX    pegasus::mpiexec     /usr/pegasus/bin/pegasus-mpi-cluster INSTALLED    
           <para>If the entry is not specified, Pegasus will attempt create a
           default path on the basis of the environment profile PEGASUS_HOME
           specified in the site catalog for the remote site.</para>
+
+          <tip>
+            <para>Users are encouraged to use label based clustering in
+            conjunction with PMC</para>
+          </tip>
         </listitem>
       </itemizedlist>
 
