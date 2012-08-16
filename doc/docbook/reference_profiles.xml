@@ -781,7 +781,7 @@
             </row>
 
             <row>
-              <entry>job.runtime</entry>
+              <entry>runtime</entry>
 
               <entry>Please refer to the <link
               linkend="runtime_clustering">Pegasus Clustering Guide</link> for
@@ -968,7 +968,7 @@
               <entry>This key is used to set the -p option for
               pegasus-mpi-cluster. It specifies the priority for a job . This
               profile is usually set in the DAX for each job. Negative values
-              are allowed for priorities. </entry>
+              are allowed for priorities.</entry>
             </row>
           </tbody>
         </tgroup>
