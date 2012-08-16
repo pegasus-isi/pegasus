@@ -2,12 +2,12 @@
 .\"     Title: pegasus-mpi-cluster
 .\"    Author: [see the "Author" section]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 06/22/2012
+.\"      Date: 08/16/2012
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "PEGASUS\-MPI\-CLUSTE" "1" "06/22/2012" "\ \&" "\ \&"
+.TH "PEGASUS\-MPI\-CLUSTE" "1" "08/16/2012" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -209,13 +209,13 @@ This example specifies a task \fIt01\fR that requires 10 MB memory and 2 CPUs to
 .PP
 \fB\-m\fR \fIM\fR, \fB\-\-request\-memory\fR \fIM\fR
 .RS 4
-The amount of memory required by the task in MB\&. The default is 0, which means memory is not considered for this task\&. (see
+The amount of memory required by the task in MB\&. The default is 0, which means memory is not considered for this task\&. This option can be set for a job in the DAX by specifying the pegasus::pmc_request_memory profile\&. (see
 \fBRESOURCE\-BASED SCHEDULING\fR)
 .RE
 .PP
 \fB\-c\fR \fIN\fR, \fB\-\-request\-cpus\fR \fIN\fR
 .RS 4
-The number of CPUs required by the task\&. The default is 1, which implies that the number of slots on a host should be less than or equal to the number of physical CPUs in order for all the slots to be used\&. (see
+The number of CPUs required by the task\&. The default is 1, which implies that the number of slots on a host should be less than or equal to the number of physical CPUs in order for all the slots to be used\&. This option can be set for a job in the DAX by specifying the pegasus::pmc_request_cpus profile\&. (see
 \fBRESOURCE\-BASED SCHEDULING\fR)
 .RE
 .PP
@@ -228,7 +228,7 @@ command\-line option\&.
 .PP
 \fB\-p\fR \fIP\fR, \fB\-\-priority\fR \fIP\fR
 .RS 4
-The priority of the task\&. P should be an integer\&. Larger values have higher priority\&. The default is 0\&. Priorities are simply hints and are not strict\(emif a task cannot be matched to an available slot (e\&.g\&. due to resource availability), but a lower\-priority task can, then the task will be deferred and the lower priority task will be executed\&.
+The priority of the task\&. P should be an integer\&. Larger values have higher priority\&. The default is 0\&. Priorities are simply hints and are not strict\(emif a task cannot be matched to an available slot (e\&.g\&. due to resource availability), but a lower\-priority task can, then the task will be deferred and the lower priority task will be executed\&. This option can be set for a job in the DAX by specifying the pegasus::pmc_priority profile\&.
 .RE
 .sp
 The format of an \fBEDGE\fR record is:

@@ -185,16 +185,18 @@ This example specifies a task 't01' that requires 10 MB memory and 2 CPUs to run
 
     *-m* 'M'::
     *--request-memory* 'M'::
-        The amount of memory required by the task in MB. The default is 0, which means
-        memory is not considered for this task. (see <<RESOURCE_SCHED, 
-        *RESOURCE-BASED SCHEDULING*>>)
+        The amount of memory required by the task in MB. The default is 0, 
+        which means memory is not considered for this task. This option can 
+        be set for a job in the DAX by specifying the pegasus::pmc_request_memory
+        profile. (see <<RESOURCE_SCHED, *RESOURCE-BASED SCHEDULING*>>)
     
     *-c* 'N'::
     *--request-cpus* 'N'::
         The number of CPUs required by the task. The default is 1, which implies that
         the number of slots on a host should be less than or equal to the number of
-        physical CPUs in order for all the slots to be used. (see <<RESOURCE_SCHED, 
-        *RESOURCE-BASED SCHEDULING*>>)
+        physical CPUs in order for all the slots to be used. This option can be set
+        for a job in the DAX by specifying the pegasus::pmc_request_cpus profile. 
+        (see <<RESOURCE_SCHED, *RESOURCE-BASED SCHEDULING*>>)
     
     *-t* 'T'::
     *--tries* 'T'::
@@ -208,7 +210,8 @@ This example specifies a task 't01' that requires 10 MB memory and 2 CPUs to run
         are not strict--if a task cannot be matched to an available slot 
         (e.g. due to resource availability), but a lower-priority task can, 
         then the task will be deferred and the lower priority task will be 
-        executed.
+        executed. This option can be set for a job in the DAX by specifying 
+        the pegasus::pmc_priority profile.
 
 The format of an *EDGE* record is:
 [verse]
