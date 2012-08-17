@@ -44,7 +44,7 @@ for i in range (4):
     for j in range (4):
         child = Job (namespace = "cluster", name = "level2", version = "1.0")
 	child.addArguments('-a level2 -T ' + str ((j + 1) * 2))
-        child.addProfile (Profile (namespace = "pegasus", key = "job.runtime", value = str ((j + 1) * 2)))
+        child.addProfile (Profile (namespace = "pegasus", key = "runtime", value = str ((j + 1) * 2)))
         cluster.addJob (child)
 
         cluster.depends (parent = job, child = child)
