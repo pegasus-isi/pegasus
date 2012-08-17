@@ -30,6 +30,7 @@ import java.util.LinkedHashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
 
@@ -257,6 +258,19 @@ public class Partition extends Data {
      */
     public  int size(){
         return mNodeList.size();
+    }
+
+    /**
+     * Returns a list of id's of parents for a node in the partition.
+     * It lists parents that in the partition itself
+     *
+     * @param id  the node for which parents are required
+     *
+     * @return List of parents else empty list
+     */
+    public List<String> getParents( String id ){
+        List<String> parents =   (List)mParentsMap.get(id);
+        return ( parents == null )? new LinkedList(): parents;
     }
 
     /**

@@ -258,16 +258,19 @@ public abstract class Abstract implements Clusterer {
             }
         }
 
+
         //add edges in the partition to the clustered job
         List<GraphNode> gns = partition.getNodes();
         for( GraphNode gn: gns ){
-            List<GraphNode> parents = gn.getParents();
-            
-            List<String> parentEdges = new LinkedList();
-            for( GraphNode parent : parents ){
-                parentEdges.add( parent.getID() );
-            }
-            
+            //PM-642
+            //Going through the graph nodes will get you parents
+            //that are outside of the partition
+//            List<GraphNode> parents = gn.getParents();
+//            List<String> parentEdges = new LinkedList();
+//            for( GraphNode parent : parents ){
+//                parentEdges.add( parent.getID() );
+//            }
+            List<String> parentEdges = partition.getParents( gn.getID() );            
             clusteredJob.addEdges( gn.getID(), parentEdges );
 
         }
