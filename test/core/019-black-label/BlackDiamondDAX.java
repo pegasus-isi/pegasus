@@ -81,6 +81,7 @@ public class BlackDiamondDAX {
 
 
         dax.addExecutable(preprocess).addExecutable(findrange).addExecutable(analyze);
+	dax.addExecutable(postanalyze);
 
         // Add a preprocess job
         Job j1 = new Job("j1", "pegasus", "preprocess", "4.0");
