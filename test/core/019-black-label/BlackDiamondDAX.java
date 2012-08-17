@@ -74,17 +74,17 @@ public class BlackDiamondDAX {
         analyze.setInstalled( false );
         analyze.addPhysicalFile("file://" + pegasus_location + "/bin/pegasus-keg", "condorpool");
 
-	Executable post-analyze = new Executable("pegasus", "post-analyze", "4.0");
-        post-analyze.setArchitecture(Executable.ARCH.X86).setOS(Executable.OS.LINUX);
-        post-analyze.setInstalled( false );
-        post-analyze.addPhysicalFile("file://" + pegasus_location + "/bin/pegasus-keg", "condorpool");
+	Executable postanalyze = new Executable("pegasus", "post-analyze", "4.0");
+        postanalyze.setArchitecture(Executable.ARCH.X86).setOS(Executable.OS.LINUX);
+        postanalyze.setInstalled( false );
+        postanalyze.addPhysicalFile("file://" + pegasus_location + "/bin/pegasus-keg", "condorpool");
 
 
         dax.addExecutable(preprocess).addExecutable(findrange).addExecutable(analyze);
 
         // Add a preprocess job
         Job j1 = new Job("j1", "pegasus", "preprocess", "4.0");
-        j1.addArgument("-a preprocess -T 60 -i ").addArgument(fa);
+        j1.addArgument("-a preprocess -T 10 -i ").addArgument(fa);
         j1.addArgument("-o ").addArgument(fb1);
         j1.addArgument(" ").addArgument(fb2);
         j1.uses(fa, File.LINK.INPUT);
@@ -94,7 +94,7 @@ public class BlackDiamondDAX {
 
         // Add left Findrange job
         Job j2 = new Job("j2", "pegasus", "findrange", "4.0");
-        j2.addArgument("-a findrange -T 60 -i ").addArgument(fb1);
+        j2.addArgument("-a findrange -T 10 -i ").addArgument(fb1);
         j2.addArgument("-o ").addArgument(fc1);
         j2.uses(fb1, File.LINK.INPUT);
         j2.uses(fc1, File.LINK.OUTPUT);
@@ -104,7 +104,7 @@ public class BlackDiamondDAX {
 
         // Add right Findrange job
         Job j3 = new Job("j3", "pegasus", "findrange", "4.0");
-        j3.addArgument("-a findrange -T 60 -i ").addArgument(fb2);
+        j3.addArgument("-a findrange -T 10 -i ").addArgument(fb2);
         j3.addArgument("-o ").addArgument(fc2);
         j3.uses(fb2, File.LINK.INPUT);
         j3.uses(fc2, File.LINK.OUTPUT);
@@ -113,7 +113,7 @@ public class BlackDiamondDAX {
 
         // Add analyze job
         Job j4 = new Job("j4", "pegasus", "analyze", "4.0");
-        j4.addArgument("-a analyze -T 60 -i ").addArgument(fc1);
+        j4.addArgument("-a analyze -T 10 -i ").addArgument(fc1);
         j4.addArgument(" ").addArgument(fc2);
         j4.addArgument("-o ").addArgument(fd);
         j4.uses(fc1, File.LINK.INPUT);
@@ -124,7 +124,7 @@ public class BlackDiamondDAX {
 
 	//add left post-analyze job
         Job j5 = new Job("j5", "pegasus", "post-analyze", "4.0");
-        j5.addArgument("-a findrange -T 60 -i ").addArgument(fb1);
+        j5.addArgument("-a findrange -T 10 -i ").addArgument(fb1);
         j5.addArgument("-o ").addArgument(fc1);
         j5.uses(fd, File.LINK.INPUT);
         j5.uses(fe1, File.LINK.OUTPUT);
@@ -133,7 +133,7 @@ public class BlackDiamondDAX {
 
 	//add right post-analyze job
         Job j6 = new Job("j6", "pegasus", "post-analyze", "4.0");
-        j6.addArgument("-a findrange -T 60 -i ").addArgument(fb1);
+        j6.addArgument("-a findrange -T 10 -i ").addArgument(fb1);
         j6.addArgument("-o ").addArgument(fc1);
         j6.uses(fd, File.LINK.INPUT);
         j6.uses(fe2, File.LINK.OUTPUT);
