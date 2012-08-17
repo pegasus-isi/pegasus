@@ -3,9 +3,17 @@ $Id$
 ===============================
 Release Notes for PEGASUS 4.1.0
 ===============================
-This a major release of Pegasus that has support for PMC (
-pegasus-mpi-cluster ) that can be used to run the tasks in a clustered
-job in parallel on remote machines using MPI.
+This a major release of Pegasus that has support for PMC
+(pegasus-mpi-cluster ) that can be used to run the tasks in a
+clustered job in parallel on remote machines using MPI. As part of
+this release, the support for submitting workflows using CondorC has
+been updated. The Pegasus Tutorial has also been updated and is
+available to run on  
+
+   - Amazon EC2
+   - Futuregrid
+   - Local machine using Virtual Box
+ 
 
 NEW FEATURES
 --------------
