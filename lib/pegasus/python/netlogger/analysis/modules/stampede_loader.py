@@ -129,7 +129,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         
         # flags and state for batching
         self._batch = util.as_bool(batch)
-        self._flush_every = 10000
+        self._flush_every = 1000
         self._flush_count = 0
         self._last_flush = time.time()
         
