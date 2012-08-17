@@ -251,9 +251,10 @@
     &lt;/site&gt;
 
     &lt;site  handle="condorcpool" arch="x86_86" os="LINUX"&gt;
-         &lt;!-- the grid gateway entries are used to designate the remote schedd for the CondorC pool --&gt;
-         &lt;grid type="condor" contact="ccg-condorctest.isi.edu" scheduler="Condor" jobtype="compute" total-nodes="50"/&gt;
-         &lt;grid type="condor" contact="ccg-condorctest.isi.edu" scheduler="Condor" jobtype="auxillary" total-nodes="50"/&gt;
+         &lt;!-- the grid gateway entries are used to designate
+              the remote schedd for the CondorC pool --&gt;
+         &lt;grid type="condor" contact="ccg-condorctest.isi.edu" scheduler="Condor" jobtype="compute" /&gt;
+         &lt;grid type="condor" contact="ccg-condorctest.isi.edu" scheduler="Condor" jobtype="auxillary" /&gt;
 
         &lt;head-fs&gt;
             &lt;!-- empty when submitting to this site using PegasusLite --&gt;
@@ -264,7 +265,8 @@
         &lt;!-- enable submission using condorc --&gt;
         &lt;profile namespace="pegasus" key="style"&gt;condorc&lt;/profile&gt;
 
-        &lt;!-- specify which condor collector to use. If not specified defaults to remote schedd specified in grid gateway --&gt;
+        &lt;!-- specify which condor collector to use. 
+             If not specified defaults to remote schedd specified in grid gateway --&gt;
         &lt;profile namespace="condor" key="condor_collector"&gt;condorc-collector.isi.edu&lt;/profile&gt;
         
         &lt;profile namespace="condor" key="should_transfer_files"&gt;Yes&lt;/profile&gt;
