@@ -12,10 +12,11 @@
 
     <para>In this configuration, Pegasus schedules the jobs to run locally on
     the submit host. Running locally is a good approach for smaller workflows,
-    testing workflows, and for demonstations such as the <link linkend="tutorial">
-    Pegasus tutorial</link>. Pegasus supports two methods of local execution: local
-    Condor pool, and shell planner. The former is preferred as the latter does
-    not support all Pegasus' features (such as notifications).</para>
+    testing workflows, and for demonstations such as the <link
+    linkend="tutorial"> Pegasus tutorial</link>. Pegasus supports two methods
+    of local execution: local Condor pool, and shell planner. The former is
+    preferred as the latter does not support all Pegasus' features (such as
+    notifications).</para>
 
     <para>Running on a local Condor pool is achieved by executing the workflow
     on site local ( <emphasis role="bold">--sites local </emphasis>option to
@@ -209,6 +210,76 @@
           submit mechanisms or do not allow outside networking.</para>
         </listitem>
       </itemizedlist>
+    </section>
+
+    <section>
+      <title>CondorC</title>
+
+      <para>Using CondorC users can submit workflows to remote condor pools.
+      CondorC is a condor specific solution for remote submission that does
+      not involve the setting up a GRAM on the headnode. To enable CondorC
+      submission to a site, user needs to associate pegasus profile key named
+      style with value as condorc. In case, the remote Condor pool does not
+      have a shared filesytem between the nodes making up the pool, users
+      should use pegasus in the condorio data configuration. In this mode, all
+      the data is staged to the remote node in the Condor pool using Condor
+      File transfers and is executed using PegasusLite.</para>
+
+      <para>A sample site catalog for submission to a CondorC enabled site is
+      listed below</para>
+
+      <programlisting>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog
+             http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
+    &lt;site  handle="local" arch="x86_64" os="LINUX"&gt;
+        &lt;head-fs&gt;
+            &lt;scratch&gt;
+                &lt;shared&gt;
+                    &lt;file-server protocol="file" url="file://" mount-point="/tmp/wf/work"/&gt;
+                    &lt;internal-mount-point mount-point="/tmp/wf/work"/&gt;
+                &lt;/shared&gt;
+            &lt;/scratch&gt;
+            &lt;storage&gt;
+                &lt;shared&gt;
+                    &lt;file-server protocol="file" url="file://" mount-point="/tmp/wf/storage"/&gt;
+                    &lt;internal-mount-point mount-point="/tmp/wf/storage"/&gt;
+                &lt;/shared&gt;
+            &lt;/storage&gt;
+        &lt;/head-fs&gt;
+    &lt;/site&gt;
+
+    &lt;site  handle="condorcpool" arch="x86_86" os="LINUX"&gt;
+         &lt;!-- the grid gateway entries are used to designate the remote schedd for the CondorC pool --&gt;
+         &lt;grid type="condor" contact="ccg-condorctest.isi.edu" scheduler="Condor" jobtype="compute" total-nodes="50"/&gt;
+         &lt;grid type="condor" contact="ccg-condorctest.isi.edu" scheduler="Condor" jobtype="auxillary" total-nodes="50"/&gt;
+
+        &lt;head-fs&gt;
+            &lt;!-- empty when submitting to this site using PegasusLite --&gt;
+            &lt;scratch /&gt;
+            &lt;storage /&gt;
+        &lt;/head-fs&gt;
+        
+        &lt;!-- enable submission using condorc --&gt;
+        &lt;profile namespace="pegasus" key="style"&gt;condorc&lt;/profile&gt;
+
+        &lt;!-- specify which condor collector to use. If not specified defaults to remote schedd specified in grid gateway --&gt;
+        &lt;profile namespace="condor" key="condor_collector"&gt;condorc-collector.isi.edu&lt;/profile&gt;
+        
+        &lt;profile namespace="condor" key="should_transfer_files"&gt;Yes&lt;/profile&gt;
+        &lt;profile namespace="condor" key="when_to_transfer_output"&gt;ON_EXIT&lt;/profile&gt;
+        &lt;profile namespace="env" key="PEGASUS_HOME" &gt;/usr&lt;/profile&gt;
+        &lt;profile namespace="condor" key="universe"&gt;vanilla&lt;/profile&gt;
+
+    &lt;/site&gt;
+&lt;/sitecatalog&gt;</programlisting>
+
+      <para>To enable PegasusLite in CondorIO mode, users should set the
+      following in their properties</para>
+
+      <programlisting># pegasus properties
+pegasus.data.configuration    condorio</programlisting>
     </section>
   </section>
 
