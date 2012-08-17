@@ -530,17 +530,15 @@ public class Horizontal implements Clusterer,
 	double minJobRunTime = Double.MAX_VALUE;
 
 	if (jobs != null && jobs.size() > 0) {
-	    minJobRunTime = Double
-		    .parseDouble( (String) jobs.get( jobs.size() - 1 ).vdsNS
-		            .get( Pegasus.JOB_RUN_TIME ) );
+	    minJobRunTime = Double.parseDouble( getRunTime( jobs.get( jobs
+		    .size() - 1 ) ) );
 	}
 
 	for (Job j : jobs) {
 	    List<Job> bin;
 	    double currentBinTime;
 	    boolean isBreak = false;
-	    double jobRunTime = Double.parseDouble( (String) j.vdsNS
-		    .get( Pegasus.JOB_RUN_TIME ) );
+	    double jobRunTime = Double.parseDouble( getRunTime( j ) );
 
 	    mLogger.log( "Job " + j.getID() + " runtime " + jobRunTime,
 		    LogManager.DEBUG_MESSAGE_LEVEL );
@@ -600,6 +598,25 @@ public class Horizontal implements Clusterer,
 	return returnBins;
     }
 
+    private String getRunTime(Job job) {
+
+	String sTmp = (String) job.vdsNS.get( Pegasus.RUNTIME_KEY );
+	if (sTmp != null && sTmp.length() > 0) {
+	    return sTmp;
+	}
+
+	sTmp = (String) job.vdsNS.get( Pegasus.JOB_RUN_TIME );
+	if (sTmp != null && sTmp.length() > 0) {
+	    mLogger.log( "The profile " + Pegasus.JOB_RUN_TIME
+		    + " will be deprecated. It will be replaced with "
+		    + Pegasus.RUNTIME_KEY, LogManager.WARNING_MESSAGE_LEVEL );
+	    return sTmp;
+	}
+
+	throw new RuntimeException( "Profile Key: " + Pegasus.RUNTIME_KEY
+	        + " is not set for the job " + job.getID() );
+    }
+
     /**
      * The comparator is used to sort a collection of jobs in decreasing order
      * of their run times as specified by the Pegasus.JOB_RUN_TIME property.
@@ -611,22 +628,30 @@ public class Horizontal implements Clusterer,
 
 	    @Override
 	    public int compare(Job job1, Job job2) {
-		String s1 = (String) job1.vdsNS.get( Pegasus.JOB_RUN_TIME );
-		String s2 = (String) job2.vdsNS.get( Pegasus.JOB_RUN_TIME );
-
-		if (s1 == null || s1.length() == 0)
-		    throw new RuntimeException( "Profile Key: "
-			    + Pegasus.JOB_RUN_TIME + " is not set for the job "
-			    + job1.getID() );
-		if (s2 == null || s2.length() == 0)
-		    throw new RuntimeException( "Profile Key: "
-			    + Pegasus.JOB_RUN_TIME + " is not set for the job "
-			    + job2.getID() );
+		String s1 = getRunTime( job1 );
+		String s2 = getRunTime( job2 );
 
 		double jobTime1 = Double.parseDouble( s1 );
 		double jobTime2 = Double.parseDouble( s2 );
 
 		return (int) (jobTime2 - jobTime1);
+	    }
+	    
+	    private String getRunTime (Job job) {
+
+		String sTmp = (String) job.vdsNS.get( Pegasus.RUNTIME_KEY );
+		if (sTmp != null && sTmp.length() > 0) {
+		    return sTmp;
+		}
+
+		sTmp = (String) job.vdsNS.get( Pegasus.JOB_RUN_TIME );
+		if (sTmp != null && sTmp.length() > 0) {
+		    return sTmp;
+		}
+
+		throw new RuntimeException( "Profile Key: "
+		        + Pegasus.RUNTIME_KEY + " is not set for the job "
+		        + job.getID() );
 	    }
 
 	};
