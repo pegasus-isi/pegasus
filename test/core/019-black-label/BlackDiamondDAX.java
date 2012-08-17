@@ -125,8 +125,8 @@ public class BlackDiamondDAX {
 
 	//add left post-analyze job
         Job j5 = new Job("j5", "pegasus", "post-analyze", "4.0");
-        j5.addArgument("-a findrange -T 10 -i ").addArgument(fb1);
-        j5.addArgument("-o ").addArgument(fc1);
+        j5.addArgument("-a findrange -T 10 -i ").addArgument(fd);
+        j5.addArgument("-o ").addArgument(fe1);
         j5.uses(fd, File.LINK.INPUT);
         j5.uses(fe1, File.LINK.OUTPUT);
 	j5.addProfile( "pegasus" , "label", "cluster2");
@@ -134,8 +134,8 @@ public class BlackDiamondDAX {
 
 	//add right post-analyze job
         Job j6 = new Job("j6", "pegasus", "post-analyze", "4.0");
-        j6.addArgument("-a findrange -T 10 -i ").addArgument(fb1);
-        j6.addArgument("-o ").addArgument(fc1);
+        j6.addArgument("-a findrange -T 10 -i ").addArgument(fd);
+        j6.addArgument("-o ").addArgument(fe2);
         j6.uses(fd, File.LINK.INPUT);
         j6.uses(fe2, File.LINK.OUTPUT);
 	j6.addProfile( "pegasus" , "label", "cluster2");
