@@ -1,0 +1,83 @@
+#!/bin/bash
+
+set -e
+set -v
+
+
+if [ X${testdir} = "X" ]; then
+    testdir=`dirname  $0`
+    export testdir
+fi
+
+TOPDIR=`pwd`
+
+# generate the input file
+echo "This is sample input to KEG" >f.a
+
+# output directory
+mkdir -p outputs
+
+# build the dax generator
+export CLASSPATH=$testdir:`pegasus-config --classpath`
+javac $testdir/BlackDiamondDAX.java
+
+# generate the dax
+java BlackDiamondDAX /usr blackdiamond.dax
+
+# create the site catalog
+cat >sites.xml <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0">
+    <site  handle="local" arch="x86" os="LINUX">
+        <head-fs>
+            <scratch>
+                <shared>
+                    <file-server protocol="file" url="file://" mount-point="$TOPDIR/work"/>
+                    <internal-mount-point mount-point="$TOPDIR/work"/>
+                </shared>
+            </scratch>
+            <storage>
+                <shared>
+                    <file-server protocol="file" url="file://" mount-point="$TOPDIR/outputs"/>
+                    <internal-mount-point mount-point="$TOPDIR/outputs"/>
+                </shared>
+            </storage>
+        </head-fs>
+        <profile namespace="pegasus" key="clusters.num">1</profile>
+    </site>
+    <site  handle="condorpool" arch="x86" os="LINUX">
+       <head-fs>
+            <scratch>
+                <shared>
+                    <file-server protocol="gsiftp" url="gsiftp://cartman.isi.edu" mount-point="/nfs/ccg3/scratch/bamboo/scratch"/>
+                    <internal-mount-point mount-point="/nfs/ccg3/scratch/bamboo/scratch"/>
+                </shared>
+            </scratch>
+            <storage>
+                <shared>
+                    <file-server protocol="gsiftp" url="gsiftp://cartman.isi.edu" mount-point="/nfs/ccg3/scratch/bamboo/outputs"/>
+                    <internal-mount-point mount-point="/nfs/ccg3/scratch/bamboo/outputs"/>
+                </shared>
+            </storage>
+        </head-fs>
+
+        <profile namespace="pegasus" key="style" >condor</profile>
+        <profile namespace="condor" key="universe" >vanilla</profile>
+        <profile namespace="env" key="PEGASUS_HOME" >/usr</profile>
+    </site>
+</sitecatalog>
+EOF
+
+# plan and submit the  workflow
+pegasus-plan \
+    --conf $testdir/pegasusrc \
+    --sites condorpool \
+    --dir work \
+    --output local \
+    --cluster label \
+    --dax blackdiamond.dax \
+    --submit | tee plan.out
+
+
+
+
