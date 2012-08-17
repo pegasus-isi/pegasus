@@ -295,7 +295,8 @@ class Job:
         my_invocation_found = False
         my_task_number = 0
         self._stdout_text = "" # Initialize stdout
-
+        stdout_text_list = []
+        
         for my_record in kickstart_output:
             if not "invocation" in my_record:
                 # Not this one... skip to the next
@@ -321,14 +322,30 @@ class Job:
                 # We are done with this part
                 my_invocation_found = True
 
+            #PM-641 optimization Modified string concatenation to a list join 
+
             if "stdout" in my_record:
-                self._stdout_text = self._stdout_text + "#@ %d stdout\n" % (my_task_number) + my_record["stdout"] + "\n"
+                stdout_text_list.append(utils.quote("#@ %d stdout\n" % (my_task_number)))
+                stdout_text_list.append(utils.quote(my_record["stdout"]))
+                stdout_text_list.append(utils.quote("\n"))
             if "stderr" in my_record:
-                self._stdout_text = self._stdout_text + "#@ %d stderr\n" % (my_task_number) + my_record["stderr"] + "\n"
+                stdout_text_list.append(utils.quote("#@ %d stderr\n" % (my_task_number)))
+                stdout_text_list.append(utils.quote(my_record["stderr"]))
+                stdout_text_list.append(utils.quote("\n"))
+
+
+
+        if len(stdout_text_list) > 0 :
+            self._stdout_text = "".join(stdout_text_list)
+
+
+            #PM-641 optimization merged encoding above
 
         # Now, we encode it!
-        if self._stdout_text != "":
-            self._stdout_text = utils.quote(self._stdout_text)
+#        if self._stdout_text != "":
+#            self._stdout_text = utils.quote(self._stdout_text)
+
+
 
         if not my_invocation_found:
             logger.debug("cannot find invocation record in output")
