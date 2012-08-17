@@ -165,7 +165,14 @@ pegasus-cleanup
    is a bundle that has been generated using the Pegasus Plugin for
    the Shiwa Desktop.
 
+12 ) Runtime Clustering picks up pegasus profile key named runtime
+   
+   Starting 4.1, the runtime clustering  in Pegasus picks up  pegasus
+   profile key runtime instead of job.runtime .  
 
+   job.runtime is deprecated and a message is logged if a user has
+   that specified. The planner picks up job.runtime only if runtime is
+   not specified for a job. 
 
 
 BUGS FIXED
