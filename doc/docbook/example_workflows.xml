@@ -9,6 +9,16 @@
   install (<filename>/usr/share/pegasus/examples</filename> for native
   packages)</para>
 
+  <note>
+    <para>These examples are intended to be a starting point for when you want
+    to create your own workflows and want to see how other workflows are set
+    up. The example workflows will probably not work in your environment
+    without modifications. Site and transformation catalogs contain site and
+    user specifics such as paths to scratch directories and installed
+    software, and at least minor modificiations are required to get the
+    workflows to plan and run. </para>
+  </note>
+
   <section id="grid_examples">
     <title>Grid Examples</title>
 
