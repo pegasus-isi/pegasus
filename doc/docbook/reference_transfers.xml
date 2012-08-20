@@ -1145,4 +1145,73 @@ irodsPassword 'somesecretpassword'</programlisting>
       <programlisting><emphasis role="bold">pegasus.transfer.worker.package          false</emphasis> </programlisting>
     </section>
   </section>
+
+  <section>
+    <title>Using Amazon S3 as a Staging Site</title>
+
+    <para>Pegasus can be configured to use Amazon S3 as a staging site. In
+    this mode, Pegasus transfers workflow inputs from the input site to S3.
+    When a job runs, the inputs for that job are fetched from S3 to the worker
+    node, the job is executed, then the output files are transferred from the
+    worker node back to S3. When the jobs are complete, Pegasus transfers the
+    output data from S3 to the output site.</para>
+
+    <para>In order to use S3, it is necessary to create a config file for the
+    S3 transfer client, <link linkend="cli-pegasus-s3">pegasus-s3</link>. See
+    the <link linkend="cli-pegasus-s3">man page</link> for details on how to
+    create the config file. You also need to specify <link
+    linkend="non_shared_fs">S3 as a staging site</link>.</para>
+
+    <para>Next, you need to modify your site catalog to tell the location of
+    your s3cfg file. See <link linkend="cred_staging">the section on
+    credential staging</link>.</para>
+
+    <para>The following site catalog shows how to specify the location of the
+    s3cfg file on the local site and how to specify an Amazon S3 staging
+    site:</para>
+
+    <programlisting>&lt;sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog
+             http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
+    &lt;site handle="local" arch="x86_64" os="LINUX"&gt;
+        &lt;head-fs&gt;
+            &lt;scratch&gt;
+                &lt;shared&gt;
+                    &lt;file-server protocol="file" url="file://" mount-point="/tmp/wf/work"/&gt;
+                    &lt;internal-mount-point mount-point="/tmp/wf/work"/&gt;
+                &lt;/shared&gt;
+            &lt;/scratch&gt;
+            &lt;storage&gt;
+                &lt;shared&gt;
+                    &lt;file-server protocol="file" url="file://" mount-point="/tmp/wf/storage"/&gt;
+                    &lt;internal-mount-point mount-point="/tmp/wf/storage"/&gt;
+                &lt;/shared&gt;
+            &lt;/storage&gt;
+        &lt;/head-fs&gt;
+        <emphasis role="bold">&lt;profile namespace="env" key="S3CFG"&gt;/home/username/.s3cfg&lt;/profile&gt;</emphasis>
+    &lt;/site&gt;
+    <emphasis role="bold">&lt;site handle="s3" arch="x86_64" os="LINUX"&gt;
+        &lt;head-fs&gt;
+            &lt;scratch&gt;
+                &lt;shared&gt;
+                    &lt;!-- wf-scratch is the name of the S3 bucket that will be used --&gt;
+                    &lt;file-server protocol="s3" url="s3://user@amazon" mount-point="/wf-scratch"/&gt;
+                    &lt;internal-mount-point mount-point="/wf-scratch"/&gt;
+                &lt;/shared&gt;
+            &lt;/scratch&gt;
+        &lt;/head-fs&gt;
+    &lt;/site&gt;</emphasis>
+    &lt;site handle="condorpool" arch="x86_64" os="LINUX"&gt;
+        &lt;head-fs&gt;
+            &lt;scratch/&gt;
+            &lt;storage/&gt;
+        &lt;/head-fs&gt;
+        &lt;profile namespace="pegasus" key="style"&gt;condor&lt;/profile&gt;
+        &lt;profile namespace="condor" key="universe"&gt;vanilla&lt;/profile&gt;
+        &lt;profile namespace="condor" key="requirements"&gt;(Target.Arch == "X86_64")&lt;/profile&gt;
+    &lt;/site&gt;
+&lt;/sitecatalog&gt;
+</programlisting>
+  </section>
 </section>

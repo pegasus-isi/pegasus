@@ -8,12 +8,12 @@
   environment is a setup where jobs from a workflow are running.</para>
 
   <section id="localhost">
-    <title>General execution environment: Localhost</title>
+    <title>Localhost</title>
 
     <para>In this configuration, Pegasus schedules the jobs to run locally on
     the submit host. Running locally is a good approach for smaller workflows,
     testing workflows, and for demonstations such as the <link
-    linkend="tutorial"> Pegasus tutorial</link>. Pegasus supports two methods
+    linkend="tutorial">Pegasus tutorial</link>. Pegasus supports two methods
     of local execution: local Condor pool, and shell planner. The former is
     preferred as the latter does not support all Pegasus' features (such as
     notifications).</para>
@@ -29,7 +29,7 @@
              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
              xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog
              http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
-    &lt;site  handle="local" arch="x86_64" os="LINUX"&gt;
+    &lt;site handle="local" arch="x86_64" os="LINUX"&gt;
         &lt;head-fs&gt;
             &lt;scratch&gt;
                 &lt;shared&gt;
@@ -58,7 +58,7 @@
   </section>
 
   <section id="condor_pool">
-    <title>General execution environment: Condor Pool</title>
+    <title>Condor Pool</title>
 
     <para>A Condor pool is a set of machines that use Condor for resource
     management. A Condor pool can be a cluster of dedicated machines or a set
@@ -72,7 +72,7 @@
       <mediaobject>
         <imageobject>
           <imagedata contentdepth="100%" fileref="images/condor_layout.png"
-                     scalefit="1" width="100%" />
+                     scalefit="1" width="100%"/>
         </imageobject>
       </mediaobject>
     </figure>
@@ -105,7 +105,7 @@
              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
              xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog
              http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
-    &lt;site  handle="local" arch="x86_64" os="LINUX"&gt;
+    &lt;site handle="local" arch="x86_64" os="LINUX"&gt;
         &lt;head-fs&gt;
             &lt;scratch&gt;
                 &lt;shared&gt;
@@ -121,13 +121,13 @@
             &lt;/storage&gt;
         &lt;/head-fs&gt;
     &lt;/site&gt;
-    &lt;site  handle="condorpool" arch="x86_86" os="LINUX"&gt;
+    &lt;site handle="condorpool" arch="x86_86" os="LINUX"&gt;
         &lt;head-fs&gt;
-            &lt;scratch /&gt;
-            &lt;storage /&gt;
+            &lt;scratch/&gt;
+            &lt;storage/&gt;
         &lt;/head-fs&gt;
-        &lt;profile namespace="pegasus" key="style" &gt;condor&lt;/profile&gt;
-        &lt;profile namespace="condor" key="universe" &gt;vanilla&lt;/profhile&gt;
+        &lt;profile namespace="pegasus" key="style"&gt;condor&lt;/profile&gt;
+        &lt;profile namespace="condor" key="universe"&gt;vanilla&lt;/profhile&gt;
     &lt;/site&gt;
 &lt;/sitecatalog&gt;</programlisting>
 
@@ -286,7 +286,7 @@ pegasus.data.configuration    condorio</programlisting>
   </section>
 
   <section id="cloud">
-    <title>General execution environment: Clouds</title>
+    <title>Infrastructure Clouds</title>
 
     <para><figure id="concepts-fig-cloud-layout">
         <title>Cloud Sample Site Layout</title>
@@ -295,23 +295,23 @@ pegasus.data.configuration    condorio</programlisting>
           <imageobject>
             <imagedata align="center" contentdepth="100%"
                        fileref="images/fg-pwms-prefio.3.png" scalefit="1"
-                       valign="middle" width="100%" />
+                       valign="middle" width="100%"/>
           </imageobject>
         </mediaobject>
       </figure></para>
 
-    <para>The pevious figure shows a sample layout for sky computing (as in:
-    multiple clouds) as supported by Pegasus. At this point, it is up to the
+    <para>This figure shows a sample environment for executing Pegasus on
+    multiple clouds (known as "sky computing"). At this point, it is up to the
     user to provision the remote resources with a proper VM image that
-    includes a Condor startd and proper Condor configuration to report back to
-    a Condor collector that the Condor schedd has access to.</para>
+    includes a Condor worker that is configured to report back to a Condor
+    master outside the cloud.</para>
 
     <para>In this discussion, the <emphasis>submit host</emphasis> (SH) is
     located logically external to the cloud provider(s). The SH is the point
     where a user submits Pegasus workflows for execution. This site typically
     runs a Condor collector to gather resource announcements, or is part of a
-    larger Condor pool that collects these announcement. Condor makes the
-    remote resources available to the submit host&amp;rsquor;s Condor
+    larger Condor pool that collects these announcements. Condor makes the
+    remote resources available to the submit host's Condor
     installation.</para>
 
     <para>The <link linkend="concepts-fig-cloud-layout">figure above</link>
@@ -370,13 +370,55 @@ pegasus.data.configuration    condorio</programlisting>
     job's worker node to the site's data server, and possibly from there to
     another data server external to the site. Pegasus is capable to plan both
     steps: Normal staging to the site's data server, and the worker-node
-    staging from and to the site's data server as part of the job. We are
-    working on expanding the current code to support a more generic set by
-    Pegasus 3.1.</para>
+    staging from and to the site's data server as part of the job.</para>
+
+    <section id="amazon_aws">
+      <title>Amazon EC2</title>
+
+      <para>There are many different ways to set up an execution environment
+      in Amazon EC2. The easiest way is to use a submit machine outside the
+      cloud, and to provision several worker nodes and a file server node in
+      the cloud as shown here:</para>
+
+      <para><figure id="ec2">
+          <title>Amazon EC2</title>
+
+          <mediaobject>
+            <imageobject>
+              <imagedata align="center" contentdepth="100%"
+                         fileref="images/ec2.png" scalefit="1" valign="middle"
+                         width="100%"/>
+            </imageobject>
+          </mediaobject>
+        </figure></para>
+
+      <para>The submit machine runs Pegasus and a Condor master (collector,
+      schedd, negotiator). The workers run a Condor startd. And the file
+      server node exports an NFS file system. The startd on the workers is
+      configured to connect to the master running outside the cloud, and the
+      workers also mount the NFS file system. More information on setting up
+      Condor for this environment can be found at <ulink
+      url="http://www.isi.edu/~gideon/condor-ec2/">http://www.isi.edu/~gideon/condor-ec2</ulink>.</para>
+
+      <para>The site catalog entry for this configuration is similar to what
+      you would create for running on a local <link
+      linkend="condor_pool">Condor pool</link> with a shared file
+      system.</para>
+    </section>
+
+    <section id="futuregrid_nimbus">
+      <title>FutureGrid</title>
+
+      <para><ulink url="https://portal.futuregrid.org/">FutureGrid</ulink> is
+      a distributed testbed for cloud computing. There is a tutorial on how to
+      run Pegasus on FutureGrid using the Nimbus cloud management system here:
+      <ulink
+      url="http://pegasus.isi.edu/futuregrid/tutorials/">http://pegasus.isi.edu/futuregrid/tutorials</ulink></para>
+    </section>
   </section>
 
   <section id="globus_gram">
-    <title>General execution environment: Globus GRAM enabled Cluster</title>
+    <title>Remote Cluster using Globus GRAM</title>
 
     <para><figure id="concepts-fig-site-layout">
         <title>Grid Sample Site Layout</title>
@@ -385,7 +427,7 @@ pegasus.data.configuration    condorio</programlisting>
           <imageobject>
             <imagedata align="center" contentdepth="100%"
                        fileref="images/concepts-site-layout.jpg" scalefit="1"
-                       valign="middle" width="100%" />
+                       valign="middle" width="100%"/>
           </imageobject>
         </mediaobject>
       </figure></para>
@@ -470,7 +512,7 @@ pegasus.data.configuration    condorio</programlisting>
   </section>
 
   <section id="glite">
-    <title>General execution environment: Glite</title>
+    <title>Local Cluster Using Glite</title>
 
     <para>This section describes the various changes required in the site
     catalog for Pegasus to generate an executable workflow that uses gLite
@@ -505,14 +547,14 @@ pegasus.data.configuration    condorio</programlisting>
              &lt;scratch&gt;
                    &lt;shared&gt;
                          &lt;file-server protocol="gsiftp" url="gsiftp://viz-login.isi.edu" \
-                                                       mount-point="/nfs/scratch01"\&gt;
+                                                       mount-point="/nfs/scratch01"/&gt;
                          &lt;internal-mount-point mount-point="/nfs/scratch01"/&gt;
                    &lt;/shared&gt;
              &lt;/scratch&gt;
              &lt;storage&gt;
                    &lt;shared&gt;
                          &lt;file-server protocol="gsiftp" url="gsiftp://viz-login.isi.edu" \
-                                                mount-point="/exports/storage01"\&gt;
+                                                mount-point="/exports/storage01"/&gt;
                          &lt;internal-mount-point mount-point="/exports/storage01"/&gt;
                     &lt;/shared&gt;
              &lt;/storage&gt;
@@ -673,37 +715,37 @@ pegasus.data.configuration    condorio</programlisting>
              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
              xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog
              http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
-    &lt;site  handle="local" arch="x86_64" os="LINUX"&gt;
+    &lt;site handle="local" arch="x86_64" os="LINUX"&gt;
         &lt;head-fs&gt;
             &lt;scratch&gt;
                 &lt;shared&gt;
                     &lt;file-server protocol="file" url="file://" mount-point="/tmp/wf/work"/&gt;
-                    &lt;internal-mount-point mount-point="/tmp/wf/work" /&gt;
+                    &lt;internal-mount-point mount-point="/tmp/wf/work"/&gt;
                 &lt;/shared&gt;
             &lt;/scratch&gt;
             &lt;storage&gt;
                 &lt;shared&gt;
                     &lt;file-server protocol="file" url="file://" mount-point="/tmp/wf/storage"/&gt;
-                    &lt;internal-mount-point mount-point="/tmp/wf/storage" /&gt;
+                    &lt;internal-mount-point mount-point="/tmp/wf/storage"/&gt;
                 &lt;/shared&gt;
             &lt;/storage&gt;
         &lt;/head-fs&gt;
-        &lt;replica-catalog  type="LRC" url="rlsn://dummyValue.url.edu" /&gt;
-        &lt;profile namespace="env" key="GLOBUS_LOCATION" &gt;/opt/globus/5.0.2&lt;/profile&gt;
+        &lt;replica-catalog  type="LRC" url="rlsn://dummyValue.url.edu"/&gt;
+        &lt;profile namespace="env" key="GLOBUS_LOCATION"&gt;/opt/globus/5.0.2&lt;/profile&gt;
     &lt;/site&gt;
-    &lt;site  handle="Trestles" arch="x86_64" os="LINUX"&gt;
-       &lt;grid  type="gt2" contact="trestles.sdsc.edu:2119/jobmanager-fork" scheduler="PBS" jobtype="auxillary"/&gt;
-       &lt;grid  type="gt2" contact="trestles.sdsc.edu:2119/jobmanager-pbs" scheduler="PBS" jobtype="compute"/&gt;
+    &lt;site handle="Trestles" arch="x86_64" os="LINUX"&gt;
+       &lt;grid type="gt2" contact="trestles.sdsc.edu:2119/jobmanager-fork" scheduler="PBS" jobtype="auxillary"/&gt;
+       &lt;grid type="gt2" contact="trestles.sdsc.edu:2119/jobmanager-pbs" scheduler="PBS" jobtype="compute"/&gt;
         &lt;head-fs&gt;
             &lt;scratch&gt;
                 &lt;shared&gt;
                     &lt;file-server protocol="gsiftp" url="gsiftp://trestles-dm1.sdsc.edu" mount-point="/phase1/USERNAME"/&gt;
-                    &lt;internal-mount-point mount-point="/phase1/USERNAME" /&gt;
+                    &lt;internal-mount-point mount-point="/phase1/USERNAME"/&gt;
                 &lt;/shared&gt;
             &lt;/scratch&gt;
-            &lt;storage /&gt;
+            &lt;storage/&gt;
         &lt;/head-fs&gt;
-        &lt;replica-catalog  type="LRC" url="rlsn://dummyValue.url.edu" /&gt;
+        &lt;replica-catalog type="LRC" url="rlsn://dummyValue.url.edu"/&gt;
     &lt;/site&gt;
 &lt;/sitecatalog&gt;
 </programlisting>
@@ -737,7 +779,7 @@ pegasus.transfer.worker.package = true
   </section>
 
   <section id="open_science_grid">
-    <title>Open Science Grid / glideinWMS</title>
+    <title>Open Science Grid Using glideinWMS</title>
 
     <section>
       <para><ulink
@@ -745,137 +787,6 @@ pegasus.transfer.worker.package = true
       is a glidein system widely used on Open Science Grid. Running on top of
       glideinWMS is like running on a <link linkend="condor_pool">Condor
       Pool</link> without a shared filesystem.</para>
-    </section>
-  </section>
-
-  <section id="futuregrid_nimbus">
-    <title>FutureGrid Cloud / Nimbus</title>
-
-    <para><ulink url="https://portal.futuregrid.org/">FutureGrid</ulink>
-    provides a distributed testbed for Clouds, Grids and HPC. For the cloud
-    case, and more specifically for <ulink
-    url="http://www.nimbusproject.org/">Nimbus</ulink>, tutorials are
-    available on how to use Pegasus in that environment:</para>
-
-    <itemizedlist>
-      <listitem>
-        <para><ulink
-        url="http://pegasus.isi.edu/futuregrid/tutorials/">http://pegasus.isi.edu/futuregrid/tutorials/</ulink></para>
-      </listitem>
-
-      <listitem>
-        <para><ulink
-        url="https://wiki.futuregrid.org/index.php/Pegasus">https://wiki.futuregrid.org/index.php/Pegasus</ulink></para>
-      </listitem>
-    </itemizedlist>
-  </section>
-
-  <section id="amazon_aws">
-    <title>Amazon AWS Cloud</title>
-
-    <section>
-      <para>In order to use Amazon to execute workflows you need to a) set up
-      an execution environment in EC2, and b) configure Pegasus to plan
-      workflows for that environment.</para>
-
-      <para>There are many different ways to set up the execution environment
-      in Amazon. The easiest way is to use a submit machine outside the cloud,
-      and to provision several worker nodes and a file server node in the
-      cloud as shown here:</para>
-
-      <para>
-        <figure id="ec2">
-          <title>Amazon EC2</title>
-
-          <mediaobject>
-            <imageobject>
-              <imagedata align="center" contentdepth="100%"
-                         fileref="images/ec2.png" scalefit="1" valign="middle"
-                         width="100%" />
-            </imageobject>
-          </mediaobject>
-        </figure>
-      </para>
-
-      <para>The submit machine runs Pegasus and a Condor master (collector,
-      schedd, negotiator),the workers run a Condor startd, and the file server
-      node exports an NFS file system. The workers' startd is configured to
-      connect to the master running outside the cloud. The worker also mounts
-      the NFS file system. More information on setting up Condor for this
-      environment can be found at <ulink
-      url="http://www.isi.edu/~gideon/condor-ec2/">http://www.isi.edu/~gideon/condor-ec2/</ulink>.</para>
-
-      <para>To set up Pegasus to plan workflows for Amazon you need to create
-      an 'ec2' entry your site catalog. The site configuration is similar to
-      what you would create for running on a local <link
-      linkend="condor_pool">Condor pool</link> with nonshared file
-      system.</para>
-    </section>
-
-    <section>
-      <title>Using S3 for intermediate files</title>
-
-      <para>This section will show you how to use S3 to store intermediate
-      files. In this mode, Pegasus transfers workflow inputs from the input
-      site to S3 if they are not already in S3. When a job runs, the inputs
-      for that job are fetched from S3 to the worker node, the job is
-      executed, then the output files are transferred from the worker node
-      back to S3.</para>
-
-      <para>In order to use S3 for your workflows, you need to first create a
-      config file for the S3 transfer client, <link
-      linkend="cli-pegasus-s3">pegasus-s3</link>. See the <link
-      linkend="cli-pegasus-s3">man page</link> for details on how to create
-      the config file. You also need to specify <link
-      linkend="non_shared_fs">S3 as a staging site</link>.</para>
-
-      <para>Next, you need to modify your site catalog to tell the location of
-      your s3cfg file. See <link linkend="cred_staging">Credential
-      Staging</link>. A sample site catalog specifying the location of the
-      s3cfg file and s3 URLs:</para>
-
-      <programlisting>&lt;sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog"
-             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-             xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog
-             http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
-    &lt;site  handle="local" arch="x86_64" os="LINUX"&gt;
-        &lt;head-fs&gt;
-            &lt;scratch&gt;
-                &lt;shared&gt;
-                    &lt;file-server protocol="file" url="file://" mount-point="/tmp/wf/work"/&gt;
-                    &lt;internal-mount-point mount-point="/tmp/wf/work"/&gt;
-                &lt;/shared&gt;
-            &lt;/scratch&gt;
-            &lt;storage&gt;
-                &lt;shared&gt;
-                    &lt;file-server protocol="file" url="file://" mount-point="/tmp/wf/storage"/&gt;
-                    &lt;internal-mount-point mount-point="/tmp/wf/storage"/&gt;
-                &lt;/shared&gt;
-            &lt;/storage&gt;
-        &lt;/head-fs&gt;
-        &lt;profile namespace="env" key="S3CFG" &gt;/home/username/.s3cfg&lt;/profile&gt;
-    &lt;/site&gt;
-    &lt;site  handle="s3" arch="x86_64" os="LINUX"&gt;
-        &lt;head-fs&gt;
-            &lt;scratch&gt;
-                &lt;shared&gt;
-                    &lt;file-server protocol="s3" url="s3://user@amazon" mount-point="/wf-scratch"/&gt;
-                    &lt;internal-mount-point mount-point="/wf-scratch"/&gt;
-                &lt;/shared&gt;
-            &lt;/scratch&gt;
-        &lt;/head-fs&gt;
-    &lt;/site&gt;
-    &lt;site  handle="condorpool" arch="x86_64" os="LINUX"&gt;
-        &lt;head-fs&gt;
-            &lt;scratch /&gt;
-            &lt;storage /&gt;
-        &lt;/head-fs&gt;
-        &lt;profile namespace="pegasus" key="style" &gt;condor&lt;/profile&gt;
-        &lt;profile namespace="condor" key="universe" &gt;vanilla&lt;/profile&gt;
-        &lt;profile namespace="condor" key="requirements" &gt;(Target.Arch == "X86_64")&lt;/profile&gt;
-    &lt;/site&gt;
-&lt;/sitecatalog&gt;
-</programlisting>
     </section>
   </section>
 </chapter>
