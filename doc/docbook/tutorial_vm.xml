@@ -37,8 +37,6 @@
       <para>Next, download the VM image: <ulink
       url="http://download.pegasus.isi.edu/wms/download/latest/PegasusTutorialVM.zip">http://download.pegasus.isi.edu/wms/download/latest/PegasusTutorialVM.zip</ulink></para>
 
-      <para>The download is about 350 MB.</para>
-
       <para>Unzip the downloaded file and move the <literal>.vmdk</literal>
       file it contains to somewhere that you can find it later.</para>
     </section>
@@ -124,8 +122,8 @@
       </figure>
 
       <para>Leave "Start-up Disk" checked. Choose "Use existing hard disk".
-      Click the little folder icon and locate the .vmdk file you extracted
-      from the zip file that you downloaded earlier.</para>
+      Click the folder icon and locate the .vmdk file that you downloaded
+      earlier.</para>
 
       <para>When you have selected the .vmdk file, choose "Open" and then
       click "Continue" to get to the Summary page:</para>
@@ -185,7 +183,7 @@
 
       <programlisting>$ sudo /sbin/poweroff</programlisting>
 
-      <para>at the prompt and then entering the password "pegasus".</para>
+      <para>at the prompt and then enter the tutorial user's password.</para>
 
       <para>Alternatively, you can just close the window and choose "Power off
       the machine".</para>
@@ -236,8 +234,8 @@
       corner is set to “US West (Oregon)”.</para>
 
       <para>Click on the “AMIs” link on the left side and set “Viewing:” to
-      “All Images”, “All Platforms”, and type “<emphasis
-      role="bold">ami-0c1e913c</emphasis>” in the search box:</para>
+      “All Images”, “All Platforms”, and type “Pegasus Tutorial VM” in the
+      search box:</para>
 
       <figure>
         <title>Locating the Tutorial VM</title>
@@ -250,12 +248,14 @@
         </mediaobject>
       </figure>
 
-      <para>If you don’t see the AMI named “Pegasus Tutorial VM” you may need
-      to click the Refresh button. We update the VM regularly, so the AMI ID
-      will not match the picture above.</para>
+      <para>You will see several versions of the VM. If you don’t see any AMIs
+      named “Pegasus Tutorial VM” you may need to click the Refresh button. We
+      update the VM regularly, so your search results will not match the
+      picture above.</para>
 
-      <para>Check the check box next to the Pegasus Tutorial VM and click the
-      “Launch” button. The "Request Instances Wizard" will pop up:</para>
+      <para>Check the check box next to the latest Pegasus Tutorial VM and
+      click the “Launch” button. The "Request Instances Wizard" will pop
+      up:</para>
 
       <figure>
         <title>Request Instances Wizard: Step 1</title>
@@ -296,9 +296,8 @@
         </mediaobject>
       </figure>
 
-      <para>On the “Storage Device Configuration” step choose “Edit”, check
-      the “Delete on Termination” box, click “Save”, then click
-      “Continue”:</para>
+      <para>On the “Storage Device Configuration” step make sure “Delete on
+      Termination” is set to "true", then click “Continue”:</para>
 
       <figure>
         <title>Request Instances Wizard: Step 4</title>
@@ -342,9 +341,9 @@
       </figure>
 
       <para>On the next page choose “Create a new Security Group”. Name the
-      security group “Pegasus Tutorial”, give it a description, and create two
-      TCP rules to allow connections on port 22 (SSH) and port 5900 (VNC) from
-      source 0.0.0.0/0, and click “Continue”.</para>
+      security group “Pegasus Tutorial” and give it a description. Create an
+      inbound TCP rule to allow connections on port 22 (SSH) from source
+      0.0.0.0/0 and click "Add Rule". Then click “Continue”.</para>
 
       <para>Note that you will only need to create this security group once.
       If you launch the Pegasus Tutorial VM again the security group should
@@ -389,9 +388,9 @@
     <section>
       <title>Logging into the VM</title>
 
-      <para>Log into the VM using SSH. The username that you will log in with
-      is ‘<emphasis role="bold">tutorial</emphasis>’ and the password is
-      ‘<emphasis role="bold">pegasus</emphasis>’.</para>
+      <para>Log into the VM using SSH. The username is ‘<emphasis
+      role="bold">tutorial</emphasis>’ and the password is ‘<emphasis
+      role="bold">pegasus</emphasis>’.</para>
 
       <para>On UNIX machines such as Linux or Mac OS X you can log in via SSH
       by opening a terminal and typing:</para>
@@ -503,7 +502,7 @@ tutorial's password: <emphasis role="bold">pegasus</emphasis>
       <programlisting>$ <emphasis role="bold">euca-describe-images | grep PegasusTutorialVM</emphasis>
 IMAGE ami-0000003e juve/PegasusTutorialVM-4.0.1.fg.manifest.xml available public x86_64 ...</programlisting>
 
-      <para>Find the image ID (am1-0000003e in the example above). If you get
+      <para>Find the image ID (ami-0000003e in the example above). If you get
       multiple results, use the latest version.</para>
 
       <para>Launch the tutorial VM using the
@@ -517,8 +516,8 @@ INSTANCE    <emphasis role="bold">i-00000c38</emphasis>    ami-0000003e    serve
       <para>Note the instance ID (i-00000c38 in the example). Monitor the
       status of your VM by invoking the
       <literal>euca-describe-instances</literal> command periodically with the
-      instance ID until the VM status changes from "pending" to "running":
-      </para>
+      instance ID until the VM status changes from "pending" to
+      "running":</para>
 
       <programlisting>$ <emphasis role="bold">euca-describe-instances i-00000c38</emphasis>
 RESERVATION    r-y9ue0rs7    461884eef90047fbb4eb9ec92f22a1e3    default

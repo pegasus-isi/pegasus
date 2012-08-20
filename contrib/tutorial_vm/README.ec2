@@ -42,7 +42,9 @@ umount /mnt
 9. Create a snapshot of the image using the web console.
 
 10. Register the snapshot as a new AMI using the pv-grub hd00 kernel 
-(aki-f837bac8) and /dev/sda as the root device (not /dev/sda1)
+(aki-f837bac8) and /dev/sda as the root device (not /dev/sda1). Use a name
+that starts with "Pegasus Tutorial VM" and contains the Pegasus version
+(e.g. "Pegasus Tutorial VM 4.1.0").
 
 11. Set the image permissions to "public"
 
@@ -50,6 +52,4 @@ umount /mnt
 
 13. Delete the volume you created (you now have a snapshot, so nothing will
 be lost)
-
-14. Update Appendix A of the user guide with the new image ID
 
