@@ -57,6 +57,7 @@ class Expunge(SQLAlchemyInit, DoesLogging):
         Invoke this to remove workflow/information from DB.
         """
         self.log.info('expunge.start')
+        self.session.autoflush=True
         # delete main workflow uuid and start cascade
         query = self.session.query(Workflow).filter(Workflow.wf_uuid == self._wf_uuid)
         try:
@@ -67,21 +68,21 @@ class Expunge(SQLAlchemyInit, DoesLogging):
             
         root_wf_id = wf.wf_id
         
-        subs = []
+#        subs = []
         
-        query = self.session.query(Workflow.wf_id).filter(Workflow.root_wf_id == root_wf_id).filter(Workflow.wf_id != root_wf_id)
-        for row in query:
-            subs.append(row[0])
+#        query = self.session.query(Workflow.wf_id).filter(Workflow.root_wf_id == root_wf_id).filter(Workflow.wf_id != root_wf_id)
+#        for row in query:
+#            subs.append(row[0])
         
-        for sub in subs:
-            query = self.session.query(Workflow).filter(Workflow.wf_id == sub)
-            subwf = query.one()
-            self.log.info('expunge', msg='Expunging sub-workflow: %s' % subwf.wf_uuid)
-            i = time.time()
-            self.session.delete(subwf)
-            self.session.flush()
-            self.session.commit()
-            self.log.info('expunge', msg='Flush took: %f seconds' % (time.time() - i))
+ #       for sub in subs:
+ #           query = self.session.query(Workflow).filter(Workflow.wf_id == sub)
+ #           subwf = query.one()
+ #           self.log.info('expunge', msg='Expunging sub-workflow: %s' % subwf.wf_uuid)
+ #           i = time.time()
+ #           self.session.delete(subwf)
+ #           self.session.flush()
+ #           self.session.commit()
+ #           self.log.info('expunge', msg='Flush took: %f seconds' % (time.time() - i))
             
         self.log.info('expunge', msg='Flushing top-level workflow: %s' % wf.wf_uuid)
         i = time.time()
@@ -89,6 +90,8 @@ class Expunge(SQLAlchemyInit, DoesLogging):
         self.session.flush()
         self.session.commit()
         self.log.info('expunge', msg=' Flush took: %f seconds' % (time.time() - i) )
+        # Disable autoflush
+        self.session.autoflush=False
         pass
 
 if __name__ == '__main__':

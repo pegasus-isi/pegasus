@@ -110,7 +110,7 @@ def initializeToPegasusDB(db, metadata, kw={}):
                         Column('dax_version', VARCHAR(255), nullable=True),
                         Column('dax_file', VARCHAR(255), nullable=True),
                         Column('parent_wf_id', KeyInt,
-                                ForeignKey("workflow.wf_id"), nullable=True),
+                                ForeignKey("workflow.wf_id", ondelete='CASCADE'), nullable=True),
                         # not marked as FK to not screw up the cascade.
                         Column('root_wf_id', KeyInt, nullable=True),
                         **kw
@@ -121,14 +121,22 @@ def initializeToPegasusDB(db, metadata, kw={}):
     
     try:
         wf_props = {
-                'child_wf':relation(Workflow, cascade='all'),
-                'child_wfs':relation(Workflowstate, backref='st_workflow', cascade='all'),
-                'child_host':relation(Host, backref='st_workflow', cascade='all'),
-                'child_task':relation(Task, backref='st_workflow', cascade='all'),
-                'child_job':relation(Job, backref='st_workflow', cascade='all'),
-                'child_invocation':relation(Invocation, backref='st_workflow', cascade='all'),
-                'child_task_e':relation(TaskEdge, backref='st_workflow', cascade='all'),
-                'child_job_e':relation(JobEdge, backref='st_workflow', cascade='all'),
+                'child_wf':relation(Workflow, cascade='all, delete-orphan', passive_deletes=True
+                    ),
+                'child_wfs':relation(Workflowstate, backref='st_workflow', cascade='all, delete-orphan',
+                    passive_deletes=True),
+                'child_host':relation(Host, backref='st_workflow', cascade='all, delete-orphan',
+                    passive_deletes=True),
+                'child_task':relation(Task, backref='st_workflow', cascade='all, delete-orphan',
+                    passive_deletes=True),
+                'child_job':relation(Job, backref='st_workflow', cascade='all, delete-orphan',
+                    passive_deletes=True),
+                'child_invocation':relation(Invocation, backref='st_workflow', cascade='all, delete-orphan',
+                    passive_deletes=True),
+                'child_task_e':relation(TaskEdge, backref='st_workflow', cascade='all, delete-orphan',
+                    passive_deletes=True),
+                'child_job_e':relation(JobEdge, backref='st_workflow', cascade='all, delete-orphan',
+                    passive_deletes=True),
             }        
         orm.mapper(Workflow, st_workflow, properties = wf_props)
     except exc.ArgumentError:
@@ -138,7 +146,7 @@ def initializeToPegasusDB(db, metadata, kw={}):
     # All three columns are marked as primary key to produce the desired
     # effect - ie: it is the combo of the three columns that make a row
     # unique.
-                             Column('wf_id', KeyInt, ForeignKey('workflow.wf_id'), 
+                             Column('wf_id', KeyInt, ForeignKey('workflow.wf_id', ondelete='CASCADE'), 
                                     nullable=False, primary_key=True),
                              Column('state', Enum('WORKFLOW_STARTED', 'WORKFLOW_TERMINATED'), 
                                 nullable=False, primary_key=True),
@@ -169,7 +177,7 @@ def initializeToPegasusDB(db, metadata, kw={}):
     st_host = Table('host', metadata,
                     Column('host_id', KeyInt, primary_key=True, nullable=False),
                     Column('wf_id', KeyInt,
-                            ForeignKey('workflow.wf_id'), nullable=False),
+                            ForeignKey('workflow.wf_id', ondelete='CASCADE'), nullable=False),
                     Column('site', VARCHAR(255), nullable=False),
                     Column('hostname', VARCHAR(255), nullable=False),
                     Column('ip', VARCHAR(255), nullable=False),
@@ -191,7 +199,7 @@ def initializeToPegasusDB(db, metadata, kw={}):
     st_job = Table('job', metadata,
             Column('job_id', KeyInt, primary_key=True, nullable=False),
             Column('wf_id', KeyInt,
-                    ForeignKey('workflow.wf_id'), nullable=False),
+                    ForeignKey('workflow.wf_id', ondelete='CASCADE'), nullable=False),
             Column('exec_job_id', VARCHAR(255), nullable=False),
             Column('submit_file', VARCHAR(255), nullable=False),
             Column('type_desc', Enum('unknown',
@@ -221,7 +229,8 @@ def initializeToPegasusDB(db, metadata, kw={}):
     
     try:
         orm.mapper(Job, st_job, properties = {
-                'child_job_instance':relation(JobInstance, backref='st_job', cascade='all', lazy=False)
+                'child_job_instance':relation(JobInstance, backref='st_job', cascade='all, delete-orphan',
+                    passive_deletes=True, lazy=False)
             }
         )
     except exc.ArgumentError:
@@ -231,7 +240,7 @@ def initializeToPegasusDB(db, metadata, kw={}):
     
     st_job_edge = Table('job_edge', metadata,
         Column('wf_id', KeyInt,
-                ForeignKey('workflow.wf_id'), primary_key=True, nullable=False),
+                ForeignKey('workflow.wf_id', ondelete='CASCADE'), primary_key=True, nullable=False),
         Column('parent_exec_job_id', VARCHAR(255), primary_key=True, nullable=False),
         Column('child_exec_job_id', VARCHAR(255), primary_key=True, nullable=False),
         **kw
@@ -250,7 +259,7 @@ def initializeToPegasusDB(db, metadata, kw={}):
     st_job_instance = Table('job_instance', metadata,
                     Column('job_instance_id', KeyInt, primary_key=True, nullable=False),
                     Column('job_id', KeyInt,
-                            ForeignKey('job.job_id'), nullable=False),
+                            ForeignKey('job.job_id', ondelete='CASCADE'), nullable=False),
                     Column('host_id', KeyInt,
                             ForeignKey('host.host_id', ondelete='SET NULL'), nullable=True),
                     Column('job_submit_seq', INT, nullable=False),
@@ -278,8 +287,10 @@ def initializeToPegasusDB(db, metadata, kw={}):
     
     try:
         orm.mapper(JobInstance, st_job_instance, properties = {
-                'child_tsk':relation(Invocation, backref='st_job_instance', cascade='all', lazy=False),
-                'child_jst':relation(Jobstate, backref='st_job_instance', cascade='all', lazy=False),
+                'child_tsk':relation(Invocation, backref='st_job_instance', cascade='all, delete-orphan',
+                    passive_deletes=True, lazy=False),
+                'child_jst':relation(Jobstate, backref='st_job_instance', cascade='all, delete-orphan',
+                    passive_deletes=True, lazy=False),
             }
         )
     except exc.ArgumentError:
@@ -297,7 +308,7 @@ def initializeToPegasusDB(db, metadata, kw={}):
     # All four columns are marked as primary key to produce the desired
     # effect - ie: it is the combo of the four columns that make a row
     # unique.
-                        Column('job_instance_id', KeyInt, ForeignKey('job_instance.job_instance_id'), 
+                        Column('job_instance_id', KeyInt, ForeignKey('job_instance.job_instance_id', ondelete='CASCADE'), 
                                 nullable=False, primary_key=True),
                         Column('state', VARCHAR(255), nullable=False, primary_key=True),
                         Column('timestamp', NUMERIC(precision=16,scale=6), nullable=False, primary_key=True,
@@ -321,7 +332,7 @@ def initializeToPegasusDB(db, metadata, kw={}):
         Column('job_id', KeyInt,
                 ForeignKey('job.job_id', ondelete='SET NULL'), nullable=True),
         Column('wf_id', KeyInt,
-                ForeignKey('workflow.wf_id'), nullable=False),
+                ForeignKey('workflow.wf_id', ondelete='CASCADE'), nullable=False),
         Column('abs_task_id', VARCHAR(255), nullable=False),
         Column('transformation', TEXT, nullable=False),
         Column('argv', TEXT, nullable=True),
@@ -336,7 +347,8 @@ def initializeToPegasusDB(db, metadata, kw={}):
     
     try:
         orm.mapper(Task, st_task, properties = {
-                'child_file':relation(File, backref='st_task', cascade='all'),
+                'child_file':relation(File, backref='st_task', cascade='all, delete-orphan',
+                    passive_deletes=True),
             }
         )
     except exc.ArgumentError:
@@ -346,7 +358,7 @@ def initializeToPegasusDB(db, metadata, kw={}):
     
     st_task_edge = Table('task_edge', metadata,
         Column('wf_id', KeyInt,
-                ForeignKey('workflow.wf_id'), primary_key=True, nullable=False),
+                ForeignKey('workflow.wf_id', ondelete='CASCADE'), primary_key=True, nullable=False),
         Column('parent_abs_task_id', VARCHAR(255), primary_key=True, nullable=True),
         Column('child_abs_task_id', VARCHAR(255), primary_key=True, nullable=True),
         **kw
@@ -365,7 +377,7 @@ def initializeToPegasusDB(db, metadata, kw={}):
     st_invocation = Table('invocation', metadata,
                     Column('invocation_id', KeyInt, primary_key=True, nullable=False),
                     Column('job_instance_id', KeyInt,
-                            ForeignKey('job_instance.job_instance_id'), nullable=False),
+                            ForeignKey('job_instance.job_instance_id', ondelete='CASCADE'), nullable=False),
                     Column('task_submit_seq', INT, nullable=False),
                     Column('start_time', NUMERIC(16,6), nullable=False,
                             default=time.time()),
@@ -376,7 +388,7 @@ def initializeToPegasusDB(db, metadata, kw={}):
                     Column('executable', TEXT, nullable=False),
                     Column('argv', TEXT, nullable=True),
                     Column('abs_task_id', VARCHAR(255), nullable=True),
-                    Column('wf_id', KeyInt, ForeignKey('workflow.wf_id'), nullable=False),
+                    Column('wf_id', KeyInt, ForeignKey('workflow.wf_id', ondelete='CASCADE'), nullable=False),
                     **kw
     )
     
@@ -396,7 +408,7 @@ def initializeToPegasusDB(db, metadata, kw={}):
     st_file = Table('file', metadata,
                     Column('file_id', KeyInt, primary_key=True, nullable=False),
                     Column('task_id', KeyInt,
-                            ForeignKey('task.task_id'), nullable=True),
+                            ForeignKey('task.task_id', ondelete='CASCADE'), nullable=True),
                     Column('lfn', VARCHAR(255), nullable=True),
                     Column('estimated_size', INT, nullable=True),
                     Column('md_checksum', VARCHAR(255), nullable=True),
