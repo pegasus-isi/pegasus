@@ -92,6 +92,7 @@ class Workflow:
 
         try:
             # Send event to corresponding sink
+            #GAURANG
             self._sink.send(event, kwargs)
         except:
             # Error sending this event... disable the sink from now on...

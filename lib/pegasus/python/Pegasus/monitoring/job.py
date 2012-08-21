@@ -22,6 +22,7 @@ This file implements the Job class for pegasus-monitord.
 
 # Import Python modules
 import os
+import sys
 import re
 import logging
 
@@ -32,6 +33,7 @@ logger = logging.getLogger()
 
 # Global variables
 good_rsl = {"maxcputime": 1, "maxtime":1, "maxwalltime": 1}
+MAX_OUTPUT_LENGTH = 2**16-1  # Only keep stdout to 64K
 
 # Used in parse_sub_file
 re_rsl_string = re.compile(r"^\s*globusrsl\W", re.IGNORECASE)
@@ -323,17 +325,18 @@ class Job:
                 my_invocation_found = True
 
             #PM-641 optimization Modified string concatenation to a list join 
+                
 
-            if "stdout" in my_record:
-                stdout_text_list.append(utils.quote("#@ %d stdout\n" % (my_task_number)))
-                stdout_text_list.append(utils.quote(my_record["stdout"]))
-                stdout_text_list.append(utils.quote("\n"))
-            if "stderr" in my_record:
-                stdout_text_list.append(utils.quote("#@ %d stderr\n" % (my_task_number)))
-                stdout_text_list.append(utils.quote(my_record["stderr"]))
-                stdout_text_list.append(utils.quote("\n"))
-
-
+                if "stdout" in my_record:
+                    if len(my_record["stdout"])<= MAX_OUTPUT_LENGTH - sys.getsizeof(stdout_text_list):
+                        stdout_text_list.append(utils.quote("#@ %d stdout\n" % (my_task_number)))
+                        stdout_text_list.append(utils.quote(my_record["stdout"]))
+                        stdout_text_list.append(utils.quote("\n"))
+                if "stderr" in my_record:
+                    if len(my_record["stderr"]) <= MAX_OUTPUT_LENGTH - sys.getsizeof(stdout_text_list):
+                        stdout_text_list.append(utils.quote("#@ %d stderr\n" % (my_task_number)))
+                        stdout_text_list.append(utils.quote(my_record["stderr"]))
+                        stdout_text_list.append(utils.quote("\n"))
 
         if len(stdout_text_list) > 0 :
             self._stdout_text = "".join(stdout_text_list)
