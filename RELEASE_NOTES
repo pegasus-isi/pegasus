@@ -165,7 +165,28 @@ pegasus-cleanup
    is a bundle that has been generated using the Pegasus Plugin for
    the Shiwa Desktop.
 
-12 ) Runtime Clustering picks up pegasus profile key named runtime
+12) Improved performance for the expunge operation in against mysql
+database 
+
+    When monitord is run in a replay mode, the database is first
+    expunged of all the information related to that workflow. In case,
+    of mysql backend where the same database maybe used to track
+    multiple hierarchal workflows, the expunge operation has to be
+    careful to delete only the relevant entries for the various
+    tables. 
+
+    In earlier versions, this expunge operation was implemented at OR
+    level in SQLAlchemy that led to lots of select and delete
+    statements to be executed ( one per entry ). This blew up the
+    memory footprint for monitord and prevented the workflow
+    population in case of large databases. For 4.1, we changed the
+    schema to add cascaded delete clauses, and set the passive delete
+    option to true in SQLAlchemy.  
+
+    More details
+    https://jira.isi.edu/browse/PM-646
+
+13 ) Runtime Clustering picks up pegasus profile key named runtime
    
    Starting 4.1, the runtime clustering  in Pegasus picks up  pegasus
    profile key runtime instead of job.runtime .  
