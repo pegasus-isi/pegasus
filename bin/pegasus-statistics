@@ -55,7 +55,7 @@ NEW_LINE_STR ="\n"
 DEFAULT_OUTPUT_DIR = "statistics"
 FILE_TYPE_TXT='txt'
 FILE_TYPE_CSV='csv'
-cluster_type_PMC=False
+uses_PMC=False
 
 # Transformations file column names
 transformation_stats_col_name_text = ["Transformation", "Count", "Succeeded", "Failed", "Min", "Max", "Mean", "Total"]
@@ -681,7 +681,7 @@ def print_workflow_summary(workflow_stats, output_format, wf_summary=True, time_
 
                 # Tasks
                 total_tasks = workflow_stats.get_total_tasks_status()
-                total_succeeded_tasks = workflow_stats.get_total_succeeded_tasks_status(cluster_type_PMC)
+                total_succeeded_tasks = workflow_stats.get_total_succeeded_tasks_status(uses_PMC)
                 total_failed_tasks = workflow_stats.get_total_failed_tasks_status()
                 total_unsubmitted_tasks = total_tasks - (total_succeeded_tasks + total_failed_tasks)
                 total_task_retries = workflow_stats.get_total_tasks_retries()
@@ -848,7 +848,7 @@ def print_individual_workflow_stats(workflow_stats, workflow_id, dax_label, outp
 	# tasks
 	workflow_stats.set_job_filter('nonsub')
 	total_tasks = workflow_stats.get_total_tasks_status()
-	total_succeeded_tasks = workflow_stats.get_total_succeeded_tasks_status(cluster_type_PMC)
+	total_succeeded_tasks = workflow_stats.get_total_succeeded_tasks_status(uses_PMC)
 	total_failed_tasks = workflow_stats.get_total_failed_tasks_status()
 	total_unsubmitted_tasks = total_tasks - (total_succeeded_tasks + total_failed_tasks)
 	total_task_retries =  workflow_stats.get_total_tasks_retries()
@@ -1331,10 +1331,10 @@ def main():
 	
 	top_level_braindb = utils.slurp_braindb(submit_dir)
 	output_db_url, wf_uuid = db_utils.get_db_url_wf_uuid(submit_dir, options.config_properties)
-	global cluster_type_PMC
-	if top_level_braindb.has_key("cluster_type"):
-		if top_level_braindb["cluster_type"].lower() == "PMC".lower():
-			cluster_type_PMC=True
+	global uses_PMC
+	if "uses_pmc" in top_level_braindb :
+		if top_level_braindb["uses_pmc"].lower() == "True".lower():
+			uses_PMC=True
 	if output_db_url is not None:
 		print_workflow_details(output_db_url, wf_uuid, output_dir)
 	sys.exit(0)
