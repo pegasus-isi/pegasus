@@ -153,6 +153,12 @@ public class JobAggregatorInstanceFactory {
                             mProps.getJobAggregator():
                             (String)obj;
 
+        //update the bag to set the flag whether 
+        //PMC was used or not PM-639
+        if( shortName.equalsIgnoreCase( JobAggregatorFactory.MPI_EXEC_CLASS ) ){
+            mBag.add( PegasusBag.USES_PMC, Boolean.TRUE );
+        }
+        
         //now look up the job aggregator
         Object aggregator = this.get( shortName.toLowerCase() );
         if ( aggregator == null ) {

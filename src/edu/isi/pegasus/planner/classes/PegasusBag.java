@@ -51,7 +51,7 @@ public class PegasusBag
     public static final String PEGASUS_INFO[] = {
         "pegasus-properties", "planner-options", "replica-catalog", "site-catalog",
         "transformation-catalog", "transformation-mapper", "pegasus-logger", "site-store",
-        "transient-rc", "worker-package-map"
+        "transient-rc", "worker-package-map", "uses-pmc"
     };
 
 
@@ -117,6 +117,13 @@ public class PegasusBag
      * handle to the worker package maps
      */
     public static final Integer WORKER_PACKAGE_MAP = new Integer( 9  );
+    
+    /**
+     * The constant to be passed to the accessor functions to get or set the
+     * whether the planner used PMC or not
+     */
+    public static final Integer USES_PMC = new Integer( 10  );
+    
 
     /**
      * The handle to the <code>PegasusProperties</code>.
@@ -172,9 +179,16 @@ public class PegasusBag
     private Map<String,String> mWorkerPackageMap;
     
     /**
+     * A boolean indicating whether we use PMC or not
+     */
+    private boolean mUsesPMC;
+    
+    /**
      * The default constructor.
      */
     public PegasusBag() {
+        //by default uses PMC is set to false
+        mUsesPMC = false;
     }
 
     /**
@@ -263,6 +277,13 @@ public class PegasusBag
                     valid = false;
                 break;
 
+            case 10: //uses PMC
+                if ( value != null && value instanceof Boolean )
+                    mUsesPMC = (Boolean) value;
+                else
+                    valid = false;
+                break;
+                
             default:
                 throw new RuntimeException(
                       " Wrong Pegasus Bag key. Please use one of the predefined Integer key types");
@@ -293,7 +314,7 @@ public class PegasusBag
         }
         catch( Exception e ){}
 
-        return ( k >= PegasusBag.PEGASUS_PROPERTIES.intValue() && k <= PegasusBag.WORKER_PACKAGE_MAP.intValue() );
+        return ( k >= PegasusBag.PEGASUS_PROPERTIES.intValue() && k <= PegasusBag.USES_PMC.intValue() );
     }
 
     /**
@@ -340,6 +361,9 @@ public class PegasusBag
             case 9://WORKER PACKAGE MAP
                 return this.mWorkerPackageMap;
 
+            case 10://USES PMC
+                return this.mUsesPMC;
+                
             default:
                 throw new RuntimeException(
                     " Wrong Pegasus Bag key. Please use one of the predefined Integer key types");
@@ -430,6 +454,16 @@ public class PegasusBag
     public Map<String,String> getWorkerPackageMap(){
         return ( Map )get( PegasusBag.WORKER_PACKAGE_MAP );
     }
+    
+    /**
+     * A convenice method to return whether the planner used PMC or not
+     * 
+     * @return boolean indicating whether PMC was used or not
+     */
+    public boolean plannerUsesPMC(){
+        return ( Boolean )get( PegasusBag.USES_PMC );
+    }
+
 
     /**
      * A convenience method to get the intValue for the object passed.

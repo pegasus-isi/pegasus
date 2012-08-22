@@ -309,7 +309,10 @@ public class Braindump {
         entries.put( "bindir" , mProps.getBinDir().getAbsolutePath());
         entries.put( "vogroup" , mPOptions.getVOGroup() );
         
-        
+        //add the entry required by pegasus-statistics
+        String pmc = Boolean.toString(mBag.plannerUsesPMC());
+        entries.put( "uses_pmc", pmc );
+                
         return entries;
     }
 
