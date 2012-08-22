@@ -569,21 +569,19 @@ siteX    B     /shared/PEGASUS/bin/jobB INSTALLED       INTEL32::LINUX pegasus::
 
             <note>
               <para><emphasis role="bold"> The clustering of jobs on a site
-              only happens only if </emphasis></para>
+              only happens only if </emphasis><itemizedlist>
+                  <listitem>
+                    <para>there exists an entry in the transformation catalog
+                    for the clustering executable that has been determined by
+                    the above 3 rules</para>
+                  </listitem>
+
+                  <listitem>
+                    <para>the number of jobs being clustered on the site are
+                    more than 1</para>
+                  </listitem>
+                </itemizedlist></para>
             </note>
-
-            <itemizedlist>
-              <listitem>
-                <para>there exists an entry in the transformation catalog for
-                the clustering executable that has been determined by the
-                above 3 rules</para>
-              </listitem>
-
-              <listitem>
-                <para>the number of jobs being clustered on the site are more
-                than 1</para>
-              </listitem>
-            </itemizedlist>
           </listitem>
         </orderedlist>
       </section>
