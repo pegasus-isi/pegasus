@@ -518,62 +518,65 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         
         return q
         
-    def _base_task_statistics_query(self, success=True):
+
+    def _base_task_statistics_query(self, success=True, pmc=False):
         w = orm.aliased(Workflow, name='w')
         j = orm.aliased(Job, name='j')
         ji = orm.aliased(JobInstance, name='ji')
         tk = orm.aliased(Task, name='tk')
-        i = orm.aliased(Invocation, name='i')
-
-        sq_1 = self.session.query(w.wf_id,
+        
+        sq_1 = self.session.query(w.wf_id, 
                 j.job_id,
-                i.abs_task_id,
+                ji.job_instance_id.label('jiid'),
+                ji.job_submit_seq.label('jss'),
                 func.max(ji.job_submit_seq).label('maxjss'))
+        if pmc :
+            sq_1 = self.session.query(w.wf_id, 
+                j.job_id,
+                ji.job_instance_id.label('jiid'),
+                ji.job_submit_seq.label('jss'))
+
         sq_1 = sq_1.join(j, w.wf_id == j.wf_id)
         sq_1 = sq_1.join(ji, j.job_id == ji.job_id)
-        sq_1 = sq_1.join(i, w.wf_id == i.wf_id)
-        
         if self._expand:
             sq_1 = sq_1.filter(w.root_wf_id == self._root_wf_id)
         else:
             sq_1 = sq_1.filter(w.wf_id == self._wfs[0])
-        sq_1 = sq_1.filter(ji.job_instance_id == i.job_instance_id )
+        if not pmc:
+            sq_1 = sq_1.group_by(j.job_id)
         if self._get_job_filter(j) is not None:
             sq_1 = sq_1.filter(self._get_job_filter(j))
-        sq_1 = sq_1.filter(i.abs_task_id != None )
-#        sq_1 = sq_1.filter(i.transformation != 'condor::dagman' )
-        sq_1 = sq_1.group_by(i.abs_task_id).group_by(j.job_id).group_by(w.wf_id)
         sq_1 = sq_1.subquery('t')
 
-        sq_2 = self.session.query(sq_1.c.wf_id, func.count(sq_1.c.abs_task_id).label('count'))
-        sq_2 = sq_2.join(ji, sq_1.c.job_id == ji.job_id)
-        sq_2 = sq_2.join(i, ji.job_instance_id == i.job_instance_id)
-        sq_2 = sq_2.filter(sq_1.c.maxjss == ji.job_submit_seq)
-        sq_2 = sq_2.filter(sq_1.c.wf_id == i.wf_id)
-        sq_2 = sq_2.filter(sq_1.c.abs_task_id == i.abs_task_id)
+        sq_2 = self.session.query(sq_1.c.wf_id, func.count(Invocation.exitcode).label('count'))
+        sq_2 = sq_2.select_from(orm.join(sq_1, Invocation, sq_1.c.jiid == Invocation.job_instance_id))
+        if not pmc:
+           sq_2 = sq_2.filter(sq_1.c.jss == sq_1.c.maxjss)
+                                         
+        sq_2 = sq_2.filter(Invocation.abs_task_id != None)
         if success:
-            sq_2 = sq_2.filter(i.exitcode == 0)
+            sq_2 = sq_2.filter(Invocation.exitcode == 0)
         else:
-            sq_2 = sq_2.filter(i.exitcode != 0)
+            sq_2 = sq_2.filter(Invocation.exitcode != 0)
         sq_2 = sq_2.group_by(sq_1.c.wf_id)
         return sq_2
         
-    def _task_statistics_query_sum(self, success=True):
-        s = self._base_task_statistics_query(success).subquery('tt')
+    def _task_statistics_query_sum(self, success=True, pmc=False):
+        s = self._base_task_statistics_query(success,pmc).subquery('tt')
         q = self.session.query(func.sum(s.c.count).label('task_count'))
         return q.one()[0] or 0
     
-    def get_total_succeeded_tasks_status(self):
-        return self._task_statistics_query_sum(success=True)
+    def get_total_succeeded_tasks_status(self,pmc=False):
+        return self._task_statistics_query_sum(True,pmc)
 
     def get_total_failed_tasks_status(self):
-        return self._task_statistics_query_sum(success=False)
+        return self._task_statistics_query_sum(False,False)
         
-    def get_task_success_report(self):
-        return self._base_task_statistics_query(True).all()
+    def get_task_success_report(self,pmc=False):
+        return self._base_task_statistics_query(True,pmc).all()
         
     def get_task_failure_report(self):
-        return self._base_task_statistics_query(False).all()
+        return self._base_task_statistics_query(False,False).all()
         
     def get_total_tasks_retries(self):
         """
