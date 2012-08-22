@@ -143,11 +143,12 @@ def generate_dag_graph(wf_info, output_dir):
 	return None
 	
 	
-def generate_dax_graph(wf_info, output_dir):
+def generate_dax_graph(wf_info, output_dir, create_dax_files=False):
 	"""
 	Generates the DAX graph
 	@wf_info WorkflowInfo object reference
 	@output_dir the output directory path
+	@create_dax_files  whether to include files when visualizing dax 
 	"""
 	dax_file_path = wf_info.dax_file_path
 	title =  str(wf_info.wf_uuid) + " (" + str(wf_info.dax_label) +")"
@@ -156,6 +157,8 @@ def generate_dax_graph(wf_info, output_dir):
 		dot_file_path = os.path.join(output_dir, wf_info.wf_uuid + ".dot")
 		dax_cmd = dax2dot_file_path 
 		dax_cmd +=" --output "+ dot_file_path
+		if create_dax_files:
+			dax_cmd += " --files "
 		dax_cmd += " "+ dax_file_path
 		logger.debug("Executing command :\n"  + dax_cmd)
 		status, output = commands.getstatusoutput(dax_cmd)
@@ -412,13 +415,17 @@ padding-top:25px;
 	else:
 		fh.close()
 		
-def create_charts(submit_dir, output_dir, config_properties, log_level):
+	
+
+
+def create_charts(submit_dir, output_dir, config_properties, log_level, create_dax_files=False):
 	"""
 	Generates all the graphs and charts 
 	@submit_dir submit directory pathd
 	@output_dir the output directory path
 	@config_properties path to the pegasus property file
 	@log_level logging level
+	@create_dax_files  whether to include files when visualizing dax 
 	"""
 	wf_uuid_dax_image = []
 	wf_uuid_dax_label = []
@@ -479,7 +486,7 @@ def create_charts(submit_dir, output_dir, config_properties, log_level):
 			populate.populate_task_details(wf_stats, wf_info)
 			if wf_info.total_tasks <= max_graph_nodes:
 				logger.debug("Generating dax graph for the workflow " + title +" ... ")
-				if generate_dax_graph(wf_info, dax_graph_output_dir) is None:
+				if generate_dax_graph(wf_info, dax_graph_output_dir,create_dax_files) is None:
 					wf_uuid_dax_image.append(None)
 				else:
 					wf_uuid_dax_image.append(wf_info.wf_uuid+".png")
@@ -566,6 +573,11 @@ def main():
 			help="Increase verbosity, repeatable")
 	parser.add_option("-q", "--quiet", action="count", default=0, dest="quiet", 
 			help="Decrease verbosity, repeatable")
+	parser.add_option("-f", "--files", action="store_true",
+        dest="files", default=False,
+        help="Include files. This option is only valid for DAX files. [default: false]")
+
+	
 	# Parse command line options
 	(options, args) = parser.parse_args()
 	
@@ -619,7 +631,7 @@ def main():
 		max_graph_nodes = options.max_graph_nodes
 	
 	try:
-		create_charts(submit_dir, output_dir, options.config_properties, log_level_str)
+		create_charts(submit_dir, output_dir, options.config_properties, log_level_str, options.files)
 	except SystemExit:
 		sys.exit(1)
 	except:
