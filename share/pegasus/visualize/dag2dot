@@ -94,7 +94,19 @@ class DAXHandler(xml.sax.handler.ContentHandler):
             self.jobs[job.id] = job
             self.last_job = job
         elif name == "uses":
-            filename = attrs.get("file")
+            namespace = attrs.get("namespace")
+            version = attrs.get("version")
+            filename = attrs.get("name") or attrs.get("file")
+
+            if filename is None:
+                raise Exception("name attribute missing on <uses>")
+
+            if namespace is not None:
+                filename = namespace + "::" + filename
+
+            if version is not None:
+                filename = filename + ":" + version
+            
             if filename in self.files:
                 f = self.files[filename]
             else:
@@ -102,11 +114,17 @@ class DAXHandler(xml.sax.handler.ContentHandler):
                 f.id = f.label = filename
                 self.files[filename] = f
 
-            link = attrs.get("link")
+            link = attrs.get("link") or "input"
+            link = link.lower()
             if link == "input":
                 self.last_job.inputs.append(f)
             elif link == "output":
                 self.last_job.outputs.append(f)
+            elif link == "inout":
+                self.last_job.inputs.append(f)
+                self.last_job.outputs.append(f)
+            elif link == "none":
+                pass
             else:
                 raise Exception("Unrecognized link value: %s" % link)
         elif name == "child":
