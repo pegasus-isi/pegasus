@@ -325,30 +325,28 @@ class Job:
                 my_invocation_found = True
 
             #PM-641 optimization Modified string concatenation to a list join 
-                
-                
             if "stdout" in my_record:
                 if len(my_record["stdout"])<= MAX_OUTPUT_LENGTH - stdout_size:
                     stdout_text_list.append(utils.quote("#@ %d stdout\n" % (my_task_number)))
                     stdout_text_list.append(utils.quote(my_record["stdout"]))
                     stdout_text_list.append(utils.quote("\n"))
                     stdout_size+=len(my_record["stdout"])+20
+
             if "stderr" in my_record:
                 if len(my_record["stderr"]) <= MAX_OUTPUT_LENGTH - stdout_size :
                     stdout_text_list.append(utils.quote("#@ %d stderr\n" % (my_task_number)))
                     stdout_text_list.append(utils.quote(my_record["stderr"]))
                     stdout_text_list.append(utils.quote("\n"))
                     stdout_size+=len(my_record["stderr"])+20
+
         if len(stdout_text_list) > 0 :
             self._stdout_text = "".join(stdout_text_list)
 
 
             #PM-641 optimization merged encoding above
-
         # Now, we encode it!
 #        if self._stdout_text != "":
 #            self._stdout_text = utils.quote(self._stdout_text)
-
 
 
         if not my_invocation_found:
