@@ -327,16 +327,16 @@ class Job:
             #PM-641 optimization Modified string concatenation to a list join 
                 
 
-                if "stdout" in my_record:
-                    if len(my_record["stdout"])<= MAX_OUTPUT_LENGTH - sys.getsizeof(stdout_text_list):
-                        stdout_text_list.append(utils.quote("#@ %d stdout\n" % (my_task_number)))
-                        stdout_text_list.append(utils.quote(my_record["stdout"]))
-                        stdout_text_list.append(utils.quote("\n"))
-                if "stderr" in my_record:
-                    if len(my_record["stderr"]) <= MAX_OUTPUT_LENGTH - sys.getsizeof(stdout_text_list):
-                        stdout_text_list.append(utils.quote("#@ %d stderr\n" % (my_task_number)))
-                        stdout_text_list.append(utils.quote(my_record["stderr"]))
-                        stdout_text_list.append(utils.quote("\n"))
+            if "stdout" in my_record:
+                if len(my_record["stdout"])<= MAX_OUTPUT_LENGTH - sys.getsizeof(stdout_text_list):
+                    stdout_text_list.append(utils.quote("#@ %d stdout\n" % (my_task_number)))
+                    stdout_text_list.append(utils.quote(my_record["stdout"]))
+                    stdout_text_list.append(utils.quote("\n"))
+            if "stderr" in my_record:
+                if len(my_record["stderr"]) <= MAX_OUTPUT_LENGTH - sys.getsizeof(stdout_text_list):
+                    stdout_text_list.append(utils.quote("#@ %d stderr\n" % (my_task_number)))
+                    stdout_text_list.append(utils.quote(my_record["stderr"]))
+                    stdout_text_list.append(utils.quote("\n"))
 
         if len(stdout_text_list) > 0 :
             self._stdout_text = "".join(stdout_text_list)
