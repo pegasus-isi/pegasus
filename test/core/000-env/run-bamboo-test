@@ -1,0 +1,11 @@
+#!/bin/bash
+
+echo
+echo "The current test environment is:"
+echo
+
+/usr/bin/env | sort
+
+echo 
+
+
