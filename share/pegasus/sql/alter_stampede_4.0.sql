@@ -20,8 +20,10 @@ ALTER TABLE `host` ADD CONSTRAINT `host_ibfk_1` FOREIGN KEY (`wf_id`) REFERENCES
 -- Table structure for table `invocation`
 -- 
 
-ALTER TABLE `invocation` DROP FOREIGN KEY `invocation_ibfk_1`, DROP FOREIGN KEY `invocation_ibfk_2`;
-ALTER TABLE `invocation` ADD CONSTRAINT `invocation_ibfk_1` FOREIGN KEY (`job_instance_id`) REFERENCES `job_instance` (`job_instance_id`) ON DELETE CASCADE, ADD CONSTRAINT `invocation_ibfk_2` FOREIGN KEY (`wf_id`) REFERENCES `workflow` (`wf_id`) ON DELETE CASCADE;
+ALTER TABLE `invocation` DROP FOREIGN KEY `invocation_ibfk_1`;
+ALTER TABLE `invocation` DROP FOREIGN KEY `invocation_ibfk_2`;
+ALTER TABLE `invocation` ADD CONSTRAINT `invocation_ibfk_1` FOREIGN KEY (`job_instance_id`) REFERENCES `job_instance` (`job_instance_id`) ON DELETE CASCADE;
+ALTER TABLE `invocation` ADD CONSTRAINT `invocation_ibfk_2` FOREIGN KEY (`wf_id`) REFERENCES `workflow` (`wf_id`) ON DELETE CASCADE;
  
 --
 -- Table structure for table `job`
