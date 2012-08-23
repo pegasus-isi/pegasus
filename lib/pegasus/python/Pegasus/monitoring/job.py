@@ -298,7 +298,7 @@ class Job:
         my_task_number = 0
         self._stdout_text = "" # Initialize stdout
         stdout_text_list = []
-        
+        stdout_size=0
         for my_record in kickstart_output:
             if not "invocation" in my_record:
                 # Not this one... skip to the next
@@ -326,18 +326,19 @@ class Job:
 
             #PM-641 optimization Modified string concatenation to a list join 
                 
-
+                
             if "stdout" in my_record:
-                if len(my_record["stdout"])<= MAX_OUTPUT_LENGTH - sys.getsizeof(stdout_text_list):
+                if len(my_record["stdout"])<= MAX_OUTPUT_LENGTH - stdout_size:
                     stdout_text_list.append(utils.quote("#@ %d stdout\n" % (my_task_number)))
                     stdout_text_list.append(utils.quote(my_record["stdout"]))
                     stdout_text_list.append(utils.quote("\n"))
+                    stdout_size+=len(my_record["stdout"])+20
             if "stderr" in my_record:
-                if len(my_record["stderr"]) <= MAX_OUTPUT_LENGTH - sys.getsizeof(stdout_text_list):
+                if len(my_record["stderr"]) <= MAX_OUTPUT_LENGTH - stdout_size :
                     stdout_text_list.append(utils.quote("#@ %d stderr\n" % (my_task_number)))
                     stdout_text_list.append(utils.quote(my_record["stderr"]))
                     stdout_text_list.append(utils.quote("\n"))
-
+                    stdout_size+=len(my_record["stderr"])+20
         if len(stdout_text_list) > 0 :
             self._stdout_text = "".join(stdout_text_list)
 
