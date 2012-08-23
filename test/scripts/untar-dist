@@ -17,10 +17,8 @@ fi
 #UNTAR PEGASUS BINARY TARBALL
 
 echo "Ensuring that there are no leftovers from previous tests..."
-for DER in `ls | grep -E 'pegasus-[0-9\.]+(cvs){0,1}'`; do
-    if [ -d $DER ]; then
-        rm -rf $DER
-    fi
+for OLD_CRAP in `ls | grep -E -v '(tar.gz|untar-dist)'`; do
+    rm -rf $OLD_CRAP
 done
 
 echo "Untaring the Pegasus distribution $PEGASUS_BINARY"
