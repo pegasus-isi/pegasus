@@ -4,6 +4,7 @@
 #include <mpi.h>
 #include <signal.h>
 #include <math.h>
+#include <sys/time.h>
 
 #include "master.h"
 #include "failure.h"
@@ -19,14 +20,14 @@ static void on_signal(int signo) {
 }
 
 void Host::log_status() {
-    log_trace("Host %s now has %u MB and %u CPUs free", 
-        this->host_name.c_str(), this->memory, this->cpus);
+    log_trace("Host %s now has %u MB, %u CPUs, and %u slots free", 
+        this->host_name.c_str(), this->memory, this->cpus, this->slots);
 }
 
 Master::Master(const std::string &program, Engine &engine, DAG &dag,
                const std::string &dagfile, const std::string &outfile,
                const std::string &errfile, bool has_host_script,
-               double max_wall_time) {
+               double max_wall_time, const std::string &resourcefile) {
     this->program = program;
     this->dagfile = dagfile;
     this->outfile = outfile;
@@ -46,7 +47,11 @@ Master::Master(const std::string &program, Engine &engine, DAG &dag,
     
     this->total_cpus = 0;
     this->total_runtime = 0.0;
-    
+
+    this->memory_avail = 0;
+    this->cpus_avail = 0;
+    this->slots_avail = 0;
+
     // Determine the number of workers we have
     int numprocs;
     MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
@@ -79,6 +84,13 @@ Master::Master(const std::string &program, Engine &engine, DAG &dag,
     snprintf(dotpid, 10, ".%d.", pid);
     this->worker_out_path = this->dagfile + dotpid + "out";
     this->worker_err_path = this->dagfile + dotpid + "err";
+
+    if (resourcefile == "") {
+        this->resource_log = NULL;
+    } else {
+        this->resource_log = fopen(resourcefile.c_str(), "a");
+    }
+
 }
 
 Master::~Master() {
@@ -98,6 +110,10 @@ Master::~Master() {
     std::vector<Host *>::iterator h;
     for (h = hosts.begin(); h != hosts.end(); h++) {
         delete *h;
+    }
+
+    if (resource_log != NULL) {
+        fclose(resource_log);
     }
 }
 
@@ -180,13 +196,54 @@ void Master::process_result() {
     Slot *slot = slots[rank-1];
     
     // Return resources to host
-    Host *host = slot->host;
-    host->memory += task->memory;
-    host->cpus += task->cpus;
-    host->log_status();
-    
+    release_resources(slot->host, task->cpus, task->memory);
+
     // Mark slot as free
     free_slots.push_back(slot);
+}
+
+void Master::allocate_resources(Host *host, unsigned cpus, unsigned memory) {
+
+    memory_avail -= memory;
+    cpus_avail -= cpus;
+    slots_avail -= 1;
+
+    host->memory -= memory;
+    host->cpus -= cpus;
+    host->slots -= 1;
+
+    host->log_status();
+    log_resources(host->slots, host->cpus, host->memory, host->host_name);
+    log_resources(slots_avail, cpus_avail, memory_avail, "*");
+}
+
+void Master::release_resources(Host *host, unsigned cpus, unsigned memory) {
+
+    memory_avail += memory;
+    cpus_avail += cpus;
+    slots_avail += 1;
+
+    host->cpus += cpus;
+    host->memory += memory;
+    host->slots += 1;
+
+    host->log_status();
+    log_resources(host->slots, host->cpus, host->memory, host->host_name);
+    log_resources(slots_avail, cpus_avail, memory_avail, "*");
+}
+
+void Master::log_resources(unsigned slots, unsigned cpus, unsigned memory, const std::string &hostname) {
+    if (resource_log == NULL) {
+        return;
+    }
+
+    struct timeval ts;
+
+    gettimeofday(&ts, NULL);
+    double timestamp = ts.tv_sec + (ts.tv_usec / 1.0e6);
+
+    fprintf(resource_log, "%lf,%u,%u,%u,%s\n", 
+            timestamp, slots, cpus, memory, hostname.c_str());
 }
 
 void Master::merge_all_task_stdio() {
@@ -300,15 +357,23 @@ void Master::register_workers() {
         
         hostnames[rank] = hostname;
         
-        // If the host is not found, create a new one
         if (hostmap.find(hostname) == hostmap.end()) {
+            // If the host is not found, create a new one
             log_debug("Got new host: name=%s, mem=%u, cpus=%u", hostname.c_str(), memory, cpus);
             Host *newhost = new Host(hostname, memory, cpus);
             hosts.push_back(newhost);
             hostmap[hostname] = newhost;
             
             total_cpus += cpus;
+            cpus_avail += cpus;
+            memory_avail += memory;
+        } else {
+            // Otherwise, increment the number of slots available
+            Host *host = hostmap[hostname];
+            host->slots += 1;
         }
+        
+        slots_avail += 1;
         
         log_debug("Slot %d on host %s", rank, hostname.c_str());
     }
@@ -339,6 +404,13 @@ void Master::register_workers() {
         send_hostrank(rank, hostrank);
         log_debug("Host rank of worker %d is %d", rank, hostrank);
     }
+    
+    // Log the initial resource availability
+    for (std::vector<Host *>::iterator i = hosts.begin(); i!=hosts.end(); i++) {
+        Host *host = *i;
+        log_resources(host->slots, host->cpus, host->memory, host->host_name);
+    }
+    log_resources(slots_avail, cpus_avail, memory_avail, "*");
 }
 
 void Master::schedule_tasks() {
@@ -367,9 +439,7 @@ void Master::schedule_tasks() {
                     task->name.c_str(), slot->rank, host->host_name.c_str());
                 
                 // Reserve the resources
-                host->memory -= task->memory;
-                host->cpus -= task->cpus;
-                host->log_status();
+                allocate_resources(host, task->cpus, task->memory);
                 
                 submit_task(task, slot->rank);
                 

@@ -31,7 +31,7 @@ void usage() {
             "   -m|--max-failures N  Stop submitting tasks after N tasks have failed\n"
             "   -t|--tries N         Try tasks N times before marking them failed\n"
             "   -n|--nolock          Do not try to lock DAGFILE\n"
-            "   -r|--rescue PATH     Path to rescue file [default: DAGFILE.rescue]\n"
+            "   -r|--rescue PATH     Path to rescue log [default: DAGFILE.rescue]\n"
             "   --host-script PATH   Path to script that will be launched on each host\n"
             "   --host-memory N      Amount of memory per host in MB\n"
             "   --host-cpus N        Number of CPUs per host\n"
@@ -73,7 +73,7 @@ int mpidag(int argc, char *argv[]) {
     unsigned host_cpus = 0;
     bool strict_limits = false;
     double max_wall_time = 0.0;
-    
+
     // Environment variable defaults
     char *env_host_script = getenv("PMC_HOST_SCRIPT");
     if (env_host_script != NULL) {
@@ -267,16 +267,19 @@ int mpidag(int argc, char *argv[]) {
             // User does not want to read old rescue file
             oldrescue = "";
         }
-        
+
         log_debug("Using old rescue file: %s", oldrescue.c_str());
         log_debug("Using new rescue file: %s", newrescue.c_str());
+        
+        std::string resource_log = dagfile + ".resource";
         
         bool has_host_script = ("" != host_script);
         
         DAG dag(dagfile, oldrescue, lock, tries);
         Engine engine(dag, newrescue, max_failures);
         return Master(program, engine, dag, dagfile, 
-            outfile, errfile, has_host_script, max_wall_time).run();
+            outfile, errfile, has_host_script, 
+            max_wall_time, resource_log).run();
     } else {
         return Worker(host_script, host_memory, host_cpus, strict_limits).run();
     }
