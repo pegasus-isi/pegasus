@@ -12,11 +12,13 @@ public:
     std::string host_name;
     unsigned int memory;
     unsigned int cpus;
+    unsigned int slots;
     
     Host(const std::string &host_name, unsigned int memory, unsigned int cpus) {
         this->host_name = host_name;
         this->memory = memory;
         this->cpus = cpus;
+        this->slots = 1;
     }
     
     void log_status();
@@ -55,7 +57,9 @@ class Master {
     
     FILE *task_stdout;
     FILE *task_stderr;
-    
+   
+    FILE *resource_log;
+
     std::vector<Slot *> slots;
     std::vector<Host *> hosts;
     SlotList free_slots;
@@ -79,6 +83,10 @@ class Master {
     double start_time;
     double finish_time;
     double wall_time;
+
+    unsigned cpus_avail;
+    unsigned memory_avail;
+    unsigned slots_avail;
     
     void register_workers();
     void schedule_tasks();
@@ -89,10 +97,14 @@ class Master {
     void merge_all_task_stdio();
     void merge_task_stdio(FILE *dest, const std::string &src, const std::string &stream);
     void write_cluster_summary(bool failed);
+
+    void allocate_resources(Host *host, unsigned cpus, unsigned memory);
+    void release_resources(Host *host, unsigned cpus, unsigned memory);
+    void log_resources(unsigned slots, unsigned cpus, unsigned memory, const std::string &hostname);
 public:
     Master(const std::string &program, Engine &engine, DAG &dag, const std::string &dagfile, 
         const std::string &outfile, const std::string &errfile, bool has_host_script = false, 
-        double max_wall_time = 0.0);
+        double max_wall_time = 0.0, const std::string &resourcefile = "");
     ~Master();
     int run();
 };

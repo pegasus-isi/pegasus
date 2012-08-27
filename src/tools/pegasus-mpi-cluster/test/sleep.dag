@@ -1,1 +1,1 @@
-TASK A /bin/sleep 1
+TASK A -m 5 -c 3 /bin/sleep 1
