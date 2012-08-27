@@ -1,5 +1,5 @@
 Name:           pegasus
-Version:        4.0.0cvs
+Version:        4.1.0
 Release:        1%{?dist}
 Summary:        Workflow management system for Condor, grids, and clouds
 Group:          Applications/System
@@ -11,7 +11,7 @@ Source:         pegasus-source-%{version}.tar.gz
 
 BuildRoot:      %{_tmppath}/%{name}-root
 BuildRequires:  ant, ant-apache-regexp, java, gcc, groff, python-devel, gcc-c++, make 
-Requires:       java >= 1.6, python >= 2.4, condor >= 7.4, graphviz-gd
+Requires:       java >= 1.6, python >= 2.4, condor >= 7.6, graphviz
 
 %define sourcedir %{name}-source-%{version}
 
@@ -82,6 +82,9 @@ rm -Rf %{buildroot}
 
 
 %changelog
+* Tue Feb 7 2012 Mats Rynge <rynge@isi.edu> 4.1.0
+- 4.1.0 release
+
 * Tue Feb 7 2012 Mats Rynge <rynge@isi.edu> 4.0.0cvs-1
 - Preparing for 4.0.0
 - Added graphviz-gd as dep

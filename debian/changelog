@@ -1,5 +1,5 @@
-pegasus (4.0.0cvs201202281954-1) unstable; urgency=low
+pegasus (4.1.0-1) unstable; urgency=low
 
-  * Initial FHS packaging
+  * Pegasus 4.1.0 release
 
- -- Mats Rynge <mats@rynge.net>  Tue, 28 Feb 2012 19:54:27 -0800
+ -- Mats Rynge <mats@rynge.net>  Mon, 27 Aug 2012 07:03:56 -0700
