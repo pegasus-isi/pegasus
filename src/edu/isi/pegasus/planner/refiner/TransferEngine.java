@@ -410,10 +410,10 @@ public class TransferEngine extends Engine {
             mLogger.log(msg, LogManager.DEBUG_MESSAGE_LEVEL);
 
             //getting the parents of that node
-            Vector vParents = mDag.getParents(currentJobName);
-            mLogger.log(vectorToString("Parents of job:", vParents),
+            List<GraphNode> parents = node.getParents();
+            mLogger.log("Parents of job:" + node.parentsToString(),
                         LogManager.DEBUG_MESSAGE_LEVEL);
-            processParents(currentJob, vParents);
+            processParents(currentJob, parents);
 
             //transfer the nodes output files
             //to the output pool
@@ -589,23 +589,22 @@ public class TransferEngine extends Engine {
      *
      * @param job       the <code>Job</code> object containing all the
      *                  details of the job.
-     * @param vParents  Vector of String objects corresponding to the Parents
-     *                  of the node.
+     * @param parents   list <code>GraphNode</code> ojbects corresponding to the parent jobs
+     *                  of the job.
      */
-    private void processParents(Job job, Vector vParents) {
+    private void processParents(Job job, List<GraphNode> parents) {
 
         Set nodeIpFiles = job.getInputFiles();
         Vector vRCSearchFiles = new Vector(); //vector of PegasusFile
-        Vector vIPTxFiles = new Vector();
-        Vector vParentSubs = new Vector();
+
 
         //getAll the output Files of the parents
-        Set parentsOutFiles = getOutputFiles(vParents, vParentSubs);
+        Set<PegasusFile> parentsOutFiles = getOutputFiles( parents );
 
 
         //interpool transfer of the nodes parents
         //output files
-        Collection[] interSiteFileTX = this.getInterpoolFileTX(job, vParentSubs);
+        Collection[] interSiteFileTX = this.getInterpoolFileTX(job, parents);
         Collection localInterSiteTX = interSiteFileTX[0];
         Collection remoteInterSiteTX = interSiteFileTX[1];
 
@@ -851,12 +850,12 @@ public class TransferEngine extends Engine {
      *
      * @param job     the job with reference to which interpool file transfers
      *                need to be determined.
-     * @param nodes   Vector of <code> Job</code> objects for the nodes, whose
-     *                outputfiles are to be transferred to the dest pool.
+     * @param parents   list <code>GraphNode</code> ojbects corresponding to the
+     *                  parent jobs of the job.
      *
-     * @return        Vector of <code>FileTransfer</code> objects
+     * @return    array of Collection of  <code>FileTransfer</code> objects
      */
-    private Collection<FileTransfer>[] getInterpoolFileTX(Job job, Vector nodes) {
+    private Collection<FileTransfer>[] getInterpoolFileTX(Job job, List<GraphNode>parents ) {
         String destSiteHandle = job.getStagingSiteHandle();
         //contains the remote_initialdir if specified for the job
         String destRemoteDir = job.vdsNS.getStringValue(
@@ -869,9 +868,9 @@ public class TransferEngine extends Engine {
         Collection<FileTransfer> localTransfers  = new LinkedList();
         Collection<FileTransfer> remoteTransfers = new LinkedList();
 
-        for (Iterator it = nodes.iterator();it.hasNext();) {
+        for ( GraphNode parent: parents ) {
             //get the parent job
-            Job pJob = (Job)it.next();
+            Job pJob = (Job)parent.getContent();
             sourceSite = mSiteStore.lookup( pJob.getStagingSiteHandle() );
 
             if( sourceSite.getSiteHandle().equalsIgnoreCase( destSiteHandle ) ){
@@ -1504,6 +1503,27 @@ public class TransferEngine extends Engine {
         
         return m;
     }
+
+    /**
+     * It gets the output files for all the nodes which are specified in
+     * the  nodes passed.
+     *
+     * @param nodes   List<GraphNode> containing the jobs
+     * 
+     *
+     * @return   Set of PegasusFile objects
+     */
+    private Set<PegasusFile> getOutputFiles( List<GraphNode> nodes ) {
+
+        Set<PegasusFile> files = new HashSet();
+
+        for( GraphNode n : nodes ){
+            Job job = (Job)n.getContent();
+            files.addAll( job.getOutputFiles() );
+        }
+
+        return files;
+    }
     
     /**
      * It gets the output files for all the nodes which are specified in
@@ -1703,7 +1723,6 @@ public class TransferEngine extends Engine {
 
    
 
-    
 
 
 }

@@ -194,8 +194,6 @@ public class GraphNode extends Data {
         return mParents;
     }
 
-
-
     /**
      * Returns a list of <code>GraphNode</code> objects that are children of the
      * node.
@@ -308,6 +306,39 @@ public class GraphNode extends Data {
         return colored;
     }
 
+    /**
+     * A convenience methods that generates a comma separated list of parents
+     * as String
+     *
+     * @return String
+     */
+    public String parentsToString(){
+        StringBuffer sb = new StringBuffer();
+        sb.append( "{" );
+        for( GraphNode n : this.getParents() ){
+            sb.append( n.getID() ).append( "," );
+        }
+
+        sb.append( "}" );
+        return sb.toString();
+    }
+
+    /**
+     * A convenience methods that generates a comma separated list of children
+     * as String
+     *
+     * @return String
+     */
+    public String childrenToString(){
+        StringBuffer sb = new StringBuffer();
+        sb.append( "{" );
+        for( GraphNode n : this.getChildren() ){
+            sb.append( n.getID() ).append( "," );
+        }
+
+        sb.append( "}" );
+        return sb.toString();
+    }
 
     /**
      * The textual representation of the graph node.
@@ -319,20 +350,11 @@ public class GraphNode extends Data {
         Iterator it;
 
         sb.append( "ID->" ).append(mLogicalID).append( " name->" ).
-            append( mLogicalName ).append( " parents->{" );
-        if (mParents != null) {
-            it = mParents.iterator();
-            while (it.hasNext()) {
-                sb.append( ( (GraphNode) it.next()).getID()).append(',');
-            }
+            append( mLogicalName ).append( " parents->" ).
+            append( this.parentsToString() );
+        
+        sb.append( "} children->" ).append( this.childrenToString() );
 
-        }
-        sb.append( "} children->{" );
-        it = mChildren.iterator();
-        while (it.hasNext()) {
-            sb.append( ( (GraphNode) it.next()).getID()).append(',');
-        }
-        sb.append( "}" );
         sb.append( " Content-{" ).append( getContent() ).append( "}" );
         sb.append( " Bag-{" ).append( getBag() ).append( "}" );
         return sb.toString();
