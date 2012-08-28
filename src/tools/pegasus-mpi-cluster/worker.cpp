@@ -21,7 +21,10 @@ static void log_signal(int signo) {
     log_error("Caught signal %d", signo);
 }
 
-Worker::Worker(const std::string &host_script, unsigned int host_memory, unsigned host_cpus, bool strict_limits) {
+Worker::Worker(const std::string &outfile, const std::string &errfile, const std::string &host_script, unsigned int host_memory, unsigned host_cpus, bool strict_limits) {
+    this->outfile = outfile;
+    this->errfile = errfile;
+
     this->host_script = host_script;
     if (host_memory == 0) {
         // If host memory is not specified by the user, then get the amount
@@ -208,26 +211,15 @@ int Worker::run() {
     recv_hostrank(host_rank);
     log_trace("Worker %d: Host rank: %d", rank, host_rank);
     
-    // Get outfile/errfile
-    std::string outfile;
-    std::string errfile;
-    recv_stdio_paths(outfile, errfile);
+    log_debug("Worker %d: Using task stdout file: %s", rank, outfile.c_str());
+    log_debug("Worker %d: Using task stderr file: %s", rank, errfile.c_str());
     
-    // Append rank to outfile/errfile
-    char dotrank[10];
-    snprintf(dotrank, 10, ".%d", rank);
-    outfile += dotrank;
-    errfile += dotrank;
-    
-    log_debug("Worker %d: Using stdout file: %s", rank, outfile.c_str());
-    log_debug("Worker %d: Using stderr file: %s", rank, errfile.c_str());
-    
-    int out = open(outfile.c_str(), O_WRONLY|O_CREAT|O_TRUNC, 0000644);
+    int out = open(outfile.c_str(), O_WRONLY|O_APPEND|O_CREAT, 0000644);
     if (out < 0) {
         myfailures("Worker %d: unable to open task stdout", rank);
     }
     
-    int err = open(errfile.c_str(), O_WRONLY|O_CREAT|O_TRUNC, 0000644);
+    int err = open(errfile.c_str(), O_WRONLY|O_APPEND|O_CREAT, 0000644);
     if (err < 0) {
         myfailures("Worker %d: unable to open task stderr", rank);
     }

@@ -11,22 +11,25 @@
 #define HOST_SCRIPT_GRACE_PERIOD 5
 
 class Worker {
-	int rank;
-	int host_rank;
-	
-	std::string host_script;
-	pid_t host_script_pgid;
-	
-	std::string host_name;
-	unsigned int host_memory;
-	unsigned int host_cpus;
-	
-	bool strict_limits;
-	
-	void run_host_script();
-	void kill_host_script_group();
+    std::string outfile;
+    std::string errfile;
+    
+    int rank;
+    int host_rank;
+    
+    std::string host_script;
+    pid_t host_script_pgid;
+    
+    std::string host_name;
+    unsigned int host_memory;
+    unsigned int host_cpus;
+    
+    bool strict_limits;
+    
+    void run_host_script();
+    void kill_host_script_group();
 public:
-    Worker(const std::string &host_script, unsigned host_memory = 0, unsigned host_cpus = 0, bool strict_limits = false);
+    Worker(const std::string &outfile, const std::string &errfile, const std::string &host_script, unsigned host_memory = 0, unsigned host_cpus = 0, bool strict_limits = false);
     ~Worker();
     int run();
 };

@@ -9,22 +9,6 @@
 
 static char buf[MAX_MESSAGE];
 
-void send_stdio_paths(const std::string &outfile, const std::string &errfile) {
-    strcpy(buf, outfile.c_str());
-    strcpy(buf+outfile.size()+1, errfile.c_str());
-    int size = outfile.size()+errfile.size()+2;
-    MPI_Bcast(&size, 1, MPI_INT, 0, MPI_COMM_WORLD); // Send message size first
-    MPI_Bcast(buf, outfile.size()+errfile.size()+2, MPI_CHAR, 0, MPI_COMM_WORLD); // Then send message
-}
-
-void recv_stdio_paths(std::string &outfile, std::string &errfile) {
-    int size;
-    MPI_Bcast(&size, 1, MPI_INT, 0, MPI_COMM_WORLD); // Get size first
-    MPI_Bcast(buf, size, MPI_CHAR, 0, MPI_COMM_WORLD); // Then get message
-    outfile = buf;
-    errfile = buf+strlen(buf)+1;
-}
-
 void send_registration(const std::string &hostname, unsigned int memory, unsigned int cpus) {
     // Send the hostname
     sprintf(buf, "%s %u %u", hostname.c_str(), memory, cpus);
