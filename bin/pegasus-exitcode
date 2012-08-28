@@ -38,216 +38,216 @@ import os
 from optparse import OptionParser
 
 
-__author__ = "Gideon Juve <juve@usc.edu>"
+__author__ = "Gideon Juve <gideon@isi.edu>"
 
 
 def fail(message=None):
-	if message: print "fail: %s" % message
-	sys.exit(1)
-	
-	
+    if message: print "fail: %s" % message
+    sys.exit(1)
+    
+    
 def rename(outfile, errfile):
-	"""Rename .out and .err files to .out.XXX and .err.XXX where XXX
-	is the next sequence number. Returns the new name, or fails with
-	an error message and a non-zero exit code."""
-	
-	# This is just to prevent the file from being accidentally renamed 
-	# again in testing.
-	if re.search("\.out\.[0-9]{3}$", outfile):
-		return outfile, errfile
-	
-	# Must end in .out
-	if not outfile.endswith(".out"):
-		fail("%s does not look like a kickstart .out file" % outfile)
-	
-	# Find next file in sequence
-	retry = None
-	for i in range(0,1000):
-		candidate = "%s.%03d" % (outfile,i)
-		if not os.path.isfile(candidate):
-			retry = i
-			break
-	
-	# unlikely to occur
-	if retry is None:
-		fail("%s has been renamed too many times!" % (outfile))
-		
-	basename = outfile[:-4]
-	
-	# rename .out to .out.000
-	newout = "%s.out.%03d" % (basename,retry)
-	os.rename(outfile,newout)
-	
-	# rename .err to .err.000 if it exists
-	newerr = None
-	if os.path.isfile(errfile):
-		newerr = "%s.err.%03d" % (basename,retry)
-		os.rename(errfile,newerr)
-		
-	return newout, newerr
+    """Rename .out and .err files to .out.XXX and .err.XXX where XXX
+    is the next sequence number. Returns the new name, or fails with
+    an error message and a non-zero exit code."""
+    
+    # This is just to prevent the file from being accidentally renamed 
+    # again in testing.
+    if re.search("\.out\.[0-9]{3}$", outfile):
+        return outfile, errfile
+    
+    # Must end in .out
+    if not outfile.endswith(".out"):
+        fail("%s does not look like a kickstart .out file" % outfile)
+    
+    # Find next file in sequence
+    retry = None
+    for i in range(0,1000):
+        candidate = "%s.%03d" % (outfile,i)
+        if not os.path.isfile(candidate):
+            retry = i
+            break
+    
+    # unlikely to occur
+    if retry is None:
+        fail("%s has been renamed too many times!" % (outfile))
+        
+    basename = outfile[:-4]
+    
+    # rename .out to .out.000
+    newout = "%s.out.%03d" % (basename,retry)
+    os.rename(outfile,newout)
+    
+    # rename .err to .err.000 if it exists
+    newerr = None
+    if os.path.isfile(errfile):
+        newerr = "%s.err.%03d" % (basename,retry)
+        os.rename(errfile,newerr)
+        
+    return newout, newerr
 
 
 def exitcode(outfile):
-	"""Parse invocation records looking for status codes. Returns
-	the number of successful invocations, or fails with an error
-	message and a non-zero exit code."""
-	
-	# Read the file first
-	f = open(outfile)
-	txt = f.read()
-	f.close()
-	
-	# Verify the length
-	if len(txt) == 0:
-		fail("kickstart produced no output")
-	
-	# Check cluster-summary first if it exists
-	#[cluster-summary stat="ok" tasks=9628, succeeded=9628, failed=0, extra=0, \
-	# start="2012-04-20T15:37:48.523-04:00", duration=116129.649, pid=5170, \
-	# app="/lustre/scratch/proj/tera3d/pegasus/default/bin/pegasus-mpi-cluster"]
-	b = txt.find("[cluster-summary")
-	if b < 0:
-		b = txt.find("[seqexec-summary") # Older seqexec used this
-	if b >= 0:
-		e = txt.find("]", b)
-		if e < 0:
-			fail("Invalid cluster-summary record")
-		
-		# If any of the tasks failed, then job failed
-		re_failed = re.compile(r'failed=([0-9]+)')
-		m = re_failed.search(txt[b:e])
-		if m:
-			failed = int(m.group(1))
-			if failed > 0:
-				fail("Failures occurred")
-		
-		# If there were no tasks, then the job was successful
-		re_tasks = re.compile(r'tasks=([0-9]+)')
-		m = re_tasks.search(txt[b:e])
-		if m:
-			tasks = int(m.group(1))
-			if tasks == 0:
-				return 0
-		
-		# If the number of successes was zero, then the job failed
-		re_succeeded = re.compile(r'succeeded=([0-9]+)')
-		m = re_succeeded.search(txt[b:e])
-		if m:
-			succeeded = int(m.group(1))
-			
-			if succeeded == 0:
-				fail("No successful tasks")
-			
-			# No need to check the individual tasks in this case
-			return succeeded
-	
-	# Check the exitcodes of all tasks
-	regex = re.compile(r'raw="(-?[0-9]+)"')
-	succeeded = 0
-	e = 0
-	while True:
-		b = txt.find("<status", e)
-		if b < 0: break
-		e = txt.find("</status>", b) 
-		if e < 0: fail("mismatched <status>")
-		e = e + len("</status>")
-		m = regex.search(txt[b:e])
-		if m: raw = int(m.group(1))
-		else: fail("<status> was missing valid 'raw' attribute")
-		if raw != 0:
-			fail("task exited with raw status %d" % raw)
-		succeeded = succeeded + 1
-	
-	# Fail if there were no invocation records and no cluster-summary
-	if succeeded == 0:
-		fail("No successful tasks")
-	
-	return succeeded
+    """Parse invocation records looking for status codes. Returns
+    the number of successful invocations, or fails with an error
+    message and a non-zero exit code."""
+    
+    # Read the file first
+    f = open(outfile)
+    txt = f.read()
+    f.close()
+    
+    # Verify the length
+    if len(txt) == 0:
+        fail("kickstart produced no output")
+    
+    # Check cluster-summary first if it exists
+    #[cluster-summary stat="ok" tasks=9628, succeeded=9628, failed=0, extra=0, \
+    # start="2012-04-20T15:37:48.523-04:00", duration=116129.649, pid=5170, \
+    # app="/lustre/scratch/proj/tera3d/pegasus/default/bin/pegasus-mpi-cluster"]
+    b = txt.find("[cluster-summary")
+    if b < 0:
+        b = txt.find("[seqexec-summary") # Older seqexec used this
+    if b >= 0:
+        e = txt.find("]", b)
+        if e < 0:
+            fail("Invalid cluster-summary record")
+        
+        # If any of the tasks failed, then job failed
+        re_failed = re.compile(r'failed=([0-9]+)')
+        m = re_failed.search(txt[b:e])
+        if m:
+            failed = int(m.group(1))
+            if failed > 0:
+                fail("Failures occurred")
+        
+        # If there were no tasks, then the job was successful
+        re_tasks = re.compile(r'tasks=([0-9]+)')
+        m = re_tasks.search(txt[b:e])
+        if m:
+            tasks = int(m.group(1))
+            if tasks == 0:
+                return 0
+        
+        # If the number of successes was zero, then the job failed
+        re_succeeded = re.compile(r'succeeded=([0-9]+)')
+        m = re_succeeded.search(txt[b:e])
+        if m:
+            succeeded = int(m.group(1))
+            
+            if succeeded == 0:
+                fail("No successful tasks")
+            
+            # No need to check the individual tasks in this case
+            return succeeded
+    
+    # Check the exitcodes of all tasks
+    regex = re.compile(r'raw="(-?[0-9]+)"')
+    succeeded = 0
+    e = 0
+    while True:
+        b = txt.find("<status", e)
+        if b < 0: break
+        e = txt.find("</status>", b) 
+        if e < 0: fail("mismatched <status>")
+        e = e + len("</status>")
+        m = regex.search(txt[b:e])
+        if m: raw = int(m.group(1))
+        else: fail("<status> was missing valid 'raw' attribute")
+        if raw != 0:
+            fail("task exited with raw status %d" % raw)
+        succeeded = succeeded + 1
+    
+    # Fail if there were no invocation records and no cluster-summary
+    if succeeded == 0:
+        fail("No successful tasks")
+    
+    return succeeded
 
 
 def pegasuslite_failures(errfile):
-	"""Determine if the stderr contains PegasusLite output, and if so
-	make sure that the PegasusLite tasks finished successfully"""
-	
-	if not os.path.isfile(errfile):
-		return False
-	
-	# Read the file first
-	f = open(errfile)
-	txt = f.read()
-	f.close()
+    """Determine if the stderr contains PegasusLite output, and if so
+    make sure that the PegasusLite tasks finished successfully"""
+    
+    if not os.path.isfile(errfile):
+        return False
+    
+    # Read the file first
+    f = open(errfile)
+    txt = f.read()
+    f.close()
 
-	# Is this a PegasusLite job?
-	regex = re.compile(r'^PegasusLite:', re.MULTILINE)
-	if regex.search(txt) == None:
-		return False
-	
-	# If we got here, we know it is a PegasusLite job. Now check
-	# for exitcode 0
-	regex = re.compile(r'^PegasusLite: exitcode 0$', re.MULTILINE)
-	if regex.search(txt):
-		return False
+    # Is this a PegasusLite job?
+    regex = re.compile(r'^PegasusLite:', re.MULTILINE)
+    if regex.search(txt) == None:
+        return False
+    
+    # If we got here, we know it is a PegasusLite job. Now check
+    # for exitcode 0
+    regex = re.compile(r'^PegasusLite: exitcode 0$', re.MULTILINE)
+    if regex.search(txt):
+        return False
 
-	# PegasusLite job without exitcode 0 - must be a failure
-	return True
+    # PegasusLite job without exitcode 0 - must be a failure
+    return True
 
 
 def main():
-	usage = "Usage: %prog [options] kickstart.out"
-	parser = OptionParser(usage)
-	
-	parser.add_option("-t", "--tasks", action="store", type="int",
-		dest="tasks", metavar="N", 
-		help="Number of tasks expected. If less than N tasks succeeded, then exitcode will fail.")
-	parser.add_option("-r", "--return", action="store", type="int",
-		dest="exitcode", metavar="R", 
-		help="Return code reported by DAGMan. This can be specified in a DAG using the $RETURN variable.")
-	parser.add_option("-n", "--no-rename", action="store_false",
-		dest="rename", default=True, 
-		help="Don't rename kickstart.out and .err to .out.XXX and .err.XXX. Useful for testing.")
-	
-	(options, args) = parser.parse_args()
-	
-	if len(args) != 1:
-		parser.error("please specify kickstart.out")
-	
-	outfile = args[0]
-	i = outfile.rfind(".out")
-	left = outfile[0:i]
-	right = ""
-	if i + 5 < len(outfile):
-		right = outfile[i+4:]
-	errfile = left + ".err" + right
-	
-	if not os.path.isfile(outfile):
-		fail("%s does not exist" % outfile)
-	
-	# if we are renaming, then rename
-	if options.rename:
-		outfile, errfile = rename(outfile, errfile)
+    usage = "Usage: %prog [options] kickstart.out"
+    parser = OptionParser(usage)
+    
+    parser.add_option("-t", "--tasks", action="store", type="int",
+        dest="tasks", metavar="N", 
+        help="Number of tasks expected. If less than N tasks succeeded, then exitcode will fail.")
+    parser.add_option("-r", "--return", action="store", type="int",
+        dest="exitcode", metavar="R", 
+        help="Return code reported by DAGMan. This can be specified in a DAG using the $RETURN variable.")
+    parser.add_option("-n", "--no-rename", action="store_false",
+        dest="rename", default=True, 
+        help="Don't rename kickstart.out and .err to .out.XXX and .err.XXX. Useful for testing.")
+    
+    (options, args) = parser.parse_args()
+    
+    if len(args) != 1:
+        parser.error("please specify kickstart.out")
+    
+    outfile = args[0]
+    i = outfile.rfind(".out")
+    left = outfile[0:i]
+    right = ""
+    if i + 5 < len(outfile):
+        right = outfile[i+4:]
+    errfile = left + ".err" + right
+    
+    if not os.path.isfile(outfile):
+        fail("%s does not exist" % outfile)
+    
+    # if we are renaming, then rename
+    if options.rename:
+        outfile, errfile = rename(outfile, errfile)
 
-	# check supplied exitcode first
-	if options.exitcode is not None:
-		if options.exitcode != 0:
-			fail("dagman reported non-zero exitcode: %d" % options.exitcode)
-		sys.exit(options.exitcode)
+    # check supplied exitcode first
+    if options.exitcode is not None:
+        if options.exitcode != 0:
+            fail("dagman reported non-zero exitcode: %d" % options.exitcode)
+        sys.exit(options.exitcode)
 
-	# check exitcodes of all tasks
-	succeeded = exitcode(outfile)
-	
-	# if we know how many tasks to expect, check that they all succeeded
-	if options.tasks and options.tasks>=0 and succeeded != options.tasks:
-		fail("wrong number of successful tasks: wanted %d got %d" % \
-			(options.tasks,succeeded))
+    # check exitcodes of all tasks
+    succeeded = exitcode(outfile)
+    
+    # if we know how many tasks to expect, check that they all succeeded
+    if options.tasks and options.tasks>=0 and succeeded != options.tasks:
+        fail("wrong number of successful tasks: wanted %d got %d" % \
+            (options.tasks,succeeded))
 
-	# check stderr for PegasusLite information, and possibly non-zero exit
-	# of the wrapper tasks
-	if pegasuslite_failures(errfile):
-		fail("Some PegasusLite wrapper tasks failed")
-	
-	# If we reach this, then it was OK
-	sys.exit(0)
-	
-	
+    # check stderr for PegasusLite information, and possibly non-zero exit
+    # of the wrapper tasks
+    if pegasuslite_failures(errfile):
+        fail("Some PegasusLite wrapper tasks failed")
+    
+    # If we reach this, then it was OK
+    sys.exit(0)
+    
+    
 if __name__ == "__main__":
-	main()
+    main()
