@@ -20,6 +20,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import edu.isi.pegasus.common.util.Currently;
+import java.util.Date;
 
 /**
  * A Simple LogEvent implementation that is back by a StringBuffer.
@@ -51,7 +52,18 @@ public class SimpleEvent implements Event{
      */
     private StringBuffer mLogBuffer;
     
-        
+
+    /**
+     * The start time when start message for the event was generated
+     */
+    private double mStart;
+
+
+    /**
+     * The  time when end message for the event was generated
+     */
+    private double mEnd;
+
         
     /**
      * The default constructor.
@@ -129,6 +141,7 @@ public class SimpleEvent implements Event{
      * @return start event message
      */
     public String getStartEventMessage(){
+        mStart = new Date().getTime();
         StringBuffer message = new StringBuffer();
         message./*append( DATE_FORMATTER.now() ).append( " " ).*/
                 append( mEventBuffer.toString() ).
@@ -143,9 +156,12 @@ public class SimpleEvent implements Event{
      * @return end event message
      */
     public String getEndEventMessage(){
+        mEnd = new Date().getTime();
         StringBuffer message = new StringBuffer();
         message./*append( DATE_FORMATTER.now() ).append( " " ).*/
                 append( mEventBuffer ).
+                //duration of the event
+                append( " (" ).append( (mEnd - mStart)/1000 ).append( " seconds" ).append( ")" ).
                 append( " - FINISHED ");
         return message.toString();
     }
@@ -158,6 +174,8 @@ public class SimpleEvent implements Event{
     public void reset(){
         mEventBuffer = new StringBuffer();
         mLogBuffer   = new StringBuffer();
+        mStart       = 0;
+        mEnd         = 0;
     }
 
     /**

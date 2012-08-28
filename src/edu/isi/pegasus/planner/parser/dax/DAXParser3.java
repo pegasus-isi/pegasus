@@ -30,6 +30,7 @@ import org.xml.sax.SAXException;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
+import edu.isi.pegasus.common.logging.LoggingKeys;
 import edu.isi.pegasus.common.util.CondorVersion;
 import edu.isi.pegasus.common.util.Separator;
 import edu.isi.pegasus.common.util.Version;
@@ -161,6 +162,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
      * @param file   the XML file to be parsed.
      */
     public void startParser( String file ) {
+        mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_PARSE_DAX, LoggingKeys.DAX_ID, file );
         try {
             this.testForFile( file );
             mParser.parse( file );
@@ -181,6 +183,7 @@ public class DAXParser3 extends StackBasedXMLParser implements DAXParser {
                     se.getMessage() , LogManager.ERROR_MESSAGE_LEVEL);
             }
         }
+        mLogger.logEventCompletion();
     }
 
     /**

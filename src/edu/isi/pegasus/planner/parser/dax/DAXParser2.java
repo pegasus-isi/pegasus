@@ -312,6 +312,7 @@ public class DAXParser2 extends Parser implements DAXParser {
                            "DAXParser2 While parsing file " + mLocator.getSystemId() +
                            " at line " + mLocator.getLineNumber() +
                            " at column " + mLocator.getColumnNumber();
+            mLogger.logEventCompletion();
             throw new RuntimeException(message, e);
         }
 

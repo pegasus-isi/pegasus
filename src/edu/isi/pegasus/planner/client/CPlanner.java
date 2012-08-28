@@ -612,9 +612,12 @@ public class CPlanner extends Executable{
                 emptyWorkflow = true;
             }
 
-            message = "Generating codes for the concrete workflow";
+            message = "Generating codes for the executable workflow";
             log( message, LogManager.INFO_MESSAGE_LEVEL );
+
             try{
+                mLogger.logEventStart( LoggingKeys.EVENTS_PEGASUS_CODE_GENERATION, LoggingKeys.DAX_ID, finalDag.getAbstractWorkflowName() );
+
                 result = codeGenerator.generateCode(finalDag);
                 
                 //connect the DAX and the DAG via the hieararcy message
@@ -634,8 +637,10 @@ public class CPlanner extends Executable{
             finally{
                 //close the connection to transient replica catalog
                 mBag.getHandleToTransientReplicaCatalog().close();
+                mLogger.logEventCompletion();
             }
-            mLogger.log( message + " -DONE", LogManager.INFO_MESSAGE_LEVEL );
+
+//            mLogger.log( message + " -DONE", LogManager.INFO_MESSAGE_LEVEL );
 
 // CLEANUP WORKFLOW GENERATION IS DISABLED FOR 3.2
 // JIRA PM-529
@@ -1796,9 +1801,10 @@ public class CPlanner extends Executable{
         CodeGenerator codeGenerator =
                 CodeGeneratorFactory.loadInstance( bag, CodeGeneratorFactory.STAMPEDE_EVENT_GENERATOR_CLASS );
 
+        mLogger.logEventStart( LoggingKeys.EVENTS_PEGASUS_STAMPEDE_GENERATION, LoggingKeys.DAX_ID, workflow.getAbstractWorkflowName() );
 
-        String message = "Generating Stampede Events for Abstract Workflow";
-        log( message, LogManager.INFO_MESSAGE_LEVEL );
+//        String message = "Generating Stampede Events for Abstract Workflow";
+//        log( message, LogManager.INFO_MESSAGE_LEVEL );
         
         try{
             Collection result = codeGenerator.generateCode( workflow );
@@ -1809,8 +1815,9 @@ public class CPlanner extends Executable{
         catch ( Exception e ){
             throw new RuntimeException( "Unable to generate stampede events for abstract workflow", e );
         }
-        
-        mLogger.log( message + " -DONE", LogManager.INFO_MESSAGE_LEVEL );
+
+        mLogger.logEventCompletion();
+//        mLogger.log( message + " -DONE", LogManager.INFO_MESSAGE_LEVEL );
 
     }
 
