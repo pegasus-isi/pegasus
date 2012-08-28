@@ -247,9 +247,10 @@ void Master::log_resources(unsigned slots, unsigned cpus, unsigned memory, const
 }
 
 void Master::merge_all_task_stdio() {
-    log_trace("Merging stdio from workers");
     char dotrank[25];
     for (int i=1; i<=numworkers; i++) {
+        log_debug("Merging stdio from worker %d...", i);
+
         sprintf(dotrank, ".%d", i);
         
         std::string task_outfile = worker_out_path + dotrank;
@@ -556,16 +557,10 @@ int Master::run() {
         log_error("Max failures reached: DAG prematurely aborted");
     }
     
-    merge_all_task_stdio();
-    
     // This must be done before write_cluster_summary so that the
     // wall time can be recorded in the cluster-summary record
     finish_time = current_time();
     wall_time = finish_time - start_time;
-    log_info("Wall time: %lf minutes", wall_time/60.0);
-    
-    bool failed = ABORT || this->engine->is_failed();
-    write_cluster_summary(failed);
     
     // Compute resource utilization
     double master_util = total_runtime / (wall_time * (numworkers+1));
@@ -574,13 +569,21 @@ int Master::run() {
         master_util = 0.0;
         worker_util = 0.0;
     }
+    
     log_info("Resource utilization (with master): %lf", master_util);
     log_info("Resource utilization (without master): %lf", worker_util);
+    log_info("Total runtime of tasks: %lf seconds (%lf minutes)", total_runtime, total_runtime/60.0);
+    log_info("Wall time: %lf seconds (%lf minutes)", wall_time, wall_time/60.0);
+
+    bool failed = ABORT || this->engine->is_failed();
+    write_cluster_summary(failed);
+   
+    log_info("Merging task stdio from workers...");
+    merge_all_task_stdio();
     
-    log_info("Total runtime of tasks: %f", total_runtime);
-    
-    log_trace("Sending workers shutdown messages");
+    log_info("Sending workers shutdown messages...");
     for (int i=1; i<=numworkers; i++) {
+        log_debug("Sending shutdown message to worker %d", i);
         send_shutdown(i);
     }
     
