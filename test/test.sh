@@ -391,6 +391,33 @@ function test_resource_log {
     fi
 }
 
+# Make sure that stdio is appended to existing files
+function test_append_stdio {
+    echo "onefish my stdout" > test/diamond.dag.out.1
+    echo "twofish my stderr" > test/diamond.dag.err.1
+    
+    OUTPUT=$(mpiexec -n 2 $PMC -v test/diamond.dag 2>&1)
+    RC=$?
+
+    if [ $RC -ne 0 ]; then
+        echo "$OUTPUT"
+        echo "ERROR: Append test failed"
+        return 1
+    fi
+
+    if ! [[ "$OUTPUT" =~ "onefish my stdout" ]]; then
+        echo "$OUTPUT"
+        echo "ERROR: stdout not appended"
+        return 1
+    fi
+
+    if ! [[ "$OUTPUT" =~ "twofish my stderr" ]]; then
+        echo "$OUTPUT"
+        echo "ERROR: stderr not appended"
+        return 1
+    fi
+}
+
 run_test ./test-strlib
 run_test ./test-tools
 run_test ./test-dag
@@ -413,6 +440,7 @@ run_test test_host_script
 run_test test_fail_script
 run_test test_fork_script
 run_test test_resource_log
+run_test test_append_stdio
 run_test test_hang_script
 
 # setrlimit is broken on Darwin, so the strict limits test won't work

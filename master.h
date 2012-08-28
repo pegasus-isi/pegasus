@@ -65,9 +65,6 @@ class Master {
     SlotList free_slots;
     TaskQueue ready_queue;
     
-    std::string worker_out_path;
-    std::string worker_err_path;
-    
     int numworkers;
     double max_wall_time;
     

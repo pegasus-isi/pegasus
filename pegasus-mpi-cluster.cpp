@@ -253,7 +253,7 @@ int mpidag(int argc, char *argv[]) {
     // in their behavior for many reasons (file systems issues, bad nodes,
     // etc.), so be careful how failures are handled after this point
     // and make sure MPI_Abort is called when something bad happens.
-    
+   
     if (rank == 0) {
         // If no rescue file specified, use default
         if (rescuefile == "") {
@@ -277,11 +277,21 @@ int mpidag(int argc, char *argv[]) {
         
         DAG dag(dagfile, oldrescue, lock, tries);
         Engine engine(dag, newrescue, max_failures);
-        return Master(program, engine, dag, dagfile, 
-            outfile, errfile, has_host_script, 
-            max_wall_time, resource_log).run();
+        Master master(program, engine, dag, dagfile, outfile, errfile, 
+                has_host_script, max_wall_time, resource_log);
+        
+        return master.run();
     } else {
-        return Worker(host_script, host_memory, host_cpus, strict_limits).run();
+        // Send stdout/stderr to a different file for each worker
+        char rankstr[10];
+        sprintf(rankstr, "%d", rank);
+        outfile = dagfile + ".out." + rankstr;
+        errfile = dagfile + ".err." + rankstr;
+
+        Worker worker(outfile, errfile, host_script, host_memory, host_cpus, 
+                strict_limits);
+        
+        return worker.run();
     }
 }
 

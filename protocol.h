@@ -16,8 +16,6 @@ void send_registration(const std::string &hostname, unsigned int memory, unsigne
 void recv_registration(int &worker, std::string &hostname, unsigned int &memory, unsigned int &cpus);
 void send_hostrank(int worker, int hostrank);
 void recv_hostrank(int &hostrank);
-void send_stdio_paths(const std::string &outfile, const std::string &errfile);
-void recv_stdio_paths(std::string &outfile, std::string &errfile);
 void send_request(const std::string &name, const std::string &command, const std::string &pegasus_id, unsigned int memory, unsigned int cpus, int worker);
 void send_shutdown(int worker);
 void recv_request(std::string &name, std::string &command, std::string &pegasus_id, unsigned int &memory, unsigned int &cpus, int &shutdown);

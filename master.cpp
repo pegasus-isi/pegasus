@@ -61,8 +61,10 @@ Master::Master(const std::string &program, Engine &engine, DAG &dag,
     }
     
     // Open task stdout
-    this->task_stdout = stdout;
-    if (outfile != "stdout") {
+    if (outfile == "stdout") {
+        this->task_stdout = stdout;
+    }
+    else {
         this->task_stdout = fopen(this->outfile.c_str(), "w");
         if (this->task_stdout == NULL) {
             myfailures("Unable to open stdout file: %s\n", this->outfile.c_str());
@@ -71,20 +73,19 @@ Master::Master(const std::string &program, Engine &engine, DAG &dag,
     
     // Open task stderr
     this->task_stderr = stderr;
-    if (errfile != "stderr") {
+    if (errfile == "stderr") {
+        this->task_stderr = stderr;
+    }
+    else if (errfile == outfile) {
+        this->task_stderr = this->task_stdout;
+    }
+    else {
         this->task_stderr = fopen(this->errfile.c_str(), "w");
         if (this->task_stderr == NULL) {
             myfailures("Unable to open stderr file: %s\n", this->outfile.c_str());
         }
     }
     
-    // Set the worker stdout/stderr paths
-    pid_t pid = getpid();
-    char dotpid[10];
-    snprintf(dotpid, 10, ".%d.", pid);
-    this->worker_out_path = this->dagfile + dotpid + "out";
-    this->worker_err_path = this->dagfile + dotpid + "err";
-
     if (resourcefile == "") {
         this->resource_log = NULL;
     } else {
@@ -247,16 +248,16 @@ void Master::log_resources(unsigned slots, unsigned cpus, unsigned memory, const
 }
 
 void Master::merge_all_task_stdio() {
-    char dotrank[25];
+    char rankstr[10];
     for (int i=1; i<=numworkers; i++) {
         log_debug("Merging stdio from worker %d...", i);
 
-        sprintf(dotrank, ".%d", i);
+        sprintf(rankstr, "%d", i);
         
-        std::string task_outfile = worker_out_path + dotrank;
+        std::string task_outfile = this->dagfile + ".out." + rankstr;
         this->merge_task_stdio(task_stdout, task_outfile, "stdout");
         
-        std::string task_errfile = worker_err_path + dotrank;
+        std::string task_errfile = this->dagfile + ".err." + rankstr;
         this->merge_task_stdio(task_stderr, task_errfile, "stderr");
     }
 }
@@ -505,9 +506,6 @@ int Master::run() {
     }
     
     register_workers();
-    
-    // Send out a unique path workers can use for their out/err files
-    send_stdio_paths(worker_out_path, worker_err_path);
     
     // Check to make sure that there is at least one host capable
     // of executing every task
