@@ -47,7 +47,6 @@ import edu.isi.pegasus.planner.selector.replica.ReplicaSelectorFactory;
 import edu.isi.pegasus.planner.transfer.Refiner;
 import edu.isi.pegasus.planner.transfer.refiner.RefinerFactory;
 
-import edu.isi.pegasus.planner.refiner.createdir.Implementation;
 
 import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
@@ -400,17 +399,6 @@ public class TransferEngine extends Engine {
             //set the staging site for the job
             //currentJob.setStagingSiteHandle( getStagingSite( currentJob ) );
 
-            //For 3.2 release we may not need this, as credentials will be handled
-            //explicitly. And no SLS files exist any longer.
-/*
-            //modify the jobs if required for worker node execution
-            if( mWorkerNodeExecution ){
-                mSLS.modifyJobForFirstLevelStaging( currentJob,
-                                                    mPOptions.getSubmitDirectory(),
-                                                    mSLS.getSLSInputLFN( currentJob ),
-                                                    mSLS.getSLSOutputLFN( currentJob )   );
-            }
- */
             //set the node depth as the level
             currentJob.setLevel( node.getDepth() );
             currentJobName = currentJob.getName();
@@ -445,7 +433,6 @@ public class TransferEngine extends Engine {
                 boolean localTransfer = runTransferOnLocalSite( 
                                             currentJob.getSiteHandle(), 
                                             stagingSiteURLPrefix,
-//                                            stagingSite.getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix(),
                                             Job.STAGE_OUT_JOB);
                 vOutPoolTX = getFileTX(outputSite, currentJob, localTransfer );
                 mTXRefiner.addStageOutXFERNodes( currentJob, vOutPoolTX, rcb, localTransfer );
@@ -547,8 +534,6 @@ public class TransferEngine extends Engine {
             //definite inconsitency as url prefix and mount point
             //are not picked up from the same server
             //PM-590 stricter checks
-//            String destURL =  p.getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix() +
-//                                 this.getPathOnStageoutSite( lfn );
   
             String urlPrefix = this.selectHeadNodeScratchSharedFileServerURLPrefix( p );
             if( urlPrefix == null ){
@@ -743,9 +728,6 @@ public class TransferEngine extends Engine {
         }
 
         //PM-590 stricter checks
-//        String execURL = stagingSite.getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix() +
-//            mSiteStore.getExternalWorkDirectory(stagingSite.getHeadNodeFS().selectScratchSharedFileServer(), stagingSiteHandle) +
-//            File.separatorChar + lfn;
         FileServer stagingSiteSharedScratchFS = stagingSite.selectHeadNodeScratchSharedFileServer();
         if( stagingSiteSharedScratchFS == null ){
             this.complainForHeadNodeFileServer( job, stagingSiteHandle );
@@ -901,10 +883,6 @@ public class TransferEngine extends Engine {
             String sourceURI = null;
             
             //PM-590 Stricter checks
-//            String thirdPartyDestURI = destSite.getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix() +
-//                                       mSiteStore.getExternalWorkDirectory(
-//                                               destSite.getHeadNodeFS().selectScratchSharedFileServer(),
-//                                               destSiteHandle);
 
             FileServer destSiteSharedScratchFS = destSite.selectHeadNodeScratchSharedFileServer();
             if( destSiteSharedScratchFS == null ){
@@ -1129,8 +1107,6 @@ public class TransferEngine extends Engine {
         //dAbsPath would be just the destination directory absolute path
         
         //PM-590 Stricter checks
-//        String dAbsPath = mSiteStore.getExternalWorkDirectory( stagingSite.getHeadNodeFS().selectScratchSharedFileServer(),
-//                                                               stagingSiteHandle);
         FileServer stagingSiteSharedScratchFS = stagingSite.selectHeadNodeScratchSharedFileServer();
         if( stagingSiteSharedScratchFS == null ){
             this.complainForHeadNodeFileServer(job, stagingSiteHandle);
@@ -1142,7 +1118,6 @@ public class TransferEngine extends Engine {
         //sDirURL would be the url to the source directory.
         //dDirURL would be the url to the destination directoy
         //and is always a networked url.
-//        String dDirURL = stagingSite.getHeadNodeFS().selectScratchSharedFileServer( ).getURLPrefix() + dAbsPath;
         String dDirURL = stagingSiteSharedScratchFS.getURLPrefix() + dAbsPath;
   
         String sDirURL = null;
@@ -1721,21 +1696,6 @@ public class TransferEngine extends Engine {
                                      String site, 
                                      boolean modifyURL ){
 
-/*
- //     For JIRA PM-501. We dont want to do anyting specific on basis of custom
- //     S3 implementations.
-        if( this.mS3BucketUsedForStorage ){
-            //modify the PFN only for non raw input files.
-            //This takes care of the case, where
-            //the data already might be on the cloud , and first level 
-            //staging is bypassed.
-            if( modifyURL ){
-                StringBuffer execURL = new StringBuffer();
-                execURL.append( ((S3)mCreateDirImpl).getBucketNameURL( site ) ).append( File.separatorChar ).append( lfn );
-                pfn = execURL.toString();
-            }
-        }
- */
         mTransientRC.insert( lfn, pfn, site );
     }
 
