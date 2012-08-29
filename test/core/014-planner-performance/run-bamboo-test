@@ -3,19 +3,15 @@
 #######################################################################
 # settings
 
-# Max number of minutes allowed for the planner to plan the
+# Max number of seconds allowed for the planner to plan the
 # dax - if these limit is exeeded, the test fails
-MAX_MINUTES=4
+MAX_SECONDS=120
 
-# Min number of minutes allowed for the planner to plan the
+# Min number of seconds allowed for the planner to plan the
 # dax - if these limit is exeeded, the test fails. This is used
 # to detect big improvements in the planner which would mean it
 # is time to lower the upper (and lower) limits of this test
-MIN_MINUTES=2
-
-# control the environment
-export JAVA_HEAPMAX=1024
-export JAVA_HEAPMIN=512
+MIN_SECONDS=80
 
 #######################################################################
 
@@ -72,19 +68,18 @@ START_TS=`/bin/date +'%s'`
 
 END_TS=`/bin/date +'%s'`
 DURATION=$(($END_TS - $START_TS))
-DURATION_MINUTES=$(($DURATION / 60))
 echo
-echo "Planner took $DURATION_MINUTES minutes"
-echo "The upper limit was $MAX_MINUTES minutes"
-echo "The lower limit was $MIN_MINUTES minutes"
+echo "Planner took $DURATION seconds"
+echo "The lower limit was $MIN_SECONDS seconds"
+echo "The upper limit was $MAX_SECONDS seconds"
 echo
 
-if [ $DURATION_MINUTES -gt $MAX_MINUTES ]; then
+if [ $DURATION -gt $MAX_SECONDS ]; then
     echo "Error: Limit exceeded!"
     exit 1
 fi
 
-if [ $DURATION_MINUTES -lt $MIN_MINUTES ]; then
+if [ $DURATION -lt $MIN_SECONDS ]; then
     echo "Error: Planning was faster than lower limit - time to lower limits!"
     exit 1
 fi
