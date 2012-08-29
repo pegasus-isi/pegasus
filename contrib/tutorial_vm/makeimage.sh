@@ -100,7 +100,7 @@ EOF
 
 
 echo "Installing minimal base packages..."
-yum -c yum.conf --installroot=$mnt1/ -y install yum dhclient rsyslog openssh-server openssh-clients curl passwd kernel grub e2fsprogs rootfiles vim-minimal sudo perl
+yum -c yum.conf --installroot=$mnt1/ -y install yum dhclient rsyslog openssh-server openssh-clients curl passwd kernel grub e2fsprogs rootfiles vim sudo perl
 yum --installroot=$mnt1/ -y clean all
 
 
