@@ -8,30 +8,45 @@ https://portal.futuregrid.org/tutorials/openstack
 
 ssh USER@india.futuregrid.org
 
-2. Next, download the .fg image:
+2. Next, source your novarc file and load the euca2ools module
+
+source ~/.futuregrid/openstack/novarc
+module load euca2ools
+
+3. Next, download the .fg image:
 
 wget http://HOST/PATH/PegasusTutorialVM-VERSION.fg
 
-3. Next, bundle the image:
+4. Next, bundle the image:
 
 euca-bundle-image -i PegasusTutorialVM-VERSION.fg --kernel aki-00000010 --ramdisk ari-00000011
 
-4. Upload the bundle to the instance store:
+5. Upload the bundle to the instance store:
 
 euca-upload-bundle -b pegasus -m /tmp/PegasusTutorialVM-VERSION.fg.manifest.xml
 
-5. Register the new image with OpenStack:
+Where 'pegasus' is the name of the bucket. I typically use 'juve' as the bucket.
+
+6. Register the new image with OpenStack:
 
 euca-register pegasus/PegasusTutorialVM-VERSION.fg.manifest.xml
 
-This should print out the ID of the new image. Use this ID to update Appendix A of the
-Pegasus User Guide.
+The argument is printed on the last line of the output of step 5.
 
-6. Make the image public:
+This should print out the ID of the new image.
 
-euca-modify-image-attribute -l -a all ami-0000003e
+7. Make the image public:
 
-7. Remove any files that were left over from the bundling process:
+euca-modify-image-attribute -l -a all ami-00000000
+
+Where ami-00000000 is the ID you got from step 6. You may need to do this a
+few times to get it done. Run 'euca-describe-images' to make sure the 
+image is 'public' and not 'private'.
+
+8. Remove any files that were left over from the bundling process:
 
 rm -rf PegasusTutorialVM-* /tmp/PegasusTutorialVM-*
+
+9. Test the new VM by following the instructions in Appendix A of the
+user guide.
 
