@@ -69,6 +69,14 @@ if [ "X${JAVA_HEAPMIN}" = "X" -a "X${JAVA_HEAPMAX}" = "X" ]; then
         heap_max=4096
     fi
 
+    # upper limit - ulimit
+    memulimit=`(ulimit -m | grep -v unlimited) 2>/dev/null`
+    if [ "X$memulimit" != "X" ]; then
+        if [ $memulimit -gt 128 ]; then
+            heap_max=$(($memulimit / 1024 / 2))
+        fi
+    fi
+
     # min is 1/2 of max - should provide good performance
     heap_min=$(($heap_max / 2))
 
