@@ -91,18 +91,19 @@ Master::Master(const std::string &program, Engine &engine, DAG &dag,
     } else {
         this->resource_log = fopen(resourcefile.c_str(), "a");
     }
-
 }
 
 Master::~Master() {
-    if (errfile != "stderr") {
-        fclose(task_stderr);
-    }
-    
-    if (outfile != "stdout") {
+    if (fileno(task_stdout) > 2) {
+        log_trace("Closing task stdout");
         fclose(task_stdout);
     }
     
+    if (fileno(task_stderr) > 2) {
+        log_trace("Closing task stderr");
+        fclose(task_stderr);
+    }
+
     std::vector<Slot *>::iterator s;
     for (s = slots.begin(); s != slots.end(); s++) {
         delete *s;
@@ -113,7 +114,8 @@ Master::~Master() {
         delete *h;
     }
 
-    if (resource_log != NULL) {
+    if (resource_log != NULL && fileno(resource_log) > 2) {
+        log_trace("Closing resource log");
         fclose(resource_log);
     }
 }
