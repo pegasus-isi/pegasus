@@ -34,8 +34,9 @@
     <section>
       <title>Download VM Image</title>
 
-      <para>Next, download the VM image: <ulink
-      url="http://download.pegasus.isi.edu/wms/download/latest/PegasusTutorialVM.zip">http://download.pegasus.isi.edu/wms/download/latest/PegasusTutorialVM.zip</ulink></para>
+      <para>Next, download the Pegasus Tutorial VM from the Pegasus download page: <ulink
+      url="http://pegasus.isi.edu/downloads">http://pegasus.isi.edu/downloads</ulink>
+      </para>
 
       <para>Unzip the downloaded file and move the <literal>.vmdk</literal>
       file it contains to somewhere that you can find it later.</para>
