@@ -25,6 +25,11 @@ endif
 
 CXXFLAGS += -D$(OPSYS)
 
+SVN_REVISION=$(shell svn info | awk '/Revision:/ {print $$2}')
+ifneq (,$(SVN_REVISION))
+  CXXFLAGS += -DSVN_REVISION=$(SVN_REVISION)
+endif
+
 OBJS += strlib.o
 OBJS += tools.o
 OBJS += failure.o

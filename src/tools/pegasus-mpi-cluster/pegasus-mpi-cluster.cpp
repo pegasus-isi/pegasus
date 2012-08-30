@@ -16,6 +16,34 @@
 static char *program;
 static int rank;
 
+void version() {
+    if (rank == 0) {
+        fprintf(stderr, "pegasus-mpi-cluster\n");
+#ifdef SVN_REVISION
+        fprintf(stderr, "Revision: %d\n" ,SVN_REVISION);
+#endif
+        fprintf(stderr, "Compiled: %s %s\n", __DATE__, __TIME__);
+#ifdef __VERSION__
+        fprintf(stderr, "Compiler: %s\n", __VERSION__);
+#endif
+        int major, minor;
+        MPI_Get_version(&major, &minor);
+        fprintf(stderr, "MPI: %d.%d\n", major, minor);
+#ifdef MPICH_VERSION
+        fprintf(stderr, "MPICH: %s\n", MPICH_VERSION);
+#endif
+#ifdef MPICH2_VERSION
+        fprintf(stderr, "MPICH2: %s\n", MPICH2_VERSION);
+#endif
+#ifdef MVAPICH2_VERSION
+        fprintf(stderr, "MVAPICH2: %s\n", MVAPICH2_VERSION);
+#endif
+#ifdef OPEN_MPI
+        fprintf(stderr, "OpenMPI: %d.%d.%d", OMPI_MAJOR_VERSION, OMPI_MINOR_VERSION, OMPI_RELEASE_VERSION);
+#endif
+    }
+}
+
 void usage() {
     if (rank == 0) {
         fprintf(stderr,
@@ -23,6 +51,7 @@ void usage() {
             "\n"
             "Options:\n"
             "   -h|--help            Print this message\n"
+            "   -V|--version         Print version information\n"
             "   -v|--verbose         Increase logging level\n"
             "   -q|--quiet           Decrease logging level\n"
             "   -o|--stdout PATH     Path to stdout file for tasks\n"
@@ -108,6 +137,9 @@ int mpidag(int argc, char *argv[]) {
         std::string flag = flags.front();
         if (flag == "-h" || flag == "--help") {
             usage();
+            return 0;
+        } else if (flag == "-V" || flag == "--version") {
+            version();
             return 0;
         } else if (flag == "-o" || flag == "--stdout") {
             flags.pop_front();
@@ -255,6 +287,8 @@ int mpidag(int argc, char *argv[]) {
     // and make sure MPI_Abort is called when something bad happens.
    
     if (rank == 0) {
+        version();
+        
         // If no rescue file specified, use default
         if (rescuefile == "") {
             rescuefile = dagfile + ".rescue";
