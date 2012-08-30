@@ -13,7 +13,7 @@ Synopsis
 --------
 [verse]
 *pegasus-mpi-cluster* [*-h*][*-v*][*-q*][*-s*][*-o* 'path'][*-e* 'path'] 
-                    [*-m* 'M'][*-t* 'T'][*-n*][*-r*] 'workflow.dag'
+                    [*-m* 'M'][*-t* 'T'][*-n*][*-r*][*-V*] 'workflow.dag'
 
 
 Description
@@ -67,6 +67,10 @@ Options
 *-h*::
 *--help*::
     Print help message
+
+*-V*::
+*--version*::
+    Print version information
 
 *-v*::
 *--verbose*::
