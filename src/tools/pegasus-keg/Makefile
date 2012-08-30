@@ -32,14 +32,15 @@ datadir = $(prefix)/share
 endif
 
 ifeq (DARWIN,${SYSTEM})
+# Gideon removed all this because it breaks on Mountain Lion
 #SDK=/Developer/SDKs/MacOSX10.6.sdk
-SDK=$(lastword $(sort $(wildcard /Developer/SDKs/MacOSX10.*.sdk)))
-ifneq (,${SDK})
-CXXFLAGS = -g -pipe -arch x86_64 -arch i686 -nostdinc \
-	-B${SDK}/usr/include/gcc -B${SDK}/usr/lib/gcc \
-	-isystem${SDK}/usr/include -F${SDK}/System/Library/Frameworks
-LDFLAGS = -arch x86_64 -arch i686 -Wl,-syslibroot,${SDK}
-endif
+#SDK=$(lastword $(sort $(wildcard /Developer/SDKs/MacOSX10.*.sdk)))
+#ifneq (,${SDK})
+#CXXFLAGS = -g -pipe -arch x86_64 -arch i686 -nostdinc \
+#	-B${SDK}/usr/include/gcc -B${SDK}/usr/lib/gcc \
+#	-isystem${SDK}/usr/include -F${SDK}/System/Library/Frameworks
+#LDFLAGS = -arch x86_64 -arch i686 -Wl,-syslibroot,${SDK}
+#endif
 EXTRA_OBJ += darwin.o
 EXTRA_INC = darwin.hh
 CXXFLAGS += -DMACHINE_SPECIFIC=darwin
