@@ -2,6 +2,8 @@
 #set -v
 #Get the Test dir from the build Plan Name or from command line
 
+set -o pipefail
+
 TOP_DIR=`pwd`
 TEST=`echo $1 | awk -F " - " '{print $3}'`
 shift
