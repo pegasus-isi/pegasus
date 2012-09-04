@@ -4,6 +4,9 @@ set -e
 
 TOP_DIR=`pwd`
 
+# limit the memory - this is to the test the common.sh ulimit check
+ulimit -m 512000
+
 # download rosetta binary - this is to save space in the Pegasus distribution
 if [ ! -e rosetta.exe ]; then
    wget -q http://pegasus.isi.edu/wms/example-workflows/rosetta/rosetta.exe
