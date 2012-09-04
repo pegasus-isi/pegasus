@@ -76,12 +76,16 @@ sub env_setup
     $ENV{'CLASSPATH'} = "";
     
     cmd("env", 1, 1);
+    cmd("which perl 2>&1", 1, 1);
+    cmd("perl --version 2>&1", 1, 0);
+    cmd("which python 2>&1", 1, 1);
+    cmd("python -V 2>&1", 1, 0);
     cmd("which java 2>&1", 1, 1);
     cmd("java -version 2>&1", 1, 0);
     cmd("which javac 2>&1", 1, 1);
     cmd("javac -version 2>&1", 1, 0);
+    cmd("which ant 2>&1", 1, 1);
     cmd("ant -version 2>&1", 1, 1);
-    cmd("python -V 2>&1", 1, 0);
     cmd("(rpm -qa | grep python) 2>&1", 1, 0);
     cmd("(dpkg -l | grep python) 2>&1", 1, 0);
 
