@@ -23,6 +23,7 @@ public:
     unsigned tries;
     unsigned failures;
     int priority;
+    std::vector<std::string> forwards;
     
     Task(const std::string &name, const std::string &command);
     ~Task();

@@ -198,6 +198,35 @@ void test_priority_dag() {
     }
 }
 
+void test_forward() {
+    DAG dag("test/forward.dag");
+    
+    Task *a = dag.get_task("A");
+    Task *b = dag.get_task("B");
+    Task *c = dag.get_task("C");
+
+    if (a->forwards.size() != 1) {
+        myfailure("A should have one forward");
+    }
+    if (a->forwards[0] != "/tmp/foo") {
+        myfailure("A should be forwarding /tmp/foo");
+    }
+
+    if (b->forwards.size() != 1) {
+        myfailure("B should have one forward");
+    }
+    if (b->forwards[0] != "/tmp/bar") {
+        myfailure("B should be forwarding /tmp/bar");
+    }
+
+    if (c->forwards.size() != 2) {
+        myfailure("C should have two forwards");
+    }
+    if (c->forwards[0] != "/tmp/foo" && c->forwards[1] != "/tmp/bar") {
+        myfailure("C should be forwarding /tmp/foo and /tmp/bar");
+    }
+}
+
 int main(int argc, char *argv[]) {
     test_dag();
     test_rescue();
@@ -206,5 +235,6 @@ int main(int argc, char *argv[]) {
     test_cpu_dag();
     test_tries_dag();
     test_priority_dag();
+    test_forward();
     return 0;
 }

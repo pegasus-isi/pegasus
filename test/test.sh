@@ -418,6 +418,18 @@ function test_append_stdio {
     fi
 }
 
+# Make sure I/O forwarding works
+function test_forward {
+    OUTPUT=$(mpiexec -n 2 $PMC -v test/forward.dag 2>&1)
+    RC=$?
+
+    if [ $RC -ne 0 ]; then
+        echo "$OUTPUT"
+        echo "ERROR: Forward test failed"
+        return 1
+    fi
+}
+
 run_test ./test-strlib
 run_test ./test-tools
 run_test ./test-dag
@@ -441,6 +453,7 @@ run_test test_fail_script
 run_test test_fork_script
 run_test test_resource_log
 run_test test_append_stdio
+run_test test_forward
 run_test test_hang_script
 
 # setrlimit is broken on Darwin, so the strict limits test won't work

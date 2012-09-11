@@ -179,6 +179,7 @@ void DAG::read_dag() {
             unsigned cpus = 1;
             unsigned tries = this->tries;
             int priority = 0;
+            std::vector<std::string> forwards;
             
             // Parse task arguments
             std::list<std::string> args;
@@ -261,6 +262,16 @@ void DAG::read_dag() {
                         }
                         log_trace("Task %s has priority %d", 
                             name.c_str(), priority);
+                    } else if (arg == "-f" || arg == "--forward") {
+                        args.pop_front();
+                        if (args.size() == 0) {
+                            myfailure("-f/--forward requires PATH for task %s",
+                                name.c_str());
+                        }
+                        std::string forward = args.front();
+                        log_trace("Task %s needs data forwarded for %s",
+                                name.c_str(), forward.c_str());
+                        forwards.push_back(forward);
                     } else {
                         myfailure("Invalid argument '%s' for task %s", 
                             arg.c_str(), name.c_str());
@@ -286,6 +297,7 @@ void DAG::read_dag() {
             t->cpus = cpus;
             t->tries = tries;
             t->priority = priority;
+            t->forwards = forwards;
             
             if (pegasus_id.length() > 0) {
                 if (pegasus_name != name) {
