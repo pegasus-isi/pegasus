@@ -515,8 +515,8 @@ class Workflow:
         """
         # to the dashboard db we had the connection details
         # rest remains the same
-        if self._dashboard_database_url is not None:
-            kwargs["db__url"] = self._dashboard_database_url
+        if self._database_url is not None:
+            kwargs["db__url"] = self._database_url
 
         self.output_to_dashboard_db("wf.plan",kwargs)
 
@@ -679,8 +679,8 @@ class Workflow:
             except BaseException:
                 pass
 
-    def __init__(self, rundir, outfile, database=None,
-                 dashboard_database=None,  dashboard_db_url=None,
+    def __init__(self, rundir, outfile, database=None,database_url=None,
+                 dashboard_database=None,
                  workflow_config_file=None, jsd=None, root_id=None,
                  parent_id=None, parent_jobid=None, parent_jobseq=None,
                  enable_notifications=True, replay_mode=False,
@@ -699,7 +699,7 @@ class Workflow:
         self._root_workflow_id = root_id
         self._sink = database
         self._dashboard_sink = dashboard_database
-        self._dashboard_database_url = dashboard_db_url
+        self._database_url = database_url
         self._database_disabled = False
         self._workflow_start = int(time.time())
         self._enable_notifications = enable_notifications

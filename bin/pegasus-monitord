@@ -1110,7 +1110,7 @@ if do_notifications == True:
 
 # Instantiate workflow class
 wf = Workflow(run, out, database=wf_event_sink,
-              dashboard_database=dashboard_event_sink, dashboard_db_url=dashboard_event_dest, jsd=jsd,
+              dashboard_database=dashboard_event_sink, database_url=event_dest, jsd=jsd,
               enable_notifications=do_notifications,
               replay_mode=replay_mode,
               output_dir=output_dir,
