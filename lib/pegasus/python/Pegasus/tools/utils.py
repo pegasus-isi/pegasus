@@ -134,6 +134,55 @@ def epochdate(timestamp):
         logger.warn("unable to parse timestamp \"%s\"" % timestamp)
         return None
 
+def get_path_dashboard_db( props ):
+    """
+    Utility method for creating appropriate directory and the path to the
+    dashboard database file
+    @param props  properties passed by user
+
+    # Returns fully qualified path to binary, None if not found
+    """
+    db_file = props.property("pegasus.dashboard.output")
+
+    if db_file is not None:
+        return db_file
+
+    #construct the default path
+    home = os.getenv("HOME")
+    dir = os.path.join( home, ".pegasus" );
+
+    # check for writability and create directory if required
+    if not os.path.isdir( dir ):
+        try:
+            os.mkdir( dir  )
+        except OSError:
+            logger.error("Unable to create directory." + dir)
+            return None
+    elif not os.access( dir, os.W_OK ):
+        logger.warning( "unable to write to directory " + dir )
+        return None
+
+    #directory exists, touch the file and set permissions
+    filename =  os.path.join( dir, "workflow.db" )
+    if not os.access(filename, os.F_OK):
+        try:
+            # touch the file
+            open(filename, 'w').close()
+            os.chmod( filename, 0600)
+        except:
+            logger.warning("unable to initialize dashboard db %s. ..." % (filename))
+            logger.warning(traceback.format_exc())
+            return None
+    elif not os.access( filename, os.W_OK ):
+        logger.warning( "no read access for file " + filename )
+        return None
+
+    db_file = "sqlite:///" + filename
+
+    return db_file
+
+
+
 def create_directory(dir_name, delete_if_exists=False):
     """
     Utility method for creating directory

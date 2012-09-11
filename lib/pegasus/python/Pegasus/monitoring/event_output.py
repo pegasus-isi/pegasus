@@ -29,8 +29,9 @@ import urlparse
 
 from Pegasus.tools import utils
 
-# Event name-space
+# Event name-spaces
 STAMPEDE_NS = "stampede."
+DASHBOARD_NS = "dashboard."
 
 # Get logger object (initialized elsewhere)
 logger = logging.getLogger()
@@ -38,6 +39,7 @@ logger = logging.getLogger()
 # Optional imports, only generate 'warnings' if they fail
 nlapi = None
 stampede_loader = None
+stampede_dashboard_loader = None
 bson = None
 amqp = None
 
@@ -50,6 +52,10 @@ try:
     from netlogger.analysis.modules import stampede_loader
 except:
     logger.info("cannot import NetLogger's stampede_loader")
+try:
+    from netlogger.analysis.modules import stampede_dashboard_loader
+except:
+    logger.info("cannot import NetLogger's stampede_dashboard_loader")
 try:
     from netlogger.analysis.workflow.util import Expunge
 except:
@@ -163,16 +169,26 @@ class DBEventSink(EventSink):
     """
     Write wflow event logs to database via loader
     """
-    def __init__(self, dest, db_stats=False, **kw):
-        assert stampede_loader is not None, "Database destination selected, "+\
+    def __init__(self, dest, db_stats=False, namespace=STAMPEDE_NS, **kw):
+        self._namespace=namespace
+        #pick the right database loader based on prefix
+        if namespace == STAMPEDE_NS:
+            assert stampede_loader is not None, "Database destination selected, "+\
                "but cannot import stampede loader"
-        self._db = stampede_loader.Analyzer(dest, perf=db_stats, batch="yes", mysql_engine='InnoDB')
+            self._db = stampede_loader.Analyzer(dest, perf=db_stats, batch="yes", mysql_engine='InnoDB')
+        elif namespace == DASHBOARD_NS:
+            assert stampede_dashboard_loader is not None, "Database destination selected, "+\
+                                                "but cannot import stampede_dashboard_loader"
+            self._db = stampede_dashboard_loader.Analyzer(dest, perf=db_stats, batch="yes", mysql_engine='InnoDB')
+        else:
+            raise ValueError("Unknown namespace specified '%s'" % (namespace))
+
         super(DBEventSink, self).__init__()
         
     def send(self, event, kw):
         if self._isdbg:
             self._log.debug("send.start event=%s" % (event))
-        d = {'event' : "stampede." + event}
+        d = {'event' : self._namespace + event}
         for k, v in kw.iteritems():
             d[k.replace('__','.')] = v
         self._db.notify(d)
@@ -272,22 +288,26 @@ def bson_encode(event, **kw):
     kw['event'] = STAMPEDE_NS + event
     return bson.dumps(kw)        
 
-def create_wf_event_sink(dest, enc=None, **kw):
+def create_wf_event_sink(dest, enc=None,prefix=STAMPEDE_NS, **kw):
     """
     Create & return subclass of EventSink, chosen by value of 'dest'
     and parameterized by values (if any) in 'kw'.
     """
+
+    if( dest is None ):
+        return None
+
     url = OutputURL(dest)
     
     # Pick an encoder
 
-    def pick_encfn(enc_name):
+    def pick_encfn(enc_name, namespace ):
         ##enc_name = url.query.get('enc', 'bp').lower()
         if enc_name is None or enc_name == 'bp':
             assert nlapi is not None, "NetLogger encoding selected, "+\
                 "but cannot import nlapi library"
             # NetLogger name=value encoding
-            encfn = nlapi.Log(level=nlapi.Level.ALL, prefix=STAMPEDE_NS)
+            encfn = nlapi.Log(level=nlapi.Level.ALL, prefix=namespace)
         elif enc_name == 'bson':
             # BSON
             assert bson is not None, "BSON encoding selected, "+\
@@ -299,15 +319,15 @@ def create_wf_event_sink(dest, enc=None, **kw):
 
     # Branch on scheme
     if url.scheme == '':
-        sink = FileEventSink(dest, encoder=pick_encfn(enc), **kw)
+        sink = FileEventSink(dest, encoder=pick_encfn(enc, prefix), **kw)
         _type, _name = "file", dest
     elif url.scheme == 'file':
-        sink = FileEventSink(url.path, encoder=pick_encfn(enc), **kw)
+        sink = FileEventSink(url.path, encoder=pick_encfn(enc, prefix), **kw)
         _type, _name = "file", url.path
     elif url.scheme == 'x-tcp':
         if url.port is None:
             url.port = 14380
-        sink = TCPEventSink(url.host, url.port, encoder=pick_encfn(enc), **kw)
+        sink = TCPEventSink(url.host, url.port, encoder=pick_encfn(enc, prefix), **kw)
         _type, _name = "network", "%s:%s" % (url.host, url.port)
     elif url.scheme == 'amqp':
         assert amqp is not None, "AMQP destination selected, "+\
@@ -320,8 +340,9 @@ def create_wf_event_sink(dest, enc=None, **kw):
                              encoder=pick_encfn(enc), **kw)
         _type, _name="AMQP", "%s:%s/%s" % (url.host, url.port, url.path)
     else:
-        sink = DBEventSink(dest, **kw)
+        # load the appropriate DBEvent on basis of prefix passed
+        sink = DBEventSink(dest, namespace=prefix, **kw)
         _type, _name = "DB", dest
-    logger.info("output type=%s name=%s" % (_type, _name))
+    logger.info("output type=%s namespace=%s name=%s" % (_type, prefix, _name))
 
     return sink

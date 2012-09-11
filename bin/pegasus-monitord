@@ -137,6 +137,7 @@ keep_state = 0                  # Flag for keeping a Workflow's state across sev
 db_stats = 'no'                 # collect and print database stats at the end of execution
 no_events = False               # Flag for disabling event output altogether
 event_dest = None               # URL containing the destination of the events
+dashboard_event_dest = None     # URL containing the destination of events for the dashboard
 encoding = None	                # Way to encode the data
 monitord_exit_code = 0          # Exit code for pegasus-monitord
 socket_enabled = False          # Enable socket for real-time debugging
@@ -206,18 +207,21 @@ def finish_stampede_loader():
     It is used to make sure the loader has finished loading all data
     into the database. It will also produce stats for benchmarking.
     """
-    if wf_event_sink is not None:
-        print (utils.isodate(time.time()) + " - pegasus-monitord - DB flushing beginning ").ljust(80, "-")
-        try:
-            if db_stats == 'yes' and logger.getEffectiveLevel() > logging.INFO:
-                # Make sure log level is enough to display database
-                # benchmarking information
-                logger.setLevel(logging.INFO)
-            wf_event_sink.close()
-        except:
-            logger.warning("could not call the finish method "+\
-                               "in the nl loader class... exiting anyway")
-        print (utils.isodate(time.time()) + " - pegasus-monitord - DB flushing ended ").ljust(80, "-")
+    sinks = [wf_event_sink,dashboard_event_sink]
+    for sink in sinks:
+        if sink is not None:
+            print (utils.isodate(time.time()) + " - pegasus-monitord - DB flushing beginning ").ljust(80, "-")
+            try:
+                if db_stats == 'yes' and logger.getEffectiveLevel() > logging.INFO:
+                    # Make sure log level is enough to display database
+                    # benchmarking information
+                    logger.setLevel(logging.INFO)
+                sink.close()
+            except:
+                logger.warning("could not call the finish method "+\
+                                   "in the nl loader class... exiting anyway")
+            print (utils.isodate(time.time()) + " - pegasus-monitord - DB flushing ended ").ljust(80, "-")
+
 
 # Workflow Entry Class
 class WorkflowEntry:
@@ -457,6 +461,10 @@ if options.event_dest is None:
 else:
     # Use command-line option
     event_dest = options.event_dest
+
+#hardcoded for the time being
+#dashboard_event_dest = "sqlite:////tmp/workflow.db"
+dashboard_event_dest = utils.get_path_dashboard_db( props );
 
 if options.enc is not None:
     # Get encoding from command-line options
@@ -980,6 +988,7 @@ if os.access(os.path.join(run, MONITORD_RECOVER_FILE), os.F_OK):
 if no_events:
     wf_event_sink = None # Avoid parsing kickstart output if not
                          # generating bp file or database events
+    dashboard_event_sink = None
 else:
     restart_logging = False
     if replay_mode or os.access(os.path.join(run, MONITORD_RECOVER_FILE), os.F_OK):
@@ -1009,6 +1018,15 @@ else:
             logger.error("error flushing previous wf_uuid from database... continuing...")
             logger.error("cannot create events output... disabling event output!")
             wf_event_sink = None
+    #create the stampede_dashboard_loader
+    try:
+        dashboard_event_sink= eo.create_wf_event_sink(dashboard_event_dest, restart=restart_logging,prefix=eo.DASHBOARD_NS,db_stats=db_stats)
+    except:
+        logger.error(traceback.format_exc())
+        dashboard_event_sink = None
+
+    if dashboard_event_dest is None:
+        logger.error("cannot create dashboard events output... disabling dashboard event output!")
 
 # Say hello
 logger.info("starting [%s], using pid %d" % (revision, os.getpid()))
@@ -1091,7 +1109,8 @@ if do_notifications == True:
 # Ok! Let's start now...
 
 # Instantiate workflow class
-wf = Workflow(run, out, database=wf_event_sink, jsd=jsd,
+wf = Workflow(run, out, database=wf_event_sink,
+              dashboard_database=dashboard_event_sink, dashboard_db_url=dashboard_event_dest, jsd=jsd,
               enable_notifications=do_notifications,
               replay_mode=replay_mode,
               output_dir=output_dir,

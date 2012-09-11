@@ -92,7 +92,6 @@ class Workflow:
 
         try:
             # Send event to corresponding sink
-            #GAURANG
             self._sink.send(event, kwargs)
         except:
             # Error sending this event... disable the sink from now on...
@@ -100,6 +99,31 @@ class Workflow:
                                                           ((self._dax_label or "unknown") +
                                                            "-" + (self._dax_index or "unknown"))))
             logger.warning("error sending event: %s --> %s" % (event, kwargs))
+            logger.warning(traceback.format_exc())
+            self._database_disabled = True
+
+    def output_to_dashboard_db(self, event, kwargs):
+        """
+        This function sends an NetLogger event to the loader class.
+        """
+
+        # Sanity check (should also be done elsewhere, but repeated here)
+        if self._dashboard_sink is None:
+            return
+
+        # Don't output anything if we have disabled events to the database
+        if self._database_disabled == True:
+            return
+
+        try:
+            # Send event to corresponding sink
+            self._dashboard_sink.send(event, kwargs)
+        except:
+            # Error sending this event... disable the sink from now on...
+            logger.warning("DASHBOARD DB NL-LOAD-ERROR --> %s - %s" % (self._wf_uuid,
+                                                          ((self._dax_label or "unknown") +
+                                                           "-" + (self._dax_index or "unknown"))))
+            logger.warning("error sending event to dashboard db: %s --> %s" % (event, kwargs))
             logger.warning(traceback.format_exc())
             self._database_disabled = True
 
@@ -468,6 +492,36 @@ class Workflow:
         # Send workflow event to database
         self.output_to_db("wf.plan", kwargs)
 
+        # send the workflow event to dashboard database
+        if self._dashboard_sink is None:
+            return
+        """
+        dashboard_args = {}
+        dashboard_args["xwf__id"] = self._wf_uuid
+        if self._dashboard_database_url is not None:
+            dashboard_args["db__url"] = self._dashboard_database_url
+
+        #add the keys we want
+
+        if self._dax_label is not None:
+            dashboard_args["dax__label"] = self._dax_label
+
+        if self._timestamp is not None:
+            dashboard_args["ts"] = self._timestamp
+        if self._submit_hostname is not None:
+            dashboard_args["submit__hostname"] = self._submit_hostname
+        if self._submit_dir is not None:
+            dashboard_args["submit__dir"] = self._submit_dir
+        """
+        # to the dashboard db we had the connection details
+        # rest remains the same
+        if self._dashboard_database_url is not None:
+            kwargs["db__url"] = self._dashboard_database_url
+
+        self.output_to_dashboard_db("wf.plan",kwargs)
+
+
+
     def db_send_subwf_link(self, wf_uuid, parent_workflow_id, parent_jobid, parent_jobseq):
         """
         This function sends to the DB the information linking a subwf
@@ -504,7 +558,7 @@ class Workflow:
     def db_send_wf_state(self, state):
         """
         This function sends to the DB information about the current
-        workflow state
+        workflow state to both the stampede database and dashboard database
         """
         # Check if database is configured
         if self._sink is None:
@@ -535,8 +589,9 @@ class Workflow:
                 kwargs["status"] = 0
         state = "xwf." + state
 
-        # Send workflow state event to database
+        # Send workflow state event to stampede database
         self.output_to_db(state, kwargs)
+        self.output_to_dashboard_db( state, kwargs)
 
     def change_wf_state(self, state):
         """
@@ -625,6 +680,7 @@ class Workflow:
                 pass
 
     def __init__(self, rundir, outfile, database=None,
+                 dashboard_database=None,  dashboard_db_url=None,
                  workflow_config_file=None, jsd=None, root_id=None,
                  parent_id=None, parent_jobid=None, parent_jobseq=None,
                  enable_notifications=True, replay_mode=False,
@@ -642,6 +698,8 @@ class Workflow:
         self._parent_workflow_id = parent_id
         self._root_workflow_id = root_id
         self._sink = database
+        self._dashboard_sink = dashboard_database
+        self._dashboard_database_url = dashboard_db_url
         self._database_disabled = False
         self._workflow_start = int(time.time())
         self._enable_notifications = enable_notifications
