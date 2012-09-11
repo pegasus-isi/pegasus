@@ -254,8 +254,9 @@ int Worker::run() {
         std::string pegasus_id;
         unsigned int memory = 0;
         unsigned int cpus = 0;
+        std::vector<std::string> forwards;
         int shutdown;
-        recv_request(name, command, pegasus_id, memory, cpus, shutdown);
+        recv_request(name, command, pegasus_id, memory, cpus, forwards, shutdown);
         log_trace("Worker %d: Got request", rank);
         
         if (shutdown) {

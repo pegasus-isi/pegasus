@@ -4,6 +4,7 @@
 #include "tools.h"
 #include "protocol.h"
 #include "failure.h"
+#include "log.h"
 
 #define MAX_MESSAGE 16384
 
@@ -35,7 +36,7 @@ void send_hostrank(int worker, int hostrank) {
     MPI_Send(&hostrank, 1, MPI_INT, worker, TAG_HOSTRANK, MPI_COMM_WORLD);
 }
 
-void send_request(const std::string &name, const std::string &command, const std::string &pegasus_id, unsigned int memory, unsigned int cpus, int worker) {
+void send_request(const std::string &name, const std::string &command, const std::string &pegasus_id, unsigned int memory, unsigned int cpus, std::vector<std::string> &forwards, int worker) {
     
     // Pack message
     unsigned size = 0;
@@ -50,11 +51,18 @@ void send_request(const std::string &name, const std::string &command, const std
     sprintf(buf+size, "%u", cpus);
     size += strlen(buf+size) + 1;
     
+    int i;
+    for (i=0; i<forwards.size(); i++) {
+        log_trace("Sending forward %s", forwards[i].c_str());
+        strcpy(buf+size, forwards[i].c_str());
+        size += forwards[i].size() + 1;
+    }
+    
     // Send message
     MPI_Send(buf, size, MPI_CHAR, worker, TAG_COMMAND, MPI_COMM_WORLD);
 }
 
-void recv_request(std::string &name, std::string &command, std::string &pegasus_id, unsigned int &memory, unsigned int &cpus, int &shutdown) {
+void recv_request(std::string &name, std::string &command, std::string &pegasus_id, unsigned int &memory, unsigned int &cpus, std::vector<std::string> &forwards, int &shutdown) {
     
     // Recv message
     MPI_Status status;
@@ -67,6 +75,9 @@ void recv_request(std::string &name, std::string &command, std::string &pegasus_
         return;
     }
     
+    int msgsize;
+    MPI_Get_count(&status, MPI_CHAR, &msgsize);
+    
     // Unpack message
     unsigned size = 0;
     name = buf+size;
@@ -78,6 +89,14 @@ void recv_request(std::string &name, std::string &command, std::string &pegasus_
     sscanf(buf+size, "%u", &memory);
     size += strlen(buf+size) + 1;
     sscanf(buf+size, "%u", &cpus);
+    size += strlen(buf+size) + 1;
+    
+    while (size < msgsize) {
+        std::string forward = buf+size;
+        size += forward.size() + 1;
+        forwards.push_back(forward);
+        log_trace("Received forward %s", forward.c_str());
+    }
 }
 
 void send_shutdown(int worker) {
@@ -119,3 +138,4 @@ bool request_waiting() {
     MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &flag, MPI_STATUS_IGNORE);
     return flag != 0;
 }
+
