@@ -1018,12 +1018,24 @@ else:
             logger.error("error flushing previous wf_uuid from database... continuing...")
             logger.error("cannot create events output... disabling event output!")
             wf_event_sink = None
+
     #create the stampede_dashboard_loader
     try:
         dashboard_event_sink= eo.create_wf_event_sink(dashboard_event_dest, restart=restart_logging,prefix=eo.DASHBOARD_NS,db_stats=db_stats)
     except:
         logger.error(traceback.format_exc())
         dashboard_event_sink = None
+    else:
+        try:
+            if restart_logging and isinstance(dashboard_event_sink, eo.DBEventSink):
+                # If in replay mode or recovery mode and it is a DB,
+                # attempt to purge wf_uuid_first
+                eo.purge_wf_uuid_from_dashboard_database(run, dashboard_event_dest)
+        except:
+            logger.error(traceback.format_exc())
+            logger.error("error flushing previous wf_uuid from dashboard database... continuing...")
+            logger.error("cannot create events output... disabling event output!")
+            dashboard_event_dest = None
 
     if dashboard_event_dest is None:
         logger.error("cannot create dashboard events output... disabling dashboard event output!")

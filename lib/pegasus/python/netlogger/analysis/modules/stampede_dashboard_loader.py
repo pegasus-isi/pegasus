@@ -62,7 +62,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
                 _kw[dialect]['mysql_engine'] = mysql_engine
         # This mixin adds a class member "self.session" after initialization.
         # This is the session handler that the code logic uses for queries
-        # and other DB interaction.  The arg "initializeToPegasusDB" is
+        # and other DB interaction.  The arg "initializeToDashboardDB" is
         # a function from the stampede_schema module.
         try:
             SQLAlchemyInit.__init__(self, connString, initializeToDashboardDB, **_kw)

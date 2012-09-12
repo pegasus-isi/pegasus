@@ -57,9 +57,14 @@ try:
 except:
     logger.info("cannot import NetLogger's stampede_dashboard_loader")
 try:
-    from netlogger.analysis.workflow.util import Expunge
+    from netlogger.analysis.workflow.util import StampedeExpunge
 except:
-    logger.info("cannot import NetLogger's Expunge")
+    logger.info("cannot import NetLogger's Stampede Expunge")
+try:
+    from netlogger.analysis.workflow.util import DashboardExpunge
+except:
+    logger.info("cannot import NetLogger's Dashboard Expunge")
+
 try:
     import bson
 except:
@@ -89,7 +94,25 @@ def purge_wf_uuid_from_database(rundir, output_db):
         if wfparams["wf_uuid"] is not None:
             # Get wf_uuid
             wf_uuid = wfparams["wf_uuid"]
-            e = Expunge(output_db, wf_uuid)
+            e = StampedeExpunge(output_db, wf_uuid)
+            e.expunge()
+
+            # Done, make this connection go away
+            e = None
+
+def purge_wf_uuid_from_dashboard_database(rundir, output_db):
+    """
+    This function purges a workflow id from the output database.
+    """
+
+    # Parse the braindump file
+    wfparams = utils.slurp_braindb(rundir)
+
+    if "wf_uuid" in wfparams:
+        if wfparams["wf_uuid"] is not None:
+            # Get wf_uuid
+            wf_uuid = wfparams["wf_uuid"]
+            e = DashboardExpunge(output_db, wf_uuid)
             e.expunge()
 
             # Done, make this connection go away
