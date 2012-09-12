@@ -19,6 +19,11 @@
 #include "failure.h"
 #include "tools.h"
 
+using std::string;
+using std::map;
+using std::vector;
+using std::list;
+
 extern char **environ;
 
 // TODO Replace this with something else
@@ -29,10 +34,9 @@ static void log_signal(int signo) {
     log_error("Caught signal %d", signo);
 }
 
-Pipe::Pipe(std::string forward, int readfd, int writefd) {
-    int eq = forward.find("=");
-    this->varname = forward.substr(0, eq);
-    this->filename = forward.substr(eq + 1);
+Pipe::Pipe(string varname, string filename, int readfd, int writefd) {
+    this->varname = varname;
+    this->filename = filename;
     this->readfd = readfd;
     this->writefd = writefd;
 }
@@ -71,7 +75,7 @@ void Pipe::closewrite() {
     }
 }
 
-Worker::Worker(const std::string &outfile, const std::string &errfile, const std::string &host_script, unsigned int host_memory, unsigned host_cpus, bool strict_limits) {
+Worker::Worker(const string &outfile, const string &errfile, const string &host_script, unsigned int host_memory, unsigned host_cpus, bool strict_limits) {
     this->outfile = outfile;
     this->errfile = errfile;
 
@@ -299,12 +303,12 @@ int Worker::run() {
         }
 #endif
         
-        std::string name;
-        std::string command;
-        std::string pegasus_id;
+        string name;
+        string command;
+        string pegasus_id;
         unsigned int memory = 0;
         unsigned int cpus = 0;
-        std::vector<std::string> forwards;
+        map<string, string> forwards;
         int shutdown;
         recv_request(name, command, pegasus_id, memory, cpus, forwards, shutdown);
         log_trace("Worker %d: Got request", rank);
@@ -319,23 +323,25 @@ int Worker::run() {
         double task_start = current_time();
         
         // Process arguments
-        std::list<std::string> args;
+        list<string> args;
         split_args(args, command);
         
         // Task status is exit code 1 by default
         int status = 256; // 256 is exit code 1
         
         // Create pipes for all of the forwarded files
-        std::vector<Pipe *> pipes;
-        for (unsigned i=0; i<forwards.size(); i++) {
+        vector<Pipe *> pipes;
+        for (map<string,string>::iterator i = forwards.begin(); i != forwards.end(); i++) {
+            string varname = (*i).first;
+            string filename = (*i).second;
             int pipefd[2];
             if (pipe(pipefd) < 0) {
                 log_error("Unable to create pipe for task %s: %s",
                         name.c_str(), strerror(errno));
                 // TODO Handle this error somehow
             }
-            Pipe *p = new Pipe(forwards[i], pipefd[0], pipefd[1]);
-            log_trace("Pipe: %s = %s", p->varname.c_str(), p->filename.c_str());
+            log_trace("Pipe: %s = %s", varname.c_str(), filename.c_str());
+            Pipe *p = new Pipe(varname, filename, pipefd[0], pipefd[1]);
             pipes.push_back(p);
         }
         
@@ -358,7 +364,7 @@ int Worker::run() {
             unsigned nargs = args.size();
             char **argp = new char*[nargs+1];
             for (unsigned i=0; i<nargs; i++) {
-                std::string arg = args.front();
+                string arg = args.front();
                 asprintf(&argp[i], "%s", arg.c_str());
                 args.pop_front();
             }
@@ -426,7 +432,7 @@ int Worker::run() {
                 pipes[i]->closewrite();
             }
             
-            std::map<int, Pipe *> reading;
+            map<int, Pipe *> reading;
             for (unsigned i=0; i<pipes.size(); i++) {
                 reading[pipes[i]->readfd] = pipes[i];
             }
@@ -437,7 +443,7 @@ int Worker::run() {
                 // Set up inputs for poll()
                 int nfds = reading.size();
                 struct pollfd *fds = new struct pollfd[nfds];
-                std::map<int, Pipe *>::iterator p;
+                map<int, Pipe *>::iterator p;
                 int j = 0;
                 for (p=reading.begin(); p!=reading.end(); p++) {
                     Pipe *pipe = (*p).second;
@@ -534,12 +540,12 @@ int Worker::run() {
         // pegasus cluster output - used for provenance
         
         // If the Pegasus id is missing then don't add it to the message
-        std::string id = "";
+        string id = "";
         if (pegasus_id.size() > 0) {
             id = "id=" + pegasus_id + ", ";
         }
         
-        std::string app = args.front();
+        string app = args.front();
         
         char date[32];
         iso2date(task_start, date, sizeof(date));

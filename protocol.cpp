@@ -10,14 +10,14 @@
 
 static char buf[MAX_MESSAGE];
 
-void send_registration(const std::string &hostname, unsigned int memory, unsigned int cpus) {
+void send_registration(const string &hostname, unsigned int memory, unsigned int cpus) {
     // Send the hostname
     sprintf(buf, "%s %u %u", hostname.c_str(), memory, cpus);
     int size = strlen(buf) + 1;
     MPI_Send(buf, size, MPI_CHAR, 0, TAG_HOSTNAME, MPI_COMM_WORLD);
 }
 
-void recv_registration(int &worker, std::string &hostname, unsigned int &memory, unsigned int &cpus) {
+void recv_registration(int &worker, string &hostname, unsigned int &memory, unsigned int &cpus) {
     MPI_Status status;
     MPI_Recv(buf, MAX_MESSAGE, MPI_CHAR, MPI_ANY_SOURCE, TAG_HOSTNAME, MPI_COMM_WORLD, &status);
     worker = status.MPI_SOURCE;
@@ -36,7 +36,7 @@ void send_hostrank(int worker, int hostrank) {
     MPI_Send(&hostrank, 1, MPI_INT, worker, TAG_HOSTRANK, MPI_COMM_WORLD);
 }
 
-void send_request(const std::string &name, const std::string &command, const std::string &pegasus_id, unsigned int memory, unsigned int cpus, std::map<std::string, std::string> &forwards, int worker) {
+void send_request(const string &name, const string &command, const string &pegasus_id, unsigned int memory, unsigned int cpus, map<string, string> &forwards, int worker) {
     
     // Pack message
     unsigned size = 0;
@@ -51,10 +51,10 @@ void send_request(const std::string &name, const std::string &command, const std
     sprintf(buf+size, "%u", cpus);
     size += strlen(buf+size) + 1;
     
-    std::map<std::string, std::string>::iterator i;
+    map<string, string>::iterator i;
     for (i=forwards.begin(); i!=forwards.end(); i++) {
-        std::string varname = (*i).first;
-        std::string filename = (*i).second;
+        string varname = (*i).first;
+        string filename = (*i).second;
         log_trace("Sending forward %s => %s", varname.c_str(), filename.c_str());
         sprintf(buf+size, "%s=%s", varname.c_str(), filename.c_str());
         size += strlen(buf+size) + 1;
@@ -64,7 +64,7 @@ void send_request(const std::string &name, const std::string &command, const std
     MPI_Send(buf, size, MPI_CHAR, worker, TAG_COMMAND, MPI_COMM_WORLD);
 }
 
-void recv_request(std::string &name, std::string &command, std::string &pegasus_id, unsigned int &memory, unsigned int &cpus, std::vector<std::string> &forwards, int &shutdown) {
+void recv_request(string &name, string &command, string &pegasus_id, unsigned int &memory, unsigned int &cpus, map<string, string> &forwards, int &shutdown) {
     
     // Recv message
     MPI_Status status;
@@ -94,10 +94,13 @@ void recv_request(std::string &name, std::string &command, std::string &pegasus_
     size += strlen(buf+size) + 1;
     
     while (size < msgsize) {
-        std::string forward = buf+size;
+        string forward = buf+size;
         size += forward.size() + 1;
-        forwards.push_back(forward);
-        log_trace("Received forward %s", forward.c_str());
+        int eq = forward.find("=");
+        string varname = forward.substr(0, eq);
+        string filename = forward.substr(eq + 1);
+        log_trace("Received forward %s = %s", varname.c_str(), filename.c_str());
+        forwards[varname] = filename;
     }
 }
 
@@ -105,7 +108,7 @@ void send_shutdown(int worker) {
     MPI_Send(NULL, 0, MPI_CHAR, worker, TAG_SHUTDOWN, MPI_COMM_WORLD);
 }
 
-void send_response(const std::string &name, int exitcode, double runtime) {
+void send_response(const string &name, int exitcode, double runtime) {
     int size = 0;
     sprintf(buf, "%d", exitcode);
     size += strlen(buf) + 1;
@@ -116,7 +119,7 @@ void send_response(const std::string &name, int exitcode, double runtime) {
     MPI_Send(buf, size, MPI_CHAR, 0, TAG_RESULT, MPI_COMM_WORLD);
 }
 
-void recv_response(std::string &name, int &exitcode, double &runtime, int &worker) {
+void recv_response(string &name, int &exitcode, double &runtime, int &worker) {
     MPI_Status status;
     MPI_Recv(buf, MAX_MESSAGE, MPI_CHAR, MPI_ANY_SOURCE, TAG_RESULT, MPI_COMM_WORLD, &status);
     
