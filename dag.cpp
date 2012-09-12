@@ -265,10 +265,14 @@ void DAG::read_dag() {
                     } else if (arg == "-f" || arg == "--forward") {
                         args.pop_front();
                         if (args.size() == 0) {
-                            myfailure("-f/--forward requires PATH for task %s",
+                            myfailure("-f/--forward requires VAR=PATH for task %s",
                                 name.c_str());
                         }
                         std::string forward = args.front();
+                        if (forward.find("=") == std::string::npos) {
+                            myfailure("Task %s -f/--forward format should be VAR=PATH: %s",
+                                    name.c_str(), forward.c_str());
+                        }
                         log_trace("Task %s needs data forwarded for %s",
                                 name.c_str(), forward.c_str());
                         forwards.push_back(forward);

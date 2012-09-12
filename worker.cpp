@@ -17,8 +17,52 @@
 #include "failure.h"
 #include "tools.h"
 
+extern char **environ;
+
 static void log_signal(int signo) {
     log_error("Caught signal %d", signo);
+}
+
+Pipe::Pipe(std::string forward, int readfd, int writefd) {
+    int eq = forward.find("=");
+    this->varname = forward.substr(0, eq);
+    this->filename = forward.substr(eq + 1);
+    this->readfd = readfd;
+    this->writefd = writefd;
+}
+
+Pipe::~Pipe() {
+}
+
+void Pipe::save(char *buf, unsigned n) {
+    this->buffer.append(buf, n);
+}
+
+const char *Pipe::data() {
+    return this->buffer.data();
+}
+
+unsigned Pipe::size() {
+    return this->buffer.size();
+}
+
+void Pipe::close() {
+    this->closeread();
+    this->closewrite();
+}
+
+void Pipe::closeread() {
+    if (this->readfd != -1) {
+        ::close(this->readfd);
+        this->readfd = -1;
+    }
+}
+
+void Pipe::closewrite() {
+    if (this->writefd != -1) {
+        ::close(this->writefd);
+        this->writefd = -1;
+    }
 }
 
 Worker::Worker(const std::string &outfile, const std::string &errfile, const std::string &host_script, unsigned int host_memory, unsigned host_cpus, bool strict_limits) {
@@ -266,6 +310,8 @@ int Worker::run() {
         
         log_debug("Worker %d: Running task %s", rank, name.c_str());
         
+        double task_start = current_time();
+        
         // Process arguments
         std::list<std::string> args;
         split_args(args, command);
@@ -273,8 +319,19 @@ int Worker::run() {
         // Task status is exit code 1 by default
         int status = 256; // 256 is exit code 1
         
-        // Get start time
-        double task_start = current_time();
+        // Create pipes for all of the forwarded files
+        std::vector<Pipe *> pipes;
+        for (unsigned i=0; i<forwards.size(); i++) {
+            int pipefd[2];
+            if (pipe(pipefd) < 0) {
+                log_error("Unable to create pipe for task %s: %s",
+                        name.c_str(), strerror(errno));
+                // TODO Handle this error somehow
+            }
+            Pipe *p = new Pipe(forwards[i], pipefd[0], pipefd[1]);
+            log_trace("Pipe: %s = %s", p->varname.c_str(), p->filename.c_str());
+            pipes.push_back(p);
+        }
         
         pid_t pid = fork();
         if (pid < 0) {
@@ -284,17 +341,35 @@ int Worker::run() {
         } else if (pid == 0) {
             // In child
             
+            // Close the read end of all the pipes
+            for (unsigned i=0; i<pipes.size(); i++) {
+                pipes[i]->closeread();
+            }
+            
+            // TODO Search path if args[0] does not have '/'
+            
             // Create argument structure
             unsigned nargs = args.size();
-            // N + 1 for null-termination
-            char **argv = new char*[nargs+1];
+            char **argp = new char*[nargs+1];
             for (unsigned i=0; i<nargs; i++) {
                 std::string arg = args.front();
+                asprintf(&argp[i], "%s", arg.c_str());
                 args.pop_front();
-                argv[i] = new char[arg.size()+1];
-                strcpy(argv[i], arg.c_str());
             }
-            argv[nargs] = NULL; // Last one is null
+            argp[nargs] = NULL;
+            
+            // Create environment structure
+            unsigned nenvs = 0;
+            while (environ[nenvs]) nenvs++;
+            char **envp = new char*[nenvs+pipes.size()+1];
+            for (unsigned i=0; i<nenvs; i++) {
+                envp[i] = environ[i];
+            }
+            for (unsigned i=0; i<pipes.size(); i++) {
+                Pipe *p = pipes[i];
+                asprintf(&envp[nenvs+i], "%s=%d", p->varname.c_str(), p->writefd);
+            }
+            envp[nenvs+pipes.size()] = NULL;
             
             // Redirect stdout/stderr
             if (dup2(out, STDOUT_FILENO) < 0) {
@@ -334,23 +409,28 @@ int Worker::run() {
                 }
             }
             
-            // Close any other open descriptors. This will not really close
-            // everything, but it is unlikely that we will have more than a 
-            // few descriptors open. It depends on MPI.
-            for (int i=3; i<32; i++) {
-                close(i);
-            }
-            
             // Exec process
-            execvp(argv[0], argv);
+            execve(argp[0], argp, envp);
             fprintf(stderr, "Unable to exec command for task %s: %s\n", 
                 name.c_str(), strerror(errno));
             exit(1);
         } else {
+            // Close the write end of all the pipes
+            for (unsigned i=0; i<pipes.size(); i++) {
+                pipes[i]->closewrite();
+            }
+            
+            // TODO poll() for data on pipes
+            
             // Wait for task to complete
             if (waitpid(pid, &status, 0) < 0) {
                 log_error("Failed waiting for task: %s", strerror(errno));
             }
+        }
+        
+        // Close all the pipes
+        for (unsigned i=0; i<pipes.size(); i++) {
+            pipes[i]->close();
         }
         
         double task_finish = current_time();

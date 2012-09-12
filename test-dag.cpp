@@ -208,21 +208,21 @@ void test_forward() {
     if (a->forwards.size() != 1) {
         myfailure("A should have one forward");
     }
-    if (a->forwards[0] != "/tmp/foo") {
+    if (a->forwards[0] != "FOO=/tmp/foo") {
         myfailure("A should be forwarding /tmp/foo");
     }
 
     if (b->forwards.size() != 1) {
         myfailure("B should have one forward");
     }
-    if (b->forwards[0] != "/tmp/bar") {
+    if (b->forwards[0] != "BAR=/tmp/bar") {
         myfailure("B should be forwarding /tmp/bar");
     }
 
     if (c->forwards.size() != 2) {
         myfailure("C should have two forwards");
     }
-    if (c->forwards[0] != "/tmp/foo" && c->forwards[1] != "/tmp/bar") {
+    if (c->forwards[0] != "FOO=/tmp/foo" && c->forwards[1] != "BAR=/tmp/bar") {
         myfailure("C should be forwarding /tmp/foo and /tmp/bar");
     }
 }

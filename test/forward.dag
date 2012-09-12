@@ -1,4 +1,5 @@
-TASK A -f /tmp/foo /bin/date
-TASK B --forward /tmp/bar /bin/date
-TASK C -f /tmp/foo -f /tmp/bar /bin/date
+TASK A -f FOO=/tmp/foo /bin/date
+TASK B --forward BAR=/tmp/bar /bin/date
+TASK C -f FOO=/tmp/foo -f BAR=/tmp/bar /usr/bin/env
+TASK D /usr/bin/env
 

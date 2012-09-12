@@ -10,6 +10,24 @@
 // group 5 seconds after SIGTERM before sending SIGKILL
 #define HOST_SCRIPT_GRACE_PERIOD 5
 
+class Pipe {
+public:
+    std::string varname;
+    std::string filename;
+    int readfd;
+    int writefd;
+    std::string buffer;
+    
+    Pipe(std::string forward, int readfd, int writefd);
+    ~Pipe();
+    void save(char *buf, unsigned n);
+    const char *data();
+    unsigned size();
+    void close();
+    void closeread();
+    void closewrite();
+};
+
 class Worker {
     std::string outfile;
     std::string errfile;
