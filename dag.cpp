@@ -179,7 +179,7 @@ void DAG::read_dag() {
             unsigned cpus = 1;
             unsigned tries = this->tries;
             int priority = 0;
-            std::vector<std::string> forwards;
+            std::map<std::string, std::string> forwards;
             
             // Parse task arguments
             std::list<std::string> args;
@@ -269,13 +269,16 @@ void DAG::read_dag() {
                                 name.c_str());
                         }
                         std::string forward = args.front();
-                        if (forward.find("=") == std::string::npos) {
+                        int eq = forward.find("=");
+                        if (eq == std::string::npos) {
                             myfailure("Task %s -f/--forward format should be VAR=PATH: %s",
                                     name.c_str(), forward.c_str());
                         }
+                        std::string varname = forward.substr(0, eq);
+                        std::string filename = forward.substr(eq + 1);
                         log_trace("Task %s needs data forwarded for %s",
-                                name.c_str(), forward.c_str());
-                        forwards.push_back(forward);
+                                name.c_str(), filename.c_str());
+                        forwards[varname] = filename;
                     } else {
                         myfailure("Invalid argument '%s' for task %s", 
                             arg.c_str(), name.c_str());

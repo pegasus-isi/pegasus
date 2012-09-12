@@ -36,7 +36,7 @@ void send_hostrank(int worker, int hostrank) {
     MPI_Send(&hostrank, 1, MPI_INT, worker, TAG_HOSTRANK, MPI_COMM_WORLD);
 }
 
-void send_request(const std::string &name, const std::string &command, const std::string &pegasus_id, unsigned int memory, unsigned int cpus, std::vector<std::string> &forwards, int worker) {
+void send_request(const std::string &name, const std::string &command, const std::string &pegasus_id, unsigned int memory, unsigned int cpus, std::map<std::string, std::string> &forwards, int worker) {
     
     // Pack message
     unsigned size = 0;
@@ -51,11 +51,13 @@ void send_request(const std::string &name, const std::string &command, const std
     sprintf(buf+size, "%u", cpus);
     size += strlen(buf+size) + 1;
     
-    int i;
-    for (i=0; i<forwards.size(); i++) {
-        log_trace("Sending forward %s", forwards[i].c_str());
-        strcpy(buf+size, forwards[i].c_str());
-        size += forwards[i].size() + 1;
+    std::map<std::string, std::string>::iterator i;
+    for (i=forwards.begin(); i!=forwards.end(); i++) {
+        std::string varname = (*i).first;
+        std::string filename = (*i).second;
+        log_trace("Sending forward %s => %s", varname.c_str(), filename.c_str());
+        sprintf(buf+size, "%s=%s", varname.c_str(), filename.c_str());
+        size += strlen(buf+size) + 1;
     }
     
     // Send message
