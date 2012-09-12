@@ -9,6 +9,8 @@
 #include <math.h>
 #include <mpi.h>
 #include <sys/resource.h>
+#include <map>
+#include <poll.h>
 
 #include "strlib.h"
 #include "worker.h"
@@ -18,6 +20,10 @@
 #include "tools.h"
 
 extern char **environ;
+
+// TODO Replace this with something else
+#define BSIZE 1024
+static char buffer[BSIZE];
 
 static void log_signal(int signo) {
     log_error("Caught signal %d", signo);
@@ -420,7 +426,87 @@ int Worker::run() {
                 pipes[i]->closewrite();
             }
             
-            // TODO poll() for data on pipes
+            std::map<int, Pipe *> reading;
+            for (unsigned i=0; i<pipes.size(); i++) {
+                reading[pipes[i]->readfd] = pipes[i];
+            }
+            
+            // While there are pipes to read from
+            while (reading.size() > 0) {
+                
+                // Set up inputs for poll()
+                int nfds = reading.size();
+                struct pollfd *fds = new struct pollfd[nfds];
+                std::map<int, Pipe *>::iterator p;
+                int j = 0;
+                for (p=reading.begin(); p!=reading.end(); p++) {
+                    Pipe *pipe = (*p).second;
+                    fds[j].fd = pipe->readfd;
+                    fds[j].events = POLLIN;
+                    j++;
+                }
+                
+                log_trace("Polling %d pipes", nfds);
+                
+                int timeout = -1;
+                int rc = poll(fds, nfds, timeout);
+                if (rc < 0) {
+                    perror("poll");
+                    break;
+                } else if (rc == 0) {
+                    // This shouldn't happen if timeout is -1
+                    perror("poll timeout");
+                    break;
+                } else {
+                    // One of the file descriptors is readable, find out which one
+                    for (int i=0; i<nfds; i++) {
+                        int revents = fds[i].revents;
+                        int fd = fds[i].fd;
+                        
+                        // This descriptor has no events 
+                        if (revents == 0) {
+                            continue;
+                        }
+                        
+                        if (revents & POLLIN) {
+                            rc = read(fd, buffer, BSIZE);
+                            if (rc < 0) {
+                                perror("read");
+                            } else if (rc == 0) {
+                                // Pipe was closed, EOF
+                                log_trace("EOF on pipe %d", fd);
+                                reading.erase(fd);
+                            } else {
+                                log_trace("Read %d bytes from pipe %d", rc, fd);
+                                reading[fd]->save(buffer, rc);
+                            }
+                        }
+                        
+                        if (revents & POLLHUP) {
+                            log_trace("Hangup on pipe %d", fd);
+                            // It is important that we don't stop reading the fd here
+                            // because in the next poll we may get more data if our
+                            // buffer wasn't big enough to get everything on this read
+                        }
+                        
+                        if (revents & POLLERR) {
+                            log_error("Error on pipe %d", fd);
+                            // We can't read anything from it anymore
+                            reading.erase(fd);
+                        }
+                    }
+                }
+                
+                delete [] fds;
+            }
+            
+            // Close the reading end here just in case something happens so
+            // that we aren't deadlocked waiting for a process that is deadlocked
+            // waiting for us to read data off the pipe. Instead, if we do this,
+            // then the process will get SIGPIPE and we can wait on it.
+            for (unsigned i=0; i<pipes.size(); i++) {
+                pipes[i]->closeread();
+            }
             
             // Wait for task to complete
             if (waitpid(pid, &status, 0) < 0) {
@@ -428,7 +514,7 @@ int Worker::run() {
             }
         }
         
-        // Close all the pipes
+        // Make sure the pipes are closed
         for (unsigned i=0; i<pipes.size(); i++) {
             pipes[i]->close();
         }
@@ -467,6 +553,16 @@ int Worker::run() {
         write(out, summary, strlen(summary));
         
         send_response(name, status, task_runtime);
+        
+        // Clean up all of the pipes
+        for (unsigned i=0; i<pipes.size(); i++) {
+            // If the task succeeded, then send the data back to the master
+            if (status == 0) {
+                log_trace("Pipe %s got %d bytes", pipes[i]->varname.c_str(), pipes[i]->size());
+                // TODO Send the data from the pipes back to the master
+            }
+            delete pipes[i];
+        }
     }
     
     kill_host_script_group();
