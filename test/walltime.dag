@@ -1,2 +1,2 @@
-TASK A /bin/sleep 120
+TASK A /bin/sleep 10
 TASK B test/taskscript.sh
