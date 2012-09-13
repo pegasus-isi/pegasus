@@ -12,6 +12,7 @@ from netlogger.nllog import DoesLogging
 
 import os, time
 
+
 class Expunge(SQLAlchemyInit, DoesLogging):
     """
     Utility class to expunge a workflow and the associated data from
@@ -94,6 +95,7 @@ class StampedeExpunge(Expunge):
         DoesLogging.__init__(self)
         self.log.info('init.start')
         SQLAlchemyInit.__init__(self, connString, initializeToPegasusDB)
+        self._connString = connString
         self._wf_uuid = wf_uuid
         self.log.info('init.end')
     
@@ -101,16 +103,24 @@ class StampedeExpunge(Expunge):
         """
         Invoke this to remove workflow/information from DB.
         """
-        self.log.info('expunge.start')
+
+        #PM-652 do nothing for sqlite
+        #DB is already rotated in pegasus-monitord
+        if self._connString.startswith( "sqlite:" ):
+            return
+
+        self.log.info('stampede.expunge.start')
+
+
         self.session.autoflush=True
         # delete main workflow uuid and start cascade
         query = self.session.query(Workflow).filter(Workflow.wf_uuid == self._wf_uuid)
         try:
             wf = query.one()
         except orm.exc.NoResultFound, e:
-            self.log.warn('expunge', msg='No workflow found with wf_uuid %s - aborting expunge' % self._wf_uuid)
+            self.log.warn('stampede.expunge', msg='No workflow found with wf_uuid %s - aborting expunge' % self._wf_uuid)
             return
-            
+
         root_wf_id = wf.wf_id
         
 #        subs = []
