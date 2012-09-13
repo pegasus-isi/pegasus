@@ -122,7 +122,10 @@ Master::~Master() {
 
 void Master::submit_task(Task *task, int rank) {
     log_debug("Submitting task %s to slot %d", task->name.c_str(), rank);
-    send_request(task->name, task->command, task->pegasus_id, task->memory, task->cpus, task->forwards, rank);
+    
+    CommandMessage cmd(task->name, task->command, task->pegasus_id, 
+            task->memory, task->cpus, task->forwards);
+    send_message(cmd, rank);
     
     this->total_count++;
 }
@@ -155,7 +158,7 @@ void Master::wait_for_results() {
          * check the flag that is set by the signal handlers to detect when the
          * master needs to abort the workflow.
          */
-        while (!ABORT && !response_waiting()) {
+        while (!ABORT && !message_waiting()) {
             usleep(NO_MESSAGE_SLEEP_TIME);    
         }
         
@@ -168,18 +171,19 @@ void Master::wait_for_results() {
         
         process_result();
         tasks++;
-    } while (response_waiting());
+    } while (message_waiting());
     log_trace("Processed %u task(s) this cycle", tasks);
 }
 
 void Master::process_result() {
     log_trace("Waiting for task to finish");
     
-    std::string name;
-    int exitcode;
-    int rank;
-    double task_runtime;
-    recv_response(name, exitcode, task_runtime, rank);
+    ResultMessage *msg = (ResultMessage *)recv_message();
+    string name = msg->name;
+    int exitcode = msg->exitcode;
+    int rank = msg->source;
+    double task_runtime = msg->runtime;
+    delete msg;
     
     total_runtime += task_runtime;
     
@@ -352,12 +356,13 @@ void Master::register_workers() {
     
     // Collect host names from all workers, create host objects
     for (int i=0; i<numworkers; i++) {
-        int rank;
-        std::string hostname;
-        unsigned int memory = 0;
-        unsigned int cpus = 0;
         
-        recv_registration(rank, hostname, memory, cpus);
+        RegistrationMessage *msg = (RegistrationMessage *)recv_message();
+        int rank = msg->source;
+        string hostname = msg->hostname;
+        unsigned int memory = msg->memory;
+        unsigned int cpus = msg->cpus;
+        delete msg;
         
         hostnames[rank] = hostname;
         
@@ -405,7 +410,9 @@ void Master::register_workers() {
         }
         ranks[hostname] = hostrank + 1;
         
-        send_hostrank(rank, hostrank);
+        HostrankMessage hrmsg(hostrank);
+        send_message(hrmsg, rank);
+        
         log_debug("Host rank of worker %d is %d", rank, hostrank);
     }
     
@@ -574,6 +581,8 @@ int Master::run() {
     log_info("Resource utilization (without master): %lf", worker_util);
     log_info("Total runtime of tasks: %lf seconds (%lf minutes)", total_runtime, total_runtime/60.0);
     log_info("Wall time: %lf seconds (%lf minutes)", wall_time, wall_time/60.0);
+    log_info("Bytes sent to workers: %lu", pmc_bytes_sent);
+    log_info("Bytes received from workers: %lu", pmc_bytes_recvd);
 
     bool failed = ABORT || this->engine->is_failed();
     write_cluster_summary(failed);
@@ -584,7 +593,8 @@ int Master::run() {
     log_info("Sending workers shutdown messages...");
     for (int i=1; i<=numworkers; i++) {
         log_debug("Sending shutdown message to worker %d", i);
-        send_shutdown(i);
+        ShutdownMessage shmsg;
+        send_message(shmsg, i);
     }
     
     if (ABORT) {

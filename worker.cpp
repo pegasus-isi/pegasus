@@ -573,14 +573,17 @@ void Worker::kill_host_script_group() {
 int Worker::run() {
     log_debug("Worker %d: Starting...", rank);
     
-    // Send worker's hostname
-    send_registration(host_name, host_memory, host_cpus);
+    // Send worker's registration message to the master
+    RegistrationMessage regmsg(host_name, host_memory, host_cpus);
+    send_message(regmsg, 0);
     log_trace("Worker %d: Host name: %s", rank, host_name.c_str());
     log_trace("Worker %d: Host memory: %u MB", rank, this->host_memory);
     log_trace("Worker %d: Host CPUs: %u", rank, this->host_cpus);
     
     // Get worker's host rank
-    recv_hostrank(host_rank);
+    HostrankMessage *hrmsg = (HostrankMessage *)recv_message();
+    host_rank = hrmsg->hostrank;
+    delete hrmsg;
     log_trace("Worker %d: Host rank: %d", rank, host_rank);
     
     log_debug("Worker %d: Using task stdout file: %s", rank, outfile.c_str());
@@ -602,7 +605,7 @@ int Worker::run() {
         MPI_Barrier(MPI_COMM_WORLD);
     }
     
-    while (1) {
+    while (true) {
         log_trace("Worker %d: Waiting for request", rank);
         
 #ifdef SLEEP_IF_NO_REQUEST
@@ -616,49 +619,45 @@ int Worker::run() {
          * reduce the load/CPU usage on workers significantly. It decreases
          * responsiveness a bit, but it is a fair tradeoff.
          */
-        while (!request_waiting()) {
+        while (!message_waiting()) {
             usleep(NO_MESSAGE_SLEEP_TIME);
         }
 #endif
         
-        string name;
-        string command;
-        string id;
-        unsigned int memory;
-        unsigned int cpus;
-        map<string, string> forwards;
-        int shutdown;
-        recv_request(name, command, id, memory, cpus, forwards, shutdown);
-        
-        if (shutdown) {
+        Message *mesg = recv_message();
+        if (mesg->type == SHUTDOWN) {
             log_trace("Worker %d: Got shutdown message", rank);
+            delete mesg;
             break;
-        }
-        
-        log_trace("Worker %d: Got task", rank);
-        
-        TaskHandler *task = new TaskHandler(this, name, command, id, 
-                memory, cpus, forwards);
-        
-        task->run();
-        
-        int status = task->status;
-        double runtime = task->elapsed();
-        
-        
-        // Send task information back to master
-        send_response(name, status, runtime);
-        
-        // If the task succeeded, then send the I/O back to the master
-        if (status == 0) {
-            for (unsigned i = 0; i < task->pipes.size(); i++) {
-                Pipe *pipe = task->pipes[i];
-                log_trace("Pipe %s got %d bytes", pipe->varname.c_str(), pipe->size());
-                // TODO Send the data from the pipes back to the master
+        } else if (mesg->type == COMMAND) {
+            CommandMessage *cmd = (CommandMessage *)mesg;
+            
+            log_trace("Worker %d: Got task", rank);
+            
+            TaskHandler *task = new TaskHandler(this, cmd->name, cmd->command, 
+                    cmd->id, cmd->memory, cmd->cpus, cmd->forwards);
+            
+            task->run();
+            
+            // Send task information back to master
+            ResultMessage res(task->name, task->status, task->elapsed());
+            send_message(res, 0);
+            
+            // If the task succeeded, then send the I/O back to the master
+            if (task->status == 0) {
+                for (unsigned i = 0; i < task->pipes.size(); i++) {
+                    Pipe *pipe = task->pipes[i];
+                    log_trace("Pipe %s got %d bytes", pipe->varname.c_str(), pipe->size());
+                    // TODO Send the data from the pipes back to the master
+                }
             }
+            
+            delete task;
+        } else {
+            myfailure("Unknown message type: %d", mesg->type);
         }
         
-        delete task;
+        delete mesg;
     }
     
     kill_host_script_group();

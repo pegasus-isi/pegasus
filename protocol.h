@@ -10,22 +10,85 @@ using std::map;
 // Time in microseconds to sleep if there is no message waiting
 #define NO_MESSAGE_SLEEP_TIME 50000
 
-#define TAG_COMMAND 1
-#define TAG_RESULT 2
-#define TAG_SHUTDOWN 3
-#define TAG_HOSTNAME 4
-#define TAG_HOSTRANK 5
+extern unsigned long pmc_bytes_sent;
+extern unsigned long pmc_bytes_recvd;
 
-void send_registration(const string &hostname, unsigned int memory, unsigned int cpus);
-void recv_registration(int &worker, string &hostname, unsigned int &memory, unsigned int &cpus);
-void send_hostrank(int worker, int hostrank);
-void recv_hostrank(int &hostrank);
-void send_request(const string &name, const string &command, const string &pegasus_id, unsigned int memory, unsigned int cpus, map<string, string> &forwards, int worker);
-void send_shutdown(int worker);
-void recv_request(string &name, string &command, string &pegasus_id, unsigned int &memory, unsigned int &cpus, map<string, string> &forwards, int &shutdown);
-void send_response(const string &name, int exitcode, double runtime);
-void recv_response(string &name, int &exitcode, double &runtime, int &worker);
-bool response_waiting();
-bool request_waiting();
+enum MessageType {
+    COMMAND      = 1,
+    RESULT       = 2,
+    SHUTDOWN     = 3,
+    REGISTRATION = 4,
+    HOSTRANK     = 5
+};
+
+class Message {
+public:
+    MessageType type;
+    int source;
+    Message(MessageType type) { this->type = type; }
+    virtual ~Message() {}
+    virtual int encode(char **buff) = 0;
+    virtual void decode(char *buff, int size) = 0;
+};
+
+class ShutdownMessage: public Message {
+public:
+    ShutdownMessage();
+    int encode(char **buff);
+    void decode(char *buff, int size);
+};
+
+class CommandMessage: public Message {
+public:
+    string name;
+    string command;
+    string id;
+    unsigned memory;
+    unsigned cpus;
+    map<string, string> forwards;
+    
+    CommandMessage();
+    CommandMessage(const string &name, const string &command, const string &id, unsigned memory, unsigned cpus, const map<string,string> &forwards);
+    int encode(char **buff);
+    void decode(char *buff, int size);
+};
+
+class ResultMessage: public Message {
+public:
+    string name;
+    int exitcode;
+    double runtime;
+    
+    ResultMessage();
+    ResultMessage(const string &name, int exitcode, double runtime);
+    int encode(char **buff);
+    void decode(char *buff, int size);
+};
+
+class RegistrationMessage: public Message {
+public:
+    string hostname;
+    unsigned memory;
+    unsigned cpus;
+    
+    RegistrationMessage();
+    RegistrationMessage(const string &hostname, unsigned memory, unsigned cpus);
+    int encode(char **buff);
+    void decode(char *buff, int size);
+};
+
+class HostrankMessage: public Message {
+public:
+    int hostrank;
+    
+    HostrankMessage();
+    HostrankMessage(int hostrank);
+    int encode(char **buff);
+    void decode(char *buff, int size);
+};
+
+void send_message(Message &message, int rank);
+Message *recv_message();
+bool message_waiting();
 
 #endif /* PROTOCOL_H */
