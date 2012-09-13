@@ -32,7 +32,8 @@
 
     <!-- substitute built timestamp into Version.java -->
     <exec executable="perl" 
-          output="src/edu/isi/pegasus/common/util/Version.java">
+          output="src/edu/isi/pegasus/common/util/Version.java"
+          failonerror="true">
       <arg value="-CS"/>
       <arg value="-pe"/>
       <arg value="s/BUILDTIMESTAMP/${ISODATE.utc}/; s/BUILDARCHITECTURE/${dist.arch}/; s/DONOTEDITWARNING/DO NOT EDIT! This file is generated automatically/"/>
