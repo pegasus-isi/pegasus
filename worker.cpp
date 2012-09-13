@@ -26,10 +26,6 @@ using std::list;
 
 extern char **environ;
 
-// TODO Replace this with something else
-#define BSIZE 1024
-static char buffer[BSIZE];
-
 static void log_signal(int signo) {
     log_error("Caught signal %d", signo);
 }
@@ -44,8 +40,14 @@ Pipe::Pipe(string varname, string filename, int readfd, int writefd) {
 Pipe::~Pipe() {
 }
 
-void Pipe::save(char *buf, unsigned n) {
-    this->buffer.append(buf, n);
+int Pipe::read() {
+    char buff[BUFSIZ];
+    int rc = ::read(readfd, buff, BUFSIZ);
+    if (rc > 0) {
+        // We got some data, save it to the pipe's data buffer
+        this->buffer.append(buff, rc);
+    }
+    return rc;
 }
 
 const char *Pipe::data() {
@@ -300,7 +302,7 @@ void TaskHandler::run() {
             }
             
             if (revents & POLLIN) {
-                rc = read(fd, buffer, BSIZE);
+                rc = reading[fd]->read();
                 if (rc < 0) {
                     // If this happens we have a serious problem and need the
                     // task to fail. Cause the failure by breaking out of the
@@ -309,13 +311,11 @@ void TaskHandler::run() {
                               fd, strerror(errno));
                     goto after_poll_loop;
                 } else if (rc == 0) {
-                    // Pipe was closed, EOF
-                    log_trace("EOF on pipe %d", fd);
+                    // Pipe was closed, EOF. Stop polling it.
+                    log_trace("Pipe %d closed", fd);
                     reading.erase(fd);
                 } else {
-                    // We got some data, save it to the pipe's data buffer
                     log_trace("Read %d bytes from pipe %d", rc, fd);
-                    reading[fd]->save(buffer, rc);
                 }
             }
             
@@ -355,6 +355,16 @@ after_poll_loop:
     finish = current_time();
     
     write_cluster_task();
+    
+    double runtime = elapsed();
+    
+    if (WIFEXITED(status)) {
+        log_debug("Task %s exited with status %d (%d) in %f seconds", 
+            name.c_str(), WEXITSTATUS(status), status, runtime);
+    } else {
+        log_debug("Task %s exited on signal %d (%d) in %f seconds", 
+            name.c_str(), WTERMSIG(status), status, runtime);
+    }
 }
 
 void TaskHandler::write_cluster_task() {
@@ -627,19 +637,14 @@ int Worker::run() {
         
         log_trace("Worker %d: Got task", rank);
         
-        TaskHandler *task = new TaskHandler(this, name, command, id, memory, cpus, forwards);
+        TaskHandler *task = new TaskHandler(this, name, command, id, 
+                memory, cpus, forwards);
+        
         task->run();
         
         int status = task->status;
         double runtime = task->elapsed();
         
-        if (WIFEXITED(status)) {
-            log_debug("Task %s exited with status %d (%d) in %f seconds", 
-                name.c_str(), WEXITSTATUS(status), status, runtime);
-        } else {
-            log_debug("Task %s exited on signal %d (%d) in %f seconds", 
-                name.c_str(), WTERMSIG(status), status, runtime);
-        }
         
         // Send task information back to master
         send_response(name, status, runtime);

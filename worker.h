@@ -29,7 +29,7 @@ public:
     
     Pipe(string varname, string filename, int readfd, int writefd);
     ~Pipe();
-    void save(char *buf, unsigned n);
+    int read();
     const char *data();
     unsigned size();
     void close();
