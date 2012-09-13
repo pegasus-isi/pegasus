@@ -77,7 +77,8 @@
            encoding="UTF-8" debug="true"
            target="${build.target}" source="${build.source}"
            includes="edu/isi/pegasus/common/util/Version.java,VersionTask.java"
-           classpathref="build.classpath"/>
+           classpathref="build.classpath"
+           includeantruntime="true"/>
   </target>
 
   <target name="common" depends="build-setup"
@@ -87,7 +88,8 @@
            target="${build.target}" source="${build.source}"
            includes="edu/isi/pegasus/common/**/*.java,edu/isi/pegasus/gridftp/**/*.java"
            excludes="edu/isi/pegasus/common/**/*Test.java,edu/isi/pegasus/planner/**/*.java"
-           classpathref="build.classpath"/>
+           classpathref="build.classpath"
+           includeantruntime="false"/>
   </target>
   
 
@@ -98,7 +100,8 @@
            target="${build.target}" source="${build.source}"
            includes="edu/clemson/**/*.java"
            excludes="edu/clemson/**/*Test.java"
-           classpathref="build.classpath"/>
+           classpathref="build.classpath"
+           includeantruntime="false"/>
   </target>
 
 
@@ -109,7 +112,8 @@
            encoding="UTF-8" debug="true"
            includes="org/griphyn/vdl/*.java,org/griphyn/vdl/**/*.java"
            excludes="org/griphyn/vdl/*Test.java,org/griphyn/vdl/**/*Test.java"
-           classpathref="build.classpath"/>
+           classpathref="build.classpath"
+           includeantruntime="false"/>
   </target>
 
 
@@ -120,7 +124,8 @@
            encoding="UTF-8" debug="true"
            includes="edu/isi/pegasus/planner/**/*.java"
            excludes="edu/isi/pegasus/planner/**/*Test.java,org/griphyn/**/*.java"
-           classpathref="build.classpath"/>
+           classpathref="build.classpath"
+           includeantruntime="false"/>
   </target>
 
 
@@ -131,7 +136,8 @@
            encoding="UTF-8" debug="true"
            includes="examples/**/*.java"
            excludes="org/griphyn/**/*.java"
-           classpathref="build.classpath"/>
+           classpathref="build.classpath"
+           includeantruntime="false"/>
   </target>
 
 
@@ -141,7 +147,8 @@
            target="${build.target}" source="${build.source}"
            encoding="UTF-8" deprecation="true" debug="true"
            includes="*.java,edu/isi/pegasus/**/*.java"
-           classpathref="build.classpath"/>
+           classpathref="build.classpath"
+           includeantruntime="false"/>
   </target>
 
 
