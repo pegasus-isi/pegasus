@@ -49,6 +49,7 @@ class Expunge(SQLAlchemyInit, DoesLogging):
         DoesLogging.__init__(self)
         self.log.info('init.start')
         SQLAlchemyInit.__init__(self, connString, initializeToPegasusDB)
+        self._connString = connString
         self._wf_uuid = wf_uuid
         self.log.info('init.end')
     
