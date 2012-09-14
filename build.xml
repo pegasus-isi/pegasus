@@ -29,15 +29,17 @@
       <format property="ISODATE.utc" pattern="yyyyMMddHHmmss'Z'" timezone="UTC"/>
     </tstamp>
     <echo>full ISO timestamp: ${ISODATE.full}</echo>   
-
+    
     <!-- substitute built timestamp into Version.java -->
-    <exec executable="perl" 
-          output="src/edu/isi/pegasus/common/util/Version.java"
-          failonerror="true">
+    <copy file="src/edu/isi/pegasus/common/util/Version.in"
+          tofile="src/edu/isi/pegasus/common/util/Version.java"/>
+    <exec executable="perl" failonerror="true">
       <arg value="-CS"/>
-      <arg value="-pe"/>
+      <arg value="-p"/>
+      <arg value="-i"/>
+      <arg value="-e"/>
       <arg value="s/BUILDTIMESTAMP/${ISODATE.utc}/; s/BUILDARCHITECTURE/${dist.arch}/; s/DONOTEDITWARNING/DO NOT EDIT! This file is generated automatically/"/>
-      <arg value="src/edu/isi/pegasus/common/util/Version.in"/>
+      <arg value="src/edu/isi/pegasus/common/util/Version.java"/>
     </exec>
   </target>
 
@@ -498,6 +500,7 @@
     <delete dir="dist"/>
     <delete dir="build"/>
     <delete file="stamp"/>
+    <delete file="src/edu/isi/pegasus/common/util/Version.java"/>
   </target>
 
   <target name="clean" depends="build-clean,ctools-clean,externals-clean"
