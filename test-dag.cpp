@@ -208,22 +208,22 @@ void test_forward() {
     if (a->forwards.size() != 1) {
         myfailure("A should have one forward");
     }
-    if (a->forwards["FOO"] != "/tmp/foo") {
-        myfailure("A should be forwarding /tmp/foo");
+    if (a->forwards["FOO"] != "./test/forward.dag.foo") {
+        myfailure("A should be forwarding foo");
     }
 
     if (b->forwards.size() != 1) {
         myfailure("B should have one forward");
     }
-    if (b->forwards["BAR"] != "/tmp/bar") {
-        myfailure("B should be forwarding /tmp/bar");
+    if (b->forwards["BAR"] != "./test/forward.dag.bar") {
+        myfailure("B should be forwarding bar");
     }
 
     if (c->forwards.size() != 2) {
         myfailure("C should have two forwards");
     }
-    if (c->forwards["FOO"] != "/tmp/foo" && c->forwards["BAR"] != "/tmp/bar") {
-        myfailure("C should be forwarding /tmp/foo and /tmp/bar");
+    if (c->forwards["FOO"] != "./test/forward.dag.foo" && c->forwards["BAR"] != "./test/forward.dag.bar") {
+        myfailure("C should be forwarding foo and bar");
     }
 }
 

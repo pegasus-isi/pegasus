@@ -8,6 +8,6 @@ for var in sys.argv[1:]:
     if fd is None:
         raise Exception("%s not in environment" % var)
     fd = int(fd)
-    os.write(fd, "Test data on fd %d\n" % fd)
+    os.write(fd, "Variable %s is fd %d\n" % (var,fd))
     os.close(fd)
 

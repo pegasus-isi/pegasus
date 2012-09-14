@@ -439,6 +439,20 @@ function test_forward {
         echo "ERROR: Forward test failed"
         return 1
     fi
+    
+    FOO=$(grep "Variable FOO" test/forward.dag.foo | wc -l)
+    if [ $? -ne 0 ] || [ $FOO -ne 2 ]; then
+        echo "$OUTPUT"
+        echo "ERROR: Forward test failed (foo problem)"
+        return 1
+    fi
+    
+    BAR=$(grep "Variable BAR" test/forward.dag.bar | wc -l)
+    if [ $? -ne 0 ] || [ $BAR -ne 2 ]; then
+        echo "$OUTPUT"
+        echo "ERROR: Forward test failed (bar problem)"
+        return 1
+    fi
 }
 
 run_test ./test-strlib

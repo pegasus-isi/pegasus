@@ -5,6 +5,7 @@
 #include <signal.h>
 #include <math.h>
 #include <sys/time.h>
+#include <fcntl.h>
 
 #include "master.h"
 #include "failure.h"
@@ -122,6 +123,13 @@ Master::~Master() {
         log_trace("Closing resource log");
         fclose(resource_log);
     }
+    
+    map<string, int>::iterator i;
+    for (i=fdcache.begin(); i!=fdcache.end(); i++) {
+        log_trace("Closing %s", i->first.c_str());
+        int fd = i->second;
+        close(fd);
+    }
 }
 
 void Master::submit_task(Task *task, int rank) {
@@ -136,11 +144,12 @@ void Master::submit_task(Task *task, int rank) {
 }
 
 void Master::wait_for_results() {
-    // This will process all the waiting responses. If there are none 
+    // This will process all the waiting messages. If there are none 
     // waiting, then it will block until one arrives. If there are 
     // several waiting, then it will process them all and return without 
     // waiting.
     unsigned int tasks = 0;
+    unsigned int messages = 0;
     do {
         
         /* In many MPI implementations MPI_Recv uses a busy wait loop. This
@@ -174,21 +183,64 @@ void Master::wait_for_results() {
             return;
         }
         
-        process_result();
-        tasks++;
-    } while (message_waiting());
-    log_trace("Processed %u task(s) this cycle", tasks);
+        log_trace("Waiting for result");
+        Message *mesg = recv_message();
+        messages++;
+        if (mesg->type == RESULT) {
+            process_result((ResultMessage *)mesg);
+            tasks++;
+        } else if (mesg->type == IODATA) {
+            process_iodata((IODataMessage *)mesg);
+        } else {
+            myfailure("Unexpected message type: %d", mesg->type);
+        }
+        delete mesg;
+        
+        // We need to do this while tasks == 0 because the caller
+        // of this method assumes that it will process at least one
+        // task before returning
+    } while (message_waiting() || tasks == 0);
+    
+    log_trace("Processed %u task(s) and %u message(s) this cycle", 
+            tasks, messages);
 }
 
-void Master::process_result() {
-    log_trace("Waiting for task to finish");
-    
-    ResultMessage *msg = (ResultMessage *)recv_message();
-    string name = msg->name;
-    int exitcode = msg->exitcode;
-    int rank = msg->source;
-    double task_runtime = msg->runtime;
-    delete msg;
+void Master::process_iodata(IODataMessage *mesg) {
+    // TODO Make this more robust
+    // TODO Handle failures by marking task as unsuccessful somehow
+    // TODO Keep LRU cache of open files and don't use more than getrlimit() says
+    // TODO Create directories as needed on file creation
+    log_trace("Got %u bytes for file %s", mesg->size, mesg->filename.c_str());
+    map<string,int>::iterator i = fdcache.find(mesg->filename);
+    int fd;
+    if (i == fdcache.end()) {
+        fd = open(mesg->filename.c_str(), O_WRONLY|O_CREAT|O_APPEND, 00644);
+        if (fd < 0) {
+            log_error("Error opening %s: %s", mesg->filename.c_str(),
+                    strerror(errno));
+            return;
+        }
+        fdcache[mesg->filename] = fd;
+    } else {
+        fd = (*i).second;
+    }
+    if (write(fd, mesg->data, mesg->size) != mesg->size) {
+        log_error("Error writing to %s: %s", mesg->filename.c_str(),
+                strerror(errno));
+        return;
+    }
+    if (fsync(fd)) {
+        log_warn("Error flushing I/O to %s: %s", mesg->filename.c_str(), 
+                strerror(errno));
+        return;
+    }
+}
+
+void Master::process_result(ResultMessage *mesg) {
+    string name = mesg->name;
+    int exitcode = mesg->exitcode;
+    int rank = mesg->source;
+    double task_runtime = mesg->runtime;
     
     total_runtime += task_runtime;
     

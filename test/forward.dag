@@ -1,4 +1,4 @@
-TASK A -f FOO=/tmp/foo ./test/forward.py FOO
-TASK B --forward BAR=/tmp/bar ./test/forward.py BAR
-TASK C -f FOO=/tmp/foo -f BAR=/tmp/bar ./test/forward.py FOO BAR
+TASK A -f FOO=./test/forward.dag.foo ./test/forward.py FOO
+TASK B --forward BAR=./test/forward.dag.bar ./test/forward.py BAR
+TASK C -f FOO=./test/forward.dag.foo -f BAR=./test/forward.dag.bar ./test/forward.py FOO BAR
 

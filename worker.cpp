@@ -655,11 +655,9 @@ int Worker::run() {
                 for (unsigned i = 0; i < task->pipes.size(); i++) {
                     Pipe *pipe = task->pipes[i];
                     log_trace("Pipe %s got %d bytes", pipe->varname.c_str(), pipe->size());
-                    /* TODO
                     IODataMessage *iodata = new IODataMessage(task->name, pipe->filename, pipe->data(), pipe->size());
-                    send_message(*iodata, 0);
+                    send_message(iodata, 0);
                     delete iodata;
-                    */
                 }
             }
             

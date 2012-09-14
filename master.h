@@ -3,14 +3,17 @@
 
 #include <list>
 #include <vector>
+#include <map>
 
 #include "engine.h"
 #include "dag.h"
+#include "protocol.h"
 
 using std::string;
 using std::vector;
 using std::priority_queue;
 using std::list;
+using std::map;
 
 class Host {
 public:
@@ -90,10 +93,13 @@ class Master {
     unsigned memory_avail;
     unsigned slots_avail;
     
+    map<string, int> fdcache;
+    
     void register_workers();
     void schedule_tasks();
     void wait_for_results();
-    void process_result();
+    void process_result(ResultMessage *mesg);
+    void process_iodata(IODataMessage *mesg);
     void queue_ready_tasks();
     void submit_task(Task *t, int worker);
     void merge_all_task_stdio();
