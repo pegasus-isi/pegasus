@@ -7,14 +7,19 @@
 #include "engine.h"
 #include "dag.h"
 
+using std::string;
+using std::vector;
+using std::priority_queue;
+using std::list;
+
 class Host {
 public:
-    std::string host_name;
+    string host_name;
     unsigned int memory;
     unsigned int cpus;
     unsigned int slots;
     
-    Host(const std::string &host_name, unsigned int memory, unsigned int cpus) {
+    Host(const string &host_name, unsigned int memory, unsigned int cpus) {
         this->host_name = host_name;
         this->memory = memory;
         this->cpus = cpus;
@@ -42,16 +47,16 @@ public:
     }
 };
 
-typedef std::priority_queue<Task *, std::vector<Task *>, TaskPriority> TaskQueue;
+typedef priority_queue<Task *, vector<Task *>, TaskPriority> TaskQueue;
 
-typedef std::list<Slot *> SlotList;
-typedef std::list<Task *> TaskList;
+typedef list<Slot *> SlotList;
+typedef list<Task *> TaskList;
 
 class Master {
-    std::string program;
-    std::string dagfile;
-    std::string outfile;
-    std::string errfile;
+    string program;
+    string dagfile;
+    string outfile;
+    string errfile;
     DAG *dag;
     Engine *engine;
     
@@ -60,8 +65,8 @@ class Master {
    
     FILE *resource_log;
 
-    std::vector<Slot *> slots;
-    std::vector<Host *> hosts;
+    vector<Slot *> slots;
+    vector<Host *> hosts;
     SlotList free_slots;
     TaskQueue ready_queue;
     
@@ -92,16 +97,16 @@ class Master {
     void queue_ready_tasks();
     void submit_task(Task *t, int worker);
     void merge_all_task_stdio();
-    void merge_task_stdio(FILE *dest, const std::string &src, const std::string &stream);
+    void merge_task_stdio(FILE *dest, const string &src, const string &stream);
     void write_cluster_summary(bool failed);
 
     void allocate_resources(Host *host, unsigned cpus, unsigned memory);
     void release_resources(Host *host, unsigned cpus, unsigned memory);
-    void log_resources(unsigned slots, unsigned cpus, unsigned memory, const std::string &hostname);
+    void log_resources(unsigned slots, unsigned cpus, unsigned memory, const string &hostname);
 public:
-    Master(const std::string &program, Engine &engine, DAG &dag, const std::string &dagfile, 
-        const std::string &outfile, const std::string &errfile, bool has_host_script = false, 
-        double max_wall_time = 0.0, const std::string &resourcefile = "");
+    Master(const string &program, Engine &engine, DAG &dag, const string &dagfile, 
+        const string &outfile, const string &errfile, bool has_host_script = false, 
+        double max_wall_time = 0.0, const string &resourcefile = "");
     ~Master();
     int run();
 };

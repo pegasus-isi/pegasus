@@ -12,6 +12,10 @@
 #include "log.h"
 #include "tools.h"
 
+using std::string;
+using std::vector;
+using std::map;
+
 static bool ABORT = false;
 
 static void on_signal(int signo) {
@@ -24,10 +28,10 @@ void Host::log_status() {
         this->host_name.c_str(), this->memory, this->cpus, this->slots);
 }
 
-Master::Master(const std::string &program, Engine &engine, DAG &dag,
-               const std::string &dagfile, const std::string &outfile,
-               const std::string &errfile, bool has_host_script,
-               double max_wall_time, const std::string &resourcefile) {
+Master::Master(const string &program, Engine &engine, DAG &dag,
+               const string &dagfile, const string &outfile,
+               const string &errfile, bool has_host_script,
+               double max_wall_time, const string &resourcefile) {
     this->program = program;
     this->dagfile = dagfile;
     this->outfile = outfile;
@@ -104,12 +108,12 @@ Master::~Master() {
         fclose(task_stderr);
     }
 
-    std::vector<Slot *>::iterator s;
+    vector<Slot *>::iterator s;
     for (s = slots.begin(); s != slots.end(); s++) {
         delete *s;
     }
     
-    std::vector<Host *>::iterator h;
+    vector<Host *>::iterator h;
     for (h = hosts.begin(); h != hosts.end(); h++) {
         delete *h;
     }
@@ -239,7 +243,7 @@ void Master::release_resources(Host *host, unsigned cpus, unsigned memory) {
     log_resources(slots_avail, cpus_avail, memory_avail, "*");
 }
 
-void Master::log_resources(unsigned slots, unsigned cpus, unsigned memory, const std::string &hostname) {
+void Master::log_resources(unsigned slots, unsigned cpus, unsigned memory, const string &hostname) {
     if (resource_log == NULL) {
         return;
     }
@@ -260,15 +264,15 @@ void Master::merge_all_task_stdio() {
 
         sprintf(rankstr, "%d", i);
         
-        std::string task_outfile = this->dagfile + ".out." + rankstr;
+        string task_outfile = this->dagfile + ".out." + rankstr;
         this->merge_task_stdio(task_stdout, task_outfile, "stdout");
         
-        std::string task_errfile = this->dagfile + ".err." + rankstr;
+        string task_errfile = this->dagfile + ".err." + rankstr;
         this->merge_task_stdio(task_stderr, task_errfile, "stderr");
     }
 }
 
-void Master::merge_task_stdio(FILE *dest, const std::string &srcfile, const std::string &stream) {
+void Master::merge_task_stdio(FILE *dest, const string &srcfile, const string &stream) {
     log_trace("Merging %s file: %s", stream.c_str(), srcfile.c_str());
     
     FILE *src = fopen(srcfile.c_str(), "r");
@@ -348,10 +352,10 @@ void Master::write_cluster_summary(bool failed) {
  * and so on. The master is not given a host rank.
  */
 void Master::register_workers() {
-    typedef std::map<std::string, Host *> HostMap;
+    typedef map<string, Host *> HostMap;
     HostMap hostmap;
     
-    typedef std::map<int, std::string> HostnameMap;
+    typedef map<int, string> HostnameMap;
     HostnameMap hostnames;
     
     // Collect host names from all workers, create host objects
@@ -387,12 +391,12 @@ void Master::register_workers() {
         log_debug("Slot %d on host %s", rank, hostname.c_str());
     }
     
-    typedef std::map<std::string, int> RankMap;
+    typedef map<string, int> RankMap;
     RankMap ranks;
     
     // Create slots, assign a host rank to each worker
     for (int rank=1; rank<=numworkers; rank++) {
-        std::string hostname = hostnames.find(rank)->second;
+        string hostname = hostnames.find(rank)->second;
         
         // Find host
         Host *host = hostmap.find(hostname)->second;
@@ -417,7 +421,7 @@ void Master::register_workers() {
     }
     
     // Log the initial resource availability
-    for (std::vector<Host *>::iterator i = hosts.begin(); i!=hosts.end(); i++) {
+    for (vector<Host *>::iterator i = hosts.begin(); i!=hosts.end(); i++) {
         Host *host = *i;
         log_resources(host->slots, host->cpus, host->memory, host->host_name);
     }
