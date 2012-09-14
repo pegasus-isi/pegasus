@@ -5,7 +5,7 @@ log.o: log.cpp log.h
 master.o: master.cpp master.h engine.h dag.h failure.h protocol.h log.h \
   tools.h
 pegasus-mpi-cluster.o: pegasus-mpi-cluster.cpp dag.h engine.h master.h \
-  worker.h failure.h log.h protocol.h
+  worker.h failure.h log.h protocol.h svn.h
 protocol.o: protocol.cpp protocol.h
 strlib.o: strlib.cpp strlib.h
 test-dag.o: test-dag.cpp dag.h failure.h

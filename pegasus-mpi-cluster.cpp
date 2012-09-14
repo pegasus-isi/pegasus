@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <math.h>
 
+#include "svn.h"
 #include "dag.h"
 #include "engine.h"
 #include "master.h"
@@ -22,10 +23,15 @@ static int rank;
 
 void version() {
     if (rank == 0) {
-        fprintf(stderr, "pegasus-mpi-cluster\n");
+#ifdef SVN_URL
+        fprintf(stderr, "Repository: %s\n", SVN_URL);
+#endif 
 #ifdef SVN_REVISION
-        fprintf(stderr, "Revision: %d\n" ,SVN_REVISION);
+        fprintf(stderr, "Revision: %s\n", SVN_REVISION);
 #endif
+#ifdef SVN_CHANGED
+        fprintf(stderr, "Changed: %s\n", SVN_CHANGED);
+#endif 
         fprintf(stderr, "Compiled: %s %s\n", __DATE__, __TIME__);
 #ifdef __VERSION__
         fprintf(stderr, "Compiler: %s\n", __VERSION__);

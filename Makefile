@@ -25,11 +25,6 @@ endif
 
 CXXFLAGS += -D$(OPSYS)
 
-SVN_REVISION=$(shell svn info | awk '/Revision:/ {print $$2}')
-ifneq (,$(SVN_REVISION))
-  CXXFLAGS += -DSVN_REVISION=$(SVN_REVISION)
-endif
-
 OBJS += strlib.o
 OBJS += tools.o
 OBJS += failure.o
@@ -48,7 +43,7 @@ TESTS += test-log
 TESTS += test-engine
 TESTS += test-tools
 
-.PHONY: clean depends test install 
+.PHONY: clean depends test install
 
 ifeq ($(shell which $(CXX) || echo n),n)
 $(warning To build pegasus-mpi-cluster set CXX to the path to your MPI C++ compiler wrapper)
@@ -74,9 +69,12 @@ distclean: clean
 	$(RM) $(PROGRAMS)
 
 clean:
-	$(RM) *.o $(TESTS)
+	$(RM) *.o $(TESTS) svn.h
 
 depends:
 	g++ -MM *.cpp > depends.mk
+
+svn.h:
+	$(PWD)/gensvnh.sh $(PWD) > svn.h
 
 include depends.mk
