@@ -23,6 +23,7 @@ Pegasus utility for sending workflow notifications over email
 
 import os
 import sys
+import pwd
 import optparse
 import smtplib
 import subprocess
@@ -89,7 +90,7 @@ def myexit(rc):
 # Configure command line option parser
 parser = optparse.OptionParser()
 parser.add_option("-t", "--to", action = "append", dest = "to_address",
-                  help = "The To: email address. Defines the recipient(s) for the notification.")
+                  help = "The To: email address. Defines the recipient(s) for the notification. Default is current user.")
 parser.add_option("-f", "--from", action = "store", dest = "from_address",
                   help = "The From: email address. Defaults to the required To: address.")
 parser.add_option("-r", "--report", action = "store", dest = "report",
@@ -98,11 +99,10 @@ parser.add_option("-r", "--report", action = "store", dest = "report",
 
 # Parse command line options
 (options, args) = parser.parse_args()
-if options.to_address == None:
-    print >> sys.stderr, "You have to provide a To: email address"
-    usage(parser)
-to_address = ','.join(options.to_address)
-from_address = options.to_address[0]
+to_address = pwd.getpwuid(os.getuid()).pw_name
+if options.to_address != None:
+    to_address = ','.join(options.to_address)
+from_address = to_address
 if options.from_address != None:
     from_address = options.from_address
 report = "pegasus-status"
