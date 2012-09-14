@@ -56,6 +56,11 @@ class Expunge(SQLAlchemyInit, DoesLogging):
         """
         Invoke this to remove workflow/information from DB.
         """
+        #PM-652 do nothing for sqlite
+        #DB is already rotated in pegasus-monitord
+        if self._connString.startswith( "sqlite:" ):
+            return
+
         self.log.info('expunge.start')
         self.session.autoflush=True
         # delete main workflow uuid and start cascade

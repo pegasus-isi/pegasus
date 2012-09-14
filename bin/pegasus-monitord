@@ -984,6 +984,24 @@ else:
     restart_logging = False
     if replay_mode or os.access(os.path.join(run, MONITORD_RECOVER_FILE), os.F_OK):
         restart_logging = True
+    
+    #PM-652 if there is sqlite db then just take a backup
+    #by rotating the db file. possible as we have only one workflow per sqlitedb
+    if replay_mode and event_dest.startswith( "sqlite:" ):
+        try:
+            start = event_dest.index( "sqlite:///" )
+        except ValueError:
+            logger.error( 'Invalid sqlite connection string passed %s ' %event_dest )
+
+        db_path = event_dest[start + 10:]
+
+        if os.access(db_path, os.F_OK):
+            logger.info( 'Rotating sqlite db file %s' %db_path)
+            utils.rotate_log_file( db_path )
+        else:
+            logger.error( 'db file is not a file %s ' %db_path )
+    
+
     try:
         wf_event_sink = eo.create_wf_event_sink(event_dest, db_stats=db_stats,
                                                 restart=restart_logging, enc=encoding)
