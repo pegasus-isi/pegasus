@@ -574,8 +574,9 @@ int Worker::run() {
     log_debug("Worker %d: Starting...", rank);
     
     // Send worker's registration message to the master
-    RegistrationMessage regmsg(host_name, host_memory, host_cpus);
+    RegistrationMessage *regmsg = new RegistrationMessage(host_name, host_memory, host_cpus);
     send_message(regmsg, 0);
+    delete regmsg;
     log_trace("Worker %d: Host name: %s", rank, host_name.c_str());
     log_trace("Worker %d: Host memory: %u MB", rank, this->host_memory);
     log_trace("Worker %d: Host CPUs: %u", rank, this->host_cpus);
@@ -654,15 +655,18 @@ int Worker::run() {
                 for (unsigned i = 0; i < task->pipes.size(); i++) {
                     Pipe *pipe = task->pipes[i];
                     log_trace("Pipe %s got %d bytes", pipe->varname.c_str(), pipe->size());
-                    // TODO Send IODataMessage
-                    //IODataMessage iodata(task->name, pipe->filename, pipe->data(), pipe->size());
-                    //send_message(iodata, 0);
+                    /* TODO
+                    IODataMessage *iodata = new IODataMessage(task->name, pipe->filename, pipe->data(), pipe->size());
+                    send_message(*iodata, 0);
+                    delete iodata;
+                    */
                 }
             }
             
             // Send task information back to master
-            ResultMessage res(task->name, task->status, task->elapsed());
+            ResultMessage *res = new ResultMessage(task->name, task->status, task->elapsed());
             send_message(res, 0);
+            delete res;
             
             delete task;
         } else {

@@ -127,9 +127,10 @@ Master::~Master() {
 void Master::submit_task(Task *task, int rank) {
     log_debug("Submitting task %s to slot %d", task->name.c_str(), rank);
     
-    CommandMessage cmd(task->name, task->command, task->pegasus_id, 
-            task->memory, task->cpus, task->forwards);
+    CommandMessage *cmd = new CommandMessage(task->name, task->command, 
+            task->pegasus_id, task->memory, task->cpus, task->forwards);
     send_message(cmd, rank);
+    delete cmd;
     
     this->total_count++;
 }
@@ -414,8 +415,9 @@ void Master::register_workers() {
         }
         ranks[hostname] = hostrank + 1;
         
-        HostrankMessage hrmsg(hostrank);
+        HostrankMessage *hrmsg = new HostrankMessage(hostrank);
         send_message(hrmsg, rank);
+        delete hrmsg;
         
         log_debug("Host rank of worker %d is %d", rank, hostrank);
     }
@@ -597,8 +599,9 @@ int Master::run() {
     log_info("Sending workers shutdown messages...");
     for (int i=1; i<=numworkers; i++) {
         log_debug("Sending shutdown message to worker %d", i);
-        ShutdownMessage shmsg;
+        ShutdownMessage *shmsg = new ShutdownMessage();
         send_message(shmsg, i);
+        delete shmsg;
     }
     
     if (ABORT) {

@@ -26,17 +26,18 @@ class Message {
 public:
     MessageType type;
     int source;
-    Message(MessageType type) { this->type = type; }
-    virtual ~Message() {}
-    virtual int encode(char **buff) = 0;
-    virtual void decode(char *buff, int size) = 0;
+    char *msg;
+    unsigned msgsize;
+    
+    Message(MessageType type);
+    Message(MessageType type, char *msg, unsigned msgsize, int source);
+    virtual ~Message();
 };
 
 class ShutdownMessage: public Message {
 public:
+    ShutdownMessage(char *msg, unsigned msgsize, int source);
     ShutdownMessage();
-    int encode(char **buff);
-    void decode(char *buff, int size);
 };
 
 class CommandMessage: public Message {
@@ -48,10 +49,8 @@ public:
     unsigned cpus;
     map<string, string> forwards;
     
-    CommandMessage();
+    CommandMessage(char *msg, unsigned msgsize, int source);
     CommandMessage(const string &name, const string &command, const string &id, unsigned memory, unsigned cpus, const map<string,string> &forwards);
-    int encode(char **buff);
-    void decode(char *buff, int size);
 };
 
 class ResultMessage: public Message {
@@ -60,10 +59,8 @@ public:
     int exitcode;
     double runtime;
     
-    ResultMessage();
+    ResultMessage(char *msg, unsigned msgsize, int source, int _dummy_);
     ResultMessage(const string &name, int exitcode, double runtime);
-    int encode(char **buff);
-    void decode(char *buff, int size);
 };
 
 class RegistrationMessage: public Message {
@@ -72,20 +69,16 @@ public:
     unsigned memory;
     unsigned cpus;
     
-    RegistrationMessage();
+    RegistrationMessage(char *msg, unsigned msgsize, int source);
     RegistrationMessage(const string &hostname, unsigned memory, unsigned cpus);
-    int encode(char **buff);
-    void decode(char *buff, int size);
 };
 
 class HostrankMessage: public Message {
 public:
     int hostrank;
     
-    HostrankMessage();
+    HostrankMessage(char *msg, unsigned msgsize, int source);
     HostrankMessage(int hostrank);
-    int encode(char **buff);
-    void decode(char *buff, int size);
 };
 
 class IODataMessage: public Message {
@@ -95,13 +88,11 @@ public:
     const char *data;
     unsigned size;
     
-    IODataMessage();
+    IODataMessage(char *msg, unsigned msgsize, int source);
     IODataMessage(const string &task, const string &filename, const char *data, unsigned size);
-    int encode(char **buff);
-    void decode(char *buff, int size);
 };
 
-void send_message(Message &message, int rank);
+void send_message(Message *message, int rank);
 Message *recv_message();
 bool message_waiting();
 
