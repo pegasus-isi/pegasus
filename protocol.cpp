@@ -180,6 +180,25 @@ void HostrankMessage::decode(char *buff, int size) {
     memcpy(&hostrank, buff, sizeof(hostrank));
 }
 
+IODataMessage::IODataMessage() : Message(IODATA) {
+}
+
+IODataMessage::IODataMessage(const string &task, const string &filename, const char *data, unsigned size) : Message(IODATA) {
+    this->task = task;
+    this->filename = filename;
+    this->data = data;
+    this->size = size;
+}
+
+int IODataMessage::encode(char **buff) {
+    // TODO
+    return 0;
+}
+
+void IODataMessage::decode(char *buff, int size) {
+    // TODO
+}
+
 void send_message(Message &message, int dest) {
     char *buff;
     int size = message.encode(&buff);

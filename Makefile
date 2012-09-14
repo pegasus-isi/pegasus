@@ -77,4 +77,7 @@ depends:
 svn.h:
 	$(PWD)/gensvnh.sh $(PWD) > svn.h
 
+tags: *.h *.cpp
+	ctags *.h *.cpp
+
 include depends.mk

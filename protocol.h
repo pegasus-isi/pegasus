@@ -18,7 +18,8 @@ enum MessageType {
     RESULT       = 2,
     SHUTDOWN     = 3,
     REGISTRATION = 4,
-    HOSTRANK     = 5
+    HOSTRANK     = 5,
+    IODATA       = 6
 };
 
 class Message {
@@ -83,6 +84,19 @@ public:
     
     HostrankMessage();
     HostrankMessage(int hostrank);
+    int encode(char **buff);
+    void decode(char *buff, int size);
+};
+
+class IODataMessage: public Message {
+public:
+    string task;
+    string filename;
+    const char *data;
+    unsigned size;
+    
+    IODataMessage();
+    IODataMessage(const string &task, const string &filename, const char *data, unsigned size);
     int encode(char **buff);
     void decode(char *buff, int size);
 };

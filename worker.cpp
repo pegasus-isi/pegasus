@@ -639,18 +639,29 @@ int Worker::run() {
             
             task->run();
             
-            // Send task information back to master
-            ResultMessage res(task->name, task->status, task->elapsed());
-            send_message(res, 0);
-            
-            // If the task succeeded, then send the I/O back to the master
+            // If the task succeeded, then send the I/O back to the master.
+            // We only do this if the task succeeds because if the task 
+            // failed, then it might not have generated good output data.
+            // It is important that we do this before sending back the 
+            // result message. If we send the result message first, or if
+            // it gets processed first, then we could have a situation
+            // where, when a failure occurs, a task has been marked as
+            // success in the transaction log, but the I/O from the task
+            // has not been saved. The MPI standard guaranteest that 
+            // messages sent from one process to another are delivered 
+            // in the order sent.
             if (task->status == 0) {
                 for (unsigned i = 0; i < task->pipes.size(); i++) {
                     Pipe *pipe = task->pipes[i];
                     log_trace("Pipe %s got %d bytes", pipe->varname.c_str(), pipe->size());
-                    // TODO Send the data from the pipes back to the master
+                    IODataMessage iodata(task->name, pipe->filename, pipe->data(), pipe->size());
+                    send_message(iodata, 0);
                 }
             }
+            
+            // Send task information back to master
+            ResultMessage res(task->name, task->status, task->elapsed());
+            send_message(res, 0);
             
             delete task;
         } else {
