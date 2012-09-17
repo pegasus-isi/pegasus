@@ -288,6 +288,13 @@ public class MPIExec extends Abstract {
             }
         }
 
+        //PM-654 post add the arguments if any specified by pmc_arguments
+        extraArgs = job.vdsNS.getStringValue( Pegasus.PMC_CLUSTER_ARGUMENTS );
+
+        if( extraArgs != null ){
+            args.append( extraArgs ).append( " " );
+        }
+
         args.append( stdin );
 
         return args.toString();
