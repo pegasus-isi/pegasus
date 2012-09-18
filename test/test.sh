@@ -6,10 +6,11 @@ PMC=./pegasus-mpi-cluster
 function run_test {
     local test=$1
     echo "Running $test..."
-
+    
     # Set up
     rm -f test/*.dag.*
-
+    rm -rf test/scratch
+    
     if $test; then 
         echo "OK"
     else
@@ -19,6 +20,7 @@ function run_test {
     
     # Clean up
     rm -f test/*.dag.*
+    rm -rf test/scratch
 }
 
 function test_help {
