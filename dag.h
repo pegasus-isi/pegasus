@@ -21,6 +21,8 @@ public:
     string pegasus_transformation;
     
     bool success;
+
+    bool io_failed;
     
     unsigned memory;
     unsigned cpus;

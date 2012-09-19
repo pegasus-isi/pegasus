@@ -1,0 +1,1 @@
+TASK A -f FOO=/notallowed ./test/forward.py FOO

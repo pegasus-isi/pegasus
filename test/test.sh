@@ -457,6 +457,24 @@ function test_forward {
     fi
 }
 
+# Make sure I/O forwarding failures cause task to fail
+function test_forward_fail {
+    OUTPUT=$(mpiexec -n 2 $PMC -v test/forward_fail.dag 2>&1)
+    RC=$?
+
+    if [ $RC -eq 0 ]; then
+        echo "$OUTPUT"
+        echo "ERROR: Forward failure test failed"
+        return 1
+    fi
+    
+    if ! [[ "$OUTPUT" =~ "Task A failed due to collective I/O errors" ]]; then
+        echo "$OUTPUT"
+        echo "ERROR: Forward failure test failed"
+        return 1
+    fi
+}
+
 run_test ./test-strlib
 run_test ./test-tools
 run_test ./test-dag
@@ -481,6 +499,7 @@ run_test test_fork_script
 run_test test_resource_log
 run_test test_append_stdio
 run_test test_forward
+run_test test_forward_fail
 run_test test_max_wall_time
 run_test test_hang_script
 

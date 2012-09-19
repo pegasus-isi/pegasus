@@ -229,7 +229,8 @@ FILE *FDCache::open(string filename) {
 int FDCache::write(string filename, const char *data, int size) {
     FILE *file = open(filename);
     if (file == NULL) {
-        log_error("Error opening file %s", filename.c_str());
+        log_error("Error opening file %s: %s", filename.c_str(), 
+                strerror(errno));
         return -1;
     }
     
@@ -435,12 +436,22 @@ void Master::wait_for_results() {
 }
 
 void Master::process_iodata(IODataMessage *mesg) {
-    // TODO Handle failures by marking task as unsuccessful somehow
     log_trace("Got %u bytes for file %s", mesg->size, mesg->filename.c_str());
+    
     if (fdcache.write(mesg->filename, mesg->data, mesg->size) < 0) {
-        log_error("Error writing to %s: %s", mesg->filename.c_str(),
-                strerror(errno));
-        return;
+        log_error("Error writing %d bytes to %s for task %s", mesg->size,
+                mesg->filename.c_str(), mesg->task.c_str());
+        
+        Task *task = this->dag->get_task(mesg->task);
+        if (task == NULL) {
+            // If the task is not found then there is a problem, but
+            // we can probably just ignore it at this point.
+            log_warn("Unable to find task %s for I/O failure", 
+                    mesg->task.c_str());
+            return;
+        }
+        
+        task->io_failed = true;
     }
 }
 
@@ -452,15 +463,29 @@ void Master::process_result(ResultMessage *mesg) {
     
     total_runtime += task_runtime;
     
-    // Mark task finished
-    if (exitcode == 0) {
+    Task *task = this->dag->get_task(name);
+
+    if (task->io_failed) {
+        // If there was an error processing I/O data for this task, 
+        // then record it as a failure
+        
+        log_error("Task %s failed due to collective I/O errors", name.c_str());
+        this->failed_count++;
+        
+        // Set the exitcode to something non-zero to force the failure
+        exitcode = 256;
+        
+        // Reset the flag so that, if the task is retried, it won't
+        // automatically fail again
+        task->io_failed = false;
+    } else if (exitcode == 0) {
         log_debug("Task %s finished with exitcode %d", name.c_str(), exitcode);
         this->success_count++;
     } else {
         log_error("Task %s failed with exitcode %d", name.c_str(), exitcode);
         this->failed_count++;
     }
-    Task *task = this->dag->get_task(name);
+    
     this->engine->mark_task_finished(task, exitcode);
     
     // Mark slot idle

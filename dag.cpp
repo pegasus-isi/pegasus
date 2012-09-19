@@ -26,6 +26,7 @@ Task::Task(const string &name, const string &command) {
     this->memory = 0;
     this->cpus = 1;
     this->priority = 0;
+    this->io_failed = false;
 }
 
 Task::~Task() {
