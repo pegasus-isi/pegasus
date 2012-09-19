@@ -1,5 +1,6 @@
 #include <string.h>
 #include <mpi.h>
+#include <stdlib.h>
 
 #include "tools.h"
 #include "protocol.h"

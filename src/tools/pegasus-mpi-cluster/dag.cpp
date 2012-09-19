@@ -275,7 +275,7 @@ void DAG::read_dag() {
                                 name.c_str());
                         }
                         string forward = args.front();
-                        int eq = forward.find("=");
+                        size_t eq = forward.find("=");
                         if (eq == string::npos) {
                             myfailure("Task %s -f/--forward format should be VAR=PATH: %s",
                                     name.c_str(), forward.c_str());
