@@ -22,6 +22,7 @@ public:
     FDEntry *prev;
     FDEntry *next;
     FDEntry(const string &filename, FILE *file);
+    ~FDEntry();
 };
 
 class FDCache {
@@ -33,7 +34,7 @@ public:
     FDEntry *first;
     FDEntry *last;
     map<string, FDEntry *> byname;
-
+    
     FDCache(unsigned maxsize=100);
     ~FDCache();
     double hitrate();
@@ -42,6 +43,7 @@ public:
     FDEntry *pop();
     FILE *open(string filename);
     int write(string filename, const char *data, int size);
+    int size();
     void close();
 };
 

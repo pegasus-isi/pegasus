@@ -12,5 +12,6 @@ test-dag.o: test-dag.cpp dag.h failure.h
 test-engine.o: test-engine.cpp dag.h engine.h failure.h
 test-log.o: test-log.cpp log.h failure.h
 test-strlib.o: test-strlib.cpp strlib.h failure.h
+test-fdcache.o: test-fdcache.cpp failure.h master.h log.h
 tools.o: tools.cpp tools.h
 worker.o: worker.cpp strlib.h worker.h protocol.h log.h failure.h tools.h
