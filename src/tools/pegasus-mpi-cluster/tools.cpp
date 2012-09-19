@@ -138,16 +138,16 @@ int mkdirs(const char *path) {
         return 0;
     }
     
-    if (strlen(path) > MAXPATHLEN) {
+    if (strlen(path) > PATH_MAX) {
         errno = ENAMETOOLONG;
         return -1;
     }
     
-    char mypath[MAXPATHLEN];
+    char mypath[PATH_MAX];
     char *p = mypath;
     
     if (path[0] == '.' && path[1] == '.') {
-        if (getcwd(mypath, MAXPATHLEN) == NULL) {
+        if (getcwd(mypath, PATH_MAX) == NULL) {
             return -1;
         }
         
