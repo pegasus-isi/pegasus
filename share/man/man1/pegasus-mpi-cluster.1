@@ -2,12 +2,12 @@
 .\"     Title: pegasus-mpi-cluster
 .\"    Author: [see the "Author" section]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 08/30/2012
+.\"      Date: 09/19/2012
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "PEGASUS\-MPI\-CLUSTE" "1" "08/30/2012" "\ \&" "\ \&"
+.TH "PEGASUS\-MPI\-CLUSTE" "1" "09/19/2012" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -235,6 +235,16 @@ command\-line option\&.
 .RS 4
 The priority of the task\&. P should be an integer\&. Larger values have higher priority\&. The default is 0\&. Priorities are simply hints and are not strict\(emif a task cannot be matched to an available slot (e\&.g\&. due to resource availability), but a lower\-priority task can, then the task will be deferred and the lower priority task will be executed\&. This option can be set for a job in the DAX by specifying the pegasus::pmc_priority profile\&.
 .RE
+.PP
+\fB\-f\fR \fIVAR=FILE\fR, \fB\-\-forward\fR \fIVAR=FILE\fR
+.RS 4
+Forward I/O to file
+\fIFILE\fR\&. The environment variable
+\fIVAR\fR
+will be set to the value of a file descriptor to which the task can write to get data into
+\fIFILE\fR\&. For example, if a task specifies: \-f FOO=/tmp/foo then the environment variable FOO for the task will be set to a number (e\&.g\&. 3) that represents the file /tmp/foo\&. In order to specify this in a Pegasus DAX you need to set the pegasus::pmc_arguments profile (note that the value of pmc_arguments must contain the "\-f" part of the argument, so a valid value would be: <profile namespace="pegasus" key="pmc_arguments">\-f A=/tmp/a </profile>)\&. (see
+\fBI/O FORWARDING\fR)
+.RE
 .sp
 The format of an \fBEDGE\fR record is:
 .sp
@@ -333,6 +343,64 @@ Users can specify both the amount of memory required per task, and the amount of
 .SS "CPUs"
 .sp
 Users can specify the number of CPUs required per task, and the total number of CPUs available on each host\&. If the number of CPUs required by a task exceeds the available CPUs on all hosts, then the workflow will be aborted\&. By default, the number of CPUs on a host is determined automatically, but the user can specify \fB\-\-host\-cpus\fR to over\- or under\-subscribe the host\&. The number of CPUs required for each task is specified in the DAG using the \fB\-c\fR/\fB\-\-request\-cpus\fR argument (see \fBDAG Files\fR)\&.
+.SH "I/O FORWARDING"
+.sp
+In workflows that have lots of small tasks it is common for the I/O written by those tasks to be very small\&. For example, a workflow may have 10,000 tasks that each write a few KB of data\&. Typically each task writes to its own file, resulting in 10,000 files\&. This I/O pattern is very inefficient on many parallel file systems because it requires the file system to handle a large number of very small files, which results in many metadata operations\&.
+.sp
+One way to handle this problem is to have all 10,000 tasks write to a single file\&. The problem with this approach is that it requires those tasks to synchronize their access to the file using POSIX locks or some other mutual exclusion mechanism\&. Otherwise, the writes from different tasks may be interleaved in arbitrary order, resulting in unusable data\&.
+.sp
+In order to address this use case PMC implements a feature that we call "I/O Forwarding"\&. I/O forwarding enables each task in a PMC job to write data to an arbitrary number of shared files in a safe way\&. I/O forwarding works by having PMC worker processes collect data from each task using UNIX pipes\&. When the task finishes successfully, the data gathered from the pipes is sent over the high\-speed network using MPI messaging to the PMC master process, where it is written to the output file\&. By having one process (the PMC master process) write to the file all of the I/O from many parallel tasks can be synchronized and written out to the files safely\&.
+.sp
+In order to use I/O forwarding a PMC task just needs to specify an argument that specifies the name of the file to forward data to, and the name of an environment variable through which the PMC worker process can inform it of the file descriptor for the pipe the task should write to\&.
+.sp
+For example, if there is a task "mytask" that needs to forward data to two files: "myfile\&.a" and "myfile\&.b", it would look like this:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+TASK mytask \-f A=/tmp/myfile\&.a \-f B=/tmp/myfile\&.b /bin/mytask
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+When the /bin/mytask process starts it will have two variables in its environment: "A=3" and "B=4", for example\&. The value of these variables is the file descriptor number of the corresponding files\&. In this case, if the task wants to write to "/tmp/myfile\&.a", it gets the value of environment variable "A", and calls write() on that descriptor number\&. In C the code for that looks like this:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+char *A = getenv("A");
+int fd = atoi(A);
+char *message = "Hello, World\en";
+write(fd, message, strlen(message));
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+In some programming languages it is not possible to write to a file descriptor directly\&. Fortran, for example, refers to files by unit number instead of using file descriptors\&. In these languages you can either link C I/O functions into your binary and call them from routines written in the other language, or you can open a special file in the Linux /proc file system to get another handle to the pipe you want to access\&. For the latter, the file you should open is "/proc/self/fd/NUMBER" where NUMBER is the file descriptor number you got from the environment variable\&. For the example above, the pipe for myfile\&.a (environment variable A) is "/proc/self/fd/3"\&.
+.sp
+When using I/O forwarding it is important to consider a few caveats\&.
+.sp
+First, you should not use I/O forwarding if your task is going to write a lot of data to the file\&. Because the PMC worker is reading data off the pipe into memory, if you write too much then the worker process will run the system out of memory\&. There is no hard limit, and we haven\(cqt benchmarked the performance on large I/O, but anything larger than about 1 MB is probably too much\&.
+.sp
+Second, the pipes are write\-only\&. If you need to read and write data from the file it won\(cqt work\&. Why are you reading and writing from the same file in a workflow anyway?
+.sp
+Third, the I/O is not written to the file if the task returns a non\-zero exitcode\&. We assume that if the task failed that you don\(cqt want the data it produced\&.
+.sp
+Fourth, the data from one task is not interleaved with other tasks\&. All of the data written by a task will appear sequentially in the output file\&.
+.sp
+Fifth, data from different tasks appears in arbitrary order in the output file\&. It depends on what order the tasks were executed by PMC, which may be arbitrary if there are no dependencies between the tasks\&. The data that is written should contain enough information that you are able to determine which task produced it if you require that\&. PMC does not add any headers or trailers to the data\&.
+.sp
+Sixth, if the master is not able to write to the output file for any reason the task is marked as failed even if the task produced a non\-zero exitcode\&.
+.sp
+Seventh, a task will only be marked as successful if all of its I/O was successfully written\&. If the workflow completed successfully, then the I/O is guaranteed to have been written\&.
+.sp
+Eighth, all files are opened in append mode\&. This is so that, if the workflow fails and has to be restarted, or if a task fails and is retried, the data that was written previously is not lost\&. PMC never truncates the files\&.
+.sp
+Finally, if the PMC job fails for any reason, then the output file may be corrupted\&. We make no guarantees about the contents of the data files in this case\&. They may contain both partial records and duplicate records\&. It is up to the code that reads the files to a) detect and b) recover from such problems\&. If this becomes a problem we can implement journaling to fix it, but for now there are no guarantees\&.
 .SH "MISC"
 .SS "Resource Utilization"
 .sp
