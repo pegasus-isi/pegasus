@@ -6,11 +6,27 @@ bindir = $(prefix)/bin
 CXX = mpicxx
 CC = $(CXX)
 LD = $(CXX)
-CXXFLAGS = -g -Wall -DSLEEP_IF_NO_REQUEST
+CXXFLAGS = -g -Wall
 LDFLAGS = 
 RM = rm -f
 INSTALL = install
 MAKE = make
+
+# If you want to force the MPI processes to sleep when there is
+# no message waiting instead of running in a busy loop, then
+# enable -DSLEEP_IF_NO_REQUEST.
+CXXFLAGS += -DSLEEP_IF_NO_REQUEST
+
+# If you want to call fsyncdata() when a record is written to the 
+# rescue log, then enable -DSYNC_RESCUE. If you want to enable
+# it when data is written to a collective I/O file, then enable
+# -DSYNC_IODATA. This will protect the application in the case
+# where the system fails, but it adds quite a lot of overhead
+# (typically ~10ms for most disks) per write. In the case of the
+# rescue log, enabling SYNC_RESCUE causes PMC to handle no more 
+# than about 100 tasks/second. Enabling SYNC_IODATA can reduce
+# that even more.
+#CXXFLAGS += -DSYNC_IODATA -DSYNC_RESCUE
 
 OS=$(shell uname -s)
 ifeq (Linux,$(OS))

@@ -239,19 +239,24 @@ int FDCache::write(string filename, const char *data, int size) {
                 strerror(errno));
         return -1;
     }
-    // TODO Determine whether fflush+fdatasync is required here
-    /*
-    rc = fflush(file);
-    if (rc != 0) {
-        log_error("fflush failed");
+    if (fflush(file) != 0) {
+        log_error("fflush failed on file %s: %s", filename.c_str(), 
+                strerror(errno));
         return -1;
     }
+#ifdef SYNC_IODATA
+#ifdef DARWIN
+    // OSX does not have fdatasync
+    rc = fsync(fileno(file));
+#else
     rc = fdatasync(fileno(file));
+#endif
     if (rc != 0) {
-        log_error("fdatasync failed");
+        log_error("fsync/fdatasync failed on file %s: %s", filename.c_str(), 
+                strerror(errno));
         return -1;
     }
-    */
+#endif
     return 0;
 }
 
