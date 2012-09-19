@@ -6,6 +6,7 @@
 #include <math.h>
 #include <sys/time.h>
 #include <fcntl.h>
+#include <sys/resource.h>
 
 #include "master.h"
 #include "failure.h"
@@ -22,6 +23,164 @@ static bool ABORT = false;
 static void on_signal(int signo) {
     log_error("Caught signal %d", signo);
     ABORT = true;
+}
+
+FDEntry::FDEntry(const string &filename, FILE *file) {
+    this->filename = filename;
+    this->file = file;
+    this->prev = NULL;
+    this->next = NULL;
+}
+
+FDCache::FDCache(unsigned maxsize) {
+    this->maxsize = maxsize;
+    this->first = NULL;
+    this->last = NULL;
+    this->hits = 0;
+    this->misses = 0;
+}
+
+FDCache::~FDCache() {
+    this->close();
+}
+
+double FDCache::hitrate() {
+    double total = this->hits + this->misses;
+    if (total == 0) {
+        return 1.0;
+    }
+    return this->hits / total;
+}
+
+void FDCache::access(FDEntry *entry) {
+    if (first == entry) {
+        return;
+    }
+    if (last == entry) {
+        last = entry->prev;
+    }
+    if (entry->prev) {
+        entry->prev->next = entry->next;
+    }
+    entry->next = first;
+    first = entry;
+    entry->prev = NULL;
+}
+
+void FDCache::push(FDEntry *entry) {
+    if (last == NULL) {
+        last = entry;
+    }
+    entry->next = first;
+    entry->prev = NULL;
+    if (first != NULL) {
+        first->prev = entry;
+    }
+    first = entry;
+    byname[entry->filename] = entry;
+}
+
+FDEntry *FDCache::pop() {
+    if (last == NULL) {
+        return NULL;
+    }
+    FDEntry *remove = last;
+    if (first == last) {
+        first = NULL;
+        last = NULL;
+    } else {
+        last = last->prev;
+    }
+    byname.erase(last->filename);
+    return remove;
+}
+
+FILE *FDCache::open(string filename) {
+    // If the file is already in the cache, then
+    // return it
+    map<string, FDEntry *>::iterator i;
+    i = byname.find(filename);
+    if (i == byname.end()) {
+        this->misses += 1;
+    } else {
+        this->hits += 1;
+        FDEntry *entry = i->second;
+        access(entry);
+        return entry->file;
+    }
+    
+    // If there are too many descriptors in the cache,
+    // then remove the least recently used one
+    if (byname.size() >= maxsize) {
+        FDEntry *remove = pop();
+        fclose(remove->file);
+        remove->file = NULL;
+        delete remove;
+    }
+    
+    // Create directories as needed on file creation
+    if (filename.find("/") != string::npos) {
+        string path = filename.substr(0, filename.rfind("/"));
+        if (mkdirs(path.c_str())) {
+            log_error("Unable to create directory %s: %s", path.c_str(), 
+                    strerror(errno));
+            return NULL;
+        }
+    }
+    
+    // We always open the file for append because this may be one of many
+    // records we need to write to the file
+    FILE *file = fopen(filename.c_str(), "a");
+    if (file == NULL) {
+        return NULL;
+    }
+    
+    FDEntry *entry = new FDEntry(filename, file);
+    push(entry);
+    
+    return file;
+}
+
+int FDCache::write(string filename, const char *data, int size) {
+    FILE *file = open(filename);
+    if (file == NULL) {
+        log_error("Error opening file %s", filename.c_str());
+        return -1;
+    }
+    
+    int rc = fwrite(data, 1, size, file);
+    if (rc != size) {
+        log_error("Error writing %d bytes to %s: %s", size, filename.c_str(), 
+                strerror(errno));
+        return -1;
+    }
+    // TODO Determine whether fflush+fdatasync is required here
+    /*
+    rc = fflush(file);
+    if (rc != 0) {
+        log_error("fflush failed");
+        return -1;
+    }
+    rc = fdatasync(fileno(file));
+    if (rc != 0) {
+        log_error("fdatasync failed");
+        return -1;
+    }
+    */
+    return 0;
+}
+
+void FDCache::close() {
+    FDEntry *i = first;
+    while (i!=NULL) {
+        FDEntry *next = i->next;
+        fclose(i->file);
+        delete i;
+        i = next;
+    }
+    byname.clear();
+    first = NULL;
+    last = NULL;
 }
 
 void Host::log_status() {
@@ -96,6 +255,20 @@ Master::Master(const string &program, Engine &engine, DAG &dag,
     } else {
         this->resource_log = fopen(resourcefile.c_str(), "a");
     }
+    
+    // Determine the maximum number of open files allowed
+    unsigned maxfiles = 1024;
+    struct rlimit nofile;
+    if (getrlimit(RLIMIT_NOFILE, &nofile)) {
+        log_error("Unable to get NOFILE limit: %s", strerror(errno));
+    } else {
+        log_debug("Open files limit = %d (%d)", nofile.rlim_cur, nofile.rlim_max);
+        if (nofile.rlim_cur > 0) {
+            maxfiles = nofile.rlim_cur;
+        }
+    }
+    log_debug("Setting max open files = %u", maxfiles);
+    fdcache.maxsize = maxfiles;
 }
 
 Master::~Master() {
@@ -122,13 +295,6 @@ Master::~Master() {
     if (resource_log != NULL && fileno(resource_log) > 2) {
         log_trace("Closing resource log");
         fclose(resource_log);
-    }
-    
-    map<string, int>::iterator i;
-    for (i=fdcache.begin(); i!=fdcache.end(); i++) {
-        log_trace("Closing %s", i->first.c_str());
-        int fd = i->second;
-        close(fd);
     }
 }
 
@@ -206,31 +372,10 @@ void Master::wait_for_results() {
 }
 
 void Master::process_iodata(IODataMessage *mesg) {
-    // TODO Make this more robust
     // TODO Handle failures by marking task as unsuccessful somehow
-    // TODO Keep LRU cache of open files and don't use more than getrlimit() says
-    // TODO Create directories as needed on file creation
     log_trace("Got %u bytes for file %s", mesg->size, mesg->filename.c_str());
-    map<string,int>::iterator i = fdcache.find(mesg->filename);
-    int fd;
-    if (i == fdcache.end()) {
-        fd = open(mesg->filename.c_str(), O_WRONLY|O_CREAT|O_APPEND, 00644);
-        if (fd < 0) {
-            log_error("Error opening %s: %s", mesg->filename.c_str(),
-                    strerror(errno));
-            return;
-        }
-        fdcache[mesg->filename] = fd;
-    } else {
-        fd = (*i).second;
-    }
-    if (write(fd, mesg->data, mesg->size) != mesg->size) {
+    if (fdcache.write(mesg->filename, mesg->data, mesg->size) < 0) {
         log_error("Error writing to %s: %s", mesg->filename.c_str(),
-                strerror(errno));
-        return;
-    }
-    if (fsync(fd)) {
-        log_warn("Error flushing I/O to %s: %s", mesg->filename.c_str(), 
                 strerror(errno));
         return;
     }
@@ -627,6 +772,10 @@ int Master::run() {
     finish_time = current_time();
     wall_time = finish_time - start_time;
     
+    // Close FDCache here before merging output so that
+    // we can be sure the data files are flushed
+    fdcache.close();
+    
     // Compute resource utilization
     double master_util = total_runtime / (wall_time * (numworkers+1));
     double worker_util = total_runtime / (wall_time * numworkers);
@@ -641,6 +790,7 @@ int Master::run() {
     log_info("Wall time: %lf seconds (%lf minutes)", wall_time, wall_time/60.0);
     log_info("Bytes sent to workers: %lu", pmc_bytes_sent);
     log_info("Bytes received from workers: %lu", pmc_bytes_recvd);
+    log_info("File descriptor cache hit rate: %lf", fdcache.hitrate());
 
     bool failed = ABORT || this->engine->is_failed();
     write_cluster_summary(failed);

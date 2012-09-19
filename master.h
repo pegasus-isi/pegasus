@@ -15,6 +15,36 @@ using std::priority_queue;
 using std::list;
 using std::map;
 
+class FDEntry {
+public:
+    string filename;
+    FILE *file;
+    FDEntry *prev;
+    FDEntry *next;
+    FDEntry(const string &filename, FILE *file);
+};
+
+class FDCache {
+public:
+    unsigned maxsize;
+    unsigned hits;
+    unsigned misses;
+    
+    FDEntry *first;
+    FDEntry *last;
+    map<string, FDEntry *> byname;
+
+    FDCache(unsigned maxsize=100);
+    ~FDCache();
+    double hitrate();
+    void access(FDEntry *entry);
+    void push(FDEntry *entry);
+    FDEntry *pop();
+    FILE *open(string filename);
+    int write(string filename, const char *data, int size);
+    void close();
+};
+
 class Host {
 public:
     string host_name;
@@ -93,7 +123,7 @@ class Master {
     unsigned memory_avail;
     unsigned slots_avail;
     
-    map<string, int> fdcache;
+    FDCache fdcache;
     
     void register_workers();
     void schedule_tasks();
