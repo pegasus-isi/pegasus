@@ -35,7 +35,7 @@ public:
     FDEntry *last;
     map<string, FDEntry *> byname;
     
-    FDCache(unsigned maxsize=100);
+    FDCache(unsigned maxsize=0);
     ~FDCache();
     double hitrate();
     void access(FDEntry *entry);

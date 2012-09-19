@@ -18,6 +18,9 @@ using std::string;
 using std::vector;
 using std::map;
 
+#define NOFILE_MAX 4096
+#define NOFILE_RESERVE 64
+
 static bool ABORT = false;
 
 static void on_signal(int signo) {
@@ -45,6 +48,35 @@ FDCache::FDCache(unsigned maxsize) {
     this->last = NULL;
     this->hits = 0;
     this->misses = 0;
+    
+    // Determine the maximum number of open files allowed
+    if (maxsize == 0) {
+        int limit = 0;
+        struct rlimit nofile;
+        if (getrlimit(RLIMIT_NOFILE, &nofile)) {
+            log_error("Unable to get NOFILE limit: %s", strerror(errno));
+        } else {
+            log_debug("Open files limit = %d (%d)", nofile.rlim_cur, nofile.rlim_max);
+            limit = nofile.rlim_cur;
+        }
+        
+        if (limit < 0) {
+            // If there is no limit, then allow the max
+            this->maxsize = NOFILE_MAX;
+        } else if (limit == 0) {
+            // If we couldn't find the limit, then the default is 64
+            this->maxsize = 64;
+        } else if (limit > NOFILE_MAX) {
+            // No more than the max
+            this->maxsize = NOFILE_MAX;
+        } else {
+            // In this case we reserve descriptors for other parts of the system
+            // In the worst case we require at least 1 open descriptor
+            this->maxsize = limit-NOFILE_RESERVE < 1 ? 1 : limit-NOFILE_RESERVE;
+        } 
+    }
+    
+    log_info("Setting max cached files = %u", this->maxsize);
 }
 
 FDCache::~FDCache() {
@@ -117,6 +149,9 @@ void FDCache::push(FDEntry *entry) {
     // then remove some
     while (this->byname.size() >= this->maxsize) {
         FDEntry *remove = this->pop();
+        if (remove == NULL) {
+            myfailure("Expected an entry");
+        }
         delete remove;
     }
     
@@ -292,20 +327,6 @@ Master::Master(const string &program, Engine &engine, DAG &dag,
     } else {
         this->resource_log = fopen(resourcefile.c_str(), "a");
     }
-    
-    // Determine the maximum number of open files allowed
-    unsigned maxfiles = 1024;
-    struct rlimit nofile;
-    if (getrlimit(RLIMIT_NOFILE, &nofile)) {
-        log_error("Unable to get NOFILE limit: %s", strerror(errno));
-    } else {
-        log_debug("Open files limit = %d (%d)", nofile.rlim_cur, nofile.rlim_max);
-        if (nofile.rlim_cur > 0) {
-            maxfiles = nofile.rlim_cur;
-        }
-    }
-    log_debug("Setting max open files = %u", maxfiles);
-    fdcache.maxsize = maxfiles;
 }
 
 Master::~Master() {
