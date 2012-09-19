@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% block title %}Home Page - Title{% endblock %}
+{% block javascript_includes %}
+<script type="text/javascript" src="{{ url_for ('static', filename='js/highcharts/highcharts.src.js') }}"></script>
+{% endblock %}
+{% block javascript_init %}
+<script type="text/javascript" charset="utf-8">
+var chart;
+var chartOptions;
+$(document).ready (function () 
+{
+	// Radialize the colors
+    Highcharts.getOptions ().colors = $.map (Highcharts.getOptions ().colors, function (color) 
+    {
+        return {
+            radialGradient: { cx: 0.5, cy: 0.3, r: 0.7 },
+            stops: [
+                [0, color],
+                [1, Highcharts.Color (color).brighten (-0.3).get ('rgb')] // darken
+            ]
+        };
+    });
+
+	$ ('#workflow_list').dataTable (
+	{
+		"bJQueryUI": true,
+		"sPaginationType": "full_numbers",
+		"bProcessing": true,
+		"bServerSide": true,
+		"sAjaxSource": "/",
+		"bAutoWidth": false,
+		"aaSorting": [[ 3, "desc" ]]
+	});
+	
+	chartOptions =  
+	{
+		chart: 
+		{
+			renderTo: 'workflow_counts',
+			plotBackgroundColor: null,
+			plotBorderWidth: null,
+			plotShadow: false,
+			height: 250
+		},
+		title: 
+		{
+			text: null
+		},
+		credits : 
+		{
+			enabled : false
+		},
+		tooltip: 
+		{
+			formatter: function() 
+			{
+				return '<b>'+ this.point.name +'</b>: '+ this.point.y;
+			}
+		},
+		plotOptions: 
+		{
+			pie: 
+			{
+				allowPointSelect: true,
+				cursor: 'pointer',
+				dataLabels: 
+				{
+					enabled: false
+				},
+				showInLegend: true,
+				dataLabels: 
+				{
+					color: '#000000',
+					formatter: function () 
+					{
+	                    return '<b>'+ this.point.name +':</b> '+ this.point.y;
+	                }
+				}
+			}
+		},
+		series: 
+		[{
+			type: 'pie',
+			name: 'Workflow Distribution',
+			data: [
+				{
+					name: 'Running',
+					y: {{ counts ['others'] }},
+					sliced: true,
+					selected: true
+				},
+				{
+					name: 'Failed',
+					y: {{ counts ['fail'] }}
+				},
+				{
+					name: 'Successful',
+					y: {{ counts ['success'] }}
+				}
+			]
+		}]
+	};
+    
+chart = new Highcharts.Chart (chartOptions);
+});
+</script>
+{% endblock %}
+{% block title_header %}Workflow Listing{% endblock %}
+{% block content %}
+	<div id="workflow_counts"></div>
+	<div id="table_wrapper">
+		<table id="workflow_list">
+			<thead>
+				<tr>
+					<th>Workflow Label</th>
+					<th>Submit Directory</th>
+					<th>State</th>
+					<th>Submitted On</th>
+				</tr>
+			</thead>
+			<tbody>
+			</tbody>
+		</table>
+	</div>
+{% endblock %}

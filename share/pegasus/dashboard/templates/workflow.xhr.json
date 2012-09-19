@@ -1,0 +1,18 @@
+{
+{% if table_args ['sequence'] %}"sEcho" : {{ table_args ['sequence'] }},{% else %}"sEcho" : 0,{% endif %}
+{% if count != None %}"iTotalRecords" : {{ count }},{% else %}"iTotalRecords" : {{ workflows|count }},{% endif %}
+{% if table_args ['limit'] %}"iTotalDisplayRecords" : {{ filtered }},{% endif %}
+"aaData" : [
+{% if workflows %}
+{% for i in range(0, workflows|count) %}
+{
+	"DT_RowClass" : "{{ workflows[i].state | to_lower_case }}",
+	"0" : {{ workflows[i].dax_label|tojson|safe  }}, "1" : {{ workflows[i].submit_dir|tojson|safe }}, "2" : {{ workflows[i].state|tojson|safe }}, "3" : {{ workflows[i].timestamp|tojson|safe }} 
+}
+{% if i + 1 != workflows|count %}
+,
+{% endif %}
+{% endfor %}
+{% endif %}
+]
+}

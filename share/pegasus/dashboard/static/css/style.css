@@ -1,0 +1,117 @@
+body
+{
+	margin : 0;
+	vertical-align : middle;
+}
+
+.top_fixed
+{
+	position : fixed !important;
+	top : 0px;
+	left : 0px;
+	z-index : 500;
+}
+
+.bottom_fixed
+{
+}
+
+.header
+{
+	background-color : #3f75d9;
+	padding : 2px 5px 2px 5px;
+	width : 100%;
+}
+
+.header_left
+{
+	display : inline-block;
+	width : 80%;
+}
+
+.float_left
+{
+	float: left;
+}
+
+.float_right
+{
+	float: right;
+}
+
+.logo, .header_right
+{
+	width : 10%;
+}
+
+.footer
+{
+	text-align : center;
+	vertical-align : middle;
+	padding : 2px 2px 2px 2px;
+}
+
+.footer_icon
+{
+	height : 68px;
+}
+
+.skip
+{
+	padding-top : 32px;
+}
+
+.content_container
+{
+	margin-left : auto;
+	margin-right : auto;
+	width : 80%;
+	border-left : 2px solid #3f75d9;
+	border-bottom : 2px solid #3f75d9;
+	border-right : 2px solid #3f75d9;
+}
+
+.content
+{
+	padding : 1em 1em 1em 1em;
+}
+
+p.content_spacer
+{
+	height : .5em;
+}
+
+p.spacer
+{
+	height : 5px;
+}
+
+p 
+{ 
+	font-size : 40px; 
+	margin : 0;
+}
+
+.icons
+{
+	height : 30px;
+	width : 30px;
+	vertical-align : middle;
+}
+
+.list
+{
+	width : 80%
+}
+
+.title
+{
+	background-color : #3f75d9;
+	padding : 2px 5px 2px 5px;
+}
+
+.workflow_job_graph
+{
+	max-width: 350px; 
+	max-height: 400px;
+}

@@ -1,0 +1,22 @@
+{% if invocations %}
+<table id="successful_invocations_list">
+	<thead>
+		<tr>
+			<th>Invocations</th>
+			<th>Time Taken</th>
+		</tr>
+	</thead>
+	<tbody>
+		{% for invocation in invocations %}
+		<tr class="successful">
+			{% if invocation.abs_task_id == None %}
+			<td><a href="{{ url_for ('invocation', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, task_id = '') }}">{{ invocation.exec_job_id }}</a></td>
+			{% else %}
+			<td><a href="{{ url_for ('invocation', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, task_id = invocation.abs_task_id) }}">{{ invocation.abs_task_id }}</a></td>
+			{% endif %}
+			<td>{{ invocation.remote_duration }}</td>
+		</tr>
+		{% endfor %}
+	</tbody>
+</table>
+{% endif %}

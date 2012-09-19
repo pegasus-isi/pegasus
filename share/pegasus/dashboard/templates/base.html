@@ -1,0 +1,88 @@
+<!doctype html>
+<html>
+<head>
+<title>{% block title %}{% endblock %}</title>
+<link rel="shortcut icon" href="{{ url_for ('static', filename='favicon.ico') }}">
+{% block head %}
+<!-- My CSS -->
+<link rel="stylesheet" type="text/css" href="{{ url_for ('static', filename='css/style.css') }}" />
+<!-- jQuery Custom CSS -->
+<link rel="stylesheet" type="text/css" href="{{ url_for ('static', filename='css/jquery/jquery-ui-1.8.22.custom.css') }}" />
+
+<!-- Datatable's jQuery Compatible CSS -->
+<link rel="stylesheet" type="text/css" href="{{ url_for ('static', filename='js/datatables/media/css/jquery.dataTables_themeroller.css') }}" />
+{% block css_includes %}{% endblock %}
+
+<script type="text/javascript" src="{{ url_for ('static', filename='js/jquery/jquery-1.7.2.min.js') }}"></script>
+<script type="text/javascript" src="{{ url_for ('static', filename='js/jquery/jquery-ui-1.8.22.custom.min.js') }}"></script>
+
+<script type="text/javascript" src="{{ url_for ('static', filename='js/datatables/media/js/jquery.dataTables.js') }}"></script>
+{% endblock %} 
+{% block javascript_includes %}{% endblock %} 
+{% block javascript_init %}{% endblock %}
+</head>
+<body>
+	<article>
+		<header id="header" class="top_fixed header ui-widget-header">
+			<div id="logo" class="float_left logo">
+				<div title="Logo">
+					 &nbsp;
+				</div>
+			</div>
+			<div id="" class="float_left">
+				<a href="{{ url_for ('index') }}"><img id="list"
+					src="{{ url_for ('static', filename='images/list.png') }}"
+					title="List Workflows" class="icons" /></a>
+			</div>
+			<div id="header_right" class="float_right header_right">
+				<a href="{{ url_for ('index') }}"><img id="about"
+					src="{{ url_for ('static', filename='images/about.png') }}"
+					title="About" class="icons about" /></a>
+				<a href="{{ url_for ('index') }}"><img id="help"
+					src="{{ url_for ('static', filename='images/help.png') }}"
+					title="Help" class="icons help" /></a>
+			</div>
+		</header>
+
+		<!-- Content -->
+		<section id="content_layout">
+			<div id="skip" class="skip"></div>
+
+			<div id="content_container" class="content_container">
+				<div id="content" class="content">
+					<article>
+					<div>
+						<a href="{{ url_for ('index') }}"><img src="{{ url_for ('static', filename='images/home.png') }}" class="icons"></a>{% block navigation_bar %}{% endblock %}
+					</div>
+					<p class="content_spacer"></p>
+					<header id="title" class="title ui-widget-header">
+						{% block title_header %}{% endblock %}
+					</header>
+					<p class="content_spacer"></p>
+					<section>
+						{% block content %} {% endblock %}
+					</section>
+					</article>
+				</div>
+			</div>
+		</section>
+		<!-- Content -->
+
+		<footer id="footer" class="content_layout footer">
+			<p class="spacer"></p>
+			<a href="http://pegasus.isi.edu"><img id="list"
+				src="{{ url_for ('static', filename='images/footer/stampede.png') }}"
+				title="STAMPEDE" class="footer_icon" /></a> 
+			<a href="http://pegasus.isi.edu"><img id="list"
+				src="{{ url_for ('static', filename='images/footer/pegasus.jpg') }}"
+				title="Pegasus Workflow Management System" class="footer_icon" /></a>
+			<a href="http://www.isi.edu"><img id="list"
+				src="{{ url_for ('static', filename='images/footer/isi.png') }}"
+				title="Information Sciences Institute" class="footer_icon" /></a> 
+			<a href="http://www.usc.edu"><img id="list"
+				src="{{ url_for ('static', filename='images/footer/usc.png') }}"
+				title="University of Southern California" class="footer_icon" /></a>
+		</footer>
+	</article>
+</body>
+</html>

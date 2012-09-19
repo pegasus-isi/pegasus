@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block javascript_init %}
+<script type="text/javascript" charset="utf-8">
+function verticalTableInit (selector)
+{
+	var table = $(selector);
+	table.addClass ('dataTable');
+	table.attr ('cellspacing', 0);
+	table.attr ('cellpadding', 5);
+	$(selector + '> tbody > tr > th').each (function (index)
+	{
+		$(this).addClass ('ui-state-default');
+	});
+	
+	$(selector + '> tbody > tr').each (function (index)
+	{
+		$(this).addClass ('odd');
+	});
+}
+
+$(document).ready (function () 
+{
+	verticalTableInit ('#invocation_text_info');
+})
+</script>
+{% endblock %}
+{% block title %}Invocation Details{% endblock %}
+{% block title_header %}Invocation Details{% endblock %}
+{% block navigation_bar %} | <a href="{{ url_for ('workflow', root_wf_id = root_wf_id, wf_id = wf_id) }}">Workflow</a> | <a href="{{ url_for ('job', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id) }}">Job</a> | <a href="{{ url_for ('invocation', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, task_id = task_id) }}">Task</a>
+{% endblock %}
+{% block content %}
+<div id="invocation_details">
+	<div id="invocation_text">
+		<table id="invocation_text_info">
+			<tr>
+				<th>Task Label</th>
+				<td>{{ task_id }}</td>
+			</tr>
+			<tr>
+				<th>Transformation</th>
+				<td>{{ invocation.transformation }}</td>
+			</tr>
+			<tr>
+				<th>Executable</th>
+				<td>{{ invocation.executable }}</td>
+			</tr>
+			<tr>
+				<th>Arguments</th>
+				<td>{{ invocation.argv }}</td>
+			</tr>
+			<tr>
+				<th>Exit Code</th>
+				<td>{{ invocation.exitcode }}</td>
+			</tr>
+			<tr>
+				<th>Start Time</th>
+				<td>{{ invocation.start_time }}</td>
+			</tr>
+			<tr>
+				<th>Remote Duration</th>
+				<td>{{ invocation.remote_duration | time_to_str }}</td>
+			</tr>
+			<tr>
+				<th>Remote CPU Time</th>
+				<td>{{ invocation.remote_cpu_time | time_to_str }}</td>
+			</tr>
+		</table>
+	</div>
+</div>
+<br/>
+{% endblock %}

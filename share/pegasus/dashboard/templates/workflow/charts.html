@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+{% block title %}Charts{% endblock %}
+{% block javascript_includes %}
+<script type="text/javascript" src="{{ url_for ('static', filename='js/highcharts/highcharts.src.js') }}"></script>
+<script type="text/javascript" src="{{ url_for ('static', filename='js/charts.js') }}"></script>
+{% endblock %}
+{% block javascript_init %}
+<script type="text/javascript" charset="utf-8">
+var timeChart;
+var timeChartOpt;
+var timeChartData;
+
+var jobDistribution;
+var jobDistributionOpt;
+
+var jobDistributionData = [
+{% if job_dist %}
+{% for i in range(0, job_dist|count) %}	
+{
+	name : {{ job_dist [i].transformation|tojson|safe }},
+	count : { total : {{ job_dist [i].count|tojson|safe }}, success : {{ job_dist [i].success|tojson|safe }}, failure : {{ job_dist [i].failure|tojson|safe }} },
+	time : { total : {{ job_dist [i].sum|dec_to_float|tojson|safe }} , min : {{ job_dist [i].min|dec_to_float|tojson|safe }}, max : {{ job_dist [i].max|dec_to_float|tojson|safe }}, avg : {{ job_dist [i].avg|dec_to_float|tojson|safe }} }
+}
+{% if i + 1 != job_dist|count %}
+,
+{% endif %}
+{% endfor %}
+{% endif %}];
+
+function getTimeChartData ()
+{
+	var ajaxOpt = 
+	{
+		url : '{{ url_for ("time_chart", root_wf_id = root_wf_id, wf_id = wf_id) }}',
+		dataType: 'json',
+		error: function (xhr, textStatus, errorThrown)
+		{
+			alert ('Error occured: ' + xhr.responseText + textStatus);
+		},
+		success: function (data, textStatus, xhr) 
+		{
+			timeChartData = data;
+		}, 
+		async: false
+	};
+	
+	$.ajax (ajaxOpt)
+}
+
+$(document).ready (function () 
+{
+	radializeChartColors ();
+    plotTimeChart ();
+    
+    jobDistributionOpt =  
+	{
+		chart: 
+		{
+			renderTo: 'job_distribution',
+			plotBackgroundColor: null,
+			plotBorderWidth: null,
+			plotShadow: false,
+		},
+		title: 
+		{
+			text: 'Job Distribution by Count'
+		},
+		credits : 
+		{
+			enabled : false
+		},
+		tooltip: 
+		{
+			formatter: jobDistributionTooltipFormat
+		},
+		plotOptions: 
+		{
+			pie: 
+			{
+				allowPointSelect: true,
+				cursor: 'pointer',
+				dataLabels: 
+				{
+					enabled: false
+				},
+				showInLegend: true,
+				dataLabels: 
+				{
+					color: '#000000',
+					formatter: function () 
+					{
+	                    return '<b>'+ this.point.name +':</b> '+ this.point.y;
+	                }
+				}
+			}
+		},
+		series: 
+		[{
+			type: 'pie',
+			name: 'Browser share',
+			data: [
+				{% if job_dist %}
+					{% for i in range(0, job_dist|count) %}	
+					{
+						name: {{ job_dist [i].transformation|tojson|safe }},
+						y: {{ job_dist [i].count }},
+						count : { total : {{ job_dist [i].count|tojson|safe }}, success : {{ job_dist [i].success|tojson|safe }}, failure : {{ job_dist [i].failure|tojson|safe }} },
+						time : { total : {{ job_dist [i].sum|dec_to_float|tojson|safe }} , min : {{ job_dist [i].min|dec_to_float|tojson|safe }}, max : {{ job_dist [i].max|dec_to_float|tojson|safe }}, avg : {{ job_dist [i].avg|dec_to_float|tojson|safe }} }						
+					}
+					{% if i + 1 != job_dist|count %}
+					,
+					{% endif %}
+					{% endfor %}
+				{% endif %}
+			]
+		}]
+	};
+    
+jobDistribution = new Highcharts.Chart (jobDistributionOpt);
+});
+</script>
+{% endblock %}
+{% block navigation_bar %} | <a href="{{ url_for ('workflow', root_wf_id = root_wf_id, wf_id = wf_id) }}">Workflow</a> | <a href="{{ url_for ('charts', root_wf_id = root_wf_id, wf_id = wf_id) }}">Charts</a>{% endblock %}
+{% block title_header %}Charts{% endblock %}
+{% block content %}
+<div id="plots">
+	<section id="time_chart_container">
+		<div id="time_chart"></div>
+		<div id="time_chart_options">
+			<input type="radio" id="by_job"     name="time_chrt" onclick="timeChartToggle (1);" checked="checked" /><label for="by_job">By Jobs</label>
+			<input type="radio" id="by_runtime" name="time_chrt" onclick="timeChartToggle (2);" /><label for="by_runtime">By Invocations</label>
+		</div>
+	</section>
+	<br />
+	<section id="distribution_chart_container">
+		<div id="job_distribution"></div>
+		<div id="job_distribution_options">
+			<input type="radio" id="by_count" name="job_dist" onclick="jobDistributionGraphToggle (1);" checked="checked"  /><label for="by_count">By Count</label>
+			<input type="radio" id="by_time" name="job_dist"  onclick="jobDistributionGraphToggle (2);" /><label for="by_time">By Time</label>
+		</div>
+	</section>
+</div>
+<br/>
+{% endblock %}
