@@ -111,7 +111,7 @@ public class Shiwa {
             
             //potential for race condition
             directory.delete();
-            directory.mkdir();
+            directory.mkdirs();
         }
         catch( IOException ioe ){
             throw new RuntimeException( "Unable to create temp directory in directory " + directory );
