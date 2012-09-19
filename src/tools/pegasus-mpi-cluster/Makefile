@@ -93,7 +93,7 @@ depends:
 	g++ -MM *.cpp > depends.mk
 
 svn.h:
-	$(PWD)/gensvnh.sh $(PWD) > svn.h
+	$(CURDIR)/gensvnh.sh $(CURDIR) > $(CURDIR)/svn.h
 
 tags: *.h *.cpp
 	ctags *.h *.cpp
