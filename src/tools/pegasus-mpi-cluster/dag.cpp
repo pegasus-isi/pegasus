@@ -11,9 +11,14 @@
 #include "failure.h"
 #include "log.h"
 
+using std::string;
+using std::vector;
+using std::map;
+using std::list;
+
 #define MAX_LINE 16384
 
-Task::Task(const std::string &name, const std::string &command) {
+Task::Task(const string &name, const string &command) {
     this->name = name;
     this->command = command;
     this->success = false;
@@ -21,6 +26,7 @@ Task::Task(const std::string &name, const std::string &command) {
     this->memory = 0;
     this->cpus = 1;
     this->priority = 0;
+    this->io_failed = false;
 }
 
 Task::~Task() {
@@ -42,7 +48,7 @@ bool Task::is_ready() {
     return true;
 }
 
-DAG::DAG(const std::string &dagfile, const std::string &rescuefile, const bool lock, unsigned tries) {
+DAG::DAG(const string &dagfile, const string &rescuefile, const bool lock, unsigned tries) {
     this->lock = lock;
     this->tries = tries;
     
@@ -108,11 +114,11 @@ DAG::~DAG() {
     }
 }
 
-bool DAG::has_task(const std::string &name) const {
+bool DAG::has_task(const string &name) const {
     return this->tasks.find(name) != this->tasks.end();
 }
 
-Task *DAG::get_task(const std::string &name) const {
+Task *DAG::get_task(const string &name) const {
     if (!this->has_task(name)) {
         return NULL;
     }
@@ -126,7 +132,7 @@ void DAG::add_task(Task *task) {
     this->tasks[task->name] = task;
 }
 
-void DAG::add_edge(const std::string &parent, const std::string &child) {
+void DAG::add_edge(const string &parent, const string &child) {
     if (!this->has_task(parent)) {
         myfailure("No such task: %s\n", parent.c_str());
     }
@@ -144,12 +150,12 @@ void DAG::add_edge(const std::string &parent, const std::string &child) {
 void DAG::read_dag() {
     const char *DELIM = " \t\n\r";
     
-    std::string pegasus_id = "";
-    std::string pegasus_transformation = "";
-    std::string pegasus_name = ""; 
+    string pegasus_id = "";
+    string pegasus_transformation = "";
+    string pegasus_name = ""; 
     char line[MAX_LINE];
     while (fgets(line, MAX_LINE, this->dag) != NULL) {
-        std::string rec(line);
+        string rec(line);
         trim(rec);
         
         // Blank lines
@@ -159,7 +165,7 @@ void DAG::read_dag() {
         
         
         if (rec.find("TASK", 0, 4) == 0) {
-            std::vector<std::string> v;
+            vector<string> v;
             
             split(v, rec, DELIM, 2);
             
@@ -167,7 +173,7 @@ void DAG::read_dag() {
                 myfailure("Invalid TASK record: %s\n", line);
             }
             
-            std::string name = v[1];
+            string name = v[1];
             
             // Check for duplicate tasks
             if (this->has_task(name)) {
@@ -179,12 +185,13 @@ void DAG::read_dag() {
             unsigned cpus = 1;
             unsigned tries = this->tries;
             int priority = 0;
+            map<string, string> forwards;
             
             // Parse task arguments
-            std::list<std::string> args;
+            list<string> args;
             split_args(args, v[2]);
             while (true) {
-                std::string arg = args.front();
+                string arg = args.front();
                 if (arg[0] == '-') {
                     if (arg == "-m" || arg == "--request-memory") {
                         args.pop_front();
@@ -192,7 +199,7 @@ void DAG::read_dag() {
                             myfailure("-m/--request-memory requires N for task %s", 
                                 name.c_str());
                         }
-                        std::string smemory = args.front();
+                        string smemory = args.front();
                         float fmemory;
                         if (sscanf(smemory.c_str(), "%f", &fmemory) != 1) {
                             myfailure(
@@ -214,7 +221,7 @@ void DAG::read_dag() {
                             myfailure("-c/--request-cpus requires N for task %s", 
                                 name.c_str());
                         }
-                        std::string scpus = args.front();
+                        string scpus = args.front();
                         float fcpus;
                         if (sscanf(scpus.c_str(), "%f", &fcpus) != 1) {
                             myfailure(
@@ -236,7 +243,7 @@ void DAG::read_dag() {
                             myfailure("-t/--tries requires N for task %s", 
                                 name.c_str());
                         }
-                        std::string stries = args.front();
+                        string stries = args.front();
                         int itries;
                         if (sscanf(stries.c_str(), "%d", &itries) != 1) {
                             myfailure("Invalid tries '%s' for task %s", 
@@ -254,13 +261,30 @@ void DAG::read_dag() {
                             myfailure("-p/--priority requires P for task %s", 
                                 name.c_str());
                         }
-                        std::string spriority = args.front();
+                        string spriority = args.front();
                         if (sscanf(spriority.c_str(), "%d", &priority) != 1) {
                             myfailure("Invalid priority '%s' for task %s", 
                                 spriority.c_str(), name.c_str());
                         }
                         log_trace("Task %s has priority %d", 
                             name.c_str(), priority);
+                    } else if (arg == "-f" || arg == "--forward") {
+                        args.pop_front();
+                        if (args.size() == 0) {
+                            myfailure("-f/--forward requires VAR=PATH for task %s",
+                                name.c_str());
+                        }
+                        string forward = args.front();
+                        int eq = forward.find("=");
+                        if (eq == string::npos) {
+                            myfailure("Task %s -f/--forward format should be VAR=PATH: %s",
+                                    name.c_str(), forward.c_str());
+                        }
+                        string varname = forward.substr(0, eq);
+                        string filename = forward.substr(eq + 1);
+                        log_trace("Task %s needs data forwarded for %s",
+                                name.c_str(), filename.c_str());
+                        forwards[varname] = filename;
                     } else {
                         myfailure("Invalid argument '%s' for task %s", 
                             arg.c_str(), name.c_str());
@@ -272,7 +296,7 @@ void DAG::read_dag() {
             }
             
             // Copy all the arguments into a single string
-            std::string command = "";
+            string command = "";
             while (args.size() > 0) {
                 command += args.front();
                 args.pop_front();
@@ -286,6 +310,7 @@ void DAG::read_dag() {
             t->cpus = cpus;
             t->tries = tries;
             t->priority = priority;
+            t->forwards = forwards;
             
             if (pegasus_id.length() > 0) {
                 if (pegasus_name != name) {
@@ -303,7 +328,7 @@ void DAG::read_dag() {
             this->add_task(t);
         } else if (rec.find("EDGE", 0, 4) == 0) {
             
-            std::vector<std::string> v;
+            vector<string> v;
             
             split(v, rec, DELIM, 2);
             
@@ -311,13 +336,13 @@ void DAG::read_dag() {
                 myfailure("Invalid EDGE record: %s\n", line);
             }
             
-            std::string parent = v[1];
-            std::string child = v[2];
+            string parent = v[1];
+            string child = v[2];
             
             this->add_edge(parent, child);
         } else if (rec.find("#@", 0, 2) == 0) {
             // Pegasus cluster comment - includes extra task information
-            std::vector<std::string> v;
+            vector<string> v;
             
             split(v, rec, DELIM, 3);
             
@@ -336,7 +361,7 @@ void DAG::read_dag() {
     }
 }
 
-void DAG::read_rescue(const std::string &filename) {
+void DAG::read_rescue(const string &filename) {
     
     // Check if rescue file exists
     if (access(filename.c_str(), R_OK)) {
@@ -355,7 +380,7 @@ void DAG::read_rescue(const std::string &filename) {
     const char *DELIM = " \t\n\r";
     char line[MAX_LINE];
     while (fgets(line, MAX_LINE, rescuefile) != NULL) {
-        std::string rec(line);
+        string rec(line);
         trim(rec);
         
         // Blank lines
@@ -369,7 +394,7 @@ void DAG::read_rescue(const std::string &filename) {
         }
         
         if (rec.find("DONE", 0, 4) == 0) {
-            std::vector<std::string> v;
+            vector<string> v;
             
             split(v, rec, DELIM, 1);
             
@@ -377,7 +402,7 @@ void DAG::read_rescue(const std::string &filename) {
                 myfailure("Invalid DONE record: %s\n", line);
             }
             
-            std::string name = v[1];
+            string name = v[1];
             
             if (!this->has_task(name)) {
                 myfailure("Unknown task %s in rescue file", name.c_str());

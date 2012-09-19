@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <math.h>
 
+#include "svn.h"
 #include "dag.h"
 #include "engine.h"
 #include "master.h"
@@ -13,15 +14,24 @@
 #include "log.h"
 #include "protocol.h"
 
+using std::string;
+using std::list;
+using std::exception;
+
 static char *program;
 static int rank;
 
 void version() {
     if (rank == 0) {
-        fprintf(stderr, "pegasus-mpi-cluster\n");
+#ifdef SVN_URL
+        fprintf(stderr, "Repository: %s\n", SVN_URL);
+#endif 
 #ifdef SVN_REVISION
-        fprintf(stderr, "Revision: %d\n" ,SVN_REVISION);
+        fprintf(stderr, "Revision: %s\n", SVN_REVISION);
 #endif
+#ifdef SVN_CHANGED
+        fprintf(stderr, "Changed: %s\n", SVN_CHANGED);
+#endif 
         fprintf(stderr, "Compiled: %s %s\n", __DATE__, __TIME__);
 #ifdef __VERSION__
         fprintf(stderr, "Compiler: %s\n", __VERSION__);
@@ -71,7 +81,7 @@ void usage() {
     }
 }
 
-void argerror(const std::string message) {
+void argerror(const string message) {
     if (rank == 0) {
         fprintf(stderr, "%s\n", message.c_str());
     }
@@ -83,21 +93,21 @@ int mpidag(int argc, char *argv[]) {
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
     
-    std::list<char *> flags;
+    list<char *> flags;
     for (int i=1; i<argc; i++) {
         flags.push_back(argv[i]);
     }
     
-    std::string outfile = "stdout";
-    std::string errfile = "stderr";
-    std::list<std::string> args;
+    string outfile = "stdout";
+    string errfile = "stderr";
+    list<string> args;
     int loglevel = LOG_INFO;
     bool skiprescue = false;
     int max_failures = 0;
     int tries = 1;
     bool lock = true;
-    std::string rescuefile = "";
-    std::string host_script = "";
+    string rescuefile = "";
+    string host_script = "";
     unsigned host_memory = 0;
     unsigned host_cpus = 0;
     bool strict_limits = false;
@@ -134,7 +144,7 @@ int mpidag(int argc, char *argv[]) {
     }
     
     while (flags.size() > 0) {
-        std::string flag = flags.front();
+        string flag = flags.front();
         if (flag == "-h" || flag == "--help") {
             usage();
             return 0;
@@ -167,7 +177,7 @@ int mpidag(int argc, char *argv[]) {
                 argerror("-m/--max-failures requires N");
                 return 1;
             }
-            std::string N = flags.front();
+            string N = flags.front();
             if (!sscanf(N.c_str(), "%d", &max_failures)) {
                 argerror("N for -m/--max-failures is invalid");
                 return 1;
@@ -182,7 +192,7 @@ int mpidag(int argc, char *argv[]) {
                 argerror("-t/--tries requires N");
                 return 1;
             }
-            std::string N = flags.front();
+            string N = flags.front();
             if (!sscanf(N.c_str(), "%d", &tries)) {
                 argerror("N for -t/--tries is invalid");
                 return 1;
@@ -213,7 +223,7 @@ int mpidag(int argc, char *argv[]) {
                 argerror("--host-memory requires N");
                 return 1;
             }
-            std::string host_memory_string = flags.front();
+            string host_memory_string = flags.front();
             if (sscanf(host_memory_string.c_str(), "%u", &host_memory) != 1) {
                 argerror("Invalid value for --host-memory");
                 return 1;
@@ -228,7 +238,7 @@ int mpidag(int argc, char *argv[]) {
                 argerror("--host-cpus requires N");
                 return 1;
             }
-            std::string host_cpus_string = flags.front();
+            string host_cpus_string = flags.front();
             if (sscanf(host_cpus_string.c_str(), "%u", &host_cpus) != 1) {
                 argerror("Invalid value for --host-cpus");
                 return 1;
@@ -245,13 +255,13 @@ int mpidag(int argc, char *argv[]) {
                 argerror("--max-wall-time requires T");
                 return 1;
             }
-            std::string max_wall_time_string = flags.front();
+            string max_wall_time_string = flags.front();
             if (sscanf(max_wall_time_string.c_str(), "%lf", &max_wall_time) != 1) {
                 argerror("Invalid value for --max-wall-time");
                 return 1;
             }
         } else if (flag[0] == '-') {
-            std::string message = "Unrecognized argument: ";
+            string message = "Unrecognized argument: ";
             message += flag;
             argerror(message);
             return 1;
@@ -271,7 +281,7 @@ int mpidag(int argc, char *argv[]) {
         return 1;
     }
     
-    std::string dagfile = args.front();
+    string dagfile = args.front();
     
     log_set_level(loglevel);
     
@@ -294,8 +304,8 @@ int mpidag(int argc, char *argv[]) {
             rescuefile = dagfile + ".rescue";
         }
         
-        std::string oldrescue = rescuefile;
-        std::string newrescue = rescuefile;
+        string oldrescue = rescuefile;
+        string newrescue = rescuefile;
         
         if (skiprescue) {
             // User does not want to read old rescue file
@@ -305,7 +315,7 @@ int mpidag(int argc, char *argv[]) {
         log_debug("Using old rescue file: %s", oldrescue.c_str());
         log_debug("Using new rescue file: %s", newrescue.c_str());
         
-        std::string resource_log = dagfile + ".resource";
+        string resource_log = dagfile + ".resource";
         
         bool has_host_script = ("" != host_script);
         
@@ -336,7 +346,7 @@ int main(int argc, char *argv[]) {
         int rc = mpidag(argc, argv);
         MPI_Finalize();
         return rc;
-    } catch (std::exception &error) {
+    } catch (exception &error) {
         // If we catch an execption here, then one of the
         // processes has hit an unsolvable problem and we
         // need to abort the entire workflow.

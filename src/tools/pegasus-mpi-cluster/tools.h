@@ -16,5 +16,6 @@ double current_time();
 void get_host_name(std::string &hostname);
 unsigned long get_host_memory();
 unsigned int get_host_cpus();
+int mkdirs(const char *path);
 
 #endif /* _TOOLS_H */

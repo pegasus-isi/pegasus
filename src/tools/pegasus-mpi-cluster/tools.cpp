@@ -9,10 +9,12 @@
 #include <sys/sysctl.h>
 #endif
 #include <sys/time.h>
+#include <sys/stat.h>
 
 #include "tools.h"
 #include "failure.h"
 
+using std::string;
 
 /* purpose: formats ISO 8601 timestamp into given buffer (simplified)
  * paramtr: seconds (IN): time stamp
@@ -124,4 +126,89 @@ unsigned int get_host_cpus() {
         myfailure("Invalid number of CPUs: %u", cpus);
     }
     return cpus;
+}
+
+int mkdirs(const char *path) {
+    if (path == NULL || strlen(path) == 0) {
+        return 0;
+    }
+    
+    // No need to create cwd
+    if (path[0] == '.' && path[1] == '\0') {
+        return 0;
+    }
+    
+    if (strlen(path) > MAXPATHLEN) {
+        errno = ENAMETOOLONG;
+        return -1;
+    }
+    
+    char mypath[MAXPATHLEN];
+    char *p = mypath;
+    
+    if (path[0] == '.' && path[1] == '.') {
+        if (getcwd(mypath, MAXPATHLEN) == NULL) {
+            return -1;
+        }
+        
+        char *parent = strrchr(mypath, '/');
+        if (parent) *parent = '\0';
+        
+        int off = strlen(mypath);
+        strcpy(mypath+off, path+2);
+        
+        // In this case we don't need to go back to the root
+        p = mypath + off; 
+    } else if (path[0] == '.' && path[1] == '/') {
+        strcpy(mypath, path+2);
+    } else {
+        strcpy(mypath, path);
+    }
+    
+    while (*p == '/') p++;
+    
+    int created = 0;
+    struct stat st;
+    while ((p = strchr(p, '/'))) {
+        *p = '\0';
+        
+        if (stat(mypath, &st)) {
+            if (errno == ENOENT) {
+                if (mkdir(mypath, 0777)) {
+                    return -1;
+                }
+                created++;
+            } else {
+                return -1;
+            }
+        } else {
+            // If it exists, make sure it is a dir
+            if (S_ISDIR(st.st_mode) == 0) {
+                errno = ENOTDIR;
+                return -1;
+            }
+        }
+        
+        *p = '/';
+        while (*p == '/') p++;
+    }
+    
+    // Last element of path
+    if (stat(mypath, &st)) {
+        if (errno == ENOENT) { 
+            if (mkdir(mypath, 0777)) {
+                return -1;
+            }
+            created++;
+        } else {
+            return -1;
+        }
+    } else {
+        if (S_ISDIR(st.st_mode) == 0) {
+            errno = ENOTDIR;
+            return -1;
+        }
+    }
+    
+    return created;
 }

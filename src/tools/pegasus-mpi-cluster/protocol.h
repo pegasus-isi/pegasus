@@ -2,26 +2,98 @@
 #define PROTOCOL_H
 
 #include <string>
+#include <map>
+
+using std::string;
+using std::map;
 
 // Time in microseconds to sleep if there is no message waiting
 #define NO_MESSAGE_SLEEP_TIME 50000
 
-#define TAG_COMMAND 1
-#define TAG_RESULT 2
-#define TAG_SHUTDOWN 3
-#define TAG_HOSTNAME 4
-#define TAG_HOSTRANK 5
+extern unsigned long pmc_bytes_sent;
+extern unsigned long pmc_bytes_recvd;
 
-void send_registration(const std::string &hostname, unsigned int memory, unsigned int cpus);
-void recv_registration(int &worker, std::string &hostname, unsigned int &memory, unsigned int &cpus);
-void send_hostrank(int worker, int hostrank);
-void recv_hostrank(int &hostrank);
-void send_request(const std::string &name, const std::string &command, const std::string &pegasus_id, unsigned int memory, unsigned int cpus, int worker);
-void send_shutdown(int worker);
-void recv_request(std::string &name, std::string &command, std::string &pegasus_id, unsigned int &memory, unsigned int &cpus, int &shutdown);
-void send_response(const std::string &name, int exitcode, double runtime);
-void recv_response(std::string &name, int &exitcode, double &runtime, int &worker);
-bool response_waiting();
-bool request_waiting();
+enum MessageType {
+    COMMAND      = 1,
+    RESULT       = 2,
+    SHUTDOWN     = 3,
+    REGISTRATION = 4,
+    HOSTRANK     = 5,
+    IODATA       = 6
+};
+
+class Message {
+public:
+    MessageType type;
+    int source;
+    char *msg;
+    unsigned msgsize;
+    
+    Message(MessageType type);
+    Message(MessageType type, char *msg, unsigned msgsize, int source);
+    virtual ~Message();
+};
+
+class ShutdownMessage: public Message {
+public:
+    ShutdownMessage(char *msg, unsigned msgsize, int source);
+    ShutdownMessage();
+};
+
+class CommandMessage: public Message {
+public:
+    string name;
+    string command;
+    string id;
+    unsigned memory;
+    unsigned cpus;
+    map<string, string> forwards;
+    
+    CommandMessage(char *msg, unsigned msgsize, int source);
+    CommandMessage(const string &name, const string &command, const string &id, unsigned memory, unsigned cpus, const map<string,string> &forwards);
+};
+
+class ResultMessage: public Message {
+public:
+    string name;
+    int exitcode;
+    double runtime;
+    
+    ResultMessage(char *msg, unsigned msgsize, int source, int _dummy_);
+    ResultMessage(const string &name, int exitcode, double runtime);
+};
+
+class RegistrationMessage: public Message {
+public:
+    string hostname;
+    unsigned memory;
+    unsigned cpus;
+    
+    RegistrationMessage(char *msg, unsigned msgsize, int source);
+    RegistrationMessage(const string &hostname, unsigned memory, unsigned cpus);
+};
+
+class HostrankMessage: public Message {
+public:
+    int hostrank;
+    
+    HostrankMessage(char *msg, unsigned msgsize, int source);
+    HostrankMessage(int hostrank);
+};
+
+class IODataMessage: public Message {
+public:
+    string task;
+    string filename;
+    const char *data;
+    unsigned size;
+    
+    IODataMessage(char *msg, unsigned msgsize, int source);
+    IODataMessage(const string &task, const string &filename, const char *data, unsigned size);
+};
+
+void send_message(Message *message, int rank);
+Message *recv_message();
+bool message_waiting();
 
 #endif /* PROTOCOL_H */

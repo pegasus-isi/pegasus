@@ -5,12 +5,21 @@
 #include <signal.h>
 #include <math.h>
 #include <sys/time.h>
+#include <fcntl.h>
+#include <sys/resource.h>
 
 #include "master.h"
 #include "failure.h"
 #include "protocol.h"
 #include "log.h"
 #include "tools.h"
+
+using std::string;
+using std::vector;
+using std::map;
+
+#define NOFILE_MAX 4096
+#define NOFILE_RESERVE 64
 
 static bool ABORT = false;
 
@@ -19,15 +28,248 @@ static void on_signal(int signo) {
     ABORT = true;
 }
 
+FDEntry::FDEntry(const string &filename, FILE *file) {
+    this->filename = filename;
+    this->file = file;
+    this->prev = NULL;
+    this->next = NULL;
+}
+
+FDEntry::~FDEntry() {
+    if (this->file != NULL) {
+        fclose(this->file);
+        this->file = NULL;
+    }
+}
+
+FDCache::FDCache(unsigned maxsize) {
+    this->maxsize = maxsize;
+    this->first = NULL;
+    this->last = NULL;
+    this->hits = 0;
+    this->misses = 0;
+    
+    // Determine the maximum number of open files allowed
+    if (maxsize == 0) {
+        int limit = 0;
+        struct rlimit nofile;
+        if (getrlimit(RLIMIT_NOFILE, &nofile)) {
+            log_error("Unable to get NOFILE limit: %s", strerror(errno));
+        } else {
+            log_debug("Open files limit = %d (%d)", nofile.rlim_cur, nofile.rlim_max);
+            limit = nofile.rlim_cur;
+        }
+        
+        if (limit < 0) {
+            // If there is no limit, then allow the max
+            this->maxsize = NOFILE_MAX;
+        } else if (limit == 0) {
+            // If we couldn't find the limit, then the default is 64
+            this->maxsize = 64;
+        } else if (limit > NOFILE_MAX) {
+            // No more than the max
+            this->maxsize = NOFILE_MAX;
+        } else {
+            // In this case we reserve descriptors for other parts of the system
+            // In the worst case we require at least 1 open descriptor
+            this->maxsize = limit-NOFILE_RESERVE < 1 ? 1 : limit-NOFILE_RESERVE;
+        } 
+    }
+    
+    log_info("Setting max cached files = %u", this->maxsize);
+}
+
+FDCache::~FDCache() {
+    this->close();
+}
+
+void FDCache::close() {
+    FDEntry *i = first;
+    while (i!=NULL) {
+        FDEntry *next = i->next;
+        delete i;
+        i = next;
+    }
+    byname.clear();
+    first = NULL;
+    last = NULL;
+}
+
+int FDCache::size() {
+    return this->byname.size();
+}
+
+double FDCache::hitrate() {
+    double total = this->hits + this->misses;
+    if (total == 0) {
+        return 1.0;
+    }
+    return this->hits / total;
+}
+
+void FDCache::access(FDEntry *entry) {
+    if (first == entry) {
+        return;
+    }
+    
+    // Make sure it is a valid request
+    if (byname.size() == 0) {
+        myfailure("Empty list");
+    }
+    if (entry == NULL) {
+        myfailure("Invalid entry");
+    }
+    if (entry->prev && entry->prev->next != entry) {
+        myfailure("Entry not in list");
+    }
+    if (entry->next && entry->next->prev != entry) {
+        myfailure("Entry not in list");
+    }
+    
+    // If it is last, we need to update the last pointer
+    if (last == entry) {
+        last = entry->prev;
+    }
+    
+    if (entry->prev) {
+        entry->prev->next = entry->next;
+    }
+    if (entry->next) {
+        entry->next->prev = entry->prev;
+    }
+    
+    entry->prev = NULL;
+    entry->next = first;
+    first->prev = entry;
+    first = entry;
+}
+
+void FDCache::push(FDEntry *entry) {
+    // If there are too many descriptors in the cache,
+    // then remove some
+    while (this->byname.size() >= this->maxsize) {
+        FDEntry *remove = this->pop();
+        if (remove == NULL) {
+            myfailure("Expected an entry");
+        }
+        delete remove;
+    }
+    
+    if (last == NULL) {
+        last = entry;
+    }
+    entry->next = first;
+    entry->prev = NULL;
+    if (first != NULL) {
+        first->prev = entry;
+    }
+    first = entry;
+    byname[entry->filename] = entry;
+}
+
+FDEntry *FDCache::pop() {
+    if (last == NULL) {
+        return NULL;
+    }
+    
+    FDEntry *remove = last;
+    
+    byname.erase(last->filename);
+    
+    if (first == last) {
+        // If it is the last one, then 
+        // the list is empty
+        first = NULL;
+        last = NULL;
+    } else {
+        last = last->prev;
+        last->next = NULL;
+    }
+    
+    return remove;
+}
+
+FILE *FDCache::open(string filename) {
+    // If the file is already in the cache, then
+    // return it
+    map<string, FDEntry *>::iterator i;
+    i = byname.find(filename);
+    if (i == byname.end()) {
+        this->misses += 1;
+    } else {
+        this->hits += 1;
+        FDEntry *entry = i->second;
+        access(entry);
+        return entry->file;
+    }
+    
+    // Create directories as needed on file creation
+    if (filename.find("/") != string::npos) {
+        string path = filename.substr(0, filename.rfind("/"));
+        if (mkdirs(path.c_str()) < 0) {
+            log_error("Unable to create directory %s: %s", path.c_str(), 
+                    strerror(errno));
+            return NULL;
+        }
+    }
+    
+    // We always open the file for append because this may be one of many
+    // records we need to write to the file
+    FILE *file = fopen(filename.c_str(), "a");
+    if (file == NULL) {
+        return NULL;
+    }
+    
+    FDEntry *entry = new FDEntry(filename, file);
+    push(entry);
+    
+    return file;
+}
+
+int FDCache::write(string filename, const char *data, int size) {
+    FILE *file = open(filename);
+    if (file == NULL) {
+        log_error("Error opening file %s: %s", filename.c_str(), 
+                strerror(errno));
+        return -1;
+    }
+    
+    int rc = fwrite(data, 1, size, file);
+    if (rc != size) {
+        log_error("Error writing %d bytes to %s: %s", size, filename.c_str(), 
+                strerror(errno));
+        return -1;
+    }
+    if (fflush(file) != 0) {
+        log_error("fflush failed on file %s: %s", filename.c_str(), 
+                strerror(errno));
+        return -1;
+    }
+#ifdef SYNC_IODATA
+#ifdef DARWIN
+    // OSX does not have fdatasync
+    rc = fsync(fileno(file));
+#else
+    rc = fdatasync(fileno(file));
+#endif
+    if (rc != 0) {
+        log_error("fsync/fdatasync failed on file %s: %s", filename.c_str(), 
+                strerror(errno));
+        return -1;
+    }
+#endif
+    return 0;
+}
+
 void Host::log_status() {
     log_trace("Host %s now has %u MB, %u CPUs, and %u slots free", 
         this->host_name.c_str(), this->memory, this->cpus, this->slots);
 }
 
-Master::Master(const std::string &program, Engine &engine, DAG &dag,
-               const std::string &dagfile, const std::string &outfile,
-               const std::string &errfile, bool has_host_script,
-               double max_wall_time, const std::string &resourcefile) {
+Master::Master(const string &program, Engine &engine, DAG &dag,
+               const string &dagfile, const string &outfile,
+               const string &errfile, bool has_host_script,
+               double max_wall_time, const string &resourcefile) {
     this->program = program;
     this->dagfile = dagfile;
     this->outfile = outfile;
@@ -104,12 +346,12 @@ Master::~Master() {
         fclose(task_stderr);
     }
 
-    std::vector<Slot *>::iterator s;
+    vector<Slot *>::iterator s;
     for (s = slots.begin(); s != slots.end(); s++) {
         delete *s;
     }
     
-    std::vector<Host *>::iterator h;
+    vector<Host *>::iterator h;
     for (h = hosts.begin(); h != hosts.end(); h++) {
         delete *h;
     }
@@ -122,17 +364,22 @@ Master::~Master() {
 
 void Master::submit_task(Task *task, int rank) {
     log_debug("Submitting task %s to slot %d", task->name.c_str(), rank);
-    send_request(task->name, task->command, task->pegasus_id, task->memory, task->cpus, rank);
+    
+    CommandMessage *cmd = new CommandMessage(task->name, task->command, 
+            task->pegasus_id, task->memory, task->cpus, task->forwards);
+    send_message(cmd, rank);
+    delete cmd;
     
     this->total_count++;
 }
 
 void Master::wait_for_results() {
-    // This will process all the waiting responses. If there are none 
+    // This will process all the waiting messages. If there are none 
     // waiting, then it will block until one arrives. If there are 
     // several waiting, then it will process them all and return without 
     // waiting.
     unsigned int tasks = 0;
+    unsigned int messages = 0;
     do {
         
         /* In many MPI implementations MPI_Recv uses a busy wait loop. This
@@ -155,7 +402,7 @@ void Master::wait_for_results() {
          * check the flag that is set by the signal handlers to detect when the
          * master needs to abort the workflow.
          */
-        while (!ABORT && !response_waiting()) {
+        while (!ABORT && !message_waiting()) {
             usleep(NO_MESSAGE_SLEEP_TIME);    
         }
         
@@ -166,32 +413,79 @@ void Master::wait_for_results() {
             return;
         }
         
-        process_result();
-        tasks++;
-    } while (response_waiting());
-    log_trace("Processed %u task(s) this cycle", tasks);
+        log_trace("Waiting for result");
+        Message *mesg = recv_message();
+        messages++;
+        if (mesg->type == RESULT) {
+            process_result((ResultMessage *)mesg);
+            tasks++;
+        } else if (mesg->type == IODATA) {
+            process_iodata((IODataMessage *)mesg);
+        } else {
+            myfailure("Unexpected message type: %d", mesg->type);
+        }
+        delete mesg;
+        
+        // We need to do this while tasks == 0 because the caller
+        // of this method assumes that it will process at least one
+        // task before returning
+    } while (message_waiting() || tasks == 0);
+    
+    log_trace("Processed %u task(s) and %u message(s) this cycle", 
+            tasks, messages);
 }
 
-void Master::process_result() {
-    log_trace("Waiting for task to finish");
+void Master::process_iodata(IODataMessage *mesg) {
+    log_trace("Got %u bytes for file %s", mesg->size, mesg->filename.c_str());
     
-    std::string name;
-    int exitcode;
-    int rank;
-    double task_runtime;
-    recv_response(name, exitcode, task_runtime, rank);
+    if (fdcache.write(mesg->filename, mesg->data, mesg->size) < 0) {
+        log_error("Error writing %d bytes to %s for task %s", mesg->size,
+                mesg->filename.c_str(), mesg->task.c_str());
+        
+        Task *task = this->dag->get_task(mesg->task);
+        if (task == NULL) {
+            // If the task is not found then there is a problem, but
+            // we can probably just ignore it at this point.
+            log_warn("Unable to find task %s for I/O failure", 
+                    mesg->task.c_str());
+            return;
+        }
+        
+        task->io_failed = true;
+    }
+}
+
+void Master::process_result(ResultMessage *mesg) {
+    string name = mesg->name;
+    int exitcode = mesg->exitcode;
+    int rank = mesg->source;
+    double task_runtime = mesg->runtime;
     
     total_runtime += task_runtime;
     
-    // Mark task finished
-    if (exitcode == 0) {
+    Task *task = this->dag->get_task(name);
+
+    if (task->io_failed) {
+        // If there was an error processing I/O data for this task, 
+        // then record it as a failure
+        
+        log_error("Task %s failed due to collective I/O errors", name.c_str());
+        this->failed_count++;
+        
+        // Set the exitcode to something non-zero to force the failure
+        exitcode = 256;
+        
+        // Reset the flag so that, if the task is retried, it won't
+        // automatically fail again
+        task->io_failed = false;
+    } else if (exitcode == 0) {
         log_debug("Task %s finished with exitcode %d", name.c_str(), exitcode);
         this->success_count++;
     } else {
         log_error("Task %s failed with exitcode %d", name.c_str(), exitcode);
         this->failed_count++;
     }
-    Task *task = this->dag->get_task(name);
+    
     this->engine->mark_task_finished(task, exitcode);
     
     // Mark slot idle
@@ -235,7 +529,7 @@ void Master::release_resources(Host *host, unsigned cpus, unsigned memory) {
     log_resources(slots_avail, cpus_avail, memory_avail, "*");
 }
 
-void Master::log_resources(unsigned slots, unsigned cpus, unsigned memory, const std::string &hostname) {
+void Master::log_resources(unsigned slots, unsigned cpus, unsigned memory, const string &hostname) {
     if (resource_log == NULL) {
         return;
     }
@@ -256,15 +550,15 @@ void Master::merge_all_task_stdio() {
 
         sprintf(rankstr, "%d", i);
         
-        std::string task_outfile = this->dagfile + ".out." + rankstr;
+        string task_outfile = this->dagfile + ".out." + rankstr;
         this->merge_task_stdio(task_stdout, task_outfile, "stdout");
         
-        std::string task_errfile = this->dagfile + ".err." + rankstr;
+        string task_errfile = this->dagfile + ".err." + rankstr;
         this->merge_task_stdio(task_stderr, task_errfile, "stderr");
     }
 }
 
-void Master::merge_task_stdio(FILE *dest, const std::string &srcfile, const std::string &stream) {
+void Master::merge_task_stdio(FILE *dest, const string &srcfile, const string &stream) {
     log_trace("Merging %s file: %s", stream.c_str(), srcfile.c_str());
     
     FILE *src = fopen(srcfile.c_str(), "r");
@@ -344,20 +638,21 @@ void Master::write_cluster_summary(bool failed) {
  * and so on. The master is not given a host rank.
  */
 void Master::register_workers() {
-    typedef std::map<std::string, Host *> HostMap;
+    typedef map<string, Host *> HostMap;
     HostMap hostmap;
     
-    typedef std::map<int, std::string> HostnameMap;
+    typedef map<int, string> HostnameMap;
     HostnameMap hostnames;
     
     // Collect host names from all workers, create host objects
     for (int i=0; i<numworkers; i++) {
-        int rank;
-        std::string hostname;
-        unsigned int memory = 0;
-        unsigned int cpus = 0;
         
-        recv_registration(rank, hostname, memory, cpus);
+        RegistrationMessage *msg = (RegistrationMessage *)recv_message();
+        int rank = msg->source;
+        string hostname = msg->hostname;
+        unsigned int memory = msg->memory;
+        unsigned int cpus = msg->cpus;
+        delete msg;
         
         hostnames[rank] = hostname;
         
@@ -382,12 +677,12 @@ void Master::register_workers() {
         log_debug("Slot %d on host %s", rank, hostname.c_str());
     }
     
-    typedef std::map<std::string, int> RankMap;
+    typedef map<string, int> RankMap;
     RankMap ranks;
     
     // Create slots, assign a host rank to each worker
     for (int rank=1; rank<=numworkers; rank++) {
-        std::string hostname = hostnames.find(rank)->second;
+        string hostname = hostnames.find(rank)->second;
         
         // Find host
         Host *host = hostmap.find(hostname)->second;
@@ -405,12 +700,15 @@ void Master::register_workers() {
         }
         ranks[hostname] = hostrank + 1;
         
-        send_hostrank(rank, hostrank);
+        HostrankMessage *hrmsg = new HostrankMessage(hostrank);
+        send_message(hrmsg, rank);
+        delete hrmsg;
+        
         log_debug("Host rank of worker %d is %d", rank, hostrank);
     }
     
     // Log the initial resource availability
-    for (std::vector<Host *>::iterator i = hosts.begin(); i!=hosts.end(); i++) {
+    for (vector<Host *>::iterator i = hosts.begin(); i!=hosts.end(); i++) {
         Host *host = *i;
         log_resources(host->slots, host->cpus, host->memory, host->host_name);
     }
@@ -562,6 +860,10 @@ int Master::run() {
     finish_time = current_time();
     wall_time = finish_time - start_time;
     
+    // Close FDCache here before merging output so that
+    // we can be sure the data files are flushed
+    fdcache.close();
+    
     // Compute resource utilization
     double master_util = total_runtime / (wall_time * (numworkers+1));
     double worker_util = total_runtime / (wall_time * numworkers);
@@ -574,6 +876,9 @@ int Master::run() {
     log_info("Resource utilization (without master): %lf", worker_util);
     log_info("Total runtime of tasks: %lf seconds (%lf minutes)", total_runtime, total_runtime/60.0);
     log_info("Wall time: %lf seconds (%lf minutes)", wall_time, wall_time/60.0);
+    log_info("Bytes sent to workers: %lu", pmc_bytes_sent);
+    log_info("Bytes received from workers: %lu", pmc_bytes_recvd);
+    log_info("File descriptor cache hit rate: %lf", fdcache.hitrate());
 
     bool failed = ABORT || this->engine->is_failed();
     write_cluster_summary(failed);
@@ -584,7 +889,9 @@ int Master::run() {
     log_info("Sending workers shutdown messages...");
     for (int i=1; i<=numworkers; i++) {
         log_debug("Sending shutdown message to worker %d", i);
-        send_shutdown(i);
+        ShutdownMessage *shmsg = new ShutdownMessage();
+        send_message(shmsg, i);
+        delete shmsg;
     }
     
     if (ABORT) {

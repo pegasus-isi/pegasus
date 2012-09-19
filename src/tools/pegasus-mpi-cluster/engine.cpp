@@ -69,6 +69,7 @@ void Engine::close_rescue() {
 }
 
 void Engine::write_rescue(Task *task) {
+    // TODO What if an error occurs here?
     if (this->has_rescue()) {
         if (fprintf(this->rescue, "\nDONE %s", task->name.c_str()) < 0) {
             log_error("Error writing to rescue file: %s", strerror(errno));
@@ -76,6 +77,18 @@ void Engine::write_rescue(Task *task) {
         if (fflush(this->rescue)) {
             log_error("Error flushing rescue file: %s", strerror(errno));
         }
+#ifdef SYNC_RESCUE
+#ifdef DARWIN
+        // OSX does not have fdatasync
+        int rc = fsync(fileno(this->rescue));
+#else
+        int rc = fdatasync(fileno(this->rescue));
+#endif
+        if (rc != 0) {
+            log_error("Error on fsync/fdatasync of rescue file: %s", 
+                    strerror(errno));
+        }
+#endif
     }
 }
 

@@ -6,10 +6,11 @@ PMC=./pegasus-mpi-cluster
 function run_test {
     local test=$1
     echo "Running $test..."
-
+    
     # Set up
     rm -f test/*.dag.*
-
+    rm -rf test/scratch
+    
     if $test; then 
         echo "OK"
     else
@@ -19,6 +20,7 @@ function run_test {
     
     # Clean up
     rm -f test/*.dag.*
+    rm -rf test/scratch
 }
 
 function test_help {
@@ -338,8 +340,10 @@ Scheduling task N"
 
 # Make sure that PMC aborts if the workflow takes too long
 function test_max_wall_time {
+    START=$(date +%s)
     OUTPUT=$(mpiexec -n 3 $PMC -s test/walltime.dag --host-cpus 2 --max-wall-time 0.05 2>&1)
     RC=$?
+    END=$(date +%s)
     
     if [ $RC -eq 0 ]; then
         echo "$OUTPUT"
@@ -368,6 +372,15 @@ function test_max_wall_time {
     if ! [[ "$OUTPUT" =~ "TASK stderr" ]]; then
         echo "$OUTPUT"
         echo "ERROR: Max wall time test failed on task stderr"
+        return 1
+    fi
+    
+    ELAPSED=$(expr $END - $START)
+    
+    if [ $ELAPSED -gt 10 ]; then
+        echo "$OUTPUT"
+        echo "Ran in $ELAPSED seconds"
+        echo "ERROR: Max wall time test took too long"
         return 1
     fi
 }
@@ -418,11 +431,56 @@ function test_append_stdio {
     fi
 }
 
+# Make sure I/O forwarding works
+function test_forward {
+    OUTPUT=$(mpiexec -n 2 $PMC -v test/forward.dag 2>&1)
+    RC=$?
+
+    if [ $RC -ne 0 ]; then
+        echo "$OUTPUT"
+        echo "ERROR: Forward test failed"
+        return 1
+    fi
+    
+    FOO=$(grep "Variable FOO" test/forward.dag.foo | wc -l)
+    if [ $? -ne 0 ] || [ $FOO -ne 2 ]; then
+        echo "$OUTPUT"
+        echo "ERROR: Forward test failed (foo problem)"
+        return 1
+    fi
+    
+    BAR=$(grep "Variable BAR" test/forward.dag.bar | wc -l)
+    if [ $? -ne 0 ] || [ $BAR -ne 2 ]; then
+        echo "$OUTPUT"
+        echo "ERROR: Forward test failed (bar problem)"
+        return 1
+    fi
+}
+
+# Make sure I/O forwarding failures cause task to fail
+function test_forward_fail {
+    OUTPUT=$(mpiexec -n 2 $PMC -v test/forward_fail.dag 2>&1)
+    RC=$?
+
+    if [ $RC -eq 0 ]; then
+        echo "$OUTPUT"
+        echo "ERROR: Forward failure test failed"
+        return 1
+    fi
+    
+    if ! [[ "$OUTPUT" =~ "Task A failed due to collective I/O errors" ]]; then
+        echo "$OUTPUT"
+        echo "ERROR: Forward failure test failed"
+        return 1
+    fi
+}
+
 run_test ./test-strlib
 run_test ./test-tools
 run_test ./test-dag
 run_test ./test-log
 run_test ./test-engine
+run_test ./test-fdcache
 run_test test_help
 run_test test_one_worker_required
 run_test test_run_diamond
@@ -435,12 +493,14 @@ run_test test_cpus_limit
 run_test test_insufficient_cpus
 run_test test_tries
 run_test test_priority
-run_test test_max_wall_time
 run_test test_host_script
 run_test test_fail_script
 run_test test_fork_script
 run_test test_resource_log
 run_test test_append_stdio
+run_test test_forward
+run_test test_forward_fail
+run_test test_max_wall_time
 run_test test_hang_script
 
 # setrlimit is broken on Darwin, so the strict limits test won't work
