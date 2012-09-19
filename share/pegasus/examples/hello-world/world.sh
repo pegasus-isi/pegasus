@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# see what is in the f.a input file
-cat f.a
-
 # output some thing to stdout
 echo "Hello world!"
 
