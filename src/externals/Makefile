@@ -9,11 +9,12 @@ endif
 PySQLite=pysqlite-2.6.0
 BOTO=boto-2.0b3-24047c8
 SQLAlchemy=SQLAlchemy-0.7.6
+Werkzeug=Werkzeug-0.8.3
 Jinja=Jinja2-2.6
 Flask=Flask-0.9
 need_pysqlite2=$(shell if python -V 2>&1 | grep -qE 'ython 2\.[3-4]'; then echo 1; else echo 0; fi)
 
-all: ${libdir}/python/pysqlite2 ${libdir}/python/sqlalchemy ${libdir}/python/boto ${libdir}/python/jinja2 ${libdir}/python/flask
+all: ${libdir}/python/pysqlite2 ${libdir}/python/sqlalchemy ${libdir}/python/boto ${libdir}/python/werkzeug ${libdir}/python/jinja2 ${libdir}/python/flask
 
 ${libdir}/python/pysqlite2:
 ifeq ($(need_pysqlite2), 1)
@@ -46,6 +47,16 @@ ${libdir}/python/boto:
 	  cp -R build/lib*/boto ${libdir}/python/ \
 	)
 	@rm -rf $(BOTO)
+
+${libdir}/python/werkzeug:
+	@rm -rf $(Werkzeug)
+	tar xzf $(Werkzeug).tar.gz
+	(cd $(Werkzeug) && \
+	  python setup.py build && \
+	  rm -rf ${prefix}/lib/python/werkzeug && \
+	  cp -R build/lib*/werkzeug ${libdir}/python/ \
+	)
+	@rm -rf $(Werkzeug)
 
 ${libdir}/python/jinja2:
 	@rm -rf $(Jinja)
