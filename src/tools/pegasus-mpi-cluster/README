@@ -27,13 +27,13 @@ Finally, to install do:
 
     $ make install
 
-By default it will install in $(HOME), otherwise you can do:
+By default it will install in $(PEGASUS_HOME), otherwise you can do:
 
     $ make prefix=/usr/local install
 
 To execute a workflow run:
 
-    $ mpirun -n 4 mpidag test/diamond.dag
+    $ mpirun -n 4 pegasus-mpi-cluster test/diamond.dag
 
 or something similar in your PBS/LSF/SGE submit script. Ask your local
 system administrator if you are unsure how to run MPI applications on

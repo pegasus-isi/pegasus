@@ -1,6 +1,6 @@
 This is a list of items that are planned in future versions of pegasus-mpi-cluster.
 
-* Have workers create task stdout/stderr file names that are guaranteed to be unique
+* Have workers send task stdout/stderr via I/O forwarding
 * Implement a better, object-oriented logging interface
 * Allow runtime estimates to be specified in DAG with -r/--runtime
 * Implement hard limits on task runtime
