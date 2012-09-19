@@ -324,6 +324,11 @@ void TaskHandler::run() {
                 // It is important that we don't stop reading the fd here
                 // because in the next poll we may get more data if our
                 // buffer wasn't big enough to get everything on this read.
+                // However, on Linux, if POLLIN was not set, then the pipe
+                // is really closed and we need to clean it up here.
+                if (! (revents & POLLIN)) {
+                    reading.erase(fd);
+                }
             }
             
             if (revents & POLLERR) {
