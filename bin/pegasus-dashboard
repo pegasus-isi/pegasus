@@ -57,10 +57,6 @@ pegasus_env_path = {
 'pegasus_share_dir'     : pegasus_share_dir
 }
 
-print '-'*100
-print lib_ext_dir
-print '-'*100
-
 #Pegasus modules
 from Pegasus.tools import utils
 
