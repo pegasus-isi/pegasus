@@ -10,6 +10,7 @@
 #endif
 #include <sys/time.h>
 #include <sys/stat.h>
+#include <limits.h>
 
 #include "tools.h"
 #include "failure.h"
