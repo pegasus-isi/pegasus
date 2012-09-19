@@ -68,7 +68,7 @@ from Pegasus.tools import utils
 from flask import Flask, request, render_template, g
 
 #Dashboard modules
-from Pegasus.monitoring.dashboard.Dashboard import Dashboard, Utils, NoWorkflowsFoundError
+from Pegasus.dashboard.Dashboard import Dashboard, Utils, NoWorkflowsFoundError
 
 _master_db_url = None
 app = Flask (__name__, static_folder = os.path.join (pegasus_env_path ['pegasus_share_dir'], 'dashboard/static'))
