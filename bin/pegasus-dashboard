@@ -67,7 +67,7 @@ from flask import Flask, request, render_template, g
 from Pegasus.dashboard.Dashboard import Dashboard, Utils, NoWorkflowsFoundError
 
 _master_db_url = None
-app = Flask (__name__, static_folder = os.path.join (pegasus_env_path ['pegasus_share_dir'], 'dashboard/static'))
+app = Flask (__name__, static_folder=os.path.join (pegasus_env_path ['pegasus_share_dir'], 'dashboard/static'))
 
 from jinja2 import FileSystemLoader
 app.jinja_loader = FileSystemLoader (os.path.join (pegasus_env_path ['pegasus_share_dir'], 'dashboard/templates'))
@@ -85,9 +85,9 @@ def index ():
             count, filtered, workflows, totals = dashboard.get_root_workflow_list (**args)
             
         except NoWorkflowsFoundError, e:
-            return render_template ('workflow.xhr.json', count = e.count, filtered = e.filtered, workflows = [], table_args = args)
+            return render_template ('workflow.xhr.json', count=e.count, filtered=e.filtered, workflows=[], table_args=args)
         
-        return render_template ('workflow.xhr.json', count = count, filtered = filtered, workflows = workflows, table_args = args)
+        return render_template ('workflow.xhr.json', count=count, filtered=filtered, workflows=workflows, table_args=args)
     
     #Not an AJAX request.
     try:
@@ -99,14 +99,14 @@ def index ():
         #Log this.
         return '', 204
 
-    return render_template ('workflow.html', workflows = workflows, counts = totals)
+    return render_template ('workflow.html', workflows=workflows, counts=totals)
 
 """
 Get details of the latest instance of a specific work-flow.
 """
 @app.route('/root/<root_wf_id>/workflow')
 @app.route('/root/<root_wf_id>/workflow/<wf_id>')
-def workflow (root_wf_id, wf_id = None):
+def workflow (root_wf_id, wf_id=None):
     
     wf_uuid = request.args.get ('wf_uuid', None)
     
@@ -114,18 +114,18 @@ def workflow (root_wf_id, wf_id = None):
         raise ValueError, 'Workflow ID or Workflow UUID is required'
     
     if wf_id:
-        dashboard = Dashboard (_master_db_url, root_wf_id, wf_id = wf_id)
+        dashboard = Dashboard (_master_db_url, root_wf_id, wf_id=wf_id)
     else:
         dashboard = Dashboard (_master_db_url, root_wf_id)
 
     counts, details, statistics = dashboard.get_workflow_information (wf_id, wf_uuid)
 
-    return render_template ('workflow/workflow_details.html', root_wf_id = root_wf_id, wf_id = details.wf_id, workflow = details, counts = counts, statistics = statistics);
+    return render_template ('workflow/workflow_details.html', root_wf_id=root_wf_id, wf_id=details.wf_id, workflow=details, counts=counts, statistics=statistics);
 
 """
 Get a list of all successful jobs of the latest instance for a given work-flow.
 """
-@app.route('/root/<root_wf_id>/workflow/<wf_id>/sub_workflows/', methods = ['GET'])
+@app.route('/root/<root_wf_id>/workflow/<wf_id>/sub_workflows/', methods=['GET'])
 def sub_workflows (root_wf_id, wf_id):
     
     dashboard = Dashboard (_master_db_url, root_wf_id, wf_id)
@@ -134,16 +134,16 @@ def sub_workflows (root_wf_id, wf_id):
     # is_xhr = True if it is AJAX request.
     if request.is_xhr:
         if len (sub_workflows) > 0:
-            return render_template ('workflow/sub_workflows.xhr.html', root_wf_id = root_wf_id, wf_id = wf_id, workflows = sub_workflows)
+            return render_template ('workflow/sub_workflows.xhr.html', root_wf_id=root_wf_id, wf_id=wf_id, workflows=sub_workflows)
         else:
             return '', 204
     else:
-        return render_template ('workflow/sub_workflows.html', root_wf_id = root_wf_id, wf_id = wf_id, workflows = sub_workflows)
+        return render_template ('workflow/sub_workflows.html', root_wf_id=root_wf_id, wf_id=wf_id, workflows=sub_workflows)
 
 """
 Get a list of all failed jobs of the latest instance for a given work-flow.
 """
-@app.route('/root/<root_wf_id>/workflow/<wf_id>/jobs/failed/', methods = ['GET'])
+@app.route('/root/<root_wf_id>/workflow/<wf_id>/jobs/failed/', methods=['GET'])
 def failed_jobs (root_wf_id, wf_id):
     dashboard = Dashboard (_master_db_url, root_wf_id, wf_id)
     failed_jobs_list = dashboard.get_failed_jobs (wf_id)
@@ -151,17 +151,17 @@ def failed_jobs (root_wf_id, wf_id):
     # is_xhr = True if it is AJAX request.
     if request.is_xhr:
         if len (failed_jobs_list) > 0:
-            return render_template ('workflow/jobs_failed.xhr.html', root_wf_id = root_wf_id, wf_id = wf_id, jobs = failed_jobs_list)
+            return render_template ('workflow/jobs_failed.xhr.html', root_wf_id=root_wf_id, wf_id=wf_id, jobs=failed_jobs_list)
         else:
             return '', 204
     else:
-        return render_template ('workflow/jobs_failed.html', root_wf_id = root_wf_id, wf_id = wf_id, jobs = failed_jobs_list)
+        return render_template ('workflow/jobs_failed.html', root_wf_id=root_wf_id, wf_id=wf_id, jobs=failed_jobs_list)
 
 
 """
 Get a list of all running jobs of the latest instance for a given work-flow.
 """
-@app.route('/root/<root_wf_id>/workflow/<wf_id>/jobs/running/', methods = ['GET'])
+@app.route('/root/<root_wf_id>/workflow/<wf_id>/jobs/running/', methods=['GET'])
 def running_jobs (root_wf_id, wf_id):
     #Setup context
     g.wf_id = wf_id
@@ -172,17 +172,17 @@ def running_jobs (root_wf_id, wf_id):
     # is_xhr = True if it is AJAX request.
     if request.is_xhr:
         if len (running_jobs_list) > 0:
-            return render_template ('workflow/jobs_running.xhr.html', root_wf_id = root_wf_id, wf_id = wf_id, jobs = running_jobs_list)
+            return render_template ('workflow/jobs_running.xhr.html', root_wf_id=root_wf_id, wf_id=wf_id, jobs=running_jobs_list)
         else:
             return '', 204
     else:
-        return render_template ('workflow/jobs_running.html', root_wf_id = root_wf_id, wf_id = wf_id, jobs = running_jobs_list)
+        return render_template ('workflow/jobs_running.html', root_wf_id=root_wf_id, wf_id=wf_id, jobs=running_jobs_list)
 
 
 """
 Get a list of all successful jobs of the latest instance for a given work-flow.
 """
-@app.route('/root/<root_wf_id>/workflow/<wf_id>/jobs/successful/', methods = ['GET'])
+@app.route('/root/<root_wf_id>/workflow/<wf_id>/jobs/successful/', methods=['GET'])
 def successful_jobs (root_wf_id, wf_id):
     #Setup context
     g.wf_id = wf_id
@@ -193,11 +193,11 @@ def successful_jobs (root_wf_id, wf_id):
     # is_xhr = True if it is AJAX request.
     if request.is_xhr:
         if len (successful_jobs_list) > 0:
-            return render_template ('workflow/jobs_successful.xhr.html', root_wf_id = root_wf_id, wf_id = wf_id, jobs = successful_jobs_list)
+            return render_template ('workflow/jobs_successful.xhr.html', root_wf_id=root_wf_id, wf_id=wf_id, jobs=successful_jobs_list)
         else:
             return '', 204
     else:
-        return render_template ('workflow/jobs_successful.html', root_wf_id = root_wf_id, wf_id = wf_id, jobs = successful_jobs_list)
+        return render_template ('workflow/jobs_successful.html', root_wf_id=root_wf_id, wf_id=wf_id, jobs=successful_jobs_list)
 
 
 """
@@ -211,7 +211,7 @@ def job (root_wf_id, wf_id, job_id):
     if not job:
         return 'Bad Request', 400
     
-    return render_template ('workflow/job/job_details.html', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, job = job)
+    return render_template ('workflow/job/job_details.html', root_wf_id=root_wf_id, wf_id=wf_id, job_id=job_id, job=job)
 
 """
 Get stdout contents for a specific job instance.
@@ -255,11 +255,11 @@ def successful_invocations (root_wf_id, wf_id, job_id):
     # is_xhr = True if it is AJAX request.
     if request.is_xhr:
         if len (successful_invocations_list) > 0:
-            return render_template ('workflow/job/invocations_successful.xhr.html', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, invocations = successful_invocations_list)
+            return render_template ('workflow/job/invocations_successful.xhr.html', root_wf_id=root_wf_id, wf_id=wf_id, job_id=job_id, invocations=successful_invocations_list)
         else:
             return '', 204
     else:
-        return render_template ('workflow/job/invocations_successful.html', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, invocations = successful_invocations_list)
+        return render_template ('workflow/job/invocations_successful.html', root_wf_id=root_wf_id, wf_id=wf_id, job_id=job_id, invocations=successful_invocations_list)
 
 """
 Get list of failed invocations for a given job.
@@ -276,23 +276,23 @@ def failed_invocations (root_wf_id, wf_id, job_id):
     # is_xhr = True if it is AJAX request.
     if request.is_xhr:
         if len (failed_invocations_list) > 0:
-            return render_template ('workflow/job/invocations_failed.xhr.html', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, invocations = failed_invocations_list)
+            return render_template ('workflow/job/invocations_failed.xhr.html', root_wf_id=root_wf_id, wf_id=wf_id, job_id=job_id, invocations=failed_invocations_list)
         else:
             return '', 204
     else:
-        return render_template ('workflow/job/invocations_failed.html', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, invocations = failed_invocations_list)
+        return render_template ('workflow/job/invocations_failed.html', root_wf_id=root_wf_id, wf_id=wf_id, job_id=job_id, invocations=failed_invocations_list)
 
 """
 Get detailed invocation information
 """
 @app.route('/root/<root_wf_id>/workflow/<wf_id>/job/<job_id>/invocation/', methods=['GET'])
 @app.route('/root/<root_wf_id>/workflow/<wf_id>/job/<job_id>/invocation/<task_id>', methods=['GET'])
-def invocation (root_wf_id, wf_id, job_id, task_id = None):
+def invocation (root_wf_id, wf_id, job_id, task_id=None):
     
     dashboard = Dashboard (_master_db_url, root_wf_id, wf_id)
     invocation = dashboard.get_invocation_information (wf_id, job_id, task_id)
         
-    return render_template ('workflow/job/invocation/invocation_details.html', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id, task_id = task_id, invocation = invocation)
+    return render_template ('workflow/job/invocation/invocation_details.html', root_wf_id=root_wf_id, wf_id=wf_id, job_id=job_id, task_id=task_id, invocation=invocation)
 
 """
 Get job-distribution information
@@ -302,7 +302,7 @@ def charts (root_wf_id, wf_id):
     dashboard = Dashboard (_master_db_url, root_wf_id, wf_id)
     job_dist = dashboard.plots_transformation_statistics (wf_id)
 
-    return render_template ('workflow/charts.html', root_wf_id = root_wf_id, wf_id = wf_id, job_dist = job_dist)
+    return render_template ('workflow/charts.html', root_wf_id=root_wf_id, wf_id=wf_id, job_dist=job_dist)
 
 """
 Get job-distribution information
@@ -313,7 +313,7 @@ def time_chart (root_wf_id, wf_id):
     dashboard = Dashboard (_master_db_url, root_wf_id, wf_id)
     time_chart_job, time_chart_invocation = dashboard.plots_time_chart (wf_id)
     
-    return render_template ('workflow/charts/time_chart.json', root_wf_id = root_wf_id, wf_id = wf_id, time_chart_job = time_chart_job, time_chart_invocation = time_chart_invocation)
+    return render_template ('workflow/charts/time_chart.json', root_wf_id=root_wf_id, wf_id=wf_id, time_chart_job=time_chart_job, time_chart_invocation=time_chart_invocation)
 
 """
 Extract list of arguments passed in the request
@@ -471,13 +471,13 @@ if __name__ == '__main__':
     usage = 'pegasus-dashboard [options]'
     description = 'pegasus-dashboard [npdfm]'
     
-    parser = optparse.OptionParser (usage = usage, description = description)
+    parser = optparse.OptionParser (usage=usage, description=description)
 
-    parser.add_option ("-n", "--host", action = "store", type = "str", dest = "host", default='0.0.0.0', help = "Hostname or IP address to bind to. Default: All IP's")
-    parser.add_option ("-p", "--port", action = "store", type = "int", dest = "port_number", default=8000, help = "Port number on which to start the dash board Default: 8000")
-    parser.add_option ("-d", "--debug", action = "store_const", const = True, dest = "debug", help = "For development mode, only")
-    parser.add_option ("-f", "--pidfile", action = "store", type = "str", dest = "pid_filename", default='dashboard.pid', help = "Location of PID file. Default: dashboard.pid")
-    parser.add_option ("-m", "--masterdburl", action = "store", type = "str", dest = "master_db", default='sqlite:///%s/.pegasus/workflow.db' % os.getenv('HOME'), help = "URL to connect to the master the database")
+    parser.add_option ("-n", "--host", action="store", type="str", dest="host", default='0.0.0.0', help="Hostname or IP address to bind to. Default: All IP's")
+    parser.add_option ("-p", "--port", action="store", type="int", dest="port_number", default=8000, help="Port number on which to start the dash board Default: 8000")
+    parser.add_option ("-d", "--debug", action="store_const", const=True, dest="debug", help="For development mode, only")
+    parser.add_option ("-f", "--pidfile", action="store", type="str", dest="pid_filename", default='dashboard.pid', help="Location of PID file. Default: dashboard.pid")
+    parser.add_option ("-m", "--masterdburl", action="store", type="str", dest="master_db", default='sqlite:///%s/.pegasus/workflow.db' % os.getenv('HOME'), help="URL to connect to the master the database")
 
     # Parsing command-line options
     (options, args) = parser.parse_args ()
@@ -490,4 +490,4 @@ if __name__ == '__main__':
             utils.write_pid_file (options.pid_filename)
 
     _master_db_url = options.master_db
-    app.run (host = options.host, port = options.port_number, debug = options.debug)
+    app.run (host=options.host, port=options.port_number, debug=options.debug)

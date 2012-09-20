@@ -94,12 +94,12 @@ class MasterDatabase (SQLAlchemyInit, DoesLogging):
         qmax = qmax.subquery ('max_timestamp')
         
         q = self.session.query (w.wf_id, w.wf_uuid, w.timestamp,
-                                w.dag_file_name, w.submit_hostname, 
+                                w.dag_file_name, w.submit_hostname,
                                 w.submit_dir, w.planner_arguments,
                                 w.user, w.grid_dn, w.planner_version,
-                                w.dax_label, w.dax_version, w.db_url, 
-                                case([(ws.status == None, 'Running'), 
-                                      (ws.status == 0, 'Successful'), 
+                                w.dax_label, w.dax_version, w.db_url,
+                                case([(ws.status == None, 'Running'),
+                                      (ws.status == 0, 'Successful'),
                                       (ws.status != 0, 'Failed')], else_='Undefined').label ("state"))
         
         q = q.filter (w.wf_id == ws.wf_id)
@@ -160,8 +160,6 @@ class MasterDatabase (SQLAlchemyInit, DoesLogging):
             q = q.limit (table_args ['limit'])
             q = q.offset (table_args ['offset'])
 
-        #self.get_workflow_counts()
-        
         return (count, filtered, q.all ())
 
 
@@ -198,7 +196,7 @@ class MasterDatabase (SQLAlchemyInit, DoesLogging):
 
 class WorkflowInfo(SQLAlchemyInit, DoesLogging):
 
-    def __init__(self, connString=None, wf_id = None, wf_uuid = None):
+    def __init__(self, connString=None, wf_id=None, wf_uuid=None):
         if connString is None:
             raise ValueError("Connection string is required")
         DoesLogging.__init__(self)
@@ -216,7 +214,7 @@ class WorkflowInfo(SQLAlchemyInit, DoesLogging):
 
         self.initialize (wf_id, wf_uuid)
     
-    def initialize (self, wf_id = None, wf_uuid = None):
+    def initialize (self, wf_id=None, wf_uuid=None):
        
         if not wf_id and not wf_uuid:
             raise ValueError, 'Workflow ID or Workflow UUID is required.'

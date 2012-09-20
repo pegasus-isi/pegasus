@@ -1,7 +1,3 @@
-"""
-Usage: pegasus-dashboard [options]
-"""
-
 ##
 #  Copyright 2007-2012 University Of Southern California
 #
@@ -77,7 +73,7 @@ class Utils(object):
 
 class Dashboard(object):
     
-    def __init__(self, conn_url, root_wf_id = None, wf_id = None):
+    def __init__(self, conn_url, root_wf_id=None, wf_id=None):
         if not conn_url:
             raise ValueError, 'A connection URL is required'
         
@@ -128,7 +124,7 @@ class Dashboard(object):
     
             if len (self._workflows) == 0:
                 # Throw no work-flows found error.
-                raise NoWorkflowsFoundError (count = tuple [0], filtered = tuple [1])
+                raise NoWorkflowsFoundError (count=tuple [0], filtered=tuple [1])
             
             self.__update_timestamp ()
             # Try removing Flask references here.
@@ -156,9 +152,9 @@ class Dashboard(object):
     
     def __update_label_link (self):
         for workflow in self._workflows:
-            workflow.dax_label = "<a href='" + url_for ('workflow', root_wf_id = workflow.wf_id, wf_uuid = workflow.wf_uuid) + "'>" + workflow.dax_label + "</a>"
+            workflow.dax_label = "<a href='" + url_for ('workflow', root_wf_id=workflow.wf_id, wf_uuid=workflow.wf_uuid) + "'>" + workflow.dax_label + "</a>"
 
-    def plots_time_chart (self, wf_id, time_filter = 'hour'):
+    def plots_time_chart (self, wf_id, time_filter='hour'):
         try:
             workflow = queries.WorkflowInfo (self.__get_wf_db_url (), wf_id)
             details = workflow.get_workflow_information ()
@@ -204,7 +200,7 @@ class Dashboard(object):
             Dashboard.close (workflow)
             Dashboard.close (workflow_plots)
     
-    def get_workflow_information (self, wf_id = None, wf_uuid = None):
+    def get_workflow_information (self, wf_id=None, wf_uuid=None):
         """
         Get work-flow specific information. This is when user click on a work-flow link.
         Returns a work-flow object.
@@ -214,9 +210,9 @@ class Dashboard(object):
                 raise ValueError, 'Workflow ID or Workflow UUID is required'
     
             if wf_id:
-                workflow = queries.WorkflowInfo (self.__get_wf_db_url (), wf_id = wf_id)
+                workflow = queries.WorkflowInfo (self.__get_wf_db_url (), wf_id=wf_id)
             else:
-                workflow = queries.WorkflowInfo (self.__get_wf_db_url (), wf_uuid = wf_uuid)
+                workflow = queries.WorkflowInfo (self.__get_wf_db_url (), wf_uuid=wf_uuid)
 
             details = workflow.get_workflow_information ()
             
@@ -239,7 +235,7 @@ class Dashboard(object):
             statistics ['failed-jobs'] = workflow_statistics.get_total_failed_jobs_status()
             statistics ['unsubmitted-jobs'] = statistics ['total-jobs'] - (statistics ['successful-jobs'] + statistics ['failed-jobs'])
             statistics ['job-retries'] = workflow_statistics.get_total_jobs_retries()
-            statistics ['job-instance-retries'] =  statistics ['successful-jobs'] + statistics ['failed-jobs'] + statistics ['job-retries']
+            statistics ['job-instance-retries'] = statistics ['successful-jobs'] + statistics ['failed-jobs'] + statistics ['job-retries']
             
             return job_counts, details, statistics
         
@@ -273,7 +269,7 @@ class Dashboard(object):
         
     def get_failed_jobs (self, wf_id):
         try:
-            workflow = queries.WorkflowInfo (self.__get_wf_db_url (), wf_id = wf_id)
+            workflow = queries.WorkflowInfo (self.__get_wf_db_url (), wf_id=wf_id)
             failed_jobs = workflow.get_failed_jobs ()
             return failed_jobs
         finally:
@@ -281,7 +277,7 @@ class Dashboard(object):
             
     def get_successful_jobs (self, wf_id):
         try:
-            workflow = queries.WorkflowInfo (self.__get_wf_db_url (), wf_id = wf_id)
+            workflow = queries.WorkflowInfo (self.__get_wf_db_url (), wf_id=wf_id)
             successful_jobs = workflow.get_successful_jobs ()
             return successful_jobs
         finally:
@@ -289,7 +285,7 @@ class Dashboard(object):
             
     def get_running_jobs (self, wf_id):
         try:
-            workflow = queries.WorkflowInfo (self.__get_wf_db_url (), wf_id = wf_id)
+            workflow = queries.WorkflowInfo (self.__get_wf_db_url (), wf_id=wf_id)
             running_jobs = workflow.get_other_jobs ()
             return running_jobs
         finally:
@@ -297,7 +293,7 @@ class Dashboard(object):
 
     def get_sub_workflows (self, wf_id):
         try:
-            workflow = queries.WorkflowInfo (self.__get_wf_db_url (), wf_id = wf_id)
+            workflow = queries.WorkflowInfo (self.__get_wf_db_url (), wf_id=wf_id)
             sub_workflows = workflow.get_sub_workflows ()
             return sub_workflows
         finally:
