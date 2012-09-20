@@ -222,7 +222,7 @@ Message *recv_message() {
     pmc_bytes_recvd += msgsize;
     
     // Create the right type of message
-    Message *message;
+    Message *message = NULL;
     int source = status.MPI_SOURCE;
     MessageType type = (MessageType)status.MPI_TAG;
     switch(type) {

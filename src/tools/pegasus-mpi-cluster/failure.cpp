@@ -1,3 +1,5 @@
+#include <stdarg.h>
+
 #include "failure.h"
 
 #define MAX_FAILURE_MSG 2048
