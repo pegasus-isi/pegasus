@@ -31,8 +31,6 @@ from flask import url_for
 #Dashboard modules
 from Pegasus.dashboard import WorkflowInfo as queries
 
-from sqlalchemy.orm.exc import NoResultFound
-
 class NoWorkflowsFoundError (Exception):
     def __init__(self, **args):
         if 'count' in args:
@@ -127,7 +125,7 @@ class Dashboard(object):
          
     def __update_timestamp (self):
         for workflow in self._workflows:
-            workflow.timestamp = strftime ("%a, %d %b %Y %H:%M:%S +0000", localtime (workflow.timestamp))
+            workflow.timestamp = strftime ("%a, %d %b %Y %H:%M:%S", localtime (workflow.timestamp))
     
     def __update_label_link (self):
         for workflow in self._workflows:
@@ -304,7 +302,7 @@ class Dashboard(object):
         try:
             workflow = queries.WorkflowInfo (self.__get_wf_db_url (), wf_id)
             invocation = workflow.get_invocation_information (job_id, task_id)
-            invocation.start_time = strftime ("%a, %d %b %Y %H:%M:%S +0000", localtime (invocation.start_time))
+            invocation.start_time = strftime ("%a, %d %b %Y %H:%M:%S", localtime (invocation.start_time))
             return invocation
         finally:
             Dashboard.close (workflow)
