@@ -400,8 +400,6 @@ void TaskHandler::write_cluster_task() {
         worker->host_name.c_str(), worker->rank, cpus, memory);
     
     write(worker->out, summary, strlen(summary));
-    
-    delete summary;
 }
 
 Worker::Worker(const string &outfile, const string &errfile, const string &host_script, unsigned int host_memory, unsigned host_cpus, bool strict_limits) {
