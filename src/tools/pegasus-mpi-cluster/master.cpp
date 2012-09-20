@@ -118,6 +118,7 @@ void FDCache::access(FDEntry *entry) {
     }
     if (entry == NULL) {
         myfailure("Invalid entry");
+        return; /* Silence static analyzer */
     }
     if (entry->prev && entry->prev->next != entry) {
         myfailure("Entry not in list");

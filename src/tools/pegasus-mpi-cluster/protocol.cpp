@@ -110,7 +110,7 @@ ResultMessage::ResultMessage(char *msg, unsigned msgsize, int source, int _dummy
     memcpy(&exitcode, msg + off, sizeof(exitcode));
     off += sizeof(exitcode);
     memcpy(&runtime, msg + off, sizeof(runtime));
-    off += sizeof(runtime);
+    //off += sizeof(runtime);
 }
 
 ResultMessage::ResultMessage(const string &name, int exitcode, double runtime) : Message(RESULT) {
@@ -127,7 +127,7 @@ ResultMessage::ResultMessage(const string &name, int exitcode, double runtime) :
     memcpy(msg + off, &exitcode, sizeof(exitcode));
     off += sizeof(exitcode);
     memcpy(msg + off, &runtime, sizeof(runtime));
-    off += sizeof(runtime);
+    //off += sizeof(runtime);
 }
 
 RegistrationMessage::RegistrationMessage(char *msg, unsigned msgsize, int source) : Message(REGISTRATION, msg, msgsize, source) {
@@ -136,7 +136,7 @@ RegistrationMessage::RegistrationMessage(char *msg, unsigned msgsize, int source
     memcpy(&memory, msg + off, sizeof(memory));
     off += sizeof(memory);
     memcpy(&cpus, msg + off, sizeof(cpus));
-    off += sizeof(cpus);
+    //off += sizeof(cpus);
 }
 
 RegistrationMessage::RegistrationMessage(const string &hostname, unsigned memory, unsigned cpus) : Message(REGISTRATION) {
