@@ -417,7 +417,7 @@ Change an integer duration to be represented as d days h hours m mins s secs
 @app.template_filter ('time_to_str')
 def time_to_str (time):
 
-    if time is not None and isinstance (time, Decimal):
+    if time is not None and (isinstance (time, Decimal) or isinstance (time, float)):
         str_time = ''
         time = int (time)
         
@@ -458,7 +458,7 @@ def time_to_str (time):
             if time > 1:
                 str_time += str (time) + ' secs '
             else:
-                str_time += time + ' sec '
+                str_time += str (time) + ' sec '
                 
         return str_time.strip ()
     
