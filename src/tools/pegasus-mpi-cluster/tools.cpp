@@ -12,6 +12,7 @@
 #include <sys/stat.h>
 #include <limits.h>
 #include <sstream>
+#include <stdlib.h>
 
 #include "tools.h"
 #include "failure.h"

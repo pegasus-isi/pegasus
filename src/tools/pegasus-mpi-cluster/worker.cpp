@@ -153,8 +153,6 @@ void TaskHandler::child_process() {
         pipes[i]->closeread();
     }
     
-    // TODO Search path if args[0] does not have '/'
-    
     // Create argument structure
     unsigned nargs = args.size();
     char **argp = new char*[nargs+1];
