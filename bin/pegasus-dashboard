@@ -72,11 +72,11 @@ app = Flask (__name__, static_folder=os.path.join (pegasus_env_path ['pegasus_sh
 from jinja2 import FileSystemLoader
 app.jinja_loader = FileSystemLoader (os.path.join (pegasus_env_path ['pegasus_share_dir'], 'dashboard/templates'))
 
-"""
-List all work-flows in the master database.
-"""
 @app.route('/')
 def index ():
+    """
+    List all work-flows from the master database.
+    """
     
     if request.is_xhr:
         try:
@@ -101,13 +101,13 @@ def index ():
 
     return render_template ('workflow.html', workflows=workflows, counts=totals)
 
-"""
-Get details of the latest instance of a specific work-flow.
-"""
+
 @app.route('/root/<root_wf_id>/workflow')
 @app.route('/root/<root_wf_id>/workflow/<wf_id>')
 def workflow (root_wf_id, wf_id=None):
-    
+    """
+    Get details for a specific work-flow.
+    """    
     wf_uuid = request.args.get ('wf_uuid', None)
     
     if not wf_id and not wf_uuid:
@@ -122,12 +122,11 @@ def workflow (root_wf_id, wf_id=None):
 
     return render_template ('workflow/workflow_details.html', root_wf_id=root_wf_id, wf_id=details.wf_id, workflow=details, counts=counts, statistics=statistics);
 
-"""
-Get a list of all successful jobs of the latest instance for a given work-flow.
-"""
 @app.route('/root/<root_wf_id>/workflow/<wf_id>/sub_workflows/', methods=['GET'])
 def sub_workflows (root_wf_id, wf_id):
-    
+    """
+    Get a list of all successful jobs of the latest instance for a given work-flow.
+    """    
     dashboard = Dashboard (_master_db_url, root_wf_id, wf_id)
     sub_workflows = dashboard.get_sub_workflows (wf_id)
 
@@ -140,11 +139,12 @@ def sub_workflows (root_wf_id, wf_id):
     else:
         return render_template ('workflow/sub_workflows.html', root_wf_id=root_wf_id, wf_id=wf_id, workflows=sub_workflows)
 
-"""
-Get a list of all failed jobs of the latest instance for a given work-flow.
-"""
+
 @app.route('/root/<root_wf_id>/workflow/<wf_id>/jobs/failed/', methods=['GET'])
 def failed_jobs (root_wf_id, wf_id):
+    """
+    Get a list of all failed jobs of the latest instance for a given work-flow.
+    """
     dashboard = Dashboard (_master_db_url, root_wf_id, wf_id)
     failed_jobs_list = dashboard.get_failed_jobs (wf_id)
 
@@ -158,14 +158,11 @@ def failed_jobs (root_wf_id, wf_id):
         return render_template ('workflow/jobs_failed.html', root_wf_id=root_wf_id, wf_id=wf_id, jobs=failed_jobs_list)
 
 
-"""
-Get a list of all running jobs of the latest instance for a given work-flow.
-"""
 @app.route('/root/<root_wf_id>/workflow/<wf_id>/jobs/running/', methods=['GET'])
 def running_jobs (root_wf_id, wf_id):
-    #Setup context
-    g.wf_id = wf_id
-    
+    """
+    Get a list of all running jobs of the latest instance for a given work-flow.
+    """
     dashboard = Dashboard (_master_db_url, root_wf_id, wf_id)
     running_jobs_list = dashboard.get_running_jobs (wf_id)
 
@@ -179,13 +176,11 @@ def running_jobs (root_wf_id, wf_id):
         return render_template ('workflow/jobs_running.html', root_wf_id=root_wf_id, wf_id=wf_id, jobs=running_jobs_list)
 
 
-"""
-Get a list of all successful jobs of the latest instance for a given work-flow.
-"""
 @app.route('/root/<root_wf_id>/workflow/<wf_id>/jobs/successful/', methods=['GET'])
 def successful_jobs (root_wf_id, wf_id):
-    #Setup context
-    g.wf_id = wf_id
+    """
+    Get a list of all successful jobs of the latest instance for a given work-flow.
+    """
     
     dashboard = Dashboard (_master_db_url, root_wf_id, wf_id)
     successful_jobs_list = dashboard.get_successful_jobs (wf_id)
@@ -200,11 +195,11 @@ def successful_jobs (root_wf_id, wf_id):
         return render_template ('workflow/jobs_successful.html', root_wf_id=root_wf_id, wf_id=wf_id, jobs=successful_jobs_list)
 
 
-"""
-Get details of a specific job instance.
-"""
 @app.route('/root/<root_wf_id>/workflow/<wf_id>/job/<job_id>', methods=['GET'])
 def job (root_wf_id, wf_id, job_id):
+    """
+    Get details of a specific job instance.
+    """
     dashboard = Dashboard (_master_db_url, root_wf_id, wf_id)
     job = dashboard.get_job_information (wf_id, job_id)
     
@@ -213,11 +208,11 @@ def job (root_wf_id, wf_id, job_id):
     
     return render_template ('workflow/job/job_details.html', root_wf_id=root_wf_id, wf_id=wf_id, job_id=job_id, job=job)
 
-"""
-Get stdout contents for a specific job instance.
-"""
 @app.route('/root/<root_wf_id>/workflow/<wf_id>/job/<job_id>/stdout', methods=['GET'])
 def stdout (root_wf_id, wf_id, job_id):
+    """
+    Get stdout contents for a specific job instance.
+    """
     dashboard = Dashboard (_master_db_url, root_wf_id, wf_id)
     text = dashboard.get_stdout (wf_id, job_id)
     
@@ -240,15 +235,11 @@ def stderr (root_wf_id, wf_id, job_id):
     else:
         return text.stderr_text
 
-"""
-Get list of successful invocations for a given job.
-"""
 @app.route('/root/<root_wf_id>/workflow/<wf_id>/job/<job_id>/invocations/successful', methods=['GET'])
 def successful_invocations (root_wf_id, wf_id, job_id):
-    #Setup context
-    g.wf_id = wf_id
-    g.job_id = job_id
-    
+    """
+    Get list of successful invocations for a given job.
+    """
     dashboard = Dashboard (_master_db_url, root_wf_id, wf_id)
     successful_invocations_list = dashboard.get_successful_job_invocation (wf_id, job_id)
 
@@ -261,15 +252,12 @@ def successful_invocations (root_wf_id, wf_id, job_id):
     else:
         return render_template ('workflow/job/invocations_successful.html', root_wf_id=root_wf_id, wf_id=wf_id, job_id=job_id, invocations=successful_invocations_list)
 
-"""
-Get list of failed invocations for a given job.
-"""
+
 @app.route('/root/<root_wf_id>/workflow/<wf_id>/job/<job_id>/invocations/failed', methods=['GET'])
 def failed_invocations (root_wf_id, wf_id, job_id):
-    #Setup context
-    g.wf_id = wf_id
-    g.job_id = job_id
-    
+    """
+    Get list of failed invocations for a given job.
+    """
     dashboard = Dashboard (_master_db_url, root_wf_id, wf_id)
     failed_invocations_list = dashboard.get_failed_job_invocation (wf_id, job_id)
 
@@ -282,43 +270,45 @@ def failed_invocations (root_wf_id, wf_id, job_id):
     else:
         return render_template ('workflow/job/invocations_failed.html', root_wf_id=root_wf_id, wf_id=wf_id, job_id=job_id, invocations=failed_invocations_list)
 
-"""
-Get detailed invocation information
-"""
+
 @app.route('/root/<root_wf_id>/workflow/<wf_id>/job/<job_id>/invocation/', methods=['GET'])
 @app.route('/root/<root_wf_id>/workflow/<wf_id>/job/<job_id>/invocation/<task_id>', methods=['GET'])
 def invocation (root_wf_id, wf_id, job_id, task_id=None):
-    
+    """
+    Get detailed invocation information
+    """    
     dashboard = Dashboard (_master_db_url, root_wf_id, wf_id)
     invocation = dashboard.get_invocation_information (wf_id, job_id, task_id)
         
     return render_template ('workflow/job/invocation/invocation_details.html', root_wf_id=root_wf_id, wf_id=wf_id, job_id=job_id, task_id=task_id, invocation=invocation)
 
-"""
-Get job-distribution information
-"""
+
 @app.route('/root/<root_wf_id>/workflow/<wf_id>/charts', methods=['GET'])
 def charts (root_wf_id, wf_id):
+    """
+    Get job-distribution information
+    """
     dashboard = Dashboard (_master_db_url, root_wf_id, wf_id)
     job_dist = dashboard.plots_transformation_statistics (wf_id)
 
     return render_template ('workflow/charts.html', root_wf_id=root_wf_id, wf_id=wf_id, job_dist=job_dist)
 
-"""
-Get job-distribution information
-"""
+
 @app.route('/root/<root_wf_id>/workflow/<wf_id>/charts/time_chart', methods=['GET'])
 def time_chart (root_wf_id, wf_id):
-
+    """
+    Get job-distribution information
+    """
     dashboard = Dashboard (_master_db_url, root_wf_id, wf_id)
     time_chart_job, time_chart_invocation = dashboard.plots_time_chart (wf_id)
     
     return render_template ('workflow/charts/time_chart.json', root_wf_id=root_wf_id, wf_id=wf_id, time_chart_job=time_chart_job, time_chart_invocation=time_chart_invocation)
 
-"""
-Extract list of arguments passed in the request
-"""
+
 def __get_datatables_args ():
+    """
+    Extract list of arguments passed in the request
+    """
     table_args = dict ()
     
     if request.args.get ('sEcho'):
@@ -372,51 +362,55 @@ def __get_datatables_args ():
             
     return table_args
 
-"""
-Decimal to Float 
-"""
 @app.template_filter ('dec_to_float')
 def dec_to_float (dec):
+    """
+    Decimal to Float 
+    """
     return float (dec)
 
-"""
-Change an integer duration to be represented as a data string 
-"""
+
 @app.template_filter ('time_to_date_str')
 def time_to_date_str (time):
+    """
+    Change an integer duration to be represented as a data string 
+    """
     return strftime ("%Y-%m-%d %H", localtime (time))
 
-"""
-Convert string to lower case 
-"""
+
 @app.template_filter ('to_lower_case')
 def to_lower_case (str):
+    """
+    Convert string to lower case 
+    """
     return str.lower ()
 
-"""
-Convert string to upper case 
-"""
+
 @app.template_filter ('to_upper_case')
 def to_upper_case (str):
+    """
+    Convert string to upper case 
+    """
     return str.upper ()
 
-"""
-Capitalizes first character of the String 
-"""
+
 @app.template_filter ('capitalize')
 def capitalize (str):
+    """
+    Capitalizes first character of the String 
+    """
     return str.capitalize ()
 
 @app.errorhandler (404)
 def page_not_found (error):
     return 'This page does not exist', 404
 
-"""
-Change an integer duration to be represented as d days h hours m mins s secs 
-"""
+
 @app.template_filter ('time_to_str')
 def time_to_str (time):
-
+    """
+    Change an integer duration to be represented as d days h hours m mins s secs 
+    """
     if time is not None and (isinstance (time, Decimal) or isinstance (time, float)):
         str_time = ''
         time = int (time)
@@ -479,7 +473,7 @@ if __name__ == '__main__':
     parser.add_option ("-f", "--pidfile", action="store", type="str", dest="pid_filename", default='dashboard.pid', help="Location of PID file. Default: dashboard.pid")
     parser.add_option ("-m", "--masterdburl", action="store", type="str", dest="master_db", default='sqlite:///%s/.pegasus/workflow.db' % os.getenv('HOME'), help="URL to connect to the master the database")
 
-    # Parsing command-line options
+    #Parsing command-line options
     (options, args) = parser.parse_args ()
 
     if not options.debug:
@@ -488,6 +482,9 @@ if __name__ == '__main__':
         else:
             atexit.register (Utils.delete_pid_file, options.pid_filename)
             utils.write_pid_file (options.pid_filename)
+
+    import logging
+    logging.basicConfig (level=logging.DEBUG)
 
     _master_db_url = options.master_db
     app.run (host=options.host, port=options.port_number, debug=options.debug)
