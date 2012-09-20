@@ -186,6 +186,12 @@ void TaskHandler::child_process() {
     }
     envp[nenvs+pipes.size()] = NULL;
     
+    // If the executable is not an absolute or relative path, then search PATH
+    string executable = argp[0];
+    if (executable.find("/") == string::npos) {
+        executable = pathfind(executable);
+    }
+    
     // Set strict resource limits
     if (worker->strict_limits && memory > 0) {
         rlim_t bytes = memory * 1024 * 1024;
@@ -214,9 +220,9 @@ void TaskHandler::child_process() {
     }
     
     // Exec process
-    execve(argp[0], argp, envp);
-    fprintf(stderr, "Unable to exec command for task %s: %s\n", 
-        name.c_str(), strerror(errno));
+    execve(executable.c_str(), argp, envp);
+    fprintf(stderr, "Unable to exec command %s for task %s: %s\n", 
+        executable.c_str(), name.c_str(), strerror(errno));
     exit(1);
 }
 

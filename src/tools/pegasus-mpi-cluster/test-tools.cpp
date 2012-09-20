@@ -1,46 +1,42 @@
 #include <string>
 #include <unistd.h>
 #include <sys/param.h>
+#include <assert.h>
 
 #include "tools.h"
-#include "failure.h"
 
-using std::string;
+void test_is_executable() {
+    assert(is_executable("./test-tools"));
+    assert(!is_executable("./notfound"));
+}
+
+void test_pathfind() {
+    assert(pathfind("sh") == "/bin/sh");
+    assert(pathfind("echo") == "/bin/echo");
+    assert(pathfind("/notfound") == "/notfound");
+    assert(pathfind("./notfound") == "./notfound");
+    assert(pathfind("test/notfound") == "test/notfound");
+}
 
 void test_mkdirs() {
-    if (mkdirs("test/scratch") < 0) {
-        myfailures("mkdirs");
-    }
+    assert(mkdirs("test/scratch") >= 0);
     chdir("test/scratch");
     
-    if (mkdirs("./foo") < 0) {
-        myfailures("mkdirs");
-    }
-    if (mkdirs("../scratch/bar") < 0) {
-        myfailures("mkdirs");
-    }
-    if (mkdirs("bar/../baz") < 0) {
-        myfailures("mkdirs");
-    }
-    if (mkdirs(".boo") < 0) {
-        myfailures("mkdirs");
-    }
+    assert(mkdirs("./foo") >= 0);
+    assert(mkdirs("../scratch/bar") >= 0);
+    assert(mkdirs("bar/../baz") >= 0);
+    assert(mkdirs(".boo") >= 0);
     
-    char curdir[MAXPATHLEN];
-    getcwd(curdir, MAXPATHLEN);
+    char temp[PATH_MAX];
+    string curdir = getcwd(temp, PATH_MAX);
     
-    char testdir[MAXPATHLEN];
-    sprintf(testdir, "%s/bii", curdir);
-    if (mkdirs(testdir) < 0) {
-        myfailures("mkdirs");
-    }
+    string testdir = curdir + "/bii";
+    assert(mkdirs(testdir.c_str()) >= 0);
     
-    sprintf(testdir, "%s/gii/gii", curdir);
-    if (mkdirs(testdir) < 0) {
-        myfailures("mkdirs");
-    }
+    testdir = curdir + "/gii/gii";
+    assert(mkdirs(testdir.c_str()) >= 0);
     
-    chdir("..");
+    chdir("../..");
 }
 
 int main(int argc, char *argv[]) {
@@ -49,4 +45,6 @@ int main(int argc, char *argv[]) {
     string host_name;
     get_host_name(host_name);
     test_mkdirs();
+    test_is_executable();
+    test_pathfind();
 }

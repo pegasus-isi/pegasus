@@ -11,9 +11,11 @@
 #include <sys/time.h>
 #include <sys/stat.h>
 #include <limits.h>
+#include <sstream>
 
 #include "tools.h"
 #include "failure.h"
+#include "log.h"
 
 using std::string;
 
@@ -213,3 +215,69 @@ int mkdirs(const char *path) {
     
     return created;
 }
+
+bool is_executable(const string &file) {
+    // Invalid path
+    if (file.size() == 0) {
+        return false;
+    }
+    
+    struct stat st;
+    if (stat(file.c_str(), &st) == 0) {
+        if (S_ISREG(st.st_mode)) {
+            if ((st.st_uid == geteuid() && (S_IXUSR & st.st_mode) == S_IXUSR) ||
+                (st.st_gid == getegid() && (S_IXGRP & st.st_mode) == S_IXGRP) ||
+                ((S_IXOTH & st.st_mode) == S_IXOTH)) {
+                // It is a regular file and we can execute it
+                return true;
+            }
+        }
+    }
+    
+    // In all other cases, the file is not executable
+    return false;
+}
+
+string pathfind(const string &file) {
+    if (file.size() == 0) {
+        return file;
+    }
+    
+    // files that have a / should be returned as-is
+    if (file.find('/') != string::npos) {
+        return file;
+    }
+    
+    // normally we wouldn't allow this
+    if (is_executable(file)) {
+        return file;
+    }
+    
+    string path;
+    char *env = getenv("PATH");
+    if (env == NULL) {
+#ifdef _PATH_DEFPATH
+        path = _PATH_DEFPATH;
+#else
+        return file;
+#endif
+    } else {
+        /* yes, there is a PATH variable */ 
+        path = env;
+    }
+    
+    string element;
+    std::istringstream split(path);
+    while(std::getline(split, element, ':')) {
+        if (element.size() == 0) {
+            continue;
+        }
+        string myfile = element + "/" + file;
+        if (is_executable(myfile)) {
+            return myfile;
+        }
+    }
+    
+    return file;
+}
+
