@@ -243,7 +243,9 @@ class WorkflowInfo(SQLAlchemyInit, DoesLogging):
             w.parent_wf_id, w.root_wf_id, w.dag_file_name,
             w.submit_hostname, w.submit_dir, w.planner_arguments,
             w.user, w.grid_dn, w.planner_version,
-            w.dax_label, w.dax_version, ws.state, ws.timestamp)
+            w.dax_label, w.dax_version, case([(ws.status == None, 'Running'),
+                                      (ws.status == 0, 'Successful'),
+                                      (ws.status != 0, 'Failed')], else_='Undefined').label ("state"), ws.timestamp)
         
         q = q.filter(w.wf_id == self._wf_id)
         q = q.filter(w.wf_id == ws.wf_id)

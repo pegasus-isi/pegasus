@@ -180,7 +180,7 @@ chart = new Highcharts.Chart (chartOptions);
 				<tr>
 					<td>{{ workflow.dax_label }}</td>
 					<td>{% if workflow.root_wf_id ==  workflow.wf_id %}root-wf {% else %}sub-wf{% endif %}</td>
-					<td>{{ workflow.dax_label }}</td>
+					<td>{{ workflow.state }}</td>
 					<td>{{ workflow.submit_hostname }}</td>
 					<td>{{ workflow.user }}</td>
 					<td>{{ workflow.submit_dir }}</td>
