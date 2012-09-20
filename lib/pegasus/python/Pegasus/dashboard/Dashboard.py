@@ -25,24 +25,13 @@ import os
 from time import localtime, strftime
 from Pegasus.plots_stats import utils as stats_utils
 
-# Pegasus modules
-# Remove netlogger Errors from here.
-from netlogger.analysis.schema.schema_check import SchemaVersionError
-
 #Flask modules
 from flask import url_for
 
 #Dashboard modules
 from Pegasus.dashboard import WorkflowInfo as queries
 
-# Can be removed
-import logging
 from sqlalchemy.orm.exc import NoResultFound
-logging.basicConfig(level=logging.DEBUG)
-
-#self._conn_strings = ['sqlite:////lfs1/mayani/mon-portal/stampede.db']
-#self._conn_strings = ['sqlite:////nfs/asd2/mayani/.pegasus/workflow.db']
-#self._conn_strings = ['mysql://stampede_user:mamamia@stewie.isi.edu/stampede_jogc']
 
 class NoWorkflowsFoundError (Exception):
     def __init__(self, **args):
@@ -117,32 +106,22 @@ class Dashboard(object):
         # Now, let's try to access the database
         try:
             all_workflows = queries.MasterDatabase (self._master_db_url)
-            tuple = all_workflows.get_all_workflows (**table_args)
+            count, filtered, workflows = all_workflows.get_all_workflows (**table_args)
         
-            if tuple [2]:
-                self._workflows.extend (tuple [2])
+            if workflows:
+                self._workflows.extend (workflows)
     
             if len (self._workflows) == 0:
                 # Throw no work-flows found error.
-                raise NoWorkflowsFoundError (count=tuple [0], filtered=tuple [1])
+                raise NoWorkflowsFoundError (count=count, filtered=filtered)
             
             self.__update_timestamp ()
             # Try removing Flask references here.
             self.__update_label_link ()
             
             counts = all_workflows.get_workflow_counts ()
-            return (tuple [0], tuple [1], self._workflows, counts)
+            return (count, filtered, self._workflows, counts)
             
-        except SchemaVersionError:
-            #Log this
-            print 'Schema Err'
-        except:
-            #Log this
-            import sys, traceback
-            print "Unexpected error:", sys.exc_info()[0]
-            exc_type, exc_value, exc_traceback = sys.exc_info()
-            print "*** print_exception:"
-            traceback.print_exception(exc_type, exc_value, exc_traceback, limit=5, file=sys.stdout)
         finally:
             Dashboard.close (all_workflows)
          
@@ -239,16 +218,6 @@ class Dashboard(object):
             
             return job_counts, details, statistics
         
-        except SchemaVersionError:
-            #Log this
-            print 'Schema Err'
-        except:
-            #Log this
-            import sys, traceback
-            print "Unexpected error:", sys.exc_info()[0]
-            exc_type, exc_value, exc_traceback = sys.exc_info()
-            print "****** print_exception:"
-            traceback.print_exception(exc_type, exc_value, exc_traceback, file=sys.stdout)
         finally:
             Dashboard.close (workflow)
             Dashboard.close (workflow_statistics)
