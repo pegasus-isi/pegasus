@@ -755,11 +755,11 @@ def gsiftp_guc_options(attempt, create_dest, third_party):
     
         # -pipeline only for 3rd party transfers and Globus 4.2 and above
         # this is experimental so only allow this for the first attempt
-        if (attempt == 1 and \
-            tool_info['globus-version']['version_major'] == 5 \
-                or (tool_info['globus-version']['version_major'] >= 4 \
-                    and tool_info['globus-version']['version_minor'] >= 2)):
-            options += " -pipeline"
+        #if (attempt == 1 and \
+        #    tool_info['globus-version']['version_major'] == 5 \
+        #        or (tool_info['globus-version']['version_major'] >= 4 \
+        #            and tool_info['globus-version']['version_minor'] >= 2)):
+        #    options += " -pipeline"
     else:
         # gsiftp<->file transfers
         options += " -no-third-party-transfers -no-data-channel-authentication"
