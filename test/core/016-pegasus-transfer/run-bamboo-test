@@ -76,7 +76,7 @@ echo
 # NAT/Firewall simulation - set the tcp port range to something that is firewalled 
 export GLOBUS_TCP_PORT_RANGE=5000,6000
 
-timed_transfer 1 35 "pegasus-transfer -f es3-to-file.in"
+timed_transfer 1 55 "pegasus-transfer -f es3-to-file.in"
 timed_transfer 0 20 "pegasus-transfer -f medium-files-pull.in"
 timed_transfer 0 20 "pegasus-transfer -f medium-files-push.in"
 
