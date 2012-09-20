@@ -83,4 +83,6 @@ clean:
 	rm -rf touch.sqlalchemy $(SQLAlchemy)
 	rm -rf touch.boto $(BOTO) .boto*
 	rm -rf touch.flask $(Flask)
+	rm -rf touch.jinja2 $(Jinja)
+	rm -rf touch.werkzeug $(Werkzeug)
 
