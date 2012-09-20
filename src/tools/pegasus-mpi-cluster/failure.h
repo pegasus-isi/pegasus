@@ -15,20 +15,8 @@ public:
     const char* what() const throw();
 };
 
-#define MAX_FAILURE_MSG 2048
+void myfailure(const char *format, ...);
 
-#define myfailure(format, args...) \
-    do { \
-        char msg[MAX_FAILURE_MSG]; \
-        snprintf(msg, MAX_FAILURE_MSG, "%s(%d): "format, __FILE__, __LINE__, ##args); \
-        throw Failure(msg); \
-    } while (0);
-
-#define myfailures(format, args...) \
-    do { \
-        char msg[MAX_FAILURE_MSG]; \
-        snprintf(msg, MAX_FAILURE_MSG, "%s(%d): "format": %s", __FILE__, __LINE__, ##args, strerror(errno)); \
-        throw Failure(msg); \
-    } while (0);
+void myfailures(const char *format, ...);
 
 #endif /* FAILURE_H */
