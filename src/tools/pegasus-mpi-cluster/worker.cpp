@@ -591,7 +591,10 @@ int Worker::run() {
     log_trace("Worker %d: Host CPUs: %u", rank, this->host_cpus);
     
     // Get worker's host rank
-    HostrankMessage *hrmsg = (HostrankMessage *)recv_message();
+    HostrankMessage *hrmsg = dynamic_cast<HostrankMessage *>(recv_message());
+    if (hrmsg == NULL) {
+        myfailure("Expected hostrank message");
+    }
     host_rank = hrmsg->hostrank;
     delete hrmsg;
     log_trace("Worker %d: Host rank: %d", rank, host_rank);
@@ -635,12 +638,11 @@ int Worker::run() {
 #endif
         
         Message *mesg = recv_message();
-        if (mesg->type == SHUTDOWN) {
+        if (ShutdownMessage *sdm = dynamic_cast<ShutdownMessage *>(mesg)) {
             log_trace("Worker %d: Got shutdown message", rank);
-            delete mesg;
+            delete sdm;
             break;
-        } else if (mesg->type == COMMAND) {
-            CommandMessage *cmd = (CommandMessage *)mesg;
+        } else if (CommandMessage *cmd = dynamic_cast<CommandMessage *>(mesg)) {
             
             log_trace("Worker %d: Got task", rank);
             
@@ -677,7 +679,7 @@ int Worker::run() {
             
             delete task;
         } else {
-            myfailure("Unknown message type: %d", mesg->type);
+            myfailure("Unexpected message");
         }
         
         delete mesg;

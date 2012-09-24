@@ -417,13 +417,13 @@ void Master::wait_for_results() {
         log_trace("Waiting for result");
         Message *mesg = recv_message();
         messages++;
-        if (mesg->type == RESULT) {
-            process_result((ResultMessage *)mesg);
+        if (ResultMessage *res = dynamic_cast<ResultMessage *>(mesg)) {
+            process_result(res);
             tasks++;
-        } else if (mesg->type == IODATA) {
-            process_iodata((IODataMessage *)mesg);
+        } else if (IODataMessage *iod = dynamic_cast<IODataMessage *>(mesg)) {
+            process_iodata(iod);
         } else {
-            myfailure("Unexpected message type: %d", mesg->type);
+            myfailure("Expected result or I/O data message");
         }
         delete mesg;
         
@@ -648,7 +648,10 @@ void Master::register_workers() {
     // Collect host names from all workers, create host objects
     for (int i=0; i<numworkers; i++) {
         
-        RegistrationMessage *msg = (RegistrationMessage *)recv_message();
+        RegistrationMessage *msg = dynamic_cast<RegistrationMessage *>(recv_message());
+        if (msg == NULL) {
+            myfailure("Expected registration message");
+        }
         int rank = msg->source;
         string hostname = msg->hostname;
         unsigned int memory = msg->memory;

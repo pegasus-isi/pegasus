@@ -7,21 +7,16 @@
 #include "failure.h"
 #include "log.h"
 
-// XXX This protocol implementation assumes that the source and destination
-// XXX both have the same endianness
-
 unsigned long pmc_bytes_sent = 0;
 unsigned long pmc_bytes_recvd = 0;
 
-Message::Message(MessageType type) {
-    this->type = type;
+Message::Message() {
     this->msg = NULL;
     this->msgsize = 0;
     this->source = 0;
 }
 
-Message::Message(MessageType type, char *msg, unsigned msgsize, int source) {
-    this->type = type;
+Message::Message(char *msg, unsigned msgsize, int source) {
     this->msg = msg;
     this->msgsize = msgsize;
     this->source = source;
@@ -33,13 +28,13 @@ Message::~Message() {
     }
 }
 
-ShutdownMessage::ShutdownMessage(char *msg, unsigned msgsize, int source) : Message(SHUTDOWN, msg, msgsize, source) {
+ShutdownMessage::ShutdownMessage(char *msg, unsigned msgsize, int source) : Message(msg, msgsize, source) {
 }
 
-ShutdownMessage::ShutdownMessage() : Message(SHUTDOWN) {
+ShutdownMessage::ShutdownMessage() {
 }
 
-CommandMessage::CommandMessage(char *msg, unsigned msgsize, int source) : Message(COMMAND, msg, msgsize, source) {
+CommandMessage::CommandMessage(char *msg, unsigned msgsize, int source) : Message(msg, msgsize, source) {
     unsigned off = 0;
     name = msg + off;
     off += name.length() + 1;
@@ -61,7 +56,7 @@ CommandMessage::CommandMessage(char *msg, unsigned msgsize, int source) : Messag
     }
 }
 
-CommandMessage::CommandMessage(const string &name, const string &command, const string &id, unsigned memory, unsigned cpus, const map<string,string> &forwards) : Message(COMMAND) {
+CommandMessage::CommandMessage(const string &name, const string &command, const string &id, unsigned memory, unsigned cpus, const map<string,string> &forwards) {
     this->name = name;
     this->command = command;
     this->id = id;
@@ -103,7 +98,7 @@ CommandMessage::CommandMessage(const string &name, const string &command, const 
     }
 }
 
-ResultMessage::ResultMessage(char *msg, unsigned msgsize, int source, int _dummy_) : Message (RESULT, msg, msgsize, source) {
+ResultMessage::ResultMessage(char *msg, unsigned msgsize, int source, int _dummy_) : Message(msg, msgsize, source) {
     int off = 0;
     name = msg;
     off += name.length() + 1;
@@ -113,7 +108,7 @@ ResultMessage::ResultMessage(char *msg, unsigned msgsize, int source, int _dummy
     //off += sizeof(runtime);
 }
 
-ResultMessage::ResultMessage(const string &name, int exitcode, double runtime) : Message(RESULT) {
+ResultMessage::ResultMessage(const string &name, int exitcode, double runtime) {
     this->name = name;
     this->exitcode = exitcode;
     this->runtime = runtime;
@@ -130,7 +125,7 @@ ResultMessage::ResultMessage(const string &name, int exitcode, double runtime) :
     //off += sizeof(runtime);
 }
 
-RegistrationMessage::RegistrationMessage(char *msg, unsigned msgsize, int source) : Message(REGISTRATION, msg, msgsize, source) {
+RegistrationMessage::RegistrationMessage(char *msg, unsigned msgsize, int source) : Message(msg, msgsize, source) {
     hostname = msg;
     int off = hostname.length() + 1;
     memcpy(&memory, msg + off, sizeof(memory));
@@ -139,7 +134,7 @@ RegistrationMessage::RegistrationMessage(char *msg, unsigned msgsize, int source
     //off += sizeof(cpus);
 }
 
-RegistrationMessage::RegistrationMessage(const string &hostname, unsigned memory, unsigned cpus) : Message(REGISTRATION) {
+RegistrationMessage::RegistrationMessage(const string &hostname, unsigned memory, unsigned cpus) {
     this->hostname = hostname;
     this->memory = memory;
     this->cpus = cpus;
@@ -155,11 +150,11 @@ RegistrationMessage::RegistrationMessage(const string &hostname, unsigned memory
     memcpy(msg + off, &cpus, sizeof(cpus));
 }
 
-HostrankMessage::HostrankMessage(char *msg, unsigned msgsize, int source) : Message(HOSTRANK, msg, msgsize, source) {
+HostrankMessage::HostrankMessage(char *msg, unsigned msgsize, int source) : Message(msg, msgsize, source) {
     memcpy(&hostrank, msg, sizeof(hostrank));
 }
 
-HostrankMessage::HostrankMessage(int hostrank) : Message(HOSTRANK) {
+HostrankMessage::HostrankMessage(int hostrank) {
     this->hostrank = hostrank;
     
     this->msgsize = sizeof(hostrank);
@@ -168,7 +163,7 @@ HostrankMessage::HostrankMessage(int hostrank) : Message(HOSTRANK) {
     memcpy(msg, &hostrank, sizeof(hostrank));
 }
 
-IODataMessage::IODataMessage(char *msg, unsigned msgsize, int source) : Message(IODATA, msg, msgsize, source) {
+IODataMessage::IODataMessage(char *msg, unsigned msgsize, int source) : Message(msg, msgsize, source) {
     int off = 0;
     task = msg + off;
     off += task.length() + 1;
@@ -179,7 +174,7 @@ IODataMessage::IODataMessage(char *msg, unsigned msgsize, int source) : Message(
     data = msg + off;
 }
 
-IODataMessage::IODataMessage(const string &task, const string &filename, const char *data, unsigned size) : Message(IODATA) {
+IODataMessage::IODataMessage(const string &task, const string &filename, const char *data, unsigned size) {
     this->task = task;
     this->filename = filename;
     this->data = data;
@@ -201,7 +196,22 @@ IODataMessage::IODataMessage(const string &task, const string &filename, const c
 void send_message(Message *message, int dest) {
     char *msg = message->msg;
     unsigned msgsize = message->msgsize;
-    int tag = message->type;
+    int tag;
+    if (dynamic_cast<CommandMessage *>(message)) {
+        tag = COMMAND;
+    } else if (dynamic_cast<ResultMessage *>(message)) {
+        tag = RESULT;
+    } else if (dynamic_cast<IODataMessage *>(message)) {
+        tag = IODATA;
+    } else if (dynamic_cast<ShutdownMessage *>(message)) {
+        tag = SHUTDOWN;
+    } else if (dynamic_cast<RegistrationMessage *>(message)) {
+        tag = REGISTRATION;
+    } else if (dynamic_cast<HostrankMessage *>(message)) {
+        tag = HOSTRANK;
+    } else {
+        myfailure("Unknown message type");
+    }
     MPI_Send(msg, msgsize, MPI_CHAR, dest, tag, MPI_COMM_WORLD);
     pmc_bytes_sent += msgsize;
 }

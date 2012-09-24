@@ -24,13 +24,12 @@ enum MessageType {
 
 class Message {
 public:
-    MessageType type;
     int source;
     char *msg;
     unsigned msgsize;
     
-    Message(MessageType type);
-    Message(MessageType type, char *msg, unsigned msgsize, int source);
+    Message();
+    Message(char *msg, unsigned msgsize, int source);
     virtual ~Message();
 };
 
