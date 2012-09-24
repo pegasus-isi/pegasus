@@ -23,9 +23,7 @@ Message::Message(char *msg, unsigned msgsize, int source) {
 }
 
 Message::~Message() {
-    if (msg) {
-        free(msg);
-    }
+    delete [] msg;
 }
 
 ShutdownMessage::ShutdownMessage(char *msg, unsigned msgsize, int source) : Message(msg, msgsize, source) {
@@ -73,7 +71,7 @@ CommandMessage::CommandMessage(const string &name, const string &command, const 
         msgsize += (*i).second.length() + 1;
     }
     
-    msg = (char *)malloc(msgsize);
+    msg = new char[msgsize];
     
     int off = 0;
     
@@ -114,7 +112,7 @@ ResultMessage::ResultMessage(const string &name, int exitcode, double runtime) {
     this->runtime = runtime;
 
     this->msgsize = name.length() + 1 + sizeof(exitcode) + sizeof(runtime);
-    this->msg = (char *)malloc(this->msgsize);
+    this->msg = new char[this->msgsize];
     
     int off = 0;
     strcpy(msg + off, name.c_str());
@@ -140,7 +138,7 @@ RegistrationMessage::RegistrationMessage(const string &hostname, unsigned memory
     this->cpus = cpus;
 
     this->msgsize = hostname.length() + 1 + sizeof(memory) + sizeof(cpus);
-    this->msg = (char *)malloc(this->msgsize);
+    this->msg = new char[this->msgsize];
     
     int off = 0;
     strcpy(msg + off, hostname.c_str());
@@ -158,7 +156,7 @@ HostrankMessage::HostrankMessage(int hostrank) {
     this->hostrank = hostrank;
     
     this->msgsize = sizeof(hostrank);
-    this->msg = (char *)malloc(this->msgsize);
+    this->msg = new char [this->msgsize];
     
     memcpy(msg, &hostrank, sizeof(hostrank));
 }
@@ -181,7 +179,7 @@ IODataMessage::IODataMessage(const string &task, const string &filename, const c
     this->size = size;
 
     this->msgsize = task.length() + 1 + filename.length() + 1 + sizeof(size) + size;
-    this->msg = (char *)malloc(this->msgsize);
+    this->msg = new char [this->msgsize];
     
     int off = 0;
     strcpy(msg + off, task.c_str());
@@ -226,7 +224,7 @@ Message *recv_message() {
     // Allocate a buffer of the right size
     int msgsize;
     MPI_Get_count(&status, MPI_CHAR, &msgsize);
-    char *msg = (char *)malloc(msgsize);
+    char *msg = new char[msgsize];
     MPI_Recv(msg, msgsize, MPI_CHAR, MPI_ANY_SOURCE, MPI_ANY_TAG, 
             MPI_COMM_WORLD, &status);
     pmc_bytes_recvd += msgsize;

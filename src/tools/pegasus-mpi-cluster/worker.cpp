@@ -158,7 +158,7 @@ void TaskHandler::child_process() {
     char **argp = new char*[nargs+1];
     for (unsigned i=0; i<nargs; i++) {
         string arg = args.front();
-	argp[i] = (char *)malloc(arg.size()+1);
+        argp[i] = new char[arg.size()+1];
         if (sprintf(argp[i], "%s", arg.c_str()) == -1) {
             log_fatal("Unable to create arguments: %s", strerror(errno));
             exit(1);
@@ -178,7 +178,7 @@ void TaskHandler::child_process() {
     }
     for (unsigned i=0; i<pipes.size(); i++) {
         Pipe *p = pipes[i];
-	envp[nenvs+i] = (char *)malloc(p->varname.size()+11);
+        envp[nenvs+i] = new char[p->varname.size()+11];
         if (sprintf(envp[nenvs+i], "%s=%d", p->varname.c_str(), p->writefd) == -1) {
             log_fatal("Unable to create environment: %s", strerror(errno));
             exit(1);
