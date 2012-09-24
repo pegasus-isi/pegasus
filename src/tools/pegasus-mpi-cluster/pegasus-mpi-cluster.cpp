@@ -339,8 +339,13 @@ int mpidag(int argc, char *argv[]) {
     }
 }
 
+void out_of_memory() {
+    myfailure("Unable to allocate memory");
+}
+
 int main(int argc, char *argv[]) {
     try {
+        std::set_new_handler(out_of_memory);
         MPI_Init(&argc, &argv);
         MPI_Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_ARE_FATAL);
         int rc = mpidag(argc, argv);
