@@ -596,22 +596,15 @@ void Master::merge_task_stdio(FILE *dest, const string &srcfile, const string &s
 
 void Master::write_cluster_summary(bool failed) {
     // pegasus cluster output - used for provenance
-    char stat[10];
-    if (failed) {
-        strcpy(stat, "failed");
-    } else {
-        strcpy(stat, "ok");
-    }
-    
     char date[32];
     iso2date(start_time, date, sizeof(date));
     
     int extra = 0;
     
     char summary[BUFSIZ];
-    sprintf(summary, "[cluster-summary stat=\"%s\" tasks=%ld, succeeded=%ld, failed=%ld, extra=%d,"
+    sprintf(summary, "[cluster-summary stat=\"%s\", tasks=%ld, succeeded=%ld, failed=%ld, extra=%d,"
                  " start=\"%s\", duration=%.3f, pid=%d, app=\"%s\", runtime=%.3f, slots=%d, cpus=%u]\n",
-                 stat, 
+                 failed ? "failed" : "ok", 
                  this->total_count,
                  this->success_count, 
                  this->failed_count,
