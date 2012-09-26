@@ -17,8 +17,8 @@
     software, and remotely on Amazon EC2 and FutureGrid.</para>
   </section>
 
-  <section>
-    <title id="vm_virtualbox">VirtualBox</title>
+  <section id="vm_virtualbox">
+    <title>VirtualBox</title>
 
     <para>VirtualBox is a free desktop virtual machine manager. You can use it
     to run the Pegasus Tutorial VM on your desktop or laptop.</para>
@@ -35,7 +35,7 @@
       <title>Download VM Image</title>
 
       <para>Next, download the Pegasus Tutorial VM from the Pegasus download page: <ulink
-      url="http://pegasus.isi.edu/downloads">http://pegasus.isi.edu/downloads</ulink>
+            url="http://pegasus.isi.edu/downloads">http://pegasus.isi.edu/downloads</ulink>
       </para>
 
       <para>Unzip the downloaded file and move the <literal>.vmdk</literal>
@@ -191,8 +191,8 @@
     </section>
   </section>
 
-  <section>
-    <title id="vm_amazon">Amazon EC2</title>
+  <section id="vm_amazon">
+    <title>Amazon EC2</title>
 
     <para>In order to launch the tutorial VM you need to sign up for an Amazon
     Web Services account here: <ulink
@@ -450,8 +450,8 @@ tutorial's password: <emphasis role="bold">pegasus</emphasis>
     </section>
   </section>
 
-  <section>
-    <title id="vm_futuregrid">FutureGrid</title>
+  <section id="vm_futuregrid">
+    <title>FutureGrid</title>
 
     <para>The FutureGrid Project (<ulink
     url="https://portal.futuregrid.org">https://portal.futuregrid.org</ulink>)
@@ -462,7 +462,7 @@ tutorial's password: <emphasis role="bold">pegasus</emphasis>
     technologies. It provides a platform where researchers can experiment with
     different cloud technologies.</para>
 
-    <section>
+    <section id="fg_getting_started">
       <title>Getting Started</title>
 
       <para>The Pegasus Tutorial VM has been deployed to the FutureGrid
@@ -478,7 +478,7 @@ tutorial's password: <emphasis role="bold">pegasus</emphasis>
       url="https://portal.futuregrid.org/tutorials/openstack">https://portal.futuregrid.org/tutorials/openstack</ulink>.</para>
     </section>
 
-    <section>
+    <section id="fg_launching_vm">
       <title>Launching the VM</title>
 
       <para>First, log into the India site using your FutureGrid username and
@@ -542,7 +542,7 @@ INSTANCE    i-00000c38    ami-0000003e    <emphasis role="bold">149.165.158.123<
       tutorial.</para>
     </section>
 
-    <section>
+    <section id="fg_terminating_vm">
       <title>Terminating the VM</title>
 
       <para>Log out of the VM by typing:</para>
