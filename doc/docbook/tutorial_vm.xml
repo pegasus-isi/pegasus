@@ -462,7 +462,7 @@ tutorial's password: <emphasis role="bold">pegasus</emphasis>
     different cloud technologies.</para>
 
     <section>
-      <title>Getting Started</title>
+      <title id="fg_getting_started">Getting Started</title>
 
       <para>The Pegasus Tutorial VM has been deployed to the FutureGrid
       "India" site using OpenStack. In order to launch the VM, you will need
@@ -478,7 +478,7 @@ tutorial's password: <emphasis role="bold">pegasus</emphasis>
     </section>
 
     <section>
-      <title>Launching the VM</title>
+      <title id="fg_launching_vm">Launching the VM</title>
 
       <para>First, log into the India site using your FutureGrid username and
       password:</para>
@@ -542,7 +542,7 @@ INSTANCE    i-00000c38    ami-0000003e    <emphasis role="bold">149.165.158.123<
     </section>
 
     <section>
-      <title>Terminating the VM</title>
+      <title id="fg_terminating_vm">Terminating the VM</title>
 
       <para>Log out of the VM by typing:</para>
 
