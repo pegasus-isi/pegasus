@@ -150,6 +150,11 @@ def exitcode(outfile):
             # No need to check the individual tasks in this case
             return succeeded
     
+    # If we found a cluster-task, but no cluster-summary, then theres a problem
+    b = txt.find("[cluster-task")
+    if b >= 0:
+        fail("cluster-summary is missing")
+    
     # Check the exitcodes of all tasks
     regex = re.compile(r'raw="(-?[0-9]+)"')
     succeeded = 0
