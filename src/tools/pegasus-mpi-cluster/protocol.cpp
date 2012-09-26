@@ -194,22 +194,7 @@ IODataMessage::IODataMessage(const string &task, const string &filename, const c
 void send_message(Message *message, int dest) {
     char *msg = message->msg;
     unsigned msgsize = message->msgsize;
-    int tag;
-    if (dynamic_cast<CommandMessage *>(message)) {
-        tag = COMMAND;
-    } else if (dynamic_cast<ResultMessage *>(message)) {
-        tag = RESULT;
-    } else if (dynamic_cast<IODataMessage *>(message)) {
-        tag = IODATA;
-    } else if (dynamic_cast<ShutdownMessage *>(message)) {
-        tag = SHUTDOWN;
-    } else if (dynamic_cast<RegistrationMessage *>(message)) {
-        tag = REGISTRATION;
-    } else if (dynamic_cast<HostrankMessage *>(message)) {
-        tag = HOSTRANK;
-    } else {
-        myfailure("Unknown message type");
-    }
+    int tag = message->tag();
     MPI_Send(msg, msgsize, MPI_CHAR, dest, tag, MPI_COMM_WORLD);
     pmc_bytes_sent += msgsize;
 }

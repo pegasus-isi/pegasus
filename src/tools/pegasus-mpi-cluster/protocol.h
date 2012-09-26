@@ -31,12 +31,14 @@ public:
     Message();
     Message(char *msg, unsigned msgsize, int source);
     virtual ~Message();
+    virtual int tag() const = 0;
 };
 
 class ShutdownMessage: public Message {
 public:
     ShutdownMessage(char *msg, unsigned msgsize, int source);
     ShutdownMessage();
+    virtual int tag() const { return SHUTDOWN; };
 };
 
 class CommandMessage: public Message {
@@ -50,6 +52,7 @@ public:
     
     CommandMessage(char *msg, unsigned msgsize, int source);
     CommandMessage(const string &name, const string &command, const string &id, unsigned memory, unsigned cpus, const map<string,string> &forwards);
+    virtual int tag() const { return COMMAND; };
 };
 
 class ResultMessage: public Message {
@@ -60,6 +63,7 @@ public:
     
     ResultMessage(char *msg, unsigned msgsize, int source, int _dummy_);
     ResultMessage(const string &name, int exitcode, double runtime);
+    virtual int tag() const { return RESULT; };
 };
 
 class RegistrationMessage: public Message {
@@ -70,6 +74,7 @@ public:
     
     RegistrationMessage(char *msg, unsigned msgsize, int source);
     RegistrationMessage(const string &hostname, unsigned memory, unsigned cpus);
+    virtual int tag() const { return REGISTRATION; };
 };
 
 class HostrankMessage: public Message {
@@ -78,6 +83,7 @@ public:
     
     HostrankMessage(char *msg, unsigned msgsize, int source);
     HostrankMessage(int hostrank);
+    virtual int tag() const { return HOSTRANK; };
 };
 
 class IODataMessage: public Message {
@@ -89,6 +95,7 @@ public:
     
     IODataMessage(char *msg, unsigned msgsize, int source);
     IODataMessage(const string &task, const string &filename, const char *data, unsigned size);
+    virtual int tag() const { return IODATA; }
 };
 
 void send_message(Message *message, int rank);
