@@ -113,17 +113,26 @@ def exitcode(outfile):
         if e < 0:
             fail("Invalid cluster-summary record")
         
+        summary = txt[b:e]
+        
+        re_stat = re.compile(r'stat="(\w+)"')
+        m = re_stat.search(summary)
+        if m:
+            stat = m.group(1)
+            if stat != "ok":
+                fail("cluster-summary stat=%s" % stat)
+        
         # If any of the tasks failed, then job failed
         re_failed = re.compile(r'failed=([0-9]+)')
-        m = re_failed.search(txt[b:e])
+        m = re_failed.search(summary)
         if m:
             failed = int(m.group(1))
             if failed > 0:
-                fail("Failures occurred")
+                fail("cluster-summary failed=%d" % failed)
         
         # If there were no tasks, then the job was successful
         re_tasks = re.compile(r'tasks=([0-9]+)')
-        m = re_tasks.search(txt[b:e])
+        m = re_tasks.search(summary)
         if m:
             tasks = int(m.group(1))
             if tasks == 0:
@@ -131,12 +140,12 @@ def exitcode(outfile):
         
         # If the number of successes was zero, then the job failed
         re_succeeded = re.compile(r'succeeded=([0-9]+)')
-        m = re_succeeded.search(txt[b:e])
+        m = re_succeeded.search(summary)
         if m:
             succeeded = int(m.group(1))
             
             if succeeded == 0:
-                fail("No successful tasks")
+                fail("cluster-summary succeeded=%d" % succeeded)
             
             # No need to check the individual tasks in this case
             return succeeded
