@@ -1146,8 +1146,7 @@ class TestScale(unittest.TestCase):
     TESTFILE = "/tmp/test_pegasus_dax3.xml"
     
     def testLargeWorkflow(self):
-        """It shouldn't take more than 5 seconds to build a 20000 job workflow
-        or parse it"""
+        """It shouldn't take >10s to build or parse a 20k job workflow"""
         import time
         from cStringIO import StringIO
         start = time.time()
@@ -1164,7 +1163,7 @@ class TestScale(unittest.TestCase):
         f.close()
         end = time.time()
         elapsed = end - start
-        self.assertTrue(elapsed < 5)
+        self.assertTrue(elapsed < 10)
         
         a = None
         
@@ -1173,10 +1172,11 @@ class TestScale(unittest.TestCase):
         a = parse(self.TESTFILE)
         end = time.time()
         elapsed = end - start
-        self.assertTrue(elapsed < 5)
+        self.assertTrue(elapsed < 10)
     
     def tearDown(self):
         os.remove(self.TESTFILE)
 
 if __name__ == "__main__":
     unittest.main()
+
