@@ -1,0 +1,99 @@
+<invocation xmlns="http://pegasus.isi.edu/schema/invocation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/invocation http://pegasus.isi.edu/schema/iv-2.1.xsd" version="2.1" start="2012-08-28T00:55:14.798-04:00" duration="3039.014" transformation="scec::extract_sgt_rv_in_mem:1.0" derivation="ID1_10_0" resource="kraken" wf-label="CyberShake_s351_0" wf-stamp="2012-08-27T19:43:17-08:00" interface="ss" hostaddr="192.168.45.136" hostname="nid11565" pid="32216" uid="1252" gid="1007" umask="0077">
+  <mainjob start="2012-08-28T00:55:15.013-04:00" duration="3038.799" pid="32227">
+    <usage utime="8.321" stime="2.112" minflt="7660" majflt="5" nswap="0" nsignals="0" nvcsw="15016" nivcsw="1123"/>
+    <status raw="0"><regular exitcode="0"/></status>
+    <statcall error="0">
+      <file name="/lustre/scratch/proj/tera3d/CyberShake/software/JBSim3d_combined/bin/jbsim3d">7F454C46020101000000000000000000</file>
+      <statinfo mode="0100755" size="5163273" inode="811206670" nlink="1" blksize="2097152" blocks="10088" mtime="2012-08-15T13:47:56-04:00" atime="2012-08-28T00:55:15-04:00" ctime="2012-08-15T13:47:56-04:00" uid="1252" gid="1007"/>
+    </statcall>
+    <argument-vector>
+      <arg nr="1">stat=s351</arg>
+      <arg nr="2">slon=-118.21085</arg>
+      <arg nr="3">slat=34.21142</arg>
+      <arg nr="4">extract_sgt=1</arg>
+      <arg nr="5">slip=19</arg>
+      <arg nr="6">hypo=9</arg>
+      <arg nr="7">rup_geom_file=e35_rv4_10_0.txt</arg>
+      <arg nr="8">sgt_xfile=s351_fx_1012.sgt</arg>
+      <arg nr="9">sgt_yfile=s351_fy_1012.sgt</arg>
+      <arg nr="10">extract_sgt_xfile=s351_10_0_subfx.sgt</arg>
+      <arg nr="11">extract_sgt_yfile=s351_10_0_subfy.sgt</arg>
+      <arg nr="12">sgtdir=10/0</arg>
+    </argument-vector>
+  </mainjob>
+  <cwd>/lustre/scratch/tera3d/execdir/cybershk/pegasus/CyberShake_s351/20120827T194735-0800/CyberShake_s351_0_dax_0</cwd>
+  <usage utime="0.008" stime="0.008" minflt="612" majflt="0" nswap="0" nsignals="0" nvcsw="185" nivcsw="1"/>
+  <statcall error="0" id="stdin">
+    <file name="/dev/null"/>
+    <statinfo mode="020666" size="0" inode="905" nlink="1" blksize="4096" blocks="0" mtime="2004-09-14T21:20:01-04:00" atime="2004-09-14T21:20:01-04:00" ctime="2004-09-14T21:20:01-04:00" uid="0" user="root" gid="0" group="root"/>
+  </statcall>
+  <statcall error="0" id="stdout">
+    <temporary name="/var/tmp/gs.out.H1aGxr" descriptor="3"/>
+    <statinfo mode="0100600" size="1872" inode="44681" nlink="1" blksize="4096" blocks="8" mtime="2012-08-28T01:45:53-04:00" atime="2012-08-28T00:55:14-04:00" ctime="2012-08-28T01:45:53-04:00" uid="1252" gid="1007"/>
+    <data>Using 127.0.0.1 as memcached server.
+Key e35_rv4_10_0.txt hasn&apos;t been cached, adding.
+Calling endpar in jbsim3d.
+Header is part of SGTs.
+Key s351_fx_1012.sgt_sgtmaster hasn&apos;t been cached, adding.
+Key s351_fx_1012.sgt_sgtmaster added.
+Retrieved key s351_fx_1012.sgt_sgtheader.0 from cache.
+s351_fx_1012.sgt_sgtheader.1 is missing, adding to cache.
+s351_fx_1012.sgt_sgtheader.2 is missing, adding to cache.
+Retrieved key s351_fx_1012.sgt_sgtheader.3 from cache.
+s351_fx_1012.sgt_sgtheader.4 is missing, adding to cache.
+s351_fx_1012.sgt_sgtheader.5 is missing, adding to cache.
+s351_fx_1012.sgt_sgtheader.6 is missing, adding to cache.
+Retrieved key s351_fx_1012.sgt_sgtheader.7 from cache.
+s351_fx_1012.sgt_sgtheader.8 is missing, adding to cache.
+s351_fx_1012.sgt_sgtheader.9 is missing, adding to cache.
+Retrieved key s351_fx_1012.sgt_sgtheader.10 from cache.
+Header is part of SGTs.
+Key s351_fy_1012.sgt_sgtmaster hasn&apos;t been cached, adding.
+Key s351_fy_1012.sgt_sgtmaster added.
+s351_fy_1012.sgt_sgtheader.0 is missing, adding to cache.
+s351_fy_1012.sgt_sgtheader.1 is missing, adding to cache.
+s351_fy_1012.sgt_sgtheader.2 is missing, adding to cache.
+s351_fy_1012.sgt_sgtheader.3 is missing, adding to cache.
+s351_fy_1012.sgt_sgtheader.4 is missing, adding to cache.
+s351_fy_1012.sgt_sgtheader.5 is missing, adding to cache.
+s351_fy_1012.sgt_sgtheader.6 is missing, adding to cache.
+s351_fy_1012.sgt_sgtheader.7 is missing, adding to cache.
+s351_fy_1012.sgt_sgtheader.8 is missing, adding to cache.
+s351_fy_1012.sgt_sgtheader.9 is missing, adding to cache.
+Retrieved key s351_fy_1012.sgt_sgtheader.10 from cache.
+Find SGTs for this rupture
+  25 percent done (1267 of 5070)
+  50 percent done (2534 of 5070)
+  75 percent done (3802 of 5070)
+ 100 percent done (5069 of 5070)
+nm= 5070 non_exact= 0
+max_mindelta= 0.000000 weight= 1.000000
+Extracting SGTs for this rupture
+</data>
+  </statcall>
+  <statcall error="0" id="stderr">
+    <temporary name="/var/tmp/gs.err.WHuM3K" descriptor="4"/>
+    <statinfo mode="0100600" size="343" inode="44682" nlink="1" blksize="4096" blocks="8" mtime="2012-08-28T01:00:09-04:00" atime="2012-08-28T00:55:14-04:00" ctime="2012-08-28T01:00:09-04:00" uid="1252" gid="1007"/>
+    <data>Caching s351_fx_1012.sgt_sgtheader.1 successful.
+Caching s351_fx_1012.sgt_sgtheader.2 successful.
+Caching s351_fx_1012.sgt_sgtheader.4 successful.
+Caching s351_fx_1012.sgt_sgtheader.5 successful.
+Caching s351_fx_1012.sgt_sgtheader.6 successful.
+Caching s351_fx_1012.sgt_sgtheader.8 successful.
+Caching s351_fx_1012.sgt_sgtheader.9 successful.
+</data>
+  </statcall>
+  <statcall error="0" id="gridstart">
+    <file name="/lustre/scratch/proj/tera3d/pegasus/pegasus-4.1.0cvs/bin/pegasus-kickstart">7F454C46020101000000000000000000</file>
+    <statinfo mode="0100755" size="221368" inode="672662103" nlink="1" blksize="2097152" blocks="440" mtime="2012-08-21T22:29:45-04:00" atime="2012-08-28T00:55:14-04:00" ctime="2012-08-22T16:06:17-04:00" uid="1252" gid="1007"/>
+  </statcall>
+  <statcall error="0" id="logfile">
+    <descriptor number="1"/>
+    <statinfo mode="0100600" size="0" inode="661799023" nlink="1" blksize="2097152" blocks="0" mtime="2012-08-28T00:55:05-04:00" atime="2012-08-28T00:55:05-04:00" ctime="2012-08-28T00:55:05-04:00" uid="1252" gid="1007"/>
+  </statcall>
+  <statcall error="0" id="channel">
+    <fifo name="/var/tmp/gs.app.UcggF4" descriptor="5" count="0" rsize="0" wsize="0"/>
+    <statinfo mode="010600" size="0" inode="44691" nlink="1" blksize="4096" blocks="0" mtime="2012-08-28T00:55:14-04:00" atime="2012-08-28T00:55:14-04:00" ctime="2012-08-28T00:55:14-04:00" uid="1252" gid="1007"/>
+  </statcall>
+</invocation>
+[cluster-task id=32345, name=ID1_10_0, start="2012-08-28T00:55:12.391-04:00", duration=3041.529, status=1, app="/lustre/scratch/proj/tera3d/pegasus/default/bin/pegasus-kickstart", hostname="nid11565", slot=1, cpus=1, memory=842]

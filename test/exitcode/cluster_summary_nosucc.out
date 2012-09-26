@@ -1,0 +1,2 @@
+[cluster-summary stat="ok", tasks=100, succeeded=0, failed=0, extra=0, start="2012-08-28T10:02:14.244-07:00", duration=1.019, pid=24586, app="./pegasus-mpi-cluster", runtime=1.003, slots=3, cpus=4]
+[cluster-task name=A, start="2012-08-28T10:02:14.244-07:00", duration=1.003, status=0, app="/bin/sleep", hostname="gideon.isi.edu", slot=1, cpus=3, memory=5]

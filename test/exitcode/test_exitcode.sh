@@ -32,3 +32,9 @@ exitcode 1 nonzero.out
 exitcode 1 signalled.out
 exitcode 0 seqexec-ok.out
 exitcode 1 largecode.out
+exitcode 0 cluster_summary_ok.out
+exitcode 1 cluster_summary_failed.out
+exitcode 1 cluster_summary_stat.out
+exitcode 1 cluster_summary_missing.out
+exitcode 0 cluster_summary_notasks.out
+exitcode 1 cluster_summary_nosucc.out
