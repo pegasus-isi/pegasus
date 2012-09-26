@@ -25,7 +25,12 @@ def main():
     
     alltests = unittest.TestSuite(suites)
     
-    unittest.TextTestRunner(verbosity=2).run(alltests)
+    runner = unittest.TextTestRunner(verbosity=2)
+    result = runner.run(alltests)
+    
+    if result.wasSuccessful():
+        return 0
+    return 1
 
 if __name__ == '__main__':
-    main()
+    exit(main())
