@@ -279,15 +279,20 @@ void TaskHandler::send_file_data() {
         
         // Read the data into a buffer
         std::auto_ptr<char> buf(new char[size]);
-        if (read_file(srcfile, buf.get(), size) != size) {
-            log_error("Unable to read %s for task %s: %s", srcfile.c_str(), 
-                    name.c_str(), strerror(errno));
+        if (read_file(srcfile, buf.get(), size) == size) {
+            log_trace("Task %s: Sending %s to %s", name.c_str(), srcfile.c_str(), 
+                    destfile.c_str());
+            IODataMessage iodata(this->name, destfile, buf.get(), size);
+            send_message(&iodata, 0);
+        } else {
+            log_error("Task %s: Unable to read %s: %s", name.c_str(), srcfile.c_str(), 
+                    strerror(errno));
         }
         
-        log_trace("Sending %s to %s for task %s", srcfile.c_str(), 
-                destfile.c_str(), name.c_str());
-        IODataMessage iodata(this->name, destfile, buf.get(), size);
-        send_message(&iodata, 0);
+        if (unlink(srcfile.c_str())) {
+            log_warn("Task %s: Error removing file %s: %s", name.c_str(),
+                    srcfile.c_str(), strerror(errno));
+        }
     }
 }
 
