@@ -335,21 +335,13 @@ void DAG::read_dag() {
             }
             
             Task *t = new Task(name, command, memory, cpus, tries, priority, pipe_forwards, file_forwards);
-            /*
-            t->memory = memory;
-            t->cpus = cpus;
-            t->tries = tries;
-            t->priority = priority;
-            t->pipe_forwards = pipe_forwards;
-            t->file_forwards = file_forwards;
-            */
+            
             if (pegasus_id.length() > 0) {
                 if (pegasus_name != name) {
                     myfailure("Name from Pegasus does not match task: %s != %s\n",
                             pegasus_name.c_str(), name.c_str());
                 }
                 t->pegasus_id = pegasus_id;
-                t->pegasus_transformation = pegasus_transformation;
                 
                 // reset the extra parameters
                 pegasus_id = "";

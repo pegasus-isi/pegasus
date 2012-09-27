@@ -16,9 +16,8 @@ public:
     vector<Task *> children;
     vector<Task *> parents;
     
-    // These come from the Pegasus cluster comments
+    // This comes from the pegasus cluster arguments
     string pegasus_id;
-    string pegasus_transformation;
     
     bool success;
 
