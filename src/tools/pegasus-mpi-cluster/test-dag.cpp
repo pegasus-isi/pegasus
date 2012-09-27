@@ -4,6 +4,9 @@
 #include "stdlib.h"
 #include "dag.h"
 #include "failure.h"
+#include "log.h"
+
+using std::exception;
 
 void test_dag() {
     DAG dag("test/test.dag");
@@ -198,43 +201,91 @@ void test_priority_dag() {
     }
 }
 
-void test_forward() {
+void test_pipe_forward() {
     DAG dag("test/forward.dag");
     
     Task *a = dag.get_task("A");
     Task *b = dag.get_task("B");
     Task *c = dag.get_task("C");
 
-    if (a->forwards.size() != 1) {
+    map<string,string> *fwds;
+    
+    fwds = a->pipe_forwards;
+    if (fwds->size() != 1) {
         myfailure("A should have one forward");
     }
-    if (a->forwards["FOO"] != "./test/forward.dag.foo") {
+    if ((*fwds)["FOO"] != "./test/forward.dag.foo") {
         myfailure("A should be forwarding foo");
     }
-
-    if (b->forwards.size() != 1) {
+    
+    fwds = b->pipe_forwards;
+    if (fwds->size() != 1) {
         myfailure("B should have one forward");
     }
-    if (b->forwards["BAR"] != "./test/forward.dag.bar") {
+    if ((*fwds)["BAR"] != "./test/forward.dag.bar") {
         myfailure("B should be forwarding bar");
     }
 
-    if (c->forwards.size() != 2) {
+    fwds = c->pipe_forwards;
+    if (fwds->size() != 2) {
         myfailure("C should have two forwards");
     }
-    if (c->forwards["FOO"] != "./test/forward.dag.foo" && c->forwards["BAR"] != "./test/forward.dag.bar") {
+    if ((*fwds)["FOO"] != "./test/forward.dag.foo" && 
+        (*fwds)["BAR"] != "./test/forward.dag.bar") {
+        myfailure("C should be forwarding foo and bar");
+    }
+}
+
+void test_file_forward() {
+    DAG dag("test/file_forward.dag");
+    
+    Task *a = dag.get_task("A");
+    Task *b = dag.get_task("B");
+    Task *c = dag.get_task("C");
+    
+    map<string,string> *fwds;
+    
+    fwds = a->file_forwards;
+    if (fwds->size() != 1) {
+        myfailure("A should have one forward");
+    }
+    if ((*fwds)["./test/scratch/foo"] != "./test/forward.dag.foo") {
+        myfailure("A should be forwarding foo");
+    }
+    
+    fwds = b->file_forwards;
+    if (fwds->size() != 1) {
+        myfailure("B should have one forward");
+    }
+    if ((*fwds)["./test/scratch/bar"] != "./test/forward.dag.bar") {
+        myfailure("B should be forwarding bar");
+    }
+    
+    fwds = c->file_forwards;
+    if (fwds->size() != 2) {
+        myfailure("C should have two forwards");
+    }
+    if ((*fwds)["./test/scratch/foo"] != "./test/forward.dag.foo" && 
+        (*fwds)["./test/scratch/bar"] != "./test/forward.dag.bar") {
         myfailure("C should be forwarding foo and bar");
     }
 }
 
 int main(int argc, char *argv[]) {
-    test_dag();
-    test_rescue();
-    test_pegasus_dag();
-    test_memory_dag();
-    test_cpu_dag();
-    test_tries_dag();
-    test_priority_dag();
-    test_forward();
-    return 0;
+    try {
+        log_set_level(LOG_ERROR);
+        test_dag();
+        test_rescue();
+        test_pegasus_dag();
+        test_memory_dag();
+        test_cpu_dag();
+        test_tries_dag();
+        test_priority_dag();
+        test_pipe_forward();
+        test_file_forward();
+        return 0;
+    } catch (exception &error) {
+        log_error("ERROR: %s", error.what());
+        return 1;
+    }
 }

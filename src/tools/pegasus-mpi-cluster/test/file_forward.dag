@@ -1,0 +1,4 @@
+TASK A -F ./test/scratch/foo=./test/forward.dag.foo ./test/file_forward.py ./test/scratch/foo
+TASK B --file-forward ./test/scratch/bar=./test/forward.dag.bar ./test/file_forward.py ./test/scratch/bar
+TASK C -F ./test/scratch/foo=./test/forward.dag.foo -F ./test/scratch/bar=./test/forward.dag.bar ./test/file_forward.py ./test/scratch/foo ./test/scratch/bar
+

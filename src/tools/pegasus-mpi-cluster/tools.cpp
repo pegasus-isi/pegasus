@@ -239,6 +239,27 @@ bool is_executable(const string &file) {
     return false;
 }
 
+int read_file(const string &file, char *buf, size_t size) {
+    // Invalid path
+    if (file.size() == 0) {
+        errno = ENOENT;
+        return -1;
+    }
+    
+    FILE *f = fopen(file.c_str(), "r");
+    if (f == NULL) {
+        return -1;
+    }
+    
+    size_t read = fread(buf, 1, size, f);
+
+    if (fclose(f)) {
+        return -1;
+    }
+    
+    return read;
+}
+
 string pathfind(const string &file) {
     if (file.size() == 0) {
         return file;

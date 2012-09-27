@@ -18,18 +18,29 @@ using std::list;
 
 #define MAX_LINE 16384
 
-Task::Task(const string &name, const string &command) {
+Task::Task(const string &name, const string &command, unsigned memory, unsigned cpus, unsigned tries, int priority, const map<string,string> &pipe_forwards, const map<string,string> &file_forwards) {
     this->name = name;
     this->command = command;
+    this->memory = memory;
+    this->cpus = cpus;
+    this->tries = tries;
+    this->priority = priority;
+    this->pipe_forwards = NULL;
+    if (pipe_forwards.size() > 0) {
+        this->pipe_forwards = new map<string,string>(pipe_forwards);
+    }
+    this->file_forwards = NULL;
+    if (file_forwards.size() > 0) {
+        this->file_forwards = new map<string,string>(file_forwards);
+    }
+    this->io_failed = false;
     this->success = false;
     this->failures = 0;
-    this->memory = 0;
-    this->cpus = 1;
-    this->priority = 0;
-    this->io_failed = false;
 }
 
 Task::~Task() {
+    delete pipe_forwards;
+    delete file_forwards;
 }
 
 bool Task::is_ready() {
@@ -185,7 +196,8 @@ void DAG::read_dag() {
             unsigned cpus = 1;
             unsigned tries = this->tries;
             int priority = 0;
-            map<string, string> forwards;
+            map<string, string> pipe_forwards;
+            map<string, string> file_forwards;
             
             // Parse task arguments
             list<string> args;
@@ -268,10 +280,10 @@ void DAG::read_dag() {
                         }
                         log_trace("Task %s has priority %d", 
                             name.c_str(), priority);
-                    } else if (arg == "-f" || arg == "--forward") {
+                    } else if (arg == "-f" || arg == "--pipe-forward") {
                         args.pop_front();
                         if (args.size() == 0) {
-                            myfailure("-f/--forward requires VAR=PATH for task %s",
+                            myfailure("-f/--pipe-forward requires VAR=PATH for task %s",
                                 name.c_str());
                         }
                         string forward = args.front();
@@ -282,9 +294,26 @@ void DAG::read_dag() {
                         }
                         string varname = forward.substr(0, eq);
                         string filename = forward.substr(eq + 1);
-                        log_trace("Task %s needs data forwarded for %s",
+                        log_trace("Task %s needs data forwarded to %s",
                                 name.c_str(), filename.c_str());
-                        forwards[varname] = filename;
+                        pipe_forwards[varname] = filename;
+                    } else if (arg == "-F" || arg == "--file-forward") {
+                        args.pop_front();
+                        if (args.size() == 0) {
+                            myfailure("-F/--file-forward requires SRC=DEST for task %s",
+                                name.c_str());
+                        }
+                        string forward = args.front();
+                        size_t eq = forward.find("=");
+                        if (eq == string::npos) {
+                            myfailure("Task %s -f/--forward format should be VAR=PATH: %s",
+                                    name.c_str(), forward.c_str());
+                        }
+                        string srcfile = forward.substr(0, eq);
+                        string destfile = forward.substr(eq + 1);
+                        log_trace("Task %s needs data forwarded to %s",
+                                name.c_str(), destfile.c_str());
+                        file_forwards[srcfile] = destfile;
                     } else {
                         myfailure("Invalid argument '%s' for task %s", 
                             arg.c_str(), name.c_str());
@@ -305,13 +334,15 @@ void DAG::read_dag() {
                 }
             }
             
-            Task *t = new Task(name, command);
+            Task *t = new Task(name, command, memory, cpus, tries, priority, pipe_forwards, file_forwards);
+            /*
             t->memory = memory;
             t->cpus = cpus;
             t->tries = tries;
             t->priority = priority;
-            t->forwards = forwards;
-            
+            t->pipe_forwards = pipe_forwards;
+            t->file_forwards = file_forwards;
+            */
             if (pegasus_id.length() > 0) {
                 if (pegasus_name != name) {
                     myfailure("Name from Pegasus does not match task: %s != %s\n",

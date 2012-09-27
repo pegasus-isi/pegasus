@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <sys/wait.h>
 #include <sys/time.h>
+#include <sys/stat.h>
 #include <fcntl.h>
 #include <signal.h>
 #include <math.h>
@@ -83,18 +84,19 @@ void Pipe::closewrite() {
     }
 }
 
-TaskHandler::TaskHandler(Worker *worker, string &name, string &command, string &id, unsigned memory, unsigned cpus, map<string, string> &forwards) {
+TaskHandler::TaskHandler(Worker *worker, string &name, string &command, string &id, unsigned memory, unsigned cpus, const map<string,string> &pipe_forwards, const map<string,string> &file_forwards) {
     this->worker = worker;
     this->name = name;
     split_args(this->args, command);
     this->id = id;
     this->memory = memory;
     this->cpus = cpus;
-    this->forwards = forwards;
-
+    this->pipe_forwards = pipe_forwards;
+    this->file_forwards = file_forwards;
+    
     // We allocate this here so that we can be sure to free
     // it in the destructor
-    this->fds = new struct pollfd[forwards.size()];
+    this->fds = new struct pollfd[pipe_forwards.size()];
     
     this->start = 0;
     this->finish = 0;
@@ -226,16 +228,84 @@ void TaskHandler::child_process() {
     exit(1);
 }
 
-void TaskHandler::run() {
-    log_trace("Running task %s", this->name.c_str());
+void TaskHandler::send_pipe_data() {
+    // Don't do anything if the task failed
+    if (this->status != 0) {
+        return;
+    }
+    
+    for (unsigned i = 0; i < this->pipes.size(); i++) {
+        Pipe *pipe = this->pipes[i];
+        log_trace("Task %s: Pipe %s got %d bytes", name.c_str(), 
+                pipe->varname.c_str(), pipe->size());
+        IODataMessage iodata(this->name, pipe->filename, pipe->data(), 
+                pipe->size());
+        send_message(&iodata, 0);
+    }
+}
+
+void TaskHandler::send_file_data() {
+    // Don't do anything if the task failed
+    if (this->status != 0) {
+        return;
+    }
+    
+    for (map<string,string>::iterator i = file_forwards.begin(); i != file_forwards.end(); i++) {
+        string srcfile = i->first;
+        string destfile = i->second;
+        
+        // TODO Determine how to handle errors with the forwarded files
+        
+        // Make sure the file exists
+        struct stat st;
+        if (stat(srcfile.c_str(), &st)) {
+            log_error("Task %s: stat failed on file %s: %s", 
+                    name.c_str(), srcfile.c_str(), strerror(errno));
+            continue;
+        }
+        
+        // Make sure it is a regular file
+        if (!S_ISREG(st.st_mode)) {
+            log_error("Task %s: %s is not a file", name.c_str(), srcfile.c_str());
+            continue;
+        }
+        
+        // Check the size of the file
+        size_t size = st.st_size;
+        if (size > 1024*1024) {
+            log_error("Task %s: File %s is too large", name.c_str(), srcfile.c_str());
+            continue;
+        }
+        
+        // Read the data into a buffer
+        std::auto_ptr<char> buf(new char[size]);
+        if (read_file(srcfile, buf.get(), size) != size) {
+            log_error("Unable to read %s for task %s: %s", srcfile.c_str(), 
+                    name.c_str(), strerror(errno));
+        }
+        
+        log_trace("Sending %s to %s for task %s", srcfile.c_str(), 
+                destfile.c_str(), name.c_str());
+        IODataMessage iodata(this->name, destfile, buf.get(), size);
+        send_message(&iodata, 0);
+    }
+}
+
+void TaskHandler::send_result() {
+    // Send task information back to master
+    ResultMessage res(this->name, this->status, this->elapsed());
+    send_message(&res, 0);
+}
+
+void TaskHandler::run_process() {
     
     // Record start time of task
     start = current_time();
     
     // Create pipes for all of the forwarded files
-    for (map<string,string>::iterator i = forwards.begin(); i != forwards.end(); i++) {
-        string varname = (*i).first;
-        string filename = (*i).second;
+    for (map<string,string>::iterator i = pipe_forwards.begin(); i != pipe_forwards.end(); i++) {
+        string varname = i->first;
+        string filename = i->second;
         int pipefd[2];
         if (pipe(pipefd) < 0) {
             log_error("Unable to create pipe for task %s: %s",
@@ -270,6 +340,8 @@ void TaskHandler::run() {
     for (unsigned i=0; i<pipes.size(); i++) {
         reading[pipes[i]->readfd] = pipes[i];
     }
+    
+    // TODO Determine what to do when reading from one of the pipes fails
     
     // While there are pipes to read from
     while (reading.size() > 0) {
@@ -365,8 +437,6 @@ after_poll_loop:
     // Record the finish time of the task
     finish = current_time();
     
-    write_cluster_task();
-    
     double runtime = elapsed();
     
     if (WIFEXITED(status)) {
@@ -400,6 +470,32 @@ void TaskHandler::write_cluster_task() {
         worker->host_name.c_str(), worker->rank, cpus, memory);
     
     write(worker->out, summary, strlen(summary));
+}
+
+void TaskHandler::execute() {
+    log_trace("Running task %s", this->name.c_str());
+    
+    run_process();
+    
+    // If the task succeeded, then send the I/O back to the master.
+    // We only do this if the task succeeds because if the task 
+    // failed, then it might not have generated good output data.
+    // It is important that we do this before sending back the 
+    // result message. If we send the result message first, or if
+    // it gets processed first, then we could have a situation
+    // where, when a failure occurs, a task has been marked as
+    // success in the transaction log, but the I/O from the task
+    // has not been saved. The MPI standard guaranteest that 
+    // messages sent from one process to another are delivered 
+    // in the order sent.
+    if (this->status == 0) {
+        send_pipe_data();
+        send_file_data();
+    }
+    
+    write_cluster_task();
+    
+    send_result();
 }
 
 Worker::Worker(const string &outfile, const string &errfile, const string &host_script, unsigned int host_memory, unsigned host_cpus, bool strict_limits) {
@@ -645,36 +741,11 @@ int Worker::run() {
             
             log_trace("Worker %d: Got task", rank);
             
-            TaskHandler *task = new TaskHandler(this, cmd->name, cmd->command, 
-                    cmd->id, cmd->memory, cmd->cpus, cmd->forwards);
+            TaskHandler task(this, cmd->name, cmd->command, 
+                    cmd->id, cmd->memory, cmd->cpus, cmd->pipe_forwards,
+                    cmd->file_forwards);
             
-            task->run();
-            
-            // If the task succeeded, then send the I/O back to the master.
-            // We only do this if the task succeeds because if the task 
-            // failed, then it might not have generated good output data.
-            // It is important that we do this before sending back the 
-            // result message. If we send the result message first, or if
-            // it gets processed first, then we could have a situation
-            // where, when a failure occurs, a task has been marked as
-            // success in the transaction log, but the I/O from the task
-            // has not been saved. The MPI standard guaranteest that 
-            // messages sent from one process to another are delivered 
-            // in the order sent.
-            if (task->status == 0) {
-                for (unsigned i = 0; i < task->pipes.size(); i++) {
-                    Pipe *pipe = task->pipes[i];
-                    log_trace("Pipe %s got %d bytes", pipe->varname.c_str(), pipe->size());
-                    IODataMessage iodata(task->name, pipe->filename, pipe->data(), pipe->size());
-                    send_message(&iodata, 0);
-                }
-            }
-            
-            // Send task information back to master
-            ResultMessage res(task->name, task->status, task->elapsed());
-            send_message(&res, 0);
-            
-            delete task;
+            task.execute();
         } else {
             myfailure("Unexpected message");
         }

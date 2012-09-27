@@ -367,7 +367,7 @@ void Master::submit_task(Task *task, int rank) {
     log_debug("Submitting task %s to slot %d", task->name.c_str(), rank);
     
     CommandMessage cmd(task->name, task->command, task->pegasus_id, 
-            task->memory, task->cpus, task->forwards);
+            task->memory, task->cpus, task->pipe_forwards, task->file_forwards);
     send_message(&cmd, rank);
     
     this->total_count++;

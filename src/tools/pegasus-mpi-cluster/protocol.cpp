@@ -45,30 +45,55 @@ CommandMessage::CommandMessage(char *msg, unsigned msgsize, int source) : Messag
     memcpy(&cpus, msg + off, sizeof(cpus));
     off += sizeof(cpus);
     
-    while (off < msgsize) {
+    unsigned char npipes;
+    memcpy(&npipes, msg + off, sizeof(npipes));
+    off += sizeof(npipes);
+    
+    for (int i = 0; i<npipes; i++) {
         string varname = msg + off;
         off += varname.length() + 1;
         string filename = msg + off;
         off += filename.length() + 1;
-        forwards[varname] = filename;
+        pipe_forwards[varname] = filename;
+    }
+    
+    unsigned char nfiles;
+    memcpy(&nfiles, msg + off, sizeof(nfiles));
+    off += sizeof(nfiles);
+    
+    for (int i = 0; i<nfiles; i++) {
+        string srcfile = msg + off;
+        off += srcfile.length() + 1;
+        string destfile = msg + off;
+        off += destfile.length() + 1;
+        file_forwards[srcfile] = destfile;
     }
 }
 
-CommandMessage::CommandMessage(const string &name, const string &command, const string &id, unsigned memory, unsigned cpus, const map<string,string> &forwards) {
+CommandMessage::CommandMessage(const string &name, const string &command, const string &id, unsigned memory, unsigned cpus, const map<string,string> *pipe_forwards, const map<string,string> *file_forwards) {
     this->name = name;
     this->command = command;
     this->id = id;
     this->memory = memory;
     this->cpus = cpus;
-    this->forwards = forwards;
+    if (pipe_forwards) this->pipe_forwards = *pipe_forwards;
+    if (file_forwards) this->file_forwards = *file_forwards;
+    
+    unsigned char npipes = this->pipe_forwards.size();
+    unsigned char nfiles = this->file_forwards.size();
     
     msgsize = name.length() + 1 + command.length() + 1 +
-        id.length() + 1 + sizeof(memory) + sizeof(cpus);
+        id.length() + 1 + sizeof(memory) + sizeof(cpus) + 
+        sizeof(npipes) + sizeof(nfiles);
     
     map<string,string>::iterator i;
-    for (i=this->forwards.begin(); i!=this->forwards.end(); i++) {
-        msgsize += (*i).first.length() + 1;
-        msgsize += (*i).second.length() + 1;
+    for (i=this->pipe_forwards.begin(); i!=this->pipe_forwards.end(); i++) {
+        msgsize += i->first.length() + 1;
+        msgsize += i->second.length() + 1;
+    }
+    for (i=this->file_forwards.begin(); i!=this->file_forwards.end(); i++) {
+        msgsize += i->first.length() + 1;
+        msgsize += i->second.length() + 1;
     }
     
     msg = new char[msgsize];
@@ -86,13 +111,28 @@ CommandMessage::CommandMessage(const string &name, const string &command, const 
     memcpy(msg + off, &cpus, sizeof(cpus));
     off += sizeof(cpus);
     
-    for (i=this->forwards.begin(); i!=this->forwards.end(); i++) {
-        const string *varname = &(*i).first;
-        const string *filename = &(*i).second;
+    memcpy(msg + off, &npipes, sizeof(npipes));
+    off += sizeof(npipes);
+    
+    for (i=this->pipe_forwards.begin(); i!=this->pipe_forwards.end(); i++) {
+        const string *varname = &(i->first);
+        const string *filename = &(i->second);
         strcpy(msg + off, varname->c_str());
         off += varname->length() + 1;
         strcpy(msg + off, filename->c_str());
         off += filename->length() + 1;
+    }
+    
+    memcpy(msg + off, &nfiles, sizeof(nfiles));
+    off += sizeof(nfiles);
+    
+    for (i=this->file_forwards.begin(); i!=this->file_forwards.end(); i++) {
+        const string *srcfile = &(i->first);
+        const string *destfile = &(i->second);
+        strcpy(msg + off, srcfile->c_str());
+        off += srcfile->length() + 1;
+        strcpy(msg + off, destfile->c_str());
+        off += destfile->length() + 1;
     }
 }
 

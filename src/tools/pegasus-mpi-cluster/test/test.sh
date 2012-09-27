@@ -475,6 +475,32 @@ function test_forward_fail {
     fi
 }
 
+# Make sure I/O forwarding works with files
+function test_file_forward {
+    OUTPUT=$(mpiexec -n 2 $PMC -v test/file_forward.dag 2>&1)
+    RC=$?
+    
+    if [ $RC -ne 0 ]; then
+        echo "$OUTPUT"
+        echo "ERROR: File forward test failed"
+        return 1
+    fi
+    
+    FOO=$(grep "foo" test/forward.dag.foo | wc -l)
+    if [ $? -ne 0 ] || [ $FOO -ne 2 ]; then
+        echo "$OUTPUT"
+        echo "ERROR: File forward test failed (foo problem)"
+        return 1
+    fi
+    
+    BAR=$(grep "bar" test/forward.dag.bar | wc -l)
+    if [ $? -ne 0 ] || [ $BAR -ne 2 ]; then
+        echo "$OUTPUT"
+        echo "ERROR: File forward test failed (bar problem)"
+        return 1
+    fi
+}
+
 run_test ./test-strlib
 run_test ./test-tools
 run_test ./test-dag
@@ -500,6 +526,7 @@ run_test test_resource_log
 run_test test_append_stdio
 run_test test_forward
 run_test test_forward_fail
+run_test test_file_forward
 run_test test_max_wall_time
 run_test test_hang_script
 

@@ -29,9 +29,10 @@ public:
     unsigned tries;
     unsigned failures;
     int priority;
-    map<string, string> forwards;
+    map<string, string> *pipe_forwards;
+    map<string, string> *file_forwards;
     
-    Task(const string &name, const string &command);
+    Task(const string &name, const string &command, unsigned memory, unsigned cpus, unsigned tries, int priority, const map<string,string> &pipe_forwards, const map<string,string> &file_forwards);
     ~Task();
     
     bool is_ready();

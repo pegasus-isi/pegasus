@@ -72,7 +72,8 @@ public:
     list<string> args;
     unsigned memory;
     unsigned cpus;
-    map<string, string> forwards;
+    map<string, string> pipe_forwards;
+    map<string, string> file_forwards;
     
     vector<Pipe *> pipes;
     struct pollfd *fds;
@@ -82,12 +83,17 @@ public:
     
     int status;
     
-    TaskHandler(Worker *worker, string &name, string &command, string &id, unsigned memory, unsigned cpus, map<string, string> &forwards);
+    TaskHandler(Worker *worker, string &name, string &command, string &id, unsigned memory, unsigned cpus, const map<string,string> &pipe_forwards, const map<string,string> &file_forwards);
     ~TaskHandler();
     double elapsed();
-    void run();
+    void execute();
+private:
+    void send_result();
+    void run_process();
     void child_process();
     void write_cluster_task();
+    void send_pipe_data();
+    void send_file_data();
 };
 
 #endif /* WORKER_H */

@@ -48,10 +48,11 @@ public:
     string id;
     unsigned memory;
     unsigned cpus;
-    map<string, string> forwards;
+    map<string, string> pipe_forwards;
+    map<string, string> file_forwards;
     
     CommandMessage(char *msg, unsigned msgsize, int source);
-    CommandMessage(const string &name, const string &command, const string &id, unsigned memory, unsigned cpus, const map<string,string> &forwards);
+    CommandMessage(const string &name, const string &command, const string &id, unsigned memory, unsigned cpus, const map<string,string> *pipe_forwards, const map<string,string> *file_forwards);
     virtual int tag() const { return COMMAND; };
 };
 
