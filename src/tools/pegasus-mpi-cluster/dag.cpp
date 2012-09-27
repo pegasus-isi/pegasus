@@ -289,7 +289,7 @@ void DAG::read_dag() {
                         string forward = args.front();
                         size_t eq = forward.find("=");
                         if (eq == string::npos) {
-                            myfailure("Task %s -f/--forward format should be VAR=PATH: %s",
+                            myfailure("-f/--pipe-forward format should be VAR=PATH for task %s: %s",
                                     name.c_str(), forward.c_str());
                         }
                         string varname = forward.substr(0, eq);
@@ -306,13 +306,13 @@ void DAG::read_dag() {
                         string forward = args.front();
                         size_t eq = forward.find("=");
                         if (eq == string::npos) {
-                            myfailure("Task %s -f/--forward format should be VAR=PATH: %s",
+                            myfailure("-F/--file-forward format should be SRC=DEST for task %s: %s",
                                     name.c_str(), forward.c_str());
                         }
                         string srcfile = forward.substr(0, eq);
                         string destfile = forward.substr(eq + 1);
-                        log_trace("Task %s needs data forwarded to %s",
-                                name.c_str(), destfile.c_str());
+                        log_trace("Task %s needs data forwarded from %s to %s",
+                                name.c_str(), srcfile.c_str(), destfile.c_str());
                         file_forwards[srcfile] = destfile;
                     } else {
                         myfailure("Invalid argument '%s' for task %s", 
