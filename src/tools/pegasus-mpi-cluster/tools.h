@@ -21,6 +21,6 @@ unsigned int get_host_cpus();
 int mkdirs(const char *path);
 bool is_executable(const string &file);
 string pathfind(const string &file);
-int read_file(const string &file, char *buf, size_t size);
+size_t read_file(const string &file, char *buf, size_t size);
 
 #endif /* _TOOLS_H */

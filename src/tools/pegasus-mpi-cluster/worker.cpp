@@ -12,6 +12,7 @@
 #include <sys/resource.h>
 #include <map>
 #include <poll.h>
+#include <memory>
 
 #include "strlib.h"
 #include "worker.h"
