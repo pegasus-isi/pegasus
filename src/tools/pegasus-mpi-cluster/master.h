@@ -108,9 +108,9 @@ class Master {
     int numworkers;
     double max_wall_time;
     
-    long total_count;
-    long success_count;
-    long failed_count;
+    unsigned submitted_count;
+    unsigned success_count;
+    unsigned failed_count;
     
     unsigned total_cpus;
     double total_runtime;

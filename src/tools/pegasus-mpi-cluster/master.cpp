@@ -280,7 +280,7 @@ Master::Master(const string &program, Engine &engine, DAG &dag,
     this->has_host_script = has_host_script;
     this->max_wall_time = max_wall_time;
     
-    this->total_count = 0;
+    this->submitted_count = 0;
     this->success_count = 0;
     this->failed_count = 0;
     
@@ -370,7 +370,7 @@ void Master::submit_task(Task *task, int rank) {
             task->memory, task->cpus, task->pipe_forwards, task->file_forwards);
     send_message(&cmd, rank);
     
-    this->total_count++;
+    this->submitted_count++;
 }
 
 void Master::wait_for_results() {
@@ -599,16 +599,14 @@ void Master::write_cluster_summary(bool failed) {
     char date[32];
     iso2date(start_time, date, sizeof(date));
     
-    int extra = 0;
-    
     char summary[BUFSIZ];
-    sprintf(summary, "[cluster-summary stat=\"%s\", tasks=%ld, succeeded=%ld, failed=%ld, extra=%d,"
+    sprintf(summary, "[cluster-summary stat=\"%s\", tasks=%u, submitted=%u, succeeded=%u, failed=%u, extra=0,"
                  " start=\"%s\", duration=%.3f, pid=%d, app=\"%s\", runtime=%.3f, slots=%d, cpus=%u]\n",
                  failed ? "failed" : "ok", 
-                 this->total_count,
+                 this->dag->size(),
+                 this->submitted_count,
                  this->success_count, 
                  this->failed_count,
-                 extra,
                  date,
                  wall_time,
                  getpid(),

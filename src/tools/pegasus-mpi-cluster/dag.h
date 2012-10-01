@@ -57,6 +57,7 @@ public:
     Task *get_task(const string &name) const;
     iterator begin() { return this->tasks.begin(); }
     iterator end() { return this->tasks.end(); }
+    unsigned size() { return this->tasks.size(); }
 };
 
 #endif /* DAG_H */
