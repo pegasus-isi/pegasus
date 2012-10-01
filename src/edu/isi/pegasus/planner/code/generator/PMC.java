@@ -56,32 +56,6 @@ import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
  */
 public class PMC extends Abstract {
 
-    public static final String PEGASUS_SHELL_RUNNER_FUNCTIONS_BASENAME = "shell-runner-functions.sh ";
-
-    /**
-     * The prefix for events associated with job in jobstate.log file
-     */
-    public static final String JOBSTATE_JOB_PREFIX = "JOB";
-    
-    
-    /**
-     * The prefix for events associated with POST_SCRIPT in jobstate.log file
-     */
-    public static final String JOBSTATE_POST_SCRIPT_PREFIX = "POST_SCRIPT";
-    
-    
-    /**
-     * The prefix for events associated with job in jobstate.log file
-     */
-    public static final String JOBSTATE_PRE_SCRIPT_PREFIX = "PRE_SCRIPT";
-    
-
-  
-    /**
-     * Handle to the Site Store.
-     */
-    private SiteStore mSiteStore;
-
     /**
      * The handle to the GridStart Factory.
      */
@@ -118,8 +92,6 @@ public class PMC extends Abstract {
         File wdir = new File(mSubmitFileDir);
         wdir.mkdirs();
 
-        //get the handle to pool file
-        mSiteStore = bag.getHandleToSiteStore();
 
     }
 
@@ -154,6 +126,34 @@ public class PMC extends Abstract {
             //trigger the -w option for kickstart always
             job.vdsNS.construct( Pegasus.CHANGE_DIR_KEY , "true" );
 
+            //the stdin of the job is handled outside of
+            //kickstart module for time being.
+            //assumption is that we are always using kickstart
+            //for this scenario
+            String stdin = job.getStdIn();
+            StringBuffer kickstartPreArgs = new StringBuffer();
+            boolean prepend = false;
+            if( stdin == null || stdin.length() == 0 ){
+                //nothing to do
+            }
+            else{
+                //construct the kickstart arguments for connecting
+                // the task stdin
+                kickstartPreArgs.append("-i ");
+                if( stdin.startsWith( File.separator ) ){
+                    kickstartPreArgs.append( stdin );
+                }
+                else{
+                    //prepend the submit dirctory
+                    kickstartPreArgs.append( mSubmitFileDir ).append( File.separator).append( stdin );
+                }
+                kickstartPreArgs.append(' ');
+                //reset stdin as we don't want
+                //kickstart module to handle it
+                job.setStdIn( "" );
+                prepend = true;
+            }
+
             //enable the job
             if( !gridStart.enable( job,false ) ){
                 String msg = "Job " +  job.getName() + " cannot be enabled by " +
@@ -161,6 +161,14 @@ public class PMC extends Abstract {
                              job.getSiteHandle();
                 mLogger.log( msg, LogManager.FATAL_MESSAGE_LEVEL );
                 throw new CodeGeneratorException( msg );
+            }
+
+            if( prepend ){
+                //job has already been kickstarted.
+                //prepend the -i option for stdin
+                StringBuffer args = new StringBuffer();
+                args.append( kickstartPreArgs ).append( job.getArguments() );
+                job.setArguments( args.toString() );
             }
 
         }
