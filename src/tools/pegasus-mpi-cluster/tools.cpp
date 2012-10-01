@@ -239,7 +239,7 @@ bool is_executable(const string &file) {
     return false;
 }
 
-size_t read_file(const string &file, char *buf, size_t size) {
+int read_file(const string &file, char *buf, size_t size) {
     // Invalid path
     if (file.size() == 0) {
         errno = ENOENT;
