@@ -49,6 +49,7 @@ import edu.isi.pegasus.planner.code.GridStartFactory;
 import edu.isi.pegasus.planner.code.POSTScript;
 import edu.isi.pegasus.planner.code.generator.condor.SUBDAXGenerator;
 import edu.isi.pegasus.planner.namespace.Dagman;
+import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.partitioner.graph.Adapter;
 import edu.isi.pegasus.planner.partitioner.graph.Graph;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
@@ -163,7 +164,8 @@ public class PMC extends Abstract {
             Job job = (Job)node.getContent();
             GridStart gridStart = mGridStartFactory.loadGridStart( job , null );
 
-            //todo ? trigger the -w option for kickstart always
+            //trigger the -w option for kickstart always
+            job.vdsNS.construct( Pegasus.CHANGE_DIR_KEY , "true" );
 
             //enable the job
             if( !gridStart.enable( job,false ) ){
