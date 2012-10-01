@@ -24,6 +24,7 @@ import edu.isi.pegasus.planner.classes.AggregatedJob;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.namespace.Pegasus;
+import edu.isi.pegasus.planner.partitioner.graph.Graph;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -107,7 +108,6 @@ public class MPIExec extends Abstract {
         return;
     }
 
-
     /**
      * Writes out the input file for the aggregated job
      *
@@ -116,25 +116,38 @@ public class MPIExec extends Abstract {
      * @return path to the input file
      */
     protected File writeOutInputFileForJobAggregator(AggregatedJob job) {
+        return this.generatePMCInputFile(job, job.getID() + ".in" );
+    }
+
+
+    /**
+     * Writes out the input file for the aggregated job
+     *
+     * @param job   the aggregated job
+     *
+     * @return path to the input file
+     */
+    public File generatePMCInputFile(Graph job, String name ) {
         File stdIn = null;
         try {
             BufferedWriter writer;
-            String name = job.getID() + ".in";
+//            String name = job.getID() + ".in";
             stdIn = new File(mDirectory,name);
             writer = new BufferedWriter(new FileWriter( stdIn ));
 
             //traverse throught the jobs to determine input/output files
             //and merge the profiles for the jobs
             int taskid = 1;
-            for( Iterator it = job.constituentJobsIterator(); it.hasNext(); taskid++ ) {
-                Job constitutentJob = (Job) it.next();
+            for( Iterator<GraphNode> it = job.nodeIterator(); it.hasNext(); taskid++ ) {
+                GraphNode node = it.next();
+                Job constitutentJob = (Job) node.getContent();
 
 
 
                 //handle stdin
                 if( constitutentJob instanceof AggregatedJob ){
                     //slurp in contents of it's stdin
-                    File file = new File ( mDirectory, job.getStdIn() );
+                    File file = new File ( mDirectory, constitutentJob.getStdIn() );
                     BufferedReader reader = new BufferedReader(
                                                              new FileReader( file )
                                                                );
