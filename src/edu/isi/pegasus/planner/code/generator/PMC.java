@@ -18,8 +18,6 @@
 package edu.isi.pegasus.planner.code.generator;
 
 import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -27,29 +25,23 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import edu.isi.pegasus.common.credential.CredentialHandler;
-import edu.isi.pegasus.common.credential.CredentialHandler.TYPE;
-import edu.isi.pegasus.common.credential.CredentialHandlerFactory;
 import edu.isi.pegasus.common.logging.LogManager;
-import edu.isi.pegasus.common.util.DefaultStreamGobblerCallback;
-import edu.isi.pegasus.common.util.StreamGobbler;
-import edu.isi.pegasus.common.util.StreamGobblerCallback;
-import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
+
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
-import edu.isi.pegasus.planner.classes.Profile;
+
 import edu.isi.pegasus.planner.cluster.JobAggregator;
 import edu.isi.pegasus.planner.cluster.aggregator.JobAggregatorFactory;
 import edu.isi.pegasus.planner.cluster.aggregator.MPIExec;
+
 import edu.isi.pegasus.planner.code.CodeGeneratorException;
 import edu.isi.pegasus.planner.code.GridStart;
 import edu.isi.pegasus.planner.code.GridStartFactory;
-import edu.isi.pegasus.planner.code.POSTScript;
-import edu.isi.pegasus.planner.code.generator.condor.SUBDAXGenerator;
-import edu.isi.pegasus.planner.namespace.Dagman;
+
 import edu.isi.pegasus.planner.namespace.Pegasus;
+
 import edu.isi.pegasus.planner.partitioner.graph.Adapter;
 import edu.isi.pegasus.planner.partitioner.graph.Graph;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
@@ -84,12 +76,7 @@ public class PMC extends Abstract {
     public static final String JOBSTATE_PRE_SCRIPT_PREFIX = "PRE_SCRIPT";
     
 
-    /**
-     * The handle to the output file that is being written to.
-     */
-    private PrintWriter mWriteHandle;
-
-    
+  
     /**
      * Handle to the Site Store.
      */
