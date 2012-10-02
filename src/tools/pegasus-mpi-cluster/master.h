@@ -95,9 +95,6 @@ class Master {
     DAG *dag;
     Engine *engine;
     
-    FILE *task_stdout;
-    FILE *task_stderr;
-   
     FILE *resource_log;
 
     vector<Slot *> slots;
@@ -126,7 +123,9 @@ class Master {
     unsigned slots_avail;
     
     FDCache fdcache;
-    
+
+    bool per_task_stdio;
+
     void register_workers();
     void schedule_tasks();
     void wait_for_results();
@@ -144,7 +143,7 @@ class Master {
 public:
     Master(const string &program, Engine &engine, DAG &dag, const string &dagfile, 
         const string &outfile, const string &errfile, bool has_host_script = false, 
-        double max_wall_time = 0.0, const string &resourcefile = "");
+        double max_wall_time = 0.0, const string &resourcefile = "", bool per_task_stdio = false);
     ~Master();
     int run();
 };

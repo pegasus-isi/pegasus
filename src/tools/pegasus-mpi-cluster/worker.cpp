@@ -13,6 +13,7 @@
 #include <map>
 #include <poll.h>
 #include <memory>
+#include <libgen.h>
 
 #include "strlib.h"
 #include "worker.h"
@@ -131,12 +132,85 @@ TaskHandler::TaskHandler(Worker *worker, string &name, string &command, string &
     this->file_forwards = file_forwards;
     this->start = 0;
     this->finish = 0;
+    this->task_stdout = -1;
+    this->task_stderr = -1;
 }
 
 TaskHandler::~TaskHandler() {
+    close_stdio();
+    
     // Delete all the forwards
     for (unsigned i=0; i<forwards.size(); i++) {
         delete forwards[i];
+    }
+}
+
+int TaskHandler::open_stdio() {
+    // If per-task-stdio is not enabled, then use the global 
+    // task stdout/stderr streams
+    if (!worker->per_task_stdio) {
+        task_stdout = worker->out;
+        task_stderr = worker->err;
+        return 0;
+    }
+    
+    // Determine the path to the next stdout/stderr file 
+    string basefile = worker->workdir + "/" + name;
+    char sequence[10];
+    int seqno = 0;
+    struct stat st;
+    while (true) {
+        sprintf(sequence, "%03d", seqno);
+        string tempfile = basefile + ".out." + sequence;
+        int rc = stat(tempfile.c_str(), &st);
+        if (rc == 0) {
+            // The path exists, try the next one
+            seqno++;
+        } else {
+            if (errno == ENOENT) {
+                // We found one that doesn't exist
+                break;
+            } else {
+                // There was a problem
+                log_error("Task %s: Error finding stdout file: %s", 
+                        name.c_str(), strerror(errno));
+                return -1;
+            }
+        }
+    }
+    
+    string outfile = basefile + ".out." + sequence;
+    string errfile = basefile + ".err." + sequence;
+    
+    // Open the stdout file
+    task_stdout = open(outfile.c_str(), O_WRONLY|O_CREAT, 0000644);
+    if (task_stdout < 0) {
+        log_error("Task %s: Unable to open task stdout file %s: %s", 
+                name.c_str(), outfile.c_str(), strerror(errno));
+        return -1;
+    }
+    
+    // Open the stderr file
+    task_stderr = open(errfile.c_str(), O_WRONLY|O_CREAT, 0000644);
+    if (task_stderr < 0) {
+        log_error("Task %s: Unable to open task stderr file %s: %s", 
+                name.c_str(), errfile.c_str(), strerror(errno));
+        return -1;
+    }
+    
+    return 0;
+}
+
+void TaskHandler::close_stdio() {
+    if (worker->per_task_stdio) {
+        if (task_stdout >= 0) {
+            close(task_stdout);
+            task_stdout = -1;
+        }
+        if (task_stderr >= 0) {
+            close(task_stderr);
+            task_stderr = -1;
+        } 
     }
 }
 
@@ -156,17 +230,16 @@ double TaskHandler::elapsed() {
  * fork() up to and including execve()
  */
 void TaskHandler::child_process() {
-    
     // Redirect stdout/stderr. We do this first thing so that any
     // of the error messages printed before the execve show up in
     // the task stdout/stderr where they belong. Otherwise, we could
     // end up shipping a lot of error messages to the master process.
-    if (dup2(worker->out, STDOUT_FILENO) < 0) {
+    if (dup2(task_stdout, STDOUT_FILENO) < 0) {
         log_fatal("Error redirecting stdout of task %s: %s", 
             name.c_str(), strerror(errno));
         exit(1);
     }
-    if (dup2(worker->err, STDERR_FILENO) < 0) {
+    if (dup2(task_stderr, STDERR_FILENO) < 0) {
         log_fatal("Error redirecting stderr of task %s: %s", 
             name.c_str(), strerror(errno));
         exit(1);
@@ -531,7 +604,7 @@ void TaskHandler::write_cluster_task() {
         id_string.c_str(), name.c_str(), date, elapsed(), status, app.c_str(), 
         worker->host_name.c_str(), worker->rank, cpus, memory);
     
-    write(worker->out, summary, strlen(summary));
+    write(task_stdout, summary, strlen(summary));
 }
 
 bool TaskHandler::succeeded() {
@@ -541,7 +614,12 @@ bool TaskHandler::succeeded() {
 void TaskHandler::execute() {
     log_trace("Running task %s", this->name.c_str());
     
-    this->status = run_process();
+    if (open_stdio()) {
+        // If we were unable to open stdio, then the task failed
+        this->status = 256;
+    } else {
+        this->status = run_process();
+    }
     
     // If the task succeeded, then read all of the files. We only
     // do this if the task succeeded because we only send the data
@@ -579,10 +657,11 @@ void TaskHandler::execute() {
     send_result();
 }
 
-Worker::Worker(const string &outfile, const string &errfile, const string &host_script, unsigned int host_memory, unsigned host_cpus, bool strict_limits) {
-    this->outfile = outfile;
-    this->errfile = errfile;
-
+Worker::Worker(const string &dagfile, const string &host_script, unsigned int host_memory, unsigned host_cpus, bool strict_limits, bool per_task_stdio) {
+    this->dagfile = dagfile;
+    char *temp = strdup(dagfile.c_str());
+    this->workdir = dirname(temp);
+    free(temp);
     this->host_script = host_script;
     if (host_memory == 0) {
         // If host memory is not specified by the user, then get the amount
@@ -599,12 +678,42 @@ Worker::Worker(const string &outfile, const string &errfile, const string &host_
         this->host_cpus = host_cpus;
     }
     this->strict_limits = strict_limits;
+    this->per_task_stdio = per_task_stdio;
     this->host_script_pgid = 0;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     get_host_name(host_name);
+    if (per_task_stdio) {
+        this->out = -1;
+        this->err = -1;
+    } else {
+        // Send stdout/stderr to a different file for each worker
+        char rankstr[10];
+        sprintf(rankstr, "%d", rank);
+        string outfile = dagfile + ".out." + rankstr;
+        string errfile = dagfile + ".err." + rankstr;
+            
+        log_debug("Worker %d: Using task stdout file: %s", rank, outfile.c_str());
+        log_debug("Worker %d: Using task stderr file: %s", rank, errfile.c_str());
+        
+        out = open(outfile.c_str(), O_WRONLY|O_APPEND|O_CREAT, 0000644);
+        if (out < 0) {
+            myfailures("Worker %d: unable to open task stdout", rank);
+        }
+        
+        err = open(errfile.c_str(), O_WRONLY|O_APPEND|O_CREAT, 0000644);
+        if (err < 0) {
+            myfailures("Worker %d: unable to open task stderr", rank);
+        }
+    }
 }
 
 Worker::~Worker() {
+    if (this->out > 0) {
+        close(this->out);
+    }
+    if (this->err > 0) {
+        close(this->err);
+    }
 }
 
 /**
@@ -775,19 +884,6 @@ int Worker::run() {
     delete hrmsg;
     log_trace("Worker %d: Host rank: %d", rank, host_rank);
     
-    log_debug("Worker %d: Using task stdout file: %s", rank, outfile.c_str());
-    log_debug("Worker %d: Using task stderr file: %s", rank, errfile.c_str());
-    
-    out = open(outfile.c_str(), O_WRONLY|O_APPEND|O_CREAT, 0000644);
-    if (out < 0) {
-        myfailures("Worker %d: unable to open task stdout", rank);
-    }
-    
-    err = open(errfile.c_str(), O_WRONLY|O_APPEND|O_CREAT, 0000644);
-    if (err < 0) {
-        myfailures("Worker %d: unable to open task stderr", rank);
-    }
-    
     // If there is a host script, then run it and wait here for all the host scripts to finish
     if ("" != host_script) {
         run_host_script();
@@ -836,10 +932,8 @@ int Worker::run() {
     
     kill_host_script_group();
     
-    close(out);
-    close(err);
-    
     log_debug("Worker %d: Exiting...", rank);
     
     return 0;
 }
+

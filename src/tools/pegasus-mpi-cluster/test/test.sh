@@ -69,7 +69,7 @@ function test_run_diamond {
 
 # Make sure we can redirect task stdout/stderr to /dev/null
 function test_out_err {
-    mpiexec -n 2 $PMC -s test/diamond.dag -o /dev/null -e /dev/null 2>/dev/null
+    mpiexec -n 2 $PMC -s test/diamond.dag -o /dev/null -e /dev/null >/dev/null 2>&1
     RC=$?
     
     if [ $RC -ne 0 ]; then
@@ -81,7 +81,7 @@ function test_out_err {
 function test_rescue_file {
     RESCUE=$(mktemp test/diamond.dag.rescue.XXXXXX)
     
-    mpiexec -n 2 $PMC -s test/diamond.dag -o /dev/null -e /dev/null -r $RESCUE 2>/dev/null
+    mpiexec -n 2 $PMC -s test/diamond.dag -o /dev/null -e /dev/null -r $RESCUE >/dev/null 2>&1
     RC=$?
     
     LOG=$(cat $RESCUE)
@@ -519,6 +519,28 @@ function test_file_forward_fail {
     fi
 }
 
+function test_per_task_stdio {
+    mkdir -p test/scratch
+    cp test/diamond.dag test/scratch/
+    
+    OUTPUT=$(mpiexec -n 2 $PMC -v --per-task-stdio test/scratch/diamond.dag 2>&1)
+    RC=$?
+    
+    if [ $RC -ne 0 ]; then
+        echo "$OUTPUT"
+        echo "ERROR: Per task stdio test failed"
+        return 1
+    fi
+    
+    NFILES=$(ls test/scratch/{A,B,C,D}.{out,err}.000 | wc -l)
+    if [ $NFILES -ne 8 ]; then
+        echo "$OUTPUT"
+        echo "ERROR: Per task stdio test failed"
+        echo "NFILES=$NFILES"
+        return 1
+    fi
+}
+
 run_test ./test-strlib
 run_test ./test-tools
 run_test ./test-dag
@@ -546,6 +568,7 @@ run_test test_forward
 run_test test_forward_fail
 run_test test_file_forward
 run_test test_file_forward_fail
+run_test test_per_task_stdio
 run_test test_max_wall_time
 run_test test_hang_script
 

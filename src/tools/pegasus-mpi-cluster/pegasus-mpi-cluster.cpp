@@ -75,7 +75,8 @@ void usage() {
             "   --host-memory N      Amount of memory per host in MB\n"
             "   --host-cpus N        Number of CPUs per host\n"
             "   --strict-limits      Enforce strict task resource limits\n"
-            "   --max-wall-time T    Maximum wall time of the job in minutes\n",
+            "   --max-wall-time T    Maximum wall time of the job in minutes\n"
+            "   --per-task-stdio     Write each task's stdout/stderr to a different file\n",
             program
         );
     }
@@ -112,6 +113,7 @@ int mpidag(int argc, char *argv[]) {
     unsigned host_cpus = 0;
     bool strict_limits = false;
     double max_wall_time = 0.0;
+    bool per_task_stdio = false;
 
     // Environment variable defaults
     char *env_host_script = getenv("PMC_HOST_SCRIPT");
@@ -260,6 +262,8 @@ int mpidag(int argc, char *argv[]) {
                 argerror("Invalid value for --max-wall-time");
                 return 1;
             }
+        } else if (flag == "--per-task-stdio") {
+            per_task_stdio = true;
         } else if (flag[0] == '-') {
             string message = "Unrecognized argument: ";
             message += flag;
@@ -322,18 +326,14 @@ int mpidag(int argc, char *argv[]) {
         DAG dag(dagfile, oldrescue, lock, tries);
         Engine engine(dag, newrescue, max_failures);
         Master master(program, engine, dag, dagfile, outfile, errfile, 
-                has_host_script, max_wall_time, resource_log);
+                has_host_script, max_wall_time, resource_log, 
+                per_task_stdio);
         
         return master.run();
     } else {
-        // Send stdout/stderr to a different file for each worker
-        char rankstr[10];
-        sprintf(rankstr, "%d", rank);
-        outfile = dagfile + ".out." + rankstr;
-        errfile = dagfile + ".err." + rankstr;
-
-        Worker worker(outfile, errfile, host_script, host_memory, host_cpus, 
-                strict_limits);
+        
+        Worker worker(dagfile, host_script, host_memory, host_cpus, 
+                strict_limits, per_task_stdio);
         
         return worker.run();
     }
@@ -359,3 +359,4 @@ int main(int argc, char *argv[]) {
         MPI_Abort(MPI_COMM_WORLD, 1);
     }
 }
+

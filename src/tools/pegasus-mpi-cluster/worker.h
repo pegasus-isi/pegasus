@@ -64,8 +64,8 @@ public:
 
 class Worker {
 public:
-    string outfile;
-    string errfile;
+    string dagfile;
+    string workdir;
 
     int out;
     int err;
@@ -82,7 +82,9 @@ public:
     
     bool strict_limits;
     
-    Worker(const string &outfile, const string &errfile, const string &host_script, unsigned host_memory = 0, unsigned host_cpus = 0, bool strict_limits = false);
+    bool per_task_stdio;
+    
+    Worker(const string &dagfile, const string &host_script, unsigned host_memory = 0, unsigned host_cpus = 0, bool strict_limits = false, bool per_task_stdio=false);
     ~Worker();
     int run();
     void run_host_script();
@@ -109,6 +111,9 @@ public:
     
     int status;
     
+    int task_stdout;
+    int task_stderr;
+    
     TaskHandler(Worker *worker, string &name, string &command, string &id, unsigned memory, unsigned cpus, const map<string,string> &pipe_forwards, const map<string,string> &file_forwards);
     ~TaskHandler();
     double elapsed();
@@ -122,6 +127,8 @@ private:
     void send_io_data();
     int read_file_data();
     void delete_files();
+    int open_stdio();
+    void close_stdio();
 };
 
 #endif /* WORKER_H */

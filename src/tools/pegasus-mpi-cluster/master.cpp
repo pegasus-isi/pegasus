@@ -270,7 +270,8 @@ void Host::log_status() {
 Master::Master(const string &program, Engine &engine, DAG &dag,
                const string &dagfile, const string &outfile,
                const string &errfile, bool has_host_script,
-               double max_wall_time, const string &resourcefile) {
+               double max_wall_time, const string &resourcefile,
+               bool per_task_stdio) {
     this->program = program;
     this->dagfile = dagfile;
     this->outfile = outfile;
@@ -290,11 +291,11 @@ Master::Master(const string &program, Engine &engine, DAG &dag,
     
     this->total_cpus = 0;
     this->total_runtime = 0.0;
-
+    
     this->memory_avail = 0;
     this->cpus_avail = 0;
     this->slots_avail = 0;
-
+    
     // Determine the number of workers we have
     int numprocs;
     MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
@@ -303,50 +304,16 @@ Master::Master(const string &program, Engine &engine, DAG &dag,
         myfailure("Need at least 1 worker");
     }
     
-    // Open task stdout
-    if (outfile == "stdout") {
-        this->task_stdout = stdout;
-    }
-    else {
-        this->task_stdout = fopen(this->outfile.c_str(), "w");
-        if (this->task_stdout == NULL) {
-            myfailures("Unable to open stdout file: %s\n", this->outfile.c_str());
-        }
-    }
-    
-    // Open task stderr
-    this->task_stderr = stderr;
-    if (errfile == "stderr") {
-        this->task_stderr = stderr;
-    }
-    else if (errfile == outfile) {
-        this->task_stderr = this->task_stdout;
-    }
-    else {
-        this->task_stderr = fopen(this->errfile.c_str(), "w");
-        if (this->task_stderr == NULL) {
-            myfailures("Unable to open stderr file: %s\n", this->outfile.c_str());
-        }
-    }
-    
     if (resourcefile == "") {
         this->resource_log = NULL;
     } else {
         this->resource_log = fopen(resourcefile.c_str(), "a");
     }
+    
+    this->per_task_stdio = per_task_stdio;
 }
 
 Master::~Master() {
-    if (fileno(task_stdout) > 2) {
-        log_trace("Closing task stdout");
-        fclose(task_stdout);
-    }
-    
-    if (fileno(task_stderr) > 2) {
-        log_trace("Closing task stderr");
-        fclose(task_stderr);
-    }
-
     vector<Slot *>::iterator s;
     for (s = slots.begin(); s != slots.end(); s++) {
         delete *s;
@@ -544,6 +511,38 @@ void Master::log_resources(unsigned slots, unsigned cpus, unsigned memory, const
 }
 
 void Master::merge_all_task_stdio() {
+    // If we have per task stdio we don't need to merge the outputs
+    if (per_task_stdio) {
+        return;
+    }
+    
+    log_info("Merging task stdio from workers...");
+    
+    FILE *task_stdout = stdout;
+    FILE *task_stderr = stderr;
+    
+    // Open task stdout
+    if (outfile == "stdout") {
+        task_stdout = stdout;
+    } else {
+        task_stdout = fopen(this->outfile.c_str(), "w");
+        if (task_stdout == NULL) {
+            myfailures("Unable to open stdout file: %s\n", this->outfile.c_str());
+        }
+    }
+    
+    // Open task stderr
+    if (errfile == "stderr") {
+        task_stderr = stderr;
+    } else if (errfile == outfile) {
+        task_stderr = task_stdout;
+    } else {
+        task_stderr = fopen(this->errfile.c_str(), "w");
+        if (task_stderr == NULL) {
+            myfailures("Unable to open stderr file: %s\n", this->outfile.c_str());
+        }
+    }
+    
     char rankstr[10];
     for (int i=1; i<=numworkers; i++) {
         log_debug("Merging stdio from worker %d...", i);
@@ -555,6 +554,14 @@ void Master::merge_all_task_stdio() {
         
         string task_errfile = this->dagfile + ".err." + rankstr;
         this->merge_task_stdio(task_stderr, task_errfile, "stderr");
+    }
+    
+    if (fileno(task_stdout) > 2) {
+        fclose(task_stdout);
+    }
+    
+    if (fileno(task_stderr) > 2) {
+        fclose(task_stderr);
     }
 }
 
@@ -616,7 +623,10 @@ void Master::write_cluster_summary(bool failed) {
                  this->total_cpus);
     
     int len = strlen(summary);
-    int w = fwrite(summary, 1, len, task_stdout);
+
+    // XXX This should probably be written to the task_stdout, but for most
+    // pegasus workflows task_stdout = stdout
+    int w = fwrite(summary, 1, len, stdout);
     if (w < len) {
         myfailures("Error writing cluster-summary");
     }
@@ -876,8 +886,7 @@ int Master::run() {
     bool failed = ABORT || this->engine->is_failed();
     write_cluster_summary(failed);
    
-    log_info("Merging task stdio from workers...");
-    merge_all_task_stdio();
+    if (!per_task_stdio) merge_all_task_stdio();
     
     log_info("Sending workers shutdown messages...");
     for (int i=1; i<=numworkers; i++) {
