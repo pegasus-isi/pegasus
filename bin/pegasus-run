@@ -269,7 +269,7 @@ if ( $config{dag} ) {
 	while (<DID>) {
 	    if ( /condor_scheduniv_exec/ ) {
 		# this part was written by a python programmer?
-		$did=(split /\./,  (split)[3],2)[1];
+		$did=(split "condor_scheduniv_exec.",  (split)[3],2)[1];
 		last;
 	    }
 	}
