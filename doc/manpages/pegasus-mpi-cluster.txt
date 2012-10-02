@@ -93,11 +93,13 @@ Options
 
 *-o* 'path'::
 *--stdout* 'path'::
-    Path to file for task stdout. (see <<TASK_STDIO,*TASK STDIO*>>)
+    Path to file for task stdout. (see <<TASK_STDIO,*TASK STDIO*>> and
+    *--per-task-stdio*)
 
 *-e* 'path'::
 *--stderr* 'path'::
-    Path to file for task stderr. (see <<TASK_STDIO,*TASK STDIO*>>)
+    Path to file for task stderr. (see <<TASK_STDIO,*TASK STDIO*>> and
+    *--per-task-stdio*)
 
 *-m* 'M'::
 *--max-failures* 'M'::
@@ -162,6 +164,16 @@ Options
     recorded even if the workflow exceeds the max wall time of its batch job.
     This value can also be set using the PMC_MAX_WALL_TIME environment
     variable.
+
+*--per-task-stdio*::
+    This causes PMC to generate a .out.XXX and a .err.XXX file for each task
+    instead of writing task stdout/stderr to *--stdout* and *--stderr*. The
+    name of the files are "TASKNAME.out.XXX" and "TASKNAME.err.XXX", where 
+    "TASKNAME" is the name of the task from the DAG and "XXX" is a sequence
+    number that is incremented each time the task is tried. This option 
+    overrides the values for *--stdout* and *--stderr*. This argument is used
+    by Pegasus when workflows are planned in PMC-only mode to facilitate
+    debugging and monitoring.
 
 
 [[DAG_FILES]]
@@ -312,13 +324,15 @@ Task STDIO
 ----------
 By default the stdout and stderr of tasks will be redirected to the master's
 stdout and stderr. You can change the path of these files with the *-o* and 
-*-e* arguments. Note that the stdio of all workers will be merged into one 
-out and one err file by the master at the end, so I/O from different workers 
-will not be interleaved, but I/O from each worker will appear in the order 
-that it was generated. Also note that, if the job fails for any reason, the 
-outputs will not be merged, but instead there will be one file for each worker 
-named DAGFILE.MPID.out.X and DAGFILE.MPID.err.X, where DAGFILE is the path to
-the input DAG, MPID is the master's process ID, and 'X' is the worker's rank.
+*-e* arguments. You can also enable per-task stdio files using the 
+*--per-task-stdio* argument. Note that if per-task stdio files are not used 
+then the stdio of all workers will be merged into one out and one err file 
+by the master at the end, so I/O from different workers will not be 
+interleaved, but I/O from each worker will appear in the order that it was 
+generated. Also note that, if the job fails for any reason, the outputs will 
+not be merged, but instead there will be one file for each worker named 
+DAGFILE.out.X and DAGFILE.err.X, where DAGFILE is the path to the input DAG, 
+and 'X' is the worker's rank.
 
 
 [[HOST_SCRIPTS]]
