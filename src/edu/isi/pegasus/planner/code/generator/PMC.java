@@ -117,10 +117,24 @@ public class PMC extends Abstract {
 
         mGridStartFactory.initialize(mBag, dag);
 
+        Job prevJob = null;
         //traverse the workflow and enable the jobs with kickstart first
         for( Iterator<GraphNode> it = workflow.nodeIterator(); it.hasNext(); ){
             GraphNode node = it.next();
             Job job = (Job)node.getContent();
+            String site = job.getSiteHandle();
+
+            //sanity check
+            if( !( prevJob == null || prevJob.getSiteHandle().equalsIgnoreCase( site ) )){
+                StringBuffer error = new StringBuffer();
+                error.append( "Site Mismatch between jobs " ).append( "(" ).
+                      append( job.getID() ).append( ":" ).append( site ).append( "," ).
+                      append( prevJob.getID() ).append( ":" ).append( prevJob.getSiteHandle() ).
+                      append( ") ").append( "." ).
+                      append( "For the PMC Code generator all jobs should be mapped to the same site. ");
+                throw new CodeGeneratorException( error.toString() );
+            }
+
             GridStart gridStart = mGridStartFactory.loadGridStart( job , null );
 
             //trigger the -w option for kickstart always
@@ -170,6 +184,8 @@ public class PMC extends Abstract {
                 args.append( kickstartPreArgs ).append( job.getArguments() );
                 job.setArguments( args.toString() );
             }
+
+            prevJob = job;
 
         }
 
