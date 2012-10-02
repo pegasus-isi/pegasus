@@ -193,7 +193,7 @@ public class PMC extends Abstract {
         //and generate the PMC file for it
         JobAggregator aggregator = JobAggregatorFactory.loadInstance( JobAggregatorFactory.MPI_EXEC_CLASS, dag, mBag);
         MPIExec pmcAggregator = (MPIExec)aggregator;
-        String name = dag.getLabel() + "-" + dag.dagInfo.index + ".pmc";
+        String name = pmcBasename( dag );
         pmcAggregator.generatePMCInputFile(workflow, name );
         
          //the dax replica store
@@ -236,12 +236,40 @@ public class PMC extends Abstract {
     public  Map<String, String> getAdditionalBraindumpEntries( ADag workflow ) {
         Map entries = new HashMap();
         entries.put( Braindump.GENERATOR_TYPE_KEY, "pmc" );
-        
+        entries.put( "script", this.getPathtoPMCFile( workflow ) );
         return entries;
+    }
+
+    /**
+     * Returns the basename for the pmc file for the dag
+     * 
+     * @param dag the workflow
+     * 
+     * @return the basenmae
+     */
+    protected String pmcBasename( ADag dag ) {
+        StringBuffer name = new StringBuffer();
+        name.append(  dag.getLabel() ).append( "-" ).
+             append( dag.dagInfo.index ).append( ".pmc" );
+        return name.toString();
     }
     
 
-    
+    /**
+     * Returns the basename for the pmc file for the dag
+     *
+     * @param dag the workflow
+     *
+     * @return the basenmae
+     */
+    protected String getPathtoPMCFile( ADag dag ) {
+        StringBuilder script = new StringBuilder();
+        script.append( this.mSubmitFileDir ).append( File.separator ).
+               append( this.pmcBasename(dag) );
+        return script.toString();
+    }
+
+
 
 
 
