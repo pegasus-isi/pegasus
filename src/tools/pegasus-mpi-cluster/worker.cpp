@@ -319,7 +319,7 @@ int TaskHandler::read_file_data() {
         
         // Read the data into a buffer
         char *buff = new char[size];
-        if (read_file(srcfile, buff, size) != size) {
+        if (read_file(srcfile, buff, size) != (int)size) {
             log_error("Task %s: Unable to read %s: %s", name.c_str(), srcfile.c_str(), 
                     strerror(errno));
             delete buff;
