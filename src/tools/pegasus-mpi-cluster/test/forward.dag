@@ -1,4 +1,6 @@
 TASK A -f FOO=./test/forward.dag.foo ./test/forward.py FOO
 TASK B --pipe-forward BAR=./test/forward.dag.bar ./test/forward.py BAR
 TASK C -f FOO=./test/forward.dag.foo -f BAR=./test/forward.dag.bar ./test/forward.py FOO BAR
+# It is not an error if the task doesn't write anything
+TASK D -f BAZ=./test/forward.dag.baz ./test/forward.py
 

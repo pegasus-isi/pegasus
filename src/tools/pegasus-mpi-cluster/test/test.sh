@@ -501,6 +501,24 @@ function test_file_forward {
     fi
 }
 
+# Make sure file forwarding fails properly
+function test_file_forward_fail {
+    OUTPUT=$(mpiexec -n 2 $PMC -v test/file_forward_fail.dag 2>&1)
+    RC=$?
+    
+    if [ $RC -eq 0 ]; then
+        echo "$OUTPUT"
+        echo "ERROR: File forward fail test failed"
+        return 1
+    fi
+    
+    if ! [[ "$OUTPUT" =~ "Task A: ./test is not a file" ]]; then
+        echo "$OUTPUT"
+        echo "ERROR: File forward fail test failed"
+        return 1
+    fi
+}
+
 run_test ./test-strlib
 run_test ./test-tools
 run_test ./test-dag
@@ -527,6 +545,7 @@ run_test test_append_stdio
 run_test test_forward
 run_test test_forward_fail
 run_test test_file_forward
+run_test test_file_forward_fail
 run_test test_max_wall_time
 run_test test_hang_script
 

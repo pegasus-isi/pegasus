@@ -1,7 +1,6 @@
 #ifndef WORKER_H
 #define WORKER_H
 
-#include <poll.h>
 #include <string>
 #include <map>
 #include <list>
@@ -19,22 +18,48 @@ using std::vector;
 // group 5 seconds after SIGTERM before sending SIGKILL
 #define HOST_SCRIPT_GRACE_PERIOD 5
 
-class Pipe {
+class Forward {
+public: 
+    virtual ~Forward() {};
+    virtual const char *data() = 0;
+    virtual size_t size() = 0;
+    virtual string destination() = 0;
+};
+
+class PipeForward : public Forward {
+private:
+    string buffer;
+
 public:
-    string varname;
     string filename;
+    string varname;
     int readfd;
     int writefd;
-    string buffer;
     
-    Pipe(string varname, string filename, int readfd, int writefd);
-    ~Pipe();
+    PipeForward(string varname, string filename, int readfd, int writefd);
+    ~PipeForward();
     int read();
-    const char *data();
-    unsigned size();
+    void append(char *buff, int size);
     void close();
     void closeread();
     void closewrite();
+    const char *data();
+    size_t size();
+    string destination();
+};
+
+class FileForward : public Forward {
+public:
+    string destfile;
+    string srcfile;
+    char *buff;
+    size_t buffsize;
+    
+    FileForward(const string &srcfile, const string &destfile, char *buff, size_t buffsize);
+    ~FileForward();
+    const char *data();
+    size_t size();
+    string destination();
 };
 
 class Worker {
@@ -72,11 +97,12 @@ public:
     list<string> args;
     unsigned memory;
     unsigned cpus;
-    map<string, string> pipe_forwards;
-    map<string, string> file_forwards;
     
-    vector<Pipe *> pipes;
-    struct pollfd *fds;
+    vector<Forward *> forwards;
+    vector<PipeForward *> pipes;
+    map<string, string> pipe_forwards;
+    vector<FileForward *> files;
+    map<string, string> file_forwards;
     
     double start;
     double finish;
@@ -88,12 +114,14 @@ public:
     double elapsed();
     void execute();
 private:
+    bool succeeded();
     void send_result();
-    void run_process();
+    int run_process();
     void child_process();
     void write_cluster_task();
-    void send_pipe_data();
-    void send_file_data();
+    void send_io_data();
+    int read_file_data();
+    void delete_files();
 };
 
 #endif /* WORKER_H */

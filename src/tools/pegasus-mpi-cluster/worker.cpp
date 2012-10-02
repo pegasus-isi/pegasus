@@ -32,40 +32,52 @@ static void log_signal(int signo) {
     log_error("Caught signal %d", signo);
 }
 
-Pipe::Pipe(string varname, string filename, int readfd, int writefd) {
+PipeForward::PipeForward(string varname, string filename, int readfd, int writefd) {
     this->varname = varname;
     this->filename = filename;
     this->readfd = readfd;
     this->writefd = writefd;
 }
 
-Pipe::~Pipe() {
+PipeForward::~PipeForward() {
+    // Make sure the pipes are closed before
+    // deleting them to prevent descriptor leaks
+    // in the case of failures
+    this->close();
 }
 
-int Pipe::read() {
+const char *PipeForward::data() {
+    return this->buffer.data();
+}
+
+size_t PipeForward::size() {
+    return this->buffer.size();
+}
+
+string PipeForward::destination() {
+    return filename;
+}
+
+void PipeForward::append(char *buff, int size) {
+    this->buffer.append(buff, size);
+}
+
+int PipeForward::read() {
     char buff[BUFSIZ];
     int rc = ::read(readfd, buff, BUFSIZ);
     if (rc > 0) {
         // We got some data, save it to the pipe's data buffer
-        this->buffer.append(buff, rc);
+        this->append(buff, rc);
     }
     return rc;
 }
 
-const char *Pipe::data() {
-    return this->buffer.data();
-}
-
-unsigned Pipe::size() {
-    return this->buffer.size();
-}
-
-void Pipe::close() {
+void PipeForward::close() {
     this->closeread();
     this->closewrite();
 }
 
-void Pipe::closeread() {
+void PipeForward::closeread() {
     if (this->readfd != -1) {
         if (::close(this->readfd)) {
             log_error("Error closing read end of pipe %s: %s", 
@@ -75,7 +87,7 @@ void Pipe::closeread() {
     }
 }
 
-void Pipe::closewrite() {
+void PipeForward::closewrite() {
     if (this->writefd != -1) {
         if (::close(this->writefd)) {
             log_error("Error closing write end of pipe %s: %s", 
@@ -83,6 +95,29 @@ void Pipe::closewrite() {
         }
         this->writefd = -1;
     }
+}
+
+FileForward::FileForward(const string &srcfile, const string &destfile, char *buff, size_t buffsize) {
+    this->srcfile = srcfile;
+    this->destfile = destfile;
+    this->buff = buff;
+    this->buffsize = buffsize;
+}
+
+FileForward::~FileForward() {
+    delete buff;
+}
+
+const char *FileForward::data() {
+    return this->buff;
+}
+
+size_t FileForward::size() {
+    return this->buffsize;
+}
+
+string FileForward::destination() {
+    return destfile;
 }
 
 TaskHandler::TaskHandler(Worker *worker, string &name, string &command, string &id, unsigned memory, unsigned cpus, const map<string,string> &pipe_forwards, const map<string,string> &file_forwards) {
@@ -94,27 +129,15 @@ TaskHandler::TaskHandler(Worker *worker, string &name, string &command, string &
     this->cpus = cpus;
     this->pipe_forwards = pipe_forwards;
     this->file_forwards = file_forwards;
-    
-    // We allocate this here so that we can be sure to free
-    // it in the destructor
-    this->fds = new struct pollfd[pipe_forwards.size()];
-    
     this->start = 0;
     this->finish = 0;
-    
-    // Task status is exitcode 1 by default
-    this->status = 256;
 }
 
 TaskHandler::~TaskHandler() {
-    // Make sure the pipes are closed before
-    // deleting them to prevent descriptor leaks
-    // in the case of failures
-    for (unsigned i=0; i<pipes.size(); i++) {
-        pipes[i]->close();
-        delete pipes[i];
+    // Delete all the forwards
+    for (unsigned i=0; i<forwards.size(); i++) {
+        delete forwards[i];
     }
-    delete [] fds;
 }
 
 /** Compute the elapsed runtime of the task */
@@ -180,7 +203,7 @@ void TaskHandler::child_process() {
         envp[i] = environ[i];
     }
     for (unsigned i=0; i<pipes.size(); i++) {
-        Pipe *p = pipes[i];
+        PipeForward *p = pipes[i];
         envp[nenvs+i] = new char[p->varname.size()+11];
         if (sprintf(envp[nenvs+i], "%s=%d", p->varname.c_str(), p->writefd) == -1) {
             log_fatal("Unable to create environment: %s", strerror(errno));
@@ -229,86 +252,101 @@ void TaskHandler::child_process() {
     exit(1);
 }
 
-void TaskHandler::send_pipe_data() {
-    // Don't do anything if the task failed
-    if (this->status != 0) {
-        return;
-    }
-    
-    for (unsigned i = 0; i < this->pipes.size(); i++) {
-        Pipe *pipe = this->pipes[i];
-        log_trace("Task %s: Pipe %s got %d bytes", name.c_str(), 
-                pipe->varname.c_str(), pipe->size());
-        IODataMessage iodata(this->name, pipe->filename, pipe->data(), 
-                pipe->size());
+/* Send all I/O forwarded data to master */
+void TaskHandler::send_io_data() {
+    for (unsigned i = 0; i < this->forwards.size(); i++) {
+        Forward *f = this->forwards[i];
+        log_trace("Task %s: Forward %s got %d bytes", name.c_str(), 
+                f->destination().c_str(), f->size());
+
+        // Don't bother to send the message if there is no data
+        if (f->size() == 0) {
+            continue;
+        }
+        
+        IODataMessage iodata(this->name, f->destination(), f->data(), f->size());
         send_message(&iodata, 0);
     }
 }
 
-void TaskHandler::send_file_data() {
-    // Don't do anything if the task failed
-    if (this->status != 0) {
-        return;
+/* unlink() all I/O forwarded files */
+void TaskHandler::delete_files() {
+    map<string,string>::iterator i;
+    for (i = file_forwards.begin(); i != file_forwards.end(); i++) {
+        string srcfile = i->first;
+        if (unlink(srcfile.c_str())) {
+            log_debug("Task %s: Error unlinking forwarded file %s: %s", 
+                    name.c_str(), srcfile.c_str(), strerror(errno));
+        }
     }
-    
-    for (map<string,string>::iterator i = file_forwards.begin(); i != file_forwards.end(); i++) {
+}
+
+/* Read all I/O forwarded files into memory */
+int TaskHandler::read_file_data() {
+    map<string,string>::iterator i;
+    for (i = file_forwards.begin(); i != file_forwards.end(); i++) {
         string srcfile = i->first;
         string destfile = i->second;
-        
-        // TODO Determine how to handle errors with the forwarded files
         
         // Make sure the file exists
         struct stat st;
         if (stat(srcfile.c_str(), &st)) {
+            if (errno == ENOENT) {
+                // If the file does not exist, then we just skip it. We assume that
+                // the user wants to have some tasks exit successfully without 
+                // producing any output data.
+                log_debug("Task %s: file %s does not exist", name.c_str(), 
+                        srcfile.c_str());
+                continue;
+            }
             log_error("Task %s: stat failed on file %s: %s", 
                     name.c_str(), srcfile.c_str(), strerror(errno));
-            continue;
+            return -1;
         }
         
         // Make sure it is a regular file
         if (!S_ISREG(st.st_mode)) {
             log_error("Task %s: %s is not a file", name.c_str(), srcfile.c_str());
-            continue;
+            return -1;
         }
         
         // Check the size of the file
         size_t size = st.st_size;
         if (size > 1024*1024) {
             log_error("Task %s: File %s is too large", name.c_str(), srcfile.c_str());
-            continue;
+            return -1;
         }
         
         // Read the data into a buffer
-        std::auto_ptr<char> buf(new char[size]);
-        if (read_file(srcfile, buf.get(), size) == size) {
-            log_trace("Task %s: Sending %s to %s", name.c_str(), srcfile.c_str(), 
-                    destfile.c_str());
-            IODataMessage iodata(this->name, destfile, buf.get(), size);
-            send_message(&iodata, 0);
-        } else {
+        char *buff = new char[size];
+        if (read_file(srcfile, buff, size) != size) {
             log_error("Task %s: Unable to read %s: %s", name.c_str(), srcfile.c_str(), 
                     strerror(errno));
+            delete buff;
+            return -1;
         }
         
-        if (unlink(srcfile.c_str())) {
-            log_warn("Task %s: Error removing file %s: %s", name.c_str(),
-                    srcfile.c_str(), strerror(errno));
-        }
+        FileForward *fwd = new FileForward(srcfile, destfile, buff, size);
+        files.push_back(fwd);
+        forwards.push_back(fwd);
     }
+    
+    return 0;
 }
 
+/* Send info about the task back to the master */
 void TaskHandler::send_result() {
-    // Send task information back to master
     ResultMessage res(this->name, this->status, this->elapsed());
     send_message(&res, 0);
 }
 
-void TaskHandler::run_process() {
+/* Fork the task and wait for it to exit */
+int TaskHandler::run_process() {
     
     // Record start time of task
-    start = current_time();
+    this->start = current_time();
     
-    // Create pipes for all of the forwarded files
+    // Create pipes for all of the pipe forwards
     for (map<string,string>::iterator i = pipe_forwards.begin(); i != pipe_forwards.end(); i++) {
         string varname = i->first;
         string filename = i->second;
@@ -316,11 +354,12 @@ void TaskHandler::run_process() {
         if (pipe(pipefd) < 0) {
             log_error("Unable to create pipe for task %s: %s",
                     name.c_str(), strerror(errno));
-            return;
+            return -1;
         }
         log_trace("Pipe: %s = %s", varname.c_str(), filename.c_str());
-        Pipe *p = new Pipe(varname, filename, pipefd[0], pipefd[1]);
+        PipeForward *p = new PipeForward(varname, filename, pipefd[0], pipefd[1]);
         pipes.push_back(p);
+        forwards.push_back(p);
     }
     
     // Fork a child process to execute the task
@@ -328,34 +367,38 @@ void TaskHandler::run_process() {
     if (pid < 0) {
         // Fork failed
         log_error("Unable to fork task %s: %s", name.c_str(), strerror(errno));
-        return;
+        return -1;
     }
     
     if (pid == 0) {
         child_process();
     }
     
-    // Close the write end of all the pipes. I'm not really sure why.
+    // Close the write end of all the pipes
     for (unsigned i=0; i<pipes.size(); i++) {
         pipes[i]->closewrite();
     }
     
     // Create a structure to hold all of the pipes
     // we need to read from
-    map<int, Pipe *> reading;
+    map<int, PipeForward *> reading;
     for (unsigned i=0; i<pipes.size(); i++) {
         reading[pipes[i]->readfd] = pipes[i];
     }
     
-    // TODO Determine what to do when reading from one of the pipes fails
+    bool poll_failure = false;
+    std::auto_ptr<struct pollfd> fdhandle(new struct pollfd[pipe_forwards.size()]);
+    struct pollfd *fds = fdhandle.get();
+    
+    // TODO Refactor the pipe/polling into another method
     
     // While there are pipes to read from
     while (reading.size() > 0) {
         
         // Set up inputs for poll()
         int nfds = 0;
-        for (map<int, Pipe *>::iterator p=reading.begin(); p!=reading.end(); p++) {
-            Pipe *pipe = (*p).second;
+        for (map<int, PipeForward *>::iterator p=reading.begin(); p!=reading.end(); p++) {
+            PipeForward *pipe = (*p).second;
             fds[nfds].fd = pipe->readfd;
             fds[nfds].events = POLLIN;
             nfds++;
@@ -372,6 +415,7 @@ void TaskHandler::run_process() {
             // to get SIGPIPE and fail.
             log_error("poll() failed for task %s: %s", name.c_str(), 
                       strerror(errno));
+            poll_failure = true;
             goto after_poll_loop;
         }
         
@@ -393,6 +437,7 @@ void TaskHandler::run_process() {
                     // loop and closing the pipes.
                     log_error("Error reading from pipe %d: %s", 
                               fd, strerror(errno));
+                    poll_failure = true;
                     goto after_poll_loop;
                 } else if (rc == 0) {
                     // Pipe was closed, EOF. Stop polling it.
@@ -420,6 +465,7 @@ void TaskHandler::run_process() {
                 // only happen for hardware devices and not pipes. In case it
                 // does happen we will log it here and fail the task.
                 log_error("Error on pipe %d", fd);
+                poll_failure = true;
                 goto after_poll_loop;
             }
         }
@@ -436,27 +482,37 @@ after_poll_loop:
     }
     
     // Wait for task to complete
-    if (waitpid(pid, &status, 0) < 0) {
-        log_error("Failed waiting for task: %s", strerror(errno));
+    int exitcode;
+    if (waitpid(pid, &exitcode, 0) < 0) {
+        log_error("Failed waiting for task %s: %s", name.c_str(), 
+                strerror(errno));
+        return -1;
     }
     
     // Record the finish time of the task
-    finish = current_time();
+    this->finish = current_time();
     
     double runtime = elapsed();
     
-    if (WIFEXITED(status)) {
+    if (WIFEXITED(exitcode)) {
         log_debug("Task %s exited with status %d (%d) in %f seconds", 
-            name.c_str(), WEXITSTATUS(status), status, runtime);
+            name.c_str(), WEXITSTATUS(exitcode), exitcode, runtime);
     } else {
         log_debug("Task %s exited on signal %d (%d) in %f seconds", 
-            name.c_str(), WTERMSIG(status), status, runtime);
+            name.c_str(), WTERMSIG(exitcode), exitcode, runtime);
     }
+    
+    // We have to wait till here to return in the case of poll_failure
+    // because we need to wait() on the task
+    if (poll_failure) {
+        return -1;
+    }
+    
+    return exitcode;
 }
 
+/* Write cluster-task record to task stdout */
 void TaskHandler::write_cluster_task() {
-    // pegasus cluster output - used for provenance
-    
     // If the Pegasus id is missing then don't add it to the message
     string id_string = "";
     if (id.size() > 0) {
@@ -478,10 +534,32 @@ void TaskHandler::write_cluster_task() {
     write(worker->out, summary, strlen(summary));
 }
 
+bool TaskHandler::succeeded() {
+    return status == 0;
+}
+
 void TaskHandler::execute() {
     log_trace("Running task %s", this->name.c_str());
     
-    run_process();
+    this->status = run_process();
+    
+    // If the task succeeded, then read all of the files. We only
+    // do this if the task succeeded because we only send the data
+    // if the task succeeded.
+    if (this->succeeded()) {
+        if (read_file_data()) {
+            // If unable to read file data, then set the status
+            // to exitcode = 1
+            this->status = 256;
+        }
+    }
+    
+    // This needs to go after read_file_data because that method
+    // may change the status of the task
+    write_cluster_task();
+    
+    // Regardless of what happens, we need to delete the files
+    delete_files();
     
     // If the task succeeded, then send the I/O back to the master.
     // We only do this if the task succeeds because if the task 
@@ -491,15 +569,12 @@ void TaskHandler::execute() {
     // it gets processed first, then we could have a situation
     // where, when a failure occurs, a task has been marked as
     // success in the transaction log, but the I/O from the task
-    // has not been saved. The MPI standard guaranteest that 
+    // has not been saved. The MPI standard guarantees that 
     // messages sent from one process to another are delivered 
     // in the order sent.
-    if (this->status == 0) {
-        send_pipe_data();
-        send_file_data();
+    if (this->succeeded()) {
+        send_io_data();
     }
-    
-    write_cluster_task();
     
     send_result();
 }
