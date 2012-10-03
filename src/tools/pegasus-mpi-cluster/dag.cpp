@@ -163,8 +163,6 @@ void DAG::read_dag() {
     const char *DELIM = " \t\n\r";
     
     string pegasus_id = "";
-    string pegasus_transformation = "";
-    string pegasus_name = ""; 
     char line[MAX_LINE];
     while (fgets(line, MAX_LINE, this->dag) != NULL) {
         string rec(line);
@@ -338,16 +336,11 @@ void DAG::read_dag() {
             Task *t = new Task(name, command, memory, cpus, tries, priority, pipe_forwards, file_forwards);
             
             if (pegasus_id.length() > 0) {
-                if (pegasus_name != name) {
-                    myfailure("Name from Pegasus does not match task: %s != %s\n",
-                            pegasus_name.c_str(), name.c_str());
-                }
+                // We are only interested in the pegasus ID
                 t->pegasus_id = pegasus_id;
                 
-                // reset the extra parameters
+                // reset the value so that the next task doesn't get it
                 pegasus_id = "";
-                pegasus_transformation = "";
-                pegasus_name = "";
             }
             this->add_task(t);
         } else if (rec.find("EDGE", 0, 4) == 0) {
@@ -375,8 +368,8 @@ void DAG::read_dag() {
             }
 
             pegasus_id = v[1];
-            pegasus_transformation = v[2];
-            pegasus_name = v[3];
+            //pegasus_transformation = v[2];
+            //pegasus_dax_id = v[3];
         } else if (rec[0] == '#') {
             // Comments
         } else {

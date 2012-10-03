@@ -1,13 +1,13 @@
-#@ 1 mDiffFit:3.3 A
+#@ 1 mDiffFit:3.3 ID00001
 TASK A /bin/echo A
 
-#@ 2 mDiff:3.3 B
+#@ 2 mDiff:3.3 ID00002
 TASK B /bin/echo B
 
-#@ 3 mDiffSoo:3.3 C
+#@ 3 mDiffSoo:3.3 ID00003
 TASK C /bin/echo C
 
-#@ 4 mDiffFit:3.3 D
+#@ 4 mDiffFit:3.3 ID00004
 TASK D /bin/echo D
 
 EDGE A B
