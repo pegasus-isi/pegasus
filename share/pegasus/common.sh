@@ -70,7 +70,7 @@ if [ "X${JAVA_HEAPMIN}" = "X" -a "X${JAVA_HEAPMAX}" = "X" ]; then
     fi
 
     # upper limit - ulimit
-    memulimit=`(ulimit -m | grep -v -i unlimited) 2>/dev/null` || /bin/true
+    memulimit=`(ulimit -m | grep -v -i unlimited) 2>/dev/null` || true
     if [ "X$memulimit" != "X" ]; then
         if [ $memulimit -gt 128 ]; then
             heap_max=$(($memulimit / 1024 / 2))
