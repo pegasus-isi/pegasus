@@ -57,6 +57,9 @@ pegasus_env_path = {
 'pegasus_share_dir'     : pegasus_share_dir
 }
 
+class WorkflowsDetailsMissingError (Exception):
+    pass
+    
 #Pegasus modules
 from Pegasus.tools import utils
 
@@ -71,6 +74,8 @@ app = Flask (__name__, static_folder=os.path.join (pegasus_env_path ['pegasus_sh
 
 from jinja2 import FileSystemLoader
 app.jinja_loader = FileSystemLoader (os.path.join (pegasus_env_path ['pegasus_share_dir'], 'dashboard/templates'))
+
+from sqlalchemy.orm.exc import NoResultFound
 
 @app.route('/')
 def index ():
@@ -118,8 +123,11 @@ def workflow (root_wf_id, wf_id=None):
     else:
         dashboard = Dashboard (_master_db_url, root_wf_id)
 
-    counts, details, statistics = dashboard.get_workflow_information (wf_id, wf_uuid)
-
+    try:
+        counts, details, statistics = dashboard.get_workflow_information (wf_id, wf_uuid)
+    except NoResultFound:
+        return render_template ('error/workflow/workflow_details_missing.html');
+    
     return render_template ('workflow/workflow_details.html', root_wf_id=root_wf_id, wf_id=details.wf_id, workflow=details, counts=counts, statistics=statistics);
 
 @app.route('/root/<root_wf_id>/workflow/<wf_id>/sub_workflows/', methods=['GET'])
@@ -403,8 +411,12 @@ def capitalize (str):
 
 @app.errorhandler (404)
 def page_not_found (error):
-    return 'This page does not exist', 404
+    return render_template ('error/404.html')
 
+
+@app.errorhandler (WorkflowsDetailsMissingError)
+def workflow_details_missing (error):
+    return render_template ('error/workflow/workflow_details_missing.html');
 
 @app.template_filter ('time_to_str')
 def time_to_str (time):

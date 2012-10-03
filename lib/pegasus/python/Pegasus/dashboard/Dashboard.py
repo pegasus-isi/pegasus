@@ -186,10 +186,9 @@ class Dashboard(object):
             if not wf_id and not wf_uuid:
                 raise ValueError, 'Workflow ID or Workflow UUID is required'
     
-            if wf_id:
-                workflow = queries.WorkflowInfo (self.__get_wf_db_url (), wf_id=wf_id)
-            else:
-                workflow = queries.WorkflowInfo (self.__get_wf_db_url (), wf_uuid=wf_uuid)
+            workflow = None 
+            workflow_statistics = None
+            workflow = queries.WorkflowInfo (self.__get_wf_db_url (), wf_id=wf_id, wf_uuid=wf_uuid)
 
             details = workflow.get_workflow_information ()
             
