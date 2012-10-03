@@ -12,8 +12,7 @@ pegasus-mpi-cluster - a tool for running computational workflows expressed as DA
 Synopsis
 --------
 [verse]
-*pegasus-mpi-cluster* [*-h*][*-v*][*-q*][*-s*][*-o* 'path'][*-e* 'path'] 
-                    [*-m* 'M'][*-t* 'T'][*-n*][*-r*][*-V*] 'workflow.dag'
+*pegasus-mpi-cluster* [options] 'workflow.dag'
 
 
 Description
@@ -174,6 +173,13 @@ Options
     overrides the values for *--stdout* and *--stderr*. This argument is used
     by Pegasus when workflows are planned in PMC-only mode to facilitate
     debugging and monitoring.
+
+*--jobstate-log*::
+    This option causes PMC to generate a jobstate.log file for the workflow.
+    The file is named "jobstate.log" and is placed in the same directory where
+    the DAG file is located. If the file already exists, then PMC appends new
+    lines to the existing file. This option is used by Pegasus when workflows
+    are planned in PMC-only mode to facilitate monitoring.
 
 
 [[DAG_FILES]]

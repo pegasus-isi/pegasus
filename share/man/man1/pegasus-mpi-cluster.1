@@ -2,12 +2,12 @@
 .\"     Title: pegasus-mpi-cluster
 .\"    Author: [see the "Author" section]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 10/02/2012
+.\"      Date: 10/03/2012
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "PEGASUS\-MPI\-CLUSTE" "1" "10/02/2012" "\ \&" "\ \&"
+.TH "PEGASUS\-MPI\-CLUSTE" "1" "10/03/2012" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,8 +32,7 @@ pegasus-mpi-cluster \- a tool for running computational workflows expressed as D
 .SH "SYNOPSIS"
 .sp
 .nf
-\fBpegasus\-mpi\-cluster\fR [\fB\-h\fR][\fB\-v\fR][\fB\-q\fR][\fB\-s\fR][\fB\-o\fR \fIpath\fR][\fB\-e\fR \fIpath\fR]
-                    [\fB\-m\fR \fIM\fR][\fB\-t\fR \fIT\fR][\fB\-n\fR][\fB\-r\fR][\fB\-V\fR] \fIworkflow\&.dag\fR
+\fBpegasus\-mpi\-cluster\fR [options] \fIworkflow\&.dag\fR
 .fi
 .SH "DESCRIPTION"
 .sp
@@ -196,6 +195,11 @@ and
 \fB\-\-stdout\fR
 and
 \fB\-\-stderr\fR\&. This argument is used by Pegasus when workflows are planned in PMC\-only mode to facilitate debugging and monitoring\&.
+.RE
+.PP
+\fB\-\-jobstate\-log\fR
+.RS 4
+This option causes PMC to generate a jobstate\&.log file for the workflow\&. The file is named "jobstate\&.log" and is placed in the same directory where the DAG file is located\&. If the file already exists, then PMC appends new lines to the existing file\&. This option is used by Pegasus when workflows are planned in PMC\-only mode to facilitate monitoring\&.
 .RE
 .SH "DAG FILES"
 .sp
