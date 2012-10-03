@@ -124,6 +124,10 @@ public class PMC extends Abstract {
             Job job = (Job)node.getContent();
             String site = job.getSiteHandle();
 
+            //PM-660
+            //ensure that the job logical id and id are same.
+            job.setLogicalID( job.getID() );
+
             //sanity check
             if( !( prevJob == null || prevJob.getSiteHandle().equalsIgnoreCase( site ) )){
                 StringBuffer error = new StringBuffer();
