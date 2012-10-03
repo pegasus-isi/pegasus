@@ -13,6 +13,7 @@
 #include <limits.h>
 #include <sstream>
 #include <stdlib.h>
+#include <libgen.h>
 
 #include "tools.h"
 #include "failure.h"
@@ -301,5 +302,13 @@ string pathfind(const string &file) {
     }
     
     return file;
+}
+
+/* Return the directory part of a path */
+string dirname(const string &path) {
+    char *temp = strdup(path.c_str());
+    string result = ::dirname(temp);
+    free(temp);
+    return result;
 }
 

@@ -13,7 +13,6 @@
 #include <map>
 #include <poll.h>
 #include <memory>
-#include <libgen.h>
 
 #include "strlib.h"
 #include "worker.h"
@@ -659,9 +658,7 @@ void TaskHandler::execute() {
 
 Worker::Worker(const string &dagfile, const string &host_script, unsigned int host_memory, unsigned host_cpus, bool strict_limits, bool per_task_stdio) {
     this->dagfile = dagfile;
-    char *temp = strdup(dagfile.c_str());
-    this->workdir = dirname(temp);
-    free(temp);
+    this->workdir = dirname(dagfile);
     this->host_script = host_script;
     if (host_memory == 0) {
         // If host memory is not specified by the user, then get the amount

@@ -31,6 +31,8 @@ public:
     map<string, string> *pipe_forwards;
     map<string, string> *file_forwards;
     
+    unsigned submit_seq;
+    
     Task(const string &name, const string &command, unsigned memory, unsigned cpus, unsigned tries, int priority, const map<string,string> &pipe_forwards, const map<string,string> &file_forwards);
     ~Task();
     

@@ -541,6 +541,34 @@ function test_per_task_stdio {
     fi
 }
 
+function test_jobstate_log {
+    mkdir -p test/scratch
+    cp test/diamond.dag test/scratch/
+    
+    OUTPUT=$(mpiexec -n 2 $PMC -v --jobstate-log test/scratch/diamond.dag 2>&1)
+    RC=$?
+    
+    if [ $RC -ne 0 ]; then
+        echo "$OUTPUT"
+        echo "ERROR: jobstate.log test failed"
+        return 1
+    fi
+    
+    if ! [ -f "test/scratch/jobstate.log" ]; then
+        echo "$OUTPUT"
+        echo "ERROR: jobstate.log file was not created"
+        return 1
+    fi
+    
+    NLINES=$(cat test/scratch/jobstate.log | wc -l)
+    if [ $NLINES -ne 14 ]; then
+        echo "$OUTPUT"
+        echo "ERROR: jobstate.log was the wrong size"
+        echo "NLINES=$NLINES"
+        return 1
+    fi
+}
+
 run_test ./test-strlib
 run_test ./test-tools
 run_test ./test-dag
@@ -569,6 +597,7 @@ run_test test_forward_fail
 run_test test_file_forward
 run_test test_file_forward_fail
 run_test test_per_task_stdio
+run_test test_jobstate_log
 run_test test_max_wall_time
 run_test test_hang_script
 

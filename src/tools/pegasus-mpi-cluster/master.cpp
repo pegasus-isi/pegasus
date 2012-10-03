@@ -267,6 +267,68 @@ void Host::log_status() {
         this->host_name.c_str(), this->memory, this->cpus, this->slots);
 }
 
+JobstateLog::JobstateLog(const string &path) {
+    this->path = path;
+    this->logfile = NULL;
+}
+
+JobstateLog::~JobstateLog() {
+    close();
+}
+
+void JobstateLog::open() {
+    if (this->logfile != NULL) {
+        return;
+    }
+    
+    this->logfile = fopen(path.c_str(), "a");
+    if (this->logfile == NULL) {
+        myfailures("Unable to open %s", path.c_str());
+    }
+}
+
+void JobstateLog::close() {
+    if (logfile != NULL) {
+        fclose(logfile);
+        logfile = NULL;
+    }
+}
+
+void JobstateLog::on_event(WorkflowEvent event, Task *task) {
+    if (!logfile) {
+        open();
+    }
+    
+    double now = current_time();
+    switch (event) {
+        case TASK_QUEUED:
+            fprintf(logfile, "%0.6lf %s SUBMIT %d.0 - - %u\n", now, 
+                    task->name.c_str(), task->submit_seq, task->submit_seq);
+            break;
+        case TASK_SUBMIT:
+            fprintf(logfile, "%0.6lf %s EXECUTE %d.0 - - %u\n", now, 
+                    task->name.c_str(), task->submit_seq, task->submit_seq);
+            break;
+        case TASK_SUCCESS:
+            fprintf(logfile, "%0.6lf %s JOB_SUCCESS %d.0 - - %u\n", now, 
+                    task->name.c_str(), task->submit_seq, task->submit_seq);
+            break;
+        case TASK_FAILURE:
+            fprintf(logfile, "%0.6lf %s JOB_FAILURE %d.0 - - %u\n", now,
+                    task->name.c_str(), task->submit_seq, task->submit_seq);
+            break;
+        case WORKFLOW_START:
+            fprintf(logfile, "%0.6lf INTERNAL *** PMC_STARTED ***\n", now);
+            break;
+        case WORKFLOW_SUCCESS:
+            fprintf(logfile, "%0.6lf INTERNAL *** PMC_FINISHED 0 ***\n", now);
+            break;
+        case WORKFLOW_FAILURE:
+            fprintf(logfile, "%0.6lf INTERNAL *** PMC_FINISHED 1 ***\n", now);
+            break;
+    }
+}
+
 Master::Master(const string &program, Engine &engine, DAG &dag,
                const string &dagfile, const string &outfile,
                const string &errfile, bool has_host_script,
@@ -311,6 +373,9 @@ Master::Master(const string &program, Engine &engine, DAG &dag,
     }
     
     this->per_task_stdio = per_task_stdio;
+
+    // Task submit sequence starts at 1
+    this->task_submit_seq = 1;
 }
 
 Master::~Master() {
@@ -330,12 +395,25 @@ Master::~Master() {
     }
 }
 
+void Master::add_listener(WorkflowEventListener *l) {
+    listeners.push_back(l);
+}
+
+void Master::publish_event(WorkflowEvent event, Task *task) {
+    list<WorkflowEventListener *>::iterator i;
+    for (i=listeners.begin(); i!=listeners.end(); i++) {
+        (*i)->on_event(event, task);
+    }
+}
+
 void Master::submit_task(Task *task, int rank) {
     log_debug("Submitting task %s to slot %d", task->name.c_str(), rank);
     
     CommandMessage cmd(task->name, task->command, task->pegasus_id, 
             task->memory, task->cpus, task->pipe_forwards, task->file_forwards);
     send_message(&cmd, rank);
+    
+    publish_event(TASK_SUBMIT, task);
     
     this->submitted_count++;
 }
@@ -454,6 +532,12 @@ void Master::process_result(ResultMessage *mesg) {
     }
     
     this->engine->mark_task_finished(task, exitcode);
+    
+    if (exitcode == 0) {
+        publish_event(TASK_SUCCESS, task);
+    } else {
+        publish_event(TASK_FAILURE, task);
+    }
     
     // Mark slot idle
     log_trace("Worker %d is idle", rank);
@@ -781,8 +865,15 @@ void Master::schedule_tasks() {
 void Master::queue_ready_tasks() {
     while (this->engine->has_ready_task()) {
         Task *task = this->engine->next_ready_task();
+
         log_debug("Queueing task %s", task->name.c_str());
+        
+        // Assign a submit sequence number to this task
+        task->submit_seq = this->task_submit_seq++;
+        
         ready_queue.push(task);
+        
+        publish_event(TASK_QUEUED, task);
     }
 }
 
@@ -790,6 +881,8 @@ int Master::run() {
     log_info("Master starting with %d workers", numworkers);
     
     start_time = current_time();
+
+    publish_event(WORKFLOW_START, NULL);
     
     // Install signal handlers
     struct sigaction signal_action;
@@ -885,7 +978,7 @@ int Master::run() {
 
     bool failed = ABORT || this->engine->is_failed();
     write_cluster_summary(failed);
-   
+    
     if (!per_task_stdio) merge_all_task_stdio();
     
     log_info("Sending workers shutdown messages...");
@@ -893,6 +986,12 @@ int Master::run() {
         log_debug("Sending shutdown message to worker %d", i);
         ShutdownMessage shmsg;
         send_message(&shmsg, i);
+    }
+    
+    if (ABORT || failed) {
+        publish_event(WORKFLOW_FAILURE, NULL);
+    } else {
+        publish_event(WORKFLOW_SUCCESS, NULL);
     }
     
     if (ABORT) {

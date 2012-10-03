@@ -13,6 +13,7 @@
 #include "failure.h"
 #include "log.h"
 #include "protocol.h"
+#include "tools.h"
 
 using std::string;
 using std::list;
@@ -76,7 +77,8 @@ void usage() {
             "   --host-cpus N        Number of CPUs per host\n"
             "   --strict-limits      Enforce strict task resource limits\n"
             "   --max-wall-time T    Maximum wall time of the job in minutes\n"
-            "   --per-task-stdio     Write each task's stdout/stderr to a different file\n",
+            "   --per-task-stdio     Write each task's stdout/stderr to a different file\n"
+            "   --jobstate-log       Generate jobstate.log\n",
             program
         );
     }
@@ -114,6 +116,7 @@ int mpidag(int argc, char *argv[]) {
     bool strict_limits = false;
     double max_wall_time = 0.0;
     bool per_task_stdio = false;
+    bool jobstate_log = false;
 
     // Environment variable defaults
     char *env_host_script = getenv("PMC_HOST_SCRIPT");
@@ -264,6 +267,8 @@ int mpidag(int argc, char *argv[]) {
             }
         } else if (flag == "--per-task-stdio") {
             per_task_stdio = true;
+        } else if (flag == "--jobstate-log") {
+            jobstate_log = true;
         } else if (flag[0] == '-') {
             string message = "Unrecognized argument: ";
             message += flag;
@@ -328,6 +333,12 @@ int mpidag(int argc, char *argv[]) {
         Master master(program, engine, dag, dagfile, outfile, errfile, 
                 has_host_script, max_wall_time, resource_log, 
                 per_task_stdio);
+        
+        string jobstate_path = dirname(dagfile) + "/jobstate.log";
+        JobstateLog jslog(jobstate_path);
+        if (jobstate_log) {
+            master.add_listener(&jslog);
+        }
         
         return master.run();
     } else {

@@ -82,6 +82,34 @@ public:
     }
 };
 
+typedef enum {
+    WORKFLOW_START,
+    WORKFLOW_SUCCESS,
+    WORKFLOW_FAILURE,
+    TASK_QUEUED,
+    TASK_SUBMIT,
+    TASK_SUCCESS,
+    TASK_FAILURE
+} WorkflowEvent;
+
+class WorkflowEventListener {
+public:
+    virtual void on_event(WorkflowEvent event, Task *task) = 0;
+};
+
+class JobstateLog : public WorkflowEventListener {
+private:
+    string path;
+    FILE *logfile;
+    
+    void open();
+    void close();
+public:
+    JobstateLog(const string &path);
+    ~JobstateLog();
+    void on_event(WorkflowEvent event, Task *task);
+};
+
 typedef priority_queue<Task *, vector<Task *>, TaskPriority> TaskQueue;
 
 typedef list<Slot *> SlotList;
@@ -96,7 +124,7 @@ class Master {
     Engine *engine;
     
     FILE *resource_log;
-
+    
     vector<Slot *> slots;
     vector<Host *> hosts;
     SlotList free_slots;
@@ -123,9 +151,12 @@ class Master {
     unsigned slots_avail;
     
     FDCache fdcache;
-
+    
     bool per_task_stdio;
-
+    
+    list<WorkflowEventListener *> listeners;
+    unsigned task_submit_seq;
+    
     void register_workers();
     void schedule_tasks();
     void wait_for_results();
@@ -140,12 +171,14 @@ class Master {
     void allocate_resources(Host *host, unsigned cpus, unsigned memory);
     void release_resources(Host *host, unsigned cpus, unsigned memory);
     void log_resources(unsigned slots, unsigned cpus, unsigned memory, const string &hostname);
+    void publish_event(WorkflowEvent event, Task *task);
 public:
     Master(const string &program, Engine &engine, DAG &dag, const string &dagfile, 
         const string &outfile, const string &errfile, bool has_host_script = false, 
         double max_wall_time = 0.0, const string &resourcefile = "", bool per_task_stdio = false);
     ~Master();
     int run();
+    void add_listener(WorkflowEventListener *l);
 };
 
 #endif /* MASTER_H */
