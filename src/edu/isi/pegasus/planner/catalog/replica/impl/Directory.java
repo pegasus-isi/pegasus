@@ -21,6 +21,9 @@ import java.util.*;
 import edu.isi.pegasus.common.util.Boolean;
 import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
+import edu.isi.pegasus.planner.catalog.replica.ReplicaFactory;
+import edu.isi.pegasus.planner.common.PegasusProperties;
+
 import java.util.regex.Pattern;
 
 /**
@@ -28,9 +31,23 @@ import java.util.regex.Pattern;
  * This implementation does a directory listing to build up the
  * lfn, pfn mappings for the Replica Catalog.
  *
+ * To connect to this implementation, in Pegasus Properties set
  *
- * The site attribute defaults to local unless specified in the connection
- * properties with the key site.<p>
+ * pegasus.catalog.replica  Directory
+ *
+ * The site attribute defaults to local unless specified in Pegasus
+ * Properties by specifying the property
+ * <pre>
+ *      pegasus.catalog.replica.directory.site 
+ * </pre>
+ *
+ *
+ * The URL prefix for the PFN's defaults to file:// unless specified in Pegasus
+ * Properties by specifying the property
+ * <pre>
+ *      pegasus.catalog.replica.directory.url.prefix
+ * </pre>
+ *
  *
  *
  * @author Karan Vahi
@@ -38,11 +55,6 @@ import java.util.regex.Pattern;
  */
 public class Directory implements ReplicaCatalog {
 
-    /**
-     * The name of the key that disables writing back to the cache file.
-     * Designates a static file. i.e. read only
-     */
-    public static final String READ_ONLY_KEY = "read.only";
 
     /**
      * The default site handle to use.
@@ -54,6 +66,28 @@ public class Directory implements ReplicaCatalog {
      * The default URL Prefix to use.
      */
     public static final String DEFAULT_URL_PREFIX = "file://";
+
+
+    /**
+     * The name of the key that disables writing back to the cache file.
+     * Designates a static file. i.e. read only
+     */
+    public static final String READ_ONLY_PROPERTY_KEY = "read.only";
+
+    /**
+     * The name of the key that specifies the path to directory.
+     */
+    public static String DIRECTORY_PROPERTY_KEY = "directory";
+
+    /**
+     * The name of the key that specifies the site attribute to be associated
+     */
+    public static String SITE_PROPERTY_KEY = "directory.site";
+    
+    /**
+     * The name of the key that specifies the url prefix to be associated with the PFN's
+     */
+    public static String URL_PRFIX_PROPERTY_KEY = "directory.url.prefix";
 
     /**
      * Records the name of the on-disk representation.
@@ -114,22 +148,22 @@ public class Directory implements ReplicaCatalog {
     public boolean connect(Properties props) {
         
         //update the m_writeable flag if specified
-        if (props.containsKey(Directory.READ_ONLY_KEY)) {
-            mReadOnly = Boolean.parse(props.getProperty(Directory.READ_ONLY_KEY),
+        if (props.containsKey(Directory.READ_ONLY_PROPERTY_KEY)) {
+            mReadOnly = Boolean.parse(props.getProperty(Directory.READ_ONLY_PROPERTY_KEY),
                     false);
         }
 
-        String value = props.getProperty( "directory.site" );
+        String value = props.getProperty( Directory.SITE_PROPERTY_KEY  );
         if ( value != null ) {
             this.mSiteHandle = value;
         }
 
-        value = props.getProperty( "directory.url.prefix" );
+        value = props.getProperty( Directory.URL_PRFIX_PROPERTY_KEY  );
         if ( value != null ) {
             this.mURLPrefix = value;
         }
 
-        if (props.containsKey("directory")) {
+        if (props.containsKey( Directory.DIRECTORY_PROPERTY_KEY  )) {
             return connect(props.getProperty("directory"));
         }
         return false;
@@ -310,7 +344,7 @@ public class Directory implements ReplicaCatalog {
      * @param lfns is a set of logical directory strings to look up.
      * @return a map indexed by the LFN. Each value is a collection
      * of replica catalog entries for the LFN.
-     * @see org.griphyn.common.catalog.ReplicaCatalogEntry
+     * @see edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry
      */
     public Map lookup(Set lfns) {
         Map result = new HashMap();
@@ -587,7 +621,7 @@ public class Directory implements ReplicaCatalog {
      * @param x is a map from logical directory string to list of replica
      * catalog entries.
      * @return the number of insertions.
-     * @see org.griphyn.common.catalog.ReplicaCatalogEntry
+     * @see edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry
      */
     public int insert(Map x) {
         int result = 0;
@@ -864,14 +898,35 @@ public class Directory implements ReplicaCatalog {
     public static void main( String[] args ){
        String directory = "/lfs1/work/pegasus-features/PM-659";
 
-       Properties p = new Properties();
-       p.put( "directory", directory );
+       //Properties p = new Properties();
+       //p.put( "directory", directory );
 
-       ReplicaCatalog c = new Directory();
-       if ( !c.connect( p ) ){
-           System.err.println( "Unable to connect to replica catalog" );
-           return;
-       }
+       //load the Pegasus Properties
+       String prefix = ReplicaCatalog.c_prefix + "."; //pegasus.catalog.replica.
+       PegasusProperties props = PegasusProperties.getInstance();
+       
+       //specify the implementor to load this class
+       props.setProperty(  ReplicaCatalog.c_prefix, "Directory" );
+
+       //specify the path to directory
+       props.setProperty( prefix + Directory.DIRECTORY_PROPERTY_KEY , directory );
+
+       //specify the optional site handle to associate
+       //defaults to local
+       props.setProperty( prefix + Directory.SITE_PROPERTY_KEY, "isi" );
+
+
+       //specify the optional URL prefix to associate with the URL's
+       //defaults to file://
+       props.setProperty( prefix + Directory.URL_PRFIX_PROPERTY_KEY, "gsiftp://myhost.domain.edu" );
+
+       ReplicaCatalog c = null;
+        try {
+            c = ReplicaFactory.loadInstance(props);
+        } catch ( Exception ex) {
+            System.err.println( "Unable to connect to the Replica Catlog Backend " + ex.getMessage() );
+            System.exit( 1 );
+        }
 
        //do the listing
         Set<String> lfns = c.list();
