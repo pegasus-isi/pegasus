@@ -8,7 +8,6 @@
 #include <fcntl.h>
 #include <signal.h>
 #include <math.h>
-#include <mpi.h>
 #include <sys/resource.h>
 #include <map>
 #include <poll.h>
@@ -16,6 +15,7 @@
 
 #include "strlib.h"
 #include "worker.h"
+#include "comm.h"
 #include "protocol.h"
 #include "log.h"
 #include "failure.h"
@@ -337,7 +337,7 @@ void TaskHandler::send_io_data() {
         }
         
         IODataMessage iodata(this->name, f->destination(), f->data(), f->size());
-        send_message(&iodata, 0);
+        worker->comm->send_message(&iodata, 0);
     }
 }
 
@@ -409,7 +409,7 @@ int TaskHandler::read_file_data() {
 /* Send info about the task back to the master */
 void TaskHandler::send_result() {
     ResultMessage res(this->name, this->status, this->elapsed());
-    send_message(&res, 0);
+    worker->comm->send_message(&res, 0);
 }
 
 /* Fork the task and wait for it to exit */
@@ -656,7 +656,10 @@ void TaskHandler::execute() {
     send_result();
 }
 
-Worker::Worker(const string &dagfile, const string &host_script, unsigned int host_memory, unsigned host_cpus, bool strict_limits, bool per_task_stdio) {
+Worker::Worker(Communicator *comm, const string &dagfile, const string &host_script,
+        unsigned int host_memory, unsigned host_cpus, bool strict_limits, 
+        bool per_task_stdio) {
+    this->comm = comm;
     this->dagfile = dagfile;
     this->workdir = dirname(dagfile);
     this->host_script = host_script;
@@ -677,7 +680,7 @@ Worker::Worker(const string &dagfile, const string &host_script, unsigned int ho
     this->strict_limits = strict_limits;
     this->per_task_stdio = per_task_stdio;
     this->host_script_pgid = 0;
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    rank = comm->rank();
     get_host_name(host_name);
     if (per_task_stdio) {
         this->out = -1;
@@ -867,13 +870,13 @@ int Worker::run() {
     
     // Send worker's registration message to the master
     RegistrationMessage regmsg(host_name, host_memory, host_cpus);
-    send_message(&regmsg, 0);
+    comm->send_message(&regmsg, 0);
     log_trace("Worker %d: Host name: %s", rank, host_name.c_str());
     log_trace("Worker %d: Host memory: %u MB", rank, this->host_memory);
     log_trace("Worker %d: Host CPUs: %u", rank, this->host_cpus);
     
     // Get worker's host rank
-    HostrankMessage *hrmsg = dynamic_cast<HostrankMessage *>(recv_message());
+    HostrankMessage *hrmsg = dynamic_cast<HostrankMessage *>(comm->recv_message());
     if (hrmsg == NULL) {
         myfailure("Expected hostrank message");
     }
@@ -884,7 +887,7 @@ int Worker::run() {
     // If there is a host script, then run it and wait here for all the host scripts to finish
     if ("" != host_script) {
         run_host_script();
-        MPI_Barrier(MPI_COMM_WORLD);
+        comm->barrier();
     }
     
     while (true) {
@@ -901,12 +904,12 @@ int Worker::run() {
          * reduce the load/CPU usage on workers significantly. It decreases
          * responsiveness a bit, but it is a fair tradeoff.
          */
-        while (!message_waiting()) {
+        while (!comm->message_waiting()) {
             usleep(NO_MESSAGE_SLEEP_TIME);
         }
 #endif
         
-        Message *mesg = recv_message();
+        Message *mesg = comm->recv_message();
         if (ShutdownMessage *sdm = dynamic_cast<ShutdownMessage *>(mesg)) {
             log_trace("Worker %d: Got shutdown message", rank);
             delete sdm;

@@ -1,7 +1,6 @@
 #include <map>
 #include <stdio.h>
 #include <unistd.h>
-#include <mpi.h>
 #include <signal.h>
 #include <math.h>
 #include <sys/time.h>
@@ -10,6 +9,7 @@
 
 #include "master.h"
 #include "failure.h"
+#include "comm.h"
 #include "protocol.h"
 #include "log.h"
 #include "tools.h"
@@ -329,11 +329,11 @@ void JobstateLog::on_event(WorkflowEvent event, Task *task) {
     }
 }
 
-Master::Master(const string &program, Engine &engine, DAG &dag,
-               const string &dagfile, const string &outfile,
-               const string &errfile, bool has_host_script,
-               double max_wall_time, const string &resourcefile,
-               bool per_task_stdio) {
+Master::Master(Communicator *comm, const string &program, Engine &engine, 
+        DAG &dag, const string &dagfile, const string &outfile, 
+        const string &errfile, bool has_host_script, double max_wall_time,
+        const string &resourcefile, bool per_task_stdio) {
+    this->comm = comm;
     this->program = program;
     this->dagfile = dagfile;
     this->outfile = outfile;
@@ -359,8 +359,7 @@ Master::Master(const string &program, Engine &engine, DAG &dag,
     this->slots_avail = 0;
     
     // Determine the number of workers we have
-    int numprocs;
-    MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
+    int numprocs = comm->size();
     this->numworkers = numprocs - 1;
     if (numworkers == 0) {
         myfailure("Need at least 1 worker");
@@ -411,7 +410,7 @@ void Master::submit_task(Task *task, int rank) {
     
     CommandMessage cmd(task->name, task->command, task->pegasus_id, 
             task->memory, task->cpus, task->pipe_forwards, task->file_forwards);
-    send_message(&cmd, rank);
+    comm->send_message(&cmd, rank);
     
     publish_event(TASK_SUBMIT, task);
     
@@ -447,7 +446,7 @@ void Master::wait_for_results() {
          * check the flag that is set by the signal handlers to detect when the
          * master needs to abort the workflow.
          */
-        while (!ABORT && !message_waiting()) {
+        while (!ABORT && !comm->message_waiting()) {
             usleep(NO_MESSAGE_SLEEP_TIME);    
         }
         
@@ -459,7 +458,7 @@ void Master::wait_for_results() {
         }
         
         log_trace("Waiting for result");
-        Message *mesg = recv_message();
+        Message *mesg = comm->recv_message();
         messages++;
         if (ResultMessage *res = dynamic_cast<ResultMessage *>(mesg)) {
             process_result(res);
@@ -474,7 +473,7 @@ void Master::wait_for_results() {
         // We need to do this while tasks == 0 because the caller
         // of this method assumes that it will process at least one
         // task before returning
-    } while (message_waiting() || tasks == 0);
+    } while (comm->message_waiting() || tasks == 0);
     
     log_trace("Processed %u task(s) and %u message(s) this cycle", 
             tasks, messages);
@@ -732,7 +731,7 @@ void Master::register_workers() {
     // Collect host names from all workers, create host objects
     for (int i=0; i<numworkers; i++) {
         
-        RegistrationMessage *msg = dynamic_cast<RegistrationMessage *>(recv_message());
+        RegistrationMessage *msg = dynamic_cast<RegistrationMessage *>(comm->recv_message());
         if (msg == NULL) {
             myfailure("Expected registration message");
         }
@@ -789,7 +788,7 @@ void Master::register_workers() {
         ranks[hostname] = hostrank + 1;
         
         HostrankMessage hrmsg(hostrank);
-        send_message(&hrmsg, rank);
+        comm->send_message(&hrmsg, rank);
         
         log_debug("Host rank of worker %d is %d", rank, hostrank);
     }
@@ -928,7 +927,7 @@ int Master::run() {
     
     // If there is a host script, wait here for it to run
     if (has_host_script) {
-        MPI_Barrier(MPI_COMM_WORLD);
+        comm->barrier();
     }
     
     log_info("Starting workflow");
@@ -972,8 +971,8 @@ int Master::run() {
     log_info("Resource utilization (without master): %lf", worker_util);
     log_info("Total runtime of tasks: %lf seconds (%lf minutes)", total_runtime, total_runtime/60.0);
     log_info("Wall time: %lf seconds (%lf minutes)", wall_time, wall_time/60.0);
-    log_info("Bytes sent to workers: %lu", pmc_bytes_sent);
-    log_info("Bytes received from workers: %lu", pmc_bytes_recvd);
+    log_info("Bytes sent to workers: %lu", comm->sent());
+    log_info("Bytes received from workers: %lu", comm->recvd());
     log_info("File descriptor cache hit rate: %lf", fdcache.hitrate());
 
     bool failed = ABORT || this->engine->is_failed();
@@ -985,7 +984,7 @@ int Master::run() {
     for (int i=1; i<=numworkers; i++) {
         log_debug("Sending shutdown message to worker %d", i);
         ShutdownMessage shmsg;
-        send_message(&shmsg, i);
+        comm->send_message(&shmsg, i);
     }
     
     if (ABORT || failed) {

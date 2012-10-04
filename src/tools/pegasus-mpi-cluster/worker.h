@@ -6,6 +6,8 @@
 #include <list>
 #include <vector>
 
+#include "comm.h"
+
 using std::string;
 using std::map;
 using std::list;
@@ -64,6 +66,8 @@ public:
 
 class Worker {
 public:
+    Communicator *comm;
+    
     string dagfile;
     string workdir;
 
@@ -84,7 +88,9 @@ public:
     
     bool per_task_stdio;
     
-    Worker(const string &dagfile, const string &host_script, unsigned host_memory = 0, unsigned host_cpus = 0, bool strict_limits = false, bool per_task_stdio=false);
+    Worker(Communicator *comm, const string &dagfile, const string &host_script, 
+            unsigned host_memory = 0, unsigned host_cpus = 0, 
+            bool strict_limits = false, bool per_task_stdio=false);
     ~Worker();
     int run();
     void run_host_script();

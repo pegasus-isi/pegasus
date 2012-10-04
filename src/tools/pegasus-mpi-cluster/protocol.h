@@ -7,12 +7,6 @@
 using std::string;
 using std::map;
 
-// Time in microseconds to sleep if there is no message waiting
-#define NO_MESSAGE_SLEEP_TIME 50000
-
-extern unsigned long pmc_bytes_sent;
-extern unsigned long pmc_bytes_recvd;
-
 enum MessageType {
     COMMAND      = 1,
     RESULT       = 2,
@@ -99,8 +93,5 @@ public:
     virtual int tag() const { return IODATA; }
 };
 
-void send_message(Message *message, int rank);
-Message *recv_message();
-bool message_waiting();
-
 #endif /* PROTOCOL_H */
+

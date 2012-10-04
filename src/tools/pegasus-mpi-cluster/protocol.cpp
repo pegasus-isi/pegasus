@@ -1,14 +1,10 @@
 #include <string.h>
-#include <mpi.h>
 #include <stdlib.h>
 
 #include "tools.h"
 #include "protocol.h"
 #include "failure.h"
 #include "log.h"
-
-unsigned long pmc_bytes_sent = 0;
-unsigned long pmc_bytes_recvd = 0;
 
 Message::Message() {
     this->msg = NULL;
@@ -229,65 +225,5 @@ IODataMessage::IODataMessage(const string &task, const string &filename, const c
     memcpy(msg + off, &size, sizeof(size));
     off += sizeof(size);
     memcpy(msg + off, data, size);
-}
-
-void send_message(Message *message, int dest) {
-    char *msg = message->msg;
-    unsigned msgsize = message->msgsize;
-    int tag = message->tag();
-    MPI_Send(msg, msgsize, MPI_CHAR, dest, tag, MPI_COMM_WORLD);
-    pmc_bytes_sent += msgsize;
-}
-
-Message *recv_message() {
-    // We probe first in order to get the status, which will tell us
-    // the size of the message so that we can allocate an appropriate
-    // buffer for it.
-    MPI_Status status;
-    MPI_Probe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-    
-    // Allocate a buffer of the right size
-    int msgsize;
-    MPI_Get_count(&status, MPI_CHAR, &msgsize);
-    char *msg = new char[msgsize];
-    MPI_Recv(msg, msgsize, MPI_CHAR, MPI_ANY_SOURCE, MPI_ANY_TAG, 
-            MPI_COMM_WORLD, &status);
-    pmc_bytes_recvd += msgsize;
-    
-    // Create the right type of message
-    Message *message = NULL;
-    int source = status.MPI_SOURCE;
-    MessageType type = (MessageType)status.MPI_TAG;
-    switch(type) {
-        case SHUTDOWN:
-            message = new ShutdownMessage(msg, msgsize, source);
-            break;
-        case COMMAND:
-            message = new CommandMessage(msg, msgsize, source);
-            break;
-        case RESULT:
-            // The extra zero is just for disambiguation
-            message = new ResultMessage(msg, msgsize, source, 0);
-            break;
-        case REGISTRATION:
-            message = new RegistrationMessage(msg, msgsize, source);
-            break;
-        case HOSTRANK:
-            message = new HostrankMessage(msg, msgsize, source);
-            break;
-        case IODATA:
-            message = new IODataMessage(msg, msgsize, source);
-            break;
-        default:
-            myfailure("Unknown message type: %d", type);
-    }
-    
-    return message;
-}
-
-bool message_waiting() {
-    int flag;
-    MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &flag, MPI_STATUS_IGNORE);
-    return flag != 0;
 }
 

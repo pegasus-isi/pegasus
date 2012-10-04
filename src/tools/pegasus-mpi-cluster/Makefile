@@ -49,6 +49,7 @@ OBJS += dag.o
 OBJS += master.o
 OBJS += worker.o
 OBJS += protocol.o
+OBJS += mpicomm.o
 OBJS += log.o
 
 PROGRAMS += pegasus-mpi-cluster

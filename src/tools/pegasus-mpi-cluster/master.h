@@ -8,6 +8,7 @@
 #include "engine.h"
 #include "dag.h"
 #include "protocol.h"
+#include "comm.h"
 
 using std::string;
 using std::vector;
@@ -116,6 +117,8 @@ typedef list<Slot *> SlotList;
 typedef list<Task *> TaskList;
 
 class Master {
+    Communicator *comm;
+    
     string program;
     string dagfile;
     string outfile;
@@ -173,7 +176,7 @@ class Master {
     void log_resources(unsigned slots, unsigned cpus, unsigned memory, const string &hostname);
     void publish_event(WorkflowEvent event, Task *task);
 public:
-    Master(const string &program, Engine &engine, DAG &dag, const string &dagfile, 
+    Master(Communicator *comm, const string &program, Engine &engine, DAG &dag, const string &dagfile, 
         const string &outfile, const string &errfile, bool has_host_script = false, 
         double max_wall_time = 0.0, const string &resourcefile = "", bool per_task_stdio = false);
     ~Master();

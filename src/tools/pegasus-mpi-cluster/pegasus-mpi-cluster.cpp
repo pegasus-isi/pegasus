@@ -1,9 +1,9 @@
 #include <list>
 #include <stdio.h>
 #include <stdlib.h>
-#include <mpi.h>
 #include <unistd.h>
 #include <math.h>
+#include <mpi.h>
 
 #include "svn.h"
 #include "dag.h"
@@ -12,6 +12,7 @@
 #include "worker.h"
 #include "failure.h"
 #include "log.h"
+#include "mpicomm.h"
 #include "protocol.h"
 #include "tools.h"
 
@@ -90,11 +91,10 @@ void argerror(const string message) {
     }
 }
 
-int mpidag(int argc, char *argv[]) {
-    int numprocs;
+int mpidag(int argc, char *argv[], MPICommunicator &comm) {
+    rank = comm.rank();
+    int numprocs = comm.size();
     program = argv[0];
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
     
     list<char *> flags;
     for (int i=1; i<argc; i++) {
@@ -330,9 +330,8 @@ int mpidag(int argc, char *argv[]) {
         
         DAG dag(dagfile, oldrescue, lock, tries);
         Engine engine(dag, newrescue, max_failures);
-        Master master(program, engine, dag, dagfile, outfile, errfile, 
-                has_host_script, max_wall_time, resource_log, 
-                per_task_stdio);
+        Master master(&comm, program, engine, dag, dagfile, outfile, errfile, 
+                has_host_script, max_wall_time, resource_log, per_task_stdio);
         
         string jobstate_path = dirname(dagfile) + "/jobstate.log";
         JobstateLog jslog(jobstate_path);
@@ -343,7 +342,7 @@ int mpidag(int argc, char *argv[]) {
         return master.run();
     } else {
         
-        Worker worker(dagfile, host_script, host_memory, host_cpus, 
+        Worker worker(&comm, dagfile, host_script, host_memory, host_cpus, 
                 strict_limits, per_task_stdio);
         
         return worker.run();
@@ -355,19 +354,17 @@ void out_of_memory() {
 }
 
 int main(int argc, char *argv[]) {
+    MPICommunicator comm(&argc, &argv);
     try {
         std::set_new_handler(out_of_memory);
-        MPI_Init(&argc, &argv);
-        MPI_Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_ARE_FATAL);
-        int rc = mpidag(argc, argv);
-        MPI_Finalize();
+        int rc = mpidag(argc, argv, comm);
         return rc;
     } catch (exception &error) {
         // If we catch an execption here, then one of the
         // processes has hit an unsolvable problem and we
         // need to abort the entire workflow.
         fprintf(stderr, "ABORT: %s\n", error.what());
-        MPI_Abort(MPI_COMM_WORLD, 1);
+        comm.abort(1);
     }
 }
 
