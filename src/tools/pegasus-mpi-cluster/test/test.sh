@@ -25,7 +25,7 @@ function run_test {
 
 function test_help {
     # Should print message and exit with 1
-    if ! mpiexec -n 2 $PMC 2>/dev/null; then
+    if ! mpiexec -np 2 $PMC 2>/dev/null; then
         return 0
     else
         return 1
@@ -34,18 +34,21 @@ function test_help {
 
 # Make sure it requires at least one worker
 function test_one_worker_required {
-    result=$(mpiexec -n 1 $PMC test/diamond.dag 2>&1)
-    if [ $? ] && [ "$result" == "At least one worker process is required" ]; then
-        return 0
-    else
-        echo $result
+    result=$(mpiexec -np 1 $PMC test/diamond.dag 2>&1)
+    RC=$?
+    if [ $RC -eq 0 ]; then
+        echo "$result"
+        return 1
+    fi
+    if ! [[ "$result" =~ "At least one worker process is required" ]]; then
+        echo "$result"
         return 1
     fi
 }
 
 # Make sure it will run the simple diamond dag
 function test_run_diamond {
-    output=$(mpiexec -n 2 $PMC -s test/diamond.dag 2>&1)
+    output=$(mpiexec -np 2 $PMC -s test/diamond.dag 2>&1)
     RC=$?
     
     if [ $RC -ne 0 ]; then
@@ -69,7 +72,7 @@ function test_run_diamond {
 
 # Make sure we can redirect task stdout/stderr to /dev/null
 function test_out_err {
-    mpiexec -n 2 $PMC -s test/diamond.dag -o /dev/null -e /dev/null >/dev/null 2>&1
+    mpiexec -np 2 $PMC -s test/diamond.dag -o /dev/null -e /dev/null >/dev/null 2>&1
     RC=$?
     
     if [ $RC -ne 0 ]; then
@@ -81,7 +84,7 @@ function test_out_err {
 function test_rescue_file {
     RESCUE=$(mktemp test/diamond.dag.rescue.XXXXXX)
     
-    mpiexec -n 2 $PMC -s test/diamond.dag -o /dev/null -e /dev/null -r $RESCUE >/dev/null 2>&1
+    mpiexec -np 2 $PMC -s test/diamond.dag -o /dev/null -e /dev/null -r $RESCUE >/dev/null 2>&1
     RC=$?
     
     LOG=$(cat $RESCUE)
@@ -101,7 +104,7 @@ function test_rescue_file {
 
 # Make sure we can run host scripts
 function test_host_script {
-    OUTPUT=$(mpiexec -n 2 $PMC -s test/sleep.dag -o /dev/null -e /dev/null --host-script test/hostscript.sh 2>&1)
+    OUTPUT=$(mpiexec -np 2 $PMC -s test/sleep.dag -o /dev/null -e /dev/null --host-script test/hostscript.sh 2>&1)
     RC=$?
     
     if [ $RC -ne 0 ]; then
@@ -131,7 +134,7 @@ function test_host_script {
 
 # Make sure a failing host script causes the job to fail
 function test_fail_script {
-    OUTPUT=$(mpiexec -n 2 $PMC -s test/sleep.dag -o /dev/null -e /dev/null --host-script /usr/bin/false 2>&1)
+    OUTPUT=$(mpiexec -np 2 $PMC -s test/sleep.dag -o /dev/null -e /dev/null --host-script /usr/bin/false 2>&1)
     RC=$?
     
     if [ $RC -eq 0 ]; then
@@ -149,7 +152,7 @@ function test_fail_script {
 
 # Make sure we can kill the process group of the host script when it forks children
 function test_fork_script {
-    OUTPUT=$(mpiexec -n 2 $PMC -s test/sleep.dag -o /dev/null -e /dev/null --host-script test/forkscript.sh -v 2>&1)
+    OUTPUT=$(mpiexec -np 2 $PMC -s test/sleep.dag -o /dev/null -e /dev/null --host-script test/forkscript.sh -v 2>&1)
     RC=$?
     
     if [ $RC -ne 0 ]; then
@@ -170,7 +173,7 @@ function test_hang_script {
     echo "This should take 60 seconds..."
     
     START=$(date +%s)
-    OUTPUT=$(mpiexec -n 2 $PMC -s test/sleep.dag -o /dev/null -e /dev/null --host-script test/hangscript.sh -v 2>&1)
+    OUTPUT=$(mpiexec -np 2 $PMC -s test/sleep.dag -o /dev/null -e /dev/null --host-script test/hangscript.sh -v 2>&1)
     RC=$?
     END=$(date +%s)
     
@@ -198,7 +201,7 @@ function test_hang_script {
 
 # Make sure memory scheduling works in the normal case
 function test_memory_limit {
-    OUTPUT=$(mpiexec -n 2 $PMC -s test/memory.dag -o /dev/null -e /dev/null --host-memory 100 2>&1)
+    OUTPUT=$(mpiexec -np 2 $PMC -s test/memory.dag -o /dev/null -e /dev/null --host-memory 100 2>&1)
     RC=$?
     
     if [ $RC -ne 0 ]; then
@@ -210,7 +213,7 @@ function test_memory_limit {
 
 # Make sure a failure occurs if there isn't enough memory to run a task
 function test_insufficient_memory {
-    OUTPUT=$(mpiexec -n 2 $PMC -s test/memory.dag -o /dev/null -e /dev/null --host-memory 99 2>&1)
+    OUTPUT=$(mpiexec -np 2 $PMC -s test/memory.dag -o /dev/null -e /dev/null --host-memory 99 2>&1)
     RC=$?
     
     # This test should fail because 99 MB isn't enough to run the tasks in the DAG
@@ -229,7 +232,7 @@ function test_insufficient_memory {
 
 # Make sure strict limits work in the normal case
 function test_strict_limits {
-    OUTPUT=$(mpiexec -n 2 $PMC -s test/memory.dag --strict-limits 2>&1)
+    OUTPUT=$(mpiexec -np 2 $PMC -s test/memory.dag --strict-limits 2>&1)
     RC=$?
     
     # This test should pass because 100 MB should be enough to run the tasks in the DAG
@@ -242,7 +245,7 @@ function test_strict_limits {
 
 # Test to make sure a failure occurs if a task uses more memory than it is allowed
 function test_strict_limits_failure {
-    OUTPUT=$(mpiexec -n 2 $PMC -s test/limit.dag --strict-limits 2>&1)
+    OUTPUT=$(mpiexec -np 2 $PMC -s test/limit.dag --strict-limits 2>&1)
     RC=$?
     
     # This test should fail because 1 MB isn't enough to run the task in the DAG
@@ -255,7 +258,7 @@ function test_strict_limits_failure {
 
 # Test to make sure cpus are scheduled properly
 function test_cpus_limit {
-    OUTPUT=$(mpiexec -n 2 $PMC -s test/cpus.dag -o /dev/null -e /dev/null --host-memory 100 --host-cpus 2 2>&1)
+    OUTPUT=$(mpiexec -np 2 $PMC -s test/cpus.dag -o /dev/null -e /dev/null --host-memory 100 --host-cpus 2 2>&1)
     RC=$?
     
     if [ $RC -ne 0 ]; then
@@ -267,7 +270,7 @@ function test_cpus_limit {
 
 # Make sure a failure occurs if no host can run one of the tasks
 function test_insufficient_cpus {
-    OUTPUT=$(mpiexec -n 2 $PMC -s test/cpus.dag -o /dev/null -e /dev/null --host-cpus 1 2>&1)
+    OUTPUT=$(mpiexec -np 2 $PMC -s test/cpus.dag -o /dev/null -e /dev/null --host-cpus 1 2>&1)
     RC=$?
     
     # This test should fail because 1 CPU isn't enough to run the tasks in the DAG
@@ -286,7 +289,7 @@ function test_insufficient_cpus {
 
 # Make sure retries work
 function test_tries {
-    OUTPUT=$(mpiexec -n 2 $PMC -s test/tries.dag -o /dev/null -e /dev/null -t 3 2>&1)
+    OUTPUT=$(mpiexec -np 2 $PMC -s test/tries.dag -o /dev/null -e /dev/null -t 3 2>&1)
     RC=$?
     
     # This test should fail because task B will fail twice
@@ -311,7 +314,7 @@ function test_tries {
 
 # Make sure that task priorities are honored
 function test_priority {
-    OUTPUT=$(mpiexec -n 2 $PMC -v -v -s test/priority.dag -o /dev/null -e /dev/null --host-cpus 2 2>&1)
+    OUTPUT=$(mpiexec -np 2 $PMC -v -v -s test/priority.dag -o /dev/null -e /dev/null --host-cpus 2 2>&1)
     RC=$?
     
     if [ $RC -ne 0 ]; then
@@ -341,7 +344,7 @@ Scheduling task N"
 # Make sure that PMC aborts if the workflow takes too long
 function test_max_wall_time {
     START=$(date +%s)
-    OUTPUT=$(mpiexec -n 3 $PMC -s test/walltime.dag --host-cpus 2 --max-wall-time 0.05 2>&1)
+    OUTPUT=$(mpiexec -np 3 $PMC -s test/walltime.dag --host-cpus 2 --max-wall-time 0.05 2>&1)
     RC=$?
     END=$(date +%s)
     
@@ -387,7 +390,7 @@ function test_max_wall_time {
 
 # Make sure that the resource log gets generated correctly
 function test_resource_log {
-    OUTPUT=$(mpiexec -n 3 $PMC -s test/sleep.dag --host-cpus 4 --host-memory 100 2>&1)
+    OUTPUT=$(mpiexec -np 3 $PMC -s test/sleep.dag --host-cpus 4 --host-memory 100 2>&1)
     RC=$?
     
     if [ $RC -ne 0 ]; then
@@ -409,7 +412,7 @@ function test_append_stdio {
     echo "onefish my stdout" > test/diamond.dag.out.1
     echo "twofish my stderr" > test/diamond.dag.err.1
     
-    OUTPUT=$(mpiexec -n 2 $PMC -v test/diamond.dag 2>&1)
+    OUTPUT=$(mpiexec -np 2 $PMC -v test/diamond.dag 2>&1)
     RC=$?
 
     if [ $RC -ne 0 ]; then
@@ -433,7 +436,7 @@ function test_append_stdio {
 
 # Make sure I/O forwarding works
 function test_forward {
-    OUTPUT=$(mpiexec -n 2 $PMC -v test/forward.dag 2>&1)
+    OUTPUT=$(mpiexec -np 2 $PMC -v test/forward.dag 2>&1)
     RC=$?
 
     if [ $RC -ne 0 ]; then
@@ -459,7 +462,7 @@ function test_forward {
 
 # Make sure I/O forwarding failures cause task to fail
 function test_forward_fail {
-    OUTPUT=$(mpiexec -n 2 $PMC -v test/forward_fail.dag 2>&1)
+    OUTPUT=$(mpiexec -np 2 $PMC -v test/forward_fail.dag 2>&1)
     RC=$?
 
     if [ $RC -eq 0 ]; then
@@ -477,7 +480,7 @@ function test_forward_fail {
 
 # Make sure I/O forwarding works with files
 function test_file_forward {
-    OUTPUT=$(mpiexec -n 2 $PMC -v test/file_forward.dag 2>&1)
+    OUTPUT=$(mpiexec -np 2 $PMC -v test/file_forward.dag 2>&1)
     RC=$?
     
     if [ $RC -ne 0 ]; then
@@ -503,7 +506,7 @@ function test_file_forward {
 
 # Make sure file forwarding fails properly
 function test_file_forward_fail {
-    OUTPUT=$(mpiexec -n 2 $PMC -v test/file_forward_fail.dag 2>&1)
+    OUTPUT=$(mpiexec -np 2 $PMC -v test/file_forward_fail.dag 2>&1)
     RC=$?
     
     if [ $RC -eq 0 ]; then
@@ -523,7 +526,7 @@ function test_per_task_stdio {
     mkdir -p test/scratch
     cp test/diamond.dag test/scratch/
     
-    OUTPUT=$(mpiexec -n 2 $PMC -v --per-task-stdio test/scratch/diamond.dag 2>&1)
+    OUTPUT=$(mpiexec -np 2 $PMC -v --per-task-stdio test/scratch/diamond.dag 2>&1)
     RC=$?
     
     if [ $RC -ne 0 ]; then
@@ -545,7 +548,7 @@ function test_jobstate_log {
     mkdir -p test/scratch
     cp test/diamond.dag test/scratch/
     
-    OUTPUT=$(mpiexec -n 2 $PMC -v --jobstate-log test/scratch/diamond.dag 2>&1)
+    OUTPUT=$(mpiexec -np 2 $PMC -v --jobstate-log test/scratch/diamond.dag 2>&1)
     RC=$?
     
     if [ $RC -ne 0 ]; then
