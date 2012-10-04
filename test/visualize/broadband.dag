@@ -1,0 +1,570 @@
+######################################################################
+# PEGASUS WMS GENERATED DAG FILE
+# DAG broadband
+# Index = 0, Count = 1
+######################################################################
+
+JOB ucsb_createSRF_s001_8725973_ucsb_1 ucsb_createSRF_s001_8725973_ucsb_1.sub
+SCRIPT POST ucsb_createSRF_s001_8725973_ucsb_1 /usr/local/pegasus/default/bin/exitcode.py  /submit/broadband/small/ec2/gideon/pegasus/broadband/run0001/ucsb_createSRF_s001_8725973_ucsb_1.out
+RETRY ucsb_createSRF_s001_8725973_ucsb_1 3
+
+JOB urs_lp_seisgen_s001_8725973_ucsb_2 urs_lp_seisgen_s001_8725973_ucsb_2.sub
+SCRIPT POST urs_lp_seisgen_s001_8725973_ucsb_2 /usr/local/pegasus/default/bin/exitcode.py  /submit/broadband/small/ec2/gideon/pegasus/broadband/run0001/urs_lp_seisgen_s001_8725973_ucsb_2.out
+RETRY urs_lp_seisgen_s001_8725973_ucsb_2 3
+
+JOB urs_hf_seisgen_s001_8725973_ucsb_3 urs_hf_seisgen_s001_8725973_ucsb_3.sub
+SCRIPT POST urs_hf_seisgen_s001_8725973_ucsb_3 /usr/local/pegasus/default/bin/exitcode.py  /submit/broadband/small/ec2/gideon/pegasus/broadband/run0001/urs_hf_seisgen_s001_8725973_ucsb_3.out
+RETRY urs_hf_seisgen_s001_8725973_ucsb_3 3
+
+JOB sdsu_hf_seisgen_s001_8725973_ucsb_4 sdsu_hf_seisgen_s001_8725973_ucsb_4.sub
+SCRIPT POST sdsu_hf_seisgen_s001_8725973_ucsb_4 /usr/local/pegasus/default/bin/exitcode.py  /submit/broadband/small/ec2/gideon/pegasus/broadband/run0001/sdsu_hf_seisgen_s001_8725973_ucsb_4.out
+RETRY sdsu_hf_seisgen_s001_8725973_ucsb_4 3
+
+JOB ucsb_seisgen_s001_8725973_ucsb_5 ucsb_seisgen_s001_8725973_ucsb_5.sub
+SCRIPT POST ucsb_seisgen_s001_8725973_ucsb_5 /usr/local/pegasus/default/bin/exitcode.py  /submit/broadband/small/ec2/gideon/pegasus/broadband/run0001/ucsb_seisgen_s001_8725973_ucsb_5.out
+RETRY ucsb_seisgen_s001_8725973_ucsb_5 3
+
+JOB rspectra_s001_8725973_ucsb_6 rspectra_s001_8725973_ucsb_6.sub
+SCRIPT POST rspectra_s001_8725973_ucsb_6 /usr/local/pegasus/default/bin/exitcode.py  /submit/broadband/small/ec2/gideon/pegasus/broadband/run0001/rspectra_s001_8725973_ucsb_6.out
+RETRY rspectra_s001_8725973_ucsb_6 3
+
+JOB rspectra_s001_8725973_ucsb_7 rspectra_s001_8725973_ucsb_7.sub
+SCRIPT POST rspectra_s001_8725973_ucsb_7 /usr/local/pegasus/default/bin/exitcode.py  /submit/broadband/small/ec2/gideon/pegasus/broadband/run0001/rspectra_s001_8725973_ucsb_7.out
+RETRY rspectra_s001_8725973_ucsb_7 3
+
+JOB rspectra_s001_8725973_ucsb_8 rspectra_s001_8725973_ucsb_8.sub
+SCRIPT POST rspectra_s001_8725973_ucsb_8 /usr/local/pegasus/default/bin/exitcode.py  /submit/broadband/small/ec2/gideon/pegasus/broadband/run0001/rspectra_s001_8725973_ucsb_8.out
+RETRY rspectra_s001_8725973_ucsb_8 3
+
+JOB urs_createSRF_s001_8725973_urs_1 urs_createSRF_s001_8725973_urs_1.sub
+SCRIPT POST urs_createSRF_s001_8725973_urs_1 /usr/local/pegasus/default/bin/exitcode.py  /submit/broadband/small/ec2/gideon/pegasus/broadband/run0001/urs_createSRF_s001_8725973_urs_1.out
+RETRY urs_createSRF_s001_8725973_urs_1 3
+
+JOB urs_lp_seisgen_s001_8725973_urs_2 urs_lp_seisgen_s001_8725973_urs_2.sub
+SCRIPT POST urs_lp_seisgen_s001_8725973_urs_2 /usr/local/pegasus/default/bin/exitcode.py  /submit/broadband/small/ec2/gideon/pegasus/broadband/run0001/urs_lp_seisgen_s001_8725973_urs_2.out
+RETRY urs_lp_seisgen_s001_8725973_urs_2 3
+
+JOB urs_hf_seisgen_s001_8725973_urs_3 urs_hf_seisgen_s001_8725973_urs_3.sub
+SCRIPT POST urs_hf_seisgen_s001_8725973_urs_3 /usr/local/pegasus/default/bin/exitcode.py  /submit/broadband/small/ec2/gideon/pegasus/broadband/run0001/urs_hf_seisgen_s001_8725973_urs_3.out
+RETRY urs_hf_seisgen_s001_8725973_urs_3 3
+
+JOB sdsu_hf_seisgen_s001_8725973_urs_4 sdsu_hf_seisgen_s001_8725973_urs_4.sub
+SCRIPT POST sdsu_hf_seisgen_s001_8725973_urs_4 /usr/local/pegasus/default/bin/exitcode.py  /submit/broadband/small/ec2/gideon/pegasus/broadband/run0001/sdsu_hf_seisgen_s001_8725973_urs_4.out
+RETRY sdsu_hf_seisgen_s001_8725973_urs_4 3
+
+JOB ucsb_seisgen_s001_8725973_urs_5 ucsb_seisgen_s001_8725973_urs_5.sub
+SCRIPT POST ucsb_seisgen_s001_8725973_urs_5 /usr/local/pegasus/default/bin/exitcode.py  /submit/broadband/small/ec2/gideon/pegasus/broadband/run0001/ucsb_seisgen_s001_8725973_urs_5.out
+RETRY ucsb_seisgen_s001_8725973_urs_5 3
+
+JOB rspectra_s001_8725973_urs_6 rspectra_s001_8725973_urs_6.sub
+SCRIPT POST rspectra_s001_8725973_urs_6 /usr/local/pegasus/default/bin/exitcode.py  /submit/broadband/small/ec2/gideon/pegasus/broadband/run0001/rspectra_s001_8725973_urs_6.out
+RETRY rspectra_s001_8725973_urs_6 3
+
+JOB rspectra_s001_8725973_urs_7 rspectra_s001_8725973_urs_7.sub
+SCRIPT POST rspectra_s001_8725973_urs_7 /usr/local/pegasus/default/bin/exitcode.py  /submit/broadband/small/ec2/gideon/pegasus/broadband/run0001/rspectra_s001_8725973_urs_7.out
+RETRY rspectra_s001_8725973_urs_7 3
+
+JOB rspectra_s001_8725973_urs_8 rspectra_s001_8725973_urs_8.sub
+SCRIPT POST rspectra_s001_8725973_urs_8 /usr/local/pegasus/default/bin/exitcode.py  /submit/broadband/small/ec2/gideon/pegasus/broadband/run0001/rspectra_s001_8725973_urs_8.out
+RETRY rspectra_s001_8725973_urs_8 3
+
+JOB ucsb_createSRF_s001_8725981_ucsb_1 ucsb_createSRF_s001_8725981_ucsb_1.sub
+SCRIPT POST ucsb_createSRF_s001_8725981_ucsb_1 /usr/local/pegasus/default/bin/exitcode.py  /submit/broadband/small/ec2/gideon/pegasus/broadband/run0001/ucsb_createSRF_s001_8725981_ucsb_1.out
+RETRY ucsb_createSRF_s001_8725981_ucsb_1 3
+
+JOB urs_lp_seisgen_s001_8725981_ucsb_2 urs_lp_seisgen_s001_8725981_ucsb_2.sub
+SCRIPT POST urs_lp_seisgen_s001_8725981_ucsb_2 /usr/local/pegasus/default/bin/exitcode.py  /submit/broadband/small/ec2/gideon/pegasus/broadband/run0001/urs_lp_seisgen_s001_8725981_ucsb_2.out
+RETRY urs_lp_seisgen_s001_8725981_ucsb_2 3
+
+JOB urs_hf_seisgen_s001_8725981_ucsb_3 urs_hf_seisgen_s001_8725981_ucsb_3.sub
+SCRIPT POST urs_hf_seisgen_s001_8725981_ucsb_3 /usr/local/pegasus/default/bin/exitcode.py  /submit/broadband/small/ec2/gideon/pegasus/broadband/run0001/urs_hf_seisgen_s001_8725981_ucsb_3.out
+RETRY urs_hf_seisgen_s001_8725981_ucsb_3 3
+
+JOB sdsu_hf_seisgen_s001_8725981_ucsb_4 sdsu_hf_seisgen_s001_8725981_ucsb_4.sub
+SCRIPT POST sdsu_hf_seisgen_s001_8725981_ucsb_4 /usr/local/pegasus/default/bin/exitcode.py  /submit/broadband/small/ec2/gideon/pegasus/broadband/run0001/sdsu_hf_seisgen_s001_8725981_ucsb_4.out
+RETRY sdsu_hf_seisgen_s001_8725981_ucsb_4 3
+
+JOB ucsb_seisgen_s001_8725981_ucsb_5 ucsb_seisgen_s001_8725981_ucsb_5.sub
+SCRIPT POST ucsb_seisgen_s001_8725981_ucsb_5 /usr/local/pegasus/default/bin/exitcode.py  /submit/broadband/small/ec2/gideon/pegasus/broadband/run0001/ucsb_seisgen_s001_8725981_ucsb_5.out
+RETRY ucsb_seisgen_s001_8725981_ucsb_5 3
+
+JOB rspectra_s001_8725981_ucsb_6 rspectra_s001_8725981_ucsb_6.sub
+SCRIPT POST rspectra_s001_8725981_ucsb_6 /usr/local/pegasus/default/bin/exitcode.py  /submit/broadband/small/ec2/gideon/pegasus/broadband/run0001/rspectra_s001_8725981_ucsb_6.out
+RETRY rspectra_s001_8725981_ucsb_6 3
+
+JOB rspectra_s001_8725981_ucsb_7 rspectra_s001_8725981_ucsb_7.sub
+SCRIPT POST rspectra_s001_8725981_ucsb_7 /usr/local/pegasus/default/bin/exitcode.py  /submit/broadband/small/ec2/gideon/pegasus/broadband/run0001/rspectra_s001_8725981_ucsb_7.out
+RETRY rspectra_s001_8725981_ucsb_7 3
+
+JOB rspectra_s001_8725981_ucsb_8 rspectra_s001_8725981_ucsb_8.sub
+SCRIPT POST rspectra_s001_8725981_ucsb_8 /usr/local/pegasus/default/bin/exitcode.py  /submit/broadband/small/ec2/gideon/pegasus/broadband/run0001/rspectra_s001_8725981_ucsb_8.out
+RETRY rspectra_s001_8725981_ucsb_8 3
+
+JOB urs_createSRF_s001_8725981_urs_1 urs_createSRF_s001_8725981_urs_1.sub
+SCRIPT POST urs_createSRF_s001_8725981_urs_1 /usr/local/pegasus/default/bin/exitcode.py  /submit/broadband/small/ec2/gideon/pegasus/broadband/run0001/urs_createSRF_s001_8725981_urs_1.out
+RETRY urs_createSRF_s001_8725981_urs_1 3
+
+JOB urs_lp_seisgen_s001_8725981_urs_2 urs_lp_seisgen_s001_8725981_urs_2.sub
+SCRIPT POST urs_lp_seisgen_s001_8725981_urs_2 /usr/local/pegasus/default/bin/exitcode.py  /submit/broadband/small/ec2/gideon/pegasus/broadband/run0001/urs_lp_seisgen_s001_8725981_urs_2.out
+RETRY urs_lp_seisgen_s001_8725981_urs_2 3
+
+JOB urs_hf_seisgen_s001_8725981_urs_3 urs_hf_seisgen_s001_8725981_urs_3.sub
+SCRIPT POST urs_hf_seisgen_s001_8725981_urs_3 /usr/local/pegasus/default/bin/exitcode.py  /submit/broadband/small/ec2/gideon/pegasus/broadband/run0001/urs_hf_seisgen_s001_8725981_urs_3.out
+RETRY urs_hf_seisgen_s001_8725981_urs_3 3
+
+JOB sdsu_hf_seisgen_s001_8725981_urs_4 sdsu_hf_seisgen_s001_8725981_urs_4.sub
+SCRIPT POST sdsu_hf_seisgen_s001_8725981_urs_4 /usr/local/pegasus/default/bin/exitcode.py  /submit/broadband/small/ec2/gideon/pegasus/broadband/run0001/sdsu_hf_seisgen_s001_8725981_urs_4.out
+RETRY sdsu_hf_seisgen_s001_8725981_urs_4 3
+
+JOB ucsb_seisgen_s001_8725981_urs_5 ucsb_seisgen_s001_8725981_urs_5.sub
+SCRIPT POST ucsb_seisgen_s001_8725981_urs_5 /usr/local/pegasus/default/bin/exitcode.py  /submit/broadband/small/ec2/gideon/pegasus/broadband/run0001/ucsb_seisgen_s001_8725981_urs_5.out
+RETRY ucsb_seisgen_s001_8725981_urs_5 3
+
+JOB rspectra_s001_8725981_urs_6 rspectra_s001_8725981_urs_6.sub
+SCRIPT POST rspectra_s001_8725981_urs_6 /usr/local/pegasus/default/bin/exitcode.py  /submit/broadband/small/ec2/gideon/pegasus/broadband/run0001/rspectra_s001_8725981_urs_6.out
+RETRY rspectra_s001_8725981_urs_6 3
+
+JOB rspectra_s001_8725981_urs_7 rspectra_s001_8725981_urs_7.sub
+SCRIPT POST rspectra_s001_8725981_urs_7 /usr/local/pegasus/default/bin/exitcode.py  /submit/broadband/small/ec2/gideon/pegasus/broadband/run0001/rspectra_s001_8725981_urs_7.out
+RETRY rspectra_s001_8725981_urs_7 3
+
+JOB rspectra_s001_8725981_urs_8 rspectra_s001_8725981_urs_8.sub
+SCRIPT POST rspectra_s001_8725981_urs_8 /usr/local/pegasus/default/bin/exitcode.py  /submit/broadband/small/ec2/gideon/pegasus/broadband/run0001/rspectra_s001_8725981_urs_8.out
+RETRY rspectra_s001_8725981_urs_8 3
+
+JOB ucsb_createSRF_s002_8725973_ucsb_1 ucsb_createSRF_s002_8725973_ucsb_1.sub
+SCRIPT POST ucsb_createSRF_s002_8725973_ucsb_1 /usr/local/pegasus/default/bin/exitcode.py  /submit/broadband/small/ec2/gideon/pegasus/broadband/run0001/ucsb_createSRF_s002_8725973_ucsb_1.out
+RETRY ucsb_createSRF_s002_8725973_ucsb_1 3
+
+JOB urs_lp_seisgen_s002_8725973_ucsb_2 urs_lp_seisgen_s002_8725973_ucsb_2.sub
+SCRIPT POST urs_lp_seisgen_s002_8725973_ucsb_2 /usr/local/pegasus/default/bin/exitcode.py  /submit/broadband/small/ec2/gideon/pegasus/broadband/run0001/urs_lp_seisgen_s002_8725973_ucsb_2.out
+RETRY urs_lp_seisgen_s002_8725973_ucsb_2 3
+
+JOB urs_hf_seisgen_s002_8725973_ucsb_3 urs_hf_seisgen_s002_8725973_ucsb_3.sub
+SCRIPT POST urs_hf_seisgen_s002_8725973_ucsb_3 /usr/local/pegasus/default/bin/exitcode.py  /submit/broadband/small/ec2/gideon/pegasus/broadband/run0001/urs_hf_seisgen_s002_8725973_ucsb_3.out
+RETRY urs_hf_seisgen_s002_8725973_ucsb_3 3
+
+JOB sdsu_hf_seisgen_s002_8725973_ucsb_4 sdsu_hf_seisgen_s002_8725973_ucsb_4.sub
+SCRIPT POST sdsu_hf_seisgen_s002_8725973_ucsb_4 /usr/local/pegasus/default/bin/exitcode.py  /submit/broadband/small/ec2/gideon/pegasus/broadband/run0001/sdsu_hf_seisgen_s002_8725973_ucsb_4.out
+RETRY sdsu_hf_seisgen_s002_8725973_ucsb_4 3
+
+JOB ucsb_seisgen_s002_8725973_ucsb_5 ucsb_seisgen_s002_8725973_ucsb_5.sub
+SCRIPT POST ucsb_seisgen_s002_8725973_ucsb_5 /usr/local/pegasus/default/bin/exitcode.py  /submit/broadband/small/ec2/gideon/pegasus/broadband/run0001/ucsb_seisgen_s002_8725973_ucsb_5.out
+RETRY ucsb_seisgen_s002_8725973_ucsb_5 3
+
+JOB rspectra_s002_8725973_ucsb_6 rspectra_s002_8725973_ucsb_6.sub
+SCRIPT POST rspectra_s002_8725973_ucsb_6 /usr/local/pegasus/default/bin/exitcode.py  /submit/broadband/small/ec2/gideon/pegasus/broadband/run0001/rspectra_s002_8725973_ucsb_6.out
+RETRY rspectra_s002_8725973_ucsb_6 3
+
+JOB rspectra_s002_8725973_ucsb_7 rspectra_s002_8725973_ucsb_7.sub
+SCRIPT POST rspectra_s002_8725973_ucsb_7 /usr/local/pegasus/default/bin/exitcode.py  /submit/broadband/small/ec2/gideon/pegasus/broadband/run0001/rspectra_s002_8725973_ucsb_7.out
+RETRY rspectra_s002_8725973_ucsb_7 3
+
+JOB rspectra_s002_8725973_ucsb_8 rspectra_s002_8725973_ucsb_8.sub
+SCRIPT POST rspectra_s002_8725973_ucsb_8 /usr/local/pegasus/default/bin/exitcode.py  /submit/broadband/small/ec2/gideon/pegasus/broadband/run0001/rspectra_s002_8725973_ucsb_8.out
+RETRY rspectra_s002_8725973_ucsb_8 3
+
+JOB urs_createSRF_s002_8725973_urs_1 urs_createSRF_s002_8725973_urs_1.sub
+SCRIPT POST urs_createSRF_s002_8725973_urs_1 /usr/local/pegasus/default/bin/exitcode.py  /submit/broadband/small/ec2/gideon/pegasus/broadband/run0001/urs_createSRF_s002_8725973_urs_1.out
+RETRY urs_createSRF_s002_8725973_urs_1 3
+
+JOB urs_lp_seisgen_s002_8725973_urs_2 urs_lp_seisgen_s002_8725973_urs_2.sub
+SCRIPT POST urs_lp_seisgen_s002_8725973_urs_2 /usr/local/pegasus/default/bin/exitcode.py  /submit/broadband/small/ec2/gideon/pegasus/broadband/run0001/urs_lp_seisgen_s002_8725973_urs_2.out
+RETRY urs_lp_seisgen_s002_8725973_urs_2 3
+
+JOB urs_hf_seisgen_s002_8725973_urs_3 urs_hf_seisgen_s002_8725973_urs_3.sub
+SCRIPT POST urs_hf_seisgen_s002_8725973_urs_3 /usr/local/pegasus/default/bin/exitcode.py  /submit/broadband/small/ec2/gideon/pegasus/broadband/run0001/urs_hf_seisgen_s002_8725973_urs_3.out
+RETRY urs_hf_seisgen_s002_8725973_urs_3 3
+
+JOB sdsu_hf_seisgen_s002_8725973_urs_4 sdsu_hf_seisgen_s002_8725973_urs_4.sub
+SCRIPT POST sdsu_hf_seisgen_s002_8725973_urs_4 /usr/local/pegasus/default/bin/exitcode.py  /submit/broadband/small/ec2/gideon/pegasus/broadband/run0001/sdsu_hf_seisgen_s002_8725973_urs_4.out
+RETRY sdsu_hf_seisgen_s002_8725973_urs_4 3
+
+JOB ucsb_seisgen_s002_8725973_urs_5 ucsb_seisgen_s002_8725973_urs_5.sub
+SCRIPT POST ucsb_seisgen_s002_8725973_urs_5 /usr/local/pegasus/default/bin/exitcode.py  /submit/broadband/small/ec2/gideon/pegasus/broadband/run0001/ucsb_seisgen_s002_8725973_urs_5.out
+RETRY ucsb_seisgen_s002_8725973_urs_5 3
+
+JOB rspectra_s002_8725973_urs_6 rspectra_s002_8725973_urs_6.sub
+SCRIPT POST rspectra_s002_8725973_urs_6 /usr/local/pegasus/default/bin/exitcode.py  /submit/broadband/small/ec2/gideon/pegasus/broadband/run0001/rspectra_s002_8725973_urs_6.out
+RETRY rspectra_s002_8725973_urs_6 3
+
+JOB rspectra_s002_8725973_urs_7 rspectra_s002_8725973_urs_7.sub
+SCRIPT POST rspectra_s002_8725973_urs_7 /usr/local/pegasus/default/bin/exitcode.py  /submit/broadband/small/ec2/gideon/pegasus/broadband/run0001/rspectra_s002_8725973_urs_7.out
+RETRY rspectra_s002_8725973_urs_7 3
+
+JOB rspectra_s002_8725973_urs_8 rspectra_s002_8725973_urs_8.sub
+SCRIPT POST rspectra_s002_8725973_urs_8 /usr/local/pegasus/default/bin/exitcode.py  /submit/broadband/small/ec2/gideon/pegasus/broadband/run0001/rspectra_s002_8725973_urs_8.out
+RETRY rspectra_s002_8725973_urs_8 3
+
+JOB ucsb_createSRF_s002_8725981_ucsb_1 ucsb_createSRF_s002_8725981_ucsb_1.sub
+SCRIPT POST ucsb_createSRF_s002_8725981_ucsb_1 /usr/local/pegasus/default/bin/exitcode.py  /submit/broadband/small/ec2/gideon/pegasus/broadband/run0001/ucsb_createSRF_s002_8725981_ucsb_1.out
+RETRY ucsb_createSRF_s002_8725981_ucsb_1 3
+
+JOB urs_lp_seisgen_s002_8725981_ucsb_2 urs_lp_seisgen_s002_8725981_ucsb_2.sub
+SCRIPT POST urs_lp_seisgen_s002_8725981_ucsb_2 /usr/local/pegasus/default/bin/exitcode.py  /submit/broadband/small/ec2/gideon/pegasus/broadband/run0001/urs_lp_seisgen_s002_8725981_ucsb_2.out
+RETRY urs_lp_seisgen_s002_8725981_ucsb_2 3
+
+JOB urs_hf_seisgen_s002_8725981_ucsb_3 urs_hf_seisgen_s002_8725981_ucsb_3.sub
+SCRIPT POST urs_hf_seisgen_s002_8725981_ucsb_3 /usr/local/pegasus/default/bin/exitcode.py  /submit/broadband/small/ec2/gideon/pegasus/broadband/run0001/urs_hf_seisgen_s002_8725981_ucsb_3.out
+RETRY urs_hf_seisgen_s002_8725981_ucsb_3 3
+
+JOB sdsu_hf_seisgen_s002_8725981_ucsb_4 sdsu_hf_seisgen_s002_8725981_ucsb_4.sub
+SCRIPT POST sdsu_hf_seisgen_s002_8725981_ucsb_4 /usr/local/pegasus/default/bin/exitcode.py  /submit/broadband/small/ec2/gideon/pegasus/broadband/run0001/sdsu_hf_seisgen_s002_8725981_ucsb_4.out
+RETRY sdsu_hf_seisgen_s002_8725981_ucsb_4 3
+
+JOB ucsb_seisgen_s002_8725981_ucsb_5 ucsb_seisgen_s002_8725981_ucsb_5.sub
+SCRIPT POST ucsb_seisgen_s002_8725981_ucsb_5 /usr/local/pegasus/default/bin/exitcode.py  /submit/broadband/small/ec2/gideon/pegasus/broadband/run0001/ucsb_seisgen_s002_8725981_ucsb_5.out
+RETRY ucsb_seisgen_s002_8725981_ucsb_5 3
+
+JOB rspectra_s002_8725981_ucsb_6 rspectra_s002_8725981_ucsb_6.sub
+SCRIPT POST rspectra_s002_8725981_ucsb_6 /usr/local/pegasus/default/bin/exitcode.py  /submit/broadband/small/ec2/gideon/pegasus/broadband/run0001/rspectra_s002_8725981_ucsb_6.out
+RETRY rspectra_s002_8725981_ucsb_6 3
+
+JOB rspectra_s002_8725981_ucsb_7 rspectra_s002_8725981_ucsb_7.sub
+SCRIPT POST rspectra_s002_8725981_ucsb_7 /usr/local/pegasus/default/bin/exitcode.py  /submit/broadband/small/ec2/gideon/pegasus/broadband/run0001/rspectra_s002_8725981_ucsb_7.out
+RETRY rspectra_s002_8725981_ucsb_7 3
+
+JOB rspectra_s002_8725981_ucsb_8 rspectra_s002_8725981_ucsb_8.sub
+SCRIPT POST rspectra_s002_8725981_ucsb_8 /usr/local/pegasus/default/bin/exitcode.py  /submit/broadband/small/ec2/gideon/pegasus/broadband/run0001/rspectra_s002_8725981_ucsb_8.out
+RETRY rspectra_s002_8725981_ucsb_8 3
+
+JOB urs_createSRF_s002_8725981_urs_1 urs_createSRF_s002_8725981_urs_1.sub
+SCRIPT POST urs_createSRF_s002_8725981_urs_1 /usr/local/pegasus/default/bin/exitcode.py  /submit/broadband/small/ec2/gideon/pegasus/broadband/run0001/urs_createSRF_s002_8725981_urs_1.out
+RETRY urs_createSRF_s002_8725981_urs_1 3
+
+JOB urs_lp_seisgen_s002_8725981_urs_2 urs_lp_seisgen_s002_8725981_urs_2.sub
+SCRIPT POST urs_lp_seisgen_s002_8725981_urs_2 /usr/local/pegasus/default/bin/exitcode.py  /submit/broadband/small/ec2/gideon/pegasus/broadband/run0001/urs_lp_seisgen_s002_8725981_urs_2.out
+RETRY urs_lp_seisgen_s002_8725981_urs_2 3
+
+JOB urs_hf_seisgen_s002_8725981_urs_3 urs_hf_seisgen_s002_8725981_urs_3.sub
+SCRIPT POST urs_hf_seisgen_s002_8725981_urs_3 /usr/local/pegasus/default/bin/exitcode.py  /submit/broadband/small/ec2/gideon/pegasus/broadband/run0001/urs_hf_seisgen_s002_8725981_urs_3.out
+RETRY urs_hf_seisgen_s002_8725981_urs_3 3
+
+JOB sdsu_hf_seisgen_s002_8725981_urs_4 sdsu_hf_seisgen_s002_8725981_urs_4.sub
+SCRIPT POST sdsu_hf_seisgen_s002_8725981_urs_4 /usr/local/pegasus/default/bin/exitcode.py  /submit/broadband/small/ec2/gideon/pegasus/broadband/run0001/sdsu_hf_seisgen_s002_8725981_urs_4.out
+RETRY sdsu_hf_seisgen_s002_8725981_urs_4 3
+
+JOB ucsb_seisgen_s002_8725981_urs_5 ucsb_seisgen_s002_8725981_urs_5.sub
+SCRIPT POST ucsb_seisgen_s002_8725981_urs_5 /usr/local/pegasus/default/bin/exitcode.py  /submit/broadband/small/ec2/gideon/pegasus/broadband/run0001/ucsb_seisgen_s002_8725981_urs_5.out
+RETRY ucsb_seisgen_s002_8725981_urs_5 3
+
+JOB rspectra_s002_8725981_urs_6 rspectra_s002_8725981_urs_6.sub
+SCRIPT POST rspectra_s002_8725981_urs_6 /usr/local/pegasus/default/bin/exitcode.py  /submit/broadband/small/ec2/gideon/pegasus/broadband/run0001/rspectra_s002_8725981_urs_6.out
+RETRY rspectra_s002_8725981_urs_6 3
+
+JOB rspectra_s002_8725981_urs_7 rspectra_s002_8725981_urs_7.sub
+SCRIPT POST rspectra_s002_8725981_urs_7 /usr/local/pegasus/default/bin/exitcode.py  /submit/broadband/small/ec2/gideon/pegasus/broadband/run0001/rspectra_s002_8725981_urs_7.out
+RETRY rspectra_s002_8725981_urs_7 3
+
+JOB rspectra_s002_8725981_urs_8 rspectra_s002_8725981_urs_8.sub
+SCRIPT POST rspectra_s002_8725981_urs_8 /usr/local/pegasus/default/bin/exitcode.py  /submit/broadband/small/ec2/gideon/pegasus/broadband/run0001/rspectra_s002_8725981_urs_8.out
+RETRY rspectra_s002_8725981_urs_8 3
+
+JOB stage_out_ec2_0_0 stage_out_ec2_0_0.sub
+SCRIPT POST stage_out_ec2_0_0 /usr/local/pegasus/default/bin/exitcode.py  /submit/broadband/small/ec2/gideon/pegasus/broadband/run0001/stage_out_ec2_0_0.out
+RETRY stage_out_ec2_0_0 3
+
+JOB register_ec2_0_0 register_ec2_0_0.sub
+SCRIPT POST register_ec2_0_0 /usr/local/pegasus/default/bin/exitcode.py  /submit/broadband/small/ec2/gideon/pegasus/broadband/run0001/register_ec2_0_0.out
+RETRY register_ec2_0_0 3
+
+JOB stage_out_ec2_1_0 stage_out_ec2_1_0.sub
+SCRIPT POST stage_out_ec2_1_0 /usr/local/pegasus/default/bin/exitcode.py  /submit/broadband/small/ec2/gideon/pegasus/broadband/run0001/stage_out_ec2_1_0.out
+RETRY stage_out_ec2_1_0 3
+
+JOB register_ec2_1_0 register_ec2_1_0.sub
+SCRIPT POST register_ec2_1_0 /usr/local/pegasus/default/bin/exitcode.py  /submit/broadband/small/ec2/gideon/pegasus/broadband/run0001/register_ec2_1_0.out
+RETRY register_ec2_1_0 3
+
+JOB stage_out_ec2_2_0 stage_out_ec2_2_0.sub
+SCRIPT POST stage_out_ec2_2_0 /usr/local/pegasus/default/bin/exitcode.py  /submit/broadband/small/ec2/gideon/pegasus/broadband/run0001/stage_out_ec2_2_0.out
+RETRY stage_out_ec2_2_0 3
+
+JOB register_ec2_2_0 register_ec2_2_0.sub
+SCRIPT POST register_ec2_2_0 /usr/local/pegasus/default/bin/exitcode.py  /submit/broadband/small/ec2/gideon/pegasus/broadband/run0001/register_ec2_2_0.out
+RETRY register_ec2_2_0 3
+
+JOB stage_in_ec2_0 stage_in_ec2_0.sub
+SCRIPT POST stage_in_ec2_0 /usr/local/pegasus/default/bin/exitcode.py  /submit/broadband/small/ec2/gideon/pegasus/broadband/run0001/stage_in_ec2_0.out
+RETRY stage_in_ec2_0 3
+
+JOB stage_out_ec2_3_0 stage_out_ec2_3_0.sub
+SCRIPT POST stage_out_ec2_3_0 /usr/local/pegasus/default/bin/exitcode.py  /submit/broadband/small/ec2/gideon/pegasus/broadband/run0001/stage_out_ec2_3_0.out
+RETRY stage_out_ec2_3_0 3
+
+JOB register_ec2_3_0 register_ec2_3_0.sub
+SCRIPT POST register_ec2_3_0 /usr/local/pegasus/default/bin/exitcode.py  /submit/broadband/small/ec2/gideon/pegasus/broadband/run0001/register_ec2_3_0.out
+RETRY register_ec2_3_0 3
+
+JOB create_dir_broadband_0_ec2 create_dir_broadband_0_ec2.sub
+SCRIPT POST create_dir_broadband_0_ec2 /usr/local/pegasus/default/bin/exitcode.py  /submit/broadband/small/ec2/gideon/pegasus/broadband/run0001/create_dir_broadband_0_ec2.out
+RETRY create_dir_broadband_0_ec2 3
+
+PARENT ucsb_createSRF_s001_8725973_ucsb_1 CHILD urs_lp_seisgen_s001_8725973_ucsb_2
+PARENT ucsb_createSRF_s001_8725973_ucsb_1 CHILD urs_hf_seisgen_s001_8725973_ucsb_3
+PARENT urs_lp_seisgen_s001_8725973_ucsb_2 CHILD urs_hf_seisgen_s001_8725973_ucsb_3
+PARENT ucsb_createSRF_s001_8725973_ucsb_1 CHILD sdsu_hf_seisgen_s001_8725973_ucsb_4
+PARENT urs_lp_seisgen_s001_8725973_ucsb_2 CHILD sdsu_hf_seisgen_s001_8725973_ucsb_4
+PARENT ucsb_createSRF_s001_8725973_ucsb_1 CHILD ucsb_seisgen_s001_8725973_ucsb_5
+PARENT urs_hf_seisgen_s001_8725973_ucsb_3 CHILD rspectra_s001_8725973_ucsb_6
+PARENT sdsu_hf_seisgen_s001_8725973_ucsb_4 CHILD rspectra_s001_8725973_ucsb_7
+PARENT ucsb_seisgen_s001_8725973_ucsb_5 CHILD rspectra_s001_8725973_ucsb_8
+PARENT urs_createSRF_s001_8725973_urs_1 CHILD urs_lp_seisgen_s001_8725973_urs_2
+PARENT urs_createSRF_s001_8725973_urs_1 CHILD urs_hf_seisgen_s001_8725973_urs_3
+PARENT urs_lp_seisgen_s001_8725973_urs_2 CHILD urs_hf_seisgen_s001_8725973_urs_3
+PARENT urs_createSRF_s001_8725973_urs_1 CHILD sdsu_hf_seisgen_s001_8725973_urs_4
+PARENT urs_lp_seisgen_s001_8725973_urs_2 CHILD sdsu_hf_seisgen_s001_8725973_urs_4
+PARENT urs_createSRF_s001_8725973_urs_1 CHILD ucsb_seisgen_s001_8725973_urs_5
+PARENT urs_hf_seisgen_s001_8725973_urs_3 CHILD rspectra_s001_8725973_urs_6
+PARENT sdsu_hf_seisgen_s001_8725973_urs_4 CHILD rspectra_s001_8725973_urs_7
+PARENT ucsb_seisgen_s001_8725973_urs_5 CHILD rspectra_s001_8725973_urs_8
+PARENT ucsb_createSRF_s001_8725981_ucsb_1 CHILD urs_lp_seisgen_s001_8725981_ucsb_2
+PARENT ucsb_createSRF_s001_8725981_ucsb_1 CHILD urs_hf_seisgen_s001_8725981_ucsb_3
+PARENT urs_lp_seisgen_s001_8725981_ucsb_2 CHILD urs_hf_seisgen_s001_8725981_ucsb_3
+PARENT ucsb_createSRF_s001_8725981_ucsb_1 CHILD sdsu_hf_seisgen_s001_8725981_ucsb_4
+PARENT urs_lp_seisgen_s001_8725981_ucsb_2 CHILD sdsu_hf_seisgen_s001_8725981_ucsb_4
+PARENT ucsb_createSRF_s001_8725981_ucsb_1 CHILD ucsb_seisgen_s001_8725981_ucsb_5
+PARENT urs_hf_seisgen_s001_8725981_ucsb_3 CHILD rspectra_s001_8725981_ucsb_6
+PARENT sdsu_hf_seisgen_s001_8725981_ucsb_4 CHILD rspectra_s001_8725981_ucsb_7
+PARENT ucsb_seisgen_s001_8725981_ucsb_5 CHILD rspectra_s001_8725981_ucsb_8
+PARENT urs_createSRF_s001_8725981_urs_1 CHILD urs_lp_seisgen_s001_8725981_urs_2
+PARENT urs_lp_seisgen_s001_8725981_urs_2 CHILD urs_hf_seisgen_s001_8725981_urs_3
+PARENT urs_createSRF_s001_8725981_urs_1 CHILD urs_hf_seisgen_s001_8725981_urs_3
+PARENT urs_lp_seisgen_s001_8725981_urs_2 CHILD sdsu_hf_seisgen_s001_8725981_urs_4
+PARENT urs_createSRF_s001_8725981_urs_1 CHILD sdsu_hf_seisgen_s001_8725981_urs_4
+PARENT urs_createSRF_s001_8725981_urs_1 CHILD ucsb_seisgen_s001_8725981_urs_5
+PARENT urs_hf_seisgen_s001_8725981_urs_3 CHILD rspectra_s001_8725981_urs_6
+PARENT sdsu_hf_seisgen_s001_8725981_urs_4 CHILD rspectra_s001_8725981_urs_7
+PARENT ucsb_seisgen_s001_8725981_urs_5 CHILD rspectra_s001_8725981_urs_8
+PARENT ucsb_createSRF_s002_8725973_ucsb_1 CHILD urs_lp_seisgen_s002_8725973_ucsb_2
+PARENT urs_lp_seisgen_s002_8725973_ucsb_2 CHILD urs_hf_seisgen_s002_8725973_ucsb_3
+PARENT ucsb_createSRF_s002_8725973_ucsb_1 CHILD urs_hf_seisgen_s002_8725973_ucsb_3
+PARENT urs_lp_seisgen_s002_8725973_ucsb_2 CHILD sdsu_hf_seisgen_s002_8725973_ucsb_4
+PARENT ucsb_createSRF_s002_8725973_ucsb_1 CHILD sdsu_hf_seisgen_s002_8725973_ucsb_4
+PARENT ucsb_createSRF_s002_8725973_ucsb_1 CHILD ucsb_seisgen_s002_8725973_ucsb_5
+PARENT urs_hf_seisgen_s002_8725973_ucsb_3 CHILD rspectra_s002_8725973_ucsb_6
+PARENT sdsu_hf_seisgen_s002_8725973_ucsb_4 CHILD rspectra_s002_8725973_ucsb_7
+PARENT ucsb_seisgen_s002_8725973_ucsb_5 CHILD rspectra_s002_8725973_ucsb_8
+PARENT urs_createSRF_s002_8725973_urs_1 CHILD urs_lp_seisgen_s002_8725973_urs_2
+PARENT urs_lp_seisgen_s002_8725973_urs_2 CHILD urs_hf_seisgen_s002_8725973_urs_3
+PARENT urs_createSRF_s002_8725973_urs_1 CHILD urs_hf_seisgen_s002_8725973_urs_3
+PARENT urs_lp_seisgen_s002_8725973_urs_2 CHILD sdsu_hf_seisgen_s002_8725973_urs_4
+PARENT urs_createSRF_s002_8725973_urs_1 CHILD sdsu_hf_seisgen_s002_8725973_urs_4
+PARENT urs_createSRF_s002_8725973_urs_1 CHILD ucsb_seisgen_s002_8725973_urs_5
+PARENT urs_hf_seisgen_s002_8725973_urs_3 CHILD rspectra_s002_8725973_urs_6
+PARENT sdsu_hf_seisgen_s002_8725973_urs_4 CHILD rspectra_s002_8725973_urs_7
+PARENT ucsb_seisgen_s002_8725973_urs_5 CHILD rspectra_s002_8725973_urs_8
+PARENT ucsb_createSRF_s002_8725981_ucsb_1 CHILD urs_lp_seisgen_s002_8725981_ucsb_2
+PARENT urs_lp_seisgen_s002_8725981_ucsb_2 CHILD urs_hf_seisgen_s002_8725981_ucsb_3
+PARENT ucsb_createSRF_s002_8725981_ucsb_1 CHILD urs_hf_seisgen_s002_8725981_ucsb_3
+PARENT urs_lp_seisgen_s002_8725981_ucsb_2 CHILD sdsu_hf_seisgen_s002_8725981_ucsb_4
+PARENT ucsb_createSRF_s002_8725981_ucsb_1 CHILD sdsu_hf_seisgen_s002_8725981_ucsb_4
+PARENT ucsb_createSRF_s002_8725981_ucsb_1 CHILD ucsb_seisgen_s002_8725981_ucsb_5
+PARENT urs_hf_seisgen_s002_8725981_ucsb_3 CHILD rspectra_s002_8725981_ucsb_6
+PARENT sdsu_hf_seisgen_s002_8725981_ucsb_4 CHILD rspectra_s002_8725981_ucsb_7
+PARENT ucsb_seisgen_s002_8725981_ucsb_5 CHILD rspectra_s002_8725981_ucsb_8
+PARENT urs_createSRF_s002_8725981_urs_1 CHILD urs_lp_seisgen_s002_8725981_urs_2
+PARENT urs_lp_seisgen_s002_8725981_urs_2 CHILD urs_hf_seisgen_s002_8725981_urs_3
+PARENT urs_createSRF_s002_8725981_urs_1 CHILD urs_hf_seisgen_s002_8725981_urs_3
+PARENT urs_lp_seisgen_s002_8725981_urs_2 CHILD sdsu_hf_seisgen_s002_8725981_urs_4
+PARENT urs_createSRF_s002_8725981_urs_1 CHILD sdsu_hf_seisgen_s002_8725981_urs_4
+PARENT urs_createSRF_s002_8725981_urs_1 CHILD ucsb_seisgen_s002_8725981_urs_5
+PARENT urs_hf_seisgen_s002_8725981_urs_3 CHILD rspectra_s002_8725981_urs_6
+PARENT sdsu_hf_seisgen_s002_8725981_urs_4 CHILD rspectra_s002_8725981_urs_7
+PARENT ucsb_seisgen_s002_8725981_urs_5 CHILD rspectra_s002_8725981_urs_8
+PARENT ucsb_createSRF_s002_8725973_ucsb_1 CHILD stage_out_ec2_0_0
+PARENT urs_createSRF_s001_8725981_urs_1 CHILD stage_out_ec2_0_0
+PARENT ucsb_createSRF_s002_8725981_ucsb_1 CHILD stage_out_ec2_0_0
+PARENT urs_createSRF_s002_8725973_urs_1 CHILD stage_out_ec2_0_0
+PARENT urs_createSRF_s001_8725973_urs_1 CHILD stage_out_ec2_0_0
+PARENT ucsb_createSRF_s001_8725981_ucsb_1 CHILD stage_out_ec2_0_0
+PARENT urs_createSRF_s002_8725981_urs_1 CHILD stage_out_ec2_0_0
+PARENT ucsb_createSRF_s001_8725973_ucsb_1 CHILD stage_out_ec2_0_0
+PARENT stage_out_ec2_0_0 CHILD register_ec2_0_0
+PARENT ucsb_seisgen_s002_8725973_ucsb_5 CHILD stage_out_ec2_1_0
+PARENT ucsb_seisgen_s001_8725981_urs_5 CHILD stage_out_ec2_1_0
+PARENT ucsb_seisgen_s002_8725981_ucsb_5 CHILD stage_out_ec2_1_0
+PARENT ucsb_seisgen_s002_8725973_urs_5 CHILD stage_out_ec2_1_0
+PARENT ucsb_seisgen_s001_8725973_urs_5 CHILD stage_out_ec2_1_0
+PARENT ucsb_seisgen_s001_8725981_ucsb_5 CHILD stage_out_ec2_1_0
+PARENT ucsb_seisgen_s002_8725981_urs_5 CHILD stage_out_ec2_1_0
+PARENT ucsb_seisgen_s001_8725973_ucsb_5 CHILD stage_out_ec2_1_0
+PARENT stage_out_ec2_1_0 CHILD register_ec2_1_0
+PARENT urs_hf_seisgen_s002_8725973_ucsb_3 CHILD stage_out_ec2_2_0
+PARENT sdsu_hf_seisgen_s002_8725973_ucsb_4 CHILD stage_out_ec2_2_0
+PARENT rspectra_s002_8725973_ucsb_8 CHILD stage_out_ec2_2_0
+PARENT urs_hf_seisgen_s001_8725981_urs_3 CHILD stage_out_ec2_2_0
+PARENT sdsu_hf_seisgen_s001_8725981_urs_4 CHILD stage_out_ec2_2_0
+PARENT rspectra_s001_8725981_urs_8 CHILD stage_out_ec2_2_0
+PARENT urs_hf_seisgen_s002_8725981_ucsb_3 CHILD stage_out_ec2_2_0
+PARENT sdsu_hf_seisgen_s002_8725981_ucsb_4 CHILD stage_out_ec2_2_0
+PARENT rspectra_s002_8725981_ucsb_8 CHILD stage_out_ec2_2_0
+PARENT urs_hf_seisgen_s002_8725973_urs_3 CHILD stage_out_ec2_2_0
+PARENT sdsu_hf_seisgen_s002_8725973_urs_4 CHILD stage_out_ec2_2_0
+PARENT rspectra_s002_8725973_urs_8 CHILD stage_out_ec2_2_0
+PARENT urs_hf_seisgen_s001_8725973_urs_3 CHILD stage_out_ec2_2_0
+PARENT sdsu_hf_seisgen_s001_8725973_urs_4 CHILD stage_out_ec2_2_0
+PARENT rspectra_s001_8725973_urs_8 CHILD stage_out_ec2_2_0
+PARENT urs_hf_seisgen_s001_8725981_ucsb_3 CHILD stage_out_ec2_2_0
+PARENT sdsu_hf_seisgen_s001_8725981_ucsb_4 CHILD stage_out_ec2_2_0
+PARENT rspectra_s001_8725981_ucsb_8 CHILD stage_out_ec2_2_0
+PARENT urs_hf_seisgen_s002_8725981_urs_3 CHILD stage_out_ec2_2_0
+PARENT sdsu_hf_seisgen_s002_8725981_urs_4 CHILD stage_out_ec2_2_0
+PARENT rspectra_s002_8725981_urs_8 CHILD stage_out_ec2_2_0
+PARENT urs_hf_seisgen_s001_8725973_ucsb_3 CHILD stage_out_ec2_2_0
+PARENT sdsu_hf_seisgen_s001_8725973_ucsb_4 CHILD stage_out_ec2_2_0
+PARENT rspectra_s001_8725973_ucsb_8 CHILD stage_out_ec2_2_0
+PARENT stage_out_ec2_2_0 CHILD register_ec2_2_0
+PARENT rspectra_s002_8725973_ucsb_6 CHILD stage_out_ec2_3_0
+PARENT rspectra_s002_8725973_ucsb_7 CHILD stage_out_ec2_3_0
+PARENT rspectra_s001_8725981_urs_6 CHILD stage_out_ec2_3_0
+PARENT rspectra_s001_8725981_urs_7 CHILD stage_out_ec2_3_0
+PARENT rspectra_s002_8725981_ucsb_6 CHILD stage_out_ec2_3_0
+PARENT rspectra_s002_8725981_ucsb_7 CHILD stage_out_ec2_3_0
+PARENT rspectra_s002_8725973_urs_6 CHILD stage_out_ec2_3_0
+PARENT rspectra_s002_8725973_urs_7 CHILD stage_out_ec2_3_0
+PARENT rspectra_s001_8725973_urs_6 CHILD stage_out_ec2_3_0
+PARENT rspectra_s001_8725973_urs_7 CHILD stage_out_ec2_3_0
+PARENT rspectra_s001_8725981_ucsb_6 CHILD stage_out_ec2_3_0
+PARENT rspectra_s001_8725981_ucsb_7 CHILD stage_out_ec2_3_0
+PARENT rspectra_s002_8725981_urs_6 CHILD stage_out_ec2_3_0
+PARENT rspectra_s002_8725981_urs_7 CHILD stage_out_ec2_3_0
+PARENT rspectra_s001_8725973_ucsb_6 CHILD stage_out_ec2_3_0
+PARENT rspectra_s001_8725973_ucsb_7 CHILD stage_out_ec2_3_0
+PARENT stage_in_ec2_0 CHILD urs_hf_seisgen_s001_8725981_urs_3
+PARENT stage_in_ec2_0 CHILD sdsu_hf_seisgen_s001_8725981_ucsb_4
+PARENT stage_in_ec2_0 CHILD rspectra_s002_8725973_ucsb_6
+PARENT stage_in_ec2_0 CHILD urs_lp_seisgen_s001_8725973_urs_2
+PARENT stage_in_ec2_0 CHILD urs_hf_seisgen_s001_8725981_ucsb_3
+PARENT stage_in_ec2_0 CHILD rspectra_s002_8725973_ucsb_8
+PARENT stage_in_ec2_0 CHILD rspectra_s002_8725973_ucsb_7
+PARENT stage_in_ec2_0 CHILD urs_hf_seisgen_s002_8725973_urs_3
+PARENT stage_in_ec2_0 CHILD ucsb_seisgen_s001_8725981_ucsb_5
+PARENT stage_in_ec2_0 CHILD sdsu_hf_seisgen_s002_8725981_urs_4
+PARENT stage_in_ec2_0 CHILD urs_hf_seisgen_s001_8725973_ucsb_3
+PARENT stage_in_ec2_0 CHILD ucsb_seisgen_s001_8725973_urs_5
+PARENT stage_in_ec2_0 CHILD rspectra_s002_8725973_urs_8
+PARENT stage_in_ec2_0 CHILD rspectra_s002_8725973_urs_7
+PARENT stage_in_ec2_0 CHILD urs_lp_seisgen_s002_8725981_urs_2
+PARENT stage_in_ec2_0 CHILD rspectra_s002_8725973_urs_6
+PARENT stage_in_ec2_0 CHILD ucsb_seisgen_s002_8725973_ucsb_5
+PARENT stage_in_ec2_0 CHILD urs_lp_seisgen_s001_8725981_ucsb_2
+PARENT stage_in_ec2_0 CHILD ucsb_createSRF_s002_8725973_ucsb_1
+PARENT stage_in_ec2_0 CHILD urs_lp_seisgen_s002_8725981_ucsb_2
+PARENT stage_in_ec2_0 CHILD ucsb_seisgen_s002_8725973_urs_5
+PARENT stage_in_ec2_0 CHILD ucsb_seisgen_s002_8725981_ucsb_5
+PARENT stage_in_ec2_0 CHILD sdsu_hf_seisgen_s002_8725973_ucsb_4
+PARENT stage_in_ec2_0 CHILD urs_lp_seisgen_s001_8725981_urs_2
+PARENT stage_in_ec2_0 CHILD rspectra_s001_8725981_urs_6
+PARENT stage_in_ec2_0 CHILD rspectra_s001_8725981_urs_7
+PARENT stage_in_ec2_0 CHILD urs_createSRF_s001_8725981_urs_1
+PARENT stage_in_ec2_0 CHILD sdsu_hf_seisgen_s001_8725981_urs_4
+PARENT stage_in_ec2_0 CHILD urs_hf_seisgen_s002_8725973_ucsb_3
+PARENT stage_in_ec2_0 CHILD sdsu_hf_seisgen_s002_8725973_urs_4
+PARENT stage_in_ec2_0 CHILD urs_lp_seisgen_s002_8725973_ucsb_2
+PARENT stage_in_ec2_0 CHILD rspectra_s001_8725973_ucsb_6
+PARENT stage_in_ec2_0 CHILD urs_lp_seisgen_s001_8725973_ucsb_2
+PARENT stage_in_ec2_0 CHILD rspectra_s001_8725973_ucsb_7
+PARENT stage_in_ec2_0 CHILD rspectra_s001_8725973_ucsb_8
+PARENT stage_in_ec2_0 CHILD rspectra_s001_8725981_urs_8
+PARENT stage_in_ec2_0 CHILD sdsu_hf_seisgen_s001_8725973_urs_4
+PARENT stage_in_ec2_0 CHILD sdsu_hf_seisgen_s002_8725981_ucsb_4
+PARENT stage_in_ec2_0 CHILD urs_hf_seisgen_s002_8725981_urs_3
+PARENT stage_in_ec2_0 CHILD rspectra_s001_8725973_urs_6
+PARENT stage_in_ec2_0 CHILD rspectra_s001_8725973_urs_7
+PARENT stage_in_ec2_0 CHILD ucsb_createSRF_s002_8725981_ucsb_1
+PARENT stage_in_ec2_0 CHILD rspectra_s002_8725981_ucsb_8
+PARENT stage_in_ec2_0 CHILD rspectra_s001_8725973_urs_8
+PARENT stage_in_ec2_0 CHILD rspectra_s002_8725981_ucsb_7
+PARENT stage_in_ec2_0 CHILD rspectra_s002_8725981_ucsb_6
+PARENT stage_in_ec2_0 CHILD urs_lp_seisgen_s002_8725973_urs_2
+PARENT stage_in_ec2_0 CHILD ucsb_seisgen_s001_8725973_ucsb_5
+PARENT stage_in_ec2_0 CHILD urs_createSRF_s002_8725973_urs_1
+PARENT stage_in_ec2_0 CHILD ucsb_seisgen_s002_8725981_urs_5
+PARENT stage_in_ec2_0 CHILD urs_hf_seisgen_s002_8725981_ucsb_3
+PARENT stage_in_ec2_0 CHILD urs_createSRF_s001_8725973_urs_1
+PARENT stage_in_ec2_0 CHILD rspectra_s002_8725981_urs_6
+PARENT stage_in_ec2_0 CHILD ucsb_createSRF_s001_8725981_ucsb_1
+PARENT stage_in_ec2_0 CHILD urs_hf_seisgen_s001_8725973_urs_3
+PARENT stage_in_ec2_0 CHILD rspectra_s001_8725981_ucsb_6
+PARENT stage_in_ec2_0 CHILD rspectra_s002_8725981_urs_7
+PARENT stage_in_ec2_0 CHILD ucsb_seisgen_s001_8725981_urs_5
+PARENT stage_in_ec2_0 CHILD rspectra_s001_8725981_ucsb_8
+PARENT stage_in_ec2_0 CHILD rspectra_s001_8725981_ucsb_7
+PARENT stage_in_ec2_0 CHILD urs_createSRF_s002_8725981_urs_1
+PARENT stage_in_ec2_0 CHILD rspectra_s002_8725981_urs_8
+PARENT stage_in_ec2_0 CHILD sdsu_hf_seisgen_s001_8725973_ucsb_4
+PARENT stage_in_ec2_0 CHILD ucsb_createSRF_s001_8725973_ucsb_1
+PARENT stage_out_ec2_3_0 CHILD register_ec2_3_0
+PARENT create_dir_broadband_0_ec2 CHILD ucsb_createSRF_s001_8725973_ucsb_1
+PARENT create_dir_broadband_0_ec2 CHILD urs_lp_seisgen_s001_8725973_ucsb_2
+PARENT create_dir_broadband_0_ec2 CHILD urs_hf_seisgen_s001_8725973_ucsb_3
+PARENT create_dir_broadband_0_ec2 CHILD sdsu_hf_seisgen_s001_8725973_ucsb_4
+PARENT create_dir_broadband_0_ec2 CHILD ucsb_seisgen_s001_8725973_ucsb_5
+PARENT create_dir_broadband_0_ec2 CHILD rspectra_s001_8725973_ucsb_6
+PARENT create_dir_broadband_0_ec2 CHILD rspectra_s001_8725973_ucsb_7
+PARENT create_dir_broadband_0_ec2 CHILD rspectra_s001_8725973_ucsb_8
+PARENT create_dir_broadband_0_ec2 CHILD urs_createSRF_s001_8725973_urs_1
+PARENT create_dir_broadband_0_ec2 CHILD urs_lp_seisgen_s001_8725973_urs_2
+PARENT create_dir_broadband_0_ec2 CHILD urs_hf_seisgen_s001_8725973_urs_3
+PARENT create_dir_broadband_0_ec2 CHILD sdsu_hf_seisgen_s001_8725973_urs_4
+PARENT create_dir_broadband_0_ec2 CHILD ucsb_seisgen_s001_8725973_urs_5
+PARENT create_dir_broadband_0_ec2 CHILD rspectra_s001_8725973_urs_6
+PARENT create_dir_broadband_0_ec2 CHILD rspectra_s001_8725973_urs_7
+PARENT create_dir_broadband_0_ec2 CHILD rspectra_s001_8725973_urs_8
+PARENT create_dir_broadband_0_ec2 CHILD ucsb_createSRF_s001_8725981_ucsb_1
+PARENT create_dir_broadband_0_ec2 CHILD urs_lp_seisgen_s001_8725981_ucsb_2
+PARENT create_dir_broadband_0_ec2 CHILD urs_hf_seisgen_s001_8725981_ucsb_3
+PARENT create_dir_broadband_0_ec2 CHILD sdsu_hf_seisgen_s001_8725981_ucsb_4
+PARENT create_dir_broadband_0_ec2 CHILD ucsb_seisgen_s001_8725981_ucsb_5
+PARENT create_dir_broadband_0_ec2 CHILD rspectra_s001_8725981_ucsb_6
+PARENT create_dir_broadband_0_ec2 CHILD rspectra_s001_8725981_ucsb_7
+PARENT create_dir_broadband_0_ec2 CHILD rspectra_s001_8725981_ucsb_8
+PARENT create_dir_broadband_0_ec2 CHILD urs_createSRF_s001_8725981_urs_1
+PARENT create_dir_broadband_0_ec2 CHILD urs_lp_seisgen_s001_8725981_urs_2
+PARENT create_dir_broadband_0_ec2 CHILD urs_hf_seisgen_s001_8725981_urs_3
+PARENT create_dir_broadband_0_ec2 CHILD sdsu_hf_seisgen_s001_8725981_urs_4
+PARENT create_dir_broadband_0_ec2 CHILD ucsb_seisgen_s001_8725981_urs_5
+PARENT create_dir_broadband_0_ec2 CHILD rspectra_s001_8725981_urs_6
+PARENT create_dir_broadband_0_ec2 CHILD rspectra_s001_8725981_urs_7
+PARENT create_dir_broadband_0_ec2 CHILD rspectra_s001_8725981_urs_8
+PARENT create_dir_broadband_0_ec2 CHILD ucsb_createSRF_s002_8725973_ucsb_1
+PARENT create_dir_broadband_0_ec2 CHILD urs_lp_seisgen_s002_8725973_ucsb_2
+PARENT create_dir_broadband_0_ec2 CHILD urs_hf_seisgen_s002_8725973_ucsb_3
+PARENT create_dir_broadband_0_ec2 CHILD sdsu_hf_seisgen_s002_8725973_ucsb_4
+PARENT create_dir_broadband_0_ec2 CHILD ucsb_seisgen_s002_8725973_ucsb_5
+PARENT create_dir_broadband_0_ec2 CHILD rspectra_s002_8725973_ucsb_6
+PARENT create_dir_broadband_0_ec2 CHILD rspectra_s002_8725973_ucsb_7
+PARENT create_dir_broadband_0_ec2 CHILD rspectra_s002_8725973_ucsb_8
+PARENT create_dir_broadband_0_ec2 CHILD urs_createSRF_s002_8725973_urs_1
+PARENT create_dir_broadband_0_ec2 CHILD urs_lp_seisgen_s002_8725973_urs_2
+PARENT create_dir_broadband_0_ec2 CHILD urs_hf_seisgen_s002_8725973_urs_3
+PARENT create_dir_broadband_0_ec2 CHILD sdsu_hf_seisgen_s002_8725973_urs_4
+PARENT create_dir_broadband_0_ec2 CHILD ucsb_seisgen_s002_8725973_urs_5
+PARENT create_dir_broadband_0_ec2 CHILD rspectra_s002_8725973_urs_6
+PARENT create_dir_broadband_0_ec2 CHILD rspectra_s002_8725973_urs_7
+PARENT create_dir_broadband_0_ec2 CHILD rspectra_s002_8725973_urs_8
+PARENT create_dir_broadband_0_ec2 CHILD ucsb_createSRF_s002_8725981_ucsb_1
+PARENT create_dir_broadband_0_ec2 CHILD urs_lp_seisgen_s002_8725981_ucsb_2
+PARENT create_dir_broadband_0_ec2 CHILD urs_hf_seisgen_s002_8725981_ucsb_3
+PARENT create_dir_broadband_0_ec2 CHILD sdsu_hf_seisgen_s002_8725981_ucsb_4
+PARENT create_dir_broadband_0_ec2 CHILD ucsb_seisgen_s002_8725981_ucsb_5
+PARENT create_dir_broadband_0_ec2 CHILD rspectra_s002_8725981_ucsb_6
+PARENT create_dir_broadband_0_ec2 CHILD rspectra_s002_8725981_ucsb_7
+PARENT create_dir_broadband_0_ec2 CHILD rspectra_s002_8725981_ucsb_8
+PARENT create_dir_broadband_0_ec2 CHILD urs_createSRF_s002_8725981_urs_1
+PARENT create_dir_broadband_0_ec2 CHILD urs_lp_seisgen_s002_8725981_urs_2
+PARENT create_dir_broadband_0_ec2 CHILD urs_hf_seisgen_s002_8725981_urs_3
+PARENT create_dir_broadband_0_ec2 CHILD sdsu_hf_seisgen_s002_8725981_urs_4
+PARENT create_dir_broadband_0_ec2 CHILD ucsb_seisgen_s002_8725981_urs_5
+PARENT create_dir_broadband_0_ec2 CHILD rspectra_s002_8725981_urs_6
+PARENT create_dir_broadband_0_ec2 CHILD rspectra_s002_8725981_urs_7
+PARENT create_dir_broadband_0_ec2 CHILD rspectra_s002_8725981_urs_8
+PARENT create_dir_broadband_0_ec2 CHILD stage_out_ec2_0_0
+PARENT create_dir_broadband_0_ec2 CHILD stage_out_ec2_1_0
+PARENT create_dir_broadband_0_ec2 CHILD stage_out_ec2_2_0
+PARENT create_dir_broadband_0_ec2 CHILD stage_in_ec2_0
+PARENT create_dir_broadband_0_ec2 CHILD stage_out_ec2_3_0
+######################################################################
+# End of DAG
+######################################################################
