@@ -18,7 +18,6 @@
 package edu.isi.pegasus.planner.code.generator;
 
 import java.io.File;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -27,7 +26,6 @@ import java.util.Map;
 
 import edu.isi.pegasus.common.logging.LogManager;
 
-import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
@@ -65,8 +63,12 @@ public class PMC extends Abstract {
      * A boolean indicating whether grid start has been initialized or not.
      */
     protected boolean mInitializeGridStart;
-
     
+    /**
+     * Handle to the PBS Code generator.
+     */
+    private final PBS mPBS;
+
     /**
      * The default constructor.
      */
@@ -74,6 +76,9 @@ public class PMC extends Abstract {
         super();
         mInitializeGridStart = true;
         mGridStartFactory = new GridStartFactory();
+        //instantiate the PBS Code generator.
+        //we may need a factory later on
+        mPBS = new PBS();
     }
 
     /**
@@ -85,6 +90,7 @@ public class PMC extends Abstract {
      */
     public void initialize( PegasusBag bag ) throws CodeGeneratorException{
         super.initialize( bag );
+        mPBS.initialize( bag );
         mLogger = bag.getLogger();
 
 
@@ -102,15 +108,12 @@ public class PMC extends Abstract {
      *
      * @param dag  the concrete workflow.
      *
-     * @return handle to the GRMS output file.
+     * @return handle to the PMC file generated in the submit directory.
      *
      * @throws CodeGeneratorException in case of any error occuring code generation.
      */
     public Collection<File> generateCode( ADag dag ) throws CodeGeneratorException{
         Collection result = new ArrayList( 1 );
-        
-        
-
 
         //we first need to convert internally into graph format
         Graph workflow =    Adapter.convert( dag );
@@ -199,7 +202,10 @@ public class PMC extends Abstract {
         MPIExec pmcAggregator = (MPIExec)aggregator;
         String name = pmcBasename( dag );
         pmcAggregator.generatePMCInputFile(workflow, name );
-        
+
+        //lets generate the PBS input file
+        mPBS.generateCode( dag );
+
          //the dax replica store
         this.writeOutDAXReplicaStore( dag );
 
@@ -231,17 +237,19 @@ public class PMC extends Abstract {
     
     /**
      * Returns a Map containing additional braindump entries that are specific
-     * to a Code Generator
+     * to a Code Generator. The entries added for this are from the scheduler
+     * specific generator
      * 
      * @param workflow  the executable workflow
      * 
      * @return Map
      */
     public  Map<String, String> getAdditionalBraindumpEntries( ADag workflow ) {
-        Map entries = new HashMap();
-        entries.put( Braindump.GENERATOR_TYPE_KEY, "pmc" );
-        entries.put( "script", this.getPathtoPMCFile( workflow ) );
-        return entries;
+//        Map entries = new HashMap();
+//        entries.put( Braindump.GENERATOR_TYPE_KEY, "pmc" );
+//        entries.put( "script", this.getPathtoPMCFile( workflow ) );
+//        return entries;
+        return this.mPBS.getAdditionalBraindumpEntries(workflow);
     }
 
     /**
