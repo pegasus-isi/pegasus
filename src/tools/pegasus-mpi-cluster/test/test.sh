@@ -575,6 +575,7 @@ run_test ./test-dag
 run_test ./test-log
 run_test ./test-engine
 run_test ./test-fdcache
+run_test ./test-protocol
 run_test test_help
 run_test test_one_worker_required
 run_test test_run_diamond

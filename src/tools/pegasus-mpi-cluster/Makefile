@@ -59,6 +59,7 @@ TESTS += test-log
 TESTS += test-engine
 TESTS += test-tools
 TESTS += test-fdcache
+TESTS += test-protocol
 
 .PHONY: clean depends test install
 
@@ -79,6 +80,7 @@ test-log: test-log.o $(OBJS)
 test-engine: test-engine.o $(OBJS)
 test-tools: test-tools.o $(OBJS)
 test-fdcache: test-fdcache.o $(OBJS)
+test-protocol: test-protocol.o $(OBJS)
 
 test: $(TESTS) $(PROGRAMS)
 	test/test.sh
