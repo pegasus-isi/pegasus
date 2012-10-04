@@ -1,0 +1,50 @@
+#!/bin/bash                                                                                                                                                                                                               
+# Script that polls the status of a particular workflow.
+#
+# args:
+# 1: WORKFLOW_DIR of the workflow, or current directory if not specified.
+#
+
+if [ $# -gt 0 ]; then
+  WORKFLOW_DIR=$1
+  echo "WORKFLOW DIR is $1"
+else
+  echo "CURRENT DIR is " `pwd`
+fi
+echo "Checking status "
+
+TIMEOUT=500
+COUNT=0
+function update_status
+{
+   STATUS=`pegasus-status --noqueue $1 | tail -1 | sed 's/[:\(\)]/ /g'| awk '{print $5}'`
+}
+
+sleep 5m
+update_status $WORKFLOW_DIR
+
+echo "#" STATUS is "$STATUS"
+
+while [ "$STATUS" = "Running" -o "$STATUS" = "" -o "$STATUS" = "Unknown"  ] ; do 
+    if [ $COUNT -ge $TIMEOUT ]; then
+	echo "Reached TIMEOUT of $TIMEOUT. Calling pegasus-remove"
+	pegasus-remove `pwd`
+	STATUS=TIMEOUT
+	sleep 1m
+	break;
+    fi
+    ((COUNT++))
+    sleep 1m
+    update_status $WORKFLOW_DIR
+    echo "#" STATUS is "$STATUS"
+done
+
+if [ "$STATUS" = "Success" ]; then
+    echo "*** Workflow finished succesfully ***"
+    exit 0
+else
+    echo "*** Workflow failed ***"
+    echo "Running Pegasus analyzer"
+    pegasus-analyzer
+    exit 1
+fi
