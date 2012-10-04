@@ -79,7 +79,6 @@ void MPICommunicator::barrier() {
 
 void MPICommunicator::abort(int exitcode) {
     MPI_Abort(MPI_COMM_WORLD, exitcode);
-    exit(exitcode);
 }
 
 int MPICommunicator::rank() {
