@@ -4,13 +4,6 @@ set -e
 
 TEST_DIR=$PWD
 
-# Figure out where Pegasus is installed
-export PEGASUS_BIN_DIR=`pegasus-config --bin`
-if [ "x$PEGASUS_BIN_DIR" = "x" ]; then
-    echo "Please make sure pegasus-plan is in your path"
-    exit 1
-fi
-
 echo "Generating the dax..."
 export PYTHONPATH=`pegasus-config --python`
 python daxgen.py dax.xml
