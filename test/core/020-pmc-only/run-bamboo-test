@@ -13,7 +13,7 @@ echo "Planning workflow..."
 ./plan.sh
 
 echo "Running PMC..."
-RUN_DIR=$(find work -name 'run00*' | sort -n | tail -1)
+RUN_DIR=$(find submit -name 'run00*' | sort -n | tail -1)
 mpiexec -n 4 $PEGASUS_BIN_DIR/pegasus-mpi-cluster --jobstate-log --per-task-stdio --max-wall-time 5 $RUN_DIR/pmc-only-0.pmc
 
 exit $?

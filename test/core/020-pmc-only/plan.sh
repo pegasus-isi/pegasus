@@ -15,10 +15,16 @@ cat > sites.xml <<END
         <head-fs>
             <scratch>
                 <shared>
-                    <file-server protocol="file" url="file://" mount-point="$TEST_DIR/exec"/>
-                    <internal-mount-point mount-point="$TEST_DIR/exec"/>
+                    <file-server protocol="file" url="file://" mount-point="$TEST_DIR/work"/>
+                    <internal-mount-point mount-point="$TEST_DIR/work"/>
                 </shared>
             </scratch>
+            <storage>
+                <shared>
+                    <file-server protocol="file" url="file://" mount-point="$TEST_DIR/outputs"/>
+                    <internal-mount-point mount-point="$TEST_DIR/outputs"/>
+                </shared>
+            </storage>
         </head-fs>
     </site>
 </sitecatalog>
@@ -27,8 +33,10 @@ END
 echo "Planning the workflow..."
 pegasus-plan \
     --conf pegasusrc \
-    --dir work \
+    --dir submit \
     --dax dax.xml \
-    --sites local
+    --sites local \
+    --output local \
+    --nocleanup
 
 exit $?
