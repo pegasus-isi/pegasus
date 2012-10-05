@@ -111,7 +111,7 @@ public class PBS extends Abstract {
 
             //append the arguments
             sb.append( " --jobstate-log --per-task-stdio" );
-            sb.append( " --maxwalltime " ).append( 60 );
+            sb.append( " -—max-wall-time " ).append( 60 );
             sb.append( " ").append( this.getDAGFilename( dag, ".pbs") );
 
             writer.println( sb.toString() );
