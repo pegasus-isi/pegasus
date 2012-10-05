@@ -18,6 +18,13 @@
 package edu.isi.pegasus.planner.common;
 
 import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.planner.catalog.site.classes.DirectoryType;
+import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
+import edu.isi.pegasus.planner.catalog.site.classes.HeadNodeFS;
+import edu.isi.pegasus.planner.catalog.site.classes.HeadNodeStorage;
+import edu.isi.pegasus.planner.catalog.site.classes.InternalMountPoint;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.transfer.sls.SLSFactory;
 import java.util.Iterator;
@@ -100,11 +107,11 @@ public class PegasusConfiguration {
             if( slsImplementor.equalsIgnoreCase( DEPRECATED_CONDOR_CONFIGURATION_VALUE ) ){
 
                 for( String site : (Set<String>)options.getExecutionSites() ){
-                    //sanity check to make sure staging site is set to local
+                    //sanity check to make sure staging outputSite is set to local
                     String stagingSite = options.getStagingSite( site );
                     if( stagingSite == null ){
                         stagingSite = "local";
-                        //set it to local site
+                        //set it to local outputSite
                         mLogger.log( "Setting staging site for " + site + " to " + stagingSite ,
                                       LogManager.CONFIG_MESSAGE_LEVEL );
                         options.addToStagingSitesMappings( site , stagingSite );
@@ -123,6 +130,85 @@ public class PegasusConfiguration {
 
             }
         }
+    }
+
+    
+
+    /**
+     * Updates Site Store and options based on the planner options set by the user
+     * on the command line
+     * 
+     * @param store     the outputSite store
+     * @param options   the planner options.
+     */
+    public void updateSiteStoreAndOptions( SiteStore store, PlannerOptions  options ) {
+        //sanity check to make sure that output outputSite is loaded
+        String outputSite = options.getOutputSite();
+            
+        if( options.getOutputSite() != null ){
+            if( !store.list().contains( outputSite  ) ){
+                StringBuffer error = new StringBuffer( );
+                error.append( "The output site ["  ).append(  outputSite  ).
+                      append( "] not loaded from the site catalog." );
+                throw new  RuntimeException( error.toString() );
+            }
+        }
+        
+        //check if a user specified an output directory
+        String directory = options.getOutputDirectory();
+        if( directory != null ){
+            outputSite = ( outputSite == null )?
+                          "local": //user did not specify an output site, default to local
+                          outputSite;//stick with what user specified
+            
+            options.setOutputSite( outputSite );
+            
+            SiteCatalogEntry entry = store.lookup( outputSite );
+            
+            //update all storage file server paths to refer to the directory
+            StringBuffer message = new StringBuffer();
+            message.append( "Updating storage file server paths for site " ).append( outputSite ).
+                    append( " to directory " ).append( directory );
+            mLogger.log( message.toString(), LogManager.CONFIG_MESSAGE_LEVEL );
+            
+            HeadNodeFS headNode = entry.getHeadNodeFS();
+            if( headNode == null){
+                throw new RuntimeException( "HeadNode Filesystem not specified for output site " + outputSite );
+            }
+            HeadNodeStorage storage = headNode.getStorage();
+            if( storage == null ){
+                throw new RuntimeException( "HeadNode Storage not specified for output site " + outputSite );
+            }
+            
+            //we first check for local directory
+            DirectoryType storageDirectory = storage.getLocalDirectory();
+            if( storageDirectory == null || storageDirectory.isEmpty()){
+                //default to shared directory
+                storageDirectory = storage.getSharedDirectory();
+            }
+            if( storageDirectory == null || storageDirectory.isEmpty()){
+                //now throw an error
+                throw new RuntimeException( "No directory specified for HeadNode Storage  for output site " + outputSite );
+            }
+            
+            //update the internal mount point and external URL's
+            InternalMountPoint  imp = storageDirectory.getInternalMountPoint();
+            if( imp == null ){
+                //now throw an error
+                throw new RuntimeException( "No internal mount point specified  for HeadNode Storage Directory  for output site " + outputSite );
+            
+            }
+            imp.setMountPoint( directory );
+            for ( Iterator<FileServer> it = storageDirectory.getFileServersIterator(); it.hasNext(); ){
+                FileServer server = it.next();
+                server.setMountPoint( directory );
+            }
+            
+            //log the updated output site entry
+            mLogger.log( "Updated output site entry is " + entry,
+                         LogManager.DEBUG_MESSAGE_LEVEL );
+        }
+        
     }
     
     /**

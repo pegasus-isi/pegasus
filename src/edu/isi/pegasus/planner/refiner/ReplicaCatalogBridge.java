@@ -128,6 +128,18 @@ public class ReplicaCatalogBridge
      */
     public static final String CACHE_READ_ONLY_KEY = "read.only";
 
+    
+    /**
+     * The name of the Replica Catalog Implementer that serves as the source for
+     * cache files.
+     */
+    public static final String DIRECTORY_REPLICA_CATALOG_IMPLEMENTER = "Directory";
+
+    /**
+     * The name of the source key for Replica Catalog Implementer that serves as
+     * cache
+     */
+    public static final String DIRECTORY_REPLICA_CATALOG_KEY = "directory";
 
     /**
      * The name of the URL key for the replica catalog impelementer to be picked
@@ -167,6 +179,12 @@ public class ReplicaCatalogBridge
      * the cache replica catalogs.
      */
     private ReplicaStore mCacheStore;
+    
+    /**
+     * The replica store where we store all the results that are queried from
+     * the input directory specified at the command line.
+     */
+    private ReplicaStore mDirectoryReplicaStore;
 
 
     /**
@@ -257,6 +275,7 @@ public class ReplicaCatalogBridge
         mRCDown = false;
         mCacheStore = new ReplicaStore();
         mInheritedReplicaStore = new ReplicaStore();
+        mDirectoryReplicaStore = new ReplicaStore();
         mTreatCacheAsRC = mProps.treatCacheAsRC();
         mDefaultTCRCCreated = false;
 
@@ -331,6 +350,12 @@ public class ReplicaCatalogBridge
                 mProps.setProperty( key, "1" );
             }
         }
+        
+        //incorporate all mappings from input directory if specified
+        String input = options.getInputDirectory();
+        if( input != null ){
+            mDirectoryReplicaStore = getReplicaStoreFromDirectory( input );
+        }
             
         //incorporate the caching if any
         if ( !options.getCacheFiles().isEmpty() ) {
@@ -381,6 +406,13 @@ public class ReplicaCatalogBridge
                     mSearchFiles.size(),
                     LogManager.DEBUG_MESSAGE_LEVEL);
 
+        //check if any exist in input directory
+        lfnsFound.addAll( this.mDirectoryReplicaStore.getLFNs( mSearchFiles ) );
+        mLogger.log(lfnsFound.size()  + " entries found in cache of total " +
+                    mSearchFiles.size(),
+                    LogManager.DEBUG_MESSAGE_LEVEL);
+
+        
         //check in the main replica catalog
         if ( this.mDAXReplicaStore.isEmpty() &&
                 ( mRCDown || mReplicaCatalog == null )) {
@@ -424,6 +456,11 @@ public class ReplicaCatalogBridge
             mLogger.log( "Location of file " + rl +
                          " retrieved from cache" , LogManager.DEBUG_MESSAGE_LEVEL);
             return rl;
+        }
+        
+        //we prefer location in Directory over the DAX entries
+        if( this.mDirectoryReplicaStore.containsLFN( lfn ) ){
+            return this.mDirectoryReplicaStore.getReplicaLocation(lfn);
         }
 
 
@@ -788,6 +825,7 @@ public class ReplicaCatalogBridge
         return sb.toString();
     }
 
+    
 
 
 
@@ -878,6 +916,55 @@ public class ReplicaCatalogBridge
         mLogger.logEventCompletion();
         return store;
     }
+    
+    /**
+     * Loads the mappings from the input directory 
+     * 
+     * @param directory  the directory to load from
+     */
+    private ReplicaStore getReplicaStoreFromDirectory(String directory) {
+        ReplicaStore store = new ReplicaStore();
+        Properties properties = mProps.getVDSProperties().matchingSubset(
+                                                              ReplicaCatalog.c_prefix,
+                                                              false );
+
+        mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_LOAD_DIRECTORY_CACHE, 
+                               LoggingKeys.DAX_ID,
+                               mDag.getAbstractWorkflowName() );
+
+        ReplicaCatalog catalog = null;
+        
+        //set the appropriate property to designate path to file
+        properties.setProperty( ReplicaCatalogBridge.DIRECTORY_REPLICA_CATALOG_KEY, directory );
+
+            
+        mLogger.log("Loading  from directory: " + directory,  LogManager.DEBUG_MESSAGE_LEVEL);
+        try{
+            catalog = ReplicaFactory.loadInstance( DIRECTORY_REPLICA_CATALOG_IMPLEMENTER,
+                                                   properties );
+            
+            
+            store.add( catalog.lookup( mSearchFiles ) );
+        }
+        catch( Exception e ){
+            mLogger.log( "Unable to load from directory  " + directory,
+                             e,
+                             LogManager.ERROR_MESSAGE_LEVEL );
+        }
+        finally{
+            if( catalog != null ){
+                catalog.close();
+            }
+        }
+            
+        
+
+        
+        
+        mLogger.logEventCompletion();
+        return store;
+    }
+
 
     /**
      * Reads in the environment variables into memory from the properties file

@@ -264,6 +264,17 @@ public class PlannerOptions extends Data implements Cloneable{
      * the path to the shiwa bundle
      */
     private String mShiwaBundle;
+    
+    /**
+     * the input directory 
+     */
+    private String mInputDir;
+    
+    
+    /**
+     * the output directory 
+     */
+    private String mOutputDir;
 
     /**
      * Default Constructor.
@@ -307,6 +318,8 @@ public class PlannerOptions extends Data implements Cloneable{
         mOriginalArgumentString = null;
         mStagingSitesMap  = new HashMap<String,String>();
         mShiwaBundle      = null;
+        mInputDir         = null;
+        mOutputDir        = null;
     }
 
     /**
@@ -496,6 +509,24 @@ public class PlannerOptions extends Data implements Cloneable{
         return this.mMegadag;
     }
 
+    /**
+     * Returns the input directory.
+     * 
+     * @return the input directory for the workflow
+     */
+    public String getInputDirectory(){
+        return this.mInputDir;
+    }
+    
+    /**
+     * Returns the output directory
+     * 
+     * @return the output directory for the workflow
+     */
+    public String getOutputDirectory(){
+        return this.mOutputDir;
+    }
+    
     /**
      * Returns the output site where to stage the output .
      *
@@ -1026,6 +1057,26 @@ public class PlannerOptions extends Data implements Cloneable{
     }
 
     /**
+     * Set the input directory.
+     * 
+     * @param input the input directory for the workflow
+     */
+    public void setInputDirectory( String input ){
+        this.mInputDir = sanitizePath( input );
+    }
+    
+    
+    /**
+     * Set the output directory.
+     * 
+     * @param output the input directory for the workflow
+     */
+    public void setOutputDirectory( String output ){
+        this.mOutputDir = sanitizePath( output ) ;
+    }
+    
+    
+    /**
      * Sets the output site specified by the user.
      *
      * @param site the output site.
@@ -1309,7 +1360,9 @@ public class PlannerOptions extends Data implements Cloneable{
                     "\n Staging Sites        " + this.stagingSiteMappingToString() +
                     "\n Cache Files          " + this.setToString(mCacheFiles,",") +
                     "\n Inherited RC Files   " + this.setToString(mInheritedRCFiles,",") +
-                    "\n Output Pool          " + mOutputPool +
+                    "\n Input Directory      " + this.mInputDir + 
+                    "\n Output Directory     " + this.mOutputDir +
+                    "\n Output Site          " + mOutputPool +
                     "\n Submit to CondorG    " + mSubmit +
                     "\n Display Help         " + mDisplayHelp +
                     "\n Logging Level        " + mLoggingLevel +
@@ -1546,6 +1599,8 @@ public class PlannerOptions extends Data implements Cloneable{
         pOpt.mCacheFiles     = cloneSet(this.mCacheFiles);
         pOpt.mInheritedRCFiles       = cloneSet(this.mInheritedRCFiles);
         pOpt.mNonStandardJavaOptions = cloneSet( this.mNonStandardJavaOptions );
+        pOpt.mInputDir       = this.mInputDir;
+        pOpt.mOutputDir      = this.mOutputDir;
         pOpt.mOutputPool     = this.mOutputPool;
         pOpt.mDisplayHelp    = this.mDisplayHelp;
         pOpt.mLoggingLevel   = this.mLoggingLevel;

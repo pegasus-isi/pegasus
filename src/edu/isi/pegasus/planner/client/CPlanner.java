@@ -420,16 +420,8 @@ public class CPlanner extends Executable{
         }
         mLogger.log( "Execution sites are         " + eSites, LogManager.DEBUG_MESSAGE_LEVEL );
 
-        //sanity check to make sure that output site is loaded
-        if( mPOptions.getOutputSite() != null ){
-            String site = mPOptions.getOutputSite();
-            if( !s.list().contains( site ) ){
-                StringBuffer error = new StringBuffer( );
-                error.append( "The output site ["  ).append(  site ).
-                      append( "] not loaded from the site catalog." );
-                throw new  RuntimeException( error.toString() );
-            }
-        }
+        //update the local/output site entry if required
+        configurator.updateSiteStoreAndOptions( s, mPOptions );
         
         mBag.add( PegasusBag.SITE_STORE, s );
         mBag.add( PegasusBag.TRANSFORMATION_CATALOG, 
@@ -934,6 +926,10 @@ public class CPlanner extends Executable{
                     options.setInheritedRCFiles( g.getOptarg() );
                     break;
                     
+                case 'I'://input-dir
+                    options.setInputDirectory( g.getOptarg() );
+                    break;
+                    
                 case 'j'://job-prefix
                     options.setJobnamePrefix( g.getOptarg() );
                     break;
@@ -948,6 +944,10 @@ public class CPlanner extends Executable{
 
                 case 'o'://output
                     options.setOutputSite(g.getOptarg());
+                    break;
+                    
+                case 'O'://output-dir
+                    options.setOutputDirectory( g.getOptarg() );
                     break;
 
                 case 'p'://partition and plan
@@ -1167,7 +1167,7 @@ public class CPlanner extends Executable{
      * options
      */
     public LongOpt[] generateValidOptions(){
-        LongOpt[] longopts = new LongOpt[33];
+        LongOpt[] longopts = new LongOpt[35];
 
         longopts[0]   = new LongOpt( "dir", LongOpt.REQUIRED_ARGUMENT, null, '8' );
         longopts[1]   = new LongOpt( "dax", LongOpt.REQUIRED_ARGUMENT, null, 'd' );
@@ -1205,6 +1205,8 @@ public class CPlanner extends Executable{
         longopts[30]  = new LongOpt( "force-replan" , LongOpt.NO_ARGUMENT, null, '7' );
         longopts[31]  = new LongOpt( "staging-site", LongOpt.REQUIRED_ARGUMENT, null, '9' );
         longopts[32]  = new LongOpt( "shiwa-bundle", LongOpt.REQUIRED_ARGUMENT, null, 'B' );
+        longopts[33]  = new LongOpt( "input-dir" , LongOpt.REQUIRED_ARGUMENT, null, 'I' );
+        longopts[34]  = new LongOpt( "output-dir" , LongOpt.REQUIRED_ARGUMENT, null, 'O' );
         return longopts;
     }
 
@@ -1221,7 +1223,7 @@ public class CPlanner extends Executable{
           "\n [-f] [--force-replan]  [-b basename] [-C t1[,t2[..]]  [--dir  <base dir  for o/p files>] [-j <job-prefix>] " +
           "\n [--relative-dir <relative directory to base directory> ] [--relative-submit-dir <relative submit directory to base directory>]" +
           "\n [--inherited-rc-files f1[,f2[..]]]  " +
-          "\n [-g <vogroup>] [-o <output site>]  [-r[dir name]] [-F option[=value] ] " +
+          "\n [-g <vogroup>] [-I <input dir>] [-O <output dir>] [-o <output site>]  [-r[dir name]] [-F option[=value] ] " +
           //"[--rescue <number of rescues before replanning>]"
           "\n [-S] [-n] [-v] [-q] [-V] [-X[non standard jvm option] [-h]";
 
@@ -1241,7 +1243,7 @@ public class CPlanner extends Executable{
            "\n Usage: pegasus-plan [-Dprop  [..]] --dax|--pdax <file> [--sites <execution sites>] " +
            "\n [--staging-site s1=ss1[,s2=ss2[..]] [--basename prefix] [--cache f1[,f2[..]] [--cluster t1[,t2[..]] [--conf <path to property file>]" +
            "\n [--dir <dir for o/p files>] [--force] [--force-replan] [--forward option=[value] ] [--group vogroup] [--nocleanup] " +
-           "\n [--output output site] [--randomdir=[dir name]]   [--verbose] [--version][--help] " +
+           "\n [--input-dir <input dir>] [--output-dir <output dir>] [--output output site] [--randomdir=[dir name]]   [--verbose] [--version][--help] " +
            "\n" +
            "\n Mandatory Options " +
            "\n -d  fn "+
@@ -1264,6 +1266,8 @@ public class CPlanner extends Executable{
            "\n                    can be repeated multiple times." +
            "\n -g |--group        the VO Group to which the user belongs " +
            "\n -j |--job-prefix   the prefix to be applied while construction job submit filenames " +
+           "\n -I |--input-dir    an optional input directory where the input files reside on submit host" +
+           "\n -O |--output-dir   an optional out directory where the output files shoudl be transferred to on submit host" +
            "\n -o |--output       the output site where the data products during workflow execution are transferred to." +
            "\n -s |--sites        comma separated list of executions sites on which to map the workflow." +
            "\n --staging-site     comma separated list of key=value pairs , where the key is the execution site and value is the staging site for that execution site." +
