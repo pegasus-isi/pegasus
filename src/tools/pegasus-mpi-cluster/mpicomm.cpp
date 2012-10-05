@@ -7,6 +7,8 @@
 MPICommunicator::MPICommunicator(int *argc, char ***argv) {
     MPI_Init(argc, argv);
     MPI_Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_ARE_FATAL);
+    bytes_sent = 0;
+    bytes_recvd = 0;
 }
 
 MPICommunicator::~MPICommunicator() {
