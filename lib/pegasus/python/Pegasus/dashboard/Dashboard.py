@@ -131,6 +131,17 @@ class Dashboard(object):
         for workflow in self._workflows:
             workflow.dax_label = "<a href='" + url_for ('workflow', root_wf_id=workflow.wf_id, wf_uuid=workflow.wf_uuid) + "'>" + workflow.dax_label + "</a>"
 
+    def plots_gantt_chart (self):
+        try:
+            #Expand has to be set to false. The method does not provide information when expand set to True.
+            workflow = stampede_statistics.StampedeStatistics (self.__get_wf_db_url (), False)
+            workflow.initialize (self._root_wf_uuid)
+            gantt_chart = workflow.get_job_states ()
+
+            return gantt_chart
+        finally:
+            Dashboard.close (workflow)
+            
     def plots_time_chart (self, wf_id, time_filter='hour'):
         try:
             workflow = queries.WorkflowInfo (self.__get_wf_db_url (), wf_id)

@@ -312,6 +312,15 @@ def time_chart (root_wf_id, wf_id):
     
     return render_template ('workflow/charts/time_chart.json', root_wf_id=root_wf_id, wf_id=wf_id, time_chart_job=time_chart_job, time_chart_invocation=time_chart_invocation)
 
+@app.route('/root/<root_wf_id>/workflow/<wf_id>/charts/gantt_chart', methods=['GET'])
+def gantt_chart (root_wf_id, wf_id):
+    """
+    Get information required to generate a Gantt chart.
+    """
+    dashboard = Dashboard (_master_db_url, root_wf_id, wf_id)
+    gantt_chart = dashboard.plots_gantt_chart ()
+    return render_template ('workflow/charts/gantt_chart.json', root_wf_id=root_wf_id, wf_id=wf_id, gantt_chart=gantt_chart)
+
 
 def __get_datatables_args ():
     """
@@ -375,7 +384,10 @@ def dec_to_float (dec):
     """
     Decimal to Float 
     """
-    return float (dec)
+    if dec:
+        return float (dec)
+    else:
+        return None
 
 
 @app.template_filter ('time_to_date_str')

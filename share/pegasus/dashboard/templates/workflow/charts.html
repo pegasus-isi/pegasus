@@ -1,11 +1,17 @@
 {% extends "base.html" %}
 {% block title %}Charts{% endblock %}
 {% block javascript_includes %}
+
 <script type="text/javascript" src="{{ url_for ('static', filename='js/highcharts/highcharts.src.js') }}"></script>
+<script type="text/javascript" src="{{ url_for ('static', filename='js/highcharts/highcharts-more.js') }}"></script>
 <script type="text/javascript" src="{{ url_for ('static', filename='js/charts.js') }}"></script>
 {% endblock %}
 {% block javascript_init %}
 <script type="text/javascript" charset="utf-8">
+var ganttChart;
+var ganttChartOpt;
+var ganttChartData;
+
 var timeChart;
 var timeChartOpt;
 var timeChartData;
@@ -35,7 +41,7 @@ function getTimeChartData ()
 		dataType: 'json',
 		error: function (xhr, textStatus, errorThrown)
 		{
-			alert ('Error occured: ' + xhr.responseText + textStatus);
+			alert ('Error occured: ' + textStatus + xhr.responseText);
 		},
 		success: function (data, textStatus, xhr) 
 		{
@@ -47,10 +53,31 @@ function getTimeChartData ()
 	$.ajax (ajaxOpt)
 }
 
+function getGanttChartData ()
+{
+	var ajaxOpt = 
+	{
+		url : '{{ url_for ("gantt_chart", root_wf_id = root_wf_id, wf_id = wf_id) }}',
+		dataType: 'json',
+		error: function (xhr, textStatus, errorThrown)
+		{
+			alert ('Error occured: ' + textStatus + xhr.responseText);
+		},
+		success: function (data, textStatus, xhr) 
+		{
+			ganttChartData = data
+		},
+		async: false
+	};
+	
+	$.ajax (ajaxOpt)
+}
+
 $(document).ready (function () 
 {
 	radializeChartColors ();
     plotTimeChart ();
+    plotGanttChart ();
     
     jobDistributionOpt =  
 	{
@@ -124,6 +151,16 @@ jobDistribution = new Highcharts.Chart (jobDistributionOpt);
 {% block title_header %}Charts{% endblock %}
 {% block content %}
 <div id="plots">
+	<section id="gantt_chart_container">
+		<div id="gantt_chart" style="height: 800px;"></div>
+		<!--
+		<div id="gantt_chart_options">
+			<input type="radio" id="by_job2"     name="gantt_chrt" onclick="" checked="checked" /><label for="by_job">By Jobs</label>
+			<input type="radio" id="by_runtime2" name="gantt_chrt" onclick="" /><label for="by_runtime">By Invocations</label>
+		</div>
+		-->
+	</section>
+	<br />
 	<section id="time_chart_container">
 		<div id="time_chart"></div>
 		<div id="time_chart_options">
