@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <math.h>
+#include <cstdlib>
 
 #include "strlib.h"
 #include "dag.h"
