@@ -16,8 +16,6 @@ using std::vector;
 using std::map;
 using std::list;
 
-#define MAX_LINE 16384
-
 Task::Task(const string &name, const string &command, unsigned memory, unsigned cpus, unsigned tries, int priority, const map<string,string> &pipe_forwards, const map<string,string> &file_forwards) {
     this->name = name;
     this->command = command;
@@ -163,9 +161,15 @@ void DAG::read_dag() {
     const char *DELIM = " \t\n\r";
     
     string pegasus_id = "";
-    char line[MAX_LINE];
-    while (fgets(line, MAX_LINE, this->dag) != NULL) {
+    char *line = NULL;
+    size_t linecap = 0;
+    ssize_t linelen;
+    while ((linelen = getline(&line, &linecap, this->dag)) > 0) {
         string rec(line);
+        
+        free(line);
+        line = NULL;
+        
         trim(rec);
         
         // Blank lines
@@ -180,7 +184,7 @@ void DAG::read_dag() {
             split(v, rec, DELIM, 2);
             
             if (v.size() < 3) {
-                myfailure("Invalid TASK record: %s\n", line);
+                myfailure("Invalid TASK record: %s\n", rec.c_str());
             }
             
             string name = v[1];
@@ -350,7 +354,7 @@ void DAG::read_dag() {
             split(v, rec, DELIM, 2);
             
             if (v.size() < 3) {
-                myfailure("Invalid EDGE record: %s\n", line);
+                myfailure("Invalid EDGE record: %s\n", rec.c_str());
             }
             
             string parent = v[1];
@@ -364,7 +368,7 @@ void DAG::read_dag() {
             split(v, rec, DELIM, 3);
             
             if (v.size() < 4) {
-                myfailure("Invalid #@ record: %s\n", line);
+                myfailure("Invalid #@ record: %s\n", rec.c_str());
             }
 
             pegasus_id = v[1];
@@ -373,7 +377,7 @@ void DAG::read_dag() {
         } else if (rec[0] == '#') {
             // Comments
         } else {
-            myfailure("Invalid DAG record: %s", line);
+            myfailure("Invalid DAG record: %s", rec.c_str());
         }
     }
 }
@@ -395,9 +399,15 @@ void DAG::read_rescue(const string &filename) {
     }
     
     const char *DELIM = " \t\n\r";
-    char line[MAX_LINE];
-    while (fgets(line, MAX_LINE, rescuefile) != NULL) {
+    char *line = NULL;
+    size_t linecap = 0;
+    ssize_t linelen;
+    while ((linelen = getline(&line, &linecap, rescuefile)) > 0) {
         string rec(line);
+
+        free(line);
+        line = NULL;
+        
         trim(rec);
         
         // Blank lines
@@ -416,7 +426,7 @@ void DAG::read_rescue(const string &filename) {
             split(v, rec, DELIM, 1);
             
             if (v.size() < 2) {
-                myfailure("Invalid DONE record: %s\n", line);
+                myfailure("Invalid DONE record: %s\n", rec.c_str());
             }
             
             string name = v[1];
@@ -428,9 +438,10 @@ void DAG::read_rescue(const string &filename) {
             Task *task = this->get_task(name);
             task->success = true;
         } else {
-            myfailure("Invalid rescue record: %s", line);
+            myfailure("Invalid rescue record: %s", rec.c_str());
         }
     }
     
     fclose(rescuefile);
 }
+
