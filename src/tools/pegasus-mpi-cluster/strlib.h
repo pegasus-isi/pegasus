@@ -5,11 +5,15 @@
 #include <list>
 #include <string>
 
-void trim(std::string &str, const std::string &delim = " \t\r\n");
+using std::vector;
+using std::list;
+using std::string;
 
-void split(std::vector<std::string> &v, const std::string &line, const std::string &delim = " \t\r\n", unsigned maxsplits = 0);
+void trim(string &str, const string &delim = " \t\r\n");
 
-void split_args(std::list<std::string> &v, const std::string &line);
+void split(vector<string> &v, const string &line, const string &delim = " \t\r\n", unsigned maxsplits = 0);
+
+void split_args(list<string> &v, const string &line);
 
 
 #endif /* STRLIB_H */
