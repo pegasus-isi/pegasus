@@ -199,7 +199,7 @@ function getGanttSeries ()
 	}
 	
 	series.push ({name:"Job", data: job});
-	series.push ({name:"Condor", data: condor});
+	//series.push ({name:"Condor", data: condor});
 	//series.push ({name:"Grid", data: grid});
 	//series.push ({name:"Pre", data: pre});
 	//series.push ({name:"Exec", data: exec});
