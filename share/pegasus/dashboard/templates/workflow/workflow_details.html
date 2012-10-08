@@ -79,16 +79,6 @@ $(document).ready (function ()
 		} 
 	});
 	
-	$('.workflow_info').dataTable (
-	{
-		"bJQueryUI" : true,
-		"bFilter" : false,
-		"bPaginate" : false,
-		"bInfo" : false,
-		"bSort" : false
-
-	});
-
 	chartOptions =  
 	{
 		chart: 
@@ -155,6 +145,8 @@ $(document).ready (function ()
 	};
     
 chart = new Highcharts.Chart (chartOptions);
+verticalTableInit ('#workflow_text_info');
+verticalTableInit ('#workflow_stats_info');
 });
 </script>
 {% endblock %}
@@ -166,26 +158,38 @@ chart = new Highcharts.Chart (chartOptions);
 	<tr>
 	<td>
 		<table id="workflow_text_info" class="workflow_info">
-			<thead>
-				<tr>
-					<th>Label</th>
-					<th>Type</th>
-					<th>Progress</th>
-					<th>Submit Host</th>
-					<th>User</th>
-					<th>Submit Directory</th>
-				</tr>
-			</thead>
-			<tbody>
-				<tr>
-					<td>{{ workflow.dax_label }}</td>
-					<td>{% if workflow.root_wf_id ==  workflow.wf_id %}root-wf {% else %}sub-wf{% endif %}</td>
-					<td>{{ workflow.state }}</td>
-					<td>{{ workflow.submit_hostname }}</td>
-					<td>{{ workflow.user }}</td>
-					<td>{{ workflow.submit_dir }}</td>
-				</tr>
-			</tbody>
+			<tr>
+				<th>Label</th>
+				<td>{{ workflow.dax_label }}</td>
+			</tr>
+			<tr>
+				<th>Type</th>
+				<td>{% if workflow.root_wf_id ==  workflow.wf_id %}root-wf {% else %}sub-wf{% endif %}</td>
+			</tr>
+			<tr>
+				<th>Progress</th>
+				<td>{{ workflow.state }}</td>
+			</tr>
+			<tr>
+				<th>Submit Host</th>
+				<td>{{ workflow.submit_hostname }}</td>
+			</tr>
+			<tr>
+				<th>User</th>
+				<td>{{ workflow.user }}</td>
+			</tr>
+			<tr>
+				<th>Submit Directory</th>
+				<td>{{ workflow.submit_dir }}</td>
+			</tr>
+			<tr>
+				<th>Wall Time</th>
+				<td>{{ statistics ['wall-time']|time_to_str }}</td>
+			</tr>
+			<tr>
+				<th>Cumulative Wall Time</th>
+				<td>{{ statistics ['cum-time']|time_to_str }}</td>
+			</tr>
 		</table>
 	</td>
 	<td>
@@ -199,24 +203,18 @@ chart = new Highcharts.Chart (chartOptions);
 	</tr>	
 	</table>
 	<table id="workflow_stats_info" class="workflow_info">
-			<thead>
-				<tr>
-					<th>Wall Time</th>
-					<th>Cumulative Wall Time</th>
-					<th>Successful Jobs</th>
-					<th>Failed Jobs</th>
-					<th>Total Jobs</th>
-				</tr>
-			</thead>
-			<tbody>
-				<tr>
-					<td>{{ statistics ['wall-time']|time_to_str }}</td>
-					<td>{{ statistics ['cum-time']|time_to_str }}</td>
-					<td>{{ statistics ['successful-jobs'] }}</td>
-					<td>{{ statistics ['failed-jobs'] }}</td>
-					<td>{{ statistics ['total-jobs'] }}</td>
-				</tr>
-			</tbody>
+		<tr>
+			<th>Successful Jobs</th>
+			<td>{{ statistics ['successful-jobs']|time_to_str }}</td>
+		</tr>
+		<tr>
+			<th>Failed Jobs</th>
+			<td>{{ statistics ['failed-jobs']|time_to_str }}</td>
+		</tr>
+		<tr>
+			<th>Total Jobs</th>
+			<td>{{ statistics ['total-jobs']|time_to_str }}</td>
+		</tr>
 	</table>
 	<br/>
 	<a href="{{ url_for ('charts', root_wf_id = root_wf_id, wf_id = wf_id) }}" class="ui-state-default" style="text-decoration: none; padding: 0px 5px 0px 5px;">Charts</a>
