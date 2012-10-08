@@ -110,17 +110,13 @@ public class PBS extends Abstract {
                append( FindExecutable.findExec( "pegasus-mpi-cluster" ) );
 
             //append the arguments
-            sb.append( " --jobstate-log --per-task-stdio" );
+            sb.append( " --monitord-hack --per-task-stdio" );
             sb.append( " --max-wall-time " ).append( 60 );
-            sb.append( " ").append( this.getDAGFilename( dag, ".pmc") );
+            sb.append( " ").append( this.getDAGFilename( dag, ".dag") );
 
             writer.println( sb.toString() );
-
-
-//Call it WORKFLOW.pbs, where WORKFLOW is the name of the workflow from the DAX and save it in the submit directory. The user can modify it for their environment manually. The important thing is to add the 3 arguments: --jobstate-log, --per-task-stdio, and --max-wall-time.)
             
             writer.close();
-        
         } 
         catch (IOException ioe) {
             throw new CodeGeneratorException( "IOException while writing out the PBS file for the workflow" ,

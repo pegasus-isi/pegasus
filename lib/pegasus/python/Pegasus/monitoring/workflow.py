@@ -49,6 +49,7 @@ except:
 
 # Used while reading the DAG file
 re_parse_dag_submit_files = re.compile(r"JOB\s+(\S+)\s(\S+)(\s+DONE)?", re.IGNORECASE)
+re_parse_pmc_submit_files = re.compile(r"TASK\s+(\S*)\s(\S+)", re.IGNORECASE)
 re_parse_dag_script = re.compile(r"SCRIPT (?:PRE|POST)\s+(\S+)\s(\S+)\s(.*)", re.IGNORECASE)
 re_parse_dag_subdag = re.compile(r"SUBDAG EXTERNAL\s+(\S+)\s(\S+)\s?(?:DIR)?\s?(\S+)?", re.IGNORECASE)
 
@@ -159,6 +160,16 @@ class Workflow:
                             else:
                                 # No entry for this job, let's create a new one
                                 self._job_info[my_jobid] = [my_sub, None, None, None, None, False, None, None]
+                elif dag_line.strip().lower().startswith("task"):
+                    # This is a PMC DAG entry
+                    my_match = re_parse_pmc_submit_files.search(dag_line)
+                    if my_match:
+                        my_jobid = my_match.group(1)
+                        # In the PMC case there is no submit script
+                        if my_jobid in self._job_info:
+                            self._job_info[my_jobid][0] = None
+                        else:
+                            self._job_info[my_jobid] = [None, None, None, None, None, False, None, None]
                 elif (dag_line.lower()).find("script post") >= 0:
                     # Found SCRIPT POST line, parse it
                     my_match = re_parse_dag_script.search(dag_line)
@@ -1960,11 +1971,18 @@ class Workflow:
         my_job = self._jobs[jobid, job_submit_seq]
 
         # Make sure if we have a file for this entry
-        # (should always be there, except for SUBDAG jobs)
+        # (should always be there, except for SUBDAG jobs and PMC)
         if self._job_info[jobid][0] is None:
             if self._job_info[jobid][5] is True:
                 # Yes, this is a SUBDAG job... let's set the site as local for this job
                 my_job._site_name = "local"
+            else:
+                # In the PMC case we need to set the names of the out and error
+                # file because we can't parse the .sub file, which doesn't exist
+                my_job._input_file = None
+                my_job._output_file = "%s.out" % my_job._exec_job_id
+                my_job._error_file = "%s.err" % my_job._exec_job_id
+                # TODO Find the actual site name for PMC tasks
             return None, None
 
         # Parse sub file

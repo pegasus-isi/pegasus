@@ -12,8 +12,19 @@ fi
 echo "Planning workflow..."
 ./plan.sh
 
-echo "Running PMC..."
+
 RUN_DIR=$(find submit -name 'run00*' | sort -n | tail -1)
-mpiexec -n 4 $PEGASUS_BIN_DIR/pegasus-mpi-cluster --jobstate-log --per-task-stdio --max-wall-time 5 $RUN_DIR/pmc-only-0.pmc
+RUN_DIR=$(cd $RUN_DIR && pwd)
+echo "RUN_DIR is $RUN_DIR"
+
+echo "Running PMC..."
+mpiexec -n 4 $PEGASUS_BIN_DIR/pegasus-mpi-cluster --monitord-hack --max-wall-time 5 $RUN_DIR/pmc-only-0.dag
+RC=$?
+if [ $RC -ne 0 ]; then
+    exit $RC
+fi
+
+echo "Running monitord..."
+pegasus-monitord -n -r $RUN_DIR/pmc-only-0.dag.dagman.out
 
 exit $?

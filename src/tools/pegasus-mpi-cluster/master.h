@@ -111,6 +111,20 @@ public:
     void on_event(WorkflowEvent event, Task *task);
 };
 
+class DAGManLog : public WorkflowEventListener {
+private:
+    string logpath;
+    string dagpath;
+    FILE *logfile;
+    
+    void open();
+    void close();
+public:
+    DAGManLog(const string &logpath, const string &dagpath);
+    ~DAGManLog();
+    void on_event(WorkflowEvent event, Task *task);
+};
+
 typedef priority_queue<Task *, vector<Task *>, TaskPriority> TaskQueue;
 
 typedef list<Slot *> SlotList;

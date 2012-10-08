@@ -79,7 +79,8 @@ void usage() {
             "   --strict-limits      Enforce strict task resource limits\n"
             "   --max-wall-time T    Maximum wall time of the job in minutes\n"
             "   --per-task-stdio     Write each task's stdout/stderr to a different file\n"
-            "   --jobstate-log       Generate jobstate.log\n",
+            "   --jobstate-log       Generate jobstate.log\n"
+            "   --monitord-hack      Generate a .dagman.out file to trick monitord\n",
             program
         );
     }
@@ -117,7 +118,8 @@ int mpidag(int argc, char *argv[], MPICommunicator &comm) {
     double max_wall_time = 0.0;
     bool per_task_stdio = false;
     bool jobstate_log = false;
-
+    bool monitord_hack = false;
+    
     // Environment variable defaults
     char *env_host_script = getenv("PMC_HOST_SCRIPT");
     if (env_host_script != NULL) {
@@ -269,6 +271,9 @@ int mpidag(int argc, char *argv[], MPICommunicator &comm) {
             per_task_stdio = true;
         } else if (flag == "--jobstate-log") {
             jobstate_log = true;
+        } else if (flag == "--monitord-hack") {
+            monitord_hack = true;
+            per_task_stdio = true;
         } else if (flag[0] == '-') {
             string message = "Unrecognized argument: ";
             message += flag;
@@ -337,6 +342,11 @@ int mpidag(int argc, char *argv[], MPICommunicator &comm) {
         JobstateLog jslog(jobstate_path);
         if (jobstate_log) {
             master.add_listener(&jslog);
+        }
+        
+        DAGManLog dagmanlog(dagfile + ".dagman.out", dagfile);
+        if (monitord_hack) {
+            master.add_listener(&dagmanlog);
         }
         
         return master.run();

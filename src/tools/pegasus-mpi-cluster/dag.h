@@ -20,8 +20,8 @@ public:
     string pegasus_id;
     
     bool success;
-
     bool io_failed;
+    int last_exitcode;
     
     unsigned memory;
     unsigned cpus;

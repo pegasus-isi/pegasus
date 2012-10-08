@@ -35,6 +35,7 @@ Task::Task(const string &name, const string &command, unsigned memory, unsigned 
     this->io_failed = false;
     this->success = false;
     this->failures = 0;
+    this->last_exitcode = 0;
     this->submit_seq = 0;
 }
 

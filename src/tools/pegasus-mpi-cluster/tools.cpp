@@ -312,3 +312,11 @@ string dirname(const string &path) {
     return result;
 }
 
+/* Return the last part of a path */
+string basename(const string &path) {
+    char *temp = strdup(path.c_str());
+    string result = ::basename(temp);
+    free(temp);
+    return result;
+}
+

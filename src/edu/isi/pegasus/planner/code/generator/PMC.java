@@ -244,12 +244,10 @@ public class PMC extends Abstract {
      * 
      * @return Map
      */
-    public  Map<String, String> getAdditionalBraindumpEntries( ADag workflow ) {
-//        Map entries = new HashMap();
-//        entries.put( Braindump.GENERATOR_TYPE_KEY, "pmc" );
-//        entries.put( "script", this.getPathtoPMCFile( workflow ) );
-//        return entries;
-        return this.mPBS.getAdditionalBraindumpEntries(workflow);
+    public Map<String, String> getAdditionalBraindumpEntries( ADag workflow ) {
+        Map<String, String> entries = this.mPBS.getAdditionalBraindumpEntries(workflow);
+        entries.put("dag", this.getPathtoPMCFile(workflow));
+        return entries;
     }
 
     /**
@@ -262,7 +260,7 @@ public class PMC extends Abstract {
     protected String pmcBasename( ADag dag ) {
         StringBuffer name = new StringBuffer();
         name.append(  dag.getLabel() ).append( "-" ).
-             append( dag.dagInfo.index ).append( ".pmc" );
+             append( dag.dagInfo.index ).append( ".dag" );
         return name.toString();
     }
     
