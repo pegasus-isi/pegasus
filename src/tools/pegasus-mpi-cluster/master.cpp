@@ -331,7 +331,7 @@ void JobstateLog::on_event(WorkflowEvent event, Task *task) {
 
 DAGManLog::DAGManLog(const string &logpath, const string &dagpath) {
     this->logpath = logpath;
-    this->dagpath = basename(dagpath);
+    this->dagpath = base_name(dagpath);
     this->logfile = NULL;
 }
 
