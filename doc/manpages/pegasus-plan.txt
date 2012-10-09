@@ -19,7 +19,7 @@ Synopsis
              [*--dir* 'dir']
              [*--force*] [*--force-replan*] 
              [*--inherited-rc-files*] [*-j* 'prefix'] 
-             [*-n*] [*-o* 'site']
+             [*-n*][*-I* 'input-dir'][*-O* 'output-dir'] [*-o* 'site']
              [*-s* 'site1'[,'site2'...]]
 	     [*--staging-site* s1=ss1[,s2=ss2[..]] 
              [*--randomdir*[='dirname']]
@@ -244,6 +244,22 @@ used internally for hierarchical workflows, where the file locations mentioned i
 the parent (encompassing) workflow DAX, passed to the sub workflows (corresponding)
 to the DAX jobs.
 
+*-I*::
+*--input-dir*::
+A path to the input directory where the input files reside. This
+internally loads a Directory based Replica Catalog backend, that
+constructs does a directory listing to create the LFN->PFN mappings
+for the files in the input directory. You can specify additional
+properties either on the command line or the properties file to
+control the site attribute and url prefix associated with the
+mappings.
++
+pegasus.catalog.replica.directory.site  specifies the pool attribute
+to associate with the mappings. Defaults to local
++
+pegasus.catalog.replica.directory.url.prefix specifies the URL prefix
+to use while constructing the PFN. Defaults to file://
+
 *-j* 'prefix'::
 *--job-prefix* 'prefix'::
 The job prefix to be applied for constructing the filenames for the
@@ -261,13 +277,23 @@ the executable workflow itself that cleanup files on the remote sites
 when they are no longer required.
 
 *-o* 'site'::
-*--o* 'site'::
-The output site where all the materialized data is transferred to.
+*--output* 'site'::
+The output site to which the output files of the DAX are transferred to.
 +
 By default the *materialized data* remains in the working directory on the
 *execution* site where it was created. Only those output files are 
 transferred to an output site for which  transfer attribute is set to 
 true in the DAX.
+
+*-O* 'output directory'::
+*--output-dir* 'output directory'::
+The output directory to which the output files of the DAX are
+transferred to.
++
+If -o is specified the storage directory of the site specified as the
+output site is updated to be the directory passed. If no output site
+is specified, then this option internally sets the output site to
+local with the storage directory updated to the directory passed.
 
 *-q*::
 *--quiet*::
