@@ -1005,11 +1005,9 @@ else:
 
         db_path = event_dest[start + 10:]
 
-        if os.access(db_path, os.F_OK):
+        if os.path.isfile(db_path):
             logger.info( 'Rotating sqlite db file %s' %db_path)
             utils.rotate_log_file( db_path )
-        else:
-            logger.error( 'db file is not a file %s ' %db_path )
 
 
     try:
