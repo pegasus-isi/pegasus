@@ -661,7 +661,7 @@ Worker::Worker(Communicator *comm, const string &dagfile, const string &host_scr
         bool per_task_stdio) {
     this->comm = comm;
     this->dagfile = dagfile;
-    this->workdir = PMC::dirname(dagfile);
+    this->workdir = dirname(dagfile);
     this->host_script = host_script;
     if (host_memory == 0) {
         // If host memory is not specified by the user, then get the amount

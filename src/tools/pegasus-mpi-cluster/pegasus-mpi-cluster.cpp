@@ -338,7 +338,7 @@ int mpidag(int argc, char *argv[], MPICommunicator &comm) {
         Master master(&comm, program, engine, dag, dagfile, outfile, errfile, 
                 has_host_script, max_wall_time, resource_log, per_task_stdio);
         
-        string jobstate_path = PMC::dirname(dagfile) + "/jobstate.log";
+        string jobstate_path = dirname(dagfile) + "/jobstate.log";
         JobstateLog jslog(jobstate_path);
         if (jobstate_log) {
             master.add_listener(&jslog);

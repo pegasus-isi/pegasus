@@ -305,7 +305,7 @@ string pathfind(const string &file) {
 }
 
 /* Return the directory part of a path */
-string PMC::dirname(const string &path) {
+string dirname(const string &path) {
     char *temp = strdup(path.c_str());
     string result = ::dirname(temp);
     free(temp);
@@ -313,7 +313,7 @@ string PMC::dirname(const string &path) {
 }
 
 /* Return the last part of a path */
-string PMC::basename(const string &path) {
+string filename(const string &path) {
     char *temp = strdup(path.c_str());
     string result = ::basename(temp);
     free(temp);

@@ -22,11 +22,7 @@ int mkdirs(const char *path);
 bool is_executable(const string &file);
 string pathfind(const string &file);
 int read_file(const string &file, char *buf, size_t size);
-
-/* These are in a namespace to avoid conflicts */
-namespace PMC {
-    string dirname(const string &path);
-    string basename(const string &path);
-}
+string dirname(const string &path);
+string filename(const string &path);
 
 #endif /* _TOOLS_H */
