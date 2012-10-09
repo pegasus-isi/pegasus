@@ -116,7 +116,7 @@ public class MPIExec extends Abstract {
      * @return path to the input file
      */
     protected File writeOutInputFileForJobAggregator(AggregatedJob job) {
-        return this.generatePMCInputFile(job, job.getID() + ".in" );
+        return this.generatePMCInputFile(job, job.getID() + ".in", true );
     }
 
 
@@ -124,10 +124,13 @@ public class MPIExec extends Abstract {
      * Writes out the input file for the aggregated job
      *
      * @param job   the aggregated job
+     * @param name  the name of PMC file to be generated
+     * @param isClustered  a boolean indicating whetehre the graph belongs to a
+     *                     clustered job or not.
      *
      * @return path to the input file
      */
-    public File generatePMCInputFile(Graph job, String name ) {
+    public File generatePMCInputFile(Graph job, String name , boolean isClustered ) {
         File stdIn = null;
         try {
             BufferedWriter writer;
@@ -173,8 +176,15 @@ public class MPIExec extends Abstract {
                     //taskid transformation derivation
                     writer.write( getCommentString( constitutentJob, taskid ) + "\n" );
 
+                    //the id associated with the task is dependant on whether
+                    //the input file is generated for the whole workflow or
+                    //a clustered job. PM-660
                     StringBuffer task = new StringBuffer();
-                    task.append( "TASK" ).append( " " ).append( constitutentJob.getLogicalID() ).append( " " );
+                    task.append( "TASK" ).append( " " ).
+                         append( isClustered?
+                                constitutentJob.getLogicalID(): //for file generation for a clustered job we want the ID in the DAX
+                                constitutentJob.getID() //for file generation as part of PMC code generator we want the pegasus assigned job id
+                                ).append( " " );
 
                     //check and add if a job has requested any memory or cpus
                     //JIRA PM-601, PM-620 and PM-621

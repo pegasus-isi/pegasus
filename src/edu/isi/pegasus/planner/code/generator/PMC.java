@@ -115,6 +115,8 @@ public class PMC extends Abstract {
     public Collection<File> generateCode( ADag dag ) throws CodeGeneratorException{
         Collection result = new ArrayList( 1 );
 
+//        this.writeOutStampedeEvents( dag );
+
         //we first need to convert internally into graph format
         Graph workflow =    Adapter.convert( dag );
 
@@ -126,10 +128,6 @@ public class PMC extends Abstract {
             GraphNode node = it.next();
             Job job = (Job)node.getContent();
             String site = job.getSiteHandle();
-
-            //PM-660
-            //ensure that the job logical id and id are same.
-            job.setLogicalID( job.getID() );
 
             //sanity check
             if( !( prevJob == null || prevJob.getSiteHandle().equalsIgnoreCase( site ) )){
@@ -201,7 +199,8 @@ public class PMC extends Abstract {
         JobAggregator aggregator = JobAggregatorFactory.loadInstance( JobAggregatorFactory.MPI_EXEC_CLASS, dag, mBag);
         MPIExec pmcAggregator = (MPIExec)aggregator;
         String name = pmcBasename( dag );
-        pmcAggregator.generatePMCInputFile(workflow, name );
+        //PM-660 designate that the graph is for the whole workflow
+        pmcAggregator.generatePMCInputFile(workflow, name, false );
 
         //lets generate the PBS input file
         mPBS.generateCode( dag );
