@@ -50,6 +50,7 @@ OBJS += master.o
 OBJS += worker.o
 OBJS += protocol.o
 OBJS += mpicomm.o
+OBJS += fdcache.o
 OBJS += log.o
 
 PROGRAMS += pegasus-mpi-cluster
