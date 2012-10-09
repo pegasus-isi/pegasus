@@ -4,8 +4,6 @@
 #include <signal.h>
 #include <math.h>
 #include <sys/time.h>
-#include <fcntl.h>
-#include <sys/resource.h>
 
 #include "master.h"
 #include "failure.h"

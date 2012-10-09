@@ -1,4 +1,5 @@
 #include <cerrno>
+#include <sys/resource.h>
 
 #include "fdcache.h"
 #include "log.h"
