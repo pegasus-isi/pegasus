@@ -562,12 +562,50 @@ function test_jobstate_log {
         echo "ERROR: jobstate.log file was not created"
         return 1
     fi
+}
+
+function test_monitord_hack {
+    mkdir -p test/scratch
+    cp test/diamond.dag test/scratch/
     
-    NLINES=$(cat test/scratch/jobstate.log | wc -l)
-    if [ $NLINES -ne 18 ]; then
+    OUTPUT=$(mpiexec -np 2 $PMC -v --monitord-hack test/scratch/diamond.dag 2>&1)
+    RC=$?
+    
+    if [ $RC -ne 0 ]; then
         echo "$OUTPUT"
-        echo "ERROR: jobstate.log was the wrong size"
-        echo "NLINES=$NLINES"
+        echo "ERROR: monitord hack test failed"
+        return 1
+    fi
+    
+    if [ $(ls test/scratch/*.out.000 | wc -l) -ne 4 ]; then
+        echo "$OUTPUT"
+        echo "ERROR: --monitord-hack did not cause --per-task-stdio"
+        return 1
+    fi
+    
+    if ! [ -f "test/scratch/diamond.dag.dagman.out" ]; then
+        echo "$OUTPUT"
+        echo "ERROR: .dagman.out file was not created"
+        return 1
+    fi
+}
+
+function test_monitord_hack_failure {
+    mkdir -p test/scratch
+    cp test/fail.dag test/scratch/
+    
+    OUTPUT=$(mpiexec -np 2 $PMC -v --monitord-hack test/scratch/fail.dag 2>&1)
+    RC=$?
+    
+    if [ $RC -eq 0 ]; then
+        echo "$OUTPUT"
+        echo "ERROR: monitord hack failure test failed"
+        return 1
+    fi
+    
+    if ! [ -f "test/scratch/fail.dag.dagman.out" ]; then
+        echo "$OUTPUT"
+        echo "ERROR: .dagman.out file was not created"
         return 1
     fi
 }
@@ -602,6 +640,8 @@ run_test test_file_forward
 run_test test_file_forward_fail
 run_test test_per_task_stdio
 run_test test_jobstate_log
+run_test test_monitord_hack
+run_test test_monitord_hack_failure
 run_test test_max_wall_time
 run_test test_hang_script
 
