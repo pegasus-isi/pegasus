@@ -140,25 +140,18 @@ of the transformation that is to be used for clustering jobs. Note that
 clustering will only happen if the corresponding transformations are 
 catalogued in the transformation catalog.
 +
-PEGASUS ships with a clustering executable 'seqexec' that can be found 
+PEGASUS ships with a clustering executable 'pegasus-cluster' that can be found 
 in the '$PEGASUS_HOME/bin' directory. It runs the jobs in the clustered 
 job sequentially on the same node at the remote site.
 +
-In addition, an MPI wrapper 'mpiexec', is distributed as source with 
-PEGASUS. It can be found in the '$PEGASUS_HOME/src/tools/cluster'
+In addition, an MPI based clustering tool called
+pegasus-mpi-cluster', is also distributed and can be found in the bin
+directory. pegasus-mpi-cluster can also be used in the sharedfs setup
+and needs to be compiled against the remote site MPI install.
 directory. The wrapper is run on every MPI node, with the first one
-being the master and the rest of the ones as workers. The number of
-instances of 'mpiexec' that are invoked is equal to the value of the
-Globus RSL key 'nodecount'. The master distributes the smaller
-constituent jobs to the workers. For e.g. If there were 10 jobs in the
-clustered job and 'nodecount' was 5, then one node acts as master, and
-the 10 jobs are distributed amongst the 4 slaves on demand.  The master
-hands off a job to the slave node as and when it gets free. So
-initially all the 4 nodes are given a single job each, and then as and
-when they get done are handed more jobs till all the 10 jobs have been
-executed.
+being the master and the rest of the ones as workers. 
 +
-By default, 'seqexec' is used for clustering jobs unless overridden
+By default, 'pegasus-cluster' is used for clustering jobs unless overridden
 in the properties or by the pegasus profile key 'collapser'.
 +
 The following type of clustering styles are currently supported:
