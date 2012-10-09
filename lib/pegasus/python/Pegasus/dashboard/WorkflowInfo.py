@@ -259,8 +259,15 @@ class WorkflowInfo(SQLAlchemyInit, DoesLogging):
         
         q = self.session.query (func.count (Job.wf_id).label("total"))
         q = q.add_column (func.sum (case([(JobInstance.exitcode == 0, 1)], else_=0)).label ("success"))
+        q = q.add_column (func.sum (case([(JobInstance.exitcode == 0, case([(Job.type_desc == 'dag', 1), (Job.type_desc == 'dax', 1)], else_=0))], else_=0)).label ("success_workflow"))
+        
+        
         q = q.add_column (func.sum (case([(JobInstance.exitcode != 0, 1)], else_=0)).label ("fail"))
+        q = q.add_column (func.sum (case([(JobInstance.exitcode != 0, case([(Job.type_desc == 'dag', 1), (Job.type_desc == 'dax', 1)], else_=0))], else_=0)).label ("fail_workflow"))
+        
         q = q.add_column (func.sum (case([(JobInstance.exitcode == None, 1)], else_=0)).label ("others"))
+        q = q.add_column (func.sum (case([(JobInstance.exitcode == None, case([(Job.type_desc == 'dag', 1), (Job.type_desc == 'dax', 1)], else_=0))], else_=0)).label ("others_workflow"))
+        
         q = q.filter (Job.wf_id == self._wf_id)
         q = q.filter (Job.job_id == JobInstance.job_id)
         q = q.filter (Job.job_id == qmax.c.job_id)
@@ -270,9 +277,12 @@ class WorkflowInfo(SQLAlchemyInit, DoesLogging):
         
         res = {}
         res ['success'] = tmp.success
+        res ['success_workflow'] = tmp.success_workflow
         res ['total'] = tmp.total
         res ['fail'] = tmp.fail
+        res ['fail_workflow'] = tmp.fail_workflow
         res ['others'] = tmp.others
+        res ['others_workflow'] = tmp.others_workflow
         
         return res
 

@@ -7,6 +7,27 @@
 <script type="text/javascript" charset="utf-8">
 var chart;
 var chartOptions;
+var chartData = 
+{
+	Running: 
+	{
+		jobs: {{ counts ['others'] - counts ['others_workflow'] }},
+		workflow: {{ counts ['others_workflow'] }},
+		total: {{ counts ['others'] }}
+	},
+	Successful: 
+	{
+		jobs: {{ counts ['success'] - counts ['success_workflow'] }},
+		workflow: {{ counts ['success_workflow'] }},
+		total: {{ counts ['success'] }}
+	},
+	Failed: 
+	{
+		jobs: {{ counts ['fail'] - counts ['fail_workflow'] }},
+		workflow: {{ counts ['fail_workflow'] }},
+		total: {{ counts ['fail'] }}
+	}
+}
 $(document).ready (function () 
 {
 	// Radialize the colors
@@ -84,6 +105,7 @@ $(document).ready (function ()
 		chart: 
 		{
 			renderTo: 'workflow_graph',
+			type: 'pie',
 			plotBackgroundColor: null,
 			plotBorderWidth: null,
 			plotShadow: false,
@@ -102,7 +124,11 @@ $(document).ready (function ()
 		{
 			formatter: function() 
 			{
-				return '<b>'+ this.point.name +'</b>: '+ this.point.y;
+				var str = '';
+				str += '<b>Jobs:</b> ' + chartData [this.point.name].jobs + "<br\>";
+				str += '<b>Workflows:</b> ' + chartData [this.point.name].workflow + "<br\>";
+				str += '<b>Total:</b> ' + chartData [this.point.name].total;
+				return str;
 			}
 		},
 		plotOptions: 
@@ -115,30 +141,38 @@ $(document).ready (function ()
 				{
 					enabled: false
 				},
-				showInLegend: true
+				showInLegend: true,
+				dataLabels: 
+				{
+					color: '#000000',
+					formatter: function() 
+					{
+						var str = '';
+						str += '<b>Jobs:</b> ' + chartData [this.point.name].jobs + "<br\>";
+						str += '<b>Workflows:</b> ' + chartData [this.point.name].workflow + "<br\>";
+						str += '<b>Total:</b> ' + chartData [this.point.name].total;
+						return str;
+					}
+				}
 			}
 		},
 		series: 
 		[{
-			type: 'pie',
-			name: 'Browser share',
+			name: 'Job Status',
 			data: [
 				{
 					name: 'Running',
 					y: {{ counts ['others'] }},
 					sliced: true,
 					selected: true
-					//,	color: '#4572A7'
 				},
 				{
 					name: 'Failed',
 					y: {{ counts ['fail'] }}
-					//,color: '#AA4643'
 				},
 				{
 					name: 'Successful',
 					y: {{ counts ['success'] }}
-					//,color: '#89A54E'
 				}
 			]
 		}]
