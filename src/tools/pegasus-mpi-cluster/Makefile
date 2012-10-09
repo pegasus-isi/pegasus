@@ -69,7 +69,7 @@ $(warning To build pegasus-mpi-cluster set CXX to the path to your MPI C++ compi
 all:
 install:
 else
-all: $(PROGRAMS)
+all: $(PROGRAMS) tags
 install: $(PROGRAMS)
 	$(INSTALL) -m 0755 $(PROGRAMS) $(bindir)
 endif
@@ -98,7 +98,12 @@ depends:
 svn.h:
 	$(CURDIR)/gensvnh.sh $(CURDIR) > $(CURDIR)/svn.h
 
+ifeq ($(shell which ctags || echo n),n)
+tags:
+	touch tags
+else
 tags: *.h *.cpp
 	ctags *.h *.cpp
+endif
 
 include depends.mk
