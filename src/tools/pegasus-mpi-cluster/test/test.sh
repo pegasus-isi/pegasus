@@ -564,7 +564,7 @@ function test_jobstate_log {
     fi
     
     NLINES=$(cat test/scratch/jobstate.log | wc -l)
-    if [ $NLINES -ne 14 ]; then
+    if [ $NLINES -ne 18 ]; then
         echo "$OUTPUT"
         echo "ERROR: jobstate.log was the wrong size"
         echo "NLINES=$NLINES"
