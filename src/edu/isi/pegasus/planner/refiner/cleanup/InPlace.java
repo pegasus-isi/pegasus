@@ -33,6 +33,7 @@ import edu.isi.pegasus.planner.classes.TransferJob;
 
 
 import edu.isi.pegasus.planner.namespace.Dagman;
+import edu.isi.pegasus.planner.partitioner.graph.GraphNodeContent;
 import java.util.Map;
 import java.util.Iterator;
 import java.util.HashMap;
@@ -360,6 +361,7 @@ public class InPlace implements CleanupStrategy{
 
         //start the best first cleanup job addition
         for( int curP = mMaxDepth; curP >= 0 ; curP-- ){
+            List<GraphNode> cleanupNodesPerLevel = new LinkedList();
 
             //process all elements in the current priority
             while( pQA[curP].size() >= 1 ){
@@ -367,7 +369,9 @@ public class InPlace implements CleanupStrategy{
                 pQA[ curP ].remove( curGN );
                 Job curGN_SI = (Job) curGN.getContent();
 
-                if( !typeNeedsCleanUp( curGN_SI.getJobType() ) ) { continue; }
+                if( !typeNeedsCleanUp( curGN_SI.getJobType() ) ) { 
+                    continue;
+                }
 
                 /*if( curGN_SI.getJobType() == Job.STAGE_OUT_JOB ){
                     curGN_SI.getInputFiles().addAll( curGN_SI.getOutputFiles() );
@@ -403,7 +407,9 @@ public class InPlace implements CleanupStrategy{
 //                                   InPlace.CLEANUP_JOB_PREFIX + curGN.getName() ,
 //                                   InPlace.CLEANUP_JOB_PREFIX + curGN.getName() );
 
-                List cleanupFiles = new LinkedList();
+                
+
+                List<PegasusFile> cleanupFiles = new LinkedList();
                 for( Iterator it = fileSet.iterator() ; it.hasNext() ; ){
                     PegasusFile file = (PegasusFile) it.next();
 
@@ -417,8 +423,11 @@ public class InPlace implements CleanupStrategy{
                             curGN.addChild( child );
                         }
                     }else{
-//                       nuSI.addInputFile( file );
+
                         cleanupFiles.add( file );
+                        
+                        //Commented for PM-663
+/*
                         cleanedBy.put( file.getLFN(), nuGN );
 
                         if( !curGN.getChildren().contains( nuGN ) ){
@@ -427,14 +436,27 @@ public class InPlace implements CleanupStrategy{
                         if( ! nuGN.getParents().contains( curGN ) ){
                             nuGN.addParent( curGN );
                         }
+ */
                     }
                 }// all the files
 
-                //create a cleanup job if the cleanup node has any parents
-                if( nuGN.getParents().size() >= 1 ){
-                    mLogger.log( "Adding cleanup job with ID " + nuGN.getID(),
+                //create a cleanup job if the cleanup node has any files to delete
+//                if( nuGN.getParents().size() >= 1 ){
+                if( !cleanupFiles.isEmpty() ){
+                    mLogger.log( "Adding cleanup job with ID " + nuGN.getID() + " to the level list for level " + curP,
                             LogManager.DEBUG_MESSAGE_LEVEL );
-                    
+
+                    //PM-663, we need to store the compute job
+                    //with the node but do with a copy
+                    CleanupJobContent cleanupContent = new CleanupJobContent( curGN, cleanupFiles ) ;
+                    nuGN.setContent( cleanupContent );
+
+
+                    cleanupNodesPerLevel.add( nuGN );
+
+                     //Commented for PM-663
+                    //moved in the outer loop
+/*
                     // We have always pass the associaated compute job. Since now
                     //a cleanup job can be associated with stageout jobs also, we
                     //need to make sure that for the stageout job the cleanup job
@@ -480,9 +502,64 @@ public class InPlace implements CleanupStrategy{
                     //and the node itself to the Graph
                     nuGN.setContent( cleanupJob );
                     workflow.addNode(nuGN);
-               }
+ */
+                }
+
+            }//end of while loop .  //process all elements in the current priority
+
+            //we now have a list of cleanup jobs for this level
+            List<GraphNode> clusteredCleanupJobs = clusterCleanupJobs( cleanupNodesPerLevel, cleanedBy );
+            //for each clustered cleanup node , add the associated cleanup job
+            for( GraphNode cleanupNode: clusteredCleanupJobs ){
+                 // We have always pass the associaated compute job. Since now
+                 //a cleanup job can be associated with stageout jobs also, we
+                 //need to make sure that for the stageout job the cleanup job
+                 //is passed. Karan Jan 9, 2008
+                Job computeJob;
+
+                CleanupJobContent cleanupJobContent = (CleanupJobContent)cleanupNode.getContent();
+                GraphNode curGN = cleanupJobContent.getNode();
+                Job curGN_SI = (Job)curGN.getContent();
+                if( typeStageOut( curGN_SI.getJobType() ) ){
+                        //find a compute job that is parent of this
+                        GraphNode node = (GraphNode)curGN.getParents().get( 0 );
+                        computeJob = (Job)node.getContent();
+                        message = new StringBuffer();
+                        message.append( "For cleanup job " ).append( cleanupNode.getID() ).
+                                append( " the associated compute job is ").append( computeJob.getID() );
+                        mLogger.log(  message.toString(), LogManager.DEBUG_MESSAGE_LEVEL );
+                    }
+                    else{
+                        computeJob = curGN_SI;
+                    }
+                    Job cleanupJob = mImpl.createCleanupJob( cleanupNode.getID(),
+                                                                 cleanupJobContent.getListOfFilesToDelete(),
+                                                                 computeJob
+                                                                 );
+
+                    //No longer required as stageout jobs are also cleaned. Karan Jan , 2008
+                    //if the corresponding compute job has any transfer or stageout jobs as child add it
+                    //as a parent of the cleanup job
+                    /*
+                    for( Iterator itc=curGN.getChildren().iterator(); itc.hasNext() ;){
+                        GraphNode curGNchild=(GraphNode) itc.next();
+                        Job itc_si=(Job) curGNchild.getContent();
+                        if( itc_si != null )
+                            if( itc_si.getJobType() == Job.STAGE_OUT_JOB ||
+                                itc_si.getJobType() == Job.INTER_POOL_JOB ){
+
+                            nuGN.addParent( curGNchild );
+                            curGNchild.addChild( nuGN );
+                            }
+                    }*/
+
+                    //add the job as a content to the graphnode
+                    //and the node itself to the Graph
+                    cleanupNode.setContent( cleanupJob );
+                    workflow.addNode(cleanupNode);
             }
-        }
+
+        }//end of for loop
 
         //output whats file is cleaned by what ?
         mLogger.log( "", LogManager.DEBUG_MESSAGE_LEVEL );
@@ -686,6 +763,99 @@ public class InPlace implements CleanupStrategy{
             append( "." ).append( Dagman.MAXJOBS_KEY.toLowerCase() );
         
         return key.toString();
+    }
+
+    /**
+     * Clusters the cleanup jobs and returns the list
+     *
+     * @param cleanupNodes
+     * @param cleanedBy
+     *
+     * @return
+     */
+    private List<GraphNode> clusterCleanupJobs(List<GraphNode> cleanupNodes, HashMap cleanedBy) {
+        List<GraphNode> clusteredCleanupJobs = new LinkedList();
+
+        //for the time being lets assume one to one mapping
+        for( GraphNode node : cleanupNodes ){
+            CleanupJobContent content = (CleanupJobContent) node.getContent();
+            List<PegasusFile> filesToDelete = content.getListOfFilesToDelete();
+
+            GraphNode cleanupNode = node; //same for time being
+            GraphNode computeNode = content.getNode();
+            //files to delete remains the same
+
+            for( PegasusFile file : filesToDelete ){
+                cleanedBy.put( file.getLFN(), cleanupNode );
+            }
+
+            //add dependencies between the nodes accordingly
+                        if( !computeNode.getChildren().contains( cleanupNode ) ){
+                            computeNode.addChild( cleanupNode );
+                        }
+                        if( ! cleanupNode.getParents().contains( computeNode ) ){
+                            cleanupNode.addParent( computeNode );
+                        }
+
+
+
+            clusteredCleanupJobs.add( node );
+        }
+
+        return clusteredCleanupJobs;
+
+    }
+
+
+
+}
+
+
+/**
+ * A container class that is used to hold the contents for a cleanup job
+ * 
+ * 
+ * @author vahi
+ */
+class CleanupJobContent implements GraphNodeContent{
+
+
+    /**
+     * The graph node object for the associated job whose files are being deleted.
+     * can be a compute or a stageout job.
+     */
+    private GraphNode mNode;
+
+    /**
+     * The list of files that need to be deleted and are associated with this job.
+     */
+    private List<PegasusFile> mToBeDeletedFiles;
+
+    /**
+     *
+     * @param node
+     * @param files
+     */
+    public CleanupJobContent( GraphNode node, List<PegasusFile> files ){
+        mNode = node;
+        mToBeDeletedFiles = files;
+    }
+
+    /**
+     * Returns the list of files to be deleted for a node
+     *
+     * @return
+     */
+    public List<PegasusFile> getListOfFilesToDelete() {
+        return this.mToBeDeletedFiles;
+    }
+
+    /**
+     * Returns the associated node for which the files are deleted.
+     * @return
+     */
+    public GraphNode getNode() {
+        return this.mNode;
     }
 
 }
