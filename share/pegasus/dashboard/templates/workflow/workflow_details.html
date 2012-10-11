@@ -236,6 +236,7 @@ verticalTableInit ('#workflow_stats_info');
 		</td>
 	</tr>	
 	</table>
+	{% if workflow.root_wf_id ==  workflow.wf_id %}
 	<table id="workflow_stats_info" class="workflow_info">
 		<tr>
 			<th>Successful Jobs</th>
@@ -250,6 +251,7 @@ verticalTableInit ('#workflow_stats_info');
 			<td>{{ statistics ['total-jobs']|time_to_str }}</td>
 		</tr>
 	</table>
+	{% endif %}
 	<br/>
 	<a href="{{ url_for ('charts', root_wf_id = root_wf_id, wf_id = wf_id) }}" class="ui-state-default" style="text-decoration: none; padding: 0px 5px 0px 5px;">Charts</a>
 </div>
