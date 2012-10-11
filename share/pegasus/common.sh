@@ -52,7 +52,7 @@ if [ "X${JAVA_HEAPMIN}" = "X" -a "X${JAVA_HEAPMAX}" = "X" ]; then
     if [ -e /proc/meminfo ]; then
         mem_total=`(cat /proc/meminfo | grep MemTotal: | awk '{print $2;}') 2>/dev/null`
         if [ "X$mem_total" != "X" -a $mem_total -gt 0 ]; then
-            heap_max=$(($mem_total / 1024 / 10))
+            heap_max=$(($mem_total / 1024 / 3))
         fi
     fi
 
@@ -60,7 +60,7 @@ if [ "X${JAVA_HEAPMIN}" = "X" -a "X${JAVA_HEAPMAX}" = "X" ]; then
     if [ -e /Library -a -e /usr/sbin/sysctl ]; then
         mem_total=`/usr/sbin/sysctl -n hw.memsize 2>/dev/null`
         if [ "X$mem_total" != "X" -a $mem_total -gt 0 ]; then
-            heap_max=$(($mem_total / 1024 / 1024 / 10))
+            heap_max=$(($mem_total / 1024 / 1024 / 3))
         fi
     fi
 
