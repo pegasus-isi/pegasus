@@ -94,6 +94,17 @@ public class GraphNode extends Data {
         mBag   = null;
     }
 
+
+    /**
+     * The overloaded constructor.
+     *
+     * @param id       the id of the node in the graph.
+     */
+    public GraphNode( String id  ){
+        this();
+        mLogicalID = id;
+    }
+
     /**
      * The overloaded constructor.
      *

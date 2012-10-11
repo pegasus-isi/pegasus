@@ -30,10 +30,9 @@ import edu.isi.pegasus.planner.partitioner.graph.Graph;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.TransferJob;
 
-
-
 import edu.isi.pegasus.planner.namespace.Dagman;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNodeContent;
+
 import java.util.Map;
 import java.util.Iterator;
 import java.util.HashMap;
@@ -41,6 +40,8 @@ import java.util.List;
 import java.util.LinkedList;
 import java.util.Set;
 import java.util.HashSet;
+
+
 
 /**
  * This generates  cleanup jobs in the workflow itself.
@@ -64,6 +65,12 @@ public class InPlace implements CleanupStrategy{
      * jobs.
      */
     public static final String DEFAULT_MAX_JOBS_FOR_CLEANUP_CATEGORY = "4";
+
+    /**
+     * The default value for the number of clustered cleanup jobs created per
+     * level.
+     */
+    public static final int DEFAULT_CLUSTERED_CLEANUP_JOBS_PER_LEVEL = 2;
 
     /**
      * The mapping to siteHandle to all the jobs that are mapped to it
@@ -109,6 +116,11 @@ public class InPlace implements CleanupStrategy{
      */
     private LogManager mLogger;
 
+    /**
+     * The number of cleanup jobs per level to be created
+     */
+    private int mCleanupJobsPerLevel;
+
     
     
     /**
@@ -142,11 +154,13 @@ public class InPlace implements CleanupStrategy{
         String key = this.getDefaultCleanupMaxJobsPropertyKey();
         if( this.mProps.getProperty(key) == null ){
             mLogger.log( "Setting property " + key + " to  " +
-                          this.DEFAULT_MAX_JOBS_FOR_CLEANUP_CATEGORY + 
+                          InPlace.DEFAULT_MAX_JOBS_FOR_CLEANUP_CATEGORY +
                           " to set max jobs for cleanup jobs category",
                           LogManager.INFO_MESSAGE_LEVEL );
             mProps.setProperty( key, InPlace.DEFAULT_MAX_JOBS_FOR_CLEANUP_CATEGORY );
         }
+
+        mCleanupJobsPerLevel = DEFAULT_CLUSTERED_CLEANUP_JOBS_PER_LEVEL;
     }
 
     /**
@@ -440,14 +454,14 @@ public class InPlace implements CleanupStrategy{
                     }
                 }// all the files
 
-                //create a cleanup job if the cleanup node has any files to delete
+                //create a cleanup job if the cleanup cleanupNode has any files to delete
 //                if( nuGN.getParents().size() >= 1 ){
                 if( !cleanupFiles.isEmpty() ){
-                    mLogger.log( "Adding cleanup job with ID " + nuGN.getID() + " to the level list for level " + curP,
+                    mLogger.log( "Adding stub cleanup node with ID " + nuGN.getID() + " to the level list for level " + curP,
                             LogManager.DEBUG_MESSAGE_LEVEL );
 
                     //PM-663, we need to store the compute job
-                    //with the node but do with a copy
+                    //with the cleanupNode but do with a copy
                     CleanupJobContent cleanupContent = new CleanupJobContent( curGN, cleanupFiles ) ;
                     nuGN.setContent( cleanupContent );
 
@@ -468,8 +482,8 @@ public class InPlace implements CleanupStrategy{
                     Job computeJob;
                     if( typeStageOut( curGN_SI.getJobType() ) ){
                         //find a compute job that is parent of this
-                        GraphNode node = (GraphNode)curGN.getParents().get( 0 );
-                        computeJob = (Job)node.getContent();
+                        GraphNode cleanupNode = (GraphNode)curGN.getParents().get( 0 );
+                        computeJob = (Job)cleanupNode.getContent();
                         message = new StringBuffer();
                         message.append( "For cleanup job " ).append( nuGN.getID() ).
                                 append( " the associated compute job is ").append( computeJob.getID() );
@@ -499,7 +513,7 @@ public class InPlace implements CleanupStrategy{
                     }
 
                     //add the job as a content to the graphnode
-                    //and the node itself to the Graph
+                    //and the cleanupNode itself to the Graph
                     nuGN.setContent( cleanupJob );
                     workflow.addNode(nuGN);
  */
@@ -508,8 +522,8 @@ public class InPlace implements CleanupStrategy{
             }//end of while loop .  //process all elements in the current priority
 
             //we now have a list of cleanup jobs for this level
-            List<GraphNode> clusteredCleanupJobs = clusterCleanupJobs( cleanupNodesPerLevel, cleanedBy );
-            //for each clustered cleanup node , add the associated cleanup job
+            List<GraphNode> clusteredCleanupJobs = clusterCleanupJobs( cleanupNodesPerLevel, cleanedBy , curP );
+            //for each clustered cleanup cleanupNode , add the associated cleanup job
             for( GraphNode cleanupNode: clusteredCleanupJobs ){
                  // We have always pass the associaated compute job. Since now
                  //a cleanup job can be associated with stageout jobs also, we
@@ -554,7 +568,7 @@ public class InPlace implements CleanupStrategy{
                     }*/
 
                     //add the job as a content to the graphnode
-                    //and the node itself to the Graph
+                    //and the cleanupNode itself to the Graph
                     cleanupNode.setContent( cleanupJob );
                     workflow.addNode(cleanupNode);
             }
@@ -664,7 +678,7 @@ public class InPlace implements CleanupStrategy{
 //            if( job.getJobType() == Job.COMPUTE_JOB ||
 //                job.getJobType() == Job.STAGED_COMPUTE_JOB ){
 //                job.globusRSL.construct( "condorsubmit",
-//                                         "(priority " + node.getDepth() + ")");
+//                                         "(priority " + cleanupNode.getDepth() + ")");
 //            }
             }
         }
@@ -680,7 +694,24 @@ public class InPlace implements CleanupStrategy{
      */
     protected String generateCleanupID( Job job ){
         StringBuffer sb = new StringBuffer();
-        sb.append( this.CLEANUP_JOB_PREFIX ).append( job.getID() );
+        sb.append( InPlace.CLEANUP_JOB_PREFIX ).append( job.getID() );
+        return sb.toString();
+    }
+
+    /**
+     * Generated an ID for a clustered cleanup job
+     *
+     * @param level    the level of the workflow
+     * @param index    the index of the job on that level
+     *
+     * @return
+     */
+    public String generateClusteredJobID( int level, int index ){
+        StringBuffer sb = new StringBuffer();
+
+        sb.append( InPlace.CLEANUP_JOB_PREFIX ).append( "level" ).
+           append( "_" ).append( level ).append( "_" ).append( index );
+
         return sb.toString();
     }
 
@@ -766,22 +797,63 @@ public class InPlace implements CleanupStrategy{
     }
 
     /**
-     * Clusters the cleanup jobs and returns the list
+     * Takes in a list of cleanup nodes ,one per cleanupNode(compute/stageout job)
+     * whose files need to be deleted) and clusters them into a smaller set
+     * of cleanup nodes.
      *
-     * @param cleanupNodes
-     * @param cleanedBy
+     * @param cleanupNodes  List of  stub cleanup nodes created corresponding to a job
+     *                      in the workflow that needs cleanup. the cleanup jobs
+     *                      have content as a CleanupJobContent
+     *
+     * @param cleanedBy  a map that tracks which file was deleted by which cleanup
+     *                   job
+     *
+     * @param level      the level of the workflow
      *
      * @return
      */
-    private List<GraphNode> clusterCleanupJobs(List<GraphNode> cleanupNodes, HashMap cleanedBy) {
+    private List<GraphNode> clusterCleanupJobs(List<GraphNode> cleanupNodes, HashMap cleanedBy, int level ) {
         List<GraphNode> clusteredCleanupJobs = new LinkedList();
 
+        //sanity check for empty list
+        int size = cleanupNodes.size();
+        if( size == 0 ){
+            return clusteredCleanupJobs;
+        }
+
+        //cluster size is how many nodes are clustered into one cleanup cleanupNode
+        //it is the ceiling ( x + y -1 )/y
+        int clusterSize = ( size + mCleanupJobsPerLevel -1  )/mCleanupJobsPerLevel;
+
+
+        StringBuffer sb = new StringBuffer();
+        sb.append( "Clustering cleanup nodes at level " ).append(  level ).
+           append( " with cluster size ").append( clusterSize);
+        mLogger.log( sb.toString() , LogManager.DEBUG_MESSAGE_LEVEL );
+
         //for the time being lets assume one to one mapping
-        for( GraphNode node : cleanupNodes ){
-            CleanupJobContent content = (CleanupJobContent) node.getContent();
+        Iterator<GraphNode> it = cleanupNodes.iterator();
+        int counter = 0;
+        while( it.hasNext() ){
+            List<GraphNode> clusteredConstitutents = new LinkedList();
+            for( int i = 1; i <= clusterSize && it.hasNext(); i++ ){
+                GraphNode n = it.next();
+                clusteredConstitutents.add( n );
+            }
+
+            //we have our constituents. create a cleanup job out of this
+            GraphNode clusteredCleanupJob = createClusteredCleanupJob( clusteredConstitutents, cleanedBy, level, counter );
+            clusteredCleanupJobs.add(clusteredCleanupJob);
+            counter++;
+        }
+
+/*
+        for( Iterator<GraphNode> it = cleanupNodes.iterator(); it.hasNext();  ){
+            GraphNode cleanupNode = it.next();
+            CleanupJobContent content = (CleanupJobContent) cleanupNode.getContent();
             List<PegasusFile> filesToDelete = content.getListOfFilesToDelete();
 
-            GraphNode cleanupNode = node; //same for time being
+            GraphNode cleanupNode = cleanupNode; //same for time being
             GraphNode computeNode = content.getNode();
             //files to delete remains the same
 
@@ -799,18 +871,76 @@ public class InPlace implements CleanupStrategy{
 
 
 
-            clusteredCleanupJobs.add( node );
+            clusteredCleanupJobs.add( cleanupNode );
         }
-
+*/
         return clusteredCleanupJobs;
 
     }
 
 
+    /**
+     * Creates a clustered cleanup graph node that aggregates multiple cleanup nodes
+     * into one node
+     *
+     * @param nodes      list of cleanup nodes that are to be aggregated
+     * @param cleanedBy  a map that tracks which file was deleted by which cleanup
+     *                   job
+     * @param level      the level of the workflow
+     * @param index      the index of the cleanup job for that level
+     * @return
+     */
+    private GraphNode createClusteredCleanupJob(List<GraphNode> nodes, HashMap cleanedBy, int level, int index ) {
+        GraphNode clusteredCleanupNode = new GraphNode( generateClusteredJobID( level, index ) );
+
+
+        //sanity check
+        if( nodes.isEmpty() ){
+            throw new RuntimeException( "Logic Error in the InPlace Cleanup Algorithm for level " + level + " " + index );
+        }
+
+        //add some info
+        StringBuffer sb = new StringBuffer();
+        sb.append( "\tCreating a clustered cleanup job named " ).append( clusteredCleanupNode.getID() ).
+           append( " consisting of " ).append( nodes.size() ).append( " nodes ");
+        mLogger.log( sb.toString() , LogManager.DEBUG_MESSAGE_LEVEL );
+
+        //the list of files to be deleted by the clustered cleanup job
+        List<PegasusFile> allFilesToDelete = new LinkedList();
+
+        //for each cleanup Node add the files and modify dependencies accordingly
+        GraphNode primaryNode = null; //the primary compute node associated with the cleanup job
+        for( GraphNode cleanupNode : nodes ){
+            CleanupJobContent content = (CleanupJobContent) cleanupNode.getContent();
+            List<PegasusFile> filesToDelete = content.getListOfFilesToDelete();
+            primaryNode = content.getNode();
+
+
+            for( PegasusFile file : filesToDelete ){
+                cleanedBy.put( file.getLFN(), clusteredCleanupNode );
+            }
+
+            allFilesToDelete.addAll( filesToDelete );
+
+            //add dependencies between the compute/stageout node and the clustered cleanup node
+            if( !primaryNode.getChildren().contains( clusteredCleanupNode ) ){
+                primaryNode.addChild( clusteredCleanupNode );
+            }
+            if( ! clusteredCleanupNode.getParents().contains( primaryNode ) ){
+                clusteredCleanupNode.addParent( primaryNode );
+            }
+        }
+
+        clusteredCleanupNode.setContent( new CleanupJobContent( primaryNode, allFilesToDelete) );
+
+        return clusteredCleanupNode;
+    }
+
+
+
+
 
 }
-
-
 /**
  * A container class that is used to hold the contents for a cleanup job
  * 
@@ -821,7 +951,7 @@ class CleanupJobContent implements GraphNodeContent{
 
 
     /**
-     * The graph node object for the associated job whose files are being deleted.
+     * The graph cleanupNode object for the associated job whose files are being deleted.
      * can be a compute or a stageout job.
      */
     private GraphNode mNode;
@@ -833,7 +963,7 @@ class CleanupJobContent implements GraphNodeContent{
 
     /**
      *
-     * @param node
+     * @param cleanupNode
      * @param files
      */
     public CleanupJobContent( GraphNode node, List<PegasusFile> files ){
@@ -842,7 +972,7 @@ class CleanupJobContent implements GraphNodeContent{
     }
 
     /**
-     * Returns the list of files to be deleted for a node
+     * Returns the list of files to be deleted for a cleanupNode
      *
      * @return
      */
@@ -851,7 +981,7 @@ class CleanupJobContent implements GraphNodeContent{
     }
 
     /**
-     * Returns the associated node for which the files are deleted.
+     * Returns the associated cleanupNode for which the files are deleted.
      * @return
      */
     public GraphNode getNode() {
