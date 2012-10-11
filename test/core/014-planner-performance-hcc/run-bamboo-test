@@ -20,7 +20,7 @@ set -e
 TOPDIR=`pwd`
 
 # get the dax - it is big enough that we do not want it in svn
-wget -O isptm.dax http://pegasus.isi.edu/static/bamboo/014-planner-performance-hcc/isptm.dax
+wget -nv -O isptm.dax http://pegasus.isi.edu/static/bamboo/014-planner-performance-hcc/isptm.dax
 
 # create the site catalog
 cat >sites.xml <<EOF
