@@ -178,7 +178,8 @@ public class PegasusProperties implements Cloneable {
      */
     public static final String DEFAULT_DAGMAN_MAX_PRE_VALUE = "2";
 
-    
+
+
     /**
      * An enum defining The scope for cleanup algorithm
      */
@@ -829,6 +830,18 @@ public class PegasusProperties implements Cloneable {
         
         return mProps.getProperty( "pegasus.file.cleanup.impl", "Cleanup" );
                              
+    }
+
+    /**
+     * Returns the maximum number of clean up jobs created per level of the workflow
+     * in case of InPlace cleanup.
+     *
+     * Referred to by the "pegasus.file.cleanup.clusters.num" property
+     *
+     * @return the value in the property file , else null
+     */
+    public String getMaximumCleanupJobsPerLevel() {
+        return mProps.getProperty( "pegasus.file.cleanup.clusters.num" );
     }
     
     /**

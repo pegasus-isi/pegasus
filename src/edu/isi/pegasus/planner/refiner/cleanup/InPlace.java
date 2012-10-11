@@ -156,11 +156,21 @@ public class InPlace implements CleanupStrategy{
             mLogger.log( "Setting property " + key + " to  " +
                           InPlace.DEFAULT_MAX_JOBS_FOR_CLEANUP_CATEGORY +
                           " to set max jobs for cleanup jobs category",
-                          LogManager.INFO_MESSAGE_LEVEL );
+                          LogManager.CONFIG_MESSAGE_LEVEL );
             mProps.setProperty( key, InPlace.DEFAULT_MAX_JOBS_FOR_CLEANUP_CATEGORY );
         }
 
-        mCleanupJobsPerLevel = DEFAULT_CLUSTERED_CLEANUP_JOBS_PER_LEVEL;
+        String propValue = mProps.getMaximumCleanupJobsPerLevel();
+        int value = -1;
+        try{
+            value = Integer.parseInt( propValue );
+        }
+        catch( Exception e ){
+            //ignore
+        }
+        mCleanupJobsPerLevel = ( value > 0 ) ? value: DEFAULT_CLUSTERED_CLEANUP_JOBS_PER_LEVEL;
+        mLogger.log( "Maximum number of cleanup jobs to be created per level " + mCleanupJobsPerLevel,
+                     LogManager.CONFIG_MESSAGE_LEVEL );
     }
 
     /**
@@ -827,7 +837,7 @@ public class InPlace implements CleanupStrategy{
 
 
         StringBuffer sb = new StringBuffer();
-        sb.append( "Clustering cleanup nodes at level " ).append(  level ).
+        sb.append( "Clustering " ).append(  size ).append( " cleanup nodes at level " ).append(  level ).
            append( " with cluster size ").append( clusterSize);
         mLogger.log( sb.toString() , LogManager.DEBUG_MESSAGE_LEVEL );
 
