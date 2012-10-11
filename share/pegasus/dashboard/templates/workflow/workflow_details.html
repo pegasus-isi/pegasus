@@ -28,6 +28,7 @@ var chartData =
 		total: {{ counts ['fail'] }}
 	}
 }
+
 $(document).ready (function () 
 {
 	// Radialize the colors
@@ -108,9 +109,9 @@ $(document).ready (function ()
 			type: 'pie',
 			plotBackgroundColor: null,
 			plotBorderWidth: null,
-			plotShadow: false,
-			width: 350,
-			height: 250
+			plotShadow: false
+			//width: 350,
+			//height: 250
 		},
 		title: 
 		{
@@ -122,14 +123,7 @@ $(document).ready (function ()
 		},
 		tooltip: 
 		{
-			formatter: function() 
-			{
-				var str = '';
-				str += '<b>Jobs:</b> ' + chartData [this.point.name].jobs + "<br\>";
-				str += '<b>Workflows:</b> ' + chartData [this.point.name].workflow + "<br\>";
-				str += '<b>Total:</b> ' + chartData [this.point.name].total;
-				return str;
-			}
+			enabled: false
 		},
 		plotOptions: 
 		{
@@ -177,10 +171,82 @@ $(document).ready (function ()
 			]
 		}]
 	};
-    
+	{% if workflow.root_wf_id ==  workflow.wf_id %}
+	var stat_chart;
+	var statOptions;
+
+	statOptions =  
+	{
+		chart: 
+		{
+			renderTo: 'stat_graph',
+			type: 'pie',
+			plotBackgroundColor: null,
+			plotBorderWidth: null,
+			plotShadow: false
+			//width: 350,
+			//height: 250
+		},
+		title: 
+		{
+			text: 'Job Status (Entire Workflow)'
+		},
+		credits : 
+		{
+			enabled : false
+		},
+		tooltip: 
+		{
+			enabled: false
+		},
+		plotOptions: 
+		{
+			pie: 
+			{
+				allowPointSelect: true,
+				cursor: 'pointer',
+				dataLabels: 
+				{
+					enabled: false
+				},
+				showInLegend: true,
+				dataLabels: 
+				{
+					color: '#000000',
+					formatter: function() 
+					{
+						return '<b>' + this.point.name + ':</b> ' + this.point.y;
+					}
+				}
+			}
+		},
+		series: 
+		[{
+			name: 'Job Status',
+			data: [
+				{
+					name: 'Unsubmitted',
+					y: {{ statistics ['unsubmitted-jobs'] }},
+					sliced: true,
+					selected: true
+				},
+				{
+					name: 'Failed',
+					y: {{ statistics ['failed-jobs'] }}
+				},
+				{
+					name: 'Successful',
+					y: {{ statistics ['successful-jobs'] }}
+				}
+			]
+		}]
+	};
+
+stats_chart = new Highcharts.Chart (statOptions);
+{% endif %}
 chart = new Highcharts.Chart (chartOptions);
 verticalTableInit ('#workflow_text_info');
-verticalTableInit ('#workflow_stats_info');
+//verticalTableInit ('#workflow_stats_info');
 });
 </script>
 {% endblock %}
@@ -188,56 +254,55 @@ verticalTableInit ('#workflow_stats_info');
 {% block title_header %}Workflow Details ({{ workflow.wf_uuid }}){% endblock %}
 {% block content %}
 <div id="workflow_details" style="overflow:auto;">
-	<table>
-	<tr>
-	<td>
-		<table id="workflow_text_info" class="workflow_info">
-			<tr>
-				<th>Label</th>
-				<td>{{ workflow.dax_label }}</td>
-			</tr>
-			<tr>
-				<th>Type</th>
-				<td>{% if workflow.root_wf_id ==  workflow.wf_id %}root-wf {% else %}sub-wf{% endif %}</td>
-			</tr>
-			<tr>
-				<th>Progress</th>
-				<td>{{ workflow.state }}</td>
-			</tr>
-			<tr>
-				<th>Submit Host</th>
-				<td>{{ workflow.submit_hostname }}</td>
-			</tr>
-			<tr>
-				<th>User</th>
-				<td>{{ workflow.user }}</td>
-			</tr>
-			<tr>
-				<th>Submit Directory</th>
-				<td>{{ workflow.submit_dir }}</td>
-			</tr>
-			<tr>
-				<th>Wall Time</th>
-				<td>{{ statistics ['wall-time']|time_to_str }}</td>
-			</tr>
-			<tr>
-				<th>Cumulative Wall Time</th>
-				<td>{{ statistics ['cum-time']|time_to_str }}</td>
-			</tr>
-		</table>
-	</td>
-	<td>
-		<div id="workflow_graph" class="workflow_job_graph"></div>
-	</td>
-	</tr>
-	<tr>
-		<td colspan="2">
-		
-		</td>
-	</tr>	
+	<table id="workflow_text_info" class="workflow_info">
+		<tr>
+			<th>Label</th>
+			<td>{{ workflow.dax_label }}</td>
+		</tr>
+		<tr>
+			<th>Type</th>
+			<td>{% if workflow.root_wf_id ==  workflow.wf_id %}root-wf {% else %}sub-wf{% endif %}</td>
+		</tr>
+		<tr>
+			<th>Progress</th>
+			<td>{{ workflow.state }}</td>
+		</tr>
+		<tr>
+			<th>Submit Host</th>
+			<td>{{ workflow.submit_hostname }}</td>
+		</tr>
+		<tr>
+			<th>User</th>
+			<td>{{ workflow.user }}</td>
+		</tr>
+		<tr>
+			<th>Submit Directory</th>
+			<td>{{ workflow.submit_dir }}</td>
+		</tr>
+		<tr>
+			<th>Wall Time</th>
+			<td>{{ statistics ['wall-time']|time_to_str }}</td>
+		</tr>
+		<tr>
+			<th>Cumulative Wall Time</th>
+			<td>{{ statistics ['cum-time']|time_to_str }}</td>
+		</tr>
 	</table>
+	<table class="workflow_info">
+		<tr>
+			{% if workflow.root_wf_id ==  workflow.wf_id %}
+			<td>
+				<div id="stat_graph"></div>
+			</td>
+			{% endif %}
+			<td>
+				<div id="workflow_graph"></div>
+			</td>
+		</tr>
+	</table>
+	
 	{% if workflow.root_wf_id ==  workflow.wf_id %}
-	<table id="workflow_stats_info" class="workflow_info">
+	<!--table id="workflow_stats_info" class="workflow_info">
 		<tr>
 			<th>Successful Jobs</th>
 			<td>{{ statistics ['successful-jobs']|time_to_str }}</td>
@@ -250,7 +315,7 @@ verticalTableInit ('#workflow_stats_info');
 			<th>Total Jobs</th>
 			<td>{{ statistics ['total-jobs']|time_to_str }}</td>
 		</tr>
-	</table>
+	</table-->
 	{% endif %}
 	<br/>
 	<a href="{{ url_for ('charts', root_wf_id = root_wf_id, wf_id = wf_id) }}" class="ui-state-default" style="text-decoration: none; padding: 0px 5px 0px 5px;">Charts</a>
