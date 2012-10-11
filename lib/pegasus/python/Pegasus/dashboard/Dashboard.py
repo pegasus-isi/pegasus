@@ -216,14 +216,15 @@ class Dashboard(object):
             statistics ['wall-time'] = stats_utils.get_workflow_wall_time (workflow_states_list)
             statistics ['cum-time'] = workflow_statistics.get_workflow_cum_job_wall_time ()
             
-            workflow_statistics.set_job_filter ('nonsub')
-            statistics ['total-jobs'] = workflow_statistics.get_total_jobs_status()
-
-            statistics ['successful-jobs'] = workflow_statistics.get_total_succeeded_jobs_status()
-            statistics ['failed-jobs'] = workflow_statistics.get_total_failed_jobs_status()
-            statistics ['unsubmitted-jobs'] = statistics ['total-jobs'] - (statistics ['successful-jobs'] + statistics ['failed-jobs'])
-            statistics ['job-retries'] = workflow_statistics.get_total_jobs_retries()
-            statistics ['job-instance-retries'] = statistics ['successful-jobs'] + statistics ['failed-jobs'] + statistics ['job-retries']
+            if details.root_wf_id ==  details.wf_id:
+                workflow_statistics.set_job_filter ('nonsub')
+                statistics ['total-jobs'] = workflow_statistics.get_total_jobs_status()
+    
+                statistics ['successful-jobs'] = workflow_statistics.get_total_succeeded_jobs_status()
+                statistics ['failed-jobs'] = workflow_statistics.get_total_failed_jobs_status()
+                statistics ['unsubmitted-jobs'] = statistics ['total-jobs'] - (statistics ['successful-jobs'] + statistics ['failed-jobs'])
+                statistics ['job-retries'] = workflow_statistics.get_total_jobs_retries()
+                statistics ['job-instance-retries'] = statistics ['successful-jobs'] + statistics ['failed-jobs'] + statistics ['job-retries']
             
             return job_counts, details, statistics
         
