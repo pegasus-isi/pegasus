@@ -203,7 +203,8 @@ class Dashboard(object):
 
             details = workflow.get_workflow_information ()
             
-            workflow_statistics = stampede_statistics.StampedeStatistics (self.__get_wf_db_url ())
+            workflow_statistics = stampede_statistics.StampedeStatistics (self.__get_wf_db_url (), expand_workflow=(details.root_wf_id ==  details.wf_id))
+            
             workflow_statistics.initialize (details.wf_uuid)
             
             job_counts = workflow.get_workflow_job_counts ()
