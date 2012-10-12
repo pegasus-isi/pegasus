@@ -16,6 +16,9 @@ run_id=
 policy_type="nopolicy"
 statistics_file="statistics.csv"
 default_streams=4
+
+# This is only for output reporting
+# The file size needs to be configured on the cloud
 file_size="0M"
 total_transfer_time=
 total_cleanup_time=
@@ -25,6 +28,9 @@ cummulative_job_walltime_from_submit=
 transfers_failed=
 policy_server_url="http://lonestar.isi.edu:8080/policy"
 max_parallel_streams=
+
+# Change these to match your cloud, staging hosts
+# and email address
 transfer_hosts="vm-103.alamo.futuregrid.org=>obelix.isi.edu"
 cluster_hosts="obelix.isi.edu=>obelix.isi.edu"
 email_address="smithd@isi.edu"

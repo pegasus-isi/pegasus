@@ -21,9 +21,9 @@ RUN_DIR=$1
 #exit 0
 
 # Used to artificially inject staging files into each staging job
-#LARGE_FILE_HOSTNAME=vm-103.alamo.futuregrid.org
-#LARGE_FILE_BASE=/opt/stagein/stagein
-LARGE_FILE_HOSTNAME=
+LARGE_FILE_HOSTNAME=vm-103.alamo.futuregrid.org
+LARGE_FILE_BASE=/opt/stagein/stagein
+#LARGE_FILE_HOSTNAME=
 
 #LOCAL_PEGASUS_HOME="/ccg/software/pegasus/dev/trunk"
 LOCAL_PEGASUS_HOME="/nfs/ccg3/scratch/smithd/pegasus"
