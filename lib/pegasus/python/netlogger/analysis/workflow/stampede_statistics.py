@@ -468,8 +468,10 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         d_or_d = self._dax_or_dag_cond()
         
         sq_1 = self.session.query(func.count(Job.job_id))
-        if self._expand:
+        if self._expand and self._is_root_wf:
             sq_1 = sq_1.filter(Workflow.root_wf_id == self._root_wf_id)
+        elif self._expand and not self._is_root_wf:
+            sq_1 = sq_1.filter(Workflow.wf_id.in_ (self._wfs))
         else:
             sq_1 = sq_1.filter(Workflow.wf_id == self._wfs[0])
         sq_1 = sq_1.filter(Job.wf_id == Workflow.wf_id)
