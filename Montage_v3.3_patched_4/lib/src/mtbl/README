@@ -1,0 +1,11 @@
+
+Simple Table Reading Library
+----------------------------
+
+This library predates the full table reading library (../tbl) and
+provides similar functionality but only for basic IPAC ASCII table
+files.
+
+See the "docs" subdirectory for details.
+
+Uses "make clean" / "make" / "make install"

@@ -1,0 +1,1 @@
+saoimage -reg `imua1 -r 10 $1` -wcscom sua1_-ha_%s $*

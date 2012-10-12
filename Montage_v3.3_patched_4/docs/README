@@ -1,0 +1,55 @@
+********************************
+* Montage Documentation README *
+* December 20, 2006            *
+********************************
+
+Online Montage documentation can be found at:
+
+    http://montage.ipac.caltech.edu/docs
+
+If you would like your own local copy of the documentation, follow
+these steps:
+
+  1. Download the g-zipped tar file from:
+
+       http://montage.ipac.caltech.edu/docs/docs.tar.gz
+
+  2. Place the file docs.tar.gz in the Montage $INSTALL directory 
+     (i.e., Montage_vX.Y)
+
+  3. cd into the $INSTALL directory and type the following:
+
+       gunzip docs.tar
+       tar xvf docs.tar
+
+     This will unpack all the html documents into the docs subdirectory.
+
+The documentation contains the following sections:
+
+DESIGN AND PERFORMANCE
+ - Design Philosophy
+ - Supported File Formats
+ - Algorithms for Re-projection, Background Rectification,
+   and Image Co-Addition
+ - Parallelization and Performance
+
+INSTALLING MONTAGE
+ - Downloading Montage
+ - Montage Components
+ - System Requirements
+ - Building Montage
+
+USING MONTAGE
+ - Complete API (Detailed usage for each module)
+ - Supported WCS Projections
+ - Montage Header Templates
+ - Debug Levels
+ - Caveats
+ - Troubleshooting Montage
+ - Montage Tutorial: m101 Mosaic
+
+MONTAGE TEST SUITE
+ - Test Suite Overview
+ - Montage Build Test
+ - Photometric and Calibration Accuracy
+ - Third Party Validation by SWIRE Team

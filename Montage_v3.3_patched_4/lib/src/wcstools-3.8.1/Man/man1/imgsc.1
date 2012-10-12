@@ -1,0 +1,53 @@
+.TH imgsc(1) WCS "14 April 1998"
+.SH Name
+imgsc \- Find HST GSC stars in FITS or IRAF image files
+.SH Synopsis
+imgsc [options] FITS or IRAF file(s)
+.SH Description
+Search the HST Guide Star Catalog withing the area described by the world
+coordinate system in an image header.  This is a link to imcat rather than
+a separate executable.
+.SH Options
+.TP
+.B \-b [<RA> <Dec>]
+Output in B1950, optional new image center in B1950 (FK4) RA and Dec
+.TP
+.B \-c <name>
+Reference catalog (gsc, ujc, or tab table file
+.TP
+.B \-g <class>
+Guide Star Catalog class (-1=all,0,3 (default -1)
+.TP
+.B \-h
+Print heading, else do not 
+.TP
+.B \-j [<RA> <Dec>]
+Output in J2000, optional new image center in J2000 (FK5) RA and Dec
+.TP
+.B \-m [<bright magnitude>] <faint magnitude>
+Limiting catalog magnitude(s) (default none, bright -2 if only faint is given)
+.TP
+.B \-n <num>
+Number of brightest stars to print 
+.TP
+.B \-p <scale>
+Initial plate scale in arcsec per pixel (default 0)
+.TP
+.B \-s
+Sort by RA instead of flux 
+.TP
+.B \-t
+Tab table to standard output as well as file
+.TP
+.B \-v
+Verbose listing of processing intermediate results
+.TP
+.B \-w
+Write tab table output file imagename.cat
+.B \-z
+Use AIPS classic projections instead of WCSLIB; use CD matrix or CDELT
+instead of polynomial solution.
+.SH See Also
+imcat(),imuac(),imusac(),scat()
+.SH Author
+Doug Mink, SAO (dmink@cfa.harvard.edu)

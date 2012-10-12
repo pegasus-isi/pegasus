@@ -1,0 +1,40 @@
+convertCoordinates                convertCoordinates.c
+
+precessBesselian                  precessBesselian.c
+precessBesselianWithProperMotion  precessBesselian.c
+precessJulian                     precessJulian.c
+precessJulianWithProperMotion     precessJulian.c
+
+convertEquToGal                   convertEquGal.c
+convertGalToEqu                   convertEquGal.c
+convertGalToSgal                  convertGalSgal.c
+convertSgalToGal                  convertGalSgal.c
+convertEclToEqu                   convertEclEqu.c
+convertEquToEcl                   convertEclEqu.c
+computeEquPole                    convertEclEqu.c
+
+convertBesselianToJulian          convertBesselianJulian.c
+convertJulianToBesselian          convertBesselianJulian.c
+correctCoordinateRange            convertBesselianJulian.c
+correctForEclipticETerms          convertBesselianJulian.c
+correctForEquatorialETerms        convertBesselianJulian.c
+getEclETermCorrection             convertBesselianJulian.c
+getEquETermCorrection             convertBesselianJulian.c
+refinedEclETermCorrection         convertBesselianJulian.c
+refinedEquETermCorrection         convertBesselianJulian.c
+
+initializeFK5CorrectionData       computeFKCorrections.c
+besselianToJulianFKCorrection     computeFKCorrections.c
+interpolateBilinear               computeFKCorrections.c
+interpolateLinear                 computeFKCorrections.c
+julianToBesselianFKCorrection     computeFKCorrections.c
+loadFK5Constants                  computeFKCorrections.c
+
+parseCoordinateString             parseCoordinateString.c
+sexToDegree                       sexToDecimalDegree.c
+checkFormat                       sexToDecimalDegree.c
+getSubstrings                     sexToDecimalDegree.c
+degreeToDMS                       decimalDegreeToSex.c
+degreeToHMS                       decimalDegreeToSex.c
+degreeToSex                       decimalDegreeToSex.c
+roundValue                        decimalDegreeToSex.c

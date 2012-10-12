@@ -1,0 +1,9 @@
+Version   Date     Description of Change
+
+1.1      21Sep04   Bug fix:  cgeomFindLowest() used
+		   an integer temporary variable instead
+		   of a double
+
+1.0      01Jun04   Initial Release
+
+

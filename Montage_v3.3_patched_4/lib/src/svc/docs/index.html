@@ -1,0 +1,435 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN//2.0">
+<html>
+<head>
+<title> Service I/O Library and Return Structure Handling </title>
+</head>
+
+<body>
+<hr><p>
+
+<center>
+<h2>              Service I/O Library<br>
+              and Return Structure Handling
+</h2>
+</center>
+<p>
+
+<center><a name=toc><b>Table of Contents</b></a>
+<table border=1 cellpadding=2 width=75%><tr><td>
+<center><table><tr><td>
+<ul>
+   <item><a href=#description>   General Description</a><br>
+   <item><a href=#contrl>        Service Control</a><br>
+   <item><a href=#format>        Structure Format and Dereferencing</a><br>
+   <item><a href=#examples>      Usage Examples</a><br>
+      <ul>
+      <item><a href=#test1>         <tt>test1.c</tt></a><br>
+      <item><a href=#test2>         <tt>test2.c</tt></a><br>
+      <item><a href=#test3>         <tt>test3.c</tt></a><br>
+      </ul>
+</ul>
+</td></table></center>
+</td></table></center>
+
+
+<a name=description><h2>General Description</h2></a><p>
+
+This library allows the user to fire up external processes as
+services, to send commands and receive structured responses, and to
+parse those responses to extract <tt>keyword = value</tt> pairs or the
+value of a particular keyword.<p>
+
+<hr><p>
+
+
+
+<a name=control><h2>Service Control</h2></a><p>
+
+The calls in the <tt><b>svcio</b></tt> library are as follows:<p>
+
+<pre>
+	 void              svc_debug(FILE *stream);
+	 int   svc       = svc_init(char *cmdline);
+	 int   svc       = svc_run(cmdline);
+	 int   status    = svc_send(svc, cmd);
+	 char *retstr    = svc_receive(svc);
+	 int   status    = svc_command(int svc, char *cmd);
+	 int   status    = svc_close(int svc);
+	 int   status    = svc_closeall();
+	 void              svc_sigset();
+	 void              svc_sighandler(int sig);
+	 SVC  *svcstruct = svc_struct(char *retstr);
+	 char *val       = svc_val(char *structstr, char *key, char *val);
+	 char *val       = svc_value(char *ref);
+</pre>
+
+where <tt>SVC</tt> is defined by<p>
+
+<pre>
+         typedef struct
+         {
+            int  nalloc;
+            int  count;
+            char **key;
+            char **val;
+         }  SVC;
+</pre><p>
+
+Function descriptions:<p>
+
+<ul>
+<li><tt><b>svc_debug()</b></tt>
+The library will print a running commentary on what memory it is
+allocating, what commands it is sending to what services, etc. to
+whatever stream this function selects (usually <tt>stdout</tt> though
+the default is <tt>(FILE *)NULL</tt>).<p>
+
+<li><tt><b>svc_init()</b></tt>
+Child services are started by giving this routine a command-line-like
+string (<i>e.g.</i> "<tt>skyview -n -server</tt>").  The return 
+string is an integer handle to be used in future references to the
+service.<p>
+
+<li><tt><b>svc_run()</b></tt>
+This routine is a wrapper for <tt>svc_init()</tt>,
+<tt>svc_command()</tt>, and <tt>svc_close()</tt>, where all the user
+wants to do is run a command-line driven program which runs to
+completion and returns a single structure.<p>
+
+<li><tt><b>svc_send()</b></tt>
+Send a command to a service.<p>
+
+<li><tt><b>= svc_receive()</b></tt>
+Recieve a response from a service.  Usually, this response will be
+in the form of a structure string and usually there will be only 
+on response for each <tt>svc_send()</tt> call.  However, this 
+routine can be called multiple times in those cases where there
+are multiple lines of response.<p>
+
+<li><tt><b>svc_command()</b></tt>
+This routine is a wrapper for <tt>svc_send()</tt> and 
+<tt>svc_receive()</tt> in the usual case where there is one
+of each called one after the other.<p>
+
+<li><tt><b>svc_close()</b></tt>
+Closes a service.<p>
+
+<li><tt><b>svc_closeall()</b></tt>
+Closes all active services.<p>
+
+<li><tt><b>svc_sigset()</b></tt>
+If this routine is called, all signals (except of course for SIGKILL
+which cannot be trapped) will be sent to the function 
+<tt>svc_sighandler()</tt>.  
+<p>
+
+<li><tt><b>svc_sighandler()</b></tt>
+The default <tt>svc_sighandler()</tt> function prints (to the 
+<tt>svc_debug()</tt> stream) a message for any fatal signals, then
+exits.  All other signals it ignores and continues execution.  This
+routine can be overridden by the user or individual signal handlers
+can be implemented for specific signals (<i>e.g.</i><tt>SIGALRM</tt>).<p>
+
+<li><tt><b>svc_struct()</b></tt>
+This routine takes apart a string which has the form of a return 
+stucture (see below) and populates a SVC structure.  It is not 
+recursive; elements of the structure which are themselves need to
+be taken apart individually as needed.<p>
+
+<li><tt><b>svc_val()</b></tt>
+This routine (using <tt>svc_struct()</tt> recursively) looks up a
+specific structure value (see below).<p>
+
+<li><tt><b>svc_value()</b></tt>
+This a a wrapper for <tt>svc_val()</tt> for the specific case where
+we are taking apart the string returned internally by 
+<tt>svc_command</tt>.  Also, rather than putting the result into
+a <tt>val</tt> argument, <tt>svc_value()</tt> also takes the 
+responsibility for managing string space and returns a pointer
+to the extracted value.<p>
+
+</ul>
+
+<hr><p>
+
+
+
+<a name=format><h2>Structure Format and Dereferencing</h2></a><p>
+
+Structure strings have the form (see the <a href="struct.html"> Structure
+Format</a> description for details on the genesis of this format):<p>
+
+
+<pre>
+        [struct ... ]
+</pre><p>
+
+or<p>
+
+<pre>
+        [array  ... ]
+</pre><p>
+
+
+where the body of the structure is composed of <tt>key = val, key =
+val, ...</tt>  or <tt>val, val, ...</tt> sets (for structs and array
+respectively).  For the <tt>key = val</tt> construct, values can be
+numbers, quoted strings or arrays/structures in their own right.<p>
+
+For illustration, this is a typical structure (newlines added for 
+readability):<p>
+
+
+<pre>
+        [struct stat = "OK", 
+         count = 3, values = [array "first", 2, "and third"],
+         child = [struct pid = 55455, date = "Thu Jul 27 09:51:11 PDT 1995"]]
+</pre><p>
+
+
+Returns from services are newline-delimited strings and are limited to
+4096 characters.<p>
+
+When using <tt>svc_val()</tt>, element names look like C structure
+references:
+
+<pre>
+        scale.winref.xval[4]
+</pre>
+
+In this example, "<tt>scale</tt>", "<tt>winref</tt>", and
+"<tt>xval</tt>" are keys in the returned structure.  "<tt>4</tt>", is
+the counter for an array.<p>
+
+If the structure for the above was<p>
+
+
+<pre>
+        [struct name = "test", winref = [struct xval = [array 1, 2, 3, 4, 5],
+                yval = [array 6, 7, 8, 9, 10]]]
+</pre><p>
+
+
+<tt>svc_val(retstr, "scale.winref.xval[4]", val)</tt> would return
+<tt>val = "5"</tt>.<p>
+
+<hr><p>
+
+
+
+<a name=examples><h2>Usage Examples</h2></a><p>
+
+
+The following are example code snippets from test programs using the
+svcio library routines.<p>
+
+
+<a name=test1><tt><b>test1.c</b></tt></a>
+
+<pre>
+        index  = svc_init    ("agra -s");
+                 svc_send    (index, cmdstr);
+        retstr = svc_receive (index);
+        val    = svc_struct  (retstr);
+
+             i = val->count;  =>  ( val->key[i], val->val[i] )
+
+                 svc_free    (val);
+                 svc_close   (index);
+</pre><p>
+
+
+<tt>test1</tt> is run with a script file as input (i.e., <tt>test1 <
+script</tt>).<p>
+
+<hrwidth="50%"><p>
+
+
+<a name=test2><tt><b>test2.c</b></tt></a>
+
+<pre>
+        index  = svc_init    ("agra -s");
+                 svc_send    (index, cmdstr);
+        retstr = svc_receive (index);
+                 svc_val     (retstr, "return.value[3]", val);
+                 svc_close   (index);
+</pre><p>
+
+
+<tt>test2</tt> requires no arguments.<p>
+
+
+Both these test programs would require a valid copy of AGRA in 
+the users path.<p>
+
+<hrwidth="50%"><p>
+
+
+<a name=test3><tt><b>test3.c</b></tt></a><p>
+
+The third example program (programs are available <a href=../test>
+here</a>) reads a service structure from <i>stdin</i>, concatenating 
+multiple lines (for readability) into a single structure.  It then 
+recursively decomposes the structure, writing the results to stdout.<p>
+
+Any additional lines in the file are taken to be structure component 
+references and the program looks these up in the structure and prints
+out the values.<p>
+
+For example, if the input to the program is:<p>
+
+<pre>
+[struct 
+   cmd = "pi",
+   stat="OK",
+   center = [struct 
+      pixel_value = 297 ,
+      units = " DN",
+      coord = [struct 
+	 coord_sys = "screen",
+	 x = "100",
+	 y = [array 
+	    100,
+	    "      x      ",
+	    "",
+	    234.333,
+	    "abc def"
+	 ]
+      ],
+      coefficients = [array
+	 [struct A=0.305, B=0.764, C=0.163, D=0.002],
+	 [struct A=0.852, B=0.293, C=0.841, D=0.004],
+	 [struct A=0.274, B=0.516, C=0.565, D=0.001],
+	 [struct A=0.747, B=0.457, C=0.454, D=0.003],
+	 [struct A=0.815, B=0.372, C=0.648, D=0.001]
+      ]
+   ],
+   pixel_count = 1,
+   max_pixel_value = 2975,
+   frame = 1,
+   filename = "/home/jcg/ki0260032.fits"
+]
+
+stat
+pixel_count
+filename
+center.coefficients[2].B
+center.coord.x
+center.coord.y[1]
+</pre><p>
+
+the following would be output:<p>
+
+<pre>
+---------------------------------------------
+
+
+   sv-&gt;count = 7
+
+   0: &lt;cmd&gt; = &lt;pi&gt;
+   1: &lt;stat&gt; = &lt;OK&gt;
+   2: &lt;center&gt; = 
+
+      sv-&gt;count = 4
+
+      0: &lt;pixel_value&gt; = &lt;297&gt;
+      1: &lt;units&gt; = &lt; DN&gt;
+      2: &lt;coord&gt; = 
+
+         sv-&gt;count = 3
+
+         0: &lt;coord_sys&gt; = &lt;screen&gt;
+         1: &lt;x&gt; = &lt;100&gt;
+         2: &lt;y&gt; = 
+
+            sv-&gt;count = 5
+
+            0: &lt;0&gt; = &lt;100&gt;
+            1: &lt;1&gt; = &lt;      x      &gt;
+            2: &lt;2&gt; = &lt;&gt;
+            3: &lt;3&gt; = &lt;234.333&gt;
+            4: &lt;4&gt; = &lt;abc def&gt;
+
+
+      3: &lt;coefficients&gt; = 
+
+         sv-&gt;count = 5
+
+         0: &lt;0&gt; = 
+
+            sv-&gt;count = 4
+
+            0: &lt;A&gt; = &lt;0.305&gt;
+            1: &lt;B&gt; = &lt;0.764&gt;
+            2: &lt;C&gt; = &lt;0.163&gt;
+            3: &lt;D&gt; = &lt;0.002&gt;
+
+         1: &lt;1&gt; = 
+
+            sv-&gt;count = 4
+
+            0: &lt;A&gt; = &lt;0.852&gt;
+            1: &lt;B&gt; = &lt;0.293&gt;
+            2: &lt;C&gt; = &lt;0.841&gt;
+            3: &lt;D&gt; = &lt;0.004&gt;
+
+         2: &lt;2&gt; = 
+
+            sv-&gt;count = 4
+
+            0: &lt;A&gt; = &lt;0.274&gt;
+            1: &lt;B&gt; = &lt;0.516&gt;
+            2: &lt;C&gt; = &lt;0.565&gt;
+            3: &lt;D&gt; = &lt;0.001&gt;
+
+         3: &lt;3&gt; = 
+
+            sv-&gt;count = 4
+
+            0: &lt;A&gt; = &lt;0.747&gt;
+            1: &lt;B&gt; = &lt;0.457&gt;
+            2: &lt;C&gt; = &lt;0.454&gt;
+            3: &lt;D&gt; = &lt;0.003&gt;
+
+         4: &lt;4&gt; = 
+
+            sv-&gt;count = 4
+
+            0: &lt;A&gt; = &lt;0.815&gt;
+            1: &lt;B&gt; = &lt;0.372&gt;
+            2: &lt;C&gt; = &lt;0.648&gt;
+            3: &lt;D&gt; = &lt;0.001&gt;
+
+
+
+   3: &lt;pixel_count&gt; = &lt;1&gt;
+   4: &lt;max_pixel_value&gt; = &lt;2975&gt;
+   5: &lt;frame&gt; = &lt;1&gt;
+   6: &lt;filename&gt; = &lt;/home/jcg/ki0260032.fits&gt;
+
+---------------------------------------------
+
+&lt;stat&gt; = &lt;OK&gt;
+&lt;pixel_count&gt; = &lt;1&gt;
+&lt;filename&gt; = &lt;/home/jcg/ki0260032.fits&gt;
+&lt;center.coefficients[2].B&gt; = &lt;0.516&gt;
+&lt;center.coord.x&gt; = &lt;100&gt;
+&lt;center.coord.y[1]&gt; = &lt;      x      &gt;
+
+---------------------------------------------
+</pre>
+
+<hr>
+
+<address>
+<table>
+<tr><td><b>Author:</b>       <td> John Good                              </tr>
+<tr><td><b>Address:</b>      <td> <a href="mailto:jcg@ipac.caltech.edu">
+                                                  jcg@ipac.caltech.edu </a>
+									 </tr>
+<tr><td><b>Last update:</b>  <td> 03-Jan-97                              </tr>
+</table>
+</address>
+
+</body>
+</html>

@@ -1,0 +1,1 @@
+saoimage -reg `imty2 -r 15 $1` -wcscom sty2_-ha_%s $*

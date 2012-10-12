@@ -1,0 +1,18 @@
+SIMPLE  =                    T
+BITPIX  =                  -32
+NAXIS   =                    2
+NAXIS1  =                 5433
+NAXIS2  =                 5433
+CRVAL1  =               242.75
+CRVAL2  =                  55.
+RADESYS = 'ICRS    '          
+EQUINOX = '2000.   '          
+CTYPE1  = 'RA---TAN'          
+CTYPE2  = 'DEC--TAN'          
+CRPIX1  =          5383.333391
+CRPIX2  =          5383.333391
+CDELT1  =         -0.000166667
+CDELT2  =          0.000166667
+CROTA2  =                 315.
+BUNIT   = 'MJy/sr  '          
+END                           

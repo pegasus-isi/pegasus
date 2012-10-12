@@ -1,0 +1,25 @@
+.TH imhead(1) WCSTools "6 July 2001"
+.SH Name
+imhead \- Print FITS or IRAF image header
+.SH Synopsis
+imhead [options] FITS or IRAF filename
+.SH Description
+.I imhead
+is a utility for listing IRAF and FITS image headers. It converts IRAF .imh
+image headers to a FITS format before listing them. For IRAF files, the
+BITPIX, NAXIS, NAXIS1, NAXIS2, OBJECT, and PIXFILE keywords are set from
+the binary portion of the header. IMHFILE is set from the actual filename
+for internal purposes. 
+.SH Options
+.TP
+.B \-f
+Write exact FITS header, with no inserted newlines and including trailing blanks
+.TP
+.B \-v
+Print name of file and program version before header
+.TP
+.B \-z
+Set BITPIX to 0 to output a dataless header
+
+.SH Author
+Doug Mink, SAO dmink@cfa.harvard.edu

@@ -1,0 +1,1 @@
+saoimage -reg `imppm -r 15 $1` -wcscom sppm_-ha_%s $*

@@ -1,0 +1,10 @@
+
+Coordinate Handling Routines
+----------------------------
+
+Handles conversions between coordinate systems, including precession.
+See "docs" for detailed information.
+
+Uses "make clean" / "make" / "make install".
+
+

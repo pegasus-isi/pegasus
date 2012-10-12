@@ -1,0 +1,483 @@
+
+
+TOPIC:   NED client user's guide
+AUTHOR:  Xiuqin Wu & NED team
+TIME:    March 16, 1994
+
+NED has been providing services for the Astronomical community for more
+than three years through our interactive interface. In Response to
+repeated requests from users for a client/server and manipulative mode
+access, we are introducing this service for users who prefer to access
+NED data directly within their code.
+
+We are going to provide a NED server, which will be running on a
+dedicated NED machine, and a client library, which can be used to write
+client programs to retrieve NED data.  We also provide several simple
+client programs to serve as samples for those who want to write their
+own client programs.
+
+A typical usage of this client/server system would be for the program
+to establish a connection to the NED server (Section A below), issue a
+number of search requests (Section B), manipulate the data returned,
+free up the space when it is not needed (Section C), then disconnect.
+
+
+The memo describes the functions in the client library that client
+programmer need to call to write a client program.
+
+
+A. connect/disconnect
+   connect to and disconnect from NED server
+
+   int ned_connect()
+       ned_disconnect()
+	     
+   ned_connect() requests and establish a connection from client to server. 
+   ned_disconnect() disconnets the client from server.
+
+   RETURN VALUES:
+
+   0:  connection is established.
+   -1: connection is not established, check ned_errno for reasons.
+      NE_HOST     can't get hostent from the name
+      NE_SERVICE  can't get the port number for the service
+      NE_PROTO    can't convert tcp to protocol number
+      NE_SOCK     can't get a socket allocated
+      NE_CONNECT  can't connect to server
+
+
+
+
+
+B. NED search functions:
+   
+   We decide to start by providing a limited subset of the NED
+   functions in the client code.  The following five functions provide
+   different ways to retrieve NED data about objects.  Upon successful
+   return from the function, basic NED data will be in the data structure
+   described below, and users can navigate through the data structure
+   to get the data they are interested in.
+
+   B.1) Name resolver:
+
+      For a given object name, this will return all the other names or
+      Cross Identifications and the corresponding object types attached
+      to the names for the object in the NED database.
+
+      int ned_name_resolver(char *objname, int *no_names, CrossID **cp)
+
+      input: 
+	 objname:  object name
+
+      output:
+	 no_names: number of names found
+	 cp:       point to a pointer of data structure CrossID
+
+      typedef struct _crossid {
+	 char  objname[31];
+	 char  objtype[7];
+	 } CrossID;
+
+
+      RETURN VALUE:
+
+      0: the objname has been recognized by the name interpreter, and
+	 there is a number (no_names) of cross identifications in NED
+	 database for the object the objname refers to, and they are
+	 stored in an array of type CrossID pointed to by cp.
+
+      -1:check ned_errno to determine what happened
+	 NE_QUERY:   query can't be sent to server
+	 NE_NAME:    object name can't be recognized by name interpreter EGRET
+	 NE_NOSPACE: Can't allocate memory space for data
+	 NE_AMBN:    input object name is ambiguous, no_names is the
+		     number of possible selections supplied by EGRET;
+		     they are stored in an array of type CrossID
+		     pointed to by cp.
+	 NE_NOBJ:    the format and nomanclature for the object name provided
+		     are recongnized by the NED name interpreter (EGRET),
+		     but there is no  object in NED database for the
+		     given object name
+
+
+
+
+
+
+   The following 4 search functions will return, for the given input,
+   all the objects found; for each object found, there will be a list
+   of cross IDs and other basic data.
+
+   B.2) Objects search by object name
+
+      For a given object name, it will return all the objects found in
+      the NED database with matching names.
+
+      int ned_obj_byname(char *objname, int *obj_no, ObjInfo **op, CrossID **cp) 
+
+      input: 
+	 objname:  object name
+
+      output:
+	 obj_no:   number of objects found
+	 op:       point to pointer of structure ObjInfo
+	 cp:       point to poniter of structure CrossID
+
+
+  B.3) Objects search near object name
+
+      For a given object name and a search radius, it will return all
+      the objects found in the NED database within the cone centered
+      on the object and defined by the search radius.
+
+
+      int ned_obj_nearname(char *objname, double radius,
+			  int *obj_no, ObjInfo **op, CrossID **cp) 
+      input: 
+	 objname:  object name
+	 radius:   search radius in arcmin (up to 300 arcmins)
+
+      output:
+	 obj_no:   number of objects found
+	 op:       point to pointer of structure ObjInfo
+	 cp:       point to poniter of structure CrossID
+
+   B.4) Objects search near position
+
+      For a given position(ra-j2000, dec-j2000) and a search radius,
+      it will return all the objects found in the NED database within
+      the cone centered on the position and defined by the radius.
+
+
+      int ned_obj_nearposn(double ra, double dec, double radius,
+			  int *obj_no, ObjInfo **op)
+
+      input:
+	 ra:      Right Ascension in J2000 decimal degree
+	 dec:     Declination in J2000 decimal degree
+	 radius:  search radius in arcmin (up to 300 arcmin)
+
+      output:
+	 obj_no:  number of objects found
+	 op:      point to pointer of structure ObjInfo
+
+
+
+
+   B.5) Objects Search by IAU format
+
+      For a given IAU-format name, interpretation style and equinox,
+      return the search position, radius and all the objects found in
+      the NED database within the cone centered on the position and
+      defined by the search radius.
+
+      This function converts the IAU-format name (in accordance with
+      the style) into a search center and radius, then executes a search
+      near position on the result of the conversion.
+
+      int ned_obj_iau(char *iauformat, char style, char *equinox,
+		     char *cra, char *cdec, double *radius, 
+		     int *obj_no, ObjInfo **op)
+
+      input: 
+	 iauformat:  IAU format name
+
+	 style:      how to interprete the iauformat, 
+		     'L' (liberal) or 'S'(strict), case insensitive
+		     default: 'S'
+	 equinox:    "Jnnnn.n" or "Bnnnn.n", case insensitive, 
+		     nnnn.n is between 1500.0 and 2500.0
+		     default: B1950.0 
+
+	    it is client programer's responsibility to make sure the
+	    style and equinox are what you wanted. Otherwise the
+	    default will be taken.
+
+      output:
+	 cra:    RA in sexigesmal format
+	 cdec:   DEC in sexigesmal format
+	 radius: search radius
+
+		 According to the style, the IAU-format is converted into 
+		 a position search.
+         obj_no: number of objects found.
+	 op:     point to pointer of structure ObjInfo.
+
+
+
+
+
+
+      Each of the 4 different object searches will return the
+      information in an array of the data type ObjInfo (defined
+      below).
+
+      typedef struct _more_data {
+	 char       data_typec[61];   /* data type code to describe the data */
+	 char       data[101];
+	 _more_data *next;
+	 } MoreData;
+
+
+      typedef struct _obj_info {
+	 int        no_crossid;  /* number of crossids for the object */
+	 CrossID    *cp;
+	 int        no_note;     /* number of notes */
+	 int        no_photom;   /* number of photometric data points */
+	 int        no_ref;      /* number of references */
+	 double     dist;        /* distance to the search center */
+	 char       objtype[7];
+	 double     ra;          /* J2000 */
+	 double     dec;
+	 double     unc_maj;
+	 double     unc_min;
+	 double     unc_ang;
+	 char       refcode[20];
+	 MoreData   *mdp;
+	 } ObjInfo;
+
+
+      With the structure MoreData in the definition of ObjInfo, we will
+      have the flexibility of providing new data in the future without
+      changing any code (ideally and hopefully). With any new data we
+      have, all we need to do is to modify the server part to send the new
+      data to the client, and provide users with the data type code and
+      explanation about it. With the "Application protocol between server
+      and client" design (it is described separately), as long as users
+      use the functions we provide to retrieve the data, the new data
+      will be put into the structure MoreData for our client users.
+      Users can modify their client program to make use of the new
+      data, or they can still use the old program with the new server.
+
+      RETURN VALUE:
+      -1:check ned_errno to determine what happened
+
+	 NE_QUERY:   query can't be sent to server
+	 NE_NOSPACE: Can't allocate memory space for data
+
+	 NE_NAME:    object name can't be recognized by name interpreter EGRET
+	 NE_AMBN:    input object name is ambiguous, no_names is the number of
+		  selections supplied by EGRET, they are stored in an array
+		  of type CrossID pointed to by cp.
+	 NE_RA:      ra has unacceptable value,  e.g out of [0, 360]
+	 NE_DEC:     dec has unacceptable value, e.g out of [-90, 90]
+	 NE_RADIUS:  radius is out of range, e.g out of [0, 300]
+	 NE_JB:      Letter other than J or B is in equinox specification
+	 NE_EPOCH:   Epoch in equinox is out of range, e.g out of [1500, 2500]
+	 NE_IAU:     iauformat is in wrong format
+	 NE_NOBJ:    there is no  object in the NED database for the given 
+		  object name
+
+      0:  There are no_obj found for specified objname(position, iauformat),
+	  and they are stored in an array pointed to by op. 
+
+
+   B.6) Expand the reference code
+      
+      For a given 19-digit reference code, the function returns the detailed
+      information about the it. 
+
+      int ned_ex_refcode(char *refcode, struct reference *full_ref);
+
+      input: 
+	 
+	 refcode, the NED statndard 19 digit code
+
+      output: 
+       
+	 full_ref, the full reference for the refcode. in the structure
+
+	 struct reference{
+	       char  refcode[20];
+	       char  pub_name[81];
+	       int   year;
+	       char  vol[21];
+	       char  page[21];
+	       char  title1[81];
+	       char  title2[81];
+	       char  author1[81];
+	       char  author2[81];
+        };
+
+     RETURN: 
+      -1: check ned_errno to determine what happened
+
+	 NE_QUERY:   query can't be sent to server
+	 NE_NOSPACE: Can't allocate memory space for data
+
+	 NE_NOREFC:  there is no detailed reference in the NED database 
+		     for the given refcode. If you get the refcode from NED,
+		     please let us know this.
+	 NE_EREFC:   refcode is not a 19-digit code
+
+      0: query is done successfully.
+
+
+   B.7) Bibligraphic search for a given object
+
+      For a given object name, it will return all the references for it
+      in NED database. 
+
+      int ned_ref(char *objname, int begin_year, int end_year,
+		       int *no, CrossID **cp, NedRef **refp);
+
+      input:
+
+	 objname: the name of the object for which you want to get all the
+	          references in NED.
+	 begin_year, end_year: 
+
+                  the beginning and endding year (inclusive) during which the 
+		  references published 
+      ouput: 
+
+	 no: number of references returned,
+	 cp: point to pointer of struct CrossID,
+	 refp: point to pointer of  structure reference
+
+     RETURN:
+	-1: check ned_errno for what happened
+
+	 NE_QUERY:   query can't be sent to server
+	 NE_NOSPACE: Can't allocate memory space for data
+
+	 NE_NAME:    object name can't be recognized by name interpreter EGRET
+	 NE_AMBN:    input object name is ambiguous, no_names is the number of
+		  selections supplied by EGRET, they are stored in an array
+		  of type CrossID pointed to by cp.
+
+	 NE_NOBJ:    there is no  object in the NED database for the given 
+		  object name
+         NE_NOREF:   There is no reference in NED for the given object
+
+
+
+C. NED free space functions:
+
+   It is client programer's responsibility to free the space allocated
+   for the results of earlier called search functions. It is a better
+   practice to free the space once you are sure you don't need it any
+   more.  We provide two functions to free space.
+
+   1) ned_free_objp(ObjInfo *objp, int no_obj)
+
+           It frees the space for object. Because the size of the space
+	   is determined by the number of objects found, the number of 
+	   objects (no_obj) is needed to free space for those objects.
+
+   2) ned_free_cp( CrossID *cp)
+
+           It frees the space for cross identifications.
+   
+   3) ned_free_refp(NedRef *refp, int no_ref);
+	  
+	   It frees the space allocated for the results of reference search for
+	   a given object. Because the size of teh space is determined by the
+	   number of references found, the number of references (no_ref) is
+	   needed. 
+
+
+
+D. data type codes definition
+
+The data fields that are available for all objects are placed in the
+correponding elements in the structure ObjInfo. Other data fields that are not
+available for all the objects can be found in the chain link of
+structure MoreData, we give the data type codes and their meanings below.
+
+These are the data type codes that are the same for all
+object types, and may be available for all objects:
+
+BH_EXTIN    : Burstein Heilius extinction (B mag)
+Z           : redshift of object
+Z_UNC       : uncertainty for redshift
+Z_REFCODE   : 19-degit reference code for redshift
+HRV         : Heliocentric radial velocity in km/s
+HRV_UNC     : uncertainty for Heliocentric radial velocity in km/s
+HRV_REFCODE : 19-digit code for Heliocentric radial velocity
+ESSEN_NOTE  : essential notes
+
+The contents of the ObjInfo structure vary with the type of object
+under examination, so these contents are different for galaxy clusters
+and quasers for instance.  Here are the data type code lists for
+differnt object types:
+
+1)  Galaxies (G)
+
+   MORPH  1: Morphology
+   MAG    2: A magnitude in the visible range, on any scale as available
+   DIAM1  3: Major axis diameter in arcmin
+   DIAM2  4: Minor axis diameter in arcmin
+
+
+2)  Small Associations of Galaxies (GPair, GTrpl, GGroup)
+
+   MORPH  1: Morphology
+   MAG    2: A magnitude in the visible range (of brightest, or of all)
+   SIZE   3: Size in arcmin
+   POP    4: Population count
+
+
+
+
+
+3)  Clusters of Galaxies (GClstr)
+
+   MORPH  1: Descriptive morphology and [system of classification]
+   MAG    2: A magnitude in the visible range and rank of Nth brightest
+   SIZE   3: Size in arcmin
+   POP    4: Population count or [Richness class]
+   DIST_C 5: distance class (present only when redshift/velocity not available)
+
+4)  Quasars (QSO)
+
+   DESC   1: Description or classification
+   MAG    2: A magnitude in the visible range
+
+5)  Absorption Line Systems (AbLS)
+
+   DESC   1: Description
+
+6)  Radio Sources (RadioS)
+
+   MORPH  1:  Morphology
+   LFLUX  2:  Log (flux density S in mJy)
+   FREQ   3:  Frequency at which S is given
+   SIZE   4:  Size indication in arcmin
+   SPEC   5:  Spectral index, on the definition S=A*Freq^Index^
+
+7)  Infra-red Sources (IrS)
+
+   ORIG   1:  Origin of source or of data for this source
+   FLUX1  2:  Flux density or infrared magnitude
+   WAVE1  3:  Wavelength at which COLUMN 2 is given
+   FLUX2  4:  Flux density or infrared magnitude
+   WAVE2  5:  Wavelength at which COLUMN 4 is given
+
+8)  Emission Line Sources (EmLS)
+
+   MAG    2:  A magnitude in the visible range
+
+
+9)  Ultra-violet Excess Sources (UvES)
+
+   MAG    2:  A magnitude in the visible range
+
+
+11)  X-ray Sources (XrayS)
+
+
+12)  Supernovae (SN)
+
+   SN_TYPE 1:  Type and other information
+   MAG     2:  Maximum magnitude
+   SYSTEM  3:  Photometric system at which COLUMN 2 is given
+   DATE    4:  Date of maximum light
+
+13)  Gamma-ray Sources (GammaS)
+
+
+14)  Visual Sources(VisS)
+
+   MAG    2:  Magnitude
+

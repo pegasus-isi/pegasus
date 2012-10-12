@@ -1,0 +1,44 @@
+.TH susa2(1) WCS "9 June 2000"
+.SH Name
+Find USNO-SA2.0 Catalog stars in a square on the sky
+.SH Synopsis
+susac [options] [-b or -j] ra dec
+.SH Description
+.I suac
+finds all of the U.S. Naval Observatory SA2.0 Catalog objects in a specified
+region of the sky and lists their sky positions and magnitudes in order of
+brightness. Output is to standard out, unless the -w flag is set, in which
+case it goes to objectname.uac or search.uac. It is a link to scat.
+.SH Options
+.B \-a
+list single closest catalog source
+.B \-b <RA> <Dec>
+Output B1950 (FK4) coordinates around this center
+.B \-d
+Sort by distance from center instead of flux
+.B \-h
+Print heading, else do not 
+.B \-j <RA> <Dec>
+Output J2000 (FK5) coordinates around this center
+.B \-m [<bright magnitude>] <faint magnitude>
+Limiting catalog magnitude(s) (default none, bright -2 if only faint is given)
+.B \-n <num>
+Number of brightest stars to print 
+.B \-o <name>
+Object name used to name output file
+.B \-r <radius>
+Search radius in arcsec (default 10)
+.B \-s
+Sort by right ascension instead of flux 
+.B \-t
+Tab table to standard output as well as file
+.B \-u <num>
+Plate number for catalog sources (0=all)
+.B \-v
+Verbose listing of processing intermediate results
+.B \-w
+Write tab table output file imagename.uac
+.SH See Also
+scat(1), sua2(1), imusa2(1), sgsc(1)
+.SH Author
+Doug Mink, SAO (dmink@cfa.harvard.edu)

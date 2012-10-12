@@ -1,0 +1,2 @@
+a=`fileroot -r _ x $1`
+saoimage -quiet -reg `imua2 -r 15 $1` -wcscom sua2_-u_%x_-a_%s_-zo_$a $*

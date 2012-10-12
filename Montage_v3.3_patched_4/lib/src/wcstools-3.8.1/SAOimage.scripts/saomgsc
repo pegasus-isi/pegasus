@@ -1,0 +1,2 @@
+b=`fileroot -r _ x $1`
+saoimage -quiet -reg `imgsc -r 15 $1` -wcscom sgsc_-u_%x_-a_%s_-zo_$b $*

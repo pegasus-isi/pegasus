@@ -1,0 +1,46 @@
+# If your system is BSD based, please define BSD specifically.
+#
+# If you are running Solaris, 
+# you need to define _NO_PROTO when you compile them
+# you need to link your object files with -lsocket and -lnsl 
+# to make executable.
+# you don't need to do ranlib to build the library libnedcli.a
+
+CFLAGS = -g -DBSD
+
+SRC = ned_cif.c ned_cli.c ned_err.c ned_sk.c
+OBJ = ned_cif.o ned_cli.o ned_err.o ned_sk.o
+
+all : nedname nedpos name_resolver  byname nearname nearposn iau ex_refcode ref
+
+nedname: libnedcli.a nedname.o ../wcstools/libwcs/libwcs.a
+	cc -o nedname nedname.o libnedcli.a ../wcstools/libwcs/libwcs.a -l socket  -lnsl -lm
+
+nedpos: libnedcli.a nedpos.o ../wcstools/libwcs/libwcs.a
+	cc -o nedpos nedpos.o libnedcli.a ../wcstools/libwcs/libwcs.a -l socket  -lnsl -lm
+
+name_resolver: libnedcli.a name_resolver.o
+	cc -o name_resolver name_resolver.o libnedcli.a -lm 
+
+byname: libnedcli.a byname.o
+	cc -o byname byname.o libnedcli.a -lm 
+
+nearname: libnedcli.a nearname.o
+	cc -o nearname nearname.o libnedcli.a -lm 
+
+nearposn: libnedcli.a nearposn.o
+	cc -o nearposn nearposn.o libnedcli.a -lm
+
+iau: libnedcli.a iau.o
+	cc -o iau iau.o libnedcli.a -lm 
+
+ex_refcode: libnedcli.a ex_refcode.o
+	cc -o ex_refcode ex_refcode.o libnedcli.a -lm 
+
+ref: libnedcli.a ref.o
+	cc -o ref ref.o libnedcli.a -lm 
+
+libnedcli.a: $(OBJ)
+	ar rcu libnedcli.a $(OBJ)
+	ranlib libnedcli.a
+

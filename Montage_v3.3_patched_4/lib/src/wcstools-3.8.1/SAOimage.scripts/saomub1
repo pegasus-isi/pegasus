@@ -1,0 +1,2 @@
+a=`fileroot -r _ x $1`
+saoimage -quiet -reg `imub1 -r 15 $1` -wcscom sub1_-u_%x_-a_%s_-zo_$a $*

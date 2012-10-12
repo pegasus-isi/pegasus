@@ -1,0 +1,29 @@
+
+
+SVC/STRUCT Library Test Routines
+--------------------------------
+
+This directory contains three programs (test1, test2, and test3) which
+use the svc library in slightly different ways.  'test1' (run using
+test1.sh) reads input from a script and sends commands to agra (which
+must be in the user's path).  'test2' does the same thing but is
+hardwired (so doesn't need a script).  'test3' (run with test3.sh)
+tests having multiple services in existence simultaneously.
+
+The svc library needs another executable to drive.  For these test
+it is assumed that the user has the program AGRA in their path.  On
+most systems, this is the executable /irsa/isis/svc/bin/agra.
+
+The directory also contains a test of the structure parsing routines
+which are part of the svc library.  This program (structtest.c, run
+using structtest.sh) reads a standard structure from stdin,
+concatenating multiline input (used for readability) into a single
+structure.  It then recursively decomposes the structure and writes
+the results to stdout.  If there are additional lines in the input
+stream (see test1.sh) it uses them as structure value references (for
+svc_val()) and prints out the value for each one.
+
+After the library in the parent directory (../libsvc.a) has been built,
+"make clean" / "make" in this directory, then run test1.sh, test2.sh,
+test3.sh, and structtest.sh.  Compare your output with test1.out,
+test2.out, test3.out and structtest.out as a regression test.

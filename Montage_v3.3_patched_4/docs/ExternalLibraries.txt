@@ -1,0 +1,118 @@
+
+
+Montage uses three external libraries which the
+user may wish to update periodically with newer
+versions: 
+
+   CFITSIO - The FITS file I/O library
+  (http://heasarc.gsfc.nasa.gov/docs/software/fitsio/fitsio.html)
+
+   LIBWCS - The World Coordinate System projection library
+  (http://tdc-www.harvard.edu/software/wcstools/)
+
+  JPEG - The Independent JPEG Group's JPEG software
+  Only needed for the optional mJPEG utility
+  (http://www.ijg.org/)
+
+
+We have made minor modifications to a few parameters
+to work with large numbers of files and files greater
+than 2 GBytes.
+
+
+
+===================================
+CFITSIO Library Configuration Notes:
+===================================
+
+The NIOBUF defined variable in fitsio2.h has been
+set to 250 (rather than the original 40) so that
+we can have a large number of files open during
+mAdd runs. 
+
+The line 
+
+   CFLAGS="$CFLAGS"
+
+in the "configure" script should be changed to 
+
+   CFLAGS="$CFLAGS -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64"
+
+to allow the use of large (>2 Gbyte) files.
+
+We discovered a few problems in the library when
+dealing with very large files.  When the 64-bit
+flag above is turned on, the system type "off_t"
+changes from 4 bytes to 8.  In several places
+in the code, type "long" was used interchangably
+with "off_t", which under these conditions is 
+incorrect.  
+
+We have updated every place in the code we could
+find this problem(specifically dealing with the 
+parameter"firstelem") but do not guarantee to 
+have been complete. There is also no guarantee
+that we have not broken some other part of the
+library in the process, though everything seems
+to work for the Montage use cases.
+
+In drvrfile.c, the method used to determine 
+file size (seek to the end and then ask where
+we are) seems to fail for some large files, 
+so we have replaced it with the "fstat()"
+system call.
+
+
+
+===============================
+WCS Library Configuration Notes:
+===============================
+
+The following changes must be made to every new
+version the WCS library code to facilitate porting:
+
+   lib/src/wcstools/libwcs
+
+   The file "COPYING", if it exists should be chmod to 664.
+
+   The references to "webread.o" and "matchstar.o"
+   must be removed from the Makefile.
+
+   'clean' and 'install' options must be added
+   to the Makefile:
+
+      clean:
+	       rm -f libwcs.a *.o
+
+      install:
+	       cp libwcs.a ../../..
+	       cp *.h ../../../include
+
+   The line 
+
+      CFLAGS= -g -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64
+
+   should be added to the to the Makefile to 
+   allow the use of large (>2 GByte) files.
+
+
+
+
+
+================================
+JPEG Library Configuration Notes:
+================================
+
+The following changes must be made to every new
+version the JPEG library code to facilitate porting:
+
+   The line 
+
+      CFLAGS= -O2 -I$(srcdir)
+
+   in the Makefile should be changed to 
+   
+      CFLAGS= -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -I$(srcdir)
+
+   to allow the use of large (>2 GByte) files.
+

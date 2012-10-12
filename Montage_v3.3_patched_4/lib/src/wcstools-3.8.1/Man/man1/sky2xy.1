@@ -1,0 +1,49 @@
+.TH sky2xy(1) WCSTools "6 July 2001"
+.SH Name
+sky2xy \- Compute X Y from RA Dec using WCS in FITS and IRAF image files
+.SH Synopsis
+sky2xy [-vbjg] file.fts ra1 dec1 ... ran decn
+.br
+or
+.br
+sky2xy [-vbjg] file.fts @listfile
+.SH Description
+.I sky2xy
+(pronounced sky-to-X-Y) is a utility for getting the image coordinates of
+a set of world coordinates in a FITS or IRAF image. World coordinate
+system (WCS) information in the image header describes, in a standard
+way, the relationship between sky coordinates and image pixels. This
+information is used by the program to transform image right ascension
+and declination sky coordinate pairs to image coordinate (X,Y) pairs.
+The program prints the coordinates at the same system as is given in the
+image header, but future versions will allow transformations to B1950/FK4,
+J2000/FK5, ecliptic or galactic coordinates. Input and output files in the
+Starbase format will eventually be allowed. 
+.SH Options
+.TP
+.B \-b
+B1950 (FK4) input
+.TP
+.B \-e
+Ecliptic longitude and latitude input
+.TP
+.B \-g
+Galactic longitude and latitude input
+.TP
+.B \-j
+J2000 (FK5) input
+.TP
+.B \-g
+Galactic longitude and latitude input
+.TP
+.B \-v
+More descriptive output
+.TP
+.B \-z
+Use AIPS classic projections instead of WCSLIB
+
+.SH See Also
+xy2sky()
+
+.SH Author
+Doug Mink, SAO (dmink@cfa.harvard.edu)

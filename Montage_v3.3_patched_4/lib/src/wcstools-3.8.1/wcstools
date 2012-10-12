@@ -1,0 +1,57 @@
+#!/bin/sh
+echo "WCSTools 3.7.7 Programs
+http://tdc-www.harvard.edu/software/wcstools/
+
+addpix:    Add a constant value(s) to specified pixel(s)
+bincat:    Bin a catalog into a FITS image in flux or number
+char2sp:   Replace this character with spaces in output (default=_)
+conpix:    Operate on all of the pixels of an image
+cphead:    Copy keyword values between FITS or IRAF images
+crlf:      Change CR's to newlines in text file (for imwcs, imstar logs)
+delhead:   Delete specified keywords from FITS or IRAF image file headers
+delwcs:    Delete the WCS keywords from an image
+filename:  Drop directory from pathname, if present
+fileroot:  Drop file name extension, if present
+edhead:    Edit the header of a FITS or IRAF file
+getcol:    Extract specified fields from an space-separated ASCII table file
+getdate:   Convert between two date formats
+getfits:   Extract portion of a FITS file into a new FITS file, preserving WCS
+gethead:   Return values for keyword(s) specified after filename
+getpix:    Return value(s) of specified pixel(s)
+gettab:    Extract values from tab table data base files
+httpget:   Send contents returned from URL to standard output
+i2f:       Read two-dimensional IRAF image file and write FITS image file
+imcat:     List catalog sources in the area of the sky covered by an image.
+imextract: Extract 1D file from 2D file or 2D file from 3D file
+imfill:    Replace bad pixels in image files with 2-D Gaussian, mean, or median
+imhead:    Print FITS or IRAF header
+immatch:   Match catalog and image stars using the WCS in the image file.
+imrot:     Rotate and/or reflect FITS or IRAF image files
+imresize:  Block sum or average a file by integral numbers of columns and rows
+imsize:    Print center and size of image using WCS keywords in header
+imsmooth:  Filter FITS and IRAF image files with 2-D Gaussian, mean, or median
+imstack    Stack 1-dimensional images into a 2-dimensional image
+imstar:    Find and list stars in an IRAF or FITS image
+imwcs:     Match FITS or IRAF image stars to catalog stars and fit a WCS
+isfits:    Return 1 if argument is a FITS file, else 0
+isnum:     Return 1 if argument is an integer, 2 if it is floating point, else 0
+isrange:   Return 1 if argument is a range of the format n1[-n2[xs]],...
+keyhead:   Change keyword names in headers of FITS or IRAF images
+nedname:   Return object name(s) from RA(s) and Dec(s) using NED
+nedpos:    Return RA and Dec for object name(s) from NED
+newfits:   Create blank FITS files (dataless by default with BITPIX=0)
+remap      Rebin an image from its current WCS to a new one
+scat:      Search a source catalog given a region on the sky
+sethead:   Set header keyword values in FITS or IRAF images
+setpix:    Set specified pixel(s) to specified value(s)
+simpos:    Return RA and Dec for object name(s) from SIMBAD
+sky2xy:    Print image pixel coordinates for given sky coordinates
+skycoor:   Convert between J2000, B1950, galactic, and ecliptic coordinates
+sp2char:   Replaces space in string with specified character (default=_)
+subpix:    Subtract a constant value(s) from specified pixel(s)
+sumpix     Total pixel values in row, column, or specified area
+wcshead:   Print basic world coordinate system information for images
+xy2sky:    Print sky coordinates for given image pixel coordinates
+* <program name> help    lists possible arguments
+* <program name> version lists version of program
+" | more

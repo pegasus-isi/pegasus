@@ -1,0 +1,289 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN//2.0">
+<html>
+<head>
+<title> Coordinate Transformation Library </title>
+</head>
+
+<body>
+<hr><p>
+
+<center>
+<h2>
+                      Coordinate Handling Library
+</h2>
+</center>
+<p>
+
+<center><a name=toc><b>Table of Contents</b></a>
+<table border=1 cellpadding=2 width=75%><tr><td>
+<center><table><tr><td>
+<ul>
+   <item><a href=#description>   General Description</a><br>
+   <item><a href=#sex>           Sexigesimal Coordinate String Handling</a><br>
+   <item><a href=#coord>         Coordinate System Tranformation</a><br>
+</ul>
+</td></table></center>
+</td></table></center>
+
+
+<a name=description><h2>General Description</h2></a><p>
+
+This library provides all the functionality needed to transform coordinate
+(in decimal degrees or sexigesimal notation) between any astronomical 
+coordinate system at any epoch (including between Julian and Besselian with
+or without proper motion).<p>
+
+<hr><p>
+
+
+
+<a name=coord><h2>Sexigesimal Coordinate String Handling</h2></a><p>
+
+One subset of <tt><b>coord</b></tt> library routines is focussed on
+the task of converting readable text representations of coordinates to
+internal binary (decimal degrees).  These routines are as follows:<p>
+
+<pre>
+   int   status = parseCoordinateString (char *cmd, 
+					 char *lonstr, char *latstr,
+					 char *csys, char *cfmt, 
+					 char *epoch)
+
+   int   status = sexToDegree (char *cra, char *cdec, 
+			       double *ra, double *dec)
+
+   int   status = degreeToSex (double lon, double lat, 
+			       char *lonstr, char *latstr)
+
+   int   status = degreeToHMS (double deg, int prec, 
+			       int *neg, int *h, int *m, double *s)
+
+   int   status = degreeToDMS (double deg, int prec, 
+			       int *neg, int *d, int *m, double *s)
+</pre><p>
+
+
+Function descriptions:<p>
+
+<ul>
+
+<li><tt><b>parseCoordinateString()</b></tt>
+Given a single character string containing any variant on the normal
+set of coordinate representations, this routine extracts out the 
+components, appropriate for use by tranformation routines.<p>
+
+For parseCoordinateString():<p>
+
+<pre>
+"csys" can be one of the following (case insensitive):
+   
+   "EQ"   -   Equatorial
+   "GA"   -   Galactic
+   "EC"   -   Ecliptic
+    SG"   -   Supergalactic
+     
+
+"cfmt" can be any of the following (case insensitive):
+   
+   "DD" or "DDR"     -  Decimal Degrees (expressed as a real number)
+   "DDC"             -  Decimal Degrees (expressed as a char string)
+   "SEXR"            -  Sexigesimal     (expressed as a real number)
+   "SEX" or "SEXC"   -  Sexigesimal     (expressed as a char string)
+   "RAD" or "RADR"   -  Radians         (expressed as a real number)
+   "RADC"            -  Radians         (expressed as a char string)
+   "MRAD" or "MRADR" -  Milliradians    (expressed as a real number)
+   "MRADC"           -  Milliradians    (expressed as a char string)
+   "AS" or "ASR"     -  Arc-seconds     (expressed as a real number)
+   "ASC"             -  Arc-seconds     (expressed as a char string)
+   "MAS" or "MASR"   -  Milliarcseconds (expressed as a real number)
+   "MASC"            -  Milliarcseconds (expressed as a char string)
+   
+
+"epoch" must start with the characters "B" or "J" followed by a 
+four-digit year (e.g. "J2000", "B1950"). 
+</pre><p>
+   
+
+<li><tt><b>sexToDegree()</b></tt>
+Converts coordinates in sexigesimal format to decimal degrees.<p>
+
+<li><tt><b>degreeToSex()</b></tt>
+Converts coordinates in decimal degrees to sexigesimal (as a single
+string).<p>
+
+<li><tt><b>degreeToHMS()</b></tt>
+Converts coordinates in decimal degrees to sexigesimal (as separate
+sign, hours, minutes, seconds values).<p>
+
+<li><tt><b>degreeToDMS()</b></tt>
+Converts coordinates in decimal degrees to sexigesimal (as separate
+sign, degrees, minutes, seconds values).<p>
+
+</ul>
+
+<hr><p>
+
+<a name=coord><h2>Coordinate System Tranformation</h2></a><p>
+
+The rest of the <tt><b>coord</b></tt> library routines provide the 
+conversions between the various coordinate systems, as well as
+precession and Besselian/Julian transformation.  They are as follows:<p>
+
+<pre>
+
+   int   status = convertCoordinates (int      insys, double  inepoch, 
+				      double   inlon, double    inlat,
+				      int     outsys, double outepoch, 
+				      double *outlon, double  *outlat,
+				      double obstime )
+
+
+   int   status = convertBesselianToJulian (double  equinoxin, 
+					    double         ra, double     dec,
+					    double    obsdate, int      ieflg,
+					    double     *raout, double *decout )
+
+   int   status = convertJulianToBesselian (double         ra, double     dec, 
+					    double    obsdate, int      ieflg, 
+					    double equinoxout,
+					    double     *raout, double *decout )
+
+
+   int   status = convertEquToEcl  ( double     ra, double    dec, 
+				     double  *elon, double  *elat,
+				     double   date, int besselian )
+
+   int   status = convertEclToEqu  ( double   elon, double   elat, 
+				     double    *ra, double   *dec,
+				     double   date, int besselian )
+
+   int   status = convertEquToGal  ( double     ra, double    dec, 
+				     double  *glon, double  *glat )
+
+   int   status = convertGalToEqu  ( double   glon, double   glat, 
+				     double    *ra, double   *dec )
+
+   int   status = convertGalToSgal ( double   glon, double   glat,
+				     double *sglon, double *sglat )
+
+   int   status = convertSgalToGal ( double  sglon, double  sglat, 
+				     double  *glon, double  *glat )
+
+
+   int   status = precessBesselian ( double  epochin,  
+				     double     rain, double   decin,
+				     double epochout, 
+				     double   *raout, double *decout )
+
+   int   status = precessBesselianWithProperMotion 
+				   ( double  epochin,  
+				     double     rain, double   decin,
+				     double epochout, 
+				     double   *raout, double *decout,
+				     double    pmain, double   pmdin, 
+				     double      pin, double     vin,
+				     double    *rapm, double  *decpm )
+
+
+   int   status = precessJulian    ( double  epochin,  
+				     double     rain, double   decin,
+				     double epochout, 
+				     double   *raout, double *decout )
+
+   int   status = precessJulianWithProperMotion
+				   ( double  epochin,  
+				     double     rain, double   decin,
+				     double epochout, 
+				     double   *raout, double *decout,
+				     double    pmain, double   pmdin, 
+				     double      pin, double     vin,
+				     double    *rapm, double  *decpm )
+
+</pre><p>
+
+All of this routines convert coordinates in one system to another.  
+For most users, the <tt><b>convertCoordinates()</b></tt> routine
+(which is a wrapper around all the others) will suffice.  If the user
+wishes to use the others directly, the parameters are defined as 
+follows:<p>
+
+<hr><p>
+
+For basic conversions:<p>
+
+<pre>
+(ra,   dec  )  Coordinate in decimal degrees equatorial
+(elat, elon )  Coordinate in decimal degrees ecliptic
+(glat, glon )  Coordinate in decimal degrees galactic
+(sglat,sglon)  Coordinate in decimal degrees supergalactic
+
+date           Date (in decimal years)
+besselian      Flag (TRUE:1 if coordinates are Besselian)
+</pre><p>
+
+<hr><p>
+
+For precession:<p>
+
+<pre>
+(rain,  decin,  epochin,  equinoxin)   Input coordinates, epoch, and equinox
+(raout, decout, epochout, equinoxout)  Output coordinates, epoch, and equinox
+
+obsdate    Date (decimal years)
+ieflg      Flag allowing removal of E-terms of aberration if any
+                                                               
+           ieflg = -1 do not remove E-terms (there are none).
+           ieflg = +1 any value except -1 indicates E-terms
+                      are present and are to be removed.
+</pre><p>
+
+The input coordinates must be in the correct system (Julian or Besselian)
+for the conversion being used and are always Equatorial decimal degrees.<p>
+
+<hr><p>
+
+For proper motion (not fully tested at this time):<p>
+
+<pre>
+   epochin         epoch of input position (in year - e.g. 1950.0d0)  
+   rain,  decin    input position in decimal degrees at epochin       
+   pmain, pmdin    proper motion in ra,dec in seconds of time         
+                   per Tropical century.                              
+                                                                      
+   pin             parallax in arc seconds (0.0d0 if none)            
+   vin             radial velocity in km/sec (0.0d0 if none)          
+   epochout        epoch of output position (in year - e.g. 1992.0d0) 
+   raout, decout   position in decimal degrees at epochout            
+   rapm, decpm     proper motion in ra,dec in seconds of time         
+                   per Tropical century for epochout                  
+</pre>
+<hr><p>
+
+In these coordinate transformation routines, the coordinate system 
+identifiers are in the include file <tt>coord.h</tt>:<p>
+
+<pre>
+      #define EQUJ      0
+      #define EQUB      1
+      #define ECLJ      2
+      #define ECLB      3
+      #define GAL       4
+      #define SGAL      5
+
+      #define JULIAN    0
+      #define BESSELIAN 1
+</pre><p>
+
+<hr>
+<address>
+<table>
+<tr><td><b>Author:</b>       <td> John Good                              </tr>
+<tr><td><b>Address:</b>      <td> <a href="mailto:jcg@ipac.caltech.edu">
+                                                  jcg@ipac.caltech.edu </a>
+                                                                         </tr>
+<tr><td><b>Last update:</b>  <td> 16-Dec-99                              </tr>
+</table>
+</address>
+
+</body>
+</html>

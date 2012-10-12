@@ -1,0 +1,23 @@
+.TH edhead(1) WCSTools "6 July 2001"
+.SH Name
+edhead \- Edit header of FITS or IRAF image file
+.SH Synopsis
+edhead [options] FITS or IRAF file(s)
+.SH Description
+Edit the header of the specified image file using the editor defined by the
+EDITOR environment variable.
+.I edhead
+takes care of trailing spaces so they can be ignored while using the editor.
+.SH Options
+.TP
+.B \-e <editor path>
+Set editor, overiding environment EDITOR
+.TP
+.B \-n
+Write a new file with .e before the file type extension.  The default is
+to overwrite the input file
+.TP
+.B \-v
+List processing steps
+.SH Author
+Doug Mink, SAO (dmink@cfa.harvard.edu)

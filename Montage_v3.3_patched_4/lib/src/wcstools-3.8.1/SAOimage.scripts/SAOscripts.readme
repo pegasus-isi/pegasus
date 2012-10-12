@@ -1,0 +1,53 @@
+These are Unix shell scripts which plot star catalogs over FITS or IRAF
+imh images which contain a World Coordinate System in their headers.  Each
+invokes the WCSTools imcat program to search a star catalog over the region
+covered by the image.  This produces an extended PROS-format regions file
+which SAOimage then plots over an image.  At the same time, the 'W' cursor
+command in SAOimage is set to invoke the WCSTools scat program to find the
+star in the specified catalog which is closest to the cursor position and
+print out information about it to standard output.
+
+* These scripts expect the Linkbins script to have been run so that scat
+and imcat can be invoked with the catalog name as part of the command,
+i.e. sgsc and imgsc for the HST Guide Star Catalog.
+
+saoact - USNO ACT catalog from CDROM or hard disk
+saobsc - Yale Bright Star Catalog from SAO binary format catalog file
+saocata - First argument is catalog name, second is image, reset go to SAOimage
+saogsc - HST Guide Star Catalog from 2 CDROMs (or same files on hard disk)
+saogsca - GSC-ACT Catalog from 2 CDROMs (or same files on hard disk)
+saogsc2 - GSC II Catalog over the Internet
+saoiras - IRAS Point Source Catalog from SAO binary format catalog file
+saoppm - PPM Catalog from SAO binary format catalog file
+saosao - SAO Catalog from SAO binary format catalog file
+saoty2 - Tycho-2 Catalog from CDROM or hard disk
+saoua1 - USNO-A1.0 Catalog from 10 CDROMs (or same files on hard disk)
+saoua2 - USNO-A2.0 Catalog from 11 CDROMs (or same files on hard disk)
+saoub1 - USNO-B1.0 Catalog from hard disk
+saoub1i3 - USNO-B1.0 Catalog from hard disk (objects on 3 or more plates)
+saoub1i4 - USNO-B1.0 Catalog from hard disk (objects on 4 or more plates)
+saoub1i5 - USNO-B1.0 Catalog from hard disk (objects on all 5 plates)
+saoujc - USNO J Catalog from CDROM or hard disk
+saousa1 - USNO-SA1.0 Catalog from CDROM or hard disk
+saousa2 - USNO-SA2.0 Catalog from CDROM or hard disk
+
+The following two programs do the same overplotting as saogsc and saoua2
+above, but invoke scat with the X and Y coordinates of the previous C
+cursor command, but search for the star at the current position, with the
+closest star AND the previous X,Y coordinates written to standard output as
+
+     x y ra dec
+
+This matching file can than be fed to imwcs in WCSTools 2.9.1 or later,
+initializing a world coordinate system fit to the image, using imwcs -u,
+or to any other program which fits a world coordinate system.
+
+saomgsc - HST Guide Star Catalog from 2 CDROMs (or same files on hard disk)
+saomgsca - GSC-ACT Catalog from 2 CDROMs (or same files on hard disk)
+saomgsc2 - GSC II Catalog over the Internet
+saomtmc - 2MASS Point Source Catalog from 11 CDROMs (or same files on hard disk)
+saomua2 - USNO-A2.0 Catalog from 11 CDROMs (or same files on hard disk)
+saomub1 - USNO-B1.0 Catalog from files on hard disk
+
+Note that all of these scripts will work with catalogs accessed over the
+web if the appropriate environment variables have been set.

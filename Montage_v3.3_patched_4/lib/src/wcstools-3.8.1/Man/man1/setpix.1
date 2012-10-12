@@ -1,0 +1,61 @@
+.TH setpix(1) WCSTools "6 July 2001"
+.SH Name
+setpix \- Set FITS or IRAF image values
+.SH Synopsis
+setpix [-vn] file.fts [x_range y_range value] [@valuefile]
+.SH Description
+Set a specified pixel or range of pixels in a FITS or IRAF image to a
+specified value. More than one range of pixels and values may be specified
+on one command line. A file of xrange yrange value triplets may be used
+to set multiple regions at once. The image may be overwritten or a new
+image created. 
+.SH Options
+.TP
+.B filename 
+Name of IRAF image header file or FITS file. This must be present. 
+.TP
+.B @coordfile 
+Name of file containing lines of the format 
+         xrange yrange value
+where xrange and yrange are of the format n or n-n or n,n,n or n-n,n-n
+and value my be integer or floating point.  value will be converted to
+the type of the image. If a range is 0, the entire row or column specified
+by the other non-zero range will be set to the indicated value. If both
+ranges are zero, the entire image will be set to the specified value.
+New in version 2.6.4. 
+.TP
+.B xrange yrange value 
+Image coordinate x and y ranges and the value to which that region will
+be set. Either one of these triplets or a file of triplets, specified by
+@filename, must be present. xrange and yrange are of the format n or n-n
+or n,n,n or n-n,n-n and value my be integer or floating point. value will
+be converted to the type of the image. If a range is 0, the entire row or
+column specified by the other non-zero range will be set to the indicated
+value. If both ranges are zero, the entire image will be set to the
+specified value. Ranges new in version 2.6.4. 
+.TP
+.B \-a <number>
+Add constant to pixels
+.TP
+.B \-d <number>
+Divide pixels by constant
+.TP
+.B \-i
+List each line which is dropped 
+.TP
+.B \-m <number>
+Multiply pixels by constant
+.TP
+.B \-n 
+Write the output to a new file which is named by inserting an e before
+the file extension. The new file is always written to the current working
+directory. 
+.TP
+.B \-s <number>
+Subtract constant from pixels
+.TP
+.B \-v 
+Print more information about the process 
+
+.SH Author
+Doug Mink, SAO (dmink@cfa.harvard.edu)

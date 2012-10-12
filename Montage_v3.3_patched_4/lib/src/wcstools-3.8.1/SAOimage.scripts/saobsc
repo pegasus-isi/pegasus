@@ -1,0 +1,1 @@
+saoimage -reg `imbsc -q 0 $1` -wcscom sbsc_-ha_%s $*

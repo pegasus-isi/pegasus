@@ -1,0 +1,70 @@
+.TH xy2sky(1) WCSTools "6 July 2001"
+.SH Name
+xy2sky \- Compute RA Dec from X Y using WCS in FITS and IRAF image files
+.SH Synopsis
+xy2sky [-vbjg] [-n ndec] file.fts x1 y1 ... xn yn
+.br
+or
+.br
+xy2sky [-bdjgv] [-n ndec] file.fts @listfile
+.SH Description
+.I xy2sky
+(pronounced X-Y-to-sky) is a utility for getting the world coordinates of
+a set of image coordinates in a FITS or IRAF image. World coordinate
+system (WCS) information in the image header describes, in a standard
+way, the relationship between sky coordinates and image pixels. This
+information is used by the program to transform image coordinate (X,Y)
+pairs to right ascension and declination sky coordinate pairs. The current
+version of the program prints the coordinates at the same equinox as is
+given in the image header, but future versions will allow transformations
+to B1950/FK4, J2000/FK5, or galactic coordinates. Input and output files
+in the Starbase format will eventually be allowed. 
+.SH Options
+.TP
+.B \-a
+Append input line after output position
+.TP
+.B \-b
+B1950 (FK4) output
+.TP
+.B \-d
+RA and Dec output in degrees
+.TP
+.B \-e
+Ouput in ecliptic longitude and latitude in degrees.
+.TP
+.B \-f <number>
+Set third dimension for 3-D projections such as CSC
+.TP
+.B \-g
+Galactic longitude and latitude output
+.TP
+.B \-i
+First column is star id; 2nd, 3rd are x,y position
+.TP
+.B \-j
+J2000 (FK5) output
+.TP
+.B \-m <number>
+Set mode for output of LINEAR WCS coordinates:  0: x y linear
+1: x units y units
+2: x y linear units units
+.TP
+.B \-n <number>
+Number of decimal places in output RA seconds
+.TP
+.B \-q <year>
+Output equinox if not 2000 (-j) or 1950 (-b)
+.TP
+.B \-t
+Output as tab-separated table
+.TP
+.B \-v
+More descriptive output
+.B \-z
+Use AIPS classic projections instead of WCSLIB
+
+.SH See Also
+sky2xy(1)
+.SH Author
+Doug Mink, SAO (dmink@cfa.harvard.edu)

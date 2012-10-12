@@ -1,0 +1,46 @@
+.TH sethead(1) WCSTools "6 July 2001"
+.SH Name
+sethead \- Set FITS or IRAF header keyword values
+.SH Synopsis
+sethead [-dknv][r letter] <FITS or IRAF file> kw1=val1 kw2=val2 ... kwn=valuen
+.SH Description
+Set parameters in the header of a FITS or IRAF image.  If the keywords do
+not already exist, they are added at the end of the header.  Values are
+assumed to be numeric if they contain no alphabetic characters and
+right-aligned.  Otherwise they are left-aligned after the equals sign,
+and padded by spaces to a minimum of 8 characters.
+To set keywords in a list of files, substitute @<listfile> for the file
+names on the command line.  To set a lot of keywords, put them, one per
+line, in a file and substitute @<keylistfile> on the command line.
+If two @ commands are present, the program will figure out which contains
+file names and which contains keywords.  Lines in a keyword list file which
+do not contain an = are ignored.
+
+.SH Options
+.TP
+.B \-h
+Write HISTORY line into output header with 
+.B sethead
+version, current date and time, and names of keywords set.
+.TP
+.B \-k
+Write SETHEAD keyword into output header with 
+.B sethead
+version, current date and time, and names of keywords set.  
+If a SETHEAD keyword already exists, move the old value to a
+HISTORY line before writing the new value
+.TP
+.B \-n
+Write a new file with an added "e" before the extension.
+.TP
+.B \-r letter
+Rename existing keywords whose values are being reset by prepending
+the character "letter".  Drop the last character if the changed
+keyword is already 8 characters long.
+.TP
+.B \-v
+Print confirmations of each parameter setting
+.SH Web Page
+http://tdc-www.harvard.edu/software/wcstools/sethead.html
+.SH Author
+Doug Mink, SAO (dmink@cfa.harvard.edu)

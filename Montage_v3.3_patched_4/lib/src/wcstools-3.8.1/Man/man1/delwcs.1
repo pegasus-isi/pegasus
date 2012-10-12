@@ -1,0 +1,21 @@
+.TH delwcs(1) WCSTools "6 July 2001"
+.SH Name
+delwcs \- Delete WCS in FITS and IRAF image files
+.SH Synopsis
+delwcs [-v] FITS or IRAF file(s)
+.SH Description
+Delete WCS keywords "CTYPE1", "CRVAL1", "CDELT1", "CRPIX1", "CROTA1", "CTYPE2",
+"CRVAL2", "CDELT2", "CRPIX2", "CROTA2", and "IMWCS" from a fits header.  If
+there are "WRA", WDEC", and "WEPOCH" or "WEQUINOX" keywords present, their
+values replace those lf "RA", "DEC", and "EPOCH" or "EQUINOX".
+.SH Options
+.TP
+.B \-n
+Write new output file with "e" before the file type extension.  The default
+is to overwrite the input file.
+.TP
+.B \-v
+Print names of keywords as they are deleted
+
+.SH Author
+Doug Mink, SAO (dmink@cfa.harvard.edu)

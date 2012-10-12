@@ -1,0 +1,77 @@
+convertCoordinates
+      | 
+      |- convertEquToGal
+      |- convertGalToEqu
+      |- convertGalToSgal
+      |- convertSgalToGal
+      |- convertEquToEcl
+      |     |
+      |     |- computeEquPole
+      |
+      |- convertEclToEqu
+      |     |
+      |     |- computeEquPole
+      |
+      |
+      |- precessBesselian
+      |      |
+      |      |- precessBesselianWithProperMotion
+      |
+      |- precessJulian
+      |      |
+      |      |- precessJulianWithProperMotion
+      |
+      |
+      |- convertBesselianToJulian   
+      |     |
+      |     |- correctCoordinateRange
+      |     |
+      |     |- correctForEquatorialETerms
+      |     |     |
+      |     |     |- getEquETermCorrection
+      |     |     |- correctCoordinateRange
+      |     |     |- convertEquToEcl
+      |     |     |- convertEclToEqu
+      |     |     |
+      |     |     |- refinedEclETermCorrection
+      |     |           |
+      |     |           |- getEclETermCorrection
+      |     |           |- correctCoordinateRange
+      |     |
+      |     |- precessJulian
+      |     |- precessBesselian
+      |     |
+      |     |- besselianToJulianFKCorrection
+      |           |
+      |           |- initializeFK5CorrectionData
+      |           |     |
+      |           |     |- loadFK5Constants
+      |           |
+      |           |- interpolateLinear
+      |           |- interpolateBilinear
+      |
+      |
+      |- convertJulianToBesselian   
+	    |
+	    |- precessJulian
+	    |
+	    |- correctForEclipticETerms
+	    |     |
+	    |     |- refinedEquETermCorrection
+	    |     |- correctCoordinateRange
+	    |     |- convertEquToEcl
+	    |     |- convertEclToEqu
+	    |
+	    |- correctCoordinateRange
+	    |- precessBesselian
+	    |
+	    |- julianToBesselianFKCorrection
+		  |
+		  |- besselianToJulianFKCorrection
+			|
+			|- initializeFK5CorrectionData
+			|     |
+			|     |- loadFK5Constants
+			|
+			|- interpolateLinear
+			|- interpolateBilinear

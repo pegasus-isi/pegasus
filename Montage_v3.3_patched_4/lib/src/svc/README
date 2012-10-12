@@ -1,0 +1,18 @@
+
+
+SVC/STRUCT Library
+------------------
+
+This library allows the user to fire up external services, send
+commands and receive structured messages, and parse the returned
+structures.
+
+The library can be built using using the Makefile in this directory
+and "make clean" / "make".  It can be installed in standard place
+(assumed to be the directory "../..") and also needs to add an 
+include file to "../../include".  "make install" is currently set
+to do this.o
+
+There is a "test" subdirectory which has programs and regression 
+test output (see "test/README" for details) and a "docs" subdirectory
+with HTML documentation on library usage.

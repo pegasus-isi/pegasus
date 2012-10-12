@@ -1,0 +1,2 @@
+#!/bin/sh
+saoimage -reg `imuac -r 10 $1` -wcscom suac_-ha_%s $*

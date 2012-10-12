@@ -1,0 +1,2 @@
+b=`fileroot -r _ x $1`
+saoimage -quiet -reg `imtmc -r 15 $1` -wcscom stmc_-u_%x_-a_%s_-zo_$b $*

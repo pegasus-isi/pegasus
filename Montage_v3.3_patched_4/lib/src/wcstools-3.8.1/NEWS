@@ -1,0 +1,1112 @@
+Version 3.8.1 (December 14, 2009)
+scat,imcat: Fix magnitude memory allocation for UCAC2 and UCAC3 catalogs
+imsetwcs.c: Fix magnitude memory allocation for UCAC2 and UCAC3 catalogs
+
+Version 3.8.0 (November 13, 2009)
+getcol: Drop parentheses around single column
+imcat: Move array allocation to subroutine as suggested by Douglas Burke
+imextract: Fix bug which caused command line extension lists to be ignored
+scat, imcat, imwcs, immatch: Add UCAC3 astrometric catalog
+scat:  Print errors in UCAC2 and UCAC3 positions and proper motions in -t mode
+scat,imcat,immatch,imwcs: Fix bug so the HST Guide Star Catalog works again
+scat: Fix output of GSC2 without tabs
+binread.c, catutil.c: Change moveb() to movebuff()
+fitsfile.c: Fix binary table reading; add local moveb()
+gscread.c: Fix bug reading region limit table; initialize lengths of FITS table columns
+tabread.c: Fix memory leaks found by Douglas Burke
+ucac3read.c: Add UCAC3 catalog and add errors to UCAC2 catalog
+webread.c: Free allocated pointers before returning
+webread.c: Use movebuff() in catutil.c; reverse source/destination pointers and offsets
+imsetwcs.c: Print catalog magnitude name in residual header
+
+Version 3.7.9 (September 18, 2009)
+sethead, keyhead, cphead, delhead: Fix bug so more images can be processed
+    from the command line
+sethead: Allow writing to files extracted from multi-extension files if
+    XTENSION keyword is still present
+xy2sky: Add line of documentation for -h
+catutil.c: In RefLim(), set RA range to 360 degrees if a pole is included
+
+Version 3.7.8 (August 17, 2009)
+imwcs: Fix bugs when matched stars wrap around RA=0:00 or have the same
+       image position
+nedpos: Do not print name unless asked to
+scat: Print four magnitudes for GSC2 catalog; they have dropped Tycho B
+skycoor: Fix sign error in RA difference in -a position angle computation
+skybotread.c: Add flag to skip comets and save time
+getpix: Assume floating point coordinates to be x,y instead of RA,Dec
+
+Version 3.7.7 (April 9, 2009)
+simpos: Put back -i option which seemed to have disappeared
+simpos: Use webbuff() modification below to get to temporary URL
+imsize: Set dimensions from IMAGEW and IMAGEH if NAXIS=0 and WCSAXIS>0
+imextract: Fix but so it doesn't crash if no line/image specified
+imrot: Add -n option to force extension number in output file name
+scat,imcat,imwcs,immatch: Upgrade web access to SDSS catalog from DR6 to DR7
+scat: Add degrees=[yes|no] to CGI interface
+gethead: Increase default multi-line IRAF keyword value buffer to 20000
+webread.c: Add handling of 30* URL forwarding to webbuff()
+wcsinit.c: Fix bug setting dimensions of image if NAXISi not present
+imgetwcs.c: Set dimensions from IMAGEW and IMAGEH if NAXIS=0 and WCSAXIS>0
+sdssread.c: Upgrade web access to SDSS catalog to DR7 from DR6
+
+Version 3.7.6 (December 1, 2008)
+skycoor: Add -t command to subtract times
+getdate: fix local sidereal time (*2lst, *2mst)
+imhead: Do not output extra block if length is exact number of 2880-byte blocks (2008-12-01)
+dateutil.c: Use IAU 2006 nutation for sidereal time computations
+dateutil.c: Add ang2hr(), ang2deg(), deg2ang(), and ang2hr() to
+            convert betweem decimal floating point degrees and
+            vigesimal hours or degrees
+dateutil.c: Fix local sidereal time computation (2008-10-08)
+tnxpos.c: Fix image to world coordinate system transformation and
+          WCS to image transformation
+tnxpos.c: Fix tnxpos() for null correction case (2008-09-17)
+gsc2read.c: Read GSC2 catalog from STScI CASB instead of GALEX
+fitsfile.c: In fitswhead(), do not write error if correct number of bytes written
+
+Version 3.7.5 (July 1, 2008)
+getcol: Fix bug so columns are compared if both conditions are integer
+imrot: Fix bug so x and y shifts occur even if one is zero; fix WCS modification
+fitsfile.c: Do not append primary header if it is the only one
+
+Version 3.7.4 (May 28, 2008)
+cphead: Clean up code to make sure numeric variables for formatted correctly
+getfits: Make TNX WCS of extracted file dependent on PLATE WCS
+imsize: Add option to print the FITS format date of the image; drop quotes
+isfits: New program to detect whehter or not a string is the name of a FITS file
+fitsfile.c: Allow FITS files without FITS or FTS in name to have extensions
+wcsinit.c: Call tnxinit() before any projection calls are made
+
+Version 3.7.3 (March 20, 2008)
+sethead: Return error code =0 normally, 1 and printed message if problem
+filename:  Add -n option to keep directory with "." and allow more than one -r command
+sethead: Add -x and -d options to specify extensions and root directory
+gethead: Fix handling of filenames in list with -x extensions
+
+Version 3.7.2 (December 31, 2007)
+getdate: Fix bug so the -t time-only flag works with all 2fd options
+gethead,imsize,wcshead: Allow range of extensions or "all" after comma in filename
+getpix: Read list of pixel coordinates using @filename
+scat: Fix bug so limit flag(s) match appropriate magnitude(s)
+fitsfile.c: Skip over binary tables in multiextension FITS files
+tmcread.c: Shift position of magnitude flags in 2MASS catalog with errors by one
+ubcread.c: Expand zone searches by one star at each end
+webread.c: Fix chunk reading code which worked in Solaris but failed in Linux
+
+Version 3.7.1 (November 9, 2007)
+fixpix: Fix bug reading coordinates from file found by Saurabh Jha
+keyhead: Rewrite code implementing -r value assignment so it always works
+nedpos,nedname: Programs from NED for retrieving positions for objects and
+names for positions which were modified to work with WCSTools several years
+ago have now been rewritten for portability and added to the WCSTools
+release.  nedpos works like simpos, but has more options.
+simpos,nedpos: Options for input file of object names and output tab-separated
+tables have been added.
+findstar.c: Trim section parsing fixed
+imgetwcs.c: Return NULL wcs pointer if no wcs in header
+
+Version 3.7.0 (August 30, 2007)
+imcat,scat: Add option to list minor planets in field using SkyBot service
+scat: Add mrad=search radius in arcminutes to cgi-bin parameters
+scat: Add number checking to cgi-bin parameter parsing
+skycoor: Fix bugs computing position angles with -a
+gethead: Fix bug which screwed up sexigesimal data when -ndec was used
+imstack: Add -m option to make IRAf multispec file headers
+imstack: Fix bug so output on PCs is in correct byte order
+skybotread.c: New subroutines to access SkyBot over the web
+ucacread.c: Improve byte-swap check so it works in all cases, not all but one
+hput.c: Fix bug which could drop quote when adding comment to string value
+hput.c, hget.c: Deal with missing quotes in header without crashing
+webread.c: Add space2tab() to use scat-based catalog server at NOAO
+Set TMC_PATH or UB1_PATH to http://archive.tuc.noao.edu/cgi-bin/scat to use it.
+
+Version 3.6.9 (July 9, 2007)
+cphead: Add -a option to copy entire header from first file to second and others
+imstar: Fix magnitude offset so it works if 20 < offset < 90
+scat: Fix GSC2 and other formats
+xy2sky: Fix headings for radecsys and epoch columns in tab table output
+delhead: Add -c option to delete blank COMMENTs and -o to overwrite files
+         Delete IRAF-style multi-line keywords
+wcsinit.c: Ignore axes with TAB WCS for rotation matrix
+ty2read.c: Skip stars with no positions, only magnitudes; print error message
+
+Version 3.6.8 (April 11, 2007)
+getcol: Fix arithmetic combination of columns
+imrotate, immatch: Add -w to not rotate WCS keywords with image
+imrotate: Add -e to delete WCS keywords in output
+imstar: Add -g to not rotate WCS keywords if image is rotated
+imwcs: Add -q w to not rotate initial WCS keywords if image is rotated using -r
+wcshead: Add -d argument to use a single root directory and deal with
+         incomplete WCS, especially for spectra
+gsc2read.c: Read catalog from STScI MAST GALEX archive if gsc2, CASB if gsc22,23
+hget.c: Initial header length to zero in hlength() if lhead argument <= 0
+tnxpos.c: Fix bug so it doesn't crash
+wcs.c:  In wcstype(), set to WCS_PIX if CTYPEi starts with "DET"
+wcs.c: In wcspset(), use correct cdelts when converting PC matrix to CD matrix
+wcsinit.c: Fix bug so RA, DEC, SECPIX can be used to set a WCS
+
+Version 3.6.7 (January 18, 2007)
+bincat: Make catalog binning finally work right
+sethead: Allow multiple keywords to be set from single line input file
+wcshead: Add -n argument to set number of decimal points in CRVALi
+simpos: Fix parsing problem which returned erroneous results for low-RA objects
+wcs.h: Fix and add ANSI C prototypes
+fitsfile.h, fitshead.h, wcscat.h: Add ANSI C prototypes
+wcsinit.c: Change WCS letter argument from char to char* in wcsinitc(),wcsninitc()
+findstar.c, imrotate.c: Include fitsfile.h instead of fitshead.h and imio.h
+hget.c: Change WCS letter argument from char to char* in hget*c()
+hget.c: Declare header and keyword const char in most subroutines
+hput.c: Declare keyword and value const in most subroutines
+hput.c: Fix to return integer seconds from ra2str() and dec2str() when requested
+imio.c: Include fitsfile.h instead of imio.h
+catutil.c,fileutil.c: Move token parsing subroutines from catutil.c to fileutil.c
+imio.h: Drop because all declarations are in fitsfile.h
+wcslib.h: Drop semicolon at end of c++ ifdef
+wcslib.h: Drop second declaration of SZP subroutines
+polfit.c: Move into catutil.c
+Many smaller fixes were made so that standard C profiles work
+
+Version 3.6.6 (November 6, 2006)
+getdate: Add sidereal time conversions
+imcat,scat: Fix SDSS returned data and ID number output
+imwcs: Add -q b option to speed up star matching
+remap: Check for output image off-scale as well as input image
+remap: Fix bug setting scale
+sethead: Do not read image unless header size in 2880-byte blocks is increased
+sethead: Increase header buffer size when next keyword exceeds current length
+skycoor: No longer print " degrees" if output in degrees
+Allow right ascension and declination strings up to 31 characters everywhere
+In wcsinit.c and wcscon.c, set projection to XY if units are pixels
+ubcread.c: Fix header for nstarmax<1 output from ubcread()
+
+Version 3.6.5 (July 5, 2006)
+conpix: Add option to take base 10 log of entire image
+edhead: Use mkstemp() instead of compiler-maligned tempnam()
+scat: Print catalog object name if no number in single line search responses
+imcat,immatch,imwcs,scat: Add support for SKYMAP 2000 catalog for wide fields
+imcat,immatch,imwcs: Print catalog object name if no number
+imsmooth,imresize: Write summary of operation to header
+gethead: Fix bug which dropped trailing zeroes from strings
+imrot,imsmooth: Deal with .ms.fits as a single extension
+remap: Fix bug when adding to existing images
+wcsinit: initialize 9x9 PC matrices; handle up to 9 axes for PC matrix
+delwcs,delhead: Add -b option to leave blank lines in place of deleted keywords
+hput.c: Fix alignment of comments in hputc() and hputcom(); add strfix()
+ctgread.c,tabread.c: Add match argument to tabrnum() for sequential reads
+Initialize uninitialized variables throughout package
+
+Version 3.6.4 (May 8, 2006)
+cphead: Fix bug so WCS headers copy correctly
+gethead: Always underscore-pad not-tab null returns; make -a work correctly
+gethead: Keep quoted strings as single value when reading free-format files
+getcol: Count tokens on first line  with -k even if no columns are specified
+imcat: Add second argument to -r to vary radii of PROS regions with magnitude
+imcat,imwcs,immatch: Set image epoch from DATE-OBS or MJD-OBS, not EPOCH
+scat,imcat,imwcs,immatch: Update SDSS access to DR4
+scat,imcat: Add option to sort by ID number
+scat: Fix bug so Hipparcos Catalog search returns magnitudes and parallax
+scat: Clean up VOTable reporting
+sethead: Fix _ substitution in COMMENT and HISTORY setting
+imfill: New program to fill in bad pixels in an image; add IMFILL keyword
+imsmooth: New program to smooth an image
+imhead,imrot: Add +i to force appending of primary header keywords to FITS
+extension headers.
+imwcs,immatch: Set output image coordinate decimal places using nxydec=n
+imhead, imsize, xy2sky, sky2xy, gethead: Read from fITS headers appended to
+GIF, JPEG, or TIFF image files
+sky2xy: Use -n number of decimal places when reading from file, too
+
+binread.c: Fix bug so magnitudes are read when J2000 is set by negating the
+           number of magnitudes
+catutil.c:  Clean up VOTable code
+catutil.c:  Return number of fields from vothead()
+dateutil.c: Drop declarations of unused variables
+fileutil.c: Add istiff(), isjpeg(), isgif() to check TIFF, JPEG, GIF files
+filter.c:   Add subroutines to shrink an image
+filter.c:   Add subroutines for Gaussian smoothing/filling
+findstar.c: Add nxydec=num. decimal places in image coordinates to setparm()
+            minpeak=num now sets minimum star counts above background
+fitsfile.c: Add fitsrtail() to read FITS headers from end of non-FITS image
+            files.  In fitsrhead(), add file name to all error messages
+            Drop declarations of unused variables
+imio.c:     Fix bug of occasional double application of bscale in getvec()
+            Clean up arithmetic and increment in addpix() and multpix()
+imsetwcs.c: Allow number of decimal places in image coordinates to be set
+imutil.c: Add subroutines to filter, fill, or resize an image and reset its header
+lwcs.h: Add NXYDEC to set default number of decimal places in image coordinates
+sdssread.c: Change default URL's to search to SDSS DR4 site
+sortstar.c: Add subroutines to sort by ID number
+wcs.c       Drop declarations of unused variables
+wcsinit.c:  Get Epoch of observation from MJD-OBS or DATE-OBS/UT unless DSS
+            Set wcs->naxes to actual number of image WCS axes, usually 2
+webread.c: Make changes so SDSS DR4 is processed correctly
+           Multiply max stars for ESO search by fudge factor to get all;
+           stars outside of box are returned (but not by scat in the end)
+
+Version 3.6.3 (January 6, 2006)
+scat: Fix bug reading sequence from catalog.  Clean up alignment of epoch
+and velocity columns.  Search correctly with precessed center
+scat, imcat: add 2MASS and Tycho-2 with magnitude errors.
+imrot: Add option to flip image around horizontal axis
+imrot: Add -p option to turn a negative image into a positive one
+imstack: Fix bug which caused extra linefeeds
+delhead: Fix bug which incorrectly padded with spaces when head is shrunk
+getcol: Put line count on same line as mean or median values; add range of lines
+wcscon.c: Fix bugs in rotation matrix computation for precession
+
+Version 3.6.2 (July 29, 2005)
+gethead, delhead: Deal correctly with large numbers of keywords
+gethead: format one-per-line output to be read as input by sethead
+getcol: Fix calls to gettoken() so they work in Linux
+imextract: Fix bug to extract 1 dimension from 2D files
+imsize: Fix recent bug which reversed size in height and width
+imsize: Make -d option give center and size in degrees
+getpix: Add -d for range and -m for mean value of pixels
+scat: Add dateform command line parameter to set output epoch format
+imgetwcs.c: Set limits correctly around RA=0
+wcs.c: In wcsrange(), compute limits correctly around RA=0
+Clean up unused variables everywhere using lint
+
+Version 3.6.1 (May 31, 2005)
+imwcs, imcat, immatch: Exit with error message if no catalog is specified
+isrange, isnum: Improve self-documentation of these existing programs and
+  add them to the official "wcstools" command list of programs
+skycoor: Fix bug which infinitely looped on header in verbose mode and
+fix bug found by Daniela Doneve which failed to convert correctly from
+non-1950 B  and non 200 J coordinates in files.  Also add -f argument
+to avoid @ in windows command lines.
+imextract: Fix bug which prevented 2D extraction from data cubes.
+All programs: Add "WCSTools" to version/help heading
+wcscon.c: Replace all sla_lib subroutines with local ones
+
+Version 3.6.0 (March 17, 2005)
+sethead: Fix bug when number of keywords set from file exceeded 50
+sethead: Add -m num command to reset max number of keywords changed
+imhead: Don't do anything if not FITS or IRAF file
+wcs.c: Fix bug in wcsrotset() so angles > 360 are set to angle - 360, not 360
+fitsfile.c: Make isfits() more robust by using unbuffered I/O
+
+Version 3.5.9 (January 20, 2005)
+delhead: Fix bug which occurred when large number of keywords deleted
+imsize: Fix bug which crashed program if filename extension was uppercase
+ucacread.c: Fix bug in ucacrnum()
+imgetwcs.c: Fix bug in GetFITSWCS() which gave bad answers for reversed axes
+ 
+Version 3.5.8 (December 3, 2004)
+scat.c: Fix main loop so it works correctly for one-line output
+scat.c: Fix main loop so it works correctly for multiple-line output
+wcs.c: Keep wcs->rot between 0 and 360 degrees
+tmcread.c: Fix 2MASS problem when searching across north pole
+tabread.c: Accept SpT and spt as spectral types before *type*
+
+Version 3.5.7 (October 20, 2004)
+imwcs, immatch, imcat: Fix catalog search problems when working around RA=0:00
+imwcs, immatch, imstar: Add 0 shift arguments to RotFITS call
+newfits: Add -w option to transfer WCS from one FITS file to a new one
+remap: Fix (now) verbose mode message if writing, not overwriting, to named file
+scat: do not print anything if no stars are found unless in verbose mode or
+providing VOTable output.
+webread.c: Do not print server messages unless in verbose mode
+imrotate.c: Fix bug when reading CRPIX from header to reset WCS
+hput.c: Avoid writing negative zero values into image headers
+wcs.c: Keep RA/Long between 0 and 360 in pix2wcs() and fix bug in wcsfull()
+fitsutil.c: Drop next_token() to avoid name conflict
+gsc2read.c: Fix bug converting search box to search radius for web query
+
+Version 3.5.6 (September 3, 2004)
+remap: Add -t num option to split each output pixel in num in each dimension,
+  taking mean of num x num samples from input image
+scat: Print error message and exit if no catalog found (instead of hanging).
+sethead: Add option to add, subtract, multiply, or divide a constant
+  to or from a  keyword value.
+Clean up code in libwcs subroutines (mostly declaring undeclared subroutines)
+fitsfile.c: If SIMPLE=F, read "image" data based on file size - header, and
+write data based on the NBDATA keyword.
+catutil.c: Parse up to 1000 columns instead of 100 in setoken()
+hput.c:  Fix bug so comments are not pushed onto next line if value lengthens
+
+Version 3.5.5 (July 19, 2004)
+delhead, delwcs, imwcs: keep blank lines when deleting keywords from
+multi-extension FITS headers
+sethead,delhead,keyhead,edhead: Change first image extension if multiple
+extensions and no extension is specified.
+wcshead: Print header when first line printed, not only if first file, and
+print ___ for missing WCS information
+hget.c: Read D, d, E, and e as exponent delimiters in floating point values
+hput.c: Add setheadshrink() and change hdel() to optionally keep a blank
+line at the end of a FITS header when a keyword is deleted.
+
+Version 3.5.4 (May 19, 2004)
+delhead, keyhead, sethead: Add ability to overwrite multi-extension headers.
+scat: Exit with error message and menu if no catalog is given
+
+Version 3.5.3 (April 30, 2004)
+getcol: Add % option to format output a column at a time.
+getcol, gettab, cphead: Fix bug which removed trailing zeroes from exponents of values returned
+getdate: Fix sky position entry for heliocentric times
+getfits:  Delete NAXISn for n > 2 in output image
+gethead: Deal with lower case e and d in exponents of values returned.
+imextract: Add -s option to ease setting of character string keyword values.
+scat: Add option to search catalogs by date alone.
+getpix: Fix handling of 0 0 for entire image.
+remap: Return error on failure of any memory allocation
+ctgread.c: Add ctgrdate() to allow searches of catalogs by date
+hget.c: Use strncsrch() in hget.c to get differently-cased keywords.
+ty2read.c: Read either CDROM with CRLF lines or CDS with LF lines
+
+Version 3.5.2 (March 17, 2004)
+Fix catalog subroutine argument problems found by Richard Mathar of Max Planck
+Add support for 2MASS extended source catalog and access to Sloan Survey catalog
+Add -u option to remap to delete distortion keywords from output file header
+Fix scat catalog merging using -s e flag
+Fix 2MASS Catalog search algorithm
+Fix blank pixel implementation in remap; add -s to BSCALE input and output
+Fix remap to write multiple input files to a single output file
+In remap do not rescale pixels if unnecessary
+Add pixel shifts to imrot
+In worldpix() in worldpos.c, allow ra/long to exceed 180 if reference
+pixel is more than 180 degrees from image (1,1).
+
+Version 3.5.1 (December 5, 2003)
+scat: Fix bugs in tabbed single-line search output
+cphead: Initialize previously uninitialized variable (infile)
+Change p[0,1,2] initializations to p[1,2,3] in wcsinit.c to match proj.c
+This affects constants for AZP,SIN,COP,COE,COD,COO,SZP,CEA,CYP,AIR,BON in
+all programs which convert between WCS and image coordinates.
+*read.c: Add tab after declination dashline (-----) for -n -1 output.
+Add wcs->naxes to wcs structure for backward compatibility
+Fix bug in DelWCSFITS() which caused problems when imwcs -e used.
+Fix bug in numdec() to return 0 if no digits after decimal point
+
+Version 3.5.0 (November 22, 2003)
+bincat: New program to create an image out of a catalog or a portion thereof
+cphead: Add -w option to copy all WCS keywords;
+        Rcopy same number of decimal places as are in input header
+scat: add option to search an annular region by specifying a range in -r
+scat: Add option to merge catalog objects within specified separation set by -r
+scat,imcat: Add object class to GSC2 output
+sub1: Fix bug which failed to find any stars in regions with certain centers
+gethead: Fix bug which dropped last zero of exponent in values
+getpix: Fix bug so 0 works as substitute for 1-NAXISn on command line
+imextract: Fix bugs to deal with 3D images
+skycoor: add -a option to compute the position angle between two coordinates
+Subroutines:
+wcs.h: Change wcs->naxes to wcs->naxis to prepare for WCSLIB 3.*
+iget.c, wcsinit.c and fitshead.h: Rename mgets() to mgetstr() in
+hget.c:  Add numdec() to return number of decimal places in numeric string
+imhread.c: In iraf2fits() and irafrimage(), use image, not physical, dimensions.
+In iraf2fits(), set NAXISi to image dimensions, NPAXISi to physical dimensions.
+wcs.c: Fix bugs in wcsfull().
+distort.c, wcsinit.c, wcs.c: Move all distortion-related code to distort.c and
+include unistd.h.
+lin.c: Include stdlib.h instead of malloc.h
+matchstar.c: Drop malloc.h from matchstar.c
+*read.c: Add radi argument for inner radius of annulus if rad is set and
+         radi is greater than zero.  Add *bin() subroutines for image filling.
+         Move proper motion margin and wrap computation to RefLim()
+catutil.c: Add arguments for catalog epoch, proper motion margin, and wrap 
+         flag to RefLim().  Deal with search around pole in RefLim(), too.
+imh.c: Read images to image dimension (IM_LEN), not physical dimension
+       (IM_PHYSLEN)
+ubcread.c: Fix bug in ubcsra(), which failed to iterate enough to find
+           closest stars
+distort.c: Moved all distortion-related code to this file, added 3 subroutines
+ucacread.c: Fix byte swap test in ucacopen() so it works on Linux
+matchstar.c, lin.c: Do not include malloc.h; it is part of stdlib.h
+webread.c: Rewrite buffer reallocation code to require fewer and avoid hanging
+
+Version 3.4.2 (August 21, 2003)
+sethead, edhead, keyhead: Deal correctly with images with more than 2 dimensions
+imstack: Add -x name option to create multi-extension FITS file
+scat: Allow sorting of sources found by range of ID numbers
+remap: Add -f name to use WCS from existing FITS file and -n num to set the
+value of output pixels with no value from the input image.
+fitsfile.c: Clean up use of primary header; add ROOTEND to secondary headers
+ty2read.c: Increase maximum number of regions to search from 100 to 1000
+fitsrfull(): new subroutine in fitsfile.c to read n-dimensional FITS file.
+
+Version 3.4.1 (July 28, 2003)
+gethead: Allow root directory for text as well as image files in list file
+getdate: Fix bugs so FITS date conversions read both date and time
+imextract: Fix extraction of 2-D images from 3-D images
+sky2xy: Initialize both sysout and eqout to 0 so defaults work (Takehiko Wada)
+skycoor: Fix bug in verbose mode of -r and give RA diff in sky arcsec
+tmcread.c: Fix limiting magnitude flag; it wasn't working
+dateutil.c: Add code to convert FITS dates as yyyy/mm/dd as well as yyyy-mm-dd
+imgetwcs.c: Fix bug setting secpix if not on command line (Takehiko Wada)
+
+Version 3.4.0 (June 9, 2003)
+scat, imcat: Print both RA and Dec proper motion as mas/year
+scat, imcat: Add support for 2MASS All-Sky release as well as IDR2
+scat, imcat: Add support for UCAC2 beta all-sky proper motion catalog
+scat: Fix -rr command so it works
+tmcread.c, catutil.c: Add support for 2MASS All-Sky release as well as IDR2
+wcsinit.c: Add partial support for IRAF ZPX projection (if converted from ZPN)
+wcsinit.c: Fix bug which reinitialized coefficients set by PROJP
+ucacread: Add support for UCAC2 format
+
+Version 3.3.4 (May 8, 2003)
+scat, imcat: Add output formatting for UCAC1
+sky2xy: Add command line specification of FITS WCS parameters for imageless use
+getfits: Fix bug which did not pass arguments to main subroutine
+ucacread.c: New subroutines to read the USNO UCAC 1.0 astrometric catalog
+catutil.c: Modify subroutines for UCAC1
+wcsinit.c: Read PROJP0 (for ZPN projections)
+wcs.h: Add two missing semicolons in C++ declarations
+
+Version 3.3.3 (April 15, 2003)
+scat, imcat, immatch, imwcs: Set library revision message using setrevmsg()
+catutil.c: Add new subroutines setrevmsg() and getrevmsg() to use constant revmessage
+*read.c: Get version/date string from getrevmsg() instead of main constant RevMsg
+ubcread.c: Fix proper motion bug; RA pm is now multiplied by cos(dec)
+
+Version 3.3.2 (April 7, 2003)
+xy2sky,sky2xy: Add -o option to print only RA or Dec or x or y
+wcsinit: Add distortion initialization to wcsinit()
+wcs.c: Add distortion initialization to wcstype() and calls to pix2wcs() and wcs2pix()
+distort.c: New subroutines pix2foc() and foc2pix() to correct spatial distortion
+between the image and the focal plane
+
+Version 3.3.1 (March 27, 2003)
+getdate: Add Heliocentric Julian Date and Modified Heliocentric Julian Date, RA,Dec args
+scat: Fix bug which failed to read PPM catalog proper motions
+scat: Debug separate search, catalog, and output coordinate system implementation
+imcat: Deal correctly with rotated images
+gethead: If null keyword value and padding on, print ___
+newfits: Fix bug which wrote CTYPEn without quotes. Set default reference pixel
+  to correct center of image (was off one-half pixel)
+Catalog subroutines: Check regions exactly in search, not catalog, coordinates
+getdate and dateutil.c: Add conversions to and from heliocentric Julian date
+
+Version 3.3.0 (February 6, 2003)
+scat,imcat,imwcs,immatch: Add support for USNO-B1.0 Catalog including minid and minpmq
+scat: add argument ndec=n to set number of decimal places in output
+sethead: fix bug parsing files of settings with quotes
+gethead: initialize some uninitialized variables
+ubcread.c: Add new subroutines to deal with USNO-B1.0 Catalog
+tabread.c: Deal with proper motion in catalogs by enlarging search boxes
+ty2read.c: include math.h because of use of fabs()
+gsc2read.c: Fix bug so imwcs works with GSC II search results
+proj.c: Use local copysgn() and copysgni() instead of (sometimes) system copysign
+Change fopen option from "r" to "rb" in all binary-reading subroutines
+so WCSTools will work under Windows
+
+Version 3.2.1 (January 7, 2003)
+delhead: Fix bug so arbitrary number of keywords can be deleted
+xy2sky: Fix fatal bug in tab output from file, and ignore commented out input
+file lines
+wcsinit.c: Read PVi_0 for ZPN projection; initialize PVi_j only once
+
+Version 3.2.0 (December 6, 2002)
+getfits: New program to extract part of a FITS image preserving WCS
+getdate: Add sidereal time conversion; fix bug in -now option
+imsize: Fix bug which caused segv crash on Linux and OS/X
+scat: Add VOTable output option (sr=degrees over web or -tt)
+scat: Fix several minor bugs dealing with returned star counts and formats
+scat: Add -n -1 option to ACT and Tycho-2 catalogs
+scat: Add filtering by epoch of entry using -y y1,y2 option
+sethead: Never overwrite a multiextension FITS file
+setpix: Rewrite code so arbitrary number of ranges of pixels can be set
+sumpix: Add -l option to print range and allow summing over entire image
+catutil.c: Add VOTable header and trailer subroutines vothead() and vottail()
+dateutil.c: Add sidereal time conversion
+wcsinit.c: Fix subroutine calls for radial velocity and pole latitude
+wcsinit.c: Fix computation of center pixel in image for default ref.  pixel
+ctgread.c: Change UZC format from /f to /u; add /f for fractional hrs and deg
+
+Version 3.1.3 (August 30, 2002)
+scat: Fix bug which broke USNO-A catalog reading by number; fix UJC mag. bug.
+scat and imcat: Print all available magnitudes in BINARY, ASCII and TABTABLE
+catalogs and search catalogs to improve mergeability.
+imwcs: Add -q n to increase number of parameters to be fit.
+getcol: Read multiple files; add option to print pathname; add option to ignore comments
+gethead: Ignore / if reading to end of line with -l in free-form files
+getdate: Add option to convert files of date/time strings and ET conversion
+imwcs: Set center and scale from prematched stars if not set on command line.
+skycoor: If no coordinate system given, assume input and output both J2000
+imio.c: Fix bug in getvec() which crashed when using scaled pixels
+fileutil.c: Return 1 if file is stdin from isfile()
+dateutil.c: Add conversion to and from ET/TDT/TT ephemeris time
+
+Version 3.1.2 (July 8, 2002)
+getdate: Fix command line parsing to handle negative (BCE) dates correctly
+dateutil: Fix handling of negative years
+dateutil: Fix fixdate() to leave in fractional seconds correctly
+
+Version 3.1.1 (June 26, 2002)
+gethead,imsize: Add -x option to specify FITS extensions for file list
+gethead: Add -s option to drop space padding in tab-separated tables
+getpix: Add -s option to print x y value lines without punctuation
+imcat: Add back -a option to set a WCS rotation angle
+wcshead: Add option to print rest wavelength limits using VELOCITY
+hget.c: Fix bugs in hgetsc(), hgeti4c(), and hgetr8c()
+wcsinit.c: If no WCS is present for a specified letter, return error.
+wcsinit.c: Save name and letter of WCS in WCS data structure
+tnxpos.c, iget.c, hget.c: Fix bugs dealing with multiple line keywords
+so IRAF TNX projection works again.
+
+Version 3.1.0 (April 12, 2002)
+Implement WCSLIB 2.9
+scat: Add web query sr= option for search radius in degrees
+scat: Fix implementation of velocities in TDC binary catalogs
+imcat,scat,imwcs,immatch: select any magnitude for sorting and limits (number or letter)
+imcat: Fix bug so characters other than circles can be plotted
+binread.c: Fix object name and velocity code
+ty2read.c: Fix bug so magnitudes limits are used correctly
+wcslib.c: Fix bug in WCSLIB 2.8.2 wcs.c code
+wcsinit.c: Support PV entry of constants and PCi_j rotation matrices
+wcs.c and wcsinit.c: Support inversion of multiple WCSs
+hget.c: Add hgetri4c(), hgetr8c(), and hgetsc() for multiple WCS handling
+edhead.c, fixpix.c, addpix.c, setpix.c, subpix.c, conpix.c, gettab.c,
+newfits.c, imstack.c, imextract.c, remap.c, getcol.c, and getdate.c:
+getcol: Add -g for medians of absolute values of selected columns,
+-j for means of absolute values of selected columns,  -q for mean of
+selected columns added in quadrature, and -x for ignorable value.
+tnxpos.c: Fix bug parsing parameter strings with ddd. in them
+Fix minor bugs found by True Unix C compiler
+
+Version 3.0.7 (March 4, 2002)
+gethead: Add -l option to return values to end of line
+gettab:  Improve line range implementation
+imcat and scat: Print spectral type for TDC format catalogs, if present
+keyhead: Add time and angle conversions for 2dF keyword changes and
+sethead and keyhead: Add -l command to log files as they are processed
+catutil.c: Fix agets() to work with keywords at start of line
+catutil.c: Add option in agets() to return value to end of line or /
+tmcread.c: Fix catalog name in web access
+wcscon.c: Fix precession units problem in ecl2fk5() and fk52ecl()
+wcsinit.c: Add XPIXSIZE/YPIXSIZE (KPNO) as additional image scale keywords
+
+Version 3.0.6 (January 24, 2002)
+imwcs, immatch: Allow arbitrary argument order on command line
+imwcs: After first pass, use WCS and tolerance for matching, if possible
+imwcs: set minimum number of matches to cut matching loop (minmatch=value)
+       (default 40)
+       and minimum number of stars for WCS fit (minstars=value) (default 3)
+imcat: Add -y to set epoch of image
+scat, imcat, skycoor: accept fractional year or FITS date for epoch
+scat: If RA search size is given, divide by cos(dec) for true arcseconds
+scat, imcat, imwcs, immatch: Improve error reporting
+getcol:  Add sum, mean, sigma for hh:mm:ss and dd:mm:ss entries
+  Add -e option to print medians of values in selected columns
+  Add -f option to print ranges of values in selected columns
+  Add -p option to print only sum, mean, sigma, or range, not entries
+  Ignore non-numeric values for sums, means, ranges, and medians
+gettab: Fix bugs to deal with conditions correctly
+skycoor: Add -o argument to offset coordinates by arcseconds
+xy2sky: Add option to prepend RA and Dec to input tab table (-a -t) for output
+conpix: Use random() instead of drand48() for portability
+imrot, imwcs, immatch, imstar: Fix rotation of 8-bit images
+imstar: Add istat=0 option to avoid recomputing noise; improve code
+sethead: Add options to add comments to keywords from files and command line
+sethead: Allow use of stdin for input of keyword assignments
+sethead: Add -s to set character used for spaces in argument strings
+wcsinit.c: Use WCSDIM for number of axes if NAXIS is zero or absent
+ctgread.c: Fix Tycho-2 call argument error so scat, imcat, imwcs, immatch work
+matchstar.c: Try matching with current WCS before trying all possible offsets.
+uacread.c, gscread.c: Include math.h
+lin.c: Include stdlib.h instead of malloc.h for portability
+imio.c: Add 8-bit to 8-bit transfers to movepix()
+tabread.c: Fix initialization problems in header reading subroutine tabhgetc()
+
+Version 3.0.5 (September 27, 2001)
+Implement WCSLIB 2.7
+Fix bugs in tabread() which didn't appear on Solaris, but did on Linux and Alpha Unix
+Fix bugs in gethead in printing values from free format ASCII files
+Add magnitude name to heading limit specification
+hget.c: Fix bug in str2dec() which misinterpreting strings with leading spaces
+hget.c: Fix bug in isnum() which caused bad answer if trailing spaces
+scat,imcat,immatch,imwcs: USNO-A2.0 and HST-GSC catalogs now available over web
+webread.c: Debug code to use ESO USNO-A2.0 and GSC servers
+ctgread.c: Fix bug dealing with radial velocities
+
+Version 3.0.4 (September 19, 2001)
+imwcs, imcat, scat, immatch: rewritten to deal with arbitrary numbers of mags
+imcat, scat: -s command now allows sorting by RA, Dec, and Mag(n), X, and Y
+imwcs, immatch: -k command selects magnitude for reference star selection
+hget.c: Decode yyyy/mm/dd as a date string in hgetdate()
+webread.c: free all memory which is allocated
+tmcread.c: flag magnitudes with rd_flag indicating high uncertainty
+sortstar.c: modified to handle arbitrary numbers of magnitudes and specified
+            sort magnitude
+*read.c: arguments include single 2-D magnitude array and sort magnitude
+
+Version 3.0.3 (August 24, 2001
+sethead: Fix bug which failed to assign FITS or IRAF filenames to keywords
+scat: Pass on velocities from TDC ASCII and Starbase catalogs
+ctgread.c, tabread.c: Deal with velocities and object names better
+
+Version 3.0.2 (August 2, 2001)
+imwcs: Allow less than three star matches if only 1 or 2 parameters fit
+
+Version 3.0.1 (July 25, 2001)
+xy2sky: Add -x argument to specify columns for x,y, -m for magnitude column,
+ and -c for file containing magnitude calibration polynomial
+immatch: Add -q argument to fit image magnitude to catalog magnitude polynomial
+imstar: Return image instrumental magnitudes instead of flux
+getcol: Fix bug so that stdin can be used for input file
+scat: Fix various web access bugs
+binread.c: Fix bug so that catalogs not in specified directories can be found
+imsetwcs.c: Add code to fit image magnitudes to catalog magnitudes
+polfit.c: New file with polynomial fitting and evaluation subroutines
+
+Version 3.0 (July 12, 2001)
+scat, imcat, imwcs, immatch: Add support for GSC II, GSC-ACT and 2MASS Point
+ Source Catalogs
+scat, imcat:  Add parallax to Hipparcos catalog output and 4 fluxes to
+ IRAS Point Source output
+scat: Add help to web interface
+delwcs.c: Add PC matrix to keywords deleted
+getcol.c: Add -b to read vertical-bar-separated columns to include spaces
+ and -i to read tab-separated tables correctly
+gethead.c: Add -g for keyword=val<lf> and print same way if -v
+gettab.c: Create output tab tables from stdin without crashing
+imcat.c: Add option to set regions in pixels as well as arcseconds
+remap.c: Set default center to center of output image, not input; deal with
+ projection changes correctly
+scat.c: Rewrite sort options, adding sort by declination and no sort at all
+scat.c and imcat.c: Clean up heading alignments; add band and n to GSC output
+skycoor.c: Add -i option to specify radian input
+binread.c: If 4 magnitudes, stash last two in integer*4 type
+catutil.c: Fix bug which caused parsing failure on quoted tokens
+catutil.c: Add GSC-ACT, 2MASS PSC, and GSC II catalogs
+dateutil.c: Add options to convert to and from year,day-of-year
+dateutil.c: Add fractional day on ISO FITS string as well as UT time.
+gsc2read.c: New subroutines to read GSC 2.2 catalog over the web
+hget.c: Fix possible problems in header length setting
+gscread.c: Add support for GSC-ACT with separate file path from GSC
+tmcread.c: New subroutines to read ASCII version of 2MASS Point Source Catalog
+ty2read.c: Extend search limits so searches do not slip between region limits
+ and fix bug which caused last region on index list not to be checked.
+wcsinit.c: Read PROJPn projection constants, not PVn
+webread.c: Make a separate subroutine, webbuff(), to get data given a URL
+
+Version 2.9.3 (March 23, 2001)
+This is a bug-fix release which fixes compilation problems on HP-UX and Linux
+and problems with access to the SAO and PPM catalogs under certain conditions.
+binread.c: fixed use of PPM_PATH, SAO_PATH, and WCS_BINDIR in binread()
+catutil.c: Fixed PPMra definition in RefCat()
+getcol.c: dropped declared arguments from one subroutine declaration
+webread.c: dropped declared arguments from one subroutine declaration
+           fixed webrnum() so it works
+scat.c: fixed handling of epoch when not specified
+wcs.h, wcs.c, wcsinit.c, wcslib.c, cel.c:  Fixed minor bugs which caused
+Linux compilation errors.
+
+Version 2.9.2 (March 12, 2001)
+fitsfile.c, fitswcs.c: Change WCS selection character from : to %
+fitsfile.c: Fix bug which caused crash on reading multi-extension FITS files
+fileroot: New program used by saom* scripts to create match catalog file name
+Add shell scripts which use SAOimage to overplot and match star catalogs in
+the SAOimage.scripts subdirectory.
+Help messages now print my e-mail address to make it easier to complain about
+bugs (or compliment me for features which work).
+
+Version 2.9.1 (March 2, 2001)
+wcsinit.c: Fix bug which read CRPIX1 as CRPIX2 as well as CRPIX1
+scat: Add option -z to append to pre-existing file (for SAOimage star matching)
+imsetwcs.c: Fix bugs with pre-matched stars.
+
+Version 2.9.0 (February 23, 2001)
+wcsinit.c, wcs.c, wcs.h: Implement sequentially dependent WCS's
+fitsfile.c: Debug multiple WCS implementation with multi-extension FITS files
+Specify WCS as file.fits:wcs or files.fits,extnum:wcs , where wcs is either
+the WCSNAME, if present in the header or WCS character.
+
+Version 2.8.7 (February 15, 2001)
+imwcs: Implement -u initial matches, though matches do not set initial WCS
+ Direct all diagnostic output to stderr so it comes out in the correct order
+ if it is sent to a file.  Fix overwriting output image so it works even if
+ final header is longer than original header.  Fix -o option so it can either
+ overwrite the input file or specify file.
+imrot: Fix -o option so it can either overwrite the input file or specify file.
+binread and ctgread: if pole is included, search entire RA range of RA-sorted
+ catalog
+wcslib.h, lin.c, proj.c: minor updates from WCSLIB 2.5 to WCSLIB 2.6 (May 2000)
+wcsinit.c: New subroutines wcsinitn(header,name) and wcsinitc(header,char)
+ allow use of multiple WCS's, though no dependent ones yet.
+
+Version 2.8.6 (January 2, 2001)
+scat, imcat, imwcs, immatch: Read catalogs across the web from CGI scat
+webread.c: New subroutines to read catalogs via http
+scat: Improve error handling and feedback
+scat: Read USNO plate catalogs reformatted like UJC
+imwcs: Implement first pass at dealing with pre-matched stars
+ujcread.c: Add code to read USNO plate catalogs (ra, dec, mag)
+tabread.c: Read proper motion in seconds/century as well as seconds/year
+hget.c: isnum() now rejects strings with embedded hyphens so that ISO dates
+are aligned as strings in FITS headers, not as right-justified numbers.
+
+Version 2.8.5 (September 29, 2000)
+scat, imcat: Print approximate spectral type instead of plate number for A2.0
+scat: Print spectral type and 2nd mag in one-line closest star output format
+imrot: Echo only new file name if not -v output, use _EXTNAME if extraction
+catutil.c: Add br2sp() to approximate USNO-A2.0 spectral types
+ctgread.c: Implement multiple maginitudes and spectral types in ASCII catalogs
+uacread.c: Approximate spectral types from "B" and "R"
+wcsinit.c: Use CD matrix if any of CDi_j are present
+
+Version 2.8.4 (September 6, 2000)
+imstack: Add -o option to set output filename
+scat: Print leading zeroes in ID numbers for -f option search centers
+i2f: If pixel file not found, look in same directory as header file
+catutil.c Add option in CatNum to print leading zeroes if nnfld > 0
+imhfile.c: Use header directory if pixel file not found at its pathname
+
+Version 2.8.3 (August 3, 2000)
+setpix:  Add -a, -s, -m, and -d options to operate on existing pixel values
+in image sections with a constant.
+wcshead: Add -w option to print limits of 1-D images (often spectra)
+scat: Add ASCII catalog /x option to use X Y instead of spherical coordinates
+imcat, scat: Preserve star catalog structure between calls to avoid rereading
+Starbase and TDC ASCII and binary catalog files buffered in memory.
+imrot: Add -s option to split multi-extension FITS files to _n.fits
+newfits: Add -i option to fill data section of new FITS file from binary file
+wcs.c: Use keyword rotation angle for one-dimensional file
+imsetwcs.c: Fix bug which caused occasional segv, introduced in 2.8.0
+dateutil.c: Fix bug so ep2jd() and jd2ep() both start at 1/1 0:00
+catutil.c: Fix CatNum() and CatNumLen() to deal with integers > 10 digits
+tabread.c: Return actual catalog number from tabrnum()
+
+Version 2.8.2 (June 13, 2000)
+scat, imcat, immatch, imwcs: Fix bug which reversed Tycho-2 B and V magnitudes
+gethead: If -p, always print filename, even for one file
+ty2read: Fix bug which reversed B and V magnitudes (spectral type was OK)
+imhfile.c: If pixel file has no directory, always use same as header file
+
+Version 2.8.1 (June 9, 2000)
+scat, imcat, immatch, imwcs: Fix reading of USNO-A2.0 on PCs and Alphas
+gethead, sethead, delhead, cphead, keyhead: Improve error reporting
+uacread.c: Fix bug detecting byte-swapping on some files on PCs and Alphas
+hget.c: Get keyword values even if equal sign is not present
+
+Version 2.8.0 (June 2, 2000)
+scat, imcat, immatch, imwcs: Implement Tycho 2 astrometric catalog
+tabread.c: Read from any table in a multiple-table Starbase file
+wcs.c: If CTYPEn is not found, default to LINEAR, no error
+imgetwcs.c: Print debugging coordinates in degrees if wcs->degout is set
+ty2read.c: New subroutines to deal with the Tycho 2 catalog
+and a variety of other bugs fixed.
+
+Version 2.7.3 (May 1, 2000)
+imhfile: Fix bug and clean up code dealing with pixel subdirectories
+dateutil: Years from old FITS format or system less than 1000 get 1900 added
+hput: Bug in hadd() fixed so line is not overwritten.
+scat: Allocate search buffers once to speed multiple-object searches
+ctgread: Implement missing /d catalog flag for positions in degrees.
+
+Version 2.7.2 (March 28, 2000)
+cphead: New program to copy keyword values between headers
+gethead: Add extraction of keyword= values from any ASCII file
+         Add conditions for use of specific header files
+         Add replacement of embedded spaces with underscores
+getcol and gettab: Add conditions for use of lines in files
+imwcs: Allow iterating without then with tolerance reducing in one run
+imcat and scat: Improve handling of Starbase tab table catalogs
+                Clean up output formatting
+platepos.c: Use inverse CD matrix to get better initial x,y value
+imgetwcs.c: Set reference pixel value to output system (bug fix)
+hput.c: Do not add quotes if writing COMMENT or HISTORY using hputs()
+imhfile.c: Minimize length of path in pixel file name, fix bug dealing with
+           very long file paths.
+dateutil: Fix bug causing 2000-02-29 to appear as 2000-03-01; other dates OK.
+          Add conversion routines for current local and UT times.
+Proper motion reporting has been implemented in scat and imcat with
+additional modifications to ctgread.c, tabread.c, actread.c, and binread.c
+
+Version 2.7.1 (February 15, 2000)
+cphead: New program to copy keyword values between headers
+imwcs and immatch: Increase limit of matches to 500
+getcol: improve parsing of ranges of columns and lines
+gethead: Add optional output format which can be input to sethead
+tabread: implement proper motions in Starbase tab table files
+imstack: add option to stack a single image on itself n times and fix bugs
+
+Version 2.7.0 (February 3, 2000)
+Update WCSLIB subroutines to version 2.5, which was released in December
+imrot: Fix bug so new file is created if only BITPIX is changed
+skycoor: Fix bug so degree conversion works for coordinates from a file
+getdate, dateutil.c: Add support for modified Julian date
+
+Versdion 2.6.12 (January 13, 2000)
+scat, imcat: Fix output of Starbase tab table catalogs
+gettab:  If no column names are specified, entire lines where tests are
+         met are printed.
+dateutil.c:  If old FITS format date is 100, it is assumed to be 2000
+             Writing 100 in the year field is a typical Y2K failure.
+             The software already interprets 00 as 2000.
+tabread.c:  Fix bug in tabopen(); return id if *_id present; count decimals
+imhfile.c:  Fix bug in iraf2fits() which dropped keyword after OBJECT
+
+Version 2.6.11 (December 20, 1999)
+conpix:  Added -c (set constant), -r (square root), and -g (Gaussian noise)
+getcol:  Add -t conversion to tab-separated table
+sethead: Add -d option to change date from old FITS format to new FITS ISO
+         format.  This works on dates of format dd/mm/yyyy as well as dd/mm/yy
+setpix:  Fix bugs
+getpix:  Fix bugs so that upper and lower pixel limits can be used together
+getdate: New program which uses dateutil.c to do many date and time conversions
+imio.c:  Round all float and double conversions to integer
+tnxpos.c: Fix several bugs; set wcs->rot using wcsrotset()
+wcsfort.c: Add error handling and better internal documentation
+dateutil.c: Fix bugs and add more conversions
+hget.c:  Fix bug extracting minutes and seconds from FITS ISO time string
+
+Version 2.6.10 (December 9, 1999)
+remap:   Added -i flag to set output BITPIX and avoid overflows
+getpix:  Added -g and -l options to print only pixels within value limits
+hget.c:  Fix bug in isnum() so numeric strings starting with d or e are
+         not decreed to be numbers.
+dateutil.c: Fix bug in ts2jd() which caused JD to be much too big
+
+Version 2.6.9 (December 1, 1999)
+edhead:  Added -e option to select an editor and none editor option to
+         simply filter a header, removing control characters without editing
+gethead: Added -u option to always print underscores if keyword not found
+         and -f option to never print filenames
+imwcs:   Now copies images without reading them to memory if image catalogs
+         computed externally; fixed bug which broke iterations, and handle
+         dataless headers with separate image catalogs
+getcol:  Add -a, -c, and -m options to get sums, counts, and means of columns
+imhead:  Add options to output exact FITS header and set BITPIX to 0
+sethead: Fixed bug which wrote character string keyword values twice
+remap:   Added galactic coordinate output option
+scat, skycoor:    Fixed bug when setting epoch or equinox on command line
+imhfile.c: Delete all keywords read from binary part of header before writing
+           a new .imh file
+wcs.c:   Fixed bug which caused NCP to be ignored in wcstype()
+findstar.c: Allow image catalog filename to be up to 256 characters
+tabread.c: Improve error checking; istab() returns 1 only if column headers
+
+Version 2.6.8 (November 5, 1999)
+immatch, imstar, and imwcs now read Starbase files as well as DAOPHOT-format
+files for star x-y input (-d).
+sumpix: Add options to compute means, variances, and standard deviations
+newfits: bugs fixed
+getcol is a new task for getting information from ASCII space-delimited tables.
+lint was run on all source code, and it was cleaned up
+iraf2fits:  Add keyword DATE-MOD with binary time translated to FITS date
+imhfile.c: A major memory leak fixed after Jean-Baptiste Marquette ran
+Insure++ on the code
+catfile.c change to ctgfile.c and cat*() subroutines renamed to ctg*() to
+avoid conflicts with standard C catopen() and catclose() calls.
+catutil.c: Fix bug in getoken() which lost last character on line
+tabread.c, fitsfile.c: memory allocation cleaned up
+findstar.c: Use of pointers cleaned up; read tab tables as well as DAOPHOT format
+dateutil.c: Fix bug to return epoch if fractional year given (-y arguments)
+
+Version 2.6.7 (October 21, 1999)
+fitsfile.c: Set header length lhead0 in hget.c when allocated or reallocated
+imhfile.c: Set header length lhead0 in hget.c when allocated
+hput.c: Check length of header and return error if trying to write beyond end.
+setpix.c, sethead.c: Reallocate header and try again if hput returns error
+setpix.c: Fix subroutine arguments after lint
+
+Version 2.6.6 (September 28, 1999)
+scat: Fix access to GSC by number
+i2f: Add option to write to standard output
+fixpix: Fix bugs
+remap: New program
+gscread.c: Fix table allocation bug
+imhfile.c: Don't copy OBJECT keyword from .imh file; use binary i_title
+fitsfile.c: Add option to write to standard output as filename stdout
+imio.c: Add new subroutines to add to a pixel (addpix) and use FITS one-based
+        in addition to C zero-based image coordinates.
+
+Version 2.6.5 (September 16, 1999)
+scat: Fix bug which returned inconstent results from distance sorts.
+scat.c, imcat.c, imsetwcs.c: Rewrite catalog access so it all goes through
+catread(), catrnum(), etc.  Add distsort argument to all *read() calls.
+catread.c:  Add argument for catalog type from RefCat(), and add code to call
+access routines for each type of catalog supported by the package.
+imio.c: Fix scaling code which caused problems on some compilers
+tabread.c:  Fix coordinate system problems
+matchstar.c: Fix bug initializing CD matrix
+
+Version 2.6.4 (August 31, 1999)
+scat.c: Fix -r before decimal coordinates. Fix long/lat and 0:00 search bugs.
+imcat.c and scat.c: Fix formatting and -n option
+immatch:  Fix fatal bug caused by changes to imwcs subroutines
+sethead.c: Write multiple keywords of form name_i when character value too long
+gethead.c: Concatenate multi-line keyword values in new sethead format
+gethead.c, delhead.c, sethead.c, keyhead.c:  Programs rewritten to deal
+more completely with files of keywords and image files
+fileutil.c: New subtroutines to compartmentalize file information gathering
+hget.c: hgetm() now reads name_i, name_ii, and name_iii(IRAF) multiline keywords
+gscread.c, uacread.c, ujcread.c, binread.c: Call RefLim() to set catalog search
+ujcread.c: Fix bug when number of stars found exceeds maximum
+limits and fix test when search area passes through 0:00 RA
+wcs.c:  Print dd:mm:ss (not hh:mm:ss) dd:mm:ss for long/lat coordinates if
+        degout=0
+
+Version 2.6.3 (July 9, 1999)
+imwcs.c, immatch.c, imstar.c: Fix command line rotation angle setting
+imgetwcs.c: Fix bug when converting image coordinates to reference system
+imgetwcs.c: Fix bug so command line reference pixel is used correctly
+imsetwcs.c: Fix bug which reinitialized CDELT1 incorrectly when iterating
+sumpix.c: New program to add pixel values over rows. columns, or regions
+dateutil.c: New file with many date and time conversion subroutines
+fitswcs.c: Do not write J2000 or B1950 as RADECSYS; use FK5  and FK4
+
+Version 2.6.2
+imrotate.c: Fix bug which caused overflow in history header line
+imrotate.c: Rewrite to return pointer to rotated image
+gethead.c: Fix bug which sometimes caused garbage at start of output lines
+imstar.c: Add option to set brightest star in image to arbitary magnitude
+All catalog subroutines now use SearchLim() to set RA and Dec limits
+
+Version 2.6.1
+scat.c: Fix bug if -r last command; allow sexigesimal degree search radius
+scat.c: Allow rectangular search box (-r radius or -r width height)
+newfits.c: Create FITS files as they appear in command line unaffected by
+           subsequent command line arguments.  Allow center to be set as
+           standard WCSTools coordinate string (ra dec system)
+
+Version 2.6 (June 4, 1999)
+conpix.c: Operate on all pixels of an image (new)
+gettab.c: Extract values from a tab table file (new)
+newfits.c: Make dataless or blank FITS image files (new)
+imextract.c: Extract 1D file from 2D file or 2D file from 3D file (new)
+imwcs.c, imcat.c, immatch.c, scat.c:  Add support for ACT catalog
+scat.c: Add number ranges, search from catalog file of centers
+immatch.c, imwcs.c: Add catalog selection through symbolic link to executable
+skycoor.c: Add options to get separations and convert in and out of cartesian
+           equatorial coordinates
+gethead.c, delhead.c, keyhead.c, sethead.c: Deal gracefully with any number of
+           command line arguments, ignoring those past limiting number
+getpix.c and setpix.c:  Now work with 1-d images as well as 2-d images
+actread.c: New subroutines to read ACT catalog (new)
+catutil.c: Repackaging and new subroutines for catalog identification, range
+           decoding and date format conversion
+binread.c: Fix bug with 0h wraparound searches
+catread.c: Rewrote parser, allow coordinate system per star
+fitsfile.c: Allow 0-data-byte files and BITPIX=0 for data-free WCS fits
+imgetwcs.c: Allow negated scales to flip axes
+tabread.c: Rewrote and generalized tab table access to use same structures as
+           binread() and catread()
+wcs.c: Fix latitude for NPA and SPA coordinate systems
+       For quad cube projections, z=0-5 (faces) instead of 1-6
+       Add file name to error messages, if available
+wcsinit.c: Set rotation angle correctly for DSS projection
+           Add PIXSCALE as possible plate scale keyword (arcsec/pixel)
+           Return an error message for all WCS failures
+           Fix bug in dealing with EPOCHless non-equatorial coordinates
+wcshead.c: Change name of subroutine to avoid conflict with wcslib subroutine
+
+Version 2.5 (December 8, 1998)
+edhead.c: make temporary file in /tmp and delete it when done
+imcat.c, scat.c imwcs.c, immatch.c: Add code to read TDC ASCII, USNO-A2.0,
+ and USNO-SA2.0 catalogs
+imcat.c, imstar.c: add output options to create SAOimage region file of stars
+imwcs.c:  add access to TDC binary catalogs such as SAO, PPM, and Tycho
+imwcs.c:  fix bugs in coordinate system handling
+keyhead.c: add option to transfer keyword values within a header
+gscread.c, uacread.c, ujcread.c, tabread.c, binread.c: An egregious error
+which failed to reassign numbers when dropping faint or far stars when
+there were too many for the desired return was fixed 
+catread.c: new subroutines to read TDC ASCII catalogs
+wcs.c:  fix bug when dealing with rotation of mirrored (right-handed) systems
+wcsinit.c: Read projection constants neaded for some WCSLIB projections
+fitsfile.c: add isfits() subroutine so unsuffixed files can be identified
+imhfile.c: Use file pointer to get file length; add isiraf() subroutine
+uacread.c: Add support for USNO A-2.0 catalog and USNO SA-2.0 catalog
+wcslib.h: combine lin.h, cel,h, proj,h, and wcstrig.h into wcslib.h
+fitsfile.c: fix bug to deal correctly with very large headers
+
+Version 2.4.1 (September 15, 1998)
+scat.c, imcat.c: Add code to read TDC binary catalogs
+binread.c: new subroutines to read TDC binary catalogs
+star.h: new data structure for TDC binary catalogs
+uacread.c: bug fix for reading USNO A 1.0 CDROMs
+dsspos.c, tnxpos.c: minor bug fixes
+ssao,sppm,siras: new links to scat to search SAO, PPM, and IRAS Point Source
+                 Catalogs
+imsao,imppm,imiras: new links to imcat to search SAO, PPM, and IRAS Point
+                    Source Catalogs
+
+Version 2.4 (September 4, 1998)
+sethead.c: new arguments to add history to header
+sethead.c delhead.c keyhead.c: Write whole file if modifying primary header
+All files now transfer the extension from the input file if writing a new file
+i2f.c: Write .fits files instead of .fit; write HISTORY line
+wcs.c: Up to 10 commands may be preset
+hput.c: Add getltime() and getutime() to set ISO local time and UT strings
+wcs.h: Added pa_north, pa_east, imrot, and imflip to show image orientation
+
+Version 2.3.4 (July 28, 1998)
+delwcs.c: New program to delete keyword entries from image headers
+sethead.c: Updated to allow multiple files to be changed
+imhio.c: Properly sets modification date; memory management bugs fixed
+
+Version 2.3.3 (July 24, 1998)
+imhio.c:  Fix major bug by writing length of header to IRAF .imh files
+
+Version 2.3.2 (July 16, 1998)
+wcslib.c, wcs.c: Correct implementation of CSC, and probably all, quad cube
+projections.
+sky2xy.c: Add third dimension in output for quad cube projections
+xy2sky.c: Add -f <num> for third dimension of input for quad cube projections.
+
+Version 2.3 (July 10, 1998)
+Restructure WCS initialization subroutines, putting keyword-dependent
+stuff into wcsinit.c
+wcs.c: Add wcskinit() to initialize WCS from keywords obtained elsewhere
+wcs.c: Add wcsndec() to set number of decimal places output by pix2wcst()
+wcs.c: Fix wcscdset() to deal with all possible cases correctly
+wcs.c: Change setlinmode() to setwcslin() and setdegout() to setwcsdeg().
+wcsinit.c: Fix bug reading 1-dimensional FITS files
+wcsinit.c: Fix several initialization bugs discovered on Alpha version
+wcs.c: Add ICRS as RADECSYS value (acts like FK5)
+wcsfort.c:  Add Fortran interface in wcsfort.c
+wcs.c: Use AIPS subroutines of CAR projection to avoid WCSLIB bug
+scat.c: Add equinox options to and fix other bugs
+imcat.c: Add equinox options to and fix other bugs
+
+Version 2.2.1 (June 2, 1998)
+Fix bug in hput() so blank lines before END are filled correctly
+Fix fatal bug in tabread()
+
+Version 2.2 (May 14, 1998)
+Compute pixels from galactic coordinates correctly.
+Implement arbitrary equinox in form Jyyyy.ffff or Byyyy.ffff.
+Modify polynomial WCS to be closer to what is being discussed in fitswcs.
+Add support for ecliptic coordinates, and improve coordinate conversion.
+Fix pixel to WCS IRAF TNX projection; WCS to pixel still has problems.
+Add support for IRAF unsigned data types
+
+Version 2.1 (March 31, 1998)
+Add polynomial plate fit and IRAF TNX projection.  Fix various bugs.
+Fit CD matrix as well as CDELT/CROTA.
+Add iteration and recentering to IMWCS.
+
+Version 2.0 (February 18, 1998)
+Use Mark Calabretta's WCS code instead of AIPS classic WCS subroutines
+for the standard FITS projections.
+
+Version 1.5 (December 15, 1997)
+Rewrite IRAF code to deal with IRAF 2.11 reformatted headers.  Fix a variety
+bugs.  Switch to single catalog search and image-based catalog search programs,
+invoked by different names for different catalogs.
+
+Version 1.4 (October 16, 1997)
+Rewrite FITS code to deal with FITS image extensions.  Fix bugs in fitting
+routine and deal with off-axis images, such as those from CCD mosaics.
+
+Version 1.3.1 (April 25, 1997)
+Fixed major bug in USNO A-1.0 and USNO SA-1.0 catalog reading which ignored
+stars which are flagged as being in the Guide Star Catalog
+
+Version 1.3 (February 24, 1997)
+Fixed pointer tests to check for NULL rather than 0 so they will work
+properly in Linux.  Coordinate conversion inconsistencies were repaired.
+All programs which only use header information call a common subroutine
+to read the header.
+
+Version 1.2.2 (January 27, 1997):
+Fixed bug in HGET which ignored exponent of floating point string when
+extracting an integer due to use of atoi() instead of (int)atof().
+This most often affects how EPOCH is interpreted.
+
+Version 1.2.1 (January 15, 1997):
+Fixed bug in RA sorting which affected all catalog search programs

@@ -1,0 +1,126 @@
+WCSTools Program Files
+
+addpix.c
+  Add a constant value(s) to specified pixel(s)
+bincat.c
+  Create a FITS image containing catalogued objects
+char2sp.c:
+  Replaces a specified character in a string with spaces (default is _)
+conpix.c
+  Operate on all of the pixels of an image
+cphead.c
+  Copy keyword values between FITS or IRAF images
+crlf.c
+  Change carriage returns in text stream to line feeds to make imwcs logs readable
+delhead.c
+  Delete specified keywords from FITS or IRAF image file headers
+delwcs.c
+  Delete the WCS keywords from an image. If both EPOCH and EQUINOX are
+  present, EQUINOX is also deleted. 
+edhead.c
+  Edit the header of a FITS file or the user parameters of an IRAF image file
+  using a the text editor specified by the EDITOR environment variable.
+filename.c
+  Remove file directory path from complete file pathname leaving file name
+fileroot.c
+  Remove file extension and return the root, including character replacement
+filext.c
+  Return the file extension, if there is one.  Brackets and commas count.
+getcol.c
+  Extract specified fields from an space-separated ASCII table file
+getdate.c
+  Convert dates and times between various formats.
+getfits.c
+  Extract portion of a FITS file into a new FITS file, preserving WCS
+gethead.c
+  Return values for keyword(s) specified after filename.
+getpix.c
+  Return value(s) of specified pixel(s)
+gettab.c
+  Extract values from Starbase tab table data base files
+httpget.c
+  Return Web URL to command line
+i2f.c
+  Read two-dimensional IRAF image file and write FITS image file
+imcat.c
+  List catalog sources which should be found in the area of the sky
+  covered by a specific image.  Specific catalogs supported include
+  the GSC II, the USNO-B1.0 Catalog, the 2MASS Point Source Catalog,
+  the HST Guide Star Catalog, the USNO-A2.0 Catalog, the USNO UCAC2
+  Catalog, the Tycho-2 Catalog, the PPM Catalog, the IRAS Point Source
+  Catalog, and the SAO Catalog.
+imextract.c
+  Extract 1- or 2-dimensional images from 2- or 3-dimensional images
+imfill.c
+  Replace bad pixels using a box median, mean, or Gaussian filter
+imhead.c
+  Print FITS or IRAF header
+immatch.c
+  Match catalog and image stars using the WCS in the image file.
+imresize.c
+  Shrink an image by an integral factor keeping WCS intact
+imrot.c
+  Rotate and/or reflect FITS or IRAF image files
+imsize.c
+  Print center and size of image using WCS keywords in header
+imsmooth.c
+  Run a box median, mean, or Gaussian filter over an image
+imstack.c
+  Stack 1-dimensional images into a 2-dimensional image
+imstar.c
+  Find and list the n brightest stars in an IRAF or FITS image, with their
+  sky coordinates if there is WCS information in the image header. 
+imwcs.c
+  Automaticaly find stars in a FITS or IRAF image, match them to catalog
+  stars, compute the relation between sky coordinates and image
+  coordinates, and write in in the image header. [after U of Iowa SETWCS]
+  Specific catalogs supported include the GSC II, the USNO-B1.0 Catalog,
+  the 2MASS Point Source Catalog, the HST Guide Star Catalog, the
+  USNO-A2.0 Catalog, the USNO UCAC2 Catalog, the Tycho-2 Catalog,
+  the PPM Catalog, the IRAS Point Source Catalog, and the SAO Catalog.
+isnum.c
+  Return 1 if argument is an integer, 2 if it is floating point, else 0
+isrange.c
+  Return 1 if argument is a range of the format n[-n[xn]],n[-n]xn]],...
+keyhead.c
+  Change keyword names in headers of FITS or IRAF images.
+nedpos.c
+  Get the position of a named object from NED at IPAC
+newfits.c
+  Create dataless FITS image header files with BITPIX=0 or blank FITS
+  image file if BITPIX is set to any legal value.
+remap.c
+  Rebin an image from its current WCS to one specified on the command line
+scat.c
+  Search a source catalog given a region on the sky.
+  Specific catalogs supported include the GSC II, the USNO-B1.0 Catalog,
+  the 2MASS Point and Extended Source Catalogs, the HST Guide Star Catalog,
+  the USNO-A2.0 Catalog, the USNO UCAC2 Catalog, the Tycho-2 Catalog,
+  the PPM Catalog, the IRAS Point Source Catalog, and the SAO Catalog.
+sethead.c
+  Set header keyword values in FITS or IRAF images.
+setpix.c
+  Set specified pixel(s) to specified value(s)
+simpos.c
+  Get the position of a named object from SIMBAD at CDS
+sky2xy.c
+  Print image pixel coordinates for given sky coordinates on the command line
+  or in a list file. 
+skycoor.c
+  Convert between J2000, B1950, and Galactic coordinates from the command
+  line or a file.
+sp2char.c
+  Replaces spaces in string with specified character (default is _)
+sumpix.c
+  Total pixel values in row, column, or specified area
+tmcat.c
+  Reformat 2MASS Point Source Catalog for reading by WCSTools
+tmcate.c
+  Reformat 2MASS Point Source Catalog with magnitude errors for reading by WCSTools
+tmxcat.c
+  Reformat 2MASS Extended Source Catalog for reading by WCSTools
+wcshead.c
+  Print basic world coordinate system information on one line per image
+xy2sky.c
+  Print sky coordinates for given image pixel coordinates on the command line
+  or in a list file.

@@ -1,0 +1,16 @@
+WCSTools libwcs.a
+
+These subroutines support the programs in the WCSTools package and include
+catalog search engines, image manipulation software, and fitting software.
+There use is documented on the World Wide Web at
+
+    http://tdc-www.harvard.edu/software/wcstools/
+
+Information about the individual files is in the Subroutines file.
+A self-contained subset of these programs which deal with image world
+coordinate systems is separately available and is used by the SAOimage,
+SAOtng, Skycat, and DS9 image display programs:
+
+  cel.c dsspos.c fitshead.h fitsfile.c fitsfile.h hget.c hput.c iget.c
+  imhfile.c imio.c lin.c platepos.c proj.c slasubs.c sph.c tnxpos.c
+  wcs.c wcs.h wcscon.c wcslib.c wcslib.h wcstrig.c worldpos.c dateutil.c

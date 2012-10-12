@@ -1,0 +1,34 @@
+.TH wcshead(1) WCSTools "19 July 2004"
+.SH Name
+wcshead \- Print WCS part of FITS or IRAF image header
+.SH Synopsis
+wcshead [-hrtvsz] FITS or IRAF file(s)
+.SH Description
+.I wcshead
+is a utility for printing the world coordinate system information in
+IRAF and FITS image headers. It converts IRAF .imh image headers to
+FITS format before extracting the information.  For IRAF files, the
+image dimensions and the object name are set from the binary portion
+of the header. 
+.SH Options
+.TP
+.B \-h
+Print CRVALs as hh:mm:ss and dd:mm:ss instead of degrees
+.TP
+.B \-r
+Print first dimension as rest wavelength limiting values
+.TP
+.B \-t
+Print tab-separated table output, with headers
+.TP
+.B \-v
+Print more intermediate information for debugging
+.TP
+.B \-w
+Print only first dimension limiting values (wavelength for spectra)
+.TP
+.B \-z
+Use AIPS classic projections instead of WCSLIB
+
+.SH Author
+Doug Mink, SAO (dmink@cfa.harvard.edu)

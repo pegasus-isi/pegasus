@@ -1,0 +1,46 @@
+.TH imsize(1) WCSTools "6 July 2001"
+.SH Name
+imsize \- Print size of image in WCS and pixels
+.SH Synopsis
+imsize [-vcd] [-p scale] [-b ra dec] [-j ra dec] FITS or IRAF file(s)
+.SH Description
+.I imsize
+is a utility for printing the region covered by an image using the world
+coordinate system parameters in IRAF and FITS image headers. It converts
+IRAF .imh image headers to a FITS format before extracting the information.
+For IRAF files, the image dimensions and the object name are set from the
+binary portion of the header. 
+.SH Options
+.TP
+.B \-b [<RA> <Dec>]
+Output B1950 (B1950) coordinates (optional center)
+.TP
+.B \-c
+Format output without pixel dimensions (optional size change)
+.TP
+.B \-d
+Format output as input to DSS getimage (optional size change)
+.TP
+.B \-e
+Add epoch of image to output line
+.TP
+.B \-j [<RA> <Dec>]
+Output J2000 (J2000) coordinates (optional center)
+.TP
+.B \-n <number>
+Number of decimal places in output (default 3)
+.TP
+.B \-p <scale>
+Initial plate scale in arcsec per pixel (default 0)
+.TP
+.B \-r
+Print range in RA and Dec
+.TP
+.B \-v
+Print more intermediate information for debugging
+.TP
+.B \-z
+Use AIPS classic projections instead of WCSLIB
+
+.SH Author
+Doug Mink, SAO (dmink@cfa.harvard.edu)

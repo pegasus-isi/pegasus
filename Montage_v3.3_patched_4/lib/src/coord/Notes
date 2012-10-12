@@ -1,0 +1,72 @@
+In addition to the standard IPAC coordinate transformation routines, this
+library contains the following:
+
+
+    ccalc  ( struct COORD *in, 
+             struct COORD *out, 
+             char  *preclon, 
+             char  *preclat );
+
+    sex2dd ( char  *clon, char  *clat, 
+             double *lon, double *lat);
+ 
+    dd2sex( double lon, double lat, 
+            char *clon, char *clat);
+
+
+
+where "COORD" is defined in coord.h as
+
+   struct COORD                /* definition of coordinate structure */
+   {
+     char   sys[3];             /* Coordinate system                 */
+     char   clon[25], clat[25]; /* Coordinates (as char string)      */
+     double lon, lat;           /* Coordinates (as real numbers)     */
+     char   fmt[6];             /* Units                             */
+     char   epoch[10];          /* Epoch type and year               */
+   };
+
+
+
+"sys" can be one of the following (case insensitive):
+   
+   "EQ"   -   Equatorial
+   "GA"   -   Galactic
+   "EC"   -   Ecliptic
+    SG"   -   Supergalactic
+     
+
+"fmt" can be any of the following (case insensitive):
+   
+   "DD" or "DDR"     -  Decimal Degrees (expressed as a real number)
+   "DDC"             -  Decimal Degrees (expressed as a char string)
+   "SEXR"            -  Sexigesimal     (expressed as a real number)
+   "SEX" or "SEXC"   -  Sexigesimal     (expressed as a char string)
+   "RAD" or "RADR"   -  Radians         (expressed as a real number)
+   "RADC"            -  Radians         (expressed as a char string)
+   "MRAD" or "MRADR" -  Milliradians    (expressed as a real number)
+   "MRADC"           -  Milliradians    (expressed as a char string)
+   "AS" or "ASR"     -  Arc-seconds     (expressed as a real number)
+   "ASC"             -  Arc-seconds     (expressed as a char string)
+   "MAS" or "MASR"   -  Milliarcseconds (expressed as a real number)
+   "MASC"            -  Milliarcseconds (expressed as a char string)
+   
+
+"epoch" must start with the characters "B" or "J" followed by a 
+four-digit year (e.g. "J2000", "B1950"). 
+   
+   
+  
+Error codes returned by ccalc():
+
+
+#define ERR_CCALC_INVETYPE  -1 /* Invalid epoch type was specified           */
+#define ERR_CCALC_INVEYEAR  -2 /* Invalid epoch year was specified           */
+#define ERR_CCALC_INVSYS    -3 /* Invalid coordinate system was specified    */
+#define ERR_CCALC_INVDOUBL  -4 /* Couldn't convert a value to double         */
+#define ERR_CCALC_SEXCONV   -5 /* Sexigesimal conversion failed              */
+#define ERR_CCALC_SEXERR    -6 /* Internal error with sexigesimal conversion */
+#define ERR_CCALC_INVFMT    -7 /* Invalid format was specified               */
+#define ERR_CCALC_INVPREC   -8 /* Invalid precision was specified            */
+#define ERR_CCALC_INVCOORD  -9 /* Invalid coordinate value was specified     */
+

@@ -1,0 +1,33 @@
+.TH imrot(1) WCSTools "6 July 2001"
+.SH Name
+imrot \- Rotate and/or Reflect FITS and IRAF image files
+.SH Synopsis
+imrot [options] Fits or IRAF file(s)
+.SH Description
+.I imrot
+is a utility for rotating and/or reflecting FITS or IRAF images.  Images can
+be rotated only in multiples of 90 degrees.  The image may be output with
+a different data type than that in which it is input, and IRAF files may be
+written out as FITS files.
+.SH Options
+.B \-a
+Mirror if IRAF image WCS says to
+.B \-f
+Write FITS image from IRAF input
+.B \-l
+Reflect image across vertical axis
+.B \-o
+Allow overwriting of input image, else write new one
+.B \-r <angle>
+Image rotation angle in degrees (default 0)
+.B \-s
+Split multi-extension FITS file
+.B \-v
+Verbose
+.B \-x <num>
+Output pixel size in bits (FITS code, default=input)
+Allowed values are 8, 16, 32 for integers, -16 for unsigned integers, and
+-32 and -64 for 4- and 8-byte floating point numbers
+
+.SH Author
+Doug Mink, SAO (dmink@cfa.harvard.edu)

@@ -1,0 +1,338 @@
+Montage Release Change History
+
+3.3   14Dec2010    Library directory names changed to reflect version numbers
+                   since most of these are outside packages that can be 
+		   replaced by the user if desired (e.g. to change to a newer
+		   version of the WCS library if it has new projections).
+
+		   The checkHdr() routine used by most programs to validate 
+		   that the FITS header in the file being used has all the
+		   necessary information (so we can give a more informative
+		   message than that we get from the WCS library) has been
+		   update to include more checks and better messages.
+
+		   Several modules had to have a kludge added to get around
+		   a closure problem with the WCS library:  For CAR projections
+		   (and potentially other cylindrical projections), FITS headers
+		   with really large CRPIX offsets (e.g. a large fraction of the
+		   sky) had trouble with pix->sky->pix transformations.  This 
+		   affected mMakeImg, mOverlaps, mProject, mSubimage, mSubset,
+		   mTANHdr, and utilities such as mRotate.
+
+		   A few modules had an option added to allow status messages
+		   to go to a file rather than to stdout.  This is primarily
+		   to support certain workflow environments (like ISI's Pegasus).
+
+		   Also there is an include file (mNaN.h) that is used to
+		   deal with inter-platform differences in not-a-number checking
+		   and this has been made more robust.
+
+		   mAdd and mAddExec had small update to better support MPI
+		   use.  mBgExec and mProjExec had more extensive MPI additions.
+
+		   mBgModel has an added parameter (-a) to force the use all 
+		   the overlap fits (normally there are exclusion rules for
+		   fits that have too small an area, etc.).  There was also
+		   a small bug in the counting of the number of fits that
+		   were to be used.
+
+		   mCoverageCheck is more careful about WCS initialization,
+		   particularly in cutout mode, for some projections going
+		   back to the original FITS file rather than using the
+		   nominal parameters pulled from it earlier.  Also, at one
+		   point in the processing mCoverageCheck was using nominal
+		   outside pixel edges (e.g. -0.5 to npix+0.5) rather than
+		   the exact pixel min,max range even though this had been
+		   determined.
+
+		   All the pixels being blank in an mDiff run was changed
+		   from an error to a warning to avoid causing higher-level
+		   executives to exit.
+
+		   mDiffExec was likewise changed to deal with the mDiff
+		   warning properly and to add a "level only" mode to be passed
+		   on the mFitplane (i.e. so that mFitPlane finds only the 
+		   average difference between overlapping images and does not
+		   fit a full plane).
+
+		   mFitExec also need to allow "level only" and had minor
+		   updates for MPI processing.
+
+		   Finally, mFitplane was changed to support this "level only"
+		   mode.
+
+		   mImgtbl was changed to return the number of images found 
+		   with "bad" WCS information.
+
+		   mMakeHdr was extended to allow for padding the image header
+		   created and to check for a greater variety of parameters
+		   in the input table.
+
+		   mMakeImage is more careful about supporting odder projections,
+		   the poles, etc.
+
+		   mProjectPP was modified to be more careful about checking
+		   "offscale" status in a projection.
+
+		   mPutHdr was modified to check that inviolate information
+		   (basically BITPIX and NAXIS1,2) were not changed.  mPutHdr
+		   is not meant to be used to correct a corrupted file, just
+		   one where non-structural information in the header is
+		   missing or incorrect.
+
+		   mShrink had an option added to allow it to extract and work
+		   with a single HDU in a multi-HDU FITS file.
+
+		   mSubimage now includes a "shrink-wrap" mode to strip off 
+		   blank pixels around the outside of the image.
+
+		   mSubset was not handling tables correctly when the coordinate
+		   system of the data and the command-line didn't match.
+
+		   The interation mechanism in mTANHdr was a little too sensitive
+		   and has been damped down a little.
+
+		   mTblSort had a reverse sort option added.
+
+		   Padding in mTileHdr was being added with the wrong sign.
+
+		   A Galactic plane mosaic DAG generator (mDAGGalacticPlane)
+		   was added to the grid/Pegasus utilities.  Also in that package,
+		   mDAG was updated to the Pegasus DAX schema version 2.  There
+		   were a few other changes to code in the same package.
+
+		   mArchiveExec had a simple "restart" mechanism added and is more
+		   robust regarding column names (e.g. "url" and "URL" are both
+		   now valid).
+
+		   mArchiveGet puts more work into parsing data URLs and dealing
+		   with proxy servers.  mArchiveList also now deals with proxy
+		   servers.
+
+		   mExec, the wrapper executive that runs end-to-end mosaic
+		   processing, has a number of additional options (many of them
+		   about results markup).
+
+		   mHdr has an extra option when dealing with 2MASS images
+		   to ensure the inclusion of the proper MAGZP value in
+		   the mosaic header. mHdr can make use of the remote object
+		   name "lookup" service and has therefore also been updated
+		   with proper URL proxy handling.
+
+		   mJPEG is currently under active development (to support
+		   overlays of various sorts) but already has additional 
+		   functionality to allow it to deal with files with no
+		   WCS, showing a compass rose, etc.
+
+		   mPix2Coord can support HDU selection and both FITS and
+		   "header file" data input.
+
+		   There were several minor updates made to correct typos
+		   or wording in error messsages, etc. or notes in the code.
+
+
+
+3.2                Never released except as beta versions.  See 3.3 for 
+                   changes to final state.
+
+
+
+3.1   21Sep2007    The updates in this release center mostly around using
+		   Montage via mExec.  The archive access to SDSS has been
+		   brought up to DR6 and full flux calibration is now done.
+		   A problem with CAR projection (which can have very large
+		   offsets as they often refer back to lat=0, lon=0) has been
+		   dealt with, and mExec itself has been made more robust
+		   and the output more instructive.
+
+		   A few other bug fixes and enhances were also made:
+		   mJPEG can now make images with a simple compass 'rose'
+		   (showing N and E directions) and can make images for
+		   FITS files where there is no valid WCS.
+
+		   mTANHdr was made more robust, especially in dealing with
+		   projections like CAR (when it is far away from the 
+		   equator) where there are some gross overall distortions
+		   (in addition to the fine distortions that mTANHdr is
+		   really meant to address).
+
+
+
+3.0   05Jan2007    The core system has not been changed much, though
+		   there have been some additions and numerous small
+		   tweaks.  The main emphasis has been on solidifying
+		   Montage use in a distributed Grid environment to
+		   allow the building of large-scale mosaics from
+		   2MASS, SDSS, and DPOSS.
+
+		   New Core Modules:
+		     + mConvert
+		     + mDiffFitExec
+		     + mHdrTbl
+		     + mTblSort
+
+
+                   New Utilities:
+		     + mArchiveList
+		     + mArchiveGet
+		     + mArchiveExec 
+		     + mBestImage
+		     + mCatMap
+		     + mExec
+		     + mFixNaN
+		     + mHdr
+		     + mJPEG
+		     + mPix2Coord
+		     + mRotate
+
+                   Grid tools for Globus, Pegasus included in "grid" subdirectory
+
+		   Additional Changes:
+		   + mAdd: 
+		     bug fixes; added averaging mode options
+		   + mAddExec: 
+		     new module to create series of tiled mosaics, 
+		       instead of one large output image (mAdd)
+                   + mBgExec: 
+		     Memory bug fixes; improved handling for images 
+		     with no corrections 
+                   + mBgModel: 
+		     Improved error handling; increased default 
+		     iterations to 10000
+		   + mDiff:
+		     Improved error handling; decreased required
+		     pixel area to include in calculations to 0.333
+                   + mMakeHdr:
+		     Added flag (-p) to set pixel scale; improved 
+		     error handling
+                   + mMakeImg:
+		     Added 'region' and 'replace' modes
+                   + mOverlaps:
+		     Increased diff file name range
+		   + mProjExec:
+		     Automatically use mProjectPP when possible; 
+		     output message updates; added flux scaling option;
+		     added support for 'hdu' column in image table
+                   + mProject, mProjectPP:
+		     Added flux scaling option; added weight image and
+		     HDU functionality; added option to force reprojection
+		     of whole image, even if part of it is outside
+		     region of interest
+                   + mShrink:
+		     Added "fixed size" mode
+                   + mTANHdr:
+		     Scaling/rotation now inherited from input header; 
+		     increased number of points used in fit; check fit
+		     for "all off-scale" condition; performance improvements
+
+2.2   20Jul2004    Makefiles have been updated and the CFITSIO
+                   library modified (see docs/ExternalLibraries.txt
+                   for details) to allow the use of 64-bit addressing
+                   (files larger than 2 GByte) on LINUX platforms.
+
+2.1   01Jul2004    Changes have been made to several modules.
+                   The biggest change, however, is the addition
+                   of mTANHdr (and associated changed to mProjectPP)
+                   which allow the fast reprojection of non-tangent-plane
+                   projections if they can be approximated as distorted
+                   TAN images.
+
+2.0.4 16Mar2004    mAdd no longer allocates the entire output 
+                   image up front, and so uses even less memory.
+                   -level-only flag has been added to mBgModel.
+
+                   New module mShrink added to make scaled 
+                   versions of an image (e.g. image with pixel
+                   scale 5.5 times larger than the original)
+
+                   New modules mRadHit and mRadHitExec added
+                   to try and remove "radiation hit" type 
+                   artifacts from original unprojected images
+                   by comparing pixel values to local medians.
+
+                   New modules mDagTbls and mConcatFit added to
+                   aid in GRID computing use of Montage.  The 
+                   first generates a set of tables (lists of 
+                   images, overlap analysis) for use in setting
+                   up a batch processing run.  The second combines
+                   the output of difference fitting (presumably
+                   in this context done via separate threads) into
+                   a single table for use by mBgModel.
+
+2.0.3 04Feb2004    mAdd has been updated to better manage memory 
+                   and a fast reprojection (plane-to-plane) module
+                   has been added (mProjectPP).
+
+2.0.2 13Jan2004    Fixed several problems with 'boundaries' library
+                   (used by mMakeHdr). Also fixed a realloc() bug
+                   in mMakeHdr.
+
+2.0.1 25Nov2003    Fixed background matching (specifically mDiff
+                   bug) and made various other minor changes.
+
+2.0   17Sep2003    Status file option added to all modules
+                   to support GRID (Montage-G DAG) processing.
+
+
+                   Migrated from Montage 1.7.1:
+
+                   Fixed a couple of bugs in mProject: FITS 
+                   reading was being done incorrectly (which 
+                   caused occassional error conditions) and 
+                   pixel "handedness" was sometime computed 
+                   incorrectly for CD matrices.
+
+1.7   29May2003    - Added checks for malloc return values in mAdd
+                   - mBgModel now allows arbitrarily large 
+                     number of iterations
+
+1.6   24Apr2003    Support for DSS projection has been added.
+                   All anomaly reports from 1.5 have been 
+                   resolved.  Specifically:
+                   - checkHdr.c is more robust (and handles DSS
+                     headers properly
+                   - checkWCS.c handles transposed lon/lat
+                   - Minor changes to mImgtbl support routines
+                   - mImgtbl checks for correct ordering of corners
+                   - Added checks to see if template file lines
+                     contained <CR><LF> syntax (ie, had been passed
+                     through a PC)
+                   - Added checks for svc_run() aborts due to a 
+                     missing executable (eg if the mProjExec
+                     executable existed but mProject didn't)
+                   - Fixed bug in mGetHdr where it checked the
+                     wrong argument for FITS header
+                   - mHdrCheck now checks explicitly for a
+                     missing input file
+                   - Added specific checks to mProjExec to see if
+                     the various files and directories on the command
+                     line exist before calling mProject
+                   - Fixed bugs in syntax for parsing -i and -o
+                     arguments in mProject
+                   - Added more debugging messages to mProject                  
+
+1.5   18Mar2003    All anomoly reports have been resolved
+                   and getopt() processing has been incorporated
+                   into most of the modules to handle command-line
+                   parameters.
+
+1.4   24Jan2003    The background rectification software
+                   has been debugged and modified slightly.
+                   Minor modifications have also been made
+                   to the reprojection code to avoid problems
+                   with small-offset roundoff errors 
+                   affecting the pixel overlap calculations.
+
+1.3    1Oct2002    Workaround for bug in WCS library
+                   affecting cylindrical projections;
+                   fix for LINUX bug in svc control
+                   library
+
+1.2   25Sep2002    Initial LINUX port
+
+1.1   27Jul2002    Updated pixel overlap to remove
+                   repeated (within positional tolerance)
+                   points.  Otherwise the Girard() 
+                   calculation gets confused.
+
+1.0   01Jul2002    Initial Limited Release

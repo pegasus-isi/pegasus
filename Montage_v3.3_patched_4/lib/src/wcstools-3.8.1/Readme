@@ -1,0 +1,151 @@
+WCSTools 3.8.1
+
+WCSTools is a set of software utilities, written in C, which create,
+display and manipulate the world coordinate system of a FITS or IRAF
+image, using specific keywords in the image header which relate pixel
+position within the image to position on the sky.  Auxillary programs
+search star catalogs and manipulate images.
+
+To make the entire package, type
+
+make all
+
+in the main directory or, on Solaris machines
+
+make -f Makefile.solaris
+
+This is version 3.8.1 of the WCSTools package developed by Doug Mink
+(dmink@cfa.harvard.edu) at the Smithsonian Astrophysical Observatory,
+with significant code or algorithms from
+
+Mark Calabretta of CSIRO (projection),
+Bill Cotton of NRAO (projection),
+Jesse Doggett and Rick White of StScI (DSS projection)
+Elwood Downey of the University of Iowa (WCS fitting procedure),
+John Roll of SAO for (network access),
+Jing Li of IPAC (distortion), and
+Pat Wallace of Rutherford Appleton Laboratory, UK (coordinate conversion).
+
+Bill Joye and Eric Mandel of SAO, Allan Brighton of ESO, and Jean-Baptiste
+Marquette of the Institut d'Astrophysique de Paris, and David Shupe of IPAC
+helped debug the subroutine library.  Norman Grogin, Scott Kenyon, Susan
+Tokarz, Dan Koranyi, Guillermo Torres, Steve Willner, Gus Muensch, and
+others of SAO and Andreas Jaunsen helped debug the astrometry programs.
+Sergio Pascual of the Universidad Complutense de Madrid helped me get
+all of the variables initialized.
+
+Details of updates are in the NEWS file.
+
+Documentation, with examples and installation directions, is on the
+World Wide Web at
+
+        http://tdc-www.harvard.edu/software/wcstools/
+
+References
+
+If the WCSTools package has proven useful in your work, please reference
+at least one of the following papers. If you want to find out which is
+most applicable, the full texts are available on the WCSTools web site at
+
+        http://tdc-www.harvard.edu/software/wcstools/publications/
+
+The paper presented at ADASS in 1996 is the best published description
+of the IMWCS world coordinate system fitting program: 
+     "WCSTools: Putting Image World Coordinate Systems to Use",
+     Douglas J. Mink, 1997, in Astronomical Data Analysis Software and
+     Systems VI, A.S.P. Conference Series, Vol. 125, Gareth Hunt and
+     H. E. Payne, eds., pp.  249-252. 
+
+The 1998 ADASS paper is the best published description of the other tools
+in the WCSTools package, including SAOimage when used for WCS work: 
+     "WCSTools: An Image Astrometry Toolkit",
+     Douglas J. Mink (1998), in Astronomical Data Analysis Software and
+     Systems VIII, A.S.P. Conference Series, Vol. 172, 1999, Dave Mehringer,
+     Ray Plante, Doug Roberts, eds., pp.  498-501. 
+
+A paper presented at the 2001 ADASS conference describes how the
+WCSTools package uses the web, among other new features:
+     "WCSTools 3.0: More Tools for Image Astrometry and Catalog Searching",
+     Douglas J. Mink, 2001, to be published in Astronomical Data Analysis
+     Software and Systems XI, whenever it comes out.
+
+This paper presented at the 2002 ADASS conference describes interesting
+ways to use the SCAT program:
+     "Federating Catalogs and Interfacing Them with Archives: A VO Prototype",
+     Douglas J. Mink and Michael J. Kurtz, 2002, to be published in
+     Astronomical Data Analysis Software and Systems XII, whenever it comes out.
+
+To assist users in selecting the best catalog to use, we tested the accuracy of
+the various catalogs one is likely to use with imwcs, showing how well it works
+in a pipeline mode on 1728 images. This ADASS paper is an improved version of
+our AAS/DDA paper, adding the UCAC2 catalog and emphasizing usefulness more than
+astrometry:
+     "A Comparison of Large All-Sky Catalogs" Douglas J. Mink, Warren R. Brown,
+and Michael J. Kurtz in Astronomical Data Analysis Software and Systems XIII,
+ASP Conference Proceedings, Vol. 314. Edited by Francois Oschenbein, Mark Allen,
+and Daniel Egret. San Francisco: Astronomical Society of the Pacific,
+ISSN: 1080-7926, 2004., p. 141. 
+
+Program Descriptions
+
+addpix	Add a constant value(s) to specified pixel(s)
+bincat	Bin a catalog into a FITS image in flux or number
+conpix	Operate on all of the pixels of an image
+cphead	Copy keyword values between FITS or IRAF images
+delhead	Delete specified keywords from FITS or IRAF image file headers
+delwcs	Delete the WCS keywords from an image. If both EPOCH and EQUINOX
+	are present, EQUINOX is also deleted. 
+edhead	Edit the header of a FITS file or the user parameters of an IRAF
+	image file using a the text editor specified by the EDITOR environment
+	variable.
+getcol	Extract specified fields from an space-separated ASCII table file
+getdate Convert dates and times between various formats
+getfits	Extract portion of a FITS file into a new FITS file, preserving WCS
+gethead	Return values for keyword(s) specified after filename.
+getpix	Return value(s) of specified pixel(s)
+gettab	Extract values from tab table data base files
+i2f	Read two-dimensional IRAF image file and write FITS image file
+imcat	List catalog sources which should be found in the area of the sky
+	covered by a specific image.
+	Specific catalogs supported include the GSC II, the 2MASS Point
+	Source Catalog, the HST Guide Star Catalog, the USNO-A2.0 Catalog,
+	the Tycho-2 Catalog, the PPM Catalog, the IRAS Point Source Catalog,
+	and the SAO Catalog.
+imextract Extract 1- or 2-dimensional images from 2- or 3-dimensional images
+imfill	 Replace bad pixels using a box median, mean, or Gaussian filter
+imhead	Print FITS or IRAF header
+immatch	Match catalog and image stars using the WCS in the image file.
+imresize Shrink an image by an integral factor keeping WCS intact
+imrot	Rotate and/or reflect FITS or IRAF image files
+imsize	Print center and size of image using WCS keywords in header
+imsmooth Run a box median, mean, or Gaussian filter over an image
+imstack	Stack 1-dimensional images into a 2-dimensional image
+imstar	Find and list the n brightest stars in an IRAF or FITS image, with
+	their sky coordinates if there is WCS information in the image header. 
+imwcs	Automaticaly find stars in a FITS or IRAF image, match them to any
+	of the supported catalogs, compute the relation between sky coordinates
+	and image coordinates, and write it into the image header.
+keyhead	Change keyword names in headers of FITS or IRAF images.
+nedname	Return object name(s) from RA(s) and Dec(s) using NED (the NASA
+	Extragalactic Database)
+nedpos  Return RA and Dec for object name (or list of them) using NED
+newfits	Create blank FITS image files (dataless by default, with BITPIX=0)
+remap	Remap an image from one WCS into another, rebinning as necessary
+scat	Search a source catalog given a region on the sky.
+	Specific catalogs supported include the GSC II, the USNO-B1.0 Catalog,
+	the 2MASS Point Source Catalog, the HST Guide Star Catalog, the
+	USNO-A2.0 Catalog, the USNO UCAC2 Catalog, the Tycho-2 Catalog,
+	the PPM Catalog, the IRAS Point Source Catalog, and the SAO Catalog.
+sethead	Set header keyword values in FITS or IRAF images.
+setpix	Set specified pixel(s) to specified value(s)
+simpos  Return RA and Dec for object name (or list of them) using SIMBAD
+sky2xy	Print image pixel coordinates for given sky coordinates on the
+	command line or in a list file. 
+skycoor	Convert between J2000, B1950, and Galactic coordinates from the
+	command line or a file.
+sumpix	Total pixel values over an image row or column or a specified area
+wcshead	Print basic world coordinate system information on one line per image
+xy2sky	Print sky coordinates for given image pixel coordinates on the command
+	line or in a list file.
+
+-Doug Mink, SAO, 2009-12-14

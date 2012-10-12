@@ -1,0 +1,1 @@
+saoimage -reg `imgsc -r 15 $1` -wcscom sgsc_-ha_%s $*

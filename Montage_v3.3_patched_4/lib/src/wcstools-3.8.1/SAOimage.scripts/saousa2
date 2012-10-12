@@ -1,0 +1,1 @@
+saoimage -reg `imusa2 -r 10 $1` -wcscom susa2_-ha_%s $*

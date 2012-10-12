@@ -1,0 +1,27 @@
+.TH i2f(1) WCSTools "6 July 2001"
+.SH Name
+i2f \- Write FITS files from IRAF image files
+.SH Synopsis
+i2f [options] file.imh ...
+.SH Description
+.I i2f
+is a utility for converting IRAF images to FITS images. If you want to
+change the number of bits per pixel, use imrot.  The BITPIX, NAXIS,
+NAXIS1, NAXIS2, OBJECT, and PIXFILE keywords are set from the binary
+portion of the header. IMHFILE and PIXFILE are set from the actual
+filenames for internal purposes. 
+.SH Options
+.B \-d directory
+Move .imh file to this directory
+.B \-i
+Delete unnecessary IRAF keywords
+.B \-o filename
+Output name for one file
+.B \-s
+Write output to standard output
+.B \-v
+Verbose listing of processing intermediate results
+.B \-x
+Delete IRAF image file after successfully writing FITS file
+.SH Author
+Doug Mink, SAO (dmink@cfa.harvard.edu)

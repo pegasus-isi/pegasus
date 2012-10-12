@@ -1,0 +1,186 @@
+<hr><p>
+
+<center>
+<h2>              Structure Format
+</h2>
+</center>
+<p>
+
+This document explains the genesis of the format for return structures 
+from ISIS services.<p>
+
+There are several things we want from a structure definition:<p>
+
+<ul>
+<li> The structure should be self-defining; names for parameters and
+     their values should both be included and easily associated.</li>
+<li> Like a C structure, we want to allow nesting of information.</li>
+<li> It should be open-ended; adding information shouldn't corrupt
+     the structure and ordering (except for ordered arrays of data)
+     shouldn't matter.</li>
+<li> It should be easily parsible by software and specific items
+     should be extractable without requiring full-depth parsing.</li>
+<li> It should be readable (ASCII) text to allow for easy debugging
+     of applications.</li>
+</ul><p>
+
+<hr><p>
+
+We will start with a C structure definition as our template.  The example
+below might arise if we are returning a list of coordinates for objects
+in a region of the sky:<p>
+
+<pre>
+   struct
+   {
+      char name[20];
+
+      int count;
+
+      struct 
+      {
+	 double lon;
+	 double lat;
+	 char   csys[10];
+      }
+	 coords[256];
+   }
+</pre><p>
+
+<hr><p>
+
+But that's only the structure definition.  In addition we need the 
+initialization structure that will populate it:<p>
+
+<pre>
+   {
+      "My region",
+      3,
+      {
+	 {321.34443, 34.45692, "eq"},
+	 {321.35454, 34.87421, "eq"},
+	 {321.34671, 34.54532, "eq"}
+      }
+   }
+</pre><p>
+
+<hr><p>
+
+However, we want the names and values together.  In addition, since the
+return structure is being sent between programs and even over the net,
+and since we want the whole thing to be printable ASCII, there is not 
+much point in carrying along type definitions.  So we can restructure
+the above into the following:<p>
+
+<pre>
+   struct
+   {
+      name  = "My region";
+      count = 3;
+
+      struct 
+      {
+	 {
+	    lon  = 321.34443;
+	    lat  =  34.45692;
+	    csys = "eq";
+	 },
+
+	 {
+	    lon  = 321.35454;
+	    lat  =  34.87421;
+	    csys = "eq";
+	 },
+
+	 {
+	    lon  = 321.34671;
+	    lat  =  34.54532;
+	    csys = "eq";
+	 }
+      }
+	 coords;
+   }
+</pre><p>
+
+<hr><p>
+
+For parsibility, we need to be able to tell the difference between a
+"structure" (where values are matched to names) and "arrays" (where the
+data is ordered in a list.  For subtle (and not really compelling) reasons
+we have also replaced semicolons with commas and braces with brackets:<p>
+
+<pre>
+   [struct
+      name  = "My region",
+      count = 3,
+
+      coords =
+      [array
+	 [struct
+	    lon  = 321.34443,
+	    lat  =  34.45692,
+	    csys = "eq",
+	 ],
+
+	 [struct
+	    lon  = 321.35454,
+	    lat  =  34.87421,
+	    csys = "eq",
+	 ],
+
+	 [struct
+	    lon  = 321.34671,
+	    lat  =  34.54532,
+	    csys = "eq",
+	 ]
+      ]
+   ]
+</pre><p>
+
+<hr><p>
+
+Since we aren't using this mechanism for bulk data transfer, we can string
+it all together with no breaks (shown here on four lines but all one line
+in the real output):<p>
+
+<pre>
+   [struct name   = "My region", count  = 3, coords = [array
+   [struct lon  = 321.34443, lat  =  34.45692, csys = "eq"],
+   [struct lon  = 321.35454, lat  =  34.87421, csys = "eq"],
+   [struct lon  = 321.34671, lat  =  34.54532, csys = "eq"]]]
+</pre><p>
+
+<hr><p>
+
+We could have compressed the format even further if we removed the duplicate
+lon, lat, csys references.  However, leaving them in allows us to have                                                                       
+arrays of unlike elements with equal ease:<p>
+
+<pre>
+   [struct name   = "My region", count  = 3, coords = [array
+   [struct lon  = 321.34443, lat  =  34.45692, epoch="B1983.5"],
+   [struct lon  = 321.35454, lat  =  34.87421, csys = "eq"],
+   [struct file = "datalist.tbl", count = 347]]]]
+</pre><p>
+
+which could be used (in this case) to include special information (<i>e.g.</i>
+epoch) or to say "there are 347 more coordinates in the file datalist.tbl").<p>
+<hr>
+
+<address>
+<table>
+<tr>
+    <td><b>Author:</b></td>
+    <td> John Good </td>
+</tr>
+<tr>
+    <td><b>Address:</b></td>  
+    <td><a href="mailto:jcg@ipac.caltech.edu">jcg@ipac.caltech.edu</a></td>
+</tr>
+<tr>
+    <td><b>Last update:</b></td>
+    <td>18-Jul-2005</td>
+</tr>
+</table>
+</address>
+

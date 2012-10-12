@@ -1,0 +1,70 @@
+------------------------------------------------------------------------
+INSTRUCTIONS
+
+To build the NED client package on a UNIX system,
+simply use the 'make' utility with the Makefile appropriate for 
+your flavor of UNIX. Here we'll assume you are working on a Linux system:
+
+make -f Makefile.linux
+
+This compiles the following sample executables:
+
+byname, name_resolver, nearposn, iau, nearname, ref, and ex_refcode.
+
+Read the Users Guide documentation in the file NED_client.
+
+
+To submit comments or questions send email to ned@ipac.caltech.edu.
+------------------------------------------------------------------------
+PACKAGE CONTENT
+
+NED_client: The Users Guide documententation
+
+Makefile.solaris: Makefile for Solaris systems
+Makefile.linux:   Makefile for Linux systems
+Makefile.bsd:     Makefile for BSD UNIX systems
+
+New_functions:
+	    simple introduction of the new functions in this release.
+
+ned_cli.c
+ned_cif.c
+ned_err.c
+ned_sk.c
+ned_client.h 
+nedc.h       : The source codes for client library libcli.a
+
+Command line programs (by Doug Mink, SAO)
+nedname.c returns a name and other optional info given sky position
+nedpos.c  returns sky position and other optional info given a name
+
+byname.c
+name_resolver.c
+nearposn.c
+iau.c
+nearname.c   
+ref.c
+ex_refcode.c  : sample codes
+
+------------------------------------------------------------------------
+HISTORY:
+
+4) -Command line programs nedname and nedpos written for use in scripts
+    using WCSTools library for coordinate and string conversions
+    Doug Mink, SAO, 23-August-2004
+
+3) -The port from Solaris to Linux (RH7.x) required different handling
+    of double precision values in function ned_getdouble(d);
+    see lines 151-153 of ned_cli.c. Joe Mazzarella, 04-Sep-2001
+
+2) -Revisions for compilation on modern Linux OS (Redhat 7.0): 
+    Use of fgets() rather than gets(), declaration of atoi(), 
+    new Makefile.linux, etc. 
+    compile via 'make -f Makefile.linux'
+   -Fixed bug in ned_disconnect() being commented out in byname.c.
+   -Fixed bug in ex_refcode.c: strlen(refcode) != 20 rather than 19
+    Joe Mazzarella, IPAC, 23-Jul-2001
+
+1) -Original package written by Xiuqin Wu, IPAC, 1994-1996
+
+------------------------------------------------------------------------

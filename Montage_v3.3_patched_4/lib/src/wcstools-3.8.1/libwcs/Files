@@ -1,0 +1,173 @@
+WCSTools libwcs Subroutines
+
+actread.c
+  Return stars from the USNO ACT Reference Catalog
+binread.c
+  Return stars from catalog files in the TDC binary catalog format
+catread.c
+  Return stars from catalog files in the TDC ASCII catalog format
+catutil.c
+  Subroutines for catalog identification and number range decoding
+cel.c
+  WCSLIB spherical coordinate transformation drivers
+daoread.c
+  Read x, y, and magnitude from DAOFIND output file and return x, y, and
+  flux for use by IMSTAR or IMWCS.
+dateutil.c
+  Subroutines for conversions between various date and time formats
+distort.c
+  Subroutines for conversions between image pixel and focal plane coordinates
+dsspos.c
+  dsspos() uses the WCS structure to compute sky coordinates given
+  image pixel X and Y for images with Digitized Sky Survey plate solutions
+  in their headers.  dsspix() uses the WCS structure to compute image
+  pixel X and Y given sky coordinates for DSS images.  Algorithms from
+  StSCI CASB.
+fileutil.c
+  Subroutines for finding size and contents of ASCII files
+findstar.c
+  findStars() gets the location and brightest pixel of stars in the given
+  image.  Included are subroutines to find and reject bright pixels and
+  compute a star centroid.
+fitsfile.c
+  FITS header and image reading and writing subroutines, including FITS
+  table support.
+fitswcs.c
+  GetWCSFITS() returns a WCS structure used by wcs.c subroutines from a FITS
+  or IRAF .imh image, reading only the header.
+  GetFITShead() returns a FITS header from a FITS or IRAF .imh image.
+  DelWCS() delete the WCS keywords in a FITS header.
+fortcat.c
+  Fortran wrapper subroutines for catalog reading subroutines ctgread() and ctgrnum()
+fortwcs.c
+  Fortran wrapper subroutines for all useful subroutines in wcs.c and wcsinit.c
+gscread.c
+  Return HST Guide Stars from standard CDROM format FITS table files for
+  a given RA, Dec, and magnitude range or list of star numbers.
+gsc2read.c
+  Return GSC II Stars using an HTTP query over the web for
+  a given RA, Dec, and magnitude range or list of star numbers.
+hget.c
+  Subroutines to extract values from FITS headers by keyword.
+  Subroutines for parsing RA and Dec strings are included.
+hput.c
+  Subroutines to implant values into FITS headers by keyword (and to
+  delete headers).
+iget.c
+  Subroutines to extract values from IRAF multi-keyword header parameters
+imhfile.c
+  IRAF header and image reading and writing subroutines.  IRAF headers
+  are converted to FITS headers for use by other programs and can be
+  derived from FITS headers for writing.
+imio.c
+  Subroutines to get, put, and move pixels of various data types between images
+  im memory and a program.
+imrotate.c
+  RotFITS() rotates an image by 90, 180, or 270 degrees, with an optional
+  left-right reflection before the rotation.
+imgetwcs.c
+  GetWCSFITS() reads world coordinate system header information and returns
+  the image center coordinates and size as well as the wcs data structure.
+imsetwcs.c
+  SetWCSFITS() uses findStars to find the stars in an image, gscread to
+  find the Guide Stars in the nominal image region, and findRegisration or
+  findCoords to fit plate-tangent WCS to the image.
+lin.c
+  WCSLIB linear transformation subroutines
+matchstar.c
+  StarMatch() takes a list of reference star positions and a list
+  of object coordinates from an image and finds the image pixels
+  which correspond to each of the reference stars.  It then uses these
+  matches to get an image center, plate scale, and rotation.  The actual
+  fit is based on the amoeba subroutine in Numerical Recipes, and all
+  necessary subroutines are included.
+platepos.c
+  platepos() uses the WCS structure to compute sky coordinates given
+  image pixel X and Y for images with polynomial plate solutions
+  in their headers.  platepix() uses the WCS structure to compute image
+  pixel X and Y given sky coordinates for such images.  Algorithms are based
+  on those in dsspos.c, but go straight from pixels to angles without an
+  intermediate plate coordinate.
+proj.c
+  WCSLIB spherical map projection subroutines
+sdssread.c
+  Return Sloan Digital Sky Survey Photometry Catalog sources using an
+  HTTP query over the web for a given RA, Dec, and magnitude range.
+sortstars.c
+  Subroutines to sort lists of stars by right ascension, magnitude, or flux
+sph.c
+  WCSLIB spherical coordinate transformation subroutines
+tabread.c
+  Return stars from a tab table format catalog file for a given RA, Dec,
+  and magnitude range or list of star numbers.  Based on John Roll's
+  Starbase format.
+tmcread.c
+  Return 2MASS Point Source Catalog stars from the catalog as ungzipped from
+  the DVD into (or linked from) a common root directory for a given RA, Dec,
+  and magnitude range or list of star numbers.  Both IDR2 and All-Sky release
+  formats are supported.
+tnxpos.c
+  tnxpos() uses the WCS keywords set up for IRAF's TNX projection to compute
+  sky coordinates given image pixel X and Y.  tnxpix() uses the WCS structure
+  to compute image pixel X and Y given sky coordinates for such images.  The
+  projection is a tangent plane with corrections between the rotation and
+  scaling and the actual projection.
+uacread.c
+  Return USNO A and SA Catalog stars from their standard CDROM format
+  files for a given RA, Dec, and magnitude range or list of star numbers.
+ubcread.c
+  Return USNO B Catalog stars from their standard format files for a
+  given RA, Dec, and magnitude range or list of star numbers.
+ucacread.c
+  Return USNO UCAC1, UCAC2, or UCAC3 Catalog stars from their standard format
+  files for a given RA, Dec, and magnitude range or list of star numbers.
+ujcread.c
+  Return USNO UJ Catalog stars from its standard CDROM format files for
+  a given RA, Dec, and magnitude range or list of star numbers.
+wcs.c
+  Subroutines for using FITS or IRAF header spatial world coordinate
+  system information.
+wcsinit.c
+  Subroutines to initialize WCS structure from a FITS header
+wcscon.c
+  Subroutines for converting between B1950, J2000, and galactic
+  coordinates, mostly based on Starlink SLA_LIB subroutines.
+webread.c
+  Open Starbase files across the Internet using HTTP queries
+worldpos.c
+  worldpos() uses the WCS structure to compute sky coordinates given
+  image pixel X and Y for images with header information for any of 8
+  standard world coordinate systems.  worldpix() uses the WCS structure
+  to compute image pixel X and Y given sky coordinates for the same images.
+  Mostly from NRAO.
+
+fitshead.h
+  Declarations of FITS header access subroutines
+fitsfile.h
+  Declarations of image access subroutines and FITS table data structure.
+imio.h
+  Declarations of subroutines to convert binary formats of numbers
+lwcs.h
+  Constants used by star-finding and WCS-setting subroutines
+wcscat.h
+  Declarations for star catalog data structures
+wcs.h
+  Declaration of WCS data structure and useful conversions.
+wcslib.h
+  Declarations for WCSLIB high level driver subroutines, trig and inverse
+  trig functions, spherical map projection subroutines, spherical coordinate
+  transformation drivers, and linear transformation subroutines
+
+* Notes:
+  slasubs.c contains unmodified subroutines from Pat Wallace's Starlink
+            astrometry library and may be omitted if that library is
+            being linked.
+  WCSLIB subroutines were written by Mark Calabretta of CSIRO and have
+         been modified in several ways:
+         1) His distributed wcs.h has been changed to wcslib.h, and
+         2) wcstrig.c subroutine names have been changed from <function>d()
+            to <function>deg() to avoid name conflicts on some operating
+            systems.
+         3) ifndef's at start of headers files have been named to reflect
+            the names of the header files, i.e. wcslib_h_ in wcslib.h.
+         4) All header files have been combined into wcslib.h

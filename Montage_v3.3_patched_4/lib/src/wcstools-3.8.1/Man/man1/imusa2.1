@@ -1,0 +1,52 @@
+.TH imusa2(1) WCS "14 April 1998"
+.SH Name
+imusa2 \- Find USNO-SA2.0 stars in FITS or IRAF image files
+.SH Synopsis
+imua2 [options] FITS or IRAF file(s)
+.SH Description
+Search USNO-SA2.0 Catalog within the area described by the world coordinate
+system in an image header.  This is a link to imcat rather than
+a separate executable.
+.SH Options
+.TP
+.B \-b [<RA> <Dec>]
+Output in B1950, optional new image center in B1950 (FK4) RA and Dec
+.TP
+.B \-h
+Print heading, else do not 
+.TP
+.B \-j [<RA> <Dec>]
+Output in J2000, optional new image center in J2000 (FK5) RA and Dec
+.TP
+.B \-m [<bright magnitude>] <faint magnitude>
+Limiting catalog magnitude(s) (default none, bright -2 if only faint is given)
+.TP
+.B \-n <num>
+Number of brightest stars to print 
+.TP
+.B \-p <scale>
+Initial plate scale in arcsec per pixel (default 0)
+.TP
+.B \-s
+Sort by RA instead of flux 
+.TP
+.B \-t
+Tab table to standard output as well as file
+.TP
+.B \-u
+USNO catalog single plate number to accept
+.TP
+.B \-v
+Verbose listing of processing intermediate results
+.TP
+.B \-w
+Write tab table output file imagename.cat
+.B \-z
+Use AIPS classic projections instead of WCSLIB; use CD matrix or CDELT
+instead of polynomial solution.
+.SH See Also
+imcat(),imgsc(),imua2(),scat()
+.SH Web Page
+http://tdc-www.harvard.edu/software/wcstools/imcat/imusa2.html
+.SH Author
+Doug Mink, SAO (dmink@cfa.harvard.edu)

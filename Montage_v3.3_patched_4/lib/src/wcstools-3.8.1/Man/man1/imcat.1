@@ -1,0 +1,103 @@
+.TH imcat(1) WCSTools "30 January 2003"
+.SH Name
+imcat \- List catalog stars in FITS and IRAF image files
+.SH Synopsis
+imcat [options] FITS or IRAF file(s)
+.SH Description
+Search given catalog withing area described by the world coordinate
+system in an image header.  May be called as imuac to search the USNO A 1.0
+catalog, imusac to search the USNO SA 1.0 catalog, or imgsc to search
+the HST Guide Star Catalog.
+.SH Options
+.TP
+.B \-b [<RA> <Dec>]
+Output in B1950, optional new image center in B1950 (FK4) RA and Dec to replace that
+in image header
+.TP
+.B \-c <name>
+Reference catalog (gsc(=HST GSC), ua2(=USNO-A2.0), TMC(=2MASS Point Source Catalog),
+gsc2(=GSC II), ub1(=USNO-B1.0), local file, etc.)
+.TP
+.B \-d
+Output RA,Dec positions in fractional degrees
+.TP
+.B \-e
+Output in ecliptic longitude and latitude
+.TP
+.B \-g
+Output in galactic longitude and latitude
+.TP
+.B \-h
+Print heading, else do not 
+.TP
+.B \-i
+Print name instead of number in region file
+.TP
+.B \-j [<RA> <Dec>]
+Output in J2000, optional new image center in J2000 (FK5) RA and Dec to replace that
+in image header
+.TP
+.B \-k <keyword>
+Add this keyword to output from tab table search
+.TP
+.B \-m [<bright magnitude>] <faint magnitude>
+Limiting catalog magnitude(s) (default none, bright -2 if only faint is given)
+.TP
+.B \-n <num>
+Number of brightest stars to print 
+.TP
+.B \-o <type>
+Set HST Guide Star object class to print (0=stars, 3=nonstars, -1=all, -2=band)
+.TP
+.B \-p <scale>
+Initial plate scale in arcsec per pixel (default from file)
+.TP
+.B \-q <c|d|o|s|x|v|+>
+Write SAOimage region file with this shape, o=circle, s=square, d=diamond,
++=cross, and x=X, with the radius scaled with magnitude unless specified
+with a -r command line entry. v will cause stellar Guide Stars to plot with
+a + and nonstellar Guide Stars to plot with an x. If character is is preceded
+by p, the size specified by the -r command is assumed to be in pixels, not
+arcseconds. A p alone specifies a circle in pixels. 
+.TP
+.B \-r <radius>
+Write SAOimage region file with shapes (default CIRCLE) of this radius in
+arcseconds. SAOimage can then read this file, with will have positions and
+radii in pixels and plot it over an image. If the radius is specified as
+zero, the output radii will scale between 5 and dim/100 over the range of
+magnitudes of sources found in the image area. If the -q option is specified
+with a 'p' in it, this number is assumed to be in pixels instead of arcseconds.
+.TP
+.B \-s d|m|n|p|r|x|y
+Sort by (d)eclination, (m)agnitude, (n)o sort, (p)distance from center, 
+(r)ight ascension, image (x) or (y).
+.TP
+.B \-t
+Tab table to standard output as well as file
+.TP
+.B \-u num
+USNO catalog single plate number to accept
+.TP
+.B \-v
+Verbose listing of processing intermediate results
+.TP
+.B \-w
+Write tab table output file imagename.cat
+.TP
+.B \-x x y
+X and Y coordinates of reference pixel (default is CRPIXn or center of image)
+.TP
+.B \-y epoch
+Epoch of image for proper motions
+.TP
+.B \-z
+Use AIPS classic projections instead of WCSLIB; use CD matrix or CDELT
+instead of polynomial solution.
+.SH See Also
+scat()
+
+.SH Web Page
+http://tdc-www.harvard.edu/software/wcstools/imcat/
+
+.SH Author
+Doug Mink, SAO (dmink@cfa.harvard.edu)

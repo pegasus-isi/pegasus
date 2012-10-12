@@ -1,0 +1,100 @@
+.TH imstar(1) WCSTools "6 July 2001"
+.SH Name
+imstar \- Find stars in FITS and IRAF image files
+.SH Synopsis
+imstar  [options] [FITS or IRAF filename] or [@file of image file names]
+.SH Description
+.SH Options
+.TP
+.B <hh:mm:ss> <dd:mm:ss> [J2000, B1950]
+Coordinates for center (or reference pixel if -x is used).
+.TP
+.B \-a <angle>
+Image rotation angle in degrees (default 0).  If multiple of 90, rotate
+image before search and set WCS angle to zero; if not, put in WCS.
+.TP
+.B \-b
+Output B1950 (FK4) coordinates (default=image equinox)
+.TP
+.B \-d <catalog name>
+Read this DAOFIND style catalog of X, Y, and magnitude instead of searching
+for stars in the image.  The format is simply white-space-separated numbers
+on a line, with # at the beginning of comment lines.
+.TP
+.B \-e <num>
+Number of pixels to ignore around image edge 
+.TP
+.B \-f
+Write a simple ASCII catalog file instead of tab table or DAOFIND format
+(number RA DEC mag ... per line, with two lines of header info)
+.TP
+.B \-h
+Print heading, else do not 
+.TP
+.B \-i <num>
+Minimum peak value for star in image (<0=-sigma)
+Setting this to reject all but 10-15 stars is a good way to speed up the
+star-finding process.  If num is less than zero, the minimum peak is -num
+image pixel standard deviations.  Setting this number rejects faint stars
+early in the selection process for a significant saving in computing time.
+.TP
+.B \-j
+Output J2000 (FK5) coordinates (default=image equinox)
+.TP
+.B \-k
+Print each star as it is found for debugging 
+.TP
+.B \-l
+Reflect the image left <-> right before rotating (-a) and searching for stars.
+.TP
+.B \-m <magnitude>
+Magnitude offset
+.TP
+.B \-n
+Number of brightest stars to print 
+.TP
+.B \-o
+Output star list in DAOFIND format.
+The first three numbers on each line of the
+output file are X, Y, and magnitude, separated by one or more blanks or
+a tab.  Lines beginning with # are ignored.
+.TP
+.B \-p <num>
+Plate scale in arcsec per pixel (default 0)
+.TP
+.B \-q <c|d|o|s|x|v|+>
+Output region file shape for SAOimage (default o)
+Characters mean: c>ross, d>iamond, s>quare, o>circle, x=X, v>ary with GSC
+type, +>cross.
+.TP
+.B \-r
+Maximum radius for star in pixels 
+.TP
+.B \-s
+Sort by RA instead of flux 
+.TP
+.B \-t
+Output in Starbase tab table format
+.TP
+.B \-v
+Verbose listing of processing intermediate results
+.TP
+.B \-w
+Write output to a file in addition to standard out.
+If DAO format (-o), create the name by adding .dao to the image file name.
+If Starbase format (-t), create the name by adding .tab to the image file name.
+If ASCII format (-f), create the name by adding .stars to the image file name.
+.TP
+.B \-x <X> <Y>
+X and Y coordinates of reference pixel (if not in header or image center)
+.TP
+.B \-z
+Use AIPS classic projection code (for "-SIN", "-TAN", "-ARC", "-NCP",
+"-GLS", "-MER", "-AIT" and "-STG" only) instead of WCSLIB proposed
+standard projection code.
+
+.SH Web Page
+http://tdc-www.harvard.edu/software/wcstools/imstar/
+
+.SH Author
+Doug Mink, SAO (dmink@cfa.harvard.edu)

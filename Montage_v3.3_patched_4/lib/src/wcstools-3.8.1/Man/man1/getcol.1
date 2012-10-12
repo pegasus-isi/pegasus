@@ -1,0 +1,99 @@
+.TH getcol(1) WCSTools "8 November 2001"
+.SH Name
+getcol \- Extract specified columns from an ASCII table file
+.SH Synopsis
+getcol [-amv][-n num][-r lines][-s num] filename [column number range]
+.SH Description
+Extract specified columns from an ASCII table file
+
+.SH Options
+.TP
+.B filename
+Name of a ASCII table file.  At least one of these
+must be present for any values to be printed.  If it is stdin
+or STDIN, an ASCII table is expected as standard input.  If there
+is no input file, standard input is assumed.
+.TP
+.B @filename
+Name of a file containing a list of ASCII table files.  If this is
+present, any other file names on the command line will be ignored.
+.TP
+.B field range
+Print value of these columns for the number of lines of the table 
+specified by the -n argument after the skippiing the number of
+lines specified by the -s argument.  A value of 0 causes the
+entire input line to be printed.
+.TP
+.B \-a
+Sum all numeric columns selected, printing the sum on the line following
+the result.  Columns with no sum are filled with ___.
+(Added in version 2.6.9)
+.TP
+.B \-b
+Input is bar-separate table file
+.TP
+.B \-c
+Add count of number of lines in each column at end
+.TP
+.B \-d <number>
+Number of decimal places in f.p. output
+.TP
+.B \-e
+Compute medians of selected columns
+.TP
+.B \-f
+Print range of values in selected columns
+.TP
+.B \-h
+Print Starbase tab table header
+.TP
+.B \-i
+Input is tab-separate table file
+.TP
+.B \-k
+Print number of columns on first line
+.TP
+.B \-l <number>
+Number of lines to add to each line
+.TP
+.B \-m
+Compute the means of all numeric columns selected, printing the mean
+on the line following the result (or the line following the sum if
+-a is used).  Columns with no mean are filled with ___.
+(Added in version 2.6.9)
+.TP
+.B \-n num
+Print selected columns for this many lines.  If not specified, all
+lines will be read after the number of lines specified by -s have
+been skipped.
+.TP
+.B \-o
+OR conditions insted of ANDing them
+.TP
+.B \-p
+Print only sum, mmean, sigma, median, or range, not entries
+.TP
+.B \-r @listfile
+.B \-r line range
+Print columns from the lines specified as either the first nonzero
+number on each line of the file listfile or the comma- and hyphen-
+delimitied range; i.e. 1-5,10-12 will print values from lines
+1, 2, 3, 4, 5, 10, 11, and 12.
+(added in version 2.6.12)
+.TP
+.B \-s num
+Skip this many line before starting to print values.  If not specified,
+no lines will be skipped.
+.TP
+.B \-t
+Starbase (tab-separated) table output
+.TP
+.B \-v
+Print more information about process.
+.TP
+
+.SH Web Page
+http://tdc-www.harvard.edu/software/wcstools/getcol.html
+
+.SH Author
+Doug Mink, SAO (dmink@cfa.harvard.edu)

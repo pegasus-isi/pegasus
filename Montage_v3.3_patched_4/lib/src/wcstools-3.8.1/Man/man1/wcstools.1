@@ -1,0 +1,77 @@
+.TH wcstools(1) WCSTools "6 July 2001"
+.SH Name
+wcstools \- Programs to access image world coordinate systems and catalogs
+.SH Setting an Image World Coordinate System
+.TP
+imwcs
+Automaticaly find stars in a FITS or IRAF image, match them to HST Guide
+USNO A or USNO UJ Stars, compute the relation between sky coordinates and
+image coordinates, and write in in the image header. [after U of Iowa SETWCS]
+.TP
+delwcs
+Delete the WCS keywords from an image. If both EPOCH and EQUINOX are
+present, EQUINOX is also deleted. 
+.SH Using an Image World Coordinate System
+.TP
+imcat
+List catalog sources which should be found in the area of the sky
+covered by a specific image.
+.TP
+imsize
+Print center and size of image using WCS keywords in header
+.TP
+imstar
+Find and list the n brightest stars in an IRAF or FITS image, with their
+sky coordinates if there is WCS information in the image header. 
+.TP
+sky2xy
+Print image pixel coordinates for given sky coordinates on the command line
+or in a list file. 
+.TP
+xy2sky
+Print sky coordinates for given image pixel coordinates on the command line
+or in a list file.
+.SH Catalog Utility Programs
+.TP
+scat
+Search the HST GSC, USNO-A2.0, or other catalog given a region on the sky.
+.TP
+.TP
+skycoor
+Convert between J2000, B1950, and Galactic coordinates from the command
+line or a file.
+.SH Image Utility Programs
+.TP
+addpix
+Add a constant value(s) to specified pixel(s)
+.TP
+edhead
+Edit the header of a FITS file or the user parameters of an IRAF image file
+using a the text editor specified by the EDITOR environment variable.
+.TP
+gethead
+Return values for keyword(s) specified after filename.
+.TP
+getpix
+Return value(s) of specified pixel(s)
+.TP
+i2f
+Read two-dimensional IRAF image file and write FITS image file
+.TP
+imhead
+Print FITS or IRAF header
+.TP
+imrot
+Rotate and/or reflect FITS or IRAF image files
+.TP
+setpix
+Set specified pixel(s) to specified value(s)
+.TP
+sethead
+Set header parameters in FITS or IRAF images.
+.TP
+subpix
+Subtract a constant value(s) from specified pixel(s)
+
+.SH Author
+Doug Mink, SAO (dmink@cfa.harvard.edu)

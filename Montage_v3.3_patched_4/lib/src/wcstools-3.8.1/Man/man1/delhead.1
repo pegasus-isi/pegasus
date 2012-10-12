@@ -1,0 +1,25 @@
+.TH delhead(1) WCSTools "15 July 1999"
+.SH Name
+delhead \- Set FITS or IRAF header keyword values
+.SH Synopsis
+delhead [-nv] <FITS or IRAF file[s]> kw1 kw2 ... kwn
+.SH Description
+Delete keyword entries from the header of FITS or IRAF image[s].  If
+a keyword does not already exist, ignore it.  To delete keywords in
+a list of files, substitute @<listfile> for the file names on the command
+line.  To delete a lot of keywords, put them, one per line, in a file
+and substitute @<keylistfile> on the command line.  If two @ commands
+are present, the program will figure out which contains file names
+and which contains keywords.
+.SH Options
+.TP
+.B \-n
+Write a new file with an added "e" before the extension.  The default is
+to overwrite the input file.
+.TP
+.B \-v
+Print confirmations of each parameter setting
+.SH Web page
+http://tdc-www.harvard.edu/software/wcstools/delhead.html
+.SH Author
+Doug Mink, SAO (dmink@cfa.harvard.edu)

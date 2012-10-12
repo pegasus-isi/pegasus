@@ -1,0 +1,61 @@
+.TH gethead(1) WCSTools "6 July 2001"
+.SH Name
+gethead \- Print FITS or IRAF header keyword values
+.SH Synopsis
+gethead [-hptv] [-d pathname] [-n num] <FITS or IRAF file> kw1 kw2 ... kwn
+.SH Description
+Print values of the specified keywords from the given image header.  By
+default they are all listed on one line, separated by spaces.  The
+.I \-v
+flag causes the keyword names and values to be printed, one keyword per
+line.
+To read keywords from a list of files, substitute @<listfile> for the
+file names on the command line.  To read a lot of keywords, put them,
+one per line, in a file and substitute @<keylistfile> on the command line.
+If two @ commands are present, the program will figure out which contains
+file names and which contains keywords.
+
+.SH Options
+.TP
+.B \-a
+List file name even if keywords are not found
+.TP
+.B \-d
+Root directory for input files (default is cwd)
+.TP
+.B \-e
+Output keyword=value's on one line per file
+.TP
+.B \-f
+Never print filenames (default is to print them if more than one)
+.TP
+.B \-g
+Output keyword=value's on one line per keyword
+.TP
+.B \-h
+flag causes the keyword names to be printed at top of columns.
+.TP
+.B \-n
+Number of decimal places in numeric output
+.TP
+.B \-o
+OR conditions instead of ANDing them
+.TP
+.B \-p
+Print full pathnames of files
+.TP
+.B \-t
+flag causes the output to be in tab-separated tables with keyword column
+headings.
+.TP
+.B \-u
+Always print ___ if keyword not found, event if only one keyword in search
+.TP
+.B \-v
+Print output as <keyword>=<value>, one per line
+
+.SH Web Page
+http://tdc-www.harvard.edu/software/wcstools/gethead.html
+
+.SH Author
+Doug Mink, SAO (dmink@cfa.harvard.edu)

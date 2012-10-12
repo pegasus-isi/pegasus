@@ -1,0 +1,19 @@
+
+/* MOVEB -- Copy nbytes bytes from source+offs to dest+offd (any data type) */
+
+void
+moveb (source, dest, nbytes, offs, offd)
+
+char *source;	/* Pointer to source */
+char *dest;	/* Pointer to destination */
+int nbytes;	/* Number of bytes to move */
+int offs;	/* Offset in bytes in source from which to start copying */
+int offd;	/* Offset in bytes in destination to which to start copying */
+{
+char *from, *last, *to;
+        from = source + offs;
+        to = dest + offd;
+        last = from + nbytes;
+        while (from < last) *(to++) = *(from++);
+        return;
+}

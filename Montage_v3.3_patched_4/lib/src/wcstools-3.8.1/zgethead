@@ -1,0 +1,130 @@
+#!/bin/sh
+
+# zgethead:
+# Get header parameters from compressed FITS files
+# By Doug Mink, November 12, 2008
+
+if test -z $1
+    then
+    echo zgethead: Get header parameters from compressed FITS files
+    echo "	  usage: zgethead [-v] fits.file keyword1 ... keywordn"
+    echo "		 zgethead [-v] @fits.file.list.file keyword1 ..."
+    echo "		 -v: list file names as they are read"
+    exit
+    fi
+
+# Check for verbose flag as first argument
+if test $1 = "-v"
+    then
+    #echo verbose mode
+    vb=true
+    shift
+else
+    #echo quiet mode
+    vb=
+fi
+dir=
+
+# Loop through arguments
+if test -r templist
+    then
+    /bin/rm templist
+    fi
+
+args=
+while test $1
+    do
+
+    # Set full pathname to list of files if list file encountered
+    fromfile=`isimlist $1`
+    isfits=`echo $1 | grep fits`
+    if test $fromfile
+	then
+	if test $vb
+	    then
+	    echo Reading from list of FITS files in $fromfile
+	    fi
+
+    # If FITS file, add to list of files to check
+    elif test $isfits
+	then
+	echo $1 > templist
+
+    # Save directory path if present
+    elif test $1 = "-d"
+	then
+	shift
+	dir=$1
+	if test $vb
+	    then
+	    echo Reading from directory $dir
+	    fi
+
+    # Add argument to list
+    else
+	args=`echo $args $1`
+
+    fi
+    shift
+    done
+
+if test $vb
+    then
+    echo gethead "<file>" $args
+    fi
+
+for file in `cat $fromfile`
+    do
+    if test $vb
+	then
+	echo File is \"$file\"
+	fi
+    bzcomp=`echo $file | grep \.bz2`
+    gzcomp=`echo $file | grep \.gz`
+    zcomp=`echo $file | grep \.Z`
+    if test $bzcomp
+	then
+	if test $dir
+	   then
+	   filein=`echo $dir/$file`
+	else
+	   filein=$file
+	fi
+	file=`echo $file | sed s/\.bz2//`
+	file=`echo $file | sed s/\\\//_/`
+	sedarg1=`echo -e s/stdin/$file/`
+	sedarg2=`echo -e s/_/\\\//`
+	if test $vb
+	    then
+	    echo bzcat $filein to read header
+	    echo sed $sedarg before writing output
+	    fi
+	bzcat $filein | gethead stdin $args | sed $sedarg1 | sed $sedarg2
+    elif test $gzcomp
+	then
+	if test $dir
+	   then
+	   file=`echo $dir/$file`
+	   fi
+	if test $vb
+	    then
+	    echo zcat $file to read header
+	    fi
+	zcat $file | gethead stdin $args
+    elif test $zcomp
+	then
+	if test $dir
+	   then
+	   file=`echo $dir/$file`
+	   fi
+	if test $vb
+	    then
+	    echo zcat $file to read header
+	    fi
+	zcat $file | gethead stdin $args
+    else
+	gethead $file $args
+    fi
+    args=`echo $args | sed s/-h//`
+    done
+

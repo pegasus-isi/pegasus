@@ -1,0 +1,77 @@
+WCSTools Installation
+
+WCSTools is a set of software utilities, written in very portable C,
+which create, display and manipulate the world coordinate system of
+a FITS or IRAF image, using specific keywords in the image header
+which relate pixel position within the image to position on the sky.
+Auxillary programs search star catalogs and manipulate images.  All
+of the programs are run on the command line, but they are designed to
+be easily used in scripts.
+
+Brief descriptions of file contents are in the Programs file.
+A history of this software is in the NEWS file.
+
+The complete source code is in
+ftp://cfa-ftp.harvard.edu/pub/gsc/WCSTools/wcstools-3.8.0.tar.gz and
+ftp://cfa-ftp.harvard.edu/pub/gsc/WCSTools/wcstls37.zip and
+http://tdc-www.harvard.edu/software/wcstools/wcstools-3.8.0.tar.gz
+
+Documentation, with examples and installation directions, is on the
+World Wide Web at http://tdc-www.harvard.edu/software/wcstools/
+
+To install the code, create a directory for it, download it, and run
+
+        gzcat wcstools-3.8.0.tar.gz | tar xvf -
+or
+        unzip wcstls37.zip
+
+The directory wcstools-3.8.0 will contain the source code for the programs,
+and a subdirectory, libwcs, will contain the source code for the subroutines.
+
+Catalog access subroutines, gscread.c, actread, uacread.c, ubcread.c,
+ujcread.c, ty2read.c, tmcread.c, gsc2read.c, and ucacread.c contain
+wired-in paths to the root directories of the HST Guide Star Catalog,
+the USNO ACT, A2.0 and SA2.0, B1.0, and J Catalogs, the Tycho-2 Catalog,
+the 2MASS Point Source Catalog, the GSC II Catalog, and the USNO UCAC[1-3]
+catalogs, respectively. You should change the paths in the source files
+to match the paths in your local installation. Environment variables may
+be also used to override whatever path is in the code: GSC_NORTH sets
+the path for the HST GSC CDROM containing the northern hemisphere and
+GSC_SOUTH does the same for the southern hemisphere disk. For the
+USNO-A2.0 catalog, set the environment variable UA2_PATH to the directory
+containing the region files or UA2_ROOT to the directory below which the
+CDROMs (ua001, ua002,...ua011) are mounted. For the USNO-B1.0 Catalog,
+the environment variable UB1_PATH should be set to the directory
+containing the zone subdirectories. Path information for all supported
+catalogs is at
+
+http://tdc-www.harvard.edu/software/wcstools/wcstools.files.html.  
+
+Type
+
+	make all
+
+or for Solaris,
+
+	make -f Makefile.solaris all
+
+to compile the entire package, or
+
+	make program_name
+
+or for Solaris,
+
+	make -f Makefile.solaris program_name
+
+to compile any of the individual programs. The resulting executable(s)
+will be in the bin/ subdirectory. Once again, the programs are listed
+in the Programs file.
+
+The WCSTools package has been written to be as portable as possible. The
+only conditional code is to deal with VMS vs. Unix and to deal with 64-bit
+systems, and even that has been minimized. The package even compiles and runs
+under Windows using the free Cygwin environment. If you have any problems,
+feel free to write the author. 
+
+-Doug Mink, SAO, 2009-11-12
+http://tdc-www.harvard.edu/mink/

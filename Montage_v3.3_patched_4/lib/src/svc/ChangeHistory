@@ -1,0 +1,30 @@
+Version   Date       Description of Change
+
+2.1      23 Oct 05   svc_alloc() did not have a default return value   
+
+2.0      15 Jun 05   Close file descriptors to avoid running out       
+
+1.8       6 Jun 05   Added check in svc_init() for bad return on fork()
+
+1.7       6 Jul 04   Properly handle "escaped" characters in argument
+
+1.6       1 Jul 04   Added 64-bit file addressing compiler flag
+
+1.5      24 Apr 03   Removed a few signals for portability
+
+1.4      17 Mar 03   Added code to detect non-existence 
+                     of child executable
+
+1.3      05 Sep 02   Removed Sun-specific signals    
+
+1.2      07 Mar 02   Modification to svc_command() to
+		     avoid problem when response from 
+		     service is empty.    
+
+1.1      24 Sep 01   Documentation update.  Actually,
+		     just collecting all the old docs 
+		     in one place (./docs)
+
+1.0       1 Dec 99   Initial Release
+
+

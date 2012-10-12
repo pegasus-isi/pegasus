@@ -1,0 +1,9 @@
+file bsc.tbl
+header
+read x ra
+read y dec
+scale x y
+apply
+grid
+map x y
+quit

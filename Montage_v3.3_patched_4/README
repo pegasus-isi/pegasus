@@ -1,0 +1,56 @@
+*************************
+* Montage v3.0 README   *
+* December 20, 2006     *
+*************************
+
+1. Downloading Montage
+2. Installing Montage
+3. Where to go for help
+
+1. DOWNLOADING MONTAGE
+
+The latest version of the Montage code can be found at:
+
+    http://montage.ipac.caltech.edu/docs/download.html
+
+Montage can be downloaded as a gzipped tar file (Montage_vX.Y.tar.gz), or
+as individual components.  
+
+
+2. INSTALLING MONTAGE
+
+  i.   Unpack the gzipped tar file:
+
+         gunzip Montage_vX.Y.tar.gz
+         tar xvf Montage_vX.Y.tar
+     
+     This will create the directory Montage_vX.Y, which contains all the 
+     necessary files to build Montage.    
+
+  ii.  Go into the Montage directory:
+
+          cd Montage_vX.Y  (though presumably if you are reading
+			    this file you are already in the 
+			    right directory)
+
+  iii. Type the following:
+
+          make
+
+       This will configure and build Montage on your system.
+
+
+3. WHERE TO GO FOR HELP
+
+The Montage web site can be found at:
+      
+     http://montage.ipac.caltech.edu
+
+If you have any questions or problems, you can submit a ticket
+to Montage support at:
+
+     http://irsa.ipac.caltech.edu/ttweb/solosubmit_Montage.htm
+
+or e-mail the Montage development team at:
+  
+     montage@ipac.caltech.edu

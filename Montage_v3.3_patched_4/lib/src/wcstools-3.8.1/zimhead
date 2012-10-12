@@ -1,0 +1,137 @@
+#!/bin/sh
+
+# zimhead:
+# Get header from compressed FITS files
+# By Doug Mink, November 24, 2008
+
+if test -z $1
+    then
+    echo zimhead: Get header from compressed TRES files
+    echo "	  usage: zimhead [-v][-d directory] fits.file"
+    echo "		 zimhead [-v][-d directory] @fits.file.list.file"
+    echo "		 -v: log processing steps"
+    echo "		 -d directory: prepend directory to all filenames"
+    exit
+    fi
+
+vb=
+dir=
+datedir=
+args=
+
+# Loop through arguments
+if test -r templist
+    then
+    /bin/rm templist
+    fi
+
+while test $1
+    do
+
+    # Check for verbose flag
+    if test $1 = "-v"
+	then
+	#echo verbose mode
+	vb=true
+	args=`echo $args -v`
+
+    # Save directory path if present
+    elif test $1 = "-d"
+	then
+	shift
+	dir=$1
+	if test $vb
+	    then
+	    echo Reading from directory $dir
+	    fi
+
+    # Set full pathname to list of files if list file encountered
+    else
+	listfile=`isimlist $1`
+	isfits=`echo $1 | grep fits`
+	if test $listfile
+	    then
+	    fromfile=$listfile
+	    if test $vb
+		then
+		echo Reading from list of FITS files in $fromfile
+		fi
+
+    # If FITS file, add to list of files to check
+	elif test $isfits
+	    then
+	    if test $datedir
+		then
+		echo $datedir"/"$1 > templist
+	    else
+		echo $1 > templist
+	    fi
+	    fromfile=`echo templist`
+
+    # Add argument to list
+	else
+	    args=`echo $args $1`
+	fi
+    fi
+    shift
+    done
+
+if test $vb
+    then
+    echo imhead $args "<file>"
+    echo "where <file> is"
+    cat $fromfile
+    fi
+    apfib=
+    fibkey=
+
+for file in `cat $fromfile`
+    do
+    if test $vb
+	then
+	echo File is \"$file\"
+	fi
+    bzcomp=`echo $file | grep \.bz2`
+    gzcomp=`echo $file | grep \.gz`
+    zcomp=`echo $file | grep \.Z`
+
+# Prepend directory to file if needed
+    if test $dir
+	then
+	filein=`echo $dir/$file`
+    else
+	filein=$file
+    fi
+
+# Extract header into file yyyy.mmdd.<file>.head
+    if test $bzcomp
+	then
+	if test $vb
+	    then
+	    echo bzcat $filein to read header
+	    fi
+	bzcat $filein | imhead -f stdin
+    elif test $gzcomp
+	then
+	if test $vb
+	    then
+	    echo zcat $filein to read header
+	    fi
+	zcat $filein | imhead -f stdin
+    elif test $zcomp
+	then
+	if test $vb
+	    then
+	    echo zcat $filein to read header
+	    fi
+	zcat $filein | imhead -f stdin
+    else
+	imhead -f $filein
+    fi
+
+    done
+
+if test -e $fromfile
+    then
+    /bin/rm $fromfile
+    fi

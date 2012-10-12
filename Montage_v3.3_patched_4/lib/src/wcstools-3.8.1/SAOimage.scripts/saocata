@@ -1,0 +1,10 @@
+c=$1
+f=$2
+a=
+while test $3
+    do
+    a=`echo $a $3`
+    shift
+    done
+w=scat_-hac\_$c\_%s
+saoimage -reg `imcat -c $c -r 15 $f` -f5 $w $a $f

@@ -1,0 +1,26 @@
+Version   Date       Description of Change
+
+5.2      06Sep06     Fixed bug:  reclen was based on header, not 
+		     first data line
+5.1      06Jun05     Added "null" header line processing
+         08Jun05     Set the maxstr's to 4096 (A2).
+         20Jun05     Changed the max number of keyword lines to 1024.
+
+5.0      19May05     Added "unit" header line processing
+                     and memory for verbatim keyword/value line   
+4.0      02Feb05     Added ability to dynamically increase the size
+		     of the maximum string length above the default
+		     of 2048 (requires a library call to do it)
+3.3      11Aug04     Remove restriction on using '-' in column names
+3.2      04Aug04     Changed MTBL_MAXSTR to 2048
+3.1      01Jul04     Added 64-bit file addressing compiler flag
+3.0      20Jun04     Changed TBL to MTBL in all include variables 
+		     so as not to conflict with tbl library
+2.2      03Mar04     Changed isblank() to isBlank() for portability
+		     (isblank() is a system call on some machines)
+2.1      16Feb04     Added "type" header line processing
+2.0      13Nov03     Added keyword/value functionality plus
+		     skipping of additional header lines
+1.1      22Sep02     Moved a few parameters to the include file
+		     so applications could see them
+1.0      15Sep98     Initial Release

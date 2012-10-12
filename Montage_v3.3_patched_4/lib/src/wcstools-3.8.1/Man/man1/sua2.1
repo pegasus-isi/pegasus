@@ -1,0 +1,62 @@
+.TH sua2(1) WCS "19 November 1999"
+.SH Name
+Find USNO-A2.0 Catalog stars in a square on the sky
+.SH Synopsis
+sua2 [options] ra dec system
+.SH Description
+.I suac
+finds all of the U.S. Naval Observatory A2.0 Catalog objects in a specified
+region of the sky and lists their sky positions and magnitudes in order of
+brightness. Output is to standard out, unless the -w flag is set, in which
+case it goes to objectname.uac or search.uac. It is a link to scat.
+.SH Options
+.B \-a
+list single closest catalog source
+.B \-b
+Output B1950 (FK4) coordinates
+.B \-d
+Sort by distance from center instead of flux
+.B \-e
+Output ecliptic coordinates
+.B \-f
+Output search center for other programs
+.B \-g
+Output galactic coordinates
+.B \-h
+Print heading, else do not 
+.B \-i
+Print catalog object name, not catalog number (=ua2_region_number)
+.B \-j
+Output J2000 (FK5) coordinates
+.B \-l
+Print center and closest star on one line
+.B \-m [<bright magnitude>] <faint magnitude>
+Limiting catalog magnitude(s) (default none, bright -2 if only faint is given)
+.B \-n <num>
+Number of brightest stars to print 
+.B \-o <name>
+Object name used to name output file
+.B \-p
+Sort by distance from search center instead of brightness
+.B \-q <years>
+Equinox of output positions in years
+.B \-r <radius>
+Search box half-width in arcsec or dd:mm:ss
+If negative, this is a radius; if two numbers, first is in right ascension,
+second is in declination. (default is 10, that is a 20x20 arcsec box)
+.B \-s
+Sort by right ascension instead of flux 
+.B \-t
+Tab table output
+.B \-u <num>
+Print X Y instead of number in front of non-tab entry
+.B \-v
+Verbose listing of processing intermediate results
+.B \-w
+Write tab table output file imagename.uac
+.B \-y
+Epoch of output positions in years
+.SH See Also
+scat(1), susac(1), imuac(1), sgsc(1)
+.SH Author
+Doug Mink, SAO (dmink@cfa.harvard.edu)

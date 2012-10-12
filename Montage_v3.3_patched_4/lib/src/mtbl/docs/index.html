@@ -1,0 +1,166 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN//2.0">
+<html>
+<head>
+<title>Mini Table-Handling Library</title>
+</head>
+
+<body>
+<hr><p>
+
+<center>
+<h2>            Mini Table-Handling Library
+</h2>
+</center>
+<p>
+
+<center><a name=toc><b>Table of Contents</b></a>
+<table border=1 cellpadding=2 width=75%><tr><td>
+<center><table><tr><td>
+<ul>
+   <item><a href=#description>   General Description</a><br>
+   <item><a href=#control>       Library Routines</a><br>
+   <item><a href=#example>       Usage Example</a><br>
+</ul>
+</td></table></center>
+</td></table></center>
+
+
+<a name=description><h2>General Description</h2></a><p>
+
+We often wish to open a single ASCII table file and walk through it
+sequentially, examining a few fields in each record.  This library was
+designed with that in mind and to be as small and efficient as possible.<p>
+
+For documentation on table formatting, see the related <a href="./tbl.html">
+tbl</a> Library documentation.<p>
+<hr><p>
+
+
+
+<a name=control><h2>Library Routines</h2></a><p>
+
+The calls in the <tt><b>mtbl</b></tt> library are as follows:<p>
+
+<pre>
+      int   ncol   = topen   ( char *file );
+		     tclose  ( );
+      char *name   = tinfo   ( int   column );
+      int   column = tcol    ( char *colname );
+      int   status = tseek   ( int   row );
+      int   status = tread   ( );
+      char *value  = tval    ( int   column );
+</pre>
+<p>
+
+These names conflict with a UNIX standard FORTRAN tape reading library,
+so use a little care if you want to use them from that language.<p>
+
+<ul>
+<li><tt><b>topen()</b></tt> opens the file and returns the number of columns
+as defined by the header record.<p>
+
+<li><tt><b>tclose()</b></tt> closes the file.<p>
+
+<li><tt><b>tinfo()</b></tt> returns the name of a column by index (char *NULL
+if the index is invalid).<p>
+
+<li><tt><b>tcol()</b></tt> returns the index of a column by name
+(-1 if the name isn't found).<p>
+
+<li><tt><b>tseek()</b></tt> jumps to the beginning of the specified row
+and returns 0 for OK and a value less than 0 for an error (see below).<br>
+<b>CAUTION:</b> This only works for files where the header line and all records
+have the same number of bytes.<p>
+
+<li><tt><b>tread()</b></tt> reads the next row and returns 0 for OK and
+a value less than 0 for an error (see below).<p>
+
+<li><tt><b>tval()</b></tt> returns the value of a particular column in the
+current record (char *NULL if the column is invalid).<p>
+</ul>
+
+<hr><p>
+
+<tt><b>tread()</b></tt> populates the <tt><b>tbl_rec</b></tt> structure from
+<tt><b>mtbl.h</b></tt>:<p>
+
+<pre>
+      #define TBL_MAXSTR  4096
+      #define TBL_MAXCOL   128
+
+      #define TBL_OK      0
+      #define TBL_NOFILE -2
+      #define TBL_COLUMN -3
+      #define TBL_RDERR  -4
+
+      struct
+      {
+	 char  name[TBL_MAXSTR];
+	 char *dptr;
+	 int   endcol;
+	 int   colwd;
+      }
+	 tbl_rec[TBL_MAXCOL];
+
+      char    dval[TBL_MAXSTR];
+
+      int     ncol;
+
+      char    tbl_rec_string[TBL_MAXSTR];
+      char    tbl_hdr_string[TBL_MAXSTR];
+</pre><p>
+
+This file only needs to be included explicity if you plan to examine the
+structure manually.<p>
+
+<tt><b>tbl_rec</b></tt> is mainly a set of pointers into <tt><b>dval</b></tt>,
+a copy of <tt><b>tbl_rec_string</b></tt> (the line from the file) with nulls
+inserted at the end of each column.<p>
+
+The programmer is at liberty to use this structure directly instead of the 
+library routine <tt><b>tval()</b></tt>, which just looks up the string in
+a column.<p>
+
+<hr>
+
+<a name=example><h2>Usage Example</h2></a><p>
+
+
+The following is the code for a program using the mtbl library routines
+to examine a couple of columns in a table file.<p>
+
+
+<a name=test1><tt><b>test1.c</b></tt></a>
+
+<pre>
+      #include &ltstdio.h&gt
+
+      main()
+      {
+	 int    i, ncol, icol, jcol;
+	 char  *value;
+
+	 ncol = topen("test.tbl");
+	 icol = tcol("fnu_25");
+	 jcol = tcol("fnu_60");
+
+	 while(tread() >= 0)
+	    printf("%s %s\n",  tval(icol), tval(jcol));
+
+	 tclose();
+      }
+</pre><p>
+<hr>
+
+<address>
+<table>
+<tr><td><b>Author:</b>       <td> John Good                              </tr>
+<tr><td><b>Address:</b>      <td> <a href="mailto:jcg@ipac.caltech.edu">
+                                                  jcg@ipac.caltech.edu </a>
+									 </tr>
+<tr><td><b>Last update:</b>  <td> 01-Mar-97                              </tr>
+</table>
+</address>
+
+</body>
+</html>

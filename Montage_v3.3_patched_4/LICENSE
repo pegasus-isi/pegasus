@@ -1,0 +1,90 @@
+CALTECH/JPL
+NON-EXCLUSIVE, NON-COMMERCIAL
+SOFTWARE LICENSE AGREEMENT
+
+--MONTAGE(TM)
+SOURCE CODE ALLOCATION
+--CLICKWRAP LICENSE AGREEMENT--
+
+BY CLICKING THE "I AGREE" BUTTON OR BY USING THE SOFTWARE AFTER VIEWING THIS LICENSE, YOU ARE AGREEING TO THE TERMS OF THIS LICENSE AGREEMENT.
+
+This is a license agreement and not an agreement for sale.  This license agreement (Agreement) is between your Company or self for your personal use, and the California Institute of Technology (hereinafter called "LICENSOR" or alternatively CALTECH, through the operating division, Jet Propulsion Laboratory (JPL) of LICENSOR" and gives Licensee certain limited rights to use the proprietary "Montage" Software and Related Material.   All rights not specifically granted in this Agreement are reserved to Caltech/JPL.   Licensor warrants that it has the right to grant this license of the Software and Related Materials.
+
+RESERVATION OF OWNERSHIP AND GRANT OF LICENSE:  Caltech/JPL retains exclusive ownership of any copy of the Software (as defined below) licensed under this Agreement and hereby grants to Licensee a personal, non-exclusive, non-transferable license to use the Software and Related Materials, without the right to sublicense, for research purposes, and pursuant to the terms and conditions of this Agreement.  From the date of receipt, Licensee agrees to use reasonable effort to protect the Software from unauthorized use, reproduction, distribution, or publication. 
+
+CONFIDENTIALITY:  Licensee acknowledges that the Software provided under this Agreement is proprietary to Caltech/JPL, and as such, Licensee agrees to receive all such materials in confidence and use the Software only in accordance with the terms of this Agreement.  
+
+COPYRIGHT:   The Software is owned by Caltech/JPL and is protected by United States copyright laws and applicable international treaties and/or conventions. The United States Government may have prior rights to use some or all of the Software as determined under applicable contracts and license agreements with Caltech/JPL.
+
+DEFINITIONS:  As used herein, the following words, phrases, or terms in this Agreement shall have the following meanings:
+
+"Montage(TM)" means the suite of programs, scripts, manuals and procedures received from Caltech/JPL for the purpose of providing a portable, compute-intensive service that will deliver science-grade custom astronomical image mosaics on demand, with requests made through existing portals.
+
+"Internal" means within the Licensee’s own organization which has been granted this license.
+
+"Executable Code" means machine-readable code compiled by a high-level compiler.
+
+"Noncommercial" means for research purposes only, wherein LICENSEE shall earn no fees or costs whatsoever for use of Software and/or Related Materials, and shall not develop or manufacture a Product either directly or indirectly from the Software.
+
+"Source Code" means code written in human-readable format or in a high-level program language.
+
+"Software" means the actual copy of all or any portion of the allocated source or executable code for program routines delivered on the media, inclusive of backups, updates, or merged copies permitted hereunder or subsequently supplied by Caltech/JPL. It includes file structures, programming instructions, user interfaces and screen formats and sequences.
+
+"Related Materials" means all of the printed materials, user documentation, training documentation and confidential software activation code supplied by Caltech/JPL under this Agreement.
+
+
+PERMITTED USES: 
+
+Noncommercial Research:
+
+The Software may be used for Licensee's own internal research and development or experimental use.  Licensee shall report any performance problems to Caltech/JPL for improvement of the software. 
+
+Backups:  Licensee may make and maintain backup copies provided Licensee or its archive service delegatee keeps possession of each backup.  In addition, Licensee may make that number of copies of the Software necessary for its licensed site provided that all information appearing in or on the original labels, including the copyright and trademark notices are copied onto the labels of the copies.
+
+USES NOT PERMITTED:
+
+Licensee has not been granted any trademark license as part of this agreement and may not use the name or mark "Montage" or any rendition thereof for any purpose outside of the purpose stated herein.
+
+THIRD PARTIES:  LICENSEE MAY NOT SELL, RENT, LEASE, SUBLICENSE, LEND, TIME-SHARE OR TRANSFER, IN WHOLE OR IN PART, OR PROVIDE UNLICENSED THIRD PARTIES ACCESS, TO PRIOR OR PRESENT VERSIONS (OR ANY PARTS THEREOF) OF THE SOFTWARE AND RELATED MATERIALS, ANY UPDATES, OR LICENSEE'S RIGHTS UNDER THIS AGREEMENT.  THE CODE MAY BE ACCESSED INDEPENDENTLY, AFTER CLICKING THE "I AGREE" BUTTON AND FILLING OUT AN INFORMATION FORM, THROUGH THE WWW SITE: HTTP://MONTAGE.IPAC.CALTECH.EDU.
+
+Licensee may not remove or obscure any copyright or trademark notices.
+
+The Software and Related Materials shall not become subject to application for patent or copyright by Licensee.
+
+Assignment: Licensee shall not assign this Agreement or Licensee's rights hereunder without the prior written consent of Caltech/JPL.  Any purported assignment without such consent shall be null and void.
+
+Term:   The term of the license granted by this Agreement is from the effective date of this agreement until terminated. 
+
+You may terminate this license at any time by destroying the program and documentation and the permitted backup copy. Upon termination, you will destroy all copies of the Software.
+
+This license automatically terminates if you fail to comply with any provision of this Agreement.  Licensee will then return to Caltech/JPL the Software, Related Materials and any whole or partial copies, codes, modifications, and merged portions in any form.  The parties hereby agree that all provisions, which operate to protect the proprietary rights of Caltech/JPL shall remain in force should breach occur and that the obligation of confidentiality described survives the term of the Agreement.
+
+Fee:   Whereas Licensee will use said Software solely for the uses stated above, and agrees not to permit or sublicense third-party use of this Software, and to comply with any applicable "Restricted Rights" requirements, there is no fee for this license.  
+
+NO WARRANTY:
+
+DISCLAIMER
+
+THE SOFTWARE AND/OR RELATED MATERIALS ARE PROVIDED "AS-IS" WITHOUT WARRANTY OF ANY KIND INCLUDING ANY WARRANTIES OF PERFORMANCE OR MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE (AS SET FORTH IN UCC §2312 2313) OR FOR ANY PURPOSE WHATSOEVER, FOR THE LICENSED PRODUCT, HOWEVER USED.  
+
+IN NO EVENT SHALL CALTECH/JPL BE LIABLE FOR INCIDENTAL OR CONSEQUENTIAL DAMAGES OF ANY KIND, INCLUDING ECONOMIC DAMAGE OR INJURY TO PROPERTY AND LOST PROFITS, REGARDLESS OF WHETHER CALTECH/JPL SHALL BE ADVISED, HAVE REASON TO KNOW, OR IN FACT SHALL KNOW OF THE POSSIBILITY.
+
+USER BEARS ALL RISK RELATING TO QUALITY AND PERFORMANCE OF THE SOFTWARE AND/OR RELATED MATERIALS. 
+
+Exclusive Remedy and Limitation of Liability:  Caltech/JPL shall not be liable for indirect, special, incidental, or consequential damages or lost profits related to Licensee's use of the Software and Related Materials, even if Caltech/JPL is advised of the possibility of such damage.
+
+Restricted Rights Legend
+
+Use, duplication, or disclosure by the Government is subject to the restrictions as set forth in FAR s52.227-14 (JUN 1987) Alternate III (g)(3), FAR s52.227-19 (JUN 1987), DFARS  s252.211-7015 (MAY 1991) or DFARS s252.227-7013 (c)(1)(ii) (OCT 1988), as applicable.
+
+Support and Maintenance:  No software support or training by the Licensor is provided as part of this agreement. 
+
+Export Regulation:  When exporting Caltech/JPL software or product incorporating such software to a foreign entity, licensee shall comply with all federal export laws and statutes.  In the event an export license is required to execute the transfer, licensee shall apply and obtain approval for such license through the appropriate U.S. government agency.  
+
+Severability: If any provision(s) of this Agreement shall be held to be invalid, illegal, or unenforceable by a court or other tribunal of competent jurisdiction, the validity, legality and enforceability of the remaining provisions shall not in any way be affected or impaired thereby.
+
+No Implied Waivers: No failure or delay by Caltech/JPL in enforcing any right or remedy under this Agreement shall be construed as a waiver of any future or other exercise of such right or remedy by Caltech/JPL.
+
+Governing Law: Except with respect to Copyright or Patent rights, which shall be governed by federal laws, this Agreement shall be construed and enforced in accordance with the laws of the State of California. 
+
+BY CLICKING THE "I AGREE" BUTTON OR BY USING THE SOFTWARE AFTER VIEWING THIS LICENSE, YOU ARE AGREEING TO THE TERMS OF THIS LICENSE AGREEMENT.

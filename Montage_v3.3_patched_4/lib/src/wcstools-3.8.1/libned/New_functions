@@ -1,0 +1,21 @@
+April 25, 1996
+
+Two new functions are added in this version of NED client.
+
+1.  Expand the reference code
+      
+      For a given 19-digit reference code, the function returns the detailed
+      information about the it. 
+
+      int ned_ex_refcode(char *refcode, struct reference *full_ref);
+
+2.  Bibligraphic search for a given object
+
+      For a given object name, it will return all the references for it
+      in NED database. 
+
+      int ned_ref(char *objname, int begin_year, int end_year,
+		       int *no, CrossID **cp, NedRef **refp);
+
+Please read NED_client for more detailed description. ex_refcode.c and ref.c
+serve as simple examples to use the new functions.

@@ -1,0 +1,69 @@
+.TH skycoor(1) WCSTools "9 November 2001"
+.SH Name
+skycoor \- Convert coordinates
+.SH Synopsis
+skycoor [-bdgjv] [-n ndec] ra1 dec1 sys1 ... ran decn sysn
+.br
+or
+.br
+skycoor [-vbjg] [-n ndec] @listfile
+.SH Description
+.I skycoor
+converts coordinates between the J2000, B1950, and galactic coordinate
+systems, rounding to a specified number of decimal places and printing
+in degrees or hh:mm:ss.sss dd:mm:ss.sss.  Input coordinates may also
+be in either format, and the system (J2000, B1950, or galactic) may
+be in upper or lower case.  No spaces are allowed within  the individual
+coordinates
+.SH Options
+.TP
+.B \-b
+B1950 (FK4) output
+.TP
+.B \-d
+RA and Dec output in degrees
+.TP
+.B \-e
+Ecliptic longitude and latitude output
+.TP
+.B \-g
+Galactic longitude and latitude output
+.TP
+.B \-i r|d|
+Input units (r=radians, d=degrees, else hh:mm:sss dd:mm:sss)
+.TP
+.B \-j
+J2000 (FK5) output
+.TP
+.B \-n <num>
+Number of decimal places in output RA seconds
+.TP
+.B \-o <num>
+Offset coordinates by this many arcseconds
+.TP
+.B \-p
+RA and Dec proper motion in milliarcseconds/year
+.TP
+.B \-q
+Output system, including equinox
+.TP
+.B \-r <RA> <Dec> <RA> <Dec>
+Angular separation between two RA, Dec pairs
+.TP
+.B \-s
+Output ra= dec= epoch= radecsys= for sethead
+.TP
+.B \-v
+Print more intermediate information
+.TP
+.B \-w
+Convert RA, Dec equatorial coordinates to x,y,z
+.TP
+.B \-x
+Convert x,y,z equatorial coordinates to RA, Dec
+.TP
+.B \-y <epoch>
+Epoch of coordinates in years
+
+.SH Author
+Doug Mink, SAO (dmink@cfa.harvard.edu)
