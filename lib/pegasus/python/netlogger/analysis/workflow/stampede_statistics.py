@@ -535,8 +535,10 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
                 func.max(JobInstanceSub1.job_submit_seq).label('jss'),
                 JobInstanceSub1.job_id.label('jobid')
         )
-        if self._expand:
+        if self._expand and self._is_root_wf:
             sq_1 = sq_1.filter(WorkflowSub1.root_wf_id == self._root_wf_id)
+        elif self._expand and not self._is_root_wf:
+            sq_1 = sq_1.filter(WorkflowSub1.wf_id.in_ (self._wfs))
         else:
             sq_1 = sq_1.filter(WorkflowSub1.wf_id == self._wfs[0])
         sq_1 = sq_1.filter(WorkflowSub1.wf_id == JobSub1.wf_id)
@@ -584,8 +586,10 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
 
         sq_1 = sq_1.join(j, w.wf_id == j.wf_id)
         sq_1 = sq_1.join(ji, j.job_id == ji.job_id)
-        if self._expand:
+        if self._expand and self._is_root_wf:
             sq_1 = sq_1.filter(w.root_wf_id == self._root_wf_id)
+        elif self._expand and not self._is_root_wf:
+            sq_1 = sq_1.filter(w.wf_id.in_ (self._wfs))
         else:
             sq_1 = sq_1.filter(w.wf_id == self._wfs[0])
         if not pmc:
@@ -630,8 +634,10 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Statistics+file#WorkflowStatisticsfile-Totaltaskretries
         """
         sq_1 = self.session.query(Workflow.wf_id.label('wid'), Invocation.abs_task_id.label('tid'))
-        if self._expand:
+        if self._expand and self._is_root_wf:
             sq_1 = sq_1.filter(Workflow.root_wf_id == self._root_wf_id)
+        elif self._expand and not self._is_root_wf:
+            sq_1 = sq_1.filter(Workflow.wf_id.in_ (self._wfs))
         else:
             sq_1 = sq_1.filter(Workflow.wf_id == self._wfs[0])
         sq_1 = sq_1.filter(Job.wf_id == Workflow.wf_id)
