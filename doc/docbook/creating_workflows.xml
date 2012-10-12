@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="US-ASCII"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
 "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <chapter id="creating_workflows">
@@ -192,6 +192,10 @@
       </listitem>
 
       <listitem>
+        <para><emphasis role="bold">Directory</emphasis></para>
+      </listitem>
+
+      <listitem>
         <para><emphasis role="bold">Database via JDBC</emphasis></para>
       </listitem>
 
@@ -253,6 +257,55 @@ LFN PFN a="b" [..]
             the replica catalog file&gt;</replaceable></emphasis></para>
           </listitem>
         </orderedlist></para>
+    </section>
+
+    <section>
+      <title>Directory</title>
+
+      <para>In this mode, Pegasus does a directory listing on an input
+      directory to create the LFN to PFN mappings. The directory listing is
+      performed recursively, resulting in deep LFN mappings. For example, if
+      an input directory $input is specified with the following
+      structure</para>
+
+      <programlisting>$input
+$input/f.1
+$input/f.2
+$input/D1
+$input/D1/f.3</programlisting>
+
+      <para>Pegasus will create the mappings the following LFN PFN mappings
+      internally</para>
+
+      <programlisting>f.1 file://$input/f.1  pool="local"
+f.2 file://$input/f.2  pool="local"
+D1/f.3 file://$input/D2/f.3 pool="local"</programlisting>
+
+      <para>Users can optionally specify additional properties to configure
+      the behavior of this implementation. </para>
+
+      <orderedlist>
+        <listitem>
+          <para><emphasis
+          role="bold">pegasus.catalog.replica.directory.site</emphasis> to
+          specify a site attribute other than local to associate with the
+          mappings.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis
+          role="bold">pegasus.catalog.replica.directory.url.prefix</emphasis>
+          to associate a URL prefix for the PFN's constructed. If not
+          specified, the URL defaults to file://</para>
+        </listitem>
+      </orderedlist>
+
+      <tip>
+        <para>pegasus-plan has -<emphasis role="bold">-input-dir</emphasis>
+        option that can be used to specify an input directory on the command
+        line. This allows you to specify a separate replica catalog to catalog
+        the locations of output files.</para>
+      </tip>
     </section>
 
     <section id="rc-JDBCRC">
