@@ -188,15 +188,16 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         self._xform_filter = {'include':None, 'exclude':None}
         
         self._wfs = []
-        pass
     
     def initialize(self, root_wf_uuid):
         self.log.debug('initialize')
         self._root_wf_uuid = root_wf_uuid
-        q = self.session.query(Workflow.wf_id).filter(Workflow.wf_uuid == self._root_wf_uuid)      
+        q = self.session.query(Workflow.root_wf_id, Workflow.wf_id).filter(Workflow.wf_uuid == self._root_wf_uuid)      
         
         try:
-            self._root_wf_id = q.one().wf_id
+            result = q.one ()
+            self._root_wf_id = result.wf_id
+            self._is_root_wf = result.root_wf_id == result.wf_id
         except orm.exc.MultipleResultsFound, e:
             self.log.error('initialize',
                 msg='Multiple results found for wf_uuid: %s' % root_wf_uuid)
@@ -205,18 +206,32 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
             self.log.error('initialize',
                 msg='No results found for wf_uuid: %s' % root_wf_uuid)
             return False
-        
+
+        self._wfs.insert(0, self._root_wf_id)
+                
         if self._expand:
-            q = self.session.query(Workflow.wf_id).filter(Workflow.root_wf_id == self._root_wf_id)
-            for row in q.all():
-                self._wfs.append(row.wf_id)
-            if not len(self._wfs):
-                self.log.error('initialize',
-                    msg='Unable to expand wf_uuid: %s - not a root_wf_id?' % root_wf_uuid)
-                return False
-        else:
-            self._wfs.append(self._root_wf_id)
+            '''
+            select parent_wf_id, wf_id from workflow where root_wf_id = 
+            (select root_wf_id from workflow where wf_id=self._root_wf_id);
+            '''
+            sub_q = self.session.query(Workflow.root_wf_id).filter(Workflow.wf_id == self._root_wf_id).subquery('root_wf')
             
+            q = self.session.query(Workflow.parent_wf_id, Workflow.wf_id).filter(Workflow.root_wf_id == sub_q.c.root_wf_id)
+            
+            # @tree will hold the entire sub-work-flow dependency structure.  
+            tree = {}
+            
+            for row in q.all():
+                parent_node = row.parent_wf_id
+                if parent_node in tree:
+                    tree [parent_node].append (row.wf_id)
+                else:
+                    tree [parent_node] = [row.wf_id]
+            
+            self._get_descendants (tree, self._root_wf_id)
+
+        self.log.debug('Descendant workflow ids %s' % self._wfs)
+                
         if not len(self._wfs):
             self.log.error('initialize',
                 msg='No results found for wf_uuid: %s' % root_wf_uuid)
@@ -228,7 +243,26 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         self.set_host_filter()
         self.set_transformation_filter()
         return True
+    
+    def _get_descendants (self, tree, wf_node):
+        '''
+        If the root_wf_uuid given to initialize function is not the UUID of the root work-flow, and
+        expand_workflow was set to True, then this recursive function determines all child work-flows.
+        @tree A dictionary when key is the parent_wf_id and value is a list of its child wf_id's.
+        @wf_node The node for which to determine descendants. 
+        '''
+
+        if tree == None or wf_node == None:
+            self.log.error('initialize', msg='Tree, or node cannot be None')
+            raise ValueError('Tree, or node cannot be None')
         
+        if wf_node in tree:
+
+            self._wfs.extend (tree [wf_node])
+
+            for wf in tree [wf_node]:
+                self._get_descendants (tree, wf)
+    
     def close(self):
         self.log.debug('close')
         self.disconnect()
