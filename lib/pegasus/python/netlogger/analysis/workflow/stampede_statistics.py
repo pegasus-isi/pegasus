@@ -506,8 +506,10 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Statistics+file#WorkflowStatisticsfile-Totaltasks
         """
         q = self.session.query(Task.task_id)
-        if self._expand:
+        if self._expand and self._is_root_wf:
             q = q.filter(Workflow.root_wf_id == self._root_wf_id)
+        elif self._expand and not self._is_root_wf:
+            q = q.filter(Workflow.wf_id.in_ (self._wfs))
         else:
             q = q.filter(Workflow.wf_id == self._wfs[0])
         q = q.filter(Task.wf_id == Workflow.wf_id)
