@@ -99,5 +99,6 @@ pegasus-plan \
     --output local \
     --dax root-workflow.dax \
     --submit \
-    -vvvv
+    --nocleanup \
+    -v
 
