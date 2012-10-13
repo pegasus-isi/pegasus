@@ -171,7 +171,7 @@ $(document).ready (function ()
 			]
 		}]
 	};
-	{% if workflow.root_wf_id ==  workflow.wf_id %}
+	
 	var stat_chart;
 	var statOptions;
 
@@ -243,7 +243,7 @@ $(document).ready (function ()
 	};
 
 stats_chart = new Highcharts.Chart (statOptions);
-{% endif %}
+
 chart = new Highcharts.Chart (chartOptions);
 verticalTableInit ('#workflow_text_info');
 //verticalTableInit ('#workflow_stats_info');
@@ -290,11 +290,11 @@ verticalTableInit ('#workflow_text_info');
 	</table>
 	<table class="workflow_info">
 		<tr>
-			{% if workflow.root_wf_id ==  workflow.wf_id %}
+			
 			<td>
 				<div id="stat_graph"></div>
 			</td>
-			{% endif %}
+			
 			<td>
 				<div id="workflow_graph"></div>
 			</td>
