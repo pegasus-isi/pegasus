@@ -72,7 +72,7 @@ for l in infile:
 	
 	# Add left Findrange job
 	frl = Job(namespace="diamond", name="findrange", version="4.0")
-	c1 = File(ifile[1]+"f.c1")
+	c1 = File(ifile[1]+".c1")
 	frl.addArguments("-a findrange","-T60","-i",b1,"-o",c1)
 	frl.uses(b1, link=Link.INPUT)
 	frl.uses(c1, link=Link.OUTPUT)
@@ -80,7 +80,7 @@ for l in infile:
 	
 	# Add right Findrange job
 	frr = Job(namespace="diamond", name="findrange", version="4.0")
-	c2 = File(ifile[1]+"f.c2")
+	c2 = File(ifile[1]+".c2")
 	frr.addArguments("-a findrange","-T60","-i",b2,"-o",c2)
 	frr.uses(b2, link=Link.INPUT)
 	frr.uses(c2, link=Link.OUTPUT)
@@ -88,7 +88,7 @@ for l in infile:
 	
 	# Add Analyze job
 	analyze = Job(namespace="diamond", name="analyze", version="4.0")
-	d = File(ifile[1]+"f.d")
+	d = File(ifile[1]+".d")
 	analyze.addArguments("-a analyze","-T60","-i",c1,c2,"-o",d)
 	analyze.uses(c1, link=Link.INPUT)
 	analyze.uses(c2, link=Link.INPUT)

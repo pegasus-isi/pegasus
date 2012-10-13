@@ -1,13 +1,20 @@
 
-This is a sample workflow with 4 nodes, layed out in a diamond shape:
+This is a sample workflow that takes in 1 input file, splits it into N outputs. The second job determines the number of outputs produced and generates a sub dax that has a diamond workflow for each split output file
 
+The 
 
-        a
-       / \
-      b   c
-       \ /
-        d
-
+		
+       Split job
+	   |
+      sub-dax-gen
+           |
+   ---------------------
+   |      a1      an   |
+   |    / \      / \   |  
+   |   b1   c1  bn  cn |
+   |    \ /      \  /  |
+   |     d1       dn   |
+   ---------------------
 
 The binary for the nodes is a simple "mock application" name "keg"
 ("canonical example for the grid") which reads input files designated by
