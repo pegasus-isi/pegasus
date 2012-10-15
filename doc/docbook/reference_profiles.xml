@@ -799,7 +799,7 @@
             </row>
 
             <row>
-              <entry>collapser</entry>
+              <entry>job.aggregator</entry>
 
               <entry>Indicates the clustering executable that is used to run
               the clustered job on the remote site.</entry>

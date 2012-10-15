@@ -81,9 +81,18 @@ public class Pegasus extends Namespace {
      */
     public static final String MAX_RUN_TIME = "clusters.maxruntime";
 
+
+    /**
+     * The name of the key that determines the clusterig executable to be used
+     * to run the merged/collapsed job.
+     */
+    public static final String JOB_AGGREGATOR_KEY= "job.aggregator";
+
     /**
      * The name of the key that determines the collapser executable to be used
      * to run the merged/collapsed job.
+     *
+     * @deprecated
      */
     public static final String COLLAPSER_KEY = "collapser";
 
@@ -481,6 +490,9 @@ public class Pegasus extends Namespace {
 
             case 'j':
                 if (key.compareTo( JOB_RUN_TIME ) == 0) {
+                    res = VALID_KEY;
+                }
+                else if ( key.compareTo( JOB_AGGREGATOR_KEY ) == 0 ){
                     res = VALID_KEY;
                 }
                 else {

@@ -148,30 +148,38 @@ public class JobAggregatorInstanceFactory {
 
 
         Object obj;
-        String shortName = ((obj =job.vdsNS.get(Pegasus.COLLAPSER_KEY))==null)?
+
+        String jobAggregator = (String)job.vdsNS.get( Pegasus.JOB_AGGREGATOR_KEY );
+        jobAggregator = ( jobAggregator == null ) ?
+                          //check to see if the deprecated key is specified
+                          (String)job.vdsNS.get(Pegasus.COLLAPSER_KEY):
+                          jobAggregator;
+
+
+        jobAggregator = ( jobAggregator == null)?
                             //pick the one from the properties
                             mProps.getJobAggregator():
-                            (String)obj;
+                            jobAggregator;
 
         //update the bag to set the flag whether 
         //PMC was used or not PM-639
-        if( shortName.equalsIgnoreCase( JobAggregatorFactory.MPI_EXEC_CLASS ) ){
+        if( jobAggregator.equalsIgnoreCase( JobAggregatorFactory.MPI_EXEC_CLASS ) ){
             mBag.add( PegasusBag.USES_PMC, Boolean.TRUE );
         }
         
         //now look up the job aggregator
-        Object aggregator = this.get( shortName.toLowerCase() );
+        Object aggregator = this.get( jobAggregator.toLowerCase() );
         if ( aggregator == null ) {
             //load via reflection
-            aggregator = JobAggregatorFactory.loadInstance( shortName, mDAG, mBag );
+            aggregator = JobAggregatorFactory.loadInstance( jobAggregator, mDAG, mBag );
 
             //throw exception if still null
             if (aggregator == null ){
-                throw new JobAggregatorFactoryException( "Unsupported aggregator " + shortName);
+                throw new JobAggregatorFactoryException( "Unsupported Job Aggregator " + jobAggregator);
             }
 
             //register in cache
-            this.put( shortName, aggregator );
+            this.put( jobAggregator, aggregator );
         }
 
 

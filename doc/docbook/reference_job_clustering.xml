@@ -536,13 +536,13 @@ pegasus.clusterer.job.aggregator seqexec|mpiexec</programlisting>
           </listitem>
 
           <listitem>
-            <para><emphasis role="bold">associating profile key collapser with
-            the site in the site catalog</emphasis></para>
+            <para><emphasis role="bold">associating profile key job.aggregator
+            with the site in the site catalog</emphasis></para>
 
             <programlisting>&lt;site handle="siteX" gridlaunch = "/shared/PEGASUS/bin/kickstart"&gt;
     &lt;profile namespace="env" key="GLOBUS_LOCATION" &gt;/home/shared/globus&lt;/profile&gt;
     &lt;profile namespace="env" key="LD_LIBRARY_PATH"&gt;/home/shared/globus/lib&lt;/profile&gt;
-    &lt;profile namespace="pegasus" key="collapser" &gt;seqexec&lt;/profile&gt;
+    &lt;profile namespace="pegasus" key="job.aggregator" &gt;seqexec&lt;/profile&gt;
     &lt;lrc url="rls://siteX.edu" /&gt;
     &lt;gridftp  url="gsiftp://siteX.edu/" storage="/home/shared/work" major="2" minor="4" patch="0" /&gt;
     &lt;jobmanager universe="transfer" url="siteX.edu/jobmanager-fork" major="2" minor="4" patch="0" /&gt;
@@ -556,13 +556,13 @@ pegasus.clusterer.job.aggregator seqexec|mpiexec</programlisting>
           </listitem>
 
           <listitem>
-            <para><emphasis role="bold">associating profile key collapser with
-            the transformation that is being clustered, in the transformation
-            catalog</emphasis></para>
+            <para><emphasis role="bold">associating profile key job.aggregator
+            with the transformation that is being clustered, in the
+            transformation catalog</emphasis></para>
 
             <programlisting><emphasis role="bold">#site  transformation   pfn            type                architecture profiles
 </emphasis>
-siteX    B     /shared/PEGASUS/bin/jobB INSTALLED       INTEL32::LINUX pegasus::clusters.size=3,collapser=mpiexec</programlisting>
+siteX    B     /shared/PEGASUS/bin/jobB INSTALLED       INTEL32::LINUX pegasus::clusters.size=3,job.aggregator=mpiexec</programlisting>
 
             <para>In the above example, all the clustered jobs that consist of
             transformation B on siteX will be executed via mpiexec.</para>
