@@ -354,12 +354,12 @@ In the above example, all the clustered jobs on all remote sites will
 be launched via PMC as long as the property value is not overridden 
 in the site catalog.
 
-. By setting the profile key "collapser" to "mpiexec" in the site catalog:
+. By setting the profile key "job.aggregator" in the site catalog:
 +
 ----
 <site handle="siteX" arch="x86" os="LINUX">
     ...
-    <profile namespace="pegasus" key="collapser">mpiexec</profile>
+    <profile namespace="pegasus" key="job.aggregator">mpiexec</profile>
 </site>
 ----
 +
@@ -367,8 +367,7 @@ In the above example, all the clustered jobs on a siteX are going to
 be executed via PMC as long as the value is not overridden in the 
 transformation catalog.
 
-. By setting the profile key "collapser" to "mpiexec" in the transformation
-catalog:
+. By setting the profile key "job.aggregator" in the transformation catalog:
 +
 ----
 tr B { 
@@ -378,7 +377,7 @@ tr B {
         os "linux"
         type "INSTALLED"
         profile pegasus "clusters.size" "3"
-        profile pegasus "collapser" "mpiexec"
+        profile pegasus "job.aggregator" "mpiexec"
     }
 }
 ----
