@@ -2,12 +2,12 @@
 .\"     Title: pegasus-mpi-cluster
 .\"    Author: [see the "Author" section]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 10/08/2012
+.\"      Date: 10/15/2012
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "PEGASUS\-MPI\-CLUSTE" "1" "10/08/2012" "\ \&" "\ \&"
+.TH "PEGASUS\-MPI\-CLUSTE" "1" "10/15/2012" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -45,6 +45,8 @@ An \fBpegasus\-mpi\-cluster\fR job consists of a single master process (this pro
 \fBpegasus\-mpi\-cluster\fR applications are expressed as DAGs (Directed Acyclic Graphs) (see \fBDAG FILES\fR)\&. Each node in the graph represents a task, and the edges represent dependencies between the tasks that constrain the order in which the tasks are executed\&. Each task is a program and a set of parameters that need to be run (i\&.e\&. a command and some optional arguments)\&. The dependencies typically represent data flow dependencies in the application, where the output files produced by one task are needed as inputs for another\&.
 .sp
 If an error occurs while executing a DAG that causes the workflow to stop, it can be restarted using a rescue file, which records the progress of the workflow (see \fBRESCUE FILES\fR)\&. This enables \fBpegasus\-mpi\-cluster\fR to pick up running the workflow where it stopped\&.
+.sp
+\fBpegasus\-mpi\-cluster\fR was designed to work either as a standalone tool or as a complement to the Pegasus Workflow Managment System (WMS)\&. For more information about using PMC with Pegasus see the section on \fBPMC AND PEGASUS\fR\&.
 .sp
 \fBpegasus\-mpi\-cluster\fR allows applications expressed as a DAG to be executed in parallel on a large number of compute nodes\&. It is designed to be simple, lightweight and robust\&.
 .SH "OPTIONS"
@@ -216,7 +218,7 @@ The format of a \fBTASK\fR record is:
 .RS 4
 .\}
 .nf
-\fBTASK\fR \fIid\fR [\fIoptions\&...\fR] \fIexecutable\fR [\fIarguments\&...\fR]
+"TASK" id [options\&.\&.\&.] executable [arguments\&.\&.\&.]
 .fi
 .if n \{\
 .RE
@@ -228,7 +230,7 @@ Where \fIid\fR is the ID of the task, \fIoptions\fR is a list of task options, \
 .RS 4
 .\}
 .nf
-    TASK t01 \-m 10 \-c 2 /bin/program \-a \-b
+TASK t01 \-m 10 \-c 2 /bin/program \-a \-b
 .fi
 .if n \{\
 .RE
@@ -291,7 +293,7 @@ The format of an \fBEDGE\fR record is:
 .RS 4
 .\}
 .nf
-\fBEDGE\fR \fIparent\fR \fIchild\fR
+"EDGE" parent child
 .fi
 .if n \{\
 .RE
@@ -303,7 +305,7 @@ Where \fIparent\fR is the ID of the parent task, and \fIchild\fR is the ID of th
 .RS 4
 .\}
 .nf
-    EDGE t01 t02
+EDGE t01 t02
 .fi
 .if n \{\
 .RE
@@ -315,16 +317,16 @@ A simple diamond\-shaped workflow would look like this:
 .RS 4
 .\}
 .nf
-    # diamond\&.dag
-    TASK A /bin/echo "I am A"
-    TASK B /bin/echo "I am B"
-    TASK C /bin/echo "I am C"
-    TASK D /bin/echo "I am D"
+# diamond\&.dag
+TASK A /bin/echo "I am A"
+TASK B /bin/echo "I am B"
+TASK C /bin/echo "I am C"
+TASK D /bin/echo "I am D"
 
-    EDGE A B
-    EDGE A C
-    EDGE B D
-    EDGE C D
+EDGE A B
+EDGE A C
+EDGE B D
+EDGE C D
 .fi
 .if n \{\
 .RE
@@ -341,7 +343,7 @@ The rescue file contains zero or more DONE records\&. The format of these record
 .RS 4
 .\}
 .nf
-\fBDONE\fR \fItaskid\fR
+"DONE" *taskid*
 .fi
 .if n \{\
 .RE
@@ -350,6 +352,191 @@ The rescue file contains zero or more DONE records\&. The format of these record
 Where \fItaskid\fR is the ID of the task that finished successfully\&.
 .sp
 By default, rescue files are named \fIDAGNAME\&.rescue\fR where \fIDAGNAME\fR is the path to the input DAG file\&. The file name can be changed by specifying the \fB\-r\fR argument\&.
+.SH "PMC AND PEGASUS"
+.SS "Using PMC for Pegasus Task Clustering"
+.sp
+PMC can be used as the wrapper for executing clustered jobs in Pegasus\&. In this mode Pegasus groups several tasks together and submits them as a single clustered job to a remote system\&. PMC then executes the individual tasks in the cluster and returns the results\&.
+.sp
+PMC can be specified as the task manager for clustered jobs in Pegasus in three ways:
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 1.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  1." 4.2
+.\}
+Globally in the properties file
+.sp
+The user can set a property in the properties file that results in all the clustered jobs of the workflow being executed by PMC\&. In the Pegasus properties file specify:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+#PEGASUS PROPERTIES FILE
+pegasus\&.clusterer\&.job\&.aggregator=mpiexec
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+In the above example, all the clustered jobs on all remote sites will be launched via PMC as long as the property value is not overridden in the site catalog\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 2.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  2." 4.2
+.\}
+By setting the profile key "collapser" to "mpiexec" in the site catalog:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+<site handle="siteX" arch="x86" os="LINUX">
+    \&.\&.\&.
+    <profile namespace="pegasus" key="collapser">mpiexec</profile>
+</site>
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+In the above example, all the clustered jobs on a siteX are going to be executed via PMC as long as the value is not overridden in the transformation catalog\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 3.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  3." 4.2
+.\}
+By setting the profile key "collapser" to "mpiexec" in the transformation catalog:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+tr B {
+    site siteX {
+        pfn "/path/to/mytask"
+        arch "x86"
+        os "linux"
+        type "INSTALLED"
+        profile pegasus "clusters\&.size" "3"
+        profile pegasus "collapser" "mpiexec"
+    }
+}
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+In the above example, all the clustered jobs for transformation B on siteX will be executed via PMC\&.
+.RE
+.sp
+It is usually necessary to have a pegasus::mpiexec entry in your transformation catalog that specifies a) the path to PMC on the remote site and b) the relevant globus profiles such as xcount, host_xcount and maxwalltime to control size of the MPI job\&. That entry would look like this:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+tr pegasus::mpiexec {
+    site siteX {
+        pfn "/path/to/pegasus\-mpi\-cluster"
+        arch "x86"
+        os "linux"
+        type "INSTALLED"
+        profile globus "maxwalltime" "240"
+        profile globus "host_xcount" "1"
+        profile globus "xcount" "32"
+    }
+}
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+If this transformation catalog entry is not specified, Pegasus will attempt create a default path on the basis of the environment profile PEGASUS_HOME specified in the site catalog for the remote site\&.
+.sp
+PMC can be used with both horizontal and label\-based clustering in Pegasus, but we recommend using label\-based clustering so that entire sub\-graphs of a Pegasus DAX can be clustered into a single PMC job, instead of only a single level of the workflow\&.
+.SS "Pegasus Profiles for PMC"
+.sp
+There are several Pegasus profiles that map to PMC task options:
+.PP
+\fBpmc_request_memory\fR
+.RS 4
+This profile is used to set the \-\-request\-memory task option and is usually specified in the DAX or transformation catalog\&.
+.RE
+.PP
+\fBpmc_request_cpus\fR
+.RS 4
+This key is used to set the \-\-request\-cpus task option and is usually specified in the DAX or transformation catalog\&.
+.RE
+.PP
+\fBpmc_priority\fR
+.RS 4
+This key is used to set the \-\-priority task option and is usually specified in the DAX\&.
+.RE
+.sp
+These profiles are used by Pegasus when generating PMC\(cqs input DAG when PMC is used as the task manager for clustered jobs in Pegasus\&.
+.sp
+The profiles can be specified in the DAX like this:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+<job id="ID0000001" name="mytask">
+    <arguments>\-a 1 \-b 2 \-c 3</arguments>
+    \&.\&.\&.
+    <profile namespace="pegasus" key="pmc_request_memory">1024</profile>
+    <profile namespace="pegasus" key="pmc_request_cpus">4</profile>
+    <profile namespace="pegasus" key="pmc_priority">10</profile>
+</job>
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+This example specifies a PMC task that requires 1GB of memory and 4 cores, and has a priority of 10\&. It produces a task in the PMC DAG that looks like this:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+TASK mytask_ID00000001 \-m 1024 \-c 4 \-p 10 /path/to/mytask \-a 1 \-b 2 \-c 3
+.fi
+.if n \{\
+.RE
+.\}
+.SS "Using PMC for the Entire Pegasus DAX"
+.sp
+Pegasus can also be configured to run the entire workflow as a single PMC job\&. In this mode Pegasus will generate a single PMC DAG for the entire workflow as well as a PBS script that can be used to submit the workflow\&.
+.sp
+In contrast to using PMC as a task clustering tool, in this mode there are no jobs in the workflow executed without PMC\&. The entire workflow, including auxilliary jobs such as directory creation and file transfers, is managed by PMC\&. If Pegasus is configured in this mode, then DAGMan and Condor are not required\&.
+.sp
+To run in PMC\-only mode, set the property "pegasus\&.code\&.generator" to "PMC" in the Pegasus properties file:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+pegasus\&.code\&.generator=PMC
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+In order to submit the resulting PBS job you may need to make changes to the \&.pbs file generated by Pegasus to get it to work with your cluster\&. This mode is experimental and has not been used extensively\&.
 .SH "LOGGING"
 .sp
 By default, all logging messages are printed to stderr\&. If you turn up the logging using \fB\-v\fR then you may end up with a lot of stderr being forwarded from the workers to the master\&.

@@ -56,6 +56,11 @@ stop, it can be restarted using a rescue file, which records the
 progress of the workflow (see <<RESCUE_FILES,*RESCUE FILES*>>). This 
 enables *pegasus-mpi-cluster* to pick up running the workflow where it stopped.
 
+*pegasus-mpi-cluster* was designed to work either as a standalone tool or 
+as a complement to the Pegasus Workflow Managment System (WMS). For more 
+information about using PMC with Pegasus see the section on <<PMC_AND_PEGASUS,
+*PMC AND PEGASUS*>>.
+
 *pegasus-mpi-cluster* allows applications expressed as a DAG to be executed in 
 parallel on a large number of compute nodes. It is designed to be simple,
 lightweight and robust.
@@ -201,14 +206,14 @@ beginning with # (note that # can only appear at the beginning of a line,
 not in the middle).
 
 The format of a *TASK* record is:
-[verse]
-    *TASK* 'id' ['options...'] 'executable' ['arguments...']
-
+------------
+"TASK" id [options...] executable [arguments...]
+------------
 Where 'id' is the ID of the task, 'options' is a list of task options, 'executable' is 
 the path to the executable or script to run, and 'arguments...' is a space-separated 
 list of arguments to pass to the task. An example is:
 ------------
-    TASK t01 -m 10 -c 2 /bin/program -a -b
+TASK t01 -m 10 -c 2 /bin/program -a -b
 ------------
 This example specifies a task 't01' that requires 10 MB memory and 2 CPUs to run 
 '/bin/program' with the arguments '-a' and '-b'. The available task options are:
@@ -267,26 +272,26 @@ This example specifies a task 't01' that requires 10 MB memory and 2 CPUs to run
         (see <<IO_FORWARDING, *I/O FORWARDING*>>)
 
 The format of an *EDGE* record is:
-[verse]
-    *EDGE* 'parent' 'child'
-
+------------
+"EDGE" parent child
+------------
 Where 'parent' is the ID of the parent task, and 'child' is the ID of the
 child task. An example *EDGE* record is:
 ------------
-    EDGE t01 t02
+EDGE t01 t02
 ------------
 A simple diamond-shaped workflow would look like this:
 ------------
-    # diamond.dag
-    TASK A /bin/echo "I am A"
-    TASK B /bin/echo "I am B"
-    TASK C /bin/echo "I am C"
-    TASK D /bin/echo "I am D"
+# diamond.dag
+TASK A /bin/echo "I am A"
+TASK B /bin/echo "I am B"
+TASK C /bin/echo "I am C"
+TASK D /bin/echo "I am D"
 
-    EDGE A B
-    EDGE A C
-    EDGE B D
-    EDGE C D
+EDGE A B
+EDGE A C
+EDGE B D
+EDGE C D
 ------------
 
 
@@ -309,14 +314,162 @@ sort-of transaction log for the workflow.
 
 The rescue file contains zero or more DONE records. The format of these
 records is:
-[verse]
-    *DONE* 'taskid'
-
+------
+"DONE" *taskid*
+------
 Where 'taskid' is the ID of the task that finished successfully.
 
 By default, rescue files are named 'DAGNAME.rescue' where 'DAGNAME' is the
 path to the input DAG file. The file name can be changed by specifying the
 *-r* argument.
+
+
+[[PMC_AND_PEGASUS]]
+PMC and Pegasus
+---------------
+
+Using PMC for Pegasus Task Clustering
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+PMC can be used as the wrapper for executing clustered jobs in Pegasus. In
+this mode Pegasus groups several tasks together and submits them as a single
+clustered job to a remote system. PMC then executes the individual tasks in
+the cluster and returns the results.
+
+PMC can be specified as the task manager for clustered jobs in Pegasus in 
+three ways:
+
+. Globally in the properties file
++
+The user can set a property in the properties file that results in all 
+the clustered jobs of the workflow being executed by PMC. In the Pegasus
+properties file specify:
++
+----
+#PEGASUS PROPERTIES FILE
+pegasus.clusterer.job.aggregator=mpiexec
+----
++
+In the above example, all the clustered jobs on all remote sites will
+be launched via PMC as long as the property value is not overridden 
+in the site catalog.
+
+. By setting the profile key "collapser" to "mpiexec" in the site catalog:
++
+----
+<site handle="siteX" arch="x86" os="LINUX">
+    ...
+    <profile namespace="pegasus" key="collapser">mpiexec</profile>
+</site>
+----
++
+In the above example, all the clustered jobs on a siteX are going to
+be executed via PMC as long as the value is not overridden in the 
+transformation catalog.
+
+. By setting the profile key "collapser" to "mpiexec" in the transformation
+catalog:
++
+----
+tr B { 
+    site siteX {
+        pfn "/path/to/mytask"
+        arch "x86"
+        os "linux"
+        type "INSTALLED"
+        profile pegasus "clusters.size" "3"
+        profile pegasus "collapser" "mpiexec"
+    }
+}
+----
++
+In the above example, all the clustered jobs for transformation B on 
+siteX will be executed via PMC.
+
+It is usually necessary to have a pegasus::mpiexec entry in your 
+transformation catalog that specifies a) the path to PMC on the remote site 
+and b) the relevant globus profiles such as xcount, host_xcount and 
+maxwalltime to control size of the MPI job. That entry would look like 
+this:
+----
+tr pegasus::mpiexec { 
+    site siteX {
+        pfn "/path/to/pegasus-mpi-cluster"
+        arch "x86"
+        os "linux"
+        type "INSTALLED"
+        profile globus "maxwalltime" "240"
+        profile globus "host_xcount" "1"
+        profile globus "xcount" "32"
+    }
+}
+----
+If this transformation catalog entry is not specified, Pegasus will 
+attempt create a default path on the basis of the environment profile
+PEGASUS_HOME specified in the site catalog for the remote site.
+
+PMC can be used with both horizontal and label-based clustering in
+Pegasus, but we recommend using label-based clustering so that entire
+sub-graphs of a Pegasus DAX can be clustered into a single PMC job, 
+instead of only a single level of the workflow.
+
+Pegasus Profiles for PMC
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+There are several Pegasus profiles that map to PMC task options:
+
+*pmc_request_memory*::
+    This profile is used to set the --request-memory task option and is 
+    usually specified in the DAX or transformation catalog.
+*pmc_request_cpus*::
+    This key is used to set the --request-cpus task option and is usually
+    specified in the DAX or transformation catalog.
+*pmc_priority*::
+    This key is used to set the --priority task option and is usually
+    specified in the DAX.
+
+These profiles are used by Pegasus when generating PMC's input DAG when 
+PMC is used as the task manager for clustered jobs in Pegasus.
+
+The profiles can be specified in the DAX like this:
+----
+<job id="ID0000001" name="mytask">
+    <arguments>-a 1 -b 2 -c 3</arguments>
+    ...
+    <profile namespace="pegasus" key="pmc_request_memory">1024</profile>
+    <profile namespace="pegasus" key="pmc_request_cpus">4</profile>
+    <profile namespace="pegasus" key="pmc_priority">10</profile>
+</job>
+----
+This example specifies a PMC task that requires 1GB of memory and 4 cores,
+and has a priority of 10. It produces a task in the PMC DAG that looks like
+this:
+----
+TASK mytask_ID00000001 -m 1024 -c 4 -p 10 /path/to/mytask -a 1 -b 2 -c 3
+----
+
+Using PMC for the Entire Pegasus DAX
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Pegasus can also be configured to run the entire workflow as a single PMC 
+job. In this mode Pegasus will generate a single PMC DAG for the entire 
+workflow as well as a PBS script that can be used to submit the workflow.
+
+In contrast to using PMC as a task clustering tool, in this mode there
+are no jobs in the workflow executed without PMC. The entire workflow,
+including auxilliary jobs such as directory creation and file transfers,
+is managed by PMC. If Pegasus is configured in this mode, then DAGMan
+and Condor are not required.
+
+To run in PMC-only mode, set the property "pegasus.code.generator" to "PMC"
+in the Pegasus properties file:
+----
+pegasus.code.generator=PMC
+----
+
+In order to submit the resulting PBS job you may need to make changes to 
+the .pbs file generated by Pegasus to get it to work with your cluster.
+This mode is experimental and has not been used extensively.
 
 
 [[LOGGING]]
@@ -469,21 +622,21 @@ worker process can inform it of the file descriptor for the pipe.
 
 For example, if there is a task "mytask" that needs to forward data to two
 files: "myfile.a" and "myfile.b", it would look like this:
-
-    TASK mytask -f A=/tmp/myfile.a -f B=/tmp/myfile.b /bin/mytask
-
+------
+TASK mytask -f A=/tmp/myfile.a -f B=/tmp/myfile.b /bin/mytask
+------
 When the /bin/mytask process starts it will have two variables in its
 environment: "A=3" and "B=4", for example. The value of these variables 
 is the file descriptor number of the corresponding files. In this case,
 if the task wants to write to "/tmp/myfile.a", it gets the value of 
 environment variable "A", and calls write() on that descriptor number.
 In C the code for that looks like this:
-
-    char *A = getenv("A");
-    int fd = atoi(A);
-    char *message = "Hello, World\n";
-    write(fd, message, strlen(message));
-
+------
+char *A = getenv("A");
+int fd = atoi(A);
+char *message = "Hello, World\n";
+write(fd, message, strlen(message));
+------
 In some programming languages it is not possible to write to a file
 descriptor directly. Fortran, for example, refers to files by unit
 number instead of using file descriptors. In these languages you 
@@ -510,9 +663,9 @@ File forwarding can be enabled by giving the *-F/--file-forward*
 argument to a task.
 
 Here's an example:
-
-    TASK mytask -F /tmp/foo.0=/scratch/foo /bin/mytask -o /tmp/foo.0
-
+------
+TASK mytask -F /tmp/foo.0=/scratch/foo /bin/mytask -o /tmp/foo.0
+------
 In this case, the worker process will expect to find the file /tmp/foo.0 
 when mytask exits successfully. It reads the data from that file and sends
 it to the master to be written to the end of /scratch/foo. After 
