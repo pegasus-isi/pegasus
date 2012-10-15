@@ -101,6 +101,11 @@ $(document).ready (function ()
 		} 
 	});
 	
+	$("#jobs_tabs").bind ("tabsselect", function (event, ui) 
+	{ 
+		window.location.hash = ui.tab.hash;
+	})
+			
 	chartOptions =  
 	{
 		chart: 

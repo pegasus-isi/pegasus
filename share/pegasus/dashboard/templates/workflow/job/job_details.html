@@ -38,6 +38,11 @@ $(document).ready (function ()
 		} 
 	});
 	
+	$("#invocations_tabs").bind ("tabsselect", function (event, ui) 
+	{ 
+		window.location.hash = ui.tab.hash;
+	})
+			
 	$('#job_text_info').dataTable (
 	{
 		"bJQueryUI" : true,
