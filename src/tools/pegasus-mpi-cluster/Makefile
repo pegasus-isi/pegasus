@@ -31,9 +31,11 @@ CXXFLAGS += -DSLEEP_IF_NO_REQUEST
 OS=$(shell uname -s)
 ifeq (Linux,$(OS))
   OPSYS = LINUX
+  SIGN = 
 endif
 ifeq (Darwin,$(OS))
   OPSYS = DARWIN
+  SIGN = codesign -s "Gideon Juve" $@
 endif
 ifndef OPSYS
   $(error Unsupported OS: $(OS))
@@ -76,6 +78,8 @@ install: $(PROGRAMS)
 endif
 
 pegasus-mpi-cluster: pegasus-mpi-cluster.o $(OBJS)
+	$(LD) $^ -o $@
+	$(SIGN)
 test-strlib: test-strlib.o $(OBJS)
 test-dag: test-dag.o $(OBJS)
 test-log: test-log.o $(OBJS)
