@@ -172,10 +172,8 @@ function test_fork_script {
 function test_hang_script {
     echo "This should take 60 seconds..."
     
-    START=$(date +%s)
     OUTPUT=$(mpiexec -np 2 $PMC -s test/sleep.dag -o /dev/null -e /dev/null --host-script test/hangscript.sh -v 2>&1)
     RC=$?
-    END=$(date +%s)
     
     if [ $RC -eq 0 ]; then
         echo "$OUTPUT"
@@ -186,15 +184,6 @@ function test_hang_script {
     if ! [[ "$OUTPUT" =~ "Host script timed out" ]]; then
         echo "$OUTPUT"
         echo "ERROR: Hang script test failed"
-        return 1
-    fi
-    
-    ELAPSED=$(expr $END - $START)
-    
-    if [ $ELAPSED -gt 65 ]; then
-        echo "$OUTPUT"
-        echo "Ran in $ELAPSED seconds"
-        echo "ERROR: Hang script test took too long"
         return 1
     fi
 }
@@ -343,10 +332,8 @@ Scheduling task N"
 
 # Make sure that PMC aborts if the workflow takes too long
 function test_max_wall_time {
-    START=$(date +%s)
     OUTPUT=$(mpiexec -np 3 $PMC -s test/walltime.dag --host-cpus 2 --max-wall-time 0.05 2>&1)
     RC=$?
-    END=$(date +%s)
     
     if [ $RC -eq 0 ]; then
         echo "$OUTPUT"
@@ -378,9 +365,8 @@ function test_max_wall_time {
         return 1
     fi
     
-    ELAPSED=$(expr $END - $START)
-    
-    if [ $ELAPSED -gt 10 ]; then
+    ELAPSED=$(echo "$OUTPUT" | grep "Wall time:" | cut -d" " -f3)
+    if [ $(echo "$ELAPSED > 4.0" | bc -q) -eq 1 ]; then
         echo "$OUTPUT"
         echo "Ran in $ELAPSED seconds"
         echo "ERROR: Max wall time test took too long"
