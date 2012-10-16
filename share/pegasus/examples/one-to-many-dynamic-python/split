@@ -2,6 +2,6 @@
 
 /usr/bin/split $*
 
-for x in output.txt.*; do
+for x in input.* ; do
     echo $x "file://"`pwd`/$x
 done
