@@ -33,12 +33,12 @@ if [ "x$GLOBUS_LOCATION" = "x" ]; then
 fi 
 
 # generate the input file
-if [ -e input.txt ]; then
-    rm input.txt
+if [ -e input ]; then
+    rm input
 fi
 
 for i in 1 2 3 4 5 6 7 8 9 10; do
-    echo "This is sample input Line" $i >>input.txt
+    echo "This is sample input Line" $i >>input
 done
 # generate the dax
 export PYTHONPATH=`pegasus-config --python`
