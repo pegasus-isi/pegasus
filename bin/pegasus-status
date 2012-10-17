@@ -21,380 +21,449 @@
 # Author: Jens-S. Vöckler voeckler at isi dot edu
 # Revision: $Revision$
 #
-use v5.8.8;			# unbroken unicode requires perl >= 5.8.8
-use strict; 
+use v5.8.8;    # unbroken unicode requires perl >= 5.8.8
+use strict;
 
 BEGIN {
-    # use very early - before loading most modules!
-    $main::isutf8 = ( exists $ENV{LANG} && $ENV{LANG} =~ m{utf-?8}i );
-    delete $ENV{LANG};
-    $ENV{LANG} = 'C';
+
+	# use very early - before loading most modules!
+	$main::isutf8 = ( exists $ENV{LANG} && $ENV{LANG} =~ m{utf-?8}i );
+	delete $ENV{LANG};
+	$ENV{LANG} = 'C';
 }
 
-use utf8; 			# tell Perl "this script contains UTF-8"
-use Carp; 
-use Cwd qw(getcwd abs_path); 
+use utf8;      # tell Perl "this script contains UTF-8"
+use Carp;
+use Cwd qw(getcwd abs_path);
 use File::Spec;
-use File::Basename qw(basename dirname); 
+use File::Basename qw(basename dirname);
 use Getopt::Long qw(:config bundling no_ignore_case);
-use Data::Dumper; 
+use Data::Dumper;
 
 # Path to load Pegasus Perl modules
-BEGIN { 
-    my $pegasus_config = File::Spec->catfile( dirname($0), 'pegasus-config' );
-    eval `$pegasus_config --perl-dump`;
-    die("Unable to eval pegasus-config output. $@") if $@;
+BEGIN {
+	my $pegasus_config = File::Spec->catfile( dirname($0), 'pegasus-config' );
+	eval `$pegasus_config --perl-dump`;
+	die("Unable to eval pegasus-config output. $@") if $@;
 }
 use Pegasus::Common;
-use Pegasus::Properties qw(%initial); # parses -Dprop=val from @ARGV
+use Pegasus::Properties qw(%initial);    # parses -Dprop=val from @ARGV
 
 # set function TIOCGWINSZ to return ioctl() argument
-if ( $^O eq 'darwin' ) { 
-    # h2ph is broken on Darwin
-    *TIOCGWINSZ = sub { 0x40087468; };
-} elsif ( $^O eq 'linux' ) {
-    # not broken, but may not be installed
-    *TIOCGWINSZ = sub { 0x5413; };
-} elsif ( lc $^O eq 'sunos' ) {
-    # may be easier than getting the headers right
-    *TIOCGWINSZ = sub { 0x5468; }; 
-} else {
-    # Neither linux nor macosx
-    eval { require "sys/ioctl.ph" }; 
+if ( $^O eq 'darwin' ) {
+
+	# h2ph is broken on Darwin
+	*TIOCGWINSZ = sub { 0x40087468; };
+}
+elsif ( $^O eq 'linux' ) {
+
+	# not broken, but may not be installed
+	*TIOCGWINSZ = sub { 0x5413; };
+}
+elsif ( lc $^O eq 'sunos' ) {
+
+	# may be easier than getting the headers right
+	*TIOCGWINSZ = sub { 0x5468; };
+}
+else {
+
+	# Neither linux nor macosx
+	eval { require "sys/ioctl.ph" };
 }
 
 #
 # --- globals ----------------------------------------------
 #
-$main::debug = 0;		# debug output
-$main::color = 0; 		# default: no color (black bg terminal)
+$main::debug = 0;    # debug output
+$main::color = 0;    # default: no color (black bg terminal)
 $main::user = $ENV{USER} || $ENV{LOGNAME} || scalar getpwuid($>);
-$_ = '$Revision$';     # don't edit, automatically updated by CVS
-$main::revision=$1 if /Revision:\s+([0-9.]+)/o;
-$main::onatty = -t STDOUT; 	# are we connected to a terminal?
-$main::dirsep = File::Spec->catdir( '', '' ); 
-$main::space = '  ';		# 2 spaces in basic mode
-@main::clong = 			# Condor job states (basic mode)
-    ( 'Unsub'			# U
-    , 'Idle'			# I
-    , 'Run'			# R
-    , 'Del'			# X
-    , 'Done'			# C
-    , 'Held'			# H
-    ); 
-@main::cstat = qw(U I R X C H);	# Condor job states (expert mode)
-@main::ccolor = 
-    ( "\033[0;37m"		# unsubmitted (gray)
-    , "\033[0;34m"		# idle (blue)
-    , "\033[0;32m"		# running (green)
-    , "\033[0;35m"		# removing (magenta)
-    , "\033[0;36m"		# completed (cyan)
-    , "\033[0;31m"		# held (red)
-    );
-$main::bold  = "\033[1m";	# start real xterm as "xterm -bdc"
-$main::reset = "\033[0m";	# reset all color/bold/etc.
-%main::ccolor = map { $main::cstat[$_] => $main::ccolor[$_] } 
-	0 .. $#main::cstat;
-@main::dstat = qw(? I R S F);	# Workflow states
-@main::dlong = 
-    ( 'Unknown'
-    , 'Unknown'			# actually indeterminable 
-    , 'Running'
-    , 'Success'
-    , 'Failure'
-    ); 
-@main::dcolor =
-    ( "\033[0;37m"		# unknown (gray)
-    , "\033[0;36m"		# indeterminable (cyan)
-    , "\033[0;34m"		# running (blue)
-    , "\033[0;30m"		# success (black)
-    , "\033[0;31m"		# failure (red)
-    );
-%main::gstat = 			# Globus job states (expert mode)
-    (   0 => '?'		# unknown
-    ,   1 => 'P'                # pending
-    ,   2 => 'A'                # active
-    ,   4 => 'F'                # failed 
-    ,   8 => 'D'                # done
-    ,  16 => 'S'                # suspend
-    ,  32 => 'U'                # unsuspend
-    ,  64 => 'I'                # stage-in
-    , 128 => 'O'                # stage-out
-    );
-@main::jobclass = 
-    ( 'unknown'			# 0
-    , 'compute'			# 1
-    , 'stage-in'		# 2
-    , 'stage-out'		# 3
-    , 'register'		# 4
-    , 'xsite-xfer'		# 5
-    , 'createdir'		# 6
-    , 's-compute'		# 7 -- deprecated
-    , 'clean-up'		# 8
-    , 'chmod'			# 9
-    , 'subdax'			# 10
-    , 'subdag'			# 11
-    );
-@main::jobclass_desc = 
-    ( 'unknown (do not use)'
-    , 'regular computation job'
-    , 'auxilliary stage-in transfer job'
-    , 'auxilliary stage-out transfer job'
-    , 'auxilliary replica registration job'
-    , 'auxilliary inter-site transfer job'
-    , 'auxilliary createdir job'
-    , 'remote compute job (do not use)'
-    , 'auxilliary clean-up job'
-    , 'auxilliary chmod job'
-    , 'unplanned DAX sub-workflow job'
-    , 'planned DAG sub-workflow job'
-    );
-@main::jobshort =		# short job class (job type)
-    (   '-', 'job',  'si',  'so'
-    ,  'rr', 'isx',  'cd', 'stc'
-    , 'clu', 'chm', 'dax', 'dag' ); 
-$main::time = $^T;		# initialization only 
-%main::dagman_p =		# predicate to determine variations on DAGMan
-    map { $_ => 1 } qw(pegasus-dagman condor_dagman); 
-%main::width = 			# width selection (0=unlimited)
-    ( dagnodename => 30		# width of concrete dag node identifiers
-    , pegasus_wf_name => 24	# width of abstract workflow identifiers
-    , cmd => 20			# width of executable that is actually run
-    );
-$main::cache = undef;		# debug 
-my ($rows,$cols) = &initialize_winch;
+$_ = '$Revision$';    # don't edit, automatically updated by CVS
+$main::revision = $1 if /Revision:\s+([0-9.]+)/o;
+$main::onatty = -t STDOUT;                     # are we connected to a terminal?
+$main::dirsep = File::Spec->catdir( '', '' );
+$main::space  = '  ';                          # 2 spaces in basic mode
+@main::clong  =                                # Condor job states (basic mode)
+  (
+	'Unsub'                                    # U
+	, 'Idle'                                   # I
+	, 'Run'                                    # R
+	, 'Del'                                    # X
+	, 'Done'                                   # C
+	, 'Held'                                   # H
+  );
+@main::cstat  = qw(U I R X C H);               # Condor job states (expert mode)
+@main::ccolor = (
+	"\033[0;37m"                               # unsubmitted (gray)
+	, "\033[0;34m"                             # idle (blue)
+	, "\033[0;32m"                             # running (green)
+	, "\033[0;35m"                             # removing (magenta)
+	, "\033[0;36m"                             # completed (cyan)
+	, "\033[0;31m"                             # held (red)
+);
+$main::bold   = "\033[1m";    # start real xterm as "xterm -bdc"
+$main::reset  = "\033[0m";    # reset all color/bold/etc.
+%main::ccolor =
+  map { $main::cstat[$_] => $main::ccolor[$_] } 0 .. $#main::cstat;
+@main::dstat = qw(? I R S F);    # Workflow states
+@main::dlong = (
+	'Unknown', 'Unknown'         # actually indeterminable
+	, 'Running'
+	, 'Success'
+	, 'Failure'
+);
+@main::dcolor = (
+	"\033[0;37m"                 # unknown (gray)
+	, "\033[0;36m"               # indeterminable (cyan)
+	, "\033[0;34m"               # running (blue)
+	, "\033[0;30m"               # success (black)
+	, "\033[0;31m"               # failure (red)
+);
+%main::gstat =                   # Globus job states (expert mode)
+  (
+	0 => '?'                     # unknown
+	, 1   => 'P'                 # pending
+	, 2   => 'A'                 # active
+	, 4   => 'F'                 # failed
+	, 8   => 'D'                 # done
+	, 16  => 'S'                 # suspend
+	, 32  => 'U'                 # unsuspend
+	, 64  => 'I'                 # stage-in
+	, 128 => 'O'                 # stage-out
+  );
+@main::jobclass = (
+	'unknown'                    # 0
+	, 'compute'                  # 1
+	, 'stage-in'                 # 2
+	, 'stage-out'                # 3
+	, 'register'                 # 4
+	, 'xsite-xfer'               # 5
+	, 'createdir'                # 6
+	, 's-compute'                # 7 -- deprecated
+	, 'clean-up'                 # 8
+	, 'chmod'                    # 9
+	, 'subdax'                   # 10
+	, 'subdag'                   # 11
+);
+@main::jobclass_desc = (
+	'unknown (do not use)',
+	'regular computation job',
+	'auxilliary stage-in transfer job',
+	'auxilliary stage-out transfer job',
+	'auxilliary replica registration job',
+	'auxilliary inter-site transfer job',
+	'auxilliary createdir job',
+	'remote compute job (do not use)',
+	'auxilliary clean-up job',
+	'auxilliary chmod job',
+	'unplanned DAX sub-workflow job',
+	'planned DAG sub-workflow job'
+);
+@main::jobshort =    # short job class (job type)
+  (
+	'-',  'job', 'si',  'so',  'rr',  'isx',
+	'cd', 'stc', 'clu', 'chm', 'dax', 'dag'
+  );
+$main::time     = $^T;    # initialization only
+%main::dagman_p =         # predicate to determine variations on DAGMan
+  map { $_ => 1 } qw(pegasus-dagman condor_dagman);
+%main::width =            # width selection (0=unlimited)
+  (
+	dagnodename => 30     # width of concrete dag node identifiers
+	, pegasus_wf_name => 24    # width of abstract workflow identifiers
+	, cmd             => 20    # width of executable that is actually run
+  );
+$main::cache = undef;          # debug
+my ( $rows, $cols ) = &initialize_winch;
 
-# %qtitle describes any head we would want to show, 
+# %qtitle describes any head we would want to show,
 # indexed by a short internal key:
 # {header} is what to put into the title of the output
 # {function} is an fptr, being called with current row (q) job classads
 # {minwidth} is an minimal width, with negative width meaning left adjustment
 # {legend} is what to display for this column in the legend
 #
-my %qtitle =
-    ( 'STAT' => { header => 'STAT'
-		, function => \&x_jobstatus
-		, minwidth => -4
-		, legend => 'Condor job status'
-		},
-      'S' => { header => 'S'
-	     , function => \&x_cstat
-	     , minwidth => 1
-	     , legend => 'Condor job status'
-	     },
-      'IN_STATE' => { header => 'IN_STATE'
-		    , function => \&x_in_state
-		    , minwidth => 8
-		    , legend => 'Time job spent in current Condor status'
-                    },
-      'JPRIO' => { header => 'PRI'
-		 , minwidth => 3
-		 , function => \&x_jobpriority
-		 , legend => 'Condor job priority'
-	         },
-      'PJC' => { header => 'CLASS'
-	       , minwidth => -5
-	       , function => \&x_pegasus_jobtype
-	       , legend => 'Pegasus job type'
-	       },
-      'PJCN' => { header => 'C'
-	        , minwidth => 1
-	        , function => \&x_pegasus_jobtypenum
-	        , legend => 'Pegasus job type'
-	       },
-      'PJCS' => { header => 'PJC'
-	        , minwidth => -3
-	        , function => \&x_pegasus_jobtypeshort
-	        , legend => 'Pegasus job type'
-	       },
-      'JOB1' => { header => 'JOB'
-	        , minwidth => -50
-	        , function => \&x_job1
-		, legend => 'Workflow- or DAG-Node ID'
-                },
-      'JOB2' => { header => 'JOB'
-	        , minwidth => -32
-	        , function => \&x_job2
-		, legend => 'DAG-Node ID, command, and workflow-ID'
-                },
-      'CONDORID' => { header => 'ID'
-		    , minwidth => 2
-		    , function => \&x_condorid
-		    , legend => 'Condor cluster ID'
-		    },
-      'SITE' => { header => 'SITE'
-		, minwidth => -5
-		, function => \&x_site
-		, legend => 'Job site'
-                },
-      'C/G' => { header => 'C/G'
-	       , function => \&x_cgstatus
-	       , minwidth => 3
-	       , legend => 'Condor- and Globus job status'
-	       }
-    );
+my %qtitle = (
+	'STAT' => {
+		header   => 'STAT',
+		function => \&x_jobstatus,
+		minwidth => -4,
+		legend   => 'Condor job status'
+	},
+	'S' => {
+		header   => 'S',
+		function => \&x_cstat,
+		minwidth => 1,
+		legend   => 'Condor job status'
+	},
+	'IN_STATE' => {
+		header   => 'IN_STATE',
+		function => \&x_in_state,
+		minwidth => 8,
+		legend   => 'Time job spent in current Condor status'
+	},
+	'JPRIO' => {
+		header   => 'PRI',
+		minwidth => 3,
+		function => \&x_jobpriority,
+		legend   => 'Condor job priority'
+	},
+	'PJC' => {
+		header   => 'CLASS',
+		minwidth => -5,
+		function => \&x_pegasus_jobtype,
+		legend   => 'Pegasus job type'
+	},
+	'PJCN' => {
+		header   => 'C',
+		minwidth => 1,
+		function => \&x_pegasus_jobtypenum,
+		legend   => 'Pegasus job type'
+	},
+	'PJCS' => {
+		header   => 'PJC',
+		minwidth => -3,
+		function => \&x_pegasus_jobtypeshort,
+		legend   => 'Pegasus job type'
+	},
+	'JOB1' => {
+		header   => 'JOB',
+		minwidth => -50,
+		function => \&x_job1,
+		legend   => 'Workflow- or DAG-Node ID'
+	},
+	'JOB2' => {
+		header   => 'JOB',
+		minwidth => -32,
+		function => \&x_job2,
+		legend   => 'DAG-Node ID, command, and workflow-ID'
+	},
+	'CONDORID' => {
+		header   => 'ID',
+		minwidth => 2,
+		function => \&x_condorid,
+		legend   => 'Condor cluster ID'
+	},
+	'SITE' => {
+		header   => 'SITE',
+		minwidth => -5,
+		function => \&x_site,
+		legend   => 'Job site'
+	},
+	'C/G' => {
+		header   => 'C/G',
+		function => \&x_cgstatus,
+		minwidth => 3,
+		legend   => 'Condor- and Globus job status'
+	}
+);
 
 # @main::qtitle is an array of default outputs, indexed by 'expert
 # level'. Each entry is a key into %qtitle. (Eventually, this can
 # be overwritten by a CLI option for your own mix-n-match (TBD).)
-@main::qtitle = 
-    ( 
-       # first level is the novice state, leave out distractive information
-       [qw(STAT IN_STATE JOB1) ],
+@main::qtitle = (
 
-       # some more complex information in first expert level 
-       [qw(CONDORID S IN_STATE JPRIO JOB2) ],
+	# first level is the novice state, leave out distractive information
+	[qw(STAT IN_STATE JOB1)],
 
-       # even more complex information in next expert level 
-       [qw(CONDORID C/G IN_STATE JPRIO PJCS SITE JOB2) ]
-    );
+	# some more complex information in first expert level
+	[qw(CONDORID S IN_STATE JPRIO JOB2)],
 
+	# even more complex information in next expert level
+	[qw(CONDORID C/G IN_STATE JPRIO PJCS SITE JOB2)]
+);
 
-# %dtitle describes any head we would want to show, 
+# %dtitle describes any head we would want to show,
 # indexed by a short internal key:
 # {header} is what to put into the title of the output
 # {function} is an fptr, being called with current row (dag) workflow entry
 # {minwidth} is an minimal width, with negative width meaning left adjustment
 # {legend} is what to display for this column in the legend
 #
-my %dtitle =
-    ( 'DONE' => { header => 'DONE'
-		, function => \&y_dag_done
-		, minwidth => 5
-		, legend => 'Job completed with success'
-	        },
-      'PRE' => { header => 'PRE',
-	       , function => \&y_dag_pre
-	       , minwidth => 5
-	       , legend => 'PRE-Scripts running'
-	       },
-      'QUEUED' => { header => 'IN_Q',
-		  , function => \&y_dag_queued
-		  , minwidth => 5
-		  , legend => 'Submitted jobs'
-	          },
-      'POST' => { header => 'POST',
-	        , function => \&y_dag_post
-	        , minwidth => 5
-	        , legend => 'POST-Scripts running'
-	        },
-      'READY' => { header => 'READY',
-	         , function => \&y_dag_ready
-	         , minwidth => 5
-	         , legend => 'Jobs ready for submission'
-	         },
-      'UNREADY' => { header => 'UNRDY',
-		   , function => \&y_dag_unready
-		   , minwidth => 5
-		   , legend => 'Jobs blocked by dependencies'
-	           },
-      'FAILED' => { header => 'FAIL',
-		  , function => \&y_dag_failed
-		  , minwidth => 5
-		  , legend => 'Jobs completed with failure'
-		  },
-      'TOTAL' => { header => 'TOTAL'
-		 , function => \&y_dag_total
-		 , minwidth => 5
-		 , legend => 'Jobs in workflow'
-	         },
-      'S_DONE' => { header => 'SUCCESS'
-		, function => \&y_dag_done
-		, minwidth => 7
-		, legend => 'Job completed with success'
-	        },
-      'S_PRE' => { header => 'PRE',
-	       , function => \&y_dag_pre
-	       , minwidth => 7
-	       , legend => 'PRE-Scripts running'
-	       },
-      'S_QUEUED' => { header => 'QUEUED',
-		  , function => \&y_dag_queued
-		  , minwidth => 7
-		  , legend => 'Submitted jobs'
-	          },
-      'S_POST' => { header => 'POST',
-	        , function => \&y_dag_post
-	        , minwidth => 7
-	        , legend => 'POST-Scripts running'
-	        },
-      'S_READY' => { header => 'READY',
-	         , function => \&y_dag_ready
-	         , minwidth => 7
-	         , legend => 'Jobs ready for submission'
-	         },
-      'S_UNREADY' => { header => 'UNREADY',
-		   , function => \&y_dag_unready
-		   , minwidth => 7
-		   , legend => 'Jobs blocked by dependencies'
-	           },
-      'S_FAILED' => { header => 'FAILURE',
-		  , function => \&y_dag_failed
-		  , minwidth => 7
-		  , legend => 'Jobs completed with failure'
-		  },
-      'S_TOTAL' => { header => 'TOTAL'
-		 , function => \&y_dag_total
-		 , minwidth => 7
-		 , legend => 'Total of jobs'
-	         },
-      'S' => { header => 'S'
-	     , function => \&y_dstat
-	     , minwidth => 1
-	     , legend => 'Workflow state'
-	     },
-      'DOFT' => { header => 'D/T'
-		, function => \&y_done_total
-		, minwidth => 3
-		, legend => 'Jobs done of total'
-                },
-      'PERCENT' => { header => '%DONE'
-		   , function => \&y_percent
-		   , minwidth => 5
-		   , legend => 'Success percentage'
-		   },
-      'STATE' => { header => 'STATE'
-		 , function => \&y_dlong
-		 , minwidth => -7
-		 , legend => 'Workflow state'
-		 },
-      'EC' => { header => 'EC'
-	      , function => \&y_status
-	      , minwidth => 1
-	      , legend => 'Workflow exit status'
-	      },
-      'WORKFLOW' => { header => 'DAGNAME'
-		    , function => \&y_name
-		    , minwidth => -40
-		    , legend => 'Name of workflow'
-		    }
-      );
+my %dtitle = (
+	'DONE' => {
+		header   => 'DONE',
+		function => \&y_dag_done,
+		minwidth => 5,
+		legend   => 'Job completed with success'
+	},
+	'PRE' => {
+		header => 'PRE',
+		,
+		function => \&y_dag_pre,
+		minwidth => 5,
+		legend   => 'PRE-Scripts running'
+	},
+	'QUEUED' => {
+		header => 'IN_Q',
+		,
+		function => \&y_dag_queued,
+		minwidth => 5,
+		legend   => 'Submitted jobs'
+	},
+	'POST' => {
+		header => 'POST',
+		,
+		function => \&y_dag_post,
+		minwidth => 5,
+		legend   => 'POST-Scripts running'
+	},
+	'READY' => {
+		header => 'READY',
+		,
+		function => \&y_dag_ready,
+		minwidth => 5,
+		legend   => 'Jobs ready for submission'
+	},
+	'UNREADY' => {
+		header => 'UNRDY',
+		,
+		function => \&y_dag_unready,
+		minwidth => 5,
+		legend   => 'Jobs blocked by dependencies'
+	},
+	'FAILED' => {
+		header => 'FAIL',
+		,
+		function => \&y_dag_failed,
+		minwidth => 5,
+		legend   => 'Jobs completed with failure'
+	},
+	'TOTAL' => {
+		header   => 'TOTAL',
+		function => \&y_dag_total,
+		minwidth => 5,
+		legend   => 'Jobs in workflow'
+	},
+	'S_DONE' => {
+		header   => 'SUCCESS',
+		function => \&y_dag_done,
+		minwidth => 7,
+		legend   => 'Job completed with success'
+	},
+	'S_PRE' => {
+		header => 'PRE',
+		,
+		function => \&y_dag_pre,
+		minwidth => 7,
+		legend   => 'PRE-Scripts running'
+	},
+	'S_QUEUED' => {
+		header => 'QUEUED',
+		,
+		function => \&y_dag_queued,
+		minwidth => 7,
+		legend   => 'Submitted jobs'
+	},
+	'S_POST' => {
+		header => 'POST',
+		,
+		function => \&y_dag_post,
+		minwidth => 7,
+		legend   => 'POST-Scripts running'
+	},
+	'S_READY' => {
+		header => 'READY',
+		,
+		function => \&y_dag_ready,
+		minwidth => 7,
+		legend   => 'Jobs ready for submission'
+	},
+	'S_UNREADY' => {
+		header => 'UNREADY',
+		,
+		function => \&y_dag_unready,
+		minwidth => 7,
+		legend   => 'Jobs blocked by dependencies'
+	},
+	'S_FAILED' => {
+		header => 'FAILURE',
+		,
+		function => \&y_dag_failed,
+		minwidth => 7,
+		legend   => 'Jobs completed with failure'
+	},
+	'S_TOTAL' => {
+		header   => 'TOTAL',
+		function => \&y_dag_total,
+		minwidth => 7,
+		legend   => 'Total of jobs'
+	},
+	'S' => {
+		header   => 'S',
+		function => \&y_dstat,
+		minwidth => 1,
+		legend   => 'Workflow state'
+	},
+	'DOFT' => {
+		header   => 'D/T',
+		function => \&y_done_total,
+		minwidth => 3,
+		legend   => 'Jobs done of total'
+	},
+	'PERCENT' => {
+		header   => '%DONE',
+		function => \&y_percent,
+		minwidth => 5,
+		legend   => 'Success percentage'
+	},
+	'STATE' => {
+		header   => 'STATE',
+		function => \&y_dlong,
+		minwidth => -7,
+		legend   => 'Workflow state'
+	},
+	'EC' => {
+		header   => 'EC',
+		function => \&y_status,
+		minwidth => 1,
+		legend   => 'Workflow exit status'
+	},
+	'WORKFLOW' => {
+		header   => 'DAGNAME',
+		function => \&y_name,
+		minwidth => -40,
+		legend   => 'Name of workflow'
+	}
+);
 
 # @main::dtitle is an array of default outputs, currently fixed. Each
 # entry is a key into %qtitle. (Eventually, this can be overwritten by a
 # CLI option for your own mix-n-match (TBD).)
-@main::dtitle = 
-    ( # summary mode
-      [ qw(S_UNREADY S_READY S_PRE S_QUEUED S_POST S_DONE S_FAILED PERCENT) ]
-      # show subdag mode
-    , [ qw(UNREADY READY PRE QUEUED POST DONE FAILED PERCENT STATE WORKFLOW) ],
-    );
+@main::dtitle = (    # summary mode
+	[qw(S_UNREADY S_READY S_PRE S_QUEUED S_POST S_DONE S_FAILED PERCENT)]
 
+	# show subdag mode
+	, [qw(UNREADY READY PRE QUEUED POST DONE FAILED PERCENT STATE WORKFLOW)],
+);
+
+# Added for PM-664
+my %disptitle = (
+	'u'    => 'UNREADY',
+	'r'    => 'READY',
+	'pre'  => 'PRE',
+	'post' => 'POST',
+	'q'    => 'QUEUED',
+	'd'    => 'DONE',
+	'c'    => 'PERCENT',
+	'f'    => 'FAILED',
+	's'    => 'STATE',
+	'w'    => 'WORKFLOW'
+);
 
 #
 # --- functions --------------------------------------------
 #
 sub usage(;$) {
-    my $msg = shift;
-    my $flag = defined $msg && lc($msg) ne 'help';
-    if ( $flag ) {
-	print $main::bold if $main::color;
-	print "ERROR: $msg\n";
-	print $main::reset if $main::color; 
-    }
+	my $msg = shift;
+	my $flag = defined $msg && lc($msg) ne 'help';
+	if ($flag) {
+		print $main::bold if $main::color;
+		print "ERROR: $msg\n";
+		print $main::reset if $main::color;
+	}
 
-    my $app = basename($0); 
-    print << "EOF";
+	my $app = basename($0);
+	print << "EOF";
 
 Usage: $app [options ] [dagdir]
  $app helps monitor a workflow by querying Condor and directories. 
@@ -422,1191 +491,1332 @@ Optional arguments affecting Condor Q output:
 Optional arguments affecting DAG output: 
  rundir           directory to monitor, default is CWD.
  -l|--long        Show all DAG states, including sub-DAGs, default only totals.
+ -D|--display     List of columns to display in output. Works only when -l option is enabled. 
+                  Valid values are 
+                  r => READY,
+                  u => UNREADY,
+                  pre,
+                  post,
+                  q => QUEUED,
+                  d => DONE,
+                  c => PERCENT,
+                  f => FAILED,
+                  s => STATE,
+                  w => DAGNAME
  -r|--rows        Show summary in rows, not columns. Mutually-exclusive wrt -l. 
  -S|--[no]success Omit 'Success' workflows from --long output, default show. 
 
 (*) denotes a multi-option, which may be given multiple times or comma lists. 
 
 EOF
-    exit ($flag ? 1 : 0); 
+	exit( $flag ? 1 : 0 );
 }
 
 sub myversion() {
-    my $version = version();
-    print "Pegasus $version, @{[basename($0)]} $main::revision\n"; 
-    exit 0; 
+	my $version = version();
+	print "Pegasus $version, @{[basename($0)]} $main::revision\n";
+	exit 0;
 }
 
 sub profile_start($) {
-    my $fn = shift; 
-    if ( CORE::open( $main::profile, ">$fn" ) ) {
-	profile_log('start');
-    }
+	my $fn = shift;
+	if ( CORE::open( $main::profile, ">$fn" ) ) {
+		profile_log('start');
+	}
 }
 
-sub profile_log { 
-    if ( defined $main::profile ) { 
-	printf { $main::profile } "%s\n", join(' ', isomsdate(), @_ );
-    }
+sub profile_log {
+	if ( defined $main::profile ) {
+		printf {$main::profile} "%s\n", join( ' ', isomsdate(), @_ );
+	}
 }
 
-sub profile_done { 
-    profile_log('final');
-    close $main::profile;
-    undef $main::profile;
+sub profile_done {
+	profile_log('final');
+	close $main::profile;
+	undef $main::profile;
 }
 
 END { profile_done if defined $main::profile }
 
-sub trim($) { 
-    # purpose: remove leading and trailing whitespace, quotes around
-    # paramtr: $s (IN): a string
-    # returns: possibly shortened string
-    #
-    my $s = shift;
-    $s =~ s/^\s+//;
-    $s =~ s/\s+$//;
-    $s = substr($s,1,-1) if substr($s,0,1) =~ /[""'']/;
-    $s; 
+sub trim($) {
+
+	# purpose: remove leading and trailing whitespace, quotes around
+	# paramtr: $s (IN): a string
+	# returns: possibly shortened string
+	#
+	my $s = shift;
+	$s =~ s/^\s+//;
+	$s =~ s/\s+$//;
+	$s = substr( $s, 1, -1 ) if substr( $s, 0, 1 ) =~ /[""'']/;
+	$s;
 }
 
 sub commas($) {
-    # purpose: put commas to separate engineering dimensions
-    # paramtr: $x (IN): numerical string
-    # returns: string with commas inserted as necessary
-    # warning: assumes english locale
-    #
-    my $text = reverse shift();
-    $text =~ s/(\d{3})(?=\d)(?!\d*\.)/$1,/g;
-    return scalar reverse $text;
+
+	# purpose: put commas to separate engineering dimensions
+	# paramtr: $x (IN): numerical string
+	# returns: string with commas inserted as necessary
+	# warning: assumes english locale
+	#
+	my $text = reverse shift();
+	$text =~ s/(\d{3})(?=\d)(?!\d*\.)/$1,/g;
+	return scalar reverse $text;
 }
 
 sub plural($$) {
-    # purpose: print number space item. Add plural-s if number != 1
-    # paramtr: $n (IN): count
-    #          $s (IN): item string
-    # returns: constructed string with proper plural
-    #
-    my $n = shift;
-    my $s = shift;
-    return "$n $s" if $n == 1;
 
-    my $last = substr($s,-1);
-    if ( $last eq 'y' ) {
-        commas($n) . ' ' . substr($s,0,-1) . 'ies';
-    } elsif ( $last eq 's' ) {
-	commas($n) . " ${s}es"; 
-    } else {
-        commas($n) . " ${s}s";
-    }
+	# purpose: print number space item. Add plural-s if number != 1
+	# paramtr: $n (IN): count
+	#          $s (IN): item string
+	# returns: constructed string with proper plural
+	#
+	my $n = shift;
+	my $s = shift;
+	return "$n $s" if $n == 1;
+
+	my $last = substr( $s, -1 );
+	if ( $last eq 'y' ) {
+		commas($n) . ' ' . substr( $s, 0, -1 ) . 'ies';
+	}
+	elsif ( $last eq 's' ) {
+		commas($n) . " ${s}es";
+	}
+	else {
+		commas($n) . " ${s}s";
+	}
 }
 
 sub initialize_winch {
-    # purpose: determine rows and columns of current window
-    # returns: ($rows,$cols)
-    # warning: Make sure that this function stays POSIX signal safe!
-    #
-    my $r = $ENV{LINES} || 25; 
-    my $c = $ENV{COLUMNS} || 80; 
 
-    if ( $main::onatty ) { 
-	my $ws = pack('S!4',()); 
-	if ( defined &TIOCGWINSZ && ioctl( STDOUT, &TIOCGWINSZ, $ws ) ) { 
-	    ($r,$c) = unpack("S!4",$ws);
+	# purpose: determine rows and columns of current window
+	# returns: ($rows,$cols)
+	# warning: Make sure that this function stays POSIX signal safe!
+	#
+	my $r = $ENV{LINES}   || 25;
+	my $c = $ENV{COLUMNS} || 80;
+
+	if ($main::onatty) {
+		my $ws = pack( 'S!4', () );
+		if ( defined &TIOCGWINSZ && ioctl( STDOUT, &TIOCGWINSZ, $ws ) ) {
+			( $r, $c ) = unpack( "S!4", $ws );
+		}
 	}
-    } else {
-	$r = $c = 1E10;	# virtually unlimited
-    }
+	else {
+		$r = $c = 1E10;    # virtually unlimited
+	}
 
-    ($r,$c); 
+	( $r, $c );
 }
 
 sub sigwinch {
-    # purpose: adjust global $rows and $cols when window size changes
-    # globals: $rows (OUT): new row count
-    #          $cols (OUT): new column count
-    # warning: Make sure that this function stays POSIX signal safe!
-    # warning: Make sure the handler is only installed for ttys!
-    #
-    my $ws = pack('S!4',()); 
-    if ( defined &TIOCGWINSZ && ioctl( STDOUT, &TIOCGWINSZ, $ws ) ) { 
-	($rows,$cols) = unpack("S!4",$ws);
-    }
+
+	# purpose: adjust global $rows and $cols when window size changes
+	# globals: $rows (OUT): new row count
+	#          $cols (OUT): new column count
+	# warning: Make sure that this function stays POSIX signal safe!
+	# warning: Make sure the handler is only installed for ttys!
+	#
+	my $ws = pack( 'S!4', () );
+	if ( defined &TIOCGWINSZ && ioctl( STDOUT, &TIOCGWINSZ, $ws ) ) {
+		( $rows, $cols ) = unpack( "S!4", $ws );
+	}
 }
 
 sub interval($) {
-    # purpose: convert a number of seconds into days, hours, mins, secs
-    # paramtr: $s (IN): total number of seconds
-    # returns: formatted string with or without days
-    #
-    use integer;
-    my $total = int( shift() );
-    my $s = $total % 60;
-    my $m = ($total % 3600) / 60; 
 
-    if ( $total < 3600 ) { 
-	# no days or hours
-	sprintf "%02d:%02d", $m, $s;
-    } elsif ( $total < 86400 ) { 
-	# no days, don't show days
-	sprintf "%02d:%02d:%02d", ($total / 3600), $m, $s;
-    } else {
-	my $h = ($total % 86400) / 3600;
-	my $d = $total / 86400; 
-	sprintf "%d+%02d:%02d:%02d", $d, $h, $m, $s;
-    }
+	# purpose: convert a number of seconds into days, hours, mins, secs
+	# paramtr: $s (IN): total number of seconds
+	# returns: formatted string with or without days
+	#
+	use integer;
+	my $total = int( shift() );
+	my $s     = $total % 60;
+	my $m     = ( $total % 3600 ) / 60;
+
+	if ( $total < 3600 ) {
+
+		# no days or hours
+		sprintf "%02d:%02d", $m, $s;
+	}
+	elsif ( $total < 86400 ) {
+
+		# no days, don't show days
+		sprintf "%02d:%02d:%02d", ( $total / 3600 ), $m, $s;
+	}
+	else {
+		my $h = ( $total % 86400 ) / 3600;
+		my $d = $total / 86400;
+		sprintf "%d+%02d:%02d:%02d", $d, $h, $m, $s;
+	}
 }
 
 sub fit($$) {
-    # purpose: fit a string into a given width, truncate start or end
-    # paramtr: $width (IN): maximum space
-    #          $s (IN): input string to format
-    # returns: formatted string
-    # 
-    my $width = shift; 
-    my $s = shift;
-    my $len = length($s); 
 
-    if ( $width != 0 && $len > abs($width) ) {
-	if ( $width < 0 ) {
-	    # fit from back
-	    '..' . substr($s,($len+$width)+2);
-	} else {
-	    # forward fit
-	    substr($s,0,$width-2) . '..';
+	# purpose: fit a string into a given width, truncate start or end
+	# paramtr: $width (IN): maximum space
+	#          $s (IN): input string to format
+	# returns: formatted string
+	#
+	my $width = shift;
+	my $s     = shift;
+	my $len   = length($s);
+
+	if ( $width != 0 && $len > abs($width) ) {
+		if ( $width < 0 ) {
+
+			# fit from back
+			'..' . substr( $s, ( $len + $width ) + 2 );
+		}
+		else {
+
+			# forward fit
+			substr( $s, 0, $width - 2 ) . '..';
+		}
 	}
-    } else {
-	$s;
-    }
+	else {
+		$s;
+	}
 }
 
 sub cfit($$) {
-    # purpose: fit a string into a given width, truncate center
-    # paramtr: $width (IN): maximum space
-    #          $s (IN): string to fit
-    # returns: fitted string
-    #
-    my $width = abs( shift() );
-    my $s = shift;
-    my $len = length($s); 
 
-    if ( $width == 0 || $len <= $width ) {
-	# string fits
-	$s;
-    } else {
-	use integer; 
-	my $diff = $len - $width + 2; 
-	substr( $s, 0, ($len-$diff)/2 ) . 
-	    '..' .
-	    substr( $s, ($len+$diff)/2 ); 
-    }
+	# purpose: fit a string into a given width, truncate center
+	# paramtr: $width (IN): maximum space
+	#          $s (IN): string to fit
+	# returns: fitted string
+	#
+	my $width = abs( shift() );
+	my $s     = shift;
+	my $len   = length($s);
+
+	if ( $width == 0 || $len <= $width ) {
+
+		# string fits
+		$s;
+	}
+	else {
+		use integer;
+		my $diff = $len - $width + 2;
+		substr( $s, 0, ( $len - $diff ) / 2 ) . '..'
+		  . substr( $s, ( $len + $diff ) / 2 );
+	}
 }
 
 sub headline($$$;$) {
-    # purpose: format header from 3 strings
-    # paramtr: $left (IN): what to put on left side
-    #          $center (IN): what to put into center
-    #          $right (IN): what to put on right side
-    #          $width (opt. IN): total width (typically terminal)
-    # globals: $cols (IN): terminal width default
-    # returns: formatted string
-    #
-    my $l = shift || '';
-    my $c = shift || '';
-    my $r = shift || '';
-    my $width = shift || $cols;
 
-    my $llen = length($l);
-    my $clen = length($c);
-    my $rlen = length($r); 
-    if ( $llen+$clen+$rlen > $width ) {
-	# FIXME: fit strings
-	$l . $c . $r;
-    } else {
-	# adjust strings
-	use integer; 
-	my $room = $width - $llen - $clen - $rlen; 
-	my $x = ' ' x ( $room / 2 ); 
+	# purpose: format header from 3 strings
+	# paramtr: $left (IN): what to put on left side
+	#          $center (IN): what to put into center
+	#          $right (IN): what to put on right side
+	#          $width (opt. IN): total width (typically terminal)
+	# globals: $cols (IN): terminal width default
+	# returns: formatted string
+	#
+	my $l     = shift || '';
+	my $c     = shift || '';
+	my $r     = shift || '';
+	my $width = shift || $cols;
 
-	if ( ( $room & 1 ) == 1 ) { 
-	    # odd 
-	    $l . $x . ' ' . $c . $x . $r;
-	} else {
-	    # even
-	    $l . $x . $c . $x . $r;
+	my $llen = length($l);
+	my $clen = length($c);
+	my $rlen = length($r);
+	if ( $llen + $clen + $rlen > $width ) {
+
+		# FIXME: fit strings
+		$l . $c . $r;
 	}
-    }
+	else {
+
+		# adjust strings
+		use integer;
+		my $room = $width - $llen - $clen - $rlen;
+		my $x    = ' ' x ( $room / 2 );
+
+		if ( ( $room & 1 ) == 1 ) {
+
+			# odd
+			$l . $x . ' ' . $c . $x . $r;
+		}
+		else {
+
+			# even
+			$l . $x . $c . $x . $r;
+		}
+	}
 }
 
 sub whittle_down(\%\@\@) {
-    # purpose: taken a full input set (Q or DAG), and reduce to only 
-    #          columns that we'll show
-    # paramtr: %title (IN): hash of all available title definitions
-    #          @title (IN): current set of columns to show
-    #          @input (IN): array of job classads or workflows
-    # returns: array of columns to show for the given input
-    #
-    my $avail = shift;		# %[qd]title
-    my $title = shift; 		# @[qd]title
-    my $input = shift;		# @q or @dags
-    my @result = (); 
 
-    foreach my $row ( @{$input} ) {
-	my @y = (); 		# all columns go into @y
-	foreach my $k ( @{$title} ) { 
-	    confess "FATAL: title \"$k\" does not exist" 
-		unless exists $avail->{$k}; 
-	    push( @y, &{$avail->{$k}->{function}}( $row ) );
+	# purpose: taken a full input set (Q or DAG), and reduce to only
+	#          columns that we'll show
+	# paramtr: %title (IN): hash of all available title definitions
+	#          @title (IN): current set of columns to show
+	#          @input (IN): array of job classads or workflows
+	# returns: array of columns to show for the given input
+	#
+	my $avail  = shift;    # %[qd]title
+	my $title  = shift;    # @[qd]title
+	my $input  = shift;    # @q or @dags
+	my @result = ();
+
+	foreach my $row ( @{$input} ) {
+		my @y = ();        # all columns go into @y
+		foreach my $k ( @{$title} ) {
+			confess "FATAL: title \"$k\" does not exist"
+			  unless exists $avail->{$k};
+			push( @y, &{ $avail->{$k}->{function} }($row) );
+		}
+		push( @result, [@y] );    # a row goes into @result
 	}
-	push( @result, [ @y ] ); # a row goes into @result
-    }
 
-    @result; 
+	@result;
 }
 
-sub signum($) { 
-    # purpose: sign (lat.: signum) function
-    # paramtr: $x (IN) number
-    # returns: -1 for negative $x, +1 for positive $x and 0 for $x==0
-    # warning: comparison with 0 should use |x| < epsilon for floats. 
-    #
-    my $x = shift; 
-    ( $x < 0 ? -1 : ( $x > 0 ? 1 : 0 ) );
+sub signum($) {
+
+	# purpose: sign (lat.: signum) function
+	# paramtr: $x (IN) number
+	# returns: -1 for negative $x, +1 for positive $x and 0 for $x==0
+	# warning: comparison with 0 should use |x| < epsilon for floats.
+	#
+	my $x = shift;
+	( $x < 0 ? -1 : ( $x > 0 ? 1 : 0 ) );
 }
 
 sub column_widths(\%\@\@) {
-    # purpose: compute width of output column from data requirements
-    # paramtr: %title (IN): minimum column width comes from this
-    #          @title (IN): currently selected set of columns
-    #          @input (IN): whittled down input rows (array of arrays)
-    # globals: $main::space (IN): current column spacing
-    #          $cols (IN): terminal width 
-    # returns: array of column widths. 
-    # warning: The last column is (attempted to) adjust to the screen width
-    #
-    my $avail = shift;
-    my $title = shift;
-    my $input = shift;
-    my @max = ();
-    my @sgn = (); 
 
-    # start with title minimum width, separating sign and magnitude
-    foreach my $k ( @{$title} ) { 
-	my $x = $avail->{$k}{minwidth};
-	push( @max, abs($x) );
-	push( @sgn, signum($x) ); 
-    }
+	# purpose: compute width of output column from data requirements
+	# paramtr: %title (IN): minimum column width comes from this
+	#          @title (IN): currently selected set of columns
+	#          @input (IN): whittled down input rows (array of arrays)
+	# globals: $main::space (IN): current column spacing
+	#          $cols (IN): terminal width
+	# returns: array of column widths.
+	# warning: The last column is (attempted to) adjust to the screen width
+	#
+	my $avail = shift;
+	my $title = shift;
+	my $input = shift;
+	my @max   = ();
+	my @sgn   = ();
 
-    # determine the width of each column, but no smaller than the title width
-    foreach my $row ( @{$input} ) {
-	for ( my $i=0; $i < @{$row}; ++$i ) { 
-	    my $len = length( $row->[$i] ); 
-	    $max[$i] = $len if $len > $max[$i]; 
+	# start with title minimum width, separating sign and magnitude
+	foreach my $k ( @{$title} ) {
+		my $x = $avail->{$k}{minwidth};
+		push( @max, abs($x) );
+		push( @sgn, signum($x) );
 	}
-    }
 
-    # fix last column to match maximum terminal width
-    my $s = 0; 
-    my $l = length( $main::space ); 
-    for ( my $i=0; $i < @max; ++$i ) {
-	$s += $max[$i] + $l; 
-    }
-    if ( $s > $cols ) {
-	$s -= $max[$#max];
-	$max[$#max] = $cols - $s;
-	$max[$#max] = 0 if $max[$#max] < 0; 
-    }
+	# determine the width of each column, but no smaller than the title width
+	foreach my $row ( @{$input} ) {
+		for ( my $i = 0 ; $i < @{$row} ; ++$i ) {
+			my $len = length( $row->[$i] );
+			$max[$i] = $len if $len > $max[$i];
+		}
+	}
 
-    # return results
-    map { $max[$_] * $sgn[$_] } 0 .. $#max;
+	# fix last column to match maximum terminal width
+	my $s = 0;
+	my $l = length($main::space);
+	for ( my $i = 0 ; $i < @max ; ++$i ) {
+		$s += $max[$i] + $l;
+	}
+	if ( $s > $cols ) {
+		$s -= $max[$#max];
+		$max[$#max] = $cols - $s;
+		$max[$#max] = 0 if $max[$#max] < 0;
+	}
+
+	# return results
+	map { $max[$_] * $sgn[$_] } 0 .. $#max;
 }
 
 sub create_legend(\%\@) {
-    # purpose: show the legend based on a title (both: Q and DAG)
-    # paramtr: %title (IN): hash of all available title defs
-    #          @title (IN): select titles
-    # globals: $cols (IN): current terminal width
-    #          $main::color (IN): whether to use ANSI colors
-    #          $main::bold (IN): turn on bold
-    #          $main::reset (IN): turn off bold 
-    # returns: scalar: string containing the legend
-    #          array: [0] string containing legend
-    #                 [1] rows required to show legend
-    #
-    my $avail = shift;		# %[qd]title ref
-    my $title = shift;		# @[qd]title ref
 
-    my $result = ''; 
-    my $cursor = 0; 
+	# purpose: show the legend based on a title (both: Q and DAG)
+	# paramtr: %title (IN): hash of all available title defs
+	#          @title (IN): select titles
+	# globals: $cols (IN): current terminal width
+	#          $main::color (IN): whether to use ANSI colors
+	#          $main::bold (IN): turn on bold
+	#          $main::reset (IN): turn off bold
+	# returns: scalar: string containing the legend
+	#          array: [0] string containing legend
+	#                 [1] rows required to show legend
+	#
+	my $avail = shift;    # %[qd]title ref
+	my $title = shift;    # @[qd]title ref
 
-    my $p = 0;
-    for ( my $i=0; $i<@{$title}; ++$i ) { 
-	my $k = $avail->{ $title->[$i] }{header};
-	my $v = $avail->{ $title->[$i] }{legend}; 
-	my $l = length($k) + length($v); 
-	my $s = '';
-	$s .= $main::bold if $main::color;
-	$s .= $k;
-	$s .= $main::reset if $main::color; 
-	$s .= ': ' . $v; 
-	if ( $p + $l + 2 > $cols ) { 
-	    $result .= "\n$s";
-	    ++$cursor;
-	    $p = $l + 2;
-	} else {
-	    $result .= ' ' if $i; 
-	    $result .= $s;
-	    $p += $l + 3; 
+	my $result = '';
+	my $cursor = 0;
+
+	my $p = 0;
+	for ( my $i = 0 ; $i < @{$title} ; ++$i ) {
+		my $k = $avail->{ $title->[$i] }{header};
+		my $v = $avail->{ $title->[$i] }{legend};
+		my $l = length($k) + length($v);
+		my $s = '';
+		$s .= $main::bold  if $main::color;
+		$s .= $k;
+		$s .= $main::reset if $main::color;
+		$s .= ': ' . $v;
+		if ( $p + $l + 2 > $cols ) {
+			$result .= "\n$s";
+			++$cursor;
+			$p = $l + 2;
+		}
+		else {
+			$result .= ' ' if $i;
+			$result .= $s;
+			$p += $l + 3;
+		}
 	}
-    }
-    $result .= "\n\n"; 
-    $cursor += 2; 
+	$result .= "\n\n";
+	$cursor += 2;
 
-    wantarray ? ( $result, $cursor ) : $result;
+	wantarray ? ( $result, $cursor ) : $result;
 }
 
 sub kickstart($) {
-    # purpose: remove kickstart arguments from commandline
-    # paramtr: job classad 'Arguments' value
-    # returns: remaining commandline, with kickstart removed
-    # warning: also applies 'basename' to all absolute filenames
-    #
-    my @arg = split /\s+/, shift(); # FIXME: deal with quoting properly!
-    my @result = ();
-    my $state = 0;
-    for ( my $i=0; $i<@arg; ++$i ) {
-	if ( $state == 0 ) {
-	    if ( substr($arg[$i],0,1) eq '-' ) {
-		my $opt = substr($arg[$i],1,1);
-		if ( index('ioelnNRBLTIwWSs',$opt) >= 0 ) {
-		    # skip argument
-		    ++$i;
-		} elsif ( index('HVX',$opt) >= 0 ) {
-		    # do nothing
-		} else {
-		    warn "Warning: Unknown kickstart argument $arg[$i]\n";
-		}
-	    } else {
-		# this better be the application that we are starting
-		$state = 1;
-		push( @result, basename($arg[$i]) );
-	    }
-	} else {
-	    # we can only apply basename to absolute filenames, because
-	    # those are the only element we can recognize as such. 
-	    if ( substr($arg[$i],0,1) eq $main::dirsep ) {
-		push( @result, basename($arg[$i]) );
-	    } else {
-		push( @result, $arg[$i] );
-	    }
-	}
-    }
 
-    wantarray ? @result : join( ' ', @result );
+	# purpose: remove kickstart arguments from commandline
+	# paramtr: job classad 'Arguments' value
+	# returns: remaining commandline, with kickstart removed
+	# warning: also applies 'basename' to all absolute filenames
+	#
+	my @arg    = split /\s+/, shift();    # FIXME: deal with quoting properly!
+	my @result = ();
+	my $state  = 0;
+	for ( my $i = 0 ; $i < @arg ; ++$i ) {
+		if ( $state == 0 ) {
+			if ( substr( $arg[$i], 0, 1 ) eq '-' ) {
+				my $opt = substr( $arg[$i], 1, 1 );
+				if ( index( 'ioelnNRBLTIwWSs', $opt ) >= 0 ) {
+
+					# skip argument
+					++$i;
+				}
+				elsif ( index( 'HVX', $opt ) >= 0 ) {
+
+					# do nothing
+				}
+				else {
+					warn "Warning: Unknown kickstart argument $arg[$i]\n";
+				}
+			}
+			else {
+
+				# this better be the application that we are starting
+				$state = 1;
+				push( @result, basename( $arg[$i] ) );
+			}
+		}
+		else {
+
+			# we can only apply basename to absolute filenames, because
+			# those are the only element we can recognize as such.
+			if ( substr( $arg[$i], 0, 1 ) eq $main::dirsep ) {
+				push( @result, basename( $arg[$i] ) );
+			}
+			else {
+				push( @result, $arg[$i] );
+			}
+		}
+	}
+
+	wantarray ? @result : join( ' ', @result );
 }
 
 sub seqexec(\%) {
-    # purpose: count number of jobs in seqexec input file
-    # paramtr: %r (IN): job class ad representation
-    # returns: number of seqexec sub-jobs
-    #
-    my $r = shift;
-    my $result = 0;
-    local(*S); 
 
-    my $fn = File::Spec->rel2abs( $r->{in}, $r->{iwd} );
-    profile_log( "open $fn" ) if defined $main::profile;
-    if ( open( S, "<$fn" ) ) {
-	my @ok = ();
-	while ( <S> ) {
-	    s/[ \r\n]+$//;
-	    s/\#.*//;
-	    next if length($_) < 3;
-	    push( @ok, $_ );
+	# purpose: count number of jobs in seqexec input file
+	# paramtr: %r (IN): job class ad representation
+	# returns: number of seqexec sub-jobs
+	#
+	my $r      = shift;
+	my $result = 0;
+	local (*S);
+
+	my $fn = File::Spec->rel2abs( $r->{in}, $r->{iwd} );
+	profile_log("open $fn") if defined $main::profile;
+	if ( open( S, "<$fn" ) ) {
+		my @ok = ();
+		while (<S>) {
+			s/[ \r\n]+$//;
+			s/\#.*//;
+			next if length($_) < 3;
+			push( @ok, $_ );
+		}
+		close S;
+		$result = @ok + 0;
 	}
-	close S;
-	$result = @ok+0;
-    } else {
-	warn "Warning: open $fn: $!, skipping\n"
-	    if $main::debug > 3; 
-    }
+	else {
+		warn "Warning: open $fn: $!, skipping\n"
+		  if $main::debug > 3;
+	}
 
-    $result;
+	$result;
 }
 
 sub cstat($) {
-    # purpose: parse condor job state into string.
-    # paramtr: $s (IN): job classad 'JobStatus'
-    # returns: string representing Condor job state
-    #
-    my $s = shift;
-    $s < @main::cstat ? $main::cstat[$s] : "$s";
+
+	# purpose: parse condor job state into string.
+	# paramtr: $s (IN): job classad 'JobStatus'
+	# returns: string representing Condor job state
+	#
+	my $s = shift;
+	$s < @main::cstat ? $main::cstat[$s] : "$s";
 }
 
-sub gstat($) { 
-    # purpose: parse condor job globus state into string.
-    # paramtr: $s (IN): job classad 'GlobusStatus' (may be undef)
-    # returns: string representing Globus job state
-    #
-    my $s = shift;
-    if ( defined $s ) { 
-	exists $main::gstat{$s} ? $main::gstat{$s} : "$s";
-    } else {
-	'-';
-    }
+sub gstat($) {
+
+	# purpose: parse condor job globus state into string.
+	# paramtr: $s (IN): job classad 'GlobusStatus' (may be undef)
+	# returns: string representing Globus job state
+	#
+	my $s = shift;
+	if ( defined $s ) {
+		exists $main::gstat{$s} ? $main::gstat{$s} : "$s";
+	}
+	else {
+		'-';
+	}
 }
 
-sub parsersl($) { 
-    # purpose: Parse a Globus RSL string into hash
-    # paramtr: $rsl (IN): RSL string
-    # returns: hash representing RSL values
-    # warning: all keys will be canonicalized
-    #
-    my %result = (); 
-    local $_ = shift; 
-    while ( /\(([^)]+)\)/g ) {
-        my ($k,$v) = split /=/, $1, 2;
-	$k =~ s/[-_]//g;
-	$result{lc $k} = $v;
-    }
-    %result;
+sub parsersl($) {
+
+	# purpose: Parse a Globus RSL string into hash
+	# paramtr: $rsl (IN): RSL string
+	# returns: hash representing RSL values
+	# warning: all keys will be canonicalized
+	#
+	my %result = ();
+	local $_ = shift;
+	while (/\(([^)]+)\)/g) {
+		my ( $k, $v ) = split /=/, $1, 2;
+		$k =~ s/[-_]//g;
+		$result{ lc $k } = $v;
+	}
+	%result;
 }
 
 sub condor_q(\%\%\@;%) {
-    # purpose: Parse entire Condor-Q into hash of job classad hashes
-    # paramtr: %jobs (OUT): parsed job classads indexed by 'clusterid'
-    #          %dags (OUT): maps dagmanjobid to array of clusterids
-    #          @t    (IN): ask condor_q only for these keys 
-    #          %flag (IN): key value pairs controlling behavior
-    # globals: $main::user (IN): which user to limit output to
-    #          %qtitle (IN): determines which keys to ask for
-    #
-    my $jobref = shift;
-    my $dagref = shift;
-    my $t      = shift; 
-    my %flags = ( @_ ); 
-    my $constraint = ''; 
 
-    # determine root wf uuid from workdir
-    if ( exists $flags{rootuuid} ) {
-	my $s = ''; 
-	foreach my $n ( @{ $flags{rootuuid} } ) { 
-	    $s .= ' || ' if $s; 
-	    $s .= "(pegasus_root_wf_uuid=?=\\\"$n\\\")"; 
-	}
-	if ( $s ) { 
-	    if ( $constraint ) { 
-		$constraint .= " && ( $s )"; 
-	    } else {
-		$constraint = "( $s )"; 
-	    }
-	}	
-    }
+	# purpose: Parse entire Condor-Q into hash of job classad hashes
+	# paramtr: %jobs (OUT): parsed job classads indexed by 'clusterid'
+	#          %dags (OUT): maps dagmanjobid to array of clusterids
+	#          @t    (IN): ask condor_q only for these keys
+	#          %flag (IN): key value pairs controlling behavior
+	# globals: $main::user (IN): which user to limit output to
+	#          %qtitle (IN): determines which keys to ask for
+	#
+	my $jobref     = shift;
+	my $dagref     = shift;
+	my $t          = shift;
+	my %flags      = (@_);
+	my $constraint = '';
 
-    # determine extra jobclass constraints
-    if ( exists $flags{jobtypes} ) {
-	my $s = ''; 
-	foreach my $n ( @{ $flags{jobtypes} } ) {
-	    $s .= ' || ' if $s;
-	    $s .= "(pegasus_job_class=?=$n)"; 
-	}
-	if ( $s ) {
-	    if ( $constraint ) { 
-		$constraint .= " && ( $s )"; 
-	    } else {
-		$constraint = "( $s )"; 
-	    }
-	}
-    }
-
-    # determine extra jobsites constraints
-    if ( exists $flags{jobsites} ) { 
-	my $s = ''; 
-	foreach my $site ( @{ $flags{jobsites} } ) { 
-	    $s .= ' || ' if $s;
-	    $s .= "(pegasus_site=?=\\\"$site\\\")"; 
-	}
-	if ( $s ) { 
-	    if ( $constraint ) { 
-		$constraint .= " && ( $s )"; 
-	    } else { 
-		$constraint = "( $s )";
-	    }
-	}
-    }
-
-    # finalize constraints
-    if ( $constraint ) { 
-	$constraint = "-constraint \"$constraint\"";
-    }
-
-    local(*Q);
-    my $condor_q = find_exec('condor_q') ||
-	die "FATAL: Unable to find 'condor_q' in your PATH.\n"; 
-
-    if ( defined $main::cache && $main::cache ) { 
-	# see --cache flag -- THIS IS ONLY FOR DEBUGGING
-	open( Q, $main::cache ) || die "open $main::cache: $!\n"; 
-    } else {
-	# FIXME: 'condor_q' is expensive. Find better restrictions!
-	warn "# $condor_q -l $main::user $constraint\n" if $main::debug; 
-	open( Q, "$condor_q -l $main::user $constraint|" ) ||
-	    die "FATAL: Unable to execute $condor_q -l $main::user $constraint: $!\n"; 
-    }
-
-    # skip intro
-    while ( <Q> ) { 
-	last if /^--/;
-    }
-
-    my (%db,@x);
-    while ( <Q> ) { 
-	s/[\r\n]+$//; 		# safe chomp
-	if ( length($_) > 2 ) { 
-	    # regular job classad
-	    @x = split /\s+=\s+/, $_, 2;
-	    die "this must not happen!" if exists $db{lc($x[0])}; 
-	    $db{lc($x[0])} = trim($x[1]); 
-	} else {
-	    my $id = $db{clusterid}; 
-
-	    # extra sanity?
-	    die "nothing in queue?" unless scalar keys %db; 
-	    die "nothing in cluster" unless defined $id; 
-
-	    # noidle for Mats
-	    unless ( $flags{noidle} && $db{jobstatus} == 1 ) {
-		# add parsed job classads to %job
-		$jobref->{$id} = { %db }; 
-
-		# Add job belonging to a dagman to %dag
-		# A dagman job will always be started prior to the job
-		# it starts, thus the (condor) job for the DAGMan exists
-		# for alive DAGMans.
-		if ( exists $db{dagmanjobid} && exists $jobref->{ $db{dagmanjobid} } ) {
-		    push( @{ $dagref->{ $db{dagmanjobid} } }, $id );
-		} else {
-		    # we need this branch for Condor jobs not managed by
-		    # DAGMan, or for Condor jobs whose parent DAGMan died.
-		    $dagref->{$id} = [] unless exists $dagref->{$id}; 
+	# determine root wf uuid from workdir
+	if ( exists $flags{rootuuid} ) {
+		my $s = '';
+		foreach my $n ( @{ $flags{rootuuid} } ) {
+			$s .= ' || ' if $s;
+			$s .= "(pegasus_root_wf_uuid=?=\\\"$n\\\")";
 		}
-	    }
-
-	    # bookeeping
-	    if ( exists $flags{count} ) {
-		$flags{count}{condor}{ $db{jobstatus} }++;
-		$flags{count}{all}{condor}++;
-		if ( exists $db{globusstatus} ) {
-		    $flags{count}{globus}{ $db{globusstatus} }++;
-		    $flags{count}{all}{globus}++;
+		if ($s) {
+			if ($constraint) {
+				$constraint .= " && ( $s )";
+			}
+			else {
+				$constraint = "( $s )";
+			}
 		}
-	    }
-
-	    # prepare for next round
-	    %db = (); 
 	}
-    }
 
-    # extra sanity? 
-    warn "Warning: Maybe condor_q output formatting changed?" if scalar keys %db;
+	# determine extra jobclass constraints
+	if ( exists $flags{jobtypes} ) {
+		my $s = '';
+		foreach my $n ( @{ $flags{jobtypes} } ) {
+			$s .= ' || ' if $s;
+			$s .= "(pegasus_job_class=?=$n)";
+		}
+		if ($s) {
+			if ($constraint) {
+				$constraint .= " && ( $s )";
+			}
+			else {
+				$constraint = "( $s )";
+			}
+		}
+	}
 
-    close Q;
-    if ( $main::debug ) { 
-	warn "Warning: condor_q returned ", parse_exit($?), "\n" if $?; 
-    }
+	# determine extra jobsites constraints
+	if ( exists $flags{jobsites} ) {
+		my $s = '';
+		foreach my $site ( @{ $flags{jobsites} } ) {
+			$s .= ' || ' if $s;
+			$s .= "(pegasus_site=?=\\\"$site\\\")";
+		}
+		if ($s) {
+			if ($constraint) {
+				$constraint .= " && ( $s )";
+			}
+			else {
+				$constraint = "( $s )";
+			}
+		}
+	}
+
+	# finalize constraints
+	if ($constraint) {
+		$constraint = "-constraint \"$constraint\"";
+	}
+
+	local (*Q);
+	my $condor_q = find_exec('condor_q')
+	  || die "FATAL: Unable to find 'condor_q' in your PATH.\n";
+
+	if ( defined $main::cache && $main::cache ) {
+
+		# see --cache flag -- THIS IS ONLY FOR DEBUGGING
+		open( Q, $main::cache ) || die "open $main::cache: $!\n";
+	}
+	else {
+
+		# FIXME: 'condor_q' is expensive. Find better restrictions!
+		warn "# $condor_q -l $main::user $constraint\n" if $main::debug;
+		open( Q, "$condor_q -l $main::user $constraint|" )
+		  || die
+		  "FATAL: Unable to execute $condor_q -l $main::user $constraint: $!\n";
+	}
+
+	# skip intro
+	while (<Q>) {
+		last if /^--/;
+	}
+
+	my ( %db, @x );
+	while (<Q>) {
+		s/[\r\n]+$//;    # safe chomp
+		if ( length($_) > 2 ) {
+
+			# regular job classad
+			@x = split /\s+=\s+/, $_, 2;
+			die "this must not happen!" if exists $db{ lc( $x[0] ) };
+			$db{ lc( $x[0] ) } = trim( $x[1] );
+		}
+		else {
+			my $id = $db{clusterid};
+
+			# extra sanity?
+			die "nothing in queue?"  unless scalar keys %db;
+			die "nothing in cluster" unless defined $id;
+
+			# noidle for Mats
+			unless ( $flags{noidle} && $db{jobstatus} == 1 ) {
+
+				# add parsed job classads to %job
+				$jobref->{$id} = {%db};
+
+				# Add job belonging to a dagman to %dag
+				# A dagman job will always be started prior to the job
+				# it starts, thus the (condor) job for the DAGMan exists
+				# for alive DAGMans.
+				if (   exists $db{dagmanjobid}
+					&& exists $jobref->{ $db{dagmanjobid} } )
+				{
+					push( @{ $dagref->{ $db{dagmanjobid} } }, $id );
+				}
+				else {
+
+					# we need this branch for Condor jobs not managed by
+					# DAGMan, or for Condor jobs whose parent DAGMan died.
+					$dagref->{$id} = [] unless exists $dagref->{$id};
+				}
+			}
+
+			# bookeeping
+			if ( exists $flags{count} ) {
+				$flags{count}{condor}{ $db{jobstatus} }++;
+				$flags{count}{all}{condor}++;
+				if ( exists $db{globusstatus} ) {
+					$flags{count}{globus}{ $db{globusstatus} }++;
+					$flags{count}{all}{globus}++;
+				}
+			}
+
+			# prepare for next round
+			%db = ();
+		}
+	}
+
+	# extra sanity?
+	warn "Warning: Maybe condor_q output formatting changed?"
+	  if scalar keys %db;
+
+	close Q;
+	if ($main::debug) {
+		warn "Warning: condor_q returned ", parse_exit($?), "\n" if $?;
+	}
 }
 
 sub find_leaves(\%) {
-    # purpose: determine which are the top-level jobs to show
-    # paramtr: %dag (IN): dag dependencies
-    # returns: hash of leave jobs in queue
-    #
-    my $dagref = shift; 
 
-    # find children and parents that are dags
-    my (%parent,%leaves);
-    foreach my $d ( keys %{$dagref} ) {
-	foreach my $v ( @{$dagref->{$d}} ) {
-	    $parent{$v}{$d} = 1	if exists $dagref->{$v};
+	# purpose: determine which are the top-level jobs to show
+	# paramtr: %dag (IN): dag dependencies
+	# returns: hash of leave jobs in queue
+	#
+	my $dagref = shift;
+
+	# find children and parents that are dags
+	my ( %parent, %leaves );
+	foreach my $d ( keys %{$dagref} ) {
+		foreach my $v ( @{ $dagref->{$d} } ) {
+			$parent{$v}{$d} = 1 if exists $dagref->{$v};
+		}
 	}
-    }
 
-    # find leaves
-    my @fifo = keys %{$dagref};
-    while ( @fifo ) {
-	my $d = pop(@fifo);
-	if ( exists $parent{$d} ) {
-	    push( @fifo, keys %{$parent{$d}} );
-	} else {
-	    $leaves{$d} = 1;
+	# find leaves
+	my @fifo = keys %{$dagref};
+	while (@fifo) {
+		my $d = pop(@fifo);
+		if ( exists $parent{$d} ) {
+			push( @fifo, keys %{ $parent{$d} } );
+		}
+		else {
+			$leaves{$d} = 1;
+		}
 	}
-    }
 
-    %leaves; 
+	%leaves;
 }
 
 sub assemble_job($;$) {
-    # purpose: create the data columns for a given job
-    # paramtr: $r (IN): job classad hashref
-    #          $indent (IN): what to use for indentation 
-    # returns: updated job classad hashref
-    #
-    my $r = shift; 		# job classad
-    my $indent = shift || ''; 
 
-    # extra sanity?
-    confess "no job?" unless scalar keys %{$r}; 
-    $r->{_indent} = $indent; 
+	# purpose: create the data columns for a given job
+	# paramtr: $r (IN): job classad hashref
+	#          $indent (IN): what to use for indentation
+	# returns: updated job classad hashref
+	#
+	my $r      = shift;         # job classad
+	my $indent = shift || '';
 
-    $r;
+	# extra sanity?
+	confess "no job?" unless scalar keys %{$r};
+	$r->{_indent} = $indent;
+
+	$r;
 }
 
-sub assemble_dag($$$;$$);		# { } 
+sub assemble_dag($$$;$$);       # { }
+
 sub assemble_dag($$$;$$) {
-    # purpose: create the data rows for a given dag job
-    # paramtr: %job (IN): see condor_q
-    #          %dag (IN): see condor_q
-    #          $dagid (IN): which workflow to assemble
-    #          $lastp (opt. IN): last job in parent workflow
-    #          $indent (opt. IN): what to use for indentation 
-    # returns: ordered list (rows) of job classad refs (cols)
-    # 
-    my $jobref = shift;
-    my $dagref = shift;
-    my $dagid = shift;
-    my $lastp = shift; 
-    my $indent = shift || ''; 
-    my @result = (); 
 
-    # show dagman itself
-    push( @result, assemble_job( $jobref->{$dagid}, $indent ) ); 
-    delete $main::seen{$dagid}; 
+	# purpose: create the data rows for a given dag job
+	# paramtr: %job (IN): see condor_q
+	#          %dag (IN): see condor_q
+	#          $dagid (IN): which workflow to assemble
+	#          $lastp (opt. IN): last job in parent workflow
+	#          $indent (opt. IN): what to use for indentation
+	# returns: ordered list (rows) of job classad refs (cols)
+	#
+	my $jobref = shift;
+	my $dagref = shift;
+	my $dagid  = shift;
+	my $lastp  = shift;
+	my $indent = shift || '';
+	my @result = ();
 
-    # show dependent jobs for dagman
-    # $indent = $main::graph[2] x ( length($indent) / length($main::graph[0]) );
-    substr( $indent, -3 ) = $main::graph[ 2 + $lastp ] if $indent; 
-    my @x = sort { $a <=> $b } @{ $dagref->{$dagid} }; 
-    for ( my $j=0; $j < @x; ++$j ) { 
-	# extra sanity? 
-	die "unknown job" unless scalar keys %{$jobref->{$x[$j]}}; 
-	
-	my $conn = $main::graph[ $j == $#x ];
-	if ( exists $dagref->{$x[$j]} ) {
-	    push( @result, assemble_dag( $jobref, $dagref, $x[$j], ($j==$#x), "$indent$conn" ) ); 
-	} else {
-	    push( @result, assemble_job( $jobref->{$x[$j]}, "$indent$conn" ) ); 
+	# show dagman itself
+	push( @result, assemble_job( $jobref->{$dagid}, $indent ) );
+	delete $main::seen{$dagid};
+
+	# show dependent jobs for dagman
+	# $indent = $main::graph[2] x ( length($indent) / length($main::graph[0]) );
+	substr( $indent, -3 ) = $main::graph[ 2 + $lastp ] if $indent;
+	my @x = sort { $a <=> $b } @{ $dagref->{$dagid} };
+	for ( my $j = 0 ; $j < @x ; ++$j ) {
+
+		# extra sanity?
+		die "unknown job" unless scalar keys %{ $jobref->{ $x[$j] } };
+
+		my $conn = $main::graph[ $j == $#x ];
+		if ( exists $dagref->{ $x[$j] } ) {
+			push(
+				@result,
+				assemble_dag(
+					$jobref, $dagref, $x[$j], ( $j == $#x ),
+					"$indent$conn"
+				)
+			);
+		}
+		else {
+			push( @result,
+				assemble_job( $jobref->{ $x[$j] }, "$indent$conn" ) );
+		}
+		delete $main::seen{ $x[$j] };
 	}
-	delete $main::seen{$x[$j]}; 
-    }
 
-    @result; 
+	@result;
 }
 
 sub x_site {
-    my $row = shift;
-    $row->{'pegasus_site'} || '-';
+	my $row = shift;
+	$row->{'pegasus_site'} || '-';
 }
 
 sub x_pegasus_jobtype {
-    my $row = shift;
-    my $c = $row->{'pegasus_job_class'} + 0;
-    $c < @main::jobclass ? $main::jobclass[$c] : "$c";
+	my $row = shift;
+	my $c   = $row->{'pegasus_job_class'} + 0;
+	$c < @main::jobclass ? $main::jobclass[$c] : "$c";
 }
 
 sub x_pegasus_jobtypeshort {
-    my $row = shift;
-    my $c = $row->{'pegasus_job_class'} + 0;
-    $c < @main::jobshort ? $main::jobshort[$c] : "$c";
+	my $row = shift;
+	my $c   = $row->{'pegasus_job_class'} + 0;
+	$c < @main::jobshort ? $main::jobshort[$c] : "$c";
 }
 
 sub x_pegasus_jobtypenum {
-    my $row = shift; 
-    $row->{'pegasus_job_class'} || '-'; 
-} 
+	my $row = shift;
+	$row->{'pegasus_job_class'} || '-';
+}
 
 sub x_in_state {
-    my $row = shift;
-    interval( $main::time - $row->{enteredcurrentstatus} );
+	my $row = shift;
+	interval( $main::time - $row->{enteredcurrentstatus} );
 }
 
 sub x_jobpriority {
-    my $row = shift;
-    $row->{jobprio};
+	my $row = shift;
+	$row->{jobprio};
 }
 
 sub x_jobstatus {
-    my $row = shift;
-    my $s = $row->{jobstatus};
-    $s < @main::clong ? $main::clong[$s] : "$s"; 
+	my $row = shift;
+	my $s   = $row->{jobstatus};
+	$s < @main::clong ? $main::clong[$s] : "$s";
 }
 
 sub x_cstat {
-    my $row = shift;
-    cstat( $row->{jobstatus} );
+	my $row = shift;
+	cstat( $row->{jobstatus} );
 }
 
 sub x_cgstatus {
-    my $row = shift; 
-    cstat( $row->{jobstatus} ) . '/' . gstat( $row->{globusstatus} );
+	my $row = shift;
+	cstat( $row->{jobstatus} ) . '/' . gstat( $row->{globusstatus} );
 }
 
 sub x_condorid {
-    my $row = shift;
-    $row->{clusterid}; 
+	my $row = shift;
+	$row->{clusterid};
 }
 
 sub x_job1 {
-    my $row = shift; 
-    my $result = ''; 
+	my $row    = shift;
+	my $result = '';
 
-    if ( exists $row->{dagnodename} ) {
-	$result = $row->{dagnodename};
-    } elsif ( exists $row->{'pegasus_wf_name'} ) {
-	$result = $row->{'pegasus_wf_name'};
-    } else {
-	my $cmd = basename( $row->{cmd} || '' );
-	if ( $cmd eq 'kickstart' ) {
-	    my @x = kickstart($row->{arguments});
-	    $result = '*' . $x[0];
-	} else {
-	    $result = $cmd; 
+	if ( exists $row->{dagnodename} ) {
+		$result = $row->{dagnodename};
 	}
-    }
+	elsif ( exists $row->{'pegasus_wf_name'} ) {
+		$result = $row->{'pegasus_wf_name'};
+	}
+	else {
+		my $cmd = basename( $row->{cmd} || '' );
+		if ( $cmd eq 'kickstart' ) {
+			my @x = kickstart( $row->{arguments} );
+			$result = '*' . $x[0];
+		}
+		else {
+			$result = $cmd;
+		}
+	}
 
-    if ( $main::color ) { 
-	if ( $row->{'pegasus_job_class'} > 9 ) { 
-	    "\033[0;37m" . $row->{_indent} . $main::reset .
-		$result . $main::ccolor[ $row->{jobstatus} ];
-	} else {
-	    "\033[0;37m" . $row->{_indent} . $main::ccolor[ $row->{jobstatus} ] . 
-		$result;
+	if ($main::color) {
+		if ( $row->{'pegasus_job_class'} > 9 ) {
+			"\033[0;37m"
+			  . $row->{_indent}
+			  . $main::reset
+			  . $result
+			  . $main::ccolor[ $row->{jobstatus} ];
+		}
+		else {
+			"\033[0;37m"
+			  . $row->{_indent}
+			  . $main::ccolor[ $row->{jobstatus} ]
+			  . $result;
+		}
 	}
-    } else {
-	$row->{_indent} . $result;
-    }
+	else {
+		$row->{_indent} . $result;
+	}
 }
 
 sub x_job2 {
-    my $row = shift; 
-    my $result = ''; 
+	my $row    = shift;
+	my $result = '';
 
-    # show dagnodename first
-    if ( exists $row->{dagnodename} ) { 
-	$result .= cfit( $main::width{dagnodename}, 
-			 $row->{dagnodename} );
-    } elsif ( exists $row->{'pegasus_wf_name'} ) {
-	$result .= cfit( $main::width{'pegasus_wf_name'}, 
-			 $row->{'pegasus_wf_name'} );
-    }
-
-    # replace commandline ('cmd' and 'arguments')
-    my $cmd = basename( $row->{cmd} || '' );
-
-    if ( $cmd eq 'kickstart' ) { 
-	$cmd = (kickstart($row->{arguments}))[0]; 
-	$result .= ' [*' . cfit( $main::width{cmd}, $cmd ) . ']';
-    } else {
-	$result .= ' [' . cfit( $main::width{cmd}, $cmd ); 
-	if ( exists $row->{'pegasus_cluster_size'} ) {
-	    my $n = $row->{'pegasus_cluster_size'} + 0; 
-	    if ( $cmd eq 'seqexec' || $n > 1 ) { 
-		$result .= ": $n";
-	    }
+	# show dagnodename first
+	if ( exists $row->{dagnodename} ) {
+		$result .= cfit( $main::width{dagnodename}, $row->{dagnodename} );
 	}
-	$result .= ']'; 
-    }
-
-    if ( $main::color ) { 
-	if ( $row->{'pegasus_job_class'} > 9 ) { 
-	    "\033[0;37m" . $row->{_indent} . $main::reset .
-		$result . $main::ccolor[ $row->{jobstatus} ];
-	} else {
-	    "\033[0;37m" . $row->{_indent} . $main::ccolor[ $row->{jobstatus} ] . 
-		$result;
+	elsif ( exists $row->{'pegasus_wf_name'} ) {
+		$result .=
+		  cfit( $main::width{'pegasus_wf_name'}, $row->{'pegasus_wf_name'} );
 	}
-    } else {
-	$row->{_indent} . $result;
-    }
+
+	# replace commandline ('cmd' and 'arguments')
+	my $cmd = basename( $row->{cmd} || '' );
+
+	if ( $cmd eq 'kickstart' ) {
+		$cmd = ( kickstart( $row->{arguments} ) )[0];
+		$result .= ' [*' . cfit( $main::width{cmd}, $cmd ) . ']';
+	}
+	else {
+		$result .= ' [' . cfit( $main::width{cmd}, $cmd );
+		if ( exists $row->{'pegasus_cluster_size'} ) {
+			my $n = $row->{'pegasus_cluster_size'} + 0;
+			if ( $cmd eq 'seqexec' || $n > 1 ) {
+				$result .= ": $n";
+			}
+		}
+		$result .= ']';
+	}
+
+	if ($main::color) {
+		if ( $row->{'pegasus_job_class'} > 9 ) {
+			"\033[0;37m"
+			  . $row->{_indent}
+			  . $main::reset
+			  . $result
+			  . $main::ccolor[ $row->{jobstatus} ];
+		}
+		else {
+			"\033[0;37m"
+			  . $row->{_indent}
+			  . $main::ccolor[ $row->{jobstatus} ]
+			  . $result;
+		}
+	}
+	else {
+		$row->{_indent} . $result;
+	}
 }
 
 sub q_print_debug($$$$\%) {
-    # purpose: show job classads of certain matches for current job
-    # paramtr: $cursor (IN): current row
-    #          $reserve (IN): how much space to reserve
-    #          $watch (IN): are we in watch mode? 
-    #          $match (IN): regular expression of classads to match
-    #          %q[i] (IN): current job class ads
-    # globals: $main::color (IN): whether to use ANSI colors
-    #          $cols (IN): current terminal width
-    #          $rows (IN): current terminal height
-    # returns: new cursor position
-    #
-    my $cursor = shift; 	# current row
-    my $reserve = shift;	# current $reserve
-    my $watch = shift; 		# current $watch
-    my $match = shift; 		# what classads to match
-    my $qi = shift;		# $q[$i] ref
 
-    my $p = $cols + $cols; 
-    my ($s); 
-    foreach my $k ( sort keys %{$qi} ) {
-	if ( $watch && $cursor > $rows-$reserve-1 ) {
-	    print " ..";
-	    last; 
+	# purpose: show job classads of certain matches for current job
+	# paramtr: $cursor (IN): current row
+	#          $reserve (IN): how much space to reserve
+	#          $watch (IN): are we in watch mode?
+	#          $match (IN): regular expression of classads to match
+	#          %q[i] (IN): current job class ads
+	# globals: $main::color (IN): whether to use ANSI colors
+	#          $cols (IN): current terminal width
+	#          $rows (IN): current terminal height
+	# returns: new cursor position
+	#
+	my $cursor  = shift;    # current row
+	my $reserve = shift;    # current $reserve
+	my $watch   = shift;    # current $watch
+	my $match   = shift;    # what classads to match
+	my $qi      = shift;    # $q[$i] ref
+
+	my $p = $cols + $cols;
+	my ($s);
+	foreach my $k ( sort keys %{$qi} ) {
+		if ( $watch && $cursor > $rows - $reserve - 1 ) {
+			print " ..";
+			last;
+		}
+
+		if ( $k =~ /$match/o ) {
+			my $v = $qi->{$k};
+			my $l = length($k) + length($v);
+			$s = '';
+			$s .= "\033[1;30m" if $main::color;
+			$s .= $k;
+			$s .= $main::reset if $main::color;
+			$s .= '=' . $v;
+			if ( $p + $l + 2 > $cols ) {
+				print "\n\t$s";
+				++$cursor;
+				$p = $l + 9;
+			}
+			else {
+				print " $s";
+				$p += $l + 2;
+			}
+		}
 	}
 
-	if ( $k =~ /$match/o ) { 
-	    my $v = $qi->{$k}; 
-	    my $l = length($k) + length($v); 
-	    $s = '';
-	    $s .= "\033[1;30m" if $main::color;
-	    $s .= $k;
-	    $s .= $main::reset if $main::color; 
-	    $s .= '=' . $v; 
-	    if ( $p+$l+2 > $cols ) { 
-		print "\n\t$s"; 
-		++$cursor;
-		$p = $l+9; 
-	    } else {
-		print " $s";
-		$p += $l+2;
-	    }
-	}
-    }
-
-    $cursor;
+	$cursor;
 }
 
 sub q_print_summary($\%) {
-    # purpose: print summary line adding stats of Condor and Condor-G
-    # paramtr: $cursor (IN): current row
-    #          %count (IN): queue statistics
-    # globals: $main::color (IN): whether to use ANSI colors
-    #          @main::ccolor (IN): color settings
-    #          $main::reset (IN): undo colorings
-    # returns: new cursor position
-    #
-    my $cursor = shift;		# current row
-    my $cref = shift;		# %count ref
 
-    # create Condor job summary
-    print "Summary: ", plural($cref->{all}{condor},'Condor job'), " total"; 
+	# purpose: print summary line adding stats of Condor and Condor-G
+	# paramtr: $cursor (IN): current row
+	#          %count (IN): queue statistics
+	# globals: $main::color (IN): whether to use ANSI colors
+	#          @main::ccolor (IN): color settings
+	#          $main::reset (IN): undo colorings
+	# returns: new cursor position
+	#
+	my $cursor = shift;    # current row
+	my $cref   = shift;    # %count ref
 
-    my $f = 0;
-    foreach my $c ( sort { $a <=> $b } keys %{$cref->{condor}} ) {
-	print( $f++ ? ' ' : ' (' );
-	print $main::ccolor[$c] if $main::color; 
-	print $main::cstat[$c], ':', commas($cref->{condor}{$c}); 
-	print $main::reset if $main::color; 
-    }
-    print ')' if $f; 
+	# create Condor job summary
+	print "Summary: ", plural( $cref->{all}{condor}, 'Condor job' ), " total";
 
-    # Globus job summary
-    if ( exists $cref->{all}{globus} && $cref->{all}{globus} > 0 ) { 
-	print ", ", plural( $cref->{all}{globus}, 'Condor-G job' );
-	$f = 0; 
-	foreach my $g ( sort { $a <=> $b } keys %{$cref->{globus}} ) { 
-	    print( $f++ ? ' ' : ' (' );
-	    print $main::gstat{$g}, ':', commas($cref->{globus}{$g});
+	my $f = 0;
+	foreach my $c ( sort { $a <=> $b } keys %{ $cref->{condor} } ) {
+		print( $f++ ? ' ' : ' (' );
+		print $main::ccolor[$c] if $main::color;
+		print $main::cstat[$c], ':', commas( $cref->{condor}{$c} );
+		print $main::reset if $main::color;
 	}
 	print ')' if $f;
-    }
 
-    print "\n"; 
-    ++$cursor; 
+	# Globus job summary
+	if ( exists $cref->{all}{globus} && $cref->{all}{globus} > 0 ) {
+		print ", ", plural( $cref->{all}{globus}, 'Condor-G job' );
+		$f = 0;
+		foreach my $g ( sort { $a <=> $b } keys %{ $cref->{globus} } ) {
+			print( $f++ ? ' ' : ' (' );
+			print $main::gstat{$g}, ':', commas( $cref->{globus}{$g} );
+		}
+		print ')' if $f;
+	}
+
+	print "\n";
+	++$cursor;
 }
 
-sub dag_recurse(\@$$);		# { }
+sub dag_recurse(\@$$);    # { }
+
 sub dag_recurse(\@$$) {
-    local(*DIR); 
-    my $dirsref = shift;
-    my $dir = shift;
-    my $level = shift;
+	local (*DIR);
+	my $dirsref = shift;
+	my $dir     = shift;
+	my $level   = shift;
 
-    profile_log( "opendir $dir" ) if defined $main::profile; 
-    if ( opendir( DIR, $dir ) ) {
-	my ($file,$full); 
-	while ( defined ($file = readdir(DIR)) ) { 
-	    next if ( $file eq '.' || $file eq '..' );
-	    next if ( $file =~ /\.\d{3}$/ ); # NEW
+	profile_log("opendir $dir") if defined $main::profile;
+	if ( opendir( DIR, $dir ) ) {
+		my ( $file, $full );
+		while ( defined( $file = readdir(DIR) ) ) {
+			next if ( $file eq '.' || $file eq '..' );
+			next if ( $file =~ /\.\d{3}$/ );    # NEW
 
-	    $full = File::Spec->catfile( $dir, $file );
-	    if ( -d $full ) {
-		dag_recurse( @{$dirsref}, $full, $level+1 );
-	    } elsif ( $file =~ /\.dag\.dagman\.out$/ ) { 
-		push( @{ $dirsref->[$level] }, $full );
-	    }
+			$full = File::Spec->catfile( $dir, $file );
+			if ( -d $full ) {
+				dag_recurse( @{$dirsref}, $full, $level + 1 );
+			}
+			elsif ( $file =~ /\.dag\.dagman\.out$/ ) {
+				push( @{ $dirsref->[$level] }, $full );
+			}
+		}
+		closedir DIR;
 	}
-	closedir DIR;
-    } else {
-	warn "Warning: Unable to open $dir: $!, ignoring\n";
-    }
+	else {
+		warn "Warning: Unable to open $dir: $!, ignoring\n";
+	}
 }
 
 sub dag_get_subdag(\@$$) {
-    my $dirsref = shift;
-    my $dag = shift;
-    my $level = shift;
+	my $dirsref = shift;
+	my $dag     = shift;
+	my $level   = shift;
 
-    local(*F);
-    profile_log( "open $dag" ) if defined $main::profile; 
-    if ( open( F, "<$dag" ) ) {
-	my @subdags = (); 
-	while ( <F> ) { 
-	    push( @subdags, $1 )
-		if /^SUBDAG EXTERNAL \S+ (\S+\.dag)($| DIR)/; 
-	}
-	close F; 
+	local (*F);
+	profile_log("open $dag") if defined $main::profile;
+	if ( open( F, "<$dag" ) ) {
+		my @subdags = ();
+		while (<F>) {
+			push( @subdags, $1 )
+			  if /^SUBDAG EXTERNAL \S+ (\S+\.dag)($| DIR)/;
+		}
+		close F;
 
-	foreach my $s ( @subdags ) { 
-	    my $dagman = $s . '.dagman.out';
-	    push( @{$dirsref->[$level]}, $dagman )
-		if ( -e $dagman && -f _ && -r _ && ! -z _ ); 
+		foreach my $s (@subdags) {
+			my $dagman = $s . '.dagman.out';
+			push( @{ $dirsref->[$level] }, $dagman )
+			  if ( -e $dagman && -f _ && -r _ && !-z _ );
+		}
 	}
-    } else {
-	warn "Warning: open $dag: $!, ignoring\n"; 
-    }
+	else {
+		warn "Warning: open $dag: $!, ignoring\n";
+	}
 }
 
-sub dag_process_tab(@) { 
-    my @keys = split /\s+/, shift(); 
-    shift;			# unused 
-    my @vals = split /\s+/, shift(); 
+sub dag_process_tab(@) {
+	my @keys = split /\s+/, shift();
+	shift;    # unused
+	my @vals = split /\s+/, shift();
 
-    my @result = (); 
-    my $state = 0; 
-    my $total = 0; 
-    for ( my $i=0; $i < @keys; ++$i ) { 
-	# find where keys start
-	++$state if lc($keys[$i]) eq 'done'; 
-	next unless $state; 
+	my @result = ();
+	my $state  = 0;
+	my $total  = 0;
+	for ( my $i = 0 ; $i < @keys ; ++$i ) {
 
-	# keep ordering by using an array (that is convertible into a
-	# hash). However, remove any punctuation stuff from keys
-	$keys[$i] =~ s/[^[:alnum:]]//g;
-	push( @result, lc($keys[$i]) => $vals[$i] ); 
-	$total += $vals[$i]; 
-    }
+		# find where keys start
+		++$state if lc( $keys[$i] ) eq 'done';
+		next unless $state;
 
-    ( @result, 'total', $total ); 
+		# keep ordering by using an array (that is convertible into a
+		# hash). However, remove any punctuation stuff from keys
+		$keys[$i] =~ s/[^[:alnum:]]//g;
+		push( @result, lc( $keys[$i] ) => $vals[$i] );
+		$total += $vals[$i];
+	}
+
+	( @result, 'total', $total );
 }
 
-my $re1 = qr{\*\scondor_scheduniv_exec\.([0-9.]+)\s\(CONDOR_DAGMAN\)\sSTARTING\sUP};
-my $re2 = qr{\*\scondor_scheduniv_exec\.([0-9.]+)\s\(condor_DAGMAN\)\spid\s\d+\sEXITING\sWITH\sSTATUS\s(\S+)}; 
+my $re1 =
+  qr{\*\scondor_scheduniv_exec\.([0-9.]+)\s\(CONDOR_DAGMAN\)\sSTARTING\sUP};
+my $re2 =
+qr{\*\scondor_scheduniv_exec\.([0-9.]+)\s\(condor_DAGMAN\)\spid\s\d+\sEXITING\sWITH\sSTATUS\s(\S+)};
 
 sub dag_status($$;%) {
-    my $run = shift;
-    my $dagfn = shift;
-    my %flags = ( @_ ); 	# optional
+	my $run   = shift;
+	my $dagfn = shift;
+	my %flags = (@_);    # optional
 
-    my @dirs = (); 
-    dag_recurse(@dirs,$run,0);
-    dag_get_subdag( @dirs, File::Spec->catfile($run,$dagfn), 1 ); 
+	my @dirs = ();
+	dag_recurse( @dirs, $run, 0 );
+	dag_get_subdag( @dirs, File::Spec->catfile( $run, $dagfn ), 1 );
 
-    my $dolen = length( '.dagman.out' ); 
-    my @result = (); 
-    my $lastfn = $dirs[0][0]; # master workflow
-    foreach my $d ( reverse @dirs ) { 
-	next unless defined $d;
-	foreach my $fn ( @{$d} ) {
-	    my @tab = (); 
-	    my ($start,$final,$pid,$status);
-	    local(*F); 
-	    profile_log( "open $fn" ) if defined $main::profile;
-	    if ( open( F, "<$fn" ) ) { 
-		while ( <F> ) {
-		    # none of these will be in the same line. order by frequency
-		    if ( index($_,'Done') > 0 ) {
-			$tab[0] = $_; 
-			$tab[1] = <F>;
-			$tab[2] = <F>;
-		    } elsif ( /$re1/o ) {
-			($start,$final) = ($1,'');
-		    } elsif ( /\*\*\s+PID\s+=\s+(\d+)/ ) {
-			$pid=$1;
-		    } elsif ( /$re2/o ) { 
-			($final,$status) = ($1,$2);
-		    }
+	my $dolen  = length('.dagman.out');
+	my @result = ();
+	my $lastfn = $dirs[0][0];             # master workflow
+	foreach my $d ( reverse @dirs ) {
+		next unless defined $d;
+		foreach my $fn ( @{$d} ) {
+			my @tab = ();
+			my ( $start, $final, $pid, $status );
+			local (*F);
+			profile_log("open $fn") if defined $main::profile;
+			if ( open( F, "<$fn" ) ) {
+				while (<F>) {
+
+					# none of these will be in the same line. order by frequency
+					if ( index( $_, 'Done' ) > 0 ) {
+						$tab[0] = $_;
+						$tab[1] = <F>;
+						$tab[2] = <F>;
+					}
+					elsif (/$re1/o) {
+						( $start, $final ) = ( $1, '' );
+					}
+					elsif (/\*\*\s+PID\s+=\s+(\d+)/) {
+						$pid = $1;
+					}
+					elsif (/$re2/o) {
+						( $final, $status ) = ( $1, $2 );
+					}
+				}
+				close F;
+			}
+			else {
+				warn "Warning: open $fn: $!\n";
+			}
+
+			my $short = (
+				$fn =~ /^$run/o
+				? substr( $fn, length($run) + 1, -$dolen )
+				: substr( $fn, 0,                -$dolen )
+			);
+
+			my $state = 0;    # unknown
+			if ( $start ne $final ) {
+				if ( kill( 0, $pid ) ) {
+					$state = 2;    # running
+				}
+				else {
+					$state = 1;    # undeterminable
+				}
+			}
+			else {
+
+				# finished: success (3) or failure (4)
+				$state = ( $status == 0 ? 3 : 4 );
+			}
+
+			# I need this separately for bookeeping
+			my %detail = dag_process_tab(@tab);
+
+			# tinker with the job count. The "master" workflow dagman is
+			# not counted in any of job counts, yet it does appear in
+			# the Condor Q.
+			if ( $fn eq $lastfn ) {
+				if ( $state == 0 ) {
+
+					# map unknown to unready
+					$detail{unready}++;
+				}
+				elsif ( $state == 1 || $state == 2 ) {
+
+					# map interdeterminate and running to queued
+					$detail{queued}++;
+				}
+				elsif ( $state == 3 ) {
+
+					# map success to done
+					$detail{done}++;
+				}
+				elsif ( $state == 4 ) {
+
+					# map failure to failed
+					$detail{failed}++;
+				}
+				$detail{total}++;
+
+				# tag root workflow that we included itself by asterisk
+				$short = '*' . $short;
+			}
+
+			# nosuccess for my own sanity -- and maybe Mats?
+			unless ( $state == 3 && $flags{nosuccess} ) {
+				push(
+					@result,
+					{
+						name   => $short,
+						state  => $state,
+						status => $status    # may be undef
+						,
+						detail => {%detail}
+					}
+				);
+			}
+
+			# bookeeping
+			if ( exists $flags{count} ) {
+				$flags{count}{'_state'}[$state]++;
+				$flags{count}{'_total'}++;
+				while ( my ( $k, $v ) = each %detail ) {
+					$flags{count}{$k} += $v;
+				}
+			}
 		}
-		close F; 
-	    } else {
-		warn "Warning: open $fn: $!\n";
-	    }
-
-	    my $short = ( $fn =~ /^$run/o ? 
-			  substr( $fn, length($run)+1, -$dolen ) :
-			  substr( $fn, 0, -$dolen ) );
-
-	    my $state = 0; 	# unknown	    
-	    if ( $start ne $final ) {
-		if ( kill( 0, $pid ) ) { 
-		    $state = 2;	# running
-		} else {
-		    $state = 1; # undeterminable
-		}
-	    } else {
-		# finished: success (3) or failure (4)
-		$state = ( $status == 0 ? 3 : 4 );
-	    }
-
-	    # I need this separately for bookeeping
-	    my %detail = dag_process_tab(@tab); 
-
-	    # tinker with the job count. The "master" workflow dagman is
-	    # not counted in any of job counts, yet it does appear in
-	    # the Condor Q.
-	    if ( $fn eq $lastfn ) {
-		if ( $state == 0 ) { 
-		    # map unknown to unready
-		    $detail{unready}++;
-		} elsif ( $state == 1 || $state == 2 ) {
-		    # map interdeterminate and running to queued
-		    $detail{queued}++;
-		} elsif ( $state == 3 ) { 
-		    # map success to done
-		    $detail{done}++;
-		} elsif ( $state == 4 ) { 
-		    # map failure to failed
-		    $detail{failed}++;
-		}
-		$detail{total}++; 
-		# tag root workflow that we included itself by asterisk
-		$short = '*' . $short;
-	    }
-
-	    # nosuccess for my own sanity -- and maybe Mats?
-	    unless ( $state == 3 && $flags{nosuccess} ) {
-		push( @result, { name => $short
-				, state => $state
-				, status => $status # may be undef
-				, detail => { %detail }
-		                } ); 
-	    }
-
-	    # bookeeping
-	    if ( exists $flags{count} ) { 
-		$flags{count}{'_state'}[$state]++;
-		$flags{count}{'_total'}++; 
-		while ( my ($k,$v) = each %detail ) {
-		    $flags{count}{$k} += $v;
-		}
-	    }     
 	}
-    }
 
-    @result;
+	@result;
 }
 
 sub y_dag_done {
-    my $dag = shift;
-    commas( $dag->{detail}->{done} || 0 );
+	my $dag = shift;
+	commas( $dag->{detail}->{done} || 0 );
 }
 
 sub y_dag_pre {
-    my $dag = shift;
-    commas( $dag->{detail}->{pre} || 0 );
+	my $dag = shift;
+	commas( $dag->{detail}->{pre} || 0 );
 }
 
 sub y_dag_queued {
-    my $dag = shift;
-    commas( $dag->{detail}->{queued} || 0 );
+	my $dag = shift;
+	commas( $dag->{detail}->{queued} || 0 );
 }
 
 sub y_dag_post {
-    my $dag = shift;
-    commas( $dag->{detail}->{post} || 0 );
+	my $dag = shift;
+	commas( $dag->{detail}->{post} || 0 );
 }
 
 sub y_dag_ready {
-    my $dag = shift;
-    commas( $dag->{detail}->{ready} || 0 );
+	my $dag = shift;
+	commas( $dag->{detail}->{ready} || 0 );
 }
 
 sub y_dag_unready {
-    my $dag = shift;
-    commas( $dag->{detail}->{unready} || 0 );
+	my $dag = shift;
+	commas( $dag->{detail}->{unready} || 0 );
 }
 
 sub y_dag_failed {
-    my $dag = shift;
-    commas( $dag->{detail}->{failed} || 0 );
+	my $dag = shift;
+	commas( $dag->{detail}->{failed} || 0 );
 }
 
 sub y_dag_total {
-    my $dag = shift;
-    commas( $dag->{detail}->{total} || 0 );
+	my $dag = shift;
+	commas( $dag->{detail}->{total} || 0 );
 }
 
 sub y_percent {
-    my $dag = shift;
-    my $done = $dag->{detail}->{done}+0;
-    my $total = $dag->{detail}->{total}+0; 
-    my $percent = ( $total == 0 ) ? 0 : ( 100.0 * $done / $total );
-    sprintf "%.1f", $percent;
+	my $dag     = shift;
+	my $done    = $dag->{detail}->{done} + 0;
+	my $total   = $dag->{detail}->{total} + 0;
+	my $percent = ( $total == 0 ) ? 0 : ( 100.0 * $done / $total );
+	sprintf "%.1f", $percent;
 }
 
 sub y_done_total {
-    my $dag = shift;
-    commas( $dag->{detail}->{done} || 0 ) . '/' . commas( $dag->{detail}->{total} || 0 );
+	my $dag = shift;
+	commas( $dag->{detail}->{done}      || 0 ) . '/'
+	  . commas( $dag->{detail}->{total} || 0 );
 }
 
 sub y_dstat {
-    my $dag = shift;
-    my $s = $dag->{state}+0;
-    $s < @main::dstat ? $main::dstat[$s] : ''; 
+	my $dag = shift;
+	my $s   = $dag->{state} + 0;
+	$s < @main::dstat ? $main::dstat[$s] : '';
 }
 
 sub y_dlong {
-    my $dag = shift;
-    my $s = $dag->{state}+0;
-    $s < @main::dlong ? $main::dlong[$s] : '';
+	my $dag = shift;
+	my $s   = $dag->{state} + 0;
+	$s < @main::dlong ? $main::dlong[$s] : '';
 }
 
 sub y_status {
-    my $dag = shift;
-    my $x = $dag->{status}; 
-    defined $x ? parse_exit($x) : 'n.a'; 
+	my $dag = shift;
+	my $x   = $dag->{status};
+	defined $x ? parse_exit($x) : 'n.a';
 }
 
 sub y_name {
-    my $dag = shift;
-    my $result = $dag->{name} || ''; 
-    $result; 
+	my $dag = shift;
+	my $result = $dag->{name} || '';
+	$result;
 }
 
 sub dag_print_summary($\%) {
-    # purpose: print summary line adding stats of workflows
-    # paramtr: $cursor (IN): current row
-    #          %count (IN): queue statistics
-    # globals: $main::color (IN): whether to use ANSI colors
-    #          @main::dcolor (IN): color settings
-    #          $main::reset (IN): undo colorings
-    # returns: new cursor position
-    #
-    my $cursor = shift;		# current row
-    my $totals = shift;		# %totals ref
 
-    # create workflow summary
-    print( "Summary: ", 
-	   plural( $totals->{'_total'}, 'DAG' ), 
-	   " total" );
+	# purpose: print summary line adding stats of workflows
+	# paramtr: $cursor (IN): current row
+	#          %count (IN): queue statistics
+	# globals: $main::color (IN): whether to use ANSI colors
+	#          @main::dcolor (IN): color settings
+	#          $main::reset (IN): undo colorings
+	# returns: new cursor position
+	#
+	my $cursor = shift;    # current row
+	my $totals = shift;    # %totals ref
 
-    if ( $totals->{'_total'} > 0 ) { 
-	my $f = 0; 
-	for ( my $i=0; $i < @main::dcolor; ++$i ) { 
-	    my $x = $totals->{_state};
-	    if ( $x->[$i] > 0 ) { 
-		print( $f++ ? ' ' : ' (' );
-		print $main::dcolor[$i] if $main::color;
-		print $main::dlong[$i], ':', commas($x->[$i]);
-		print $main::reset if $main::color; 
-	    }
+	# create workflow summary
+	print( "Summary: ", plural( $totals->{'_total'}, 'DAG' ), " total" );
+
+	if ( $totals->{'_total'} > 0 ) {
+		my $f = 0;
+		for ( my $i = 0 ; $i < @main::dcolor ; ++$i ) {
+			my $x = $totals->{_state};
+			if ( $x->[$i] > 0 ) {
+				print( $f++ ? ' ' : ' (' );
+				print $main::dcolor[$i] if $main::color;
+				print $main::dlong[$i], ':', commas( $x->[$i] );
+				print $main::reset if $main::color;
+			}
+		}
+		print ")" if $f;
 	}
-	print ")" if $f; 
-    }
 
-    print "\n"; 
-    ++$cursor; 
+	print "\n";
+	++$cursor;
 }
 
 #
@@ -1615,109 +1825,130 @@ sub dag_print_summary($\%) {
 binmode( STDOUT, ':utf8' ) if $main::isutf8;
 
 # parse CLI options
-my $heldinfo = 1; 
-my $heavy = 1; 
-my $queue = 1; 
-my $showidle = 1; 
-my $success = 1; 
-$main::expert = 0; 
-my $legend = 0; 
-my $show_subdag = 0; 
-my $classads = 0; 
-my $vertical = 0; 
-my ($watch,@jobtypes,@jobsites);
-GetOptions( 'help|h' => \&usage
-	  , 'user|u=s' => \$main::user
-	  , 'debug|d+' => \$main::debug
-	  , 'verbose|v+' => \$main::expert
-	  , 'color|c!' => \$main::color
-	  , 'utf8|U!' => \$main::isutf8
-	  , 'version|V' => \&version
-	  , 'classad|ca+' => \$classads
-	  , 'jobtype|jobclass|j=s' => \@jobtypes
-	  , 'site|s=s' => \@jobsites
-	  , 'idle|i!' => \$showidle
-	  , 'success|S!' => \$success
-	  , 'legend|L!' => \$legend
-	  , 'queue|Q!' => \$queue
-	  , 'hold|held!' => \$heldinfo
-	  , 'heavy!' => \$heavy
-	  , 'profile=s' => sub { profile_start($_[1]) },
-	  # the next two options are mutually exclusive
-	  , 'long|l!' => \$show_subdag
-	  , 'rows|row|r!' => \$vertical
-	  , 'watch|w:i' => sub {
-	      if ( ! $main::onatty ) {
-		  warn "FATAL: --watch requires a terminal for output\n"; 
-		  exit 42; 
-	      } else {
-		  unless ( defined &TIOCGWINSZ ) { 
-		      warn( "Info: Your Perl installation is incomplete. Your sysadmin could\n", 
-			    "run h2ph with proper args to create sys/ioctl.ph and friends.\n" ); 
-		      sleep(3); 
-		  }
-	      }
-	      $watch = $_[1] || 60; # once a minute is almost too often
+my $heldinfo = 1;
+my $heavy    = 1;
+my $queue    = 1;
+my $showidle = 1;
+my $success  = 1;
+$main::expert = 0;
+my $legend      = 0;
+my $show_subdag = 0;
+my $classads    = 0;
+my $vertical    = 0;
+my @display_col = ();
+my ( $watch, @jobtypes, @jobsites );
+GetOptions(
+	'help|h'               => \&usage,
+	'user|u=s'             => \$main::user,
+	'debug|d+'             => \$main::debug,
+	'verbose|v+'           => \$main::expert,
+	'color|c!'             => \$main::color,
+	'utf8|U!'              => \$main::isutf8,
+	'version|V'            => \&version,
+	'classad|ca+'          => \$classads,
+	'jobtype|jobclass|j=s' => \@jobtypes,
+	'site|s=s'             => \@jobsites,
+	'idle|i!'              => \$showidle,
+	'success|S!'           => \$success,
+	'legend|L!'            => \$legend,
+	'queue|Q!'             => \$queue,
+	'hold|held!'           => \$heldinfo,
+	'heavy!'               => \$heavy,
+	'display|D:s'          => \@display_col,
+	'profile=s'            => sub { profile_start( $_[1] ) },
+
+	# the next two options are mutually exclusive
+	,
+	'long|l!'     => \$show_subdag,
+	'rows|row|r!' => \$vertical,
+	'watch|w:i'   => sub {
+		if ( !$main::onatty ) {
+			warn "FATAL: --watch requires a terminal for output\n";
+			exit 42;
+		}
+		else {
+			unless ( defined &TIOCGWINSZ ) {
+				warn(
+"Info: Your Perl installation is incomplete. Your sysadmin could\n",
+"run h2ph with proper args to create sys/ioctl.ph and friends.\n"
+				);
+				sleep(3);
+			}
+		}
+		$watch = $_[1] || 60;    # once a minute is almost too often
 	  }
+
 	  # the next option is for internal debugging only
-	  , 'cache=s' => \$main::cache
-	  );
+	,
+	'cache=s' => \$main::cache
+);
 binmode( STDOUT, ':utf8' ) if $main::isutf8;
 
 # if both are (mistakenly) specified, --long wins over --rows
-$vertical=0 if ( $show_subdag && $vertical ); 
+$vertical = 0 if ( $show_subdag && $vertical );
 
 #
-# If the user specified any form of job type/class limitations... 
+# If the user specified any form of job type/class limitations...
 #
-if ( @jobtypes > 0 ) { 
-    # make keys unique, merge comma lists
-    my %temp = map { lc($_) => 1 } split( /,/, join(',', @jobtypes) );
+if ( @jobtypes > 0 ) {
 
-    # determine valid inputs from @main::job{class,short} and numerical
-    my %valid = ( ( map { $main::jobclass[$_] => $_ } 0..$#main::jobclass ), 
-		  ( map { $main::jobshort[$_] => $_ } 0..$#main::jobshort ),
-		  ( map { $_ => $_ } 0..$#main::jobclass ) );
+	# make keys unique, merge comma lists
+	my %temp = map { lc($_) => 1 } split( /,/, join( ',', @jobtypes ) );
 
-    # determine, if there were any invalid job classes
-    my @invalid = ();
-    foreach my $k ( keys %temp ) { 
-	push( @invalid, $k ) unless ( $k eq 'help' || exists $valid{$k} ); 
-    }
+	# determine valid inputs from @main::job{class,short} and numerical
+	my %valid = (
+		( map { $main::jobclass[$_] => $_ } 0 .. $#main::jobclass ),
+		( map { $main::jobshort[$_] => $_ } 0 .. $#main::jobshort ),
+		( map { $_ => $_ } 0 .. $#main::jobclass )
+	);
 
-    if ( exists $temp{help} || @invalid ) { 
-	# this path if 'help' was specified or invalid class specs found
-	print "\n"; 
-
-	# deal with, if any, invalid job class specs
-	if ( @invalid ) { 
-	    print 'ERROR: ', plural(@invalid,'unrecognized job class');
-	    print ': ', join(', ',@invalid), "\n\n"; 
+	# determine, if there were any invalid job classes
+	my @invalid = ();
+	foreach my $k ( keys %temp ) {
+		push( @invalid, $k ) unless ( $k eq 'help' || exists $valid{$k} );
 	}
 
-	# print list of supported job class specs (omit unknown)
-	print "List of recognized job classes:\n\n";
-	printf "%2s %-5s %-10s %s\n", 'NR', 'SHORT', 'LONG', 'DESCRITPION'; 
-	for ( my $i=1; $i<@main::jobclass; ++$i ) { 
-	    printf( "%2d %-5s %-10s %s\n", $i, $main::jobshort[$i], 
-		    $main::jobclass[$i], $main::jobclass_desc[$i] );
-	}
-	print "\n";
+	if ( exists $temp{help} || @invalid ) {
 
-	# in case of invalid spec, exit with an error. 'help' is not an error. 
-	exit ( @invalid ? 1 : 0 );  
-    } else {
-	# all keys look kosher, translate into numbers
-	@jobtypes = sort { $a <=> $b } map { $valid{$_} } keys %temp; 
-    }
+		# this path if 'help' was specified or invalid class specs found
+		print "\n";
+
+		# deal with, if any, invalid job class specs
+		if (@invalid) {
+			print 'ERROR: ', plural( @invalid, 'unrecognized job class' );
+			print ': ', join( ', ', @invalid ), "\n\n";
+		}
+
+		# print list of supported job class specs (omit unknown)
+		print "List of recognized job classes:\n\n";
+		printf "%2s %-5s %-10s %s\n", 'NR', 'SHORT', 'LONG', 'DESCRITPION';
+		for ( my $i = 1 ; $i < @main::jobclass ; ++$i ) {
+			printf( "%2d %-5s %-10s %s\n",
+				$i, $main::jobshort[$i], $main::jobclass[$i],
+				$main::jobclass_desc[$i] );
+		}
+		print "\n";
+
+		# in case of invalid spec, exit with an error. 'help' is not an error.
+		exit( @invalid ? 1 : 0 );
+	}
+	else {
+
+		# all keys look kosher, translate into numbers
+		@jobtypes = sort { $a <=> $b } map { $valid{$_} } keys %temp;
+	}
 }
 
 #
 # If the user specified site limitations, unique specs
 #
-if ( @jobsites ) { 
-    @jobsites = sort keys %{{ map { $_ => 1 }
-			      split( /,/, join(',', @jobsites) ) }};
+if (@jobsites) {
+	@jobsites = sort keys %{
+		{
+			map { $_ => 1 }
+			  split( /,/, join( ',', @jobsites ) )
+		}
+	  };
 }
 
 # react to changes in terminal size
@@ -1725,318 +1956,412 @@ $SIG{WINCH} = \&sigwinch if ( defined &TIOCGWINSZ && $main::onatty );
 
 # mess with verbosity (expert level) on SIGUSR
 $SIG{USR1} = sub { ++$main::expert };
-$SIG{USR2} = sub { $main::expert-- }; 
+$SIG{USR2} = sub { $main::expert-- };
 
 # experts don't need spaces :-P
-$main::space = ' ' if $main::expert; 
+$main::space = ' ' if $main::expert;
 
 # determine UTF-8 capabilities
-if ( $main::isutf8 ) { 
-    # Draw UTF-8 graphics 
-    # Warning: These are the unicode strings that require 'use utf8;'
-    if ( $heavy ) { 
-	@main::graph = ( " ┣━", " ┗━", " ┃ ", "   " );
-    } else {
-	@main::graph = ( " ├─", " └─", " │ ", "   " );
-    }
-} else {
-    # Assume ASCII graphics
-    @main::graph = ( ' |-', ' \_', ' | ', '   ' ); 
+if ($main::isutf8) {
+
+	# Draw UTF-8 graphics
+	# Warning: These are the unicode strings that require 'use utf8;'
+	if ($heavy) {
+		@main::graph = ( " ┣━", " ┗━", " ┃ ", "   " );
+	}
+	else {
+		@main::graph = ( " ├─", " └─", " │ ", "   " );
+	}
+}
+else {
+
+	# Assume ASCII graphics
+	@main::graph = ( ' |-', ' \_', ' | ', '   ' );
 }
 
 # Default $rundir to cwd if nothing was specified
-my $run = @ARGV ? abs_path(shift()) : getcwd();
-my %braindb = slurp_braindb($run); 
+my $run      = @ARGV ? abs_path( shift() ) : getcwd();
+my %braindb  = slurp_braindb($run);
 my @rootuuid = ();
 if ( scalar keys %braindb ) {
-    # we have a rundir
-    push( @rootuuid, $braindb{'root_wf_uuid'} )
-	if exists $braindb{'root_wf_uuid'}; 
-} else {
-    # no valid rundir
-    undef $run;
+
+	# we have a rundir
+	push( @rootuuid, $braindb{'root_wf_uuid'} )
+	  if exists $braindb{'root_wf_uuid'};
 }
+else {
+
+	# no valid rundir
+	undef $run;
+}
+
 # POST-condition: $run is defined if it is a valid rundir
 # FIXME: Extend to permit multiple rundirs a la @ARGV
 
-for ( my $cursor=1; ; $cursor=1 ) { 
-    my (%ccount,%job,%dag,@result,@dags) = ();
-    my %dcount = ( _state => [ map { 0 } @main::dstat ]
-	         , _total => 0 ); 
+for ( my $cursor = 1 ; ; $cursor = 1 ) {
+	my ( %ccount, %job, %dag, @result, @dags ) = ();
+	my %dcount = (
+		_state => [ map { 0 } @main::dstat ],
+		_total => 0
+	);
 
-    # what level of expertise (output, verbose mode). Eventually a CLI
-    # option will permit to use your own mix-n-match output (TBD).  
-    my @qtitle = @{ $main::qtitle[$main::expert] }; 
-    my @dtitle = @{ $main::dtitle[$show_subdag] }; 
+	# what level of expertise (output, verbose mode). Eventually a CLI
+	# option will permit to use your own mix-n-match output (TBD).
+	my @qtitle = @{ $main::qtitle[$main::expert] };
+	my @dtitle = @{ $main::dtitle[$show_subdag] };
 
-    my @q = (); 
-    if ( $queue ) { 
-	# collect information from condor_q
-	profile_log( 'start condor_q' ) if defined $main::profile;
-	condor_q( %job, %dag, @qtitle
-		, noidle => ! $showidle
-		, count => \%ccount
-		, ( @jobtypes ? ( jobtypes => \@jobtypes ) : () ) 
-		, ( @jobsites ? ( jobsites => \@jobsites ) : () ) 
-		, ( @rootuuid ? ( rootuuid => \@rootuuid ) : () )
+	# User has specified which columns should be visible.
+	@display_col = split( /,/, join( ',', @display_col ) );
+	if ( $show_subdag && @display_col > 0 ) {
+		my $column;
+		my $ind = 0;
+		my %unique;
+		$#dtitle = -1;
+
+		foreach $column (@display_col) {
+			$column = lc($column);
+
+			if ( exists( $disptitle{$column} ) ) {
+
+				# Avoid showing same column more than once.
+				if ( !exists( $unique{$column} ) ) {
+					@dtitle[ $ind++ ] = $disptitle{$column};
+				}
+			}
+			else {
+
+				# Avoid showing warning for the same column more than once.
+				if ( !exists( $unique{$column} ) ) {
+					warn "Invalid display column '$column'. Ignoring...";
+
+				}
+			}
+
+			$unique{$column} = 1;
+		}
+	}
+
+	my @q = ();
+	if ($queue) {
+
+		# collect information from condor_q
+		profile_log('start condor_q') if defined $main::profile;
+		condor_q(
+			%job, %dag, @qtitle
+			,
+			noidle => !$showidle
+			,
+			count => \%ccount
+			,
+			( @jobtypes ? ( jobtypes => \@jobtypes ) : () )
+			, ( @jobsites ? ( jobsites => \@jobsites ) : () )
+			, ( @rootuuid ? ( rootuuid => \@rootuuid ) : () )
 		);
-	profile_log( "final condor_q ($?)" ) if defined $main::profile;
+		profile_log("final condor_q ($?)") if defined $main::profile;
 
-	# %main::seen is for sanity checks
-	%main::seen = map { $_ => 1 } keys %job;
+		# %main::seen is for sanity checks
+		%main::seen = map { $_ => 1 } keys %job;
 
-	# collect data to show into @q
-	profile_log( "start Q sorting" ) if defined $main::profile;
-	my %leaves = find_leaves(%dag); 
-	foreach my $id ( sort { $a <=> $b } keys %leaves ) {
-	    push( @q, assemble_dag( \%job, \%dag, $id ) ); 
-	}
-	profile_log( "final Q sorting" ) if defined $main::profile;
-    }
-
-    # collect data from $rundir (if applicable)
-    if ( defined $run ) {
-	profile_log( "start dag dir traversal" ) if defined $main::profile; 
-	@dags = dag_status( $run, $braindb{dag}, 
-			    nosuccess => ! $success,
-			    count => \%dcount );
-	profile_log( "final dag dir traversal" ) if defined $main::profile;
-    }
-
-    # construct legends and legend sizes according to terminal
-    my ($qlegend,$ql_size,$dlegend,$dl_size) = ('',0,'',0);
-    if ( $legend ) {
-	($qlegend,$ql_size) = create_legend( %qtitle, @qtitle ); 
-	($dlegend,$dl_size) = create_legend( %dtitle, @dtitle ); 
-    }
-
-    # empty screen and print "Ctrl+C" and date header
-    my $reserve = 5; 
-    if ( defined $watch ) { 
-	($rows,$cols) = initialize_winch(); 
-	print "\033[2J\033[H";
-	$main::time = CORE::time(); 
-	my $now = scalar localtime($main::time); 
-	my $msg = "Press Ctrl+C to exit";
-	print headline($msg,"(pid=$$)",$now,$cols), "\n\n"; 
-	$cursor += 2; 
-
-	if ( $show_subdag ) { 
-	    my $nd = @dags;
-	    $reserve += $dl_size + $nd + 2; 
-	} elsif ( $vertical ) {
-	    $reserve += $dl_size + 9; 
-	} else {
-	    $reserve += $dl_size + 3; 
-	}
-    }
-
-    # Are there are Condor jobs in the Q
-    if ( @q > 0 ) { 
-	profile_log( "start Q printing" ) if defined $main::profile; 
-
-	# create data to actually show from potentially larger set
-	@result = whittle_down( %qtitle, @qtitle, @q ); 
-
-	# determine dynamic column widths
-	my @max = column_widths( %qtitle, @qtitle, @result ); 
-	
-	# print legend (requested by Ewa)
-	if ( $legend ) {
-	    print $qlegend;
-	    $cursor += $ql_size;
+		# collect data to show into @q
+		profile_log("start Q sorting") if defined $main::profile;
+		my %leaves = find_leaves(%dag);
+		foreach my $id ( sort { $a <=> $b } keys %leaves ) {
+			push( @q, assemble_dag( \%job, \%dag, $id ) );
+		}
+		profile_log("final Q sorting") if defined $main::profile;
 	}
 
-	# print headers
-	print $main::bold if $main::color; 
-	for ( my $i=0; $i<@max; ++$i ) {
-	    print $main::space if $i; 
-	    printf "%*s", $max[$i], $qtitle{ $qtitle[$i] }{header}; 
+	# collect data from $rundir (if applicable)
+	if ( defined $run ) {
+		profile_log("start dag dir traversal") if defined $main::profile;
+		@dags = dag_status(
+			$run, $braindb{dag},
+			nosuccess => !$success,
+			count     => \%dcount
+		);
+		profile_log("final dag dir traversal") if defined $main::profile;
 	}
-	print $main::reset if $main::color; 
-	print "\n";
-	++$cursor; 
-	
-	# print each row of results
-	for ( my $i=0; $i<@result; ++$i ) { 
-	    my $jobstatus = $q[$i]->{jobstatus}; 
 
-	    # decide on color for row and print data columns
-	    print $main::ccolor[$jobstatus] if $main::color;
-	    for ( my $j=0; $j<@{$result[$i]}; ++$j ) {
-		print $main::space if $j;
-		printf "%*s", $max[$j], $result[$i][$j]; 
-	    }
+	# construct legends and legend sizes according to terminal
+	my ( $qlegend, $ql_size, $dlegend, $dl_size ) = ( '', 0, '', 0 );
+	if ($legend) {
+		( $qlegend, $ql_size ) = create_legend( %qtitle, @qtitle );
+		( $dlegend, $dl_size ) = create_legend( %dtitle, @dtitle );
+	}
 
-	    # HELD jobs get a separate line with the hold reason
-	    if ( $heldinfo && $jobstatus == 5 ) {
-		my $tile = $main::graph[1]; 
-		print "\n", $tile, fit( $cols-length($tile), $q[$i]{holdreason} );
+	# empty screen and print "Ctrl+C" and date header
+	my $reserve = 5;
+	if ( defined $watch ) {
+		( $rows, $cols ) = initialize_winch();
+		print "\033[2J\033[H";
+		$main::time = CORE::time();
+		my $now = scalar localtime($main::time);
+		my $msg = "Press Ctrl+C to exit";
+		print headline( $msg, "(pid=$$)", $now, $cols ), "\n\n";
+		$cursor += 2;
+
+		if ($show_subdag) {
+			my $nd = @dags;
+			$reserve += $dl_size + $nd + 2;
+		}
+		elsif ($vertical) {
+			$reserve += $dl_size + 9;
+		}
+		else {
+			$reserve += $dl_size + 3;
+		}
+	}
+
+	# Are there are Condor jobs in the Q
+	if ( @q > 0 ) {
+		profile_log("start Q printing") if defined $main::profile;
+
+		# create data to actually show from potentially larger set
+		@result = whittle_down( %qtitle, @qtitle, @q );
+
+		# determine dynamic column widths
+		my @max = column_widths( %qtitle, @qtitle, @result );
+
+		# print legend (requested by Ewa)
+		if ($legend) {
+			print $qlegend;
+			$cursor += $ql_size;
+		}
+
+		# print headers
+		print $main::bold if $main::color;
+		for ( my $i = 0 ; $i < @max ; ++$i ) {
+			print $main::space if $i;
+			printf "%*s", $max[$i], $qtitle{ $qtitle[$i] }{header};
+		}
+		print $main::reset if $main::color;
+		print "\n";
 		++$cursor;
-	    }
 
-	    # reset color after this
-	    print $main::reset if $main::color;
+		# print each row of results
+		for ( my $i = 0 ; $i < @result ; ++$i ) {
+			my $jobstatus = $q[$i]->{jobstatus};
 
-	    # transient trickery for classads mode
-	    if ( $classads ) {
-		my $m = $classads == 1 ? 
-		    qr{^(?:pegasus|wf)_} :
-		    qr{^(?:(?:pegasus|wf)_|job|globus)} ;
-		$cursor = q_print_debug( $cursor, $reserve, $watch, $m, %{$q[$i]} );
-	    }
+			# decide on color for row and print data columns
+			print $main::ccolor[$jobstatus] if $main::color;
+			for ( my $j = 0 ; $j < @{ $result[$i] } ; ++$j ) {
+				print $main::space if $j;
+				printf "%*s", $max[$j], $result[$i][$j];
+			}
 
-	    # terminate current line
-	    print "\n"; 
-	    ++$cursor;
+			# HELD jobs get a separate line with the hold reason
+			if ( $heldinfo && $jobstatus == 5 ) {
+				my $tile = $main::graph[1];
+				print "\n", $tile,
+				  fit( $cols - length($tile), $q[$i]{holdreason} );
+				++$cursor;
+			}
 
-	    # skip rest of output if reaching bottom of current terminal 
-	    if ( $watch && @result > $rows-$reserve && $cursor > $rows-$reserve ) {
-		print "(", plural( @result-$i, 'additional job' );
-		print " omitted.)\n";
-		++$cursor; 
+			# reset color after this
+			print $main::reset if $main::color;
+
+			# transient trickery for classads mode
+			if ($classads) {
+				my $m =
+				  $classads == 1
+				  ? qr{^(?:pegasus|wf)_}
+				  : qr{^(?:(?:pegasus|wf)_|job|globus)};
+				$cursor =
+				  q_print_debug( $cursor, $reserve, $watch, $m, %{ $q[$i] } );
+			}
+
+			# terminate current line
+			print "\n";
+			++$cursor;
+
+			# skip rest of output if reaching bottom of current terminal
+			if (   $watch
+				&& @result > $rows - $reserve
+				&& $cursor > $rows - $reserve )
+			{
+				print "(", plural( @result - $i, 'additional job' );
+				print " omitted.)\n";
+				++$cursor;
+				last;
+			}
+		}
+
+		# create summaries from %ccount
+		$cursor = q_print_summary( $cursor, %ccount );
+		profile_log("final Q printing") if defined $main::profile;
+	}
+	else {
+
+		# nothing in Q
+		if ($queue) {
+			print "(no matching jobs found in Condor Q)\n";
+			++$cursor;
+		}
+	}
+
+	# are we sane?
+	warn "\n(Debug: I appear to be missing some jobs)\n"
+	  if ( scalar %main::seen );
+
+	if ( @q > 0 && $dcount{'_total'} > 0 ) {
+
+		# separate the two sections
+		print "\n";
+		++$cursor;
+	}
+
+	# Is there state in the rundir (is there a rundir)?
+	$reserve = 5;
+	if ( $dcount{'_total'} ) {
+		local $main::space = ' ';    # temporarily scoped overwrite
+		profile_log("start DAG printing") if defined $main::profile;
+
+		my $is_complete = 1;
+
+		my $dag;
+		foreach $dag (@dags) {
+
+			# If state is <= 2 i.e. Undefined , Undefined (Indeterminable), or Running
+			# mark completion flag as false.
+			if ( $dag->{state} <= 2 ) {
+				$is_complete = 0;
+			}
+		}
+
+		if ($is_complete) {
+			undef $watch;
+		}
+
+		# create pseudo-row (last row) with totals
+		push(
+			@dags,
+			{
+				name   => "TOTALS (" . plural( $dcount{'total'}, 'job' ) . ')',
+				state  => 42,
+				status => undef,
+				detail => \%dcount
+			}
+		);
+
+		# create data to actually show from larger set
+		@result = whittle_down( %dtitle, @dtitle, @dags );
+
+		# determine dynamic column widths
+		my @max = column_widths( %dtitle, @dtitle, @result );
+
+		# print legend (requested by Ewa)
+		if ($legend) {
+			print $dlegend;
+			$cursor += $dl_size;
+		}
+
+		# print headers
+		unless ($vertical) {
+			print $main::bold if $main::color;
+			for ( my $i = 0 ; $i < @max ; ++$i ) {
+				print ' ' if $i;
+				printf "%*s", $max[$i], $dtitle{ $dtitle[$i] }{header};
+			}
+			print $main::reset if $main::color;
+			print "\n";
+			++$cursor;
+		}
+
+		# print each row of results
+		if ($show_subdag) {
+
+			# exclude pseudo-row with total from this part
+			for ( my $i = 0 ; $i < $#result ; ++$i ) {
+				my $dagstate = $dags[$i]->{state};
+
+				# decide on a color for row and print data columns
+				print $main::dcolor[$dagstate] if $main::color;
+				for ( my $j = 0 ; $j < @{ $result[$i] } ; ++$j ) {
+					print ' ' if $j;
+					if ( $j == $#max
+						&& length( $result[$i][$j] ) > abs( $max[$j] ) )
+					{
+						$result[$i][$j] =
+						  fit( -abs( $max[$j] ), $result[$i][$j] );
+					}
+					printf "%*s", $max[$j], $result[$i][$j];
+				}
+
+				# reset colors
+				print $main::reset if $main::color;
+
+				# terminate current line
+				print "\n";
+				++$cursor;
+
+				# skip rest of output if reaching bottom of current terminal
+				my $diff = $rows - $reserve;
+				if ( $watch && $#result > $diff && $cursor > $diff ) {
+					print '(', plural( $#result - $i, 'additional workflow' );
+					print " omitted.)\n";
+					++$cursor;
+					last;
+				}
+			}
+		}
+
+		# print totals here
+		if ( !$show_subdag || $dcount{'_total'} > 1 ) {
+			if ($vertical) {
+				my $i = $#result;
+
+#		my $mk = (sort { $b <=> $a } map { length($dtitle{$_}{header}) } @dtitle)[0];
+				for ( my $j = 0 ; $j < @max ; ++$j ) {
+					print $main::bold if $main::color;
+
+					#		    printf "%*s: ", $mk, $dtitle{ $dtitle[$j] }{header};
+					printf "%s: ", $dtitle{ $dtitle[$j] }{header};
+					print $main::reset if $main::color;
+					printf "%s\n", $result[$i][$j];
+					++$cursor;
+				}
+			}
+			else {
+
+				# decide on a color for row and print data columns
+				print $main::bold if ( $show_subdag && $main::color );
+				my $i = $#result;
+				for ( my $j = 0 ; $j < @{ $result[$i] } ; ++$j ) {
+					print ' ' if $j;
+					if ( $j == $#max
+						&& length( $result[$i][$j] ) > abs( $max[$j] ) )
+					{
+						$result[$i][$j] =
+						  fit( -abs( $max[$j] ), $result[$i][$j] );
+					}
+					printf "%*s", $max[$j], $result[$i][$j];
+				}
+
+				# reset colors
+				print $main::reset if $main::color;
+
+				# terminate current line
+				print "\n";
+				++$cursor;
+			}
+		}
+
+		# print summary
+		$cursor = dag_print_summary( $cursor, %dcount );
+		profile_log("final DAG printing") if defined $main::profile;
+	}
+	else {
+
+		# no valid rundir -- do nothing
+	}
+
+	# are we in 'watch' mode, or is this it?
+	if ( defined $watch ) {
+		sleep($watch);
+	}
+	else {
 		last;
-	    }
 	}
-
-	# create summaries from %ccount
-	$cursor = q_print_summary( $cursor, %ccount ); 
-	profile_log( "final Q printing" ) if defined $main::profile; 
-    } else {
-	# nothing in Q
-	if ( $queue ) { 
-	    print "(no matching jobs found in Condor Q)\n";
-	    ++$cursor;
-	}
-    }
-
-    # are we sane? 
-    warn "\n(Debug: I appear to be missing some jobs)\n" 
-	if ( scalar %main::seen );
-
-    if ( @q > 0 && $dcount{'_total'} > 0 ) {
-	# separate the two sections
-	print "\n";
-	++$cursor; 
-    }
-
-    # Is there state in the rundir (is there a rundir)? 
-    $reserve = 5;
-    if ( $dcount{'_total'} ) { 
-	local $main::space = ' '; # temporarily scoped overwrite
-	profile_log( "start DAG printing" ) if defined $main::profile; 
-
-	# create pseudo-row (last row) with totals
-	push( @dags, { name => "TOTALS (" . plural($dcount{'total'},'job') . ')',
-		       state => 42,
-		       status => undef,
-		       detail => \%dcount } );
-
-	# create data to actually show from larger set
-	@result = whittle_down( %dtitle, @dtitle, @dags ); 
-
-	# determine dynamic column widths
-	my @max = column_widths( %dtitle, @dtitle, @result ); 
-	
-	# print legend (requested by Ewa)
-	if ( $legend ) {
-	    print $dlegend;
-	    $cursor += $dl_size;
-	}
-
-	# print headers
-	unless ( $vertical ) { 
-	    print $main::bold if $main::color;
-	    for ( my $i=0; $i<@max; ++$i ) {
-		print ' ' if $i; 
-		printf "%*s", $max[$i], $dtitle{ $dtitle[$i] }{header}; 
-	    }
-	    print $main::reset if $main::color; 
-	    print "\n";
-	    ++$cursor; 
-	}
-
-	# print each row of results
-	if ( $show_subdag ) { 
-	    # exclude pseudo-row with total from this part
-	    for ( my $i=0; $i<$#result; ++$i ) { 
-		my $dagstate = $dags[$i]->{state}; 
-
-		# decide on a color for row and print data columns
-		print $main::dcolor[$dagstate] if $main::color; 
-		for ( my $j=0; $j<@{$result[$i]}; ++$j ) {
-		    print ' ' if $j;
-		    if ( $j == $#max && length($result[$i][$j]) > abs($max[$j]) ) {
-			$result[$i][$j] = fit( -abs($max[$j]), $result[$i][$j] ); 
-		    }
-		    printf "%*s", $max[$j], $result[$i][$j]; 
-	        }
-
-		# reset colors
-		print $main::reset if $main::color; 
-
-		# terminate current line
-		print "\n"; 
-		++$cursor; 
-
-		# skip rest of output if reaching bottom of current terminal
-		my $diff = $rows - $reserve; 
-		if ( $watch && $#result > $diff && $cursor > $diff ) {
-		    print '(', plural( $#result-$i, 'additional workflow' );
-		    print " omitted.)\n"; 
-		    ++$cursor;
-		    last; 
-		}
-	    }
-	}
-
-	# print totals here
-	if ( ! $show_subdag || $dcount{'_total'} > 1 ) {
-	    if ( $vertical ) { 
-		my $i = $#result;
-#		my $mk = (sort { $b <=> $a } map { length($dtitle{$_}{header}) } @dtitle)[0]; 
-		for ( my $j=0; $j<@max; ++$j ) { 
-		    print $main::bold if $main::color; 
-#		    printf "%*s: ", $mk, $dtitle{ $dtitle[$j] }{header}; 
-		    printf "%s: ", $dtitle{ $dtitle[$j] }{header}; 
-		    print $main::reset if $main::color; 
-		    printf "%s\n", $result[$i][$j]; 
-		    ++$cursor;
-		}
-	    } else {
-		# decide on a color for row and print data columns
-		print $main::bold if ( $show_subdag && $main::color );
-		my $i = $#result; 
-		for ( my $j=0; $j<@{$result[$i]}; ++$j ) {
-		    print ' ' if $j;
-		    if ( $j == $#max && length($result[$i][$j]) > abs($max[$j]) ) {
-			$result[$i][$j] = fit( -abs($max[$j]), $result[$i][$j] ); 
-		    }
-		    printf "%*s", $max[$j], $result[$i][$j]; 
-		}
-
-		# reset colors
-		print $main::reset if $main::color; 
-
-		# terminate current line
-		print "\n"; 
-		++$cursor; 
-	    }
-	}
-
-	# print summary 
-	$cursor = dag_print_summary( $cursor, %dcount );
-	profile_log( "final DAG printing" ) if defined $main::profile; 
-    } else {
-	# no valid rundir -- do nothing
-    }
-
-    # are we in 'watch' mode, or is this it? 
-    if ( defined $watch ) { 
-	sleep($watch);
-    } else { 
-	last;
-    }
 }
 
 exit 0;
