@@ -436,6 +436,20 @@ my %dtitle = (
 	, [qw(UNREADY READY PRE QUEUED POST DONE FAILED PERCENT STATE WORKFLOW)],
 );
 
+# Added for PM-664
+my %disptitle = (
+	'u'    => 'UNREADY',
+	'r'    => 'READY',
+	'pre'  => 'PRE',
+	'post' => 'POST',
+	'q'    => 'QUEUED',
+	'd'    => 'DONE',
+	'c'    => 'PERCENT',
+	'f'    => 'FAILED',
+	's'    => 'STATE',
+	'w'    => 'WORKFLOW'
+);
+
 #
 # --- functions --------------------------------------------
 #
@@ -477,6 +491,18 @@ Optional arguments affecting Condor Q output:
 Optional arguments affecting DAG output: 
  rundir           directory to monitor, default is CWD.
  -l|--long        Show all DAG states, including sub-DAGs, default only totals.
+ -D|--display     List of columns to display in output. Works only when -l option is enabled. 
+                  Valid values are 
+                  r => READY,
+                  u => UNREADY,
+                  pre,
+                  post,
+                  q => QUEUED,
+                  d => DONE,
+                  c => PERCENT,
+                  f => FAILED,
+                  s => STATE,
+                  w => DAGNAME
  -r|--rows        Show summary in rows, not columns. Mutually-exclusive wrt -l. 
  -S|--[no]success Omit 'Success' workflows from --long output, default show. 
 
@@ -1809,6 +1835,7 @@ my $legend      = 0;
 my $show_subdag = 0;
 my $classads    = 0;
 my $vertical    = 0;
+my @display_col = ();
 my ( $watch, @jobtypes, @jobsites );
 GetOptions(
 	'help|h'               => \&usage,
@@ -1827,6 +1854,7 @@ GetOptions(
 	'queue|Q!'             => \$queue,
 	'hold|held!'           => \$heldinfo,
 	'heavy!'               => \$heavy,
+	'display|D:s'          => \@display_col,
 	'profile=s'            => sub { profile_start( $_[1] ) },
 
 	# the next two options are mutually exclusive
@@ -1981,6 +2009,37 @@ for ( my $cursor = 1 ; ; $cursor = 1 ) {
 	# option will permit to use your own mix-n-match output (TBD).
 	my @qtitle = @{ $main::qtitle[$main::expert] };
 	my @dtitle = @{ $main::dtitle[$show_subdag] };
+
+	# User has specified which columns should be visible.
+	@display_col = split( /,/, join( ',', @display_col ) );
+	if ( $show_subdag && @display_col > 0 ) {
+		my $column;
+		my $ind = 0;
+		my %unique;
+		$#dtitle = -1;
+
+		foreach $column (@display_col) {
+			$column = lc($column);
+
+			if ( exists( $disptitle{$column} ) ) {
+
+				# Avoid showing same column more than once.
+				if ( !exists( $unique{$column} ) ) {
+					@dtitle[ $ind++ ] = $disptitle{$column};
+				}
+			}
+			else {
+
+				# Avoid showing warning for the same column more than once.
+				if ( !exists( $unique{$column} ) ) {
+					warn "Invalid display column '$column'. Ignoring...";
+
+				}
+			}
+
+			$unique{$column} = 1;
+		}
+	}
 
 	my @q = ();
 	if ($queue) {
