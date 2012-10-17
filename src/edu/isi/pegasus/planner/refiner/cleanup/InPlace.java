@@ -532,7 +532,7 @@ public class InPlace implements CleanupStrategy{
             }//end of while loop .  //process all elements in the current priority
 
             //we now have a list of cleanup jobs for this level
-            List<GraphNode> clusteredCleanupJobs = clusterCleanupJobs( cleanupNodesPerLevel, cleanedBy , curP );
+            List<GraphNode> clusteredCleanupJobs = clusterCleanupJobs( cleanupNodesPerLevel, cleanedBy , site, curP );
             //for each clustered cleanup cleanupNode , add the associated cleanup job
             for( GraphNode cleanupNode: clusteredCleanupJobs ){
                  // We have always pass the associaated compute job. Since now
@@ -711,16 +711,19 @@ public class InPlace implements CleanupStrategy{
     /**
      * Generated an ID for a clustered cleanup job
      *
+     *
+     * @param site       the site associated with the cleanup jobs
      * @param level    the level of the workflow
      * @param index    the index of the job on that level
      *
      * @return
      */
-    public String generateClusteredJobID( int level, int index ){
+    public String generateClusteredJobID( String site, int level, int index ){
         StringBuffer sb = new StringBuffer();
 
-        sb.append( InPlace.CLEANUP_JOB_PREFIX ).append( "level" ).
-           append( "_" ).append( level ).append( "_" ).append( index );
+        sb.append( InPlace.CLEANUP_JOB_PREFIX ).append( site ).append( "_").
+           append( "level" ).append( "_" ).append( level ).
+           append( "_" ).append( index );
 
         return sb.toString();
     }
@@ -817,12 +820,12 @@ public class InPlace implements CleanupStrategy{
      *
      * @param cleanedBy  a map that tracks which file was deleted by which cleanup
      *                   job
-     *
+     * @param site       the site associated with the cleanup jobs
      * @param level      the level of the workflow
      *
      * @return
      */
-    private List<GraphNode> clusterCleanupJobs(List<GraphNode> cleanupNodes, HashMap cleanedBy, int level ) {
+    private List<GraphNode> clusterCleanupJobs(List<GraphNode> cleanupNodes, HashMap cleanedBy, String site, int level ) {
         List<GraphNode> clusteredCleanupJobs = new LinkedList();
 
         //sanity check for empty list
@@ -852,7 +855,7 @@ public class InPlace implements CleanupStrategy{
             }
 
             //we have our constituents. create a cleanup job out of this
-            GraphNode clusteredCleanupJob = createClusteredCleanupJob( clusteredConstitutents, cleanedBy, level, counter );
+            GraphNode clusteredCleanupJob = createClusteredCleanupJob( clusteredConstitutents, cleanedBy, site, level, counter );
             clusteredCleanupJobs.add(clusteredCleanupJob);
             counter++;
         }
@@ -896,12 +899,13 @@ public class InPlace implements CleanupStrategy{
      * @param nodes      list of cleanup nodes that are to be aggregated
      * @param cleanedBy  a map that tracks which file was deleted by which cleanup
      *                   job
+     * @param site       the site associated with the cleanup jobs
      * @param level      the level of the workflow
      * @param index      the index of the cleanup job for that level
      * @return
      */
-    private GraphNode createClusteredCleanupJob(List<GraphNode> nodes, HashMap cleanedBy, int level, int index ) {
-        GraphNode clusteredCleanupNode = new GraphNode( generateClusteredJobID( level, index ) );
+    private GraphNode createClusteredCleanupJob(List<GraphNode> nodes, HashMap cleanedBy, String site, int level, int index ) {
+        GraphNode clusteredCleanupNode = new GraphNode( generateClusteredJobID( site, level, index ) );
 
 
         //sanity check
