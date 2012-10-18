@@ -78,7 +78,7 @@ install: $(PROGRAMS)
 endif
 
 pegasus-mpi-cluster: pegasus-mpi-cluster.o $(OBJS)
-	$(LD) $^ -o $@
+	$(LD) $(LDFLAGS) $^ -o $@
 	$(SIGN)
 test-strlib: test-strlib.o $(OBJS)
 test-dag: test-dag.o $(OBJS)
