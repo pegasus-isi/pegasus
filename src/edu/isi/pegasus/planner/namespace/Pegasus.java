@@ -344,7 +344,7 @@ public class Pegasus extends Namespace {
     /**
      * Arguments that need to be passed to the PMC clustering executable.
      */
-    public static final String PMC_CLUSTER_ARGUMENTS = "pmc_arguments";
+    public static final String PMC_TASK_ARGUMENTS = "pmc_task_arguments";
 
     /**
      * Static Handle to the sum aggregator.
@@ -514,7 +514,7 @@ public class Pegasus extends Namespace {
                     key.compareTo( PMC_REQUEST_MEMORY_KEY ) == 0 ||
                     key.compareTo( PMC_REQUEST_CPUS_KEY ) == 0 ||
                     key.compareTo( PMC_PRIORITY_KEY ) == 0 ||
-                    key.compareTo( PMC_CLUSTER_ARGUMENTS) == 0 ){
+                    key.compareTo( PMC_TASK_ARGUMENTS) == 0 ){
                     res = VALID_KEY;
                 }
                 else{

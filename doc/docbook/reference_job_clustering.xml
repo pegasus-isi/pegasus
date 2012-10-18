@@ -484,6 +484,17 @@ siteX    pegasus::seqexec     /usr/pegasus/bin/pegasus-cluster INSTALLED       I
                   This profile is usually set in the DAX for each job.
                   Negative values are allowed for priorities.</entry>
                 </row>
+
+                <row>
+                  <entry>pmc_task_arguments</entry>
+
+                  <entry>The key is used to pass any extra arguments to the
+                  PMC task during the planning time. They are added to the
+                  very end of the argument string constructed for the task in
+                  the PMC file. Hence, allows for overriding of any argument
+                  constructed by the planner for any particular task in the
+                  PMC job.</entry>
+                </row>
               </tbody>
             </tgroup>
           </table>

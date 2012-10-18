@@ -471,14 +471,14 @@ public class MPIExec extends Abstract {
     }
     
     /**
-     * Looks at the profile key for pegasus::pmc_arguments to determine if extra
+     * Looks at the profile key for pegasus::pmc_task_arguments to determine if extra
      * arguments are required for the task.
      * 
-     * @param job The job for which extra arguments need to be determined
-     * @return The arguments if they are present, or an empty string
+     * @param job  the constitunt job for which extra arguments need to be determined
+     * @return     the arguments if they are present, or an empty string
      */
     public String getExtraArguments( Job job ) {
-        String extra = job.vdsNS.getStringValue(Pegasus.PMC_CLUSTER_ARGUMENTS);
+        String extra = job.vdsNS.getStringValue(Pegasus.PMC_TASK_ARGUMENTS);
         if (extra == null) {
             return "";
         }
