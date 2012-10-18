@@ -192,6 +192,10 @@ public class MPIExec extends Abstract {
                     task.append( getCPURequirementsArgument( constitutentJob ) );
                     task.append( getPriorityArgument( constitutentJob ) );
 
+                    //PM-654 post add the arguments if any specified by pmc_arguments
+                    // This needs to go after all other arguments
+                    task.append( getExtraArguments( constitutentJob ) );
+                    
                     task.append( constitutentJob.getRemoteExecutable() ).append( " " ).
                          append(  constitutentJob.getArguments() ).append( "\n" );
                     writer.write( task.toString() );
@@ -201,7 +205,7 @@ public class MPIExec extends Abstract {
             writer.write( "\n" );
 
             //lets write out the edges
-            for( Iterator it = job.nodeIterator(); it.hasNext() ; ){
+            for( Iterator<GraphNode> it = job.nodeIterator(); it.hasNext() ; ){
                 GraphNode gn = (GraphNode) it.next();
 
                 //get a list of parents of the node
@@ -280,14 +284,6 @@ public class MPIExec extends Abstract {
         String stdin  = job.getStdIn();
         StringBuffer args = new StringBuffer();
         
-        //construct any extra arguments specified in profiles
-        //or properties
-        String extraArgs = job.vdsNS.getStringValue( Pegasus.CLUSTER_ARGUMENTS );
-        
-        if( extraArgs != null ){
-            args.append( extraArgs ).append( " " );
-        }
-
         //add --max-wall-time option PM-625
         String walltime = (String) job.globusRSL.get( "maxwalltime" );
         if( walltime != null ){
@@ -307,17 +303,18 @@ public class MPIExec extends Abstract {
                     //do this only if walltime is at least more than 10 minutes
                     value = ( value - 5);
                 }
-                args.append( " --max-wall-time " ).append( value ).append( " ");
+                args.append( "--max-wall-time " ).append( value ).append(" ");
             }
         }
-
-        //PM-654 post add the arguments if any specified by pmc_arguments
-        extraArgs = job.vdsNS.getStringValue( Pegasus.PMC_CLUSTER_ARGUMENTS );
-
-        if( extraArgs != null ){
-            args.append( extraArgs ).append( " " );
+        
+        // Construct any extra arguments specified in profiles or properties
+        // This should go last, otherwise we can't override any automatically-
+        // generated arguments
+        String extraArgs = job.vdsNS.getStringValue(Pegasus.CLUSTER_ARGUMENTS);
+        if (extraArgs != null) {
+            args.append(extraArgs).append(" ");
         }
-
+        
         args.append( stdin );
 
         return args.toString();
@@ -471,6 +468,21 @@ public class MPIExec extends Abstract {
         }
 
         return result.toString();
+    }
+    
+    /**
+     * Looks at the profile key for pegasus::pmc_arguments to determine if extra
+     * arguments are required for the task.
+     * 
+     * @param job The job for which extra arguments need to be determined
+     * @return The arguments if they are present, or an empty string
+     */
+    public String getExtraArguments( Job job ) {
+        String extra = job.vdsNS.getStringValue(Pegasus.PMC_CLUSTER_ARGUMENTS);
+        if (extra == null) {
+            return "";
+        }
+        return extra + " ";
     }
 
     /**

@@ -12,6 +12,10 @@ def create_job(cluster):
     j = Job(name="sleep")
     j.addArguments("1")
     j.profile(namespace="pegasus", key="label", value="dag_%d" % cluster)
+    j.profile(namespace="pegasus", key="pmc_request_memory", value="1")
+    j.profile(namespace="pegasus", key="pmc_request_cpus", value="2")
+    j.profile(namespace="pegasus", key="pmc_priority", value="1")
+    j.profile(namespace="pegasus", key="pmc_arguments", value="--tries 3")
     return j
 
 dax = ADAG("mpi-cluster")

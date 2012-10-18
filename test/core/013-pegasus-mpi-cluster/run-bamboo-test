@@ -52,6 +52,8 @@ tr pegasus::mpiexec {
         arch "x86"
         os "linux"
         type "INSTALLED"
+        profile globus "maxwalltime" "240"
+        profile pegasus "cluster.arguments" "--host-memory 1024"
     }
 }
 END
@@ -64,4 +66,5 @@ pegasus-plan \
     --sites local \
     --nocleanup \
     --cluster label \
-    -vvvvv --submit | tee plan.out
+    --submit -v
+
