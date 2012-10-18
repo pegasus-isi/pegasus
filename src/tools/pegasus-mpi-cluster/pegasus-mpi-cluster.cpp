@@ -51,7 +51,7 @@ void version() {
         fprintf(stderr, "MVAPICH2: %s\n", MVAPICH2_VERSION);
 #endif
 #ifdef OPEN_MPI
-        fprintf(stderr, "OpenMPI: %d.%d.%d", OMPI_MAJOR_VERSION, OMPI_MINOR_VERSION, OMPI_RELEASE_VERSION);
+        fprintf(stderr, "OpenMPI: %d.%d.%d\n", OMPI_MAJOR_VERSION, OMPI_MINOR_VERSION, OMPI_RELEASE_VERSION);
 #endif
     }
 }
