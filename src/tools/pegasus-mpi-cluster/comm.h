@@ -3,9 +3,6 @@
 
 #include "protocol.h"
 
-// Time in microseconds to sleep if there is no message waiting
-#define NO_MESSAGE_SLEEP_TIME 50000
-
 class Communicator {
 public:
     Communicator() {}
