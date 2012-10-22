@@ -299,7 +299,7 @@ void Master::wait_for_results() {
         while (!ABORT && !comm->message_waiting()) {
             usleep(NO_MESSAGE_SLEEP_TIME);    
         }
-        
+		
         if (ABORT) {
             // If ABORT is true, then we caught a signal and need to 
             // abort the workflow, so return without processing any 
@@ -783,7 +783,7 @@ int Master::run() {
     }
     
     log_info("Starting workflow");
-    
+    double makespan_start = current_time();
     // Keep executing tasks until the workflow is finished or the master
     // needs to abort the workflow due to a signal being caught
     while (!this->engine->is_finished() && !ABORT) {
@@ -791,6 +791,7 @@ int Master::run() {
         schedule_tasks();
         wait_for_results();
     }
+	double makespan_finish = current_time();
     
     if (ABORT) {
         log_error("Aborting workflow");
@@ -806,7 +807,8 @@ int Master::run() {
     // wall time can be recorded in the cluster-summary record
     finish_time = current_time();
     wall_time = finish_time - start_time;
-    
+    double makespan = makespan_finish - makespan_start;
+	
     // Close FDCache here before merging output so that
     // we can be sure the data files are flushed
     fdcache.close();
@@ -823,6 +825,7 @@ int Master::run() {
     log_info("Resource utilization (without master): %lf", worker_util);
     log_info("Total runtime of tasks: %lf seconds (%lf minutes)", total_runtime, total_runtime/60.0);
     log_info("Wall time: %lf seconds (%lf minutes)", wall_time, wall_time/60.0);
+	log_info("Makespan: %lf seconds (%lf minutes)", makespan, makespan/60.0);
     log_info("Bytes sent to workers: %lu", comm->sent());
     log_info("Bytes received from workers: %lu", comm->recvd());
     log_info("File descriptor cache hit rate: %lf", fdcache.hitrate());
