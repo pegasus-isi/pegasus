@@ -69,6 +69,10 @@ function getTimeChartJobRuntime ()
 function plotTimeChart ()
 {
 	getTimeChartData ();
+	if (timeChartData == null)
+	{
+		return;
+	}
 	
 	var categories = getTimeChartCategories ();
 	var init_job_count =  getTimeChartJobCount ();
@@ -212,6 +216,10 @@ function getGanttSeries ()
 function plotGanttChart ()
 {
 	getGanttChartData ();
+	if (ganttChartData == null)
+	{
+		return;
+	}
 	
 	var categories = getGanttChartCategories ();
 	var series = getGanttSeries ();

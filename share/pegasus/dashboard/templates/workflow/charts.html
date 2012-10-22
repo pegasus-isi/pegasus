@@ -152,17 +152,11 @@ jobDistribution = new Highcharts.Chart (jobDistributionOpt);
 {% block content %}
 <div id="plots">
 	<section id="gantt_chart_container">
-		<div id="gantt_chart" style="height: 800px;"></div>
-		<!--
-		<div id="gantt_chart_options">
-			<input type="radio" id="by_job2"     name="gantt_chrt" onclick="" checked="checked" /><label for="by_job">By Jobs</label>
-			<input type="radio" id="by_runtime2" name="gantt_chrt" onclick="" /><label for="by_runtime">By Invocations</label>
-		</div>
-		-->
+		<div id="gantt_chart" style="height: 800px;">No information available.</div>
 	</section>
 	<br />
 	<section id="time_chart_container">
-		<div id="time_chart"></div>
+		<div id="time_chart">No information available.</div>
 		<div id="time_chart_options">
 			<input type="radio" id="by_job"     name="time_chrt" onclick="timeChartToggle (1);" checked="checked" /><label for="by_job">By Jobs</label>
 			<input type="radio" id="by_runtime" name="time_chrt" onclick="timeChartToggle (2);" /><label for="by_runtime">By Invocations</label>
@@ -170,7 +164,7 @@ jobDistribution = new Highcharts.Chart (jobDistributionOpt);
 	</section>
 	<br />
 	<section id="distribution_chart_container">
-		<div id="job_distribution"></div>
+		<div id="job_distribution">No information available.</div>
 		<div id="job_distribution_options">
 			<input type="radio" id="by_count" name="job_dist" onclick="jobDistributionGraphToggle (1);" checked="checked"  /><label for="by_count">By Count</label>
 			<input type="radio" id="by_time" name="job_dist"  onclick="jobDistributionGraphToggle (2);" /><label for="by_time">By Time</label>
