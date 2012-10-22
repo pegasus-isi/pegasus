@@ -2,12 +2,12 @@
 .\"     Title: pegasus-mpi-cluster
 .\"    Author: [see the "Author" section]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 10/15/2012
+.\"      Date: 10/22/2012
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "PEGASUS\-MPI\-CLUSTE" "1" "10/15/2012" "\ \&" "\ \&"
+.TH "PEGASUS\-MPI\-CLUSTE" "1" "10/22/2012" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -611,7 +611,21 @@ write(fd, message, strlen(message));
 .RE
 .\}
 .sp
-In some programming languages it is not possible to write to a file descriptor directly\&. Fortran, for example, refers to files by unit number instead of using file descriptors\&. In these languages you can either link C I/O functions into your binary and call them from routines written in the other language, or you can open a special file in the Linux /proc file system to get another handle to the pipe you want to access\&. For the latter, the file you should open is "/proc/self/fd/NUMBER" where NUMBER is the file descriptor number you got from the environment variable\&. For the example above, the pipe for myfile\&.a (environment variable A) is "/proc/self/fd/3"\&. It might be easier, however, to just use file forwarding\&.
+In some programming languages it is not possible to write to a file descriptor directly\&. Fortran, for example, refers to files by unit number instead of using file descriptors\&. In these languages you can either link C I/O functions into your binary and call them from routines written in the other language, or you can open a special file in the Linux /proc file system to get another handle to the pipe you want to access\&. For the latter, the file you should open is "/proc/self/fd/NUMBER" where NUMBER is the file descriptor number you got from the environment variable\&. For the example above, the pipe for myfile\&.a (environment variable A) is "/proc/self/fd/3"\&.
+.sp
+If you are using \fBpegasus\-kickstart\fR, which is probably the case if you are using PMC for a Pegasus workflow, then there\(cqs a trick you can do to avoid modifying your code\&. You use the /proc file system, as described above, but you let pegasus\-kickstart handle the path construction\&. For example, if your application has an argument, \-o, that allows you to specify the output file then you can write your task like this:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+TASK mytask \-f A=/tmp/myfile\&.a /bin/pegasus\-kickstart /bin/mytask \-o /proc/self/fd/$A
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+In this case, pegasus\-kickstart will replace the $A in your application arguments with the file descriptor number you want\&. Your code can open that path normally, write to it, and then close it as if it were a regular file\&.
 .SS "I/O forwarding using files"
 .sp
 I/O forwarding with files works by having tasks write out data in files on the local disk\&. The PMC worker process reads these files and forwards the data to the master where it can be written to the desired output file\&. This approach may be much less efficient than using pipes because it involves the file system, which has more overhead than a pipe\&.

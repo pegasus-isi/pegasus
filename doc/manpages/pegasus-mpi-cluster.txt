@@ -646,8 +646,23 @@ pipe you want to access. For the latter, the file you should open
 is "/proc/self/fd/NUMBER" where NUMBER is the file descriptor 
 number you got from the environment variable. For the example
 above, the pipe for myfile.a (environment variable A) is 
-"/proc/self/fd/3". It might be easier, however, to just use file
-forwarding.
+"/proc/self/fd/3".
+
+If you are using *pegasus-kickstart*, which is probably the case
+if you are using PMC for a Pegasus workflow, then there's a trick
+you can do to avoid modifying your code. You use the /proc file 
+system, as described above, but you let pegasus-kickstart handle
+the path construction. For example, if your application has an
+argument, -o, that allows you to specify the output file then
+you can write your task like this:
+------
+TASK mytask -f A=/tmp/myfile.a /bin/pegasus-kickstart /bin/mytask -o /proc/self/fd/$A
+------
+In this case, pegasus-kickstart will replace the $A in your 
+application arguments with the file descriptor number you want.
+Your code can open that path normally, write to it, and then close
+it as if it were a regular file.
+
 
 I/O forwarding using files
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
