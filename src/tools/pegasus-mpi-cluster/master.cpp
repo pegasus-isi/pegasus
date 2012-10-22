@@ -824,7 +824,8 @@ int Master::run() {
     log_info("Resource utilization (without master): %lf", worker_util);
     log_info("Total runtime of tasks: %lf seconds (%lf minutes)", total_runtime, total_runtime/60.0);
     log_info("Wall time: %lf seconds (%lf minutes)", wall_time, wall_time/60.0);
-	log_info("Makespan: %lf seconds (%lf minutes)", makespan, makespan/60.0);
+    log_info("Makespan: %lf seconds (%lf minutes)", makespan, makespan/60.0);
+    log_info("Throughput: %lf tasks/second", success_count/makespan);
     log_info("Bytes sent to workers: %lu", comm->sent());
     log_info("Bytes received from workers: %lu", comm->recvd());
     log_info("File descriptor cache hit rate: %lf", fdcache.hitrate());
