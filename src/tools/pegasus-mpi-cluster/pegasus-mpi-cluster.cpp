@@ -80,7 +80,8 @@ void usage() {
             "   --max-wall-time T    Maximum wall time of the job in minutes\n"
             "   --per-task-stdio     Write each task's stdout/stderr to a different file\n"
             "   --jobstate-log       Generate jobstate.log\n"
-            "   --monitord-hack      Generate a .dagman.out file to trick monitord\n",
+            "   --monitord-hack      Generate a .dagman.out file to trick monitord\n"
+			"   --no-resource-log    Do not generate a log of resource usage\n",
             program
         );
     }
@@ -119,6 +120,7 @@ int mpidag(int argc, char *argv[], MPICommunicator &comm) {
     bool per_task_stdio = false;
     bool jobstate_log = false;
     bool monitord_hack = false;
+	bool log_resources = true;
     
     // Environment variable defaults
     char *env_host_script = getenv("PMC_HOST_SCRIPT");
@@ -274,6 +276,8 @@ int mpidag(int argc, char *argv[], MPICommunicator &comm) {
         } else if (flag == "--monitord-hack") {
             monitord_hack = true;
             per_task_stdio = true;
+		} else if (flag == "--no-resource-log") {
+			log_resources = false;
         } else if (flag[0] == '-') {
             string message = "Unrecognized argument: ";
             message += flag;
@@ -329,7 +333,10 @@ int mpidag(int argc, char *argv[], MPICommunicator &comm) {
         log_debug("Using old rescue file: %s", oldrescue.c_str());
         log_debug("Using new rescue file: %s", newrescue.c_str());
         
-        string resource_log = dagfile + ".resource";
+        string resource_log;
+		if (log_resources) {
+			resource_log = dagfile + ".resource";
+		}
         
         bool has_host_script = ("" != host_script);
         
