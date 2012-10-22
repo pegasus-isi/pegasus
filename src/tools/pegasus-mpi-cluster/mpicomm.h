@@ -20,6 +20,7 @@ public:
     virtual int size();
     virtual unsigned long sent();
     virtual unsigned long recvd();
+    int wait_for_message();
 };
 
 #endif /* MPICOMM_H */

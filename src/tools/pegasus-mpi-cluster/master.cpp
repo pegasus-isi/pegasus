@@ -276,35 +276,34 @@ void Master::wait_for_results() {
     unsigned int messages = 0;
     do {
         
-        /* In many MPI implementations MPI_Recv uses a busy wait loop. This
-         * really wreaks havoc on the load and CPU utilization of the master
-         * when there are no tasks to schedule or all slots are busy. In order 
-         * to avoid that we check here to see if there are any responses first, 
-         * and if there are not, then we wait for a few millis before checking 
-         * again and keep doing that until there is a response waiting. This 
-         * should reduce the load/CPU usage on master significantly. It decreases
-         * responsiveness a bit, but it is a fair tradeoff.
-         *
-         * Another issue is that if the user specifies a maximum wall time for
-         * the workflow, then the master sets a timeout by calling alarm(), which 
-         * causes the kernel to send a SIGALRM when the timer expires. Also, 
-         * on most PBS systems when the max wall time is reached PBS sends the 
+        /* If the user specifies a maximum wall time for the workflow, then 
+         * the master sets a timeout by calling alarm(), which causes the 
+         * kernel to send a SIGALRM when the timer expires. Also, on most 
+         * PBS systems when the max wall time is reached PBS sends the 
          * process a SIGTERM. We can catch these signals, however, in many MPI 
          * implementations signals do not interrupt blocking message calls such
          * as MPI_Recv. So we cannot be waiting in MPI_Recv when the signal is
-         * caught or we cannot respond to it. So we wait in this sleep loop and
+         * caught or we cannot respond to it. So we wait in this busy loop and
          * check the flag that is set by the signal handlers to detect when the
-         * master needs to abort the workflow.
+         * master needs to abort the workflow. We only do this if max_wall_time
+         * is set so that our benchmarks run faster.
          */
-        while (!ABORT && !comm->message_waiting()) {
-            usleep(NO_MESSAGE_SLEEP_TIME);    
-        }
-		
-        if (ABORT) {
-            // If ABORT is true, then we caught a signal and need to 
-            // abort the workflow, so return without processing any 
-            // more results.
-            return;
+        if (this->max_wall_time > 0.0) {    
+            useconds_t usec = 1;
+            useconds_t usec_max = 1048576; // ~1sec
+            
+            while (!ABORT && !comm->message_waiting()) {
+                usleep(usec);
+                usec *= 2;
+                usec = (usec > usec_max) ? usec_max : usec;
+            }
+            
+            if (ABORT) {
+                // If ABORT is true, then we caught a signal and need to 
+                // abort the workflow, so return without processing any 
+                // more results.
+                return;
+            }
         }
         
         log_trace("Waiting for result");

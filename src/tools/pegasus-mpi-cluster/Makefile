@@ -12,11 +12,6 @@ RM = rm -f
 INSTALL = install
 MAKE = make
 
-# If you want to force the MPI processes to sleep when there is
-# no message waiting instead of running in a busy loop, then
-# enable -DSLEEP_IF_NO_REQUEST.
-CXXFLAGS += -DSLEEP_IF_NO_REQUEST
-
 # If you want to call fsyncdata() when a record is written to the 
 # rescue log, then enable -DSYNC_RESCUE. If you want to enable
 # it when data is written to a collective I/O file, then enable
