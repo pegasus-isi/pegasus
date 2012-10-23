@@ -6,6 +6,7 @@
 #include <fcntl.h>
 #include <math.h>
 #include <cstdlib>
+#include <fstream>
 
 #include "strlib.h"
 #include "dag.h"
@@ -62,26 +63,25 @@ bool Task::is_ready() {
 
 DAG::DAG(const string &dagfile, const string &rescuefile, const bool lock, unsigned tries) {
     this->lock = lock;
+    this->dagfd = -1;
     this->tries = tries;
-    
-    this->dag = fopen(dagfile.c_str(), "r+");
-    if (this->dag == NULL) {
-        myfailures("Unable to open DAG file: %s", dagfile.c_str());
-    }
     
     if (this->lock) {
         log_debug("Locking DAG file...");
         
-        int dagfd = fileno(this->dag);
-        struct flock exclusive;
+        dagfd = open(dagfile.c_str(), O_RDWR);
+        if (dagfd < 0) {
+            myfailures("Unable to open DAG file: %s", dagfile.c_str());
+        }
         
+        struct flock exclusive;
         exclusive.l_start = 0;
         exclusive.l_len = 0;
         exclusive.l_type = F_WRLCK;
         exclusive.l_whence = SEEK_SET;
         exclusive.l_pid = getpid();
         
-        int locked = fcntl(dagfd, F_SETLK, &exclusive);
+        int locked = fcntl(this->dagfd, F_SETLK, &exclusive);
         if (locked < 0) {
             if (errno == EAGAIN || errno == EACCES) {
                 myfailures("DAG file is already locked by another process: %s", dagfile.c_str());
@@ -91,7 +91,7 @@ DAG::DAG(const string &dagfile, const string &rescuefile, const bool lock, unsig
         }
     }
     
-    this->read_dag();
+    this->read_dag(dagfile);
     
     if (!rescuefile.empty()) {
         this->read_rescue(rescuefile);
@@ -103,22 +103,20 @@ DAG::~DAG() {
     if (this->lock) {
         log_debug("Unlocking DAG file...");
         
-        int dagfd = fileno(this->dag);
         struct flock clear;
-        
         clear.l_start = 0;
         clear.l_len = 0;
         clear.l_type = F_UNLCK;
         clear.l_whence = SEEK_SET;
         clear.l_pid = getpid();
         
-        int locked = fcntl(dagfd, F_SETLK, &clear);
+        int locked = fcntl(this->dagfd, F_SETLK, &clear);
         if (locked < 0) {
             log_error("Error unlocking DAG file: %s", strerror(errno));
         }
+        
+        close(this->dagfd);
     }
-    
-    fclose(this->dag);
     
     // Delete all tasks
     for (iterator i = this->begin(); i != this->end(); i++) {
@@ -159,26 +157,23 @@ void DAG::add_edge(const string &parent, const string &child) {
     c->parents.push_back(p);
 }
 
-void DAG::read_dag() {
-    const char *DELIM = " \t\n\r";
+void DAG::read_dag(const string &filename) {
+    std::ifstream infile;
+    infile.open(filename.c_str());
+    if (!infile.good()) {
+        myfailures("Error opening DAG file: %s", filename.c_str());
+    }
     
+    const char *DELIM = " \t\n\r";
     string pegasus_id = "";
-    char *line = NULL;
-    size_t linecap = 0;
-    ssize_t linelen;
-    while ((linelen = getline(&line, &linecap, this->dag)) > 0) {
-        string rec(line);
-        
-        free(line);
-        line = NULL;
-        
+    string rec;
+    while (getline(infile, rec)) {
         trim(rec);
         
         // Blank lines
         if (rec.length() == 0) {
             continue;
         }
-        
         
         if (rec.find("TASK", 0, 4) == 0) {
             vector<string> v;
@@ -382,6 +377,12 @@ void DAG::read_dag() {
             myfailure("Invalid DAG record: %s", rec.c_str());
         }
     }
+    
+    if (infile.bad() || !infile.eof()) {
+        myfailures("Error reading DAG: %s", filename.c_str());
+    }
+    
+    infile.close();
 }
 
 void DAG::read_rescue(const string &filename) {
@@ -395,21 +396,15 @@ void DAG::read_rescue(const string &filename) {
         myfailures("Unable to read rescue file: %s", filename.c_str());
     }
     
-    FILE *rescuefile = fopen(filename.c_str(), "r");
-    if (rescuefile == NULL) {
+    std::ifstream infile;
+    infile.open(filename.c_str());
+    if (!infile.good()) {
         myfailures("Unable to open rescue file: %s", filename.c_str());
     }
     
     const char *DELIM = " \t\n\r";
-    char *line = NULL;
-    size_t linecap = 0;
-    ssize_t linelen;
-    while ((linelen = getline(&line, &linecap, rescuefile)) > 0) {
-        string rec(line);
-
-        free(line);
-        line = NULL;
-        
+    string rec;
+    while (getline(infile, rec)) {
         trim(rec);
         
         // Blank lines
@@ -444,6 +439,10 @@ void DAG::read_rescue(const string &filename) {
         }
     }
     
-    fclose(rescuefile);
+    if (infile.bad() || !infile.eof()) {
+        myfailures("Error reading rescue file");
+    }
+    
+    infile.close();
 }
 

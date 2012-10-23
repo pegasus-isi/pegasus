@@ -40,12 +40,12 @@ public:
 };
 
 class DAG {
-    FILE *dag;
     map<string, Task *> tasks;
     bool lock;
+    int dagfd;
     unsigned tries;
     
-    void read_dag();
+    void read_dag(const string &filename);
     void read_rescue(const string &filename);
     void add_task(Task *task);
     void add_edge(const string &parent, const string &child);
