@@ -12,6 +12,14 @@ RM = rm -f
 INSTALL = install
 MAKE = make
 
+# Flags for gprof
+#CXXFLAGS += -pg
+#LDFLAGS += -pg
+
+# Flags for gperftools
+#CXXFLAGS += -fno-omit-frame-pointer
+#LDFLAGS += -lprofiler
+
 # If you want to call fsyncdata() when a record is written to the 
 # rescue log, then enable -DSYNC_RESCUE. If you want to enable
 # it when data is written to a collective I/O file, then enable
