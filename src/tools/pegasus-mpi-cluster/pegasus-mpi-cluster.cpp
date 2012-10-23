@@ -81,7 +81,8 @@ void usage() {
             "   --per-task-stdio     Write each task's stdout/stderr to a different file\n"
             "   --jobstate-log       Generate jobstate.log\n"
             "   --monitord-hack      Generate a .dagman.out file to trick monitord\n"
-			"   --no-resource-log    Do not generate a log of resource usage\n",
+            "   --no-resource-log    Do not generate a log of resource usage\n"
+            "   --no-sleep-on-recv   Do not sleep on message receive\n",
             program
         );
     }
@@ -120,7 +121,8 @@ int mpidag(int argc, char *argv[], MPICommunicator &comm) {
     bool per_task_stdio = false;
     bool jobstate_log = false;
     bool monitord_hack = false;
-	bool log_resources = true;
+    bool log_resources = true;
+    bool sleep_on_recv = true;
     
     // Environment variable defaults
     char *env_host_script = getenv("PMC_HOST_SCRIPT");
@@ -276,8 +278,10 @@ int mpidag(int argc, char *argv[], MPICommunicator &comm) {
         } else if (flag == "--monitord-hack") {
             monitord_hack = true;
             per_task_stdio = true;
-		} else if (flag == "--no-resource-log") {
-			log_resources = false;
+        } else if (flag == "--no-resource-log") {
+            log_resources = false;
+        } else if (flag == "--no-sleep-on-recv") {
+            sleep_on_recv = false;
         } else if (flag[0] == '-') {
             string message = "Unrecognized argument: ";
             message += flag;
@@ -307,6 +311,8 @@ int mpidag(int argc, char *argv[], MPICommunicator &comm) {
         fprintf(stderr, "At least one worker process is required\n");
         return 1;
     }
+    
+    comm.sleep_on_recv = sleep_on_recv;
     
     // Everything is pretty deterministic up until the processes reach
     // this point. Once we get here the different processes can diverge 

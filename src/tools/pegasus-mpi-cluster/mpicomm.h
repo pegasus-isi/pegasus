@@ -9,10 +9,12 @@ private:
     unsigned long bytes_recvd;
     
 public:
+    bool sleep_on_recv;
+    
     MPICommunicator(int *argc, char ***argv);
     virtual ~MPICommunicator();
     virtual void send_message(Message *message, int dest);
-    virtual Message *recv_message();
+    virtual Message *recv_message(unsigned timeout = 0);
     virtual bool message_waiting();
     virtual void barrier();
     virtual void abort(int exitcode);
@@ -20,7 +22,7 @@ public:
     virtual int size();
     virtual unsigned long sent();
     virtual unsigned long recvd();
-    int wait_for_message();
+    virtual int wait_for_message(unsigned timeout = 0);
 };
 
 #endif /* MPICOMM_H */

@@ -280,34 +280,25 @@ void Master::wait_for_results() {
          * the master sets a timeout by calling alarm(), which causes the 
          * kernel to send a SIGALRM when the timer expires. Also, on most 
          * PBS systems when the max wall time is reached PBS sends the 
-         * process a SIGTERM. We can catch these signals, however, in many MPI 
-         * implementations signals do not interrupt blocking message calls such
-         * as MPI_Recv. So we cannot be waiting in MPI_Recv when the signal is
-         * caught or we cannot respond to it. So we wait in this busy loop and
-         * check the flag that is set by the signal handlers to detect when the
-         * master needs to abort the workflow. We only do this if max_wall_time
-         * is set so that our benchmarks run faster.
+         * process a SIGTERM. When PMC catches these signals it sets the 
+         * ABORT flag. In many MPI implementations, however, signals do 
+         * not interrupt blocking message calls such as MPI_Recv. So we 
+         * cannot be waiting in MPI_Recv when the signal is caught or we 
+         * cannot respond to it. So we give a timeout to recv_message so 
+         * that it does not block forever.
          */
-        if (this->max_wall_time > 0.0) {    
-            useconds_t usec = 1;
-            useconds_t usec_max = 1048576; // ~1sec
-            
-            while (!ABORT && !comm->message_waiting()) {
-                usleep(usec);
-                usec *= 2;
-                usec = (usec > usec_max) ? usec_max : usec;
-            }
-            
-            if (ABORT) {
-                // If ABORT is true, then we caught a signal and need to 
-                // abort the workflow, so return without processing any 
-                // more results.
-                return;
-            }
+        unsigned timeout = 0;
+        if (max_wall_time > 0) {
+            double now = current_time();
+            double deadline = start_time + (max_wall_time * 60.0);
+            timeout = deadline - now;
         }
-        
         log_trace("Waiting for result");
-        Message *mesg = comm->recv_message();
+        Message *mesg = comm->recv_message(timeout);
+        if (mesg == NULL || ABORT) {
+            ABORT = true;
+            return;
+        }
         messages++;
         if (ResultMessage *res = dynamic_cast<ResultMessage *>(mesg)) {
             process_result(res);
@@ -807,7 +798,7 @@ int Master::run() {
     finish_time = current_time();
     wall_time = finish_time - start_time;
     double makespan = makespan_finish - makespan_start;
-	
+    
     // Close FDCache here before merging output so that
     // we can be sure the data files are flushed
     fdcache.close();
@@ -842,7 +833,7 @@ int Master::run() {
         comm->send_message(&shmsg, i);
     }
     
-    if (ABORT || failed) {
+    if (failed) {
         publish_event(WORKFLOW_FAILURE, NULL);
     } else {
         publish_event(WORKFLOW_SUCCESS, NULL);

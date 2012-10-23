@@ -158,6 +158,7 @@ class Master {
     void release_resources(Host *host, unsigned cpus, unsigned memory);
     void log_resources(unsigned slots, unsigned cpus, unsigned memory, const string &hostname);
     void publish_event(WorkflowEvent event, Task *task);
+    bool wall_time_exceeded();
 public:
     Master(Communicator *comm, const string &program, Engine &engine, DAG &dag, const string &dagfile, 
         const string &outfile, const string &errfile, bool has_host_script = false, 

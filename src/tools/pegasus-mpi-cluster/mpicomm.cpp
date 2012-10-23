@@ -3,12 +3,14 @@
 #include "mpicomm.h"
 #include "protocol.h"
 #include "failure.h"
+#include "tools.h"
 
 MPICommunicator::MPICommunicator(int *argc, char ***argv) {
     MPI_Init(argc, argv);
     MPI_Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_ARE_FATAL);
     bytes_sent = 0;
     bytes_recvd = 0;
+    sleep_on_recv = true;
 }
 
 MPICommunicator::~MPICommunicator() {
@@ -23,10 +25,13 @@ void MPICommunicator::send_message(Message *message, int dest) {
     bytes_sent += msgsize;
 }
 
-Message *MPICommunicator::recv_message() {
+Message *MPICommunicator::recv_message(unsigned timeout) {
     // We wait for the message first in order to get the size
     // so that we can allocate an appropriate buffer.
-    int msgsize = wait_for_message();
+    int msgsize = wait_for_message(timeout);
+    if (msgsize < 0) {
+        return NULL;
+    }
     
     char *msg = new char[msgsize];
     
@@ -72,7 +77,7 @@ bool MPICommunicator::message_waiting() {
     return flag != 0;
 }
 
-int MPICommunicator::wait_for_message() {
+int MPICommunicator::wait_for_message(unsigned timeout) {
     /* On many MPI implementations MPI_Probe uses a busy wait loop. This
      * really wreaks havoc on the load and CPU utilization of the workers 
      * when there are no tasks to process or some slots are idle due to 
@@ -85,21 +90,36 @@ int MPICommunicator::wait_for_message() {
      * decreases responsiveness a bit, but it is a fair tradeoff.
      */
     MPI_Status status;
-    useconds_t usec = 1;
-    useconds_t usec_max = 1048576; // ~1sec
-    int flag = 0;
-    
-    MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &flag, &status);
-    while (!flag) {
-        usleep(usec);
+    if (sleep_on_recv || timeout > 0) {
+        useconds_t usec = 1;
+        useconds_t usec_max = 524288;
+        int flag = 0;
+        double start = current_time();
         MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &flag, &status);
-        usec *= 2;
-        usec = (usec > usec_max) ? usec_max : usec;
+        while (!flag) {
+            if (usec == usec_max && timeout > 0) {
+                double now = current_time();
+                if (now-start >= timeout) {
+                    return -1;
+                }
+            }
+            if (usleep(usec)) {
+                // The sleep was interrupted by a signal
+                return -1;
+            }
+            MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &flag, &status);
+            usec *= 2;
+            usec = (usec > usec_max) ? usec_max : usec;
+        }
+    } else {
+        // This call blocks, potentially in a busy loop depending on the
+        // MPI implementation used
+        MPI_Probe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
     }
     
+    // Return the size of the waiting message
     int msgsize;
     MPI_Get_count(&status, MPI_CHAR, &msgsize);
-    
     return msgsize;
 }
 
