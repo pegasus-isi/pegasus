@@ -115,3 +115,8 @@ p
 	max-width: 50%; 
 	
 }
+
+.nowrap
+{
+	white-space: nowrap;
+}
