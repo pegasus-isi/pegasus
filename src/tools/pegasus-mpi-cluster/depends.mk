@@ -5,7 +5,7 @@ fdcache.o: fdcache.cpp fdcache.h log.h failure.h tools.h
 log.o: log.cpp log.h
 master.o: master.cpp master.h engine.h dag.h protocol.h comm.h fdcache.h \
   failure.h log.h tools.h
-mpicomm.o: mpicomm.cpp mpicomm.h comm.h protocol.h failure.h
+mpicomm.o: mpicomm.cpp mpicomm.h comm.h protocol.h failure.h tools.h
 pegasus-mpi-cluster.o: pegasus-mpi-cluster.cpp svn.h dag.h engine.h \
   master.h protocol.h comm.h fdcache.h worker.h failure.h log.h mpicomm.h \
   tools.h

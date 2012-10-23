@@ -287,7 +287,7 @@ void Master::wait_for_results() {
          * cannot respond to it. So we give a timeout to recv_message so 
          * that it does not block forever.
          */
-        unsigned timeout = 0;
+        double timeout = 0;
         if (max_wall_time > 0) {
             double now = current_time();
             double deadline = start_time + (max_wall_time * 60.0);

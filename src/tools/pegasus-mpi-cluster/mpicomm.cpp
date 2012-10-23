@@ -25,7 +25,7 @@ void MPICommunicator::send_message(Message *message, int dest) {
     bytes_sent += msgsize;
 }
 
-Message *MPICommunicator::recv_message(unsigned timeout) {
+Message *MPICommunicator::recv_message(double timeout) {
     // We wait for the message first in order to get the size
     // so that we can allocate an appropriate buffer.
     int msgsize = wait_for_message(timeout);
@@ -77,7 +77,7 @@ bool MPICommunicator::message_waiting() {
     return flag != 0;
 }
 
-int MPICommunicator::wait_for_message(unsigned timeout) {
+int MPICommunicator::wait_for_message(double timeout) {
     /* On many MPI implementations MPI_Probe uses a busy wait loop. This
      * really wreaks havoc on the load and CPU utilization of the workers 
      * when there are no tasks to process or some slots are idle due to 
@@ -97,10 +97,10 @@ int MPICommunicator::wait_for_message(unsigned timeout) {
         double start = current_time();
         MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &flag, &status);
         while (!flag) {
-            if (usec == usec_max && timeout > 0) {
+            if (timeout > 0) {
                 double now = current_time();
-                if (now-start >= timeout) {
-                    return -1;
+                if (timeout > 0 && now-start >= timeout) {
+                   return -1;
                 }
             }
             if (usleep(usec)) {
