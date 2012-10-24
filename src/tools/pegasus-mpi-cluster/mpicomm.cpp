@@ -91,25 +91,38 @@ int MPICommunicator::wait_for_message(double timeout) {
      */
     MPI_Status status;
     if (sleep_on_recv || timeout > 0) {
-        useconds_t usec = 1;
-        useconds_t usec_max = 524288;
-        int flag = 0;
         double start = current_time();
-        MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &flag, &status);
-        while (!flag) {
+        unsigned i = 0;
+        while (1) {
+            i++;
+            
+            int message = 0;
+            MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &message, &status);
+            if (message) {
+                // We got the message
+                break;
+            }
+            
             if (timeout > 0) {
                 double now = current_time();
-                if (timeout > 0 && now-start >= timeout) {
+                if (now-start >= timeout) {
                    return -1;
                 }
             }
-            if (usleep(usec)) {
+            
+            // This causes the loop to spin rapidly for 1 second
+            useconds_t sleeptime = 10; // Default is 10 usec
+            if (i > 1e5) {
+                // Increase sleep time to 0.5 sec after 
+                // 1e5 x 10 usec = 1 second has elapsed
+                // This is only approximate of course
+                sleeptime = 5e5;
+            }
+            
+            if (usleep(sleeptime)) {
                 // The sleep was interrupted by a signal
                 return -1;
             }
-            MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &flag, &status);
-            usec *= 2;
-            usec = (usec > usec_max) ? usec_max : usec;
         }
     } else {
         // This call blocks, potentially in a busy loop depending on the
