@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Statistics{% endblock %}
+{% block javascript_includes %}
+<script type="text/javascript" src="{{ url_for ('static', filename='js/statistics.js') }}"></script>
+{% endblock %}
+{% block javascript_init %}
+<script type="text/javascript" charset="utf-8">
+$(document).ready (function () 
+{
+	var statistics = $("#statistics_container");
+	statistics.accordion ({ heightStyle: "content", autoHeight : false });
+	statistics.bind('accordionchange', activateEventHandler);
+});
+</script>
+{% endblock %}
+{% block navigation_bar %} | <a href="{{ url_for ('workflow', root_wf_id = root_wf_id, wf_id = wf_id) }}">Workflow</a> | <a href="{{ url_for ('statistics', root_wf_id = root_wf_id, wf_id = wf_id) }}">Statistics</a>{% endblock %}
+{% block title_header %}Statistics{% endblock %}
+{% block content %}
+<section id="statistics_container">
+    <h3 href="{{ url_for ('workflow_stats', root_wf_id = root_wf_id, wf_id = wf_id) }}" title="workflow_stats"><span style="padding-left: 25px;">Workflow Statistics</span></h3>
+    <div id="workflow_stats">
+    </div>
+    <h3 href="{{ url_for ('job_breakdown_stats', root_wf_id = root_wf_id, wf_id = wf_id) }}" title="job_breakdown_stats"><span style="padding-left: 25px;">Job Breadown Statistics</span></h3>
+    <div id="job_breakdown_stats">
+    </div>
+    <h3 href="{{ url_for ('job_stats', root_wf_id = root_wf_id, wf_id = wf_id) }}" title="job_stats"><span style="padding-left: 25px;">Job Statistics</span></h3>
+    <div id="job_stats">
+    </div>
+    <!-- 
+    <h3 href="{{ url_for ('time_stats', root_wf_id = root_wf_id, wf_id = wf_id) }}" title="time_stats"><span style="padding-left: 25px;">Time Statistics</span></h3>
+    <div id="time_stats">
+    </div>
+    -->
+</section>
+{% endblock %}

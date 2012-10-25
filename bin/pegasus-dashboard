@@ -65,6 +65,7 @@ from Pegasus.tools import utils
 
 #Flask modules
 from flask import Flask, request, render_template, g
+from flask.helpers import json
 
 #Dashboard modules
 from Pegasus.dashboard.Dashboard import Dashboard, Utils, NoWorkflowsFoundError
@@ -320,6 +321,40 @@ def gantt_chart (root_wf_id, wf_id):
     dashboard = Dashboard (_master_db_url, root_wf_id, wf_id)
     gantt_chart = dashboard.plots_gantt_chart ()
     return render_template ('workflow/charts/gantt_chart.json', root_wf_id=root_wf_id, wf_id=wf_id, gantt_chart=gantt_chart)
+
+@app.route('/root/<root_wf_id>/workflow/<wf_id>/statistics', methods=['GET'])
+def statistics (root_wf_id, wf_id):
+    """
+    Get workflow statistics information
+    """
+    dashboard = Dashboard (_master_db_url, root_wf_id, wf_id)
+    job_dist = dashboard.plots_transformation_statistics (wf_id)
+
+    return render_template ('workflow/statistics.html', root_wf_id=root_wf_id, wf_id=wf_id)
+
+@app.route('/root/<root_wf_id>/workflow/<wf_id>/statistics/workflow', methods=['GET'])
+def workflow_stats (root_wf_id, wf_id):
+    dashboard = Dashboard (_master_db_url, root_wf_id, wf_id)
+    return json.dumps (dashboard.workflow_stats ())
+
+
+@app.route('/root/<root_wf_id>/workflow/<wf_id>/statistics/job_breakdown', methods=['GET'])
+def job_breakdown_stats (root_wf_id, wf_id):
+    dashboard = Dashboard (_master_db_url, root_wf_id, wf_id)
+    return json.dumps (dashboard.job_breakdown_stats())
+
+
+@app.route('/root/<root_wf_id>/workflow/<wf_id>/statistics/job', methods=['GET'])
+def job_stats (root_wf_id, wf_id):
+    dashboard = Dashboard (_master_db_url, root_wf_id, wf_id)
+    return json.dumps (dashboard.job_stats ())
+
+
+@app.route('/root/<root_wf_id>/workflow/<wf_id>/statistics/time', methods=['GET'])
+def time_stats (root_wf_id, wf_id):
+    dashboard = Dashboard (_master_db_url, root_wf_id, wf_id)
+
+    return '{}'
 
 
 def __get_datatables_args ():

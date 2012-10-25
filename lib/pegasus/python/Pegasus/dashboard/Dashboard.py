@@ -23,6 +23,7 @@ __author__ = "Rajiv Mayani"
 #Python modules
 import os
 from time import localtime, strftime
+from Pegasus.tools import utils
 from Pegasus.plots_stats import utils as stats_utils
 
 #Flask modules
@@ -131,6 +132,103 @@ class Dashboard(object):
         for workflow in self._workflows:
             workflow.dax_label = "<a href='" + url_for ('workflow', root_wf_id=workflow.wf_id, wf_uuid=workflow.wf_uuid) + "'>" + workflow.dax_label + "</a>"
 
+    def workflow_stats (self):
+        try:
+            workflow = stampede_statistics.StampedeStatistics (self.__get_wf_db_url (), False)
+            workflow.initialize (self._root_wf_uuid)
+            individual_stats = self._workflow_stats (workflow)
+            
+            workflow2 = stampede_statistics.StampedeStatistics (self.__get_wf_db_url ())
+            workflow2.initialize (self._root_wf_uuid)
+            
+            all_stats = self._workflow_stats (workflow2)
+            
+            return { 'individual' : individual_stats, 'all' : all_stats }
+        
+        finally:
+            Dashboard.close (workflow)
+            Dashboard.close (workflow2)
+
+    def _workflow_stats (self, workflow):
+        # tasks
+            tasks = {}
+            workflow.set_job_filter('nonsub')
+            tasks ['total_tasks'] = workflow.get_total_tasks_status()
+            tasks ['total_succeeded_tasks'] = workflow.get_total_succeeded_tasks_status(False)
+            tasks ['total_failed_tasks'] = workflow.get_total_failed_tasks_status()
+            tasks ['total_unsubmitted_tasks'] = tasks ['total_tasks'] - (tasks ['total_succeeded_tasks'] + tasks ['total_failed_tasks'])
+            tasks ['total_task_retries'] =  workflow.get_total_tasks_retries()
+            tasks ['total_task_invocations'] = tasks ['total_succeeded_tasks'] + tasks ['total_failed_tasks'] + tasks ['total_task_retries']
+            
+            # job status
+            jobs = {}
+            workflow.set_job_filter('nonsub')
+            jobs ['total_jobs'] = workflow.get_total_jobs_status()
+            jobs ['total_succeeded_jobs'] = workflow.get_total_succeeded_jobs_status()
+            jobs ['total_failed_jobs'] = workflow.get_total_failed_jobs_status()
+            jobs ['total_unsubmitted_jobs'] = jobs ['total_jobs'] - (jobs ['total_succeeded_jobs'] + jobs ['total_failed_jobs'])
+            jobs ['total_job_retries'] = workflow.get_total_jobs_retries()
+            jobs ['total_job_invocations'] = jobs ['total_succeeded_jobs'] + jobs ['total_failed_jobs'] + jobs ['total_job_retries']
+            
+            # sub workflow
+            wfs = {}
+            workflow.set_job_filter('subwf')
+            wfs ['total_sub_wfs'] = workflow.get_total_jobs_status()
+            wfs ['total_succeeded_sub_wfs'] = workflow.get_total_succeeded_jobs_status()
+            wfs ['total_failed_sub_wfs'] = workflow.get_total_failed_jobs_status()
+            wfs ['total_unsubmitted_sub_wfs'] = wfs ['total_sub_wfs'] - (wfs ['total_succeeded_sub_wfs'] + wfs ['total_failed_sub_wfs'])
+            wfs ['total_sub_wfs_retries'] = workflow.get_total_jobs_retries()
+            wfs ['total_sub_wfs_invocations'] = wfs ['total_succeeded_sub_wfs'] + wfs ['total_failed_sub_wfs'] + wfs ['total_sub_wfs_retries']
+            
+            return [tasks, jobs, wfs]
+        
+    def job_breakdown_stats (self):
+        try:
+            workflow = stampede_statistics.StampedeStatistics (self.__get_wf_db_url (), True)
+            workflow.initialize (self._root_wf_uuid)
+            content = []
+            for t in workflow.get_transformation_statistics():
+                content.append ([t.transformation, int(t.count), int(t.success), 
+                           int(t.failure), float(t.min), float(t.max), float(t.avg), float(t.sum)])
+
+            return content
+        
+        finally:
+            Dashboard.close (workflow)
+    
+    def job_stats (self):
+        try:
+            workflow = stampede_statistics.StampedeStatistics (self.__get_wf_db_url (), False)
+            workflow.initialize (self._root_wf_uuid)
+            workflow.set_job_filter('all')
+            content = []
+            
+            for job in workflow.get_job_statistics ():
+                
+                kickstart = '0' if job.kickstart == None else float (job.kickstart)
+                multiplier_factor = '0' if job.multiplier_factor == None else int (job.multiplier_factor)
+                kickstart_multi = '0' if job.kickstart_multi == None else float (job.kickstart_multi)
+                remote_cpu_time = '0' if job.remote_cpu_time == None else float (job.remote_cpu_time)
+                post_time = '0' if job.post_time == None else float (job.post_time)
+                condor_q_time = '0' if job.condor_q_time == None else float (job.condor_q_time)
+                resource_delay = '0' if job.resource_delay == None else float (job.resource_delay)
+                runtime = '0' if job.runtime == None else float (job.runtime)
+                seqexec = '-' if job.seqexec == None else float (job.seqexec)
+
+                seqexec_delay = '-'
+                if job.seqexec is not None and job.kickstart is not None:
+                    seqexec_delay = (float (job.seqexec) - float (job.kickstart))
+                
+                content.append ([job.job_name, 1, job.site, kickstart, multiplier_factor, kickstart_multi, 
+                                 remote_cpu_time, post_time, condor_q_time, 
+                                 resource_delay, runtime, seqexec, seqexec_delay, 
+                                 utils.raw_to_regular (job.exit_code), job.host_name])
+
+            return content
+        
+        finally:
+            Dashboard.close (workflow)
+            
     def plots_gantt_chart (self):
         try:
             #Expand has to be set to false. The method does not provide information when expand set to True.
