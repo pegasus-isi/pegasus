@@ -135,7 +135,7 @@ class Dashboard(object):
     def workflow_stats (self):
         try:
             workflow = stampede_statistics.StampedeStatistics (self.__get_wf_db_url (), False)
-            workflow.initialize (self._root_wf_uuid)
+            workflow.initialize (root_wf_id = self._wf_id)
             individual_stats = self._workflow_stats (workflow)
             
             workflow2 = stampede_statistics.StampedeStatistics (self.__get_wf_db_url ())
@@ -150,7 +150,7 @@ class Dashboard(object):
             Dashboard.close (workflow2)
 
     def _workflow_stats (self, workflow):
-        # tasks
+            # tasks
             tasks = {}
             workflow.set_job_filter('nonsub')
             tasks ['total_tasks'] = int (workflow.get_total_tasks_status())
@@ -185,7 +185,7 @@ class Dashboard(object):
     def job_breakdown_stats (self):
         try:
             workflow = stampede_statistics.StampedeStatistics (self.__get_wf_db_url (), True)
-            workflow.initialize (self._root_wf_uuid)
+            workflow.initialize (root_wf_id = self._wf_id)
             content = []
             for t in workflow.get_transformation_statistics():
                 content.append ([t.transformation, int(t.count), int(t.success), 
@@ -199,7 +199,7 @@ class Dashboard(object):
     def job_stats (self):
         try:
             workflow = stampede_statistics.StampedeStatistics (self.__get_wf_db_url (), False)
-            workflow.initialize (self._root_wf_uuid)
+            workflow.initialize (root_wf_id = self._wf_id)
             workflow.set_job_filter('all')
             content = []
             
