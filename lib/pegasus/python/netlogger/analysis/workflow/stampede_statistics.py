@@ -189,14 +189,24 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         
         self._wfs = []
     
-    def initialize(self, root_wf_uuid):
+    def initialize(self, root_wf_uuid = None, root_wf_id = None):
         self.log.debug('initialize')
-        self._root_wf_uuid = root_wf_uuid
-        q = self.session.query(Workflow.root_wf_id, Workflow.wf_id).filter(Workflow.wf_uuid == self._root_wf_uuid)      
+        if root_wf_uuid == None and root_wf_id == None:
+            self.log.error('initialize',
+                msg='Either root_wf_uuid or root_wf_id is required')
+            return False
         
+        q = self.session.query(Workflow.root_wf_id, Workflow.wf_id, Workflow.wf_uuid)
+        
+        if root_wf_uuid:
+            q = q.filter(Workflow.wf_uuid == root_wf_uuid)      
+        else:
+            q = q.filter(Workflow.wf_id == root_wf_id)
+            
         try:
             result = q.one ()
             self._root_wf_id = result.wf_id
+            self._root_wf_uuid = result.wf_uuid
             self._is_root_wf = result.root_wf_id == result.wf_id
         except orm.exc.MultipleResultsFound, e:
             self.log.error('initialize',
