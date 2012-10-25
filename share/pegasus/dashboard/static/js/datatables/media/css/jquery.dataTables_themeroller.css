@@ -103,6 +103,10 @@ table.dataTable tr.failed { background-color: #e9847c; }
 .dataTables_wrapper .ui-widget-header {
 	font-weight: normal;
 }
+
+.ui-widget-header:empty {
+	display: none;
+}
 .dataTables_wrapper .ui-toolbar {
 	padding: 5px;
 }
