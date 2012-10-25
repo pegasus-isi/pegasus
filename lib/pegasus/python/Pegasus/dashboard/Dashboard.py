@@ -153,31 +153,31 @@ class Dashboard(object):
         # tasks
             tasks = {}
             workflow.set_job_filter('nonsub')
-            tasks ['total_tasks'] = workflow.get_total_tasks_status()
-            tasks ['total_succeeded_tasks'] = workflow.get_total_succeeded_tasks_status(False)
-            tasks ['total_failed_tasks'] = workflow.get_total_failed_tasks_status()
+            tasks ['total_tasks'] = int (workflow.get_total_tasks_status())
+            tasks ['total_succeeded_tasks'] = int (workflow.get_total_succeeded_tasks_status(False))
+            tasks ['total_failed_tasks'] = int (workflow.get_total_failed_tasks_status())
             tasks ['total_unsubmitted_tasks'] = tasks ['total_tasks'] - (tasks ['total_succeeded_tasks'] + tasks ['total_failed_tasks'])
-            tasks ['total_task_retries'] =  workflow.get_total_tasks_retries()
+            tasks ['total_task_retries'] =  int (workflow.get_total_tasks_retries())
             tasks ['total_task_invocations'] = tasks ['total_succeeded_tasks'] + tasks ['total_failed_tasks'] + tasks ['total_task_retries']
             
             # job status
             jobs = {}
             workflow.set_job_filter('nonsub')
-            jobs ['total_jobs'] = workflow.get_total_jobs_status()
-            jobs ['total_succeeded_jobs'] = workflow.get_total_succeeded_jobs_status()
-            jobs ['total_failed_jobs'] = workflow.get_total_failed_jobs_status()
+            jobs ['total_jobs'] = int (workflow.get_total_jobs_status())
+            jobs ['total_succeeded_jobs'] = int (workflow.get_total_succeeded_jobs_status())
+            jobs ['total_failed_jobs'] = int (workflow.get_total_failed_jobs_status())
             jobs ['total_unsubmitted_jobs'] = jobs ['total_jobs'] - (jobs ['total_succeeded_jobs'] + jobs ['total_failed_jobs'])
-            jobs ['total_job_retries'] = workflow.get_total_jobs_retries()
+            jobs ['total_job_retries'] = int (workflow.get_total_jobs_retries())
             jobs ['total_job_invocations'] = jobs ['total_succeeded_jobs'] + jobs ['total_failed_jobs'] + jobs ['total_job_retries']
             
             # sub workflow
             wfs = {}
             workflow.set_job_filter('subwf')
-            wfs ['total_sub_wfs'] = workflow.get_total_jobs_status()
-            wfs ['total_succeeded_sub_wfs'] = workflow.get_total_succeeded_jobs_status()
-            wfs ['total_failed_sub_wfs'] = workflow.get_total_failed_jobs_status()
+            wfs ['total_sub_wfs'] = int (workflow.get_total_jobs_status())
+            wfs ['total_succeeded_sub_wfs'] = int (workflow.get_total_succeeded_jobs_status())
+            wfs ['total_failed_sub_wfs'] = int (workflow.get_total_failed_jobs_status())
             wfs ['total_unsubmitted_sub_wfs'] = wfs ['total_sub_wfs'] - (wfs ['total_succeeded_sub_wfs'] + wfs ['total_failed_sub_wfs'])
-            wfs ['total_sub_wfs_retries'] = workflow.get_total_jobs_retries()
+            wfs ['total_sub_wfs_retries'] = int (workflow.get_total_jobs_retries())
             wfs ['total_sub_wfs_invocations'] = wfs ['total_succeeded_sub_wfs'] + wfs ['total_failed_sub_wfs'] + wfs ['total_sub_wfs_retries']
             
             return [tasks, jobs, wfs]
