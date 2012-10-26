@@ -1,0 +1,7 @@
+#!/bin/bash
+
+/usr/bin/split $*
+
+for x in input.* ; do
+    echo $x "file://"`pwd`/$x
+done
