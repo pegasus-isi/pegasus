@@ -299,31 +299,19 @@ class Dashboard(object):
             workflow_statistics = None
             workflow = queries.WorkflowInfo (self.__get_wf_db_url (), wf_id=wf_id, wf_uuid=wf_uuid)
 
-            details = workflow.get_workflow_information ()
+            details = self._get_workflow_details (workflow)
+            job_counts = self._get_workflow_job_counts (workflow)
             
             #workflow_statistics = stampede_statistics.StampedeStatistics (self.__get_wf_db_url (), expand_workflow=(details.root_wf_id ==  details.wf_id))
             workflow_statistics = stampede_statistics.StampedeStatistics (self.__get_wf_db_url (), expand_workflow=True)
-            
             workflow_statistics.initialize (details.wf_uuid)
-            
-            job_counts = workflow.get_workflow_job_counts ()
             
             statistics = {}
             
-            workflow_states_list = workflow_statistics.get_workflow_states ()
-            
-            statistics ['wall-time'] = stats_utils.get_workflow_wall_time (workflow_states_list)
-            statistics ['cum-time'] = workflow_statistics.get_workflow_cum_job_wall_time ()
+            statistics.update (self._get_workflow_summary_times (workflow_statistics))
             
             #if details.root_wf_id ==  details.wf_id:
-            workflow_statistics.set_job_filter ('nonsub')
-            statistics ['total-jobs'] = workflow_statistics.get_total_jobs_status()
-
-            statistics ['successful-jobs'] = workflow_statistics.get_total_succeeded_jobs_status()
-            statistics ['failed-jobs'] = workflow_statistics.get_total_failed_jobs_status()
-            statistics ['unsubmitted-jobs'] = statistics ['total-jobs'] - (statistics ['successful-jobs'] + statistics ['failed-jobs'])
-            statistics ['job-retries'] = workflow_statistics.get_total_jobs_retries()
-            statistics ['job-instance-retries'] = statistics ['successful-jobs'] + statistics ['failed-jobs'] + statistics ['job-retries']
+            statistics.update (self._get_workflow_summary_counts (workflow_statistics))
             
             return job_counts, details, statistics
         
@@ -331,6 +319,36 @@ class Dashboard(object):
             Dashboard.close (workflow)
             Dashboard.close (workflow_statistics)
 
+    def _get_workflow_details (self, workflow):
+        return workflow.get_workflow_information ()
+    
+    def _get_workflow_job_counts (self, workflow):
+        return workflow.get_workflow_job_counts ()
+
+    def _get_workflow_summary_times (self, workflow):
+        statistics = {}
+        
+        workflow_states_list = workflow.get_workflow_states ()
+        statistics ['wall-time'] = float (stats_utils.get_workflow_wall_time (workflow_states_list))
+        statistics ['cum-time'] = float (workflow.get_workflow_cum_job_wall_time ())
+        statistics ['job-cum-time'] = float (workflow.get_submit_side_job_wall_time ())
+        
+        return statistics
+    
+    def _get_workflow_summary_counts (self, workflow):
+        statistics = {}
+        
+        workflow.set_job_filter ('nonsub')
+        statistics ['total-jobs'] = workflow.get_total_jobs_status()
+
+        statistics ['successful-jobs'] = workflow.get_total_succeeded_jobs_status()
+        statistics ['failed-jobs'] = workflow.get_total_failed_jobs_status()
+        statistics ['unsubmitted-jobs'] = statistics ['total-jobs'] - (statistics ['successful-jobs'] + statistics ['failed-jobs'])
+        statistics ['job-retries'] = workflow.get_total_jobs_retries()
+        statistics ['job-instance-retries'] = statistics ['successful-jobs'] + statistics ['failed-jobs'] + statistics ['job-retries']
+        
+        return statistics
+    
     def get_job_information (self, wf_id, job_id):
         """
         Get job specific information. This is when user click on a job link, on the work-flow details page.
