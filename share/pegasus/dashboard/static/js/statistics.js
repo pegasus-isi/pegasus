@@ -49,6 +49,10 @@ function render_workflow_summary_stats (container, data)
 	content += '<th>Cumulative Job Walltime as seen from Submit Side</th>';
 	content += '<td>'+ formatData (data ['job-cum-time']) + '</td>';
 	content += '</tr>';
+	content += '<tr>';
+	content += '<th>Workflow Retries</th>';
+	content += '<td>'+ formatData (data ['retry-count']) + '</td>';
+	content += '</tr>';
 	content += '</table>';
 	
 	dest.html (content);

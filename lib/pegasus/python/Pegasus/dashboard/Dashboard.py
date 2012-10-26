@@ -324,7 +324,9 @@ class Dashboard(object):
         try:
             workflow = stampede_statistics.StampedeStatistics (self.__get_wf_db_url (), expand_workflow=False)
             workflow.initialize (root_wf_id = self._wf_id)
-            return self._get_workflow_summary_times (workflow)
+            dictionary = self._get_workflow_summary_times (workflow)
+            dictionary ['retry-count'] = self._get_workflow_retries (workflow)
+            return dictionary
         finally:
             Dashboard.close (workflow)
         
@@ -344,6 +346,13 @@ class Dashboard(object):
         
         return statistics
     
+    def _get_workflow_retries (self, workflow):
+        workflow.set_job_filter('all')
+        print '@' * 100
+        print int (workflow.get_workflow_retries ())
+        print '@' * 100
+        return int (workflow.get_workflow_retries ())
+        
     def _get_workflow_summary_counts (self, workflow):
         statistics = {}
         
