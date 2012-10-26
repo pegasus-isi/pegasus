@@ -5,6 +5,57 @@ var jobBreakdownStats = { isLoaded : false };
 var jobStats = { isLoaded : false };
 //var timeStats = { isLoaded : false };
 
+function getWorkflowSummaryStats (container, url)
+{
+	var ajaxOpt = 
+	{
+		url : url,
+		dataType: 'json',
+		error: function (xhr, textStatus, errorThrown)
+		{
+			alert ('Error occured: ' + textStatus + ' ' + xhr.responseText);
+		},
+		success: function (data, textStatus, xhr) 
+		{
+			console.log (xhr.responseText);
+			render_workflow_summary_stats (container, data);
+		} 
+	};
+	
+	$.ajax (ajaxOpt)
+}
+
+function render_workflow_summary_stats (container, data)
+{
+	var content = '';
+	var dest = $('#' + container);
+	
+	if (data.length == 0)
+	{
+		content += 'No information available';
+	}
+	
+	var content = '';
+	content = '<table id="workflow_summary_stats_table" class="x">';
+	content += '<tr>';
+	content += '<th>Workflow Wall Time</th>';
+	content += '<td>'+ formatData (data ['wall-time']) + '</td>';
+	content += '</tr>';
+	content += '<tr>';
+	content += '<th>Workflow Cumulative Job Wall Time</th>';
+	content += '<td>'+ formatData (data ['cum-time']) + '</td>';
+	content += '</tr>';
+	content += '<tr>';
+	content += '<th>Cumulative Job Walltime as seen from Submit Side</th>';
+	content += '<td>'+ formatData (data ['job-cum-time']) + '</td>';
+	content += '</tr>';
+	content += '</table>';
+	
+	dest.html (content);
+	
+	verticalTableInit ('#workflow_summary_stats_table')
+}
+
 function getWorkflowStats (url)
 {
 	if (workflowStats.isLoaded)
@@ -18,7 +69,7 @@ function getWorkflowStats (url)
 		dataType: 'json',
 		error: function (xhr, textStatus, errorThrown)
 		{
-			alert ('Error occured: ' + textStatus + xhr.responseText);
+			alert ('Error occured: ' + textStatus + ' ' + xhr.responseText);
 		},
 		success: function (data, textStatus, xhr) 
 		{
@@ -42,6 +93,7 @@ function render_workflow_stats (all_data)
 		content += 'No information available';
 	}
 	
+	content += '<header class="title ui-widget-header">This Workflow</header>';
 	content += render_workflow_stats_table ('individual', data) + '<br />';
 	
 	data = all_data.all;
@@ -51,6 +103,7 @@ function render_workflow_stats (all_data)
 		content += 'No information available';
 	}
 	
+	content += '<header class="title ui-widget-header">Entire Workflow</header>';
 	content += render_workflow_stats_table ('all', data);
 	
 	dest.html (content);

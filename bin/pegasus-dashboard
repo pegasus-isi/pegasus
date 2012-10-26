@@ -332,6 +332,18 @@ def statistics (root_wf_id, wf_id):
 
     return render_template ('workflow/statistics.html', root_wf_id=root_wf_id, wf_id=wf_id)
 
+
+@app.route('/root/<root_wf_id>/workflow/<wf_id>/statistics/summary', methods=['GET'])
+def workflow_summary_stats (root_wf_id, wf_id):
+    dashboard = Dashboard (_master_db_url, root_wf_id, wf_id)
+    summary_times = dashboard.workflow_summary_stats (wf_id)
+    
+    for key, value in summary_times.items ():
+        summary_times [key] = time_to_str (value)
+        
+    return json.dumps (summary_times)
+
+
 @app.route('/root/<root_wf_id>/workflow/<wf_id>/statistics/workflow', methods=['GET'])
 def workflow_stats (root_wf_id, wf_id):
     dashboard = Dashboard (_master_db_url, root_wf_id, wf_id)

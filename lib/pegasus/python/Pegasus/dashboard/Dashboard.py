@@ -319,6 +319,15 @@ class Dashboard(object):
             Dashboard.close (workflow)
             Dashboard.close (workflow_statistics)
 
+    def workflow_summary_stats (self, wf_id=None, wf_uuid=None):
+        
+        try:
+            workflow = stampede_statistics.StampedeStatistics (self.__get_wf_db_url (), expand_workflow=False)
+            workflow.initialize (root_wf_id = self._wf_id)
+            return self._get_workflow_summary_times (workflow)
+        finally:
+            Dashboard.close (workflow)
+        
     def _get_workflow_details (self, workflow):
         return workflow.get_workflow_information ()
     
