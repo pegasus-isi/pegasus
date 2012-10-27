@@ -358,7 +358,34 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
              
         return q.count()
     
+
         
+    def get_total_succeeded_failed_jobs_status(self):
+        """
+        https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Summary#WorkflowSummary-Totalsucceededjobs
+        https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Statistics+file#WorkflowStatisticsfile-Totalsucceededjobs
+        """
+        JobInstanceSub = orm.aliased(JobInstance, name='JobInstanceSub')
+        sq_1 = self.session.query(func.max(JobInstanceSub.job_submit_seq).label('jss'), JobInstanceSub.job_id.label('jobid'))
+        
+        if self._expand:
+            sq_1 = sq_1.filter(Workflow.root_wf_id == self._root_wf_id)
+        else:
+            sq_1 = sq_1.filter(Workflow.wf_id == self._wfs[0])
+        sq_1 = sq_1.filter(Workflow.wf_id == Job.wf_id)
+        sq_1 = sq_1.filter(Job.job_id == JobInstanceSub.job_id)
+        if self._get_job_filter() is not None:
+            sq_1 = sq_1.filter(self._get_job_filter())
+        sq_1 = sq_1.group_by(JobInstanceSub.job_id).subquery()
+        
+        q = self.session.query(
+            func.sum (case([(JobInstance.exitcode == 0, 1)], else_=0)).label ("succeeded"),
+            func.sum (case([(JobInstance.exitcode != 0, 1)], else_=0)).label ("failed"))
+        q = q.filter(JobInstance.job_id == sq_1.c.jobid)
+        q = q.filter(JobInstance.job_submit_seq == sq_1.c.jss)
+        
+        return q.one()
+
     def get_total_succeeded_jobs_status(self):
         """
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Summary#WorkflowSummary-Totalsucceededjobs
