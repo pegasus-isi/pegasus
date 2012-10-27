@@ -365,8 +365,7 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Statistics+file#WorkflowStatisticsfile-Totalsucceededjobs
         """
         JobInstanceSub = orm.aliased(JobInstance, name='JobInstanceSub')
-        sq_1 = self.session.query(func.max(JobInstanceSub.job_submit_seq).label('jss'), JobInstanceSub.job_id.label('jobid'),
-                JobInstanceSub.exitcode.label('ec'))
+        sq_1 = self.session.query(func.max(JobInstanceSub.job_submit_seq).label('jss'), JobInstanceSub.job_id.label('jobid'))
         if self._expand:
             sq_1 = sq_1.filter(Workflow.root_wf_id == self._root_wf_id)
         else:
@@ -380,8 +379,7 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         q = self.session.query(JobInstance.job_instance_id.label('last_job_instance'))
         q = q.filter(JobInstance.job_id == sq_1.c.jobid)
         q = q.filter(JobInstance.job_submit_seq == sq_1.c.jss)
-        q = q.filter(sq_1.c.ec == 0).filter(sq_1.c.ec != None)
-        
+        q = q.filter(JobInstance.exitcode == 0).filter(JobInstance.exitcode != None)
         return q.count()
     
         
@@ -391,8 +389,7 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         https://confluence.pegasus.isi.edu/display/pegasus/Workflow+Statistics+file#WorkflowStatisticsfile-Totalfailedjobs
         """
         JobInstanceSub = orm.aliased(JobInstance, name='JobInstanceSub')
-        sq_1 = self.session.query(func.max(JobInstanceSub.job_submit_seq).label('jss'), JobInstanceSub.job_id.label('jobid'),
-                JobInstanceSub.exitcode.label('ec'))
+        sq_1 = self.session.query(func.max(JobInstanceSub.job_submit_seq).label('jss'), JobInstanceSub.job_id.label('jobid'))
         if self._expand:
             sq_1 = sq_1.filter(Workflow.root_wf_id == self._root_wf_id)
         else:
@@ -406,8 +403,8 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         q = self.session.query(JobInstance.job_instance_id.label('last_job_instance'))
         q = q.filter(JobInstance.job_id == sq_1.c.jobid)
         q = q.filter(JobInstance.job_submit_seq == sq_1.c.jss)
-        q = q.filter(sq_1.c.ec != 0).filter(sq_1.c.ec != None)
-        
+        q = q.filter(JobInstance.exitcode != 0).filter(JobInstance.exitcode != None)
+
         return q.count()
         
     def _query_jobstate_for_instance(self, states):
