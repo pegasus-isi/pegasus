@@ -349,17 +349,27 @@ class Dashboard(object):
         statistics = {}
         
         workflow_states_list = workflow.get_workflow_states ()
-        statistics ['wall-time'] = float (stats_utils.get_workflow_wall_time (workflow_states_list))
-        statistics ['cum-time'] = float (workflow.get_workflow_cum_job_wall_time ())
-        statistics ['job-cum-time'] = float (workflow.get_submit_side_job_wall_time ())
         
+        wall_time = stats_utils.get_workflow_wall_time (workflow_states_list)
+        if wall_time != None:
+            wall_time = float (wall_time)
+             
+        cum_time = workflow.get_workflow_cum_job_wall_time ()
+        if cum_time != None:
+            cum_time = float (cum_time)
+            
+        job_cum_time = workflow.get_submit_side_job_wall_time ()
+        if job_cum_time != None:
+            job_cum_time = float (job_cum_time)
+        
+        statistics ['wall-time'] = wall_time
+        statistics ['cum-time'] = cum_time
+        statistics ['job-cum-time'] = job_cum_time
+
         return statistics
     
     def _get_workflow_retries (self, workflow):
         workflow.set_job_filter('all')
-        print '@' * 100
-        print int (workflow.get_workflow_retries ())
-        print '@' * 100
         return int (workflow.get_workflow_retries ())
         
     def _get_workflow_summary_counts (self, workflow):
