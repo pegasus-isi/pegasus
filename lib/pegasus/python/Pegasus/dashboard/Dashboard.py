@@ -201,6 +201,8 @@ class Dashboard(object):
             workflow = stampede_statistics.StampedeStatistics (self.__get_wf_db_url (), False)
             workflow.initialize (root_wf_id = self._wf_id)
             workflow.set_job_filter('all')
+            
+            job_retry_count_dict = {}
             content = []
             
             for job in workflow.get_job_statistics ():
@@ -219,7 +221,14 @@ class Dashboard(object):
                 if job.seqexec is not None and job.kickstart is not None:
                     seqexec_delay = (float (job.seqexec) - float (job.kickstart))
                 
-                content.append ([job.job_name, 1, job.site, kickstart, multiplier_factor, kickstart_multi, 
+                if job_retry_count_dict.has_key (job.job_name):
+                    job_retry_count_dict [job.job_name] += 1
+                else:
+                    job_retry_count_dict [job.job_name] = 1
+                    
+                retry_count = job_retry_count_dict [job.job_name]
+                
+                content.append ([job.job_name, retry_count, job.site, kickstart, multiplier_factor, kickstart_multi, 
                                  remote_cpu_time, post_time, condor_q_time, 
                                  resource_delay, runtime, seqexec, seqexec_delay, 
                                  utils.raw_to_regular (job.exit_code), job.host_name])
