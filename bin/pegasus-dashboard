@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
-"""
+'''
 Usage: pegasus-dashboard [options]
-"""
+'''
 
 ##
 #  Copyright 2007-2012 University Of Southern California
@@ -64,7 +64,7 @@ class WorkflowsDetailsMissingError (Exception):
 from Pegasus.tools import utils
 
 #Flask modules
-from flask import Flask, request, render_template, g
+from flask import Flask, request, render_template, url_for
 from flask.helpers import json
 
 #Dashboard modules
@@ -80,40 +80,32 @@ from sqlalchemy.orm.exc import NoResultFound
 
 @app.route('/')
 def index ():
-    """
+    '''
     List all work-flows from the master database.
-    """
-    
-    if request.is_xhr:
-        try:
-            dashboard = Dashboard (_master_db_url)
-            args = __get_datatables_args ()
-            count, filtered, workflows, totals = dashboard.get_root_workflow_list (**args)
-            
-        except NoWorkflowsFoundError, e:
-            return render_template ('workflow.xhr.json', count=e.count, filtered=e.filtered, workflows=[], table_args=args)
-        
-        return render_template ('workflow.xhr.json', count=count, filtered=filtered, workflows=workflows, table_args=args)
-    
-    #Not an AJAX request.
+    '''
     try:
         dashboard = Dashboard (_master_db_url)
         args = __get_datatables_args ()
         count, filtered, workflows, totals = dashboard.get_root_workflow_list (**args)
+        __update_label_link (workflows)
+        __update_timestamp (workflows)
         
-    except NoWorkflowsFoundError:
-        #Log this.
+    except NoWorkflowsFoundError, e:
+        if request.is_xhr:
+            return render_template ('workflow.xhr.json', count=e.count, filtered=e.filtered, workflows=[], table_args=args)
         return '', 204
+    
+    if request.is_xhr:
+        return render_template ('workflow.xhr.json', count=count, filtered=filtered, workflows=workflows, table_args=args)
 
     return render_template ('workflow.html', workflows=workflows, counts=totals)
-
 
 @app.route('/root/<root_wf_id>/workflow')
 @app.route('/root/<root_wf_id>/workflow/<wf_id>')
 def workflow (root_wf_id, wf_id=None):
-    """
+    '''
     Get details for a specific work-flow.
-    """    
+    '''    
     wf_uuid = request.args.get ('wf_uuid', None)
     
     if not wf_id and not wf_uuid:
@@ -133,9 +125,9 @@ def workflow (root_wf_id, wf_id=None):
 
 @app.route('/root/<root_wf_id>/workflow/<wf_id>/sub_workflows/', methods=['GET'])
 def sub_workflows (root_wf_id, wf_id):
-    """
+    '''
     Get a list of all successful jobs of the latest instance for a given work-flow.
-    """    
+    '''    
     dashboard = Dashboard (_master_db_url, root_wf_id, wf_id)
     sub_workflows = dashboard.get_sub_workflows (wf_id)
 
@@ -151,9 +143,9 @@ def sub_workflows (root_wf_id, wf_id):
 
 @app.route('/root/<root_wf_id>/workflow/<wf_id>/jobs/failed/', methods=['GET'])
 def failed_jobs (root_wf_id, wf_id):
-    """
+    '''
     Get a list of all failed jobs of the latest instance for a given work-flow.
-    """
+    '''
     dashboard = Dashboard (_master_db_url, root_wf_id, wf_id)
     failed_jobs_list = dashboard.get_failed_jobs (wf_id)
 
@@ -169,9 +161,9 @@ def failed_jobs (root_wf_id, wf_id):
 
 @app.route('/root/<root_wf_id>/workflow/<wf_id>/jobs/running/', methods=['GET'])
 def running_jobs (root_wf_id, wf_id):
-    """
+    '''
     Get a list of all running jobs of the latest instance for a given work-flow.
-    """
+    '''
     dashboard = Dashboard (_master_db_url, root_wf_id, wf_id)
     running_jobs_list = dashboard.get_running_jobs (wf_id)
 
@@ -187,9 +179,9 @@ def running_jobs (root_wf_id, wf_id):
 
 @app.route('/root/<root_wf_id>/workflow/<wf_id>/jobs/successful/', methods=['GET'])
 def successful_jobs (root_wf_id, wf_id):
-    """
+    '''
     Get a list of all successful jobs of the latest instance for a given work-flow.
-    """
+    '''
     
     dashboard = Dashboard (_master_db_url, root_wf_id, wf_id)
     successful_jobs_list = dashboard.get_successful_jobs (wf_id)
@@ -206,9 +198,9 @@ def successful_jobs (root_wf_id, wf_id):
 
 @app.route('/root/<root_wf_id>/workflow/<wf_id>/job/<job_id>', methods=['GET'])
 def job (root_wf_id, wf_id, job_id):
-    """
+    '''
     Get details of a specific job instance.
-    """
+    '''
     dashboard = Dashboard (_master_db_url, root_wf_id, wf_id)
     job = dashboard.get_job_information (wf_id, job_id)
     
@@ -219,9 +211,9 @@ def job (root_wf_id, wf_id, job_id):
 
 @app.route('/root/<root_wf_id>/workflow/<wf_id>/job/<job_id>/stdout', methods=['GET'])
 def stdout (root_wf_id, wf_id, job_id):
-    """
+    '''
     Get stdout contents for a specific job instance.
-    """
+    '''
     dashboard = Dashboard (_master_db_url, root_wf_id, wf_id)
     text = dashboard.get_stdout (wf_id, job_id)
     
@@ -231,11 +223,11 @@ def stdout (root_wf_id, wf_id, job_id):
         return text.stdout_text
 
     
-"""
-Get stderr contents for a specific job instance.
-"""
 @app.route('/root/<root_wf_id>/workflow/<wf_id>/job/<job_id>/stderr', methods=['GET'])
 def stderr (root_wf_id, wf_id, job_id):
+    '''
+    Get stderr contents for a specific job instance.
+    '''
     dashboard = Dashboard (_master_db_url, root_wf_id, wf_id)
     text = dashboard.get_stderr (wf_id, job_id)
     
@@ -246,9 +238,9 @@ def stderr (root_wf_id, wf_id, job_id):
 
 @app.route('/root/<root_wf_id>/workflow/<wf_id>/job/<job_id>/invocations/successful', methods=['GET'])
 def successful_invocations (root_wf_id, wf_id, job_id):
-    """
+    '''
     Get list of successful invocations for a given job.
-    """
+    '''
     dashboard = Dashboard (_master_db_url, root_wf_id, wf_id)
     successful_invocations_list = dashboard.get_successful_job_invocation (wf_id, job_id)
 
@@ -264,9 +256,9 @@ def successful_invocations (root_wf_id, wf_id, job_id):
 
 @app.route('/root/<root_wf_id>/workflow/<wf_id>/job/<job_id>/invocations/failed', methods=['GET'])
 def failed_invocations (root_wf_id, wf_id, job_id):
-    """
+    '''
     Get list of failed invocations for a given job.
-    """
+    '''
     dashboard = Dashboard (_master_db_url, root_wf_id, wf_id)
     failed_invocations_list = dashboard.get_failed_job_invocation (wf_id, job_id)
 
@@ -283,9 +275,9 @@ def failed_invocations (root_wf_id, wf_id, job_id):
 @app.route('/root/<root_wf_id>/workflow/<wf_id>/job/<job_id>/invocation/', methods=['GET'])
 @app.route('/root/<root_wf_id>/workflow/<wf_id>/job/<job_id>/invocation/<task_id>', methods=['GET'])
 def invocation (root_wf_id, wf_id, job_id, task_id=None):
-    """
+    '''
     Get detailed invocation information
-    """    
+    '''    
     dashboard = Dashboard (_master_db_url, root_wf_id, wf_id)
     invocation = dashboard.get_invocation_information (wf_id, job_id, task_id)
         
@@ -294,9 +286,9 @@ def invocation (root_wf_id, wf_id, job_id, task_id=None):
 
 @app.route('/root/<root_wf_id>/workflow/<wf_id>/charts', methods=['GET'])
 def charts (root_wf_id, wf_id):
-    """
+    '''
     Get job-distribution information
-    """
+    '''
     dashboard = Dashboard (_master_db_url, root_wf_id, wf_id)
     job_dist = dashboard.plots_transformation_statistics (wf_id)
 
@@ -305,9 +297,9 @@ def charts (root_wf_id, wf_id):
 
 @app.route('/root/<root_wf_id>/workflow/<wf_id>/charts/time_chart', methods=['GET'])
 def time_chart (root_wf_id, wf_id):
-    """
+    '''
     Get job-distribution information
-    """
+    '''
     dashboard = Dashboard (_master_db_url, root_wf_id, wf_id)
     time_chart_job, time_chart_invocation = dashboard.plots_time_chart (wf_id)
     
@@ -315,18 +307,18 @@ def time_chart (root_wf_id, wf_id):
 
 @app.route('/root/<root_wf_id>/workflow/<wf_id>/charts/gantt_chart', methods=['GET'])
 def gantt_chart (root_wf_id, wf_id):
-    """
+    '''
     Get information required to generate a Gantt chart.
-    """
+    '''
     dashboard = Dashboard (_master_db_url, root_wf_id, wf_id)
     gantt_chart = dashboard.plots_gantt_chart ()
     return render_template ('workflow/charts/gantt_chart.json', root_wf_id=root_wf_id, wf_id=wf_id, gantt_chart=gantt_chart)
 
 @app.route('/root/<root_wf_id>/workflow/<wf_id>/statistics', methods=['GET'])
 def statistics (root_wf_id, wf_id):
-    """
+    '''
     Get workflow statistics information
-    """
+    '''
     dashboard = Dashboard (_master_db_url, root_wf_id, wf_id)
     job_dist = dashboard.plots_transformation_statistics (wf_id)
 
@@ -368,11 +360,18 @@ def time_stats (root_wf_id, wf_id):
 
     return '{}'
 
+def __update_timestamp (workflows):
+    for workflow in workflows:
+        workflow.timestamp = strftime ("%a, %d %b %Y %H:%M:%S", localtime (workflow.timestamp))
+
+def __update_label_link (workflows):
+    for workflow in workflows:
+        workflow.dax_label = "<a href='" + url_for ('workflow', root_wf_id=workflow.wf_id, wf_uuid=workflow.wf_uuid) + "'>" + workflow.dax_label + "</a>"
 
 def __get_datatables_args ():
-    """
+    '''
     Extract list of arguments passed in the request
-    """
+    '''
     table_args = dict ()
     
     if request.args.get ('sEcho'):
@@ -428,9 +427,9 @@ def __get_datatables_args ():
 
 @app.template_filter ('dec_to_float')
 def dec_to_float (dec):
-    """
+    '''
     Decimal to Float 
-    """
+    '''
     if dec:
         return float (dec)
     else:
@@ -439,33 +438,33 @@ def dec_to_float (dec):
 
 @app.template_filter ('time_to_date_str')
 def time_to_date_str (time):
-    """
+    '''
     Change an integer duration to be represented as a data string 
-    """
+    '''
     return strftime ("%Y-%m-%d %H", localtime (time))
 
 
 @app.template_filter ('to_lower_case')
 def to_lower_case (str):
-    """
+    '''
     Convert string to lower case 
-    """
+    '''
     return str.lower ()
 
 
 @app.template_filter ('to_upper_case')
 def to_upper_case (str):
-    """
+    '''
     Convert string to upper case 
-    """
+    '''
     return str.upper ()
 
 
 @app.template_filter ('capitalize')
 def capitalize (str):
-    """
+    '''
     Capitalizes first character of the String 
-    """
+    '''
     return str.capitalize ()
 
 @app.errorhandler (404)
@@ -479,9 +478,9 @@ def workflow_details_missing (error):
 
 @app.template_filter ('time_to_str')
 def time_to_str (time):
-    """
+    '''
     Change an integer duration to be represented as d days h hours m mins s secs 
-    """
+    '''
     if time is not None and (isinstance (time, Decimal) or isinstance (time, float)):
         str_time = ''
         time = int (time)

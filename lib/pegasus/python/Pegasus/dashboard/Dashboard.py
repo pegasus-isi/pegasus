@@ -26,9 +26,6 @@ from time import localtime, strftime
 from Pegasus.tools import utils
 from Pegasus.plots_stats import utils as stats_utils
 
-#Flask modules
-from flask import url_for
-
 #Dashboard modules
 from Pegasus.dashboard import WorkflowInfo as queries
 
@@ -114,24 +111,12 @@ class Dashboard(object):
                 # Throw no work-flows found error.
                 raise NoWorkflowsFoundError (count=count, filtered=filtered)
             
-            self.__update_timestamp ()
-            # Try removing Flask references here.
-            self.__update_label_link ()
-            
             counts = all_workflows.get_workflow_counts ()
             return (count, filtered, self._workflows, counts)
             
         finally:
             Dashboard.close (all_workflows)
          
-    def __update_timestamp (self):
-        for workflow in self._workflows:
-            workflow.timestamp = strftime ("%a, %d %b %Y %H:%M:%S", localtime (workflow.timestamp))
-    
-    def __update_label_link (self):
-        for workflow in self._workflows:
-            workflow.dax_label = "<a href='" + url_for ('workflow', root_wf_id=workflow.wf_id, wf_uuid=workflow.wf_uuid) + "'>" + workflow.dax_label + "</a>"
-
     def workflow_stats (self):
         try:
             workflow = stampede_statistics.StampedeStatistics (self.__get_wf_db_url (), False)
