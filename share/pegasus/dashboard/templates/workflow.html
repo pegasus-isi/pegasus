@@ -91,17 +91,17 @@ $(document).ready (function ()
 			data: [
 				{
 					name: 'Running',
-					y: {{ counts ['others'] }},
+					y: {{ counts.others }},
 					sliced: true,
 					selected: true
 				},
 				{
 					name: 'Failed',
-					y: {{ counts ['fail'] }}
+					y: {{ counts.fail }}
 				},
 				{
 					name: 'Successful',
-					y: {{ counts ['success'] }}
+					y: {{ counts.success }}
 				}
 			]
 		}]

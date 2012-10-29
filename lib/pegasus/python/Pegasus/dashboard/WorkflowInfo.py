@@ -183,15 +183,7 @@ class MasterDatabase (SQLAlchemyInit, DoesLogging):
         q = q.filter (ws.wf_id == qmax.c.wf_id)
         q = q.filter (ws.timestamp == qmax.c.max_time)
         
-        tmp = q.one ()
-        
-        res = {}
-        res ['success'] = tmp.success
-        res ['total'] = tmp.total
-        res ['fail'] = tmp.fail
-        res ['others'] = tmp.others
-
-        return res
+        return q.one ()
 
 
 class WorkflowInfo(SQLAlchemyInit, DoesLogging):
