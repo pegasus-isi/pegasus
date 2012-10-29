@@ -265,18 +265,7 @@ class WorkflowInfo(SQLAlchemyInit, DoesLogging):
         q = q.filter (Job.job_id == qmax.c.job_id)
         q = q.filter (JobInstance.job_submit_seq == qmax.c.max_jss)
         
-        tmp = q.one ()
-        
-        res = {}
-        res ['success'] = tmp.success
-        res ['success_workflow'] = tmp.success_workflow
-        res ['total'] = tmp.total
-        res ['fail'] = tmp.fail
-        res ['fail_workflow'] = tmp.fail_workflow
-        res ['others'] = tmp.others
-        res ['others_workflow'] = tmp.others_workflow
-        
-        return res
+        return q.one ()
 
     def get_job_information (self, job_id):
 

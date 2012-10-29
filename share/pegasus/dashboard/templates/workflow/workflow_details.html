@@ -11,21 +11,21 @@ var chartData =
 {
 	Running: 
 	{
-		jobs: {{ counts ['others'] - counts ['others_workflow'] }},
-		workflow: {{ counts ['others_workflow'] }},
-		total: {{ counts ['others'] }}
+		jobs: {{ counts.others - counts.others_workflow }},
+		workflow: {{ counts.others_workflow }},
+		total: {{ counts.others }}
 	},
 	Successful: 
 	{
-		jobs: {{ counts ['success'] - counts ['success_workflow'] }},
-		workflow: {{ counts ['success_workflow'] }},
-		total: {{ counts ['success'] }}
+		jobs: {{ counts.success - counts.success_workflow }},
+		workflow: {{ counts.success_workflow }},
+		total: {{ counts.success }}
 	},
 	Failed: 
 	{
-		jobs: {{ counts ['fail'] - counts ['fail_workflow'] }},
-		workflow: {{ counts ['fail_workflow'] }},
-		total: {{ counts ['fail'] }}
+		jobs: {{ counts.fail - counts.fail_workflow }},
+		workflow: {{ counts.fail_workflow }},
+		total: {{ counts.fail }}
 	}
 }
 
@@ -161,17 +161,17 @@ $(document).ready (function ()
 			data: [
 				{
 					name: 'Running',
-					y: {{ counts ['others'] }},
+					y: {{ counts.others }},
 					sliced: true,
 					selected: true
 				},
 				{
 					name: 'Failed',
-					y: {{ counts ['fail'] }}
+					y: {{ counts.fail }}
 				},
 				{
 					name: 'Successful',
-					y: {{ counts ['success'] }}
+					y: {{ counts.success }}
 				}
 			]
 		}]
