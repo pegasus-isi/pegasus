@@ -194,7 +194,14 @@ Options
     to populate the STAMPEDE database for monitoring purposes. The file is 
     named "DAG.dagman.out" where "DAG" is the path to the PMC DAG file.
 
+*--no-resource-log*::
+    Do not generate a 'workflow.dag.resource' file for the workflow.
 
+*--no-sleep-on-recv*::
+    Do not use polling with sleep() to implement message receive. (see
+    <<CPU_USAGE_ISSUE,*Known Issues: CPU Usage*>>)
+    
+    
 [[DAG_FILES]]
 DAG Files
 ---------
@@ -772,6 +779,7 @@ calls. If your target machine runs a stripped-down OS on the
 compute nodes that does not support these system calls, then
 *pegasus-mpi-cluster* will not work.
 
+[[CPU_USAGE_ISSUE]]
 CPU Usage
 ~~~~~~~~~
 Many MPI implementations are optimized so that message sends and
@@ -788,11 +796,11 @@ processes sleep for a short period between checks for waiting
 messages. This reduces the load significantly, but causes a short 
 delay in receiving messages. If you are using an MPI implementation 
 that sleeps on message send and receive instead of doing busy waiting, 
-then you can disable the sleep in the worker by unsetting the 
-SLEEP_IF_NO_REQUEST compiler flag in the Makefile. It cannot be
-disabled in the master because MPI_Recv is not interrupted by signals
-and the master uses the SIGALRM signal to abort the workflow when it
-exceeds its max wall time.
+then you can disable the sleep by specifying the *--no-sleep-on-recv*
+option. Note that the master will always sleep if *--max-wall-time*
+is specified because there is no way to interrupt or otherwise 
+timeout a blocking call in MPI (e.g. SIGALRM does not cause MPI_Recv
+to return EINTR).
 
 
 Environment Variables
