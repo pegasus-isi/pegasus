@@ -17,7 +17,6 @@ function getWorkflowSummaryStats (container, url)
 		},
 		success: function (data, textStatus, xhr) 
 		{
-			console.log (xhr.responseText);
 			render_workflow_summary_stats (container, data);
 		} 
 	};
