@@ -2,12 +2,12 @@
 .\"     Title: pegasus-mpi-cluster
 .\"    Author: [see the "Author" section]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 10/29/2012
+.\"      Date: 10/30/2012
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "PEGASUS\-MPI\-CLUSTE" "1" "10/29/2012" "\ \&" "\ \&"
+.TH "PEGASUS\-MPI\-CLUSTE" "1" "10/30/2012" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -664,25 +664,59 @@ This approach works best on systems where the local disk is a RAM file system su
 .sp
 When using I/O forwarding it is important to consider a few caveats\&.
 .sp
-First, you should not use I/O forwarding if your task is going to write a lot of data to the file\&. Because the PMC worker is reading data off the pipe/file into memory and sending it in an MPI message, if you write too much then the worker process will run the system out of memory\&. There is no hard limit, and we haven\(cqt benchmarked the performance on large I/O, but anything larger than about 1 MB is probably too much\&. At any rate, if your data is larger then I/O forwarding probably won\(cqt have much of a performance benefit anyway\&.
+First, if the PMC job fails for any reason (including when the workflow is aborted for violating \fB\-\-max\-wall\-time\fR), then the files containing forwarded I/O may be corrupted\&. They can include \fBpartial records\fR, meaning that only part of the I/O from one or more tasks was written, and they can include \fBduplicate records\fR, meaning that the I/O was written, but the PMC job failed before the task could be marked as successful, and the workflow was restarted later\&. We make no guarantees about the contents of the data files in this case\&. It is up to the code that reads the files to a) detect and b) recover from such problems\&. To eliminate duplicates the records should include a unique identifier, and to eliminate partials the records should include a checksum\&.
 .sp
-Second, the pipes are write\-only\&. If you need to read and write data from the file you should use file forwarding and not pipe forwarding\&.
+Second, you should not use I/O forwarding if your task is going to write a lot of data to the file\&. Because the PMC worker is reading data off the pipe/file into memory and sending it in an MPI message, if you write too much, then the worker process will run the system out of memory\&. Also, all the data needs to fit in a single MPI message\&. In pipe forwarding there is no hard limit on the size, but in file forwarding the limit is 1MB\&. We haven\(cqt benchmarked the performance on large I/O, but anything larger than about 1 MB is probably too much\&. At any rate, if your data is larger than 1MB, then I/O forwarding probably won\(cqt have much of a performance benefit anyway\&.
 .sp
 Third, the I/O is not written to the file if the task returns a non\-zero exitcode\&. We assume that if the task failed that you don\(cqt want the data it produced\&.
 .sp
-Fourth, the data from one task is not interleaved with other tasks\&. All of the data written by a task will appear sequentially in the output file\&.
+Fourth, the data from different tasks is not interleaved\&. All of the data written by a given task will appear sequentially in the output file\&. Note that you can still get partial records, however, if any data from a task appears it will never be split among non\-adjacent ranges in the output file\&. If you have 3 tasks that write: "I am a task" you can get:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+I am a taskI am a taskI am a task
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+and:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+I am a taskI amI am a task
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+but not:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+I am a taskI amI am a task a task
+.fi
+.if n \{\
+.RE
+.\}
 .sp
 Fifth, data from different tasks appears in arbitrary order in the output file\&. It depends on what order the tasks were executed by PMC, which may be arbitrary if there are no dependencies between the tasks\&. The data that is written should contain enough information that you are able to determine which task produced it if you require that\&. PMC does not add any headers or trailers to the data\&.
 .sp
-Sixth, if the master is not able to write to the output file for any reason the task is marked as failed even if the task produced a non\-zero exitcode\&.
+Sixth, a task will only be marked as successful if all of its I/O was successfully written\&. If the workflow completed successfully, then the I/O is guaranteed to have been written\&.
 .sp
-Seventh, a task will only be marked as successful if all of its I/O was successfully written\&. If the workflow completed successfully, then the I/O is guaranteed to have been written\&.
+Seventh, if the master is not able to write to the output file for any reason (e\&.g\&. the master tries to write the I/O to the destination file, but the write() call returns an error) then the task is marked as failed even if the task produced a non\-zero exitcode\&. In other words, you may get a non\-zero kickstart record even when PMC marks the task failed\&.
 .sp
-Eighth, all files are opened in append mode\&. This is so that, if the workflow fails and has to be restarted, or if a task fails and is retried, the data that was written previously is not lost\&. PMC never truncates the files\&.
+Eighth, the pipes are write\-only\&. If you need to read and write data from the file you should use file forwarding and not pipe forwarding\&.
 .sp
-Ninth, in file forwarding the output file is removed when the task exits\&. You cannot rely on the file to be there when the next task runs even if you write it to a shared file system\&.
+Ninth, all files are opened by the master in append mode\&. This is so that, if the workflow fails and has to be restarted, or if a task fails and is retried, the data that was written previously is not lost\&. PMC never truncates the files\&. This is one of the reasons why you can have partial records and duplicate records in the output file\&.
 .sp
-Finally, if the PMC job fails for any reason, then the output file may be corrupted\&. We make no guarantees about the contents of the data files in this case\&. They may contain both partial records and duplicate records\&. It is up to the code that reads the files to a) detect and b) recover from such problems\&. If this becomes a problem we can implement journaling to fix it, but for now there are no guarantees\&.
+Finally, in file forwarding the output file is removed when the task exits\&. You cannot rely on the file to be there when the next task runs even if you write it to a shared file system\&.
 .SH "MISC"
 .SS "Resource Utilization"
 .sp
