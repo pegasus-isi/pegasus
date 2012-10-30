@@ -597,13 +597,25 @@ public class CondorGenerator extends Abstract {
         //for the job from various resources
         handleGlobusRSLForJob( job );
 
-        writer.println(this.mSeparator);
+        StringBuffer fragment = new StringBuffer();
+
+        //add the header to the fragment
+        fragment.append(CondorGenerator.mSeparator).append( "\n" );
+        fragment.append("# PEGASUS WMS GENERATED SUBMIT FILE").append( "\n" );
+        fragment.append("# DAG : " + dagname + ", Index = " + dagindex +
+                       ", Count = " + dagcount).append( "\n" );
+        fragment.append("# SUBMIT FILE NAME : " + subfilename).append( "\n" );
+        fragment.append(CondorGenerator.mSeparator);
+        writer.println( fragment );
+
+/*
+        writer.println(CondorGenerator.mSeparator);
         writer.println("# PEGASUS WMS GENERATED SUBMIT FILE");
         writer.println("# DAG : " + dagname + ", Index = " + dagindex +
                        ", Count = " + dagcount);
         writer.println("# SUBMIT FILE NAME : " + subfilename);
-        writer.println(this.mSeparator);
-
+        writer.println(CondorGenerator.mSeparator);
+*/
         //figure out the style to apply for a job
         applyStyle( job, writer );
 
@@ -628,11 +640,19 @@ public class CondorGenerator extends Abstract {
         ClassADSGenerator.generate( writer, dag, job );
 
         // DONE
+        fragment = new StringBuffer();
+
+        fragment.append("queue").append( "\n" );
+        fragment.append(CondorGenerator.mSeparator).append( "\n" );
+        fragment.append("# END OF SUBMIT FILE").append( "\n" );
+        fragment.append(CondorGenerator.mSeparator);
+        writer.println( fragment );
+/*
         writer.println("queue");
         writer.println(this.mSeparator);
         writer.println("# END OF SUBMIT FILE");
         writer.println(this.mSeparator);
-
+*/
         // close the print stream to the file (flush)
         writer.close();
         return;
