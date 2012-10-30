@@ -29,25 +29,34 @@ import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.credential.impl.Irods;
 import edu.isi.pegasus.common.credential.impl.Proxy;
 import edu.isi.pegasus.common.credential.impl.S3CFG;
+
 import edu.isi.pegasus.common.util.Separator;
+
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
+
 import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
+
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
+
 import edu.isi.pegasus.planner.classes.FileTransfer;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.NameValue;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.classes.TransferJob;
+
 import edu.isi.pegasus.planner.code.GridStartFactory;
+
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.common.Utility;
+
 import edu.isi.pegasus.planner.namespace.Condor;
 import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.namespace.Pegasus;
+
 import edu.isi.pegasus.planner.transfer.Implementation;
 import edu.isi.pegasus.planner.transfer.Refiner;
 
@@ -831,7 +840,6 @@ public abstract class Abstract implements Implementation{
     protected Job createSetXBitJob(FileTransfer file, String name){
         Job xBitJob = new Job();
         TransformationCatalogEntry entry   = null;
-        GridGateway jobManager = null;
         NameValue destURL  = (NameValue)file.getDestURL();
         String eSiteHandle = destURL.getKey();
 
@@ -869,7 +877,9 @@ public abstract class Abstract implements Implementation{
 
 
         SiteCatalogEntry eSite = mSiteStore.lookup( eSiteHandle );
-        jobManager             = eSite.selectGridGateway( GridGateway.JOB_TYPE.transfer );
+
+        //  JIRA PM-277
+//        jobManager             = eSite.selectGridGateway( GridGateway.JOB_TYPE.transfer );
         String arguments = " -X -f " + Utility.getAbsolutePath(destURL.getValue());
 
         xBitJob.jobName     = name;
@@ -879,9 +889,11 @@ public abstract class Abstract implements Implementation{
         xBitJob.dvName      = Abstract.CHANGE_XBIT_TRANSFORMATION;
         xBitJob.dvNamespace = Abstract.XBIT_DERIVATION_NS;
         xBitJob.dvVersion   = Abstract.XBIT_DERIVATION_VERSION;
-//        xBitJob.condorUniverse  = "vanilla";
         xBitJob.setUniverse( GridGateway.JOB_TYPE.auxillary.toString());
-        xBitJob.globusScheduler = jobManager.getContact();
+
+        //JIRA PM-277
+//        xBitJob.globusScheduler = jobManager.getContact();
+
         xBitJob.executable      = entry.getPhysicalTransformation();
         xBitJob.executionPool   = eSiteHandle;
         xBitJob.strargs         = arguments;
