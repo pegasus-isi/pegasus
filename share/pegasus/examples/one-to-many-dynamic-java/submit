@@ -50,8 +50,8 @@ CLASSPATH=`pegasus-config --classpath`
 export CLASSPATH=".:$CLASSPATH"
 javac RootWorkflow.java SubWorkflow.java
 
-export CLUSTER_SOFTWARE_LOCATION
-java RootWorkflow $CLUSTER_NAME $CLUSTER_SOFTWARE_LOCATION root-workflow.dax
+
+java RootWorkflow $CLUSTER_NAME $CLUSTER_PEGASUS_HOME $CLUSTER_SOFTWARE_LOCATION root-workflow.dax
 
 
 # create the site catalog

@@ -23,13 +23,13 @@ public class RootWorkflow {
      * @param args
      */
     public static void main(String[] args) {
-        if (args.length != 3) {
-            System.out.println("Usage: java ADAG <site_handle> <software_location> <filename.dax>");
+        if (args.length != 4) {
+            System.out.println("Usage: java ADAG <site_handle> <cluster pegasus location> <cluster software_location> <filename.dax>");
             System.exit(1);
         }
 
         try {
-            Diamond(args[0], args[1]).writeToFile(args[2]);
+            Diamond(args[0], args[1], args[2]).writeToFile(args[3]);
         }
         catch (Exception e) {
             e.printStackTrace();
@@ -37,7 +37,7 @@ public class RootWorkflow {
 
     }
 
-    private static ADAG Diamond(String site_handle, String cluster_software_location) throws Exception {
+    private static ADAG Diamond(String site_handle, String cluster_pegasus_location, String cluster_software_location) throws Exception {
 
         java.io.File cwdFile = new java.io.File (".");
         String cwd = cwdFile.getCanonicalPath(); 
@@ -83,7 +83,7 @@ public class RootWorkflow {
         // Add left Findrange job
         Job j_generate = new Job("j2", "workflow", "generate", "");
         j_generate.addArgument("SubWorkflow");
-        j_generate.addArgument(site_handle).addArgument(cluster_software_location);
+        j_generate.addArgument(site_handle).addArgument(cluster_pegasus_location);
         j_generate.addArgument(ilist);
         j_generate.addArgument(cwd+"/"+subdax.getName());
         j_generate.uses(ilist, File.LINK.INPUT);

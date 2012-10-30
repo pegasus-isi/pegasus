@@ -46,7 +46,7 @@ public class SubWorkflow {
         
 
         	Executable analyze = new Executable("pegasus", "analyze", "4.0");
-        	analyze.setArchitecture(Executable.ARCH.X86).setOS(Executable.OS.LINUX);
+        	analyze.setArchitecture(Executable.ARCH.X86_64).setOS(Executable.OS.LINUX);
         	analyze.setInstalled(true);
         	analyze.addPhysicalFile("file://" + pegasus_location + "/bin/pegasus-keg", site_handle);
 
@@ -55,16 +55,18 @@ public class SubWorkflow {
         	int jobid=0;
         	while ((line = br.readLine()) != null)   {
         		System.out.println("Line is "+line);
-        	   String ifile[] = line.split("(.+)\\s+(.+)");
-        	   System.out.println("Tokens are "+ifile);
+        	   String ifile[] = line.split(" ");
+		   for (String i : ifile){
+		       System.out.println("Tokens are "+i);
+		   }
 
-        	   edu.isi.pegasus.planner.dax.File fa = new edu.isi.pegasus.planner.dax.File(ifile[1]);
-        	  	fa.addPhysicalFile(ifile[2], "TestCluster");
+        	   edu.isi.pegasus.planner.dax.File fa = new edu.isi.pegasus.planner.dax.File(ifile[0]);
+        	  	fa.addPhysicalFile(ifile[1], "TestCluster");
         	  	dax.addFile(fa);
 
         	  	// Add analyze job
         	  	jobid++;
-        	  	edu.isi.pegasus.planner.dax.File fd= new edu.isi.pegasus.planner.dax.File(ifile[1]+".out");
+        	  	edu.isi.pegasus.planner.dax.File fd= new edu.isi.pegasus.planner.dax.File(ifile[0]+".out");
         	  	Job j_analyze = new Job("j"+jobid, "pegasus", "analyze", "4.0");
         	  	j_analyze.addArgument("-a analyze -T 60 -i ").addArgument(fa);
         	  	j_analyze.addArgument("-o ").addArgument(fd);
