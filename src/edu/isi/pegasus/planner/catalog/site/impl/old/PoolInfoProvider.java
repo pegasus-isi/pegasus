@@ -20,7 +20,6 @@ package edu.isi.pegasus.planner.catalog.site.impl.old;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.planner.catalog.site.impl.old.classes.GridFTPServer;
 import edu.isi.pegasus.planner.catalog.site.impl.old.classes.LRC;
-import edu.isi.pegasus.planner.catalog.site.impl.old.classes.PoolConfig;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.catalog.site.impl.old.classes.SiteInfo;
 import edu.isi.pegasus.planner.classes.Job;
@@ -30,7 +29,6 @@ import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.common.PegRandom;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.common.UserOptions;
-import edu.isi.pegasus.planner.common.Utility;
 
 import edu.isi.pegasus.planner.refiner.Engine;
 
@@ -42,11 +40,9 @@ import edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo;
 import java.io.File;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * This is an abstract class which defines the interface for the information

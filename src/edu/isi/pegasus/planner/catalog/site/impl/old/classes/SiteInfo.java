@@ -23,9 +23,9 @@ import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo;
 
 import edu.isi.pegasus.planner.common.PegRandom;
-import edu.isi.pegasus.planner.common.Utility;
 import edu.isi.pegasus.common.logging.LogManager;
 
+import edu.isi.pegasus.common.util.PegasusURL;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -294,7 +294,8 @@ public class SiteInfo {
         GridFTPServer server = selectGridFTP(random);
         url = server.getInfo(GridFTPServer.GRIDFTP_URL);
         //on the safe side should prune also..
-        return Utility.pruneURLPrefix(url);
+//        return Utility.pruneURLPrefix(url);
+        return new PegasusURL(url).getURLPrefix();
     }
 
     /**

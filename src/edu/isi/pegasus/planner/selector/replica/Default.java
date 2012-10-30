@@ -24,7 +24,6 @@ import edu.isi.pegasus.planner.selector.ReplicaSelector;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.common.PegRandom;
-import edu.isi.pegasus.planner.common.Utility;
 
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 

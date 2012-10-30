@@ -30,6 +30,7 @@ import edu.isi.pegasus.common.credential.impl.Irods;
 import edu.isi.pegasus.common.credential.impl.Proxy;
 import edu.isi.pegasus.common.credential.impl.S3CFG;
 
+import edu.isi.pegasus.common.util.PegasusURL;
 import edu.isi.pegasus.common.util.Separator;
 
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
@@ -51,7 +52,6 @@ import edu.isi.pegasus.planner.classes.TransferJob;
 import edu.isi.pegasus.planner.code.GridStartFactory;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
-import edu.isi.pegasus.planner.common.Utility;
 
 import edu.isi.pegasus.planner.namespace.Condor;
 import edu.isi.pegasus.planner.namespace.ENV;
@@ -784,7 +784,7 @@ public abstract class Abstract implements Implementation{
         for( FileTransfer file : files ){
             NameValue destURL  = (NameValue)file.getDestURL();
             arguments.append( " " );
-            arguments.append( Utility.getAbsolutePath(destURL.getValue()) );
+            arguments.append( new PegasusURL( destURL.getValue() ).getPath()  );
         }
         xBitJob.jobName     = name;
         xBitJob.logicalName = Abstract.CHANGE_XBIT_TRANSFORMATION;
@@ -880,7 +880,7 @@ public abstract class Abstract implements Implementation{
 
         //  JIRA PM-277
 //        jobManager             = eSite.selectGridGateway( GridGateway.JOB_TYPE.transfer );
-        String arguments = " -X -f " + Utility.getAbsolutePath(destURL.getValue());
+        String arguments = " -X -f " + new PegasusURL( destURL.getValue() ).getPath() ;
 
         xBitJob.jobName     = name;
         xBitJob.logicalName = Abstract.CHANGE_XBIT_TRANSFORMATION;

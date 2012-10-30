@@ -31,9 +31,6 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
-import edu.isi.pegasus.planner.common.Utility;
-
-//import edu.isi.pegasus.planner.refiner.createdir.S3;
 
 import edu.isi.pegasus.planner.namespace.Pegasus;
 
@@ -53,6 +50,7 @@ import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 
 import edu.isi.pegasus.common.util.FactoryException;
 
+import edu.isi.pegasus.common.util.PegasusURL;
 import edu.isi.pegasus.planner.classes.DAGJob;
 import edu.isi.pegasus.planner.classes.DAXJob;
 import edu.isi.pegasus.planner.namespace.Dagman;
@@ -1006,7 +1004,8 @@ public class TransferEngine extends Engine {
             dag = pfn;
         }
         else if( pfn.startsWith( TransferEngine.FILE_URL_SCHEME ) ){
-            dag = Utility.getAbsolutePath( pfn );
+//            dag = Utility.getAbsolutePath( pfn );
+            dag = new PegasusURL( pfn ).getPath();
         }
         else{
             throw new RuntimeException( "Invalid URL Specified for DAG Job " + job.getName() + " -> " + pfn );
@@ -1061,7 +1060,8 @@ public class TransferEngine extends Engine {
             dax = pfn;
         }
         else if( pfn.startsWith( TransferEngine.FILE_URL_SCHEME ) ){
-            dax = Utility.getAbsolutePath( pfn );
+//            dax = Utility.getAbsolutePath( pfn );
+            dax = new PegasusURL( pfn ).getPath();
         }
         else{
             throw new RuntimeException( "Invalid URL Specified for DAX Job " + job.getName() + " -> " + pfn );
@@ -1164,7 +1164,7 @@ public class TransferEngine extends Engine {
                                //enabled. use as it is
                                destURL:
                                //explicitly convert to file URL scheme
-                               scheme + "://" + Utility.getAbsolutePath(destURL);
+                               scheme + "://" + new PegasusURL( destURL ).getPath();
                 }
             }
             else{
@@ -1223,7 +1223,7 @@ public class TransferEngine extends Engine {
             //try to get the directory absolute path
             //yes i know that we sending the url to directory
             //not the file.
-            sAbsPath = Utility.getAbsolutePath(sDirURL);
+            sAbsPath = new PegasusURL(  sDirURL ).getPath();
 
             //the final source and destination url's to the file
             sourceURL = selLoc.getPFN();
@@ -1386,13 +1386,15 @@ public class TransferEngine extends Engine {
             //return the original object
 
             //we have to the manual replacement
+/*
             String hostName = Utility.getHostName( pfn );
-
             newPFN.append( FILE_URL_SCHEME ).append( "//" );
-
             //we want to skip out the hostname
             newPFN.append( pfn.substring( pfn.indexOf( hostName ) + hostName.length() ) );
+*/
 
+            newPFN.append( FILE_URL_SCHEME ).append( "//" );
+            newPFN.append( new PegasusURL( pfn ).getPath() );
         }
         
         //we do not need a full clone, just the PFN
@@ -1430,15 +1432,12 @@ public class TransferEngine extends Engine {
             return newPFN.toString();
         }
         
-                
-        //we have to the manual replacement 
-        String hostName = Utility.getHostName( pfn );
-
+ 
         newPFN.append( TransferEngine.SYMLINK_URL_SCHEME ).append( "//" );
        
-        //we want to skip out the hostname
-        newPFN.append( pfn.substring( pfn.indexOf( hostName ) + hostName.length() ) );
-                
+        //we want to skip out the hostname        
+        newPFN.append( new PegasusURL( pfn ).getPath()  );
+        
         return newPFN.toString();
     }
     

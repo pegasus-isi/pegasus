@@ -16,9 +16,8 @@
 
 package edu.isi.pegasus.planner.transfer;
 
-import edu.isi.pegasus.planner.common.Utility;
+import edu.isi.pegasus.common.util.PegasusURL;
 
-import edu.isi.pegasus.planner.transfer.TPT;
 /**
  * Client for testing  the TPT class.
  *
@@ -40,13 +39,15 @@ public class TestTPT {
 
 
         String url = "file:///gpfs-wan/karan.txt";
-        System.out.println("Hostname is " + Utility.getHostName(url));
+        PegasusURL u = new PegasusURL( url );
+        //System.out.println("Hostname is " + Utility.getHostName(url));
+        System.out.println("Hostname is " + u.getHost() );
         try{
             System.out.println("Java hostanme is " +
                                new java.net.URL(url).getHost());
         }catch(Exception e){}
 
-        System.out.println("Mount point is " + Utility.getAbsolutePath(url));
+        System.out.println("Mount point is " + u.getPath());
     }
 
 }
