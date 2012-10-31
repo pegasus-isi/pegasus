@@ -451,6 +451,10 @@ public class InPlace implements CleanupStrategy{
                         cleanupFiles.add( file );
                         
                         //Commented for PM-663
+                        //we defer this till we actually create a clustered cleanup
+                        //node
+                        //this commented out part triggered the montage bug
+                        //that led us to reopen PM-663 on Oct 31, 2012.
 /*
                         cleanedBy.put( file.getLFN(), nuGN );
 
@@ -823,7 +827,7 @@ public class InPlace implements CleanupStrategy{
      * @param site       the site associated with the cleanup jobs
      * @param level      the level of the workflow
      *
-     * @return
+     * @return a set of clustered cleanup nodes
      */
     private List<GraphNode> clusterCleanupJobs(List<GraphNode> cleanupNodes, HashMap cleanedBy, String site, int level ) {
         List<GraphNode> clusteredCleanupJobs = new LinkedList();
@@ -854,13 +858,18 @@ public class InPlace implements CleanupStrategy{
                 clusteredConstitutents.add( n );
             }
 
-            //we have our constituents. create a cleanup job out of this
+            //we have our constituents. create a cleanup node out of this
             GraphNode clusteredCleanupJob = createClusteredCleanupJob( clusteredConstitutents, cleanedBy, site, level, counter );
-            clusteredCleanupJobs.add(clusteredCleanupJob);
-            counter++;
+            if( clusteredCleanupJob != null ){
+                //we only add and increment counter only if the cleanup node
+                //is deleting at least one file.
+                clusteredCleanupJobs.add(clusteredCleanupJob);
+                counter++;
+            }
         }
 
-/*
+/* if we don't want any clustering to happen
+ * then use this and delete the rest of the function
         for( Iterator<GraphNode> it = cleanupNodes.iterator(); it.hasNext();  ){
             GraphNode cleanupNode = it.next();
             CleanupJobContent content = (CleanupJobContent) cleanupNode.getContent();
@@ -902,7 +911,9 @@ public class InPlace implements CleanupStrategy{
      * @param site       the site associated with the cleanup jobs
      * @param level      the level of the workflow
      * @param index      the index of the cleanup job for that level
-     * @return
+     *
+     * @return a clustered cleanup node with the appropriate linkages added to the workflow
+     *         else, null if the clustered cleanup node has no files to delete
      */
     private GraphNode createClusteredCleanupJob(List<GraphNode> nodes, HashMap cleanedBy, String site, int level, int index ) {
         GraphNode clusteredCleanupNode = new GraphNode( generateClusteredJobID( site, level, index ) );
@@ -931,17 +942,44 @@ public class InPlace implements CleanupStrategy{
 
 
             for( PegasusFile file : filesToDelete ){
-                cleanedBy.put( file.getLFN(), clusteredCleanupNode );
+                if( cleanedBy.containsKey( file.getLFN()) ){
+                    //somewhere during the clustering of the cleanup nodes at this
+                    //level, the file was designated to cleaned up by a
+                    //clustered cleanup node
+                    GraphNode existingCleanupNode = (GraphNode) cleanedBy.get( file.getLFN() );
+                    mLogger.log( "\t\tFile " + file.getLFN() + " already cleaned by clustered cleanup node " + existingCleanupNode.getID(),
+                                 LogManager.DEBUG_MESSAGE_LEVEL );
+
+                    if( !existingCleanupNode.getParents().contains( primaryNode ) ){
+                        existingCleanupNode.addParent( primaryNode );
+                     }
+                     if( !primaryNode.getChildren().contains( existingCleanupNode ) ){
+                        primaryNode.addChild( existingCleanupNode );
+                      }
+                }
+                else{
+                    cleanedBy.put( file.getLFN(), clusteredCleanupNode );
+                    allFilesToDelete.add( file );
+                }
             }
 
-            allFilesToDelete.addAll( filesToDelete );
+            //allFilesToDelete.addAll( filesToDelete );
 
-            //add dependencies between the compute/stageout node and the clustered cleanup node
-            if( !primaryNode.getChildren().contains( clusteredCleanupNode ) ){
-                primaryNode.addChild( clusteredCleanupNode );
+            if( allFilesToDelete.isEmpty() ){
+                //the clustered cleanup job we are trying to create has
+                //no files to delete
+                mLogger.log( "\t\tClustered cleanup node is empty " + clusteredCleanupNode.getID(),
+                                 LogManager.DEBUG_MESSAGE_LEVEL );
+                return null;
             }
-            if( ! clusteredCleanupNode.getParents().contains( primaryNode ) ){
-                clusteredCleanupNode.addParent( primaryNode );
+            else{
+                //add dependencies between the compute/stageout node and the clustered cleanup node
+                if( !primaryNode.getChildren().contains( clusteredCleanupNode ) ){
+                    primaryNode.addChild( clusteredCleanupNode );
+                }
+                if( ! clusteredCleanupNode.getParents().contains( primaryNode ) ){
+                    clusteredCleanupNode.addParent( primaryNode );
+                }
             }
         }
 
