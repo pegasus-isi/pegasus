@@ -536,10 +536,10 @@ public class InPlace implements CleanupStrategy{
             }//end of while loop .  //process all elements in the current priority
 
             //we now have a list of cleanup jobs for this level
-            List<GraphNode> clusteredCleanupJobs = clusterCleanupJobs( cleanupNodesPerLevel, cleanedBy , site, curP );
+            List<GraphNode> clusteredCleanupGraphNodes = clusterCleanupGraphNodes( cleanupNodesPerLevel, cleanedBy , site, curP );
             //for each clustered cleanup cleanupNode , add the associated cleanup job
-            for( GraphNode cleanupNode: clusteredCleanupJobs ){
-                 // We have always pass the associaated compute job. Since now
+            for( GraphNode cleanupNode: clusteredCleanupGraphNodes ){
+                 // We have always pass the associated compute job. Since now
                  //a cleanup job can be associated with stageout jobs also, we
                  //need to make sure that for the stageout job the cleanup job
                  //is passed. Karan Jan 9, 2008
@@ -829,7 +829,7 @@ public class InPlace implements CleanupStrategy{
      *
      * @return a set of clustered cleanup nodes
      */
-    private List<GraphNode> clusterCleanupJobs(List<GraphNode> cleanupNodes, HashMap cleanedBy, String site, int level ) {
+    private List<GraphNode> clusterCleanupGraphNodes(List<GraphNode> cleanupNodes, HashMap cleanedBy, String site, int level ) {
         List<GraphNode> clusteredCleanupJobs = new LinkedList();
 
         //sanity check for empty list
@@ -859,11 +859,11 @@ public class InPlace implements CleanupStrategy{
             }
 
             //we have our constituents. create a cleanup node out of this
-            GraphNode clusteredCleanupJob = createClusteredCleanupJob( clusteredConstitutents, cleanedBy, site, level, counter );
-            if( clusteredCleanupJob != null ){
+            GraphNode clusteredCleanupGraphNode = createClusteredCleanupGraphNode( clusteredConstitutents, cleanedBy, site, level, counter );
+            if( clusteredCleanupGraphNode != null ){
                 //we only add and increment counter only if the cleanup node
                 //is deleting at least one file.
-                clusteredCleanupJobs.add(clusteredCleanupJob);
+                clusteredCleanupJobs.add(clusteredCleanupGraphNode);
                 counter++;
             }
         }
@@ -893,7 +893,7 @@ public class InPlace implements CleanupStrategy{
 
 
 
-            clusteredCleanupJobs.add( cleanupNode );
+            clusteredCleanupGraphNodes.add( cleanupNode );
         }
 */
         return clusteredCleanupJobs;
@@ -915,7 +915,7 @@ public class InPlace implements CleanupStrategy{
      * @return a clustered cleanup node with the appropriate linkages added to the workflow
      *         else, null if the clustered cleanup node has no files to delete
      */
-    private GraphNode createClusteredCleanupJob(List<GraphNode> nodes, HashMap cleanedBy, String site, int level, int index ) {
+    private GraphNode createClusteredCleanupGraphNode(List<GraphNode> nodes, HashMap cleanedBy, String site, int level, int index ) {
         GraphNode clusteredCleanupNode = new GraphNode( generateClusteredJobID( site, level, index ) );
 
 
