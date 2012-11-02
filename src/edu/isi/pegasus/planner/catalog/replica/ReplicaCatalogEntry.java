@@ -35,7 +35,7 @@ import java.util.*;
  * @author Karan Vahi
  * @version $Revision$
  */
-public class ReplicaCatalogEntry implements CatalogEntry
+public class ReplicaCatalogEntry implements CatalogEntry, Cloneable
 {
   /**
    * The (reserved) attribute name used for the resource handle.
@@ -408,5 +408,16 @@ public class ReplicaCatalogEntry implements CatalogEntry
 
       return result;
   }
+  
+  @Override
+  public Object clone() throws CloneNotSupportedException
+  {
+	  ReplicaCatalogEntry r = new ReplicaCatalogEntry ();
+		
+	  r.setPFN (getPFN ());
+	  r.setResourceHandle (getResourceHandle ());
+	  r.addAttribute (this.m_attributeMap);
 
+	  return r;
+  }
 }
