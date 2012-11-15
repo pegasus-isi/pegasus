@@ -32,7 +32,7 @@ import java.util.List;
  * @author  Karan Vahi
  * 
  */
-public class LocalDirectory extends DirectoryType{
+public class LocalDirectory extends DirectoryLayout{
     
     /**
      * The default constructor.

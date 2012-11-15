@@ -18,7 +18,6 @@
 
 package edu.isi.pegasus.planner.parser;
 
-import edu.isi.pegasus.common.logging.LogManagerFactory;
 
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 
@@ -47,19 +46,16 @@ import edu.isi.pegasus.planner.classes.Profile;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.classes.PegasusBag;
-import edu.isi.pegasus.planner.common.PegasusProperties;
 
 import java.io.File;
 import java.io.IOException;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
 import java.util.Set;
 import java.util.HashSet;
 
 import java.util.Iterator;
-import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 
 /**
@@ -802,17 +798,7 @@ public class SiteCatalogParser extends StackBasedXMLParser {
     }
 
    
-    
-    /**
-     * 
-     * @param element
-     * @param attribute
-     * @param value
-     */
-    public void complain(String element, String attribute, String value) {
-        mLogger.log( "For element " + element + " invalid attribute found " + attribute + " -> " + value,
-                     LogManager.ERROR_MESSAGE_LEVEL );
-    }
+  
     
     /**
      * 

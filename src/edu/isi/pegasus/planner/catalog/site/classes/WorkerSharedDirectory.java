@@ -32,7 +32,7 @@ import java.util.List;
  * @version $Revision$
  * @author Karan Vahi
  */
-public class WorkerSharedDirectory extends DirectoryType{
+public class WorkerSharedDirectory extends DirectoryLayout{
     
     /**
      * The default constructor.

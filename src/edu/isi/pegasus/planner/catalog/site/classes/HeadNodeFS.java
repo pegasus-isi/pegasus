@@ -92,7 +92,7 @@ public class HeadNodeFS extends AbstractSiteData {
         if( scratch == null ){
             return null;
         }
-        DirectoryType directory = scratch.getLocalDirectory();
+        DirectoryLayout directory = scratch.getLocalDirectory();
         if( directory == null ){
             return null;
         }
@@ -111,7 +111,7 @@ public class HeadNodeFS extends AbstractSiteData {
         if( scratch == null ){
             return null;
         }
-        DirectoryType directory = scratch.getSharedDirectory();
+        DirectoryLayout directory = scratch.getSharedDirectory();
         if( directory == null ){
             return null;
         }
@@ -169,7 +169,7 @@ public class HeadNodeFS extends AbstractSiteData {
         if( storage == null ){
             return null;
         }
-        DirectoryType directory = storage.getLocalDirectory();
+        DirectoryLayout directory = storage.getLocalDirectory();
         if( directory == null ){
             return null;
         }
@@ -188,7 +188,7 @@ public class HeadNodeFS extends AbstractSiteData {
         if( storage == null ){
             return null;
         }
-        DirectoryType directory = storage.getSharedDirectory();
+        DirectoryLayout directory = storage.getSharedDirectory();
         if( directory == null ){
             return null;
         }

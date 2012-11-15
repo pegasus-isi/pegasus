@@ -29,7 +29,7 @@ import edu.isi.pegasus.planner.common.PegRandom;
  * 
  * @author Karan Vahi
  */
-public abstract class DirectoryType extends AbstractSiteData{
+public abstract class DirectoryLayout extends AbstractSiteData{
     
     /**
      * The list of file servers that can be used to write to access this directory.
@@ -44,7 +44,7 @@ public abstract class DirectoryType extends AbstractSiteData{
     /**
      * The default constructor.
      */
-    public DirectoryType(){
+    public DirectoryLayout(){
         initialize( );
     }
     
@@ -54,7 +54,7 @@ public abstract class DirectoryType extends AbstractSiteData{
      * @param  fs  list of file servers
      * @param  imt the internal mount point.
      */
-    public DirectoryType( List<FileServer> fs, InternalMountPoint imt ){
+    public DirectoryLayout( List<FileServer> fs, InternalMountPoint imt ){
         initialize( fs, imt );
     }
     
@@ -152,9 +152,9 @@ public abstract class DirectoryType extends AbstractSiteData{
      * @return the clone
      */
     public Object clone(){
-        DirectoryType obj;
+        DirectoryLayout obj;
         try{
-            obj = ( DirectoryType ) super.clone();
+            obj = ( DirectoryLayout ) super.clone();
         }
         catch( CloneNotSupportedException e ){
             //somewhere in the hierarch chain clone is not implemented

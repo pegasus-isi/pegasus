@@ -34,7 +34,7 @@ import java.util.List;
  * @author  Karan Vahi
  * 
  */
-public class SharedDirectory extends DirectoryType{
+public class SharedDirectory extends DirectoryLayout{
     
     /**
      * The default constructor.

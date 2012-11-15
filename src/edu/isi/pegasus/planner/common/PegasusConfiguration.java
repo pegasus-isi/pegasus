@@ -18,7 +18,7 @@
 package edu.isi.pegasus.planner.common;
 
 import edu.isi.pegasus.common.logging.LogManager;
-import edu.isi.pegasus.planner.catalog.site.classes.DirectoryType;
+import edu.isi.pegasus.planner.catalog.site.classes.DirectoryLayout;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
 import edu.isi.pegasus.planner.catalog.site.classes.HeadNodeFS;
 import edu.isi.pegasus.planner.catalog.site.classes.HeadNodeStorage;
@@ -181,7 +181,7 @@ public class PegasusConfiguration {
             }
             
             //we first check for local directory
-            DirectoryType storageDirectory = storage.getLocalDirectory();
+            DirectoryLayout storageDirectory = storage.getLocalDirectory();
             if( storageDirectory == null || storageDirectory.isEmpty()){
                 //default to shared directory
                 storageDirectory = storage.getSharedDirectory();
