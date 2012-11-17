@@ -303,15 +303,6 @@ public class InPlace implements CleanupStrategy{
             //populate mResMap ,mResMapLeaves,mResMapRoots
             Job si = ( Job )curGN.getContent();
             
-            //Commented out as for stage out jobs we need non third party
-            //site. Karan Jan 8, 2009
-//            if( !mResMap.containsKey( si.getSiteHandle() ) ){
-//                mResMap.put( si.getSiteHandle(), new HashSet() );
-//
-//            }
-//            ((Set)mResMap.get( si.getSiteHandle() )).add( curGN );
-            
-
             String site = getSiteForCleanup( si ); 
             if( !mResMap.containsKey( site ) ){
                 mResMap.put( site, new HashSet() );
@@ -397,16 +388,6 @@ public class InPlace implements CleanupStrategy{
                     continue;
                 }
 
-                /*if( curGN_SI.getJobType() == Job.STAGE_OUT_JOB ){
-                    curGN_SI.getInputFiles().addAll( curGN_SI.getOutputFiles() );
-                    curGN_SI.getOutputFiles().clear();
-                    
-                    System.out.println( curGN_SI.getName() );
-                    System.out.println( curGN_SI.getOutputFiles() );
-                    System.out.println( curGN_SI.getInputFiles() );
-                     
-                }*/
-                    
                     
 //              Leads to corruption of input files for the job.
 //                Set fileSet = curGN_SI.getInputFiles();
@@ -428,10 +409,6 @@ public class InPlace implements CleanupStrategy{
                 //create a dummy GraphNode .first create Job object and then add it to GraphNode
                 GraphNode nuGN = new GraphNode( generateCleanupID( curGN_SI ),
                         curGN_SI.getTXName() );
-//                                   InPlace.CLEANUP_JOB_PREFIX + curGN.getName() ,
-//                                   InPlace.CLEANUP_JOB_PREFIX + curGN.getName() );
-
-                
 
                 List<PegasusFile> cleanupFiles = new LinkedList();
                 for( Iterator it = fileSet.iterator() ; it.hasNext() ; ){
@@ -450,21 +427,6 @@ public class InPlace implements CleanupStrategy{
 
                         cleanupFiles.add( file );
                         
-                        //Commented for PM-663
-                        //we defer this till we actually create a clustered cleanup
-                        //node
-                        //this commented out part triggered the montage bug
-                        //that led us to reopen PM-663 on Oct 31, 2012.
-/*
-                        cleanedBy.put( file.getLFN(), nuGN );
-
-                        if( !curGN.getChildren().contains( nuGN ) ){
-                            curGN.addChild( nuGN );
-                        }
-                        if( ! nuGN.getParents().contains( curGN ) ){
-                            nuGN.addParent( curGN );
-                        }
- */
                     }
                 }// all the files
 
@@ -478,59 +440,7 @@ public class InPlace implements CleanupStrategy{
                     //with the cleanupNode but do with a copy
                     CleanupJobContent cleanupContent = new CleanupJobContent( curGN, cleanupFiles ) ;
                     nuGN.setContent( cleanupContent );
-
-
                     cleanupNodesPerLevel.add( nuGN );
-
-                     //Commented for PM-663
-                    //moved in the outer loop
-/*
-                    // We have always pass the associaated compute job. Since now
-                    //a cleanup job can be associated with stageout jobs also, we
-                    //need to make sure that for the stageout job the cleanup job
-                    //is passed. Karan Jan 9, 2008                    
-//                    Job cleanupJob = mImpl.createCleanupJob( nuGN.getID(),
-//                            cleanupFiles,
-//                            curGN_SI
-//                            );
-                    Job computeJob;
-                    if( typeStageOut( curGN_SI.getJobType() ) ){
-                        //find a compute job that is parent of this
-                        GraphNode cleanupNode = (GraphNode)curGN.getParents().get( 0 );
-                        computeJob = (Job)cleanupNode.getContent();
-                        message = new StringBuffer();
-                        message.append( "For cleanup job " ).append( nuGN.getID() ).
-                                append( " the associated compute job is ").append( computeJob.getID() );
-                        mLogger.log(  message.toString(), LogManager.DEBUG_MESSAGE_LEVEL );
-                    }
-                    else{
-                        computeJob = curGN_SI;
-                    }
-                    Job cleanupJob = mImpl.createCleanupJob( nuGN.getID(),
-                                                                 cleanupFiles,
-                                                                 computeJob
-                                                                 );
-                    
-                    //No longer required as stageout jobs are also cleaned. Karan Jan , 2008
-                    //if the corresponding compute job has any transfer or stageout jobs as child add it
-                    //as a parent of the cleanup job
-                    for( Iterator itc=curGN.getChildren().iterator(); itc.hasNext() ;){
-                        GraphNode curGNchild=(GraphNode) itc.next();
-                        Job itc_si=(Job) curGNchild.getContent();
-                        if( itc_si != null )
-                            if( itc_si.getJobType() == Job.STAGE_OUT_JOB ||
-                                itc_si.getJobType() == Job.INTER_POOL_JOB ){
-
-                            nuGN.addParent( curGNchild );
-                            curGNchild.addChild( nuGN );
-                            }
-                    }
-
-                    //add the job as a content to the graphnode
-                    //and the cleanupNode itself to the Graph
-                    nuGN.setContent( cleanupJob );
-                    workflow.addNode(nuGN);
- */
                 }
 
             }//end of while loop .  //process all elements in the current priority
@@ -565,21 +475,6 @@ public class InPlace implements CleanupStrategy{
                                                                  computeJob
                                                                  );
 
-                    //No longer required as stageout jobs are also cleaned. Karan Jan , 2008
-                    //if the corresponding compute job has any transfer or stageout jobs as child add it
-                    //as a parent of the cleanup job
-                    /*
-                    for( Iterator itc=curGN.getChildren().iterator(); itc.hasNext() ;){
-                        GraphNode curGNchild=(GraphNode) itc.next();
-                        Job itc_si=(Job) curGNchild.getContent();
-                        if( itc_si != null )
-                            if( itc_si.getJobType() == Job.STAGE_OUT_JOB ||
-                                itc_si.getJobType() == Job.INTER_POOL_JOB ){
-
-                            nuGN.addParent( curGNchild );
-                            curGNchild.addChild( nuGN );
-                            }
-                    }*/
 
                     //add the job as a content to the graphnode
                     //and the cleanupNode itself to the Graph
@@ -685,15 +580,6 @@ public class InPlace implements CleanupStrategy{
                 job.condorVariables.construct( Condor.PRIORITY_KEY,
                         new Integer( node.getDepth() ).toString());
 
-
-            //also for compute and staged compute jobs
-            //forward to remote job manager also
-            //the below hack only works for condor pools
-//            if( job.getJobType() == Job.COMPUTE_JOB ||
-//                job.getJobType() == Job.STAGED_COMPUTE_JOB ){
-//                job.globusRSL.construct( "condorsubmit",
-//                                         "(priority " + cleanupNode.getDepth() + ")");
-//            }
             }
         }
         return;
