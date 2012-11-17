@@ -382,18 +382,20 @@ public class CPlanner extends Executable{
         String pdax        = mPOptions.getPDAX();
         String baseDir     = mPOptions.getBaseSubmitDirectory();
 
-        if( dax == null && pdax == null ){
-            mLogger.log( "\nNeed to specify either a dax file ( using --dax )  or a pdax file (using --pdax) to plan",
+        if( dax == null ){
+            mLogger.log( "\nNeed to specify  a dax file ( using --dax ) to plan a workflow",
                          LogManager.CONSOLE_MESSAGE_LEVEL);
             this.printShortVersion();
             return result;
         }
-
-        if( mPOptions.getPartitioningType() != null ){
-            // partition and plan the workflow
-            doPartitionAndPlan( mProps, options );
-            return result;
+        
+        //a sanity check for an old unsupported option
+        if( pdax != null ){
+            //do the deferreed planning by parsing
+            //the partition graph in the pdax file.
+            throw new UnsupportedOperationException( "The --pdax option is no longer supported " );
         }
+        
 
         //check if sites set by user. If user has not specified any sites then
         //load all sites from site catalog.
@@ -450,187 +452,178 @@ public class CPlanner extends Executable{
         }
 
         
-        if(dax == null && pdax != null
-           && !eSites.isEmpty()){
-            //do the deferreed planning by parsing
-            //the partition graph in the pdax file.
-            result = doDeferredPlanning();
-        }
-        else if(pdax == null && dax != null
-             && !eSites.isEmpty()){
+        //load the parser and parse the dax
+        Parser p = (Parser)DAXParserFactory.loadDAXParser( mBag, "DAX2CDAG", dax );
+        Callback cb = ((DAXParser)p).getDAXCallback();
+        p.startParser( dax );
 
-            Parser p = (Parser)DAXParserFactory.loadDAXParser( mBag, "DAX2CDAG", dax );
-            Callback cb = ((DAXParser)p).getDAXCallback();
-            p.startParser( dax );
+        ADag orgDag = (ADag)cb.getConstructedObject();
 
-            ADag orgDag = (ADag)cb.getConstructedObject();
+        //generate the flow ids for the classads information
+        orgDag.dagInfo.generateFlowName();
+        orgDag.dagInfo.setFlowTimestamp( mPOptions.getDateTime( mProps.useExtendedTimeStamp() ));
+        orgDag.dagInfo.setDAXMTime( new File(dax) );
+        orgDag.dagInfo.generateFlowID();
+        orgDag.dagInfo.setReleaseVersion();
 
-            //generate the flow ids for the classads information
-            orgDag.dagInfo.generateFlowName();
-            orgDag.dagInfo.setFlowTimestamp( mPOptions.getDateTime( mProps.useExtendedTimeStamp() ));
-            orgDag.dagInfo.setDAXMTime( new File(dax) );
-            orgDag.dagInfo.generateFlowID();
-            orgDag.dagInfo.setReleaseVersion();
-
-            //set out the root workflow id
-            orgDag.setRootWorkflowUUID( determineRootWorkflowUUID(
-                                                                   orgDag,
-                                                                   this.mPOptions,
-                                                                   this.mProps ) );
+        //set out the root workflow id
+        orgDag.setRootWorkflowUUID( determineRootWorkflowUUID(
+                                                               orgDag,
+                                                               this.mPOptions,
+                                                               this.mProps ) );
                                         
-            //log id hiearchy message
-            //that connects dax with the jobs
-            logIDHierarchyMessage( orgDag , LoggingKeys.DAX_ID, orgDag.getAbstractWorkflowName() );
+        //log id hiearchy message
+        //that connects dax with the jobs
+        logIDHierarchyMessage( orgDag , LoggingKeys.DAX_ID, orgDag.getAbstractWorkflowName() );
 
-            //write out a the relevant properties to submit directory
-            int state = 0;
-            String relativeSubmitDir; //the submit directory relative to the base specified
-            try{
-                //determine the relative submit directory
-                relativeSubmitDir = ( mPOptions.getRelativeSubmitDirectory() == null )?
-                                                //create our own relative dir
-                                                determineRelativeSubmitDirectory( orgDag,
+        //write out a the relevant properties to submit directory
+        int state = 0;
+        String relativeSubmitDir; //the submit directory relative to the base specified
+        try{
+            //determine the relative submit directory
+            relativeSubmitDir = ( mPOptions.getRelativeSubmitDirectory() == null )?
+                                    //create our own relative dir
+                                    determineRelativeSubmitDirectory( orgDag,
                                                                        baseDir,
                                                                        mUser,
                                                                        mPOptions.getVOGroup(),
                                                                        mProps.useTimestampForDirectoryStructure() ):
-                                                mPOptions.getRelativeSubmitDirectory();
+                                    mPOptions.getRelativeSubmitDirectory();
 
 
-                mPOptions.setSubmitDirectory( baseDir, relativeSubmitDir  );
-                
-                if( options.partOfDeferredRun() ){
+            mPOptions.setSubmitDirectory( baseDir, relativeSubmitDir  );
+            
+            if ( options.partOfDeferredRun() ) {
 
-                    if( !mPOptions.getForceReplan() ){
-                        //if --force-replan is not set handle
-                        //rescue dags
-                        boolean rescue = handleRescueDAG( orgDag, mPOptions );
-                        if( rescue ){
-                             result = new LinkedList(  );
-                             result.add(  new File ( mPOptions.getSubmitDirectory(),
-                                          this.getDAGFilename( orgDag, mPOptions)));
-                             return result;
-
-                        }
+                if ( !mPOptions.getForceReplan() ) {
+                    //if --force-replan is not set handle
+                    //rescue dags
+                    boolean rescue = handleRescueDAG( orgDag, mPOptions );
+                    if (rescue) {
+                        result = new LinkedList();
+                        result.add( new File( mPOptions.getSubmitDirectory(),
+                                    this.getDAGFilename( orgDag, mPOptions ) ) );
+                        return result;
                     }
-
-                    //replanning case. rescues already accounted for earlier.
-
-                    //the relativeSubmitDir is to be a symlink to relativeSubmitDir.XXX
-                    relativeSubmitDir = doBackupAndCreateSymbolicLinkForSubmitDirectory( baseDir , relativeSubmitDir );
-
-                    //update the submit directory again.
-                    mPOptions.setSubmitDirectory( baseDir, relativeSubmitDir  );
-                    mLogger.log( "Setting relative submit dir to " + relativeSubmitDir,
-                                 LogManager.DEBUG_MESSAGE_LEVEL );
-                }
-                else{
-                    //create the relative submit directory if required
-                    sanityCheck( new File( baseDir, relativeSubmitDir) );
-
                 }
 
-                state++;
-                mProps.writeOutProperties( mPOptions.getSubmitDirectory() );
+                //replanning case. rescues already accounted for earlier.
 
-                mPMetrics.setRelativeSubmitDirectory( mPOptions.getRelativeSubmitDirectory() );
+                //the relativeSubmitDir is to be a symlink to relativeSubmitDir.XXX
+                relativeSubmitDir = doBackupAndCreateSymbolicLinkForSubmitDirectory(
+                                                baseDir, relativeSubmitDir );
 
-                //also log in the planner metrics where the properties are
-                mPMetrics.setProperties( mProps.getPropertiesInSubmitDirectory() );
+                //update the submit directory again.
+                mPOptions.setSubmitDirectory( baseDir, relativeSubmitDir );
+                mLogger.log( "Setting relative submit dir to " + relativeSubmitDir,
+                             LogManager.DEBUG_MESSAGE_LEVEL );
             }
-            catch( IOException ioe ){
-                String error = ( state == 0 ) ?
-                               "Unable to write  to directory" :
-                               "Unable to write out properties to directory";
-                throw new RuntimeException( error + mPOptions.getSubmitDirectory() , ioe );
+            else {
+                //create the relative submit directory if required
+                sanityCheck( new File( baseDir, relativeSubmitDir ) );
 
-            }
-            
-
-            //check if a random directory is specified by the user
-            if(mPOptions.generateRandomDirectory() && mPOptions.getRandomDir() == null){
-                //user has specified the random dir name but wants
-                //to go with default name which is the flow id
-                //for the workflow unless a basename is specified.
-                mPOptions.setRandomDir(getRandomDirectory(orgDag));
-            }
-            else if( mPOptions.getRandomDir() != null ){
-                //keep the name that the user passed
-            }
-            else if( mPOptions.getRelativeDirectory() != null ){
-                //the relative-dir option  is used to construct
-                //the remote directory name
-                mPOptions.setRandomDir( mPOptions.getRelativeDirectory() );
-            }
-            else if( relativeSubmitDir != null ){
-                //the relative directory constructed on the submit host
-                //is the one required for remote sites
-                mPOptions.setRandomDir( relativeSubmitDir );
-
-                //also for time being set the relative dir option to
-                //same as the relative submit directory.
-                //Eventually we should have getRelativeExecDir function also
-                //SLS interfaces use getRelativeDir for time being.
-                mPOptions.setRelativeDirectory( relativeSubmitDir );
             }
 
-            //before starting the refinement process load
-            //the stampede event generator and generate events for the dax
-            generateStampedeEventsForAbstractWorkflow( orgDag , mBag );
-            
-            //populate the singleton instance for user options
-            //UserOptions opts = UserOptions.getInstance(mPOptions);
-            MainEngine cwmain = new MainEngine( orgDag, mBag );
+            state++;
+            mProps.writeOutProperties( mPOptions.getSubmitDirectory() );
 
-            ADag finalDag = cwmain.runPlanner();
-            DagInfo ndi = finalDag.dagInfo;
+            mPMetrics.setRelativeSubmitDirectory( mPOptions.getRelativeSubmitDirectory() );
 
-            //store the workflow metrics from the final dag into
-            //the planner metrics
-            mPMetrics.setWorkflowMetrics( finalDag.getWorkflowMetrics() );
+            //also log in the planner metrics where the properties are
+            mPMetrics.setProperties( mProps.getPropertiesInSubmitDirectory() );
+        } catch (IOException ioe) {
+            String error = (state == 0) ? "Unable to write  to directory" : "Unable to write out properties to directory";
+            throw new RuntimeException( error + mPOptions.getSubmitDirectory(), ioe );
 
-            //we only need the script writer for daglite megadag generator mode
-            CodeGenerator codeGenerator = null;
-            codeGenerator = CodeGeneratorFactory.
-                                     loadInstance( cwmain.getPegasusBag() );
+        }
 
 
-            //before generating the codes for the workflow check
-            //for emtpy workflows
-            boolean emptyWorkflow = false;
-            if( finalDag.isEmpty() ){
-                mLogger.log( "Adding a noop job to the empty workflow ", LogManager.DEBUG_MESSAGE_LEVEL );
-                finalDag.add( this.createNoOPJob( getNOOPJobName( finalDag ) ));
-                emptyWorkflow = true;
-            }
+        //check if a random directory is specified by the user
+        if ( mPOptions.generateRandomDirectory() && mPOptions.getRandomDir() == null ) {
+            //user has specified the random dir name but wants
+            //to go with default name which is the flow id
+            //for the workflow unless a basename is specified.
+            mPOptions.setRandomDir(getRandomDirectory(orgDag));
+        } 
+        else if ( mPOptions.getRandomDir() != null ) {
+        //keep the name that the user passed
+        } 
+        else if ( mPOptions.getRelativeDirectory() != null ) {
+            //the relative-dir option  is used to construct
+            //the remote directory name
+            mPOptions.setRandomDir( mPOptions.getRelativeDirectory() );
+        }
+        else if ( relativeSubmitDir != null ) {
+            //the relative directory constructed on the submit host
+            //is the one required for remote sites
+            mPOptions.setRandomDir( relativeSubmitDir );
 
-            message = "Generating codes for the executable workflow";
-            log( message, LogManager.INFO_MESSAGE_LEVEL );
+            //also for time being set the relative dir option to
+            //same as the relative submit directory.
+            //Eventually we should have getRelativeExecDir function also
+            //SLS interfaces use getRelativeDir for time being.
+            mPOptions.setRelativeDirectory( relativeSubmitDir );
+        }
 
-            try{
-                mLogger.logEventStart( LoggingKeys.EVENTS_PEGASUS_CODE_GENERATION, LoggingKeys.DAX_ID, finalDag.getAbstractWorkflowName() );
+        //before starting the refinement process load
+        //the stampede event generator and generate events for the dax
+        generateStampedeEventsForAbstractWorkflow( orgDag, mBag );
 
-                result = codeGenerator.generateCode(finalDag);
-                
-                //connect the DAX and the DAG via the hieararcy message
-                List l = new ArrayList(1);
-                l.add( finalDag.getExecutableWorkflowName() );
-                mLogger.logEntityHierarchyMessage( LoggingKeys.DAX_ID, finalDag.getAbstractWorkflowName(),
-                                                   LoggingKeys.DAG_ID, l );
-                
-                //connect the jobs and the DAG via the hierarchy message
-                this.logIDHierarchyMessage( finalDag, LoggingKeys.DAG_ID, finalDag.getExecutableWorkflowName() );
+        //populate the singleton instance for user options
+        //UserOptions opts = UserOptions.getInstance(mPOptions);
+        MainEngine cwmain = new MainEngine( orgDag, mBag );
 
-                
-            }
-            catch ( Exception e ){
-                throw new RuntimeException( "Unable to generate code", e );
-            }
-            finally{
-                //close the connection to transient replica catalog
-                mBag.getHandleToTransientReplicaCatalog().close();
-                mLogger.logEventCompletion();
-            }
+        ADag finalDag = cwmain.runPlanner();
+        DagInfo ndi = finalDag.dagInfo;
+
+        //store the workflow metrics from the final dag into
+        //the planner metrics
+        mPMetrics.setWorkflowMetrics( finalDag.getWorkflowMetrics() );
+
+        //we only need the script writer for daglite megadag generator mode
+        CodeGenerator codeGenerator = null;
+        codeGenerator = CodeGeneratorFactory.loadInstance( cwmain.getPegasusBag() );
+
+
+        //before generating the codes for the workflow check
+        //for emtpy workflows
+        boolean emptyWorkflow = false;
+        if (finalDag.isEmpty()) {
+            mLogger.log("Adding a noop job to the empty workflow ", LogManager.DEBUG_MESSAGE_LEVEL);
+            finalDag.add(this.createNoOPJob(getNOOPJobName(finalDag)));
+            emptyWorkflow = true;
+        }
+
+        message = "Generating codes for the executable workflow";
+        log(message, LogManager.INFO_MESSAGE_LEVEL);
+
+        try {
+            mLogger.logEventStart( LoggingKeys.EVENTS_PEGASUS_CODE_GENERATION,
+                                   LoggingKeys.DAX_ID, 
+                                   finalDag.getAbstractWorkflowName() );
+
+            result = codeGenerator.generateCode( finalDag );
+
+            //connect the DAX and the DAG via the hieararcy message
+            List l = new ArrayList(1);
+            l.add( finalDag.getExecutableWorkflowName() );
+            mLogger.logEntityHierarchyMessage( LoggingKeys.DAX_ID, 
+                                               finalDag.getAbstractWorkflowName(),
+                                               LoggingKeys.DAG_ID,
+                                               l);
+
+            //connect the jobs and the DAG via the hierarchy message
+            this.logIDHierarchyMessage( finalDag, LoggingKeys.DAG_ID, finalDag.getExecutableWorkflowName() );
+
+
+        } catch (Exception e) {
+            throw new RuntimeException( "Unable to generate code", e );
+        } 
+        finally {
+            //close the connection to transient replica catalog
+            mBag.getHandleToTransientReplicaCatalog().close();
+            mLogger.logEventCompletion();
+        }
 
 //            mLogger.log( message + " -DONE", LogManager.INFO_MESSAGE_LEVEL );
 
@@ -686,32 +679,27 @@ public class CPlanner extends Executable{
 //            }
 // END OF COMMENTED OUT CODE
 
-            //write out  the planner metrics  to global log
-            mPMetrics.setEndTime( new Date() );
-            writeOutMetrics( mPMetrics );
+        //write out  the planner metrics  to global log
+        mPMetrics.setEndTime( new Date() );
+        writeOutMetrics( mPMetrics );
 
-            if( mPOptions.submitToScheduler() ){//submit the jobs
-                StringBuffer invocation = new StringBuffer();
-                //construct the path to the bin directory
-                invocation.append( mProps.getBinDir() ).append( File.separator ).
-                                   append( getPegasusRunInvocation (  ) );
+        if ( mPOptions.submitToScheduler() ) {//submit the jobs
+            StringBuffer invocation = new StringBuffer();
+            //construct the path to the bin directory
+            invocation.append( mProps.getBinDir() ).append( File.separator ).
+                    append( getPegasusRunInvocation() );
 
-                boolean submit = submitWorkflow( invocation.toString() );
-                if ( !submit ){
-                    throw new RuntimeException(
+            boolean submit = submitWorkflow( invocation.toString() );
+            if (!submit) {
+                throw new RuntimeException(
                         "Unable to submit the workflow using pegasus-run" );
-                }
             }
-            else{
-                //log the success message
-                this.logSuccessfulCompletion(  emptyWorkflow);
-            }
-        }
-        else{
-            printShortVersion();
-            throw new RuntimeException("Invalid combination of arguments passed");
+        } else {
+            //log the success message
+            this.logSuccessfulCompletion( emptyWorkflow );
         }
 
+            
         return result;
     }
 
@@ -950,6 +938,7 @@ public class CPlanner extends Executable{
                     options.setOutputDirectory( g.getOptarg() );
                     break;
 
+                /* no longer supported
                 case 'p'://partition and plan
                     options.setPartitioningType( "Whole" );
                     break;
@@ -957,6 +946,7 @@ public class CPlanner extends Executable{
                 case 'P'://pdax file
                     options.setPDAX(g.getOptarg());
                     break;
+                */
 
                 case 'q'://quiet
                     options.decrementLogging();
@@ -1058,78 +1048,7 @@ public class CPlanner extends Executable{
 
     }
 
-    /**
-     * Partitions and plans the workflow. First step of merging DAGMan and
-     * Condor
-     *
-     * @param properties   the properties passed to the planner.
-     * @param options      the options passed to the planner.
-     */
-    protected void doPartitionAndPlan( PegasusProperties properties, PlannerOptions options ){
-  
-        PegasusBag bag = new PegasusBag();
-        bag.add( PegasusBag.PEGASUS_LOGMANAGER, this.mLogger );
-        bag.add( PegasusBag.PEGASUS_PROPERTIES, properties );
-        bag.add( PegasusBag.PLANNER_OPTIONS, options );
-        String dax = options.getDAX();
-        Parser p = (Parser)DAXParserFactory.loadDAXParser( bag, "DAX2Metadata" , dax );
-        Callback cb = ((DAXParser)p).getDAXCallback();
-        try{
-            p.startParser( dax );
-        }catch( Exception e ){
-            //ignore
-        }
-        Map metadata = ( Map ) cb.getConstructedObject();
-        String label = (String) metadata.get( "name" );
-
-        String baseDir = options.getBaseSubmitDirectory();
-        String relativeDir = null;
-        //construct the submit directory structure
-        try{
-            relativeDir = (options.getRelativeDirectory() == null) ?
-                                 //create our own relative dir
-                                 determineRelativeSubmitDirectory(label,
-                                                       baseDir,
-                                                       mUser,
-                                                       options.getVOGroup(),
-                                                       properties.useTimestampForDirectoryStructure()) :
-                                 options.getRelativeDirectory();
-            //create the relative submit directory if required
-            sanityCheck( new File( baseDir, relativeDir) );
-        }
-        catch( IOException ioe ){
-            String error = "Unable to write  to directory" ;
-            throw new RuntimeException( error + options.getSubmitDirectory() , ioe );
-
-        }
-
-        options.setSubmitDirectory( baseDir, relativeDir  );
-        mLogger.log( "Submit Directory for workflow is " + options.getSubmitDirectory() , LogManager.DEBUG_MESSAGE_LEVEL );
-
-        //now let us run partitiondax
-        //mLogger.log( "Partitioning Workflow" , LogManager.INFO_MESSAGE_LEVEL );
-        mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_PARTITION, LoggingKeys.DAX_ID, options.getDAX() );
-        PartitionDAX partitionDAX = new PartitionDAX();
-        File dir = new File( options.getSubmitDirectory(), "dax" );
-        String pdax = partitionDAX.partitionDAX(
-                                                  properties,
-                                                  options.getDAX(),
-                                                  dir.getAbsolutePath(),
-                                                  options.getPartitioningType() );
-
-        mLogger.log( "PDAX file generated is " + pdax , LogManager.DEBUG_MESSAGE_LEVEL );
-        mLogger.logEventCompletion();
-                
-        //now run pegasus-plan with pdax option
-        CPlanner pegasusPlan = new CPlanner();
-        options.setDAX( null );
-        options.setPDAX( pdax );
-        options.setPartitioningType( null );
-
-        pegasusPlan.executeCommand( options );
-
-    }
-
+    
     /**
      * Sets the basename of the random directory that is created on the remote
      * sites per workflow. The name is generated by default from teh flow ID,
@@ -1326,100 +1245,6 @@ public class CPlanner extends Executable{
         return uuid;
     }
 
-
-    /**
-     * This ends up invoking the deferred planning code, that generates
-     * the MegaDAG that is used to submit the partitioned daxes in layers.
-     *
-     * @return the Collection of <code>File</code> objects for the files written
-     *         out.
-     */
-    private Collection<File> doDeferredPlanning(){
-        String mode = mPOptions.getMegaDAGMode();
-        mode  = (mode == null)?
-                   DEFAULT_MEGADAG_MODE:
-                   mode;
-
-        String file = mPOptions.getPDAX();
-
-        //get the name of the directory from the file
-        String directory = new File(file).getParent();
-        //System.out.println("Directory in which partitioned daxes are " + directory);
-
-        int errorStatus = 1;
-        ADag megaDAG = null;
-        Collection result = null;
-        try{
-            //load the correct callback handler
-            edu.isi.pegasus.planner.parser.pdax.Callback c =
-                PDAXCallbackFactory.loadInstance(mProps, mPOptions, directory);
-            errorStatus = 2;
-
-            //this is a bug. Should not be called. To be corrected by Karan
-            //Commented for new Site catalog
-//            UserOptions y = UserOptions.getInstance(mPOptions);
-
-
-            //intialize the bag of objects and load the site selector
-            PegasusBag bag = new PegasusBag();
-            bag.add( PegasusBag.PEGASUS_LOGMANAGER, mLogger );
-            bag.add( PegasusBag.PEGASUS_PROPERTIES, mProps );
-            bag.add( PegasusBag.PLANNER_OPTIONS, mPOptions );
-//            bag.add( PegasusBag.TRANSFORMATION_CATALOG, TCMode.loadDAXParserCallback() );
-          //bag.add( PegasusBag.TRANSFORMATION_MAPPER, mTCMapper );
-            bag.add( PegasusBag.PEGASUS_LOGMANAGER, mLogger );
-            bag.add( PegasusBag.SITE_STORE, mBag.getHandleToSiteStore() );
-            bag.add( PegasusBag.TRANSFORMATION_CATALOG, mBag.getHandleToTransformationCatalog() );
-
-            //start the parsing and let the fun begin
-            PDAXParser p = new PDAXParser( file , mProps );
-            p.setCallback(c);
-            p.startParser(file);
-
-            megaDAG = (ADag)c.getConstructedObject();
-
-            CodeGenerator codeGenerator = null;
-            //load the Condor Writer that understands HashedFile Factories.
-            codeGenerator = CodeGeneratorFactory.loadInstance( bag );
-            errorStatus = 3;
-            result = codeGenerator.generateCode( megaDAG );
-
-            
-
-        }
-        catch(FactoryException fe){
-            //just rethrow for time being. we need error status as 2
-            throw fe;
-        }
-        catch(Exception e){
-            String message;
-            switch(errorStatus){
-                case 1:
-                    message = "Unable to load the PDAX Callback ";
-                    break;
-
-                case 2:
-                    message = "Unable to parse the PDAX file ";
-                    break;
-
-                case 3:
-                    message = "Unable to generate the code for the MegaDAG";
-                    break;
-
-                default:
-                    //unreachable code
-                    message = "Unknown Error " ;
-                    break;
-            }
-            throw new RuntimeException(message, e);
-        }
-
-
-
-        this.logSuccessfulCompletion( false );
-
-        return result;
-    }
 
     /**
      * Creates the submit directory for the workflow. This is not thread safe.
