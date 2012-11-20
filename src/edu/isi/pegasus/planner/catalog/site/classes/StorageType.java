@@ -18,6 +18,7 @@
 
 package edu.isi.pegasus.planner.catalog.site.classes;
 
+import edu.isi.pegasus.planner.catalog.site.classes.Directory.TYPE;
 import java.io.IOException;
 import java.io.Writer;
 
@@ -68,7 +69,27 @@ public  class StorageType extends AbstractSiteData{
     public void setLocalDirectory( LocalDirectory local ){
         mLocalDirectory = local;
     }
-    
+
+    /**
+     * Sets the local directory.
+     *
+     * @param local  the local directory.
+     */
+    public void setLocalDirectory( Directory local ){
+        //sanity check on type
+        Directory.TYPE type = local.getType();
+        if( type == Directory.TYPE.shared_scratch || type == Directory.TYPE.shared_storage ){
+            //complain
+            complain( type );
+        }
+
+        mLocalDirectory = new LocalDirectory();
+        mLocalDirectory.setInternalMountPoint( local.getInternalMountPoint() );
+        for( FileServer server: local.mFileServers ){
+            mLocalDirectory.addFileServer(server);
+        }
+    }
+
     /**
      * Returns the local directory.
      * 
@@ -104,7 +125,26 @@ public  class StorageType extends AbstractSiteData{
     public void setSharedDirectory( SharedDirectory shared ){
         mSharedDirectory = shared;
     }
-    
+
+    /**
+     * Sets the shared directory.
+     *
+     * @param shared  the shared directory.
+     */
+    public void setSharedDirectory( Directory shared ){
+        //sanity check on type
+        Directory.TYPE type = shared.getType();
+        if( type == Directory.TYPE.local_scratch || type == Directory.TYPE.local_storage ){
+            //complain
+            complain( type );
+        }
+
+        mSharedDirectory = new SharedDirectory();
+        mSharedDirectory.setInternalMountPoint( shared.getInternalMountPoint() );
+        for( FileServer server: shared.mFileServers ){
+            mSharedDirectory.addFileServer(server);
+        }
+    }
     
     /**
      * Returns the shared directory.
@@ -144,5 +184,14 @@ public  class StorageType extends AbstractSiteData{
      */
     public void toXML(Writer writer, String indent) throws IOException {
         throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    /**
+     * Throws a Runtime Exception
+     *
+     * @param Directory.TYPE  the directory type
+     */
+    private void complain(Directory.TYPE type) {
+        throw new RuntimeException( "Invalid directory type associated with storage type"  + type );
     }
 }
