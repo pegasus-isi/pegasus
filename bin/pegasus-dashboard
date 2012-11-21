@@ -64,8 +64,28 @@ class WorkflowsDetailsMissingError (Exception):
 from Pegasus.tools import utils
 
 #Flask modules
-from flask import Flask, request, render_template, url_for
-from flask.helpers import json
+try:
+    from flask import Flask, request, render_template, url_for
+    from flask.helpers import json
+    from jinja2 import FileSystemLoader
+except ImportError:
+    print '''Running the Dashboard requires the following packages be installed and be available in the PYTHONPATH
+1. Flask (http://flask.pocoo.org/)
+2. Jinja (http://jinja.pocoo.org/)
+3. Werkzeug (http://werkzeug.pocoo.org/)
+    
+Installation:
+       
+1. If you do not have pip command, install pip as follows
+
+    easy_install pip
+
+2. Execute
+
+    pip install flask
+
+Note: Above command installs Jinja, and Werkzeug as well'''
+    sys.exit(1)
 
 #Dashboard modules
 from Pegasus.dashboard.Dashboard import Dashboard, Utils, NoWorkflowsFoundError
@@ -73,7 +93,6 @@ from Pegasus.dashboard.Dashboard import Dashboard, Utils, NoWorkflowsFoundError
 _master_db_url = None
 app = Flask (__name__, static_folder=os.path.join (pegasus_env_path ['pegasus_share_dir'], 'dashboard/static'))
 
-from jinja2 import FileSystemLoader
 app.jinja_loader = FileSystemLoader (os.path.join (pegasus_env_path ['pegasus_share_dir'], 'dashboard/templates'))
 
 from sqlalchemy.orm.exc import NoResultFound
