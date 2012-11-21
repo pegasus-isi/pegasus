@@ -90,5 +90,24 @@ public class SharedDirectory extends DirectoryLayout{
         writer.write( newLine );
     }
 
+    /**
+     * Accepts the visitor and calls visit method on the visitor accordingly
+     *
+     * @param visitor
+     */
+    public void accept(SiteDataVisitor visitor) throws IOException {
+
+        visitor.visit( this );
+
+        //iterate through all the file servers
+        for( Iterator<FileServer> it = this.getFileServersIterator(); it.hasNext(); ){
+            FileServer fs = it.next();
+            fs.accept(visitor);
+        }
+
+        //internal point  is handled in the depart method
+        visitor.depart( this );
+    }
+
     
 }

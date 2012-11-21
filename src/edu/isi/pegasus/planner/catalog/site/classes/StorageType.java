@@ -176,15 +176,7 @@ public  class StorageType extends AbstractSiteData{
         return obj;
     }
 
-    /**
-     * 
-     * @param writer
-     * @param indent
-     * @throws java.io.IOException
-     */
-    public void toXML(Writer writer, String indent) throws IOException {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
+
 
     /**
      * Throws a Runtime Exception
@@ -193,5 +185,12 @@ public  class StorageType extends AbstractSiteData{
      */
     private void complain(Directory.TYPE type) {
         throw new RuntimeException( "Invalid directory type associated with storage type"  + type );
+    }
+
+    
+
+    @Override
+    public void toXML(Writer writer, String indent) throws IOException {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 }

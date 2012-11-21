@@ -103,6 +103,11 @@ public class InternalMountPoint extends FileSystemType {
         writer.write( "/>" );
         writer.write( newLine );
     }
+
+    @Override
+    public void accept(SiteDataVisitor visitor) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
     
 
 }

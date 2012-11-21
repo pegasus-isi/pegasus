@@ -26,4 +26,6 @@ package edu.isi.pegasus.planner.catalog.site.classes;
  */
 public abstract class SiteData implements Cloneable{
 
+
+    
 }

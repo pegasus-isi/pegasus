@@ -82,5 +82,10 @@ public class WorkerSharedDirectory extends DirectoryLayout{
         writer.write( newLine );
     }
 
+    @Override
+    public void accept(SiteDataVisitor visitor) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
 
 }

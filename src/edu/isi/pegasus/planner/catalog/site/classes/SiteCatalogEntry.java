@@ -863,6 +863,42 @@ public class SiteCatalogEntry extends AbstractSiteData{
         return obj;
     }
 
+    /**
+     * Accept method for the visitor interface
+     *
+     * @param visitor   the visitor
+     *
+     * @throws  IOException  in case of error
+     */
+    public void accept(SiteDataVisitor visitor) throws IOException {
+
+        visitor.visit( this );
+
+       //list all the gridgateways
+        for( Iterator<GridGateway> it = this.getGridGatewayIterator(); it.hasNext(); ){
+            it.next().accept(visitor);
+        }
+
+        HeadNodeFS fs = null;
+        if( (fs = this.getHeadNodeFS()) != null ){
+            fs.accept( visitor );
+        }
+
+
+        WorkerNodeFS wfs = null;
+        if( ( wfs = this.getWorkerNodeFS() ) != null ){
+            wfs.accept(visitor);
+        }
+        
+        //list all the replica catalogs associate
+        for( Iterator<ReplicaCatalog> it = this.getReplicaCatalogIterator(); it.hasNext(); ){
+            it.next().accept(visitor);
+        }
+
+        //profiles are handled in the depart method
+        visitor.depart(this);
+    }
+
 
    
     

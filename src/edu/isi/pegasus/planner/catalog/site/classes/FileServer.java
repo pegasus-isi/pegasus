@@ -85,4 +85,9 @@ public class FileServer extends FileServerType {
         }
         writer.write( newLine );
     }
+
+    @Override
+    public void accept(SiteDataVisitor visitor) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 }

@@ -148,6 +148,11 @@ public class Connection extends AbstractSiteData {
         }
         return obj;
     }
+
+    @Override
+    public void accept(SiteDataVisitor visitor) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
     
 }
     

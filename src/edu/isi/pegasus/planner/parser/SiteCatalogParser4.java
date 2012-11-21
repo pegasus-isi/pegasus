@@ -47,12 +47,14 @@ import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.planner.catalog.site.classes.Directory;
+import edu.isi.pegasus.planner.catalog.site.classes.XML3Visitor;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import java.io.File;
 import java.io.IOException;
 
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -814,7 +816,12 @@ public class SiteCatalogParser4 extends StackBasedXMLParser {
             SiteCatalogParser4 parser = new SiteCatalogParser4( bag, s) ;
             System.out.println( " *********Parsing File *********" + file );
             parser.startParser( file );
-            System.out.println( parser.getSiteStore() );
+            SiteStore store = parser.getSiteStore();
+            System.out.println( store );
+
+            SiteCatalogEntry entry = store.lookup( "local" );
+
+            //entry.accept( new XML3Visitor( ) );
 
             System.out.println( " *********Parsing Done *********"  );
         }

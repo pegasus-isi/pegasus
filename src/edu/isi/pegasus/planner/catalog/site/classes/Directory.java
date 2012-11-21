@@ -32,6 +32,11 @@ import java.io.Writer;
  */
 public class Directory extends DirectoryLayout{
 
+    @Override
+    public void accept(SiteDataVisitor visitor) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
 
     /**
      * Enumerates the new directory types supported in this schema

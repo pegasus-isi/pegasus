@@ -263,4 +263,9 @@ public class ReplicaCatalog extends AbstractSiteData {
         
         
     }
+
+    @Override
+    public void accept(SiteDataVisitor visitor) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 }

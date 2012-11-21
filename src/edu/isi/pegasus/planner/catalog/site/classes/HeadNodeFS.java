@@ -215,6 +215,15 @@ public class HeadNodeFS extends AbstractSiteData {
     }
 
     /**
+     * Returns the profiles associated with the file server.
+     * 
+     * @return the profiles.
+     */
+    public Profiles getProfiles( ){
+        return this.mProfiles;
+    }
+
+    /**
      * Sets the profiles associated with the file server.
      * 
      * @param profiles   the profiles.
@@ -269,6 +278,23 @@ public class HeadNodeFS extends AbstractSiteData {
                                        e );
         }
         return obj;
+    }
+
+    /**
+     * Accepts the visitor and calls visit method on the visitor accordingly
+     *
+     * @param visitor
+     */
+    public void accept(SiteDataVisitor visitor) throws IOException {
+
+        visitor.visit( this );
+
+
+        this.getScratch().accept(visitor);
+        this.getStorage().accept(visitor);
+
+        //profiles are handled in the depart method
+        visitor.depart( this );
     }
 
     

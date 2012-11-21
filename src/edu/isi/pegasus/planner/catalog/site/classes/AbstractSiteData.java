@@ -29,7 +29,15 @@ import java.io.IOException;
 public abstract class AbstractSiteData extends SiteData
                                         {
     
-    
+    /**
+     * Accept method for the SiteData classes that accepts a visitor
+     *
+     * @param visitor  the visitor to be used
+     *
+     * @exception IOException if something fishy happens to the stream.
+     */
+    public abstract void accept( SiteDataVisitor visitor ) throws IOException;
+
     /**
      * Returns the xml description of the object. This is used for generating
      * the partition graph. That is no longer done.

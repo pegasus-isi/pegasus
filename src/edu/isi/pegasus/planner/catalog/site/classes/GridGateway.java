@@ -33,6 +33,11 @@ import java.io.IOException;
  */
 public class GridGateway extends AbstractSiteData{
 
+    @Override
+    public void accept(SiteDataVisitor visitor) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
 
 
     /**
