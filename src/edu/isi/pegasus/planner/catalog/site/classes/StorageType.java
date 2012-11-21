@@ -193,4 +193,9 @@ public  class StorageType extends AbstractSiteData{
     public void toXML(Writer writer, String indent) throws IOException {
         throw new UnsupportedOperationException("Not supported yet.");
     }
+
+    @Override
+    public void accept(SiteDataVisitor visitor) throws IOException {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 }
