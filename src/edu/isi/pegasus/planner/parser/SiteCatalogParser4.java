@@ -574,52 +574,7 @@ public class SiteCatalogParser4 extends StackBasedXMLParser {
                     return false;
                 }
                 
-            //h head-fs
-            case 'h':
-                //head-fs only appears in the site element
-                if ( child instanceof HeadNodeFS && parent instanceof SiteCatalogEntry ) {
-                    SiteCatalogEntry site = ( SiteCatalogEntry )parent;
-                    site.setHeadNodeFS( (HeadNodeFS)child );
-                    return true;
-                }
-                else{
-                    return false;
-                }
             
-            //i  internal-mount-point
-            case 'i':
-                //internal-mount-point appears in local , shared, wshared
-                if ( child instanceof InternalMountPoint && parent instanceof LocalDirectory ) {
-                    LocalDirectory directory = ( LocalDirectory )parent;
-                    directory.setInternalMountPoint( (InternalMountPoint)child );
-                    return true;
-                }
-                else if ( child instanceof InternalMountPoint && parent instanceof SharedDirectory ) {
-                    SharedDirectory directory = ( SharedDirectory )parent;
-                    directory.setInternalMountPoint( (InternalMountPoint)child );
-                    return true;
-                }
-                else if ( child instanceof InternalMountPoint && parent instanceof WorkerSharedDirectory ) {
-                    WorkerSharedDirectory directory = ( WorkerSharedDirectory )parent;
-                    directory.setInternalMountPoint( (InternalMountPoint)child );
-                    return true;
-                }
-                else{
-                    return false;
-                }
-                
-            //l local                 
-            case 'l':
-                //local appears in scratch and storage
-                if ( child instanceof LocalDirectory &&
-                     parent instanceof StorageType ) {
-                    StorageType st = ( StorageType )parent;
-                    st.setLocalDirectory( (LocalDirectory)child );
-                    return true;
-                }
-                else{
-                    return false;
-                }
                 
             //p profile                 
             case 'p':
@@ -730,27 +685,8 @@ public class SiteCatalogParser4 extends StackBasedXMLParser {
                     return false;
                 }
                 
-            //w worker-fs wshared
-            case 'w':
-                //worker-fs appears in site
-                if ( child instanceof WorkerNodeFS &&
-                     parent instanceof SiteCatalogEntry ) {
-                    SiteCatalogEntry site = ( SiteCatalogEntry )parent;
-                    site.setWorkerNodeFS((WorkerNodeFS)child );
-                    return true;
-                }
-                //wshared appears in shared scratch of worker node
-                else if ( child instanceof WorkerSharedDirectory && parent instanceof WorkerNodeScratch ){
-                    WorkerNodeScratch scratch = ( WorkerNodeScratch )parent;
-                    scratch.setWorkerSharedDirectory( (WorkerSharedDirectory)child );
-                }
-                else if ( child instanceof WorkerSharedDirectory && parent instanceof WorkerNodeStorage ){
-                    WorkerNodeStorage storage = ( WorkerNodeStorage )parent;
-                    storage.setWorkerSharedDirectory( (WorkerSharedDirectory)child );
-                }
-                else{
-                    return false;
-                }
+
+
                 
             default:
                 return false;

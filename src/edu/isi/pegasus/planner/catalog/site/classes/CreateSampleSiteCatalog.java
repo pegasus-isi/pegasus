@@ -42,7 +42,7 @@ public class CreateSampleSiteCatalog {
     public void constructSiteCatalog( String file ) {
         try{
             SiteStore store = new SiteStore();
-            SiteCatalogEntry entry = new SiteCatalogEntry( "isi_viz" );
+            SiteCatalogEntry3 entry = new SiteCatalogEntry3( "isi_viz" );
             entry.setHeadNodeFS( createHeadNodeFS() );
             entry.setWorkerNodeFS( createWorkerNodeFS() );
             

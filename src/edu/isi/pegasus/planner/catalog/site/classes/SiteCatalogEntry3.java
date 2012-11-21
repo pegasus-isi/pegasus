@@ -51,7 +51,7 @@ import java.io.IOException;
  * @author Karan Vahi
  * @version $Revision$
  */
-public class SiteCatalogEntry extends AbstractSiteData{
+public class SiteCatalogEntry3 extends AbstractSiteData{
 
     /**
      * The name of the environment variable PEGASUS_BIN_DIR.
@@ -87,18 +87,13 @@ public class SiteCatalogEntry extends AbstractSiteData{
     /**
      * The handle to the head node filesystem.
      */
-//    private HeadNodeFS mHeadFS;
+    private HeadNodeFS mHeadFS;
     
     /**
      * The handle to the worker node filesystem.
      */
-//    private WorkerNodeFS mWorkerFS;
-
-    /**
-     * A Map of different directories indexed by Directory.TYPE associated
-     * with the site catalog entry
-     */
-    private Map<Directory.TYPE, Directory> mDirectories;
+    private WorkerNodeFS mWorkerFS;
+    
     
     /**
      * Map of grid gateways at the site for submitting different job types.
@@ -113,7 +108,7 @@ public class SiteCatalogEntry extends AbstractSiteData{
     /**
      * The default constructor.
      */
-    public SiteCatalogEntry() {
+    public SiteCatalogEntry3() {
         this( "" );
     }
     
@@ -122,7 +117,7 @@ public class SiteCatalogEntry extends AbstractSiteData{
      * 
      * @param id   the site identifier.
      */
-    public SiteCatalogEntry( String id ) {
+    public SiteCatalogEntry3( String id ) {
         initialize( id );
     }
 
@@ -161,7 +156,6 @@ public class SiteCatalogEntry extends AbstractSiteData{
     public void initialize( String id ){        
         mID       = id;
         mSysInfo  = new SysInfo();
-        mDirectories = new HashMap<Directory.TYPE, Directory>();
         mProfiles        = new Profiles();
         mGridGateways    = new HashMap();
         mReplicaCatalogs = new LinkedList();
@@ -322,179 +316,56 @@ public class SiteCatalogEntry extends AbstractSiteData{
         return mSysInfo.getGlibc();
     }
 
+    
+
+    
     /**
-     * Adds a directory to the site catalog entry object.
-     * Adding a directory automatically will add a head node filesystem
-     * and a worker node filesystem to the SiteCatalogEntry if it does not exist
-     * already.
-     * The mapping followed is
-     * <pre>
-     *  shared-scratch  ->  HeadNodeFS shared scratch
-     *  shared-storage  ->  HeadNodeFS shared storage
-     *  local-scratch   ->  WorkerNodeFS local scratch
-     *  local-storage   ->  HeadNodeFS local storage
-     * </pre>
-     *
-     * @param directory  the directory to be added
-     *//*
-    public void addDirectory( Directory directory ) {
-        Directory.TYPE type = directory.getType();
-
-        if( type == Directory.TYPE.shared_scratch ){
-            HeadNodeFS headnode = this.getHeadNodeFS();
-            if( headnode == null ){
-                headnode = new HeadNodeFS();
-                HeadNodeScratch scratch = new HeadNodeScratch();
-                scratch.setSharedDirectory( directory );
-                headnode.setScratch( scratch );
-                this.setHeadNodeFS( headnode );
-            }
-            else{
-                //retrive from existing
-                HeadNodeScratch scratch = headnode.getScratch();
-                if( scratch == null ){
-                    scratch = new HeadNodeScratch();
-                    headnode.setScratch(scratch);
-                }
-                //get the shared filesystem
-               scratch.setSharedDirectory( directory );
-            }
-        }
-        else if( type == Directory.TYPE.shared_storage ){
-            HeadNodeFS headnode = this.getHeadNodeFS();
-            if( headnode == null ){
-                headnode = new HeadNodeFS();
-                HeadNodeStorage storage = new HeadNodeStorage();
-                storage.setSharedDirectory( directory );
-                headnode.setStorage( storage );
-                this.setHeadNodeFS( headnode );
-            }
-            else{
-                //retrieve from existing
-                HeadNodeStorage storage = headnode.getStorage();
-                if( storage == null ){
-                    storage = new HeadNodeStorage();
-                    headnode.setStorage( storage );
-                }
-                //set the shared filesystem
-               storage.setSharedDirectory( directory );
-            }
-        }
-        else if( type == Directory.TYPE.local_scratch ){
-            WorkerNodeFS workernode = this.getWorkerNodeFS();
-            if( workernode == null ){
-                workernode = new WorkerNodeFS();
-                WorkerNodeScratch scratch = new WorkerNodeScratch();
-                scratch.setLocalDirectory( directory );
-                workernode.setScratch( scratch );
-                this.setWorkerNodeFS( workernode );
-            }
-            else{
-                //retrieve from existing
-                WorkerNodeScratch scratch = workernode.getScratch();
-                if( scratch == null ){
-                    scratch = new WorkerNodeScratch();
-                    workernode.setScratch(scratch);
-                }
-                //set the shared filesystem
-               scratch.setLocalDirectory( directory );
-            }
-        }
-        /// we now map HeadNode local storage
-        else if( type == Directory.TYPE.local_storage ){
-            WorkerNodeFS workernode = this.getWorkerNodeFS();
-            if( workernode == null ){
-                workernode = new WorkerNodeFS();
-                WorkerNodeStorage storage = new WorkerNodeStorage();
-                storage.setLocalDirectory( directory );
-                workernode.setStorage( storage );
-                this.setWorkerNodeFS( workernode );
-            }
-            else{
-                //retrieve from existing
-                WorkerNodeStorage storage = workernode.getStorage();
-                if( storage == null ){
-                    storage = new WorkerNodeStorage();
-                    workernode.setStorage( storage );
-                }
-                //set the shared filesystem
-               storage.setLocalDirectory( directory );
-            }
-        }
-         
-        else if( type == Directory.TYPE.local_storage ){
-            HeadNodeFS headnode = this.getHeadNodeFS();
-            if( headnode == null ){
-                headnode = new HeadNodeFS();
-                HeadNodeStorage storage = new HeadNodeStorage();
-                storage.setLocalDirectory( directory );
-                headnode.setStorage( storage );
-                this.setHeadNodeFS( headnode );
-            }
-            else{
-                //retrieve from existing
-                HeadNodeStorage storage = headnode.getStorage();
-                if( storage == null ){
-                    storage = new HeadNodeStorage();
-                    headnode.setStorage( storage );
-                }
-                //set the shared filesystem
-               storage.setLocalDirectory( directory );
-            }
-        }
-
-    }*/
-
-    /**
-     * Adds a directory internally. Complains if directory of same type already
-     * exists
-     *
-     * @param directory   the directory to be added.
+     * Sets the headnode filesystem.
+     * 
+     * @param system   the head node filesystem.
      */
-    public void addDirectory(Directory directory) {
-        //check for existence
-        if( this.mDirectories.containsKey( directory.getType() ) ){
-            StringBuffer error = new StringBuffer();
-            error.append( "Unable to add Directory " ).append( directory.getInternalMountPoint() )
-                 .append( " for site " ).append(  this.getSiteHandle() );
-            throw new RuntimeException( error.toString() );
-
-        }
-
-        this.mDirectories.put( directory.getType(), directory);
-    }
-
-    /**
-     * Sets a directory corresponding to a particular type
-     *
-     * @param directory the directory to be set
-     */
-    public void setDirectory( Directory directory ){
-         this.mDirectories.put( directory.getType(), directory );
-    }
-
-    /**
-     * Returns a directory corresponding to a particular type
-     *
-     * @param the type the directory type
-     */
-    public Directory getDirectory( Directory.TYPE type ){
-        return this.mDirectories.get( type );
+    public void setHeadNodeFS( HeadNodeFS system ){
+        mHeadFS = system;
     }
     
-   
+    
+    /**
+     * Returns the headnode filesystem.
+     * 
+     * @return   the head node filesystem.
+     */
+    public HeadNodeFS getHeadNodeFS(  ){
+        return mHeadFS;
+    }
+    
+    /**
+     * Sets the worker node filesystem.
+     * 
+     * @param system   the head node filesystem.
+     */
+    public void setWorkerNodeFS( WorkerNodeFS system ){
+        mWorkerFS = system;
+    }
+    
+    
+    /**
+     * Returns the worker node filesystem.
+     * 
+     * @return   the worker node filesystem.
+     */
+    public WorkerNodeFS getWorkerNodeFS(  ){
+        return mWorkerFS;
+    }
     
     /**
      * Returns the work directory for the compute jobs on a site. 
      * 
      * Currently, the work directory is picked up from the head node shared filesystem.
      * 
-     * @return the internal mount point, else null
+     * @return the internal mount point.
      */
     public String getInternalMountPointOfWorkDirectory() {
-        Directory dir = this.getDirectory( Directory.TYPE.shared_scratch );
-        return ( dir == null ) ? null : dir.getInternalMountPoint().getMountPoint();
-
+        return this.getHeadNodeFS().getScratch().getSharedDirectory().getInternalMountPoint().getMountPoint();
     }
     
     /**
@@ -667,11 +538,9 @@ public class SiteCatalogEntry extends AbstractSiteData{
      * @return  FileServer for the shared scratch space , else null
      */
     public FileServer selectHeadNodeScratchSharedFileServer(){
-        Directory dir = this.getDirectory( Directory.TYPE.shared_scratch );
-
-        return ( dir == null )?
+        return ( this.getHeadNodeFS() == null )?
                null:
-               dir.selectFileServer();
+               this.getHeadNodeFS().selectScratchSharedFileServer();
         
     }
     
@@ -687,13 +556,9 @@ public class SiteCatalogEntry extends AbstractSiteData{
      * @return the <code>FileServer</code> else null.
      */
     public FileServer selectStorageFileServerForStageout(){
-        Directory dir = this.getDirectory( Directory.TYPE.local_storage );
-        if( dir == null ){
-            dir = this.getDirectory( Directory.TYPE.shared_storage );
-        }
-
-        return ( dir == null )? null:
-                                dir.selectFileServer();
+        return ( this.getHeadNodeFS() == null )?
+               null:
+               this.getHeadNodeFS().selectStorageFileServerForStageout();
     }
     
     /**
@@ -809,10 +674,16 @@ public class SiteCatalogEntry extends AbstractSiteData{
         for( Iterator<GridGateway> it = this.getGridGatewayIterator(); it.hasNext(); ){
             it.next().toXML( writer, newIndent );
         }
-
-        //list all the directories
-        for( Directory directory : this.mDirectories.values() ){
-            directory.toXML(writer, newIndent);
+        
+        HeadNodeFS fs = null;
+        if( (fs = this.getHeadNodeFS()) != null ){
+            fs.toXML( writer, newIndent );
+        }
+        
+        
+        WorkerNodeFS wfs = null;
+        if( ( wfs = this.getWorkerNodeFS() ) != null ){
+            wfs.toXML( writer, newIndent );
         }
         
         //list all the replica catalogs associate
@@ -833,9 +704,9 @@ public class SiteCatalogEntry extends AbstractSiteData{
      * @return the clone
      */
     public Object clone(){
-        SiteCatalogEntry obj;
+        SiteCatalogEntry3 obj;
         try{
-            obj = ( SiteCatalogEntry ) super.clone();
+            obj = ( SiteCatalogEntry3 ) super.clone();
             obj.initialize( this.getSiteHandle() );
             obj.setSysInfo( (SysInfo)this.getSysInfo().clone());
         
@@ -843,11 +714,16 @@ public class SiteCatalogEntry extends AbstractSiteData{
             for( Iterator<GridGateway> it = this.getGridGatewayIterator(); it.hasNext(); ){
                 obj.addGridGateway( (GridGateway)it.next().clone() );
             }   
-
-            for( Directory directory : this.mDirectories.values() ){
-                obj.setDirectory( (Directory)directory.clone() );
+        
+            HeadNodeFS fs = null;
+            if( (fs = this.getHeadNodeFS()) != null ){
+                obj.setHeadNodeFS( (HeadNodeFS)fs.clone() );
             }
-            
+        
+            WorkerNodeFS wfs = null;
+            if( ( wfs = this.getWorkerNodeFS() ) != null ){
+                obj.setWorkerNodeFS( (WorkerNodeFS)wfs.clone() );
+            }
         
             //list all the replica catalogs associate
             for( Iterator<ReplicaCatalog> it = this.getReplicaCatalogIterator(); it.hasNext(); ){
@@ -875,6 +751,8 @@ public class SiteCatalogEntry extends AbstractSiteData{
      */
     public void accept(SiteDataVisitor visitor) throws IOException {
 
+        throw new java.lang.UnsupportedOperationException( "Accept on the Visitor interface not implemented " );
+        /*
         visitor.visit( this );
 
        //list all the gridgateways
@@ -882,8 +760,15 @@ public class SiteCatalogEntry extends AbstractSiteData{
             it.next().accept(visitor);
         }
 
-        for( Directory directory: this.mDirectories.values() ){
-            directory.accept( visitor );
+        HeadNodeFS fs = null;
+        if( (fs = this.getHeadNodeFS()) != null ){
+            fs.accept( visitor );
+        }
+
+
+        WorkerNodeFS wfs = null;
+        if( ( wfs = this.getWorkerNodeFS() ) != null ){
+            wfs.accept(visitor);
         }
         
         //list all the replica catalogs associate
@@ -893,9 +778,8 @@ public class SiteCatalogEntry extends AbstractSiteData{
 
         //profiles are handled in the depart method
         visitor.depart(this);
+         */
     }
-
-
 
 
    

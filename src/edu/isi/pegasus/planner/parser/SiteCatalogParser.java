@@ -33,7 +33,7 @@ import edu.isi.pegasus.planner.catalog.site.classes.LocalDirectory;
 import edu.isi.pegasus.planner.catalog.site.classes.ReplicaCatalog;
 import edu.isi.pegasus.planner.catalog.site.classes.StorageType;
 import edu.isi.pegasus.planner.catalog.site.classes.SharedDirectory;
-import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry3;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.catalog.site.classes.WorkerNodeFS;
 import edu.isi.pegasus.planner.catalog.site.classes.WorkerSharedDirectory;
@@ -437,7 +437,7 @@ public class SiteCatalogParser extends StackBasedXMLParser {
                     return new StorageType();//typecast later
                 }
                 else if( element.equals( "site" ) ){
-                    SiteCatalogEntry site = new SiteCatalogEntry();
+                    SiteCatalogEntry3 site = new SiteCatalogEntry3();
                     
                     for ( int i=0; i<names.size(); ++i ) {
                         String name = (String) names.get( i );
@@ -507,7 +507,7 @@ public class SiteCatalogParser extends StackBasedXMLParser {
      * 
      * @return boolean
      */
-    private boolean loadSite(SiteCatalogEntry site) {
+    private boolean loadSite(SiteCatalogEntry3 site) {
         return ( mLoadAll || mSites.contains( site.getSiteHandle() ));
     }
 
@@ -578,8 +578,8 @@ public class SiteCatalogParser extends StackBasedXMLParser {
             //g  grid
             case 'g':
                 //grid only appears in the site element
-                if ( child instanceof GridGateway && parent instanceof SiteCatalogEntry ) {
-                    SiteCatalogEntry site = ( SiteCatalogEntry )parent;
+                if ( child instanceof GridGateway && parent instanceof SiteCatalogEntry3 ) {
+                    SiteCatalogEntry3 site = ( SiteCatalogEntry3 )parent;
                     site.addGridGateway( (GridGateway)child );
                     return true;
                 }
@@ -590,8 +590,8 @@ public class SiteCatalogParser extends StackBasedXMLParser {
             //h head-fs
             case 'h':
                 //head-fs only appears in the site element
-                if ( child instanceof HeadNodeFS && parent instanceof SiteCatalogEntry ) {
-                    SiteCatalogEntry site = ( SiteCatalogEntry )parent;
+                if ( child instanceof HeadNodeFS && parent instanceof SiteCatalogEntry3 ) {
+                    SiteCatalogEntry3 site = ( SiteCatalogEntry3 )parent;
                     site.setHeadNodeFS( (HeadNodeFS)child );
                     return true;
                 }
@@ -656,8 +656,8 @@ public class SiteCatalogParser extends StackBasedXMLParser {
                         fs.addProfile( p );
                         return true;
                     }
-                    else if ( parent instanceof SiteCatalogEntry ){
-                        SiteCatalogEntry s = ( SiteCatalogEntry )parent;
+                    else if ( parent instanceof SiteCatalogEntry3 ){
+                        SiteCatalogEntry3 s = ( SiteCatalogEntry3 )parent;
                         s.addProfile( p );
                         return true;
                     }
@@ -670,8 +670,8 @@ public class SiteCatalogParser extends StackBasedXMLParser {
             //r replica-catalog                 
             case 'r':
                 //replica-catalog appear in site
-                if ( child instanceof ReplicaCatalog && parent instanceof SiteCatalogEntry ){
-                    SiteCatalogEntry s = ( SiteCatalogEntry )parent;
+                if ( child instanceof ReplicaCatalog && parent instanceof SiteCatalogEntry3 ){
+                    SiteCatalogEntry3 s = ( SiteCatalogEntry3 )parent;
                     s.addReplicaCatalog( (ReplicaCatalog)child );
                     return true;
                     
@@ -720,11 +720,11 @@ public class SiteCatalogParser extends StackBasedXMLParser {
                         return true;
                     }
                 }
-                else if( child instanceof SiteCatalogEntry && parent instanceof SiteStore ){
+                else if( child instanceof SiteCatalogEntry3 && parent instanceof SiteStore ){
                     SiteStore c = ( SiteStore )parent;
                     
                     //add only to store if required.
-                    SiteCatalogEntry site = (SiteCatalogEntry)child ;
+                    SiteCatalogEntry3 site = (SiteCatalogEntry3)child ;
                     if( loadSite( site ) ){
                         mLogger.log( "Loading site in SiteStore " + site.getSiteHandle(),
                                      LogManager.DEBUG_MESSAGE_LEVEL );
@@ -747,8 +747,8 @@ public class SiteCatalogParser extends StackBasedXMLParser {
             case 'w':
                 //worker-fs appears in site
                 if ( child instanceof WorkerNodeFS &&
-                     parent instanceof SiteCatalogEntry ) {
-                    SiteCatalogEntry site = ( SiteCatalogEntry )parent;
+                     parent instanceof SiteCatalogEntry3 ) {
+                    SiteCatalogEntry3 site = ( SiteCatalogEntry3 )parent;
                     site.setWorkerNodeFS((WorkerNodeFS)child );
                     return true;
                 }

@@ -371,8 +371,11 @@ public class SiteStore extends AbstractSiteData{
         }
 
         //select a file server
-        FileServer fs = site.getHeadNodeFS().selectScratchSharedFileServer();
-
+        FileServer fs = site.selectHeadNodeScratchSharedFileServer();
+        if( fs == null ){
+            return null;
+        }
+       
         url = fs.getURLPrefix() + this.getExternalWorkDirectory( fs, siteHandle );
 
         return url;
