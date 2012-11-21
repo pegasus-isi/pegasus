@@ -47,15 +47,12 @@ import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.planner.catalog.site.classes.Directory;
-import edu.isi.pegasus.planner.catalog.site.classes.XML3Visitor;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import java.io.File;
 import java.io.IOException;
 
-import java.io.Writer;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Stack;
