@@ -27,7 +27,6 @@ import edu.isi.pegasus.planner.catalog.SiteCatalog;
 
 import edu.isi.pegasus.planner.catalog.site.SiteCatalogException;
 
-import edu.isi.pegasus.planner.catalog.site.classes.LocalSiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 
@@ -309,9 +308,10 @@ public class OSGMM implements SiteCatalog {
         }
         
         //always add local site.
-        mLogger.log( "Site LOCAL . Creating default entry" , LogManager.INFO_MESSAGE_LEVEL );
+        /*mLogger.log( "Site LOCAL . Creating default entry" , LogManager.INFO_MESSAGE_LEVEL );
         mSiteStore.addEntry( LocalSiteCatalogEntry.create( mVO, mGrid ) );
         result++;
+        */
         
         return result;
     }

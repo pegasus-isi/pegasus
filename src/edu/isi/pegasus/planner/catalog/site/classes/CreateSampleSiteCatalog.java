@@ -70,7 +70,7 @@ public class CreateSampleSiteCatalog {
             entry.addGridGateway( gw );
             
             //add entry to site store
-            store.addEntry( entry );
+            store.addEntry( Adapter.convert(entry) );
             
             //write DAX to file
             FileWriter scFw = new FileWriter( file );

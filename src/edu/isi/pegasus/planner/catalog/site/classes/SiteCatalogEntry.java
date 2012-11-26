@@ -491,6 +491,21 @@ public class SiteCatalogEntry extends AbstractSiteData{
         return this.mDirectories.get( type );
     }
     
+    /**
+     * Returns the local-storage directory.
+     * If it is not specified, then returns shared-storage
+     * If none is associated, then returns null
+     * 
+     * @return  the appropriate  directory
+     */
+    public Directory getHeadNodeStorageDirectory() {
+        Directory result = this.getDirectory( Directory.TYPE.local_storage );
+        if( result == null ){
+            result = this.getDirectory(Directory.TYPE.shared_storage );
+        }
+        return result;
+    }
+
    
     
     /**
@@ -903,6 +918,7 @@ public class SiteCatalogEntry extends AbstractSiteData{
         //profiles are handled in the depart method
         visitor.depart(this);
     }
+
 
 
 
