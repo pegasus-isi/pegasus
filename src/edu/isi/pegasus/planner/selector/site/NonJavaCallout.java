@@ -26,6 +26,8 @@ import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.classes.Job;
 
 import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.planner.catalog.site.classes.Directory;
+import edu.isi.pegasus.planner.catalog.site.classes.Directory.TYPE;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 
 import edu.isi.pegasus.planner.catalog.site.impl.old.PoolInfoProvider;
@@ -549,26 +551,17 @@ public class NonJavaCallout extends AbstractPerJob {
                     pool = (String) i.next();
                     st = "resource.id=" + pool + " ";
 
-                    // get handle to pool config
-/*                    List l = mSCHandle.getGridFTPServers(pool);
-                    if (l == null || l.isEmpty()) {
-                        // FIXME: How hard should this error be?
-                        mLogger.log("Site " + pool +
-                                    " has no grid ftp" +
-                                    "servers associated with it",
-                                    LogManager.WARNING_MESSAGE_LEVEL);
-                        // append a NONE grid ftp server
-                        pw.println(st + "NONE");
-                    } else {
-                        for ( Iterator j=l.iterator(); j.hasNext(); ) {
-                            pw.println(st + ( (GridFTPServer) j.next()).
-                                       getInfo(GridFTPServer.GRIDFTP_URL));
-                        }
-                    }
- */
+
                     SiteCatalogEntry site = mSiteStore.lookup( pool );
+                    /*
                     for( Iterator it = site.getHeadNodeFS().getScratch().getSharedDirectory().getFileServersIterator(); it.hasNext();){
                         pw.println(st + ( (FileServer) it.next()).getURLPrefix() );
+                    }*/
+                    Directory d = site.getDirectory( Directory.TYPE.shared_scratch );
+                    if( d != null ){
+                        for( Iterator it = d.getFileServersIterator(); it.hasNext();){
+                            pw.println(st + ( (FileServer) it.next()).getURLPrefix() );
+                        }
                     }
                 } // for
             }

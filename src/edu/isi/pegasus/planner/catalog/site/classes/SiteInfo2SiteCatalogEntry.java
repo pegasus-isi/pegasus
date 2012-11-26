@@ -64,7 +64,7 @@ public class SiteInfo2SiteCatalogEntry {
      * @return the converted <code>SiteCatalogEntry</code> object.
      */
     public static SiteCatalogEntry convert( SiteInfo s, LogManager logger ) {
-        SiteCatalogEntry site = new SiteCatalogEntry();
+        SiteCatalogEntry3 site = new SiteCatalogEntry3();
         
         /* set the handle */
         site.setSiteHandle( (String)s.getInfo( SiteInfo.HANDLE ) );
@@ -158,10 +158,13 @@ public class SiteInfo2SiteCatalogEntry {
         for( Iterator it = ((List)s.getInfo( SiteInfo.PROFILE )).iterator(); it.hasNext(); ) {
             site.addProfile( (Profile) it.next() );
         }
-        
-        logger.log( "SiteCatalogEntry object created is " + site,
+
+        //do another conversion.
+        SiteCatalogEntry result = Adapter.convert(site);
+
+        logger.log( "SiteCatalogEntry object created is " + result,
                     LogManager.DEBUG_MESSAGE_LEVEL );
-        return site;
+        return result;
     }
     
 }

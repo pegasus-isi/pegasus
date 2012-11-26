@@ -47,6 +47,13 @@ public abstract class DirectoryLayout extends AbstractSiteData{
     public DirectoryLayout(){
         initialize( );
     }
+
+    /**
+     * The copy constructor
+     */
+    public DirectoryLayout( DirectoryLayout directory ){
+        this.initialize( directory.mFileServers, directory.getInternalMountPoint() );
+    }
     
     /**
      * The overloaded constructor

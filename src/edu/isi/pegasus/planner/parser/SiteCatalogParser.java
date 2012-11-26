@@ -45,6 +45,7 @@ import edu.isi.pegasus.planner.classes.Profile;
 
 
 import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.planner.catalog.site.classes.Adapter;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 
 import java.io.File;
@@ -728,7 +729,7 @@ public class SiteCatalogParser extends StackBasedXMLParser {
                     if( loadSite( site ) ){
                         mLogger.log( "Loading site in SiteStore " + site.getSiteHandle(),
                                      LogManager.DEBUG_MESSAGE_LEVEL );
-                        c.addEntry( site );
+                        c.addEntry( Adapter.convert( site ) );
                     }
                     return true;
                 }

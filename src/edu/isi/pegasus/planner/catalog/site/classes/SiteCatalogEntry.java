@@ -476,6 +476,15 @@ public class SiteCatalogEntry extends AbstractSiteData{
     /**
      * Returns a directory corresponding to a particular type
      *
+     * @return the iterator
+     */
+    public Iterator<Directory> getDirectoryIterator(   ){
+        return this.mDirectories.values().iterator();
+    }
+
+    /**
+     * Returns a directory corresponding to a particular type
+     *
      * @param the type the directory type
      */
     public Directory getDirectory( Directory.TYPE type ){

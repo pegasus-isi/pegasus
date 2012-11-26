@@ -32,6 +32,24 @@ import java.io.Writer;
  */
 public class Directory extends DirectoryLayout{
 
+    /**
+     * Default constructor
+     */
+    public Directory( ){
+        super();
+    }
+
+    /**
+     * Convenience constructor for adapter class
+     *
+     * @param directory         the directory layout object
+     * @param type              the type associated
+     */
+    public Directory(DirectoryLayout directory, TYPE type) {
+        super( directory );
+        this.setType(type);
+    }
+
     @Override
     public void accept(SiteDataVisitor visitor) {
         throw new UnsupportedOperationException("Not supported yet.");
