@@ -51,6 +51,8 @@ import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 import edu.isi.pegasus.common.util.FactoryException;
 
 import edu.isi.pegasus.common.util.PegasusURL;
+import edu.isi.pegasus.planner.catalog.site.classes.Directory;
+import edu.isi.pegasus.planner.catalog.site.classes.Directory.TYPE;
 import edu.isi.pegasus.planner.classes.DAGJob;
 import edu.isi.pegasus.planner.classes.DAXJob;
 import edu.isi.pegasus.planner.namespace.Dagman;
@@ -785,7 +787,14 @@ public class TransferEngine extends Engine {
 
             //add all the possible destination urls iterating through
             //the list of grid ftp servers associated with the dest pool.
-            Iterator it = mSiteStore.lookup( destSiteHandle ).getHeadNodeFS().getStorage().getSharedDirectory().getFileServersIterator();
+
+  //          Iterator it = mSiteStore.lookup( destSiteHandle ).getHeadNodeFS().getStorage().getSharedDirectory().getFileServersIterator();
+            Directory storageDirectory = mSiteStore.lookup( destSiteHandle ).getHeadNodeStorageDirectory();
+            if( storageDirectory == null ){
+                throw new RuntimeException( "No Storage directory specified for site " + destSiteHandle );
+            }
+            Iterator it = storageDirectory.getFileServersIterator();
+
             //sanity check
             if( !it.hasNext() ){
                 // no file servers were returned
@@ -924,8 +933,11 @@ public class TransferEngine extends Engine {
                     //add all the possible source urls iterating through
                     //the list of grid ftp servers associated with the dest pool.
                     boolean first = true;
-                    for( Iterator it1 = mSiteStore.lookup( pJob.getSiteHandle() ).getHeadNodeFS().getScratch().getSharedDirectory().getFileServersIterator(); 
-                                      it1.hasNext();){
+//                    for( Iterator it1 = mSiteStore.lookup( pJob.getSiteHandle() ).getHeadNodeFS().getScratch().getSharedDirectory().getFileServersIterator();
+//                                      it1.hasNext();){
+                      for( Iterator it1 = mSiteStore.lookup( pJob.getSiteHandle() ).getDirectory( Directory.TYPE.shared_scratch ).getFileServersIterator();
+                                     it1.hasNext();){
+
                         FileServer server = ( FileServer)it1.next();
                         //definite inconsitency as url prefix and mount point
                         //are not picked up from the same server

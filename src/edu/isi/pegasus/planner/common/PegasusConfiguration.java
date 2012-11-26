@@ -18,6 +18,8 @@
 package edu.isi.pegasus.planner.common;
 
 import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.planner.catalog.site.classes.Directory;
+import edu.isi.pegasus.planner.catalog.site.classes.Directory.TYPE;
 import edu.isi.pegasus.planner.catalog.site.classes.DirectoryLayout;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
 import edu.isi.pegasus.planner.catalog.site.classes.HeadNodeFS;
@@ -170,25 +172,17 @@ public class PegasusConfiguration {
             message.append( "Updating storage file server paths for site " ).append( outputSite ).
                     append( " to directory " ).append( directory );
             mLogger.log( message.toString(), LogManager.CONFIG_MESSAGE_LEVEL );
-            
-            HeadNodeFS headNode = entry.getHeadNodeFS();
-            if( headNode == null){
-                throw new RuntimeException( "HeadNode Filesystem not specified for output site " + outputSite );
-            }
-            HeadNodeStorage storage = headNode.getStorage();
-            if( storage == null ){
-                throw new RuntimeException( "HeadNode Storage not specified for output site " + outputSite );
-            }
+
             
             //we first check for local directory
-            DirectoryLayout storageDirectory = storage.getLocalDirectory();
+            DirectoryLayout storageDirectory = entry.getDirectory( Directory.TYPE.local_storage );
             if( storageDirectory == null || storageDirectory.isEmpty()){
                 //default to shared directory
-                storageDirectory = storage.getSharedDirectory();
+                storageDirectory = entry.getDirectory( Directory.TYPE.shared_storage );
             }
             if( storageDirectory == null || storageDirectory.isEmpty()){
                 //now throw an error
-                throw new RuntimeException( "No directory specified for HeadNode Storage  for output site " + outputSite );
+                throw new RuntimeException( "No storage directory specified for output site " + outputSite );
             }
             
             //update the internal mount point and external URL's
