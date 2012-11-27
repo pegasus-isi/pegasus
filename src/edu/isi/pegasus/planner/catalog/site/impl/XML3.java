@@ -25,7 +25,7 @@ import edu.isi.pegasus.planner.catalog.site.SiteCatalogException;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
-import edu.isi.pegasus.planner.parser.SiteCatalogParser;
+import edu.isi.pegasus.planner.parser.SiteCatalogXMLParser3;
 
 import edu.isi.pegasus.common.logging.LogManager;
 
@@ -60,7 +60,7 @@ public class XML3 implements SiteCatalog {
     /**
      * The handle to parser instance that will parse the site catalog.
      */
-    private SiteCatalogParser mParser;
+    private SiteCatalogXMLParser3 mParser;
    
     /**
      * Stores sites in memory
@@ -168,7 +168,7 @@ public class XML3 implements SiteCatalog {
         if( this.isClosed() ){
             throw new SiteCatalogException( "Need to connect to site catalog before loading" );
         }
-        mParser = new SiteCatalogParser( this.mBag, sites );
+        mParser = new SiteCatalogXMLParser3( this.mBag, sites );
         //mLogger.log( "Parsing file " + mFilename, LogManager.DEBUG_MESSAGE_LEVEL );
          mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_PARSE_SITE_CATALOG , "site-catalog.id", mFilename,
                                 LogManager.DEBUG_MESSAGE_LEVEL );

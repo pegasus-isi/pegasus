@@ -66,7 +66,7 @@ import org.xml.sax.SAXException;
  * @author Karan Vahi vahi@isi.edu
  * @version $Revision$
  */
-public class SiteCatalogParser extends StackBasedXMLParser {
+public class SiteCatalogXMLParser3 extends StackBasedXMLParser {
 
     /**
      * The "not-so-official" location URL of the Site Catalog Schema.
@@ -113,7 +113,7 @@ public class SiteCatalogParser extends StackBasedXMLParser {
      * @param bag the bag of initialization objects.
      * @param sites the list of sites that need to be parsed. * means all.
      */
-    public SiteCatalogParser( PegasusBag bag, List<String> sites ) {
+    public SiteCatalogXMLParser3( PegasusBag bag, List<String> sites ) {
         super( bag );
         mStack = new Stack();
         mDepth = 0;
@@ -779,7 +779,7 @@ public class SiteCatalogParser extends StackBasedXMLParser {
      * @return the schema namespace
      */
     public  String getSchemaNamespace( ){
-        return SiteCatalogParser.SCHEMA_NAMESPACE;
+        return SiteCatalogXMLParser3.SCHEMA_NAMESPACE;
     }
 
     
@@ -790,7 +790,7 @@ public class SiteCatalogParser extends StackBasedXMLParser {
      */
     public String getSchemaLocation() {
         // treat URI as File, yes, I know - I need the basename
-        File uri = new File( SiteCatalogParser.SCHEMA_LOCATION );
+        File uri = new File( SiteCatalogXMLParser3.SCHEMA_LOCATION );
         // create a pointer to the default local position
         File poolconfig = new File( this.mProps.getSchemaDir(),  uri.getName() );
 

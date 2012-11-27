@@ -75,7 +75,7 @@ import org.xml.sax.SAXException;
  * @author Karan Vahi vahi@isi.edu
  * @version $Revision$
  */
-public class SiteCatalogParser4 extends StackBasedXMLParser {
+public class SiteCatalogXMLParser4 extends StackBasedXMLParser {
 
     /**
      * The "not-so-official" location URL of the Site Catalog Schema.
@@ -124,7 +124,7 @@ public class SiteCatalogParser4 extends StackBasedXMLParser {
      * @param bag the bag of initialization objects.
      * @param sites the list of sites that need to be parsed. * means all.
      */
-    public SiteCatalogParser4( PegasusBag bag, List<String> sites ) {
+    public SiteCatalogXMLParser4( PegasusBag bag, List<String> sites ) {
         super( bag );
         mStack = new Stack();
         mDepth = 0;
@@ -709,7 +709,7 @@ public class SiteCatalogParser4 extends StackBasedXMLParser {
      * @return the schema namespace
      */
     public  String getSchemaNamespace( ){
-        return SiteCatalogParser4.SCHEMA_NAMESPACE;
+        return SiteCatalogXMLParser4.SCHEMA_NAMESPACE;
     }
 
     
@@ -720,7 +720,7 @@ public class SiteCatalogParser4 extends StackBasedXMLParser {
      */
     public String getSchemaLocation() {
         // treat URI as File, yes, I know - I need the basename
-        File uri = new File( SiteCatalogParser4.SCHEMA_LOCATION );
+        File uri = new File( SiteCatalogXMLParser4.SCHEMA_LOCATION );
         // create a pointer to the default local position
         File poolconfig = new File( this.mProps.getSchemaDir(),  uri.getName() );
 
@@ -754,7 +754,7 @@ public class SiteCatalogParser4 extends StackBasedXMLParser {
         files.add( "/lfs1/devel/Pegasus/pegasus/etc/sample-cloud-xml4.xml" );
 
         for( String file: files ){
-            SiteCatalogParser4 parser = new SiteCatalogParser4( bag, s) ;
+            SiteCatalogXMLParser4 parser = new SiteCatalogXMLParser4( bag, s) ;
             System.out.println( " *********Parsing File *********" + file );
             parser.startParser( file );
             SiteStore store = parser.getSiteStore();
@@ -770,7 +770,7 @@ public class SiteCatalogParser4 extends StackBasedXMLParser {
                 store.accept(visitor);
                 System.out.println( "Site Catalog is \n"+ writer.toString() );
             } catch (IOException ex) {
-                Logger.getLogger(SiteCatalogParser4.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(SiteCatalogXMLParser4.class.getName()).log(Level.SEVERE, null, ex);
             }
 
             System.out.println( " *********Parsing Done *********"  );
