@@ -47,12 +47,15 @@ import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.planner.catalog.site.classes.Directory;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteDataVisitor;
+import edu.isi.pegasus.planner.catalog.site.classes.XML4PrintVisitor;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import java.io.File;
 import java.io.IOException;
 
+import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Stack;
@@ -62,6 +65,8 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.xml.sax.SAXException;
 
 /**
@@ -754,7 +759,15 @@ public class SiteCatalogParser4 extends StackBasedXMLParser {
 
             SiteCatalogEntry entry = store.lookup( "local" );
 
-            //entry.accept( new XML3Visitor( ) );
+            SiteDataVisitor visitor = new XML4PrintVisitor();
+            StringWriter writer = new StringWriter();
+            visitor.initialize(writer);
+            try {
+                entry.accept(visitor);
+                System.out.println( "Entry by visiting is \n"+ writer.toString() );
+            } catch (IOException ex) {
+                Logger.getLogger(SiteCatalogParser4.class.getName()).log(Level.SEVERE, null, ex);
+            }
 
             System.out.println( " *********Parsing Done *********"  );
         }

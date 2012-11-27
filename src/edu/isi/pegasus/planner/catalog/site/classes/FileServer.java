@@ -22,6 +22,7 @@ package edu.isi.pegasus.planner.catalog.site.classes;
 
 
 
+import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import java.io.Writer;
 import java.io.IOException;
 
@@ -50,6 +51,17 @@ public class FileServer extends FileServerType {
     public FileServer( String protocol, String urlPrefix, String mountPoint ) {
         super( protocol, urlPrefix, mountPoint );
     }
+
+    /**
+     * Returns the externally accessible URL composed of url prefix and the
+     * mount point
+     *
+     * @return
+     */
+    public String getURL( ){
+        return this.getURLPrefix() + this.getMountPoint();
+    }
+
     /**
      * Writes out the xml description of the object. 
      *
@@ -86,8 +98,22 @@ public class FileServer extends FileServerType {
         writer.write( newLine );
     }
 
-    @Override
-    public void accept(SiteDataVisitor visitor) {
-        throw new UnsupportedOperationException("Not supported yet.");
+    /**
+     *
+     * @param visitor
+     */
+    public void accept(SiteDataVisitor visitor) throws IOException{
+        visitor.visit( this );
+        
+        visitor.depart( this );
+    }
+
+    /**
+     * Returns the associated profiles
+     *
+     * @return
+     */
+    public Profiles getProfiles() {
+        return this.mProfiles;
     }
 }

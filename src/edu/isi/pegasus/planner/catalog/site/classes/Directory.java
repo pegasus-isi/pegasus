@@ -50,9 +50,24 @@ public class Directory extends DirectoryLayout{
         this.setType(type);
     }
 
-    @Override
-    public void accept(SiteDataVisitor visitor) {
-        throw new UnsupportedOperationException("Not supported yet.");
+
+    /**
+     * Accept method for the SiteData classes that accepts a visitor
+     *
+     * @param visitor  the visitor to be used
+     *
+     * @exception IOException if something fishy happens to the stream.
+     */
+    public void accept( SiteDataVisitor visitor ) throws IOException{
+        visitor.visit( this );
+
+        //traverse through all the file servers
+        for( FileServer server : this.mFileServers ){
+            server.accept(visitor);
+        }
+
+        //profiles are handled in the depart method
+        visitor.depart( this );
     }
 
 
@@ -141,7 +156,7 @@ public class Directory extends DirectoryLayout{
      * @throws IOException
      */
     public void toXML(Writer writer, String indent) throws IOException {
-        throw new UnsupportedOperationException("Not supported yet.");
+        
     }
 
     /**
