@@ -264,8 +264,22 @@ public class ReplicaCatalog extends AbstractSiteData {
         
     }
 
-    @Override
-    public void accept(SiteDataVisitor visitor) {
-        throw new UnsupportedOperationException("Not supported yet.");
+    /**
+     * Accept the visitor
+     *
+     * @param visitor
+     */
+    public void accept(SiteDataVisitor visitor) throws IOException {
+        visitor.visit( this );
+
+        //list all the connection params
+            for( Iterator<Connection> it = this.getConnectionIterator(); it.hasNext(); ){
+                Connection c = it.next();
+                c.accept(visitor);
+            }
+
+        visitor.depart( this );
+
+
     }
 }

@@ -29,14 +29,12 @@ import edu.isi.pegasus.planner.catalog.site.classes.HeadNodeFS;
 import edu.isi.pegasus.planner.catalog.site.classes.HeadNodeScratch;
 import edu.isi.pegasus.planner.catalog.site.classes.HeadNodeStorage;
 import edu.isi.pegasus.planner.catalog.site.classes.InternalMountPoint;
-import edu.isi.pegasus.planner.catalog.site.classes.LocalDirectory;
 import edu.isi.pegasus.planner.catalog.site.classes.ReplicaCatalog;
 import edu.isi.pegasus.planner.catalog.site.classes.StorageType;
 import edu.isi.pegasus.planner.catalog.site.classes.SharedDirectory;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.catalog.site.classes.WorkerNodeFS;
-import edu.isi.pegasus.planner.catalog.site.classes.WorkerSharedDirectory;
 import edu.isi.pegasus.planner.catalog.site.classes.WorkerNodeStorage;
 import edu.isi.pegasus.planner.catalog.site.classes.WorkerNodeScratch;
 
@@ -760,16 +758,17 @@ public class SiteCatalogParser4 extends StackBasedXMLParser {
             System.out.println( " *********Parsing File *********" + file );
             parser.startParser( file );
             SiteStore store = parser.getSiteStore();
-            System.out.println( store );
+//            System.out.println( store );
 
             SiteCatalogEntry entry = store.lookup( "local" );
 
             SiteDataVisitor visitor = new XML4PrintVisitor();
             StringWriter writer = new StringWriter();
             visitor.initialize(writer);
+
             try {
-                entry.accept(visitor);
-                System.out.println( "Entry by visiting is \n"+ writer.toString() );
+                store.accept(visitor);
+                System.out.println( "Site Catalog is \n"+ writer.toString() );
             } catch (IOException ex) {
                 Logger.getLogger(SiteCatalogParser4.class.getName()).log(Level.SEVERE, null, ex);
             }

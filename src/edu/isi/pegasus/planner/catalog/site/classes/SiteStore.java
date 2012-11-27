@@ -740,9 +740,19 @@ public class SiteStore extends AbstractSiteData{
         return obj;
     }
 
-    @Override
-    public void accept(SiteDataVisitor visitor) {
-        throw new UnsupportedOperationException("Not supported yet.");
+    /**
+     * Accept method for the SiteStore object
+     *
+     * @param visitor that goes through it
+     */
+    public void accept(SiteDataVisitor visitor) throws IOException {
+        visitor.visit( this );
+
+        for( Iterator<SiteCatalogEntry> it = this.entryIterator(); it.hasNext(); ){
+            it.next().accept(visitor);
+        }
+
+        visitor.depart( this );
     }
 
 
