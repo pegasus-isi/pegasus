@@ -20,6 +20,7 @@ package edu.isi.pegasus.planner.catalog.site.classes;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.util.Iterator;
 
 /**
  * The Directory class used for Site Catalog Schema version 4 onwards.
@@ -156,7 +157,31 @@ public class Directory extends DirectoryLayout{
      * @throws IOException
      */
     public void toXML(Writer writer, String indent) throws IOException {
-        
+        String newLine = System.getProperty( "line.separator", "\r\n" );
+        String newIndent = indent + "\t";
+
+        //sanity check?
+        if( this.isEmpty() ){
+            return;
+        }
+
+        //write out the  xml element
+        writer.write( indent );
+        writer.write( "<directory>" );
+        writer.write( newLine );
+
+        //iterate through all the file servers
+        for( Iterator<FileServer> it = this.getFileServersIterator(); it.hasNext(); ){
+            FileServer fs = it.next();
+            fs.toXML( writer, newIndent );
+        }
+
+        //write out the internal mount point
+        this.getInternalMountPoint().toXML( writer, newIndent );
+
+        writer.write( indent );
+        writer.write( "</directory>" );
+        writer.write( newLine );
     }
 
     /**

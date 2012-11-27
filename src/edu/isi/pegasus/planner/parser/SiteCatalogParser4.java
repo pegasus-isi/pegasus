@@ -46,6 +46,7 @@ import edu.isi.pegasus.planner.classes.Profile;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
+import edu.isi.pegasus.common.util.PegasusURL;
 import edu.isi.pegasus.planner.catalog.site.classes.Directory;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteDataVisitor;
 import edu.isi.pegasus.planner.catalog.site.classes.XML4PrintVisitor;
@@ -300,7 +301,11 @@ public class SiteCatalogParser4 extends StackBasedXMLParser {
                  	    this.log( element, name, value );                              
                         }
                         else if ( name.equals( "url" ) ) {
-                            fs.setURLPrefix( value );
+                            PegasusURL url = new PegasusURL( value );
+                            fs.setURLPrefix( url.getURLPrefix() );
+                            fs.setProtocol( url.getProtocol() );
+                            fs.setMountPoint( url.getPath() );
+                            
                  	    this.log( element, name, value );                              
                         }                        
                         else if ( name.equals( "mount-point" ) ) {

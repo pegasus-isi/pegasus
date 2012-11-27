@@ -39,6 +39,15 @@ public abstract class AbstractSiteData extends SiteData
     public abstract void accept( SiteDataVisitor visitor ) throws IOException;
 
     /**
+     * Sets the Print Visitor to use for printing the contents of the class.
+     *
+     * @param visitor  the visitor to be used for printing
+     *
+     * @exception IOException if something fishy happens to the stream.
+     */
+    //public abstract void setPrintVisitor( SiteDataVisitor visitor ) throws IOException;
+
+    /**
      * Returns the xml description of the object. This is used for generating
      * the partition graph. That is no longer done.
      *
@@ -47,7 +56,7 @@ public abstract class AbstractSiteData extends SiteData
      * @exception IOException if something fishy happens to the stream.
      */
     public String toXML() throws IOException{
-        Writer writer = new StringWriter(32);
+        Writer writer = new StringWriter( 256 );
         toXML( writer, "" );
         return writer.toString();
     }
