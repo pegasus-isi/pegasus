@@ -71,7 +71,7 @@ public class Adapter {
             HeadNodeScratch hnScratch = headNode.getScratch();
             if( hnScratch != null ){
                 SharedDirectory sharedDirectory = hnScratch.getSharedDirectory();
-                if( sharedDirectory != null ){
+                if(!( sharedDirectory == null || sharedDirectory.isEmpty() )){
                     result.addDirectory( new Directory( (DirectoryLayout)sharedDirectory , Directory.TYPE.shared_scratch ));
                 }
             }
@@ -79,13 +79,13 @@ public class Adapter {
             if( hnStorage != null ){
                 //convert the shared directory to shared storage
                 SharedDirectory sharedDirectory = hnStorage.getSharedDirectory();
-                if( sharedDirectory != null ){
+                if(!( sharedDirectory == null || sharedDirectory.isEmpty() )){
                     result.addDirectory( new Directory( (DirectoryLayout)sharedDirectory, Directory.TYPE.shared_storage ));
                 }
 
                 //convert local directory to local storage
                 LocalDirectory localDirectory = hnStorage.getLocalDirectory();
-                if( localDirectory != null ){
+                if( !( localDirectory == null || localDirectory.isEmpty() )){
                     result.addDirectory( new Directory( (DirectoryLayout)localDirectory, Directory.TYPE.local_storage ));
                 }
             }
@@ -98,7 +98,7 @@ public class Adapter {
             WorkerNodeScratch wnScratch = workerNodeFS.getScratch();
             if( wnScratch != null ){
                 LocalDirectory localDirectory = wnScratch.getLocalDirectory();
-                if( localDirectory != null ){
+                if( !( localDirectory == null || localDirectory.isEmpty() ) ){
                     result.addDirectory( new Directory( (DirectoryLayout)localDirectory , Directory.TYPE.local_scratch ));
                 }
             }

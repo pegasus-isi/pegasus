@@ -167,7 +167,9 @@ public class Directory extends DirectoryLayout{
 
         //write out the  xml element
         writer.write( indent );
-        writer.write( "<directory>" );
+        writer.write( "<directory " );
+        writeAttribute( writer, "type", this.getType().toString() );
+        writer.write( ">" );
         writer.write( newLine );
 
         //iterate through all the file servers
