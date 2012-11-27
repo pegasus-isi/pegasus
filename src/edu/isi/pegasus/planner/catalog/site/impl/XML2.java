@@ -67,7 +67,7 @@ import org.xml.sax.SAXException;
  * @author Karan Vahi
  * @version $Revision$
  */
-public class XML extends Parser implements SiteCatalog{
+public class XML2 extends Parser implements SiteCatalog{
 
     /**
      * The "not-so-official" location URL of the VDLx schema definition.
@@ -110,7 +110,7 @@ public class XML extends Parser implements SiteCatalog{
     /**
      * The default constructor.
      */
-    public XML(){
+    public XML2(){
         super( PegasusProperties.nonSingletonInstance() );
         mLogger = LogManagerFactory.loadSingletonInstance();
         
@@ -199,7 +199,7 @@ public class XML extends Parser implements SiteCatalog{
         String schemaLoc = getSchemaLocation();
         mLogger.log( "Picking schema for site catalog" + schemaLoc,
                      LogManager.CONFIG_MESSAGE_LEVEL);
-        String list = XML.SCHEMA_NAMESPACE + " " + schemaLoc;
+        String list = XML2.SCHEMA_NAMESPACE + " " + schemaLoc;
         setSchemaLocations( list );
         startParser( mFilename );
         mLogger.logEventCompletion( LogManager.DEBUG_MESSAGE_LEVEL );
@@ -358,7 +358,7 @@ public class XML extends Parser implements SiteCatalog{
 
     public String getSchemaLocation() {
         // treat URI as File, yes, I know - I need the basename
-        File uri = new File( XML.SCHEMA_LOCATION );
+        File uri = new File( XML2.SCHEMA_LOCATION );
         // create a pointer to the default local position
         File poolconfig = new File( this.mProps.getSchemaDir(),
             uri.getName() );
