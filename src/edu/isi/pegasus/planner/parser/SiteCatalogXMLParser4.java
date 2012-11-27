@@ -75,7 +75,7 @@ import org.xml.sax.SAXException;
  * @author Karan Vahi vahi@isi.edu
  * @version $Revision$
  */
-public class SiteCatalogXMLParser4 extends StackBasedXMLParser {
+public class SiteCatalogXMLParser4 extends StackBasedXMLParser implements SiteCatalogXMLParser{
 
     /**
      * The "not-so-official" location URL of the Site Catalog Schema.
