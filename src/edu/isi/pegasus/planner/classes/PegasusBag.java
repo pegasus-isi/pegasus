@@ -25,7 +25,7 @@ import edu.isi.pegasus.planner.partitioner.graph.Bag;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.common.logging.LogManager;
 
-import edu.isi.pegasus.planner.catalog.site.impl.old.PoolInfoProvider;
+
 
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
@@ -143,7 +143,7 @@ public class PegasusBag
     /**
      * The handle to the site catalog.
      */
-    private PoolInfoProvider mSCHandle;
+    //private PoolInfoProvider mSCHandle;
 
     /**
      * The handle to the transformation catalog.
@@ -229,10 +229,7 @@ public class PegasusBag
                 break;
 
             case 3: //SITE_CATALOG:
-                if ( value != null && value instanceof PoolInfoProvider )
-                    mSCHandle = ( PoolInfoProvider ) value;
-                else
-                    valid = false;
+                valid = false;
                 break;
 
             case 4: //TRANSFORMATION_CATALOG:
