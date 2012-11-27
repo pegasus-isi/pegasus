@@ -19,7 +19,6 @@ package edu.isi.pegasus.planner.catalog.site.classes;
 
 import edu.isi.pegasus.common.util.Currently;
 import java.io.IOException;
-import java.io.Writer;
 import java.util.Iterator;
 
 /**
@@ -30,7 +29,7 @@ import java.util.Iterator;
  * @author Karan Vahi
  * @version $Revision$
  */
-public  class  XML4PrintVisitor implements SiteDataVisitor {
+public  class  XML4PrintVisitor extends AbstractXMLPrintVisitor {
 
 
     /**
@@ -48,31 +47,6 @@ public  class  XML4PrintVisitor implements SiteDataVisitor {
      */
     public static final String SCHEMA_VERSION = "4.0";
 
-    /**
-     * The internal writer
-     */
-    private Writer mWriter;
-
-    /**
-     * The new line character to be used
-     */
-    private String mNewLine;
-
-    /**
-     * The number of tabs to use for current indent
-     */
-    private int mCurrentIndentIndex;
-
-   /**
-     * Initialize the visitor implementation
-     *
-     * @param writer  the writer
-     */
-    public void initialize( Writer writer ){
-        mWriter = writer;
-        mNewLine =  System.getProperty( "line.separator", "\r\n" );
-        mCurrentIndentIndex = 0;
-    }
 
     /**
      * Visit the SiteStore object
@@ -436,85 +410,4 @@ public  class  XML4PrintVisitor implements SiteDataVisitor {
         closeElement( "connection" );
     }
     
-    /**
-     * Writes an attribute to the stream. Wraps the value in quotes as required
-     * by XML.
-     *
-     * @param writer
-     * @param key
-     * @param value
-     */
-    public void writeAttribute( Writer writer, String key, String value ) throws IOException {
-        writer.write( " " );
-        writer.write( key );
-        writer.write( "=\"");
-        writer.write( value );
-        writer.write( "\"" );
-    }
-
-    /**
-     * Returns the current indent to be used while writing out
-     * 
-     * @return  the current indent
-     */
-    public String getCurrentIndent() {
-        StringBuffer indent = new StringBuffer();
-        for( int i = 0; i < this.mCurrentIndentIndex ; i++ ){
-            indent.append( "\t" );
-        }
-        return indent.toString();
-    }
-
-    /**
-     * Returns the indent to be used for the nested element.
-     * 
-     * @return the new indent
-     */
-    public String getNextIndent() {
-        return this.getCurrentIndent() + "\t";
-    }
-
-    /**
-     * Increments the indent index
-     */
-    public void incrementIndentIndex() {
-        mCurrentIndentIndex++;
-    }
-
-
-    /**
-     * Decrements the indent index
-     */
-    public void decrementIndentIndex() {
-        mCurrentIndentIndex--;
-    }
-
-
-    /**
-     * Generates a closing tag for an element
-     *
-     * @param element  the element tag name
-     *
-     * @throws IOException
-     */
-    public void closeElement( String element ) throws IOException{
-        //decrement the IndentIndex
-        decrementIndentIndex();
-        String indent = getCurrentIndent();
-        mWriter.write( indent );
-        mWriter.write( "</" );
-        mWriter.write( element );
-        mWriter.write( ">" );
-        mWriter.write( mNewLine );
-    }
-
-        
-
-    public void visit(SiteData data) throws IOException {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    public void depart(SiteData data) throws IOException {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
 }
