@@ -31,6 +31,9 @@ import edu.isi.pegasus.common.logging.LogManager;
 
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.common.PegasusProperties;
+import edu.isi.pegasus.planner.parser.SiteCatalogXMLParser;
+import edu.isi.pegasus.planner.parser.SiteCatalogXMLParserFactory;
+import edu.isi.pegasus.planner.parser.StackBasedXMLParser;
 import java.io.File;
 import java.io.IOException;
 
@@ -60,7 +63,7 @@ public class XML3 implements SiteCatalog {
     /**
      * The handle to parser instance that will parse the site catalog.
      */
-    private SiteCatalogXMLParser3 mParser;
+    private SiteCatalogXMLParser mParser;
    
     /**
      * Stores sites in memory
@@ -168,12 +171,15 @@ public class XML3 implements SiteCatalog {
         if( this.isClosed() ){
             throw new SiteCatalogException( "Need to connect to site catalog before loading" );
         }
-        mParser = new SiteCatalogXMLParser3( this.mBag, sites );
-        //mLogger.log( "Parsing file " + mFilename, LogManager.DEBUG_MESSAGE_LEVEL );
-         mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_PARSE_SITE_CATALOG , "site-catalog.id", mFilename,
+
+        mParser = SiteCatalogXMLParserFactory.loadSiteCatalogXMLParser( this.mBag, mFilename, sites );
+
+
+        mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_PARSE_SITE_CATALOG , "site-catalog.id", mFilename,
                                 LogManager.DEBUG_MESSAGE_LEVEL );
-        mParser.startParser( mFilename );        
+        ((StackBasedXMLParser)mParser).startParser( mFilename );
         mLogger.logEventCompletion( LogManager.DEBUG_MESSAGE_LEVEL );
+
         mSiteStore = mParser.getSiteStore();
         return mSiteStore.list().size();
     }

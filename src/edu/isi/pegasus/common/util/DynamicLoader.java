@@ -322,7 +322,7 @@ public class DynamicLoader
       result = "Unable to dynamically load " + classname;
       // do cause
     } else if ( e instanceof NoSuchMethodException ) {
-      result = "Unable to dynamically invoke the constructor of " + classname;
+      result = "Unable to dynamically invoke the constructor " + e.getMessage() ;
       // no cause
     } else if ( e instanceof InstantiationException ) {
       result = "The dynamically loadable class " + classname + " is either " +
