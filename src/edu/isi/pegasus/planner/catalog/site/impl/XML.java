@@ -25,7 +25,6 @@ import edu.isi.pegasus.planner.catalog.site.SiteCatalogException;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
-import edu.isi.pegasus.planner.parser.SiteCatalogXMLParser3;
 
 import edu.isi.pegasus.common.logging.LogManager;
 
@@ -35,12 +34,9 @@ import edu.isi.pegasus.planner.parser.SiteCatalogXMLParser;
 import edu.isi.pegasus.planner.parser.SiteCatalogXMLParserFactory;
 import edu.isi.pegasus.planner.parser.StackBasedXMLParser;
 import java.io.File;
-import java.io.IOException;
 
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
@@ -58,7 +54,7 @@ import java.util.Set;
  * @author Karan Vahi
  * @version $Revision$
  */
-public class XML3 implements SiteCatalog {
+public class XML implements SiteCatalog {
     
     /**
      * The handle to parser instance that will parse the site catalog.
@@ -90,7 +86,7 @@ public class XML3 implements SiteCatalog {
     /**
      * The default constructor.
      */
-    public XML3(){
+    public XML(){
         mLogger = LogManagerFactory.loadSingletonInstance();
         mBag = new PegasusBag();
         mBag.add( PegasusBag.PEGASUS_LOGMANAGER, mLogger );

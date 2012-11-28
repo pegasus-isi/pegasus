@@ -107,7 +107,7 @@ public class PegasusProperties implements Cloneable {
     public static final String TC_DATA_FILE = "tc.data";
 
 
-    public static final String DEFAULT_POOL_MODE = "XML3";
+    public static final String DEFAULT_POOL_MODE = "XML";
 
     public static final String DEFAULT_CONDOR_BIN_DIR = "";
 
