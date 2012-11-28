@@ -51,6 +51,20 @@ public class SiteFactory {
     public static final String DEFAULT_PACKAGE_NAME =
         "edu.isi.pegasus.planner.catalog.site.impl";
 
+
+    /**
+     * The name of old XML3 implementation class.  It was removed for 4.2 release.
+     * We still have to load the right class in the factory.
+     */
+    private static final String OLD_XML3_IMPLEMENTING_CLASS_BASENAME = "XML3";
+
+
+    /**
+     * For 4.2, the orginal XML3 class was renamed XML and it supports different
+     * schemas.
+     */
+    private static final String  XML_IMPLEMENTING_CLASS_BASENAME = "XML";
+
     /**
      * 
      * @param sites
@@ -125,8 +139,7 @@ public class SiteFactory {
     }
 
     /**
-     * Connects the interface with the site catalog implementation. Tedu.isi.pegasus.catalog.site.impl.XML3he
-     * choice of backend is configured through properties. 
+     * Connects the interface with the site catalog implementation.
      *
      * @param properties is an instance of properties to use.
      *
@@ -147,6 +160,10 @@ public class SiteFactory {
         /* get the implementor from properties */
         String catalogImplementor = properties.getPoolMode().trim();
 
+        if( catalogImplementor.equals( SiteFactory.OLD_XML3_IMPLEMENTING_CLASS_BASENAME )){
+            catalogImplementor = SiteFactory.XML_IMPLEMENTING_CLASS_BASENAME;
+        }
+
         /* prepend the package name if required */
         catalogImplementor = (catalogImplementor.indexOf('.') == -1) ?
             //pick up from the default package
@@ -157,7 +174,7 @@ public class SiteFactory {
         Properties connect = properties.matchingSubset( SiteCatalog.c_prefix, false );
         
         // determine the class that implements the site catalog
-        return loadInstance( properties.getProperty( SiteCatalog.c_prefix ),
+        return loadInstance( catalogImplementor,
                              connect );
     }
 
@@ -176,7 +193,7 @@ public class SiteFactory {
      *
      * @see #DEFAULT_PACKAGE_NAME
      */
-    public  static SiteCatalog loadInstance( String catalogImplementor, Properties properties ) {
+    private  static SiteCatalog loadInstance( String catalogImplementor, Properties properties ) {
         if( properties == null ){
             throw new SiteFactoryException( "Invalid NULL properties passed" );
         }
