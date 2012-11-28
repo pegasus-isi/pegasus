@@ -483,7 +483,11 @@ public class TransferEngine extends Engine {
                 //directly to the output site.
                 vOutPoolTX = getDeletedFileTX(outputSite, currentJob);
                 if( !vOutPoolTX.isEmpty() ){
-                    mTXRefiner.addStageOutXFERNodes( currentJob, vOutPoolTX, rcb, true );
+                    //the job is deleted anyways. The files exist somewhere
+                    //as mentioned in the Replica Catalog. We assume it is
+                    //URL remotely accessible
+                    boolean localTransfer = true;
+                    mTXRefiner.addStageOutXFERNodes( currentJob, vOutPoolTX, rcb, localTransfer, true );
                 }
 
             }
