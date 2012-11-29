@@ -34,48 +34,9 @@ import java.util.Iterator;
 public class Directory extends DirectoryLayout{
 
     /**
-     * Default constructor
-     */
-    public Directory( ){
-        super();
-    }
-
-    /**
-     * Convenience constructor for adapter class
-     *
-     * @param directory         the directory layout object
-     * @param type              the type associated
-     */
-    public Directory(DirectoryLayout directory, TYPE type) {
-        super( directory );
-        this.setType(type);
-    }
-
-
-    /**
-     * Accept method for the SiteData classes that accepts a visitor
-     *
-     * @param visitor  the visitor to be used
-     *
-     * @exception IOException if something fishy happens to the stream.
-     */
-    public void accept( SiteDataVisitor visitor ) throws IOException{
-        visitor.visit( this );
-
-        //traverse through all the file servers
-        for( FileServer server : this.mFileServers ){
-            server.accept(visitor);
-        }
-
-        //profiles are handled in the depart method
-        visitor.depart( this );
-    }
-
-
-    /**
      * Enumerates the new directory types supported in this schema
      */
-    public enum TYPE {
+    public static enum TYPE {
         shared_scratch( "shared-scratch" ), shared_storage( "shared-storage" ),
         local_scratch( "local-scratch" ), local_storage( "local-storage" ) ;
 
@@ -114,6 +75,47 @@ public class Directory extends DirectoryLayout{
 
 
     }
+
+    /**
+     * Default constructor
+     */
+    public Directory( ){
+        super();
+    }
+
+    /**
+     * Convenience constructor for adapter class
+     *
+     * @param directory         the directory layout object
+     * @param type              the type associated
+     */
+    public Directory(DirectoryLayout directory, TYPE type) {
+        super( directory );
+        this.setType(type);
+    }
+
+
+    /**
+     * Accept method for the SiteData classes that accepts a visitor
+     *
+     * @param visitor  the visitor to be used
+     *
+     * @exception IOException if something fishy happens to the stream.
+     */
+    public void accept( SiteDataVisitor visitor ) throws IOException{
+        visitor.visit( this );
+
+        //traverse through all the file servers
+        for( FileServer server : this.mFileServers ){
+            server.accept(visitor);
+        }
+
+        //profiles are handled in the depart method
+        visitor.depart( this );
+    }
+
+
+    
 
     /**
      * The type of directory
