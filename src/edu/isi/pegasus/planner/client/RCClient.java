@@ -474,6 +474,8 @@ public class RCClient extends Toolkit {
 	for (Iterator i = rce.getAttributeIterator(); i.hasNext();) {
 	    String key = (String) i.next();
 	    Object val = rce.getAttribute(key);
+	    if (val == null)
+		    continue;
 	    System.out.print(" " + key + "=\"" + escape(val.toString()) + "\"");
 	}
 	System.out.println();
