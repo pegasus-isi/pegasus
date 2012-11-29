@@ -692,7 +692,7 @@ public class OSGMM implements SiteCatalog {
      * the lines in a List
      *
      */
-    private class ListCallback implements StreamGobblerCallback{
+    private static class ListCallback implements StreamGobblerCallback{
 
         
         /**

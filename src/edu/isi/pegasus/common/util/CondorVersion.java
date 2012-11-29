@@ -302,7 +302,7 @@ public class CondorVersion {
      * the version of Condor being used.
      *
      */
-    private class CondorVersionCallback implements StreamGobblerCallback{
+    private static class CondorVersionCallback implements StreamGobblerCallback{
 
         
        

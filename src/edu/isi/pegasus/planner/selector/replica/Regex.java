@@ -246,7 +246,7 @@ public class Regex extends Default {
      * A Data class that allows us to compile a regex expression
      * and associate a rank value with it.
      */
-    private class Rank implements Comparable{
+    private static class Rank implements Comparable{
 
         /**
          * The rank value.

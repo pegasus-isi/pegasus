@@ -1052,7 +1052,7 @@ public class Horizontal implements Clusterer,
     * This comparator is not consistent with the Job.equals(Object) method.
     * Hence, should not be used in sorted sets or Maps.
     */
-   private class JobComparator implements Comparator{
+   private static class JobComparator implements Comparator{
 
        /**
          * Compares this object with the specified object for order. Returns a

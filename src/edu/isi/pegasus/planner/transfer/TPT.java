@@ -416,7 +416,7 @@ public class TPT {
      * It designates whether a transfer needs to be third party or not, and in
      * addition whether it needs to be executed remotely or locally.
      */
-    private class TPTState{
+    private static class TPTState{
 
         /**
          * The constant to denote that a stage-in transfer is to be third party.

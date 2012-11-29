@@ -343,7 +343,7 @@ public class RemoteTransfer {
      * execute transfers remotely or not.
      *
      */
-    private class TransferState{
+    private static class TransferState{
 
         /**
          * The constant to denote that a stage-in transfer is to be exectuted remotely

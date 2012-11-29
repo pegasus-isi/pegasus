@@ -409,5 +409,4 @@ public  class  XML4PrintVisitor extends AbstractXMLPrintVisitor {
     public  void depart( Connection c  ) throws IOException{
         closeElement( "connection" );
     }
-    
 }

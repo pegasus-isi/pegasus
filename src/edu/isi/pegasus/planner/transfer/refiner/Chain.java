@@ -234,7 +234,7 @@ public class Chain extends Basic {
      * distribution of a transfer job amongst the bundles in a round robin manner.
      * Each bundle itself is actually a chain of transfer jobs.
      */
-    private class SiteTransfer{
+    private static class SiteTransfer{
 
         /**
          * The maximum number of transfer jobs that are allowed for this
@@ -351,7 +351,7 @@ public class Chain extends Basic {
      * A shallow container class, that contains the list of the names of the
      * transfer jobs and can return the last job in the list.
      */
-     private class TransferChain{
+     private static class TransferChain{
 
          /**
           * The linked list that maintians the chain of names of the transfer

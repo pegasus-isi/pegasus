@@ -428,7 +428,7 @@ class SiteCatalogXMLMetadataParser extends Parser{
     /**
      * Private RuntimeException to stop the SAX Parser
      */
-    private class StopParserException extends RuntimeException{
+    private static class StopParserException extends RuntimeException{
 
     }
 

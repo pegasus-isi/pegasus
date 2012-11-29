@@ -421,12 +421,12 @@ public class Horizontal extends BFS{
 
 
     /**
-     * A GraphNode comparator, that allows me to compare nodes according to the
+     * A GraphNode comparator, that allows us to compare nodes according to the
      * transformation logical names. It is applied to group jobs in a particular partition,
      * according to the underlying transformation that is referred.
      *
      */
-   private class GraphNodeComparator implements Comparator{
+   private static class GraphNodeComparator implements Comparator{
 
        /**
          * Compares this object with the specified object for order. Returns a
