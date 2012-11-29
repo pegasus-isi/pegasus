@@ -141,17 +141,22 @@ public class MapGraph implements Graph{
         GraphNode removalNode = ( GraphNode )obj;
 
         // the parents of the node now become parents of the children
-        List parents = removalNode.getParents();
-        List children = removalNode.getChildren();
-        for( Iterator pIt = parents.iterator(); pIt.hasNext(); ){
-            GraphNode parent = (GraphNode)pIt.next();
+        // the parents of the node now become parents of the children
+        List<GraphNode> parents = removalNode.getParents();
+        List<GraphNode> children = removalNode.getChildren();
+
+        //for each child make the parent it's parent instead of removed node
+
+        for ( GraphNode child : children ){
+            child.removeParent( removalNode );
+        } 
+
+        for( GraphNode parent : parents ){
             //for the parent the removal node is no longer a child
             parent.removeChild( removalNode );
 
             //for each child make the parent it's parent instead of removed node
-            for ( Iterator cIt = children.iterator(); cIt.hasNext(); ){
-                GraphNode child = (GraphNode)cIt.next();
-                child.removeParent( removalNode );
+            for ( GraphNode child  : children ){
                 child.addParent( parent );
                 parent.addChild( child );
             }
