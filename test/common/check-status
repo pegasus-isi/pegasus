@@ -1,13 +1,19 @@
-#!/bin/bash                                                                                                                                                                                                                                                       
-echo "CURRENT DIR is " `pwd`
-echo "Checking status "
+#!/bin/bash
 
-TIMEOUT=180
-COUNT=0
 function update_status
 {
    STATUS=`pegasus-status --noqueue | tail -1 | sed 's/[:\(\)]/ /g'| awk '{print $5}'`
 }
+
+echo "CURRENT DIR is " `pwd`
+
+if [ ! -e braindump.txt ]; then
+    echo "braindump.txt was not found in this directory. Planner probably failed!" 1>&2
+    exit 1
+fi
+
+TIMEOUT=180
+COUNT=0
 
 sleep 1m
 update_status
@@ -37,3 +43,4 @@ else
     echo "*** Workflow failed ***"
     exit 1
 fi
+

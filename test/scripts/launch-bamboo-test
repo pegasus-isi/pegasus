@@ -26,6 +26,12 @@ fi
 
 #Get RUNDIR from the planning output
 RUN_DIR=`grep pegasus-remove $PLANFILE | awk '{print $5}'`
+
+if [ "x$RUN_DIR" = "x" ]; then
+    echo "Unable to determine the RUN_DIR from the planner output - did the planner fail?" 1>&2
+    exit 1
+fi
+
 echo "RUNDIR is $RUN_DIR"
 
 # Change in to the rundir
@@ -44,9 +50,13 @@ fi
 if [ $STATUS = 0 ]; then
    # Run Pegasus Statistics
    pegasus-statistics -s all $RUN_DIR
-else 
-   echo "ERROR: Test failed"
+   STATUS=$?
+fi
+
+if [ $STATUS != 0 ]; then
+   echo "ERROR: Test failed" 1>&2
    exit $STATUS
 fi
 
 exit
+
