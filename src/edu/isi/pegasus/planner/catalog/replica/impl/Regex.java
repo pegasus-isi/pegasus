@@ -539,9 +539,8 @@ public class Regex implements ReplicaCatalog {
 			    && handle != null && pool.equals( handle )) {
 			String tmpPFN = entry.getPFN();
 			for (int k = 0, j = m.groupCount(); k <= j; ++k) {
-			    // tmpPFN = tmpPFN.replaceAll ("\\$" + k, m.group
-			    // (k));
-			    tmpPFN = tmpPFN.replaceAll( "[" + k + "]",
+			    // tmpPFN = tmpPFN.replaceAll ("\\$" + k, m.group (k));
+			    tmpPFN = tmpPFN.replaceAll( "\\[" + k + "\\]",
 				    m.group( k ) );
 			}
 			if (tmpPFN.indexOf( '[' ) >= 0) {
@@ -588,7 +587,7 @@ public class Regex implements ReplicaCatalog {
 		    String tmpPFN = entry.getPFN();
 		    for (int k = 0, j = m.groupCount(); k <= j; ++k) {
 			tmpPFN = tmpPFN
-			        .replaceAll( "[" + k + "]", m.group( k ) );
+			        .replaceAll( "\\[" + k + "\\]", m.group( k ) );
 		    }
 		    if (tmpPFN.indexOf( '[' ) >= 0) {
 			// PFN still has variables left.
@@ -744,7 +743,7 @@ public class Regex implements ReplicaCatalog {
 			    String tmpPFN = entry.getPFN();
 			    // Substitute variables in PFN before returning
 			    for (int k = 0, j = m.groupCount(); k <= j; ++k) {
-				tmpPFN = tmpPFN.replaceAll( "[" + k + "]",
+				tmpPFN = tmpPFN.replaceAll( "\\[" + k + "\\]",
 				        m.group( k ) );
 			    }
 			    // Are there unsubstituted variables?
