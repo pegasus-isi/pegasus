@@ -32,6 +32,12 @@ import edu.isi.pegasus.planner.catalog.classes.Profiles;
  */
 public abstract class FileServerType extends AbstractSiteData {
 
+    /**
+     * The operations supported by the file server
+     */
+    public static enum OPERATION{
+        get, put, all
+    }
 
     /**
      * The protocol used by the file server.
@@ -54,6 +60,11 @@ public abstract class FileServerType extends AbstractSiteData {
      */
     protected Profiles mProfiles;
 
+    /**
+     * The operations supported by the file server
+     */
+    protected OPERATION mOperation;
+
     
     /**
      * The default constructor.
@@ -63,6 +74,7 @@ public abstract class FileServerType extends AbstractSiteData {
         mURLPrefix = "";
         mMountPoint = "";
         mProfiles = new Profiles();
+        mOperation = OPERATION.all;
     }
     
     /**
@@ -134,7 +146,25 @@ public abstract class FileServerType extends AbstractSiteData {
     public String getMountPoint(){
         return mMountPoint;
     }
-    
+
+    /**
+     * The operation supported by the file server
+     *
+     * @param operation   the supported operation
+     */
+    public void setSupportedOperation( OPERATION operation ){
+        mOperation = operation;
+    }
+
+    /**
+     * Returns the operation supported by the file server
+     *
+     * @return the supported operation
+     */
+    public OPERATION getSupportedOperation(){
+        return this.mOperation;
+    }
+
     /**
      * Adds a profile.
      * 
@@ -167,6 +197,7 @@ public abstract class FileServerType extends AbstractSiteData {
             obj.setMountPoint( this.getMountPoint() );
             obj.setProtocol( this.getProtocol() );
             obj.setURLPrefix( this.getURLPrefix() );
+            obj.setSupportedOperation( this.getSupportedOperation() );
             obj.setProfiles( (Profiles)this.mProfiles.clone() );
         
         }

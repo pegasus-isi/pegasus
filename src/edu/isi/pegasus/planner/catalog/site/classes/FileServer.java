@@ -82,6 +82,7 @@ public class FileServer extends FileServerType {
         writeAttribute( writer, "protocol", getProtocol()  );        
         writeAttribute( writer, "url", getURLPrefix() );        
         writeAttribute( writer, "mount-point", getMountPoint() );        
+        writeAttribute( writer, "operation",  getSupportedOperation().toString() );
 
         if( mProfiles.isEmpty() ){
             writer.write( "/>" );

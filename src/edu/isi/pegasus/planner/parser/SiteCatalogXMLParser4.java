@@ -46,6 +46,7 @@ import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.common.util.PegasusURL;
 import edu.isi.pegasus.planner.catalog.site.classes.Directory;
+import edu.isi.pegasus.planner.catalog.site.classes.FileServerType.OPERATION;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteDataVisitor;
 import edu.isi.pegasus.planner.catalog.site.classes.XML4PrintVisitor;
 import edu.isi.pegasus.planner.classes.PegasusBag;
@@ -309,6 +310,10 @@ public class SiteCatalogXMLParser4 extends StackBasedXMLParser implements SiteCa
                         else if ( name.equals( "mount-point" ) ) {
                             fs.setMountPoint( value );
                  	    this.log( element, name, value );                              
+                        }
+                        else if ( name.equals( "operation" ) ) {
+                            fs.setSupportedOperation( OPERATION.valueOf( value ) );
+                 	    this.log( element, name, value );                  
                         }
                         else {
                 	      this.complain( element, name, value );
