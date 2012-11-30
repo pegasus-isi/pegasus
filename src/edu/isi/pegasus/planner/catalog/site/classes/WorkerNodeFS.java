@@ -83,46 +83,6 @@ public class WorkerNodeFS extends AbstractSiteData {
     
     
     /**
-     * Selects a  <code>FileServer</code> associated with the Local Directory on
-     * the Scratch system.
-     * 
-     * @return <FileServer> if specified, else null
-     */
-    public FileServer selectScratchLocalFileServer(){
-        //return this.getScratch().getLocalDirectory().selectFileServer();
-        WorkerNodeScratch scratch = this.getScratch();
-        if( scratch == null ){
-            return null;
-        }
-
-        DirectoryLayout directory = scratch.getLocalDirectory();
-        if( directory == null ){
-            return null;
-        }
-        return directory.selectFileServer();
-    }
-    
-    /**
-     * Selects a  <code>FileServer</code> associated with the Shared Directory on
-     * the Scratch system.
-     * 
-     * @return <FileServer> if specified, else null
-     */
-    public FileServer selectScratchSharedFileServer(){
-        //return this.getScratch().getSharedDirectory().selectFileServer();
-        WorkerNodeScratch scratch = this.getScratch();
-        if( scratch == null ){
-            return null;
-        }
-
-        DirectoryLayout directory = scratch.getSharedDirectory();
-        if( directory == null ){
-            return null;
-        }
-        return directory.selectFileServer();
-    }
-    
-    /**
      * Returns the scratch area on the head node.
      * 
      * @return the scratch area.
@@ -140,45 +100,7 @@ public class WorkerNodeFS extends AbstractSiteData {
         mStorage = storage;
     }
     
-    /**
-     * Selects a  <code>FileServer</code> associated with the Local Directory on
-     * the Storage system.
-     * 
-     * @return <FileServer> if specified, else null
-     */
-    public FileServer selectStorageLocalFileServer(){
-        //return this.getStorage().getLocalDirectory().selectFileServer();
-        WorkerNodeStorage storage = this.getStorage();
-        if( storage == null ){
-            return null;
-        }
-
-        DirectoryLayout directory = storage.getLocalDirectory();
-        if( directory == null ){
-            return null;
-        }
-        return directory.selectFileServer();
-    }
-    
-    /**
-     * Selects a  <code>FileServer</code> associated with the Shared Directory on
-     * the Storage system.
-     * 
-     * @return <FileServer> if specified, else null
-     */
-    public FileServer selectStorageSharedFileServer(){
-        //return this.getStorage().getSharedDirectory().selectFileServer();
-        WorkerNodeStorage storage = this.getStorage();
-        if( storage == null ){
-            return null;
-        }
-
-        DirectoryLayout directory = storage.getSharedDirectory();
-        if( directory == null ){
-            return null;
-        }
-        return directory.selectFileServer();
-    }
+   
     
     /**
      * Returns the storage area on the head node.

@@ -518,48 +518,7 @@ public class SiteCatalogEntry3 extends AbstractSiteData{
     }
     
     
-    /**
-     * A convenience method to select the URL Prefix for the FileServer for 
-     * the shared scratch space on the HeadNode.
-     * 
-     * @return  URL Prefix for the FileServer for the shared scratch space , else null
-     */
-    public String selectHeadNodeScratchSharedFileServerURLPrefix(){
-        FileServer server = this.selectHeadNodeScratchSharedFileServer();
-        return ( server == null )?
-               null:
-               server.getURLPrefix();
-    }
-    
-    /**
-     * A convenience method to select the FileServer for the shared scratch
-     * space on the HeadNode.
-     * 
-     * @return  FileServer for the shared scratch space , else null
-     */
-    public FileServer selectHeadNodeScratchSharedFileServer(){
-        return ( this.getHeadNodeFS() == null )?
-               null:
-               this.getHeadNodeFS().selectScratchSharedFileServer();
-        
-    }
-    
-    
-    
-    /**
-     * A convenience method that selects a file server for staging the data out to 
-     * a site. It returns the file server to which the generated data is staged
-     * out / published.
-     * 
-     * The <code>FileServer</code> selected is associated with the HeadNode Filesystem.
-     * 
-     * @return the <code>FileServer</code> else null.
-     */
-    public FileServer selectStorageFileServerForStageout(){
-        return ( this.getHeadNodeFS() == null )?
-               null:
-               this.getHeadNodeFS().selectStorageFileServerForStageout();
-    }
+   
     
     /**
      * Return an iterator to value set of the Map.

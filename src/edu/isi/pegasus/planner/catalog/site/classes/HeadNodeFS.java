@@ -80,44 +80,8 @@ public class HeadNodeFS extends AbstractSiteData {
         mScratch = scratch;
     }
     
-    /**
-     * Selects a  <code>FileServer</code> associated with the Local Directory on
-     * the Scratch system.
-     * 
-     * @return <FileServer> if specified, else null
-     */
-    public FileServer selectScratchLocalFileServer(){
-        //return this.getScratch().getLocalDirectory().selectFileServer();
-        HeadNodeScratch scratch = this.getScratch();
-        if( scratch == null ){
-            return null;
-        }
-        DirectoryLayout directory = scratch.getLocalDirectory();
-        if( directory == null ){
-            return null;
-        }
-        return directory.selectFileServer();
-    }
-    
-    /**
-     * Selects a  <code>FileServer</code> associated with the Shared Directory on
-     * the Scratch system.
-     * 
-     * @return <FileServer> if specified, else null
-     */
-    public FileServer selectScratchSharedFileServer(){
-        //return this.getScratch().getSharedDirectory().selectFileServer();
-        HeadNodeScratch scratch = this.getScratch();
-        if( scratch == null ){
-            return null;
-        }
-        DirectoryLayout directory = scratch.getSharedDirectory();
-        if( directory == null ){
-            return null;
-        }
-        return directory.selectFileServer();
-    }
-    
+
+
     
     /**
      * Returns the scratch area on the head node.
@@ -137,63 +101,9 @@ public class HeadNodeFS extends AbstractSiteData {
         mStorage = storage;
     }
     
-    /**
-     * A convenience method that returns a file server to be used for stageout.
-     * 
-     * It selects a FileServer associated with the Local Directory.
-     * If that is null, it then selects a FileServer associated with the 
-     * Shared Directory.
-     * 
-     * @return  storage FileServer for stageout.
-     */
-    public FileServer selectStorageFileServerForStageout() {
-        HeadNodeStorage s = this.getStorage();
-        if( s == null ) { return null ; }
-        
-        FileServer fs = null;
-        return ( (fs = this.selectStorageLocalFileServer()) == null)?
-                  this.selectStorageSharedFileServer():  
-                  fs;
-    }
+
 
     
-    /**
-     * Selects a  <code>FileServer</code> associated with the Local Directory on
-     * the Storage system.
-     * 
-     * @return <FileServer> if specified, else null
-     */
-    public FileServer selectStorageLocalFileServer(){
-        //        return this.getStorage().getLocalDirectory().selectFileServer();
-        StorageType storage = this.getStorage();
-        if( storage == null ){
-            return null;
-        }
-        DirectoryLayout directory = storage.getLocalDirectory();
-        if( directory == null ){
-            return null;
-        }
-        return directory.selectFileServer();
-    }
-    
-    /**
-     * Selects a  <code>FileServer</code> associated with the Shared Directory on
-     * the Storage system.
-     * 
-     * @return <FileServer> if specified, else null
-     */
-    public FileServer selectStorageSharedFileServer(){
-        //return this.getStorage().getSharedDirectory().selectFileServer();
-        StorageType storage = this.getStorage();
-        if( storage == null ){
-            return null;
-        }
-        DirectoryLayout directory = storage.getSharedDirectory();
-        if( directory == null ){
-            return null;
-        }
-        return directory.selectFileServer();
-    }
     
     /**
      * Returns the storage area on the head node.
