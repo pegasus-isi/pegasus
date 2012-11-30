@@ -18,10 +18,14 @@
 
 package edu.isi.pegasus.planner.catalog.site.classes;
 
+import edu.isi.pegasus.planner.catalog.site.classes.FileServerType.OPERATION;
 import java.util.List;
 import java.util.LinkedList;
 import java.util.Iterator;
 import edu.isi.pegasus.planner.common.PegRandom;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
         
 /**
  * An abstract base class that creates a directory type. It associates multiple
@@ -32,9 +36,12 @@ import edu.isi.pegasus.planner.common.PegRandom;
 public abstract class DirectoryLayout extends AbstractSiteData{
     
     /**
-     * The list of file servers that can be used to write to access this directory.
+     * The list of file servers that can be used to write to access this directory
+     * indexed by operation type.
      */
-    protected List<FileServer> mFileServers;
+    //protected List<FileServer> mFileServers;
+    protected Map<FileServer.OPERATION, List<FileServer>> mFileServers;
+
     
     /**
      * The internal mount point for the directory.
@@ -58,10 +65,10 @@ public abstract class DirectoryLayout extends AbstractSiteData{
     /**
      * The overloaded constructor
      * 
-     * @param  fs  list of file servers
+     * @param  fs  map of file servers indexed by FileServer operation
      * @param  imt the internal mount point.
      */
-    public DirectoryLayout( List<FileServer> fs, InternalMountPoint imt ){
+    public DirectoryLayout(  Map<FileServer.OPERATION, List<FileServer>> fs, InternalMountPoint imt ){
         initialize( fs, imt );
     }
     
@@ -70,17 +77,19 @@ public abstract class DirectoryLayout extends AbstractSiteData{
      * 
      */
     public void initialize( ){
-        this.mFileServers = new LinkedList <FileServer> ();
+        this.mFileServers = new  HashMap<FileServer.OPERATION, List<FileServer>> ();
+        this.resetFileServers();
         this.mInternalMount =  new InternalMountPoint();
+
     }
     
     /**
      *  Initializes the object
      * 
-     * @param  fs  list of file servers
+     * @param  fs  list of file servers indexed by operation type
      * @param  imt the internal mount point.
      */
-    public void initialize( List<FileServer> fs, InternalMountPoint imt ){
+    public void initialize(  Map<FileServer.OPERATION, List<FileServer>> fs, InternalMountPoint imt ){
         this.mFileServers = fs;
         this.mInternalMount = imt ;
     }
@@ -91,7 +100,8 @@ public abstract class DirectoryLayout extends AbstractSiteData{
      * @param server   the file server.
      */
     public void addFileServer( FileServer server ){
-        mFileServers.add( server );
+        List<FileServer> l = mFileServers.get( server.getSupportedOperation());
+        l.add(server);
     }
 
     /**
@@ -100,7 +110,10 @@ public abstract class DirectoryLayout extends AbstractSiteData{
      * @param servers   the list of servers
      */
     public void setFileServers( List<FileServer> servers ){
-        mFileServers = servers;
+        this.resetFileServers();
+        for( FileServer server: servers ){
+            this.addFileServer(server);
+        }
     }
     
     /**
@@ -108,10 +121,39 @@ public abstract class DirectoryLayout extends AbstractSiteData{
      * 
      * @return FileServer
      */
-    public FileServer selectFileServer(){
+    public FileServer selectFileServer( FileServer.OPERATION operation ){
+        List<FileServer> servers = this.mFileServers.get(operation);
+        return ( servers.isEmpty() )?
+                null:
+                servers.get( PegRandom.getInteger( this.mFileServers.size() - 1) );
+        /*
         return ( this.mFileServers == null || this.mFileServers.size() == 0 )?
                  null :
                  this.mFileServers.get(  PegRandom.getInteger( this.mFileServers.size() - 1) );
+         */
+    }
+
+
+    /**
+     * A convenience method that retrieves whether the directory has a
+     * file server for get operations ( file server with type get and all )
+     *
+     * @return boolean
+     */
+    public boolean hasFileServerForGETOperations(){
+        return !(this.mFileServers.get( FileServer.OPERATION.all ).isEmpty()
+                && this.mFileServers.get( FileServer.OPERATION.get ).isEmpty());
+    }
+
+     /**
+     * A convenience method that retrieves whether the directory has a
+     * file server for put operations ( file server with type put and all )
+     *
+     * @return boolean
+     */
+    public boolean hasFileServerForPUTOperations(){
+        return !(this.mFileServers.get( FileServer.OPERATION.all ).isEmpty()
+                && this.mFileServers.get( FileServer.OPERATION.put ).isEmpty());
     }
     
     /**
@@ -119,8 +161,8 @@ public abstract class DirectoryLayout extends AbstractSiteData{
      * 
      * @return Iterator<FileServer>
      */
-    public Iterator<FileServer> getFileServersIterator(){
-        return mFileServers.iterator();
+    public Iterator<FileServer> getFileServersIterator( FileServer.OPERATION operation ){
+        return mFileServers.get( operation).iterator();
     }
     
     /**
@@ -151,8 +193,43 @@ public abstract class DirectoryLayout extends AbstractSiteData{
     public boolean isEmpty(){
         return this.mFileServers.isEmpty() && this.getInternalMountPoint().isEmpty();
     }
-    
-    
+
+    /**
+     * Resets the internal collection of file servers
+     */
+    public void resetFileServers(){
+        for( OPERATION op : FileServer.OPERATION.values() ){
+            this.mFileServers.put( op, new LinkedList<FileServer>() );
+        }
+    }
+
+    /**
+     * Accept method for the SiteData classes that accepts a visitor
+     *
+     * @param visitor  the visitor to be used
+     *
+     * @exception IOException if something fishy happens to the stream.
+     */
+    public void accept( SiteDataVisitor visitor ) throws IOException{
+        visitor.visit( this );
+
+        //traverse through all the file servers
+        //for( FileServer server : this.mFileServers ){
+        //    server.accept(visitor);
+        //}
+
+        for( OPERATION op : FileServer.OPERATION.values() ){
+            List<FileServer> servers = this.mFileServers.get( op );
+            for( FileServer server : servers ){
+                server.accept(visitor);
+            }
+        }
+
+        //profiles are handled in the depart method
+        visitor.depart( this );
+    }
+
+
     /**
      * Returns the clone of the object.
      *
@@ -170,12 +247,16 @@ public abstract class DirectoryLayout extends AbstractSiteData{
         }
         obj.initialize( );        
         obj.setInternalMountPoint( (InternalMountPoint)mInternalMount.clone() );
-        
-        for( FileServer server : mFileServers ){
-            obj.addFileServer( (FileServer)server.clone() );
+
+        for( OPERATION op : FileServer.OPERATION.values() ){
+            List<FileServer> servers = this.mFileServers.get( op );
+            for( FileServer server : servers ){
+                obj.addFileServer( (FileServer)server.clone() );
+            }
         }
         
         return obj;
     }
-    
+
+
 }

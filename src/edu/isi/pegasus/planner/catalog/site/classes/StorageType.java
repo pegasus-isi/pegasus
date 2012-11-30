@@ -21,6 +21,7 @@ package edu.isi.pegasus.planner.catalog.site.classes;
 import edu.isi.pegasus.planner.catalog.site.classes.Directory.TYPE;
 import java.io.IOException;
 import java.io.Writer;
+import java.util.Iterator;
 
 /**
  * An Abstract Data class to describe the filesystem layout on a site, both
@@ -85,8 +86,13 @@ public  class StorageType extends AbstractSiteData{
 
         mLocalDirectory = new LocalDirectory();
         mLocalDirectory.setInternalMountPoint( local.getInternalMountPoint() );
-        for( FileServer server: local.mFileServers ){
-            mLocalDirectory.addFileServer(server);
+        
+        //iterate through all the file servers
+        mLocalDirectory.resetFileServers();
+        for( FileServer.OPERATION op : FileServer.OPERATION.values() ){
+            for( Iterator<FileServer> it =  local.getFileServersIterator(op); it.hasNext(); ){
+                mLocalDirectory.addFileServer( it.next());
+            }
         }
     }
 
@@ -141,9 +147,12 @@ public  class StorageType extends AbstractSiteData{
 
         mSharedDirectory = new SharedDirectory();
         mSharedDirectory.setInternalMountPoint( shared.getInternalMountPoint() );
-        for( FileServer server: shared.mFileServers ){
-            mSharedDirectory.addFileServer(server);
-        }
+        mSharedDirectory.resetFileServers();
+        for( FileServer.OPERATION op : FileServer.OPERATION.values() ){
+            for( Iterator<FileServer> it =  shared.getFileServersIterator(op); it.hasNext(); ){
+                    mSharedDirectory.addFileServer( it.next() );
+                }
+            }
     }
     
     /**

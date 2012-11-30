@@ -25,6 +25,7 @@ import java.io.IOException;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 /**
  * This data class describes the directory shared only amongst worker nodes .
@@ -47,7 +48,7 @@ public class WorkerSharedDirectory extends DirectoryLayout{
      * @param  fs  list of file servers
      * @param  imt the internal mount point.
      */
-    public WorkerSharedDirectory( List<FileServer> fs, InternalMountPoint imt ){
+    public WorkerSharedDirectory( Map<FileServer.OPERATION, List<FileServer>> fs, InternalMountPoint imt ){
         super( fs, imt );
     }
 
@@ -69,9 +70,12 @@ public class WorkerSharedDirectory extends DirectoryLayout{
         writer.write( "<wshared>" );
       
         //iterate through all the file servers
-        for( Iterator<FileServer> it = this.getFileServersIterator(); it.hasNext(); ){
-            FileServer fs = it.next();
-            fs.toXML( writer, newIndent );
+
+        for(  FileServer.OPERATION op : FileServer.OPERATION.values() ){
+            List<FileServer> servers = this.mFileServers.get( op );
+            for( FileServer server: servers ){
+                server.toXML( writer, newIndent );
+            }
         }
         
         //write out the internal mount point

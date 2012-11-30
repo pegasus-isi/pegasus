@@ -559,8 +559,10 @@ public class NonJavaCallout extends AbstractPerJob {
                     }*/
                     Directory d = site.getDirectory( Directory.TYPE.shared_scratch );
                     if( d != null ){
-                        for( Iterator it = d.getFileServersIterator(); it.hasNext();){
-                            pw.println(st + ( (FileServer) it.next()).getURLPrefix() );
+                        for( FileServer.OPERATION op : FileServer.OPERATION.values() ){
+                            for( Iterator it = d.getFileServersIterator(op); it.hasNext();){
+                                pw.println(st + ( (FileServer) it.next()).getURLPrefix() );
+                            }
                         }
                     }
                 } // for

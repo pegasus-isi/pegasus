@@ -95,25 +95,7 @@ public class Directory extends DirectoryLayout{
     }
 
 
-    /**
-     * Accept method for the SiteData classes that accepts a visitor
-     *
-     * @param visitor  the visitor to be used
-     *
-     * @exception IOException if something fishy happens to the stream.
-     */
-    public void accept( SiteDataVisitor visitor ) throws IOException{
-        visitor.visit( this );
-
-        //traverse through all the file servers
-        for( FileServer server : this.mFileServers ){
-            server.accept(visitor);
-        }
-
-        //profiles are handled in the depart method
-        visitor.depart( this );
-    }
-
+    
 
     
 
@@ -175,9 +157,11 @@ public class Directory extends DirectoryLayout{
         writer.write( newLine );
 
         //iterate through all the file servers
-        for( Iterator<FileServer> it = this.getFileServersIterator(); it.hasNext(); ){
-            FileServer fs = it.next();
-            fs.toXML( writer, newIndent );
+        for( FileServer.OPERATION op : FileServer.OPERATION.values() ){
+            for( Iterator<FileServer> it = this.getFileServersIterator( op ); it.hasNext(); ){
+                FileServer fs = it.next();
+                fs.toXML( writer, newIndent );
+            }
         }
 
         //write out the internal mount point

@@ -193,9 +193,12 @@ public class PegasusConfiguration {
             
             }
             imp.setMountPoint( directory );
-            for ( Iterator<FileServer> it = storageDirectory.getFileServersIterator(); it.hasNext(); ){
-                FileServer server = it.next();
-                server.setMountPoint( directory );
+
+            for( FileServer.OPERATION op : FileServer.OPERATION.values() ){
+                for( Iterator<FileServer> it = storageDirectory.getFileServersIterator(op); it.hasNext();){
+                    FileServer server = it.next();
+                    server.setMountPoint( directory );
+                }
             }
             
             //log the updated output site entry

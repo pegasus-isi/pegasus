@@ -25,6 +25,7 @@ import java.io.IOException;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 /**
  * This data class represents a shared directory on a site.
@@ -49,7 +50,7 @@ public class SharedDirectory extends DirectoryLayout{
      * @param  fs  list of file servers
      * @param  imt the internal mount point.
      */
-    public SharedDirectory( List<FileServer> fs, InternalMountPoint imt ){
+    public SharedDirectory( Map<FileServer.OPERATION, List<FileServer>> fs, InternalMountPoint imt ){
         super( fs, imt );
     }
 
@@ -77,9 +78,12 @@ public class SharedDirectory extends DirectoryLayout{
         writer.write( newLine );
       
         //iterate through all the file servers
-        for( Iterator<FileServer> it = this.getFileServersIterator(); it.hasNext(); ){
-            FileServer fs = it.next();
-            fs.toXML( writer, newIndent );
+        //iterate through all the file servers
+        for(  FileServer.OPERATION op : FileServer.OPERATION.values() ){
+            List<FileServer> servers = this.mFileServers.get( op );
+            for( FileServer server: servers ){
+                server.toXML( writer, newIndent );
+            }
         }
         
         //write out the internal mount point
@@ -100,9 +104,12 @@ public class SharedDirectory extends DirectoryLayout{
         visitor.visit( this );
 
         //iterate through all the file servers
-        for( Iterator<FileServer> it = this.getFileServersIterator(); it.hasNext(); ){
-            FileServer fs = it.next();
-            fs.accept(visitor);
+        //iterate through all the file servers
+        for(  FileServer.OPERATION op : FileServer.OPERATION.values() ){
+            List<FileServer> servers = this.mFileServers.get( op );
+            for( FileServer server: servers ){
+                server.accept(visitor);
+            }
         }
 
         //internal point  is handled in the depart method

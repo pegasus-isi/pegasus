@@ -797,39 +797,42 @@ public class TransferEngine extends Engine {
             if( storageDirectory == null ){
                 throw new RuntimeException( "No Storage directory specified for site " + destSiteHandle );
             }
-            Iterator it = storageDirectory.getFileServersIterator();
 
             //sanity check
-            if( !it.hasNext() ){
-                // no file servers were returned
-                throw new RuntimeException( " No File Servers specified for Shared Storage on Headnode for site " + destSiteHandle );
+            if( !storageDirectory.hasFileServerForPUTOperations() ){
+                //no file servers for put operations
+                throw new RuntimeException( " No File Servers specified for PUT Operation on Shared Storage on Headnode for site " + destSiteHandle );
             }
-            
-            String destURL = null;
-            boolean first = true;
-            while(it.hasNext()){
-                
-                FileServer fs = (FileServer)it.next();
-                destURL = fs.getURLPrefix() ;
 
-                //assumption of same external mount point for each storage
-                //file server on output site                                                                                                                                 
-                destURL += this.getPathOnStageoutSite( lfn );
+            for( FileServer.OPERATION op : FileServer.OPERATION.operationsForPUT() ){
+                for( Iterator it = storageDirectory.getFileServersIterator(op); it.hasNext();){
+                    String destURL = null;
+                    boolean first = true;
                 
-                //if the paths match of dest URI
-                //and execDirURL we return null
-                if (execURL.equalsIgnoreCase(destURL)) {
-                    /*ft = new FileTransfer(file, job);
-                    ft.addSource(stagingSiteHandle, execURL);*/
-                    ft.addDestination(stagingSiteHandle, execURL);
-                    //make the transfer transient?
-                    ft.setTransferFlag(PegasusFile.TRANSFER_NOT);
-                    return ft;
+                    FileServer fs = (FileServer)it.next();
+                    destURL = fs.getURLPrefix() ;
+
+                    //assumption of same external mount point for each storage
+                    //file server on output site
+                    destURL += this.getPathOnStageoutSite( lfn );
+
+                    //if the paths match of dest URI
+                    //and execDirURL we return null
+                    if (execURL.equalsIgnoreCase(destURL)) {
+                        /*ft = new FileTransfer(file, job);
+                        ft.addSource(stagingSiteHandle, execURL);*/
+                        ft.addDestination(stagingSiteHandle, execURL);
+                        //make the transfer transient?
+                        ft.setTransferFlag(PegasusFile.TRANSFER_NOT);
+                        return ft;
+                    }
+
+                    ft.addDestination(destSiteHandle, destURL);
+                    first = false;
+                
                 }
 
-                ft.addDestination(destSiteHandle, destURL);
-                first = false;
-            }
+            }//end of different put operations
 
         }
 
@@ -937,27 +940,34 @@ public class TransferEngine extends Engine {
                     //add all the possible source urls iterating through
                     //the list of grid ftp servers associated with the dest pool.
                     boolean first = true;
+
 //                    for( Iterator it1 = mSiteStore.lookup( pJob.getSiteHandle() ).getHeadNodeFS().getScratch().getSharedDirectory().getFileServersIterator();
 //                                      it1.hasNext();){
-                      for( Iterator it1 = mSiteStore.lookup( pJob.getSiteHandle() ).getDirectory( Directory.TYPE.shared_scratch ).getFileServersIterator();
-                                     it1.hasNext();){
+                    Directory parentScratchDir = mSiteStore.lookup( pJob.getStagingSiteHandle() ).getDirectory( Directory.TYPE.shared_scratch );
+                    if( parentScratchDir == null ){
+                        throw new RuntimeException( "Unable to determine the scratch dir for site " + pJob.getStagingSiteHandle() );
+                    }
+                    //retrive all the file servers matching the get operations
+                    for( FileServer.OPERATION op : FileServer.OPERATION.operationsForGET() ){
+                        for( Iterator it1 = parentScratchDir.getFileServersIterator(op); it1.hasNext(); ){
 
-                        FileServer server = ( FileServer)it1.next();
-                        //definite inconsitency as url prefix and mount point
-                        //are not picked up from the same server
-                        sourceURI = server.getURLPrefix();
+                            FileServer server = ( FileServer)it1.next();
+                            //definite inconsitency as url prefix and mount point
+                            //are not picked up from the same server
+                            sourceURI = server.getURLPrefix();
                                                                           
-                        //sourceURI += server.getMountPoint();
-                        sourceURI += mSiteStore.getExternalWorkDirectory(server, pJob.getSiteHandle());
+                            //sourceURI += server.getMountPoint();
+                            sourceURI += mSiteStore.getExternalWorkDirectory(server, pJob.getSiteHandle());
                         
-                        sourceURL = sourceURI + File.separator + outFile;
+                            sourceURL = sourceURI + File.separator + outFile;
 
-                        if(!(sourceURL.equalsIgnoreCase(thirdPartyDestURL))){
-                            //add the source url only if it does not match to
-                            //the third party destination url
-                            ft.addSource(pJob.getStagingSiteHandle(), sourceURL);
+                            if(!(sourceURL.equalsIgnoreCase(thirdPartyDestURL))){
+                                //add the source url only if it does not match to
+                                //the third party destination url
+                                ft.addSource(pJob.getStagingSiteHandle(), sourceURL);
+                            }
+                            first = false;
                         }
-                        first = false;
                     }
                     if( ft.isValid() ){
                         if( localTransfer ){

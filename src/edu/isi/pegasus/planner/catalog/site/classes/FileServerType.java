@@ -19,6 +19,9 @@ import edu.isi.pegasus.planner.classes.Profile;
 
 
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
 
 
 
@@ -36,7 +39,40 @@ public abstract class FileServerType extends AbstractSiteData {
      * The operations supported by the file server
      */
     public static enum OPERATION{
-        get, put, all
+        get, put, all;
+
+        private static  List<OPERATION> mGetOperations;
+
+        private static  List<OPERATION> mPutOperations;
+
+        /**
+         * Returns a collection of get operations.
+         *
+         * @return Collection consisting of get and all
+         */
+        public static Collection<OPERATION> operationsForGET(){
+            if( mGetOperations == null ){
+                mGetOperations = new LinkedList<OPERATION>();
+                mGetOperations.add( get );
+                mGetOperations.add( all );
+            }
+            return mGetOperations;
+        }
+
+        /**
+         * Returns a collection of get operations.
+         *
+         * @return Collection consisting of put and all
+         */
+        public static Collection<OPERATION> operationsForPUT(){
+            if( mPutOperations == null ){
+                mPutOperations = new LinkedList<OPERATION>();
+                mPutOperations.add( put );
+                mPutOperations.add( all );
+            }
+            return mPutOperations;
+        }
+
     }
 
     /**
