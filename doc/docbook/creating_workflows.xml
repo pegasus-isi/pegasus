@@ -69,7 +69,7 @@
         <mediaobject>
           <imageobject>
             <imagedata align="center" fileref="images/DiamondWorkflow.png"
-                       valign="middle" />
+                       valign="middle"/>
           </imageobject>
         </mediaobject>
       </figure></para>
@@ -192,6 +192,10 @@
       </listitem>
 
       <listitem>
+        <para><emphasis role="bold">Regex</emphasis></para>
+      </listitem>
+
+      <listitem>
         <para><emphasis role="bold">Directory</emphasis></para>
       </listitem>
 
@@ -260,6 +264,59 @@ LFN PFN a="b" [..]
     </section>
 
     <section>
+      <title>Regex</title>
+
+      <para>In this mode, Pegasus queries a file based replica catalog. The
+      file format is a simple multicolumn format. It is neither
+      transactionally safe purposes in any way. Multiple concurrent instances
+      will conflict with each other. The site attribute should be specified
+      whenever possible. The attribute key for the site attribute is <emphasis
+      role="bold">"pool".</emphasis></para>
+
+      <para>In addition users can specifiy regular expression based LFN's. A
+      regular expression based entry should be qualified with an attribute
+      named 'regex'. The attribute regex when set to true identifies the
+      catalog entry as a regular expression based entry. Regular expressions
+      should follow Java regular expression syntax.</para>
+
+      <para>For example, consider a replica catalog as shown below. </para>
+
+      <para>Entry 1 refers to an entry which does not use a resular
+      expressions. This entry would only match a file named 'f.a', and nothing
+      else.</para>
+
+      <para>Entry 2 referes to an entry which uses a regular expression. In
+      this entry f.a referes to files having name as f&lt;any-character&gt;a
+      i.e. faa, f.a, f0a, etc. </para>
+
+      <programlisting>#1
+f.a file:///Volumes/data/input/f.a pool="local"
+#2
+f.a file:///Volumes/data/input/f.a pool="local" <emphasis role="bold">regex</emphasis>="true"
+</programlisting>
+
+      <para>Regular expression based entries also support substitutions. For
+      example, consider the regular expression based entry shown below.</para>
+
+      <para>Entry 3 will match files with name alpha.csv, alpha.txt,
+      alpha.xml. In addition, values matched in the expression can be used to
+      generate a PFN. </para>
+
+      <para>For the entry below if the file being looked up is alpha.csv, the
+      PFN for the file would be generated as
+      file:///Volumes/data/input/csv/alpha.csv. Similary if the file being
+      lookedup was alpha.csv, the PFN for the file would be generated as
+      file:///Volumes/data/input/xml/alpha.xml i.e. The section [0], [1] will
+      be replaced. Section [0] refers to the entire string i.e. alpha.csv.
+      Section [1] refers to a partial match in the input i.e. csv, or txt, or
+      xml. Users can utilize as many sections as they wish. </para>
+
+      <programlisting>#3
+alpha\.(csv|txt|xml) file:///Volumes/data/input/<emphasis role="bold">[1]</emphasis>/<emphasis
+          role="bold">[0]</emphasis> pool="local" <emphasis role="bold">regex</emphasis>="true"</programlisting>
+    </section>
+
+    <section>
       <title>Directory</title>
 
       <para>In this mode, Pegasus does a directory listing on an input
@@ -279,10 +336,10 @@ $input/D1/f.3</programlisting>
 
       <programlisting>f.1 file://$input/f.1  pool="local"
 f.2 file://$input/f.2  pool="local"
-D1/f.3 file://$input/D2/f.3 pool="local"</programlisting>
+D1/f.3 file://$input/D1/f.3 pool="local"</programlisting>
 
       <para>Users can optionally specify additional properties to configure
-      the behavior of this implementation. </para>
+      the behavior of this implementation.</para>
 
       <orderedlist>
         <listitem>
@@ -560,7 +617,7 @@ f.a gsiftp://somehost:port/path/to/file/f.a pool=local</computeroutput></screen>
 
         <mediaobject>
           <imageobject>
-            <imagedata fileref="images/sc-3.0_p2.png" />
+            <imagedata fileref="images/sc-3.0_p2.png"/>
           </imageobject>
         </mediaobject>
       </figure>
@@ -647,13 +704,13 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
 
             <itemizedlist>
               <listitem>
-                <para><emphasis role="bold"></emphasis> SHARED for shared file
-                systems like NFS, LUSTRE etc.</para>
+                <para><emphasis role="bold"/> SHARED for shared file systems
+                like NFS, LUSTRE etc.</para>
               </listitem>
 
               <listitem>
-                <para><emphasis role="bold"></emphasis> LOCAL for local file
-                systems (local to the node/machine)</para>
+                <para><emphasis role="bold"/> LOCAL for local file systems
+                (local to the node/machine)</para>
               </listitem>
             </itemizedlist>
 
@@ -1347,7 +1404,7 @@ Output Filename: /dev/fd/1</computeroutput></screen>
 clus1    black::analyze:1.0    gsiftp://clus1.com/opt/nfs/vdt/pegasus/bin/keg
                 STAGEABLE    INTEL32::LINUX</computeroutput></screen>
 
-      <para></para>
+      <para/>
     </section>
 
     <section>
