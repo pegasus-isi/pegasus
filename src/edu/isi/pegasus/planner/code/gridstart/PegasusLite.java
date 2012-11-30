@@ -773,17 +773,17 @@ public class PegasusLite implements GridStart {
 //         String exectionSiteDirectory     = (String)job.condorVariables.removeKey( key );
 
         //PM-590 stricter checks
-//        FileServer stagingSiteFileServer = mSiteStore.lookup( job.getStagingSiteHandle() ).getHeadNodeFS().selectScratchSharedFileServer();
+//        FileServer stagingSiteServerForRetrieval = mSiteStore.lookup( job.getStagingSiteHandle() ).getHeadNodeFS().selectScratchSharedFileServer();
         SiteCatalogEntry stagingSiteEntry = mSiteStore.lookup( job.getStagingSiteHandle() );
         if( stagingSiteEntry == null ){
             this.complainForHeadNodeFileServer( job.getID(),  job.getStagingSiteHandle());
         }
-        FileServer stagingSiteFileServer = stagingSiteEntry.selectHeadNodeScratchSharedFileServer();
-        if( stagingSiteFileServer == null ){
+        FileServer stagingSiteServerForRetrieval = stagingSiteEntry.selectHeadNodeScratchSharedFileServer( FileServer.OPERATION.get );
+        if( stagingSiteServerForRetrieval == null ){
             this.complainForHeadNodeFileServer( job.getID(),  job.getStagingSiteHandle());
         }
         
-        String stagingSiteDirectory      = mSiteStore.getExternalWorkDirectory(stagingSiteFileServer, job.getStagingSiteHandle() );
+        String stagingSiteDirectory      = mSiteStore.getExternalWorkDirectory(stagingSiteServerForRetrieval, job.getStagingSiteHandle() );
         String workerNodeDir             = getWorkerNodeDirectory( job );
 
 
@@ -898,6 +898,13 @@ public class PegasusLite implements GridStart {
             job.setArguments( "" );
 
              if( mSLS.needsSLSOutputTransfers( job ) ){
+                 FileServer stagingSiteServerForStore = stagingSiteEntry.selectHeadNodeScratchSharedFileServer( FileServer.OPERATION.put );
+                 if( stagingSiteServerForStore == null ){
+                    this.complainForHeadNodeFileServer( job.getID(),  job.getStagingSiteHandle());
+                 }
+
+                String stagingSiteDirectoryForStore      = mSiteStore.getExternalWorkDirectory(stagingSiteServerForStore, job.getStagingSiteHandle() );
+
                 //construct the postjob that transfers the output files
                 //back to head node exectionSiteDirectory
                 //to fix later. right now post constituentJob only created is pre constituentJob
@@ -905,7 +912,7 @@ public class PegasusLite implements GridStart {
                 Collection<FileTransfer> files = mSLS.determineSLSOutputTransfers( job,
                                                             mSLS.getSLSOutputLFN( job ),
                                                             mSubmitDir,
-                                                            stagingSiteDirectory,
+                                                            stagingSiteDirectoryForStore,
                                                             workerNodeDir );
 
 
@@ -945,7 +952,7 @@ public class PegasusLite implements GridStart {
 
         //modify the constituentJob if required
         if ( !mSLS.modifyJobForWorkerNodeExecution( job,
-                                                    stagingSiteFileServer.getURLPrefix(),
+                                                    stagingSiteServerForRetrieval.getURLPrefix(),
                                                     stagingSiteDirectory,
                                                     workerNodeDir ) ){
 

@@ -38,7 +38,7 @@ public interface SLS {
     /**
      * The version associated with the API.
      */
-    public static final String VERSION = "1.2";
+    public static final String VERSION = "1.3";
 
     /**
      * Initializes the SLS implementation.
@@ -156,33 +156,7 @@ public interface SLS {
                                        String workerNodeDirectory );
 
 
-
-
-
-    /**
-     * Modifies a job for the first level staging to headnode.This is to add
-     * any files that needs to be staged to the head node for a job specific
-     * to the SLS implementation. If any file needs to be added, a <code>FileTransfer</code>
-     * object should be created and added as an input or an output file.
-     *
-     *
-     * @param job           the job
-     * @param submitDir     the submit directory
-     * @param slsInputLFN   the sls input file if required, that is used for
-     *                      staging in from the head node to worker node directory.
-     * @param slsOutputLFN  the sls output file if required, that is used
-     *                      for staging in from the head node to worker node directory.
-     * @return boolean
-     */
-    public boolean modifyJobForFirstLevelStaging( Job job,
-                                                  String submitDir,
-                                                  String slsInputLFN,
-                                                  String slsOutputLFN );
-
-
-
-
-
+    
     /**
      * Modifies a compute job for second level staging.
      *

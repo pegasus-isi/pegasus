@@ -55,6 +55,8 @@ import edu.isi.pegasus.planner.catalog.transformation.Mapper;
 
 import edu.isi.pegasus.common.util.Separator;
 
+import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
+import edu.isi.pegasus.planner.catalog.site.classes.FileServerType.OPERATION;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TransformationStore;
 import edu.isi.pegasus.planner.common.PegRandom;
 import edu.isi.pegasus.planner.transfer.SLS;
@@ -523,7 +525,9 @@ public class InterPoolEngine extends Engine implements Refiner {
                                 + File.separator + job.getStagedExecutableBaseName();
 
             //PM-590 Stricter checks
-            String headnodeURLPrefix = this.selectHeadNodeScratchSharedFileServerURLPrefix( site );
+//            String headnodeURLPrefix = this.selectHeadNodeScratchSharedFileServerURLPrefix( site );
+            String headnodeURLPrefix = site.selectHeadNodeScratchSharedFileServerURLPrefix( FileServer.OPERATION.put );
+
             if( headnodeURLPrefix == null ){
                 this.complainForHeadNodeURLPrefix( REFINER_NAME, job , site.getSiteHandle() );
             }
@@ -678,14 +682,13 @@ public class InterPoolEngine extends Engine implements Refiner {
                             + File.separator + basename;
 
                         //PM-590 Stricter checks
-                        String headnodeURLPrefix = this.selectHeadNodeScratchSharedFileServerURLPrefix( site );
+//                        String headnodeURLPrefix = this.selectHeadNodeScratchSharedFileServerURLPrefix( site );
+                        String headnodeURLPrefix = site.selectHeadNodeScratchSharedFileServerURLPrefix( FileServer.OPERATION.put );
                         if( headnodeURLPrefix == null ){
                             this.complainForHeadNodeURLPrefix( REFINER_NAME, job , site.getSiteHandle() );
                         }
                         fTx.addDestination( stagingSiteHandle,
                                             headnodeURLPrefix + stagedPath);
-//                        fTx.addDestination(siteHandle,
-//                                           site.getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix() + stagedPath);
 
 
                         dependantExecutables.add( fTx );

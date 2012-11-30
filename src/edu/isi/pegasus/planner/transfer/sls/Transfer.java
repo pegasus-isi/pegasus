@@ -32,6 +32,7 @@ import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry
 import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 
 
+import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.code.gridstart.PegasusLite;
 import edu.isi.pegasus.planner.classes.PegasusBag;
@@ -121,13 +122,6 @@ public class Transfer   implements SLS {
      * The handle to the logging manager.
      */
     protected LogManager mLogger;
-
-   
-
-    /**
-     * The local url prefix for the submit host.
-     */
-    protected String mLocalURLPrefix;
     
     /**
      * The handle to the transient replica catalog.
@@ -167,14 +161,6 @@ public class Transfer   implements SLS {
         mLogger     = bag.getLogger();
         mSiteStore  = bag.getHandleToSiteStore();
         mTCHandle   = bag.getHandleToTransformationCatalog();
-
-
-        //PM-590 Stricter checks
-        //mLocalURLPrefix = mSiteStore.lookup( "local" ).getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix( );
-        mLocalURLPrefix = this.selectHeadNodeScratchSharedFileServerURLPrefix( "local" );
-        if( mLocalURLPrefix == null ){
-            this.complainForHeadNodeURLPrefix( "local" );
-        }
         
         mTransientRC = bag.getHandleToTransientReplicaCatalog();
         mExtraArguments = mProps.getSLSTransferArguments();
@@ -347,7 +333,7 @@ public class Transfer   implements SLS {
         //the below should be cached somehow
 //        String sourceURLPrefix = mSiteStore.lookup( job.getStagingSiteHandle() ).getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix( );
         //PM-590 stricter checks
-        String sourceURLPrefix = this.selectHeadNodeScratchSharedFileServerURLPrefix( job.getStagingSiteHandle() );
+        String sourceURLPrefix = this.selectHeadNodeScratchSharedFileServerURLPrefix( job.getStagingSiteHandle(), FileServer.OPERATION.get );
         if( sourceURLPrefix == null ){
             this.complainForHeadNodeURLPrefix( job, job.getStagingSiteHandle() );
         }
@@ -442,7 +428,7 @@ public class Transfer   implements SLS {
         //the below should be cached somehow
 //        String destURLPrefix = mSiteStore.lookup( job.getStagingSiteHandle() ).getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix();
         //PM-590 stricter checks
-        String destURLPrefix = this.selectHeadNodeScratchSharedFileServerURLPrefix( job.getStagingSiteHandle() );
+        String destURLPrefix = this.selectHeadNodeScratchSharedFileServerURLPrefix( job.getStagingSiteHandle() , FileServer.OPERATION.put );
         if( destURLPrefix == null ){
             this.complainForHeadNodeURLPrefix( job, job.getStagingSiteHandle() );
         }
@@ -481,103 +467,6 @@ public class Transfer   implements SLS {
     }
 
 
-    /**
-     * Modifies a job for the first level staging to headnode.This is to add
-     * any files that needs to be staged to the head node for a job specific
-     * to the SLS implementation. If any file needs to be added, a <code>FileTransfer</code>
-     * object should be created and added as an input or an output file.
-     *
-     *
-     * @param job           the job
-     * @param submitDir     the submit directory
-     * @param slsInputLFN   the sls input file if required, that is used for
-     *                      staging in from the head node to worker node directory.
-     * @param slsOutputLFN  the sls output file if required, that is used
-     *                      for staging in from the head node to worker node directory.
-     * @return boolean
-     */
-    public boolean modifyJobForFirstLevelStaging( Job job,
-                                                  String submitDir,
-                                                  String slsInputLFN,
-                                                  String slsOutputLFN ) {
-
-        String separator = File.separator;
-
-        //holds the externally accessible path to the directory on the staging site
-        String externalWorkDirectoryURL = mSiteStore.getExternalWorkDirectoryURL( job.getStagingSiteHandle() );
-        
-
-        //sanity check
-        if( !this.mStageSLSFile ){
-
-            //add condor file transfer keys if input and output lfs are not null
-            if( slsInputLFN != null ){
-                job.condorVariables.addIPFileForTransfer( submitDir + File.separator + slsInputLFN );
-            }
-            if( slsOutputLFN != null ){
-                job.condorVariables.addIPFileForTransfer( submitDir + File.separator + slsOutputLFN );
-            }
-
-            return true;
-        }
-
-        
-        //incorporate the sls input file if required
-        if( slsInputLFN != null ){
-
-            FileTransfer ft = new FileTransfer( slsInputLFN, job.getName());
-
-            //the source sls is to be sent across from the local site
-            //using the grid ftp server at local site.
-            StringBuffer sourceURL = new StringBuffer();
-            sourceURL.append( mLocalURLPrefix ).append( separator ).
-                append( submitDir ).append(separator).
-                append( slsInputLFN );
-            ft.addSource("local", sourceURL.toString());
-
-            //the destination URL is the working directory on the filesystem
-            //on the head node where the job is to be run.
-            StringBuffer destURL = new StringBuffer();
-            destURL.append( externalWorkDirectoryURL ).
-                    append( separator ).
-                    append( slsInputLFN );
-            ft.addDestination( job.getStagingSiteHandle(), destURL.toString() );
-
-            //add this as input file for the job
-            job.addInputFile( ft );
-        }
-
-        //add the sls out file as input to the job
-        if( slsOutputLFN != null ){
-            FileTransfer ft = new FileTransfer( slsOutputLFN, job.getName() );
-
-            //the source sls is to be sent across from the local site
-            //using the grid ftp server at local site.
-            StringBuffer sourceURL = new StringBuffer();
-            sourceURL.append( mLocalURLPrefix ).append( separator ).
-                      append( submitDir ).append( separator ).
-                      append( slsOutputLFN );
-
-            ft.addSource( "local" , sourceURL.toString() );
-
-            //the destination URL is the working directory on the filesystem
-            //on the head node where the job is to be run.
-            StringBuffer destURL = new StringBuffer();
-            destURL.append( externalWorkDirectoryURL )
-                    .append( separator ).
-                    append( slsOutputLFN );
-
-            ft.addDestination( job.getStagingSiteHandle(), destURL.toString()  );
-
-            //add this as input file for the job
-            job.addInputFile( ft );
-        }
-
-        
-
-       return true;
-
-    }
 
     /**
      * Modifies a compute job for second level staging. The only modification
@@ -805,13 +694,14 @@ public class Transfer   implements SLS {
      * the shared scratch space on the HeadNode.
      * 
      * @param site the site for which we need the URL prefix
+     * @param operation  the file server operation required
      * 
      * @return  URL Prefix for the FileServer for the shared scratch space
      * 
      * 
      */
-    protected String selectHeadNodeScratchSharedFileServerURLPrefix( String site ){
-        return this.selectHeadNodeScratchSharedFileServerURLPrefix( this.mSiteStore.lookup( site ) );
+    protected String selectHeadNodeScratchSharedFileServerURLPrefix( String site, FileServer.OPERATION operation ){
+        return this.selectHeadNodeScratchSharedFileServerURLPrefix( this.mSiteStore.lookup( site ), operation );
     }
     
     /**
@@ -819,18 +709,19 @@ public class Transfer   implements SLS {
      * the shared scratch space on the HeadNode.
      * 
      * @param site the entry for the site for which we need the URL prefix
+     * @param operation  the file server operation required
      * 
      * @return  URL Prefix for the FileServer for the shared scratch space
      * 
      * 
      */
-    protected String selectHeadNodeScratchSharedFileServerURLPrefix( SiteCatalogEntry entry ){
+    protected String selectHeadNodeScratchSharedFileServerURLPrefix( SiteCatalogEntry entry, FileServer.OPERATION operation ){
          
         if( entry == null ){
             return null;
         }
         
-        String prefix = entry.selectHeadNodeScratchSharedFileServerURLPrefix();
+        String prefix = entry.selectHeadNodeScratchSharedFileServerURLPrefix( operation );
         if( prefix == null ){
             return null;
         }

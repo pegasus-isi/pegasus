@@ -47,6 +47,8 @@ import edu.isi.pegasus.common.util.Separator;
 import edu.isi.pegasus.common.util.Version;
 
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
+import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
+import edu.isi.pegasus.planner.catalog.site.classes.FileServerType.OPERATION;
 import edu.isi.pegasus.planner.catalog.transformation.Mapper;
 
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
@@ -570,10 +572,14 @@ public class DeployWorkerPackage
             
             //figure out the URL prefix depending on
             //the TPT configuration                            
-//            String destURLPrefix = 
-//                               siteStore.lookup( stagingSite ).getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix();
+
             //PM-590 stricter checks
-            String destURLPrefix = this.selectHeadNodeScratchSharedFileServerURLPrefix( stagingSite );
+//            String destURLPrefix = this.selectHeadNodeScratchSharedFileServerURLPrefix( stagingSite );
+            SiteCatalogEntry entry = this.mSiteStore.lookup( stagingSite );
+            String destURLPrefix =  ( entry == null )? 
+                                            null:
+                                            entry.selectHeadNodeScratchSharedFileServerURLPrefix( FileServer.OPERATION.get );
+
             if( destURLPrefix == null ){
                 this.complainForHeadNodeURLPrefix( REFINER_NAME, stagingSite );
             }   

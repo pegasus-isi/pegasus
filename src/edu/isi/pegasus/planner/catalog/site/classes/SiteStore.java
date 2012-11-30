@@ -371,7 +371,7 @@ public class SiteStore extends AbstractSiteData{
         }
 
         //select a file server
-        FileServer fs = site.selectHeadNodeScratchSharedFileServer();
+        FileServer fs = site.selectHeadNodeScratchSharedFileServer( FileServer.OPERATION.get );
         if( fs == null ){
             return null;
         }
@@ -454,7 +454,7 @@ public class SiteStore extends AbstractSiteData{
         
         FileServer server = null;
         if ( mStorageDir.length() == 0 || mStorageDir.charAt( 0 ) != '/' ) {
-            server = entry.selectStorageFileServerForStageout();
+            server = entry.selectStorageFileServerForStageout( FileServer.OPERATION.put );
             mount_point = server.getMountPoint();
 
             //removing the trailing slash if there

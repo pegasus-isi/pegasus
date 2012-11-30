@@ -53,6 +53,7 @@ import edu.isi.pegasus.common.util.FactoryException;
 import edu.isi.pegasus.common.util.PegasusURL;
 import edu.isi.pegasus.planner.catalog.site.classes.Directory;
 import edu.isi.pegasus.planner.catalog.site.classes.Directory.TYPE;
+import edu.isi.pegasus.planner.catalog.site.classes.FileServerType.OPERATION;
 import edu.isi.pegasus.planner.classes.DAGJob;
 import edu.isi.pegasus.planner.classes.DAXJob;
 import edu.isi.pegasus.planner.namespace.Dagman;
@@ -426,7 +427,7 @@ public class TransferEngine extends Engine {
                 }
 
                 //PM-590 Stricter checks
-                String stagingSiteURLPrefix = stagingSite.selectHeadNodeScratchSharedFileServerURLPrefix();
+                String stagingSiteURLPrefix = stagingSite.selectHeadNodeScratchSharedFileServerURLPrefix( FileServer.OPERATION.put );
                 if( stagingSiteURLPrefix == null ){
                     this.complainForHeadNodeURLPrefix( REFINER_NAME, currentJob, stagingSite.getSiteHandle() );
                 }
@@ -539,7 +540,9 @@ public class TransferEngine extends Engine {
             //are not picked up from the same server
             //PM-590 stricter checks
   
-            String urlPrefix = this.selectHeadNodeScratchSharedFileServerURLPrefix( p );
+//            String urlPrefix = this.selectHeadNodeScratchSharedFileServerURLPrefix( p );
+            String urlPrefix = p.selectHeadNodeScratchSharedFileServerURLPrefix( FileServer.OPERATION.put );
+
             if( urlPrefix == null ){
                 this.complainForHeadNodeURLPrefix( REFINER_NAME, job, pool );
             }
@@ -731,7 +734,7 @@ public class TransferEngine extends Engine {
         }
 
         //PM-590 stricter checks
-        FileServer stagingSiteSharedScratchFS = stagingSite.selectHeadNodeScratchSharedFileServer();
+        FileServer stagingSiteSharedScratchFS = stagingSite.selectHeadNodeScratchSharedFileServer( FileServer.OPERATION.put );
         if( stagingSiteSharedScratchFS == null ){
             this.complainForHeadNodeFileServer( job, stagingSiteHandle );
             
@@ -897,7 +900,7 @@ public class TransferEngine extends Engine {
             
             //PM-590 Stricter checks
 
-            FileServer destSiteSharedScratchFS = destSite.selectHeadNodeScratchSharedFileServer();
+            FileServer destSiteSharedScratchFS = destSite.selectHeadNodeScratchSharedFileServer( FileServer.OPERATION.put );
             if( destSiteSharedScratchFS == null ){
                 this.complainForHeadNodeFileServer( job, destSiteHandle );
             }
@@ -1132,7 +1135,7 @@ public class TransferEngine extends Engine {
         //dAbsPath would be just the destination directory absolute path
         
         //PM-590 Stricter checks
-        FileServer stagingSiteSharedScratchFS = stagingSite.selectHeadNodeScratchSharedFileServer();
+        FileServer stagingSiteSharedScratchFS = stagingSite.selectHeadNodeScratchSharedFileServer( FileServer.OPERATION.put );
         if( stagingSiteSharedScratchFS == null ){
             this.complainForHeadNodeFileServer(job, stagingSiteHandle);
         }
@@ -1693,7 +1696,7 @@ public class TransferEngine extends Engine {
             
             //PM-590 stricter checks
 //            FileServer server = stagingSiteEntry.getHeadNodeFS().selectScratchSharedFileServer();
-            FileServer server = stagingSiteEntry.selectHeadNodeScratchSharedFileServer();
+            FileServer server = stagingSiteEntry.selectHeadNodeScratchSharedFileServer( FileServer.OPERATION.get );
             if( server == null ){
                 this.complainForHeadNodeFileServer(job, stagingSiteEntry.getSiteHandle());
             }

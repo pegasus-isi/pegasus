@@ -283,44 +283,7 @@ public abstract  class Engine {
         }
     }
     
-    /**
-     * A convenience method to select the URL Prefix for the FileServer for 
-     * the shared scratch space on the HeadNode.
-     * 
-     * @param site the site for which we need the URL prefix
-     * 
-     * @return  URL Prefix for the FileServer for the shared scratch space
-     * 
-     * 
-     */
-    protected String selectHeadNodeScratchSharedFileServerURLPrefix( String site ){
-        return this.selectHeadNodeScratchSharedFileServerURLPrefix( this.mSiteStore.lookup( site ) );
-    }
-    
-    /**
-     * A convenience method to select the URL Prefix for the FileServer for 
-     * the shared scratch space on the HeadNode.
-     * 
-     * @param site the entry for the site for which we need the URL prefix
-     * 
-     * @return  URL Prefix for the FileServer for the shared scratch space
-     * 
-     * 
-     */
-    protected String selectHeadNodeScratchSharedFileServerURLPrefix( SiteCatalogEntry entry ){
-         
-        if( entry == null ){
-            return null;
-        }
-        
-        String prefix = entry.selectHeadNodeScratchSharedFileServerURLPrefix();
-        if( prefix == null ){
-            return null;
-        }
-        
-        return prefix;
-    }
-    
+   
     /**
      * Complains for head node url prefix not specified
      * 
