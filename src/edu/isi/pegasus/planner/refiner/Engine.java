@@ -311,7 +311,7 @@ public abstract  class Engine {
         if( job != null ){
             error.append( "For job (" ).append( job.getID() ).append( ")." );
         }
-        error.append( "Unable to determine URL Prefix for the FileServer for scratch shared file system on site: " ).
+        error.append( "Unable to determine URL Prefix for the FileServer for shared scratch file system on site: " ).
               append( site );
         throw new RuntimeException( error.toString() );
     }

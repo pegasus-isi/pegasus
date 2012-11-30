@@ -76,7 +76,7 @@ public abstract class DirectoryLayout extends AbstractSiteData{
      *  Initializes the object
      * 
      */
-    public void initialize( ){
+    private void initialize( ){
         this.mFileServers = new  HashMap<FileServer.OPERATION, List<FileServer>> ();
         this.resetFileServers();
         this.mInternalMount =  new InternalMountPoint();
@@ -89,7 +89,7 @@ public abstract class DirectoryLayout extends AbstractSiteData{
      * @param  fs  list of file servers indexed by operation type
      * @param  imt the internal mount point.
      */
-    public void initialize(  Map<FileServer.OPERATION, List<FileServer>> fs, InternalMountPoint imt ){
+    private void initialize(  Map<FileServer.OPERATION, List<FileServer>> fs, InternalMountPoint imt ){
         this.mFileServers = fs;
         this.mInternalMount = imt ;
     }
@@ -117,7 +117,9 @@ public abstract class DirectoryLayout extends AbstractSiteData{
     }
     
     /**
-     * Selects a random file server and returns it.
+     * Selects a random file server and returns it matching an operation type.
+     * If not found matching the operation type it defaults back to the all operation
+     * server.
      *
      * @param operation  the operation for which the file server is required
      *
@@ -127,7 +129,7 @@ public abstract class DirectoryLayout extends AbstractSiteData{
         List<FileServer> servers = this.mFileServers.get(operation);
         return ( servers.isEmpty() )?
                 null:
-                servers.get( PegRandom.getInteger( this.mFileServers.size() - 1) );
+                servers.get( PegRandom.getInteger( servers.size() - 1) );
         /*
         return ( this.mFileServers == null || this.mFileServers.size() == 0 )?
                  null :
@@ -193,7 +195,19 @@ public abstract class DirectoryLayout extends AbstractSiteData{
      * @return boolean
      */
     public boolean isEmpty(){
-        return this.mFileServers.isEmpty() && this.getInternalMountPoint().isEmpty();
+        boolean result = true;
+
+        //we need to check if each file servers for each supported
+        //operation are empty or not.
+        for( FileServer.OPERATION operation : FileServer.OPERATION.values() ){
+            result = result && this.mFileServers.get( operation ).isEmpty();
+            if( !result ){
+                //break out of the computation.
+                break;
+            }
+        }
+
+        return result && this.getInternalMountPoint().isEmpty();
     }
 
     /**

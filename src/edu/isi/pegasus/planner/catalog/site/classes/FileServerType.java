@@ -39,7 +39,7 @@ public abstract class FileServerType extends AbstractSiteData {
      * The operations supported by the file server
      */
     public static enum OPERATION{
-        get, put, all;
+        all, get, put;
 
         private static  List<OPERATION> mGetOperations;
 
@@ -125,6 +125,7 @@ public abstract class FileServerType extends AbstractSiteData {
         mURLPrefix = urlPrefix;
         mMountPoint = mountPoint;        
         mProfiles = new Profiles();
+        mOperation = OPERATION.all;
     }
     
     

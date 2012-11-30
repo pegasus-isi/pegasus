@@ -682,6 +682,7 @@ public class SiteCatalogEntry extends AbstractSiteData{
      * @param operation  the operation for which the file server is required
      * 
      * @return  URL Prefix for the FileServer for the shared scratch space , else null
+     * @deprecated should be removed
      */
     public String selectHeadNodeScratchSharedFileServerURLPrefix( FileServer.OPERATION operation ){
         FileServer server = this.selectHeadNodeScratchSharedFileServer( operation );
@@ -710,8 +711,8 @@ public class SiteCatalogEntry extends AbstractSiteData{
                dir.selectFileServer( operation );
 
         //fall back to an all operation server
-        return ( result == null ) ? null :
-                                    dir.selectFileServer( FileServer.OPERATION.all );
+        return ( result == null ) ? dir.selectFileServer( FileServer.OPERATION.all ) :
+                                    result;
         
     }
     
@@ -742,8 +743,8 @@ public class SiteCatalogEntry extends AbstractSiteData{
                                 dir.selectFileServer( operation );
 
         //fall back to an all operation server
-        return ( result == null ) ? null :
-                                    dir.selectFileServer( FileServer.OPERATION.all );
+        return ( result == null ) ? dir.selectFileServer( FileServer.OPERATION.all ) :
+                                    result;
     }
     
     /**
