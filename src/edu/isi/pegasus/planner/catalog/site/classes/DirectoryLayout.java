@@ -118,8 +118,10 @@ public abstract class DirectoryLayout extends AbstractSiteData{
     
     /**
      * Selects a random file server and returns it.
-     * 
-     * @return FileServer
+     *
+     * @param operation  the operation for which the file server is required
+     *
+     * @return FileServer else null
      */
     public FileServer selectFileServer( FileServer.OPERATION operation ){
         List<FileServer> servers = this.mFileServers.get(operation);

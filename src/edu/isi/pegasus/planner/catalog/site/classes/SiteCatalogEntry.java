@@ -673,12 +673,18 @@ public class SiteCatalogEntry extends AbstractSiteData{
     
     /**
      * A convenience method to select the URL Prefix for the FileServer for 
-     * the shared scratch space on the HeadNode.
+     * the shared scratch space on the HeadNode matching a particular operation.
+     *
+     * For get and put operations, the results default back to searching for an
+     * ALL operation server.
+     *
+     *
+     * @param operation  the operation for which the file server is required
      * 
      * @return  URL Prefix for the FileServer for the shared scratch space , else null
      */
-    public String selectHeadNodeScratchSharedFileServerURLPrefix(){
-        FileServer server = this.selectHeadNodeScratchSharedFileServer();
+    public String selectHeadNodeScratchSharedFileServerURLPrefix( FileServer.OPERATION operation ){
+        FileServer server = this.selectHeadNodeScratchSharedFileServer( operation );
         return ( server == null )?
                null:
                server.getURLPrefix();
@@ -687,15 +693,25 @@ public class SiteCatalogEntry extends AbstractSiteData{
     /**
      * A convenience method to select the FileServer for the shared scratch
      * space on the HeadNode.
+     *
+     * For get and put operations, the results default back to searching for an
+     * ALL operation server.
+     *
+     *
+     * @param operation  the operation for which the file server is required
      * 
      * @return  FileServer for the shared scratch space , else null
      */
-    public FileServer selectHeadNodeScratchSharedFileServer(){
+    public FileServer selectHeadNodeScratchSharedFileServer( FileServer.OPERATION operation ){
         Directory dir = this.getDirectory( Directory.TYPE.shared_scratch );
 
-        return ( dir == null )?
+        FileServer result = ( dir == null )?
                null:
-               dir.selectFileServer();
+               dir.selectFileServer( operation );
+
+        //fall back to an all operation server
+        return ( result == null ) ? null :
+                                    dir.selectFileServer( FileServer.OPERATION.all );
         
     }
     
@@ -708,16 +724,26 @@ public class SiteCatalogEntry extends AbstractSiteData{
      * 
      * The <code>FileServer</code> selected is associated with the HeadNode Filesystem.
      * 
+     * For get and put operations, the results default back to searching for an
+     * ALL server.
+     * 
+     * 
+     * @param operation  the operation for which the file server is required
+     *
      * @return the <code>FileServer</code> else null.
      */
-    public FileServer selectStorageFileServerForStageout(){
+    public FileServer selectStorageFileServerForStageout( FileServer.OPERATION operation  ){
         Directory dir = this.getDirectory( Directory.TYPE.local_storage );
         if( dir == null ){
             dir = this.getDirectory( Directory.TYPE.shared_storage );
         }
 
-        return ( dir == null )? null:
-                                dir.selectFileServer();
+        FileServer result = ( dir == null )? null:
+                                dir.selectFileServer( operation );
+
+        //fall back to an all operation server
+        return ( result == null ) ? null :
+                                    dir.selectFileServer( FileServer.OPERATION.all );
     }
     
     /**
