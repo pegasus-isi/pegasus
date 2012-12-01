@@ -706,9 +706,12 @@ public class SiteCatalogEntry extends AbstractSiteData{
     public FileServer selectHeadNodeScratchSharedFileServer( FileServer.OPERATION operation ){
         Directory dir = this.getDirectory( Directory.TYPE.shared_scratch );
 
-        FileServer result = ( dir == null )?
-               null:
-               dir.selectFileServer( operation );
+        //sanity check
+        if( dir == null ){
+            return null;
+        }
+
+        FileServer result = dir.selectFileServer( operation );
 
         //fall back to an all operation server
         return ( result == null ) ? dir.selectFileServer( FileServer.OPERATION.all ) :
@@ -739,8 +742,12 @@ public class SiteCatalogEntry extends AbstractSiteData{
             dir = this.getDirectory( Directory.TYPE.shared_storage );
         }
 
-        FileServer result = ( dir == null )? null:
-                                dir.selectFileServer( operation );
+        //sanity check
+        if( dir == null ){
+            return null;
+        }
+
+        FileServer result =  dir.selectFileServer( operation );
 
         //fall back to an all operation server
         return ( result == null ) ? dir.selectFileServer( FileServer.OPERATION.all ) :
