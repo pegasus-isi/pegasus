@@ -372,11 +372,27 @@ public class SiteStore extends AbstractSiteData{
 
         //select a file server
         FileServer fs = site.selectHeadNodeScratchSharedFileServer( FileServer.OPERATION.get );
-        if( fs == null ){
+
+        return this.getExternalWorkDirectoryURL( fs, siteHandle );
+    }
+
+    /**
+     * Returns a  URL to the work directory as seen externally ( including external
+     * mount point ).
+     *
+     * @param server        the FileServer to use
+     * @param siteHandle    the site handle.
+     *
+     * @return the url else null
+     */
+    public String getExternalWorkDirectoryURL( FileServer server, String siteHandle ){
+        String url = null;
+
+        if( server == null ){
             return null;
         }
-       
-        url = fs.getURLPrefix() + this.getExternalWorkDirectory( fs, siteHandle );
+
+        url = server.getURLPrefix() + this.getExternalWorkDirectory( server, siteHandle );
 
         return url;
     }
@@ -385,7 +401,7 @@ public class SiteStore extends AbstractSiteData{
      * Return the work directory as seen externally (including external mount point)
      *
      * @param fs          the FileServer with the file system
-     * @param siteHanlde  the site for which you want the directory
+     * @param siteHandle  the site for which you want the directory
      *
      * @return    String corresponding to the mount point
      */    

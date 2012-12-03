@@ -48,7 +48,6 @@ import edu.isi.pegasus.common.util.Version;
 
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
-import edu.isi.pegasus.planner.catalog.site.classes.FileServerType.OPERATION;
 import edu.isi.pegasus.planner.catalog.transformation.Mapper;
 
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
@@ -504,15 +503,36 @@ public class DeployWorkerPackage
             TransformationCatalogEntry selected = ( TransformationCatalogEntry )selectedEntries.get( 0 );
             mLogger.log( "Selected entry " + selected, LogManager.DEBUG_MESSAGE_LEVEL );
 
+            SiteCatalogEntry stagingSiteEntry = this.mSiteStore.lookup( stagingSite );
+            FileServer destDirServer = ( stagingSiteEntry == null )?
+                                        null:
+                                        stagingSiteEntry.selectHeadNodeScratchSharedFileServer( FileServer.OPERATION.put );
+            String destURLPrefix =  ( destDirServer == null )?
+                                            null:
+                                            destDirServer.getURLPrefix();
+
+            if( destURLPrefix == null ){
+                this.complainForHeadNodeURLPrefix( REFINER_NAME, stagingSite );
+            }
+
             //figure out the directory where to stage the data
             //data will be staged to the staging site corresponding to
-            //the execution site
-            String baseRemoteWorkDir = (  mWorkerNodeExecution )?
-                                        //for pegasus-lite the worker package goes
-                                        //to the submit directory on the local site.
-                                        this.mPOptions.getSubmitDirectory() :
-                                        siteStore.getInternalWorkDirectory( stagingSite );
+            //the execution site and also pick up a FileServer accordingly
+            String baseRemoteWorkDir = null;
+            String baseRemoteWorkDirURL = null;//externally accessible URL
+            if(  mWorkerNodeExecution ){
+                //for pegasus-lite the worker package goes
+                //to the submit directory on the local site.
+                //the staging site is set to local
+                baseRemoteWorkDir     = mPOptions.getSubmitDirectory();
+                baseRemoteWorkDirURL  = destDirServer.getURLPrefix() + File.separator + baseRemoteWorkDir;
 
+            }
+            else{
+                //sharedfs case
+                baseRemoteWorkDir     = siteStore.getInternalWorkDirectory( stagingSite );
+                baseRemoteWorkDirURL  = siteStore.getExternalWorkDirectoryURL( destDirServer, stagingSite );
+            }
 
 
 
@@ -575,23 +595,24 @@ public class DeployWorkerPackage
 
             //PM-590 stricter checks
 //            String destURLPrefix = this.selectHeadNodeScratchSharedFileServerURLPrefix( stagingSite );
-            SiteCatalogEntry entry = this.mSiteStore.lookup( stagingSite );
-            String destURLPrefix =  ( entry == null )? 
-                                            null:
-                                            entry.selectHeadNodeScratchSharedFileServerURLPrefix( FileServer.OPERATION.get );
-
-            if( destURLPrefix == null ){
-                this.complainForHeadNodeURLPrefix( REFINER_NAME, stagingSite );
-            }   
+            
             
             boolean localTransfer = this.runTransferOnLocalSite( defaultRefiner, stagingSite, destURLPrefix, Job.STAGE_IN_JOB);
+            if( localTransfer ){
+                //then we use the external work directory url
+                ft.addDestination( stagingSite, baseRemoteWorkDirURL  + File.separator + baseName );
+            }
+            else{
+                ft.addDestination( stagingSite, "file://" + new File( baseRemoteWorkDir, baseName ).getAbsolutePath() );
+            }
+/*
             String urlPrefix =  localTransfer ?
                                //lookup the site catalog to get the URL prefix
                                destURLPrefix :
                                //push pull mode. File URL will do
                                "file://";
             ft.addDestination( stagingSite, urlPrefix + new File( baseRemoteWorkDir, baseName ).getAbsolutePath() );
-
+*/
             if( mWorkerNodeExecution ){
                 //populate the map with the submit directory locations
                 workerPackageMap.put( site, new File( baseRemoteWorkDir, baseName ).getAbsolutePath() );
