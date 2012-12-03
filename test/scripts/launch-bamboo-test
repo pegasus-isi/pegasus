@@ -41,16 +41,14 @@ cd $RUN_DIR
 $TOP_DIR/test/common/check-status
 STATUS=$?
 
-# Run pegasus-analyzer to detect other problems
-if [ $STATUS = 0 ]; then
-   pegasus-analyzer $RUN_DIR
-   STATUS=$?
-fi
+# always pegasus-analyzer to detect other problems
+pegasus-analyzer $RUN_DIR
+STATUS=$(($STAUTS + $?))
 
 if [ $STATUS = 0 ]; then
    # Run Pegasus Statistics
    pegasus-statistics -s all $RUN_DIR
-   STATUS=$?
+   STATUS=$(($STAUTS + $?))
 fi
 
 if [ $STATUS != 0 ]; then
