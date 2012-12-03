@@ -48,7 +48,7 @@ import java.io.File;
 import java.io.IOException;
 
 /**
- * Use's RM to do removal of the files on the remote sites.
+ * Uses pegasus-cleanup to do removal of the files on the remote sites.
  *
  * @author Karan Vahi
  * @version $Revision$

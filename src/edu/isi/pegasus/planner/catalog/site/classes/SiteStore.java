@@ -359,10 +359,11 @@ public class SiteStore extends AbstractSiteData{
      * mount point ).
      *
      * @param siteHandle    the site handle.
+     * @param operation     the operation for which we need the server.
      *
      * @return the url
      */
-    public String getExternalWorkDirectoryURL( String siteHandle ){
+    public String getExternalWorkDirectoryURL( String siteHandle,  FileServer.OPERATION operation ){
         String url = null;
 
         SiteCatalogEntry site = this.lookup( siteHandle );
@@ -371,7 +372,7 @@ public class SiteStore extends AbstractSiteData{
         }
 
         //select a file server
-        FileServer fs = site.selectHeadNodeScratchSharedFileServer( FileServer.OPERATION.get );
+        FileServer fs = site.selectHeadNodeScratchSharedFileServer( operation );
 
         return this.getExternalWorkDirectoryURL( fs, siteHandle );
     }

@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.Vector;
 import edu.isi.pegasus.common.util.Separator;
+import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
 
 
 /**
@@ -158,7 +159,7 @@ public class HourGlass extends AbstractStrategy{
             jobName = getCreateDirJobName( dag, pool);
             newJob = mImpl.makeCreateDirJob( pool, 
                                              jobName,
-                                             mSiteStore.getExternalWorkDirectoryURL( pool ) );
+                                             mSiteStore.getExternalWorkDirectoryURL( pool , FileServer.OPERATION.put ) );
             dag.add(newJob);
 
             //add the relation to the concat job

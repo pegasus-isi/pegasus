@@ -35,6 +35,7 @@ import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 
 import edu.isi.pegasus.common.util.Separator;
 
+import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
 import edu.isi.pegasus.planner.code.gridstart.PegasusExitCode;
 import edu.isi.pegasus.planner.namespace.Dagman;
 import edu.isi.pegasus.planner.namespace.Pegasus;
@@ -232,7 +233,7 @@ public class DefaultImplementation implements Implementation {
             execPath = sb.toString();
 
             argString = "-u " +
-                        mSiteStore.getExternalWorkDirectoryURL( site );
+                        mSiteStore.getExternalWorkDirectoryURL( site , FileServer.OPERATION.put );
             
             newJob.condorVariables.setExecutableForTransfer();
             

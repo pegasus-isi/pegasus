@@ -24,6 +24,7 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 
 import edu.isi.pegasus.common.logging.LogManager;
 
+import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
 import edu.isi.pegasus.planner.classes.DAGJob;
 import edu.isi.pegasus.planner.classes.DAXJob;
 import java.util.Iterator;
@@ -143,7 +144,7 @@ public class Tentacles extends AbstractStrategy {
             jobName = getCreateDirJobName( dag, pool);
             newJob  = mImpl.makeCreateDirJob( pool,
                                               jobName,
-                                              mSiteStore.getExternalWorkDirectoryURL( pool )  );
+                                              mSiteStore.getExternalWorkDirectoryURL( pool , FileServer.OPERATION.put )  );
             dag.add(newJob);
 
         }

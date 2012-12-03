@@ -31,6 +31,7 @@ import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 
 import edu.isi.pegasus.common.util.Separator;
 
+import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
 import edu.isi.pegasus.planner.classes.TransferJob;
 import java.util.Iterator;
 import java.util.Set;
@@ -310,7 +311,7 @@ public class RemoveDirectory extends Engine {
         List<String> l = new LinkedList<String>();
 
         //the externally accessible url to the directory/ workspace for the workflow
-        l.add( mSiteStore.getExternalWorkDirectoryURL( site )  );
+        l.add( mSiteStore.getExternalWorkDirectoryURL( site, FileServer.OPERATION.put )  );
         return makeRemoveDirJob( site, jobName, l  );
     }
     
