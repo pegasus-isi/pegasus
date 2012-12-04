@@ -21,6 +21,9 @@ package edu.isi.pegasus.planner.catalog.site.classes;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.Iterator;
+import java.util.List;
+
+import edu.isi.pegasus.planner.catalog.site.classes.FileServerType.OPERATION;
 
 /**
  * The Directory class used for Site Catalog Schema version 4 onwards.
@@ -94,6 +97,31 @@ public class Directory extends DirectoryLayout{
         this.setType(type);
     }
 
+    /**
+     * Accept method for the SiteData classes that accepts a visitor
+     *
+     * @param visitor  the visitor to be used
+     *
+     * @exception IOException if something fishy happens to the stream.
+     */
+    public void accept( SiteDataVisitor visitor ) throws IOException{
+        visitor.visit( this );
+
+        //traverse through all the file servers
+        //for( FileServer server : this.mFileServers ){
+        //    server.accept(visitor);
+        //}
+
+        for( OPERATION op : FileServer.OPERATION.values() ){
+            List<FileServer> servers = this.mFileServers.get( op );
+            for( FileServer server : servers ){
+                server.accept(visitor);
+            }
+        }
+
+        //profiles are handled in the depart method
+        visitor.depart( this );
+    }
 
     
 

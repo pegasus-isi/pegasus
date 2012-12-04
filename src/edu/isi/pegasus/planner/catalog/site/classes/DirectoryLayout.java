@@ -219,32 +219,7 @@ public abstract class DirectoryLayout extends AbstractSiteData{
         }
     }
 
-    /**
-     * Accept method for the SiteData classes that accepts a visitor
-     *
-     * @param visitor  the visitor to be used
-     *
-     * @exception IOException if something fishy happens to the stream.
-     */
-    public void accept( SiteDataVisitor visitor ) throws IOException{
-        visitor.visit( this );
-
-        //traverse through all the file servers
-        //for( FileServer server : this.mFileServers ){
-        //    server.accept(visitor);
-        //}
-
-        for( OPERATION op : FileServer.OPERATION.values() ){
-            List<FileServer> servers = this.mFileServers.get( op );
-            for( FileServer server : servers ){
-                server.accept(visitor);
-            }
-        }
-
-        //profiles are handled in the depart method
-        visitor.depart( this );
-    }
-
+ 
 
     /**
      * Returns the clone of the object.
