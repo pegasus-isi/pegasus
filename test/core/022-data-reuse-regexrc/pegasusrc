@@ -1,7 +1,7 @@
 pegasus.catalog.replica=Regex
 pegasus.catalog.replica.file=rc.data
 
-pegasus.catalog.site=XML3
+
 pegasus.catalog.site.file=sites.xml
 
 pegasus.dir.useTimestamp=true
