@@ -16,6 +16,7 @@
 
 package edu.isi.pegasus.planner.transfer;
 
+import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
 import edu.isi.pegasus.planner.classes.FileTransfer;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.Job;
@@ -118,8 +119,9 @@ public interface SLS {
      * directory. It should be  consistent with the function needsSLSFile( Job )
      *
      * @param job        the job for which the file is being created
-     * @param submitDir  the submit directory where it has to be written out.
      * @param fileName    the name of the file that needs to be written out.
+     * @param stagingSiteServer    the file server on the staging site to be used
+     *                             for retrieval of files i.e the get operation
      * @param stagingSiteDirectory  the directory on the head node of the staging site.
      * @param workerNodeDirectory  the worker node directory
      *
@@ -130,7 +132,7 @@ public interface SLS {
      */
     public Collection<FileTransfer> determineSLSInputTransfers( Job job,
                                       String fileName,
-                                      String submitDir,
+                                      FileServer stagingSiteServer,
                                       String stagingSiteDirectory,
                                       String workerNodeDirectory );
 
@@ -139,8 +141,9 @@ public interface SLS {
      * directory. It should be  consistent with the function needsSLSFile( Job )
      *
      * @param job        the job for which the file is being created
-     * @param submitDir  the submit directory where it has to be written out.
      * @param fileName    the name of the file that needs to be written out.
+     * @param stagingSiteServer    the file server on the staging site to be used
+     *                             for retrieval of files i.e the put operation
      * @param stagingSiteDirectory  the directory on the head node of the staging site.
      * @param workerNodeDirectory  the worker node directory
      *
@@ -151,7 +154,7 @@ public interface SLS {
      */
     public Collection<FileTransfer> determineSLSOutputTransfers( Job job,
                                        String fileName,
-                                       String submitDir,
+                                       FileServer stagingSiteServer,
                                        String stagingSiteDirectory,
                                        String workerNodeDirectory );
 
@@ -164,7 +167,7 @@ public interface SLS {
      * @param stagingSiteURLPrefix   the url prefix for the server on the staging site
      * @param stagingSitedirectory   the directory on the staging site, where the input data is
      *                            read from and the output data written out.
-     *                            read from and the output data written out.
+     * 
      * @param workerNodeDirectory the directory in the worker node tmp
      *
      * @return boolean indicating whether job was successfully modified or not.

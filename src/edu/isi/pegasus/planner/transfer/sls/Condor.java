@@ -27,6 +27,7 @@ import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.common.logging.LogManager;
 
+import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
 import edu.isi.pegasus.planner.transfer.SLS;
 
 import edu.isi.pegasus.planner.namespace.Pegasus;
@@ -186,7 +187,8 @@ public class Condor   implements SLS {
      *
      * @param job           job for which the file is being created
      * @param fileName      name of the file that needs to be written out.
-     * @param submitDir     submit directory where it has to be written out.
+     * @param stagingSiteServer    the file server on the staging site to be used
+     *                             for retrieval of files i.e the get operation
      * @param stagingSiteDirectory    directory on the head node of the compute site.
      * @param workerNodeDirectory  worker node directory
      *
@@ -197,7 +199,7 @@ public class Condor   implements SLS {
      */
     public Collection<FileTransfer>  determineSLSInputTransfers( Job job,
                                       String fileName,
-                                      String submitDir,
+                                      FileServer stagingSiteServer,
                                       String stagingSiteDirectory,
                                       String workerNodeDirectory ) {
 
@@ -210,7 +212,8 @@ public class Condor   implements SLS {
      *
      * @param job the job for which the file is being created
      * @param fileName the name of the file that needs to be written out.
-     * @param submitDir the submit directory where it has to be written out.
+     * @param stagingSiteServer    the file server on the staging site to be used
+     *                             for retrieval of files i.e the put operation
      * @param stagingSiteDirectory the directory on the head node of the
      *   compute site.
      * @param workerNodeDirectory the worker node directory
@@ -222,7 +225,7 @@ public class Condor   implements SLS {
      */
     public Collection<FileTransfer>  determineSLSOutputTransfers(Job job,
                                       String fileName,
-                                      String submitDir,
+                                      FileServer stagingSiteServer,
                                       String stagingSiteDirectory,
                                       String workerNodeDirectory) {
 

@@ -299,7 +299,8 @@ public class Transfer   implements SLS {
      *
      * @param job           job for which the file is being created
      * @param fileName      name of the file that needs to be written out.
-     * @param submitDir     submit directory where it has to be written out.
+     * @param stagingSiteServer    the file server on the staging site to be used
+     *                             for retrieval of files i.e the get operation
      * @param stagingSiteDirectory    directory on the head node of the staging site.
      * @param workerNodeDirectory  worker node directory
      *
@@ -310,7 +311,7 @@ public class Transfer   implements SLS {
      */
     public Collection<FileTransfer>  determineSLSInputTransfers( Job job,
                                       String fileName,
-                                      String submitDir,
+                                      FileServer stagingSiteServer,
                                       String stagingSiteDirectory,
                                       String workerNodeDirectory ) {
 
@@ -327,26 +328,11 @@ public class Transfer   implements SLS {
 //      To handle for null conditions?
 //        File sls = null;
         Collection<FileTransfer> result = new LinkedList();
-
-        //figure out the remote site's headnode gridftp server
-        //and the working directory on it.
-        //the below should be cached somehow
-//        String sourceURLPrefix = mSiteStore.lookup( job.getStagingSiteHandle() ).getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix( );
-        //PM-590 stricter checks
-        String sourceURLPrefix = this.selectHeadNodeScratchSharedFileServerURLPrefix( job.getStagingSiteHandle(), FileServer.OPERATION.get );
-        if( sourceURLPrefix == null ){
-            this.complainForHeadNodeURLPrefix( job, job.getStagingSiteHandle() );
-        }
-        
-        String sourceDir = stagingSiteDirectory;
         String destDir = workerNodeDirectory;
-
-
-        PegasusFile pf;
-
+        
         //To do. distinguish the sls file from the other input files
         for( Iterator it = files.iterator(); it.hasNext(); ){
-            pf = ( PegasusFile ) it.next();
+            PegasusFile pf = ( PegasusFile ) it.next();
             String lfn = pf.getLFN();
 
             if( lfn.equals( ENV.X509_USER_PROXY_KEY ) ){
@@ -363,9 +349,10 @@ public class Transfer   implements SLS {
                 //create the default path from the directory
                 //on the head node
                 StringBuffer url = new StringBuffer();
-                url.append( sourceURLPrefix ).append( File.separator );
-                url.append( sourceDir ).append( File.separator );
-                url.append( lfn );
+
+                url.append( mSiteStore.getExternalWorkDirectoryURL(stagingSiteServer, job.getStagingSiteHandle() ));
+                url.append( File.separator ).append( lfn );
+
                 ft.addSource( job.getStagingSiteHandle(), url.toString() );
             }
             else{
@@ -393,7 +380,8 @@ public class Transfer   implements SLS {
      *
      * @param job the job for which the file is being created
      * @param fileName the name of the file that needs to be written out.
-     * @param submitDir the submit directory where it has to be written out.
+     * @param stagingSiteServer    the file server on the staging site to be used
+     *                             for retrieval of files i.e the put operation
      * @param stagingSiteDirectory the directory on the head node of the
      *   staging site.
      * @param workerNodeDirectory the worker node directory
@@ -405,7 +393,7 @@ public class Transfer   implements SLS {
      */
     public Collection<FileTransfer>  determineSLSOutputTransfers( Job job,
                                        String fileName,
-                                       String submitDir,
+                                       FileServer stagingSiteServer,
                                        String stagingSiteDirectory,
                                        String workerNodeDirectory ) {
 
@@ -451,9 +439,14 @@ public class Transfer   implements SLS {
 
             //destination
             url = new StringBuffer();
+/*
             url.append( destURLPrefix ).append( File.separator );
             url.append( destDir ).append( File.separator );
-            url.append( pf.getLFN() );
+ */
+            //on the head node
+            url.append( mSiteStore.getExternalWorkDirectoryURL(stagingSiteServer, job.getStagingSiteHandle() ));
+            url.append( File.separator ).append( pf.getLFN() );
+            
             ft.addDestination( job.getStagingSiteHandle(), url.toString() );
 
             result.add(ft);

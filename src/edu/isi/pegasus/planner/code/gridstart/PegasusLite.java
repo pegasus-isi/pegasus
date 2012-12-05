@@ -829,7 +829,7 @@ public class PegasusLite implements GridStart {
                 //generate the sls file with the mappings in the submit exectionSiteDirectory
                 Collection<FileTransfer> files = mSLS.determineSLSInputTransfers( job,
                                                           mSLS.getSLSInputLFN( job ),
-                                                          mSubmitDir,
+                                                          stagingSiteServerForRetrieval,
                                                           stagingSiteDirectory,
                                                           workerNodeDir );
 
@@ -911,7 +911,7 @@ public class PegasusLite implements GridStart {
                 //created
                 Collection<FileTransfer> files = mSLS.determineSLSOutputTransfers( job,
                                                             mSLS.getSLSOutputLFN( job ),
-                                                            mSubmitDir,
+                                                            stagingSiteServerForStore,
                                                             stagingSiteDirectoryForStore,
                                                             workerNodeDir );
 
