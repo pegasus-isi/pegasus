@@ -122,12 +122,7 @@ public class Transfer   implements SLS {
      * The handle to the logging manager.
      */
     protected LogManager mLogger;
-    
-    /**
-     * The handle to the transient replica catalog.
-     */
-    protected ReplicaCatalog mTransientRC;
-
+   
     /**
      * Any extra arguments that need to be passed ahead to the s3 client invocation.
      */
@@ -161,8 +156,6 @@ public class Transfer   implements SLS {
         mLogger     = bag.getLogger();
         mSiteStore  = bag.getHandleToSiteStore();
         mTCHandle   = bag.getHandleToTransformationCatalog();
-        
-        mTransientRC = bag.getHandleToTransientReplicaCatalog();
         mExtraArguments = mProps.getSLSTransferArguments();
         mStageSLSFile = mProps.stageSLSFilesViaFirstLevelStaging();
         mSeqExecGridStartUsed = mProps.getGridStart().equals( PegasusLite.CLASSNAME );
@@ -341,30 +334,18 @@ public class Transfer   implements SLS {
                 continue;
             }
 
-            //check if the input file is in the transient RC
-            //all files in the DAX should be in the transient RC
-            String transientPFN =  mTransientRC.lookup( lfn, job.getSiteHandle() );
             FileTransfer ft = new FileTransfer();
-            if( transientPFN == null ){
-                //create the default path from the directory
-                //on the head node
-                StringBuffer url = new StringBuffer();
 
-                url.append( mSiteStore.getExternalWorkDirectoryURL(stagingSiteServer, job.getStagingSiteHandle() ));
-                url.append( File.separator ).append( lfn );
-
-                ft.addSource( job.getStagingSiteHandle(), url.toString() );
-            }
-            else{
-                //use the location specified in
-                //the transient replica catalog
-//                    input.write( transientPFN );
-                ft.addSource( job.getStagingSiteHandle(), transientPFN );
-            }
-                
-
-            //destination
+            //create the default path from the directory
+            //on the head node
             StringBuffer url = new StringBuffer();
+
+            url.append( mSiteStore.getExternalWorkDirectoryURL(stagingSiteServer, job.getStagingSiteHandle() ));
+            url.append( File.separator ).append( lfn );
+            ft.addSource( job.getStagingSiteHandle(), url.toString() );
+            
+            //destination
+            url = new StringBuffer();
             url.append( "file://" ).append( destDir ).append( File.separator ).
                 append( pf.getLFN() );
             ft.addDestination( job.getSiteHandle(), url.toString() );
@@ -382,8 +363,7 @@ public class Transfer   implements SLS {
      * @param fileName the name of the file that needs to be written out.
      * @param stagingSiteServer    the file server on the staging site to be used
      *                             for retrieval of files i.e the put operation
-     * @param stagingSiteDirectory the directory on the head node of the
-     *   staging site.
+     * @param stagingSiteDirectory the directory on the head node of the  staging site.
      * @param workerNodeDirectory the worker node directory
      *
      * @return a Collection of FileTransfer objects listing the transfers that
@@ -408,20 +388,8 @@ public class Transfer   implements SLS {
         //      To handle for null conditions?
 //        File sls = null;
         Collection<FileTransfer> result = new LinkedList();
-
         Set files = job.getOutputFiles();
 
-        //figure out the remote site's headnode gridftp server
-        //and the working directory on it.
-        //the below should be cached somehow
-//        String destURLPrefix = mSiteStore.lookup( job.getStagingSiteHandle() ).getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix();
-        //PM-590 stricter checks
-        String destURLPrefix = this.selectHeadNodeScratchSharedFileServerURLPrefix( job.getStagingSiteHandle() , FileServer.OPERATION.put );
-        if( destURLPrefix == null ){
-            this.complainForHeadNodeURLPrefix( job, job.getStagingSiteHandle() );
-        }
-        
-        String destDir = stagingSiteDirectory;
         String sourceDir = workerNodeDirectory;
 
         PegasusFile pf;
@@ -683,50 +651,10 @@ public class Transfer   implements SLS {
     }
 
     /**
-     * A convenience method to select the URL Prefix for the FileServer for 
-     * the shared scratch space on the HeadNode.
-     * 
-     * @param site the site for which we need the URL prefix
-     * @param operation  the file server operation required
-     * 
-     * @return  URL Prefix for the FileServer for the shared scratch space
-     * 
-     * 
-     */
-    protected String selectHeadNodeScratchSharedFileServerURLPrefix( String site, FileServer.OPERATION operation ){
-        return this.selectHeadNodeScratchSharedFileServerURLPrefix( this.mSiteStore.lookup( site ), operation );
-    }
-    
-    /**
-     * A convenience method to select the URL Prefix for the FileServer for 
-     * the shared scratch space on the HeadNode.
-     * 
-     * @param site the entry for the site for which we need the URL prefix
-     * @param operation  the file server operation required
-     * 
-     * @return  URL Prefix for the FileServer for the shared scratch space
-     * 
-     * 
-     */
-    protected String selectHeadNodeScratchSharedFileServerURLPrefix( SiteCatalogEntry entry, FileServer.OPERATION operation ){
-         
-        if( entry == null ){
-            return null;
-        }
-        
-        String prefix = entry.selectHeadNodeScratchSharedFileServerURLPrefix( operation );
-        if( prefix == null ){
-            return null;
-        }
-        
-        return prefix;
-    }
-    
-    /**
      * Complains for head node url prefix not specified
-     * 
+     *
      * @param site   the site handle
-     * 
+     *
      * @throws RuntimeException when URL Prefix cannot be determined for various reason.
      */
     protected void complainForHeadNodeURLPrefix( String site ) {
@@ -735,10 +663,10 @@ public class Transfer   implements SLS {
 
     /**
      * Complains for head node url prefix not specified
-     * 
+     *
      * @param job    the related job if any
      * @param site   the site handle
-     * 
+     *
      * @throws RuntimeException when URL Prefix cannot be determined for various reason.
      */
     protected void complainForHeadNodeURLPrefix(Job job, String site ) {
