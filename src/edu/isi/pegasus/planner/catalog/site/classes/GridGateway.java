@@ -40,7 +40,7 @@ public class GridGateway extends AbstractSiteData{
     /**
      * An enumeration of valid types of grid gateway.
      */
-    public static enum TYPE { gt2, gt4, gt5, condor, condorc, pbs, lsf };
+    public static enum TYPE { gt2, gt4, gt5, condor, cream, batch, pbs, lsf, sge, nordugrid, unicore, ec2, deltacloud };
     
     /**
      * An enumeration of types of jobs handled by an instance of a grid gateway.

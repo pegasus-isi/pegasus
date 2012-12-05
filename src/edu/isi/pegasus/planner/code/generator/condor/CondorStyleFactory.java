@@ -82,6 +82,12 @@ public class CondorStyleFactory {
      */
     private static final String CONDORC_STYLE_IMPLEMENTING_CLASS = "CondorC";
 
+
+    /**
+     * The name of the class implementing the CREAMCE Style.
+     */
+    private static final String CREAMCE_STYLE_IMPLEMENTING_CLASS = "CreamCE";
+
     /**
      * The name of the class implementing the CondorG Style.
      */
@@ -103,6 +109,7 @@ public class CondorStyleFactory {
             mImplementingClassNameTable.put( Pegasus.GLOBUS_STYLE, GLOBUS_STYLE_IMPLEMENTING_CLASS);
             mImplementingClassNameTable.put( Pegasus.GLITE_STYLE, GLITE_STYLE_IMPLEMENTING_CLASS);
             mImplementingClassNameTable.put( Pegasus.CONDORC_STYLE, CONDORC_STYLE_IMPLEMENTING_CLASS );
+            mImplementingClassNameTable.put( Pegasus.CREAMCE_STYLE, CREAMCE_STYLE_IMPLEMENTING_CLASS );
         }
         return mImplementingClassNameTable;
     }

@@ -303,6 +303,13 @@ public class Pegasus extends Namespace {
 
     /**
      * The style indicating that the submit files are to be generated for
+     * a creamce submission
+     */
+    public static final String CREAMCE_STYLE = "cream";
+
+
+    /**
+     * The style indicating that the submit files are to be generated for
      * a CondorG execution.
      */
     public static final String GLOBUS_STYLE = "globus";
