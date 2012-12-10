@@ -49,11 +49,6 @@ import edu.isi.pegasus.planner.refiner.MainEngine;
 import edu.isi.pegasus.planner.parser.dax.Callback;
 import edu.isi.pegasus.planner.parser.DAXParserFactory;
 
-import edu.isi.pegasus.planner.parser.pdax.PDAXCallbackFactory;
-
-import edu.isi.pegasus.planner.parser.PDAXParser;
-
-
 import edu.isi.pegasus.planner.catalog.transformation.TransformationFactory;
 
 import edu.isi.pegasus.common.util.Version;
@@ -85,7 +80,6 @@ import java.nio.channels.FileChannel;
 import java.util.Collection;
 import java.util.List;
 import java.util.Date;
-import java.util.Map;
 import java.util.Iterator;
 
 
@@ -804,7 +798,7 @@ public class CPlanner extends Executable{
         options.setOriginalArgString( args );
         
         Getopt g = new Getopt("pegasus-plan",args,
-                              "vqhfSnzpVr::aD:d:s:o:P:c:C:b:g:2:j:3:F:X:4:5:6:78:9:B:",
+                              "vqhfSnzpVr::aD:d:s:o:O:y:P:c:C:b:g:2:j:3:F:X:4:5:6:78:9:B:",
                               longOptions,false);
         g.setOpterr(false);
 
@@ -930,7 +924,14 @@ public class CPlanner extends Executable{
                     options.setCleanup( false );
                     break;
 
-                case 'o'://output
+                case 'y'://output option
+                    options.setOutputSite( g.getOptarg() );
+                    //warn
+                    mLogger.log( "--output option is deprecated. Replaced by --output-site " ,
+                                 LogManager.WARNING_MESSAGE_LEVEL );
+                    break;
+
+                case 'o'://output-site
                     options.setOutputSite(g.getOptarg());
                     break;
                     
@@ -1086,12 +1087,12 @@ public class CPlanner extends Executable{
      * options
      */
     public LongOpt[] generateValidOptions(){
-        LongOpt[] longopts = new LongOpt[35];
+        LongOpt[] longopts = new LongOpt[36];
 
         longopts[0]   = new LongOpt( "dir", LongOpt.REQUIRED_ARGUMENT, null, '8' );
         longopts[1]   = new LongOpt( "dax", LongOpt.REQUIRED_ARGUMENT, null, 'd' );
         longopts[2]   = new LongOpt( "sites", LongOpt.REQUIRED_ARGUMENT, null, 's' );
-        longopts[3]   = new LongOpt( "output", LongOpt.REQUIRED_ARGUMENT, null, 'o' );
+        longopts[3]   = new LongOpt( "output", LongOpt.REQUIRED_ARGUMENT, null, 'y' );
         longopts[4]   = new LongOpt( "verbose", LongOpt.NO_ARGUMENT, null, 'v' );
         longopts[5]   = new LongOpt( "help", LongOpt.NO_ARGUMENT, null, 'h' );
         longopts[6]   = new LongOpt( "force", LongOpt.NO_ARGUMENT, null, 'f' );
@@ -1126,6 +1127,7 @@ public class CPlanner extends Executable{
         longopts[32]  = new LongOpt( "shiwa-bundle", LongOpt.REQUIRED_ARGUMENT, null, 'B' );
         longopts[33]  = new LongOpt( "input-dir" , LongOpt.REQUIRED_ARGUMENT, null, 'I' );
         longopts[34]  = new LongOpt( "output-dir" , LongOpt.REQUIRED_ARGUMENT, null, 'O' );
+        longopts[35]  = new LongOpt( "output-site" , LongOpt.REQUIRED_ARGUMENT, null, 'o' );
         return longopts;
     }
 
@@ -1155,58 +1157,60 @@ public class CPlanner extends Executable{
      */
     public void printLongVersion(){
 
-        String text =
-           "\n $Id$ " +
-           "\n " + getGVDSVersion() +
-           "\n pegasus-plan - The main class which is used to run  Pegasus. "  +
-           "\n Usage: pegasus-plan [-Dprop  [..]] --dax|--pdax <file> [--sites <execution sites>] " +
-           "\n [--staging-site s1=ss1[,s2=ss2[..]] [--basename prefix] [--cache f1[,f2[..]] [--cluster t1[,t2[..]] [--conf <path to property file>]" +
-           "\n [--dir <dir for o/p files>] [--force] [--force-replan] [--forward option=[value] ] [--group vogroup] [--nocleanup] " +
-           "\n [--input-dir <input dir>] [--output-dir <output dir>] [--output output site] [--randomdir=[dir name]]   [--verbose] [--version][--help] " +
-           "\n" +
-           "\n Mandatory Options " +
-           "\n -d  fn "+
-           "\n --dax       the path to the dax file containing the abstract workflow " +
-           "\n Other Options  " +
-           "\n -b |--basename     the basename prefix while constructing the per workflow files like .dag etc." +
-           "\n -B |--bundle       the shiwa bundle to be used. ( prototypical option )  " + 
-           "\n -c |--cache        comma separated list of replica cache files." +
-           "\n --inherited-rc-files  comma separated list of replica files. Locations mentioned in these have a lower priority than the locations in the DAX file" +
-           "\n -C |--cluster      comma separated list of clustering techniques to be applied to the workflow to " +
-           "\n                    to cluster jobs in to larger jobs, to avoid scheduling overheads." +
-           "\n --conf             the path to the properties file to use for planning. " + 
-           "\n --dir          the directory where to generate the concrete workflow." +
-           "\n --relative-dir     the relative directory to the base directory where to generate the concrete workflow." +
-           "\n --relative-submit-dir  the relative submit directory where to generate the concrete workflow. Overrids --relative-dir ." +
-           "\n -f |--force        skip reduction of the workflow, resulting in build style dag." +
-           "\n --force-replan     force replanning for sub workflows in case of failure. " +
-           "\n -F |--forward      any options that need to be passed ahead to pegasus-run in format option[=value] " +
-           "\n                    where value can be optional. e.g -F nogrid will result in --nogrid . The option " +
-           "\n                    can be repeated multiple times." +
-           "\n -g |--group        the VO Group to which the user belongs " +
-           "\n -j |--job-prefix   the prefix to be applied while construction job submit filenames " +
-           "\n -I |--input-dir    an optional input directory where the input files reside on submit host" +
-           "\n -O |--output-dir   an optional out directory where the output files shoudl be transferred to on submit host" +
-           "\n -o |--output       the output site where the data products during workflow execution are transferred to." +
-           "\n -s |--sites        comma separated list of executions sites on which to map the workflow." +
-           "\n --staging-site     comma separated list of key=value pairs , where the key is the execution site and value is the staging site for that execution site." +
-           "\n -r |--randomdir    create random directories on remote execution sites in which jobs are executed" +
+        StringBuffer text = new StringBuffer( );
+        text.append( "\n $Id$ " ).
+             append( "\n " + getGVDSVersion()  ).
+             append( "\n pegasus-plan - The main class which is used to run  Pegasus. "   ).
+             append( "\n Usage: pegasus-plan [-Dprop  [..]] --dax|--pdax <file> [--sites <execution sites>] " ).
+             append( "\n [--staging-site s1=ss1[,s2=ss2[..]] [--basename prefix] [--cache f1[,f2[..]] [--cluster t1[,t2[..]] [--conf <path to property file>]"  ).
+             append( "\n [--dir <dir for o/p files>] [--force] [--force-replan] [--forward option=[value] ] [--group vogroup] [--nocleanup] "  ).
+             append( "\n [--input-dir <input dir>] [--output-dir <output dir>] [--output output site] [--randomdir=[dir name]]   [--verbose] [--version][--help] " ).
+             append( "\n"  ).
+             append( "\n Mandatory Options "  ).
+             append( "\n -d  fn " ).
+             append( "\n --dax       the path to the dax file containing the abstract workflow "  ).
+             append( "\n Other Options  "  ).
+             append( "\n -b |--basename     the basename prefix while constructing the per workflow files like .dag etc."  ).
+             append( "\n -B |--bundle       the shiwa bundle to be used. ( prototypical option )  "  ).
+             append( "\n -c |--cache        comma separated list of replica cache files."  ).
+             append( "\n --inherited-rc-files  comma separated list of replica files. Locations mentioned in these have a lower priority than the locations in the DAX file"  ).
+             append( "\n -C |--cluster      comma separated list of clustering techniques to be applied to the workflow to "  ).
+             append( "\n                    to cluster jobs in to larger jobs, to avoid scheduling overheads."  ).
+             append( "\n --conf             the path to the properties file to use for planning. "  ).
+             append( "\n --dir          the directory where to generate the executable workflow."  ).
+             append( "\n --relative-dir     the relative directory to the base directory where to generate the concrete workflow." ).
+             append( "\n --relative-submit-dir  the relative submit directory where to generate the concrete workflow. Overrids --relative-dir ."  ).
+             append( "\n -f |--force        skip reduction of the workflow, resulting in build style dag." ).
+             append( "\n --force-replan     force replanning for sub workflows in case of failure. " ).
+             append( "\n -F |--forward      any options that need to be passed ahead to pegasus-run in format option[=value] "  ).
+             append( "\n                    where value can be optional. e.g -F nogrid will result in --nogrid . The option "  ).
+             append( "\n                    can be repeated multiple times."  ).
+             append( "\n -g |--group        the VO Group to which the user belongs "  ).
+             append( "\n -j |--job-prefix   the prefix to be applied while construction job submit filenames "  ).
+             append( "\n -I |--input-dir    an optional input directory where the input files reside on submit host"  ).
+             append( "\n -O |--output-dir   an optional output directory where the output files should be transferred to on submit host. "  ).
+             append( "                      the directory specified is asscociated with the local-storage directory for the output site."  ).
+             append( "\n -o |--output-site  the output site where the data products during workflow execution are transferred to."  ).
+             append( "\n --output           deprecated option . Replaced by --output-site option"  ).
+             append( "\n -s |--sites        comma separated list of executions sites on which to map the workflow."  ).
+             append( "\n --staging-site     comma separated list of key=value pairs , where the key is the execution site and value is the staging site for that execution site."  ).
+             append( "\n -r |--randomdir    create random directories on remote execution sites in which jobs are executed"  ).
           // "\n --rescue           the number of times rescue dag should be submitted for sub workflows before triggering re-planning" +
-           "\n                    can optionally specify the basename of the remote directories" +
-           "\n -n |--nocleanup    generates only the separate cleanup workflow. Does not add cleanup nodes to the concrete workflow." +
-           "\n -S |--submit       submit the executable workflow generated" +
-           "\n --staging-site     comma separated list of key=value pairs, where key is the execution site and value is the staging site" +
-           "\n -v |--verbose      increases the verbosity of messages about what is going on" +
-           "\n -q |--quiet        decreases the verbosity of messages about what is going on" +
-           "\n -V |--version      displays the version of the Pegasus Workflow Management System" +
-           "\n -X[non standard java option]  pass to jvm a non standard option . e.g. -Xmx1024m -Xms512m" +
-           "\n -h |--help         generates this help." +
-           "\n The following exitcodes are produced" +
-           "\n 0 concrete planner planner was able to generate a concretized workflow" +
-           "\n 1 an error occured. In most cases, the error message logged should give a" +
-           "\n   clear indication as to where  things went wrong." +
-           "\n 2 an error occured while loading a specific module implementation at runtime" +
-           "\n ";
+             append( "\n                    can optionally specify the basename of the remote directories"  ).
+             append( "\n -n |--nocleanup    generates only the separate cleanup workflow. Does not add cleanup nodes to the executable workflow."  ).
+             append( "\n -S |--submit       submit the executable workflow generated"  ).
+             append( "\n --staging-site     comma separated list of key=value pairs, where key is the execution site and value is the staging site"  ).
+             append( "\n -v |--verbose      increases the verbosity of messages about what is going on"  ).
+             append( "\n -q |--quiet        decreases the verbosity of messages about what is going on"  ).
+             append( "\n -V |--version      displays the version of the Pegasus Workflow Management System"  ).
+             append( "\n -X[non standard java option]  pass to jvm a non standard option . e.g. -Xmx1024m -Xms512m"  ).
+             append( "\n -h |--help         generates this help."  ).
+             append( "\n The following exitcodes are produced"  ).
+             append( "\n 0 concrete planner planner was able to generate a concretized workflow" ).
+             append( "\n 1 an error occured. In most cases, the error message logged should give a"  ).
+             append( "\n   clear indication as to where  things went wrong." ).
+             append( "\n 2 an error occured while loading a specific module implementation at runtime"  ).
+             append( "\n " );
 
         System.out.println(text);
         //mLogger.log(text,LogManager.INFO_MESSAGE_LEVEL);

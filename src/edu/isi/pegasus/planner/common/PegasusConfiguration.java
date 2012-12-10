@@ -19,11 +19,8 @@ package edu.isi.pegasus.planner.common;
 
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.catalog.site.classes.Directory;
-import edu.isi.pegasus.planner.catalog.site.classes.Directory.TYPE;
 import edu.isi.pegasus.planner.catalog.site.classes.DirectoryLayout;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
-import edu.isi.pegasus.planner.catalog.site.classes.HeadNodeFS;
-import edu.isi.pegasus.planner.catalog.site.classes.HeadNodeStorage;
 import edu.isi.pegasus.planner.catalog.site.classes.InternalMountPoint;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;

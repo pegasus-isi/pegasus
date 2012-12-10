@@ -1440,8 +1440,17 @@ public class PlannerOptions extends Data implements Cloneable{
         //collapse option
         if( mClusterer != null ){ sb.append(" --cluster ").append(mClusterer);}
 
-        //specify the output pool
-        if(mOutputPool != null){ sb.append(" --output ").append(mOutputPool);}
+        //specify the input directory
+        if( this.mInputDir != null ){
+            sb.append(" --input-dir ").append( this.mInputDir );
+        }
+
+        //specify the output directory
+        if( this.mOutputDir != null ){
+            sb.append(" --output-dir ").append( this.mOutputDir );
+        }
+        //specify the output site
+        if(mOutputPool != null){ sb.append(" --output-site ").append(mOutputPool);}
 
         //the condor submit option
         if(mSubmit){ sb.append(" --run "); }
