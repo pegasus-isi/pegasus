@@ -17,36 +17,32 @@
 
 package edu.isi.pegasus.planner.client;
 
-import edu.isi.pegasus.planner.catalog.site.impl.old.classes.PoolConfig;
-import edu.isi.pegasus.planner.parser.ScannerException;
-import edu.isi.pegasus.planner.parser.SiteCatalogTextParser;
-
-import edu.isi.pegasus.common.logging.LogManager;
-
-import edu.isi.pegasus.common.logging.LogManagerFactory;
-import edu.isi.pegasus.planner.catalog.SiteCatalog;
-import edu.isi.pegasus.planner.catalog.site.SiteFactory;
-import edu.isi.pegasus.planner.catalog.site.classes.SiteInfo2SiteCatalogEntry;
-import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
-import gnu.getopt.Getopt;
-import gnu.getopt.LongOpt;
-
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
 import java.util.StringTokenizer;
 
-//import javax.naming.NamingEnumeration;
-import edu.isi.pegasus.planner.catalog.site.impl.old.classes.SiteInfo;
+import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.common.logging.LogManagerFactory;
 import edu.isi.pegasus.common.util.FactoryException;
-//import javax.naming.ldap.LdapContext;
+import edu.isi.pegasus.planner.catalog.SiteCatalog;
+import edu.isi.pegasus.planner.catalog.site.SiteFactory;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteDataVisitor;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
+import edu.isi.pegasus.planner.catalog.site.classes.XML3PrintVisitor;
+import edu.isi.pegasus.planner.catalog.site.classes.XML4PrintVisitor;
+import edu.isi.pegasus.planner.catalog.site.impl.old.classes.PoolConfig;
+import edu.isi.pegasus.planner.parser.ScannerException;
+import edu.isi.pegasus.planner.parser.SiteCatalogTextParser;
+import gnu.getopt.Getopt;
+import gnu.getopt.LongOpt;
 
 /**
  * A client to convert site catalog between different formats.
@@ -59,26 +55,8 @@ import edu.isi.pegasus.common.util.FactoryException;
 public class SCClient
     extends Executable {
     
-    /**
-     * The default output format.
-     */
-    private static String DEFAULT_OUTPUT_FORMAT = "XML3";
-    
-    /**
-     * The XML format.
-     */
-    private static String XML_FORMAT = "XML";
-    
-    /**
-     * The textual format.
-     */
-    private static String TEXT_FORMAT = "Text";
-
     private static final String XML_NAMESPACE="http://pegasus.isi.edu/schema";
     private static final String XML_VERSION="2.0";
-
-
-    //private boolean mText;
 
     /**
      * The input files.
@@ -117,7 +95,7 @@ public class SCClient
     	super.initialize(opts);
     	//the output format is whatever user specified in the properties
         mOutputFormat = mProps.getPoolMode();
-        mInputFormat  = SCClient.TEXT_FORMAT;
+        mInputFormat  = "XML";
         mLoggingLevel     = LogManager.WARNING_MESSAGE_LEVEL;
         //mText = false;
         
@@ -145,20 +123,17 @@ public class SCClient
     }
 
     public LongOpt[] generateValidOptions() {
-        LongOpt[] longopts = new LongOpt[ 11 ];
-        longopts[ 0 ] = new LongOpt( "text", LongOpt.NO_ARGUMENT, null, 't' );
-        longopts[ 1 ] = new LongOpt( "files", LongOpt.REQUIRED_ARGUMENT, null,            'f' );
-        longopts[ 2 ] = new LongOpt( "input", LongOpt.REQUIRED_ARGUMENT, null, 'i' );
-        longopts[ 3 ] = new LongOpt( "iformat", LongOpt.REQUIRED_ARGUMENT, null, 'I' );
-        longopts[ 4 ] = new LongOpt( "output", LongOpt.REQUIRED_ARGUMENT, null, 'o' );
-        longopts[ 5 ] = new LongOpt( "oformat", LongOpt.REQUIRED_ARGUMENT, null, 'O' );
-        longopts[ 6 ] = new LongOpt( "help", LongOpt.NO_ARGUMENT, null, 'h' );
-        longopts[ 7 ] = new LongOpt( "version", LongOpt.NO_ARGUMENT, null, 'V' );
-        longopts[ 8 ] = new LongOpt( "verbose", LongOpt.NO_ARGUMENT, null, 'v' );
-        longopts[ 9 ]  = new LongOpt( "quiet", LongOpt.NO_ARGUMENT, null, 'q' );
-        longopts[ 10 ] = new LongOpt( "conf", LongOpt.REQUIRED_ARGUMENT, null, 'c' );
+        LongOpt[] longopts = new LongOpt[ 9 ];
+        longopts[ 0 ] = new LongOpt( "files", LongOpt.REQUIRED_ARGUMENT, null, 'f' );
+        longopts[ 1 ] = new LongOpt( "input", LongOpt.REQUIRED_ARGUMENT, null, 'i' );
+        longopts[ 2 ] = new LongOpt( "output", LongOpt.REQUIRED_ARGUMENT, null, 'o' );
+        longopts[ 3 ] = new LongOpt( "oformat", LongOpt.REQUIRED_ARGUMENT, null, 'O' );
+        longopts[ 4 ] = new LongOpt( "help", LongOpt.NO_ARGUMENT, null, 'h' );
+        longopts[ 5 ] = new LongOpt( "version", LongOpt.NO_ARGUMENT, null, 'V' );
+        longopts[ 6 ] = new LongOpt( "verbose", LongOpt.NO_ARGUMENT, null, 'v' );
+        longopts[ 7 ]  = new LongOpt( "quiet", LongOpt.NO_ARGUMENT, null, 'q' );
+        longopts[ 8 ] = new LongOpt( "conf", LongOpt.REQUIRED_ARGUMENT, null, 'c' );
         return longopts;
-
     }
 
     /**
@@ -169,20 +144,15 @@ public class SCClient
     public void executeCommand() throws IOException {
         LongOpt[] longOptions = generateValidOptions();
 
-        Getopt g = new Getopt( "SCClient", getCommandLineOptions(), "lthvqVi:I:o:O:f:c:",
+        Getopt g = new Getopt( "SCClient", getCommandLineOptions(), "lhvqVi:o:O:f:c:",
             longOptions, false );
 
         int option = 0;
         while ( ( option = g.getopt() ) != -1 ) {
             switch ( option ) {
-                case 't': //text 
-                    //mText = true;
-                    mOutputFormat = SCClient.TEXT_FORMAT;
-                    break;
-
                 case 'f': //files
                     StringTokenizer st = new StringTokenizer( g.getOptarg(), "," );
-                    mInputFiles = new ArrayList( st.countTokens() );
+                    mInputFiles = new ArrayList<String>( st.countTokens() );
                     while ( st.hasMoreTokens() ) {
                         mInputFiles.add( st.nextToken() );
                     }
@@ -190,14 +160,10 @@ public class SCClient
 
                 case 'i': //input
                     StringTokenizer str = new StringTokenizer( g.getOptarg(), "," );
-                    mInputFiles = new ArrayList( str.countTokens() );
+                    mInputFiles = new ArrayList<String>( str.countTokens() );
                     while ( str.hasMoreTokens() ) {
                         mInputFiles.add( str.nextToken() );
                     }
-                    break;
-                    
-                case 'I': //iformat
-                    mInputFormat = g.getOptarg();
                     break;
                     
                 case 'o': //output
@@ -254,7 +220,7 @@ public class SCClient
             mLogger.setLevel( LogManager.FATAL_MESSAGE_LEVEL );
         }
         if(mInputFiles==null || mInputFiles.isEmpty()|| mOutputFile==null || mOutputFile.isEmpty()){
-            mLogger.log("Please provide the input and the output file",mLogger.ERROR_MESSAGE_LEVEL);
+            mLogger.log("Please provide the input and the output file", LogManager.ERROR_MESSAGE_LEVEL);
             this.printShortVersion();
             System.exit(1);
         }
@@ -306,21 +272,8 @@ public class SCClient
             throw new IOException( "Input files not specified. Specify the --input option" );
         }
         
-        mLogger.log( "Input  format detected is " + inputFormat , LogManager.DEBUG_MESSAGE_LEVEL );
+        //mLogger.log( "Input  format detected is " + inputFormat , LogManager.DEBUG_MESSAGE_LEVEL );
         mLogger.log( "Output format detected is " + outputFormat , LogManager.DEBUG_MESSAGE_LEVEL );
-        
-        //check if support for backward compatibility applies
-        boolean backwardCompatibility =  mInputFormat.equals( SCClient.TEXT_FORMAT ) &&
-                                         mOutputFormat.equals( SCClient.XML_FORMAT ) ;
-        
-        if( backwardCompatibility ){
-            return parseInputFilesForBackwardCompatibility( inputFiles, inputFormat, outputFormat );
-        }
-        
-        //sanity check for output format
-        if ( !outputFormat.equals( SCClient.DEFAULT_OUTPUT_FORMAT )){
-            throw new RuntimeException( "Only XML3 output format is currently supported");
-        }
         
         SiteStore result = new SiteStore();
         for( String inputFile : inputFiles ){
@@ -335,7 +288,7 @@ public class SCClient
                     catalog = SiteFactory.loadInstance( mProps );
                 
                     /* load all sites in site catalog */
-                    List s = new ArrayList(1);
+                    List<String> s = new ArrayList<String>(1);
                     s.add( "*" );
                     mLogger.log( "Loaded  " + catalog.load( s ) + " number of sites ", LogManager.DEBUG_MESSAGE_LEVEL );
         
@@ -344,6 +297,20 @@ public class SCClient
                     for( String site : catalog.list() ){
                         result.addEntry( catalog.lookup( site ) );
                     }
+                    
+                    SiteDataVisitor xml = null;
+                    StringWriter writer = new StringWriter();
+                    
+                    if ( outputFormat.equals ( "XML3" ) ) {
+                    	xml = new XML3PrintVisitor ( );
+                    } else {
+                    	xml = new XML4PrintVisitor ( );
+                    }
+                    
+                    xml.initialize ( writer );
+                    result.accept ( xml );
+                    
+                    return writer.toString();
                 }
                 finally{
                     /* close the connection */
@@ -351,48 +318,12 @@ public class SCClient
                         catalog.close();
                     }catch( Exception e ){}
                 }
+            } else {
+            	throw new IOException( "Invalid input format. Only input format supported in XML. The client will auto-detect if the input is in version 3 or 4." );
             }//end of input format xml
-            else if ( inputFormat.equals( "Text" ) ){
-                //do a two step process.
-                //1. convert to PoolConfig
-                //2. convert to SiteCatalogEntry
-                PoolConfig config = this.getTextToPoolConfig( inputFile );
-                
-                //iterate through each entry
-                for( Iterator it = config.getSites().values().iterator(); it.hasNext(); ){
-                    SiteInfo s = (SiteInfo)it.next();
-                    
-                    //convert and add to site store
-                    result.addEntry( SiteInfo2SiteCatalogEntry.convert( s , mLogger ) );
-                }
-            }//end of input format Text
         }//end of iteration through input files.
        
-        return result.toXML();
-    }
-
-    /**
-     * Parses the input files in the input format and returns a String in the old XML
-     * output format.
-     * 
-     * @param inputFiles      list of input files that need to be converted
-     * @param inputFormat     input format of the input files
-     * @param outputFormat    output format of the output file
-     * 
-     * @return  String in output format ( old XML )
-     * 
-     * @throws java.io.IOException
-     */
-    private String parseInputFilesForBackwardCompatibility( List<String> inputFiles,
-                                                            String inputFormat, 
-                                                            String outputFormat ) {
-        
-        PoolConfig result = new PoolConfig();
-        for( String inputFile : inputFiles ){
-            PoolConfig config = this.getTextToPoolConfig( inputFile );
-            result.add( config );    
-        }
-        return this.toXML( result );
+        return null;
     }
 
     /**
@@ -405,7 +336,7 @@ public class SCClient
             "\n $Id$ " +
             "\n " + getGVDSVersion() +
             "\n Usage: pegasus-sc-converter [-Dprop  [..]]  -i <list of input files> -o <output file to write> " +
-            "\n        [-I input format] [-O <output format>] [-c <path to property file>] [-v] [-q] [-V] [-h]\n" ;
+            "\n        [-O <output format>] [-c <path to property file>] [-v] [-q] [-V] [-h]\n" ;
 
         System.out.print(text);
     }
@@ -428,8 +359,8 @@ public class SCClient
             "\n" +
             "\n Other Options " +
             "\n" +
-            "\n -I |--iformat    the input format for the files . Can be [XML , Text] "  + 
-            "\n -O |--oformat    the output format of the file. Usually [XML3] " +
+            //"\n -I |--iformat    the input format for the files . Can be [XML , Text] "  + 
+            "\n -O |--oformat    the output format of the file. Usually [XML4] " +
             "\n -c |--conf       path to  property file" +
             "\n -v |--verbose    increases the verbosity of messages about what is going on" +
             "\n -q |--quiet      decreases the verbosity of messages about what is going on" +
@@ -439,9 +370,9 @@ public class SCClient
             "\n" + 
             "\n Deprecated Options " +
             "\n" + 
-            "\n --text | -t        To convert an xml site catalog file to the multiline site catalog file." +
-            "\n                    Use --iformat instead " + 
-            "\n" +
+            //"\n --text | -t        To convert an xml site catalog file to the multiline site catalog file." +
+            //"\n                    Use --iformat instead " + 
+            //"\n" +
             "\n --files | -f  The local text site catalog file|files to be converted to " +
             "\n                    xml or text. This file needs to be in multiline textual " +
             "\n                    format not the single line or in xml format if converting " +
@@ -450,12 +381,7 @@ public class SCClient
             "\n" +
             "\n Example Usage " +
             "\n" + 
-            "\n pegasus-sc-converter  -i sites.xml -I XML -o sites.xml.new  -O XML3 -vvvvv" +
-            "\n" +
-            "\n" +
-            "\n Deprecated Usage . Exists only for backward compatibility " +
-            "\n" + 
-            "\n pegasus-sc-converter --files sites.txt --output sites.xml\n" ;
+            "\n pegasus-sc-converter  -i sites.xml -o sites.xml.new  -O XML3 -vvvvv\n";
 
         System.out.print(text);
 
@@ -612,6 +538,4 @@ public class SCClient
         System.exit(result);
         
     }
-
-    
 }
