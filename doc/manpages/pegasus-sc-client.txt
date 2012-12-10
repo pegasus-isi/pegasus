@@ -40,7 +40,7 @@ The *-D* option(s) must be the first option on the command line. CLI properties
 take precedence over the file-based properties of the same key.
 
 *--source* 'src'::
-the source to query for site information. Valid sources are: OSGMM|MYOSG|VORS
+the source to query for site information. Valid sources are: OSGMM
 
 
 *-g* 'grid'::
