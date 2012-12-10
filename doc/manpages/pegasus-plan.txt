@@ -270,7 +270,7 @@ the executable workflow itself that cleanup files on the remote sites
 when they are no longer required.
 
 *-o* 'site'::
-*--output* 'site'::
+*--output-site* 'site'::
 The output site to which the output files of the DAX are transferred to.
 +
 By default the *materialized data* remains in the working directory on the
