@@ -38,6 +38,9 @@ javac RosettaDAX.java
 # generate the dax
 java RosettaDAX dax.xml
 
+#empty replica catalog 
+touch rc.data
+
 # site catalog
 cat >sites.xml <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
