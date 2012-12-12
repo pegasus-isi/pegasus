@@ -819,7 +819,7 @@ public class ReplicaCatalogBridge
         StringBuffer sb = new StringBuffer();
         NameValue destURL = ft.getDestURL();
         sb.append( ft.getLFN() ).append( " " );
-        sb.append( destURL.getValue()  ).append( " " );
+        sb.append( ft.getURLForRegistrationOnDestination()  ).append( " " );
         sb.append( "pool=\"" ).append( destURL.getKey() ).append( "\"" );
         sb.append( "\n" );
         return sb.toString();

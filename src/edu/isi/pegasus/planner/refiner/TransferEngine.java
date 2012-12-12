@@ -766,6 +766,7 @@ public class TransferEngine extends Engine {
             ft.setTransferFlag(pf.getTransferFlag());
             ft.addSource(stagingSiteHandle,execURL);
             ft.addDestination(stagingSiteHandle,execURL);
+            ft.setURLForRegistrationOnDestination( execURL );
         }
         //the source dir is the exec dir
         //on exec pool and dest dir
@@ -788,6 +789,7 @@ public class TransferEngine extends Engine {
             //FileTransfer the user has specified the destination
             //that they want to use in the DAX 3.0 
             if( pf instanceof FileTransfer ){
+                //not really supported in DAX 3.3?
                 ft.addDestination( ((FileTransfer)pf).removeDestURL() );
                 return ft;
             }
@@ -810,7 +812,6 @@ public class TransferEngine extends Engine {
             for( FileServer.OPERATION op : FileServer.OPERATION.operationsForPUT() ){
                 for( Iterator it = storageDirectory.getFileServersIterator(op); it.hasNext();){
                     String destURL = null;
-                    boolean first = true;
                 
                     FileServer fs = (FileServer)it.next();
                     destURL = fs.getURLPrefix() ;
@@ -831,15 +832,48 @@ public class TransferEngine extends Engine {
                     }
 
                     ft.addDestination(destSiteHandle, destURL);
-                    first = false;
                 
                 }
-
             }//end of different put operations
 
+            //construct a registration URL
+            ft.setURLForRegistrationOnDestination( constructRegistrationURL( storageDirectory ,destSiteHandle, lfn ) );
         }
 
         return ft;
+    }
+
+    /**
+     * Constructs a Registration URL for a LFN
+     *
+     * @param directory  the storage directory
+     * @param site       the site handle
+     * @param lfn        the LFN for which the URL needs to be constructed
+     *
+     * @return  the URL
+     */
+    private String constructRegistrationURL(  Directory directory , String site, String lfn ){
+        //sanity check
+        if( !directory.hasFileServerForGETOperations() ){
+            //no file servers for GET operations
+            throw new RuntimeException( " No File Servers specified for GET Operation on Shared Storage on Headnode for site " + site );
+        }
+
+        String url = null;
+        for( FileServer.OPERATION op : FileServer.OPERATION.operationsForGET() ){
+            for( Iterator it = directory.getFileServersIterator(op); it.hasNext();){
+                FileServer fs = (FileServer)it.next();
+                url = fs.getURLPrefix() ;
+
+                //assumption of same external mount point for each storage
+                //file server on output site
+                url += this.getPathOnStageoutSite( lfn );
+
+                return url;
+            }
+
+        }//end of different get operations
+        return url;
     }
 
     /**
@@ -1624,7 +1658,7 @@ public class TransferEngine extends Engine {
         // create files in the directory, unless anything else is known.
         mStageOutBaseDirectory = mSiteStore.getExternalStorageDirectory( outputSite );
 
-        if( mProps.useDeepStorageDirectoryStructure() ){
+        if( this.mDeepStorageStructure ){
             // create hashed, and levelled directories
             try {
                 VirtualDecimalHashedFileFactory temp = null;

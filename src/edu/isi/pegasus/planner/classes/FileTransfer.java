@@ -66,6 +66,11 @@ public class FileTransfer extends PegasusFile {
      */
     private Map mDestMap;
 
+    /**
+     * The registration URL for the file
+     */
+    private String mURLForRegistrationOnDestination;
+
 
     /**
      * A priority associated with the FileTransfer
@@ -82,6 +87,7 @@ public class FileTransfer extends PegasusFile {
         mSourceMap   = new HashMap();
         mDestMap     = new HashMap();
         mPriority    = 0;
+        mURLForRegistrationOnDestination = null;
     }
 
     /**
@@ -100,6 +106,8 @@ public class FileTransfer extends PegasusFile {
         this.mSourceMap    = new HashMap();
         this.mDestMap      = new HashMap();
         this.mPriority     = 0;
+        this.mURLForRegistrationOnDestination = null;
+
     }
 
     /**
@@ -116,6 +124,7 @@ public class FileTransfer extends PegasusFile {
         mDestMap     = new HashMap();
         mFlags       = new BitSet(NO_OF_TRANSIENT_FLAGS);
         this.mPriority     = 0;
+        this.mURLForRegistrationOnDestination = null;
     }
 
     /**
@@ -127,13 +136,13 @@ public class FileTransfer extends PegasusFile {
      * @param flags      the BitSet flags.
      */
     public FileTransfer(String lfn, String job, BitSet flags){
-
         mLogicalFile = lfn;
         mJob         = job;
         mSourceMap   = new HashMap();
         mDestMap     = new HashMap();
         mFlags       = (BitSet)flags.clone();
         this.mPriority     = 0;
+        this.mURLForRegistrationOnDestination = null;
     }
 
 
@@ -214,6 +223,25 @@ public class FileTransfer extends PegasusFile {
         }
 
     }
+
+    /**
+     * Sets the registration url for the destination.
+     * 
+     * @param url  the url
+     */
+    public void setURLForRegistrationOnDestination( String url ){
+        this.mURLForRegistrationOnDestination = url;
+    }
+
+    /**
+     * Sets the registration url for the destination.
+     *
+     * @return the destination url
+     */
+    public String getURLForRegistrationOnDestination(  ){
+        return this.mURLForRegistrationOnDestination  ;
+    }
+
 
     /**
      * Sets the priority for the File Transfer
@@ -400,35 +428,6 @@ public class FileTransfer extends PegasusFile {
 
 
     /**
-     * Constructs a URL with the prefix as the poolname enclosed in #.
-     *
-     * @param site       the site
-     * @param directory  the directory
-     * @param filename   the filename
-     *
-     * @return String
-     */
-    private String constructURL(String site, String directory, String filename ){
-        StringBuffer sb = new StringBuffer();
-        sb/*.append("#").append(pool).append("#\n")*/
-            .append( directory ).append(File.separatorChar).append(filename);
-
-        return sb.toString();
-    }
-
-    /**
-     * Returns a boolean value of whether the source url and the destination
-     * url members of this object match or not.
-     */
-    /*public boolean URLsMatch(){
-        if(mSourceURL.trim().equalsIgnoreCase(mDestURL.trim())){
-            return true;
-        }
-        return false;
-    }*/
-
-
-    /**
      * Returns a clone of the object.
      *
      * @return clone of the object.
@@ -442,7 +441,8 @@ public class FileTransfer extends PegasusFile {
         ft.mType        = this.mType;
         ft.mJob         = new String(this.mJob);
         ft.mPriority    = this.mPriority;
-        
+        ft.mURLForRegistrationOnDestination = this.mURLForRegistrationOnDestination;
+
         //the maps are not cloned underneath
 
         return ft;
