@@ -56,6 +56,7 @@ import edu.isi.pegasus.planner.catalog.site.classes.Directory.TYPE;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServerType.OPERATION;
 import edu.isi.pegasus.planner.classes.DAGJob;
 import edu.isi.pegasus.planner.classes.DAXJob;
+import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.namespace.Dagman;
 import edu.isi.pegasus.planner.transfer.SLS;
 import edu.isi.pegasus.planner.transfer.sls.SLSFactory;
@@ -163,13 +164,7 @@ public class TransferEngine extends Engine {
      */
     private List mDeletedJobs;
     
-    /**
-     * Holds the jobs from the original dags which are deleted by the reduction
-     * algorithm.
-     */
-    private List mDeletedLeafJobs;
-
-
+    
     /**
      * A SimpleFile Replica Catalog, that tracks all the files that are being
      * materialized as part of workflow executaion.
@@ -187,7 +182,8 @@ public class TransferEngine extends Engine {
      * The base path for the stageout directory on the output site where all
      * the files are staged out.
      */
-    private String mStageOutBaseDirectory;
+//    private String mStageOutBaseDirectory;
+    private Directory mStageoutDirectory;
     
     /**
      * The working directory relative to the mount point of the execution pool.
@@ -196,14 +192,6 @@ public class TransferEngine extends Engine {
      * of the execution pool.
      */
     protected String mWorkDir;
-
-    /**
-     * This contains the storage directory relative to the se mount point of the
-     * pool. It is populated from the pegasus.dir.storage property from the properties
-     * file. If not specified then the storage directory is the se mount point
-     * from the pool.config file.
-     */
-    protected String mStorageDir;
 
 
     /**
@@ -224,13 +212,11 @@ public class TransferEngine extends Engine {
      */
     private boolean mWorkerNodeExecution;
 
-            
-  
-    /**
-     * The handle to the SLS implementor
-     */
-    private SLS mSLS;
     
+    /**
+     * The planner options passed to the planner
+     */
+    private PlannerOptions mPlannerOptions;
 
     /**
      * Overloaded constructor.
@@ -246,9 +232,7 @@ public class TransferEngine extends Engine {
                            List<Job> deletedLeafJobs){
         super( bag );
 
-        
-        mWorkDir = mProps.getExecDirectory();
-        mStorageDir = mProps.getStorageDirectory();
+        mPlannerOptions  = bag.getPlannerOptions();
         mDeepStorageStructure = mProps.useDeepStorageDirectoryStructure();
         mUseSymLinks = mProps.getUseOfSymbolicLinks();
         mWorkerNodeExecution = mProps.executeOnWorkerNode();
@@ -257,16 +241,7 @@ public class TransferEngine extends Engine {
         
         mDag = reducedDag;
         mDeletedJobs     = deletedJobs;
-        mDeletedLeafJobs = deletedLeafJobs;
-
-      
-           
-        if( mWorkerNodeExecution ){
-            //load SLS
-            mSLS = SLSFactory.loadInstance( mBag );
-        }
-
-        
+    
         try{
             mTXRefiner = RefinerFactory.loadInstance( reducedDag,
                                                       bag );
@@ -517,8 +492,7 @@ public class TransferEngine extends Engine {
      */
     private Vector getDeletedFileTX( String pool, Job job ) {
         Vector vFileTX = new Vector();
-        SiteCatalogEntry p = mSiteStore.lookup(pool);
-
+        
         for( Iterator it = job.getOutputFiles().iterator(); it.hasNext(); ){
             PegasusFile pf = (PegasusFile)it.next();
             String  lfn = pf.getLFN();
@@ -534,26 +508,14 @@ public class TransferEngine extends Engine {
                 throw new RuntimeException( "Unable to find a location in the Replica Catalog for output file "  + lfn );
             }
 
-
-
-            //definite inconsitency as url prefix and mount point
-            //are not picked up from the same server
-            //PM-590 stricter checks
-  
-//            String urlPrefix = this.selectHeadNodeScratchSharedFileServerURLPrefix( p );
-            String urlPrefix = p.selectHeadNodeScratchSharedFileServerURLPrefix( FileServer.OPERATION.put );
-
-            if( urlPrefix == null ){
-                this.complainForHeadNodeURLPrefix( REFINER_NAME, job, pool );
-            }
-            String destURL =  urlPrefix +
-                                this.getPathOnStageoutSite( lfn );
-
+            
+            String putDestURL = getURLOnStageoutSite( mStageoutDirectory, FileServer.OPERATION.put, lfn );
+            String getDestURL = getURLOnStageoutSite( mStageoutDirectory, FileServer.OPERATION.get, lfn );
             //selLocs are all the locations found in ReplicaMechanism corr
             //to the pool pool
             ReplicaLocation selLocs = mReplicaSelector.selectReplicas( rl,
                                                                        pool,
-                                                                       this.runTransferOnLocalSite( pool,destURL, Job.STAGE_OUT_JOB ));
+                                                                       this.runTransferOnLocalSite( pool,putDestURL, Job.STAGE_OUT_JOB  ));
 
 
             boolean flag = false;
@@ -565,7 +527,7 @@ public class TransferEngine extends Engine {
                 String sourceURL = selLoc.getPFN();
 
                 //check if the URL's match
-                if (sourceURL.trim().equalsIgnoreCase(destURL.trim())){
+                if (sourceURL.trim().equalsIgnoreCase(putDestURL.trim())){
                     String msg = "The leaf file " + lfn +
                         " is already at the output pool " + pool;
                     mLogger.log(msg,LogManager.INFO_MESSAGE_LEVEL);
@@ -576,7 +538,8 @@ public class TransferEngine extends Engine {
 
                 ft = new FileTransfer( lfn, job.getName() );
                 ft.addSource( selLoc.getResourceHandle() , sourceURL );
-                ft.addDestination( pool, destURL );
+                ft.addDestination( pool, putDestURL  );
+                ft.setURLForRegistrationOnDestination( getDestURL );
                 ft.setSize( pf.getSize() );
 
                 //System.out.println("Deleted Leaf Job File transfer object " + ft);
@@ -589,6 +552,7 @@ public class TransferEngine extends Engine {
         return vFileTX;
     }
 
+    
     /**
      * It processes a nodes parents and determines if nodes are to be added
      * or not. All the input files for the job are searched in the output files of
@@ -811,14 +775,10 @@ public class TransferEngine extends Engine {
 
             for( FileServer.OPERATION op : FileServer.OPERATION.operationsForPUT() ){
                 for( Iterator it = storageDirectory.getFileServersIterator(op); it.hasNext();){
-                    String destURL = null;
-                
                     FileServer fs = (FileServer)it.next();
-                    destURL = fs.getURLPrefix() ;
-
-                    //assumption of same external mount point for each storage
+                    
                     //file server on output site
-                    destURL += this.getPathOnStageoutSite( lfn );
+                    String destURL = this.getURLOnStageoutSite( fs, lfn);
 
                     //if the paths match of dest URI
                     //and execDirURL we return null
@@ -826,12 +786,13 @@ public class TransferEngine extends Engine {
                         /*ft = new FileTransfer(file, job);
                         ft.addSource(stagingSiteHandle, execURL);*/
                         ft.addDestination(stagingSiteHandle, execURL);
+                        ft.setURLForRegistrationOnDestination( execURL );
                         //make the transfer transient?
                         ft.setTransferFlag(PegasusFile.TRANSFER_NOT);
                         return ft;
                     }
 
-                    ft.addDestination(destSiteHandle, destURL);
+                    ft.addDestination( destSiteHandle, destURL );
                 
                 }
             }//end of different put operations
@@ -863,11 +824,11 @@ public class TransferEngine extends Engine {
         for( FileServer.OPERATION op : FileServer.OPERATION.operationsForGET() ){
             for( Iterator it = directory.getFileServersIterator(op); it.hasNext();){
                 FileServer fs = (FileServer)it.next();
-                url = fs.getURLPrefix() ;
+                
 
                 //assumption of same external mount point for each storage
                 //file server on output site
-                url += this.getPathOnStageoutSite( lfn );
+                url = this.getURLOnStageoutSite( fs, lfn );
 
                 return url;
             }
@@ -1586,33 +1547,7 @@ public class TransferEngine extends Engine {
 
         return files;
     }
-    
-    /**
-     * It gets the output files for all the nodes which are specified in
-     * the Vector nodes passed.
-     *
-     * @param nodes   Vector of nodes job names whose output files are required.
-     *
-     * @param parentSubs  Vector of <code>Job</code> objects. One passes an
-     *                    empty vector as a parameter. And this populated with
-     *                    Job objects, of the nodes when output files are
-     *                    being determined.
-     *
-     * @return   Set of PegasusFile objects
-     */
-    private Set getOutputFiles(Vector nodes, Vector parentSubs) {
-
-        Set files = new HashSet();
-
-        for( Iterator it = nodes.iterator(); it.hasNext(); ){
-            String jobName = (String) it.next();
-            Job sub = getSubInfo(jobName);
-            parentSubs.addElement(sub);
-            files.addAll( sub.getOutputFiles() );
-        }
-
-        return files;
-    }
+   
 
 
     /**
@@ -1620,19 +1555,54 @@ public class TransferEngine extends Engine {
      * Each call to this function could trigger a change in the directory
      * returned depending upon the file factory being used.
      *
+     * @param directory     the directory on the output site 
+     * @param operation     the get or put operation
+     * @param lfn           the lfn
+     * 
+     * @return the URL as a String
+     */
+    private String getURLOnStageoutSite(Directory directory, OPERATION operation, String lfn) {
+        
+        //PM-590 stricter checks  
+        FileServer server = directory.selectFileServer( operation );
+ 
+        //          String urlPrefix = p.selectHeadNodeScratchSharedFileServerURLPrefix( FileServer.OPERATION.put );
+        if( server == null ){
+            this.complainForHeadNodeURLPrefix( REFINER_NAME, this.mPlannerOptions.getOutputSite()  );
+        }
+        
+        return this.getURLOnStageoutSite( server, lfn );
+        
+    }
+
+    
+    /**
+     * Returns the full path on remote output site, where the lfn will reside.
+     * Each call to this function could trigger a change in the directory
+     * returned depending upon the file factory being used.
+     *
+     * @param server  the file server to use
      * @param lfn   the logical filename of the file.
      *
      * @return the storage mount point.
      */
-    protected String getPathOnStageoutSite( String lfn ){
-        String file;
+    private  String getURLOnStageoutSite( FileServer server, String lfn ){
+        StringBuffer url =  new StringBuffer( server.getURL() );
         try{
-            file = mFactory.createFile( lfn ).toString();
+            //the factory will give us the relative
+            //add on part
+            String addOn = mFactory.createFile( lfn ).toString();
+            //check if we need to add file separator
+            //do we really need it?
+            if( addOn.indexOf( File.separator ) != 0 ){
+                url.append( File.separator );
+            }
+            url.append( addOn );
          }
          catch( IOException e ){
              throw new RuntimeException( "IOException " , e );
          }
-         return file;
+         return url.toString();
     }
 
     /**
@@ -1656,8 +1626,20 @@ public class TransferEngine extends Engine {
         }
 
         // create files in the directory, unless anything else is known.
-        mStageOutBaseDirectory = mSiteStore.getExternalStorageDirectory( outputSite );
-
+        SiteCatalogEntry entry       = mSiteStore.lookup( outputSite );
+        if( entry == null ){
+            throw new RuntimeException( "Unable to lookup site catalog for site " + outputSite );
+        }        
+        
+        mStageoutDirectory = entry.getHeadNodeStorageDirectory();
+        if( mStageoutDirectory == null ){
+            throw new RuntimeException( "No Storage directory specified for site " + outputSite );
+        }
+//        mStageOutBaseDirectory = mSiteStore.getExternalStorageDirectory( outputSite );
+        String addOn = this.getRelativeStorageDirectoryAddon( );
+        
+        //all file factories intialized with the addon component only
+        
         if( this.mDeepStorageStructure ){
             // create hashed, and levelled directories
             try {
@@ -1677,8 +1659,10 @@ public class TransferEngine extends Engine {
                     }
                 }
 
-                temp = new VirtualDecimalHashedFileFactory( mStageOutBaseDirectory, totalFiles );
+//                temp = new VirtualDecimalHashedFileFactory( mStageOutBaseDirectory, totalFiles );
+                temp = new VirtualDecimalHashedFileFactory( addOn, totalFiles );
 
+                
                 //each stageout file  has only 1 file associated with it
                 temp.setMultiplicator( 1 );
                 mFactory = temp;
@@ -1691,7 +1675,9 @@ public class TransferEngine extends Engine {
         else{
             try {
                 //Create a flat file factory
-                mFactory = new VirtualFlatFileFactory( mStageOutBaseDirectory ); // minimum default
+//                mFactory = new VirtualFlatFileFactory( mStageOutBaseDirectory ); // minimum default
+                mFactory = new VirtualFlatFileFactory( addOn ); // minimum default
+  
             } catch ( IOException ioe ) {
                 throw new RuntimeException( "Unable to generate files in the submit directory " ,
                                             ioe );
@@ -1700,6 +1686,36 @@ public class TransferEngine extends Engine {
 
     }
     
+    /**
+     * Return the relative directory that needs to be appended to the storage
+     * directory for the workflow.
+     *
+     *
+     * @return    String corresponding to the mount point if the pool is found.
+     *            null if pool entry is not found.
+     * 
+     */
+    private String getRelativeStorageDirectoryAddon(  ) {
+        
+        String mount_point = "";
+        //check if we need to replicate the submit directory
+        //structure on the storage directory
+        if( mDeepStorageStructure ){
+            String leaf = ( this.mPlannerOptions.partOfDeferredRun() )?
+                             //if a deferred run then pick up the relative random directory
+                             //this.mUserOpts.getOptions().getRandomDir():
+                             this.mPlannerOptions.getRelativeDirectory():
+                             //for a normal run add the relative submit directory
+                             this.mPlannerOptions.getRelativeDirectory();
+            File f = new File( mount_point, leaf );
+            mount_point = f.getAbsolutePath();
+        }
+
+
+        return mount_point;
+
+    }
+ 
     
     /**
      * Tracks the files created by a job in the Transient Replica Catalog.

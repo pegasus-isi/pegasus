@@ -94,9 +94,6 @@ public class SiteStore extends AbstractSiteData{
         initialize();
     }
 
-    
-    
-    
     /**
      * The intialize method.
      */
@@ -458,7 +455,10 @@ public class SiteStore extends AbstractSiteData{
      *
      * @return    String corresponding to the mount point if the pool is found.
      *            null if pool entry is not found.
+     * 
+     * @deprecated
      */
+/*
     public String getExternalStorageDirectory( String site ) {
         
         String mount_point = mStorageDir;
@@ -503,6 +503,7 @@ public class SiteStore extends AbstractSiteData{
         return mount_point;
 
     }
+ */ 
     
     /**
      * This determines the working directory on remote execution pool on the
