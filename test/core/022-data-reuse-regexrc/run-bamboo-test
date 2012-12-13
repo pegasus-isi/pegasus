@@ -67,7 +67,7 @@ pegasus-plan \
     --conf ${testdir}/pegasusrc \
     --sites condorpool \
     --dir work \
-    --output local \
+    --output-site local \
     --dax dax.xml \
     --nocleanup \
     -vvvvv \
