@@ -437,6 +437,36 @@ public class SiteStore extends AbstractSiteData{
         return path.toString();
     }
 
+    /**
+     * Return the relative directory that needs to be appended to the storage
+     * directory for the workflow.
+     *
+     *
+     * @return    String corresponding to the mount point if the pool is found.
+     *            null if pool entry is not found.
+     * 
+     */
+    public String getRelativeStorageDirectoryAddon(  ) {
+        
+        String mount_point = "";
+        //check if we need to replicate the submit directory
+        //structure on the storage directory
+        if( mDeepStorageStructure ){
+            String leaf = ( this.mPlannerOptions.partOfDeferredRun() )?
+                             //if a deferred run then pick up the relative random directory
+                             //this.mUserOpts.getOptions().getRandomDir():
+                             this.mPlannerOptions.getRelativeDirectory():
+                             //for a normal run add the relative submit directory
+                             this.mPlannerOptions.getRelativeDirectory();
+            File f = new File( mount_point, leaf );
+            mount_point = f.getAbsolutePath();
+        }
+
+
+        return mount_point;
+
+    }
+ 
      
     /**
      * Return the storage mount point for a particular pool.

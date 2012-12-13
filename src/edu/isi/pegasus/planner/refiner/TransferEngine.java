@@ -305,40 +305,35 @@ public class TransferEngine extends Engine {
     /**
      * Complains for a missing head node file server on a site for a job
      * 
-     * @param job      the job
-     * @param site     the site 
+     * @param job       the job
+     * @param operation the operation
+     * @param site      the site 
      */
-    private void complainForHeadNodeFileServer( Job job, String site) {
-        this.complainForHeadNodeFileServer( job.getID(), site);
+    private void complainForHeadNodeFileServer( Job job,
+                                                FileServer.OPERATION operation,
+                                                String site) {
+        this.complainForScratchFileServer( job.getID(), operation, site);
     }
     
     /**
      * Complains for a missing head node file server on a site for a job
      * 
      * @param jobname  the name of the job
+     * @param operation the file server operation
      * @param site     the site 
      */
-    private void complainForHeadNodeFileServer(String jobname, String site) {
+    private void complainForScratchFileServer( String jobname,
+                                                FileServer.OPERATION operation,
+                                                String site) {
         StringBuffer error = new StringBuffer();
         error.append( "[" ).append( REFINER_NAME ).append( "] ");
         if( jobname != null ){
             error.append( "For job (" ).append( jobname).append( ")." ); 
         }
-        error.append( " File Server not specified for head node scratch shared filesystem for site: ").
+        error.append( " File Server not specified for shared-scratch filesystem for site: ").
               append( site );
         throw new RuntimeException( error.toString() );
         
-    }
-
-    /**
-     * Returns the Job object for the job specified.
-     *
-     * @param jobName  the name of the job
-     *
-     * @return  the Job object for a job.
-     */
-    private Job getSubInfo(String jobName) {
-        return mDag.getSubInfo(jobName);
     }
 
     /**
@@ -700,7 +695,7 @@ public class TransferEngine extends Engine {
         //PM-590 stricter checks
         FileServer stagingSiteSharedScratchFS = stagingSite.selectHeadNodeScratchSharedFileServer( FileServer.OPERATION.put );
         if( stagingSiteSharedScratchFS == null ){
-            this.complainForHeadNodeFileServer( job, stagingSiteHandle );
+            this.complainForScratchFileServer( job, FileServer.OPERATION.put, stagingSiteHandle );
             
         }
         StringBuffer buffer = new StringBuffer();
@@ -817,7 +812,7 @@ public class TransferEngine extends Engine {
         //sanity check
         if( !directory.hasFileServerForGETOperations() ){
             //no file servers for GET operations
-            throw new RuntimeException( " No File Servers specified for GET Operation on Shared Storage on Headnode for site " + site );
+            throw new RuntimeException( " No File Servers specified for GET Operation on Shared Storage for site " + site );
         }
 
         String url = null;
@@ -897,7 +892,7 @@ public class TransferEngine extends Engine {
 
             FileServer destSiteSharedScratchFS = destSite.selectHeadNodeScratchSharedFileServer( FileServer.OPERATION.put );
             if( destSiteSharedScratchFS == null ){
-                this.complainForHeadNodeFileServer( job, destSiteHandle );
+                this.complainForHeadNodeFileServer( job, FileServer.OPERATION.put, destSiteHandle );
             }
             StringBuffer buffer = new StringBuffer();
             buffer.append( destSiteSharedScratchFS.getURLPrefix() ).
@@ -1132,7 +1127,7 @@ public class TransferEngine extends Engine {
         //PM-590 Stricter checks
         FileServer stagingSiteSharedScratchFS = stagingSite.selectHeadNodeScratchSharedFileServer( FileServer.OPERATION.put );
         if( stagingSiteSharedScratchFS == null ){
-            this.complainForHeadNodeFileServer(job, stagingSiteHandle);
+            this.complainForHeadNodeFileServer( job, FileServer.OPERATION.put, stagingSiteHandle);
         }
         String dAbsPath = mSiteStore.getExternalWorkDirectory( stagingSiteSharedScratchFS,
                                                                stagingSiteHandle);
@@ -1636,7 +1631,7 @@ public class TransferEngine extends Engine {
             throw new RuntimeException( "No Storage directory specified for site " + outputSite );
         }
 //        mStageOutBaseDirectory = mSiteStore.getExternalStorageDirectory( outputSite );
-        String addOn = this.getRelativeStorageDirectoryAddon( );
+        String addOn = mSiteStore.getRelativeStorageDirectoryAddon( );
         
         //all file factories intialized with the addon component only
         
@@ -1686,36 +1681,6 @@ public class TransferEngine extends Engine {
 
     }
     
-    /**
-     * Return the relative directory that needs to be appended to the storage
-     * directory for the workflow.
-     *
-     *
-     * @return    String corresponding to the mount point if the pool is found.
-     *            null if pool entry is not found.
-     * 
-     */
-    private String getRelativeStorageDirectoryAddon(  ) {
-        
-        String mount_point = "";
-        //check if we need to replicate the submit directory
-        //structure on the storage directory
-        if( mDeepStorageStructure ){
-            String leaf = ( this.mPlannerOptions.partOfDeferredRun() )?
-                             //if a deferred run then pick up the relative random directory
-                             //this.mUserOpts.getOptions().getRandomDir():
-                             this.mPlannerOptions.getRelativeDirectory():
-                             //for a normal run add the relative submit directory
-                             this.mPlannerOptions.getRelativeDirectory();
-            File f = new File( mount_point, leaf );
-            mount_point = f.getAbsolutePath();
-        }
-
-
-        return mount_point;
-
-    }
- 
     
     /**
      * Tracks the files created by a job in the Transient Replica Catalog.
@@ -1748,7 +1713,7 @@ public class TransferEngine extends Engine {
 //            FileServer server = stagingSiteEntry.getHeadNodeFS().selectScratchSharedFileServer();
             FileServer server = stagingSiteEntry.selectHeadNodeScratchSharedFileServer( FileServer.OPERATION.get );
             if( server == null ){
-                this.complainForHeadNodeFileServer(job, stagingSiteEntry.getSiteHandle());
+                this.complainForHeadNodeFileServer(job, FileServer.OPERATION.get, stagingSiteEntry.getSiteHandle());
             }
   
             stagingSiteURL.append( server.getURLPrefix() ).
