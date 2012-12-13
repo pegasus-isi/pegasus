@@ -70,17 +70,8 @@ public class SiteStore extends AbstractSiteData{
      */
     private String mWorkDir;
     private PlannerOptions mPlannerOptions;
-    
-    
-    /**
-     * This contains the storage directory relative to the se mount point of the
-     * pool. It is populated from the pegasus.dir.storage property from the properties
-     * file. If not specified then the storage directory is the se mount point
-     * from the pool.config file.
-     */
-    protected String mStorageDir;
 
-
+    
     /**
      * A boolean indicating whether to have a deep directory structure for
      * the storage directory or not.
@@ -109,8 +100,7 @@ public class SiteStore extends AbstractSiteData{
      */
     public void setForPlannerUse( PegasusProperties properties, PlannerOptions options ){
         mPlannerOptions = options;
-        mWorkDir              = properties.getExecDirectory();
-        mStorageDir           = properties.getStorageDirectory();        
+        mWorkDir              = properties.getExecDirectory();    
         mDeepStorageStructure = properties.useDeepStorageDirectoryStructure();
     }
     
