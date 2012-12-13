@@ -1745,9 +1745,9 @@ public class TransferEngine extends Engine {
             
             //PM-590 stricter checks
 //            FileServer server = stagingSiteEntry.getHeadNodeFS().selectScratchSharedFileServer();
-            FileServer server = stagingSiteEntry.selectHeadNodeScratchSharedFileServer( FileServer.OPERATION.get );
+            FileServer server = stagingSiteEntry.selectHeadNodeScratchSharedFileServer( FileServer.OPERATION.put );
             if( server == null ){
-                this.complainForScratchFileServer(job, FileServer.OPERATION.get, stagingSiteEntry.getSiteHandle());
+                this.complainForScratchFileServer(job, FileServer.OPERATION.put, stagingSiteEntry.getSiteHandle());
             }
   
             stagingSiteURL.append( server.getURLPrefix() ).
