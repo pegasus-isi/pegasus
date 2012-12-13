@@ -303,13 +303,47 @@ public class TransferEngine extends Engine {
     }
 
     /**
+     * Complains for a missing head node storage file server on a site for a job
+     *
+     * @param job       the job
+     * @param operation the operation
+     * @param site      the site
+     */
+    private void complainForStorageFileServer( Job job,
+                                                FileServer.OPERATION operation,
+                                                String site) {
+        this.complainForScratchFileServer( job.getID(), operation, site);
+    }
+
+    /**
+     * Complains for a missing head node storage file server on a site for a job
+     *
+     * @param jobname  the name of the job
+     * @param operation the file server operation
+     * @param site     the site
+     */
+    private void complainForStorageFileServer( String jobname,
+                                                FileServer.OPERATION operation,
+                                                String site) {
+        StringBuffer error = new StringBuffer();
+        error.append( "[" ).append( REFINER_NAME ).append( "] ");
+        if( jobname != null ){
+            error.append( "For job (" ).append( jobname).append( ")." );
+        }
+        error.append( " File Server not specified for shared-scratch filesystem for site: ").
+              append( site );
+        throw new RuntimeException( error.toString() );
+
+    }
+
+    /**
      * Complains for a missing head node file server on a site for a job
      * 
      * @param job       the job
      * @param operation the operation
      * @param site      the site 
      */
-    private void complainForHeadNodeFileServer( Job job,
+    private void complainForScratchFileServer( Job job,
                                                 FileServer.OPERATION operation,
                                                 String site) {
         this.complainForScratchFileServer( job.getID(), operation, site);
@@ -892,7 +926,7 @@ public class TransferEngine extends Engine {
 
             FileServer destSiteSharedScratchFS = destSite.selectHeadNodeScratchSharedFileServer( FileServer.OPERATION.put );
             if( destSiteSharedScratchFS == null ){
-                this.complainForHeadNodeFileServer( job, FileServer.OPERATION.put, destSiteHandle );
+                this.complainForScratchFileServer( job, FileServer.OPERATION.put, destSiteHandle );
             }
             StringBuffer buffer = new StringBuffer();
             buffer.append( destSiteSharedScratchFS.getURLPrefix() ).
@@ -1127,7 +1161,7 @@ public class TransferEngine extends Engine {
         //PM-590 Stricter checks
         FileServer stagingSiteSharedScratchFS = stagingSite.selectHeadNodeScratchSharedFileServer( FileServer.OPERATION.put );
         if( stagingSiteSharedScratchFS == null ){
-            this.complainForHeadNodeFileServer( job, FileServer.OPERATION.put, stagingSiteHandle);
+            this.complainForScratchFileServer( job, FileServer.OPERATION.put, stagingSiteHandle);
         }
         String dAbsPath = mSiteStore.getExternalWorkDirectory( stagingSiteSharedScratchFS,
                                                                stagingSiteHandle);
@@ -1563,7 +1597,7 @@ public class TransferEngine extends Engine {
  
         //          String urlPrefix = p.selectHeadNodeScratchSharedFileServerURLPrefix( FileServer.OPERATION.put );
         if( server == null ){
-            this.complainForHeadNodeURLPrefix( REFINER_NAME, this.mPlannerOptions.getOutputSite()  );
+            this.complainForStorageFileServer( "", operation, this.mPlannerOptions.getOutputSite()  );
         }
         
         return this.getURLOnStageoutSite( server, lfn );
@@ -1713,7 +1747,7 @@ public class TransferEngine extends Engine {
 //            FileServer server = stagingSiteEntry.getHeadNodeFS().selectScratchSharedFileServer();
             FileServer server = stagingSiteEntry.selectHeadNodeScratchSharedFileServer( FileServer.OPERATION.get );
             if( server == null ){
-                this.complainForHeadNodeFileServer(job, FileServer.OPERATION.get, stagingSiteEntry.getSiteHandle());
+                this.complainForScratchFileServer(job, FileServer.OPERATION.get, stagingSiteEntry.getSiteHandle());
             }
   
             stagingSiteURL.append( server.getURLPrefix() ).
