@@ -98,10 +98,10 @@ public class TransferEngine extends Engine {
     public static final int DELETED_JOBS_LEVEL = 1000;
 
     /**
-     * The name of the Replica Catalog Implementer that serves as the source for
-     * cache files.
+     * The name of the Replica Catalog Implementer that is used to write out
+     * the workflow cache file in the submit directory.
      */
-    public static final String WORKFLOW_CACHE_FILE_IMPLEMENTOR = "SimpleFile";
+    public static final String WORKFLOW_CACHE_FILE_IMPLEMENTOR = "FlushedCache";
 
 
     /**
