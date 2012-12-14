@@ -127,7 +127,12 @@ public abstract class DirectoryLayout extends AbstractSiteData{
      */
     public FileServer selectFileServer( FileServer.OPERATION operation ){
         List<FileServer> servers = this.mFileServers.get(operation);
-        return ( servers.isEmpty() )?
+        
+        if (servers == null || servers.isEmpty() ) {
+        	servers = this.mFileServers.get( FileServer.OPERATION.all );
+        }
+        	
+        return ( servers == null || servers.isEmpty() )?
                 null:
                 servers.get( PegRandom.getInteger( servers.size() - 1) );
         /*

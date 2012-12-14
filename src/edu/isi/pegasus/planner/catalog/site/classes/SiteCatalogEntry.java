@@ -711,12 +711,7 @@ public class SiteCatalogEntry extends AbstractSiteData{
             return null;
         }
 
-        FileServer result = dir.selectFileServer( operation );
-
-        //fall back to an all operation server
-        return ( result == null ) ? dir.selectFileServer( FileServer.OPERATION.all ) :
-                                    result;
-        
+        return dir.selectFileServer( operation );
     }
     
     
@@ -747,11 +742,7 @@ public class SiteCatalogEntry extends AbstractSiteData{
             return null;
         }
 
-        FileServer result =  dir.selectFileServer( operation );
-
-        //fall back to an all operation server
-        return ( result == null ) ? dir.selectFileServer( FileServer.OPERATION.all ) :
-                                    result;
+        return dir.selectFileServer( operation );
     }
     
     /**
