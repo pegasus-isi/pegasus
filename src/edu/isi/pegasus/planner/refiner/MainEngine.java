@@ -51,13 +51,13 @@ public class MainEngine
      * The name of the source key for Replica Catalog Implementer that serves as
      * cache
      */
-    public static final String TRANSIENT_REPLICA_CATALOG_KEY = "file";
+    public static final String PLANNER_CACHE_REPLICA_CATALOG_KEY = "file";
 
     /**
      * The name of the Replica Catalog Implementer that serves as the source for
      * cache files.
      */
-    public static final String TRANSIENT_REPLICA_CATALOG_IMPLEMENTER = "SimpleFile";
+    public static final String PLANNER_CACHE_REPLICA_CATALOG_IMPLEMENTER = "SimpleFile";
 
     /**
      * The Original Dag object which is constructed by parsing the dag file.
@@ -333,15 +333,15 @@ public class MainEngine
                           getCacheFileName( dag );
 
         //set the appropriate property to designate path to file
-        cacheProps.setProperty( MainEngine.TRANSIENT_REPLICA_CATALOG_KEY, file );
+        cacheProps.setProperty( MainEngine.PLANNER_CACHE_REPLICA_CATALOG_KEY, file );
 
         try{
             rc = ReplicaFactory.loadInstance(
-                                          TRANSIENT_REPLICA_CATALOG_IMPLEMENTER,
+                                          PLANNER_CACHE_REPLICA_CATALOG_IMPLEMENTER,
                                           cacheProps);
         }
         catch( Exception e ){
-            throw new RuntimeException( "Unable to initialize the transient replica catalog  " + file,
+            throw new RuntimeException( "Unable to initialize the replica catalog that acts as planner cache  " + file,
                                          e );
         
         }

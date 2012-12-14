@@ -51,6 +51,7 @@ import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 import edu.isi.pegasus.common.util.FactoryException;
 
 import edu.isi.pegasus.common.util.PegasusURL;
+import edu.isi.pegasus.planner.catalog.replica.ReplicaFactory;
 import edu.isi.pegasus.planner.catalog.site.classes.Directory;
 import edu.isi.pegasus.planner.catalog.site.classes.Directory.TYPE;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServerType.OPERATION;
@@ -97,6 +98,19 @@ public class TransferEngine extends Engine {
      * in a workflows exceed 1000.
      */
     public static final int DELETED_JOBS_LEVEL = 1000;
+
+    /**
+     * The name of the Replica Catalog Implementer that serves as the source for
+     * cache files.
+     */
+    public static final String WORKFLOW_CACHE_FILE_IMPLEMENTOR = "SimpleFile";
+
+
+    /**
+     * The name of the source key for Replica Catalog Implementer that serves as
+     * cache
+     */
+    public static final String WORKFLOW_CACHE_REPLICA_CATALOG_KEY = "file";
 
     /**
      * The scheme name for file url.
@@ -169,7 +183,13 @@ public class TransferEngine extends Engine {
      * A SimpleFile Replica Catalog, that tracks all the files that are being
      * materialized as part of workflow executaion.
      */
-    private ReplicaCatalog mTransientRC;
+    private ReplicaCatalog mPlannerCache;
+
+    /**
+     * A  Replica Catalog, that tracks all the GET URL's for the files on the
+     * staging sites.
+     */
+    private ReplicaCatalog mWorkflowCache;
 
 
     /**
@@ -179,10 +199,8 @@ public class TransferEngine extends Engine {
     private FileFactory mFactory;
 
     /**
-     * The base path for the stageout directory on the output site where all
-     * the files are staged out.
+     * The Directory on the output site as retrieved from the site catalog.
      */
-//    private String mStageOutBaseDirectory;
     private Directory mStageoutDirectory;
     
     /**
@@ -236,7 +254,6 @@ public class TransferEngine extends Engine {
         mDeepStorageStructure = mProps.useDeepStorageDirectoryStructure();
         mUseSymLinks = mProps.getUseOfSymbolicLinks();
         mWorkerNodeExecution = mProps.executeOnWorkerNode();
-        
         mSRMServiceURLToMountPointMap = constructSiteToSRMServerMap( mProps );
         
         mDag = reducedDag;
@@ -380,7 +397,7 @@ public class TransferEngine extends Engine {
      */
     public void addTransferNodes( ReplicaCatalogBridge rcb, ReplicaCatalog transientCatalog ) {
         mRCBridge = rcb;
-        mTransientRC = transientCatalog;
+        mPlannerCache = transientCatalog;
 
         Job currentJob;
         String currentJobName;
@@ -1762,6 +1779,8 @@ public class TransferEngine extends Engine {
 
 
 
+
+
     
     /**
      * Inserts an entry into the Transient RC. It modifies the PFN if the
@@ -1793,13 +1812,75 @@ public class TransferEngine extends Engine {
                                      String site, 
                                      boolean modifyURL ){
 
-        mTransientRC.insert( lfn, pfn, site );
+        mPlannerCache.insert( lfn, pfn, site );
     }
 
+    /**
+     * Initializes a Replica Catalog Instance that is used to store
+     * the GET URL's for all files on the staging site ( inputs staged and outputs
+     * created ).
+     *
+     * @param dag  the workflow being planned
+     *
+     * @return handle to transient catalog
+     */
+    private ReplicaCatalog initializeWorkflowCacheFile( ADag dag ){
+        ReplicaCatalog rc = null;
+        mLogger.log("Initialising Workflow Cache File in the Submit Directory",
+                    LogManager.DEBUG_MESSAGE_LEVEL );
 
 
-   
+        Properties cacheProps = mProps.getVDSProperties().matchingSubset(
+                                                              ReplicaCatalog.c_prefix,
+                                                              false );
+        String file = mPOptions.getSubmitDirectory() + File.separatorChar +
+                          getCacheFileName( dag );
 
+        //set the appropriate property to designate path to file
+        cacheProps.setProperty( WORKFLOW_CACHE_REPLICA_CATALOG_KEY, file );
+
+        try{
+            rc = ReplicaFactory.loadInstance(
+                                          WORKFLOW_CACHE_FILE_IMPLEMENTOR,
+                                          cacheProps);
+        }
+        catch( Exception e ){
+            throw new RuntimeException( "Unable to initialize Workflow Cache File in the Submit Directory  " + file,
+                                         e );
+
+        }
+        return rc;
+    }
+
+     /**
+     * Constructs the basename to the cache file that is to be used
+     * to log the transient files. The basename is dependant on whether the
+     * basename prefix has been specified at runtime or not.
+     *
+     * @param adag  the ADag object containing the workflow that is being
+     *              concretized.
+     *
+     * @return the name of the cache file
+     */
+    private String getCacheFileName(ADag adag){
+        StringBuffer sb = new StringBuffer();
+        String bprefix = mPOptions.getBasenamePrefix();
+
+        if(bprefix != null){
+            //the prefix is not null using it
+            sb.append(bprefix);
+        }
+        else{
+            //generate the prefix from the name of the dag
+            sb.append(adag.dagInfo.nameOfADag).append("-").
+           append(adag.dagInfo.index);
+        }
+        //append the suffix
+        sb.append(".cache");
+
+        return sb.toString();
+
+    }
 
 
 }
