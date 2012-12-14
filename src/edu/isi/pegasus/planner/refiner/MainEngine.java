@@ -223,20 +223,20 @@ public class MainEngine
 
 
         message = "Grafting transfer nodes in the workflow";
-        ReplicaCatalog transientRC  = initializeTransientRC( mReducedDag ) ;
+        ReplicaCatalog plannerCache  = initializePlannerCache( mReducedDag ) ;
         mLogger.log(message,LogManager.INFO_MESSAGE_LEVEL);
         mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_ADD_TRANSFER_NODES, LoggingKeys.DAX_ID, mOriginalDag.getAbstractWorkflowName() );       
         mTransEng = new TransferEngine( mReducedDag, 
                                         mBag,
                                         mRedEng.getDeletedJobs(),
                                         mRedEng.getDeletedLeafJobs());
-        mTransEng.addTransferNodes( mRCBridge , transientRC );
+        mTransEng.addTransferNodes( mRCBridge , plannerCache );
         mTransEng = null;
         mRedEng = null;
         mLogger.logEventCompletion();
         
         //populate the transient RC into PegasusBag
-        mBag.add( PegasusBag.TRANSIENT_REPLICA_CATALOG, transientRC );
+        mBag.add( PegasusBag.PLANNER_CACHE, plannerCache );
         
         //close the connection to RLI explicitly
         mRCBridge.closeConnection();
@@ -320,7 +320,7 @@ public class MainEngine
      * 
      * @return handle to transient catalog
      */
-    private ReplicaCatalog initializeTransientRC( ADag dag ){
+    private ReplicaCatalog initializePlannerCache( ADag dag ){
         ReplicaCatalog rc = null;
         mLogger.log("Initialising Transient Replica Catalog",
                     LogManager.DEBUG_MESSAGE_LEVEL );

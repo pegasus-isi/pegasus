@@ -444,7 +444,7 @@ public class TransferEngine extends Engine {
             }
             else{ //create the cache file always 
                 //Pegasus Bug PM-32 and PM-356
-                trackInTransientRC( currentJob );
+                trackInPlannerCache( currentJob );
             }
         }
 
@@ -739,7 +739,7 @@ public class TransferEngine extends Engine {
         String execURL = buffer.toString();
 
         //write out the exec url to the cache file
-        trackInTransientRC(lfn,execURL,stagingSiteHandle);
+        trackInPlannerCache(lfn,execURL,stagingSiteHandle);
 
         //if both transfer and registration
         //are transient return null
@@ -962,7 +962,7 @@ public class TransferEngine extends Engine {
                     //for the cleanup algorithm
                     //only the destination is tracked as source will have been
                     //tracked for the parent jobs
-                    this.trackInTransientRC( outFile, destURL, destSiteHandle );
+                    this.trackInPlannerCache( outFile, destURL, destSiteHandle );
 
                     //add all the possible source urls iterating through
                     //the list of grid ftp servers associated with the dest pool.
@@ -1344,15 +1344,15 @@ public class TransferEngine extends Engine {
                 //the compute site.  we can bypass first level
                 //staging of the data
                 //we add into transient RC the source URL without any modifications
-                trackInTransientRC( lfn, sourceURL, job.getSiteHandle(), false );
+                trackInPlannerCache( lfn, sourceURL, job.getSiteHandle(), false );
                 continue;
             }
             else{
                 //track the location where the data is staged as 
                 //part of the first level staging
                 //we always store the thirdparty url
-                //trackInTransientRC( lfn, destURL, job.getSiteHandle() );
-                trackInTransientRC( lfn, 
+                //trackInPlannerCache( lfn, destURL, job.getSiteHandle() );
+                trackInPlannerCache( lfn,
                                     dDirURL + File.separator + lfn, 
                                     job.getStagingSiteHandle());
             }
@@ -1721,7 +1721,7 @@ public class TransferEngine extends Engine {
      *
      * @param job  the job whose input files need to be tracked.
      */
-    protected void trackInTransientRC( Job job ){
+    protected void trackInPlannerCache( Job job ){
 
 
         //check if there is a remote initialdir set
@@ -1755,7 +1755,7 @@ public class TransferEngine extends Engine {
                     append( File.separatorChar ).append( lfn );
 
             
-            trackInTransientRC( lfn, stagingSiteURL.toString(), job.getSiteHandle() );
+            trackInPlannerCache( lfn, stagingSiteURL.toString(), job.getSiteHandle() );
 
         }
     }
@@ -1771,11 +1771,11 @@ public class TransferEngine extends Engine {
      * @param pfn  the pfn
      * @param site the site handle
      */
-    private void trackInTransientRC( String lfn, 
+    private void trackInPlannerCache( String lfn,
                                      String pfn,
                                      String site ){
 
-        this.trackInTransientRC( lfn, pfn, site, true );
+        this.trackInPlannerCache( lfn, pfn, site, true );
     }
     
     /**
@@ -1788,7 +1788,7 @@ public class TransferEngine extends Engine {
      * @param site the site handle
      * @param modifyURL whether to modify URL in case of S3 or not.
      */
-    private void trackInTransientRC( String lfn, 
+    private void trackInPlannerCache( String lfn,
                                      String pfn,
                                      String site, 
                                      boolean modifyURL ){

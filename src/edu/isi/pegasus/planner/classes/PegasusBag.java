@@ -51,7 +51,7 @@ public class PegasusBag
     public static final String PEGASUS_INFO[] = {
         "pegasus-properties", "planner-options", "replica-catalog", "site-catalog",
         "transformation-catalog", "transformation-mapper", "pegasus-logger", "site-store",
-        "transient-rc", "worker-package-map", "uses-pmc"
+        "planner-cache", "worker-package-map", "uses-pmc"
     };
 
 
@@ -107,9 +107,9 @@ public class PegasusBag
     
     /**
      * The constant to be passed to the accessor functions to get or set the
-     * handle to the transient replica catalog
+     * handle to the planner cache for planning purposes.
      */
-    public static final Integer TRANSIENT_REPLICA_CATALOG = new Integer( 8 );
+    public static final Integer PLANNER_CACHE = new Integer( 8 );
 
 
     /**
@@ -169,7 +169,7 @@ public class PegasusBag
      * The transient replica catalog that tracks the files created or transferred
      * during the workflow
      */
-    private ReplicaCatalog mTransientRC;
+    private ReplicaCatalog mPlannerCache;
 
 
     /**
@@ -260,9 +260,9 @@ public class PegasusBag
                     valid = false;
                 break;
 
-            case 8: //TRANSIENT_REPLICA_CATALOG
+            case 8: //PLANNER_CACHE
                 if ( value != null && value instanceof ReplicaCatalog )
-                    mTransientRC = ( ReplicaCatalog ) value;
+                    mPlannerCache = ( ReplicaCatalog ) value;
                 else
                     valid = false;
                 break;
@@ -353,7 +353,7 @@ public class PegasusBag
                 return this.mSiteStore;
                 
             case 8://TRANSIENT_RC
-                return this.mTransientRC;
+                return this.mPlannerCache;
 
             case 9://WORKER PACKAGE MAP
                 return this.mWorkerPackageMap;
@@ -416,12 +416,12 @@ public class PegasusBag
     }
     
     /**
-     * A convenice method to get the handle to the transient replica catalog
+     * A convenice method to get the handle to the planner cache
      *
      * @return  the handle to transient replica catalog
      */
-    public ReplicaCatalog getHandleToTransientReplicaCatalog(){
-        return ( ReplicaCatalog )get( PegasusBag.TRANSIENT_REPLICA_CATALOG );
+    public ReplicaCatalog getHandleToPlannerCache(){
+        return ( ReplicaCatalog )get( PegasusBag.PLANNER_CACHE );
     }
     
     /**

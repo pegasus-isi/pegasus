@@ -615,7 +615,7 @@ public class CPlanner extends Executable{
         } 
         finally {
             //close the connection to transient replica catalog
-            mBag.getHandleToTransientReplicaCatalog().close();
+            mBag.getHandleToPlannerCache().close();
             mLogger.logEventCompletion();
         }
 

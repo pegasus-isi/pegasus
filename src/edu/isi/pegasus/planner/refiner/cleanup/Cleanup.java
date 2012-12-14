@@ -168,7 +168,7 @@ public class Cleanup implements CleanupImplementation{
         mSiteStore       = bag.getHandleToSiteStore();
         mTCHandle        = bag.getHandleToTransformationCatalog(); 
         mLogger          = bag.getLogger();
-        mTransientRC     = bag.getHandleToTransientReplicaCatalog();
+        mTransientRC     = bag.getHandleToPlannerCache();
     }
 
 
