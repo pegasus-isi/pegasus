@@ -303,7 +303,7 @@ public class FlushedCache implements ReplicaCatalog {
 		if (lfn == null || tuple == null)
 			throw new NullPointerException();
 
-		writeReplicaCatalogEntry(lfn, tuple);
+		write (writeReplicaCatalogEntry(lfn, tuple));
 
 		return 1;
 	}
@@ -329,7 +329,7 @@ public class FlushedCache implements ReplicaCatalog {
 		if (lfn == null || pfn == null || handle == null)
 			throw new NullPointerException();
 
-		writeReplicaCatalogEntry(lfn, new ReplicaCatalogEntry(pfn, handle));
+		write (writeReplicaCatalogEntry(lfn, new ReplicaCatalogEntry(pfn, handle)));
 		return 1;
 	}
 
