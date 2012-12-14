@@ -34,11 +34,21 @@ import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
  * file. This is done so that the Cache file generation would not require
  * storing all RC entries in memory.
  * 
+ * The implementation does not maintain any internal state, and is not aware if
+ * same entries are being written multiple times.
+ * 
+ * The class using this implementation needs to ensure only valid entries are
+ * passed through to the insert method, and that entries are not being
+ * duplicated.
+ * 
  * @author Rajiv Mayani
  * @version $Revision: 5907 $
  */
 public class FlushedCache implements ReplicaCatalog {
 
+	/**
+	 * A buffered writer, to buffer all file writes being performed.
+	 */
 	protected BufferedWriter m_out;
 
 	/**
@@ -57,27 +67,18 @@ public class FlushedCache implements ReplicaCatalog {
 	private int m_line_count = 0;
 
 	/**
-	 * Set buffer size for the internal BufferedWriter.
-	 * 
-	 * @return true if buffer size was set, false otherwise
+	 * Set buffer size i.e. The no of lines that the implementation will buffer.
 	 */
-	public boolean setBufferSize(int bufferSize) {
-
-		if (m_out == null) {
-			m_buffer_size = bufferSize;
-
-			return true;
-		}
-
-		return false;
+	public void setBufferSize(int bufferSize) {
+		m_buffer_size = bufferSize;
 	}
 
 	/**
-	 * Reads the on-disk map file into memory.
+	 * Opens the file for writing.
 	 * 
 	 * @param filename
-	 *            is the name of the file to read.
-	 * @return true, if the in-memory data structures appear sound.
+	 *            is the name of the file to write too.
+	 * @return true, if the file can be opened for writing
 	 */
 	public boolean connect(String filename) {
 		// sanity check
@@ -85,6 +86,8 @@ public class FlushedCache implements ReplicaCatalog {
 			return false;
 
 		try {
+			// Create a buffered writer with a buffer size of m_buffer_size
+			// lines, with each line averaging a m_avg_line_size bytes
 			m_out = new BufferedWriter(new FileWriter(filename), m_buffer_size
 					* m_avg_line_size);
 		} catch (IOException ioe) {
@@ -98,17 +101,13 @@ public class FlushedCache implements ReplicaCatalog {
 	/**
 	 * Establishes a connection to the database from the properties. You will
 	 * need to specify a "file" property to point to the location of the on-disk
-	 * instance. If the property "quote" is set to a true value, LFNs and PFNs
-	 * are always quoted. By default, and if false, LFNs and PFNs are only
-	 * quoted as necessary.
+	 * instance.
 	 * 
 	 * @param props
 	 *            is the property table with sufficient settings to establish a
 	 *            link with the database.
 	 * @return true if connected, false if failed to connect.
 	 * 
-	 * @throws Error
-	 *             subclasses for runtime errors in the class loader.
 	 */
 	public boolean connect(Properties props) {
 
@@ -140,10 +139,10 @@ public class FlushedCache implements ReplicaCatalog {
 
 		if (s == null || s.length() == 0) {
 			// empty string short-cut
-			result = "\"\"";
+			result = s;
 		} else {
 			// string has content
-			boolean flag = true;
+			boolean flag = false;
 			for (int i = 0; i < s.length() && !flag; ++i) {
 				// Note: loop will never trigger, if m_quote is true
 				char ch = s.charAt(i);
@@ -158,6 +157,19 @@ public class FlushedCache implements ReplicaCatalog {
 		return result;
 	}
 
+	/**
+	 * 
+	 * The method generate a String representation of the replica catalog entry.
+	 * The String representation follows the format expected by SimpleFile
+	 * replica catalog implementation.
+	 * 
+	 * @param lfn
+	 *            The logical file name
+	 * @param rce
+	 *            The replica catalog entry consisting of the physical file name
+	 *            name and key, value pairs.
+	 * @return A String representation of the replica-catalog entry.
+	 */
 	protected String writeReplicaCatalogEntry(String lfn,
 			ReplicaCatalogEntry rce) {
 		Escape e = new Escape("\"\\", '\\');
@@ -182,6 +194,12 @@ public class FlushedCache implements ReplicaCatalog {
 		return s.toString();
 	}
 
+	/**
+	 * Check if the buffer is full i.e. No. of unwritten lines is same as
+	 * m_buffer_size
+	 * 
+	 * @see setBufferSize
+	 */
 	private void flush() {
 		if (m_buffer_size - m_line_count == 0) {
 			try {
@@ -303,7 +321,7 @@ public class FlushedCache implements ReplicaCatalog {
 		if (lfn == null || tuple == null)
 			throw new NullPointerException();
 
-		write (writeReplicaCatalogEntry(lfn, tuple));
+		write(writeReplicaCatalogEntry(lfn, tuple));
 
 		return 1;
 	}
@@ -311,7 +329,7 @@ public class FlushedCache implements ReplicaCatalog {
 	/**
 	 * Inserts a new mapping into the replica catalog. This is a convenience
 	 * function exposing the resource handle. Internally, the
-	 * <code>ReplicaCatalogEntry</code> element will be contructed, and passed
+	 * <code>ReplicaCatalogEntry</code> element will be constructed, and passed
 	 * to the appropriate insert function.
 	 * 
 	 * @param lfn
@@ -329,7 +347,8 @@ public class FlushedCache implements ReplicaCatalog {
 		if (lfn == null || pfn == null || handle == null)
 			throw new NullPointerException();
 
-		write (writeReplicaCatalogEntry(lfn, new ReplicaCatalogEntry(pfn, handle)));
+		write(writeReplicaCatalogEntry(lfn,
+				new ReplicaCatalogEntry(pfn, handle)));
 		return 1;
 	}
 
