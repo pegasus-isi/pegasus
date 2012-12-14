@@ -126,10 +126,10 @@ public abstract class DirectoryLayout extends AbstractSiteData{
      * @return FileServer else null
      */
     public FileServer selectFileServer( FileServer.OPERATION operation ){
-        List<FileServer> servers = this.mFileServers.get(operation);
+        List<FileServer> servers = getFileServers(operation);
         
         if (servers == null || servers.isEmpty() ) {
-        	servers = this.mFileServers.get( FileServer.OPERATION.all );
+        	servers = getFileServers( FileServer.OPERATION.all );
         }
         	
         return ( servers == null || servers.isEmpty() )?
@@ -142,7 +142,19 @@ public abstract class DirectoryLayout extends AbstractSiteData{
          */
     }
 
+    /**
+     * Selects all file servers and returns it matching an operation type.
+     *
+     * @param operation  the operation for which the file server is required
+     *
+     * @return List of FileServer else null
+     */
+    public List<FileServer> getFileServers( FileServer.OPERATION operation ){
+        List<FileServer> servers = this.mFileServers.get(operation);
 
+        return servers;
+    }
+    
     /**
      * A convenience method that retrieves whether the directory has a
      * file server for get operations ( file server with type get and all )
