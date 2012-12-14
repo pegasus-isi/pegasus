@@ -399,46 +399,6 @@ public class SimpleFile implements ReplicaCatalog
     return result;
   }
 
-	protected String writeLFNEntry( String lfn ) {
-		String newline = System.getProperty("line.separator", "\r\n");
-		StringBuilder s = new StringBuilder ();
-		Collection c = (Collection) m_lfn.get(lfn);
-		
-		if (c != null) {
-			for (Iterator j = c.iterator(); j.hasNext();) {
-				ReplicaCatalogEntry rce = (ReplicaCatalogEntry) j.next();
-
-				s.append( writeReplicaCatalogEntry( lfn, rce) );
-
-				// finalize record/line
-				s.append ( newline );
-			}
-		}
-		
-		return s.toString();
-	}
-
-	protected String writeReplicaCatalogEntry(String lfn,
-			ReplicaCatalogEntry rce) {
-		Escape e = new Escape("\"\\", '\\');
-		StringBuilder s = new StringBuilder();
-
-		s.append(quote(e, lfn));
-		s.append(' ');
-		s.append(quote(e, rce.getPFN()));
-		for (Iterator k = rce.getAttributeIterator(); k.hasNext();) {
-			String key = (String) k.next();
-			String value = (String) rce.getAttribute(key);
-			s.append(' ');
-			s.append(key);
-			s.append("=\"");
-			s.append(e.escape(value));
-			s.append('"');
-		}
-
-		return s.toString();
-	}
-	
   /**
    * This operation will dump the in-memory representation back onto
    * disk. The store operation is strict in what it produces. The LFN
@@ -446,48 +406,71 @@ public class SimpleFile implements ReplicaCatalog
    * they contain special characters. The attributes are <b>always</b>
    * quoted and thus quote-escaped.
    */
-	public void close() {
-		String newline = System.getProperty("line.separator", "\r\n");
+  public void close()
+  {
+    String newline = System.getProperty("line.separator", "\r\n");
+    Escape e = new Escape( "\"\\", '\\' );
 
-		// sanity check
-		if (m_lfn == null)
-			return;
+    // sanity check
+    if ( m_lfn == null ) return;
+    
+    
+    //check if the file is writeable or not
+    if( m_readonly ){
+      m_lfn.clear();
+      m_lfn = null;
+      m_filename = null;
+      return;
+    }
 
-		// check if the file is writeable or not
-		if (m_readonly) {
-			m_lfn.clear();
-			m_lfn = null;
-			m_filename = null;
-			return;
-		}
+    try {
+      
+        
+      // open
+      Writer out = new BufferedWriter(new FileWriter(m_filename));
 
-		try {
+      // write header
+      out.write( "# file-based replica catalog: " +
+		 Currently.iso8601(false,true,true,new Date()) );
+      out.write( newline );
 
-			// open
-			Writer out = new BufferedWriter(new FileWriter(m_filename));
+      // write data
+      for ( Iterator i=m_lfn.keySet().iterator(); i.hasNext(); ) {
+	String lfn = (String) i.next();
+	Collection c = (Collection) m_lfn.get(lfn);
+	if ( c != null ) {
+	  for ( Iterator j=c.iterator(); j.hasNext(); ) {
+	    ReplicaCatalogEntry rce = (ReplicaCatalogEntry) j.next();
+	    out.write( quote(e,lfn) );
+	    out.write( ' ' );
+	    out.write( quote(e,rce.getPFN()) );
+	    for ( Iterator k=rce.getAttributeIterator(); k.hasNext(); ) {
+	      String key = (String) k.next();
+	      String value = (String) rce.getAttribute(key);
+	      out.write( ' ' );
+	      out.write( key );
+	      out.write( "=\"" );
+	      out.write( e.escape(value) );
+	      out.write( '"' );
+	    }
 
-			// write header
-			out.write("# file-based replica catalog: "
-					+ Currently.iso8601(false, true, true, new Date()));
-			out.write(newline);
-
-			// write data
-			for (Iterator i = m_lfn.keySet().iterator(); i.hasNext();) {
-				String lfn = (String) i.next();
-				out.write( writeLFNEntry( lfn ) );
-			}
-
-			// close
-			out.close();
-		} catch (IOException ioe) {
-			// FIXME: blurt message somewhere sane
-			System.err.println(ioe.getMessage());
-		} finally {
-			m_lfn.clear();
-			m_lfn = null;
-			m_filename = null;
-		}
+	    // finalize record/line
+	    out.write( newline );
+	  }
 	}
+      }
+
+      // close
+      out.close();
+    } catch ( IOException ioe ) {
+      // FIXME: blurt message somewhere sane
+      System.err.println( ioe.getMessage() );
+    } finally {
+      m_lfn.clear();
+      m_lfn = null;
+      m_filename = null;
+    }
+  }
 
   /**
    * Predicate to check, if the connection with the catalog's
