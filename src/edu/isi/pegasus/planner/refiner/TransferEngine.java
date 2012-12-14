@@ -53,14 +53,12 @@ import edu.isi.pegasus.common.util.FactoryException;
 import edu.isi.pegasus.common.util.PegasusURL;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaFactory;
 import edu.isi.pegasus.planner.catalog.site.classes.Directory;
-import edu.isi.pegasus.planner.catalog.site.classes.Directory.TYPE;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServerType.OPERATION;
 import edu.isi.pegasus.planner.classes.DAGJob;
 import edu.isi.pegasus.planner.classes.DAXJob;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.namespace.Dagman;
-import edu.isi.pegasus.planner.transfer.SLS;
-import edu.isi.pegasus.planner.transfer.sls.SLSFactory;
+
 import org.griphyn.vdl.euryale.FileFactory;
 import org.griphyn.vdl.euryale.VirtualDecimalHashedFileFactory;
 import org.griphyn.vdl.euryale.VirtualFlatFileFactory;
@@ -271,6 +269,8 @@ public class TransferEngine extends Engine {
 
         this.initializeStageOutSiteDirectoryFactory( reducedDag );
 
+        mWorkflowCache = this.initializeWorkflowCacheFile( reducedDag );
+
         //log some configuration messages
         mLogger.log("Transfer Refiner loaded is [" + mTXRefiner.getDescription() +
                             "]",LogManager.CONFIG_MESSAGE_LEVEL);
@@ -283,7 +283,7 @@ public class TransferEngine extends Engine {
      *
      *
      * @param site  the site handle associated with the destination URL.
-     * @param destURL the destination URL
+     * @param destPutURL the destination URL
      * @param type  the type of transfer job for which the URL is being constructed.
      *
      * @return true indicating if the associated transfer job should run on local
@@ -319,85 +319,18 @@ public class TransferEngine extends Engine {
         return result;
     }
 
-    /**
-     * Complains for a missing head node storage file server on a site for a job
-     *
-     * @param job       the job
-     * @param operation the operation
-     * @param site      the site
-     */
-    private void complainForStorageFileServer( Job job,
-                                                FileServer.OPERATION operation,
-                                                String site) {
-        this.complainForScratchFileServer( job.getID(), operation, site);
-    }
-
-    /**
-     * Complains for a missing head node storage file server on a site for a job
-     *
-     * @param jobname  the name of the job
-     * @param operation the file server operation
-     * @param site     the site
-     */
-    private void complainForStorageFileServer( String jobname,
-                                                FileServer.OPERATION operation,
-                                                String site) {
-        StringBuffer error = new StringBuffer();
-        error.append( "[" ).append( REFINER_NAME ).append( "] ");
-        if( jobname != null ){
-            error.append( "For job (" ).append( jobname).append( ")." );
-        }
-        error.append( " File Server not specified for shared-scratch filesystem for site: ").
-              append( site );
-        throw new RuntimeException( error.toString() );
-
-    }
-
-    /**
-     * Complains for a missing head node file server on a site for a job
-     * 
-     * @param job       the job
-     * @param operation the operation
-     * @param site      the site 
-     */
-    private void complainForScratchFileServer( Job job,
-                                                FileServer.OPERATION operation,
-                                                String site) {
-        this.complainForScratchFileServer( job.getID(), operation, site);
-    }
     
-    /**
-     * Complains for a missing head node file server on a site for a job
-     * 
-     * @param jobname  the name of the job
-     * @param operation the file server operation
-     * @param site     the site 
-     */
-    private void complainForScratchFileServer( String jobname,
-                                                FileServer.OPERATION operation,
-                                                String site) {
-        StringBuffer error = new StringBuffer();
-        error.append( "[" ).append( REFINER_NAME ).append( "] ");
-        if( jobname != null ){
-            error.append( "For job (" ).append( jobname).append( ")." ); 
-        }
-        error.append( " File Server not specified for shared-scratch filesystem for site: ").
-              append( site );
-        throw new RuntimeException( error.toString() );
-        
-    }
-
     /**
      * Adds the transfer nodes to the workflow.
      *
      * @param rcb                the bridge to the ReplicaCatalog.
-     * @param transientCatalog   an instance of the replica catalog that will
+     * @param plannerCache   an instance of the replica catalog that will
      *                           store the locations of the files on the remote
      *                           sites.
      */
-    public void addTransferNodes( ReplicaCatalogBridge rcb, ReplicaCatalog transientCatalog ) {
+    public void addTransferNodes( ReplicaCatalogBridge rcb, ReplicaCatalog plannerCache ) {
         mRCBridge = rcb;
-        mPlannerCache = transientCatalog;
+        mPlannerCache = plannerCache;
 
         Job currentJob;
         String currentJobName;
@@ -459,9 +392,10 @@ public class TransferEngine extends Engine {
                 vOutPoolTX = getFileTX(outputSite, currentJob, localTransfer );
                 mTXRefiner.addStageOutXFERNodes( currentJob, vOutPoolTX, rcb, localTransfer );
             }
-            else{ //create the cache file always 
+            else{
+                //create the cache file always
                 //Pegasus Bug PM-32 and PM-356
-                trackInPlannerCache( currentJob );
+                trackInCaches( currentJob );
             }
         }
 
@@ -506,8 +440,9 @@ public class TransferEngine extends Engine {
         mTXRefiner.done();
 
 
-        //close the handle to the cache file if it is written
-        //closeTransientRC();
+        //close the handle to the workflow cache file if it is written
+        //not the planner cache file
+        this.mWorkflowCache.close();
     }
 
 
@@ -685,10 +620,9 @@ public class TransferEngine extends Engine {
             String file = pf.getLFN();
 
 
-            FileTransfer ft = this.constructFileTX( pf, 
-                                                    job.getStagingSiteHandle(),
+            FileTransfer ft = this.constructFileTX( pf,
+                                                    job,
                                                     destPool,
-                                                    job.logicalName,
                                                     path,
                                                     localTransfer );
             if (ft != null) {
@@ -706,7 +640,7 @@ public class TransferEngine extends Engine {
     
     /**
      * Constructs the FileTransfer object on the basis of the transiency
-     * information. If the transient flag for transfer is set, the destURL for the
+     * information. If the transient flag for transfer is set, the destPutURL for the
      * FileTransfer object would be the execution directory, as this is the entry
      * that has to be registered in the ReplicaMechanism
      *
@@ -724,12 +658,12 @@ public class TransferEngine extends Engine {
      * @return   the corresponding FileTransfer object
      */
     private FileTransfer constructFileTX( PegasusFile pf,
-                                          String stagingSiteHandle,
+                                          Job job,
                                           String destSiteHandle,
-                                          String job,
                                           String path,
                                           boolean localTransfer ) {
 
+        String stagingSiteHandle = job.getStagingSiteHandle();
         String lfn = pf.getLFN();
         FileTransfer ft = null;
 
@@ -743,7 +677,10 @@ public class TransferEngine extends Engine {
             throw new RuntimeException( mLogMsg );
         }
 
-        //PM-590 stricter checks
+        //the get
+        String sharedScratchGetURL = this.getURLOnSharedScratch( stagingSite, job, OPERATION.get, lfn );
+        String sharedScratchPutURL = this.getURLOnSharedScratch( stagingSite, job, OPERATION.put, lfn );
+/*
         FileServer stagingSiteSharedScratchFS = stagingSite.selectHeadNodeScratchSharedFileServer( FileServer.OPERATION.put );
         if( stagingSiteSharedScratchFS == null ){
             this.complainForScratchFileServer( job, FileServer.OPERATION.put, stagingSiteHandle );
@@ -753,10 +690,12 @@ public class TransferEngine extends Engine {
         buffer.append( stagingSiteSharedScratchFS.getURLPrefix() ).
                append( mSiteStore.getExternalWorkDirectory(stagingSiteSharedScratchFS, stagingSiteHandle)).
                append( File.separatorChar ).append( lfn );
-        String execURL = buffer.toString();
-
-        //write out the exec url to the cache file
-        trackInPlannerCache(lfn,execURL,stagingSiteHandle);
+        String sharedScratchGetURL = buffer.toString();
+*/
+        //in the planner cache we track the output files put url on staging site
+        trackInPlannerCache( lfn, sharedScratchPutURL, stagingSiteHandle );
+        //in the workflow cache we track the output files put url on staging site
+        trackInWorkflowCache( lfn, sharedScratchGetURL, stagingSiteHandle );
 
         //if both transfer and registration
         //are transient return null
@@ -765,18 +704,18 @@ public class TransferEngine extends Engine {
         }
 
         //if only transient transfer flag
-        //means destURL and sourceURL
+        //means destPutURL and sourceURL
         //are same and are equal to
         //execution directory on stagingSiteHandle
         if (pf.getTransientTransferFlag()) {
 
-            ft = new FileTransfer(lfn,job,pf.getFlags());
+            ft = new FileTransfer(lfn,job.getID(),pf.getFlags());
             //set the transfer mode
             ft.setSize( pf.getSize() );
             ft.setTransferFlag(pf.getTransferFlag());
-            ft.addSource(stagingSiteHandle,execURL);
-            ft.addDestination(stagingSiteHandle,execURL);
-            ft.setURLForRegistrationOnDestination( execURL );
+            ft.addSource(stagingSiteHandle,sharedScratchGetURL);
+            ft.addDestination(stagingSiteHandle,sharedScratchGetURL);
+            ft.setURLForRegistrationOnDestination( sharedScratchGetURL );
         }
         //the source dir is the exec dir
         //on exec pool and dest dir
@@ -784,11 +723,11 @@ public class TransferEngine extends Engine {
         else {
             //construct the source url depending on whether third party tx
            String sourceURL = localTransfer ?
-                                execURL :
+                                sharedScratchGetURL :
                                 "file://" + mSiteStore.getInternalWorkDirectory(stagingSiteHandle,path) +
                                 File.separator + lfn;
 
-            ft = new FileTransfer(lfn,job,pf.getFlags());
+            ft = new FileTransfer(lfn, job.getID(), pf.getFlags());
             ft.setSize( pf.getSize() );
             //set the transfer mode
             ft.setTransferFlag(pf.getTransferFlag());
@@ -828,11 +767,11 @@ public class TransferEngine extends Engine {
 
                     //if the paths match of dest URI
                     //and execDirURL we return null
-                    if (execURL.equalsIgnoreCase(destURL)) {
+                    if (sharedScratchGetURL.equalsIgnoreCase(destURL)) {
                         /*ft = new FileTransfer(file, job);
-                        ft.addSource(stagingSiteHandle, execURL);*/
-                        ft.addDestination(stagingSiteHandle, execURL);
-                        ft.setURLForRegistrationOnDestination( execURL );
+                        ft.addSource(stagingSiteHandle, sharedScratchGetURL);*/
+                        ft.addDestination(stagingSiteHandle, sharedScratchGetURL);
+                        ft.setURLForRegistrationOnDestination( sharedScratchGetURL );
                         //make the transfer transient?
                         ft.setTransferFlag(PegasusFile.TRANSFER_NOT);
                         return ft;
@@ -940,7 +879,7 @@ public class TransferEngine extends Engine {
             String sourceURI = null;
             
             //PM-590 Stricter checks
-
+/*
             FileServer destSiteSharedScratchFS = destSite.selectHeadNodeScratchSharedFileServer( FileServer.OPERATION.put );
             if( destSiteSharedScratchFS == null ){
                 this.complainForScratchFileServer( job, FileServer.OPERATION.put, destSiteHandle );
@@ -950,14 +889,17 @@ public class TransferEngine extends Engine {
                    append( mSiteStore.getExternalWorkDirectory(
                                                destSiteSharedScratchFS,
                                                destSiteHandle) );
-            String thirdPartyDestURI = buffer.toString();
+            String thirdPartyDestPutURI = buffer.toString();
+ */
+            String thirdPartyDestPutURI = this.getURLOnSharedScratch( destSite, job, OPERATION.put, null );
+
 
             //definite inconsitency as url prefix and mount point
             //are not picked up from the same server
-            boolean localTransfer = runTransferOnLocalSite( destSiteHandle, thirdPartyDestURI, Job.INTER_POOL_JOB );
+            boolean localTransfer = runTransferOnLocalSite( destSiteHandle, thirdPartyDestPutURI, Job.INTER_POOL_JOB );
             String destURI = localTransfer ?
                 //construct for third party transfer
-                thirdPartyDestURI :
+                thirdPartyDestPutURI :
                 //construct for normal transfer
                 "file://" + mSiteStore.getInternalWorkDirectory( destSiteHandle, destRemoteDir );
 
@@ -969,7 +911,7 @@ public class TransferEngine extends Engine {
                if( job.getInputFiles().contains( pf ) ){
                     String sourceURL     = null;
                     String destURL       = destURI + File.separator + outFile;
-                    String thirdPartyDestURL = thirdPartyDestURI + File.separator +
+                    String thirdPartyDestURL = thirdPartyDestPutURI + File.separator +
                                            outFile;
                     FileTransfer ft      = new FileTransfer(outFile,pJob.jobName);
                     ft.setSize( pf.getSize() );
@@ -979,14 +921,16 @@ public class TransferEngine extends Engine {
                     //for the cleanup algorithm
                     //only the destination is tracked as source will have been
                     //tracked for the parent jobs
-                    this.trackInPlannerCache( outFile, destURL, destSiteHandle );
+                    trackInPlannerCache( outFile, thirdPartyDestURL, destSiteHandle );
+
+                    //in the workflow cache we track the get URL for the outfile
+                    String thirdPartyDestGetURL = this.getURLOnSharedScratch( destSite, job, OPERATION.get, outFile );
+                    trackInWorkflowCache( outFile, thirdPartyDestGetURL, destSiteHandle );
 
                     //add all the possible source urls iterating through
                     //the list of grid ftp servers associated with the dest pool.
                     boolean first = true;
 
-//                    for( Iterator it1 = mSiteStore.lookup( pJob.getSiteHandle() ).getHeadNodeFS().getScratch().getSharedDirectory().getFileServersIterator();
-//                                      it1.hasNext();){
                     Directory parentScratchDir = mSiteStore.lookup( pJob.getStagingSiteHandle() ).getDirectory( Directory.TYPE.shared_scratch );
                     if( parentScratchDir == null ){
                         throw new RuntimeException( "Unable to determine the scratch dir for site " + pJob.getStagingSiteHandle() );
@@ -1174,7 +1118,7 @@ public class TransferEngine extends Engine {
 
         //sAbsPath would be just the source directory absolute path
         //dAbsPath would be just the destination directory absolute path
-        
+/*
         //PM-590 Stricter checks
         FileServer stagingSiteSharedScratchFS = stagingSite.selectHeadNodeScratchSharedFileServer( FileServer.OPERATION.put );
         if( stagingSiteSharedScratchFS == null ){
@@ -1185,28 +1129,36 @@ public class TransferEngine extends Engine {
         String sAbsPath = null;
 
         //sDirURL would be the url to the source directory.
-        //dDirURL would be the url to the destination directoy
+        //dDirPutURL would be the url to the destination directoy
         //and is always a networked url.
-        String dDirURL = stagingSiteSharedScratchFS.getURLPrefix() + dAbsPath;
-  
+        String dDirPutURL = stagingSiteSharedScratchFS.getURLPrefix() + dAbsPath;
+ */
+
+        //sDirURL would be the url to the source directory.
+        //dDirPutURL would be the url to the destination directoy
+        //and is always a networked url.
+        String dDirPutURL = this.getURLOnSharedScratch( stagingSite, job, OPERATION.put, null );
+        String dDirGetURL = this.getURLOnSharedScratch( stagingSite, job, OPERATION.get, null );
         String sDirURL = null;
+        String sAbsPath = null;
+        String dAbsPath = mSiteStore.getInternalWorkDirectory( stagingSiteHandle, eRemoteDir );
         
         
         //file dest dir is destination dir accessed as a file URL
-        String fileDestDir = scheme + "://" + mSiteStore.getInternalWorkDirectory( stagingSiteHandle, eRemoteDir );
+        String fileDestDir = scheme + "://" + dAbsPath;
                 
         //check if the execution pool is third party or not
-        boolean runTransferOnLocalSite = runTransferOnLocalSite( stagingSiteHandle, dDirURL, Job.STAGE_IN_JOB);
+        boolean runTransferOnLocalSite = runTransferOnLocalSite( stagingSiteHandle, dDirPutURL, Job.STAGE_IN_JOB);
         String destDir = ( runTransferOnLocalSite ) ?
             //use the full networked url to the directory
-            dDirURL
+            dDirPutURL
             :
             //use the default pull mode
             fileDestDir;
 
 
         for( Iterator it = searchFiles.iterator(); it.hasNext(); ){
-            String sourceURL,destURL=null;
+            String sourceURL = null,destPutURL = null, destGetURL =null;
             PegasusFile pf = (PegasusFile) it.next();
             List  pfns   = null;
             ReplicaLocation rl = null;
@@ -1227,14 +1179,18 @@ public class TransferEngine extends Engine {
                     //no transfer of executables case
                     throw new RuntimeException( "Unreachable code . Signifies error in internal logic " );
                 }
-                else{//staging of executables case
-                    destURL = destNV.getValue();
-                    destURL = (runTransferOnLocalSite( stagingSiteHandle, destURL, Job.STAGE_IN_JOB))?
+                else{
+                    //staging of executables case
+                    destPutURL = destNV.getValue();
+                    destPutURL = (runTransferOnLocalSite( stagingSiteHandle, destPutURL, Job.STAGE_IN_JOB))?
                                //the destination URL is already third party
                                //enabled. use as it is
-                               destURL:
+                               destPutURL:
                                //explicitly convert to file URL scheme
-                               scheme + "://" + new PegasusURL( destURL ).getPath();
+                               scheme + "://" + new PegasusURL( destPutURL ).getPath();
+                               
+                    //for time being for this case the get url is same as put url
+                    destGetURL = destPutURL;
                 }
             }
             else{
@@ -1298,7 +1254,7 @@ public class TransferEngine extends Engine {
             //the final source and destination url's to the file
             sourceURL = selLoc.getPFN();
             
-            if( destURL == null ){
+            if( destPutURL == null ){
                 //no staging of executables case. 
                 //we construct destination URL to file.
                 StringBuffer destPFN = new StringBuffer();
@@ -1313,7 +1269,8 @@ public class TransferEngine extends Engine {
                     destPFN.append( destDir );
                 }
                 destPFN.append( File.separator).append( lfn );
-                destURL = destPFN.toString();
+                destPutURL = destPFN.toString();
+                destGetURL = dDirGetURL + File.separator + lfn;
             }
             
 
@@ -1326,7 +1283,7 @@ public class TransferEngine extends Engine {
             //match the directory url knowing that lfn and
             //(source and dest pool) are same
             try{
-                if(sourceURL.equalsIgnoreCase(dDirURL + File.separator + lfn)||
+                if(sourceURL.equalsIgnoreCase(dDirPutURL + File.separator + lfn)||
                      ( selLoc.getResourceHandle().equalsIgnoreCase( stagingSiteHandle ) &&
                        lfn.equals( sourceURL.substring(sourceURL.lastIndexOf(File.separator) + 1)) &&
                        //sAbsPath.equals( dAbsPath )
@@ -1361,16 +1318,21 @@ public class TransferEngine extends Engine {
                 //the compute site.  we can bypass first level
                 //staging of the data
                 //we add into transient RC the source URL without any modifications
-                trackInPlannerCache( lfn, sourceURL, job.getSiteHandle(), false );
+                trackInPlannerCache( lfn, sourceURL, job.getSiteHandle() );
+                trackInWorkflowCache( lfn, sourceURL, job.getSiteHandle() );
                 continue;
             }
             else{
                 //track the location where the data is staged as 
                 //part of the first level staging
                 //we always store the thirdparty url
-                //trackInPlannerCache( lfn, destURL, job.getSiteHandle() );
+                //trackInCaches( lfn, destPutURL, job.getSiteHandle() );
                 trackInPlannerCache( lfn,
-                                    dDirURL + File.separator + lfn, 
+                                    destPutURL,
+                                    job.getStagingSiteHandle());
+
+                trackInWorkflowCache( lfn,
+                                    destGetURL,
                                     job.getStagingSiteHandle());
             }
             
@@ -1395,7 +1357,7 @@ public class TransferEngine extends Engine {
 
             //to prevent duplicate destination urls
             if(ft.getDestURL() == null)
-                ft.addDestination(stagingSiteHandle,destURL);
+                ft.addDestination(stagingSiteHandle,destPutURL);
             
             if( symLinkSelectedLocation || !runTransferOnLocalSite ){
                 //all symlink transfers and user specified remote transfers
@@ -1405,8 +1367,8 @@ public class TransferEngine extends Engine {
                 localFileTransfers.add(ft);
             }
             
-            //we need to set destURL to null
-            destURL = null;
+            //we need to set destPutURL to null
+            destPutURL = null;
         }
 
         //call addTransferNode
@@ -1593,63 +1555,8 @@ public class TransferEngine extends Engine {
 
         return files;
     }
-   
 
 
-    /**
-     * Returns the full path on remote output site, where the lfn will reside.
-     * Each call to this function could trigger a change in the directory
-     * returned depending upon the file factory being used.
-     *
-     * @param directory     the directory on the output site 
-     * @param operation     the get or put operation
-     * @param lfn           the lfn
-     * 
-     * @return the URL as a String
-     */
-    private String getURLOnStageoutSite(Directory directory, OPERATION operation, String lfn) {
-        
-        //PM-590 stricter checks  
-        FileServer server = directory.selectFileServer( operation );
- 
-        //          String urlPrefix = p.selectHeadNodeScratchSharedFileServerURLPrefix( FileServer.OPERATION.put );
-        if( server == null ){
-            this.complainForStorageFileServer( "", operation, this.mPlannerOptions.getOutputSite()  );
-        }
-        
-        return this.getURLOnStageoutSite( server, lfn );
-        
-    }
-
-    
-    /**
-     * Returns the full path on remote output site, where the lfn will reside.
-     * Each call to this function could trigger a change in the directory
-     * returned depending upon the file factory being used.
-     *
-     * @param server  the file server to use
-     * @param lfn   the logical filename of the file.
-     *
-     * @return the storage mount point.
-     */
-    private  String getURLOnStageoutSite( FileServer server, String lfn ){
-        StringBuffer url =  new StringBuffer( server.getURL() );
-        try{
-            //the factory will give us the relative
-            //add on part
-            String addOn = mFactory.createFile( lfn ).toString();
-            //check if we need to add file separator
-            //do we really need it?
-            if( addOn.indexOf( File.separator ) != 0 ){
-                url.append( File.separator );
-            }
-            url.append( addOn );
-         }
-         catch( IOException e ){
-             throw new RuntimeException( "IOException " , e );
-         }
-         return url.toString();
-    }
 
     /**
      * Initialize the Stageout Site Directory factory.
@@ -1734,18 +1641,19 @@ public class TransferEngine extends Engine {
     
     
     /**
-     * Tracks the files created by a job in the Transient Replica Catalog.
+     * Tracks the files created by a job in the both the planner and workflow cache
+     * The planner cache stores the put URL's and the GET URL is stored in the
+     * workflow cache.
      *
      * @param job  the job whose input files need to be tracked.
      */
-    protected void trackInPlannerCache( Job job ){
+    private void trackInCaches( Job job ){
 
 
         //check if there is a remote initialdir set
         String path  = job.vdsNS.getStringValue(
                                                  Pegasus.REMOTE_INITIALDIR_KEY );
 
-//        SiteInfo stagingSite = mPoolHandle.getPoolEntry( job.getSiteHandle(), "vanilla" );
         SiteCatalogEntry stagingSiteEntry = mSiteStore.lookup( job.getStagingSiteHandle() );
         if ( stagingSiteEntry == null ) {
             this.poolNotFoundMsg( job.getStagingSiteHandle(), "vanilla" ) ;
@@ -1758,21 +1666,12 @@ public class TransferEngine extends Engine {
             PegasusFile pf = (PegasusFile) it.next();
             String lfn = pf.getLFN();
 
-            StringBuffer stagingSiteURL = new StringBuffer();
-            
-            //PM-590 stricter checks
-//            FileServer server = stagingSiteEntry.getHeadNodeFS().selectScratchSharedFileServer();
-            FileServer server = stagingSiteEntry.selectHeadNodeScratchSharedFileServer( FileServer.OPERATION.put );
-            if( server == null ){
-                this.complainForScratchFileServer(job, FileServer.OPERATION.put, stagingSiteEntry.getSiteHandle());
-            }
-  
-            stagingSiteURL.append( server.getURLPrefix() ).
-                    append( mSiteStore.getExternalWorkDirectory(server, job.getSiteHandle() ) ).
-                    append( File.separatorChar ).append( lfn );
+            //construct the URL to track in planner cache
+            String stagingSitePutURL = this.getURLOnSharedScratch( stagingSiteEntry, job, OPERATION.put, lfn);
+            trackInPlannerCache( lfn, stagingSitePutURL, stagingSiteEntry.getSiteHandle() );
 
-            
-            trackInPlannerCache( lfn, stagingSiteURL.toString(), job.getSiteHandle() );
+            String stagingSiteGetURL = this.getURLOnSharedScratch( stagingSiteEntry, job, OPERATION.get, lfn);
+            trackInWorkflowCache( lfn, stagingSiteGetURL, stagingSiteEntry.getSiteHandle() );
 
         }
     }
@@ -1783,8 +1682,7 @@ public class TransferEngine extends Engine {
 
     
     /**
-     * Inserts an entry into the Transient RC. It modifies the PFN if the
-     * workflow is running on the cloud and S3 is being used for storage..
+     * Inserts an entry into the planner cache
      *
      * @param lfn  the logical name of the file.
      * @param pfn  the pfn
@@ -1794,27 +1692,184 @@ public class TransferEngine extends Engine {
                                      String pfn,
                                      String site ){
 
-        this.trackInPlannerCache( lfn, pfn, site, true );
+         mPlannerCache.insert( lfn, pfn, site );
     }
     
     /**
-     * Inserts an entry into the Transient RC. It modifies the PFN if the
-     * workflow is running on the cloud and S3 is being used for storage, 
-     * dependant on the modifyURL parameter passed.
+     * Inserts an entry into the workflow cache that is to be written out to the
+     * submit directory.
      *
      * @param lfn  the logical name of the file.
      * @param pfn  the pfn
      * @param site the site handle
-     * @param modifyURL whether to modify URL in case of S3 or not.
      */
-    private void trackInPlannerCache( String lfn,
+    private void trackInWorkflowCache( String lfn,
                                      String pfn,
-                                     String site, 
-                                     boolean modifyURL ){
+                                     String site ){
 
-        mPlannerCache.insert( lfn, pfn, site );
+         mWorkflowCache.insert( lfn, pfn, site );
     }
 
+    /**
+     * Returns a URL on the shared scratch of the staging site
+     *
+     * @param entry         the SiteCatalogEntry for the associated stagingsite
+     * @param job           the job
+     * @param operation     the FileServer operation for which we need the URL
+     * @param lfn           the LFN can be null to get the path to the directory
+     *
+     * @return  the URL
+     */
+    private String getURLOnSharedScratch( SiteCatalogEntry entry ,
+                                          Job job,
+                                          FileServer.OPERATION operation ,
+                                          String lfn ){
+
+
+        StringBuffer url = new StringBuffer();
+
+        FileServer getServer = entry.selectHeadNodeScratchSharedFileServer( operation );
+
+        if( getServer == null ){
+            this.complainForScratchFileServer(job, operation, entry.getSiteHandle());
+        }
+
+        url.append( getServer.getURLPrefix() ).
+            append( mSiteStore.getExternalWorkDirectory(getServer, entry.getSiteHandle() ));
+
+        if( lfn != null ){
+            url.append( File.separatorChar ).append( lfn );
+        }
+
+        return url.toString();
+    }
+
+
+    /**
+     * Returns the full path on remote output site, where the lfn will reside.
+     * Each call to this function could trigger a change in the directory
+     * returned depending upon the file factory being used.
+     *
+     * @param directory     the directory on the output site
+     * @param operation     the get or put operation
+     * @param lfn           the lfn
+     *
+     * @return the URL as a String
+     */
+    private String getURLOnStageoutSite(Directory directory, OPERATION operation, String lfn) {
+
+        //PM-590 stricter checks
+        FileServer server = directory.selectFileServer( operation );
+
+        //          String urlPrefix = p.selectHeadNodeScratchSharedFileServerURLPrefix( FileServer.OPERATION.put );
+        if( server == null ){
+            this.complainForStorageFileServer( "", operation, this.mPlannerOptions.getOutputSite()  );
+        }
+
+        return this.getURLOnStageoutSite( server, lfn );
+
+    }
+
+
+    /**
+     * Returns the full path on remote output site, where the lfn will reside.
+     * Each call to this function could trigger a change in the directory
+     * returned depending upon the file factory being used.
+     *
+     * @param server  the file server to use
+     * @param lfn   the logical filename of the file.
+     *
+     * @return the storage mount point.
+     */
+    private  String getURLOnStageoutSite( FileServer server, String lfn ){
+        StringBuffer url =  new StringBuffer( server.getURL() );
+        try{
+            //the factory will give us the relative
+            //add on part
+            String addOn = mFactory.createFile( lfn ).toString();
+            //check if we need to add file separator
+            //do we really need it?
+            if( addOn.indexOf( File.separator ) != 0 ){
+                url.append( File.separator );
+            }
+            url.append( addOn );
+         }
+         catch( IOException e ){
+             throw new RuntimeException( "IOException " , e );
+         }
+         return url.toString();
+    }
+
+
+    /**
+     * Complains for a missing head node storage file server on a site for a job
+     *
+     * @param job       the job
+     * @param operation the operation
+     * @param site      the site
+     */
+    private void complainForStorageFileServer( Job job,
+                                                FileServer.OPERATION operation,
+                                                String site) {
+        this.complainForScratchFileServer( job.getID(), operation, site);
+    }
+
+    /**
+     * Complains for a missing head node storage file server on a site for a job
+     *
+     * @param jobname  the name of the job
+     * @param operation the file server operation
+     * @param site     the site
+     */
+    private void complainForStorageFileServer( String jobname,
+                                                FileServer.OPERATION operation,
+                                                String site) {
+        StringBuffer error = new StringBuffer();
+        error.append( "[" ).append( REFINER_NAME ).append( "] ");
+        if( jobname != null ){
+            error.append( "For job (" ).append( jobname).append( ")." );
+        }
+        error.append( " File Server not specified for shared-scratch filesystem for site: ").
+              append( site );
+        throw new RuntimeException( error.toString() );
+
+    }
+
+    /**
+     * Complains for a missing head node file server on a site for a job
+     *
+     * @param job       the job
+     * @param operation the operation
+     * @param site      the site
+     */
+    private void complainForScratchFileServer( Job job,
+                                                FileServer.OPERATION operation,
+                                                String site) {
+        this.complainForScratchFileServer( job.getID(), operation, site);
+    }
+
+    /**
+     * Complains for a missing head node file server on a site for a job
+     *
+     * @param jobname  the name of the job
+     * @param operation the file server operation
+     * @param site     the site
+     */
+    private void complainForScratchFileServer( String jobname,
+                                                FileServer.OPERATION operation,
+                                                String site) {
+        StringBuffer error = new StringBuffer();
+        error.append( "[" ).append( REFINER_NAME ).append( "] ");
+        if( jobname != null ){
+            error.append( "For job (" ).append( jobname).append( ")." );
+        }
+        error.append( " File Server not specified for shared-scratch filesystem for site: ").
+              append( site );
+        throw new RuntimeException( error.toString() );
+
+    }
+
+    
     /**
      * Initializes a Replica Catalog Instance that is used to store
      * the GET URL's for all files on the staging site ( inputs staged and outputs

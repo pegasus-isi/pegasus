@@ -29,6 +29,7 @@ import java.io.File;
 import java.util.Properties;
 import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaFactory;
+import edu.isi.pegasus.planner.catalog.replica.impl.SimpleFile;
 
 
 /**
@@ -335,6 +336,9 @@ public class MainEngine
         //set the appropriate property to designate path to file
         cacheProps.setProperty( MainEngine.PLANNER_CACHE_REPLICA_CATALOG_KEY, file );
 
+        //the planner cache is to be never written out
+        //PM-677
+        cacheProps.setProperty( SimpleFile.READ_ONLY_KEY, "true" );
         try{
             rc = ReplicaFactory.loadInstance(
                                           PLANNER_CACHE_REPLICA_CATALOG_IMPLEMENTER,
@@ -371,8 +375,12 @@ public class MainEngine
             sb.append(adag.dagInfo.nameOfADag).append("-").
            append(adag.dagInfo.index);
         }
-        //append the suffix
-        sb.append(".cache");
+        
+        //PM-677 deliberately a put cache to make sure it is never
+        //it does not overwrite the workflow cache written out in
+        //Transfer Engine. We do explicilty set read only flag to true
+        //This is a failsafe.
+        sb.append(".put.cache");
 
         return sb.toString();
 

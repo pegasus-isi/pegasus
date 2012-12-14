@@ -614,8 +614,9 @@ public class CPlanner extends Executable{
             throw new RuntimeException( "Unable to generate code", e );
         } 
         finally {
-            //close the connection to transient replica catalog
+            //close the connection to planner cache
             mBag.getHandleToPlannerCache().close();
+
             mLogger.logEventCompletion();
         }
 
