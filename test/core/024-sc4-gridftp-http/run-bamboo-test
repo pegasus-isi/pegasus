@@ -82,6 +82,20 @@ pegasus-plan \
     --sites condor_pool \
     --staging-site staging_site \
     --output local \
-    --submit | tee $TOP_DIR/plan.out
+    | tee $TOP_DIR/plan.out
+
+WORK_DIR=`cat plan.out | grep pegasus-status | sed 's/.*-l //'`
+cd $WORK_DIR
+
+# check the cache to make sure it only has the expected URLS
+cat rosetta-0.cache | grep -v "file-based replica catalog" | grep -v " http://" | grep -v "^rosetta.exe" >$TOP_DIR/cache.urls
+if [ -s $TOP_DIR/cache.urls ]; then
+    echo "Fatal: Unexected URLs found in rosetta-0.cache:"
+    cat $TOP_DIR/cache.urls
+    exit 1
+fi
+
+# now run the workflow
+pegasus-run $WORK_DIR
 
 
