@@ -84,7 +84,7 @@ pegasus-plan \
     --output local \
     | tee $TOP_DIR/plan.out
 
-WORK_DIR=`cat plan.out | grep pegasus-status | sed 's/.*-l //'`
+WORK_DIR=`cat plan.out | grep pegasus-run | sed -E 's/^pegasus-run[ ]+//'`
 cd $WORK_DIR
 
 # check the cache to make sure it only has the expected URLS
