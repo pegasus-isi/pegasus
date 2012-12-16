@@ -26,10 +26,15 @@ fi
 
 #Get RUNDIR from the planning output
 RUN_DIR=`grep pegasus-remove $PLANFILE | awk '{print $5}'`
-
 if [ "x$RUN_DIR" = "x" ]; then
-    echo "Unable to determine the RUN_DIR from the planner output - did the planner fail?" 1>&2
-    exit 1
+    
+    # if the workflow was planned with out --submit, it only has a pegasus-run line
+    RUN_DIR=`grep pegasus-run $PLANFILE | awk '{print $2}'`
+
+    if [ "x$RUN_DIR" = "x" ]; then
+        echo "Unable to determine the RUN_DIR from the planner output - did the planner fail?" 1>&2
+        exit 1
+    fi
 fi
 
 echo "RUNDIR is $RUN_DIR"
