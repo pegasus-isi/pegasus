@@ -187,11 +187,12 @@ public class MainEngine
         String message = null;
         mRCBridge = new ReplicaCatalogBridge( mOriginalDag, mBag );
 
+        //lock down on the workflow task metrics
+        //the refinement process will not update them
+        mOriginalDag.getWorkflowMetrics().lockTaskMetrics( true );
 
-        mRedEng = new DataReuseEngine( mOriginalDag, mBag );
+        mRedEng     = new DataReuseEngine( mOriginalDag, mBag );
         mReducedDag = mRedEng.reduceWorkflow(mOriginalDag, mRCBridge );
-        //mReducedDag = new ReductionEngine( mOriginalDag, mBag ).reduceDag(mRCBridge);
-        //System.out.print( mReducedDag );
 
         //unmark arg strings
         //unmarkArgs();

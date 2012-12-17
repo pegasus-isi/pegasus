@@ -108,19 +108,34 @@ public class WorkflowMetrics extends Data {
      */
     private String mDAXLabel;
 
+    /**
+     * A boolean indicating whether to update task metrics
+     */
+    private boolean mLockTaskMetrics;
+
 
 
     /**
      * The default constructor.
      */
     public WorkflowMetrics() {
-        reset();
+        reset( true );
+        mLockTaskMetrics = false;
     }
 
     /**
      * Resets the internal counters to zero.
+     *
+     * @param resetTaskMetrics   whether to reset task metrics or not
      */
-    public void reset(){
+    public final void  reset( boolean resetTaskMetrics ){
+
+        if( resetTaskMetrics ){
+            mNumComputeTasks  = 0;
+            mNumDAXTasks      = 0;
+            mNumDAGTasks      = 0;
+        }
+        
         mNumTotalJobs    = 0;
         mNumComputeJobs  = 0;
         mNumSITxJobs     = 0;
@@ -133,9 +148,6 @@ public class WorkflowMetrics extends Data {
         mNumChmodJobs     = 0;
         mNumDAXJobs          = 0;
         mNumDAGJobs          = 0;
-        mNumComputeTasks  = 0;
-        mNumDAXTasks      = 0;
-        mNumDAGTasks      = 0;
     }
 
 
@@ -159,42 +171,92 @@ public class WorkflowMetrics extends Data {
     }
 
     /**
+     * Sets the lock task metrics parameters.
+     * If the lock is set, the task metrics are no longer updated on subsequent
+     * calls to increment / decrement.
+     *
+     * @param lock  the boolean parameter
+     */
+    public void lockTaskMetrics( boolean lock ){
+        this.mLockTaskMetrics = lock;
+    }
+
+    /**
      * Increment the metrics when on the basis of type of job.
      *
      * @param job                the job being added.
      */
     public void increment( Job job  ){
-         this.increment( job, true );
+         this.incrementJobMetrics( job );
+         this.incrementTaskMetrics( job );
     }
+
+
     /**
      * Increment the metrics when on the basis of type of job.
      *
      * @param job                the job being added.
-     * @param incrementJobs       boolean whether to increment  jobs or not
+     *
      */
-    public void increment( Job job, boolean incrementJobs ){
+    private void incrementTaskMetrics( Job job ){
         //sanity check
-        if( job == null ){
+        if( job == null || mLockTaskMetrics ){
+            //job is null or we have locked updates to task metrics
             return;
         }
 
-        //increment the total
-        if( incrementJobs ){
-            mNumTotalJobs++;
-        }
-
-        //increment on basis of type of job
+        //update the task metrics
+        //incrementJobMetrics on basis of type of job
         int type = job.getJobType();
         switch( type ){
 
             //treating compute and staged compute as same
             case Job.COMPUTE_JOB:
+                mNumComputeTasks++;
+                break;
+
+            case Job.DAX_JOB:
+                mNumDAXTasks++;
+                break;
+
+            case Job.DAG_JOB:
+                mNumDAGTasks++;
+                break;
+
+
+            default:
+                throw new RuntimeException( "Unknown or Unassigned Task " + job.getID() + " of type " + type );
+        }
+    }
+
+    /**
+     * Increment the metrics when on the basis of type of job.
+     *
+     * @param job                the job being added.
+     */
+    private void incrementJobMetrics( Job job  ){
+        //sanity check
+        if( job == null ){
+            return;
+        }
+
+        //incrementJobMetrics the total
+        mNumTotalJobs++;
+
+
+        //incrementJobMetrics on basis of type of job
+        int type = job.getJobType();
+        switch( type ){
+
+            //treating compute and staged compute as same
+            case Job.COMPUTE_JOB:
+/*
                 if( job instanceof AggregatedJob ){
                     mNumClusteredJobs++;
                     
                     for( Iterator<Job> it = ((AggregatedJob)job).constituentJobsIterator(); it.hasNext(); ){
                         Job j = it.next();
-                        this.increment( j , false );
+                        this.incrementJobMetrics( j , false );
                     }
                     
                 }else{
@@ -203,20 +265,21 @@ public class WorkflowMetrics extends Data {
                     }
                     mNumComputeTasks++;
                 }
+ */
+                if( job instanceof AggregatedJob ){
+                    mNumClusteredJobs++;
+                }
+                else{
+                    mNumComputeJobs++;
+                }
                 break;
 
             case Job.DAX_JOB:
-                if ( incrementJobs ){
-                    mNumDAXJobs++;
-                }
-                mNumDAXTasks++;
+                mNumDAXJobs++;
                 break;
 
             case Job.DAG_JOB:
-                if( incrementJobs ){
-                    mNumDAGJobs++;
-                }
-                mNumDAGTasks++;
+                mNumDAGJobs++;
                 break;
 
 
@@ -258,21 +321,33 @@ public class WorkflowMetrics extends Data {
     }
 
     /**
+     * Decrement the metrics when on the basis of type of job being removed
+     *
+     * @param job                the job being added.
+     */
+    public void decrement( Job job  ){
+         this.decrementJobMetrics( job );
+         this.decrementTaskMetrics( job );
+    }
+
+
+
+    /**
      * Decrement the metrics when on the basis of type of job.
      * Does not decrement the task related metrics.
      *
      * @param job  the job being removed.
      */
-    public void decrement( Job job ){
+    private void decrementJobMetrics( Job job ){
         //sanity check
         if( job == null ){
             return;
         }
 
-        //increment the total
+        //incrementJobMetrics the total
         mNumTotalJobs--;
 
-        //increment on basis of type of job
+        //incrementJobMetrics on basis of type of job
         int type = job.getJobType();
         switch( type ){
 
@@ -280,15 +355,9 @@ public class WorkflowMetrics extends Data {
             case Job.COMPUTE_JOB:
                 if( job instanceof AggregatedJob ){
                     mNumClusteredJobs--;
-                    //for each constituent do the remove
-                    for( Iterator<Job> it = ((AggregatedJob)job).constituentJobsIterator(); it.hasNext(); ){
-                        Job j = it.next();
-                        this.decrement( j );
-                    }
                 }
                 else{
                     mNumComputeJobs--;
-                    mNumComputeTasks--;
                 }
                 break;
 
@@ -335,6 +404,44 @@ public class WorkflowMetrics extends Data {
 
         }
 
+    }
+
+
+    /**
+     * Decrement the task metrics when on the basis of type of job.
+     *
+     * @param job   the job being removed.
+     *
+     */
+    private void decrementTaskMetrics( Job job ){
+        //sanity check
+        if( job == null || mLockTaskMetrics ){
+            //job is null or we have locked updates to task metrics
+            return;
+        }
+
+        //update the task metrics
+        //incrementJobMetrics on basis of type of job
+        int type = job.getJobType();
+        switch( type ){
+
+            //treating compute and staged compute as same
+            case Job.COMPUTE_JOB:
+                mNumComputeTasks--;
+                break;
+
+            case Job.DAX_JOB:
+                mNumDAXTasks--;
+                break;
+
+            case Job.DAG_JOB:
+                mNumDAGTasks--;
+                break;
+
+
+            default:
+                throw new RuntimeException( "Unknown or Unassigned Task " + job.getID() + " of type " + type );
+        }
     }
 
     /**
@@ -410,6 +517,7 @@ public class WorkflowMetrics extends Data {
                                         e);
         }
 
+        wm.mLockTaskMetrics = this.mLockTaskMetrics;
         wm.mNumCleanupJobs = this.mNumCleanupJobs;
         wm.mNumComputeJobs = this.mNumComputeJobs;
         wm.mNumInterTxJobs = this.mNumInterTxJobs;

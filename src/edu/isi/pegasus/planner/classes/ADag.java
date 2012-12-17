@@ -316,8 +316,8 @@ public class ADag extends Data {
         dagInfo.dagJobs.clear();
         dagInfo.relations.clear();
         dagInfo.lfnMap.clear();
-        //reset the workflow metrics also
-        this.getWorkflowMetrics().reset();
+        //reset the workflow metrics but not the task metrics
+        this.getWorkflowMetrics().reset( false );
     }
 
     /**
