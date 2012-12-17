@@ -155,10 +155,11 @@ public class MainEngine
      * @return the planned worflow.
      */
     public ADag runPlanner() {
+        String abstractWFName = mOriginalDag.getAbstractWorkflowName();
         //create the main event refinement event
         mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_REFINEMENT,
                                LoggingKeys.DAX_ID, 
-                               mOriginalDag.getAbstractWorkflowName() );
+                               abstractWFName );
         
         //refinement process starting
         mOriginalDag.setWorkflowRefinementStarted( true );
@@ -196,7 +197,9 @@ public class MainEngine
 
         //unmark arg strings
         //unmarkArgs();
-        mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_SITESELECTION, LoggingKeys.DAX_ID, mOriginalDag.getAbstractWorkflowName() );
+        mOriginalDag = null;
+
+        mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_SITESELECTION, LoggingKeys.DAX_ID, abstractWFName );
         mIPEng = new InterPoolEngine( mReducedDag, mBag );
         mIPEng.determineSites();
         mBag = mIPEng.getPegasusBag();
@@ -209,7 +212,7 @@ public class MainEngine
 
         //do the node cluster
         if( mPOptions.getClusteringTechnique() != null ){
-            mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_CLUSTER, LoggingKeys.DAX_ID, mOriginalDag.getAbstractWorkflowName() );
+            mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_CLUSTER, LoggingKeys.DAX_ID, abstractWFName );
             mNodeCollapser = new NodeCollapser( mBag );
 
             try{
@@ -227,7 +230,7 @@ public class MainEngine
         message = "Grafting transfer nodes in the workflow";
         ReplicaCatalog plannerCache  = initializePlannerCache( mReducedDag ) ;
         mLogger.log(message,LogManager.INFO_MESSAGE_LEVEL);
-        mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_ADD_TRANSFER_NODES, LoggingKeys.DAX_ID, mOriginalDag.getAbstractWorkflowName() );       
+        mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_ADD_TRANSFER_NODES, LoggingKeys.DAX_ID, abstractWFName );
         mTransEng = new TransferEngine( mReducedDag, 
                                         mBag,
                                         mRedEng.getDeletedJobs(),
@@ -254,7 +257,7 @@ public class MainEngine
             message = "Grafting the remote workdirectory creation jobs " +
                         "in the workflow";
             //mLogger.log(message,LogManager.INFO_MESSAGE_LEVEL);
-            mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_GENERATE_WORKDIR, LoggingKeys.DAX_ID, mOriginalDag.getAbstractWorkflowName() );
+            mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_GENERATE_WORKDIR, LoggingKeys.DAX_ID, abstractWFName );
             mCreateEng = new CreateDirectory( mBag );
             mCreateEng.addCreateDirectoryNodes( mReducedDag );
             mCreateEng = null;
@@ -279,7 +282,7 @@ public class MainEngine
         if ( mPOptions.getCleanup() ){ /* should be exposed via command line option */
             message = "Adding cleanup jobs in the workflow";
            // mLogger.log( message, LogManager.INFO_MESSAGE_LEVEL );
-            mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_GENERATE_CLEANUP, LoggingKeys.DAX_ID, mOriginalDag.getAbstractWorkflowName() );
+            mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_GENERATE_CLEANUP, LoggingKeys.DAX_ID, abstractWFName );
             CleanupEngine cEngine = new CleanupEngine( mBag );
             mReducedDag = cEngine.addCleanupJobs( mReducedDag );
             mLogger.logEventCompletion();
