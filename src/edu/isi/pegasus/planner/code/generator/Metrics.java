@@ -18,17 +18,18 @@ package edu.isi.pegasus.planner.code.generator;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.code.CodeGeneratorException;
 
-import java.net.UnknownHostException;
-
-import org.globus.gsi.GlobusCredentialException;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.Job;
 
 import edu.isi.pegasus.planner.classes.PlannerOptions;
+import edu.isi.pegasus.planner.code.CodeGenerator;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 
-import org.globus.gsi.GlobusCredential;
+import org.globus.gsi.GlobusCredentialException;
+
+import java.net.UnknownHostException;
+
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -36,7 +37,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 
-import java.net.InetAddress;
 import java.util.Collection;
 import java.util.LinkedList;
 
@@ -51,7 +51,7 @@ import java.util.LinkedList;
  * @author Karan Vahi
  * @version $Revision$
  */
-public class Metrics {
+public class Metrics implements CodeGenerator {
 
 
     /**
@@ -119,7 +119,7 @@ public class Metrics {
         try {
 
             Collection<File> result = new LinkedList();
-            result.add( writeOutMetricsFile( dag) );
+            result.add( writeOutMetricsFile( dag ) );
             return result;
         } catch (IOException ioe) {
             throw new CodeGeneratorException( "IOException while writing out the braindump file" ,
@@ -162,15 +162,26 @@ public class Metrics {
                   new PrintWriter(new BufferedWriter(new FileWriter(f)));
         
  
-        writer.println( "{\n" );
-        writer.println( dag.getWorkflowMetrics() );
-        writer.write(  "}\n" );
+        writer.println( dag.getWorkflowMetrics().toPrettyJson() );
+        writer.write(  "\n" );
 
         writer.close();
                 
         return f;
     }
    
-    
+    /**
+     * Resets the Code Generator implementation.
+     *
+     * @throws CodeGeneratorException in case of any error occuring code generation.
+     */
+    public void reset( )throws CodeGeneratorException{
+        
+        
+    }
+
+    public boolean startMonitoring() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
     
 }

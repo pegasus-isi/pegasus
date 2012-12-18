@@ -185,7 +185,7 @@ public abstract class Abstract implements CodeGenerator{
             Metrics metrics = new Metrics();
             metrics.initialize(mBag);
 
-            Collection result = metrics.generateCode(workflow );
+            Collection result = metrics.generateCode( workflow );
             for( Iterator it = result.iterator(); it.hasNext() ;){
                 mLogger.log("Written out workflow metrics file to " + it.next(), LogManager.DEBUG_MESSAGE_LEVEL);
             }

@@ -17,7 +17,14 @@
 
 package edu.isi.pegasus.planner.classes;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
+
 import edu.isi.pegasus.common.util.Currently;
+import edu.isi.pegasus.common.util.Version;
 
 import java.util.Date;
 
@@ -59,22 +66,32 @@ public class PlannerMetrics extends Data{
      */
     private String mVOGroup;
 
+    
     /**
-     * The metrics about the workflow.
+     * The name of the client
      */
-    private WorkflowMetrics mWFMetrics;
-
-
+    @Expose @SerializedName( "client" ) private  final String mClient = "pegasus-plan";
+    
     /**
-     * The start time for hte planning.
+     * The planner version
      */
-    private Date mStartTime;
+    @Expose @SerializedName( "version" ) private  final String mVersion = Version.instance().toString();
+    
+    /**
+     * The start time for the planning.
+     */
+    @Expose @SerializedName("start_time") private Date mStartTime;
 
     /**
      * The end time for the planning.
      */
-    private Date mEndTime;
+    @Expose @SerializedName("end_time") private Date mEndTime;
 
+    
+    /**
+     * The metrics about the workflow.
+     */
+    @Expose @SerializedName("wf_metrics") private WorkflowMetrics mWFMetrics;
 
     /**
      * The default metrics.
@@ -256,7 +273,28 @@ public class PlannerMetrics extends Data{
     public Date getEndTime( ){
         return mEndTime;
     }
+    
+    /**
+     * Converts the planner metrics to JSON
+     * 
+     * @return  the planner metrics in JSON
+     */
+    public String toJson(){
+        Gson gson = new Gson();
+        return gson.toJson( this );      
+    }
 
+    /**
+     * Converts the planner metrics to JSON
+     * 
+     * @return  the planner metrics in JSON
+     */
+    public String toPrettyJson(){
+        //Gson gson = new Gson();
+        //Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        Gson gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().setPrettyPrinting().create();
+        return gson.toJson( this );      
+    }
 
 
     /**
@@ -277,6 +315,7 @@ public class PlannerMetrics extends Data{
         append( sb, "planning.end", Currently.iso8601( false, true, false, mEndTime ) );
         append( sb, "properties", this.mPropertiesPath );
         append( sb, "dax", this.mDAXPath );
+
         sb.append( this.getWorkflowMetrics() );
 
         sb.append( "}" ).append( "\n" );

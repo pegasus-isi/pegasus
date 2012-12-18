@@ -17,7 +17,10 @@
 
 package edu.isi.pegasus.planner.classes;
 
-import java.util.Iterator;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
 
 /**
  * A Workflow metrics class that stores the metrics about the workflow.
@@ -25,93 +28,95 @@ import java.util.Iterator;
  * @author Karan Vahi
  * @version $Revision$
  */
-public class WorkflowMetrics extends Data {
+public class WorkflowMetrics extends Data implements Cloneable{
 
-
-    /**
-     * The total number of  jobs in the executable workflow.
-     */
-    private int mNumTotalJobs;
-
-    /**
-     * The number of compute jobs.
-     */
-    private int mNumComputeJobs;
-
-    /**
-     * The number of clustered compute jobs.
-     */
-    private int mNumClusteredJobs;
-
-    /**
-     * The number of stage in transfer jobs.
-     */
-    private int mNumSITxJobs;
-
-    /**
-     * The number of stage-out transfer jobs.
-     */
-    private int mNumSOTxJobs;
-
-    /**
-     * The number of inter-site transfer jobs.
-     */
-    private int mNumInterTxJobs;
-
-    /**
-     * The number of registration jobs.
-     */
-    private int mNumRegJobs;
-
-    /**
-     * The number of cleanup jobs.
-     */
-    private int mNumCleanupJobs;
-
-    /**
-     * The number of create dir jobs.
-     */
-    private int mNumCreateDirJobs;
-
-    /**
-     * The number of dax jobs in the workflow
-     */
-    private int mNumDAXJobs;
-
-    /**
-     * The number of DAG jobs in the workflow
-     */
-    private int mNumDAGJobs;
-
-    /*
-     * The number of chmod jobs in the workflow
-     */
-    private int mNumChmodJobs;
 
     /**
      * The number of compute tasks in the DAX
      */
-    private int mNumComputeTasks;
+    @SerializedName("compute_tasks") @Expose private int mNumComputeTasks;
 
     /**
      * The number of DAX tasks in the DAX
      */
-    private int mNumDAXTasks;
+    @SerializedName("dax_tasks") @Expose private int mNumDAXTasks;
 
     /**
      * The number of DAG tasks in the DAX.
      */
-    private int mNumDAGTasks;
+    @SerializedName("dag_tasks") @Expose private int mNumDAGTasks;
+    
+    /**
+     * The number of compute jobs.
+     */
+    @SerializedName("compute_jobs") @Expose private int mNumComputeJobs;
 
+    /**
+     * The number of clustered compute jobs.
+     */
+    @SerializedName("clustered_jobs") @Expose private int mNumClusteredJobs;
+
+    /**
+     * The number of stage in transfer jobs.
+     */
+    @SerializedName("si_tx_jobs") @Expose private int mNumSITxJobs;
+
+    /**
+     * The number of stage-out transfer jobs.
+     */
+    @SerializedName("so_tx_jobs") @Expose private int mNumSOTxJobs;
+
+    /**
+     * The number of inter-site transfer jobs.
+     */
+    @SerializedName("inter_tx_jobs") @Expose private int mNumInterTxJobs;
+
+    /**
+     * The number of registration jobs.
+     */
+    @SerializedName("reg_jobs") @Expose private int mNumRegJobs;
+
+    /**
+     * The number of cleanup jobs.
+     */
+    @SerializedName("cleanup_jobs") @Expose private int mNumCleanupJobs;
+
+    /**
+     * The number of create dir jobs.
+     */
+    @SerializedName("create_dir_jobs") @Expose private int mNumCreateDirJobs;
+
+    /**
+     * The number of dax jobs in the workflow
+     */
+    @SerializedName("dax_jobs") @Expose private int mNumDAXJobs;
+
+    /**
+     * The number of DAG jobs in the workflow
+     */
+    @SerializedName("dag_jobs") @Expose private int mNumDAGJobs;
+
+    /*
+     * The number of chmod jobs in the workflow
+     */
+    @SerializedName("chmod_jobs") @Expose private int mNumChmodJobs;
+
+    /**
+     * The total number of  jobs in the executable workflow.
+     */
+    @SerializedName("total_jobs") @Expose private int mNumTotalJobs;
+    
     /**
      * The label of the dax.
      */
     private String mDAXLabel;
+    
+    
 
     /**
      * A boolean indicating whether to update task metrics
      */
-    private boolean mLockTaskMetrics;
+    private transient boolean mLockTaskMetrics;
 
 
 
@@ -452,6 +457,7 @@ public class WorkflowMetrics extends Data {
     public String toString(){
         StringBuffer sb = new StringBuffer();
 
+        
         append( sb, "dax-label", this.mDAXLabel );
 
         //dax task related metrics
@@ -499,6 +505,27 @@ public class WorkflowMetrics extends Data {
         buffer.append( key ).append( " = " ).append( value ).append( "\n" );
     }
 
+    /**
+     * Converts the planner metrics to JSON
+     * 
+     * @return  the planner metrics in JSON
+     */
+    public String toJson(){
+        Gson gson = new Gson();
+        return gson.toJson( this );      
+    }
+
+    /**
+     * Converts the planner metrics to JSON
+     * 
+     * @return  the planner metrics in JSON
+     */
+    public String toPrettyJson(){
+        //Gson gson = new Gson();
+        //Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        Gson gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().setPrettyPrinting().create();
+        return gson.toJson( this );      
+    }
 
     /**
      * Returns the clone of the object.

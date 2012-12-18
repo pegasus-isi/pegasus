@@ -1396,6 +1396,7 @@ public class CPlanner extends Executable{
      */
     protected boolean writeOutMetrics( PlannerMetrics pm  ){
         boolean result = false;
+        System.out.print( pm.toPrettyJson() );
         if ( mProps.writeOutMetrics() ) {
             File log = new File( mProps.getMetricsLogFile() );
             
@@ -1412,7 +1413,7 @@ public class CPlanner extends Executable{
                     mLogger.log( "Logging Planner Metrics to " + log,
                                  LogManager.DEBUG_MESSAGE_LEVEL );
                     //write out to the planner metrics to fos
-                    fos.write( pm.toString().getBytes() );
+                    fos.write( pm.toPrettyJson().getBytes() );
                 }
                 finally{
                     fl.release();

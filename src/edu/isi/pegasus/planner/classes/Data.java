@@ -37,12 +37,12 @@ public abstract class Data implements Cloneable {
      * The LogManager object which is used to log all the messages.
      *
      */
-    public LogManager mLogger = LogManagerFactory.loadSingletonInstance( );
+    public transient LogManager mLogger = LogManagerFactory.loadSingletonInstance( );
 
     /**
      * The String which stores the message to be stored.
      */
-    public String mLogMsg;
+    public transient String mLogMsg;
 
 
     /**
