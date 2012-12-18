@@ -95,6 +95,8 @@ import java.io.BufferedReader;
 import java.io.FilenameFilter;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.regex.Pattern;
 
 
@@ -278,15 +280,17 @@ public class CPlanner extends Executable{
             cPlanner.mPMetrics.setExitcode( result );
 
             if( plannerException != null ){
-                cPlanner.mPMetrics.setErrorMessage(  convertException(
-                                                                    plannerException ,  LogManager.TRACE_MESSAGE_LEVEL ) );
+                //we want the stack trace to a String Writer.
+                StringWriter sw = new StringWriter();
+                plannerException.printStackTrace( new PrintWriter( sw ) );
+                cPlanner.mPMetrics.setErrorMessage(  sw.toString() );
             }
             //lets write out the metrics
             edu.isi.pegasus.planner.code.generator.Metrics metrics = new edu.isi.pegasus.planner.code.generator.Metrics();
             metrics.logMetrics( cPlanner.mPMetrics );
         }
         catch( Exception e ){
-            System.err.println( "ERROR while logging metrics " + e.getMessage() );
+            System.out.println( "ERROR while logging metrics " + e.getMessage() );
         }
 
 	// 2012-03-06 (jsv): Copy dax file to submit directory. It's
@@ -488,6 +492,8 @@ public class CPlanner extends Executable{
                                                                this.mProps ) );
 
         //set some initial workflow metrics
+        mPMetrics.setRootWorkflowUUID( orgDag.getRootWorkflowUUID() );
+        mPMetrics.setWorkflowUUID( orgDag.getWorkflowUUID() );
         mPMetrics.setWorkflowMetrics( orgDag.getWorkflowMetrics() );
         
         //log id hiearchy message

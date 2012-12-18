@@ -106,11 +106,20 @@ public class PlannerMetrics extends Data{
      */
     @Expose @SerializedName("exitcode") private int mExitcode;
 
-
     /**
      * The error message to be logged
      */
     @Expose @SerializedName( "error" ) private String mErrorMessage;
+
+    /**
+     * The Root Workflow UUID.
+     */
+    @Expose @SerializedName( "root.wf.uid" ) private String mRootWorkflowUUID;
+
+    /**
+     * The UUID associated with the workflow.
+     */
+    @Expose @SerializedName( "wf.uid" ) private String mWorkflowUUID;
 
     /**
      * The metrics about the workflow.
@@ -125,6 +134,45 @@ public class PlannerMetrics extends Data{
         //the exitcode is explicitly set to -1
         //it should be set when the planner ends with the correct exitcode
         mExitcode = -1;
+    }
+
+    /**
+     * Returns the UUID for the Root workflow
+     *
+     * @return the UUID of the workflow
+     */
+    public String getRootWorkflowUUID() {
+        return this.mRootWorkflowUUID;
+    }
+
+
+    /**
+     * Sets the root UUID for the workflow
+     *
+     * @param uuid   the UUID of the workflow
+     */
+    public void setRootWorkflowUUID( String uuid ) {
+        this.mRootWorkflowUUID = uuid;
+    }
+
+
+    /**
+     * Returns the UUID for the workflow
+     *
+     * @return the UUID of the workflow
+     */
+    public String getWorkflowUUID() {
+        return this.mWorkflowUUID;
+    }
+
+
+    /**
+     * Sets the UUID for the workflow
+     *
+     * @param uuid   the UUID of the workflow
+     */
+    public void setWorkflowUUID( String uuid ) {
+        this.mWorkflowUUID = uuid;
     }
 
     /**
@@ -410,6 +458,8 @@ public class PlannerMetrics extends Data{
 
         sb.append( "{" ).append( "\n" );
 
+        append( sb, "client", this.mClient );
+        append( sb, "version", this.mVersion );
         append( sb, "user", this.mUser );
         append( sb, "vogroup", this.mVOGroup );
         append( sb, "submitdir.base", this.mBaseSubmitDirectory );
@@ -421,7 +471,8 @@ public class PlannerMetrics extends Data{
         append( sb, "error" , mErrorMessage );
         append( sb, "properties", this.mPropertiesPath );
         append( sb, "dax", this.mDAXPath );
-
+        append( sb, "root.wf.uuid", this.mRootWorkflowUUID );
+        append( sb, "wf.uuid", this.mWorkflowUUID );
         sb.append( this.getWorkflowMetrics() );
 
         sb.append( "}" ).append( "\n" );

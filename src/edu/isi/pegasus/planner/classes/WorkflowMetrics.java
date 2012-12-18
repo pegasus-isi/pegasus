@@ -45,6 +45,12 @@ public class WorkflowMetrics extends Data implements Cloneable{
      * The number of DAG tasks in the DAX.
      */
     @SerializedName("dag_tasks") @Expose private int mNumDAGTasks;
+
+
+    /**
+     * The total number of tasks in the executable workflow.
+     */
+    @SerializedName("total_tasks") @Expose private int mNumTotalTasks;
     
     /**
      * The number of compute jobs.
@@ -139,6 +145,7 @@ public class WorkflowMetrics extends Data implements Cloneable{
             mNumComputeTasks  = 0;
             mNumDAXTasks      = 0;
             mNumDAGTasks      = 0;
+            mNumTotalTasks    = 0;
         }
         
         mNumTotalJobs    = 0;
@@ -209,6 +216,9 @@ public class WorkflowMetrics extends Data implements Cloneable{
             //job is null or we have locked updates to task metrics
             return;
         }
+
+        //update the total account
+        mNumTotalTasks++;
 
         //update the task metrics
         //incrementJobMetrics on basis of type of job
@@ -425,6 +435,9 @@ public class WorkflowMetrics extends Data implements Cloneable{
             return;
         }
 
+        //decrement the total count
+        mNumTotalTasks--;
+
         //update the task metrics
         //incrementJobMetrics on basis of type of job
         int type = job.getJobType();
@@ -464,7 +477,7 @@ public class WorkflowMetrics extends Data implements Cloneable{
         append( sb, "compute-tasks.count", this.mNumComputeTasks );
         append( sb, "dax-tasks.count", this.mNumDAXTasks );
         append( sb, "dag-tasks.count", this.mNumDAGTasks );
-        append( sb, "total-tasks.count", this.mNumComputeTasks + this.mNumDAGTasks + this.mNumDAXTasks );
+        append( sb, "total-tasks.count", this.mNumTotalTasks );
 
         //job related metrics
         append( sb, "createdir-jobs.count", this.mNumCreateDirJobs );
@@ -561,6 +574,7 @@ public class WorkflowMetrics extends Data implements Cloneable{
         wm.mNumComputeTasks  = this.mNumComputeTasks;
         wm.mNumDAXTasks      = this.mNumDAXTasks;
         wm.mNumDAGTasks      = this.mNumDAGTasks;
+        wm.mNumTotalTasks    = this.mNumTotalTasks;
         return wm;
     }
 
