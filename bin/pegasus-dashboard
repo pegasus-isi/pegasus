@@ -559,18 +559,10 @@ if __name__ == '__main__':
     parser.add_option ("-n", "--host", action="store", type="str", dest="host", default='0.0.0.0', help="Hostname or IP address to bind to. Default: All IP's")
     parser.add_option ("-p", "--port", action="store", type="int", dest="port_number", default=8000, help="Port number on which to start the dash board Default: 8000")
     parser.add_option ("-d", "--debug", action="store_const", const=True, dest="debug", help="For development mode, only")
-    parser.add_option ("-f", "--pidfile", action="store", type="str", dest="pid_filename", default='dashboard.pid', help="Location of PID file. Default: dashboard.pid")
     parser.add_option ("-m", "--masterdburl", action="store", type="str", dest="master_db", default='sqlite:///%s/.pegasus/workflow.db' % os.getenv('HOME'), help="URL to connect to the master the database")
 
     #Parsing command-line options
     (options, args) = parser.parse_args ()
-
-    if not options.debug:
-        if utils.pid_running (options.pid_filename):
-            print 'Application already running'
-        else:
-            atexit.register (Utils.delete_pid_file, options.pid_filename)
-            utils.write_pid_file (options.pid_filename)
 
     import logging
     logging.basicConfig (level=logging.DEBUG)
