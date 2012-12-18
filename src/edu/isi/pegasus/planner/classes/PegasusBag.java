@@ -51,7 +51,7 @@ public class PegasusBag
     public static final String PEGASUS_INFO[] = {
         "pegasus-properties", "planner-options", "replica-catalog", "site-catalog",
         "transformation-catalog", "transformation-mapper", "pegasus-logger", "site-store",
-        "planner-cache", "worker-package-map", "uses-pmc"
+        "planner-cache", "worker-package-map", "uses-pmc" , "planner-metrics"
     };
 
 
@@ -123,7 +123,13 @@ public class PegasusBag
      * whether the planner used PMC or not
      */
     public static final Integer USES_PMC = new Integer( 10  );
-    
+
+
+    /**
+     * The constant to be passed to the accessor functions to get or set the
+     * the planner metrics that are logged during the planning purpose
+     */
+    public static final Integer PLANNER_METRICS = new Integer( 11  );
 
     /**
      * The handle to the <code>PegasusProperties</code>.
@@ -182,6 +188,11 @@ public class PegasusBag
      * A boolean indicating whether we use PMC or not
      */
     private boolean mUsesPMC;
+
+    /**
+     * The planner metrics to use.
+     */
+    private PlannerMetrics mPMetrics;
     
     /**
      * The default constructor.
@@ -280,7 +291,14 @@ public class PegasusBag
                 else
                     valid = false;
                 break;
-                
+
+            case 11: //Planner metrics
+                if ( value != null && value instanceof PlannerMetrics )
+                    mPMetrics = (PlannerMetrics) value;
+                else
+                    valid = false;
+                break;
+
             default:
                 throw new RuntimeException(
                       " Wrong Pegasus Bag key. Please use one of the predefined Integer key types");
@@ -360,6 +378,9 @@ public class PegasusBag
 
             case 10://USES PMC
                 return this.mUsesPMC;
+
+            case 11://PLANNER METRICS
+                return this.mPMetrics;
                 
             default:
                 throw new RuntimeException(

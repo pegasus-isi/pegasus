@@ -164,9 +164,6 @@ public class CPlanner extends Executable{
        "to start or execute your workflow. The invocation required is" +
        "\n\n\n";
 
-
-   
-
     /**
      * The object containing all the options passed to the Concrete Planner.
      */
@@ -239,11 +236,14 @@ public class CPlanner extends Executable{
 
         CPlanner cPlanner = new CPlanner();
         int result = 0;
-        double starttime = new Date().getTime();
-        double execTime  = -1;
+        Date startDate   = new Date();
+        Date endDate     = null;
+        double starttime = startDate.getTime();
+        double duration  = -1;
 
         try{
             cPlanner.initialize(args , '6');
+            cPlanner.mPMetrics.setStartDate( startDate );
             cPlanner.executeCommand();
         }
         catch ( FactoryException fe){
@@ -263,8 +263,19 @@ public class CPlanner extends Executable{
                           LogManager.FATAL_MESSAGE_LEVEL );
             result = 3;
         } finally {
-            double endtime = new Date().getTime();
-            execTime = (endtime - starttime)/1000;
+            endDate = new Date();
+            cPlanner.mPMetrics.setEndDate( startDate );
+            double endtime = endDate.getTime();
+            duration = (endtime - starttime)/1000;
+        }
+
+        try{
+            //lets write out the metrics
+            edu.isi.pegasus.planner.code.generator.Metrics metrics = new edu.isi.pegasus.planner.code.generator.Metrics();
+            metrics.logMetrics( cPlanner.mPMetrics );
+        }
+        catch( Exception e ){
+            System.err.println( "ERROR while logging metrics " + e.getMessage() );
         }
 
 	// 2012-03-06 (jsv): Copy dax file to submit directory. It's
@@ -300,7 +311,7 @@ public class CPlanner extends Executable{
         }
         else{
             //log the time taken to execute
-            cPlanner.log("Time taken to execute is " + execTime + " seconds",
+            cPlanner.log("Time taken to execute is " + duration + " seconds",
                          LogManager.CONSOLE_MESSAGE_LEVEL );
         }
 
@@ -425,12 +436,11 @@ public class CPlanner extends Executable{
         
 
         //populate planner metrics
-        mPMetrics.setStartTime( new Date() );
         mPMetrics.setVOGroup( mPOptions.getVOGroup() );
         mPMetrics.setBaseSubmitDirectory( mPOptions.getSubmitDirectory() );
         mPMetrics.setDAX( mPOptions.getDAX() );
 
-       
+
         
 
         //try to get hold of the vds properties
@@ -465,7 +475,10 @@ public class CPlanner extends Executable{
                                                                orgDag,
                                                                this.mPOptions,
                                                                this.mProps ) );
-                                        
+
+        //set some initial workflow metrics
+        mPMetrics.setWorkflowMetrics( orgDag.getWorkflowMetrics() );
+        
         //log id hiearchy message
         //that connects dax with the jobs
         logIDHierarchyMessage( orgDag , LoggingKeys.DAX_ID, orgDag.getAbstractWorkflowName() );
@@ -515,7 +528,6 @@ public class CPlanner extends Executable{
             else {
                 //create the relative submit directory if required
                 sanityCheck( new File( baseDir, relativeSubmitDir ) );
-
             }
 
             state++;
@@ -530,6 +542,19 @@ public class CPlanner extends Executable{
             throw new RuntimeException( error + mPOptions.getSubmitDirectory(), ioe );
 
         }
+
+        //we have enough information to pin the metrics file in the submit directory
+        mPMetrics.setMetricsFileLocationInSubmitDirectory(
+                            new File( mPOptions.getSubmitDirectory() ,
+                                      edu.isi.pegasus.planner.code.generator.Abstract.getDAGFilename(
+                                                            mPOptions,
+                                                            orgDag.dagInfo.nameOfADag,
+                                                            orgDag.dagInfo.index,
+                                                            edu.isi.pegasus.planner.code.generator.Metrics.METRICS_FILE_SUFFIX )
+                                                            ));
+
+        mLogger.log( "Metrics file will be written out to " + mPMetrics.getMetricsFileLocationInSubmitDirectory(),
+                     LogManager.CONFIG_MESSAGE_LEVEL );
 
 
         //check if a random directory is specified by the user
@@ -674,9 +699,7 @@ public class CPlanner extends Executable{
 //            }
 // END OF COMMENTED OUT CODE
 
-        //write out  the planner metrics  to global log
-        mPMetrics.setEndTime( new Date() );
-        writeOutMetrics( mPMetrics );
+        
 
         if ( mPOptions.submitToScheduler() ) {//submit the jobs
             StringBuffer invocation = new StringBuffer();
@@ -1387,51 +1410,7 @@ public class CPlanner extends Executable{
     }
 
 
-    /**
-     * Writes out the planner metrics to the global log.
-     *
-     * @param pm  the metrics to be written out.
-     *
-     * @return boolean
-     */
-    protected boolean writeOutMetrics( PlannerMetrics pm  ){
-        boolean result = false;
-        System.out.print( pm.toPrettyJson() );
-        if ( mProps.writeOutMetrics() ) {
-            File log = new File( mProps.getMetricsLogFile() );
-            
-
-            //do a sanity check on the directory
-            try{
-                sanityCheck( log.getParentFile() );
-                //open the log file in append mode
-                FileOutputStream fos = new FileOutputStream( log ,true );
-
-                //get an exclusive lock
-                FileLock fl = fos.getChannel().lock();
-                try{
-                    mLogger.log( "Logging Planner Metrics to " + log,
-                                 LogManager.DEBUG_MESSAGE_LEVEL );
-                    //write out to the planner metrics to fos
-                    fos.write( pm.toPrettyJson().getBytes() );
-                }
-                finally{
-                    fl.release();
-                    fos.close();
-                }
-
-            }
-            catch( IOException ioe ){
-                mLogger.log( "Unable to write out planner metrics ", ioe,
-                             LogManager.DEBUG_MESSAGE_LEVEL );
-                return false;
-            }
-
-            result = true;
-        }
-        return result;
-    }
-
+    
     /**
      * Returns the basename of the dag file
      * 

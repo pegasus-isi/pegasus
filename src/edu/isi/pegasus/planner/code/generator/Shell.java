@@ -181,7 +181,7 @@ public class Shell extends Abstract {
         this.writeOutStampedeEvents( dag );
 
         //write out the metrics file
-        this.writeOutWorkflowMetrics(dag);
+//        this.writeOutWorkflowMetrics(dag);
 
         return result;
     }

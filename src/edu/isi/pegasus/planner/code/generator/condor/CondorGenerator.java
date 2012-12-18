@@ -512,7 +512,7 @@ public class CondorGenerator extends Abstract {
         this.writeOutStampedeEvents( dag );
 
         //write out the metrics file
-        this.writeOutWorkflowMetrics(dag);
+//        this.writeOutWorkflowMetrics(dag);
 
         //write out the braindump file
         this.writeOutBraindump( dag );

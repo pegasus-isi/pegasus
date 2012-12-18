@@ -26,6 +26,7 @@ import com.google.gson.annotations.SerializedName;
 import edu.isi.pegasus.common.util.Currently;
 import edu.isi.pegasus.common.util.Version;
 
+import java.io.File;
 import java.util.Date;
 
 /**
@@ -39,12 +40,19 @@ public class PlannerMetrics extends Data{
     /**
      * The base submit directory where the files are being created.
      */
-    private String mBaseSubmitDirectory;
+   private String mBaseSubmitDirectory;
 
     /**
      * The relative submit directory for this run.
      */
-    private String mRelativeSubmitDirectory;
+   private String mRelativeSubmitDirectory;
+
+
+    /*
+     * The file to which the metrics should be written out in the submit directory
+     */
+    private File mMetricsFileInSubmitDirectory;
+
 
     /**
      * The path to the DAX that was planned by the workflow.
@@ -66,7 +74,8 @@ public class PlannerMetrics extends Data{
      */
     private String mVOGroup;
 
-    
+
+
     /**
      * The name of the client
      */
@@ -218,6 +227,24 @@ public class PlannerMetrics extends Data{
         return mRelativeSubmitDirectory;
     }
 
+    /**
+     * Sets the metrics file location in the submit directory
+     * 
+     * @param f  the file pointing to the metrics file
+     */
+    public void setMetricsFileLocationInSubmitDirectory( File f ){
+        this.mMetricsFileInSubmitDirectory = f;
+    }
+
+    /**
+     * Sets the metrics file location in the submit directory
+     *
+     * @return the file pointing to the metrics file. can be null
+     */
+    public File getMetricsFileLocationInSubmitDirectory(   ){
+        return this.mMetricsFileInSubmitDirectory;
+    }
+
 
     /**
      * Sets the path to the DAX.
@@ -242,7 +269,7 @@ public class PlannerMetrics extends Data{
      *
      * @param start   the start time.
      */
-    public void setStartTime( Date start ){
+    public void setStartDate( Date start ){
         mStartTime = start;
     }
 
@@ -251,7 +278,7 @@ public class PlannerMetrics extends Data{
      *
      * @return   the start time.
      */
-    public Date getStartTime( ){
+    public Date getStartDate( ){
         return mStartTime;
     }
 
@@ -261,7 +288,7 @@ public class PlannerMetrics extends Data{
      *
      * @param end   the end time.
      */
-    public void setEndTime( Date end ){
+    public void setEndDate( Date end ){
         mEndTime = end;
     }
 
@@ -270,7 +297,7 @@ public class PlannerMetrics extends Data{
      *
      * @return   the end time.
      */
-    public Date getEndTime( ){
+    public Date getEndDate( ){
         return mEndTime;
     }
     
@@ -358,8 +385,8 @@ public class PlannerMetrics extends Data{
         pm.setRelativeSubmitDirectory( this.mRelativeSubmitDirectory );
         pm.setProperties( this.mPropertiesPath );
         pm.setDAX( this.mDAXPath );
-        pm.setStartTime( this.mStartTime );
-        pm.setEndTime( this.mEndTime );
+        pm.setStartDate( this.mStartTime );
+        pm.setEndDate( this.mEndTime );
 
         return pm;
     }

@@ -15,20 +15,12 @@
  */
 package edu.isi.pegasus.planner.code.generator;
 
-import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.code.CodeGeneratorException;
 
-import edu.isi.pegasus.planner.classes.ADag;
-import edu.isi.pegasus.planner.classes.PegasusBag;
-import edu.isi.pegasus.planner.classes.Job;
 
-import edu.isi.pegasus.planner.classes.PlannerOptions;
-import edu.isi.pegasus.planner.code.CodeGenerator;
-import edu.isi.pegasus.planner.common.PegasusProperties;
+import edu.isi.pegasus.planner.classes.PlannerMetrics;
 
-import org.globus.gsi.GlobusCredentialException;
 
-import java.net.UnknownHostException;
 
 
 import java.io.BufferedWriter;
@@ -37,8 +29,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 
-import java.util.Collection;
-import java.util.LinkedList;
 
 /**
  * A Metrics file generator that generates a metrics file in the submit directory
@@ -51,7 +41,7 @@ import java.util.LinkedList;
  * @author Karan Vahi
  * @version $Revision$
  */
-public class Metrics implements CodeGenerator {
+public class Metrics  {
 
 
     /**
@@ -59,116 +49,102 @@ public class Metrics implements CodeGenerator {
      */
     public static final String METRICS_FILE_SUFFIX = ".metrics";
 
-    /**
-     * The bag of initialization objects.
-     */
-    protected PegasusBag mBag;
+
 
 
     /**
-     * The directory where all the submit files are to be generated.
-     */
-    protected String mSubmitFileDir;
-
-    /**
-     * The object holding all the properties pertaining to Pegasus.
-     */
-    protected PegasusProperties mProps;
-
-    /**
-     * The object containing the command line options specified to the planner
-     * at runtime.
-     */
-    protected PlannerOptions mPOptions;
-
-    /**
-     * The handle to the logging object.
-     */
-    protected LogManager mLogger;
-
-    /**
-     * Initializes the Code Generator implementation.
+     * Logs the metrics to the metrics server and to the submit directory
      *
-     * @param bag   the bag of initialization objects.
+     * @param metrics
      *
-     * @throws CodeGeneratorException in case of any error occuring code generation.
+     * @throws IOException
      */
-    public void initialize( PegasusBag bag ) throws CodeGeneratorException{
-        mBag           = bag;
-        mProps         = bag.getPegasusProperties();
-        mPOptions      = bag.getPlannerOptions();
-        mSubmitFileDir = mPOptions.getSubmitDirectory();
-        mLogger        = bag.getLogger();
+    public void logMetrics( PlannerMetrics metrics ) throws IOException{
+        //lets write out to the local file
+        this.writeOutMetricsFile( metrics );
     }
 
-  
-
-    
-    /**
-     * Generates the code for the executable workflow in terms of a braindump
-     * file that contains workflow metadata useful for monitoring daemons etc.
-     *
-     * @param dag  the concrete workflow.
-     *
-     * @return the Collection of <code>File</code> objects for the files written
-     *         out.
-     *
-     * @throws CodeGeneratorException in case of any error occuring code generation.
-     */
-    public Collection<File> generateCode(ADag dag) throws CodeGeneratorException {
-        try {
-
-            Collection<File> result = new LinkedList();
-            result.add( writeOutMetricsFile( dag ) );
-            return result;
-        } catch (IOException ioe) {
-            throw new CodeGeneratorException( "IOException while writing out the braindump file" ,
-                                               ioe );
-        }
-    }
-    
-    
-    /**
-     * Method not implemented. Throws an exception.
-     * 
-     * @param dag  the workflow
-     * @param job  the job for which the code is to be generated.
-     * 
-     * @throws edu.isi.pegasus.planner.code.CodeGeneratorException
-     */
-    public void generateCode( ADag dag, Job job ) throws CodeGeneratorException {
-        throw new CodeGeneratorException( "Metrics generator only generates code for the whole workflow" );
-    }
     
     /**
      * Writes out the workflow metrics file in the submit directory
      *
-     * @param dag  the final executable workflow
+     * @param metrics  the metrics to be written out.
      *
-     * @return the absolute path to the braindump file.txt written in the directory.
+     * @return the path to metrics file in the submit directory
      *
      * @throws IOException in case of error while writing out file.
      */
-    protected File writeOutMetricsFile( ADag dag ) throws IOException{
+    private File writeOutMetricsFile( PlannerMetrics metrics ) throws IOException{
         
-        
+        if( metrics == null ){
+            throw new IOException( "NULL Metrics passed" );
+        }
         
         //create a writer to the braindump.txt in the directory.
-        File f = new File( mSubmitFileDir , Abstract.getDAGFilename( this.mPOptions,
-                                                                     dag.dagInfo.nameOfADag,
-                                                                     dag.dagInfo.index,
-                                                                     Metrics.METRICS_FILE_SUFFIX ) );
+        File f =  metrics.getMetricsFileLocationInSubmitDirectory();
+
+        if( f == null ){
+            throw new IOException( "The metrics file location is not yet initialized" );
+        }
+
         PrintWriter writer =
                   new PrintWriter(new BufferedWriter(new FileWriter(f)));
         
  
-        writer.println( dag.getWorkflowMetrics().toPrettyJson() );
+        writer.println( metrics.toPrettyJson() );
         writer.write(  "\n" );
 
         writer.close();
                 
         return f;
     }
+
+    /**
+     * Writes out the planner metrics to the global log.
+     *
+     * @param pm  the metrics to be written out.
+     *
+     * @return boolean
+     */
+    /*
+    protected boolean writeOutMetrics( PlannerMetrics pm  ){
+        boolean result = false;
+        System.out.print( pm.toPrettyJson() );
+        if ( mProps.writeOutMetrics() ) {
+            File log = new File( mProps.getMetricsLogFile() );
+
+
+            //do a sanity check on the directory
+            try{
+                sanityCheck( log.getParentFile() );
+                //open the log file in append mode
+                FileOutputStream fos = new FileOutputStream( log ,true );
+
+                //get an exclusive lock
+                FileLock fl = fos.getChannel().lock();
+                try{
+                    mLogger.log( "Logging Planner Metrics to " + log,
+                                 LogManager.DEBUG_MESSAGE_LEVEL );
+                    //write out to the planner metrics to fos
+                    fos.write( pm.toPrettyJson().getBytes() );
+                }
+                finally{
+                    fl.release();
+                    fos.close();
+                }
+
+            }
+            catch( IOException ioe ){
+                mLogger.log( "Unable to write out planner metrics ", ioe,
+                             LogManager.DEBUG_MESSAGE_LEVEL );
+                return false;
+            }
+
+            result = true;
+        }
+        return result;
+    }
+    */
    
     /**
      * Resets the Code Generator implementation.

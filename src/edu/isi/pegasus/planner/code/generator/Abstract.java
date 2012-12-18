@@ -178,6 +178,7 @@ public abstract class Abstract implements CodeGenerator{
      *
      * @param workflow      the workflow whose metrics file needs to be generated.
      */
+ /*
     protected void writeOutWorkflowMetrics( ADag workflow ){
 
 
@@ -196,7 +197,7 @@ public abstract class Abstract implements CodeGenerator{
                         ioe, LogManager.ERROR_MESSAGE_LEVEL );
         }
     }
-
+*/
 
     /**
      * Writes out the stampedeEventGenerator events for the workflow.
