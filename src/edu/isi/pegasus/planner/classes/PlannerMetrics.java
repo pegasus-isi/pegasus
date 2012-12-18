@@ -96,18 +96,35 @@ public class PlannerMetrics extends Data{
      */
     @Expose @SerializedName("end_time") private Date mEndTime;
 
-    
+    /**
+     * The planning duration
+     */
+    @Expose @SerializedName("duration") private double mDuration;
+
+    /**
+     * the exitcode of the planner
+     */
+    @Expose @SerializedName("exitcode") private int mExitcode;
+
+
+    /**
+     * The error message to be logged
+     */
+    @Expose @SerializedName( "error" ) private String mErrorMessage;
+
     /**
      * The metrics about the workflow.
      */
     @Expose @SerializedName("wf_metrics") private WorkflowMetrics mWFMetrics;
 
+
     /**
      * The default metrics.
      */
     public PlannerMetrics() {
-
-
+        //the exitcode is explicitly set to -1
+        //it should be set when the planner ends with the correct exitcode
+        mExitcode = -1;
     }
 
     /**
@@ -129,12 +146,14 @@ public class PlannerMetrics extends Data{
     }
 
 
+    
+
     /**
      * Returns the username.
      *
      * @return the user.
      */
-    public String setUser( ){
+    public String getUser( ){
         return mUser;
     }
 
@@ -300,7 +319,64 @@ public class PlannerMetrics extends Data{
     public Date getEndDate( ){
         return mEndTime;
     }
-    
+
+    /**
+     * Returns the duration for the planning
+     *
+     * @return the duration
+     */
+    public double getDuration( ){
+        return mDuration;
+    }
+
+
+    /**
+     * Sets the user.
+     *
+     * @param duration  the duration
+     */
+    public void setDuration( double duration ){
+        mDuration = duration;
+    }
+
+    /**
+     * Returns the exitcode for the planner
+     *
+     * @return the exitcode
+     */
+    public int getExitcode( ){
+        return mExitcode;
+    }
+
+
+    /**
+     * Sets the exitcode for the planner.
+     *
+     * @param exitcode the exitcode
+     */
+    public void setExitcode( int exitcode ){
+        mExitcode = exitcode;
+    }
+
+    /**
+     * Set the error message that we want to log
+     *
+     * @param error   error
+     */
+    public void setErrorMessage(String error ) {
+        mErrorMessage = error;
+    }
+
+
+    /**
+     * Returns the error message that we want to log
+     *
+     * @return  the error message
+     */
+    public String getErrorMessage( ) {
+        return mErrorMessage;
+    }
+
     /**
      * Converts the planner metrics to JSON
      * 
@@ -340,6 +416,9 @@ public class PlannerMetrics extends Data{
         append( sb, "submitdir.relative", this.mRelativeSubmitDirectory );
         append( sb, "planning.start", Currently.iso8601( false, true, false, mStartTime ) );
         append( sb, "planning.end", Currently.iso8601( false, true, false, mEndTime ) );
+        append( sb, "duration" ,  Double.toString( mDuration )  );
+        append( sb, "exitcode" ,  Integer.toString( mExitcode )  );
+        append( sb, "error" , mErrorMessage );
         append( sb, "properties", this.mPropertiesPath );
         append( sb, "dax", this.mDAXPath );
 
@@ -387,7 +466,11 @@ public class PlannerMetrics extends Data{
         pm.setDAX( this.mDAXPath );
         pm.setStartDate( this.mStartTime );
         pm.setEndDate( this.mEndTime );
-
+        pm.setDuration( this.mDuration );
+        pm.setExitcode( this.mExitcode );
+        pm.setErrorMessage( this.mErrorMessage );
         return pm;
     }
+
+
 }

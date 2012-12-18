@@ -241,16 +241,19 @@ public class CPlanner extends Executable{
         double starttime = startDate.getTime();
         double duration  = -1;
 
+        Exception plannerException = null;
         try{
             cPlanner.initialize(args , '6');
             cPlanner.mPMetrics.setStartDate( startDate );
             cPlanner.executeCommand();
         }
         catch ( FactoryException fe){
+            plannerException = fe;
             cPlanner.log( fe.convertException() , LogManager.FATAL_MESSAGE_LEVEL);
             result = 2;
         }
         catch ( RuntimeException rte ) {
+            plannerException = rte;
             //catch all runtime exceptions including our own that
             //are thrown that may have chained causes
             cPlanner.log( convertException(rte, cPlanner.mLogger.getLevel() ),
@@ -258,18 +261,26 @@ public class CPlanner extends Executable{
             result = 1;
         }
         catch ( Exception e ) {
+            plannerException = e;
             //unaccounted for exceptions
             cPlanner.log( convertException(e, cPlanner.mLogger.getLevel() ),
                           LogManager.FATAL_MESSAGE_LEVEL );
             result = 3;
         } finally {
             endDate = new Date();
-            cPlanner.mPMetrics.setEndDate( startDate );
-            double endtime = endDate.getTime();
-            duration = (endtime - starttime)/1000;
         }
 
         try{
+            cPlanner.mPMetrics.setEndDate( startDate );
+            double endtime = endDate.getTime();
+            duration = (endtime - starttime)/1000;
+            cPlanner.mPMetrics.setDuration( duration );
+            cPlanner.mPMetrics.setExitcode( result );
+
+            if( plannerException != null ){
+                cPlanner.mPMetrics.setErrorMessage(  convertException(
+                                                                    plannerException ,  LogManager.TRACE_MESSAGE_LEVEL ) );
+            }
             //lets write out the metrics
             edu.isi.pegasus.planner.code.generator.Metrics metrics = new edu.isi.pegasus.planner.code.generator.Metrics();
             metrics.logMetrics( cPlanner.mPMetrics );
