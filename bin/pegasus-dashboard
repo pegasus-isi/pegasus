@@ -112,7 +112,8 @@ def index ():
     except NoWorkflowsFoundError, e:
         if request.is_xhr:
             return render_template ('workflow.xhr.json', count=e.count, filtered=e.filtered, workflows=[], table_args=args)
-        return '', 204
+        
+        return render_template ('workflow.html', workflows=[], counts=(0, 0, 0, 0))
     
     if request.is_xhr:
         return render_template ('workflow.xhr.json', count=count, filtered=filtered, workflows=workflows, table_args=args)
