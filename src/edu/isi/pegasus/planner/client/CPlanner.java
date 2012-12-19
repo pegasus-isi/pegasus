@@ -283,11 +283,14 @@ public class CPlanner extends Executable{
                 //we want the stack trace to a String Writer.
                 StringWriter sw = new StringWriter();
                 plannerException.printStackTrace( new PrintWriter( sw ) );
+                cPlanner.mPMetrics.setMetricsTypeToError();
                 cPlanner.mPMetrics.setErrorMessage(  sw.toString() );
             }
             //lets write out the metrics
             edu.isi.pegasus.planner.code.generator.Metrics metrics = new edu.isi.pegasus.planner.code.generator.Metrics();
+            metrics.initialize( cPlanner.mBag );
             metrics.logMetrics( cPlanner.mPMetrics );
+
         }
         catch( Exception e ){
             System.out.println( "ERROR while logging metrics " + e.getMessage() );

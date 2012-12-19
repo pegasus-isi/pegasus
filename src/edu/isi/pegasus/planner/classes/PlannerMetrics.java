@@ -85,6 +85,11 @@ public class PlannerMetrics extends Data{
      * The planner version
      */
     @Expose @SerializedName( "version" ) private  final String mVersion = Version.instance().toString();
+
+    /**
+     * The name of the client
+     */
+    @Expose @SerializedName( "type" ) private   String mType ;
     
     /**
      * The start time for the planning.
@@ -107,24 +112,24 @@ public class PlannerMetrics extends Data{
     @Expose @SerializedName("exitcode") private int mExitcode;
 
     /**
-     * The error message to be logged
-     */
-    @Expose @SerializedName( "error" ) private String mErrorMessage;
-
-    /**
      * The Root Workflow UUID.
      */
-    @Expose @SerializedName( "root.wf.uid" ) private String mRootWorkflowUUID;
+    @Expose @SerializedName( "root_wf_uuid" ) private String mRootWorkflowUUID;
 
     /**
      * The UUID associated with the workflow.
      */
-    @Expose @SerializedName( "wf.uid" ) private String mWorkflowUUID;
+    @Expose @SerializedName( "wf_uuid" ) private String mWorkflowUUID;
 
     /**
      * The metrics about the workflow.
      */
     @Expose @SerializedName("wf_metrics") private WorkflowMetrics mWFMetrics;
+
+    /**
+     * The error message to be logged
+     */
+    @Expose @SerializedName( "error" ) private String mErrorMessage;
 
 
     /**
@@ -134,6 +139,7 @@ public class PlannerMetrics extends Data{
         //the exitcode is explicitly set to -1
         //it should be set when the planner ends with the correct exitcode
         mExitcode = -1;
+        mType = "metrics";
     }
 
     /**
@@ -215,6 +221,33 @@ public class PlannerMetrics extends Data{
         mUser = user;
     }
 
+    /**
+     * Sets the metrics
+     *
+     * @param type  the metrics type
+     */
+    public void setMetricsType( String type ){
+        mType = type;
+    }
+
+    /**
+     * Convenience setter method
+     *
+     * @param type  the metrics type
+     */
+    public void setMetricsTypeToError(   ){
+        mType = "error";
+    }
+
+
+    /**
+     * Returns the metric type
+     *
+     * @return  metrics type
+     */
+    public String getMetricsType(   ){
+        return mType;
+    }
 
 
     /**
@@ -431,7 +464,7 @@ public class PlannerMetrics extends Data{
      * @return  the planner metrics in JSON
      */
     public String toJson(){
-        Gson gson = new Gson();
+        Gson gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create();
         return gson.toJson( this );      
     }
 
