@@ -100,12 +100,12 @@ public class PlannerMetrics extends Data{
     /**
      * The start time for the planning.
      */
-    @Expose @SerializedName("start_time") private String mStartTime;
+    @Expose @SerializedName("start_time") private double mStartTime;
 
     /**
      * The end time for the planning.
      */
-    @Expose @SerializedName("end_time") private String mEndTime;
+    @Expose @SerializedName("end_time") private double mEndTime;
 
     /**
      * The planning duration
@@ -402,7 +402,8 @@ public class PlannerMetrics extends Data{
      */
     public void setStartTime( Date start ){
         double t = start.getTime();
-        mStartTime = mNumFormatter.format( t/1000 );
+        //mStartTime = mNumFormatter.format( t/1000 );
+        mStartTime = t/1000;
     }
 
     /**
@@ -410,7 +411,7 @@ public class PlannerMetrics extends Data{
      *
      * @param start   the start time.
      */
-    public void setStartTime( String start ){
+    public void setStartTime( double start ){
         mStartTime = start;
     }
 
@@ -420,7 +421,7 @@ public class PlannerMetrics extends Data{
      *
      * @return   the start time.
      */
-    public String getStartTime( ){
+    public double getStartTime( ){
         return mStartTime;
     }
 
@@ -432,7 +433,8 @@ public class PlannerMetrics extends Data{
      */
     public void setEndTime( Date end ){
         double t = end.getTime();
-        mEndTime = mNumFormatter.format( t/1000 );
+        //mEndTime = mNumFormatter.format( t/1000 );
+        mEndTime   = t/1000;
     }
 
     /**
@@ -440,7 +442,7 @@ public class PlannerMetrics extends Data{
      *
      * @param end   the end time.
      */
-    public void setEndTime( String end ){
+    public void setEndTime( double end ){
         mEndTime = end;
     }
 
@@ -451,7 +453,7 @@ public class PlannerMetrics extends Data{
      *
      * @return   the end time.
      */
-    public String getEndTime( ){
+    public double getEndTime( ){
         return mEndTime;
     }
 
@@ -551,8 +553,8 @@ public class PlannerMetrics extends Data{
         append( sb, "vogroup", this.mVOGroup );
         append( sb, "submitdir.base", this.mBaseSubmitDirectory );
         append( sb, "submitdir.relative", this.mRelativeSubmitDirectory );
-        append( sb, "planning.start",   mStartTime  );
-        append( sb, "planning.end", mEndTime );
+        append( sb, "planning.start",   mNumFormatter.format( mStartTime ) );
+        append( sb, "planning.end", mNumFormatter.format( mEndTime ) );
         append( sb, "duration" ,  Double.toString( mDuration )  );
         append( sb, "exitcode" ,  Integer.toString( mExitcode )  );
         append( sb, "error" , mErrorMessage );
