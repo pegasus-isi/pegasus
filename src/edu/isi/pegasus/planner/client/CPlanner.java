@@ -246,7 +246,7 @@ public class CPlanner extends Executable{
         Exception plannerException = null;
         try{
             cPlanner.initialize(args , '6');
-            cPlanner.mPMetrics.setStartDate( startDate );
+            cPlanner.mPMetrics.setStartTime( startDate );
             cPlanner.executeCommand();
         }
         catch ( FactoryException fe){
@@ -273,7 +273,7 @@ public class CPlanner extends Executable{
         }
 
         try{
-            cPlanner.mPMetrics.setEndDate( startDate );
+            cPlanner.mPMetrics.setEndTime( endDate );
             double endtime = endDate.getTime();
             duration = (endtime - starttime)/1000;
             cPlanner.mPMetrics.setDuration( duration );

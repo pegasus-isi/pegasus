@@ -23,10 +23,11 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
-import edu.isi.pegasus.common.util.Currently;
 import edu.isi.pegasus.common.util.Version;
 
 import java.io.File;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.Date;
 
 /**
@@ -75,6 +76,11 @@ public class PlannerMetrics extends Data{
     private String mVOGroup;
 
 
+    /**
+     * The number formatter to format the run submit dir entries.
+     */
+    private NumberFormat mNumFormatter;
+
 
     /**
      * The name of the client
@@ -94,12 +100,12 @@ public class PlannerMetrics extends Data{
     /**
      * The start time for the planning.
      */
-    @Expose @SerializedName("start_time") private Date mStartTime;
+    @Expose @SerializedName("start_time") private String mStartTime;
 
     /**
      * The end time for the planning.
      */
-    @Expose @SerializedName("end_time") private Date mEndTime;
+    @Expose @SerializedName("end_time") private String mEndTime;
 
     /**
      * The planning duration
@@ -139,6 +145,7 @@ public class PlannerMetrics extends Data{
         //the exitcode is explicitly set to -1
         //it should be set when the planner ends with the correct exitcode
         mExitcode = -1;
+        mNumFormatter = new DecimalFormat( "#.###" );
         mType = "metrics";
     }
 
@@ -369,16 +376,27 @@ public class PlannerMetrics extends Data{
      *
      * @param start   the start time.
      */
-    public void setStartDate( Date start ){
+    public void setStartTime( Date start ){
+        double t = start.getTime();
+        mStartTime = mNumFormatter.format( t/1000 );
+    }
+
+    /**
+     * Set the start time for the planning operation.
+     *
+     * @param start   the start time.
+     */
+    public void setStartTime( String start ){
         mStartTime = start;
     }
 
     /**
-     * Returns the start time for the planning operation.
+     * Returns the start time for the planning operation as epoch with
+     * millisecond precision
      *
      * @return   the start time.
      */
-    public Date getStartDate( ){
+    public String getStartTime( ){
         return mStartTime;
     }
 
@@ -388,16 +406,28 @@ public class PlannerMetrics extends Data{
      *
      * @param end   the end time.
      */
-    public void setEndDate( Date end ){
-        mEndTime = end;
+    public void setEndTime( Date end ){
+        double t = end.getTime();
+        mEndTime = mNumFormatter.format( t/1000 );
     }
 
     /**
-     * Returns the end time for the planning operation.
+     * Set the end time for the planning operation.
+     *
+     * @param end   the end time.
+     */
+    public void setEndTime( String end ){
+        mEndTime = end;
+    }
+
+
+    /**
+     * Returns the end time for the planning operation as epoch with
+     * millisecond precision
      *
      * @return   the end time.
      */
-    public Date getEndDate( ){
+    public String getEndTime( ){
         return mEndTime;
     }
 
@@ -497,8 +527,8 @@ public class PlannerMetrics extends Data{
         append( sb, "vogroup", this.mVOGroup );
         append( sb, "submitdir.base", this.mBaseSubmitDirectory );
         append( sb, "submitdir.relative", this.mRelativeSubmitDirectory );
-        append( sb, "planning.start", Currently.iso8601( false, true, false, mStartTime ) );
-        append( sb, "planning.end", Currently.iso8601( false, true, false, mEndTime ) );
+        append( sb, "planning.start",   mStartTime  );
+        append( sb, "planning.end", mEndTime );
         append( sb, "duration" ,  Double.toString( mDuration )  );
         append( sb, "exitcode" ,  Integer.toString( mExitcode )  );
         append( sb, "error" , mErrorMessage );
@@ -542,14 +572,15 @@ public class PlannerMetrics extends Data{
                                         e);
         }
 
+        pm.mNumFormatter = (NumberFormat) this.mNumFormatter.clone();
         pm.setUser( this.mUser );
         pm.setVOGroup( this.mVOGroup );
         pm.setBaseSubmitDirectory( this.mBaseSubmitDirectory );
         pm.setRelativeSubmitDirectory( this.mRelativeSubmitDirectory );
         pm.setProperties( this.mPropertiesPath );
         pm.setDAX( this.mDAXPath );
-        pm.setStartDate( this.mStartTime );
-        pm.setEndDate( this.mEndTime );
+        pm.setStartTime( this.mStartTime );
+        pm.setEndTime( this.mEndTime );
         pm.setDuration( this.mDuration );
         pm.setExitcode( this.mExitcode );
         pm.setErrorMessage( this.mErrorMessage );
