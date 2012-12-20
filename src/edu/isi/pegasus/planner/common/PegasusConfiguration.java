@@ -49,10 +49,16 @@ public class PegasusConfiguration {
      */
     public static final String DEPRECATED_S3_CONFIGURATION_VALUE = "S3";
 
-       /**
+
+    /**
      * The value for the non shared filesystem configuration.
      */
     public static final String SHARED_FS_CONFIGURATION_VALUE = "sharedfs";
+
+    /**
+     * The default data configuration value
+     */
+    public static String DEFAULT_DATA_CONFIGURATION_VALUE = SHARED_FS_CONFIGURATION_VALUE;
 
     /**
      * The value for the non shared filesystem configuration.

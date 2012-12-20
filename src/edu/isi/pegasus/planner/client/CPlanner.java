@@ -457,7 +457,11 @@ public class CPlanner extends Executable{
         mPMetrics.setVOGroup( mPOptions.getVOGroup() );
         mPMetrics.setBaseSubmitDirectory( mPOptions.getSubmitDirectory() );
         mPMetrics.setDAX( mPOptions.getDAX() );
-
+        String dataConfiguration = mProps.getProperty( PegasusConfiguration.PEGASUS_CONFIGURATION_PROPERTY_KEY ) ;
+        dataConfiguration = ( dataConfiguration == null ) ?
+                                PegasusConfiguration.DEFAULT_DATA_CONFIGURATION_VALUE:
+                                dataConfiguration;
+        mPMetrics.setDataConfiguration( dataConfiguration );
 
         
 

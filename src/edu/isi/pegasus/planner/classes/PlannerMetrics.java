@@ -128,6 +128,11 @@ public class PlannerMetrics extends Data{
     @Expose @SerializedName( "wf_uuid" ) private String mWorkflowUUID;
 
     /**
+     * The UUID associated with the workflow.
+     */
+    @Expose @SerializedName( "data_config" )private String mDataConfiguration;
+
+    /**
      * The metrics about the workflow.
      */
     @Expose @SerializedName("wf_metrics") private WorkflowMetrics mWFMetrics;
@@ -371,6 +376,25 @@ public class PlannerMetrics extends Data{
         return mDAXPath;
     }
 
+
+    /**
+     * The data configuration
+     *
+     * @param configuration   the data configuration
+     */
+    public void setDataConfiguration(String configuration) {
+        mDataConfiguration = configuration;
+    }
+
+    /**
+     * Returns the data configuration
+     *
+     * @return the data configuration
+     */
+    public String getDataConfiguration( ) {
+        return mDataConfiguration ;
+    }
+
     /**
      * Set the start time for the planning operation.
      *
@@ -534,6 +558,7 @@ public class PlannerMetrics extends Data{
         append( sb, "error" , mErrorMessage );
         append( sb, "properties", this.mPropertiesPath );
         append( sb, "dax", this.mDAXPath );
+        append( sb, "data.configuration", this.mDataConfiguration );
         append( sb, "root.wf.uuid", this.mRootWorkflowUUID );
         append( sb, "wf.uuid", this.mWorkflowUUID );
         sb.append( this.getWorkflowMetrics() );
@@ -579,6 +604,7 @@ public class PlannerMetrics extends Data{
         pm.setRelativeSubmitDirectory( this.mRelativeSubmitDirectory );
         pm.setProperties( this.mPropertiesPath );
         pm.setDAX( this.mDAXPath );
+        pm.setDataConfiguration( this.mDataConfiguration );
         pm.setStartTime( this.mStartTime );
         pm.setEndTime( this.mEndTime );
         pm.setDuration( this.mDuration );
@@ -586,6 +612,8 @@ public class PlannerMetrics extends Data{
         pm.setErrorMessage( this.mErrorMessage );
         return pm;
     }
+
+
 
 
 }
