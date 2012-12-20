@@ -227,7 +227,7 @@ public class Metrics  {
             mLogger.log( "Exception caught while sending metrics to server " + url, ex,
                          LogManager.DEBUG_MESSAGE_LEVEL );
         } catch (TimeoutException e) {
-            mLogger.log( "Sending of metrics to server timed out " + url,
+            mLogger.log( "Sending of metrics to server timed out " + url, e ,
                          LogManager.DEBUG_MESSAGE_LEVEL );
         }
         finally{
