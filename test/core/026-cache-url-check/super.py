@@ -19,12 +19,12 @@ diamond.addFile(b)
 
 # Add DAX job 1
 one = DAX("one.dax")
-one.addArguments('-vvvv')
+one.addArguments('--staging-site local -vvvv')
 diamond.addJob(one)
 
 # Add DAX job 2
 two = DAX("two.dax")
-two.addArguments('-vvvv')
+two.addArguments('--staging-site local -vvvv')
 diamond.addJob(two)
 
 # Add control-flow dependencies
