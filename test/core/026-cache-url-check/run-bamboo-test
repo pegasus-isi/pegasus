@@ -56,7 +56,28 @@ pegasus-plan \
     --sites condor_pool \
     --staging-site local \
     --output-site local \
-    -vvvvv \
     --submit | tee $TOP_DIR/plan.out
 
+
+WORK_DIR=`cat plan.out | grep pegasus-remove | sed -E 's/.*pegasus-remove[ ]+//'`
+cd $WORK_DIR
+
+while :
+do
+	sleep 1
+	
+	if [ -e "diamond-a_ID0000001/diamond-a-0.cache" ]; then
+		set +e
+		grep -v -P "diamond-.*-4\.0" diamond-a_ID0000001/diamond-a-0.cache | grep -v "http://" 
+		EC=$?
+		set -e
+
+		if [ $EC -eq 0 ]; then
+			echo "Cache file contains non http URL's" 
+			exit 1
+		fi
+
+		break
+	fi
+done
 
