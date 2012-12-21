@@ -35,6 +35,9 @@
   <xi:include href="useful_tips.xml"
               xmlns:xi="http://www.w3.org/2001/XInclude" />
 
+  <xi:include href="usage_metrics..xml"
+              xmlns:xi="http://www.w3.org/2001/XInclude" />
+
   <xi:include href="glossary.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
   
   <xi:include href="tutorial_vm.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
