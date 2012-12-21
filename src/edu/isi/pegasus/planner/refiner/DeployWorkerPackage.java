@@ -512,7 +512,7 @@ public class DeployWorkerPackage
                                             destDirServer.getURLPrefix();
 
             if( destURLPrefix == null ){
-                this.complainForHeadNodeURLPrefix( REFINER_NAME, stagingSite );
+                this.complainForHeadNodeURLPrefix( REFINER_NAME, stagingSite , FileServer.OPERATION.put);
             }
 
             //figure out the directory where to stage the data

@@ -529,7 +529,7 @@ public class InterPoolEngine extends Engine implements Refiner {
             String headnodeURLPrefix = site.selectHeadNodeScratchSharedFileServerURLPrefix( FileServer.OPERATION.put );
 
             if( headnodeURLPrefix == null ){
-                this.complainForHeadNodeURLPrefix( REFINER_NAME, job , site.getSiteHandle() );
+                this.complainForHeadNodeURLPrefix( REFINER_NAME,  site.getSiteHandle() , FileServer.OPERATION.put, job );
             }
             fTx.addDestination( stagingSiteHandle,
                                 headnodeURLPrefix + stagedPath);
@@ -685,7 +685,7 @@ public class InterPoolEngine extends Engine implements Refiner {
 //                        String headnodeURLPrefix = this.selectHeadNodeScratchSharedFileServerURLPrefix( site );
                         String headnodeURLPrefix = site.selectHeadNodeScratchSharedFileServerURLPrefix( FileServer.OPERATION.put );
                         if( headnodeURLPrefix == null ){
-                            this.complainForHeadNodeURLPrefix( REFINER_NAME, job , site.getSiteHandle() );
+                            this.complainForHeadNodeURLPrefix( REFINER_NAME,  site.getSiteHandle() , FileServer.OPERATION.put, job );
                         }
                         fTx.addDestination( stagingSiteHandle,
                                             headnodeURLPrefix + stagedPath);

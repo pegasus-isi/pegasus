@@ -383,7 +383,7 @@ public class TransferEngine extends Engine {
                 //PM-590 Stricter checks
                 String stagingSiteURLPrefix = stagingSite.selectHeadNodeScratchSharedFileServerURLPrefix( FileServer.OPERATION.put );
                 if( stagingSiteURLPrefix == null ){
-                    this.complainForHeadNodeURLPrefix( REFINER_NAME, currentJob, stagingSite.getSiteHandle() );
+                    this.complainForHeadNodeURLPrefix( REFINER_NAME, stagingSite.getSiteHandle(), FileServer.OPERATION.put, currentJob );
                 }
                 boolean localTransfer = runTransferOnLocalSite( 
                                             currentJob.getSiteHandle(), 

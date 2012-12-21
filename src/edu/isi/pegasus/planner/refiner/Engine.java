@@ -29,6 +29,8 @@ import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.catalog.site.impl.old.PoolMode;
 
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
+import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
+import edu.isi.pegasus.planner.catalog.site.classes.FileServerType;
 
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.classes.Job;
@@ -292,26 +294,28 @@ public abstract  class Engine {
      * 
      * @throws RuntimeException when URL Prefix cannot be determined for various reason.
      */
-    protected void complainForHeadNodeURLPrefix( String refiner, String site ) {
-         this.complainForHeadNodeURLPrefix( refiner, null, site );
+    protected void complainForHeadNodeURLPrefix( String refiner, String site, FileServer.OPERATION operation) {
+         this.complainForHeadNodeURLPrefix( refiner,site, operation, null  );
     }
 
     /**
      * Complains for head node url prefix not specified
      * 
      * @param refiner the name of the refiner
+     * @param operation  the operation for which error is throw
      * @param job    the related job if any
      * @param site   the site handle
      * 
      * @throws RuntimeException when URL Prefix cannot be determined for various reason.
      */
-    protected void complainForHeadNodeURLPrefix(String refiner, Job job, String site ) {
+    protected void complainForHeadNodeURLPrefix(String refiner, String site, FileServer.OPERATION operation, Job job   ) {
         StringBuffer error = new StringBuffer();
         error.append( "[" ).append( refiner ).append( "] ");
         if( job != null ){
             error.append( "For job (" ).append( job.getID() ).append( ")." );
         }
-        error.append( "Unable to determine URL Prefix for the FileServer for shared scratch file system on site: " ).
+        error.append( "Unable to determine URL Prefix for the FileServer ").
+              append( " for operation ").append( operation ).append( "for shared scratch file system on site: " ).
               append( site );
         throw new RuntimeException( error.toString() );
     }
