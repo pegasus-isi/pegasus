@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: pegasus-plan
 .\"    Author: [see the "Authors" section]
-.\" Generator: DocBook XSL Stylesheets v1.75.2 <http://docbook.sf.net/>
-.\"      Date: 02/27/2012
+.\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
+.\"      Date: 12/21/2012
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "PEGASUS\-PLAN" "1" "02/27/2012" "\ \&" "\ \&"
+.TH "PEGASUS\-PLAN" "1" "12/21/2012" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -40,7 +40,7 @@ pegasus-plan \- runs Pegasus to generate the executable workflow
              [\fB\-\-dir\fR \fIdir\fR]
              [\fB\-\-force\fR] [\fB\-\-force\-replan\fR]
              [\fB\-\-inherited\-rc\-files\fR] [\fB\-j\fR \fIprefix\fR]
-             [\fB\-n\fR] [\fB\-o\fR \fIsite\fR]
+             [\fB\-n\fR][\fB\-I\fR \fIinput\-dir\fR][\fB\-O\fR \fIoutput\-dir\fR] [\fB\-o\fR \fIsite\fR]
              [\fB\-s\fR \fIsite1\fR[,\fIsite2\fR\&...]]
              [\fB\-\-staging\-site\fR s1=ss1[,s2=ss2[\&.\&.]]
              [\fB\-\-randomdir\fR[=\fIdirname\fR]]
@@ -135,23 +135,15 @@ The clustered jobs can be run at the remote site, either sequentially or by usin
 either with the transformation in the transformation catalog or the execution site in the site catalog\&. The value specified (to the property or the profile), is the logical name of the transformation that is to be used for clustering jobs\&. Note that clustering will only happen if the corresponding transformations are catalogued in the transformation catalog\&.
 .sp
 PEGASUS ships with a clustering executable
-\fIseqexec\fR
+\fIpegasus\-cluster\fR
 that can be found in the
 \fI$PEGASUS_HOME/bin\fR
 directory\&. It runs the jobs in the clustered job sequentially on the same node at the remote site\&.
 .sp
-In addition, an MPI wrapper
-\fImpiexec\fR, is distributed as source with PEGASUS\&. It can be found in the
-\fI$PEGASUS_HOME/src/tools/cluster\fR
-directory\&. The wrapper is run on every MPI node, with the first one being the master and the rest of the ones as workers\&. The number of instances of
-\fImpiexec\fR
-that are invoked is equal to the value of the Globus RSL key
-\fInodecount\fR\&. The master distributes the smaller constituent jobs to the workers\&. For e\&.g\&. If there were 10 jobs in the clustered job and
-\fInodecount\fR
-was 5, then one node acts as master, and the 10 jobs are distributed amongst the 4 slaves on demand\&. The master hands off a job to the slave node as and when it gets free\&. So initially all the 4 nodes are given a single job each, and then as and when they get done are handed more jobs till all the 10 jobs have been executed\&.
+In addition, an MPI based clustering tool called pegasus\-mpi\-cluster\*(Aq, is also distributed and can be found in the bin directory\&. pegasus\-mpi\-cluster can also be used in the sharedfs setup and needs to be compiled against the remote site MPI install\&. directory\&. The wrapper is run on every MPI node, with the first one being the master and the rest of the ones as workers\&.
 .sp
 By default,
-\fIseqexec\fR
+\fIpegasus\-cluster\fR
 is used for clustering jobs unless overridden in the properties or by the pegasus profile key
 \fIcollapser\fR\&.
 .sp
@@ -256,6 +248,15 @@ command\&.
 A comma separated list of paths to replica files\&. Locations mentioned in these have a lower priority than the locations in the DAX file\&. This option is usually used internally for hierarchical workflows, where the file locations mentioned in the parent (encompassing) workflow DAX, passed to the sub workflows (corresponding) to the DAX jobs\&.
 .RE
 .PP
+\fB\-I\fR, \fB\-\-input\-dir\fR
+.RS 4
+A path to the input directory where the input files reside\&. This internally loads a Directory based Replica Catalog backend, that constructs does a directory listing to create the LFN→PFN mappings for the files in the input directory\&. You can specify additional properties either on the command line or the properties file to control the site attribute and url prefix associated with the mappings\&.
+.sp
+pegasus\&.catalog\&.replica\&.directory\&.site specifies the pool attribute to associate with the mappings\&. Defaults to local
+.sp
+pegasus\&.catalog\&.replica\&.directory\&.url\&.prefix specifies the URL prefix to use while constructing the PFN\&. Defaults to file://
+.RE
+.PP
 \fB\-j\fR \fIprefix\fR, \fB\-\-job\-prefix\fR \fIprefix\fR
 .RS 4
 The job prefix to be applied for constructing the filenames for the job submit files\&.
@@ -268,15 +269,22 @@ This results in the generation of the separate cleanup workflow that removes the
 If this option is not specified, then Pegasus adds cleanup nodes to the executable workflow itself that cleanup files on the remote sites when they are no longer required\&.
 .RE
 .PP
-\fB\-o\fR \fIsite\fR, \fB\-\-o\fR \fIsite\fR
+\fB\-o\fR \fIsite\fR, \fB\-\-output\-site\fR \fIsite\fR
 .RS 4
-The output site where all the materialized data is transferred to\&.
+The output site to which the output files of the DAX are transferred to\&.
 .sp
 By default the
 \fBmaterialized data\fR
 remains in the working directory on the
 \fBexecution\fR
 site where it was created\&. Only those output files are transferred to an output site for which transfer attribute is set to true in the DAX\&.
+.RE
+.PP
+\fB\-O\fR \fIoutput directory\fR, \fB\-\-output\-dir\fR \fIoutput directory\fR
+.RS 4
+The output directory to which the output files of the DAX are transferred to\&.
+.sp
+If \-o is specified the storage directory of the site specified as the output site is updated to be the directory passed\&. If no output site is specified, then this option internally sets the output site to local with the storage directory updated to the directory passed\&.
 .RE
 .PP
 \fB\-q\fR, \fB\-\-quiet\fR
