@@ -28,6 +28,7 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.Job;
 
 import edu.isi.pegasus.planner.classes.PlannerOptions;
+import edu.isi.pegasus.planner.cluster.aggregator.JobAggregatorFactory;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 
 import org.globus.gsi.GlobusCredential;
@@ -310,8 +311,19 @@ public class Braindump {
         entries.put( "vogroup" , mPOptions.getVOGroup() );
         
         //add the entry required by pegasus-statistics
-        String pmc = Boolean.toString(mBag.plannerUsesPMC());
-        entries.put( "uses_pmc", pmc );
+        //PM-639
+        boolean usesPMC =  mBag.plannerUsesPMC() ;
+        //update from properties if required?
+        if( !usesPMC ){
+            String jobAggregator = mProps.getJobAggregator();
+            //update the bag to set the flag whether
+            //PMC was used or not PM-639
+            if( jobAggregator.equalsIgnoreCase( JobAggregatorFactory.MPI_EXEC_CLASS ) ){
+                usesPMC = true;
+                mLogger.log( "Setting uses_pmc to true in braindump file on basis of properties set " , LogManager.CONFIG_MESSAGE_LEVEL );
+            }
+        }
+        entries.put( "uses_pmc", Boolean.toString( usesPMC ) );
                 
         return entries;
     }
