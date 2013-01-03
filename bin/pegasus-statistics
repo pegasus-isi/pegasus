@@ -577,8 +577,15 @@ def print_workflow_summary(workflow_stats, output_format, wf_summary=True, time_
         workflow_stats.set_job_filter('subwf')
         total_sub_wfs = workflow_stats.get_total_jobs_status()
         total_succeeded_failed_sub_wfs = workflow_stats.get_total_succeeded_failed_jobs_status()
-        total_succeeded_sub_wfs = total_succeeded_failed_jobs.succeeded
-        total_failed_sub_wfs = total_succeeded_failed_jobs.failed
+        total_succeeded_sub_wfs = total_succeeded_failed_sub_wfs.succeeded
+        total_failed_sub_wfs = total_succeeded_failed_sub_wfs.failed
+        #for non hierarichal workflows the combined query can return none
+        if total_succeeded_sub_wfs is None:
+            total_succeeded_sub_wfs = 0
+        
+        if total_failed_sub_wfs is None:
+            total_failed_sub_wfs = 0
+        
         total_unsubmitted_sub_wfs = total_sub_wfs - (total_succeeded_sub_wfs + total_failed_sub_wfs)
         total_sub_wfs_retries = workflow_stats.get_total_jobs_retries()
         total_sub_wfs_tries =  total_succeeded_sub_wfs + total_failed_sub_wfs + total_sub_wfs_retries
