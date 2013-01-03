@@ -327,14 +327,6 @@ public class CondorGenerator extends Abstract {
             //call the callout before returns
             concreteDagEmpty( dagFileName, dag );
             return result ;
-        } else {
-            //initialize the file handle to the dag
-            //file and print it's header
-            dagFile = initializeDagFileWriter( dagFileName, ndi );
-            result.add( dagFile );
-
-            //write out any category based dagman knobs to the dagman file
-            printDagString( this.getCategoryDAGManKnobs( mProps ) );
         }
 
         
@@ -383,6 +375,18 @@ public class CondorGenerator extends Abstract {
         Graph workflow = Adapter.convert( dag );
         SUBDAXGenerator subdaxGen = new SUBDAXGenerator();
         subdaxGen.initialize( mBag, dag, workflow, mDagWriter );
+
+        //we should initialize the .dag file only when we are done
+        //with the conversion
+
+        //initialize the file handle to the dag
+        //file and print it's header
+        dagFile = initializeDagFileWriter( dagFileName, ndi );
+        result.add( dagFile );
+
+        //write out any category based dagman knobs to the dagman file
+        printDagString( this.getCategoryDAGManKnobs( mProps ) );
+
                     
         for( Iterator it = workflow.iterator(); it.hasNext(); ){
             GraphNode node = ( GraphNode )it.next();
