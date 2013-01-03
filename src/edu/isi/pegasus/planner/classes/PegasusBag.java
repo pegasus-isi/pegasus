@@ -329,7 +329,7 @@ public class PegasusBag
         }
         catch( Exception e ){}
 
-        return ( k >= PegasusBag.PEGASUS_PROPERTIES.intValue() && k <= PegasusBag.USES_PMC.intValue() );
+        return ( k >= PegasusBag.PEGASUS_PROPERTIES.intValue() && k <= PegasusBag.PLANNER_METRICS.intValue() );
     }
 
     /**
