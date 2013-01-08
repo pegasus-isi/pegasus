@@ -10,9 +10,9 @@
     <para>The DAX is a description of an abstract workflow in XML format that
     is used as the primary input into Pegasus. The DAX schema is described in
     <ulink
-    url="http://pegasus.isi.edu/wms/docs/schemas/dax-3.3/dax-3.3.xsd">dax-3.3.xsd</ulink>
+    url="http://pegasus.isi.edu/wms/docs/schemas/dax-3.4/dax-3.4.xsd">dax-3.4.xsd</ulink>
     The documentation of the schema and its elements can be found in <ulink
-    url="http://pegasus.isi.edu/wms/docs/schemas/dax-3.3/dax-3.3.html">dax-3.3.html</ulink>.</para>
+    url="http://pegasus.isi.edu/wms/docs/schemas/dax-3.4/dax-3.4.html">dax-3.4.html</ulink>.</para>
 
     <para>A DAX can be created by all users with the DAX generating API in
     Java, Perl, or Python format</para>
@@ -593,20 +593,171 @@ f.a gsiftp://somehost:port/path/to/file/f.a pool=local</computeroutput></screen>
 
     <orderedlist>
       <listitem>
-        <para><emphasis role="bold">XML3</emphasis>(Default)</para>
-      </listitem>
+        <para><emphasis role="bold">XML4</emphasis>(Default)</para>
+	  </listitem>
 
       <listitem>
-        <para><emphasis role="bold">XML</emphasis>(Deprecated)</para>
+        <para><emphasis role="bold">XML3</emphasis>(Deprecated)</para>
       </listitem>
 
-      <listitem>
-        <para><emphasis role="bold">File</emphasis>(Deprecated)</para>
-      </listitem>
     </orderedlist>
+
+    <section id="sc-XML4">
+      <title>XML4</title>
+
+      <para>This is the default format for Pegasus 4.2. This format allows
+      defining filesystem of shared as well as local type on the head node of
+      the remote cluster as well as on the backend nodes</para>
+
+      <figure>
+        <title>Schema Image of the Site Catalog XML4</title>
+
+        <mediaobject>
+          <imageobject>
+            <imagedata fileref="images/sc-4.0_p2.png"/>
+          </imageobject>
+        </mediaobject>
+      </figure>
+
+      <para>Below is an example of the XML4 site catalog</para>
+
+	  <programlisting><![CDATA[
+<?xml version="1.0" encoding="UTF-8"?>
+<sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd"
+             version="4.0">
+
+    <site  handle="local" arch="x86_64" os="LINUX">
+        <directory type="shared-scratch" path="/tmp/workflows/scratch">
+            <file-server operation="all" url="file:///tmp/workflows/scratch"/>
+        </directory>
+        <directory type="local-storage" path="/tmp/workflows/outputs">
+            <file-server operation="all" url="file:///tmp/workflows/outputs"/>
+        </directory>
+    </site>
+
+    <site  handle="condor_pool" arch="x86_64" os="LINUX">
+        <grid type="gt5" contact="smarty.isi.edu/jobmanager-pbs" scheduler="PBS" jobtype="auxillary"/>
+        <grid type="gt5" contact="smarty.isi.edu/jobmanager-pbs" scheduler="PBS" jobtype="compute"/>
+        <directory type="shared-scratch" path="/lustre">
+            <file-server operation="all" url="gsiftp://smarty.isi.edu/lustre"/>
+        </directory>
+        <replica-catalog type="LRC" url="rlsn://smarty.isi.edu"/>
+    </site>
+
+    <site  handle="staging_site" arch="x86_64" os="LINUX">
+        <directory type="shared-scratch" path="/data">
+            <file-server operation="put" url="scp://obelix.isi.edu/data"/>
+            <file-server operation="get" url="http://obelix.isi.edu/data"/>
+        </directory>
+    </site>
+
+</sitecatalog>
+      ]]></programlisting>
+
+      <para>Described below are some of the entries in the site
+      catalog.</para>
+
+      <para><orderedlist>
+          <listitem>
+            <para><emphasis role="bold">site</emphasis> - A site
+            identifier.</para>
+          </listitem>
+
+
+          <listitem>
+            <para><emphasis role="bold">Directory</emphasis> - Info about
+            filesystems Pegasus can use for storing temporary and long-term
+			files. There are several configurations:</para>
+
+            <itemizedlist>
+              <listitem>
+                <para><emphasis role="bold">shared-scratch</emphasis> - This
+                describe a scratch file systems. Pegasus will use this to 
+			    store intermediate data between jobs and other temporary
+				files.</para>
+              </listitem>
+
+              <listitem>
+                <para><emphasis role="bold">local-storage</emphasis> - This
+                describes the storage file systems (long term). This is the
+		        directory Pegasus will stage output files to.</para>
+              </listitem>
+
+              <listitem>
+				<para><emphasis role="bold">local-scratch</emphasis> -
+                This describe the scratch file systems available locally
+			    on a compute node. This parameter is not commonly used and
+			    can be left unset in most cases.</para>
+              </listitem>
+
+            </itemizedlist>
+
+            <para>For each of the directories, you can specify access methods.
+                Allowed methods are <emphasis role="bold">put</emphasis>,
+                <emphasis role="bold">get</emphasis>, and <emphasis role="bold">all</emphasis>
+                which means both put and get.  For each mehod, specify a URL including the protocol.
+                For example, if you want share data via http using the /var/www/staging directory,
+                you can use scp://hostname/var/www for the put element and http://hostname/staging
+                for the get element.
+            </para>
+
+          </listitem>
+
+          <listitem>
+            <para><emphasis role="bold">arch,os,osrelease,osversion,
+            glibc</emphasis> - The arch/os/osrelease/osversion/glibc of the
+            site. OSRELEASE, OSVERSION and GLIBC are optional</para>
+
+            <para>ARCH can have one of the following values X86, X86_64,
+            SPARCV7, SPARCV9, AIX, PPC.</para>
+
+            <para>OS can have one of the following values LINUX,SUNOS,MACOSX.
+            The default value for sysinfo if none specified is
+            X86::LINUX</para>
+          </listitem>
+		  
+		  <listitem>
+            <para><emphasis role="bold">replica-catalog</emphasis> - URL for a
+            local replica catalog (LRC) to register your files in. Only used
+            for RLS implementation of the RC. This is optional</para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis role="bold">Profiles</emphasis> - One or many
+            profiles can be attached to a pool.</para>
+
+            <para>One example is the environments to be set on a remote
+            pool.</para>
+          </listitem>
+        </orderedlist></para>
+
+      <para>To use this site catalog the follow properties need to be
+      set:</para>
+
+      <orderedlist>
+        <listitem>
+          <para><emphasis
+          role="bold">pegasus.catalog.site=XML3</emphasis></para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis
+          role="bold">pegasus.catalog.site.file=<replaceable>&lt;path to the
+          site catalog file&gt;</replaceable></emphasis></para>
+        </listitem>
+      </orderedlist>
+    </section>
 
     <section id="sc-XML3">
       <title>XML3</title>
+	  
+	  <para><warning>
+          <para>This format is now deprecated in favor of the XML4 format. If
+          you are still using the File format you should convert it to XML4
+          format using the client pegasus-sc-converter</para>
+        </warning></para>
 
       <para>This is the default format for Pegasus 3.0. This format allows
       defining filesystem of shared as well as local type on the head node of
@@ -763,244 +914,6 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
       </orderedlist>
     </section>
 
-    <section id="sc-XML">
-      <title>XML</title>
-
-      <para><warning>
-          <para>This format is now deprecated in favor of the XML3 format. If
-          you are still using the XML or File format you should convert it to
-          XML3 formation using the pegasus-sc-converter client</para>
-        </warning></para>
-
-      <para><programlisting>$ <emphasis>cat $HOME/sites.xml</emphasis>
-
-&lt;sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog"
-  xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog
-  http://pegasus.isi.edu/schema/sc-2.0.xsd"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="2.0"&gt;
-  &lt;site handle="local" gridlaunch="/nfs/vdt/pegasus/bin/kickstart"
-   sysinfo="INTEL32::LINUX"&gt;
-    &lt;profile namespace="env" key="PEGASUS_HOME" &gt;/nfs/vdt/pegasus&lt;/profile&gt;
-    &lt;profile namespace="env" key="GLOBUS_LOCATION" &gt;/vdt/globus&lt;/profile&gt;
-    &lt;profile namespace="env" key="LD_LIBRARY_PATH" &gt;/vdt/globus/lib&lt;/profile&gt;
-    &lt;profile namespace="env" key="JAVA_HOME" &gt;/vdt/java&lt;/profile&gt;
-    &lt;lrc url="rlsn://localhost" /&gt;
-    &lt;gridftp  url="gsiftp://localhost" storage="/$HOME/storage" major="4" minor="0"
-     patch="5"&gt;
-    &lt;/gridftp&gt;
-    &lt;jobmanager universe="transfer" url="localhost/jobmanager-fork" major="4" minor="0"
-     patch="5" /&gt;
-    &lt;jobmanager universe="vanilla" url="localhost/jobmanager-fork" major="4" minor="0"
-     patch="5" /&gt;
-    &lt;workdirectory &gt;$HOME/workdir&lt;/workdirectory&gt;
-  &lt;/site&gt;
-  &lt;site handle="clus1" gridlaunch="/opt/nfs/vdt/pegasus/bin/kickstart"
-   sysinfo="INTEL32::LINUX"&gt;
-    &lt;profile namespace="env" key="PEGASUS_HOME" &gt;/opt/nfs/vdt/pegasus&lt;/profile&gt;
-    &lt;profile namespace="env" key="GLOBUS_LOCATION" &gt;/opt/vdt/globus&lt;/profile&gt;
-    &lt;profile namespace="env" key="LD_LIBRARY_PATH" &gt;/opt/vdt/globus/lib&lt;/profile&gt;
-    &lt;lrc url="rlsn://clus1.com" /&gt;
-    &lt;gridftp  url="gsiftp://clus1.com" storage="/jobmanager-fork" major="4" minor="0"
-     patch="3"&gt;
-    &lt;/gridftp&gt;
-    &lt;jobmanager universe="transfer" url="clus1.com/jobmanager-fork" major="4" minor="0"
-     patch="3" /&gt;
-    &lt;jobmanager universe="vanilla" url="clus1.com/jobmanager-pbs" major="4" minor="0"
-     patch="3" /&gt;
-    &lt;workdirectory &gt;$HOME/workdir-clus1&lt;/workdirectory&gt;
-  &lt;/site&gt;
-&lt;/sitecatalog&gt;</programlisting><orderedlist>
-          <listitem>
-            <para><emphasis role="bold">site</emphasis> - A site
-            identifier.</para>
-          </listitem>
-
-          <listitem>
-            <para><emphasis role="bold">lrc</emphasis> - URL for a local
-            replica catalog (LRC) to register your files in. Only used for RLS
-            implementation of the RC</para>
-          </listitem>
-
-          <listitem>
-            <para><emphasis role="bold">workdirectory</emphasis> - A remote
-            working directory (Should be on a shared file system)</para>
-          </listitem>
-
-          <listitem>
-            <para><emphasis role="bold">gridftp</emphasis> - A URL prefix for
-            a remote storage location. and a path to the storage
-            location</para>
-          </listitem>
-
-          <listitem>
-            <para><emphasis role="bold">jobmanager</emphasis> - Url to the
-            jobmanager entrypoints for the remote grid. Different universes
-            are supported which map to different batch jobmanagers.</para>
-
-            <para>"vanilla" for compute jobs and "transfer" for transfer jobs
-            are mandatory. Generally a transfer universe should map to the
-            fork jobmanager.</para>
-          </listitem>
-
-          <listitem>
-            <para><emphasis role="bold">gridlaunch</emphasis> - Path to the
-            remote kickstart tool (provenance tracking)</para>
-          </listitem>
-
-          <listitem>
-            <para><emphasis role="bold">sysinfo</emphasis> - The
-            arch/os/osversion/glibc of the site. The format is
-            ARCH::OS:OSVER:GLIBC where OSVERSION and GLIBC are
-            optional.</para>
-
-            <para>ARCH can have one of the following values INTEL32, INTEL64,
-            SPARCV7, SPARCV9, AIX, AMD64. OS can have one of the following
-            values LINUX,SUNOS. The default value for sysinfo if none
-            specified is INTEL32::LINUX</para>
-          </listitem>
-
-          <listitem>
-            <para><emphasis role="bold">Profiles</emphasis> - One or many
-            profiles can be attached to a pool.</para>
-
-            <para>Profiles such as the environments to be set on a remote
-            pool.</para>
-          </listitem>
-        </orderedlist></para>
-
-      <para>To use this format you need to set the following properties</para>
-
-      <para><orderedlist>
-          <listitem>
-            <para><emphasis
-            role="bold">pegasus.catalog.site=XML</emphasis></para>
-          </listitem>
-
-          <listitem>
-            <para><emphasis
-            role="bold">pegasus.catalog.site.file=<replaceable>&lt;path to the
-            site catalog file&gt;</replaceable></emphasis></para>
-          </listitem>
-        </orderedlist></para>
-    </section>
-
-    <section id="sc-Text">
-      <title>Text</title>
-
-      <para><warning>
-          <para>This format is now deprecated in favor of the XML3 format. If
-          you are still using the File format you should convert it to XML3
-          format using the client pegasus-sc-converter</para>
-        </warning></para>
-
-      <para>The format for the File is as follows</para>
-
-      <programlisting>site site_id {
-  #required. Can be a dummy value if using Simple File RC
-  lrc "rls://someurl"
-
-  #required on a shared file system
-  workdir "path/to/a/tmp/shared/file/sytem/"
-
-  #required one or more entries
-  gridftp "gsiftp://hostname/mountpoint&amp;rdquor; "GLOBUS VERSION"
-
-  #required one or more entries
-  universe transfer "hostname/jobmanager-&lt;scheduler&gt;" "GLOBUS VERSION"
-
-  #reqired one or more entries
-  universe vanilla "hostname/jobmanager-&lt;scheduler&gt;" "GLOBUS VERSION"
-
-  #optional
-  sysinfo  "ARCH::OS:OSVER:GLIBC"
-
-  #optional
-  gridlaunch "/path/to/gridlaunch/executable"
-
-  #optional zero or more entries
-  profile namespace "key" "value"
-} </programlisting>
-
-      <para>The gridlaunch and profile entries are optional. All the rest are
-      required for each pool. Also the transfer and vanilla universe are
-      mandatory. You can add multiple transfer and vanilla universe if you
-      have more then one head node on the cluster. The entries in the Site
-      Catalog have the following meaning:</para>
-
-      <orderedlist>
-        <listitem>
-          <para><emphasis role="bold">site</emphasis> - A site
-          identifier.</para>
-        </listitem>
-
-        <listitem>
-          <para><emphasis role="bold">lrc</emphasis> - URL for a local replica
-          catalog (LRC) to register your files in. Only used for RLS
-          implementation of the RC</para>
-        </listitem>
-
-        <listitem>
-          <para><emphasis role="bold">workdir</emphasis> - A remote working
-          directory (Should be on a shared file system)</para>
-        </listitem>
-
-        <listitem>
-          <para><emphasis role="bold">gridftp</emphasis> gridftp - A URL
-          prefix for a remote storage location.</para>
-        </listitem>
-
-        <listitem>
-          <para><emphasis role="bold">universe</emphasis> - Different
-          universes are supported which map to different batch
-          jobmanagers.</para>
-
-          <para>"vanilla" for compute jobs and "transfer" for transfer jobs
-          are mandatory. Generally a transfer universe should map to the fork
-          jobmanager.</para>
-        </listitem>
-
-        <listitem>
-          <para><emphasis role="bold">gridlaunch</emphasis> - Path to the
-          remote kickstart tool (provenance tracking)</para>
-        </listitem>
-
-        <listitem>
-          <para><emphasis role="bold">sysinfo</emphasis> - The
-          arch/os/osversion/glibc of the site. The format is
-          ARCH::OS:OSVER:GLIBC where OSVERSION and GLIBC are optiona.</para>
-
-          <para>ARCH can have one of the following values INTEL32, INTEL64,
-          SPARCV7, SPARCV9, AIX, AMD64. OS can have one of the following
-          values LINUX,SUNOS. The default value for sysinfo if none specified
-          is INTEL32::LINUX</para>
-        </listitem>
-
-        <listitem>
-          <para><emphasis role="bold">Profiles</emphasis> - One or many
-          profiles can be attached to a pool.</para>
-
-          <para>Profiles such as the environments to be set on a remote
-          pool.</para>
-        </listitem>
-      </orderedlist>
-
-      <para>To use this format you need to set the following
-      properties:</para>
-
-      <para><orderedlist>
-          <listitem>
-            <para><emphasis
-            role="bold">pegasus.catalog.site=Text</emphasis></para>
-          </listitem>
-
-          <listitem>
-            <para><emphasis
-            role="bold">pegasus.catalog.site.file=<replaceable>&lt;path to the
-            site catalog file&gt;</replaceable></emphasis></para>
-          </listitem>
-        </orderedlist></para>
-    </section>
-
     <section id="pegasus-sc-client">
       <title>Site Catalog Client pegasus-sc-client</title>
 
@@ -1012,20 +925,20 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
     <section>
       <title>Site Catalog Converter pegasus-sc-converter</title>
 
-      <para>Pegasus 3.0 by default now parses Site Catalog format conforming
-      to the SC schema 3.0 ( XML3 ) available <ulink role=""
-      url="http://pegasus.isi.edu/wms/docs/schemas/sc-3.0/sc-3.0.xsd"
+      <para>Pegasus 4.2 by default now parses Site Catalog format conforming
+      to the SC schema 4.0 (XML4) available <ulink role=""
+      url="http://pegasus.isi.edu/wms/docs/schemas/sc-4.0/sc-4.0.xsd"
       userlevel="">here</ulink> and is explained in detail in the Catalog
       Properties section of <link linkend="running_workflows">Running
       Workflows</link>.</para>
 
-      <para>Pegasus 3.0 comes with a pegasus-sc-converter that will convert
-      users old site catalog ( XML ) to the XML3 format. Sample usage is given
+      <para>Pegasus 4.2 comes with a pegasus-sc-converter that will convert
+      users old site catalog (XML3) to the XML4 format. Sample usage is given
       below.</para>
 
-      <programlisting><emphasis role="bold">$ pegasus-sc-converter -i sample.sites.xml -I XML -o sample.sites.xml3 -O XML3
+      <programlisting><emphasis role="bold">$ pegasus-sc-converter -i sample.sites.xml -I XML3 -o sample.sites.xml4 -O XML4
 </emphasis>
-2010.11.22 12:55:14.169 PST:   Written out the converted file to sample.sites.xml3 
+2010.11.22 12:55:14.169 PST:   Written out the converted file to sample.sites.xml4
 </programlisting>
 
       <para>To use the converted site catalog, in the properties do the
@@ -1034,7 +947,7 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
       <orderedlist>
         <listitem>
           <para>unset pegasus.catalog.site or set pegasus.catalog.site to
-          XML3</para>
+          XML4</para>
         </listitem>
 
         <listitem>
