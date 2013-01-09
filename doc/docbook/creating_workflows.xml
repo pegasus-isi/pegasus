@@ -69,7 +69,7 @@
         <mediaobject>
           <imageobject>
             <imagedata align="center" fileref="images/DiamondWorkflow.png"
-                       valign="middle"/>
+                       valign="middle" />
           </imageobject>
         </mediaobject>
       </figure></para>
@@ -279,7 +279,7 @@ LFN PFN a="b" [..]
       catalog entry as a regular expression based entry. Regular expressions
       should follow Java regular expression syntax.</para>
 
-      <para>For example, consider a replica catalog as shown below. </para>
+      <para>For example, consider a replica catalog as shown below.</para>
 
       <para>Entry 1 refers to an entry which does not use a resular
       expressions. This entry would only match a file named 'f.a', and nothing
@@ -287,7 +287,7 @@ LFN PFN a="b" [..]
 
       <para>Entry 2 referes to an entry which uses a regular expression. In
       this entry f.a referes to files having name as f&lt;any-character&gt;a
-      i.e. faa, f.a, f0a, etc. </para>
+      i.e. faa, f.a, f0a, etc.</para>
 
       <programlisting>#1
 f.a file:///Volumes/data/input/f.a pool="local"
@@ -300,7 +300,7 @@ f.a file:///Volumes/data/input/f.a pool="local" <emphasis role="bold">regex</emp
 
       <para>Entry 3 will match files with name alpha.csv, alpha.txt,
       alpha.xml. In addition, values matched in the expression can be used to
-      generate a PFN. </para>
+      generate a PFN.</para>
 
       <para>For the entry below if the file being looked up is alpha.csv, the
       PFN for the file would be generated as
@@ -309,7 +309,7 @@ f.a file:///Volumes/data/input/f.a pool="local" <emphasis role="bold">regex</emp
       file:///Volumes/data/input/xml/alpha.xml i.e. The section [0], [1] will
       be replaced. Section [0] refers to the entire string i.e. alpha.csv.
       Section [1] refers to a partial match in the input i.e. csv, or txt, or
-      xml. Users can utilize as many sections as they wish. </para>
+      xml. Users can utilize as many sections as they wish.</para>
 
       <programlisting>#3
 alpha\.(csv|txt|xml) file:///Volumes/data/input/<emphasis role="bold">[1]</emphasis>/<emphasis
@@ -583,23 +583,26 @@ f.a gsiftp://somehost:port/path/to/file/f.a pool=local</computeroutput></screen>
     part of a cluster that has at least a single GRAM gatekeeper with a
     <emphasis role="bold">jobmanager-fork</emphasis>
     and<emphasis>jobmanager-&lt;scheduler&gt; </emphasis> interface and at
-    least one <emphasis role="bold">gridftp</emphasis> server along with a sh$
-    cat $HOME ared file system. The GRAM gatekeeper can be either WS GRAM or
-    Pre-WS GRAM. A site can also be a condor pool or glidein pool with a
-    shared file system.</para>
+    least one <emphasis role="bold">gridftp</emphasis> server along with a
+    shared file system. The GRAM gatekeeper can be either WS GRAM or Pre-WS
+    GRAM. A site can also be a condor pool or glidein pool with a shared file
+    system.</para>
 
-    <para>Pegasus currently supports two implementation of the Site
-    Catalog:</para>
+    <para>The Site Catalog can be described as an XML . Pegasus currently
+    supports two schemas for the Site Catalog:</para>
 
     <orderedlist>
       <listitem>
-        <para><emphasis role="bold">XML4</emphasis>(Default)</para>
-	  </listitem>
-
-      <listitem>
-        <para><emphasis role="bold">XML3</emphasis>(Deprecated)</para>
+        <para><emphasis role="bold">XML4</emphasis>(Default) Corresponds to
+        the schema described <ulink
+        url="http://pegasus.isi.edu/wms/docs/schemas/sc-4.0/sc-4.0.html">here</ulink>.</para>
       </listitem>
 
+      <listitem>
+        <para><emphasis role="bold">XML3</emphasis>(Deprecated) Corresponds to
+        the schema described <ulink
+        url="http://pegasus.isi.edu/wms/docs/schemas/sc-3.0/sc-3.0.html">here</ulink></para>
+      </listitem>
     </orderedlist>
 
     <section id="sc-XML4">
@@ -614,47 +617,47 @@ f.a gsiftp://somehost:port/path/to/file/f.a pool=local</computeroutput></screen>
 
         <mediaobject>
           <imageobject>
-            <imagedata fileref="images/sc-4.0_p2.png"/>
+            <imagedata fileref="images/sc-4.0_p2.png" />
           </imageobject>
         </mediaobject>
       </figure>
 
       <para>Below is an example of the XML4 site catalog</para>
 
-	  <programlisting><![CDATA[
-<?xml version="1.0" encoding="UTF-8"?>
-<sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog"
+      <programlisting>
+&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog"
              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
              xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd"
-             version="4.0">
+             version="4.0"&gt;
 
-    <site  handle="local" arch="x86_64" os="LINUX">
-        <directory type="shared-scratch" path="/tmp/workflows/scratch">
-            <file-server operation="all" url="file:///tmp/workflows/scratch"/>
-        </directory>
-        <directory type="local-storage" path="/tmp/workflows/outputs">
-            <file-server operation="all" url="file:///tmp/workflows/outputs"/>
-        </directory>
-    </site>
+    &lt;site  handle="local" arch="x86_64" os="LINUX"&gt;
+        &lt;directory type="shared-scratch" path="/tmp/workflows/scratch"&gt;
+            &lt;file-server operation="all" url="file:///tmp/workflows/scratch"/&gt;
+        &lt;/directory&gt;
+        &lt;directory type="local-storage" path="/tmp/workflows/outputs"&gt;
+            &lt;file-server operation="all" url="file:///tmp/workflows/outputs"/&gt;
+        &lt;/directory&gt;
+    &lt;/site&gt;
 
-    <site  handle="condor_pool" arch="x86_64" os="LINUX">
-        <grid type="gt5" contact="smarty.isi.edu/jobmanager-pbs" scheduler="PBS" jobtype="auxillary"/>
-        <grid type="gt5" contact="smarty.isi.edu/jobmanager-pbs" scheduler="PBS" jobtype="compute"/>
-        <directory type="shared-scratch" path="/lustre">
-            <file-server operation="all" url="gsiftp://smarty.isi.edu/lustre"/>
-        </directory>
-        <replica-catalog type="LRC" url="rlsn://smarty.isi.edu"/>
-    </site>
+    &lt;site  handle="condor_pool" arch="x86_64" os="LINUX"&gt;
+        &lt;grid type="gt5" contact="smarty.isi.edu/jobmanager-pbs" scheduler="PBS" jobtype="auxillary"/&gt;
+        &lt;grid type="gt5" contact="smarty.isi.edu/jobmanager-pbs" scheduler="PBS" jobtype="compute"/&gt;
+        &lt;directory type="shared-scratch" path="/lustre"&gt;
+            &lt;file-server operation="all" url="gsiftp://smarty.isi.edu/lustre"/&gt;
+        &lt;/directory&gt;
+        &lt;replica-catalog type="LRC" url="rlsn://smarty.isi.edu"/&gt;
+    &lt;/site&gt;
 
-    <site  handle="staging_site" arch="x86_64" os="LINUX">
-        <directory type="shared-scratch" path="/data">
-            <file-server operation="put" url="scp://obelix.isi.edu/data"/>
-            <file-server operation="get" url="http://obelix.isi.edu/data"/>
-        </directory>
-    </site>
+    &lt;site  handle="staging_site" arch="x86_64" os="LINUX"&gt;
+        &lt;directory type="shared-scratch" path="/data"&gt;
+            &lt;file-server operation="put" url="scp://obelix.isi.edu/data"/&gt;
+            &lt;file-server operation="get" url="http://obelix.isi.edu/data"/&gt;
+        &lt;/directory&gt;
+    &lt;/site&gt;
 
-</sitecatalog>
-      ]]></programlisting>
+&lt;/sitecatalog&gt;
+      </programlisting>
 
       <para>Described below are some of the entries in the site
       catalog.</para>
@@ -665,44 +668,41 @@ f.a gsiftp://somehost:port/path/to/file/f.a pool=local</computeroutput></screen>
             identifier.</para>
           </listitem>
 
-
           <listitem>
             <para><emphasis role="bold">Directory</emphasis> - Info about
             filesystems Pegasus can use for storing temporary and long-term
-			files. There are several configurations:</para>
+            files. There are several configurations:</para>
 
             <itemizedlist>
               <listitem>
                 <para><emphasis role="bold">shared-scratch</emphasis> - This
-                describe a scratch file systems. Pegasus will use this to 
-			    store intermediate data between jobs and other temporary
-				files.</para>
+                describe a scratch file systems. Pegasus will use this to
+                store intermediate data between jobs and other temporary
+                files.</para>
               </listitem>
 
               <listitem>
                 <para><emphasis role="bold">local-storage</emphasis> - This
                 describes the storage file systems (long term). This is the
-		        directory Pegasus will stage output files to.</para>
+                directory Pegasus will stage output files to.</para>
               </listitem>
 
               <listitem>
-				<para><emphasis role="bold">local-scratch</emphasis> -
-                This describe the scratch file systems available locally
-			    on a compute node. This parameter is not commonly used and
-			    can be left unset in most cases.</para>
+                <para><emphasis role="bold">local-scratch</emphasis> - This
+                describe the scratch file systems available locally on a
+                compute node. This parameter is not commonly used and can be
+                left unset in most cases.</para>
               </listitem>
-
             </itemizedlist>
 
             <para>For each of the directories, you can specify access methods.
-                Allowed methods are <emphasis role="bold">put</emphasis>,
-                <emphasis role="bold">get</emphasis>, and <emphasis role="bold">all</emphasis>
-                which means both put and get.  For each mehod, specify a URL including the protocol.
-                For example, if you want share data via http using the /var/www/staging directory,
-                you can use scp://hostname/var/www for the put element and http://hostname/staging
-                for the get element.
-            </para>
-
+            Allowed methods are <emphasis role="bold">put</emphasis>,
+            <emphasis role="bold">get</emphasis>, and <emphasis
+            role="bold">all</emphasis> which means both put and get. For each
+            mehod, specify a URL including the protocol. For example, if you
+            want share data via http using the /var/www/staging directory, you
+            can use scp://hostname/var/www for the put element and
+            http://hostname/staging for the get element.</para>
           </listitem>
 
           <listitem>
@@ -717,8 +717,8 @@ f.a gsiftp://somehost:port/path/to/file/f.a pool=local</computeroutput></screen>
             The default value for sysinfo if none specified is
             X86::LINUX</para>
           </listitem>
-		  
-		  <listitem>
+
+          <listitem>
             <para><emphasis role="bold">replica-catalog</emphasis> - URL for a
             local replica catalog (LRC) to register your files in. Only used
             for RLS implementation of the RC. This is optional</para>
@@ -747,8 +747,8 @@ f.a gsiftp://somehost:port/path/to/file/f.a pool=local</computeroutput></screen>
 
     <section id="sc-XML3">
       <title>XML3</title>
-	  
-	  <para><warning>
+
+      <para><warning>
           <para>This format is now deprecated in favor of the XML4 format. If
           you are still using the File format you should convert it to XML4
           format using the client pegasus-sc-converter</para>
@@ -763,7 +763,7 @@ f.a gsiftp://somehost:port/path/to/file/f.a pool=local</computeroutput></screen>
 
         <mediaobject>
           <imageobject>
-            <imagedata fileref="images/sc-3.0_p2.png"/>
+            <imagedata fileref="images/sc-3.0_p2.png" />
           </imageobject>
         </mediaobject>
       </figure>
@@ -850,13 +850,13 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
 
             <itemizedlist>
               <listitem>
-                <para><emphasis role="bold"/> SHARED for shared file systems
-                like NFS, LUSTRE etc.</para>
+                <para><emphasis role="bold"></emphasis> SHARED for shared file
+                systems like NFS, LUSTRE etc.</para>
               </listitem>
 
               <listitem>
-                <para><emphasis role="bold"/> LOCAL for local file systems
-                (local to the node/machine)</para>
+                <para><emphasis role="bold"></emphasis> LOCAL for local file
+                systems (local to the node/machine)</para>
               </listitem>
             </itemizedlist>
 
@@ -937,7 +937,7 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
       <orderedlist>
         <listitem>
           <para>unset pegasus.catalog.site or set pegasus.catalog.site to
-          XML4</para>
+          XML</para>
         </listitem>
 
         <listitem>
@@ -1307,7 +1307,7 @@ Output Filename: /dev/fd/1</computeroutput></screen>
 clus1    black::analyze:1.0    gsiftp://clus1.com/opt/nfs/vdt/pegasus/bin/keg
                 STAGEABLE    INTEL32::LINUX</computeroutput></screen>
 
-      <para/>
+      <para></para>
     </section>
 
     <section>
