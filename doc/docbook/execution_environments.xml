@@ -24,29 +24,24 @@
     in the jobs to run on the submit host in condor universe local. The site
     catalog can be left very simple in this case:</para>
 
-    <programlisting>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
-&lt;sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog"
+<programlisting><![CDATA[
+<?xml version="1.0" encoding="UTF-8"?>
+<sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog"
              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-             xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog
-             http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
-    &lt;site handle="local" arch="x86_64" os="LINUX"&gt;
-        &lt;head-fs&gt;
-            &lt;scratch&gt;
-                &lt;shared&gt;
-                    &lt;file-server protocol="file" url="file://" mount-point="/tmp/wf/work"/&gt;
-                    &lt;internal-mount-point mount-point="/tmp/wf/work"/&gt;
-                &lt;/shared&gt;
-            &lt;/scratch&gt;
-            &lt;storage&gt;
-                &lt;shared&gt;
-                    &lt;file-server protocol="file" url="file://" mount-point="/tmp/wf/storage"/&gt;
-                    &lt;internal-mount-point mount-point="/tmp/wf/storage"/&gt;
-                &lt;/shared&gt;
-            &lt;/storage&gt;
-        &lt;/head-fs&gt;
-    &lt;/site&gt;
-&lt;/sitecatalog&gt;
-</programlisting>
+             xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd"
+             version="4.0">
+
+    <site  handle="local" arch="x86_64" os="LINUX">
+        <directory type="shared-scratch" path="/tmp/wf/work">
+            <file-server operation="all" url="file:///tmp/wf/work"/>
+        </directory>
+        <directory type="local-storage" path="/tmp/wf/storage">
+            <file-server operation="all" url="file:///tmp/wf/storage"/>
+        </directory>
+    </site>
+
+</sitecatalog>
+]]></programlisting>
 
     <para>The simplest execution environment does not involve Condor. Pegasus
     is capable of planning small workflows for local execution using a shell
@@ -100,36 +95,29 @@
     . In condorio mode, the site catalog for the execution site is very simple
     as storage is provided by Condor:</para>
 
-    <programlisting>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
-&lt;sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog"
+<programlisting><![CDATA[
+<?xml version="1.0" encoding="UTF-8"?>
+<sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog"
              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-             xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog
-             http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
-    &lt;site handle="local" arch="x86_64" os="LINUX"&gt;
-        &lt;head-fs&gt;
-            &lt;scratch&gt;
-                &lt;shared&gt;
-                    &lt;file-server protocol="file" url="file://" mount-point="/tmp/wf/work"/&gt;
-                    &lt;internal-mount-point mount-point="/tmp/wf/work"/&gt;
-                &lt;/shared&gt;
-            &lt;/scratch&gt;
-            &lt;storage&gt;
-                &lt;shared&gt;
-                    &lt;file-server protocol="file" url="file://" mount-point="/tmp/wf/storage"/&gt;
-                    &lt;internal-mount-point mount-point="/tmp/wf/storage"/&gt;
-                &lt;/shared&gt;
-            &lt;/storage&gt;
-        &lt;/head-fs&gt;
-    &lt;/site&gt;
-    &lt;site handle="condorpool" arch="x86_86" os="LINUX"&gt;
-        &lt;head-fs&gt;
-            &lt;scratch/&gt;
-            &lt;storage/&gt;
-        &lt;/head-fs&gt;
-        &lt;profile namespace="pegasus" key="style"&gt;condor&lt;/profile&gt;
-        &lt;profile namespace="condor" key="universe"&gt;vanilla&lt;/profhile&gt;
-    &lt;/site&gt;
-&lt;/sitecatalog&gt;</programlisting>
+             xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd"
+             version="4.0">
+
+    <site  handle="local" arch="x86_64" os="LINUX">
+        <directory type="shared-scratch" path="/tmp/wf/work">
+            <file-server operation="all" url="file:///tmp/wf/work"/>
+        </directory>
+        <directory type="local-storage" path="/tmp/wf/storage">
+            <file-server operation="all" url="file:///tmp/wf/storage"/>
+        </directory>
+    </site>
+
+    <site  handle="condorpool" arch="x86_64" os="LINUX">
+        <profile namespace="pegasus" key="style" >condor</profile>
+        <profile namespace="condor" key="universe" >vanilla</profile>
+    </site>
+
+</sitecatalog>
+]]></programlisting>
 
     <para>There is a set of Condor profiles which are used commonly when
     running Pegasus workflows. You may have to set some or all of these
@@ -228,54 +216,43 @@
       <para>A sample site catalog for submission to a CondorC enabled site is
       listed below</para>
 
-      <programlisting>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
-&lt;sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog"
+<programlisting><![CDATA[
+<sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog"
              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-             xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog
-             http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
-    &lt;site  handle="local" arch="x86_64" os="LINUX"&gt;
-        &lt;head-fs&gt;
-            &lt;scratch&gt;
-                &lt;shared&gt;
-                    &lt;file-server protocol="file" url="file://" mount-point="/tmp/wf/work"/&gt;
-                    &lt;internal-mount-point mount-point="/tmp/wf/work"/&gt;
-                &lt;/shared&gt;
-            &lt;/scratch&gt;
-            &lt;storage&gt;
-                &lt;shared&gt;
-                    &lt;file-server protocol="file" url="file://" mount-point="/tmp/wf/storage"/&gt;
-                    &lt;internal-mount-point mount-point="/tmp/wf/storage"/&gt;
-                &lt;/shared&gt;
-            &lt;/storage&gt;
-        &lt;/head-fs&gt;
-    &lt;/site&gt;
+             xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd"
+             version="4.0">
+      
+    <site  handle="local" arch="x86_64" os="LINUX">
+        <directory type="shared-scratch" path="/tmp/wf/work">
+            <file-server operation="all" url="file:///tmp/wf/work"/>
+        </directory>
+        <directory type="local-storage" path="/tmp/wf/storage">
+            <file-server operation="all" url="file:///tmp/wf/storage"/>
+        </directory>
+    </site>
 
-    &lt;site  handle="condorcpool" arch="x86_86" os="LINUX"&gt;
-         &lt;!-- the grid gateway entries are used to designate
-              the remote schedd for the CondorC pool --&gt;
-         &lt;grid type="condor" contact="ccg-condorctest.isi.edu" scheduler="Condor" jobtype="compute" /&gt;
-         &lt;grid type="condor" contact="ccg-condorctest.isi.edu" scheduler="Condor" jobtype="auxillary" /&gt;
-
-        &lt;head-fs&gt;
-            &lt;!-- empty when submitting to this site using PegasusLite --&gt;
-            &lt;scratch /&gt;
-            &lt;storage /&gt;
-        &lt;/head-fs&gt;
+    <site  handle="condorcpool" arch="x86_86" os="LINUX">
+         <!-- the grid gateway entries are used to designate
+              the remote schedd for the CondorC pool -->
+         <grid type="condor" contact="ccg-condorctest.isi.edu" scheduler="Condor" jobtype="compute" />
+         <grid type="condor" contact="ccg-condorctest.isi.edu" scheduler="Condor" jobtype="auxillary" />
         
-        &lt;!-- enable submission using condorc --&gt;
-        &lt;profile namespace="pegasus" key="style"&gt;condorc&lt;/profile&gt;
+        <!-- enable submission using condorc -->
+        <profile namespace="pegasus" key="style">condorc</profile>
 
-        &lt;!-- specify which condor collector to use. 
-             If not specified defaults to remote schedd specified in grid gateway --&gt;
-        &lt;profile namespace="condor" key="condor_collector"&gt;condorc-collector.isi.edu&lt;/profile&gt;
+        <!-- specify which condor collector to use. 
+             If not specified defaults to remote schedd specified in grid gateway -->
+        <profile namespace="condor" key="condor_collector">condorc-collector.isi.edu</profile>
         
-        &lt;profile namespace="condor" key="should_transfer_files"&gt;Yes&lt;/profile&gt;
-        &lt;profile namespace="condor" key="when_to_transfer_output"&gt;ON_EXIT&lt;/profile&gt;
-        &lt;profile namespace="env" key="PEGASUS_HOME" &gt;/usr&lt;/profile&gt;
-        &lt;profile namespace="condor" key="universe"&gt;vanilla&lt;/profile&gt;
+        <profile namespace="condor" key="should_transfer_files">Yes</profile>
+        <profile namespace="condor" key="when_to_transfer_output">ON_EXIT</profile>
+        <profile namespace="env" key="PEGASUS_HOME" >/usr</profile>
+        <profile namespace="condor" key="universe">vanilla</profile>
 
-    &lt;/site&gt;
-&lt;/sitecatalog&gt;</programlisting>
+    </site>
+
+</sitecatalog>
+]]></programlisting>
 
       <para>To enable PegasusLite in CondorIO mode, users should set the
       following in their properties</para>
@@ -540,32 +517,36 @@ pegasus.data.configuration    condorio</programlisting>
     <para>An example site catalog entry for a glite site looks as follows in
     the site catalog</para>
 
-    <programlisting> &lt;site  handle="isi_viz_glite" arch="x86_64" os="LINUX"&gt;
-       &lt;grid  type="gt2" contact="smarty.isi.edu/jobmanager-pbs" scheduler="PBS" jobtype="auxillary"/&gt;
-       &lt;grid  type="gt2" contact="smarty.isi.edu/jobmanager-pbs" scheduler="PBS" jobtype="compute"/&gt;
-       &lt;head-fs&gt;
-             &lt;scratch&gt;
-                   &lt;shared&gt;
-                         &lt;file-server protocol="gsiftp" url="gsiftp://viz-login.isi.edu" \
-                                                       mount-point="/nfs/scratch01"/&gt;
-                         &lt;internal-mount-point mount-point="/nfs/scratch01"/&gt;
-                   &lt;/shared&gt;
-             &lt;/scratch&gt;
-             &lt;storage&gt;
-                   &lt;shared&gt;
-                         &lt;file-server protocol="gsiftp" url="gsiftp://viz-login.isi.edu" \
-                                                mount-point="/exports/storage01"/&gt;
-                         &lt;internal-mount-point mount-point="/exports/storage01"/&gt;
-                    &lt;/shared&gt;
-             &lt;/storage&gt;
-       &lt;/head-fs&gt;
-       &lt;replica-catalog  type="LRC" url="rlsn://smarty.isi.edu" /&gt;
+<programlisting><![CDATA[
+<sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd"
+             version="4.0">
+      
+    <site  handle="local" arch="x86_64" os="LINUX">
+        <directory type="shared-scratch" path="/tmp/wf/work">
+            <file-server operation="all" url="file:///tmp/wf/work"/>
+        </directory>
+        <directory type="local-storage" path="/tmp/wf/storage">
+            <file-server operation="all" url="file:///tmp/wf/storage"/>
+        </directory>
+    </site>
+
+    <site  handle="isi_viz_glite" arch="x86_64" os="LINUX">
+        <directory type="shared-scratch" path="/nfs/work">
+            <file-server operation="all" url="gsiftp://viz-login.isi.edu/nfs/work"/>
+        </directory>
+        <directory type="local-storage" path="/nfs/storage">
+            <file-server operation="all" url="gsiftp://viz-login.isi.edu/nfs/work/nfs/storage"/>
+        </directory>
                
-       <emphasis role="bold">&lt;!-- following profiles reqd for glite grid style--&gt;
-       &lt;profile namespace="pegasus" key="style"&gt;glite&lt;/profile&gt; 
-       &lt;profile namespace="condor" key="grid_resource"&gt;pbs&lt;/profile&gt;</emphasis>
- &lt;/site&gt;
-</programlisting>
+       <!-- following profiles reqd for glite grid style-->
+       <profile namespace="pegasus" key="style">glite</profile> 
+       <profile namespace="condor" key="grid_resource">pbs</profile>
+    </site>
+
+ </sitecatalog>
+ ]]></programlisting>
 
     <section>
       <title>Changes to Jobs</title>
@@ -711,51 +692,37 @@ pegasus.data.configuration    condorio</programlisting>
     url="http://www.sdsc.edu/us/resources/trestles/">SDSC
     Trestles</ulink>:</para>
 
-    <programlisting>&lt;sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog"
+<programlisting><![CDATA[
+<sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog"
              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-             xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog
-             http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
-    &lt;site handle="local" arch="x86_64" os="LINUX"&gt;
-        &lt;head-fs&gt;
-            &lt;scratch&gt;
-                &lt;shared&gt;
-                    &lt;file-server protocol="file" url="file://" mount-point="/tmp/wf/work"/&gt;
-                    &lt;internal-mount-point mount-point="/tmp/wf/work"/&gt;
-                &lt;/shared&gt;
-            &lt;/scratch&gt;
-            &lt;storage&gt;
-                &lt;shared&gt;
-                    &lt;file-server protocol="file" url="file://" mount-point="/tmp/wf/storage"/&gt;
-                    &lt;internal-mount-point mount-point="/tmp/wf/storage"/&gt;
-                &lt;/shared&gt;
-            &lt;/storage&gt;
-        &lt;/head-fs&gt;
-        &lt;replica-catalog  type="LRC" url="rlsn://dummyValue.url.edu"/&gt;
-        &lt;profile namespace="env" key="GLOBUS_LOCATION"&gt;/opt/globus/5.0.2&lt;/profile&gt;
-    &lt;/site&gt;
-    &lt;site handle="Trestles" arch="x86_64" os="LINUX"&gt;
-       &lt;grid type="gt2" contact="trestles.sdsc.edu:2119/jobmanager-fork" scheduler="PBS" jobtype="auxillary"/&gt;
-       &lt;grid type="gt2" contact="trestles.sdsc.edu:2119/jobmanager-pbs" scheduler="PBS" jobtype="compute"/&gt;
-        &lt;head-fs&gt;
-            &lt;scratch&gt;
-                &lt;shared&gt;
-                    &lt;file-server protocol="gsiftp" url="gsiftp://trestles-dm1.sdsc.edu" mount-point="/phase1/USERNAME"/&gt;
-                    &lt;internal-mount-point mount-point="/phase1/USERNAME"/&gt;
-                &lt;/shared&gt;
-            &lt;/scratch&gt;
-            &lt;storage/&gt;
-        &lt;/head-fs&gt;
-        &lt;replica-catalog type="LRC" url="rlsn://dummyValue.url.edu"/&gt;
-    &lt;/site&gt;
-&lt;/sitecatalog&gt;
-</programlisting>
+             xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd"
+             version="4.0">
+      
+    <site  handle="local" arch="x86_64" os="LINUX">
+        <directory type="shared-scratch" path="/tmp/wf/work">
+            <file-server operation="all" url="file:///tmp/wf/work"/>
+        </directory>
+        <directory type="local-storage" path="/tmp/wf/storage">
+            <file-server operation="all" url="file:///tmp/wf/storage"/>
+        </directory>
+    </site>
+
+    <site handle="Trestles" arch="x86_64" os="LINUX">
+       <grid type="gt5" contact="trestles.sdsc.edu:2119/jobmanager-fork" scheduler="PBS" jobtype="auxillary"/>
+       <grid type="gt5" contact="trestles.sdsc.edu:2119/jobmanager-pbs" scheduler="PBS" jobtype="compute"/>
+       <directory type="shared-scratch" path="/phase1/USERNAME">
+           <file-server operation="all" url="gsiftp://trestles-dm1.sdsc.edu/phase1/USERNAME"/>
+       </directory>
+    </site>
+
+</sitecatalog>
+]]></programlisting>
 
     <para>pegasusrc:</para>
 
     <programlisting>pegasus.catalog.replica=SimpleFile
 pegasus.catalog.replica.file=rc
 
-pegasus.catalog.site=XML3
 pegasus.catalog.site.file=sites.xml
 
 pegasus.catalog.transformation=Text

@@ -739,11 +739,6 @@ f.a gsiftp://somehost:port/path/to/file/f.a pool=local</computeroutput></screen>
       <orderedlist>
         <listitem>
           <para><emphasis
-          role="bold">pegasus.catalog.site=XML3</emphasis></para>
-        </listitem>
-
-        <listitem>
-          <para><emphasis
           role="bold">pegasus.catalog.site.file=<replaceable>&lt;path to the
           site catalog file&gt;</replaceable></emphasis></para>
         </listitem>
@@ -901,11 +896,6 @@ http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0"&gt;
       set:</para>
 
       <orderedlist>
-        <listitem>
-          <para><emphasis
-          role="bold">pegasus.catalog.site=XML3</emphasis></para>
-        </listitem>
-
         <listitem>
           <para><emphasis
           role="bold">pegasus.catalog.site.file=<replaceable>&lt;path to the

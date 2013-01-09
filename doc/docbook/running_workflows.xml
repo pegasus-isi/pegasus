@@ -1122,10 +1122,6 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
               </row>
 
               <row>
-                <entry>pegasus.catalog.site</entry>
-              </row>
-
-              <row>
                 <entry>pegasus.catalog.site.file</entry>
               </row>
             </tbody>
