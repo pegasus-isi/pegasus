@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
 "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
-<chapter id="funding_citing">
+<chapter id="funding_citing_usage">
 
     <title>Funding, citing, and anonymous usage statistics</title>
 
@@ -21,7 +21,7 @@
     <section id="usage_statistics">
         <title>Usage Statistics Collection</title>
 
-        <section id="purpose">
+        <section id="usage_stats_purpose">
           <title>Purpose</title>
     
           <para>Pegasus WMS is primarily a NSF funded project as part of the
@@ -35,7 +35,7 @@
           the use of our software.</para>
         </section>
     
-        <section id="overview">
+        <section id="usage_stats_overview">
           <title>Overview</title>
     
           <para>We plan to instrument and augment the following clients in our
@@ -64,7 +64,7 @@
           Collected"</link>.</para>
         </section>
     
-        <section id="configuration">
+        <section id="usage_stats_configuration">
           <title>Configuration</title>
     
           <para>By default, the clients will report usage metrics to a server at
@@ -87,7 +87,7 @@
           </itemizedlist>
         </section>
     
-        <section id="metrics_collected">
+        <section id="usage_metrics_collected">
           <title>Metrics Collected</title>
     
           <para>All metrics are sent in JSON format and the metrics sent by the
@@ -160,7 +160,7 @@
             </tgroup>
           </table>
     
-          <section id="planner_metrics">
+          <section id="usage_planner_metrics">
             <title>Pegasus Planner Metrics</title>
     
             <para>The metrics messages sent by the planner in addition include the
