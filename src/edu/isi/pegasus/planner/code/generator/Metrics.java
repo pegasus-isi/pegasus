@@ -33,6 +33,8 @@ import java.io.PrintWriter;
 
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -85,9 +87,9 @@ public class Metrics  {
     private boolean mSendMetricsToServer;
 
     /**
-     * The url to which to log to.
+     * The List of URLS for the metrics servers to report to.
      */
-    private String mMetricsServerURL;
+    private List<String> mMetricsServers;
 
     /**
      * The logger object
@@ -97,7 +99,7 @@ public class Metrics  {
 
     public Metrics(){
         mSendMetricsToServer = true;
-        mMetricsServerURL    = METRICS_SERVER_DEFAULT_URL;
+        mMetricsServers    = new LinkedList();
     }
 
     /**
@@ -111,7 +113,13 @@ public class Metrics  {
 
         value = System.getenv( METRICS_SERVER_URL_ENV_VARIABLE );
         if( value != null ){
-            mMetricsServerURL = value;
+            String[] urls = value.split( "," );
+            for( int i = 0 ; i < urls.length; i++ ){
+                mMetricsServers.add( urls[i] );
+            }
+        }
+        else{
+            mMetricsServers.add( METRICS_SERVER_DEFAULT_URL );
         }
 
         //intialize the logger defensively
@@ -135,7 +143,9 @@ public class Metrics  {
         this.writeOutMetricsFile( metrics );
 
         if( this.mSendMetricsToServer ){
-            sendMetricsAsynchronously( metrics , mMetricsServerURL );
+            for( String url: mMetricsServers ){
+                sendMetricsAsynchronously( metrics , url );
+            }
         }
     }
 

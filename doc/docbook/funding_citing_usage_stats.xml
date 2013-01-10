@@ -81,7 +81,8 @@
         <listitem>
           <para>PEGASUS_METRICS_SERVER</para>
 
-          <para>The URL of the server to which to report the metrics.</para>
+          <para>A comma separated list of URLs of the servers to which to
+          report the metrics.</para>
         </listitem>
       </itemizedlist>
     </section>
