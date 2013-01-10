@@ -103,11 +103,16 @@ public class PBS extends Abstract {
             writer.println( "#PBS -N " + this.pbsBasename(dag) );
             writer.println( "cd " + mSubmitFileDir );
 
+            File localPMCPath =  FindExecutable.findExec( "pegasus-mpi-cluster" ) ;
+            if( localPMCPath == null ){
+                throw new CodeGeneratorException( 
+                        "PBS Code Generator: The executable pegasus-mpi-cluster is not accessible via $PATH environment variable." );
+            }
             //construct PMC invocation
             StringBuffer sb = new StringBuffer();
             sb.append( "mpiexec" ).//later on load via TC
                append( " " ).
-               append( FindExecutable.findExec( "pegasus-mpi-cluster" ) );
+               append( localPMCPath );
 
             //append the arguments
             sb.append( " --monitord-hack --per-task-stdio" );
