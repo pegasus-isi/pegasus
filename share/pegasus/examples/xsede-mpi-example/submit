@@ -9,7 +9,7 @@ pegasus-plan \
     --conf pegasusrc \
     --dir work \
     --sites Trestles \
-    --output local \
+    --output-site local \
     --nocleanup \
     --dax workflow.dax \
     --submit

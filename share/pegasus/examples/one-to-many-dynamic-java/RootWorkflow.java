@@ -92,7 +92,7 @@ public class RootWorkflow {
 
         // Add right Findrange job
         DAX j_subdax = new DAX("j3", subdax.getName());
-        j_subdax.addArgument("--output local").addArgument("--basename sub-workflow");
+        j_subdax.addArgument("--output-site local").addArgument("--basename sub-workflow");
         dax.addDAX(j_subdax);
 
         dax.addDependency("j1", "j2");

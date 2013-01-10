@@ -11,8 +11,6 @@ set -e
 
 DEGREES=2.0
 
-LOCAL_PEGASUS_HOME="/ccg/software/pegasus/dev/trunk"
-LOCAL_GLOBUS_LOCATION="/ccg/software/globus/default"
 LOCAL_MONTAGE_LOCATION="/ccg/software/montage/Montage_v3.2_beta6_mats"
 LOCAL_GLOBUS_TCP_PORT_RANGE="40000,50000"
 
@@ -21,7 +19,7 @@ CLUSTER_HOSTNAME="obelix.isi.edu"
 CLUSTER_GATEKEEPER_TYPE="gt5"
 CLUSTER_GATEKEEPER_PORT="2119"
 CLUSTER_SCHEDULER="condor"
-CLUSTER_WORK_DIR="/nfs/ccg1/90-day-scratch"
+CLUSTER_WORK_DIR="/nfs/ccg4/scratch-6-months-purge"
 CLUSTER_PEGASUS_HOME="/ccg/software/pegasus/dev/trunk"
 CLUSTER_GLOBUS_LOCATION="/ccg/software/globus/default"
 CLUSTER_MONTAGE_LOCATION="/ccg/software/montage/Montage_v3.2_beta6_mats"
@@ -55,7 +53,7 @@ for BINARY in `(cd $LOCAL_MONTAGE_LOCATION/bin && ls)`; do
 tr $BINARY:3.0 {
     site $CLUSTER_NAME {
         pfn "$CLUSTER_MONTAGE_LOCATION/bin/$BINARY"
-        arch "x86"
+        arch "x86_64"
         os "linux"
         type "INSTALLED"
         profile pegasus "clusters.size" "$JOB_CLUSTERS_SIZE" 
@@ -63,52 +61,36 @@ tr $BINARY:3.0 {
 }
 EOF
 done
+#        <directory type="shared-scratch" path="$TOP_DIR/work">
+#            <file-server operation="all" url="file://$TOP_DIR/work"/>
+#        </directory>
 
 # site catalog
 echo
 echo "Creating the site catalog..."
 cat >sites.xml <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
-<sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-3.0.xsd" version="3.0">
-    <site handle="local" arch="x86" os="LINUX">
-        <grid  type="gt2" contact="localhost/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/>
-        <head-fs>
-            <scratch>
-                <shared>
-                    <file-server protocol="file" url="file://" mount-point="$RUN_DIR/work"/>
-                    <internal-mount-point mount-point="$RUN_DIR/work"/>
-                </shared>
-            </scratch>
-            <storage>
-                <shared>
-                    <file-server protocol="file" url="file://" mount-point="$RUN_DIR/outputs"/>
-                    <internal-mount-point mount-point="$RUN_DIR/outputs"/>
-                </shared>
-            </storage>
-        </head-fs>
-        <replica-catalog  type="LRC" url="rlsn://dummyValue.url.edu" />
-        <profile namespace="env" key="PEGASUS_HOME" >$LOCAL_PEGASUS_HOME</profile>
-        <profile namespace="env" key="GLOBUS_LOCATION" >$LOCAL_GLOBUS_LOCATION</profile>
+<sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd" version="4.0">
+
+    <site  handle="local" arch="x86_64" os="LINUX">
+        <directory type="local-storage" path="$TOP_DIR/outputs">
+            <file-server operation="all" url="file://$TOP_DIR/outputs"/>
+        </directory>
+        <profile namespace="env" key="GLOBUS_LOCATION" >$GLOBUS_LOCATION</profile>
         <profile namespace="env" key="GLOBUS_TCP_PORT_RANGE" >$LOCAL_GLOBUS_TCP_PORT_RANGE</profile>
     </site>
-    <site handle="$CLUSTER_NAME" arch="x86" os="LINUX">
+
+    <site  handle="$CLUSTER_NAME" arch="x86_64" os="LINUX">
         <grid  type="$CLUSTER_GATEKEEPER_TYPE" contact="$CLUSTER_HOSTNAME:$CLUSTER_GATEKEEPER_PORT/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/>
         <grid  type="$CLUSTER_GATEKEEPER_TYPE" contact="$CLUSTER_HOSTNAME:$CLUSTER_GATEKEEPER_PORT/jobmanager-$CLUSTER_SCHEDULER" scheduler="unknown" jobtype="compute"/>
-        <head-fs>
-            <scratch>
-                <shared>
-                    <file-server protocol="gsiftp" url="gsiftp://$CLUSTER_HOSTNAME" mount-point="$CLUSTER_WORK_DIR"/>
-                    <internal-mount-point mount-point="$CLUSTER_WORK_DIR"/>
-                </shared>
-            </scratch>
-            <storage>
-            </storage>
-        </head-fs>
-        <replica-catalog  type="LRC" url="rlsn://dummyValue.url.edu" />
+        <directory type="shared-scratch" path="$CLUSTER_WORK_DIR">
+            <file-server operation="all" url="gsiftp://$CLUSTER_HOSTNAME/$CLUSTER_WORK_DIR"/>
+        </directory>
         <profile namespace="env" key="PEGASUS_HOME" >$CLUSTER_PEGASUS_HOME</profile>
         <profile namespace="env" key="GLOBUS_LOCATION" >$CLUSTER_GLOBUS_LOCATION</profile>
         <profile namespace="env" key="MONTAGE_HOME" >$CLUSTER_MONTAGE_LOCATION</profile>
     </site>
+
 </sitecatalog>
 EOF
 
@@ -127,9 +109,9 @@ echo "Planning and submitting the workflow..."
 pegasus-plan \
     --conf pegasusrc \
     --sites $CLUSTER_NAME \
+    --output-site local \
     --cluster horizontal \
     --dir work \
-    --output local \
     --dax dag.xml \
     --submit \
     2>&1 | tee pegasus-plan.out

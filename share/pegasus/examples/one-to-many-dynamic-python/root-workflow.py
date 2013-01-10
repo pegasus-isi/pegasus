@@ -63,7 +63,7 @@ root_dax.addJob(generate)
 
 # Add a subdax job of type DAX that takes the runtime generated sub dax file in the previous step and runs the computation.
 sub_dax = DAX(c)
-sub_dax.addArguments("--output local","--basename sub-workflow")
+sub_dax.addArguments("--output-site local","--basename sub-workflow")
 root_dax.addJob(sub_dax)
 
 # Add control-flow dependencies

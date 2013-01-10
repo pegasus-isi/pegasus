@@ -15,15 +15,15 @@ diamond.addFile(a)
 # Add executables to the DAX-level replica catalog
 # In this case the binary is keg, which is shipped with Pegasus
 e_preprocess = Executable(namespace="diamond", name="preprocess", version="2.0", os="linux", arch="x86_64")
-e_preprocess.addPFN(PFN("file://" + sys.argv[1] + "/bin/keg", "local"))
+e_preprocess.addPFN(PFN("file://" + sys.argv[1] + "/bin/pegasus-keg", "local"))
 diamond.addExecutable(e_preprocess)
 
 e_findrange = Executable(namespace="diamond", name="findrange", version="2.0", os="linux", arch="x86_64")
-e_findrange.addPFN(PFN("file://" + sys.argv[1] + "/bin/keg", "local"))
+e_findrange.addPFN(PFN("file://" + sys.argv[1] + "/bin/pegasus-keg", "local"))
 diamond.addExecutable(e_findrange)
 
 e_analyze = Executable(namespace="diamond", name="analyze", version="2.0", os="linux", arch="x86_64")
-e_analyze.addPFN(PFN("file://" + sys.argv[1] + "/bin/keg", "local"))
+e_analyze.addPFN(PFN("file://" + sys.argv[1] + "/bin/pegasus-keg", "local"))
 diamond.addExecutable(e_analyze)
 
 # Add transformations to the DAX-level transformation catalog
