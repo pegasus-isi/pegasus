@@ -287,8 +287,12 @@ public class Condor   implements SLS {
         //handle the -w option that asks kickstart to change
         //directory before launching an executable.
         String style = (String)job.vdsNS.get( Pegasus.STYLE_KEY );
-        if( style == null || !( style.equals( Pegasus.CONDOR_STYLE ) || style.equals( Pegasus.GLIDEIN_STYLE ) || style.equals( Pegasus.CONDORC_STYLE ) ) ){
-            mLogger.log( "Invalid style for the job " + job.getName(),
+        if( style == null || 
+                !( style.equals( Pegasus.CONDOR_STYLE ) || style.equals( Pegasus.GLIDEIN_STYLE ) ||
+                      style.equals( Pegasus.CONDORC_STYLE ) || style.equals( Pegasus.CREAMCE_STYLE )
+
+                  ) ){
+            mLogger.log( "Invalid style " + style + " for the job " + job.getName(),
                          LogManager.ERROR_MESSAGE_LEVEL );
             return false;
         }
