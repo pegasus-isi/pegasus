@@ -2,8 +2,8 @@ Source: pegasus
 Section: science
 Priority: extra
 Maintainer: Mats Rynge <mats@rynge.net>
-Build-Depends: debhelper (>= 7), ant, openjdk-6-jdk, perl, python
-Standards-Version: 3.9.1
+Build-Depends: debhelper (>= 7), ant, openjdk-6-jdk | openjdk-7-jdk, perl, python
+Standards-Version: 3.9.4
 Homepage: http://pegasus.isi.edu
 
 Package: pegasus
