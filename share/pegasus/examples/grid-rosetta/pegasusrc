@@ -1,5 +1,5 @@
 
-pegasus.catalog.site=XML3
+pegasus.catalog.site=XML
 pegasus.catalog.site.file=sites.xml
 
 pegasus.transfer.worker.package = true
