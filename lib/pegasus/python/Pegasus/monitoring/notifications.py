@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """
 Class for managing notifications in pegasus-monitord.
 """

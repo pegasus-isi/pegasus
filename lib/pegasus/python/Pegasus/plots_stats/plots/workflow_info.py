@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """
 Base class for storing workflow and job information
 

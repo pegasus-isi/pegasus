@@ -407,6 +407,8 @@
     <copy preservelastmodified="true" todir="${dist.doc}/schemas">
       <fileset dir="doc/schemas" includes="**/*"/>
     </copy>
+    <fixcrlf srcdir="${dist.doc}/schemas" includes="**/*.xsd" eol="lf"/>
+    <fixcrlf srcdir="${dist.doc}/schemas" includes="**/*.xml" eol="lf"/>
 
     <!-- etc -->
     <mkdir dir="${dist.etc}"/>
@@ -459,6 +461,7 @@
     <chmod perm="0755" type="file">
       <fileset dir="${dist.share}/visualize">
         <exclude name="README"/>
+        <exclude name="Common.pm"/>
       </fileset>
     </chmod>
     <chmod perm="0755" type="file">
@@ -467,6 +470,7 @@
       <fileset dir="${dist.share}/examples" includes="**/*.py"/>
       <fileset dir="${dist.share}/examples" includes="**/*.pl"/>
       <fileset dir="${dist.share}/examples" includes="**/*.exe"/>
+      <fileset dir="${dist.share}/examples" includes="**/split"/>
       <fileset dir="${dist.share}/examples" includes="**/submit-workflow*"/>
       <fileset dir="${dist.share}/examples" includes="**/galactic-plane/galactic-plane"/>
       <fileset dir="${dist.share}/examples" includes="**/galactic-plane/local*"/>

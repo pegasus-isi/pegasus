@@ -1,4 +1,3 @@
-#!/usr/bin/env perl
 #
 # common functionality used in the various log processors
 #

@@ -1,9 +1,9 @@
 Name:           pegasus
-Version:        4.1.0
+Version:        4.2.0
 Release:        1%{?dist}
 Summary:        Workflow management system for Condor, grids, and clouds
 Group:          Applications/System
-License:        Apache Software License
+License:        ASL 2.0
 URL:            http://pegasus.isi.edu/
 Packager:       Mats Rynge <rynge@isi.edu>
 
@@ -82,6 +82,9 @@ rm -Rf %{buildroot}
 
 
 %changelog
+* Fri Jan 11 2013 Mats Rynge <rynge@isi.edu> 4.2.0
+- 4.2.0 release
+
 * Tue Feb 7 2012 Mats Rynge <rynge@isi.edu> 4.1.0
 - 4.1.0 release
 

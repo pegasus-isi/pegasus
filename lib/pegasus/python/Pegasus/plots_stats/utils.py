@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """
 This file implements several utility functions pegasus-statistics and pegasus-plots.
 """

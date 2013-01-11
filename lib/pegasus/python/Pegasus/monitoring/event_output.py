@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """
 Functions for output pegasus-monitord events to various destinations.
 """

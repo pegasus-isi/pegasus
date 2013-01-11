@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """
 This file implements the Job class for pegasus-monitord.
 """

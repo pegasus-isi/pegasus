@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """
 Pegasus utility for generating host over time chart
 
@@ -42,7 +41,6 @@ from datetime import datetime
 
 
 #Global variables----
-prog_base = os.path.split(sys.argv[0])[1]	# Name of this program
 output_dir = None
 
 
@@ -995,10 +993,3 @@ def generate_chart(workflow_info):
 	create_host_plot_page(workflow_info,output_dir )
 
 
-# ---------main----------------------------------------------------------------------------
-def main():
-	sys.exit(0)
-
-
-if __name__ == '__main__':
-	main()
