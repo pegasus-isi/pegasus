@@ -1,0 +1,18 @@
+
+pegasus.catalog.site.file=sites.xml
+
+# tell pegasus to execute wf in a non shared fs setup
+# and use Condor File Transfers for transferring data
+# to the worker node
+pegasus.data.configuration = condorio
+
+# if the submit script generates a tc.data
+# set these properties
+# pegasus.catalog.transformation=File
+# pegasus.catalog.transformation.file=tc.data
+
+
+
+
+
+
