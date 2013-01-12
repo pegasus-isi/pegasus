@@ -101,6 +101,7 @@ class Dashboard(object):
         
         # Now, let's try to access the database
         try:
+            all_workflows = None
             all_workflows = queries.MasterDatabase (self._master_db_url)
             count, filtered, workflows = all_workflows.get_all_workflows (**table_args)
         
