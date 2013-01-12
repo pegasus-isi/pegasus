@@ -115,6 +115,9 @@ def index ():
         
         return render_template ('workflow.html', workflows=[], counts=(0, 0, 0, 0))
     
+    except RuntimeError, e:
+        return render_template ('error/master_database_missing.html')
+        
     if request.is_xhr:
         return render_template ('workflow.xhr.json', count=count, filtered=filtered, workflows=workflows, table_args=args)
 
@@ -139,7 +142,7 @@ def workflow (root_wf_id, wf_id=None):
     try:
         counts, details, statistics = dashboard.get_workflow_information (wf_id, wf_uuid)
     except NoResultFound:
-        return render_template ('error/workflow/workflow_details_missing.html');
+        return render_template ('error/workflow/workflow_details_missing.html')
     
     return render_template ('workflow/workflow_details.html', root_wf_id=root_wf_id, wf_id=details.wf_id, workflow=details, counts=counts, statistics=statistics);
 
