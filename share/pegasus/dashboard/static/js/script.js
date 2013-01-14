@@ -33,11 +33,11 @@ function verticalTableInitStatus (selector, status)
     
     $(selector + '> tbody > tr').each (function (index)
 				       {
-					   if (status != null && status == 'Failed')
+					   if (status != null && status.toLowerCase()  == 'failed')
 					   {
 					       $(this).addClass ('failed'); // Might require change in some CSS file, probably jquery*dataTables*theme*.css file.
 					   }
-					   else if (status != null && status == 'Successful')
+					   else if (status != null && status.toLowerCase()  == 'successful')
                                            {
                                                $(this).addClass ('successful');
                                            }
