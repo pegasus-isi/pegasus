@@ -209,6 +209,9 @@ def successful_jobs (root_wf_id, wf_id):
     dashboard = Dashboard (_master_db_url, root_wf_id, wf_id)
     successful_jobs_list = dashboard.get_successful_jobs (wf_id)
 
+    for job in successful_jobs_list:
+        job.duration_formatted = time_to_str(job.duration)
+
     # is_xhr = True if it is AJAX request.
     if request.is_xhr:
         if len (successful_jobs_list) > 0:
@@ -502,8 +505,12 @@ def workflow_details_missing (error):
 @app.template_filter ('time_to_str')
 def time_to_str (time):
     '''
-    Change an integer duration to be represented as d days h hours m mins s secs 
+    Change an integer duration to be represented as d days h hours m mins s secs
+    but only use the to major units (ie, drop seconds if hours and minutes are
+    populated)
     '''
+    max_units = 2
+    num_units = 0
     if time is not None and (isinstance (time, Decimal) or isinstance (time, float)):
         str_time = ''
         time = int (time)
@@ -517,6 +524,7 @@ def time_to_str (time):
                 str_time += str (time / Utils.DAY) + ' day '
             
             time = time % Utils.DAY
+            num_units += 1
         
         if time >= Utils.HOUR:
             
@@ -528,8 +536,9 @@ def time_to_str (time):
                 str_time += str (time / Utils.HOUR) + ' hour '
             
             time = time % Utils.HOUR
+            num_units += 1
             
-        if time >= Utils.MIN:
+        if time >= Utils.MIN and num_units < max_units:
             
             temp_time = time / Utils.MIN
             
@@ -539,8 +548,9 @@ def time_to_str (time):
                 str_time += str (time / Utils.MIN) + ' min '
             
             time = time % Utils.MIN
+            num_units += 1
             
-        if time > 0:
+        if time > 0 and num_units < max_units:
             
             if time > 1:
                 str_time += str (time) + ' secs '
