@@ -569,7 +569,13 @@ if __name__ == '__main__':
     (options, args) = parser.parse_args ()
 
     import logging
-    logging.basicConfig (level=logging.DEBUG)
+    if options.debug:
+        logging.basicConfig (level=logging.DEBUG)
+    else:
+        logging.basicConfig (level=logging.WARNING)
+
+    print "Starting Pegasus Dashboard on port %d" % (options.port_number)
 
     _master_db_url = options.master_db
     app.run (host=options.host, port=options.port_number, debug=options.debug)
+
