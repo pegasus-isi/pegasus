@@ -39,7 +39,7 @@ function verticalTableInitStatus (selector, status)
 					   }
 					   else if (status != null && status == 'Successful')
                                            {
-                                               $(this).addClass ('failed');
+                                               $(this).addClass ('successful');
                                            }
 					   else
 					   {
