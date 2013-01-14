@@ -76,7 +76,7 @@ $(document).ready (function ()
 				<th>Stdout</th>
 				<th>Stderr</th>
 			</thead>
-			<tr>
+			<tr {% if job.exitcode !=  0   %}class="failed"{% else  %}class="successful"{% endif %}>
 				<td><strong>{{ job.exec_job_id  }}</strong></td>
 				<td>{% if job.clustered %}Clustered{% else %}Compute{% endif %}</td>
 				<td>{{ job.exitcode  }}</td>
@@ -92,7 +92,7 @@ $(document).ready (function ()
 		<th>Stdout File</th>
 		<th>Stderr File</th>
 	</thead>
-	<tr>
+	<tr {% if job.exitcode !=  0   %}class="failed"{% else  %}class="successful"{% endif %}>
 		<td>{{ job.stdout_file }}</td>
 		<td>{{ job.stderr_file }}</td>
 	</tr>
