@@ -250,7 +250,7 @@ $(document).ready (function ()
 stats_chart = new Highcharts.Chart (statOptions);
 
 chart = new Highcharts.Chart (chartOptions);
-verticalTableInit ('#workflow_text_info');
+verticalTableInitStatus ('#workflow_text_info', '{{workflow.state}}' );
 //verticalTableInit ('#workflow_stats_info');
 });
 </script>
@@ -260,35 +260,35 @@ verticalTableInit ('#workflow_text_info');
 {% block content %}
 <div id="workflow_details" style="overflow:auto;">
 	<table id="workflow_text_info" class="workflow_info">
-		<tr {% if workflow.state ==  "Failed" %}class="failed"{% else %}class="successful"{% endif %}>
+		<tr class="odd" >
 			<th>Label</th>
 			<td>{{ workflow.dax_label }}</td>
 		</tr>
-		<tr {% if workflow.state ==  "Failed" %}class="failed"{% else %}class="successful"{% endif %}>
+		<tr class="even" >
 			<th>Type</th>
 			<td>{% if workflow.root_wf_id ==  workflow.wf_id %}root-wf {% else %}sub-wf{% endif %}</td>
 		</tr>
-		<tr {% if workflow.state ==  "Failed" %}class="failed"{% else %}class="successful"{% endif %}>
+		<tr class="odd">
 			<th>Progress</th>
 			<td>{{ workflow.state }}</td>
 		</tr>
-		<tr {% if workflow.state ==  "Failed" %}class="failed"{% else %}class="successful"{% endif %}>
+		<tr class="even">
 			<th>Submit Host</th>
 			<td>{{ workflow.submit_hostname }}</td>
 		</tr>
-		<tr {% if workflow.state ==  "Failed" %}class="failed"{% else %}class="successful"{% endif %}>
+		<tr class="odd">
 			<th>User</th>
 			<td>{{ workflow.user }}</td>
 		</tr>
-		<tr {% if workflow.state ==  "Failed" %}class="failed"{% else %}class="successful"{% endif %}>
+		<tr class="even">
 			<th>Submit Directory</th>
 			<td>{{ workflow.submit_dir }}</td>
 		</tr>
-		<tr {% if workflow.state ==  "Failed" %}class="failed"{% else %}class="successful"{% endif %}>
+		<tr class="odd">
 			<th>Wall Time</th>
 			<td>{{ statistics ['wall-time']|time_to_str }}</td>
 		</tr>
-		<tr {% if workflow.state ==  "Failed" %}class="failed"{% else %}class="successful"{% endif %}>
+		<tr class="even">
 			<th>Cumulative Wall Time</th>
 			<td>{{ statistics ['cum-time']|time_to_str }}</td>
 		</tr>
