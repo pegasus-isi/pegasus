@@ -27,6 +27,8 @@ from netlogger.analysis.schema.stampede_dashboard_schema import DashboardWorkflo
 from netlogger.analysis.schema.stampede_schema import *
 from netlogger.nllog import DoesLogging
 
+from Pegasus.dashboard.error.Errors import MasterDBNotFoundError
+
 class MasterDatabase (SQLAlchemyInit, DoesLogging):
     
     def __init__(self, connString=None):
@@ -38,7 +40,7 @@ class MasterDatabase (SQLAlchemyInit, DoesLogging):
             SQLAlchemyInit.__init__(self, connString, initializeToDashboardDB)
         except exceptions.OperationalError, e:
             self.log.error('init', msg='%s' % ErrorStrings.get_init_error(e))
-            raise RuntimeError
+            raise MasterDBNotFoundError
     
     def close (self):
         self.log.debug ('close')

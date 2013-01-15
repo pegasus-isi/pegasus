@@ -89,6 +89,7 @@ Note: Above command installs Jinja, and Werkzeug as well'''
 
 #Dashboard modules
 from Pegasus.dashboard.Dashboard import Dashboard, Utils, NoWorkflowsFoundError
+from Pegasus.dashboard.error.Errors import MasterDBNotFoundError
 
 _master_db_url = None
 app = Flask (__name__, static_folder=os.path.join (pegasus_env_path ['pegasus_share_dir'], 'dashboard/static'))
@@ -115,9 +116,6 @@ def index ():
         
         return render_template ('workflow.html', workflows=[], counts=(0, 0, 0, 0))
     
-    except RuntimeError, e:
-        return render_template ('error/master_database_missing.html')
-        
     if request.is_xhr:
         return render_template ('workflow.xhr.json', count=count, filtered=filtered, workflows=workflows, table_args=args)
 
@@ -504,6 +502,11 @@ def page_not_found (error):
 @app.errorhandler (WorkflowsDetailsMissingError)
 def workflow_details_missing (error):
     return render_template ('error/workflow/workflow_details_missing.html');
+
+@app.errorhandler (MasterDBNotFoundError)
+def workflow_details_missing (error):
+    return render_template ('error/master_database_missing.html')
+
 
 @app.template_filter ('time_to_str')
 def time_to_str (time):
