@@ -498,15 +498,13 @@ def capitalize (str):
 def page_not_found (error):
     return render_template ('error/404.html')
 
-
 @app.errorhandler (WorkflowsDetailsMissingError)
 def workflow_details_missing (error):
     return render_template ('error/workflow/workflow_details_missing.html');
 
 @app.errorhandler (MasterDBNotFoundError)
-def workflow_details_missing (error):
+def master_database_missing (error):
     return render_template ('error/master_database_missing.html')
-
 
 @app.template_filter ('time_to_str')
 def time_to_str (time):
