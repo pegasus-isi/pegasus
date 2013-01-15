@@ -488,14 +488,14 @@ pegasus.data.configuration    condorio</programlisting>
     recommended that the GridFTP server has its own machine.</para>
   </section>
 
-  <section>
+  <section id="creamce_submission">
     <title>Remote Cluster using CREAMCE</title>
 
     <para><ulink
     url="https://wiki.italiangrid.it/twiki/bin/view/CREAM/FunctionalDescription">CREAM</ulink>
     is a webservices based job submission front end for remote compute
     clusters. It can be viewed as a replaced for Globus GRAM and is mainly
-    popular in Europe. It widely used in the Italian Grid. </para>
+    popular in Europe. It widely used in the Italian Grid.</para>
 
     <para>In order to submit a workflow to compute site using the CREAMCE
     front end, the user needs to specify the following for the site in their
