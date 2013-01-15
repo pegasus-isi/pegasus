@@ -269,6 +269,9 @@ def successful_invocations (root_wf_id, wf_id, job_id):
     '''
     dashboard = Dashboard (_master_db_url, root_wf_id, wf_id)
     successful_invocations_list = dashboard.get_successful_job_invocation (wf_id, job_id)
+    
+    for item in successful_invocations_list:
+        item.remote_duration_formatted = time_to_str(item.remote_duration)
 
     # is_xhr = True if it is AJAX request.
     if request.is_xhr:
@@ -556,6 +559,10 @@ def time_to_str (time):
                 str_time += str (time) + ' secs '
             else:
                 str_time += str (time) + ' sec '
+
+        # 0 second duration - is this the way we want to display that?
+        if str_time == '':
+            str_time = "0 secs"
                 
         return str_time.strip ()
     
