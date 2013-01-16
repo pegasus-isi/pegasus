@@ -183,7 +183,7 @@
     path to a file. Along with the PFN one can also store additional key/value
     attributes to be associated with a PFN.</para>
 
-    <para>Pegasus supports 3 different implemenations of the Replica
+    <para>Pegasus supports the following implementations of the Replica
     Catalog.</para>
 
     <orderedlist>
@@ -264,7 +264,7 @@ LFN PFN a="b" [..]
     </section>
 
     <section>
-      <title>Regex</title>
+      <title id="rc-regex">Regex</title>
 
       <para>In this mode, Pegasus queries a file based replica catalog. The
       file format is a simple multicolumn format. It is neither
