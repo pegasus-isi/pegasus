@@ -1056,7 +1056,7 @@ def stats_add(filename):
     try:
         s = os.stat(filename)
         stats_total_bytes = stats_total_bytes + s[stat.ST_SIZE]
-    except BaseException, err:
+    except Exception, err:
         pass # ignore
 
 
