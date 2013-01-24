@@ -15,35 +15,35 @@ $(document).ready (function ()
 <div id="invocation_details">
 	<div id="invocation_text">
 		<table id="invocation_text_info">
-			<tr class="odd">
+			<tr>
 				<th>Task Label</th>
 				<td>{{ task_id }}</td>
 			</tr>
-			<tr class="even">
+			<tr>
 				<th>Transformation</th>
 				<td>{{ invocation.transformation }}</td>
 			</tr>
-			<tr class="odd">
+			<tr>
 				<th>Executable</th>
 				<td>{{ invocation.executable }}</td>
 			</tr>
-			<tr  class="even">
+			<tr >
 				<th>Arguments</th>
 				<td>{{ invocation.argv }}</td>
 			</tr>
-			<tr class="odd">
+			<tr>
 				<th>Exit Code</th>
 				<td>{{ invocation.exitcode }}</td>
 			</tr>
-			<tr class="even">
+			<tr>
 				<th>Start Time</th>
 				<td>{{ invocation.start_time }}</td>
 			</tr>
-			<tr class="odd">
+			<tr>
 				<th>Remote Duration</th>
 				<td>{{ invocation.remote_duration | time_to_str }}</td>
 			</tr>
-			<tr class="even">
+			<tr>
 				<th>Remote CPU Time</th>
 				<td>{{ invocation.remote_cpu_time | time_to_str }}</td>
 			</tr>
