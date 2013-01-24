@@ -11,9 +11,18 @@ function verticalTableInit (selector)
 		$(this).addClass ('ui-state-default nowrap');
 	});
 	
+	var isOdd = true;
+	
 	$(selector + '> tbody > tr').each (function (index)
 	{
-		$(this).addClass ('odd');
+		if (isOdd)
+    	{
+    		$(this).addClass ('odd');
+    	}
+    	else
+    	{
+    		$(this).addClass ('even');
+    	}
 	});
 }
 
@@ -27,23 +36,36 @@ function verticalTableInitStatus (selector, status)
     table.attr ('cellspacing', 0);
     table.attr ('cellpadding', 5);
     $(selector + '> tbody > tr > th').each (function (index)
-					    {
-						$(this).addClass ('ui-state-default nowrap');
-					    });
+    {
+    	$(this).addClass ('ui-state-default nowrap');
+    });
+
+    var isOdd = true;
     
     $(selector + '> tbody > tr').each (function (index)
-				       {
-					   if (status != null && status.toLowerCase()  == 'failed')
-					   {
-					       $(this).addClass ('failed'); // Might require change in some CSS file, probably jquery*dataTables*theme*.css file.
-					   }
-					   else if (status != null && status.toLowerCase()  == 'successful')
-                                           {
-                                               $(this).addClass ('successful');
-                                           }
-					   else
-					   {
-					       $(this).addClass ('running');
-					   }
-				       });
+    {
+    	if (isOdd)
+    	{
+    		$(this).addClass ('odd');
+    	}
+    	else
+    	{
+    		$(this).addClass ('even');
+    	}
+    	
+    	isOdd = !isOdd;
+
+    	if (status != null && status.toLowerCase()  == 'failed')
+    	{
+    		$(this).addClass ('failed');
+    	}
+    	else if (status != null && status.toLowerCase()  == 'successful')
+    	{
+    		$(this).addClass ('successful');
+    	}
+    	else
+    	{
+    		$(this).addClass ('running');
+    	}
+   });
 }
