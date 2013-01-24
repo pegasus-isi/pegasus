@@ -23,6 +23,8 @@ function verticalTableInit (selector)
     	{
     		$(this).addClass ('even');
     	}
+		
+    	isOdd = !isOdd;
 	});
 }
 
