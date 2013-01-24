@@ -160,6 +160,7 @@ from netlogger.analysis.modules._base import SQLAlchemyInit
 from netlogger.analysis.schema.schema_check import ErrorStrings, SchemaCheck, SchemaVersionError
 from netlogger.analysis.schema.stampede_schema import *
 from netlogger.nllog import DoesLogging, get_logger
+from netlogger.analysis.error.Error import StampedeDBNotFoundError
         
 # Main stats class.
 
@@ -172,7 +173,7 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
             SQLAlchemyInit.__init__(self, connString, initializeToPegasusDB)
         except exceptions.OperationalError, e:
             self.log.error('init', msg='%s' % ErrorStrings.get_init_error(e))
-            raise RuntimeError
+            raise StampedeDBNotFoundError
             
         # Check the schema version before proceeding.
         self.s_check = SchemaCheck(self.session)

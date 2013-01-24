@@ -91,6 +91,8 @@ Note: Above command installs Jinja, and Werkzeug as well'''
 from Pegasus.dashboard.Dashboard import Dashboard, Utils, NoWorkflowsFoundError
 from Pegasus.dashboard.error.Errors import MasterDBNotFoundError
 
+from netlogger.analysis.error.Error import StampedeDBNotFoundError
+
 _master_db_url = None
 app = Flask (__name__, static_folder=os.path.join (pegasus_env_path ['pegasus_share_dir'], 'dashboard/static'))
 
@@ -505,6 +507,10 @@ def workflow_details_missing (error):
 @app.errorhandler (MasterDBNotFoundError)
 def master_database_missing (error):
     return render_template ('error/master_database_missing.html')
+
+@app.errorhandler (StampedeDBNotFoundError)
+def stampede_database_missing (error):
+    return render_template ('error/stampede_database_missing.html')
 
 @app.template_filter ('time_to_str')
 def time_to_str (time):
