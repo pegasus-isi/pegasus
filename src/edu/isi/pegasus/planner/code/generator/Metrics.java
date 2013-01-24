@@ -74,7 +74,12 @@ public class Metrics  {
     /**
      * The name of the environment variable that overrides the default server url
      */
-    public static final String METRICS_SERVER_URL_ENV_VARIABLE = "PEGASUS_METRICS_SERVER";
+    public static final String PRIMARY_METRICS_SERVER_URL_ENV_VARIABLE = "PEGASUS_METRICS_SERVER";
+
+    /**
+     * The name of the environment variable that overrides the default server url
+     */
+    public static final String SECONDARY_METRICS_SERVER_URL_ENV_VARIABLE = "SECONDARY_PEGASUS_METRICS_SERVER";
 
     /**
      * The timeout in seconds for sending the metrics to the server
@@ -111,7 +116,7 @@ public class Metrics  {
         String value = System.getenv( COLLECT_METRICS_ENV_VARIABLE );
         mSendMetricsToServer =  Boolean.parse(  value, true );
 
-        value = System.getenv( METRICS_SERVER_URL_ENV_VARIABLE );
+        value = System.getenv( PRIMARY_METRICS_SERVER_URL_ENV_VARIABLE );
         if( value != null ){
             String[] urls = value.split( "," );
             for( int i = 0 ; i < urls.length; i++ ){
@@ -121,6 +126,15 @@ public class Metrics  {
         else{
             mMetricsServers.add( METRICS_SERVER_DEFAULT_URL );
         }
+
+        value = System.getenv( SECONDARY_METRICS_SERVER_URL_ENV_VARIABLE );
+        if( value != null ){
+            String[] urls = value.split( "," );
+            for( int i = 0 ; i < urls.length; i++ ){
+                mMetricsServers.add( urls[i] );
+            }
+        }
+        
 
         //intialize the logger defensively
         if( bag != null ){
@@ -143,8 +157,16 @@ public class Metrics  {
         this.writeOutMetricsFile( metrics );
 
         if( this.mSendMetricsToServer ){
+            int count = mMetricsServers.size();
+            int i = 1;
             for( String url: mMetricsServers ){
+                StringBuffer message = new StringBuffer();
+                message.append( "Sending Planner Metrics to [" ).append( i ).append( " of " ).
+                        append( count ).append(   "] " ).append( url );
+                mLogger.log( message.toString(),
+                     LogManager.DEBUG_MESSAGE_LEVEL );
                 sendMetricsAsynchronously( metrics , url );
+                i++;
             }
         }
     }
@@ -192,9 +214,7 @@ public class Metrics  {
      * @param url       the url to send the metrics to
      */
     private void sendMetricsSynchronously(PlannerMetrics metrics, String url ) throws IOException{
-        mLogger.log( "Planner Metrics will be sent to " + url,
-                     LogManager.DEBUG_MESSAGE_LEVEL );
-
+        
         SendMetrics sm = new SendMetrics( metrics, url );
 
         SendMetricsResult result = sm.call();
@@ -216,9 +236,6 @@ public class Metrics  {
      * @param url       the url to send the metrics to
      */
     private void sendMetricsAsynchronously( PlannerMetrics metrics, String url ){
-
-        mLogger.log( "Planner Metrics will be sent to " + url,
-                     LogManager.DEBUG_MESSAGE_LEVEL );
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
   //      Future<SendMetricsResult> future =   (Future<SendMetricsResult>) executor.submit(
