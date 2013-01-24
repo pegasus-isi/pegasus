@@ -74,7 +74,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.FileOutputStream;
 import java.io.FileInputStream;
-import java.nio.channels.FileLock;
 import java.nio.channels.FileChannel;
 
 import java.util.Collection;
@@ -192,6 +191,11 @@ public class CPlanner extends Executable{
     private String mUser;
 
     /**
+     * A boolean indicating whether metrics should be sent to metrics server or not
+     */
+    private boolean mSendMetrics;
+
+    /**
      * Default constructor.
      */
     public CPlanner(){
@@ -224,7 +228,7 @@ public class CPlanner extends Executable{
 
         mPMetrics = new PlannerMetrics();
         mPMetrics.setUser( mUser );
-
+        mSendMetrics = true;
         mBag = new PegasusBag();
     }
 
@@ -287,9 +291,15 @@ public class CPlanner extends Executable{
                 cPlanner.mPMetrics.setErrorMessage(  sw.toString() );
             }
             //lets write out the metrics
-            edu.isi.pegasus.planner.code.generator.Metrics metrics = new edu.isi.pegasus.planner.code.generator.Metrics();
-            metrics.initialize( cPlanner.mBag );
-            metrics.logMetrics( cPlanner.mPMetrics );
+            if( cPlanner.mSendMetrics ){
+                edu.isi.pegasus.planner.code.generator.Metrics metrics = new edu.isi.pegasus.planner.code.generator.Metrics();
+                metrics.initialize( cPlanner.mBag );
+                metrics.logMetrics( cPlanner.mPMetrics );
+            }
+            else{
+                //log
+                cPlanner.log( "No metrics logged or sent to the metrics server", LogManager.DEBUG_MESSAGE_LEVEL );
+            }
 
         }
         catch( Exception e ){
@@ -534,6 +544,13 @@ public class CPlanner extends Executable{
                         result = new LinkedList();
                         result.add( new File( mPOptions.getSubmitDirectory(),
                                     this.getDAGFilename( orgDag, mPOptions ) ) );
+
+                        //for rescue dag workflows we don't want any metrics
+                        //to be sent to prevent double counting.
+                        mSendMetrics = false;
+                        mLogger.log( "No metrics will be sent for rescue dag submission",
+                                     LogManager.DEBUG_MESSAGE_LEVEL );
+
                         return result;
                     }
                 }
@@ -1087,7 +1104,7 @@ public class CPlanner extends Executable{
             result = (status == 0) ?true : false;
         }
         catch(IOException ioe){
-            mLogger.log("IOException while running tailstatd ", ioe,
+            mLogger.log("IOException while running pegasus-run ", ioe,
                         LogManager.ERROR_MESSAGE_LEVEL);
         }
         catch( InterruptedException ie){
