@@ -78,7 +78,7 @@ if cat monitord.log.000 | grep ERR >/dev/null 2>&1; then
     STATUS=$(($STATUS + 1))
 fi
 
-if cat monitord.log.000 | grep WARN | grep -v -E '(read_stdout_stderr_files)|(unable to read error file)' >/dev/null 2>&1; then
+if cat monitord.log.000 | grep WARN | grep -v -E '(read_stdout_stderr_files)|(unable to read error file)|(truncating std)' >/dev/null 2>&1; then
     echo "monitord log contains warnings:"
     echo
     cat monitord.log.000
