@@ -55,6 +55,7 @@ import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 
 import edu.isi.pegasus.planner.classes.TransferJob;
+import edu.isi.pegasus.planner.code.gridstart.PegasusExitCode;
 import edu.isi.pegasus.planner.namespace.Dagman;
 import edu.isi.pegasus.planner.transfer.RemoteTransfer;
 import java.util.List;
@@ -813,6 +814,8 @@ public class DeployWorkerPackage
             //the setup and untar jobs need to be launched without kickstart.
             setupTXJob.vdsNS.construct( Pegasus.GRIDSTART_KEY, "None" );
             //no empty postscript but arguments to exitcode to add -r $RETURN
+            setupTXJob.dagmanVariables.construct( Dagman.POST_SCRIPT_KEY,
+                                                  PegasusExitCode.SHORT_NAME );
             setupTXJob.dagmanVariables.construct( Dagman.POST_SCRIPT_ARGUMENTS_KEY,
                                                   POSTSCRIPT_ARGUMENTS_FOR_ONLY_ROTATING_LOG_FILE );
 
@@ -825,6 +828,8 @@ public class DeployWorkerPackage
                                               getBasename( ((NameValue)ft.getSourceURL()).getValue() )
                                                   );
             untarJob.vdsNS.construct( Pegasus.GRIDSTART_KEY, "None" );
+            untarJob.dagmanVariables.construct( Dagman.POST_SCRIPT_KEY,
+                                                  PegasusExitCode.SHORT_NAME );
             untarJob.dagmanVariables.construct( Dagman.POST_SCRIPT_ARGUMENTS_KEY,
                                                 POSTSCRIPT_ARGUMENTS_FOR_ONLY_ROTATING_LOG_FILE );
             
