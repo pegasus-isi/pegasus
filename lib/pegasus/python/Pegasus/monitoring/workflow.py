@@ -1602,6 +1602,10 @@ class Workflow:
         my_output = []
         parse_kickstart = True
 
+        #a boolean to track if the job has rotated stdout/stderr files
+        #used to track the case where we have rotated files for non kickstart jobs
+        my_job_has_rotated_stdout_err_files = False
+
         # Check if this is a subdag job
         if (my_job._exec_job_id in self._job_info and
             self._job_info[my_job._exec_job_id][5] == True):
@@ -1628,6 +1632,10 @@ class Workflow:
                     # Couldn't find it again, one last try, as it might have just been moved
                     my_parser.__init__(my_job_output_fn)
                     my_output = my_parser.parse_stampede()
+
+            else:
+                #we were able to find the rotated file
+                my_job_has_rotated_stdout_err_files = True
 
             # Check if successful
             if my_parser._open_error == True:
@@ -1722,6 +1730,12 @@ class Workflow:
             # If we don't have any records, we only generate 1 task
             self.db_send_task_start(my_job, "MAIN_JOB", my_task_id)
             self.db_send_task_end(my_job, "MAIN_JOB", my_task_id)
+
+            #update job data structure if the stdout/stderr files are rotated
+            #for non kickstart launched jobs
+            if my_job_has_rotated_stdout_err_files:
+                my_job._output_file += ".%03d" % (my_job._job_output_counter)
+                my_job._error_file += ".%03d" % (my_job._job_output_counter)
 
             # Read stdout/stderr files, if not disabled by user
             if self._store_stdout_stderr:
