@@ -95,33 +95,6 @@ f.close()
 
 __author__ = "Gideon Juve <juve@usc.edu>"
 __version__ = "3.3"
-__all__ = [
-    'DAX3Error',
-    'DuplicateError',
-    'NotFoundError',
-    'FormatError',
-    'Metadata',
-    'Profile',
-    'PFN',
-    'Namespace',
-    'Arch',
-    'Link',
-    'Transfer',
-    'OS',
-    'When',
-    'File',
-    'Executable',
-    'Use',
-    'Transformation',
-    'Invoke',
-    'Job',
-    'DAX',
-    'DAG',
-    'ADAG',
-    'Dependency',
-    'parse',
-    'parseString'
-]
 
 import datetime, pwd, os, sys
 from StringIO import StringIO
