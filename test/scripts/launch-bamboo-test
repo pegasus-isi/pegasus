@@ -48,12 +48,42 @@ STATUS=$?
 
 # always pegasus-analyzer to detect other problems
 pegasus-analyzer $RUN_DIR
-STATUS=$(($STAUTS + $?))
+STATUS=$(($STATUS + $?))
 
 if [ $STATUS = 0 ]; then
    # Run Pegasus Statistics
    pegasus-statistics -s all $RUN_DIR
-   STATUS=$(($STAUTS + $?))
+   STATUS=$(($STATUS + $?))
+fi
+
+cd $RUN_DIR
+
+# monitord checks
+if [ ! -e monitord.done ]; then
+    echo "monitord.done does not exist - did monitord finish successfully?"
+    STATUS=$(($STATUS + 1))
+fi
+
+LOG_COUNT=`ls monitord.log.* 2>/dev/null | wc -l`
+if [ $LOG_COUNT -lt 1 -o $LOG_COUNT -gt 1 ]; then
+    echo "$LOG_COUNT monitord log files found - did monitord restart?"
+    STATUS=$(($STATUS + 1))
+fi
+
+if cat monitord.log.000 | grep ERR >/dev/null 2>&1; then
+    echo "monitord log contains errors:"
+    echo
+    cat monitord.log.000
+    echo
+    STATUS=$(($STATUS + 1))
+fi
+
+if cat monitord.log.000 | grep WARN | grep -v -E '(read_stdout_stderr_files)|(unable to read error file)' >/dev/null 2>&1; then
+    echo "monitord log contains warnings:"
+    echo
+    cat monitord.log.000
+    echo
+    STATUS=$(($STATUS + 1))
 fi
 
 if [ $STATUS != 0 ]; then
