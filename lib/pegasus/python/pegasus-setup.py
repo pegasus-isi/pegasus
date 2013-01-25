@@ -7,45 +7,41 @@ try:
     from setuptools import setup
 except:
     from distutils.core import setup
-from glob import glob
 import os
-import sys
 
 VERSION = os.environ.get('PEGASUS_VERSION','trunk')
 
-# Main function
-# -------------
-
 setup(name = "Pegasus",
       version=VERSION,
-      packages = ["Pegasus",
+      packages = [
+          "Pegasus",
           "Pegasus.monitoring",
-          "Pegasus.monitoring.dashboard",
+          "Pegasus.dashboard",
           "Pegasus.plots_stats",
           "Pegasus.plots_stats.plots",
           "Pegasus.plots_stats.stats",
           "Pegasus.test",
-          "Pegasus.tools"],
+          "Pegasus.tools"
+      ],
       ext_modules = [],
       package_data = {},
-      scripts = [ ],
+      scripts = [],
       install_requires=[ ],
-      # metadata for upload to PyPI
       author = "Pegasus Team",
-      author_email = "deelman@isi.edu",
+      author_email = "pegasus-support@isi.edu",
       maintainer = "Karan Vahi",
       maintainer_email = "vahi@isi.edu",
       description = "Pegasus Python library",
       long_description = "",
-      license = "LBNL Open-Source",
+      license = "Apache 2.0",
       keywords = "workflow",
-      url = "https://confluence.pegasus.isi.edu/display/pegasus/Home",
+      url = "http://pegasus.isi.edu",
       classifiers = [
         "Development Status :: 5 - Production/Stable",
         "Environment :: No Input/Output (Daemon)",
         "Intended Audience :: Science/Research",
         "Intended Audience :: System Administrators",
-        "License :: Other/Proprietary License",
+        "License :: OSI Approved :: Apache Software License",
         "Natural Language :: English",
         "Operating System :: POSIX",
         "Programming Language :: Python",
