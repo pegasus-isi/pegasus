@@ -225,7 +225,7 @@
       <arg line="-p"/>
       <arg line="-i"/>
       <arg line="-e"/>
-      <arg line="'s:(file\:){0,1}[\w\./]+lib/pegasus/python/Pegasus/::g'"/>
+      <arg line="'s:(file\:){0,1}[\w\.\-_/]+lib/pegasus/python/Pegasus/::g'"/>
       <arg line="DAX3.html"/>
     </exec>
     <!-- change the file name from DAX3.html to index.html -->
