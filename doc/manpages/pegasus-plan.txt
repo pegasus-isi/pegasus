@@ -393,6 +393,14 @@ module.  In case of any other error occurring during the running of the
 command, the exitcode will be 1. In most cases, the error message
 logged should give a clear indication as to where things went wrong.
 
+Controlling pegasus-plan Memory Consumption
+-------------------------------------------
+pegasus-plan will try to determine memory limits automatically using
+factors such as total system memory and potential memory limits
+(ulimits). The automatic limits can be overridden by setting the
+JAVA_HEAPMIN and JAVA_HEAPMAX environment variables before invoking
+pegasus-plan. The values are in megabytes. As a rule of thumb,
+JAVA_HEAPMIN can be set to half of the value of JAVA_HEAPMAX.
 
 Pegasus Properties
 ------------------
