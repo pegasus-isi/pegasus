@@ -486,6 +486,29 @@ pegasus.data.configuration    condorio</programlisting>
     the gatekeeper, so that they can share the grid mapfile, CA certificate
     chains and other setups. However, for performance purposes it is
     recommended that the GridFTP server has its own machine.</para>
+
+    <para>An example site catalog entry for a GRAM enabled site looks as
+    follow in the site catalog</para>
+
+    <programlisting>&lt;sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd"
+             version="4.0"&gt;
+      
+     &lt;site handle="Trestles" arch="x86_64" os="LINUX"&gt;
+        &lt;grid type="gt5" contact="trestles.sdsc.edu/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/&gt;
+        &lt;grid type="gt5" contact="trestles.sdsc.edu/jobmanager-pbs" scheduler="unknown" jobtype="compute"/&gt;
+
+        &lt;directory type="shared-scratch" path="/oasis/projects/nsf/USERNAME"&gt;
+            &lt;file-server operation="all" url="gsiftp://trestles-dm1.sdsc.edu/oasis/projects/nsf/USERNAME"/&gt;
+        &lt;/directory&gt;
+
+        &lt;!-- specify the path to a PEGASUS WORKER INSTALL on the site --&gt;
+        &lt;profile namespace="env" key="PEGASUS_HOME" &gt;/path/to/PEGASUS/INSTALL&lt;/profile&gt;
+    &lt;/site&gt;
+
+
+ &lt;/sitecatalog&gt;</programlisting>
   </section>
 
   <section id="creamce_submission">
