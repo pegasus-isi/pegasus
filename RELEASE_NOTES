@@ -10,7 +10,7 @@ This a major release of Pegasus which contains
      - job submission interfaces supported. CREAM CE is now supported 
      - new replica catalog backends. 
      - support for IO forwarding for PMC clustered jobs
-     - anonymous usage statistics metrics reporting.
+     - anonymous usage metrics reporting.
 
 The data management improvements include a new simpler site catalog
 schema to describe the site layouts, and enables data to be
