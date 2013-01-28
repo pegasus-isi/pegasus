@@ -2,12 +2,12 @@
 .\"     Title: pegasus-plan
 .\"    Author: [see the "Authors" section]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 12/21/2012
+.\"      Date: 01/28/2013
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "PEGASUS\-PLAN" "1" "12/21/2012" "\ \&" "\ \&"
+.TH "PEGASUS\-PLAN" "1" "01/28/2013" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -450,6 +450,9 @@ Displays the current version number of the Pegasus Workflow Management System\&.
 .SH "RETURN VALUE"
 .sp
 If the Pegasus Workflow Planner is able to generate an executable workflow successfully, the exitcode will be 0\&. All runtime errors result in an exitcode of 1\&. This is usually in the case when you have misconfigured your catalogs etc\&. In the case of an error occurring while loading a specific module implementation at run time, the exitcode will be 2\&. This is usually due to factory methods failing while loading a module\&. In case of any other error occurring during the running of the command, the exitcode will be 1\&. In most cases, the error message logged should give a clear indication as to where things went wrong\&.
+.SH "CONTROLLING PEGASUS-PLAN MEMORY CONSUMPTION"
+.sp
+pegasus\-plan will try to determine memory limits automatically using factors such as total system memory and potential memory limits (ulimits)\&. The automatic limits can be overridden by setting the JAVA_HEAPMIN and JAVA_HEAPMAX environment variables before invoking pegasus\-plan\&. The values are in megabytes\&. As a rule of thumb, JAVA_HEAPMIN can be set to half of the value of JAVA_HEAPMAX\&.
 .SH "PEGASUS PROPERTIES"
 .sp
 This is not an exhaustive list of properties used\&. For the complete description and list of properties refer to \fB$PEGASUS_HOME/doc/advanced\-properties\&.pdf\fR
