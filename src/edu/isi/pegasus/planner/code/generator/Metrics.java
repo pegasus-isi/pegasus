@@ -79,7 +79,7 @@ public class Metrics  {
     /**
      * The name of the environment variable that overrides the default server url
      */
-    public static final String SECONDARY_METRICS_SERVER_URL_ENV_VARIABLE = "ALTERNATE_PEGASUS_METRICS_SERVER";
+    public static final String SECONDARY_METRICS_SERVER_URL_ENV_VARIABLE = "PEGASUS_USER_METRICS_SERVER";
 
     /**
      * The timeout in seconds for sending the metrics to the server

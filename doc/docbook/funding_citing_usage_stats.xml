@@ -79,21 +79,10 @@
         </listitem>
 
         <listitem>
-          <para>ALTERNATE_PEGASUS_METRICS_SERVER</para>
+          <para>PEGASUS_USER_METRICS_SERVER</para>
 
           <para>A comma separated list of URLs of the servers to which to
           report the metrics in addition to the default server.</para>
-        </listitem>
-      </itemizedlist>
-
-      <para></para>
-
-      <para>To change the default server to which to report to users can set
-      the following environment variable</para>
-
-      <itemizedlist>
-        <listitem>
-          <para>PEGASUS_METRICS_SERVER</para>
         </listitem>
       </itemizedlist>
     </section>
