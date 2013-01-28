@@ -9,7 +9,7 @@ This a major release of Pegasus which contains
      - a new web based monitoring dashboard
      - job submission interfaces supported. CREAM CE is now supported 
      - new replica catalog backends. 
-     - support for IO forwarding for PMC clustered jobs
+     - support for PMC only workflows and IO forwarding for PMC clustered jobs
      - anonymous usage metrics reporting.
 
 The data management improvements include a new simpler site catalog
@@ -35,10 +35,13 @@ New simpler replica catalog backends are included that allow the user
 to specify the input directory where the input files reside instead of
 specifying a replica catalog file that contains the mappings.
 
-I/O forwarding enables each task in a PMC job to write data to an
-arbitrary number of shared files in a safe way. This is useful for
-clustered jobs that contain lots of tasks and each task only writes
-out a few KB of output data.
+There is prototypical support for setting up Pegasus to generate the
+executable workflow as a PMC task workflow instead of a Condor DAGMan
+workflow. This is useful for environments, where Condor cannot be
+deployed such as Blue Waters. I/O forwarding in PMC enables each task
+in a PMC job to write data to an arbitrary number of shared files in a
+safe way. This is useful for clustered jobs that contain lots of tasks
+and each task only writes out a few KB of output data.
 
 Starting with this release, Pegasus will send anonymous usage statistics 
 to the Pegasus development team. Collecting this anonymous information
@@ -143,8 +146,10 @@ NEW FEATURES
    displays statistics similar to what the command line tool
    pegasus-statistics displays.
 
-   There is a command line tool called pegasus-dashboard that can be
-   used to start up the dashboard.
+   
+   The workflow dashboad can be started by a  a command line tool
+   called pegasus-dashboard. 
+
    
 4) Usage Statistics Collection
 
