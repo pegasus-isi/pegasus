@@ -3,19 +3,33 @@ $Id$
 ===============================
 Release Notes for PEGASUS 4.2.0
 ===============================
-This a major release of Pegasus that has support for  a new simpler
-site catalog schema to describe the site layouts . The release also
-has improved data management capabilities for transferring data to and
-from a staging site. Also, with the release we include a beta version
-of a web based monitoring dashboard ( built on flask ) that users can
-use to monitor and debug their running workflows. Pegasus also now
-supports submission to CREAMCE frontends and has new replica catalog
-backends. 
 
-Also with this release we start collecting usage statistics as
-mandated by NSF. Please refer to 
+This a major release of Pegasus which contains several improvements
+on data management capabilities, a new web based monitoring dashboard,
+CREAM support, and a new replica catalog backend. The data management
+improvements include a new simpler site catalog schema to describe the
+site layouts, and enables data to be transferred to and from staging
+sites using different protocols. A driving force behind this change
+was Open Science Grid, in which it is common for the compute sites
+to have Squid caches available to the jobs. If a Pegasus workflow is
+configured to for example stage data into a staging site using SRM or
+GridFTP, and out over HTTP, the data being pulled by the compute jobs
+over HTTP will automatically use the Squid caching mechanism provided
+by the sites.
+
+Also, with the release we include a beta version of a web based
+monitoring dashboard (built on flask) that users can use to monitor and
+debug their running workflows. The dashboard provides workflow overview,
+graphs and job status/outputs.
+
+Job submissions to the CREAM job management system has been implemented
+and tested.
+
+Starting with this release, Pegasus will send anonymous usage statistics 
+to the Pegasus development team. Collecting this anonymous information
+is mandated by the main Pegasus funding agency, NSF. Please refer to 
 http://pegasus.isi.edu/wms/docs/latest/funding_citing_usage.php#usage_statistics 
-for more details on our policy and configuration.
+for more details on our privacy policy and configuration.
 
 NEW FEATURES
 --------------
