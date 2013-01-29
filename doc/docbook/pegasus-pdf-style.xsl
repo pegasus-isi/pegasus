@@ -4,6 +4,8 @@
 
    <xsl:import href="http://yggdrasil.isi.edu/docbook-xsl/fo/docbook.xsl"/>
 
+   <xsl:param name="use.role.for.mediaobject">1</xsl:param>
+   <xsl:param name="preferred.mediaobject.role">fo</xsl:param>
    <xsl:param name="body.font.master">9</xsl:param>
 
    <xsl:attribute-set name="monospace.verbatim.properties">

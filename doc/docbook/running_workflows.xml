@@ -24,9 +24,9 @@
 
         <mediaobject>
           <imageobject>
-            <imagedata align="center" contentdepth="100%"
-                       fileref="images/concepts-diamond-dag.png" scalefit="1"
-                       valign="middle" width="100%" />
+            <imagedata align="center"
+                       fileref="images/concepts-diamond-dag.png"
+                       valign="middle" />
           </imageobject>
         </mediaobject>
       </figure></para>
@@ -203,11 +203,16 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
         <title>Workflow Data Reuse</title>
 
         <mediaobject>
-          <imageobject>
-            <imagedata align="center" contentdepth="100%"
-                       fileref="./images/refinement-data-reuse.png"
-                       scalefit="1" width="100%" />
-          </imageobject>
+            <imageobject role="fo">
+                <imagedata
+                    align="center"
+                    fileref="./images/refinement-data-reuse.png"
+                    scalefit="1" width="100%" contentdepth="100%" />
+            </imageobject>
+            <imageobject role="html">
+                <imagedata align="center"
+                    fileref="./images/refinement-data-reuse.png" />
+            </imageobject>
         </mediaobject>
       </figure>
     </section>
@@ -428,11 +433,16 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
         <title>Workflow Site Selection</title>
 
         <mediaobject>
-          <imageobject>
-            <imagedata align="center" contentdepth="100%"
-                       fileref="./images/refinement-site-selection.png"
-                       scalefit="1" width="100%" />
-          </imageobject>
+            <imageobject role="fo">
+                <imagedata
+                    align="center"
+                    fileref="./images/refinement-site-selection.png"
+                    scalefit="1" width="100%" contentdepth="100%" />
+            </imageobject>
+            <imageobject role="html">
+                <imagedata align="center"
+                    fileref="./images/refinement-site-selection.png" />
+            </imageobject>
         </mediaobject>
       </figure>
     </section>
@@ -492,11 +502,16 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
         <title>Addition of Data Transfer Nodes to the Workflow</title>
 
         <mediaobject>
-          <imageobject>
-            <imagedata align="center" contentdepth="100%"
-                       fileref="./images/refinement-transfer-jobs.png"
-                       scalefit="1" width="100%" />
-          </imageobject>
+            <imageobject role="fo">
+                <imagedata
+                    align="center"
+                    fileref="./images/refinement-transfer-jobs.png"
+                    scalefit="1" width="100%" contentdepth="100%" />
+            </imageobject>
+            <imageobject role="html">
+                <imagedata align="center"
+                    fileref="./images/refinement-transfer-jobs.png" />
+            </imageobject>
         </mediaobject>
       </figure>
 
@@ -510,11 +525,16 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
         <title>Addition of Data Registration Nodes to the Workflow</title>
 
         <mediaobject>
-          <imageobject>
-            <imagedata align="center" contentdepth="100%"
-                       fileref="./images/refinement-registration-jobs.png"
-                       scalefit="1" width="100%" />
-          </imageobject>
+            <imageobject role="fo">
+                <imagedata
+                    align="center"
+                    fileref="./images/refinement-registration-jobs.png"
+                    scalefit="1" width="100%" contentdepth="100%" />
+            </imageobject>
+            <imageobject role="html">
+                <imagedata align="center"
+                    fileref="./images/refinement-registration-jobs.png" />
+            </imageobject>
         </mediaobject>
       </figure>
 
@@ -570,11 +590,16 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
         <title>Addition of Directory Creation and File Removal Jobs</title>
 
         <mediaobject>
-          <imageobject>
-            <imagedata align="center" contentdepth="100%"
-                       fileref="./images/refinement-creadir-rm-jobs.png"
-                       scalefit="1" width="100%" />
-          </imageobject>
+            <imageobject role="fo">
+                <imagedata
+                    align="center"
+                    fileref="./images/refinement-creadir-rm-jobs.png"
+                    scalefit="1" width="100%" contentdepth="100%" />
+            </imageobject>
+            <imageobject role="html">
+                <imagedata align="center"
+                    fileref="./images/refinement-creadir-rm-jobs.png" />
+            </imageobject>
         </mediaobject>
       </figure>
 
@@ -624,11 +649,16 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
         <title>Final Executable Workflow</title>
 
         <mediaobject>
-          <imageobject>
-            <imagedata align="center" contentdepth="100%"
-                       fileref="./images/refinement-final-executable-wf.png"
-                       scalefit="1" width="100%" />
-          </imageobject>
+            <imageobject role="fo">
+                <imagedata
+                    align="center"
+                    fileref="./images/refinement-final-executable-wf.png"
+                    scalefit="1" width="100%" contentdepth="100%" />
+            </imageobject>
+            <imageobject role="html">
+                <imagedata align="center"
+                    fileref="./images/refinement-final-executable-wf.png" />
+            </imageobject>
         </mediaobject>
       </figure>
     </section>
@@ -750,11 +780,16 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
         <title>Shared File System Setup</title>
 
         <mediaobject>
-          <imageobject>
-            <imagedata contentdepth="100%"
-                       fileref="images/data-configuration-sharedfs.png"
-                       scalefit="1" width="100%" />
-          </imageobject>
+            <imageobject role="fo">
+                <imagedata
+                    align="center"
+                    fileref="images/data-configuration-sharedfs.png"
+                    scalefit="1" width="100%" contentdepth="100%" />
+            </imageobject>
+            <imageobject role="html">
+                <imagedata align="center"
+                    fileref="images/data-configuration-sharedfs.png" />
+            </imageobject>
         </mediaobject>
       </figure>
 
@@ -822,13 +857,17 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
 
       <figure>
         <title>Non Shared Filesystem Setup</title>
-
         <mediaobject>
-          <imageobject>
-            <imagedata contentdepth="100%"
-                       fileref="images/data-configuration-nonsharedfs.png"
-                       id="Figure2" scalefit="1" width="100%" />
-          </imageobject>
+            <imageobject role="fo">
+                <imagedata
+                    align="center"
+                    fileref="images/data-configuration-nonsharedfs.png"
+                    scalefit="1" width="100%" contentdepth="100%" />
+            </imageobject>
+            <imageobject role="html">
+                <imagedata align="center"
+                    fileref="images/data-configuration-nonsharedfs.png" />
+            </imageobject>
         </mediaobject>
       </figure>
 
@@ -919,11 +958,16 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
         <title>Condor Pool Without a Shared Filesystem</title>
 
         <mediaobject>
-          <imageobject>
-            <imagedata contentdepth="100%"
-                       fileref="images/data-configuration-condorio.png"
-                       id="Figure13" scalefit="1" width="100%" />
-          </imageobject>
+            <imageobject role="fo">
+                <imagedata
+                    align="center"
+                    fileref="images/data-configuration-condorio.png"
+                    scalefit="1" width="100%" contentdepth="100%" />
+            </imageobject>
+            <imageobject role="html">
+                <imagedata align="center"
+                    fileref="images/data-configuration-condorio.png" />
+            </imageobject>
         </mediaobject>
       </figure>
 
@@ -994,13 +1038,18 @@ PARENT create_dir_diamond_0_hpcc CHILD stage_in_local_hpcc_0
       <title>Workflow Running in NonShared Filesystem Setup with PegasusLite
       launching compute jobs</title>
 
-      <mediaobject>
-        <imageobject>
-          <imagedata align="center" contentdepth="100%"
-                     fileref="images/data-configuration-pegasuslite.png"
-                     id="image-pegasuslite" scalefit="1" width="100%" />
-        </imageobject>
-      </mediaobject>
+        <mediaobject>
+            <imageobject role="fo">
+                <imagedata
+                    align="center"
+                    fileref="images/data-configuration-pegasuslite.png"
+                    scalefit="1" width="100%" contentdepth="100%" />
+            </imageobject>
+            <imageobject role="html">
+                <imagedata align="center"
+                    fileref="images/data-configuration-pegasuslite.png" />
+            </imageobject>
+        </mediaobject>
     </figure>
 
     <para>When PegasusLite starts on a remote worker node to run a compute job
