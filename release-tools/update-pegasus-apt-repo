@@ -9,9 +9,14 @@ rm -rf $REPO_DIR
 rsync -a -v -e ssh $REMOTE_REPO/ $REPO_DIR/
 
 # debian
-for DIST in squeeze; do
+for DIST in squeeze wheezy; do
 
     for ARCH in i386 amd64; do
+
+        if [ ! -e dists/$DIST/main/binary-$ARCH ]; then
+            continue
+        fi
+
         echo
         echo "Updating Debian packages list for $DIST-$ARCH"
         cd $REPO_DIR
