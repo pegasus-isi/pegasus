@@ -149,6 +149,11 @@ def get_path_dashboard_db( props ):
 
     #construct the default path
     home = os.getenv("HOME")
+    
+    if home == None:
+        logger.error('Environment variable HOME not defined, set pegasus.dashboard.output property to point to the Dashboard database')
+        return None
+        
     dir = os.path.join( home, ".pegasus" );
 
     # check for writability and create directory if required
