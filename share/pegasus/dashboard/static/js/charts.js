@@ -193,13 +193,13 @@ function getGanttSeries ()
 		{
 			start = ganttChartData [i].jobS;
 		}
-		job.push ([ganttChartData [i].jobS -start, ganttChartData [i].jobDuration]);
-		pre.push ([ganttChartData [i].pre_start -start, ganttChartData [i].pre_duration]);
-		condor.push ([ganttChartData [i].condor_start -start, ganttChartData [i].condor_duration]);
-		grid.push ([ganttChartData [i].grid_start -start, ganttChartData [i].grid_duration]);
-		exec.push ([ganttChartData [i].exec_start -start, ganttChartData [i].exec_duration]);
-		kickstart.push ([ganttChartData [i].kickstart_start -start, ganttChartData [i].kickstart_duration]);
-		post.push ([ganttChartData [i].post_start -start, ganttChartData [i].post_duration]);
+		job.push ([ganttChartData [i].jobS - start, ganttChartData [i].jobS - start + ganttChartData [i].jobDuration]);
+		//pre.push ([ganttChartData [i].pre_start - start, ganttChartData [i].pre_start - start + ganttChartData [i].pre_duration]);
+		//condor.push ([ganttChartData [i].condor_start - start, ganttChartData [i].condor_start - start + ganttChartData [i].condor_duration]);
+		//grid.push ([ganttChartData [i].grid_start - start, ganttChartData [i].grid_start - start + ganttChartData [i].grid_duration]);
+		//exec.push ([ganttChartData [i].exec_start - start, ganttChartData [i].exec_start - start + ganttChartData [i].exec_duration]);
+		//kickstart.push ([ganttChartData [i].kickstart_start - start, ganttChartData [i].kickstart_start - start + ganttChartData [i].kickstart_duration]);
+		//post.push ([ganttChartData [i].post_start - start, ganttChartData [i].post_start - start + ganttChartData [i].post_duration]);
 	}
 	
 	series.push ({name:"Job", data: job});
