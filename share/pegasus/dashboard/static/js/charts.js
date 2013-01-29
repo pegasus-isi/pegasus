@@ -286,7 +286,7 @@ function jobDistributionGraphToggle (choice)
 	
 	if (choice == 1)
 	{
-		chart.setTitle ({ text: 'Job Distribution by Count'});
+		chart.setTitle ({ text: 'Invocation Distribution by Count'});
 		var data = jobDistribution.series [0].data;
 
 		for (var i  = 0; i < data.length; ++i)
@@ -296,7 +296,7 @@ function jobDistributionGraphToggle (choice)
 	}
 	else
 	{
-		chart.setTitle ({ text: 'Job Distribution by Time' });
+		chart.setTitle ({ text: 'Invocation Distribution by Time' });
 		var data = jobDistribution.series [0].data;
 
 		for (var i  = 0; i < data.length; ++i)
