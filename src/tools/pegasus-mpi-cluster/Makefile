@@ -38,7 +38,7 @@ ifeq (Linux,$(OS))
 endif
 ifeq (Darwin,$(OS))
   OPSYS = DARWIN
-  SIGN = codesign -s "Pegasus Development" $@
+  SIGN = codesign -s "Pegasus Development" $@ || true
 endif
 ifndef OPSYS
   $(error Unsupported OS: $(OS))
