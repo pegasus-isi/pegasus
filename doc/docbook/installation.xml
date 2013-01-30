@@ -156,8 +156,8 @@ Complete!</programlisting>
   <section id="tarballs">
     <title>Pegasus from Tarballs</title>
 
-    <para>The Pegaus prebuild tarballs can be downloaded from the <ulink
-    url="http://download.pegasus.isi.edu/wms/downloads"><emphasis>Pegasus
+    <para>The Pegasus prebuild tarballs can be downloaded from the <ulink
+            url="http://pegasus.isi.edu/downloads"><emphasis>Pegasus
     Download Page</emphasis></ulink>.</para>
 
     <para>Use these tarballs if you already have Condor installed or prefer to
