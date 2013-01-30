@@ -937,7 +937,9 @@ def prog_sigusr2_handler(signum, frame):
 #
 
 # Rotate log file, if it exists
-utils.rotate_log_file(logfile)
+#PM-688 we don't rotate logs in monitord
+# pegasus-dagman rotates the log file
+#utils.rotate_log_file(logfile)
 
 # Turn into daemon process
 if nodaemon == 0:
