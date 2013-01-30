@@ -521,53 +521,32 @@ public class InterPoolEngine extends Engine implements Refiner {
             //pool where it needs to be staged to
             //always creating a third party transfer URL
             //for the destination.
-            String stagedPath =  mSiteStore.getInternalWorkDirectory( job, true )
-                                + File.separator + job.getStagedExecutableBaseName();
+//            String externalStagedPath =  mSiteStore.getInternalWorkDirectory( job, true )
+//                                + File.separator + job.getStagedExecutableBaseName();
+
+            StringBuffer externalStagedPath = new StringBuffer();
+
 
             //PM-590 Stricter checks
 //            String headnodeURLPrefix = this.selectHeadNodeScratchSharedFileServerURLPrefix( site );
-            String headnodeURLPrefix = site.selectHeadNodeScratchSharedFileServerURLPrefix( FileServer.OPERATION.put );
+            FileServer headNodeScratchServer = site.selectHeadNodeScratchSharedFileServer( FileServer.OPERATION.put );
 
-            if( headnodeURLPrefix == null ){
+            if( headNodeScratchServer == null ){
                 this.complainForHeadNodeURLPrefix( REFINER_NAME,  site.getSiteHandle() , FileServer.OPERATION.put, job );
             }
+            externalStagedPath.append( headNodeScratchServer.getURLPrefix() ).
+                       append( mSiteStore.getExternalWorkDirectory(headNodeScratchServer, site.getSiteHandle() )).
+                       append( File.separator ).append(  job.getStagedExecutableBaseName());
+
             fTx.addDestination( stagingSiteHandle,
-                                headnodeURLPrefix + stagedPath);
+                                externalStagedPath.toString() );
 
-//            fTx.addDestination( stagingSiteHandle,
-//                                site.getHeadNodeFS().selectScratchSharedFileServer().getURLPrefix() + stagedPath);
 
-            //added in the end now after dependant executables
-            //have been handled Karan May 31 2007
-            //job.addInputFile(fTx);
+            //the internal path needs to be set for the executable
+            String internalStagedPath =  mSiteStore.getInternalWorkDirectory( job, true )
+                                + File.separator + job.getStagedExecutableBaseName();
 
-            /* Karan April 27, 2012. No longer required
-            if( mWorkerNodeExecution ){
-                //do not specify the full path as we do not know worker
-                //node directory
-
-                
-                if( mSLS.doesCondorModifications() ){
-                    //we need to take the basename of the source url
-                    //as condor file transfer mech does not allow to
-                    //specify destination filenames
-                    job.setRemoteExecutable( new File( tcEntry.getPhysicalTransformation() ).getName() );
-                }
-                else{
-                  
-                    //do this only when kickstart executable existance check is fixed
-                    //Karan Nov 30 2007
-                    //job.setRemoteExecutable(job.getStagedExecutableBaseName());
-                    job.setRemoteExecutable(  stagedPath );
-                }
-            }
-            else{
-                //the jobs executable is the path to where
-                //the executable is going to be staged
-                job.executable = stagedPath;
-            }
-            */
-            job.setRemoteExecutable(  stagedPath );
+            job.setRemoteExecutable(  internalStagedPath );
             
             //setting the job type of the job to
             //denote the executable is being staged
@@ -695,7 +674,7 @@ public class InterPoolEngine extends Engine implements Refiner {
 
                         //the jobs executable is the path to where
                         //the executable is going to be staged
-                        //job.executable = stagedPath;
+                        //job.executable = externalStagedPath;
                         mLogger.log( "Dependant Executable " + input.getLFN() + " being staged from " +
                                      fTx.getSourceURL(), LogManager.DEBUG_MESSAGE_LEVEL );
 
