@@ -19,7 +19,11 @@ wget http://HOST/PATH/PegasusTutorialVM-VERSION.fg
 
 4. Next, bundle the image:
 
-euca-bundle-image -i PegasusTutorialVM-VERSION.fg --kernel aki-00000010 --ramdisk ari-00000011
+euca-bundle-image -i PegasusTutorialVM-VERSION.fg --kernel KERNEL --ramdisk
+RAMDISK
+
+Where KERNEL and RAMDISK match the aki and ari for other versions of the
+tutorial VM that are already in FutureGrid.
 
 5. Upload the bundle to the instance store:
 
