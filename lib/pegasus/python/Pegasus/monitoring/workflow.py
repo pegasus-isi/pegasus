@@ -850,6 +850,7 @@ class Workflow:
                 # Recovery mode detected, reset last_processed_line so
                 # that we start from the beginning of the dagman.out
                 # file...
+                logger.info( "Setting last processed line to 0 in recovery mode to ensure population starts afresh")
                 self._last_processed_line = 0
 
         # Determine location of jobstate.log file
@@ -869,12 +870,16 @@ class Workflow:
             if not self._replay_mode and self._previous_processed_line == 0:
                 # Append to current one if not in replay mode and not
                 # in recovering from previous errors
+                # this is for rescue dags and when a workflow is run for the first time
+                logger.info( "Appending to exisitng jobstate.log replay_mode %s previous_processed_line %s" %(self._replay_mode, self._previous_processed_line))
                 self._JSDB = open(self._jsd_file, 'a', 0)
             else:
                 # Rotate jobstate.log file, if any in case of replay
                 # mode of if we are starting from the beginning
                 # because of a previous failure
+                # or the recover mode
                 utils.rotate_log_file(self._jsd_file)
+                logger.info( " Rotating jobstate.log replay_mode %s previous_processed_line %s" %(self._replay_mode, self._previous_processed_line))
                 self._JSDB = open(self._jsd_file, 'w', 0)
         except:
             logger.critical("error creating/appending to %s!" % (self._jsd_file))
