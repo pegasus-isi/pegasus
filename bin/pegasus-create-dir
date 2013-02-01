@@ -426,11 +426,35 @@ def irods(url):
             
 def srm(url):
     """
-    implements recursive mkdir as srm-mkdir can not handle it
+    We suppoer two tools: lcg-utils and bestman srm. lcg-utils is preferred.
     """
     
-    if tool_info['srm-mkdir']['full_path'] == None:
-        raise RuntimeError("Unable to do srm mkdir becuase srm-mkdir could not be found")
+    if tool_info['lcg-cp']['full_path'] != None:
+        srm_lcgcp(url)
+    elif tool_info['srm-mkdir']['full_path'] != None:
+        srm_srmmkdir(url)
+    else:
+        raise RuntimeError("Unable to do srm mkdir becuase lcg-cp/srm-mkdir could not be found")
+
+
+def srm_lcgcp(url):
+    """
+    implements mkdir using lcg-cp (there is no mkdir in the lcg utils, but cp creates dirs)
+    """
+    
+    cmd = "lcg-cp -b -D srmv2 file:///dev/null %s/.empty" %(url.url())
+
+    try:
+        myexec(cmd, 60, True)
+    except Exception, err:
+        if check_error:
+            raise err
+
+
+def srm_mkdir(url):
+    """
+    implements recursive mkdir as srm-mkdir can not handle it
+    """
 
     # if the directory exists, just return
     cmd = "srm-ls %s >/dev/null" %(url.url())
@@ -443,7 +467,7 @@ def srm(url):
     # back down to a directory which exists
     one_up = url.parent_url()
     if one_up.path != "/":
-        srm(one_up)
+        srm_mkdir(one_up)
             
     cmd = "srm-mkdir %s" %(url.url())
 
@@ -494,6 +518,7 @@ def create_dir(url):
                 check_tool("imkdir", "-h", "Version[ \t]+([\.0-9a-zA-Z]+)")
                 irods(url)
             elif tool == "srm":
+                check_tool("lcg-cp", "--version", "lcg_util-([\.0-9a-zA-Z]+)")
                 check_tool("srm-mkdir", "-version", "srm-mkdir[ \t]+([\.0-9a-zA-Z]+)")
                 srm(url)
             elif tool == "s3":
