@@ -1,0 +1,9 @@
+~*
+*~
+*.pdf
+*.fo
+advanced_concepts_properties.xml
+reference_properties.xml
+configuration.xml
+html
+manpage.*

@@ -1,0 +1,11 @@
+pegasus-mpi-cluster
+*.o
+svn.h
+tags
+test-engine
+test-fdcache
+test-log
+test-strlib
+test-dag
+test-tools
+test-protocol
