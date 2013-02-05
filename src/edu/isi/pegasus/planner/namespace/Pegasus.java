@@ -332,6 +332,12 @@ public class Pegasus extends Namespace {
      */
     public static final String GLITE_STYLE = "glite";
 
+    /**
+     * The style indicating that the submit files are to be generated for a
+     * direct ssh submission
+     */
+    public static final String SSH_STYLE = "ssh";
+
 
     /**
      * A key to designate the memory required by a job in MB by pegasus-mpi-cluster.
