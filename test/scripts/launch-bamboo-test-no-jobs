@@ -1,7 +1,11 @@
 #!/bin/bash
 
 TOP_DIR=`pwd`
-TEST=`echo $1 | awk -F " - " '{print $3}'`
+
+# The first argument is the build plan name which contains
+# plan/branch information. We are only interested in the
+# last part of this name which is the test name.
+TEST=`echo $1 | sed 's/.*- //'`
 shift
 
 cd test/core/$TEST
