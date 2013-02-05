@@ -53,6 +53,17 @@ sub env_setup
 
     cmd("ls -l", 1, 1);
 
+    # Unless already done, untar the pegasus tarball
+    # The downloaded tarball from github gets renamed to just
+    # the tree name - the easiest way to find it is by size
+    if ( ! -e "pegasus" ) {
+        logmsg("pegasus directory does not exist. Untaring Github tarball");
+        my $tarfile = `find . -type f -size +30000 | sed 's/.*\\///'`;
+        chomp($tarfile);
+        cmd("tar xzf $tarfile && rm -f $tarfile", 1, 1);
+        cmd("mv pegasus-* pegasus", 1, 1);
+    }
+
     if ( ! -e "apache-ant-$ant_version" ) {
         cmd("tar xzf apache-ant-$ant_version-bin.tar.gz", 1, 1);
     }
