@@ -131,8 +131,6 @@ public class SSH extends Abstract{
 
         }
 
-        gridResource.append( g.getContact() ).append( " " );
-        
         //the job should have a scheduler specified
         GridGateway.SCHEDULER_TYPE scheduler = g.getScheduler();
         if( scheduler.equals( GridGateway.SCHEDULER_TYPE.Fork ) || scheduler.equals( GridGateway.SCHEDULER_TYPE.Unknown) ){
@@ -143,6 +141,10 @@ public class SSH extends Abstract{
             throw new RuntimeException( error.toString() );
         }
         gridResource.append( scheduler.toString().toLowerCase()).append( " " );
+
+        gridResource.append( g.getContact() ).append( " " );
+        
+        
 
         String queue = (String) job.globusRSL.removeKey( "queue" );
         if( queue == null ){
