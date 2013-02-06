@@ -7,7 +7,7 @@ TOP_DIR=`pwd`
 # The first argument is the build plan name which contains
 # plan/branch information. We are only interested in the
 # last part of this name which is the test name.
-TEST=`echo $1 | sed 's/.*- //'`
+TEST=`echo $1 | sed -r 's/.*Build and Test - ([0-9\.]+ - ){0,1}//' | awk '{ print $1; }'`
 shift
 
 cd test/core/$TEST
