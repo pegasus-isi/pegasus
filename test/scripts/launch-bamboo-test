@@ -9,7 +9,7 @@ TOP_DIR=`pwd`
 # The first argument is the build plan name which contains
 # plan/branch information. We are only interested in the
 # last part of this name which is the test name.
-TEST=`echo $1 | sed 's/.*- //'`
+TEST=`echo $1 | sed -r 's/.*Build and Test - ([0-9\.]+ - ){0,1}//' | awk '{ print $1; }'`
 shift
 
 cd test/core/$TEST
@@ -68,24 +68,24 @@ if [ ! -e monitord.done ]; then
     STATUS=$(($STATUS + 1))
 fi
 
-LOG_COUNT=`ls monitord.log.* 2>/dev/null | wc -l`
+LOG_COUNT=`ls monitord.log* 2>/dev/null | wc -l`
 if [ $LOG_COUNT -lt 1 -o $LOG_COUNT -gt 1 ]; then
     echo "$LOG_COUNT monitord log files found - did monitord restart?"
     STATUS=$(($STATUS + 1))
 fi
 
-if cat monitord.log.000 | grep ERR >/dev/null 2>&1; then
+if cat monitord.log | grep ERR >/dev/null 2>&1; then
     echo "monitord log contains errors:"
     echo
-    cat monitord.log.000
+    cat monitord.log
     echo
     STATUS=$(($STATUS + 1))
 fi
 
-if cat monitord.log.000 | grep WARN | grep -v -E '(read_stdout_stderr_files)|(unable to read error file)|(truncating std)' >/dev/null 2>&1; then
+if cat monitord.log | grep WARN | grep -v -E '(read_stdout_stderr_files)|(unable to read error file)|(truncating std)' >/dev/null 2>&1; then
     echo "monitord log contains warnings:"
     echo
-    cat monitord.log.000
+    cat monitord.log
     echo
     STATUS=$(($STATUS + 1))
 fi

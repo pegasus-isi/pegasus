@@ -1,0 +1,2 @@
+[cluster-summary stat="ok", tasks=28876, submitted=0, succeeded=0, failed=0, extra=0, start="2013-01-31T15:36:54.988-05:00", duration=5.088, pid=4335, app="/lustre/scratch/proj/tera3d/pegasus/default/bin/pegasus-mpi-cluster", runtime=0.000, slots=239, cpus=240]
+Application 4983914 resources: utime ~2262s, stime ~20s

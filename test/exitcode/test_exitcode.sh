@@ -38,3 +38,4 @@ exitcode 1 cluster_summary_stat.out
 exitcode 1 cluster_summary_missing.out
 exitcode 0 cluster_summary_notasks.out
 exitcode 1 cluster_summary_nosucc.out
+exitcode 0 cluster_summary_submitted.out
