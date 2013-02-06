@@ -313,6 +313,7 @@ def check_env_and_tools():
     os.environ['irodsAuthFileName'] = os.getcwd() + "/.irodsA"
     
     # tools we might need later
+    check_tool("lcg-del", "--version", "lcg_util-([\.0-9a-zA-Z]+)")
     check_tool("srm-rm", "-version", "srm-copy[ \t]+([\.0-9a-zA-Z]+)")
     check_tool("irm", "-h", "Version[ \t]+([\.0-9a-zA-Z]+)")
     check_tool("pegasus-gridftp", "", None)
@@ -437,17 +438,21 @@ def irods(urls):
             logger.error(err)
 
 
-
 def srm(urls):
     """
-    srm - use srm-rm
+    srm - use lcg-del or srm-rm
     """
 
-    if tool_info['srm-rm']['full_path'] == None:
-        raise RuntimeError("Unable to do srm remove becuase srm-rm could not be found")
+    base_cmd = ""
+    if tool_info['lcg-del']['full_path'] != None:
+        base_cmd = "lcg-del -b -l -D srmv2 --force"
+    elif tool_info['srm-rm']['full_path'] != None:
+        base_cmd = "srm-rm"
+    else:
+        raise RuntimeError("Unable to do srm remove becuase lcg-del/srm-rm could not be found")
 
     for i, url in enumerate(urls):
-        cmd = "srm-rm " + url.url()
+        cmd = base_cmd + " " + url.url()
         
         try:
             myexec(cmd, 5*60, True)
