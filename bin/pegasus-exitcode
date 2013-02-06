@@ -130,6 +130,14 @@ def exitcode(outfile):
             if failed > 0:
                 fail("cluster-summary failed=%d" % failed)
         
+        # If no tasks were submitted, then it succeeded
+        re_submitted = re.compile(r'submitted=([0-9]+)')
+        m = re_submitted.search(summary)
+        if m:
+            submitted = int(m.group(1))
+            if submitted == 0:
+                return 0
+        
         # If there were no tasks, then the job was successful
         re_tasks = re.compile(r'tasks=([0-9]+)')
         m = re_tasks.search(summary)
