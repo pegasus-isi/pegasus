@@ -93,6 +93,12 @@ public class CondorStyleFactory {
      */
     private static final String GLITE_STYLE_IMPLEMENTING_CLASS = "GLite";
 
+
+    /**
+     * The name of the class implementing the CondorG Style.
+     */
+    private static final String SSH_STYLE_IMPLEMENTING_CLASS = "SSH";
+
     /**
      * Returns a table that maps, the Pegasus style keys to the names of implementing
      * classes.
@@ -110,6 +116,7 @@ public class CondorStyleFactory {
             mImplementingClassNameTable.put( Pegasus.GLITE_STYLE, GLITE_STYLE_IMPLEMENTING_CLASS);
             mImplementingClassNameTable.put( Pegasus.CONDORC_STYLE, CONDORC_STYLE_IMPLEMENTING_CLASS );
             mImplementingClassNameTable.put( Pegasus.CREAMCE_STYLE, CREAMCE_STYLE_IMPLEMENTING_CLASS );
+            mImplementingClassNameTable.put( Pegasus.SSH_STYLE, SSH_STYLE_IMPLEMENTING_CLASS );
         }
         return mImplementingClassNameTable;
     }

@@ -162,7 +162,7 @@ public class GridGateway extends AbstractSiteData{
     
     
     /**
-     * Returns the type of jobs that run via this grid gateway.
+     * Returns the type of this grid gateway.
      * 
      * @return  the type of grid gateway
      */
