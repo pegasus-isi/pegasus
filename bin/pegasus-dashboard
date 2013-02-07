@@ -65,7 +65,7 @@ from Pegasus.tools import utils
 
 #Flask modules
 try:
-    from flask import Flask, request, render_template, url_for
+    from flask import Flask, request, render_template, url_for, send_from_directory
     from flask.helpers import json
     from jinja2 import FileSystemLoader
 except ImportError:
@@ -388,6 +388,10 @@ def time_stats (root_wf_id, wf_id):
     dashboard = Dashboard (_master_db_url, root_wf_id, wf_id)
 
     return '{}'
+
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory(os.path.join (pegasus_env_path ['pegasus_share_dir'], 'dashboard/static'), 'favicon.ico')
 
 def __update_timestamp (workflows):
     for workflow in workflows:
