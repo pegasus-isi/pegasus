@@ -131,7 +131,8 @@ public class GLite extends Abstract {
         }
 
 
-        job.condorVariables.construct( GLite.CONDOR_REMOTE_DIRECTORY_KEY, workdir );
+        job.condorVariables.construct( GLite.CONDOR_REMOTE_DIRECTORY_KEY,
+                                       workdir == null ? null : quote(workdir) );
 
         
         /* transfer_executable does not work with gLite
@@ -339,9 +340,9 @@ public class GLite extends Abstract {
     private String quote( String string ) throws CondorStyleException{
         String result;
         try{
-            mLogger.log("Unquoted Prejob is  " + string, LogManager.DEBUG_MESSAGE_LEVEL);
+            mLogger.log("Unquoted string is  " + string, LogManager.TRACE_MESSAGE_LEVEL);
             result = CondorQuoteParser.quote( string, true );
-            mLogger.log("Quoted Prejob is  " + result, LogManager.DEBUG_MESSAGE_LEVEL );
+            mLogger.log("Quoted string is  " + result, LogManager.TRACE_MESSAGE_LEVEL );
         }
         catch (CondorQuoteParserException e) {
             throw new CondorStyleException("CondorQuoting Problem " +
