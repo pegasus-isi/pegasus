@@ -23,7 +23,6 @@ import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.classes.Job;
 
 import edu.isi.pegasus.planner.namespace.Condor;
-import edu.isi.pegasus.planner.namespace.Pegasus;
 
 import edu.isi.pegasus.planner.code.generator.condor.CondorQuoteParser;
 import edu.isi.pegasus.planner.code.generator.condor.CondorQuoteParserException;
@@ -46,7 +45,8 @@ import edu.isi.pegasus.planner.classes.TransferJob;
  * As part of applying the style to the job, this style adds the following
  * classads expressions to the job description
  * <pre>
- *      +remote_queue  - value picked up from globus profile queue
+ *      batch_queue  - value picked up from globus profile queue or can be
+ *                     set directly as a Condor profile named batch_queue
  *      +remote_cerequirements - See below
  * </pre>
  *
@@ -96,6 +96,11 @@ public class GLite extends Abstract {
     public static final String STYLE_NAME = "GLite";
 
 
+    /**
+     * The Condor remote directory classad key to be used with Glite
+     */
+    public static final String CONDOR_REMOTE_DIRECTORY_KEY = "+remote_iwd";
+
 
     /**
      * The default Constructor.
@@ -114,9 +119,8 @@ public class GLite extends Abstract {
      * @throws CondorStyleException in case of any error occuring code generation.
      */
     public void apply( Job job ) throws CondorStyleException {
-        String execSiteWorkDir = mSiteStore.getInternalWorkDirectory( job );
-        String workdir = (String) job.globusRSL.removeKey( "directory" ); // returns old value
-        workdir = (workdir == null) ? execSiteWorkDir : workdir;
+
+        String workdir = job.getDirectory();
 
         /* universe is always set to grid*/
         job.condorVariables.construct( Condor.UNIVERSE_KEY,Condor.GRID_UNIVERSE );
@@ -125,11 +129,11 @@ public class GLite extends Abstract {
         if( !job.condorVariables.containsKey( Condor.GRID_RESOURCE_KEY )  ){
             throw new CondorStyleException( missingKeyError( job, Condor.GRID_RESOURCE_KEY ) );
         }
-        
-        /* remote_initialdir does not work with gLite
-         * Rely on Gridstart to do the right thing */
-        job.condorVariables.construct( "remote_initialdir", workdir );
-        job.vdsNS.construct( Pegasus.CHANGE_DIR_KEY, "true" );
+
+
+        job.condorVariables.construct( GLite.CONDOR_REMOTE_DIRECTORY_KEY,
+                                       workdir == null ? null : quote(workdir) );
+
         
         /* transfer_executable does not work with gLite
          * Explicitly set to false */
@@ -137,7 +141,7 @@ public class GLite extends Abstract {
         
         /* retrieve some keys from globus rsl and convert to gLite format */
         if( job.globusRSL.containsKey( "queue" ) ){
-            job.condorVariables.construct(  "+remote_queue" , (String)job.globusRSL.get( "queue" ) );
+            job.condorVariables.construct(  "batch_queue" , (String)job.globusRSL.get( "queue" ) );
         }
         
         /* convert some condor keys and globus keys to remote ce requirements 
@@ -150,16 +154,14 @@ public class GLite extends Abstract {
         if( job.getSiteHandle().equals( "local" ) && job instanceof TransferJob ){
                 /* remove the change dir requirments for the 
                  * third party transfer on local host */
-                job.vdsNS.construct( Pegasus.CHANGE_DIR_KEY, "false" );
-                job.condorVariables.removeKey( "remote_initialdir" );
+                job.condorVariables.removeKey( GLite.CONDOR_REMOTE_DIRECTORY_KEY );
         }
         
         /* similar handling for registration jobs */
         if( job.getSiteHandle().equals( "local" ) && job.getJobType() == Job.REPLICA_REG_JOB ){
                 /* remove the change dir requirments for the 
                  * third party transfer on local host */
-                job.vdsNS.construct( Pegasus.CHANGE_DIR_KEY, "false" );
-                job.condorVariables.removeKey( "remote_initialdir" );
+                job.condorVariables.removeKey( GLite.CONDOR_REMOTE_DIRECTORY_KEY );
         }
         
         if ( job.getSiteHandle().equals("local") ) {
@@ -338,9 +340,9 @@ public class GLite extends Abstract {
     private String quote( String string ) throws CondorStyleException{
         String result;
         try{
-            mLogger.log("Unquoted Prejob is  " + string, LogManager.DEBUG_MESSAGE_LEVEL);
+            mLogger.log("Unquoted string is  " + string, LogManager.TRACE_MESSAGE_LEVEL);
             result = CondorQuoteParser.quote( string, true );
-            mLogger.log("Quoted Prejob is  " + result, LogManager.DEBUG_MESSAGE_LEVEL );
+            mLogger.log("Quoted string is  " + result, LogManager.TRACE_MESSAGE_LEVEL );
         }
         catch (CondorQuoteParserException e) {
             throw new CondorStyleException("CondorQuoting Problem " +
