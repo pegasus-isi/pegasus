@@ -647,6 +647,12 @@ pegasus.data.configuration    condorio</programlisting>
 
 </programlisting>
 
+    <tip>
+      <para>Starting 4.2.1 , in the examples directory you can find a glite
+      shared filesystem example that you can use to test out this
+      configuration</para>
+    </tip>
+
     <section>
       <title>Changes to Jobs</title>
 
