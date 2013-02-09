@@ -19,7 +19,6 @@ package edu.isi.pegasus.planner.namespace;
 
 import edu.isi.pegasus.planner.classes.Profile;
 
-import edu.isi.pegasus.common.logging.LogManager;
 
 import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.common.PegasusProperties;
@@ -48,6 +47,11 @@ public class Condor extends Namespace{
      * The name of the key that denotes the arguments of the job.
      */
     public static final String ARGUMENTS_KEY = "arguments";
+
+    /**
+     * The queue to be used when using batch gahp.
+     */
+    public static final String BATCH_QUEUE_KEY = "batch_queue";
 
     /**
      * The name of the key that denotes the executable of the job.
@@ -462,6 +466,7 @@ public class Condor extends Namespace{
      *
      * <pre>
      * arguments	- not supported, got from the arguments tag in DAX
+     * batch_queue      - the batch queue to be used
      * copy_to_spool    - supported, limited to LCG sites at present where one needs
      *                    to stage in the kickstart. Pegasus sets it to false by default
      *                    for arch start stuff on the local pool, unless the user
@@ -474,6 +479,7 @@ public class Condor extends Namespace{
      *                    it's planning strategy
      * globusrsl        - not supported, rsl to populated through Globus namespace.
      * grid_type        - OK (like gt2, gt4, condor)
+     * grid_resource    - supported . used for glite
      * getevn           - OK
      * log              - not supported, as it has to be same for the whole dag
      * notification     - OK
@@ -540,6 +546,15 @@ public class Condor extends Namespace{
                 }
                 break;
 
+             case 'b':
+                if (key.compareTo( BATCH_QUEUE_KEY ) == 0) {
+                    res = VALID_KEY;
+                }
+                else {
+                    res = UNKNOWN_KEY;
+                }
+                break;
+
             case 'c':
                 if (key.compareTo("copy_to_spool") == 0) {
                     res = VALID_KEY;
@@ -574,6 +589,9 @@ public class Condor extends Namespace{
                     res = VALID_KEY;
                 }
                 else if ( key.compareTo(GET_ENV_KEY) == 0 ){
+                    res = VALID_KEY;
+                }
+                else if ( key.compareTo( GRID_RESOURCE_KEY) == 0 ){
                     res = VALID_KEY;
                 }
                 else if (key.compareTo("globusscheduler") == 0 ||
