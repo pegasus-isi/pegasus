@@ -149,7 +149,7 @@ def workflow (root_wf_id, wf_id=None):
 @app.route('/root/<root_wf_id>/workflow/<wf_id>/sub_workflows/', methods=['GET'])
 def sub_workflows (root_wf_id, wf_id):
     '''
-    Get a list of all successful jobs of the latest instance for a given work-flow.
+    Get a list of all sub-workflow of a given work-flow.
     '''    
     dashboard = Dashboard (_master_db_url, root_wf_id, wf_id)
     sub_workflows = dashboard.get_sub_workflows (wf_id)
@@ -198,7 +198,6 @@ def running_jobs (root_wf_id, wf_id):
             return '', 204
     else:
         return render_template ('workflow/jobs_running.html', root_wf_id=root_wf_id, wf_id=wf_id, jobs=running_jobs_list)
-
 
 @app.route('/root/<root_wf_id>/workflow/<wf_id>/jobs/successful/', methods=['GET'])
 def successful_jobs (root_wf_id, wf_id):
