@@ -94,6 +94,13 @@ typedef struct _pidlist_t {
     double cstime; /* time waited on children were in kernel mode */
     double tstart; /* start time in seconds from epoch */
     double tstop;  /* stop time in seconds from epoch */
+    unsigned long rchar; /* characters read by the process */
+    unsigned long wchar; /* characters written by the process */
+    unsigned long syscr; /* read system calls */
+    unsigned long syscw; /* write system calls */
+    unsigned long read_bytes; /* file bytes read */
+    unsigned long write_bytes; /* file bytes written */
+    unsigned long cancelled_write_bytes; /* bytes written, then deleted before flush */
     struct _pidlist_t *next;
     struct _pidlist_t *prev;
 } pidlist_t;
@@ -118,9 +125,9 @@ pidlist_t *add_pid(pid_t pid) {
     if (PIDS == NULL) {
         PIDS = new;
     } else {
-    	for (cur = PIDS; cur->next!=NULL; cur = cur->next);
-	cur->next = new;
-	new->prev = cur;
+        for (cur = PIDS; cur->next!=NULL; cur = cur->next);
+        cur->next = new;
+        new->prev = cur;
     }
     return new;
 }
@@ -169,15 +176,15 @@ int read_meminfo(pidlist_t *item) {
 
     f = fopen(statf,"r");
     while (fgets(line, BUFSIZ, f) != NULL) {
-	if (startswith(line, "PPid")) {
-	    sscanf(line,"PPid:%d\n",&(item->ppid));
-	} else if (startswith(line, "Tgid")) {
-	    sscanf(line,"Tgid:%d\n",&(item->tgid));
+        if (startswith(line, "PPid")) {
+            sscanf(line,"PPid:%d\n",&(item->ppid));
+        } else if (startswith(line, "Tgid")) {
+            sscanf(line,"Tgid:%d\n",&(item->tgid));
         } else if (startswith(line,"VmPeak")) {
-	    sscanf(line,"VmPeak:%d kB\n",&(item->vmpeak));
-	} else if (startswith(line,"VmHWM")) {
-	    sscanf(line,"VmHWM:%d kB\n",&(item->rsspeak));
-	}
+            sscanf(line,"VmPeak:%d kB\n",&(item->vmpeak));
+        } else if (startswith(line,"VmHWM")) {
+            sscanf(line,"VmHWM:%d kB\n",&(item->rsspeak));
+        }
     }
 
     if (ferror(f)) {
@@ -210,7 +217,41 @@ int read_statinfo(pidlist_t *item) {
 
     if (ferror(f)) {
         fclose(f);
-	return -1;
+        return -1;
+    }
+
+    return fclose(f);
+}
+
+int read_io(pidlist_t *item) {
+    char iofile[BUFSIZ], line[BUFSIZ];
+    FILE *f;
+    
+    sprintf(iofile, "/proc/%d/io", item->pid);
+
+    f = fopen(iofile, "r");
+    
+    while (fgets(line, BUFSIZ, f) != NULL) {
+        if (startswith(line, "rchar")) {
+            sscanf(line,"rchar: %lu\n",&(item->rchar));
+        } else if (startswith(line, "wchar")) {
+            sscanf(line,"wchar: %lu\n",&(item->wchar));
+        } else if (startswith(line,"syscr")) {
+            sscanf(line,"syscr: %lu\n",&(item->syscr));
+        } else if (startswith(line,"syscw")) {
+            sscanf(line,"syscw: %lu\n",&(item->syscw));
+        } else if (startswith(line,"read_bytes")) {
+            sscanf(line,"read_bytes: %lu\n",&(item->read_bytes));
+        } else if (startswith(line,"write_bytes")) {
+            sscanf(line,"write_bytes: %lu\n",&(item->write_bytes));
+        } else if (startswith(line,"cancelled_write_bytes")) {
+            sscanf(line,"cancelled_write_bytes: %lu\n",&(item->cancelled_write_bytes));
+        }
+    }
+    
+    if (ferror(f)) {
+        fclose(f);
+        return -1;
     }
 
     return fclose(f);
@@ -218,7 +259,10 @@ int read_statinfo(pidlist_t *item) {
 
 void print_header() {
     fprintf(stderr,
-        "xform pid ppid exe lstart lstop tstart tstop vmpeak rsspeak utime stime wtime cutime cstime\n");
+        "xform pid ppid exe lstart lstop tstart tstop "
+        "vmpeak rsspeak utime stime wtime cutime cstime "
+        "rchar wchar syscr syscw read_bytes write_bytes "
+        "cancelled_write_bytes\n");
 }
 
 void print_report(pidlist_t *item) {
@@ -227,22 +271,29 @@ void print_report(pidlist_t *item) {
         return;
 
     fprintf(stderr, 
-        "%s %d %d %s %d %d %lf %lf %d %d %lf %lf %lf %lf %lf\n", 
-	XFORM,
+        "%s %d %d %s %d %d %lf %lf %d %d %lf %lf %lf %lf %lf %lu %lu %lu %lu %lu %lu %lu\n", 
+        XFORM,
         item->pid, 
-	item->ppid,
-	item->exe, 
-	item->lstart,
-	item->lstop,
-	item->tstart,
-	item->tstop,
+        item->ppid,
+        item->exe, 
+        item->lstart,
+        item->lstop,
+        item->tstart,
+        item->tstop,
         item->vmpeak,
         item->rsspeak,
-	item->utime,
-	item->stime,
-	item->tstop - item->tstart,
+        item->utime,
+        item->stime,
+        item->tstop - item->tstart,
         item->cutime,
-        item->cstime);
+        item->cstime,
+        item->rchar,
+        item->wchar,
+        item->syscr,
+        item->syscw,
+        item->read_bytes,
+        item->write_bytes,
+        item->cancelled_write_bytes);
 }
 
 int main(int argc, char **argv) {
@@ -261,22 +312,22 @@ int main(int argc, char **argv) {
         if (PEGASUS_HOME == NULL) {
             fprintf(stderr, "Please set PEGASUS_HOME\n");
             exit(1);
-	}
+        }
 
         /* check for kickstart in $PEGASUS_HOME/bin */
-    	sprintf(kickstart, "%s/bin/pegasus-kickstart", PEGASUS_HOME);
-    	if (access(kickstart, X_OK) < 0) {
-    	    fprintf(stderr, "cannot execute kickstart: %s\n", kickstart);
-    	    exit(1);
-    	}
+            sprintf(kickstart, "%s/bin/pegasus-kickstart", PEGASUS_HOME);
+            if (access(kickstart, X_OK) < 0) {
+                fprintf(stderr, "cannot execute kickstart: %s\n", kickstart);
+                exit(1);
+            }
     }
 
     /* Get transformation name if possible */
     for (i=0; i<argc; i++) {
         if (strcmp(argv[i], "-n") == 0) {
-	    strcpy(XFORM, argv[i+1]);
-	    break;
-	}
+            strcpy(XFORM, argv[i+1]);
+            break;
+        }
     }
 
     /* Fork kickstart */
@@ -290,90 +341,96 @@ int main(int argc, char **argv) {
             perror("PTRACE_TRACEME");
             exit(1);
         }
-	dup2(1, 2); /* redirect stderr to stdout */
-	argv[0] = "kickstart";
+        dup2(1, 2); /* redirect stderr to stdout */
+        argv[0] = "kickstart";
         execv(kickstart, argv);
         _exit(0);
     }
     else {
 
         /* initialize logical clock */
-	lclock = 0;
+        lclock = 0;
 
         print_header();
 
         while (1) {
-	    /* __WALL is needed so that we can wait on threads too */
-	    cpid = waitpid(0, &status, __WALL);
+            /* __WALL is needed so that we can wait on threads too */
+            cpid = waitpid(0, &status, __WALL);
 
             /* find the child */
-	    child = lookup(cpid);
+            child = lookup(cpid);
 
-	    /* if not found, then it is new, so add it */
-	    if (child == NULL) {
-	        child = add_pid(cpid);
-		child->tstart = get_time();
-		child->lstart = lclock++;
+            /* if not found, then it is new, so add it */
+            if (child == NULL) {
+                child = add_pid(cpid);
+                child->tstart = get_time();
+                child->lstart = lclock++;
                 if (ptrace(PTRACE_SETOPTIONS, cpid, NULL, 
                            PTRACE_O_TRACEEXIT|PTRACE_O_TRACEFORK| 
                            PTRACE_O_TRACEVFORK|PTRACE_O_TRACECLONE)) {
-		    perror("PTRACE_SETOPTIONS");
+                    perror("PTRACE_SETOPTIONS");
                     exit(1);
                 }
-	    }
+            }
 
             /* child exited */
             if (WIFEXITED(status)) {
-		remove_pid(cpid);
-		if (PIDS == NULL) break;
-	    }
+                remove_pid(cpid);
+                if (PIDS == NULL) break;
+            }
             
-	    /* child was stopped */
-	    if (WIFSTOPPED(status)) {
+            /* child was stopped */
+            if (WIFSTOPPED(status)) {
 
-	        /* because of an event we wanted to see */
-	        if(WSTOPSIG(status) == SIGTRAP) {
+                /* because of an event we wanted to see */
+                if(WSTOPSIG(status) == SIGTRAP) {
                     event = status >> 16;
-	            if (event == PTRACE_EVENT_EXIT) {
-		        child->tstop = get_time();
-		        child->lstop = lclock++;
+                    if (event == PTRACE_EVENT_EXIT) {
+                        child->tstop = get_time();
+                        child->lstop = lclock++;
 
-		        /* fill in exe name */
-		        if (read_exe(child) < 0) {
-		            perror("read_exe");
-			    exit(1);
-		        }
+                        /* fill in exe name */
+                        if (read_exe(child) < 0) {
+                            perror("read_exe");
+                            exit(1);
+                        }
 
-		        /* fill in memory info */
-		        if (read_meminfo(child) < 0) {
-			    perror("read_meminfo");
-			    exit(1);
-			}
+                        /* fill in memory info */
+                        if (read_meminfo(child) < 0) {
+                            perror("read_meminfo");
+                            exit(1);
+                        }
 
-			if (read_statinfo(child) < 0) {
-			    perror("read_statinfo");
-			    exit(1);
-			}
+                        if (read_statinfo(child) < 0) {
+                            perror("read_statinfo");
+                            exit(1);
+                        }
 
-		        /* print stats */
-		        print_report(child);
-		    }
+                        /* fill in io info */
+                        if (read_io(child) < 0) {
+                            perror("read_io");
+                            exit(1);
+                        }
+
+                        /* print stats */
+                        print_report(child);
+                    }
 
                     /* tell child to continue */
-		    if (ptrace(PTRACE_CONT, cpid, NULL, NULL)) {
-		        perror("PTRACE_CONT");
+                    if (ptrace(PTRACE_CONT, cpid, NULL, NULL)) {
+                        perror("PTRACE_CONT");
                         exit(1);
-		    }
+                    }
                 } 
 
-		/* because it got a signal */
-	        else {
+                /* because it got a signal */
+                else {
                     /* pass the signal on to the child */
                     if (ptrace(PTRACE_CONT, cpid, 0, WSTOPSIG(status))) {
                         perror("PTRACE_CONT");
                         exit(1);
                     }
-		}
+                }
             } 
         }
     }
