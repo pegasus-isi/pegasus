@@ -281,9 +281,8 @@ class WorkflowInfo(SQLAlchemyInit, DoesLogging):
         q = q.filter (JobInstance.job_instance_id == qmax.c.job_instance_id)
         
         return q.one()
-     
-    def get_failed_jobs (self):
 
+    def _jobs_by_type(self):
         qmax = self.__get_jobs_maxjss_sq ()
         
         q = self.session.query(Job.job_id, JobInstance.job_instance_id, Job.exec_job_id, JobInstance.exitcode)
@@ -296,31 +295,27 @@ class WorkflowInfo(SQLAlchemyInit, DoesLogging):
         q = q.filter (Job.job_id == qmax.c.job_id)
         q = q.filter (JobInstance.job_submit_seq == qmax.c.max_jss)
         
-        q = q.filter (JobInstance.exitcode != 0).filter (JobInstance.exitcode != None)
-        
         q = q.group_by(JobInstance.job_id)
+
+        return q
+        
+    def get_failed_jobs (self):
+
+        q = self._jobs_by_type()        
+        q = q.filter (JobInstance.exitcode != 0).filter (JobInstance.exitcode != None)
 
         return q.all()
     
     def get_successful_jobs (self, **table_args):
         
-        qmax = self.__get_jobs_maxjss_sq ()
+        q = self._jobs_by_type()
         
-        q = self.session.query(Job.job_id, JobInstance.job_instance_id, Job.exec_job_id, JobInstance.exitcode, JobInstance.local_duration, JobInstance.cluster_duration)
+        q = q.add_column (JobInstance.local_duration)
+        q = q.add_column (JobInstance.cluster_duration)
         q = q.add_column (case ([(Job.clustered == 1, JobInstance.cluster_duration)], else_=JobInstance.local_duration).label ("duration"))
-        
-        q = q.filter (Job.wf_id == self._wf_id)
-        q = q.filter (Job.type_desc != 'dax', Job.type_desc != 'dag')
-        
-        q = q.filter (Job.job_id == JobInstance.job_id)
-        
-        q = q.filter (Job.job_id == qmax.c.job_id)
-        q = q.filter (JobInstance.job_submit_seq == qmax.c.max_jss)
         
         q = q.filter (JobInstance.exitcode == 0).filter (JobInstance.exitcode != None)
         
-        q = q.group_by(JobInstance.job_id)
-
         # Get Total Count. Need this to pass to jQuery Datatable.
         count = q.count ()
         if count == 0:
@@ -371,23 +366,14 @@ class WorkflowInfo(SQLAlchemyInit, DoesLogging):
     
     def get_other_jobs (self):
         
-        qmax = self.__get_jobs_maxjss_sq ()
+        q = self._jobs_by_type()
         
-        q = self.session.query(Job.job_id, JobInstance.job_instance_id, Job.exec_job_id, JobInstance.exitcode, JobInstance.local_duration, JobInstance.cluster_duration)
+        q = q.add_column (JobInstance.local_duration)
+        q = q.add_column (JobInstance.cluster_duration)
         q = q.add_column (case ([(Job.clustered == 1, JobInstance.cluster_duration)], else_=JobInstance.local_duration).label ("duration"))
-        
-        q = q.filter (Job.wf_id == self._wf_id)
-        q = q.filter (Job.type_desc != 'dax', Job.type_desc != 'dag')
-        
-        q = q.filter (Job.job_id == JobInstance.job_id)
-        
-        q = q.filter (Job.job_id == qmax.c.job_id)
-        q = q.filter (JobInstance.job_submit_seq == qmax.c.max_jss)
         
         q = q.filter (JobInstance.exitcode == None)
         
-        q = q.group_by(JobInstance.job_id)
-
         return q.all()
 
     def __get_jobs_maxjss_sq (self):
