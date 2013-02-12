@@ -1,5 +1,5 @@
-"""
-"""
+''''
+'''
 
 ##
 #  Copyright 2007-2012 University Of Southern California
@@ -19,7 +19,7 @@
 
 # Revision : $Revision: 2012 $
 
-__author__ = "Rajiv Mayani"
+__author__ = 'Rajiv Mayani'
 
 from netlogger.analysis.modules._base import SQLAlchemyInit
 from netlogger.analysis.schema.schema_check import ErrorStrings, SchemaCheck, SchemaVersionError
@@ -34,7 +34,7 @@ class MasterDatabase (SQLAlchemyInit, DoesLogging):
     
     def __init__(self, connString=None):
         if connString is None:
-            raise ValueError("Connection string is required")
+            raise ValueError('Connection string is required')
         DoesLogging.__init__(self)
         
         try:
@@ -48,9 +48,9 @@ class MasterDatabase (SQLAlchemyInit, DoesLogging):
         self.disconnect ()
     
     def get_wf_db_url (self, wf_id):
-        """
+        '''
         Given a work-flow UUID, query the master database to get the connection URL for the work-flow's STAMPEDE database. 
-        """
+        '''
         
         w = orm.aliased(DashboardWorkflow, name='w')
         
@@ -60,9 +60,9 @@ class MasterDatabase (SQLAlchemyInit, DoesLogging):
         return q.one ().db_url
     
     def get_wf_id_url (self, root_wf_id):
-        """
+        '''
         Given a work-flow UUID, query the master database to get the connection URL for the work-flow's STAMPEDE database. 
-        """
+        '''
         
         w = orm.aliased(DashboardWorkflow, name='w')
         
@@ -74,7 +74,7 @@ class MasterDatabase (SQLAlchemyInit, DoesLogging):
         return q.wf_id, q.wf_uuid, q.db_url
 
     def get_all_workflows(self, **table_args):
-        """
+        '''
         SELECT w.*, ws.*
          FROM   workflow w 
                      JOIN workflowstate ws ON w.wf_id = ws.wf_id 
@@ -85,7 +85,7 @@ class MasterDatabase (SQLAlchemyInit, DoesLogging):
          WHERE  w.wf_id = ws.wf_id 
         AND ws.wf_id = t.wf_id 
         AND ws.timestamp = t.time; 
-        """
+        '''
         
         w = orm.aliased(DashboardWorkflow, name='w')
         ws = orm.aliased(DashboardWorkflowstate, name='ws')
@@ -96,14 +96,14 @@ class MasterDatabase (SQLAlchemyInit, DoesLogging):
         
         qmax = qmax.subquery ('max_timestamp')
         
+        state = case([(ws.status == None, 'Running'), (ws.status == 0, 'Successful'), (ws.status != 0, 'Failed')], else_='Undefined').label ('state')
+        
         q = self.session.query (w.wf_id, w.wf_uuid, w.timestamp,
                                 w.dag_file_name, w.submit_hostname,
                                 w.submit_dir, w.planner_arguments,
                                 w.user, w.grid_dn, w.planner_version,
                                 w.dax_label, w.dax_version, w.db_url,
-                                case([(ws.status == None, 'Running'),
-                                      (ws.status == 0, 'Successful'),
-                                      (ws.status != 0, 'Failed')], else_='Undefined').label ("state"))
+                                state)
         
         q = q.filter (w.wf_id == ws.wf_id)
         q = q.filter (ws.wf_id == qmax.c.wf_id)
@@ -116,7 +116,7 @@ class MasterDatabase (SQLAlchemyInit, DoesLogging):
         
         if 'filter' in table_args:
             filter_text = '%' + table_args ['filter'] + '%'
-            q = q.filter (or_ (w.dax_label.like (filter_text), w.submit_dir.like (filter_text), case([(ws.status == None, 'Running'), (ws.status == 0, 'Successful'), (ws.status != 0, 'Failed')], else_='Undefined').like (filter_text)))
+            q = q.filter (or_ (w.dax_label.like (filter_text), w.submit_dir.like (filter_text), state.like (filter_text)))
         
         # Get Total Count. Need this to pass to jQuery Datatable.
         filtered = q.count ()
@@ -136,7 +136,7 @@ class MasterDatabase (SQLAlchemyInit, DoesLogging):
                         elif i == 1:
                             q = q.order_by (w.submit_dir)
                         elif i == 2:
-                            q = q.order_by (case([(ws.status == None, 'Running'), (ws.status == 0, 'Successful'), (ws.status != 0, 'Failed')], else_='Undefined'))
+                            q = q.order_by (state)
                         elif i == 3:
                             q = q.order_by (w.timestamp)
                         else:
@@ -149,7 +149,7 @@ class MasterDatabase (SQLAlchemyInit, DoesLogging):
                         elif i == 1:
                             q = q.order_by (desc (w.submit_dir))
                         elif i == 2:
-                            q = q.order_by (desc (case([(ws.status == None, 'Running'), (ws.status == 0, 'Successful'), (ws.status != 0, 'Failed')], else_='Undefined')))
+                            q = q.order_by (desc (state))
                         elif i == 3:
                             q = q.order_by (desc (w.timestamp))
                         else:
@@ -177,10 +177,10 @@ class MasterDatabase (SQLAlchemyInit, DoesLogging):
         
         qmax = qmax.subquery ('max_timestamp')
         
-        q = self.session.query (func.count (w.wf_id).label("total"),
-                                func.sum (case([(ws.status == 0, 1)], else_=0)).label ("success"),
-                                func.sum (case([(ws.status != 0, 1)], else_=0)).label ("fail"),
-                                func.sum (case([(ws.status == None, 1)], else_=0)).label ("others")) 
+        q = self.session.query (func.count (w.wf_id).label('total'),
+                                func.sum (case([(ws.status == 0, 1)], else_=0)).label ('success'),
+                                func.sum (case([(ws.status != 0, 1)], else_=0)).label ('fail'),
+                                func.sum (case([(ws.status == None, 1)], else_=0)).label ('others')) 
         
         q = q.filter (w.wf_id == ws.wf_id)
         q = q.filter (ws.wf_id == qmax.c.wf_id)
@@ -193,7 +193,7 @@ class WorkflowInfo(SQLAlchemyInit, DoesLogging):
 
     def __init__(self, connString=None, wf_id=None, wf_uuid=None):
         if connString is None:
-            raise ValueError("Connection string is required")
+            raise ValueError('Connection string is required')
         DoesLogging.__init__(self)
         
         try:
@@ -240,7 +240,7 @@ class WorkflowInfo(SQLAlchemyInit, DoesLogging):
             w.user, w.grid_dn, w.planner_version,
             w.dax_label, w.dax_version, case([(ws.status == None, 'Running'),
                                       (ws.status == 0, 'Successful'),
-                                      (ws.status != 0, 'Failed')], else_='Undefined').label ("state"), ws.timestamp)
+                                      (ws.status != 0, 'Failed')], else_='Undefined').label ('state'), ws.timestamp)
         
         q = q.filter(w.wf_id == self._wf_id)
         q = q.filter(w.wf_id == ws.wf_id)
@@ -252,16 +252,16 @@ class WorkflowInfo(SQLAlchemyInit, DoesLogging):
         
         qmax = self.__get_maxjss_subquery ()
         
-        q = self.session.query (func.count (Job.wf_id).label("total"))
-        q = q.add_column (func.sum (case([(JobInstance.exitcode == 0, 1)], else_=0)).label ("success"))
-        q = q.add_column (func.sum (case([(JobInstance.exitcode == 0, case([(Job.type_desc == 'dag', 1), (Job.type_desc == 'dax', 1)], else_=0))], else_=0)).label ("success_workflow"))
+        q = self.session.query (func.count (Job.wf_id).label('total'))
+        q = q.add_column (func.sum (case([(JobInstance.exitcode == 0, 1)], else_=0)).label ('success'))
+        q = q.add_column (func.sum (case([(JobInstance.exitcode == 0, case([(Job.type_desc == 'dag', 1), (Job.type_desc == 'dax', 1)], else_=0))], else_=0)).label ('success_workflow'))
         
         
-        q = q.add_column (func.sum (case([(JobInstance.exitcode != 0, 1)], else_=0)).label ("fail"))
-        q = q.add_column (func.sum (case([(JobInstance.exitcode != 0, case([(Job.type_desc == 'dag', 1), (Job.type_desc == 'dax', 1)], else_=0))], else_=0)).label ("fail_workflow"))
+        q = q.add_column (func.sum (case([(JobInstance.exitcode != 0, 1)], else_=0)).label ('fail'))
+        q = q.add_column (func.sum (case([(JobInstance.exitcode != 0, case([(Job.type_desc == 'dag', 1), (Job.type_desc == 'dax', 1)], else_=0))], else_=0)).label ('fail_workflow'))
         
-        q = q.add_column (func.sum (case([(JobInstance.exitcode == None, 1)], else_=0)).label ("others"))
-        q = q.add_column (func.sum (case([(JobInstance.exitcode == None, case([(Job.type_desc == 'dag', 1), (Job.type_desc == 'dax', 1)], else_=0))], else_=0)).label ("others_workflow"))
+        q = q.add_column (func.sum (case([(JobInstance.exitcode == None, 1)], else_=0)).label ('others'))
+        q = q.add_column (func.sum (case([(JobInstance.exitcode == None, case([(Job.type_desc == 'dag', 1), (Job.type_desc == 'dax', 1)], else_=0))], else_=0)).label ('others_workflow'))
         
         q = q.filter (Job.wf_id == self._wf_id)
         q = q.filter (Job.job_id == JobInstance.job_id)
@@ -312,7 +312,8 @@ class WorkflowInfo(SQLAlchemyInit, DoesLogging):
         
         q = q.add_column (JobInstance.local_duration)
         q = q.add_column (JobInstance.cluster_duration)
-        q = q.add_column (case ([(Job.clustered == 1, JobInstance.cluster_duration)], else_=JobInstance.local_duration).label ("duration"))
+        duration = case ([(Job.clustered == 1, JobInstance.cluster_duration)], else_=JobInstance.local_duration).label ('duration')
+        q = q.add_column (duration)
         
         q = q.filter (JobInstance.exitcode == 0).filter (JobInstance.exitcode != None)
         
@@ -341,7 +342,7 @@ class WorkflowInfo(SQLAlchemyInit, DoesLogging):
                         if i == 0:
                             q = q.order_by (Job.exec_job_id)
                         elif i == 1:
-                            q = q.order_by (case ([(Job.clustered == 1, JobInstance.cluster_duration)], else_=JobInstance.local_duration))
+                            q = q.order_by (duration)
                         else:
                             raise ValueError, ('Invalid column (%s) in successful jobs listing ' % i)
                     else:
@@ -350,7 +351,7 @@ class WorkflowInfo(SQLAlchemyInit, DoesLogging):
                         if i == 0:
                             q = q.order_by (desc (Job.exec_job_id))
                         elif i == 1:
-                            q = q.order_by (desc (case ([(Job.clustered == 1, JobInstance.cluster_duration)], else_=JobInstance.local_duration)))
+                            q = q.order_by (desc (duration))
                         else:
                             raise ValueError, ('Invalid column (%s) in successful jobs listing ' % i)
 
@@ -370,7 +371,7 @@ class WorkflowInfo(SQLAlchemyInit, DoesLogging):
         
         q = q.add_column (JobInstance.local_duration)
         q = q.add_column (JobInstance.cluster_duration)
-        q = q.add_column (case ([(Job.clustered == 1, JobInstance.cluster_duration)], else_=JobInstance.local_duration).label ("duration"))
+        q = q.add_column (case ([(Job.clustered == 1, JobInstance.cluster_duration)], else_=JobInstance.local_duration).label ('duration'))
         
         q = q.filter (JobInstance.exitcode == None)
         
@@ -397,7 +398,7 @@ class WorkflowInfo(SQLAlchemyInit, DoesLogging):
         ws = orm.aliased (Workflowstate, name='ws')
         w = orm.aliased (Workflow, name='w')
     
-        q = self.session.query (w.wf_id, w.wf_uuid, w.dax_label, case([(ws.status == None, 'Running'), (ws.status == 0, 'Successful'), (ws.status != 0, 'Failed')], else_='Undefined').label ("state"))
+        q = self.session.query (w.wf_id, w.wf_uuid, w.dax_label, case([(ws.status == None, 'Running'), (ws.status == 0, 'Successful'), (ws.status != 0, 'Failed')], else_='Undefined').label ('state'))
         
         q = q.filter (w.parent_wf_id == self._wf_id)
         q = q.filter(w.wf_id == ws.wf_id)
