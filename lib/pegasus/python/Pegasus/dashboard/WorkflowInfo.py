@@ -346,7 +346,7 @@ class WorkflowInfo(SQLAlchemyInit, DoesLogging):
                         if i == 0:
                             q = q.order_by (Job.exec_job_id)
                         elif i == 1:
-                            q = q.order_by (q.c.duration)
+                            q = q.order_by (case ([(Job.clustered == 1, JobInstance.cluster_duration)], else_=JobInstance.local_duration))
                         else:
                             raise ValueError, ('Invalid column (%s) in successful jobs listing ' % i)
                     else:
@@ -355,7 +355,7 @@ class WorkflowInfo(SQLAlchemyInit, DoesLogging):
                         if i == 0:
                             q = q.order_by (desc (Job.exec_job_id))
                         elif i == 1:
-                            q = q.order_by (desc (q.c.duration))
+                            q = q.order_by (desc (case ([(Job.clustered == 1, JobInstance.cluster_duration)], else_=JobInstance.local_duration)))
                         else:
                             raise ValueError, ('Invalid column (%s) in successful jobs listing ' % i)
 
