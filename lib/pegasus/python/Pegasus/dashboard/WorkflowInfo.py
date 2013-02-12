@@ -124,6 +124,8 @@ class MasterDatabase (SQLAlchemyInit, DoesLogging):
         if filtered == 0:
             return (count, 0, [])
         
+        display_columns = [w.dax_label, w.submit_dir, state, w.timestamp]
+        
         if 'sort-col-count' in table_args:
             for i in range (table_args ['sort-col-count']):
                 
@@ -131,27 +133,15 @@ class MasterDatabase (SQLAlchemyInit, DoesLogging):
                     if 'sSortDir_' + str(i) in table_args and table_args ['sSortDir_' + str(i)] == 'asc':
                         i = table_args ['iSortCol_' + str(i)]
 
-                        if i == 0:
-                            q = q.order_by (w.dax_label)
-                        elif i == 1:
-                            q = q.order_by (w.submit_dir)
-                        elif i == 2:
-                            q = q.order_by (state)
-                        elif i == 3:
-                            q = q.order_by (w.timestamp)
+                        if i >= 0 and i < len(display_columns):
+                            q = q.order_by (display_columns [i])
                         else:
                             raise ValueError, ('Invalid column (%s) in work-flow listing ' % i)
                     else:
                         i = table_args ['iSortCol_' + str(i)]
 
-                        if i == 0:
-                            q = q.order_by (desc (w.dax_label))
-                        elif i == 1:
-                            q = q.order_by (desc (w.submit_dir))
-                        elif i == 2:
-                            q = q.order_by (desc (state))
-                        elif i == 3:
-                            q = q.order_by (desc (w.timestamp))
+                        if i >= 0 and i < len(display_columns):
+                            q = q.order_by (desc (display_columns [i]))
                         else:
                             raise ValueError, ('Invalid column (%s) in work-flow listing ' % i)
 
