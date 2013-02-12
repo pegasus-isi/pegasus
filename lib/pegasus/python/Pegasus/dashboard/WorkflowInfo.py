@@ -322,6 +322,8 @@ class WorkflowInfo(SQLAlchemyInit, DoesLogging):
         if filtered == 0:
             return (count, 0, [])
         
+        display_columns = [Job.exec_job_id, duration]
+        
         if 'sort-col-count' in table_args:
             for i in range (table_args ['sort-col-count']):
                 
@@ -329,19 +331,15 @@ class WorkflowInfo(SQLAlchemyInit, DoesLogging):
                     if 'sSortDir_' + str(i) in table_args and table_args ['sSortDir_' + str(i)] == 'asc':
                         i = table_args ['iSortCol_' + str(i)]
 
-                        if i == 0:
-                            q = q.order_by (Job.exec_job_id)
-                        elif i == 1:
-                            q = q.order_by (duration)
+                        if i >= 0 and i < len(display_columns):
+                            q = q.order_by (display_columns [i])
                         else:
                             raise ValueError, ('Invalid column (%s) in successful jobs listing ' % i)
                     else:
                         i = table_args ['iSortCol_' + str(i)]
 
-                        if i == 0:
-                            q = q.order_by (desc (Job.exec_job_id))
-                        elif i == 1:
-                            q = q.order_by (desc (duration))
+                        if i >= 0 and i < len(display_columns):
+                            q = q.order_by (desc (display_columns [i]))
                         else:
                             raise ValueError, ('Invalid column (%s) in successful jobs listing ' % i)
 
