@@ -65,7 +65,7 @@ from Pegasus.tools import utils
 
 #Flask modules
 try:
-    from flask import Flask, request, render_template, url_for
+    from flask import Flask, request, render_template, url_for, send_from_directory
     from flask.helpers import json
     from jinja2 import FileSystemLoader
 except ImportError:
@@ -149,7 +149,7 @@ def workflow (root_wf_id, wf_id=None):
 @app.route('/root/<root_wf_id>/workflow/<wf_id>/sub_workflows/', methods=['GET'])
 def sub_workflows (root_wf_id, wf_id):
     '''
-    Get a list of all successful jobs of the latest instance for a given work-flow.
+    Get a list of all sub-workflow of a given work-flow.
     '''    
     dashboard = Dashboard (_master_db_url, root_wf_id, wf_id)
     sub_workflows = dashboard.get_sub_workflows (wf_id)
@@ -199,27 +199,21 @@ def running_jobs (root_wf_id, wf_id):
     else:
         return render_template ('workflow/jobs_running.html', root_wf_id=root_wf_id, wf_id=wf_id, jobs=running_jobs_list)
 
-
 @app.route('/root/<root_wf_id>/workflow/<wf_id>/jobs/successful/', methods=['GET'])
 def successful_jobs (root_wf_id, wf_id):
     '''
     Get a list of all successful jobs of the latest instance for a given work-flow.
     '''
-    
     dashboard = Dashboard (_master_db_url, root_wf_id, wf_id)
-    successful_jobs_list = dashboard.get_successful_jobs (wf_id)
+    args = __get_datatables_args ()
+    #count, filtered, workflows, totals = dashboard.get_root_workflow_list (**args)
+
+    total_count, filtered_count, successful_jobs_list = dashboard.get_successful_jobs (wf_id, **args)
 
     for job in successful_jobs_list:
         job.duration_formatted = time_to_str(job.duration)
 
-    # is_xhr = True if it is AJAX request.
-    if request.is_xhr:
-        if len (successful_jobs_list) > 0:
-            return render_template ('workflow/jobs_successful.xhr.html', root_wf_id=root_wf_id, wf_id=wf_id, jobs=successful_jobs_list)
-        else:
-            return '', 204
-    else:
-        return render_template ('workflow/jobs_successful.html', root_wf_id=root_wf_id, wf_id=wf_id, jobs=successful_jobs_list)
+    return render_template ('workflow/jobs_successful.xhr.json', count=total_count, filtered=filtered_count, jobs=successful_jobs_list, table_args=args)
 
 
 @app.route('/root/<root_wf_id>/workflow/<wf_id>/job/<job_id>', methods=['GET'])
@@ -388,6 +382,10 @@ def time_stats (root_wf_id, wf_id):
     dashboard = Dashboard (_master_db_url, root_wf_id, wf_id)
 
     return '{}'
+
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory(os.path.join (pegasus_env_path ['pegasus_share_dir'], 'dashboard/static'), 'favicon.ico')
 
 def __update_timestamp (workflows):
     for workflow in workflows:
