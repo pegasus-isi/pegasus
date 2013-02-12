@@ -95,7 +95,17 @@ $(document).ready (function ()
 				}
 				else
 				{
-					$('#successful_jobs_list').dataTable ({"bJQueryUI" : true, "sPaginationType": "full_numbers"});
+					$('#successful_jobs_list').dataTable ({"bJQueryUI": true,
+							"sPaginationType": "full_numbers",
+							"bProcessing": true,
+							"bServerSide": true,
+							"sAjaxSource": "{{ url_for ('successful_jobs', root_wf_id = root_wf_id, wf_id = wf_id) }}",
+							"bAutoWidth": false,
+							"aoColumns": [
+							              { "mData": "Job Name" },
+							              { "mData": "Time Taken", "sClass": "nowrap" }
+							            ]
+					});
 				}
 			}
 		} 
@@ -104,6 +114,21 @@ $(document).ready (function ()
 	$("#jobs_tabs").bind ("tabsselect", function (event, ui) 
 	{ 
 		window.location.hash = ui.tab.hash;
+
+		if (ui.index == 3)
+		{
+			$('#successful_jobs_list').dataTable ({"bJQueryUI": true,
+					"sPaginationType": "full_numbers",
+					"bProcessing": true,
+					"bServerSide": true,
+					"sAjaxSource": "{{ url_for ('successful_jobs', root_wf_id = root_wf_id, wf_id = wf_id) }}",
+					"bAutoWidth": false,
+					"aoColumns": [
+					              { "mData": "Job Name" },
+					              { "mData": "Time Taken", "sClass": "nowrap" }
+					            ]
+			});
+		}
 	})
 			
 	chartOptions =  
@@ -340,13 +365,24 @@ verticalTableInitStatus ('#workflow_text_info', '{{workflow.state}}' );
 				<a href="{{ url_for ('running_jobs', root_wf_id = root_wf_id, wf_id = wf_id) }}" title="running_jobs">Running</a>
 			</li>
 			<li>
-				<a href="{{ url_for ('successful_jobs', root_wf_id = root_wf_id, wf_id = wf_id) }}" title="successful_jobs">Successful</a>
+				<a href="#successful_jobs" title="successful_jobs">Successful</a>
 			</li>
 		</ul>
 		<div id="sub_workflows"></div>
 		<div id="failed_jobs"></div>
 		<div id="running_jobs"></div>
-		<div id="successful_jobs"></div>
+		<div id="successful_jobs">
+			<table id="successful_jobs_list">
+				<thead>
+					<tr>
+						<th>Job Name</th>
+						<th>Time Taken</th>
+					</tr>
+				</thead>
+				<tbody>
+				</tbody>
+			</table>	
+		</div>
 	</div>
 </div>
 {% endblock %}

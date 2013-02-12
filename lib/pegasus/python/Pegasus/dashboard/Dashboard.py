@@ -394,11 +394,11 @@ class Dashboard(object):
         finally:
             Dashboard.close (workflow)
             
-    def get_successful_jobs (self, wf_id):
+    def get_successful_jobs (self, wf_id, **table_args):
         try:
             workflow = queries.WorkflowInfo (self.__get_wf_db_url (), wf_id=wf_id)
-            successful_jobs = workflow.get_successful_jobs ()
-            return successful_jobs
+            total_count, filtered_count, successful_jobs = workflow.get_successful_jobs (**table_args)
+            return total_count, filtered_count, successful_jobs
         finally:
             Dashboard.close (workflow)
             

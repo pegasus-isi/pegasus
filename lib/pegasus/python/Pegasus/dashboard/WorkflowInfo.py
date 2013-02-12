@@ -162,7 +162,7 @@ class MasterDatabase (SQLAlchemyInit, DoesLogging):
         if 'limit' in table_args and 'offset' in table_args:
             q = q.limit (table_args ['limit'])
             q = q.offset (table_args ['offset'])
-
+            
         return (count, filtered, q.all ())
 
 
@@ -302,7 +302,7 @@ class WorkflowInfo(SQLAlchemyInit, DoesLogging):
 
         return q.all()
     
-    def get_successful_jobs (self):
+    def get_successful_jobs (self, **table_args):
         
         qmax = self.__get_jobs_maxjss_sq ()
         
@@ -321,7 +321,53 @@ class WorkflowInfo(SQLAlchemyInit, DoesLogging):
         
         q = q.group_by(JobInstance.job_id)
 
-        return q.all()
+        # Get Total Count. Need this to pass to jQuery Datatable.
+        count = q.count ()
+        if count == 0:
+            return (0, 0, [])
+        
+        if 'filter' in table_args:
+            filter_text = '%' + table_args ['filter'] + '%'
+            q = q.filter (or_ (Job.exec_job_id.like (filter_text)))
+        
+        # Get Total Count. Need this to pass to jQuery Datatable.
+        filtered = q.count ()
+        
+        if filtered == 0:
+            return (count, 0, [])
+        
+        if 'sort-col-count' in table_args:
+            for i in range (table_args ['sort-col-count']):
+                
+                if 'iSortCol_' + str(i) in table_args:
+                    if 'sSortDir_' + str(i) in table_args and table_args ['sSortDir_' + str(i)] == 'asc':
+                        i = table_args ['iSortCol_' + str(i)]
+
+                        if i == 0:
+                            q = q.order_by (Job.exec_job_id)
+                        elif i == 1:
+                            q = q.order_by (q.c.duration)
+                        else:
+                            raise ValueError, ('Invalid column (%s) in successful jobs listing ' % i)
+                    else:
+                        i = table_args ['iSortCol_' + str(i)]
+
+                        if i == 0:
+                            q = q.order_by (desc (Job.exec_job_id))
+                        elif i == 1:
+                            q = q.order_by (desc (q.c.duration))
+                        else:
+                            raise ValueError, ('Invalid column (%s) in successful jobs listing ' % i)
+
+        else:
+            # Default sorting order
+            q = q.order_by (desc (Job.exec_job_id))  
+        
+        if 'limit' in table_args and 'offset' in table_args:
+            q = q.limit (table_args ['limit'])
+            q = q.offset (table_args ['offset'])
+
+        return (count, filtered, q.all ())
     
     def get_other_jobs (self):
         

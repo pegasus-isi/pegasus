@@ -204,21 +204,16 @@ def successful_jobs (root_wf_id, wf_id):
     '''
     Get a list of all successful jobs of the latest instance for a given work-flow.
     '''
-    
     dashboard = Dashboard (_master_db_url, root_wf_id, wf_id)
-    successful_jobs_list = dashboard.get_successful_jobs (wf_id)
+    args = __get_datatables_args ()
+    #count, filtered, workflows, totals = dashboard.get_root_workflow_list (**args)
+
+    total_count, filtered_count, successful_jobs_list = dashboard.get_successful_jobs (wf_id, **args)
 
     for job in successful_jobs_list:
         job.duration_formatted = time_to_str(job.duration)
 
-    # is_xhr = True if it is AJAX request.
-    if request.is_xhr:
-        if len (successful_jobs_list) > 0:
-            return render_template ('workflow/jobs_successful.xhr.html', root_wf_id=root_wf_id, wf_id=wf_id, jobs=successful_jobs_list)
-        else:
-            return '', 204
-    else:
-        return render_template ('workflow/jobs_successful.html', root_wf_id=root_wf_id, wf_id=wf_id, jobs=successful_jobs_list)
+    return render_template ('workflow/jobs_successful.xhr.json', count=total_count, filtered=filtered_count, jobs=successful_jobs_list, table_args=args)
 
 
 @app.route('/root/<root_wf_id>/workflow/<wf_id>/job/<job_id>', methods=['GET'])
