@@ -228,7 +228,15 @@ int read_io(pidlist_t *item) {
     FILE *f;
     
     sprintf(iofile, "/proc/%d/io", item->pid);
-
+    
+    /* This proc file was added in Linux 2.6.20. It won't be
+     * there on older kernels, or on kernels without task IO 
+     * accounting. If it is missing, just bail out.
+     */
+    if (access(iofile, F_OK) < 0) {
+        return 0;
+    }
+    
     f = fopen(iofile, "r");
     
     while (fgets(line, BUFSIZ, f) != NULL) {
