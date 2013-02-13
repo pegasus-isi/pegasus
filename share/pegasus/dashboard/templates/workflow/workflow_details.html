@@ -67,17 +67,6 @@ $(document).ready (function ()
 					$('#sub_workflows_list').dataTable ({"bJQueryUI" : true, "sPaginationType": "full_numbers"});
 				}
 			}
-			else if (ui.index == 1)
-			{
-				if ($('#failed_jobs').html() == '')
-				{
-					$('#failed_jobs').html('No failed jobs.')
-				}
-				else
-				{
-					$('#failed_jobs_list').dataTable ({"bJQueryUI" : true, "sPaginationType": "full_numbers"});
-				}
-			}
 			else if (ui.index == 2)
 			{
 				if ($('#running_jobs').html() == '')
@@ -95,8 +84,26 @@ $(document).ready (function ()
 	$("#jobs_tabs").bind ("tabsselect", function (event, ui) 
 	{ 
 		window.location.hash = ui.tab.hash;
-	
-		if (ui.index == 3 && !tablesInitialized [ui.index])
+		
+		if (ui.index == 1 && !tablesInitialized [ui.index])
+		{
+			tablesInitialized [ui.index] = true;
+			
+			$('#failed_jobs_list').dataTable ({"bJQueryUI": true,
+					"sPaginationType": "full_numbers",
+					"bProcessing": true,
+					"bServerSide": true,
+					"sAjaxSource": "{{ url_for ('failed_jobs', root_wf_id = root_wf_id, wf_id = wf_id) }}",
+					"bAutoWidth": false,
+					"aoColumns": [
+					              { "mData": "Job Name" },
+					              { "mData": "Exit Code" },
+					              { "mData": "Standard Out" },
+					              { "mData": "Standard Error" }
+					            ]
+			});
+		}
+		else if (ui.index == 3 && !tablesInitialized [ui.index])
 		{
 			tablesInitialized [ui.index] = true;
 			
@@ -342,7 +349,7 @@ verticalTableInitStatus ('#workflow_text_info', '{{workflow.state}}' );
 				<a href="{{ url_for ('sub_workflows', root_wf_id = root_wf_id, wf_id = wf_id) }}" title="sub_workflows">Sub Workflows</a>
 			</li>
 			<li>
-				<a href="{{ url_for ('failed_jobs', root_wf_id = root_wf_id, wf_id = wf_id) }}" title="failed_jobs">Failed</a>
+				<a href="#failed_jobs" title="failed_jobs">Failed</a>
 			</li>
 			<li>
 				<a href="{{ url_for ('running_jobs', root_wf_id = root_wf_id, wf_id = wf_id) }}" title="running_jobs">Running</a>
@@ -352,7 +359,20 @@ verticalTableInitStatus ('#workflow_text_info', '{{workflow.state}}' );
 			</li>
 		</ul>
 		<div id="sub_workflows"></div>
-		<div id="failed_jobs"></div>
+		<div id="failed_jobs">
+			<table id="failed_jobs_list">
+				<thead>
+					<tr>
+						<th>Job Name</th>
+						<th>Exit Code</th>
+						<th>Standard Out</th>
+						<th>Standard Error</th>
+					</tr>
+				</thead>
+				<tbody>
+				</tbody>
+			</table>
+		</div>
 		<div id="running_jobs"></div>
 		<div id="successful_jobs">
 			<table id="successful_jobs_list">
