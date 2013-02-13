@@ -4,7 +4,7 @@
 Usage: pegasus-dashboard [options]
 '''
 
-##
+# #
 #  Copyright 2007-2012 University Of Southern California
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,13 +18,13 @@ Usage: pegasus-dashboard [options]
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-##
+# #
 
 # Revision : $Revision: 2012 $
 
-__author__ = "Rajiv Mayani"
+__author__ = 'Rajiv Mayani'
 
-#Python modules
+# Python modules
 import os
 import sys
 import atexit
@@ -35,12 +35,12 @@ from time import localtime, strftime
 
 # Use pegasus-config to find our Pegasus environment
 bin_dir = os.path.normpath(os.path.join(os.path.dirname(sys.argv[0])))
-pegasus_config = os.path.join(bin_dir, "pegasus-config") + " --python-dump"
+pegasus_config = os.path.join(bin_dir, 'pegasus-config') + ' --python-dump'
 config = subprocess.Popen(pegasus_config, stdout=subprocess.PIPE, shell=True).communicate()[0]
 exec config
 
 # We also need the externals lib 
-pegasus_config = os.path.join(bin_dir, "pegasus-config") + " --noeoln --python-externals"
+pegasus_config = os.path.join(bin_dir, 'pegasus-config') + ' --noeoln --python-externals'
 lib_ext_dir = subprocess.Popen(pegasus_config, stdout=subprocess.PIPE, shell=True).communicate()[0]
 
 # Insert the lib directories in our search path
@@ -60,10 +60,10 @@ pegasus_env_path = {
 class WorkflowsDetailsMissingError (Exception):
     pass
     
-#Pegasus modules
+# Pegasus modules
 from Pegasus.tools import utils
 
-#Flask modules
+# Flask modules
 try:
     from flask import Flask, request, render_template, url_for, send_from_directory
     from flask.helpers import json
@@ -87,7 +87,7 @@ Installation:
 Note: Above command installs Jinja, and Werkzeug as well'''
     sys.exit(1)
 
-#Dashboard modules
+# Dashboard modules
 from Pegasus.dashboard.Dashboard import Dashboard, Utils, NoWorkflowsFoundError
 from Pegasus.dashboard.error.Errors import MasterDBNotFoundError
 
@@ -206,12 +206,12 @@ def successful_jobs (root_wf_id, wf_id):
     '''
     dashboard = Dashboard (_master_db_url, root_wf_id, wf_id)
     args = __get_datatables_args ()
-    #count, filtered, workflows, totals = dashboard.get_root_workflow_list (**args)
 
     total_count, filtered_count, successful_jobs_list = dashboard.get_successful_jobs (wf_id, **args)
 
     for job in successful_jobs_list:
         job.duration_formatted = time_to_str(job.duration)
+        job.exec_job_id = '<a href="' + url_for ('job', root_wf_id=root_wf_id, wf_id=wf_id, job_id=job.job_id) + '">' + job.exec_job_id + '</a>'
 
     return render_template ('workflow/jobs_successful.xhr.json', count=total_count, filtered=filtered_count, jobs=successful_jobs_list, table_args=args)
 
@@ -389,11 +389,11 @@ def favicon():
 
 def __update_timestamp (workflows):
     for workflow in workflows:
-        workflow.timestamp = strftime ("%a, %d %b %Y %H:%M:%S", localtime (workflow.timestamp))
+        workflow.timestamp = strftime ('%a, %d %b %Y %H:%M:%S', localtime (workflow.timestamp))
 
 def __update_label_link (workflows):
     for workflow in workflows:
-        workflow.dax_label = "<a href='" + url_for ('workflow', root_wf_id=workflow.wf_id, wf_uuid=workflow.wf_uuid) + "'>" + workflow.dax_label + "</a>"
+        workflow.dax_label = '<a href="' + url_for ('workflow', root_wf_id=workflow.wf_id, wf_uuid=workflow.wf_uuid) + '">' + workflow.dax_label + '</a>'
 
 def __get_datatables_args ():
     '''
@@ -468,7 +468,7 @@ def time_to_date_str (time):
     '''
     Change an integer duration to be represented as a data string 
     '''
-    return strftime ("%Y-%m-%d %H", localtime (time))
+    return strftime ('%Y-%m-%d %H', localtime (time))
 
 
 @app.template_filter ('to_lower_case')
@@ -567,7 +567,7 @@ def time_to_str (time):
 
         # 0 second duration - is this the way we want to display that?
         if str_time == '':
-            str_time = "0 secs"
+            str_time = '0 secs'
                 
         return str_time.strip ()
     
@@ -582,12 +582,12 @@ if __name__ == '__main__':
     
     parser = optparse.OptionParser (usage=usage, description=description)
 
-    parser.add_option ("-n", "--host", action="store", type="str", dest="host", default='0.0.0.0', help="Hostname or IP address to bind to. Default: All IP's")
-    parser.add_option ("-p", "--port", action="store", type="int", dest="port_number", default=8000, help="Port number on which to start the dash board Default: 8000")
-    parser.add_option ("-d", "--debug", action="store_const", const=True, dest="debug", help="For development mode, only")
-    parser.add_option ("-m", "--masterdburl", action="store", type="str", dest="master_db", default='sqlite:///%s/.pegasus/workflow.db' % os.getenv('HOME'), help="URL to connect to the master the database")
+    parser.add_option ('-n', '--host', action='store', type='str', dest='host', default='0.0.0.0', help="Hostname or IP address to bind to. Default: All IP's")
+    parser.add_option ('-p', '--port', action='store', type='int', dest='port_number', default=8000, help='Port number on which to start the dash board Default: 8000')
+    parser.add_option ('-d', '--debug', action='store_const', const=True, dest='debug', help='For development mode, only')
+    parser.add_option ('-m', '--masterdburl', action='store', type='str', dest='master_db', default='sqlite:///%s/.pegasus/workflow.db' % os.getenv('HOME'), help='URL to connect to the master the database')
 
-    #Parsing command-line options
+    # Parsing command-line options
     (options, args) = parser.parse_args ()
 
     import logging
@@ -596,7 +596,7 @@ if __name__ == '__main__':
     else:
         logging.basicConfig (level=logging.WARNING)
 
-    print "Starting Pegasus Dashboard on port %d" % (options.port_number)
+    print 'Starting Pegasus Dashboard on port %d' % (options.port_number)
 
     _master_db_url = options.master_db
     app.run (host=options.host, port=options.port_number, debug=options.debug)
