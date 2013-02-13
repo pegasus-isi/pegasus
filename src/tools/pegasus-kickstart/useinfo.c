@@ -21,7 +21,7 @@ static const char* RCS_ID =
 
 int
 printXMLUseInfo( char* buffer, size_t size, size_t* len, size_t indent,
-		 const char* id, const struct rusage* use )
+                 const char* id, const struct rusage* use )
 /* purpose: format the rusage record into the given buffer as XML.
  * paramtr: buffer (IO): area to store the output in
  *          size (IN): capacity of character area
@@ -35,43 +35,43 @@ printXMLUseInfo( char* buffer, size_t size, size_t* len, size_t indent,
 
   /* <usage> */
   myprint( buffer, size, len, "%*s<%s utime=\"%.3f\" stime=\"%.3f\"",
-	   indent, "", id, mymaketime(use->ru_utime), mymaketime(use->ru_stime) );
+           indent, "", id, mymaketime(use->ru_utime), mymaketime(use->ru_stime) );
 
 #ifdef HAS_USAGE_MEM
 #ifdef HAS_USAGE_FULLMEM
   myrpint( buffer, size, len, " maxrss=\"%s\" ixrss=\"%s\" idrss=\"%s\" isrss=\"%s\"",
-	   sizer( b[0], 32, sizeof(use->ru_maxrss), &(use->ru_maxrss) ),
-	   sizer( b[1], 32, sizeof(use->ru_ixrss), &(use->ru_ixrss) ),
-	   sizer( b[2], 32, sizeof(use->ru_idrss), &(use->ru_idrss) ),
-	   sizer( b[3], 32, sizeof(use->ru_isrss), &(use->ru_isrss) ) );
+           sizer( b[0], 32, sizeof(use->ru_maxrss), &(use->ru_maxrss) ),
+           sizer( b[1], 32, sizeof(use->ru_ixrss), &(use->ru_ixrss) ),
+           sizer( b[2], 32, sizeof(use->ru_idrss), &(use->ru_idrss) ),
+           sizer( b[3], 32, sizeof(use->ru_isrss), &(use->ru_isrss) ) );
 #else
   myprint( buffer, size, len, " maxrss=\"%s\" idrss=\"%s\"",
-	   sizer( b[0], 32, sizeof(use->ru_maxrss), &(use->ru_maxrss) ),
-	   sizer( b[2], 32, sizeof(use->ru_idrss), &(use->ru_idrss) ) );
+           sizer( b[0], 32, sizeof(use->ru_maxrss), &(use->ru_maxrss) ),
+           sizer( b[2], 32, sizeof(use->ru_idrss), &(use->ru_idrss) ) );
 #endif /* HAS_USAGE_FULLMEM */
 #endif /* HAS_USAGE_MEM */
 
   myprint( buffer, size, len, " minflt=\"%s\" majflt=\"%s\" nswap=\"%s\"",
-	   sizer( b[0], 32, sizeof(use->ru_minflt), &(use->ru_minflt) ), 
-	   sizer( b[1], 32, sizeof(use->ru_majflt), &(use->ru_majflt) ),
-	   sizer( b[2], 32, sizeof(use->ru_nswap),  &(use->ru_nswap) ) );
+           sizer( b[0], 32, sizeof(use->ru_minflt), &(use->ru_minflt) ), 
+           sizer( b[1], 32, sizeof(use->ru_majflt), &(use->ru_majflt) ),
+           sizer( b[2], 32, sizeof(use->ru_nswap),  &(use->ru_nswap) ) );
 
 #ifdef HAS_USAGE_IO
   myprint( buffer, size, len, " inblock=\"%s\" outblock=\"%s\"",
-	   sizer( b[0], 32, sizeof(use->ru_inblock), &(use->ru_inblock) ),
-	   sizer( b[1], 32, sizeof(use->ru_oublock), &(use->ru_oublock) ) );
+           sizer( b[0], 32, sizeof(use->ru_inblock), &(use->ru_inblock) ),
+           sizer( b[1], 32, sizeof(use->ru_oublock), &(use->ru_oublock) ) );
 #endif /* HAS_USAGE_IO */
 
 #ifdef HAS_USAGE_MSG
   myprint( buffer, size, len, " msgsnd=\"%s\" msgrcv=\"%s\"",
-	   sizer( b[2], 32, sizeof(use->ru_msgsnd), &(use->ru_msgsnd) ),
-	   sizer( b[3], 32, sizeof(use->ru_msgrcv), &(use->ru_msgrcv) ) );
+           sizer( b[2], 32, sizeof(use->ru_msgsnd), &(use->ru_msgsnd) ),
+           sizer( b[3], 32, sizeof(use->ru_msgrcv), &(use->ru_msgrcv) ) );
 #endif /* HAS_USAGE_MSG */
 
   myprint( buffer, size, len, " nsignals=\"%s\" nvcsw=\"%s\" nivcsw=\"%s\"/>\n",
-	   sizer( b[0], 32, sizeof(use->ru_nsignals), &(use->ru_nsignals) ),
-	   sizer( b[1], 32, sizeof(use->ru_nvcsw), &(use->ru_nvcsw) ),
-	   sizer( b[2], 32, sizeof(use->ru_nivcsw), &(use->ru_nivcsw) ) );
+           sizer( b[0], 32, sizeof(use->ru_nsignals), &(use->ru_nsignals) ),
+           sizer( b[1], 32, sizeof(use->ru_nvcsw), &(use->ru_nvcsw) ),
+           sizer( b[2], 32, sizeof(use->ru_nivcsw), &(use->ru_nivcsw) ) );
 
   return *len;
 }

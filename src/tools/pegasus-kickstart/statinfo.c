@@ -53,26 +53,26 @@ myaccess( const char* path )
     if ( stat(path,&st) == 0 && S_ISREG(st.st_mode) ) {
       /* stat on file succeeded, and it is a regular file */
       if ( make_application_executable ) {
-	mode_t mode = st.st_mode;
-	if ( st.st_uid == geteuid() ) mode |= (S_IXUSR | S_IRUSR);
-	if ( st.st_gid == getegid() ) mode |= (S_IXGRP | S_IRGRP);
-	mode |= (S_IXOTH | S_IROTH);
-	chmod( path, mode );
+        mode_t mode = st.st_mode;
+        if ( st.st_uid == geteuid() ) mode |= (S_IXUSR | S_IRUSR);
+        if ( st.st_gid == getegid() ) mode |= (S_IXGRP | S_IRGRP);
+        mode |= (S_IXOTH | S_IROTH);
+        chmod( path, mode );
 
-	/* update stat record */
-	if ( stat(path,&st) != 0 || ! S_ISREG(st.st_mode) ) {
-	  /* restat'ing the file now failed */
-	  return -1;
-	}
+        /* update stat record */
+        if ( stat(path,&st) != 0 || ! S_ISREG(st.st_mode) ) {
+          /* restat'ing the file now failed */
+          return -1;
+        }
       }
 
       if ( ( st.st_uid == geteuid() && (S_IXUSR & st.st_mode) == S_IXUSR ) ||
-	   ( st.st_gid == getegid() && (S_IXGRP & st.st_mode) == S_IXGRP ) ||
-	   ( (S_IXOTH & st.st_mode) == S_IXOTH ) ) {
-	/* all is well, app is executable and accessible */
-	return 0;
+           ( st.st_gid == getegid() && (S_IXGRP & st.st_mode) == S_IXGRP ) ||
+           ( (S_IXOTH & st.st_mode) == S_IXOTH ) ) {
+        /* all is well, app is executable and accessible */
+        return 0;
       } else {
-	return -1;
+        return -1;
       }
     } else {
       /* stat call failed, or file is not a regular file */
@@ -233,7 +233,7 @@ initStatInfoAsFifo( StatInfo* statinfo, char* pattern, const char* key )
     statinfo->source = IS_INVALID;
     statinfo->error = errno;
     debugmsg( "Warning! Invalid FIFO: mkstemp failed: %d: %s\n",
-	     errno, strerror(errno) );
+             errno, strerror(errno) );
 
   } else {
     /* create a FIFO instead of a regular tmp file. */
@@ -243,15 +243,15 @@ initStatInfoAsFifo( StatInfo* statinfo, char* pattern, const char* key )
 
     if ( (result = mkfifo( pattern, 0660 )) == -1 ) {
       if ( errno == EEXIST ) {
-	/* filename was taken, restore pattern and retry */
-	strcpy( pattern, race );
-	goto RETRY;
+        /* filename was taken, restore pattern and retry */
+        strcpy( pattern, race );
+        goto RETRY;
       } else {
-	/* other errors are treated as more fatal */
-	statinfo->source = IS_INVALID;
-	statinfo->error = errno;
-	debugmsg( "Warning! Invalid FIFO: mkfifo failed: %d: %s\n",
-		 errno, strerror(errno) );
+        /* other errors are treated as more fatal */
+        statinfo->source = IS_INVALID;
+        statinfo->error = errno;
+        debugmsg( "Warning! Invalid FIFO: mkfifo failed: %d: %s\n",
+                 errno, strerror(errno) );
       }
     } else {
       /* open in non-blocking mode for reading.
@@ -259,40 +259,40 @@ initStatInfoAsFifo( StatInfo* statinfo, char* pattern, const char* key )
        * You must open in O_RDWR to avoid having to deal with EOF
        * whenever the clients drop to zero. */
       if ( (result = open( pattern, O_RDWR | O_NONBLOCK )) == -1 ) {
-	statinfo->source = IS_INVALID;
-	statinfo->error = errno;
-	debugmsg( "Warning! Invalid FIFO: open failed: %d: %s\n",
-		 errno, strerror(errno) );
+        statinfo->source = IS_INVALID;
+        statinfo->error = errno;
+        debugmsg( "Warning! Invalid FIFO: open failed: %d: %s\n",
+                 errno, strerror(errno) );
       } else {
-	/* this file descriptor is NOT to be passed to the jobs? So far,
-	 * the answer is true. We close this fd on exec of sub jobs, so
-	 * it will be invisible to them. */
-	int flags = fcntl( result, F_GETFD );
-	if ( flags != -1 ) fcntl( result, F_SETFD, flags | FD_CLOEXEC );
+        /* this file descriptor is NOT to be passed to the jobs? So far,
+         * the answer is true. We close this fd on exec of sub jobs, so
+         * it will be invisible to them. */
+        int flags = fcntl( result, F_GETFD );
+        if ( flags != -1 ) fcntl( result, F_SETFD, flags | FD_CLOEXEC );
 
-	/* the return is the chosen filename as well as the opened
-	 * descriptor. We cannot unlink the filename right now. */
-	statinfo->source = IS_FIFO;
-	statinfo->file.descriptor = result;
-	statinfo->file.name = strdup(pattern);
+        /* the return is the chosen filename as well as the opened
+         * descriptor. We cannot unlink the filename right now. */
+        statinfo->source = IS_FIFO;
+        statinfo->file.descriptor = result;
+        statinfo->file.name = strdup(pattern);
 
-	/* fix environment */
-	if ( key != NULL ) {
-	  size_t size = strlen(key) + strlen(pattern) + 2;
-	  char* temp = (char*) malloc(size);
-	  memset( temp, 0, size-- );
-	  strncpy( temp, key, size );
-	  strncat( temp, "=", size );
-	  strncat( temp, pattern, size );
-	  if ( putenv( temp ) == -1 )
-	    debugmsg( "Warning: Unable to putenv %s: %d: %s\n", 
-		     key, errno, strerror(errno) );
-	  /* do not free this string here nor now */
-	}
-	  
-	errno = 0;
-	result = fstat( result, &statinfo->info );
-	statinfo->error = errno;
+        /* fix environment */
+        if ( key != NULL ) {
+          size_t size = strlen(key) + strlen(pattern) + 2;
+          char* temp = (char*) malloc(size);
+          memset( temp, 0, size-- );
+          strncpy( temp, key, size );
+          strncat( temp, "=", size );
+          strncat( temp, pattern, size );
+          if ( putenv( temp ) == -1 )
+            debugmsg( "Warning: Unable to putenv %s: %d: %s\n", 
+                     key, errno, strerror(errno) );
+          /* do not free this string here nor now */
+        }
+          
+        errno = 0;
+        result = fstat( result, &statinfo->info );
+        statinfo->error = errno;
       }
     }
   }
@@ -320,8 +320,8 @@ preserveFile( const char* fn )
     for ( i=0; i<1000; ++i ) {
       snprintf( newfn + size-8, 8, ".%03d", i );
       if ( (fd = open( newfn, O_RDONLY )) == -1 ) {
-	if ( errno == ENOENT ) break;
-	else return -1;
+        if ( errno == ENOENT ) break;
+        else return -1;
       }
       close(fd);
     }
@@ -342,7 +342,7 @@ preserveFile( const char* fn )
 
 int
 initStatInfoFromName( StatInfo* statinfo, const char* filename, int openmode,
-		      int flag )
+                      int flag )
 /* purpose: Initialize a stat info buffer with a filename to point to
  * paramtr: statinfo (OUT): the newly initialized buffer
  *          filename (IN): the filename to memorize (deep copy)
@@ -405,7 +405,7 @@ updateStatInfo( StatInfo* statinfo )
     int fd;
     if ( (statinfo->deferred & 4) == 4 ) preserveFile( statinfo->file.name );
     fd = open( statinfo->file.name, 
-	       (statinfo->file.descriptor & O_ACCMODE) | O_CREAT | O_TRUNC, 0666 );
+               (statinfo->file.descriptor & O_ACCMODE) | O_CREAT | O_TRUNC, 0666 );
     if ( fd != -1 ) close(fd);
 
     /* once only */
@@ -425,11 +425,11 @@ updateStatInfo( StatInfo* statinfo )
     statinfo->error = errno;
       
     if ( result != -1 && statinfo->source == IS_FILE &&
-	 S_ISREG(statinfo->info.st_mode) && statinfo->info.st_size > 0 ) {
+         S_ISREG(statinfo->info.st_mode) && statinfo->info.st_size > 0 ) {
       int fd = open( statinfo->file.name, O_RDONLY );
       if ( fd != -1 ) {
-	read( fd, (char*) statinfo->client.header, sizeof(statinfo->client.header) );
-	close(fd);
+        read( fd, (char*) statinfo->client.header, sizeof(statinfo->client.header) );
+        close(fd);
       }
     }
   }
@@ -475,7 +475,7 @@ addLFNToStatInfo( StatInfo* info, const char* lfn )
 
 size_t
 printXMLStatInfo( char* buffer, const size_t size, size_t* len, size_t indent,
-		  const char* tag, const char* id, const StatInfo* info )
+                  const char* tag, const char* id, const StatInfo* info )
 /* purpose: XML format a stat info record into a given buffer
  * paramtr: buffer (IO): area to store the output in
  *          size (IN): capacity of character area
@@ -494,7 +494,7 @@ printXMLStatInfo( char* buffer, const size_t size, size_t* len, size_t indent,
 
   /* start main tag */
   myprint( buffer, size, len, "%*s<%s error=\"%d\"", 
-	   indent, "", tag, info->error );
+           indent, "", tag, info->error );
   if ( id != NULL ) myprint( buffer, size, len, " id=\"%s\"", id ); 
   if ( info->lfn != NULL ) 
     myprint( buffer, size, len, " lfn=\"%s\"", info->lfn );
@@ -503,7 +503,7 @@ printXMLStatInfo( char* buffer, const size_t size, size_t* len, size_t indent,
   /* NEW: ignore "file not found" error for "gridstart" */
   if ( id != NULL && info->error == 2 && strcmp( id, "gridstart" ) == 0 ) 
     myprint( buffer, size, len, "%*s<!-- ignore above error -->\n",
-	     indent+2, "" ); 
+             indent+2, "" ); 
   
   /* either a <name> or <descriptor> sub element */
   switch ( info->source ) {
@@ -511,66 +511,66 @@ printXMLStatInfo( char* buffer, const size_t size, size_t* len, size_t indent,
     /* late update for temp files */
     errno = 0;
     if ( fstat( info->file.descriptor, (struct stat*) &info->info ) != -1 &&
-	 ( ((StatInfo*) info)->error = errno) == 0 ) {
+         ( ((StatInfo*) info)->error = errno) == 0 ) {
       /* obtain header of file */
 
 #if 0
       /* implementation alternative 1: use a new filetable kernel structure */
       int fd = open( info->file.name, O_RDONLY );
       if ( fd != -1 ) {
-	read( fd, (char*) info->client.header, sizeof(info->client.header) );
-	close(fd);
+        read( fd, (char*) info->client.header, sizeof(info->client.header) );
+        close(fd);
       }
 #else
       /* implementation alternative 2: share the kernel filetable structure */
       int fd = dup( info->file.descriptor );
       if ( fd != -1 ) {
-	if ( lseek( fd, 0, SEEK_SET ) != -1 )
-	  read( fd, (char*) info->client.header, sizeof(info->client.header) );
-	close(fd);
+        if ( lseek( fd, 0, SEEK_SET ) != -1 )
+          read( fd, (char*) info->client.header, sizeof(info->client.header) );
+        close(fd);
       }
 #endif
     }
 
     myprint( buffer, size, len, 
-	     "%*s<temporary name=\"%s\" descriptor=\"%d\"/>\n",
-	     indent+2, "", info->file.name, info->file.descriptor );
+             "%*s<temporary name=\"%s\" descriptor=\"%d\"/>\n",
+             indent+2, "", info->file.name, info->file.descriptor );
     break;
 
   case IS_FIFO: /* <fifo> element */
     myprint( buffer, size, len, 
-	     "%*s<fifo name=\"%s\" descriptor=\"%d\" count=\"%u\" rsize=\"%u\" wsize=\"%u\"/>\n",
-	     indent+2, "", info->file.name, info->file.descriptor,
-	     info->client.fifo.count, info->client.fifo.rsize, 
-	     info->client.fifo.wsize );
+             "%*s<fifo name=\"%s\" descriptor=\"%d\" count=\"%u\" rsize=\"%u\" wsize=\"%u\"/>\n",
+             indent+2, "", info->file.name, info->file.descriptor,
+             info->client.fifo.count, info->client.fifo.rsize, 
+             info->client.fifo.wsize );
     break;
 
   case IS_FILE: /* <file> element */
 #if 0
     /* some debug info - for now */
     myprint( buffer, size, len, "%*s<!-- deferred flag: %d -->\n",
-	     indent+2, "", info->deferred );
+             indent+2, "", info->deferred );
 #endif
 
 #ifdef HAS_REALPATH_EXT
     real = realpath( info->file.name, NULL ); 
 #endif /* HAS_REALPATH_EXT */
     myprint( buffer, size, len, 
-	     "%*s<file name=\"%s\"", indent+2, "", 
-	     real ? real : info->file.name );
+             "%*s<file name=\"%s\"", indent+2, "", 
+             real ? real : info->file.name );
 #ifdef HAS_REALPATH_EXT
     if ( real ) free((void*) real);
 #endif /* HAS_REALPATH_EXT */
 
     if ( info->error == 0 && S_ISREG(info->info.st_mode) && 
-	 info->info.st_size > 0 ) {
+         info->info.st_size > 0 ) {
       /* optional hex information */
       size_t i, end = sizeof(info->client.header);
       if ( info->info.st_size < end ) end = info->info.st_size;
 
       append( buffer, size, len, ">" );
       for ( i=0; i<end; ++i )
-	myprint( buffer, size, len, "%02X", info->client.header[i] );
+        myprint( buffer, size, len, "%02X", info->client.header[i] );
       append( buffer, size, len, "</file>\n" );
     } else {
       append( buffer, size, len, "/>\n" );
@@ -579,13 +579,13 @@ printXMLStatInfo( char* buffer, const size_t size, size_t* len, size_t indent,
 
   case IS_HANDLE: /* <descriptor> element */
     myprint( buffer, size, len, 
-	     "%*s<descriptor number=\"%u\"/>\n", indent+2, "", 
-	     info->file.descriptor );
+             "%*s<descriptor number=\"%u\"/>\n", indent+2, "", 
+             info->file.descriptor );
     break;
 
   default: /* this must not happen! */
     myprint( buffer, size, len, 
-	     "%*s<!-- ERROR: No valid file info available -->\n", indent+2, "" );
+             "%*s<!-- ERROR: No valid file info available -->\n", indent+2, "" );
     break;
   }
 
@@ -596,42 +596,42 @@ printXMLStatInfo( char* buffer, const size_t size, size_t* len, size_t indent,
     struct group* group = wrap_getgrgid( info->info.st_gid );
 
     myprint( buffer, size, len, 
-	     "%*s<statinfo mode=\"0%o\"",
-	     indent+2, "", info->info.st_mode );
+             "%*s<statinfo mode=\"0%o\"",
+             indent+2, "", info->info.st_mode );
 
     /* Grmblftz, are we in 32bit, 64bit LFS on 32bit, or 64bit on 64 */
     sizer( my, sizeof(my), 
-	   sizeof(info->info.st_size), &info->info.st_size );
+           sizeof(info->info.st_size), &info->info.st_size );
     myprint( buffer, size, len, " size=\"%s\"", my );
 
     sizer( my, sizeof(my), 
-	   sizeof(info->info.st_ino), &info->info.st_ino );
+           sizeof(info->info.st_ino), &info->info.st_ino );
     myprint( buffer, size, len, " inode=\"%s\"", my );
 
     sizer( my, sizeof(my), 
-	   sizeof(info->info.st_nlink), &info->info.st_nlink );
+           sizeof(info->info.st_nlink), &info->info.st_nlink );
     myprint( buffer, size, len, " nlink=\"%s\"", my );
 
     sizer( my, sizeof(my), 
-	   sizeof(info->info.st_blksize), &info->info.st_blksize );
+           sizeof(info->info.st_blksize), &info->info.st_blksize );
     myprint( buffer, size, len, " blksize=\"%s\"", my );
 
     /* st_blocks is new in iv-1.8 */
     sizer( my, sizeof(my), 
-	   sizeof(info->info.st_blocks), &info->info.st_blocks );
+           sizeof(info->info.st_blocks), &info->info.st_blocks );
     myprint( buffer, size, len, " blocks=\"%s\"", my );
 
     append( buffer, size, len, " mtime=\"" );
     mydatetime( buffer, size, len, isLocal, isExtended,
-		info->info.st_mtime, -1 );
+                info->info.st_mtime, -1 );
 
     append( buffer, size, len, "\" atime=\"" );
     mydatetime( buffer, size, len, isLocal, isExtended,
-		info->info.st_atime, -1 );
+                info->info.st_atime, -1 );
 
     append( buffer, size, len, "\" ctime=\"" );
     mydatetime( buffer, size, len, isLocal, isExtended,
-		info->info.st_ctime, -1 );
+                info->info.st_ctime, -1 );
 
     myprint( buffer, size, len, "\" uid=\"%lu\"", info->info.st_uid );
     if ( user ) myprint( buffer, size, len, " user=\"%s\"", user->pw_name );
@@ -647,18 +647,18 @@ printXMLStatInfo( char* buffer, const size_t size, size_t* len, size_t indent,
     size_t dsize = data_section_size;
     size_t fsize = info->info.st_size;
     myprint( buffer, size, len, "%*s<data%s",
-	     indent+2, "", ( fsize > dsize ? " truncated=\"true\"" : "" ) );
+             indent+2, "", ( fsize > dsize ? " truncated=\"true\"" : "" ) );
     if ( fsize > 0 ) {
       char* data = (char*) malloc(dsize+1);
       int fd = dup(info->file.descriptor);
 
       append( buffer, size, len, ">" );
       if ( fd != -1 ) {
-	if ( lseek( fd, SEEK_SET, 0 ) != -1 ) {
-	  ssize_t rsize = read( fd, data, dsize );
-	  xmlquote( buffer, size, len, data, rsize );
-	}
-	close(fd);
+        if ( lseek( fd, SEEK_SET, 0 ) != -1 ) {
+          ssize_t rsize = read( fd, data, dsize );
+          xmlquote( buffer, size, len, data, rsize );
+        }
+        close(fd);
       }
 
       append( buffer, size, len, "</data>\n" );

@@ -35,7 +35,7 @@ append_arg( char* data, char*** arg, size_t* index, size_t* capacity )
 {
 #ifdef DEBUG_ARGV
   fprintf( stderr, "# data=%p arg=%p index=%d cap=%d: \"%s\"\n", 
-	   data, *arg, *index, *capacity, data );
+           data, *arg, *index, *capacity, data );
 #endif
 
   if ( *index >= *capacity ) {
@@ -97,7 +97,7 @@ expand_arg( const char* fn, char*** arg, size_t* index, size_t* capacity,
 
   if ( level >= 32 ) {
     fprintf( stderr, "ERROR: Nesting too deep (%d levels), "
-	     "circuit breaker triggered!\n", level );
+             "circuit breaker triggered!\n", level );
     errno = EMLINK;
     return -1;
   }
@@ -119,12 +119,12 @@ expand_arg( const char* fn, char*** arg, size_t* index, size_t* capacity,
       /* read buffer was too small, save and append */
       char* temp = merge( save, line );
       if ( temp == NULL ) {
-	/* error while merging strings */
-	int saverr = errno;
-	fclose(f);
-	if ( save != NULL ) free((void*) save);
-	errno = saverr;
-	return -1;
+        /* error while merging strings */
+        int saverr = errno;
+        fclose(f);
+        if ( save != NULL ) free((void*) save);
+        errno = saverr;
+        return -1;
       }
 
       if ( save != NULL ) free((void*) save);
@@ -134,8 +134,8 @@ expand_arg( const char* fn, char*** arg, size_t* index, size_t* capacity,
     } else {
       /* remove terminating character(s) */
       while ( len > 0 && (line[len-1] == '\r' || line[len-1] == '\n') ) {
-	line[len-1] = 0;
-	len--;
+        line[len-1] = 0;
+        len--;
       } 
     }
 
@@ -147,11 +147,11 @@ expand_arg( const char* fn, char*** arg, size_t* index, size_t* capacity,
       save = NULL;
 
       if ( cmd == NULL ) {
-	/* error while merging strings */
-	int saverr = errno;
-	fclose(f);
-	errno = saverr;
-	return -1;
+        /* error while merging strings */
+        int saverr = errno;
+        fclose(f);
+        errno = saverr;
+        return -1;
       }
     } else {
       /* no overlong lines */
@@ -165,19 +165,19 @@ expand_arg( const char* fn, char*** arg, size_t* index, size_t* capacity,
     if ( (len=strlen(cmd)) > 0 ) {
       int result =
 #ifdef PERMIT_RECURSION
-	add_arg( cmd, arg, index, capacity, level+1 )
+        add_arg( cmd, arg, index, capacity, level+1 )
 #else /* ! PERMIT_RECURSION */
-	append_arg( cmd, arg, index, capacity )
+        append_arg( cmd, arg, index, capacity )
 #endif /* PERMIT_RECURSION */
-	;
+        ;
 
       if ( result == -1 ) {
-	  int saverr = errno;
-	  fclose(f);
-	  if ( cmd != line ) free((void*) cmd);
-	  errno = saverr;
-	  return -1;
-	}
+          int saverr = errno;
+          fclose(f);
+          if ( cmd != line ) free((void*) cmd);
+          errno = saverr;
+          return -1;
+        }
     }
 
     /* done with this argument */

@@ -20,11 +20,11 @@
 #include <unistd.h>
 
 typedef enum { 
-  IS_INVALID	= 0, 
-  IS_FILE	= 1, 
-  IS_HANDLE	= 2, 
-  IS_TEMP	= 3,
-  IS_FIFO	= 4
+  IS_INVALID    = 0, 
+  IS_FILE       = 1, 
+  IS_HANDLE     = 2, 
+  IS_TEMP       = 3,
+  IS_FIFO       = 4
 } StatSource;
 
 typedef struct {
@@ -105,7 +105,7 @@ initStatInfoAsFifo( StatInfo* statinfo, char* pattern, const char* key );
 extern
 int
 initStatInfoFromName( StatInfo* statinfo, const char* filename, int openmode,
-		      int flag );
+                      int flag );
 /* purpose: Initialize a stat info buffer with a filename to point to
  * paramtr: statinfo (OUT): the newly initialized buffer
  *          filename (IN): the filename to memorize (deep copy)
@@ -145,7 +145,7 @@ addLFNToStatInfo( StatInfo* info, const char* lfn );
 extern
 size_t
 printXMLStatInfo( char* buffer, const size_t size, size_t* len, size_t indent,
-		  const char* tag, const char* id, const StatInfo* info );
+                  const char* tag, const char* id, const StatInfo* info );
 /* purpose: XML format a stat info record into a given buffer
  * paramtr: buffer (IO): area to store the output in
  *          size (IN): capacity of character area

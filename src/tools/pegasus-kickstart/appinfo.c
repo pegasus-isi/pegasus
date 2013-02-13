@@ -52,7 +52,7 @@ int
 mycompare( const void* a, const void* b )
 {
   return strcmp( ( a ? *((const char**) a) : "" ), 
-		 ( b ? *((const char**) b) : "" ) );
+                 ( b ? *((const char**) b) : "" ) );
 }
 
 static
@@ -73,18 +73,18 @@ convert2XML( char* buffer, size_t size, const AppInfo* run )
 
   /* generate the XML header and start of root element */
   append( buffer, size, &len,
-	  "<invocation xmlns=\"" XML_SCHEMA_URI "\""
-	  " xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\""
-	  " xsi:schemaLocation=\"" XML_SCHEMA_URI
-	  " http://pegasus.isi.edu/schema/iv-" XML_SCHEMA_VERSION ".xsd\""
-	  " version=\"" XML_SCHEMA_VERSION "\""
-	  " start=\"" );
+          "<invocation xmlns=\"" XML_SCHEMA_URI "\""
+          " xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\""
+          " xsi:schemaLocation=\"" XML_SCHEMA_URI
+          " http://pegasus.isi.edu/schema/iv-" XML_SCHEMA_VERSION ".xsd\""
+          " version=\"" XML_SCHEMA_VERSION "\""
+          " start=\"" );
 
   /* mandatory attributes for root element */
   mydatetime( buffer, size, &len, isLocal, isExtended,
-	      run->start.tv_sec, run->start.tv_usec );
+              run->start.tv_sec, run->start.tv_usec );
   myprint( buffer, size, &len, "\" duration=\"%.3f\"",
-	   mymaketime(run->finish) - mymaketime(run->start) );
+           mymaketime(run->finish) - mymaketime(run->start) );
 
   /* optional attributes for root element: transformation fqdn */
   if ( run->xformation && strlen(run->xformation) ) {
@@ -162,7 +162,7 @@ convert2XML( char* buffer, size_t size, const AppInfo* run )
   } else {
 #if 0
     append( buffer, size, &len, "  <cwd xmlns:xsi=\"http://www.w3.org/2001/"
-	    "XMLSchema-instance\" xsi:nil=\"true\"/>\n" );
+            "XMLSchema-instance\" xsi:nil=\"true\"/>\n" );
 #else
     append( buffer, size, &len, "  <cwd/>\n" );
 #endif
@@ -202,21 +202,21 @@ convert2XML( char* buffer, size_t size, const AppInfo* run )
       /* attempt a sorted version */
       char** keys = malloc( sizeof(char*) * run->envc );
       for ( i=0; i < run->envc; ++i ) {
-	keys[i] = run->envp[i] ? strdup(run->envp[i]) : "";
+        keys[i] = run->envp[i] ? strdup(run->envp[i]) : "";
       }
       qsort( (void*) keys, run->envc, sizeof(char*), mycompare );
 
       append( buffer, size, &len, "  <environment>\n" );
       for ( i=0; i < run->envc; ++i ) {
-	if ( keys[i] && (s = strchr( keys[i], '=' )) ) {
-	  *s = '\0'; /* temporarily cut string here */
-	  append( buffer, size, &len, "    <env key=\"" );
-	  append( buffer, size, &len, keys[i] );
-	  append( buffer, size, &len, "\">" );
-	  xmlquote( buffer, size, &len, s+1, strlen(s+1) );
-	  append( buffer, size, &len, "</env>\n" );
-	  *s = '='; /* reset string to original */
-	}
+        if ( keys[i] && (s = strchr( keys[i], '=' )) ) {
+          *s = '\0'; /* temporarily cut string here */
+          append( buffer, size, &len, "    <env key=\"" );
+          append( buffer, size, &len, keys[i] );
+          append( buffer, size, &len, "\">" );
+          xmlquote( buffer, size, &len, s+1, strlen(s+1) );
+          append( buffer, size, &len, "</env>\n" );
+          *s = '='; /* reset string to original */
+        }
       }
       free((void*) keys);
       append( buffer, size, &len, "  </environment>\n" );
@@ -235,7 +235,7 @@ convert2XML( char* buffer, size_t size, const AppInfo* run )
 static
 char*
 pattern( char* buffer, size_t size,
-	 const char* dir, const char* sep, const char* file ) 
+         const char* dir, const char* sep, const char* file ) 
 {
   --size;
   buffer[size] = '\0'; /* reliably terminate string */
@@ -312,7 +312,7 @@ initAppInfo( AppInfo* appinfo, int argc, char* const* argv )
   /* where do I run -- guess the primary interface IPv4 dotted quad */
   /* find out where we run at (might stall LATER for some time on DNS) */
   whoami( appinfo->ipv4, sizeof(appinfo->ipv4),
-	  appinfo->prif, sizeof(appinfo->prif) );
+          appinfo->prif, sizeof(appinfo->prif) );
 
   /* record resource limits */
   initLimitInfo( &appinfo->limits );
@@ -348,12 +348,12 @@ printAppInfo( const AppInfo* run )
     /* Adjust for final/initial sections */
     if ( run->icount && run->initial )
       for ( i=0; i<run->icount; ++i )
-	size += 256 + safe_strlen( run->initial[i].lfn ) +
-	  safe_strlen( run->initial[i].file.name );
+        size += 256 + safe_strlen( run->initial[i].lfn ) +
+          safe_strlen( run->initial[i].file.name );
     if ( run->fcount && run->final )
       for ( i=0; i<run->fcount; ++i )
-	size += 256 + safe_strlen( run->final[i].lfn ) +
-	  safe_strlen( run->final[i].file.name );
+        size += 256 + safe_strlen( run->final[i].lfn ) +
+          safe_strlen( run->final[i].file.name );
 
     /* Adjust for <data> sections in stdout and stderr */
     size += ( data_section_size << 1 );

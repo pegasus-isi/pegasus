@@ -17,7 +17,7 @@ main( int argc, char* argv[] )
 
   i = 1;
   for ( node = head = parseArgVector( argc-1, argv+1, &state ); 
-	node != NULL; node = node->next ) {
+        node != NULL; node = node->next ) {
     printf( ">%*d>>%s>>\n", l, i, node->data );
     i++;
   }

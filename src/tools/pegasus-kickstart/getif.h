@@ -44,7 +44,7 @@ primary_interface();
 extern 
 void 
 whoami( char* abuffer, size_t asize, 
-	char* ibuffer, size_t isize );
+        char* ibuffer, size_t isize );
 /* purpose: copy the primary interface's IPv4 dotted quad into the given buffer
  * paramtr: abuffer (OUT): start of buffer to put IPv4 dotted quad
  *          asize (IN): maximum capacity the abuffer is willing to accept

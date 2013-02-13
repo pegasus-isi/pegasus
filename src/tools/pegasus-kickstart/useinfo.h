@@ -33,7 +33,7 @@
 extern
 int
 printXMLUseInfo( char* buffer, size_t size, size_t* len, size_t indent,
-		 const char* id, const struct rusage* use );
+                 const char* id, const struct rusage* use );
 /* purpose: format the rusage record into the given buffer as XML.
  * paramtr: buffer (IO): area to store the output in
  *          size (IN): capacity of character area

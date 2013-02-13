@@ -90,7 +90,7 @@ initMachineInfo( MachineInfo* machine );
 extern
 int
 printXMLMachineInfo( char* buffer, size_t size, size_t* len, size_t indent,
-		     const char* tag, const MachineInfo* machine );
+                     const char* tag, const MachineInfo* machine );
 /* purpose: format the job information into the given buffer as XML.
  * paramtr: buffer (IO): area to store the output in
  *          size (IN): capacity of character area

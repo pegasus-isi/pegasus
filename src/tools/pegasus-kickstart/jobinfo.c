@@ -271,7 +271,7 @@ initJobInfo( JobInfo* jobinfo, int argc, char* const* argv )
 
 int
 printXMLJobInfo( char* buffer, size_t size, size_t* len, size_t indent,
-		 const char* tag, const JobInfo* job )
+                 const char* tag, const JobInfo* job )
 /* purpose: format the job information into the given buffer as XML.
  * paramtr: buffer (IO): area to store the output in
  *          size (IN): capacity of character area
@@ -281,7 +281,7 @@ printXMLJobInfo( char* buffer, size_t size, size_t* len, size_t indent,
  *          job (IN): job info to print.
  * returns: number of characters put into buffer (buffer length) */
 {
-  int status;	/* $#@! broken Debian headers */
+  int status;        /* $#@! broken Debian headers */
 
   /* sanity check */
   if ( ! job->isValid ) return *len;
@@ -291,9 +291,9 @@ printXMLJobInfo( char* buffer, size_t size, size_t* len, size_t indent,
 
   /* start time and duration */
   mydatetime( buffer, size, len, isLocal, isExtended,
-	      job->start.tv_sec, job->start.tv_usec );
+              job->start.tv_sec, job->start.tv_usec );
   myprint( buffer, size, len, "\" duration=\"%.3f\"",
-	   mymaketime(job->finish) - mymaketime(job->start) );
+           mymaketime(job->finish) - mymaketime(job->start) );
 
   /* optional attribute: application process id */
   if ( job->child != 0 )
@@ -312,49 +312,49 @@ printXMLJobInfo( char* buffer, size_t size, size_t* len, size_t indent,
 
   /* <status>: open tag */
   myprint( buffer, size, len, "%*s<status raw=\"%d\">", indent+2, "", 
-	   job->status );
+           job->status );
 
   /* <status>: cases of completion */
-  status = (int) job->status;	/* $#@! broken Debian headers */
+  status = (int) job->status;        /* $#@! broken Debian headers */
   if ( job->status < 0 ) {
     /* <failure> */
     myprint( buffer, size, len, "<failure error=\"%d\">%s%s</failure>",
-	     job->saverr, 
-	     job->prefix && job->prefix[0] ? job->prefix : "", 
-	     strerror(job->saverr) );
+             job->saverr, 
+             job->prefix && job->prefix[0] ? job->prefix : "", 
+             strerror(job->saverr) );
   } else if ( WIFEXITED(status) ) {
     myprint( buffer, size, len, "<regular exitcode=\"%d\"/>", 
-	     WEXITSTATUS(status) );
+             WEXITSTATUS(status) );
   } else if ( WIFSIGNALED(status) ) {
     /* result = 128 + WTERMSIG(status); */
     myprint( buffer, size, len, "<signalled signal=\"%u\"", 
-	     WTERMSIG(status) );
+             WTERMSIG(status) );
 #ifdef WCOREDUMP
     myprint( buffer, size, len, " corefile=\"%s\"", 
-	     WCOREDUMP(status) ? "true" : "false" );
+             WCOREDUMP(status) ? "true" : "false" );
 #endif
     myprint( buffer, size, len, ">%s</signalled>", 
 #if defined(CYGWINNT50) || defined(CYGWINNT51)
-	     "unknown"
+             "unknown"
 #else
-	     sys_siglist[WTERMSIG(status)]
+             sys_siglist[WTERMSIG(status)]
 #endif
-	     );
+             );
   } else if ( WIFSTOPPED(status) ) {
     myprint( buffer, size, len, "<suspended signal=\"%u\">%s</suspended>",
-	     WSTOPSIG(status),
+             WSTOPSIG(status),
 #if defined(CYGWINNT50) || defined(CYGWINNT51)
-	     "unknown"
+             "unknown"
 #else
-	     sys_siglist[WSTOPSIG(status)]
+             sys_siglist[WSTOPSIG(status)]
 #endif
-	     );
+             );
   } /* FIXME: else? */
   append( buffer, size, len, "</status>\n" );
 
   /* <executable> */
   printXMLStatInfo( buffer, size, len, indent+2, 
-		    "statcall", NULL, &job->executable );
+                    "statcall", NULL, &job->executable );
 
 #ifdef WITH_NEW_ARGS
   /* alternative 1: new-style <argument-vector> */

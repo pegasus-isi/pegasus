@@ -132,10 +132,10 @@ interface_list( struct ifconf* ifc )
     if ( ioctl( sockfd, SIOCGIFCONF, ifc ) < 0 ) {
       debugmsg( "WARN: ioctl SIOCGIFCONF: %d: %s\n", errno, strerror(errno) );
       if ( errno != EINVAL || lastlen != 0 ) {
-	int saverr = errno; 
-	close(sockfd);
-	errno = saverr; 
-	return -1; 
+        int saverr = errno; 
+        close(sockfd);
+        errno = saverr; 
+        return -1; 
       }
     } else {
       if ( ifc->ifc_len == lastlen ) break; /* success */
@@ -208,7 +208,7 @@ primary_interface( void )
     /* interested in IPv4 interfaces only */
     if ( ifr->ifr_addr.sa_family != AF_INET ) {
       if ( getif_debug ) 
-	debugmsg( "DEBUG: interface %s has wrong family, skipping\n", ifr->ifr_name );
+        debugmsg( "DEBUG: interface %s has wrong family, skipping\n", ifr->ifr_name );
       continue;
     }
 
@@ -221,7 +221,7 @@ primary_interface( void )
      * network. */
     if ( (sa.sin_addr.s_addr & vpn_netmask[0]) == vpn_network[0] ) {
       if ( getif_debug ) 
-	debugmsg( "DEBUG: interface is localhost, skipping\n" );
+        debugmsg( "DEBUG: interface is localhost, skipping\n" );
       continue;
     }
 
@@ -229,33 +229,33 @@ primary_interface( void )
     result = *ifr;
     if ( ioctl( sockfd, SIOCGIFFLAGS, &result ) < 0 ) {
       if ( getif_debug ) 
-	debugmsg( "DEBUG: ioctl SIOCGIFFLAGS %s: %s\n", 
-	       ifr->ifr_name, strerror(errno) );
+        debugmsg( "DEBUG: ioctl SIOCGIFFLAGS %s: %s\n", 
+               ifr->ifr_name, strerror(errno) );
     }
 
     /* interface is up - our work is done. Or is it? */
     if ( (result.ifr_flags & IFF_UP) ) {
       if ( ! flag ) {
-	/* remember first found primary interface */
-	if ( getif_debug )
-	  debugmsg( "DEBUG: first primary interface %s\n", ifr->ifr_name );
-	primary = result;
-	flag = 1;
+        /* remember first found primary interface */
+        if ( getif_debug )
+          debugmsg( "DEBUG: first primary interface %s\n", ifr->ifr_name );
+        primary = result;
+        flag = 1;
       }
 
       /* check for VPNs */
       if ( (sa.sin_addr.s_addr & vpn_netmask[1]) == vpn_network[1] ||
-	   (sa.sin_addr.s_addr & vpn_netmask[2]) == vpn_network[2] ||
-	   (sa.sin_addr.s_addr & vpn_netmask[3]) == vpn_network[3] ||
-	   (sa.sin_addr.s_addr & vpn_netmask[4]) == vpn_network[4] ||
-	   (sa.sin_addr.s_addr & vpn_netmask[5]) == vpn_network[5] ) {
-	if ( getif_debug )
-	  debugmsg( "DEBUG: interface has VPN or bad address, trying next\n" );
+           (sa.sin_addr.s_addr & vpn_netmask[2]) == vpn_network[2] ||
+           (sa.sin_addr.s_addr & vpn_netmask[3]) == vpn_network[3] ||
+           (sa.sin_addr.s_addr & vpn_netmask[4]) == vpn_network[4] ||
+           (sa.sin_addr.s_addr & vpn_netmask[5]) == vpn_network[5] ) {
+        if ( getif_debug )
+          debugmsg( "DEBUG: interface has VPN or bad address, trying next\n" );
       } else {
-	if ( getif_debug ) 
-	  debugmsg( "DEBUG: interface is good\n" );
-	flag = 2;
-	break;
+        if ( getif_debug ) 
+          debugmsg( "DEBUG: interface is good\n" );
+        flag = 2;
+        break;
       }
     } else {
       if ( getif_debug ) debugmsg( "DEBUG: interface is down\n" );
@@ -281,7 +281,7 @@ primary_interface( void )
 
 void
 whoami( char* abuffer, size_t asize, 
-	char* ibuffer, size_t isize )
+        char* ibuffer, size_t isize )
 /* purpose: copy the primary interface's IPv4 dotted quad into the given buffer
  * paramtr: abuffer (OUT): start of buffer to put IPv4 dotted quad
  *          asize (IN): maximum capacity the abuffer is willing to accept

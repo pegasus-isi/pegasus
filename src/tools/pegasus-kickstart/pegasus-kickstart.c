@@ -108,10 +108,10 @@ initStatFromList( mylist_p list, size_t* size )
 
     if ( (result = (StatInfo*) calloc( sizeof(StatInfo), *size )) ) {
       while ( item && i < *size ) {
-	initStatInfoFromName( result+i, item->pfn, O_RDONLY, 0 );
-	if ( item->lfn != NULL ) addLFNToStatInfo( result+i, item->lfn );
-	item = item->next;
-	++i;
+        initStatInfoFromName( result+i, item->pfn, O_RDONLY, 0 );
+        if ( item->lfn != NULL ) addLFNToStatInfo( result+i, item->lfn );
+        item = item->next;
+        ++i;
       }
     }
   }
@@ -163,24 +163,24 @@ helpMe( const AppInfo* run )
 "\t[-B sz] [-F] (-I fn | app [appflags])\n", p );
   fprintf( stderr, 
 " -i fn\tConnects stdin of app to file fn, default is \"%s\".\n", 
-	   xlate(&run->input) );
+           xlate(&run->input) );
   fprintf( stderr, 
 " -o fn\tConnects stdout of app to file fn, default is \"%s\".\n",
-	   xlate(&run->output) );
+           xlate(&run->output) );
   fprintf( stderr, 
 " -e fn\tConnects stderr of app to file fn, default is \"%s\".\n", 
-	   xlate(&run->error) );
+           xlate(&run->error) );
   fprintf( stderr, 
 " -l fn\tProtocols invocation record into file fn, default is \"%s\".\n",
-	   xlate(&run->logfile) );
+           xlate(&run->logfile) );
 
   fprintf( stderr, 
 " -n xid\tProvides the TR name, default is \"%s\".\n"
 " -N did\tProvides the DV name, default is \"%s\".\n" 
 " -R res\tReflects the resource handle into record, default is \"%s\".\n"
 " -B sz\tResizes the data section size for stdio capture, default is %zu.\n",
-	   show(run->xformation), show(run->derivation), 
-	   show(run->sitehandle), data_section_size );
+           show(run->xformation), show(run->derivation), 
+           show(run->sitehandle), data_section_size );
   fprintf( stderr,
 " -L lbl\tReflects the workflow label into record, no default.\n"
 " -T iso\tReflects the workflow time stamp into record, no default.\n"
@@ -225,8 +225,8 @@ finish( void )
     status = fsync( STDOUT_FILENO ); 
     now(&final); 
     debugmsg( "# fsync(%d)=%d (errno=%d) in %.3f s\n", 
-	      STDOUT_FILENO, status, errno,
-	      mymaketime(final)-mymaketime(start) ); 
+              STDOUT_FILENO, status, errno,
+              mymaketime(final)-mymaketime(start) ); 
   }
 
   nfs_sync( STDERR_FILENO, DEFAULT_SYNC_IDLE );
@@ -241,7 +241,7 @@ show_args( const char* prefix, char** argv, int argc )
   debugmsg( "argc=%d\n", argc );
   for ( i=0; i<argc; ++i )
     debugmsg( "%s%2d: %s\n", (prefix ? prefix : ""), i, 
-	      (argv[i] ? argv[i] : "(null)" ) );
+              (argv[i] ? argv[i] : "(null)" ) );
 }
 #endif
 
@@ -376,8 +376,8 @@ main( int argc, char* argv[] )
 
 #if 0
   debugmsg( "# appinfo=%d, jobinfo=%d, statinfo=%d, useinfo=%d\n",
-	    sizeof(AppInfo), sizeof(JobInfo), sizeof(StatInfo),
-	    sizeof(struct rusage) );
+            sizeof(AppInfo), sizeof(JobInfo), sizeof(StatInfo),
+            sizeof(struct rusage) );
 #endif
 
 #if 0
@@ -417,14 +417,14 @@ main( int argc, char* argv[] )
 #if 0
     case 'c':
       if ( appinfo.channel.source != IS_INVALID )
-	deleteStatInfo( &appinfo.channel );
+        deleteStatInfo( &appinfo.channel );
       temp = argv[i][2] ? &argv[i][2] : argv[++i];
       initStatInfoAsFifo( &appinfo.channel, temp, "GRIDSTART_CHANNEL" );
       break;
 #endif
     case 'e':
       if ( appinfo.error.source != IS_INVALID )
-	deleteStatInfo( &appinfo.error );
+        deleteStatInfo( &appinfo.error );
       temp = ( argv[i][2] ? &argv[i][2] : argv[++i] );
       handleOutputStream( &appinfo.error, temp, STDERR_FILENO );
       break;
@@ -438,12 +438,12 @@ main( int argc, char* argv[] )
       return 0;
     case 'i':
       if ( appinfo.input.source != IS_INVALID )
-	deleteStatInfo( &appinfo.input );
+        deleteStatInfo( &appinfo.input );
       temp = argv[i][2] ? &argv[i][2] : argv[++i];
       if ( temp[0] == '-' && temp[1] == '\0' )
-	initStatInfoFromHandle( &appinfo.input, STDIN_FILENO );
+        initStatInfoFromHandle( &appinfo.input, STDIN_FILENO );
       else
-	initStatInfoFromName( &appinfo.input, temp, O_RDONLY, 2 );
+        initStatInfoFromName( &appinfo.input, temp, O_RDONLY, 2 );
       break;
     case 'H':
       appinfo.noHeader++;
@@ -455,23 +455,23 @@ main( int argc, char* argv[] )
       /* invoke application and args from given file */
       temp = argv[i][2] ? &argv[i][2] : argv[++i];
       if ( readFromFile( temp, &argv, &argc, &i, j ) == -1 ) {
-	int saverr = errno;
-	debugmsg( "ERROR: While parsing -I %s: %d: %s\n",
-		  temp, errno, strerror(saverr) );
-	appinfo.application.prefix = strerror(saverr);
-	appinfo.application.status = -1;
-	return 127;
+        int saverr = errno;
+        debugmsg( "ERROR: While parsing -I %s: %d: %s\n",
+                  temp, errno, strerror(saverr) );
+        appinfo.application.prefix = strerror(saverr);
+        appinfo.application.status = -1;
+        return 127;
       }
       keeploop = 0;
       break;
     case 'l':
       if ( appinfo.logfile.source != IS_INVALID )
-	deleteStatInfo( &appinfo.logfile );
+        deleteStatInfo( &appinfo.logfile );
       temp = argv[i][2] ? &argv[i][2] : argv[++i];
       if ( temp[0] == '-' && temp[1] == '\0' )
-	initStatInfoFromHandle( &appinfo.logfile, STDOUT_FILENO );
+        initStatInfoFromHandle( &appinfo.logfile, STDOUT_FILENO );
       else
-	initStatInfoFromName( &appinfo.logfile, temp, O_WRONLY | O_CREAT | O_APPEND, 2 );
+        initStatInfoFromName( &appinfo.logfile, temp, O_WRONLY | O_CREAT | O_APPEND, 2 );
       break;
     case 'L':
       appinfo.wf_label = noquote( argv[i][2] ? &argv[i][2] : argv[++i] );
@@ -484,7 +484,7 @@ main( int argc, char* argv[] )
       break;
     case 'o':
       if ( appinfo.output.source != IS_INVALID )
-	deleteStatInfo( &appinfo.output );
+        deleteStatInfo( &appinfo.output );
       temp = ( argv[i][2] ? &argv[i][2] : argv[++i] );
       handleOutputStream( &appinfo.output, temp, STDOUT_FILENO );
       break;
@@ -494,29 +494,29 @@ main( int argc, char* argv[] )
     case 'S':
       temp = argv[i][2] ? &argv[i][2] : argv[++i];
       if ( temp[0] == '@' ) {
-	/* list-of-filenames file */
-	if ( (result=mylist_fill( &initial, temp+1 )) )
-	  debugmsg( "ERROR: initial %s: %d: %s\n", 
-		    temp+1, result, strerror(result) );
+        /* list-of-filenames file */
+        if ( (result=mylist_fill( &initial, temp+1 )) )
+          debugmsg( "ERROR: initial %s: %d: %s\n", 
+                    temp+1, result, strerror(result) );
       } else {
-	/* direct filename */
-	if ( (result=mylist_add( &initial, temp )) )
-	  debugmsg( "ERROR: initial %s: %d: %s\n", 
-		    temp, result, strerror(result) );
+        /* direct filename */
+        if ( (result=mylist_add( &initial, temp )) )
+          debugmsg( "ERROR: initial %s: %d: %s\n", 
+                    temp, result, strerror(result) );
       }
       break;
     case 's':
       temp = argv[i][2] ? &argv[i][2] : argv[++i];
       if ( temp[0] == '@' ) {
-	/* list-of-filenames file */
-	if ( (result=mylist_fill( &final, temp+1 )) )
-	  debugmsg( "ERROR: final %s: %d: %s\n", 
-		   temp+1, result, strerror(result) );
+        /* list-of-filenames file */
+        if ( (result=mylist_fill( &final, temp+1 )) )
+          debugmsg( "ERROR: final %s: %d: %s\n", 
+                   temp+1, result, strerror(result) );
       } else {
-	/* direct filename */
-	if ( (result=mylist_add( &final, temp )) )
-	  debugmsg( "ERROR: final %s: %d: %s\n", 
-		   temp, result, strerror(result) );
+        /* direct filename */
+        if ( (result=mylist_add( &final, temp )) )
+          debugmsg( "ERROR: final %s: %d: %s\n", 
+                   temp, result, strerror(result) );
       }
       break;
     case 'T':
@@ -556,14 +556,14 @@ main( int argc, char* argv[] )
       appinfo.application.status = -1;
       switch ( appinfo.application.isValid ) { 
       case 2: /* permissions? */
-	appinfo.application.saverr = EACCES;
-	break; 
+        appinfo.application.saverr = EACCES;
+        break; 
       default: /* no such file? */
-	appinfo.application.saverr = ENOENT; 
-	break;
+        appinfo.application.saverr = ENOENT; 
+        break;
       }
       fputs( "FATAL: The main job specification is invalid or missing.\n",
-	     stderr );
+             stderr );
       return 127;
     }
   } else {
@@ -579,14 +579,14 @@ main( int argc, char* argv[] )
       createDir = 0; /* once only */
 
       if ( mkdir( workdir, 0777 ) == 0 ) {
-	/* If this causes an infinite loop, your file-system is
-	 * seriously whacked out -- run fsck or equivalent. */
-	goto REDIR;
+        /* If this causes an infinite loop, your file-system is
+         * seriously whacked out -- run fsck or equivalent. */
+        goto REDIR;
       }
       /* else */
       appinfo.application.saverr = errno;
       debugmsg( "Unable to mkdir %s: %d: %s\n", 
-	       workdir, errno, strerror(errno) );
+               workdir, errno, strerror(errno) );
       appinfo.application.prefix = "Unable to mkdir: ";
       appinfo.application.status = -1;
       return 127;
@@ -595,7 +595,7 @@ main( int argc, char* argv[] )
     /* unable to use alternate workdir */
     appinfo.application.saverr = errno;
     debugmsg( "Unable to chdir %s: %d: %s\n", 
-	     workdir, errno, strerror(errno) );
+             workdir, errno, strerror(errno) );
     appinfo.application.prefix = "Unable to chdir: ";
     appinfo.application.status = -1;
     return 127;
@@ -627,7 +627,7 @@ main( int argc, char* argv[] )
   if ( prepareSideJob( &appinfo.setup, getenv("GRIDSTART_SETUP") ) )
     mysystem( &appinfo, &appinfo.setup, environ );
 
-  /* possible prae job */
+  /* possible pre job */
   result = 0;
   if ( prepareSideJob( &appinfo.prejob, getenv("GRIDSTART_PREJOB") ) ) {
     /* there is a prejob to be executed */

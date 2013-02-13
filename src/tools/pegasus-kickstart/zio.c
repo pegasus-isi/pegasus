@@ -68,26 +68,26 @@ zopen( const char* pathname, int flags, mode_t mode )
     if ( (flags & 3) == O_RDONLY ) {
       close(pfd[0]);
       if ( pfd[1] != STDOUT_FILENO ) {
-	dup2( pfd[1], STDOUT_FILENO );
-	close(pfd[1]);
+        dup2( pfd[1], STDOUT_FILENO );
+        close(pfd[1]);
       }
 
       if ( fd != STDIN_FILENO ) {
-	dup2( fd, STDIN_FILENO );
-	close(fd);
+        dup2( fd, STDIN_FILENO );
+        close(fd);
       }
 
       argv[1] = "-cd";
     } else {
       close(pfd[1]);
       if ( pfd[0] != STDIN_FILENO ) {
-	dup2( pfd[0], STDIN_FILENO );
-	close(pfd[0]);
+        dup2( pfd[0], STDIN_FILENO );
+        close(pfd[0]);
       }
 
       if ( fd != STDOUT_FILENO ) {
-	dup2( fd, STDOUT_FILENO );
-	close(fd);
+        dup2( fd, STDOUT_FILENO );
+        close(fd);
       }
 
       argv[1] = "-cf";

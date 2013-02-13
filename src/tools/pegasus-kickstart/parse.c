@@ -289,10 +289,10 @@ xlate( char input )
 static
 void
 internalParse( const char* line, const char** cursor, int* state,
-	       Map actionmap, Map statemap,
-	       Node** headp, Node** tailp,
-	       char** pp, char* buffer, size_t size,
-	       char** vp, char* varname, size_t vsize )
+               Map actionmap, Map statemap,
+               Node** headp, Node** tailp,
+               char** pp, char* buffer, size_t size,
+               char** vp, char* varname, size_t vsize )
 {
   const char* s = *cursor;
   char* p = *pp;
@@ -306,8 +306,8 @@ internalParse( const char* line, const char** cursor, int* state,
 
     if ( debug )
       debugmsg( "# state=%02d, class=%d, action=%d, newstate=%02d, char=%02X (%c)\n",
-	       *state, charclass, actionmap[*state][charclass], newstate, *s,
-	       ((*s & 127) >= 32) ? *s : '.' );
+               *state, charclass, actionmap[*state][charclass], newstate, *s,
+               ((*s & 127) >= 32) ? *s : '.' );
 
     switch ( actionmap[*state][charclass] ) {
     case 0: /* store into buffer */
@@ -334,9 +334,9 @@ internalParse( const char* line, const char** cursor, int* state,
       break;
     case 6: /* translate control escapes */
       if ( p-buffer < size ) {
-	char* x = strchr( translation, *s );
-	*p++ = ( x == NULL ? *s : translationmap[x-translation] );
-	if ( debug ) debugmsg( "# escape %c -> %d\n", *s, *(p-1) );
+        char* x = strchr( translation, *s );
+        *p++ = ( x == NULL ? *s : translationmap[x-translation] );
+        if ( debug ) debugmsg( "# escape %c -> %d\n", *s, *(p-1) );
       }
       break;
     case 7: /* case 3 followed by case 0 */
@@ -345,10 +345,10 @@ internalParse( const char* line, const char** cursor, int* state,
       break;
     case 8: /* print error message */
       if ( newstate > 32 )
-	fputs( errormessage[newstate-33], stderr );
+        fputs( errormessage[newstate-33], stderr );
       else
-	debugmsg( "# PARSER ERROR: state=%02d, class=%d, action=%d, newstate=%02d, char=%02X (%c)\n",
-		 *state, charclass, 8, newstate, *s, ((*s & 127) >= 32) ? *s : '.' );
+        debugmsg( "# PARSER ERROR: state=%02d, class=%d, action=%d, newstate=%02d, char=%02X (%c)\n",
+                 *state, charclass, 8, newstate, *s, ((*s & 127) >= 32) ? *s : '.' );
       break;
     }
     ++s;
@@ -390,7 +390,7 @@ parseCommandLine( const char* line, int* state )
 
   /* invoke parsing only once */
   internalParse( line, &s, state, actionmap1, statemap1, &head, &tail, 
-		 &p, buffer, size, &v, varname, vsize );
+                 &p, buffer, size, &v, varname, vsize );
 
   /* finally */
   return head;
@@ -432,7 +432,7 @@ parseArgVector( int argc, char* const* argv, int* state )
     const char* s = argv[i];
     *state = 0;
     internalParse( argv[i], &s, state, actionmap2, statemap2, &head, &tail, 
-		   &p, buffer, size, &v, varname, vsize );
+                   &p, buffer, size, &v, varname, vsize );
   }
 
   /* finally */

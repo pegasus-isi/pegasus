@@ -22,7 +22,7 @@
 extern
 void
 full_append( char* buffer, const size_t size, size_t* len, 
-	     const char* msg, size_t msglen );
+             const char* msg, size_t msglen );
 /* purpose: append a binary message to the buffer while maintaining length
  *          information.
  * paramtr: buffer (IO): buffer area to put strings into
@@ -36,7 +36,7 @@ full_append( char* buffer, const size_t size, size_t* len,
 extern
 void
 xmlquote( char* buffer, const size_t size, size_t* len,
-	  const char* msg, size_t msglen );
+          const char* msg, size_t msglen );
 /* purpose: append a possibly binary message to the buffer while XML
  *          quoting and maintaining buffer length information.
  * paramtr: buffer (IO): buffer area to put strings into
@@ -51,7 +51,7 @@ xmlquote( char* buffer, const size_t size, size_t* len,
 extern
 void
 append( char* buffer, const size_t size, size_t* len, 
-	const char* msg );
+        const char* msg );
 /* purpose: append a string to the buffer while maintaining length information.
  * paramtr: buffer (IO): buffer area to put strings into
  *          size (IN): capacity of buffer
@@ -65,7 +65,7 @@ append( char* buffer, const size_t size, size_t* len,
 extern
 void
 myprint( char* buffer, const size_t size, size_t* len, 
-	 const char* fmt, ... );
+         const char* fmt, ... );
 /* purpose: format a string at the end of a buffer while maintaining length information.
  * paramtr: buffer (IO): buffer area to put strings into
  *          size (IN): capacity of buffer
@@ -78,7 +78,7 @@ myprint( char* buffer, const size_t size, size_t* len,
 extern
 size_t
 mydatetime( char* buffer, const size_t size, size_t* offset,
-	    int isLocal, int isExtended, time_t seconds, long micros );
+            int isLocal, int isExtended, time_t seconds, long micros );
 /* purpose: append an ISO timestamp to a buffer
  * paramtr: buffer (IO): buffer area to store things into
  *          size (IN): capacity of buffer

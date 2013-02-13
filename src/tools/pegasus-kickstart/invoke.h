@@ -33,7 +33,7 @@ append_arg( char* data, char*** arg, size_t* index, size_t* capacity );
 extern
 int
 expand_arg( const char* fn, char*** arg, size_t* index, size_t* capacity,
-	    int level );
+            int level );
 /* purpose: adds the contents of a file, line by line, to an argument vector
  *          This is a low-level function, use add_arg instead.
  * paramtr: fn (IN): name of file with contents to append

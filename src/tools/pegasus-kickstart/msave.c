@@ -177,31 +177,31 @@ gather_proc_cpuinfo( MachineInfo* machine )
     char line[256]; 
     while ( fgets( line, 256, f ) ) {
       if ( *(machine->vendor_id) == 0 && 
-	   strncmp( line, "vendor_id", 9 ) == 0 ) {
-	char* s = strchr( line, ':' )+1; 
-	char* d = machine->vendor_id; 
-	while ( *s && isspace(*s) ) ++s; 
-	while ( *s && ! isspace(*s) && 
-		d - machine->vendor_id < sizeof(machine->vendor_id) ) *d++ = *s++; 
-	*d = 0; 
+           strncmp( line, "vendor_id", 9 ) == 0 ) {
+        char* s = strchr( line, ':' )+1; 
+        char* d = machine->vendor_id; 
+        while ( *s && isspace(*s) ) ++s; 
+        while ( *s && ! isspace(*s) && 
+                d - machine->vendor_id < sizeof(machine->vendor_id) ) *d++ = *s++; 
+        *d = 0; 
       } else if ( *(machine->model_name) == 0 && 
-		  strncmp( line, "model name", 10 ) == 0 ) {
-	char* s = strchr( line, ':' )+2; 
-	char* d = machine->model_name; 
-	while ( *s && d - machine->model_name < sizeof(machine->model_name) ) {
-	  while ( *s && ! isspace(*s) ) *d++ = *s++; 
-	  if ( *s && *s == ' ' ) *d++ = *s++; 
-	  while ( *s && isspace(*s) ) ++s; 
-	}
-	*d = 0; 
+                  strncmp( line, "model name", 10 ) == 0 ) {
+        char* s = strchr( line, ':' )+2; 
+        char* d = machine->model_name; 
+        while ( *s && d - machine->model_name < sizeof(machine->model_name) ) {
+          while ( *s && ! isspace(*s) ) *d++ = *s++; 
+          if ( *s && *s == ' ' ) *d++ = *s++; 
+          while ( *s && isspace(*s) ) ++s; 
+        }
+        *d = 0; 
       } else if ( machine->megahertz == 0.0 && 
-		  strncmp( line, "cpu MHz", 7 ) == 0 ) {
-	char* s = strchr( line, ':' )+2; 
-	float mhz; 
-	sscanf( s, "%f", &mhz );
-	machine->megahertz = (unsigned long) mhz;
+                  strncmp( line, "cpu MHz", 7 ) == 0 ) {
+        char* s = strchr( line, ':' )+2; 
+        float mhz; 
+        sscanf( s, "%f", &mhz );
+        machine->megahertz = (unsigned long) mhz;
       } else if ( strncmp( line, "processor ", 10 ) == 0 ) {
-	machine->cpu_count += 1; 
+        machine->cpu_count += 1; 
       }
     }
     fclose(f); 
@@ -216,8 +216,8 @@ gather_proc_loadavg( MachineInfo* machine )
   if ( f != NULL ) {
     int maxpid; 
     fscanf( f, "%f %f %f %d/%d %d",
-	    &(machine->load[0]), &(machine->load[1]), &(machine->load[2]),
-	    &(machine->pid_running), &(machine->pid_total), &maxpid ); 
+            &(machine->load[0]), &(machine->load[1]), &(machine->load[2]),
+            &(machine->pid_running), &(machine->pid_total), &maxpid ); 
     fclose(f);
   }
 }
@@ -317,7 +317,7 @@ initMachineInfo( MachineInfo* machine )
 
 int
 printXMLMachineInfo( char* buffer, size_t size, size_t* len, size_t indent,
-		     const char* tag, const MachineInfo* machine )
+                     const char* tag, const MachineInfo* machine )
 /* purpose: format the job information into the given buffer as XML.
  * paramtr: buffer (IO): area to store the output in
  *          size (IN): capacity of character area
@@ -331,32 +331,32 @@ printXMLMachineInfo( char* buffer, size_t size, size_t* len, size_t indent,
   /* <machine> open tag */
   myprint( buffer, size, len, "%*s<%s start=\"", indent, "", tag );
   mydatetime( buffer, size, len, isLocal, isExtended,
-	      machine->now.tv_sec, machine->now.tv_usec ); 
+              machine->now.tv_sec, machine->now.tv_usec ); 
   append( buffer, size, len, "\">\n" ); 
 
   /* <uname> */
   myprint( buffer, size, len, "%*s<uname system=\"", indent+2, "" );
   full_append( buffer, size, len, machine->uname.sysname, 
-	       mystrlen(machine->uname.sysname,SYS_NMLN) );
+               mystrlen(machine->uname.sysname,SYS_NMLN) );
   append( buffer, size, len, "\" nodename=\"" );
   full_append( buffer, size, len, machine->uname.nodename, 
-	       mystrlen(machine->uname.nodename,SYS_NMLN) );
+               mystrlen(machine->uname.nodename,SYS_NMLN) );
   append( buffer, size, len, "\" release=\"" );
   full_append( buffer, size, len, machine->uname.release, 
-	       mystrlen(machine->uname.release,SYS_NMLN) );
+               mystrlen(machine->uname.release,SYS_NMLN) );
   append( buffer, size, len, "\" machine=\"" );
   full_append( buffer, size, len, machine->uname.machine, 
-	       mystrlen(machine->uname.machine,SYS_NMLN) );
+               mystrlen(machine->uname.machine,SYS_NMLN) );
   append( buffer, size, len, "\">" );
   full_append( buffer, size, len, machine->uname.version, 
-	       mystrlen(machine->uname.version,SYS_NMLN) );
+               mystrlen(machine->uname.version,SYS_NMLN) );
   append( buffer, size, len, "</uname>\n" );
 
   /* <ram .../> tag */
   myprint( buffer, size, len, 
-	   "%*s<ram page-size=\"%lu\" total=\"%lu\"",
-	   indent+2, "", 
-	   machine->pagesize, machine->ram_total );
+           "%*s<ram page-size=\"%lu\" total=\"%lu\"",
+           indent+2, "", 
+           machine->pagesize, machine->ram_total );
   if ( machine->ram_free )
     myprint( buffer, size, len, " free=\"%lu\"", machine->ram_free );
   append( buffer, size, len, "/>\n" ); 
@@ -368,41 +368,41 @@ printXMLMachineInfo( char* buffer, size_t size, size_t* len, size_t indent,
     myprint( buffer, size, len, " idle=\"%.3f\"", machine->idletime );
   append( buffer, size, len, ">" ); 
   mydatetime( buffer, size, len, isLocal, isExtended, 
-	      machine->boottime.tv_sec, machine->boottime.tv_usec ); 
+              machine->boottime.tv_sec, machine->boottime.tv_usec ); 
   append( buffer, size, len, "</boot>\n" ); 
 #endif /* LINUX || DARWIN */
 
 #if defined(LINUX) || defined(DARWIN)
   /* <swap .../> tag */
   myprint( buffer, size, len, 
-	   "%*s<swap total=\"%lu\" free=\"%lu\"/>\n",
-	   indent+2, "", machine->swap_total, machine->swap_free );
+           "%*s<swap total=\"%lu\" free=\"%lu\"/>\n",
+           indent+2, "", machine->swap_total, machine->swap_free );
 #endif 
 
 #if defined(_SC_NPROCESSORS_CONF) || defined(DARWIN)
   /* <cpu> element */
   myprint( buffer, size, len, 
-	   "%*s<cpu count=\"%u\" speed=\"%.0f\" vendor=\"%s\">%s</cpu>\n", 
-	   indent+2, "", 
-	   machine->cpu_count,
-	   machine->megahertz + 0.5,
-	   machine->vendor_id, machine->model_name ); 
+           "%*s<cpu count=\"%u\" speed=\"%.0f\" vendor=\"%s\">%s</cpu>\n", 
+           indent+2, "", 
+           machine->cpu_count,
+           machine->megahertz + 0.5,
+           machine->vendor_id, machine->model_name ); 
 #endif
 
 #if defined(LINUX) || defined(DARWIN)
   /* <load .../> tag */
   myprint( buffer, size, len, 
-	   "%*s<load min1=\"%.2f\" min5=\"%.2f\" min15=\"%.2f\""
+           "%*s<load min1=\"%.2f\" min5=\"%.2f\" min15=\"%.2f\""
 #ifdef LINUX
-	   " running=\"%u\" total-pid=\"%u\""
+           " running=\"%u\" total-pid=\"%u\""
 #endif
-	   "/>\n", 
-	   indent+2, "", 
-	   machine->load[0], machine->load[1], machine->load[2]
+           "/>\n", 
+           indent+2, "", 
+           machine->load[0], machine->load[1], machine->load[2]
 #ifdef LINUX
-	   , machine->pid_running, machine->pid_total
+           , machine->pid_running, machine->pid_total
 #endif
-	   ); 
+           ); 
 #endif
 
   /* </machine> close tag */

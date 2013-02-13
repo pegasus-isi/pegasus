@@ -39,7 +39,7 @@ typedef struct {
   volatile sig_atomic_t count;   /* OUT: number of signals seen */
   volatile sig_atomic_t done;    /* OUT: 0: to be done, 1: child reaped */
   volatile int          error;   /* OUT: errno when something went bad */
-  JobInfo*       	job;     /*  IO: data repository */
+  JobInfo*               job;     /*  IO: data repository */
 } SignalHandlerCommunication;
 
 static SignalHandlerCommunication child;
@@ -52,7 +52,7 @@ mywait4( pid_t wpid, int* status, int options, struct rusage* rusage )
 {
   pid_t result = wait4( wpid, status, options, rusage );
   debugmsg( "# wait4(%d,%p=%d,%d,%p) = %d\n",
-	   wpid, status, *status, options, rusage, result );
+           wpid, status, *status, options, rusage, result );
   return result;
 }
 #else
@@ -82,11 +82,11 @@ sig_child( SIGPARAM signo )
 
     /* WARN: wait4 is not POSIX.1 reentrant safe */
     while ( (rc=mywait4( child.job->child, &child.job->status, 
-			 WNOHANG, &child.job->use )) < 0 ) {
+                         WNOHANG, &child.job->use )) < 0 ) {
       if ( errno != EINTR ) {
-	child.error = errno;
-	child.job->status = -42;
-	break;
+        child.error = errno;
+        child.job->status = -42;
+        break;
       }
     }
     errno = saverr;
@@ -223,7 +223,7 @@ mysystem( AppInfo* appinfo, JobInfo* jobinfo, char* envp[] )
   if ( child.count != 1 || child.error ) {
     char temp[256];
     snprintf( temp, sizeof(temp), "%d x SIGCHLD; %d: %s",
-	      child.count, child.error, strerror(child.error) );
+              child.count, child.error, strerror(child.error) );
     send_message( STDERR_FILENO, temp, strlen(temp), 0 );
   }
 

@@ -68,7 +68,7 @@ send_message( int outfd, char* msg, ssize_t msize, unsigned channel )
 
   now( &t );
   myprint( buffer, size, &len, "<chunk channel=\"%u\" size=\"%ld\" start=\"",
-	   channel, msize );
+           channel, msize );
   mydatetime( buffer, size, &len, isLocal, isExtended, t.tv_sec, t.tv_usec );
   append( buffer, size, &len, "\"><![CDATA[" );
 #if 1
@@ -93,8 +93,8 @@ send_message( int outfd, char* msg, ssize_t msize, unsigned channel )
       break;
     default:
       if ( len < size ) {
-	buffer[len++] = msg[i];
-	buffer[len] = 0;
+        buffer[len++] = msg[i];
+        buffer[len] = 0;
       }
     }
   }
@@ -128,7 +128,7 @@ poll_via_select( struct pollfd* fds, unsigned nfds, long timeout )
   FD_ZERO( &efds );
   for ( i = 0; i < nfds; ++i ) {
     if ( fds[i].events & ( POLLIN | POLLRDNORM ) &&
-	 fds[i].fd != -1 ) { 
+         fds[i].fd != -1 ) { 
       FD_SET( fds[i].fd, &rfds );
       FD_SET( fds[i].fd, &efds );
       if ( fds[i].fd >= max ) max = fds[i].fd+1;
@@ -139,8 +139,8 @@ poll_via_select( struct pollfd* fds, unsigned nfds, long timeout )
   if ( (status = select( max, &rfds, NULL, NULL, &tv )) > 0 ) {
     for ( i = 0; i < nfds; ++i ) {
       if ( fds[i].fd != -1 ) {
-	if ( FD_ISSET( fds[i].fd, &rfds ) ) fds[i].revents |= POLLIN;
-	if ( FD_ISSET( fds[i].fd, &efds ) ) fds[i].revents |= POLLERR;
+        if ( FD_ISSET( fds[i].fd, &rfds ) ) fds[i].revents |= POLLIN;
+        if ( FD_ISSET( fds[i].fd, &efds ) ) fds[i].revents |= POLLERR;
       }
     }
   }
@@ -212,8 +212,8 @@ eventLoop( int outfd, StatInfo* fifo, volatile sig_atomic_t* terminate )
 
 #ifdef DEBUG_EVENTLOOP
     debugmsg( "# tm=%d, s_sp=%d, calling poll([%d:%x:%x],%d,%d)\n", 
-	      *terminate, seen_sigpipe, 
-	      pfds.fd, pfds.events, pfds.revents, 1, timeout );
+              *terminate, seen_sigpipe, 
+              pfds.fd, pfds.events, pfds.revents, 1, timeout );
 #endif /* DEBUG_EVENTLOOP */
 
     errno = 0;
@@ -226,17 +226,17 @@ eventLoop( int outfd, StatInfo* fifo, volatile sig_atomic_t* terminate )
 
 #ifdef DEBUG_EVENTLOOP
     debugmsg( "# poll() returned %d [errno=%d: %s] [%d:%x:%x]\n", 
-	      status, saverr, strerror(saverr),
-	      pfds.fd, pfds.events, pfds.revents );
+              status, saverr, strerror(saverr),
+              pfds.fd, pfds.events, pfds.revents );
 #endif /* DEBUG_EVENTLOOP */
 
     errno = saverr;
     if ( status == -1 ) {
       /* poll ERR */
       if ( errno != EINTR ) {
-	/* not an interruption */
-	result = -3;
-	break;
+        /* not an interruption */
+        result = -3;
+        break;
       }
     } else if ( status == 0 ) {
       /* timeout -- only exit, if we were wrapping up anyway! */
@@ -244,32 +244,32 @@ eventLoop( int outfd, StatInfo* fifo, volatile sig_atomic_t* terminate )
     } else if ( status > 0 ) {
       /* poll OK */
       if ( (pfds.revents & mask) > 0 ) {
-	ssize_t rsize = read( pfds.fd, rbuffer, bufsize-1 );
-	if ( rsize == -1 ) {
-	  /* ERR */
-	  if ( errno != EINTR ) {
-	    result = -1;
-	    break;
-	  }
-	} else if ( rsize == 0 ) {
-	  /* EOF */
-	  result = 0;
-	  break;
-	} else {
-	  /* data */
-	  ssize_t wsize;
-	  rbuffer[rsize] = '\0';	  
-	  if ( (wsize = send_message( outfd, rbuffer, rsize, 1 )) == -1 ) {
-	    /* we'll be unable to send anything further */
-	    result = -1;
-	    break;
-	  } else {
-	    /* update statistics */
-	    fifo->client.fifo.count++;
-	    fifo->client.fifo.rsize += rsize;
-	    fifo->client.fifo.wsize += wsize;
-	  }
-	}
+        ssize_t rsize = read( pfds.fd, rbuffer, bufsize-1 );
+        if ( rsize == -1 ) {
+          /* ERR */
+          if ( errno != EINTR ) {
+            result = -1;
+            break;
+          }
+        } else if ( rsize == 0 ) {
+          /* EOF */
+          result = 0;
+          break;
+        } else {
+          /* data */
+          ssize_t wsize;
+          rbuffer[rsize] = '\0';          
+          if ( (wsize = send_message( outfd, rbuffer, rsize, 1 )) == -1 ) {
+            /* we'll be unable to send anything further */
+            result = -1;
+            break;
+          } else {
+            /* update statistics */
+            fifo->client.fifo.count++;
+            fifo->client.fifo.rsize += rsize;
+            fifo->client.fifo.wsize += wsize;
+          }
+        }
       } /* if pfds mask */
     } /* if status > 0 */
   } /* forever */

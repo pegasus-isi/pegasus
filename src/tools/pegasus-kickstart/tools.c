@@ -27,7 +27,7 @@ static const char* RCS_ID =
 
 void
 full_append( char* buffer, const size_t size, size_t* len, 
-	     const char* msg, size_t msglen )
+             const char* msg, size_t msglen )
 /* purpose: append a binary message to the buffer while maintaining length information.
  * paramtr: buffer (IO): buffer area to put strings into
  *          size (IN): capacity of buffer
@@ -50,7 +50,7 @@ full_append( char* buffer, const size_t size, size_t* len,
 #if 0
 void
 append( char* buffer, const size_t size, size_t* len, 
-	const char* msg )
+        const char* msg )
 /* purpose: append a string to the buffer while maintaining length information.
  * paramtr: buffer (IO): buffer area to put strings into
  *          size (IN): capacity of buffer
@@ -72,43 +72,43 @@ static const char* iso88591lookup[256] =
 
          " ",        "!",   "&quot;",        "#",        "$",        "%",    "&amp;",   "&apos;", 
          "(",        ")",        "*",        "+",        ",",        "-",        ".",        "/", 
-	 "0",        "1",        "2",        "3",        "4",        "5",        "6",        "7", 
-	 "8",        "9",        ":",        ";",     "&lt;",        "=",     "&gt;",        "?", 
+         "0",        "1",        "2",        "3",        "4",        "5",        "6",        "7", 
+         "8",        "9",        ":",        ";",     "&lt;",        "=",     "&gt;",        "?", 
 
-	 "@",        "A",        "B",        "C",        "D",        "E",        "F",        "G", 
-	 "H",        "I",        "J",        "K",        "L",        "M",        "N",        "O", 
-	 "P",        "Q",        "R",        "S",        "T",        "U",        "V",        "W", 
-	 "X",        "Y",        "Z",        "[",       "\\",        "]",        "^",        "_", 
+         "@",        "A",        "B",        "C",        "D",        "E",        "F",        "G", 
+         "H",        "I",        "J",        "K",        "L",        "M",        "N",        "O", 
+         "P",        "Q",        "R",        "S",        "T",        "U",        "V",        "W", 
+         "X",        "Y",        "Z",        "[",       "\\",        "]",        "^",        "_", 
 
-	 "`",        "a",        "b",        "c",        "d",        "e",        "f",        "g", 
-	 "h",        "i",        "j",        "k",        "l",        "m",        "n",        "o", 
-	 "p",        "q",        "r",        "s",        "t",        "u",        "v",        "w", 
-	 "x",        "y",        "z",        "{",        "|",        "}",        "~", "&#xe07f;", 
+         "`",        "a",        "b",        "c",        "d",        "e",        "f",        "g", 
+         "h",        "i",        "j",        "k",        "l",        "m",        "n",        "o", 
+         "p",        "q",        "r",        "s",        "t",        "u",        "v",        "w", 
+         "x",        "y",        "z",        "{",        "|",        "}",        "~", "&#xe07f;", 
 
   "&#xe080;", "&#xe081;", "&#xe082;", "&#xe083;", "&#xe084;", "&#xe085;", "&#xe086;", "&#xe087;", 
   "&#xe088;", "&#xe089;", "&#xe08a;", "&#xe08b;", "&#xe08c;", "&#xe08d;", "&#xe08e;", "&#xe08f;", 
   "&#xe090;", "&#xe091;", "&#xe092;", "&#xe093;", "&#xe094;", "&#xe095;", "&#xe096;", "&#xe097;", 
   "&#xe098;", "&#xe099;", "&#xe09a;", "&#xe09b;", "&#xe09c;", "&#xe09d;", "&#xe09e;", "&#xe09f;", 
 
-	 " ",        "¡",        "¢",        "£",        "¤",        "¥",        "¦",        "§", 
-	 "¨",        "©",        "ª",        "«",        "¬",        "­",        "®",        "¯", 
-	 "°",        "±",        "²",        "³",        "´",        "µ",        "¶",        "·", 
-	 "¸",        "¹",        "º",        "»",        "¼",        "½",        "¾",        "¿", 
+         " ",        "¡",        "¢",        "£",        "¤",        "¥",        "¦",        "§", 
+         "¨",        "©",        "ª",        "«",        "¬",        "­",        "®",        "¯", 
+         "°",        "±",        "²",        "³",        "´",        "µ",        "¶",        "·", 
+         "¸",        "¹",        "º",        "»",        "¼",        "½",        "¾",        "¿", 
 
-	 "À",        "Á",        "Â",        "Ã",        "Ä",        "Å",        "Æ",        "Ç", 
-	 "È",        "É",        "Ê",        "Ë",        "Ì",        "Í",        "Î",        "Ï", 
-	 "Ð",        "Ñ",        "Ò",        "Ó",        "Ô",        "Õ",        "Ö",        "×", 
-	 "Ø",        "Ù",        "Ú",        "Û",        "Ü",        "Ý",        "Þ",        "ß", 
+         "À",        "Á",        "Â",        "Ã",        "Ä",        "Å",        "Æ",        "Ç", 
+         "È",        "É",        "Ê",        "Ë",        "Ì",        "Í",        "Î",        "Ï", 
+         "Ð",        "Ñ",        "Ò",        "Ó",        "Ô",        "Õ",        "Ö",        "×", 
+         "Ø",        "Ù",        "Ú",        "Û",        "Ü",        "Ý",        "Þ",        "ß", 
 
-	 "à",        "á",        "â",        "ã",        "ä",        "å",        "æ",        "ç", 
-	 "è",        "é",        "ê",        "ë",        "ì",        "í",        "î",        "ï", 
-	 "ð",        "ñ",        "ò",        "ó",        "ô",        "õ",        "ö",        "÷", 
-	 "ø",        "ù",        "ú",        "û",        "ü",        "ý",        "þ", "&#xe0ff;"
+         "à",        "á",        "â",        "ã",        "ä",        "å",        "æ",        "ç", 
+         "è",        "é",        "ê",        "ë",        "ì",        "í",        "î",        "ï", 
+         "ð",        "ñ",        "ò",        "ó",        "ô",        "õ",        "ö",        "÷", 
+         "ø",        "ù",        "ú",        "û",        "ü",        "ý",        "þ", "&#xe0ff;"
 };
 
 void
 xmlquote( char* buffer, const size_t size, size_t* len,
-	  const char* msg, size_t msglen )
+          const char* msg, size_t msglen )
 /* purpose: append a possibly binary message to the buffer while XML
  *          quoting and maintaining buffer length information.
  * paramtr: buffer (IO): buffer area to put strings into
@@ -127,7 +127,7 @@ xmlquote( char* buffer, const size_t size, size_t* len,
 
 void
 myprint( char* buffer, const size_t size, size_t* len, 
-	 const char* fmt, ... )
+         const char* fmt, ... )
 /* purpose: format a string at the end of a buffer while maintaining length information.
  * paramtr: buffer (IO): buffer area to put strings into
  *          size (IN): capacity of buffer
@@ -148,7 +148,7 @@ myprint( char* buffer, const size_t size, size_t* len,
 
 size_t
 mydatetime( char* buffer, const size_t size, size_t* offset,
-	    int isLocal, int isExtended, time_t seconds, long micros )
+            int isLocal, int isExtended, time_t seconds, long micros )
 /* purpose: append an ISO timestamp to a buffer
  * paramtr: buffer (IO): buffer area to store things into
  *          size (IN): capacity of buffer
@@ -179,19 +179,19 @@ mydatetime( char* buffer, const size_t size, size_t* offset,
     minutes = abs(distance) % 60;
 
     strftime( line, sizeof(line), 
-	      isExtended ? "%Y-%m-%dT%H:%M:%S" : "%Y%m%dT%H%M%S", &local );
+              isExtended ? "%Y-%m-%dT%H:%M:%S" : "%Y%m%dT%H%M%S", &local );
     len = strlen(line);
 
     if ( micros < 0 )
       myprint( line, sizeof(line), &len, "%+03d:%02d", hours, minutes );
     else
       myprint( line, sizeof(line), &len, 
-	       isExtended ? ".%03ld%+03d:%02d" : ".%03ld%+03d%02d",
-	       micros / 1000, hours, minutes );
+               isExtended ? ".%03ld%+03d:%02d" : ".%03ld%+03d%02d",
+               micros / 1000, hours, minutes );
   } else {
     /* zulu time aka UTC */
     strftime( line, sizeof(line), 
-	      isExtended ? "%Y-%m-%dT%H:%M:%S" : "%Y%m%dT%H%M%S", &zulu );
+              isExtended ? "%Y-%m-%dT%H:%M:%S" : "%Y%m%dT%H%M%S", &zulu );
     len = strlen(line);
 
     if ( micros < 0 ) 
@@ -237,8 +237,8 @@ isDir( const char* tmp )
   if ( stat( tmp, &st ) == 0 && S_ISDIR(st.st_mode) ) {
     /* exists and isa directory */
     if ( (geteuid() != st.st_uid || (st.st_mode & S_IWUSR) == 0) &&
-	 (getegid() != st.st_gid || (st.st_mode & S_IWGRP) == 0) &&
-	 ((st.st_mode & S_IWOTH) == 0) ) {
+         (getegid() != st.st_gid || (st.st_mode & S_IWGRP) == 0) &&
+         ((st.st_mode & S_IWOTH) == 0) ) {
       /* not writable to us */
       return 0;
     } else {

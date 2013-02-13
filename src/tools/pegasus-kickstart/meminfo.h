@@ -62,7 +62,7 @@ avgMemInfo( MemInfo* avg, const MemInfo* add );
 extern
 int
 printXMLMemInfo( char* buffer, size_t size, size_t* len, size_t indent,
-		 const char* tag, const MemInfo* mem );
+                 const char* tag, const MemInfo* mem );
 /* purpose: format the status information into the given buffer as XML.
  * paramtr: buffer (IO): area to store the output in
  *          size (IN): capacity of character area

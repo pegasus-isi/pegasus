@@ -198,7 +198,7 @@ value2string( char* buffer, size_t capacity, rlim_t value )
 static
 int
 formatLimit( char* buffer, size_t size, size_t* len, size_t indent, 
-	     const SingleLimitInfo* l )
+             const SingleLimitInfo* l )
 {
   char id[32],value[32];
 
@@ -210,19 +210,19 @@ formatLimit( char* buffer, size_t size, size_t* len, size_t indent,
 #if 1
   /* Gaurang prefers this one */
   myprint( buffer, size, len, "%*s<soft id=\"%s\">%s</soft>\n",
-	   indent, "", id, 
-	   value2string(value,sizeof(value),l->limit.rlim_cur) );
+           indent, "", id, 
+           value2string(value,sizeof(value),l->limit.rlim_cur) );
     
   myprint( buffer, size, len, "%*s<hard id=\"%s\">%s</hard>\n",
-	   indent, "", id,
-	   value2string(value,sizeof(value),l->limit.rlim_max) );
+           indent, "", id,
+           value2string(value,sizeof(value),l->limit.rlim_max) );
 #else
   /* I like concise */
   myprint( buffer, size, len, "%*s<limit id=\"%s\" soft=\"%s\"",
-	   indent, "", id, 
-	   value2string(value,sizeof(value),l->limit.rlim_cur) );
+           indent, "", id, 
+           value2string(value,sizeof(value),l->limit.rlim_cur) );
   myprint( buffer, size, len, " hard=\"%s\"/>\n", 
-	   value2string(value,sizeof(value),l->limit.rlim_max) );
+           value2string(value,sizeof(value),l->limit.rlim_max) );
 #endif
 
   return *len;
@@ -231,7 +231,7 @@ formatLimit( char* buffer, size_t size, size_t* len, size_t indent,
 extern
 int
 printXMLLimitInfo( char* buffer, size_t size, size_t* len, size_t indent,
-		   const LimitInfo* limits )
+                   const LimitInfo* limits )
 /* purpose: format the rusage record into the given buffer as XML.
  * paramtr: buffer (IO): area to store the output in
  *          size (IN): capacity of character area
