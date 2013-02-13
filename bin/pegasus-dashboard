@@ -170,17 +170,16 @@ def failed_jobs (root_wf_id, wf_id):
     Get a list of all failed jobs of the latest instance for a given work-flow.
     '''
     dashboard = Dashboard (_master_db_url, root_wf_id, wf_id)
-    failed_jobs_list = dashboard.get_failed_jobs (wf_id)
+    args = __get_datatables_args ()
+    
+    total_count, filtered_count, failed_jobs_list = dashboard.get_failed_jobs (wf_id, **args)
 
-    # is_xhr = True if it is AJAX request.
-    if request.is_xhr:
-        if len (failed_jobs_list) > 0:
-            return render_template ('workflow/jobs_failed.xhr.html', root_wf_id=root_wf_id, wf_id=wf_id, jobs=failed_jobs_list)
-        else:
-            return '', 204
-    else:
-        return render_template ('workflow/jobs_failed.html', root_wf_id=root_wf_id, wf_id=wf_id, jobs=failed_jobs_list)
+    for job in failed_jobs_list:
+        job.exec_job_id = '<a href="' + url_for ('job', root_wf_id=root_wf_id, wf_id=wf_id, job_id=job.job_id) + '">' + job.exec_job_id + '</a>'
+        job.stdout = '<a href="' + url_for ('stdout', root_wf_id=root_wf_id, wf_id=wf_id, job_id=job.job_id) + '">stdout</a>'
+        job.stderr = '<a href="' + url_for ('stderr', root_wf_id=root_wf_id, wf_id=wf_id, job_id=job.job_id) + '">stderr</a>'
 
+    return render_template ('workflow/jobs_failed.xhr.json', count=total_count, filtered=filtered_count, jobs=failed_jobs_list, table_args=args)
 
 @app.route('/root/<root_wf_id>/workflow/<wf_id>/jobs/running/', methods=['GET'])
 def running_jobs (root_wf_id, wf_id):
