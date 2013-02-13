@@ -402,7 +402,7 @@ class WorkflowInfo(SQLAlchemyInit, DoesLogging):
 
         return (count, filtered, q.all ())
     
-    def get_other_jobs (self):
+    def get_other_jobs (self, **table_args):
         
         q = self._jobs_by_type()
         
@@ -412,7 +412,52 @@ class WorkflowInfo(SQLAlchemyInit, DoesLogging):
         
         q = q.filter (JobInstance.exitcode == None)
         
-        return q.all()
+        # Get Total Count. Need this to pass to jQuery Datatable.
+        count = q.count ()
+        if count == 0:
+            return (0, 0, [])
+        
+        filtered = count
+        if 'filter' in table_args:
+            filter_text = '%' + table_args ['filter'] + '%'
+            q = q.filter (or_ (Job.exec_job_id.like (filter_text)))
+        
+            # Get Total Count. Need this to pass to jQuery Datatable.
+            filtered = q.count ()
+            
+            if filtered == 0:
+                return (count, 0, [])
+        
+        display_columns = [Job.exec_job_id]
+
+        if 'sort-col-count' in table_args:
+            for i in range (table_args ['sort-col-count']):
+                
+                if 'iSortCol_' + str(i) in table_args:
+                    if 'sSortDir_' + str(i) in table_args and table_args ['sSortDir_' + str(i)] == 'asc':
+                        i = table_args ['iSortCol_' + str(i)]
+
+                        if i >= 0 and i < len(display_columns):
+                            q = q.order_by (display_columns [i])
+                        else:
+                            raise ValueError, ('Invalid column (%s) in other jobs listing ' % i)
+                    else:
+                        i = table_args ['iSortCol_' + str(i)]
+
+                        if i >= 0 and i < len(display_columns):
+                            q = q.order_by (desc (display_columns [i]))
+                        else:
+                            raise ValueError, ('Invalid column (%s) in other jobs listing ' % i)
+
+        else:
+            # Default sorting order
+            q = q.order_by (desc (Job.exec_job_id))  
+        
+        if 'limit' in table_args and 'offset' in table_args:
+            q = q.limit (table_args ['limit'])
+            q = q.offset (table_args ['offset'])
+
+        return (count, filtered, q.all ())
 
     def __get_jobs_maxjss_sq (self):
         

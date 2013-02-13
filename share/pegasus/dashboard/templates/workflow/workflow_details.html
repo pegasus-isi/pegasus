@@ -67,17 +67,6 @@ $(document).ready (function ()
 					$('#sub_workflows_list').dataTable ({"bJQueryUI" : true, "sPaginationType": "full_numbers"});
 				}
 			}
-			else if (ui.index == 2)
-			{
-				if ($('#running_jobs').html() == '')
-				{
-					$('#running_jobs').html('No running jobs.')
-				}
-				else
-				{
-					$('#running_jobs_list').dataTable ({"bJQueryUI" : true, "sPaginationType": "full_numbers"});
-				}
-			}
 		} 
 	});
 	
@@ -100,6 +89,21 @@ $(document).ready (function ()
 					              { "mData": "Exit Code" },
 					              { "mData": "Standard Out" },
 					              { "mData": "Standard Error" }
+					            ]
+			});
+		}
+		else if (ui.index == 2 && !tablesInitialized [ui.index])
+		{
+			tablesInitialized [ui.index] = true;
+			
+			$('#running_jobs_list').dataTable ({"bJQueryUI": true,
+					"sPaginationType": "full_numbers",
+					"bProcessing": true,
+					"bServerSide": true,
+					"sAjaxSource": "{{ url_for ('running_jobs', root_wf_id = root_wf_id, wf_id = wf_id) }}",
+					"bAutoWidth": false,
+					"aoColumns": [
+					              { "mData": "Job Name" },
 					            ]
 			});
 		}
@@ -352,7 +356,7 @@ verticalTableInitStatus ('#workflow_text_info', '{{workflow.state}}' );
 				<a href="#failed_jobs" title="failed_jobs">Failed</a>
 			</li>
 			<li>
-				<a href="{{ url_for ('running_jobs', root_wf_id = root_wf_id, wf_id = wf_id) }}" title="running_jobs">Running</a>
+				<a href="#running_jobs" title="running_jobs">Running</a>
 			</li>
 			<li>
 				<a href="#successful_jobs" title="successful_jobs">Successful</a>
@@ -373,7 +377,17 @@ verticalTableInitStatus ('#workflow_text_info', '{{workflow.state}}' );
 				</tbody>
 			</table>
 		</div>
-		<div id="running_jobs"></div>
+		<div id="running_jobs">
+			<table id="running_jobs_list">
+				<thead>
+					<tr>
+						<th>Job Name</th>
+					</tr>
+				</thead>
+				<tbody>
+				</tbody>
+			</table>
+		</div>
 		<div id="successful_jobs">
 			<table id="successful_jobs_list">
 				<thead>

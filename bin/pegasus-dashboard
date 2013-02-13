@@ -187,16 +187,14 @@ def running_jobs (root_wf_id, wf_id):
     Get a list of all running jobs of the latest instance for a given work-flow.
     '''
     dashboard = Dashboard (_master_db_url, root_wf_id, wf_id)
-    running_jobs_list = dashboard.get_running_jobs (wf_id)
+    args = __get_datatables_args ()
+    
+    total_count, filtered_count, running_jobs_list = dashboard.get_running_jobs (wf_id, **args)
 
-    # is_xhr = True if it is AJAX request.
-    if request.is_xhr:
-        if len (running_jobs_list) > 0:
-            return render_template ('workflow/jobs_running.xhr.html', root_wf_id=root_wf_id, wf_id=wf_id, jobs=running_jobs_list)
-        else:
-            return '', 204
-    else:
-        return render_template ('workflow/jobs_running.html', root_wf_id=root_wf_id, wf_id=wf_id, jobs=running_jobs_list)
+    for job in running_jobs_list:
+        job.exec_job_id = '<a href="' + url_for ('job', root_wf_id=root_wf_id, wf_id=wf_id, job_id=job.job_id) + '">' + job.exec_job_id + '</a>'
+    
+    return render_template ('workflow/jobs_running.xhr.json', count=total_count, filtered=filtered_count, jobs=running_jobs_list, table_args=args)
 
 @app.route('/root/<root_wf_id>/workflow/<wf_id>/jobs/successful/', methods=['GET'])
 def successful_jobs (root_wf_id, wf_id):
