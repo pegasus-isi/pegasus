@@ -40,6 +40,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/time.h>
+#include <stdint.h>
+#include <inttypes.h>
 
 /* Check kernel version */
 #include <linux/version.h>
@@ -94,13 +96,13 @@ typedef struct _pidlist_t {
     double cstime; /* time waited on children were in kernel mode */
     double tstart; /* start time in seconds from epoch */
     double tstop;  /* stop time in seconds from epoch */
-    unsigned long rchar; /* characters read by the process */
-    unsigned long wchar; /* characters written by the process */
-    unsigned long syscr; /* read system calls */
-    unsigned long syscw; /* write system calls */
-    unsigned long read_bytes; /* file bytes read */
-    unsigned long write_bytes; /* file bytes written */
-    unsigned long cancelled_write_bytes; /* bytes written, then deleted before flush */
+    uint64_t rchar; /* characters read by the process */
+    uint64_t wchar; /* characters written by the process */
+    uint64_t syscr; /* read system calls */
+    uint64_t syscw; /* write system calls */
+    uint64_t read_bytes; /* file bytes read */
+    uint64_t write_bytes; /* file bytes written */
+    uint64_t cancelled_write_bytes; /* bytes written, then deleted before flush */
     struct _pidlist_t *next;
     struct _pidlist_t *prev;
 } pidlist_t;
@@ -241,19 +243,19 @@ int read_io(pidlist_t *item) {
     
     while (fgets(line, BUFSIZ, f) != NULL) {
         if (startswith(line, "rchar")) {
-            sscanf(line,"rchar: %lu\n",&(item->rchar));
+            sscanf(line,"rchar: %"SCNu64"\n", &(item->rchar));
         } else if (startswith(line, "wchar")) {
-            sscanf(line,"wchar: %lu\n",&(item->wchar));
+            sscanf(line,"wchar: %"SCNu64"\n", &(item->wchar));
         } else if (startswith(line,"syscr")) {
-            sscanf(line,"syscr: %lu\n",&(item->syscr));
+            sscanf(line,"syscr: %"SCNu64"\n", &(item->syscr));
         } else if (startswith(line,"syscw")) {
-            sscanf(line,"syscw: %lu\n",&(item->syscw));
+            sscanf(line,"syscw: %"SCNu64"\n", &(item->syscw));
         } else if (startswith(line,"read_bytes")) {
-            sscanf(line,"read_bytes: %lu\n",&(item->read_bytes));
+            sscanf(line,"read_bytes: %"SCNu64"\n",&(item->read_bytes));
         } else if (startswith(line,"write_bytes")) {
-            sscanf(line,"write_bytes: %lu\n",&(item->write_bytes));
+            sscanf(line,"write_bytes: %"SCNu64"\n",&(item->write_bytes));
         } else if (startswith(line,"cancelled_write_bytes")) {
-            sscanf(line,"cancelled_write_bytes: %lu\n",&(item->cancelled_write_bytes));
+            sscanf(line,"cancelled_write_bytes: %"SCNu64"\n",&(item->cancelled_write_bytes));
         }
     }
     
@@ -279,7 +281,8 @@ void print_report(pidlist_t *item) {
         return;
 
     fprintf(stderr, 
-        "%s %d %d %s %d %d %lf %lf %d %d %lf %lf %lf %lf %lf %lu %lu %lu %lu %lu %lu %lu\n", 
+        "%s %d %d %s %d %d %lf %lf %d %d %lf %lf %lf %lf %lf "
+        "%"PRIu64" %"PRIu64" %"PRIu64" %"PRIu64" %"PRIu64" %"PRIu64" %"PRIu64"\n", 
         XFORM,
         item->pid, 
         item->ppid,
