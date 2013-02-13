@@ -316,24 +316,19 @@ class WorkflowInfo(SQLAlchemyInit, DoesLogging):
             for i in range (table_args ['sort-col-count']):
                 
                 if 'iSortCol_' + str(i) in table_args:
+                    sort_order = desc;
+                    
                     if 'sSortDir_' + str(i) in table_args and table_args ['sSortDir_' + str(i)] == 'asc':
-                        i = table_args ['iSortCol_' + str(i)]
+                        sort_order = asc;
+                        
+                    i = table_args ['iSortCol_' + str(i)]
 
-                        if i >= 0 and i < len(display_columns):
-                            q = q.order_by (display_columns [i])
-                        elif i >= len(display_columns) and i < 4:
-                            pass
-                        else:
-                            raise ValueError, ('Invalid column (%s) in failed jobs listing ' % i)
+                    if i >= 0 and i < len(display_columns):
+                        q = q.order_by (sort_order (display_columns [i]))
+                    elif i >= len(display_columns) and i < 4:
+                        pass
                     else:
-                        i = table_args ['iSortCol_' + str(i)]
-
-                        if i >= 0 and i < len(display_columns):
-                            q = q.order_by (desc (display_columns [i]))
-                        elif i >= len(display_columns) and i < 4:
-                            pass
-                        else:
-                            raise ValueError, ('Invalid column (%s) in failed jobs listing ' % i)
+                        raise ValueError, ('Invalid column (%s) in failed jobs listing ' % i)
 
         else:
             # Default sorting order
@@ -361,15 +356,16 @@ class WorkflowInfo(SQLAlchemyInit, DoesLogging):
         if count == 0:
             return (0, 0, [])
         
+        filtered = count
         if 'filter' in table_args:
             filter_text = '%' + table_args ['filter'] + '%'
             q = q.filter (or_ (Job.exec_job_id.like (filter_text)))
         
-        # Get Total Count. Need this to pass to jQuery Datatable.
-        filtered = q.count ()
-        
-        if filtered == 0:
-            return (count, 0, [])
+            # Get Total Count. Need this to pass to jQuery Datatable.
+            filtered = q.count ()
+            
+            if filtered == 0:
+                return (count, 0, [])
         
         display_columns = [Job.exec_job_id, duration]
         
@@ -377,21 +373,18 @@ class WorkflowInfo(SQLAlchemyInit, DoesLogging):
             for i in range (table_args ['sort-col-count']):
                 
                 if 'iSortCol_' + str(i) in table_args:
+                    sort_order = desc;
+
                     if 'sSortDir_' + str(i) in table_args and table_args ['sSortDir_' + str(i)] == 'asc':
-                        i = table_args ['iSortCol_' + str(i)]
-
-                        if i >= 0 and i < len(display_columns):
-                            q = q.order_by (display_columns [i])
-                        else:
-                            raise ValueError, ('Invalid column (%s) in successful jobs listing ' % i)
+                        sort_order = asc;
+                                            
+                    i = table_args ['iSortCol_' + str(i)]
+                    
+                    if i >= 0 and i < len(display_columns):
+                        q = q.order_by (sort_order (display_columns [i]))
                     else:
-                        i = table_args ['iSortCol_' + str(i)]
-
-                        if i >= 0 and i < len(display_columns):
-                            q = q.order_by (desc (display_columns [i]))
-                        else:
-                            raise ValueError, ('Invalid column (%s) in successful jobs listing ' % i)
-
+                        raise ValueError, ('Invalid column (%s) in successful jobs listing ' % i)
+                    
         else:
             # Default sorting order
             q = q.order_by (desc (Job.exec_job_id))  
@@ -434,21 +427,18 @@ class WorkflowInfo(SQLAlchemyInit, DoesLogging):
             for i in range (table_args ['sort-col-count']):
                 
                 if 'iSortCol_' + str(i) in table_args:
+                    sort_order = desc;
+                    
                     if 'sSortDir_' + str(i) in table_args and table_args ['sSortDir_' + str(i)] == 'asc':
-                        i = table_args ['iSortCol_' + str(i)]
+                        sort_order = asc;
+                        
+                    i = table_args ['iSortCol_' + str(i)]
 
-                        if i >= 0 and i < len(display_columns):
-                            q = q.order_by (display_columns [i])
-                        else:
-                            raise ValueError, ('Invalid column (%s) in other jobs listing ' % i)
+                    if i >= 0 and i < len(display_columns):
+                        q = q.order_by (sort_order (display_columns [i]))
                     else:
-                        i = table_args ['iSortCol_' + str(i)]
-
-                        if i >= 0 and i < len(display_columns):
-                            q = q.order_by (desc (display_columns [i]))
-                        else:
-                            raise ValueError, ('Invalid column (%s) in other jobs listing ' % i)
-
+                        raise ValueError, ('Invalid column (%s) in other jobs listing ' % i)
+                  
         else:
             # Default sorting order
             q = q.order_by (desc (Job.exec_job_id))  
