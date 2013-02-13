@@ -402,11 +402,11 @@ class Dashboard(object):
         finally:
             Dashboard.close (workflow)
             
-    def get_running_jobs (self, wf_id):
+    def get_running_jobs (self, wf_id, **table_args):
         try:
             workflow = queries.WorkflowInfo (self.__get_wf_db_url (), wf_id=wf_id)
-            running_jobs = workflow.get_other_jobs ()
-            return running_jobs
+            total_count, filtered_count, running_jobs = workflow.get_other_jobs (**table_args)
+            return total_count, filtered_count, running_jobs
         finally:
             Dashboard.close (workflow)
 
