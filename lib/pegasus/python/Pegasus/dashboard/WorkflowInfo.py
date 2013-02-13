@@ -361,15 +361,16 @@ class WorkflowInfo(SQLAlchemyInit, DoesLogging):
         if count == 0:
             return (0, 0, [])
         
+        filtered = count
         if 'filter' in table_args:
             filter_text = '%' + table_args ['filter'] + '%'
             q = q.filter (or_ (Job.exec_job_id.like (filter_text)))
         
-        # Get Total Count. Need this to pass to jQuery Datatable.
-        filtered = q.count ()
-        
-        if filtered == 0:
-            return (count, 0, [])
+            # Get Total Count. Need this to pass to jQuery Datatable.
+            filtered = q.count ()
+            
+            if filtered == 0:
+                return (count, 0, [])
         
         display_columns = [Job.exec_job_id, duration]
         
