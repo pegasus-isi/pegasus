@@ -316,24 +316,19 @@ class WorkflowInfo(SQLAlchemyInit, DoesLogging):
             for i in range (table_args ['sort-col-count']):
                 
                 if 'iSortCol_' + str(i) in table_args:
+                    sort_order = desc;
+                    
                     if 'sSortDir_' + str(i) in table_args and table_args ['sSortDir_' + str(i)] == 'asc':
-                        i = table_args ['iSortCol_' + str(i)]
+                        sort_order = asc;
+                        
+                    i = table_args ['iSortCol_' + str(i)]
 
-                        if i >= 0 and i < len(display_columns):
-                            q = q.order_by (display_columns [i])
-                        elif i >= len(display_columns) and i < 4:
-                            pass
-                        else:
-                            raise ValueError, ('Invalid column (%s) in failed jobs listing ' % i)
+                    if i >= 0 and i < len(display_columns):
+                        q = q.order_by (sort_order (display_columns [i]))
+                    elif i >= len(display_columns) and i < 4:
+                        pass
                     else:
-                        i = table_args ['iSortCol_' + str(i)]
-
-                        if i >= 0 and i < len(display_columns):
-                            q = q.order_by (desc (display_columns [i]))
-                        elif i >= len(display_columns) and i < 4:
-                            pass
-                        else:
-                            raise ValueError, ('Invalid column (%s) in failed jobs listing ' % i)
+                        raise ValueError, ('Invalid column (%s) in failed jobs listing ' % i)
 
         else:
             # Default sorting order
