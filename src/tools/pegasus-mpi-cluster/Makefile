@@ -98,13 +98,13 @@ distclean: clean
 	$(RM) $(PROGRAMS)
 
 clean:
-	$(RM) *.o $(TESTS) svn.h
+	$(RM) *.o $(TESTS) version.h
 
 depends:
 	g++ -MM *.cpp > depends.mk
 
-svn.h:
-	$(CURDIR)/gensvnh.sh $(CURDIR) > $(CURDIR)/svn.h
+version.h:
+	$(CURDIR)/genversion.sh $(CURDIR) > $(CURDIR)/version.h
 
 ifeq ($(shell which ctags || echo n),n)
 tags:

@@ -5,7 +5,7 @@
 #include <math.h>
 #include <mpi.h>
 
-#include "svn.h"
+#include "version.h"
 #include "dag.h"
 #include "engine.h"
 #include "master.h"
@@ -25,15 +25,9 @@ static int rank;
 
 void version() {
     if (rank == 0) {
-#ifdef SVN_URL
-        fprintf(stderr, "Repository: %s\n", SVN_URL);
-#endif 
-#ifdef SVN_REVISION
-        fprintf(stderr, "Revision: %s\n", SVN_REVISION);
+#ifdef PMC_VERSION
+        fprintf(stderr, "Version: %s\n", PMC_VERSION);
 #endif
-#ifdef SVN_CHANGED
-        fprintf(stderr, "Changed: %s\n", SVN_CHANGED);
-#endif 
         fprintf(stderr, "Compiled: %s %s\n", __DATE__, __TIME__);
 #ifdef __VERSION__
         fprintf(stderr, "Compiler: %s\n", __VERSION__);
