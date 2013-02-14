@@ -1,6 +1,6 @@
 pegasus-mpi-cluster
 *.o
-svn.h
+version.h
 tags
 test-engine
 test-fdcache
