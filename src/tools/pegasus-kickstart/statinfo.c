@@ -656,7 +656,14 @@ printXMLStatInfo( char* buffer, const size_t size, size_t* len, size_t indent,
       if ( fd != -1 ) {
 	if ( lseek( fd, SEEK_SET, 0 ) != -1 ) {
 	  ssize_t rsize = read( fd, data, dsize );
-	  xmlquote( buffer, size, len, data, rsize );
+	  
+	  /* Fix for PM-691 
+	   * the xml quote converts whitespaces. so we need to ensure that the buffer
+	   * only moves maximum of data_section_size. If stdout is only whitespaces,
+	   * then the truncation will happen much earlier than data_section_size.
+	   */
+	  //xmlquote( buffer, size, len, data, rsize );
+	  xmlquote( buffer, dsize, len, data, rsize );
 	}
 	close(fd);
       }
