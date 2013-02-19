@@ -451,7 +451,7 @@ def srm_lcgcp(url):
             raise err
 
 
-def srm_mkdir(url):
+def srm_srmmkdir(url):
     """
     implements recursive mkdir as srm-mkdir can not handle it
     """
@@ -467,7 +467,7 @@ def srm_mkdir(url):
     # back down to a directory which exists
     one_up = url.parent_url()
     if one_up.path != "/":
-        srm_mkdir(one_up)
+        srm_srmmkdir(one_up)
             
     cmd = "srm-mkdir %s" %(url.url())
 
