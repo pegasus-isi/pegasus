@@ -42,8 +42,8 @@ cat >sites.xml <<EOF
         <grid type="cream" contact="https://ce01-lcg.cr.cnaf.infn.it:8443/ce-cream/services/CREAM2" scheduler="LSF" jobtype="compute" />
         <grid type="cream" contact="https://ce01-lcg.cr.cnaf.infn.it:8443/ce-cream/services/CREAM2" scheduler="LSF" jobtype="auxillary" />
 
-        <directory type="shared-scratch" path="/storage/gpfs_virgo3/">             
-               <file-server operation="all" url="srm://storm-fe-archive.cr.cnaf.infn.it:8444/srm/managerv2?SFN=/virgo3/"/> 
+        <directory type="shared-scratch" path="/storage/gpfs_virgo4/">             
+               <file-server operation="all" url="srm://storm-fe-archive.cr.cnaf.infn.it:8444/srm/managerv2?SFN=/virgo4/"/> 
         </directory>                                                                                                                                                                                                                                                                             
         
         <profile namespace="pegasus" key="style">cream</profile>
