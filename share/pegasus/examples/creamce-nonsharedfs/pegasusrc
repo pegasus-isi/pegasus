@@ -1,0 +1,14 @@
+
+pegasus.catalog.site.file=sites.xml
+
+pegasus.catalog.transformation=File
+pegasus.catalog.transformation.file=tc.data
+
+#pegasus.transfer.worker.package true
+
+#disable condor quoting for jobs
+pegasus.condor.arguments.quote false
+
+pegasus.data.configuration nonsharedfs
+
+dagman.retry 1
