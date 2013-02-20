@@ -350,10 +350,11 @@ D1/f.3 file://$input/D1/f.3 pool="local"</programlisting>
         </listitem>
 
         <listitem>
-          <para>pegasus.catalog.replica.directory.flat.lfn to specify whether
-          you want deep LFN's to be constructed or not. If not specified,
-          value defaults to false i.e. deep lfn's are constructed for the
-          mappings.</para>
+          <para><emphasis
+          role="bold">pegasus.catalog.replica.directory.flat.lfn</emphasis> to
+          specify whether you want deep LFN's to be constructed or not. If not
+          specified, value defaults to false i.e. deep lfn's are constructed
+          for the mappings.</para>
         </listitem>
 
         <listitem>
