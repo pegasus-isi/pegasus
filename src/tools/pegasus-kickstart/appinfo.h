@@ -58,7 +58,6 @@ typedef struct {
   StatInfo       error;      /* stat() info for "error", if available */
   StatInfo       logfile;    /* stat() info for "logfile", if available */
   StatInfo       gridstart;  /* stat() info for this program, if available */
-  StatInfo       channel;    /* stat() on app channel FIFO, if avail. */
 
   StatInfo*      initial;    /* stat() info for user-specified files. */
   size_t         icount;     /* size of initial array, may be 0 */

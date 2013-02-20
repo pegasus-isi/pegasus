@@ -311,29 +311,6 @@ handleOutputStream( StatInfo* stream, const char* temp, int std_fileno )
 extern char** environ;
 
 static
-int
-areWeSane( const char* what )
-/* purpose: count the number of occurances of a specific environment variable
- * paramtr: what (IN): environment variable name
- * returns: the count. 
- * warning: Produces a warning on stderr if count==0
- */
-{
-  size_t len = strlen(what);
-  int count = 0;
-  char** s = environ;
-
-  while ( s && *s ) {
-    if ( strncmp( *s, what, len ) == 0 && (*s)[len] == '=' ) count++;
-    ++s;
-  }
-
-  if ( ! count ) 
-    debugmsg( "Warning! Did not find %s in environment!\n", what );
-  return count;
-}
-
-static
 char*
 noquote( char* s )
 {
@@ -414,14 +391,6 @@ main( int argc, char* argv[] )
       /* limit max <data> size to 64 MB for each. */
       if ( m < 67108863ul ) data_section_size = m;
       break;
-#if 0
-    case 'c':
-      if ( appinfo.channel.source != IS_INVALID )
-        deleteStatInfo( &appinfo.channel );
-      temp = argv[i][2] ? &argv[i][2] : argv[++i];
-      initStatInfoAsFifo( &appinfo.channel, temp, "GRIDSTART_CHANNEL" );
-      break;
-#endif
     case 'e':
       if ( appinfo.error.source != IS_INVALID )
         deleteStatInfo( &appinfo.error );
@@ -542,9 +511,6 @@ main( int argc, char* argv[] )
       break;
     }
   }
-
-  /* sanity check -- for FNAL/ATLAS */
-  areWeSane("GRIDSTART_CHANNEL");
 
   /* initialize app info and register CLI parameters with it */
   if ( argc-i > 0 ) {

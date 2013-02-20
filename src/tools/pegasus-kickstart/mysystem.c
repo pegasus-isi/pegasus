@@ -27,23 +27,12 @@
 #include "tools.h"
 #include "appinfo.h"
 #include "statinfo.h"
-#include "event.h"
 #include "mysystem.h"
 
 static const char* RCS_ID =
 "$Id$";
 
 #include "mysignal.h"
-
-typedef struct {
-  volatile sig_atomic_t count;   /* OUT: number of signals seen */
-  volatile sig_atomic_t done;    /* OUT: 0: to be done, 1: child reaped */
-  volatile int          error;   /* OUT: errno when something went bad */
-  JobInfo*               job;     /*  IO: data repository */
-} SignalHandlerCommunication;
-
-static SignalHandlerCommunication child;
-
 
 #ifdef DEBUG_WAIT
 static
@@ -58,55 +47,6 @@ mywait4( pid_t wpid, int* status, int options, struct rusage* rusage )
 #else
 #define mywait4(a,b,c,d) wait4(a,b,c,d)
 #endif /* DEBUG_WAIT */
-
-static
-SIGRETTYPE
-sig_child( SIGPARAM signo )
-{
-  int rc = -1;
-
-  ++child.count;
-  /* There have been known cases where Linux delivers signals twice
-   * that may have been sent only once, grrrr. 
-   */
-#ifdef DEBUG_WAIT
-  debugmsg( "# child.count == %d\n", child.count );
-#endif /* DEBUG_WAIT */
-
-  if ( child.job != NULL ) {
-    int saverr = errno;
-    errno = 0;
-#ifdef DEBUG_WAIT
-    fputs( "# child.job != NULL\n", stderr );
-#endif /* DEBUG_WAIT */
-
-    /* WARN: wait4 is not POSIX.1 reentrant safe */
-    while ( (rc=mywait4( child.job->child, &child.job->status, 
-                         WNOHANG, &child.job->use )) < 0 ) {
-      if ( errno != EINTR ) {
-        child.error = errno;
-        child.job->status = -42;
-        break;
-      }
-    }
-    errno = saverr;
-  }
-
-#ifdef DEBUG_WAIT
-  debugmsg( "# child.done := (%d != 0) => %d\n", rc, (rc != 0) );
-#endif /* DEBUG_WAIT */
-
-  /* once set, never reset */
-  if ( ! child.done ) child.done = ( rc != 0 );
-}
-
-static
-SIGRETTYPE
-sig_propagate( SIGPARAM signo )
-/* purpose: propagate the signal to active children */
-{
-  if ( child.job != NULL ) kill( child.job->child, signo );
-}
 
 int
 mysystem( AppInfo* appinfo, JobInfo* jobinfo, char* envp[] )
@@ -135,7 +75,6 @@ mysystem( AppInfo* appinfo, JobInfo* jobinfo, char* envp[] )
  */
 {
   struct sigaction ignore, saveintr, savequit;
-  struct sigaction new_child, old_child;
 
   /* sanity checks first */
   if ( ! jobinfo->isValid ) {
@@ -150,20 +89,6 @@ mysystem( AppInfo* appinfo, JobInfo* jobinfo, char* envp[] )
   if ( sigaction( SIGINT, &ignore, &saveintr ) < 0 )
     return -1;
   if ( sigaction( SIGQUIT, &ignore, &savequit ) < 0 )
-    return -1;
-
-  /* install SIGCHLD handler */
-  memset( &child, 0, sizeof(child) );
-  child.job  = jobinfo;
-
-  memset( &new_child, 0, sizeof(new_child) );
-  new_child.sa_handler = sig_child;
-  sigemptyset( &new_child.sa_mask );
-  new_child.sa_flags = SA_NOCLDSTOP;
-#ifdef SA_INTERRUPT
-  new_child.sa_flags |= SA_INTERRUPT; /* SunOS, obsoleted by POSIX */
-#endif
-  if ( sigaction( SIGCHLD, &new_child, &old_child ) < 0 )
     return -1;
 
   /* start wall-clock */
@@ -184,49 +109,35 @@ mysystem( AppInfo* appinfo, JobInfo* jobinfo, char* envp[] )
     /* undo signal handlers */
     sigaction( SIGINT, &saveintr, NULL );
     sigaction( SIGQUIT, &savequit, NULL );
-    sigaction( SIGCHLD, &old_child, NULL );
 
     execve( jobinfo->argv[0], (char* const*) jobinfo->argv, envp );
     _exit(127); /* executed in child process */
   } else {
     /* parent */
-    int saverr;
-    errno = 0;
-
-    /* insert event loop here */
-    while ( ! child.done )
-      eventLoop( STDERR_FILENO, &appinfo->channel, &child.done );
-
+    int rc;
+    while ( (rc = mywait4( jobinfo->child, &jobinfo->status, 0, &jobinfo->use )) < 0 ) {
+      if ( errno != EINTR ) {
+        jobinfo->status = -42;
+      }
+    }
+    
     /* sanity check */
-    saverr = errno;
     if ( kill( jobinfo->child, 0 ) == 0 ) {
       debugmsg( "ERROR: job %d is still running!\n", jobinfo->child );
-      if ( ! child.error ) child.error = EINPROGRESS;
+      if ( ! errno ) errno = EINPROGRESS;
     }
-    errno = child.error ? child.error : saverr;
   }
-
+  
   /* save any errors before anybody overwrites this */
   jobinfo->saverr = errno;
-
-  /* move closer towards signal occurance -- ward off further signals */
-  sigaction( SIGCHLD, &old_child, NULL );
-
+  
   /* stop wall-clock */
   now( &(jobinfo->finish) );
-
+  
   /* ignore errors on these, too. */
   sigaction( SIGINT, &saveintr, NULL );
   sigaction( SIGQUIT, &savequit, NULL );
-
-  /* only after handler was deactivated */
-  if ( child.count != 1 || child.error ) {
-    char temp[256];
-    snprintf( temp, sizeof(temp), "%d x SIGCHLD; %d: %s",
-              child.count, child.error, strerror(child.error) );
-    send_message( STDERR_FILENO, temp, strlen(temp), 0 );
-  }
-
+  
   /* finalize */
   return jobinfo->status;
 }

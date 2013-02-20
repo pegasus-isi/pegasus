@@ -183,7 +183,6 @@ convert2XML( char* buffer, size_t size, const AppInfo* run )
   updateStatInfo( &(((AppInfo*) run)->logfile) );
   printXMLStatInfo( buffer, size, &len, 2, "statcall", "gridstart", &run->gridstart );
   printXMLStatInfo( buffer, size, &len, 2, "statcall", "logfile", &run->logfile );
-  printXMLStatInfo( buffer, size, &len, 2, "statcall", "channel", &run->channel );
 
   /* initial and final arbitrary <statcall> records */
   if ( run->icount && run->initial )
@@ -297,10 +296,6 @@ initAppInfo( AppInfo* appinfo, int argc, char* const* argv )
 
   /* default for stdlog */
   initStatInfoFromHandle( &appinfo->logfile, STDOUT_FILENO );
-
-  /* default for application-level feedback-channel */
-  pattern( tempname, tempsize, tempdir, "/", "gs.app.XXXXXX" );
-  initStatInfoAsFifo( &appinfo->channel, tempname, "GRIDSTART_CHANNEL" );
 
   /* free pattern space */
   free((void*) tempname );
@@ -436,7 +431,6 @@ deleteAppInfo( AppInfo* runinfo )
   deleteStatInfo( &runinfo->error );
   deleteStatInfo( &runinfo->logfile );
   deleteStatInfo( &runinfo->gridstart );
-  deleteStatInfo( &runinfo->channel );
 
   if ( runinfo->icount && runinfo->initial )
     for ( i=0; i<runinfo->icount; ++i )
