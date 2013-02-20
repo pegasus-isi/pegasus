@@ -69,6 +69,8 @@ typedef struct {
   struct rusage  usage;      /* rusage record for myself */
   LimitInfo      limits;     /* hard- and soft limits */
   MachineInfo    machine;    /* more system information */
+  
+  int            status;     /* The final status of the job */
 } AppInfo;
 
 extern

@@ -157,12 +157,7 @@ convert2XML( char* buffer, size_t size, const AppInfo* run )
     append( buffer, size, &len, run->workdir );
     append( buffer, size, &len, "</cwd>\n" );
   } else {
-#if 0
-    append( buffer, size, &len, "  <cwd xmlns:xsi=\"http://www.w3.org/2001/"
-            "XMLSchema-instance\" xsi:nil=\"true\"/>\n" );
-#else
     append( buffer, size, &len, "  <cwd/>\n" );
-#endif
   }
 
   /* <usage> own resources */
@@ -171,8 +166,17 @@ convert2XML( char* buffer, size_t size, const AppInfo* run )
   if ( ! run->noHeader )
     printXMLMachineInfo( buffer, size, &len, 2, "machine", &run->machine ); 
 
-  if ( run->fullInfo ) {
-    /* <statcall> records */
+  /* User-specified initial and final arbitrary <statcall> records */
+  if ( run->icount && run->initial )
+    for ( i=0; i<run->icount; ++i )
+      printXMLStatInfo( buffer, size, &len, 2, "statcall", "initial", &run->initial[i] );
+  if ( run->fcount && run->final )
+    for ( i=0; i<run->fcount; ++i )
+      printXMLStatInfo( buffer, size, &len, 2, "statcall", "final", &run->final[i] );
+
+  /* If the job failed, or if the user requested the full kickstart record */
+  if ( run->status || run->fullInfo ) {
+    /* Default <statcall> records */
     printXMLStatInfo( buffer, size, &len, 2, "statcall", "stdin", &run->input );
     updateStatInfo( &(((AppInfo*) run)->output) );
     printXMLStatInfo( buffer, size, &len, 2, "statcall", "stdout", &run->output );
@@ -181,14 +185,6 @@ convert2XML( char* buffer, size_t size, const AppInfo* run )
     updateStatInfo( &(((AppInfo*) run)->logfile) );
     printXMLStatInfo( buffer, size, &len, 2, "statcall", "gridstart", &run->gridstart );
     printXMLStatInfo( buffer, size, &len, 2, "statcall", "logfile", &run->logfile );
-
-    /* initial and final arbitrary <statcall> records */
-    if ( run->icount && run->initial )
-      for ( i=0; i<run->icount; ++i )
-        printXMLStatInfo( buffer, size, &len, 2, "statcall", "initial", &run->initial[i] );
-    if ( run->fcount && run->final )
-      for ( i=0; i<run->fcount; ++i )
-        printXMLStatInfo( buffer, size, &len, 2, "statcall", "final", &run->final[i] );
 
     /* <environment> */
     if ( run->envp && run->envc ) {
@@ -220,7 +216,7 @@ convert2XML( char* buffer, size_t size, const AppInfo* run )
     /* <resource>  limits */
     printXMLLimitInfo( buffer, size, &len, 2, &run->limits );
 
-  } /* run->fullInfo */
+  } /* run->status || run->fullInfo */
 
   /* finish root element */
   append( buffer, size, &len, "</invocation>\n" );

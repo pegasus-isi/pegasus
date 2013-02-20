@@ -181,7 +181,8 @@ helpMe( const AppInfo* run )
   fprintf( stderr,
 " -L lbl\tReflects the workflow label into record, no default.\n"
 " -T iso\tReflects the workflow time stamp into record, no default.\n"
-" -H\tOmit <?xml ...?> header and <machine> from record.\n"
+" -H\tOmit <?xml ...?> header and <machine> from record. This is used\n"
+"   \tin clustered jobs to supress duplicate information.\n"
 " -I fn\tReads job and args from the file fn, one arg per line.\n"
 " -V\tDisplays the version and exit.\n"
 " -X\tMakes the application executable, no matter what.\n"
@@ -192,7 +193,8 @@ helpMe( const AppInfo* run )
 " -s l=p\tProvides filename pairs to stat before exit, multi-option.\n"
 " \tIf the arg is prefixed with '@', it is a list-of-filenames file.\n"
 " -F\tAttempt to fsync kickstart's stdout at exit (should not be necessary).\n"
-" -f\tPrint full information including <resource>, <environment> and <statcall>\n"
+" -f\tPrint full information including <resource>, <environment> and \n"
+"   \t<statcall>. If the job fails, then -f is implied.\n"
  );
 
   /* avoid printing of results in exit handler */
@@ -336,9 +338,6 @@ main( int argc, char* argv[] )
   int status, result;
   int i, j, keeploop;
   int createDir = 0;
-#if 0
-  long fsflags = -1; 
-#endif
   const char* temp;
   const char* workdir = NULL;
   mylist_t initial;
@@ -348,20 +347,6 @@ main( int argc, char* argv[] )
   if ( mylist_init( &initial ) ) return 43;
   if ( mylist_init( &final ) ) return 43;
   initAppInfo( &appinfo, argc, argv );
-
-#if 0
-  debugmsg( "# appinfo=%d, jobinfo=%d, statinfo=%d, useinfo=%d\n",
-            sizeof(AppInfo), sizeof(JobInfo), sizeof(StatInfo),
-            sizeof(struct rusage) );
-#endif
-
-#if 0
-  /* NEW: 2011-08-19: PM-466 -- best effort add O_SYNC flag to stdout */
-  /* Handled differently in finish() above using fsync() on stdout */
-  if ( (fsflags=fcntl( STDOUT_FILENO, F_GETFL )) != -1 ) { 
-    fcntl( STDOUT_FILENO, F_SETFL, ( fsflags | O_SYNC ) ); 
-  }
-#endif
 
   /* register emergency exit handler */
   if ( atexit( finish ) == -1 ) {
@@ -627,22 +612,15 @@ main( int argc, char* argv[] )
   appinfo.final = initStatFromList( &final, &appinfo.fcount );
   mylist_done( &final );
 
+  /* Record final result */
+  appinfo.status = result;
+
   /* append results to log file */
   printAppInfo( &appinfo );
 
   /* clean up and close FDs */
   global_no_atexit = 1; /* disable atexit handler */
   deleteAppInfo( &appinfo );
-
-  /* force NFS sync for gatekeeper */
-#if 0
-  /* FIXME: No locking on stdout, because printAppInfo will have done so */
-  nfs_sync( STDOUT_FILENO, DEFAULT_SYNC_IDLE );
-#endif
-#if 0
-  /* FIXME: No locking on stderr, because atexit-handler finish() does it. */
-  nfs_sync( STDERR_FILENO, DEFAULT_SYNC_IDLE );
-#endif
 
   /* done */
   return result;
