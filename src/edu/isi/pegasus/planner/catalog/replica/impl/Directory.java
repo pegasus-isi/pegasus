@@ -21,6 +21,7 @@ import java.util.*;
 import edu.isi.pegasus.common.util.Boolean;
 import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
+import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogException;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaFactory;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 
@@ -48,6 +49,11 @@ import java.util.regex.Pattern;
  *      pegasus.catalog.replica.directory.url.prefix
  * </pre>
  *
+ * By default, deep LFN's are constructed while traversing through the directory,
+ * unless the following property is set to true
+ * <pre>
+ *     pegasus.catalog.replica.directory.flat.lfn
+ * </pre>
  *
  *
  * @author Karan Vahi
@@ -72,22 +78,29 @@ public class Directory implements ReplicaCatalog {
      * The name of the key that disables writing back to the cache file.
      * Designates a static file. i.e. read only
      */
-    public static final String READ_ONLY_PROPERTY_KEY = "read.only";
+    //public static final String READ_ONLY_PROPERTY_KEY = "read.only";
 
     /**
      * The name of the key that specifies the path to directory.
      */
-    public static String DIRECTORY_PROPERTY_KEY = "directory";
+    public static final String DIRECTORY_PROPERTY_KEY = "directory";
 
     /**
      * The name of the key that specifies the site attribute to be associated
      */
-    public static String SITE_PROPERTY_KEY = "directory.site";
+    public static final String SITE_PROPERTY_KEY = "directory.site";
     
     /**
      * The name of the key that specifies the url prefix to be associated with the PFN's
      */
-    public static String URL_PRFIX_PROPERTY_KEY = "directory.url.prefix";
+    public static final String URL_PRFIX_PROPERTY_KEY = "directory.url.prefix";
+
+    /**
+     * the name of the key that specifies whether we want flat lfns or not.
+     * By default it is false, i.e we construct deep lfn's when traversing through
+     * the directory hierarchy
+     */
+    public static final String FLAT_LFN_PROPERTY_KEY = "directory.flat.lfn";
 
     /**
      * Records the name of the on-disk representation.
@@ -103,6 +116,11 @@ public class Directory implements ReplicaCatalog {
      * A boolean indicating whether the catalog is read only or not.
      */
     boolean mReadOnly;
+
+    /**
+     * A boolean indicating whether the catalog is to construct flat lfns or not
+     */
+    boolean mConstructFlatLFN;
 
     /**
      * The  site handle to use.
@@ -126,7 +144,8 @@ public class Directory implements ReplicaCatalog {
         // make connection defunc
         mLFNMap = null;
         mDirectory = null;
-        mReadOnly = false;
+        //mReadOnly = false;
+        mConstructFlatLFN = false;
         mSiteHandle = Directory.DEFAULT_SITE_HANDLE;
         mURLPrefix  = Directory.DEFAULT_URL_PREFIX;
     }
@@ -148,8 +167,8 @@ public class Directory implements ReplicaCatalog {
     public boolean connect(Properties props) {
         
         //update the m_writeable flag if specified
-        if (props.containsKey(Directory.READ_ONLY_PROPERTY_KEY)) {
-            mReadOnly = Boolean.parse(props.getProperty(Directory.READ_ONLY_PROPERTY_KEY),
+        if (props.containsKey(Directory.FLAT_LFN_PROPERTY_KEY)) {
+            mConstructFlatLFN = Boolean.parse(props.getProperty(Directory.FLAT_LFN_PROPERTY_KEY),
                     false);
         }
 
@@ -221,7 +240,7 @@ public class Directory implements ReplicaCatalog {
         for( File f: directory.listFiles() ){
             StringBuffer lfn = new StringBuffer();
             String name = f.getName();
-            if( prefix == null || prefix.isEmpty() ){
+            if( mConstructFlatLFN || prefix == null || prefix.isEmpty() ){
                 lfn.append( name );
             }
             else{
@@ -234,8 +253,8 @@ public class Directory implements ReplicaCatalog {
             }
             else{
                 //we have a mapping to populate
-                //System.out.println( lfn + " => " + f.getAbsolutePath() );
                 String pfn = this.mURLPrefix + f.getAbsolutePath();
+                //System.out.println( lfn + " => " + pfn );
                 insert( lfn.toString(), new ReplicaCatalogEntry( pfn, mSiteHandle ) );
             }
         }
@@ -568,6 +587,16 @@ public class Directory implements ReplicaCatalog {
 
         Collection c = null;
         if (mLFNMap.containsKey(lfn)) {
+
+            if ( this.mConstructFlatLFN ){
+                //for flat LFN's we need to throw error if two files of the same
+                //name exist
+                StringBuffer error = new StringBuffer();
+                error.append( "Entry for lfn ").append( lfn ).
+                      append( "already exists " ).append( mLFNMap.get(lfn) );
+                throw new ReplicaCatalogException( error.toString() );
+            }
+
             boolean seen = false;
             String pfn = tuple.getPFN();
             String handle = tuple.getResourceHandle();
