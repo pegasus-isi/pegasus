@@ -181,7 +181,7 @@ helpMe( const AppInfo* run )
   fprintf( stderr,
 " -L lbl\tReflects the workflow label into record, no default.\n"
 " -T iso\tReflects the workflow time stamp into record, no default.\n"
-" -H\tOmit <?xml ...?> header and <resource|environment> from record.\n"
+" -H\tOmit <?xml ...?> header and <machine> from record.\n"
 " -I fn\tReads job and args from the file fn, one arg per line.\n"
 " -V\tDisplays the version and exit.\n"
 " -X\tMakes the application executable, no matter what.\n"
@@ -192,6 +192,7 @@ helpMe( const AppInfo* run )
 " -s l=p\tProvides filename pairs to stat before exit, multi-option.\n"
 " \tIf the arg is prefixed with '@', it is a list-of-filenames file.\n"
 " -F\tAttempt to fsync kickstart's stdout at exit (should not be necessary).\n"
+" -f\tPrint full information including <resource>, <environment> and <statcall>\n"
  );
 
   /* avoid printing of results in exit handler */
@@ -413,6 +414,9 @@ main( int argc, char* argv[] )
       break;
     case 'H':
       appinfo.noHeader++;
+      break;
+    case 'f':
+      appinfo.fullInfo++;
       break;
     case 'F':
       doFlush++;

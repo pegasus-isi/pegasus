@@ -171,25 +171,24 @@ convert2XML( char* buffer, size_t size, const AppInfo* run )
   if ( ! run->noHeader )
     printXMLMachineInfo( buffer, size, &len, 2, "machine", &run->machine ); 
 
-  /* <statcall> records */
-  printXMLStatInfo( buffer, size, &len, 2, "statcall", "stdin", &run->input );
-  updateStatInfo( &(((AppInfo*) run)->output) );
-  printXMLStatInfo( buffer, size, &len, 2, "statcall", "stdout", &run->output );
-  updateStatInfo( &(((AppInfo*) run)->error) );
-  printXMLStatInfo( buffer, size, &len, 2, "statcall", "stderr", &run->error );
-  updateStatInfo( &(((AppInfo*) run)->logfile) );
-  printXMLStatInfo( buffer, size, &len, 2, "statcall", "gridstart", &run->gridstart );
-  printXMLStatInfo( buffer, size, &len, 2, "statcall", "logfile", &run->logfile );
+  if ( run->fullInfo ) {
+    /* <statcall> records */
+    printXMLStatInfo( buffer, size, &len, 2, "statcall", "stdin", &run->input );
+    updateStatInfo( &(((AppInfo*) run)->output) );
+    printXMLStatInfo( buffer, size, &len, 2, "statcall", "stdout", &run->output );
+    updateStatInfo( &(((AppInfo*) run)->error) );
+    printXMLStatInfo( buffer, size, &len, 2, "statcall", "stderr", &run->error );
+    updateStatInfo( &(((AppInfo*) run)->logfile) );
+    printXMLStatInfo( buffer, size, &len, 2, "statcall", "gridstart", &run->gridstart );
+    printXMLStatInfo( buffer, size, &len, 2, "statcall", "logfile", &run->logfile );
 
-  /* initial and final arbitrary <statcall> records */
-  if ( run->icount && run->initial )
-    for ( i=0; i<run->icount; ++i )
-      printXMLStatInfo( buffer, size, &len, 2, "statcall", "initial", &run->initial[i] );
-  if ( run->fcount && run->final )
-    for ( i=0; i<run->fcount; ++i )
-      printXMLStatInfo( buffer, size, &len, 2, "statcall", "final", &run->final[i] );
-
-  if ( ! run->noHeader ) {
+    /* initial and final arbitrary <statcall> records */
+    if ( run->icount && run->initial )
+      for ( i=0; i<run->icount; ++i )
+        printXMLStatInfo( buffer, size, &len, 2, "statcall", "initial", &run->initial[i] );
+    if ( run->fcount && run->final )
+      for ( i=0; i<run->fcount; ++i )
+        printXMLStatInfo( buffer, size, &len, 2, "statcall", "final", &run->final[i] );
 
     /* <environment> */
     if ( run->envp && run->envc ) {
@@ -221,7 +220,7 @@ convert2XML( char* buffer, size_t size, const AppInfo* run )
     /* <resource>  limits */
     printXMLLimitInfo( buffer, size, &len, 2, &run->limits );
 
-  } /* ! run->noHeader */
+  } /* run->fullInfo */
 
   /* finish root element */
   append( buffer, size, &len, "</invocation>\n" );
