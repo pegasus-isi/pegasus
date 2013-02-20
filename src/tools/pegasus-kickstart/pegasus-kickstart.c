@@ -33,6 +33,7 @@
 #include "mylist.h"
 #include "invoke.h"
 #include "tools.h"
+#include "version.h"
 
 /* truely shared globals */
 int isExtended = 1;     /* timestamp format concise or extended */
@@ -398,7 +399,7 @@ main( int argc, char* argv[] )
       helpMe( &appinfo );
       break; /* unreachable */
     case 'V':
-      puts( "No version info" );
+      puts( KICKSTART_VERSION );
       appinfo.isPrinted=1;
       return 0;
     case 'i':

@@ -140,7 +140,7 @@ jobinfo.o: jobinfo.c getif.h debug.h tools.h useinfo.h jobinfo.h \
   statinfo.h parse.h
 pegasus-kickstart.o: pegasus-kickstart.c rwio.h debug.h appinfo.h \
   statinfo.h jobinfo.h limitinfo.h machine.h mysystem.h mylist.h \
-  invoke.h tools.h
+  invoke.h tools.h version.h
 limitinfo.o: limitinfo.c debug.h tools.h limitinfo.h
 machine.o: machine.c machine.h machine/basic.h debug.h
 meminfo.o: meminfo.c meminfo.h debug.h
@@ -171,11 +171,14 @@ machine/linux.o: machine/linux.c machine/basic.c machine/linux.h \
 machine/darwin.o: machine/darwin.c machine/basic.c machine/darwin.h \
   machine/../tools.h
 
+version.h:
+	$(CURDIR)/genversion.sh > $(CURDIR)/version.h
+
 install: pegasus-kickstart
 	$(INSTALL) -m 0755 pegasus-kickstart $(prefix)/bin
 
 clean:
-	$(RM) *.o machine/*.o core core.*
+	$(RM) *.o machine/*.o core core.* version.h
 
 distclean: clean
 	$(RM) pegasus-kickstart fail test-post test-pre test-ascii show-if
