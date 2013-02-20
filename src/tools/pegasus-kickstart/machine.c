@@ -14,9 +14,6 @@
  */
 #include "machine.h"
 
-static const char* RCS_ID =
-  "$Id$";
-
 #ifdef LINUX
 #define __MFLAG 1
 #include "machine/linux.h"

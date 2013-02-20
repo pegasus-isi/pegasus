@@ -23,9 +23,6 @@
 #include "tools.h"
 #include "limitinfo.h"
 
-static const char* RCS_ID =
-"$Id$";
-
 #ifndef RLIMIT_NLIMITS
 #ifdef RLIM_NLIMITS
 #define RLIMIT_NLIMITS RLIM_NLIMITS

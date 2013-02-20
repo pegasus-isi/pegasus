@@ -23,9 +23,6 @@
 #include <stdlib.h>
 #include <stdarg.h>
 
-static const char* RCS_ID =
-  "$Id$";
-
 ssize_t
 debugmsg( char* fmt, ... )
 /* purpose: create a log line on stderr.

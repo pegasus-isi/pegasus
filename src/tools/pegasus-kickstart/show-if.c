@@ -27,9 +27,6 @@
 #include <stdlib.h>
 #include "getif.h"
 
-static const char* RCS_ID =
-"$Id$";
-
 int
 main( int argc, char* argv[] )
 {

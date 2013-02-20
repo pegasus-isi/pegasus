@@ -34,9 +34,6 @@
 extern int isExtended; /* timestamp format concise or extended */
 extern int isLocal;    /* timestamp time zone, UTC or local */
 
-static const char* RCS_ID =
-"$Id$";
-
 #ifdef sun
 #define sys_siglist _sys_siglist
 #endif

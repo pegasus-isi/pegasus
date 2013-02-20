@@ -34,9 +34,6 @@
 #include <sys/sockio.h>
 #endif
 
-static const char* RCS_ID =
-  "$Id$";
-
 int getif_debug = 0; /* enable debugging code paths */
 
 static unsigned long vpn_network[6] = { 0, 0, 0, 0, 0 };

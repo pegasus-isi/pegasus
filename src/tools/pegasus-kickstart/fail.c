@@ -17,9 +17,6 @@
 #include <unistd.h>
 #include <stdlib.h>
 
-static const char* RCS_ID =
-"$Id$";
-
 int
 main( int argc, char* argv[] )
 {

@@ -22,9 +22,6 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-static const char* RCS_ID =
-"$Id$";
-
 #ifndef ITEM_MAGIC
 #define ITEM_MAGIC 0xcd82bd08
 #endif

@@ -22,9 +22,6 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-static const char* RCS_ID =
-"$Id$";
-
 void
 full_append( char* buffer, const size_t size, size_t* len, 
              const char* msg, size_t msglen )

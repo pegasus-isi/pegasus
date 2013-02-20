@@ -14,9 +14,6 @@
  */
 #include "mynss.h"
 
-static const char* RCS_ID =
-"$Id$";
-
 #ifdef LINUX
 #include <setjmp.h>
 #include <errno.h>

@@ -28,10 +28,6 @@
 #include "appinfo.h"
 #include "statinfo.h"
 #include "mysystem.h"
-
-static const char* RCS_ID =
-"$Id$";
-
 #include "mysignal.h"
 
 #ifdef DEBUG_WAIT

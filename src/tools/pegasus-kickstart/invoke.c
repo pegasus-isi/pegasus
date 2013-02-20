@@ -18,9 +18,6 @@
 #include <stdlib.h>
 #include "invoke.h"
 
-static const char* RCS_ID =
-"$Id$";
-
 int
 append_arg( char* data, char*** arg, size_t* index, size_t* capacity )
 /* purpose: adds a string to a list of arguments

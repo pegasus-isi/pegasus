@@ -45,9 +45,6 @@ static int doFlush = 0; /* apply fsync() on kickstart's stdout if true */
 static AppInfo appinfo; /* sigh, needs to be global for atexit handler */
 static volatile sig_atomic_t global_no_atexit;
 
-static const char* RCS_ID =
-"$Id$";
-
 static
 int
 obtainStatusCode( int raw ) 
@@ -156,7 +153,6 @@ helpMe( const AppInfo* run )
   if ( p ) ++p;
   else p=run->argv[0];
 
-  fprintf( stderr, "%s\n", RCS_ID );
   fprintf( stderr, 
 "Usage:\t%s [-i fn] [-o fn] [-e fn] [-l fn] [-n xid] [-N did] \\\n"
 "\t[-w|-W cwd] [-R res] [-s [l=]p] [-S [l=]p] [-X] [-H] [-L lbl -T iso] \\\n" 
@@ -402,7 +398,7 @@ main( int argc, char* argv[] )
       helpMe( &appinfo );
       break; /* unreachable */
     case 'V':
-      puts( RCS_ID );
+      puts( "No version info" );
       appinfo.isPrinted=1;
       return 0;
     case 'i':

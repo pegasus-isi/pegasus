@@ -24,9 +24,6 @@
 #include <fcntl.h>
 #include "debug.h"
 
-static const char* RCS_ID =
-"$Id$";
-
 #if 0
 --- 2.4.29 Linux kernel, fs/proc/array.c ---
 

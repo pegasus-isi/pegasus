@@ -16,9 +16,6 @@
 #include "useinfo.h"
 #include <string.h>
 
-static const char* RCS_ID =
-"$Id$";
-
 int
 printXMLUseInfo( char* buffer, size_t size, size_t* len, size_t indent,
                  const char* id, const struct rusage* use )

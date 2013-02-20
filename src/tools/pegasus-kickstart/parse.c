@@ -21,9 +21,6 @@
 #include "debug.h"
 #include "parse.h"
 
-static const char* RCS_ID =
-"$Id$";
-
 size_t
 countNodes( const Node* head )
 /* purpose: count the number of element in list
