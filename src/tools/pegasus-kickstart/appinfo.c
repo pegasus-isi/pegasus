@@ -174,16 +174,18 @@ convert2XML( char* buffer, size_t size, const AppInfo* run )
     for ( i=0; i<run->fcount; ++i )
       printXMLStatInfo( buffer, size, &len, 2, "statcall", "final", &run->final[i] );
 
+  /* Default <statcall> records */
+  printXMLStatInfo( buffer, size, &len, 2, "statcall", "stdin", &run->input );
+  updateStatInfo( &(((AppInfo*) run)->output) );
+  printXMLStatInfo( buffer, size, &len, 2, "statcall", "stdout", &run->output );
+  updateStatInfo( &(((AppInfo*) run)->error) );
+  printXMLStatInfo( buffer, size, &len, 2, "statcall", "stderr", &run->error );
+
   /* If the job failed, or if the user requested the full kickstart record */
   if ( run->status || run->fullInfo ) {
-    /* Default <statcall> records */
-    printXMLStatInfo( buffer, size, &len, 2, "statcall", "stdin", &run->input );
-    updateStatInfo( &(((AppInfo*) run)->output) );
-    printXMLStatInfo( buffer, size, &len, 2, "statcall", "stdout", &run->output );
-    updateStatInfo( &(((AppInfo*) run)->error) );
-    printXMLStatInfo( buffer, size, &len, 2, "statcall", "stderr", &run->error );
-    updateStatInfo( &(((AppInfo*) run)->logfile) );
+    /* Extra <statcall> records */
     printXMLStatInfo( buffer, size, &len, 2, "statcall", "gridstart", &run->gridstart );
+    updateStatInfo( &(((AppInfo*) run)->logfile) );
     printXMLStatInfo( buffer, size, &len, 2, "statcall", "logfile", &run->logfile );
 
     /* <environment> */
