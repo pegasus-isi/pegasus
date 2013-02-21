@@ -26,6 +26,7 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.transfer.sls.SLSFactory;
+import java.io.File;
 import java.util.Iterator;
 import java.util.Properties;
 import java.util.Set;
@@ -161,6 +162,7 @@ public class PegasusConfiguration {
         
         //check if a user specified an output directory
         String directory = options.getOutputDirectory();
+        String externalDirectory = options.getOutputDirectory();//the external view of the directory if relative
         if( directory != null ){
             outputSite = ( outputSite == null )?
                           "local": //user did not specify an output site, default to local
@@ -170,12 +172,6 @@ public class PegasusConfiguration {
             
             SiteCatalogEntry entry = store.lookup( outputSite );
             
-            //update all storage file server paths to refer to the directory
-            StringBuffer message = new StringBuffer();
-            message.append( "Updating storage file server paths for site " ).append( outputSite ).
-                    append( " to directory " ).append( directory );
-            mLogger.log( message.toString(), LogManager.CONFIG_MESSAGE_LEVEL );
-
             
             //we first check for local directory
             DirectoryLayout storageDirectory = entry.getDirectory( Directory.TYPE.local_storage );
@@ -187,20 +183,58 @@ public class PegasusConfiguration {
                 //now throw an error
                 throw new RuntimeException( "No storage directory specified for output site " + outputSite );
             }
-            
+
+            boolean append = ( directory.startsWith( File.separator ) )?
+                             false: //we use the path specified
+                             true;  //we need to append to path in site catalog on basis of site handle
+
+
             //update the internal mount point and external URL's
             InternalMountPoint  imp = storageDirectory.getInternalMountPoint();
-            if( imp == null ){
+            if( imp == null || imp.getMountPoint() == null ){
                 //now throw an error
                 throw new RuntimeException( "No internal mount point specified  for HeadNode Storage Directory  for output site " + outputSite );
             
             }
+
+
+            if( append ){
+                //we update the output directory on basis of what is specified
+                //in the site catalog for the site. For local site, we resolve
+                //the relative path from the command line/environment
+                if( outputSite.equals( "local" ) ){
+                    directory = new File( directory ).getAbsolutePath();
+                    externalDirectory = directory;
+                    //we have the directory figured out for local site
+                    //that should be the one to be used for external file servers
+                    append = false;
+                }
+                else{
+                    directory = new File( imp.getMountPoint(), directory).getAbsolutePath();
+                }
+            }
+
+
+            //update all storage file server paths to refer to the directory
+            StringBuffer message = new StringBuffer();
+            message.append( "Updating internal storage file server paths for site " ).append( outputSite ).
+                    append( " to directory " ).append( directory );
+            mLogger.log( message.toString(), LogManager.CONFIG_MESSAGE_LEVEL );
             imp.setMountPoint( directory );
 
             for( FileServer.OPERATION op : FileServer.OPERATION.values() ){
                 for( Iterator<FileServer> it = storageDirectory.getFileServersIterator(op); it.hasNext();){
                     FileServer server = it.next();
-                    server.setMountPoint( directory );
+                    if( append ){
+                        //get the mount point and append
+                        StringBuffer mountPoint = new StringBuffer();
+                        mountPoint.append( server.getMountPoint() ).append( File.separator ).append( externalDirectory );
+                        server.setMountPoint( mountPoint.toString() );
+
+                    }
+                    else{
+                        server.setMountPoint( directory );
+                    }
                 }
             }
             
@@ -323,4 +357,5 @@ public class PegasusConfiguration {
         return sb.toString();
     }
 
+    
 }

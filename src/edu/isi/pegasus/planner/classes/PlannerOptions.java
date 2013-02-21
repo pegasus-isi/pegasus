@@ -1072,7 +1072,7 @@ public class PlannerOptions extends Data implements Cloneable{
      * @param output the input directory for the workflow
      */
     public void setOutputDirectory( String output ){
-        this.mOutputDir = sanitizePath( output ) ;
+        this.mOutputDir =  output ;
     }
     
     
