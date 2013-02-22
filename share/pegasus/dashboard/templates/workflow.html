@@ -38,11 +38,11 @@ $(document).ready (function ()
 		            ],
 		"fnServerParams": function ( aoData ) 
 		{
-			aoData.push( { "name": "filter", "value": $('#filter').val() } );
+			aoData.push( { "name": "time_filter", "value": $('#time_filter').val() } );
 		}
 	});
 	
-	$("#filter").change ( function() 
+	$("#time_filter").change ( function() 
 	{ 
 		$("#workflow_list").dataTable().fnDraw(); 
 	});
@@ -124,7 +124,7 @@ chart = new Highcharts.Chart (chartOptions);
 {% block content %}
 	<div id="workflow_counts"></div>
 	<div id="table_wrapper">
-		Show results for: <select name="filter" id="filter">
+		Show results for: <select name="time_filter" id="time_filter">
 			<option value="all">all</option>
 			<option value="day">last day</option>
 			<option value="week">last week</option>
