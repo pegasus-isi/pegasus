@@ -1,0 +1,18 @@
+#!/bin/bash
+
+set -e
+
+# Generate dax
+echo "Generating the DAX..."
+export PYTHONPATH=`pegasus-config --python`
+python daxgen.py dax.xml
+
+echo "Planning and submitting the workflow..."
+pegasus-plan \
+    --conf pegasusrc \
+    --dir submit \
+    --dax dax.xml \
+    --sites kraken \
+    --nocleanup \
+    --cluster label \
+    --submit

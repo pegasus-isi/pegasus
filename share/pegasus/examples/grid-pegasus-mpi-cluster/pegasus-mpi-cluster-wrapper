@@ -1,0 +1,9 @@
+#!/bin/bash
+
+CORES_PER_NODE=12
+CORES_PER_SOCKET=6
+
+NUM_CORES=$(($PBS_NNODES/12*$CORES_PER_NODE))
+
+aprun -n $NUM_CORES -S $CORES_PER_SOCKET /lustre/scratch/gideon/bin/pegasus-mpi-cluster "$@"
+

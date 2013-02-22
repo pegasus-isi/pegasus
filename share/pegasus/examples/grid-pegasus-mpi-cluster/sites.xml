@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd" version="4.0">
+    <site handle="local" arch="x86_64" os="LINUX">
+        <profile namespace="env" key="PEGASUS_HOME">/usr</profile>
+    </site>
+    <site handle="kraken" arch="x86_64" os="LINUX">
+        <!-- This is where transfer jobs are submitted -->
+        <grid type="gt5" contact="grid.nics.teragrid.org:2119/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/>
+
+        <!-- This is where compute jobs are submitted -->
+        <grid type="gt5" contact="grid.nics.teragrid.org:2119/jobmanager-pbs" scheduler="PBS" jobtype="compute"/>
+        
+        <!-- Shared scratch is where the working directory is created -->
+        <directory path="/lustre/scratch/gideon/work" type="shared-scratch">
+            <file-server operation="all" url="gsiftp://gridftp.kraken.nics.xsede.org/lustre/scratch/gideon/work"/>
+        </directory>
+
+        <!-- Shared storage is where output files are stored -->
+        <directory path="/lustre/scratch/gideon/storage" type="shared-storage">
+            <file-server operation="all" url="gsiftp://gridftp.kraken.nics.xsede.org/lustre/scratch/gideon/storage"/>
+        </directory>
+
+        <!-- This is how Pegasus knows where to find pegasus-transfer and pegasus-kickstart -->
+        <profile namespace="env" key="PEGASUS_HOME">/lustre/scratch/gideon</profile>
+    </site>
+</sitecatalog>

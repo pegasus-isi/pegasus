@@ -1,0 +1,41 @@
+# This is the pegasus-mpi-cluster transformation
+tr pegasus::mpiexec { 
+
+    # This is the site
+    site kraken {
+        
+        # This is the physical file name (physical path) of the wrapper script
+        pfn "/lustre/scratch/gideon/bin/pegasus-mpi-cluster-wrapper"
+        
+        # This should match the site catalog
+        arch "x86_64"
+        os "linux"
+        
+        # This indicates that the executable is already installed
+        type "INSTALLED"
+        
+        # This specifies the max runtime of the job in minutes
+        profile globus "maxwalltime" "30"
+        
+        # This says how many compute nodes to allocate
+        profile globus "host_count" "1"
+        
+        # This specifies how many MPI processes to start (Kraken has 12
+        # cores/node)
+        profile globus "count" "12"
+        
+        # This specifies to use a wrapper instead of invoking the MPI job
+        # directly
+        profile globus "jobtype" "single"
+    }
+}
+
+# This is our test transformation
+tr sleep { 
+    site kraken {
+        pfn "/bin/sleep"
+        arch "x86_64"
+        os "linux"
+        type "INSTALLED"
+    }
+}
