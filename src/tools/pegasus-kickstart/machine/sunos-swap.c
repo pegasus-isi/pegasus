@@ -27,9 +27,6 @@
 #include <dirent.h>
 #include <procfs.h>
 
-static const char* RCS_ID =
-  "$Id$";
-
 int
 gather_sunos_swap( uint64_t* stotal, uint64_t* sfree )
 /* purpose: collect swap information from solaris
