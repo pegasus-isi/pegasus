@@ -41,7 +41,7 @@ helpMe( const char* arg0 )
 
 static
 int
-log10( long x )
+ilog10( long x )
 {
   int result;
   if ( x == 0 ) return 1;
@@ -104,7 +104,7 @@ main( int argc, char* argv[], char* envp[] )
   arg[size] = NULL;
 
   /* determine size */
-  width = log10(size);
+  width = ilog10(size);
   for ( total=size, i=0; i<size; ++i ) {
     if ( debug ) printf( "# %*zd: %s\n", width, i, arg[i] );
     total += strlen(arg[i]); 
