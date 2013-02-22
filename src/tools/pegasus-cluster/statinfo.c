@@ -22,9 +22,6 @@
 #include <unistd.h>
 #include "statinfo.h"
 
-static const char* RCS_ID =
-"$Id$";
-
 int
 myaccess( const char* path )
 /* purpose: check a given file for being accessible and executable

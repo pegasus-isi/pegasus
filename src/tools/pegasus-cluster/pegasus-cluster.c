@@ -33,9 +33,6 @@
 #include "job.h"
 #include "statinfo.h"
 
-static const char* RCS_ID =
-"$Id$";
-
 #ifndef APPLICATION_NAME
 #define APPLICATION_NAME "pegasus-cluster"
 #endif /* APPLICATION_NAME */
@@ -60,8 +57,7 @@ helpMe( const char* programname, int rc )
  *           rc (IN): exit code to exit with
  * returns: procedure does not return. */
 {
-  printf( "%s\nUsage:\t%s [options] [inputfile]\n\n", 
-	  RCS_ID, programname );
+  printf( "Usage:\t%s [options] [inputfile]\n\n", programname );
   printf( "Optional arguments:\n"
 " -d\tIncrease debug mode.\n"
 " -s fn\tProtocol anything to given status file, default stdout.\n"

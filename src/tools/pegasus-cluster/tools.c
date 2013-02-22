@@ -20,9 +20,6 @@
 #include <unistd.h>
 #include "tools.h"
 
-static const char* RCS_ID =
-  "$Id$";
-
 ssize_t
 writen( int fd, const char* buffer, ssize_t n, unsigned restart )
 /* purpose: write all n bytes in buffer, if possible at all

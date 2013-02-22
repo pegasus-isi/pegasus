@@ -22,8 +22,6 @@
 #include "parser.h"
 #include "tools.h"
 
-static const char* RCS_ID =
-  "$Id$";
 extern int debug; 
 
 /* create finite state automaton to remove one level of quoting in the

@@ -24,9 +24,6 @@
 #include "report.h"
 #include "mysystem.h"
 
-static const char* RCS_ID =
-  "$Id$";
-
 extern int debug; 
 extern int progress; 
 extern char* application; 

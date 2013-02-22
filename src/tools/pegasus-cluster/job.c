@@ -20,9 +20,6 @@
 
 #include "job.h"
 
-static const char* RCS_ID =
-  "$Id$";
-
 void
 job_done( Job* job )
 /* purpose: free up the argv vector

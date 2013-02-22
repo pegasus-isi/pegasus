@@ -27,9 +27,6 @@
 #include "tools.h"
 #include "report.h"
 
-static const char* RCS_ID =
-  "$Id$";
-
 static char* identifier; 
 struct utsname uname_cache;
 
