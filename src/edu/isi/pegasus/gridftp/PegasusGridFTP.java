@@ -189,12 +189,15 @@ public class PegasusGridFTP {
         try {
             execute(args);
             System.exit(0);
-        } catch(Exception e) {
+        } catch(Throwable t) {
+            System.err.printf("ERROR: %s failed\n", args[0]);
             if (logger.isInfoEnabled()) {
-                System.err.printf("%s failed\n", args[0]);
-                e.printStackTrace();
+                t.printStackTrace();
             } else {
-                System.err.printf("%s: %s\n", args[0], e.getMessage());
+                while (t != null) {
+                    System.err.printf("%s\n", t.getMessage());
+                    t = t.getCause();
+                }
             }
             System.exit(1);
         }
