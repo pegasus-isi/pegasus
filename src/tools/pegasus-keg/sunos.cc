@@ -15,9 +15,6 @@
 #include "sunos.hh"
 #include "sunos-swap.hh"
 
-static const char* RCS_ID =
-  "$Id$";
-
 #include <stdio.h>
 #include <sys/vfstab.h>
 #include <sys/statvfs.h>

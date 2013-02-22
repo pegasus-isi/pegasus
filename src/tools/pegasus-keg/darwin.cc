@@ -14,9 +14,6 @@
  */
 #include "darwin.hh"
 
-static const char* RCS_ID =
-  "$Id$";
-
 #include <ctype.h>
 #include <stdio.h>
 #include <string.h>

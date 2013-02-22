@@ -14,9 +14,6 @@
  */
 #include "linux.hh"
 
-static const char* RCS_ID =
-  "$Id$";
-
 #include <fstab.h>
 #include <sys/statvfs.h>
 #include <sys/sysinfo.h>

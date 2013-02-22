@@ -23,9 +23,6 @@
 
 #include "sunos-swap.hh"
 
-static const char* RCS_ID =
-  "$Id$";
-
 int
 gather_sunos_swap( unsigned long long* total, 
 		   unsigned long long* free )
