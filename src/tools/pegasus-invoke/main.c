@@ -9,9 +9,6 @@
 
 #include "pegasus-invoke.h"
 
-static const char* RCS_ID =
-"$Id$";
-
 int debug = 0;
 
 static
@@ -25,7 +22,6 @@ helpMe( const char* arg0 )
   if ( p ) ++p;
   else p = arg0;
 
-  puts( RCS_ID );
   printf( "Usage:\t%s [options] (app | @fn) [arg | @fn [..]]\n\n", p ); 
   printf(
 "Optional arguments:\n"

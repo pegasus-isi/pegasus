@@ -18,9 +18,6 @@
 #include <stdlib.h>
 #include "pegasus-invoke.h"
 
-static const char* RCS_ID =
-"$Id$";
-
 extern int debug;
 
 int
