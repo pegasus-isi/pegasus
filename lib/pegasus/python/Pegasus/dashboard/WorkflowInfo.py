@@ -30,6 +30,8 @@ from netlogger.nllog import DoesLogging
 from Pegasus.dashboard.error.Errors import MasterDBNotFoundError
 from netlogger.analysis.error.Error import StampedeDBNotFoundError
 
+from time import localtime
+
 class MasterDatabase (SQLAlchemyInit, DoesLogging):
     
     def __init__(self, connString=None):
@@ -118,6 +120,19 @@ class MasterDatabase (SQLAlchemyInit, DoesLogging):
             filter_text = '%' + table_args ['filter'] + '%'
             q = q.filter (or_ (w.dax_label.like (filter_text), w.submit_dir.like (filter_text), state.like (filter_text)))
         
+        if 'time_filter' in table_args:
+            time_filter = table_args ['time_filter']
+            current_time = int (time.time())
+            
+            if time_filter == 'day':
+                q = q.filter (between (w.timestamp, current_time - 86400, current_time))
+            elif time_filter == 'week':
+                q = q.filter (between (w.timestamp, current_time - 604800, current_time))
+            elif time_filter == 'month':
+                q = q.filter (between (w.timestamp, current_time - 2620800, current_time))
+            elif time_filter == 'year':
+                q = q.filter (between (w.timestamp, current_time - 31449600, current_time))
+            
         # Get Total Count. Need this to pass to jQuery Datatable.
         filtered = q.count ()
         

@@ -422,6 +422,9 @@ def __get_datatables_args ():
     if request.args.get ('iSortingCols'):
         table_args ['sort-col-count'] = int (request.args.get ('iSortingCols'))
     
+    if request.args.get ('time_filter'):
+        table_args ['time_filter'] = request.args.get ('time_filter')
+        
     if request.args.get ('iColumns'):
         for i in range (int (request.args.get ('iColumns'))):
             i = str (i)
