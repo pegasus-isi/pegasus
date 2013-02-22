@@ -35,9 +35,18 @@ $(document).ready (function ()
 		              { "mData": "Submit Directory" },
 		              { "mData": "State" },
 		              { "mData": "Submitted On", "sClass": "nowrap" }
-		            ]
+		            ],
+		"fnServerParams": function ( aoData ) 
+		{
+			aoData.push( { "name": "time_filter", "value": $('#time_filter').val() } );
+		}
 	});
 	
+	$("#time_filter").change ( function() 
+	{ 
+		$("#workflow_list").dataTable().fnDraw(); 
+	});
+	  
 	chartOptions =  
 	{
 		chart: 
@@ -115,6 +124,13 @@ chart = new Highcharts.Chart (chartOptions);
 {% block content %}
 	<div id="workflow_counts"></div>
 	<div id="table_wrapper">
+		Show results for: <select name="time_filter" id="time_filter">
+			<option value="all">all</option>
+			<option value="day">last day</option>
+			<option value="week">last week</option>
+			<option value="month">last month</option>
+			<option value="year">last year</option>
+		</select>
 		<table id="workflow_list">
 			<thead>
 				<tr>
