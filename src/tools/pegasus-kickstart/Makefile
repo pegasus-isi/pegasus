@@ -125,16 +125,16 @@ all : pegasus-kickstart
 
 pegasus-kickstart: debug.o getif.o rwio.o tools.o useinfo.o mynss.o statinfo.o jobinfo.o limitinfo.o $(EXTRA_OBJ) machine.o appinfo.o parse.o mysystem.o mylist.o invoke.o pegasus-kickstart.o
 	$(LD) $(EXTRA_LDFLAGS) $(CFLAGS) $^ -o $@ $(LOADLIBES)
-show-if: show-if.o getif.o debug.o
+show-if: show-if.o getif.o debug.o rwio.o
 	$(LD) $(EXTRA_LDFLAGS) $(CFLAGS) $^ -o $@ $(LOADLIBES)
-try-parse: try-parse.o parse.o
+try-parse: try-parse.o parse.o debug.o rwio.o
 	$(LD) $(EXTRA_LDFLAGS) $(CFLAGS) $^ -o $@ $(LOADLIBES)
 
 appinfo.o: appinfo.c getif.h rwio.h debug.h tools.h useinfo.h machine.h \
   jobinfo.h statinfo.h appinfo.h limitinfo.h mynss.h
 debug.o: debug.c debug.h rwio.h
 fail.o: fail.c
-getif.o: getif.c debug.h getif.h
+getif.o: getif.c debug.h getif.h rwio.h
 invoke.o: invoke.c invoke.h
 jobinfo.o: jobinfo.c getif.h debug.h tools.h useinfo.h jobinfo.h \
   statinfo.h parse.h
@@ -155,7 +155,7 @@ test-ascii.o: test-ascii.c
 test-post.o: test-post.c
 test-pre.o: test-pre.c
 tools.o: tools.c tools.h
-try-parse.o: try-parse.c parse.h
+try-parse.o: try-parse.c parse.h rwio.h
 useinfo.o: useinfo.c tools.h useinfo.h
 zio.o: zio.c zio.h
 
