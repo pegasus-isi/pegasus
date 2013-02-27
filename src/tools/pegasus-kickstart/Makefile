@@ -143,8 +143,6 @@ pegasus-kickstart.o: pegasus-kickstart.c rwio.h debug.h appinfo.h \
   invoke.h tools.h version.h
 limitinfo.o: limitinfo.c debug.h tools.h limitinfo.h
 machine.o: machine.c machine.h machine/basic.h debug.h
-meminfo.o: meminfo.c meminfo.h debug.h
-msave.o: msave.c machine.h debug.h tools.h
 mylist.o: mylist.c mylist.h
 mynss.o: mynss.c mynss.h
 mysystem.o: mysystem.c debug.h tools.h appinfo.h statinfo.h jobinfo.h \
