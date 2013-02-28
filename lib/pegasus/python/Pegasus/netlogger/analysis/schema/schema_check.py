@@ -7,9 +7,9 @@ __author__ = "Monte Goode"
 
 import exceptions
 
-from netlogger.analysis.modules._base import SQLAlchemyInit, dsn_dialect
-from netlogger.analysis.schema.stampede_schema import *
-from netlogger.nllog import DoesLogging
+from Pegasus.netlogger.analysis.modules._base import SQLAlchemyInit, dsn_dialect
+from Pegasus.netlogger.analysis.schema.stampede_schema import *
+from Pegasus.netlogger.nllog import DoesLogging
 
 class SchemaVersionError(Exception): 
     """

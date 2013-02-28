@@ -59,8 +59,8 @@ import Pegasus.common
 from Pegasus.tools import utils
 from Pegasus.tools import db_utils
 from Pegasus.tools import kickstart_parser
-from netlogger.analysis.workflow import stampede_statistics
-from netlogger.analysis.schema.schema_check import SchemaVersionError
+from Pegasus.netlogger.analysis.workflow import stampede_statistics
+from Pegasus.netlogger.analysis.schema.schema_check import SchemaVersionError
 
 # --- regular expressions -------------------------------------------------------------
 

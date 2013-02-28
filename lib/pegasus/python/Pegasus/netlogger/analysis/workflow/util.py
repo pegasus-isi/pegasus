@@ -5,10 +5,10 @@ Utility code to work with workflow databases.
 __rcsid__ = "$Id: util.py 28135 2011-07-05 20:07:28Z mgoode $"
 __author__ = "Monte Goode"
 
-from netlogger.analysis.schema.stampede_schema import *
-from netlogger.analysis.modules._base import SQLAlchemyInit
-from netlogger import util
-from netlogger.nllog import DoesLogging
+from Pegasus.netlogger.analysis.schema.stampede_schema import *
+from Pegasus.netlogger.analysis.modules._base import SQLAlchemyInit
+from Pegasus.netlogger import util
+from Pegasus.netlogger.nllog import DoesLogging
 
 import os, time
 
@@ -27,7 +27,7 @@ class Expunge(SQLAlchemyInit, DoesLogging):
 
     Usage::
 
-     from netlogger.analysis.workflow.util import Expunge
+     from Pegasus.netlogger.analysis.workflow.util import Expunge
 
      connString = 'sqlite:///pegasusMontage.db'
      wf_uuid = '1249335e-7692-4751-8da2-efcbb5024429'
@@ -72,7 +72,7 @@ class StampedeExpunge(Expunge):
     
     Usage::
      
-     from netlogger.analysis.workflow.util import Expunge
+     from Pegasus.netlogger.analysis.workflow.util import Expunge
      
      connString = 'sqlite:///pegasusMontage.db'
      wf_uuid = '1249335e-7692-4751-8da2-efcbb5024429'
@@ -151,7 +151,7 @@ class StampedeExpunge(Expunge):
 
 
 
-from netlogger.analysis.schema.stampede_dashboard_schema import *
+from Pegasus.netlogger.analysis.schema.stampede_dashboard_schema import *
 class DashboardExpunge(Expunge):
 
 
@@ -169,7 +169,7 @@ class DashboardExpunge(Expunge):
 
     Usage::
 
-    from netlogger.analysis.workflow.util import Expunge
+    from Pegasus.netlogger.analysis.workflow.util import Expunge
 
     connString = 'sqlite:///pegasusMontage.db'
     wf_uuid = '1249335e-7692-4751-8da2-efcbb5024429'

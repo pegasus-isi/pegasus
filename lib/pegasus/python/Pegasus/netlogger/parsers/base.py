@@ -5,7 +5,7 @@ __author__ = 'Dan Gunter <dkgunter@lbl.gov>'
 __rcsid__ = '$Id: base.py 28287 2011-08-18 03:42:53Z dang $'
 
 import calendar 
-from netlogger.configobj import ConfigObj, Section
+from Pegasus.netlogger.configobj import ConfigObj, Section
 import glob
 import imp
 from itertools import starmap
@@ -25,13 +25,13 @@ try:
 except ImportError:
     HAVE_PYPARSING = False
 #
-from netlogger import nldate
-from netlogger.nllog import DoesLogging
-from netlogger import nlapi
-from netlogger.nlapi import Log, Level
-from netlogger.nlapi import TS_FIELD, EVENT_FIELD, HASH_FIELD
-from netlogger.parsers import nlreadline
-from netlogger.util import hash_event
+from Pegasus.netlogger import nldate
+from Pegasus.netlogger.nllog import DoesLogging
+from Pegasus.netlogger import nlapi
+from Pegasus.netlogger.nlapi import Log, Level
+from Pegasus.netlogger.nlapi import TS_FIELD, EVENT_FIELD, HASH_FIELD
+from Pegasus.netlogger.parsers import nlreadline
+from Pegasus.netlogger.util import hash_event
 
 # Special result code for parsers to return
 # when they 'on purpose' skip a line

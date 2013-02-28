@@ -1,0 +1,28 @@
+#!/bin/bash
+
+# this script figures out the location of the system Python
+# modules - note that we are using the python in /usr/bin
+# for this, and not the one in the users environment
+
+VERSION=`/usr/bin/python -V 2>&1 | sed -e 's/^.* \([0-9]\.[0-9]\).*$/\1/'`
+
+FINAL_LOCATION="NONE"
+
+for LOCATION in \
+    "/usr/lib64/python$VERSION/dist-packages" \
+    "/usr/lib/python$VERSION/dist-packages" \
+    "/usr/lib64/python$VERSION/site-packages" \
+    "/usr/lib/python$VERSION/site-packages" \
+    "/Library/Python/$VERSION/site-packages" \
+; do
+    if [ -e "$LOCATION" ]; then
+        FINAL_LOCATION="$LOCATION"
+        break
+    fi
+done
+
+# remote the prefix
+FINAL_LOCATION=`echo "$FINAL_LOCATION" | sed -e 's/^\/usr//' | sed -e 's:^/*::'`
+
+echo $FINAL_LOCATION
+

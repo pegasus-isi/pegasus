@@ -5,7 +5,7 @@ via a SQLAlchemy interface.
 __rcsid__ = "$Id: stampede_schema.py 30421 2012-02-21 21:20:02Z mgoode $"
 __author__ = "Monte Goode MMGoode@lbl.gov"
 
-from netlogger.analysis.schema._base import SABase, SchemaIntegrityError
+from Pegasus.netlogger.analysis.schema._base import SABase, SchemaIntegrityError
 try:
     from sqlalchemy import *
     from sqlalchemy import orm, exceptions, func, exc

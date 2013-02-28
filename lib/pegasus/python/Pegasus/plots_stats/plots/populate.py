@@ -22,8 +22,8 @@ import pegasus_gantt
 import pegasus_host_over_time
 import traceback
 
-from netlogger.analysis.workflow.stampede_statistics import StampedeStatistics
-from netlogger.analysis.schema.schema_check import SchemaVersionError
+from Pegasus.netlogger.analysis.workflow.stampede_statistics import StampedeStatistics
+from Pegasus.netlogger.analysis.schema.schema_check import SchemaVersionError
 from datetime import timedelta
 from datetime import datetime
 

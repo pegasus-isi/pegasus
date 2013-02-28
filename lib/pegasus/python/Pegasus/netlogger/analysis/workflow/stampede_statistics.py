@@ -156,11 +156,11 @@ https://confluence.pegasus.isi.edu/display/pegasus/Pegasus+Statistics+Python+Ver
 __rcsid__ = "$Id: stampede_statistics.py 31980 2012-07-02 15:12:17Z mgoode $"
 __author__ = "Monte Goode"
 
-from netlogger.analysis.modules._base import SQLAlchemyInit
-from netlogger.analysis.schema.schema_check import ErrorStrings, SchemaCheck, SchemaVersionError
-from netlogger.analysis.schema.stampede_schema import *
-from netlogger.nllog import DoesLogging, get_logger
-from netlogger.analysis.error.Error import StampedeDBNotFoundError
+from Pegasus.netlogger.analysis.modules._base import SQLAlchemyInit
+from Pegasus.netlogger.analysis.schema.schema_check import ErrorStrings, SchemaCheck, SchemaVersionError
+from Pegasus.netlogger.analysis.schema.stampede_schema import *
+from Pegasus.netlogger.nllog import DoesLogging, get_logger
+from Pegasus.netlogger.analysis.error.Error import StampedeDBNotFoundError
         
 # Main stats class.
 

@@ -29,8 +29,8 @@ lib_ext_dir = subprocess.Popen(pegasus_config, stdout=subprocess.PIPE, shell=Tru
 os.sys.path.insert(0, lib_ext_dir)
 os.sys.path.insert(0, lib_dir)
 
-from netlogger.analysis.schema.schema_check import ConnHandle, SchemaCheck
-from netlogger.nllog import OptionParser, get_logger, get_root_logger
+from Pegasus.netlogger.analysis.schema.schema_check import ConnHandle, SchemaCheck
+from Pegasus.netlogger.nllog import OptionParser, get_logger, get_root_logger
 
 def main():
     usage = "%prog {-c | -u} connString='required' mysql_engine='optional'"

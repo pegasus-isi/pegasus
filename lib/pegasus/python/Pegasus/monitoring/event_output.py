@@ -42,24 +42,24 @@ bson = None
 amqp = None
 
 try:
-    from netlogger import nlapi
+    from Pegasus.netlogger import nlapi
 except:
-    logger.info("cannot import netlogger.nlapi")
+    logger.info("cannot import Pegasus.netlogger.nlapi")
 try:
-    from netlogger.analysis.schema.schema_check import SchemaVersionError
-    from netlogger.analysis.modules import stampede_loader
+    from Pegasus.netlogger.analysis.schema.schema_check import SchemaVersionError
+    from Pegasus.netlogger.analysis.modules import stampede_loader
 except:
     logger.info("cannot import NetLogger's stampede_loader")
 try:
-    from netlogger.analysis.modules import stampede_dashboard_loader
+    from Pegasus.netlogger.analysis.modules import stampede_dashboard_loader
 except:
     logger.info("cannot import NetLogger's stampede_dashboard_loader")
 try:
-    from netlogger.analysis.workflow.util import StampedeExpunge
+    from Pegasus.netlogger.analysis.workflow.util import StampedeExpunge
 except:
     logger.info("cannot import NetLogger's Stampede Expunge")
 try:
-    from netlogger.analysis.workflow.util import DashboardExpunge
+    from Pegasus.netlogger.analysis.workflow.util import DashboardExpunge
 except:
     logger.info("cannot import NetLogger's Dashboard Expunge")
 

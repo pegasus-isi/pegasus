@@ -21,14 +21,14 @@
 
 __author__ = 'Rajiv Mayani'
 
-from netlogger.analysis.modules._base import SQLAlchemyInit
-from netlogger.analysis.schema.schema_check import ErrorStrings, SchemaCheck, SchemaVersionError
-from netlogger.analysis.schema.stampede_dashboard_schema import DashboardWorkflow, DashboardWorkflowstate, initializeToDashboardDB
-from netlogger.analysis.schema.stampede_schema import *
-from netlogger.nllog import DoesLogging
+from Pegasus.netlogger.analysis.modules._base import SQLAlchemyInit
+from Pegasus.netlogger.analysis.schema.schema_check import ErrorStrings, SchemaCheck, SchemaVersionError
+from Pegasus.netlogger.analysis.schema.stampede_dashboard_schema import DashboardWorkflow, DashboardWorkflowstate, initializeToDashboardDB
+from Pegasus.netlogger.analysis.schema.stampede_schema import *
+from Pegasus.netlogger.nllog import DoesLogging
 
 from Pegasus.dashboard.error.Errors import MasterDBNotFoundError
-from netlogger.analysis.error.Error import StampedeDBNotFoundError
+from Pegasus.netlogger.analysis.error.Error import StampedeDBNotFoundError
 
 from time import localtime
 

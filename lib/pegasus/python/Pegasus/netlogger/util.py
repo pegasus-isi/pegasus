@@ -25,8 +25,8 @@ import tempfile
 import time
 import traceback
 #
-import netlogger
-from netlogger import configobj
+import Pegasus.netlogger
+from Pegasus.netlogger import configobj
 
 ## Globals
 
@@ -49,7 +49,7 @@ MAGICDATE_EXAMPLES = ', '.join(["%s" % s for s in (
      'next Tuesday',
      'last Tuesday')])
 
-DATA_DIR = os.path.join(os.path.dirname(netlogger.__file__), 'data')
+DATA_DIR = os.path.join(os.path.dirname(Pegasus.netlogger.__file__), 'data')
 
 ## Exceptions
 
@@ -170,7 +170,7 @@ def parseDatetime(d, utc=False):
     """Parse a datetime object, or anything that formats itself
     with isoformat(), to number of seconds since epoch.
     """
-    from netlogger.parsers.base import parseDate
+    from Pegasus.netlogger.parsers.base import parseDate
     if d is None:
         raise ValueError("date is None")
     iso = d.isoformat()

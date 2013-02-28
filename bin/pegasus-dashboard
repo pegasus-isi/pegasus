@@ -91,7 +91,7 @@ Note: Above command installs Jinja, and Werkzeug as well'''
 from Pegasus.dashboard.Dashboard import Dashboard, Utils, NoWorkflowsFoundError
 from Pegasus.dashboard.error.Errors import MasterDBNotFoundError
 
-from netlogger.analysis.error.Error import StampedeDBNotFoundError
+from Pegasus.netlogger.analysis.error.Error import StampedeDBNotFoundError
 
 _master_db_url = None
 app = Flask (__name__, static_folder=os.path.join (pegasus_env_path ['pegasus_share_dir'], 'dashboard/static'))

@@ -4,7 +4,7 @@ Example file - this can be copied, renamed and then filled in for a new implemen
 Has all the appropriate @property methods filled in, base class initializations, etc.
 """
 
-from netlogger.analysis.workflow._base import Workflow as BaseWorkflow, \
+from Pegasus.netlogger.analysis.workflow._base import Workflow as BaseWorkflow, \
     Job as BaseJob, Host as BaseHost, Task as BaseTask, Jobstate as BaseJobstate
 
 __rcsid__ = "$Id: example.py 26972 2011-01-11 16:19:33Z mgoode $"

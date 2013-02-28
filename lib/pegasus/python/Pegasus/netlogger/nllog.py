@@ -12,9 +12,9 @@ import time
 import traceback
 import types
 #
-from netlogger import nlapi
-from netlogger.nlapi import Level
-from netlogger.version import *
+from Pegasus.netlogger import nlapi
+from Pegasus.netlogger.nlapi import Level
+from Pegasus.netlogger.version import *
 
 # extra logging levels
 TRACE = logging.DEBUG -1

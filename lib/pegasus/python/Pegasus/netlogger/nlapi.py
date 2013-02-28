@@ -26,8 +26,8 @@ import time
 import types
 import urlparse
 
-from netlogger.nldate import utcFormatISO
-from netlogger.util import uuid1
+from Pegasus.netlogger.nldate import utcFormatISO
+from Pegasus.netlogger.util import uuid1
 
 #
 ## Exceptions

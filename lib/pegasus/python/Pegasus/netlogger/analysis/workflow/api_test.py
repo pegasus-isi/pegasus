@@ -5,8 +5,8 @@ function and pass it an initialized Workflow instance.
 
 Usage:
 
-from netlogger.analysis.workflow.sql_alchemy import Workflow
-from netlogger.analysis.workflow.api_test import test_workflow_types
+from Pegasus.netlogger.analysis.workflow.sql_alchemy import Workflow
+from Pegasus.netlogger.analysis.workflow.api_test import test_workflow_types
 
 w = Workflow('sqlite:///pegasusMontage.db')
 w.initialize('5117013a-f7f1-4bc5-a2f8-517186599fad')
@@ -34,7 +34,7 @@ Etc.
 __rcsid__ = "$Id: api_test.py 26974 2011-01-11 18:57:35Z mgoode $"
 __author__ = "Monte Goode MMGoode@lbl.gov"
 
-from netlogger.analysis.workflow._base import Job as JobBase, Host as HostBase,\
+from Pegasus.netlogger.analysis.workflow._base import Job as JobBase, Host as HostBase,\
     Task as TaskBase, Jobstate as JobstateBase, Workflowstate as WorkflowstateBase
 
 import datetime

@@ -39,7 +39,7 @@ logger = logging.getLogger()
 NLSimpleParser = None
 
 try:
-    from netlogger.parsers.base import NLSimpleParser
+    from Pegasus.netlogger.parsers.base import NLSimpleParser
 except:
     logger.info("cannot import NL parser")
 

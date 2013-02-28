@@ -19,11 +19,11 @@ See http://www.sqlalchemy.org/ for details on SQLAlchemy
 __rcsid__ = "$Id: stampede_loader.py 31116 2012-03-29 15:45:15Z mgoode $"
 __author__ = "Monte Goode"
 
-from netlogger.analysis.schema.schema_check import ErrorStrings, SchemaCheck, SchemaVersionError
-from netlogger.analysis.schema.stampede_schema import *
-from netlogger.analysis.modules._base import Analyzer as BaseAnalyzer
-from netlogger.analysis.modules._base import SQLAlchemyInit, dsn_dialect
-from netlogger import util
+from Pegasus.netlogger.analysis.schema.schema_check import ErrorStrings, SchemaCheck, SchemaVersionError
+from Pegasus.netlogger.analysis.schema.stampede_schema import *
+from Pegasus.netlogger.analysis.modules._base import Analyzer as BaseAnalyzer
+from Pegasus.netlogger.analysis.modules._base import SQLAlchemyInit, dsn_dialect
+from Pegasus.netlogger import util
 import sys
 import time
 
