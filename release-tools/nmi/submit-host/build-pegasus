@@ -60,7 +60,7 @@ sub env_setup
         logmsg("pegasus directory does not exist. Untaring Github tarball");
         my $tarfile = `find . -type f -size +30000 | sed 's/.*\\///'`;
         chomp($tarfile);
-        cmd("tar xzf $tarfile && rm -f $tarfile", 1, 1);
+        cmd("tar xzf '$tarfile' && rm -f '$tarfile'", 1, 1);
         cmd("mv pegasus-* pegasus", 1, 1);
     }
 
