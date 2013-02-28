@@ -476,6 +476,7 @@
          to make our relocatable tarballs work. -->
     <mkdir dir="${dist.lib}/python"/>
     <exec executable="ln" dir="${dist.lib}/python" failonerror="true">
+      <arg line="-f"/>
       <arg line="-s"/>
       <arg line="../../../${dist.python-modules-loc}/Pegasus"/>
     </exec>
