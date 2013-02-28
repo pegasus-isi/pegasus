@@ -13,10 +13,10 @@ import pymongo
 from pymongo.connection import Connection
 from pymongo.errors import ConnectionFailure
 # NetLogger
-from netlogger.analysis.modules._base import Analyzer as BaseAnalyzer
-from netlogger.analysis.modules._base import ConnectionException
-from netlogger import util
-from netlogger.nlapi import TS_FIELD, STATUS_FIELD
+from Pegasus.netlogger.analysis.modules._base import Analyzer as BaseAnalyzer
+from Pegasus.netlogger.analysis.modules._base import ConnectionException
+from Pegasus.netlogger import util
+from Pegasus.netlogger.nlapi import TS_FIELD, STATUS_FIELD
 
 class Analyzer(BaseAnalyzer):
     """Load into a collection in a MongoDB database.

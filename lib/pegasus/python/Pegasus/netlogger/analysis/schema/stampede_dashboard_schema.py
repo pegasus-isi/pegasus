@@ -6,7 +6,7 @@ __rcsid__ = "$Id$"
 __author__ = "Monte Goode"
 __author__ = "Karan Vahi"
 
-from netlogger.analysis.schema._base import SABase
+from Pegasus.netlogger.analysis.schema._base import SABase
 
 try:
     from sqlalchemy import *

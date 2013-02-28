@@ -16,7 +16,7 @@
 
 # Revision : $Revision: 2012 $
 
-from netlogger.analysis.workflow import stampede_statistics
+from Pegasus.netlogger.analysis.workflow import stampede_statistics
 
 __author__ = "Rajiv Mayani"
 

@@ -8,11 +8,11 @@ import sys
 import threading
 import time
 #
-from netlogger import util
-from netlogger.nllog import DoesLogging, TRACE
-from netlogger.nlapi import TS_FIELD, EVENT_FIELD, HASH_FIELD
-from netlogger.util import hash_event
-from netlogger.analysis import schemacfg
+from Pegasus.netlogger import util
+from Pegasus.netlogger.nllog import DoesLogging, TRACE
+from Pegasus.netlogger.nlapi import TS_FIELD, EVENT_FIELD, HASH_FIELD
+from Pegasus.netlogger.util import hash_event
+from Pegasus.netlogger.analysis import schemacfg
 
 """
 Standard Exceptions for all Analyzers

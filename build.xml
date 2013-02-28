@@ -43,6 +43,13 @@
     </exec>
   </target>
 
+  <target name="python-modules-location"
+          description="Obtains the system Python module location">
+    <exec executable="${basedir}/release-tools/python/python-modules-dir"
+          outputproperty="dist.python-modules-loc"
+          failonerror="true"/>
+    <echo>Location for system Python modules is ${dist.python-modules-loc}</echo>
+  </target>
 
   <target name="check-java"  description="Check the version of java">
      <property name="build.source" value="1.6"/>
@@ -52,7 +59,7 @@
   </target>
 
 
-  <target name="build-setup" depends="compile-version"
+  <target name="build-setup" depends="compile-version,python-modules-location"
           description="Sets up the build environment, paths, versions, ...">
     <taskdef name="versiontask"
              classpath="${build.src}"
@@ -63,6 +70,7 @@
     <property name="dist.bin" location="${dist.dir}/bin"/> 
     <property name="dist.etc" location="${dist.dir}/etc"/> 
     <property name="dist.lib" location="${dist.dir}/lib/pegasus"/> 
+    <property name="dist.python-lib" location="${dist.dir}/${dist.python-modules-loc}"/> 
     <property name="dist.data" location="${dist.dir}/share"/>
     <property name="dist.share" location="${dist.data}/pegasus"/> 
     <property name="dist.jars" location="${dist.share}/java"/> 
@@ -459,10 +467,18 @@
     <copy preservelastmodified="true" todir="${dist.lib}/php">
       <fileset dir="lib/pegasus/php" includes="**/*.php"/>
     </copy>
-    <mkdir dir="${dist.lib}/python"/>
-    <copy preservelastmodified="true" todir="${dist.lib}/python">
+    <mkdir dir="${dist.python-lib}"/>
+    <copy preservelastmodified="true" todir="${dist.python-lib}">
       <fileset dir="lib/pegasus/python" includes="**/*.py"/>
     </copy>
+    <!-- Symlink from old Python location to be backward compatible and
+         make sure pegasus-config works correctly. This has to be relative
+         to make our relocatable tarballs work. -->
+    <mkdir dir="${dist.lib}/python"/>
+    <exec executable="ln" dir="${dist.lib}/python" failonerror="true">
+      <arg line="-s"/>
+      <arg line="../../../${dist.python-modules-loc}/Pegasus"/>
+    </exec>
     <chmod perm="0755" type="file">
       <fileset dir="${dist.lib}/externals/python/boto/tests" includes="*.py"/>
     </chmod>

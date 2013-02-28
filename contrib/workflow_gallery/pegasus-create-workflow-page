@@ -40,7 +40,7 @@ from Pegasus.plots_stats.plots import pegasus_host_over_time
 from Pegasus.plots_stats.plots import pegasus_breakdown
 from Pegasus.plots_stats.stats import workflow_stats
 
-from netlogger.analysis.workflow.stampede_statistics import StampedeStatistics
+from Pegasus.netlogger.analysis.workflow.stampede_statistics import StampedeStatistics
 
 #regular expressions
 re_parse_property = re.compile(r'([^:= \t]+)\s*[:=]?\s*(.*)')

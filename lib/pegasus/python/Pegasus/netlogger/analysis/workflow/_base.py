@@ -22,7 +22,7 @@ __rcsid__ = "$Id: _base.py 26972 2011-01-11 16:19:33Z mgoode $"
 __author__ = "Monte Goode MMGoode@lbl.gov"
 
 import logging
-from netlogger.nllog import DoesLogging, get_root_logger
+from Pegasus.netlogger.nllog import DoesLogging, get_root_logger
 
 class NullHandler(logging.Handler):
     def emit(self, record):

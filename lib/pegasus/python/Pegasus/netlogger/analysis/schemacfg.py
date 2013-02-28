@@ -51,11 +51,11 @@ from datetime import datetime
 import ConfigParser
 import re
 # Local imports
-from netlogger import nldate
-from netlogger import nlapi
-from netlogger import nllog
-from netlogger import util
-from netlogger.parsers.base import parseDate
+from Pegasus.netlogger import nldate
+from Pegasus.netlogger import nlapi
+from Pegasus.netlogger import nllog
+from Pegasus.netlogger import util
+from Pegasus.netlogger.parsers.base import parseDate
 
 def convert_to_date(x):
     """Convert value to date.

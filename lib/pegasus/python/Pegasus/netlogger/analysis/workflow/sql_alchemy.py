@@ -11,11 +11,11 @@ import calendar
 import datetime
 import time
 
-from netlogger.analysis.schema.stampede_schema import initializeToPegasusDB, func, orm, \
+from Pegasus.netlogger.analysis.schema.stampede_schema import initializeToPegasusDB, func, orm, \
     Workflow as WorkflowTable, Workflowstate as WorkflowstateTable, Job as JobTable, \
     Jobstate as JobstateTable, Host as HostTable, Task as TaskTable, Edge as EdgeTable
-from netlogger.analysis.modules._base import SQLAlchemyInit
-from netlogger.analysis.workflow._base import Workflow as BaseWorkflow, \
+from Pegasus.netlogger.analysis.modules._base import SQLAlchemyInit
+from Pegasus.netlogger.analysis.workflow._base import Workflow as BaseWorkflow, \
     Job as BaseJob, Host as BaseHost, Task as BaseTask, Jobstate as BaseJobstate, \
     Discovery as BaseDiscovery, Workflowstate as BaseWorkflowstate
     
@@ -1444,7 +1444,7 @@ class Discovery(BaseDiscovery, SQLAlchemyInit):
 ### XXX: remove this testing code
 if __name__ == '__main__':
     import os, calendar
-    from netlogger.analysis.workflow.api_test import test_workflow_types
+    from Pegasus.netlogger.analysis.workflow.api_test import test_workflow_types
     os.chdir('/Users/monte/Desktop/Pegasus')
     debug = True
     
