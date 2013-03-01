@@ -45,12 +45,6 @@ main) with variable substitutions from Unix environment variables. See
 section <<VARIABLE_REWRITING, *VARIABLE REWRITING*>> below for details on 
 this feature.
 
-*pegasus-kickstart* provides a temporary named pipe (fifo) for 
-applications that are gridstart-aware. Any data an application writes to 
-the FIFO will be propagated back to the submit host, thus enabling 
-progress meters and other application dependent monitoring. See section
-<<FEEDBACK_CHANNEL,*FEEDBACK CHANNEL*>> below for details on this feature.
-
 
 Options
 -------
@@ -273,6 +267,16 @@ any further command line processing of *pegasus-kickstart* command lines.
 Default is to use the 'app flags' mode, where the application is specified 
 explicitly on the command-line. 
 
+*-f*::
+This flag causes kickstart to output full information, including the
+environment and resource limits under which the job ran, and any useful
+auxilliary statcalls. If the job fails, then *-f* is implied.
+
+*-t*::
+This flag causes kickstart to skip tracing the child process and omit the
+<proc> element. This flag only exists when kickstart is compiled for
+Linux.
+
 'app'::
 The path to the application has to be completely specified. The application 
 is a mandatory option.
@@ -293,7 +297,7 @@ See Also
 --------
 pegasus-plan(1), condor_submit_dag(1), condor_submit(1), getrusage(3c).
 
-<http://pegasus.isi.edu/wms/docs/schemas/iv-2.1/iv-2.1.html>
+<http://pegasus.isi.edu/wms/docs/schemas/iv-2.2/iv-2.2.html>
 
 <http://pegasus.isi.edu/documentation>
 
@@ -425,31 +429,6 @@ It is highly recommended to experiment on the Unix command line with the
 quoting mechanisms needed to achieve variable substitution. 
 
 
-[[FEEDBACK_CHANNEL]]
-Feedback Channel
-----------------
-A long-running application may consider to stream back heart beats
-and other application-specific monitoring and progress data. For this
-reason, *pegasus-kickstart* provides a feedback channel. At start-up, 
-a transient named pipe, also known as FIFO, is created. While waiting 
-for started jobs to finish, *pegasus-kickstart* will attempt to read 
-from the FIFO. By default, any information read will be encapsulated 
-in XML tags, and written to 'stderr'. Please note that in a Pegasus, 
-Globus, Condor-G environment, 'stderr' will be GASS streamed or staged 
-to the submit host. At the submit host, an application specific monitor 
-may unpack the data chunks and could for instance visually display them, 
-or aggregate them with other data. Please note that *pegasus-kickstart*
-only provides a feedback channel. The content and interpretation
-is up to, and specific for the application. 
-
-In order to make an application gridstart aware, it needs to be
-able to write to a FIFO. The filename can be picked up from the
-environment variable *GRIDSTART_CHANNEL* which is provided to all jobs. 
-Please note that the application  must be prepared to handle the PIPE 
-signal when writing to a FIFO, and must be able to cope with failing 
-write operations. 
-
-
 Example
 -------
 You can run the *pegasus-kickstart* executable locally to verify that 
@@ -492,7 +471,7 @@ The current format of the performance data is as follows:
 
 Output Format
 -------------
-Refer to <http://pegasus.isi.edu/wms/docs/schemas/iv-2.1/iv-2.1.html>
+Refer to <http://pegasus.isi.edu/wms/docs/schemas/iv-2.2/iv-2.2.html>
 for an up-to-date description of elements and their attributes. Check with
 <http://pegasus.isi.edu/documentation> for invocation schemas with a higher 
 version number.
@@ -539,7 +518,7 @@ truncated. This is correct behavior, but sometimes not obvious.
 
 Files
 -----
-*/usr/share/pegasus/schema/iv-2.1.xsd*::
+*/usr/share/pegasus/schema/iv-2.2.xsd*::
 is the suggested location of the latest XML schema describing the data
 on the submit host.
 
@@ -580,10 +559,6 @@ after the main job, see above for a detailed description.
 *GRIDSTART_CLEANUP*::
 contains a string that starts a job to be executed unconditionally
 after any of the previous jobs, see above for a detailed description.
-
-*GRIDSTART_CHANNEL*::
-is the name of a FIFO for an application-specific feedback-channel,
-see above for a detailed description.
 
 
 History

@@ -2,12 +2,12 @@
 .\"     Title: pegasus-kickstart
 .\"    Author: [see the "Authors" section]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 12/21/2012
+.\"      Date: 03/01/2013
 .\"    Manual: \ \&
 .\"    Source: \ \&
 .\"  Language: English
 .\"
-.TH "PEGASUS\-KICKSTART" "1" "12/21/2012" "\ \&" "\ \&"
+.TH "PEGASUS\-KICKSTART" "1" "03/01/2013" "\ \&" "\ \&"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -48,8 +48,6 @@ Sitting in between the remote scheduler and the executable, it is possible for \
 All jobs with relative path specifications to the application are part of search relative to the current working directory (yes, this is unsafe), and by prepending each component from the \fIPATH\fR environment variable\&. The first match is used\&. Jobs that use absolute pathnames, starting in a slash, are exempt\&. Using an absolute path to your executable is the safe and recommended option\&.
 .sp
 \fBpegasus\-kickstart\fR rewrites the command line of any job (pre, post and main) with variable substitutions from Unix environment variables\&. See section \fBVARIABLE REWRITING\fR below for details on this feature\&.
-.sp
-\fBpegasus\-kickstart\fR provides a temporary named pipe (fifo) for applications that are gridstart\-aware\&. Any data an application writes to the FIFO will be propagated back to the submit host, thus enabling progress meters and other application dependent monitoring\&. See section \fBFEEDBACK CHANNEL\fR below for details on this feature\&.
 .SH "OPTIONS"
 .PP
 \fB\-n\fR \fItr\fR
@@ -319,6 +317,18 @@ Default is to use the
 mode, where the application is specified explicitly on the command\-line\&.
 .RE
 .PP
+\fB\-f\fR
+.RS 4
+This flag causes kickstart to output full information, including the environment and resource limits under which the job ran, and any useful auxilliary statcalls\&. If the job fails, then
+\fB\-f\fR
+is implied\&.
+.RE
+.PP
+\fB\-t\fR
+.RS 4
+This flag causes kickstart to skip tracing the child process and omit the <proc> element\&. This flag only exists when kickstart is compiled for Linux\&.
+.RE
+.PP
 \fIapp\fR
 .RS 4
 The path to the application has to be completely specified\&. The application is a mandatory option\&.
@@ -335,7 +345,7 @@ Application may or may not have additional flags\&.
 .sp
 pegasus\-plan(1), condor_submit_dag(1), condor_submit(1), getrusage(3c)\&.
 .sp
-\m[blue]\fBhttp://pegasus\&.isi\&.edu/wms/docs/schemas/iv\-2\&.1/iv\-2\&.1\&.html\fR\m[]
+\m[blue]\fBhttp://pegasus\&.isi\&.edu/wms/docs/schemas/iv\-2\&.2/iv\-2\&.2\&.html\fR\m[]
 .sp
 \m[blue]\fBhttp://pegasus\&.isi\&.edu/documentation\fR\m[]
 .SH "SUBJOBS"
@@ -384,11 +394,6 @@ Mind that variable substitution is an expert feature, as some degree of tricky q
 The variable substitution assumptions for the main job differ slightly from the prejob and postjob for technical reasons\&. The pre\- and postjob command lines are passed as one string\&. However, the main jobs command line is already split into pieces by the time it reaches \fBpegasus\-kickstart\fR\&. Thus, any whitespace on the main job\(cqs command line must be preserved, and further argument splitting avoided\&.
 .sp
 It is highly recommended to experiment on the Unix command line with the \fIecho\fR and \fIenv\fR applications to obtain a feeling for the different quoting mechanisms needed to achieve variable substitution\&.
-.SH "FEEDBACK CHANNEL"
-.sp
-A long\-running application may consider to stream back heart beats and other application\-specific monitoring and progress data\&. For this reason, \fBpegasus\-kickstart\fR provides a feedback channel\&. At start\-up, a transient named pipe, also known as FIFO, is created\&. While waiting for started jobs to finish, \fBpegasus\-kickstart\fR will attempt to read from the FIFO\&. By default, any information read will be encapsulated in XML tags, and written to \fIstderr\fR\&. Please note that in a Pegasus, Globus, Condor\-G environment, \fIstderr\fR will be GASS streamed or staged to the submit host\&. At the submit host, an application specific monitor may unpack the data chunks and could for instance visually display them, or aggregate them with other data\&. Please note that \fBpegasus\-kickstart\fR only provides a feedback channel\&. The content and interpretation is up to, and specific for the application\&.
-.sp
-In order to make an application gridstart aware, it needs to be able to write to a FIFO\&. The filename can be picked up from the environment variable \fBGRIDSTART_CHANNEL\fR which is provided to all jobs\&. Please note that the application must be prepared to handle the PIPE signal when writing to a FIFO, and must be able to cope with failing write operations\&.
 .SH "EXAMPLE"
 .sp
 You can run the \fBpegasus\-kickstart\fR executable locally to verify that it is functioning well\&. In the initial phase, the format of the performance data may be slightly adjusted\&.
@@ -423,7 +428,7 @@ Even this output already appears large\&. The output may already be too large to
 The current format of the performance data is as follows:
 .SH "OUTPUT FORMAT"
 .sp
-Refer to \m[blue]\fBhttp://pegasus\&.isi\&.edu/wms/docs/schemas/iv\-2\&.1/iv\-2\&.1\&.html\fR\m[] for an up\-to\-date description of elements and their attributes\&. Check with \m[blue]\fBhttp://pegasus\&.isi\&.edu/documentation\fR\m[] for invocation schemas with a higher version number\&.
+Refer to \m[blue]\fBhttp://pegasus\&.isi\&.edu/wms/docs/schemas/iv\-2\&.2/iv\-2\&.2\&.html\fR\m[] for an up\-to\-date description of elements and their attributes\&. Check with \m[blue]\fBhttp://pegasus\&.isi\&.edu/documentation\fR\m[] for invocation schemas with a higher version number\&.
 .SH "RESTRICTIONS"
 .sp
 There is no version for the Condor \fIstandard\fR universe\&. It is simply not possible within the constraints of Condor\&.
@@ -445,7 +450,7 @@ The upper limit of characters of command line characters is currently not checke
 If the output or error file is opened in append mode, but the application decides to truncate its output file, as in the above example by opening \fI/dev/fd/1\fR inside \fIkeg\fR, the resulting file will still be truncated\&. This is correct behavior, but sometimes not obvious\&.
 .SH "FILES"
 .PP
-\fB/usr/share/pegasus/schema/iv\-2\&.1\&.xsd\fR
+\fB/usr/share/pegasus/schema/iv\-2\&.2\&.xsd\fR
 .RS 4
 is the suggested location of the latest XML schema describing the data on the submit host\&.
 .RE
@@ -494,11 +499,6 @@ contains a string that starts a job to be executed conditionally after the main 
 \fBGRIDSTART_CLEANUP\fR
 .RS 4
 contains a string that starts a job to be executed unconditionally after any of the previous jobs, see above for a detailed description\&.
-.RE
-.PP
-\fBGRIDSTART_CHANNEL\fR
-.RS 4
-is the name of a FIFO for an application\-specific feedback\-channel, see above for a detailed description\&.
 .RE
 .SH "HISTORY"
 .sp
