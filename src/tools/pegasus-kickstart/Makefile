@@ -140,7 +140,7 @@ jobinfo.o: jobinfo.c getif.h debug.h tools.h useinfo.h jobinfo.h \
   statinfo.h parse.h procinfo.h
 pegasus-kickstart.o: pegasus-kickstart.c rwio.h debug.h appinfo.h \
   statinfo.h jobinfo.h limitinfo.h machine.h mysystem.h mylist.h \
-  invoke.h tools.h version.h
+  invoke.h tools.h version.h ptrace.h
 limitinfo.o: limitinfo.c debug.h tools.h limitinfo.h
 machine.o: machine.c machine.h machine/basic.h debug.h
 mylist.o: mylist.c mylist.h

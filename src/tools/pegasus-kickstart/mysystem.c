@@ -93,7 +93,7 @@ int mysystem(AppInfo* appinfo, JobInfo* jobinfo, char* envp[])
     sigaction( SIGQUIT, &savequit, NULL );
 
     /* If we are tracing, then hand over control to the proc module */
-    if (1) {
+    if (!appinfo->skipTracing) {
       if ( procChild() ) _exit(126);
     }
     
@@ -101,10 +101,10 @@ int mysystem(AppInfo* appinfo, JobInfo* jobinfo, char* envp[])
     _exit(127); /* executed in child process */
   } else {
     /* parent */
-    if (1) {
-      procParentTrace(jobinfo->child, &jobinfo->status, &jobinfo->use, &(jobinfo->children));
-    } else {
+    if (appinfo->skipTracing) {
       procParentWait(jobinfo->child, &jobinfo->status, &jobinfo->use, &(jobinfo->children));
+    } else {
+      procParentTrace(jobinfo->child, &jobinfo->status, &jobinfo->use, &(jobinfo->children));
     }
     
     /* sanity check */

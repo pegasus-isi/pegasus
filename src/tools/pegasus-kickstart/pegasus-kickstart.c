@@ -34,6 +34,7 @@
 #include "invoke.h"
 #include "tools.h"
 #include "version.h"
+#include "ptrace.h"
 
 /* truely shared globals */
 int isExtended = 1;     /* timestamp format concise or extended */
@@ -157,7 +158,7 @@ helpMe( const AppInfo* run )
   fprintf( stderr, 
 "Usage:\t%s [-i fn] [-o fn] [-e fn] [-l fn] [-n xid] [-N did] \\\n"
 "\t[-w|-W cwd] [-R res] [-s [l=]p] [-S [l=]p] [-X] [-H] [-L lbl -T iso] \\\n" 
-"\t[-B sz] [-F] (-I fn | app [appflags])\n", p );
+"\t[-B sz] [-F] [-f] (-I fn | app [appflags])\n", p );
   fprintf( stderr, 
 " -i fn\tConnects stdin of app to file fn, default is \"%s\".\n", 
            xlate(&run->input) );
@@ -195,6 +196,9 @@ helpMe( const AppInfo* run )
 " -F\tAttempt to fsync kickstart's stdout at exit (should not be necessary).\n"
 " -f\tPrint full information including <resource>, <environment> and \n"
 "   \t<statcall>. If the job fails, then -f is implied.\n"
+#ifdef HAS_PTRACE
+" -t\tSkip tracing and omit <proc>\n"
+#endif
  );
 
   /* avoid printing of results in exit handler */
@@ -476,6 +480,9 @@ main( int argc, char* argv[] )
       break;
     case 'T':
       appinfo.wf_stamp = noquote( argv[i][2] ? &argv[i][2] : argv[++i] );
+      break;
+    case 't':
+      appinfo.skipTracing++;
       break;
     case 'w':
       workdir = noquote( argv[i][2] ? &argv[i][2] : argv[++i] );

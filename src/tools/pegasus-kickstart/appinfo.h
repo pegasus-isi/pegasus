@@ -32,7 +32,8 @@ typedef struct {
   int            isPrinted;  /* flag to set after successful print op */
   int            noHeader;   /* exclude <?xml ?> premable and <machine> */
   int            fullInfo;   /* include <statcall>, <environment> and <resource> */
-
+  int            skipTracing;/* skip tracing and omit <proc> */
+  
   char* const*   argv;       /* application executable and arguments */
   int            argc;       /* application CLI number of arguments */
   char* const*   envp;       /* snapshot of environment */
