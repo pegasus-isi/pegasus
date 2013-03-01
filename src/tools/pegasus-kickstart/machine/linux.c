@@ -524,8 +524,8 @@ printMachine( char* buffer, size_t size, size_t* len, size_t indent,
 	   ptr->load[0], ptr->load[1], ptr->load[2] );
 
   if ( ptr->procs.total && ptr->tasks.total ) {
-    /* <proc> element */
-    myprint( buffer, size, len, "%*s<proc total=\"%u\"",
+    /* <procs> element */
+    myprint( buffer, size, len, "%*s<procs total=\"%u\"",
 	     indent+2, "", ptr->procs.total ); 
     for ( s=S_RUNNING; s<=S_OTHER; ++s ) {
       if ( ptr->procs.state[s] ) 
