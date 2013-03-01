@@ -123,7 +123,7 @@ endif
 
 all : pegasus-kickstart
 
-pegasus-kickstart: debug.o getif.o rwio.o tools.o useinfo.o mynss.o statinfo.o jobinfo.o limitinfo.o $(EXTRA_OBJ) machine.o appinfo.o parse.o mysystem.o mylist.o invoke.o pegasus-kickstart.o
+pegasus-kickstart: debug.o getif.o rwio.o tools.o useinfo.o mynss.o statinfo.o jobinfo.o limitinfo.o $(EXTRA_OBJ) machine.o appinfo.o parse.o mysystem.o mylist.o invoke.o pegasus-kickstart.o procinfo.o
 	$(LD) $(EXTRA_LDFLAGS) $(CFLAGS) $^ -o $@ $(LOADLIBES)
 show-if: show-if.o getif.o debug.o rwio.o
 	$(LD) $(EXTRA_LDFLAGS) $(CFLAGS) $^ -o $@ $(LOADLIBES)
@@ -137,7 +137,7 @@ fail.o: fail.c
 getif.o: getif.c debug.h getif.h rwio.h
 invoke.o: invoke.c invoke.h
 jobinfo.o: jobinfo.c getif.h debug.h tools.h useinfo.h jobinfo.h \
-  statinfo.h parse.h
+  statinfo.h parse.h procinfo.h
 pegasus-kickstart.o: pegasus-kickstart.c rwio.h debug.h appinfo.h \
   statinfo.h jobinfo.h limitinfo.h machine.h mysystem.h mylist.h \
   invoke.h tools.h version.h
@@ -146,8 +146,9 @@ machine.o: machine.c machine.h machine/basic.h debug.h
 mylist.o: mylist.c mylist.h
 mynss.o: mynss.c mynss.h
 mysystem.o: mysystem.c debug.h tools.h appinfo.h statinfo.h jobinfo.h \
-  limitinfo.h machine.h mysystem.h mysignal.h
+  limitinfo.h machine.h mysystem.h mysignal.h procinfo.h
 parse.o: parse.c debug.h parse.h
+procinfo.o: procinfo.c procinfo.h ptrace.h tools.h
 rwio.o: rwio.c rwio.h
 show-if.o: show-if.c getif.h
 statinfo.o: statinfo.c mynss.h debug.h statinfo.h tools.h

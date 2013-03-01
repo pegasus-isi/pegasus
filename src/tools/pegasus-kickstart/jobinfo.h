@@ -20,32 +20,28 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 #include "statinfo.h"
+#include "procinfo.h"
 
-#ifdef USE_MEMINFO
-#include "meminfo.h"
-#endif /* USE_MEMINFO */
-
-typedef struct {
+typedef struct _JobInfo {
   /* private */
-  int           isValid;     /* 0: uninitialized, 1:valid, 2:app not found */
-  char*         copy;        /* buffer for argument separation */
+  int            isValid;     /* 0: uninitialized, 1:valid, 2:app not found */
+  char*          copy;        /* buffer for argument separation */
 
   /* public */
-  char* const*  argv;        /* application executable and arguments */
-  int           argc;        /* application CLI number of arguments */
-  StatInfo      executable;  /* stat() info for executable, if available */
+  char* const*   argv;        /* application executable and arguments */
+  int            argc;        /* application CLI number of arguments */
+  StatInfo       executable;  /* stat() info for executable, if available */
 
-  struct timeval start;      /* point of time that app was started */
-  struct timeval finish;     /* point of time that app was reaped */
+  struct timeval start;       /* point of time that app was started */
+  struct timeval finish;      /* point of time that app was reaped */
 
-  pid_t         child;       /* pid of process that ran application */
-  int           status;      /* raw exit status of application */
-  int           saverr;      /* errno for status < 0 */
-  char*         prefix;      /* prefix to error message for status < 0 */
-  struct rusage use;         /* rusage record from reaping application status */
-#ifdef USE_MEMINFO
-  MemInfo       peakmem;     /* maximum memory usage during lifetime */
-#endif /* USE_MEMINFO */
+  pid_t          child;       /* pid of process that ran application */
+  int            status;      /* raw exit status of application */
+  int            saverr;      /* errno for status < 0 */
+  char*          prefix;      /* prefix to error message for status < 0 */
+  struct rusage  use;         /* rusage record from reaping application status */
+
+  ProcInfo *     children;    /* per-process memory, I/O and CPU usage */
 } JobInfo;
 
 extern

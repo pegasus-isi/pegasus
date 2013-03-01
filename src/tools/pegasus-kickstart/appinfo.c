@@ -318,69 +318,72 @@ safe_strlen( const char* s )
 }
 
 int
-printAppInfo( const AppInfo* run )
+printAppInfo( AppInfo* run )
 /* purpose: output the given app info onto the given fd
  * paramtr: run (IN): is the collective information about the run
  * returns: the number of characters actually written (as of write() call).
  *          if negative, check with errno for the cause of write failure. */
 {
-  int i, result = -1;
-  int fd = run->logfile.source == IS_HANDLE ?
-    run->logfile.file.descriptor :
-    open( run->logfile.file.name, O_WRONLY | O_APPEND | O_CREAT, 0644 );
+  int result = -1;
 
-  if ( fd != -1 ) {
-    int locked;
-    size_t wsize, size = getpagesize() << 5; /* initial assumption */
-    char* buffer = NULL;
-
-    /* Adjust for final/initial sections */
-    if ( run->icount && run->initial )
-      for ( i=0; i<run->icount; ++i )
-        size += 256 + safe_strlen( run->initial[i].lfn ) +
-          safe_strlen( run->initial[i].file.name );
-    if ( run->fcount && run->final )
-      for ( i=0; i<run->fcount; ++i )
-        size += 256 + safe_strlen( run->final[i].lfn ) +
-          safe_strlen( run->final[i].file.name );
-
-    /* Adjust for <data> sections in stdout and stderr */
-    size += ( data_section_size << 1 );
-
-    /* Allocate buffer -- this may fail? */
-    buffer = (char*) calloc( size, sizeof(char) );
-
-    /* what about myself? Update stat info on log file */
-    updateStatInfo( &((AppInfo*) run)->logfile );
-
-    /* obtain resource usage for xxxx */
-#if 0
-    struct rusage temp;
-    getrusage( RUSAGE_SELF, &temp );
-    addUseInfo( (struct rusage*) &run->usage, &temp );
-    getrusage( RUSAGE_CHILDREN, &temp );
-    addUseInfo( (struct rusage*) &run->usage, &temp );
-#else
-    getrusage( RUSAGE_SELF, (struct rusage*) &run->usage );
-#endif
-
-    /* FIXME: is this true and necessary? */
-    updateLimitInfo( (LimitInfo*) &run->limits );
-
-    /* stop the clock */
-    now( (struct timeval*) &run->finish );
-
-    wsize = convert2XML( buffer, size, run );
-    locked = mytrylock(fd);
-    result = writen( fd, buffer, wsize, 3 );
-    /* FIXME: what about wsize != result */
-    if ( locked==1 ) lockit( fd, F_SETLK, F_UNLCK );
-
-    free( (void*) buffer );
-
-    ((AppInfo*) run)->isPrinted = 1;
-    if ( run->logfile.source == IS_FILE ) close(fd);
+  /* Get the descriptor to write to */
+  int fd;
+  if (run->logfile.source == IS_FILE) {
+    fd = open(run->logfile.file.name, O_WRONLY | O_APPEND | O_CREAT, 0644);
+  } else {
+    fd = run->logfile.file.descriptor;
   }
+
+  if (fd < 0) 
+      return -1;
+
+  size_t size = getpagesize() << 5; /* initial assumption */
+
+  /* Adjust for final/initial sections */
+  int i;
+  if ( run->icount && run->initial )
+    for ( i=0; i<run->icount; ++i )
+      size += 256 + safe_strlen( run->initial[i].lfn ) +
+        safe_strlen( run->initial[i].file.name );
+  if ( run->fcount && run->final )
+    for ( i=0; i<run->fcount; ++i )
+      size += 256 + safe_strlen( run->final[i].lfn ) +
+        safe_strlen( run->final[i].file.name );
+
+  /* Adjust for <data> sections in stdout and stderr */
+  size += ( data_section_size << 1 );
+
+  /* Allocate buffer -- this may fail? */
+  char* buffer = (char*) calloc( size, sizeof(char) );
+  if (buffer == NULL)
+      goto exit;
+
+  /* what about myself? Update stat info on log file */
+  updateStatInfo( &run->logfile );
+
+  /* obtain resource usage for xxxx */
+  getrusage( RUSAGE_SELF, &run->usage );
+
+  /* FIXME: is this true and necessary? */
+  updateLimitInfo( &run->limits );
+
+  /* stop the clock */
+  now( &run->finish );
+
+  size_t wsize = convert2XML( buffer, size, run );
+  int locked = mytrylock(fd);
+  result = writen( fd, buffer, wsize, 3 );
+  /* FIXME: what about wsize != result */
+  if ( locked==1 ) 
+      lockit( fd, F_SETLK, F_UNLCK );
+
+  run->isPrinted = 1;
+
+  free( (void*) buffer );
+
+exit:
+  if (run->logfile.source == IS_FILE)
+      close(fd);
 
   return result;
 }

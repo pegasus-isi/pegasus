@@ -29,23 +29,9 @@
 #include "statinfo.h"
 #include "mysystem.h"
 #include "mysignal.h"
+#include "procinfo.h"
 
-#ifdef DEBUG_WAIT
-static
-pid_t
-mywait4( pid_t wpid, int* status, int options, struct rusage* rusage )
-{
-  pid_t result = wait4( wpid, status, options, rusage );
-  debugmsg( "# wait4(%d,%p=%d,%d,%p) = %d\n",
-           wpid, status, *status, options, rusage, result );
-  return result;
-}
-#else
-#define mywait4(a,b,c,d) wait4(a,b,c,d)
-#endif /* DEBUG_WAIT */
-
-int
-mysystem( AppInfo* appinfo, JobInfo* jobinfo, char* envp[] )
+int mysystem(AppInfo* appinfo, JobInfo* jobinfo, char* envp[])
 /* purpose: emulate the system() libc call, but save utilization data. 
  * paramtr: appinfo (IO): shared record of information
  *                        isPrinted (IO): reset isPrinted in child process!
@@ -106,16 +92,29 @@ mysystem( AppInfo* appinfo, JobInfo* jobinfo, char* envp[] )
     sigaction( SIGINT, &saveintr, NULL );
     sigaction( SIGQUIT, &savequit, NULL );
 
+#ifdef USE_PROC
+    /* If we are tracing, then hand over control to the proc module */
+    if ( procChild() ) _exit(126);
+#endif
+    
     execve( jobinfo->argv[0], (char* const*) jobinfo->argv, envp );
     _exit(127); /* executed in child process */
   } else {
     /* parent */
-    int rc;
-    while ( (rc = mywait4( jobinfo->child, &jobinfo->status, 0, &jobinfo->use )) < 0 ) {
-      if ( errno != EINTR ) {
+#ifdef USE_PROC
+    /* If we are ptracing, then hand over control to the proc module */
+    if (procParent(jobinfo->child, &jobinfo->status, &jobinfo->use, &(jobinfo->children)) < 0) {
+        jobinfo->status = -42;
+    }
+#else
+    /* Otherwise, just wait for the child */
+    while (wait4(jobinfo->child, &jobinfo->status, 0, &jobinfo->use) < 0) {
+      if (errno != EINTR) {
+        perror("wait4");
         jobinfo->status = -42;
       }
     }
+#endif
     
     /* sanity check */
     if ( kill( jobinfo->child, 0 ) == 0 ) {
@@ -137,3 +136,4 @@ mysystem( AppInfo* appinfo, JobInfo* jobinfo, char* envp[] )
   /* finalize */
   return jobinfo->status;
 }
+

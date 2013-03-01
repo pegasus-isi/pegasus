@@ -302,11 +302,6 @@ printXMLJobInfo( char* buffer, size_t size, size_t* len, size_t indent,
   /* <usage> */
   printXMLUseInfo( buffer, size, len, indent+2, "usage", &job->use );
 
-#ifdef USE_MEMINFO
-  /* <meminfo> */
-  printXMLMemInfo( buffer, size, len, indent+2, "peak", &job->peakmem );
-#endif /* USE_MEMINFO */
-
   /* <status>: open tag */
   myprint( buffer, size, len, "%*s<status raw=\"%d\">", indent+2, "", 
            job->status );
@@ -393,6 +388,9 @@ printXMLJobInfo( char* buffer, size_t size, size_t* len, size_t indent,
     append( buffer, size, len, "</arguments>\n" );
   }
 #endif /* WITH_NEW_ARGS */
+
+  /* <proc>s */
+  printXMLProcInfo( buffer, size, len, indent+2, job->children );
   
   /* finalize close tag of outmost element */
   myprint( buffer, size, len, "%*s</%s>\n", indent, "", tag );
@@ -424,6 +422,9 @@ deleteJobInfo( JobInfo* jobinfo )
     free( (void*) jobinfo->argv );
     jobinfo->copy = 0;
   }
+
+  deleteProcInfo(jobinfo->children);
+  jobinfo->children = NULL;
 
   /* final invalidation */
   jobinfo->isValid = 0;

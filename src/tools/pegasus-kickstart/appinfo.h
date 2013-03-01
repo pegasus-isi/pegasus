@@ -86,7 +86,7 @@ initAppInfo( AppInfo* appinfo, int argc, char* const* argv );
 
 extern
 int
-printAppInfo( const AppInfo* runinfo );
+printAppInfo( AppInfo* runinfo );
 /* purpose: output the given app info onto the given fd
  * paramtr: appinfo (IN): is the collective information about the run
  * returns: the number of characters actually written (as of write() call).
