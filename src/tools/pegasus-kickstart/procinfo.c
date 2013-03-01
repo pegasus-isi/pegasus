@@ -222,13 +222,19 @@ static int proc_read_io(ProcInfo *item) {
     return fclose(f);
 }
 
-/* Do the child part of fork() */
 int procChild() {
+#ifdef HAS_PTRACE
     return ptrace(PTRACE_TRACEME, 0, NULL, NULL);
+#else
+    return 0;
+#endif
 }
 
 /* Do the parent part of fork() */
-int procParent(pid_t main, int *main_status,  struct rusage *main_usage, ProcInfo **procs) {
+int procParentTrace(pid_t main, int *main_status,  struct rusage *main_usage, ProcInfo **procs) {
+#ifndef HAS_PTRACE
+    return procParentWait(main, main_status, main_usage, procs);
+#else
     /* Event loop */
     while (1) {
         
@@ -323,6 +329,18 @@ int procParent(pid_t main, int *main_status,  struct rusage *main_usage, ProcInf
     }
     
     return 0;
+#endif
+}
+
+int procParentWait(pid_t main, int *main_status,  struct rusage *main_usage, ProcInfo **procs) {
+    /* Just wait for the child */
+    while (wait4(main, main_status, 0, main_usage) < 0) {
+        if (errno != EINTR) {
+            perror("wait4");
+            *main_status = -42;
+        }
+    }
+    return *main_status;
 }
 
 /* Write <proc> records to buffer */

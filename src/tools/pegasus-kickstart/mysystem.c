@@ -92,29 +92,20 @@ int mysystem(AppInfo* appinfo, JobInfo* jobinfo, char* envp[])
     sigaction( SIGINT, &saveintr, NULL );
     sigaction( SIGQUIT, &savequit, NULL );
 
-#ifdef USE_PROC
     /* If we are tracing, then hand over control to the proc module */
-    if ( procChild() ) _exit(126);
-#endif
+    if (1) {
+      if ( procChild() ) _exit(126);
+    }
     
     execve( jobinfo->argv[0], (char* const*) jobinfo->argv, envp );
     _exit(127); /* executed in child process */
   } else {
     /* parent */
-#ifdef USE_PROC
-    /* If we are ptracing, then hand over control to the proc module */
-    if (procParent(jobinfo->child, &jobinfo->status, &jobinfo->use, &(jobinfo->children)) < 0) {
-        jobinfo->status = -42;
+    if (1) {
+      procParentTrace(jobinfo->child, &jobinfo->status, &jobinfo->use, &(jobinfo->children));
+    } else {
+      procParentWait(jobinfo->child, &jobinfo->status, &jobinfo->use, &(jobinfo->children));
     }
-#else
-    /* Otherwise, just wait for the child */
-    while (wait4(jobinfo->child, &jobinfo->status, 0, &jobinfo->use) < 0) {
-      if (errno != EINTR) {
-        perror("wait4");
-        jobinfo->status = -42;
-      }
-    }
-#endif
     
     /* sanity check */
     if ( kill( jobinfo->child, 0 ) == 0 ) {

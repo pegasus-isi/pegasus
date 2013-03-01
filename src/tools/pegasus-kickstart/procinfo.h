@@ -6,10 +6,6 @@
 
 #include "ptrace.h"
 
-#ifdef HAVE_PTRACE
-#define USE_PROC
-#endif
-
 typedef struct _ProcInfo {
     int pid; /* Thread ID (main tid==pid) */
     int ppid; /* Parent pid */
@@ -33,7 +29,8 @@ typedef struct _ProcInfo {
 } ProcInfo;
 
 int procChild();
-int procParent(pid_t main, int* main_status, struct rusage* main_usage, ProcInfo** procs);
+int procParentTrace(pid_t main, int* main_status, struct rusage* main_usage, ProcInfo** procs);
+int procParentWait(pid_t main, int* main_status, struct rusage* main_usage, ProcInfo** procs);
 int printXMLProcInfo(char* buffer, size_t size, size_t* len, size_t indent, ProcInfo* procs);
 void deleteProcInfo(ProcInfo *list);
 
