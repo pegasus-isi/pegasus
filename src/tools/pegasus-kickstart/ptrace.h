@@ -9,7 +9,7 @@
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,60)
 
 #include <sys/ptrace.h>
-#define HAS_PTRACE
+/*#define HAS_PTRACE*/
 
 #ifdef __GLIBC__
 
