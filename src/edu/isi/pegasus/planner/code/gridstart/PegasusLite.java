@@ -407,48 +407,7 @@ public class PegasusLite implements GridStart {
         String submitDir = mSubmitDir + mSeparator;
 
 
-        //NOT CLEAR HOW Pegasus-Lite will handle stdout and stdin
-        // handle stdin
-        if (job.stdIn.length() > 0) {
-            construct(job,"input",submitDir + job.stdIn);
-            if (isGlobusJob) {
-                //this needs to be true as you want the stdin
-                //to be transfered to the remote execution
-                //pool, as in case of the transfer script.
-                //it needs to be set if the stdin is already
-                //prepopulated at the remote side which
-                //it is not.
-                construct(job,"transfer_input","true");
-            }
-        }
-
-        if (job.stdOut.length() > 0) {
-            //handle stdout
-            construct(job,"output",job.stdOut);
-            if (isGlobusJob) {
-                construct(job,"transfer_output","false");
-            }
-        } else {
-            // transfer output back to submit host, if unused
-            construct(job,"output",submitDir + job.jobName + ".out");
-            if (isGlobusJob) {
-                construct(job,"transfer_output","true");
-            }
-        }
-
-        if (job.stdErr.length() > 0) {
-            //handle stderr
-            construct(job,"error",job.stdErr);
-            if (isGlobusJob) {
-                construct(job,"transfer_error","false");
-            }
-        } else {
-            // transfer error back to submit host, if unused
-            construct(job,"error",submitDir + job.jobName + ".err");
-            if (isGlobusJob) {
-                construct(job,"transfer_error","true");
-            }
-        }
+        
         
         //consider case for non worker node execution first
 
@@ -568,6 +527,20 @@ public class PegasusLite implements GridStart {
             mKickstartGridStartImpl.enable( job, isGlobusJob );
         }
 
+        
+        if (job.stdIn.length() > 0) {
+            //PM-694
+            //job has a stdin explicitly tracked
+            //the transfer setup will ensure that the input file appears
+            //in the directory where the job is launched via pegauss lite
+
+            //we just need to unset it, so that the stdin is not transferred
+            //from the submit directory as happens in sharedfs cases
+            job.setStdIn( "" );
+
+        }
+
+       
     }
 
    
