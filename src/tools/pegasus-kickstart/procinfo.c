@@ -231,10 +231,15 @@ int procChild() {
 }
 
 /* Do the parent part of fork() */
-int procParentTrace(pid_t main, int *main_status,  struct rusage *main_usage, ProcInfo **procs) {
+int procParentTrace(pid_t main, int *main_status, struct rusage *main_usage, ProcInfo **procs) {
 #ifndef HAS_PTRACE
     return procParentWait(main, main_status, main_usage, procs);
 #else
+    /* TODO We need to find a way to stop tracing all of our children 
+     * if we encounter an error so that we don't leave a lot of processes
+     * hanging around in the t state
+     */
+    
     /* Event loop */
     while (1) {
         
@@ -264,9 +269,13 @@ int procParentTrace(pid_t main, int *main_status,  struct rusage *main_usage, Pr
             child = proc_add(procs, cpid);
             if (child == NULL) return -1;
             child->start = get_time();
-            
+
             /* Set the tracing options for this child so that we
              * can see when it creates children and when it exits
+             */
+            /* TODO Trace exec so we can get the original exe path.
+             * Right now shell scripts are reported as the shell, not
+             * as the original script
              */
             if (ptrace(PTRACE_SETOPTIONS, cpid, NULL, 
                        PTRACE_O_TRACEEXIT|PTRACE_O_TRACEFORK| 
@@ -319,13 +328,32 @@ int procParentTrace(pid_t main, int *main_status,  struct rusage *main_usage, Pr
             
             /* because it got a signal */
             else {
+                int signal = WSTOPSIG(status);
+                
+                /* Mask the STOP signal. Since we are running a batch job
+                 * we should assume that the children never need to be sent
+                 * SIGSTOP. It looks like shells try to send SIGSTOP to all
+                 * the processes they fork so that they can do something 
+                 * and send them SIGCONT. The problem is that this does not
+                 * work under ptrace because wait() does not return in the
+                 * parent, rather it returns in the tracing process so there
+                 * is no way to tell the parent that the child stopped, and
+                 * as a result the parent never sends SIGCONT and the job
+                 * hangs. It is not entirely clear if that explanation is
+                 * correct, but blocking STOP (and for completeness TSTP)
+                 * fixes the problem.
+                 */
+                if (signal == SIGSTOP || signal == SIGTSTP) {
+                    signal = 0;
+                }
+                
                 /* pass the signal on to the child */
-                if (ptrace(PTRACE_CONT, cpid, 0, WSTOPSIG(status))) {
+                if (ptrace(PTRACE_CONT, cpid, NULL, signal)) {
                     perror("ptrace(PTRACE_CONT)");
                     return -1;
                 }
             }
-        } 
+        }
     }
     
     return 0;
