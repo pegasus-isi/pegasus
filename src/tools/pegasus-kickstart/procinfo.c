@@ -291,12 +291,11 @@ int procParentTrace(pid_t main, int *main_status, struct rusage *main_usage, Pro
              * store its status and usage 
              */
             if (main == cpid) {
-                *main_status = status;
                 memcpy(main_usage, &usage, sizeof(struct rusage));
             }
         }
-        
-        /* child was stopped */
+
+        /* child stopped */
         if (WIFSTOPPED(status)) {
             
             /* because of an event we wanted to see */
@@ -316,6 +315,20 @@ int procParentTrace(pid_t main, int *main_status, struct rusage *main_usage, Pro
                     }
                     if (proc_read_io(child) < 0) {
                         perror("proc_read_io");
+                    }
+                     
+                    /* If this is the main process, then get the exit status.
+                     * We have to do this here because the normal exit status
+                     * we get from wait4 above does not properly capture the 
+                     * exit status of signalled processes.
+                     */
+                    if (cpid == main) {
+                        unsigned long event_status;
+                        if (ptrace(PTRACE_GETEVENTMSG, cpid, NULL, &event_status) < 0) {
+                            perror("ptrace(PTRACE_GETEVENTMSG)");
+                            return -1;
+                        }
+                        *main_status = event_status;
                     }
                 }
                 
