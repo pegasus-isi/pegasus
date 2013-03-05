@@ -961,7 +961,7 @@ def s3(transfers, failed_q):
             local_filename = url_pair.src_path
             
             # extract the bucket part
-            re_bucket = re.compile(r'(s3(s){0,1}://\w+@\w+/+[\w]+)')
+            re_bucket = re.compile(r'(s3(s){0,1}://\w+@\w+/+[\w\-]+)')
             bucket = url_pair.dst_url_dirname()
             r = re_bucket.search(bucket)
             if r:
