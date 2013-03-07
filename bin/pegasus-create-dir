@@ -441,14 +441,10 @@ def srm_lcgcp(url):
     """
     implements mkdir using lcg-cp (there is no mkdir in the lcg utils, but cp creates dirs)
     """
-    
-    cmd = "lcg-cp -b -D srmv2 file:///dev/null %s/.empty" %(url.url())
-
-    try:
-        myexec(cmd, 60, True)
-    except Exception, err:
-        if check_error:
-            raise err
+    logger.info("Using lcg-cp as the LCG tools do not have a good mkdir")
+    ts = time.time() 
+    cmd = "lcg-cp -b -D srmv2 file:///bin/true %s/.empty.%f" %(url.url(), ts)
+    myexec(cmd, 60, True)
 
 
 def srm_srmmkdir(url):
@@ -470,12 +466,7 @@ def srm_srmmkdir(url):
         srm_srmmkdir(one_up)
             
     cmd = "srm-mkdir %s" %(url.url())
-
-    try:
-        myexec(cmd, 60, True)
-    except Exception, err:
-        if check_error:
-            raise err
+    myexec(cmd, 60, True)
     
 
 def s3(url):
