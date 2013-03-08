@@ -380,7 +380,7 @@
     <!-- creates the worker tarball -->
     <exec executable="sh" dir="dist">
       <arg value="-c"/>
-      <arg value="tar --exclude=\.svn -cf pegasus-worker-${pegasus.version}.tar pegasus-${pegasus.version}"/>
+      <arg value="tar --exclude=\.git --exclude=\.gitignore -cf pegasus-worker-${pegasus.version}.tar pegasus-${pegasus.version}"/>
     </exec>
     <gzip src="dist/pegasus-worker-${pegasus.version}.tar" 
           destfile="dist/pegasus-worker-${pegasus.version}-${dist.arch}.tar.gz"/>
@@ -391,21 +391,21 @@
     <!-- copies trees preserving all flags and links -->
     <exec executable="sh" dir="${src.dir}">
       <arg value="-c"/>
-      <arg value="find * -depth | fgrep -v .svn | cpio -pdma ${dst.dir}"/>
+      <arg value="find * -depth | fgrep -v .git | cpio -pdma ${dst.dir}"/>
     </exec>
   </target>
 
  <target name="dist-trunk" depends="dist" description="Creates a dist tarball with the trunk dir name">
      <exec executable="sh" dir="dist">
       <arg value="-c"/>
-      <arg value="tar --exclude=\.svn -zcf pegasus-binary-${pegasus.version}.tar.gz pegasus-${pegasus.version}"/>
+      <arg value="tar --exclude=\.git --exclude=\.gitignore -zcf pegasus-binary-${pegasus.version}.tar.gz pegasus-${pegasus.version}"/>
     </exec>
 </target>
 
  <target name="dist-test" depends="dist" description="Creates a dist tarball with the trunk dir name">
      <exec executable="sh">
       <arg value="-c"/>
-      <arg value="tar --exclude=\.svn -zcf dist/pegasus-test-${pegasus.version}.tar.gz test"/>
+      <arg value="tar --exclude=\.git --exclude=\.gitignore -zcf dist/pegasus-test-${pegasus.version}.tar.gz test"/>
     </exec>
 </target>
 
@@ -418,8 +418,7 @@
     <copy preservelastmodified="true" todir="${dist.bin}">
       <fileset dir="bin">
         <exclude name="*-free"/>
-        <exclude name="CVS"/>
-        <exclude name=".svn"/>
+        <exclude name=".gitignore"/>
         <exclude name="Archive"/>
         <exclude name="Archive/*"/>
       </fileset>
@@ -539,7 +538,7 @@
     <!-- creates the binary tarball -->
     <exec executable="sh" dir="dist">
       <arg value="-c"/>
-      <arg value="tar --exclude=\.svn -cf pegasus-binary-${pegasus.version}.tar pegasus-${pegasus.version}"/>
+      <arg value="tar --exclude=\.git --exclude=\.gitignore -cf pegasus-binary-${pegasus.version}.tar pegasus-${pegasus.version}"/>
     </exec>
     <gzip src="dist/pegasus-binary-${pegasus.version}.tar" 
       destfile="dist/pegasus-binary-${pegasus.version}-${dist.arch}.tar.gz"/>
