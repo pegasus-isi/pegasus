@@ -1,5 +1,5 @@
 Name:           pegasus
-Version:        4.2.0
+Version:        4.2.1cvs
 Release:        1%{?dist}
 Summary:        Workflow management system for Condor, grids, and clouds
 Group:          Applications/System
@@ -39,23 +39,16 @@ strip dist/pegasus-%{version}/bin/pegasus-cluster
 strip dist/pegasus-%{version}/bin/pegasus-kickstart
 strip dist/pegasus-%{version}/bin/pegasus-keg
 
-# fix pegasus-config on 64 bit systems
-if (echo %{_libdir} | grep lib64); then 
-    perl -p -i -e 's/^my \$lib.*/my \$lib         = "lib64";/' \
-         dist/pegasus-%{version}/bin/pegasus-config
-fi
-
 %install
 rm -Rf %{buildroot}
 
 mkdir -p %{buildroot}/%{_sysconfdir}/%{name}
 mkdir -p %{buildroot}/%{_bindir}
-mkdir -p %{buildroot}/%{_libdir}
 mkdir -p %{buildroot}/%{_datadir}
 
 cp -aR dist/pegasus-%{version}/etc/* %{buildroot}/%{_sysconfdir}/%{name}/
 cp -aR dist/pegasus-%{version}/bin/* %{buildroot}/%{_bindir}/
-cp -aR dist/pegasus-%{version}/lib/* %{buildroot}/%{_libdir}/
+cp -aR dist/pegasus-%{version}/lib* %{buildroot}/usr/
 cp -aR dist/pegasus-%{version}/share/* %{buildroot}/%{_datadir}/
 
 # rm unwanted files
@@ -75,15 +68,15 @@ rm -Rf %{buildroot}
 %defattr(-,root,root,-)
 %config(noreplace) %{_sysconfdir}/%{name}/
 %{_bindir}/*
-%{_libdir}/%{name}/
+/usr/lib*
 %{_datadir}/doc/%{name}
 %{_datadir}/man/man1/*
 %{_datadir}/%{name}
 
 
 %changelog
-* Fri Jan 11 2013 Mats Rynge <rynge@isi.edu> 4.2.0
-- 4.2.0 release
+* Wed Mar 13 2013 Mats Rynge <rynge@isi.edu> 4.2.1cvs
+- 4.2.1cvs release
 
 * Tue Feb 7 2012 Mats Rynge <rynge@isi.edu> 4.1.0
 - 4.1.0 release
