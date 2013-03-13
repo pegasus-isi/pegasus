@@ -69,7 +69,16 @@
     <property name="dist.dir" location="dist/pegasus-${pegasus.version}"/>
     <property name="dist.bin" location="${dist.dir}/bin"/> 
     <property name="dist.etc" location="${dist.dir}/etc"/> 
-    <property name="dist.lib" location="${dist.dir}/lib/pegasus"/> 
+    
+    <!-- RHEL based system uses lib64 on 64 bit systems -->
+    <available file="/usr/lib64" type="dir" property="dist.lib64.available"/>
+    <condition property="dist.lib.subdir" value="lib64">
+        <isset property="dist.lib64.available"/>
+    </condition>
+    <!-- properties are immuatable, so this is basically an "else" -->
+    <property name="dist.lib.subdir" value="lib"/> 
+    <property name="dist.lib" location="${dist.dir}/${dist.lib.subdir}"/> 
+
     <property name="dist.python-lib" location="${dist.dir}/${dist.python-modules-loc}"/> 
     <property name="dist.data" location="${dist.dir}/share"/>
     <property name="dist.share" location="${dist.data}/pegasus"/> 
@@ -317,11 +326,11 @@
   <target name="externals" depends="build-setup,validate-make"
           description="INTERNAL: Compiles and installs external dependencies" 
           if="make.available">
-    <mkdir dir="${dist.lib}/externals/python"/>
+    <mkdir dir="${dist.lib}/pegasus/externals/python"/>
     <exec executable="${basedir}/src/tools/make.pl" dir="src/externals" failonerror="true">
       <env key="prefix" value="${dist.dir}"/>
-      <env key="libdir" value="${dist.lib}"/>
-      <arg line="prefix=${dist.dir} libdir=${dist.lib}/externals all"/>
+      <env key="libdir" value="${dist.lib}/pegasus"/>
+      <arg line="prefix=${dist.dir} libdir=${dist.lib}/pegasus/externals all"/>
     </exec>
   </target>
 
@@ -366,6 +375,7 @@
       </fileset>
     </copy>
     <replace file="${dist.bin}/pegasus-config" token="#PEGASUS_VERSION#" value="${pegasus.version}"/>
+    <replace file="${dist.bin}/pegasus-config" token="#LIBDIR#" value="${dist.lib.subdir}"/>
     <chmod perm="0755" type="file">
       <fileset dir="${dist.bin}">
         <include name="*"/>
@@ -424,6 +434,7 @@
       </fileset>
     </copy>
     <replace file="${dist.bin}/pegasus-config" token="#PEGASUS_VERSION#" value="${pegasus.version}"/>
+    <replace file="${dist.bin}/pegasus-config" token="#LIBDIR#" value="${dist.lib.subdir}"/>
     <chmod perm="0755" type="file">
       <fileset dir="${dist.bin}">
         <include name="*"/>
@@ -454,16 +465,16 @@
     </copy>
 
     <!-- lib -->
-    <mkdir dir="${dist.lib}/javascript"/>
-    <copy preservelastmodified="true" todir="${dist.lib}/javascript">
+    <mkdir dir="${dist.lib}/pegasus/javascript"/>
+    <copy preservelastmodified="true" todir="${dist.lib}/pegasus/javascript">
       <fileset dir="lib/pegasus/javascript" includes="**/*.js"/>
     </copy>
-    <mkdir dir="${dist.lib}/perl"/>
-    <copy preservelastmodified="true" todir="${dist.lib}/perl">
+    <mkdir dir="${dist.lib}/pegasus/perl"/>
+    <copy preservelastmodified="true" todir="${dist.lib}/pegasus/perl">
       <fileset dir="lib/pegasus/perl" includes="**/*.pm"/>
     </copy>
-    <mkdir dir="${dist.lib}/php"/>
-    <copy preservelastmodified="true" todir="${dist.lib}/php">
+    <mkdir dir="${dist.lib}/pegasus/php"/>
+    <copy preservelastmodified="true" todir="${dist.lib}/pegasus/php">
       <fileset dir="lib/pegasus/php" includes="**/*.php"/>
     </copy>
     <mkdir dir="${dist.python-lib}"/>
@@ -473,17 +484,17 @@
     <!-- Symlink from old Python location to be backward compatible and
          make sure pegasus-config works correctly. This has to be relative
          to make our relocatable tarballs work. -->
-    <mkdir dir="${dist.lib}/python"/>
-    <exec executable="ln" dir="${dist.lib}/python" failonerror="true">
+    <mkdir dir="${dist.lib}/pegasus/python"/>
+    <exec executable="ln" dir="${dist.lib}/pegasus/python" failonerror="true">
       <arg line="-f"/>
       <arg line="-s"/>
       <arg line="../../../${dist.python-modules-loc}/Pegasus"/>
     </exec>
     <chmod perm="0755" type="file">
-      <fileset dir="${dist.lib}/externals/python/boto/tests" includes="*.py"/>
+      <fileset dir="${dist.lib}/pegasus/externals/python/boto/tests" includes="*.py"/>
     </chmod>
     <chmod perm="0755" type="file">
-      <fileset dir="${dist.lib}/python">
+    <fileset dir="${dist.lib}/pegasus/python">
         <include name="Pegasus/plots_stats/plots/populate.py"/>
         <include name="Pegasus/plots_stats/plots/pegasus_breakdown.py"/>
         <include name="Pegasus/plots_stats/plots/pegasus_time.py"/>
