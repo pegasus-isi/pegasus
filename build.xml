@@ -43,6 +43,14 @@
     </exec>
   </target>
 
+  <target name="lib-dir-location"
+          description="Obtains the system library location (lib64 or lib)">
+    <exec executable="${basedir}/release-tools/system/determine-lib-dir"
+          outputproperty="dist.lib.subdir"
+          failonerror="true"/>
+    <echo>Sub directory for libraries on this system is '${dist.lib.subdir}'</echo>
+  </target>
+
   <target name="python-modules-location"
           description="Obtains the system Python module location">
     <exec executable="${basedir}/release-tools/python/python-modules-dir"
@@ -59,7 +67,7 @@
   </target>
 
 
-  <target name="build-setup" depends="compile-version,python-modules-location"
+  <target name="build-setup" depends="compile-version,lib-dir-location,python-modules-location"
           description="Sets up the build environment, paths, versions, ...">
     <taskdef name="versiontask"
              classpath="${build.src}"
@@ -69,16 +77,7 @@
     <property name="dist.dir" location="dist/pegasus-${pegasus.version}"/>
     <property name="dist.bin" location="${dist.dir}/bin"/> 
     <property name="dist.etc" location="${dist.dir}/etc"/> 
-    
-    <!-- RHEL based system uses lib64 on 64 bit systems -->
-    <available file="/usr/lib64" type="dir" property="dist.lib64.available"/>
-    <condition property="dist.lib.subdir" value="lib64">
-        <isset property="dist.lib64.available"/>
-    </condition>
-    <!-- properties are immuatable, so this is basically an "else" -->
-    <property name="dist.lib.subdir" value="lib"/> 
     <property name="dist.lib" location="${dist.dir}/${dist.lib.subdir}"/> 
-
     <property name="dist.python-lib" location="${dist.dir}/${dist.python-modules-loc}"/> 
     <property name="dist.data" location="${dist.dir}/share"/>
     <property name="dist.share" location="${dist.data}/pegasus"/> 
