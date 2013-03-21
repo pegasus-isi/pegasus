@@ -65,6 +65,10 @@ class URL:
         if string.find(url, ":") == -1:
             logger.debug("URL without protocol (" + url + ") - assuming file://")
             url = "file://" + url
+        
+        # translate symlink URLs to file:
+        if string.find(url, "symlink:") == 0:
+            url = re.sub("^symlink:", "file:", url)
 
         # file url is a special cases as it can contain relative paths and env vars
         if string.find(url, "file:") == 0:
@@ -110,14 +114,15 @@ logger = logging.getLogger("my_logger")
 
 # this is the map of what tool to use for a given protocol pair (src, dest)
 tool_map = {}
-tool_map['file'  ] = 'rm'
-tool_map['ftp'   ] = 'gsiftp'
-tool_map['gsiftp'] = 'gsiftp'
-tool_map['irods' ] = 'irods'
-tool_map['s3'    ] = 's3'
-tool_map['s3s'   ] = 's3'
-tool_map['scp'   ] = 'scp'
-tool_map['srm'   ] = 'srm'
+tool_map['file'    ] = 'rm'
+tool_map['ftp'     ] = 'gsiftp'
+tool_map['gsiftp'  ] = 'gsiftp'
+tool_map['irods'   ] = 'irods'
+tool_map['s3'      ] = 's3'
+tool_map['s3s'     ] = 's3'
+tool_map['scp'     ] = 'scp'
+tool_map['srm'     ] = 'srm'
+tool_map['symlink' ] = 'rm'
 
 tool_info = {}
 
