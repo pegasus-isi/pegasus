@@ -61,7 +61,11 @@ public class Cleanup implements CleanupImplementation{
      */
     public static final String FILE_URL_SCHEME = "file:";
 
-    
+    /**
+     * The scheme name for file url.
+     */
+    public static final String SYMLINK_URL_SCHEME = "symlink:";
+
     /**
      * The transformation namespace for the  job.
      */
@@ -215,9 +219,9 @@ public class Cleanup implements CleanupImplementation{
                     throw new RuntimeException( "Unable to determine url for lfn " + file.getLFN() + " at site " + stagingSite );
                 }
 
-                if( pfn.startsWith( Cleanup.FILE_URL_SCHEME ) ){
+                if( pfn.startsWith( Cleanup.FILE_URL_SCHEME ) || pfn.startsWith( Cleanup.SYMLINK_URL_SCHEME ) ){
                     //means the cleanup job should run on the staging site
-                    mLogger.log( " PFN for file " + file.getLFN() + " on staging site is a file URL " + pfn,
+                    mLogger.log( " PFN for file " + file.getLFN() + " on staging site is a file|symlink URL " + pfn,
                                  LogManager.DEBUG_MESSAGE_LEVEL );
                     mLogger.log( "Cleanup Job " + id + " instead of running on local site , will run on site " + stagingSite,
                                  LogManager.DEBUG_MESSAGE_LEVEL );
