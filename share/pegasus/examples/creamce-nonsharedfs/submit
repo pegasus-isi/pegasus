@@ -65,5 +65,5 @@ pegasus-plan \
     --dir work \
     --output-site local \
     --dax blackdiamond.dax \
-    -vvvv
+    -v --submit
 
