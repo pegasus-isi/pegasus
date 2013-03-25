@@ -6,10 +6,14 @@
 
 LIB_DIR="lib"
 
-if [ -d "/usr/lib64" ]; then
-    # ok, but only if it is not a symlink
-    if [ ! -L "/usr/lib64" ]; then
-        LIB_DIR="lib64"
+# limit this check to RHEL based systems - those are the only ones
+# we know of which have this problem
+if [ -e "/etc/redhat-release" ]; then
+    if [ -d "/usr/lib64" ]; then
+        # ok, but only if it is not a symlink
+        if [ ! -L "/usr/lib64" ]; then
+            LIB_DIR="lib64"
+        fi
     fi
 fi
 

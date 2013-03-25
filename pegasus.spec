@@ -11,7 +11,7 @@ Source:         pegasus-source-%{version}.tar.gz
 
 BuildRoot:      %{_tmppath}/%{name}-root
 BuildRequires:  ant, ant-apache-regexp, java, gcc, groff, python-devel, gcc-c++, make 
-Requires:       java >= 1.6, python >= 2.4, condor >= 7.6, graphviz
+Requires:       java >= 1.6, python >= 2.6, condor >= 7.6, graphviz
 
 %define sourcedir %{name}-source-%{version}
 
@@ -29,15 +29,17 @@ execute the steps in appropriate order.
 %prep
 %setup -q -n %{sourcedir}
 
-%pre
-# Can't overwrite dir with a symlink, so remove the old dir first on upgrades
-[ $1 -gt 1 -a -d /usr/lib/pegasus/python ] && \
-   rm -rf /usr/lib/pegasus/python || :
-[ $1 -gt 1 -a -d /usr/lib64/pegasus/python ] && \
-   rm -rf /usr/lib64/pegasus/python || :
-
 %build
+rm -rf dist
 ant dist
+# we want to use the tarball as that has been stripped of some git files
+(cd dist && rm -rf pegasus-%{version} && tar xzf pegasus-*.tar.gz)
+
+# RPM does not allow use to replace a directory with a symlink
+# so ship two copies of the Python module for now
+rm -f dist/pegasus-%{version}/lib*/pegasus/python/Pegasus
+cp -a dist/pegasus-%{version}/lib*/python*/site-packages/Pegasus \
+      dist/pegasus-%{version}/lib*/pegasus/python/
 
 # strip executables
 strip dist/pegasus-%{version}/bin/pegasus-invoke
@@ -64,7 +66,6 @@ rm -f %{buildroot}/%{_datadir}/%{name}/java/EXCEPTIONS.*
 rm -f %{buildroot}/%{_datadir}/%{name}/java/LICENSE.*
 rm -f %{buildroot}/%{_datadir}/%{name}/java/NOTICE.*
 
-
 %clean
 ant clean
 rm -Rf %{buildroot}
@@ -74,7 +75,8 @@ rm -Rf %{buildroot}
 %defattr(-,root,root,-)
 %config(noreplace) %{_sysconfdir}/%{name}/
 %{_bindir}/*
-/usr/lib*
+%{_libdir}/pegasus
+%{_libdir}/python*
 %{_datadir}/doc/%{name}
 %{_datadir}/man/man1/*
 %{_datadir}/%{name}
