@@ -29,6 +29,12 @@ execute the steps in appropriate order.
 %prep
 %setup -q -n %{sourcedir}
 
+%pre
+# Can't overwrite dir with a symlink, so remove the old dir first on upgrades
+[ $1 -gt 1 -a -d /usr/lib/pegasus/python ] && \
+   rm -rf /usr/lib/pegasus/python || :
+[ $1 -gt 1 -a -d /usr/lib64/pegasus/python ] && \
+   rm -rf /usr/lib64/pegasus/python || :
 
 %build
 ant dist
