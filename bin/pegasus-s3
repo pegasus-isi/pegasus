@@ -46,7 +46,6 @@ try:
     import boto.s3.connection
     from boto.s3.bucket import Bucket
     from boto.s3.key import Key
-    from boto.s3.multipart import MultiPartUpload
 except ImportError, e:
     sys.stderr.write("ERROR: Unable to load boto library: %s\n" % e)
     exit(1)
