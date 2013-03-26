@@ -104,7 +104,7 @@ function test_rescue_file {
 
 # Make sure we can run host scripts
 function test_host_script {
-    OUTPUT=$(mpiexec -np 2 $PMC -s test/sleep.dag -o /dev/null -e /dev/null --host-script test/hostscript.sh 2>&1)
+    OUTPUT=$(mpiexec -np 2 $PMC -v -s test/sleep.dag -o /dev/null -e /dev/null --host-script test/hostscript.sh 2>&1)
     RC=$?
     
     if [ $RC -ne 0 ]; then
