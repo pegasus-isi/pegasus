@@ -54,11 +54,12 @@ COMMANDS = {
     'ls': 'List the contents of a bucket',
     'mkdir': 'Create a bucket in S3',
     'rmdir': 'Delete a bucket from S3',
-    'rm': 'Delete a file from S3',
-    'put': 'Upload a file to S3',
-    'get': 'Download a file from S3',
+    'rm': 'Delete a key from S3',
+    'put': 'Upload a key to S3 from a file',
+    'get': 'Download a key from S3 to a file',
     'lsup': 'List multipart uploads',
     'rmup': 'Cancel multipart uploads',
+    'cp': 'Copy keys remotely',
     'help': 'Print this message'
 }
 
@@ -400,7 +401,93 @@ def ls(args):
                     if isinstance(o, boto.s3.prefix.Prefix):
                         continue
                     sys.stdout.write("\t%s\n" % o.name)
-            
+ 
+def cp(args):
+    parser = option_parser("cp SRC[...] DEST")
+
+    parser.add_option("-c", "--create-dest", dest="create", action="store_true",
+        default=False, help="Create destination bucket if it does not exist")
+    parser.add_option("-r", "--recursive", dest="recurse", action="store_true",
+        default=False, help="If SRC is a bucket, copy all its keys to DEST")
+    parser.add_option("-f", "--force", dest="force", action="store_true",
+        default=False, help="If DEST key exists, then overwrite it")
+
+    options, args = parser.parse_args(args)
+    
+    if len(args) < 2:
+        parser.error("Specify a SRC and DEST")
+    
+    config = get_config(options)
+    
+    items = [parse_uri(uri) for uri in args]
+
+    # The last one is the DEST
+    dest = items[-1]
+    # Everything else is a SRC
+    srcs = items[0:-1]
+
+    # If there is more than one source, then the destination must be
+    # a bucket and not a bucket+key.
+    if len(srcs) > 1 and dest.key is not None:
+        raise Exception("Destination must be a bucket if there are multiple sources")
+
+    # Validate all the URI pairs
+    for src in srcs:
+        # The source URI must have a key unless the user specified -r
+        if src.key is None and not options.recurse:
+            raise Exception("Source URI does not contain a key "
+                            "(see -r): %s" % src)
+
+        # Each source must have the same identity as the destination. 
+        # Copying from one account to another, or one region to another,
+        # is not allowed.
+        if src.ident != dest.ident:
+            raise Exception("Identities for source and destination "
+                            "do not match: %s -> %s" % (src,dest))
+
+    conn = get_connection(config, dest)
+    bucket = conn.lookup(dest.bucket)
+    if bucket is None:
+        if options.create:
+            info("Creating destination bucket %s" % dest.bucket)
+            bucket = conn.create_bucket(dest.bucket)
+        else:
+            raise Exception("Destination bucket %s does not exist "
+                            "(see -c)" % dest.bucket)
+
+    for src in srcs:
+
+        # If there is no src key, then copy all of the keys from
+        # the src bucket. We already checked for -r above.
+        if src.key is None:
+            srcbucket = conn.get_bucket(src.bucket)
+            srckeys = [k.name for k in srcbucket.list()]
+            info("Copying %d keys from %s to %s" % (len(srckeys), src, dest))
+        else:
+            srckeys = [src.key]
+
+        # It doesn't make sense to copy several keys into one destination
+        if len(srckeys) > 1 and dest.key:
+            raise Exception("Cannot copy %d keys to one destination key" % len(srckeys))
+
+        for srckey in srckeys:
+            # If the destination key is not specified, then just use
+            # the same key name as the source
+            destkey = dest.key or srckey
+
+            # If the user did not specify force, then check to make sure
+            # the destination key does not exist
+            if not options.force:
+                info("Checking for existence of %s" % destkey)
+                if bucket.get_key(destkey) is not None:
+                    raise Exception("Destination key %s exists "
+                                    "(see -f)" % destkey)
+
+            info("Copying %s/%s to %s/%s" % (src.bucket, srckey, dest.bucket, destkey))
+            bucket.copy_key(new_key_name = destkey, 
+                            src_bucket_name = src.bucket, 
+                            src_key_name = srckey)
+             
 def mkdir(args):
     parser = option_parser("mkdir URL...")
     options, args = parser.parse_args(args)
