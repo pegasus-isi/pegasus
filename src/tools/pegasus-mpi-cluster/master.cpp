@@ -19,7 +19,10 @@ using std::map;
 static bool ABORT = false;
 
 static void on_signal(int signo) {
-    log_error("Caught signal %d", signo);
+    log_fatal("Caught signal %d", signo);
+    if (signo == SIGALRM) {
+        log_fatal("Workflow wall time exceeded!");
+    }
     ABORT = true;
 }
 
