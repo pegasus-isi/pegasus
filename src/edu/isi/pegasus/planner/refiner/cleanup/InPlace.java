@@ -121,7 +121,16 @@ public class InPlace implements CleanupStrategy{
      */
     private int mCleanupJobsPerLevel;
 
-    
+    /**
+     * the number of cleanup jobs clustered into a clustered cleanup job
+     */
+    private int mCleanupJobsSize;
+
+    /**
+     * A boolean indicating whether we prefer use the size factor or the num
+     * factor
+     */
+    private boolean mUseSizeFactor;
     
     /**
      * The default constructor.
@@ -148,7 +157,9 @@ public class InPlace implements CleanupStrategy{
         mResMapRoots  = new HashMap();
         mDoNotClean   = new HashSet();
         mMaxDepth=0;
-        
+
+        mUseSizeFactor = false;
+
         //set the default value for maxjobs only if not specified
         //in the properties
         String key = this.getDefaultCleanupMaxJobsPropertyKey();
@@ -160,6 +171,7 @@ public class InPlace implements CleanupStrategy{
             mProps.setProperty( key, InPlace.DEFAULT_MAX_JOBS_FOR_CLEANUP_CATEGORY );
         }
 
+        mCleanupJobsPerLevel = -1;
         String propValue = mProps.getMaximumCleanupJobsPerLevel();
         int value = -1;
         try{
@@ -168,9 +180,40 @@ public class InPlace implements CleanupStrategy{
         catch( Exception e ){
             //ignore
         }
-        mCleanupJobsPerLevel = ( value > 0 ) ? value: DEFAULT_CLUSTERED_CLEANUP_JOBS_PER_LEVEL;
-        mLogger.log( "Maximum number of cleanup jobs to be created per level " + mCleanupJobsPerLevel,
+
+        if( value > 0 ){
+            //user has specified a value for the clustered cleanup
+            mCleanupJobsPerLevel = value;
+        }
+        else{
+            //check if a user has
+             propValue = mProps.getClusterSizeCleanupJobsPerLevel();
+             int clusterSize = -1;
+             try{
+                clusterSize = Integer.parseInt( propValue );
+             }
+             catch( Exception e ){
+                //ignore
+             }
+             if( clusterSize > 0 ){
+                 //set the algorithm to use it
+                 mUseSizeFactor   = true;
+                 mCleanupJobsSize = clusterSize;
+                 mLogger.log( "Cluster Size of cleanup jobs  " + mCleanupJobsSize,
+                              LogManager.CONFIG_MESSAGE_LEVEL );
+             }
+             else{
+                 //we rely on a default value for the clustered cleanup jobs
+                 mCleanupJobsPerLevel = DEFAULT_CLUSTERED_CLEANUP_JOBS_PER_LEVEL;
+             }
+        }
+        if( !mUseSizeFactor ){
+            //log a config message for the number of cleanup jobs
+            mLogger.log( "Maximum number of cleanup jobs to be created per level " + mCleanupJobsPerLevel,
                      LogManager.CONFIG_MESSAGE_LEVEL );
+        }
+
+       
     }
 
     /**
@@ -725,9 +768,7 @@ public class InPlace implements CleanupStrategy{
         }
 
         //cluster size is how many nodes are clustered into one cleanup cleanupNode
-        //it is the ceiling ( x + y -1 )/y
-        int clusterSize = ( size + mCleanupJobsPerLevel -1  )/mCleanupJobsPerLevel;
-
+        int clusterSize = getClusterSize( size );
 
         StringBuffer sb = new StringBuffer();
         sb.append( "Clustering " ).append(  size ).append( " cleanup nodes at level " ).append(  level ).
@@ -872,6 +913,32 @@ public class InPlace implements CleanupStrategy{
         clusteredCleanupNode.setContent( new CleanupJobContent( primaryNode, allFilesToDelete) );
 
         return clusteredCleanupNode;
+    }
+
+    /**
+     * Returns the number of cleanup jobs clustered into one job per level.
+     *
+     * 
+     * @param size   the number of cleanup jobs created by the algorithm before clustering
+     *               for the level.
+     *
+     * @return the number of clustered cleanup jobs to be created for the level
+     */
+    private int getClusterSize(int size) {
+
+        int result = 1;
+
+        if( this.mUseSizeFactor ){
+            return this.mCleanupJobsSize;
+            
+        }
+        else{
+            //it is the ceiling ( x + y -1 )/y
+            //we use the fixed number of cleanup jobs per level
+            result = ( size + mCleanupJobsPerLevel -1  )/mCleanupJobsPerLevel;
+        }
+
+        return result ;
     }
 
 

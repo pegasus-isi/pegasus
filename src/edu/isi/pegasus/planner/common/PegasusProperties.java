@@ -843,6 +843,19 @@ public class PegasusProperties implements Cloneable {
     public String getMaximumCleanupJobsPerLevel() {
         return mProps.getProperty( "pegasus.file.cleanup.clusters.num" );
     }
+
+    /**
+     * Returns the fraction  of cleanup jobs clustered into a single clustered
+     * cleanup job.
+     *
+     * Referred to by the "pegasus.file.cleanup.clusters.size" property
+     *
+     * @return the value in the property file , else null
+     */
+    public String getClusterSizeCleanupJobsPerLevel() {
+        return mProps.getProperty( "pegasus.file.cleanup.clusters.size" );
+    }
+
     
     /**
      * Returns the scope for file cleanup. It is used to trigger cleanup in case
