@@ -20,7 +20,7 @@ Synopsis
 *pegasus-s3* *get* [options] 'URL' ['FILE']
 *pegasus-s3* *lsup* [options] 'URL'
 *pegasus-s3* *rmup* [options] 'URL' ['UPLOAD']
-
+*pegasus-s3* *cp* [options] 'SRC...' 'DEST'
 
 Description
 -----------
@@ -109,6 +109,22 @@ rmup Options
 *-a*::
 *--all*::
 Cancel all uploads for the specified bucket
+
+
+cp Options
+~~~~~~~~~~
+*-c*::
+*--create-dest*::
+Create the destination bucket if it does not exist.
+
+*-r*::
+*--recursive*::
+If SRC is a bucket, copy all of the keys in that bucket to DEST. In that case
+DEST must be a bucket.
+
+*-f*::
+*--force*::
+If DEST exists, then overwrite it.
 
 
 
@@ -248,6 +264,10 @@ ID shown by the *lsup* subcommand.
 +
 This subcommand is used with *lsup* to recover from failures of 
 multipart uploads.
+
+*cp*::
+The *cp* subcommand copies keys on the server. Keys cannot be copied
+between accounts.
 
 
 URL Format
