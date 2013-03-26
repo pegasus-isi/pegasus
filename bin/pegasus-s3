@@ -435,7 +435,7 @@ def cp(args):
     for src in srcs:
         # The source URI must have a key unless the user specified -r
         if src.key is None and not options.recurse:
-            raise Exception("Source URI does not contain a key "
+            raise Exception("Source URL does not contain a key "
                             "(see -r): %s" % src)
 
         # Each source must have the same identity as the destination. 
@@ -969,6 +969,7 @@ def main():
                 raise
     else:
         sys.stderr.write("ERROR: Unknown command: %s\n" % command)
+        help(sys.argv)
         exit(1)
 
 if __name__ == '__main__':
