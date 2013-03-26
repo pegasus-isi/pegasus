@@ -131,7 +131,7 @@ int MPICommunicator::wait_for_message(double timeout) {
     }
     
     // Return the size of the waiting message
-    int msgsize;
+    int msgsize = 0;
     MPI_Get_count(&status, MPI_CHAR, &msgsize);
     return msgsize;
 }

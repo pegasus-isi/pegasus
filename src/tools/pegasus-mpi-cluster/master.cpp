@@ -320,6 +320,16 @@ void Master::wait_for_results() {
 }
 
 void Master::process_iodata(IODataMessage *mesg) {
+    if (mesg->size < 0) {
+        myfailure("Invalid I/O message: invalid size");
+    }
+    if (mesg->filename.size() == 0) {
+        myfailure("Invalid I/O message: bad filename");
+    }
+    if (mesg->task.size() == 0) {
+        myfailure("Invalid I/O message: bad task name");
+    }
+    
     log_trace("Got %u bytes for file %s", mesg->size, mesg->filename.c_str());
     
     if (fdcache.write(mesg->filename, mesg->data, mesg->size) < 0) {
@@ -330,9 +340,8 @@ void Master::process_iodata(IODataMessage *mesg) {
         if (task == NULL) {
             // If the task is not found then there is a problem, but
             // we can probably just ignore it at this point.
-            log_warn("Unable to find task %s for I/O failure", 
-                    mesg->task.c_str());
-            return;
+            myfailure("Unable to find task %s for I/O failure", 
+                      mesg->task.c_str());
         }
         
         task->io_failed = true;
