@@ -729,7 +729,7 @@ void Worker::run_host_script() {
     if (host_rank > 0)
         return;
     
-    log_info("Worker %d: Launching host script %s", rank, host_script.c_str());
+    log_debug("Worker %d: Launching host script %s", rank, host_script.c_str());
     
     pid_t pid = fork();
     if (pid < 0) {
@@ -813,15 +813,15 @@ void Worker::run_host_script() {
             }
         } else {
             if (WIFEXITED(status)) {
-                log_info("Worker %d: Host script exited with status %d (%d)", 
+                log_debug("Worker %d: Host script exited with status %d (%d)", 
                     rank, WEXITSTATUS(status), status);
             } else {
-                log_info("Worker %d: Host script exited on signal %d (%d)", 
+                log_debug("Worker %d: Host script exited on signal %d (%d)", 
                     rank, WTERMSIG(status), status);
             }
             
             if (status != 0) {
-                myfailure("Worker %d: Host script failed", rank);
+                myfailure("Worker %d: Host script failed with status %d", rank, status);
             }
         }
     }
