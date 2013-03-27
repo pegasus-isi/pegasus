@@ -56,6 +56,7 @@ import edu.isi.pegasus.planner.catalog.site.classes.Directory;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServerType.OPERATION;
 import edu.isi.pegasus.planner.classes.DAGJob;
 import edu.isi.pegasus.planner.classes.DAXJob;
+import edu.isi.pegasus.planner.classes.PlannerCache;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.namespace.Dagman;
@@ -182,7 +183,7 @@ public class TransferEngine extends Engine {
      * A SimpleFile Replica Catalog, that tracks all the files that are being
      * materialized as part of workflow executaion.
      */
-    private ReplicaCatalog mPlannerCache;
+    private PlannerCache mPlannerCache;
 
     /**
      * A  Replica Catalog, that tracks all the GET URL's for the files on the
@@ -342,7 +343,7 @@ public class TransferEngine extends Engine {
      *                           store the locations of the files on the remote
      *                           sites.
      */
-    public void addTransferNodes( ReplicaCatalogBridge rcb, ReplicaCatalog plannerCache ) {
+    public void addTransferNodes( ReplicaCatalogBridge rcb, PlannerCache plannerCache ) {
         mRCBridge = rcb;
         mPlannerCache = plannerCache;
 
@@ -1327,8 +1328,10 @@ public class TransferEngine extends Engine {
                 //the selected replica already exists on
                 //the compute site.  we can bypass first level
                 //staging of the data
-                //we add into transient RC the source URL without any modifications
-                trackInPlannerCache( lfn, sourceURL, selLoc.getResourceHandle() );
+
+                //only the files for which we bypass first level staging , we
+                //store them in the planner cache as a GET URL
+                trackInPlannerCache( lfn, sourceURL, selLoc.getResourceHandle(), OPERATION.get );
                 trackInWorkflowCache( lfn, sourceURL, selLoc.getResourceHandle() );
                 continue;
             }
@@ -1692,7 +1695,8 @@ public class TransferEngine extends Engine {
 
     
     /**
-     * Inserts an entry into the planner cache
+     * Inserts an entry into the planner cache as a put URL.
+     *
      *
      * @param lfn  the logical name of the file.
      * @param pfn  the pfn
@@ -1702,7 +1706,25 @@ public class TransferEngine extends Engine {
                                      String pfn,
                                      String site ){
 
-         mPlannerCache.insert( lfn, pfn, site );
+         trackInPlannerCache( lfn, pfn, site, OPERATION.put );
+    }
+
+
+    /**
+     * Inserts an entry into the planner cache as a put URL.
+     *
+     *
+     * @param lfn  the logical name of the file.
+     * @param pfn  the pfn
+     * @param site the site handle
+     * @param type the type of url
+     */
+    private void trackInPlannerCache( String lfn,
+                                     String pfn,
+                                     String site,
+                                     OPERATION type ){
+
+         mPlannerCache.insert( lfn, pfn, site, type );
     }
     
     /**

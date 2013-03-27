@@ -175,7 +175,7 @@ public class PegasusBag
      * The transient replica catalog that tracks the files created or transferred
      * during the workflow
      */
-    private ReplicaCatalog mPlannerCache;
+    private PlannerCache mPlannerCache;
 
 
     /**
@@ -272,8 +272,8 @@ public class PegasusBag
                 break;
 
             case 8: //PLANNER_CACHE
-                if ( value != null && value instanceof ReplicaCatalog )
-                    mPlannerCache = ( ReplicaCatalog ) value;
+                if ( value != null && value instanceof PlannerCache )
+                    mPlannerCache = ( PlannerCache ) value;
                 else
                     valid = false;
                 break;
@@ -441,8 +441,8 @@ public class PegasusBag
      *
      * @return  the handle to transient replica catalog
      */
-    public ReplicaCatalog getHandleToPlannerCache(){
-        return ( ReplicaCatalog )get( PegasusBag.PLANNER_CACHE );
+    public PlannerCache getHandleToPlannerCache(){
+        return ( PlannerCache )get( PegasusBag.PLANNER_CACHE );
     }
     
     /**

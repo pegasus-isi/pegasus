@@ -19,7 +19,6 @@ package edu.isi.pegasus.planner.refiner.cleanup;
 
 
 
-import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 
@@ -37,6 +36,8 @@ import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 
 import edu.isi.pegasus.common.util.Separator;
 
+import edu.isi.pegasus.planner.catalog.site.classes.FileServerType.OPERATION;
+import edu.isi.pegasus.planner.classes.PlannerCache;
 import edu.isi.pegasus.planner.namespace.Dagman;
 import java.util.List;
 import java.util.Iterator;
@@ -124,7 +125,7 @@ public class Cleanup implements CleanupImplementation{
     /**
      * Handle to the transient replica catalog.
      */
-    protected ReplicaCatalog mTransientRC;
+    protected PlannerCache mPlannerCache;
 
     /**
      * The handle to the properties passed to Pegasus.
@@ -172,7 +173,7 @@ public class Cleanup implements CleanupImplementation{
         mSiteStore       = bag.getHandleToSiteStore();
         mTCHandle        = bag.getHandleToTransformationCatalog(); 
         mLogger          = bag.getLogger();
-        mTransientRC     = bag.getHandleToPlannerCache();
+        mPlannerCache     = bag.getHandleToPlannerCache();
     }
 
 
@@ -213,7 +214,7 @@ public class Cleanup implements CleanupImplementation{
 
             for( Iterator it = files.iterator(); it.hasNext(); ){
                 PegasusFile file = (PegasusFile)it.next();
-                String pfn = mTransientRC.lookup( file.getLFN(), stagingSite );
+                String pfn = mPlannerCache.lookup( file.getLFN(), stagingSite, OPERATION.put );
 
                 if( pfn == null ){
                     throw new RuntimeException( "Unable to determine url for lfn " + file.getLFN() + " at site " + stagingSite );
