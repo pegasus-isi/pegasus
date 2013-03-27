@@ -1135,6 +1135,19 @@ public class PegasusProperties implements Cloneable {
          return mProps.getProperty("pegasus.transfer.*.impl");
      }
 
+
+     /**
+      * Returns a boolean indicating whether to bypass first level staging of
+      * inputs. Useful in case of PegasusLite setup
+      *
+      * @return boolean value specified , else false
+      */
+     public boolean bypassFirstLevelStagingForInputs( ){
+         return Boolean.parse(
+                    mProps.getProperty( "pegasus.transfer.bypass.staging.inputs" ),
+                    false );
+     }
+
      /**
       * Returns the default priority for the transfer jobs if specified in
       * the properties file.

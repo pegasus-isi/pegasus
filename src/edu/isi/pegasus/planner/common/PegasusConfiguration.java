@@ -316,6 +316,22 @@ public class PegasusConfiguration {
         
         return p;
     }
+
+    /**
+     * Returns a boolean indicating if properties are setup for condor io
+     *
+     * @param properties
+     *
+     * @return boolean
+     */
+    public boolean setupForCondorIO( PegasusProperties properties ){
+        String configuration  = properties.getProperty( PEGASUS_CONFIGURATION_PROPERTY_KEY ) ;
+
+        return ( configuration == null )?
+                false:
+                configuration.equalsIgnoreCase( CONDOR_CONFIGURATION_VALUE ) ||
+                    configuration.equalsIgnoreCase( DEPRECATED_CONDOR_CONFIGURATION_VALUE );
+    }
     
     /**
      * Checks for a property, if it does not exist then sets the property to 

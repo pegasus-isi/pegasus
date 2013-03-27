@@ -57,6 +57,7 @@ import edu.isi.pegasus.planner.catalog.site.classes.FileServerType.OPERATION;
 import edu.isi.pegasus.planner.classes.DAGJob;
 import edu.isi.pegasus.planner.classes.DAXJob;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
+import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.namespace.Dagman;
 
 import org.griphyn.vdl.euryale.FileFactory;
@@ -228,11 +229,20 @@ public class TransferEngine extends Engine {
      */
     private boolean mWorkerNodeExecution;
 
-    
     /**
      * The planner options passed to the planner
      */
     private PlannerOptions mPlannerOptions;
+
+    /**
+     * A boolean indicating whether to bypass first level staging for inputs
+     */
+    private boolean mBypassStagingForInputs;
+
+    /**
+     * A boolean to track whether condor file io is used for the workflow or not.
+     */
+    private final boolean mSetupForCondorIO;
 
     /**
      * Overloaded constructor.
@@ -251,12 +261,16 @@ public class TransferEngine extends Engine {
         mPlannerOptions  = bag.getPlannerOptions();
         mDeepStorageStructure = mProps.useDeepStorageDirectoryStructure();
         mUseSymLinks = mProps.getUseOfSymbolicLinks();
-        mWorkerNodeExecution = mProps.executeOnWorkerNode();
         mSRMServiceURLToMountPointMap = constructSiteToSRMServerMap( mProps );
         
         mDag = reducedDag;
         mDeletedJobs     = deletedJobs;
-    
+
+        mWorkerNodeExecution    = mProps.executeOnWorkerNode();
+        mSetupForCondorIO       = new PegasusConfiguration( mLogger).setupForCondorIO( mProps );
+        mBypassStagingForInputs = mProps.bypassFirstLevelStagingForInputs();
+
+
         try{
             mTXRefiner = RefinerFactory.loadInstance( reducedDag,
                                                       bag );
@@ -1297,7 +1311,7 @@ public class TransferEngine extends Engine {
                     mLogger.log( message.toString() , LogManager.DEBUG_MESSAGE_LEVEL );
                     message = new StringBuffer();
                     message.append( " Not transferring ip file as ").append( lfn ).
-                            append( " for job " ).append( job.jobName ).append( " to site " ).append( stagingSiteHandle);
+                            append( " for job " ).append( job.jobName ).append( " to site " ).append( stagingSiteHandle );
                     
                     mLogger.log( message.toString() , LogManager.DEBUG_MESSAGE_LEVEL );
                     continue;
@@ -1307,19 +1321,15 @@ public class TransferEngine extends Engine {
             }
                 
             //add locations of input data on the remote site to the transient RC
-            boolean bypassFirstLevelStaging = mWorkerNodeExecution && selLoc.getResourceHandle().equals( job.getSiteHandle() );
             
-            //for 3.2 first level staging cannot be bypassed
-            //bypassing staging creates problems with in place cleanup and condor 
-            //IO case.
-            bypassFirstLevelStaging = false;
+            boolean bypassFirstLevelStaging = this.bypassStagingForInputFile( selLoc , job.getSiteHandle() );
             if( bypassFirstLevelStaging ){
                 //the selected replica already exists on
                 //the compute site.  we can bypass first level
                 //staging of the data
                 //we add into transient RC the source URL without any modifications
-                trackInPlannerCache( lfn, sourceURL, job.getSiteHandle() );
-                trackInWorkflowCache( lfn, sourceURL, job.getSiteHandle() );
+                trackInPlannerCache( lfn, sourceURL, selLoc.getResourceHandle() );
+                trackInWorkflowCache( lfn, sourceURL, selLoc.getResourceHandle() );
                 continue;
             }
             else{
@@ -1935,6 +1945,47 @@ public class TransferEngine extends Engine {
 
         return sb.toString();
 
+    }
+
+    /**
+     * Returns a boolean indicating whether to bypass first level staging for a
+     * file or not
+     *
+     * @entry        a ReplicaCatalogEntry matching the selected replica location.
+     * @computeSite  the compute site where the associated job will run.
+     *
+     * @return  boolean indicating whether we need to enable bypass or not
+     */
+    private boolean bypassStagingForInputFile( ReplicaCatalogEntry entry , String computeSite ) {
+        boolean bypass = false;
+
+        //check if user has it configured for bypassing the staging and
+        //we are in pegasus lite mode
+        if( this.mBypassStagingForInputs && mWorkerNodeExecution ){
+            boolean isFileURL = entry.getPFN().startsWith( TransferEngine.FILE_URL_SCHEME);
+            String fileSite = entry.getResourceHandle();
+
+            if( this.mSetupForCondorIO ){
+                //additional check for condor io
+                //we need to inspect the URL and it's location
+                if( isFileURL &&
+                    fileSite.equals( "local" ) ){
+                    //for condorio only file urls for input files are
+                    //eligible for bypass
+                    bypass = true;
+                }
+            }
+            else{
+                //for non shared fs case we can bypass all url's safely
+                //other than file urls
+                bypass = isFileURL ?
+                         fileSite.equalsIgnoreCase( computeSite )://file site is same as the compute site
+                         true;
+            }
+            
+        }
+
+        return bypass;
     }
 
 
