@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Workflow Details{% endblock %}
 {% block javascript_includes %}
-<script type="text/javascript" src="{{ url_for ('static', filename='js/highcharts/highcharts.js') }}"></script>
+<script type="text/javascript" src="http://code.highcharts.com/2.3.3/highcharts.js"></script>
 {% endblock %}
 {% block javascript_init %}
 <script type="text/javascript" charset="utf-8">
@@ -9,21 +9,21 @@ var tablesInitialized = [false, false, false, false]
 
 var chart;
 var chartOptions;
-var chartData = 
+var chartData =
 {
-	Running: 
+	Running:
 	{
 		jobs: {{ counts.others - counts.others_workflow }},
 		workflow: {{ counts.others_workflow }},
 		total: {{ counts.others }}
 	},
-	Successful: 
+	Successful:
 	{
 		jobs: {{ counts.success - counts.success_workflow }},
 		workflow: {{ counts.success_workflow }},
 		total: {{ counts.success }}
 	},
-	Failed: 
+	Failed:
 	{
 		jobs: {{ counts.fail - counts.fail_workflow }},
 		workflow: {{ counts.fail_workflow }},
@@ -31,10 +31,10 @@ var chartData =
 	}
 }
 
-$(document).ready (function () 
+$(document).ready (function ()
 {
 	// Radialize the colors
-    Highcharts.getOptions ().colors = $.map (Highcharts.getOptions ().colors, function (color) 
+    Highcharts.getOptions ().colors = $.map (Highcharts.getOptions ().colors, function (color)
     {
         return {
             radialGradient: { cx: 0.5, cy: 0.3, r: 0.7 },
@@ -44,40 +44,40 @@ $(document).ready (function ()
             ]
         };
     });
-	
+
 	$('#jobs_tabs').tabs (
 	{
-		ajaxOptions: 
+		ajaxOptions:
 		{
-			error: function (xhr, status, index, anchor) 
+			error: function (xhr, status, index, anchor)
 			{
 				$(anchor.hash).html ("We encountered an error loading this tab.");
 			}
 		},
 		load: function(event, ui)
-		{ 
+		{
 			if (ui.index == 0)
 			{
 				if ($('#sub_workflows').html() == '')
 				{
-					$('#sub_workflows').html('No sub-workflows found.')	
+					$('#sub_workflows').html('No sub-workflows found.')
 				}
 				else
 				{
 					$('#sub_workflows_list').dataTable ({"bJQueryUI" : true, "sPaginationType": "full_numbers"});
 				}
 			}
-		} 
+		}
 	});
-	
-	$("#jobs_tabs").bind ("tabsselect", function (event, ui) 
-	{ 
+
+	$("#jobs_tabs").bind ("tabsselect", function (event, ui)
+	{
 		window.location.hash = ui.tab.hash;
-		
+
 		if (ui.index == 1 && !tablesInitialized [ui.index])
 		{
 			tablesInitialized [ui.index] = true;
-			
+
 			$('#failed_jobs_list').dataTable ({"bJQueryUI": true,
 					"sPaginationType": "full_numbers",
 					"bProcessing": true,
@@ -95,7 +95,7 @@ $(document).ready (function ()
 		else if (ui.index == 2 && !tablesInitialized [ui.index])
 		{
 			tablesInitialized [ui.index] = true;
-			
+
 			$('#running_jobs_list').dataTable ({"bJQueryUI": true,
 					"sPaginationType": "full_numbers",
 					"bProcessing": true,
@@ -110,7 +110,7 @@ $(document).ready (function ()
 		else if (ui.index == 3 && !tablesInitialized [ui.index])
 		{
 			tablesInitialized [ui.index] = true;
-			
+
 			$('#successful_jobs_list').dataTable ({"bJQueryUI": true,
 					"sPaginationType": "full_numbers",
 					"bProcessing": true,
@@ -124,10 +124,10 @@ $(document).ready (function ()
 			});
 		}
 	})
-			
-	chartOptions =  
+
+	chartOptions =
 	{
-		chart: 
+		chart:
 		{
 			renderTo: 'workflow_graph',
 			type: 'pie',
@@ -137,33 +137,33 @@ $(document).ready (function ()
 			//width: 350,
 			//height: 250
 		},
-		title: 
+		title:
 		{
 			text: 'Job Status (Per Workflow)'
 		},
-		credits : 
+		credits :
 		{
 			enabled : false
 		},
-		tooltip: 
+		tooltip:
 		{
 			enabled: false
 		},
-		plotOptions: 
+		plotOptions:
 		{
-			pie: 
+			pie:
 			{
 				allowPointSelect: true,
 				cursor: 'pointer',
-				dataLabels: 
+				dataLabels:
 				{
 					enabled: false
 				},
 				showInLegend: true,
-				dataLabels: 
+				dataLabels:
 				{
 					color: '#000000',
-					formatter: function() 
+					formatter: function()
 					{
 						var str = '';
 						str += '<b>Jobs:</b> ' + chartData [this.point.name].jobs + "<br\>";
@@ -174,7 +174,7 @@ $(document).ready (function ()
 				}
 			}
 		},
-		series: 
+		series:
 		[{
 			name: 'Job Status',
 			data: [
@@ -195,13 +195,13 @@ $(document).ready (function ()
 			]
 		}]
 	};
-	
+
 	var stat_chart;
 	var statOptions;
 
-	statOptions =  
+	statOptions =
 	{
-		chart: 
+		chart:
 		{
 			renderTo: 'stat_graph',
 			type: 'pie',
@@ -211,40 +211,40 @@ $(document).ready (function ()
 			//width: 350,
 			//height: 250
 		},
-		title: 
+		title:
 		{
 			text: 'Job Status (Entire Workflow)'
 		},
-		credits : 
+		credits :
 		{
 			enabled : false
 		},
-		tooltip: 
+		tooltip:
 		{
 			enabled: false
 		},
-		plotOptions: 
+		plotOptions:
 		{
-			pie: 
+			pie:
 			{
 				allowPointSelect: true,
 				cursor: 'pointer',
-				dataLabels: 
+				dataLabels:
 				{
 					enabled: false
 				},
 				showInLegend: true,
-				dataLabels: 
+				dataLabels:
 				{
 					color: '#000000',
-					formatter: function() 
+					formatter: function()
 					{
 						return '<b>' + this.point.name + ':</b> ' + this.point.y;
 					}
 				}
 			}
 		},
-		series: 
+		series:
 		[{
 			name: 'Job Status',
 			data: [
@@ -274,7 +274,7 @@ verticalTableInitStatus ('#workflow_text_info', '{{workflow.state}}' );
 });
 </script>
 {% endblock %}
-{% block navigation_bar %} | <a href="{{ url_for ('workflow', root_wf_id = root_wf_id, wf_id = wf_id) }}">Workflow</a>{% endblock %} 
+{% block navigation_bar %} | <a href="{{ url_for ('workflow', root_wf_id = root_wf_id, wf_id = wf_id) }}">Workflow</a>{% endblock %}
 {% block title_header %}Workflow Details ({{ workflow.wf_uuid }}){% endblock %}
 {% block content %}
 <div id="workflow_details" style="overflow:auto;">
@@ -314,17 +314,17 @@ verticalTableInitStatus ('#workflow_text_info', '{{workflow.state}}' );
 	</table>
 	<table class="workflow_info">
 		<tr>
-			
+
 			<td>
 				<div id="stat_graph"></div>
 			</td>
-			
+
 			<td>
 				<div id="workflow_graph"></div>
 			</td>
 		</tr>
 	</table>
-	
+
 	{% if workflow.root_wf_id ==  workflow.wf_id %}
 	<!--table id="workflow_stats_info" class="workflow_info">
 		<tr>
@@ -398,7 +398,7 @@ verticalTableInitStatus ('#workflow_text_info', '{{workflow.state}}' );
 				</thead>
 				<tbody>
 				</tbody>
-			</table>	
+			</table>
 		</div>
 	</div>
 </div>

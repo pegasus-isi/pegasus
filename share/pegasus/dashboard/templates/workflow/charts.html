@@ -2,8 +2,8 @@
 {% block title %}Charts{% endblock %}
 {% block javascript_includes %}
 
-<script type="text/javascript" src="{{ url_for ('static', filename='js/highcharts/highcharts.js') }}"></script>
-<script type="text/javascript" src="{{ url_for ('static', filename='js/highcharts/highcharts-more.js') }}"></script>
+<script type="text/javascript" src="http://code.highcharts.com/2.3.3/highcharts.js"></script>
+<script type="text/javascript" src="http://code.highcharts.com/2.3.3/highcharts-more.js"></script>
 <script type="text/javascript" src="{{ url_for ('static', filename='js/charts.js') }}"></script>
 {% endblock %}
 {% block javascript_init %}
@@ -21,7 +21,7 @@ var jobDistributionOpt;
 
 var jobDistributionData = [
 {% if job_dist %}
-{% for i in range(0, job_dist|count) %}	
+{% for i in range(0, job_dist|count) %}
 {
 	name : {{ job_dist [i].transformation|tojson|safe }},
 	count : { total : {{ job_dist [i].count|tojson|safe }}, success : {{ job_dist [i].success|tojson|safe }}, failure : {{ job_dist [i].failure|tojson|safe }} },
@@ -35,7 +35,7 @@ var jobDistributionData = [
 
 function getTimeChartData ()
 {
-	var ajaxOpt = 
+	var ajaxOpt =
 	{
 		url : '{{ url_for ("time_chart", root_wf_id = root_wf_id, wf_id = wf_id) }}',
 		dataType: 'json',
@@ -43,19 +43,19 @@ function getTimeChartData ()
 		{
 			alert ('Error occured: ' + textStatus + xhr.responseText);
 		},
-		success: function (data, textStatus, xhr) 
+		success: function (data, textStatus, xhr)
 		{
 			timeChartData = data;
-		}, 
+		},
 		async: false
 	};
-	
+
 	$.ajax (ajaxOpt)
 }
 
 function getGanttChartData ()
 {
-	var ajaxOpt = 
+	var ajaxOpt =
 	{
 		url : '{{ url_for ("gantt_chart", root_wf_id = root_wf_id, wf_id = wf_id) }}',
 		dataType: 'json',
@@ -63,76 +63,76 @@ function getGanttChartData ()
 		{
 			alert ('Error occured: ' + textStatus + xhr.responseText);
 		},
-		success: function (data, textStatus, xhr) 
+		success: function (data, textStatus, xhr)
 		{
 			ganttChartData = data
 		},
 		async: false
 	};
-	
+
 	$.ajax (ajaxOpt)
 }
 
-$(document).ready (function () 
+$(document).ready (function ()
 {
 	radializeChartColors ();
     plotTimeChart ();
     plotGanttChart ();
-    
-    jobDistributionOpt =  
+
+    jobDistributionOpt =
 	{
-		chart: 
+		chart:
 		{
 			renderTo: 'job_distribution',
 			plotBackgroundColor: null,
 			plotBorderWidth: null,
 			plotShadow: false,
 		},
-		title: 
+		title:
 		{
 			text: 'Invocation Distribution by Count'
 		},
-		credits : 
+		credits :
 		{
 			enabled : false
 		},
-		tooltip: 
+		tooltip:
 		{
 			formatter: jobDistributionTooltipFormat
 		},
-		plotOptions: 
+		plotOptions:
 		{
-			pie: 
+			pie:
 			{
 				allowPointSelect: true,
 				cursor: 'pointer',
-				dataLabels: 
+				dataLabels:
 				{
 					enabled: false
 				},
 				showInLegend: true,
-				dataLabels: 
+				dataLabels:
 				{
 					color: '#000000',
-					formatter: function () 
+					formatter: function ()
 					{
 	                    return '<b>'+ this.point.name +':</b> '+ this.point.y;
 	                }
 				}
 			}
 		},
-		series: 
+		series:
 		[{
 			type: 'pie',
 			name: 'Browser share',
 			data: [
 				{% if job_dist %}
-					{% for i in range(0, job_dist|count) %}	
+					{% for i in range(0, job_dist|count) %}
 					{
 						name: {{ job_dist [i].transformation|tojson|safe }},
 						y: {{ job_dist [i].count }},
 						count : { total : {{ job_dist [i].count|tojson|safe }}, success : {{ job_dist [i].success|tojson|safe }}, failure : {{ job_dist [i].failure|tojson|safe }} },
-						time : { total : {{ job_dist [i].sum|dec_to_float|tojson|safe }} , min : {{ job_dist [i].min|dec_to_float|tojson|safe }}, max : {{ job_dist [i].max|dec_to_float|tojson|safe }}, avg : {{ job_dist [i].avg|dec_to_float|tojson|safe }} }						
+						time : { total : {{ job_dist [i].sum|dec_to_float|tojson|safe }} , min : {{ job_dist [i].min|dec_to_float|tojson|safe }}, max : {{ job_dist [i].max|dec_to_float|tojson|safe }}, avg : {{ job_dist [i].avg|dec_to_float|tojson|safe }} }
 					}
 					{% if i + 1 != job_dist|count %}
 					,
@@ -142,7 +142,7 @@ $(document).ready (function ()
 			]
 		}]
 	};
-    
+
 jobDistribution = new Highcharts.Chart (jobDistributionOpt);
 });
 </script>

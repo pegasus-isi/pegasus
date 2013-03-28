@@ -1,16 +1,16 @@
 {% extends "base.html" %}
 {% block title %}Home Page - Title{% endblock %}
 {% block javascript_includes %}
-<script type="text/javascript" src="{{ url_for ('static', filename='js/highcharts/highcharts.js') }}"></script>
+<script type="text/javascript" src="http://code.highcharts.com/2.3.3/highcharts.js"></script>
 {% endblock %}
 {% block javascript_init %}
 <script type="text/javascript" charset="utf-8">
 var chart;
 var chartOptions;
-$(document).ready (function () 
+$(document).ready (function ()
 {
 	// Radialize the colors
-    Highcharts.getOptions ().colors = $.map (Highcharts.getOptions ().colors, function (color) 
+    Highcharts.getOptions ().colors = $.map (Highcharts.getOptions ().colors, function (color)
     {
         return {
             radialGradient: { cx: 0.5, cy: 0.3, r: 0.7 },
@@ -36,20 +36,20 @@ $(document).ready (function ()
 		              { "mData": "State" },
 		              { "mData": "Submitted On", "sClass": "nowrap" }
 		            ],
-		"fnServerParams": function ( aoData ) 
+		"fnServerParams": function ( aoData )
 		{
 			aoData.push( { "name": "time_filter", "value": $('#time_filter').val() } );
 		}
 	});
-	
-	$("#time_filter").change ( function() 
-	{ 
-		$("#workflow_list").dataTable().fnDraw(); 
-	});
-	  
-	chartOptions =  
+
+	$("#time_filter").change ( function()
 	{
-		chart: 
+		$("#workflow_list").dataTable().fnDraw();
+	});
+
+	chartOptions =
+	{
+		chart:
 		{
 			renderTo: 'workflow_counts',
 			plotBackgroundColor: null,
@@ -57,43 +57,43 @@ $(document).ready (function ()
 			plotShadow: false,
 			height: 250
 		},
-		title: 
+		title:
 		{
 			text: null
 		},
-		credits : 
+		credits :
 		{
 			enabled : false
 		},
-		tooltip: 
+		tooltip:
 		{
-			formatter: function() 
+			formatter: function()
 			{
 				return '<b>'+ this.point.name +'</b>: '+ this.point.y;
 			}
 		},
-		plotOptions: 
+		plotOptions:
 		{
-			pie: 
+			pie:
 			{
 				allowPointSelect: true,
 				cursor: 'pointer',
-				dataLabels: 
+				dataLabels:
 				{
 					enabled: false
 				},
 				showInLegend: true,
-				dataLabels: 
+				dataLabels:
 				{
 					color: '#000000',
-					formatter: function () 
+					formatter: function ()
 					{
 	                    return '<b>'+ this.point.name +':</b> '+ this.point.y;
 	                }
 				}
 			}
 		},
-		series: 
+		series:
 		[{
 			type: 'pie',
 			name: 'Workflow Distribution',
@@ -115,7 +115,7 @@ $(document).ready (function ()
 			]
 		}]
 	};
-    
+
 chart = new Highcharts.Chart (chartOptions);
 });
 </script>
