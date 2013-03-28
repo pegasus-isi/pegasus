@@ -21,11 +21,13 @@ import edu.isi.pegasus.planner.common.PegasusProperties;
 
 import edu.isi.pegasus.common.logging.LogManager;
 
+import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaFactory;
 import edu.isi.pegasus.planner.catalog.replica.impl.SimpleFile;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServerType.OPERATION;
 
 import java.io.File;
+import java.util.Collection;
 import java.util.Properties;
 
 /**
@@ -134,6 +136,41 @@ public class PlannerCache extends Data
         }
 
     }
+
+    /**
+     * Retrieves all entries for a given LFN from the replica catalog.
+     * Each entry in the result set is a tuple of a PFN and all its
+     * attributes.
+     *
+     * @param lfn is the logical filename to obtain information for.
+     * @param type  the type of URL.
+     *
+     * @return the first matching entry
+     *
+     * @see ReplicaCatalogEntry
+     */
+    public ReplicaCatalogEntry lookup(String lfn , OPERATION type ){
+        Collection<ReplicaCatalogEntry> results = null;
+        ReplicaCatalogEntry result = null;
+        if( type == OPERATION.get ){
+            results = mGetRCCache.lookup( lfn );
+        }
+        else if( type == OPERATION.put ){
+            results = mPutRCCache.lookup( lfn);
+        }
+        else{
+            throw new RuntimeException( "Unsupported operation type for planner cache " + type );
+        }
+        
+        //we return the first entry
+        for( ReplicaCatalogEntry entry: results ){
+            result = entry;
+            break;
+        }
+        return result;
+    }
+
+
 
     /**
      * Retrieves the entry for a given filename and resource handle from

@@ -1325,12 +1325,9 @@ public class TransferEngine extends Engine {
             
             boolean bypassFirstLevelStaging = this.bypassStagingForInputFile( selLoc , job.getSiteHandle() );
             if( bypassFirstLevelStaging ){
-                //the selected replica already exists on
-                //the compute site.  we can bypass first level
-                //staging of the data
-
                 //only the files for which we bypass first level staging , we
-                //store them in the planner cache as a GET URL
+                //store them in the planner cache as a GET URL and associate with the compute site
+                //PM-698
                 trackInPlannerCache( lfn, sourceURL, selLoc.getResourceHandle(), OPERATION.get );
                 trackInWorkflowCache( lfn, sourceURL, selLoc.getResourceHandle() );
                 continue;

@@ -22,6 +22,17 @@ import java.util.regex.Pattern;
  * @author  Mats Rynge
  */
 public class PegasusURL {
+    
+    /**
+     * The scheme name for file url.
+     */
+    public static final String FILE_URL_SCHEME = "file:";
+
+    /**
+     * The scheme name for file url.
+     */
+    public static final String SYMLINK_URL_SCHEME = "symlink:";
+
 
     /**
      * The default protocol if none is determined from the PegasusURL or path
