@@ -1313,7 +1313,7 @@ public class TransferEngine extends Engine {
                 
             //add locations of input data on the remote site to the transient RC
             
-            boolean bypassFirstLevelStaging = this.bypassStagingForInputFile( selLoc , job.getSiteHandle() );
+            boolean bypassFirstLevelStaging = this.bypassStagingForInputFile( selLoc , pf , job.getSiteHandle()  );
             if( bypassFirstLevelStaging ){
                 //only the files for which we bypass first level staging , we
                 //store them in the planner cache as a GET URL and associate with the compute site
@@ -1960,12 +1960,14 @@ public class TransferEngine extends Engine {
      * Returns a boolean indicating whether to bypass first level staging for a
      * file or not
      *
-     * @entry        a ReplicaCatalogEntry matching the selected replica location.
-     * @computeSite  the compute site where the associated job will run.
+     * @param entry        a ReplicaCatalogEntry matching the selected replica location.
+     * @param file         the corresponding Pegasus File object
+     * @param computeSite  the compute site where the associated job will run.
+     * @param isExecutable whether the file transferred is an executable file or not
      *
      * @return  boolean indicating whether we need to enable bypass or not
      */
-    private boolean bypassStagingForInputFile( ReplicaCatalogEntry entry , String computeSite ) {
+    private boolean bypassStagingForInputFile( ReplicaCatalogEntry entry , PegasusFile file, String computeSite ) {
         boolean bypass = false;
 
         //check if user has it configured for bypassing the staging and
@@ -1981,7 +1983,11 @@ public class TransferEngine extends Engine {
                     fileSite.equals( "local" ) ){
                     //for condorio only file urls for input files are
                     //eligible for bypass
-                    bypass = true;
+                    bypass = ( file.isExecutable() )?
+                                    //for condor io, we cannot remap the destination URL
+                                    //we need to make sure the PFN ends with lfn to enable bypass
+                                    entry.getPFN().endsWith( file.getLFN() ):
+                                    true;
                 }
             }
             else{

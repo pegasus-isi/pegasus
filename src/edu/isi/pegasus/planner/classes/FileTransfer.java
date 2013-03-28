@@ -359,7 +359,7 @@ public class FileTransfer extends PegasusFile {
      * @return boolean indicating whether a file is executable or not.
      */
     public boolean isTransferringExecutableFile(){
-        return (this.mType == this.EXECUTABLE_FILE);
+        return this.isExecutable();
     }
 
     /**

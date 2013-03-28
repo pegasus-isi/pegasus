@@ -572,6 +572,16 @@ public class PegasusFile extends Data {
          return this.mLogicalFile.hashCode();
      }
 
+     /**
+      * Returns a boolean indicating if a file that is being staged is an
+      * executable or not (i.e is a data file).
+      *
+      * @return boolean indicating whether a file is executable or not.
+      */
+     public boolean isExecutable(){
+        return (this.mType == PegasusFile.EXECUTABLE_FILE);
+     }
+
 
 
     /**
