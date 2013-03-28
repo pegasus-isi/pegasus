@@ -8,16 +8,16 @@
 function init ()
 {
 	getWorkflowSummaryStats ('workflow_summary_stats', $('#workflow_summary_stats').attr ('href'));
-	
+
 	var statistics = $("#statistics_container");
 	statistics.accordion ({ heightStyle: "content", autoHeight : false });
 	statistics.bind('accordionchange', activateEventHandler);
-	
+
 	var newHeader = { newHeader : $('h3[title="workflow_stats"]') };
 	activateEventHandler (null, newHeader);
 }
 
-$(document).ready (function () 
+$(document).ready (function ()
 {
 	init ();
 });
@@ -39,10 +39,5 @@ $(document).ready (function ()
     <h3 href="{{ url_for ('job_stats', root_wf_id = root_wf_id, wf_id = wf_id) }}" title="job_stats"><span style="padding-left: 25px;">Job Statistics</span></h3>
     <div id="job_stats">
     </div>
-    <!-- 
-    <h3 href="{{ url_for ('time_stats', root_wf_id = root_wf_id, wf_id = wf_id) }}" title="time_stats"><span style="padding-left: 25px;">Time Statistics</span></h3>
-    <div id="time_stats">
-    </div>
-    -->
 </section>
 {% endblock %}
