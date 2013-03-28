@@ -17,6 +17,7 @@
 package edu.isi.pegasus.planner.selector.replica;
 
 import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.common.util.PegasusURL;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.common.PegRandom;
 
@@ -183,7 +184,7 @@ public class Restricted extends Default {
                      it.remove();
                 }
                 else{
-                    if ( rce.getPFN().startsWith( FILE_URL_SCHEME ) ) {
+                    if ( rce.getPFN().startsWith( PegasusURL.FILE_URL_SCHEME ) ) {
                         //this is the one which is reqd for ligo
                         //return the location instead of breaking
                         return rce;

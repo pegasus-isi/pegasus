@@ -22,6 +22,7 @@ import edu.isi.pegasus.planner.classes.ReplicaLocation;
 import edu.isi.pegasus.planner.selector.ReplicaSelector;
 
 import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.common.util.PegasusURL;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.common.PegRandom;
 
@@ -59,12 +60,6 @@ public class Local implements ReplicaSelector {
      * Sanity Check Error Message.
      */
     public static final String SANITY_CHECK_ERROR_MESSAGE_PREFIX = "Local Replica Selector selects only local file URL's. Set transfers to run on submit host.";
-
-    /**
-     * The scheme name for file url.
-     */
-    protected static final String FILE_URL_SCHEME = "file:";
-
 
     /**
      * The handle to the logging object that is used to log the various debug
@@ -137,7 +132,7 @@ public class Local implements ReplicaSelector {
 
             //check if has pool attribute as local, and at same time
             //start with a file url scheme
-            if( site.equals( "local" ) && rce.getPFN().startsWith( FILE_URL_SCHEME ) ){
+            if( site.equals( "local" ) && rce.getPFN().startsWith( PegasusURL.FILE_URL_SCHEME ) ){
                 prefPFNs.add( rce );
             }
         }

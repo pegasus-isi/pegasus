@@ -113,16 +113,6 @@ public class TransferEngine extends Engine {
     public static final String WORKFLOW_CACHE_REPLICA_CATALOG_KEY = "file";
 
     /**
-     * The scheme name for file url.
-     */
-    public static final String FILE_URL_SCHEME = "file:";
-
-    /**
-     * The scheme name for file url.
-     */
-    public static final String SYMLINK_URL_SCHEME = "symlink:";
-
-    /**
      * The property prefix for retrieving SRM properties.
      */
     public static final String SRM_PROPERTIES_PREFIX = "pegasus.transfer.srm";
@@ -326,7 +316,7 @@ public class TransferEngine extends Engine {
             return !result;
         }
         //check to see if destination URL is a file url
-        else if( destinationURL != null && destinationURL.startsWith( TransferEngine.FILE_URL_SCHEME ) ){
+        else if( destinationURL != null && destinationURL.startsWith( PegasusURL.FILE_URL_SCHEME ) ){
            result = false;
             
         }
@@ -1032,7 +1022,7 @@ public class TransferEngine extends Engine {
         if( pfn.startsWith( File.separator ) ){
             dag = pfn;
         }
-        else if( pfn.startsWith( TransferEngine.FILE_URL_SCHEME ) ){
+        else if( pfn.startsWith( PegasusURL.FILE_URL_SCHEME ) ){
 //            dag = Utility.getAbsolutePath( pfn );
             dag = new PegasusURL( pfn ).getPath();
         }
@@ -1088,7 +1078,7 @@ public class TransferEngine extends Engine {
         if( pfn.startsWith( File.separator ) ){
             dax = pfn;
         }
-        else if( pfn.startsWith( TransferEngine.FILE_URL_SCHEME ) ){
+        else if( pfn.startsWith( PegasusURL.FILE_URL_SCHEME ) ){
 //            dax = Utility.getAbsolutePath( pfn );
             dax = new PegasusURL( pfn ).getPath();
         }
@@ -1403,7 +1393,7 @@ public class TransferEngine extends Engine {
 
          //if the pfn starts with a file url we
         //dont need to replace . a sanity check
-        if( pfn.startsWith( FILE_URL_SCHEME ) ){
+        if( pfn.startsWith( PegasusURL.FILE_URL_SCHEME ) ){
             return rce;
         }
         
@@ -1415,7 +1405,7 @@ public class TransferEngine extends Engine {
             String urlPrefix = nv.getKey();
             if( pfn.startsWith( urlPrefix ) ){
                 //replace the starting with the mount point
-                newPFN.append( FILE_URL_SCHEME ).append( "//" );
+                newPFN.append( PegasusURL.FILE_URL_SCHEME ).append( "//" );
                 newPFN.append( nv.getValue() );
                 newPFN.append( pfn.substring( urlPrefix.length(), pfn.length() ));
                 mLogger.log( "Replaced pfn " + pfn + " with " + newPFN.toString() ,
@@ -1435,7 +1425,7 @@ public class TransferEngine extends Engine {
             newPFN.append( pfn.substring( pfn.indexOf( hostName ) + hostName.length() ) );
 */
 
-            newPFN.append( FILE_URL_SCHEME ).append( "//" );
+            newPFN.append( PegasusURL.FILE_URL_SCHEME ).append( "//" );
             newPFN.append( new PegasusURL( pfn ).getPath() );
         }
         
@@ -1464,18 +1454,18 @@ public class TransferEngine extends Engine {
         /* special handling for SRM urls */
         StringBuffer newPFN = new StringBuffer();
         
-        if( pfn.startsWith(FILE_URL_SCHEME) ){
+        if( pfn.startsWith(PegasusURL.FILE_URL_SCHEME) ){
             //special handling for FILE URL's as 
             //utility hostname functions dont hold up
-            newPFN.append( TransferEngine.SYMLINK_URL_SCHEME ).
-                   append( pfn.substring( FILE_URL_SCHEME.length() ) );
+            newPFN.append( PegasusURL.SYMLINK_URL_SCHEME ).
+                   append( pfn.substring( PegasusURL.FILE_URL_SCHEME.length() ) );
             
             //System.out.println( "Original PFN " + pfn + " \nReplaced PFN " + newPFN.toString() );
             return newPFN.toString();
         }
         
  
-        newPFN.append( TransferEngine.SYMLINK_URL_SCHEME ).append( "//" );
+        newPFN.append( PegasusURL.SYMLINK_URL_SCHEME ).append( "//" );
        
         //we want to skip out the hostname        
         newPFN.append( new PegasusURL( pfn ).getPath()  );
@@ -1981,7 +1971,7 @@ public class TransferEngine extends Engine {
         //check if user has it configured for bypassing the staging and
         //we are in pegasus lite mode
         if( this.mBypassStagingForInputs && mWorkerNodeExecution ){
-            boolean isFileURL = entry.getPFN().startsWith( TransferEngine.FILE_URL_SCHEME);
+            boolean isFileURL = entry.getPFN().startsWith( PegasusURL.FILE_URL_SCHEME);
             String fileSite = entry.getResourceHandle();
 
             if( this.mSetupForCondorIO ){

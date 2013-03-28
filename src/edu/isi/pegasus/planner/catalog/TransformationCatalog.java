@@ -48,10 +48,6 @@ public interface TransformationCatalog
      */
     public static final String VERSION = "1.3";
     
-    /**
-     * The scheme name for file url.
-     */
-    public static final String FILE_URL_SCHEME = "file:";
     
     /**
      * Property specify whether to modify file url or not.

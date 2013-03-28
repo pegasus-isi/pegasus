@@ -43,6 +43,7 @@ import edu.isi.pegasus.planner.selector.TransformationSelector;
 
 import edu.isi.pegasus.common.util.DynamicLoader;
 import edu.isi.pegasus.common.util.FactoryException;
+import edu.isi.pegasus.common.util.PegasusURL;
 import edu.isi.pegasus.common.util.Separator;
 import edu.isi.pegasus.common.util.Version;
 
@@ -657,7 +658,7 @@ public class DeployWorkerPackage
             return !result;
         }
         //check to see if destination URL is a file url
-        else if( destinationURL != null && destinationURL.startsWith( TransferEngine.FILE_URL_SCHEME ) ){
+        else if( destinationURL != null && destinationURL.startsWith( PegasusURL.FILE_URL_SCHEME ) ){
            result = false;
             
         }

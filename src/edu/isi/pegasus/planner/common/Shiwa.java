@@ -17,6 +17,7 @@
 package edu.isi.pegasus.planner.common;
 
 import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.common.util.PegasusURL;
 import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaFactory;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
@@ -54,7 +55,7 @@ public class Shiwa {
    
     public static final String TRANSFORMATION_CATALOG_LFN = "transformation-catalog";
     
-    public static final String FILE_URL_SCHEME = "file:";
+    
     
     /**
      * The name of the source key for Replica Catalog Implementer t
@@ -313,7 +314,7 @@ public class Shiwa {
             }
             
             //update the pool to be local in case of file urls
-            if( pfn.startsWith( Shiwa.FILE_URL_SCHEME ) ){
+            if( pfn.startsWith( PegasusURL.FILE_URL_SCHEME ) ){
                 pool = "local";
             }
             

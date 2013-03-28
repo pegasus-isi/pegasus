@@ -22,6 +22,7 @@ import edu.isi.pegasus.planner.classes.ReplicaLocation;
 import edu.isi.pegasus.planner.selector.ReplicaSelector;
 
 import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.common.util.PegasusURL;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.common.PegRandom;
 
@@ -54,10 +55,6 @@ public class Default implements ReplicaSelector {
      */
     private static String mDescription = "Default";
 
-    /**
-     * The scheme name for file url.
-     */
-    protected static final String FILE_URL_SCHEME = "file:";
 
     
     /**
@@ -128,7 +125,7 @@ public class Default implements ReplicaSelector {
                 prefPFNs.add( rce );
                 //return the one with file url for ligo stuff
                 //is temporary till new api coded
-                if ( rce.getPFN().startsWith( FILE_URL_SCHEME ) ) {
+                if ( rce.getPFN().startsWith( PegasusURL.FILE_URL_SCHEME ) ) {
                     //this is the one which is reqd for ligo
                     //return instead of break;
                     return rce;
@@ -296,7 +293,7 @@ public class Default implements ReplicaSelector {
 
         boolean result = false;
 
-        if ( !pfn.startsWith( FILE_URL_SCHEME )  ){
+        if ( !pfn.startsWith( PegasusURL.FILE_URL_SCHEME )  ){
             //not a file url . dont remove
             return result;
         }
