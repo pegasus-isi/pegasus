@@ -1,9 +1,10 @@
-#include <list>
+/* mpi.h must come before stdio.h for Intel MPI */
+#include <mpi.h>
 #include <stdio.h>
+#include <list>
 #include <stdlib.h>
 #include <unistd.h>
 #include <math.h>
-#include <mpi.h>
 
 #include "version.h"
 #include "dag.h"

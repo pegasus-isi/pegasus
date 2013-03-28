@@ -16,6 +16,8 @@ using std::string;
 using std::vector;
 using std::map;
 
+#define MESSAGE_DUMP_FILE "pmc.message.dmp"
+
 static bool ABORT = false;
 
 static void on_signal(int signo) {
@@ -24,6 +26,26 @@ static void on_signal(int signo) {
         log_fatal("Workflow wall time exceeded!");
     }
     ABORT = true;
+}
+
+static void log_invalid_message(Message *mesg) {
+    /* Log as much information about the message as we can */
+    log_error("Master got invalid message: size=%u, source=%d", 
+              mesg->msgsize, mesg->source);
+    
+    /* Write the message to a memory dump file */
+    log_error("Writing invalid message to %s", MESSAGE_DUMP_FILE);
+    FILE *dump = fopen(MESSAGE_DUMP_FILE, "w");
+    if (dump == NULL) {
+        log_error("Unable to open message dump file: %s", strerror(errno));
+        return;
+    }
+    if (fwrite(mesg->msg, mesg->msgsize, 1, dump) != 1) {
+        log_error("Incomplete message dump: %s", strerror(errno));
+    }
+    if (fclose(dump)) {
+        log_error("Error closing message dump file: %s", strerror(errno));
+    }
 }
 
 void Host::log_status() {
@@ -323,13 +345,20 @@ void Master::wait_for_results() {
 }
 
 void Master::process_iodata(IODataMessage *mesg) {
-    if (mesg->size < 0) {
+    /* Perform some sanity checks on the message. This
+     * was added because of an issue with mangled messages
+     * on TACC Stampede.
+     */
+    if (mesg->size > mesg->msgsize) {
+        log_invalid_message(mesg);
         myfailure("Invalid I/O message: invalid size");
     }
     if (mesg->filename.size() == 0) {
+        log_invalid_message(mesg);
         myfailure("Invalid I/O message: bad filename");
     }
     if (mesg->task.size() == 0) {
+        log_invalid_message(mesg);
         myfailure("Invalid I/O message: bad task name");
     }
     
