@@ -1,3 +1,4 @@
+/* mpi.h must come before stdio.h for Intel MPI */
 #include <mpi.h>
 
 #include "mpicomm.h"
