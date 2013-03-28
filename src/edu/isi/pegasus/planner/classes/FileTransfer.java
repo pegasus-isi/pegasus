@@ -122,7 +122,6 @@ public class FileTransfer extends PegasusFile {
         mJob         = job;
         mSourceMap   = new HashMap();
         mDestMap     = new HashMap();
-        mFlags       = new BitSet(NO_OF_TRANSIENT_FLAGS);
         this.mPriority     = 0;
         this.mURLForRegistrationOnDestination = null;
     }

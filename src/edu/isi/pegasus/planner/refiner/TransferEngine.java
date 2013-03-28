@@ -1320,6 +1320,9 @@ public class TransferEngine extends Engine {
                 //PM-698
                 trackInPlannerCache( lfn, sourceURL, selLoc.getResourceHandle(), OPERATION.get );
                 trackInWorkflowCache( lfn, sourceURL, selLoc.getResourceHandle() );
+                //ensure the input file does not get cleaned up by the
+                //InPlace cleanup algorithm
+                pf.setForCleanup( false );
                 continue;
             }
             else{
@@ -1339,11 +1342,10 @@ public class TransferEngine extends Engine {
             //construct the file transfer object
             FileTransfer ft = (pf instanceof FileTransfer) ?
                                (FileTransfer)pf:
-                               new FileTransfer( lfn, jobName );
+                               new FileTransfer( lfn, jobName, pf.getFlags() );
             
             //make sure the type information is set in file transfer
             ft.setType( pf.getType() );
-
             ft.setSize( pf.getSize() );
             
             //the transfer mode for the file needs to be

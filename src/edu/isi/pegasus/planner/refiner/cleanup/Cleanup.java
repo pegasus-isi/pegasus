@@ -210,7 +210,7 @@ public class Cleanup implements CleanupImplementation{
                 String pfn = mPlannerCache.lookup( file.getLFN(), stagingSite, OPERATION.put );
 
                 if( pfn == null ){
-                    throw new RuntimeException( "Unable to determine url for lfn " + file.getLFN() + " at site " + stagingSite );
+                    throw new RuntimeException( "Unable to determine cleanup url for lfn " + file.getLFN() + " at site " + stagingSite );
                 }
 
                 if( pfn.startsWith( PegasusURL.FILE_URL_SCHEME ) || pfn.startsWith( PegasusURL.SYMLINK_URL_SCHEME ) ){
