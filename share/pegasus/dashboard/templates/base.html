@@ -14,12 +14,12 @@
 {% block css_includes %}{% endblock %}
 
 <script type="text/javascript" src="{{ url_for ('static', filename='js/script.js') }}"></script>
-<script type="text/javascript" src="{{ url_for ('static', filename='js/jquery/jquery-1.7.2.min.js') }}"></script>
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
 <script type="text/javascript" src="{{ url_for ('static', filename='js/jquery/jquery-ui-1.8.22.custom.min.js') }}"></script>
 
 <script type="text/javascript" src="{{ url_for ('static', filename='js/datatables/media/js/jquery.dataTables.min.js') }}"></script>
-{% endblock %} 
-{% block javascript_includes %}{% endblock %} 
+{% endblock %}
+{% block javascript_includes %}{% endblock %}
 {% block javascript_init %}{% endblock %}
 </head>
 <body>
@@ -73,13 +73,13 @@
 			<p class="spacer"></p>
 			<a href="http://pegasus.isi.edu"><img id="list"
 				src="{{ url_for ('static', filename='images/footer/stampede.png') }}"
-				title="STAMPEDE" class="footer_icon" /></a> 
+				title="STAMPEDE" class="footer_icon" /></a>
 			<a href="http://pegasus.isi.edu"><img id="list"
 				src="{{ url_for ('static', filename='images/footer/pegasus.jpg') }}"
 				title="Pegasus Workflow Management System" class="footer_icon" /></a>
 			<a href="http://www.isi.edu"><img id="list"
 				src="{{ url_for ('static', filename='images/footer/isi.png') }}"
-				title="Information Sciences Institute" class="footer_icon" /></a> 
+				title="Information Sciences Institute" class="footer_icon" /></a>
 			<a href="http://www.usc.edu"><img id="list"
 				src="{{ url_for ('static', filename='images/footer/usc.png') }}"
 				title="University of Southern California" class="footer_icon" /></a>
