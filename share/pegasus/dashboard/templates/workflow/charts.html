@@ -75,6 +75,9 @@ function getGanttChartData ()
 
 $(document).ready (function ()
 {
+	$ ("#time_chart_options").buttonset ();
+	$ ("#job_distribution_options").buttonset ();
+
 	radializeChartColors ();
     plotTimeChart ();
     plotGanttChart ();
@@ -157,7 +160,7 @@ jobDistribution = new Highcharts.Chart (jobDistributionOpt);
 	<br />
 	<section id="time_chart_container">
 		<div id="time_chart">No information available.</div>
-		<div id="time_chart_options">
+		<div id="time_chart_options" class="align_center">
 			<input type="radio" id="by_job"     name="time_chrt" onclick="timeChartToggle (1);" checked="checked" /><label for="by_job">By Jobs</label>
 			<input type="radio" id="by_runtime" name="time_chrt" onclick="timeChartToggle (2);" /><label for="by_runtime">By Invocations</label>
 		</div>
@@ -165,7 +168,7 @@ jobDistribution = new Highcharts.Chart (jobDistributionOpt);
 	<br />
 	<section id="distribution_chart_container">
 		<div id="job_distribution">No information available.</div>
-		<div id="job_distribution_options">
+		<div id="job_distribution_options" class="align_center">
 			<input type="radio" id="by_count" name="job_dist" onclick="jobDistributionGraphToggle (1);" checked="checked"  /><label for="by_count">By Count</label>
 			<input type="radio" id="by_time" name="job_dist"  onclick="jobDistributionGraphToggle (2);" /><label for="by_time">By Time</label>
 		</div>

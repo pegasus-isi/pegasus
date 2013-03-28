@@ -1,20 +1,20 @@
-a img 
+a img
 {
 	border : none;
 }
 
 body
 {
-	margin : 0;
+	margin         : 0;
 	vertical-align : middle;
 }
 
 .top_fixed
 {
 	position : fixed !important;
-	top : 0px;
-	left : 0px;
-	z-index : 500;
+	top      : 0px;
+	left     : 0px;
+	z-index  : 500;
 }
 
 .bottom_fixed
@@ -24,24 +24,24 @@ body
 .header
 {
 	background-color : #3f75d9;
-	padding : 2px 5px 2px 5px;
-	width : 100%;
+	padding          : 2px 5px 2px 5px;
+	width            : 100%;
 }
 
 .header_left
 {
 	display : inline-block;
-	width : 80%;
+	width   : 80%;
 }
 
 .float_left
 {
-	float: left;
+	float : left;
 }
 
 .float_right
 {
-	float: right;
+	float : right;
 }
 
 .logo, .header_right
@@ -51,9 +51,9 @@ body
 
 .footer
 {
-	text-align : center;
+	text-align     : center;
 	vertical-align : middle;
-	padding : 2px 2px 2px 2px;
+	padding        : 2px 2px 2px 2px;
 }
 
 .footer_icon
@@ -68,12 +68,12 @@ body
 
 .content_container
 {
-	margin-left : auto;
-	margin-right : auto;
-	width : 80%;
-	border-left : 2px solid #3f75d9;
+	margin-left   : auto;
+	margin-right  : auto;
+	width         : 80%;
+	border-left   : 2px solid #3f75d9;
 	border-bottom : 2px solid #3f75d9;
-	border-right : 2px solid #3f75d9;
+	border-right  : 2px solid #3f75d9;
 }
 
 .content
@@ -91,16 +91,16 @@ p.spacer
 	height : 5px;
 }
 
-p 
-{ 
-	/*font-size : 40px;*/ 
+p
+{
+	/*font-size : 40px;*/
 	margin : 0;
 }
 
 .icons
 {
-	height : 30px;
-	width : 30px;
+	height         : 30px;
+	width          : 30px;
 	vertical-align : middle;
 }
 
@@ -112,16 +112,22 @@ p
 .title
 {
 	background-color : #3f75d9;
-	padding : 2px 5px 2px 5px;
+	padding          : 2px 5px 2px 5px;
 }
 
 .workflow_job_graph
 {
-	max-width: 50%; 
-	
+	max-width : 50%;
+
 }
 
 .nowrap
 {
-	white-space: nowrap;
+	white-space : nowrap;
+}
+
+.align_center
+{
+	margin     : 0 auto;
+	text-align : center;
 }
