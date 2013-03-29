@@ -459,7 +459,7 @@ int TaskHandler::run_process() {
     }
     
     bool poll_failure = false;
-    struct pollfd *fds = new struct pollfd[pipe_forwards.size()];
+    std::vector<struct pollfd> fds(pipe_forwards.size());
     
     // TODO Refactor the pipe/polling into another method
     
@@ -478,7 +478,7 @@ int TaskHandler::run_process() {
         log_trace("Polling %d pipes", nfds);
         
         int timeout = -1;
-        int rc = poll(fds, nfds, timeout);
+        int rc = poll(&fds[0], nfds, timeout);
         if (rc <= 0) {
             // If this happens then we are in trouble. The only thing we
             // can do is log it and break out of the loop. What should happen
@@ -543,8 +543,6 @@ int TaskHandler::run_process() {
     }
     
 after_poll_loop:
-    delete [] fds;
-    
     // Close the pipes here just in case something happens above 
     // so that we aren't deadlocked waiting for a process that is itself 
     // deadlocked waiting for us to read data off the pipe. Instead, 
