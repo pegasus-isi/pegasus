@@ -459,8 +459,7 @@ int TaskHandler::run_process() {
     }
     
     bool poll_failure = false;
-    std::auto_ptr<struct pollfd> fdhandle(new struct pollfd[pipe_forwards.size()]);
-    struct pollfd *fds = fdhandle.get();
+    struct pollfd *fds = new struct pollfd[pipe_forwards.size()];
     
     // TODO Refactor the pipe/polling into another method
     
@@ -543,7 +542,9 @@ int TaskHandler::run_process() {
         }
     }
     
-after_poll_loop: 
+after_poll_loop:
+    delete [] fds;
+    
     // Close the pipes here just in case something happens above 
     // so that we aren't deadlocked waiting for a process that is itself 
     // deadlocked waiting for us to read data off the pipe. Instead, 
