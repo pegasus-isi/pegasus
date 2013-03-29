@@ -237,6 +237,7 @@ public class InPlace implements CleanupStrategy{
         for( Iterator it = workflow.nodeIterator() ; it.hasNext(); ){
             GraphNode _GN = ( GraphNode ) it.next();
             Job _SI = ( Job ) _GN.getContent();
+ 
             //only for compute jobs
             if( ! ( _SI.getJobType() == _SI.COMPUTE_JOB /*|| _SI.getJobType() == _SI.STAGED_COMPUTE_JOB*/ ) ) {
                 continue;
@@ -401,6 +402,7 @@ public class InPlace implements CleanupStrategy{
         .append( " are " );
         for( Iterator it = leaves.iterator(); it.hasNext(); ){
             message.append( ((GraphNode)it.next()).getID() );
+            message.append( "," );
         }
         mLogger.log( message.toString(), LogManager.DEBUG_MESSAGE_LEVEL );
 
@@ -427,8 +429,9 @@ public class InPlace implements CleanupStrategy{
                 pQA[ curP ].remove( curGN );
                 Job curGN_SI = (Job) curGN.getContent();
 
-                if( !typeNeedsCleanUp( curGN_SI.getJobType() ) ) { 
-                    continue;
+                //if( !typeNeedsCleanUp( curGN_SI.getJobType() ) ) { 
+                if( !typeNeedsCleanUp( curGN ) ) { 
+                      continue;
                 }
 
                     
@@ -502,27 +505,30 @@ public class InPlace implements CleanupStrategy{
                 GraphNode curGN = cleanupJobContent.getNode();
                 Job curGN_SI = (Job)curGN.getContent();
                 if( typeStageOut( curGN_SI.getJobType() ) ){
-                        //find a compute job that is parent of this
-                        GraphNode node = (GraphNode)curGN.getParents().get( 0 );
-                        computeJob = (Job)node.getContent();
-                        message = new StringBuffer();
-                        message.append( "For cleanup job " ).append( cleanupNode.getID() ).
-                                append( " the associated compute job is ").append( computeJob.getID() );
-                        mLogger.log(  message.toString(), LogManager.DEBUG_MESSAGE_LEVEL );
-                    }
-                    else{
-                        computeJob = curGN_SI;
-                    }
-                    Job cleanupJob = mImpl.createCleanupJob( cleanupNode.getID(),
-                                                                 cleanupJobContent.getListOfFilesToDelete(),
-                                                                 computeJob
+                        
+                    //find a compute job that is parent of this
+                    GraphNode node = (GraphNode)curGN.getParents().get( 0 );
+                    computeJob = (Job)node.getContent();
+                    message = new StringBuffer();
+                    message.append( "For cleanup job " ).append( cleanupNode.getID() ).
+                            append( " the associated compute job is ").append( computeJob.getID() );
+                
+                    mLogger.log(  message.toString(), LogManager.DEBUG_MESSAGE_LEVEL );
+                    
+                }
+                else{
+                    computeJob = curGN_SI;
+                }
+                Job cleanupJob = mImpl.createCleanupJob( cleanupNode.getID(),
+                                                         cleanupJobContent.getListOfFilesToDelete(),
+                                                         computeJob
                                                                  );
 
 
-                    //add the job as a content to the graphnode
-                    //and the cleanupNode itself to the Graph
-                    cleanupNode.setContent( cleanupJob );
-                    workflow.addNode(cleanupNode);
+                //add the job as a content to the graphnode
+                //and the cleanupNode itself to the Graph
+                cleanupNode.setContent( cleanupJob );
+                workflow.addNode(cleanupNode);
             }
 
         }//end of for loop
@@ -659,6 +665,38 @@ public class InPlace implements CleanupStrategy{
            append( "_" ).append( index );
 
         return sb.toString();
+    }
+    
+    /**
+     * Checks to see which job types are required to be looked at for cleanup.
+     * COMPUTE_JOB , STAGE_OUT_JOB , INTER_POOL_JOB  are the ones that need
+     * cleanup
+     *
+     * @param node  the graph node
+     *
+     * @return boolean
+     */
+    protected boolean typeNeedsCleanUp( GraphNode node ){
+        Job job = (Job) node.getContent();
+        int type = job.getJobType();
+        boolean cleanup = false;
+        
+        if( type == Job.COMPUTE_JOB ){
+            cleanup = true;
+        }
+        else if( this.typeStageOut(type) ){
+            //for stage-out jobs we need extra checks
+            //PM-699 check for stageout jobs with no parents
+            if( node.getParents().size() > 0 ){
+                cleanup = true;
+            }
+            else{
+                mLogger.log( "Disabling cleanup for stageout job " + node.getID() , 
+                              LogManager.INFO_MESSAGE_LEVEL );
+            }
+        }
+        
+        return cleanup;
     }
 
     /**
