@@ -126,6 +126,9 @@ p
 	white-space : nowrap;
 }
 
+/*
+ * The align contents of div in the center
+ */
 .align_center
 {
 	margin     : 0 auto;
