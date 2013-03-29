@@ -9,7 +9,7 @@
 using std::exception;
 
 char *msgcopy(char *msg, int msgsize) {
-    char *message = (char *)malloc(msgsize);
+    char *message = new char[msgsize];
     memcpy(message, msg, msgsize);
     return message;
 }
