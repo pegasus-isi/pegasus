@@ -785,6 +785,7 @@ void Worker::run_host_script() {
         struct sigaction oact;
         act.sa_handler = log_signal;
         act.sa_flags = SA_NODEFER;
+        sigemptyset(&act.sa_mask);
         if (sigaction(SIGALRM, &act, &oact) < 0) {
             myfailures(
                 "Worker %d: Unable to set signal handler for SIGALRM", rank);

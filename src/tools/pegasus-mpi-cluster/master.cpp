@@ -770,6 +770,7 @@ int Master::run() {
     struct sigaction signal_action;
     signal_action.sa_handler = on_signal;
     signal_action.sa_flags = SA_NODEFER;
+    sigemptyset(&signal_action.sa_mask);
     if (sigaction(SIGALRM, &signal_action, NULL) < 0) {
         myfailures("Unable to set signal handler for SIGALRM");
     }
