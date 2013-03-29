@@ -394,7 +394,7 @@ int TaskHandler::read_file_data() {
         if (read_file(srcfile, buff, size) != (int)size) {
             log_error("Task %s: Unable to read %s: %s", name.c_str(), srcfile.c_str(), 
                     strerror(errno));
-            delete buff;
+            delete[] buff;
             return -1;
         }
         
