@@ -33,6 +33,8 @@ var chartData =
 
 $(document).ready (function ()
 {
+	$ ('.button').button ();
+
 	// Radialize the colors
     Highcharts.getOptions ().colors = $.map (Highcharts.getOptions ().colors, function (color)
     {
@@ -325,8 +327,10 @@ verticalTableInitStatus ('#workflow_text_info', '{{workflow.state}}' );
 		</tr>
 	</table>
 	<br/>
-	<a href="{{ url_for ('charts', root_wf_id = root_wf_id, wf_id = wf_id) }}" class="ui-state-default" style="text-decoration: none; padding: 0px 5px 0px 5px;">Charts</a>
-	<a href="{{ url_for ('statistics', root_wf_id = root_wf_id, wf_id = wf_id) }}" class="ui-state-default" style="text-decoration: none; padding: 0px 5px 0px 5px;">Statistics</a>
+	<div class="align_center">
+		<a href="{{ url_for ('charts', root_wf_id = root_wf_id, wf_id = wf_id) }}" class="button">Charts</a>
+		<a href="{{ url_for ('statistics', root_wf_id = root_wf_id, wf_id = wf_id) }}" class="button">Statistics</a>
+	</div>
 </div>
 <br/>
 <div id="jobs_tabs_wrapper">
