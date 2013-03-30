@@ -390,8 +390,6 @@ public class InPlace implements CleanupStrategy{
     private void addCleanUpJobs( String site, Set leaves, Graph workflow ){
 
         mLogger.log(  site + " " + leaves.size() , LogManager.DEBUG_MESSAGE_LEVEL );
-        //if( !site.equals(new String("k")) )return;
-        //file(String) cleaned by GraphNode
         HashMap cleanedBy = new HashMap();
 
         //the below in case we get rid of the primitive java 1.4
@@ -429,7 +427,6 @@ public class InPlace implements CleanupStrategy{
                 pQA[ curP ].remove( curGN );
                 Job curGN_SI = (Job) curGN.getContent();
 
-                //if( !typeNeedsCleanUp( curGN_SI.getJobType() ) ) { 
                 if( !typeNeedsCleanUp( curGN ) ) { 
                       continue;
                 }
