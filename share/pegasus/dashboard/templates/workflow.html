@@ -21,24 +21,25 @@ $(document).ready (function ()
         };
     });
 
-	$ ('#workflow_list').dataTable (
-	{
-		"bJQueryUI": true,
+	$ ('#workflow_list').dataTable ({
+		"bJQueryUI"      : true,
 		"sPaginationType": "full_numbers",
-		"bProcessing": true,
-		"bServerSide": true,
-		"sAjaxSource": "/",
-		"bAutoWidth": false,
-		"aaSorting": [[ 3, "desc" ]],
+		"bProcessing"    : true,
+		"bServerSide"    : true,
+		"sAjaxSource"    : "/",
+		"bAutoWidth"     : false,
+		"aaSorting"      : [
+			[ 3, "desc" ]
+		],
 		"aoColumns": [
-		              { "mData": "Workflow Label" },
-		              { "mData": "Submit Directory" },
-		              { "mData": "State" },
-		              { "mData": "Submitted On", "sClass": "nowrap" }
-		            ],
-		"fnServerParams": function ( aoData )
+			null,
+			null,
+			null,
+			{ "sClass": "nowrap" }
+		],
+		"fnServerParams" : function (aoData)
 		{
-			aoData.push( { "name": "time_filter", "value": $('#time_filter').val() } );
+			aoData.push ({ "name": "time_filter", "value": $ ('#time_filter').val () });
 		}
 	});
 

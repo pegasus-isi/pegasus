@@ -32,230 +32,208 @@ var chartData =
 }
 
 $(document).ready (function ()
-{
-	$ ('.button').button ();
-
-	// Radialize the colors
-    Highcharts.getOptions ().colors = $.map (Highcharts.getOptions ().colors, function (color)
-    {
-        return {
-            radialGradient: { cx: 0.5, cy: 0.3, r: 0.7 },
-            stops: [
-                [0, color],
-                [1, Highcharts.Color (color).brighten (-0.3).get ('rgb')] // darken
-            ]
-        };
-    });
-
-	$('#jobs_tabs').tabs (
-	{
-		ajaxOptions:
 		{
-			error: function (xhr, status, index, anchor)
+			$ ('.button').button ();
+
+			// Radialize the colors
+			Highcharts.getOptions ().colors = $.map (Highcharts.getOptions ().colors, function (color)
 			{
-				$(anchor.hash).html ("We encountered an error loading this tab.");
-			}
-		},
-		load: function(event, ui)
-		{
-			if (ui.index == 0)
+				return {
+					radialGradient: { cx: 0.5, cy: 0.3, r: 0.7 },
+					stops: [
+						[0, color],
+						[1, Highcharts.Color (color).brighten (-0.3).get ('rgb')] // darken
+					]
+				};
+			});
+
+			$ ('#jobs_tabs').tabs (
+					{
+						beforeLoad: function (event, ui)
+						{
+							ui.jqXHR.error (function ()
+							{
+								ui.panel.html ('Error loading contents of this tab.');
+							})
+						},
+						load      : function (event, ui)
+						{
+							if (ui.panel.html () == '')
+							{
+								ui.panel.html ('No sub-workflows found.')
+							}
+							else
+							{
+								$ ('#sub_workflows_list').dataTable ({"bJQueryUI": true, "sPaginationType": "full_numbers"});
+							}
+						},
+						activate: function (event, ui)
+						{
+							var tabIndex = ui.newTab.index ();
+
+							if (tabIndex == 1 && !tablesInitialized [tabIndex])
+							{
+								tablesInitialized [tabIndex] = true;
+
+								$ ('#failed_jobs_list').dataTable ({"bJQueryUI": true,
+									"sPaginationType"                          : "full_numbers",
+									"bProcessing"                              : true,
+									"bServerSide"                              : true,
+									"sAjaxSource"                              : "{{ url_for ('failed_jobs', root_wf_id = root_wf_id, wf_id = wf_id) }}",
+									"bAutoWidth"                               : false
+								});
+							}
+							else if (tabIndex == 2 && !tablesInitialized [tabIndex])
+							{
+								tablesInitialized [tabIndex] = true;
+
+								$ ('#running_jobs_list').dataTable ({"bJQueryUI": true,
+									"sPaginationType"                           : "full_numbers",
+									"bProcessing"                               : true,
+									"bServerSide"                               : true,
+									"sAjaxSource"                               : "{{ url_for ('running_jobs', root_wf_id = root_wf_id, wf_id = wf_id) }}",
+									"bAutoWidth"                                : false
+								});
+							}
+							else if (tabIndex == 3 && !tablesInitialized [tabIndex])
+							{
+								tablesInitialized [tabIndex] = true;
+
+								$ ('#successful_jobs_list').dataTable ({"bJQueryUI": true,
+									"sPaginationType"                              : "full_numbers",
+									"bProcessing"                                  : true,
+									"bServerSide"                                  : true,
+									"sAjaxSource"                                  : "{{ url_for ('successful_jobs', root_wf_id = root_wf_id, wf_id = wf_id) }}",
+									"bAutoWidth"                                   : false
+								});
+							}
+						}
+					});
+
+			chartOptions =
 			{
-				if ($('#sub_workflows').html() == '')
+				chart:
 				{
-					$('#sub_workflows').html('No sub-workflows found.')
-				}
-				else
+					renderTo: 'workflow_graph',
+					type: 'pie',
+					plotBackgroundColor: null,
+					plotBorderWidth: null,
+					plotShadow: false
+				},
+				title:
 				{
-					$('#sub_workflows_list').dataTable ({"bJQueryUI" : true, "sPaginationType": "full_numbers"});
-				}
-			}
-		}
-	});
-
-	$("#jobs_tabs").bind ("tabsselect", function (event, ui)
-	{
-		window.location.hash = ui.tab.hash;
-
-		if (ui.index == 1 && !tablesInitialized [ui.index])
-		{
-			tablesInitialized [ui.index] = true;
-
-			$('#failed_jobs_list').dataTable ({"bJQueryUI": true,
-					"sPaginationType": "full_numbers",
-					"bProcessing": true,
-					"bServerSide": true,
-					"sAjaxSource": "{{ url_for ('failed_jobs', root_wf_id = root_wf_id, wf_id = wf_id) }}",
-					"bAutoWidth": false,
-					"aoColumns": [
-					              { "mData": "Job Name" },
-					              { "mData": "Exit Code" },
-					              { "mData": "Standard Out" },
-					              { "mData": "Standard Error" }
-					            ]
-			});
-		}
-		else if (ui.index == 2 && !tablesInitialized [ui.index])
-		{
-			tablesInitialized [ui.index] = true;
-
-			$('#running_jobs_list').dataTable ({"bJQueryUI": true,
-					"sPaginationType": "full_numbers",
-					"bProcessing": true,
-					"bServerSide": true,
-					"sAjaxSource": "{{ url_for ('running_jobs', root_wf_id = root_wf_id, wf_id = wf_id) }}",
-					"bAutoWidth": false,
-					"aoColumns": [
-					              { "mData": "Job Name" },
-					            ]
-			});
-		}
-		else if (ui.index == 3 && !tablesInitialized [ui.index])
-		{
-			tablesInitialized [ui.index] = true;
-
-			$('#successful_jobs_list').dataTable ({"bJQueryUI": true,
-					"sPaginationType": "full_numbers",
-					"bProcessing": true,
-					"bServerSide": true,
-					"sAjaxSource": "{{ url_for ('successful_jobs', root_wf_id = root_wf_id, wf_id = wf_id) }}",
-					"bAutoWidth": false,
-					"aoColumns": [
-					              { "mData": "Job Name" },
-					              { "mData": "Time Taken", "sClass": "nowrap" }
-					            ]
-			});
-		}
-	})
-
-	chartOptions =
-	{
-		chart:
-		{
-			renderTo: 'workflow_graph',
-			type: 'pie',
-			plotBackgroundColor: null,
-			plotBorderWidth: null,
-			plotShadow: false
-			//width: 350,
-			//height: 250
-		},
-		title:
-		{
-			text: 'Job Status (Per Workflow)'
-		},
-		credits :
-		{
-			enabled : false
-		},
-		tooltip:
-		{
-			enabled: false
-		},
-		plotOptions:
-		{
-			pie:
-			{
-				allowPointSelect: true,
-				cursor: 'pointer',
-				dataLabels:
+					text: 'Job Status (Per Workflow)'
+				},
+				credits :
+				{
+					enabled : false
+				},
+				tooltip:
 				{
 					enabled: false
 				},
-				showInLegend: true,
-				dataLabels:
+				plotOptions:
 				{
-					color: '#000000',
-					formatter: function()
+					pie:
 					{
-						var str = '';
-						str += '<b>Jobs:</b> ' + chartData [this.point.name].jobs + "<br\>";
-						str += '<b>Workflows:</b> ' + chartData [this.point.name].workflow + "<br\>";
-						str += '<b>Total:</b> ' + chartData [this.point.name].total;
-						return str;
+						allowPointSelect: true,
+						cursor: 'pointer',
+						dataLabels:
+						{
+							enabled: false
+						},
+						showInLegend: true,
+						dataLabels:
+						{
+							color: '#000000',
+							formatter: function()
+							{
+								var str = '';
+								str += '<b>Jobs:</b> ' + chartData [this.point.name].jobs + "<br\>";
+								str += '<b>Workflows:</b> ' + chartData [this.point.name].workflow + "<br\>";
+								str += '<b>Total:</b> ' + chartData [this.point.name].total;
+								return str;
+							}
+						}
 					}
-				}
-			}
-		},
-		series:
-		[{
-			name: 'Job Status',
-			data: [
-				{
-					name: 'Running',
-					y: {{ counts.others }},
+				},
+				series:
+						[{
+							name: 'Job Status',
+							data: [
+								{
+									name: 'Running',
+									y: {{ counts.others }},
 					sliced: true,
-					selected: true
-				},
-				{
-					name: 'Failed',
-					y: {{ counts.fail }}
-				},
-				{
-					name: 'Successful',
-					y: {{ counts.success }}
-				}
-			]
+				selected: true
+		},
+		{
+			name: 'Failed',
+			y: {{ counts.fail }}
+		},
+		{
+			name: 'Successful',
+			y: {{ counts.success }}
 		}]
-	};
+	}]
+};
 
-	var stat_chart;
-	var statOptions;
+var stat_chart;
+var statOptions;
 
-	statOptions =
+statOptions =
+{
+	chart:
 	{
-		chart:
+		renderTo: 'stat_graph',
+		type: 'pie',
+		plotBackgroundColor: null,
+		plotBorderWidth: null,
+		plotShadow: false
+	},
+	title:
+	{
+		text: 'Job Status (Entire Workflow)'
+	},
+	credits :
+	{
+		enabled : false
+	},
+	tooltip:
+	{
+		enabled: false
+	},
+	plotOptions:
+	{
+		pie:
 		{
-			renderTo: 'stat_graph',
-			type: 'pie',
-			plotBackgroundColor: null,
-			plotBorderWidth: null,
-			plotShadow: false
-			//width: 350,
-			//height: 250
-		},
-		title:
-		{
-			text: 'Job Status (Entire Workflow)'
-		},
-		credits :
-		{
-			enabled : false
-		},
-		tooltip:
-		{
-			enabled: false
-		},
-		plotOptions:
-		{
-			pie:
+			allowPointSelect: true,
+			cursor: 'pointer',
+			dataLabels:
 			{
-				allowPointSelect: true,
-				cursor: 'pointer',
-				dataLabels:
+				enabled: false
+			},
+			showInLegend: true,
+			dataLabels:
+			{
+				color: '#000000',
+				formatter: function()
 				{
-					enabled: false
-				},
-				showInLegend: true,
-				dataLabels:
-				{
-					color: '#000000',
-					formatter: function()
-					{
-						return '<b>' + this.point.name + ':</b> ' + this.point.y;
-					}
+					return '<b>' + this.point.name + ':</b> ' + this.point.y;
 				}
 			}
-		},
-		series:
-		[{
-			name: 'Job Status',
-			data: [
-				{
-					name: 'Unsubmitted',
-					y: {{ statistics ['unsubmitted-jobs'] }},
-					sliced: true,
-					selected: true
-				},
+		}
+	},
+	series:
+			[{
+				name: 'Job Status',
+				data: [
+					{
+						name: 'Unsubmitted',
+						y: {{ statistics ['unsubmitted-jobs'] }},
+						sliced: true,
+						selected: true
+					},
 				{
 					name: 'Failed',
 					y: {{ statistics ['failed-jobs'] }}
@@ -263,10 +241,9 @@ $(document).ready (function ()
 				{
 					name: 'Successful',
 					y: {{ statistics ['successful-jobs'] }}
-				}
-			]
-		}]
-	};
+				}]
+			}]
+};
 
 stats_chart = new Highcharts.Chart (statOptions);
 
@@ -353,12 +330,12 @@ verticalTableInitStatus ('#workflow_text_info', '{{workflow.state}}' );
 		<div id="failed_jobs">
 			<table id="failed_jobs_list">
 				<thead>
-					<tr>
-						<th>Job Name</th>
-						<th>Exit Code</th>
-						<th>Standard Out</th>
-						<th>Standard Error</th>
-					</tr>
+				<tr>
+					<th>Job Name</th>
+					<th>Exit Code</th>
+					<th>Standard Out</th>
+					<th>Standard Error</th>
+				</tr>
 				</thead>
 				<tbody>
 				</tbody>
@@ -367,9 +344,9 @@ verticalTableInitStatus ('#workflow_text_info', '{{workflow.state}}' );
 		<div id="running_jobs">
 			<table id="running_jobs_list">
 				<thead>
-					<tr>
-						<th>Job Name</th>
-					</tr>
+				<tr>
+					<th>Job Name</th>
+				</tr>
 				</thead>
 				<tbody>
 				</tbody>
@@ -378,10 +355,10 @@ verticalTableInitStatus ('#workflow_text_info', '{{workflow.state}}' );
 		<div id="successful_jobs">
 			<table id="successful_jobs_list">
 				<thead>
-					<tr>
-						<th>Job Name</th>
-						<th>Time Taken</th>
-					</tr>
+				<tr>
+					<th>Job Name</th>
+					<th>Time Taken</th>
+				</tr>
 				</thead>
 				<tbody>
 				</tbody>
