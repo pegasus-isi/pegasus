@@ -8,17 +8,17 @@
 				{
 					beforeLoad: function (event, ui)
 					{
-						ui.jqXHR.error (function ()
-						{
-							ui.panel.html ('Error loading contents of this tab.');
-						})
-
 						var isInitialized = ui.panel.data ('initialized');
 
 						if (isInitialized === true)
 						{
 							return false;
 						}
+
+						ui.jqXHR.error (function ()
+						{
+							ui.panel.html ('Error loading contents of this tab.');
+						})
 					},
 					load: function (event, ui)
 					{
