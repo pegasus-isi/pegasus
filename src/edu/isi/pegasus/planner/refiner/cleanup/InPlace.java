@@ -492,6 +492,8 @@ public class InPlace implements CleanupStrategy{
 
         //output whats file is cleaned by what ?
         mLogger.log( "", LogManager.DEBUG_MESSAGE_LEVEL );
+        mLogger.log( "For site: " + site + " number of files cleaned up - " + cleanedBy.keySet().size() ,
+                     LogManager.INFO_MESSAGE_LEVEL);
         mLogger.log( "CLEANUP LIST",LogManager.DEBUG_MESSAGE_LEVEL);
         for( Iterator it = cleanedBy.keySet().iterator() ; it.hasNext() ;){
             String lfn = (String)it.next();
@@ -889,15 +891,9 @@ public class InPlace implements CleanupStrategy{
 
             //allFilesToDelete.addAll( filesToDelete );
 
-            if( allFilesToDelete.isEmpty() ){
-                //the clustered cleanup job we are trying to create has
-                //no files to delete
-                mLogger.log( "\t\tClustered cleanup node is empty " + clusteredCleanupNode.getID(),
-                                 LogManager.DEBUG_MESSAGE_LEVEL );
-                return null;
-            }
-            else{
+            if( !allFilesToDelete.isEmpty() ){
                 //add dependencies between the compute/stageout node and the clustered cleanup node
+                //as long as we know that we are creating a clustered cleanup job that is not empty
                 if( !primaryNode.getChildren().contains( clusteredCleanupNode ) ){
                     primaryNode.addChild( clusteredCleanupNode );
                 }
@@ -905,6 +901,14 @@ public class InPlace implements CleanupStrategy{
                     clusteredCleanupNode.addParent( primaryNode );
                 }
             }
+        }
+        
+        if( allFilesToDelete.isEmpty() ){
+            //the clustered cleanup job we are trying to create has
+            //no files to delete
+            mLogger.log( "\t\tClustered cleanup node is empty " + clusteredCleanupNode.getID(),
+                                 LogManager.DEBUG_MESSAGE_LEVEL );
+            return null;
         }
 
         clusteredCleanupNode.setContent( new CleanupJobContent( primaryNode, allFilesToDelete) );
