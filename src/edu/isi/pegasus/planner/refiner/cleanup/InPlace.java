@@ -373,7 +373,8 @@ public class InPlace implements CleanupStrategy{
             pQA[ gN.getDepth() ].add( gN );
 
         }
-
+        
+        List<GraphNode> wfCleanupNodes = new LinkedList();//stores all the cleanup nodes added for the workflow
         //start the best first cleanup job addition
         for( int curP = mMaxDepth; curP >= 0 ; curP-- ){
             List<GraphNode> cleanupNodesPerLevel = new LinkedList();
@@ -483,6 +484,9 @@ public class InPlace implements CleanupStrategy{
                 //and the cleanupNode itself to the Graph
                 cleanupNode.setContent( cleanupJob );
                 workflow.addNode(cleanupNode);
+                //add all the cleanup node to wf wide list to 
+                //use it for reducing the dependencies
+                wfCleanupNodes.add( cleanupNode );
             }
 
         }//end of for loop
@@ -507,55 +511,74 @@ public class InPlace implements CleanupStrategy{
         //the job. For each parent Y see if there is a path to any other parent Z of X.
         //If a path exists, then the edge from Z to cleanup job can
         //be removed.
-        int num = 0;
-        for( Iterator it = cleanedBy.values().iterator() ; it.hasNext() ;){
-            num++;
-            mLogger.log(" cleanup job counter = " + num, mLogger.DEBUG_MESSAGE_LEVEL);
-            GraphNode cl_GN = (GraphNode)it.next();
-            //Job cl_si=(Job)cl_GN.getContent();
-            List cl_GNparents = cl_GN.getParents();
-            List redundant = new LinkedList();
-            HashSet visit = new HashSet();
-            for( Iterator itp = cl_GN.getParents().iterator() ; itp.hasNext() ;){
-                LinkedList mque = new LinkedList();
-                mque.add( itp.next() );
+        for( GraphNode cleanupNode: wfCleanupNodes ){
+            mLogger.log( "Reducing edges for the cleanup node " + cleanupNode.getID(), 
+                         mLogger.DEBUG_MESSAGE_LEVEL);
+            reduceDependency( cleanupNode );
+        }
 
-                while( mque.size() > 0 ){
-                    GraphNode popGN = (GraphNode) mque.removeFirst();
+    }
 
-                    if( visit.contains(popGN) ) { continue; }
+    /**
+     * Reduces the number of edges between the nodes and it's parents.
+     * 
+     * <pre>
+     * For the node look at the parents of the Node. 
+     * For each parent Y see if there is a path to any other parent Z of X.
+     * If a path exists, then the edge from Z to node can be removed.
+     * </pre>
+     * 
+     * @param node the nodes whose parent edges need to be reduced.
+     */
+    protected void reduceDependency( GraphNode node ){
+        if( node == null ){
+            return;
+        }
+        
+        //reduce dependencies. for each cleanup job X, look at the parents of
+        //the job. For each parent Y see if there is a path to any other parent Z of X.
+        //If a path exists, then the edge from Z to cleanup job can
+        //be removed.
+        
+        List parents = node.getParents();
+        List redundant = new LinkedList();
+        HashSet visit = new HashSet();
+        for( Iterator itp = node.getParents().iterator() ; itp.hasNext() ;){
+            LinkedList mque = new LinkedList();
+            mque.add( itp.next() );
 
-                    visit.add(popGN);
+            while( mque.size() > 0 ){
+                GraphNode popGN = (GraphNode) mque.removeFirst();
 
-                    for( Iterator itp_pop = popGN.getParents().iterator() ; itp_pop.hasNext() ;){
-                        GraphNode pop_pGN = (GraphNode) itp_pop.next();
-                        //check if its redundant ..if so add it to redundant list
-                        if( cl_GNparents.contains( pop_pGN ) ){
-                            redundant.add( pop_pGN );
-                        }else{
-                            //mque.addAll( pop_pGN.getParents() );
-                            for( Iterator itgp = pop_pGN.getParents().iterator() ; itgp.hasNext() ;){
-                                GraphNode gpGN = (GraphNode) itgp.next();
-                                if( ! visit.contains( gpGN ) ){
-                                    mque.add( gpGN );
-                                }
+                if( visit.contains(popGN) ) { continue; }
+
+                visit.add(popGN);
+
+                for( Iterator itp_pop = popGN.getParents().iterator() ; itp_pop.hasNext() ;){
+                    GraphNode pop_pGN = (GraphNode) itp_pop.next();
+                    //check if its redundant ..if so add it to redundant list
+                    if( parents.contains( pop_pGN ) ){
+                        redundant.add( pop_pGN );
+                    }else{
+                        //mque.addAll( pop_pGN.getParents() );
+                        for( Iterator itgp = pop_pGN.getParents().iterator() ; itgp.hasNext() ;){
+                            GraphNode gpGN = (GraphNode) itgp.next();
+                            if( ! visit.contains( gpGN ) ){
+                                mque.add( gpGN );
                             }
                         }
                     }
                 }
             }
-
-            //remove all redundant nodes that were found
-            for( Iterator itr = redundant.iterator() ; itr.hasNext() ;){
-                GraphNode r_GN = (GraphNode) itr.next();
-                cl_GN.removeParent( r_GN );
-                r_GN.removeChild( cl_GN );
-            }
         }
 
-
+        //remove all redundant nodes that were found
+        for( Iterator itr = redundant.iterator() ; itr.hasNext() ;){
+            GraphNode r_GN = (GraphNode) itr.next();
+            node.removeParent( r_GN );
+            r_GN.removeChild( node );
+        }
     }
-
 
     /**
      * Adds job priorities to the jobs in the workflow on the basis of
