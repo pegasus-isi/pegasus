@@ -282,7 +282,7 @@ function render_job_stats (dest, data)
 
 function activateEventHandler (event, ui)
 {
-	var tabIndex = ui.newHeader[0].title;
+	var tabIndex = ui.newHeader.attr ('title');
 
 	if (tabIndex == 'workflow_stats')
 	{
