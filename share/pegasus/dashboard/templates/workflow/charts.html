@@ -49,7 +49,7 @@ function getGanttChartData ()
 		dataType: 'json',
 		error: function (xhr, textStatus, errorThrown)
 		{
-			alert ('Error occured: ' + textStatus + xhr.responseText);
+			alert ('Error occurred: ' + textStatus + xhr.responseText);
 		},
 		success: function (data, textStatus, xhr)
 		{
@@ -149,8 +149,8 @@ jobDistribution = new Highcharts.Chart (jobDistributionOpt);
 	<section id="time_chart_container">
 		<div id="time_chart">No information available.</div>
 		<div id="time_chart_options" class="align_center">
-			<input type="radio" id="by_job"     name="time_chrt" onclick="timeChartToggle (1);" checked="checked" /><label for="by_job">By Jobs</label>
-			<input type="radio" id="by_runtime" name="time_chrt" onclick="timeChartToggle (2);" /><label for="by_runtime">By Invocations</label>
+			<input type="radio" id="by_job"     name="time_chart" onclick="timeChartToggle (1);" checked="checked" /><label for="by_job">By Jobs</label>
+			<input type="radio" id="by_runtime" name="time_chart" onclick="timeChartToggle (2);" /><label for="by_runtime">By Invocations</label>
 		</div>
 	</section>
 	<br />
