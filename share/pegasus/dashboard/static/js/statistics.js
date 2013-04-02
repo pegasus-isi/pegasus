@@ -145,7 +145,7 @@ function getJobBreakdownStats (url)
 		dataType: 'json',
 		error   : function (xhr, textStatus, errorThrown)
 		{
-			alert ('Error occured: ' + textStatus + xhr.responseText);
+			alert ('Error occurred: ' + textStatus + xhr.responseText);
 		},
 		success : function (data, textStatus, xhr)
 		{
@@ -217,7 +217,7 @@ function getJobStats (url)
 		dataType: 'json',
 		error: function (xhr, textStatus, errorThrown)
 		{
-			alert ('Error occured: ' + textStatus + ' ' + xhr.responseText);
+			alert ('Error occurred: ' + textStatus + ' ' + xhr.responseText);
 		},
 		success: function (data, textStatus, xhr)
 		{
