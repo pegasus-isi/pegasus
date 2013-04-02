@@ -1,32 +1,11 @@
 "use strict";
 
-var workflowStats = { isLoaded : false };
 var jobBreakdownStats = { isLoaded : false };
 var jobStats = { isLoaded : false };
 
-function getWorkflowSummaryStats (container, url)
-{
-	var ajaxOpt =
-	{
-		url : url,
-		dataType: 'json',
-		error: function (xhr, textStatus, errorThrown)
-		{
-			alert ('Error occurred: ' + textStatus + ' ' + xhr.responseText);
-		},
-		success: function (data, textStatus, xhr)
-		{
-			render_workflow_summary_stats (container, data);
-		}
-	};
-
-	$.ajax (ajaxOpt)
-}
-
-function render_workflow_summary_stats (container, data)
+function render_workflow_summary_stats (dest, data)
 {
 	var content = '';
-	var dest = $('#' + container);
 
 	if (data.length == 0)
 	{
@@ -58,35 +37,9 @@ function render_workflow_summary_stats (container, data)
 	verticalTableInit ('#workflow_summary_stats_table')
 }
 
-function getWorkflowStats (url)
-{
-	if (workflowStats.isLoaded)
-	{
-		return;
-	}
-
-	var ajaxOpt =
-	{
-		url : url,
-		dataType: 'json',
-		error: function (xhr, textStatus, errorThrown)
-		{
-			alert ('Error occured: ' + textStatus + ' ' + xhr.responseText);
-		},
-		success: function (data, textStatus, xhr)
-		{
-			render_workflow_stats (data);
-			workflowStats.isLoaded = true;
-		}
-	};
-
-	$.ajax (ajaxOpt)
-}
-
-function render_workflow_stats (all_data)
+function render_workflow_stats (dest, all_data)
 {
 	var content = '';
-	var dest = $('#workflow_stats');
 
 	var data = all_data.individual;
 
@@ -337,7 +290,7 @@ function activateEventHandler (event, ui)
 
 	if (tabIndex == 'workflow_stats')
 	{
-		getWorkflowStats (ui.newHeader.attr ('href'));
+		return;
 	}
 	else if (tabIndex == 'job_breakdown_stats')
 	{

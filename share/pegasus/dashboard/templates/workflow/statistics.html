@@ -5,15 +5,29 @@
 {% endblock %}
 {% block javascript_init %}
 <script type="text/javascript" charset="utf-8">
+	function accordianCreate (event, ui)
+	{
+		var workflowStats = '{{ workflow_stats|tojson|safe }}';
+		workflowStats = JSON.parse (workflowStats);
+		render_workflow_stats (ui.panel, workflowStats);
+	}
+
+	function loadSummaryStats ()
+	{
+		var workflowSummaryStats = '{{ summary_stats|tojson|safe }}';
+		workflowSummaryStats = JSON.parse (workflowSummaryStats);
+		render_workflow_summary_stats ($ ('#workflow_summary_stats'), workflowSummaryStats);
+	}
+
 	function init ()
 	{
-		getWorkflowSummaryStats ('workflow_summary_stats', $ ('#workflow_summary_stats').attr ('href'));
+		loadSummaryStats ();
 
 		var statistics = $ ("#statistics_container");
-		statistics.accordion ({ heightStyle: "content", autoHeight: false, activate: activateEventHandler });
+		statistics.accordion ({ heightStyle: "content", autoHeight: false, activate: activateEventHandler, create : accordianCreate });
 
-		var newHeader = { newHeader: $ ('h3[title="workflow_stats"]') };
-		activateEventHandler (null, newHeader);
+		//var newHeader = { newHeader: $ ('h3[title="workflow_stats"]') };
+		//activateEventHandler (null, newHeader);
 	}
 
 	$ (document).ready (function ()
