@@ -18,6 +18,7 @@
 
 package edu.isi.pegasus.planner.catalog.transformation.impl;
 
+import edu.isi.pegasus.common.util.PegasusURL;
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
@@ -56,7 +57,7 @@ public abstract class Abstract implements TransformationCatalog{
         String url = entry.getPhysicalTransformation();
         //convert file url appropriately for installed executables
         if ( entry.getType().equals( TCType.INSTALLED) &&
-                url.startsWith(TransformationCatalog.FILE_URL_SCHEME)) {
+                url.startsWith(PegasusURL.FILE_URL_SCHEME)) {
             try {
                 url = new URL(url).getFile();
                 entry.setPhysicalTransformation(url);
@@ -66,7 +67,7 @@ public abstract class Abstract implements TransformationCatalog{
         } else
         if ( entry.getType().equals( TCType.STAGEABLE) &&
                 url.startsWith("/")) {
-                url = TransformationCatalog.FILE_URL_SCHEME + "//" + url;
+                url = PegasusURL.FILE_URL_SCHEME + "//" + url;
                 entry.setPhysicalTransformation(url);
         }
         
@@ -94,7 +95,7 @@ public abstract class Abstract implements TransformationCatalog{
         }
 
         if ( TCType.valueOf(type)== TCType.INSTALLED &&
-                pfn.startsWith(TransformationCatalog.FILE_URL_SCHEME)) {
+                pfn.startsWith(PegasusURL.FILE_URL_SCHEME)) {
             try {
                 pfn = new URL(pfn).getFile();
             } catch (MalformedURLException ex) {
@@ -103,7 +104,7 @@ public abstract class Abstract implements TransformationCatalog{
         } else
         if ( TCType.valueOf(type) == TCType.STAGEABLE &&
                 pfn.startsWith("/")) {
-                pfn = TransformationCatalog.FILE_URL_SCHEME + "//" + pfn;
+                pfn = PegasusURL.FILE_URL_SCHEME + "//" + pfn;
         }
 
         return pfn;

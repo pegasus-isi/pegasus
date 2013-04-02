@@ -122,7 +122,6 @@ public class FileTransfer extends PegasusFile {
         mJob         = job;
         mSourceMap   = new HashMap();
         mDestMap     = new HashMap();
-        mFlags       = new BitSet(NO_OF_TRANSIENT_FLAGS);
         this.mPriority     = 0;
         this.mURLForRegistrationOnDestination = null;
     }
@@ -359,7 +358,7 @@ public class FileTransfer extends PegasusFile {
      * @return boolean indicating whether a file is executable or not.
      */
     public boolean isTransferringExecutableFile(){
-        return (this.mType == this.EXECUTABLE_FILE);
+        return this.isExecutable();
     }
 
     /**

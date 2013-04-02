@@ -25,6 +25,7 @@ import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 
 import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.common.util.PegasusURL;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 
 
@@ -51,11 +52,6 @@ import java.util.List;
  * @version $Revision$
  */
 public class DefaultImplementation implements Implementation {
-
-    /**
-     * The scheme name for file url.
-     */
-    public static final String FILE_URL_SCHEME = "file:";
 
     /**
      * The transformation namespace for the create dir jobs.
@@ -368,7 +364,7 @@ public class DefaultImplementation implements Implementation {
 
         String result = "local";
 
-        if( directoryURL != null && directoryURL.startsWith( this.FILE_URL_SCHEME ) ){
+        if( directoryURL != null && directoryURL.startsWith( PegasusURL.FILE_URL_SCHEME ) ){
             result = site;
         }
 

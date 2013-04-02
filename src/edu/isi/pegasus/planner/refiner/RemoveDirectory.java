@@ -24,6 +24,7 @@ import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 
 import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.common.util.PegasusURL;
 
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 
@@ -61,10 +62,6 @@ import java.io.IOException;
  */
 public class RemoveDirectory extends Engine {
 
-    /**
-     * The scheme name for file url.
-     */
-    public static final String FILE_URL_SCHEME = "file:";
 
 
     /**
@@ -338,7 +335,7 @@ public class RemoveDirectory extends Engine {
         String eSite = "local";
 
         for( String file: files ){
-            if( file.startsWith( this.FILE_URL_SCHEME ) ){
+            if( file.startsWith( PegasusURL.FILE_URL_SCHEME ) ){
                 //means the cleanup job should run on the staging site
                 mLogger.log( "Directory URL is a file url for site " + site + "  " +  files,
                                  LogManager.DEBUG_MESSAGE_LEVEL );

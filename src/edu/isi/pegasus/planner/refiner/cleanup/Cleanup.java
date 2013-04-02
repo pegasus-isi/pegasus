@@ -19,7 +19,6 @@ package edu.isi.pegasus.planner.refiner.cleanup;
 
 
 
-import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 
@@ -29,6 +28,7 @@ import edu.isi.pegasus.planner.classes.PegasusFile;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.common.util.PegasusURL;
 
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
@@ -37,6 +37,8 @@ import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 
 import edu.isi.pegasus.common.util.Separator;
 
+import edu.isi.pegasus.planner.catalog.site.classes.FileServerType.OPERATION;
+import edu.isi.pegasus.planner.classes.PlannerCache;
 import edu.isi.pegasus.planner.namespace.Dagman;
 import java.util.List;
 import java.util.Iterator;
@@ -56,15 +58,7 @@ import java.io.IOException;
 public class Cleanup implements CleanupImplementation{
 
 
-    /**
-     * The scheme name for file url.
-     */
-    public static final String FILE_URL_SCHEME = "file:";
-
-    /**
-     * The scheme name for file url.
-     */
-    public static final String SYMLINK_URL_SCHEME = "symlink:";
+    
 
     /**
      * The transformation namespace for the  job.
@@ -124,7 +118,7 @@ public class Cleanup implements CleanupImplementation{
     /**
      * Handle to the transient replica catalog.
      */
-    protected ReplicaCatalog mTransientRC;
+    protected PlannerCache mPlannerCache;
 
     /**
      * The handle to the properties passed to Pegasus.
@@ -172,7 +166,7 @@ public class Cleanup implements CleanupImplementation{
         mSiteStore       = bag.getHandleToSiteStore();
         mTCHandle        = bag.getHandleToTransformationCatalog(); 
         mLogger          = bag.getLogger();
-        mTransientRC     = bag.getHandleToPlannerCache();
+        mPlannerCache     = bag.getHandleToPlannerCache();
     }
 
 
@@ -213,13 +207,13 @@ public class Cleanup implements CleanupImplementation{
 
             for( Iterator it = files.iterator(); it.hasNext(); ){
                 PegasusFile file = (PegasusFile)it.next();
-                String pfn = mTransientRC.lookup( file.getLFN(), stagingSite );
+                String pfn = mPlannerCache.lookup( file.getLFN(), stagingSite, OPERATION.put );
 
                 if( pfn == null ){
-                    throw new RuntimeException( "Unable to determine url for lfn " + file.getLFN() + " at site " + stagingSite );
+                    throw new RuntimeException( "Unable to determine cleanup url for lfn " + file.getLFN() + " at site " + stagingSite );
                 }
 
-                if( pfn.startsWith( Cleanup.FILE_URL_SCHEME ) || pfn.startsWith( Cleanup.SYMLINK_URL_SCHEME ) ){
+                if( pfn.startsWith( PegasusURL.FILE_URL_SCHEME ) || pfn.startsWith( PegasusURL.SYMLINK_URL_SCHEME ) ){
                     //means the cleanup job should run on the staging site
                     mLogger.log( " PFN for file " + file.getLFN() + " on staging site is a file|symlink URL " + pfn,
                                  LogManager.DEBUG_MESSAGE_LEVEL );

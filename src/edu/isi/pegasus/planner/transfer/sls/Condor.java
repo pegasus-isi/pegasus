@@ -26,8 +26,12 @@ import edu.isi.pegasus.planner.classes.PlannerOptions;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.common.util.PegasusURL;
+import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
+import edu.isi.pegasus.planner.catalog.site.classes.FileServerType;
+import edu.isi.pegasus.planner.classes.PlannerCache;
 import edu.isi.pegasus.planner.transfer.SLS;
 
 import edu.isi.pegasus.planner.namespace.Pegasus;
@@ -79,6 +83,16 @@ public class Condor   implements SLS {
      */
     protected LogManager mLogger;
 
+    /**
+     * A boolean indicating whether to bypass first level staging for inputs
+     */
+    private boolean mBypassStagingForInputs;
+
+    /**
+     * A SimpleFile Replica Catalog, that tracks all the files that are being
+     * materialized as part of workflow execution.
+     */
+    private PlannerCache mPlannerCache;
 
     /**
      * The default constructor.
@@ -96,8 +110,9 @@ public class Condor   implements SLS {
         mProps      = bag.getPegasusProperties();
         mPOptions   = bag.getPlannerOptions();
         mLogger     = bag.getLogger();
-//        mSiteHandle = bag.getHandleToSiteCatalog();
         mSiteStore = bag.getHandleToSiteStore();
+        mBypassStagingForInputs = mProps.bypassFirstLevelStagingForInputs();
+        mPlannerCache = bag.getHandleToPlannerCache();
     }
 
     /**
@@ -310,20 +325,37 @@ public class Condor   implements SLS {
         //iterate through all the input files
         for( Iterator it = job.getInputFiles().iterator(); it.hasNext(); ){
             PegasusFile pf = ( PegasusFile )it.next();
-
-/* not reqd for 3.2
-            //ignore any input files of FileTransfer as they are first level
-            //staging put in by Condor Transfer refiner
-            if( pf instanceof FileTransfer ){
-                continue;
-            }
-*/
-
             String lfn = pf.getLFN();
+            
+            ReplicaCatalogEntry cacheLocation = null;
+            
+            String pfn = null;
+            if( mBypassStagingForInputs ){
+                //we retrieve the URL from the Planner Cache as a get URL
+                //bypassed URL's are stored as GET urls in the cache and
+                //associated with the compute site
+                //we need a GET URL. we don't know what site is associated with
+                //the source URL. Get the first matching one
+                //PM-698
+                cacheLocation = mPlannerCache.lookup( lfn, FileServerType.OPERATION.get );
+            }
+            if( cacheLocation == null ){
+                //nothing in the cache
+                //construct the location with respect to the staging site
+                //we add just the lfn as we are setting initialdir
+                pfn = lfn;
+            }
+            else{
+                //construct the URL wrt to the planner cache location
+                pfn = cacheLocation.getPFN();
+                if( pfn.startsWith( PegasusURL.FILE_URL_SCHEME ) ){
+                    //we let other url's pass through to ensure
+                    pfn = new PegasusURL( pfn ).getPath();
+                }
+            }
+
             //add an input file for transfer
-            //job.condorVariables.addIPFileForTransfer( stagingSiteDirectory + File.separator + lfn );
-            //we add just the lfn as we are setting initialdir
-            files.add( lfn );
+            files.add( pfn );
         }
         job.condorVariables.addIPFileForTransfer( files );
 

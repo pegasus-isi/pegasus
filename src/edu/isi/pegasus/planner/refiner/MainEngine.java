@@ -30,6 +30,7 @@ import java.util.Properties;
 import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 import edu.isi.pegasus.planner.catalog.replica.ReplicaFactory;
 import edu.isi.pegasus.planner.catalog.replica.impl.SimpleFile;
+import edu.isi.pegasus.planner.classes.PlannerCache;
 
 
 /**
@@ -48,18 +49,7 @@ public class MainEngine
      */
     public static final String CLEANUP_DIR  = "cleanup";
 
-    /**
-     * The name of the source key for Replica Catalog Implementer that serves as
-     * cache
-     */
-    public static final String PLANNER_CACHE_REPLICA_CATALOG_KEY = "file";
-
-    /**
-     * The name of the Replica Catalog Implementer that serves as the source for
-     * cache files.
-     */
-    public static final String PLANNER_CACHE_REPLICA_CATALOG_IMPLEMENTER = "SimpleFile";
-
+   
     /**
      * The Original Dag object which is constructed by parsing the dag file.
      */
@@ -228,7 +218,9 @@ public class MainEngine
 
 
         message = "Grafting transfer nodes in the workflow";
-        ReplicaCatalog plannerCache  = initializePlannerCache( mReducedDag ) ;
+        PlannerCache plannerCache  = new PlannerCache();
+        plannerCache.initialize(mBag, mReducedDag);
+
         mLogger.log(message,LogManager.INFO_MESSAGE_LEVEL);
         mLogger.logEventStart( LoggingKeys.EVENT_PEGASUS_ADD_TRANSFER_NODES, LoggingKeys.DAX_ID, abstractWFName );
         mTransEng = new TransferEngine( mReducedDag, 
@@ -318,77 +310,7 @@ public class MainEngine
         return mBag;
     }
 
-    /**
-     * Initializes the transient replica catalog and returns a handle to it.
-     * 
-     * @param dag  the workflow being planned
-     * 
-     * @return handle to transient catalog
-     */
-    private ReplicaCatalog initializePlannerCache( ADag dag ){
-        ReplicaCatalog rc = null;
-        mLogger.log("Initialising Transient Replica Catalog",
-                    LogManager.DEBUG_MESSAGE_LEVEL );
-
-
-        Properties cacheProps = mProps.getVDSProperties().matchingSubset(
-                                                              ReplicaCatalog.c_prefix,
-                                                              false );
-        String file = mPOptions.getSubmitDirectory() + File.separatorChar +
-                          getCacheFileName( dag );
-
-        //set the appropriate property to designate path to file
-        cacheProps.setProperty( MainEngine.PLANNER_CACHE_REPLICA_CATALOG_KEY, file );
-
-        //the planner cache is to be never written out
-        //PM-677
-        cacheProps.setProperty( SimpleFile.READ_ONLY_KEY, "true" );
-        try{
-            rc = ReplicaFactory.loadInstance(
-                                          PLANNER_CACHE_REPLICA_CATALOG_IMPLEMENTER,
-                                          cacheProps);
-        }
-        catch( Exception e ){
-            throw new RuntimeException( "Unable to initialize the replica catalog that acts as planner cache  " + file,
-                                         e );
-        
-        }
-        return rc;
-    }
-    
-     /**
-     * Constructs the basename to the cache file that is to be used
-     * to log the transient files. The basename is dependant on whether the
-     * basename prefix has been specified at runtime or not.
-     *
-     * @param adag  the ADag object containing the workflow that is being
-     *              concretized.
-     *
-     * @return the name of the cache file
-     */
-    private String getCacheFileName(ADag adag){
-        StringBuffer sb = new StringBuffer();
-        String bprefix = mPOptions.getBasenamePrefix();
-
-        if(bprefix != null){
-            //the prefix is not null using it
-            sb.append(bprefix);
-        }
-        else{
-            //generate the prefix from the name of the dag
-            sb.append(adag.dagInfo.nameOfADag).append("-").
-           append(adag.dagInfo.index);
-        }
-        
-        //PM-677 deliberately a put cache to make sure it is never
-        //it does not overwrite the workflow cache written out in
-        //Transfer Engine. We do explicilty set read only flag to true
-        //This is a failsafe.
-        sb.append(".put.cache");
-
-        return sb.toString();
-
-    }
+  
 
     
     /**

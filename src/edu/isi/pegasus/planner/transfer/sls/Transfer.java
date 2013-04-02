@@ -20,6 +20,7 @@ package edu.isi.pegasus.planner.transfer.sls;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 
 import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.common.util.PegasusURL;
 
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 
@@ -29,16 +30,17 @@ import edu.isi.pegasus.planner.transfer.SLS;
 
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
-import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
 
 
+import edu.isi.pegasus.planner.catalog.replica.ReplicaCatalogEntry;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
-import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
+import edu.isi.pegasus.planner.catalog.site.classes.FileServerType.OPERATION;
 import edu.isi.pegasus.planner.code.gridstart.PegasusLite;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.FileTransfer;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PegasusFile;
+import edu.isi.pegasus.planner.classes.PlannerCache;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.planner.namespace.ENV;
 
@@ -138,6 +140,24 @@ public class Transfer   implements SLS {
      */
     protected boolean mSeqExecGridStartUsed;
 
+    /**
+     * A boolean indicating whether to bypass first level staging for inputs
+     */
+    private boolean mBypassStagingForInputs;
+
+    /**
+     * A SimpleFile Replica Catalog, that tracks all the files that are being
+     * materialized as part of workflow execution.
+     */
+    private PlannerCache mPlannerCache;
+    
+    /**
+     * This member variable if set causes the destination URL for the symlink jobs
+     * to have symlink:// url if the pool attributed associated with the pfn
+     * is same as a particular jobs execution pool. 
+     */
+    protected boolean mUseSymLinks;
+    
 
     /**
      * The default constructor.
@@ -159,6 +179,9 @@ public class Transfer   implements SLS {
         mExtraArguments = mProps.getSLSTransferArguments();
         mStageSLSFile = mProps.stageSLSFilesViaFirstLevelStaging();
         mSeqExecGridStartUsed = mProps.getGridStart().equals( PegasusLite.CLASSNAME );
+        mBypassStagingForInputs = mProps.bypassFirstLevelStagingForInputs();
+        mPlannerCache = bag.getHandleToPlannerCache();
+        mUseSymLinks = mProps.getUseOfSymbolicLinks();
     }
 
     /**
@@ -340,13 +363,38 @@ public class Transfer   implements SLS {
             //on the head node
             StringBuffer url = new StringBuffer();
 
-            url.append( mSiteStore.getExternalWorkDirectoryURL(stagingSiteServer, job.getStagingSiteHandle() ));
-            url.append( File.separator ).append( lfn );
-            ft.addSource( job.getStagingSiteHandle(), url.toString() );
+            ReplicaCatalogEntry cacheLocation = null;
+            if( mBypassStagingForInputs ){
+                //we retrieve the URL from the Planner Cache as a get URL
+                //bypassed URL's are stored as GET urls in the cache and
+                //associated with the compute site
+                //we need a GET URL. we don't know what site is associated with
+                //the source URL. Get the first matching one
+                //PM-698
+                cacheLocation = mPlannerCache.lookup( lfn, OPERATION.get );
+            }
+            if( cacheLocation == null ){
+                //construct the location with respect to the staging site
+                url.append( mSiteStore.getExternalWorkDirectoryURL(stagingSiteServer, job.getStagingSiteHandle() ));
+                url.append( File.separator ).append( lfn );
+                ft.addSource( job.getStagingSiteHandle(), url.toString() );
+            }
+            else{
+                //construct the URL wrt to the planner cache location
+                url.append( cacheLocation.getPFN() );
+                ft.addSource( cacheLocation.getResourceHandle(), url.toString() );
+            }
             
+            //if the source URL is already present at the compute site
+            //and is a file URL, then the destination URL has to be a symlink
+            String destURLScheme = ( mUseSymLinks && 
+                                     ft.getSourceURL().getKey().equals( job.getSiteHandle() ))?
+                                   PegasusURL.SYMLINK_URL_SCHEME:
+                                   PegasusURL.FILE_URL_SCHEME;//default is file URL
+
             //destination
             url = new StringBuffer();
-            url.append( "file://" ).append( destDir ).append( File.separator ).
+            url.append( destURLScheme ).append( "//" ).append( destDir ).append( File.separator ).
                 append( pf.getLFN() );
             ft.addDestination( job.getSiteHandle(), url.toString() );
 

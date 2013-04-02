@@ -48,19 +48,24 @@ public class PegasusFile extends Data {
      * The index of the flags field which when set indicates that the file
      * is to be considered optional.
      */
-    public static final int TRANSIENT_OPTIONAL_FLAG = 0;
+    public static final int OPTIONAL_BIT_FLAG = 0;
 
     /**
      * The index of the flags field which when set indicates that the file is
      * not to be registered in the RLS/ RC.
      */
-    public static final int TRANSIENT_REGISTRATION_FLAG = 1;
-
+    public static final int DO_NOT_REGISTER_BIT_FLAG = 1;
+    
+    /**
+     * If set, means can be considered for cleanup  
+     */
+    public static final int CLEANUP_BIT_FLAG = 2;
+    
     /**
      * The number of transient flags. This is the length of the BitSet in the
      * flags fields.
      */
-    public static final int NO_OF_TRANSIENT_FLAGS = 2;
+    public static final int NO_OF_TRANSIENT_FLAGS = 3;
 
     /**
      * The mode where the transfer for this file to the pool
@@ -165,6 +170,9 @@ public class PegasusFile extends Data {
     public PegasusFile() {
         super();
         mFlags       = new BitSet(NO_OF_TRANSIENT_FLAGS);
+        //by default files are eligible for cleanup
+        mFlags.set( PegasusFile.CLEANUP_BIT_FLAG );
+        
         mLogicalFile = "";
         //by default the type is DATA
         //and transfers are mandatory
@@ -180,15 +188,8 @@ public class PegasusFile extends Data {
      * @param logName  the logical name of the file.
      */
     public PegasusFile(String logName) {
-        super();
-        mFlags       = new BitSet(NO_OF_TRANSIENT_FLAGS);
+        this();
         mLogicalFile = logName;
-        //by default the type is DATA
-        //and transfers are mandatory
-        mType        = DATA_FILE;
-        mTransferFlag= this.TRANSFER_MANDATORY;
-        mSize        = -1;
-        mLink        = LINKAGE.NONE;
     }
 
     /**
@@ -437,7 +438,7 @@ public class PegasusFile extends Data {
      * @see #setRegisterFlag( boolean )
      */
     public void setTransientRegFlag(){
-        mFlags.set(TRANSIENT_REGISTRATION_FLAG);
+        mFlags.set(DO_NOT_REGISTER_BIT_FLAG);
     }
 
     
@@ -447,25 +448,51 @@ public class PegasusFile extends Data {
      * @param value the value to set to
      */
     public void setRegisterFlag( boolean value ){
-        mFlags.set( TRANSIENT_REGISTRATION_FLAG, !value );
+        mFlags.set( DO_NOT_REGISTER_BIT_FLAG, !value );
     }
     
     /**
-     * Sets the optionalflag denoting the file to be optional to true.
+     * Sets the optional flag denoting the file to be optional to true.
      */
     public void setFileOptional(){
-        mFlags.set(TRANSIENT_OPTIONAL_FLAG);
+        mFlags.set(OPTIONAL_BIT_FLAG);
     }
 
     /**
-     * Returns optionalflag denoting the file to be optional or not.
+     * Returns optional flag denoting the file to be optional or not.
      *
      * @return true  denoting the file is optional.
      *         false denoting that file is not optional.
      */
     public boolean fileOptional(){
-        return mFlags.get(TRANSIENT_OPTIONAL_FLAG);
+        return mFlags.get(OPTIONAL_BIT_FLAG);
     }
+    
+    /**
+     * Sets the cleanup flag denoting the file can be cleaned up to true.
+     */
+    public void setForCleanup(){
+        mFlags.set(CLEANUP_BIT_FLAG);
+    }
+    
+    /**
+     * Sets the cleanup flag to the value passed
+     * 
+     * @param value the boolean value to which the flag should be set to.
+     */
+    public void setForCleanup( boolean value ){
+        mFlags.set(CLEANUP_BIT_FLAG, value );
+    }
+
+    /**
+     * Returns cleanup denoting whether the file can be cleaned up or not
+     *
+     * @return true  denoting the file can be cleaned up.
+     */
+    public boolean canBeCleanedup(){
+        return mFlags.get(CLEANUP_BIT_FLAG);
+    }
+    
 
     /**
      * Returns the tristate transfer mode that is associated with the file.
@@ -501,7 +528,7 @@ public class PegasusFile extends Data {
      *         false denoting that file does not need to be registered.
      */
     public boolean getRegisterFlag(){
-        return !mFlags.get(TRANSIENT_REGISTRATION_FLAG);
+        return !mFlags.get(DO_NOT_REGISTER_BIT_FLAG);
     }
 
     
@@ -513,7 +540,7 @@ public class PegasusFile extends Data {
      *         false denoting that file needs to be registered.
      */
     public boolean getTransientRegFlag(){
-        return mFlags.get(TRANSIENT_REGISTRATION_FLAG);
+        return mFlags.get(DO_NOT_REGISTER_BIT_FLAG);
     }
 
     /**
@@ -521,8 +548,8 @@ public class PegasusFile extends Data {
      *
      *
      * @see #NO_OF_TRANSIENT_FLAGS
-     * @see #TRANSIENT_OPTIONAL_FLAG
-     * @see #TRANSIENT_REGISTRATION_FLAG
+     * @see #OPTIONAL_BIT_FLAG
+     * @see #DO_NOT_REGISTER_BIT_FLAG
      */
     public BitSet getFlags(){
         return mFlags;
@@ -570,6 +597,16 @@ public class PegasusFile extends Data {
       */
      public int hashCode() {
          return this.mLogicalFile.hashCode();
+     }
+
+     /**
+      * Returns a boolean indicating if a file that is being staged is an
+      * executable or not (i.e is a data file).
+      *
+      * @return boolean indicating whether a file is executable or not.
+      */
+     public boolean isExecutable(){
+        return (this.mType == PegasusFile.EXECUTABLE_FILE);
      }
 
 
@@ -622,22 +659,22 @@ public class PegasusFile extends Data {
      * @return the dump of the data object into a string.
      */
     public  String toString(){
-        String st = "\n Logical Name :" + this.mLogicalFile +
-                    "\n Type         :" + typeToString() +
-                    "\n Size         :" + mSize +
-                    "\n Transient Flags (transfer,optional,dontRegister):" +
-                    " ( ";
-
-        st += getTransferFlag() + ",";
+        StringBuffer sb = new StringBuffer();
+        sb.append( "\n Logical Name :" ).append( this.mLogicalFile ).
+           append( "\n Type         :" ).append( typeToString() ).
+           append( "\n Size         :" ).append( mSize ).
+           append( "\n Transient Flags (transfer,optional,dontRegister,cleanup):").
+           append( " ( " ).append( getTransferFlag() ).append( "," );
 
         for(int i = 0; i < NO_OF_TRANSIENT_FLAGS; i ++) {
-            st += mFlags.get(i) ;
-            if( i < NO_OF_TRANSIENT_FLAGS)
-                st += ",";
+            sb.append( mFlags.get(i) );
+            if( i < NO_OF_TRANSIENT_FLAGS - 1 ){
+                sb.append( "," );
+            }
         }
-        st += ")";
+        sb.append( ")");
 
-        return st;
+        return sb.toString();
     }
 
 }

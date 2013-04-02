@@ -56,7 +56,9 @@ import edu.isi.pegasus.planner.catalog.site.classes.Directory;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServerType.OPERATION;
 import edu.isi.pegasus.planner.classes.DAGJob;
 import edu.isi.pegasus.planner.classes.DAXJob;
+import edu.isi.pegasus.planner.classes.PlannerCache;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
+import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.namespace.Dagman;
 
 import org.griphyn.vdl.euryale.FileFactory;
@@ -109,16 +111,6 @@ public class TransferEngine extends Engine {
      * cache
      */
     public static final String WORKFLOW_CACHE_REPLICA_CATALOG_KEY = "file";
-
-    /**
-     * The scheme name for file url.
-     */
-    public static final String FILE_URL_SCHEME = "file:";
-
-    /**
-     * The scheme name for file url.
-     */
-    public static final String SYMLINK_URL_SCHEME = "symlink:";
 
     /**
      * The property prefix for retrieving SRM properties.
@@ -181,7 +173,7 @@ public class TransferEngine extends Engine {
      * A SimpleFile Replica Catalog, that tracks all the files that are being
      * materialized as part of workflow executaion.
      */
-    private ReplicaCatalog mPlannerCache;
+    private PlannerCache mPlannerCache;
 
     /**
      * A  Replica Catalog, that tracks all the GET URL's for the files on the
@@ -217,9 +209,9 @@ public class TransferEngine extends Engine {
     protected boolean mDeepStorageStructure;
     
     /**
-     * This member variable if set causes the source url for the pull nodes from
-     * the RLS to have file:// url if the pool attributed associated with the pfn
-     * is same as a particular jobs execution pool.
+     * This member variable if set causes the destination URL for the symlink jobs
+     * to have symlink:// url if the pool attributed associated with the pfn
+     * is same as a particular jobs execution pool. 
      */
     protected boolean mUseSymLinks;
     
@@ -228,11 +220,20 @@ public class TransferEngine extends Engine {
      */
     private boolean mWorkerNodeExecution;
 
-    
     /**
      * The planner options passed to the planner
      */
     private PlannerOptions mPlannerOptions;
+
+    /**
+     * A boolean indicating whether to bypass first level staging for inputs
+     */
+    private boolean mBypassStagingForInputs;
+
+    /**
+     * A boolean to track whether condor file io is used for the workflow or not.
+     */
+    private final boolean mSetupForCondorIO;
 
     /**
      * Overloaded constructor.
@@ -251,12 +252,16 @@ public class TransferEngine extends Engine {
         mPlannerOptions  = bag.getPlannerOptions();
         mDeepStorageStructure = mProps.useDeepStorageDirectoryStructure();
         mUseSymLinks = mProps.getUseOfSymbolicLinks();
-        mWorkerNodeExecution = mProps.executeOnWorkerNode();
         mSRMServiceURLToMountPointMap = constructSiteToSRMServerMap( mProps );
         
         mDag = reducedDag;
         mDeletedJobs     = deletedJobs;
-    
+
+        mWorkerNodeExecution    = mProps.executeOnWorkerNode();
+        mSetupForCondorIO       = new PegasusConfiguration( mLogger).setupForCondorIO( mProps );
+        mBypassStagingForInputs = mProps.bypassFirstLevelStagingForInputs();
+
+
         try{
             mTXRefiner = RefinerFactory.loadInstance( reducedDag,
                                                       bag );
@@ -311,7 +316,7 @@ public class TransferEngine extends Engine {
             return !result;
         }
         //check to see if destination URL is a file url
-        else if( destinationURL != null && destinationURL.startsWith( TransferEngine.FILE_URL_SCHEME ) ){
+        else if( destinationURL != null && destinationURL.startsWith( PegasusURL.FILE_URL_SCHEME ) ){
            result = false;
             
         }
@@ -328,7 +333,7 @@ public class TransferEngine extends Engine {
      *                           store the locations of the files on the remote
      *                           sites.
      */
-    public void addTransferNodes( ReplicaCatalogBridge rcb, ReplicaCatalog plannerCache ) {
+    public void addTransferNodes( ReplicaCatalogBridge rcb, PlannerCache plannerCache ) {
         mRCBridge = rcb;
         mPlannerCache = plannerCache;
 
@@ -1017,7 +1022,7 @@ public class TransferEngine extends Engine {
         if( pfn.startsWith( File.separator ) ){
             dag = pfn;
         }
-        else if( pfn.startsWith( TransferEngine.FILE_URL_SCHEME ) ){
+        else if( pfn.startsWith( PegasusURL.FILE_URL_SCHEME ) ){
 //            dag = Utility.getAbsolutePath( pfn );
             dag = new PegasusURL( pfn ).getPath();
         }
@@ -1073,7 +1078,7 @@ public class TransferEngine extends Engine {
         if( pfn.startsWith( File.separator ) ){
             dax = pfn;
         }
-        else if( pfn.startsWith( TransferEngine.FILE_URL_SCHEME ) ){
+        else if( pfn.startsWith( PegasusURL.FILE_URL_SCHEME ) ){
 //            dax = Utility.getAbsolutePath( pfn );
             dax = new PegasusURL( pfn ).getPath();
         }
@@ -1297,7 +1302,7 @@ public class TransferEngine extends Engine {
                     mLogger.log( message.toString() , LogManager.DEBUG_MESSAGE_LEVEL );
                     message = new StringBuffer();
                     message.append( " Not transferring ip file as ").append( lfn ).
-                            append( " for job " ).append( job.jobName ).append( " to site " ).append( stagingSiteHandle);
+                            append( " for job " ).append( job.jobName ).append( " to site " ).append( stagingSiteHandle );
                     
                     mLogger.log( message.toString() , LogManager.DEBUG_MESSAGE_LEVEL );
                     continue;
@@ -1307,19 +1312,17 @@ public class TransferEngine extends Engine {
             }
                 
             //add locations of input data on the remote site to the transient RC
-            boolean bypassFirstLevelStaging = mWorkerNodeExecution && selLoc.getResourceHandle().equals( job.getSiteHandle() );
             
-            //for 3.2 first level staging cannot be bypassed
-            //bypassing staging creates problems with in place cleanup and condor 
-            //IO case.
-            bypassFirstLevelStaging = false;
+            boolean bypassFirstLevelStaging = this.bypassStagingForInputFile( selLoc , pf , job.getSiteHandle()  );
             if( bypassFirstLevelStaging ){
-                //the selected replica already exists on
-                //the compute site.  we can bypass first level
-                //staging of the data
-                //we add into transient RC the source URL without any modifications
-                trackInPlannerCache( lfn, sourceURL, job.getSiteHandle() );
-                trackInWorkflowCache( lfn, sourceURL, job.getSiteHandle() );
+                //only the files for which we bypass first level staging , we
+                //store them in the planner cache as a GET URL and associate with the compute site
+                //PM-698
+                trackInPlannerCache( lfn, sourceURL, selLoc.getResourceHandle(), OPERATION.get );
+                trackInWorkflowCache( lfn, sourceURL, selLoc.getResourceHandle() );
+                //ensure the input file does not get cleaned up by the
+                //InPlace cleanup algorithm
+                pf.setForCleanup( false );
                 continue;
             }
             else{
@@ -1339,11 +1342,10 @@ public class TransferEngine extends Engine {
             //construct the file transfer object
             FileTransfer ft = (pf instanceof FileTransfer) ?
                                (FileTransfer)pf:
-                               new FileTransfer( lfn, jobName );
+                               new FileTransfer( lfn, jobName, pf.getFlags() );
             
             //make sure the type information is set in file transfer
             ft.setType( pf.getType() );
-
             ft.setSize( pf.getSize() );
             
             //the transfer mode for the file needs to be
@@ -1393,7 +1395,7 @@ public class TransferEngine extends Engine {
 
          //if the pfn starts with a file url we
         //dont need to replace . a sanity check
-        if( pfn.startsWith( FILE_URL_SCHEME ) ){
+        if( pfn.startsWith( PegasusURL.FILE_URL_SCHEME ) ){
             return rce;
         }
         
@@ -1405,7 +1407,7 @@ public class TransferEngine extends Engine {
             String urlPrefix = nv.getKey();
             if( pfn.startsWith( urlPrefix ) ){
                 //replace the starting with the mount point
-                newPFN.append( FILE_URL_SCHEME ).append( "//" );
+                newPFN.append( PegasusURL.FILE_URL_SCHEME ).append( "//" );
                 newPFN.append( nv.getValue() );
                 newPFN.append( pfn.substring( urlPrefix.length(), pfn.length() ));
                 mLogger.log( "Replaced pfn " + pfn + " with " + newPFN.toString() ,
@@ -1425,7 +1427,7 @@ public class TransferEngine extends Engine {
             newPFN.append( pfn.substring( pfn.indexOf( hostName ) + hostName.length() ) );
 */
 
-            newPFN.append( FILE_URL_SCHEME ).append( "//" );
+            newPFN.append( PegasusURL.FILE_URL_SCHEME ).append( "//" );
             newPFN.append( new PegasusURL( pfn ).getPath() );
         }
         
@@ -1454,18 +1456,18 @@ public class TransferEngine extends Engine {
         /* special handling for SRM urls */
         StringBuffer newPFN = new StringBuffer();
         
-        if( pfn.startsWith(FILE_URL_SCHEME) ){
+        if( pfn.startsWith(PegasusURL.FILE_URL_SCHEME) ){
             //special handling for FILE URL's as 
             //utility hostname functions dont hold up
-            newPFN.append( TransferEngine.SYMLINK_URL_SCHEME ).
-                   append( pfn.substring( FILE_URL_SCHEME.length() ) );
+            newPFN.append( PegasusURL.SYMLINK_URL_SCHEME ).
+                   append( pfn.substring( PegasusURL.FILE_URL_SCHEME.length() ) );
             
             //System.out.println( "Original PFN " + pfn + " \nReplaced PFN " + newPFN.toString() );
             return newPFN.toString();
         }
         
  
-        newPFN.append( TransferEngine.SYMLINK_URL_SCHEME ).append( "//" );
+        newPFN.append( PegasusURL.SYMLINK_URL_SCHEME ).append( "//" );
        
         //we want to skip out the hostname        
         newPFN.append( new PegasusURL( pfn ).getPath()  );
@@ -1682,7 +1684,8 @@ public class TransferEngine extends Engine {
 
     
     /**
-     * Inserts an entry into the planner cache
+     * Inserts an entry into the planner cache as a put URL.
+     *
      *
      * @param lfn  the logical name of the file.
      * @param pfn  the pfn
@@ -1692,7 +1695,25 @@ public class TransferEngine extends Engine {
                                      String pfn,
                                      String site ){
 
-         mPlannerCache.insert( lfn, pfn, site );
+         trackInPlannerCache( lfn, pfn, site, OPERATION.put );
+    }
+
+
+    /**
+     * Inserts an entry into the planner cache as a put URL.
+     *
+     *
+     * @param lfn  the logical name of the file.
+     * @param pfn  the pfn
+     * @param site the site handle
+     * @param type the type of url
+     */
+    private void trackInPlannerCache( String lfn,
+                                     String pfn,
+                                     String site,
+                                     OPERATION type ){
+
+         mPlannerCache.insert( lfn, pfn, site, type );
     }
     
     /**
@@ -1935,6 +1956,53 @@ public class TransferEngine extends Engine {
 
         return sb.toString();
 
+    }
+
+    /**
+     * Returns a boolean indicating whether to bypass first level staging for a
+     * file or not
+     *
+     * @param entry        a ReplicaCatalogEntry matching the selected replica location.
+     * @param file         the corresponding Pegasus File object
+     * @param computeSite  the compute site where the associated job will run.
+     * @param isExecutable whether the file transferred is an executable file or not
+     *
+     * @return  boolean indicating whether we need to enable bypass or not
+     */
+    private boolean bypassStagingForInputFile( ReplicaCatalogEntry entry , PegasusFile file, String computeSite ) {
+        boolean bypass = false;
+
+        //check if user has it configured for bypassing the staging and
+        //we are in pegasus lite mode
+        if( this.mBypassStagingForInputs && mWorkerNodeExecution ){
+            boolean isFileURL = entry.getPFN().startsWith( PegasusURL.FILE_URL_SCHEME);
+            String fileSite = entry.getResourceHandle();
+
+            if( this.mSetupForCondorIO ){
+                //additional check for condor io
+                //we need to inspect the URL and it's location
+                if( isFileURL &&
+                    fileSite.equals( "local" ) ){
+                    //for condorio only file urls for input files are
+                    //eligible for bypass
+                    bypass = ( file.isExecutable() )?
+                                    //for condor io, we cannot remap the destination URL
+                                    //we need to make sure the PFN ends with lfn to enable bypass
+                                    entry.getPFN().endsWith( file.getLFN() ):
+                                    true;
+                }
+            }
+            else{
+                //for non shared fs case we can bypass all url's safely
+                //other than file urls
+                bypass = isFileURL ?
+                         fileSite.equalsIgnoreCase( computeSite )://file site is same as the compute site
+                         true;
+            }
+            
+        }
+
+        return bypass;
     }
 
 

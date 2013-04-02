@@ -435,7 +435,19 @@ public class InPlace implements CleanupStrategy{
                     
 //              Leads to corruption of input files for the job.
 //                Set fileSet = curGN_SI.getInputFiles();
-                Set fileSet = new HashSet( curGN_SI.getInputFiles() );
+                Set<PegasusFile> fileSet = new HashSet( curGN_SI.getInputFiles() );
+                
+                //PM-698 traverse through the input files and unset those
+                //that have cleanup flag set to false
+                for( Iterator<PegasusFile> it = fileSet.iterator(); it.hasNext(); ){
+                    PegasusFile pf = it.next();
+                    if( !pf.canBeCleanedup() ){
+                        it.remove();
+                        mLogger.log( "File " + pf.getLFN() + " will not be cleaned up for job " + curGN_SI.getID() ,
+                                     LogManager.DEBUG_MESSAGE_LEVEL );
+                    }
+                }
+                
                 fileSet.addAll( curGN_SI.getOutputFiles() );
 
                 //remove the files in fileSet that are in this.mDoNotClean
