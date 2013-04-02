@@ -209,9 +209,9 @@ public class TransferEngine extends Engine {
     protected boolean mDeepStorageStructure;
     
     /**
-     * This member variable if set causes the source url for the pull nodes from
-     * the RLS to have file:// url if the pool attributed associated with the pfn
-     * is same as a particular jobs execution pool.
+     * This member variable if set causes the destination URL for the symlink jobs
+     * to have symlink:// url if the pool attributed associated with the pfn
+     * is same as a particular jobs execution pool. 
      */
     protected boolean mUseSymLinks;
     

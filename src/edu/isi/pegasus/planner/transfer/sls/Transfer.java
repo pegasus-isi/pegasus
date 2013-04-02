@@ -20,6 +20,7 @@ package edu.isi.pegasus.planner.transfer.sls;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 
 import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.common.util.PegasusURL;
 
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 
@@ -149,6 +150,14 @@ public class Transfer   implements SLS {
      * materialized as part of workflow execution.
      */
     private PlannerCache mPlannerCache;
+    
+    /**
+     * This member variable if set causes the destination URL for the symlink jobs
+     * to have symlink:// url if the pool attributed associated with the pfn
+     * is same as a particular jobs execution pool. 
+     */
+    protected boolean mUseSymLinks;
+    
 
     /**
      * The default constructor.
@@ -172,6 +181,7 @@ public class Transfer   implements SLS {
         mSeqExecGridStartUsed = mProps.getGridStart().equals( PegasusLite.CLASSNAME );
         mBypassStagingForInputs = mProps.bypassFirstLevelStagingForInputs();
         mPlannerCache = bag.getHandleToPlannerCache();
+        mUseSymLinks = mProps.getUseOfSymbolicLinks();
     }
 
     /**
@@ -374,10 +384,17 @@ public class Transfer   implements SLS {
                 url.append( cacheLocation.getPFN() );
                 ft.addSource( cacheLocation.getResourceHandle(), url.toString() );
             }
+            
+            //if the source URL is already present at the compute site
+            //and is a file URL, then the destination URL has to be a symlink
+            String destURLScheme = ( mUseSymLinks && 
+                                     ft.getSourceURL().getKey().equals( job.getSiteHandle() ))?
+                                   PegasusURL.SYMLINK_URL_SCHEME:
+                                   PegasusURL.FILE_URL_SCHEME;//default is file URL
 
             //destination
             url = new StringBuffer();
-            url.append( "file://" ).append( destDir ).append( File.separator ).
+            url.append( destURLScheme ).append( "//" ).append( destDir ).append( File.separator ).
                 append( pf.getLFN() );
             ft.addDestination( job.getSiteHandle(), url.toString() );
 
