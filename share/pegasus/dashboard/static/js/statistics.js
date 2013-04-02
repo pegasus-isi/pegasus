@@ -132,7 +132,7 @@ function render_workflow_stats_table (type, data)
 	return content;
 }
 
-function getJobBreakdownStats (url)
+function getJobBreakdownStats (url, container)
 {
 	if (jobBreakdownStats.isLoaded)
 	{
@@ -149,7 +149,7 @@ function getJobBreakdownStats (url)
 		},
 		success : function (data, textStatus, xhr)
 		{
-			render_job_breakdown (data);
+			render_job_breakdown (container, data);
 			jobBreakdownStats.isLoaded = true;
 		}
 	};
@@ -157,10 +157,8 @@ function getJobBreakdownStats (url)
 	$.ajax (ajaxOpt)
 }
 
-function render_job_breakdown (data)
+function render_job_breakdown (dest, data)
 {
-	var dest = $('#job_breakdown_stats');
-
 	if (data.length == 0)
 	{
 		dest.html ('No information available');
@@ -204,7 +202,7 @@ function render_job_breakdown (data)
 	});
 }
 
-function getJobStats (url)
+function getJobStats (url, container)
 {
 	if (jobStats.isLoaded)
 	{
@@ -221,7 +219,7 @@ function getJobStats (url)
 		},
 		success: function (data, textStatus, xhr)
 		{
-			render_job_stats (data);
+			render_job_stats (container, data);
 			jobStats.isLoaded = true;
 		}
 	};
@@ -229,10 +227,8 @@ function getJobStats (url)
 	$.ajax (ajaxOpt)
 }
 
-function render_job_stats (data)
+function render_job_stats (dest, data)
 {
-	var dest = $('#job_stats');
-
 	if (data.length == 0)
 	{
 		dest.html ('No information available');
@@ -294,15 +290,15 @@ function activateEventHandler (event, ui)
 	}
 	else if (tabIndex == 'job_breakdown_stats')
 	{
-		getJobBreakdownStats (ui.newHeader.attr ('href'));
+		getJobBreakdownStats (ui.newHeader.attr ('href'), ui.newPanel);
 	}
 	else if (tabIndex == 'job_stats')
 	{
-		getJobStats (ui.newHeader.attr ('href'));
+		getJobStats (ui.newHeader.attr ('href'), ui.newPanel);
 	}
 	else if (tabIndex == 'time_stats')
 	{
-		getTimeStats (ui.newHeader.attr ('href'));
+		getTimeStats (ui.newHeader.attr ('href'), ui.newPanel);
 	}
 	else
 	{
