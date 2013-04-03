@@ -12,7 +12,13 @@ TOP_DIR=`pwd`
 TEST=`echo $1 | sed -r 's/.*Build and Test - ([0-9\.]+ - ){0,1}//' | awk '{ print $1; }'`
 shift
 
-cd test/core/$TEST
+TEST_DIR=test/core/$TEST
+if [ ! -d "$TEST_DIR" ]; then
+    echo "Test Directory does not exist. Probably the test $TEST is not checked in the branch"
+    echo "Exiting with status 0 "
+    exit 0
+fi
+cd $TEST_DIR
 
 echo "TEST is $TEST"
 pwd
