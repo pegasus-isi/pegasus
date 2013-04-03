@@ -312,12 +312,12 @@ function test_priority {
         return 1
     fi
     
-    DESIRED="Scheduling task G
-Scheduling task I
-Scheduling task D
-Scheduling task E
-Scheduling task O
-Scheduling task N"
+    DESIRED="[trace] Scheduling task G
+[trace] Scheduling task I
+[trace] Scheduling task D
+[trace] Scheduling task E
+[trace] Scheduling task O
+[trace] Scheduling task N"
     
     ACTUAL=$(echo "$OUTPUT" | grep "Scheduling task ")
     
@@ -365,7 +365,7 @@ function test_max_wall_time {
         return 1
     fi
     
-    ELAPSED=$(echo "$OUTPUT" | grep "Wall time:" | cut -d" " -f3)
+    ELAPSED=$(echo "$OUTPUT" | grep "Wall time:" | cut -d" " -f4)
     if [ $(echo "$ELAPSED > 4.0" | bc -q) -eq 1 ]; then
         echo "$OUTPUT"
         echo "Ran in $ELAPSED seconds"

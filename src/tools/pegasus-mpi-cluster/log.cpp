@@ -12,6 +12,15 @@
 static int loglevel = LOG_INFO;
 static FILE *logfile = DEFAULT_LOG_FILE;
 
+static const char * const loglabels[] = {
+    "fatal",
+    "error",
+    "warn",
+    "info",
+    "debug",
+    "trace"
+};
+
 void log_set_level(int level) {
     loglevel = level;
 }
@@ -33,30 +42,35 @@ static void timestr(char *dest) {
     gettimeofday(&tod, NULL);
     struct tm *t = localtime(&(tod.tv_sec));
     int ms = (int)(tod.tv_usec/1000.0);
-    sprintf(dest, "%02d/%02d/%04d %02d:%02d:%02d.%.3d", 
-        t->tm_mon+1, t->tm_mday, t->tm_year+1900, 
-        t->tm_hour, t->tm_min, t->tm_sec, ms);
+    sprintf(dest, "%04d-%02d-%02d %02d:%02d:%02d.%.3d %s", 
+        t->tm_year+1900, t->tm_mon+1, t->tm_mday,
+        t->tm_hour, t->tm_min, t->tm_sec, ms, t->tm_zone);
 }
 
 void log_message(int level, const char *message, va_list args) {
+    // Filter log messages that are unnecessary
+    if (!log_test(level)) {
+        return;
+    }
+    
     // Just in case...
     if (logfile == NULL || fileno(logfile) == -1 || ferror(logfile) || ftell(logfile) < 0) {
         logfile = DEFAULT_LOG_FILE;
     }
     
-    if (log_test(level)) {
-        char logformat[MAX_LOG_MESSAGE];
-        if (logfile == DEFAULT_LOG_FILE) {
-            snprintf(logformat, MAX_LOG_MESSAGE, "%s\n", message);    
-        } else {
-            // If logging to a file, add the date
-            char ts[26];
-            timestr(ts);
-            snprintf(logformat, MAX_LOG_MESSAGE, "%s: %s\n", ts, message);
-        }
-        
-        vfprintf(logfile, logformat, args);
+    char logformat[MAX_LOG_MESSAGE];
+    if (logfile == DEFAULT_LOG_FILE) {
+        snprintf(logformat, MAX_LOG_MESSAGE, "[%s] %s\n", 
+                 loglabels[level], message);    
+    } else {
+        // If logging to a file, add the date
+        char ts[26];
+        timestr(ts);
+        snprintf(logformat, MAX_LOG_MESSAGE, "%s [%s] %s\n", 
+                 ts, loglabels[level], message);
     }
+    
+    vfprintf(logfile, logformat, args);
 }
 
 #define __LOG_MESSAGE(level) \
