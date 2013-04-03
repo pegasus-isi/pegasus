@@ -25,7 +25,7 @@ function run_test {
 
 function test_help {
     # Should print message and exit with 1
-    if ! mpiexec -np 2 $PMC 2>/dev/null; then
+    if ! mpiexec -np 2 $PMC >/dev/null 2>&1; then
         return 0
     else
         return 1
