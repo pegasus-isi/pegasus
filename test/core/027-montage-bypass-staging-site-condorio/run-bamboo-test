@@ -150,12 +150,12 @@ fi
 
 # make sure that none of the fits files are deleted by the cleanup jobs
 set +e
-clean_up_local_level_*in | grep input
+grep input clean_up_local_level_*in
 EC=$?
 set -e
 
 if [ $EC -eq 0 ]; then
-    # the fits files should not be staged as part of stagein jobs                                                                                                                                                                                      
+    # the fits files should not be staged as part of stagein jobs 
     echo "Error: The cleanup jobs are cleaning up files from the input directory. Cleanup only happens against the staging site directory"
     exit 1
 fi
