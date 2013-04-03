@@ -111,7 +111,7 @@ tags:
 	touch tags
 else
 tags: *.h *.cpp
-	ctags *.h *.cpp
+	ctags -w *.h *.cpp
 endif
 
 include depends.mk
