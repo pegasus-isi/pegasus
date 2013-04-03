@@ -1981,15 +1981,12 @@ public class TransferEngine extends Engine {
             if( this.mSetupForCondorIO ){
                 //additional check for condor io
                 //we need to inspect the URL and it's location
+                //only file urls for input files are eligible for bypass
                 if( isFileURL &&
                     fileSite.equals( "local" ) ){
-                    //for condorio only file urls for input files are
-                    //eligible for bypass
-                    bypass = ( file.isExecutable() )?
-                                    //for condor io, we cannot remap the destination URL
-                                    //we need to make sure the PFN ends with lfn to enable bypass
-                                    entry.getPFN().endsWith( file.getLFN() ):
-                                    true;
+                    //in condor io  we cannot remap the destination URL
+                    //we need to make sure the PFN ends with lfn to enable bypass
+                    bypass = entry.getPFN().endsWith( file.getLFN() );
                 }
             }
             else{
