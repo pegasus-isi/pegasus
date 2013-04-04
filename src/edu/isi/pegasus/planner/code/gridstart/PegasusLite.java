@@ -865,12 +865,11 @@ public class PegasusLite implements GridStart {
                 this.mKickstartGridStartImpl.enable( job, isGlobusJob );
                 sb.append( job.getRemoteExecutable() ).append( job.getArguments() ).append( '\n' );
             }
-            sb.append( '\n' );
             
             //PM-701 enable back fail on error
             sb.append( "job_ec=$?" ).append( "\n" );
             sb.append( "set -e").append( "\n" );
-
+            sb.append( '\n' );
             
             //the pegasus lite wrapped job itself does not have any
             //arguments passed
