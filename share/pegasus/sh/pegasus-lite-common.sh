@@ -221,6 +221,15 @@ function pegasus_lite_exit()
     if [ "x$rc" = "x" ]; then
         rc=0
     fi
+
+    if [ "x$job_ec" != "x" ];then
+	if [ $job_ec != 0 ];then
+	    pegasus_lite_log "Job failed with exitcode $job_ec"
+	    rc=$job_ec
+	fi
+    fi
+	
+
     if [ $rc != 0 ]; then
         pegasus_lite_log "FAILURE: Last command exited with $rc"
     fi

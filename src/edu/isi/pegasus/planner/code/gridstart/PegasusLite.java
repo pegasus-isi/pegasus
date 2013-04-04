@@ -837,7 +837,8 @@ public class PegasusLite implements GridStart {
             }
            
 
-            sb.append( "# execute the tasks" ).append( '\n' );
+            sb.append( "# execute the tasks" ).append( '\n' ).
+               append( "set +e" );//PM-701
 
             writer.print( sb.toString() );
             writer.flush();
@@ -865,6 +866,11 @@ public class PegasusLite implements GridStart {
                 sb.append( job.getRemoteExecutable() ).append( job.getArguments() ).append( '\n' );
             }
             sb.append( '\n' );
+            
+            //PM-701 enable back fail on error
+            sb.append( "job_ec=$?" ).append( "\n" );
+            sb.append( "set -e").append( "\n" );
+
             
             //the pegasus lite wrapped job itself does not have any
             //arguments passed
