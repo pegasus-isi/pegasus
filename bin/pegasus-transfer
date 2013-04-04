@@ -225,7 +225,11 @@ tool_map[('http'    , 'gsiftp'  )] = 'gsiftp'
 tool_map[('https'   , 'file'    )] = 'webget'
 tool_map[('irods'   , 'file'    )] = 'irods'
 tool_map[('s3'      , 'file'    )] = 's3'
+tool_map[('s3'      , 's3'      )] = 's3'
+tool_map[('s3'      , 's3s'     )] = 's3'
 tool_map[('s3s'     , 'file'    )] = 's3'
+tool_map[('s3s'     , 's3'      )] = 's3'
+tool_map[('s3s'     , 's3s'     )] = 's3'
 tool_map[('scp'     , 'file'    )] = 'scp'
 tool_map[('srm'     , 'file'    )] = 'srm'
 tool_map[('srm'     , 'gsiftp'  )] = 'srm'
@@ -237,6 +241,9 @@ tool_info = {}
 # track remote directories created so that don't have to
 # try to create them over and over again
 remote_dirs_created = {}
+
+# similarly for s3 buckets
+buckets_created = {}
 
 # gsiftp failure count - used to provide sane globus-url-copy options
 gsiftp_failures = 0
@@ -934,7 +941,32 @@ def srm(transfers, failed_q):
         except Exception, err:
             logger.error(err)
             failed_q.append(url_pair)
-            
+
+
+def s3_bucket_create(s3_url):
+    """
+    creates s3 buckets unless we have already done so before
+    """
+    global buckets_created
+
+    # extract the bucket part
+    re_bucket = re.compile(r'(s3(s){0,1}://\w+@\w+/+[\w\-]+)')
+    bucket = s3_url
+    r = re_bucket.search(bucket)
+    if r:
+        bucket = r.group(1)
+    else:
+        raise RuntimeError("Unable to parse bucket: %s" % (bucket))
+    
+    # first ensure that the bucket exists
+    if not bucket in buckets_created:
+        buckets_created[bucket] = True
+        cmd = "pegasus-s3 mkdir %s" %(bucket)
+        try:
+            myexec(cmd, 5*60, True)
+        except Exception, err:
+            logger.error("mkdir failed - possibly due to the bucket already existing, so continuing...")
+
             
 def s3(transfers, failed_q):
     """
@@ -949,9 +981,14 @@ def s3(transfers, failed_q):
     buckets_created = {}
 
     for i, url_pair in enumerate(transfers): 
-
-        # get/put?
-        if url_pair.dst_proto == "file":
+        local_filename = None
+        # use cp for s3->s3 transfers, and get/put when one end is a file://
+        if (url_pair.src_proto == "s3" or url_pair.src_proto == "s3s") and \
+           (url_pair.dst_proto == "s3" or url_pair.dst_proto == "s3s"):
+            # s3 -> s3
+            s3_bucket_create(url_pair.dst_url_dirname())
+            cmd = "pegasus-s3 cp -f %s %s" % (url_pair.src_url(), url_pair.dst_url())
+        elif url_pair.dst_proto == "file":
             # this is a 'get'
             local_filename = url_pair.dst_path
             prepare_local_dir(os.path.dirname(url_pair.dst_path))
@@ -959,29 +996,13 @@ def s3(transfers, failed_q):
         else:
             # this is a 'put'
             local_filename = url_pair.src_path
-            
-            # extract the bucket part
-            re_bucket = re.compile(r'(s3(s){0,1}://\w+@\w+/+[\w\-]+)')
-            bucket = url_pair.dst_url_dirname()
-            r = re_bucket.search(bucket)
-            if r:
-                bucket = r.group(1)
-            else:
-                raise RuntimeError("Unable to parse bucket: %s" % (bucket))
-            
-            # first ensure that the bucket exists
-            if not bucket in buckets_created:
-                buckets_created[bucket] = True
-                cmd = "pegasus-s3 mkdir %s" %(bucket)
-                try:
-                    myexec(cmd, 5*60, True)
-                except Exception, err:
-                    logger.error("mkdir failed - possibly due to the bucket already existing, so continuing...")
+            s3_bucket_create(url_pair.dst_url_dirname())
             cmd = "pegasus-s3 put %s %s" % (url_pair.src_path, url_pair.dst_url())
 
         try:
             myexec(cmd, default_subshell_timeout, True)
-            stats_add(local_filename)
+            if local_filename is not None:
+                stats_add(local_filename)
         except Exception, err:
             logger.error(err)
             failed_q.append(url_pair)
@@ -1045,7 +1066,7 @@ def stats_summarize():
     logger.info("Stats: %sB transferred in %.0f seconds. Rate: %sB/s (%sb/s)" % (
                 iso_prefix_formatted(stats_total_bytes), total_secs, 
                 iso_prefix_formatted(Bps), iso_prefix_formatted(Bps*8)))
-    logger.info("NOTE: stats do not include third party gsiftp/srm transfers")
+    logger.info("NOTE: stats do not include third party gsiftp/srm/s3 transfers")
 
 
 def iso_prefix_formatted(n):
