@@ -955,18 +955,18 @@ def main():
         fn = globals()[command]
         try:
             fn(args)
-        except boto.exception.S3ResponseError, e:
-            if sys.stderr.isatty() and not DEBUG:
-                sys.stderr.write("ERROR: %s\n" % e.error_message)
-                exit(1)
-            else:
-                raise
         except Exception, e:
-            if sys.stderr.isatty() and not DEBUG:
-                sys.stderr.write("ERROR: %s\n" % e)
-                exit(1)
-            else:
-                raise
+            # Just raise the exception if the user wants more info
+            if VERBOSE or DEBUG: raise
+            
+            error = str(e)
+            
+            # This is for boto S3ResponseError
+            if hasattr(e, "error_message"):
+                error = e.error_message
+            
+            sys.stderr.write("ERROR: %s\n" % error)
+            exit(1)
     else:
         sys.stderr.write("ERROR: Unknown command: %s\n" % command)
         help(sys.argv)
