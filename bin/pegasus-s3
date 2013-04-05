@@ -660,9 +660,7 @@ def put(args):
     
     # Create the bucket if the user requested it and it does not exist
     if options.create_bucket:
-        b = conn.lookup(uri.bucket)
-        if b is None:
-            conn.create_bucket(uri.bucket)
+        conn.create_bucket(uri.bucket)
     
     b = Bucket(connection=conn, name=uri.bucket)    
     k = Key(bucket=b, name=uri.key)
