@@ -608,6 +608,9 @@ def put(args):
             "parameter is not 0.")
     parser.add_option("-b", "--create-bucket", dest="create_bucket", action="store_true",
         default=False, help="Create the destination bucket if it does not already exist")
+    parser.add_option("-f", "--force", dest="force", action="store_true",
+        default=False, help="Overwrite key if it already exists")
+    
     options, args = parser.parse_args(args)
     
     if options.chunksize!=0 and (options.chunksize < 5 or options.chunksize > 1024):
@@ -662,10 +665,14 @@ def put(args):
             conn.create_bucket(uri.bucket)
     
     b = Bucket(connection=conn, name=uri.bucket)    
+    k = Key(bucket=b, name=uri.key)
+    
+    # Make sure the key does not exist
+    if not options.force and k.exists():
+        raise Exception("Key exists: %s" % uri)
     
     if (not multipart_uploads) or (options.chunksize==0):
         # no multipart, or chunks disabled, just do it the simple way
-        k = Key(bucket=b, name=uri.key)
         k.set_contents_from_filename(infile)
     else:
         # Multipart supported, chunking requested
@@ -680,7 +687,6 @@ def put(args):
     
         if num_parts <= 1:
             # Serial
-            k = Key(bucket=b, name=uri.key)
             k.set_contents_from_filename(infile)
         else:
             # Parallel
