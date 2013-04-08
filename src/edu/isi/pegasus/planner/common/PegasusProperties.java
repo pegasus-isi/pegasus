@@ -1878,12 +1878,17 @@ public class PegasusProperties implements Cloneable {
     /** 
      * Completely disable placing a symlink for Condor common log (indiscriminately). 
      * 
-     * @return true if we want a symlink for Condor common log. 
+     * Starting 4.2.1 this defaults to "false" .
+     * 
+     * Referred to by the "pegasus.condor.logs.symlink" property.
+     * 
+     * @return value specified by the property. Defaults to false.
     */ 
     public boolean symlinkCommonLog() { 
-        return Boolean.parse( mProps.getProperty( "pegasus.condor.logs.symlink"),
-                              true  ); 
-   } 
+        return Boolean.parse( mProps.getProperty( "pegasus.condor.logs.symlink" ),
+                              false  ); 
+    } 
+    
 
     /**
      * Returns a boolean indicating whether we want to Condor Quote the
@@ -1894,7 +1899,7 @@ public class PegasusProperties implements Cloneable {
      * @return boolean
      */
     public boolean useCondorQuotingForArguments(){
-        return Boolean.parse( mProps.getProperty("pegasus.condor.arguments.quote"),
+        return Boolean.parse( mProps.getProperty( "pegasus.condor.arguments.quote" ),
                               true);
     }
 
