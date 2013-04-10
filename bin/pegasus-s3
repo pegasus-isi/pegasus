@@ -24,6 +24,7 @@ import Queue
 import mmap
 import fnmatch
 import re
+import time
 from optparse import OptionParser
 from urlparse import urlsplit
 from ConfigParser import ConfigParser
@@ -668,6 +669,8 @@ def put(args):
     # Make sure the key does not exist
     if not options.force and k.exists():
         raise Exception("Key exists: %s" % uri)
+
+    start = time.time()
     
     if (not multipart_uploads) or (options.chunksize==0):
         # no multipart, or chunks disabled, just do it the simple way
@@ -751,7 +754,12 @@ def put(args):
                         " upload (use lsup/rmup): %s\n" % f)
                 raise e
     
-    info("Upload complete")
+    end = time.time()
+    size = size / 1024.0
+    elapsed = end - start
+    rate = size / elapsed
+    
+    info("Uploaded %0.1f KB in %0.6f seconds: %0.2f KB/s" % (size, elapsed, rate))
 
 def lsup(args):
     parser = option_parser("lsup URL")
