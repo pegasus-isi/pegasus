@@ -690,8 +690,8 @@ def put(args):
             # Parallel
             
             # Map the file
-            f = open(infile, "r+b")
-            mm = mmap.mmap(f.fileno(), 0, mmap.MAP_SHARED)
+            f = open(infile, "rb")
+            mm = mmap.mmap(f.fileno(), 0, mmap.MAP_SHARED, mmap.PROT_READ)
             
             # Request upload
             info("Creating multipart upload")
