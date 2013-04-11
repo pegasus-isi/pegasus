@@ -255,6 +255,72 @@ def analyze():
             unknown_jobs.append(my_job)
             unknown = unknown + 1
 
+def get_pegasus_lite_wrapper(my_job):
+    """
+    This function returns whether a Pegasus Lite Wrapper
+    exists for the job or not. Returns the path to wrapper if it exists
+    """
+    # First we check if this is a SUBDAG job from the dag file
+    if my_job.is_subdag:
+        # Nothing to do here
+        return None
+
+    if my_job.sub_file == "":
+        # Create full path for the submit file if we already don't have the sub file set up
+        my_job.sub_file = os.path.join(input_dir, my_job.name + ".sub")
+
+    # Create full path for the pegasus_lite_wrapped job on basis of where submit file is
+    pegasus_lite_wrapper = os.path.join( os.path.dirname( my_job.sub_file), my_job.name + ".sh")
+
+    # Try to access submit file
+    if os.access(pegasus_lite_wrapper, os.R_OK):
+        # Open submit file
+        try:
+            SUB = open( pegasus_lite_wrapper, "r")
+        except:
+            # print "error opening submit file: %s" % (my_job.sub_file)
+            # fail silently for now...
+            return None
+        else:
+            SUB.close()
+
+    return pegasus_lite_wrapper
+
+def generate_pegasus_lite_debug_wrapper(pegasus_lite_wrapper):
+    """
+    This generates a debug wrapper for the pegasus lite job
+    It copies the the pegasus lite job till part of the stage out of outputs
+    """
+    if pegasus_lite_wrapper is None:
+        return None
+
+    debug_wrapper= os.path.join( debug_dir, "stripped_pl_" + os.path.basename( pegasus_lite_wrapper ))
+
+    try:
+        DEBUG_WRAPPER = open( debug_wrapper, "w")
+        WRAPPER = open( pegasus_lite_wrapper , "r" )
+        for line in WRAPPER:
+            #line = line.strip(" \t") # Remove leading and trailing spaces
+            if line.startswith('# stage out'):
+                # we only continue till we hit the stage out part
+                break
+            DEBUG_WRAPPER.write( line )
+
+    except:
+        # fail silently for now...
+        return None
+    else:
+        if DEBUG_WRAPPER is not None:
+            DEBUG_WRAPPER.close()
+        if WRAPPER is not None:
+            WRAPPER.close()
+
+    #set the x bit
+    os.chmod(debug_wrapper, 0755 )
+
+    return debug_wrapper
+
+
 def parse_submit_file(my_job):
     """
     This function opens a submit file and reads site
@@ -1076,9 +1142,9 @@ def debug_condor(my_job):
 
     # Create script name
     debug_script_basename = "debug_" + my_job.name + ".sh"
+    debug_script_err_basename = "debug_" + my_job.name + ".err"
     debug_script_name = os.path.join(debug_dir, debug_script_basename)
 
-    job_executable = os.path.join(debug_dir, my_job.executable) + my_job.arguments
 
     try:
         debug_script = open(debug_script_name, "w")
@@ -1091,6 +1157,8 @@ def debug_condor(my_job):
         debug_script.write("#!/bin/bash\n")
         debug_script.write("\n")
         debug_script.write("set -e\n")
+        debug_script.write("\n")
+        debug_script.write("export pegasus_lite_work_dir=%s" %debug_dir)
         debug_script.write("\n")
         debug_script.write("# Copy any files that are needed\n")
 
@@ -1108,14 +1176,33 @@ def debug_condor(my_job):
         debug_script.write("\n")
         debug_script.write('echo "copying input files completed."\n')
         debug_script.write("\n")
-        debug_script.write("# Set the execute bit on the executable\n")
-        debug_script.write("chmod +x %s\n" % (os.path.join(debug_dir, my_job.executable)))
-        debug_script.write("\n")
+
+        #check if the job is a Pegasus Lite wrapped job or an earlier type
+        job_pegasus_lite_wrapper = get_pegasus_lite_wrapper( my_job )
+        job_executable =  my_job.executable
+        if( job_pegasus_lite_wrapper is None ):
+            # older non pegasus lite mode /sipht case?
+            debug_script.write("# Set the execute bit on the executable\n")
+            debug_script.write("chmod +x %s\n" % (os.path.join(debug_dir, my_job.executable)))
+            debug_script.write("\n")
+        else:
+            #generate a separate sh file that parts of pegasus-lite script
+            debug_wrapper = generate_pegasus_lite_debug_wrapper( job_pegasus_lite_wrapper )
+            job_executable = debug_wrapper
+
+        job_executable = os.path.join(debug_dir, job_executable) + my_job.arguments
+
         debug_script.write('echo "executing job: %s"\n' % (job_executable))
         debug_script.write("\n")
         debug_script.write("# Now, execute the job\n")
-        debug_script.write("%s\n" % (job_executable))
-        debug_script.write("\n")
+        debug_script.write("%s" % (job_executable))
+
+        #redirect stderr for pegasus lite jobs to separate err file
+        if( job_pegasus_lite_wrapper is not None):
+            debug_script.write( " 2>" + os.path.join(debug_dir, debug_script_err_basename) )
+
+        debug_script.write("\n\n")
+
         # Remember not to put anything between running the executable
         # and checking the exit code, otherwise $? will break...
         debug_script.write("# Check error code\n")
