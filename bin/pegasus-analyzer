@@ -1195,6 +1195,8 @@ def debug_condor(my_job):
         debug_script.write('echo "executing job: %s"\n' % (job_executable))
         debug_script.write("\n")
         debug_script.write("# Now, execute the job\n")
+        #disable fail on error before launching
+        debug_script.write('set +e\n')
         debug_script.write("%s" % (job_executable))
 
         #redirect stderr for pegasus lite jobs to separate err file
@@ -1206,7 +1208,10 @@ def debug_condor(my_job):
         # Remember not to put anything between running the executable
         # and checking the exit code, otherwise $? will break...
         debug_script.write("# Check error code\n")
-        debug_script.write("if [ $? -eq 0 ]; then\n")
+        debug_script.write('rc=$?\n')
+        #reenable fail on error before launching
+        debug_script.write('set -e\n')
+        debug_script.write("if [ $rc -eq 0 ]; then\n")
         debug_script.write('   echo "executable ran successfully"\n')
         debug_script.write("else\n")
         debug_script.write('   echo "executable failed with error $?"\n')
