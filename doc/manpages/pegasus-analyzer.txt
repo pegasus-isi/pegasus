@@ -15,8 +15,9 @@ Synopsis
                  [*--monitord*|*-m*|*-t*] [*--verbose*|*-v*]
                  [*--output-dir*|*-o* 'output_dir'] 
                  [*--dag* 'dag_filename'] [*--dir*|*-d*|*-i* 'input_dir']
-                 [*--print*|*-p* 'print_options'] [*--debug-job* 'job']
-                 [*--debug-dir* 'debug_dir'] [*--type* 'workflow_type']
+                 [*--print*|*-p* 'print_options'] [*--type* 'workflow_type']
+                 [*--debug-job* 'job'][*--debug-dir* 'debug_dir']
+		 [*--local-executable* 'local user executable']
                  [*--conf*|*-c* 'property_file'] [*--files*]
                  [*--top-dir* 'dir_name'] ['workflow_directory']
 
@@ -111,15 +112,23 @@ will print the 'invocation' command, so users can manually run the failed job.
 
 *--debug-job* 'job'::
 When given this option, *pegasus-analyzer* turns on its 'debug_mode', when it 
-can be used to debug a particular job. In this mode, *pegasus-analyzer* will 
-create a shell script in the 'debug_dir' (see below, for specifying it) and 
-copy all necessary files to this local directory and then execute the job 
-locally.
+can be used to debug a particular Pegasus Lite job. In this mode,
+*pegasus-analyzer* will create a shell script in the 'debug_dir' (see
+below, for specifying it) and  copy all necessary files to this local
+directory and then execute the job locally.
 
 *--debug-dir* 'debug_dir'::
 When in 'debug_mode', *pegasus-analyzer* will create a temporary debug 
 directory. Users can give this option in order to specify a particular
 'debug_dir' directory to be used instead.
+
+*--local-executable* 'local user executable'::
+When in debug job mode for Pegasus Lite jobs, pegasus-analyzer creates
+a shell script to execute the Pegasus Lite job locally in a debug
+directory. The Pegasus Lite script refers to remote user executable
+path. This option can be used to pass the local path to the user
+executable on the submit host. If the path to the user executable in
+the Pegasus Lite job is same as the local installation.
 
 *--type* 'workflow_type'::
 In this options, users specify what 'workflow_type' they want to debug. At 

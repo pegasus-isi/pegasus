@@ -1346,7 +1346,7 @@ parser.add_option("-S", "--summary", action = "store_const", const = 1, dest = "
                   help = "Just print the summary and exit")
 parser.add_option("--debug-job", action = "store", type = "string", dest = "debug_job",
                   help = "specifies a job to debug (can be either the job base name or the submit file name) -- this option enables debugging a single pegasus lite job")
-parser.add_option("--debug-job-local-executable", action = "store", type = "string", dest = "debug_job_local_executable",
+parser.add_option("--local-executable", action = "store", type = "string", dest = "debug_job_local_executable",
     help = "the path to the local user application that pegasus-lite job refers to.")
 parser.add_option("--debug-dir", action = "store", type = "string", dest = "debug_dir",
                   help = "specifies the directory to use as debug directory (default is to create a random directory in /tmp)")
