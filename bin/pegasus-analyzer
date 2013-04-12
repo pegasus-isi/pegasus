@@ -67,7 +67,8 @@ from Pegasus.netlogger.analysis.schema.schema_check import SchemaVersionError
 re_parse_property = re.compile(r'([^:= \t]+)\s*[:=]?\s*(.*)')
 re_parse_script_pre = re.compile(r'^SCRIPT PRE (\S+) (.*)')
 re_parse_condor_subs = re.compile(r'(\S+)="([^"]+)"')
-re_collapse_condor_subs = re.compile(r'\$\([^\)]*\)') 
+re_collapse_condor_subs = re.compile(r'\$\([^\)]*\)')
+re_ks_invocation = re.compile( r'^[/\w]*pegasus-kickstart\b[^/]*[\s]+([/\w-]*)\b.*')
 
 # --- classes -------------------------------------------------------------------------
 
@@ -120,6 +121,7 @@ tsdl_path = None				# Path to monitord's log file
 temp_dir = None					# Temporary log file created
 debug_job = None				# Path of a submit file to debug
 debug_dir = None				# Temp directory to use while debugging a job
+debug_job_local_executable = None # the local path to user executable for debugging job
 workflow_type = None				# Type of the workflow being debugged
 workflow_base_dir = ""				# Workflow submit_dir or dirname(jsd) from braindump file
 run_monitord = 0				# Run monitord before trying to analyze the output
@@ -295,15 +297,28 @@ def generate_pegasus_lite_debug_wrapper(pegasus_lite_wrapper):
         return None
 
     debug_wrapper= os.path.join( debug_dir, "stripped_pl_" + os.path.basename( pegasus_lite_wrapper ))
-
     try:
         DEBUG_WRAPPER = open( debug_wrapper, "w")
         WRAPPER = open( pegasus_lite_wrapper , "r" )
         for line in WRAPPER:
-            #line = line.strip(" \t") # Remove leading and trailing spaces
             if line.startswith('# stage out'):
                 # we only continue till we hit the stage out part
                 break
+
+            #line = line.strip(" \t") # Remove leading and trailing spaces
+            if debug_job_local_executable is not None:
+                #enable matching to replace the kickstart invocation with local path
+                ks_invocation = re_ks_invocation.search(line)
+
+                if ks_invocation and ks_invocation.groups() > 0:
+                    logger.debug("Match found for kickstart invocation in pegasus lite wrapper %s" %ks_invocation.group(0))
+                    logger.debug("Executable to be replaced is %s" %ks_invocation.group(1))
+                    substituted_string = line[:ks_invocation.start(1)] + debug_job_local_executable + line[ks_invocation.end(1):]
+                    line = substituted_string
+                    logger.debug("Substituted invocation is %s" %line)
+
+
+
             DEBUG_WRAPPER.write( line )
 
     except:
@@ -1201,7 +1216,7 @@ def debug_condor(my_job):
 
         #redirect stderr for pegasus lite jobs to separate err file
         if( job_pegasus_lite_wrapper is not None):
-            debug_script.write( " 2>" + os.path.join(debug_dir, debug_script_err_basename) )
+            debug_script.write( " 2> " + os.path.join(debug_dir, debug_script_err_basename) )
 
         debug_script.write("\n\n")
 
@@ -1329,7 +1344,9 @@ parser.add_option("-s", "--strict", action = "store_const", const = 1, dest = "s
 parser.add_option("-S", "--summary", action = "store_const", const = 1, dest = "summary_mode",
                   help = "Just print the summary and exit")
 parser.add_option("--debug-job", action = "store", type = "string", dest = "debug_job",
-                  help = "specifies a job to debug (can be either the job base name or the submit file name) -- this option enables debugging a single job")
+                  help = "specifies a job to debug (can be either the job base name or the submit file name) -- this option enables debugging a single pegasus lite job")
+parser.add_option("--debug-job-local-executable", action = "store", type = "string", dest = "debug_job_local_executable",
+    help = "the path to the local user application that pegasus-lite job refers to.")
 parser.add_option("--debug-dir", action = "store", type = "string", dest = "debug_dir",
                   help = "specifies the directory to use as debug directory (default is to create a random directory in /tmp)")
 parser.add_option("--type", action = "store", type = "string", dest = "workflow_type",
@@ -1377,6 +1394,8 @@ if options.debug_job is not None:
     debug_mode = 1
 if options.debug_dir is not None:
     debug_dir = options.debug_dir
+if options.debug_job_local_executable is not None:
+    debug_job_local_executable = options.debug_job_local_executable
 if options.workflow_type is not None:
     workflow_type = options.workflow_type
 
