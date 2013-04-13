@@ -1,2 +1,5 @@
-pegasus*.1
-pegasus*.xml
+*.1
+*.xml
+!manpages.xml
+*.pdf
+*.html
