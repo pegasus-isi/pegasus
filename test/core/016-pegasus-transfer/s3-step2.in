@@ -1,0 +1,6 @@
+s3://test@amazon/pegasus-isi-transfer-tests/many-small-files/filesave.png
+file:///lfs1/pegasus-transfer-testing/tmp/many-small-files/filesave.png
+s3://test@amazon/pegasus-isi-transfer-tests/many-small-files/gtk-media-play-ltr.png
+file:///lfs1/pegasus-transfer-testing/tmp/many-small-files/gtk-media-play-ltr.png
+s3://test@amazon/pegasus-isi-transfer-tests/many-small-files/multimedia-volume-control.svg
+file:///lfs1/pegasus-transfer-testing/tmp/many-small-files/multimedia-volume-control.svg
