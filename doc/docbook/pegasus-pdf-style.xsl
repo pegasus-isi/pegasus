@@ -2,7 +2,9 @@
 <xsl:stylesheet
    xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
 
-   <xsl:import href="http://yggdrasil.isi.edu/docbook-xsl/fo/docbook.xsl"/>
+   <!-- This should map via /etc/xml/catalog to a file on the local system -->
+   <xsl:import href="http://docbook.sourceforge.net/release/xsl/current/fo/docbook.xsl"/>
+   <!-- <xsl:import href="http://yggdrasil.isi.edu/docbook-xsl/fo/docbook.xsl"/> -->
 
    <xsl:param name="use.role.for.mediaobject">1</xsl:param>
    <xsl:param name="preferred.mediaobject.role">fo</xsl:param>

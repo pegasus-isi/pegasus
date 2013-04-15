@@ -2,7 +2,9 @@
 <xsl:stylesheet
    xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
 
-    <xsl:import href="http://yggdrasil.isi.edu/docbook-xsl/html/chunk.xsl"/>
+    <!-- This should map via /etc/xml/catalog to a file on the local system -->
+    <xsl:import href="http://docbook.sourceforge.net/release/xsl/current/html/chunk.xsl"/>
+    <!-- <xsl:import href="http://yggdrasil.isi.edu/docbook-xsl/html/chunk.xsl"/> -->
 
     <xsl:output method="html" encoding="UTF-8" indent="no"/> 
 
