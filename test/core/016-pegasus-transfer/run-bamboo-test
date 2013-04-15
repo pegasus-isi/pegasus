@@ -13,9 +13,7 @@ function timed_transfer
     echo
     echo
     echo
-    echo
-    echo
-    echo "================================================================="
+    echo "-----------------------------------------"
     echo
 
     start_ts=`/bin/date +'%s'`
@@ -56,12 +54,40 @@ function timed_transfer
 export GLOBUS_LOCATION=/ccg/software/globus/default
 . $GLOBUS_LOCATION/etc/globus-user-env.sh
 
-timed_transfer 1 20 "pegasus-transfer -f es3-to-cartman-3rdparty.in"
+echo
+echo
+echo "================================================================="
+echo 
+echo
+echo "S3 test..."
+echo
+echo
 
-timed_transfer 1 20 "pegasus-transfer -f many-small-files-3rdparty.in"
+timed_transfer 0 5 "pegasus-transfer -f s3-step1.in"
 
-timed_transfer 0 5 "pegasus-transfer -f medium-files-pull.in"
-timed_transfer 0 5 "pegasus-transfer -f medium-files-push.in"
+timed_transfer 0 5 "pegasus-transfer -f s3-step2.in"
+
+timed_transfer 0 5 "pegasus-cleanup -f s3-cleanup.in"
+
+echo
+echo
+echo "================================================================="
+echo 
+echo
+echo "3rd party gridftp test..."
+echo
+echo
+
+
+timed_transfer 0 10 "pegasus-transfer -f 3rdparty.in"
+
+timed_transfer 0 10 "pegasus-transfer -f 3rdparty-step2.in"
+
+timed_transfer 0 5  "pegasus-cleanup -f 3rdparty-cleanup.in"
+
+timed_transfer 0 20 "pegasus-transfer -f many-small-files-3rdparty.in"
+
+timed_transfer 0 5 "pegasus-transfer -f medium-files-push-3rdparty.in"
 
 
 echo
@@ -76,7 +102,7 @@ echo
 # NAT/Firewall simulation - set the tcp port range to something that is firewalled 
 export GLOBUS_TCP_PORT_RANGE=5000,6000
 
-timed_transfer 1 60 "pegasus-transfer -f es3-to-file.in"
+timed_transfer 0 10 "pegasus-transfer -f nat.in"
 timed_transfer 0 5 "pegasus-transfer -f medium-files-pull.in"
 timed_transfer 0 5 "pegasus-transfer -f medium-files-push.in"
 
