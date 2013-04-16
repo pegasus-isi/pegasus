@@ -1,0 +1,16 @@
+tr level1::sleep { 
+  site local {
+    pfn "/bin/sleep"
+    os "linux"
+    type "INSTALLED"
+  }
+}
+
+tr level2::sleep {   
+  site local {
+    pfn "/bin/sleep"
+    os "linux"
+    type "INSTALLED"
+  }
+}
+
