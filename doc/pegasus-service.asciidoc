@@ -1,0 +1,28 @@
+pegasus-service(1)
+==================
+Pegasus Team <pegasus@isi.edu>
+Version {VERSION}
+:doctype: manpage
+
+Name
+----
+pegasus-service - Runs the Pegasus Service server
+
+Synopsis
+--------
+[verse]
+pegasus-service [options]
+
+Options
+-------
+-p | --port::
+    The port to listen on
+-h | --host::
+    The host to bind to [default: 127.0.0.1]
+-d | --dburl::
+    The URL of the database [e.g. mysql://user:pass@127.0.0.1/dbname, sqlite:///path/to/dbfile]
+
+Authors
+-------
+Pegasus Team `<pegasus@isi.edu>`
+
