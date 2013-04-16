@@ -1,8 +1,5 @@
 #!python
+import pegasus.service.server
 
-def main():
-    pass
-
-if __name__ == '__main__':
-    main()
+pegasus.service.server.main()
 
