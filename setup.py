@@ -40,6 +40,7 @@ setup(
         "License :: OSI Approved :: Apache Software License",
     ],
     packages = find_packages(src),
+    namespace_packages = ["pegasus"],
     package_dir = {"": "src"},
     package_data = {"" : ["templates/*", "static/*"] },
     include_package_data = True,
