@@ -1,3 +1,5 @@
+from pegasus.service import app
+
 def main():
-    print "Hello, World!"
+    app.run(debug=True, port=5000)
 
