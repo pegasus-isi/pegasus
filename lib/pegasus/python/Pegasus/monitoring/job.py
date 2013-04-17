@@ -396,6 +396,7 @@ class Job:
         This function reads both stdout and stderr files and populates
         these fields in the Job class.
         """
+        my_max_encoded_length = MAX_OUTPUT_LENGTH - 2000
         if self._output_file is None:
             # This is the case for SUBDAG jobs
             self._stdout_text = None
@@ -404,7 +405,10 @@ class Job:
 
             try:
                 OUT = open(my_out_file, 'r')
-                self._stdout_text = utils.quote("#@ 1 stdout\n" + OUT.read())
+                buffer = OUT.read()
+                if len( buffer ) > my_max_encoded_length :
+                    buffer = buffer[:my_max_encoded_length]
+                self._stdout_text = utils.quote("#@ 1 stdout\n" + buffer)
             except IOError:
                 self._stdout_text = None
                 logger.warning("unable to read output file: %s, continuing..." % (my_out_file))
@@ -419,7 +423,10 @@ class Job:
 
             try:
                 ERR = open(my_err_file, 'r')
-                self._stderr_text = utils.quote(ERR.read())
+                buffer = ERR.read()
+                if len( buffer ) > my_max_encoded_length :
+                    buffer = buffer[:my_max_encoded_length]
+                self._stderr_text = utils.quote(buffer)
             except IOError:
                 self._stderr_text = None
                 logger.warning("unable to read error file: %s, continuing..." % (my_err_file))
