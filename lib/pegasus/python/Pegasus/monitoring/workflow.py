@@ -1170,6 +1170,10 @@ class Workflow:
             # For post-script SUCCESS/FAILED, we send the exitcode
             kwargs["exitcode"] = str(my_job._post_script_exitcode)
 
+        if event == "pre.end":
+            # For pre-script SUCCESS/FAILED, we send the exitcode
+            kwargs["exitcode"] = str(my_job._pre_script_exitcode)
+
         # Send job state event to database
         self.output_to_db("job_inst." + event, kwargs)
 
@@ -1923,7 +1927,10 @@ class Workflow:
         elif job_state == "PRE_SCRIPT_SUCCESS":
             self.db_send_job_brief(my_job, "pre.end", 0)
         elif job_state == "PRE_SCRIPT_FAILURE":
+            #PM-704 set the main exitcode to the prescript exitcode
+            my_job._main_job_exitcode = my_job._pre_script_exitcode
             self.db_send_job_brief(my_job, "pre.end", -1)
+            self.db_send_job_end(my_job, -1 )
         elif job_state == "SUBMIT":
             self.db_send_job_brief(my_job, "submit.start")
             self.db_send_job_brief(my_job, "submit.end", 0)
