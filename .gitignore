@@ -2,3 +2,5 @@ build
 dist
 *.pyc
 pegasus_service.egg-info
+*.db
+.*.swp
