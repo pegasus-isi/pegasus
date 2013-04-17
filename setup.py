@@ -2,13 +2,6 @@ import os
 import sys
 from setuptools import setup, find_packages
 
-root = os.path.dirname(sys.argv[0])
-src = os.path.join(root,"src")
-
-# Include this so we can get the version
-sys.path.insert(0,src)
-import pegasus.service
-
 # Utility function to read the README file.
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
@@ -27,7 +20,7 @@ if sys.version_info < (2,6):
 
 setup(
     name = "pegasus-service",
-    version = pegasus.service.__version__,
+    version = "0.1",
     author = "Pegasus Team",
     author_email = "pegasus-support@isi.edu",
     description = "Pegasus as a Service",
