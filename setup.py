@@ -44,7 +44,12 @@ setup(
     package_data = {"" : ["templates/*", "static/*"] },
     include_package_data = True,
     zip_safe = False,
-    scripts = ["bin/pegasus-service"],
+    #scripts = ["bin/pegasus-service"],
+    entry_points = {
+        'console_scripts': [
+            'pegasus-service = pegasus.service.server:main',
+        ]
+    },
     install_requires = dependencies
 )
 

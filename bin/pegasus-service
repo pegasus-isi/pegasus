@@ -1,5 +1,0 @@
-#!python
-import pegasus.service.server
-
-pegasus.service.server.main()
-
