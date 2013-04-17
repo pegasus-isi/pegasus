@@ -26,7 +26,8 @@ setup(
     zip_safe = False,
     entry_points = {
         'console_scripts': [
-            'pegasus-service = pegasus.service.server:main',
+            'pegasus-service-server = pegasus.service.server:main',
+            'pegasus-service-admin = pegasus.service.admin:main',
         ]
     },
     install_requires = [
