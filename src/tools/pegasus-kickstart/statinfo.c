@@ -651,7 +651,12 @@ printXMLStatInfo( char* buffer, const size_t size, size_t* len, size_t indent,
       
       append( buffer, size, len, ">" );
       if ( fd != -1 ) {
-        if ( lseek( fd, SEEK_SET, 0 ) != -1 ) {
+        /* Get the last dsize bytes of the file */
+        size_t offset = 0;
+        if (fsize > dsize) {
+          offset = fsize - dsize;
+        }
+        if ( lseek(fd, offset, SEEK_SET) != -1 ) {
           ssize_t rsize = read( fd, data, dsize );
           
           /* Fix for PM-691 
@@ -661,8 +666,8 @@ printXMLStatInfo( char* buffer, const size_t size, size_t* len, size_t indent,
            */
           //xmlquote( buffer, size, len, data, rsize );
           xmlquote( buffer, dsize, len, data, rsize );
-	}
-	close(fd);
+        }
+        close(fd);
       }
 
       append( buffer, size, len, "</data>\n" );
