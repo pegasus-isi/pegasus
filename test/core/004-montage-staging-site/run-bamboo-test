@@ -80,6 +80,7 @@ cat >sites.xml <<EOF
         <profile namespace="condor" key="should_transfer_files">Yes</profile>
         <profile namespace="condor" key="when_to_transfer_output">ON_EXIT</profile>
         <profile namespace="env" key="MONTAGE_HOME" >/ccg/software/montage/Montage_v3.3_mats</profile>
+        <profile namespace="env" key="GLOBUS_LOCATION" >/ccg/software/globus/default</profile>
     </site>
     <site handle="CCGData">
         <head-fs>
@@ -92,7 +93,6 @@ cat >sites.xml <<EOF
             <storage />
         </head-fs>
         <replica-catalog type="LRC" url="rlsn://dummyValue.url.edu" />
-        <profile namespace="env" key="GLOBUS_LOCATION" >/ccg/software/globus/default</profile>
     </site>
 </sitecatalog>
 EOF
