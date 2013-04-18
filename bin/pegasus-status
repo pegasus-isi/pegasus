@@ -1091,15 +1091,10 @@ sub condor_q(\%\%\@;%) {
 		  "FATAL: Unable to execute $condor_q -l $main::user $constraint: $!\n";
 	}
 
-	# skip intro
-	while (<Q>) {
-		last if /^--/;
-	}
-
 	my ( %db, @x );
 	while (<Q>) {
 		s/[\r\n]+$//;    # safe chomp
-		if ( length($_) > 2 ) {
+		if ( length($_) > 2 and substr($_, 0, 2) ne "--") {
 
 			# regular job classad
 			@x = split /\s+=\s+/, $_, 2;
@@ -1109,9 +1104,8 @@ sub condor_q(\%\%\@;%) {
 		else {
 			my $id = $db{clusterid};
 
-			# extra sanity?
-			die "nothing in queue?"  unless scalar keys %db;
-			die "nothing in cluster" unless defined $id;
+			# skip empty ads
+			next unless defined $id;
 
 			# noidle for Mats
 			unless ( $flags{noidle} && $db{jobstatus} == 1 ) {
