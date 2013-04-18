@@ -786,7 +786,7 @@ class Workflow:
             if wfparams["wf_uuid"] is not None:
                 self._wf_uuid = wfparams["wf_uuid"]
         else:
-            logger.error("wf_uuid not specified in braindump, skipping this (sub-)workflow...")
+            logger.error("wf_uuid not specified in braindump, skipping this (sub-)workflow. %s %s " %(rundir, workflow_config_file) )
             self._monitord_exit_code = 1
             return
         # Now that we have the wf_uuid, set root_wf_uuid if not already set
@@ -1825,19 +1825,27 @@ class Workflow:
             self._job_submit_seq = self._job_submit_seq + 1
 
         # Update job counter if this job is in the SUBMIT state
-        # or the PRE_SCRIPT_STARTED state. the job counters need
-        # to be updated in case of retries for pre script failures PM-704
-        if job_state == "SUBMIT" or job_state == "PRE_SCRIPT_STARTED":
-            if jobid in self._job_counters:
-                # Counter already exists for this job, just increate it by 1
-                self._job_counters[jobid] = self._job_counters[jobid] + 1
-            else:
-                # No counter for this job yet
-                self._job_counters[jobid] = 0
+        if job_state == "SUBMIT" :
             # Now, we set the job output counter for this particular job
-            my_job._job_output_counter = self._job_counters[jobid]
+            my_job._job_output_counter = self.increment_job_counter( jobid )
+
 
         return my_job_submit_seq
+
+    def increment_job_counter(self, jobid ):
+        """
+        This function increments the job counter by 1 in the internal job counters map
+        and returns the value.
+        If it does not exist for a job it is set to 0
+        """
+        if jobid in self._job_counters:
+            # Counter already exists for this job, just increate it by 1
+            self._job_counters[jobid] = self._job_counters[jobid] + 1
+        else:
+            # No counter for this job yet
+            self._job_counters[jobid] = 0
+
+        return self._job_counters[jobid]
 
     def job_update_info(self, jobid, job_submit_seq, sched_id=None):
         """
@@ -1943,6 +1951,10 @@ class Workflow:
         elif job_state == "PRE_SCRIPT_FAILURE":
             #PM-704 set the main exitcode to the prescript exitcode
             my_job._main_job_exitcode = my_job._pre_script_exitcode
+
+            # PM-704 the job counters need to be updated in case of retries for pre script failures
+            # Now, we set the job output counter for this particular job
+            my_job._job_output_counter = self.increment_job_counter( jobid )
 
             #record the job output for pegasus plan prescript logs
             #we only do for prescript failures. once job starts running
@@ -2136,6 +2148,8 @@ class Workflow:
             # No, this is the first time we get to this sub-workflow
             wf_retries[my_dagman_dir] = 0
             my_retry = 0
+
+        print "*** dagman dir %s retry value %s " %(my_dagman_dir,my_retry)
 
         # Compose directory... assuming replanning mode
         my_retry_dir = my_dagman_dir + ".%03d" % (my_retry)
