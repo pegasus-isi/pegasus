@@ -63,11 +63,11 @@ echo "S3 test..."
 echo
 echo
 
-timed_transfer 0 5 "pegasus-transfer -f s3-step1.in"
+timed_transfer 0 15 "pegasus-transfer -f s3-step1.in"
 
-timed_transfer 0 5 "pegasus-transfer -f s3-step2.in"
+timed_transfer 0 15 "pegasus-transfer -f s3-step2.in"
 
-timed_transfer 0 5 "pegasus-cleanup -f s3-cleanup.in"
+timed_transfer 0 15 "pegasus-cleanup -f s3-cleanup.in"
 
 echo
 echo
