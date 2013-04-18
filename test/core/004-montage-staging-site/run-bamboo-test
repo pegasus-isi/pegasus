@@ -92,6 +92,7 @@ cat >sites.xml <<EOF
             <storage />
         </head-fs>
         <replica-catalog type="LRC" url="rlsn://dummyValue.url.edu" />
+        <profile namespace="env" key="GLOBUS_LOCATION" >/ccg/software/globus/default</profile>
     </site>
 </sitecatalog>
 EOF
