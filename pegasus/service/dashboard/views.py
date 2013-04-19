@@ -23,11 +23,7 @@ import subprocess
 from decimal import Decimal
 from time import localtime, strftime
 
-
-class WorkflowsDetailsMissingError(Exception):
-    pass
-
-_master_db_url = 'sqlite:///%s/.pegasus/workflow.db' % os.getenv('HOME')
+_master_db_url = 'sqlite:///%s/.pegasus/workflow.dbs' % os.getenv('HOME')
 
 from flask import Flask, request, render_template, url_for, send_from_directory
 from flask.helpers import json
@@ -41,11 +37,15 @@ from pegasus.service import app
 from pegasus.service.dashboard.dashboard import Dashboard, Utils, NoWorkflowsFoundError
 from pegasus.service.dashboard.errors import MasterDBNotFoundError
 
+# XXX This does not appear to be used!
+class WorkflowsDetailsMissingError(Exception):
+    pass
+
 
 @app.route('/')
 def index():
     '''
-    List all work-flows from the master database.
+    List all workflows from the master database.
     '''
     try:
         dashboard = Dashboard(_master_db_url)
@@ -68,7 +68,7 @@ def index():
 @app.route('/root/<root_wf_id>/workflow/<wf_id>')
 def workflow(root_wf_id, wf_id=None):
     '''
-    Get details for a specific work-flow.
+    Get details for a specific workflow.
     '''
     wf_uuid = request.args.get('wf_uuid', None)
 
@@ -90,7 +90,7 @@ def workflow(root_wf_id, wf_id=None):
 @app.route('/root/<root_wf_id>/workflow/<wf_id>/sub_workflows/', methods=['GET'])
 def sub_workflows(root_wf_id, wf_id):
     '''
-    Get a list of all sub-workflow of a given work-flow.
+    Get a list of all sub-workflow of a given workflow.
     '''
     dashboard = Dashboard(_master_db_url, root_wf_id, wf_id)
     sub_workflows = dashboard.get_sub_workflows(wf_id)
@@ -108,7 +108,7 @@ def sub_workflows(root_wf_id, wf_id):
 @app.route('/root/<root_wf_id>/workflow/<wf_id>/jobs/failed/', methods=['GET'])
 def failed_jobs(root_wf_id, wf_id):
     '''
-    Get a list of all failed jobs of the latest instance for a given work-flow.
+    Get a list of all failed jobs of the latest instance for a given workflow.
     '''
     dashboard = Dashboard(_master_db_url, root_wf_id, wf_id)
     args = __get_datatables_args()
@@ -125,7 +125,7 @@ def failed_jobs(root_wf_id, wf_id):
 @app.route('/root/<root_wf_id>/workflow/<wf_id>/jobs/running/', methods=['GET'])
 def running_jobs(root_wf_id, wf_id):
     '''
-    Get a list of all running jobs of the latest instance for a given work-flow.
+    Get a list of all running jobs of the latest instance for a given workflow.
     '''
     dashboard = Dashboard(_master_db_url, root_wf_id, wf_id)
     args = __get_datatables_args()
@@ -140,7 +140,7 @@ def running_jobs(root_wf_id, wf_id):
 @app.route('/root/<root_wf_id>/workflow/<wf_id>/jobs/successful/', methods=['GET'])
 def successful_jobs(root_wf_id, wf_id):
     '''
-    Get a list of all successful jobs of the latest instance for a given work-flow.
+    Get a list of all successful jobs of the latest instance for a given workflow.
     '''
     dashboard = Dashboard(_master_db_url, root_wf_id, wf_id)
     args = __get_datatables_args()
@@ -176,7 +176,7 @@ def stdout(root_wf_id, wf_id, job_id):
     text = dashboard.get_stdout(wf_id, job_id)
 
     if text.stdout_text == None:
-        return 'No stdout for work-flow ' + wf_id + ' job-id ' + job_id
+        return 'No stdout for workflow ' + wf_id + ' job-id ' + job_id
     else:
         return text.stdout_text
 
@@ -190,7 +190,7 @@ def stderr(root_wf_id, wf_id, job_id):
     text = dashboard.get_stderr(wf_id, job_id)
 
     if text.stderr_text == None:
-        return 'No Standard error for work-flow ' + wf_id + ' job-id ' + job_id;
+        return 'No Standard error for workflow ' + wf_id + ' job-id ' + job_id;
     else:
         return text.stderr_text
 
@@ -284,7 +284,7 @@ def statistics(root_wf_id, wf_id):
     summary_times = dashboard.workflow_summary_stats(wf_id)
 
     for key, value in summary_times.items():
-        summary_times [key] = time_to_str(value)
+        summary_times[key] = time_to_str(value)
 
     workflow_stats = dashboard.workflow_stats()
 
@@ -297,7 +297,7 @@ def workflow_summary_stats(root_wf_id, wf_id):
     summary_times = dashboard.workflow_summary_stats(wf_id)
 
     for key, value in summary_times.items():
-        summary_times [key] = time_to_str(value)
+        summary_times[key] = time_to_str(value)
 
     return json.dumps(summary_times)
 
@@ -341,56 +341,56 @@ def __get_datatables_args():
     table_args = dict()
 
     if request.args.get('sEcho'):
-        table_args ['sequence'] = request.args.get('sEcho')
+        table_args['sequence'] = request.args.get('sEcho')
 
     if request.args.get('iColumns'):
-        table_args ['column-count'] = int(request.args.get('iColumns'))
+        table_args['column-count'] = int(request.args.get('iColumns'))
 
     if request.args.get('sColumns'):
-        table_args ['columns'] = request.args.get('sColumns')
+        table_args['columns'] = request.args.get('sColumns')
 
     if request.args.get('iDisplayStart'):
-        table_args ['offset'] = int(request.args.get('iDisplayStart'))
+        table_args['offset'] = int(request.args.get('iDisplayStart'))
 
     if request.args.get('iDisplayLength'):
-        table_args ['limit'] = int(request.args.get('iDisplayLength'))
+        table_args['limit'] = int(request.args.get('iDisplayLength'))
 
     if request.args.get('sSearch'):
-        table_args ['filter'] = request.args.get('sSearch')
+        table_args['filter'] = request.args.get('sSearch')
 
     if request.args.get('bRegex'):
-        table_args ['filter-regex'] = request.args.get('bRegex')
+        table_args['filter-regex'] = request.args.get('bRegex')
 
     if request.args.get('iSortingCols'):
-        table_args ['sort-col-count'] = int(request.args.get('iSortingCols'))
+        table_args['sort-col-count'] = int(request.args.get('iSortingCols'))
 
     if request.args.get('time_filter'):
-        table_args ['time_filter'] = request.args.get('time_filter')
+        table_args['time_filter'] = request.args.get('time_filter')
 
     if request.args.get('iColumns'):
         for i in range(int(request.args.get('iColumns'))):
             i = str(i)
 
             if request.args.get('mDataProp_' + i):
-                table_args ['mDataProp_' + i] = request.args.get('mDataProp_' + i)
+                table_args['mDataProp_' + i] = request.args.get('mDataProp_' + i)
 
             if request.args.get('sSearch_' + i):
-                table_args ['sSearch_' + i] = request.args.get('sSearch_' + i)
+                table_args['sSearch_' + i] = request.args.get('sSearch_' + i)
 
             if request.args.get('bRegex_' + i):
-                table_args ['bRegex_' + i] = request.args.get('bRegex_' + i)
+                table_args['bRegex_' + i] = request.args.get('bRegex_' + i)
 
             if request.args.get('bSearchable_' + i):
-                table_args ['bSearchable_' + i] = request.args.get('bSearchable_' + i)
+                table_args['bSearchable_' + i] = request.args.get('bSearchable_' + i)
 
             if request.args.get('iSortCol_' + i):
-                table_args ['iSortCol_' + i] = int(request.args.get('iSortCol_' + i))
+                table_args['iSortCol_' + i] = int(request.args.get('iSortCol_' + i))
 
             if request.args.get('bSortable_' + i):
-                table_args ['bSortable_' + i] = request.args.get('bSortable_' + i)
+                table_args['bSortable_' + i] = request.args.get('bSortable_' + i)
 
             if request.args.get('sSortDir_' + i):
-                table_args ['sSortDir_' + i] = request.args.get('sSortDir_' + i)
+                table_args['sSortDir_' + i] = request.args.get('sSortDir_' + i)
 
     return table_args
 
@@ -440,6 +440,7 @@ def capitalize(str):
 def page_not_found(error):
     return render_template('error/404.html')
 
+# XXX This does not appear to be used!
 @app.errorhandler(WorkflowsDetailsMissingError)
 def workflow_details_missing(error):
     return render_template('error/workflow/workflow_details_missing.html');

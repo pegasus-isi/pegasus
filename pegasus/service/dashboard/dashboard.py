@@ -58,8 +58,8 @@ class Dashboard(object):
         self._master_db_url = conn_url
     
         """
-        If the ID is specified, it means that the query is specific to a work-flow.
-        So we will now query the master database to get the connection URL for the work-flow.
+        If the ID is specified, it means that the query is specific to a workflow.
+        So we will now query the master database to get the connection URL for the workflow.
         """ 
         if root_wf_id or wf_id:
             self.initialize(root_wf_id, wf_id)
@@ -79,14 +79,14 @@ class Dashboard(object):
     
     def __get_wf_db_url(self):
         if not self._wf_db_url:
-            raise ValueError, 'Work-flow database URL is not set'
+            raise ValueError, 'workflow database URL is not set'
         
         return self._wf_db_url
 
     def get_root_workflow_list(self, **table_args):
         """
-        Get basic information about all work-flows running, on all databases. This is for the index page.
-        Returns a list of work-flows.
+        Get basic information about all workflows running, on all databases. This is for the index page.
+        Returns a list of workflows.
         """
         self._workflows = []
         
@@ -100,7 +100,7 @@ class Dashboard(object):
                 self._workflows.extend(workflows)
     
             if len(self._workflows) == 0:
-                # Throw no work-flows found error.
+                # Throw no workflows found error.
                 raise NoWorkflowsFoundError(count=count, filtered=filtered)
             
             counts = all_workflows.get_workflow_counts()
@@ -274,8 +274,8 @@ class Dashboard(object):
     
     def get_workflow_information(self, wf_id=None, wf_uuid=None):
         """
-        Get work-flow specific information. This is when user click on a work-flow link.
-        Returns a work-flow object.
+        Get workflow specific information. This is when user click on a workflow link.
+        Returns a workflow object.
         """
         try:
             if not wf_id and not wf_uuid:
@@ -365,7 +365,7 @@ class Dashboard(object):
     
     def get_job_information(self, wf_id, job_id):
         """
-        Get job specific information. This is when user click on a job link, on the work-flow details page.
+        Get job specific information. This is when user click on a job link, on the workflow details page.
         Returns a Job object.
         """
         try:
