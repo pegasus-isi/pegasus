@@ -326,10 +326,6 @@ def time_stats(root_wf_id, wf_id):
 
     return '{}'
 
-@app.route('/favicon.ico')
-def favicon():
-    return send_from_directory(os.path.join(pegasus_env_path ['pegasus_share_dir'], 'dashboard/static'), 'favicon.ico')
-
 def __update_timestamp(workflows):
     for workflow in workflows:
         workflow.timestamp = strftime('%a, %d %b %Y %H:%M:%S', localtime(workflow.timestamp))
