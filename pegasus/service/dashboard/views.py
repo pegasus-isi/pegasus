@@ -33,7 +33,7 @@ from Pegasus.tools import utils
 
 from pegasus.service import app
 from pegasus.service.dashboard.dashboard import Dashboard, Utils, NoWorkflowsFoundError
-from pegasus.service.dashboard.errors import MasterDBNotFoundError
+from pegasus.service.dashboard.queries import MasterDBNotFoundError
 
 # XXX This does not appear to be used!
 class WorkflowsDetailsMissingError(Exception):

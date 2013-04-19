@@ -23,7 +23,8 @@ from Pegasus.netlogger.analysis.schema.stampede_schema import *
 from Pegasus.netlogger.analysis.error.Error import StampedeDBNotFoundError
 from Pegasus.netlogger.nllog import DoesLogging
 
-from pegasus.service.dashboard.errors import MasterDBNotFoundError
+class MasterDBNotFoundError (Exception):
+    pass
 
 class MasterDatabase(SQLAlchemyInit, DoesLogging):
     
