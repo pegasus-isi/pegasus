@@ -32,7 +32,7 @@ from Pegasus.netlogger.analysis.error.Error import StampedeDBNotFoundError
 from Pegasus.tools import utils
 
 from pegasus.service import app
-from pegasus.service.dashboard.dashboard import Dashboard, Utils, NoWorkflowsFoundError
+from pegasus.service.dashboard.dashboard import Dashboard, NoWorkflowsFoundError
 from pegasus.service.dashboard.queries import MasterDBNotFoundError
 
 # XXX This does not appear to be used!
@@ -392,48 +392,6 @@ def __get_datatables_args():
 
     return table_args
 
-@app.template_filter('dec_to_float')
-def dec_to_float(dec):
-    '''
-    Decimal to Float
-    '''
-    if dec:
-        return float(dec)
-    else:
-        return None
-
-
-@app.template_filter('time_to_date_str')
-def time_to_date_str(time):
-    '''
-    Change an integer duration to be represented as a data string
-    '''
-    return strftime('%Y-%m-%d %H', localtime(time))
-
-
-@app.template_filter('to_lower_case')
-def to_lower_case(str):
-    '''
-    Convert string to lower case
-    '''
-    return str.lower()
-
-
-@app.template_filter('to_upper_case')
-def to_upper_case(str):
-    '''
-    Convert string to upper case
-    '''
-    return str.upper()
-
-
-@app.template_filter('capitalize')
-def capitalize(str):
-    '''
-    Capitalizes first character of the String
-    '''
-    return str.capitalize()
-
 @app.errorhandler(404)
 def page_not_found(error):
     return render_template('error/404.html')
@@ -450,69 +408,4 @@ def master_database_missing(error):
 @app.errorhandler(StampedeDBNotFoundError)
 def stampede_database_missing(error):
     return render_template('error/stampede_database_missing.html')
-
-@app.template_filter('time_to_str')
-def time_to_str(time):
-    '''
-    Change an integer duration to be represented as d days h hours m mins s secs
-    but only use the to major units(ie, drop seconds if hours and minutes are
-    populated)
-    '''
-    max_units = 2
-    num_units = 0
-    if time is not None and(isinstance(time, Decimal) or isinstance(time, float)):
-        str_time = ''
-        time = int(time)
-
-        if time >= Utils.DAY:
-            temp_time = time / Utils.DAY
-
-            if temp_time > 1:
-                str_time += str(temp_time) + ' days '
-            else:
-                str_time += str(time / Utils.DAY) + ' day '
-
-            time = time % Utils.DAY
-            num_units += 1
-
-        if time >= Utils.HOUR:
-
-            temp_time = time / Utils.HOUR
-
-            if temp_time > 1:
-                str_time += str(temp_time) + ' hours '
-            else:
-                str_time += str(time / Utils.HOUR) + ' hour '
-
-            time = time % Utils.HOUR
-            num_units += 1
-
-        if time >= Utils.MIN and num_units < max_units:
-
-            temp_time = time / Utils.MIN
-
-            if temp_time > 1:
-                str_time += str(temp_time) + ' mins '
-            else:
-                str_time += str(time / Utils.MIN) + ' min '
-
-            time = time % Utils.MIN
-            num_units += 1
-
-        if time > 0 and num_units < max_units:
-
-            if time > 1:
-                str_time += str(time) + ' secs '
-            else:
-                str_time += str(time) + ' sec '
-
-        # 0 second duration - is this the way we want to display that?
-        if str_time == '':
-            str_time = '0 secs'
-
-        return str_time.strip()
-
-    else:
-
-        return time
 

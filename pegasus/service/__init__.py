@@ -22,6 +22,5 @@ app.config.from_pyfile(locate_config())
 from flask.ext.sqlalchemy import SQLAlchemy
 db = SQLAlchemy(app)
 
-from pegasus.service import models
-from pegasus.service.dashboard import views
+from pegasus.service import filters, dashboard
 

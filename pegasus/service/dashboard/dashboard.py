@@ -33,23 +33,6 @@ class NoWorkflowsFoundError(Exception):
         if 'filtered' in args:
             self.filtered = args['filtered']
 
-class Utils(object):
-    
-    DAY = 86400
-    HOUR = 3600
-    MIN = 60
-
-    @staticmethod
-    def hour_multiplier(j):
-        j.date_format *= Utils.HOUR
-    
-    @staticmethod
-    def delete_pid_file(pid_filename):
-        try:
-            os.unlink(pid_filename)
-        except OSError:
-            print('Cannot delete pid file %s' % pid_filename)
-
 class Dashboard(object):
     
     def __init__(self, root_wf_id=None, wf_id=None):
@@ -239,10 +222,10 @@ class Dashboard(object):
             job, invocation = workflow_plots.get_jobs_run_by_time(), workflow_plots.get_invocation_by_time()
             
             for j in job:
-                Utils.hour_multiplier(j)
+                j.date_format *= 3600
             
             for i in invocation:
-                Utils.hour_multiplier(i)
+                i.date_format *= 3600
             
             return job, invocation
         
