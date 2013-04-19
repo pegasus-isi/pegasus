@@ -6,8 +6,8 @@
 {% if jobs %}
 {% for i in range(0, jobs|count) %}
 {
-	"DT_RowClass" : "running",
-	"0" : {{ jobs[i].exec_job_id|tojson|safe  }} 
+    "DT_RowClass" : "running",
+    "0" : {{ jobs[i].exec_job_id|tojson|safe  }} 
 }
 {% if i + 1 != jobs|count %}
 ,
