@@ -32,8 +32,8 @@ def read(fname):
 setup(
     name = "pegasus-wms",
     version = readversion(),
-    author = "Gideon Juve",
-    author_email = "gideon@isi.edu",
+    author = "Pegasus Team",
+    author_email = "pegasus@isi.edu",
     description = "Pegasus Workflow Management System Python API",
     long_description = read("README"),
     license = "Apache2",
