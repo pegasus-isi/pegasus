@@ -1,17 +1,17 @@
-pegasus-service(1)
-==================
+pegasus-service-server(1)
+=========================
 Pegasus Team <pegasus@isi.edu>
 Version {VERSION}
 :doctype: manpage
 
 Name
 ----
-pegasus-service - Runs the Pegasus Service server
+pegasus-service-server - Runs the Pegasus Service server
 
 Synopsis
 --------
 [verse]
-pegasus-service [options]
+pegasus-service-server [options]
 
 Options
 -------

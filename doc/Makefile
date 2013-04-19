@@ -3,7 +3,13 @@ ASCIIDOC = asciidoc --attribute VERSION=$(VERSION)
 XSLTPROC = xsltproc
 FOP = fop
 
-all: manual.html manual.pdf pegasus-service.pdf pegasus-service.1 pegasus-service.html
+MANPAGES = pegasus-service-server.man
+
+.PHONY: clean $(MANPAGES)
+
+all: manual.html manual.pdf $(MANPAGES)
+
+$(MANPAGES): %.man : %.pdf %.1 %.html
 
 %.xml: %.asciidoc
 	$(ASCIIDOC) -o $@ -b docbook $^
