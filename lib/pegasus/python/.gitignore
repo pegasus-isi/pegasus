@@ -1,3 +1,4 @@
 boto
 pysqlite2
 sqlalchemy
+*.egg-info
