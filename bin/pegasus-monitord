@@ -1013,7 +1013,6 @@ else:
             logger.info( 'Rotating sqlite db file %s' %db_path)
             utils.rotate_log_file( db_path )
 
-
     try:
         wf_event_sink = eo.create_wf_event_sink(event_dest, db_stats=db_stats,
                                                 restart=restart_logging, enc=encoding)
@@ -1117,12 +1116,16 @@ else:
     wf_notification_fn_prefix = os.path.join(run, output_dir)
 
 # Empty sub-workflow retry information if in replay mode
-if replay_mode:
-    try:
-        os.unlink(wf_retry_fn)
-    except OSError:
-        # Nothing to do...
-        pass
+# PM-704 in replay or restart logging case we always take a backup
+# of monitord.subwf.db . Otherwise monitord loses track of workflow
+# retries workflow.has_subworkflow() function where it tries to determine
+# submit directory for the sub workflow
+if restart_logging:
+    subworkflow_db_file = wf_retry_fn +  ".db"
+    if os.path.isfile(subworkflow_db_file):
+        logger.info( 'Rotating sub workflow db file %s' %subworkflow_db_file)
+        utils.rotate_log_file( subworkflow_db_file )
+
 
 # Link wf_retry_dict to persistent storage
 try:

@@ -2139,6 +2139,7 @@ class Workflow:
             return my_dagman_out
 
         # Check if we have seen this sub-workflow before
+        """
         if my_dagman_dir in wf_retries:
             # Yes, increment out retry counter...
             my_retry = wf_retries[my_dagman_dir]
@@ -2148,8 +2149,16 @@ class Workflow:
             # No, this is the first time we get to this sub-workflow
             wf_retries[my_dagman_dir] = 0
             my_retry = 0
+        """
+        # PM-704 the retries for sub workflows are tracked solely on basis
+        # of job counters. this handles case where we have prescript errors
+        # workflow fails. we fix prescript error and submit rescue dag
+        my_retry = self._job_counters[jobid]
+        if my_retry is None:
+            my_retry = 0
 
-        print "*** dagman dir %s retry value %s " %(my_dagman_dir,my_retry)
+        wf_retries[my_dagman_dir] = my_retry
+        #print "*** dagman dir %s retry value %s " %(my_dagman_dir,my_retry)
 
         # Compose directory... assuming replanning mode
         my_retry_dir = my_dagman_dir + ".%03d" % (my_retry)
