@@ -14,22 +14,13 @@
 
 __author__ = 'Rajiv Mayani'
 
-# Python modules
-import os
-import sys
-import atexit
-import optparse
-import subprocess
-from decimal import Decimal
 from time import localtime, strftime
 
-from flask import Flask, request, render_template, url_for, send_from_directory
+from flask import request, render_template, url_for 
 from flask.helpers import json
-from jinja2 import FileSystemLoader
 from sqlalchemy.orm.exc import NoResultFound
 
 from Pegasus.netlogger.analysis.error.Error import StampedeDBNotFoundError
-from Pegasus.tools import utils
 
 from pegasus.service import app
 from pegasus.service.dashboard.dashboard import Dashboard, NoWorkflowsFoundError
@@ -38,7 +29,6 @@ from pegasus.service.dashboard.queries import MasterDBNotFoundError
 # XXX This does not appear to be used!
 class WorkflowsDetailsMissingError(Exception):
     pass
-
 
 @app.route('/')
 def index():

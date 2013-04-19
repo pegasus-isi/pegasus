@@ -14,8 +14,6 @@
 
 __author__ = 'Rajiv Mayani'
 
-from time import localtime
-
 from Pegasus.netlogger.analysis.modules._base import SQLAlchemyInit
 from Pegasus.netlogger.analysis.schema.schema_check import ErrorStrings, SchemaCheck, SchemaVersionError
 from Pegasus.netlogger.analysis.schema.stampede_dashboard_schema import DashboardWorkflow, DashboardWorkflowstate, initializeToDashboardDB

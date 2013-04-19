@@ -14,7 +14,6 @@
 
 __author__ = "Rajiv Mayani"
 
-import os
 from time import localtime, strftime
 from Pegasus.tools import utils
 from Pegasus.plots_stats import utils as stats_utils
