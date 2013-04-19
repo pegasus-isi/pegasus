@@ -8,26 +8,21 @@ def read(fname):
 
 setup(
     name = "pegasus-wms",
-    version = "4.3",
-    author = "Pegasus Team",
-    author_email = "pegasus-support@isi.edu",
-    description = "Pegasus",
-    long_description = "",
+    version = "4.3.0",
+    author = "Gideon Juve",
+    author_email = "gideon@isi.edu",
+    description = "Pegasus Workflow Management System Python API",
+    long_description = read("README"),
     license = "Apache2",
-    url = "https://github.com/pegasus-isi/pegasus",
+    url = "http://pegasus.isi.edu",
     classifiers = [
         "Development Status :: 3 - Alpha",
         "Topic :: Utilities",
         "License :: OSI Approved :: Apache Software License",
     ],
-    packages = find_packages(),
-    #package_data = {"" : ["templates/*", "static/*"] },
-    #include_package_data = True,
-    zip_safe = False,
+    packages = ["Pegasus"],
     install_requires = [
-        "SQLAlchemy",
-        "boto",
-        "pysqlite"
+        "SQLAlchemy"
     ]
 )
 
