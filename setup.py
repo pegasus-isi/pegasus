@@ -9,8 +9,8 @@ def read(fname):
 setup(
     name = "pegasus-service",
     version = "0.1",
-    author = "Gideon Juve",
-    author_email = "gideon@isi.edu",
+    author = "Pegasus Team",
+    author_email = "pegasus@isi.edu",
     description = "Pegasus as a Service",
     long_description = read("README.md"),
     license = "Apache2",
