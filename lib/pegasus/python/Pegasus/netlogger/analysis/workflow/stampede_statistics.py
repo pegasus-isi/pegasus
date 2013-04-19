@@ -837,7 +837,8 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         sq_8 = self.session.query(func.max(Invocation.exitcode))
         sq_8 = sq_8.filter(Invocation.job_instance_id == JobInstance.job_instance_id).correlate(JobInstance)
         sq_8 = sq_8.filter(Invocation.wf_id == Job.wf_id).correlate(Job)
-        sq_8 = sq_8.filter(Invocation.task_submit_seq >= 0)
+        #PM-704 the task submit sequence needs to be >= -1 to include prescript status
+        sq_8 = sq_8.filter(Invocation.task_submit_seq >= -1)
         sq_8 = sq_8.group_by().subquery()
         
         JobInstanceSub = orm.aliased(JobInstance)
