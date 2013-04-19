@@ -23,8 +23,6 @@ import subprocess
 from decimal import Decimal
 from time import localtime, strftime
 
-_master_db_url = 'sqlite:///%s/.pegasus/workflow.dbs' % os.getenv('HOME')
-
 from flask import Flask, request, render_template, url_for, send_from_directory
 from flask.helpers import json
 from jinja2 import FileSystemLoader
@@ -48,7 +46,7 @@ def index():
     List all workflows from the master database.
     '''
     try:
-        dashboard = Dashboard(_master_db_url)
+        dashboard = Dashboard()
         args = __get_datatables_args()
         count, filtered, workflows, totals = dashboard.get_root_workflow_list(**args)
         __update_label_link(workflows)
@@ -76,9 +74,9 @@ def workflow(root_wf_id, wf_id=None):
         raise ValueError, 'Workflow ID or Workflow UUID is required'
 
     if wf_id:
-        dashboard = Dashboard(_master_db_url, root_wf_id, wf_id=wf_id)
+        dashboard = Dashboard(root_wf_id, wf_id=wf_id)
     else:
-        dashboard = Dashboard(_master_db_url, root_wf_id)
+        dashboard = Dashboard(root_wf_id)
 
     try:
         counts, details, statistics = dashboard.get_workflow_information(wf_id, wf_uuid)
@@ -92,7 +90,7 @@ def sub_workflows(root_wf_id, wf_id):
     '''
     Get a list of all sub-workflow of a given workflow.
     '''
-    dashboard = Dashboard(_master_db_url, root_wf_id, wf_id)
+    dashboard = Dashboard(root_wf_id, wf_id)
     sub_workflows = dashboard.get_sub_workflows(wf_id)
 
     # is_xhr = True if it is AJAX request.
@@ -110,7 +108,7 @@ def failed_jobs(root_wf_id, wf_id):
     '''
     Get a list of all failed jobs of the latest instance for a given workflow.
     '''
-    dashboard = Dashboard(_master_db_url, root_wf_id, wf_id)
+    dashboard = Dashboard(root_wf_id, wf_id)
     args = __get_datatables_args()
 
     total_count, filtered_count, failed_jobs_list = dashboard.get_failed_jobs(wf_id, **args)
@@ -127,7 +125,7 @@ def running_jobs(root_wf_id, wf_id):
     '''
     Get a list of all running jobs of the latest instance for a given workflow.
     '''
-    dashboard = Dashboard(_master_db_url, root_wf_id, wf_id)
+    dashboard = Dashboard(root_wf_id, wf_id)
     args = __get_datatables_args()
 
     total_count, filtered_count, running_jobs_list = dashboard.get_running_jobs(wf_id, **args)
@@ -142,7 +140,7 @@ def successful_jobs(root_wf_id, wf_id):
     '''
     Get a list of all successful jobs of the latest instance for a given workflow.
     '''
-    dashboard = Dashboard(_master_db_url, root_wf_id, wf_id)
+    dashboard = Dashboard(root_wf_id, wf_id)
     args = __get_datatables_args()
 
     total_count, filtered_count, successful_jobs_list = dashboard.get_successful_jobs(wf_id, **args)
@@ -159,7 +157,7 @@ def job(root_wf_id, wf_id, job_id):
     '''
     Get details of a specific job instance.
     '''
-    dashboard = Dashboard(_master_db_url, root_wf_id, wf_id)
+    dashboard = Dashboard(root_wf_id, wf_id)
     job = dashboard.get_job_information(wf_id, job_id)
 
     if not job:
@@ -172,7 +170,7 @@ def stdout(root_wf_id, wf_id, job_id):
     '''
     Get stdout contents for a specific job instance.
     '''
-    dashboard = Dashboard(_master_db_url, root_wf_id, wf_id)
+    dashboard = Dashboard(root_wf_id, wf_id)
     text = dashboard.get_stdout(wf_id, job_id)
 
     if text.stdout_text == None:
@@ -186,7 +184,7 @@ def stderr(root_wf_id, wf_id, job_id):
     '''
     Get stderr contents for a specific job instance.
     '''
-    dashboard = Dashboard(_master_db_url, root_wf_id, wf_id)
+    dashboard = Dashboard(root_wf_id, wf_id)
     text = dashboard.get_stderr(wf_id, job_id)
 
     if text.stderr_text == None:
@@ -199,7 +197,7 @@ def successful_invocations(root_wf_id, wf_id, job_id):
     '''
     Get list of successful invocations for a given job.
     '''
-    dashboard = Dashboard(_master_db_url, root_wf_id, wf_id)
+    dashboard = Dashboard(root_wf_id, wf_id)
     successful_invocations_list = dashboard.get_successful_job_invocation(wf_id, job_id)
 
     for item in successful_invocations_list:
@@ -220,7 +218,7 @@ def failed_invocations(root_wf_id, wf_id, job_id):
     '''
     Get list of failed invocations for a given job.
     '''
-    dashboard = Dashboard(_master_db_url, root_wf_id, wf_id)
+    dashboard = Dashboard(root_wf_id, wf_id)
     failed_invocations_list = dashboard.get_failed_job_invocation(wf_id, job_id)
 
     # is_xhr = True if it is AJAX request.
@@ -239,7 +237,7 @@ def invocation(root_wf_id, wf_id, job_id, task_id=None):
     '''
     Get detailed invocation information
     '''
-    dashboard = Dashboard(_master_db_url, root_wf_id, wf_id)
+    dashboard = Dashboard(root_wf_id, wf_id)
     invocation = dashboard.get_invocation_information(wf_id, job_id, task_id)
 
     return render_template('workflow/job/invocation/invocation_details.html', root_wf_id=root_wf_id, wf_id=wf_id, job_id=job_id, task_id=task_id, invocation=invocation)
@@ -250,7 +248,7 @@ def charts(root_wf_id, wf_id):
     '''
     Get job-distribution information
     '''
-    dashboard = Dashboard(_master_db_url, root_wf_id, wf_id)
+    dashboard = Dashboard(root_wf_id, wf_id)
     job_dist = dashboard.plots_transformation_statistics(wf_id)
 
     return render_template('workflow/charts.html', root_wf_id=root_wf_id, wf_id=wf_id, job_dist=job_dist)
@@ -261,7 +259,7 @@ def time_chart(root_wf_id, wf_id):
     '''
     Get job-distribution information
     '''
-    dashboard = Dashboard(_master_db_url, root_wf_id, wf_id)
+    dashboard = Dashboard(root_wf_id, wf_id)
     time_chart_job, time_chart_invocation = dashboard.plots_time_chart(wf_id)
 
     return render_template('workflow/charts/time_chart.json', root_wf_id=root_wf_id, wf_id=wf_id, time_chart_job=time_chart_job, time_chart_invocation=time_chart_invocation)
@@ -271,7 +269,7 @@ def gantt_chart(root_wf_id, wf_id):
     '''
     Get information required to generate a Gantt chart.
     '''
-    dashboard = Dashboard(_master_db_url, root_wf_id, wf_id)
+    dashboard = Dashboard(root_wf_id, wf_id)
     gantt_chart = dashboard.plots_gantt_chart()
     return render_template('workflow/charts/gantt_chart.json', root_wf_id=root_wf_id, wf_id=wf_id, gantt_chart=gantt_chart)
 
@@ -280,7 +278,7 @@ def statistics(root_wf_id, wf_id):
     '''
     Get workflow statistics information
     '''
-    dashboard = Dashboard(_master_db_url, root_wf_id, wf_id)
+    dashboard = Dashboard(root_wf_id, wf_id)
     summary_times = dashboard.workflow_summary_stats(wf_id)
 
     for key, value in summary_times.items():
@@ -293,7 +291,7 @@ def statistics(root_wf_id, wf_id):
 
 @app.route('/root/<root_wf_id>/workflow/<wf_id>/statistics/summary', methods=['GET'])
 def workflow_summary_stats(root_wf_id, wf_id):
-    dashboard = Dashboard(_master_db_url, root_wf_id, wf_id)
+    dashboard = Dashboard(root_wf_id, wf_id)
     summary_times = dashboard.workflow_summary_stats(wf_id)
 
     for key, value in summary_times.items():
@@ -304,25 +302,25 @@ def workflow_summary_stats(root_wf_id, wf_id):
 
 @app.route('/root/<root_wf_id>/workflow/<wf_id>/statistics/workflow', methods=['GET'])
 def workflow_stats(root_wf_id, wf_id):
-    dashboard = Dashboard(_master_db_url, root_wf_id, wf_id)
+    dashboard = Dashboard(root_wf_id, wf_id)
     return json.dumps(dashboard.workflow_stats())
 
 
 @app.route('/root/<root_wf_id>/workflow/<wf_id>/statistics/job_breakdown', methods=['GET'])
 def job_breakdown_stats(root_wf_id, wf_id):
-    dashboard = Dashboard(_master_db_url, root_wf_id, wf_id)
+    dashboard = Dashboard(root_wf_id, wf_id)
     return json.dumps(dashboard.job_breakdown_stats())
 
 
 @app.route('/root/<root_wf_id>/workflow/<wf_id>/statistics/job', methods=['GET'])
 def job_stats(root_wf_id, wf_id):
-    dashboard = Dashboard(_master_db_url, root_wf_id, wf_id)
+    dashboard = Dashboard(root_wf_id, wf_id)
     return json.dumps(dashboard.job_stats())
 
 
 @app.route('/root/<root_wf_id>/workflow/<wf_id>/statistics/time', methods=['GET'])
 def time_stats(root_wf_id, wf_id):
-    dashboard = Dashboard(_master_db_url, root_wf_id, wf_id)
+    dashboard = Dashboard(root_wf_id, wf_id)
 
     return '{}'
 

@@ -12,7 +12,8 @@ import os
 # The secret key used by Flask to encrypt session keys
 SECRET_KEY = os.urandom(24)
 
-# The URI of the database for SQLAlchemy
-SQLALCHEMY_DATABASE_URI = "sqlite:///%s/test.db" % os.getcwd()
+# The URI of the database
 #SQLALCHEMY_DATABASE_URI = "mysql://pegasus:secret@127.0.0.1:3306/pegasus_service"
+SQLALCHEMY_DATABASE_URI = 'sqlite:///%s/.pegasus/workflow.db' % os.getenv('HOME')
+
 

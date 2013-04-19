@@ -20,6 +20,7 @@ from Pegasus.tools import utils
 from Pegasus.plots_stats import utils as stats_utils
 from Pegasus.netlogger.analysis.workflow import stampede_statistics
 
+from pegasus.service import app
 from pegasus.service.dashboard import queries
 
 class NoWorkflowsFoundError(Exception):
@@ -51,12 +52,9 @@ class Utils(object):
 
 class Dashboard(object):
     
-    def __init__(self, conn_url, root_wf_id=None, wf_id=None):
-        if not conn_url:
-            raise ValueError, 'A connection URL is required'
-        
-        self._master_db_url = conn_url
-    
+    def __init__(self, root_wf_id=None, wf_id=None):
+        self._master_db_url = app.config["SQLALCHEMY_DATABASE_URI"]
+         
         """
         If the ID is specified, it means that the query is specific to a workflow.
         So we will now query the master database to get the connection URL for the workflow.
