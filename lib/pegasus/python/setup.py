@@ -49,7 +49,7 @@ setup(
         "Topic :: Utilities",
         "License :: OSI Approved :: Apache Software License",
     ],
-    packages = ["Pegasus"],
+    packages = find_packages(),
     install_requires = [
         "SQLAlchemy"
     ]
