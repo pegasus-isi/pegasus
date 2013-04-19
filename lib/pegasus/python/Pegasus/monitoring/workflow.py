@@ -50,6 +50,7 @@ re_parse_dag_submit_files = re.compile(r"JOB\s+(\S+)\s(\S+)(\s+DONE)?", re.IGNOR
 re_parse_pmc_submit_files = re.compile(r"TASK\s+(\S*)\s(\S+)", re.IGNORECASE)
 re_parse_dag_script = re.compile(r"SCRIPT (?:PRE|POST)\s+(\S+)\s(\S+)\s(.*)", re.IGNORECASE)
 re_parse_dag_subdag = re.compile(r"SUBDAG EXTERNAL\s+(\S+)\s(\S+)\s?(?:DIR)?\s?(\S+)?", re.IGNORECASE)
+re_parse_planner_args = re.compile(r"\s*-Dpegasus.log.\*=(\S+)\s.*", re.IGNORECASE )
 
 # Constants
 MONITORD_START_FILE = "monitord.started"   # filename for writing when monitord starts
@@ -157,7 +158,7 @@ class Workflow:
                                 self._job_info[my_jobid][0] = my_sub
                             else:
                                 # No entry for this job, let's create a new one
-                                self._job_info[my_jobid] = [my_sub, None, None, None, None, False, None, None]
+                                self._job_info[my_jobid] = [my_sub, None, None, None, None, False, None, None, None]
                 elif dag_line.strip().lower().startswith("task"):
                     # This is a PMC DAG entry
                     my_match = re_parse_pmc_submit_files.search(dag_line)
@@ -167,7 +168,7 @@ class Workflow:
                         if my_jobid in self._job_info:
                             self._job_info[my_jobid][0] = None
                         else:
-                            self._job_info[my_jobid] = [None, None, None, None, None, False, None, None]
+                            self._job_info[my_jobid] = [None, None, None, None, None, False, None, None, None]
                 elif (dag_line.lower()).find("script post") >= 0:
                     # Found SCRIPT POST line, parse it
                     my_match = re_parse_dag_script.search(dag_line)
@@ -181,7 +182,7 @@ class Workflow:
                             self._job_info[my_jobid][4] = my_args
                         else:
                             # No entry for this job, let's create a new one
-                            self._job_info[my_jobid] = [None, None, None, my_exec, my_args, False, None, None]
+                            self._job_info[my_jobid] = [None, None, None, my_exec, my_args, False, None, None, None]
                 elif (dag_line.lower()).find("script pre") >= 0:
                     # Found SCRIPT PRE line, parse it
                     my_match = re_parse_dag_script.search(dag_line)
@@ -189,13 +190,23 @@ class Workflow:
                         my_jobid = my_match.group(1)
                         my_exec = my_match.group(2)
                         my_args = my_match.group(3)
+
+                        my_pegasus_pre_log = None
+                        if  my_args is not None:
+                            #try and determine the pegasus plan pre log from the arguments
+                            my_args_match = re_parse_planner_args.search(my_args)
+                            if my_args_match:
+                                my_pegasus_pre_log = my_args_match.group(1)
+
+
                         if my_jobid in self._job_info:
                             # Entry already exists for this job, just collect pre script info
                             self._job_info[my_jobid][1] = my_exec
                             self._job_info[my_jobid][2] = my_args
+                            self._job_info[my_jobid][8] = my_pegasus_pre_log
                         else:
                             # No entry for this job, let's create a new one
-                            self._job_info[my_jobid] = [None, my_exec, my_args, None, None, False, None, None]
+                            self._job_info[my_jobid] = [None, my_exec, my_args, None, None, False, None, None, my_pegasus_pre_log ]
                 elif (dag_line.lower()).find("subdag external") >= 0:
                     # Found SUBDAG line, parse it
                     my_match = re_parse_dag_subdag.search(dag_line)
@@ -214,7 +225,7 @@ class Workflow:
                             self._job_info[my_jobid][7] = my_dir
                         else:
                             # No entry for this job, let's create a new one
-                            self._job_info[my_jobid] = [None, None, None, None, None, True, my_dag, my_dir]
+                            self._job_info[my_jobid] = [None, None, None, None, None, True, my_dag, my_dir, None ]
 
             try:
                 DAG.close()
@@ -743,7 +754,7 @@ class Workflow:
         self._notifications = None              # list of notifications for this workflow
         self._JSDB = None                       # Handle for jobstate.log file
         self._job_counters = {}                 # Job counters for figuring out which output file to parse
-        self._job_info = {}                     # jobid --> [sub_file, pre_exec, pre_args, post_exec, post_args, is_subdag, subdag_dag, subdag_dir]
+        self._job_info = {}                     # jobid --> [sub_file, pre_exec, pre_args, post_exec, post_args, is_subdag, subdag_dag, subdag_dir, prescript_log]
         self._valid_braindb = True              # Flag for creating a new brain db if we don't find one
         self._line = 0                          # line number from dagman.out file
         self._last_processed_line = 0           # line last processed by the monitoring daemon
@@ -775,7 +786,7 @@ class Workflow:
             if wfparams["wf_uuid"] is not None:
                 self._wf_uuid = wfparams["wf_uuid"]
         else:
-            logger.error("wf_uuid not specified in braindump, skipping this (sub-)workflow...")
+            logger.error("wf_uuid not specified in braindump, skipping this (sub-)workflow. %s %s " %(rundir, workflow_config_file) )
             self._monitord_exit_code = 1
             return
         # Now that we have the wf_uuid, set root_wf_uuid if not already set
@@ -1169,6 +1180,10 @@ class Workflow:
         if event == "post.end":
             # For post-script SUCCESS/FAILED, we send the exitcode
             kwargs["exitcode"] = str(my_job._post_script_exitcode)
+
+        if event == "pre.end":
+            # For pre-script SUCCESS/FAILED, we send the exitcode
+            kwargs["exitcode"] = str(my_job._pre_script_exitcode)
 
         # Send job state event to database
         self.output_to_db("job_inst." + event, kwargs)
@@ -1599,6 +1614,7 @@ class Workflow:
         # Send host event to database
         self.output_to_db("job_inst.host.info", kwargs)
 
+
     def parse_job_output(self, my_job, job_state):
         """
         This function tries to parse the kickstart output file of a
@@ -1809,17 +1825,27 @@ class Workflow:
             self._job_submit_seq = self._job_submit_seq + 1
 
         # Update job counter if this job is in the SUBMIT state
-        if job_state == "SUBMIT":
-            if jobid in self._job_counters:
-                # Counter already exists for this job, just increate it by 1
-                self._job_counters[jobid] = self._job_counters[jobid] + 1
-            else:
-                # No counter for this job yet
-                self._job_counters[jobid] = 0
+        if job_state == "SUBMIT" :
             # Now, we set the job output counter for this particular job
-            my_job._job_output_counter = self._job_counters[jobid]
+            my_job._job_output_counter = self.increment_job_counter( jobid )
+
 
         return my_job_submit_seq
+
+    def increment_job_counter(self, jobid ):
+        """
+        This function increments the job counter by 1 in the internal job counters map
+        and returns the value.
+        If it does not exist for a job it is set to 0
+        """
+        if jobid in self._job_counters:
+            # Counter already exists for this job, just increate it by 1
+            self._job_counters[jobid] = self._job_counters[jobid] + 1
+        else:
+            # No counter for this job yet
+            self._job_counters[jobid] = 0
+
+        return self._job_counters[jobid]
 
     def job_update_info(self, jobid, job_submit_seq, sched_id=None):
         """
@@ -1923,7 +1949,24 @@ class Workflow:
         elif job_state == "PRE_SCRIPT_SUCCESS":
             self.db_send_job_brief(my_job, "pre.end", 0)
         elif job_state == "PRE_SCRIPT_FAILURE":
+            #PM-704 set the main exitcode to the prescript exitcode
+            my_job._main_job_exitcode = my_job._pre_script_exitcode
+
+            # PM-704 the job counters need to be updated in case of retries for pre script failures
+            # Now, we set the job output counter for this particular job
+            my_job._job_output_counter = self.increment_job_counter( jobid )
+
+            #record the job output for pegasus plan prescript logs
+            #we only do for prescript failures. once job starts running
+            #the dagman output gets populated
+            if self._job_info[my_job._exec_job_id][8] is not None:
+                my_job._output_file = self._job_info[my_job._exec_job_id][8] + ".%03d" % (my_job._job_output_counter)
+                my_job.read_stdout_stderr_files(self._run_dir)
+
+            # PM-704 and send the job end event to record failure
+            # in addition to the brief
             self.db_send_job_brief(my_job, "pre.end", -1)
+            self.db_send_job_end(my_job, -1 )
         elif job_state == "SUBMIT":
             self.db_send_job_brief(my_job, "submit.start")
             self.db_send_job_brief(my_job, "submit.end", 0)
@@ -2096,6 +2139,7 @@ class Workflow:
             return my_dagman_out
 
         # Check if we have seen this sub-workflow before
+        """
         if my_dagman_dir in wf_retries:
             # Yes, increment out retry counter...
             my_retry = wf_retries[my_dagman_dir]
@@ -2105,6 +2149,16 @@ class Workflow:
             # No, this is the first time we get to this sub-workflow
             wf_retries[my_dagman_dir] = 0
             my_retry = 0
+        """
+        # PM-704 the retries for sub workflows are tracked solely on basis
+        # of job counters. this handles case where we have prescript errors
+        # workflow fails. we fix prescript error and submit rescue dag
+        my_retry = self._job_counters[jobid]
+        if my_retry is None:
+            my_retry = 0
+
+        wf_retries[my_dagman_dir] = my_retry
+        #print "*** dagman dir %s retry value %s " %(my_dagman_dir,my_retry)
 
         # Compose directory... assuming replanning mode
         my_retry_dir = my_dagman_dir + ".%03d" % (my_retry)
