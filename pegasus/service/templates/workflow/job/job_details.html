@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block title %}Job Details{% endblock %}
+{% block javascript_init %}
+<script type="text/javascript" charset="utf-8">
+	$(document).ready (function ()
+	{
+		$('#invocations_tabs').tabs (
+				{
+					beforeLoad: function (event, ui)
+					{
+						var isInitialized = ui.panel.data ('initialized');
+
+						if (isInitialized === true)
+						{
+							return false;
+						}
+
+						ui.jqXHR.error (function ()
+						{
+							ui.panel.html ('Error loading contents of this tab.');
+						})
+					},
+					load: function (event, ui)
+					{
+						var index = ui.tab.index ();
+						var panel = ui.panel;
+
+						if (index == 0)
+						{
+							panel.data ('initialized', true);
+
+							if (panel.html () == '')
+							{
+								panel.html ('No failed invocations.')
+							}
+							else
+							{
+								$('#failed_invocations_list').dataTable ({"bJQueryUI" : true, "sPaginationType": "full_numbers"});
+							}
+						}
+						else if (index == 1)
+						{
+							panel.data ('initialized', true);
+
+							if (panel.html () == '')
+							{
+								panel.html ('No successful invocations.')
+							}
+							else
+							{
+								$('#successful_invocations_list').dataTable ({"bJQueryUI" : true, "sPaginationType": "full_numbers"});
+							}
+						}
+					}
+				});
+
+		verticalTableInit ('#job_text_info', {% if job.exitcode !=  0 %}"failed"{% else  %}"successful"{% endif %});
+	})
+</script>
+{% endblock %}
+{% block navigation_bar %} | <a href="{{ url_for ('workflow', root_wf_id = root_wf_id, wf_id = wf_id) }}">Workflow</a> | <a href="{{ url_for ('job', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id) }}">Job</a>{% endblock %}
+{% block title_header %}Job Details{% endblock %}
+{% block content %}
+<div id="job_details">
+	<div id="job_text">
+		<table id="job_text_info">
+			<tr>
+				<th>Label</th>
+				<td><strong>{{ job.exec_job_id  }}</strong></td>
+			</tr>
+			<tr>
+				<th>Type</th>
+				<td>{% if job.clustered %}Clustered{% else %}Compute{% endif %}</td>
+			</tr>
+			<tr>
+				<th>Exit Code</th>
+				<td>{{ job.exitcode  }}</td>
+			</tr>
+			<tr>
+				<th>Stdout Preview</th>
+				<td><a href="{{ url_for ('stdout', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id) }}">Preview</a></td>
+			</tr>
+			<tr>
+				<th>Stdout File</th>
+				<td>{{ job.stdout_file }}</td>
+			</tr>
+			<tr>
+				<th>Stderr Preview</th>
+				<td><a href="{{ url_for ('stderr', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id) }}">Preview</a></td>
+			</tr>
+			<tr>
+				<th>Stderr File</th>
+				<td>{{ job.stderr_file }}</td>
+			</tr>
+		</table>
+	</div>
+</div>
+<br/>
+<div id="invocation_table_wrapper">
+	<div id="invocations_tabs">
+		<ul>
+			<li>
+				<a href="{{ url_for ('failed_invocations', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id) }}" title="failed_invocations">Failed</a>
+			</li>
+			<li>
+				<a href="{{ url_for ('successful_invocations', root_wf_id = root_wf_id, wf_id = wf_id, job_id = job_id) }}" title="successful_invocations">Successful</a>
+			</li>
+		</ul>
+	</div>
+</div>
+{% endblock %}

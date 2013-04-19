@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}404 Page not found{% endblock %}
+{% block title_header %}Page not Found{% endblock %}
+{% block content %}
+<div class="ui-widget">
+	<div class="ui-state-error ui-corner-all" style="padding: .3em .7em;">
+		<p>
+			<span class="ui-icon ui-icon-alert"
+				style="float: left; margin-right: .3em;"></span> <strong>Error:</strong>
+			Page you are looking for was not found on this server.
+		</p>
+	</div>
+</div>
+{% endblock %}
