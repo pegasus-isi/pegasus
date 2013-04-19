@@ -10,7 +10,7 @@ from Pegasus.netlogger.analysis.schema._base import SABase
 
 try:
     from sqlalchemy import *
-    from sqlalchemy import orm, exceptions, func, exc
+    from sqlalchemy import orm, func, exc
     from sqlalchemy.orm import relation, backref
 except ImportError, e:
     print '** SQLAlchemy library needs to be installed: http://www.sqlalchemy.org/ **\n'
