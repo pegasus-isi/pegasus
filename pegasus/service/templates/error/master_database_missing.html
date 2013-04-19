@@ -3,17 +3,16 @@
 {% block title_header %}Workflows information not found.{% endblock %}
 {% block content %}
 <div class="ui-widget">
-	<div class="ui-state-highlight ui-corner-all" style="padding: .3em .7em;">
-		<p>
-			<span class="ui-icon ui-icon-info"
-				style="float: left; margin-right: .3em;"></span> <strong>Info:</strong>
-			We were unable to locate the list of work-flows. Try again later. If the problem persists, contact the administrator.
-		</p>
-		<p>
-			Possible Reasons:<br/>
-			1. No work-flows have been run using Pegasus 4.2.0 or above.<br/>
-			2. The Master database URL provided to pegasus-dashboard command is invalid.<br/>
-		</p>
-	</div>
+    <div class="ui-state-highlight ui-corner-all" style="padding: .3em .7em;">
+        <p>
+            <span class="ui-icon ui-icon-info" style="float: left; margin-right: .3em;"></span>
+            <strong>Info:</strong>
+            We were unable to locate the master workflow database. Possible Reasons:
+            <ol>
+                <li>No workflows have been run using Pegasus 4.2.0 or above.</li>
+                <li>The master database URL provided to the pegasus service is invalid.</li>
+            </ol>
+        </p>
+    </div>
 </div>
 {% endblock %}

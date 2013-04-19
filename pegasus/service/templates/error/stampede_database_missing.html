@@ -3,16 +3,11 @@
 {% block title_header %}Workflows information not found.{% endblock %}
 {% block content %}
 <div class="ui-widget">
-	<div class="ui-state-highlight ui-corner-all" style="padding: .3em .7em;">
-		<p>
-			<span class="ui-icon ui-icon-info"
-				style="float: left; margin-right: .3em;"></span> <strong>Info:</strong>
-			We were unable to locate the database containing information for the specified work-flow.
-		</p>
-		<p>
-			Most likely reason for this, is that the submit directory containing the database was moved or deleted from the file system.<br/>
-			If you feel that the error is being wrongly generated, kindly contact the system administrator.<br/>
-		</p>
-	</div>
+    <div class="ui-state-highlight ui-corner-all" style="padding: .3em .7em;">
+        <p>
+            <span class="ui-icon ui-icon-info" style="float: left; margin-right: .3em;"></span>
+            <strong>Info:</strong>
+            We were unable to locate the database containing information for the specified workflow. The most likely reason is that the submit directory containing the database was moved or deleted from the file system.</p>
+    </div>
 </div>
 {% endblock %}
