@@ -31,6 +31,7 @@ setup(
         ]
     },
     install_requires = [
+        "pegasus-wms",
         "Flask",
         "Flask-SQLAlchemy",
         "MySQL-python",
