@@ -632,10 +632,8 @@ public class InterPoolEngine extends Engine implements Refiner {
                         throw new RuntimeException(error.toString());
                     }
 
-                    //            tcEntry = (TransformationCatalogEntry) tcEntries.get(0);
+                    
                     if (tcEntry.getType().equals(TCType.STAGEABLE )) {
-//                        SiteInfo site = mPoolHandle.getPoolEntry(siteHandle,
-//                            "vanilla");
                         
                         SiteCatalogEntry site = mSiteStore.lookup( stagingSiteHandle );
                         //construct a file transfer object and add it
@@ -661,14 +659,19 @@ public class InterPoolEngine extends Engine implements Refiner {
                             + File.separator + basename;
 
                         //PM-590 Stricter checks
-//                        String headnodeURLPrefix = this.selectHeadNodeScratchSharedFileServerURLPrefix( site );
-                        String headnodeURLPrefix = site.selectHeadNodeScratchSharedFileServerURLPrefix( FileServer.OPERATION.put );
-                        if( headnodeURLPrefix == null ){
+                        //PM-686 construct the URL using the externally accessible path for work directory
+                        StringBuffer externalStagedPath = new StringBuffer();
+                        FileServer headNodeScratchServer = site.selectHeadNodeScratchSharedFileServer( FileServer.OPERATION.put );
+
+                        if( headNodeScratchServer == null ){
                             this.complainForHeadNodeURLPrefix( REFINER_NAME,  site.getSiteHandle() , FileServer.OPERATION.put, job );
                         }
-                        fTx.addDestination( stagingSiteHandle,
-                                            headnodeURLPrefix + stagedPath);
+                        externalStagedPath.append( headNodeScratchServer.getURLPrefix() ).
+                                           append( mSiteStore.getExternalWorkDirectory(headNodeScratchServer, site.getSiteHandle() )).
+                                           append( File.separator ).append(  basename );
 
+                        fTx.addDestination( stagingSiteHandle,
+                                            externalStagedPath.toString() );
 
                         dependantExecutables.add( fTx );
 
