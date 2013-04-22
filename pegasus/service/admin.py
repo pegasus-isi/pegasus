@@ -21,14 +21,25 @@ def usage():
 
 def create():
     """Create the database"""
-    print "Creating database..."
-    db.create_all()
-    schema = current_schema()
-    if schema is None:
-        db.session.add(Schema(models.version))
-        db.session.commit()
-    elif schema.version < models.version:
-        print "Schema out of date. Please run migrate."
+    try:
+        # First we check to see if it is current
+        schema = current_schema()
+        if schema.version < models.version:
+            print "Database schema out of date. Please run migrate."
+        elif schema.version == models.version:
+            print "Database schema up-to-date."
+        else:
+            print "Database schema is newer than expected. "\
+                  "Expected <= %d, got %d." % (models.version, schema.version)
+    except Exception, e: 
+        # If there was no schema table, then we create the database
+        if "no such table: schema" in e.message:
+            print "Creating database schema..."
+            db.create_all()
+            db.session.add(Schema(models.version))
+            db.session.commit()
+        else:
+            raise
 
 def drop():
     """Drop the database"""
@@ -48,8 +59,12 @@ def migrate():
         print "NOT YET IMPLEMENTED"
         db.session.add(Schema(models.version))
         db.session.commit()
-    else:
+    elif current == latest:
         print "Schema up to date"
+    else:
+        print "Database schema is newer than expected. "\
+              "Expected <= %d, got %d." % (latest, current)
+ 
 
 COMMANDS = {
     'help': usage,
