@@ -39,18 +39,3 @@ class User(db.Model):
     def __repr__(self):
         return '<User %r>' % (self.username)
 
-# Map the tables maintained by Pegasus from the Stampede schema
-workflow = Table('workflow', db.metadata, autoload=True, autoload_with=db.engine)
-workflowstate = Table('workflowstate', db.metadata, autoload=True, autoload_with=db.engine)
-
-class Workflow(object):
-    def __repr__(self):
-        return '<Workflow %r %s>' % (self.wf_id, self.wf_uuid)
-
-class WorkflowState(object):
-    def __repr__(self):
-        return '<WorkflowState %r %s>' % (self.wf_id, self.state)
-
-mapper(Workflow, workflow)
-mapper(WorkflowState, workflowstate)
-
