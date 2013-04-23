@@ -317,6 +317,15 @@ safe_strlen( const char* s )
   return ( s == NULL ? 0 : strlen(s) );
 }
 
+int countProcs(JobInfo *job) {
+    int procs = 0;
+    ProcInfo *i;
+    for (i=job->children; i; i=i->next){
+        procs++;
+    }
+    return procs;
+}
+
 int
 printAppInfo( AppInfo* run )
 /* purpose: output the given app info onto the given fd
@@ -349,6 +358,15 @@ printAppInfo( AppInfo* run )
     for ( i=0; i<run->fcount; ++i )
       size += 256 + safe_strlen( run->final[i].lfn ) +
         safe_strlen( run->final[i].file.name );
+
+  /* Adjust for <proc> */
+  int procs = 0;
+  procs += countProcs(&run->setup);
+  procs += countProcs(&run->prejob);
+  procs += countProcs(&run->application);
+  procs += countProcs(&run->postjob);
+  procs += countProcs(&run->cleanup);
+  size += procs * 250; // <proc> has ~250 chars
 
   /* Adjust for <data> sections in stdout and stderr */
   size += ( data_section_size << 1 );
