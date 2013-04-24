@@ -103,8 +103,8 @@ echo
 export GLOBUS_TCP_PORT_RANGE=5000,6000
 
 timed_transfer 0 10 "pegasus-transfer -f nat.in"
-timed_transfer 0 5 "pegasus-transfer -f medium-files-pull.in"
-timed_transfer 0 5 "pegasus-transfer -f medium-files-push.in"
+timed_transfer 0 10 "pegasus-transfer -f medium-files-pull.in"
+timed_transfer 0 10 "pegasus-transfer -f medium-files-push.in"
 
 
 exit 0
