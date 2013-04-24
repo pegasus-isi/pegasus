@@ -1,41 +1,19 @@
 "use strict";
 
-var workflowStats = { isLoaded : false };
 var jobBreakdownStats = { isLoaded : false };
 var jobStats = { isLoaded : false };
-//var timeStats = { isLoaded : false };
 
-function getWorkflowSummaryStats (container, url)
-{
-	var ajaxOpt = 
-	{
-		url : url,
-		dataType: 'json',
-		error: function (xhr, textStatus, errorThrown)
-		{
-			alert ('Error occured: ' + textStatus + ' ' + xhr.responseText);
-		},
-		success: function (data, textStatus, xhr) 
-		{
-			render_workflow_summary_stats (container, data);
-		} 
-	};
-	
-	$.ajax (ajaxOpt)
-}
-
-function render_workflow_summary_stats (container, data)
+function render_workflow_summary_stats (dest, data)
 {
 	var content = '';
-	var dest = $('#' + container);
-	
+
 	if (data.length == 0)
 	{
 		content += 'No information available';
 	}
-	
+
 	var content = '';
-	content = '<table id="workflow_summary_stats_table" class="x">';
+	content = '<table id="workflow_summary_stats_table">';
 	content += '<tr>';
 	content += '<th>Workflow Wall Time</th>';
 	content += '<td>'+ formatData (data ['wall-time']) + '</td>';
@@ -53,78 +31,54 @@ function render_workflow_summary_stats (container, data)
 	content += '<td>'+ formatData (data ['retry-count']) + '</td>';
 	content += '</tr>';
 	content += '</table>';
-	
+
 	dest.html (content);
-	
+
 	verticalTableInit ('#workflow_summary_stats_table')
 }
 
-function getWorkflowStats (url)
-{
-	if (workflowStats.isLoaded)
-	{
-		return;
-	}
-	
-	var ajaxOpt = 
-	{
-		url : url,
-		dataType: 'json',
-		error: function (xhr, textStatus, errorThrown)
-		{
-			alert ('Error occured: ' + textStatus + ' ' + xhr.responseText);
-		},
-		success: function (data, textStatus, xhr) 
-		{
-			render_workflow_stats (data);
-			workflowStats.isLoaded = true;
-		} 
-	};
-	
-	$.ajax (ajaxOpt)
-}
-
-function render_workflow_stats (all_data)
+function render_workflow_stats (dest, all_data)
 {
 	var content = '';
-	var dest = $('#workflow_stats');
-	
+
 	var data = all_data.individual;
-	
+
 	if (data.length == 0)
 	{
 		content += 'No information available';
 	}
-	
+
 	content += '<header class="title ui-widget-header">This Workflow</header>';
 	content += render_workflow_stats_table ('individual', data) + '<br />';
-	
+
 	data = all_data.all;
-	
+
 	if (data.length == 0)
 	{
 		content += 'No information available';
 	}
-	
+
 	content += '<header class="title ui-widget-header">Entire Workflow</header>';
 	content += render_workflow_stats_table ('all', data);
-	
+
 	dest.html (content);
-	
-	$('#workflow_stats_individual_table').dataTable ({
+
+	$ ('#workflow_stats_individual_table').dataTable ({
 		"bJQueryUI": true,
-		"bSort": false,
-		"bFilter": false,
+		"sDom"     : '<"top"iflp<"clear">>rt<"bottom"iflp<"clear">>',
+		"bSort"    : false,
+		"bFilter"  : false,
 		"bPaginate": false,
-		"bInfo": false
+		"bInfo"    : false
 	});
-	
-	$('#workflow_stats_all_table').dataTable ({
+
+	$ ('#workflow_stats_all_table').dataTable ({
 		"bJQueryUI": true,
-		"bSort": false,
-		"bFilter": false,
+		"sDom"     : '<"top"iflp<"clear">>rt<"bottom"iflp<"clear">>',
+		"bSort"    : false,
+		"bFilter"  : false,
 		"bPaginate": false,
-		"bInfo": false
+		"bInfo"    : false
 	});
 }
 
@@ -142,7 +96,7 @@ function render_workflow_stats_table (type, data)
 	content += '<th>Total + Retries</th>';
 	content += '</tr></thead>';
 	content += '<tbody>';
-	
+
 	content += '<tr class="' + (data [0].total_failed_tasks === 0 ? 'successful' : 'failed') + '">';
 	content += '<td>Tasks</td>';
 	content += '<td>'+ formatData (data [0].total_succeeded_tasks) + '</td>';
@@ -152,7 +106,7 @@ function render_workflow_stats_table (type, data)
 	content += '<td>'+ formatData (data [0].total_task_retries) + '</td>';
 	content += '<td>'+ formatData (data [0].total_task_invocations) + '</td>';
 	content += '</tr>';
-	
+
 	content += '<tr class="' + (data [1].total_failed_jobs === 0 ? 'successful' : 'failed') + '">';
 	content += '<td>Jobs</td>';
 	content += '<td>'+ formatData (data [1].total_succeeded_jobs) + '</td>';
@@ -162,7 +116,7 @@ function render_workflow_stats_table (type, data)
 	content += '<td>'+ formatData (data [1].total_job_retries) + '</td>';
 	content += '<td>'+ formatData (data [1].total_job_invocations) + '</td>';
 	content += '</tr>';
-	
+
 	content += '<tr class="' + (data [2].total_failed_sub_wfs === 0 ? 'successful' : 'failed') + '">';
 	content += '<td>Sub Workflows</td>';
 	content += '<td>'+ formatData (data [2].total_succeeded_sub_wfs) + '</td>';
@@ -172,46 +126,44 @@ function render_workflow_stats_table (type, data)
 	content += '<td>'+ formatData (data [2].total_sub_wfs_retries) + '</td>';
 	content += '<td>'+ formatData (data [2].total_sub_wfs_invocations) + '</td>';
 	content += '</tr>';
-	
+
 	content += '</tbody></table>';
-	
+
 	return content;
 }
 
-function getJobBreakdownStats (url)
+function getJobBreakdownStats (url, container)
 {
 	if (jobBreakdownStats.isLoaded)
 	{
 		return;
 	}
-	
-	var ajaxOpt = 
+
+	var ajaxOpt =
 	{
-		url : url,
+		url     : url,
 		dataType: 'json',
-		error: function (xhr, textStatus, errorThrown)
+		error   : function (xhr, textStatus, errorThrown)
 		{
-			alert ('Error occured: ' + textStatus + xhr.responseText);
+			alert ('Error occurred: ' + textStatus + xhr.responseText);
 		},
-		success: function (data, textStatus, xhr) 
+		success : function (data, textStatus, xhr)
 		{
-			render_job_breakdown (data);
+			render_job_breakdown (container, data);
 			jobBreakdownStats.isLoaded = true;
-		} 
+		}
 	};
-	
+
 	$.ajax (ajaxOpt)
 }
 
-function render_job_breakdown (data)
+function render_job_breakdown (dest, data)
 {
-	var dest = $('#job_breakdown_stats');
-	
 	if (data.length == 0)
 	{
 		dest.html ('No information available');
 	}
-	
+
 	var content = '';
 	content = '<table id="job_breakdown_stats_table">';
 	content += '<thead><tr>';
@@ -225,7 +177,7 @@ function render_job_breakdown (data)
 	content += '<th>Total</th>';
 	content += '</tr></thead>';
 	content += '<tbody>';
-	
+
 	for (var i = 0; i < data.length; ++i)
 	{
 		content += '<tr class="' + (data[i][3] === 0 ? 'successful' : 'failed') + '">';
@@ -237,53 +189,51 @@ function render_job_breakdown (data)
 		}
 		content += '</tr>';
 	}
-	
+
 	content += '</tbody></table>';
 	dest.html (content);
-	
-	$('#job_breakdown_stats_table').dataTable ({
-		"bJQueryUI": true,
+
+	$ ('#job_breakdown_stats_table').dataTable ({
+		"bJQueryUI"      : true,
 		"sPaginationType": "full_numbers",
-		"bProcessing": true,
-		"bServerSide": false,
-		"bAutoWidth": false
+		"bProcessing"    : true,
+		"bServerSide"    : false,
+		"bAutoWidth"     : false
 	});
 }
 
-function getJobStats (url)
+function getJobStats (url, container)
 {
 	if (jobStats.isLoaded)
 	{
 		return;
 	}
-	
-	var ajaxOpt = 
+
+	var ajaxOpt =
 	{
 		url : url,
 		dataType: 'json',
 		error: function (xhr, textStatus, errorThrown)
 		{
-			alert ('Error occured: ' + textStatus + ' ' + xhr.responseText);
+			alert ('Error occurred: ' + textStatus + ' ' + xhr.responseText);
 		},
-		success: function (data, textStatus, xhr) 
+		success: function (data, textStatus, xhr)
 		{
-			render_job_stats (data);
+			render_job_stats (container, data);
 			jobStats.isLoaded = true;
 		}
 	};
-	
+
 	$.ajax (ajaxOpt)
 }
 
-function render_job_stats (data)
+function render_job_stats (dest, data)
 {
-	var dest = $('#job_stats');
-	
 	if (data.length == 0)
 	{
 		dest.html ('No information available');
 	}
-	
+
 	var content = '';
 	content += '<table id="job_stats_table">';
 	content += '<thead><tr>';
@@ -304,7 +254,7 @@ function render_job_stats (data)
 	content += '<th>Host</th>';
 	content += '</tr></thead>';
 	content += '<tbody>';
-	
+
 	for (var i = 0; i < data.length; ++i)
 	{
 		content += '<tr class="' + (data[i][13] === 0 ? 'successful' : 'failed') + '">';
@@ -316,66 +266,43 @@ function render_job_stats (data)
 		}
 		content += '</tr>';
 	}
-	
+
 	content += '</tbody></table>';
 	dest.html (content);
-	
-	$('#job_stats_table').dataTable ({
-		"sScrollX": "100%",
-        "bScrollCollapse": true,
-		"bJQueryUI": true,
+
+	$ ('#job_stats_table').dataTable ({
+		"sScrollX"       : "100%",
+		"bScrollCollapse": true,
+		"bJQueryUI"      : true,
 		"sPaginationType": "full_numbers",
-		"bProcessing": true,
-		"bServerSide": false
+		"bProcessing"    : true,
+		"bServerSide"    : false
 	});
 }
 
-/*
-function getTimeStats ()
+function activateEventHandler (event, ui)
 {
-	if (timeStats.isLoaded)
+	var tabIndex = ui.newHeader.attr ('title');
+
+	if (tabIndex == 'workflow_stats')
 	{
 		return;
 	}
-	
-	var ajaxOpt = 
+	else if (tabIndex == 'job_breakdown_stats')
 	{
-		url : '',
-		dataType: 'json',
-		error: function (xhr, textStatus, errorThrown)
-		{
-			alert ('Error occured: ' + textStatus + xhr.responseText);
-		},
-		success: function (data, textStatus, xhr) 
-		{
-		}
-	};
-	
-	$.ajax (ajaxOpt)
-}
-*/
-
-function activateEventHandler (event, ui)
-{
-	if (ui.newHeader.attr('title') == 'workflow_stats')
-	{
-		getWorkflowStats (ui.newHeader.attr ('href'));
+		getJobBreakdownStats (ui.newHeader.attr ('href'), ui.newPanel);
 	}
-	else if (ui.newHeader.attr('title') == 'job_breakdown_stats')
+	else if (tabIndex == 'job_stats')
 	{
-		getJobBreakdownStats (ui.newHeader.attr ('href'));
+		getJobStats (ui.newHeader.attr ('href'), ui.newPanel);
 	}
-	else if (ui.newHeader.attr('title') == 'job_stats')
+	else if (tabIndex == 'time_stats')
 	{
-		getJobStats (ui.newHeader.attr ('href'));
-	}
-	else if (ui.newHeader.attr('title') == 'time_stats')
-	{
-		getTimeStats (ui.newHeader.attr ('href'));
+		getTimeStats (ui.newHeader.attr ('href'), ui.newPanel);
 	}
 	else
 	{
-		alert ('Invalid accordian option ' + ui.newHeader.attr('title'));
+		alert ('Invalid accordian option ' + tabIndex);
 	}
 }
 
@@ -385,7 +312,7 @@ function formatData (num)
 	{
 		return num.toFixed (3);
 	}
-	
+
 	return num;
 }
 

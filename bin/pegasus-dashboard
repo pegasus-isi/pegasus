@@ -39,7 +39,7 @@ pegasus_config = os.path.join(bin_dir, 'pegasus-config') + ' --python-dump'
 config = subprocess.Popen(pegasus_config, stdout=subprocess.PIPE, shell=True).communicate()[0]
 exec config
 
-# We also need the externals lib 
+# We also need the externals lib
 pegasus_config = os.path.join(bin_dir, 'pegasus-config') + ' --noeoln --python-externals'
 lib_ext_dir = subprocess.Popen(pegasus_config, stdout=subprocess.PIPE, shell=True).communicate()[0]
 
@@ -59,7 +59,7 @@ pegasus_env_path = {
 
 class WorkflowsDetailsMissingError (Exception):
     pass
-    
+
 # Pegasus modules
 from Pegasus.tools import utils
 
@@ -73,9 +73,9 @@ except ImportError:
 1. Flask (http://flask.pocoo.org/)
 2. Jinja (http://jinja.pocoo.org/)
 3. Werkzeug (http://werkzeug.pocoo.org/)
-    
+
 Installation:
-       
+
 1. If you do not have pip command, install pip as follows
 
     easy_install pip
@@ -111,13 +111,13 @@ def index ():
         count, filtered, workflows, totals = dashboard.get_root_workflow_list (**args)
         __update_label_link (workflows)
         __update_timestamp (workflows)
-        
+
     except NoWorkflowsFoundError, e:
         if request.is_xhr:
             return render_template ('workflow.xhr.json', count=e.count, filtered=e.filtered, workflows=[], table_args=args)
-        
+
         return render_template ('workflow.html', workflows=[], counts=(0, 0, 0, 0))
-    
+
     if request.is_xhr:
         return render_template ('workflow.xhr.json', count=count, filtered=filtered, workflows=workflows, table_args=args)
 
@@ -128,12 +128,12 @@ def index ():
 def workflow (root_wf_id, wf_id=None):
     '''
     Get details for a specific work-flow.
-    '''    
+    '''
     wf_uuid = request.args.get ('wf_uuid', None)
-    
+
     if not wf_id and not wf_uuid:
         raise ValueError, 'Workflow ID or Workflow UUID is required'
-    
+
     if wf_id:
         dashboard = Dashboard (_master_db_url, root_wf_id, wf_id=wf_id)
     else:
@@ -143,14 +143,14 @@ def workflow (root_wf_id, wf_id=None):
         counts, details, statistics = dashboard.get_workflow_information (wf_id, wf_uuid)
     except NoResultFound:
         return render_template ('error/workflow/workflow_details_missing.html')
-    
+
     return render_template ('workflow/workflow_details.html', root_wf_id=root_wf_id, wf_id=details.wf_id, workflow=details, counts=counts, statistics=statistics);
 
 @app.route('/root/<root_wf_id>/workflow/<wf_id>/sub_workflows/', methods=['GET'])
 def sub_workflows (root_wf_id, wf_id):
     '''
     Get a list of all sub-workflow of a given work-flow.
-    '''    
+    '''
     dashboard = Dashboard (_master_db_url, root_wf_id, wf_id)
     sub_workflows = dashboard.get_sub_workflows (wf_id)
 
@@ -171,7 +171,7 @@ def failed_jobs (root_wf_id, wf_id):
     '''
     dashboard = Dashboard (_master_db_url, root_wf_id, wf_id)
     args = __get_datatables_args ()
-    
+
     total_count, filtered_count, failed_jobs_list = dashboard.get_failed_jobs (wf_id, **args)
 
     for job in failed_jobs_list:
@@ -188,12 +188,12 @@ def running_jobs (root_wf_id, wf_id):
     '''
     dashboard = Dashboard (_master_db_url, root_wf_id, wf_id)
     args = __get_datatables_args ()
-    
+
     total_count, filtered_count, running_jobs_list = dashboard.get_running_jobs (wf_id, **args)
 
     for job in running_jobs_list:
         job.exec_job_id = '<a href="' + url_for ('job', root_wf_id=root_wf_id, wf_id=wf_id, job_id=job.job_id) + '">' + job.exec_job_id + '</a>'
-    
+
     return render_template ('workflow/jobs_running.xhr.json', count=total_count, filtered=filtered_count, jobs=running_jobs_list, table_args=args)
 
 @app.route('/root/<root_wf_id>/workflow/<wf_id>/jobs/successful/', methods=['GET'])
@@ -220,10 +220,10 @@ def job (root_wf_id, wf_id, job_id):
     '''
     dashboard = Dashboard (_master_db_url, root_wf_id, wf_id)
     job = dashboard.get_job_information (wf_id, job_id)
-    
+
     if not job:
         return 'Bad Request', 400
-    
+
     return render_template ('workflow/job/job_details.html', root_wf_id=root_wf_id, wf_id=wf_id, job_id=job_id, job=job)
 
 @app.route('/root/<root_wf_id>/workflow/<wf_id>/job/<job_id>/stdout', methods=['GET'])
@@ -233,13 +233,13 @@ def stdout (root_wf_id, wf_id, job_id):
     '''
     dashboard = Dashboard (_master_db_url, root_wf_id, wf_id)
     text = dashboard.get_stdout (wf_id, job_id)
-    
+
     if text.stdout_text == None:
         return 'No stdout for work-flow ' + wf_id + ' job-id ' + job_id
     else:
         return text.stdout_text
 
-    
+
 @app.route('/root/<root_wf_id>/workflow/<wf_id>/job/<job_id>/stderr', methods=['GET'])
 def stderr (root_wf_id, wf_id, job_id):
     '''
@@ -247,7 +247,7 @@ def stderr (root_wf_id, wf_id, job_id):
     '''
     dashboard = Dashboard (_master_db_url, root_wf_id, wf_id)
     text = dashboard.get_stderr (wf_id, job_id)
-    
+
     if text.stderr_text == None:
         return 'No Standard error for work-flow ' + wf_id + ' job-id ' + job_id;
     else:
@@ -260,7 +260,7 @@ def successful_invocations (root_wf_id, wf_id, job_id):
     '''
     dashboard = Dashboard (_master_db_url, root_wf_id, wf_id)
     successful_invocations_list = dashboard.get_successful_job_invocation (wf_id, job_id)
-    
+
     for item in successful_invocations_list:
         item.remote_duration_formatted = time_to_str(item.remote_duration)
 
@@ -297,10 +297,10 @@ def failed_invocations (root_wf_id, wf_id, job_id):
 def invocation (root_wf_id, wf_id, job_id, task_id=None):
     '''
     Get detailed invocation information
-    '''    
+    '''
     dashboard = Dashboard (_master_db_url, root_wf_id, wf_id)
     invocation = dashboard.get_invocation_information (wf_id, job_id, task_id)
-        
+
     return render_template ('workflow/job/invocation/invocation_details.html', root_wf_id=root_wf_id, wf_id=wf_id, job_id=job_id, task_id=task_id, invocation=invocation)
 
 
@@ -322,7 +322,7 @@ def time_chart (root_wf_id, wf_id):
     '''
     dashboard = Dashboard (_master_db_url, root_wf_id, wf_id)
     time_chart_job, time_chart_invocation = dashboard.plots_time_chart (wf_id)
-    
+
     return render_template ('workflow/charts/time_chart.json', root_wf_id=root_wf_id, wf_id=wf_id, time_chart_job=time_chart_job, time_chart_invocation=time_chart_invocation)
 
 @app.route('/root/<root_wf_id>/workflow/<wf_id>/charts/gantt_chart', methods=['GET'])
@@ -340,19 +340,24 @@ def statistics (root_wf_id, wf_id):
     Get workflow statistics information
     '''
     dashboard = Dashboard (_master_db_url, root_wf_id, wf_id)
-    job_dist = dashboard.plots_transformation_statistics (wf_id)
+    summary_times = dashboard.workflow_summary_stats (wf_id)
 
-    return render_template ('workflow/statistics.html', root_wf_id=root_wf_id, wf_id=wf_id)
+    for key, value in summary_times.items ():
+        summary_times [key] = time_to_str (value)
+
+    workflow_stats = dashboard.workflow_stats ()
+
+    return render_template ('workflow/statistics.html', root_wf_id=root_wf_id, wf_id=wf_id, summary_stats=summary_times, workflow_stats=workflow_stats)
 
 
 @app.route('/root/<root_wf_id>/workflow/<wf_id>/statistics/summary', methods=['GET'])
 def workflow_summary_stats (root_wf_id, wf_id):
     dashboard = Dashboard (_master_db_url, root_wf_id, wf_id)
     summary_times = dashboard.workflow_summary_stats (wf_id)
-    
+
     for key, value in summary_times.items ():
         summary_times [key] = time_to_str (value)
-        
+
     return json.dumps (summary_times)
 
 
@@ -397,65 +402,65 @@ def __get_datatables_args ():
     Extract list of arguments passed in the request
     '''
     table_args = dict ()
-    
+
     if request.args.get ('sEcho'):
         table_args ['sequence'] = request.args.get ('sEcho')
-    
+
     if request.args.get ('iColumns'):
         table_args ['column-count'] = int (request.args.get ('iColumns'))
-        
+
     if request.args.get ('sColumns'):
         table_args ['columns'] = request.args.get ('sColumns')
-        
+
     if request.args.get ('iDisplayStart'):
         table_args ['offset'] = int (request.args.get ('iDisplayStart'))
-         
+
     if request.args.get ('iDisplayLength'):
         table_args ['limit'] = int (request.args.get ('iDisplayLength'))
-        
+
     if request.args.get ('sSearch'):
         table_args ['filter'] = request.args.get ('sSearch')
-        
+
     if request.args.get ('bRegex'):
         table_args ['filter-regex'] = request.args.get ('bRegex')
-            
+
     if request.args.get ('iSortingCols'):
         table_args ['sort-col-count'] = int (request.args.get ('iSortingCols'))
-    
+
     if request.args.get ('time_filter'):
         table_args ['time_filter'] = request.args.get ('time_filter')
-        
+
     if request.args.get ('iColumns'):
         for i in range (int (request.args.get ('iColumns'))):
             i = str (i)
-            
+
             if request.args.get ('mDataProp_' + i):
                 table_args ['mDataProp_' + i] = request.args.get ('mDataProp_' + i)
-            
+
             if request.args.get ('sSearch_' + i):
                 table_args ['sSearch_' + i] = request.args.get ('sSearch_' + i)
-            
+
             if request.args.get ('bRegex_' + i):
                 table_args ['bRegex_' + i] = request.args.get ('bRegex_' + i)
-            
+
             if request.args.get ('bSearchable_' + i):
                 table_args ['bSearchable_' + i] = request.args.get ('bSearchable_' + i)
-    
+
             if request.args.get ('iSortCol_' + i):
                 table_args ['iSortCol_' + i] = int (request.args.get ('iSortCol_' + i))
-    
+
             if request.args.get ('bSortable_' + i):
                 table_args ['bSortable_' + i] = request.args.get ('bSortable_' + i)
-        
+
             if request.args.get ('sSortDir_' + i):
                 table_args ['sSortDir_' + i] = request.args.get ('sSortDir_' + i)
-            
+
     return table_args
 
 @app.template_filter ('dec_to_float')
 def dec_to_float (dec):
     '''
-    Decimal to Float 
+    Decimal to Float
     '''
     if dec:
         return float (dec)
@@ -466,7 +471,7 @@ def dec_to_float (dec):
 @app.template_filter ('time_to_date_str')
 def time_to_date_str (time):
     '''
-    Change an integer duration to be represented as a data string 
+    Change an integer duration to be represented as a data string
     '''
     return strftime ('%Y-%m-%d %H', localtime (time))
 
@@ -474,7 +479,7 @@ def time_to_date_str (time):
 @app.template_filter ('to_lower_case')
 def to_lower_case (str):
     '''
-    Convert string to lower case 
+    Convert string to lower case
     '''
     return str.lower ()
 
@@ -482,7 +487,7 @@ def to_lower_case (str):
 @app.template_filter ('to_upper_case')
 def to_upper_case (str):
     '''
-    Convert string to upper case 
+    Convert string to upper case
     '''
     return str.upper ()
 
@@ -490,7 +495,7 @@ def to_upper_case (str):
 @app.template_filter ('capitalize')
 def capitalize (str):
     '''
-    Capitalizes first character of the String 
+    Capitalizes first character of the String
     '''
     return str.capitalize ()
 
@@ -522,44 +527,44 @@ def time_to_str (time):
     if time is not None and (isinstance (time, Decimal) or isinstance (time, float)):
         str_time = ''
         time = int (time)
-        
+
         if time >= Utils.DAY:
             temp_time = time / Utils.DAY
-            
+
             if temp_time > 1:
                 str_time += str (temp_time) + ' days '
             else:
                 str_time += str (time / Utils.DAY) + ' day '
-            
+
             time = time % Utils.DAY
             num_units += 1
-        
+
         if time >= Utils.HOUR:
-            
+
             temp_time = time / Utils.HOUR
-            
+
             if temp_time > 1:
                 str_time += str (temp_time) + ' hours '
             else:
                 str_time += str (time / Utils.HOUR) + ' hour '
-            
+
             time = time % Utils.HOUR
             num_units += 1
-            
+
         if time >= Utils.MIN and num_units < max_units:
-            
+
             temp_time = time / Utils.MIN
-            
+
             if temp_time > 1:
                 str_time += str (temp_time) + ' mins '
             else:
                 str_time += str (time / Utils.MIN) + ' min '
-            
+
             time = time % Utils.MIN
             num_units += 1
-            
+
         if time > 0 and num_units < max_units:
-            
+
             if time > 1:
                 str_time += str (time) + ' secs '
             else:
@@ -568,18 +573,18 @@ def time_to_str (time):
         # 0 second duration - is this the way we want to display that?
         if str_time == '':
             str_time = '0 secs'
-                
+
         return str_time.strip ()
-    
+
     else:
-        
+
         return time
 
 if __name__ == '__main__':
 
     usage = 'pegasus-dashboard [options]'
     description = 'pegasus-dashboard [npdfm]'
-    
+
     parser = optparse.OptionParser (usage=usage, description=description)
 
     parser.add_option ('-n', '--host', action='store', type='str', dest='host', default='0.0.0.0', help="Hostname or IP address to bind to. Default: All IP's")

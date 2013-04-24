@@ -4,22 +4,24 @@
 <title>{% block title %}{% endblock %}</title>
 <link rel="shortcut icon" href="{{ url_for ('static', filename='favicon.ico') }}">
 {% block head %}
+<!-- jQuery Custom CSS -->
+<link rel="stylesheet" type="text/css" href="http://code.jquery.com/ui/1.10.2/themes/redmond/jquery-ui.css" />
+<!-- Data table's jQuery Compatible CSS -->
+<link rel="stylesheet" type="text/css" href="http://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/css/jquery.dataTables_themeroller.css" />
 <!-- My CSS -->
 <link rel="stylesheet" type="text/css" href="{{ url_for ('static', filename='css/style.css') }}" />
-<!-- jQuery Custom CSS -->
-<link rel="stylesheet" type="text/css" href="{{ url_for ('static', filename='css/jquery/jquery-ui-1.8.22.custom.css') }}" />
-
-<!-- Datatable's jQuery Compatible CSS -->
-<link rel="stylesheet" type="text/css" href="{{ url_for ('static', filename='js/datatables/media/css/jquery.dataTables_themeroller.css') }}" />
 {% block css_includes %}{% endblock %}
 
+<!-- jQuery -->
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<!-- jQuery UI -->
+<script type="text/javascript" src="http://code.jquery.com/ui/1.10.2/jquery-ui.js"></script>
+<!-- Data table -->
+<script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/jquery.dataTables.min.js"></script>
+<!-- My JS -->
 <script type="text/javascript" src="{{ url_for ('static', filename='js/script.js') }}"></script>
-<script type="text/javascript" src="{{ url_for ('static', filename='js/jquery/jquery-1.7.2.min.js') }}"></script>
-<script type="text/javascript" src="{{ url_for ('static', filename='js/jquery/jquery-ui-1.8.22.custom.min.js') }}"></script>
-
-<script type="text/javascript" src="{{ url_for ('static', filename='js/datatables/media/js/jquery.dataTables.min.js') }}"></script>
-{% endblock %} 
-{% block javascript_includes %}{% endblock %} 
+{% endblock %}
+{% block javascript_includes %}{% endblock %}
 {% block javascript_init %}{% endblock %}
 </head>
 <body>
@@ -71,16 +73,16 @@
 
 		<footer id="footer" class="content_layout footer">
 			<p class="spacer"></p>
-			<a href="http://pegasus.isi.edu"><img id="list"
+			<a href="http://pegasus.isi.edu"><img id="stampede_image"
 				src="{{ url_for ('static', filename='images/footer/stampede.png') }}"
-				title="STAMPEDE" class="footer_icon" /></a> 
-			<a href="http://pegasus.isi.edu"><img id="list"
+				title="STAMPEDE" class="footer_icon" /></a>
+			<a href="http://pegasus.isi.edu"><img id="pegasus_image"
 				src="{{ url_for ('static', filename='images/footer/pegasus.jpg') }}"
 				title="Pegasus Workflow Management System" class="footer_icon" /></a>
-			<a href="http://www.isi.edu"><img id="list"
+			<a href="http://www.isi.edu"><img id="isi_image"
 				src="{{ url_for ('static', filename='images/footer/isi.png') }}"
-				title="Information Sciences Institute" class="footer_icon" /></a> 
-			<a href="http://www.usc.edu"><img id="list"
+				title="Information Sciences Institute" class="footer_icon" /></a>
+			<a href="http://www.usc.edu"><img id="usc_image"
 				src="{{ url_for ('static', filename='images/footer/usc.png') }}"
 				title="University of Southern California" class="footer_icon" /></a>
 		</footer>
