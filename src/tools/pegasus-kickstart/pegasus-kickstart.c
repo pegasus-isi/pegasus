@@ -197,7 +197,7 @@ helpMe( const AppInfo* run )
 " -f\tPrint full information including <resource>, <environment> and \n"
 "   \t<statcall>. If the job fails, then -f is implied.\n"
 #ifdef HAS_PTRACE
-" -t\tSkip tracing and omit <proc>\n"
+" -t\tEnable resource usage tracing\n"
 #endif
  );
 
@@ -482,7 +482,7 @@ main( int argc, char* argv[] )
       appinfo.wf_stamp = noquote( argv[i][2] ? &argv[i][2] : argv[++i] );
       break;
     case 't':
-      appinfo.skipTracing++;
+      appinfo.enableTracing++;
       break;
     case 'w':
       workdir = noquote( argv[i][2] ? &argv[i][2] : argv[++i] );
