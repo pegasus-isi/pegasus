@@ -529,12 +529,9 @@ printMachine(FILE *out, int indent, const char* tag, const void* data)
       if (ptr->tasks.state[s])
         fprintf(out, " %s=\"%hu\"", c_state[s], ptr->tasks.state[s]);
     }
-#if 0
-    /* does not make sense for threads, since they share memory */
-    myprint(buffer, size, len, " vmsize=\"%s\" rss=\"%s\"/>\n",
-         sizer(b[0], 32, sizeof(ptr->tasks.size), &ptr->tasks.size),
-         sizer(b[1], 32, sizeof(ptr->tasks.rss), &ptr->tasks.rss));
-#else
+
+    /* vmsize and rss do not make sense for threads b/c they share memory */
+
     fprintf(out, "/>\n");
 #endif
   }
