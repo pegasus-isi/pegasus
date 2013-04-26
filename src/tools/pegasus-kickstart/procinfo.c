@@ -30,6 +30,8 @@
 #include "procinfo.h"
 #include "tools.h"
 
+#ifdef HAS_PTRACE
+
 /* Find ProcInfo in a list by pid */
 static ProcInfo *proc_lookup(ProcInfo **list, pid_t pid) {
     ProcInfo *cur;
@@ -221,6 +223,7 @@ static int proc_read_io(ProcInfo *item) {
     
     return fclose(f);
 }
+#endif
 
 int procChild() {
 #ifdef HAS_PTRACE
