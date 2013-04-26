@@ -118,6 +118,8 @@ ifneq (,${LFS_LDFLAGS})
 LDFLAGS += $(LFS_LDFLAGS)
 endif
 
+.PHONY: test
+
 %.o : %.c
 	$(CC) $(CFLAGS) $< -c -o $@
 
@@ -181,3 +183,6 @@ clean:
 
 distclean: clean
 	$(RM) pegasus-kickstart fail test-post test-pre test-ascii show-if
+
+test: pegasus-kickstart
+	cd $(CURDIR)/test && ./test.sh
