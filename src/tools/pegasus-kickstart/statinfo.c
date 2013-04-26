@@ -609,7 +609,7 @@ printXMLStatInfo(FILE *out, int indent, const char* tag, const char* id,
     fprintf(out, " ctime=\"%s\"",
             fmtisodate(isLocal, isExtended, info->info.st_ctime, -1));
 
-    fprintf(out, "\" uid=\"%d\"", info->info.st_uid);
+    fprintf(out, " uid=\"%d\"", info->info.st_uid);
     if (user) fprintf(out, " user=\"%s\"", user->pw_name);
     fprintf(out, " gid=\"%d\"", info->info.st_gid);
     if (group) fprintf(out, " group=\"%s\"", group->gr_name);

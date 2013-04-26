@@ -45,7 +45,7 @@ fmtisodate(int isLocal, int isExtended, time_t seconds, long micros);
 
 extern
 double
-mymaketime( const struct timeval t );
+doubletime(const struct timeval t);
 /* purpose: convert a structured timeval into seconds with fractions.
  * paramtr: t (IN): a timeval as retured from gettimeofday().
  * returns: the number of seconds with microsecond fraction.

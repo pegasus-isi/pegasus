@@ -31,7 +31,7 @@ printXMLUseInfo(FILE *out, int indent, const char* id,
 
   /* <usage> */
   fprintf(out, "%*s<%s utime=\"%.3f\" stime=\"%.3f\"",
-          indent, "", id, mymaketime(use->ru_utime), mymaketime(use->ru_stime));
+          indent, "", id, doubletime(use->ru_utime), doubletime(use->ru_stime));
 
 #ifdef HAS_USAGE_MEM
 #ifdef HAS_USAGE_FULLMEM

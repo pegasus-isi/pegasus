@@ -130,7 +130,7 @@ fmtisodate(int isLocal, int isExtended, time_t seconds, long micros)
 }
 
 double
-mymaketime( struct timeval t )
+doubletime(struct timeval t)
 /* purpose: convert a structured timeval into seconds with fractions.
  * paramtr: t (IN): a timeval as retured from gettimeofday().
  * returns: the number of seconds with microsecond fraction. */
@@ -223,23 +223,23 @@ sizer( char* buffer, size_t capacity, size_t vsize, const void* value )
 {
   switch ( vsize ) {
   case 2:
-    snprintf( buffer, capacity, "%hu", 
+    snprintf( buffer, capacity, "%hu",
               *((const short unsigned*) value) );
     break;
   case 4:
-    if ( sizeof(long) == 4 ) 
-      snprintf( buffer, capacity, "%lu", 
+    if ( sizeof(long) == 4 )
+      snprintf( buffer, capacity, "%lu",
                 *((const long unsigned*) value) );
-    else 
-      snprintf( buffer, capacity, "%u", 
+    else
+      snprintf( buffer, capacity, "%u",
                 *((const unsigned*) value) );
     break;
   case 8:
     if ( sizeof(long) == 4 ) {
-      snprintf( buffer, capacity, "%llu", 
+      snprintf( buffer, capacity, "%llu",
                 *((const long long unsigned*) value) );
     } else {
-      snprintf( buffer, capacity, "%lu", 
+      snprintf( buffer, capacity, "%lu",
                 *((const long unsigned*) value) );
     }
     break;

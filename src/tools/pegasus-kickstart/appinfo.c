@@ -82,7 +82,7 @@ convert2XML( FILE *out, const AppInfo* run )
 
   /* duration */
   fprintf(out, " duration=\"%.3f\"",
-          mymaketime(run->finish) - mymaketime(run->start));
+          doubletime(run->finish) - doubletime(run->start));
 
   /* optional attributes for root element: transformation fqdn */
   if (run->xformation && strlen(run->xformation)) {

@@ -287,7 +287,7 @@ printXMLJobInfo(FILE *out, int indent, const char* tag,
           fmtisodate(isLocal, isExtended, job->start.tv_sec,
                      job->start.tv_usec));
   fprintf(out, " duration=\"%.3f\"",
-          mymaketime(job->finish) - mymaketime(job->start));
+          doubletime(job->finish) - doubletime(job->start));
 
   /* optional attribute: application process id */
   if (job->child != 0)

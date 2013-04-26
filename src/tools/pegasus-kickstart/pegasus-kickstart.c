@@ -226,11 +226,11 @@ finish( void )
     int status;
 
     now(&start);
-    status = fsync( STDOUT_FILENO ); 
-    now(&final); 
-    debugmsg( "# fsync(%d)=%d (errno=%d) in %.3f s\n", 
+    status = fsync( STDOUT_FILENO );
+    now(&final);
+    debugmsg( "# fsync(%d)=%d (errno=%d) in %.3f s\n",
               STDOUT_FILENO, status, errno,
-              mymaketime(final)-mymaketime(start) ); 
+              doubletime(final)-doubletime(start) );
   }
 
   nfs_sync( STDERR_FILENO, DEFAULT_SYNC_IDLE );
