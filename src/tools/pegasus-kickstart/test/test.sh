@@ -4,16 +4,20 @@ KICKSTART=../pegasus-kickstart
 
 function run_test {
     echo "Running" $KICKSTART "$@"
-    $KICKSTART "$@" >/dev/null 2>&1
+    $KICKSTART "$@"
     return $?
 }
 
-run_test ./lotsofprocs.sh && echo "OK"
-run_test -B 10000 -t ./lotsofprocs.sh && echo "OK"
-run_test -B 10000 ./lotsofprocs.sh && echo "OK"
+($KICKSTART ./lotsofprocs.sh | xmllint - >/dev/null 2>&1) && echo "OK"
+($KICKSTART -B 10000 -t ./lotsofprocs.sh | xmllint - >/dev/null 2>&1) && echo "OK"
+($KICKSTART -B 10000 ./lotsofprocs.sh | xmllint - >/dev/null 2>&1) && echo "OK"
 
-run_test -I bindate.arg && echo "OK"
+# This should succeed
+($KICKSTART -I bindate.arg | xmllint - >/dev/null 2>&1) && echo "OK"
 
 # It should fail if we have anything after -I fn
-run_test -I bindate.arg -B 2 || echo "OK"
+!($KICKSTART -I bindate.arg -B 2 >/dev/null 2>&1) && echo "OK"
+
+# This should return properly escaped XML
+($KICKSTART -B 3000 /bin/cat ampersand.txt | xmllint - >/dev/null 2>&1) && echo "OK"
 
