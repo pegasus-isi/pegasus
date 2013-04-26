@@ -26,16 +26,6 @@ extern int isExtended; /* timestamp format concise or extended */
 extern int isLocal;    /* timestamp time zone, UTC or local */
 
 static
-size_t
-mystrlen(const char* s, size_t max)
-{
-  /* array version */
-  size_t i = 0;
-  while (i < max && s[i]) ++i;
-  return i;
-}
-
-static
 char*
 mytolower(char* s, size_t max)
 {
