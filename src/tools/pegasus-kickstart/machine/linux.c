@@ -482,7 +482,7 @@ printMachine(FILE *out, int indent, const char* tag, const void* data)
   if (ptr == NULL) return 0;
 
   /* start basic info */
-  startBasicMachine(buffer, size, len, indent+2, tag, ptr->basic);
+  startBasicMachine(out, indent+2, tag, ptr->basic);
 
   /* <ram .../> tag */
   fprintf(out, "%*s<ram total=\"%s\" free=\"%s\" shared=\"%s\" buffer=\"%s\"/>\n",
@@ -533,7 +533,6 @@ printMachine(FILE *out, int indent, const char* tag, const void* data)
     /* vmsize and rss do not make sense for threads b/c they share memory */
 
     fprintf(out, "/>\n");
-#endif
   }
 
   /* finish tag */

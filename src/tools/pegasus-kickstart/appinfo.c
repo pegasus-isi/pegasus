@@ -308,13 +308,6 @@ initAppInfo( AppInfo* appinfo, int argc, char* const* argv )
   appinfo->child = getpid();
 }
 
-static
-size_t
-safe_strlen( const char* s )
-{
-  return ( s == NULL ? 0 : strlen(s) );
-}
-
 int countProcs(JobInfo *job) {
     int procs = 0;
     ProcInfo *i;
