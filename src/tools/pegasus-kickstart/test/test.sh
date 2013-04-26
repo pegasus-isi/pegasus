@@ -61,6 +61,20 @@ function xmlquote_ampersand {
     return $?
 }
 
+function test_full {
+    kickstart -f /bin/date
+    return $?
+}
+
+function test_flush {
+    kickstart -F /bin/date 2>/dev/null
+    return $?
+}
+
+function test_executable {
+    kickstart -X /bin/date
+    return $?
+}
 
 # RUN THE TESTS
 run_test lotsofprocs
@@ -71,4 +85,7 @@ fi
 run_test argfile
 run_test argfile_after
 run_test xmlquote_ampersand
+run_test test_full
+run_test test_flush
+run_test test_executable
 

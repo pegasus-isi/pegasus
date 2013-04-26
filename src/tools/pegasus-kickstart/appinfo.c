@@ -372,7 +372,9 @@ printAppInfo(AppInfo* run)
   /* print the invocation record */
   result = convert2XML(out, run);
 
+  /* make sure the data is completely flushed */
   fflush(out);
+  fsync(fileno(out));
 
   if (locked==1) lockit(fd, F_SETLK, F_UNLCK);
 
@@ -380,8 +382,10 @@ printAppInfo(AppInfo* run)
 
   fclose(out);
 exit:
-  if (run->logfile.source == IS_FILE)
+  if (run->logfile.source == IS_FILE) {
+    fsync(fd);
     close(fd);
+  }
 
   return result;
 }
@@ -456,3 +460,4 @@ deleteAppInfo( AppInfo* runinfo )
 
   memset( runinfo, 0, sizeof(AppInfo) );
 }
+

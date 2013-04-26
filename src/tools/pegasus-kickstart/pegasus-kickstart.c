@@ -222,15 +222,11 @@ finish( void )
 
   /* PM-466 debugging */
   if ( doFlush ) {
-    struct timeval start, final;
-    int status;
-
-    now(&start);
-    status = fsync( STDOUT_FILENO );
-    now(&final);
-    debugmsg( "# fsync(%d)=%d (errno=%d) in %.3f s\n",
-              STDOUT_FILENO, status, errno,
-              doubletime(final)-doubletime(start) );
+    int status = fsync(STDOUT_FILENO);
+    if (status != 0) {
+      debugmsg("WARNING: fsync(%d)=%d (errno=%d, strerror=%s)\n",
+               STDOUT_FILENO, status, errno, strerror(errno));
+    }
   }
 
   nfs_sync( STDERR_FILENO, DEFAULT_SYNC_IDLE );
