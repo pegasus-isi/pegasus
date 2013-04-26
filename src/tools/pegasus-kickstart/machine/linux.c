@@ -498,10 +498,10 @@ printMachine(FILE *out, int indent, const char* tag, const void* data)
           sizer(b[1], 32, sizeof(ptr->swap_free), &(ptr->swap_free)));
 
   /* <boot> element */
-  fprintf(out, "%*s<boot idle=\"%.3f\">", indent+2, "", ptr->idletime);
-  mydatetime(out, isLocal, isExtended, ptr->boottime.tv_sec,
-             ptr->boottime.tv_usec);
-  fprintf(out, "</boot>\n");
+  fprintf(out, "%*s<boot idle=\"%.3f\">%s</boot>\n", indent+2, "",
+          ptr->idletime,
+          fmtisodate(isLocal, isExtended, ptr->boottime.tv_sec,
+                     ptr->boottime.tv_usec));
 
   /* <cpu> element */
   fprintf(out, "%*s<cpu count=\"%hu\" speed=\"%lu\" vendor=\"%s\">%s</cpu>\n",

@@ -234,9 +234,8 @@ printMachine(FILE *out, size_t indent, const char* tag, const void* data)
           sizer(b[1], 32, sizeof(ptr->swap_free), &(ptr->swap_free)));
 
   /* <boot> element */
-  fprintf(out, "%*s<boot>", indent+2, "");
-  mydatetime(out, isLocal, isExtended, ptr->boottime, -1);
-  fprintf(out, "</boot>\n");
+  fprintf(out, "%*s<boot>%s</boot>\n", indent+2, "",
+          fmtisodate(isLocal, isExtended, ptr->boottime, -1));
 
   /* <cpu> element */
   fprintf(out, "%*s<cpu count=\"%hu\" online=\"%hu\" speed=\"%lu\""

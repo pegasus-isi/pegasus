@@ -254,10 +254,9 @@ printMachine(FILE *out, int indent, const char* tag, const void* data)
           sizer(b[2], 32, sizeof(ptr->swap_used), &(ptr->swap_used)));
 
   /* <boot> element */
-  fprintf(out, "%*s<boot>", indent+2, "");
-  mydatetime(out, isLocal, isExtended,
-             ptr->boottime.tv_sec, ptr->boottime.tv_usec);
-  fprintf(out, "</boot>\n");
+  fprintf(out, "%*s<boot>%s</boot>\n", indent+2, "",
+          fmtisodate(isLocal, isExtended, ptr->boottime.tv_sec, 
+                     ptr->boottime.tv_usec));
 
   /* <cpu> element */
   fprintf(out, "%*s<cpu count=\"%s\" speed=\"%s\" vendor=\"%s\">%s</cpu>\n",

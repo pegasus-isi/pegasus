@@ -120,10 +120,9 @@ startBasicMachine(FILE *out, int indent, const char* tag,
           machine->pagesize);
 
   /* <stamp> */
-  fprintf(out, "%*s<stamp>", indent, "");
-  mydatetime(out, isLocal, isExtended, machine->stamp.tv_sec,
-             machine->stamp.tv_usec);
-  fprintf(out, "</stamp>\n");
+  fprintf(out, "%*s<stamp>%s</stamp>\n", indent, "",
+          fmtisodate(isLocal, isExtended, machine->stamp.tv_sec,
+                     machine->stamp.tv_usec));
 
   /* <uname> */
   fprintf(out, "%*s<uname", indent, "");

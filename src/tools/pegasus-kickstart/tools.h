@@ -33,16 +33,14 @@ xmlquote(FILE *out, const char* msg, size_t msglen);
  */
 
 extern
-size_t
-mydatetime( FILE *out, int isLocal, int isExtended, time_t seconds, 
-            long micros );
-/* purpose: Write ISO timestamp to stream
- * paramtr: out (IO): The stream to write to
- *          isLocal (IN): flag, if 0 use UTC, otherwise use local time
+char *
+fmtisodate(int isLocal, int isExtended, time_t seconds, long micros);
+/* purpose: return an ISO-formatted string for a given timestamp
+ * paramtr: isLocal (IN): flag, if 0 use UTC, otherwise use local time
  *          isExtd (IN): flag, if 0 use concise format, otherwise extended
  *          seconds (IN): tv_sec part of timeval
  *          micros (IN): if negative, don't show micros.
- * returns: number of characters added
+ * returns: a pointer to the formatted string
  */
 
 extern

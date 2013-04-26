@@ -74,20 +74,18 @@ xmlquote(FILE *out, const char* msg, size_t msglen)
   }
 }
 
-size_t
-mydatetime(FILE *out, int isLocal, int isExtended, time_t seconds, long micros)
-/* purpose: append an ISO timestamp to a buffer
- * paramtr: buffer (IO): buffer area to store things into
- *          size (IN): capacity of buffer
- *          offset (IO): current position of end of meaningful buffer
- *          isLocal (IN): flag, if 0 use UTC, otherwise use local time
+static char __isodate[32];
+
+char *
+fmtisodate(int isLocal, int isExtended, time_t seconds, long micros)
+/* purpose: return an ISO-formatted string for a given timestamp
+ * paramtr: isLocal (IN): flag, if 0 use UTC, otherwise use local time
  *          isExtd (IN): flag, if 0 use concise format, otherwise extended
  *          seconds (IN): tv_sec part of timeval
  *          micros (IN): if negative, don't show micros.
- * returns: number of characters added
+ * returns: a pointer to the formatted string
  */
 {
-  char line[32];
   size_t len;
   struct tm zulu;
   memcpy(&zulu, gmtime(&seconds), sizeof(struct tm));
@@ -105,31 +103,30 @@ mydatetime(FILE *out, int isLocal, int isExtended, time_t seconds, long micros)
     hours = distance / 3600;
     minutes = abs(distance) % 60;
 
-    strftime(line, sizeof(line),
+    strftime(__isodate, sizeof(__isodate),
              isExtended ? "%Y-%m-%dT%H:%M:%S" : "%Y%m%dT%H%M%S", &local);
-    len = strlen(line);
+    len = strlen(__isodate);
 
     if (micros < 0)
-      snprintf(line+len, sizeof(line)-len, "%+03d:%02d", hours, minutes);
+      snprintf(__isodate+len, sizeof(__isodate)-len,
+               "%+03d:%02d", hours, minutes);
     else
-      snprintf(line+len, sizeof(line)-len,
+      snprintf(__isodate+len, sizeof(__isodate)-len,
                isExtended ? ".%03ld%+03d:%02d" : ".%03ld%+03d%02d",
                micros / 1000, hours, minutes );
   } else {
     /* zulu time aka UTC */
-    strftime(line, sizeof(line),
+    strftime(__isodate, sizeof(__isodate),
              isExtended ? "%Y-%m-%dT%H:%M:%S" : "%Y%m%dT%H%M%S", &zulu);
-    len = strlen(line);
+    len = strlen(__isodate);
 
     if ( micros < 0 )
-      snprintf(line+len, sizeof(line)-len, "Z");
+      snprintf(__isodate+len, sizeof(__isodate)-len, "Z");
     else
-      snprintf(line+len, sizeof(line)-len, ".%03ldZ", micros / 1000);
+      snprintf(__isodate+len, sizeof(__isodate)-len, ".%03ldZ", micros/1000);
   }
 
-  fprintf(out, "%s", line);
-
-  return 0;
+  return __isodate;
 }
 
 double

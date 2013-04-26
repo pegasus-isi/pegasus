@@ -76,10 +76,9 @@ convert2XML( FILE *out, const AppInfo* run )
           " version=\"" XML_SCHEMA_VERSION "\"");
 
   /* start */
-  fprintf(out, " start=\"");
-  mydatetime(out, isLocal, isExtended,
-             run->start.tv_sec, run->start.tv_usec);
-  fprintf(out, "\"");
+  fprintf(out, " start=\"%s\"",
+          fmtisodate(isLocal, isExtended, run->start.tv_sec, 
+                     run->start.tv_usec));
 
   /* duration */
   fprintf(out, " duration=\"%.3f\"",

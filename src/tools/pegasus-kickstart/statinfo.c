@@ -602,14 +602,12 @@ printXMLStatInfo(FILE *out, int indent, const char* tag, const char* id,
     sizer(my, sizeof(my), sizeof(info->info.st_blocks), &info->info.st_blocks);
     fprintf(out, " blocks=\"%s\"", my);
 
-    fprintf(out, " mtime=\"");
-    mydatetime(out, isLocal, isExtended, info->info.st_mtime, -1);
-
-    fprintf(out, "\" atime=\"");
-    mydatetime(out, isLocal, isExtended, info->info.st_atime, -1);
-
-    fprintf(out, "\" ctime=\"");
-    mydatetime(out, isLocal, isExtended, info->info.st_ctime, -1);
+    fprintf(out, " mtime=\"%s\"",
+            fmtisodate(isLocal, isExtended, info->info.st_mtime, -1));
+    fprintf(out, " atime=\"%s\"",
+            fmtisodate(isLocal, isExtended, info->info.st_atime, -1));
+    fprintf(out, " ctime=\"%s\"",
+            fmtisodate(isLocal, isExtended, info->info.st_ctime, -1));
 
     fprintf(out, "\" uid=\"%d\"", info->info.st_uid);
     if (user) fprintf(out, " user=\"%s\"", user->pw_name);

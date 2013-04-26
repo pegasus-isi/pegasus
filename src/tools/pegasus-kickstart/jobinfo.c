@@ -283,12 +283,10 @@ printXMLJobInfo(FILE *out, int indent, const char* tag,
   if (!job->isValid) return 0;
 
   /* start tag with indentation */
-  fprintf(out, "%*s<%s start=\"", indent, "", tag);
-
-  /* start time and duration */
-  mydatetime(out, isLocal, isExtended,
-             job->start.tv_sec, job->start.tv_usec);
-  fprintf(out, "\" duration=\"%.3f\"",
+  fprintf(out, "%*s<%s start=\"%s\"", indent, "", tag,
+          fmtisodate(isLocal, isExtended, job->start.tv_sec,
+                     job->start.tv_usec));
+  fprintf(out, " duration=\"%.3f\"",
           mymaketime(job->finish) - mymaketime(job->start));
 
   /* optional attribute: application process id */
