@@ -20,19 +20,6 @@
 #include <sys/time.h>
 #include <time.h>
 
-extern
-void
-full_append( char* buffer, const size_t size, size_t* len, 
-             const char* msg, size_t msglen );
-/* purpose: append a binary message to the buffer while maintaining length
- *          information.
- * paramtr: buffer (IO): buffer area to put strings into
- *          size (IN): capacity of buffer
- *          len (IO): current end of buffer, updated on return
- *          msg (IN): message to append to buffer
- *          mlen (IN): length of message area to append
- * returns: nada
- */
 
 extern
 void
@@ -43,30 +30,6 @@ xmlquote(FILE *out, const char* msg, size_t msglen);
  *          msg (IN): message to append to buffer
  *          mlen (IN): length of message area to append
  * returns: nada
- */
-
-extern
-void
-append( char* buffer, const size_t size, size_t* len, 
-        const char* msg );
-/* purpose: append a string to the buffer while maintaining length information.
- * paramtr: buffer (IO): buffer area to put strings into
- *          size (IN): capacity of buffer
- *          len (IO): current end of buffer, updated on return
- *          msg (IN): message to append to buffer
- */
-
-extern
-void
-myprint( char* buffer, const size_t size, size_t* len, 
-         const char* fmt, ... );
-/* purpose: format a string at the end of a buffer while maintaining length information.
- * paramtr: buffer (IO): buffer area to put strings into
- *          size (IN): capacity of buffer
- *          len (IO): current end of buffer, updated on return
- *          fmt (IN): printf compatible format
- *          ... (IN): parameters to format
- * returns: nada 
  */
 
 extern
