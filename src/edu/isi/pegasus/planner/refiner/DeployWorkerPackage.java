@@ -878,8 +878,19 @@ public class DeployWorkerPackage
         //should be local site , submit directory.
         String stagingSite = "local";
 
+        if( deploymentSites.isEmpty() ){
+            //PM-706 in case of condorio and full workflow reduction
+            mLogger.log( "Skipping staging of worker package as no deployment site detected ",
+                          LogManager.INFO_MESSAGE_LEVEL );
+            return workflow;
+        }
+        
         //stage worker job runs locally or on the staging site
-        boolean localTransfer = mLocalTransfers.get( stagingSite ) ;
+        //PM-706 check for null returns
+        boolean localTransfer = mLocalTransfers.containsKey( stagingSite) ?
+                                mLocalTransfers.get( stagingSite ) :
+                                true;
+
 
         //add a setup job per execution site
         for( Iterator it = deploymentSites.iterator(); it.hasNext(); ){
