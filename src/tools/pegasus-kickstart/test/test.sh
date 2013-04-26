@@ -29,12 +29,17 @@ function lotsofprocs {
     return $?
 }
 
+function lotsofprocs_trace {
+    kickstart -t ./lotsofprocs.sh
+    return $?
+}
+
 function lotsofprocs_buffer {
     kickstart -B 10000 ./lotsofprocs.sh
     return $?
 }
 
-function lotsofprocs_trace {
+function lotsofprocs_trace_buffer {
     kickstart -B 10000 -t ./lotsofprocs.sh
     return $?
 }
@@ -81,6 +86,7 @@ run_test lotsofprocs
 run_test lotsofprocs_buffer
 if [ `uname -s` == "Linux" ]; then
     run_test lotsofprocs_trace
+    run_test lotsofprocs_trace_buffer
 fi
 run_test argfile
 run_test argfile_after
