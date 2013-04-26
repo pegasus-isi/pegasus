@@ -411,6 +411,15 @@ main( int argc, char* argv[] )
       doFlush++;
       break;
     case 'I':
+      /* XXX We expect exactly 1 argument after -I. If we see more,
+       * then it is considered to be an error. This should be fixed
+       * to work in a more sensible fashion.
+       */
+      if (argc > i+2) {
+          debugmsg("ERROR: No arguments allowed after -I fn\n");
+          return 127;
+      }
+
       /* invoke application and args from given file */
       temp = argv[i][2] ? &argv[i][2] : argv[++i];
       if ( readFromFile( temp, &argv, &argc, &i, j ) == -1 ) {
