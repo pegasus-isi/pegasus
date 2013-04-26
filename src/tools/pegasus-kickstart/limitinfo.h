@@ -52,15 +52,12 @@ deleteLimitInfo( LimitInfo* limits );
 
 extern
 int
-printXMLLimitInfo( char* buffer, size_t size, size_t* len, size_t indent,
-                   const LimitInfo* limits );
-/* purpose: format the rusage record into the given buffer as XML.
- * paramtr: buffer (IO): area to store the output in
- *          size (IN): capacity of character area
- *          len (IO): current position within area, will be adjusted
+printXMLLimitInfo(FILE *out, int indent, const LimitInfo* limits);
+/* purpose: format the rusage record into the given stream as XML.
+ * paramtr: out (IO): the stream
  *          indent (IN): indentation level
  *          limits (IN): observed resource limits
- * returns: number of characters put into buffer (buffer length)
+ * returns: 0 if no error
  */
 
 #endif /* _LIMIT_INFO_H */

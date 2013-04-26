@@ -385,14 +385,13 @@ int procParentWait(pid_t main, int *main_status,  struct rusage *main_usage, Pro
 }
 
 /* Write <proc> records to buffer */
-int printXMLProcInfo(char* buffer, size_t size, size_t* len, size_t indent, ProcInfo* procs) {
+int printXMLProcInfo(FILE *out, int indent, ProcInfo* procs) {
     ProcInfo *i;
     for (i = procs; i; i = i->next) {
         /* Skip non-main threads in multithreaded programs */
         if (i->tgid != i->pid) continue;
-        
-        myprint(buffer, size, len, 
-                "%*s<proc ppid=\"%d\" pid=\"%d\" exe=\"%s\" "
+
+        fprintf(out, "%*s<proc ppid=\"%d\" pid=\"%d\" exe=\"%s\" "
                 "start=\"%lf\" stop=\"%lf\" utime=\"%lf\" stime=\"%lf\" "
                 "vmpeak=\"%d\" rsspeak=\"%d\" rchar=\"%"PRIu64"\" wchar=\"%"PRIu64"\" "
                 "rbytes=\"%"PRIu64"\" wbytes=\"%"PRIu64"\" cwbytes=\"%"PRIu64"\" "
@@ -403,7 +402,7 @@ int printXMLProcInfo(char* buffer, size_t size, size_t* len, size_t indent, Proc
                 i->read_bytes, i->write_bytes, i->cancelled_write_bytes, 
                 i->syscr, i->syscw);
     }
-    return *len;
+    return 0;
 }
 
 /* Delete all the ProcInfo objects in a list */

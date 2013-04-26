@@ -15,6 +15,7 @@
 #ifndef _MACHINE_BASIC_H
 #define _MACHINE_BASIC_H
 
+#include <stdio.h>
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/utsname.h>
@@ -30,10 +31,10 @@
 
 typedef struct {
   /* common (shared) portion */
-  const char*      provider;	/* name of this provider */
-  struct timeval   stamp;	/* when was this snapshot taken */
-  struct utsname   uname;	/* general system information */ 
-  unsigned long    pagesize;	/* size of a page in bytes */
+  const char*      provider;    /* name of this provider */
+  struct timeval   stamp;   /* when was this snapshot taken */
+  struct utsname   uname;   /* general system information */ 
+  unsigned long    pagesize;    /* size of a page in bytes */
 
   /* fall-back provider-specific portion */
 #ifdef _SC_PHYS_PAGES
@@ -50,51 +51,45 @@ typedef struct {
   unsigned short   cpu_online; 
 #endif /* _SC_NPROCESSORS_ONLN */
 
-} MachineBasicInfo; 
+} MachineBasicInfo;
 
 extern
 void*
-initBasicMachine( void ); 
-/* purpose: initialize the data structure. 
- * returns: initialized MachineBasicInfo structure. 
+initBasicMachine( void );
+/* purpose: initialize the data structure.
+ * returns: initialized MachineBasicInfo structure.
  */
 
 extern
 int
-startBasicMachine( char* buffer, size_t size, size_t* len, size_t indent,
-		   const char* tag, const MachineBasicInfo* machine );
-/* purpose: start format the information into the given buffer as XML.
- * paramtr: buffer (IO): area to store the output in
- *          size (IN): capacity of character area
- *          len (IO): current position within area, will be adjusted
+startBasicMachine(FILE *out, int indent, const char* tag,
+                  const MachineBasicInfo* machine);
+/* purpose: start format the information into the given stream as XML.
+ * paramtr: out (IO): the stream
  *          indent (IN): indentation level
  *          tag (IN): name to use for element tags.
  *          machine (IN): basic machine structure info to print.
- * returns: number of characters put into buffer (buffer length)
+ * returns: 0 if no error
  */
 
 extern
 int
-finalBasicMachine( char* buffer, size_t size, size_t* len, size_t indent,
-		   const char* tag, const MachineBasicInfo* machine );
-/* purpose: finish format the information into the given buffer as XML.
- * paramtr: buffer (IO): area to store the output in
- *          size (IN): capacity of character area
- *          len (IO): current position within area, will be adjusted
+finalBasicMachine(FILE *out, int indent, const char* tag,
+                  const MachineBasicInfo* machine);
+/* purpose: finish format the information into the given stream as XML.
+ * paramtr: out (IO): The stream
  *          indent (IN): indentation level
  *          tag (IN): name to use for element tags.
  *          machine (IN): basic machine structure info to print.
- * returns: number of characters put into buffer (buffer length)
+ * returns: 0 if no error
  */
 
 extern
 int
-printBasicMachine( char* buffer, size_t size, size_t* len, size_t indent,
-		   const char* tag, const void* data );
-/* purpose: format the machine information into the given buffer as XML.
- * paramtr: buffer (IO): area to store the output in
- *          size (IN): capacity of character area
- *          len (IO): current position within area, will be adjusted
+printBasicMachine(FILE *out, int indent, const char* tag,
+                  const void* data);
+/* purpose: format the machine information into the given stream as XML.
+ * paramtr: out (IO): The stream
  *          indent (IN): indentation level
  *          tag (IN): name to use for element tags.
  *          data (IN): MachineBasicInfo info to print.

@@ -144,13 +144,10 @@ addLFNToStatInfo( StatInfo* info, const char* lfn );
 
 extern
 size_t
-printXMLStatInfo( char* buffer, const size_t size, size_t* len, size_t indent,
-                  const char* tag, const char* id, const StatInfo* info );
-/* purpose: XML format a stat info record into a given buffer
- * paramtr: buffer (IO): area to store the output in
- *          size (IN): capacity of character area
- *          len (IO): current position within area, will be adjusted
- *          indent (IN): indentation level of tag
+printXMLStatInfo(FILE *out, int indent, const char* tag, const char* id, 
+                 const StatInfo* info);
+/* purpose: XML format a stat info record into a given stream
+ * paramtr: out (IO): the stream
  *          tag (IN): name of element to generate
  *          id (IN): id attribute, use NULL to not generate
  *          info (IN): stat info to print.

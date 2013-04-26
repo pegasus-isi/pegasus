@@ -54,181 +54,180 @@ mycompare( const void* a, const void* b )
 
 static
 size_t
-convert2XML( char* buffer, size_t size, const AppInfo* run )
+convert2XML( FILE *out, const AppInfo* run )
 {
   size_t i;
-  struct passwd* user = wrap_getpwuid( getuid() );
-  struct group* group = wrap_getgrgid( getgid() );
+  struct passwd* user = wrap_getpwuid(getuid());
+  struct group* group = wrap_getgrgid(getgid());
 
-  size_t len = 0;
 #define XML_SCHEMA_URI "http://pegasus.isi.edu/schema/invocation"
 #define XML_SCHEMA_VERSION "2.2"
 
   /* default is to produce XML preamble */
-  if ( ! run->noHeader )
-    append( buffer, size, &len, "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\n" );
+  if (!run->noHeader) {
+    fprintf(out, "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\n" );
+  }
 
   /* generate the XML header and start of root element */
-  append( buffer, size, &len,
-          "<invocation xmlns=\"" XML_SCHEMA_URI "\""
+  fprintf(out, "<invocation xmlns=\"" XML_SCHEMA_URI "\""
           " xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\""
           " xsi:schemaLocation=\"" XML_SCHEMA_URI
           " http://pegasus.isi.edu/schema/iv-" XML_SCHEMA_VERSION ".xsd\""
-          " version=\"" XML_SCHEMA_VERSION "\""
-          " start=\"" );
+          " version=\"" XML_SCHEMA_VERSION "\"");
 
-  /* mandatory attributes for root element */
-  mydatetime( buffer, size, &len, isLocal, isExtended,
-              run->start.tv_sec, run->start.tv_usec );
-  myprint( buffer, size, &len, "\" duration=\"%.3f\"",
-           mymaketime(run->finish) - mymaketime(run->start) );
+  /* start */
+  fprintf(out, " start=\"");
+  mydatetime(out, isLocal, isExtended,
+             run->start.tv_sec, run->start.tv_usec);
+  fprintf(out, "\"");
+
+  /* duration */
+  fprintf(out, " duration=\"%.3f\"",
+          mymaketime(run->finish) - mymaketime(run->start));
 
   /* optional attributes for root element: transformation fqdn */
-  if ( run->xformation && strlen(run->xformation) ) {
-    append( buffer, size, &len, " transformation=\"" );
-    xmlquote( buffer, size, &len, run->xformation, strlen(run->xformation) );
-    append( buffer, size, &len, "\"" );
+  if (run->xformation && strlen(run->xformation)) {
+    fprintf(out, " transformation=\"");
+    xmlquote(out, run->xformation, strlen(run->xformation));
+    fprintf(out, "\"");
   }
 
   /* optional attributes for root element: derivation fqdn */
-  if ( run->derivation && strlen(run->derivation) ) {
-    append( buffer, size, &len, " derivation=\"" );
-    xmlquote( buffer, size, &len, run->derivation, strlen(run->derivation) );
-    append( buffer, size, &len, "\"" );
+  if (run->derivation && strlen(run->derivation)) {
+    fprintf(out, " derivation=\"");
+    xmlquote(out, run->derivation, strlen(run->derivation));
+    fprintf(out, "\"");
   }
 
   /* optional attributes for root element: name of remote site */
-  if ( run->sitehandle && strlen(run->sitehandle) ) {
-    append( buffer, size, &len, " resource=\"" );
-    xmlquote( buffer, size, &len, run->sitehandle, strlen(run->sitehandle) );
-    append( buffer, size, &len, "\"" );
+  if (run->sitehandle && strlen(run->sitehandle)) {
+    fprintf(out, " resource=\"");
+    xmlquote(out, run->sitehandle, strlen(run->sitehandle));
+    fprintf(out, "\"");
   }
 
   /* optional attribute for workflow label: name of workflow */
-  if ( run->wf_label && strlen(run->wf_label) ) {
-    append( buffer, size, &len, " wf-label=\"" );
-    xmlquote( buffer, size, &len, run->wf_label, strlen(run->wf_label) );
-    append( buffer, size, &len, "\"" );
+  if (run->wf_label && strlen(run->wf_label)) {
+    fprintf(out, " wf-label=\"");
+    xmlquote(out, run->wf_label, strlen(run->wf_label));
+    fprintf(out, "\"");
   }
-  if ( run->wf_stamp && strlen(run->wf_stamp) ) {
-    append( buffer, size, &len, " wf-stamp=\"" );
-    xmlquote( buffer, size, &len, run->wf_stamp, strlen(run->wf_stamp) );
-    append( buffer, size, &len, "\"" );
+  if (run->wf_stamp && strlen(run->wf_stamp)) {
+    fprintf(out, " wf-stamp=\"");
+    xmlquote(out, run->wf_stamp, strlen(run->wf_stamp));
+    fprintf(out, "\"");
   }
 
   /* optional attributes for root element: host address dotted quad */
-  if ( isdigit( run->ipv4[0] ) ) {
+  if (isdigit(run->ipv4[0])) {
     struct hostent* h;
-    in_addr_t address = inet_addr( run->ipv4 );
-    myprint( buffer, size, &len, " interface=\"%s\"", run->prif ); 
-    myprint( buffer, size, &len, " hostaddr=\"%s\"", run->ipv4 );
-    if ( (h = wrap_gethostbyaddr( (const char*) &address, sizeof(in_addr_t), AF_INET )) )
-      myprint( buffer, size, &len, " hostname=\"%s\"", h->h_name );
+    in_addr_t address = inet_addr(run->ipv4);
+    fprintf(out, " interface=\"%s\"", run->prif); 
+    fprintf(out, " hostaddr=\"%s\"", run->ipv4);
+    if ((h = wrap_gethostbyaddr((const char*) &address, sizeof(in_addr_t), AF_INET)))
+      fprintf(out, " hostname=\"%s\"", h->h_name);
   }
 
   /* optional attributes for root element: application process id */
-  if ( run->child != 0 )
-    myprint( buffer, size, &len, " pid=\"%d\"", run->child );
+  if (run->child != 0)
+    fprintf(out, " pid=\"%d\"", run->child);
 
   /* user info about who ran this thing */
-  myprint( buffer, size, &len, " uid=\"%d\"", getuid() );
-  if ( user ) myprint( buffer, size, &len, " user=\"%s\"", user->pw_name );
+  fprintf(out, " uid=\"%d\"", getuid());
+  if (user) fprintf(out, " user=\"%s\"", user->pw_name);
 
   /* group info about who ran this thing */
-  myprint( buffer, size, &len, " gid=\"%d\"", getgid() );
-  if ( group ) myprint( buffer, size, &len, " group=\"%s\"", group->gr_name );
+  fprintf(out, " gid=\"%d\"", getgid());
+  if (group) fprintf(out, " group=\"%s\"", group->gr_name);
 
   /* currently active umask settings */
-  myprint( buffer, size, &len, " umask=\"0%03o\"", run->umask );
+  fprintf(out, " umask=\"0%03o\"", run->umask);
 
   /* finalize open tag of root element */
-  append( buffer, size, &len, ">\n" );
+  fprintf(out, ">\n");
 
   /* <setup>, <prejob>, <application>, <postjob>, <cleanup> */
-  printXMLJobInfo( buffer, size, &len, 2, "setup", &run->setup );
-  printXMLJobInfo( buffer, size, &len, 2, "prejob", &run->prejob );
-  printXMLJobInfo( buffer, size, &len, 2, "mainjob", &run->application );
-  printXMLJobInfo( buffer, size, &len, 2, "postjob", &run->postjob );
-  printXMLJobInfo( buffer, size, &len, 2, "cleanup", &run->cleanup );
+  printXMLJobInfo(out, 2, "setup", &run->setup);
+  printXMLJobInfo(out, 2, "prejob", &run->prejob);
+  printXMLJobInfo(out, 2, "mainjob", &run->application);
+  printXMLJobInfo(out, 2, "postjob", &run->postjob);
+  printXMLJobInfo(out, 2, "cleanup", &run->cleanup);
 
   /* <cwd> */
-  if ( run->workdir != NULL ) {
-    append( buffer, size, &len, "  <cwd>" );
-    append( buffer, size, &len, run->workdir );
-    append( buffer, size, &len, "</cwd>\n" );
+  if (run->workdir != NULL) {
+    fprintf(out, "  <cwd>%s</cwd>\n", run->workdir);
   } else {
-    append( buffer, size, &len, "  <cwd/>\n" );
+    fprintf(out, "  <cwd/>\n");
   }
 
   /* <usage> own resources */
-  printXMLUseInfo( buffer, size, &len, 2, "usage", &run->usage );
+  printXMLUseInfo(out, 2, "usage", &run->usage);
 
-  if ( ! run->noHeader )
-    printXMLMachineInfo( buffer, size, &len, 2, "machine", &run->machine ); 
+  if (!run->noHeader)
+    printXMLMachineInfo(out, 2, "machine", &run->machine);
 
   /* User-specified initial and final arbitrary <statcall> records */
-  if ( run->icount && run->initial )
-    for ( i=0; i<run->icount; ++i )
-      printXMLStatInfo( buffer, size, &len, 2, "statcall", "initial", &run->initial[i] );
-  if ( run->fcount && run->final )
-    for ( i=0; i<run->fcount; ++i )
-      printXMLStatInfo( buffer, size, &len, 2, "statcall", "final", &run->final[i] );
+  if (run->icount && run->initial)
+    for (i=0; i<run->icount; ++i)
+      printXMLStatInfo(out, 2, "statcall", "initial", &run->initial[i]);
+  if (run->fcount && run->final)
+    for (i=0; i<run->fcount; ++i)
+      printXMLStatInfo(out, 2, "statcall", "final", &run->final[i]);
 
   /* Default <statcall> records */
-  printXMLStatInfo( buffer, size, &len, 2, "statcall", "stdin", &run->input );
-  updateStatInfo( &(((AppInfo*) run)->output) );
-  printXMLStatInfo( buffer, size, &len, 2, "statcall", "stdout", &run->output );
-  updateStatInfo( &(((AppInfo*) run)->error) );
-  printXMLStatInfo( buffer, size, &len, 2, "statcall", "stderr", &run->error );
+  printXMLStatInfo(out, 2, "statcall", "stdin", &run->input);
+  updateStatInfo(&(((AppInfo*) run)->output));
+  printXMLStatInfo(out, 2, "statcall", "stdout", &run->output);
+  updateStatInfo(&(((AppInfo*) run)->error));
+  printXMLStatInfo(out, 2, "statcall", "stderr", &run->error);
 
   /* If the job failed, or if the user requested the full kickstart record */
-  if ( run->status || run->fullInfo ) {
+  if (run->status || run->fullInfo) {
     /* Extra <statcall> records */
-    printXMLStatInfo( buffer, size, &len, 2, "statcall", "gridstart", &run->gridstart );
-    updateStatInfo( &(((AppInfo*) run)->logfile) );
-    printXMLStatInfo( buffer, size, &len, 2, "statcall", "logfile", &run->logfile );
+    printXMLStatInfo(out, 2, "statcall", "gridstart", &run->gridstart);
+    updateStatInfo(&(((AppInfo*) run)->logfile));
+    printXMLStatInfo(out, 2, "statcall", "logfile", &run->logfile);
 
     /* <environment> */
-    if ( run->envp && run->envc ) {
-      char* s; 
+    if (run->envp && run->envc) {
+      char* s;
 
       /* attempt a sorted version */
-      char** keys = malloc( sizeof(char*) * run->envc );
-      for ( i=0; i < run->envc; ++i ) {
+      char** keys = malloc(sizeof(char*) * run->envc);
+      for (i=0; i < run->envc; ++i) {
         keys[i] = run->envp[i] ? strdup(run->envp[i]) : "";
       }
-      qsort( (void*) keys, run->envc, sizeof(char*), mycompare );
+      qsort((void*) keys, run->envc, sizeof(char*), mycompare);
 
-      append( buffer, size, &len, "  <environment>\n" );
-      for ( i=0; i < run->envc; ++i ) {
-        if ( keys[i] && (s = strchr( keys[i], '=' )) ) {
+      fprintf(out, "  <environment>\n");
+      for (i=0; i < run->envc; ++i) {
+        if (keys[i] && (s = strchr(keys[i], '='))) {
           *s = '\0'; /* temporarily cut string here */
-          append( buffer, size, &len, "    <env key=\"" );
-          append( buffer, size, &len, keys[i] );
-          append( buffer, size, &len, "\">" );
-          xmlquote( buffer, size, &len, s+1, strlen(s+1) );
-          append( buffer, size, &len, "</env>\n" );
+          fprintf(out, "    <env key=\"%s\">", keys[i]);
+          xmlquote(out, s+1, strlen(s+1));
+          fprintf(out, "</env>\n");
           *s = '='; /* reset string to original */
         }
       }
       free((void*) keys);
-      append( buffer, size, &len, "  </environment>\n" );
+      fprintf(out, "  </environment>\n");
     }
 
     /* <resource>  limits */
-    printXMLLimitInfo( buffer, size, &len, 2, &run->limits );
+    printXMLLimitInfo(out, 2, &run->limits);
 
   } /* run->status || run->fullInfo */
 
   /* finish root element */
-  append( buffer, size, &len, "</invocation>\n" );
-  return len;
+  fprintf(out, "</invocation>\n");
+
+  return 0;
 }
 
 static
 char*
 pattern( char* buffer, size_t size,
-         const char* dir, const char* sep, const char* file ) 
+         const char* dir, const char* sep, const char* file)
 {
   --size;
   buffer[size] = '\0'; /* reliably terminate string */
@@ -327,7 +326,7 @@ int countProcs(JobInfo *job) {
 }
 
 int
-printAppInfo( AppInfo* run )
+printAppInfo(AppInfo* run)
 /* purpose: output the given app info onto the given fd
  * paramtr: run (IN): is the collective information about the run
  * returns: the number of characters actually written (as of write() call).
@@ -343,65 +342,47 @@ printAppInfo( AppInfo* run )
     fd = run->logfile.file.descriptor;
   }
 
-  if (fd < 0) 
-      return -1;
+  if (fd < 0) {
+    debugmsg("ERROR: Unable to open output file\n");
+    return -1;
+  }
 
-  size_t size = getpagesize() << 5; /* initial assumption */
-
-  /* Adjust for final/initial sections */
-  int i;
-  if ( run->icount && run->initial )
-    for ( i=0; i<run->icount; ++i )
-      size += 256 + safe_strlen( run->initial[i].lfn ) +
-        safe_strlen( run->initial[i].file.name );
-  if ( run->fcount && run->final )
-    for ( i=0; i<run->fcount; ++i )
-      size += 256 + safe_strlen( run->final[i].lfn ) +
-        safe_strlen( run->final[i].file.name );
-
-  /* Adjust for <proc> */
-  int procs = 0;
-  procs += countProcs(&run->setup);
-  procs += countProcs(&run->prejob);
-  procs += countProcs(&run->application);
-  procs += countProcs(&run->postjob);
-  procs += countProcs(&run->cleanup);
-  size += procs * 250; // <proc> has ~250 chars
-
-  /* Adjust for <data> sections in stdout and stderr */
-  size += ( data_section_size << 1 );
-
-  /* Allocate buffer -- this may fail? */
-  char* buffer = (char*) calloc( size, sizeof(char) );
-  if (buffer == NULL)
-      goto exit;
+  /* Create a stream for the file. We use dup so that we can call
+   * fclose later regardless of whether fd is stdout/stderr.
+   */
+  FILE *out = fdopen(dup(fd), "w");
+  if (out == NULL) {
+    debugmsg("ERROR: Unable to output stream\n");
+    goto exit;
+  }
 
   /* what about myself? Update stat info on log file */
-  updateStatInfo( &run->logfile );
+  updateStatInfo(&run->logfile);
 
   /* obtain resource usage for xxxx */
-  getrusage( RUSAGE_SELF, &run->usage );
+  getrusage(RUSAGE_SELF, &run->usage);
 
   /* FIXME: is this true and necessary? */
-  updateLimitInfo( &run->limits );
+  updateLimitInfo(&run->limits);
 
   /* stop the clock */
-  now( &run->finish );
+  now(&run->finish);
 
-  size_t wsize = convert2XML( buffer, size, run );
   int locked = mytrylock(fd);
-  result = writen( fd, buffer, wsize, 3 );
-  /* FIXME: what about wsize != result */
-  if ( locked==1 ) 
-      lockit( fd, F_SETLK, F_UNLCK );
+
+  /* print the invocation record */
+  result = convert2XML(out, run);
+
+  fflush(out);
+
+  if (locked==1) lockit(fd, F_SETLK, F_UNLCK);
 
   run->isPrinted = 1;
 
-  free( (void*) buffer );
-
+  fclose(out);
 exit:
   if (run->logfile.source == IS_FILE)
-      close(fd);
+    close(fd);
 
   return result;
 }

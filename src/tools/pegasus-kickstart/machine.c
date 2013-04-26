@@ -49,26 +49,24 @@ initMachineInfo( MachineInfo* machine )
 {
   /* initialize virtual method table */
 #ifdef __MFLAG
-  machine->ctor = initMachine; 
+  machine->ctor = initMachine;
   machine->show = printMachine;
   machine->dtor = deleteMachine;
 #else
-  machine->ctor = initBasicMachine; 
+  machine->ctor = initBasicMachine;
   machine->show = printBasicMachine;
   machine->dtor = deleteBasicMachine;
 #endif /* __MFLAG */
 
-  /* call constructor on data */ 
-  machine->data = machine->ctor(); 
+  /* call constructor on data */
+  machine->data = machine->ctor();
 }
 
 int
-printXMLMachineInfo( char* buffer, size_t size, size_t* len, size_t indent,
-                     const char* tag, const MachineInfo* machine )
-/* purpose: format the job information into the given buffer as XML.
- * paramtr: buffer (IO): area to store the output in
- *          size (IN): capacity of character area
- *          len (IO): current position within area, will be adjusted
+printXMLMachineInfo(FILE *out, int indent, const char* tag,
+                    const MachineInfo* machine)
+/* purpose: format the job information into the given stream as XML.
+ * paramtr: out (IO): The stream
  *          indent (IN): indentation level
  *          tag (IN): name to use for element tags.
  *          machine (IN): machine info to print.
@@ -76,10 +74,10 @@ printXMLMachineInfo( char* buffer, size_t size, size_t* len, size_t indent,
  */
 {
   /* sanity check */
-  if ( machine && machine->show && machine->data )
-    machine->show( buffer, size, len, indent, tag, machine->data ); 
+  if (machine && machine->show && machine->data)
+    machine->show(out, indent, tag, machine->data);
 
-  return *len; 
+  return 0;
 }
 
 void
@@ -95,3 +93,4 @@ deleteMachineInfo( MachineInfo* machine )
   machine->dtor( machine->data ); 
   memset( machine, 0, sizeof(MachineInfo) ); 
 }
+

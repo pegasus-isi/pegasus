@@ -258,7 +258,7 @@ initJobInfo( JobInfo* jobinfo, int argc, char* const* argv )
       jobinfo->saverr = errno;
       jobinfo->isValid = 2;
     }
-      
+
     /* initialize some data for myself */
     initStatInfoFromName( &jobinfo->executable, jobinfo->argv[0], O_RDONLY, 0 );
   }
@@ -267,135 +267,127 @@ initJobInfo( JobInfo* jobinfo, int argc, char* const* argv )
 
 
 int
-printXMLJobInfo( char* buffer, size_t size, size_t* len, size_t indent,
-                 const char* tag, const JobInfo* job )
-/* purpose: format the job information into the given buffer as XML.
- * paramtr: buffer (IO): area to store the output in
- *          size (IN): capacity of character area
- *          len (IO): current position within area, will be adjusted
+printXMLJobInfo(FILE *out, int indent, const char* tag, 
+                const JobInfo* job)
+/* purpose: format the job information into the given stream as XML.
+ * paramtr: out (IO): the stream
  *          indent (IN): indentation level
  *          tag (IN): name to use for element tags.
  *          job (IN): job info to print.
- * returns: number of characters put into buffer (buffer length) */
+ * returns: number of characters put into buffer (buffer length)
+ */
 {
   int status;        /* $#@! broken Debian headers */
 
   /* sanity check */
-  if ( ! job->isValid ) return *len;
+  if (!job->isValid) return 0;
 
   /* start tag with indentation */
-  myprint( buffer, size, len, "%*s<%s start=\"", indent, "", tag );
+  fprintf(out, "%*s<%s start=\"", indent, "", tag);
 
   /* start time and duration */
-  mydatetime( buffer, size, len, isLocal, isExtended,
-              job->start.tv_sec, job->start.tv_usec );
-  myprint( buffer, size, len, "\" duration=\"%.3f\"",
-           mymaketime(job->finish) - mymaketime(job->start) );
+  mydatetime(out, isLocal, isExtended,
+             job->start.tv_sec, job->start.tv_usec);
+  fprintf(out, "\" duration=\"%.3f\"",
+          mymaketime(job->finish) - mymaketime(job->start));
 
   /* optional attribute: application process id */
-  if ( job->child != 0 )
-    myprint( buffer, size, len, " pid=\"%d\"", job->child );
+  if (job->child != 0)
+    fprintf(out, " pid=\"%d\"", job->child);
 
   /* finalize open tag of element */
-  append( buffer, size, len, ">\n" );
+  fprintf(out, ">\n");
 
   /* <usage> */
-  printXMLUseInfo( buffer, size, len, indent+2, "usage", &job->use );
+  printXMLUseInfo(out, indent+2, "usage", &job->use);
 
   /* <status>: open tag */
-  myprint( buffer, size, len, "%*s<status raw=\"%d\">", indent+2, "", 
-           job->status );
+  fprintf(out, "%*s<status raw=\"%d\">", indent+2, "", job->status);
 
   /* <status>: cases of completion */
   status = (int) job->status;        /* $#@! broken Debian headers */
-  if ( job->status < 0 ) {
+  if (job->status < 0) {
     /* <failure> */
-    myprint( buffer, size, len, "<failure error=\"%d\">%s%s</failure>",
-             job->saverr, 
-             job->prefix && job->prefix[0] ? job->prefix : "", 
-             strerror(job->saverr) );
-  } else if ( WIFEXITED(status) ) {
-    myprint( buffer, size, len, "<regular exitcode=\"%d\"/>", 
-             WEXITSTATUS(status) );
-  } else if ( WIFSIGNALED(status) ) {
+    fprintf(out, "<failure error=\"%d\">%s%s</failure>", job->saverr,
+            job->prefix && job->prefix[0] ? job->prefix : "",
+            strerror(job->saverr));
+  } else if (WIFEXITED(status)) {
+    fprintf(out, "<regular exitcode=\"%d\"/>", WEXITSTATUS(status));
+  } else if (WIFSIGNALED(status)) {
     /* result = 128 + WTERMSIG(status); */
-    myprint( buffer, size, len, "<signalled signal=\"%u\"", 
-             WTERMSIG(status) );
+    fprintf(out, "<signalled signal=\"%u\"", WTERMSIG(status));
 #ifdef WCOREDUMP
-    myprint( buffer, size, len, " corefile=\"%s\"", 
-             WCOREDUMP(status) ? "true" : "false" );
+    fprintf(out, " corefile=\"%s\"", WCOREDUMP(status) ? "true" : "false");
 #endif
-    myprint( buffer, size, len, ">%s</signalled>", 
+    fprintf(out, ">%s</signalled>",
 #if defined(CYGWINNT50) || defined(CYGWINNT51)
              "unknown"
 #else
              sys_siglist[WTERMSIG(status)]
 #endif
-             );
-  } else if ( WIFSTOPPED(status) ) {
-    myprint( buffer, size, len, "<suspended signal=\"%u\">%s</suspended>",
-             WSTOPSIG(status),
+    );
+  } else if (WIFSTOPPED(status)) {
+    fprintf(out, "<suspended signal=\"%u\">%s</suspended>", WSTOPSIG(status),
 #if defined(CYGWINNT50) || defined(CYGWINNT51)
              "unknown"
 #else
              sys_siglist[WSTOPSIG(status)]
 #endif
-             );
+    );
   } /* FIXME: else? */
-  append( buffer, size, len, "</status>\n" );
+  fprintf(out, "</status>\n");
 
   /* <executable> */
-  printXMLStatInfo( buffer, size, len, indent+2, 
-                    "statcall", NULL, &job->executable );
+  printXMLStatInfo(out, indent+2, "statcall", NULL, &job->executable);
 
 #ifdef WITH_NEW_ARGS
   /* alternative 1: new-style <argument-vector> */
-  myprint( buffer, size, len, "%*s<argument-vector", indent+2, "" );
-  if ( job->argc == 1 ) {
+  fprintf(out, "%*s<argument-vector", indent+2, "");
+  if (job->argc == 1) {
     /* empty element */
-    append( buffer, size, len, "/>\n" );
+    fprintf(out, "/>\n");
   } else {
     /* content are the CLI args */
-    int i=1;
+    int i;
 
-    append( buffer, size, len, ">\n" );
-    for ( ; i < job->argc; ++i ) {
-      myprint( buffer, size, len, "%*s<arg nr=\"%d\">", indent+4, "", i );
-      xmlquote( buffer, size, len, job->argv[i], strlen(job->argv[i]) ); 
-      append( buffer, size, len, "</arg>\n" );
+    fprintf(out, ">\n");
+    for (i=1; i<job->argc; ++i) {
+      fprintf(out, "%*s<arg nr=\"%d\">", indent+4, "", i);
+      xmlquote(out, job->argv[i], strlen(job->argv[i]));
+      fprintf(out, "</arg>\n");
     }
 
     /* end tag */
-    myprint( buffer, size, len, "%*s</argument-vector>\n", indent+2, "" );
+    fprintf(out, "%*s</argument-vector>\n", indent+2, "");
   }
-#else 
+#else
   /* alternative 2: old-stlye <arguments> */
-  myprint( buffer, size, len, "%*s<arguments", indent+2, "" );
-  if ( job->argc == 1 ) {
+  fprintf(out, "%*s<arguments", indent+2, "");
+  if (job->argc == 1) {
     /* empty element */
-    append( buffer, size, len, "/>\n" );
+    fprintf(out, "/>\n");
   } else {
     /* content are the CLI args */
-    int i=1;
+    int i = 1;
 
-    append( buffer, size, len, ">" );
-    while ( i < job->argc ) {
-      xmlquote( buffer, size, len, job->argv[i], strlen(job->argv[i]) );
-      if ( ++i < job->argc ) append( buffer, size, len, " " );
+    fprintf(out, ">");
+    while (i < job->argc) {
+      xmlquote(out, job->argv[i], strlen(job->argv[i]));
+      if (++i < job->argc) fprintf(out, " ");
     }
 
     /* end tag */
-    append( buffer, size, len, "</arguments>\n" );
+    fprintf(out, "</arguments>\n");
   }
 #endif /* WITH_NEW_ARGS */
 
   /* <proc>s */
-  printXMLProcInfo( buffer, size, len, indent+2, job->children );
-  
-  /* finalize close tag of outmost element */
-  myprint( buffer, size, len, "%*s</%s>\n", indent, "", tag );
+  printXMLProcInfo(out, indent+2, job->children);
 
-  return *len;
+  /* finalize close tag of outmost element */
+  fprintf(out, "%*s</%s>\n", indent, "", tag);
+
+  return 0;
 }
 
 void

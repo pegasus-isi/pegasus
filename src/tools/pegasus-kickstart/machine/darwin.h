@@ -91,22 +91,19 @@ gather_loadavg( float load[3] );
 extern
 void*
 initMachine( void ); 
-/* purpose: initialize the data structure. 
- * returns: initialized MachineDarwinInfo structure. 
+/* purpose: initialize the data structure.
+ * returns: initialized MachineDarwinInfo structure.
  */
 
 extern
 int
-printMachine( char* buffer, size_t size, size_t* len, size_t indent,
-	      const char* tag, const void* data );
-/* purpose: format the information into the given buffer as XML.
- * paramtr: buffer (IO): area to store the output in
- *          size (IN): capacity of character area
- *          len (IO): current position within area, will be adjusted
+printMachine(FILE *out, int indent, const char* tag, const void* data);
+/* purpose: format the information into the given stream as XML.
+ * paramtr: out (IO): the buffer
  *          indent (IN): indentation level
  *          tag (IN): name to use for element tags.
  *          data (IN): MachineDarwinInfo info to print.
- * returns: number of characters put into buffer (buffer length)
+ * returns: 0 if no error
  */
 
 extern

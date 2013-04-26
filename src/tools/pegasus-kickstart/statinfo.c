@@ -471,214 +471,189 @@ addLFNToStatInfo( StatInfo* info, const char* lfn )
 }
 
 size_t
-printXMLStatInfo( char* buffer, const size_t size, size_t* len, size_t indent,
-                  const char* tag, const char* id, const StatInfo* info )
-/* purpose: XML format a stat info record into a given buffer
- * paramtr: buffer (IO): area to store the output in
- *          size (IN): capacity of character area
- *          len (IO): current position within area, will be adjusted
- *          indent (IN): indentation level of tag
+printXMLStatInfo(FILE *out, int indent, const char* tag, const char* id,
+                 const StatInfo* info)
+/* purpose: XML format a stat info record into a given stream
+ * paramtr: out (IO): the stream
  *          tag (IN): name of element to generate
  *          id (IN): id attribute, use NULL to not generate
  *          info (IN): stat info to print.
  * returns: number of characters put into buffer (buffer length)
  */
 {
-  char* real = NULL; 
+  char* real = NULL;
 
   /* sanity check */
-  if ( info->source == IS_INVALID ) return *len;
+  if (info->source == IS_INVALID) return 0;
 
   /* start main tag */
-  myprint( buffer, size, len, "%*s<%s error=\"%d\"", 
-           indent, "", tag, info->error );
-  if ( id != NULL ) myprint( buffer, size, len, " id=\"%s\"", id ); 
-  if ( info->lfn != NULL ) 
-    myprint( buffer, size, len, " lfn=\"%s\"", info->lfn );
-  append( buffer, size, len, ">\n" );
+  fprintf(out, "%*s<%s error=\"%d\"", indent, "", tag, info->error);
+  if (id != NULL) fprintf(out, " id=\"%s\"", id);
+  if (info->lfn != NULL) fprintf(out, " lfn=\"%s\"", info->lfn);
+  fprintf(out, ">\n");
 
   /* NEW: ignore "file not found" error for "gridstart" */
-  if ( id != NULL && info->error == 2 && strcmp( id, "gridstart" ) == 0 ) 
-    myprint( buffer, size, len, "%*s<!-- ignore above error -->\n",
-             indent+2, "" ); 
-  
+  if (id != NULL && info->error == 2 && strcmp(id, "gridstart") == 0)
+    fprintf(out, "%*s<!-- ignore above error -->\n", indent+2, "");
+
   /* either a <name> or <descriptor> sub element */
-  switch ( info->source ) {
+  switch (info->source) {
   case IS_TEMP:   /* preparation for <temporary> element */
     /* late update for temp files */
     errno = 0;
-    if ( fstat( info->file.descriptor, (struct stat*) &info->info ) != -1 &&
-         ( ((StatInfo*) info)->error = errno) == 0 ) {
+    if (fstat(info->file.descriptor, (struct stat*) &info->info) != -1 &&
+         (((StatInfo*) info)->error = errno) == 0) {
       /* obtain header of file */
 
 #if 0
       /* implementation alternative 1: use a new filetable kernel structure */
-      int fd = open( info->file.name, O_RDONLY );
-      if ( fd != -1 ) {
-        read( fd, (char*) info->client.header, sizeof(info->client.header) );
+      int fd = open(info->file.name, O_RDONLY);
+      if (fd != -1) {
+        read(fd, (char*) info->client.header, sizeof(info->client.header));
         close(fd);
       }
 #else
       /* implementation alternative 2: share the kernel filetable structure */
-      int fd = dup( info->file.descriptor );
-      if ( fd != -1 ) {
-        if ( lseek( fd, 0, SEEK_SET ) != -1 )
-          read( fd, (char*) info->client.header, sizeof(info->client.header) );
+      int fd = dup(info->file.descriptor);
+      if (fd != -1) {
+        if (lseek(fd, 0, SEEK_SET) != -1)
+          read(fd, (char*) info->client.header, sizeof(info->client.header));
         close(fd);
       }
 #endif
     }
 
-    myprint( buffer, size, len, 
-             "%*s<temporary name=\"%s\" descriptor=\"%d\"/>\n",
-             indent+2, "", info->file.name, info->file.descriptor );
+    fprintf(out, "%*s<temporary name=\"%s\" descriptor=\"%d\"/>\n",
+            indent+2, "", info->file.name, info->file.descriptor);
     break;
 
   case IS_FIFO: /* <fifo> element */
-    myprint( buffer, size, len, 
-             "%*s<fifo name=\"%s\" descriptor=\"%d\" count=\"%u\" rsize=\"%u\" wsize=\"%u\"/>\n",
-             indent+2, "", info->file.name, info->file.descriptor,
-             info->client.fifo.count, info->client.fifo.rsize, 
-             info->client.fifo.wsize );
+    fprintf(out, "%*s<fifo name=\"%s\" descriptor=\"%d\" count=\"%zu\" rsize=\"%zu\" wsize=\"%zu\"/>\n",
+            indent+2, "", info->file.name, info->file.descriptor,
+            info->client.fifo.count, info->client.fifo.rsize, 
+            info->client.fifo.wsize);
     break;
 
   case IS_FILE: /* <file> element */
 #if 0
     /* some debug info - for now */
-    myprint( buffer, size, len, "%*s<!-- deferred flag: %d -->\n",
-             indent+2, "", info->deferred );
+    fprintf(out, "%*s<!-- deferred flag: %d -->\n",
+            indent+2, "", info->deferred);
 #endif
 
 #ifdef HAS_REALPATH_EXT
-    real = realpath( info->file.name, NULL ); 
+    real = realpath(info->file.name, NULL); 
 #endif /* HAS_REALPATH_EXT */
-    myprint( buffer, size, len, 
-             "%*s<file name=\"%s\"", indent+2, "", 
-             real ? real : info->file.name );
+    fprintf(out, "%*s<file name=\"%s\"", indent+2, "",
+            real ? real : info->file.name);
 #ifdef HAS_REALPATH_EXT
-    if ( real ) free((void*) real);
+    if (real) free((void*) real);
 #endif /* HAS_REALPATH_EXT */
 
-    if ( info->error == 0 && S_ISREG(info->info.st_mode) && 
-         info->info.st_size > 0 ) {
+    if (info->error == 0 && S_ISREG(info->info.st_mode) &&
+        info->info.st_size > 0) {
       /* optional hex information */
       size_t i, end = sizeof(info->client.header);
-      if ( info->info.st_size < end ) end = info->info.st_size;
+      if (info->info.st_size < end) end = info->info.st_size;
 
-      append( buffer, size, len, ">" );
-      for ( i=0; i<end; ++i )
-        myprint( buffer, size, len, "%02X", info->client.header[i] );
-      append( buffer, size, len, "</file>\n" );
+      fprintf(out, ">");
+      for (i=0; i<end; ++i)
+        fprintf(out, "%02X", info->client.header[i]);
+      fprintf(out, "</file>\n");
     } else {
-      append( buffer, size, len, "/>\n" );
+      fprintf(out, "/>\n");
     }
     break;
 
   case IS_HANDLE: /* <descriptor> element */
-    myprint( buffer, size, len, 
-             "%*s<descriptor number=\"%u\"/>\n", indent+2, "", 
-             info->file.descriptor );
+    fprintf(out, "%*s<descriptor number=\"%u\"/>\n", indent+2, "",
+            info->file.descriptor);
     break;
 
   default: /* this must not happen! */
-    myprint( buffer, size, len, 
-             "%*s<!-- ERROR: No valid file info available -->\n", indent+2, "" );
+    fprintf(out, "%*s<!-- ERROR: No valid file info available -->\n",
+            indent+2, "");
     break;
   }
 
-  if ( info->error == 0 && info->source != IS_INVALID ) {
+  if (info->error == 0 && info->source != IS_INVALID) {
     /* <stat> subrecord */
     char my[32];
-    struct passwd* user = wrap_getpwuid( info->info.st_uid );
-    struct group* group = wrap_getgrgid( info->info.st_gid );
+    struct passwd* user = wrap_getpwuid(info->info.st_uid);
+    struct group* group = wrap_getgrgid(info->info.st_gid);
 
-    myprint( buffer, size, len, 
-             "%*s<statinfo mode=\"0%o\"",
-             indent+2, "", info->info.st_mode );
+    fprintf(out, "%*s<statinfo mode=\"0%o\"", indent+2, "",
+            info->info.st_mode);
 
     /* Grmblftz, are we in 32bit, 64bit LFS on 32bit, or 64bit on 64 */
-    sizer( my, sizeof(my), 
-           sizeof(info->info.st_size), &info->info.st_size );
-    myprint( buffer, size, len, " size=\"%s\"", my );
+    sizer(my, sizeof(my), sizeof(info->info.st_size), &info->info.st_size);
+    fprintf(out, " size=\"%s\"", my);
 
-    sizer( my, sizeof(my), 
-           sizeof(info->info.st_ino), &info->info.st_ino );
-    myprint( buffer, size, len, " inode=\"%s\"", my );
+    sizer(my, sizeof(my), sizeof(info->info.st_ino), &info->info.st_ino);
+    fprintf(out, " inode=\"%s\"", my);
 
-    sizer( my, sizeof(my), 
-           sizeof(info->info.st_nlink), &info->info.st_nlink );
-    myprint( buffer, size, len, " nlink=\"%s\"", my );
+    sizer(my, sizeof(my), sizeof(info->info.st_nlink), &info->info.st_nlink);
+    fprintf(out, " nlink=\"%s\"", my);
 
-    sizer( my, sizeof(my), 
-           sizeof(info->info.st_blksize), &info->info.st_blksize );
-    myprint( buffer, size, len, " blksize=\"%s\"", my );
+    sizer(my, sizeof(my), sizeof(info->info.st_blksize), &info->info.st_blksize);
+    fprintf(out, " blksize=\"%s\"", my);
 
     /* st_blocks is new in iv-1.8 */
-    sizer( my, sizeof(my), 
-           sizeof(info->info.st_blocks), &info->info.st_blocks );
-    myprint( buffer, size, len, " blocks=\"%s\"", my );
+    sizer(my, sizeof(my), sizeof(info->info.st_blocks), &info->info.st_blocks);
+    fprintf(out, " blocks=\"%s\"", my);
 
-    append( buffer, size, len, " mtime=\"" );
-    mydatetime( buffer, size, len, isLocal, isExtended,
-                info->info.st_mtime, -1 );
+    fprintf(out, " mtime=\"");
+    mydatetime(out, isLocal, isExtended, info->info.st_mtime, -1);
 
-    append( buffer, size, len, "\" atime=\"" );
-    mydatetime( buffer, size, len, isLocal, isExtended,
-                info->info.st_atime, -1 );
+    fprintf(out, "\" atime=\"");
+    mydatetime(out, isLocal, isExtended, info->info.st_atime, -1);
 
-    append( buffer, size, len, "\" ctime=\"" );
-    mydatetime( buffer, size, len, isLocal, isExtended,
-                info->info.st_ctime, -1 );
+    fprintf(out, "\" ctime=\"");
+    mydatetime(out, isLocal, isExtended, info->info.st_ctime, -1);
 
-    myprint( buffer, size, len, "\" uid=\"%lu\"", info->info.st_uid );
-    if ( user ) myprint( buffer, size, len, " user=\"%s\"", user->pw_name );
-    myprint( buffer, size, len, " gid=\"%lu\"", info->info.st_gid );
-    if ( group ) myprint( buffer, size, len, " group=\"%s\"", group->gr_name );
+    fprintf(out, "\" uid=\"%d\"", info->info.st_uid);
+    if (user) fprintf(out, " user=\"%s\"", user->pw_name);
+    fprintf(out, " gid=\"%d\"", info->info.st_gid);
+    if (group) fprintf(out, " group=\"%s\"", group->gr_name);
 
-    append( buffer, size, len, "/>\n" );
+    fprintf(out, "/>\n");
   }
 
   /* data section from stdout and stderr of application */
-  if ( info->source == IS_TEMP && info->error == 0 && info->info.st_size &&
-       data_section_size > 0 ) {
+  if (info->source == IS_TEMP && info->error == 0 && info->info.st_size &&
+      data_section_size > 0) {
     size_t dsize = data_section_size;
     size_t fsize = info->info.st_size;
-    myprint( buffer, size, len, "%*s<data%s",
-             indent+2, "", ( fsize > dsize ? " truncated=\"true\"" : "" ) );
-    if ( fsize > 0 ) {
+    fprintf(out, "%*s<data%s", indent+2, "",
+            (fsize > dsize ? " truncated=\"true\"" : ""));
+    if (fsize > 0) {
       char* data = (char*) malloc(dsize+1);
       int fd = dup(info->file.descriptor);
-      
-      append( buffer, size, len, ">" );
-      if ( fd != -1 ) {
+
+      fprintf(out, ">");
+      if (fd != -1) {
         /* Get the last dsize bytes of the file */
         size_t offset = 0;
         if (fsize > dsize) {
           offset = fsize - dsize;
         }
-        if ( lseek(fd, offset, SEEK_SET) != -1 ) {
-          ssize_t rsize = read( fd, data, dsize );
-          
-          /* Fix for PM-691 
-           * the xml quote converts whitespaces. so we need to ensure that the buffer
-           * only moves maximum of data_section_size. If stdout is only whitespaces,
-           * then the truncation will happen much earlier than data_section_size.
-           */
-          //xmlquote( buffer, size, len, data, rsize );
-          xmlquote( buffer, dsize, len, data, rsize );
+        if (lseek(fd, offset, SEEK_SET) != -1) {
+          ssize_t rsize = read(fd, data, dsize);
+          xmlquote(out, data, rsize);
         }
         close(fd);
       }
 
-      append( buffer, size, len, "</data>\n" );
+      fprintf(out, "</data>\n");
       free((void*) data);
     } else {
-      append( buffer, size, len, "/>\n" );
+      fprintf(out, "/>\n");
     }
   }
 
-  myprint( buffer, size, len, "%*s</%s>\n", indent, "", tag );
-  return *len;
+  fprintf(out, "%*s</%s>\n", indent, "", tag);
+
+  return 0;
 }
 
 void

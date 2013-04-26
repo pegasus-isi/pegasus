@@ -63,12 +63,10 @@ initJobInfoFromString( JobInfo* jobinfo, const char* commandline );
 
 extern
 int
-printXMLJobInfo( char* buffer, size_t size, size_t* len, size_t indent,
-                 const char* tag, const JobInfo* job );
-/* purpose: format the job information into the given buffer as XML.
- * paramtr: buffer (IO): area to store the output in
- *          size (IN): capacity of character area
- *          len (IO): current position within area, will be adjusted
+printXMLJobInfo( FILE *out, int indent, const char* tag,
+                 const JobInfo* job );
+/* purpose: format the job information into the given stream as XML.
+ * paramtr: out (IO): the stream
  *          indent (IN): indentation level
  *          tag (IN): name to use for element tags.
  *          job (IN): job info to print.

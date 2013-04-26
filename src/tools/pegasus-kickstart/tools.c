@@ -31,8 +31,8 @@ full_append( char* buffer, const size_t size, size_t* len,
  *          len (IO): current end of buffer, updated on return
  *          msg (IN): message to append to buffer
  *          mlen (IN): length of message area to append
- * returns: nada 
- */          
+ * returns: nada
+ */
 {
   if ( *len + msglen + 1 < size ) {
     /* JSV 20070921: msglen may be smaller than strlen(msg) ! */
@@ -44,23 +44,21 @@ full_append( char* buffer, const size_t size, size_t* len,
   }
 }
 
-#if 0
 void
-append( char* buffer, const size_t size, size_t* len, 
+append( char* buffer, const size_t size, size_t* len,
         const char* msg )
 /* purpose: append a string to the buffer while maintaining length information.
  * paramtr: buffer (IO): buffer area to put strings into
  *          size (IN): capacity of buffer
  *          len (IO): current end of buffer, updated on return
  *          msg (IN): message to append to buffer
- * returns: nada 
- */          
+ * returns: nada
+ */
 {
   full_append( buffer, size, len, msg, strlen(msg) );
 }
-#endif
 
-static const char* iso88591lookup[256] = 
+static const char* iso88591lookup[256] =
 {
   "&#xe000;", "&#xe001;", "&#xe002;", "&#xe003;", "&#xe004;", "&#xe005;", "&#xe006;", "&#xe007;", 
   "&#xe008;",       "\t",       "\n", "&#xe00b;", "&#xe00c;",       "\r", "&#xe00e;", "&#xe00f;", 
@@ -103,27 +101,25 @@ static const char* iso88591lookup[256] =
          "ø",        "ù",        "ú",        "û",        "ü",        "ý",        "þ", "&#xe0ff;"
 };
 
+extern
 void
-xmlquote( char* buffer, const size_t size, size_t* len,
-          const char* msg, size_t msglen )
-/* purpose: append a possibly binary message to the buffer while XML
- *          quoting and maintaining buffer length information.
- * paramtr: buffer (IO): buffer area to put strings into
- *          size (IN): capacity of buffer
- *          len (IO): current end of buffer, updated on return
+xmlquote( FILE *out, const char* msg, size_t msglen )
+/* purpose: write a possibly binary message to the stream while XML
+ *          quoting
+ * paramtr: out (IO): stream to write the quoted xml to
  *          msg (IN): message to append to buffer
  *          mlen (IN): length of message area to append
- * returns: nada 
- */          
+ * returns: nada
+ */
 {
-  size_t i, tsize = size-2;
-  for ( i=0; i < msglen; ++i ) {
-    append( buffer, tsize, len, iso88591lookup[ (unsigned char) msg[i] ] );
+  size_t i;
+  for (i=0; i<msglen; ++i) {
+    fprintf(out, "%s", iso88591lookup[(unsigned char)msg[i]]);
   }
 }
 
 void
-myprint( char* buffer, const size_t size, size_t* len, 
+myprint( char* buffer, const size_t size, size_t* len,
          const char* fmt, ... )
 /* purpose: format a string at the end of a buffer while maintaining length information.
  * paramtr: buffer (IO): buffer area to put strings into
@@ -131,8 +127,8 @@ myprint( char* buffer, const size_t size, size_t* len,
  *          len (IO): current end of buffer, updated on return
  *          fmt (IN): printf compatible format
  *          ... (IN): parameters to format
- * returns: nada 
- */          
+ * returns: nada
+ */
 {
   va_list ap;
   va_start( ap, fmt );
@@ -143,8 +139,9 @@ myprint( char* buffer, const size_t size, size_t* len,
   va_end(ap);
 }
 
+static
 size_t
-mydatetime( char* buffer, const size_t size, size_t* offset,
+__mydatetime( char* buffer, const size_t size, size_t* offset,
             int isLocal, int isExtended, time_t seconds, long micros )
 /* purpose: append an ISO timestamp to a buffer
  * paramtr: buffer (IO): buffer area to store things into
@@ -199,6 +196,23 @@ mydatetime( char* buffer, const size_t size, size_t* offset,
 
   append( buffer, size, offset, line );
   return len;
+}
+
+size_t
+mydatetime( FILE *out, int isLocal, int isExtended, time_t seconds, 
+            long micros )
+/* purpose: Write ISO timestamp to stream
+ * paramtr: out (IO): The stream to write to
+ *          isLocal (IN): flag, if 0 use UTC, otherwise use local time
+ *          isExtd (IN): flag, if 0 use concise format, otherwise extended
+ *          seconds (IN): tv_sec part of timeval
+ *          micros (IN): if negative, don't show micros.
+ * returns: number of characters added
+ */
+{
+  char line[256];
+  size_t len = 0;
+  return __mydatetime(line, 256, &len, isLocal, isExtended, seconds, micros);
 }
 
 double

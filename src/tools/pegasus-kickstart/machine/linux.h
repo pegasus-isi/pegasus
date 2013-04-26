@@ -22,23 +22,23 @@
 
 typedef enum {
   S_RUNNING, S_SLEEPING, S_WAITING, S_STOPPED, S_ZOMBIE, S_OTHER,
-  MAX_STATE 
+  MAX_STATE
 } LinuxState;
 
 typedef struct {
   /* summaries from procfs status file */
   uint64_t          size;
   uint64_t          rss;
-  unsigned          total; 
+  unsigned          total;
   unsigned          state[MAX_STATE];
-} LinuxStatus; 
+} LinuxStatus;
 
 typedef struct {
   /* common (shared) portion */
-  MachineBasicInfo* basic; 
+  MachineBasicInfo* basic;
 
-  /* 
-   * provider-specific portion 
+  /*
+   * provider-specific portion
    */
 
   /* from sysinfo(2) call */
@@ -47,14 +47,14 @@ typedef struct {
   uint64_t          ram_shared;
   uint64_t          ram_buffer;
   uint64_t          swap_total;
-  uint64_t          swap_free; 
+  uint64_t          swap_free;
 
   /* from /proc/loadavg */
   float             load[3];
 
   /* from /proc/cpuinfo */
   unsigned short    cpu_count;
-  unsigned short    cpu_online; 
+  unsigned short    cpu_online;
   unsigned long     megahertz;
   char              vendor_id[16];
   char              model_name[80];
@@ -65,9 +65,9 @@ typedef struct {
 
   /* from /proc/ ** /status */
   LinuxStatus       procs;
-  LinuxStatus       tasks; 
+  LinuxStatus       tasks;
 
-} MachineLinuxInfo; 
+} MachineLinuxInfo;
 
 extern
 void
@@ -80,8 +80,8 @@ gather_loadavg( float load[3] );
 extern
 void
 gather_meminfo( uint64_t* ram_total, uint64_t* ram_free,
-		uint64_t* ram_shared, uint64_t* ram_buffer,
-		uint64_t* swap_total, uint64_t* swap_free );
+        uint64_t* ram_shared, uint64_t* ram_buffer,
+        uint64_t* swap_total, uint64_t* swap_free );
 /* purpose: collect system-wide memory usage
  * primary: provide functionality for monitoring
  * paramtr: ram_total (OUT): all RAM
@@ -98,19 +98,16 @@ gather_meminfo( uint64_t* ram_total, uint64_t* ram_free,
 
 extern
 void*
-initMachine( void ); 
-/* purpose: initialize the data structure. 
- * returns: initialized MachineLinuxInfo structure. 
+initMachine( void );
+/* purpose: initialize the data structure.
+ * returns: initialized MachineLinuxInfo structure.
  */
 
 extern
 int
-printMachine( char* buffer, size_t size, size_t* len, size_t indent,
-	      const char* tag, const void* data );
-/* purpose: format the information into the given buffer as XML.
- * paramtr: buffer (IO): area to store the output in
- *          size (IN): capacity of character area
- *          len (IO): current position within area, will be adjusted
+printMachine(FILE *out, int indent, const char* tag, const void* data);
+/* purpose: format the information into the given stream as XML.
+ * paramtr: out (IO): The stream
  *          indent (IN): indentation level
  *          tag (IN): name to use for element tags.
  *          data (IN): MachineLinuxInfo info to print.
@@ -121,7 +118,7 @@ extern
 void
 deleteMachine( void* data );
 /* purpose: destructor
- * paramtr: data (IO): valid MachineLinuxInfo structure to destroy. 
+ * paramtr: data (IO): valid MachineLinuxInfo structure to destroy.
  */
 
 #endif /* _MACHINE_LINUX_H */
