@@ -455,6 +455,9 @@ public class Braindump {
         } catch (GlobusCredentialException ex) {
             mLogger.log( "Unable to determine GRID DN", ex, LogManager.DEBUG_MESSAGE_LEVEL );
         }
+        catch( Exception e ){
+            mLogger.log( "Unknown exception caught while determining the DN", e, LogManager.DEBUG_MESSAGE_LEVEL );
+        }
         return dn;
     }
     
