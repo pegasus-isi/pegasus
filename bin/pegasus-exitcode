@@ -191,7 +191,7 @@ def pegasuslite_failures(errfile):
     """Determine if the stderr contains PegasusLite output, and if so
     make sure that the PegasusLite tasks finished successfully"""
     
-    if not os.path.isfile(errfile):
+    if errfile is None or not os.path.isfile(errfile):
         return False
     
     # Read the file first
