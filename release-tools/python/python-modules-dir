@@ -4,15 +4,15 @@
 # modules - note that we are using the python in /usr/bin
 # for this, and not the one in the users environment
 
+SYSLIB="$1"
+
 VERSION=`/usr/bin/python -V 2>&1 | sed -e 's/^.* \([0-9]\.[0-9]\).*$/\1/'`
 
 FINAL_LOCATION="NONE"
 
 for LOCATION in \
-    "/usr/lib64/python$VERSION/dist-packages" \
-    "/usr/lib/python$VERSION/dist-packages" \
-    "/usr/lib64/python$VERSION/site-packages" \
-    "/usr/lib/python$VERSION/site-packages" \
+    "/usr/$SYSLIB/python$VERSION/dist-packages" \
+    "/usr/$SYSLIB/python$VERSION/site-packages" \
     "/Library/Python/$VERSION/site-packages" \
 ; do
     if [ -e "$LOCATION" ]; then
