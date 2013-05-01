@@ -1,12 +1,3 @@
-# This is the config file for the pegasus service. Save a copy of it in
-# one of the following locations:
-#
-#   1. $PWD/service_config.py
-#   2. ~/.pegasus/service_config.py
-#   3. /etc/pegasus/service_config.py
-#
-# The first file found is the one that will be used.
-#
 import os
 
 # The secret key used by Flask to encrypt session keys

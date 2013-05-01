@@ -1,7 +1,7 @@
 TODO
 ====
 
-* Sort out configuration w/ command-line overrides
+* Sort out logging
 * Establish unit test suite
 * Update developer documentation
 * Add user authentication
