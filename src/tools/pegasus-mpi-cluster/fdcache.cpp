@@ -1,5 +1,6 @@
 #include <cerrno>
 #include <sys/resource.h>
+#include <fcntl.h>
 
 #include "fdcache.h"
 #include "log.h"
@@ -8,6 +9,44 @@
 
 #define NOFILE_MAX 4096
 #define NOFILE_RESERVE 64
+
+/* Determine the system limit on open file descriptors */
+static int get_max_open_files() {
+    int limit = 0;
+    struct rlimit nofile;
+    if (getrlimit(RLIMIT_NOFILE, &nofile)) {
+        log_error("Unable to get NOFILE limit: %s", strerror(errno));
+    } else {
+        // It shouldn't be bigger than _SC_OPEN_MAX
+        long open_max = sysconf(_SC_OPEN_MAX);
+        limit = nofile.rlim_cur > open_max ? open_max : nofile.rlim_cur;
+    }
+    // Returns 0 if there was a problem
+    return limit;
+}
+
+/* Get the number of open file descriptors */
+static int get_nr_open_fds() {
+    // Save this so that we don't lose the original error
+    int saverr = errno;
+
+    int limit = get_max_open_files();
+
+    int fd;
+    int openfds = 0;
+    for (fd=0; fd<=limit; fd++) {
+        // If this returns -1, then the fd is not valid
+        // Otherwise, it is valid
+        if (fcntl(fd, F_GETFD, 0) != -1) {
+            openfds++;
+        }
+    }
+
+    // Restore the error
+    errno = saverr;
+
+    return openfds;
+}
 
 FDEntry::FDEntry(const string &filename, FILE *file) {
     this->filename = filename;
@@ -31,13 +70,12 @@ FDCache::FDCache(unsigned maxsize) {
     this->misses = 0;
 
     // Determine the system limit
-    int limit = 0;
-    struct rlimit nofile;
-    if (getrlimit(RLIMIT_NOFILE, &nofile)) {
-        log_error("Unable to get NOFILE limit: %s", strerror(errno));
-    } else {
-        log_debug("Open files limit = %d (%d)", nofile.rlim_cur, nofile.rlim_max);
-        limit = nofile.rlim_cur;
+    int limit = get_max_open_files();
+    log_debug("Open files limit = %d", limit);
+
+    // Log the number of currently open files
+    if (log_debug()) {
+        log_debug("Number of open files = %d", get_nr_open_fds());
     }
 
     // Determine the maximum number of open files allowed
@@ -221,6 +259,14 @@ int FDCache::write(string filename, const char *data, int size) {
     if (file == NULL) {
         log_error("Error opening file %s: %s", filename.c_str(), 
                 strerror(errno));
+
+        if (errno == ENFILE || errno == EMFILE) {
+            // If it failed because the fd limit was exceeded,
+            // then log how many we have open to see if it was
+            // us causing the problem.
+            log_error("Number of open files: %d", get_nr_open_fds());
+        }
+
         return -1;
     }
     
