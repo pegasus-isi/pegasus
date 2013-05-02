@@ -204,10 +204,10 @@ void DAGManLog::on_event(WorkflowEvent event, Task *task) {
     }
 }
 
-Master::Master(Communicator *comm, const string &program, Engine &engine, 
-        DAG &dag, const string &dagfile, const string &outfile, 
+Master::Master(Communicator *comm, const string &program, Engine &engine,
+        DAG &dag, const string &dagfile, const string &outfile,
         const string &errfile, bool has_host_script, double max_wall_time,
-        const string &resourcefile, bool per_task_stdio) {
+        const string &resourcefile, bool per_task_stdio, int maxfds) {
     this->comm = comm;
     this->program = program;
     this->dagfile = dagfile;
@@ -217,39 +217,41 @@ Master::Master(Communicator *comm, const string &program, Engine &engine,
     this->dag = &dag;
     this->has_host_script = has_host_script;
     this->max_wall_time = max_wall_time;
-    
+
     this->submitted_count = 0;
     this->success_count = 0;
     this->failed_count = 0;
-    
+
     this->start_time = 0.0;
     this->finish_time = 0.0;
     this->wall_time = 0.0;
-    
+
     this->total_cpus = 0;
     this->total_runtime = 0.0;
-    
+
     this->memory_avail = 0;
     this->cpus_avail = 0;
     this->slots_avail = 0;
-    
+
     // Determine the number of workers we have
     int numprocs = comm->size();
     this->numworkers = numprocs - 1;
     if (numworkers == 0) {
         myfailure("Need at least 1 worker");
     }
-    
+
     if (resourcefile == "") {
         this->resource_log = NULL;
     } else {
         this->resource_log = fopen(resourcefile.c_str(), "a");
     }
-    
+
     this->per_task_stdio = per_task_stdio;
 
     // Task submit sequence starts at 1
     this->task_submit_seq = 1;
+
+    this->fdcache = new FDCache(maxfds);
 }
 
 Master::~Master() {
@@ -257,7 +259,7 @@ Master::~Master() {
     for (s = slots.begin(); s != slots.end(); s++) {
         delete *s;
     }
-    
+
     vector<Host *>::iterator h;
     for (h = hosts.begin(); h != hosts.end(); h++) {
         delete *h;
@@ -266,6 +268,12 @@ Master::~Master() {
     if (resource_log != NULL && fileno(resource_log) > 2) {
         log_trace("Closing resource log");
         fclose(resource_log);
+    }
+
+    if (fdcache != NULL) {
+        fdcache->close();
+        delete fdcache;
+        fdcache = NULL;
     }
 }
 
@@ -364,7 +372,7 @@ void Master::process_iodata(IODataMessage *mesg) {
     
     log_trace("Got %u bytes for file %s", mesg->size, mesg->filename.c_str());
     
-    if (fdcache.write(mesg->filename, mesg->data, mesg->size) < 0) {
+    if (fdcache->write(mesg->filename, mesg->data, mesg->size) < 0) {
         log_error("Error writing %d bytes to %s for task %s", mesg->size,
                 mesg->filename.c_str(), mesg->task.c_str());
         
@@ -843,7 +851,7 @@ int Master::run() {
     
     // Close FDCache here before merging output so that
     // we can be sure the data files are flushed
-    fdcache.close();
+    fdcache->close();
     
     // Compute resource utilization
     double master_util = total_runtime / (wall_time * (numworkers+1));
@@ -861,7 +869,7 @@ int Master::run() {
     log_info("Throughput: %lf tasks/second", success_count/makespan);
     log_info("Bytes sent to workers: %lu", comm->sent());
     log_info("Bytes received from workers: %lu", comm->recvd());
-    log_info("File descriptor cache hit rate: %lf", fdcache.hitrate());
+    log_info("File descriptor cache hit rate: %lf", fdcache->hitrate());
 
     bool failed = ABORT || this->engine->is_failed();
     write_cluster_summary(failed);

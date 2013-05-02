@@ -136,7 +136,7 @@ class Master {
     unsigned memory_avail;
     unsigned slots_avail;
     
-    FDCache fdcache;
+    FDCache *fdcache;
     
     bool per_task_stdio;
     
@@ -162,7 +162,8 @@ class Master {
 public:
     Master(Communicator *comm, const string &program, Engine &engine, DAG &dag, const string &dagfile, 
         const string &outfile, const string &errfile, bool has_host_script = false, 
-        double max_wall_time = 0.0, const string &resourcefile = "", bool per_task_stdio = false);
+        double max_wall_time = 0.0, const string &resourcefile = "", bool per_task_stdio = false,
+        int maxfds = 0);
     ~Master();
     int run();
     void add_listener(WorkflowEventListener *l);

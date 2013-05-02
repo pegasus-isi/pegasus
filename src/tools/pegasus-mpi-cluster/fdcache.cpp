@@ -29,18 +29,19 @@ FDCache::FDCache(unsigned maxsize) {
     this->last = NULL;
     this->hits = 0;
     this->misses = 0;
-    
+
+    // Determine the system limit
+    int limit = 0;
+    struct rlimit nofile;
+    if (getrlimit(RLIMIT_NOFILE, &nofile)) {
+        log_error("Unable to get NOFILE limit: %s", strerror(errno));
+    } else {
+        log_debug("Open files limit = %d (%d)", nofile.rlim_cur, nofile.rlim_max);
+        limit = nofile.rlim_cur;
+    }
+
     // Determine the maximum number of open files allowed
     if (maxsize == 0) {
-        int limit = 0;
-        struct rlimit nofile;
-        if (getrlimit(RLIMIT_NOFILE, &nofile)) {
-            log_error("Unable to get NOFILE limit: %s", strerror(errno));
-        } else {
-            log_debug("Open files limit = %d (%d)", nofile.rlim_cur, nofile.rlim_max);
-            limit = nofile.rlim_cur;
-        }
-        
         if (limit < 0) {
             // If there is no limit, then allow the max
             this->maxsize = NOFILE_MAX;
@@ -54,9 +55,12 @@ FDCache::FDCache(unsigned maxsize) {
             // In this case we reserve descriptors for other parts of the system
             // In the worst case we require at least 1 open descriptor
             this->maxsize = limit-NOFILE_RESERVE < 1 ? 1 : limit-NOFILE_RESERVE;
-        } 
+        }
+    } else if (maxsize > limit) {
+        myfailure("Setting for max cached files is greater than system limit:"
+                  " %d > %d", maxsize, limit);
     }
-    
+
     log_info("Setting max cached files = %u", this->maxsize);
 }
 
@@ -92,7 +96,7 @@ void FDCache::access(FDEntry *entry) {
     if (first == entry) {
         return;
     }
-    
+
     // Make sure it is a valid request
     if (byname.size() == 0) {
         myfailure("Empty list");
@@ -107,19 +111,19 @@ void FDCache::access(FDEntry *entry) {
     if (entry->next && entry->next->prev != entry) {
         myfailure("Entry not in list");
     }
-    
+
     // If it is last, we need to update the last pointer
     if (last == entry) {
         last = entry->prev;
     }
-    
+
     if (entry->prev) {
         entry->prev->next = entry->next;
     }
     if (entry->next) {
         entry->next->prev = entry->prev;
     }
-    
+
     entry->prev = NULL;
     entry->next = first;
     first->prev = entry;
@@ -136,7 +140,7 @@ void FDCache::push(FDEntry *entry) {
         }
         delete remove;
     }
-    
+
     if (last == NULL) {
         last = entry;
     }
@@ -147,19 +151,21 @@ void FDCache::push(FDEntry *entry) {
     }
     first = entry;
     byname[entry->filename] = entry;
+
+    log_trace("Adding %s to FDCache", entry->filename.c_str());
 }
 
 FDEntry *FDCache::pop() {
     if (last == NULL) {
         return NULL;
     }
-    
+
     FDEntry *remove = last;
-    
+
     byname.erase(last->filename);
-    
+
     if (first == last) {
-        // If it is the last one, then 
+        // If it is the last one, then
         // the list is empty
         first = NULL;
         last = NULL;
@@ -167,7 +173,9 @@ FDEntry *FDCache::pop() {
         last = last->prev;
         last->next = NULL;
     }
-    
+
+    log_trace("Evicting %s from FDCache", remove->filename.c_str());
+
     return remove;
 }
 

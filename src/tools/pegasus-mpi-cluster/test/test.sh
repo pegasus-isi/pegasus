@@ -596,6 +596,17 @@ function test_monitord_hack_failure {
     fi
 }
 
+function test_maxfds {
+    OUTPUT=$(mpiexec -np 2 $PMC --maxfds 10 -v test/maxfd.dag 2>&1)
+    RC=$?
+
+    if [ $RC -eq 0 ]; then
+        echo "$OUTPUT"
+        echo "ERROR: maxfds test failed"
+        return 1
+    fi
+}
+
 run_test ./test-strlib
 run_test ./test-tools
 run_test ./test-dag
@@ -630,6 +641,7 @@ run_test test_monitord_hack
 run_test test_monitord_hack_failure
 run_test test_max_wall_time
 run_test test_hang_script
+run_test test_maxfds
 
 # setrlimit is broken on Darwin, so the strict limits test won't work
 if [ $(uname -s) != "Darwin" ]; then

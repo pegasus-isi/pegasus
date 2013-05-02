@@ -77,7 +77,8 @@ void usage() {
             "   --jobstate-log       Generate jobstate.log\n"
             "   --monitord-hack      Generate a .dagman.out file to trick monitord\n"
             "   --no-resource-log    Do not generate a log of resource usage\n"
-            "   --no-sleep-on-recv   Do not sleep on message receive\n",
+            "   --no-sleep-on-recv   Do not sleep on message receive\n"
+            "   --maxfds             Maximum cached file descriptors\n",
             program
         );
     }
@@ -93,12 +94,12 @@ int mpidag(int argc, char *argv[], MPICommunicator &comm) {
     rank = comm.rank();
     int numprocs = comm.size();
     program = argv[0];
-    
+
     list<char *> flags;
     for (int i=1; i<argc; i++) {
         flags.push_back(argv[i]);
     }
-    
+
     string outfile = "stdout";
     string errfile = "stderr";
     list<string> args;
@@ -118,13 +119,14 @@ int mpidag(int argc, char *argv[], MPICommunicator &comm) {
     bool monitord_hack = false;
     bool log_resources = true;
     bool sleep_on_recv = true;
-    
+    int maxfds = 0;
+
     // Environment variable defaults
     char *env_host_script = getenv("PMC_HOST_SCRIPT");
     if (env_host_script != NULL) {
         host_script = env_host_script;
     }
-    
+
     char *env_host_memory = getenv("PMC_HOST_MEMORY");
     if (env_host_memory != NULL) {
         if (sscanf(env_host_memory, "%u", &host_memory) != 1) {
@@ -132,7 +134,7 @@ int mpidag(int argc, char *argv[], MPICommunicator &comm) {
             return 1;
         }
     }
-    
+
     char *env_host_cpus = getenv("PMC_HOST_CPUS");
     if (env_host_cpus != NULL) {
         if (sscanf(env_host_cpus, "%u", &host_cpus) != 1) {
@@ -140,7 +142,7 @@ int mpidag(int argc, char *argv[], MPICommunicator &comm) {
             return 1;
         }
     }
-    
+
     char *env_max_wall_time = getenv("PMC_MAX_WALL_TIME");
     if (env_max_wall_time != NULL) {
         if (sscanf(env_max_wall_time, "%lf", &max_wall_time) != 1) {
@@ -148,7 +150,7 @@ int mpidag(int argc, char *argv[], MPICommunicator &comm) {
             return 1;
         }
     }
-    
+
     while (flags.size() > 0) {
         string flag = flags.front();
         if (flag == "-h" || flag == "--help") {
@@ -277,6 +279,21 @@ int mpidag(int argc, char *argv[], MPICommunicator &comm) {
             log_resources = false;
         } else if (flag == "--no-sleep-on-recv") {
             sleep_on_recv = false;
+        } else if (flag == "--maxfds") {
+            flags.pop_front();
+            if (flags.size() == 0) {
+                argerror("--maxfds requires N");
+                return 1;
+            }
+            string maxfds_string = flags.front();
+            if (sscanf(maxfds_string.c_str(), "%d", &maxfds) != 1) {
+                argerror("Invalid value for --maxfds");
+                return 1;
+            }
+            if (maxfds < 1) {
+                argerror("--maxfds must be at least 1");
+                return 1;
+            }
         } else if (flag[0] == '-') {
             string message = "Unrecognized argument: ";
             message += flag;
@@ -287,45 +304,45 @@ int mpidag(int argc, char *argv[], MPICommunicator &comm) {
         }
         flags.pop_front();
     }
-    
+
     if (args.size() == 0) {
         usage();
         return 1;
     }
-    
+
     if (args.size() > 1) {
         argerror("Invalid argument\n");
         return 1;
     }
-    
+
     string dagfile = args.front();
-    
+
     log_set_level(loglevel);
-    
+
     if (numprocs < 2) {
         fprintf(stderr, "At least one worker process is required\n");
         return 1;
     }
-    
+
     comm.sleep_on_recv = sleep_on_recv;
-    
+
     // Everything is pretty deterministic up until the processes reach
     // this point. Once we get here the different processes can diverge 
     // in their behavior for many reasons (file systems issues, bad nodes,
     // etc.), so be careful how failures are handled after this point
     // and make sure MPI_Abort is called when something bad happens.
-   
+
     if (rank == 0) {
         version();
-        
+
         // If no rescue file specified, use default
         if (rescuefile == "") {
             rescuefile = dagfile + ".rescue";
         }
-        
+
         string oldrescue = rescuefile;
         string newrescue = rescuefile;
-        
+
         if (skiprescue) {
             // User does not want to read old rescue file
             oldrescue = "";
@@ -333,36 +350,37 @@ int mpidag(int argc, char *argv[], MPICommunicator &comm) {
 
         log_debug("Using old rescue file: %s", oldrescue.c_str());
         log_debug("Using new rescue file: %s", newrescue.c_str());
-        
+
         string resource_log;
-		if (log_resources) {
-			resource_log = dagfile + ".resource";
-		}
-        
+        if (log_resources) {
+            resource_log = dagfile + ".resource";
+        }
+
         bool has_host_script = ("" != host_script);
-        
+
         DAG dag(dagfile, oldrescue, lock, tries);
         Engine engine(dag, newrescue, max_failures);
-        Master master(&comm, program, engine, dag, dagfile, outfile, errfile, 
-                has_host_script, max_wall_time, resource_log, per_task_stdio);
-        
+        Master master(&comm, program, engine, dag, dagfile, outfile, errfile,
+                has_host_script, max_wall_time, resource_log, per_task_stdio,
+                maxfds);
+
         string jobstate_path = dirname(dagfile) + "/jobstate.log";
         JobstateLog jslog(jobstate_path);
         if (jobstate_log) {
             master.add_listener(&jslog);
         }
-        
+
         DAGManLog dagmanlog(dagfile + ".dagman.out", dagfile);
         if (monitord_hack) {
             master.add_listener(&dagmanlog);
         }
-        
+
         return master.run();
     } else {
-        
+
         Worker worker(&comm, dagfile, host_script, host_memory, host_cpus, 
                 strict_limits, per_task_stdio);
-        
+
         return worker.run();
     }
 }
