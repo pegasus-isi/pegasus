@@ -277,18 +277,19 @@ if ( $config{dag} ) {
     }
     print << "EOF";
 
-Your Workflow has been started and runs in base directory given below
+Your workflow has been started and is running in the base directory:
 
-cd $run
+  $run
 
 *** To monitor the workflow you can run ***
 
-pegasus-status -l $run
+  pegasus-status -l $run
 
 *** To remove your workflow run ***
-EOF
 
-    print "pegasus-remove $run\n\n";
+  pegasus-remove $run
+
+EOF
 
 } elsif ( $config{type}=="shell" ) {
     # sanity check: Is the SCRIPT file there? 
