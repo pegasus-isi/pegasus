@@ -23,11 +23,11 @@ public:
     unsigned maxsize;
     unsigned hits;
     unsigned misses;
-    
+
     FDEntry *first;
     FDEntry *last;
     map<string, FDEntry *> byname;
-    
+
     FDCache(unsigned maxsize=0);
     ~FDCache();
     double hitrate();
@@ -38,6 +38,8 @@ public:
     int write(string filename, const char *data, int size);
     int size();
     void close();
+    unsigned get_nr_open_fds();
+    unsigned get_max_open_files();
 };
 
 #endif /* FDCACHE_H */

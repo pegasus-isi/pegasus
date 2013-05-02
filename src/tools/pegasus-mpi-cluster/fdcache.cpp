@@ -10,48 +10,6 @@
 #define NOFILE_MAX 4096
 #define NOFILE_RESERVE 64
 
-/* Determine the system limit on open file descriptors */
-static unsigned get_max_open_files() {
-    unsigned limit = 0;
-    struct rlimit nofile;
-    if (getrlimit(RLIMIT_NOFILE, &nofile)) {
-        log_error("Unable to get NOFILE limit: %s", strerror(errno));
-    } else {
-        limit = nofile.rlim_cur;
-        
-        // It shouldn't be bigger than _SC_OPEN_MAX
-        long open_max = sysconf(_SC_OPEN_MAX);
-        if (limit > open_max) {
-            limit = open_max;
-        }
-    }
-    // Returns 0 if there was a problem
-    return limit;
-}
-
-/* Get the number of open file descriptors */
-static unsigned get_nr_open_fds() {
-    // Save this so that we don't lose the original error
-    int saverr = errno;
-
-    unsigned limit = get_max_open_files();
-
-    unsigned fd;
-    unsigned openfds = 0;
-    for (fd=0; fd<=limit; fd++) {
-        // If this returns -1, then the fd is not valid
-        // Otherwise, it is valid
-        if (fcntl(fd, F_GETFD, 0) != -1) {
-            openfds++;
-        }
-    }
-
-    // Restore the error
-    errno = saverr;
-
-    return openfds;
-}
-
 FDEntry::FDEntry(const string &filename, FILE *file) {
     this->filename = filename;
     this->file = file;
@@ -84,10 +42,7 @@ FDCache::FDCache(unsigned maxsize) {
 
     // Determine the maximum number of open files allowed
     if (maxsize == 0) {
-        if (limit < 0) {
-            // If there is no limit, then allow the max
-            this->maxsize = NOFILE_MAX;
-        } else if (limit == 0) {
+        if (limit == 0) {
             // If we couldn't find the limit, then the default is 64
             this->maxsize = 64;
         } else if (limit > NOFILE_MAX) {
@@ -299,5 +254,47 @@ int FDCache::write(string filename, const char *data, int size) {
     }
 #endif
     return 0;
+}
+
+/* Determine the system limit on open file descriptors */
+unsigned FDCache::get_max_open_files() {
+    unsigned limit = 0;
+    struct rlimit nofile;
+    if (getrlimit(RLIMIT_NOFILE, &nofile)) {
+        log_error("Unable to get NOFILE limit: %s", strerror(errno));
+    } else {
+        limit = nofile.rlim_cur;
+
+        // It shouldn't be bigger than _SC_OPEN_MAX
+        long open_max = sysconf(_SC_OPEN_MAX);
+        if (limit > open_max) {
+            limit = open_max;
+        }
+    }
+    // Returns 0 if there was a problem
+    return limit;
+}
+
+/* Get the number of open file descriptors */
+unsigned FDCache::get_nr_open_fds() {
+    // Save this so that we don't lose the original error
+    int saverr = errno;
+
+    unsigned limit = get_max_open_files();
+
+    unsigned fd;
+    unsigned openfds = 0;
+    for (fd=0; fd<=limit; fd++) {
+        // If this returns -1, then the fd is not valid
+        // Otherwise, it is valid
+        if (fcntl(fd, F_GETFD, 0) != -1) {
+            openfds++;
+        }
+    }
+
+    // Restore the error
+    errno = saverr;
+
+    return openfds;
 }
 

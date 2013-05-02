@@ -4,6 +4,35 @@
 
 using std::exception;
 
+void test_get_nr_open_fds() {
+    FDCache cache;
+
+    // Should be stdin, stdout, stderr
+    if (cache.get_nr_open_fds() != 3) {
+        myfailure("get_nr_open_fds failed on stdin,stdout,stderr");
+    }
+
+    // Close stdin
+    close(0);
+
+    // Should be stdout, stderr
+    if (cache.get_nr_open_fds() != 2) {
+        myfailure("get_nr_open_fds failed on stdout,stderr");
+    }
+
+    // Open a file
+    FILE *date = fopen("/bin/date","rb");
+    if (cache.get_nr_open_fds() != 3) {
+        myfailure("get_nr_open_fds failed on stdtout,stderr,/bin/date");
+    }
+    fclose(date);
+
+    // Should be stdout, stderr again
+    if (cache.get_nr_open_fds() != 2) {
+        myfailure("get_nr_open_fds failed on second stdout,stderr");
+    }
+}
+
 void test_new() {
     FDCache cache;
     cache.close();
@@ -240,6 +269,8 @@ void test_write() {
 int main(int argc, char **argv) {
     try {
         log_set_level(LOG_ERROR);
+        log_trace("test_get_nr_open_fds");
+        test_get_nr_open_fds();
         log_trace("test_new");
         test_new();
         log_trace("test_push");
