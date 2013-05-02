@@ -200,8 +200,14 @@ Options
 *--no-sleep-on-recv*::
     Do not use polling with sleep() to implement message receive. (see
     <<CPU_USAGE_ISSUE,*Known Issues: CPU Usage*>>)
-    
-    
+
+*--maxfds*::
+    Set the maximum number of file descriptors that can be left open by
+    the master for I/O forwarding. By default this value is set automatically
+    based on the value of getrlimit(RLIMIT_NOFILE). The value must be
+    at least 1, and cannot be more than RLIMIT_NOFILE.
+
+
 [[DAG_FILES]]
 DAG Files
 ---------
