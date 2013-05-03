@@ -624,7 +624,7 @@ def print_workflow_summary(workflow_stats, output_format, wf_summary=True, time_
         if output_format == "text":
             def myfmt(val):
                 if val is None: return "-"
-                else: return "%s(%d secs)" % (format_seconds(val), val)
+                else: return format_seconds(val)
             summary_str += "%-49s: %s\n" % ("Workflow wall time", myfmt(wwt)) 
             summary_str += "%-49s: %s\n" % ("Workflow cumulative job wall time", myfmt(wcjwt))
             summary_str += "%-49s: %s\n" % ("Cumulative job walltime as seen from submit side", myfmt(ssjwt))
