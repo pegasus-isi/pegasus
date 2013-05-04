@@ -298,10 +298,10 @@ def simplify(dag):
 
     return dag
 
-def emit_dot(dag, use_xforms=False, outfile="/dev/stdout", width=None, height=None, files=False):
+def emit_dot(dag, label_type="label", outfile="/dev/stdout", width=None, height=None, files=False):
     """
     Write a DOT-formatted diagram.
-    use_xforms: Use transformation names instead of job names
+    label_type: What attribute to use for labels
     outfile: The file name to write the diagam out to.
     width: The width of the diagram
     height: The height of the diagram
@@ -321,8 +321,10 @@ def emit_dot(dag, use_xforms=False, outfile="/dev/stdout", width=None, height=No
 
     for id in dag.jobs:
         j = dag.jobs[id]
-        if use_xforms:
+        if label_type == 'xform':
             label = j.xform
+        elif label_type == 'id':
+            label = j.id
         else:
             label = j.label
         if j.xform not in xforms:
@@ -365,9 +367,10 @@ DAGMan file, or a Pegasus DAX file."""
     parser.add_option("-s", "--nosimplify", action="store_false",
         dest="simplify", default=True,
         help="Do not simplify the graph by removing redundant edges. [default: False]")
-    parser.add_option("-x", "--xforms", action="store_true", 
-        dest="xforms", default=False,
-        help="Use transformation names as labels instead of the default label")
+    parser.add_option("-l", "--label", action="store", dest="label", default="label",
+        help="What attribute to use for labels. One of 'label','xform', or 'id'. "
+             "For 'label', the transformation is used for jobs that have no node-label."
+             "[default: label]")
     parser.add_option("-o", "--output", action="store",
         dest="outfile", metavar="FILE", default="/dev/stdout",
         help="Write output to FILE [default: stdout]")
@@ -389,6 +392,9 @@ DAGMan file, or a Pegasus DAX file."""
     elif options.width or options.height:
         parser.error("Either both --width and --height or neither")
 
+    if options.label not in ["label","xform","id"]:
+        parser.error("--label must be one of 'label', 'xform' or 'id")
+
     if len(args) < 1:
         parser.error("Please specify DAGFILE")
 
@@ -408,7 +414,7 @@ DAGMan file, or a Pegasus DAX file."""
     if options.simplify and not options.files:
         dag = simplify(dag)
 
-    emit_dot(dag, options.xforms, options.outfile, options.width, 
+    emit_dot(dag, options.label, options.outfile, options.width, 
              options.height, options.files)
 
 if __name__ == '__main__':
