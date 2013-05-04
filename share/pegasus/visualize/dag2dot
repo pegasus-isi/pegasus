@@ -61,15 +61,15 @@ class DAXHandler(xml.sax.handler.ContentHandler):
         self.dag = DAG()
         self.jobs = self.dag.jobs
         self.files = self.dag.files
-        
+
     def startElement(self, name, attrs):
         if name in ["job","dax","dag"]:
             job = Job()
-        
+
             job.id = attrs.get("id")
             if job.id is None:
                 raise Exception("Invalid DAX: attribute 'id' missing")
-            
+
             if name == "job":
                 job.xform = attrs.get("name")
                 if job.xform is None:
@@ -84,13 +84,13 @@ class DAXHandler(xml.sax.handler.ContentHandler):
                 job.xform = "pegasus::dax"
             else:
                 job.xform = "pegasus::dag"
-            
+
             job.label = attrs.get("node-label")
             if job.label is None:
                 job.label = attrs.get("file")
                 if job.label is None:
                     job.label = job.xform
-            
+
             self.jobs[job.id] = job
             self.last_job = job
         elif name == "uses":
@@ -106,7 +106,7 @@ class DAXHandler(xml.sax.handler.ContentHandler):
 
             if version is not None:
                 filename = filename + ":" + version
-            
+
             if filename in self.files:
                 f = self.files[filename]
             else:
@@ -137,7 +137,7 @@ class DAXHandler(xml.sax.handler.ContentHandler):
             parent = self.jobs[pid]
             child.parents.append(parent)
             parent.children.append(child)
-            
+
     def endElement(self, name):
         if name == "child":
             self.lastchild = None
@@ -153,7 +153,7 @@ def parse_daxfile(fname):
     parser.parse(f)
     f.close()
     return handler.dag
-    
+
 def parse_xform_name(path):
     """
     Parse the transformation name from a submit script. Usually the
@@ -169,18 +169,18 @@ def parse_xform_name(path):
     if fname.startswith("stage_worker_"): return "pegasus::stage_worker"
     if fname.startswith("register_"): return "pegasus::register"
     if fname.startswith("clean_up_"): return "pegasus::clean_up"
-    
+
     # Get it from the submit file
     if os.path.isfile(path):
         f = open(path,'r')
         for line in f.readlines():
             if '+pegasus_wf_xformation' in line:
                 return line.split('"')[1]
-    
+
     # Otherwise, guess the xform by stripping digits from the name
     name = fname.replace(".sub","")
     return "".join(c for c in name if not '0' <= c <= '9')
-    
+
 def parse_dagfile(fname):
     """
     Parse a DAG from a dagfile.
@@ -213,7 +213,7 @@ def parse_dagfile(fname):
             p.children.append(c)
             c.parents.append(p)
     f.close()
-    
+
     return dag
 
 def remove_xforms(dag, xforms):
@@ -232,7 +232,7 @@ def remove_xforms(dag, xforms):
             for c in job.children:
                 c.parents.remove(job)
             del jobs[id]
-            
+
 def inv_reachable(a, b):
     """
     Is a reachable from b using reverse edges? Reverse edges are
@@ -248,7 +248,7 @@ def inv_reachable(a, b):
             if p == b: return True
             fifo.append(p)
     return False
-            
+
 def simplify(dag):
     """
     Simplify a DAG by removing redundant edges. Redundant edges are edges
@@ -263,13 +263,13 @@ def simplify(dag):
         j = dag.jobs[id]
         if len(j.parents) == 0:
             roots.append(j)
-    
+
     # Assign surrogate root
     root = Job()
     root.level = 0
     for j in roots:
         root.children.append(j)
-        
+
     # Label all levels of the workflow (BFS)
     fifo = [root]
     while len(fifo) > 0:
@@ -295,10 +295,10 @@ def simplify(dag):
                     n.children.remove(c)
                 else:
                     c.parents.append(n)
-        
+
     return dag
-    
-def emit_dot(dag, use_xforms=False, outfile="/dev/stdout", width=8.0, height=10.0, files=False):
+
+def emit_dot(dag, use_xforms=False, outfile="/dev/stdout", width=None, height=None, files=False):
     """
     Write a DOT-formatted diagram.
     use_xforms: Use transformation names instead of job names
@@ -309,16 +309,16 @@ def emit_dot(dag, use_xforms=False, outfile="/dev/stdout", width=8.0, height=10.
     """
     next_color = 0  # Keep track of next color
     xforms = {} # Keep track of transformation names to assign colors
-    
+
     out = open(outfile,'w')
 
-    out.write("""digraph dag {
-    size="%s,%s"
-    ratio=fill
-    node [style=filled,color="#444444",fillcolor="#ffed6f"]
-    edge [arrowhead=normal,arrowsize=1.0]
-    \n""" % (width,height))
-    
+    out.write("digraph dag {\n")
+    if width and height:
+        out.write('    size="%0.1f,%0.1f"\n' % (width, height))
+    out.write('    ratio=fill\n')
+    out.write('    node [style=filled,color="#444444",fillcolor="#ffed6f"]\n')
+    out.write('    edge [arrowhead=normal,arrowsize=1.0]\n\n')
+
     for id in dag.jobs:
         j = dag.jobs[id]
         if use_xforms:
@@ -331,31 +331,31 @@ def emit_dot(dag, use_xforms=False, outfile="/dev/stdout", width=8.0, height=10.
             # Just in case we run out of colors
             next_color = min(len(COLORS)-1, next_color)
         color = xforms[j.xform]
-        out.write('\t"%s" [shape=ellipse,fillcolor="%s",label="%s"]\n' % (j.id,COLORS[color],label))
-    
+        out.write('    "%s" [shape=ellipse,fillcolor="%s",label="%s"]\n' % (j.id,COLORS[color],label))
+
     out.write('\n')
 
     if files:
         for id in dag.files:
             f = dag.files[id]
-            out.write('\t"%s" [shape=rect,label="%s"]\n' % (f.id,f.label))
-    
+            out.write('    "%s" [shape=rect,label="%s"]\n' % (f.id,f.label))
+
     out.write('\n')
 
     for id in dag.jobs:
         j = dag.jobs[id]
         if files:
             for i in j.inputs:
-                out.write('\t"%s" -> "%s"\n' % (i.id,j.id))
+                out.write('    "%s" -> "%s"\n' % (i.id,j.id))
             for o in j.outputs:
-                out.write('\t"%s" -> "%s"\n' % (j.id,o.id))
+                out.write('    "%s" -> "%s"\n' % (j.id,o.id))
         else:
             for c in j.children:
-                out.write('\t"%s" -> "%s"\n' % (j.id,c.id))
-     
+                out.write('    "%s" -> "%s"\n' % (j.id,c.id))
+
     out.write("}\n")
     out.close()
-    
+
 def main():
     usage = "%prog [options] DAGFILE"
     description = """Parses DAGFILE and generates a DOT-formatted
@@ -374,39 +374,42 @@ DAGMan file, or a Pegasus DAX file."""
     parser.add_option("-r", "--remove", action="append",
         dest="remove", metavar="XFORM", default=[],
         help="Remove jobs from the workflow by transformation name")
-    parser.add_option("-W", "--width", action="store",
-        dest="width", default="8.0",
-        help="Width of the digraph [default: 8.0]")
-    parser.add_option("-H", "--height", action="store",
-        dest="height", default="10.0",
-        help="Height of the digraph [default: 10.0]")
+    parser.add_option("-W", "--width", action="store", dest="width",
+        type="float", default=None, help="Width of the digraph")
+    parser.add_option("-H", "--height", action="store", dest="height",
+        type="float", default=None, help="Height of the digraph")
     parser.add_option("-f", "--files", action="store_true",
         dest="files", default=False,
         help="Include files. This option is only valid for DAX files. [default: false]")
 
     (options, args) = parser.parse_args()
-    
+
+    if options.width and options.height:
+        pass
+    elif options.width or options.height:
+        parser.error("Either both --width and --height or neither")
+
     if len(args) < 1:
         parser.error("Please specify DAGFILE")
-        
+
     if len(args) > 1:
         parser.error("Invalid argument")
-    
+
     dagfile = args[0]
     if dagfile.endswith(".dag"):
         options.files = False # Cannot use files if DAG
         dag = parse_dagfile(dagfile)
     else:
         dag = parse_daxfile(dagfile)
-    
+
     remove_xforms(dag, options.remove)
-     
+
     # Only simplify if the user did not want to use files
     if options.simplify and not options.files:
         dag = simplify(dag)
-    
-    emit_dot(dag, options.xforms, options.outfile, 
-            options.width, options.height, options.files)
-    
+
+    emit_dot(dag, options.xforms, options.outfile, options.width, 
+             options.height, options.files)
+
 if __name__ == '__main__':
     main()
