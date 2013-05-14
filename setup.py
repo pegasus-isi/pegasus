@@ -37,6 +37,7 @@ setup(
         "MySQL-python",
         "WTForms",
         "requests"
-    ]
+    ],
+    test_suite = "pegasus.service.tests"
 )
 
