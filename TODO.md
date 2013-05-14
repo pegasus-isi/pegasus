@@ -1,8 +1,6 @@
 TODO
 ====
 
-* Sort out logging
-* Update developer documentation
 * Add DAX, TC, RC management
 * Add workflow submissions
 * Add basic ensemble management
