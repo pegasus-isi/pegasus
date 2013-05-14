@@ -8,11 +8,23 @@ def parse_args(args, synopsis):
     script = os.path.basename(sys.argv[0])
     parser = OptionParser("%s %s" % (script, synopsis))
 
-    config.add_options(parser)
+    parser.add_option("--config", action="store", dest="config",
+            default=None, help="Path to configuration file")
+    parser.add_option("--dburi", action="store", dest="dburi",
+            default=None, help="SQLAlchemy database URI")
+    parser.add_option("-d", "--debug", action="store_true", dest="debug",
+            default=None, help="Enable debugging")
 
     options, args = parser.parse_args(args)
 
-    config.set_options(options)
+    if options.config:
+        config.load_config(options.config)
+
+    if options.dburi:
+        config.set_dburi(options.dburi)
+
+    if options.debug:
+        config.set_debug(True)
 
     return options, args, parser
 

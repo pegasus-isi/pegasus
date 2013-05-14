@@ -22,6 +22,10 @@ To install normally just run:
 
     $ python setup.py install
 
+To run the unit tests run:
+
+    $ python setup.py test
+
 Creating the Database
 ---------------------
 The `pegasus-service-admin` script is used to manage the database, among

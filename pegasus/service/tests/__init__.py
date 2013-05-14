@@ -6,14 +6,15 @@ class TestCase(unittest.TestCase):
     "This test case is for tests that just require the webapp"
 
     def setUp(self):
-        app.config['TESTING'] = True
+        config.set_debug(True)
         self.app = app.test_client()
 
 class DBTestCase(TestCase):
     "This test case is for tests that require the database"
 
     def setUp(self):
-        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite://' # in-memory database
+        # Tests use an in-memory database
+        config.set_dburi('sqlite://')
         db.create_all()
 
     def tearDown(self):
