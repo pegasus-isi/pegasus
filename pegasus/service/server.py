@@ -15,7 +15,7 @@ def main():
 
     (options, args) = parser.parse_args()
 
-    config.set_options(opts)
+    config.set_options(options)
 
     logging.basicConfig(level=logging.INFO)
 
