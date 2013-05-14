@@ -36,7 +36,8 @@ setup(
         "Flask-SQLAlchemy",
         "MySQL-python",
         "WTForms",
-        "requests"
+        "requests",
+        "passlib"
     ],
     test_suite = "pegasus.service.tests"
 )
