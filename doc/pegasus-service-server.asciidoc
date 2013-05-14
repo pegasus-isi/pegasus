@@ -15,12 +15,19 @@ pegasus-service-server [options]
 
 Options
 -------
+-h | --help::
+    Print help message
+-d | --debug::
+    Enable debugging
 -p | --port::
-    The port to listen on
--h | --host::
+    The port to listen on [default: 5000]
+-H | --host::
     The host to bind to [default: 127.0.0.1]
--d | --dburl::
-    The URL of the database [e.g. mysql://user:pass@127.0.0.1/dbname, sqlite:///path/to/dbfile]
+--config::
+    Path to service configuration file
+--dburi::
+    The SQLAlchemy database URI [e.g. mysql://user:pass@127.0.0.1/dbname,
+    sqlite:///path/to/dbfile]
 
 Authors
 -------
