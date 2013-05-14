@@ -4,6 +4,7 @@ XSLTPROC = xsltproc
 FOP = fop
 
 MANPAGES = pegasus-service-server.man
+MANPAGES += pegasus-service-admin.man
 
 .PHONY: clean $(MANPAGES)
 

@@ -1,0 +1,43 @@
+pegasus-service-admin(1)
+========================
+Pegasus Team <pegasus@isi.edu>
+Version {VERSION}
+:doctype: manpage
+
+Name
+----
+pegasus-service-admin - Manage a Pegasus Service installation
+
+Synopsis
+--------
+[verse]
+pegasus-service-admin COMMAND [options]
+
+Commands
+--------
+create::
+    Create all of the tables in the database.
+
+drop::
+    Drop the tables from the database. WARNING: This deletes all the data.
+
+migrate [version]::
+    Convert the database schema to the specified version. If version is not
+    specified, then upgrade to the latest version.
+
+General Options
+---------------
+-h | --help::
+    Print help message
+-d | --debug::
+    Enable debugging
+--config::
+    Path to service configuration file
+--dburi::
+    The SQLAlchemy database URI [e.g. mysql://user:pass@127.0.0.1/dbname,
+    sqlite:///path/to/dbfile]
+
+Authors
+-------
+Pegasus Team `<pegasus@isi.edu>`
+
