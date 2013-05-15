@@ -65,17 +65,21 @@ def create(username, password, email):
     user = User(username, password, email)
     db.session.add(user)
 
+    return user
+
 def passwd(username, password):
     "Change a user's password"
     user = getuser(username)
     if password is None:
         password = getpass.getpass("New password: ")
     user.set_password(password)
+    return user
 
 def usermod(username, email):
     "Change a user's email address"
     user = getuser(username)
     user.email = email
+    return user
 
 def all():
     "Get a list of all users"

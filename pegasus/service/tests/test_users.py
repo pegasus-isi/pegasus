@@ -36,9 +36,8 @@ class TestUsers(tests.TestCase):
 class TestUsersDB(tests.DBTestCase):
     def test_usercreate(self):
         # Make sure we can insert a new user
-        u1 = User(username="gideon", password="secret", email="gideon@isi.edu")
-        db.session.add(u1)
-        db.session.commit()
+        u1 = users.create(username="gideon", password="secret", email="gideon@isi.edu")
+        db.session.flush()
 
         # Make sure one user exists
         self.assertEquals(User.query.count(), 1)
@@ -59,4 +58,52 @@ class TestUsersDB(tests.DBTestCase):
         # Adding a duplicate user should be an error
         db.session.add(u2)
         self.assertRaises(IntegrityError, db.session.commit)
+
+    def test_passwd(self):
+        gideon = users.create("gideon", "secret", "gideon@isi.edu")
+        db.session.flush()
+
+        self.assertTrue(gideon.password_matches("secret")) # original passwd
+
+        users.passwd("gideon", "newsecret")
+        db.session.flush()
+
+        self.assertTrue(gideon.password_matches("newsecret")) # new passwd
+
+        gideon2 = users.getuser("gideon")
+
+        self.assertTrue(gideon2.password_matches("newsecret")) # new passwd
+
+    def test_usermod(self):
+        gideon = users.create("gideon", "secret", "gideon@isi.edu")
+        db.session.flush()
+        self.assertEquals(gideon.email, "gideon@isi.edu") # original email
+
+        users.usermod("gideon", "juve@usc.edu")
+        self.assertEquals(gideon.email, "juve@usc.edu") # new email
+
+    def test_all(self):
+        l = users.all()
+        self.assertEquals(len(l), 0) # should not be any users
+
+        users.create("gideon", "secret", "gideon@isi.edu")
+        db.session.flush()
+        l = users.all()
+        self.assertEquals(len(l), 1) # should be 1 user
+
+        users.create("rynge", "secret", "rynge@isi.edu")
+        db.session.flush()
+        l = users.all()
+        self.assertEquals(len(l), 2) # should be 2 users
+
+    def test_getuser(self):
+        gideon = users.create("gideon", "secret", "gideon@isi.edu")
+        db.session.flush()
+
+        g2 = users.getuser("gideon")
+        self.assertEquals(gideon.username, g2.username)
+        self.assertEquals(gideon.hashpass, g2.hashpass)
+        self.assertEquals(gideon.email, g2.email)
+
+        self.assertRaises(users.NoSuchUser, users.getuser, "rynge")
 
