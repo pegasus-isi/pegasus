@@ -3,7 +3,7 @@ import sys
 from optparse import OptionParser
 import getpass
 
-from pegasus.service import models, migrations, config, db, users
+from pegasus.service import schema, migrations, config, db, users
 
 def parse_args(args, synopsis):
     script = os.path.basename(sys.argv[0])
@@ -49,13 +49,13 @@ def create(args):
     if schema is None:
         print "Creating database..."
         migrations.create()
-    elif schema < models.version:
+    elif schema < schema.version:
         print "Database schema out of date. Please run migrate."
-    elif schema == models.version:
+    elif schema == schema.version:
         print "Database schema up-to-date."
     else:
         print "Database schema is newer than expected. "\
-              "Expected <= %d, got %d." % (models.version, schema)
+              "Expected <= %d, got %d." % (schema.version, schema)
 
 def drop(args):
     "Drop the database"
@@ -79,7 +79,7 @@ def migrate(args):
     elif len(args) == 1:
         target = int(args[1])
     else:
-        target = models.version
+        target = schema.version
 
     current = migrations.current_schema()
     if current is None:

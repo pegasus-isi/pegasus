@@ -1,5 +1,5 @@
-from pegasus.service import db, models
-from pegasus.service.models import Schema
+from pegasus.service import db, schema
+from pegasus.service.schema import Schema
 
 def current_schema():
     """Return the version of the current database schema"""
@@ -18,9 +18,9 @@ def create():
     """Create all objects in the database"""
     if current_schema() is not None:
         raise Exception("Schema already exists. Try migrate.")
-    
+
     db.create_all()
-    db.session.add(Schema(models.version))
+    db.session.add(Schema(schema.version))
     db.session.commit()
 
 def drop():
@@ -31,20 +31,20 @@ def migrate(to):
     """Migrate the current schema to version"""
     start = current_schema()
     end = to
-    
-    if end < 0 or end > models.version:
+
+    if end < 0 or end > schema.version:
         raise Exception("Version out of range: %d" % to)
-    
+
     if start == end:
         return
-    
+
     if start < end:
         for i in range(start+1, end-start+1):
             _get_migration(v).upgrade()
     else:
         for i in range(start, end, -1):
             _get_migration(v).downgrade()
-    
+
     db.session.add(Schema(end))
     db.session.commit()
 

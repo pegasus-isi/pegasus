@@ -1,10 +1,10 @@
-from pegasus.service import db, models
+from pegasus.service import db, users
 
 def upgrade():
     db.metadata.create_all(bind=db.engine,
-            tables=[models.User.__table__])
+            tables=[users.User.__table__])
 
 def downgrade():
     db.metadata.drop_all(bind=db.engine,
-            tables=[models.User.__table__])
+            tables=[users.User.__table__])
 

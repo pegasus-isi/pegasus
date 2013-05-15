@@ -1,6 +1,4 @@
 from datetime import datetime
-from sqlalchemy import Table
-from sqlalchemy.orm import mapper
 
 from pegasus.service import db
 
@@ -27,4 +25,6 @@ class Schema(db.Model):
     def __repr__(self):
         return '<Schema %d %s>' % (self.version, self.timestamp)
 
+# Need to import all the other schema objects here
 from pegasus.service.users import User
+
