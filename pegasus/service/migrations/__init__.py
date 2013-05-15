@@ -4,10 +4,10 @@ from pegasus.service.schema import Schema
 def current_schema():
     """Return the version of the current database schema"""
     try:
-        schema = db.session.query(Schema).\
-                            order_by(Schema.timestamp.desc()).\
-                            first()
-        return schema.version
+        s = db.session.query(Schema).\
+                       order_by(Schema.timestamp.desc()).\
+                       first()
+        return s.version
     except Exception, e:
         if "no such table: schema" in e.message:
             return None
@@ -40,10 +40,10 @@ def migrate(to):
 
     if start < end:
         for i in range(start+1, end-start+1):
-            _get_migration(v).upgrade()
+            _get_migration(i).upgrade()
     else:
         for i in range(start, end, -1):
-            _get_migration(v).downgrade()
+            _get_migration(i).downgrade()
 
     db.session.add(Schema(end))
     db.session.commit()
