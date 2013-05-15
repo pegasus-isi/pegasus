@@ -13,18 +13,17 @@ If you want to install in development mode use:
 
     $ python setup.py develop
 
-To install normally just run:
+To install normally just type:
 
     $ python setup.py install
 
-To run the unit tests run:
+To run the unit tests type:
 
     $ python setup.py test
 
-Creating the Database
----------------------
-The `pegasus-service-admin` script is used to manage the database, among
-other things.
+Setup
+-----
+The `pegasus-service-admin` script is used to manage the service.
 
 To add tables to the database run:
 
@@ -32,13 +31,21 @@ To add tables to the database run:
 
 You can set the SQLAlchemy database URI with the `--dburi` argument.
 
+To add a new user run:
+
+    $ pegasus-service-admin useradd USERNAME EMAIL
+
+Where USERNAME is the desired username and EMAIL is the user's email address.
+It will prompt you for the new user's password.
+
 Running the Service
 -------------------
-Once the package is installed (normally or in development mode) you can
+Once the service is installed (normally or in development mode) you can
 start the server by running:
 
     $ pegasus-service-server
 
-Add the `-d` argument to enable debugging, and the `--dburi` argument to change
-the SQLAlchemy database URI.
+By default, the server will start on http://localhost:5000. Add the `-d`
+argument to enable debugging, and the `--dburi` argument to change the
+SQLAlchemy database URI.
 
