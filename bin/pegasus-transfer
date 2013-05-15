@@ -866,7 +866,7 @@ class ScpHandler(TransferHandlerBase):
                 mkdir_key = "scp://" + transfer.dst_host + ":" \
                           + os.path.dirname(transfer.dst_path)
                 if not mkdir_key in remote_dirs_created:
-                    this._prepare_scp_dir(transfer.dst_host,
+                    self._prepare_scp_dir(transfer.dst_host,
                                          os.path.dirname(transfer.dst_path))
                     remote_dirs_created[mkdir_key] = True
                 cmd += " " + transfer.src_path
