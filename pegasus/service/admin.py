@@ -77,7 +77,7 @@ def migrate(args):
     if len(args) > 1:
         parser.error("Invalid argument")
     elif len(args) == 1:
-        target = int(args[1])
+        target = int(args[0])
     else:
         target = schema.version
 

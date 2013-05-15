@@ -39,7 +39,7 @@ def migrate(to):
         return
 
     if start < end:
-        for i in range(start+1, end-start+1):
+        for i in range(start+1, end+1):
             _get_migration(i).upgrade()
     else:
         for i in range(start, end, -1):
