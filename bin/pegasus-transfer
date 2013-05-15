@@ -883,7 +883,7 @@ class ScpHandler(TransferHandlerBase):
         return True
 
 
-    def _prepare_scp_dir(rhost, rdir):
+    def _prepare_scp_dir(self, rhost, rdir):
         """
         makes sure a local path exists before putting files into it
         """
