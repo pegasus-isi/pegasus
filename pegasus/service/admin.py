@@ -1,8 +1,9 @@
 import os
 import sys
 from optparse import OptionParser
+import getpass
 
-from pegasus.service import models, migrations, config
+from pegasus.service import models, migrations, config, db, users
 
 def parse_args(args, synopsis):
     script = os.path.basename(sys.argv[0])
@@ -29,7 +30,7 @@ def parse_args(args, synopsis):
     return options, args, parser
 
 def usage():
-    """Print help message"""
+    "Print help message"
     print "Usage: %s COMMAND\n" % os.path.basename(sys.argv[0])
     print "Commands:"
     for name, fn in COMMANDS.items():
@@ -37,7 +38,7 @@ def usage():
     exit(1)
 
 def create(args):
-    """Create the database"""
+    "Create the database"
     options, args, parser = parse_args(args, "create")
 
     if len(args) > 0:
@@ -57,7 +58,7 @@ def create(args):
               "Expected <= %d, got %d." % (models.version, schema)
 
 def drop(args):
-    """Drop the database"""
+    "Drop the database"
     options, args, parser = parse_args(args, "drop")
 
     if len(args) > 0:
@@ -70,7 +71,7 @@ def drop(args):
         migrations.drop()
 
 def migrate(args):
-    """Update the database schema"""
+    "Update the database schema"
     options, args, parser = parse_args(args, "migrate [version]")
 
     if len(args) > 1:
@@ -92,11 +93,80 @@ def migrate(args):
     print "Migrating database schema from v%d to v%d..." %(current, target)
     migrations.migrate(target)
 
+def useradd(args):
+    "Add a user"
+    options, args, parser = parse_args(args, "useradd USERNAME EMAIL")
+
+    if len(args) < 2:
+        parser.error("Specify USERNAME and EMAIL")
+    elif len(args) > 2:
+        parser.error("Invalid argument")
+
+    username = args[0]
+    email = args[1]
+
+    try:
+        users.create(username, None, email)
+        db.session.commit()
+    except Exception, e:
+        if options.debug: raise
+        print e
+        exit(1)
+
+def userlist(args):
+    "List all users"
+    options, args, parser = parse_args(args, "userlist")
+
+    if len(args) > 0:
+        parser.error("Invalid argument")
+
+    print "%-20s %-20s" % ("USERNAME", "EMAIL")
+    for user in users.all():
+        print "%-20s %-20s" % (user.username, user.email)
+
+def passwd(args):
+    "Change a user's password"
+    options, args, parser = parse_args(args, "passwd USERNAME")
+
+    if len(args) != 1:
+        parser.error("Invalid argument")
+
+    try:
+        users.passwd(args[0], None)
+        db.session.commit()
+    except Exception, e:
+        if options.debug: raise
+        print e
+        exit(1)
+
+def usermod(args):
+    "Change a user's email"
+    options, args, parser = parse_args(args, "usermod USERNAME EMAIL")
+
+    if len(args) < 2:
+        parser.error("Specify USERNAME and EMAIL")
+    elif len(args) > 2:
+        parser.error("Invalid argument")
+
+    username = args[0]
+    email = args[1]
+
+    try:
+        users.usermod(username, email)
+        db.session.commit()
+    except Exception, e:
+        if options.debug: raise
+        print e
+        exit(1)
 
 COMMANDS = {
     'create': create,
     'drop': drop,
-    'migrate': migrate
+    'migrate': migrate,
+    'userlist': userlist,
+    'useradd': useradd,
+    'passwd': passwd,
+    'usermod': usermod
 }
 
 def main():

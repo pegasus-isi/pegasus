@@ -11,7 +11,7 @@ pegasus-service-admin - Manage a Pegasus Service installation
 Synopsis
 --------
 [verse]
-pegasus-service-admin COMMAND [options]
+pegasus-service-admin COMMAND [options] [ARGUMENTS...]
 
 Commands
 --------
@@ -25,8 +25,20 @@ migrate [version]::
     Convert the database schema to the specified version. If version is not
     specified, then upgrade to the latest version.
 
-General Options
----------------
+userlist::
+    List all users in the database.
+
+passwd USERNAME::
+    Change a user's password.
+
+useradd USERNAME EMAIL::
+    Add a new user.
+
+usermod USERNAME EMAIL::
+    Change a user's email address.
+
+Options
+-------
 -h | --help::
     Print help message
 -d | --debug::

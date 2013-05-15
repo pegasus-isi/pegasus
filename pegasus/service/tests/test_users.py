@@ -1,32 +1,34 @@
-from pegasus.service import db, tests
-from pegasus.service.models import User
+from pegasus.service import db, tests, users
+from pegasus.service.users import User
 
 from sqlalchemy.exc import IntegrityError
 
 class TestUsers(tests.TestCase):
-    def test_validpass(self):
-        self.assertRaises(Exception, User.validate_password, None)
-        self.assertRaises(Exception, User.validate_password, "")
-        self.assertRaises(Exception, User.validate_password, "abc")
-        User.validate_password("abcd")
-        User.validate_password("secret")
+    def test_validate_password(self):
+        self.assertRaises(users.InvalidPassword, users.validate_password, None)
+        self.assertRaises(users.InvalidPassword, users.validate_password, "")
+        self.assertRaises(users.InvalidPassword, users.validate_password, "abc")
+        self.assertRaises(users.InvalidPassword, users.validate_password, self)
+        users.validate_password("abcd")
+        users.validate_password("secret")
 
-    def test_hashpass(self):
-        self.assertRaises(Exception, User.hash_password, None)
-        self.assertRaises(Exception, User.hash_password, "")
-        self.assertRaises(Exception, User.hash_password, "abc")
-        shorthash = User.hash_password("abcd")
+    def test_hash_password(self):
+        shorthash = users.hash_password("abcd")
         self.assertEquals(len(shorthash),87)
-        secrethash = User.hash_password("secret")
+        secrethash = users.hash_password("secret")
         self.assertEquals(len(secrethash),87)
+
+    def test_verify_password(self):
+        self.assertTrue(users.verify_password("secret", users.hash_password("secret")))
+        self.assertTrue(users.verify_password("abcd", users.hash_password("abcd")))
 
     def test_userpass(self):
         u = User(username="gideon",password="secret",email="gideon@isi.edu")
 
-        # Make sure the correct password is valid
+        # Make sure the correct password matches
         self.assertTrue(u.password_matches("secret"))
 
-        # Make sure an incorrect password is not valid
+        # Make sure an incorrect password does not match
         self.assertFalse(u.password_matches("secrets"))
         self.assertFalse(u.password_matches(""))
         self.assertFalse(u.password_matches(None))
