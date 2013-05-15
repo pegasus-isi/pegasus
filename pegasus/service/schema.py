@@ -4,10 +4,10 @@ from pegasus.service import db
 
 #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # IMPORTANT
-# This is the current version of the schema. It should be incremented 
-# each time a change is made to the schema and a migration script 
+# This is the current version of the schema. It should be incremented
+# each time a change is made to the schema and a migration script
 # should be created to go from the old version to the new version.
-version = 1
+version = 2
 #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 class Schema(db.Model):
@@ -27,4 +27,5 @@ class Schema(db.Model):
 
 # Need to import all the other schema objects here
 from pegasus.service.users import User
+from pegasus.service.replicas import ReplicaMapping
 
