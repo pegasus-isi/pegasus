@@ -37,7 +37,6 @@ class TestUsersDB(tests.DBTestCase):
     def test_usercreate(self):
         # Make sure we can insert a new user
         u1 = users.create(username="gideon", password="secret", email="gideon@isi.edu")
-        db.session.flush()
 
         # Make sure one user exists
         self.assertEquals(User.query.count(), 1)
@@ -49,34 +48,21 @@ class TestUsersDB(tests.DBTestCase):
         self.assertEquals(u1.email, u2.email)
 
     def test_userdupes(self):
-        u1 = User(username="gideon", password="secret", email="gideon@isi.edu")
-        u2 = User(username="gideon", password="private", email="juve@usc.edu")
-
-        db.session.add(u1)
-        db.session.commit()
-
-        # Adding a duplicate user should be an error
-        db.session.add(u2)
-        self.assertRaises(IntegrityError, db.session.commit)
+        users.create(username="gideon", password="secret", email="gideon@isi.edu")
+        self.assertRaises(users.UserExists, users.create, "gideon", "private", "juve@usc.edu")
 
     def test_passwd(self):
         gideon = users.create("gideon", "secret", "gideon@isi.edu")
-        db.session.flush()
-
         self.assertTrue(gideon.password_matches("secret")) # original passwd
 
         users.passwd("gideon", "newsecret")
-        db.session.flush()
-
         self.assertTrue(gideon.password_matches("newsecret")) # new passwd
 
         gideon2 = users.getuser("gideon")
-
         self.assertTrue(gideon2.password_matches("newsecret")) # new passwd
 
     def test_usermod(self):
         gideon = users.create("gideon", "secret", "gideon@isi.edu")
-        db.session.flush()
         self.assertEquals(gideon.email, "gideon@isi.edu") # original email
 
         users.usermod("gideon", "juve@usc.edu")
@@ -87,18 +73,15 @@ class TestUsersDB(tests.DBTestCase):
         self.assertEquals(len(l), 0) # should not be any users
 
         users.create("gideon", "secret", "gideon@isi.edu")
-        db.session.flush()
         l = users.all()
         self.assertEquals(len(l), 1) # should be 1 user
 
         users.create("rynge", "secret", "rynge@isi.edu")
-        db.session.flush()
         l = users.all()
         self.assertEquals(len(l), 2) # should be 2 users
 
     def test_getuser(self):
         gideon = users.create("gideon", "secret", "gideon@isi.edu")
-        db.session.flush()
 
         g2 = users.getuser("gideon")
         self.assertEquals(gideon.username, g2.username)
