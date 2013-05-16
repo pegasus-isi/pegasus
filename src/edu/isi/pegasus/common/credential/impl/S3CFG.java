@@ -60,8 +60,9 @@ public class S3CFG  extends Abstract implements CredentialHandler {
      * Returns the path to s3cfg. The order of preference is as follows
      *
      * - If a s3cfg is specified in the site catalog entry that is used
-     * - Else the one pointed to by the environment variable S3Cfg
-     * - Else the default path to the ~/.s3cfg
+     * - Else the one pointed to by the environment variable S3CFG
+     * - Else the default path of ~/.pegasus/s3cfg
+     * - Else the legacy default path of ~/.s3cfg
      *
      * @param site   the  site handle
      *
@@ -80,10 +81,16 @@ public class S3CFG  extends Abstract implements CredentialHandler {
                 path = envs.get( S3CFG.S3CFG_FILE_VARIABLE );
             }
         }
-        
+
         if (path == null) {
-            // default location
-            path = envs.get("HOME") + "/.s3cfg";
+            // New default
+            path = envs.get("HOME") + "/.pegasus/s3cfg";
+
+            File cfg = new File(path);
+            if (!cfg.isFile()) {
+                // Old default
+                path = envs.get("HOME") + "/.s3cfg";
+            }
         }
 
         return path;

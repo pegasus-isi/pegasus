@@ -334,10 +334,12 @@ user's configuration file:
 
 1. The -C/--conf argument
 2. The S3CFG environment variable
-3. $HOME/.s3cfg
+3. $HOME/.pegasus/s3cfg
+4. $HOME/.s3cfg
 
 If it does not find the configuration file in one of these locations it 
-will fail with an error.
+will fail with an error. The $HOME/.s3cfg location is only supported for 
+backward-compatibility. $HOME/.pegasus/s3cfg should be used instead.
 
 Configuration File Format
 ~~~~~~~~~~~~~~~~~~~~~~~~~

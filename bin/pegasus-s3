@@ -234,24 +234,35 @@ def option_parser(usage):
     return parser
 
 def get_config(options):
+    S3CFG = os.getenv("S3CFG", None)
     if options.config:
+        # Command-line overrides everything
         cfg = options.config
+    elif S3CFG is not None:
+        # Environment variable overrides defaults
+        cfg = S3CFG
     else:
-        cfg = os.getenv("S3CFG", None)
-        if cfg is None:
+        # New default
+        new_default = os.path.expanduser("~/.pegasus/s3cfg")
+        if os.path.isfile(new_default):
+            cfg = new_default
+        else:
+            # If the new default doesn't exist, try the old default
             cfg = os.path.expanduser("~/.s3cfg")
-            
+
     if not os.path.isfile(cfg):
-        raise Exception("Unable to locate config file: %s" % cfg)
-    
+        raise Exception("Config file not found")
+
+    debug("Found config file: %s" % cfg)
+
     # Make sure nobody else can read the file
     mode = os.stat(cfg).st_mode
     if mode & (stat.S_IRWXG | stat.S_IRWXO):
         raise Exception("Permissions of config file %s are too liberal" % cfg)
-    
+
     config = ConfigParser(DEFAULT_CONFIG)
     config.read(cfg)
-    
+
     return config
 
 def parse_endpoint(uri):
