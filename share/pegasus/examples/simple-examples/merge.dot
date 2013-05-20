@@ -1,0 +1,23 @@
+digraph dag {
+    ratio=fill
+    node [style=filled,color="#444444",fillcolor="#ffed6f"]
+    edge [arrowhead=normal,arrowsize=1.0]
+
+    "ID0000004" [shape=ellipse,fillcolor="#1b9e77",label="cat"]
+    "ID0000001" [shape=ellipse,fillcolor="#d95f02",label="ls"]
+    "ID0000002" [shape=ellipse,fillcolor="#d95f02",label="ls"]
+    "ID0000003" [shape=ellipse,fillcolor="#d95f02",label="ls"]
+
+    "bin_0.txt" [shape=rect,label="bin_0.txt"]
+    "bin_2.txt" [shape=rect,label="bin_2.txt"]
+    "bin_1.txt" [shape=rect,label="bin_1.txt"]
+    "binaries.txt" [shape=rect,label="binaries.txt"]
+
+    "bin_2.txt" -> "ID0000004"
+    "bin_0.txt" -> "ID0000004"
+    "bin_1.txt" -> "ID0000004"
+    "ID0000004" -> "binaries.txt"
+    "ID0000001" -> "bin_0.txt"
+    "ID0000002" -> "bin_1.txt"
+    "ID0000003" -> "bin_2.txt"
+}

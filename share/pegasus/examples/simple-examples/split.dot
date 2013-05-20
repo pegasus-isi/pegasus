@@ -1,0 +1,37 @@
+digraph dag {
+    ratio=fill
+    node [style=filled,color="#444444",fillcolor="#ffed6f"]
+    edge [arrowhead=normal,arrowsize=1.0]
+
+    "ID0000004" [shape=ellipse,fillcolor="#1b9e77",label="wc"]
+    "ID0000005" [shape=ellipse,fillcolor="#1b9e77",label="wc"]
+    "ID0000006" [shape=ellipse,fillcolor="#1b9e77",label="wc"]
+    "ID0000001" [shape=ellipse,fillcolor="#d95f02",label="curl"]
+    "ID0000002" [shape=ellipse,fillcolor="#7570b3",label="split"]
+    "ID0000003" [shape=ellipse,fillcolor="#1b9e77",label="wc"]
+
+    "part.d" [shape=rect,label="part.d"]
+    "part.c" [shape=rect,label="part.c"]
+    "part.b" [shape=rect,label="part.b"]
+    "part.a" [shape=rect,label="part.a"]
+    "pegasus.html" [shape=rect,label="pegasus.html"]
+    "count.txt.d" [shape=rect,label="count.txt.d"]
+    "count.txt.b" [shape=rect,label="count.txt.b"]
+    "count.txt.c" [shape=rect,label="count.txt.c"]
+    "count.txt.a" [shape=rect,label="count.txt.a"]
+
+    "part.b" -> "ID0000004"
+    "ID0000004" -> "count.txt.b"
+    "part.c" -> "ID0000005"
+    "ID0000005" -> "count.txt.c"
+    "part.d" -> "ID0000006"
+    "ID0000006" -> "count.txt.d"
+    "ID0000001" -> "pegasus.html"
+    "pegasus.html" -> "ID0000002"
+    "ID0000002" -> "part.d"
+    "ID0000002" -> "part.c"
+    "ID0000002" -> "part.a"
+    "ID0000002" -> "part.b"
+    "part.a" -> "ID0000003"
+    "ID0000003" -> "count.txt.a"
+}

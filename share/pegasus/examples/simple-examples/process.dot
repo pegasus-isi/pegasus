@@ -1,0 +1,11 @@
+digraph dag {
+    ratio=fill
+    node [style=filled,color="#444444",fillcolor="#ffed6f"]
+    edge [arrowhead=normal,arrowsize=1.0]
+
+    "ID0000001" [shape=ellipse,fillcolor="#1b9e77",label="ls"]
+
+    "listing.txt" [shape=rect,label="listing.txt"]
+
+    "ID0000001" -> "listing.txt"
+}

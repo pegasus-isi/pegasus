@@ -1,0 +1,15 @@
+digraph dag {
+    ratio=fill
+    node [style=filled,color="#444444",fillcolor="#ffed6f"]
+    edge [arrowhead=normal,arrowsize=1.0]
+
+    "ID0000001" [shape=ellipse,fillcolor="#1b9e77",label="curl"]
+    "ID0000002" [shape=ellipse,fillcolor="#d95f02",label="wc"]
+
+    "count.txt" [shape=rect,label="count.txt"]
+    "pegasus.html" [shape=rect,label="pegasus.html"]
+
+    "ID0000001" -> "pegasus.html"
+    "pegasus.html" -> "ID0000002"
+    "ID0000002" -> "count.txt"
+}
