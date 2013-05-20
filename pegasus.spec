@@ -11,7 +11,7 @@ Source:         pegasus-source-%{version}.tar.gz
 
 BuildRoot:      %{_tmppath}/%{name}-root
 BuildRequires:  ant, ant-apache-regexp, java, gcc, groff, python-devel, gcc-c++, make 
-Requires:       java >= 1.6, python >= 2.6, condor >= 7.6, graphviz
+Requires:       java >= 1.6, python >= 2.4, condor >= 7.6, graphviz
 
 %define sourcedir %{name}-source-%{version}
 
