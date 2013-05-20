@@ -1,8 +1,6 @@
 """
 Base for schema modules
 """
-from sqlalchemy import exceptions
-
 class SchemaException(Exception):
     """Common base.
     """
