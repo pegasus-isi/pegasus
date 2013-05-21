@@ -81,6 +81,17 @@ function test_executable {
     return $?
 }
 
+function test_longarg {
+    A=$(for i in $(seq 1 5000); do echo -n 'c'; done)
+    kickstart /bin/echo $A
+    return $?
+}
+
+function test_longarg_file {
+    kickstart -I long.arg
+    return $?
+}
+
 # RUN THE TESTS
 run_test lotsofprocs
 run_test lotsofprocs_buffer
@@ -94,4 +105,6 @@ run_test xmlquote_ampersand
 run_test test_full
 run_test test_flush
 run_test test_executable
+run_test test_longarg
+run_test test_longarg_file
 

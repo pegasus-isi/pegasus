@@ -67,7 +67,6 @@ merge( char* s1, char* s2 )
     char* temp = (char*) malloc(len);
     if ( temp == NULL ) return NULL;
     strncpy( temp, s1, len );
-    strncat( temp, " ", len );
     strncat( temp, s2, len );
     return temp;
   }

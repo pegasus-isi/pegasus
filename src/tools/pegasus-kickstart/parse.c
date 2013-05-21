@@ -89,7 +89,8 @@ resolve( char** v, char* varname, char** p, char* buffer, size_t size )
     while ( pp - buffer < size && *value ) *pp++ = *value++; 
     *p = pp;
   } else {
-    if ( debug ) debugmsg( "# %s does not exist\n", varname );
+    debugmsg( "ERROR: Variable $%s does not exist\n", varname );
+    exit(1);
   }
 
   *v = varname;
@@ -301,14 +302,21 @@ internalParse( const char* line, const char** cursor, int* state,
     int charclass = xlate( *s );
     int newstate = statemap[*state][charclass];
 
-    if ( debug )
-      debugmsg( "# state=%02d, class=%d, action=%d, newstate=%02d, char=%02X (%c)\n",
-               *state, charclass, actionmap[*state][charclass], newstate, *s,
-               ((*s & 127) >= 32) ? *s : '.' );
+    if (debug) {
+      debugmsg("# pos=%d, state=%02d, class=%d, action=%d, newstate=%02d, char=%02X (%c)\n",
+               p-buffer, *state, charclass, actionmap[*state][charclass], newstate, *s,
+               ((*s & 127) >= 32) ? *s : '.');
+    }
 
     switch ( actionmap[*state][charclass] ) {
     case 0: /* store into buffer */
-      if ( p-buffer < size ) *p++ = *s;
+      if ( p-buffer < size ) {
+          *p = *s;
+          p++;
+      } else {
+          debugmsg("ERROR: Argument too long\n");
+          exit(1);
+      }
       break;
     case 1: /* conditionally finalize buffer */
       *p = '\0';
@@ -316,7 +324,12 @@ internalParse( const char* line, const char** cursor, int* state,
       p = buffer;
       break;
     case 2: /* store variable part */
-      if ( v-varname < vsize ) *v++ = *s;
+      if ( v-varname < vsize ) {
+          *v++ = *s;
+      } else {
+          debugmsg("ERROR: Variable name too long\n");
+          exit(1);
+      }
       break;
     case 3: /* finalize variable name */
       resolve( &v, varname, &p, buffer, size );
@@ -341,11 +354,13 @@ internalParse( const char* line, const char** cursor, int* state,
       if ( p - buffer < size ) *p++ = *s;
       break;
     case 8: /* print error message */
-      if ( newstate > 32 )
+      if (newstate > 32) {
         fputs( errormessage[newstate-33], stderr );
-      else
-        debugmsg( "# PARSER ERROR: state=%02d, class=%d, action=%d, newstate=%02d, char=%02X (%c)\n",
+      } else {
+        debugmsg( "# ARG PARSER ERROR: state=%02d, class=%d, action=%d, newstate=%02d, char=%02X (%c)\n",
                  *state, charclass, 8, newstate, *s, ((*s & 127) >= 32) ? *s : '.' );
+      }
+      exit(1);
       break;
     }
     ++s;
@@ -371,10 +386,13 @@ parseCommandLine( const char* line, int* state )
  *          lead to a premature exit in parsing.
  * returns: A (partial on error) list of split arguments. */
 {
+  if ( line == NULL ) return NULL;
+
   Node* head = NULL;
   Node* tail = NULL;
-  char buffer[2048];
-  size_t size = sizeof(buffer);
+
+  size_t size = (size_t) sysconf(_SC_ARG_MAX);
+  char* buffer = malloc(size);
   char* p = buffer;
 
   char varname[128];
@@ -382,14 +400,11 @@ parseCommandLine( const char* line, int* state )
   char* v = varname;
   const char* s = line;
 
-  /* sanity check */
-  if ( line == NULL ) return head;
-
-  /* invoke parsing only once */
   internalParse( line, &s, state, actionmap1, statemap1, &head, &tail, 
                  &p, buffer, size, &v, varname, vsize );
 
-  /* finally */
+  free(buffer);
+
   return head;
 }
 
@@ -408,31 +423,31 @@ parseArgVector( int argc, char* const* argv, int* state )
  *          stays the same, but environment variables were translated.
  */
 {
+  if ( argc == 0 ) return NULL;
+
   int i;
 
   Node* head = NULL;
   Node* tail = NULL;
 
-  char buffer[2048];
-  size_t size = sizeof(buffer);
+  size_t size = (size_t) sysconf(_SC_ARG_MAX);
+  char* buffer = malloc(size);
   char* p = buffer;
-
+  
   char varname[128];
   size_t vsize = sizeof(varname);
   char* v = varname;
 
-  /* sanity check */
-  if ( argc == 0 ) return head;
-
   /* invoke parsing once for each argument */
-  for ( i=0; i<argc && *state <= 32; ++i ) {
+  for (i=0; i<argc && *state <= 32; ++i) {
     const char* s = argv[i];
     *state = 0;
     internalParse( argv[i], &s, state, actionmap2, statemap2, &head, &tail, 
                    &p, buffer, size, &v, varname, vsize );
   }
 
-  /* finally */
-  return head;
+  free(buffer);
 
+  return head;
 }
+
