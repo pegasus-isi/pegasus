@@ -88,8 +88,25 @@ function test_longarg {
 }
 
 function test_longarg_file {
+    cat > long.arg <<END
+/bin/echo
+$(dd if=/dev/zero of=/dev/stdout bs=127k count=1 2>/dev/null | tr '\0' 'c')
+END
     kickstart -I long.arg
     return $?
+}
+
+function test_toolongarg_file {
+    cat > toolong.arg <<END
+/bin/echo
+$(dd if=/dev/zero of=/dev/stdout bs=128k count=1 2>/dev/null | tr '\0' 'c')
+END
+    kickstart -I toolong.arg
+    if [ $? -eq 0 ]; then
+        return 1
+    else
+        return 0
+    fi
 }
 
 # RUN THE TESTS
@@ -107,4 +124,5 @@ run_test test_flush
 run_test test_executable
 run_test test_longarg
 run_test test_longarg_file
+run_test test_toolongarg_file
 

@@ -21,6 +21,14 @@
 #include "debug.h"
 #include "parse.h"
 
+/* In Linux, 32 pages is the max for a single argument.
+ * In Darwin it is larger, but we will just use the same
+ * value for simplicity. Since we don't limit the number
+ * of arguments we could still exceed the max, but then
+ * execve will fail with a nice error. 
+ */
+#define KS_ARG_MAX 131072
+
 size_t
 countNodes( const Node* head )
 /* purpose: count the number of element in list
@@ -391,8 +399,12 @@ parseCommandLine( const char* line, int* state )
   Node* head = NULL;
   Node* tail = NULL;
 
-  size_t size = (size_t) sysconf(_SC_ARG_MAX);
+  size_t size = KS_ARG_MAX;
   char* buffer = malloc(size);
+  if (buffer == NULL) {
+      perror("malloc");
+      exit(1);
+  }
   char* p = buffer;
 
   char varname[128];
@@ -430,8 +442,12 @@ parseArgVector( int argc, char* const* argv, int* state )
   Node* head = NULL;
   Node* tail = NULL;
 
-  size_t size = (size_t) sysconf(_SC_ARG_MAX);
+  size_t size = KS_ARG_MAX;
   char* buffer = malloc(size);
+  if (buffer == NULL) {
+      perror("malloc");
+      exit(1);
+  }
   char* p = buffer;
   
   char varname[128];
