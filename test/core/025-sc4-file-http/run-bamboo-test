@@ -43,9 +43,9 @@ cat >sites.xml <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <sitecatalog xmlns="http://pegasus.isi.edu/schema/sitecatalog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/sitecatalog http://pegasus.isi.edu/schema/sc-4.0.xsd" version="4.0">
     <site  handle="local" arch="x86" os="LINUX">
-        <directory type="shared-scratch" path="/shared/hdfs/scratch/http/bamboo">
-            <file-server operation="get" url="http://obelix.isi.edu/hdfs-scratch/bamboo"/>
-            <file-server operation="put" url="file:///shared/hdfs/scratch/http/bamboo"/>
+        <directory type="shared-scratch" path="/nfs/ccg3/scratch/http-scratch/bamboo">
+            <file-server operation="get" url="http://obelix.isi.edu/shared-scratch/bamboo"/>
+            <file-server operation="put" url="file:///nfs/ccg3/scratch/http-scratch/bamboo"/>
         </directory>
         <directory type="local-storage" path="$TOP_DIR/outputs">
             <file-server operation="all" url="file://$TOP_DIR/outputs"/>
