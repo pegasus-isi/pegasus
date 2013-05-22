@@ -642,73 +642,81 @@ def put(args):
         default=False, help="Create the destination bucket if it does not already exist")
     parser.add_option("-f", "--force", dest="force", action="store_true",
         default=False, help="Overwrite key if it already exists")
-    
+
     options, args = parser.parse_args(args)
-    
+
     if options.chunksize!=0 and (options.chunksize < 5 or options.chunksize > 1024):
         parser.error("Invalid chunksize")
-        
+
     if options.parallel < 0:
         parser.error("Invalid value for --parallel")
-    
+
     if len(args) != 2:
         parser.error("Specify FILE and URL")
-    
+
     infile = fix_file(args[0])
     url = args[1]
-    
+
     if not os.path.isfile(infile):
         raise Exception("No such file: %s" % infile)
-    
+
     # Validate URL
     uri = parse_uri(url)
     if uri.bucket is None:
         raise Exception("URL for put must have a bucket: %s" % url)
     if uri.key is None:
         uri.key = os.path.basename(infile)
-    
+
     config = get_config(options)
-    
+
     # Make sure file is not too large for the service
     size = os.stat(infile).st_size
     max_object_size = config.getint(uri.site, "max_object_size")
     if size > (max_object_size*GB):
         raise Exception("File %s exceeds object size limit"
         " (%sGB) of service" % (infile, max_object_size))
-        
+
     info("Uploading %s" % uri)
-    
+
     # Does the site support multipart uploads?
     multipart_uploads = config.getboolean(uri.site, "multipart_uploads")
-    
+
     # Warn the user
     if options.parallel > 0:
         if not multipart_uploads:
             warn("Multipart uploads disabled, ignoring --parallel ")
         elif options.chunksize == 0:
             warn("--chunksize set to 0, ignoring --parallel")
-    
+
     conn = get_connection(config, uri)
-    
+
     # Create the bucket if the user requested it and it does not exist
     if options.create_bucket:
-        conn.create_bucket(uri.bucket)
-    
-    b = Bucket(connection=conn, name=uri.bucket)    
+        try:
+            conn.create_bucket(uri.bucket)
+        except Exception, e:
+            # We were seeing lots of 409 errors for this
+            # operation when the bucket already exists. Since
+            # we assume that the bucket will exist in most cases,
+            # and the transfer will fail if it doesn't, then
+            # any errors caught here can be safely ignored.
+            warn("Error creating bucket '%s': %s" % (uri.bucket, e))
+
+    b = Bucket(connection=conn, name=uri.bucket)
     k = Key(bucket=b, name=uri.key)
-    
+
     # Make sure the key does not exist
     if not options.force and k.exists():
         raise Exception("Key exists: %s" % uri)
 
     start = time.time()
-    
+
     if (not multipart_uploads) or (options.chunksize==0):
         # no multipart, or chunks disabled, just do it the simple way
         k.set_contents_from_filename(infile)
     else:
         # Multipart supported, chunking requested
-        
+
         # The target chunk size is user-defined, but we may need
         # to go larger if the file is big because the maximum number
         # of chunks is 10,000. So the actual size of a chunk
@@ -716,17 +724,17 @@ def put(args):
         # is 5 TB.
         part_size = max(options.chunksize*MB, size/9999)
         num_parts = int(math.ceil(size / float(part_size)))
-    
+
         if num_parts <= 1:
             # Serial
             k.set_contents_from_filename(infile)
         else:
             # Parallel
-            
+
             # Map the file
             f = open(infile, "rb")
             mm = mmap.mmap(f.fileno(), 0, mmap.MAP_SHARED, mmap.PROT_READ)
-            
+
             # Request upload
             info("Creating multipart upload")
             upload = b.initiate_multipart_upload(uri.key)
@@ -737,29 +745,29 @@ def put(args):
                     length = min(size-(i*part_size), part_size)
                     up = PartialUpload(upload, i+1, num_parts, mm, i*part_size, length)
                     uploads.append(up)
-                
+
                 if options.parallel <= 1:
                     # Serial
                     for up in uploads:
                         up()
                 else:
                     # Parallel
-                    
+
                     # Queue up requests
                     queue = Queue.Queue()
                     for up in uploads:
                         queue.put(up)
-                    
+
                     # No sense forking more threads than there are chunks
                     nthreads = min(options.parallel, num_parts)
-                    
+
                     # Fork threads
                     threads = []
                     for i in range(0, nthreads):
                         t = WorkThread(queue)
                         threads.append(t)
                         t.start()
-                    
+
                     # Wait for the threads
                     for t in threads:
                         t.join()
@@ -767,10 +775,10 @@ def put(args):
                         # an error, then we fail here
                         if t.exception is not None:
                             raise t.exception
-                
+
                 info("Completing upload")   
                 upload.complete_upload()
-                
+
                 mm.close()
                 f.close()
             except Exception, e:
@@ -784,12 +792,12 @@ def put(args):
                     sys.stderr.write("ERROR: Unable to abort multipart"
                         " upload (use lsup/rmup): %s\n" % f)
                 raise e
-    
+
     end = time.time()
     size = size / 1024.0
     elapsed = end - start
     rate = size / elapsed
-    
+
     info("Uploaded %0.1f KB in %0.6f seconds: %0.2f KB/s" % (size, elapsed, rate))
 
 def lsup(args):
@@ -990,10 +998,10 @@ def main():
     if len(sys.argv) < 2:
         help(sys.argv)
         exit(1)
-    
+
     command = sys.argv[1].lower()
     args = sys.argv[2:]
-    
+
     if command in COMMANDS:
         fn = globals()[command]
         try:
