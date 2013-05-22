@@ -98,6 +98,7 @@ int mysystem(AppInfo* appinfo, JobInfo* jobinfo, char* envp[])
     }
     
     execve( jobinfo->argv[0], (char* const*) jobinfo->argv, envp );
+    perror("execve");
     _exit(127); /* executed in child process */
   } else {
     /* parent */
