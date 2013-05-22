@@ -1001,13 +1001,13 @@ def main():
         except Exception, e:
             # Just raise the exception if the user wants more info
             if VERBOSE or DEBUG: raise
-            
+
             error = str(e)
-            
+
             # This is for boto S3ResponseError
             if hasattr(e, "error_message"):
-                error = e.error_message
-            
+                error = e.error_message or error
+
             sys.stderr.write("ERROR: %s\n" % error)
             exit(1)
     else:
