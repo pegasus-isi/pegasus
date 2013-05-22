@@ -54,9 +54,11 @@ NOTE: Do not copy and paste the commands below without double checking.
 11. Built Yum repo. Similar to Apt repo, but the step has to be
     done on a RHEL machine.
 
-12. Update download page (and test the links!)
+12. Create and deploy the tutorial VMs.
 
-13. Send annouce email to pegasus-announce@mailman.isi.edu
+13. Update download page (and test the links!)
+
+14. Send annouce email to pegasus-announce@mailman.isi.edu
     (Karan has to do this step)
 
 
