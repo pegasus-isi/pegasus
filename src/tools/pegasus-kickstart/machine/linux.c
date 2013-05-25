@@ -144,38 +144,34 @@ gather_linux_proc26(LinuxStatus* procs, LinuxStatus* tasks)
   DIR* procdir;
 
   /* assume procfs is mounted at /proc */
-  if ((procdir=opendir("/proc"))) {
+  if ((procdir = opendir("/proc"))) {
     char procinfo[128];
     while ((dp = readdir(procdir))) {
       /* real proc files start with digit in 2.6 */
       if (isdigit(dp->d_name[0])) {
-    procs->total++;
-    snprintf(procinfo, sizeof(procinfo), "/proc/%s/task", dp->d_name);
-    if ((taskdir=opendir(procinfo))) {
-      while ((dt = readdir(taskdir))) {
-        if (isdigit(dt->d_name[0])) {
-          char taskinfo[128];
-          tasks->total++;
-          snprintf(taskinfo, sizeof(taskinfo),
-            "%s/%s/status", procinfo, dt->d_name);
-          parse_status_file(taskinfo, tasks);
+        procs->total++;
+        snprintf(procinfo, sizeof(procinfo), "/proc/%s/task", dp->d_name);
+        if ((taskdir=opendir(procinfo))) {
+          while ((dt = readdir(taskdir))) {
+            if (isdigit(dt->d_name[0])) {
+              char taskinfo[128];
+              tasks->total++;
+              snprintf(taskinfo, sizeof(taskinfo),
+                       "%s/%s/status", procinfo, dt->d_name);
+              parse_status_file(taskinfo, tasks);
+            }
+          }
+          closedir(taskdir);
+        } else {
+          fprintf(stderr, "opendir %s: %s\n", procinfo, strerror(errno));
         }
-      }
-      closedir(taskdir);
-#ifdef DEBUG_PROCFS
-    } else {
-      fprintf(stderr, "opendir %s: %s\n", procinfo, strerror(errno));
-#endif
-    }
-    snprintf(procinfo, sizeof(procinfo), "/proc/%s/status", dp->d_name);
-    parse_status_file(procinfo, procs);
+        snprintf(procinfo, sizeof(procinfo), "/proc/%s/status", dp->d_name);
+        parse_status_file(procinfo, procs);
       }
     }
     closedir(procdir);
-#ifdef DEBUG_PROCFS
   } else {
     perror("opendir /proc");
-#endif
   }
 }
 
@@ -211,48 +207,48 @@ parse_stat_file(const char* fn, LinuxStatus* proc, LinuxStatus* task)
       rss *= getpagesize();
 
       if (exitsignal == SIGCHLD) {
-    /* regular process */
-    notatask = 1;
+        /* regular process */
+        notatask = 1;
       } else if (exitsignal == SIGRTMIN) {
-    /* Do we need to check ancient LinuxThreads, which on 2.0 kernels
-     * were forced to use SIGUSR1 and SIGUSR2 for communication? */
-    /* regular thread */
-    notatask = 0;
+        /* Do we need to check ancient LinuxThreads, which on 2.0 kernels
+         * were forced to use SIGUSR1 and SIGUSR2 for communication? */
+        /* regular thread */
+        notatask = 0;
       } else if (exitsignal == 0) {
-    if (text == 0 && stack == 0) {
-      /* kernel magic task -- count as process */
-      notatask = 1;
-    } else {
-      /* thread manager task -- count as thread except (init) */
-      notatask = (ppid == 0);
-    }
+        if (text == 0 && stack == 0) {
+          /* kernel magic task -- count as process */
+          notatask = 1;
+        } else {
+          /* thread manager task -- count as thread except (init) */
+          notatask = (ppid == 0);
+        }
       }
 
       switch (state) {
       case 'R':
-    task->state[S_RUNNING]++;
-    if (notatask) proc->state[S_RUNNING]++;
-    break;
+        task->state[S_RUNNING]++;
+        if (notatask) proc->state[S_RUNNING]++;
+        break;
       case 'S':
-    task->state[S_SLEEPING]++;
-    if (notatask) proc->state[S_SLEEPING]++;
-    break;
+        task->state[S_SLEEPING]++;
+        if (notatask) proc->state[S_SLEEPING]++;
+        break;
       case 'D':
-    task->state[S_WAITING]++;
-    if (notatask) proc->state[S_WAITING]++;
-    break;
+        task->state[S_WAITING]++;
+        if (notatask) proc->state[S_WAITING]++;
+        break;
       case 'T':
-    task->state[S_STOPPED]++;
-    if (notatask) proc->state[S_STOPPED]++;
-    break;
+        task->state[S_STOPPED]++;
+        if (notatask) proc->state[S_STOPPED]++;
+        break;
       case 'Z':
-    task->state[S_ZOMBIE]++;
-    if (notatask) proc->state[S_ZOMBIE]++;
-    break;
+        task->state[S_ZOMBIE]++;
+        if (notatask) proc->state[S_ZOMBIE]++;
+        break;
       default:
-    task->state[S_OTHER]++;
-    if (notatask) proc->state[S_OTHER]++;
-    break;
+        task->state[S_OTHER]++;
+        if (notatask) proc->state[S_OTHER]++;
+        break;
       }
 
       task->size += vmsize;
@@ -264,10 +260,8 @@ parse_stat_file(const char* fn, LinuxStatus* proc, LinuxStatus* task)
       if (notatask) proc->total++;
     }
     fclose(f);
-#ifdef DEBUG_PROCFS
   } else {
     fprintf(stderr, "open %s: %s\n", fn, strerror(errno));
-#endif
   }
 }
 
@@ -287,18 +281,14 @@ gather_linux_proc24(LinuxStatus* procs, LinuxStatus* tasks)
     char procinfo[128];
     while ((dp = readdir(procdir))) {
       /* real processes start with digit, tasks *may* start with dot-digit */
-      if (isdigit(dp->d_name[0]) ||
-       (dp->d_name[0] == '.' && isdigit(dp->d_name[1]))) {
-    snprintf(procinfo, sizeof(procinfo), "/proc/%s/stat", dp->d_name);
-    parse_stat_file(procinfo, procs, tasks);
+      if (isdigit(dp->d_name[0]) || (dp->d_name[0] == '.' && isdigit(dp->d_name[1]))) {
+        snprintf(procinfo, sizeof(procinfo), "/proc/%s/stat", dp->d_name);
+        parse_stat_file(procinfo, procs, tasks);
       }
     }
     closedir(procdir);
-
-#ifdef DEBUG_PROCFS
   } else {
     perror("opendir /proc");
-#endif
   }
 }
 
@@ -374,12 +364,10 @@ gather_proc_cpuinfo(MachineLinuxInfo* machine)
         char* s = strchr(line, ':')+1;
         char* d = machine->vendor_id;
         while (*s && isspace(*s)) ++s;
-        while (*s && ! isspace(*s) &&
-                d - machine->vendor_id < sizeof(machine->vendor_id))
-      *d++ = *s++;
+        while (*s && ! isspace(*s) && d - machine->vendor_id < sizeof(machine->vendor_id))
+          *d++ = *s++;
         *d = 0;
-      } else if (*(machine->model_name) == 0 &&
-                  strncmp(line, "model name", 10) == 0) {
+      } else if (*(machine->model_name) == 0 && strncmp(line, "model name", 10) == 0) {
         char* s = strchr(line, ':')+2;
         char* d = machine->model_name;
         while (*s && d - machine->model_name < sizeof(machine->model_name)) {
@@ -388,8 +376,7 @@ gather_proc_cpuinfo(MachineLinuxInfo* machine)
           while (*s && isspace(*s)) ++s;
         }
         *d = 0;
-      } else if (machine->megahertz == 0.0 &&
-                  strncmp(line, "cpu MHz", 7) == 0) {
+      } else if (machine->megahertz == 0.0 && strncmp(line, "cpu MHz", 7) == 0) {
         char* s = strchr(line, ':')+2;
         float mhz;
         sscanf(s, "%f", &mhz);
@@ -442,8 +429,8 @@ initMachine(void)
   p->basic->provider = "linux";
 
   gather_meminfo(&p->ram_total, &p->ram_free,
-          &p->ram_shared, &p->ram_buffer,
-          &p->swap_total, &p->swap_free);
+                 &p->ram_shared, &p->ram_buffer,
+                 &p->swap_total, &p->swap_free);
   gather_loadavg(p->load);
   gather_proc_cpuinfo(p);
   gather_proc_uptime(&p->boottime, &p->idletime);
@@ -456,7 +443,7 @@ initMachine(void)
     gather_linux_proc24(&p->procs, &p->tasks);
   } else {
     fprintf(stderr, "Info: Kernel v%lu.%lu.%lu is not supported for proc stats gathering\n",
-         version / 1000000, (version % 1000000) / 1000, version % 1000);
+            version / 1000000, (version % 1000000) / 1000, version % 1000);
   }
 
   return p;
@@ -558,3 +545,4 @@ deleteMachine(void* data)
     free((void*) ptr);
   }
 }
+
