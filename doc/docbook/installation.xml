@@ -30,8 +30,8 @@ Python 2.6.2</programlisting></para>
 
       <listitem>
         <para><emphasis role="bold">Condor 7.6 or higher</emphasis>. See
-        h<ulink
-        url="ttp://www.cs.wisc.edu/condor/">ttp://www.cs.wisc.edu/condor/</ulink>
+        <ulink
+        url="http://www.cs.wisc.edu/condor/">http://www.cs.wisc.edu/condor/</ulink>
         for more information. You should be able to run
         <filename>condor_q</filename> and
         <filename>condor_status</filename>.</para>
