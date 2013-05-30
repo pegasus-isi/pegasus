@@ -68,7 +68,7 @@ Python 2.6.2</programlisting></para>
   <section id="env">
     <title>Environment</title>
 
-    <para>To use Pegasus, you need ot have the pegasus-* tools in your PATH.
+    <para>To use Pegasus, you need to have the pegasus-* tools in your PATH.
     If you have installed Pegasus from RPM/DEB packages. the tools will be in
     the default PATH, in /usr/bin. If you have installed Pegasus from binary
     tarballs or source, add the bin/ directory to your PATH.</para>
