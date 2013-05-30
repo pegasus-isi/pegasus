@@ -426,7 +426,7 @@ pegasus-run  /home/tutorial/submit/tutorial/pegasus/diamond/run0001
 
     <para>For this workflow the only jobs Pegasus needs to add are a directory
     creation job, a stage-in job (for f.a), and a stage-out job (for f.d). No
-    registation jobs are added because all the files in the DAX are marked
+    registration jobs are added because all the files in the DAX are marked
     register="false", and no cleanup jobs are added because we passed the
     <literal>--nocleanup</literal> argument to
     <literal>pegasus-plan</literal>.</para>
