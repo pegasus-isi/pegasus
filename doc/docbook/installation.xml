@@ -29,9 +29,9 @@ Python 2.6.2</programlisting></para>
       </listitem>
 
       <listitem>
-        <para><emphasis role="bold">Condor 7.6 or higher</emphasis>. See
+        <para><emphasis role="bold">HTCondor (formerly Condor) 7.6 or higher</emphasis>. See
         <ulink
-        url="http://www.cs.wisc.edu/condor/">http://www.cs.wisc.edu/condor/</ulink>
+        url="http://www.cs.wisc.edu/htcondor/">http://www.cs.wisc.edu/htcondor/</ulink>
         for more information. You should be able to run
         <filename>condor_q</filename> and
         <filename>condor_status</filename>.</para>
@@ -96,9 +96,9 @@ Python 2.6.2</programlisting></para>
     <title>Native Packages (RPM/DEB)</title>
 
     <para>The preferred way to install Pegasus is with native (RPM/DEB)
-    packages. It is recommended that you also install Condor (<ulink
-    url="http://research.cs.wisc.edu/condor/yum/">yum</ulink>, <ulink
-    url="http://research.cs.wisc.edu/condor/debian/">debian</ulink>) from
+    packages. It is recommended that you also install HTCondor (formerly Condor)
+    (<ulink url="http://research.cs.wisc.edu/htcondor/yum/">yum</ulink>, <ulink
+    url="http://research.cs.wisc.edu/htcondor/debian/">debian</ulink>) from
     native packages.</para>
 
     <section id="rhel">
@@ -160,8 +160,8 @@ Complete!</programlisting>
             url="http://pegasus.isi.edu/downloads"><emphasis>Pegasus
     Download Page</emphasis></ulink>.</para>
 
-    <para>Use these tarballs if you already have Condor installed or prefer to
-    keep the Condor installation separate from the Pegasus
+    <para>Use these tarballs if you already have HTCondor installed or prefer to
+    keep the HTCondor installation separate from the Pegasus
     installation.</para>
 
     <itemizedlist>
