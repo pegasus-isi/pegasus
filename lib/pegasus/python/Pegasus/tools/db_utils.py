@@ -30,6 +30,26 @@ from Pegasus.tools import utils
 # Get logger object (initialized elsewhere)
 logger = logging.getLogger()
 
+def get_db_url(config_properties):
+    # Parse, and process properties
+    props = properties.Properties()
+    props.new(config_file=config_properties)
+
+    # Ok, now figure out the database URL
+    output_db_url = None
+
+    if props.property('pegasus.monitord.output') is not None:
+        output_db_url = props.property('pegasus.monitord.output')
+
+        # Return, if not using sqlite or mysql
+        if not (output_db_url.startswith("mysql:") or output_db_url.startswith("sqlite:")):
+            logger.error("Unable to find database file from the properties file ")
+            return None
+
+        return output_db_url
+
+    return None
+
 def get_db_url_wf_uuid(submit_dir, config_properties, top_dir=None):
     """
     Utility method for returning the db_url and wf_uuid given the submit_dir and pegasus properties file.
@@ -63,7 +83,7 @@ def get_db_url_wf_uuid(submit_dir, config_properties, top_dir=None):
         if not top_level_wf_params:
             logger.error("Unable to process braindump.txt in %s" % (top_dir))
             return None, None
-        
+
     # Get the location of the properties file from braindump
     top_level_prop_file = None
 
