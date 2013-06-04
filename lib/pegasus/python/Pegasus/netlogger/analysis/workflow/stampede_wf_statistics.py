@@ -75,6 +75,7 @@ class StampedeWorkflowStatistics(SQLAlchemyInit, DoesLogging):
         self.set_time_filter()
         self.set_host_filter()
         self.set_transformation_filter()
+
         return True
 
     def get_descendant_workflow_ids(self):
@@ -92,6 +93,7 @@ class StampedeWorkflowStatistics(SQLAlchemyInit, DoesLogging):
                                Workflow.submit_hostname, Workflow.submit_dir, Workflow.planner_arguments,
                                Workflow.user, Workflow.grid_dn, Workflow.planner_version,
                                Workflow.dax_label, Workflow.dax_version)
+
         q = q.filter(Workflow.wf_id.in_(self._root_wf_id))
 
         return q.all()

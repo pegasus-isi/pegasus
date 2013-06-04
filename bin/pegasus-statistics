@@ -22,8 +22,6 @@ lib_ext_dir = subprocess.Popen(pegasus_config, stdout=subprocess.PIPE, shell=Tru
 os.sys.path.insert(0, lib_ext_dir)
 os.sys.path.insert(0, lib_dir)
 
-import Pegasus.common
-
 from Pegasus.tools import utils
 from Pegasus.tools import db_utils
 from Pegasus.plots_stats import utils as stats_utils
@@ -352,7 +350,7 @@ def print_workflow_details(output_db_url, wf_uuid, output_dir, multiple_wf = Fal
         sys.exit(1)
 
     # print workflow statistics
-    wf_uuid_list = [wf_uuid]
+    wf_uuid_list = wf_uuid if multiple_wf else [wf_uuid]
     desc_wf_uuid_list = expanded_workflow_stats.get_descendant_workflow_ids()
     for wf_det in desc_wf_uuid_list:
         wf_uuid_list.append(wf_det.wf_uuid)
@@ -410,7 +408,7 @@ def print_workflow_details(output_db_url, wf_uuid, output_dir, multiple_wf = Fal
         for sub_wf_uuid in wf_uuid_list:
             try:
                 individual_workflow_stats = StampedeWorkflowStatistics(output_db_url, False) if multiple_wf else StampedeStatistics(output_db_url, False)
-                individual_workflow_stats.initialize(sub_wf_uuid)
+                individual_workflow_stats.initialize([sub_wf_uuid])
             except SchemaVersionError:
                 logger.error("------------------------------------------------------")
                 logger.error("Database schema mismatch! Please run the upgrade tool")
@@ -422,6 +420,7 @@ def print_workflow_details(output_db_url, wf_uuid, output_dir, multiple_wf = Fal
                 sys.exit(1)
 
             wf_det = individual_workflow_stats.get_workflow_details()[0]
+
             workflow_id =  str(sub_wf_uuid)
             dax_label = str(wf_det.dax_label)
             logger.info("Generating statistics information about the workflow " + workflow_id + " ... ")
@@ -688,8 +687,8 @@ def print_individual_workflow_stats(workflow_stats, workflow_id, dax_label, outp
     total_jobs = workflow_stats.get_total_jobs_status()
 
     tmp = workflow_stats.get_total_succeeded_failed_jobs_status()
-    total_succeeded_jobs = tmp.succeeded if tmp.succeeded else 0
-    total_failed_jobs = tmp.failed if tmp.failed else 0
+    total_succeeded_jobs = tmp.succeeded
+    total_failed_jobs = tmp.failed
 
     total_unsubmitted_jobs = total_jobs - (total_succeeded_jobs + total_failed_jobs)
     total_job_retries = workflow_stats.get_total_jobs_retries()
@@ -710,6 +709,7 @@ def print_individual_workflow_stats(workflow_stats, workflow_id, dax_label, outp
     # sub workflow
     workflow_stats.set_job_filter('subwf')
     total_sub_wfs = workflow_stats.get_total_jobs_status()
+
     tmp = workflow_stats.get_total_succeeded_failed_jobs_status()
     total_succeeded_sub_wfs = tmp.succeeded if tmp.succeeded else 0
     total_failed_sub_wfs = tmp.failed if tmp.failed else 0
