@@ -29,6 +29,9 @@ from Pegasus.netlogger.analysis.workflow.stampede_statistics import StampedeStat
 from Pegasus.netlogger.analysis.workflow.stampede_wf_statistics import StampedeWorkflowStatistics
 from Pegasus.netlogger.analysis.schema.schema_check import SchemaVersionError
 
+# Not unused. Logging get initialized
+import Pegasus.common
+
 # Regular expressions
 re_parse_property = re.compile(r'([^:= \t]+)\s*[:=]?\s*(.*)')
 
@@ -350,8 +353,13 @@ def print_workflow_details(output_db_url, wf_uuid, output_dir, multiple_wf = Fal
         sys.exit(1)
 
     # print workflow statistics
-    wf_uuid_list = wf_uuid if multiple_wf else [wf_uuid]
-    desc_wf_uuid_list = expanded_workflow_stats.get_descendant_workflow_ids()
+    if multiple_wf:
+        wf_uuid_list = []
+        desc_wf_uuid_list = expanded_workflow_stats.get_workflow_ids()
+    else:
+        wf_uuid_list = wf_uuid
+        desc_wf_uuid_list = expanded_workflow_stats.get_descendant_workflow_ids()
+
     for wf_det in desc_wf_uuid_list:
         wf_uuid_list.append(wf_det.wf_uuid)
 
@@ -407,8 +415,8 @@ def print_workflow_details(output_db_url, wf_uuid, output_dir, multiple_wf = Fal
     if calc_jb_stats or calc_tf_stats or calc_wf_stats:
         for sub_wf_uuid in wf_uuid_list:
             try:
-                individual_workflow_stats = StampedeWorkflowStatistics(output_db_url, False) if multiple_wf else StampedeStatistics(output_db_url, False)
-                individual_workflow_stats.initialize([sub_wf_uuid])
+                individual_workflow_stats = StampedeStatistics(output_db_url, False)
+                individual_workflow_stats.initialize(sub_wf_uuid)
             except SchemaVersionError:
                 logger.error("------------------------------------------------------")
                 logger.error("Database schema mismatch! Please run the upgrade tool")
@@ -421,7 +429,7 @@ def print_workflow_details(output_db_url, wf_uuid, output_dir, multiple_wf = Fal
 
             wf_det = individual_workflow_stats.get_workflow_details()[0]
 
-            workflow_id =  str(sub_wf_uuid)
+            workflow_id = str(sub_wf_uuid)
             dax_label = str(wf_det.dax_label)
             logger.info("Generating statistics information about the workflow " + workflow_id + " ... ")
 

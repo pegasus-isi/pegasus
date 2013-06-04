@@ -78,10 +78,10 @@ class StampedeWorkflowStatistics(SQLAlchemyInit, DoesLogging):
 
         return True
 
-    def get_descendant_workflow_ids(self):
-        q = self.session.query(Workflow.wf_id, Workflow.wf_uuid)
+    def get_workflow_ids(self):
+        q = self.session.query(Workflow.root_wf_id, Workflow.wf_id, Workflow.wf_uuid)
         q = q.filter(Workflow.root_wf_id.in_(self._root_wf_id))
-        q = q.filter(~Workflow.wf_id.in_(self._root_wf_id))
+        q = q.order_by(Workflow.root_wf_id)
         return q.all()
 
     def get_workflow_details(self):
