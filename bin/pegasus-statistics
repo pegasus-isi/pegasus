@@ -1114,7 +1114,6 @@ def main():
     else:
         output_db_url, wf_uuid = db_utils.get_db_url_wf_uuid(submit_dir, options.config_properties)
 
-    #output_db_url, wf_uuid = db_utils.get_db_url_wf_uuid(submit_dir, options.config_properties)
     logger.info("DB URL is: %s" % output_db_url)
     logger.info("workflow UUID is: %s" % wf_uuid)
 
