@@ -437,9 +437,6 @@ public class AbstractJob {
     public AbstractJob setStdin(File stdin) {
         File f = new File(stdin, File.LINK.INPUT);
         mStdin = f;
-        if (!mUses.contains(f)) {
-            mUses.add(f);
-        }
         return this;
     }
 
@@ -453,9 +450,6 @@ public class AbstractJob {
         File f = new File(stdin, File.LINK.INPUT);
         f.setTransfer(transfer);
         mStdin = f;
-        if (!mUses.contains(f)) {
-            mUses.add(f);
-        }
         return this;
     }
 
@@ -469,9 +463,6 @@ public class AbstractJob {
         File f = new File(stdin, File.LINK.INPUT);
         f.setRegister(register);
         mStdin = f;
-        if (!mUses.contains(f)) {
-            mUses.add(f);
-        }
         return this;
     }
 
@@ -488,9 +479,6 @@ public class AbstractJob {
         f.setTransfer(transfer);
         f.setRegister(register);
         mStdin = f;
-        if (!mUses.contains(f)) {
-            mUses.add(f);
-        }
         return this;
     }
 
@@ -508,9 +496,6 @@ public class AbstractJob {
         f.setRegister(register);
         f.setOptional(optional);
         mStdin = f;
-        if (!mUses.contains(f)) {
-            mUses.add(f);
-        }
         return this;
     }
 
@@ -522,9 +507,6 @@ public class AbstractJob {
     public AbstractJob setStdin(String stdin) {
         File f = new File(stdin, File.LINK.INPUT);
         mStdin = f;
-        if (!mUses.contains(f)) {
-            mUses.add(f);
-        }
         return this;
     }
 
@@ -538,9 +520,6 @@ public class AbstractJob {
         File f = new File(stdin, File.LINK.INPUT);
         f.setTransfer(transfer);
         mStdin = f;
-        if (!mUses.contains(f)) {
-            mUses.add(f);
-        }
         return this;
     }
 
@@ -554,9 +533,6 @@ public class AbstractJob {
         File f = new File(stdin, File.LINK.INPUT);
         f.setRegister(register);
         mStdin = f;
-        if (!mUses.contains(f)) {
-            mUses.add(f);
-        }
         return this;
     }
 
@@ -573,9 +549,6 @@ public class AbstractJob {
         f.setTransfer(transfer);
         f.setRegister(register);
         mStdin = f;
-        if (!mUses.contains(f)) {
-            mUses.add(f);
-        }
         return this;
     }
 
@@ -594,9 +567,6 @@ public class AbstractJob {
         f.setRegister(register);
         f.setOptional(optional);
         mStdin = f;
-        if (!mUses.contains(f)) {
-            mUses.add(f);
-        }
         return this;
     }
 
@@ -616,9 +586,6 @@ public class AbstractJob {
     public AbstractJob setStdout(File stdout) {
         File f = new File(stdout, File.LINK.OUTPUT);
         mStdout = f;
-        if (!mUses.contains(f)) {
-            mUses.add(f);
-        }
         return this;
     }
 
@@ -632,9 +599,6 @@ public class AbstractJob {
         File f = new File(stdout, File.LINK.OUTPUT);
         f.setTransfer(transfer);
         mStdout = f;
-        if (!mUses.contains(f)) {
-            mUses.add(f);
-        }
         return this;
     }
 
@@ -648,9 +612,6 @@ public class AbstractJob {
         File f = new File(stdout, File.LINK.OUTPUT);
         f.setRegister(register);
         mStdout = f;
-        if (!mUses.contains(f)) {
-            mUses.add(f);
-        }
         return this;
     }
 
@@ -667,9 +628,6 @@ public class AbstractJob {
         f.setTransfer(transfer);
         f.setRegister(register);
         mStdout = f;
-        if (!mUses.contains(f)) {
-            mUses.add(f);
-        }
         return this;
     }
 
@@ -688,9 +646,6 @@ public class AbstractJob {
         f.setRegister(register);
         f.setOptional(optional);
         mStdout = f;
-        if (!mUses.contains(f)) {
-            mUses.add(f);
-        }
         return this;
     }
 
@@ -702,9 +657,6 @@ public class AbstractJob {
     public AbstractJob setStdout(String stdout) {
         File f = new File(stdout, File.LINK.OUTPUT);
         mStdout = f;
-        if (!mUses.contains(f)) {
-            mUses.add(f);
-        }
         return this;
     }
 
@@ -718,9 +670,6 @@ public class AbstractJob {
         File f = new File(stdout, File.LINK.OUTPUT);
         f.setTransfer(transfer);
         mStdout = f;
-        if (!mUses.contains(f)) {
-            mUses.add(f);
-        }
         return this;
     }
 
@@ -734,9 +683,6 @@ public class AbstractJob {
         File f = new File(stdout, File.LINK.OUTPUT);
         f.setRegister(register);
         mStdout = f;
-        if (!mUses.contains(f)) {
-            mUses.add(f);
-        }
         return this;
     }
 
@@ -772,9 +718,6 @@ public class AbstractJob {
         f.setRegister(register);
         f.setOptional(optional);
         mStdout = f;
-        if (!mUses.contains(f)) {
-            mUses.add(f);
-        }
         return this;
     }
 
@@ -795,9 +738,6 @@ public class AbstractJob {
     public AbstractJob setStderr(File stderr) {
         File f = new File(stderr, File.LINK.OUTPUT);
         mStderr = f;
-        if (!mUses.contains(f)) {
-            mUses.add(f);
-        }
         return this;
     }
 
@@ -811,9 +751,6 @@ public class AbstractJob {
         File f = new File(stderr, File.LINK.OUTPUT);
         f.setTransfer(transfer);
         mStderr = f;
-        if (!mUses.contains(f)) {
-            mUses.add(f);
-        }
         return this;
     }
 
@@ -827,9 +764,6 @@ public class AbstractJob {
         File f = new File(stderr, File.LINK.OUTPUT);
         f.setRegister(register);
         mStderr = f;
-        if (!mUses.contains(f)) {
-            mUses.add(f);
-        }
         return this;
     }
 
@@ -846,9 +780,6 @@ public class AbstractJob {
         f.setTransfer(transfer);
         f.setRegister(register);
         mStderr = f;
-        if (!mUses.contains(f)) {
-            mUses.add(f);
-        }
         return this;
     }
 
@@ -867,9 +798,6 @@ public class AbstractJob {
         f.setRegister(register);
         f.setOptional(optional);
         mStderr = f;
-        if (!mUses.contains(f)) {
-            mUses.add(f);
-        }
         return this;
     }
 
@@ -881,9 +809,6 @@ public class AbstractJob {
     public AbstractJob setStderr(String stderr) {
         File f = new File(stderr, File.LINK.OUTPUT);
         mStderr = f;
-        if (!mUses.contains(f)) {
-            mUses.add(f);
-        }
         return this;
     }
 
@@ -897,9 +822,6 @@ public class AbstractJob {
         File f = new File(stderr, File.LINK.OUTPUT);
         f.setTransfer(transfer);
         mStderr = f;
-        if (!mUses.contains(f)) {
-            mUses.add(f);
-        }
         return this;
     }
 
@@ -913,9 +835,6 @@ public class AbstractJob {
         File f = new File(stderr, File.LINK.OUTPUT);
         f.setRegister(register);
         mStderr = f;
-        if (!mUses.contains(f)) {
-            mUses.add(f);
-        }
         return this;
     }
 
@@ -932,9 +851,6 @@ public class AbstractJob {
         f.setTransfer(transfer);
         f.setRegister(register);
         mStderr = f;
-        if (!mUses.contains(f)) {
-            mUses.add(f);
-        }
         return this;
     }
 
@@ -953,9 +869,6 @@ public class AbstractJob {
         f.setRegister(register);
         f.setOptional(optional);
         mStderr = f;
-        if (!mUses.contains(f)) {
-            mUses.add(f);
-        }
         return this;
     }
 
@@ -1357,7 +1270,8 @@ public class AbstractJob {
         return this;
     }
     
-        /**
+        
+    /**
      *
      * @param file
      * @param link
@@ -1658,16 +1572,48 @@ public class AbstractJob {
         } //add profiles
         for (Profile p : mProfiles) {
             p.toXML(writer, indent + 1);
-        } //add stdin
+        } 
+        
+        //PM-708 add extra uses for stdout|stderr|stdin if not 
+        //specified by the user in the uses section
+        Set<File> addOnUses = new LinkedHashSet<File>();
+        
+        //add stdin
         if (mStdin != null) {
+            if( !mUses.contains( mStdin) ){
+                //add uses with default flags
+                File f = new File( mStdin, File.LINK.INPUT);
+                addOnUses.add(f);
+            }
             mStdin.toXML(writer, indent + 1, "stdin");
-        } //add stdout
+        } 
+        
+        //add stdout
         if (mStdout != null) {
+            if( !mUses.contains( mStdout) ){
+                //add uses with default flags
+                File f = new File( mStdout, File.LINK.OUTPUT);
+                addOnUses.add(f);
+            }
             mStdout.toXML(writer, indent + 1, "stdout");
-        } //add stderr
+        } 
+        
+        //add stderr
         if (mStderr != null) {
+            if( !mUses.contains( mStderr) ){
+                //add uses with default flags
+                File f = new File( mStderr, File.LINK.OUTPUT);
+                addOnUses.add(f);
+            }
             mStderr.toXML(writer, indent + 1, "stderr");
-        } //add uses
+        } 
+        
+        //print add on uses first
+        for (File f : addOnUses) {
+            f.toXML(writer, indent + 1, "uses");
+        }
+        
+        //add uses
         for (File f : mUses) {
             f.toXML(writer, indent + 1, "uses");
         } //add invoke

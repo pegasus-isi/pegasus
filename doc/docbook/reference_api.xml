@@ -1200,9 +1200,8 @@
       California Earthquake Center, uses this API in their CyberShake workflow
       generator to generate huge DAX containing 10&amp;rsquor;s of thousands
       of tasks with 100&amp;rsquor;s of thousands of input and output files.
-      The <ulink url="javadoc/index.html">Java
-      API</ulink> is well documented using <ulink
-      url="javadoc/edu/isi/pegasus/planner/dax/ADAG.html">Javadoc
+      The <ulink url="javadoc/index.html">Java API</ulink> is well documented
+      using <ulink url="javadoc/edu/isi/pegasus/planner/dax/ADAG.html">Javadoc
       for ADAGs</ulink> .</para>
 
       <para>The steps involved in creating a DAX using the API are</para>
@@ -1283,35 +1282,24 @@
 
 import edu.isi.pegasus.planner.dax.*;
 
-public class BlackDiamondDAX {
 
-    /**
-     * Create an example DIAMOND DAX
-     * @param args
-     */
-    public static void main(String[] args) {
-        if (args.length != 3) {
-            System.out.println("Usage: java ADAG &lt;site_handle&gt; &lt;pegasus_location&gt; &lt;filename.dax&gt;");
-            System.exit(1);
-        }
+/**
+ * An example class to highlight how to use the JAVA DAX API to generate a diamond
+ * DAX.
+ * 
+ */
+public class Diamond {
 
-        try {
-            Diamond(args[0], args[1]).writeToFile(args[2]);
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-        }
+    
 
-    }
-
-    private static ADAG Diamond(String site_handle, String pegasus_location) throws Exception {
+    public ADAG generate(String site_handle, String pegasus_location) throws Exception {
 
         java.io.File cwdFile = new java.io.File (".");
         String cwd = cwdFile.getCanonicalPath(); 
 
         ADAG dax = new ADAG("blackdiamond");
-        dax.addNotification(When.start,"/pegasus/libexec/notification/email -t notify@example.com");
-        dax.addNotification(When.at_end,"/pegasus/libexec/notification/email -t notify@example.com");
+        dax.addNotification(Invoke.WHEN.start,"/pegasus/libexec/notification/email -t notify@example.com");
+        dax.addNotification(Invoke.WHEN.at_end,"/pegasus/libexec/notification/email -t notify@example.com");
         File fa = new File("f.a");
         fa.addPhysicalFile("file://" + cwd + "/f.a", "local");
         dax.addFile(fa);
@@ -1348,8 +1336,8 @@ public class BlackDiamondDAX {
         j1.uses(fa, File.LINK.INPUT);
         j1.uses(fb1, File.LINK.OUTPUT);
         j1.uses(fb2, File.LINK.OUTPUT);
-        j1.addNotification(When.start,"/pegasus/libexec/notification/email -t notify@example.com");
-        j1.addNotification(When.at_end,"/pegasus/libexec/notification/email -t notify@example.com");
+        j1.addNotification(Invoke.WHEN.start,"/pegasus/libexec/notification/email -t notify@example.com");
+        j1.addNotification(Invoke.WHEN.at_end,"/pegasus/libexec/notification/email -t notify@example.com");
         dax.addJob(j1);
 
         // Add left Findrange job
@@ -1358,8 +1346,8 @@ public class BlackDiamondDAX {
         j2.addArgument("-o ").addArgument(fc1);
         j2.uses(fb1, File.LINK.INPUT);
         j2.uses(fc1, File.LINK.OUTPUT);
-        j2.addNotification(When.start,"/pegasus/libexec/notification/email -t notify@example.com");
-        j2.addNotification(When.at_end,"/pegasus/libexec/notification/email -t notify@example.com");
+        j2.addNotification(Invoke.WHEN.start,"/pegasus/libexec/notification/email -t notify@example.com");
+        j2.addNotification(Invoke.WHEN.at_end,"/pegasus/libexec/notification/email -t notify@example.com");
         dax.addJob(j2);
 
         // Add right Findrange job
@@ -1368,8 +1356,8 @@ public class BlackDiamondDAX {
         j3.addArgument("-o ").addArgument(fc2);
         j3.uses(fb2, File.LINK.INPUT);
         j3.uses(fc2, File.LINK.OUTPUT);
-        j3.addNotification(When.start,"/pegasus/libexec/notification/email -t notify@example.com");
-        j3.addNotification(When.at_end,"/pegasus/libexec/notification/email -t notify@example.com");
+        j3.addNotification(Invoke.WHEN.start,"/pegasus/libexec/notification/email -t notify@example.com");
+        j3.addNotification(Invoke.WHEN.at_end,"/pegasus/libexec/notification/email -t notify@example.com");
         dax.addJob(j3);
 
         // Add analyze job
@@ -1380,8 +1368,8 @@ public class BlackDiamondDAX {
         j4.uses(fc1, File.LINK.INPUT);
         j4.uses(fc2, File.LINK.INPUT);
         j4.uses(fd, File.LINK.OUTPUT);
-        j4.addNotification(When.start,"/pegasus/libexec/notification/email -t notify@example.com");
-        j4.addNotification(When.at_end,"/pegasus/libexec/notification/email -t notify@example.com");
+        j4.addNotification(Invoke.WHEN.start,"/pegasus/libexec/notification/email -t notify@example.com");
+        j4.addNotification(Invoke.WHEN.at_end,"/pegasus/libexec/notification/email -t notify@example.com");
         dax.addJob(j4);
 
         dax.addDependency("j1", "j2");
@@ -1390,7 +1378,33 @@ public class BlackDiamondDAX {
         dax.addDependency("j3", "j4");
         return dax;
     }
-}</programlisting>
+    
+    /**
+     * Create an example DIAMOND DAX
+     * @param args
+     */
+    public static void main(String[] args) {
+        if (args.length != 1) {
+            System.out.println("Usage: java GenerateDiamondDAX  &lt;pegasus_location&gt; ");
+            System.exit(1);
+        }
+
+        try {
+            Diamond diamond = new Diamond();
+            String pegasusHome = args[0];
+            String site = "TestCluster";
+            ADAG dag = diamond.generate( site, pegasusHome );
+            dag.writeToSTDOUT();
+            //generate(args[0], args[1]).writeToFile(args[2]);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+}
+
+</programlisting>
 
       <para>Of course, you will have to set up some catalogs and properties to
       run this example. The details are catpured in the examples directory
