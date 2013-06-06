@@ -325,7 +325,7 @@ public class ReplicaCatalogBridge
             if ( options.getCacheFiles().isEmpty() &&       //no cache files specified
                  options.getInheritedRCFiles().isEmpty() && //no files locations inherited from outer level DAX
                  this.mDAXReplicaStore.isEmpty() &&         //no file locations in current DAX
-                 options.getInputDirectory() == null  && //no file locations in current DAX
+                 options.getInputDirectory() == null  && //no input directory specified on the command line
                  dag.dagInfo.getLFNs( true ).size() > 0 //the number of raw input files is more than 1
                     ){
                 mLogger.log( msg + ex.getMessage(),LogManager.ERROR_MESSAGE_LEVEL );
