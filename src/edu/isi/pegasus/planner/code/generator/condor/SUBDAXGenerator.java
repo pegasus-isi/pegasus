@@ -22,6 +22,7 @@ import edu.isi.pegasus.common.logging.LogManager;
 
 import edu.isi.pegasus.common.util.CondorVersion;
 import edu.isi.pegasus.common.util.FindExecutable;
+import edu.isi.pegasus.common.util.Separator;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.classes.PegasusBag;
@@ -37,6 +38,9 @@ import edu.isi.pegasus.planner.common.RunDirectoryFilenameFilter;
 import edu.isi.pegasus.planner.client.CPlanner;
 
 import edu.isi.pegasus.planner.catalog.TransformationCatalog;
+import edu.isi.pegasus.planner.catalog.classes.Profiles;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
+import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 
@@ -194,6 +198,8 @@ public class SUBDAXGenerator{
     private Graph mWorkflow;
     private ADag mDAG;
     
+    private SiteStore mSiteStore;
+    
     
     /**
      * The default constructor.
@@ -222,6 +228,7 @@ public class SUBDAXGenerator{
         mProps  = bag.getPegasusProperties();
         mLogger = bag.getLogger();
         mTCHandle = bag.getHandleToTransformationCatalog();
+        mSiteStore = bag.getHandleToSiteStore();
         this.mPegasusPlanOptions  = bag.getPlannerOptions();
         mCleanupScope = mProps.getCleanupScope();
         mDAXJobIDToSubmitDirectoryCacheFile = new HashMap();
@@ -613,21 +620,29 @@ public class SUBDAXGenerator{
             entries = mTCHandle.lookup(job.namespace, job.logicalName,
                                                  job.version, job.getSiteHandle(),
                                                  TCType.INSTALLED);
+            if( entries == null ){
+                mLogger.log( Separator.combine( job.namespace, job.logicalName,  job.version ) + 
+                             "  not catalogued in the Transformation Catalog. Trying to construct from the Site Catalog",
+                              LogManager.DEBUG_MESSAGE_LEVEL );
+                entry = defaultTCEntry( "local" );
+            }
+            else{
+                entry = (TransformationCatalogEntry) entries.get(0);
+                mLogger.log( "Picked path to DAGMan from the Transformation Catalog " + entry.getPhysicalTransformation() ,
+                             LogManager.DEBUG_MESSAGE_LEVEL );
+            }
+            
+            /*
             entry = (entries == null) ?
                      defaultTCEntry( "local") ://construct from site catalog
                       //Gaurang assures that if no record is found then
                       //TC Mechanism returns null
                       (TransformationCatalogEntry) entries.get(0);
-            
+            */
             if( entry == null ){
-                mLogger.log( "DAGMan not catalogued in the TC. Trying to construct from the environment",
+                mLogger.log( "DAGMan not catalogued in the Transformation Catalog or the Site Catalog. Trying to construct from the environment",
                               LogManager.DEBUG_MESSAGE_LEVEL );
                 entry = constructTCEntryFromEnvironment( );
-            }
-            else{
-                mLogger.log( "Picked path to DAGMan from the TC " + entry.getPhysicalTransformation() ,
-                             LogManager.DEBUG_MESSAGE_LEVEL );
-
             }
 
             
@@ -637,9 +652,9 @@ public class SUBDAXGenerator{
         }
         if(entry == null){
             //throw appropriate error
-            throw new RuntimeException("ERROR: Entry not found in tc for job " +
+            throw new RuntimeException("Unable to construct entry for  " +
                                         job.getCompleteTCName() +
-                                        " on site " + job.getSiteHandle());
+                                        " from the Transformation Catalog, Site Catalog or the Environment for site " + job.getSiteHandle());
         }
 
         //set the path to the executable and environment string
@@ -892,11 +907,16 @@ public class SUBDAXGenerator{
      */
     private  TransformationCatalogEntry defaultTCEntry( String site ){
         //not implemented as we dont have handle to site catalog in this class
+        SiteCatalogEntry entry = mSiteStore.lookup( site );
+        if( entry != null ){
+            return constructTCEntryFromEnvProfiles( (ENV)entry.getProfiles().get(Profiles.NAMESPACES.env) );
+        }
+        
         return null;
     }
 
     /**
-     * Returns a tranformation catalog entry object constructed from the environment
+     * Returns a transformation catalog entry object constructed from the environment
      * 
      * An entry is constructed if either of the following environment variables
      * are defined
