@@ -596,10 +596,14 @@ public class SUBDAXGenerator{
             OutputStream ostream = new FileOutputStream( wrapper , true );
             PrintWriter writer = new PrintWriter( new BufferedWriter(new OutputStreamWriter(ostream)) );
 
+            //determine the launch directory in which the pre script should be
+            //called. it is the scratch directory for local site
+            String launchDir = mSiteStore.getInternalWorkDirectory( dagJob );
+            
             StringBuffer sb = new StringBuffer( );
             sb.append( "#!/bin/bash" ).append( '\n' );
             sb.append( "set -e" ).append( '\n' );
-            sb.append( "cd "  ).append( directory.getAbsolutePath() );
+            sb.append( "cd "  ).append( launchDir );
             sb.append( '\n' );
             sb.append( executable ).append( " ").append( "$@" );
             sb.append( '\n' );
