@@ -533,8 +533,17 @@ public class CPlanner extends Executable{
 
 
             mPOptions.setSubmitDirectory( baseDir, relativeSubmitDir  );
-            
+           
             if ( options.partOfDeferredRun() ) {
+                //PM-667 log what directory the planner is launched in 
+                //what the base submit directory is
+                String launchDir = System.getProperty("user.dir") ;
+                mLogger.log( "The directory in which the planner was launched " + launchDir,
+                              LogManager.CONFIG_MESSAGE_LEVEL );
+                mLogger.log( "The base submit directory for the planner " + baseDir,
+                              LogManager.CONFIG_MESSAGE_LEVEL );
+                mLogger.log( "The relative submit directory for the planner " + relativeSubmitDir,
+                              LogManager.CONFIG_MESSAGE_LEVEL );
 
                 if ( !mPOptions.getForceReplan() ) {
                     //if --force-replan is not set handle

@@ -48,6 +48,7 @@ import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
 import edu.isi.pegasus.planner.classes.DAXJob;
 import edu.isi.pegasus.planner.code.GridStartFactory;
 import edu.isi.pegasus.planner.code.generator.DAXReplicaStore;
+import edu.isi.pegasus.planner.code.gridstart.PegasusLite;
 import edu.isi.pegasus.planner.namespace.Condor;
 import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.namespace.Pegasus;
@@ -55,10 +56,14 @@ import edu.isi.pegasus.planner.namespace.Pegasus;
 import edu.isi.pegasus.planner.partitioner.graph.Graph;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 
 import java.text.NumberFormat;
@@ -540,17 +545,86 @@ public class SUBDAXGenerator{
                          LogManager.DEBUG_MESSAGE_LEVEL );
             mDAXJobIDToSubmitDirectoryCacheFile.put( job.getID(), subDAXCache);
             
+            //submit directory is the submit directory of the DAX that is currently
+            //being planned. The one that contains the DAX job.
+            File submitDirectory = new File( mPegasusPlanOptions.getSubmitDirectory() );
             Job dagJob = constructDAGJob( job,
-                                    new File( mPegasusPlanOptions.getSubmitDirectory() ),
-                                    new File( options.getSubmitDirectory()),
-                                    basenamePrefix.toString()
-                                  );
-            //set the prescript
-            dagJob.setPreScript( job.getPreScriptPath(), job.getPreScriptArguments() );
+                                          submitDirectory,
+                                          new File( options.getSubmitDirectory()),
+                                          basenamePrefix.toString()
+                                        );
+            
+            
+            File wrapper = constructPlannerPrescriptWrapper( dagJob, 
+                                                             submitDirectory,
+                                                             job.getPreScriptPath(),
+                                                             job.getPreScriptArguments() );
+            
+            //set the prescript to the dag job
+            //the executable is the wrapper now PM-667
+//            dagJob.setPreScript( job.getPreScriptPath(), job.getPreScriptArguments() );
+            dagJob.setPreScript( wrapper.getAbsolutePath(), job.getPreScriptArguments() );
+            
             return dagJob;
         }
 
     }
+    
+     
+    /**
+     * Construct a pegasus plan wrapper script that changes the directory in which
+     * pegasus-plan is launched. 
+     * 
+     * @param dagJob        the DAG job corresponding to which the prescript is associated.
+     * @param directory   the directory where the submit file for dagman job has
+     *                    to be written out to.
+     * @param executable    the path to the planner that needs to be called in the prescript
+     * @param arguments     the arguments with which the planner is called.
+     * 
+     * @return the wrapper script that gets called in the prescript for the dag job 
+     */
+    protected File constructPlannerPrescriptWrapper( Job dagJob, 
+                                                     File directory,
+                                                     String executable,
+                                                     String arguments ){
+        
+        //determine the basename for the wrapper
+        String basename = this.getBasename( dagJob.getName(), "_pre.sh" );
+        File wrapper = new File( directory, basename );
+        
+        try{
+            OutputStream ostream = new FileOutputStream( wrapper , true );
+            PrintWriter writer = new PrintWriter( new BufferedWriter(new OutputStreamWriter(ostream)) );
+
+            StringBuffer sb = new StringBuffer( );
+            sb.append( "#!/bin/bash" ).append( '\n' );
+            sb.append( "set -e" ).append( '\n' );
+            sb.append( "cd "  ).append( directory.getAbsolutePath() );
+            sb.append( '\n' );
+            sb.append( executable ).append( " ").append( "$@" );
+            sb.append( '\n' );
+    
+            writer.print( sb.toString() );
+            writer.flush();
+            
+            writer.close();
+            ostream.close();
+
+            //set the xbit on the shell script
+            //for 3.2, we will have 1.6 as the minimum jdk requirement
+            wrapper.setExecutable( true, false );
+ 
+        }
+        catch( IOException ioe ){
+            throw new RuntimeException( "Error while writing out prescript wrapper  " + wrapper 
+                                        + " for job " + dagJob.getName(), ioe );
+        }
+
+        
+        return wrapper;
+    
+    }
+
     
     /**
      * Constructs a job that plans and submits the partitioned workflow,
@@ -1439,5 +1513,6 @@ public class SUBDAXGenerator{
         return s;
     }
 
+   
 
 }
