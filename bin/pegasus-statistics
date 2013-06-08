@@ -357,7 +357,7 @@ def print_workflow_details(output_db_url, wf_uuid, output_dir, multiple_wf = Fal
         wf_uuid_list = []
         desc_wf_uuid_list = expanded_workflow_stats.get_workflow_ids()
     else:
-        wf_uuid_list = wf_uuid
+        wf_uuid_list = [wf_uuid]
         desc_wf_uuid_list = expanded_workflow_stats.get_descendant_workflow_ids()
 
     for wf_det in desc_wf_uuid_list:
