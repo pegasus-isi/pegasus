@@ -86,7 +86,7 @@ public class InPlace implements CleanupStrategy{
 
     /**
      * The mapping of siteHandle to all subset of the jobs mapped to it that are
-     * leaves in the workflow mapping to siteHandle(String) to Set<GraphNodes>.
+     * roots in the workflow mapping to siteHandle(String) to Set<GraphNodes>.
      */
     private HashMap mResMapRoots;
 
@@ -380,7 +380,7 @@ public class InPlace implements CleanupStrategy{
 
     /**
      * Adds cleanup jobs for the workflow scheduled to a particular site
-     * a best first search strategy is implemented based on the depth of the job
+     * a breadth first search strategy is implemented based on the depth of the job
      * in the workflow
      *
      * @param site the site ID
@@ -418,7 +418,7 @@ public class InPlace implements CleanupStrategy{
         }
         
         List<GraphNode> wfCleanupNodes = new LinkedList();//stores all the cleanup nodes added for the workflow
-        //start the best first cleanup job addition
+        //start the breadth first cleanup job addition
         for( int curP = mMaxDepth; curP >= 0 ; curP-- ){
             List<GraphNode> cleanupNodesPerLevel = new LinkedList();
 
