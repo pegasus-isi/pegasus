@@ -1048,19 +1048,6 @@ public class TransferEngine extends Engine {
     private void getFilesFromRC( DAXJob job, Collection searchFiles ){
         //dax appears in adag element
         String dax = null;
-
-        //go through all the job input files
-        //and set transfer flag to false
-        /*
-        for (Iterator<PegasusFile> it = job.getInputFiles().iterator(); it.hasNext();) {
-            PegasusFile pf = it.next();
-            //at the moment dax files are not staged in.
-            //remove from input set of files
-            //part of the reason is about how to handle where
-            //to run the DAGJob. We dont have much control over it.
-            it.remove();
-        }*/
-
         String lfn = job.getDAXLFN();
         
         PegasusFile daxFile = new PegasusFile( lfn );
@@ -1071,34 +1058,7 @@ public class TransferEngine extends Engine {
             job.getInputFiles().add( daxFile );
         }
         
-        /*
-        ReplicaLocation rl = mRCBridge.getFileLocs( lfn );
-
-        if (rl == null) { //flag an error
-            throw new RuntimeException(
-                    "TransferEngine.java: Can't determine a location to " +
-                    "transfer input file for DAX lfn " + lfn + " for job " +
-                    job.getName());
-        }
-
         
-        ReplicaCatalogEntry selLoc = mReplicaSelector.selectReplica( rl,
-                                                                     job.getSiteHandle(),
-                                                                     true );
-        String pfn = selLoc.getPFN();
-        //some extra checks to ensure paths
-        if( pfn.startsWith( File.separator ) ){
-            dax = pfn;
-        }
-        else if( pfn.startsWith( PegasusURL.FILE_URL_SCHEME ) ){
-            dax = new PegasusURL( pfn ).getPath();
-        }
-        */
-        /*
-        else{
-            throw new RuntimeException( "Invalid URL Specified for DAX Job " + job.getName() + " -> " + pfn );
-        }*/
-
         //add the dax to the argument
         StringBuffer arguments = new StringBuffer();
         arguments.append(job.getArguments()).
