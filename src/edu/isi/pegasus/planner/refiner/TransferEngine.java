@@ -1051,6 +1051,7 @@ public class TransferEngine extends Engine {
 
         //go through all the job input files
         //and set transfer flag to false
+        /*
         for (Iterator<PegasusFile> it = job.getInputFiles().iterator(); it.hasNext();) {
             PegasusFile pf = it.next();
             //at the moment dax files are not staged in.
@@ -1058,9 +1059,19 @@ public class TransferEngine extends Engine {
             //part of the reason is about how to handle where
             //to run the DAGJob. We dont have much control over it.
             it.remove();
-        }
+        }*/
 
         String lfn = job.getDAXLFN();
+        
+        PegasusFile daxFile = new PegasusFile( lfn );
+        if( !job.getInputFiles().contains( daxFile )){
+            //if the LFN is not specified as an input file in the DAX
+            //lets add it PM-667
+            daxFile.setTransferFlag( PegasusFile.TRANSFER_MANDATORY );
+            job.getInputFiles().add( daxFile );
+        }
+        
+        /*
         ReplicaLocation rl = mRCBridge.getFileLocs( lfn );
 
         if (rl == null) { //flag an error
@@ -1070,6 +1081,7 @@ public class TransferEngine extends Engine {
                     job.getName());
         }
 
+        
         ReplicaCatalogEntry selLoc = mReplicaSelector.selectReplica( rl,
                                                                      job.getSiteHandle(),
                                                                      true );
@@ -1079,18 +1091,21 @@ public class TransferEngine extends Engine {
             dax = pfn;
         }
         else if( pfn.startsWith( PegasusURL.FILE_URL_SCHEME ) ){
-//            dax = Utility.getAbsolutePath( pfn );
             dax = new PegasusURL( pfn ).getPath();
         }
+        */
+        /*
         else{
             throw new RuntimeException( "Invalid URL Specified for DAX Job " + job.getName() + " -> " + pfn );
-        }
+        }*/
 
         //add the dax to the argument
         StringBuffer arguments = new StringBuffer();
         arguments.append(job.getArguments()).
-                append(" --dax ").append(dax);
+                append(" --dax ").append( lfn );//append the lfn instead of the full path to the dax PM-667
         job.setArguments(arguments.toString());
+        
+        this.getFilesFromRC( (Job)job, searchFiles );
     }
 
     /**
