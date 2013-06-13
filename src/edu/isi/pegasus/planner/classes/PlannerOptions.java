@@ -275,6 +275,13 @@ public class PlannerOptions extends Data implements Cloneable{
      * the output directory 
      */
     private String mOutputDir;
+    
+     
+    /**
+     * The conf option passed to the planner pointing to the properties file.
+     */
+    private String mConfFile;
+    
 
     /**
      * Default Constructor.
@@ -320,6 +327,7 @@ public class PlannerOptions extends Data implements Cloneable{
         mShiwaBundle      = null;
         mInputDir         = null;
         mOutputDir        = null;
+        mConfFile         = null;
     }
 
     /**
@@ -723,6 +731,16 @@ public class PlannerOptions extends Data implements Cloneable{
 
     }
 
+    /**
+     * Returns the property file pointed to by the --conf option passed to the 
+     * planner
+     * 
+     * @return the conf option if passed, else null 
+     */
+    public String getConfFile(){
+        return mConfFile;
+    }
+    
     /**
      * Sets the authenticate flag to the value passed.
      *
@@ -1341,6 +1359,16 @@ public class PlannerOptions extends Data implements Cloneable{
 
     
     /**
+     * Sets the property file pointed to by the --conf option passed to the 
+     * planner
+     * 
+     * @param conf  the conf option if passed, else null 
+     */
+    public void setConfFile( String conf ){
+        mConfFile = conf;
+    }
+    
+    /**
      * Returns the textual description of all the options that were set for
      * the planner.
      *
@@ -1390,6 +1418,11 @@ public class PlannerOptions extends Data implements Cloneable{
      */
     public String toOptions(){
         StringBuffer sb = new StringBuffer();
+        
+        //the conf option if set always has to be the first one!
+        if( mConfFile != null ){
+            sb.append( " --conf " ).append( mConfFile );
+        }
 
         //the submit file dir
 //        if( mSubmitFileDir != null){ sb.append(" --dir ").append(mSubmitFileDir);}
@@ -1555,8 +1588,8 @@ public class PlannerOptions extends Data implements Cloneable{
     public String getCompleteOptions(){
         StringBuffer sb = new StringBuffer();
         sb./*append( this.toJVMOptions() ).append( " " ).*/
-           append( "--dax" ).append( " " ).append( this.getDAX() ).
-           append( this.toOptions() );
+           append( this.toOptions() ).
+           append( "--dax" ).append( " " ).append( this.getDAX() );
         
         return sb.toString();
     }
@@ -1632,6 +1665,7 @@ public class PlannerOptions extends Data implements Cloneable{
         pOpt.mPartitioningType = this.mPartitioningType;
         pOpt.mNumOfRescueTries = this.mNumOfRescueTries;
         pOpt.mOriginalArgumentString = this.mOriginalArgumentString;
+        pOpt.mConfFile       = this.mConfFile;
 
         //a shallow clone for forward options
         pOpt.mForwardOptions  = this.mForwardOptions;

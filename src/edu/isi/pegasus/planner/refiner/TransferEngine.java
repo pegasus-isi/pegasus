@@ -1048,49 +1048,24 @@ public class TransferEngine extends Engine {
     private void getFilesFromRC( DAXJob job, Collection searchFiles ){
         //dax appears in adag element
         String dax = null;
-
-        //go through all the job input files
-        //and set transfer flag to false
-        for (Iterator<PegasusFile> it = job.getInputFiles().iterator(); it.hasNext();) {
-            PegasusFile pf = it.next();
-            //at the moment dax files are not staged in.
-            //remove from input set of files
-            //part of the reason is about how to handle where
-            //to run the DAGJob. We dont have much control over it.
-            it.remove();
-        }
-
         String lfn = job.getDAXLFN();
-        ReplicaLocation rl = mRCBridge.getFileLocs( lfn );
-
-        if (rl == null) { //flag an error
-            throw new RuntimeException(
-                    "TransferEngine.java: Can't determine a location to " +
-                    "transfer input file for DAX lfn " + lfn + " for job " +
-                    job.getName());
+        
+        PegasusFile daxFile = new PegasusFile( lfn );
+        if( !job.getInputFiles().contains( daxFile )){
+            //if the LFN is not specified as an input file in the DAX
+            //lets add it PM-667
+            daxFile.setTransferFlag( PegasusFile.TRANSFER_MANDATORY );
+            job.getInputFiles().add( daxFile );
         }
-
-        ReplicaCatalogEntry selLoc = mReplicaSelector.selectReplica( rl,
-                                                                     job.getSiteHandle(),
-                                                                     true );
-        String pfn = selLoc.getPFN();
-        //some extra checks to ensure paths
-        if( pfn.startsWith( File.separator ) ){
-            dax = pfn;
-        }
-        else if( pfn.startsWith( PegasusURL.FILE_URL_SCHEME ) ){
-//            dax = Utility.getAbsolutePath( pfn );
-            dax = new PegasusURL( pfn ).getPath();
-        }
-        else{
-            throw new RuntimeException( "Invalid URL Specified for DAX Job " + job.getName() + " -> " + pfn );
-        }
-
+        
+        
         //add the dax to the argument
         StringBuffer arguments = new StringBuffer();
         arguments.append(job.getArguments()).
-                append(" --dax ").append(dax);
+                append(" --dax ").append( lfn );//append the lfn instead of the full path to the dax PM-667
         job.setArguments(arguments.toString());
+        
+        this.getFilesFromRC( (Job)job, searchFiles );
     }
 
     /**
