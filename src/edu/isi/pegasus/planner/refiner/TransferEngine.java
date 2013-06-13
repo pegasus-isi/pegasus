@@ -1058,11 +1058,43 @@ public class TransferEngine extends Engine {
             job.getInputFiles().add( daxFile );
         }
         
+
+        //update the dax argument with the direct path to the DAX file
+        //if present locally. This is to ensure that SUBDAXGenerator
+        //can figure out the path to the dag file that will be created for the 
+        //job. Else the dax job needs to have a --basename option passed.
+        ReplicaLocation rl = mRCBridge.getFileLocs( lfn );
+
+        if (rl == null) { //flag an error
+            throw new RuntimeException(
+                    "TransferEngine.java: Can't determine a location to " +
+                   "transfer input file for DAX lfn " + lfn + " for job " +
+                    job.getName());
+        }
+
+         
+        ReplicaCatalogEntry selLoc = mReplicaSelector.selectReplica( rl,
+                                                                     job.getSiteHandle(),
+                                                                     true );
+        String pfn = selLoc.getPFN();
+        //some extra checks to ensure paths
+        if( pfn.startsWith( File.separator ) ){
+            dax = pfn;
+        }
+        else if( pfn.startsWith( PegasusURL.FILE_URL_SCHEME ) ){
+            dax = new PegasusURL( pfn ).getPath();
+        }
         
+        if( dax == null ){
+            //append the lfn instead of the full path to the dax PM-667
+            //the user then needs to have a basename option set for the DAX job
+            dax = lfn;
+        }
+
         //add the dax to the argument
         StringBuffer arguments = new StringBuffer();
         arguments.append(job.getArguments()).
-                append(" --dax ").append( lfn );//append the lfn instead of the full path to the dax PM-667
+                append(" --dax ").append( dax );
         job.setArguments(arguments.toString());
         
         this.getFilesFromRC( (Job)job, searchFiles );
