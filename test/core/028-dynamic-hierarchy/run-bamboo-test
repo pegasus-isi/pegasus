@@ -29,7 +29,11 @@ echo "dax1.properties  $INNER_DAX_PROPERTIES site=local" > rc.data
 echo "dax1.rc  $INNER_DAX_RC site=local" >> rc.data
 echo "dax1.tc.text $INNER_DAX_TC site=local" >> rc.data
 echo "dax1.sites.xml $INNER_DAX_SC site=local" >> rc.data
-echo "inner2.dax  $TOP_DIR/inner2.dax site=local" >> rc.data
+echo "inner2.dax  $TOP_DIR/input/inner2.dax site=local" >> rc.data
+
+#copy the preexisting sample dax file
+cp sample_inner2.dax input/inner2.dax
+
 
 #create the replica catalog for the inner dax
 cat > f.a <<EOF
