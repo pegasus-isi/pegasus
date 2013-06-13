@@ -1,12 +1,11 @@
 #!/bin/bash
 
 set -e
-
 TOP_DIR=`pwd`
 
 # pegasus bin directory is needed to find keg
 BIN_DIR=`pegasus-config --bin`
-CONDOR_POOL_PEGASUS_HOME=`dirname $BIN_DIR`
+CONDOR_POOL_PEGASUS_HOME=/usr
 
 # build the dax generator
 PYTHONPATH=`pegasus-config --python`
@@ -79,10 +78,10 @@ tr level2::sleep {
 # making up the condor pool. path can be updated to a local path
 # on the nodes
 tr blackdiamond::generate{
-   site condorpool {
+   site CCG {
     pfn "$TOP_DIR/blackdiamond.py"     
     os "linux"
-    type "INSTALLED"
+    type "STAGEABLE"
    }
 }
 EOF
@@ -90,7 +89,7 @@ EOF
 #create the transformation catalog for inner dax
 # In this case the binary is keg, which is shipped with Pegasus, so we use
 # Assumption is that pegasus-keg is installed at same place on the submit host
-# and the nodes in the condorpool.
+# and the nodes in the CCG.
 cat > $INNER_DAX_TC <<EOF
 
 tr level2::sleep {   
@@ -102,25 +101,25 @@ tr level2::sleep {
 }
 
 tr diamond::preprocess:4.0{
-   site condorpool {
+   site local {
     pfn "$BIN_DIR/pegasus-keg"
     os "linux"
-    type "INSTALLED"
+    type "STAGEABLE"
    }
 }
 
 tr diamond::analyze:4.0{
-   site condorpool {
+   site local {
     pfn "$BIN_DIR/pegasus-keg"
     os "linux"
-    type "INSTALLED"
+    type "STAGEABLE"
    }
 }
 tr diamond::findrange:4.0{
-   site condorpool {
+   site local {
     pfn "$BIN_DIR/pegasus-keg"
     os "linux"
-    type "INSTALLED"
+    type "STAGEABLE"
    }
 }
 EOF
@@ -140,15 +139,17 @@ cat >sites.xml <<EOF
         <!-- <profile namespace="env" key="CONDOR_HOME">/opt/condor/7.8.8</profile>-->
     </site>
 
-    <site  handle="condorpool" arch="x86" os="LINUX">
-        <directory type="shared-scratch" path="$TOP_DIR/work/condorpool/scratch">
-            <file-server operation="all" url="file://$TOP_DIR/work/condorpool/scratch"/>
+    <site  handle="CCG" arch="x86" os="LINUX">
+        <grid  type="gt5" contact="obelix.isi.edu/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/>
+        <grid  type="gt5" contact="obelix.isi.edu/jobmanager-condor" scheduler="Condor" jobtype="compute"/>
+
+        <directory type="shared-scratch" path="/nfs/ccg4/scratch-6-months-purge/CCG/scratch">
+            <file-server operation="all" url="gsiftp://obelix.isi.edu/nfs/ccg4/scratch-6-months-purge/CCG/scratch"/>
         </directory>
-        <directory type="local-storage" path="$TOP_DIR/outputs/condorpool">
-            <file-server operation="all" url="file://$TOP_DIR/outputs/condorpool"/>
+        <directory type="local-storage" path="/nfs/ccg4/scratch-6-months-purge/CCG/outputs">
+            <file-server operation="all" url="gsiftp://obelix.isi.edu/nfs/ccg4/scratch-6-months-purge/CCG/outputs"/>
         </directory>
-        <profile namespace="pegasus" key="style" >condor</profile>
-        <profile namespace="condor" key="universe" >vanilla</profile>
+
         <profile namespace="env" key="PEGASUS_HOME">$CONDOR_POOL_PEGASUS_HOME</profile>
     </site>
 
@@ -162,7 +163,7 @@ cp sites.xml $INNER_DAX_SC
 # plan and submit the  workflow
 pegasus-plan \
     --conf pegasusrc \
-    --sites local,condorpool \
+    --sites local,CCG \
     --dir work \
     --output-site local \
     --dax outer.dax \
