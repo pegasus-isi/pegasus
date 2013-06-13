@@ -916,8 +916,9 @@ public class CPlanner extends Executable{
 
 
                 case '6':// conf
-                	//do nothing
-                	break;
+                    //PM-667 we need to track conf file option
+                    options.setConfFile( g.getOptarg() );
+                    break;
 
 
                 case 'd'://dax

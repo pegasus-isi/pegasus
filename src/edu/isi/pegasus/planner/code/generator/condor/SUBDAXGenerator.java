@@ -1203,10 +1203,22 @@ public class SUBDAXGenerator{
                   append( " -D" ).append( PegasusProperties.ROOT_WORKFLOW_UUID_PROPERTY_KEY ).
                   append( "=" ).append( rootUUID ).
                   //add other jvm options that user may have specified
-                  append( options.toJVMOptions() ).
-                  append(" --conf ").append( properties ).
-                  //put in all the other options.
-                  append( options.toOptions());
+                  append( options.toJVMOptions() );
+        
+        //PM-667
+        //the dax jobs can have a conf option specified on the command line
+        //if that is the case then don't inherit for the sub workflow 
+        if( options.getConfFile() != null  ){
+            mLogger.log( "Not inheriting properties from the outer level workflow. DAX Job " + job.getID() + 
+                        " already has a conf option specified " + options.getConfFile(),
+                          LogManager.DEBUG_MESSAGE_LEVEL );
+        }
+        else{
+            arguments.append(" --conf ").append( properties );
+        }
+       
+        //put in all the other options.
+        arguments.append( options.toOptions());
         
         //add the --dax option explicitly in the end
         arguments.append( " --dax " ).append( options.getDAX() );
