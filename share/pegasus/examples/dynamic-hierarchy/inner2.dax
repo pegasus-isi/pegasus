@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<adag xmlns="http://pegasus.isi.edu/schema/DAX" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.3.xsd" version="3.3" name="inner">
+	<job id="ID0000001" namespace="level2" name="sleep">
+		<argument>2</argument>
+	</job>
+	<job id="ID0000002" namespace="level2" name="sleep">
+		<argument>2</argument>
+	</job>
+	<child ref="ID0000002">
+		<parent ref="ID0000001"/>
+	</child>
+</adag>
