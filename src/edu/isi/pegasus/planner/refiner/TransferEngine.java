@@ -1053,9 +1053,10 @@ public class TransferEngine extends Engine {
         PegasusFile daxFile = new PegasusFile( lfn );
         if( !job.getInputFiles().contains( daxFile )){
             //if the LFN is not specified as an input file in the DAX
-            //lets add it PM-667
+            //lets add it PM-667 more of a sanity check.
             daxFile.setTransferFlag( PegasusFile.TRANSFER_MANDATORY );
             job.getInputFiles().add( daxFile );
+            searchFiles.add( daxFile );
         }
         
 
@@ -1087,21 +1088,19 @@ public class TransferEngine extends Engine {
         }
         else{
             //we also remove the daxFile from the input files for the job.
-            //as we have a local path to the DAX . 
-            boolean removed = job.getInputFiles().remove( daxFile );
-            if( removed ){
-                mLogger.log( "Removed file " + daxFile.getLFN()  + " from input files for job " + job.getID() ,
-                             LogManager.DEBUG_MESSAGE_LEVEL );
+            //and the searchFiles as we have a local path to the DAX . 
+            if( job.getInputFiles().contains( daxFile )){
+                 boolean removed = job.getInputFiles().remove( daxFile );
+                 logRemoval( job, daxFile,  "Job Input files ", removed );
             }
-            else{
-                //warn 
-                mLogger.log( "Unable to remove file " + daxFile.getLFN()  + " from input files for job " + job.getID() ,
-                             LogManager.WARNING_MESSAGE_LEVEL );
+            if( searchFiles.contains( daxFile ) ){
+                boolean removed = searchFiles.remove( daxFile );
+                logRemoval( job, daxFile,  "Job Search Files", removed );
             }
         }
 
         //add the dax to the argument
-        StringBuffer arguments = new StringBuffer();
+        StringBuilder arguments = new StringBuilder();
         arguments.append(job.getArguments()).
                 append(" --dax ").append( dax );
         job.setArguments(arguments.toString());
@@ -2016,6 +2015,34 @@ public class TransferEngine extends Engine {
         }
 
         return bypass;
+    }
+
+    /**
+     * Helped method for logging removal message. If removed is true, then logged on
+     * debug else logged as warning.
+     * 
+     * @param job       the job 
+     * @param file      the file to be removed
+     * @param prefix    prefix for log message
+     * @param removed   whether removal was successful or not.
+     * 
+     */
+    private void logRemoval( Job job, PegasusFile file, String prefix, boolean removed) {
+        StringBuilder message = new StringBuilder();
+        message.append( prefix ).append( " : " );
+        if( removed ){
+            message.append( "Removed file " ).append( file.getLFN() ).append( " for job " ).
+                    append( job.getID() );
+                
+            mLogger.log( message.toString() , LogManager.DEBUG_MESSAGE_LEVEL );
+        }
+        else{
+            //warn
+            message.append( "Unable to remove file " ).append( file.getLFN() ).append( " for job " ).
+                    append( job.getID() );
+                
+            mLogger.log( message.toString() , LogManager.WARNING_MESSAGE_LEVEL );
+        }
     }
 
 
