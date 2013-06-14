@@ -16,8 +16,7 @@ __author__ = 'Rajiv Mayani'
 
 from time import localtime, strftime
 
-from flask import request, render_template, url_for 
-from flask.helpers import json
+from flask import request, render_template, url_for, json 
 from sqlalchemy.orm.exc import NoResultFound
 
 from Pegasus.netlogger.analysis.error.Error import StampedeDBNotFoundError
