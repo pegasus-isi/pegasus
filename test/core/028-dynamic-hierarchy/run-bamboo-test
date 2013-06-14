@@ -82,9 +82,10 @@ tr level2::sleep {
 # making up the condor pool. path can be updated to a local path
 # on the nodes
 tr blackdiamond::generate{
-   site CCG {
+   site local {
     pfn "$TOP_DIR/blackdiamond.py"     
     os "linux"
+    arch "x86_64"
     type "STAGEABLE"
    }
 }
@@ -108,6 +109,7 @@ tr diamond::preprocess:4.0{
    site local {
     pfn "$BIN_DIR/pegasus-keg"
     os "linux"
+    arch "x86_64"
     type "STAGEABLE"
    }
 }
@@ -116,6 +118,7 @@ tr diamond::analyze:4.0{
    site local {
     pfn "$BIN_DIR/pegasus-keg"
     os "linux"
+    arch "x86_64"
     type "STAGEABLE"
    }
 }
@@ -123,6 +126,7 @@ tr diamond::findrange:4.0{
    site local {
     pfn "$BIN_DIR/pegasus-keg"
     os "linux"
+    arch "x86_64"
     type "STAGEABLE"
    }
 }
@@ -143,7 +147,7 @@ cat >sites.xml <<EOF
         <!-- <profile namespace="env" key="CONDOR_HOME">/opt/condor/7.8.8</profile>-->
     </site>
 
-    <site  handle="CCG" arch="x86" os="LINUX">
+    <site  handle="CCG" arch="x86_64" os="LINUX">
         <grid  type="gt5" contact="obelix.isi.edu/jobmanager-fork" scheduler="Fork" jobtype="auxillary"/>
         <grid  type="gt5" contact="obelix.isi.edu/jobmanager-condor" scheduler="Condor" jobtype="compute"/>
 
