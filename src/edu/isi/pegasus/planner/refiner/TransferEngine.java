@@ -1065,25 +1065,20 @@ public class TransferEngine extends Engine {
         //job. Else the dax job needs to have a --basename option passed.
         ReplicaLocation rl = mRCBridge.getFileLocs( lfn );
 
-        if (rl == null) { //flag an error
-            throw new RuntimeException(
-                    "TransferEngine.java: Can't determine a location to " +
-                   "transfer input file for DAX lfn " + lfn + " for job " +
-                    job.getName());
-        }
-
+        if (rl != null) { 
          
-        ReplicaCatalogEntry selLoc = mReplicaSelector.selectReplica( rl,
-                                                                     job.getSiteHandle(),
-                                                                     true );
-        String pfn = selLoc.getPFN();
-        //some extra checks to ensure paths
-        if( pfn.startsWith( File.separator ) ){
-            dax = pfn;
-        }
-        else if( pfn.startsWith( PegasusURL.FILE_URL_SCHEME ) ){
-            dax = new PegasusURL( pfn ).getPath();
-        }
+	    ReplicaCatalogEntry selLoc = mReplicaSelector.selectReplica( rl,
+									 job.getSiteHandle(),
+									 true );
+	    String pfn = selLoc.getPFN();
+	    //some extra checks to ensure paths
+	    if( pfn.startsWith( File.separator ) ){
+		dax = pfn;
+	    }
+	    else if( pfn.startsWith( PegasusURL.FILE_URL_SCHEME ) ){
+		dax = new PegasusURL( pfn ).getPath();
+	    }
+	}
         
         if( dax == null ){
             //append the lfn instead of the full path to the dax PM-667
