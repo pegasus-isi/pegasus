@@ -1085,6 +1085,20 @@ public class TransferEngine extends Engine {
             //the user then needs to have a basename option set for the DAX job
             dax = lfn;
         }
+        else{
+            //we also remove the daxFile from the input files for the job.
+            //as we have a local path to the DAX . 
+            boolean removed = job.getInputFiles().remove( daxFile );
+            if( removed ){
+                mLogger.log( "Removed file " + daxFile.getLFN()  + " from input files for job " + job.getID() ,
+                             LogManager.DEBUG_MESSAGE_LEVEL );
+            }
+            else{
+                //warn 
+                mLogger.log( "Unable to remove file " + daxFile.getLFN()  + " from input files for job " + job.getID() ,
+                             LogManager.WARNING_MESSAGE_LEVEL );
+            }
+        }
 
         //add the dax to the argument
         StringBuffer arguments = new StringBuffer();
