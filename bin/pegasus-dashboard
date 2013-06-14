@@ -65,8 +65,7 @@ from Pegasus.tools import utils
 
 # Flask modules
 try:
-    from flask import Flask, request, render_template, url_for, send_from_directory
-    from flask.helpers import json
+    from flask import Flask, request, render_template, url_for, send_from_directory, json
     from jinja2 import FileSystemLoader
 except ImportError:
     print '''Running the Dashboard requires the following packages be installed and be available in the PYTHONPATH
