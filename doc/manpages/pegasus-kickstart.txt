@@ -277,6 +277,11 @@ This flag causes kickstart to skip tracing the child process and omit the
 <proc> element. This flag only exists when kickstart is compiled for
 Linux.
 
+*-q*::
+This flag causes kickstart to omit the <data> part of the <statcall> records
+when the job exits successfully. This is designed to reduce the size of the
+output logs for large workflows.
+
 'app'::
 The path to the application has to be completely specified. The application 
 is a mandatory option.
