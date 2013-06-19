@@ -472,14 +472,7 @@ addLFNToStatInfo( StatInfo* info, const char* lfn )
 
 size_t
 printXMLStatInfo(FILE *out, int indent, const char* tag, const char* id,
-                 const StatInfo* info)
-/* purpose: XML format a stat info record into a given stream
- * paramtr: out (IO): the stream
- *          tag (IN): name of element to generate
- *          id (IN): id attribute, use NULL to not generate
- *          info (IN): stat info to print.
- * returns: number of characters put into buffer (buffer length)
- */
+                 const StatInfo* info, int includeData)
 {
   char* real = NULL;
 
@@ -618,8 +611,8 @@ printXMLStatInfo(FILE *out, int indent, const char* tag, const char* id,
   }
 
   /* data section from stdout and stderr of application */
-  if (info->source == IS_TEMP && info->error == 0 && info->info.st_size &&
-      data_section_size > 0) {
+  if (includeData && info->source == IS_TEMP && info->error == 0 &&
+      info->info.st_size && data_section_size > 0) {
     size_t dsize = data_section_size;
     size_t fsize = info->info.st_size;
     fprintf(out, "%*s<data%s", indent+2, "",

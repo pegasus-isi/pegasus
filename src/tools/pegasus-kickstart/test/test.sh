@@ -7,19 +7,24 @@ function run_test {
     "$@"
     if [ $? -eq 0 ]; then
         echo "OK"
+        rm test.err test.out
         return 0
     else
+        cat test.err test.out
         echo "ERROR"
+        rm test.err test.out
         exit 1
     fi
 }
 
 function kickstart {
-    OUTPUT=$($KICKSTART "$@")
+    $KICKSTART "$@" >test.out 2>test.err
     RC=$?
-    if [ $RC -eq 0 ]; then
-        echo "$OUTPUT" | xmllint - >/dev/null
-        RC=$?
+    xmllint test.out >/dev/null
+    if [ $? -ne 0 ]; then
+        cat test.err test.out
+        echo "Invalid XML"
+        exit 1
     fi
     return $RC
 }
@@ -99,7 +104,7 @@ END
 function test_toolongarg_file {
     cat > toolong.arg <<END
 /bin/echo
-$(dd if=/dev/zero of=/dev/stdout bs=128k count=1 2>/dev/null | tr '\0' 'c')
+$(dd if=/dev/zero of=/dev/stdout bs=129k count=1 2>/dev/null | tr '\0' 'c')
 END
     kickstart -I toolong.arg
     if [ $? -eq 0 ]; then
@@ -109,6 +114,39 @@ END
     fi
 }
 
+function test_quiet {
+    kickstart -q ./testquiet.sh
+    RC=$?
+    if [ $RC -ne 0 ]; then
+        return $RC
+    fi
+    if [[ $(cat test.out) =~ "Some message on stderr" ]]; then
+        echo "Expected no <data> for stderr"
+        return 1
+    fi
+    if [[ $(cat test.out) =~ "Some message on stdout" ]]; then
+        echo "Expected no <data> for stdout"
+        return 1
+    fi
+    return 0
+}
+
+function test_quiet_fail {
+    kickstart -q ./testquiet.sh fail
+    RC=$?
+    if [ $RC -eq 0 ]; then
+        return 1
+    fi
+    if ! [[ $(cat test.out) =~ "Some message on stderr" ]]; then
+        echo "Expected <data> for stderr"
+        return 1
+    fi
+    if ! [[ $(cat test.out) =~ "Some message on stdout" ]]; then
+        echo "Expected <data> for stdout"
+        return 1
+    fi
+    return 0
+}
 # RUN THE TESTS
 run_test lotsofprocs
 run_test lotsofprocs_buffer
@@ -125,4 +163,6 @@ run_test test_executable
 run_test test_longarg
 run_test test_longarg_file
 run_test test_toolongarg_file
+run_test test_quiet
+run_test test_quiet_fail
 

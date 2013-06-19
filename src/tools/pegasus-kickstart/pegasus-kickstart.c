@@ -196,6 +196,7 @@ helpMe( const AppInfo* run )
 " -F\tAttempt to fsync kickstart's stdout at exit (should not be necessary).\n"
 " -f\tPrint full information including <resource>, <environment> and \n"
 "   \t<statcall>. If the job fails, then -f is implied.\n"
+" -q\tOmit <data> for <statcall> (stdout, stderr) if the job succeeds.\n"
 #ifdef HAS_PTRACE
 " -t\tEnable resource usage tracing\n"
 #endif
@@ -451,6 +452,9 @@ main( int argc, char* argv[] )
         deleteStatInfo( &appinfo.output );
       temp = ( argv[i][2] ? &argv[i][2] : argv[++i] );
       handleOutputStream( &appinfo.output, temp, STDOUT_FILENO );
+      break;
+    case 'q':
+      appinfo.omitData = 1;
       break;
     case 'R':
       appinfo.sitehandle = noquote( argv[i][2] ? &argv[i][2] : argv[++i] );

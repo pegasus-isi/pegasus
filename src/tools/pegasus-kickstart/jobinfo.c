@@ -336,7 +336,7 @@ printXMLJobInfo(FILE *out, int indent, const char* tag,
   fprintf(out, "</status>\n");
 
   /* <executable> */
-  printXMLStatInfo(out, indent+2, "statcall", NULL, &job->executable);
+  printXMLStatInfo(out, indent+2, "statcall", NULL, &job->executable, 1);
 
 #ifdef WITH_NEW_ARGS
   /* alternative 1: new-style <argument-vector> */

@@ -60,6 +60,7 @@ convert2XML( FILE *out, const AppInfo* run )
   struct passwd* user = wrap_getpwuid(getuid());
   struct group* group = wrap_getgrgid(getgid());
 
+
 #define XML_SCHEMA_URI "http://pegasus.isi.edu/schema/invocation"
 #define XML_SCHEMA_VERSION "2.2"
 
@@ -165,27 +166,31 @@ convert2XML( FILE *out, const AppInfo* run )
   if (!run->noHeader)
     printXMLMachineInfo(out, 2, "machine", &run->machine);
 
+  /* We include <data> in the <statcall>s if the job failed, or if the user
+   * did not specify -q */
+  int includeData = run->status || !run->omitData;
+
   /* User-specified initial and final arbitrary <statcall> records */
   if (run->icount && run->initial)
     for (i=0; i<run->icount; ++i)
-      printXMLStatInfo(out, 2, "statcall", "initial", &run->initial[i]);
+      printXMLStatInfo(out, 2, "statcall", "initial", &run->initial[i], includeData);
   if (run->fcount && run->final)
     for (i=0; i<run->fcount; ++i)
-      printXMLStatInfo(out, 2, "statcall", "final", &run->final[i]);
+      printXMLStatInfo(out, 2, "statcall", "final", &run->final[i], includeData);
 
   /* Default <statcall> records */
-  printXMLStatInfo(out, 2, "statcall", "stdin", &run->input);
+  printXMLStatInfo(out, 2, "statcall", "stdin", &run->input, includeData);
   updateStatInfo(&(((AppInfo*) run)->output));
-  printXMLStatInfo(out, 2, "statcall", "stdout", &run->output);
+  printXMLStatInfo(out, 2, "statcall", "stdout", &run->output, includeData);
   updateStatInfo(&(((AppInfo*) run)->error));
-  printXMLStatInfo(out, 2, "statcall", "stderr", &run->error);
+  printXMLStatInfo(out, 2, "statcall", "stderr", &run->error, includeData);
 
   /* If the job failed, or if the user requested the full kickstart record */
   if (run->status || run->fullInfo) {
     /* Extra <statcall> records */
-    printXMLStatInfo(out, 2, "statcall", "gridstart", &run->gridstart);
+    printXMLStatInfo(out, 2, "statcall", "gridstart", &run->gridstart, includeData);
     updateStatInfo(&(((AppInfo*) run)->logfile));
-    printXMLStatInfo(out, 2, "statcall", "logfile", &run->logfile);
+    printXMLStatInfo(out, 2, "statcall", "logfile", &run->logfile, includeData);
 
     /* <environment> */
     if (run->envp && run->envc) {
