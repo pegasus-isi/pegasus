@@ -1132,7 +1132,8 @@ try:
     wf_retry_dict = shelve.open(wf_retry_fn)
     atexit.register(close_wf_retry_file)
 except:
-    logger.critical("cannot create persistent storage file for sub-workflow retry information... exiting...")
+    logger.critical("cannot create persistent storage file for sub-workflow retry information... exiting... %s" %wf_retry_fn)
+    logger.error(traceback.format_exc())
     sys.exit(1)
 
 # Open notifications' log file
