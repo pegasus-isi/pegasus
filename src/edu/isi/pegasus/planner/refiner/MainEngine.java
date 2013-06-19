@@ -279,7 +279,7 @@ public class MainEngine
             mReducedDag = cEngine.addCleanupJobs( mReducedDag );
             mLogger.logEventCompletion();
             
-            //for the non pegasus lite case we add the clenaup nodes
+            //for the non pegasus lite case we add the cleanup nodes
             //for the worker package.
             if( !mProps.executeOnWorkerNode() ){
                  //add the cleanup of setup jobs if required
