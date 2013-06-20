@@ -59,6 +59,7 @@ class Parser:
         self._parsing_data = False
         self._parsing_cwd = False
         self._line_number = 0
+        self._record_number = 0
         self._arguments = ""
         self._stdout = ""
         self._stderr = ""
@@ -106,6 +107,9 @@ class Parser:
 
         #valid token that is parsed
         token = ""
+
+        self._record_number += 1
+        logger.debug( "***** Started reading record number %d from kickstart file %s" %( self._record_number, self._kickstart_output_file))
 
         # First, we find the beginning <invocation xmlns....
         while True:
@@ -181,7 +185,7 @@ class Parser:
                 # End of file, record not found
                 return None
             buffer = buffer + line
-            if buffer.find("</invocation>") > 0:
+            if line.find("</invocation>") >= 0:
                 break
 
         # Now, we got it, let's make sure
@@ -190,6 +194,8 @@ class Parser:
             return ""
 
         end = end + len("</invocation>")
+        logger.debug( "***** Finished reading record number %d from kickstart file %s" %( self._record_number, self._kickstart_output_file))
+
         return buffer[:end]
 
     def is_invocation_record(self, buffer=''):
@@ -478,9 +484,10 @@ class Parser:
         if self.open() == False:
             return my_reply
 
+        self._record_number = 0
         # Read first record
         my_buffer = self.read_record()
-        
+
         # Loop while we still have record to read
         while my_buffer is not None:
             if self.is_invocation_record(my_buffer) == True:
