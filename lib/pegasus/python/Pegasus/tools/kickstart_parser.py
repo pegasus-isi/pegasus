@@ -179,24 +179,31 @@ class Parser:
             return ""
 
         # Ok, now continue reading the file until we get a full record
+        buffer = [buffer]
+
         while True:
             line = self._fh.readline()
             if line == '':
                 # End of file, record not found
                 return None
-            buffer = buffer + line
+            #buffer = buffer + line
+            buffer.append( line )
             if line.find("</invocation>") >= 0:
                 break
 
         # Now, we got it, let's make sure
-        end = buffer.find("</invocation>")
+        end = line.find("</invocation>")
         if end == -1:
             return ""
 
-        end = end + len("</invocation>")
-        logger.debug( "***** Finished reading record number %d from kickstart file %s" %( self._record_number, self._kickstart_output_file))
 
-        return buffer[:end]
+        #end = end + len("</invocation>")
+        invocation = "".join(buffer)
+        #print invocation
+        logger.debug( "***** Finished reading record number %d from kickstart file %s" %( self._record_number, self._kickstart_output_file))
+        return invocation
+        #return buffer[:end]
+
 
     def is_invocation_record(self, buffer=''):
         """
