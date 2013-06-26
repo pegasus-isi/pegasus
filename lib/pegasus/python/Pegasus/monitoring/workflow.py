@@ -92,6 +92,7 @@ class Workflow:
 
         try:
             # Send event to corresponding sink
+            logger.debug( "Sending record to DB %s,%s" %(event, kwargs))
             self._sink.send(event, kwargs)
         except:
             # Error sending this event... disable the sink from now on...
@@ -1669,7 +1670,9 @@ class Workflow:
             # Parsing the output file resulted in some info... let's parse it
 
             # Add job information to the Job class.
+            logger.info( "Starting extraction of job_info from job output file %s " %my_job_output_fn )
             my_invocation_found = my_job.extract_job_info(self._run_dir, my_output)
+            logger.info( "Completed extraction of job_info from job output file %s " %my_job_output_fn )
 
             if my_invocation_found:
                 # Loop through all records
