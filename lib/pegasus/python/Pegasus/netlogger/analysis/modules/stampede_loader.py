@@ -338,6 +338,8 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
             s = time.time()
         
         end_event = []
+
+        self.log.debug( 'batch_events_sizes', batch_event_size=len(self._batch_cache['batch_events']), update_event_size=len(self._batch_cache['update_events']))
         
         for event in self._batch_cache['batch_events']:
             if event.event == 'stampede.xwf.end':
