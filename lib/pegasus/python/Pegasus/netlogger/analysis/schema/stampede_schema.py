@@ -16,6 +16,7 @@ except ImportError, e:
 
 import time
 import warnings
+import sys
 
 CURRENT_SCHEMA_VERSION = 4.0
         
@@ -230,7 +231,7 @@ def initializeToPegasusDB(db, metadata, kw={}):
     try:
         orm.mapper(Job, st_job, properties = {
                 'child_job_instance':relation(JobInstance, backref='st_job', cascade='all, delete-orphan',
-                    passive_deletes=True, lazy=False)
+                    passive_deletes=True, lazy=True)
             }
         )
     except exc.ArgumentError:
@@ -287,10 +288,13 @@ def initializeToPegasusDB(db, metadata, kw={}):
     
     try:
         orm.mapper(JobInstance, st_job_instance, properties = {
+                #PM-712 don't want merges to happen to invocation table .
+                #setting lazy = false leads to a big join query when a job_instance is updated
+                #with the postscript status.
                 'child_tsk':relation(Invocation, backref='st_job_instance', cascade='all, delete-orphan',
-                    passive_deletes=True, lazy=False),
+                    passive_deletes=True, lazy=True),
                 'child_jst':relation(Jobstate, backref='st_job_instance', cascade='all, delete-orphan',
-                    passive_deletes=True, lazy=False),
+                    passive_deletes=True, lazy=True),
             }
         )
     except exc.ArgumentError:
