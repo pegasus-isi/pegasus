@@ -370,12 +370,20 @@ main( int argc, char* argv[] )
     j = i;
     switch ( argv[i][1] ) {
     case 'B':
+      if (!argv[i][2] && argc <= i+1) {
+          debugmsg( "ERROR: -B argument missing\n");
+          return 127;
+      }
       temp = argv[i][2] ? &argv[i][2] : argv[++i];
       m = strtoul( temp, 0, 0 );
       /* limit max <data> size to 64 MB for each. */
       if ( m < 67108863ul ) data_section_size = m;
       break;
     case 'e':
+      if (!argv[i][2] && argc <= i+1) {
+          debugmsg( "ERROR: -e argument missing\n");
+          return 127;
+      }
       if ( appinfo.error.source != IS_INVALID )
         deleteStatInfo( &appinfo.error );
       temp = ( argv[i][2] ? &argv[i][2] : argv[++i] );
@@ -390,6 +398,10 @@ main( int argc, char* argv[] )
       appinfo.isPrinted=1;
       return 0;
     case 'i':
+      if (!argv[i][2] && argc <= i+1) {
+          debugmsg( "ERROR: -i argument missing\n");
+          return 127;
+      }
       if ( appinfo.input.source != IS_INVALID )
         deleteStatInfo( &appinfo.input );
       temp = argv[i][2] ? &argv[i][2] : argv[++i];
@@ -417,6 +429,11 @@ main( int argc, char* argv[] )
           return 127;
       }
 
+      if (!argv[i][2] && argc <= i+1) {
+          debugmsg( "ERROR: -I argument missing\n");
+          return 127;
+      }
+
       /* invoke application and args from given file */
       temp = argv[i][2] ? &argv[i][2] : argv[++i];
       if ( readFromFile( temp, &argv, &argc, &i, j ) == -1 ) {
@@ -430,6 +447,10 @@ main( int argc, char* argv[] )
       keeploop = 0;
       break;
     case 'l':
+      if (!argv[i][2] && argc <= i+1) {
+          debugmsg( "ERROR: -l argument missing\n");
+          return 127;
+      }
       if ( appinfo.logfile.source != IS_INVALID )
         deleteStatInfo( &appinfo.logfile );
       temp = argv[i][2] ? &argv[i][2] : argv[++i];
@@ -439,15 +460,31 @@ main( int argc, char* argv[] )
         initStatInfoFromName( &appinfo.logfile, temp, O_WRONLY | O_CREAT | O_APPEND, 2 );
       break;
     case 'L':
+      if (!argv[i][2] && argc <= i+1) {
+          debugmsg( "ERROR: -L argument missing\n");
+          return 127;
+      }
       appinfo.wf_label = noquote( argv[i][2] ? &argv[i][2] : argv[++i] );
       break;
     case 'n':
+      if (!argv[i][2] && argc <= i+1) {
+          debugmsg( "ERROR: -n argument missing\n");
+          return 127;
+      }
       appinfo.xformation = noquote( argv[i][2] ? &argv[i][2] : argv[++i] );
       break;
     case 'N':
+      if (!argv[i][2] && argc <= i+1) {
+          debugmsg( "ERROR: -N argument missing\n");
+          return 127;
+      }
       appinfo.derivation = noquote( argv[i][2] ? &argv[i][2] : argv[++i] );
       break;
     case 'o':
+      if (!argv[i][2] && argc <= i+1) {
+          debugmsg( "ERROR: -o argument missing\n");
+          return 127;
+      }
       if ( appinfo.output.source != IS_INVALID )
         deleteStatInfo( &appinfo.output );
       temp = ( argv[i][2] ? &argv[i][2] : argv[++i] );
@@ -457,9 +494,17 @@ main( int argc, char* argv[] )
       appinfo.omitData = 1;
       break;
     case 'R':
+      if (!argv[i][2] && argc <= i+1) {
+          debugmsg( "ERROR: -R argument missing\n");
+          return 127;
+      }
       appinfo.sitehandle = noquote( argv[i][2] ? &argv[i][2] : argv[++i] );
       break;
     case 'S':
+      if (!argv[i][2] && argc <= i+1) {
+          debugmsg( "ERROR: -S argument missing\n");
+          return 127;
+      }
       temp = argv[i][2] ? &argv[i][2] : argv[++i];
       if ( temp[0] == '@' ) {
         /* list-of-filenames file */
@@ -474,6 +519,10 @@ main( int argc, char* argv[] )
       }
       break;
     case 's':
+      if (!argv[i][2] && argc <= i+1) {
+          debugmsg( "ERROR: -s argument missing\n");
+          return 127;
+      }
       temp = argv[i][2] ? &argv[i][2] : argv[++i];
       if ( temp[0] == '@' ) {
         /* list-of-filenames file */
@@ -488,16 +537,28 @@ main( int argc, char* argv[] )
       }
       break;
     case 'T':
+      if (!argv[i][2] && argc <= i+1) {
+          debugmsg( "ERROR: -T argument missing\n");
+          return 127;
+      }
       appinfo.wf_stamp = noquote( argv[i][2] ? &argv[i][2] : argv[++i] );
       break;
     case 't':
       appinfo.enableTracing++;
       break;
     case 'w':
+      if (!argv[i][2] && argc <= i+1) {
+          debugmsg( "ERROR: -w argument missing\n");
+          return 127;
+      }
       workdir = noquote( argv[i][2] ? &argv[i][2] : argv[++i] );
       createDir = 0;
       break;
     case 'W':
+      if (!argv[i][2] && argc <= i+1) {
+          debugmsg( "ERROR: -W argument missing\n");
+          return 127;
+      }
       workdir = noquote( argv[i][2] ? &argv[i][2] : argv[++i] );
       createDir = 1;
       break;
