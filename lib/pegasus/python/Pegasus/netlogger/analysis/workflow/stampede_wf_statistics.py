@@ -16,7 +16,7 @@ class StampedeWorkflowStatistics(SQLAlchemyInit, DoesLogging):
         DoesLogging.__init__(self)
         try:
             SQLAlchemyInit.__init__(self, connString, initializeToPegasusDB)
-        except exceptions.OperationalError, e:
+        except exc.OperationalError, e:
             self.log.error('init', msg='%s' % ErrorStrings.get_init_error(e))
             raise StampedeDBNotFoundError
 

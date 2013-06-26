@@ -66,7 +66,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         # a function from the stampede_schema module.
         try:
             SQLAlchemyInit.__init__(self, connString, initializeToPegasusDB, **_kw)
-        except exceptions.OperationalError, e:
+        except exc.OperationalError, e:
             self.log.error('init', msg='%s' % ErrorStrings.get_init_error(e))
             raise RuntimeError
 
@@ -174,13 +174,13 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
             else:
                 self.log.error('process', 
                     msg='no handler for event type "%s" defined' % linedata['event'])
-        except exceptions.IntegrityError, e:
+        except exc.IntegrityError, e:
             # This is raised when an attempted insert violates the
             # schema (unique indexes, etc).
             self.log.error('process',
                 msg='Insert failed for event "%s" : %s' % (linedata['event'], e))
             self.session.rollback()
-        except exceptions.OperationalError, e:
+        except exc.OperationalError, e:
             self.log.error('process', msg='Connection seemingly lost - attempting to refresh')
             self.session.rollback()
             self.check_connection()
@@ -300,14 +300,14 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         self.log.debug('check_connection.start')
         try:
             self.session.connection().closed
-        except exceptions.OperationalError, e:
+        except exc.OperationalError, e:
             try:
                 if not self.session.is_active:
                     self.session.rollback()
                 self.log.error('check_connection', msg='Lost connection - attempting reconnect')
                 time.sleep(5)
                 self.session.connection().connect()
-            except exceptions.OperationalError, e:
+            except exc.OperationalError, e:
                 self.check_connection(sub=True)
             if not sub:
                 self.log.warn('check_connection', msg='Connection re-established')
@@ -357,12 +357,12 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
                 
         try:
             self.session.commit()
-        except exceptions.IntegrityError, e:
+        except exc.IntegrityError, e:
             self.log.error('batch_flush', 
                 msg='Integrity error on batch flush: %s - batch will need to be committed per-event which will take longer' % e)
             self.session.rollback()
             self.hard_flush(batch_flush=False)
-        except exceptions.OperationalError, e:
+        except exc.OperationalError, e:
             self.log.error('batch_flush',
                 msg='Connection problem during commit: %s - reattempting batch' % e)
             self.session.rollback()
@@ -401,7 +401,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
             else:
                 event.commit_to_db(self.session)
             self.session.expunge(event)
-        except exceptions.IntegrityError, e:
+        except exc.IntegrityError, e:
             self.log.error('individual_commit', msg='Insert failed for event %s : %s' % (event,e))
             self.session.rollback()
             

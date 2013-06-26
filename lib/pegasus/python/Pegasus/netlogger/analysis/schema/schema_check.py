@@ -5,7 +5,6 @@ Stampede schema.
 __rcsid__ = "$Id: schema_check.py 30802 2012-03-07 17:01:34Z mgoode $"
 __author__ = "Monte Goode"
 
-import exceptions
 
 from Pegasus.netlogger.analysis.modules._base import SQLAlchemyInit, dsn_dialect
 from Pegasus.netlogger.analysis.schema.stampede_schema import *
@@ -34,7 +33,7 @@ class ConnHandle(SQLAlchemyInit, DoesLogging):
                 _kw[dialect]['mysql_engine'] = mysql_engine
         try:
             SQLAlchemyInit.__init__(self, connString, initializeToPegasusDB, **_kw)
-        except exceptions.OperationalError, e:
+        except exc.OperationalError, e:
             self.log.error('init', msg='%s' % ErrorStrings.get_init_error(e))
             raise RuntimeError
         pass
