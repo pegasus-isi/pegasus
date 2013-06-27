@@ -1114,16 +1114,14 @@ sub condor_q(\%\%\@;%) {
 				$jobref->{$id} = {%db};
 
 				# Add job belonging to a dagman to %dag
-				# A dagman job will always be started prior to the job
-				# it starts, thus the (condor) job for the DAGMan exists
-				# for alive DAGMans.
-				if (   exists $db{dagmanjobid}
-					&& exists $jobref->{ $db{dagmanjobid} } )
-				{
+				if ( exists $db{dagmanjobid} ) {
+					# In HTConodor 8 and above, we might see a child before
+					# the dag parent in the condor_q -l output
+					$dagref->{ $db{dagmanjobid} } = []
+						unless exists $dagref->{ $db{dagmanjobid} };
 					push( @{ $dagref->{ $db{dagmanjobid} } }, $id );
 				}
 				else {
-
 					# we need this branch for Condor jobs not managed by
 					# DAGMan, or for Condor jobs whose parent DAGMan died.
 					$dagref->{$id} = [] unless exists $dagref->{$id};
