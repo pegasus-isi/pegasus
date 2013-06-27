@@ -147,6 +147,17 @@ function test_quiet_fail {
     fi
     return 0
 }
+
+function test_missing_args {
+    for a in i o e l n N R B L T I w W s S; do
+        kickstart -$a
+        if [ $? -ne 127 ]; then
+            echo "ERROR on missing argument for -$a"
+            return 1
+        fi
+    done
+}
+
 # RUN THE TESTS
 run_test lotsofprocs
 run_test lotsofprocs_buffer
@@ -165,4 +176,5 @@ run_test test_longarg_file
 run_test test_toolongarg_file
 run_test test_quiet
 run_test test_quiet_fail
+run_test test_missing_args
 
