@@ -56,14 +56,14 @@ cat >sites.xml <<EOF
        <head-fs>
             <scratch>
                 <shared>
-                    <file-server protocol="gsiftp" url="gsiftp://cartman.isi.edu" mount-point="/nfs/ccg3/scratch/bamboo/scratch"/>
-                    <internal-mount-point mount-point="/nfs/ccg3/scratch/bamboo/scratch"/>
+                    <file-server protocol="gsiftp" url="gsiftp://cartman.isi.edu" mount-point="/nfs/ccg4/scratch-6-months-purge/bamboo/scratch"/>
+                    <internal-mount-point mount-point="/nfs/ccg4/scratch-6-months-purge/bamboo/scratch"/>
                 </shared>
             </scratch>
             <storage>
                 <shared>
-                    <file-server protocol="gsiftp" url="gsiftp://cartman.isi.edu" mount-point="/nfs/ccg3/scratch/bamboo/outputs"/>
-                    <internal-mount-point mount-point="/nfs/ccg3/scratch/bamboo/outputs"/>
+                    <file-server protocol="gsiftp" url="gsiftp://cartman.isi.edu" mount-point="/nfs/ccg4/scratch-6-months-purge/bamboo/outputs"/>
+                    <internal-mount-point mount-point="/nfs/ccg4/scratch-6-months-purge/bamboo/outputs"/>
                 </shared>
             </storage>
         </head-fs>
