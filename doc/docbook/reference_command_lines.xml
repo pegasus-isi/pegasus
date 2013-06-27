@@ -7,6 +7,9 @@
   <xi:include href="manpage.pegasus-analyzer.xml"
               xmlns:xi="http://www.w3.org/2001/XInclude" />
 
+  <xi:include href="manpage.pegasus-archive.xml"
+              xmlns:xi="http://www.w3.org/2001/XInclude" />
+
   <xi:include href="manpage.pegasus-cleanup.xml"
               xmlns:xi="http://www.w3.org/2001/XInclude" />
 

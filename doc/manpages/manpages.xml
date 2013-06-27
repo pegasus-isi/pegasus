@@ -5,6 +5,7 @@
     <title>Man Pages</title>
     
     <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="pegasus-analyzer.xml"/>
+    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="pegasus-archive.xml"/>
     <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="pegasus-cleanup.xml"/>
     <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="pegasus-create-dir.xml"/>
     <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="pegasus-dax-validator.xml"/>
