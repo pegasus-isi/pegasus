@@ -606,7 +606,6 @@ class StampedeStatistics(SQLAlchemyInit, DoesLogging):
         w = orm.aliased(Workflow, name='w')
         j = orm.aliased(Job, name='j')
         ji = orm.aliased(JobInstance, name='ji')
-        tk = orm.aliased(Task, name='tk')
 
         sq_1 = self.session.query(w.wf_id,
                 j.job_id,
