@@ -122,7 +122,6 @@ class StampedeWorkflowStatistics(SQLAlchemyInit, DoesLogging):
         w = orm.aliased(Workflow, name='w')
         j = orm.aliased(Job, name='j')
         ji = orm.aliased(JobInstance, name='ji')
-        tk = orm.aliased(Task, name='tk')
 
         sq_1 = self.session.query(w.wf_id,
                                   j.job_id,
@@ -149,7 +148,8 @@ class StampedeWorkflowStatistics(SQLAlchemyInit, DoesLogging):
             sq_1 = sq_1.filter(self._get_job_filter(j))
         sq_1 = sq_1.subquery('t')
 
-        sq_2 = self.session.query(sq_1.c.wf_id, func.count(Invocation.exitcode).label('count'))
+        # PM-713 - Change to func.count(distinct(Invocation.abs_task_id)) from func.count(Invocation.exitcode)
+        sq_2 = self.session.query(sq_1.c.wf_id, func.count(distinct(Invocation.abs_task_id)).label('count'))
         sq_2 = sq_2.select_from(orm.join(sq_1, Invocation, sq_1.c.jiid == Invocation.job_instance_id))
         if not pmc:
             sq_2 = sq_2.filter(sq_1.c.jss == sq_1.c.maxjss)
