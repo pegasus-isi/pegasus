@@ -67,7 +67,7 @@ EOF
 pegasus-plan \
     --conf $testdir/pegasusrc \
     --sites local \
-    --output local \
+    --output-site local \
     --dir work \
     --nocleanup \
     --cluster horizontal \
