@@ -9,8 +9,7 @@ import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.partitioner.graph.Adapter;
 import edu.isi.pegasus.planner.partitioner.graph.Graph;
 import edu.isi.pegasus.planner.partitioner.graph.GraphNode;
-import edu.isi.pegasus.planner.refiner.cleanup.CleanupFactory;
-import edu.isi.pegasus.planner.refiner.cleanup.CleanupStrategy;
+
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -30,7 +29,8 @@ import java.util.Stack;
  * @author Karan Vahi
  */
 public class ReduceEdges {
-    private int mCurrentDepth;
+    
+    
     
     public ReduceEdges(){
         
@@ -83,18 +83,11 @@ public class ReduceEdges {
      */
     public Graph reduce( Graph workflow ) {
         //start a DFS for the graph at root. 
-        mCurrentDepth = -1;
-
-        //sanity intialization of all nodes depth
-        for( Iterator it = workflow.nodeIterator(); it.hasNext(); ){
-            GraphNode node = ( GraphNode )it.next();
-            node.setDepth( mCurrentDepth );
-            node.setColor( GraphNode.WHITE_COLOR );
-        }
+        
         
         //get all the roots of the workflow
-        
         for( GraphNode root: workflow.getRoots() ){
+            reset( workflow );
             //mCurrentDepth = 0;
             root.setDepth( 0 );
             root.setColor( GraphNode.GRAY_COLOR );
@@ -189,11 +182,6 @@ public class ReduceEdges {
     private Collection<GraphNode> findLCA(GraphNode from, GraphNode to) {
         Set<GraphNode> ancestors = new HashSet();
         
-        if( from.getDepth() - to.getDepth() == 1 ){
-            //return empty hashset
-            return new HashSet<GraphNode>();
-        }
-        
         Queue<GraphNode> parents = new LinkedList();
         parents.addAll( to.getParents() );
         //the from node should never be considered initially 
@@ -219,9 +207,12 @@ public class ReduceEdges {
         while( !parents.isEmpty() ){
             GraphNode parent = parents.remove();
             
-            if( parent.getDepth() < minDepth ){
-                //we only want the lca search to go as far back as
+            if( parent.getDepth() < 0 || parent.getDepth() < minDepth ){
+                //if the depth is -1 we don't do backtracking
+                //as that is associated with a different root
+                //also, we only want the lca search to go as far back as
                 //the min depth of the parents of the to node.
+                
                 continue;
             }
             
@@ -243,6 +234,23 @@ public class ReduceEdges {
         }
         return deletedAncestors;
         
+    }
+
+    /**
+     * Resets internal depth and color counters associated with the nodes in the 
+     * workflow, before doing any graph traversals. 
+     * 
+     * @param workflow the workflow 
+     */
+    private void reset(Graph workflow) {
+        int depth = -1;
+
+        //sanity intialization of all nodes depth
+        for( Iterator it = workflow.nodeIterator(); it.hasNext(); ){
+            GraphNode node = ( GraphNode )it.next();
+            node.setDepth( depth );
+            node.setColor( GraphNode.WHITE_COLOR );
+        }
     }
     
 }
