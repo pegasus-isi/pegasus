@@ -120,10 +120,23 @@ public class ReduceEdges {
                     if( child.isColor( GraphNode.GRAY_COLOR )){
                         //this is where the collision is happening
                         //find LCA of the top and child
-                        Collection<GraphNode> ancestors = findLCA( top, child );
-                        if( !ancestors.isEmpty() ){
-                            deletionMap.put( child, ancestors );
+                        //Collection<GraphNode> ancestors = findLCA( top, child );
+                        
+                        //we now do LCA between child and all it's parents
+                        for( GraphNode parent: child.getParents() ){
+                            Collection<GraphNode> ancestors = findLCA( parent, child );
+                            if( !ancestors.isEmpty() ){
+                                if( deletionMap.containsKey( child ) ){
+                                    Collection<GraphNode> existing = deletionMap.get( child );
+                                    existing.addAll( ancestors );
+                                }
+                                else{
+                                    deletionMap.put( child, ancestors );
+                                }
+                            }
                         }
+                        
+                        
                         
                         //we set the child color to Black to ensure that if
                         //we visit child again, we don't attempt LCA procedure again
@@ -176,9 +189,18 @@ public class ReduceEdges {
     private Collection<GraphNode> findLCA(GraphNode from, GraphNode to) {
         Set<GraphNode> ancestors = new HashSet();
         
+        if( from.getDepth() - to.getDepth() == 1 ){
+            //return empty hashset
+            return new HashSet<GraphNode>();
+        }
+        
         Queue<GraphNode> parents = new LinkedList();
         parents.addAll( to.getParents() );
+        //the from node should never be considered initially 
+        parents.remove( from );
         parents.addAll( from.getParents() );
+        
+        
         
         //find min depth of all the parents of the to node
         int minDepth = Integer.MAX_VALUE;
@@ -189,11 +211,7 @@ public class ReduceEdges {
             throw new RuntimeException( "Inconsistent state for LCA " + from.getID() + " -> " + to.getID() );
         }
         
-        if( from.getDepth() - to.getDepth() == 1 ){
-            //just remove the from node from the parents if present.
-            //important to work correctly
-            parents.remove( from );
-        }
+        
         
         System.out.println( "Find LCA for " + from.getID() + " -> " + to.getID() );
         Set<GraphNode> deletedAncestors = new HashSet();
