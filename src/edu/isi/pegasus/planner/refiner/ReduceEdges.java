@@ -125,6 +125,12 @@ public class ReduceEdges {
                             deletionMap.put( child, ancestors );
                         }
                         
+                        //we set the child color to Black to ensure that if
+                        //we visit child again, we don't attempt LCA procedure again
+                        //one call to LCA is sufficient to remove all the redundant
+                        //edges making up a cycle
+                        child.setColor( GraphNode.BLACK_COLOR );
+                        
                         continue;
                     }
                     
@@ -140,7 +146,7 @@ public class ReduceEdges {
                 for( Map.Entry<GraphNode,Collection<GraphNode>> entry : deletionMap.entrySet()){
                     GraphNode child = entry.getKey();
                     for( GraphNode ancestor: entry.getValue() ){
-                        //System.out.println( "Deleting Edge " + ancestor.getID() + " -> " + child.getID() );
+                        System.out.println( "\tDeleting Edge " + ancestor.getID() + " -> " + child.getID() );
                         
                         ancestor.removeChild( child);
                         //remove from the child hte parent
@@ -174,6 +180,15 @@ public class ReduceEdges {
         parents.addAll( to.getParents() );
         parents.addAll( from.getParents() );
         
+        //find min depth of all the parents of the to node
+        int minDepth = Integer.MAX_VALUE;
+        for( GraphNode parent: to.getParents() ){
+            minDepth = Math.min( minDepth, parent.getDepth() );
+        }
+        if( minDepth == Integer.MAX_VALUE ){
+            throw new RuntimeException( "Inconsistent state for LCA " + from.getID() + " -> " + to.getID() );
+        }
+        
         if( from.getDepth() - to.getDepth() == 1 ){
             //just remove the from node from the parents if present.
             //important to work correctly
@@ -185,6 +200,13 @@ public class ReduceEdges {
         
         while( !parents.isEmpty() ){
             GraphNode parent = parents.remove();
+            
+            if( parent.getDepth() < minDepth ){
+                //we only want the lca search to go as far back as
+                //the min depth of the parents of the to node.
+                continue;
+            }
+            
             //System.out.println( parent.getID() );
             if( !ancestors.add( parent )){
                 //means the parent was already present
