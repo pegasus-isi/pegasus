@@ -286,6 +286,11 @@ public class MainEngine
                 mReducedDag = deploy.addCleanupNodesForWorkerPackage( mReducedDag );
             }
         }
+        
+        mLogger.logEventStart( "workflow.prune", LoggingKeys.DAX_ID, abstractWFName );
+        ReduceEdges p = new ReduceEdges();
+        p.prune(mReducedDag);
+        mLogger.logEventCompletion();
 
         mLogger.logEventCompletion();
         return mReducedDag;
