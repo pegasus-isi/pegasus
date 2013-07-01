@@ -23,7 +23,7 @@ import java.util.Set;
 import java.util.Stack;
 
 /**
- * An algorithm to prune remove edges in the workflow, based on a DFS of a graph
+ * An algorithm to reduce remove edges in the workflow, based on a DFS of a graph
  * and doing least common ancestor tranversals to detect duplicate edges.
  * 
  * @author Rajiv Mayani
@@ -45,12 +45,12 @@ public class ReduceEdges {
      * 
      * @return 
      */
-    public ADag prune( ADag dag ){
+    public ADag reduce( ADag dag ){
         ADag result;
 
        
         //we first need to convert internally into graph format
-        Graph resultGraph =  this.prune( Adapter.convert(dag ) );
+        Graph resultGraph =  this.reduce( Adapter.convert(dag ) );
 
         //convert back to ADag and return
         result = dag;
@@ -81,7 +81,7 @@ public class ReduceEdges {
      * 
      * @return the workflow with non essential edges removed
      */
-    public Graph prune( Graph workflow ) {
+    public Graph reduce( Graph workflow ) {
         //start a DFS for the graph at root. 
         mCurrentDepth = -1;
 

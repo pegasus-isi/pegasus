@@ -289,7 +289,7 @@ public class MainEngine
         
         mLogger.logEventStart( "workflow.prune", LoggingKeys.DAX_ID, abstractWFName );
         ReduceEdges p = new ReduceEdges();
-        p.prune(mReducedDag);
+        p.reduce(mReducedDag);
         mLogger.logEventCompletion();
 
         mLogger.logEventCompletion();
