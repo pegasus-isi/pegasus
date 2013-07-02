@@ -106,7 +106,14 @@ public class ReduceEdges {
                 //this is to prevent concurrent modification error in the loop below
                 Map<GraphNode,Collection<GraphNode>> deletionMap = new HashMap();
                 
-                for( GraphNode child : top.getChildren() ){
+                List<GraphNode> children = new LinkedList();
+                for( GraphNode child: top.getChildren() ){
+                    children.add( child );
+                }
+                
+                
+                //for( GraphNode child : top.getChildren() ){
+                for( GraphNode child : children ){
                     //we always update the depth to max of current and new depth
                     child.setDepth( Math.max( child.getDepth(), newDepth) );
                     
@@ -116,11 +123,27 @@ public class ReduceEdges {
                         //Collection<GraphNode> ancestors = findLCA( top, child );
                         
                         //we now do LCA between child and all it's parents
+                        //we need to clone to prevent concurrent modification exception
+                        //as LCA can delete the edge between parent and child
+                        List<GraphNode> clonedParents = new LinkedList();
                         for( GraphNode parent: child.getParents() ){
+                            clonedParents.add( parent );
+                        }
+                        //for( GraphNode parent: child.getParents() ){
+                        for( GraphNode parent: clonedParents ){
+                            //the lca itself might have removed other parents of 
+                            //the child 
+                            if( !child.getParents().contains( parent )){
+                                System.out.println( "Bypassing LCA for " + parent.getID() + " -> " + child.getID());
+                                continue;
+                            }
+                            
                             Collection<GraphNode> ancestors = findLCA( parent, child );
                             if( !ancestors.isEmpty() ){
                                 if( deletionMap.containsKey( child ) ){
                                     Collection<GraphNode> existing = deletionMap.get( child );
+                                    
+                                    System.out.println( "addeing to existing ancestors " + existing.size() );
                                     existing.addAll( ancestors );
                                 }
                                 else{
@@ -185,7 +208,7 @@ public class ReduceEdges {
         Queue<GraphNode> parents = new LinkedList();
         parents.addAll( to.getParents() );
         //the from node should never be considered initially 
-        parents.remove( from );
+        //parents.remove( from );
         parents.addAll( from.getParents() );
         
         
@@ -202,11 +225,24 @@ public class ReduceEdges {
         
         
         System.out.println( "Find LCA for " + from.getID() + " -> " + to.getID() );
+        /*if( to.getID().equals( "stage_out_remote_blueridge_0_0")){
+            System.out.println( "DEBUG" );
+        }*/
+        /*for( GraphNode parent: to.getParents() ){
+            System.out.println( parent.getID() + " -> " + parent.getDepth() );
+        }*/
+        
         Set<GraphNode> deletedAncestors = new HashSet();
+        Set<GraphNode> uniqueParentsInQueue = new HashSet();
+        uniqueParentsInQueue.addAll( parents );
+        
         
         while( !parents.isEmpty() ){
+            //System.out.println( "Parents Size is " + parents.size() + "," + uniqueParentsInQueue.size() );
             GraphNode parent = parents.remove();
+            uniqueParentsInQueue.remove( parent );//rajiv
             
+            //System.out.println( parent.getID() );
             if( parent.getDepth() < 0 || parent.getDepth() < minDepth ){
                 //if the depth is -1 we don't do backtracking
                 //as that is associated with a different root
@@ -216,21 +252,30 @@ public class ReduceEdges {
                 continue;
             }
             
-            //System.out.println( parent.getID() );
             if( !ancestors.add( parent )){
                 //means the parent was already present
                 //check if from this parent this is a direct edge to the "to" node
                 if( parent.getChildren().contains(to) ){
                     //we need to delete edge parent to the to  
-                    //System.out.println( "Scheduling deletion of Edge " + parent.getID() + " -> " + to.getID() );
-                    deletedAncestors.add( parent );
+                    System.out.println( "Deleting Edge in LCA " + parent.getID() + " -> " + to.getID() );
+                    //deletedAncestors.add( parent );
                     
-                    //parent.removeChild(to);
+                    parent.removeChild(to);
                     //remove from the child hte parent
-                    //to.removeParent(parent);
+                    to.removeParent(parent);
                 }
-            } 
-            parents.addAll( parent.getParents());
+            }
+            else{
+                //traversedAncestors.add( parent );
+                for( GraphNode ancestor: parent.getParents() ){
+                    if( !uniqueParentsInQueue.contains( ancestor ) ){
+                    //if( !ancestors.contains( ancestor ) ){
+                        parents.add( ancestor);
+                        uniqueParentsInQueue.add( ancestor);
+                    }
+                }
+            }
+            
         }
         return deletedAncestors;
         
