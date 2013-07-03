@@ -40,6 +40,8 @@ class Node:
         self.level = 0
         self.parents = []
         self.children = []
+        self.mark = 0
+        self.closure = set()
 
 class Job(Node):
     def __init__(self):
@@ -233,68 +235,158 @@ def remove_xforms(dag, xforms):
                 c.parents.remove(job)
             del jobs[id]
 
-def inv_reachable(a, b):
-    """
-    Is a reachable from b using reverse edges? Reverse edges are
-    used because it is a little more efficient than forward edges
-    assuming that a node is more likely to have children than
-    parents. Does a BFS using the child->parent edges instead of the
-    parent->child edges.
-    """
-    fifo = [a]
-    while len(fifo) > 0:
-        n = fifo.pop()
-        for p in n.parents:
-            if p == b: return True
-            fifo.append(p)
-    return False
 
-def simplify(dag):
-    """
-    Simplify a DAG by removing redundant edges. Redundant edges are edges
-    that go from a grandparent to a grandchild. In other words, they are
-    edges that, if removed, do not change the dependencies in the workflow.
-    We want to remove these because they clutter up the diagram and make
-    it hard to read.
-    """
-    # Find roots
+def transitivereduction_rajiv(dag):
+    # This is Rajiv's reduction algorithm. Right now it doesn't work.
     roots = []
-    for id in dag.jobs:
-        j = dag.jobs[id]
-        if len(j.parents) == 0:
-            roots.append(j)
+    for n in dag.jobs.values():
+        if len(n.parents) == 0:
+            roots.append(n)
 
-    # Assign surrogate root
-    root = Job()
-    root.level = 0
-    for j in roots:
-        root.children.append(j)
+    def lca(u, v):
+        closure = set()
 
-    # Label all levels of the workflow (BFS)
-    fifo = [root]
-    while len(fifo) > 0:
-        n = fifo.pop()
+        delta = u.level-v.level
+        if delta > 1:
+            closure.add(v)
+
+        def rdfs(n):
+            for p in n.parents:
+                # We found the lca
+                if p in closure:
+                    return p
+
+                closure.add(p)
+
+                a = rdfs(p)
+
+                # We found v
+                if a is not None:
+                    return a
+
+        a = rdfs(u)
+
+        # The lca is v
+        if a is not None:
+            return a
+
+        # The lca is an ancestor of v
+        return rdfs(v)
+
+    remove = []
+
+    def dfs(n, prev):
+        if prev is None:
+            n.level = 1
+        else:
+            n.level = max(prev.level+1, n.level)
+
+        if n.lvf is not None:
+            if n.lvf == prev:
+                return
+
+            if prev.level != n.lvf.level:
+                a = lca(n, n.lvf)
+
+                sys.stderr.write("LCA(%s,%s) = %s (prev %s)\n" % (n.label, n.lvf.label, a.label, prev.label))
+
+                if a is not None and n in a.children:
+                    sys.stderr.write("Removing %s -> %s\n" % (a.label, n.label))
+                    remove.append((a,n))
+        else:
+            n.lvf = prev
+
         for c in n.children:
-            fifo.append(c)
-            c.level = max(c.level, n.level + 1)
+            dfs(c, n)
 
-    # Eliminate any redundant edges (BFS)
-    fifo = [root]
-    while len(fifo) > 0:
-        n = fifo.pop()
-        children = n.children[:]
-        for c in children:
-            fifo.append(c)
-            dist = c.level - n.level
-            if dist > 1:
-                c.parents.remove(n)
-                if inv_reachable(c, n):
-                    sys.stderr.write(
-                        "Removing redunant edge: %s -> %s\n" % 
-                        (n.id, c.id))
-                    n.children.remove(c)
-                else:
-                    c.parents.append(n)
+    for r in roots:
+        dfs(r, None)
+        for n in dag.jobs.values():
+            n.lvf = None
+
+    for u,v in remove:
+        u.children.remove(v)
+        v.parents.remove(u)
+
+    return dag
+
+def transitivereduction(dag):
+    # Perform a transitive reduction of the DAG to remove redundant edges.
+
+    # First, perform a *reverse* topological sort of the workflow.
+    # This also sets the levels of the workflow, which are used
+    # to sort the children of each node in topological order.
+    roots = [n for n in dag.jobs.values() if len(n.parents) == 0]
+
+    L = []
+
+    def visit(n, m):
+        # Set the level
+        if m is not None:
+            n.level = max(n.level, m.level+1)
+
+        if n.mark == 1:
+            raise Exception("Not a DAG")
+
+        if n.mark == 0:
+            n.mark = 1
+            for m in n.children:
+                visit(m, n)
+            n.mark = 2
+            L.append(n)
+
+    # Visit all the roots to create the topo sort
+    for r in roots:
+        visit(r, None)
+
+    # This compares nodes by level for sorting. Note that sorting
+    # children has to be done after the topo sort above because
+    # the levels haven't been set until all the roots have been
+    # visited.
+    def lvlcmp(a, b):
+        return a.level - b.level
+
+    # This algorithm is due to Goralcikova and Koubek. It is fast and
+    # simple, but it takes a lot of memory for large workflows because
+    # it computes and stores the transitive closure of each node.
+    for v in L:
+        # This is to keep track of how many times v has been visited
+        # from one of its parents. When this counter reaches the
+        # number of parents the node has, then we can remove the closure
+        v.mark = 0
+
+        v.closure = set([v])
+
+        # We need to sort the children in topological order, otherwise the
+        # reduction won't work properly. Sorting by level should produce
+        # a valid topological ordering.
+        v.children.sort(lvlcmp)
+
+        # Compute the transitive closure and identify redundant edges
+        reduced = []
+        for w in v.children:
+
+            w.mark += 1
+
+            if w in v.closure:
+                # If it is already in the closure, then it is not needed
+                sys.stderr.write("Removing %s -> %s\n" % (v.label, w.label))
+            else:
+                v.closure = v.closure.union(w.closure)
+                reduced.append(w)
+
+            # Once w has been visited by all its parents we can clear
+            # its closure.
+            if len(w.parents) == w.mark:
+                w.closure = None
+
+        # Another optimization. If v has no parents, then
+        # we don't need to save its closure at all.
+        if len(v.parents) == 0:
+            v.closure = None
+
+        # Now remove the edges
+        v.children = reduced
 
     return dag
 
@@ -412,7 +504,7 @@ DAGMan file, or a Pegasus DAX file."""
 
     # Only simplify if the user did not want to use files
     if options.simplify and not options.files:
-        dag = simplify(dag)
+        dag = transitivereduction(dag)
 
     emit_dot(dag, options.label, options.outfile, options.width, 
              options.height, options.files)
