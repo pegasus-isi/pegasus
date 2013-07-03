@@ -87,7 +87,9 @@ public class ReduceEdges {
         
         //get all the roots of the workflow
         for( GraphNode root: workflow.getRoots() ){
-            reset( workflow );
+            //reset( workflow );
+            this.assignLevels(workflow, root);
+            
             //mCurrentDepth = 0;
             root.setDepth( 0 );
             root.setColor( GraphNode.GRAY_COLOR );
@@ -134,7 +136,7 @@ public class ReduceEdges {
                             //the lca itself might have removed other parents of 
                             //the child 
                             if( !child.getParents().contains( parent )){
-                                System.out.println( "Bypassing LCA for " + parent.getID() + " -> " + child.getID());
+                                //System.out.println( "Bypassing LCA for " + parent.getID() + " -> " + child.getID());
                                 continue;
                             }
                             
@@ -175,7 +177,7 @@ public class ReduceEdges {
                 for( Map.Entry<GraphNode,Collection<GraphNode>> entry : deletionMap.entrySet()){
                     GraphNode child = entry.getKey();
                     for( GraphNode ancestor: entry.getValue() ){
-                        System.out.println( "\tDeleting Edge " + ancestor.getID() + " -> " + child.getID() );
+                        //System.out.println( "\tDeleting Edge " + ancestor.getID() + " -> " + child.getID() );
                         
                         ancestor.removeChild( child);
                         //remove from the child hte parent
@@ -194,6 +196,9 @@ public class ReduceEdges {
         return workflow;
     }
 
+    
+
+    
     /**
      * We find LCA of from and to.
      * 
@@ -224,7 +229,7 @@ public class ReduceEdges {
         
         
         
-        System.out.println( "Find LCA for " + from.getID() + " -> " + to.getID() );
+        //System.out.println( "Find LCA for " + from.getID() + " -> " + to.getID() );
         /*if( to.getID().equals( "stage_out_remote_blueridge_0_0")){
             System.out.println( "DEBUG" );
         }*/
@@ -257,7 +262,7 @@ public class ReduceEdges {
                 //check if from this parent this is a direct edge to the "to" node
                 if( parent.getChildren().contains(to) ){
                     //we need to delete edge parent to the to  
-                    System.out.println( "Deleting Edge in LCA " + parent.getID() + " -> " + to.getID() );
+                    //System.out.println( "Deleting Edge in LCA " + parent.getID() + " -> " + to.getID() );
                     //deletedAncestors.add( parent );
                     
                     parent.removeChild(to);
@@ -281,6 +286,60 @@ public class ReduceEdges {
         
     }
 
+    /**
+     * Prunes redundant edges from the workflow.
+     * 
+     * @param workflow
+     * @param root   the root from which to start to assign the levels
+     * 
+     * @return the workflow with non essential edges removed
+     */
+    public void assignLevels( Graph workflow , GraphNode root) {
+        //start a DFS for the graph at root. 
+        
+        
+        reset( workflow );
+        //mCurrentDepth = 0;
+        root.setDepth( 0 );
+        root.setColor( GraphNode.GRAY_COLOR );
+        //System.out.println( "Traversing node " + root.getID() );
+
+        //start an iterative DFS on the root
+        Stack<GraphNode> stack = new Stack();
+        stack.push(root);
+        while( !stack.isEmpty() ){
+            GraphNode top = stack.peek();
+            int newDepth = top.getDepth() + 1;
+
+            for( GraphNode child : top.getChildren() ){
+                //we always update the depth to max of current and new depth
+                child.setDepth( Math.max( child.getDepth(), newDepth) );
+
+                
+                if( child.isColor( GraphNode.WHITE_COLOR )){
+                    child.setColor( GraphNode.GRAY_COLOR );
+                    //System.out.println( "Traversing node " + child.getID() + " with depth " + child.getDepth());
+
+                    stack.push( child );
+                }
+            }
+
+
+            //set the color of the node to be black
+            top.setColor( GraphNode.BLACK_COLOR );
+            stack.pop();
+        }
+        
+        //reset colors again to white
+        //sanity intialization of all nodes depth
+        for( Iterator it = workflow.nodeIterator(); it.hasNext(); ){
+            GraphNode node = ( GraphNode )it.next();
+            node.setColor( GraphNode.WHITE_COLOR );
+        }
+
+        
+    }
+    
     /**
      * Resets internal depth and color counters associated with the nodes in the 
      * workflow, before doing any graph traversals. 
