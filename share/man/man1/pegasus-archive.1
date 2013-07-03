@@ -1,0 +1,68 @@
+'\" t
+.\"     Title: pegasus-archive
+.\"    Author: [see the "Authors" section]
+.\" Generator: DocBook XSL Stylesheets v1.78.0 <http://docbook.sf.net/>
+.\"      Date: 06/27/2013
+.\"    Manual: \ \&
+.\"    Source: \ \&
+.\"  Language: English
+.\"
+.TH "PEGASUS\-ARCHIVE" "1" "06/27/2013" "\ \&" "\ \&"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+pegasus-archive \- Compresses a workflow submit directory in a way that allows pegasus\-dashboard, pegasus\-statistics, pegasus\-plots, and pegasus\-analyzer to keep working\&.
+.SH "SYNOPSIS"
+.sp
+.nf
+\fBpegasus\-archive\fR [\fB\-h\fR][\fB\-v\fR][\fB\-x\fR] \fIsubmit_dir\fR
+.fi
+.SH "DESCRIPTION"
+.sp
+\fBpegasus\-archive\fR significantly reduces the size of workflow submit directories by compressing the data in a way such that it remains accessible to tools such as pegasus\-statistics, pegasus\-plots, and pegasus\-analyzer\&. It creates a \&.tar\&.gz archive of the submit files and logs that excludes files such as the stampede database, braindump file, and monitord logs, which are used by pegasus reporting tools\&.
+.SH "OPTIONS"
+.PP
+\fB\-h\fR, \fB\-\-help\fR
+.RS 4
+Prints a usage summary with all the available command\-line options\&.
+.RE
+.PP
+\fB\-v\fR, \fB\-\-verbose\fR
+.RS 4
+Print detailed messages about the archiving process\&.
+.RE
+.PP
+\fB\-x\fR, \fB\-\-extract\fR
+.RS 4
+Un\-archive a previously archived submit directory\&. This option returns the submit directory to the state it was before
+\fBpegasus\-archive\fR
+was applied to it\&.
+.RE
+.SH "AUTHORS"
+.sp
+Gideon Juve <\m[blue]\fBgideon@isi\&.edu\fR\m[]\&\s-2\u[1]\d\s+2>
+.sp
+Pegasus Team \m[blue]\fBhttp://pegasus\&.isi\&.edu\fR\m[]
+.SH "NOTES"
+.IP " 1." 4
+gideon@isi.edu
+.RS 4
+\%mailto:gideon@isi.edu
+.RE

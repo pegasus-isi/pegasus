@@ -28,7 +28,7 @@ cat > sites.xml <<EOF
          <grid type="condor" contact="ccg-testing1.isi.edu" scheduler="Condor" jobtype="compute" total-nodes="50"/>
          <grid type="condor" contact="ccg-testing1.isi.edu" scheduler="Condor" jobtype="auxillary" total-nodes="50"/>
         <head-fs>
-              <scratch>                                                                                                                                                                                                                                    <shared>                                                                                                                                                                                                                                    <file-server protocol="file" url="file://" mount-point="/nfs/ccg3/scratch"/>                                                                                                                                                            <internal-mount-point mount-point="/nfs/ccg3/scratch"/>                                                                                                                                                                             </shared>                                                                                                                                                                                                                           </scratch>                                                                                                                                                                                                                              <storage>                                                                                                                                                                                                                                   <shared>                                                                                                                                                                                                                                    <file-server protocol="file" url="file://" mount-point="/nfs/ccg3/scratch/bamboo/outputs"/>                                                                                                                                             <internal-mount-point mount-point="/nfs/ccg3/scratch/bamboo/outputs"/>                                                                                                                                                              </shared>                                                                                                                                                                                                                           </storage> 
+              <scratch>                                                                                                                                                                                                                                    <shared>                                                                                                                                                                                                                                    <file-server protocol="file" url="file://" mount-point="/nfs/ccg4/scratch-6-months-purge"/>                                                                                                                                                            <internal-mount-point mount-point="/nfs/ccg4/scratch-6-months-purge"/>                                                                                                                                                                             </shared>                                                                                                                                                                                                                           </scratch>                                                                                                                                                                                                                              <storage>                                                                                                                                                                                                                                   <shared>                                                                                                                                                                                                                                    <file-server protocol="file" url="file://" mount-point="/nfs/ccg4/scratch-6-months-purge/bamboo/outputs"/>                                                                                                                                             <internal-mount-point mount-point="/nfs/ccg4/scratch-6-months-purge/bamboo/outputs"/>                                                                                                                                                              </shared>                                                                                                                                                                                                                           </storage> 
         </head-fs>
        
              <profile namespace="pegasus" key="style">condor</profile>
@@ -42,14 +42,14 @@ cat > sites.xml <<EOF
         <head-fs>
             <scratch>
                 <shared>
-                    <file-server protocol="file" url="file://" mount-point="/nfs/ccg3/scratch"/>
-                    <internal-mount-point mount-point="/nfs/ccg3/scratch"/>
+                    <file-server protocol="file" url="file://" mount-point="/nfs/ccg4/scratch-6-months-purge"/>
+                    <internal-mount-point mount-point="/nfs/ccg4/scratch-6-months-purge"/>
                 </shared>
             </scratch>
             <storage>
                 <shared>
-                    <file-server protocol="file" url="file://" mount-point="/nfs/ccg3/scratch/bamboo/outputs"/>
-                    <internal-mount-point mount-point="/nfs/ccg3/scratch/bamboo/outputs"/>
+                    <file-server protocol="file" url="file://" mount-point="/nfs/ccg4/scratch-6-months-purge/bamboo/outputs"/>
+                    <internal-mount-point mount-point="/nfs/ccg4/scratch-6-months-purge/bamboo/outputs"/>
                 </shared>
             </storage>
         </head-fs>
@@ -67,7 +67,7 @@ EOF
 pegasus-plan \
     --conf $testdir/pegasusrc \
     --sites local \
-    --output local \
+    --output-site local \
     --dir work \
     --nocleanup \
     --cluster horizontal \

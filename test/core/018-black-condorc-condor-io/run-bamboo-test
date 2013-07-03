@@ -70,7 +70,7 @@ EOF
 pegasus-plan \
     --conf $testdir/pegasusrc \
     --sites isi-condorc \
-    --output local \
+    --output-site local \
     --dir work \
     --nocleanup \
     --cluster horizontal \
