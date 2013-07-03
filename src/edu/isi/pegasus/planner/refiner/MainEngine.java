@@ -287,11 +287,13 @@ public class MainEngine
             }
         }
         
+        /* PM-714. The approach does not scale for the planner performace test case.
         mLogger.logEventStart( "workflow.prune", LoggingKeys.DAX_ID, abstractWFName );
         ReduceEdges p = new ReduceEdges();
         p.reduce(mReducedDag);
         mLogger.logEventCompletion();
-
+        */
+        
         mLogger.logEventCompletion();
         return mReducedDag;
     }
