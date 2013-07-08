@@ -6,18 +6,18 @@ PMC=./pegasus-mpi-cluster
 function run_test {
     local test=$1
     echo "Running $test..."
-    
+
     # Set up
     rm -f test/*.dag.*
     rm -rf test/scratch
-    
-    if $test; then 
+
+    if $test; then
         echo "OK"
     else
         echo "FAILED ($?)"
         exit 1
     fi
-    
+
     # Clean up
     rm -f test/*.dag.*
     rm -rf test/scratch
@@ -26,6 +26,15 @@ function run_test {
 function test_help {
     # Should print message and exit with 1
     if ! mpiexec -np 2 $PMC >/dev/null 2>&1; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+function test_help_no_mpi {
+    # It should work even if we don't have an MPI context
+    if ! $PMC >/dev/null 2>&1; then
         return 0
     else
         return 1
@@ -615,6 +624,7 @@ run_test ./test-engine
 run_test ./test-fdcache
 run_test ./test-protocol
 run_test test_help
+run_test test_help_no_mpi
 run_test test_one_worker_required
 run_test test_run_diamond
 run_test test_out_err
