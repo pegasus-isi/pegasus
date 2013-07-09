@@ -675,13 +675,13 @@ public class PegasusProperties implements Cloneable {
      * Referred to by the "pegasus.dir.create.strategy" property.
      *
      * @return  the create dir classname if specified in the properties file,
-     *          else Tentacles.
+     *          else Minimal.
      */
     public String getCreateDirClass() {
         
         return getProperty( "pegasus.dir.create.strategy",
                             "pegasus.dir.create",
-                             "Tentacles" );
+                             "Minimal" );
     }
 
     /**
