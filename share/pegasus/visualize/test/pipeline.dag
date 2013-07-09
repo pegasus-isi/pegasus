@@ -1,0 +1,49 @@
+######################################################################
+# PEGASUS WMS GENERATED DAG FILE
+# DAG pipeline
+# Index = 0, Count = 1
+######################################################################
+MAXJOBS registration 1
+MAXJOBS cleanup 4
+
+JOB create_dir_pipeline_0_local create_dir_pipeline_0_local.sub
+SCRIPT POST create_dir_pipeline_0_local /usr/bin/pegasus-exitcode   /nfs/asd2/gideon/Workspace/pegasus/share/pegasus/examples/simple-examples/submit/gideon/pegasus/pipeline/run0001/create_dir_pipeline_0_local.out
+RETRY create_dir_pipeline_0_local 3
+
+JOB curl_ID0000001 curl_ID0000001.sub
+SCRIPT POST curl_ID0000001 /usr/bin/pegasus-exitcode   /nfs/asd2/gideon/Workspace/pegasus/share/pegasus/examples/simple-examples/submit/gideon/pegasus/pipeline/run0001/curl_ID0000001.out
+RETRY curl_ID0000001 3
+
+JOB wc_ID0000002 wc_ID0000002.sub
+SCRIPT POST wc_ID0000002 /usr/bin/pegasus-exitcode   /nfs/asd2/gideon/Workspace/pegasus/share/pegasus/examples/simple-examples/submit/gideon/pegasus/pipeline/run0001/wc_ID0000002.out
+RETRY wc_ID0000002 3
+
+JOB stage_out_local_local_0_0 stage_out_local_local_0_0.sub
+SCRIPT POST stage_out_local_local_0_0 /usr/bin/pegasus-exitcode   /nfs/asd2/gideon/Workspace/pegasus/share/pegasus/examples/simple-examples/submit/gideon/pegasus/pipeline/run0001/stage_out_local_local_0_0.out
+RETRY stage_out_local_local_0_0 3
+
+JOB stage_out_local_local_1_0 stage_out_local_local_1_0.sub
+SCRIPT POST stage_out_local_local_1_0 /usr/bin/pegasus-exitcode   /nfs/asd2/gideon/Workspace/pegasus/share/pegasus/examples/simple-examples/submit/gideon/pegasus/pipeline/run0001/stage_out_local_local_1_0.out
+RETRY stage_out_local_local_1_0 3
+
+JOB clean_up_local_level_3_0 clean_up_local_level_3_0.sub
+SCRIPT POST clean_up_local_level_3_0 /usr/bin/pegasus-exitcode   /nfs/asd2/gideon/Workspace/pegasus/share/pegasus/examples/simple-examples/submit/gideon/pegasus/pipeline/run0001/clean_up_local_level_3_0.out
+RETRY clean_up_local_level_3_0 3
+CATEGORY clean_up_local_level_3_0 cleanup
+
+JOB clean_up_local_level_4_0 clean_up_local_level_4_0.sub
+SCRIPT POST clean_up_local_level_4_0 /usr/bin/pegasus-exitcode   /nfs/asd2/gideon/Workspace/pegasus/share/pegasus/examples/simple-examples/submit/gideon/pegasus/pipeline/run0001/clean_up_local_level_4_0.out
+RETRY clean_up_local_level_4_0 3
+CATEGORY clean_up_local_level_4_0 cleanup
+
+PARENT stage_out_local_local_0_0 CHILD clean_up_local_level_3_0
+PARENT wc_ID0000002 CHILD stage_out_local_local_1_0
+PARENT wc_ID0000002 CHILD clean_up_local_level_3_0
+PARENT stage_out_local_local_1_0 CHILD clean_up_local_level_4_0
+PARENT create_dir_pipeline_0_local CHILD wc_ID0000002
+PARENT create_dir_pipeline_0_local CHILD curl_ID0000001
+PARENT curl_ID0000001 CHILD wc_ID0000002
+PARENT curl_ID0000001 CHILD stage_out_local_local_0_0
+######################################################################
+# End of DAG
+######################################################################

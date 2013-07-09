@@ -21,8 +21,8 @@ using std::string;
 using std::list;
 using std::exception;
 
-static char *program;
-static int rank;
+static char *program = NULL;
+static int rank = 0;
 
 void version() {
     if (rank == 0) {
@@ -93,7 +93,6 @@ void argerror(const string message) {
 int mpidag(int argc, char *argv[], MPICommunicator &comm) {
     rank = comm.rank();
     int numprocs = comm.size();
-    program = argv[0];
 
     list<char *> flags;
     for (int i=1; i<argc; i++) {
@@ -154,6 +153,8 @@ int mpidag(int argc, char *argv[], MPICommunicator &comm) {
     while (flags.size() > 0) {
         string flag = flags.front();
         if (flag == "-h" || flag == "--help") {
+            // This should no longer be reachable because
+            // of the code in main()
             usage();
             return 0;
         } else if (flag == "-V" || flag == "--version") {
@@ -390,6 +391,21 @@ void out_of_memory() {
 }
 
 int main(int argc, char *argv[]) {
+    program = argv[0];
+
+    // Shortcut to make 'help' work when running without an MPI context
+    if (argc < 2) {
+        usage();
+        return 1;
+    }
+    for (int i=1; i<argc; i++) {
+        string flag = argv[i];
+        if (flag == "-h" || flag == "--help") {
+            usage();
+            return 0;
+        }
+    }
+
     MPICommunicator comm(&argc, &argv);
     try {
         std::set_new_handler(out_of_memory);
