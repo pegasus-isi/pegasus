@@ -23,22 +23,22 @@ import org.apache.log4j.Logger;
  */
 public class PegasusGridFTP {
     private static Log logger = LogFactory.getLog(ListCommand.class);
-    
+
     public static String NAME = "pegasus-gridftp";
-    
+
     public PegasusGridFTP() {
     }
-    
+
     private static void usage() {
         usage(null);
     }
-    
+
     private static void options() {
         System.err.println("Options:");
         System.err.println("  -v        Turn on verbose output");
         System.err.println("  -i FILE   Read URLs from FILE");
     }
-    
+
     private static void usage(String command) {
         if (command == null) {
             System.err.printf("Usage: %s COMMAND\n\n", NAME);
@@ -69,66 +69,66 @@ public class PegasusGridFTP {
             System.err.printf("Unknown command: %s\n", command);
         }
     }
-    
+
     private static List<GridFTPURL> readURLs(File file) throws MalformedURLException, IOException {
         List<GridFTPURL> urls = new LinkedList<GridFTPURL>();
-        
+
         int lineno = 0;
         BufferedReader reader = null;
         try {
             reader = new BufferedReader(new FileReader(file));
-            
+
             for (String line = reader.readLine(); line != null; line = reader.readLine()) {
                 line = line.trim();
-                
+
                 lineno++;
-                
+
                 if (line.length() == 0) {
                     continue;
                 }
-                
+
                 if ('#' == line.charAt(0)) {
                     continue;
                 }
-                
+
                 urls.add(new GridFTPURL(line));
             }
         } catch (MalformedURLException cause) {
             MalformedURLException e = new MalformedURLException(
-                    String.format("Malformed URL at line %d in file %s", 
+                    String.format("Malformed URL at line %d in file %s",
                             lineno, file.getPath()));
             e.initCause(cause);
             throw e;
         } finally {
             if (reader != null) {
                 try {
-                    reader.close(); 
+                    reader.close();
                 } catch (Exception e) {
                     logger.warn(e);
                 }
             }
         }
-        
+
         return urls;
     }
-    
+
     private static void execute(String[] args) throws GridFTPException, MalformedURLException, IOException {
         Logger root = Logger.getRootLogger();
         root.removeAllAppenders();
         root.addAppender(new ConsoleAppender(new PatternLayout("%m%n")));
         root.setLevel(Level.WARN);
-        
+
         // Ignore most logging messages from globus by default
         Logger globus = Logger.getLogger("org.globus");
         globus.setLevel(Level.FATAL);
-        
+
         if (args.length == 0) {
             usage();
             System.exit(1);
         }
-        
+
         String command = args[0];
-        
+
         // Extract all the URLs from the command line and the -f argument
         // This applies to all the commands
         List<String> argv = new LinkedList<String>();
@@ -158,13 +158,21 @@ public class PegasusGridFTP {
                 argv.add(arg);
             }
         }
-        
+
         // Can't do anything if they didn't specify any URLs
         if (urls.size() == 0) {
             usage(command);
             System.exit(1);
         }
-        
+
+        // We need to set the X509_USER_PROXY system property if the env
+        // variable is set so that JGlobus will pick it up.
+        String proxypath = System.getenv("X509_USER_PROXY");
+        if (proxypath != null) {
+            logger.info("X509_USER_PROXY is set to "+proxypath);
+            System.setProperty("X509_USER_PROXY", proxypath);
+        }
+
         Command cmd = null;
         if ("ls".equals(command)) {
             cmd = ListCommand.fromArguments(argv);
@@ -175,15 +183,15 @@ public class PegasusGridFTP {
         } else {
             throw new IllegalArgumentException("Unknown command: "+command);
         }
-        
+
         if (logger.isDebugEnabled()) {
-            logger.debug(String.format("Executing command '%s' on %d urls", 
-                    command, urls.size()));
+            logger.info(String.format("Executing command '%s' on %d urls",
+                        command, urls.size()));
         }
-        
+
         cmd.execute(urls);
     }
-    
+
     public static void main(String[] args) {
         try {
             execute(args);
@@ -202,3 +210,4 @@ public class PegasusGridFTP {
         }
     }
 }
+
