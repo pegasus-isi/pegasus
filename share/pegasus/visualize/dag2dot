@@ -313,18 +313,12 @@ def transitivereduction_rajiv(dag):
 def transitivereduction(dag):
     # Perform a transitive reduction of the DAG to remove redundant edges.
 
-    # First, perform a *reverse* topological sort of the workflow.
-    # This also sets the levels of the workflow, which are used
-    # to sort the children of each node in topological order.
+    # First, perform a topological sort of the workflow.
     roots = [n for n in dag.jobs.values() if len(n.parents) == 0]
 
     L = []
 
     def visit(n, m):
-        # Set the level
-        if m is not None:
-            n.level = max(n.level, m.level+1)
-
         if n.mark == 1:
             raise Exception("Not a DAG")
 
@@ -333,11 +327,22 @@ def transitivereduction(dag):
             for m in n.children:
                 visit(m, n)
             n.mark = 2
-            L.append(n)
+            L.insert(0,n)
 
     # Visit all the roots to create the topo sort
     for r in roots:
         visit(r, None)
+
+    # Number all the levels of the workflow, which are used
+    # to sort the children of each node in topological order.
+    for n in L:
+        n.level = 0
+        for p in n.parents:
+            n.level = max(n.level, p.level+1)
+
+    # The topological sort has to be reversed so that the deepest
+    # nodes are visited first
+    L.reverse()
 
     # This compares nodes by level for sorting. Note that sorting
     # children has to be done after the topo sort above because
