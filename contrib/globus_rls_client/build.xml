@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+<project default="all" basedir=".">
+    <property name="package.name" value="globus_rls_client"/>
+    <property name="deploy.dir" location="../../share/pegasus/java"/>
+    <property name="jar.name" value="${package.name}.jar"/>
+    <property name="build.dir"  location="build"/>
+    <property name="build.dest" location="build/classes"/>
+    <property name="build.lib.dir" location="build/lib"/>
+    <property name="java.debug" value="on"/>
+
+    <target name="init">
+        <mkdir dir="${build.dir}"/>
+        <mkdir dir="${build.dest}"/>
+        <mkdir dir="${build.lib.dir}"/>
+    </target>
+
+    <target name="compile" depends="init">
+        <javac srcdir="src" destdir="${build.dest}" debug="${java.debug}">
+            <include name="**/*.java"/>
+            <classpath>
+                <fileset dir="${deploy.dir}">
+                    <include name="*.jar"/>
+                    <exclude name="${jar.name}"/>
+                </fileset>
+            </classpath>
+        </javac>
+    </target>
+
+    <target name="jar" depends="compile">
+        <jar destfile="${build.lib.dir}/${jar.name}" basedir="${build.dest}"/>
+    </target>
+
+    <target name="deploy" depends="jar">
+        <copy file="${build.lib.dir}/${jar.name}" todir="${deploy.dir}"/>
+    </target>
+
+    <target name="clean">
+        <delete dir="${build.dir}"/>
+    </target>
+
+    <target name="all" depends="deploy"/>
+
+</project>
