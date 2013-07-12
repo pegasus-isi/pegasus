@@ -15,6 +15,7 @@
  */
 package org.globus.replica.rls;
 
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.*;
 
@@ -22,9 +23,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.ietf.jgss.GSSCredential;
 import org.ietf.jgss.GSSException;
-import org.globus.gsi.GlobusCredential;
+import org.globus.gsi.X509Credential;
 import org.globus.gsi.gssapi.GlobusGSSCredentialImpl;
-import org.globus.gsi.GlobusCredentialException;
+import org.globus.gsi.CredentialException;
 import org.globus.replica.rls.impl.SimpleRLSConnectionSource;
 import org.globus.replica.rls.impl.rpc.SimpleRLSConnection;
 import org.globus.util.GlobusURL;
@@ -158,7 +159,7 @@ public class RLSClient {
 			if (RLSClient.defaultProxyfile != null
 					&& RLSClient.defaultProxyfile.length() > 0) {
 				init(url, new GlobusGSSCredentialImpl(
-						new GlobusCredential(RLSClient.defaultProxyfile),
+						new X509Credential(RLSClient.defaultProxyfile),
 						GSSCredential.INITIATE_ONLY));
 			}
 			else if (RLSClient.defaultCertfile != null
@@ -166,14 +167,14 @@ public class RLSClient {
 					&& RLSClient.defaultKeyfile != null
 					&& RLSClient.defaultKeyfile.length() > 0) {
 				init(url, new GlobusGSSCredentialImpl( 
-						new GlobusCredential(RLSClient.defaultProxyfile),
+						new X509Credential(RLSClient.defaultProxyfile),
 						GSSCredential.INITIATE_ONLY));
 			}
 			else {
 				init(url, null);
 			}
 		}
-		catch (GlobusCredentialException e) {
+		catch (CredentialException e) {
 			throw new RLSException(RLSStatusCode.RLS_GLOBUSERR, e);
 		}
 		catch (GSSException e) {
@@ -195,10 +196,10 @@ public class RLSClient {
 	public RLSClient(String url, String proxyfile) throws RLSException {
 		try {
 			init(url, new GlobusGSSCredentialImpl(
-					new GlobusCredential(proxyfile),
+					new X509Credential(proxyfile),
 					GSSCredential.INITIATE_ONLY));
 		}
-		catch (GlobusCredentialException e) {
+		catch (CredentialException e) {
 			throw new RLSException(RLSStatusCode.RLS_GLOBUSERR, e);
 		}
 		catch (GSSException e) {
@@ -223,14 +224,17 @@ public class RLSClient {
 			throws RLSException {
 		try {
 			init(url, new GlobusGSSCredentialImpl(
-					new GlobusCredential(certfile, keyfile),
+					new X509Credential(certfile, keyfile),
 					GSSCredential.INITIATE_ONLY));
 		}
-		catch (GlobusCredentialException e) {
+		catch (CredentialException e) {
 			throw new RLSException(RLSStatusCode.RLS_GLOBUSERR, e);
 		}
 		catch (GSSException e) {
 			throw new RLSException(RLSStatusCode.RLS_GLOBUSERR, e);
+		}
+		catch (IOException e) {
+		    throw new RLSException(RLSStatusCode.RLS_GLOBUSERR, e);
 		}
 	}
 
