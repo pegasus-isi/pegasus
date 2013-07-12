@@ -204,6 +204,12 @@ public class SimpleRLSConnection implements RLSConnection {
 	 */
 	private void _establishSecuredConnection(
 			GlobusURL url, GSSCredential cred) throws RLSException {
+        // We need to set the X509_USER_PROXY system property if the env
+        // variable is set so that JGlobus can pick it up if required.
+        String proxypath = System.getenv("X509_USER_PROXY");
+        if (proxypath != null) {
+            System.setProperty("X509_USER_PROXY", proxypath);
+        }
 
 		// Establish RLS connection
 		try {
