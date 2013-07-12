@@ -2127,18 +2127,6 @@ public class PegasusProperties implements Cloneable {
     }
 
     
-    /**
-     * Return returns the environment string specified for the local pool. If
-     * specified the registration jobs are set with these environment variables.
-     *
-     * Referred to by the "pegasus.local.env" property
-     *
-     * @return the environment string for local pool in properties file if
-     *         defined, else null.
-     */
-    public String getLocalPoolEnvVar() {
-        return mProps.getProperty( "pegasus.local.env" );
-    }
     
     /**
      * Returns a boolean indicating whether to have jobs executing on worker

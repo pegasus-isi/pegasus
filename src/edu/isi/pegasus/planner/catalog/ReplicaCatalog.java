@@ -54,6 +54,12 @@ public interface ReplicaCatalog extends Catalog
    public static final String DB_PREFIX = "pegasus.catalog.replica.db";
 
 
+    /**
+     * The key that if set, specifies the proxy to be picked up while connecting
+     * to the RLS.
+     */
+    public static final String PROXY_KEY = "proxy";
+    
   /**
    * The suffix for the property that if set, specifies the size of the chunk
    * in which the implementations handle multiple queries. The property that

@@ -28,6 +28,7 @@ import org.gridforum.jgss.ExtendedGSSManager;
 import edu.isi.pegasus.planner.classes.AuthenticateRequest;
 import edu.isi.pegasus.planner.classes.Profile;
 import edu.isi.pegasus.common.logging.LogManager;
+import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.ENV;
 import edu.isi.pegasus.planner.catalog.site.impl.old.PoolInfoProvider;
@@ -217,7 +218,7 @@ public class ThreadPool {
         //load from the pool.config
         env.checkKeyInNS(mPoolHandle.getPoolProfile("local",Profile.ENV));
         //load from property file
-        env.checkKeyInNS(mProps.getLocalPoolEnvVar());
+        env.checkKeyInNS( mProps.getProfiles(Profiles.NAMESPACES.env));
 
         return env;
     }

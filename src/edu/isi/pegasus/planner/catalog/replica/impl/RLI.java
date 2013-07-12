@@ -114,7 +114,7 @@ public class RLI implements ReplicaCatalog {
      * The key that if set, specifies the proxy to be picked up while connecting
      * to the RLS.
      */
-    public static final String PROXY_KEY = "proxy";
+    public static final String PROXY_KEY = ReplicaCatalog.PROXY_KEY;
 
     /**
      * The error message for not connected to RLI.

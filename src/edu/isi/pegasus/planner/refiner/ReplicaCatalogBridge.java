@@ -307,6 +307,14 @@ public class ReplicaCatalogBridge
                 String name =  ReplicaCatalog.c_prefix + "." + ReplicaCatalogBridge.CACHE_READ_ONLY_KEY;
                 props.setProperty( name, "true" );
                 
+                if( mLocalEnv.containsKey( ENV.X509_USER_PROXY_KEY ) ){
+                    String proxy = (String)mLocalEnv.get( ENV.X509_USER_PROXY_KEY);
+                    mLogger.log( "Proxy used for Replica Catalog is " + proxy,
+                                 LogManager.DEBUG_MESSAGE_LEVEL );
+                    props.setProperty( ReplicaCatalog.c_prefix + "." + ReplicaCatalog.PROXY_KEY, 
+                                       proxy );
+                }
+                
                 mReplicaCatalog = ReplicaFactory.loadInstance( props );          
 
                 //load all the mappings.
@@ -985,7 +993,7 @@ public class ReplicaCatalogBridge
         SiteCatalogEntry local = mSiteStore.lookup( "local" );        
         env.checkKeyInNS( local.getProfiles().get( Profiles.NAMESPACES.env ) );
         //load from property file
-        env.checkKeyInNS( mProps.getLocalPoolEnvVar() );
+        env.checkKeyInNS( mProps.getProfiles(Profiles.NAMESPACES.env));
 
         // the new RC API has a different key. if that is specified use that.
         //mProps.getProperty( ReplicaCatalog.c_prefix )
