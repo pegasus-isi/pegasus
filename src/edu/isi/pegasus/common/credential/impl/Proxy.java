@@ -62,8 +62,8 @@ public class Proxy  extends Abstract implements CredentialHandler{
      * Returns the path to user proxy. The order of preference is as follows
      *
      * - If a proxy is specified in the site catalog entry that is used
-     * - Else the one pointed to by the environment variable X509_USER_PROXY
      * - Else the one specified in the properties
+     * - Else the one pointed to by the environment variable X509_USER_PROXY
      * - Else the default path to the proxy in /tmp is created as determined by
      *     CoGProperties.getDefault().getProxyFile()
      *
@@ -77,6 +77,12 @@ public class Proxy  extends Abstract implements CredentialHandler{
         //check if one is specified in site catalog entry
         String proxy = ( siteEntry == null )? null :siteEntry.getEnvironmentVariable( Proxy.X509_USER_PROXY_KEY);
 
+        if( proxy == null ) {
+            //load from property file
+            Namespace env = mProps.getProfiles(Profiles.NAMESPACES.env);
+            proxy = (String)env.get( Proxy.X509_USER_PROXY_KEY );
+        }
+        
         if( proxy == null){
             //check if X509_USER_PROXY is specified in the environment
             Map<String,String> envs = System.getenv();
@@ -84,13 +90,6 @@ public class Proxy  extends Abstract implements CredentialHandler{
                 proxy = envs.get( Proxy.X509_USER_PROXY_KEY );
             }
         }
-
-        
-        if( proxy == null ) {
-            //load from property file
-            Namespace env = mProps.getProfiles(Profiles.NAMESPACES.env);
-            proxy = (String)env.get( Proxy.X509_USER_PROXY_KEY );
-        }       
 
         if( proxy == null ){
             //construct default path to user proxy in /tmp
