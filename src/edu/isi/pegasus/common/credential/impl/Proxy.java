@@ -17,7 +17,9 @@
 package edu.isi.pegasus.common.credential.impl;
 
 import edu.isi.pegasus.common.credential.CredentialHandler;
+import edu.isi.pegasus.planner.catalog.classes.Profiles;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
+import edu.isi.pegasus.planner.namespace.Namespace;
 
 
 
@@ -61,6 +63,7 @@ public class Proxy  extends Abstract implements CredentialHandler{
      *
      * - If a proxy is specified in the site catalog entry that is used
      * - Else the one pointed to by the environment variable X509_USER_PROXY
+     * - Else the one specified in the properties
      * - Else the default path to the proxy in /tmp is created as determined by
      *     CoGProperties.getDefault().getProxyFile()
      *
@@ -82,21 +85,17 @@ public class Proxy  extends Abstract implements CredentialHandler{
             }
         }
 
+        
+        if( proxy == null ) {
+            //load from property file
+            Namespace env = mProps.getProfiles(Profiles.NAMESPACES.env);
+            proxy = (String)env.get( Proxy.X509_USER_PROXY_KEY );
+        }       
 
         if( proxy == null ){
             //construct default path to user proxy in /tmp
             proxy = CoGProperties.getDefault().getProxyFile();
         }
-
-
-        //overload from the properties file
-        /*
-        ENV env = new ENV();
-        env.checkKeyInNS( mProps,"local" );
-        proxy = env.containsKey( ENV.X509_USER_PROXY_KEY )?
-                (String)env.get( ENV.X509_USER_PROXY_KEY ):
-                proxy;
-        */
 
         return proxy;
     }

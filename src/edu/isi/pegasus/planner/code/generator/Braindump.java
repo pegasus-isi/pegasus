@@ -15,13 +15,16 @@
  */
 package edu.isi.pegasus.planner.code.generator;
 
+import edu.isi.pegasus.common.credential.CredentialHandler;
+import edu.isi.pegasus.common.credential.CredentialHandlerFactory;
+import edu.isi.pegasus.common.credential.impl.Proxy;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.common.util.Version;
+
 import edu.isi.pegasus.planner.code.CodeGeneratorException;
 
 import java.net.UnknownHostException;
 
-import org.globus.gsi.GlobusCredentialException;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.DagInfo;
 import edu.isi.pegasus.planner.classes.PegasusBag;
@@ -31,7 +34,6 @@ import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.cluster.aggregator.JobAggregatorFactory;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 
-import org.globus.gsi.GlobusCredential;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -44,6 +46,12 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.Map;
+import org.globus.common.CoGProperties;
+import org.gridforum.jgss.ExtendedGSSManager;
+import org.ietf.jgss.GSSCredential;
+import org.ietf.jgss.GSSException;
+import org.ietf.jgss.GSSManager;
+import org.ietf.jgss.GSSName;
 
 /**
  * Braindump file code generator that generates a Braindump file for the 
@@ -446,14 +454,31 @@ public class Braindump {
      */
     protected String getGridDN( ){
         String dn = null;
+        //load and intialize the CredentialHandler Factory
+        CredentialHandlerFactory factory = new CredentialHandlerFactory();
+        factory.initialize( mBag );
+        CredentialHandler handler = factory.loadInstance(CredentialHandler.TYPE.x509);
+        String proxy =  handler.getPath( "local" );
+        
         try {
-            
-            GlobusCredential credential = GlobusCredential.getDefaultCredential();
-                    //new GlobusCredential(proxyFile);
-
-            dn = credential.getIdentity();
-        } catch (GlobusCredentialException ex) {
-            mLogger.log( "Unable to determine GRID DN", ex, LogManager.DEBUG_MESSAGE_LEVEL );
+            String defaultProxy = CoGProperties.getDefault().getProxyFile();
+            if( !defaultProxy.equalsIgnoreCase( proxy ) ){
+                //the user specified proxy, somewhere in Pegasus configuration
+                //can be properties, site catalog or environment.
+               mLogger.log( "X509_USER_PROXY system property is set to "+ proxy,
+                            LogManager.CONFIG_MESSAGE_LEVEL );
+               System.setProperty( Proxy.X509_USER_PROXY_KEY, proxy);
+        
+            }
+            GSSManager manager = ExtendedGSSManager.getInstance();
+            GSSCredential credential = manager.createCredential(GSSCredential.INITIATE_AND_ACCEPT);
+            GSSName name = credential.getName();
+            if( name != null ){
+                dn = name.toString();
+            }
+        } 
+        catch (GSSException gsse) {
+            mLogger.log( "Unable to determine GRID DN", gsse, LogManager.DEBUG_MESSAGE_LEVEL );
         }
         catch( Exception e ){
             mLogger.log( "Unknown exception caught while determining the DN", e, LogManager.DEBUG_MESSAGE_LEVEL );

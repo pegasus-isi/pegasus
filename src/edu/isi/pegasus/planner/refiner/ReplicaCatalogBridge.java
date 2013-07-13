@@ -17,8 +17,9 @@
 package edu.isi.pegasus.planner.refiner;
 
 
+import edu.isi.pegasus.common.credential.CredentialHandler;
+import edu.isi.pegasus.common.credential.CredentialHandlerFactory;
 import edu.isi.pegasus.common.logging.LoggingKeys;
-import edu.isi.pegasus.planner.catalog.classes.Profiles;
 
 import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteCatalogEntry;
@@ -35,18 +36,11 @@ import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 
-import edu.isi.pegasus.planner.namespace.ENV;
-
 import edu.isi.pegasus.planner.catalog.ReplicaCatalog;
-import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
-
 import edu.isi.pegasus.planner.catalog.replica.ReplicaFactory;
 
-
-
+import edu.isi.pegasus.planner.catalog.transformation.TransformationCatalogEntry;
 import edu.isi.pegasus.planner.catalog.transformation.classes.TCType;
-
-import edu.isi.pegasus.common.util.Separator;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -206,12 +200,6 @@ public class ReplicaCatalogBridge
     private boolean mTreatCacheAsRC;
 
     /**
-     * The namespace object holding the environment variables for local
-     * pool.
-     */
-    private ENV mLocalEnv;
-
-    /**
      * The default tc entry.
      */
     private TransformationCatalogEntry mDefaultTCRCEntry;
@@ -236,8 +224,6 @@ public class ReplicaCatalogBridge
      *
      */
     public ReplicaCatalogBridge( ADag dag ,
-//                                 PegasusProperties properties,
-//                                 PlannerOptions options 
                                  PegasusBag bag ) {
         super( bag );
         this.initialize( dag, bag );
@@ -284,10 +270,6 @@ public class ReplicaCatalogBridge
         //filenames
         mSearchFiles = dag.dagInfo.getLFNs( options.getForce() );
 
-        //load the local environment variable
-        //from pool config and property file
-        mLocalEnv = loadLocalEnvVariables();
-
         //only for windward for time being
         properties.setProperty( "pegasus.catalog.replica.dax.id", dag.getAbstractWorkflowName() );
         properties.setProperty( "pegasus.catalog.replica.mrc.windward.dax.id", dag.getAbstractWorkflowName() );
@@ -307,10 +289,10 @@ public class ReplicaCatalogBridge
                 String name =  ReplicaCatalog.c_prefix + "." + ReplicaCatalogBridge.CACHE_READ_ONLY_KEY;
                 props.setProperty( name, "true" );
                 
-                if( mLocalEnv.containsKey( ENV.X509_USER_PROXY_KEY ) ){
-                    String proxy = (String)mLocalEnv.get( ENV.X509_USER_PROXY_KEY);
+                String proxy = getPathToLocalProxy();
+                if( proxy != null ){
                     mLogger.log( "Proxy used for Replica Catalog is " + proxy,
-                                 LogManager.DEBUG_MESSAGE_LEVEL );
+                                 LogManager.CONFIG_MESSAGE_LEVEL );
                     props.setProperty( ReplicaCatalog.c_prefix + "." + ReplicaCatalog.PROXY_KEY, 
                                        proxy );
                 }
@@ -837,9 +819,6 @@ public class ReplicaCatalogBridge
     }
 
     
-
-
-
     /**
      * Retrieves a location from the cache table, that contains the contents
      * of the cache files specified at runtime.
@@ -967,10 +946,6 @@ public class ReplicaCatalogBridge
                 catalog.close();
             }
         }
-            
-        
-
-        
         
         mLogger.logEventCompletion();
         return store;
@@ -978,27 +953,16 @@ public class ReplicaCatalogBridge
 
 
     /**
-     * Reads in the environment variables into memory from the properties file
-     * and the pool catalog.
-     *
-     * @return  the <code>ENV</code> namespace object holding the environment
-     *          variables.
+     * Returns path to the local proxy
+     * 
+     * @return path to the local proxy 
      */
-    private ENV loadLocalEnvVariables() {
-        //assumes that pool handle, and property handle are initialized.
-        ENV env = new ENV();
-
-        //load from the pool.config
-//        env.checkKeyInNS( mPoolHandle.getPoolProfile( "local", Profile.ENV ) );
-        SiteCatalogEntry local = mSiteStore.lookup( "local" );        
-        env.checkKeyInNS( local.getProfiles().get( Profiles.NAMESPACES.env ) );
-        //load from property file
-        env.checkKeyInNS( mProps.getProfiles(Profiles.NAMESPACES.env));
-
-        // the new RC API has a different key. if that is specified use that.
-        //mProps.getProperty( ReplicaCatalog.c_prefix )
-
-        return env;
+    private String getPathToLocalProxy() {
+        //load and intialize the CredentialHandler Factory
+        CredentialHandlerFactory factory = new CredentialHandlerFactory();
+        factory.initialize( mBag );
+        CredentialHandler handler = factory.loadInstance(CredentialHandler.TYPE.x509);
+        return handler.getPath( "local" );
     }
 
 
