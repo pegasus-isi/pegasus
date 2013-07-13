@@ -459,6 +459,8 @@ public class Braindump {
         factory.initialize( mBag );
         CredentialHandler handler = factory.loadInstance(CredentialHandler.TYPE.x509);
         String proxy =  handler.getPath( "local" );
+        mLogger.log( "Proxy whose DN will be logged in the braindump file " + proxy,
+                     LogManager.DEBUG_MESSAGE_LEVEL );
         
         try {
             String defaultProxy = CoGProperties.getDefault().getProxyFile();
