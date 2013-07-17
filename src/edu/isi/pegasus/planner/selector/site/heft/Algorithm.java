@@ -615,29 +615,38 @@ public class Algorithm {
         String value = null;
         int nodes = 0;
         for( Iterator it = mSites.iterator(); it.hasNext(); ){
-//            SiteInfo s = mSiteHandle.getPoolEntry( site, "vanilla" );
-//            JobManager manager = s.selectJobManager( "vanilla", true );
-//            value = (String)manager.getInfo( JobManager.IDLE_NODES );
             String site = (String)it.next();
             SiteCatalogEntry eSite = mSiteStore.lookup( site );
-            GridGateway jobManager = eSite.selectGridGateway( GridGateway.JOB_TYPE.compute );   
+            if( eSite == null ){
+                throw new RuntimeException( "Unable to find site in site store entry for site " + site );
+            }
             
-            try {
-                nodes = jobManager.getIdleNodes();
-                if( nodes == -1 ){
-                    mLogger.log( "Picking up total nodes for site " + site, 
-                                 LogManager.DEBUG_MESSAGE_LEVEL );
-                    nodes = jobManager.getTotalNodes();
-                
+            GridGateway jobManager = eSite.selectGridGateway( GridGateway.JOB_TYPE.compute );
+            if( jobManager == null ){
+                mLogger.log( "Site not associated with a gridgateway. Using default number of freenodes " + site, 
+                             LogManager.DEBUG_MESSAGE_LEVEL );
+                nodes = Algorithm.DEFAULT_NUMBER_OF_FREE_NODES;
+            }
+            else{
+                try {
+                    nodes = jobManager.getIdleNodes();
                     if( nodes == -1 ){
-                        mLogger.log( "Picking up default free nodes for site " + site, 
+                        mLogger.log( "Picking up total nodes for site " + site, 
                                      LogManager.DEBUG_MESSAGE_LEVEL );
-                        nodes = Algorithm.DEFAULT_NUMBER_OF_FREE_NODES;
+                        nodes = jobManager.getTotalNodes();
+
+                        if( nodes == -1 ){
+                            mLogger.log( "Picking up default free nodes for site " + site, 
+                                         LogManager.DEBUG_MESSAGE_LEVEL );
+                            nodes = Algorithm.DEFAULT_NUMBER_OF_FREE_NODES;
+                        }
                     }
                 }
-            }catch( Exception e ){
-                nodes = this.DEFAULT_NUMBER_OF_FREE_NODES;
+                catch( Exception e ){
+                    nodes = Algorithm.DEFAULT_NUMBER_OF_FREE_NODES;
+                }
             }
+            
             mLogger.log( "Available nodes set for site " + site + " " + nodes, 
                                  LogManager.DEBUG_MESSAGE_LEVEL );
             mSiteMap.put( site, new Site( site,  nodes ) );

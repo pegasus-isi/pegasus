@@ -451,6 +451,7 @@ public class CPlanner extends Executable{
         if( eSites.contains( "*" ) ){
             //set execution sites to all sites that are loaded into site store
             //only if a user passed * option on command line or did not specify
+            eSites.remove( "*" );
             eSites.addAll( s.list() );
         }
         mLogger.log( "Execution sites are         " + eSites, LogManager.DEBUG_MESSAGE_LEVEL );
