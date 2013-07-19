@@ -67,7 +67,7 @@ class Analyzer(BaseAnalyzer, SQLAlchemyInit):
         try:
             SQLAlchemyInit.__init__(self, connString, initializeToPegasusDB, **_kw)
         except exceptions.OperationalError, e:
-            self.log.error('init', msg='%s' % ErrorStrings.get_init_error(e))
+            self.log.error('init', msg='Connection String %s  %s' % (connString ,ErrorStrings.get_init_error(e)))
             raise RuntimeError
 
         # Check the schema version before proceeding.
