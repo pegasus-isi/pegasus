@@ -988,12 +988,12 @@ if os.access(os.path.join(run, MONITORD_RECOVER_FILE), os.F_OK):
     logger.warning("monitord entering it's own recovery mode. Population will start again for the workflow..")
 
 # Create wf_event_sink object
+restart_logging = False
 if no_events:
     wf_event_sink = None # Avoid parsing kickstart output if not
                          # generating bp file or database events
     dashboard_event_sink = None
 else:
-    restart_logging = False
     if replay_mode or os.access(os.path.join(run, MONITORD_RECOVER_FILE), os.F_OK):
         restart_logging = True
 
