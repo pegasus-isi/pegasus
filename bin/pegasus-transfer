@@ -310,7 +310,7 @@ class CpHandler(TransferHandlerBase):
 
     def do_transfer(self, transfer, attempt):
         prepare_local_dir(os.path.dirname(transfer.dst_path))
-        cmd = "/bin/cp -f -L \"%s\" \"%s\"" \
+        cmd = "/bin/cp -f -L '%s' '%s'" \
             % (transfer.src_path, transfer.dst_path)
         try:
             myexec(cmd, default_subshell_timeout, True)
@@ -710,16 +710,16 @@ class IRodsHandler(TransferHandlerBase):
         if transfer.dst_proto == "file":
             # irods->file
             prepare_local_dir(os.path.dirname(transfer.dst_path))
-            cmd = "iget -f " + transfer.src_path + " " + transfer.dst_path
+            cmd = "iget -f '" + transfer.src_path + "' '" + transfer.dst_path + "'"
         else:
             # file->irods
-            cmd = "imkdir -p " + os.path.dirname(transfer.dst_path)
+            cmd = "imkdir -p '" + os.path.dirname(transfer.dst_path) + "'"
             try:
                 myexec(cmd, 60*60, True)
             except:
                 # ignore errors from the mkdir command
                 pass
-            cmd = "iput -f " + transfer.src_path + " " +  transfer.dst_path
+            cmd = "iput -f '" + transfer.src_path + "' '" +  transfer.dst_path + "'"
 
         try:
             myexec(cmd, default_subshell_timeout, True)
@@ -766,19 +766,19 @@ class S3Handler(TransferHandlerBase):
         if (transfer.src_proto == "s3" or transfer.src_proto == "s3s") and \
            (transfer.dst_proto == "s3" or transfer.dst_proto == "s3s"):
             # s3 -> s3
-            cmd = "pegasus-s3 cp -f -c %s %s" % (transfer.src_url(),
-                                                 transfer.dst_url())
+            cmd = "pegasus-s3 cp -f -c '%s' '%s'" % (transfer.src_url(),
+                                                     transfer.dst_url())
         elif transfer.dst_proto == "file":
             # this is a 'get'
             local_filename = transfer.dst_path
             prepare_local_dir(os.path.dirname(transfer.dst_path))
-            cmd = "pegasus-s3 get %s %s" % (transfer.src_url(),
-                                            transfer.dst_path)
+            cmd = "pegasus-s3 get '%s' '%s'" % (transfer.src_url(),
+                                                transfer.dst_path)
         else:
             # this is a 'put'
             local_filename = transfer.src_path
-            cmd = "pegasus-s3 put -f -b %s %s" % (transfer.src_path,
-                                                  transfer.dst_url())
+            cmd = "pegasus-s3 put -f -b '%s' '%s'" % (transfer.src_path,
+                                                      transfer.dst_url())
 
         try:
             myexec(cmd, default_subshell_timeout, True)
@@ -825,10 +825,10 @@ class SRMHandler(TransferHandlerBase):
             cmd = "lcg-cp"
             if logger.isEnabledFor(logging.DEBUG):
                 cmd = cmd + " -v"
-            cmd = cmd + " -b -D srmv2 %s %s" \
+            cmd = cmd + " -b -D srmv2 '%s' '%s'" \
                   % (transfer.src_url_srm(), transfer.dst_url_srm())
         else:
-            cmd = "srm-copy  %s %s -mkdir" \
+            cmd = "srm-copy '%s' '%s' -mkdir" \
                   % (transfer.src_url_srm(), transfer.dst_url_srm())
             if third_party:
                 cmd = cmd + " -parallelism 4 -3partycopy"
@@ -869,8 +869,8 @@ class ScpHandler(TransferHandlerBase):
                     self._prepare_scp_dir(transfer.dst_host,
                                          os.path.dirname(transfer.dst_path))
                     remote_dirs_created[mkdir_key] = True
-                cmd += " " + transfer.src_path
-                cmd += " " + transfer.dst_host + ":" + transfer.dst_path
+                cmd += " '" + transfer.src_path + "'"
+                cmd += " '" + transfer.dst_host + ":" + transfer.dst_path + "'"
                 stats_add(transfer.src_path)
 
             myexec(cmd, default_subshell_timeout, True)
@@ -926,7 +926,7 @@ class SymlinkHandler(TransferHandlerBase):
                                % (transfer.src_path, transfer.dst_path))
                 return True
 
-        cmd = "ln -f -s %s %s" % (transfer.src_path, transfer.dst_path)
+        cmd = "ln -f -s '%s' '%s'" % (transfer.src_path, transfer.dst_path)
         try:
             myexec(cmd, 60, True)
         except RuntimeError, err:
@@ -1129,7 +1129,7 @@ def alarm_handler(signum, frame):
 
 
 def expand_env_vars(s):
-    re_env_var = re.compile(r'\${?([a-zA-Z0-9_]+)}?')
+    re_env_var = re.compile(r'\${?([a-zA-Z][a-zA-Z0-9_]+)}?')
     s = re.sub(re_env_var, get_env_var, s)
     return s
 
