@@ -5,180 +5,172 @@ import getpass
 
 from pegasus.service import schema, migrations, config, db, users
 
-def parse_args(args, synopsis):
-    script = os.path.basename(sys.argv[0])
-    parser = OptionParser("%s %s" % (script, synopsis))
+from pegasus.service.command import Command, CompoundCommand
 
-    parser.add_option("--config", action="store", dest="config",
-            default=None, help="Path to configuration file")
-    parser.add_option("--dburi", action="store", dest="dburi",
-            default=None, help="SQLAlchemy database URI")
-    parser.add_option("-d", "--debug", action="store_true", dest="debug",
-            default=None, help="Enable debugging")
+class AdminCommand(Command):
+    def __init__(self):
+        Command.__init__(self)
+        self.parser.add_option("--config", action="store", dest="config",
+                default=None, help="Path to configuration file")
+        self.parser.add_option("--dburi", action="store", dest="dburi",
+                default=None, help="SQLAlchemy database URI")
+        self.parser.add_option("-d", "--debug", action="store_true", dest="debug",
+                default=None, help="Enable debugging")
 
-    options, args = parser.parse_args(args)
+    def main(self, args=None):
+        self.parse(args)
 
-    if options.config:
-        config.load_config(options.config)
+        if self.options.config:
+            config.load_config(options.config)
 
-    if options.dburi:
-        config.set_dburi(options.dburi)
+        if self.options.dburi:
+            config.set_dburi(options.dburi)
 
-    if options.debug:
-        config.set_debug(True)
+        if self.options.debug:
+            config.set_debug(True)
 
-    return options, args, parser
+        self.run()
 
-def usage():
-    "Print help message"
-    print "Usage: %s COMMAND\n" % os.path.basename(sys.argv[0])
-    print "Commands:"
-    for name, fn in COMMANDS.items():
-        print "    %-10s %s" % (name, fn.__doc__)
-    exit(1)
+class CreateCommand(AdminCommand):
+    usage = "%prog create"
+    description = "Create the database"
 
-def create(args):
-    "Create the database"
-    options, args, parser = parse_args(args, "create")
+    def run(self):
+        if len(self.args) > 0:
+            self.parser.error("Invalid argument")
 
-    if len(args) > 0:
-        parser.error("Invalid argument")
+        # First we check to see if it is current
+        cur = migrations.current_schema()
+        if cur is None:
+            print "Creating database..."
+            migrations.create()
+        elif cur < schema.version:
+            print "Database schema out of date. Please run migrate."
+        elif cur == schema.version:
+            print "Database schema up-to-date."
+        else:
+            print "Database schema is newer than expected. "\
+                  "Expected <= %d, got %d." % (schema.version, cur)
 
-    # First we check to see if it is current
-    schema = migrations.current_schema()
-    if schema is None:
-        print "Creating database..."
-        migrations.create()
-    elif schema < schema.version:
-        print "Database schema out of date. Please run migrate."
-    elif schema == schema.version:
-        print "Database schema up-to-date."
-    else:
-        print "Database schema is newer than expected. "\
-              "Expected <= %d, got %d." % (schema.version, schema)
+class DropCommand(AdminCommand):
+    usage = "%prog drop"
+    description = "Drop the database"
 
-def drop(args):
-    "Drop the database"
-    options, args, parser = parse_args(args, "drop")
+    def run(self):
+        if len(self.args) > 0:
+            self.parser.error("Invalid argument")
 
-    if len(args) > 0:
-        print "Invalid argument"
-        usage()
+        sure = raw_input("Are you sure? [y/n] ") == "y"
+        if sure:
+            print "Dropping database..."
+            migrations.drop()
 
-    sure = raw_input("Are you sure? [y/n] ") == "y"
-    if sure:
-        print "Dropping database..."
-        migrations.drop()
+class MigrateCommand(AdminCommand):
+    usage = "%prog migrate [version]"
+    description = "Update the database schema"
 
-def migrate(args):
-    "Update the database schema"
-    options, args, parser = parse_args(args, "migrate [version]")
+    def run(self):
+        if len(self.args) > 1:
+            self.parser.error("Invalid argument")
+        elif len(self.args) == 1:
+            target = int(self.args[0])
+        else:
+            target = schema.version
 
-    if len(args) > 1:
-        parser.error("Invalid argument")
-    elif len(args) == 1:
-        target = int(args[0])
-    else:
-        target = schema.version
+        current = migrations.current_schema()
+        if current is None:
+            print "No database schema. Please run create."
+            exit(1)
 
-    current = migrations.current_schema()
-    if current is None:
-        print "No database schema. Please run create."
-        exit(1)
+        if current == target:
+            print "Database schema up to date"
+            exit(0)
 
-    if current == target:
-        print "Database schema up to date"
-        exit(0)
+        print "Migrating database schema from v%d to v%d..." %(current, target)
+        migrations.migrate(target)
 
-    print "Migrating database schema from v%d to v%d..." %(current, target)
-    migrations.migrate(target)
+class UserAddCommand(AdminCommand):
+    usage = "%prog useradd USERNAME EMAIL"
+    description = "Add a user"
 
-def useradd(args):
-    "Add a user"
-    options, args, parser = parse_args(args, "useradd USERNAME EMAIL")
+    def run(self):
+        if len(self.args) < 2:
+            self.parser.error("Specify USERNAME and EMAIL")
+        elif len(self.args) > 2:
+            self.parser.error("Invalid argument")
 
-    if len(args) < 2:
-        parser.error("Specify USERNAME and EMAIL")
-    elif len(args) > 2:
-        parser.error("Invalid argument")
+        username = self.args[0]
+        email = self.args[1]
 
-    username = args[0]
-    email = args[1]
+        try:
+            users.create(username, None, email)
+            db.session.commit()
+        except Exception, e:
+            if self.options.debug: raise
+            print e
+            exit(1)
 
-    try:
-        users.create(username, None, email)
-        db.session.commit()
-    except Exception, e:
-        if options.debug: raise
-        print e
-        exit(1)
+class UserListCommand(AdminCommand):
+    usage = "%prog userlist"
+    description = "List all users"
 
-def userlist(args):
-    "List all users"
-    options, args, parser = parse_args(args, "userlist")
+    def run(self):
+        if len(self.args) > 0:
+            self.parser.error("Invalid argument")
 
-    if len(args) > 0:
-        parser.error("Invalid argument")
+        print "%-20s %-20s" % ("USERNAME", "EMAIL")
+        for user in users.all():
+            print "%-20s %-20s" % (user.username, user.email)
 
-    print "%-20s %-20s" % ("USERNAME", "EMAIL")
-    for user in users.all():
-        print "%-20s %-20s" % (user.username, user.email)
+class PasswdCommand(AdminCommand):
+    usage = "%prog passwd USERNAME"
+    description = "Change a user's password"
 
-def passwd(args):
-    "Change a user's password"
-    options, args, parser = parse_args(args, "passwd USERNAME")
+    def run(self):
+        if len(self.args) != 1:
+            self.parser.error("Invalid argument")
 
-    if len(args) != 1:
-        parser.error("Invalid argument")
+        try:
+            users.passwd(self.args[0], None)
+            db.session.commit()
+        except Exception, e:
+            if self.options.debug: raise
+            print e
+            exit(1)
 
-    try:
-        users.passwd(args[0], None)
-        db.session.commit()
-    except Exception, e:
-        if options.debug: raise
-        print e
-        exit(1)
+class UsermodCommand(AdminCommand):
+    usage = "%prog usermod USERNAME EMAIL"
+    description = "Change a user's email"
 
-def usermod(args):
-    "Change a user's email"
-    options, args, parser = parse_args(args, "usermod USERNAME EMAIL")
+    def run(self):
+        if len(self.args) < 2:
+            self.parser.error("Specify USERNAME and EMAIL")
+        elif len(self.args) > 2:
+            self.parser.error("Invalid argument")
 
-    if len(args) < 2:
-        parser.error("Specify USERNAME and EMAIL")
-    elif len(args) > 2:
-        parser.error("Invalid argument")
+        username = self.args[0]
+        email = self.args[1]
 
-    username = args[0]
-    email = args[1]
+        try:
+            users.usermod(username, email)
+            db.session.commit()
+        except Exception, e:
+            if self.options.debug: raise
+            print e
+            exit(1)
 
-    try:
-        users.usermod(username, email)
-        db.session.commit()
-    except Exception, e:
-        if options.debug: raise
-        print e
-        exit(1)
-
-COMMANDS = {
-    'create': create,
-    'drop': drop,
-    'migrate': migrate,
-    'userlist': userlist,
-    'useradd': useradd,
-    'passwd': passwd,
-    'usermod': usermod
-}
+class AdminClient(CompoundCommand):
+    description = "Administrative client for Pegasus Service"
+    commands = {
+        'create': CreateCommand,
+        'drop': DropCommand,
+        'migrate': MigrateCommand,
+        'userlist': UserListCommand,
+        'useradd': UserAddCommand,
+        'passwd': PasswdCommand,
+        'usermod': UsermodCommand
+    }
 
 def main():
-    if len(sys.argv) <= 1:
-        usage()
-
-    command = sys.argv[1]
-    fn = COMMANDS.get(command, None)
-
-    if not fn:
-        print "No such command: %s" % command
-        exit(1)
-
-    fn(sys.argv[2:])
+    AdminClient().main()
 

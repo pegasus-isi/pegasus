@@ -28,6 +28,7 @@ setup(
         'console_scripts': [
             'pegasus-service-server = pegasus.service.server:main',
             'pegasus-service-admin = pegasus.service.admin:main',
+            'pegasus-service-rc = pegasus.service.replicas.client:main'
         ]
     },
     install_requires = [
@@ -39,7 +40,7 @@ setup(
         "SQLAlchemy==0.8.0",
         "MySQL-python==1.2.4c1",
         "WTForms==1.0.3",
-        "requests==1.1.0",
+        "requests==1.2.3",
         "passlib==1.6.1",
         "MarkupSafe==0.18"
     ],

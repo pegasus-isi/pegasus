@@ -8,5 +8,5 @@ app.config.from_object("pegasus.service.defaults")
 from flask.ext.sqlalchemy import SQLAlchemy
 db = SQLAlchemy(app)
 
-from pegasus.service import auth, filters, dashboard
+from pegasus.service import auth, filters, dashboard, replicas
 
