@@ -65,8 +65,8 @@ if [ "X${JAVA_HEAPMIN}" = "X" -a "X${JAVA_HEAPMAX}" = "X" ]; then
     fi
 
     # upper limit - useful for large memory systems
-    if [ $heap_max -gt 4096 ]; then
-        heap_max=4096
+    if [ $heap_max -gt 16384 ]; then
+        heap_max=16384
     fi
 
     # upper limit - ulimit
