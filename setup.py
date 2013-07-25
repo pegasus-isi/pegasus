@@ -31,13 +31,17 @@ setup(
         ]
     },
     install_requires = [
-        "pegasus-wms",
-        "Flask",
-        "Flask-SQLAlchemy",
-        "MySQL-python",
-        "WTForms",
-        "requests",
-        "passlib"
+        "pegasus-wms>=4.3.0",
+        "werkzeug==0.9.3",
+        "Flask==0.10",
+        "Jinja2==2.7",
+        "Flask-SQLAlchemy==0.16",
+        "SQLAlchemy==0.8.0",
+        "MySQL-python==1.2.4c1",
+        "WTForms==1.0.3",
+        "requests==1.1.0",
+        "passlib==1.6.1",
+        "MarkupSafe==0.18"
     ],
     test_suite = "pegasus.service.tests"
 )
