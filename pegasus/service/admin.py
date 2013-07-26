@@ -3,31 +3,21 @@ import sys
 from optparse import OptionParser
 import getpass
 
-from pegasus.service import schema, migrations, config, db, users
+from pegasus.service import schema, migrations, db, users
 
 from pegasus.service.command import Command, CompoundCommand
 
 class AdminCommand(Command):
     def __init__(self):
         Command.__init__(self)
-        self.parser.add_option("--config", action="store", dest="config",
-                default=None, help="Path to configuration file")
-        self.parser.add_option("--dburi", action="store", dest="dburi",
-                default=None, help="SQLAlchemy database URI")
         self.parser.add_option("-d", "--debug", action="store_true", dest="debug",
                 default=None, help="Enable debugging")
 
     def main(self, args=None):
         self.parse(args)
 
-        if self.options.config:
-            config.load_config(options.config)
-
-        if self.options.dburi:
-            config.set_dburi(options.dburi)
-
         if self.options.debug:
-            config.set_debug(True)
+            app.config.update(DEBUG=True)
 
         self.run()
 

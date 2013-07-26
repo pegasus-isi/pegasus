@@ -3,20 +3,15 @@ import sys
 import urlparse
 import requests
 from optparse import OptionParser
-from ConfigParser import ConfigParser
+
+from pegasus.service import app
 
 class Command:
     description = None
     usage = "Usage: %prog [options] [args]"
 
     def __init__(self):
-        self.config = ConfigParser()
-        self.config.read(os.path.expanduser("~/.pegasus/service.cfg"))
-
         self.parser = OptionParser(usage=self.usage, description=self.description)
-        self.parser.add_option("-c", metavar="CONFIG", action="store", dest="config",
-                               default="~/.pegasus/service.cfg",
-                               help="Service config file")
 
     def parse(self, args):
         self.options, self.args = self.parser.parse_args(args)
@@ -75,9 +70,15 @@ class CompoundCommand(Command):
 class ClientCommand(Command):
     def __init__(self):
         Command.__init__(self)
-        self.endpoint = self.config.get("client", "endpoint")
-        self.username = self.config.get("client", "username")
-        self.password = self.config.get("client", "password")
+        self.endpoint = app.config["ENDPOINT"]
+        if not self.endpoint:
+            raise Exception("Specify ENDPOINT in configuration")
+        self.username = app.config["USERNAME"]
+        if not self.username:
+            raise Exception("Specify USERNAME in configuration")
+        self.password = app.config["PASSWORD"]
+        if not self.password:
+            raise Exception("Specify PASSWORD in configuration")
 
     def _request(self, method, path, **kwargs):
         headers = {

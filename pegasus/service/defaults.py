@@ -1,5 +1,11 @@
 import os
 
+# Server configuration
+SERVER_HOST = "127.0.0.1"
+SERVER_PORT = 5000
+
+DEBUG = False
+
 # The secret key used by Flask to encrypt session keys
 SECRET_KEY = os.urandom(24)
 
@@ -20,4 +26,9 @@ SQLALCHEMY_DATABASE_URI = 'sqlite:///%s/.pegasus/workflow.db' % os.getenv('HOME'
 # Set to change how long connections remain before being recycled (in seconds)
 # Default is 2 hours for MySQL
 #SQLALCHEMY_POOL_RECYCLE = 2 * 60 * 60
+
+# Client configuration
+ENDPOINT = "http://%s:%s/" % (SERVER_HOST, SERVER_PORT)
+USERNAME = ""
+PASSWORD = ""
 
