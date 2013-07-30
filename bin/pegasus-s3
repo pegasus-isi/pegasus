@@ -19,9 +19,9 @@ import os
 import math
 import stat
 import subprocess
+import traceback
 import threading
 import Queue
-import mmap
 import fnmatch
 import re
 import time
@@ -89,75 +89,13 @@ DEFAULT_CONFIG = {
 DEBUG = False
 VERBOSE = False
 
-class FilePart:
-    """
-    This is a file-like object that can be used to access a given range
-    of bytes in a file. It is used for chunked uploads and downloads.
-    """
-    def __init__(self, mm, start, length):
-        self.mm = mm
-        self.start = start
-        self.offset = start
-        self.length = length
-    
-    def seek(self, offset, whence=os.SEEK_SET):
-        if whence==os.SEEK_SET:
-            self.offset = self.start + offset
-        elif whence==os.SEEK_CUR:
-            self.offset += offset
-        elif whence==os.SEEK_END:
-            self.offset = self.start + self.length + offset
-        else:
-            raise Exception("Invalid seek")
-    
-    def tell(self):
-        return self.offset - self.start
-    
-    def read(self, size=None):
-        # Attempt to read before start
-        if self.offset < self.start:
-            return ''
-            
-        # Attempt to read past end
-        if self.offset - self.start >= self.length:
-            return ''
-        
-        remaining = self.start + self.length - self.offset
-        if size > remaining or size is None:
-            size = remaining
-        
-        start = self.offset
-        end = self.offset + size
-        
-        data = self.mm[start:end]
-        
-        self.offset += size
-        
-        return data
-    
-    def write(self, data):
-        size = len(data)
-        start = self.offset
-        end = self.offset + size
-        
-        # Attempt to write before start
-        if start < self.start:
-            raise Exception("Invalid offset")
-        
-        # Attempt to write past end
-        if end > self.start + self.length + 1:
-            raise Exception("Invalid offset")
-        
-        self.mm[start:end] = data
-        self.offset += size
-
 class WorkThread(threading.Thread):
     def __init__(self, queue):
         threading.Thread.__init__(self)
         self.queue = queue
         self.exception = None
         self.daemon = True
-        
+
     def run(self):
         try:
             # Just keep grabbing work units and
@@ -169,6 +107,7 @@ class WorkThread(threading.Thread):
         except Queue.Empty:
             return
         except Exception, e:
+            traceback.print_exc()
             self.exception = e
 
 def debug(message):
@@ -204,7 +143,7 @@ def help(args):
 
 def option_parser(usage):
     command = os.path.basename(sys.argv[0])
-    
+
     parser = OptionParser(usage="usage: %s %s" % (command, usage))
     parser.add_option("-d", "--debug", dest="debug", action="store_true",
         default=False, help="Turn on debugging")
@@ -213,24 +152,24 @@ def option_parser(usage):
     parser.add_option("-C", "--conf", dest="config",
         metavar="FILE", default=None,
         help="Path to configuration file")
-    
+
     # Add a hook so we can handle global arguments
     fn = parser.parse_args
     def parse(*args, **kwargs):
         options, args = fn(*args, **kwargs)
-        
+
         if options.debug:
             boto.set_stream_logger("boto")
             global DEBUG
             DEBUG = True
-            
+
         if options.verbose:
             global VERBOSE
             VERBOSE = True
-        
+
         return options, args
     parser.parse_args = parse
-    
+
     return parser
 
 def get_config(options):
@@ -267,39 +206,39 @@ def get_config(options):
 
 def parse_endpoint(uri):
     result = urlsplit(uri)
-    
+
     kwargs = {
         'is_secure': result.scheme=='https',
         'host': result.hostname,
         'port': result.port,
         'path': result.path
     }
-    
+
     location = LOCATIONS.get(result.hostname, '')
-    
+
     return kwargs, location
 
 def get_connection(config, uri):
     if not config.has_section(uri.site):
         raise Exception("Config file has no section for site '%s'" % uri.site)
-        
+
     if not config.has_section(uri.ident):
         raise Exception("Config file has no section for identity '%s'" % uri.ident)
-    
+
     endpoint = config.get(uri.site,"endpoint")
     kwargs, location = parse_endpoint(endpoint)
-    
+
     kwargs['aws_access_key_id'] = config.get(uri.ident,"access_key")
     kwargs['aws_secret_access_key'] = config.get(uri.ident,"secret_key")
     kwargs['calling_format'] = boto.s3.connection.OrdinaryCallingFormat()
-    
+
     # If the URI is s3s, then override the config
     if uri.secure:
         kwargs['is_secure'] = True
-        
+
     conn = boto.s3.connection.S3Connection(**kwargs)
     conn.location = location
-    
+
     return conn
 
 def read_command_file(path):
@@ -324,7 +263,7 @@ class S3URI:
         self.bucket = bucket
         self.key = key
         self.secure = secure
-        
+
     def __repr__(self):
         if self.secure:
             uri = "s3s://%s" % self.ident
@@ -338,7 +277,7 @@ class S3URI:
 
 def parse_uri(uri):
     "Parse S3 uri into an S3URI object"
-    
+
     # The only valid schemes are s3s:// and s3://
     if uri.startswith("s3s://"):
         secure = True
@@ -346,7 +285,7 @@ def parse_uri(uri):
         secure = False
     else:
         raise Exception("Invalid URL scheme: %s" % (uri))
-    
+
     # Need to do this because urlparse does not recognize
     # custom URI schemes. Replace our scheme with http.
     # The actual scheme used isn't important as long as
@@ -356,7 +295,7 @@ def parse_uri(uri):
     else:
         http = uri.replace("s3://","http://")
     result = urlsplit(http)
-    
+
     # The user should not be specifying a query part unless
     # they are trying to use the ? wildcard. If they do use
     # the ? wildcard, then urlsplit thinks it is the query
@@ -366,7 +305,7 @@ def parse_uri(uri):
         path = "?".join([result.path, result.query]).strip()
     else:
         path = result.path.strip()
-    
+
     # The path should be empty, /BUCKET or /BUCKET/KEY
     if path.startswith("/"):
         path = path[1:]
@@ -382,38 +321,38 @@ def parse_uri(uri):
             key = None
         else:
             key = comp[1]
-    
+
     # We require the username part
     user = result.username
     if user is None:
         raise Exception("User missing from URL: %s" % uri)
-    
+
     if result.port is None:
         site = result.hostname
     else:
         site = "%s:%s" % (result.hostname, result.port)
-    
+
     return S3URI(user, site, bucket, key, secure)
 
 def ls(args):
     parser = option_parser("ls URL...")
     options, args = parser.parse_args(args)
-    
+
     if len(args) == 0:
         parser.error("Specify a URL")
-    
+
     config = get_config(options)
-    
+
     items = []
     for uri in args:
         items.append(parse_uri(uri))
-    
+
     for uri in items:
         conn = get_connection(config, uri)
-        
+
         bucket = uri.bucket
         key = uri.key
-        
+
         sys.stdout.write("%s\n" % uri)
         if bucket is None:
             buckets = conn.get_all_buckets()
@@ -433,7 +372,7 @@ def ls(args):
                     if isinstance(o, boto.s3.prefix.Prefix):
                         continue
                     sys.stdout.write("\t%s\n" % o.name)
- 
+
 def cp(args):
     parser = option_parser("cp SRC[...] DEST")
 
@@ -445,12 +384,12 @@ def cp(args):
         default=False, help="If DEST key exists, then overwrite it")
 
     options, args = parser.parse_args(args)
-    
+
     if len(args) < 2:
         parser.error("Specify a SRC and DEST")
-    
+
     config = get_config(options)
-    
+
     items = [parse_uri(uri) for uri in args]
 
     # The last one is the DEST
@@ -519,14 +458,14 @@ def cp(args):
             bucket.copy_key(new_key_name = destkey, 
                             src_bucket_name = src.bucket, 
                             src_key_name = srckey)
-             
+
 def mkdir(args):
     parser = option_parser("mkdir URL...")
     options, args = parser.parse_args(args)
-    
+
     if len(args) == 0:
         parser.error("Specify URL")
-    
+
     buckets = []
     for arg in args:
         uri = parse_uri(arg)
@@ -535,21 +474,21 @@ def mkdir(args):
         if uri.key is not None:
             raise Exception("URL for mkdir cannot contain a key: %s" % arg)
         buckets.append(uri)
-        
+
     config = get_config(options)
-    
+
     for uri in buckets:
         info("Creating %s" % uri)
         conn = get_connection(config, uri)
         conn.create_bucket(uri.bucket, location=conn.location)
-    
+
 def rmdir(args):
     parser = option_parser("rmdir URL...")
     options, args = parser.parse_args(args)
-    
+
     if len(args) == 0:
         parser.error("Specify URL")
-    
+
     buckets = []
     for arg in args:
         uri = parse_uri(arg)
@@ -558,14 +497,14 @@ def rmdir(args):
         if uri.key is not None:
             raise Exception("URL for rmdir cannot contain a key: %s" % arg)
         buckets.append(uri)
-    
+
     config = get_config(options)
-    
+
     for uri in buckets:
         info("Removing bucket %s" % uri)
         conn = get_connection(config, uri)
         conn.delete_bucket(uri.bucket)
-    
+
 def rm(args):
     parser = option_parser("rm URL...")
     parser.add_option("-f", "--force", dest="force", action="store_true",
@@ -573,16 +512,16 @@ def rm(args):
     parser.add_option("-F", "--file", dest="file", action="store",
         default=None, help="File containing a list of URLs to delete")
     options, args = parser.parse_args(args)
-    
+
     if len(args) == 0 and not options.file:
         parser.error("Specify URL")
-    
+
     if options.file:
         for rec in read_command_file(options.file):
             if len(rec) != 1:
                 raise Exception("Invalid record: %s" % rec)
             args.append(rec[0])
-    
+
     buckets = {}
     for arg in args:
         uri = parse_uri(arg)
@@ -590,16 +529,16 @@ def rm(args):
             raise Exception("URL for rm must contain a bucket: %s" % arg)
         if uri.key is None:
             raise Exception("URL for rm must contain a key: %s" % arg)
-        
+
         bid = "%s/%s" % (uri.ident, uri.bucket)
         buri = S3URI(uri.user, uri.site, uri.bucket, uri.secure)
-        
+
         if bid not in buckets:
             buckets[bid] = (buri, [])
         buckets[bid][1].append(uri)
-    
+
     config = get_config(options)
-    
+
     for bucket in buckets:
         uri, keys = buckets[bucket]
         conn = get_connection(config, uri)
@@ -615,12 +554,14 @@ def rm(args):
                 info("Removing key %s" % key.key)
                 b.delete_key(key_name=key.key)
 
-def PartialUpload(up, part, parts, mm, offset, length):
+def PartialUpload(up, part, parts, fname, offset, length):
     def upload():
         info("Uploading part %d of %d" % (part, parts))
-        f = FilePart(mm, offset, length)
-        up.upload_part_from_file(f, part)
+        f = open(fname, "rb")
+        f.seek(offset, os.SEEK_SET)
+        up.upload_part_from_file(f, part, size=length)
         info("Finished uploading part %d (%s bytes)" % (part, length))
+        f.close()
     return upload
 
 def put(args):
@@ -731,10 +672,6 @@ def put(args):
         else:
             # Parallel
 
-            # Map the file
-            f = open(infile, "rb")
-            mm = mmap.mmap(f.fileno(), 0, mmap.MAP_SHARED, mmap.PROT_READ)
-
             # Request upload
             info("Creating multipart upload")
             upload = b.initiate_multipart_upload(uri.key)
@@ -743,7 +680,7 @@ def put(args):
                 uploads = []
                 for i in range(0, num_parts):
                     length = min(size-(i*part_size), part_size)
-                    up = PartialUpload(upload, i+1, num_parts, mm, i*part_size, length)
+                    up = PartialUpload(upload, i+1, num_parts, infile, i*part_size, length)
                     uploads.append(up)
 
                 if options.parallel <= 1:
@@ -776,11 +713,8 @@ def put(args):
                         if t.exception is not None:
                             raise t.exception
 
-                info("Completing upload")   
+                info("Completing upload")
                 upload.complete_upload()
-
-                mm.close()
-                f.close()
             except Exception, e:
                 # If there is an error, then we need to try and abort
                 # the multipart upload so that it doesn't hang around
@@ -803,22 +737,22 @@ def put(args):
 def lsup(args):
     parser = option_parser("lsup URL")
     options, args = parser.parse_args(args)
-    
+
     if len(args) == 0:
         parser.error("Specify URL")
-    
+
     uri = parse_uri(args[0])
-    
+
     if uri.bucket is None:
         raise Exception("URL must contain a bucket: %s" % args[0])
     if uri.key is not None:
         raise Exception("URL cannot contain a key: %s" % args[0])
-        
+
     config = get_config(options)
     conn = get_connection(config, uri)
-    
+
     b = conn.get_bucket(uri.bucket)
-    
+
     for up in b.list_multipart_uploads():
         uri.key = up.key_name
         sys.stdout.write("%s %s\n" % (uri, up.id))
@@ -828,7 +762,7 @@ def rmup(args):
     parser.add_option("-a", "--all", dest="all", action="store_true",
         default=False, help="Cancel all uploads for the specified bucket")
     options, args = parser.parse_args(args)
-    
+
     if options.all:
         if len(args) < 1:
             parser.error("Specify bucket URL")
@@ -836,17 +770,17 @@ def rmup(args):
         if len(args) != 2:
             parser.error("Specify bucket URL and UPLOAD")
         upload = args[1]
-    
+
     uri = parse_uri(args[0])
-    
+
     if uri.bucket is None:
         raise Exception("URL must contain a bucket: %s" % args[0])
     if uri.key is not None:
         raise Exception("URL cannot contain a key: %s" % args[0])
-        
+
     config = get_config(options)
     conn = get_connection(config, uri)
-    
+
     # There is no easy way to do this with boto
     b = Bucket(connection=conn, name=uri.bucket)
     for up in b.list_multipart_uploads():
@@ -854,14 +788,15 @@ def rmup(args):
             info("Removing upload %s" % up.id)
             up.cancel_upload()
 
-def PartialDownload(key, mm, part, parts, start, end):
+def PartialDownload(key, fname, part, parts, start, end):
     def download():
         info("Downloading part %d of %d" % (part, parts))
-        length = end - start
-        f = FilePart(mm, start, length)
+        f = open(fname, "r+b")
+        f.seek(start, os.SEEK_SET)
         key.get_file(f, headers={"Range": "bytes=%d-%d" % (start, end)})
-        info("Part %d finished (%s bytes)" % (part, key.size))
-        
+        info("Part %d finished" % (part))
+        f.close()
+
     return download
 
 def get(args):
@@ -878,108 +813,108 @@ def get(args):
             "only valid if the site supports ranged downloads and the --chunksize "
             "parameter is not 0.")
     options, args = parser.parse_args(args)
-    
+
     if options.chunksize < 0 or options.chunksize > 1024:
         parser.error("Invalid chunksize")
-        
+
     if options.parallel < 0:
         parser.error("Invalid value for --parallel")
-    
+
     if len(args) == 0:
         parser.error("Specify URL")
-    
+
     uri = parse_uri(args[0])
-    
+
     if uri.bucket is None:
         raise Exception("URL must contain a bucket: %s" % args[0])
     if uri.key is None:
         raise Exception("URL must contain a key: %s" % args[0])
-        
+
     if len(args) > 1:
         outfile = fix_file(args[1])
     else:
         outfile = uri.key
-    
+
     info("Downloading %s" % uri)
-    
+
     # Does the site support ranged downloads properly?
     config = get_config(options)
     ranged_downloads = config.getboolean(uri.site, "ranged_downloads")
-    
+
     # Warn the user
     if options.parallel > 1:
         if not ranged_downloads:
             warn("ranged downloads not supported, ignoring --parallel")
         elif options.chunksize == 0:
             warn("--chunksize set to 0, ignoring --parallel")
-    
+
     conn = get_connection(config, uri)
     b = Bucket(connection=conn, name=uri.bucket)
-    
+
+    start = time.time()
+
     if (not ranged_downloads) or (options.chunksize == 0):
-        # Ranged downloads not supported, or chunking disabled  
+        # Ranged downloads not supported, or chunking disabled
         k = Key(bucket=b, name=uri.key)
         k.get_contents_to_filename(outfile)
     else:
         # Ranged downloads and chunking requested
-        
+
         # Get the size of the key
         k = b.get_key(uri.key)
         if k is None:
             raise Exception("No such key: %s" % uri)
         size = k.size
-        
+
         # Compute chunks
         part_size = options.chunksize*MB
         num_parts = int(math.ceil(size / float(part_size)))
-        
+
         if num_parts <= 1:
             # No point if there is only one chunk
             k.get_contents_to_filename(outfile)
         else:
-            # Create the file and mmap it. We have to pre-create
-            # the file, otherwise the mmaping won't work properly.
+            # Create the file and set it to the appropriate size.
             f = open(outfile, "w+b")
             f.seek(size-1)
             f.write('\0')
-            f.flush()
-            mm = mmap.mmap(f.fileno(), 0, mmap.MAP_SHARED)
-            
+            f.close()
+
             # Create all the downloads
             downloads = []
             for i in range(0, num_parts):
-                start = i*part_size
-                end = min(size, start+part_size-1)
+                dstart = i*part_size
+                dend = min(size, start+part_size-1)
                 # Need to pass a different key object to each thread because
                 # the Key object in boto is not thread-safe
                 ki = Key(bucket=b, name=uri.key)
-                down = PartialDownload(ki, mm, i+1, num_parts, start, end)
+                down = PartialDownload(ki, outfile, i+1, num_parts, dstart, dend)
                 downloads.append(down)
-                
+
             if options.parallel <= 1:
                 # Serial
                 for down in downloads:
                     down()
             else:
                 # Parallel
-                
+
                 # No sense forking more threads than there are chunks
                 nthreads = min(options.parallel, num_parts)
-                
+
                 info("Starting parallel download with %d threads" % nthreads)
-                
+
                 # Queue up requests
                 queue = Queue.Queue()
                 for down in downloads:
                     queue.put(down)
-                
+
                 # Fork threads
                 threads = []
                 for i in range(0, nthreads):
                     t = WorkThread(queue)
                     threads.append(t)
                     t.start()
-            
+
                 # Wait for the threads
                 for t in threads:
                     t.join()
@@ -987,12 +922,13 @@ def get(args):
                     # an error, then we fail here
                     if t.exception is not None:
                         raise t.exception
-                        
-            # Close the mmap()ed file
-            mm.close()
-            f.close()
-    
-    info("Download complete")
+
+    end = time.time()
+    size = size / 1024.0
+    elapsed = end - start
+    rate = size / elapsed
+
+    info("Downloaded %0.1f KB in %0.6f seconds: %0.2f KB/s" % (size, elapsed, rate))
 
 def main():
     if len(sys.argv) < 2:
