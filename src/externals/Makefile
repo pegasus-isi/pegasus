@@ -7,7 +7,7 @@ libdir = ${prefix}/lib
 endif
 
 PySQLite=pysqlite-2.6.0
-BOTO=boto-2.0b3-24047c8
+BOTO=boto-2.9.9
 SQLAlchemy=SQLAlchemy-0.7.6
 need_pysqlite2=$(shell if python -V 2>&1 | grep -qE 'ython 2\.[3-4]'; then echo 1; else echo 0; fi)
 

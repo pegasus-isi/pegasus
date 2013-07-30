@@ -51,6 +51,12 @@ except ImportError, e:
     sys.stderr.write("ERROR: Unable to load boto library: %s\n" % e)
     exit(1)
 
+# The multipart upload feature we require was introduced in 2.2.2
+boto_version = tuple(int(x) for x in boto.__version__.split("."))
+if boto_version < (2,2,2):
+    sys.stderr.write("Requires boto 2.2.2 or later, not %s\n" % boto.__version__)
+    exit(1)
+
 COMMANDS = {
     'ls': 'List the contents of a bucket',
     'mkdir': 'Create a bucket in S3',

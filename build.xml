@@ -488,9 +488,6 @@
       <fileset dir="lib/pegasus/python" includes="**/*.py"/>
     </copy>
     <chmod perm="0755" type="file">
-      <fileset dir="${dist.lib}/pegasus/externals/python/boto/tests" includes="*.py"/>
-    </chmod>
-    <chmod perm="0755" type="file">
     <fileset dir="${dist.lib}/pegasus/python">
         <include name="Pegasus/plots_stats/plots/populate.py"/>
         <include name="Pegasus/plots_stats/plots/pegasus_breakdown.py"/>
