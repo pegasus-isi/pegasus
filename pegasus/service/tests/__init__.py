@@ -1,12 +1,12 @@
 import unittest
 
-from pegasus.service import app, db, config, migrations
+from pegasus.service import app, db, migrations
 
 class TestCase(unittest.TestCase):
     "This test case is for tests that just require the webapp"
 
     def setUp(self):
-        config.set_debug(True)
+        app.config.update(DEBUG=True)
         self.app = app.test_client()
 
 class DBTestCase(TestCase):
@@ -14,7 +14,7 @@ class DBTestCase(TestCase):
 
     def setUp(self):
         # Tests use an in-memory database
-        config.set_dburi('sqlite://')
+        app.config.update(SQLALCHEMY_DATABASE_URI="sqlite://")
         migrations.create()
 
     def tearDown(self):

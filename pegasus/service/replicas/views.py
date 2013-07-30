@@ -17,7 +17,9 @@ def post_replicas():
     for m in mappings:
         print m
         #replicas.create_mapping(g.user.id, m["lfn"], m["pfn"], m["pool"])
+
     db.session.commit()
+
     return ""
 
 @app.route("/replicas", methods=["GET"])

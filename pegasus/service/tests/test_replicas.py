@@ -1,5 +1,4 @@
-from pegasus.service import db, tests, replicas, users
-
+from pegasus.service import tests, replicas, users
 
 class TestReplicasDB(tests.DBTestCase):
     def setUp(self):
