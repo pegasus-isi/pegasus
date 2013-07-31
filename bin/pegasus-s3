@@ -85,7 +85,7 @@ LOCATIONS = {
     "s3-ap-northeast-1.amazonaws.com": "ap-northeast-1",
     "s3-sa-east-1.amazonaws.com": "sa-east-1"
 }
-    
+
 DEFAULT_CONFIG = {
     "max_object_size": str(5),
     "multipart_uploads": str(False),
@@ -863,6 +863,9 @@ def get(args):
         # Ranged downloads not supported, or chunking disabled
         k = Key(bucket=b, name=uri.key)
         k.get_contents_to_filename(outfile)
+
+        # We need this for the performance report
+        size = k.size
     else:
         # Ranged downloads and chunking requested
 
