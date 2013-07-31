@@ -78,9 +78,10 @@ the impact of transient failures.
 
 *-p* 'N'::
 *--parallel*='N'::
-Use N threads to upload 'FILE' in parallel. The default value is 0, which 
-disables parallel uploads. This parameter is only valid if the site 
-supports mulipart uploads and the *--chunksize* parameter is not 0.
+Use N threads to upload 'FILE' in parallel. The default value is 4, which 
+enables parallel uploads with 4 threads. This parameter is only valid if 
+the site supports mulipart uploads and the *--chunksize* parameter is not 0. 
+Otherwise parallel uploads are disabled.
 
 *-b*::
 *--create-bucket*::
@@ -99,9 +100,10 @@ reduce the impact of transient failures.
 
 *-p* 'N'::
 *--parallel*='N'::
-Use N threads to upload FILE in parallel. The default value is 0, which 
-disables parallel downloads. This parameter is only valid if the site 
-supports ranged downloads and the *--chunksize* parameter is not 0.
+Use N threads to upload FILE in parallel. The default value is 4, which 
+enables parallel downloads with 4 threads. This parameter is only valid 
+if the site supports ranged downloads and the *--chunksize* parameter 
+is not 0. Otherwise parallel downloads are disabled.
 
 
 rmup Options
@@ -190,11 +192,10 @@ chunks and each chunk is uploaded concurrently by one of M threads
 in first-come, first-served fashion. If the chunksize is set to 0, 
 then parallel uploads are disabled. If M > N, then the actual number 
 of threads used will be reduced to N. The number of threads can be 
-specified using the --parallel argument. If --parallel is 0 or 1, 
-then only a single thread is used. The default value is 0. There is 
+specified using the --parallel argument. If --parallel is 1, 
+then only a single thread is used. The default value is 4. There is 
 no maximum number of threads, but it is likely that the link will 
-be saturated by ~4 threads. Very high-bandwidth, long-delay links 
-may get better results with up to ~8 threads.
+be saturated by 4 to 8 threads.
 +
 Under certain circumstances, when a multipart upload fails it could 
 leave behind data on the server. When a failure occurs the *put* 
@@ -242,11 +243,10 @@ concurrently by one of M threads in a first-come, first-served
 fashion. If the chunksize is 0, then parallel downloads are 
 disabled. If M > N, then the actual number of threads used will 
 be reduced to N. The number of threads can be specified using the 
---parallel argument. If --parallel is 0 or 1, then only a single 
-thread is used. The default value is 0. There is no maximum number 
+--parallel argument. If --parallel is 1, then only a single 
+thread is used. The default value is 4. There is no maximum number 
 of threads, but it is likely that the link will be saturated by 
-~4 threads. Very high-bandwidth, long-delay links may get better 
-results with up to ~8 threads.
+4 to 8 threads.
 
 *lsup*::
 The *lsup* subcommand lists active multipart uploads. The URL 
@@ -500,6 +500,6 @@ non-zero exit status is returned in case of failure.
 
 Author
 ------
-Gideon Juve `<juve@usc.edu>`
+Gideon Juve `<gideon@isi.edu>`
 
 Pegasus Team <http://pegasus.isi.edu>

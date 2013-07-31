@@ -581,10 +581,10 @@ def put(args):
         "chunksize is automatically increased to enable the upload. Choose smaller values "
         "to reduce the impact of transient failures.")
     parser.add_option("-p", "--parallel", dest="parallel", action="store", type="int",
-        metavar="N", default=0, help="Use N threads to upload FILE in parallel. "
-            "The default value is 0, which disables parallel uploads. This parameter "
-            "is only valid if the site supports mulipart uploads and the --chunksize "
-            "parameter is not 0.")
+        metavar="N", default=4, help="Use N threads to upload FILE in parallel. "
+            "The default value is 4, which enables parallel uploads with 4 threads. This "
+            "parameter is only valid if the site supports mulipart uploads and the "
+            "--chunksize parameter is not 0. Otherwise parallel uploads are disabled.")
     parser.add_option("-b", "--create-bucket", dest="create_bucket", action="store_true",
         default=False, help="Create the destination bucket if it does not already exist")
     parser.add_option("-f", "--force", dest="force", action="store_true",
@@ -595,7 +595,7 @@ def put(args):
     if options.chunksize!=0 and (options.chunksize < 5 or options.chunksize > 1024):
         parser.error("Invalid chunksize")
 
-    if options.parallel < 0:
+    if options.parallel <= 0:
         parser.error("Invalid value for --parallel")
 
     if len(args) != 2:
@@ -814,16 +814,17 @@ def get(args):
         "parameter). The default chunk size is 10MB, the min is 1MB and the max is "
         "1024MB. Choose smaller values to reduce the impact of transient failures.")
     parser.add_option("-p", "--parallel", dest="parallel", action="store", type="int",
-        metavar="N", default=0, help="Use N threads to upload FILE in parallel. The "
-            "default value is 0, which disables parallel downloads. This parameter is "
-            "only valid if the site supports ranged downloads and the --chunksize "
-            "parameter is not 0.")
+        metavar="N", default=4, help="Use N threads to upload FILE in parallel. The "
+            "default value is 4, which enables parallel downloads with 4 threads. "
+            "This parameter is only valid if the site supports ranged downloads "
+            "and the --chunksize parameter is not 0. Otherwise parallel downloads are "
+            "disabled.")
     options, args = parser.parse_args(args)
 
     if options.chunksize < 0 or options.chunksize > 1024:
         parser.error("Invalid chunksize")
 
-    if options.parallel < 0:
+    if options.parallel <= 0:
         parser.error("Invalid value for --parallel")
 
     if len(args) == 0:
