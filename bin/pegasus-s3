@@ -890,7 +890,7 @@ def get(args):
             downloads = []
             for i in range(0, num_parts):
                 dstart = i*part_size
-                dend = min(size, start+part_size-1)
+                dend = min(size, dstart+part_size-1)
                 # Need to pass a different key object to each thread because
                 # the Key object in boto is not thread-safe
                 ki = Key(bucket=b, name=uri.key)
