@@ -90,3 +90,14 @@ class TestUsersDB(tests.DBTestCase):
 
         self.assertRaises(users.NoSuchUser, users.getuser, "rynge")
 
+
+class TestAuthentication(tests.UserTestCase):
+
+    def test_unauthorized(self):
+        r = self.get("/", auth=False)
+        self.assertEquals(r.status_code, 401)
+
+    def test_authorized(self):
+        r = self.get("/")
+        self.assertEquals(r.status_code, 200)
+
