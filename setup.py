@@ -28,7 +28,7 @@ setup(
         'console_scripts': [
             'pegasus-service-server = pegasus.service.server:main',
             'pegasus-service-admin = pegasus.service.admin:main',
-            'pegasus-service-rc = pegasus.service.replicas.client:main'
+            'pegasus-service-catalogs = pegasus.service.catalogs:main'
         ]
     },
     install_requires = [

@@ -27,5 +27,4 @@ class Schema(db.Model):
 
 # Need to import all the other schema objects here
 from pegasus.service.users import User
-from pegasus.service.replicas import ReplicaMapping
 

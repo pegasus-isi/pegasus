@@ -32,3 +32,6 @@ ENDPOINT = "http://%s:%s/" % (SERVER_HOST, SERVER_PORT)
 USERNAME = ""
 PASSWORD = ""
 
+# Storage
+STORAGE_DIR = os.path.join(os.getenv('HOME'), ".pegasus", "service")
+

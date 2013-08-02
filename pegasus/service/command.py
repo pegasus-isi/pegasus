@@ -82,7 +82,6 @@ class ClientCommand(Command):
 
     def _request(self, method, path, **kwargs):
         headers = {
-            'content-type': 'application/json',
             'accept': 'application/json'
         }
         defaults = {"auth": (self.username, self.password), "headers": headers}
@@ -92,4 +91,13 @@ class ClientCommand(Command):
 
     def get(self, path, **kwargs):
         return self._request("get", path, **kwargs)
+
+    def post(self, path, **kwargs):
+        return self._request("post", path, **kwargs)
+
+    def delete(self, path, **kwargs):
+        return self._request("delete", path, **kwargs)
+
+    def put(self, path, **kwargs):
+        return self._request("put", path, **kwargs)
 

@@ -15,5 +15,5 @@ del conf
 from flask.ext.sqlalchemy import SQLAlchemy
 db = SQLAlchemy(app)
 
-from pegasus.service import auth, filters, dashboard, replicas
+from pegasus.service import auth, filters, api, dashboard, catalogs, ensemble
 
