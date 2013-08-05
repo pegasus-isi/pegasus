@@ -43,10 +43,10 @@ class CatalogMixin:
         self.name = validate_catalog_name(name)
 
     def set_created(self):
-        self.created = datetime.now()
+        self.created = datetime.utcnow()
 
     def set_updated(self):
-        self.updated = datetime.now()
+        self.updated = datetime.utcnow()
 
     def set_format(self, format):
         self.format = validate_catalog_format(self.__catalog_type__, format)
@@ -150,7 +150,7 @@ def get_catalog(catalog_type, user_id, name):
 
 def list_catalogs(catalog_type, user_id):
     Catalog = get_catalog_model(catalog_type)
-    return Catalog.query.filter_by(user_id=user_id).all()
+    return Catalog.query.filter_by(user_id=user_id).order_by("updated").all()
 
 def save_catalog(catalog_type, user_id, name, format, file):
     Catalog = get_catalog_model(catalog_type)
