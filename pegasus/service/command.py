@@ -51,7 +51,7 @@ class CompoundCommand(Command):
                 args.remove(command)
                 break
 
-        if "-h" in args or "--help" in args:
+        if command is None and ("-h" in args or "--help" in args):
             self.parser.print_help()
             exit(1)
 

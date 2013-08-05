@@ -260,19 +260,38 @@ def route_update_catalog(catalog_type, name):
 
     return json_response(catalog_object(catalog_type, c))
 
+
+
+def add_type_option(self):
+    self.parser.add_option("-t", "--type", action="store", dest="type",
+            default=None, help="Catalog type (replica, site, transformation)")
+
+def add_name_option(self):
+    self.parser.add_option("-n", "--name", action="store", dest="name",
+            default=None, help="Catalog name")
+
+def add_format_option(self):
+    self.parser.add_option("-F", "--format", action="store", dest="format",
+            default=None, help="Catalog format (xml3, xml4, file, text, regex)")
+
+def add_file_option(self):
+    self.parser.add_option("-f", "--file", action="store", dest="file",
+            default=None, help="Catalog file")
+
 class ListCommand(ClientCommand):
     description = "List stored catalogs"
-    usage = "Usage: %prog list [options] TYPE"
+    usage = "Usage: %prog list -t TYPE"
+
+    def __init__(self):
+        ClientCommand.__init__(self)
+        add_type_option(self)
 
     def run(self):
-        if len(self.args) == 0:
-            self.parser.error("Specify TYPE")
-        elif len(self.args) > 1:
-            self.parser.error("Invalid argument")
 
-        catalog_type = self.args[0]
+        if self.options.type is None:
+            self.parser.error("Specify -t/--type")
 
-        response = self.get("/catalogs/%s" % catalog_type)
+        response = self.get("/catalogs/%s" % self.options.type)
         result = response.json()
 
         if response.status_code != 200:
@@ -287,22 +306,32 @@ class ListCommand(ClientCommand):
 
 class UploadCommand(ClientCommand):
     description = "Upload a catalog to the server"
-    usage = "Usage: %prog create [options] TYPE NAME FORMAT FILE"
+    usage = "Usage: %prog create -t TYPE -n NAME -F FORMAT -f FILE"
+
+    def __init__(self):
+        ClientCommand.__init__(self)
+        add_type_option(self)
+        add_name_option(self)
+        add_format_option(self)
+        add_file_option(self)
 
     def run(self):
-        if len(self.args) == 0:
-            self.parser.error("Specify arguments")
-        elif len(self.args) > 4:
+        if len(self.args) > 0:
             self.parser.error("Invalid argument")
 
-        catalog_type = self.args[0]
-        name = self.args[1]
-        format = self.args[2]
-        file = self.args[3]
+        o = self.options
+        if o.type is None:
+            self.parser.error("Specify -t/--type")
+        if o.name is None:
+            self.parser.error("Specify -n/--name")
+        if o.format is None:
+            self.parser.error("Specify -F/--format")
+        if o.file is None:
+            self.parser.error("Specify -f/--file")
 
-        data = {"name": name, "format": format}
-        files = {"file": open(file, "rb")}
-        response = self.post("/catalogs/%s/" % catalog_type, data=data, files=files)
+        data = {"name": o.name, "format": o.format}
+        files = {"file": open(o.file, "rb")}
+        response = self.post("/catalogs/%s/" % o.type, data=data, files=files)
         if response.status_code != 201:
             result = response.json()
             print "ERROR:",result["message"]
@@ -310,22 +339,38 @@ class UploadCommand(ClientCommand):
 
 class UpdateCommand(ClientCommand):
     description = "Update a catalog"
-    usage = "Usage: %prog update TYPE NAME FORMAT FILE"
+    usage = "Usage: %prog update -t TYPE -n NAME -F FORMAT -f FILE"
+
+    def __init__(self):
+        ClientCommand.__init__(self)
+        add_type_option(self)
+        add_name_option(self)
+        add_format_option(self)
+        add_file_option(self)
 
     def run(self):
-        if len(self.args) == 0:
-            self.parser.error("Specify arguments")
+        if len(self.args) > 0:
+            self.parser.error("Invalid argument")
+
+        o = self.options
+        if o.type is None:
+            self.parser.error("Specify -t/--type")
+        if o.name is None:
+            self.parser.error("Specify -n/--name")
+        if o.format is None and o.file is None:
+            self.parser.error("Specify -F/--format and/or -f/--file")
         elif len(self.args) > 4:
             self.parser.error("Invalid argument")
 
-        catalog_type = self.args[0]
-        name = self.args[1]
-        format = self.args[2]
-        file = self.args[3]
-
-        data = {"format": format}
-        files = {"file": open(file, "rb")}
-        response = self.put("/catalogs/%s/%s" % (catalog_type, name), data=data, files=files)
+        if o.format:
+            data = {"format": o.format}
+        else:
+            data = {}
+        if o.file:
+            files = {"file": open(o.file, "rb")}
+        else:
+            files = {}
+        response = self.put("/catalogs/%s/%s" % (o.type, o.name), data=data, files=files)
         if response.status_code != 200:
             result = response.json()
             print "ERROR:",result["message"]
@@ -333,18 +378,24 @@ class UpdateCommand(ClientCommand):
 
 class DeleteCommand(ClientCommand):
     description = "Delete a catalog"
-    usage = "Usage: %prog delete TYPE NAME"
+    usage = "Usage: %prog delete -t TYPE -n NAME"
+
+    def __init__(self):
+        ClientCommand.__init__(self)
+        add_type_option(self)
+        add_name_option(self)
 
     def run(self):
-        if len(self.args) == 0:
-            self.parser.error("Specify TYPE and NAME")
-        if len(self.args) > 2:
+        if len(self.args) > 0:
             self.parser.error("Invalid argument")
 
-        catalog_type = self.args[0]
-        name = self.args[1]
+        o = self.options
+        if o.type is None:
+            self.parser.error("Specify -t/--type")
+        if o.name is None:
+            self.parser.error("Specify -n/--name")
 
-        response = self.delete("/catalogs/%s/%s" % (catalog_type, name))
+        response = self.delete("/catalogs/%s/%s" % (o.type, o.name))
         result = response.json()
         if response.status_code != 200:
             print "ERROR:",result["message"]
@@ -352,18 +403,24 @@ class DeleteCommand(ClientCommand):
 
 class DownloadCommand(ClientCommand):
     description = "Download a catalog"
-    usage = "Usage: %prog download TYPE NAME"
+    usage = "Usage: %prog download -t TYPE -n NAME"
+
+    def __init__(self):
+        ClientCommand.__init__(self)
+        add_type_option(self)
+        add_name_option(self)
 
     def run(self):
-        if len(self.args) == 0:
-            self.parser.error("Specify TYPE and NAME")
-        if len(self.args) > 2:
+        if len(self.args) > 0:
             self.parser.error("Invalid argument")
 
-        catalog_type = self.args[0]
-        name = self.args[1]
+        o = self.options
+        if o.type is None:
+            self.parser.error("Specify -t/--type")
+        if o.name is None:
+            self.parser.error("Specify -n/--name")
 
-        response = self.get("/catalogs/%s/%s" % (catalog_type, name), stream=True)
+        response = self.get("/catalogs/%s/%s" % (o.type, o.name), stream=True)
         if response.status_code != 200:
             result = response.json()
             print "ERROR:",result["message"]
