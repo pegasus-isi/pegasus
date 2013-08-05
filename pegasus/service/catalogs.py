@@ -45,6 +45,9 @@ class CatalogMixin:
     def set_created(self):
         self.created = datetime.now()
 
+    def set_updated(self):
+        self.updated = datetime.now()
+
     def set_format(self, format):
         self.format = validate_catalog_format(self.__catalog_type__, format)
 
@@ -60,6 +63,7 @@ class ReplicaCatalog(CatalogMixin, db.Model):
     name = db.Column(db.String(100), nullable=False)
     format = db.Column(db.Enum(*RC_FORMATS), nullable=False)
     created = db.Column(db.DateTime, nullable=False)
+    updated = db.Column(db.DateTime, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
     def __init__(self, user_id, name, format):
@@ -67,6 +71,7 @@ class ReplicaCatalog(CatalogMixin, db.Model):
         self.set_name(name)
         self.set_format(format)
         self.set_created()
+        self.set_updated()
 
 class SiteCatalog(db.Model, CatalogMixin):
     __tablename__ = 'site_catalog'
@@ -80,6 +85,7 @@ class SiteCatalog(db.Model, CatalogMixin):
     name = db.Column(db.String(100), nullable=False)
     format = db.Column(db.Enum(*SC_FORMATS), nullable=False)
     created = db.Column(db.DateTime, nullable=False)
+    updated = db.Column(db.DateTime, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
     def __init__(self, user_id, name, format):
@@ -87,6 +93,7 @@ class SiteCatalog(db.Model, CatalogMixin):
         self.set_name(name)
         self.set_format(format)
         self.set_created()
+        self.set_updated()
 
 class TransformationCatalog(db.Model, CatalogMixin):
     __tablename__ = 'transformation_catalog'
@@ -100,6 +107,7 @@ class TransformationCatalog(db.Model, CatalogMixin):
     name = db.Column(db.String(100), nullable=False)
     format = db.Column(db.Enum(*TC_FORMATS), nullable=False)
     created = db.Column(db.DateTime, nullable=False)
+    updated = db.Column(db.DateTime, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
     def __init__(self, user_id, name, format):
@@ -107,12 +115,14 @@ class TransformationCatalog(db.Model, CatalogMixin):
         self.set_name(name)
         self.set_format(format)
         self.set_created()
+        self.set_updated()
 
 def catalog_object(catalog_type, c):
     return {
         "id": c.id,
         "name": c.name,
         "created": c.created,
+        "updated": c.updated,
         "format": c.format,
         "href": url_for("route_get_catalog", catalog_type=catalog_type, name=c.name, _external=True)
     }
@@ -238,8 +248,7 @@ def route_update_catalog(catalog_type, name):
 
     c = get_catalog(catalog_type, g.user.id, name)
 
-    # Update created date
-    c.set_created()
+    c.set_updated()
 
     format = request.form.get("format", None)
     if format is not None:
@@ -298,11 +307,11 @@ class ListCommand(ClientCommand):
             print "ERROR:",result["message"]
             exit(1)
 
-        fmt = "%-20s %-8s %-32s %s"
+        fmt = "%-20s %-8s %-32s %-32s"
         if len(result) > 0:
-            print fmt % ("NAME","FORMAT","CREATED","URL")
+            print fmt % ("NAME","FORMAT","CREATED","UPDATED")
         for r in result:
-            print fmt % (r["name"], r["format"], r["created"], r["href"])
+            print fmt % (r["name"], r["format"], r["created"], r["updated"])
 
 class UploadCommand(ClientCommand):
     description = "Upload a catalog to the server"
