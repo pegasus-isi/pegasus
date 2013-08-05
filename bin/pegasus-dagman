@@ -168,7 +168,7 @@ if __name__ == "__main__":
     copy_to_spool = is_dagman_copy_to_spool()
 
     # Find dagman Binary
-    dagman_bin = find_prog("condor_dagman", [bin_dir])
+    dagman_bin = find_prog("condor_dagman")
 
     if dagman_bin != None :
         # If copy_to_spool is set copy dagman binary to dag submit directory
