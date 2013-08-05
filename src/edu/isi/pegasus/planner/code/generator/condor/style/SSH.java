@@ -17,8 +17,6 @@
 
 package edu.isi.pegasus.planner.code.generator.condor.style;
 
-import edu.isi.pegasus.common.credential.CredentialHandler.TYPE;
-import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.code.generator.condor.CondorStyleException;
 
 import edu.isi.pegasus.planner.catalog.site.classes.GridGateway;
@@ -43,7 +41,7 @@ import edu.isi.pegasus.planner.classes.Job;
  * @author Karan Vahi
  * @version $Revision$
  */
-public class SSH extends Abstract{
+public class SSH extends GLite{
 
     /**
      * The key that designates the collector associated with the job
@@ -54,7 +52,7 @@ public class SSH extends Abstract{
     /**
      * The name of the style being implemented.
      */
-    public static final String STYLE_NAME = "CreamCE";
+    public static final String STYLE_NAME = "SSH";
 
     /**
      * The default constructor.
@@ -71,40 +69,30 @@ public class SSH extends Abstract{
      * @throws CondorStyleException in case of any error occuring code generation.
      */
     public void apply(Job job) throws CondorStyleException{
-        String workdir = job.getDirectory();
-
-
-
-        //the universe for CondorC is always grid
-        job.condorVariables.construct( Condor.UNIVERSE_KEY, "grid" );
-        
         //construct the grid_resource for the job
         String gridResource = constructGridResource( job );
-
         job.condorVariables.construct( SSH.GRID_RESOURCE_KEY, gridResource.toString() );
        
-        job.condorVariables.construct( "remote_initialdir", workdir );
+        //glite and ssh submission for now only differ in the grid_resource
+        //construction
+        super.apply(job);
 
-        applyCredentialsForRemoteExec(job);
+
     }
 
     /**
      * Constructs the grid_resource entry for the job. The grid resource is a 
      * tuple consisting of three fields.
      *
-     * A CREAM grid resource specification is of the form:
+     * A SSH grid resource specification is of the form:
      *
-     * grid_resource = cream <web-services-address> <batch-system> <queue-name>
+     * grid_resource = batch <batch-system> remote_username@batch-headnode-hostname
      *
-     * The <batch-system> is the name of the batch system that sits behind the CREAM server,
-     * into which it submits the jobs. Normal values are pbs, lsf, and condor.
+     * The <batch-system> is the name of the batch system that we are submitting to. 
+     * Normal values are pbs, lsf, and condor.
      * It is picked up from the scheduler attribute for the grid gateway entry
      * in the site catalog entry for the site
      *
-     * The <queue-name> identifies which queue within the batch system should be used.
-     * Values for this will vary by site, with no typical values and are picked up
-     * from the globus profile queue associated with the job
-     * 
      * @param job  the job
      * 
      * @return the grid_resource entry
@@ -145,7 +133,7 @@ public class SSH extends Abstract{
         gridResource.append( g.getContact() ).append( " " );
         
         
-
+/*
         String queue = (String) job.globusRSL.removeKey( "queue" );
         if( queue == null ){
             
@@ -157,6 +145,7 @@ public class SSH extends Abstract{
         else{
             gridResource.append( queue );
         }
+*/
         return gridResource.toString();
     }
 
