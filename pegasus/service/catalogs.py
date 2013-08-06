@@ -176,7 +176,7 @@ def save_catalog_file(catalog_type, user_id, name, file):
     finally:
         f.close()
 
-@app.route("/catalogs/", methods=["GET"])
+@app.route("/catalogs", methods=["GET"])
 def route_all_catalogs():
     result = {
         "site": url_for("route_list_catalogs", catalog_type="site", _external=True),
@@ -185,13 +185,13 @@ def route_all_catalogs():
     }
     return json_response(result)
 
-@app.route("/catalogs/<string:catalog_type>/", methods=["GET"])
+@app.route("/catalogs/<string:catalog_type>", methods=["GET"])
 def route_list_catalogs(catalog_type):
     clist = list_catalogs(catalog_type, g.user.id)
     result = [catalog_object(catalog_type, c) for c in clist]
     return json_response(result)
 
-@app.route("/catalogs/<string:catalog_type>/", methods=["POST"])
+@app.route("/catalogs/<string:catalog_type>", methods=["POST"])
 def route_store_catalog(catalog_type):
 
     # The name of the catalog

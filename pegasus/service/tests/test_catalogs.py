@@ -19,15 +19,15 @@ class TestCatalog(tests.TestCase):
             self.assertRaises(api.APIError, catalogs.validate_catalog_format, t, None)
             self.assertRaises(api.APIError, catalogs.validate_catalog_format, t, "foo")
 
-class TestCatalogAPI(tests.UserTestCase):
+class TestCatalogAPI(tests.APITestCase):
     def test_manage_catalogs(self):
-        r = self.get("/catalogs/")
+        r = self.get("/catalogs")
         self.assertEquals(r.status_code, 200)
         self.assertTrue("site" in r.json)
         self.assertTrue("replica" in r.json)
         self.assertTrue("transformation" in r.json)
 
-        r = self.get("/catalogs/foo/")
+        r = self.get("/catalogs/foo")
         self.assertEquals(r.status_code, 400)
 
         for cat, formats in [
@@ -38,22 +38,22 @@ class TestCatalogAPI(tests.UserTestCase):
             format1, format2 = formats
 
             # Make sure there are no catalogs yet
-            r = self.get("/catalogs/%s/" % cat)
+            r = self.get("/catalogs/%s" % cat)
             self.assertEquals(r.status_code, 200)
             self.assertEquals(len(r.json), 0)
 
             # Make sure it requires a name
-            r = self.post("/catalogs/%s/" % cat)
+            r = self.post("/catalogs/%s" % cat)
             self.assertEquals(r.status_code, 400)
             self.assertEquals(r.json["message"], "Specify name")
 
             # Make sure it requires a format
-            r = self.post("/catalogs/%s/" % cat, data={"name": "%s.txt" % cat})
+            r = self.post("/catalogs/%s" % cat, data={"name": "%s.txt" % cat})
             self.assertEquals(r.status_code, 400)
             self.assertEquals(r.json["message"], "Specify format")
 
             # Create the catalog
-            r = self.post("/catalogs/%s/" % cat, data={
+            r = self.post("/catalogs/%s" % cat, data={
                 "name": "%s.txt" % cat,
                 "format": format1,
                 "file": (StringIO("%s catalog" % cat), "mycat.txt")
@@ -62,7 +62,7 @@ class TestCatalogAPI(tests.UserTestCase):
             location = r.headers["Location"]
 
             # Make sure duplicate names are disallowed
-            r = self.post("/catalogs/%s/" % cat, data={
+            r = self.post("/catalogs/%s" % cat, data={
                 "name": "%s.txt" % cat,
                 "format": format1,
                 "file": (StringIO("%s catalog" % cat), "mycat.txt")
@@ -75,7 +75,7 @@ class TestCatalogAPI(tests.UserTestCase):
             self.assertEquals(r.data, "%s catalog" % cat)
 
             # Make sure it appears in listings
-            r = self.get("/catalogs/%s/" % cat)
+            r = self.get("/catalogs/%s" % cat)
             self.assertEquals(r.status_code, 200)
             self.assertEquals(len(r.json), 1)
             self.assertEquals(r.json[0]["name"], "%s.txt" % cat)
@@ -101,4 +101,9 @@ class TestCatalogAPI(tests.UserTestCase):
             r = self.get("/catalogs/%s/%s.txt" % (cat, cat))
             self.assertEquals(r.status_code, 404)
 
+
+class TestCatalogClient(tests.ClientTestCase):
+    # TODO Test catalog client
+    def test_catalog_client(self):
+        pass
 
