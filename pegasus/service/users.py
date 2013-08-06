@@ -1,7 +1,8 @@
+import os
 import getpass
 from passlib.hash import pbkdf2_sha256 as passlib
 
-from pegasus.service import db
+from pegasus.service import app, db
 
 class UserExists(Exception): pass
 class NoSuchUser(Exception): pass
@@ -32,6 +33,10 @@ class User(db.Model):
 
     def __repr__(self):
         return '<User %r>' % (self.username)
+
+    def get_userdata_dir(self):
+        return os.path.join(app.config["STORAGE_DIR"],
+                            "userdata", self.username)
 
 def validate_password(password):
     # Password must be non-null
