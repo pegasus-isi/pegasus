@@ -137,9 +137,9 @@ def get_catalog_model(catalog_type):
     else:
         raise APIError("Invalid catalog type: %s" % catalog_type, status_code=400)
 
-def get_catalog_path(catalog_type, user_id, name):
+def get_catalog_path(catalog_type, user, name):
     dirname = os.path.join(app.config["STORAGE_DIR"],
-                           "userdata", str(user_id),
+                           "userdata", user.username,
                            "catalogs", catalog_type)
     if not os.path.exists(dirname): os.makedirs(dirname)
     return os.path.join(dirname, name)
@@ -152,20 +152,20 @@ def list_catalogs(catalog_type, user_id):
     Catalog = get_catalog_model(catalog_type)
     return Catalog.query.filter_by(user_id=user_id).order_by("updated").all()
 
-def save_catalog(catalog_type, user_id, name, format, file):
+def save_catalog(catalog_type, user, name, format, file):
     Catalog = get_catalog_model(catalog_type)
 
     try:
-        cat = Catalog(user_id, name, format)
+        cat = Catalog(user.id, name, format)
         db.session.add(cat)
         db.session.flush()
     except IntegrityError, e:
         raise APIError("Duplicate catalog name")
 
-    save_catalog_file(catalog_type, g.user.id, name, file)
+    save_catalog_file(catalog_type, user, name, file)
 
-def save_catalog_file(catalog_type, user_id, name, file):
-    filename = get_catalog_path(catalog_type, user_id, name)
+def save_catalog_file(catalog_type, user, name, file):
+    filename = get_catalog_path(catalog_type, user, name)
 
     if os.path.exists(filename):
         os.remove(filename)
@@ -209,7 +209,7 @@ def route_store_catalog(catalog_type):
     if file is None:
         raise APIError("Specify file")
 
-    save_catalog(catalog_type, g.user.id, name, format, file)
+    save_catalog(catalog_type, g.user, name, format, file)
 
     db.session.commit()
 
@@ -217,7 +217,7 @@ def route_store_catalog(catalog_type):
 
 @app.route("/catalogs/<string:catalog_type>/<string:name>", methods=["GET"])
 def route_get_catalog(catalog_type, name):
-    filename = get_catalog_path(catalog_type, g.user.id, name)
+    filename = get_catalog_path(catalog_type, g.user, name)
 
     if not os.path.exists(filename):
         raise APIError("No such catalog: %s" % name, 404)
@@ -235,7 +235,7 @@ def route_delete_catalog(catalog_type, name):
     # will go through before removing the file.
     db.session.flush()
 
-    filename = get_catalog_path(catalog_type, g.user.id, name)
+    filename = get_catalog_path(catalog_type, g.user, name)
     if os.path.exists(filename):
         os.remove(filename)
 
@@ -263,7 +263,7 @@ def route_update_catalog(catalog_type, name):
     file = request.files.get("file", None)
     if file is not None:
         # Update the file
-        save_catalog_file(catalog_type, g.user.id, name, file)
+        save_catalog_file(catalog_type, g.user, name, file)
 
     db.session.commit()
 
