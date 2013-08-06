@@ -7,6 +7,7 @@ from datetime import datetime
 from flask import g, url_for, make_response, request, send_file, json
 
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm.exc import NoResultFound
 
 from pegasus.service import app, db
 from pegasus.service.command import ClientCommand, CompoundCommand
@@ -51,6 +52,26 @@ class CatalogMixin:
     def set_format(self, format):
         self.format = validate_catalog_format(self.__catalog_type__, format)
 
+    def get_catalog_file(self):
+        userdata = self.user.get_userdata_dir()
+        return os.path.join(userdata, "catalogs", self.__catalog_type__, self.name)
+
+    def save_catalog_file(self, file):
+        filename = self.get_catalog_file()
+        dirname = os.path.dirname(filename)
+
+        if os.path.exists(filename):
+            os.remove(filename)
+
+        if not os.path.exists(dirname):
+            os.makedirs(dirname)
+
+        f = open(filename, "wb")
+        try:
+            shutil.copyfileobj(file, f)
+        finally:
+            f.close()
+
 class ReplicaCatalog(CatalogMixin, db.Model):
     __tablename__ = 'replica_catalog'
     __table_args__ = (
@@ -65,6 +86,7 @@ class ReplicaCatalog(CatalogMixin, db.Model):
     created = db.Column(db.DateTime, nullable=False)
     updated = db.Column(db.DateTime, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    user = db.relationship("User")
 
     def __init__(self, user_id, name, format):
         self.user_id = user_id
@@ -87,6 +109,7 @@ class SiteCatalog(db.Model, CatalogMixin):
     created = db.Column(db.DateTime, nullable=False)
     updated = db.Column(db.DateTime, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    user = db.relationship("User")
 
     def __init__(self, user_id, name, format):
         self.user_id = user_id
@@ -109,6 +132,7 @@ class TransformationCatalog(db.Model, CatalogMixin):
     created = db.Column(db.DateTime, nullable=False)
     updated = db.Column(db.DateTime, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    user = db.relationship("User")
 
     def __init__(self, user_id, name, format):
         self.user_id = user_id
@@ -137,16 +161,12 @@ def get_catalog_model(catalog_type):
     else:
         raise APIError("Invalid catalog type: %s" % catalog_type, status_code=400)
 
-def get_catalog_path(catalog_type, user, name):
-    dirname = os.path.join(app.config["STORAGE_DIR"],
-                           "userdata", user.username,
-                           "catalogs", catalog_type)
-    if not os.path.exists(dirname): os.makedirs(dirname)
-    return os.path.join(dirname, name)
-
-def get_catalog(catalog_type, user_id, name):
-    Catalog = get_catalog_model(catalog_type)
-    return Catalog.query.filter_by(user_id=g.user.id, name=name).one()
+def get_catalog(catalog_type, user, name):
+    try:
+        Catalog = get_catalog_model(catalog_type)
+        return Catalog.query.filter_by(user_id=user.id, name=name).one()
+    except NoResultFound:
+        raise APIError("No such catalog: %s" % name, 404)
 
 def list_catalogs(catalog_type, user_id):
     Catalog = get_catalog_model(catalog_type)
@@ -162,19 +182,9 @@ def save_catalog(catalog_type, user, name, format, file):
     except IntegrityError, e:
         raise APIError("Duplicate catalog name")
 
-    save_catalog_file(catalog_type, user, name, file)
+    cat.save_catalog_file(file)
 
-def save_catalog_file(catalog_type, user, name, file):
-    filename = get_catalog_path(catalog_type, user, name)
-
-    if os.path.exists(filename):
-        os.remove(filename)
-
-    f = open(filename, "wb")
-    try:
-        shutil.copyfileobj(file, f)
-    finally:
-        f.close()
+    return cat
 
 @app.route("/catalogs", methods=["GET"])
 def route_all_catalogs():
@@ -217,7 +227,8 @@ def route_store_catalog(catalog_type):
 
 @app.route("/catalogs/<string:catalog_type>/<string:name>", methods=["GET"])
 def route_get_catalog(catalog_type, name):
-    filename = get_catalog_path(catalog_type, g.user, name)
+    c = get_catalog(catalog_type, g.user, name)
+    filename = c.get_catalog_file()
 
     if not os.path.exists(filename):
         raise APIError("No such catalog: %s" % name, 404)
@@ -226,7 +237,7 @@ def route_get_catalog(catalog_type, name):
 
 @app.route("/catalogs/<string:catalog_type>/<string:name>", methods=["DELETE"])
 def route_delete_catalog(catalog_type, name):
-    c = get_catalog(catalog_type, g.user.id, name)
+    c = get_catalog(catalog_type, g.user, name)
 
     db.session.delete(c)
 
@@ -235,7 +246,7 @@ def route_delete_catalog(catalog_type, name):
     # will go through before removing the file.
     db.session.flush()
 
-    filename = get_catalog_path(catalog_type, g.user, name)
+    filename = c.get_catalog_file()
     if os.path.exists(filename):
         os.remove(filename)
 
@@ -246,7 +257,7 @@ def route_delete_catalog(catalog_type, name):
 @app.route("/catalogs/<string:catalog_type>/<string:name>", methods=["PUT"])
 def route_update_catalog(catalog_type, name):
 
-    c = get_catalog(catalog_type, g.user.id, name)
+    c = get_catalog(catalog_type, g.user, name)
 
     c.set_updated()
 
@@ -263,7 +274,7 @@ def route_update_catalog(catalog_type, name):
     file = request.files.get("file", None)
     if file is not None:
         # Update the file
-        save_catalog_file(catalog_type, g.user, name, file)
+        c.save_catalog_file(file)
 
     db.session.commit()
 
