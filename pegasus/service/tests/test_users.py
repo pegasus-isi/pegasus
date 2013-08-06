@@ -91,7 +91,7 @@ class TestUsersDB(tests.DBTestCase):
         self.assertRaises(users.NoSuchUser, users.getuser, "rynge")
 
 
-class TestAuthentication(tests.UserTestCase):
+class TestAuthentication(tests.APITestCase):
 
     def test_unauthorized(self):
         r = self.get("/", auth=False)
