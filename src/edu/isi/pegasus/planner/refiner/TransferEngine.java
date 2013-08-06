@@ -60,6 +60,10 @@ import edu.isi.pegasus.planner.classes.PlannerCache;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.common.PegasusConfiguration;
 import edu.isi.pegasus.planner.namespace.Dagman;
+import edu.isi.pegasus.planner.transfer.mapper.OutputMapper;
+import edu.isi.pegasus.planner.transfer.mapper.OutputMapperFactory;
+import edu.isi.pegasus.planner.transfer.mapper.impl.Flat;
+import edu.isi.pegasus.planner.transfer.mapper.impl.Hashed;
 
 import org.griphyn.vdl.euryale.FileFactory;
 import org.griphyn.vdl.euryale.VirtualDecimalHashedFileFactory;
@@ -193,6 +197,12 @@ public class TransferEngine extends Engine {
      */
     private Directory mStageoutDirectory;
     
+    
+    /**
+     * Handle to an OutputMapper that tells what
+     */
+    private OutputMapper mOutputMapper;
+    
     /**
      * The working directory relative to the mount point of the execution pool.
      * It is populated from the pegasus.dir.exec property from the properties file.
@@ -234,6 +244,11 @@ public class TransferEngine extends Engine {
      * A boolean to track whether condor file io is used for the workflow or not.
      */
     private final boolean mSetupForCondorIO;
+    
+    /**
+     * The output site where files need to be staged to.
+     */
+    private final String mOutputSite;
 
     /**
      * Overloaded constructor.
@@ -272,7 +287,9 @@ public class TransferEngine extends Engine {
             throw new FactoryException("Transfer Engine ", e);
         }
 
-        this.initializeStageOutSiteDirectoryFactory( reducedDag );
+        mOutputSite   =  mPOptions.getOutputSite(); 
+        mOutputMapper = OutputMapperFactory.loadInstance( reducedDag, bag);
+//        this.initializeStageOutSiteDirectoryFactory( reducedDag );
 
         mWorkflowCache = this.initializeWorkflowCacheFile( reducedDag );
 
@@ -495,8 +512,12 @@ public class TransferEngine extends Engine {
             }
 
             
-            String putDestURL = getURLOnStageoutSite( mStageoutDirectory, FileServer.OPERATION.put, lfn );
-            String getDestURL = getURLOnStageoutSite( mStageoutDirectory, FileServer.OPERATION.get, lfn );
+ //           String putDestURL = getURLOnStageoutSite( mStageoutDirectory, FileServer.OPERATION.put, lfn );
+ //           String getDestURL = getURLOnStageoutSite( mStageoutDirectory, FileServer.OPERATION.get, lfn );
+            String putDestURL = mOutputMapper.getURL( lfn, mOutputSite,  FileServer.OPERATION.put );
+            String getDestURL = mOutputMapper.getURL( lfn, mOutputSite,  FileServer.OPERATION.get );
+            
+            
             //selLocs are all the locations found in ReplicaMechanism corr
             //to the pool pool
             ReplicaLocation selLocs = mReplicaSelector.selectReplicas( rl,
@@ -768,7 +789,8 @@ public class TransferEngine extends Engine {
                     FileServer fs = (FileServer)it.next();
                     
                     //file server on output site
-                    String destURL = this.getURLOnStageoutSite( fs, lfn);
+//                    String destURL = this.getURLOnStageoutSite( fs, lfn);
+                    String destURL = mOutputMapper.getURL(lfn, fs);
 
                     //if the paths match of dest URI
                     //and execDirURL we return null
@@ -818,7 +840,8 @@ public class TransferEngine extends Engine {
 
                 //assumption of same external mount point for each storage
                 //file server on output site
-                url = this.getURLOnStageoutSite( fs, lfn );
+//                url = this.getURLOnStageoutSite( fs, lfn );
+                url = mOutputMapper.getURL(lfn, fs);
 
                 return url;
             }
@@ -1865,7 +1888,7 @@ public class TransferEngine extends Engine {
         if( jobname != null ){
             error.append( "For job (" ).append( jobname).append( ")." );
         }
-        error.append( " File Server not specified for shared-scratch filesystem for site: ").
+        error.append( " File Server not specified for shared-storage filesystem for site: ").
               append( site );
         throw new RuntimeException( error.toString() );
 
