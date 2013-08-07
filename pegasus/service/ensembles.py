@@ -8,7 +8,7 @@ from flask import g, url_for, make_response, request, send_file, json
 
 from sqlalchemy.orm.exc import NoResultFound
 
-from pegasus.service import app, db, catalogs
+from pegasus.service import app, db, catalogs, command
 from pegasus.service.api import *
 
 def validate_ensemble_name(name):
@@ -391,4 +391,66 @@ def route_get_ensemble_workflow_file(ensemble, workflow, filename):
         raise APIError("Invalid file: %s" % filename)
 
     return send_file(path, mimetype=mimetype)
+
+
+class ListCommand(command.ClientCommand):
+    description = "List ensembles"
+    usage = "Usage: %prog list"
+
+    def run(self):
+        response = self.get("/ensembles")
+        result = response.json()
+
+        if response.status_code != 200:
+            print "ERROR:",result["message"]
+            exit(1)
+
+        fmt = "%-20s %-32s %-32s"
+        if len(result) > 0:
+            print fmt % ("NAME","CREATED","UPDATED")
+        for r in result:
+            print fmt % (r["name"], r["created"], r["updated"])
+            print r
+
+class CreateCommand(command.ClientCommand):
+    description = "Create ensemble"
+    usage = "Usage: %prog create ..."
+
+    def run(self):
+        raise Exception("Not implemented")
+
+class SubmitCommand(command.ClientCommand):
+    description = "Submit ensemble workflow"
+    usage = "Usage: %prog submit ..."
+
+    def run(self):
+        raise Exception("Not implemented")
+
+class ShowCommand(command.ClientCommand):
+    description = "Show workflows in ensemble"
+    usage = "Usage: %prog show ..."
+
+    def run(self):
+        raise Exception("Not implemented")
+
+class UpdateCommand(command.ClientCommand):
+    description = "Update ensemble"
+    usage = "Usage: %prog update ..."
+
+    def run(self):
+        raise Exception("Not implemented")
+
+class EnsembleCommand(command.CompoundCommand):
+    description = "Client for ensemble management"
+    commands = {
+        "list": ListCommand,
+        "create": CreateCommand,
+        "submit": SubmitCommand,
+        "show": ShowCommand,
+        "update": UpdateCommand
+    }
+
+def main():
+    "The entry point for pegasus-service-ensemble"
+    EnsembleCommand().main()
 
