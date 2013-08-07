@@ -84,7 +84,7 @@ public abstract class AbstractFileFactoryBasedMapper implements OutputMapper {
         PlannerOptions options = bag.getPlannerOptions();
         String      outputSite = options.getOutputSite();
         mSiteStore    = bag.getHandleToSiteStore();
-        
+        mOutputSite   = outputSite;
         boolean stageOut = (( outputSite != null ) && ( outputSite.trim().length() > 0 ));
 
         if (!stageOut ){

@@ -43,6 +43,12 @@ public class OutputMapperFactory {
     
     
     /**
+     * The prefix for the property subset for connecting to the individual
+     *  catalogs.
+     */
+    public static final String PROPERTY_KEY = "pegasus.dir.storage.mapper";
+    
+    /**
      * The default mapper implementation that is picked up.
      */
     public static final String DEFAULT_OUTPUT_MAPPER_IMPLEMENTATION = "Flat";
@@ -81,9 +87,15 @@ public class OutputMapperFactory {
             throw new OutputMapperFactoryException( "Null Properties passed in the bag ");
         }
         
+        //we prefer the legacy property for backward compatibility
         String className = props.useDeepStorageDirectoryStructure()?
                 HASHED_OUTPUT_MAPPER_IMPLEMENTATION:
-                DEFAULT_OUTPUT_MAPPER_IMPLEMENTATION;
+                props.getProperty(PROPERTY_KEY ); //rely on the new mapper property
+                
+        //fall back to default if not determined from properties
+        className = ( className == null )?
+                DEFAULT_OUTPUT_MAPPER_IMPLEMENTATION:
+                className;
         
         return loadInstance( className, bag, dag );
     }
