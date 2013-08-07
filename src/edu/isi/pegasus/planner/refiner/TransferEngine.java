@@ -493,9 +493,6 @@ public class TransferEngine extends Engine {
                 throw new RuntimeException( "Unable to find a location in the Replica Catalog for output file "  + lfn );
             }
 
-            
- //           String putDestURL = getURLOnStageoutSite( mStageoutDirectory, FileServer.OPERATION.put, lfn );
- //           String getDestURL = getURLOnStageoutSite( mStageoutDirectory, FileServer.OPERATION.get, lfn );
             String putDestURL = mOutputMapper.getURL( lfn, mOutputSite,  FileServer.OPERATION.put );
             String getDestURL = mOutputMapper.getURL( lfn, mOutputSite,  FileServer.OPERATION.get );
             
@@ -688,18 +685,7 @@ public class TransferEngine extends Engine {
         //the get
         String sharedScratchGetURL = this.getURLOnSharedScratch( stagingSite, job, OPERATION.get, lfn );
         String sharedScratchPutURL = this.getURLOnSharedScratch( stagingSite, job, OPERATION.put, lfn );
-/*
-        FileServer stagingSiteSharedScratchFS = stagingSite.selectHeadNodeScratchSharedFileServer( FileServer.OPERATION.put );
-        if( stagingSiteSharedScratchFS == null ){
-            this.complainForScratchFileServer( job, FileServer.OPERATION.put, stagingSiteHandle );
-            
-        }
-        StringBuffer buffer = new StringBuffer();
-        buffer.append( stagingSiteSharedScratchFS.getURLPrefix() ).
-               append( mSiteStore.getExternalWorkDirectory(stagingSiteSharedScratchFS, stagingSiteHandle)).
-               append( File.separatorChar ).append( lfn );
-        String sharedScratchGetURL = buffer.toString();
-*/
+
         //in the planner cache we track the output files put url on staging site
         trackInPlannerCache( lfn, sharedScratchPutURL, stagingSiteHandle );
         //in the workflow cache we track the output files put url on staging site
@@ -753,8 +739,6 @@ public class TransferEngine extends Engine {
 
             //add all the possible destination urls iterating through
             //the list of grid ftp servers associated with the dest pool.
-
-  //          Iterator it = mSiteStore.lookup( destSiteHandle ).getHeadNodeFS().getStorage().getSharedDirectory().getFileServersIterator();
             Directory storageDirectory = mSiteStore.lookup( destSiteHandle ).getHeadNodeStorageDirectory();
             if( storageDirectory == null ){
                 throw new RuntimeException( "No Storage directory specified for site " + destSiteHandle );
@@ -889,18 +873,6 @@ public class TransferEngine extends Engine {
             String sourceURI = null;
             
             //PM-590 Stricter checks
-/*
-            FileServer destSiteSharedScratchFS = destSite.selectHeadNodeScratchSharedFileServer( FileServer.OPERATION.put );
-            if( destSiteSharedScratchFS == null ){
-                this.complainForScratchFileServer( job, FileServer.OPERATION.put, destSiteHandle );
-            }
-            StringBuffer buffer = new StringBuffer();
-            buffer.append( destSiteSharedScratchFS.getURLPrefix() ).
-                   append( mSiteStore.getExternalWorkDirectory(
-                                               destSiteSharedScratchFS,
-                                               destSiteHandle) );
-            String thirdPartyDestPutURI = buffer.toString();
- */
             String thirdPartyDestPutURI = this.getURLOnSharedScratch( destSite, job, OPERATION.put, null );
 
 
@@ -1028,7 +1000,6 @@ public class TransferEngine extends Engine {
             dag = pfn;
         }
         else if( pfn.startsWith( PegasusURL.FILE_URL_SCHEME ) ){
-//            dag = Utility.getAbsolutePath( pfn );
             dag = new PegasusURL( pfn ).getPath();
         }
         else{
@@ -1143,21 +1114,6 @@ public class TransferEngine extends Engine {
 
         //sAbsPath would be just the source directory absolute path
         //dAbsPath would be just the destination directory absolute path
-/*
-        //PM-590 Stricter checks
-        FileServer stagingSiteSharedScratchFS = stagingSite.selectHeadNodeScratchSharedFileServer( FileServer.OPERATION.put );
-        if( stagingSiteSharedScratchFS == null ){
-            this.complainForScratchFileServer( job, FileServer.OPERATION.put, stagingSiteHandle);
-        }
-        String dAbsPath = mSiteStore.getExternalWorkDirectory( stagingSiteSharedScratchFS,
-                                                               stagingSiteHandle);
-        String sAbsPath = null;
-
-        //sDirURL would be the url to the source directory.
-        //dDirPutURL would be the url to the destination directoy
-        //and is always a networked url.
-        String dDirPutURL = stagingSiteSharedScratchFS.getURLPrefix() + dAbsPath;
- */
 
         //sDirURL would be the url to the source directory.
         //dDirPutURL would be the url to the destination directoy
