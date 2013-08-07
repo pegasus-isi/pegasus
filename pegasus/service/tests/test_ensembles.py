@@ -133,6 +133,9 @@ class TestEnsembleAPI(tests.APITestCase):
             self.assertEquals(r.status_code, 200, "Should return OK")
             self.assertTrue(len(r.data) > 0, "File should not be empty")
 
+        r = self.post("/ensembles/myensemble/workflows/mywf", data={"priority":"100"})
+        self.assertEquals(r.status_code, 200, "Should return OK")
+        self.assertEquals(r.json["priority"], 100, "Should have priority 100")
 
 class TestEnsembleClient(tests.ClientTestCase):
     # TODO Test ensemble client

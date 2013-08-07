@@ -67,15 +67,15 @@ class Ensemble(db.Model, EnsembleMixin):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     user = db.relationship("User")
 
-    def __init__(self, user_id, name, priority=0, max_running=1, max_planning=1):
+    def __init__(self, user_id, name):
         self.user_id = user_id
         self.set_name(name)
         self.set_created()
         self.set_updated()
         self.state = EnsembleStates.ACTIVE
-        self.set_priority(priority)
-        self.set_max_running(max_running)
-        self.set_max_planning(max_planning)
+        self.set_priority(0)
+        self.set_max_running(1)
+        self.set_max_planning(1)
 
     def set_state(self, state):
         state = state.upper()
@@ -117,6 +117,11 @@ class Ensemble(db.Model, EnsembleMixin):
             "href": url_for("route_get_ensemble", name=self.name, _external=True)
         }
 
+    def get_detail_object(self):
+        obj = self.get_object()
+        obj["workflows"] = [w.get_object() for w in self.workflows]
+        return obj
+
 class EnsembleWorkflow(db.Model, EnsembleMixin):
     __tablename__ = 'ensemble_workflow'
     __table_args__ = (
@@ -131,15 +136,15 @@ class EnsembleWorkflow(db.Model, EnsembleMixin):
     state = db.Column(db.Enum(*EnsembleWorkflowStates), nullable=False)
     priority = db.Column(db.Integer, nullable=False)
     ensemble_id = db.Column(db.Integer, db.ForeignKey('ensemble.id'))
-    ensemble = db.relationship("Ensemble")
+    ensemble = db.relationship("Ensemble", backref="workflows")
 
-    def __init__(self, ensemble_id, name, priority):
+    def __init__(self, ensemble_id, name):
         self.ensemble_id = ensemble_id
         self.set_name(name)
         self.set_created()
         self.set_updated()
         self.state = EnsembleWorkflowStates.READY
-        self.set_priority(priority)
+        self.set_priority(0)
 
     def set_state(self, state):
         state = state.upper()
@@ -203,104 +208,10 @@ def get_ensemble_workflow(ensemble_id, name):
     except NoResultFound:
         raise APIError("No such ensemble workflow: %s" % name, 404)
 
-@app.route("/ensembles", methods=["GET"])
-def route_list_ensembles():
-    ensembles = list_ensembles(g.user.id)
-    result = [e.get_object() for e in ensembles]
-    return json_response(result)
-
-@app.route("/ensembles", methods=["POST"])
-def route_create_ensemble():
-    name = request.form.get("name", None)
-    if name is None:
-        raise APIError("Specify ensemble name")
-
-    priority = request.form.get("priority", 0)
-    max_running = request.form.get("max_running", 1)
-    max_planning = request.form.get("max_planning", 1)
-
-    create_ensemble(g.user.id, name, priority, max_running, max_planning)
-
-    db.session.commit()
-
-    return json_created(url_for("route_get_ensemble", name=name, _external=True))
-
-@app.route("/ensembles/<string:name>", methods=["GET"])
-def route_get_ensemble(name):
-    e = get_ensemble(g.user.id, name)
-    workflows = list_ensemble_workflows(e.id)
-    result = e.get_object()
-    result["workflows"] = [w.get_object() for w in workflows]
-    return json_response(result)
-
-@app.route("/ensembles/<string:name>", methods=["PUT","POST"])
-def route_update_ensemble(name):
-    e = get_ensemble(g.user.id, name)
-
-    priority = request.form.get("priority", None)
-    if priority is not None:
-        e.set_priority(priority)
-
-    max_running = request.form.get("max_running", None)
-    if max_running is not None:
-        e.set_max_running(max_running)
-
-    max_planning = request.form.get("max_planning", None)
-    if max_planning is not None:
-        e.set_max_planning(max_planning)
-
-    state = request.form.get("state", None)
-    if state is not None:
-        if state != e.state:
-            # TODO Do the necessary state transition
-            e.set_state(state)
-
-    e.set_updated()
-
-    db.session.commit()
-
-    return json_response(e.get_object())
-
-@app.route("/ensembles/<string:name>/workflows", methods=["GET"])
-def route_list_ensemble_workflows(name):
-    e = get_ensemble(g.user.id, name)
-    workflows = EnsembleWorkflow.query.filter_by(ensemble_id=e.id).all()
-    result = [w.get_object() for w in workflows]
-    return json_response(result)
-
-@app.route("/ensembles/<string:ensemble>/workflows", methods=["POST"])
-def route_create_ensemble_workflow(ensemble):
-    e = get_ensemble(g.user.id, ensemble)
-
-    name = request.form.get("name", None)
-    if name is None:
-        raise APIError("Specify ensemble workflow name")
-
-    priority = request.form.get("priority", 0)
-
-    sc = request.form.get("sites", None)
-    if sc is None:
-        raise APIError("Specify sites")
-    sc = catalogs.get_catalog("site", g.user, sc)
-
-    tc = request.form.get("transformations", None)
-    if tc is None:
-        raise APIError("Specify transformations")
-    tc = catalogs.get_catalog("transformation", g.user, tc)
-
-    rc = request.form.get("replicas", None)
-    if rc is None:
-        raise APIError("Specify replicas")
-    rc = catalogs.get_catalog("replica", g.user, rc)
-
-    dax = request.files.get("dax", None)
-    if dax is None:
-        raise APIError("Specify dax")
-
-    props = request.files.get("properties", None)
-
+def create_ensemble_workflow(ensemble_id, name, priority, rc, tc, sc, dax, props):
     # Create database record
-    w = EnsembleWorkflow(e.id, name, priority)
+    w = EnsembleWorkflow(ensemble_id, name)
+    w.set_priority(priority)
     db.session.add(w)
     db.session.flush()
 
@@ -340,6 +251,99 @@ def route_create_ensemble_workflow(ensemble):
     finally:
         f.close()
 
+@app.route("/ensembles", methods=["GET"])
+def route_list_ensembles():
+    ensembles = list_ensembles(g.user.id)
+    result = [e.get_object() for e in ensembles]
+    return json_response(result)
+
+@app.route("/ensembles", methods=["POST"])
+def route_create_ensemble():
+    name = request.form.get("name", None)
+    if name is None:
+        raise APIError("Specify ensemble name")
+
+    priority = request.form.get("priority", 0)
+    max_running = request.form.get("max_running", 1)
+    max_planning = request.form.get("max_planning", 1)
+
+    create_ensemble(g.user.id, name, priority, max_running, max_planning)
+
+    db.session.commit()
+
+    return json_created(url_for("route_get_ensemble", name=name, _external=True))
+
+@app.route("/ensembles/<string:name>", methods=["GET"])
+def route_get_ensemble(name):
+    e = get_ensemble(g.user.id, name)
+    result = e.get_detail_object()
+    return json_response(result)
+
+@app.route("/ensembles/<string:name>", methods=["PUT","POST"])
+def route_update_ensemble(name):
+    e = get_ensemble(g.user.id, name)
+
+    priority = request.form.get("priority", None)
+    if priority is not None:
+        e.set_priority(priority)
+
+    max_running = request.form.get("max_running", None)
+    if max_running is not None:
+        e.set_max_running(max_running)
+
+    max_planning = request.form.get("max_planning", None)
+    if max_planning is not None:
+        e.set_max_planning(max_planning)
+
+    state = request.form.get("state", None)
+    if state is not None:
+        if state != e.state:
+            # TODO Do the necessary state transition
+            e.set_state(state)
+
+    e.set_updated()
+
+    db.session.commit()
+
+    return json_response(e.get_object())
+
+@app.route("/ensembles/<string:name>/workflows", methods=["GET"])
+def route_list_ensemble_workflows(name):
+    e = get_ensemble(g.user.id, name)
+    result = [w.get_object() for w in e.workflows]
+    return json_response(result)
+
+@app.route("/ensembles/<string:ensemble>/workflows", methods=["POST"])
+def route_create_ensemble_workflow(ensemble):
+    e = get_ensemble(g.user.id, ensemble)
+
+    name = request.form.get("name", None)
+    if name is None:
+        raise APIError("Specify ensemble workflow name")
+
+    priority = request.form.get("priority", 0)
+
+    sites = request.form.get("sites", None)
+    if sites is None: raise APIError("Specify sites")
+
+    transformations = request.form.get("transformations", None)
+    if transformations is None: raise APIError("Specify transformations")
+
+    replicas = request.form.get("replicas", None)
+    if replicas is None: raise APIError("Specify replicas")
+
+    dax = request.files.get("dax", None)
+    if dax is None:
+        raise APIError("Specify dax")
+
+    props = request.files.get("properties", None)
+
+    sc = catalogs.get_catalog("site", g.user, sites)
+    tc = catalogs.get_catalog("transformation", g.user, transformations)
+    rc = catalogs.get_catalog("replica", g.user, replicas)
+
+    create_ensemble_workflow(e.id, name, priority, rc, tc, sc, dax, props)
+
     db.session.commit()
 
     return json_created(url_for("route_get_ensemble_workflow", ensemble=ensemble, workflow=name))
@@ -350,6 +354,21 @@ def route_get_ensemble_workflow(ensemble, workflow):
     w = get_ensemble_workflow(e.id, workflow)
     result = w.get_detail_object()
     return json_response(result)
+
+@app.route("/ensembles/<string:ensemble>/workflows/<string:workflow>", methods=["PUT","POST"])
+def route_update_ensemble_workflow(ensemble, workflow):
+    e = get_ensemble(g.user.id, ensemble)
+    w = get_ensemble_workflow(e.id, workflow)
+
+    priority = request.form.get("priority", None)
+    if priority is not None:
+        w.set_priority(priority)
+
+    w.set_updated()
+
+    db.session.commit()
+
+    return json_response(w.get_detail_object())
 
 @app.route("/ensembles/<string:ensemble>/workflows/<string:workflow>/<string:filename>", methods=["GET"])
 def route_get_ensemble_workflow_file(ensemble, workflow, filename):
