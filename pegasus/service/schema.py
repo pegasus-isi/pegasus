@@ -7,7 +7,7 @@ from pegasus.service import db
 # This is the current version of the schema. It should be incremented
 # each time a change is made to the schema and a migration script
 # should be created to go from the old version to the new version.
-version = 2
+version = 3
 #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 class Schema(db.Model):
@@ -25,6 +25,4 @@ class Schema(db.Model):
     def __repr__(self):
         return '<Schema %d %s>' % (self.version, self.timestamp)
 
-# Need to import all the other schema objects here
-from pegasus.service.users import User
 
