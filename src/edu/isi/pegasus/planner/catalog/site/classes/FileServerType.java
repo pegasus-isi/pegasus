@@ -44,6 +44,19 @@ public abstract class FileServerType extends AbstractSiteData {
         private static  List<OPERATION> mGetOperations;
 
         private static  List<OPERATION> mPutOperations;
+        
+        /**
+         * Returns a collection of operations corresponding to a get or put operation
+         *
+         * @param operation  the operation for which all the operations are reqd
+         * 
+         * @return Collection consisting of valid operations for operation passed
+         */
+        public static Collection<OPERATION> operationsFor( OPERATION operation ){
+            return ( operation.equals( OPERATION.get) ) ?
+                    operationsForGET():
+                    operationsForPUT();
+        }
 
         /**
          * Returns a collection of get operations.

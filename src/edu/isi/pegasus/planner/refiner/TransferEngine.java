@@ -739,6 +739,7 @@ public class TransferEngine extends Engine {
 
             //add all the possible destination urls iterating through
             //the list of grid ftp servers associated with the dest pool.
+/*
             Directory storageDirectory = mSiteStore.lookup( destSiteHandle ).getHeadNodeStorageDirectory();
             if( storageDirectory == null ){
                 throw new RuntimeException( "No Storage directory specified for site " + destSiteHandle );
@@ -749,39 +750,46 @@ public class TransferEngine extends Engine {
                 //no file servers for put operations
                 throw new RuntimeException( " No File Servers specified for PUT Operation on Shared Storage on Headnode for site " + destSiteHandle );
             }
-
-            for( FileServer.OPERATION op : FileServer.OPERATION.operationsForPUT() ){
-                for( Iterator it = storageDirectory.getFileServersIterator(op); it.hasNext();){
-                    FileServer fs = (FileServer)it.next();
-                    
-                    //file server on output site
-//                    String destURL = this.getURLOnStageoutSite( fs, lfn);
-                    String destURL = mOutputMapper.map(lfn, fs);
-
-                    //if the paths match of dest URI
-                    //and execDirURL we return null
-                    if (sharedScratchGetURL.equalsIgnoreCase(destURL)) {
-                        /*ft = new FileTransfer(file, job);
-                        ft.addSource(stagingSiteHandle, sharedScratchGetURL);*/
-                        ft.addDestination(stagingSiteHandle, sharedScratchGetURL);
-                        ft.setURLForRegistrationOnDestination( sharedScratchGetURL );
-                        //make the transfer transient?
-                        ft.setTransferFlag(PegasusFile.TRANSFER_NOT);
-                        return ft;
-                    }
-
-                    ft.addDestination( destSiteHandle, destURL );
-                
+*/
+            for( String destURL : mOutputMapper.mapAll( lfn, destSiteHandle, OPERATION.put )){
+                //if the paths match of dest URI
+                //and execDirURL we return null
+                if (sharedScratchGetURL.equalsIgnoreCase(destURL)) {
+                    /*ft = new FileTransfer(file, job);
+                    ft.addSource(stagingSiteHandle, sharedScratchGetURL);*/
+                    ft.addDestination(stagingSiteHandle, sharedScratchGetURL);
+                    ft.setURLForRegistrationOnDestination( sharedScratchGetURL );
+                    //make the transfer transient?
+                    ft.setTransferFlag(PegasusFile.TRANSFER_NOT);
+                    return ft;
                 }
-            }//end of different put operations
+                ft.addDestination( destSiteHandle, destURL );
+            }
 
             //construct a registration URL
-            ft.setURLForRegistrationOnDestination( constructRegistrationURL( storageDirectory ,destSiteHandle, lfn ) );
+            ft.setURLForRegistrationOnDestination( constructRegistrationURL( destSiteHandle, lfn ) );
         }
 
         return ft;
     }
 
+     
+    /**
+     * Constructs a Registration URL for a LFN
+     *
+     * @param site       the site handle
+     * @param lfn        the LFN for which the URL needs to be constructed
+     *
+     * @return  the URL
+     */
+    private String constructRegistrationURL( String site, String lfn ){
+        //assumption of same external mount point for each storage
+        //file server on output site
+//                url = this.getURLOnStageoutSite( fs, lfn );
+        return mOutputMapper.map( lfn, site, FileServer.OPERATION.get );
+    }
+
+ 
     /**
      * Constructs a Registration URL for a LFN
      *
@@ -791,6 +799,7 @@ public class TransferEngine extends Engine {
      *
      * @return  the URL
      */
+/*
     private String constructRegistrationURL(  Directory directory , String site, String lfn ){
         //sanity check
         if( !directory.hasFileServerForGETOperations() ){
@@ -807,7 +816,7 @@ public class TransferEngine extends Engine {
                 //assumption of same external mount point for each storage
                 //file server on output site
 //                url = this.getURLOnStageoutSite( fs, lfn );
-                url = mOutputMapper.map(lfn, fs);
+                url = mOutputMapper.map( lfn, site, FileServer.OPERATION.get );
 
                 return url;
             }
@@ -815,7 +824,8 @@ public class TransferEngine extends Engine {
         }//end of different get operations
         return url;
     }
-
+*/
+    
     /**
      * This generates a error message for pool not found in the pool
      * config file.

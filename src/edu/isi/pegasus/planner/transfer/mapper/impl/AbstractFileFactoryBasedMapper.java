@@ -29,6 +29,9 @@ import edu.isi.pegasus.planner.transfer.mapper.OutputMapper;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import org.griphyn.vdl.euryale.FileFactory;
 
 import org.griphyn.vdl.euryale.VirtualFlatFileFactory;
@@ -117,14 +120,18 @@ public abstract class AbstractFileFactoryBasedMapper implements OutputMapper {
     public abstract String getShortName();
     
     /**
-     * 
-     * Returns a URL for the lfn on the output site. It randomly selects one of
-     * the file servers to use for selection.
+     * Maps a LFN to a location on the filsystem of a site and returns a single
+     * externally accessible URL corresponding to that location. If the storage
+     * directory for the site has multiple file servers associated with it, it 
+     * selects one randomly and returns a URL accessible from that FileServer
      * 
      * @param lfn          the lfn
      * @param site         the output site
      * @param operation    whether we want a GET or a PUT URL
-     * @return 
+     * 
+     * @return the URL to file that was mapped
+     * 
+     * @throws MapperException if unable to construct URL for any reason
      */
     public String map( String lfn , String site , FileServer.OPERATION operation )  throws MapperException{
         Directory directory = null;
@@ -140,39 +147,111 @@ public abstract class AbstractFileFactoryBasedMapper implements OutputMapper {
             this.complainForStorageFileServer( operation, site);
         }
         
-        return this.map(lfn, server);
+        //create a file in the virtual namespace and get the
+        //addOn part
+        String addOn = this.createAndGetAddOn( lfn );
+        return this.constructURL( server , addOn );
+        
+    }
+    
+    /**
+     * Maps a LFN to a location on the filsystem of a site and returns all the possible
+     * equivalent externally accessible URL corresponding to that location. 
+     * For example, if a file on the filesystem is accessible via multiple file 
+     * servers it should return externally accessible URL's from all the File Servers
+     * on the site.
+     * 
+     * @param lfn          the lfn
+     * @param site         the output site
+     * @param operation    whether we want a GET or a PUT URL
+     * 
+     * @return List<String> of externally accessible URLs to the mapped file.
+     * 
+     * @throws MapperException if unable to construct URL for any reason
+     */
+    public List<String> mapAll( String lfn, String site, FileServer.OPERATION operation) throws MapperException{
+        Directory directory = null;
+        if( mOutputSite != null && mOutputSite.equals( site ) ){
+            directory = this.mStageoutDirectory;
+        }
+        else{
+            directory = this.lookupStorageDirectory(site);
+        }
+        
+        //sanity check
+        if( !directory.hasFileServerForOperations(operation) ){
+            //no file servers for GET operations
+            throw new MapperException( this.getErrorMessagePrefix() + 
+                                       " No File Servers specified for " + operation + 
+                                       " Operation on Shared Storage for site " + site );
+        }
+
+        List<String>urls = new LinkedList();
+        
+        //figure out the addon only once first.
+        //the factory will give us the relative
+        //add on part
+        String addOn = this.createAndGetAddOn( lfn );
+        for( FileServer.OPERATION op : FileServer.OPERATION.operationsFor(operation) ){
+            for( Iterator it = directory.getFileServersIterator(op); it.hasNext();){
+                FileServer fs = (FileServer)it.next();
+                urls.add( this.constructURL( fs, addOn ) );
+            }
+        }//end 
+        
+        return urls;
         
     }
     
      
     /**
      * Returns the full path on remote output site, where the lfn will reside, 
-     * using the FileServer passed.
+     * using the FileServer passed. This method creates a new File in the FileFactory 
+     * space.
      *
-     * @param lfn     the logical filename of the file.
      * @param server  the file server to use
+     * @param addOn   the addOn part containing the LFN
      * 
      * @return the URL for the LFN
      */
-    public String map( String lfn , FileServer server ) throws MapperException {
+    protected String constructURL( FileServer server,  String addOn ) throws MapperException {
         StringBuilder url =  new StringBuilder( server.getURL() );
+        
+        //the factory will give us the relative
+        //add on part
+        
+        //check if we need to add file separator
+        //do we really need it?
+        if( addOn.indexOf( File.separator ) != 0 ){
+            url.append( File.separator );
+        }
+        url.append( addOn );
+    
+        return url.toString();
+    }
+    
+    /**
+     * Returns the addOn part that is retrieved from the File Factory.
+     * It creates a new file in the factory for the LFN and returns it.
+     * 
+     * @param lfn  the LFN to be used
+     * 
+     * @return 
+     */
+    protected String createAndGetAddOn( String lfn ){
+        
+        String addOn = null;
         try{
             //the factory will give us the relative
             //add on part
-            String addOn = mFactory.createFile( lfn ).toString();
-            //check if we need to add file separator
-            //do we really need it?
-            if( addOn.indexOf( File.separator ) != 0 ){
-                url.append( File.separator );
-            }
-            url.append( addOn );
-         }
-         catch( IOException e ){
-             throw new RuntimeException( "IOException " , e );
-         }
-         return url.toString();
+            addOn = mFactory.createFile( lfn ).toString();
+        }
+        catch( IOException e ){
+            throw new MapperException( "IOException " , e );
+        }
         
-    }
+        return addOn;
+     }
 
     /**
      * Looks up the site catalog to return the storage directory for a site

@@ -18,6 +18,7 @@ package edu.isi.pegasus.planner.transfer.mapper;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.PegasusBag;
+import java.util.List;
 
 /**
  * 
@@ -46,8 +47,8 @@ public interface OutputMapper {
     
     
     /**
-     * 
-     * Returns a URL for the lfn on the output site.
+     * Maps a LFN to a location on the filsystem of a site and returns a single
+     * externally accessible URL corresponding to that location.
      * 
      * @param lfn          the lfn
      * @param site         the output site
@@ -60,15 +61,19 @@ public interface OutputMapper {
     public String map( String lfn , String site , FileServer.OPERATION operation ) throws MapperException;
     
     /**
-     * Returns the full path on remote output site, where the lfn will reside, 
-     * using the FileServer passed.
-     *
-     * @param lfn     the logical filename of the file.
-     * @param server  the file server to use
+     * Maps a LFN to a location on the filsystem of a site and returns all the possible
+     * equivalent externally accessible URL corresponding to that location. 
+     * For example, if a file on the filesystem is accessible via multiple file 
+     * servers it should return externally accessible URL's from all the File Servers
+     * on the site.
      * 
-     * @return the URL to the file that was mapped
+     * @param lfn          the lfn
+     * @param site         the output site
+     * @param operation    whether we want a GET or a PUT URL
+     * 
+     * @return List<String> of externally accessible URLs to the mapped file.
      * 
      * @throws MapperException if unable to construct URL for any reason
      */
-    public String map( String lfn , FileServer server ) throws MapperException;
+    public List<String> mapAll( String lfn, String site, FileServer.OPERATION operation) throws MapperException;
 }
