@@ -1,8 +1,11 @@
+import sys
 import os
 import unittest
 import tempfile
 import shutil
 import base64
+import logging
+from StringIO import StringIO
 
 from flask import json
 
@@ -11,13 +14,14 @@ from pegasus.service import app, db, migrations, users
 class TestCase(unittest.TestCase):
 
     def setUp(self):
+        # We want our test cases quiet
+        logging.basicConfig(level=logging.ERROR)
+
         app.config.update(DEBUG=True)
 
         # Create a temp dir to store data files
         self.tmpdir = tempfile.mkdtemp()
         app.config.update(STORAGE_DIR=self.tmpdir)
-
-        self.app = app.test_client()
 
     def tearDown(self):
         # Remove the temp dir
@@ -51,6 +55,8 @@ class APITestCase(DBTestCase):
         self.email = "scott@isi.edu"
         users.create(username=self.username, password=self.password, email=self.email)
         db.session.commit()
+
+        self.app = app.test_client()
 
         # Patch the Flask/Werkzeug open to support required features
         orig_open = self.app.open
@@ -110,10 +116,28 @@ class ClientTestCase(APITestCase):
         APITestCase.setUp(self)
         self.host = "127.0.0.1"
         self.port = 4999
+        app.config["ENDPOINT"] = "http://%s:%s/" % (self.host, self.port)
+        app.config["USERNAME"] = self.username
+        app.config["PASSWORD"] = self.password
         self.server = TestWSGIServer(host=self.host, port=self.port)
         self.server.start()
 
+        self.oldstdout = sys.stdout
+        sys.stdout = StringIO()
+        self.oldstderr = sys.stderr
+        sys.stderr = StringIO()
+
+    def stdout(self):
+        sys.stdout.seek(0, os.SEEK_SET)
+        return sys.stdout.read()
+
+    def stderr(self):
+        sys.stderr.seek(0, os.SEEK_SET)
+        return sys.stderr.read()
+
     def tearDown(self):
+        sys.stdout = self.oldstdout
+        sys.stderr = self.oldstderr
         self.server.shutdown()
         APITestCase.tearDown(self)
 
