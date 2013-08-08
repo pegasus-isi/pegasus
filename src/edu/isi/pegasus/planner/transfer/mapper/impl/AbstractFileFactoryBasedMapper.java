@@ -119,6 +119,48 @@ public abstract class AbstractFileFactoryBasedMapper implements OutputMapper {
      */
     public abstract String getShortName();
     
+    
+    /**
+     * Returns the addOn part that is retrieved from the File Factory.
+     * It creates a new file in the factory for the LFN and returns it.
+     * 
+     * @param lfn      the LFN to be used
+     * @param site     the site at which the LFN resides
+     * @param existing indicates whether to create a new location/placement for a file, 
+     *                 or rely on existing placement on the site.
+     * 
+     * @return 
+     */
+    public abstract String createAndGetAddOn( String lfn, String site, boolean existing);
+    
+    
+     
+    /**
+     * Returns the full path on remote output site, where the lfn will reside, 
+     * using the FileServer passed. This method creates a new File in the FileFactory 
+     * space.
+     *
+     * @param server  the file server to use
+     * @param addOn   the addOn part containing the LFN
+     * 
+     * @return the URL for the LFN
+     */
+    protected String constructURL( FileServer server,  String addOn ) throws MapperException {
+        StringBuilder url =  new StringBuilder( server.getURL() );
+        
+        //the factory will give us the relative
+        //add on part
+        
+        //check if we need to add file separator
+        //do we really need it?
+        if( addOn.indexOf( File.separator ) != 0 ){
+            url.append( File.separator );
+        }
+        url.append( addOn );
+    
+        return url.toString();
+    }
+    
     /**
      * Maps a LFN to a location on the filsystem of a site and returns a single
      * externally accessible URL corresponding to that location. If the storage
@@ -134,6 +176,26 @@ public abstract class AbstractFileFactoryBasedMapper implements OutputMapper {
      * @throws MapperException if unable to construct URL for any reason
      */
     public String map( String lfn , String site , FileServer.OPERATION operation )  throws MapperException{
+        //in this case we want to create an entry in factory namespace and use that addOn
+        return this.map( lfn, site, operation, false );
+        
+    }
+    
+    /**
+     * Maps a LFN to a location on the filsystem of a site and returns a single
+     * externally accessible URL corresponding to that location.
+     * 
+     * @param lfn          the lfn
+     * @param site         the output site
+     * @param operation    whether we want a GET or a PUT URL
+     * @param existing     indicates whether to create a new location/placement for a file, 
+     *                     or rely on existing placement on the site.
+     * 
+     * @return  externally accessible URL to the mapped file.
+     * 
+     * @throws MapperException if unable to construct URL for any reason
+     */
+    public String map( String lfn, String site, FileServer.OPERATION operation, boolean existing ) throws MapperException{
         Directory directory = null;
         if( mOutputSite != null && mOutputSite.equals( site ) ){
             directory = this.mStageoutDirectory;
@@ -149,9 +211,8 @@ public abstract class AbstractFileFactoryBasedMapper implements OutputMapper {
         
         //create a file in the virtual namespace and get the
         //addOn part
-        String addOn = this.createAndGetAddOn( lfn );
+        String addOn = this.createAndGetAddOn( lfn, site, existing );
         return this.constructURL( server , addOn );
-        
     }
     
     /**
@@ -190,8 +251,8 @@ public abstract class AbstractFileFactoryBasedMapper implements OutputMapper {
         
         //figure out the addon only once first.
         //the factory will give us the relative
-        //add on part
-        String addOn = this.createAndGetAddOn( lfn );
+        //add on part 
+        String addOn = this.createAndGetAddOn( lfn , site, false );
         for( FileServer.OPERATION op : FileServer.OPERATION.operationsFor(operation) ){
             for( Iterator it = directory.getFileServersIterator(op); it.hasNext();){
                 FileServer fs = (FileServer)it.next();
@@ -203,55 +264,6 @@ public abstract class AbstractFileFactoryBasedMapper implements OutputMapper {
         
     }
     
-     
-    /**
-     * Returns the full path on remote output site, where the lfn will reside, 
-     * using the FileServer passed. This method creates a new File in the FileFactory 
-     * space.
-     *
-     * @param server  the file server to use
-     * @param addOn   the addOn part containing the LFN
-     * 
-     * @return the URL for the LFN
-     */
-    protected String constructURL( FileServer server,  String addOn ) throws MapperException {
-        StringBuilder url =  new StringBuilder( server.getURL() );
-        
-        //the factory will give us the relative
-        //add on part
-        
-        //check if we need to add file separator
-        //do we really need it?
-        if( addOn.indexOf( File.separator ) != 0 ){
-            url.append( File.separator );
-        }
-        url.append( addOn );
-    
-        return url.toString();
-    }
-    
-    /**
-     * Returns the addOn part that is retrieved from the File Factory.
-     * It creates a new file in the factory for the LFN and returns it.
-     * 
-     * @param lfn  the LFN to be used
-     * 
-     * @return 
-     */
-    protected String createAndGetAddOn( String lfn ){
-        
-        String addOn = null;
-        try{
-            //the factory will give us the relative
-            //add on part
-            addOn = mFactory.createFile( lfn ).toString();
-        }
-        catch( IOException e ){
-            throw new MapperException( "IOException " , e );
-        }
-        
-        return addOn;
-     }
 
     /**
      * Looks up the site catalog to return the storage directory for a site

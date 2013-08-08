@@ -15,11 +15,9 @@
  */
 package edu.isi.pegasus.planner.transfer.mapper.impl;
 
-import edu.isi.pegasus.common.logging.LogManager;
 
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.PegasusBag;
-import edu.isi.pegasus.planner.classes.PlannerOptions;
 
 import edu.isi.pegasus.planner.transfer.mapper.MapperException;
 
@@ -81,6 +79,36 @@ public class Flat extends AbstractFileFactoryBasedMapper {
         }
         return factory;
     }
+    
+    
+    /**
+     * Returns the addOn part that is retrieved from the File Factory.
+     * It creates a new file in the factory for the LFN and returns it.
+     * 
+     * @param lfn      the LFN to be used
+     * @param site     the site at which the LFN resides
+     * @param existing indicates whether to create a new location/placement for a file, 
+     *                 or rely on existing placement on the site.
+     * 
+     * @return 
+     */
+    public String createAndGetAddOn( String lfn, String site, boolean existing){
+        //In the Flat hierarchy, all files are placed on the same directory.
+        //we just let the factory create a new addOn space in the base directory
+        //for the lfn
+        String addOn = null;
+        try{
+            //the factory will give us the relative
+            //add on part
+            addOn = mFactory.createFile( lfn ).toString();
+        }
+        catch( IOException e ){
+            throw new MapperException( "IOException " , e );
+        }
+        
+        return addOn;
+     }
+    
     
     /**
      * Returns the short name for the implementation class.

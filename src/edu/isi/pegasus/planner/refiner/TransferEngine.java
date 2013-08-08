@@ -767,7 +767,7 @@ public class TransferEngine extends Engine {
             }
 
             //construct a registration URL
-            ft.setURLForRegistrationOnDestination( constructRegistrationURL( destSiteHandle, lfn ) );
+            ft.setURLForRegistrationOnDestination( mOutputMapper.map( lfn, destSiteHandle, FileServer.OPERATION.get , true ) );
         }
 
         return ft;

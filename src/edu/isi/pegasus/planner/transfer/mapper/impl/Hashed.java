@@ -21,7 +21,9 @@ import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PegasusFile;
 import edu.isi.pegasus.planner.transfer.mapper.MapperException;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import org.griphyn.vdl.euryale.FileFactory;
 import org.griphyn.vdl.euryale.VirtualDecimalHashedFileFactory;
 
@@ -40,6 +42,10 @@ public class Hashed extends AbstractFileFactoryBasedMapper {
      */
     public static final String SHORT_NAME = "Hashed";
 
+    /**
+     * A Map that tracks for each output site, the LFN to the Add on's 
+     */
+    private Map<String,Map<String,String>> mSiteLFNAddOnMap;
     
     
     /**
@@ -51,6 +57,12 @@ public class Hashed extends AbstractFileFactoryBasedMapper {
      */
     public void initialize( PegasusBag bag, ADag workflow)  throws MapperException{
         super.initialize(bag, workflow);
+        mSiteLFNAddOnMap = new HashMap();
+        if( mOutputSite != null ){
+            //add a default lfn to add on map for the site
+            Map<String,String> m = new HashMap();
+            mSiteLFNAddOnMap.put( mOutputSite, m );
+        }
     }
     
     /**
@@ -82,6 +94,7 @@ public class Hashed extends AbstractFileFactoryBasedMapper {
                 }
             }
 
+            totalFiles = 1000000;
             factory =  new VirtualDecimalHashedFileFactory( addOn, totalFiles );
 
             //each stageout file  has only 1 file associated with it
@@ -91,6 +104,70 @@ public class Hashed extends AbstractFileFactoryBasedMapper {
                                             ioe );
         }
         return factory;
+    }
+    
+    /**
+     * Returns the addOn part that is retrieved from the File Factory.
+     * It creates a new file in the factory for the LFN and returns it.
+     * 
+     * @param lfn      the LFN to be used
+     * @param site     the site at which the LFN resides
+     * @param existing indicates whether to create a new location/placement for a file, 
+     *                 or rely on existing placement on the site.
+     * 
+     * @return 
+     */
+    public String createAndGetAddOn( String lfn, String site, boolean existing){
+        if( existing ){
+            Map<String,String> lfnAddOn = this.mSiteLFNAddOnMap.get( site );
+            if( lfnAddOn == null ){
+                throw new MapperException( this.getErrorMessagePrefix() + " LFN's not tracked for site " + site );
+            }
+            String addOn = (String)lfnAddOn.get(lfn);
+            if( addOn == null ){
+                throw new MapperException( this.getErrorMessagePrefix() + " LFN " + lfn + " is not tracked for site " + site );
+            }
+            return addOn;
+        }
+        
+        
+        //In the Flat hierarchy, all files are placed on the same directory.
+        //we just let the factory create a new addOn space in the base directory
+        //for the lfn
+        String addOn = null;
+        try{
+            //the factory will give us the relative
+            //add on part
+            addOn = mFactory.createFile( lfn ).toString();
+            this.trackLFNAddOn(site, lfn, addOn);
+            
+        }
+        catch( IOException e ){
+            throw new MapperException( "IOException " , e );
+        }
+        
+        return addOn;
+     }
+    
+    /**
+     * Tracks the lfn with addOn's on the various sites.
+     * 
+     * @param site
+     * @param lfn
+     * @param addOn 
+     */
+    private void trackLFNAddOn( String site, String lfn, String addOn ){
+        if( site.equals( mOutputSite) ||  mSiteLFNAddOnMap.containsKey( site )  ){
+            //we know output site  it is initialized already
+            Map m = mSiteLFNAddOnMap.get( site );
+            m.put( lfn, addOn );
+        }
+        else{           
+            Map<String,String> m = new HashMap();
+            m.put( lfn, addOn );
+            mSiteLFNAddOnMap.put( mOutputSite, m );
+        }
+        
     }
     
     /**
