@@ -8,8 +8,9 @@ from flask import g, url_for, make_response, request, send_file, json
 
 from sqlalchemy.orm.exc import NoResultFound
 
-from pegasus.service import app, db, catalogs, command
+from pegasus.service import app, db, catalogs
 from pegasus.service.api import *
+from pegasus.service.command import ClientCommand, CompoundCommand
 
 def validate_ensemble_name(name):
     if name is None:
@@ -45,7 +46,7 @@ class States(set):
             return name
         raise AttributeError
 
-EnsembleStates = States(["ACTIVE","HELD"])
+EnsembleStates = States(["ACTIVE","HELD","PAUSED"])
 EnsembleWorkflowStates = States(["READY","PLANNING","QUEUED","RUNNING",
                                  "FAILED","SUCCESSFUL","ABORTED"])
 
@@ -393,7 +394,12 @@ def route_get_ensemble_workflow_file(ensemble, workflow, filename):
     return send_file(path, mimetype=mimetype)
 
 
-class ListCommand(command.ClientCommand):
+#TODO Change --name to --ensemble
+def add_name_option(self):
+    self.parser.add_option("-n", "--name", action="store", dest="name",
+        default=None, help="Ensemble name")
+
+class ListCommand(ClientCommand):
     description = "List ensembles"
     usage = "Usage: %prog list"
 
@@ -405,49 +411,152 @@ class ListCommand(command.ClientCommand):
             print "ERROR:",result["message"]
             exit(1)
 
-        fmt = "%-20s %-32s %-32s"
+        fmt = "%-20s %-8s %-30s %-30s %8s %14s %12s"
         if len(result) > 0:
-            print fmt % ("NAME","CREATED","UPDATED")
+            print fmt % ("NAME","STATE","CREATED","UPDATED","PRIORITY","MAX PLANNING","MAX RUNNING")
         for r in result:
-            print fmt % (r["name"], r["created"], r["updated"])
-            print r
+            print fmt % (r["name"], r["state"], r["created"], r["updated"], r["priority"], r["max_planning"], r["max_running"])
 
-class CreateCommand(command.ClientCommand):
+class CreateCommand(ClientCommand):
     description = "Create ensemble"
     usage = "Usage: %prog create ..."
 
-    def run(self):
-        raise Exception("Not implemented")
+    def __init__(self):
+        ClientCommand.__init__(self)
+        add_name_option(self)
+        self.parser.add_option("-p", "--priority", action="store", dest="priority",
+            default=0, type="int", help="Ensemble priority")
+        self.parser.add_option("-P", "--max-planning", action="store", dest="max_planning",
+            default=1, type="int", help="Maximum number of workflows being planned at once")
+        self.parser.add_option("-R", "--max-running", action="store", dest="max_running",
+            default=1, type="int", help="Maximum number of workflows running at once")
 
-class SubmitCommand(command.ClientCommand):
+    def run(self):
+        if self.options.name is None:
+            parser.error("Specify -n/--name")
+
+        request = {
+            "name": self.options.name,
+            "priority": self.options.priority,
+            "max_planning": self.options.max_planning,
+            "max_running": self.options.max_running
+        }
+
+        response = self.post("/ensembles", data=request)
+
+        if response.status_code != 201:
+            result = response.json()
+            print "ERROR:", result["message"]
+            exit(1)
+
+class SubmitCommand(ClientCommand):
     description = "Submit ensemble workflow"
     usage = "Usage: %prog submit ..."
 
+    def __init__(self):
+        ClientCommand.__init__(self)
+
     def run(self):
+        # TODO Finish submit command
         raise Exception("Not implemented")
 
-class ShowCommand(command.ClientCommand):
+class ShowCommand(ClientCommand):
     description = "Show workflows in ensemble"
     usage = "Usage: %prog show ..."
 
     def run(self):
+        # TODO Finish ensemble show command
         raise Exception("Not implemented")
 
-class UpdateCommand(command.ClientCommand):
+class StateChangeCommand(ClientCommand):
+    def __init__(self):
+        ClientCommand.__init__(self)
+        add_name_option(self)
+
+    def run(self):
+        if self.options.name is None:
+            self.parser.error("Specify -n/--name")
+
+        response = self.post("/ensembles/%s" % self.options.name, data={"state":self.newstate})
+        result = response.json()
+
+        if response.status_code != 200:
+            print "ERROR:",result["message"]
+
+        print "State:", result["state"]
+
+class PauseCommand(StateChangeCommand):
+    description = "Pause ensemble"
+    usage = "Usage: %prog pause -n NAME"
+    newstate = EnsembleStates.PAUSED
+
+class ActivateCommand(StateChangeCommand):
+    description = "Activate ensemble"
+    usage = "Usage: %prog activate -n NAME"
+    newstate = EnsembleStates.ACTIVE
+
+class HoldCommand(StateChangeCommand):
+    description = "Hold ensemble"
+    usage = "Usage: %prog hold -n NAME"
+    newstate = EnsembleStates.HELD
+
+class UpdateCommand(ClientCommand):
     description = "Update ensemble"
     usage = "Usage: %prog update ..."
 
-    def run(self):
-        raise Exception("Not implemented")
+    def __init__(self):
+        ClientCommand.__init__(self)
+        add_name_option(self)
+        self.parser.add_option("-p", "--priority", action="store", dest="priority",
+            default=None, type="int", help="Ensemble priority")
+        self.parser.add_option("-P", "--max-planning", action="store", dest="max_planning",
+            default=None, type="int", help="Maximum number of workflows being planned at once")
+        self.parser.add_option("-R", "--max-running", action="store", dest="max_running",
+            default=None, type="int", help="Maximum number of workflows running at once")
 
-class EnsembleCommand(command.CompoundCommand):
+    def run(self):
+        if self.options.name is None:
+            self.parser.error("Specify -n/--name")
+
+        request = {}
+
+        if self.options.priority:
+            request["priority"] = self.options.priority
+        if self.options.max_planning:
+            request["max_planning"] = self.options.max_planning
+        if self.options.max_running:
+            request["max_running"] = self.options.max_running
+
+        if len(request) == 0:
+            self.parser.error("Specify --priority, --max-planning or --max-running")
+
+        response = self.post("/ensembles/%s" % self.options.name, data=request)
+
+        result = response.json()
+
+        if response.status_code != 200:
+            print "ERROR:", result["message"]
+            exit(1)
+
+        print "Name:",result["name"]
+        print "State:",result["state"]
+        print "Created:",result["created"]
+        print "Updated:",result["updated"]
+        print "Priority:",result["priority"]
+        print "Max Planning:",result["max_planning"]
+        print "Max Running:",result["max_running"]
+
+class EnsembleCommand(CompoundCommand):
     description = "Client for ensemble management"
     commands = {
         "list": ListCommand,
         "create": CreateCommand,
+        "pause": PauseCommand,
+        "activate": ActivateCommand,
+        "hold": HoldCommand,
+        "update": UpdateCommand,
         "submit": SubmitCommand,
-        "show": ShowCommand,
-        "update": UpdateCommand
+        "show": ShowCommand
     }
 
 def main():
