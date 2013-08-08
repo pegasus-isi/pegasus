@@ -178,7 +178,7 @@ class EnsembleWorkflow(db.Model, EnsembleMixin):
         o["replicas"] = myurl_for("replicas")
         o["transformations"] = myurl_for("transformations")
         o["sites"] = myurl_for("sites")
-        o["properties"] = myurl_for("properties")
+        o["conf"] = myurl_for("conf")
         return o
 
 def list_ensembles(user_id):
@@ -209,7 +209,7 @@ def get_ensemble_workflow(ensemble_id, name):
     except NoResultFound:
         raise APIError("No such ensemble workflow: %s" % name, 404)
 
-def create_ensemble_workflow(ensemble_id, name, priority, rc, tc, sc, dax, props):
+def create_ensemble_workflow(ensemble_id, name, priority, rc, tc, sc, dax, conf):
     # Create database record
     w = EnsembleWorkflow(ensemble_id, name)
     w.set_priority(priority)
@@ -247,10 +247,12 @@ def create_ensemble_workflow(ensemble_id, name, priority, rc, tc, sc, dax, props
     try:
         # It is possible that there is no properties file
         # but we still need to create the file
-        if props is not None:
-            shutil.copyfileobj(props, f)
+        if conf is not None:
+            shutil.copyfileobj(conf, f)
     finally:
         f.close()
+
+    # TODO Create planning script
 
 @app.route("/ensembles", methods=["GET"])
 def route_list_ensembles():
@@ -337,13 +339,13 @@ def route_create_ensemble_workflow(ensemble):
     if dax is None:
         raise APIError("Specify dax")
 
-    props = request.files.get("properties", None)
+    conf = request.files.get("conf", None)
 
     sc = catalogs.get_catalog("site", g.user, sites)
     tc = catalogs.get_catalog("transformation", g.user, transformations)
     rc = catalogs.get_catalog("replica", g.user, replicas)
 
-    create_ensemble_workflow(e.id, name, priority, rc, tc, sc, dax, props)
+    create_ensemble_workflow(e.id, name, priority, rc, tc, sc, dax, conf)
 
     db.session.commit()
 
@@ -386,7 +388,7 @@ def route_get_ensemble_workflow_file(ensemble, workflow, filename):
     elif filename == "dax":
         path = os.path.join(dirname, "dax.xml")
         mimetype = "application/xml"
-    elif filename == "properties":
+    elif filename == "conf":
         path = os.path.join(dirname, "pegasus.properties")
     else:
         raise APIError("Invalid file: %s" % filename)
