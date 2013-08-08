@@ -37,7 +37,7 @@ import org.griphyn.vdl.euryale.VirtualFlatFileFactory;
  *
  * The abstract class that serves as the base class for the File Factory based mappers.
  * 
- * @author vahi
+ * @author Karan Vahi
  */
 public abstract class AbstractFileFactoryBasedMapper implements OutputMapper {
 
@@ -126,7 +126,7 @@ public abstract class AbstractFileFactoryBasedMapper implements OutputMapper {
      * @param operation    whether we want a GET or a PUT URL
      * @return 
      */
-    public String getURL( String lfn , String site , FileServer.OPERATION operation )  throws MapperException{
+    public String map( String lfn , String site , FileServer.OPERATION operation )  throws MapperException{
         Directory directory = null;
         if( mOutputSite != null && mOutputSite.equals( site ) ){
             directory = this.mStageoutDirectory;
@@ -140,7 +140,7 @@ public abstract class AbstractFileFactoryBasedMapper implements OutputMapper {
             this.complainForStorageFileServer( operation, site);
         }
         
-        return this.getURL(lfn, server);
+        return this.map(lfn, server);
         
     }
     
@@ -154,7 +154,7 @@ public abstract class AbstractFileFactoryBasedMapper implements OutputMapper {
      * 
      * @return the URL for the LFN
      */
-    public String getURL( String lfn , FileServer server ) throws MapperException {
+    public String map( String lfn , FileServer server ) throws MapperException {
         StringBuilder url =  new StringBuilder( server.getURL() );
         try{
             //the factory will give us the relative

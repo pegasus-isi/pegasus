@@ -493,8 +493,8 @@ public class TransferEngine extends Engine {
                 throw new RuntimeException( "Unable to find a location in the Replica Catalog for output file "  + lfn );
             }
 
-            String putDestURL = mOutputMapper.getURL( lfn, mOutputSite,  FileServer.OPERATION.put );
-            String getDestURL = mOutputMapper.getURL( lfn, mOutputSite,  FileServer.OPERATION.get );
+            String putDestURL = mOutputMapper.map( lfn, mOutputSite,  FileServer.OPERATION.put );
+            String getDestURL = mOutputMapper.map( lfn, mOutputSite,  FileServer.OPERATION.get );
             
             
             //selLocs are all the locations found in ReplicaMechanism corr
@@ -756,7 +756,7 @@ public class TransferEngine extends Engine {
                     
                     //file server on output site
 //                    String destURL = this.getURLOnStageoutSite( fs, lfn);
-                    String destURL = mOutputMapper.getURL(lfn, fs);
+                    String destURL = mOutputMapper.map(lfn, fs);
 
                     //if the paths match of dest URI
                     //and execDirURL we return null
@@ -807,7 +807,7 @@ public class TransferEngine extends Engine {
                 //assumption of same external mount point for each storage
                 //file server on output site
 //                url = this.getURLOnStageoutSite( fs, lfn );
-                url = mOutputMapper.getURL(lfn, fs);
+                url = mOutputMapper.map(lfn, fs);
 
                 return url;
             }

@@ -53,11 +53,11 @@ public interface OutputMapper {
      * @param site         the output site
      * @param operation    whether we want a GET or a PUT URL
      * 
-     * @return the URL to be constructed 
+     * @return the URL to file that was mapped
      * 
      * @throws MapperException if unable to construct URL for any reason
      */
-    public String getURL( String lfn , String site , FileServer.OPERATION operation ) throws MapperException;
+    public String map( String lfn , String site , FileServer.OPERATION operation ) throws MapperException;
     
     /**
      * Returns the full path on remote output site, where the lfn will reside, 
@@ -66,9 +66,9 @@ public interface OutputMapper {
      * @param lfn     the logical filename of the file.
      * @param server  the file server to use
      * 
-     * @return the URL on the File Server
+     * @return the URL to the file that was mapped
      * 
      * @throws MapperException if unable to construct URL for any reason
      */
-    public String getURL( String lfn , FileServer server ) throws MapperException;
+    public String map( String lfn , FileServer server ) throws MapperException;
 }
