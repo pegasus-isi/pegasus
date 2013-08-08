@@ -152,22 +152,22 @@ class TestEnsembleClient(tests.ClientTestCase):
         listing = self.stdout()
         self.assertEquals(len(listing.split("\n")), 3, "Should be two lines of stdout")
 
-        cmd.main(["update","-n","foo","-p","40","-P","50","-R","60"])
+        cmd.main(["update","-e","foo","-p","40","-P","50","-R","60"])
         listing = self.stdout()
         self.assertTrue("Name: foo" in listing, "Name should be foo")
         self.assertTrue("Priority: 40" in listing, "Priority should be 40")
         self.assertTrue("Max Planning: 50" in listing, "Max Planning should be 50")
         self.assertTrue("Max Running: 60" in listing, "Max running should be 60")
 
-        cmd.main(["pause","-n","foo"])
+        cmd.main(["pause","-e","foo"])
         listing = self.stdout()
         self.assertTrue("State: PAUSED" in listing, "State should be paused")
 
-        cmd.main(["hold","-n","foo"])
+        cmd.main(["hold","-e","foo"])
         listing = self.stdout()
         self.assertTrue("State: HELD" in listing, "State should be held")
 
-        cmd.main(["activate","-n","foo"])
+        cmd.main(["activate","-e","foo"])
         listing = self.stdout()
         self.assertTrue("State: ACTIVE" in listing, "State should be active")
 

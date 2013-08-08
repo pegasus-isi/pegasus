@@ -395,9 +395,9 @@ def route_get_ensemble_workflow_file(ensemble, workflow, filename):
 
 
 #TODO Change --name to --ensemble
-def add_name_option(self):
-    self.parser.add_option("-n", "--name", action="store", dest="name",
-        default=None, help="Ensemble name")
+def add_ensemble_option(self):
+    self.parser.add_option("-e", "--ensemble", action="store", dest="ensemble",
+        default=None, help="Name of ensemble")
 
 class ListCommand(ClientCommand):
     description = "List ensembles"
@@ -423,7 +423,8 @@ class CreateCommand(ClientCommand):
 
     def __init__(self):
         ClientCommand.__init__(self)
-        add_name_option(self)
+        self.parser.add_option("-n", "--name", action="store", dest="name",
+            default=None, type="string", help="Ensemble name")
         self.parser.add_option("-p", "--priority", action="store", dest="priority",
             default=0, type="int", help="Ensemble priority")
         self.parser.add_option("-P", "--max-planning", action="store", dest="max_planning",
@@ -471,13 +472,13 @@ class ShowCommand(ClientCommand):
 class StateChangeCommand(ClientCommand):
     def __init__(self):
         ClientCommand.__init__(self)
-        add_name_option(self)
+        add_ensemble_option(self)
 
     def run(self):
-        if self.options.name is None:
-            self.parser.error("Specify -n/--name")
+        if self.options.ensemble is None:
+            self.parser.error("Specify -e/--ensemble")
 
-        response = self.post("/ensembles/%s" % self.options.name, data={"state":self.newstate})
+        response = self.post("/ensembles/%s" % self.options.ensemble, data={"state":self.newstate})
         result = response.json()
 
         if response.status_code != 200:
@@ -506,7 +507,7 @@ class UpdateCommand(ClientCommand):
 
     def __init__(self):
         ClientCommand.__init__(self)
-        add_name_option(self)
+        add_ensemble_option(self)
         self.parser.add_option("-p", "--priority", action="store", dest="priority",
             default=None, type="int", help="Ensemble priority")
         self.parser.add_option("-P", "--max-planning", action="store", dest="max_planning",
@@ -515,8 +516,8 @@ class UpdateCommand(ClientCommand):
             default=None, type="int", help="Maximum number of workflows running at once")
 
     def run(self):
-        if self.options.name is None:
-            self.parser.error("Specify -n/--name")
+        if self.options.ensemble is None:
+            self.parser.error("Specify -e/--ensemble")
 
         request = {}
 
@@ -530,7 +531,7 @@ class UpdateCommand(ClientCommand):
         if len(request) == 0:
             self.parser.error("Specify --priority, --max-planning or --max-running")
 
-        response = self.post("/ensembles/%s" % self.options.name, data=request)
+        response = self.post("/ensembles/%s" % self.options.ensemble, data=request)
 
         result = response.json()
 
