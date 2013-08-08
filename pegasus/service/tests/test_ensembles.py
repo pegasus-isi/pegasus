@@ -92,11 +92,17 @@ class TestEnsembleAPI(tests.APITestCase):
         req = {
             "name":"mywf",
             "priority":"10",
-            "sites": "sc",
-            "transformations": "tc",
-            "replicas":"rc",
+            "site_catalog": "sc",
+            "transformation_catalog": "tc",
+            "replica_catalog":"rc",
             "dax": (StringIO("my dax"), "my.dax"),
-            "conf": (StringIO("my props"), "pegasus.properties")
+            "conf": (StringIO("my props"), "pegasus.properties"),
+            "args": (StringIO("""
+            {
+                "sites": ["local"],
+                "output_site": "local"
+            }
+            """), "args.json")
         }
         r = self.post("/ensembles/myensemble/workflows", data=req)
         self.assertEquals(r.status_code, 201, "Should return CREATED")
@@ -143,31 +149,51 @@ class TestEnsembleClient(tests.ClientTestCase):
         cmd = ensembles.EnsembleCommand()
 
         cmd.main(["list"])
-        self.assertTrue(len(self.stdout()) == 0, "Should be no stdout")
+        stdout, stderr = self.stdio()
+        self.assertEquals(stdout, "", "Should be no stdout")
 
         cmd.main(["create","-n","foo","-p","10","-P","20","-R","30"])
-        self.assertTrue(len(self.stdout()) == 0, "Should be no stdout")
+        stdout, stderr = self.stdio()
+        self.assertEquals(stdout, "", "Should be no stdout")
 
         cmd.main(["list"])
-        listing = self.stdout()
-        self.assertEquals(len(listing.split("\n")), 3, "Should be two lines of stdout")
+        stdout, stderr = self.stdio()
+        self.assertEquals(len(stdout.split("\n")), 3, "Should be two lines of stdout")
 
         cmd.main(["update","-e","foo","-p","40","-P","50","-R","60"])
-        listing = self.stdout()
-        self.assertTrue("Name: foo" in listing, "Name should be foo")
-        self.assertTrue("Priority: 40" in listing, "Priority should be 40")
-        self.assertTrue("Max Planning: 50" in listing, "Max Planning should be 50")
-        self.assertTrue("Max Running: 60" in listing, "Max running should be 60")
+        stdout, stderr = self.stdio()
+        self.assertTrue("Name: foo" in stdout, "Name should be foo")
+        self.assertTrue("Priority: 40" in stdout, "Priority should be 40")
+        self.assertTrue("Max Planning: 50" in stdout, "Max Planning should be 50")
+        self.assertTrue("Max Running: 60" in stdout, "Max running should be 60")
 
         cmd.main(["pause","-e","foo"])
-        listing = self.stdout()
-        self.assertTrue("State: PAUSED" in listing, "State should be paused")
+        stdout, stderr = self.stdio()
+        self.assertTrue("State: PAUSED" in stdout, "State should be paused")
 
         cmd.main(["hold","-e","foo"])
-        listing = self.stdout()
-        self.assertTrue("State: HELD" in listing, "State should be held")
+        stdout, stderr = self.stdio()
+        self.assertTrue("State: HELD" in stdout, "State should be held")
 
         cmd.main(["activate","-e","foo"])
-        listing = self.stdout()
-        self.assertTrue("State: ACTIVE" in listing, "State should be active")
+        stdout, stderr = self.stdio()
+        self.assertTrue("State: ACTIVE" in stdout, "State should be active")
+
+        # Create some test catalogs using the catalog API
+        r = self.post("/catalogs/replica", data={"name": "rc", "format": "regex",
+            "file": (StringIO("replicas"), "rc.txt")})
+        self.assertEquals(r.status_code, 201)
+        r = self.post("/catalogs/site", data={"name": "sc", "format": "xml4",
+            "file": (StringIO("sites"), "sites.xml")})
+        self.assertEquals(r.status_code, 201)
+        r = self.post("/catalogs/transformation", data={"name": "tc",
+            "format": "text", "file": (StringIO("transformations"), "tc.txt")})
+        self.assertEquals(r.status_code, 201)
+
+        cmd.main(["submit","-e","foo","-n","bar","-d","setup.py",
+                  "-T","tc","-R","rc","-S","sc","-s","local",
+                  "-o","local","--staging-site","ss=s,s2=s",
+                  "-C","horiz,vert","-p","10","-c","setup.py"])
+        stdout, stderr = self.stdio()
+        self.assertEquals(stdout, "")
 

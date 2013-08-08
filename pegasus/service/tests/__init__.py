@@ -127,13 +127,12 @@ class ClientTestCase(APITestCase):
         self.oldstderr = sys.stderr
         sys.stderr = StringIO()
 
-    def stdout(self):
-        sys.stdout.seek(0, os.SEEK_SET)
-        return sys.stdout.read()
-
-    def stderr(self):
-        sys.stderr.seek(0, os.SEEK_SET)
-        return sys.stderr.read()
+    def stdio(self):
+        stdout = sys.stdout.getvalue()
+        sys.stdout.truncate(0)
+        stderr = sys.stderr.getvalue()
+        sys.stderr.truncate(0)
+        return (stdout,stderr)
 
     def tearDown(self):
         sys.stdout = self.oldstdout

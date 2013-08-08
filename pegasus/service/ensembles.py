@@ -209,7 +209,7 @@ def get_ensemble_workflow(ensemble_id, name):
     except NoResultFound:
         raise APIError("No such ensemble workflow: %s" % name, 404)
 
-def create_ensemble_workflow(ensemble_id, name, priority, rc, tc, sc, dax, conf):
+def create_ensemble_workflow(ensemble_id, name, priority, rc, tc, sc, dax, conf, args):
     # Create database record
     w = EnsembleWorkflow(ensemble_id, name)
     w.set_priority(priority)
@@ -326,26 +326,35 @@ def route_create_ensemble_workflow(ensemble):
 
     priority = request.form.get("priority", 0)
 
-    sites = request.form.get("sites", None)
-    if sites is None: raise APIError("Specify sites")
+    site_catalog = request.form.get("site_catalog", None)
+    if site_catalog is None:
+        raise APIError("Specify site_catalog")
 
-    transformations = request.form.get("transformations", None)
-    if transformations is None: raise APIError("Specify transformations")
+    transformation_catalog = request.form.get("transformation_catalog", None)
+    if transformation_catalog is None:
+        raise APIError("Specify transformation_catalog")
 
-    replicas = request.form.get("replicas", None)
-    if replicas is None: raise APIError("Specify replicas")
+    replica_catalog = request.form.get("replica_catalog", None)
+    if replica_catalog is None:
+        raise APIError("Specify replica_catalog")
 
     dax = request.files.get("dax", None)
     if dax is None:
         raise APIError("Specify dax")
 
+    argfile = request.files.get("args", None)
+    if argfile is None:
+        raise APIError("Specify args")
+
     conf = request.files.get("conf", None)
 
-    sc = catalogs.get_catalog("site", g.user, sites)
-    tc = catalogs.get_catalog("transformation", g.user, transformations)
-    rc = catalogs.get_catalog("replica", g.user, replicas)
+    sc = catalogs.get_catalog("site", g.user, site_catalog)
+    tc = catalogs.get_catalog("transformation", g.user, transformation_catalog)
+    rc = catalogs.get_catalog("replica", g.user, replica_catalog)
 
-    create_ensemble_workflow(e.id, name, priority, rc, tc, sc, dax, conf)
+    args = json.load(argfile)
+
+    create_ensemble_workflow(e.id, name, priority, rc, tc, sc, dax, conf, args)
 
     db.session.commit()
 
@@ -458,10 +467,99 @@ class SubmitCommand(ClientCommand):
 
     def __init__(self):
         ClientCommand.__init__(self)
+        add_ensemble_option(self)
+        self.parser.add_option("-n", "--name", action="store", dest="name",
+            default=None, help="Workflow name")
+        self.parser.add_option("-p", "--priority", action="store", dest="priority",
+            default=0, help="Workflow priority", metavar="NUMBER")
+        self.parser.add_option("-d", "--dax", action="store", dest="dax",
+            default=None, help="DAX file", metavar="PATH")
+        self.parser.add_option("-T", "--transformation-catalog", action="store", dest="transformation_catalog",
+            default=None, help="Name of transformation catalog", metavar="NAME")
+        self.parser.add_option("-S", "--site-catalog", action="store", dest="site_catalog",
+            default=None, help="Name of site catalog", metavar="NAME")
+        self.parser.add_option("-R", "--replica-catalog", action="store", dest="replica_catalog",
+            default=None, help="Name of replica catalog", metavar="NAME")
+        self.parser.add_option("-s", "--site", action="store", dest="sites",
+            default=None, help="Execution sites (see pegasus-plan man page)", metavar="SITE[,SITE...]")
+        self.parser.add_option("-o", "--output-site", action="store", dest="output_site",
+            default=None, help="Output storage site (see pegasus-plan man page)", metavar="SITE")
+
+        self.parser.add_option("-c", "--conf", action="store", dest="conf",
+            default=None, help="Configuration file (pegasus properties file)", metavar="PATH")
+        self.parser.add_option("--staging-site", action="store", dest="staging_sites",
+            default=None, help="Staging sites (see pegasus-plan man page)", metavar="s=ss[,s=ss...]")
+        self.parser.add_option("--nocleanup", action="store_false", dest="cleanup",
+            default=None, help="Add cleanup jobs (see pegasus-plan man page)")
+        self.parser.add_option("-f", "--force", action="store_true", dest="force",
+            default=None, help="Skip workflow reduction (see pegasus-plan man page)")
+        self.parser.add_option("-C", "--cluster", action="store", dest="clustering",
+            default=None, help="Clustering techniques to apply (see pegasus-plan man page)", metavar="STYLE[,STYLE...]")
 
     def run(self):
-        # TODO Finish submit command
-        raise Exception("Not implemented")
+        o = self.options
+        p = self.parser
+
+        if o.name is None:
+            p.error("Specify -n/--name")
+        if o.dax is None:
+            p.error("Specify -d/--dax")
+        if o.transformation_catalog is None:
+            p.error("Specify -T/--transformation-catalog")
+        if o.site_catalog is None:
+            p.error("Specify -S/--site-catalog")
+        if o.replica_catalog is None:
+            p.error("Specify -R/--replica-catalog")
+        if o.sites is None:
+            p.error("Specify -s/--site")
+        if o.output_site is None:
+            p.error("Specify -o/--output-site")
+
+        data = {
+            "name": o.name,
+            "transformation_catalog": o.transformation_catalog,
+            "site_catalog": o.site_catalog,
+            "replica_catalog": o.replica_catalog,
+            "priority": o.priority
+        }
+
+        args = {
+            "sites": [s.strip() for s in o.sites.split(",")],
+            "output_site": o.output_site
+        }
+
+        if o.cleanup is not None:
+            args["cleanup"] = o.cleanup
+
+        if o.force is not None:
+            args["force"] = o.force
+
+        if o.staging_sites is not None:
+            kvs = [s.strip() for s in o.staging_sites.split(",")]
+            args["staging_sites"] = dict([s.split("=") for s in kvs])
+
+        if o.clustering is not None:
+            args["clustering"] = [s.strip() for s in o.clustering.split(",")]
+
+        # Dump the args to  a file-like object
+        argfile = StringIO()
+        json.dump(args, argfile)
+        argfile.seek(0, os.SEEK_SET)
+
+        files = {
+            "dax": open(o.dax, "rb"),
+            "args": argfile
+        }
+
+        if o.conf is not None:
+            files["conf"] = open(o.conf, "rb")
+
+        response = self.post("/ensembles/%s/workflows" % o.ensemble, data=data, files=files)
+
+        if response.status_code != 201:
+            result = response.json()
+            print result
+            print "ERROR:",response.status_code,result["message"]
 
 class ShowCommand(ClientCommand):
     description = "Show workflows in ensemble"
