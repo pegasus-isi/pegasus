@@ -800,28 +800,28 @@ class SRMHandler(TransferHandlerBase):
         srm - lcg-cp is the preferred clienr, srm-copy the backup one
               Is this generic enough? Do we need to handle space tokens?
         """
-        if len(transfers) == 0:
-            return
-    
+        
         tools = Tools()
-        if tools.find("lcg-cp", "--version", "lcg_util-([\.0-9a-zA-Z]+)") \
-           == None \
+        if tools.find("lcg-cp",
+                      "--version", 
+                      "lcg_util-([\.0-9a-zA-Z]+)") == None \
            and \
-           tools.find("srm-copy", "-version", "srm-copy[ \t]+([\.0-9a-zA-Z]+)")\
-           == None:
+           tools.find("srm-copy",
+                      "-version",
+                      "srm-copy[ \t]+([\.0-9a-zA-Z]+)") == None:
             raise RuntimeError("Unable to do srm transfers because" 
                                + " lcg-cp/srm-copy could not be found")
     
         if transfer.dst_proto == "file":
             prepare_local_dir(os.path.dirname(transfer.dst_path))
             
-        third_party = (url_pair.src_proto == "gsiftp" 
-                       or url_pair.src_proto == "srm") and \
-                      (url_pair.dst_proto == "gsiftp"
-                       or url_pair.dst_proto == "srm")
+        third_party = (transfer.src_proto == "gsiftp" 
+                       or transfer.src_proto == "srm") and \
+                      (transfer.dst_proto == "gsiftp"
+                       or transfer.dst_proto == "srm")
       
         # prefer lcg-cp
-        if tool_info['lcg-cp']['full_path'] != None:
+        if tools.full_path('lcg-cp') != None:
             cmd = "lcg-cp"
             if logger.isEnabledFor(logging.DEBUG):
                 cmd = cmd + " -v"
