@@ -348,9 +348,9 @@ def route_create_ensemble_workflow(ensemble):
 
     conf = request.files.get("conf", None)
 
-    sc = catalogs.get_catalog("site", g.user, site_catalog)
-    tc = catalogs.get_catalog("transformation", g.user, transformation_catalog)
-    rc = catalogs.get_catalog("replica", g.user, replica_catalog)
+    sc = catalogs.get_catalog("site", g.user.id, site_catalog)
+    tc = catalogs.get_catalog("transformation", g.user.id, transformation_catalog)
+    rc = catalogs.get_catalog("replica", g.user.id, replica_catalog)
 
     args = json.load(argfile)
 

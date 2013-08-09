@@ -22,7 +22,7 @@ class TestCatalog(tests.TestCase):
 class TestCatalogDB(tests.DBTestCase):
     def test_relationship(self):
         u = users.create(username="scott", password="tiger", email="scott@isi.edu")
-        c = catalogs.save_catalog("replica", u, "rc.txt", "regex", StringIO("replica"))
+        c = catalogs.save_catalog("replica", u.id, "rc.txt", "regex", StringIO("replica"))
         self.assertEquals(c.user.username, "scott")
 
 class TestCatalogAPI(tests.APITestCase):

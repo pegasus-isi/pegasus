@@ -1,4 +1,4 @@
-from pegasus.service import tests, ensembles, api
+from pegasus.service import tests, ensembles, api, db
 from pegasus.service.ensembles import *
 
 class TestEnsembles(tests.TestCase):
@@ -78,15 +78,10 @@ class TestEnsembleAPI(tests.APITestCase):
         self.assertEquals(len(r.json), 0, "Should have no workflows")
 
         # Create some test catalogs
-        r = self.post("/catalogs/replica", data={"name": "rc", "format": "regex",
-            "file": (StringIO("replicas"), "rc.txt")})
-        self.assertEquals(r.status_code, 201)
-        r = self.post("/catalogs/site", data={"name": "sc", "format": "xml4",
-            "file": (StringIO("sites"), "sites.xml")})
-        self.assertEquals(r.status_code, 201)
-        r = self.post("/catalogs/transformation", data={"name": "tc",
-            "format": "text", "file": (StringIO("transformations"), "tc.txt")})
-        self.assertEquals(r.status_code, 201)
+        catalogs.save_catalog("replica", self.user_id, "rc", "regex", StringIO("replicas"))
+        catalogs.save_catalog("site", self.user_id, "sc", "xml4", StringIO("sites"))
+        catalogs.save_catalog("transformation", self.user_id, "tc", "text", StringIO("transformations"))
+        db.session.commit()
 
         # Create a test workflow
         req = {
@@ -180,15 +175,10 @@ class TestEnsembleClient(tests.ClientTestCase):
         self.assertTrue("State: ACTIVE" in stdout, "State should be active")
 
         # Create some test catalogs using the catalog API
-        r = self.post("/catalogs/replica", data={"name": "rc", "format": "regex",
-            "file": (StringIO("replicas"), "rc.txt")})
-        self.assertEquals(r.status_code, 201)
-        r = self.post("/catalogs/site", data={"name": "sc", "format": "xml4",
-            "file": (StringIO("sites"), "sites.xml")})
-        self.assertEquals(r.status_code, 201)
-        r = self.post("/catalogs/transformation", data={"name": "tc",
-            "format": "text", "file": (StringIO("transformations"), "tc.txt")})
-        self.assertEquals(r.status_code, 201)
+        catalogs.save_catalog("replica", self.user_id, "rc", "regex", StringIO("replicas"))
+        catalogs.save_catalog("site", self.user_id, "sc", "xml4", StringIO("sites"))
+        catalogs.save_catalog("transformation", self.user_id, "tc", "text", StringIO("transformations"))
+        db.session.commit()
 
         cmd.main(["submit","-e","foo","-n","bar","-d","setup.py",
                   "-T","tc","-R","rc","-S","sc","-s","local",

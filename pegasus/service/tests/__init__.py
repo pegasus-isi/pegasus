@@ -53,7 +53,8 @@ class APITestCase(DBTestCase):
         self.username = "scott"
         self.password = "tiger"
         self.email = "scott@isi.edu"
-        users.create(username=self.username, password=self.password, email=self.email)
+        self.user = users.create(username=self.username, password=self.password, email=self.email)
+        self.user_id = self.user.id
         db.session.commit()
 
         self.app = app.test_client()

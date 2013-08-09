@@ -161,10 +161,10 @@ def get_catalog_model(catalog_type):
     else:
         raise APIError("Invalid catalog type: %s" % catalog_type, status_code=400)
 
-def get_catalog(catalog_type, user, name):
+def get_catalog(catalog_type, user_id, name):
     try:
         Catalog = get_catalog_model(catalog_type)
-        return Catalog.query.filter_by(user_id=user.id, name=name).one()
+        return Catalog.query.filter_by(user_id=user_id, name=name).one()
     except NoResultFound:
         raise APIError("No such catalog: %s" % name, 404)
 
@@ -172,11 +172,11 @@ def list_catalogs(catalog_type, user_id):
     Catalog = get_catalog_model(catalog_type)
     return Catalog.query.filter_by(user_id=user_id).order_by("updated").all()
 
-def save_catalog(catalog_type, user, name, format, file):
+def save_catalog(catalog_type, user_id, name, format, file):
     Catalog = get_catalog_model(catalog_type)
 
     try:
-        cat = Catalog(user.id, name, format)
+        cat = Catalog(user_id, name, format)
         db.session.add(cat)
         db.session.flush()
     except IntegrityError, e:
@@ -219,7 +219,7 @@ def route_store_catalog(catalog_type):
     if file is None:
         raise APIError("Specify file")
 
-    save_catalog(catalog_type, g.user, name, format, file)
+    save_catalog(catalog_type, g.user.id, name, format, file)
 
     db.session.commit()
 
@@ -227,7 +227,7 @@ def route_store_catalog(catalog_type):
 
 @app.route("/catalogs/<string:catalog_type>/<string:name>", methods=["GET"])
 def route_get_catalog(catalog_type, name):
-    c = get_catalog(catalog_type, g.user, name)
+    c = get_catalog(catalog_type, g.user.id, name)
     filename = c.get_catalog_file()
 
     if not os.path.exists(filename):
@@ -237,7 +237,7 @@ def route_get_catalog(catalog_type, name):
 
 @app.route("/catalogs/<string:catalog_type>/<string:name>", methods=["DELETE"])
 def route_delete_catalog(catalog_type, name):
-    c = get_catalog(catalog_type, g.user, name)
+    c = get_catalog(catalog_type, g.user.id, name)
 
     db.session.delete(c)
 
@@ -257,7 +257,7 @@ def route_delete_catalog(catalog_type, name):
 @app.route("/catalogs/<string:catalog_type>/<string:name>", methods=["PUT"])
 def route_update_catalog(catalog_type, name):
 
-    c = get_catalog(catalog_type, g.user, name)
+    c = get_catalog(catalog_type, g.user.id, name)
 
     c.set_updated()
 
