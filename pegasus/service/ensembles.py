@@ -65,7 +65,7 @@ class Ensemble(db.Model, EnsembleMixin):
     priority = db.Column(db.Integer, nullable=False)
     max_running = db.Column(db.Integer, nullable=False)
     max_planning = db.Column(db.Integer, nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     user = db.relationship("User")
 
     def __init__(self, user_id, name):
@@ -136,7 +136,8 @@ class EnsembleWorkflow(db.Model, EnsembleMixin):
     updated = db.Column(db.DateTime, nullable=False)
     state = db.Column(db.Enum(*EnsembleWorkflowStates), nullable=False)
     priority = db.Column(db.Integer, nullable=False)
-    ensemble_id = db.Column(db.Integer, db.ForeignKey('ensemble.id'))
+    wf_uuid = db.Column(db.String(36))
+    ensemble_id = db.Column(db.Integer, db.ForeignKey('ensemble.id'), nullable=False)
     ensemble = db.relationship("Ensemble", backref="workflows")
 
     def __init__(self, ensemble_id, name):
@@ -146,12 +147,18 @@ class EnsembleWorkflow(db.Model, EnsembleMixin):
         self.set_updated()
         self.state = EnsembleWorkflowStates.READY
         self.set_priority(0)
+        self.set_wf_uuid(None)
 
     def set_state(self, state):
         state = state.upper()
         if state not in EnsembleWorkflowStates:
             raise APIError("Invalid ensemble workflow state: %s" % state)
         self.state = state
+
+    def set_wf_uuid(self, wf_uuid):
+        if wf_uuid is not None and len(wf_uuid) != 36:
+            raise APIError("Invalid wf_uuid")
+        self.wf_uuid = wf_uuid
 
     def get_dir(self):
         ensembledir = self.ensemble.get_dir()
@@ -165,6 +172,7 @@ class EnsembleWorkflow(db.Model, EnsembleMixin):
             "updated": self.updated,
             "state": self.state,
             "priority": self.priority,
+            "wf_uuid": self.wf_uuid,
             "href": url_for("route_get_ensemble_workflow", ensemble=self.ensemble.name, workflow=self.name, _external=True)
         }
 

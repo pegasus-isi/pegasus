@@ -124,6 +124,7 @@ class TestEnsembleAPI(tests.APITestCase):
         self.assertEquals(r.json["name"], "mywf", "Name should be mywf")
         self.assertEquals(r.json["priority"], 10, "Should have priority 10")
         self.assertEquals(r.json["state"], EnsembleWorkflowStates.READY, "Should have state READY")
+        self.assertTrue("wf_uuid" in r.json)
         self.assertTrue("dax" in r.json)
         self.assertTrue("conf" in r.json)
         self.assertTrue("sites" in r.json)
