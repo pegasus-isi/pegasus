@@ -13,9 +13,9 @@ from pegasus.service import app, db
 from pegasus.service.command import ClientCommand, CompoundCommand
 from pegasus.service.api import *
 
-SC_FORMATS = ["xml3","xml4"]
-TC_FORMATS = ["file","text"]
-RC_FORMATS = ["file","regex"]
+SC_FORMATS = ["XML3","XML4"]
+TC_FORMATS = ["File","Text"]
+RC_FORMATS = ["File","Regex"]
 
 FORMATS = {
     "replica": RC_FORMATS,
@@ -35,9 +35,13 @@ def validate_catalog_name(name):
 def validate_catalog_format(catalog_type, format):
     if catalog_type not in FORMATS:
         raise APIError("Invalid catalog type: %s" % catalog_type)
-    if format not in FORMATS[catalog_type]:
+    lower_formats = dict([(fmt.lower(),fmt) for fmt in FORMATS[catalog_type]])
+    if format is None:
+        raise APIError("Invalid catalog format: None")
+    lower_format = format.lower()
+    if lower_format not in lower_formats:
         raise APIError("Invalid %s catalog format: %s" % (catalog_type, format))
-    return format
+    return lower_formats[lower_format]
 
 class CatalogMixin:
     def set_name(self, name):
@@ -292,7 +296,7 @@ def add_name_option(self):
 
 def add_format_option(self):
     self.parser.add_option("-F", "--format", action="store", dest="format",
-            default=None, help="Catalog format (xml3, xml4, file, text, regex)")
+            default=None, help="Catalog format (transformation: Text, File; replica: File, Regex; site: XML3, XML4)")
 
 def add_file_option(self):
     self.parser.add_option("-f", "--file", action="store", dest="file",

@@ -1,6 +1,7 @@
 import os
 import sys
 import re
+import stat
 import shutil
 from StringIO import StringIO
 from datetime import datetime
@@ -182,11 +183,12 @@ class EnsembleWorkflow(db.Model, EnsembleMixin):
                            ensemble=self.ensemble.name, workflow=self.name,
                            filename=filename, _external=True)
         o = self.get_object()
-        o["dax"] = myurl_for("dax")
-        o["replicas"] = myurl_for("replicas")
-        o["transformations"] = myurl_for("transformations")
-        o["sites"] = myurl_for("sites")
-        o["conf"] = myurl_for("conf")
+        o["dax"] = myurl_for("dax.xml")
+        o["replicas"] = myurl_for("rc.txt")
+        o["transformations"] = myurl_for("tc.txt")
+        o["sites"] = myurl_for("sites.xml")
+        o["conf"] = myurl_for("pegasus.properties")
+        o["plan_script"] = myurl_for("plan.sh")
         return o
 
 def list_ensembles(user_id):
@@ -256,11 +258,48 @@ def create_ensemble_workflow(ensemble_id, name, priority, rc, tc, sc, dax, conf,
         # It is possible that there is no properties file
         # but we still need to create the file
         if conf is not None:
+            # TODO Filter out properties that are not allowed
             shutil.copyfileobj(conf, f)
     finally:
         f.close()
 
-    # TODO Create planning script
+    # Create planning script
+    filename = os.path.join(dirname, "plan.sh")
+    f = open(filename, "w")
+    try:
+        write_planning_script(f, tcformat=tc.format, rcformat=rc.format, scformat=sc.format, **args)
+    finally:
+        f.close()
+    os.chmod(filename, stat.S_IRWXU|stat.S_IRGRP|stat.S_IXGRP|stat.S_IROTH|stat.S_IXOTH)
+
+def write_planning_script(f, tcformat, rcformat, scformat, sites, output_site, staging_sites=None, clustering=None, force=False, cleanup=True):
+    f.write("#!/bin/bash\n")
+    f.write("pegasus-plan \\\n")
+    f.write("-Dpegasus.catalog.site=%s \\\n" % scformat)
+    f.write("-Dpegasus.catalog.site.file=sites.xml \\\n")
+    f.write("-Dpegasus.catalog.transformation=%s \\\n" % tcformat)
+    f.write("-Dpegasus.catalog.transformation.file=tc.txt \\\n")
+    f.write("-Dpegasus.catalog.replica=%s \\\n" % rcformat)
+    f.write("-Dpegasus.catalog.replica.file=rc.txt \\\n")
+    f.write("--conf pegasus.properties \\\n")
+    f.write("--site %s \\\n" % ",".join(sites))
+    f.write("--output-site %s \\\n" % output_site)
+
+    if staging_sites is not None and len(staging_sites) > 0:
+        pairs = ["%s=%s" % (k,v) for k,v in staging_sites.items()]
+        f.write("--staging-site %s \\\n" % ",".join(pairs))
+
+    if clustering is not None and len(clustering) > 0:
+        f.write("--cluster %s \\\n" % ",".join(clustering))
+
+    if force:
+        f.write("--force \\\n")
+
+    if not cleanup:
+        f.write("--nocleanup \\\n")
+
+    f.write("--dir submit \\\n")
+    f.write("--dax dax.xml\n")
 
 @app.route("/ensembles", methods=["GET"])
 def route_list_ensembles():
@@ -396,17 +435,19 @@ def route_get_ensemble_workflow_file(ensemble, workflow, filename):
     w = get_ensemble_workflow(e.id, workflow)
     dirname = w.get_dir()
     mimetype = "text/plain"
-    if filename == "sites":
+    if filename == "sites.xml":
         path = os.path.join(dirname, "sites.xml")
-    elif filename == "transformations":
+    elif filename == "tc.txt":
         path = os.path.join(dirname, "tc.txt")
-    elif filename == "replicas":
+    elif filename == "rc.txt":
         path = os.path.join(dirname, "rc.txt")
-    elif filename == "dax":
+    elif filename == "dax.xml":
         path = os.path.join(dirname, "dax.xml")
         mimetype = "application/xml"
-    elif filename == "conf":
+    elif filename == "pegasus.properties":
         path = os.path.join(dirname, "pegasus.properties")
+    elif filename == "plan.sh":
+        path = os.path.join(dirname, "plan.sh")
     else:
         raise APIError("Invalid file: %s" % filename)
 

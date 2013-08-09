@@ -26,6 +26,53 @@ class TestEnsembles(tests.TestCase):
         self.assertRaises(api.APIError, validate_priority, "a")
         self.assertRaises(api.APIError, validate_priority, "10.1")
 
+    def test_write_planning_script(self):
+        f = StringIO()
+        write_planning_script(f, tcformat="tc", rcformat="rc", scformat="sc",
+                              sites=["local"], output_site="local",
+                              staging_sites={"a":"b", "c":"d"},
+                              clustering=["horizontal","vertical"],
+                              force=True, cleanup=False)
+        script = f.getvalue()
+        self.assertTrue("#!/bin/bash" in script)
+        self.assertTrue("pegasus-plan" in script)
+        self.assertTrue("-Dpegasus.catalog.site=sc" in script)
+        self.assertTrue("-Dpegasus.catalog.site.file=sites.xml" in script)
+        self.assertTrue("-Dpegasus.catalog.transformation=tc" in script)
+        self.assertTrue("-Dpegasus.catalog.transformation.file=tc.txt" in script)
+        self.assertTrue("-Dpegasus.catalog.replica=rc" in script)
+        self.assertTrue("-Dpegasus.catalog.replica.file=rc.txt" in script)
+        self.assertTrue("--conf pegasus.properties" in script)
+        self.assertTrue("--site local" in script)
+        self.assertTrue("--output-site local" in script)
+        self.assertTrue("--staging-site a=b,c=d" in script)
+        self.assertTrue("--cluster horizontal,vertical" in script)
+        self.assertTrue("--force" in script)
+        self.assertTrue("--nocleanup" in script)
+        self.assertTrue("--dir submit" in script)
+        self.assertTrue("--dax dax.xml" in script)
+
+        f = StringIO()
+        write_planning_script(f, tcformat="tc", rcformat="rc", scformat="sc",
+                              sites=["local"], output_site="local")
+        script = f.getvalue()
+        self.assertFalse("--staging-site" in script)
+        self.assertFalse("--cluster" in script)
+        self.assertFalse("--force" in script)
+        self.assertFalse("--nocleanup" in script)
+
+        f = StringIO()
+        write_planning_script(f, tcformat="tc", rcformat="rc", scformat="sc",
+                              sites=["local"], output_site="local",
+                              staging_sites={"a":"b"},
+                              clustering=["horiz"], force=False,
+                              cleanup=True)
+        script = f.getvalue()
+        self.assertTrue("--staging-site a=b " in script)
+        self.assertTrue("--cluster horiz" in script)
+        self.assertFalse("--force" in script)
+        self.assertFalse("--nocleanup" in script)
+
 class TestEnsembleAPI(tests.APITestCase):
     def test_ensemble_api(self):
         r = self.get("/ensembles")
@@ -110,6 +157,7 @@ class TestEnsembleAPI(tests.APITestCase):
         self.assertTrue(os.path.isfile(os.path.join(wfdir, "rc.txt")))
         self.assertTrue(os.path.isfile(os.path.join(wfdir, "tc.txt")))
         self.assertTrue(os.path.isfile(os.path.join(wfdir, "pegasus.properties")))
+        self.assertTrue(os.path.isfile(os.path.join(wfdir, "plan.sh")))
 
         r = self.get("/ensembles/myensemble")
         self.assertEquals(r.status_code, 200, "Should return OK")
@@ -129,8 +177,9 @@ class TestEnsembleAPI(tests.APITestCase):
         self.assertTrue("conf" in r.json)
         self.assertTrue("sites" in r.json)
         self.assertTrue("replicas" in r.json)
+        self.assertTrue("plan_script" in r.json)
 
-        for f in ["dax","conf","sites","replicas","transformations"]:
+        for f in ["dax.xml","pegasus.properties","sites.xml","rc.txt","tc.txt","plan.sh"]:
             r = self.get("/ensembles/myensemble/workflows/mywf/%s" % f)
             self.assertEquals(r.status_code, 200, "Should return OK")
             self.assertTrue(len(r.data) > 0, "File should not be empty")

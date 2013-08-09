@@ -19,6 +19,12 @@ class TestCatalog(tests.TestCase):
             self.assertRaises(api.APIError, catalogs.validate_catalog_format, t, None)
             self.assertRaises(api.APIError, catalogs.validate_catalog_format, t, "foo")
 
+        self.assertEquals("XML3", catalogs.validate_catalog_format("site", "xml3"))
+        self.assertEquals("Regex", catalogs.validate_catalog_format("replica", "regex"))
+        self.assertEquals("Regex", catalogs.validate_catalog_format("replica", "REGEX"))
+        self.assertEquals("XML4", catalogs.validate_catalog_format("site", "XMl4"))
+        self.assertEquals("File", catalogs.validate_catalog_format("transformation", "FILE"))
+
 class TestCatalogDB(tests.DBTestCase):
     def test_relationship(self):
         u = users.create(username="scott", password="tiger", email="scott@isi.edu")
