@@ -97,7 +97,6 @@ public class Hashed extends AbstractFileFactoryBasedMapper {
                 }
             }
 
-            totalFiles = 1000000;
             factory =  new VirtualDecimalHashedFileFactory( addOn, totalFiles );
 
             //each stageout file  has only 1 file associated with it
