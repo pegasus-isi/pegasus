@@ -49,6 +49,14 @@ public class Hashed extends AbstractFileFactoryBasedMapper {
     
     
     /**
+     * The maximum number of entries in the map, before the output site map
+     * is cleared.
+     */
+    private static final int MAX_CACHE_ENTRIES = 1000;
+    
+    private int mNumberOfExistingLFNS;
+    
+    /**
      * Initializes the mappers.
      *
      * @param bag   the bag of objects that is useful for initialization.
@@ -57,12 +65,7 @@ public class Hashed extends AbstractFileFactoryBasedMapper {
      */
     public void initialize( PegasusBag bag, ADag workflow)  throws MapperException{
         super.initialize(bag, workflow);
-        mSiteLFNAddOnMap = new HashMap();
-        if( mOutputSite != null ){
-            //add a default lfn to add on map for the site
-            Map<String,String> m = new HashMap();
-            mSiteLFNAddOnMap.put( mOutputSite, m );
-        }
+        resetLFNAddOnCache();
     }
     
     /**
@@ -127,6 +130,12 @@ public class Hashed extends AbstractFileFactoryBasedMapper {
             if( addOn == null ){
                 throw new MapperException( this.getErrorMessagePrefix() + " LFN " + lfn + " is not tracked for site " + site );
             }
+            
+            //check if we need to clear the addOnMap
+            if( mNumberOfExistingLFNS == Hashed.MAX_CACHE_ENTRIES ){
+                this.resetLFNAddOnCache();
+            }
+            
             return addOn;
         }
         
@@ -167,7 +176,7 @@ public class Hashed extends AbstractFileFactoryBasedMapper {
             m.put( lfn, addOn );
             mSiteLFNAddOnMap.put( mOutputSite, m );
         }
-        
+        mNumberOfExistingLFNS++;
     }
     
     /**
@@ -177,6 +186,21 @@ public class Hashed extends AbstractFileFactoryBasedMapper {
      */
     public  String getShortName(){
         return Hashed.SHORT_NAME;
+    }
+
+    /**
+     * Resets the internal cache.
+     */
+    private void resetLFNAddOnCache() {
+        //this is also relying on the fact that registration URL's (for which existing = true)
+        //are retrieved in conjuction with the PUT urls on the stageout site.
+        mSiteLFNAddOnMap = new HashMap();
+        if( mOutputSite != null ){
+            //add a default lfn to add on map for the site
+            Map<String,String> m = new HashMap();
+            mSiteLFNAddOnMap.put( mOutputSite, m );
+        }
+        mNumberOfExistingLFNS = 0;
     }
    
     
