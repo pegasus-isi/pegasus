@@ -438,7 +438,7 @@ class ListCommand(ClientCommand):
 
 class CreateCommand(ClientCommand):
     description = "Create ensemble"
-    usage = "Usage: %prog create ..."
+    usage = "Usage: %prog create [options] -n NAME"
 
     def __init__(self):
         ClientCommand.__init__(self)
@@ -471,15 +471,13 @@ class CreateCommand(ClientCommand):
 
 class SubmitCommand(ClientCommand):
     description = "Submit ensemble workflow"
-    usage = "Usage: %prog submit ..."
+    usage = "Usage: %prog submit [options] -n NAME -d DAX -T TC -S SC -R RC -s SITE -o SITE"
 
     def __init__(self):
         ClientCommand.__init__(self)
         add_ensemble_option(self)
         self.parser.add_option("-n", "--name", action="store", dest="name",
             default=None, help="Workflow name")
-        self.parser.add_option("-p", "--priority", action="store", dest="priority",
-            default=0, help="Workflow priority", metavar="NUMBER")
         self.parser.add_option("-d", "--dax", action="store", dest="dax",
             default=None, help="DAX file", metavar="PATH")
         self.parser.add_option("-T", "--transformation-catalog", action="store", dest="transformation_catalog",
@@ -493,6 +491,8 @@ class SubmitCommand(ClientCommand):
         self.parser.add_option("-o", "--output-site", action="store", dest="output_site",
             default=None, help="Output storage site (see pegasus-plan man page)", metavar="SITE")
 
+        self.parser.add_option("-p", "--priority", action="store", dest="priority",
+            default=0, help="Workflow priority", metavar="NUMBER")
         self.parser.add_option("-c", "--conf", action="store", dest="conf",
             default=None, help="Configuration file (pegasus properties file)", metavar="PATH")
         self.parser.add_option("--staging-site", action="store", dest="staging_sites",
@@ -596,22 +596,22 @@ class StateChangeCommand(ClientCommand):
 
 class PauseCommand(StateChangeCommand):
     description = "Pause ensemble"
-    usage = "Usage: %prog pause -n NAME"
+    usage = "Usage: %prog pause -e ENSEMBLE"
     newstate = EnsembleStates.PAUSED
 
 class ActivateCommand(StateChangeCommand):
     description = "Activate ensemble"
-    usage = "Usage: %prog activate -n NAME"
+    usage = "Usage: %prog activate -e ENSEMBLE"
     newstate = EnsembleStates.ACTIVE
 
 class HoldCommand(StateChangeCommand):
     description = "Hold ensemble"
-    usage = "Usage: %prog hold -n NAME"
+    usage = "Usage: %prog hold -e ENSEMBLE"
     newstate = EnsembleStates.HELD
 
 class UpdateCommand(ClientCommand):
     description = "Update ensemble"
-    usage = "Usage: %prog update ..."
+    usage = "Usage: %prog update [options] -e ENSEMBLE"
 
     def __init__(self):
         ClientCommand.__init__(self)
