@@ -43,9 +43,7 @@ class DBTestCase(TestCase):
         os.remove(self.dbfile)
         TestCase.tearDown(self)
 
-class APITestCase(DBTestCase):
-    "This test case has a user scott with password tiger"
-
+class UserTestCase(DBTestCase):
     def setUp(self):
         DBTestCase.setUp(self)
 
@@ -56,6 +54,13 @@ class APITestCase(DBTestCase):
         self.user = users.create(username=self.username, password=self.password, email=self.email)
         self.user_id = self.user.id
         db.session.commit()
+
+
+class APITestCase(UserTestCase):
+    "This test case has a user scott with password tiger"
+
+    def setUp(self):
+        UserTestCase.setUp(self)
 
         self.app = app.test_client()
 
@@ -89,9 +94,6 @@ class APITestCase(DBTestCase):
         self.post = self.app.post
         self.delete = self.app.delete
         self.put = self.app.put
-
-    def tearDown(self):
-        DBTestCase.tearDown(self)
 
 from werkzeug.serving import make_server, BaseWSGIServer
 import threading

@@ -73,6 +73,12 @@ class TestEnsembles(tests.TestCase):
         self.assertFalse("--force" in script)
         self.assertFalse("--nocleanup" in script)
 
+class TestEnsembleDB(tests.UserTestCase):
+    def test_ensemble_db(self):
+        self.assertEquals(len(ensembles.list_ensembles(self.user_id)), 0, "Should be no ensembles")
+        e = ensembles.create_ensemble(self.user_id, "foo", 1, 1)
+        self.assertEquals(len(ensembles.list_ensembles(self.user_id)), 1, "Should be 1 ensemble")
+
 class TestEnsembleAPI(tests.APITestCase):
     def test_ensemble_api(self):
         r = self.get("/ensembles")
@@ -82,14 +88,13 @@ class TestEnsembleAPI(tests.APITestCase):
         r = self.post("/ensembles")
         self.assertEquals(r.status_code, 400, "Should fail on missing ensemble params")
 
-        r = self.post("/ensembles", data={"name":"myensemble", "priority":"10"})
+        r = self.post("/ensembles", data={"name":"myensemble"})
         self.assertEquals(r.status_code, 201, "Should return created status")
         self.assertTrue("location" in r.headers, "Should have location header")
 
         r = self.get("/ensembles/myensemble")
         self.assertEquals(r.status_code, 200)
         self.assertEquals(r.json["name"], "myensemble", "Should be named myensemble")
-        self.assertEquals(r.json["priority"], 10, "Should have a priority of 10")
         self.assertEquals(r.json["state"], EnsembleStates.ACTIVE, "Should be in active state")
         self.assertEquals(len(r.json["workflows"]), 0, "Should not have any workflows")
 
@@ -104,14 +109,12 @@ class TestEnsembleAPI(tests.APITestCase):
 
         update = {
             "state": EnsembleStates.HELD,
-            "priority": "-10",
             "max_running": "10",
             "max_planning": "2"
         }
         r = self.post("/ensembles/myensemble", data=update)
         self.assertEquals(r.status_code, 200, "Should return OK")
         self.assertEquals(r.json["state"], EnsembleStates.HELD, "Should be in held state")
-        self.assertEquals(r.json["priority"], -10, "Should have priority -10")
         self.assertEquals(r.json["max_running"], 10, "max_running should be 10")
         self.assertEquals(r.json["max_planning"], 2, "max_planning should be 2")
         self.assertNotEquals(r.json["updated"], updated)
@@ -197,7 +200,7 @@ class TestEnsembleClient(tests.ClientTestCase):
         stdout, stderr = self.stdio()
         self.assertEquals(stdout, "", "Should be no stdout")
 
-        cmd.main(["create","-n","foo","-p","10","-P","20","-R","30"])
+        cmd.main(["create","-n","foo","-P","20","-R","30"])
         stdout, stderr = self.stdio()
         self.assertEquals(stdout, "", "Should be no stdout")
 
@@ -205,10 +208,9 @@ class TestEnsembleClient(tests.ClientTestCase):
         stdout, stderr = self.stdio()
         self.assertEquals(len(stdout.split("\n")), 3, "Should be two lines of stdout")
 
-        cmd.main(["update","-e","foo","-p","40","-P","50","-R","60"])
+        cmd.main(["update","-e","foo","-P","50","-R","60"])
         stdout, stderr = self.stdio()
         self.assertTrue("Name: foo" in stdout, "Name should be foo")
-        self.assertTrue("Priority: 40" in stdout, "Priority should be 40")
         self.assertTrue("Max Planning: 50" in stdout, "Max Planning should be 50")
         self.assertTrue("Max Running: 60" in stdout, "Max running should be 60")
 

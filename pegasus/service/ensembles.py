@@ -32,9 +32,6 @@ class EnsembleMixin:
     def set_name(self, name):
         self.name = validate_ensemble_name(name)
 
-    def set_priority(self, priority):
-        self.priority = validate_priority(priority)
-
     def set_created(self):
         self.created = datetime.utcnow()
 
@@ -63,7 +60,6 @@ class Ensemble(db.Model, EnsembleMixin):
     created = db.Column(db.DateTime, nullable=False)
     updated = db.Column(db.DateTime, nullable=False)
     state = db.Column(db.Enum(*EnsembleStates), nullable=False)
-    priority = db.Column(db.Integer, nullable=False)
     max_running = db.Column(db.Integer, nullable=False)
     max_planning = db.Column(db.Integer, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -75,7 +71,6 @@ class Ensemble(db.Model, EnsembleMixin):
         self.set_created()
         self.set_updated()
         self.state = EnsembleStates.ACTIVE
-        self.set_priority(0)
         self.set_max_running(1)
         self.set_max_planning(1)
 
@@ -113,7 +108,6 @@ class Ensemble(db.Model, EnsembleMixin):
             "created": self.created,
             "updated": self.updated,
             "state": self.state,
-            "priority": self.priority,
             "max_running": self.max_running,
             "max_planning": self.max_planning,
             "href": url_for("route_get_ensemble", name=self.name, _external=True)
@@ -155,6 +149,9 @@ class EnsembleWorkflow(db.Model, EnsembleMixin):
         if state not in EnsembleWorkflowStates:
             raise APIError("Invalid ensemble workflow state: %s" % state)
         self.state = state
+
+    def set_priority(self, priority):
+        self.priority = validate_priority(priority)
 
     def set_wf_uuid(self, wf_uuid):
         if wf_uuid is not None and len(wf_uuid) != 36:
@@ -201,9 +198,8 @@ def get_ensemble(user_id, name):
     except NoResultFound:
         raise APIError("No such ensemble: %s" % name, 404)
 
-def create_ensemble(user_id, name, priority, max_running, max_planning):
-    ensemble = Ensemble(g.user.id, name)
-    ensemble.set_priority(priority)
+def create_ensemble(user_id, name, max_running, max_planning):
+    ensemble = Ensemble(user_id, name)
     ensemble.set_max_running(max_running)
     ensemble.set_max_planning(max_planning)
     db.session.add(ensemble)
@@ -313,11 +309,10 @@ def route_create_ensemble():
     if name is None:
         raise APIError("Specify ensemble name")
 
-    priority = request.form.get("priority", 0)
     max_running = request.form.get("max_running", 1)
     max_planning = request.form.get("max_planning", 1)
 
-    create_ensemble(g.user.id, name, priority, max_running, max_planning)
+    create_ensemble(g.user.id, name, max_running, max_planning)
 
     db.session.commit()
 
@@ -332,10 +327,6 @@ def route_get_ensemble(name):
 @app.route("/ensembles/<string:name>", methods=["PUT","POST"])
 def route_update_ensemble(name):
     e = get_ensemble(g.user.id, name)
-
-    priority = request.form.get("priority", None)
-    if priority is not None:
-        e.set_priority(priority)
 
     max_running = request.form.get("max_running", None)
     if max_running is not None:
@@ -471,11 +462,11 @@ class ListCommand(ClientCommand):
             print "ERROR:",result["message"]
             exit(1)
 
-        fmt = "%-20s %-8s %-30s %-30s %8s %14s %12s"
+        fmt = "%-20s %-8s %-30s %-30s %14s %12s"
         if len(result) > 0:
-            print fmt % ("NAME","STATE","CREATED","UPDATED","PRIORITY","MAX PLANNING","MAX RUNNING")
+            print fmt % ("NAME","STATE","CREATED","UPDATED","MAX PLANNING","MAX RUNNING")
         for r in result:
-            print fmt % (r["name"], r["state"], r["created"], r["updated"], r["priority"], r["max_planning"], r["max_running"])
+            print fmt % (r["name"], r["state"], r["created"], r["updated"], r["max_planning"], r["max_running"])
 
 class CreateCommand(ClientCommand):
     description = "Create ensemble"
@@ -485,8 +476,6 @@ class CreateCommand(ClientCommand):
         ClientCommand.__init__(self)
         self.parser.add_option("-n", "--name", action="store", dest="name",
             default=None, type="string", help="Ensemble name")
-        self.parser.add_option("-p", "--priority", action="store", dest="priority",
-            default=0, type="int", help="Ensemble priority")
         self.parser.add_option("-P", "--max-planning", action="store", dest="max_planning",
             default=1, type="int", help="Maximum number of workflows being planned at once")
         self.parser.add_option("-R", "--max-running", action="store", dest="max_running",
@@ -498,7 +487,6 @@ class CreateCommand(ClientCommand):
 
         request = {
             "name": self.options.name,
-            "priority": self.options.priority,
             "max_planning": self.options.max_planning,
             "max_running": self.options.max_running
         }
@@ -657,8 +645,6 @@ class UpdateCommand(ClientCommand):
     def __init__(self):
         ClientCommand.__init__(self)
         add_ensemble_option(self)
-        self.parser.add_option("-p", "--priority", action="store", dest="priority",
-            default=None, type="int", help="Ensemble priority")
         self.parser.add_option("-P", "--max-planning", action="store", dest="max_planning",
             default=None, type="int", help="Maximum number of workflows being planned at once")
         self.parser.add_option("-R", "--max-running", action="store", dest="max_running",
@@ -670,15 +656,13 @@ class UpdateCommand(ClientCommand):
 
         request = {}
 
-        if self.options.priority:
-            request["priority"] = self.options.priority
         if self.options.max_planning:
             request["max_planning"] = self.options.max_planning
         if self.options.max_running:
             request["max_running"] = self.options.max_running
 
         if len(request) == 0:
-            self.parser.error("Specify --priority, --max-planning or --max-running")
+            self.parser.error("Specify --max-planning or --max-running")
 
         response = self.post("/ensembles/%s" % self.options.ensemble, data=request)
 
@@ -692,7 +676,6 @@ class UpdateCommand(ClientCommand):
         print "State:",result["state"]
         print "Created:",result["created"]
         print "Updated:",result["updated"]
-        print "Priority:",result["priority"]
         print "Max Planning:",result["max_planning"]
         print "Max Running:",result["max_running"]
 
