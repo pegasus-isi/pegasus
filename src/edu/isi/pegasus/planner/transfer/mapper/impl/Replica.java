@@ -94,6 +94,7 @@ public class Replica implements OutputMapper {
     public void initialize( PegasusBag bag, ADag workflow)  throws MapperException{
         PlannerOptions options = bag.getPlannerOptions();
         String      outputSite = options.getOutputSite();
+        mLogger       = bag.getLogger();
         mSiteStore    = bag.getHandleToSiteStore();
         mOutputSite   = outputSite;
         
