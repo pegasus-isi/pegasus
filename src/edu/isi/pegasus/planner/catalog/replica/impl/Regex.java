@@ -516,15 +516,17 @@ public class Regex implements ReplicaCatalog {
     public Collection<ReplicaCatalogEntry> lookupWithHandle(String lfn,
 	    String handle) {
 	Collection<ReplicaCatalogEntry> c = new ArrayList<ReplicaCatalogEntry>();
-	Collection<ReplicaCatalogEntry> tmp;
+	
 	// Lookup regular LFN's
-	tmp = m_lfn.get( lfn );
-	for (ReplicaCatalogEntry rce : tmp) {
-	    String pool = rce.getResourceHandle();
-	    if (pool == null && handle == null || pool != null
-		    && handle != null && pool.equals( handle ))
-		c.add( rce );
-	}
+	Collection<ReplicaCatalogEntry> tmp = m_lfn.get( lfn );
+        if( tmp != null ){
+            for (ReplicaCatalogEntry rce : tmp) {
+                String pool = rce.getResourceHandle();
+                if (pool == null && handle == null || pool != null
+                        && handle != null && pool.equals( handle ))
+                    c.add( rce );
+            }
+        }
 	// Lookup regex LFN's
 	Pattern p = null;
 	Matcher m = null;

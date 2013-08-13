@@ -39,6 +39,17 @@ import java.util.Properties;
  * file should be placed on the output site. At present the location on the output
  * site returned is the first matching entry in the Replica Catalog.
  * 
+ * By default, if no replica catalog backend is specified, the RC defaults to 
+ * Regex replica catalog backend.
+ * 
+ * To use this mapper, user needs to set the following properties
+ * <pre>
+ * pegasus.dir.storage.mapper               Replica
+ * pegasus.dir.storage.mapper.replica       <replica-catalog backend to use> 
+ * pegasus.dir.storage.mapper.replica.file  the RC file at the backend to use, \
+ *                                          if using a file based RC
+ * </pre>
+ * 
  * 
  * @author Karan Vahi
  */
