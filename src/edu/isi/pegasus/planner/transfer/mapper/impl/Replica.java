@@ -24,8 +24,10 @@ import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.classes.ADag;
 import edu.isi.pegasus.planner.classes.PegasusBag;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
+
 import edu.isi.pegasus.planner.transfer.mapper.MapperException;
 import edu.isi.pegasus.planner.transfer.mapper.OutputMapper;
+
 import java.util.LinkedList;
 import java.util.List;
 
@@ -47,6 +49,13 @@ public class Replica implements OutputMapper {
      *  catalogs.
      */
     public static final String PROPERTY_PREFIX = "pegasus.dir.storage.mapper.replica";
+    
+    /**
+     * The name of the key that disables writing back to the cache file.
+     * Designates a static file. i.e. read only
+     */
+    public static final String READ_ONLY_KEY = "read.only";
+    
     
     /**
      * The short name for this backend.
@@ -109,6 +118,10 @@ public class Replica implements OutputMapper {
         
         Properties props = bag.getPegasusProperties().matchingSubset( PROPERTY_PREFIX, false );
         String catalogImplementor = bag.getPegasusProperties().getProperty( Replica.PROPERTY_PREFIX );
+       
+        //we only are reading not inserting any entries
+        props.setProperty( Replica.READ_ONLY_KEY, "true" );
+        
         catalogImplementor = ( catalogImplementor == null ) ?
                 DEFAULT_REPLICA_BACKEND:
                 catalogImplementor;

@@ -505,10 +505,12 @@ public class Regex implements ReplicaCatalog {
      */
     public String lookup(String lfn, String handle) {
 	Collection<ReplicaCatalogEntry> result = lookupWithHandle( lfn, handle );
-	if (result != null && result.iterator().hasNext()) {
-	    result.iterator().next().getPFN();
-	}
-	return null;
+        
+        if( result == null || result.isEmpty() ){
+            return null;
+        }
+        return result.iterator().next().getPFN();
+	
     }
 
     public Collection<ReplicaCatalogEntry> lookupWithHandle(String lfn,
