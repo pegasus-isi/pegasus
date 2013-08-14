@@ -88,8 +88,8 @@ public class SiteStore extends AbstractSiteData{
     public void setForPlannerUse( PegasusProperties properties, PlannerOptions options ){
         mPlannerOptions = options;
         mWorkDir              = properties.getExecDirectory();  
-        mDeepStorageStructure = properties.useDeepStorageDirectoryStructure() ||
-                                hashedOutputMapperUsed( properties );
+        mDeepStorageStructure = properties.useDeepStorageDirectoryStructure() ;
+                                //||hashedOutputMapperUsed( properties );
                                   
     }
     
