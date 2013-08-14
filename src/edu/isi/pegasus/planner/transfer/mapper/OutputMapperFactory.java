@@ -87,10 +87,12 @@ public class OutputMapperFactory {
             throw new OutputMapperFactoryException( "Null Properties passed in the bag ");
         }
         
-        //we prefer the legacy property for backward compatibility
-        String className = props.useDeepStorageDirectoryStructure()?
-                HASHED_OUTPUT_MAPPER_IMPLEMENTATION:
-                props.getProperty(PROPERTY_KEY ); //rely on the new mapper property
+        String className = props.getProperty(PROPERTY_KEY ); //rely on the new mapper property
+        
+        if( className == null && props.useDeepStorageDirectoryStructure() ){
+            //if the legacy property is specified, use that to set to HashedMapper
+            className = HASHED_OUTPUT_MAPPER_IMPLEMENTATION;
+        }
                 
         //fall back to default if not determined from properties
         className = ( className == null )?
