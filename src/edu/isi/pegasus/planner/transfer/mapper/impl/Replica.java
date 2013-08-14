@@ -61,6 +61,12 @@ public class Replica implements OutputMapper {
      */
     public static final String PROPERTY_PREFIX = "pegasus.dir.storage.mapper.replica";
     
+    
+    /**
+     * Short description.
+     */
+    private static final String DESCRIPTION = "Replica Catalog Mapper";
+    
     /**
      * The name of the key that disables writing back to the cache file.
      * Designates a static file. i.e. read only
@@ -141,7 +147,7 @@ public class Replica implements OutputMapper {
         }
         catch( Exception e ){
             //log the connection error
-            throw new MapperException( "Unable to connect to replica catalog backed for output mapper " + catalogImplementor );
+            throw new MapperException( "Unable to connect to replica catalog backend for output mapper " + catalogImplementor , e);
         }
 
     }
@@ -230,5 +236,14 @@ public class Replica implements OutputMapper {
 
     private String getShortName() {
         return Replica.SHORT_NAME;
+    }
+    
+    /**
+     * Returns a short description of the mapper.
+     * 
+     * @return 
+     */
+    public String description(){
+        return this.DESCRIPTION;
     }
 }

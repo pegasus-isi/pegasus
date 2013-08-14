@@ -278,7 +278,9 @@ public class TransferEngine extends Engine {
         //log some configuration messages
         mLogger.log("Transfer Refiner loaded is [" + mTXRefiner.getDescription() +
                             "]",LogManager.CONFIG_MESSAGE_LEVEL);
-        mLogger.log("ReplicaSelector loaded is [" + mReplicaSelector.description() +
+        mLogger.log("ReplicaSelector loaded is  [" + mReplicaSelector.description() +
+                    "]",LogManager.CONFIG_MESSAGE_LEVEL);
+        mLogger.log("Output Mapper loaded is    [" + mOutputMapper.description() +
                     "]",LogManager.CONFIG_MESSAGE_LEVEL);
     }
 

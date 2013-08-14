@@ -92,6 +92,13 @@ public interface OutputMapper {
      * @throws MapperException if unable to construct URL for any reason
      */
     public List<String> mapAll( String lfn, String site, FileServer.OPERATION operation) throws MapperException;
+
+    /**
+     * Returns a short description of the mapper.
+     * 
+     * @return 
+     */
+    public String description();
     
     
 }

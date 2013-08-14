@@ -41,6 +41,12 @@ public class Hashed extends AbstractFileFactoryBasedMapper {
      * The short name for the mapper
      */
     public static final String SHORT_NAME = "Hashed";
+    
+    
+    /**
+     * Short description.
+     */
+    private static final String DESCRIPTION = "Hashed Directory Mapper";
 
     /**
      * A Map that tracks for each output site, the LFN to the Add on's 
@@ -185,6 +191,15 @@ public class Hashed extends AbstractFileFactoryBasedMapper {
      */
     public  String getShortName(){
         return Hashed.SHORT_NAME;
+    }
+    
+    /**
+     * Returns a short description of the mapper.
+     * 
+     * @return 
+     */
+    public String description(){
+        return this.DESCRIPTION;
     }
 
     /**

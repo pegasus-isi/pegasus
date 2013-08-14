@@ -37,6 +37,11 @@ public class Flat extends AbstractFileFactoryBasedMapper {
      * The short name for the mapper
      */
     public static final String SHORT_NAME = "Flat";
+    
+    /**
+     * Short description.
+     */
+    private static final String DESCRIPTION = "Flat Directory Mapper";
 
     /**
      * The default constructor.
@@ -109,6 +114,14 @@ public class Flat extends AbstractFileFactoryBasedMapper {
         return addOn;
      }
     
+    /**
+     * Returns a short description of the mapper.
+     * 
+     * @return 
+     */
+    public String description(){
+        return this.DESCRIPTION;
+    }
     
     /**
      * Returns the short name for the implementation class.
