@@ -162,8 +162,7 @@ public abstract class DirectoryLayout extends AbstractSiteData{
      * @return boolean
      */
     public boolean hasFileServerForGETOperations(){
-        return !(this.mFileServers.get( FileServer.OPERATION.all ).isEmpty()
-                && this.mFileServers.get( FileServer.OPERATION.get ).isEmpty());
+        return this.hasFileServerForOperations( OPERATION.get );
     }
 
      /**
@@ -173,8 +172,22 @@ public abstract class DirectoryLayout extends AbstractSiteData{
      * @return boolean
      */
     public boolean hasFileServerForPUTOperations(){
+        return this.hasFileServerForOperations( OPERATION.put );
+    }
+    
+    /**
+     * A convenience method that retrieves whether the directory has a
+     * file server for a particular operation. Servers with operation type as ALL
+     * are also considered.
+     * 
+     *
+     * @param operation  the operation for which we need the file servers
+     * 
+     * @return boolean
+     */
+    public boolean hasFileServerForOperations( FileServer.OPERATION operation ){
         return !(this.mFileServers.get( FileServer.OPERATION.all ).isEmpty()
-                && this.mFileServers.get( FileServer.OPERATION.put ).isEmpty());
+                && this.mFileServers.get( operation ).isEmpty());
     }
     
     /**
