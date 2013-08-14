@@ -28,13 +28,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import edu.isi.pegasus.common.util.Currently;
 import edu.isi.pegasus.planner.catalog.classes.SysInfo;
 import edu.isi.pegasus.planner.catalog.transformation.classes.VDSSysInfo;
 import edu.isi.pegasus.planner.classes.Job;
 import edu.isi.pegasus.planner.classes.PlannerOptions;
 import edu.isi.pegasus.planner.common.PegasusProperties;
 import edu.isi.pegasus.planner.namespace.Pegasus;
+import edu.isi.pegasus.planner.transfer.mapper.OutputMapperFactory;
 
 /**
  * The site store contains the collection of sites backed by a HashMap.
@@ -87,8 +87,10 @@ public class SiteStore extends AbstractSiteData{
      */
     public void setForPlannerUse( PegasusProperties properties, PlannerOptions options ){
         mPlannerOptions = options;
-        mWorkDir              = properties.getExecDirectory();    
-        mDeepStorageStructure = properties.useDeepStorageDirectoryStructure();
+        mWorkDir              = properties.getExecDirectory();  
+        mDeepStorageStructure = properties.useDeepStorageDirectoryStructure() ||
+                                hashedOutputMapperUsed( properties );
+                                  
     }
     
     /**
@@ -719,6 +721,24 @@ public class SiteStore extends AbstractSiteData{
         }
 
         visitor.depart( this );
+    }
+
+    /**
+     * Returns a boolean indicating whether the Hashed Output Mapper was used or
+     * not
+     * 
+     * @param properties
+     * 
+     * @return boolean 
+     */
+    private boolean hashedOutputMapperUsed(PegasusProperties properties) {
+        
+        String mapper = properties.getProperty( OutputMapperFactory.PROPERTY_KEY );
+        if( mapper == null ){
+            mapper = OutputMapperFactory.DEFAULT_OUTPUT_MAPPER_IMPLEMENTATION;
+        }
+        
+        return mapper.equals( OutputMapperFactory.HASHED_OUTPUT_MAPPER_IMPLEMENTATION );
     }
 
 
