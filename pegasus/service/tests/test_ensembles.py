@@ -79,6 +79,15 @@ class TestEnsembleDB(tests.UserTestCase):
         e = ensembles.create_ensemble(self.user_id, "foo", 1, 1)
         self.assertEquals(len(ensembles.list_ensembles(self.user_id)), 1, "Should be 1 ensemble")
 
+
+        self.assertEquals(len(ensembles.list_actionable_ensembles()), 0, "Should be 0 actionable ensembles")
+
+        w = ensembles.EnsembleWorkflow(e.id, "bar")
+        db.session.add(w)
+        db.session.flush()
+
+        self.assertEquals(len(ensembles.list_actionable_ensembles()), 1, "Should be 1 actionable ensembles")
+
 class TestEnsembleAPI(tests.APITestCase):
     def test_ensemble_api(self):
         r = self.get("/ensembles")
@@ -129,7 +138,7 @@ class TestEnsembleAPI(tests.APITestCase):
 
         # Create some test catalogs
         catalogs.save_catalog("replica", self.user_id, "rc", "regex", StringIO("replicas"))
-        catalogs.save_catalog("site", self.user_id, "sc", "xml4", StringIO("sites"))
+        catalogs.save_catalog("site", self.user_id, "sc", "xml", StringIO("sites"))
         catalogs.save_catalog("transformation", self.user_id, "tc", "text", StringIO("transformations"))
         db.session.commit()
 
@@ -228,7 +237,7 @@ class TestEnsembleClient(tests.ClientTestCase):
 
         # Create some test catalogs using the catalog API
         catalogs.save_catalog("replica", self.user_id, "rc", "regex", StringIO("replicas"))
-        catalogs.save_catalog("site", self.user_id, "sc", "xml4", StringIO("sites"))
+        catalogs.save_catalog("site", self.user_id, "sc", "xml", StringIO("sites"))
         catalogs.save_catalog("transformation", self.user_id, "tc", "text", StringIO("transformations"))
         db.session.commit()
 

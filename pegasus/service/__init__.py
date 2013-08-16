@@ -17,3 +17,6 @@ db = SQLAlchemy(app)
 
 from pegasus.service import auth, filters, api, dashboard, catalogs, ensembles
 
+from Pegasus.netlogger.analysis.schema import stampede_dashboard_schema as dash
+dash.initializeToDashboardDB(db.engine, db.metadata)
+

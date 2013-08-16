@@ -3,9 +3,8 @@ TODO
 
 Ensemble Manager
 ----------------
-* Add basic ensemble management
+* Make sure ensemble manager works with Flask reloader
 * Add workflow dependencies
-* Add ensemble pause
 * Add ensemble hold
 * Add workflow abort
 * Add web UI for monitoring ensembles

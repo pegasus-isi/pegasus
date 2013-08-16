@@ -19,10 +19,10 @@ class TestCatalog(tests.TestCase):
             self.assertRaises(api.APIError, catalogs.validate_catalog_format, t, None)
             self.assertRaises(api.APIError, catalogs.validate_catalog_format, t, "foo")
 
-        self.assertEquals("XML3", catalogs.validate_catalog_format("site", "xml3"))
+        self.assertEquals("XML", catalogs.validate_catalog_format("site", "xml"))
         self.assertEquals("Regex", catalogs.validate_catalog_format("replica", "regex"))
         self.assertEquals("Regex", catalogs.validate_catalog_format("replica", "REGEX"))
-        self.assertEquals("XML4", catalogs.validate_catalog_format("site", "XMl4"))
+        self.assertEquals("XML2", catalogs.validate_catalog_format("site", "XMl2"))
         self.assertEquals("File", catalogs.validate_catalog_format("transformation", "FILE"))
 
 class TestCatalogDB(tests.DBTestCase):

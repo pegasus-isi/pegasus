@@ -1,7 +1,7 @@
 import logging
 from optparse import OptionParser
 
-from pegasus.service import app
+from pegasus.service import app, em
 from pegasus.service.command import Command
 
 class ServerCommand(Command):
@@ -18,6 +18,10 @@ class ServerCommand(Command):
             app.config.update(DEBUG=True)
 
         logging.basicConfig(level=logging.INFO)
+
+        # Start the ensemble manager
+        mgr = em.EnsembleManager()
+        mgr.start()
 
         app.run(port=app.config["SERVER_PORT"], host=app.config["SERVER_HOST"])
 

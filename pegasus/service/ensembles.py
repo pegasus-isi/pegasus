@@ -8,6 +8,7 @@ from datetime import datetime
 from flask import g, url_for, make_response, request, send_file, json
 
 from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy import sql
 
 from pegasus.service import app, db, catalogs
 from pegasus.service.api import *
@@ -132,6 +133,7 @@ class EnsembleWorkflow(db.Model, EnsembleMixin):
     state = db.Column(db.Enum(*EnsembleWorkflowStates), nullable=False)
     priority = db.Column(db.Integer, nullable=False)
     wf_uuid = db.Column(db.String(36))
+    submitdir = db.Column(db.String(512))
     ensemble_id = db.Column(db.Integer, db.ForeignKey('ensemble.id'), nullable=False)
     ensemble = db.relationship("Ensemble", backref="workflows")
 
@@ -143,6 +145,7 @@ class EnsembleWorkflow(db.Model, EnsembleMixin):
         self.state = EnsembleWorkflowStates.READY
         self.set_priority(0)
         self.set_wf_uuid(None)
+        self.set_submitdir(None)
 
     def set_state(self, state):
         state = state.upper()
@@ -157,6 +160,9 @@ class EnsembleWorkflow(db.Model, EnsembleMixin):
         if wf_uuid is not None and len(wf_uuid) != 36:
             raise APIError("Invalid wf_uuid")
         self.wf_uuid = wf_uuid
+
+    def set_submitdir(self, submitdir):
+        self.submitdir = submitdir
 
     def get_dir(self):
         ensembledir = self.ensemble.get_dir()
@@ -191,6 +197,16 @@ class EnsembleWorkflow(db.Model, EnsembleMixin):
 def list_ensembles(user_id):
     ensembles = Ensemble.query.filter_by(user_id=user_id).all()
     return ensembles
+
+def list_actionable_ensembles():
+    states = (
+        EnsembleWorkflowStates.READY,
+        EnsembleWorkflowStates.PLANNING,
+        EnsembleWorkflowStates.QUEUED,
+        EnsembleWorkflowStates.RUNNING
+    )
+    stmt = sql.exists().where(Ensemble.id==EnsembleWorkflow.ensemble_id).where(EnsembleWorkflow.state.in_(states))
+    return Ensemble.query.filter(stmt).all()
 
 def get_ensemble(user_id, name):
     try:
@@ -256,6 +272,10 @@ def create_ensemble_workflow(ensemble_id, name, priority, rc, tc, sc, dax, conf,
         if conf is not None:
             # TODO Filter out properties that are not allowed
             shutil.copyfileobj(conf, f)
+
+        # We need to make sure that the dashboard info is
+        # sent to the same database we are using
+        f.write("\npegasus.dashboard.output=%s\n" % app.config["SQLALCHEMY_DATABASE_URI"])
     finally:
         f.close()
 
@@ -267,6 +287,8 @@ def create_ensemble_workflow(ensemble_id, name, priority, rc, tc, sc, dax, conf,
     finally:
         f.close()
     os.chmod(filename, stat.S_IRWXU|stat.S_IRGRP|stat.S_IXGRP|stat.S_IROTH|stat.S_IXOTH)
+
+    return w
 
 def write_planning_script(f, tcformat, rcformat, scformat, sites, output_site, staging_sites=None, clustering=None, force=False, cleanup=True):
     f.write("#!/bin/bash\n")
@@ -296,6 +318,7 @@ def write_planning_script(f, tcformat, rcformat, scformat, sites, output_site, s
 
     f.write("--dir submit \\\n")
     f.write("--dax dax.xml\n")
+    f.write("exit $?")
 
 @app.route("/ensembles", methods=["GET"])
 def route_list_ensembles():

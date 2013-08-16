@@ -13,7 +13,7 @@ from pegasus.service import app, db
 from pegasus.service.command import ClientCommand, CompoundCommand
 from pegasus.service.api import *
 
-SC_FORMATS = ["XML3","XML4"]
+SC_FORMATS = ["XML","XML2"]
 TC_FORMATS = ["File","Text"]
 RC_FORMATS = ["File","Regex"]
 

@@ -35,3 +35,7 @@ PASSWORD = ""
 # Storage
 STORAGE_DIR = os.path.join(os.getenv('HOME'), ".pegasus", "service")
 
+# Ensemble manager
+EM_INTERVAL = 120
+PEGASUS_HOME = "/usr"
+

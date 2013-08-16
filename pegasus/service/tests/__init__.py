@@ -25,7 +25,8 @@ class TestCase(unittest.TestCase):
 
     def tearDown(self):
         # Remove the temp dir
-        shutil.rmtree(self.tmpdir)
+        if os.path.isdir(self.tmpdir):
+            shutil.rmtree(self.tmpdir)
 
 class DBTestCase(TestCase):
     "This test case is for tests that require the database"
@@ -51,14 +52,13 @@ class UserTestCase(DBTestCase):
         self.username = "scott"
         self.password = "tiger"
         self.email = "scott@isi.edu"
-        self.user = users.create(username=self.username, password=self.password, email=self.email)
+        self.user = users.create(username=self.username,
+                                 password=self.password,
+                                 email=self.email)
         self.user_id = self.user.id
         db.session.commit()
 
-
 class APITestCase(UserTestCase):
-    "This test case has a user scott with password tiger"
-
     def setUp(self):
         UserTestCase.setUp(self)
 
