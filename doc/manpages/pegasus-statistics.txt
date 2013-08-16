@@ -67,7 +67,8 @@ statistics are created for each sub workflow.
 
 - *jb_stats*: generates the job statistics information of each individual
 workflow. In case of hierarchical workflow the job statistics is created
-for each sub workflows.
+for each sub workflows. Note: Not supported when generating statistics
+over multiple workflows.
 
 - *tf_stats*: generates the invocation statistics information of each
 individual workflow grouped by transformation name .In case of hierarchical
