@@ -22,7 +22,7 @@ Synopsis
                    [*-m*|*--multiple-wf*]
                    [*-p*|*--ispmc*]
                    [*-u*|*--isuuid*]
-                   [ ['submitdir ..'] | ['workflow_uuid ..']]
+                   [['submitdir ..'] | ['workflow_uuid ..']]
 
 
 Description
