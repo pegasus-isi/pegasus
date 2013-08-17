@@ -1063,8 +1063,8 @@ def main():
     if options.output_dir:
         output_dir = options.output_dir
     else:
-        if multiple_wf or not options.is_uuid:
-            sys.stderr.write("Output directory option is required when calculating statistics over multiple workflows..\n")
+        if multiple_wf or options.is_uuid:
+            sys.stderr.write("Output directory option is required when calculating statistics over multiple workflows.\n")
             sys.exit(1)
         else:
             output_dir = os.path.join(submit_dir, DEFAULT_OUTPUT_DIR)
