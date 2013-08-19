@@ -25,7 +25,11 @@ def create():
 
 def drop():
     """Drop all objects from the database"""
-    db.drop_all()
+    # We omit the dashboard tables because they are maintained
+    # by monitord
+    omit = ["workflow","workflowstate"]
+    tables = [t for t in db.metadata.sorted_tables if t.name not in omit]
+    db.metadata.drop_all(bind=db.engine, tables=tables)
 
 def migrate(to):
     """Migrate the current schema to version"""
