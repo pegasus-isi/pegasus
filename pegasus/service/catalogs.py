@@ -330,7 +330,7 @@ class ListCommand(ClientCommand):
 
 class UploadCommand(ClientCommand):
     description = "Upload a catalog to the server"
-    usage = "Usage: %prog create -t TYPE -n NAME -F FORMAT -f FILE"
+    usage = "Usage: %prog upload -t TYPE -n NAME -F FORMAT -f FILE"
 
     def __init__(self):
         ClientCommand.__init__(self)
@@ -355,10 +355,10 @@ class UploadCommand(ClientCommand):
 
         data = {"name": o.name, "format": o.format}
         files = {"file": open(o.file, "rb")}
-        response = self.post("/catalogs/%s/" % o.type, data=data, files=files)
+        response = self.post("/catalogs/%s" % o.type, data=data, files=files)
         if response.status_code != 201:
             result = response.json()
-            print "ERROR:",result["message"]
+            print "ERROR:",response.status_code,result["message"]
             exit(1)
 
 class UpdateCommand(ClientCommand):
