@@ -151,15 +151,15 @@ class UsermodCommand(AdminCommand):
 
 class AdminClient(CompoundCommand):
     description = "Administrative client for Pegasus Service"
-    commands = {
-        'create': CreateCommand,
-        'drop': DropCommand,
-        'migrate': MigrateCommand,
-        'userlist': UserListCommand,
-        'useradd': UserAddCommand,
-        'passwd': PasswdCommand,
-        'usermod': UsermodCommand
-    }
+    commands = [
+        ('create', CreateCommand),
+        ('drop', DropCommand),
+        ('migrate', MigrateCommand),
+        ('userlist', UserListCommand),
+        ('useradd', UserAddCommand),
+        ('passwd', PasswdCommand),
+        ('usermod', UsermodCommand)
+    ]
 
 def main():
     AdminClient().main()

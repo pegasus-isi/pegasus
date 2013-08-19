@@ -838,18 +838,18 @@ class PriorityCommand(ClientCommand):
 
 class EnsembleCommand(CompoundCommand):
     description = "Client for ensemble management"
-    commands = {
-        "ensembles": EnsemblesCommand,
-        "create": CreateCommand,
-        "pause": PauseCommand,
-        "activate": ActivateCommand,
-        "config": ConfigCommand,
-        "submit": SubmitCommand,
-        "workflows": WorkflowsCommand,
-        "replan": ReplanCommand,
-        "rerun": RerunCommand,
-        "priority": PriorityCommand
-    }
+    commands = [
+        ("ensembles", EnsemblesCommand),
+        ("create", CreateCommand),
+        ("pause", PauseCommand),
+        ("activate", ActivateCommand),
+        ("config", ConfigCommand),
+        ("submit", SubmitCommand),
+        ("workflows", WorkflowsCommand),
+        ("replan", ReplanCommand),
+        ("rerun", RerunCommand),
+        ("priority", PriorityCommand)
+    ]
 
 def main():
     "The entry point for pegasus-service-ensemble"

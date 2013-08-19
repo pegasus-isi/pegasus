@@ -455,13 +455,13 @@ class DownloadCommand(ClientCommand):
 
 class CatalogCommand(CompoundCommand):
     description = "Client for catalog management"
-    commands = {
-        "list": ListCommand,
-        "upload": UploadCommand,
-        "download": DownloadCommand,
-        "update": UpdateCommand,
-        "delete": DeleteCommand
-    }
+    commands = [
+        ("list", ListCommand),
+        ("upload", UploadCommand),
+        ("download", DownloadCommand),
+        ("update", UpdateCommand),
+        ("delete", DeleteCommand)
+    ]
 
 def main():
     "The entry point for pegasus-service-catalogs"

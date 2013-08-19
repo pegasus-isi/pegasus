@@ -27,7 +27,7 @@ class CompoundCommand(Command):
     "A Command with multiple sub-commands"
     description = None
     usage = "%prog COMMAND [options] [args]"
-    commands = {}
+    commands = []
 
     def __init__(self):
         Command.__init__(self)
@@ -35,7 +35,7 @@ class CompoundCommand(Command):
         lines = [
             "\n\nCommands:"
         ]
-        for cmd, cmdclass in self.commands.items():
+        for cmd, cmdclass in self.commands:
             lines.append("    %-10s %s" % (cmd, cmdclass.description))
 
         self.parser.usage += "\n".join(lines)
@@ -59,11 +59,13 @@ class CompoundCommand(Command):
             self.parser.error("Specify COMMAND")
             exit(1)
 
-        if command not in self.commands:
+        commandmap = dict(self.commands)
+
+        if command not in commandmap:
             sys.stderr.write("Invalid command: %s\n" % command)
             exit(1)
 
-        cmdclass = self.commands[command]
+        cmdclass = commandmap[command]
         cmd = cmdclass()
         cmd.main(args)
 
