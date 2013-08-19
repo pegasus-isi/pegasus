@@ -1,4 +1,5 @@
 import os
+import sys
 import time
 import subprocess
 import logging
@@ -27,7 +28,7 @@ class TestWorkflowProcessor:
     def get_submitdir(self):
         return "submitdir"
 
-    def submit(self):
+    def run(self):
         pass
 
     def pending(self):
@@ -93,15 +94,40 @@ class EnsembleManagerTest(tests.UserTestCase):
         mgr.loop_once()
         self.assertEquals(w2.state, ensembles.EnsembleWorkflowStates.SUCCESSFUL, "State should be SUCCESSFUL")
 
+def RequiresPegasus(f):
+    def wrapper(*args, **kwargs):
+        try:
+            em.get_pegasus_bin()
+        except:
+            sys.stderr.write(" test requires Pegasus ")
+            return None
+
+        return f(*args, **kwargs)
+
+    return wrapper
+
+def RequiresCondor(f):
+    def wrapper(*args, **kwargs):
+        try:
+            em.get_condor_bin()
+        except:
+            sys.stderr.write(" test requires Condor ")
+            return None
+
+        return f(*args, **kwargs)
+
+    return wrapper
 
 class ScriptTest(tests.TestCase):
+    @RequiresPegasus
+    @RequiresCondor
     def testGetEnv(self):
+        PEGASUS_BIN = em.get_pegasus_bin()
+        CONDOR_BIN = em.get_condor_bin()
         env = em.get_script_env()
 
-        self.assertTrue("PEGASUS_HOME" in env)
-        PEGASUS_HOME = env["PEGASUS_HOME"]
-
-        self.assertTrue(env["PATH"].startswith(PEGASUS_HOME))
+        self.assertTrue(PEGASUS_BIN in env["PATH"])
+        self.assertTrue(CONDOR_BIN in env["PATH"])
 
     def testForkScript(self):
         em.forkscript("true")
@@ -140,48 +166,6 @@ class ScriptTest(tests.TestCase):
 
         self.assertRaises(em.EMException, em.runscript, "true", cwd="/some/path/not/existing")
 
-def RequiresPegasus(f):
-    def wrapper(*args, **kwargs):
-        # We can only do this test if PEGASUS_HOME is set correctly
-        PEGASUS_HOME = app.config.get("PEGASUS_HOME", None)
-        if PEGASUS_HOME is None:
-            return None
-        if not os.path.isdir(PEGASUS_HOME):
-            return None
-        PEGASUS_BIN = os.path.join(PEGASUS_HOME,"bin")
-        if not os.path.isdir(PEGASUS_BIN):
-            return None
-        PEGASUS_PLAN = os.path.join(PEGASUS_BIN,"pegasus-plan")
-        if not os.path.isfile(PEGASUS_PLAN):
-            return None
-        PEGASUS_RUN = os.path.join(PEGASUS_BIN,"pegasus-run")
-        if not os.path.isfile(PEGASUS_RUN):
-            return None
-
-        # Make sure pegasus-plan runs
-        p = subprocess.Popen(PEGASUS_PLAN, shell=True,
-                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        stdout, stderr = p.communicate()
-        if p.wait() != 0:
-            return None
-
-        return f(*args, **kwargs)
-
-    return wrapper
-
-def RequiresCondor(f):
-    def wrapper(*args, **kwargs):
-        # Condor needs to be on the PATH and running
-        p = subprocess.Popen("condor_q", shell=True,
-                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        stdout, stderr = p.communicate()
-        if p.wait() != 0:
-            return None
-
-        return f(*args, **kwargs)
-
-    return wrapper
-
 class WorkflowTest(tests.UserTestCase):
 
     def test_workflow_processor(self):
@@ -198,12 +182,12 @@ class WorkflowTest(tests.UserTestCase):
         db.session.flush()
 
         p = em.WorkflowProcessor(ew)
-        self.assertRaises(em.EMException, p.submit)
+        self.assertRaises(em.EMException, p.run)
 
         ew.submitdir = "/some/path/not/existing"
         db.session.flush()
 
-        self.assertRaises(em.EMException, p.submit)
+        self.assertRaises(em.EMException, p.run)
 
         p = em.WorkflowProcessor(ew)
         self.assertTrue(p.pending())
@@ -351,7 +335,7 @@ class WorkflowTest(tests.UserTestCase):
         db.session.flush()
         db.session.commit()
 
-        p.submit()
+        p.run()
 
         while p.pending() or p.running():
             time.sleep(5)
@@ -396,7 +380,7 @@ class WorkflowTest(tests.UserTestCase):
 
         db.session.commit()
 
-        p.submit()
+        p.run()
 
         while p.pending() or p.running():
             time.sleep(5)

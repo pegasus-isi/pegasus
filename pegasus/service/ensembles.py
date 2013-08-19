@@ -46,7 +46,7 @@ class States(set):
         raise AttributeError
 
 EnsembleStates = States(["ACTIVE","HELD","PAUSED"])
-EnsembleWorkflowStates = States(["READY","PLANNING","QUEUED","RUNNING",
+EnsembleWorkflowStates = States(["READY","PLANNING","PLAN_FAILED","QUEUED","RUN_FAILED","RUNNING",
                                  "FAILED","SUCCESSFUL","ABORTED"])
 
 class Ensemble(db.Model, EnsembleMixin):
@@ -111,13 +111,9 @@ class Ensemble(db.Model, EnsembleMixin):
             "state": self.state,
             "max_running": self.max_running,
             "max_planning": self.max_planning,
+            "workflows": url_for("route_list_ensemble_workflows", name=self.name, _external=True),
             "href": url_for("route_get_ensemble", name=self.name, _external=True)
         }
-
-    def get_detail_object(self):
-        obj = self.get_object()
-        obj["workflows"] = [w.get_object() for w in self.workflows]
-        return obj
 
 class EnsembleWorkflow(db.Model, EnsembleMixin):
     __tablename__ = 'ensemble_workflow'
@@ -215,6 +211,9 @@ def get_ensemble(user_id, name):
         raise APIError("No such ensemble: %s" % name, 404)
 
 def create_ensemble(user_id, name, max_running, max_planning):
+    if Ensemble.query.filter_by(user_id=user_id, name=name).count() > 0:
+        raise APIError("Ensemble %s already exists" % name, 400)
+
     ensemble = Ensemble(user_id, name)
     ensemble.set_max_running(max_running)
     ensemble.set_max_planning(max_planning)
@@ -232,6 +231,9 @@ def get_ensemble_workflow(ensemble_id, name):
         raise APIError("No such ensemble workflow: %s" % name, 404)
 
 def create_ensemble_workflow(ensemble_id, name, priority, rc, tc, sc, dax, conf, args):
+    if EnsembleWorkflow.query.filter_by(ensemble_id=ensemble_id, name=name).count() > 0:
+        raise APIError("Ensemble workflow %s already exists" % name, 400)
+
     # Create database record
     w = EnsembleWorkflow(ensemble_id, name)
     w.set_priority(priority)
@@ -344,7 +346,7 @@ def route_create_ensemble():
 @app.route("/ensembles/<string:name>", methods=["GET"])
 def route_get_ensemble(name):
     e = get_ensemble(g.user.id, name)
-    result = e.get_detail_object()
+    result = e.get_object()
     return json_response(result)
 
 @app.route("/ensembles/<string:name>", methods=["PUT","POST"])
@@ -437,6 +439,28 @@ def route_update_ensemble_workflow(ensemble, workflow):
     if priority is not None:
         w.set_priority(priority)
 
+    state = request.form.get("state", None)
+    if state is not None:
+        # The allowed transitions are:
+        #   PLAN_FAILED -> READY
+        #   RUN_FAILED -> QUEUED
+        #   RUN_FAILED -> READY
+        #   FAILED -> QUEUED
+        #   FAILED -> READY
+        if w.state == EnsembleWorkflowStates.PLAN_FAILED:
+            if state != EnsembleWorkflowStates.READY:
+                raise APIError("Can only replan workflows in PLAN_FAILED state")
+        elif w.state == EnsembleWorkflowStates.RUN_FAILED:
+            if state not in (EnsembleWorkflowStates.READY, EnsembleWorkflowStates.QUEUED):
+                raise APIError("Can only replan or rerun workflows in RUN_FAILED state")
+        elif w.state == EnsembleWorkflowStates.FAILED:
+            if state not in (EnsembleWorkflowStates.READY, EnsembleWorkflowStates.QUEUED):
+                raise APIError("Can only replan or rerun workflows in FAILED state")
+        else:
+            raise APIError("Can only replan or rerun failed workflows")
+
+        w.set_state(state)
+
     w.set_updated()
 
     db.session.commit()
@@ -468,14 +492,17 @@ def route_get_ensemble_workflow_file(ensemble, workflow, filename):
     return send_file(path, mimetype=mimetype)
 
 
-#TODO Change --name to --ensemble
 def add_ensemble_option(self):
     self.parser.add_option("-e", "--ensemble", action="store", dest="ensemble",
-        default=None, help="Name of ensemble")
+        default=None, help="Ensemble name")
 
-class ListCommand(ClientCommand):
+def add_workflow_option(self):
+    self.parser.add_option("-w", "--workflow", action="store", dest="workflow",
+        default=None, help="Workflow name")
+
+class EnsemblesCommand(ClientCommand):
     description = "List ensembles"
-    usage = "Usage: %prog list"
+    usage = "Usage: %prog ensembles"
 
     def run(self):
         response = self.get("/ensembles")
@@ -493,23 +520,22 @@ class ListCommand(ClientCommand):
 
 class CreateCommand(ClientCommand):
     description = "Create ensemble"
-    usage = "Usage: %prog create [options] -n NAME"
+    usage = "Usage: %prog create [options] -e ENSEMBLE"
 
     def __init__(self):
         ClientCommand.__init__(self)
-        self.parser.add_option("-n", "--name", action="store", dest="name",
-            default=None, type="string", help="Ensemble name")
+        add_ensemble_option(self)
         self.parser.add_option("-P", "--max-planning", action="store", dest="max_planning",
             default=1, type="int", help="Maximum number of workflows being planned at once")
         self.parser.add_option("-R", "--max-running", action="store", dest="max_running",
             default=1, type="int", help="Maximum number of workflows running at once")
 
     def run(self):
-        if self.options.name is None:
-            parser.error("Specify -n/--name")
+        if self.options.ensemble is None:
+            self.parser.error("Specify -e/--ensemble")
 
         request = {
-            "name": self.options.name,
+            "name": self.options.ensemble,
             "max_planning": self.options.max_planning,
             "max_running": self.options.max_running
         }
@@ -522,14 +548,13 @@ class CreateCommand(ClientCommand):
             exit(1)
 
 class SubmitCommand(ClientCommand):
-    description = "Submit ensemble workflow"
-    usage = "Usage: %prog submit [options] -n NAME -d DAX -T TC -S SC -R RC -s SITE -o SITE"
+    description = "Submit workflow"
+    usage = "Usage: %prog submit [options] -e ENSEMBLE -w WORKFLOW -d DAX -T TC -S SC -R RC -s SITE -o SITE"
 
     def __init__(self):
         ClientCommand.__init__(self)
         add_ensemble_option(self)
-        self.parser.add_option("-n", "--name", action="store", dest="name",
-            default=None, help="Workflow name")
+        add_workflow_option(self)
         self.parser.add_option("-d", "--dax", action="store", dest="dax",
             default=None, help="DAX file", metavar="PATH")
         self.parser.add_option("-T", "--transformation-catalog", action="store", dest="transformation_catalog",
@@ -560,8 +585,10 @@ class SubmitCommand(ClientCommand):
         o = self.options
         p = self.parser
 
-        if o.name is None:
-            p.error("Specify -n/--name")
+        if o.ensemble is None:
+            p.error("Specify -e/--ensemble")
+        if o.workflow is None:
+            p.error("Specify -w/--workflow")
         if o.dax is None:
             p.error("Specify -d/--dax")
         if o.transformation_catalog is None:
@@ -576,7 +603,7 @@ class SubmitCommand(ClientCommand):
             p.error("Specify -o/--output-site")
 
         data = {
-            "name": o.name,
+            "name": o.workflow,
             "transformation_catalog": o.transformation_catalog,
             "site_catalog": o.site_catalog,
             "replica_catalog": o.replica_catalog,
@@ -618,16 +645,51 @@ class SubmitCommand(ClientCommand):
 
         if response.status_code != 201:
             result = response.json()
-            print result
             print "ERROR:",response.status_code,result["message"]
 
-class ShowCommand(ClientCommand):
-    description = "Show workflows in ensemble"
-    usage = "Usage: %prog show ..."
+class WorkflowsCommand(ClientCommand):
+    description = "List workflows in ensemble"
+    usage = "Usage: %prog workflows [options] -e ENSEMBLE."
+
+    def __init__(self):
+        ClientCommand.__init__(self)
+        add_ensemble_option(self)
+        self.parser.add_option("-l", "--long", action="store_true", dest="long",
+            default=False, help="Show detailed output")
 
     def run(self):
-        # TODO Finish ensemble show command
-        raise Exception("Not implemented")
+        if self.options.ensemble is None:
+            self.parser.error("Specify -e/--ensemble")
+        if len(self.args) > 0:
+            self.parser.error("Invalid argument")
+
+        response = self.get("/ensembles/%s/workflows" % self.options.ensemble)
+
+        result = response.json()
+
+        if response.status_code != 200:
+            print "ERROR:",response.status_code,result["message"]
+            exit(1)
+
+        if len(result) == 0:
+            return
+
+        if self.options.long:
+            for w in result:
+                print "ID:      ",w["id"]
+                print "Name:    ",w["name"]
+                print "Created: ",w["created"]
+                print "Updated: ",w["updated"]
+                print "State:   ",w["state"]
+                print "Priority:",w["priority"]
+                print "UUID:    ",w["wf_uuid"]
+                print "URL:     ",w["href"]
+                print
+        else:
+            fmt = "%-20s %-15s %-8s %-30s %-30s"
+            print fmt % ("NAME","STATE","PRIORITY","CREATED","UPDATED")
+            for w in result:
+                print fmt % (w["name"],w["state"],w["priority"],w["created"],w["updated"])
 
 class StateChangeCommand(ClientCommand):
     def __init__(self):
@@ -647,23 +709,23 @@ class StateChangeCommand(ClientCommand):
         print "State:", result["state"]
 
 class PauseCommand(StateChangeCommand):
-    description = "Pause ensemble"
+    description = "Pause active ensemble"
     usage = "Usage: %prog pause -e ENSEMBLE"
     newstate = EnsembleStates.PAUSED
 
 class ActivateCommand(StateChangeCommand):
-    description = "Activate ensemble"
+    description = "Activate paused or held ensemble"
     usage = "Usage: %prog activate -e ENSEMBLE"
     newstate = EnsembleStates.ACTIVE
 
 class HoldCommand(StateChangeCommand):
-    description = "Hold ensemble"
+    description = "Hold active ensemble"
     usage = "Usage: %prog hold -e ENSEMBLE"
     newstate = EnsembleStates.HELD
 
-class UpdateCommand(ClientCommand):
-    description = "Update ensemble"
-    usage = "Usage: %prog update [options] -e ENSEMBLE"
+class ConfigCommand(ClientCommand):
+    description = "Change ensemble configuration"
+    usage = "Usage: %prog config [options] -e ENSEMBLE"
 
     def __init__(self):
         ClientCommand.__init__(self)
@@ -702,17 +764,60 @@ class UpdateCommand(ClientCommand):
         print "Max Planning:",result["max_planning"]
         print "Max Running:",result["max_running"]
 
+class WorkflowStateChangeCommand(ClientCommand):
+    def __init__(self):
+        ClientCommand.__init__(self)
+        add_ensemble_option(self)
+        add_workflow_option(self)
+
+    def run(self):
+        if self.options.ensemble is None:
+            self.parser.error("Specify -e/--ensemble")
+        if self.options.workflow is None:
+            self.parser.error("Specify -w/--workflow")
+
+        if len(self.args) > 0:
+            self.parser.error("Invalid argument")
+
+        request = {"state": self.newstate}
+
+        response = self.post("/ensembles/%s/workflows/%s" % (self.options.ensemble, self.options.workflow), data=request)
+
+        result = response.json()
+
+        if response.status_code != 200:
+            print "ERROR:", result["message"]
+            exit(1)
+
+        print "State:", result["state"]
+
+class ReplanCommand(WorkflowStateChangeCommand):
+    description = "Replan failed workflow"
+    usage = "Usage: %prog replan -e ENSEMBLE -w WORKFLOW"
+    newstate = EnsembleWorkflowStates.READY
+
+class RerunCommand(WorkflowStateChangeCommand):
+    description = "Rerun failed workflow"
+    usage = "Usage: %prog rerun -e ENSEMBLE -w WORKFLOW"
+    newstate = EnsembleWorkflowStates.QUEUED
+
+class AbortCommand(WorkflowStateChangeCommand):
+    description = "Abort workflow"
+    usage = "Usage: %prog abort -e ENSEMBLE -w WORKFLOW"
+    newstate = EnsembleWorkflowStates.ABORTED
+
 class EnsembleCommand(CompoundCommand):
     description = "Client for ensemble management"
     commands = {
-        "list": ListCommand,
+        "ensembles": EnsemblesCommand,
         "create": CreateCommand,
         "pause": PauseCommand,
         "activate": ActivateCommand,
-        "hold": HoldCommand,
-        "update": UpdateCommand,
+        "config": ConfigCommand,
         "submit": SubmitCommand,
-        "show": ShowCommand
+        "workflows": WorkflowsCommand,
+        "replan": ReplanCommand,
+        "rerun": RerunCommand
     }
 
 def main():

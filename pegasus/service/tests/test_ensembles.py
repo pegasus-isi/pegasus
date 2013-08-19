@@ -105,7 +105,6 @@ class TestEnsembleAPI(tests.APITestCase):
         self.assertEquals(r.status_code, 200)
         self.assertEquals(r.json["name"], "myensemble", "Should be named myensemble")
         self.assertEquals(r.json["state"], EnsembleStates.ACTIVE, "Should be in active state")
-        self.assertEquals(len(r.json["workflows"]), 0, "Should not have any workflows")
 
         # Need to sleep for one second so that updated gets a different value
         updated = r.json["updated"]
@@ -171,10 +170,6 @@ class TestEnsembleAPI(tests.APITestCase):
         self.assertTrue(os.path.isfile(os.path.join(wfdir, "pegasus.properties")))
         self.assertTrue(os.path.isfile(os.path.join(wfdir, "plan.sh")))
 
-        r = self.get("/ensembles/myensemble")
-        self.assertEquals(r.status_code, 200, "Should return OK")
-        self.assertEquals(len(r.json["workflows"]), 1, "Should have 1 workflow")
-
         r = self.get("/ensembles/myensemble/workflows")
         self.assertEquals(r.status_code, 200, "Should return OK")
         self.assertEquals(len(r.json), 1, "Should have one workflow")
@@ -205,19 +200,19 @@ class TestEnsembleClient(tests.ClientTestCase):
     def test_ensemble_client(self):
         cmd = ensembles.EnsembleCommand()
 
-        cmd.main(["list"])
+        cmd.main(["ensembles"])
         stdout, stderr = self.stdio()
         self.assertEquals(stdout, "", "Should be no stdout")
 
-        cmd.main(["create","-n","foo","-P","20","-R","30"])
+        cmd.main(["create","-e","foo","-P","20","-R","30"])
         stdout, stderr = self.stdio()
         self.assertEquals(stdout, "", "Should be no stdout")
 
-        cmd.main(["list"])
+        cmd.main(["ensembles"])
         stdout, stderr = self.stdio()
         self.assertEquals(len(stdout.split("\n")), 3, "Should be two lines of stdout")
 
-        cmd.main(["update","-e","foo","-P","50","-R","60"])
+        cmd.main(["config","-e","foo","-P","50","-R","60"])
         stdout, stderr = self.stdio()
         self.assertTrue("Name: foo" in stdout, "Name should be foo")
         self.assertTrue("Max Planning: 50" in stdout, "Max Planning should be 50")
@@ -227,9 +222,9 @@ class TestEnsembleClient(tests.ClientTestCase):
         stdout, stderr = self.stdio()
         self.assertTrue("State: PAUSED" in stdout, "State should be paused")
 
-        cmd.main(["hold","-e","foo"])
-        stdout, stderr = self.stdio()
-        self.assertTrue("State: HELD" in stdout, "State should be held")
+        #cmd.main(["hold","-e","foo"])
+        #stdout, stderr = self.stdio()
+        #self.assertTrue("State: HELD" in stdout, "State should be held")
 
         cmd.main(["activate","-e","foo"])
         stdout, stderr = self.stdio()
@@ -241,7 +236,7 @@ class TestEnsembleClient(tests.ClientTestCase):
         catalogs.save_catalog("transformation", self.user_id, "tc", "text", StringIO("transformations"))
         db.session.commit()
 
-        cmd.main(["submit","-e","foo","-n","bar","-d","setup.py",
+        cmd.main(["submit","-e","foo","-w","bar","-d","setup.py",
                   "-T","tc","-R","rc","-S","sc","-s","local",
                   "-o","local","--staging-site","ss=s,s2=s",
                   "-C","horiz,vert","-p","10","-c","setup.py"])

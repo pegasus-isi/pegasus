@@ -16,32 +16,70 @@ log = logging.getLogger("EnsembleManager")
 
 class EMException(Exception): pass
 
+def pathfind(exe):
+    PATH = os.getenv("PATH","/bin:/usr/bin:/usr/local/bin")
+    PATH = PATH.split(":")
+    for prefix in PATH:
+        exepath = os.path.join(prefix, exe)
+        if os.path.isfile(exepath):
+            return exepath
+    raise EMException("%s not found on PATH" % exe)
+
+def get_bin(name, exe):
+    # Try to find NAME/bin using 1) NAME env var, 2) NAME config
+    # variable, 3) PATH env var
+    exepath = None
+
+    HOME = os.getenv(name, app.config.get(name, None))
+
+    if HOME is not None:
+        if not os.path.isdir(HOME):
+            raise EMException("%s is not a directory: %s" % (name, HOME))
+        BIN = os.path.join(HOME, "bin")
+        if not os.path.isdir(BIN):
+            raise EMException("%s/bin is not a directory: %s" % (name, BIN))
+        exepath = os.path.join(BIN, exe)
+
+    exepath = exepath or pathfind(exe)
+
+    if not os.path.isfile(exepath):
+        raise EMException("%s not found: %s" % (exe, exepath))
+
+    BIN = os.path.dirname(exepath)
+
+    return BIN
+
+def get_pegasus_bin():
+    return get_bin("PEGASUS_HOME", "pegasus-plan")
+
+def get_condor_bin():
+    return get_bin("CONDOR_HOME", "condor_submit_dag")
+
+def check_environment():
+    # Make sure Pegasus and Condor are on the PATH, or PEGASUS_HOME
+    # and CONDOR_HOME are set in the environment or configuration
+    get_pegasus_bin()
+    get_condor_bin()
+
 def get_script_env():
-    # Find the pegasus bin dir
-    PEGASUS_HOME = app.config.get("PEGASUS_HOME", "/usr")
-    PEGASUS_BIN = os.path.join(PEGASUS_HOME, "bin")
+    PEGASUS_BIN = get_pegasus_bin()
+    CONDOR_BIN = get_condor_bin()
 
-    if not os.path.isdir(PEGASUS_HOME):
-        raise EMException("PEGASUS_HOME does not exist: %s" % PEGASUS_HOME)
-
-    if not os.path.isdir(PEGASUS_BIN):
-        raise EMException("PEGASUS_HOME/bin does not exist: %s" % PEGASUS_BIN)
-
-    # Add pegasus bin dir to PATH
+    # Add pegasus bin dirs to PATH
     env = dict(os.environ)
     PATH = env.get("PATH", "/bin:/usr/bin:/usr/local/bin")
-    PATH = PEGASUS_BIN + ":" + PATH
+    PATH = PEGASUS_BIN + ":" + CONDOR_BIN + ":" + PATH
     env["PATH"] = PATH
-    env["PEGASUS_HOME"] = PEGASUS_HOME
 
     return env
 
-def runscript(script, cwd=None):
+def runscript(script, cwd=None, env=None):
     # Make sure the cwd is OK
     if cwd is not None and not os.path.isdir(cwd):
         raise EMException("Working directory does not exist: %s" % cwd)
 
-    env = get_script_env()
+    if env is None:
+        env = dict(os.environ)
 
     p = subprocess.Popen(script, shell=True, env=env, cwd=cwd)
 
@@ -50,13 +88,16 @@ def runscript(script, cwd=None):
     if rc != 0:
         raise EMException("Script failed with exitcode %d" % rc)
 
-def forkscript(script, pidfile=None, cwd=None):
+def forkscript(script, pidfile=None, cwd=None, env=None):
     # This does a double fork to detach the process from the python
     # interpreter so that we don't have to call wait() on it
 
     # Make sure the cwd is OK
     if cwd is not None and not os.path.isdir(cwd):
         raise EMException("Working directory does not exist: %s" % cwd)
+
+    if env is None:
+        env = dict(os.environ)
 
     # This is just to ensure we get an exception if there is
     # something wrong with the pidfile
@@ -65,8 +106,6 @@ def forkscript(script, pidfile=None, cwd=None):
             open(pidfile, "w").close()
         except:
             raise EMException("Unable to write pidfile: %s" % pidfile)
-
-    env = get_script_env()
 
     pid1 = os.fork()
     if pid1 == 0:
@@ -117,7 +156,7 @@ class WorkflowProcessor:
         planfile = self.get_planfile()
         resultfile = self.get_resultfile()
 
-        if os.path.isfile(pidfile) and self.running():
+        if os.path.isfile(pidfile) and self.planning():
             raise EMException("Planner already running")
 
         # When we re-plan, we need to remove all the old
@@ -133,7 +172,7 @@ class WorkflowProcessor:
                 os.remove(f)
 
         script = "%s >%s 2>&1; /bin/echo $? >%s" % (planfile, logfile, resultfile)
-        forkscript(script, cwd=workdir, pidfile=pidfile)
+        forkscript(script, cwd=workdir, pidfile=pidfile, env=get_script_env())
 
     def planning(self):
         "Check pidfile to see if the planner is still running"
@@ -212,8 +251,8 @@ class WorkflowProcessor:
 
         return wf_uuid
 
-    def submit(self):
-        "Submit the workflow using pegasus-run"
+    def run(self):
+        "Run the workflow using pegasus-run"
         submitdir = self.workflow.submitdir
 
         if submitdir is None:
@@ -224,7 +263,7 @@ class WorkflowProcessor:
 
         logfile = self.get_logfile()
 
-        runscript("pegasus-run %s >>%s 2>&1" % (submitdir,logfile))
+        runscript("pegasus-run %s >>%s 2>&1" % (submitdir,logfile), env=get_script_env())
 
     def get_dashboard(self):
         "Get the dashboard record for the workflow"
@@ -317,12 +356,17 @@ class EnsembleProcessor:
         log.info("Planning %s" % workflow.name)
         self.planning += 1
         workflow.set_state(EnsembleWorkflowStates.PLANNING)
+        workflow.set_updated()
 
         db.session.flush()
 
         # Fork planning task
         p = self.Processor(workflow)
-        p.plan()
+        try:
+            p.plan()
+        except:
+            workflow.set_state(EnsembleWorkflowStates.PLAN_FAILED)
+            workflow.set_updated()
 
         db.session.commit()
 
@@ -340,7 +384,8 @@ class EnsembleProcessor:
 
         # Planning failed
         if not p.planning_successful():
-            workflow.set_state(EnsembleWorkflowStates.FAILED)
+            workflow.set_state(EnsembleWorkflowStates.PLAN_FAILED)
+            workflow.set_updated()
             db.session.commit()
             return
 
@@ -350,29 +395,35 @@ class EnsembleProcessor:
         workflow.set_wf_uuid(p.get_wf_uuid())
         workflow.set_submitdir(p.get_submitdir())
         workflow.set_state(EnsembleWorkflowStates.QUEUED)
+        workflow.set_updated()
         db.session.commit()
 
         # Go ahead and handle the queued state now
         self.handle_queued(workflow)
 
-    def can_submit(self):
+    def can_run(self):
         return self.active and self.running < self.max_running
 
-    def submit_workflow(self, workflow):
-        log.info("Submitting workflow %s" % workflow.name)
+    def run_workflow(self, workflow):
+        log.info("Running workflow %s" % workflow.name)
 
         self.running += 1
         workflow.set_state(EnsembleWorkflowStates.RUNNING)
+        workflow.set_updated()
         db.session.flush()
 
         p = self.Processor(workflow)
-        p.submit()
+        try:
+            p.run()
+        except:
+            workflow.set_state(EnsembleWorkflowStates.RUN_FAILED)
+            workflow.set_updated()
 
         db.session.commit()
 
     def handle_queued(self, workflow):
-        if self.can_submit():
-            self.submit_workflow(workflow)
+        if self.can_run():
+            self.run_workflow(workflow)
 
     def handle_running(self, workflow):
         p = self.Processor(workflow)
@@ -386,6 +437,8 @@ class EnsembleProcessor:
             workflow.set_state(EnsembleWorkflowStates.SUCCESSFUL)
         else:
             workflow.set_state(EnsembleWorkflowStates.FAILED)
+
+        workflow.set_updated()
 
         db.session.commit()
 
@@ -407,6 +460,7 @@ class EnsembleProcessor:
             except Exception, e:
                 log.error("Processing workflow %s of ensemble %s" % (w.name, self.ensemble.name))
                 log.exception(e)
+                db.session.rollback()
 
 
 class EnsembleManager(threading.Thread):
