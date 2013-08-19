@@ -757,10 +757,6 @@ class ConfigCommand(ClientCommand):
             print "ERROR:", result["message"]
             exit(1)
 
-        print "Name:",result["name"]
-        print "State:",result["state"]
-        print "Created:",result["created"]
-        print "Updated:",result["updated"]
         print "Max Planning:",result["max_planning"]
         print "Max Running:",result["max_running"]
 
@@ -806,6 +802,40 @@ class AbortCommand(WorkflowStateChangeCommand):
     usage = "Usage: %prog abort -e ENSEMBLE -w WORKFLOW"
     newstate = EnsembleWorkflowStates.ABORTED
 
+class PriorityCommand(ClientCommand):
+    description = "Update workflow priority"
+    usage = "Usage: %prog priority -e ENSEMBLE -w WORKFLOW -p PRIORITY"
+
+    def __init__(self):
+        ClientCommand.__init__(self)
+        add_ensemble_option(self)
+        add_workflow_option(self)
+        self.parser.add_option("-p","--priority",action="store",dest="priority",
+                default=None,type="int",help="New workflow priority")
+
+    def run(self):
+        if self.options.ensemble is None:
+            self.parser.error("Specify -e/--ensemble")
+        if self.options.workflow is None:
+            self.parser.error("Specify -w/--workflow")
+        if self.options.priority is None:
+            self.parser.error("Specify -p/--priority")
+
+        if len(self.args) > 0:
+            self.parser.error("Invalid argument")
+
+        request = {"priority": self.options.priority}
+
+        response = self.post("/ensembles/%s/workflows/%s" % (self.options.ensemble, self.options.workflow), data=request)
+
+        result = response.json()
+
+        if response.status_code != 200:
+            print "ERROR:", result["message"]
+            exit(1)
+
+        print "Priority:", result["priority"]
+
 class EnsembleCommand(CompoundCommand):
     description = "Client for ensemble management"
     commands = {
@@ -817,7 +847,8 @@ class EnsembleCommand(CompoundCommand):
         "submit": SubmitCommand,
         "workflows": WorkflowsCommand,
         "replan": ReplanCommand,
-        "rerun": RerunCommand
+        "rerun": RerunCommand,
+        "priority": PriorityCommand
     }
 
 def main():
