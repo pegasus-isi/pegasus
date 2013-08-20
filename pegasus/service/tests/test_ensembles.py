@@ -214,7 +214,6 @@ class TestEnsembleClient(tests.ClientTestCase):
 
         cmd.main(["config","-e","foo","-P","50","-R","60"])
         stdout, stderr = self.stdio()
-        self.assertTrue("Name: foo" in stdout, "Name should be foo")
         self.assertTrue("Max Planning: 50" in stdout, "Max Planning should be 50")
         self.assertTrue("Max Running: 60" in stdout, "Max running should be 60")
 

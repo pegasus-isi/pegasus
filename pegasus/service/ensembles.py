@@ -457,7 +457,7 @@ def route_update_ensemble_workflow(ensemble, workflow):
             if state not in (EnsembleWorkflowStates.READY, EnsembleWorkflowStates.QUEUED):
                 raise APIError("Can only replan or rerun workflows in FAILED state")
         else:
-            raise APIError("Can only replan or rerun failed workflows")
+            raise APIError("Invalid state change: %s -> %s" % (w.state, state))
 
         w.set_state(state)
 
