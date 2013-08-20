@@ -1,3 +1,4 @@
+import os
 from StringIO import StringIO
 
 from pegasus.service import catalogs, api, tests, users
@@ -115,7 +116,52 @@ class TestCatalogAPI(tests.APITestCase):
 
 
 class TestCatalogClient(tests.ClientTestCase):
-    # TODO Test catalog client
     def test_catalog_client(self):
-        pass
+        cmd = catalogs.CatalogCommand()
+
+        cmd.main(["list","-t","replica"])
+        stdout, stderr = self.stdio()
+        self.assertEquals(stdout, "", "Should be no stdout")
+
+        rcfile = os.path.join(self.tmpdir, "rc.txt")
+
+        rc = open(rcfile, "w")
+        rc.write("# REPLICA CATALOG")
+        rc.close()
+
+        # upload
+        cmd.main(["upload","-t","replica","-n","foo","-F","file","-f",rcfile])
+        stdout, stderr = self.stdio()
+        self.assertEquals(stdout, "", "Should be no stdout")
+
+        cmd.main(["list","-t","replica"])
+        stdout, stderr = self.stdio()
+        self.assertTrue("foo" in stdout)
+        self.assertTrue("File" in stdout)
+
+        # download
+        cmd.main(["download","-t","replica","-n","foo"])
+        stdout, stderr = self.stdio()
+        self.assertTrue("# REPLICA CATALOG" in stdout)
+
+        rc = open(rcfile, "w")
+        rc.write("# REPLICA CATALOG 2")
+        rc.close()
+
+        # update
+        cmd.main(["update","-t","replica","-n","foo","-f",rcfile])
+        stdout, stderr = self.stdio()
+
+        cmd.main(["download","-t","replica","-n","foo"])
+        stdout, stderr = self.stdio()
+        self.assertTrue("# REPLICA CATALOG 2" in stdout)
+
+        # delete
+        cmd.main(["delete","-t","replica","-n","foo"])
+        stdout, stderr = self.stdio()
+        self.assertEquals(stdout, "")
+
+        cmd.main(["list","-t","replica"])
+        stdout, stderr = self.stdio()
+        self.assertEquals(stdout, "", "Should be no stdout")
 
