@@ -484,10 +484,8 @@ class EnsembleManager(threading.Thread):
             time.sleep(self.interval)
 
     def loop_once(self):
-        log.info("Processing ensembles...")
         for e in ensembles.list_actionable_ensembles():
             log.info("Processing ensemble %s" % e.name)
             p = self.Processor(e)
             p.run()
-        log.info("Finished processing ensembles")
 
