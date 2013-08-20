@@ -230,7 +230,9 @@ def get_ensemble_workflow(ensemble_id, name):
     except NoResultFound:
         raise APIError("No such ensemble workflow: %s" % name, 404)
 
-def create_ensemble_workflow(ensemble_id, name, priority, rc, tc, sc, dax, conf, args):
+def create_ensemble_workflow(ensemble_id, name, priority, rc, tc, sc, dax, conf, sites, output_site,
+        staging_sites=None, clustering=None, force=False, cleanup=True):
+
     if EnsembleWorkflow.query.filter_by(ensemble_id=ensemble_id, name=name).count() > 0:
         raise APIError("Ensemble workflow %s already exists" % name, 400)
 
@@ -285,14 +287,18 @@ def create_ensemble_workflow(ensemble_id, name, priority, rc, tc, sc, dax, conf,
     filename = os.path.join(dirname, "plan.sh")
     f = open(filename, "w")
     try:
-        write_planning_script(f, tcformat=tc.format, rcformat=rc.format, scformat=sc.format, **args)
+        write_planning_script(f, tcformat=tc.format, rcformat=rc.format, scformat=sc.format,
+                sites=sites, output_site=output_site, staging_sites=staging_sites,
+                clustering=clustering, force=force, cleanup=cleanup)
     finally:
         f.close()
     os.chmod(filename, stat.S_IRWXU|stat.S_IRGRP|stat.S_IXGRP|stat.S_IROTH|stat.S_IXOTH)
 
     return w
 
-def write_planning_script(f, tcformat, rcformat, scformat, sites, output_site, staging_sites=None, clustering=None, force=False, cleanup=True):
+def write_planning_script(f, tcformat, rcformat, scformat, sites, output_site,
+        staging_sites=None, clustering=None, force=False, cleanup=True):
+
     f.write("#!/bin/bash\n")
     f.write("pegasus-plan \\\n")
     f.write("-Dpegasus.catalog.site=%s \\\n" % scformat)
@@ -405,9 +411,41 @@ def route_create_ensemble_workflow(ensemble):
     if dax is None:
         raise APIError("Specify dax")
 
-    argfile = request.files.get("args", None)
-    if argfile is None:
-        raise APIError("Specify args")
+    sites = request.form.get("sites", None)
+    if sites is None:
+        raise APIError("Specify sites")
+    else:
+        sites = [s.strip() for s in sites.split(",")]
+        sites = [s for s in sites if len(s) > 0]
+    if len(sites) == 0:
+        raise APIError("Specify sites")
+
+    output_site = request.form.get("output_site", None)
+    if output_site is None:
+        raise APIError("Specify output_site")
+
+    cleanup = request.form.get("cleanup", None)
+    if cleanup is not None:
+        if cleanup.lower() not in ["true","false"]:
+            raise APIError("Invalid value for cleanup: %s" % cleanup)
+        cleanup = cleanup.lower() == "true"
+
+    force = request.form.get("force", None)
+    if force is not None:
+        if force.lower() not in ["true","false"]:
+            raise APIError("Invalid value for force: %s" % force)
+        force = force.lower() == "true"
+
+    clustering = request.form.get("clustering", None)
+    if clustering is not None:
+        clustering = [s.strip() for s in clustering.split(",")]
+        clustering = [s for s in clustering if len(s) > 0]
+
+    staging_sites = request.form.get("staging_sites", None)
+    if staging_sites is not None:
+        kvs = [s.strip() for s in staging_sites.split(",")]
+        kvs = [s for s in kvs if len(s) > 0]
+        staging_sites = dict([s.split("=") for s in kvs])
 
     conf = request.files.get("conf", None)
 
@@ -415,9 +453,9 @@ def route_create_ensemble_workflow(ensemble):
     tc = catalogs.get_catalog("transformation", g.user.id, transformation_catalog)
     rc = catalogs.get_catalog("replica", g.user.id, replica_catalog)
 
-    args = json.load(argfile)
-
-    create_ensemble_workflow(e.id, name, priority, rc, tc, sc, dax, conf, args)
+    create_ensemble_workflow(e.id, name, priority, rc, tc, sc, dax, conf,
+            sites=sites, output_site=output_site, cleanup=cleanup,
+            force=force, clustering=clustering, staging_sites=staging_sites)
 
     db.session.commit()
 
@@ -607,35 +645,25 @@ class SubmitCommand(ClientCommand):
             "transformation_catalog": o.transformation_catalog,
             "site_catalog": o.site_catalog,
             "replica_catalog": o.replica_catalog,
-            "priority": o.priority
-        }
-
-        args = {
-            "sites": [s.strip() for s in o.sites.split(",")],
+            "priority": o.priority,
+            "sites": o.sites,
             "output_site": o.output_site
         }
 
         if o.cleanup is not None:
-            args["cleanup"] = o.cleanup
+            data["cleanup"] = o.cleanup
 
         if o.force is not None:
-            args["force"] = o.force
+            data["force"] = o.force
 
         if o.staging_sites is not None:
-            kvs = [s.strip() for s in o.staging_sites.split(",")]
-            args["staging_sites"] = dict([s.split("=") for s in kvs])
+            data["staging_sites"] = o.staging_sites
 
         if o.clustering is not None:
-            args["clustering"] = [s.strip() for s in o.clustering.split(",")]
-
-        # Dump the args to  a file-like object
-        argfile = StringIO()
-        json.dump(args, argfile)
-        argfile.seek(0, os.SEEK_SET)
+            data["clustering"] = [s.strip() for s in o.clustering.split(",")]
 
         files = {
-            "dax": open(o.dax, "rb"),
-            "args": argfile
+            "dax": open(o.dax, "rb")
         }
 
         if o.conf is not None:

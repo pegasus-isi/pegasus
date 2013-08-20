@@ -262,13 +262,9 @@ class WorkflowTest(tests.UserTestCase):
 
         conf = StringIO("pegasus.register=false")
 
-        args = {
-            "output_site": "local",
-            "sites": ["local"]
-        }
-
         e = ensembles.create_ensemble(self.user_id, "process", 1, 1)
-        ew = ensembles.create_ensemble_workflow(e.id, "process", 0, rc, tc, sc, daxfile, conf, args)
+        ew = ensembles.create_ensemble_workflow(e.id, "process", 0, rc, tc, sc, daxfile, conf,
+                sites=["local"], output_site="local", force=True, cleanup=False)
 
         return e, ew
 

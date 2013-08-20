@@ -150,12 +150,12 @@ class TestEnsembleAPI(tests.APITestCase):
             "replica_catalog":"rc",
             "dax": (StringIO("my dax"), "my.dax"),
             "conf": (StringIO("my props"), "pegasus.properties"),
-            "args": (StringIO("""
-            {
-                "sites": ["local"],
-                "output_site": "local"
-            }
-            """), "args.json")
+            "sites": "local, remote, ",
+            "output_site": "local",
+            "clustering": "horizontal,  vertical,",
+            "force": True,
+            "cleanup": False,
+            "staging_sites": "a=b, c=d,"
         }
         r = self.post("/ensembles/myensemble/workflows", data=req)
         self.assertEquals(r.status_code, 201, "Should return CREATED")
@@ -168,7 +168,16 @@ class TestEnsembleAPI(tests.APITestCase):
         self.assertTrue(os.path.isfile(os.path.join(wfdir, "rc.txt")))
         self.assertTrue(os.path.isfile(os.path.join(wfdir, "tc.txt")))
         self.assertTrue(os.path.isfile(os.path.join(wfdir, "pegasus.properties")))
-        self.assertTrue(os.path.isfile(os.path.join(wfdir, "plan.sh")))
+        planfile = os.path.join(wfdir, "plan.sh")
+        self.assertTrue(os.path.isfile(planfile))
+
+        planscript = open(planfile).read()
+        self.assertTrue("--nocleanup" in planscript)
+        self.assertTrue("--force" in planscript)
+        self.assertTrue("--cluster horizontal,vertical" in planscript)
+        self.assertTrue("--output-site local" in planscript)
+        self.assertTrue("--site local,remote" in planscript)
+        self.assertTrue("--staging-site a=b,c=d" in planscript)
 
         r = self.get("/ensembles/myensemble/workflows")
         self.assertEquals(r.status_code, 200, "Should return OK")
