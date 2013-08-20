@@ -149,6 +149,27 @@ class EnsembleWorkflow(db.Model, EnsembleMixin):
             raise APIError("Invalid ensemble workflow state: %s" % state)
         self.state = state
 
+    def change_state(self, state):
+        # The allowed transitions are:
+        #   PLAN_FAILED -> READY
+        #   RUN_FAILED -> QUEUED
+        #   RUN_FAILED -> READY
+        #   FAILED -> QUEUED
+        #   FAILED -> READY
+        if self.state == EnsembleWorkflowStates.PLAN_FAILED:
+            if state != EnsembleWorkflowStates.READY:
+                raise APIError("Can only replan workflows in PLAN_FAILED state")
+        elif self.state == EnsembleWorkflowStates.RUN_FAILED:
+            if state not in (EnsembleWorkflowStates.READY, EnsembleWorkflowStates.QUEUED):
+                raise APIError("Can only replan or rerun workflows in RUN_FAILED state")
+        elif self.state == EnsembleWorkflowStates.FAILED:
+            if state not in (EnsembleWorkflowStates.READY, EnsembleWorkflowStates.QUEUED):
+                raise APIError("Can only replan or rerun workflows in FAILED state")
+        else:
+            raise APIError("Invalid state change: %s -> %s" % (self.state, state))
+
+        self.set_state(state)
+
     def set_priority(self, priority):
         self.priority = validate_priority(priority)
 
@@ -479,25 +500,7 @@ def route_update_ensemble_workflow(ensemble, workflow):
 
     state = request.form.get("state", None)
     if state is not None:
-        # The allowed transitions are:
-        #   PLAN_FAILED -> READY
-        #   RUN_FAILED -> QUEUED
-        #   RUN_FAILED -> READY
-        #   FAILED -> QUEUED
-        #   FAILED -> READY
-        if w.state == EnsembleWorkflowStates.PLAN_FAILED:
-            if state != EnsembleWorkflowStates.READY:
-                raise APIError("Can only replan workflows in PLAN_FAILED state")
-        elif w.state == EnsembleWorkflowStates.RUN_FAILED:
-            if state not in (EnsembleWorkflowStates.READY, EnsembleWorkflowStates.QUEUED):
-                raise APIError("Can only replan or rerun workflows in RUN_FAILED state")
-        elif w.state == EnsembleWorkflowStates.FAILED:
-            if state not in (EnsembleWorkflowStates.READY, EnsembleWorkflowStates.QUEUED):
-                raise APIError("Can only replan or rerun workflows in FAILED state")
-        else:
-            raise APIError("Invalid state change: %s -> %s" % (w.state, state))
-
-        w.set_state(state)
+        w.change_state(state)
 
     w.set_updated()
 

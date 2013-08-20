@@ -18,6 +18,28 @@ class TestEnsembles(tests.TestCase):
         self.assertEquals(EnsembleStates.ACTIVE, "ACTIVE")
         self.assertTrue("ACTIVE" in EnsembleStates)
 
+    def test_change_state(self):
+        w = EnsembleWorkflow(1, "foo")
+
+        # From PLAN_FAILED we can only go to READY, not QUEUED
+        w.set_state(EnsembleWorkflowStates.PLAN_FAILED)
+        self.assertRaises(api.APIError, w.change_state, EnsembleWorkflowStates.QUEUED)
+        w.change_state(EnsembleWorkflowStates.READY)
+
+        # From RUN_FAILED we can to to READY or QUEUED
+        w.set_state(EnsembleWorkflowStates.RUN_FAILED)
+        self.assertRaises(api.APIError, w.change_state, EnsembleWorkflowStates.PLANNING)
+        w.change_state(EnsembleWorkflowStates.READY)
+        w.set_state(EnsembleWorkflowStates.RUN_FAILED)
+        w.change_state(EnsembleWorkflowStates.QUEUED)
+
+        # From FAILED we can go to READY or QUEUED
+        w.set_state(EnsembleWorkflowStates.FAILED)
+        self.assertRaises(api.APIError, w.change_state, EnsembleWorkflowStates.PLANNING)
+        w.change_state(EnsembleWorkflowStates.READY)
+        w.set_state(EnsembleWorkflowStates.FAILED)
+        w.change_state(EnsembleWorkflowStates.QUEUED)
+
     def test_priority(self):
         self.assertEquals(validate_priority(10), 10)
         self.assertEquals(validate_priority(10.1), 10)
@@ -203,6 +225,32 @@ class TestEnsembleAPI(tests.APITestCase):
         r = self.post("/ensembles/myensemble/workflows/mywf", data={"priority":"100"})
         self.assertEquals(r.status_code, 200, "Should return OK")
         self.assertEquals(r.json["priority"], 100, "Should have priority 100")
+
+        e = get_ensemble(self.user_id, "myensemble")
+
+        ew = get_ensemble_workflow(e.id, "mywf")
+        ew.set_state(EnsembleWorkflowStates.PLAN_FAILED)
+        db.session.commit()
+
+        r = self.post("/ensembles/myensemble/workflows/mywf", data={"state":EnsembleWorkflowStates.READY})
+        self.assertEquals(r.status_code, 200, "Should return OK")
+        self.assertEquals(r.json["state"], EnsembleWorkflowStates.READY, "Should be in READY state")
+
+        ew = get_ensemble_workflow(e.id, "mywf")
+        ew.set_state(EnsembleWorkflowStates.RUN_FAILED)
+        db.session.commit()
+
+        r = self.post("/ensembles/myensemble/workflows/mywf", data={"state":EnsembleWorkflowStates.READY})
+        self.assertEquals(r.status_code, 200, "Should return OK")
+        self.assertEquals(r.json["state"], EnsembleWorkflowStates.READY, "Should be in READY state")
+
+        ew = get_ensemble_workflow(e.id, "mywf")
+        ew.set_state(EnsembleWorkflowStates.RUN_FAILED)
+        db.session.commit()
+
+        r = self.post("/ensembles/myensemble/workflows/mywf", data={"state":EnsembleWorkflowStates.QUEUED})
+        self.assertEquals(r.status_code, 200, "Should return OK")
+        self.assertEquals(r.json["state"], EnsembleWorkflowStates.QUEUED, "Should be in QUEUED state")
 
 class TestEnsembleClient(tests.ClientTestCase):
 
