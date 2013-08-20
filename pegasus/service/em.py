@@ -473,11 +473,11 @@ class EnsembleManager(threading.Thread):
         self.daemon = True
 
         if interval is None:
-            self.interval = float(app.config["EM_INTERVAL"])
-        else:
-            self.interval = interval
+            interval = float(app.config["EM_INTERVAL"])
+        self.interval = interval
 
     def run(self):
+        log.info("Ensemble Manager starting")
         self.loop_forever()
 
     def loop_forever(self):
