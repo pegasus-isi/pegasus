@@ -251,3 +251,33 @@ class TestEnsembleClient(tests.ClientTestCase):
         stdout, stderr = self.stdio()
         self.assertEquals(stdout, "")
 
+        cmd.main(["workflows","-e","foo"])
+        stdout, stderr = self.stdio()
+        self.assertTrue("bar" in stdout)
+
+        cmd.main(["workflows","-e","foo","-l"])
+        stdout, stderr = self.stdio()
+        self.assertTrue("Name:     bar" in stdout)
+
+        cmd.main(["priority","-e","foo","-w","bar","-p","100"])
+        stdout, stderr = self.stdio()
+        self.assertTrue("Priority: 100" in stdout)
+
+        e = ensembles.get_ensemble(self.user_id, "foo")
+        ew = ensembles.get_ensemble_workflow(e.id, "bar")
+        ew.set_state(ensembles.EnsembleWorkflowStates.PLAN_FAILED)
+        db.session.commit()
+
+        cmd.main(["replan","-e","foo","-w","bar"])
+        stdout, stderr = self.stdio()
+        self.assertTrue("State: READY" in stdout)
+        self.assertEquals(ew.state, ensembles.EnsembleWorkflowStates.READY)
+
+        ew.set_state(ensembles.EnsembleWorkflowStates.RUN_FAILED)
+        db.session.commit()
+
+        cmd.main(["rerun","-e","foo","-w","bar"])
+        stdout, stderr = self.stdio()
+        self.assertTrue("State: QUEUED" in stdout)
+        self.assertEquals(ew.state, ensembles.EnsembleWorkflowStates.QUEUED)
+
