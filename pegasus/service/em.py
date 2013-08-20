@@ -364,7 +364,8 @@ class EnsembleProcessor:
         p = self.Processor(workflow)
         try:
             p.plan()
-        except:
+        except Exception, e:
+            log.exception(e)
             workflow.set_state(EnsembleWorkflowStates.PLAN_FAILED)
             workflow.set_updated()
 
@@ -415,7 +416,8 @@ class EnsembleProcessor:
         p = self.Processor(workflow)
         try:
             p.run()
-        except:
+        except Exception, e:
+            log.exception(e)
             workflow.set_state(EnsembleWorkflowStates.RUN_FAILED)
             workflow.set_updated()
 
