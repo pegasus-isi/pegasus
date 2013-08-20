@@ -94,6 +94,17 @@ class EnsembleManagerTest(tests.UserTestCase):
         mgr.loop_once()
         self.assertEquals(w2.state, ensembles.EnsembleWorkflowStates.SUCCESSFUL, "State should be SUCCESSFUL")
 
+def IntegrationTest(f):
+    def wrapper(*args, **kwargs):
+        disable = os.getenv("DISABLE_INTEGRATION_TESTS", None)
+        if disable is not None:
+            sys.stderr.write(" integration tests disabled ")
+            return None
+
+        return f(*args, **kwargs)
+
+    return wrapper
+
 def RequiresPegasus(f):
     def wrapper(*args, **kwargs):
         try:
@@ -119,6 +130,7 @@ def RequiresCondor(f):
     return wrapper
 
 class ScriptTest(tests.TestCase):
+    @IntegrationTest
     @RequiresPegasus
     @RequiresCondor
     def testGetEnv(self):
@@ -268,6 +280,7 @@ class WorkflowTest(tests.UserTestCase):
 
         return e, ew
 
+    @IntegrationTest
     @RequiresPegasus
     def test_planner_fails(self):
         # This should fail to plan because the dax has an unknown transformation
@@ -293,6 +306,7 @@ class WorkflowTest(tests.UserTestCase):
 
         self.assertFalse(p.planning_successful(), "Workflow should fail to plan")
 
+    @IntegrationTest
     @RequiresPegasus
     @RequiresCondor
     def test_failed_workflow(self):
@@ -338,6 +352,7 @@ class WorkflowTest(tests.UserTestCase):
 
         self.assertFalse(p.running_successful(), "The workflow should fail to run")
 
+    @IntegrationTest
     @RequiresPegasus
     @RequiresCondor
     def test_successful_workflow(self):
@@ -383,6 +398,7 @@ class WorkflowTest(tests.UserTestCase):
 
         self.assertTrue(p.running_successful())
 
+    @IntegrationTest
     @RequiresPegasus
     @RequiresCondor
     def test_ensemble_end_to_end(self):
@@ -414,6 +430,7 @@ class WorkflowTest(tests.UserTestCase):
 
         self.assertEquals(ew.state, ensembles.EnsembleWorkflowStates.SUCCESSFUL)
 
+    @IntegrationTest
     @RequiresPegasus
     @RequiresCondor
     def test_ensemble_failure_end_to_end(self):
