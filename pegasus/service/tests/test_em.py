@@ -179,6 +179,12 @@ class ScriptTest(tests.TestCase):
         self.assertRaises(em.EMException, em.runscript, "true", cwd="/some/path/not/existing")
 
 class WorkflowTest(tests.UserTestCase):
+    endstates = set([
+        ensembles.EnsembleWorkflowStates.SUCCESSFUL,
+        ensembles.EnsembleWorkflowStates.PLAN_FAILED,
+        ensembles.EnsembleWorkflowStates.RUN_FAILED,
+        ensembles.EnsembleWorkflowStates.FAILED
+    ])
 
     def test_workflow_processor(self):
         "Simple tests to make sure the WorkflowProcessor works"
@@ -419,12 +425,7 @@ class WorkflowTest(tests.UserTestCase):
 
         mgr = em.EnsembleManager()
 
-        endstates = set([
-            ensembles.EnsembleWorkflowStates.SUCCESSFUL,
-            ensembles.EnsembleWorkflowStates.FAILED
-        ])
-
-        while ew.state not in endstates:
+        while ew.state not in self.endstates:
             mgr.loop_once()
             time.sleep(5)
 
@@ -451,14 +452,52 @@ class WorkflowTest(tests.UserTestCase):
 
         mgr = em.EnsembleManager()
 
-        endstates = set([
-            ensembles.EnsembleWorkflowStates.SUCCESSFUL,
-            ensembles.EnsembleWorkflowStates.FAILED
-        ])
-
-        while ew.state not in endstates:
+        while ew.state not in self.endstates:
             mgr.loop_once()
             time.sleep(5)
 
         self.assertEquals(ew.state, ensembles.EnsembleWorkflowStates.FAILED)
+
+    @IntegrationTest
+    @RequiresPegasus
+    @RequiresCondor
+    def test_hierarchical_workflow(self):
+        subdax = """<?xml version="1.0" encoding="UTF-8"?>
+            <adag xmlns="http://pegasus.isi.edu/schema/DAX" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.4.xsd"
+                  version="3.4" name="process">
+                <job id="ID0000001" name="ls">
+                    <argument>-l /</argument>
+                    <stdout name="listing.txt" link="output"/>
+                    <uses name="listing.txt" link="output" register="false" transfer="true"/>
+                </job>
+            </adag>
+        """
+
+        subdaxfile = os.path.join(self.tmpdir, "subdax.xml")
+        f = open(subdaxfile, "w")
+        f.write(subdax)
+        f.close()
+
+        dax = StringIO("""<?xml version="1.0" encoding="UTF-8"?>
+            <adag xmlns="http://pegasus.isi.edu/schema/DAX" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://pegasus.isi.edu/schema/DAX http://pegasus.isi.edu/schema/dax-3.4.xsd"
+                  version="3.4" name="process">
+                <file name="subdax.xml">
+                    <pfn url="file://%s" site="local"/>
+                </file>
+                <dax id="ID0000001" file="subdax.xml">
+                </dax>
+            </adag>
+        """ % subdaxfile)
+
+        e, ew = self.create_test_workflow(dax)
+
+        mgr = em.EnsembleManager()
+
+        while ew.state not in self.endstates:
+            mgr.loop_once()
+            time.sleep(5)
+
+        self.assertEquals(ew.state, ensembles.EnsembleWorkflowStates.SUCCESSFUL)
 
