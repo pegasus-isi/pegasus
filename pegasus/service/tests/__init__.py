@@ -143,3 +143,25 @@ class ClientTestCase(APITestCase):
         self.server.shutdown()
         APITestCase.tearDown(self)
 
+def IntegrationTest(f):
+    def wrapper(*args, **kwargs):
+        env = os.getenv("ENABLE_INTEGRATION_TESTS", None)
+        if env is None:
+            sys.stderr.write(" integration tests disabled ")
+            return None
+
+        return f(*args, **kwargs)
+
+    return wrapper
+
+def PerformanceTest(f):
+    def wrapper(*args, **kwargs):
+        env = os.getenv("ENABLE_PERFORMANCE_TESTS", None)
+        if env is None:
+            sys.stderr.write(" performance tests disabled ")
+            return None
+
+        return f(*args, **kwargs)
+
+    return wrapper
+

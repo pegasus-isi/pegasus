@@ -8,6 +8,7 @@ from StringIO import StringIO
 from Pegasus.netlogger.analysis.schema import stampede_dashboard_schema as dash
 
 from pegasus.service import app, db, em, tests, catalogs, ensembles
+from pegasus.service.tests import *
 
 class TestWorkflowProcessor:
     def __init__(self, workflow):
@@ -93,17 +94,6 @@ class EnsembleManagerTest(tests.UserTestCase):
 
         mgr.loop_once()
         self.assertEquals(w2.state, ensembles.EnsembleWorkflowStates.SUCCESSFUL, "State should be SUCCESSFUL")
-
-def IntegrationTest(f):
-    def wrapper(*args, **kwargs):
-        disable = os.getenv("DISABLE_INTEGRATION_TESTS", None)
-        if disable is not None:
-            sys.stderr.write(" integration tests disabled ")
-            return None
-
-        return f(*args, **kwargs)
-
-    return wrapper
 
 def RequiresPegasus(f):
     def wrapper(*args, **kwargs):
