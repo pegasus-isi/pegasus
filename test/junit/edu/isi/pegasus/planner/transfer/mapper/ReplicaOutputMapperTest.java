@@ -16,8 +16,6 @@
 package edu.isi.pegasus.planner.transfer.mapper;
 
 import edu.isi.pegasus.planner.catalog.site.classes.FileServer;
-import edu.isi.pegasus.planner.catalog.site.classes.FileServerType;
-import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.classes.ADag;
 import java.util.List;
 
@@ -73,37 +71,6 @@ public class ReplicaOutputMapperTest extends OutputMapperTest {
         }
         mLogger.logEventCompletion();
         
-        /*
-        pfn = mapper.map( lfn, "local", FileServerType.OPERATION.get );
-        assertEquals( lfn + " not mapped to right location " , expected, pfn );
-        
-        List<String> pfns = mapper.mapAll( lfn, "local", FileServerType.OPERATION.get);
-        String[] expectedPFNS = { "gsiftp://sukhna.isi.edu/test/junit/output/mapper/blackdiamond/outputs/f.a" };
-        assertArrayEquals( expectedPFNS, pfns.toArray() );
-        mLogger.logEventCompletion();
-        
-        ////test with  deep storage structure enabled
-        //set property to enable deep storage, where relative submit directory is added
-        mLogger.logEventStart( "test.output.mapper.Replica", "set", Integer.toString(set++) );
-        mBag.getPlannerOptions().setRelativeDirectory( "deep" );
-        mProps.setProperty( "pegasus.dir.storage.deep", "true" );
-        SiteStore store = mBag.getHandleToSiteStore();
-        store.setForPlannerUse(mProps,mBag.getPlannerOptions() );
-        mapper = OutputMapperFactory.loadInstance( new ADag(), mBag );
-        
-        String deepPFN    = mapper.map( lfn, "local", FileServerType.OPERATION.put );
-        assertEquals( lfn + " not mapped to right location " ,
-                      "file:///test/junit/output/mapper/blackdiamond/outputs/deep/f.a", deepPFN );
-        
-        deepPFN = mapper.map( lfn, "local", FileServerType.OPERATION.get );
-        assertEquals( lfn + " not mapped to right location " ,
-                      "gsiftp://sukhna.isi.edu/test/junit/output/mapper/blackdiamond/outputs/deep/f.a", deepPFN );
-        
-        List<String> deepPFNS = mapper.mapAll( lfn, "local", FileServerType.OPERATION.get);
-        String[] expectedDeepPFNS = { "gsiftp://sukhna.isi.edu/test/junit/output/mapper/blackdiamond/outputs/deep/f.a" };
-        assertArrayEquals( expectedDeepPFNS, deepPFNS.toArray() );
-        mLogger.logEventCompletion();
-        */
     }
 
     /**
