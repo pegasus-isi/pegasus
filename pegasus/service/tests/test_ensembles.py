@@ -1,5 +1,7 @@
+import time
 from pegasus.service import tests, ensembles, api, db
 from pegasus.service.ensembles import *
+from pegasus.service.tests import *
 
 class TestEnsembles(tests.TestCase):
     def test_name(self):
@@ -130,7 +132,6 @@ class TestEnsembleAPI(tests.APITestCase):
 
         # Need to sleep for one second so that updated gets a different value
         updated = r.json["updated"]
-        import time
         time.sleep(1)
 
         r = self.get("/ensembles")
@@ -251,6 +252,36 @@ class TestEnsembleAPI(tests.APITestCase):
         r = self.post("/ensembles/myensemble/workflows/mywf", data={"state":EnsembleWorkflowStates.QUEUED})
         self.assertEquals(r.status_code, 200, "Should return OK")
         self.assertEquals(r.json["state"], EnsembleWorkflowStates.QUEUED, "Should be in QUEUED state")
+
+class LargeDAXTest(tests.ClientTestCase):
+
+    @PerformanceTest
+    def test_large_dax(self):
+        r = self.post("/ensembles", data={"name": "myensemble"})
+        self.assertEquals(r.status_code, 201, "Should return created status")
+
+        # Create some test catalogs
+        catalogs.save_catalog("replica", self.user_id, "rc", "regex", StringIO("replicas"))
+        catalogs.save_catalog("site", self.user_id, "sc", "xml", StringIO("sites"))
+        catalogs.save_catalog("transformation", self.user_id, "tc", "text", StringIO("transformations"))
+        db.session.commit()
+
+        # Create a 256MB file and submit it as the DAX
+        daxfile = os.path.join(self.tmpdir, "large.dax")
+        dax = open(daxfile, "w")
+        for i in range(0, 256*1024):
+            dax.write("x" * 1024)
+        dax.close()
+
+        cmd = ensembles.EnsembleCommand()
+
+        start = time.time()
+        cmd.main(["submit","-e","myensemble","-w","mywf","-R","rc","-S","sc","-T","tc","-d",daxfile,"-s","local","-o","local"])
+        end = time.time()
+        stdout, stderr = self.stdio()
+        self.assertEquals(stdout, "", "Should be no stdout")
+        elapsed = end-start
+        self.assertTrue(elapsed < 10, "Should take less than 10 seconds")
 
 class TestEnsembleClient(tests.ClientTestCase):
 

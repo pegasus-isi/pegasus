@@ -428,10 +428,6 @@ def route_create_ensemble_workflow(ensemble):
     if replica_catalog is None:
         raise APIError("Specify replica_catalog")
 
-    dax = request.files.get("dax", None)
-    if dax is None:
-        raise APIError("Specify dax")
-
     sites = request.form.get("sites", None)
     if sites is None:
         raise APIError("Specify sites")
@@ -467,6 +463,10 @@ def route_create_ensemble_workflow(ensemble):
         kvs = [s.strip() for s in staging_sites.split(",")]
         kvs = [s for s in kvs if len(s) > 0]
         staging_sites = dict([s.split("=") for s in kvs])
+
+    dax = request.files.get("dax", None)
+    if dax is None:
+        raise APIError("Specify dax")
 
     conf = request.files.get("conf", None)
 
