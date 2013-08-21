@@ -16,6 +16,7 @@
 package edu.isi.pegasus.planner.test;
 
 import edu.isi.pegasus.planner.common.PegasusProperties;
+import java.util.List;
 
 /**
  * An interface that designates that a Test Requires Properties to be loaded.
@@ -28,10 +29,11 @@ public interface RequiresProperties {
     /**
      * Loads up properties from the input directory for the test.
      * 
-     * @param inputdir  the input directory for the test
+     * @param inputdir      the input directory for the test
+     * @param sanitizeKeys  list of keys to be sanitized 
      * 
      * @return 
      */
-    public  PegasusProperties getProperties( String inputdir );
+    public  PegasusProperties getProperties( String inputdir , List<String> sanitizeKeys);
     
 }

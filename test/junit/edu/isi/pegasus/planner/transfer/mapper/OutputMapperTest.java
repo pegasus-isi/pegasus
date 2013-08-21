@@ -2,7 +2,7 @@
  *  Copyright 2007-2013 University Of Southern California
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
+ *  you may not use this value except in compliance with the License.
  *  You may obtain a copy of the License at
  *
  *  http://www.apache.org/licenses/LICENSE-2.0
@@ -77,7 +77,7 @@ public abstract class OutputMapperTest implements
         mInputDir = getInputDir();
         System.out.println( "Input Test Dir is " + mInputDir );
         
-        mProps = this.getProperties( mInputDir );
+        mProps = this.getProperties( mInputDir, this.getPropertyKeysForSanitization() );
         mBag.add( PegasusBag.PEGASUS_PROPERTIES, mProps );
         LogManager logger = LogManagerFactory.loadSingletonInstance( mProps );
         mLogger = logger;
@@ -118,21 +118,26 @@ public abstract class OutputMapperTest implements
     /**
      * Loads up properties from the input directory for the test.
      * 
-     * @param inputdir
+     * @param inputdir      the input directory for the test
+     * @param sanitizeKeys  list of keys to be sanitized 
+     * 
      * @return 
      */
-    public final PegasusProperties getProperties( String inputdir ){
+    public  PegasusProperties getProperties( String inputdir , List<String> sanitizeKeys){
         String propertiesBasename = getPropertiesFileBasename( );
         String propsFile = new File( inputdir, propertiesBasename ).getAbsolutePath();
        
         System.out.println( "Properties File for test is " + propsFile );
         PegasusProperties properties = PegasusProperties.getInstance( propsFile );
-        //check if the properties have a relative value for file property set
-        String file = properties.getProperty( PegasusProperties.PEGASUS_SITE_CATALOG_FILE_PROPERTY ) ;
-        if( file != null && file.startsWith( "." )){
-            //update the relative path with the input dir
-            file = inputdir + File.separator + file;
-            properties.setProperty( PegasusProperties.PEGASUS_SITE_CATALOG_FILE_PROPERTY, file );
+        
+        for( String key: sanitizeKeys){
+            //check if the properties have a relative value for value property set
+            String value = properties.getProperty( key ) ;
+            if( value != null && value.startsWith( "." )){
+                //update the relative path with the input dir
+                value = inputdir + File.separator + value;
+                properties.setProperty( key , value );
+            }
         }
         return properties;
     }
@@ -165,9 +170,21 @@ public abstract class OutputMapperTest implements
         dir.append( File.separator ).append( "input" );
         return dir.toString();
     }
+    
+    
+    /**
+     * Returns the list of property keys that should be sanitized
+     * 
+     * @return List<String>
+     */
+    protected List<String> getPropertyKeysForSanitization(){
+        List<String> keys = new LinkedList();
+        keys.add( PegasusProperties.PEGASUS_SITE_CATALOG_FILE_PROPERTY );
+        return keys;
+    }
 
     /**
-     * Returns the basename for the properties file
+     * Returns the basename for the properties value
      * 
      * @return 
      */

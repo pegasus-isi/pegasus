@@ -1,0 +1,2 @@
+f.a1  gsiftp://corbusier.isi.edu/Volumes/data/output/nonregex/f.a1 pool="local" 
+f\.([a-z][0-9]*) gsiftp://corbusier.isi.edu/Volumes/data/output/[0] pool="local" regex="true"
