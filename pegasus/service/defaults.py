@@ -47,8 +47,9 @@ STORAGE_DIR = os.path.join(os.getenv('HOME'), ".pegasus", "service")
 
 # CLIENT CONFIGURATION
 
-# Service endpoint
-ENDPOINT = "http://%s:%s/" % (SERVER_HOST, SERVER_PORT)
+# Service endpoint. This is only required if you install the service
+# at a URL other than "http://SERVER_HOST:SERVER_PORT/".
+ENDPOINT = None
 
 # User credentials
 USERNAME = ""

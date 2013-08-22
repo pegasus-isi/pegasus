@@ -73,8 +73,10 @@ class ClientCommand(Command):
     def __init__(self):
         Command.__init__(self)
         self.endpoint = app.config["ENDPOINT"]
-        if not self.endpoint:
-            raise Exception("Specify ENDPOINT in configuration")
+        if self.endpoint is None:
+            host = app.config["SERVER_HOST"]
+            port = app.config["SERVER_PORT"]
+            self.endpoint = "http://%s:%s/" % (host, port)
         self.username = app.config["USERNAME"]
         if not self.username:
             raise Exception("Specify USERNAME in configuration")
