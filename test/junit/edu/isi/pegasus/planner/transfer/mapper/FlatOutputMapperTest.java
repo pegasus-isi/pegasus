@@ -15,22 +15,79 @@
  */
 package edu.isi.pegasus.planner.transfer.mapper;
 
+import edu.isi.pegasus.common.logging.LogManager;
 import edu.isi.pegasus.planner.catalog.site.classes.FileServerType;
 import edu.isi.pegasus.planner.catalog.site.classes.SiteStore;
 import edu.isi.pegasus.planner.classes.ADag;
+import edu.isi.pegasus.planner.classes.PegasusBag;
+import edu.isi.pegasus.planner.common.PegasusProperties;
+import edu.isi.pegasus.planner.test.TestSetup;
+import java.util.LinkedList;
 import java.util.List;
+import org.junit.After;
+import org.junit.AfterClass;
 
 import org.junit.Test;
 
 import static org.junit.Assert.*;
+import org.junit.Before;
+import org.junit.BeforeClass;
 
 /**
  * A JUnit Test to test the output mapper interface.
  *
  * @author Karan Vahi
  */
-public class FlatOutputMapperTest extends OutputMapperTest {
-   
+public class FlatOutputMapperTest {
+    
+    /**
+     * The properties used for this test.
+     */
+    private static final String PROPERTIES_BASENAME="flat.properties";
+    
+    private PegasusBag mBag;
+    
+    private PegasusProperties mProps;
+    
+    private LogManager mLogger;
+    
+    private TestSetup mTestSetup;
+    
+    
+    @BeforeClass
+    public static void setUpClass() {
+    }
+    
+    @AfterClass
+    public static void tearDownClass() {
+    }
+    
+    /**
+     * Setup the logger and properties that all test functions require
+     */
+    @Before
+    public final void setUp() {
+        mTestSetup = new OutputMapperTestSetup();
+        mBag = new PegasusBag();
+       
+        mTestSetup.setInputDirectory( this.getClass() );
+        System.out.println( "Input Test Dir is " + mTestSetup.getInputDirectory() );
+        
+        mProps = mTestSetup.loadPropertiesFromFile( PROPERTIES_BASENAME, this.getPropertyKeysForSanitization() );
+        mBag.add( PegasusBag.PEGASUS_PROPERTIES, mProps );
+        
+        mLogger  = mTestSetup.loadLogger( mProps );
+        mLogger.logEventStart( "test.output.mapper", "setup", "0" );
+        mBag.add( PegasusBag.PEGASUS_LOGMANAGER, mLogger );
+        
+        mBag.add( PegasusBag.PLANNER_OPTIONS, mTestSetup.loadPlannerOptions() );
+        
+        List<String> sites = new LinkedList();
+        sites.add( "*" );
+        SiteStore store = mTestSetup.loadSiteStoreFromFile(mProps, mLogger, sites);
+        mBag.add( PegasusBag.SITE_STORE, store );
+        mLogger.logEventCompletion();
+    }
 
     /**
      * Test of the Flat Output Mapper.
@@ -82,10 +139,23 @@ public class FlatOutputMapperTest extends OutputMapperTest {
     }
 
     
+    @After
+    public void tearDown() {
+        mLogger = null;
+        mProps  = null;
+        mBag    = null;
+        mTestSetup = null;
+    }
 
-    @Override
-    protected String getPropertiesFileBasename() {
-        return "flat.properties";
+    /**
+     * Returns the list of property keys that should be sanitized
+     * 
+     * @return List<String>
+     */
+    protected List<String> getPropertyKeysForSanitization(){
+        List<String> keys = new LinkedList();
+        keys.add( PegasusProperties.PEGASUS_SITE_CATALOG_FILE_PROPERTY );
+        return keys;
     }
 
     
