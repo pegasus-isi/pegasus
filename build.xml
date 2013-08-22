@@ -2,7 +2,7 @@
 <!-- $Id$ -->
 <project name="pegasus-all" default="jar">
   <description>Manages Pegasus</description>
-  <property name="build.src" location="build/classes"/>
+  <property name="build.src" location="build/main/classes"/>
   <property name="test.src"  location="build/tests/classes"/>
   <property name="junitreport.dir"  value="${test.src}/junitreport"/>
   <property environment="env"/>
