@@ -29,6 +29,7 @@ class StampedeWorkflowStatistics(SQLAlchemyInit, DoesLogging):
 
         self._root_wf_id = []
         self._root_wf_uuid = []
+        self.all_workflows = None
         self._job_filter_mode = None
         self._time_filter_mode = None
         self._host_filter = None
@@ -43,12 +44,21 @@ class StampedeWorkflowStatistics(SQLAlchemyInit, DoesLogging):
                            msg='Either root_wf_uuid or root_wf_id is required')
             return False
 
+        if root_wf_uuid == '*' or root_wf_id == '*':
+            self.all_workflows = True
+
         q = self.session.query(Workflow.root_wf_id, Workflow.wf_id, Workflow.wf_uuid)
 
         if root_wf_uuid:
-            q = q.filter(Workflow.wf_uuid.in_(root_wf_uuid))
+            if root_wf_uuid == '*':
+                q = q.filter(Workflow.root_wf_id == Workflow.wf_id)
+            else:
+                q = q.filter(Workflow.wf_uuid.in_(root_wf_uuid))
         else:
-            q = q.filter(Workflow.root_wf_id.in_(root_wf_id))
+            if root_wf_id == '*':
+                q = q.filter(Workflow.root_wf_id == Workflow.wf_id)
+            else:
+                q = q.filter(Workflow.root_wf_id.in_(root_wf_id))
 
         result = q.all()
 
@@ -61,11 +71,11 @@ class StampedeWorkflowStatistics(SQLAlchemyInit, DoesLogging):
             self._root_wf_id.append(workflow.wf_id)
             self._root_wf_uuid.append(workflow.wf_uuid)
 
-        if root_wf_uuid and len(root_wf_uuid) != len(self._root_wf_uuid):
+        if root_wf_uuid and root_wf_uuid != '*' and len(root_wf_uuid) != len(self._root_wf_uuid):
             self.log.error('initialize',
                            msg='Some workflows were not found')
             return False
-        elif root_wf_id and len(root_wf_id) != len(self._root_wf_id):
+        elif root_wf_id and root_wf_id != '*' and len(root_wf_id) != len(self._root_wf_id):
             self.log.error('initialize',
                            msg='Some workflows were not found')
             return False
@@ -78,9 +88,29 @@ class StampedeWorkflowStatistics(SQLAlchemyInit, DoesLogging):
 
         return True
 
+    def __filter_all(self, q, w=None):
+
+        w = w if w else Workflow
+
+        if not self.all_workflows:
+            q = q.filter(w.root_wf_id.in_(self._root_wf_id))
+
+        return q
+
+    def __filter_roots_only(self, q, w=None):
+
+        w = w if w else Workflow
+
+        if self.all_workflows:
+            q = q.filter(w.root_wf_id == w.wf_id)
+        else:
+            q = q.filter(w.wf_id.in_(self._root_wf_id))
+
+        return q
+
     def get_workflow_ids(self):
         q = self.session.query(Workflow.root_wf_id, Workflow.wf_id, Workflow.wf_uuid)
-        q = q.filter(Workflow.root_wf_id.in_(self._root_wf_id))
+        q = self.__filter_all(q)
         q = q.order_by(Workflow.root_wf_id)
         return q.all()
 
@@ -94,7 +124,7 @@ class StampedeWorkflowStatistics(SQLAlchemyInit, DoesLogging):
                                Workflow.user, Workflow.grid_dn, Workflow.planner_version,
                                Workflow.dax_label, Workflow.dax_version)
 
-        q = q.filter(Workflow.wf_id.in_(self._root_wf_id))
+        q = self.__filter_roots_only(q)
 
         return q.all()
 
@@ -106,9 +136,9 @@ class StampedeWorkflowStatistics(SQLAlchemyInit, DoesLogging):
         q = self.session.query(Task.task_id)
 
         if self._expand:
-            q = q.filter(Workflow.root_wf_id.in_(self._root_wf_id))
+            q = self.__filter_all(q)
         else:
-            q = q.filter(Workflow.wf_id.in_ (self._root_wf_id))
+            q = self.__filter_roots_only(q)
 
         q = q.filter(Task.wf_id == Workflow.wf_id)
         q = q.filter(Task.job_id == Job.job_id)
@@ -138,9 +168,9 @@ class StampedeWorkflowStatistics(SQLAlchemyInit, DoesLogging):
         sq_1 = sq_1.join(ji, j.job_id == ji.job_id)
 
         if self._expand:
-            sq_1 = sq_1.filter(w.root_wf_id.in_(self._root_wf_id))
+            sq_1 = self.__filter_all(sq_1, w)
         else:
-            sq_1 = sq_1.filter(w.wf_id.in_ (self._root_wf_id))
+            sq_1 = self.__filter_roots_only(sq_1, w)
 
         if not pmc:
             sq_1 = sq_1.group_by(j.job_id)
@@ -181,9 +211,9 @@ class StampedeWorkflowStatistics(SQLAlchemyInit, DoesLogging):
         sq_1 = self.session.query(Workflow.wf_id.label('wid'), Invocation.abs_task_id.label('tid'))
 
         if self._expand:
-            sq_1 = sq_1.filter(Workflow.root_wf_id.in_(self._root_wf_id))
+            sq_1 = self.__filter_all(sq_1)
         else:
-            sq_1 = sq_1.filter(Workflow.wf_id.in_ (self._root_wf_id))
+            sq_1 = self.__filter_roots_only(sq_1)
 
         sq_1 = sq_1.filter(Job.wf_id == Workflow.wf_id)
         sq_1 = sq_1.filter(Invocation.wf_id == Workflow.wf_id)
@@ -210,9 +240,9 @@ class StampedeWorkflowStatistics(SQLAlchemyInit, DoesLogging):
         q = self.session.query(Job.job_id)
 
         if self._expand:
-            q = q.filter(Workflow.root_wf_id.in_(self._root_wf_id))
+            q = self.__filter_all(q)
         else:
-            q = q.filter(Workflow.wf_id.in_ (self._root_wf_id))
+            q = self.__filter_roots_only(q)
 
         q = q.filter(Job.wf_id == Workflow.wf_id)
         if self._get_job_filter() is not None:
@@ -229,9 +259,9 @@ class StampedeWorkflowStatistics(SQLAlchemyInit, DoesLogging):
         sq_1 = self.session.query(func.max(JobInstanceSub.job_submit_seq).label('jss'), JobInstanceSub.job_id.label('jobid'))
 
         if self._expand:
-            sq_1 = sq_1.filter(Workflow.root_wf_id.in_(self._root_wf_id))
+            sq_1 = self.__filter_all(sq_1)
         else:
-            sq_1 = sq_1.filter(Workflow.wf_id.in_ (self._root_wf_id))
+            sq_1 = self.__filter_roots_only(sq_1)
 
         sq_1 = sq_1.filter(Workflow.wf_id == Job.wf_id)
         sq_1 = sq_1.filter(Job.job_id == JobInstanceSub.job_id)
@@ -257,9 +287,9 @@ class StampedeWorkflowStatistics(SQLAlchemyInit, DoesLogging):
         sq_1 = self.session.query(func.count(Job.job_id))
 
         if self._expand:
-            sq_1 = sq_1.filter(Workflow.root_wf_id.in_(self._root_wf_id))
+            sq_1 = self.__filter_all(sq_1)
         else:
-            sq_1 = sq_1.filter(Workflow.wf_id.in_ (self._root_wf_id))
+            sq_1 = self.__filter_roots_only(sq_1)
 
         sq_1 = sq_1.filter(Job.wf_id == Workflow.wf_id)
         sq_1 = sq_1.filter(Job.job_id == JobInstance.job_id)
@@ -272,9 +302,9 @@ class StampedeWorkflowStatistics(SQLAlchemyInit, DoesLogging):
         sq_2 = self.session.query(func.count(distinct(JobInstance.job_id)))
 
         if self._expand:
-            sq_2 = sq_2.filter(Workflow.root_wf_id.in_(self._root_wf_id))
+            sq_2 = self.__filter_all(sq_2)
         else:
-            sq_2 = sq_2.filter(Workflow.wf_id.in_ (self._root_wf_id))
+            sq_2 = self.__filter_roots_only(sq_2)
 
         sq_2 = sq_2.filter(Job.wf_id == Workflow.wf_id)
         sq_2 = sq_2.filter(Job.job_id == JobInstance.job_id)
@@ -294,7 +324,14 @@ class StampedeWorkflowStatistics(SQLAlchemyInit, DoesLogging):
         """
         q = self.session.query(Workflowstate.wf_id, Workflowstate.state, Workflowstate.timestamp,
                                Workflowstate.restart_count, Workflowstate.status)
-        q = q.filter(Workflowstate.wf_id.in_(self._root_wf_id)).order_by(Workflowstate.wf_id, Workflowstate.restart_count)
+
+        if self.all_workflows:
+            q = q.filter(Workflowstate.wf_id == Workflow.wf_id)
+            q = q.filter(Workflow.root_wf_id == Workflow.wf_id)
+        else:
+            q = q.filter(Workflowstate.wf_id.in_(self._root_wf_id))
+
+        q = q.order_by(Workflowstate.wf_id, Workflowstate.restart_count)
 
         return q.all()
 
@@ -313,11 +350,16 @@ class StampedeWorkflowStatistics(SQLAlchemyInit, DoesLogging):
         q = self.session.query(cast(func.sum(Invocation.remote_duration * JobInstance.multiplier_factor), Float))
         q = q.filter(Invocation.task_submit_seq >= 0)
         q = q.filter(Invocation.job_instance_id == JobInstance.job_instance_id)
+
         if self._expand:
+            q = self.__filter_all(q)
             q = q.filter(Invocation.wf_id == Workflow.wf_id)
-            q = q.filter(Workflow.root_wf_id.in_(self._root_wf_id))
         else:
-            q = q.filter(Invocation.wf_id.in_(self._root_wf_id))
+            if self.all_workflows:
+                q = self.__filter_roots_only(q)
+                q = q.filter (Invocation.wf_id == Workflow.wf_id)
+            else:
+                q = q.filter(Invocation.wf_id.in_(self._root_wf_id))
 
         q = q.filter(Invocation.transformation != 'condor::dagman')
         return q.first()[0]
@@ -338,11 +380,16 @@ class StampedeWorkflowStatistics(SQLAlchemyInit, DoesLogging):
         """
         q = self.session.query(cast(func.sum(JobInstance.local_duration * JobInstance.multiplier_factor), Float).label('wall_time'))
         q = q.filter(JobInstance.job_id == Job.job_id)
+
         if self._expand:
+            q = self.__filter_all(q)
             q = q.filter(Job.wf_id == Workflow.wf_id)
-            q = q.filter(Workflow.root_wf_id.in_(self._root_wf_id))
         else:
-            q = q.filter(Job.wf_id.in_(self._root_wf_id))
+            if self.all_workflows:
+                q = self.__filter_roots_only(q)
+                q = q.filter (Job.wf_id == Workflow.wf_id)
+            else:
+                q = q.filter(Job.wf_id.in_(self._root_wf_id))
 
         if self._expand:
             d_or_d = self._dax_or_dag_cond()
@@ -357,9 +404,9 @@ class StampedeWorkflowStatistics(SQLAlchemyInit, DoesLogging):
         sq_1 = self.session.query(func.max(Workflowstate.restart_count).label('retry'))
 
         if self._expand:
-            sq_1 = sq_1.filter(Workflow.root_wf_id.in_(self._root_wf_id))
+            sq_1 = self.__filter_all(sq_1)
         else:
-            sq_1 = sq_1.filter(Workflow.wf_id.in_(self._root_wf_id))
+            sq_1 = self.__filter_roots_only(sq_1)
 
         sq_1 = sq_1.filter(Workflowstate.wf_id == Workflow.wf_id)
         sq_1 = sq_1.group_by(Workflowstate.wf_id)
@@ -393,7 +440,7 @@ class StampedeWorkflowStatistics(SQLAlchemyInit, DoesLogging):
                                cast(func.sum(Invocation.remote_duration * JobInstance.multiplier_factor), Float).label('sum'))
         q = q.filter(Workflow.wf_id == Invocation.wf_id)
         q = q.filter(Invocation.job_instance_id == JobInstance.job_instance_id)
-        q = q.filter(Workflow.root_wf_id.in_(self._root_wf_id))
+        q = self.__filter_all(q)
         q = q.group_by(Invocation.transformation)
 
         return q.all()
@@ -407,7 +454,7 @@ class StampedeWorkflowStatistics(SQLAlchemyInit, DoesLogging):
             func.count(Invocation.invocation_id).label('count'),
             cast(func.sum(Invocation.remote_duration), Float).label('total_runtime')
         )
-        q = q.filter(Workflow.root_wf_id.in_(self._root_wf_id))
+        q = self.__filter_all(q)
         q = q.filter(Invocation.wf_id == Workflow.wf_id)
         if self._get_xform_filter() is not None:
             q = q.filter(self._get_xform_filter())
@@ -425,7 +472,7 @@ class StampedeWorkflowStatistics(SQLAlchemyInit, DoesLogging):
             func.count(Invocation.invocation_id).label('count'),
             cast(func.sum(Invocation.remote_duration), Float).label('total_runtime')
         )
-        q = q.filter(Workflow.root_wf_id.in_(self._root_wf_id))
+        q = self.__filter_all(q)
         q = q.filter(Invocation.wf_id == Workflow.wf_id)
         q = q.filter(JobInstance.job_instance_id == Invocation.job_instance_id)
         q = q.filter(JobInstance.host_id == Host.host_id)
@@ -447,7 +494,7 @@ class StampedeWorkflowStatistics(SQLAlchemyInit, DoesLogging):
             func.count(JobInstance.job_instance_id).label('count'),
             cast(func.sum(JobInstance.local_duration), Float).label('total_runtime')
         )
-        q = q.filter(Workflow.root_wf_id.in_(self._root_wf_id))
+        q = self.__filter_all(q)
         q = q.filter(Workflow.wf_id == Job.wf_id)
         q = q.filter(Job.job_id == JobInstance.job_id)
         q = q.filter(JobInstance.job_instance_id == Jobstate.job_instance_id)
@@ -476,7 +523,7 @@ class StampedeWorkflowStatistics(SQLAlchemyInit, DoesLogging):
         q = q.filter(Job.job_id == JobInstance.job_id)
         q = q.filter(JobInstance.job_instance_id == Jobstate.job_instance_id)
 
-        q = q.filter(Workflow.root_wf_id.in_(self._root_wf_id))
+        q = self.__filter_all(q)
         q = q.filter(Jobstate.state == 'EXECUTE')
 
         if self._get_job_filter() is not None:

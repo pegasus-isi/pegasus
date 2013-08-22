@@ -919,7 +919,8 @@ def print_statistics_by_time_and_host(stats, fmt, combined=True, per_host=True):
 
 def main():
     # Configure command line option parser
-    prog_usage = "%s [options] [SUBMIT_DIRECTORY]" % sys.argv[0]
+    prog_usage = "%s [options] [[SUBMIT_DIRECTORY ..] | [WORKFLOW_UUID ..]]" % sys.argv[0]
+
     parser = optparse.OptionParser(usage=prog_usage)
     parser.add_option("-o", "--output", action = "store", dest = "output_dir",
                       help = "Writes the output to given directory.")
@@ -942,6 +943,8 @@ def main():
     parser.add_option("-q", "--quiet", action="count", default=0, dest="quiet",
                       help="Decrease verbosity, repeatable")
 
+    parser.add_option("-m", "--multiple-wf", action="store_true", dest="multiple_wf", default=False,
+                      help="Calculate statistics for multiple workflows")
     parser.add_option("-p", "--ispmc", action="store_true", dest="is_pmc", default=False,
                       help="Calculate statistics for workflows which use PMC")
     parser.add_option("-u", "--isuuid", action="store_true", dest="is_uuid", default=False,
@@ -951,13 +954,18 @@ def main():
     (options, args) = parser.parse_args()
 
     # Multiple workflow is set to true if there are multiple positional arguments.
-    multiple_wf = False
+    multiple_wf = options.multiple_wf
+
     if len(args) < 1:
-        submit_dir = "."
+        # * means all workflows in the database, and . means current directory
+        submit_dir = '*' if multiple_wf else '.'
     elif len(args) > 1:
+        options.multiple_wf = True
         multiple_wf = True
         submit_dir = args
     else:
+        options.multiple_wf = False
+        multiple_wf = False
         submit_dir = args[0]
 
     log_level = options.verbose - options.quiet
@@ -977,11 +985,14 @@ def main():
             sys.exit(1)
 
     if multiple_wf:
-        if not options.is_uuid:
+        #Check for braindump file's existence if workflows are not specified as UUIDs and
+        # statistics need to be calculated only on a sub set of workflows
+        if not options.is_uuid and submit_dir != '*':
             for dir in submit_dir:
                 check_dump(dir)
     else:
-        check_dump(submit_dir)
+        if not options.is_uuid:
+            check_dump(submit_dir)
 
     if options.ignore_db_inconsistency:
         logger.warning("Ignoring db inconsistency")
@@ -997,11 +1008,15 @@ def main():
                 sys.exit(1)
 
         if multiple_wf:
-            if not options.is_uuid:
+            if submit_dir == '*':
+                logger.warning("Statistics have to be calculated on all workflows. Tool cannot check to see if all of them have finished. Ensure that all workflows have finished")
+
+            if not options.is_uuid and submit_dir != '*':
                 for dir in submit_dir:
                     loading_complete(dir)
         else:
-            loading_complete(submit_dir)
+            if not options.is_uuid:
+                loading_complete(submit_dir)
 
     # Figure out what statistics we need to calculate
     global calc_wf_stats
@@ -1048,8 +1063,8 @@ def main():
     if options.output_dir:
         output_dir = options.output_dir
     else:
-        if multiple_wf:
-            sys.stderr.write("Output directory option is required when calculating statistics over multiple workflows..\n")
+        if multiple_wf or options.is_uuid:
+            sys.stderr.write("Output directory option is required when calculating statistics over multiple workflows.\n")
             sys.exit(1)
         else:
             output_dir = os.path.join(submit_dir, DEFAULT_OUTPUT_DIR)
@@ -1067,35 +1082,41 @@ def main():
 
         return False
 
-    if multiple_wf:
-
-        if options.is_pmc:
-            logger.info('Calculating statistics with use of PMC clustering')
-            uses_PMC = True
-        else:
-
-            # User provided workflow UUID
-            if options.is_uuid:
-                uses_PMC = False
-            # User provided workflow submit directories
-            else:
-                # int(True) -> 1
-                tmp = reduce(int, [use_pmc(dir) for dir in submit_dir])
-
-                # All workflow are either PMC or non PMC workflows?
-                if tmp == len(submit_dir) or tmp == 0:
-                    uses_PMC = use_pmc(submit_dir[0])
-                else:
-                    uses_PMC = False
-                    logger.warn('Input workflows use both PMC & regular clustering! Calculating statistics with regular clustering')
-
+    if options.is_pmc:
+        logger.info('Calculating statistics with use of PMC clustering')
+        uses_PMC = True
     else:
-        uses_PMC = use_pmc(submit_dir)
+        if options.is_uuid:
+            # User provided workflow UUID
+            logger.info('Workflows are specified as UUIDs and ispmc option is not set.')
+            uses_PMC = False
+        else:
+            # User provided workflow submit directories
+            if multiple_wf:
+                if submit_dir == '*':
+                    logger.info('Calculating statistics over all workflows, and ispmc option is not set.')
+                else:
+                    # int(True) -> 1
+                    tmp = sum([int(use_pmc(dir)) for dir in submit_dir])
+
+                    # All workflow are either PMC or non PMC workflows?
+                    if tmp == len(submit_dir) or tmp == 0:
+                        uses_PMC = use_pmc(submit_dir[0])
+                    else:
+                        uses_PMC = False
+                        logger.warn('Input workflows use both PMC & regular clustering! Calculating statistics with regular clustering')
+
+            else:
+                uses_PMC = use_pmc(submit_dir)
 
     # Check db_url, and get wf_uuid's
     if multiple_wf:
-        if options.is_uuid:
+        if options.is_uuid or submit_dir == '*':
             #URL picked from config_properties file.
+            if not options.config_properties:
+                logger.error('--conf options has to be specified')
+                sys.exit(1)
+
             output_db_url = db_utils.get_db_url(options.config_properties)
             wf_uuid = submit_dir
         else:
@@ -1108,16 +1129,24 @@ def main():
                 wf_uuid.append(uuid)
 
             if len(db_url_set) != 1:
-                sys.stderr.write("Cannot determine a single database URL to connect to.\n")
+                logger.error("Workflows are distributed across multiple databases, which is not supported")
                 sys.exit(1)
 
             output_db_url = db_url_set.pop()
 
     else:
-        output_db_url, wf_uuid = db_utils.get_db_url_wf_uuid(submit_dir, options.config_properties)
+        if options.is_uuid:
+            if not options.config_properties:
+                logger.error('--conf options has to be specified')
+                sys.exit(1)
+            else:
+                output_db_url = db_utils.get_db_url(options.config_properties)
+                wf_uuid = submit_dir
+        else:
+            output_db_url, wf_uuid = db_utils.get_db_url_wf_uuid(submit_dir, options.config_properties)
 
-    logger.info("DB URL is: %s" % output_db_url)
-    logger.info("workflow UUID is: %s" % wf_uuid)
+    logger.info('DB URL is: %s' % output_db_url)
+    logger.info('workflow UUID is: %s' % wf_uuid)
 
     if output_db_url is not None:
         print_workflow_details(output_db_url, wf_uuid, output_dir, multiple_wf=multiple_wf)
