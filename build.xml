@@ -3,6 +3,7 @@
 <project name="pegasus-all" default="jar">
   <description>Manages Pegasus</description>
   <property name="build.src" location="build/classes"/>
+  <property name="junitreport.dir"  value="${build.src}/junitreport"/>
   <property environment="env"/>
   <path id="build.classpath">
     <fileset dir="share/pegasus/java" includes="*.jar"/>
@@ -149,6 +150,16 @@
            includeantruntime="false"/>
   </target>
 
+   <target name="planner-tests" depends="build-setup,planner"
+          description="Compiles the tests for Pegasus Planner">
+    <javac destdir="${build.src}" srcdir="test/junit"
+           target="${build.target}" source="${build.source}"
+           encoding="UTF-8" debug="true"
+           includes="edu/isi/pegasus/planner/**/*.java"           
+           classpathref="build.classpath"
+           includeantruntime="false"/>
+  </target>
+
 
   <target name="examples" depends="build-setup"
           description="Compiles all examples">
@@ -178,8 +189,17 @@
     <mkdir dir="${dist.jars}"/>
     <jar destfile="${dist.jars}/pegasus.jar" basedir="${build.src}"
          includes="edu/isi/pegasus/**/*.class,edu/isi/ikcap/**/*.class,edu/clemson/**/*.class"
-         excludes="*.class,edu/isi/pegasus/**/*Test.class,org/griphyn/**/*Test.class,org/griphyn/**/*.class"/>
+         excludes="*.class,edu/isi/pegasus/planner/test/**/*.class,edu/isi/pegasus/**/*Test.class,org/griphyn/**/*Test.class,org/griphyn/**/*.class"/>
     <chmod perm="0644" file="${dist.jars}/pegasus.jar"/>
+  </target>
+
+  <target name="test-jar" depends="contrib,common,planner,planner-tests,examples"
+          description="Create the PEGASUS Test JAR files to use for unit tests">
+    <mkdir dir="${dist.jars}"/>
+    <jar destfile="${dist.jars}/pegasus-test.jar" basedir="${build.src}"
+         includes="edu/isi/pegasus/planner/test/**/*.class,edu/isi/pegasus/**/*Test.class"
+         excludes="*.class,org/griphyn/**/*Test.class,org/griphyn/**/*.class"/>
+    <chmod perm="0644" file="${dist.jars}/pegasus-test.jar"/>
   </target>
 
   <target name="vdl-jar" depends="vdl"
@@ -564,10 +584,25 @@
 	  description="Run {build,ctools,externals}-clean" />
   <target name="build" depends="ctools-all,externals,jar,vdl-jar"/>
 
-  <target name="junit" depends="jar"
-	  description="Execute the Java unit testing (not yet)">
-    <echo>FIXME: This is a stand-in dummy for Java unit testing.</echo>
+
+  <target name="junit" depends="jar,vdl-jar,test-jar"
+	  description="Execute the Java Unit Tests for the Pegasus Planner">
+
+        <mkdir dir="${junitreport.dir}"/>
+        <junit printsummary="yes">
+            <classpath>
+	      <path refid="build.classpath"/>
+	      <path location="${dist.jars}/pegasus.jar"/>
+	      <path location="${dist.jars}/pegasus-test.jar"/>
+	      <path location="${dist.jars}/vdl.jar"/>
+	    </classpath>
+	    <formatter type="xml"/>
+
+	    <test name="edu.isi.pegasus.planner.test.AllTests"  todir="${junitreport.dir}"/>
+
+        </junit>
   </target>
+
   <target name="pyunit" depends="jar"
 	  description="Execute the Python unit testing (not yet)">
     <echo>FIXME: This is a stand-in dummy for Python unit testing.</echo>

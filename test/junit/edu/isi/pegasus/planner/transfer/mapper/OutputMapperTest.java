@@ -137,6 +137,7 @@ public abstract class OutputMapperTest implements
                 //update the relative path with the input dir
                 value = inputdir + File.separator + value;
                 properties.setProperty( key , value );
+                System.out.println( "Set property " + key + " to " + value );
             }
         }
         return properties;
