@@ -2,8 +2,9 @@
 <!-- $Id$ -->
 <project name="pegasus-all" default="jar">
   <description>Manages Pegasus</description>
-  <property name="build.src" location="build/classes"/>
-  <property name="junitreport.dir"  value="${build.src}/junitreport"/>
+  <property name="build.src" location="build/main/classes"/>
+  <property name="test.src"  location="build/tests/classes"/>
+  <property name="junitreport.dir"  value="${test.src}/junitreport"/>
   <property environment="env"/>
   <path id="build.classpath">
     <fileset dir="share/pegasus/java" includes="*.jar"/>
@@ -23,6 +24,7 @@
     <tstamp/>
     <mkdir dir="dist"/>  
     <mkdir dir="${build.src}"/>
+    <mkdir dir="${test.src}"/>
     <copy preservelastmodified="true" todir="${build.src}" file="LICENSE"/>
     <tstamp>
       <format property="ISODATE.full" pattern="yyyy-MM-dd'T'HH:mm:ssZZZZZ"/>
@@ -152,12 +154,17 @@
 
    <target name="planner-tests" depends="build-setup,planner"
           description="Compiles the tests for Pegasus Planner">
-    <javac destdir="${build.src}" srcdir="test/junit"
+    <javac destdir="${test.src}" srcdir="test/junit"
            target="${build.target}" source="${build.source}"
            encoding="UTF-8" debug="true"
            includes="edu/isi/pegasus/planner/**/*.java"           
-           classpathref="build.classpath"
-           includeantruntime="false"/>
+           includeantruntime="false">
+
+          <classpath>
+	    <path refid="build.classpath"/>
+	    <path location="${build.src}"/>
+	  </classpath>
+    </javac>
   </target>
 
 
@@ -193,12 +200,12 @@
     <chmod perm="0644" file="${dist.jars}/pegasus.jar"/>
   </target>
 
+
   <target name="test-jar" depends="contrib,common,planner,planner-tests,examples"
           description="Create the PEGASUS Test JAR files to use for unit tests">
     <mkdir dir="${dist.jars}"/>
-    <jar destfile="${dist.jars}/pegasus-test.jar" basedir="${build.src}"
-         includes="edu/isi/pegasus/planner/test/**/*.class,edu/isi/pegasus/**/*Test.class"
-         excludes="*.class,org/griphyn/**/*Test.class,org/griphyn/**/*.class"/>
+    <jar destfile="${dist.jars}/pegasus-test.jar" basedir="${test.src}"
+         includes="edu/isi/pegasus/planner/**/*.class"/>
     <chmod perm="0644" file="${dist.jars}/pegasus-test.jar"/>
   </target>
 
