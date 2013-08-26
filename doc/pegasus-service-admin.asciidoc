@@ -43,11 +43,6 @@ Options
     Print help message
 -d | --debug::
     Enable debugging
---config::
-    Path to service configuration file
---dburi::
-    The SQLAlchemy database URI [e.g. mysql://user:pass@127.0.0.1/dbname,
-    sqlite:///path/to/dbfile]
 
 Authors
 -------
