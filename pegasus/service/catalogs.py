@@ -296,7 +296,7 @@ def add_name_option(self):
 
 def add_format_option(self):
     self.parser.add_option("-F", "--format", action="store", dest="format",
-            default=None, help="Catalog format (transformation: Text, File; replica: File, Regex; site: XML3, XML4)")
+            default=None, help="Catalog format (transformation: Text, File; replica: File, Regex; site: XML, XML2)")
 
 def add_file_option(self):
     self.parser.add_option("-f", "--file", action="store", dest="file",
