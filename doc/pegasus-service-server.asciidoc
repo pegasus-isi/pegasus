@@ -19,15 +19,10 @@ Options
     Print help message
 -d | --debug::
     Enable debugging
--p | --port::
-    The port to listen on [default: 5000]
--H | --host::
-    The host to bind to [default: 127.0.0.1]
---config::
-    Path to service configuration file
---dburi::
-    The SQLAlchemy database URI [e.g. mysql://user:pass@127.0.0.1/dbname,
-    sqlite:///path/to/dbfile]
+
+Configuration
+-------------
+The host, port and database can be specified in the configuration file.
 
 Authors
 -------
