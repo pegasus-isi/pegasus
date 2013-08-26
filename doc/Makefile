@@ -5,6 +5,8 @@ FOP = fop
 
 MANPAGES = pegasus-service-server.man
 MANPAGES += pegasus-service-admin.man
+MANPAGES += pegasus-service-catalogs.man
+MANPAGES += pegasus-service-ensemble.man
 
 .PHONY: clean $(MANPAGES)
 
