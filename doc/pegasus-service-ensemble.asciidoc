@@ -1,0 +1,99 @@
+pegasus-service-ensemble(1)
+===========================
+Pegasus Team <pegasus@isi.edu>
+Version {VERSION}
+:doctype: manpage
+
+Name
+----
+pegasus-service-ensemble - Submit and monitor ensembles of workflows
+
+Synopsis
+--------
+[verse]
+pegasus-service-ensemble COMMAND [options] [ARGUMENTS...]
+
+Commands
+--------
+ensembles::
+    List ensembles.
+
+create -e NAME [-R MAX_RUNNING] [-P MAX_PLANNING]::
+    Create an ensemble.
+
+pause -e NAME::
+    Pause ensemble.
+
+activate -e NAME::
+    Activate a paused ensemble.
+
+config -e NAME [-R MAX_RUNNING] | [-P MAX_PLANNING]::
+    Configure an ensemble.
+
+submit -e NAME -w NAME -R RC -T TC -S SC -d DAX -s SITES -o SITE::
+    Submit a workflow.
+
+workflows -e NAME [-l]::
+    List workflows.
+
+replan -e NAME -w NAME::
+    Replan a failed workflow.
+
+rerun -e NAME -w NAME::
+    Rerun a failed workflow.
+
+priority -e NAME -w NAME -p PRIORITY::
+    Alter the priority of a workflow.
+
+Common Options
+--------------
+-h | --help::
+    Print help message
+-d | --debug::
+    Enable debugging
+-e NAME | --ensemble NAME::
+    Name of ensemble.
+-w NAME | --workflow NAME::
+    Name of workflow.
+
+Create and Config Options
+-------------------------
+-R N | --max-running N::
+    Maximum number of concurrently running workflows.
+-P N | --max-planning N::
+    Maximum number of workflows being planned simultaneously.
+
+Workflows Options
+-----------------
+-l | --long::
+    Use long listing format.
+
+Submit Options
+--------------
+-R NAME | --replica-catalog NAME::
+    Name of replica catalog to use.
+-S NAME | --site-catalog NAME::
+    Name of site catalog to use.
+-T NAME | --transformation-catalog NAME::
+    Name of transformation catalog to use.
+-s SITE[,SITE...] | --site SITE[,SITE...]::
+    Names of execution sites.
+-o SITE | --output-site SITE::
+    Name of output site.
+-p PRIORITY | --priority PRIORITY::
+    Priority of workflow
+-c PATH | --conf PATH::
+    Path to pegasus.properties file.
+--staging-site s=ss[,s=ss...]::
+    Staging sites (ss) for each execution site (s).
+--nocleanup::
+    Do not add cleanup jobs to the workflow (see pegasus-plan).
+--force::
+    Skip workflow reduction (see pegasus-plan).
+-C STYLE[,STYLE...] | --cluster STYLE[,STYLE...]::
+    Clustering techniques to apply (see pegasus-plan).
+
+Authors
+-------
+Pegasus Team `<pegasus@isi.edu>`
+
