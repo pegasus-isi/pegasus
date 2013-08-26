@@ -25,15 +25,28 @@ require Condor and Pegasus):
     $ export ENABLE_INTEGRATION_TESTS=1
     $ python setup.py test
 
-Setup
------
-The `pegasus-service-admin` script is used to manage the service.
+Configuration
+-------------
+The configuration file is $HOME/.pegasus/service.py. Look in
+pegasus/service/defaults.py for the variable names and default values.
+
+You can change the host and port of the service by setting the SERVER\_HOST
+and SERVER\_PORT variables.
+
+All clients that connect to the web API will require the USERNAME and
+PASSWORD settings in the configuration file.
+
+Administration
+--------------
+The `pegasus-service-admin` script is used to administer the service.
+
+You can set the SQLAlchemy database URI in the configuration file. The
+`pegasus-service-admin` script needs direct access to the database (it does
+not go through the service).
 
 To add tables to the database run:
 
     $ pegasus-service-admin create
-
-You can set the SQLAlchemy database URI with the `--dburi` argument.
 
 To add a new user run:
 
@@ -44,25 +57,13 @@ It will prompt you for the new user's password.
 
 Running the Service
 -------------------
-Once the service is installed (normally or in development mode) you can
-start the server by running:
+Once the service is installed (normally or in development mode) and
+configured you can start the server by running:
 
     $ pegasus-service-server
 
 By default, the server will start on http://localhost:5000. You can set
-the host and port in the configuration file (see next section).
-
-Configuration
--------------
-The configuration file is $HOME/.pegasus/service.py. Look in
-pegasus/service/defaults.py for the variables and default values.
-
-You can change the host and port of the service by setting the SERVER\_HOST
-and SERVER\_PORT variables.
-
-All clients that connect to the web API will require the USERNAME and
-PASSWORD settings in the configuration file.
-
+the host and port in the configuration file.
 
 Ensemble Manager
 ----------------
