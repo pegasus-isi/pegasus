@@ -49,7 +49,6 @@ setup(
         "Jinja2==2.7",
         "Flask-SQLAlchemy==0.16",
         "SQLAlchemy==0.8.0",
-        "MySQL-python==1.2.4c1",
         "WTForms==1.0.3",
         "requests==1.2.3",
         "passlib==1.6.1",
