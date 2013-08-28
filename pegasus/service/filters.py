@@ -1,3 +1,5 @@
+import time
+import decimal
 from pegasus.service import app
 
 @app.template_filter('dec_to_float')
@@ -11,11 +13,11 @@ def dec_to_float(dec):
         return None
 
 @app.template_filter('time_to_date_str')
-def time_to_date_str(time):
+def time_to_date_str(ts):
     '''
     Change an integer duration to be represented as a data string
     '''
-    return strftime('%Y-%m-%d %H', localtime(time))
+    return time.strftime('%Y-%m-%d %H', time.localtime(ts))
 
 @app.template_filter('to_lower_case')
 def to_lower_case(str):
@@ -48,13 +50,13 @@ def time_to_str(time):
     DAY = 86400
     HOUR = 3600
     MIN = 60
-    
+
     max_units = 2
     num_units = 0
-    
-    if time is None or not (isinstance(time, Decimal) or isinstance(time, float)):
+
+    if time is None or not (isinstance(time, decimal.Decimal) or isinstance(time, float)):
         return time
-    
+
     str_time = ''
     time = int(time)
 

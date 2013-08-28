@@ -21,7 +21,7 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from Pegasus.netlogger.analysis.error.Error import StampedeDBNotFoundError
 
-from pegasus.service import app
+from pegasus.service import app, filters
 from pegasus.service.dashboard.dashboard import Dashboard, NoWorkflowsFoundError
 from pegasus.service.dashboard.queries import MasterDBNotFoundError
 
@@ -135,7 +135,7 @@ def successful_jobs(root_wf_id, wf_id):
     total_count, filtered_count, successful_jobs_list = dashboard.get_successful_jobs(wf_id, **args)
 
     for job in successful_jobs_list:
-        job.duration_formatted = time_to_str(job.duration)
+        job.duration_formatted = filters.time_to_str(job.duration)
         job.exec_job_id = '<a href="' + url_for('job', root_wf_id=root_wf_id, wf_id=wf_id, job_id=job.job_id) + '">' + job.exec_job_id + '</a>'
 
     return render_template('workflow/jobs_successful.xhr.json', count=total_count, filtered=filtered_count, jobs=successful_jobs_list, table_args=args)
@@ -190,7 +190,7 @@ def successful_invocations(root_wf_id, wf_id, job_id):
     successful_invocations_list = dashboard.get_successful_job_invocation(wf_id, job_id)
 
     for item in successful_invocations_list:
-        item.remote_duration_formatted = time_to_str(item.remote_duration)
+        item.remote_duration_formatted = filters.time_to_str(item.remote_duration)
 
     # is_xhr = True if it is AJAX request.
     if request.is_xhr:
@@ -271,7 +271,7 @@ def statistics(root_wf_id, wf_id):
     summary_times = dashboard.workflow_summary_stats(wf_id)
 
     for key, value in summary_times.items():
-        summary_times[key] = time_to_str(value)
+        summary_times[key] = filters.time_to_str(value)
 
     workflow_stats = dashboard.workflow_stats()
 
@@ -284,7 +284,7 @@ def workflow_summary_stats(root_wf_id, wf_id):
     summary_times = dashboard.workflow_summary_stats(wf_id)
 
     for key, value in summary_times.items():
-        summary_times[key] = time_to_str(value)
+        summary_times[key] = filters.time_to_str(value)
 
     return json.dumps(summary_times)
 
