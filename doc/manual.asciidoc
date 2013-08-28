@@ -9,6 +9,7 @@ Introduction
 ------------
 Introduction.
 
+
 Administrator Guide
 -------------------
 Admin guide.
@@ -32,19 +33,19 @@ How to create users...
 
 User Guide
 ----------
-User Guide
 
-Submitting Workflows
-~~~~~~~~~~~~~~~~~~~~
+Dashboard
+~~~~~~~~~
+Workflow monitoring...
+
+Ensemble Manager
+~~~~~~~~~~~~~~~~
+An ensemble is...
+To create an ensemble...
 To submit a workflow...
-
-Monitoring Workflows
-~~~~~~~~~~~~~~~~~~~~
 To monitor workflows...
 
-Workflow Ensembles
-~~~~~~~~~~~~~~~~~~
-An ensemble is...
+
 
 Developer Guide
 ---------------
@@ -122,12 +123,16 @@ To run the unit tests type:
 
     (pegasus-service)$ python setup.py test
 
+If you want to run integration and performance tests set the environment
+variables ENABLE_INTEGRATION_TESTS and ENABLE_PERFORMANCE_TESTS before running
+the unit test suite like this:
+
+    (pegasus-service)$ export ENABLE_INTEGRATION_TESTS=1
+    (pegasus-service)$ export ENABLE_PERFORMANCE_TESTS=1
+    (pegasus-service)$ python setup.py test
+
 Unit tests are in the pegasus.service.tests package. To add one just create a
 new module in the pegasus.service.tests package that extends one of the
-TestCase classes in pegasus.service.tests. Your new test class will be
+\*TestCase classes in pegasus.service.tests. Your new test class will be
 automatically added to the test suite.
-
-An SQLite in-memory database is used for database tests. Tests that require
-the database should inherit from pegasus.service.tests.DBTestCase. All other
-tests should inherit from pegasus.service.tests.TestCase.
 
