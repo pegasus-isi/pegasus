@@ -9,7 +9,8 @@ def current_schema():
                        first()
         return s.version
     except Exception, e:
-        if "no such table: schema" in e.message:
+        message = getattr(e, "message", "")
+        if "no such table: schema" in message:
             return None
         else:
             raise
