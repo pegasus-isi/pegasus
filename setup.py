@@ -6,6 +6,16 @@ from setuptools import setup, find_packages
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
+def find_package_data(dirname):
+    items = []
+    for fname in os.listdir(dirname):
+        path = os.path.join(dirname, fname)
+        if os.path.isdir(path):
+            items += find_package_data(path)
+        elif not path.endswith(".py") and not path.endswith(".pyc"):
+            items.append(path)
+    return items
+
 setup(
     name = "pegasus-service",
     version = "0.1",
@@ -21,7 +31,7 @@ setup(
         "License :: OSI Approved :: Apache Software License",
     ],
     packages = find_packages(),
-    package_data = {"" : ["templates/*", "static/*"] },
+    package_data = {"" : find_package_data("pegasus/service") },
     include_package_data = True,
     zip_safe = False,
     entry_points = {
