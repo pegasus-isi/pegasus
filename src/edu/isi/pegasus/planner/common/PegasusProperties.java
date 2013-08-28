@@ -76,6 +76,7 @@ public class PegasusProperties implements Cloneable {
     
     public static final String PEGASUS_SITE_CATALOG_FILE_PROPERTY = "pegasus.catalog.site.file";
     
+    public static final String PEGASUS_APP_METRICS_PREFIX = "pegasus.metrics.app";
     
     
     //Replica Catalog Constants

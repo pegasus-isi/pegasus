@@ -24,11 +24,13 @@ import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
 import edu.isi.pegasus.common.util.Version;
+import edu.isi.pegasus.planner.common.PegasusProperties;
 
 import java.io.File;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.Date;
+import java.util.Properties;
 
 /**
  * A Data class containing the metrics about the planning instance.
@@ -37,16 +39,16 @@ import java.util.Date;
  * @version $Revision$
  */
 public class PlannerMetrics extends Data{
-
+    
     /**
      * The base submit directory where the files are being created.
      */
-   private String mBaseSubmitDirectory;
+    private String mBaseSubmitDirectory;
 
     /**
      * The relative submit directory for this run.
      */
-   private String mRelativeSubmitDirectory;
+    private String mRelativeSubmitDirectory;
 
 
     /*
@@ -136,12 +138,18 @@ public class PlannerMetrics extends Data{
      * The metrics about the workflow.
      */
     @Expose @SerializedName("wf_metrics") private WorkflowMetrics mWFMetrics;
+    
+    /**
+     * The application metrics that need to be forwarded
+     */
+    @Expose @SerializedName( "app_metrics" ) private Properties mApplicationMetrics;
 
     /**
      * The error message to be logged
      */
     @Expose @SerializedName( "error" ) private String mErrorMessage;
-
+    
+    
 
     /**
      * The default metrics.
@@ -152,6 +160,9 @@ public class PlannerMetrics extends Data{
         mExitcode = -1;
         mNumFormatter = new DecimalFormat( "#.###" );
         mType = "metrics";
+        
+        //we want metrics to be serialized only if user specified
+        //mApplicationMetrics = new Properties();
     }
 
     /**
@@ -211,8 +222,40 @@ public class PlannerMetrics extends Data{
         mWFMetrics = metrics;
     }
 
+    /**
+     * Sets the app metrics that need to be forwarded.
+     * 
+     * @param metrics the application metrics
+     */
+    public void setApplicationMetrics( Properties properties ){
+        this.mApplicationMetrics = properties;
+    }
 
-    
+    /**
+     * Sets the app metrics that need to be forwarded.
+     * 
+     * @param metrics the application metrics
+     */
+    public void setApplicationMetrics( PegasusProperties properties ){
+        //figure out the application name if set
+        String name = properties.getProperty( PegasusProperties.PEGASUS_APP_METRICS_PREFIX );
+        if( name != null ){
+            mApplicationMetrics = properties.matchingSubset( PegasusProperties.PEGASUS_APP_METRICS_PREFIX, false );
+            //add the name
+            mApplicationMetrics.setProperty( "name", name );
+        }
+        
+    }
+
+    /**
+     * Returns the application specific metrics that will be forwarded to the
+     * server
+     * 
+     * @return the application metrics
+     */
+    public Properties getApplicationMetrics( ){
+        return this.mApplicationMetrics;
+    }
 
     /**
      * Returns the username.
@@ -564,7 +607,9 @@ public class PlannerMetrics extends Data{
         append( sb, "root.wf.uuid", this.mRootWorkflowUUID );
         append( sb, "wf.uuid", this.mWorkflowUUID );
         sb.append( this.getWorkflowMetrics() );
-
+        if( this.mApplicationMetrics != null ){
+            append( sb, "app.metrics", this.mApplicationMetrics.toString() );
+        }
         sb.append( "}" ).append( "\n" );
 
         return sb.toString();
@@ -612,10 +657,12 @@ public class PlannerMetrics extends Data{
         pm.setDuration( this.mDuration );
         pm.setExitcode( this.mExitcode );
         pm.setErrorMessage( this.mErrorMessage );
+        if( this.mApplicationMetrics != null ){
+            pm.setApplicationMetrics( (Properties) this.mApplicationMetrics.clone());
+        }
         return pm;
     }
 
 
-
-
+    
 }

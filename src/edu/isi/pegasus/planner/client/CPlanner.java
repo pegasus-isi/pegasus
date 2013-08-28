@@ -473,7 +473,7 @@ public class CPlanner extends Executable{
                                 PegasusConfiguration.DEFAULT_DATA_CONFIGURATION_VALUE:
                                 dataConfiguration;
         mPMetrics.setDataConfiguration( dataConfiguration );
-
+        mPMetrics.setApplicationMetrics( mProps );
         
 
         //try to get hold of the vds properties
