@@ -7,14 +7,19 @@ def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 def find_package_data(dirname):
-    items = []
-    for fname in os.listdir(dirname):
-        path = os.path.join(dirname, fname)
-        if os.path.isdir(path):
-            items += find_package_data(path)
-        elif not path.endswith(".py") and not path.endswith(".pyc"):
-            items.append(path)
-    return items
+    def find_paths(dirname):
+        items = []
+        for fname in os.listdir(dirname):
+            path = os.path.join(dirname, fname)
+            if os.path.isdir(path):
+                items += find_paths(path)
+            elif not path.endswith(".py") and not path.endswith(".pyc"):
+                items.append(path)
+        return items
+    items = find_paths(dirname)
+    return [os.path.relpath(path, dirname) for path in items]
+
+print find_package_data("pegasus/service")
 
 setup(
     name = "pegasus-service",
@@ -31,7 +36,7 @@ setup(
         "License :: OSI Approved :: Apache Software License",
     ],
     packages = find_packages(),
-    package_data = {"" : find_package_data("pegasus/service") },
+    package_data = {"pegasus.service" : find_package_data("pegasus/service") },
     include_package_data = True,
     zip_safe = False,
     entry_points = {
