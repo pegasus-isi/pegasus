@@ -19,8 +19,6 @@ def find_package_data(dirname):
     items = find_paths(dirname)
     return [os.path.relpath(path, dirname) for path in items]
 
-print find_package_data("pegasus/service")
-
 setup(
     name = "pegasus-service",
     version = "0.1",
