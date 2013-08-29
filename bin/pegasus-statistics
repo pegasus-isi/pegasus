@@ -927,7 +927,7 @@ def main():
     parser.add_option("-f", "--file", action="store", dest="filetype", choices=[FILE_TYPE_TXT, FILE_TYPE_CSV],
                       default=FILE_TYPE_TXT,
                       help="Select output file type. Valid values are 'text' and 'csv'. Default is '%default'.")
-    parser.add_option("-c","--conf", action = "store", type = "string", dest = "config_properties",
+    parser.add_option("-c","--conf", action = "store", type = "string", dest = "config_properties", default=None,
                       help = "Specifies the properties file to use. This option overrides all other property files.")
     parser.add_option("-s", "--statistics-level", action="store", dest="statistics_level",
                       choices=['all', 'summary', 'wf_stats', 'jb_stats', 'tf_stats', 'ti_stats'],
@@ -1112,13 +1112,13 @@ def main():
     # Check db_url, and get wf_uuid's
     if multiple_wf:
         if options.is_uuid or submit_dir == '*':
-            #URL picked from config_properties file.
-            if not options.config_properties:
-                logger.error('--conf options has to be specified')
-                sys.exit(1)
-
+            # URL picked from config_properties file.
             output_db_url = db_utils.get_db_url(options.config_properties)
             wf_uuid = submit_dir
+
+            if not output_db_url:
+                logger.error('Unable to determine database URL. Kindly specify a value for "pegasus.monitord.output" property')
+                sys.exit(1)
         else:
             db_url_set = set()
             wf_uuid = []
@@ -1136,12 +1136,12 @@ def main():
 
     else:
         if options.is_uuid:
-            if not options.config_properties:
-                logger.error('--conf options has to be specified')
+            output_db_url = db_utils.get_db_url(options.config_properties)
+            wf_uuid = submit_dir
+
+            if not output_db_url:
+                logger.error('Unable to determine database URL. Kindly specify a value for "pegasus.monitord.output" property')
                 sys.exit(1)
-            else:
-                output_db_url = db_utils.get_db_url(options.config_properties)
-                wf_uuid = submit_dir
         else:
             output_db_url, wf_uuid = db_utils.get_db_url_wf_uuid(submit_dir, options.config_properties)
 
