@@ -177,7 +177,7 @@ public class PegasusProperties implements Cloneable {
     /**
      * The default value to be assigned for dagman.maxpre .
      */
-    public static final String DEFAULT_DAGMAN_MAX_PRE_VALUE = "2";
+    public static final String DEFAULT_DAGMAN_MAX_PRE_VALUE = "1";
 
 
 
