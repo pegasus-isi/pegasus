@@ -60,6 +60,7 @@ MONITORD_RECOVER_FILE = "monitord.recover" # filename for writing monitord recov
 PRESCRIPT_TASK_ID = -1                     # id for prescript tasks
 POSTSCRIPT_TASK_ID = -2                    # id for postscript tasks
 MAX_OUTPUT_LENGTH = 2**16-1                # in bytes, maximum we can put into the database for job's stdout and stderr
+UNKNOWN_FAILURE_CODE = 2                   # unknown failure code when inserting an END event betweeen consecutive workflow start events
 
 # Other variables
 condor_dagman_executable = None	# condor_dagman binary location
@@ -620,6 +621,21 @@ class Workflow:
         change to the DB. This function is called as response to
         DAGMan starting/stopping.
         """
+
+        if self._last_known_state is not None:
+            #sanity check
+            if state == "start" and self._last_known_state == state:
+                # we have two consecutive start events from DAGMAN log
+                # can happen in case of power failure or condor crashing.
+                # we insert a DAGMAN FINISHED event PM-723
+                logger.warning( "Consecutive workflow START events detected for workflow with condor id %s running in directory %s ." %
+                                ( self._dagman_condor_id, self._submit_dir ) +
+                                 " Inserting Workflow END event with timestamp %s" %( self._current_timestamp ))
+                self._dagman_exit_code = UNKNOWN_FAILURE_CODE
+                self._JSDB.write("%d INTERNAL *** DAGMAN_FINISHED %s ***\n" % (self._current_timestamp, self._dagman_exit_code))
+                self.db_send_wf_state( "end" )
+
+
         if state == "start":
             logger.info("DAGMan starting with condor id %s" % (self._dagman_condor_id))
             self._JSDB.write("%d INTERNAL *** DAGMAN_STARTED %s ***\n" % (self._current_timestamp, self._dagman_condor_id))
@@ -632,6 +648,7 @@ class Workflow:
             self._notifications_manager.process_workflow_notifications(self, state)
 
         self.db_send_wf_state(state)
+        self._last_known_state = state
 
     def start_wf(self):
         """
@@ -706,7 +723,7 @@ class Workflow:
                  parent_id=None, parent_jobid=None, parent_jobseq=None,
                  enable_notifications=True, replay_mode=False,
                  store_stdout_stderr=True, output_dir=None,
-                 notifications_manager=None):
+                 notifications_manager=None, last_known_state=None):
         """
         This function initializes the workflow object. It looks for
         the workflow configuration file (or for workflow_config_file,
@@ -728,6 +745,7 @@ class Workflow:
         self._notifications_manager = notifications_manager
         self._output_dir = output_dir
         self._store_stdout_stderr = store_stdout_stderr
+        self._last_known_state = last_known_state  #last known state of the workflow. updated whenever change_wf_state is called
 
         # Initialize other class variables
         self._wf_uuid = None
