@@ -723,7 +723,7 @@ class Workflow:
                  parent_id=None, parent_jobid=None, parent_jobseq=None,
                  enable_notifications=True, replay_mode=False,
                  store_stdout_stderr=True, output_dir=None,
-                 notifications_manager=None, last_known_state=None):
+                 notifications_manager=None ):
         """
         This function initializes the workflow object. It looks for
         the workflow configuration file (or for workflow_config_file,
@@ -745,7 +745,7 @@ class Workflow:
         self._notifications_manager = notifications_manager
         self._output_dir = output_dir
         self._store_stdout_stderr = store_stdout_stderr
-        self._last_known_state = last_known_state  #last known state of the workflow. updated whenever change_wf_state is called
+        #self._last_known_state = last_known_state  #last known state of the workflow. updated whenever change_wf_state is called
 
         # Initialize other class variables
         self._wf_uuid = None
@@ -790,6 +790,7 @@ class Workflow:
         self._multiline_file_flag = False       # Track multiline user log files, DAGMan > 6.6
         self._walltime = {}                     # jid --> walltime
         self._job_site = {}                     # last site a job was planned for
+        self._last_known_state = None  #last known state of the workflow. updated whenever change_wf_state is called
 
         self.init_clean()
 
