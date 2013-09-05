@@ -4,6 +4,7 @@ import os
 import xml.sax.handler
 import xml.sax
 from optparse import OptionParser
+import colorsys
 
 COLORS = [
     "#1b9e77",
@@ -25,8 +26,23 @@ COLORS = [
     "#bc80bd",
     "#ccebc5",
     "#ffed6f",
-    "#ffffb3"
+    "#ffffb3",
+    "#aadd88",
+    "#889933",
+    "#22bbcc",
+    "#d9dbb5"
 ]
+
+def rgb2hex(r,g,b):
+    return "#%02x%02x%02x" % (r*255,g*255,b*255)
+
+# Generate some colors to add to the list
+s = .7
+for l in [.70, .55]:
+    for h in range(0, 101, 10):
+        if h == 40: continue
+        rgb = colorsys.hls_to_rgb(h/100.0, l, s)
+        COLORS.append(rgb2hex(*rgb))
 
 class DAG:
     def __init__(self):
