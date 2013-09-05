@@ -66,70 +66,48 @@ parse_status_file(const char* fn, LinuxStatus* status)
   if ((f = fopen(fn, "r"))) {
     while (fgets(line, sizeof(line), f)) {
       if (strncmp(line, "State:", 6) == 0) {
-    char* s = line+7;
-    while (*s && isspace(*s)) ++s;
-    switch (*s) {
-    case 'R':
-      status->state[S_RUNNING]++;
-      break;
-    case 'S':
-      status->state[S_SLEEPING]++;
-      break;
-    case 'D':
-      status->state[S_WAITING]++;
-      break;
-    case 'T':
-      status->state[S_STOPPED]++;
-      break;
-    case 'Z':
-      status->state[S_ZOMBIE]++;
-      break;
-    default:
-      status->state[S_OTHER]++;
-      break;
-    }
+        char* s = line+7;
+        while (*s && isspace(*s)) ++s;
+        switch (*s) {
+          case 'R':
+            status->state[S_RUNNING]++;
+            break;
+          case 'S':
+            status->state[S_SLEEPING]++;
+            break;
+          case 'D':
+            status->state[S_WAITING]++;
+            break;
+          case 'T':
+            status->state[S_STOPPED]++;
+            break;
+          case 'Z':
+            status->state[S_ZOMBIE]++;
+            break;
+          default:
+            status->state[S_OTHER]++;
+            break;
+        }
       } else if (line[0] == 'V') {
-    unsigned long value;
-    char scale[4];
-    if (strncmp(line, "VmSize:", 7) == 0) {
-      char* s = line+8;
-      while (*s && isspace(*s)) ++s;
-      sscanf(s, "%lu %4s", &value, scale);
-      status->size += unscale(value, scale[0]);
-    } else if (strncmp(line, "VmRSS:", 6) == 0) {
-      char* s = line+7;
-      while (*s && isspace(*s)) ++s;
-      sscanf(s, "%lu %4s", &value, scale);
-      status->rss += unscale(value, scale[0]);
-    }
+        unsigned long value;
+        char scale[4];
+        if (strncmp(line, "VmSize:", 7) == 0) {
+          char* s = line+8;
+          while (*s && isspace(*s)) ++s;
+          sscanf(s, "%lu %4s", &value, scale);
+          status->size += unscale(value, scale[0]);
+        } else if (strncmp(line, "VmRSS:", 6) == 0) {
+          char* s = line+7;
+          while (*s && isspace(*s)) ++s;
+          sscanf(s, "%lu %4s", &value, scale);
+          status->rss += unscale(value, scale[0]);
+        }
       }
     }
     fclose(f);
-#ifdef DEBUG_PROCFS
-  } else {
-    fprintf(stderr, "open %s: %s\n", fn, strerror(errno));
-#endif
   }
 }
 
-
-#if 0  /*** currently unused ***/
-
-static
-void
-addtoinfo(LinuxStatus* io, LinuxStatus* summand)
-{
-  LinuxState i;
-
-  io->size  += summand->size;
-  io->rss   += summand->rss;
-  io->total += summand->total;
-  for (i=0; i < MAX_STATE; ++i) {
-    io->state[i] += summand->state[i];
-  }
-}
-
-#endif /*** unused ***/
 
 void
 gather_linux_proc26(LinuxStatus* procs, LinuxStatus* tasks)
@@ -162,16 +140,12 @@ gather_linux_proc26(LinuxStatus* procs, LinuxStatus* tasks)
             }
           }
           closedir(taskdir);
-        } else {
-          fprintf(stderr, "opendir %s: %s\n", procinfo, strerror(errno));
         }
         snprintf(procinfo, sizeof(procinfo), "/proc/%s/status", dp->d_name);
         parse_status_file(procinfo, procs);
       }
     }
     closedir(procdir);
-  } else {
-    perror("opendir /proc");
   }
 }
 
@@ -186,8 +160,8 @@ parse_stat_file(const char* fn, LinuxStatus* proc, LinuxStatus* task)
       pid_t pid, ppid;
       char state;
       unsigned long flags, vmsize, text, stack;
-        signed long rss;
-    int         exitsignal, notatask = 0;
+      signed long rss;
+      int exitsignal, notatask = 0;
 
       sscanf(line,
           "%d %*s %c %d %*d %*d %*d %*d %lu %*u "     /*  1 - 10 */
@@ -203,7 +177,7 @@ parse_stat_file(const char* fn, LinuxStatus* proc, LinuxStatus* task)
           /* SIGCHLD == normal process
            * SIGRTxx == threaded task
            */
-         );
+      );
       rss *= getpagesize();
 
       if (exitsignal == SIGCHLD) {
@@ -225,30 +199,30 @@ parse_stat_file(const char* fn, LinuxStatus* proc, LinuxStatus* task)
       }
 
       switch (state) {
-      case 'R':
-        task->state[S_RUNNING]++;
-        if (notatask) proc->state[S_RUNNING]++;
-        break;
-      case 'S':
-        task->state[S_SLEEPING]++;
-        if (notatask) proc->state[S_SLEEPING]++;
-        break;
-      case 'D':
-        task->state[S_WAITING]++;
-        if (notatask) proc->state[S_WAITING]++;
-        break;
-      case 'T':
-        task->state[S_STOPPED]++;
-        if (notatask) proc->state[S_STOPPED]++;
-        break;
-      case 'Z':
-        task->state[S_ZOMBIE]++;
-        if (notatask) proc->state[S_ZOMBIE]++;
-        break;
-      default:
-        task->state[S_OTHER]++;
-        if (notatask) proc->state[S_OTHER]++;
-        break;
+        case 'R':
+          task->state[S_RUNNING]++;
+          if (notatask) proc->state[S_RUNNING]++;
+          break;
+        case 'S':
+          task->state[S_SLEEPING]++;
+          if (notatask) proc->state[S_SLEEPING]++;
+          break;
+        case 'D':
+          task->state[S_WAITING]++;
+          if (notatask) proc->state[S_WAITING]++;
+          break;
+        case 'T':
+          task->state[S_STOPPED]++;
+          if (notatask) proc->state[S_STOPPED]++;
+          break;
+        case 'Z':
+          task->state[S_ZOMBIE]++;
+          if (notatask) proc->state[S_ZOMBIE]++;
+          break;
+        default:
+          task->state[S_OTHER]++;
+          if (notatask) proc->state[S_OTHER]++;
+          break;
       }
 
       task->size += vmsize;
@@ -287,8 +261,6 @@ gather_linux_proc24(LinuxStatus* procs, LinuxStatus* tasks)
       }
     }
     closedir(procdir);
-  } else {
-    perror("opendir /proc");
   }
 }
 
