@@ -153,7 +153,7 @@ def generate_dax_graph(wf_info, output_dir, create_dax_files=False):
 	dax_file_path = wf_info.dax_file_path
 	title =  str(wf_info.wf_uuid) + " (" + str(wf_info.dax_label) +")"
 	if dax_file_path is not None:
-		dax2dot_file_path = os.path.join(pegasus_share_dir, "visualize/dax2dot")
+		dax2dot_file_path = os.path.join(pegasus_share_dir, "visualize/dag2dot")
 		dot_file_path = os.path.join(output_dir, wf_info.wf_uuid + ".dot")
 		dax_cmd = dax2dot_file_path 
 		dax_cmd +=" --output "+ dot_file_path

@@ -290,7 +290,7 @@ def generate_dax_graph(wf_info, output_dir):
 	logger.info("Generating dax graph for  workflow "  + wf_info.wf_uuid)
 	dax_file_path = wf_info.dax_file_path
 	if dax_file_path is not None:
-		dax2dot_file_path = os.path.join(pegasus_share_dir, "visualize/dax2dot")
+		dax2dot_file_path = os.path.join(pegasus_share_dir, "visualize/dag2dot")
 		dot_file_path = os.path.join(output_dir, wf_info.wf_uuid + ".dot")
 		dax_cmd = dax2dot_file_path 
 		dax_cmd +=" --output "+ dot_file_path
